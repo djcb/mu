@@ -1,0 +1,36 @@
+INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
+
+bin_PROGRAMS=			\
+	mu
+
+mu_SOURCES=			\
+	mu-index.c		\
+	mu-index.h		\
+	mu-msg-fields.c		\
+	mu-msg-fields.h		\
+	mu-msg-flags.c		\
+	mu-msg-flags.h		\
+	mu-msg-gmime.c		\
+	mu-msg-gmime.h		\
+	mu-msg-str.c		\
+	mu-msg-str.h		\
+	mu-msg-xapian-priv.hh	\
+	mu-msg-xapian.cc	\
+	mu-msg-xapian.h		\
+	mu-query.h		\
+	mu-query.c		\
+	mu-query-xapian.cc	\
+	mu-query-xapian.h	\
+	mu-path.c		\
+	mu-path.h		\
+	mu-result.h		\
+	mu-store-xapian.cc	\
+	mu-store-xapian.h	\
+	mu-util.h		\
+	mu-util.c		\
+	mu.c
+
+mu_LDADD=			\
+	$(XAPIAN_LIBS)		\
+	$(GMIME_LIBS)		\
+	$(GLIB_LIBS)
