@@ -27,6 +27,39 @@
 
 #include "mu-msg-gmime.h"
 
+
+enum _MuCmd {
+	MU_CMD_INDEX,
+	MU_CMD_QUERY,
+	MU_CMD_HELP,
+	MU_CMD_UNKNOWN
+};
+typedef enum _MuCmd MuCmd;
+
+
+MuCmd 
+parse_cmd (const char* cmd)
+{
+	if (!cmd)
+		return MU_CMD_UNKNOWN;
+
+	if (strcmp (cmd, "index") == 0)
+		return MU_CMD_INDEX;
+
+	/* support some synonyms... */
+	if ((strcmp (cmd, "query") == 0) ||
+	    (strcmp (cmd, "find")  == 0) ||
+	    (strcmp (cmd, "search") == 0))
+		return MU_CMD_QUERY;
+
+	if ((strcmp (cmd, "help") == 0))
+		return MU_CMD_HELP;
+
+	return MU_CMD_UNKNOWN;
+}
+
+
+
 static MuResult
 msg_cb  (MuIndexStats* stats, void *user_data)
 {
@@ -39,14 +72,35 @@ msg_cb  (MuIndexStats* stats, void *user_data)
 	return MU_OK;
 }
 
-static void
+static int
 show_help (const char* cmd)
 {
 	if (cmd)
 		g_print ("Help about %s\n", cmd);
 	else
-		g_print ("General help");
+		g_print ("General help\n");
+
+	return 0;
 }
+
+static int
+show_usage (gboolean noerror)
+{
+	const char* usage=
+		"usage: mu [options] command [parameters]\n"
+		"\twhere command is one of index, query, help\n"
+		"see mu(1) for for information\n";
+
+	if (noerror)
+		g_print ("%s", usage);
+	else
+		g_printerr ("%s", usage);
+
+	return noerror ? 0 : 1;
+}
+
+	
+
 
 
 static gboolean opt_debug;
@@ -61,51 +115,44 @@ static GOptionEntry entries[] = {
 };
 
 
-
-
-
 int
 main (int argc, char *argv[])
 {
-	const char* cmd;
-	
 	GError *error = NULL;
 	GOptionContext *context;
 	MuResult rv;
+	MuCmd cmd;
 	
 	g_type_init ();
 	
 	context = g_option_context_new ("- search your e-mail");
 	g_option_context_add_main_entries (context, entries, "mu");
+
 	g_option_context_add_group (context, mu_query_option_group());
+	g_option_context_add_group (context, mu_index_option_group());
 	
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
-		g_printerr ("option parsing failed: %s\n",
+		g_printerr ("error in options: %s\n",
 			    error->message);
 		g_error_free (error);
 		return 1;
 	}
 	
-	if (argc < 2 || !( strcmp(argv[1], "index") == 0 ||
-			   strcmp(argv[1], "search") == 0 ||
-			   strcmp(argv[1], "help") == 0)) {
-		g_printerr ("usage: mu [options] command [parameters]\n"
-			    "\twhere command is one of index, search, help\n");
-		return 1;
-	}
-			    
-	cmd = argv[1];
+	if (argc < 2)
+		return show_usage (FALSE);
 
-	if (strcmp (cmd, "help") == 0) {
-		show_help (argc > 2 ? argv[2] : NULL);
-		return 0;
-	}
+	cmd = parse_cmd (argv[1]);
+	if (cmd == MU_CMD_UNKNOWN)
+		return show_usage (FALSE);
 	
+	if (cmd == MU_CMD_HELP)
+		return show_help (argc > 2 ? argv[2] : NULL);
 
 	mu_msg_gmime_init ();
-
 	rv = MU_OK;
-	if (strcmp(cmd, "index") == 0) {
+
+
+	if (cmd == MU_CMD_INDEX) {
 		MuIndex *midx;
 		MuIndexStats stats;
 		
@@ -116,20 +163,19 @@ main (int argc, char *argv[])
 		
 		mu_index_destroy (midx);
 		
-	} else if (strcmp(cmd, "search") == 0) {
-
-		GSList *args;
-		if (argc < 3) { /* FIXME */
-			g_printerr ("error!\n");
-			return 1;
-		}
+	} else if (cmd == MU_CMD_QUERY) {
 		
-		args = mu_util_strlist_from_args (argc-2, argv+2); 
-		rv = mu_query_run (args);
-		mu_util_strlist_free (args);
+		GSList *args;
+		if (argc < 3) {
+			g_printerr ("error: missing something to search for\n");
+			rv = 1;
+		} else {
+			args = mu_util_strlist_from_args (argc-2, argv+2); 
+			rv = mu_query_run (args);
+			mu_util_strlist_free (args);
+		}
 	}
 	
 	mu_msg_gmime_uninit ();
 	return rv == MU_OK ? 0 : 1;
-
 }
