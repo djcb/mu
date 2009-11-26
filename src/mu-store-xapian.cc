@@ -126,7 +126,7 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 			 const MuMsgField* field)
 {
 	const char* str = mu_msg_gmime_get_field_string (msg, field);
-	if (G_UNLIKELY(!str))
+	if (!str)
 		return;
 	
 	const std::string value (str);
@@ -146,12 +146,12 @@ static void
 add_terms_values_body (Xapian::Document& doc, MuMsgGMime *msg,
 		       const MuMsgField* field)
 {	
-	if (G_UNLIKELY((mu_msg_gmime_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)))
+	if (mu_msg_gmime_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
 		return; /* don't store encrypted bodies */
 
 	const char *str = mu_msg_gmime_get_body_text(msg);
-	if (!str) 
-		str = mu_msg_gmime_get_body_html(msg); /* FIXME: html->html fallback */
+	if (!str) /* FIXME: html->html fallback */
+		str = mu_msg_gmime_get_body_html(msg); 
 	if (!str)
 		return; /* no body... */
 		
@@ -176,9 +176,8 @@ add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 		
 	type = mu_msg_field_type (field);
 
-	if (G_LIKELY(type == MU_MSG_FIELD_TYPE_STRING)) {		
-		if (G_UNLIKELY(mu_msg_field_id (field) ==
-			       MU_MSG_FIELD_ID_BODY_TEXT)) 
+	if (type == MU_MSG_FIELD_TYPE_STRING) {		
+		if (mu_msg_field_id (field) == MU_MSG_FIELD_ID_BODY_TEXT) 
 			add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, 
 					       field);
 		else
@@ -217,7 +216,7 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		MsgDoc msgdoc = { &newdoc, msg };
 
 		// start transaction if needed
-		if (G_UNLIKELY(!store->_in_transaction)) {
+		if (!store->_in_transaction) {
 			store->_db->begin_transaction();
 			store->_in_transaction = true;
 		}
@@ -231,7 +230,7 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		id = store->_db->replace_document (pathterm, newdoc);
 		
 		commit_now = ++store->_processed % store->_transaction_size == 0;
-		if (G_UNLIKELY(commit_now)) {
+		if (commit_now) {
 			store->_in_transaction = false;
 			store->_db->commit_transaction();
 		}
@@ -262,7 +261,7 @@ mu_store_xapian_cleanup (MuStoreXapian *store, const char* msgpath)
 	g_return_val_if_fail (msgpath, MU_ERROR);
 
 	try {
-		return MU_OK; /* TODO: */
+		return MU_OK; /* FIXME: TODO: */
 		
 	} catch (const Xapian::Error &err) {
 		g_warning ("%s: caught xapian exception '%s' (%s)", 
