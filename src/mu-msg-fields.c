@@ -29,8 +29,8 @@ typedef enum _FieldFlags FieldFlags;
 
 struct _MuMsgField {
 	const char     *_name;
-	const char     *_shortcut;
-	const char     *_prefix;
+	const char     *_shortcut;    
+	const char     *_prefix;      /* xapian prefix */
 	MuMsgFieldId    _id;
 	MuMsgFieldType  _type;
 	
@@ -84,7 +84,7 @@ static const MuMsgField FIELD_DATA[] = {
 	{ "prio", "P", "I",  
 	  MU_MSG_FIELD_ID_PRIORITY,
 	  MU_MSG_FIELD_TYPE_INT,
-	  FLAG_XAPIAN | FLAG_GMIME
+	  FLAG_XAPIAN | FLAG_GMIME | FLAG_INDEX
 	}, 
 
 	{ "size", "z", "Z",  
@@ -218,7 +218,7 @@ mu_msg_field_is_numeric (const MuMsgField *field)
 	
 	type = mu_msg_field_type (field);
 	
-	return type == MU_MSG_FIELD_TYPE_BYTESIZE ||
+	return  type == MU_MSG_FIELD_TYPE_BYTESIZE ||
 		type == MU_MSG_FIELD_TYPE_TIME_T ||
 		type == MU_MSG_FIELD_TYPE_INT;
 }

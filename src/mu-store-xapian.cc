@@ -76,7 +76,6 @@ mu_store_xapian_new  (const char* path)
 }
 
 
-
 void
 mu_store_xapian_destroy (MuStoreXapian *store)
 {
