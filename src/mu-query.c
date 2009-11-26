@@ -29,9 +29,8 @@
 #include "mu-query-xapian.h"
 
 struct _FindOptions {
-	gboolean		_links;
 	gboolean		_print;
-	gboolean		_query;
+	gboolean		_xquery;
 	char*                   _fields;
 
 	char*			_sortfield_str;
@@ -45,11 +44,9 @@ typedef struct _FindOptions FindOptions;
 
 static FindOptions FIND_OPTIONS;
 static GOptionEntry OPTION_ENTRIES[] = {
-	{"links", 'l', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._links,
-	 "generate symlinks to matching messages", NULL},
 	{"print", 'p', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._print,
 	 "print matching messages to screen (default)", NULL},
-	{"query", 'q', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._query,
+	{"xquery", 'x', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._xquery,
 	 "print a string representation of the Xapian query", NULL},
 	{"fields", 'f', 0, G_OPTION_ARG_STRING, &FIND_OPTIONS._fields,
 	 "fields to display in output", NULL},
@@ -118,7 +115,7 @@ handle_options (void)
 	/* } */
 	
 	/* if nothing specified, or fields are specified use print */
-	if ((!FIND_OPTIONS._links && !FIND_OPTIONS._query)||FIND_OPTIONS._fields)
+	if ((!FIND_OPTIONS._xquery)||FIND_OPTIONS._fields)
 		FIND_OPTIONS._print = TRUE;
 
 	 /* if no fields are specified, use 'd f s' */
@@ -224,7 +221,7 @@ do_output (MuQueryXapian *xapian, GSList *args, FindOptions* opts)
 	gboolean retval = TRUE;
 	
 	query = mu_query_xapian_combine (args, FALSE); 
-	if (opts->_query)
+	if (opts->_xquery)
 		retval = print_query (xapian, query);
 	
 	if (retval && opts->_print) 
