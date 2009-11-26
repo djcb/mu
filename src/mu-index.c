@@ -32,6 +32,41 @@
 #include "mu-index.h"
 #include "mu-store-xapian.h"
 
+struct _IndexOptions {
+        gboolean       quiet;
+        gboolean       cleanup;
+	gboolean       reindex;
+        const char     *maildir;
+};
+typedef struct _IndexOptions IndexOptions;
+
+static IndexOptions INDEX_OPTIONS;
+static GOptionEntry INDEX_ENTRIES[] = {
+        {"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &INDEX_OPTIONS.maildir,
+         "top of the maildir", NULL},
+
+	/* FIXME: implement this */
+	{"reindex", 'r', 0, G_OPTION_ARG_NONE, &INDEX_OPTIONS.reindex,
+         "re-index already indexed messages ", NULL},
+        {NULL}
+};
+
+
+GOptionGroup*
+mu_index_option_group (void)
+{
+	GOptionGroup *og;
+	
+	og = g_option_group_new ("index",
+				 "options for indexing your maildirs",
+				 "", NULL, NULL);
+	
+	g_option_group_add_entries (og, INDEX_ENTRIES);
+	
+	return og;
+}
+
+
 struct _MuIndex {
 	MuStoreXapian  *_xapian;
 };
@@ -282,3 +317,5 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 	/* FIXME: implement this */
 	return MU_OK;
 }
+
+

@@ -142,4 +142,12 @@ MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *result,
 			   MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 			   void *user_data);
 
+
+/** 
+ * get the option group for 'index' 
+ * 
+ * @return an option group
+ */
+GOptionGroup*   mu_index_option_group (void);
+
 #endif /*__MU_INDEX_H__*/
