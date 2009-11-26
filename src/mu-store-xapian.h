@@ -34,7 +34,7 @@ MuStoreXapian*    mu_store_xapian_new     (const char* path);
 
 void              mu_store_xapian_destroy (MuStoreXapian *store);
 MuResult	  mu_store_xapian_store   (MuStoreXapian *store,
-					     MuMsgGMime *msg);
+					   MuMsgGMime *msg);
 MuResult          mu_store_xapian_cleanup (MuStoreXapian *store, 
 					     const char* msgpath);
 
