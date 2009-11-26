@@ -51,7 +51,7 @@ mu_store_xapian_new  (const char* path)
 			(path,Xapian::DB_CREATE_OR_OPEN);
 
 		/* keep count of processed docs */
-		store->_transaction_size = 10000; /* default */
+		store->_transaction_size = 1000; /* default */
 		store->_in_transaction = false;
 		store->_processed = 0;
 
@@ -75,19 +75,6 @@ mu_store_xapian_new  (const char* path)
 	}
 }
 
-
-void
-mu_store_xapian_tune (MuStoreXapian *store,
-			unsigned int transaction_size)
-{
-	g_return_if_fail (store);
-
-	if (transaction_size) {
-		g_message ("tune: setting xapian transaction size to %u",
-			   transaction_size);
-		store->_transaction_size = transaction_size;
-	}
-}
 
 
 void

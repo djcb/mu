@@ -31,8 +31,7 @@ struct _MuStoreXapian;
 typedef struct _MuStoreXapian MuStoreXapian;
 
 MuStoreXapian*    mu_store_xapian_new     (const char* path);
-void              mu_store_xapian_tune    (MuStoreXapian *store,
-					     unsigned int transaction_size);
+
 void              mu_store_xapian_destroy (MuStoreXapian *store);
 MuResult	  mu_store_xapian_store   (MuStoreXapian *store,
 					     MuMsgGMime *msg);
