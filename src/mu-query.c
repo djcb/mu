@@ -75,6 +75,7 @@ display_field (MuMsgXapian *row, const MuMsgField* field)
 }
 
 
+/* returns NULL if there is an error */
 const MuMsgField*
 sort_field_from_string (const char* fieldstr)
 {
@@ -93,6 +94,7 @@ sort_field_from_string (const char* fieldstr)
 }
 
 
+/* FIXME */
 static gboolean
 handle_options (MuConfigOptions *opts)
 {
@@ -109,10 +111,10 @@ handle_options (MuConfigOptions *opts)
 static gboolean
 print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 {
-	MuMsgXapian *row;
-	const MuMsgField *sortfield;
+	MuMsgXapian		*row;
+	const MuMsgField	*sortfield;
 
-	sortfield = NULL;
+	sortfield	  = NULL;
 	if (opts->sortfield_str) {
 		sortfield = sort_field_from_string (opts->sortfield_str);
 		if (!sortfield) /* error occured? */
@@ -126,10 +128,11 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 		g_printerr ("error: running query failed\n");
 		return FALSE;
 	}
-	
+
+	/* iterate over the found rows */
 	while (!mu_msg_xapian_is_done (row)) {
-	 	const char* fields = opts->fields;
-		int printlen = 0;
+	 	const char*	fields		= opts->fields;
+		int		printlen	= 0;
 		while (*fields) {
 			const MuMsgField* field = 
 				mu_msg_field_from_shortcut (*fields);
