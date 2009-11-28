@@ -4,6 +4,8 @@ bin_PROGRAMS=			\
 	mu
 
 mu_SOURCES=			\
+	mu-config.h		\
+	mu-config.c		\
 	mu-index.c		\
 	mu-index.h		\
 	mu-msg-fields.c		\
