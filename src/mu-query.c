@@ -27,109 +27,7 @@
 #include "mu-msg-str.h"
 #include "mu-msg-flags.h"
 #include "mu-query-xapian.h"
-
-struct _FindOptions {
-	gboolean		_print;
-	gboolean		_xquery;
-	char*                   _fields;
-
-	char*			_sortfield_str;
-	const MuMsgField*	_sortfield;
-
-	gboolean		_ascending_flag, _descending_flag;
-	gboolean		_sortdir_ascending;
-
-};
-typedef struct _FindOptions FindOptions;
-
-static FindOptions FIND_OPTIONS;
-static GOptionEntry OPTION_ENTRIES[] = {
-	{"print", 'p', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._print,
-	 "print matching messages to screen (default)", NULL},
-	{"xquery", 'x', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._xquery,
-	 "print a string representation of the Xapian query", NULL},
-	{"fields", 'f', 0, G_OPTION_ARG_STRING, &FIND_OPTIONS._fields,
-	 "fields to display in output", NULL},
-	{"sortfield", 's', 0, G_OPTION_ARG_STRING, &FIND_OPTIONS._sortfield_str,
-	 "field to sort on", NULL},
-	{"ascending", 'a', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._ascending_flag,
-	 "sort ascending", NULL},
-	{"descending", 'c', 0, G_OPTION_ARG_NONE, &FIND_OPTIONS._descending_flag,
-	 "sort ascending", NULL},
-	{NULL}
-};
-
-GOptionGroup*
-mu_query_option_group (void)
-{
-	GOptionGroup *og;
-
-	og = g_option_group_new ("query",
-				 "options for quering the e-mail database",
-				 "", NULL, NULL);
-	g_option_group_add_entries (og, OPTION_ENTRIES);
-	
-	return og;
-}
-
-
-static gboolean
-handle_options_sort_field_dir (void)
-{
-	const MuMsgField *field;
-	
-	if (FIND_OPTIONS._sortfield_str) {
-		field = mu_msg_field_from_name (FIND_OPTIONS._sortfield_str);
-		if (!field && strlen(FIND_OPTIONS._sortfield_str) == 1)
-			field = mu_msg_field_from_shortcut
-				(FIND_OPTIONS._sortfield_str[0]);
-		if (!field) {
-			g_warning ("not a valid sort field: '%s'",
-				   FIND_OPTIONS._sortfield_str);
-			return FALSE;
-		}
-		FIND_OPTIONS._sortfield = field;
-	}
-	
-	if (FIND_OPTIONS._ascending_flag && FIND_OPTIONS._descending_flag) {
-		g_warning ("ignoring option '--descending'");
-		FIND_OPTIONS._sortdir_ascending = TRUE;
-	} else if (!FIND_OPTIONS._descending_flag)
-		FIND_OPTIONS._sortdir_ascending = !FIND_OPTIONS._descending_flag;
-	
-	return TRUE;
-}
-
-
-static gboolean
-handle_options (void)
-{
-	//GError *err = NULL;
-	/* if (!mu_conf_handle_options (mu_app_conf(),OPTION_ENTRIES, argcp, argvp,  */
-	/* 			     &err)) { */
-	/* 	g_printerr ("option parsing failed: %s\n",  */
-	/* 		    (err && err->message) ? err->message : "?" ); */
-	/* 	if (err) */
-	/* 		g_error_free (err); */
-	/* 	return FALSE; */
-	/* } */
-	
-	/* if nothing specified, or fields are specified use print */
-	if ((!FIND_OPTIONS._xquery)||FIND_OPTIONS._fields)
-		FIND_OPTIONS._print = TRUE;
-
-	 /* if no fields are specified, use 'd f s' */
-	if (FIND_OPTIONS._print && !FIND_OPTIONS._fields) {
-		FIND_OPTIONS._fields = "d f s"; /* default: date-from-subject.. */
-		if (!FIND_OPTIONS._ascending_flag) /* ... and sort descending */
-			FIND_OPTIONS._sortdir_ascending = FALSE;
-	}
-	
-	if (!handle_options_sort_field_dir ())
-		return FALSE;
-	
-	return TRUE;
-}
+#include "mu-query.h"
 
 static gboolean
 print_query (MuQueryXapian *xapian, const gchar *query)
@@ -178,19 +76,68 @@ display_field (MuMsgXapian *row, const MuMsgField* field)
 
 
 static gboolean
-print_rows (MuQueryXapian *xapian, const gchar *query, FindOptions *opts)
+handle_options_sort_field_dir (MuConfigOptions *opts)
+{
+	const MuMsgField *field;
+	
+	if (opts->sortfield_str) {
+		field = mu_msg_field_from_name (opts->sortfield_str);
+		if (!field && strlen(opts->sortfield_str) == 1)
+			field = mu_msg_field_from_shortcut
+				(opts->sortfield_str[0]);
+		if (!field) {
+			g_printerr ("not a valid sort field: '%s'\n",
+				    opts->sortfield_str);
+			return FALSE;
+		}
+		opts->sortfield = field;
+	}
+	
+	if (opts->ascending_flag && opts->descending_flag) {
+		g_printerr ("ignoring option '--descending'\n");
+		opts->sortdir_ascending = TRUE;
+	} else if (!opts->descending_flag)
+		opts->sortdir_ascending = !opts->descending_flag;
+	
+	return TRUE;
+}
+
+static gboolean
+handle_options (MuConfigOptions *opts)
+{
+	/* if nothing specified, or fields are specified use print */
+	if ((!opts->xquery)||opts->fields)
+		opts->print = TRUE;
+
+	 /* if no fields are specified, use 'd f s' */
+	if (opts->print && !opts->fields) {
+		opts->fields = "d f s"; /* default: date-from-subject.. */
+		if (!opts->ascending_flag) /* ... and sort descending */
+			opts->sortdir_ascending = FALSE;
+	}
+	
+	if (!handle_options_sort_field_dir (opts))
+		return FALSE;
+	
+	return TRUE;
+}
+
+
+static gboolean
+print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 {
 	MuMsgXapian *row;
 	
 	row = mu_query_xapian_run (xapian, query,
-				   opts->_sortfield, opts->_sortdir_ascending);
+				   opts->sortfield,
+				   opts->sortdir_ascending);
 	if (!row) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
 	}
 	
 	while (!mu_msg_xapian_is_done (row)) {
-		const char* fields = opts->_fields;
+		const char* fields = opts->fields;
 		int printlen = 0;
 		while (*fields) {
 			const MuMsgField* field = 
@@ -198,8 +145,8 @@ print_rows (MuQueryXapian *xapian, const gchar *query, FindOptions *opts)
 			if (!field) 
 				printlen += printf ("%c", *fields);
 			else
-				printlen += printf ("%s", display_field(row, 
-									field)); 
+				printlen += printf ("%s",
+						    display_field(row, field)); 
 			
 			++fields;
 		}	
@@ -215,16 +162,16 @@ print_rows (MuQueryXapian *xapian, const gchar *query, FindOptions *opts)
 
 
 static gboolean
-do_output (MuQueryXapian *xapian, GSList *args, FindOptions* opts)
+do_output (MuQueryXapian *xapian, GSList *args, MuConfigOptions* opts)
 {
 	gchar *query;
 	gboolean retval = TRUE;
 	
 	query = mu_query_xapian_combine (args, FALSE); 
-	if (opts->_xquery)
+	if (opts->xquery)
 		retval = print_query (xapian, query);
 	
-	if (retval && opts->_print) 
+	if (retval && opts->print) 
 		retval = print_rows (xapian, query, opts);
 	
 	g_free (query);
@@ -234,7 +181,7 @@ do_output (MuQueryXapian *xapian, GSList *args, FindOptions* opts)
 
 
 MuResult
-mu_query_run (GSList *args)
+mu_query_run (MuConfigOptions *opts, GSList *args)
 {
 	GError *err = 0;
 	MuQueryXapian *xapian;
@@ -242,7 +189,7 @@ mu_query_run (GSList *args)
 	
 	rv = MU_OK;
 
-	handle_options ();
+	handle_options (opts);
 	xapian = mu_query_xapian_new ("/home/djcb/.mu", &err);
 
 	if (!xapian) {
@@ -253,7 +200,7 @@ mu_query_run (GSList *args)
 		return MU_ERROR;
 	}
 	
-	rv = do_output (xapian, args, &FIND_OPTIONS) ? 0 : 1;
+	rv = do_output (xapian, args, opts) ? 0 : 1;
 	mu_query_xapian_destroy (xapian);
 	
 	return rv;

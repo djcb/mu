@@ -24,9 +24,9 @@
 #include "mu-index.h"
 #include "mu-query.h"
 #include "mu-util.h"
+#include "mu-config.h"
 
 #include "mu-msg-gmime.h"
-
 
 enum _MuCmd {
 	MU_CMD_INDEX,
@@ -35,6 +35,7 @@ enum _MuCmd {
 	MU_CMD_UNKNOWN
 };
 typedef enum _MuCmd MuCmd;
+
 
 
 MuCmd 
@@ -99,37 +100,27 @@ show_usage (gboolean noerror)
 	return noerror ? 0 : 1;
 }
 
-	
-
-
-
-static gboolean opt_debug;
-static gboolean opt_quiet;
-
-static GOptionEntry entries[] = {
-	{ "debug", 'd', 0, G_OPTION_ARG_NONE, &opt_debug,
-	  "print debug output to standard-error", NULL },
-	{ "quiet", 'q', 0, G_OPTION_ARG_NONE, &opt_quiet,
-	  "don't give any progress information", NULL },
-	{ NULL }
-};
-
-
 int
 main (int argc, char *argv[])
 {
 	GError *error = NULL;
 	GOptionContext *context;
+	MuConfigOptions config;
 	MuResult rv;
 	MuCmd cmd;
 	
 	g_type_init ();
 	
 	context = g_option_context_new ("- search your e-mail");
-	g_option_context_add_main_entries (context, entries, "mu");
+	
+	g_option_context_set_main_group (context,
+					 mu_config_options_group_mu(&config));
+	g_option_context_add_group (context,
+				    mu_config_options_group_index(&config));
+	g_option_context_add_group (context,
+				    mu_config_options_group_query(&config));
 
-	g_option_context_add_group (context, mu_query_option_group());
-	g_option_context_add_group (context, mu_index_option_group());
+	mu_config_set_defaults (&config);
 	
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
 		g_printerr ("error in options: %s\n",
@@ -150,16 +141,19 @@ main (int argc, char *argv[])
 
 	mu_msg_gmime_init ();
 	rv = MU_OK;
-
-
+	
 	if (cmd == MU_CMD_INDEX) {
 		MuIndex *midx;
 		MuIndexStats stats;
 		
 		midx = mu_index_new ("/home/djcb/.mu");
 		rv = mu_index_run (midx,
-				   "/home/djcb/Maildir",
-			      FALSE, &stats, msg_cb, NULL, NULL);
+				   config.maildir,
+				   config.reindex,
+				   &stats,
+				   msg_cb,
+				   NULL,
+				   NULL);
 		
 		mu_index_destroy (midx);
 		
@@ -171,7 +165,7 @@ main (int argc, char *argv[])
 			rv = 1;
 		} else {
 			args = mu_util_strlist_from_args (argc-2, argv+2); 
-			rv = mu_query_run (args);
+			rv = mu_query_run (&config, args);
 			mu_util_strlist_free (args);
 		}
 	}
