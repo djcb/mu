@@ -32,11 +32,10 @@
 #include "mu-path.h"
 #include "mu-msg-flags.h"
 
+#define MU_MAX_FILE_SIZE (15*1000*1000)
+
 static MuResult process_dir (const char* path, MuPathWalkMsgCallback msg_cb, 
 			     MuPathWalkDirCallback dir_cb, void *data);
-
-
-
 
 static MuResult 
 process_file (const char* fullpath, MuPathWalkMsgCallback cb, void *data)
@@ -47,7 +46,6 @@ process_file (const char* fullpath, MuPathWalkMsgCallback cb, void *data)
 	if (!cb)
 		return MU_OK;
 
-	/* FIXME: may remove this access, and only use 'stat'? may be faster */
 	if (G_UNLIKELY(access(fullpath, R_OK) != 0)) {
 		g_warning ("cannot access %s: %s", fullpath, strerror(errno));
 		return MU_ERROR;
@@ -58,6 +56,12 @@ process_file (const char* fullpath, MuPathWalkMsgCallback cb, void *data)
 		return MU_ERROR;
 	}
 
+	if (G_UNLIKELY(statbuf.st_size > MU_MAX_FILE_SIZE)) {
+		g_warning ("ignoring because bigger than %d bytes: %s",
+			   MU_MAX_FILE_SIZE, fullpath);
+		return MU_ERROR;
+	}
+	
 	result = (cb)(fullpath,statbuf.st_mtime,data);
 	
 	if (G_LIKELY(result == MU_OK || result == MU_STOP))
@@ -71,9 +75,9 @@ process_file (const char* fullpath, MuPathWalkMsgCallback cb, void *data)
 
 
 /* determine if path is a maildir leaf-dir; ie. if it's 'cur' or 'new'
- * (we're ignoring 'tmp' for obvious reasons)
+ * (we're skipping 'tmp' for obvious reasons)
  */
-static gboolean
+G_GNUC_CONST static gboolean 
 is_maildir_new_or_cur (const char *path)
 {
 	size_t len;
