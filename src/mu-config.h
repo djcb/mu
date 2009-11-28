@@ -38,8 +38,8 @@ struct _MuConfigOptions {
 	gboolean             reindex;   /* re-index existing mails */
 	
 	/* options for querying */
-	gboolean             print;    /* do output */
-	gboolean             xquery;   /* give the Xapian query (for debuging)*/
+	gboolean             xquery;   /* give the Xapian query instead of
+					  search results */
 	char                 *fields;   /* fields to show in output */
 	
 	char*                sortfield_str; /* fields to sort by */

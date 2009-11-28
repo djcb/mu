@@ -76,7 +76,7 @@ display_field (MuMsgXapian *row, const MuMsgField* field)
 
 
 static gboolean
-handle_options_sort_field_dir (MuConfigOptions *opts)
+handle_options (MuConfigOptions *opts)
 {
 	const MuMsgField *field;
 	
@@ -102,26 +102,6 @@ handle_options_sort_field_dir (MuConfigOptions *opts)
 	return TRUE;
 }
 
-static gboolean
-handle_options (MuConfigOptions *opts)
-{
-	/* if nothing specified, or fields are specified use print */
-	if ((!opts->xquery)||opts->fields)
-		opts->print = TRUE;
-
-	 /* if no fields are specified, use 'd f s' */
-	if (opts->print && !opts->fields) {
-		opts->fields = "d f s"; /* default: date-from-subject.. */
-		if (!opts->ascending_flag) /* ... and sort descending */
-			opts->sortdir_ascending = FALSE;
-	}
-	
-	if (!handle_options_sort_field_dir (opts))
-		return FALSE;
-	
-	return TRUE;
-}
-
 
 static gboolean
 print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
@@ -137,7 +117,7 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	}
 	
 	while (!mu_msg_xapian_is_done (row)) {
-		const char* fields = opts->fields;
+	 	const char* fields = opts->fields;
 		int printlen = 0;
 		while (*fields) {
 			const MuMsgField* field = 
@@ -168,13 +148,16 @@ do_output (MuQueryXapian *xapian, GSList *args, MuConfigOptions* opts)
 	gboolean retval = TRUE;
 	
 	query = mu_query_xapian_combine (args, FALSE); 
-	if (opts->xquery)
+
+	/* if xquery is set, we print the xapian query instead of the
+	 * output; this is for debugging purposes */
+	if (opts->xquery) 
 		retval = print_query (xapian, query);
-	
-	if (retval && opts->print) 
+	else
 		retval = print_rows (xapian, query, opts);
 	
 	g_free (query);
+
 	return retval;
 }
 

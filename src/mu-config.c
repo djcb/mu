@@ -71,8 +71,6 @@ mu_config_options_group_query (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"print", 'p', 0, G_OPTION_ARG_NONE, &opts->print,
-		 "print matching messages to screen (default)", NULL},
 		{"xquery", 'x', 0, G_OPTION_ARG_NONE, &opts->xquery,
 		 "print a string representation of the Xapian query", NULL},
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
@@ -114,7 +112,6 @@ mu_config_set_defaults (MuConfigOptions *opts)
 	opts->reindex = FALSE;
 
 	/* querying */
-	opts->print         = TRUE;
 	opts->xquery        = FALSE;
 	opts->fields        = "d f s";
 }
