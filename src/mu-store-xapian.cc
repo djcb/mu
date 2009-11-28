@@ -124,7 +124,9 @@ static void
 add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 			 const MuMsgField* field)
 {
-	const char* str = mu_msg_gmime_get_field_string (msg, field);
+	const char* str;
+
+	str = mu_msg_gmime_get_field_string (msg, field);
 	if (!str)
 		return;
 	
@@ -138,7 +140,8 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 	} else
 		doc.add_term(prefix + value);
 	
-	doc.add_value ((Xapian::valueno)mu_msg_field_id(field), value);
+	doc.add_value ((Xapian::valueno)mu_msg_field_id(field),
+		       value);
 }
 
 static void
@@ -149,14 +152,16 @@ add_terms_values_body (Xapian::Document& doc, MuMsgGMime *msg,
 		return; /* don't store encrypted bodies */
 
 	const char *str = mu_msg_gmime_get_body_text(msg);
-	if (!str) /* FIXME: html->html fallback */
-		str = mu_msg_gmime_get_body_html(msg); 
-	if (!str)
+	// if (!str) /* FIXME: html->html fallback */
+	// 	str = mu_msg_gmime_get_body_html(msg);
+	
+	if (!str) 
 		return; /* no body... */
-		
+
 	Xapian::TermGenerator termgen;
-	termgen.index_text(str, 1, mu_msg_field_xapian_prefix(field));
 	termgen.set_document(doc);
+	termgen.index_text(str, 1, mu_msg_field_xapian_prefix(field));
+	
 }
 
 struct _MsgDoc {
