@@ -1,7 +1,18 @@
 * to-do list for mu-ng first release
 
 ** release 0.1 [0%]
+
+*** Index
+   - [ ] implement re-index
+   - [X] mu-index config options
+
+*** Query
+   - [ ] check which option actually work, remove rest
+   - [ ] fix AND/OR escaping issue
+
+*** General
    - [ ] man page / help
    - [ ] config system
    - [ ] logging system
-   - [ ] mu-index config options
+ 
+
