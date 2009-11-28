@@ -81,16 +81,16 @@ static const MuMsgField FIELD_DATA[] = {
 	  FLAG_XAPIAN | FLAG_GMIME 
 	},
 	
-	{ "prio", "P", "I",  
+	{ "prio", "P", "I",
 	  MU_MSG_FIELD_ID_PRIORITY,
 	  MU_MSG_FIELD_TYPE_INT,
-	  FLAG_XAPIAN | FLAG_GMIME | FLAG_INDEX
-	}, 
+	  FLAG_GMIME
+	},
 
-	{ "size", "z", "Z",  
-	  MU_MSG_FIELD_ID_SIZE, 
+	{ "size", "z", "Z",
+	  MU_MSG_FIELD_ID_SIZE,
 	  MU_MSG_FIELD_TYPE_BYTESIZE,
-	  FLAG_XAPIAN | FLAG_GMIME
+	  FLAG_GMIME
 	},
 	
 	 { "subject", "s", "S",
