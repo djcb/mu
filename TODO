@@ -1,18 +1,25 @@
+#+STARTUP:showall
 * to-do list for mu-ng first release
 
-** release 0.1 [0%]
+** release 0.1 [36%]
 
-*** Index
-   - [ ] implement re-index
+   - [X] implement re-index
    - [X] mu-index config options
-
-*** Query
    - [ ] check which option actually work, remove rest
    - [ ] fix AND/OR escaping issue
-
-*** General
    - [ ] man page / help
-   - [ ] config system
+   - [X] config system (centralize options)
+   - [ ] config system (config file)
    - [ ] logging system
- 
+   - [ ] better output for indexing (statistics)
+   - [ ] re-add symlink support (?)
+   - [X] size check in indexing (~15Mb)
 
+** release 0.2 [%]
+
+   - [ ] detect mail threads
+   - [ ] add move-mail support
+
+ 
+	 
+	 
