@@ -38,12 +38,11 @@ struct _MuConfigOptions {
 	gboolean             reindex;   /* re-index existing mails */
 	
 	/* options for querying */
-	gboolean             xquery;   /* give the Xapian query instead of
-					  search results */
-	char                 *fields;   /* fields to show in output */
+	gboolean             xquery;       /* give the Xapian query instead of
+					      search results */
+	const char           *fields;      /* fields to show in output */
 	
-	char*                sortfield_str; /* fields to sort by */
-	const MuMsgField*    sortfield;
+	const char           *sortfield_str; /* field to sort by (string) */
 
 	/* FIXME: clean up this mess */
 	gboolean             sortdir_descending ; /* sort descending? */
