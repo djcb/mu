@@ -31,6 +31,15 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 		  "print debug output to standard-error", NULL },
 		{ "quiet", 'q', 0, G_OPTION_ARG_NONE, &opts->quiet,
 		  "don't give any progress information", NULL },
+		{"version", 'v', 0, G_OPTION_ARG_NONE, &opts->version,
+		 "display version and copyright information", NULL},
+		{"muhome", 'h', 0, G_OPTION_ARG_FILENAME, &opts->muhome,
+		 "mu directory", NULL},
+		{"log-stderr", 's', 0, G_OPTION_ARG_NONE, &opts->log_stderr,
+		 "log to standard error", NULL},
+		{"log-append", 'a', 0, G_OPTION_ARG_NONE, &opts->log_append,
+		 "append to the current logfile (instead of overwriting it)", 
+		 NULL},
 		{ NULL }
 	};
 	

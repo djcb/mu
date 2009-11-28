@@ -29,25 +29,29 @@
 struct _MuConfigOptions {
 	
 	/* general options */
-	gboolean	     quiet;     /* don't give any output */
-	gboolean             debug;     /* spew out debug info */
+	gboolean	 quiet; /* don't give any output */
+	gboolean	 debug; /* spew out debug info */
+	const char	*muhome;/* the House of Mu */
+	gboolean	version; /* request mu version */
+	gboolean	log_stderr; /*log to stderr (instead of logfile)*/
+	gboolean	log_append; /* append to log (instead of overwriting)*/
 	
 	/* options for indexing */
-	const char           *maildir;  /* where the mails are */
-	gboolean             cleanup;   /* cleanup deleted mails form db */
-	gboolean             reindex;   /* re-index existing mails */
+	const char      *maildir;	/* where the mails are */
+	gboolean         cleanup;	/* cleanup deleted mails form db */
+	gboolean         reindex;	/* re-index existing mails */
 	
 	/* options for querying */
-	gboolean             xquery;       /* give the Xapian query instead of
+	gboolean         xquery;       /* give the Xapian query instead of
 					      search results */
-	const char           *fields;      /* fields to show in output */
+	const char      *fields;	/* fields to show in output */
 	
-	const char           *sortfield_str; /* field to sort by (string) */
+	const char      *sortfield_str;	/* field to sort by (string) */
 
 	/* FIXME: clean up this mess */
-	gboolean             sortdir_descending ; /* sort descending? */
-	gboolean             sortdir_ascending;
-	gboolean             ascending_flag, descending_flag;
+	gboolean        sortdir_descending ;	/* sort descending? */
+	gboolean        sortdir_ascending;
+	gboolean        ascending_flag, descending_flag;
 };
 typedef struct _MuConfigOptions MuConfigOptions;
 

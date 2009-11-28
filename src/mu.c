@@ -17,6 +17,8 @@
 **
 */
 
+#include <config.h>
+
 #include <glib.h>
 #include <glib-object.h>
 #include <string.h>
@@ -85,6 +87,23 @@ show_help (const char* cmd)
 }
 
 static int
+show_version (void)
+{
+	const char* msg =
+		"mu (mail indexer / searcher version) " VERSION "\n\n"
+		"copyright (C) 2009 Dirk-Jan C. Binnema\n"
+		"license GPLv3+: GNU GPL version 3 or later "
+		"<http://gnu.org/licenses/gpl.html>.\n\n"
+		"This is free software: you are free to change "
+		"and redistribute it.\n"
+		"There is NO WARRANTY, to the extent permitted by law.";
+
+	g_print ("%s\n", msg);
+
+	return 0;
+}
+
+static int
 show_usage (gboolean noerror)
 {
 	const char* usage=
@@ -99,7 +118,6 @@ show_usage (gboolean noerror)
 
 	return noerror ? 0 : 1;
 }
-
 int
 main (int argc, char *argv[])
 {
@@ -128,10 +146,15 @@ main (int argc, char *argv[])
 		g_error_free (error);
 		return 1;
 	}
+
+	if (config.version)
+		return show_version ();
 	
 	if (argc < 2)
 		return show_usage (FALSE);
+	
 
+	
 	cmd = parse_cmd (argv[1]);
 	if (cmd == MU_CMD_UNKNOWN)
 		return show_usage (FALSE);
