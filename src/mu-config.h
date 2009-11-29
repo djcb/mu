@@ -29,12 +29,13 @@
 struct _MuConfigOptions {
 	
 	/* general options */
-	gboolean	 quiet; /* don't give any output */
-	gboolean	 debug; /* spew out debug info */
+	gboolean	quiet; /* don't give any output */
+	gboolean        debug; /* spew out debug info */
 	const char	*muhome;/* the House of Mu */
 	gboolean	version; /* request mu version */
 	gboolean	log_stderr; /*log to stderr (instead of logfile)*/
 	gboolean	log_append; /* append to log (instead of overwriting)*/
+	
 	
 	/* options for indexing */
 	const char      *maildir;	/* where the mails are */
@@ -57,12 +58,22 @@ typedef struct _MuConfigOptions MuConfigOptions;
 
 
 /** 
- * set default values for the configuration options
+ * set default values for the configuration options; when you call
+ * mu_config_init, you should also call mu_config_uninit when the data
+ * is no longer needed.
+ * 
+ * @param opts options 
+ */
+void mu_config_init (MuConfigOptions *opts);
+
+
+/** 
+ * free the MuOptionsCOnfig structure; the the muhome and maildir
+ * members are heap-allocated, so must be freed.
  * 
  * @param opts 
  */
-void mu_config_set_defaults (MuConfigOptions *opts);
-
+void  mu_config_uninit (MuConfigOptions *opts);
 
 /**
  * get the general options option group
@@ -91,5 +102,7 @@ GOptionGroup* mu_config_options_group_index (MuConfigOptions *opts);
  */
 GOptionGroup* mu_config_options_group_query (MuConfigOptions *opts);
 
+
+char* mu_config_expanded_mu_home (MuConfigOptions *opts);
 
 #endif /*__MU_CONFIG_H__*/

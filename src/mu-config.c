@@ -19,6 +19,8 @@
 
 #include <glib.h>
 #include <string.h> /* memset */
+
+#include "mu-util.h"
 #include "mu-config.h"
 
 
@@ -104,7 +106,7 @@ mu_config_options_group_query (MuConfigOptions *opts)
 
 
 void
-mu_config_set_defaults (MuConfigOptions *opts)
+mu_config_init (MuConfigOptions *opts)
 {
 	g_return_if_fail (opts);
 
@@ -112,15 +114,28 @@ mu_config_set_defaults (MuConfigOptions *opts)
 	memset (opts, 0, sizeof(MuConfigOptions));
 
 	/* general */
-	opts->quiet = FALSE;
-	opts->debug = FALSE;
+	opts->quiet  = FALSE;
+	opts->debug  = FALSE;
+	opts->muhome = mu_util_dir_expand ("~/.mu");
 	
 	/* indexing */
-	opts->maildir = "/home/djcb/Maildir";
+	opts->maildir = mu_util_dir_expand ("~/Maildir");
 	opts->cleanup = FALSE;
 	opts->reindex = FALSE;
 
 	/* querying */
 	opts->xquery        = FALSE;
 	opts->fields        = "d f s";
+}
+
+
+void
+mu_config_uninit (MuConfigOptions *opts)
+{
+	g_return_if_fail (opts);
+
+	/* yes, this is fine -- they are only const
+	 * for the 'outside world' */
+	g_free ((gchar*)opts->muhome);
+	g_free ((gchar*)opts->maildir);
 }
