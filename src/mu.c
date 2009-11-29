@@ -22,11 +22,13 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <string.h>
+#include <stdio.h> /* for fileno() */
 
 #include "mu-index.h"
 #include "mu-query.h"
 #include "mu-util.h"
 #include "mu-config.h"
+#include "mu-log.h"
 
 #include "mu-msg-gmime.h"
 
@@ -118,6 +120,35 @@ show_usage (gboolean noerror)
 
 	return noerror ? 0 : 1;
 }
+
+static gboolean
+init_log (MuConfigOptions *opts)
+{
+	gboolean rv;
+
+	/* TODO: check incompatible options (eg., silent + log_append) */
+	
+	if (opts->quiet)
+		rv = mu_log_init_silence ();	
+	else if (opts->log_stderr) 
+		rv = mu_log_init_with_fd (fileno(stderr), FALSE,
+					  opts->debug);
+	else {
+		char *logfile;
+		logfile = g_strdup_printf ("%s%c%s",
+					   opts->muhome,
+					   G_DIR_SEPARATOR,
+					   "mu.log");
+		rv = mu_log_init_with_file (logfile,
+					    opts->log_append,
+					    opts->debug);
+		g_free (logfile);
+	}
+
+	return rv;
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -138,22 +169,19 @@ main (int argc, char *argv[])
 	g_option_context_add_group (context,
 				    mu_config_options_group_query(&config));
 
-	mu_config_set_defaults (&config);
-	
+	mu_config_init (&config);	
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
 		g_printerr ("error in options: %s\n",
 			    error->message);
 		g_error_free (error);
 		return 1;
 	}
-
+	
 	if (config.version)
 		return show_version ();
 	
 	if (argc < 2)
 		return show_usage (FALSE);
-	
-
 	
 	cmd = parse_cmd (argv[1]);
 	if (cmd == MU_CMD_UNKNOWN)
@@ -162,6 +190,9 @@ main (int argc, char *argv[])
 	if (cmd == MU_CMD_HELP)
 		return show_help (argc > 2 ? argv[2] : NULL);
 
+	if (!init_log (&config))
+		return 1;
+	
 	mu_msg_gmime_init ();
 	rv = MU_OK;
 	
@@ -174,7 +205,7 @@ main (int argc, char *argv[])
 				   config.maildir,
 				   config.reindex,
 				   &stats,
-				   msg_cb,
+				   config.quiet ? NULL : msg_cb,
 				   NULL,
 				   NULL);
 		
@@ -194,5 +225,7 @@ main (int argc, char *argv[])
 	}
 	
 	mu_msg_gmime_uninit ();
+	mu_log_uninit();
+
 	return rv == MU_OK ? 0 : 1;
 }
