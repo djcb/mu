@@ -65,7 +65,8 @@ mu_log_init_silence (void)
 	
         MU_LOG = g_new(MuLog, 1);
         MU_LOG->_fd     = -1;
-
+	MU_LOG->_own    = FALSE; /* nobody owns silence */
+	
 	MU_LOG->_log_id =
 		g_log_set_handler (NULL,
 				   G_LOG_LEVEL_DEBUG|
