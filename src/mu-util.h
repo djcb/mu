@@ -25,16 +25,14 @@
 G_BEGIN_DECLS
 
 /** 
- * get the expanded path; currently only a starting '~/' will be
- * replaced by the users home directory, ie. for a user 'bob' this could mean
- * something like "~/my/path/to/something" --> "/home/bob/my/path/to/something"
+ * get the expanded path; ie. perform shell expansion on the path
  *
  * @param path path to expand
  * 
  * @return the expanded path as a newly allocated string, or NULL in
  * case of error
  */
-char*       mu_util_homedir_expand (const char* path);
+char*       mu_util_dir_expand (const char* path);
 
 
 /** 

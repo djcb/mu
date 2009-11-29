@@ -17,28 +17,34 @@
 **
 */
 
+#define _XOPEN_SOURCE
+#include <wordexp.h> /* for shell-style globbing */
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "mu-util.h"
 
 char*
-mu_util_homedir_expand (const char *path)
+mu_util_dir_expand (const char *path)
 {
-	const char* home;
+	wordexp_t wexp;
+	char *dir;
 	
-	if (!path)
-		return NULL;
-	
-	if (path[0] != '~' || path[1] != G_DIR_SEPARATOR)
-		return g_strdup (path);
+	g_return_val_if_fail (path, NULL);
 
-	home = getenv ("HOME");
-	if (!home)
-		home = g_get_home_dir ();
+	dir = NULL;
+	wordexp (path, &wexp, 0);
+	if (wexp.we_wordc != 1) 
+		g_printerr ("error expanding dir '%s'", path);
+	else 
+		dir = g_strdup (wexp.we_wordv[0]);
 	
-	return g_strdup_printf ("%s%s", home, path + 1);
+	wordfree (&wexp);
+
+	return dir;
 }
+
 
 
 GSList *
