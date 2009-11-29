@@ -8,6 +8,8 @@ mu_SOURCES=			\
 	mu-config.c		\
 	mu-index.c		\
 	mu-index.h		\
+	mu-log.c		\
+	mu-log.h		\
 	mu-msg-fields.c		\
 	mu-msg-fields.h		\
 	mu-msg-flags.c		\
