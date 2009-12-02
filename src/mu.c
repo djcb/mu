@@ -200,7 +200,7 @@ main (int argc, char *argv[])
 		MuIndex *midx;
 		MuIndexStats stats;
 		
-		midx = mu_index_new ("/home/djcb/.mu");
+		midx = mu_index_new (config.muhome);
 		rv = mu_index_run (midx,
 				   config.maildir,
 				   config.reindex,
