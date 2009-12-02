@@ -32,33 +32,36 @@
 #include "mu-index.h"
 #include "mu-store-xapian.h"
 
+#define MU_XAPIAN_DIR_NAME "xapian"
 
 
 struct _MuIndex {
 	MuStoreXapian  *_xapian;
 };
 
+
 MuIndex* 
-mu_index_new (const char *xpath)
+mu_index_new (const char *muhome)
 {
 	MuIndex *index;
+	char *xpath;
 	
-	g_return_val_if_fail (xpath, NULL);
-
-	do {
-		index = g_new0 (MuIndex, 1);				
-		index->_xapian = mu_store_xapian_new (xpath);
-		if (!index->_xapian) {
-			g_warning ("%s: failed to get xapian store (%s)",
-				   __FUNCTION__, xpath); 
-			break;
-		}
-		return index;
-
-	} while (0);
+	g_return_val_if_fail (muhome, NULL);
 	
-	mu_index_destroy (index);
-	return NULL;
+	index = g_new0 (MuIndex, 1);				
+	xpath = g_strdup_printf ("%s%c%s", muhome,
+				 G_DIR_SEPARATOR, MU_XAPIAN_DIR_NAME);
+	index->_xapian = mu_store_xapian_new (xpath);
+	g_free (xpath);
+	
+	if (!index->_xapian) {
+		g_warning ("%s: failed to open xapian store (%s)",
+			   __FUNCTION__, muhome); 
+		g_free (index);
+		return NULL;
+	}
+	
+	return index;
 }
 
 
@@ -187,12 +190,6 @@ static gboolean
 check_path (const char* path)
 {
 	g_return_val_if_fail (path, FALSE);
-
-	if (!g_path_is_absolute (path)) {
-		g_warning ("%s: path is not absolute '%s'", 
-			   __FUNCTION__, path);
-		return FALSE;
-	}
 	
 	if (access (path, R_OK) != 0) {
 		g_warning ("%s: cannot open '%s': %s", 

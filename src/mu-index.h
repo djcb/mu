@@ -43,11 +43,12 @@ typedef struct _MuIndexStats MuIndexStats;
  * make sure you haved called g_type_init, and mu_msg_init somewhere
  * in your code.
  *
- * @param xpath path to the xapian db to store the results
+ * @param xpath path to the 'homedir'; the xapian directory will be
+ * this homedir/xapian
  * 
  * @return a new MuIndex instance, or NULL in case of error
  */
-MuIndex* mu_index_new (const char* xpath);
+MuIndex* mu_index_new (const char* muhome);
 
 
 /** 
@@ -141,13 +142,5 @@ typedef MuResult (*MuIndexCleanupCallback) (MuIndexStats*, void *user_data);
 MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *result,
 			   MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 			   void *user_data);
-
-
-/** 
- * get the option group for 'index' 
- * 
- * @return an option group
- */
-GOptionGroup*   mu_index_option_group (void);
 
 #endif /*__MU_INDEX_H__*/
