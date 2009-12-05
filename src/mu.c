@@ -57,7 +57,8 @@ parse_cmd (const char* cmd)
 	    (strcmp (cmd, "search") == 0))
 		return MU_CMD_QUERY;
 
-	if ((strcmp (cmd, "help") == 0))
+	if ((strcmp (cmd, "help") == 0) ||
+	    (strcmp (cmd, "info") == 0))
 		return MU_CMD_HELP;
 
 	return MU_CMD_UNKNOWN;
@@ -133,18 +134,13 @@ init_log (MuConfigOptions *opts)
 	else if (opts->log_stderr) 
 		rv = mu_log_init_with_fd (fileno(stderr), FALSE,
 					  opts->debug);
-	else {
-		char *logfile;
-		logfile = g_strdup_printf ("%s%c%s",
-					   opts->muhome,
-					   G_DIR_SEPARATOR,
-					   "mu.log");
-		rv = mu_log_init_with_file (logfile,
-					    opts->log_append,
-					    opts->debug);
-		g_free (logfile);
-	}
+	else 
+		rv = mu_log_init (opts->muhome, opts->log_append,
+				  opts->debug);
 
+	if (!rv)
+		g_print ("error: failed to initialize log\n");
+	
 	return rv;
 }
 
@@ -192,7 +188,7 @@ main (int argc, char *argv[])
 
 	if (!init_log (&config))
 		return 1;
-	
+
 	mu_msg_gmime_init ();
 	rv = MU_OK;
 	
