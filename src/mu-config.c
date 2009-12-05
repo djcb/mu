@@ -114,9 +114,11 @@ mu_config_init (MuConfigOptions *opts)
 	memset (opts, 0, sizeof(MuConfigOptions));
 
 	/* general */
-	opts->quiet  = FALSE;
-	opts->debug  = FALSE;
-	opts->muhome = mu_util_dir_expand ("~/.mu");
+	opts->quiet	 = FALSE;
+	opts->debug	 = FALSE;
+	opts->muhome	 = mu_util_dir_expand ("~/.mu");
+	opts->log_append = TRUE;
+	opts->log_stderr = FALSE;
 	
 	/* indexing */
 	opts->maildir = mu_util_dir_expand ("~/Maildir");
