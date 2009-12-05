@@ -29,6 +29,9 @@
 #include "mu-msg-gmime.h"
 #include "mu-store-xapian.h"
 
+/* number of new messages after which we commit to the database */
+#define MU_STORE_XAPIAN_TRANSACTION_SIZE 2000
+
 struct _MuStoreXapian {
 	Xapian::WritableDatabase *_db;
 
@@ -51,7 +54,7 @@ mu_store_xapian_new  (const char* path)
 			(path,Xapian::DB_CREATE_OR_OPEN);
 
 		/* keep count of processed docs */
-		store->_transaction_size = 1000; /* default */
+		store->_transaction_size = MU_STORE_XAPIAN_TRANSACTION_SIZE; 
 		store->_in_transaction = false;
 		store->_processed = 0;
 
