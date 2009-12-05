@@ -70,9 +70,20 @@ static MuResult
 msg_cb  (MuIndexStats* stats, void *user_data)
 {
 	char *kars="-\\|/";
+	char output[100];
+	
 	static int i = 0;
+	static int len = 0;
 
-	g_print ("%s%c", (!i)?"":"\b", kars[i % 4]);
+	while (len --> 0) 
+		printf ("\b");
+	
+	len = snprintf (output, sizeof(output),
+			"%c mu is indexing your mails; processed: %d; "
+			"updated/new: %d",
+			kars[i % 4], stats->_processed, stats->_updated);
+	g_print ("%s", output);
+	
 	++i;
 	
 	return MU_OK;
@@ -204,7 +215,7 @@ main (int argc, char *argv[])
 				   config.quiet ? NULL : msg_cb,
 				   NULL,
 				   NULL);
-		
+		g_print ("\n");
 		mu_index_destroy (midx);
 		
 	} else if (cmd == MU_CMD_QUERY) {
