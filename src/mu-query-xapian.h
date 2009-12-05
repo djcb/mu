@@ -41,7 +41,7 @@ typedef struct _MuQueryXapian MuQueryXapian;
  * when the instance is no longer needed, use mu_query_xapian_destroy
  * to free it
  */
-MuQueryXapian  *mu_query_xapian_new      (const char* path, GError **err);
+MuQueryXapian  *mu_query_xapian_new      (const char* path);
 
 /** 
  * destroy the MuQueryXapian instance

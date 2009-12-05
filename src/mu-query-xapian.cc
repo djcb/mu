@@ -28,14 +28,49 @@
 #include "mu-msg-xapian.h"
 #include "mu-msg-xapian-priv.hh"
 
-struct _MuQueryXapian {
+static void add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser);
+
+class _MuQueryXapian {
+public:
+	_MuQueryXapian (const char *path) : _db(Xapian::Database(path)) {
+
+		_qparser.set_database(_db);
+		_qparser.set_default_op(Xapian::Query::OP_OR);
+		_qparser.set_stemming_strategy 
+			(Xapian::QueryParser::STEM_SOME);
+
+		memset (_sorters, 0, sizeof(_sorters));
+		
+		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
+				      (gconstpointer)&_qparser);
+	}
+
+	~_MuQueryXapian () {
+		try {
+			for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) 
+				delete _sorters[i];
+		} catch (...) {
+			g_warning ("%s: caught exception", __FUNCTION__);
+		}
+	}
 	
-	_MuQueryXapian (const char *path) :
-		_db(Xapian::Database(path)) {}
-	
-	const Xapian::Database&    _db;
-	Xapian::QueryParser	   _qparser;
-	Xapian::Sorter*		   _sorters[MU_MSG_FIELD_TYPE_NUM];
+	Xapian::Query get_query  (const char* searchexpr) {
+		return _qparser.parse_query 
+			(searchexpr,
+			 Xapian::QueryParser::FLAG_BOOLEAN          | 
+			 Xapian::QueryParser::FLAG_PHRASE           |
+			 Xapian::QueryParser::FLAG_LOVEHATE         |
+			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
+			 Xapian::QueryParser::FLAG_WILDCARD         |
+			 Xapian::QueryParser::FLAG_PURE_NOT         |
+			 Xapian::QueryParser::FLAG_PARTIAL);
+	}
+	const Xapian::Database&    db() { return _db; }
+
+private:
+	const Xapian::Database  _db;
+	Xapian::QueryParser	_qparser;
+	Xapian::Sorter*         _sorters[MU_MSG_FIELD_TYPE_NUM];
 };
 
 static void
@@ -56,69 +91,39 @@ add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 }
 
 MuQueryXapian*
-mu_query_xapian_new (const char* path, GError **err)
+mu_query_xapian_new (const char* path)
 {
-	MuQueryXapian *self;
+	char *xpath;
 	
 	g_return_val_if_fail (path, NULL);
 
-	if (!g_file_test (path, G_FILE_TEST_IS_DIR) ||
-	    g_access(path, R_OK) != 0) { 
-		g_set_error (err, 0, 0,"'%s' is not a readable xapian dir", path);
+	/* move this to common place? */
+	xpath = g_strdup_printf ("%s%c%s", path, G_DIR_SEPARATOR, "xapian");
+	if (!g_file_test (xpath, G_FILE_TEST_IS_DIR) ||
+	    g_access(xpath, R_OK) != 0) { 
+		g_warning ("'%s' is not a readable xapian dir", xpath);
+		g_free (xpath);
 		return NULL;
 	}
-
-	self = 0;
 	
 	try {
-		self = new MuQueryXapian (path); 
-
-		self->_qparser.set_database(self->_db);
-		self->_qparser.set_default_op(Xapian::Query::OP_OR);
-		self->_qparser.set_stemming_strategy 
-			(Xapian::QueryParser::STEM_SOME);
-	
-	} catch (const Xapian::Error &ex) {
-		g_set_error (err, 0, 0,"%s: caught xapian exception '%s' (%s)", 
-			     __FUNCTION__, ex.get_msg().c_str(), 
-			     ex.get_error_string());
-		delete self;
-		self = 0;
-	} catch (...) {
-		g_set_error (err, 0, 0,"%s: caught exception", __FUNCTION__);
-		delete self;
-		self = 0;
-	}
-
-	if (self) {
-		memset (self->_sorters, 0, sizeof(self->_sorters));
+		MuQueryXapian *qx (new MuQueryXapian (xpath));
+		g_free (xpath);
+		return qx;
 		
-		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
-				      (gconstpointer)&self->_qparser);
+	} catch (...) {
+		g_free (xpath);
+		g_warning ("%s: caught exception", __FUNCTION__);
+		return NULL;
 	}
-	
-	return self ? self: NULL;
 }
 
 
 void
 mu_query_xapian_destroy (MuQueryXapian *self)
 {
-	if (!self)
-		return;
-
 	try {
-		for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) {
-			delete self->_sorters[i];
-			self->_sorters[i] = 0;
-		}
-		
 		delete self;
-
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(), 
-			   err.get_error_string());
 	} catch (...) {
 		g_warning ("%s: caught exception", __FUNCTION__);
 	}
@@ -126,19 +131,6 @@ mu_query_xapian_destroy (MuQueryXapian *self)
 
 
 
-static Xapian::Query
-get_query  (MuQueryXapian *self, const char* searchexpr) 
-{	
-	return (self->_qparser.parse_query 
-		(searchexpr,
-		 Xapian::QueryParser::FLAG_BOOLEAN          | 
-		 Xapian::QueryParser::FLAG_PHRASE           |
-		 Xapian::QueryParser::FLAG_LOVEHATE         |
-		 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
-		 Xapian::QueryParser::FLAG_WILDCARD         |
-		 Xapian::QueryParser::FLAG_PURE_NOT         |
-		 Xapian::QueryParser::FLAG_PARTIAL));
-}
 
 MuMsgXapian*
 mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
@@ -148,8 +140,8 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query q(get_query(self, searchexpr));
-		Xapian::Enquire enq (self->_db);
+		Xapian::Query q(self->get_query(searchexpr));
+		Xapian::Enquire enq (self->db());
 		
 		if (sortfield) 
 			enq.set_sort_by_value (
@@ -180,7 +172,7 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query q(get_query(self, searchexpr));
+		Xapian::Query q(self->get_query(searchexpr));
 		return g_strdup(q.get_description().c_str());
 		
 	} catch (const Xapian::Error &err) {
@@ -212,8 +204,4 @@ mu_query_xapian_combine (GSList *lst, gboolean connect_or)
 	}
 
 	return g_string_free (str, FALSE);
-} 
-
-
-
-
+}

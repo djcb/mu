@@ -180,22 +180,16 @@ do_output (MuQueryXapian *xapian, GSList *args, MuConfigOptions* opts)
 MuResult
 mu_query_run (MuConfigOptions *opts, GSList *args)
 {
-	GError *err = 0;
 	MuQueryXapian *xapian;
 	MuResult rv;
 	
 	rv = MU_OK;
 
 	handle_options (opts);
-	xapian = mu_query_xapian_new ("/home/djcb/.mu", &err);
+	xapian = mu_query_xapian_new (opts->muhome);
 
-	if (!xapian) {
-		if (err) {
-			g_printerr ("error: %s\n", err->message);
-			g_error_free (err);
-		}
+	if (!xapian)
 		return MU_ERROR;
-	}
 	
 	rv = do_output (xapian, args, opts) ? 0 : 1;
 	mu_query_xapian_destroy (xapian);
