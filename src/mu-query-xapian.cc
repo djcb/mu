@@ -29,9 +29,13 @@
 #include "mu-msg-xapian-priv.hh"
 
 struct _MuQueryXapian {
-	Xapian::Database    *_db;
-	Xapian::QueryParser  _qparser;
-	Xapian::Sorter*      _sorters[MU_MSG_FIELD_TYPE_NUM];
+	
+	_MuQueryXapian (const char *path) :
+		_db(Xapian::Database(path)) {}
+	
+	const Xapian::Database&    _db;
+	Xapian::QueryParser	   _qparser;
+	Xapian::Sorter*		   _sorters[MU_MSG_FIELD_TYPE_NUM];
 };
 
 static void
@@ -64,37 +68,36 @@ mu_query_xapian_new (const char* path, GError **err)
 		return NULL;
 	}
 
+	self = 0;
+	
 	try {
-		self = new MuQueryXapian;
-		
-		self->_db      = new Xapian::Database(path);		
-		self->_qparser.set_database(*self->_db);
+		self = new MuQueryXapian (path); 
+
+		self->_qparser.set_database(self->_db);
 		self->_qparser.set_default_op(Xapian::Query::OP_OR);
 		self->_qparser.set_stemming_strategy 
 			(Xapian::QueryParser::STEM_SOME);
-
-		memset (self->_sorters, 0, sizeof(self->_sorters));
-		
-		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
-				      (gconstpointer)&self->_qparser);
-
-		return self;
 	
 	} catch (const Xapian::Error &ex) {
 		g_set_error (err, 0, 0,"%s: caught xapian exception '%s' (%s)", 
 			     __FUNCTION__, ex.get_msg().c_str(), 
 			     ex.get_error_string());
+		delete self;
+		self = 0;
 	} catch (...) {
-		delete self->_db;
 		g_set_error (err, 0, 0,"%s: caught exception", __FUNCTION__);
+		delete self;
+		self = 0;
 	}
 
 	if (self) {
-		delete self->_db;
-		delete self;
+		memset (self->_sorters, 0, sizeof(self->_sorters));
+		
+		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
+				      (gconstpointer)&self->_qparser);
 	}
-
-	return NULL;
+	
+	return self ? self: NULL;
 }
 
 
@@ -110,7 +113,6 @@ mu_query_xapian_destroy (MuQueryXapian *self)
 			self->_sorters[i] = 0;
 		}
 		
-		delete self->_db;
 		delete self;
 
 	} catch (const Xapian::Error &err) {
@@ -147,7 +149,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 		
 	try {
 		Xapian::Query q(get_query(self, searchexpr));
-		Xapian::Enquire enq (*self->_db);
+		Xapian::Enquire enq (self->_db);
 		
 		if (sortfield) 
 			enq.set_sort_by_value (
