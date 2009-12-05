@@ -211,6 +211,9 @@ mu_index_run (MuIndex *index, const char* path,
 	
 	g_return_val_if_fail (index && index->_xapian, MU_ERROR);
 	g_return_val_if_fail (check_path (path), MU_ERROR);
+
+	if (stats)
+		memset (stats, 0, sizeof(MuIndexStats));
 	
 	cb_data._idx_msg_cb    = msg_cb;
 	cb_data._idx_dir_cb    = dir_cb;
@@ -259,6 +262,9 @@ mu_index_stats (MuIndex *index, const char* path,
 	g_return_val_if_fail (index, MU_ERROR);
 	g_return_val_if_fail (check_path (path), MU_ERROR);
 
+	if (stats)
+		memset (stats, 0, sizeof(MuIndexStats));
+	
 	cb_data._idx_msg_cb        = cb_msg;
 	cb_data._idx_dir_cb        = cb_dir;
 
@@ -278,6 +284,9 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 		  MuIndexMsgCallback msg_cb,
 		  MuIndexDirCallback dir_cb, void *user_data)
 {
+	if (stats)
+		memset (stats, 0, sizeof(MuIndexStats));
+	
 	/* FIXME: implement this */
 	return MU_OK;
 }
