@@ -25,6 +25,18 @@
 /* mu log is the global logging system */
 
 /** 
+ * write logging information to a log file
+ * 
+ * @param muhome the mu home directory
+ * @param append append to logfile, instead of overwriting
+ * @param debug include debug-level information.
+ * 
+ * @return TRUE if initialization succeeds, FALSE otherwise
+ */
+gboolean mu_log_init  (const char* muhome, gboolean append,
+		       gboolean debug);
+
+/** 
  * write logging information to a file descriptor
  * 
  * @param fd an open file descriptor
@@ -36,17 +48,6 @@
 gboolean mu_log_init_with_fd    (int fd, gboolean doclose, gboolean debug);
 
 
-/** 
- * write logging information to a file descriptor
- * 
- * @param a filename to log to
- * @param append append to logfile, instead of overwriting
- * @param debug include debug-level information.
- * 
- * @return TRUE if initialization succeeds, FALSE otherwise
- */
-gboolean mu_log_init_with_file  (const char* file, gboolean append,
-				 gboolean debug);
 
 /** 
  * be absolutely silent, except for runtime errors, which will be

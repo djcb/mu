@@ -30,11 +30,14 @@
 
 #include "mu-log.h"
 
+#define MU_LOG_FILE "mu.log"
+
 struct _MuLog {
 	int _fd;      /* log file descriptor */
 	int _own;     /* close _fd with log_destroy? */
-	int _log_id;  /* log handler id */
 	int _debug;   /* add debug-level stuff? */
+
+	GLogFunc _old_log_func;
 };
 typedef struct _MuLog MuLog;
 
@@ -67,12 +70,8 @@ mu_log_init_silence (void)
         MU_LOG->_fd     = -1;
 	MU_LOG->_own    = FALSE; /* nobody owns silence */
 	
-	MU_LOG->_log_id =
-		g_log_set_handler (NULL,
-				   G_LOG_LEVEL_DEBUG|
-				   G_LOG_LEVEL_MESSAGE|
-				   G_LOG_LEVEL_INFO,
-				   (GLogFunc)silence, NULL);
+	MU_LOG->_old_log_func =
+		g_log_set_default_handler ((GLogFunc)silence, NULL);
 	return TRUE;
 }
 
@@ -99,34 +98,32 @@ mu_log_init_with_fd (int fd, gboolean doclose, gboolean debug)
 	MU_LOG->_debug  = debug;
         MU_LOG->_own    = doclose; /* if we now own the fd, close it
 				    * in _destroy */
-	
-	g_log_set_handler ("mu", G_LOG_LEVEL_MASK,
-			   (GLogFunc)log_handler, NULL);
+	MU_LOG->_old_log_func =
+		g_log_set_default_handler ((GLogFunc)log_handler, NULL);
 	
 	return TRUE;
 }
 
 gboolean
-mu_log_init_with_file  (const char* file, gboolean append, gboolean debug)
+mu_log_init  (const char* muhome, gboolean append, gboolean debug)
 {
 	int fd;
+	gchar *logfile;
 	
 	/* only init once... */
-	g_return_val_if_fail (!MU_LOG, FALSE);
+	g_return_val_if_fail (!MU_LOG, FALSE);	
+	g_return_val_if_fail (muhome, FALSE);
 	
-	fd = -1;	
-	if (file) {
-		fd = open (file,
-			   O_WRONLY|O_CREAT|(append ? O_APPEND : O_TRUNC),
-			   00600);
-		if (fd < 0) {
-			fprintf (stderr, "%s: open() of '%s' failed: %s\n",
-				 __FUNCTION__, file, strerror(errno));
-			return FALSE;
-		}
-	}
-			   
-	if (!mu_log_init_with_fd (fd, FALSE, debug)) {
+	logfile = g_strdup_printf ("%s%c%s", muhome,
+				   G_DIR_SEPARATOR, MU_LOG_FILE);
+	fd = open (logfile,  O_WRONLY|O_CREAT|(append ? O_APPEND : O_TRUNC),
+		   00600);
+	if (fd < 0) 
+		g_warning ("%s: open() of '%s' failed: %s\n",  __FUNCTION__,
+			   logfile, strerror(errno));
+	g_free (logfile);
+	
+	if (fd < 0 || !mu_log_init_with_fd (fd, FALSE, debug)) {
 		try_close (fd);
 		return FALSE;
 	}
@@ -178,8 +175,8 @@ log_write (const char* domain, GLogLevelFlags level,
 	strftime (timebuf, sizeof(timebuf), "%F %T", localtime(&now));
 		
 	/* now put it all together */
-	len = snprintf (buf, sizeof(buf), "%s [%s] [%s] %s\n", timebuf, 
-			pfx(level), domain, msg);
+	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf, 
+			pfx(level), msg);
 	
 	len = write (MU_LOG->_fd, buf, len);
 	if (len < 0)
