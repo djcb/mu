@@ -1,7 +1,7 @@
 #+STARTUP:showall
 * to-do list for mu-ng first release
 
-** release 0.6 [31%]
+** release 0.6 [40%]
 
    - [X] implement re-index
    - [X] mu-index config options
@@ -10,16 +10,18 @@
    - [ ] man page / help
    - [X] config system (centralize options)
    - [ ] config system (config file)
-   - [ ] logging system
-   - [ ] better output for indexing (statistics)
+   - [X] logging system
+   - [X] better output for indexing (statistics)
    - [ ] re-add symlink support (?)
    - [X] size check in indexing (~15Mb)
-   - [ ] change directory setup a bit (~/.mu/xapian)
+   - [X] change directory setup a bit (~/.mu/xapian)
    - [X] remove path-is-absolute checks
    - [ ] UTF-8 output to console
    - [ ] mu-setup
    - [ ] bookmarks
    - [ ] moving msg field formatting to MuMsgField
+   - [ ] valgrind checking
+   - [ ] check existing bugs in c.g.c
    - [ ] cleanup ascending/descending stuff
 
 
