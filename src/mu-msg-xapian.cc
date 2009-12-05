@@ -154,7 +154,6 @@ unsigned int
 mu_msg_xapian_get_id (MuMsgXapian *row)
 {
 	g_return_val_if_fail (row, NULL);
-	const char *str;
 
 	try {
 		return row->_cursor.get_document().get_docid();

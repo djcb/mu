@@ -216,7 +216,6 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 	g_return_val_if_fail (msg, MU_ERROR);
 
 	try {
-		const char* body;
 		Xapian::Document newdoc;
 		Xapian::docid id;
 		gboolean commit_now;
