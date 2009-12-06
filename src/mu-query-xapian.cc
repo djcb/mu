@@ -195,11 +195,26 @@ mu_query_xapian_combine (GSList *lst, gboolean connect_or)
 	
 	str = g_string_sized_new (64); /* just a guess */
 	while (lst) {
+		const char* elm;
 		const char* cnx = "";
+		gboolean do_quote;
+
+		elm = (const gchar*)lst->data;
+		if (!elm) /* shouldn't happen */
+			break;  
+		
 		if (lst->next)
 			cnx = connect_or ? " OR " : " AND ";
+
+		do_quote = (strcasecmp (elm, "OR") == 0 ||
+			    strcasecmp (elm, "AND") == 0 ||
+			    strcasecmp (elm, "NOT") == 0);
 		
-		g_string_append_printf (str, "%s%s", (gchar*)lst->data, cnx);
+		g_string_append_printf (str, "%s%s%s%s",
+					do_quote ? "\"" : "",
+					(gchar*)lst->data,
+					do_quote ? "\"" : "",
+					cnx);	
 		lst = lst->next;
 	}
 
