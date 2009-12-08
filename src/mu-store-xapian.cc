@@ -177,10 +177,10 @@ static void
 add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 {
 	MuMsgFieldType type;
-
-	if (!mu_msg_field_is_xapian_enabled(field)) 
+	
+	if (!mu_msg_field_is_xapian_enabled(field))
 		return;
-		
+	
 	type = mu_msg_field_type (field);
 
 	if (type == MU_MSG_FIELD_TYPE_STRING) {		
