@@ -42,7 +42,7 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 		{"log-append", 'a', 0, G_OPTION_ARG_NONE, &opts->log_append,
 		 "append to the current logfile (instead of overwriting it)", 
 		 NULL},
-		{ NULL }
+		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 	
 	og = g_option_group_new ("mu",
@@ -66,7 +66,7 @@ mu_config_options_group_index (MuConfigOptions *opts)
 		/* FIXME: implement this */
 		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
 		 "re-index already indexed messages ", NULL},
-		{NULL}
+		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 	
 	og = g_option_group_new ("index",
@@ -92,7 +92,7 @@ mu_config_options_group_query (MuConfigOptions *opts)
 		 "sort ascending", NULL},
 		{"descending", 'c', 0, G_OPTION_ARG_NONE, &opts->descending_flag,
 		 "sort ascending", NULL},
-		{NULL}
+		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
 	og = g_option_group_new ("querying",
