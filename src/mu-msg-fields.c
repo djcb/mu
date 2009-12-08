@@ -115,19 +115,15 @@ static const MuMsgField FIELD_DATA[] = {
 	  MU_MSG_FIELD_ID_TIMESTAMP,
 	  MU_MSG_FIELD_TYPE_TIME_T,
 	  FLAG_GMIME 
-	},
-	
-	{ NULL, NULL, NULL, 0, 0, 0 }
+	}
 };
 
 void
 mu_msg_field_foreach (MuMsgFieldForEachFunc func, gconstpointer data)
 {
-	const MuMsgField* cursor = &FIELD_DATA[0];
-	while (cursor->_name) {
-		func (cursor, data);
-		++cursor;
-	}
+	int i;
+	for (i = 0; i != sizeof(FIELD_DATA)/sizeof(FIELD_DATA[0]); ++i)
+		func (&FIELD_DATA[i], data);
 }
 
 typedef gboolean (*FieldMatchFunc) (const MuMsgField *field, 
@@ -136,12 +132,11 @@ typedef gboolean (*FieldMatchFunc) (const MuMsgField *field,
 static const MuMsgField*
 find_field (FieldMatchFunc matcher, gconstpointer data)
 {
-	const MuMsgField* cursor = &FIELD_DATA[0];
-	while (cursor->_name) {
-		if (matcher (cursor, data))
-			return cursor;
-		++cursor;
-	}
+	int i;
+	for (i = 0; i != sizeof(FIELD_DATA)/sizeof(FIELD_DATA[0]); ++i)
+		if (matcher(&FIELD_DATA[i], data))
+			return &FIELD_DATA[i];
+
 	return NULL;
 }
 
@@ -186,7 +181,7 @@ mu_msg_field_from_id (MuMsgFieldId id)
 
 
 gboolean
-mu_msg_field_is_xapian_enabled    (const MuMsgField *field)
+mu_msg_field_is_xapian_enabled (const MuMsgField *field)
 {
 	g_return_val_if_fail (field, FALSE);
 	return field->_flags & FLAG_XAPIAN;
