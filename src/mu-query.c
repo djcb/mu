@@ -136,12 +136,12 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 		while (*fields) {
 			const MuMsgField* field = 
 				mu_msg_field_from_shortcut (*fields);
-			if (!field) 
+			if (!field || 
+			    !mu_msg_field_is_xapian_enabled (field)) 
 				printlen += printf ("%c", *fields);
 			else
 				printlen += printf ("%s",
-						    display_field(row, field)); 
-			
+						    display_field(row, field));
 			++fields;
 		}	
 		if (printlen >0)
@@ -161,8 +161,8 @@ do_output (MuQueryXapian *xapian, GSList *args, MuConfigOptions* opts)
 	gchar *query;
 	gboolean retval = TRUE;
 	
-	query = mu_query_xapian_combine (args, FALSE); 
-
+	query = mu_query_xapian_combine (args, FALSE);
+	
 	/* if xquery is set, we print the xapian query instead of the
 	 * output; this is for debugging purposes */
 	if (opts->xquery) 
@@ -186,12 +186,13 @@ mu_query_run (MuConfigOptions *opts, GSList *args)
 	rv = MU_OK;
 
 	handle_options (opts);
+	
 	xapian = mu_query_xapian_new (opts->muhome);
-
 	if (!xapian)
 		return MU_ERROR;
-	
+
 	rv = do_output (xapian, args, opts) ? 0 : 1;
+	
 	mu_query_xapian_destroy (xapian);
 	
 	return rv;
