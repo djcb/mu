@@ -1,12 +1,12 @@
 #+STARTUP:showall
 * to-do list for mu-ng first release
 
-** release 0.6 [40%]
+** release 0.6 [45%]
 
    - [X] implement re-index
    - [X] mu-index config options
    - [ ] check which options actually work, remove rest
-   - [ ] fix AND/OR escaping issue
+   - [X] fix AND/OR escaping issue
    - [ ] man page / help
    - [X] config system (centralize options)
    - [ ] config system (config file)
