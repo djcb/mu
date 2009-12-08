@@ -113,11 +113,14 @@ mu_msg_xapian_get_field (MuMsgXapian *row, const MuMsgField *field)
 	g_return_val_if_fail (field, NULL);
 	
 	try {
-		MuMsgFieldId id = mu_msg_field_id (field);
+		MuMsgFieldId id;
+
+		id = mu_msg_field_id (field);
 		if (!row->_str[id]) { 	/* cache the value */
 			Xapian::Document doc (row->_cursor.get_document());
 			row->_str[id] = g_strdup (doc.get_value(id).c_str());
 		}
+		
 		return row->_str[id];
 						 
 	} catch (const Xapian::Error &err) {
