@@ -30,32 +30,61 @@
 
 static void add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser);
 
-class _MuQueryXapian {
-public:
-	_MuQueryXapian (const char *path) : _db(Xapian::Database(path)) {
+struct _MuQueryXapian {
+	Xapian::Database*         _db;
+	Xapian::QueryParser*	  _qparser;
+	Xapian::Sorter*           _sorters[MU_MSG_FIELD_TYPE_NUM];
+};
 
-		_qparser.set_database(_db);
-		_qparser.set_default_op(Xapian::Query::OP_OR);
-		_qparser.set_stemming_strategy 
-			(Xapian::QueryParser::STEM_SOME);
-
-		memset (_sorters, 0, sizeof(_sorters));
-		
-		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
-				      (gconstpointer)&_qparser);
-	}
-
-	~_MuQueryXapian () {
-		try {
-			for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) 
-				delete _sorters[i];
-		} catch (...) {
-			g_warning ("%s: caught exception", __FUNCTION__);
-		}
-	}
+gboolean
+_init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
+{
+	mqx->_db = 0;
+	mqx->_qparser = 0;
 	
-	Xapian::Query get_query  (const char* searchexpr) {
-		return _qparser.parse_query 
+	try {
+		mqx->_db = new Xapian::Database(dbpath);
+		mqx->_qparser = new Xapian::QueryParser;
+		
+		mqx->_qparser->set_database(*mqx->_db);
+		mqx->_qparser->set_default_op(Xapian::Query::OP_OR);
+		mqx->_qparser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
+
+		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
+		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
+				      (gpointer)mqx->_qparser);
+		
+	} catch (...) {
+		delete mqx->_db;
+		delete mqx->_qparser;
+		g_warning ("%s: caught exception", __FUNCTION__);
+
+		return FALSE;
+	}
+	return TRUE;
+}
+
+	
+static void
+_uninit_mu_query_xapian (MuQueryXapian *mqx)
+{
+	try {
+		delete mqx->_db;
+		delete mqx->_qparser;
+
+		for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) 
+			delete mqx->_sorters[i];
+		
+	} catch (...) {
+		g_warning ("%s: caught exception", __FUNCTION__);
+	}
+}
+	
+static Xapian::Query
+_get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
+	
+	try {
+		return mqx->_qparser->parse_query
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          | 
 			 Xapian::QueryParser::FLAG_PHRASE           |
@@ -64,14 +93,14 @@ public:
 			 Xapian::QueryParser::FLAG_WILDCARD         |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_PARTIAL);
-	}
-	const Xapian::Database&    db() { return _db; }
 
-private:
-	const Xapian::Database  _db;
-	Xapian::QueryParser	_qparser;
-	Xapian::Sorter*         _sorters[MU_MSG_FIELD_TYPE_NUM];
-};
+	} catch (...) {
+		g_warning ("%s: caught exception", __FUNCTION__);
+		if (err)
+			*err  = 1;
+		return Xapian::Query();
+	}
+}
 
 static void
 add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
@@ -80,11 +109,11 @@ add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 		return;
 
 	const std::string prefix (mu_msg_field_xapian_prefix(field));
-
+	
 	qparser->add_boolean_prefix(std::string(mu_msg_field_name(field)),
 				   prefix);
 	qparser->add_boolean_prefix(std::string(mu_msg_field_shortcut(field)),
-				   prefix);
+				    prefix);
 
 	/* make the empty string match this field too*/
 	qparser->add_prefix ("", prefix);
@@ -93,11 +122,11 @@ add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 MuQueryXapian*
 mu_query_xapian_new (const char* path)
 {
-	char *xpath;
+	char *xpath;	
+	MuQueryXapian *mqx;
 	
 	g_return_val_if_fail (path, NULL);
-
-	/* move this to common place? */
+	
 	xpath = g_strdup_printf ("%s%c%s", path, G_DIR_SEPARATOR, "xapian");
 	if (!g_file_test (xpath, G_FILE_TEST_IS_DIR) ||
 	    g_access(xpath, R_OK) != 0) { 
@@ -105,28 +134,19 @@ mu_query_xapian_new (const char* path)
 		g_free (xpath);
 		return NULL;
 	}
-	
-	try {
-		MuQueryXapian *qx (new MuQueryXapian (xpath));
-		g_free (xpath);
-		return qx;
-		
-	} catch (...) {
-		g_free (xpath);
-		g_warning ("%s: caught exception", __FUNCTION__);
-		return NULL;
-	}
+
+	mqx = g_new (MuQueryXapian, 1);
+	_init_mu_query_xapian (mqx, xpath);
+	g_free (xpath);
+
+	return mqx;
 }
 
 
 void
 mu_query_xapian_destroy (MuQueryXapian *self)
 {
-	try {
-		delete self;
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}
+	_uninit_mu_query_xapian (self);
 }
 
 
@@ -140,8 +160,8 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query q(self->get_query(searchexpr));
-		Xapian::Enquire enq (self->db());
+		Xapian::Query q(_get_query(self, searchexpr));
+		Xapian::Enquire enq (*self->_db);
 		
 		if (sortfield) 
 			enq.set_sort_by_value (
@@ -172,7 +192,7 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query q(self->get_query(searchexpr));
+		Xapian::Query q(_get_query(self, searchexpr));
 		return g_strdup(q.get_description().c_str());
 		
 	} catch (const Xapian::Error &err) {

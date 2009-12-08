@@ -25,9 +25,11 @@
 
 G_BEGIN_DECLS
 
+
 /*
  * MuQueryXapian
  */
+
 struct _MuQueryXapian;
 typedef struct _MuQueryXapian MuQueryXapian;
 
