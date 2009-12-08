@@ -164,6 +164,7 @@ main (int argc, char *argv[])
 	MuConfigOptions config;
 	MuResult rv;
 	MuCmd cmd;
+	gboolean ok;
 	
 	g_type_init ();
 	
@@ -177,7 +178,10 @@ main (int argc, char *argv[])
 				    mu_config_options_group_query(&config));
 
 	mu_config_init (&config);	
-	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+	ok = g_option_context_parse (context, &argc, &argv, &error);
+	g_option_context_free (context);
+
+	if (!ok) {
 		g_printerr ("error in options: %s\n",
 			    error->message);
 		g_error_free (error);
