@@ -75,12 +75,20 @@ const char*
 mu_msg_str_prio  (MuMsgPriority prio)
 {
 	switch (prio) {
-	case MU_MSG_PRIORITY_LOW:    return "low";
-	case MU_MSG_PRIORITY_NORMAL: return "normal";
-	case MU_MSG_PRIORITY_HIGH:   return "high";
+
+	case MU_MSG_PRIORITY_LOW:
+		return "low";
+		
+	case MU_MSG_PRIORITY_NONE:
+	case MU_MSG_PRIORITY_NORMAL:
+		return "normal";
+
+	case MU_MSG_PRIORITY_HIGH:
+		return "high";
+
 	default:
 		g_warning ("%s: invalid priority %d", __FUNCTION__, prio);
-		return "Err";
+		return "<error>";
 	}
 }
 
