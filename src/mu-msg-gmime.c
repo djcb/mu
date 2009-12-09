@@ -768,6 +768,8 @@ mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb,
 }
 
 
+
+/* FIXME: this is too complicated */
 int
 mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg, 
 				   MuMsgGMimeContactsCallback cb, 
@@ -804,7 +806,7 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
 			InternetAddress *addr  = 
 				internet_address_list_get_address (list, i);
 			if (addr) {
-
+				
 				contact._name = internet_address_get_name (addr);
 				contact._type = ctypes[i]._type;  
 
@@ -814,6 +816,9 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
 				contact._addr = internet_address_mailbox_get_addr(
 					INTERNET_ADDRESS_MAILBOX(addr));
 
+				g_printerr ("%s\n", contact._name);
+				
+				
 				result = (cb)(&contact,ptr);
 	
 				if (result != 0) /* callback tells us to stop */
