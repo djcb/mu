@@ -32,7 +32,8 @@
 #include "mu-path.h"
 #include "mu-msg-flags.h"
 
-#define MU_MAX_FILE_SIZE (15*1000*1000)
+#define MU_PATH_MAX_FILE_SIZE (15*1000*1000)
+#define MU_PATH_NOINDEX_FILE  ".noindex"
 
 static MuResult process_dir (const char* path, MuPathWalkMsgCallback msg_cb, 
 			     MuPathWalkDirCallback dir_cb, void *data);
@@ -56,9 +57,9 @@ process_file (const char* fullpath, MuPathWalkMsgCallback cb, void *data)
 		return MU_ERROR;
 	}
 
-	if (G_UNLIKELY(statbuf.st_size > MU_MAX_FILE_SIZE)) {
+	if (G_UNLIKELY(statbuf.st_size > MU_PATH_MAX_FILE_SIZE)) {
 		g_warning ("ignoring because bigger than %d bytes: %s",
-			   MU_MAX_FILE_SIZE, fullpath);
+			   MU_PATH_MAX_FILE_SIZE, fullpath);
 		return MU_ERROR;
 	}
 	
@@ -74,7 +75,8 @@ process_file (const char* fullpath, MuPathWalkMsgCallback cb, void *data)
 }
 
 
-/* determine if path is a maildir leaf-dir; ie. if it's 'cur' or 'new'
+/*
+ * determine if path is a maildir leaf-dir; ie. if it's 'cur' or 'new'
  * (we're skipping 'tmp' for obvious reasons)
  */
 G_GNUC_CONST static gboolean 
@@ -100,6 +102,21 @@ is_maildir_new_or_cur (const char *path)
 			strcmp (sfx + 1, "new") == 0);
 }
 
+/* check if there is a noindex file (MU_PATH_NOINDEX_FILE) in this dir; */
+static gboolean
+has_noindex_file (const char *path)
+{
+	char *fname;
+	fname = g_newa (char, strlen(path) + 1 + strlen(MU_PATH_NOINDEX_FILE) + 1);
+	sprintf (fname, "%s%c%s", path, G_DIR_SEPARATOR, MU_PATH_NOINDEX_FILE);
+	if (access (fname, F_OK) == 0)
+		return TRUE;
+	else if (errno != ENOENT)
+		g_warning ("error testing for noindex file: %s", strerror(errno));
+
+	return FALSE;
+}
+
 static MuResult
 process_dir_entry (const char* path,struct dirent *entry,
 		   MuPathWalkMsgCallback cb_msg, MuPathWalkDirCallback cb_dir, 
@@ -107,7 +124,8 @@ process_dir_entry (const char* path,struct dirent *entry,
 {
 	char* fullpath;
 	
-	/* ignore anything starting with a dot */
+	/* ignore any dir starting with a dot; this will make us
+	 * ignore .notmuch, .nnmaildir etc. */
 	if (G_UNLIKELY(entry->d_name[0] == '.')) 
 			return MU_OK;
 
@@ -122,9 +140,17 @@ process_dir_entry (const char* path,struct dirent *entry,
 
 		return process_file (fullpath, cb_msg, data);
 		
-	case DT_DIR:
+	case DT_DIR: {
+		/* if it has a noindex file, we ignore this dir */
+		if (has_noindex_file (fullpath)) {
+			g_message ("ignoring dir %s", fullpath);
+			return MU_OK;
+		}
+		
 		return process_dir (fullpath, cb_msg, cb_dir, data);
-	
+	}
+
+		
 	default:
 		return MU_OK; /* ignore other types */
 	}
@@ -173,7 +199,7 @@ process_dir (const char* path, MuPathWalkMsgCallback msg_cb,
 			return rv;
 		}
 	}
-
+	
 	/* we sort the inodes, which makes file-access much faster on 
 	   some filesystems, such as ext3fs */
 	lst = NULL;
