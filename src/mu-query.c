@@ -50,6 +50,7 @@ display_field (MuMsgXapian *row, const MuMsgField* field)
 	switch (mu_msg_field_type(field)) {
 	case MU_MSG_FIELD_TYPE_STRING:
 		return mu_msg_xapian_get_field (row, field);
+
 	case MU_MSG_FIELD_TYPE_INT:
 	
 		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_PRIORITY) {
