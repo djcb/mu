@@ -124,12 +124,14 @@ static MuResult
 run_msg_callback_maybe (MuIndexCallbackData *data)
 {
 	if (data && data->_idx_msg_cb) {
-		MuResult result = 
-			data->_idx_msg_cb (data->_stats, data->_user_data);
+		
+		MuResult result;
+		
+		result = data->_idx_msg_cb (data->_stats, data->_user_data);
 		if (result != MU_OK && result != MU_STOP)
- 			g_warning ("%s: callback said %d",
-				   __FUNCTION__, result);
+ 			g_warning ("%s: callback said %d", __FUNCTION__, result);
 	}
+
 	return MU_OK;
 }
 
@@ -177,9 +179,9 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 						       fullpath);
 	else
 		mu_store_xapian_set_timestamp (data->_xapian, fullpath,
-						 time(NULL));
+					       time(NULL));
 	
-	if (data->_idx_dir_cb) 
+	if (data->_idx_dir_cb)
 		return data->_idx_dir_cb (fullpath, enter, 
 					  data->_user_data);
 
@@ -243,12 +245,13 @@ on_stats_maildir_file (const char *fullpath, time_t timestamp,
 	else
 		result = MU_OK;
 
-	if (result == MU_OK) { 
+	if (result == MU_OK) {
 		if (cb_data->_stats)
 			++cb_data->_stats->_processed;
 		return MU_OK;
-	} else 
-		return result; /* MU_STOP or MU_OK */
+	} 
+
+	return result; /* MU_STOP or MU_OK */
 }
 
 
