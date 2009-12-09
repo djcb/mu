@@ -105,6 +105,8 @@ mu_config_options_group_query (MuConfigOptions *opts)
 
 
 
+
+
 void
 mu_config_init (MuConfigOptions *opts)
 {
@@ -120,8 +122,9 @@ mu_config_init (MuConfigOptions *opts)
 	opts->log_append = TRUE;
 	opts->log_stderr = FALSE;
 	
-	/* indexing */
-	opts->maildir = mu_util_dir_expand ("~/Maildir");
+	/* indexing */		
+	opts->maildir    = mu_util_guess_maildir ();
+
 	opts->cleanup = FALSE;
 	opts->reindex = FALSE;
 

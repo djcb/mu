@@ -35,6 +35,15 @@ G_BEGIN_DECLS
 char*       mu_util_dir_expand (const char* path);
 
 
+
+/** 
+ * guess the maildir; first try MAILDIR, then try ~/Maildir
+ * if both fail, return NULL
+ * 
+ * @return full path of the guessed Maildir, or NULL; must be freed (gfree)
+ */
+char*       mu_util_guess_maildir (void);
+
 /** 
  * take a char*[] and turn it into a GSList
  * 

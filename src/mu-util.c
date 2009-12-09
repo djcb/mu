@@ -23,6 +23,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+
 #include "mu-util.h"
 
 char*
@@ -75,4 +80,35 @@ mu_util_strlist_free (GSList *lst)
 {
 	g_slist_foreach (lst, (GFunc)g_free, NULL);
 	g_slist_free (lst);
+}
+
+
+static gboolean
+_is_readable_dir (const gchar* path)
+{
+	struct stat statbuf;
+
+	return path &&
+		access (path, F_OK) &&
+		stat (path, &statbuf) == 0 &&
+		S_ISDIR(statbuf.st_mode);
+}
+
+gchar*
+mu_util_guess_maildir (void)
+{
+	char *dir;
+
+	/* first, try MAILDIR */
+	dir = getenv ("MAILDIR");
+	if (_is_readable_dir (dir))
+		return g_strdup (dir);
+
+	/* then, try ~/Maildir */
+	dir = mu_util_dir_expand ("~/Maildir");
+	if (_is_readable_dir (dir))
+		return dir;
+
+	/* nope; nothing found */
+	return NULL;
 }
