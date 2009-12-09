@@ -150,21 +150,24 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 static void
 add_terms_values_body (Xapian::Document& doc, MuMsgGMime *msg,
 		       const MuMsgField* field)
-{	
+{
+	const char *str;
+	
 	if (mu_msg_gmime_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
 		return; /* don't store encrypted bodies */
 
-	const char *str = mu_msg_gmime_get_body_text(msg);
-	// if (!str) /* FIXME: html->html fallback */
-	// 	str = mu_msg_gmime_get_body_html(msg);
+	str = mu_msg_gmime_get_body_text(msg);
+	if (!str) /* FIXME: html->html fallback */
+		str = mu_msg_gmime_get_body_html (msg);
 	
-	if (!str) 
+	if (!str)  {
+		//g_warning ("no body found");
 		return; /* no body... */
+	}
 
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
 	termgen.index_text(str, 1, mu_msg_field_xapian_prefix(field));
-	
 }
 
 struct _MsgDoc {

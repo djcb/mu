@@ -200,7 +200,7 @@ gboolean
 mu_msg_field_is_xapian_enabled (const MuMsgField *field)
 {
 	g_return_val_if_fail (field, FALSE);
-	return field->_flags & FLAG_XAPIAN;
+	return field->_flags & (FLAG_XAPIAN|FLAG_XAPIAN_INDEX);
 }
 
 
