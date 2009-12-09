@@ -240,14 +240,14 @@ mu_path_walk_maildir (const char *path, MuPathWalkMsgCallback cb_msg,
 		return MU_ERROR;
 	}
 	
-	if ((statbuf.st_mode & S_IFMT) == S_IFREG)
+	if (S_ISREG(statbuf.st_mode))
 		return process_file (path, cb_msg, data);
-	
-	if ((statbuf.st_mode & S_IFMT) == S_IFDIR) 
+	else if (S_ISDIR(statbuf.st_mode)) 
 		return process_dir (path, cb_msg, cb_dir, data);
+	else
+		g_warning ("%s: unsupported file type for %s", 
+			   __FUNCTION__, path);
 
-	g_warning ("%s: unsupported file type for %s", 
-		   __FUNCTION__, path);
 	return MU_ERROR;
 }
 
