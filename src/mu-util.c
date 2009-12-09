@@ -89,7 +89,7 @@ _is_readable_dir (const gchar* path)
 	struct stat statbuf;
 
 	return path &&
-		access (path, F_OK) &&
+		access (path, R_OK) == 0 &&
 		stat (path, &statbuf) == 0 &&
 		S_ISDIR(statbuf.st_mode);
 }
