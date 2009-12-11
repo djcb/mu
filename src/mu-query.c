@@ -81,10 +81,7 @@ const MuMsgField*
 sort_field_from_string (const char* fieldstr)
 {
 	const MuMsgField *field;
-	
-	if (fieldstr)
-		return NULL;
-	
+		
 	field = mu_msg_field_from_name (fieldstr);
 	if (!field && strlen(fieldstr) == 1)
 		field = mu_msg_field_from_shortcut(fieldstr[0]);
@@ -95,36 +92,35 @@ sort_field_from_string (const char* fieldstr)
 }
 
 
-/* FIXME */
 static gboolean
 handle_options (MuConfigOptions *opts)
 {
-	if (opts->ascending_flag && opts->descending_flag) {
-		g_printerr ("ignoring option '--descending'\n");
-		opts->sortdir_ascending = TRUE;
-	} else if (!opts->descending_flag)
-		opts->sortdir_ascending = !opts->descending_flag;
-	
-	return TRUE;
+	if (opts->ascending && opts->descending) {
+		g_printerr ("only one of --ascending and --descending "
+			    "may be specied\n");
+		return FALSE;
+	}
+
+	return opts->ascending = opts->descending ? FALSE : TRUE;
 }
 
 
 static gboolean
 print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 {
-	MuMsgXapian		*row;
-	const MuMsgField	*sortfield;
+	MuMsgXapian *row;
+	const MuMsgField *sortfield;
 
-	sortfield	  = NULL;
-	if (opts->sortfield_str) {
-		sortfield = sort_field_from_string (opts->sortfield_str);
+	sortfield = NULL;
+	if (opts->sortfield) {
+		sortfield = sort_field_from_string (opts->sortfield);
 		if (!sortfield) /* error occured? */
 			return FALSE;
 	}
 	
 	row = mu_query_xapian_run (xapian, query,
 				   sortfield,
-				   opts->sortdir_ascending);
+				   opts->ascending);
 	if (!row) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;

@@ -41,7 +41,6 @@ enum _MuCmd {
 typedef enum _MuCmd MuCmd;
 
 
-
 MuCmd 
 parse_cmd (const char* cmd)
 {

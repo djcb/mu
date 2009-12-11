@@ -48,12 +48,10 @@ struct _MuConfigOptions {
 					      search results */
 	const char      *fields;	/* fields to show in output */
 	
-	const char      *sortfield_str;	/* field to sort by (string) */
+	const char      *sortfield;	/* field to sort by (string) */
 
-	/* FIXME: clean up this mess */
-	gboolean        sortdir_descending ;	/* sort descending? */
-	gboolean        sortdir_ascending;
-	gboolean        ascending_flag, descending_flag;
+	gboolean        descending;	/* sort descending? */
+	gboolean        ascending;
 };
 typedef struct _MuConfigOptions MuConfigOptions;
 

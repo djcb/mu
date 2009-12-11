@@ -86,11 +86,11 @@ mu_config_options_group_query (MuConfigOptions *opts)
 		 "print the Xapian query", NULL},
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
 		 "fields to display in output", NULL},
-		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield_str,
+		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
 		 "field to sort on", NULL},
-		{"ascending", 'u', 0, G_OPTION_ARG_NONE, &opts->ascending_flag,
+		{"ascending", 'u', 0, G_OPTION_ARG_NONE, &opts->ascending,
 		 "sort ascending (up)", NULL},
-		{"descending", 'd', 0, G_OPTION_ARG_NONE, &opts->descending_flag,
+		{"descending", 'd', 0, G_OPTION_ARG_NONE, &opts->descending,
 		 "sort descending (down)", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
@@ -128,6 +128,9 @@ mu_config_init (MuConfigOptions *opts)
 	/* querying */
 	opts->xquery        = FALSE;
 	opts->fields        = "d f s";
+	opts->sortfield     = "d";
+	opts->ascending     = FALSE;
+	opts->descending    = TRUE;
 }
 
 
