@@ -3,7 +3,7 @@
 
 #include "mu-config.h"
 
-MuResult mu_query_run (MuConfigOptions *opts, GSList *args);
+MuResult mu_query_run (MuConfigOptions *opts, gchar **params);
 
 #endif /*__MU_QUERY_H__*/
 

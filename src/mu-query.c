@@ -157,12 +157,12 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 
 
 static gboolean
-do_output (MuQueryXapian *xapian, GSList *args, MuConfigOptions* opts)
+do_output (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
 {
 	gchar *query;
 	gboolean retval = TRUE;
 	
-	query = mu_query_xapian_combine (args, FALSE);
+	query = mu_query_xapian_combine (params, FALSE);
 	
 	/* if xquery is set, we print the xapian query instead of the
 	 * output; this is for debugging purposes */
@@ -179,7 +179,7 @@ do_output (MuQueryXapian *xapian, GSList *args, MuConfigOptions* opts)
 
 
 MuResult
-mu_query_run (MuConfigOptions *opts, GSList *args)
+mu_query_run (MuConfigOptions *opts, gchar **params)
 {
 	MuQueryXapian *xapian;
 	MuResult rv;
@@ -192,7 +192,7 @@ mu_query_run (MuConfigOptions *opts, GSList *args)
 	if (!xapian)
 		return MU_ERROR;
 
-	rv = do_output (xapian, args, opts) ? 0 : 1;
+	rv = do_output (xapian, opts, params) ? 0 : 1;
 	
 	mu_query_xapian_destroy (xapian);
 	
