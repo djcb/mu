@@ -1,7 +1,7 @@
 #+STARTUP:showall
 * to-do list for mu-ng first release
 
-** release 0.6 [86%]
+** release 0.6 [87%]
 
    - [X] implement re-index
    - [X] mu-index config options
@@ -17,7 +17,7 @@
    - [X] remove path-is-absolute checks
    - [X] valgrind checking
    - [X] check existing bugs in c.g.c
-   - [ ] cleanup ascending/descending stuff
+   - [X] cleanup ascending/descending stuff
    - [ ] testing
 
 
