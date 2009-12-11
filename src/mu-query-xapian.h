@@ -73,13 +73,13 @@ MuMsgXapian*     mu_query_xapian_run      (MuQueryXapian *self,
  * please refer to the mu-find manpage, or
  * http://xapian.org/docs/queryparser.html
  *
- * @param lst a list of search expressions
+ * @param string array of search expressions
  * @param connect_or if TRUE, combine the expressions with OR, otherwise use AND
  * 
  * @return a string with the combined xapian expression or NULL in
  * case of error; free with g_free when it's no longer needed
  */
-char*  mu_query_xapian_combine  (GSList *lst, gboolean connect_or);
+char*  mu_query_xapian_combine  (gchar **params, gboolean connect_or);
 
 /** 
  * get a string representation of the Xapian search query

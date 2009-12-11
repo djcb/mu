@@ -79,7 +79,6 @@ _uninit_mu_query_xapian (MuQueryXapian *mqx)
 		g_warning ("%s: caught exception", __FUNCTION__);
 	}
 }
-	
 static Xapian::Query
 _get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 	
@@ -93,13 +92,16 @@ _get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 			 Xapian::QueryParser::FLAG_WILDCARD         |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_PARTIAL);
-
+	} catch (const Xapian::Error& ex) {
+		g_warning ("error in query: %s (\"%s\")",
+			   ex.get_msg().c_str(), searchexpr);
 	} catch (...) {
 		g_warning ("%s: caught exception", __FUNCTION__);
-		if (err)
-			*err  = 1;
-		return Xapian::Query();
-	}
+	}	
+	if (err)
+		*err  = 1;
+	
+	return Xapian::Query();
 }
 
 static void
@@ -211,36 +213,37 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 }
 
 char*
-mu_query_xapian_combine (GSList *lst, gboolean connect_or)
+mu_query_xapian_combine (gchar **params, gboolean connect_or)
 {
 	GString *str;
-
-	g_return_val_if_fail (lst, NULL);
+	int i;
+	
+	g_return_val_if_fail (params && params[0], NULL);
 	
 	str = g_string_sized_new (64); /* just a guess */
-	while (lst) {
+	
+	for (i = 0; params && params[i]; ++i) { 
+
 		const char* elm;
 		const char* cnx = "";
 		gboolean do_quote;
 
-		elm = (const gchar*)lst->data;
+		elm = (const gchar*)params[i];
 		if (!elm) /* shouldn't happen */
 			break;  
 		
-		if (lst->next)
+		if (params[i + 1])
 			cnx = connect_or ? " OR " : " AND ";
 
-		do_quote = (strcasecmp (elm, "OR") == 0 ||
+		do_quote = (strcasecmp (elm, "OR") == 0  ||
 			    strcasecmp (elm, "AND") == 0 ||
 			    strcasecmp (elm, "NOT") == 0);
 		
 		g_string_append_printf (str, "%s%s%s%s",
 					do_quote ? "\"" : "",
-					(gchar*)lst->data,
+					elm,
 					do_quote ? "\"" : "",
 					cnx);	
-		lst = lst->next;
 	}
-
 	return g_string_free (str, FALSE);
 }
