@@ -52,37 +52,6 @@ mu_util_dir_expand (const char *path)
 
 
 
-GSList *
-mu_util_strlist_from_args (int argc, char *argv[])
-{
-	GSList *lst;
-	int i;
-
-	g_return_val_if_fail (argc >= 0, NULL);
-	if (argc == 0)
-		return NULL;
-	g_return_val_if_fail (argv, NULL);
-
-	/* we prepend args in opposite direction;
-	 * prepending is faster
-	 */
-	for (i = argc - 1, lst = NULL; i >= 0; --i) {
-		if (!argv[i])
-			continue;		
-		lst = g_slist_prepend (lst, g_strdup(argv[i]));
-	}
-	return lst;
-}
-
-
-void
-mu_util_strlist_free (GSList *lst)
-{
-	g_slist_foreach (lst, (GFunc)g_free, NULL);
-	g_slist_free (lst);
-}
-
-
 static gboolean
 _is_readable_dir (const gchar* path)
 {

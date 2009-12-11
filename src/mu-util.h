@@ -44,27 +44,6 @@ char*       mu_util_dir_expand (const char* path);
  */
 char*       mu_util_guess_maildir (void);
 
-/** 
- * take a char*[] and turn it into a GSList
- * 
- * @param argc numbers of strings
- * @param argv array of strings
- * 
- * @return a newly allocated GSList of the arguments; or NULL in case
- * of error. use mu_exprs_helpers_strlist_free when done with the list
- */
-GSList   *mu_util_strlist_from_args    (int argc, char *argv[]);
-
-
-
-/** 
- * free a list of strings, as produced by mu_expr_helpers_strlist_from_args or
- * mu_expr_helpers_strlist_from_str
- *
- * @param lst a list or NULL
- */
-void      mu_util_strlist_free         (GSList *lst);
-
 
 G_END_DECLS
 
