@@ -29,7 +29,7 @@
 #include "mu-msg-gmime.h"
 
 
-enum StringFields {
+enum _StringFields {
 	HTML_FIELD  = 0, 
 	TEXT_FIELD,
 	TO_FIELD,
@@ -39,6 +39,7 @@ enum StringFields {
 	
 	FIELD_NUM
 };
+typedef enum _StringFields StringFields;
 
 struct _MuMsgGMime {
 	GMimeMessage    *_mime_msg;
@@ -204,46 +205,41 @@ mu_msg_gmime_get_from (MuMsgGMime *msg)
 }
 
 
+static const char*
+_get_recipient (MuMsgGMime *msg, GMimeRecipientType rtype, StringFields field)
+{
+	/* can only be set once */
+	if (!msg->_fields[field]) {
+
+		char *recep;
+		InternetAddressList *receps;
+		receps = g_mime_message_get_recipients (msg->_mime_msg, rtype);
+
+		/* FIXME: is there an internal leak in
+		 * internet_address_list_to_string? */
+		recep = (char*)internet_address_list_to_string (receps, TRUE);
+		if (recep && recep[0]=='\0')
+			g_free (recep);
+		else 
+			msg->_fields[field] = recep;
+	}
+
+	return msg->_fields[field];
+}
+
+
 const char*
 mu_msg_gmime_get_to (MuMsgGMime *msg)
 {
 	g_return_val_if_fail (msg, NULL);
-
-	if (!msg->_fields[TO_FIELD]) {
-		char *to;
-		InternetAddressList *recps;
-		recps = g_mime_message_get_recipients (msg->_mime_msg,
-						       GMIME_RECIPIENT_TYPE_TO);
-		/* FIXME */
-		to = (char*)internet_address_list_to_string (recps, TRUE);
-		if (to && strlen(to) == 0)
-			g_free (to);
-		else 
-			msg->_fields[TO_FIELD] = to;
-	}
-
-	return msg->_fields[TO_FIELD];
+	return _get_recipient (msg, GMIME_RECIPIENT_TYPE_TO, TO_FIELD);
 }
 
 const char*
 mu_msg_gmime_get_cc (MuMsgGMime *msg)
 {
 	g_return_val_if_fail (msg, NULL);
-
-	if (!msg->_fields[CC_FIELD]) {
-		char *cc;
-		InternetAddressList *recps;
-		recps = g_mime_message_get_recipients (msg->_mime_msg,
-						       GMIME_RECIPIENT_TYPE_CC);
-		
-		cc = internet_address_list_to_string (recps, TRUE);
-		if (cc && strlen(cc) == 0)
-			g_free (cc);
-		else 
-			msg->_fields[CC_FIELD] = cc;
-	}
-
-	return msg->_fields[CC_FIELD];
+	return _get_recipient (msg, GMIME_RECIPIENT_TYPE_CC, CC_FIELD);
 }
 
 
