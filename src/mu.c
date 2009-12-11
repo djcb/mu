@@ -235,8 +235,9 @@ main (int argc, char *argv[])
 		}
 	}
 	
-	mu_msg_gmime_uninit ();
+	mu_msg_gmime_uninit();
 	mu_log_uninit();
-
+	mu_config_uninit(&config);
+	
 	return rv == MU_OK ? 0 : 1;
 }
