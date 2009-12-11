@@ -146,7 +146,11 @@ mu_query_xapian_new (const char* path)
 void
 mu_query_xapian_destroy (MuQueryXapian *self)
 {
+	if (!self)
+		return;
+
 	_uninit_mu_query_xapian (self);
+	g_free (self);
 }
 
 
