@@ -29,7 +29,7 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{ "debug", 'd', 0, G_OPTION_ARG_NONE, &opts->debug,
+		{ "debug", 'g', 0, G_OPTION_ARG_NONE, &opts->debug,
 		  "print debug output to standard-error", NULL },
 		{ "quiet", 'q', 0, G_OPTION_ARG_NONE, &opts->quiet,
 		  "don't give any progress information", NULL },
@@ -37,7 +37,7 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 		 "display version and copyright information", NULL},
 		{"muhome", 'h', 0, G_OPTION_ARG_FILENAME, &opts->muhome,
 		 "mu directory", NULL},
-		{"log-stderr", 's', 0, G_OPTION_ARG_NONE, &opts->log_stderr,
+		{"log-stderr", 'e', 0, G_OPTION_ARG_NONE, &opts->log_stderr,
 		 "log to standard error", NULL},
 		{"log-append", 'a', 0, G_OPTION_ARG_NONE, &opts->log_append,
 		 "append to the current logfile (instead of overwriting it)", 
@@ -62,8 +62,6 @@ mu_config_options_group_index (MuConfigOptions *opts)
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
 		 "top of the maildir", NULL},
-
-		/* FIXME: implement this */
 		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
 		 "re-index already indexed messages ", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
@@ -83,28 +81,25 @@ mu_config_options_group_query (MuConfigOptions *opts)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"xquery", 'x', 0, G_OPTION_ARG_NONE, &opts->xquery,
-		 "print a string representation of the Xapian query", NULL},
+		 "print the Xapian query", NULL},
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
 		 "fields to display in output", NULL},
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield_str,
 		 "field to sort on", NULL},
-		{"ascending", 'a', 0, G_OPTION_ARG_NONE, &opts->ascending_flag,
-		 "sort ascending", NULL},
-		{"descending", 'c', 0, G_OPTION_ARG_NONE, &opts->descending_flag,
-		 "sort ascending", NULL},
+		{"ascending", 'u', 0, G_OPTION_ARG_NONE, &opts->ascending_flag,
+		 "sort ascending (up)", NULL},
+		{"descending", 'd', 0, G_OPTION_ARG_NONE, &opts->descending_flag,
+		 "sort descending (down)", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
-	og = g_option_group_new ("querying",
+	og = g_option_group_new ("query",
 				 "options for the 'query' command",
 				 "", NULL, NULL);	
 	g_option_group_add_entries (og, entries);
 	
 	return og;
 }
-
-
-
 
 
 void
