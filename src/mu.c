@@ -191,10 +191,10 @@ main (int argc, char *argv[])
 	if (config.version)
 		return show_version ();
 	
-	if (argc < 2)
+	if (!config.params[0]) /* no command? */
 		return show_usage (FALSE);
 	
-	cmd = parse_cmd (argv[1]);
+	cmd = parse_cmd (config.params[0]);
 	if (cmd == MU_CMD_UNKNOWN)
 		return show_usage (FALSE);
 	
@@ -202,7 +202,7 @@ main (int argc, char *argv[])
 		return show_help (argc > 2 ? argv[2] : NULL);
 
 	if (!init_log (&config))
-		return 1;
+		return 1; 
 
 	mu_msg_gmime_init ();
 	rv = MU_OK;
@@ -223,16 +223,12 @@ main (int argc, char *argv[])
 		mu_index_destroy (midx);
 		
 	} else if (cmd == MU_CMD_QUERY) {
-		
-		GSList *args;
-		if (argc < 3) {
+
+		if (!config.params[1]) {
 			g_printerr ("error: missing something to search for\n");
 			rv = 1;
-		} else {
-			args = mu_util_strlist_from_args (argc-2, argv+2); 
-			rv = mu_query_run (&config, args);
-			mu_util_strlist_free (args);
-		}
+		} else 
+			rv = mu_query_run (&config, &config.params[1]);
 	}
 	
 	mu_msg_gmime_uninit();
@@ -241,3 +237,4 @@ main (int argc, char *argv[])
 	
 	return rv == MU_OK ? 0 : 1;
 }
+
