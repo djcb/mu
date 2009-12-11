@@ -35,6 +35,7 @@ struct _MuConfigOptions {
 	gboolean	version; /* request mu version */
 	gboolean	log_stderr; /*log to stderr (instead of logfile)*/
 	gboolean	log_append; /* append to log (instead of overwriting)*/
+	gchar**         params;    /* parameters (for querying) */
 	
 	
 	/* options for indexing */

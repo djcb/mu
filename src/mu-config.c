@@ -42,6 +42,8 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 		{"log-append", 'a', 0, G_OPTION_ARG_NONE, &opts->log_append,
 		 "append to the current logfile (instead of overwriting it)", 
 		 NULL},
+		{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
+		  &opts->params, "parameters", NULL },
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 	
@@ -138,4 +140,6 @@ mu_config_uninit (MuConfigOptions *opts)
 	 * for the 'outside world' */
 	g_free ((gchar*)opts->muhome);
 	g_free ((gchar*)opts->maildir);
+
+	g_strfreev (opts->params);
 }
