@@ -117,18 +117,45 @@ has_noindex_file (const char *path)
 	return FALSE;
 }
 
+static gboolean
+_ignore_dir_entry (struct dirent *entry)
+{
+	const char *name;
+	
+	if (entry->d_type!= DT_REG)
+		return FALSE;
+
+	name = entry->d_name;
+	
+	if (name[0] != '.')
+		return FALSE;
+
+	/* ignore . and .. */
+	if (name[1] == '\0' ||
+	    (name[1] == '.' && name[2] == '\0'))
+		return TRUE;
+
+	/* ignore .notmuch, .nnmaildir */
+	if (name[1] == 'n')  {/* optimization */
+		if (strcmp (name, ".notmuch") == 0 ||
+		    strcmp (name, ".nnmaildir") == 0)
+			return TRUE;
+	}
+	
+	return FALSE;
+}
+
 static MuResult
 process_dir_entry (const char* path,struct dirent *entry,
 		   MuPathWalkMsgCallback cb_msg, MuPathWalkDirCallback cb_dir, 
 		   void *data)
 {
 	char* fullpath;
-	
-	/* ignore any dir starting with a dot; this will make us
-	 * ignore .notmuch, .nnmaildir etc. */
-	if (G_UNLIKELY(entry->d_name[0] == '.')) 
-			return MU_OK;
 
+	/* ignore special dirs: */
+	if (_ignore_dir_entry (entry))
+		return MU_OK; 
+	
 	fullpath = g_newa (char, strlen(path) + 1 + strlen(entry->d_name) + 1);
 	sprintf (fullpath, "%s%c%s", path, G_DIR_SEPARATOR, entry->d_name);
 	
