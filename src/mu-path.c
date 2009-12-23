@@ -107,8 +107,10 @@ static gboolean
 has_noindex_file (const char *path)
 {
 	char *fname;
+
 	fname = g_newa (char, strlen(path) + 1 + strlen(MU_PATH_NOINDEX_FILE) + 1);
 	sprintf (fname, "%s%c%s", path, G_DIR_SEPARATOR, MU_PATH_NOINDEX_FILE);
+
 	if (access (fname, F_OK) == 0)
 		return TRUE;
 	else if (errno != ENOENT)
@@ -121,9 +123,15 @@ static gboolean
 _ignore_dir_entry (struct dirent *entry)
 {
 	const char *name;
-	
-	if (entry->d_type!= DT_REG)
-		return FALSE;
+
+	/* if it's not a dir and not a file, ignore it.
+	 * note, this means also symlinks (DT_LNK) are ignored,
+	 * maybe make this optional. Also note that entry->d_type is
+	 * defined on Linux, BSDs is not part of POSIX; this needs a
+	 * configure check */
+	if (entry->d_type != DT_REG &&
+	    entry->d_type != DT_DIR)
+		return TRUE;
 
 	name = entry->d_name;
 	
@@ -151,10 +159,10 @@ process_dir_entry (const char* path,struct dirent *entry,
 		   void *data)
 {
 	char* fullpath;
-
+	
 	/* ignore special dirs: */
-	if (_ignore_dir_entry (entry))
-		return MU_OK; 
+	if (_ignore_dir_entry (entry)) 
+		return MU_OK;
 	
 	fullpath = g_newa (char, strlen(path) + 1 + strlen(entry->d_name) + 1);
 	sprintf (fullpath, "%s%c%s", path, G_DIR_SEPARATOR, entry->d_name);
