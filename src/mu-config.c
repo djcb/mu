@@ -30,7 +30,7 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{ "debug", 'g', 0, G_OPTION_ARG_NONE, &opts->debug,
-		  "print debug output to standard-error", NULL },
+		  "print debug output to standard error", NULL },
 		{ "quiet", 'q', 0, G_OPTION_ARG_NONE, &opts->quiet,
 		  "don't give any progress information", NULL },
 		{"version", 'v', 0, G_OPTION_ARG_NONE, &opts->version,
@@ -40,7 +40,7 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 		{"log-stderr", 'e', 0, G_OPTION_ARG_NONE, &opts->log_stderr,
 		 "log to standard error", NULL},
 		{"log-append", 'a', 0, G_OPTION_ARG_NONE, &opts->log_append,
-		 "append to the current logfile (instead of overwriting it)", 
+		 "append to the logfile (instead of overwriting)", 
 		 NULL},
 		{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		  &opts->params, "parameters", NULL },
@@ -65,7 +65,7 @@ mu_config_options_group_index (MuConfigOptions *opts)
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
 		 "top of the maildir", NULL},
 		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
-		 "re-index already indexed messages ", NULL},
+		 "index even already indexed messages ", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 	
@@ -85,7 +85,7 @@ mu_config_options_group_query (MuConfigOptions *opts)
 		{"xquery", 'x', 0, G_OPTION_ARG_NONE, &opts->xquery,
 		 "print the Xapian query", NULL},
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
-		 "fields to display in output", NULL},
+		 "fields to display in the output", NULL},
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
 		 "field to sort on", NULL},
 		{"ascending", 'u', 0, G_OPTION_ARG_NONE, &opts->ascending,
