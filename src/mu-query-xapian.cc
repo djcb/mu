@@ -55,10 +55,12 @@ _init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 				      (gpointer)mqx->_qparser);
 		
 	} catch (...) {
+
+		g_warning ("%s: caught exception", __FUNCTION__);
+		
 		delete mqx->_db;
 		delete mqx->_qparser;
-		g_warning ("%s: caught exception", __FUNCTION__);
-
+		
 		return FALSE;
 	}
 	return TRUE;
@@ -76,9 +78,11 @@ _uninit_mu_query_xapian (MuQueryXapian *mqx)
 			delete mqx->_sorters[i];
 		
 	} catch (...) {
+		
 		g_warning ("%s: caught exception", __FUNCTION__);
 	}
 }
+
 static Xapian::Query
 _get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 	
@@ -92,10 +96,13 @@ _get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 			 Xapian::QueryParser::FLAG_WILDCARD         |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_PARTIAL);
+
 	} catch (const Xapian::Error& ex) {
+
 		g_warning ("error in query: %s (\"%s\")",
 			   ex.get_msg().c_str(), searchexpr);
 	} catch (...) {
+
 		g_warning ("%s: caught exception", __FUNCTION__);
 	}	
 	if (err)
@@ -188,7 +195,6 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 	}
 
 	return NULL;
-
 }
 
 char*
