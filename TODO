@@ -27,7 +27,9 @@
    - [ ] signal handler
    - [ ] add move-mail support
    - [ ] add mu cleanup
-   - [ ] re-add symlink support (?)
+   - [ ] add symlink-following option for index
+   - [ ] re-add symlink support for search
+   - [ ] document support for mutt, wanderlust
    - [ ] test suite
    - [ ] moving msg field formatting to MuMsgField
    - [ ] bookmarks
