@@ -88,7 +88,7 @@ static const MuMsgField FIELD_DATA[] = {
 	  MU_MSG_FIELD_ID_PATH, 
 	  MU_MSG_FIELD_TYPE_STRING,
 	  "path", "p", "P",
-	  FLAG_XAPIAN | FLAG_GMIME 
+	  FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
 	},
 	
 	{ 
