@@ -95,7 +95,7 @@ show_help (const char* cmd)
 		g_print ("Help about %s\n", cmd);
 	else
 		g_print ("General help\n");
-
+	
 	return 0;
 }
 
@@ -202,7 +202,7 @@ main (int argc, char *argv[])
 
 	if (!init_log (&config))
 		return 1; 
-
+	
 	mu_msg_gmime_init ();
 	rv = MU_OK;
 	
