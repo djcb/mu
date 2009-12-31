@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <inttypes.h>
 
+#include "mu-result.h"
 #include "mu-msg-gmime.h"
 
 G_BEGIN_DECLS
@@ -36,7 +37,7 @@ void              mu_store_xapian_destroy (MuStoreXapian *store);
 MuResult	  mu_store_xapian_store   (MuStoreXapian *store,
 					   MuMsgGMime *msg);
 MuResult          mu_store_xapian_cleanup (MuStoreXapian *store, 
-					     const char* msgpath);
+					   const char* msgpath);
 
 void              mu_store_xapian_set_timestamp (MuStoreXapian *store,
 						   const char* msgpath, 

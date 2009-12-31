@@ -25,8 +25,8 @@ mu_SOURCES=			\
 	mu-query.c		\
 	mu-query-xapian.cc	\
 	mu-query-xapian.h	\
-	mu-path.c		\
-	mu-path.h		\
+	mu-walk.c		\
+	mu-walk.h		\
 	mu-result.h		\
 	mu-store-xapian.cc	\
 	mu-store-xapian.h	\

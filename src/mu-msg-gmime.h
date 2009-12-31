@@ -21,7 +21,6 @@
 #define __MU_MSG_READ_H__
 
 #include "mu-msg.h"
-#include "mu-path.h"
 
 G_BEGIN_DECLS
 
