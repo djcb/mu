@@ -38,6 +38,7 @@ enum _MuCmd {
 	MU_CMD_INDEX,
 	MU_CMD_QUERY,
 	MU_CMD_MKDIR,
+	MU_CMD_LINK,
 	MU_CMD_HELP,
 	MU_CMD_UNKNOWN
 };
@@ -62,6 +63,9 @@ parse_cmd (const char* cmd)
 	if ((strcmp (cmd, "mkmdir") == 0) ||
 	    (strcmp (cmd, "mkdir") == 0)) 
 		return MU_CMD_MKDIR;
+
+	if (strcmp (cmd, "link") == 0)
+		return MU_CMD_LINK;
 	
 	if ((strcmp (cmd, "help") == 0) ||
 	    (strcmp (cmd, "info") == 0))
@@ -112,7 +116,8 @@ make_maildir (MuConfigOptions *opts)
 	i = 1;
 	while (opts->params[i]) {
 		GError *err = NULL;
-		if (!mu_maildir_mkmdir (opts->params[i], 0755, &err)) {
+		if (!mu_maildir_mkmdir (opts->params[i], 0755, FALSE,
+					&err)) {
 			g_printerr ("error creating %s: %s\n",
 				    opts->params[i], err->message);
 			g_error_free (err);
@@ -123,7 +128,34 @@ make_maildir (MuConfigOptions *opts)
 
 	return 0;
 }
+
+
+
+static int
+make_symlink (MuConfigOptions *opts)
+{
+	GError *err;
 	
+	if (!opts->params[0])
+		return 1;  /* shouldn't happen */
+ 	
+	if (!opts->params[1] || !opts->params[2]) {
+		g_printerr ("usage: mu link <src> <targetdir>\n");
+		return 1;
+	}
+
+	err = NULL;
+	if (!mu_maildir_link (opts->params[1], opts->params[2], &err)) {
+		if (err) {
+			g_printerr ("error: %s\n", err->message);
+			g_error_free (err);
+		}
+		return 1;
+	}
+	
+	return 0;
+}
+
 
 
 
@@ -165,7 +197,7 @@ show_help (MuConfigOptions *opts)
 {
 	/* FIXME: get context-sensitive help */
 	show_version ();
-	show_usage (FALSE);
+	return show_usage (FALSE);
 }
 
 
@@ -239,6 +271,9 @@ main (int argc, char *argv[])
 
 	if (cmd == MU_CMD_MKDIR)
 		return make_maildir (&config);
+	
+	if (cmd == MU_CMD_LINK)
+		return make_symlink (&config);
 	
 	if (!init_log (&config))
 		return 1;
