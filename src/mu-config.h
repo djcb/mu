@@ -102,6 +102,7 @@ GOptionGroup* mu_config_options_group_index (MuConfigOptions *opts);
 GOptionGroup* mu_config_options_group_query (MuConfigOptions *opts);
 
 
+
 char* mu_config_expanded_mu_home (MuConfigOptions *opts);
 
 #endif /*__MU_CONFIG_H__*/

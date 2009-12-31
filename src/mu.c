@@ -26,6 +26,8 @@
 
 #include "mu-index.h"
 #include "mu-query.h"
+#include "mu-maildir.h"
+
 #include "mu-util.h"
 #include "mu-config.h"
 #include "mu-log.h"
@@ -35,6 +37,7 @@
 enum _MuCmd {
 	MU_CMD_INDEX,
 	MU_CMD_QUERY,
+	MU_CMD_MKDIR,
 	MU_CMD_HELP,
 	MU_CMD_UNKNOWN
 };
@@ -56,10 +59,14 @@ parse_cmd (const char* cmd)
 	    (strcmp (cmd, "search") == 0))
 		return MU_CMD_QUERY;
 
+	if ((strcmp (cmd, "mkmdir") == 0) ||
+	    (strcmp (cmd, "mkdir") == 0)) 
+		return MU_CMD_MKDIR;
+	
 	if ((strcmp (cmd, "help") == 0) ||
 	    (strcmp (cmd, "info") == 0))
 		return MU_CMD_HELP;
-
+	
 	return MU_CMD_UNKNOWN;
 }
 
@@ -88,15 +95,52 @@ msg_cb  (MuIndexStats* stats, void *user_data)
 	return MU_OK;
 }
 
+
 static int
-show_help (const char* cmd)
+make_maildir (MuConfigOptions *opts)
 {
-	if (cmd)
-		g_print ("Help about %s\n", cmd);
-	else
-		g_print ("General help\n");
+	int i;
 	
+	if (!opts->params[0])
+		return 1;  /* shouldn't happen */
+ 	
+	if (!opts->params[1]) {
+		g_printerr ("usage: mu mkdir <dir> [more dirs]\n");
+		return 1;
+	}
+	
+	i = 1;
+	while (opts->params[i]) {
+		GError *err = NULL;
+		if (!mu_maildir_mkmdir (opts->params[i], 0755, &err)) {
+			g_printerr ("error creating %s: %s\n",
+				    opts->params[i], err->message);
+			g_error_free (err);
+			return 1;
+		}
+		++i;
+	}
+
 	return 0;
+}
+	
+
+
+
+static int
+show_usage (gboolean noerror)
+{
+	const char* usage=
+		"usage: mu [options] command [parameters]\n"
+		"\twhere command is one of index, query, help\n"
+		"see mu(1) for for information\n";
+
+	if (noerror)
+		g_print ("%s", usage);
+	else
+		g_printerr ("%s", usage);
+
+	return noerror ? 0 : 1;
 }
 
 static int
@@ -117,20 +161,13 @@ show_version (void)
 }
 
 static int
-show_usage (gboolean noerror)
+show_help (MuConfigOptions *opts)
 {
-	const char* usage=
-		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, query, help\n"
-		"see mu(1) for for information\n";
-
-	if (noerror)
-		g_print ("%s", usage);
-	else
-		g_printerr ("%s", usage);
-
-	return noerror ? 0 : 1;
+	/* FIXME: get context-sensitive help */
+	show_version ();
+	show_usage (FALSE);
 }
+
 
 static gboolean
 init_log (MuConfigOptions *opts)
@@ -198,10 +235,13 @@ main (int argc, char *argv[])
 		return show_usage (FALSE);
 	
 	if (cmd == MU_CMD_HELP)
-		return show_help (argc > 2 ? argv[2] : NULL);
+		return show_help (&config);
 
+	if (cmd == MU_CMD_MKDIR)
+		return make_maildir (&config);
+	
 	if (!init_log (&config))
-		return 1; 
+		return 1;
 	
 	mu_msg_gmime_init ();
 	rv = MU_OK;

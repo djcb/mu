@@ -10,6 +10,8 @@ mu_SOURCES=			\
 	mu-index.h		\
 	mu-log.c		\
 	mu-log.h		\
+	mu-maildir.c		\
+	mu-maildir.h		\
 	mu-msg-fields.c		\
 	mu-msg-fields.h		\
 	mu-msg-flags.c		\

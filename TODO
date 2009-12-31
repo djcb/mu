@@ -8,6 +8,8 @@
    - [X] check which options actually work, remove rest
    - [X] fix AND/OR escaping issue
    - [ ] man page / help
+   - [ ] add mkmdir
+   - [ ] re-add symlink support for search
    - [X] support MAILDIR
    - [X] config system (centralize options)
    - [X] logging system
@@ -28,7 +30,6 @@
    - [ ] add move-mail support
    - [ ] add mu cleanup
    - [ ] add symlink-following option for index
-   - [ ] re-add symlink support for search
    - [ ] document support for mutt, wanderlust
    - [ ] test suite
    - [ ] moving msg field formatting to MuMsgField

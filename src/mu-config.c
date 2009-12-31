@@ -146,3 +146,4 @@ mu_config_uninit (MuConfigOptions *opts)
 
 	g_strfreev (opts->params);
 }
+
