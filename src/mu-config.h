@@ -29,27 +29,28 @@
 struct _MuConfigOptions {
 	
 	/* general options */
-	gboolean	quiet; /* don't give any output */
-	gboolean        debug; /* spew out debug info */
-	const char	*muhome;/* the House of Mu */
-	gboolean	version; /* request mu version */
-	gboolean	log_stderr; /*log to stderr (instead of logfile)*/
-	gboolean	log_append; /* append to log (instead of overwriting)*/
-	gchar**         params;    /* parameters (for querying) */
+	gboolean	 quiet; /* don't give any output */
+	gboolean	 debug; /* spew out debug info */
+	char		*muhome;/* the House of Mu */
+	gboolean	 version;	/* request mu version */
+	gboolean	 log_stderr;	/*log to stderr (instead of logfile)*/
+	gboolean	 log_append;	/* append to log (don't overwrite)*/
+	gchar**	         params;	/* parameters (for querying) */
 	
 	
 	/* options for indexing */
-	const char      *maildir;	/* where the mails are */
+	char	        *maildir;	/* where the mails are */
 	gboolean         cleanup;	/* cleanup deleted mails form db */
 	gboolean         reindex;	/* re-index existing mails */
 	
 	/* options for querying */
 	gboolean         xquery;       /* give the Xapian query instead of
 					      search results */
-	const char      *fields;	/* fields to show in output */
+	char		*fields;	/* fields to show in output */
 	
-	const char      *sortfield;	/* field to sort by (string) */
-
+	char	        *sortfield;	/* field to sort by (string) */
+	char            *linksdir;      /* maildir to output symlinks */
+	
 	gboolean        descending;	/* sort descending? */
 	gboolean        ascending;
 };

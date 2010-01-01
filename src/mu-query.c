@@ -21,6 +21,7 @@
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "mu-util.h"
 #include "mu-result.h"
@@ -28,6 +29,7 @@
 #include "mu-msg-flags.h"
 #include "mu-query-xapian.h"
 #include "mu-query.h"
+#include "mu-maildir.h"
 
 static gboolean
 print_query (MuQueryXapian *xapian, const gchar *query)
@@ -153,7 +155,7 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 
 
 static gboolean
-do_output (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
+_do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
 {
 	gchar *query;
 	gboolean retval = TRUE;
@@ -172,6 +174,69 @@ do_output (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
 	return retval;
 }
 
+static gboolean
+_create_linkdir_if_nonexistant (const gchar* linkdir)
+{
+	GError *err;
+	
+	if (access (linkdir, F_OK) != 0) {
+		err = NULL;
+		if (!mu_maildir_mkmdir (linkdir, 0700, TRUE, &err)) {
+			g_printerr ("error: %s", err->message);
+			g_error_free (err);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
+_do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
+{
+	gchar *query;
+	gboolean retval = TRUE;
+	MuMsgXapian *row;
+	const MuMsgField *pathfield;
+
+	if (!_create_linkdir_if_nonexistant (opts->linksdir))
+		return FALSE;
+	
+	query = mu_query_xapian_combine (params, FALSE);
+	row = mu_query_xapian_run (xapian, query, NULL, FALSE);
+	if (!row) {
+		g_printerr ("error: running query failed\n");
+		return FALSE;
+	}
+	
+	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
+
+	/* iterate over the found rows */
+	while (!mu_msg_xapian_is_done (row)) {
+		const char *path;
+		path = mu_msg_xapian_get_field (row, pathfield);
+		if (path) {
+			GError *err = NULL;
+			if (!mu_maildir_link (path, opts->linksdir, &err)) {
+				if (err) {
+					g_printerr ("error: %s", err->message);
+					g_error_free (err);
+				}
+				return FALSE;
+			}
+		}
+		
+		mu_msg_xapian_next (row);
+	}
+	
+	mu_msg_xapian_destroy (row);
+	g_free (query);
+
+	return retval;
+}
+
+
+
 
 
 MuResult
@@ -188,7 +253,10 @@ mu_query_run (MuConfigOptions *opts, gchar **params)
 	if (!xapian)
 		return MU_ERROR;
 
-	rv = do_output (xapian, opts, params) ? 0 : 1;
+	if (opts->linksdir)
+		rv = _do_output_links (xapian, opts, params) ? 0 : 1;
+	else
+		rv = _do_output_text (xapian, opts, params) ? 0 : 1;
 	
 	mu_query_xapian_destroy (xapian);
 	

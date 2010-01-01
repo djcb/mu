@@ -297,7 +297,6 @@ main (int argc, char *argv[])
 		mu_index_destroy (midx);
 		
 	} else if (cmd == MU_CMD_QUERY) {
-
 		if (!config.params[1]) {
 			g_printerr ("error: missing something to search for\n");
 			rv = 1;

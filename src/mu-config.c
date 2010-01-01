@@ -92,6 +92,8 @@ mu_config_options_group_query (MuConfigOptions *opts)
 		 "sort ascending (up)", NULL},
 		{"descending", 'd', 0, G_OPTION_ARG_NONE, &opts->descending,
 		 "sort descending (down)", NULL},
+		{"linksdir", 't', 0, G_OPTION_ARG_STRING, &opts->linksdir,
+		 "output as symbolic links to a target maildir", NULL },
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
@@ -131,6 +133,7 @@ mu_config_init (MuConfigOptions *opts)
 	opts->sortfield     = "d";
 	opts->ascending     = FALSE;
 	opts->descending    = TRUE;
+	opts->linksdir      = NULL;
 }
 
 
@@ -139,11 +142,9 @@ mu_config_uninit (MuConfigOptions *opts)
 {
 	g_return_if_fail (opts);
 
-	/* yes, this is fine -- they are only const
-	 * for the 'outside world' */
-	g_free ((gchar*)opts->muhome);
-	g_free ((gchar*)opts->maildir);
-
+	g_free (opts->muhome);
+	g_free (opts->maildir);
+	g_free (opts->linksdir);
 	g_strfreev (opts->params);
 }
 
