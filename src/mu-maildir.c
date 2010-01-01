@@ -34,7 +34,7 @@
 
 
 static gboolean
-_create_maildir (const char *path, int mode, GError **err)
+_create_maildir (const char *path, int mode)
 {
 	int i;
 	const gchar* subdirs[] = {"new", "cur", "tmp"};
@@ -43,7 +43,7 @@ _create_maildir (const char *path, int mode, GError **err)
 	if (access (path, F_OK) == 0)
 		errno = EEXIST;
 	if (errno != ENOENT) {
-		g_set_error (err, 0, 0, "%s", strerror (errno));
+		g_warning ("%s", strerror (errno));
 		return FALSE;
 	}
 	
@@ -59,8 +59,7 @@ _create_maildir (const char *path, int mode, GError **err)
 		g_free (fullpath);
 		
 		if (rv != 0) {
-			g_set_error (err, 0, 0, "%s",
-				     strerror (errno));
+			g_warning ("%s", strerror (errno));
 			return FALSE;
 		}
 	}
@@ -69,7 +68,7 @@ _create_maildir (const char *path, int mode, GError **err)
 }
 
 static gboolean
-_create_noindex (const char *path, GError **err)
+_create_noindex (const char *path)
 {	
 	/* create a noindex file if requested */
 	int fd;
@@ -80,25 +79,24 @@ _create_noindex (const char *path, GError **err)
 	fd = creat (noindexpath, 0644);
 	g_free (noindexpath);
 	if (fd < 0 || close (fd) != 0) {
-		g_set_error (err, 0, 0, "%s", strerror (errno));
+		g_warning ("%s", strerror (errno));
 		return FALSE;
 	}
-
+	
 	return TRUE;
 }
 
 
 gboolean
-mu_maildir_mkmdir (const char* path, int mode,
-		   gboolean noindex, GError **err)
+mu_maildir_mkmdir (const char* path, int mode, gboolean noindex)
 {
 	
 	g_return_val_if_fail (path, FALSE);
 	
-	if (!_create_maildir (path, mode, err))
+	if (!_create_maildir (path, mode))
 		return FALSE;
 
-	if (noindex && !_create_noindex (path, err))
+	if (noindex && !_create_noindex (path))
 		return FALSE;
 	
 	return TRUE;
@@ -107,7 +105,7 @@ mu_maildir_mkmdir (const char* path, int mode,
 /* determine whether the source message is in 'new' or in 'cur';
  * we ignore messages in 'tmp' for obvious reasons */
 static gboolean
-_check_subdir (const char *src, gboolean *in_cur, GError **err)
+_check_subdir (const char *src, gboolean *in_cur)
 {
 	gchar *srcpath;
 
@@ -118,8 +116,7 @@ _check_subdir (const char *src, gboolean *in_cur, GError **err)
 	else if (g_str_has_suffix (srcpath, "cur"))
 		*in_cur = TRUE;
 	else {
-		g_set_error (err, 0, 0, "%s",
-			     "Invalid source message");
+		g_warning ("%s", "Invalid source message");
 		return FALSE;
 	}
 	g_free (srcpath);
@@ -128,14 +125,13 @@ _check_subdir (const char *src, gboolean *in_cur, GError **err)
 }
 
 static gchar*
-_get_target_fullpath (const char* src,  const gchar *targetpath,
-		      GError **err)
+_get_target_fullpath (const char* src,  const gchar *targetpath)
 {
 	gchar *targetfullpath;
 	gchar *srcfile;
 	gboolean in_cur;
 	
-	if (!_check_subdir (src, &in_cur, err))
+	if (!_check_subdir (src, &in_cur))
 		return NULL;
 	
 	srcfile = g_path_get_basename (src);
@@ -155,8 +151,7 @@ _get_target_fullpath (const char* src,  const gchar *targetpath,
 
 
 gboolean
-mu_maildir_link (const char* src, const char *targetpath,
-		 GError **err)
+mu_maildir_link (const char* src, const char *targetpath)
 {
 	gchar *targetfullpath;
 	int rv;
@@ -166,20 +161,19 @@ mu_maildir_link (const char* src, const char *targetpath,
 
 	/* just a basic check */
 	if (access (src, R_OK) != 0) {
-		g_set_error (err, 0, 0, "Cannot read source message: %s",
-			     strerror (errno));
+		g_warning ("Cannot read source message: %s",
+			   strerror (errno));
 		return FALSE;
 	}
 	
-	targetfullpath = _get_target_fullpath (src, targetpath, err);
+	targetfullpath = _get_target_fullpath (src, targetpath);
 	if (!targetfullpath)
 		return FALSE;
 	
 	rv = symlink (src, targetfullpath);
 	g_free (targetfullpath);
 	if (rv != 0) {
-		g_set_error (err, 0, 0, "Error creating link: %s",
-			     strerror (errno));
+		g_warning ("Error creating link: %s", strerror (errno));
 		return FALSE;
 	}
 

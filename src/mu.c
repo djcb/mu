@@ -115,14 +115,8 @@ make_maildir (MuConfigOptions *opts)
 	
 	i = 1;
 	while (opts->params[i]) {
-		GError *err = NULL;
-		if (!mu_maildir_mkmdir (opts->params[i], 0755, FALSE,
-					&err)) {
-			g_printerr ("error creating %s: %s\n",
-				    opts->params[i], err->message);
-			g_error_free (err);
+		if (!mu_maildir_mkmdir (opts->params[i], 0755, FALSE))
 			return 1;
-		}
 		++i;
 	}
 
@@ -134,8 +128,6 @@ make_maildir (MuConfigOptions *opts)
 static int
 make_symlink (MuConfigOptions *opts)
 {
-	GError *err;
-	
 	if (!opts->params[0])
 		return 1;  /* shouldn't happen */
  	
@@ -144,16 +136,7 @@ make_symlink (MuConfigOptions *opts)
 		return 1;
 	}
 
-	err = NULL;
-	if (!mu_maildir_link (opts->params[1], opts->params[2], &err)) {
-		if (err) {
-			g_printerr ("error: %s\n", err->message);
-			g_error_free (err);
-		}
-		return 1;
-	}
-	
-	return 0;
+	return mu_maildir_link (opts->params[1], opts->params[2]) ? 0 : 1;
 }
 
 

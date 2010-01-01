@@ -177,17 +177,10 @@ _do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
 static gboolean
 _create_linkdir_if_nonexistant (const gchar* linkdir)
 {
-	GError *err;
-	
-	if (access (linkdir, F_OK) != 0) {
-		err = NULL;
-		if (!mu_maildir_mkmdir (linkdir, 0700, TRUE, &err)) {
-			g_printerr ("error: %s", err->message);
-			g_error_free (err);
+	if (access (linkdir, F_OK) != 0)
+		if (!mu_maildir_mkmdir (linkdir, 0700, TRUE)) 
 			return FALSE;
-		}
-	}
-
+	
 	return TRUE;
 }
 
@@ -216,16 +209,10 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
 		const char *path;
 		path = mu_msg_xapian_get_field (row, pathfield);
 		if (path) {
-			GError *err = NULL;
-			if (!mu_maildir_link (path, opts->linksdir, &err)) {
-				if (err) {
-					g_printerr ("error: %s", err->message);
-					g_error_free (err);
-				}
-				return FALSE;
-			}
+			retval = mu_maildir_link (path, opts->linksdir);
+			if (!retval)
+				break;
 		}
-		
 		mu_msg_xapian_next (row);
 	}
 	

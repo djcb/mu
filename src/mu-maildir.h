@@ -34,12 +34,10 @@
  * @param mode the file mode (e.g., 0755)
  * @param noindex add a .noindex file to the maildir, so it will be excluded
  * from indexing by 'mu index'
- * @param err a GError* to receive error info, or NULL
  * 
  * @return TRUE if creation succeeded, FALSE otherwise
  */
-gboolean mu_maildir_mkmdir (const char* path, int mode,
-			    gboolean noindex, GError **err);
+gboolean mu_maildir_mkmdir (const char* path, int mode, gboolean noindex);
 
 
 /** 
@@ -50,14 +48,10 @@ gboolean mu_maildir_mkmdir (const char* path, int mode,
  * @param targetpath the path to the target maildir; ie., *not*
  * MyMaildir/cur, but just MyMaildir/. The function will figure out
  * the correct subdir then. *
- * @param err a GError* to receive error info, or NULL
  * 
  * @return 
  */
-gboolean mu_maildir_link   (const char* src, const char *targetpath,
-			    GError **err);
-
-
+gboolean mu_maildir_link   (const char* src, const char *targetpath);
 
 /** 
  * MuMaildirWalkMsgCallback -- callback function for mu_path_walk_maildir;
