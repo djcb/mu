@@ -1,0 +1,265 @@
+.TH MU 1 "December 2009" "User Manuals"
+.SH NAME 
+mu \- index and search the contents of e-mail messages stored in Maildirs
+
+.SH SYNOPSIS
+.B mu <command> [options] [parameter(s)]  
+
+.SH DESCRIPTION
+.B mu
+is a tool for indexing and searching e-mail messages stored in Maildirs. It
+does so by recursively scanning a Maildir directory tree and analyzing the
+e-mail messages found. The results of this analysis are then stored in a
+database. Using this database, you can quickly search for specific messages.
+
+.SH COMMANDS
+.B mu
+offers the following commands.
+.TP
+\fBindex\fR
+for indexing (analyzing) the contents of your Maildirs, and storing the
+information in a database
+
+.TP
+\fBfind\fR
+for finding messages in your database, using certain search parameters (see
+below for details). You can use \fBquery\fR and \fBsearch\fR as synonyms for
+\fBfind\fR.
+
+.TP
+One can can run these command by either using \fBmu index\fR or \fBmu find\fR \
+from the command line, plus any parameters they take. In the following, we \
+discusses these commands in detail.
+
+.SH THE INDEX COMMAND
+Using the
+.B index
+command, you can index your Maildir directories, and store the information in
+a Xapian database. 
+
+.B index
+understands Maildirs as defined by Dan Bernstein for qmail(7). It also
+understands recursive Maildirs (Maildirs within Maildirs), and the
+VFAT-version of Maildir, as used by Tinymail/Modest.
+
+E-mail messages which are not stored in something that looks like a Maildir
+leaf directory are ignored.
+
+Currently, symlinks are not followed.
+
+Also, if there's a file called
+.B .noindex
+in a directory, the contents of that directory and any of its subdirectories
+will be ignored. This can be useful to exclude certain directories from the
+indexing process, for example directories with spam-messages. 
+
+The first run of 
+.B mu index
+can take some time; on the author's laptop using mu version 0.6, scans more
+than 1000 messages per second. Note that a full scan has to be done only once,
+after that it suffices to index the changes, which goes much faster.
+
+.SS Indexing options
+
+.TP
+\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
+start searching at Maildir \fB<maildir>\fR. By default,
+.B mu
+uses whatever
+.B MAILDIR
+is set to; if that is not set, it tries
+.B ~/Maildir
+.TP
+\fB\-r\fR, \fB\-\-reindex\fR
+re-index all mails, even ones that are already in the database.
+
+.B NOTE:
+It is probably not a good idea to run multiple instances of
+.B mu index
+concurrently. No data loss should occur, but one or more of the instances may
+experience errors due to database locks.
+
+Also note that, before indexing is completed, searches for messages may fail,
+even if they have already been indexed, as some of the esssential database
+information will only be written in batches during the indexing process.
+
+.SH THE FIND COMMAND
+
+The
+.B find
+command starts a search for a specific message in the database.
+
+
+.SS find options
+
+.SS query syntax
+In its simplest form, you can just can just specify a number of words, and
+.B mu
+will try to find matches for those, for common fields like the e-mail's
+sender/recipient, the subject and the message body. So,
+.nf
+ $ mu find monkey banana
+.fi
+will find all messages which have both "monkey" AND "banana" in one of those
+fields.
+
+
+
+
+
+
+.SH OPTIONS
+.B mu
+has a number of general options, which work with all the commands.
+
+.B --maildir=, -m
+.I <maildir>
+set the full path to the maildir; note that you can also specify this path as
+a non-option argument to 
+.B
+mu-index
+; if you use both, the non-option argument wins.
+
+.B --quiet|-q
+makes 
+.B mu-index
+not put out any progress info during its indexing. This is not the default, as
+running may take quite some time, and might confuse novice users.
+
+.SS General options
+.B --home=, -h 
+.I <dir>
+sets the
+.B mu 
+home directory; default is 
+.I ~/.mu
+\. This directory is where the message database
+is stored, as well as configuration files and logs.
+
+.B --log-stderr, -s
+write logging information to standard error instead of to 
+.I <mu-home-directory>/mu-find.log, 
+which is the default.
+
+.B --log-append, -a
+append to the log file instead of overwriting it for every run, which is the default.
+
+.B --debug, -d 
+add a lot of logging for debugging purposes
+
+.SS Performance tuning
+Even though the defaults should be fine for most use cases, it is possible to
+tune the indexing process.
+The following options are
+available: 
+
+.B --tune-sqlite-transaction-size=
+.B --tune-xapian-transaction-size=
+.I <size>
+Sets the number of messages that are updated/inserted per transaction, for
+sqlite and Xapian. Setting the number higher improves the performance, but
+also increases the memory usage very significantly. And of course, in case of
+problems, up to
+.I<size>
+changes will be rolled back (this is very rare though).  For SQLite, the
+default is 100 and for Xapian it is 1000. It seems that setting the value
+higher does not improve performance very much.
+
+
+.SH CONFIGURATION
+Instead of specifying the options on the command line, you can also specify
+them in the
+.B mu-conf
+configuration file, in the mu home directory (by default,
+.B ~/.mu
+). The
+.B General options
+go in the section
+.B [mu]
+while the
+.B mu-index
+specific options go under
+.B [mu-index].
+For example, your configuration file could look something like this:
+
+.nf
+[mu]
+debug=false
+
+[mu-index]
+maildir=~/MyMaildir
+.fi
+
+Note that command line arguments take precedence over the configuration file.
+
+.SH MAILDIR SUPPORT
+.B mu-index
+supports an extended version of
+.BR maildir(5)
+; in particular, it supports (a) a tree of Maildirs (strictly, the maildir
+specification does not allow this, but it is useful and widely supported), and
+(b) it supports '!' in addition to ':' as separators in mail filenames, which
+some e-mail programs (such as 
+.BR modest(1)
+and the Maildir module in
+.BR python(1)
+use to support on VFAT filesystems, which don't allow ':' in filenames.
+
+.B mu-index
+ignores messages it cannot read or
+.BR stat(2)
+; but failure to read or stat will be logged. Files starting with '.' are
+ignored, but directories are not. Thus, if there is a message
+.B .dotdir/new/mymsg1234
+it will be indexed. This allows indexing 
+.B Maildir++ 
+directories, as used by
+.I CourierIMAP
+and 
+.I Dovecot
+
+.B mu-index
+processes messages in
+.B cur/
+and
+.B new/
+leaf directories; it will ignore messages in
+.B tmp/
+
+Thus,
+.B [....]/tmp/msg02
+will be ignored, while
+.B [....]/new/msg01
+won't. 
+
+On the other hand,
+.B [....]/tmp/cur/msg03
+would not be ignored, while
+.B [....]/cur/tmp/msg04
+would.
+
+Note: single messages that are added by providing their full pathname to
+.B mu-index
+will not have their path checked.
+
+.SH ENVIRONMENT
+As mentioned,
+.B mu index
+uses 
+.B MAILDIR
+to find the user's Maildir if it has not been specified explicitly. If
+.B MAILDIR
+is not set, 
+.B mu index
+will try 
+.B $HOME/Maildir
+.
+.SH BUGS
+There probably are some; please report bugs when you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+.BR maildir(5)
