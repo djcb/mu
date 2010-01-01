@@ -28,7 +28,7 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#include "mu-walk.h"
+#include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-store-xapian.h"
 
@@ -227,9 +227,9 @@ mu_index_run (MuIndex *index, const char* path,
 
 	cb_data._dirstamp  = 0;
 
-	return mu_walk_maildir (path,
-				(MuWalkMsgCallback)on_run_maildir_msg,
-				(MuWalkDirCallback)on_run_maildir_dir,
+	return mu_maildir_walk (path,
+				(MuMaildirWalkMsgCallback)on_run_maildir_msg,
+				(MuMaildirWalkDirCallback)on_run_maildir_dir,
 				&cb_data);
 }
 
@@ -276,8 +276,8 @@ mu_index_stats (MuIndex *index, const char* path,
 
 	cb_data._dirstamp  = 0;
 	
-	return mu_walk_maildir (path,
-				(MuWalkMsgCallback)on_stats_maildir_file,
+	return mu_maildir_walk (path,
+				(MuMaildirWalkMsgCallback)on_stats_maildir_file,
 				NULL,&cb_data);
 }
 
