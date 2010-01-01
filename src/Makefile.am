@@ -4,6 +4,8 @@ bin_PROGRAMS=			\
 	mu
 
 mu_SOURCES=			\
+	mu-cmd.h		\
+	mu-cmd.c		\
 	mu-config.h		\
 	mu-config.c		\
 	mu-index.c		\

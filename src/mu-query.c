@@ -223,9 +223,6 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts, gchar **params)
 }
 
 
-
-
-
 MuResult
 mu_query_run (MuConfigOptions *opts, gchar **params)
 {

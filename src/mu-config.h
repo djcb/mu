@@ -29,14 +29,13 @@
 struct _MuConfigOptions {
 	
 	/* general options */
-	gboolean	 quiet; /* don't give any output */
-	gboolean	 debug; /* spew out debug info */
-	char		*muhome;/* the House of Mu */
+	gboolean	 quiet;         /* don't give any output */
+	gboolean	 debug;         /* spew out debug info */
+	char		*muhome;        /* the House of Mu */
 	gboolean	 version;	/* request mu version */
-	gboolean	 log_stderr;	/*log to stderr (instead of logfile)*/
+	gboolean	 log_stderr;	/* log to stderr (not logfile) */
 	gboolean	 log_append;	/* append to log (don't overwrite)*/
 	gchar**	         params;	/* parameters (for querying) */
-	
 	
 	/* options for indexing */
 	char	        *maildir;	/* where the mails are */
@@ -44,8 +43,8 @@ struct _MuConfigOptions {
 	gboolean         reindex;	/* re-index existing mails */
 	
 	/* options for querying */
-	gboolean         xquery;       /* give the Xapian query instead of
-					      search results */
+	gboolean         xquery;        /* give the Xapian query instead of
+					   search results */
 	char		*fields;	/* fields to show in output */
 	
 	char	        *sortfield;	/* field to sort by (string) */
@@ -102,8 +101,13 @@ GOptionGroup* mu_config_options_group_index (MuConfigOptions *opts);
  */
 GOptionGroup* mu_config_options_group_query (MuConfigOptions *opts);
 
-
-
+/** 
+ * 
+ * 
+ * @param opts 
+ * 
+ * @return 
+ */
 char* mu_config_expanded_mu_home (MuConfigOptions *opts);
 
 #endif /*__MU_CONFIG_H__*/

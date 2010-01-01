@@ -1,15 +1,15 @@
 #+STARTUP:showall
 * to-do list for mu-ng first release
 
-** release 0.6 [87%]
+** release 0.6 [88%]
 
    - [X] implement re-index
    - [X] mu-index config options
    - [X] check which options actually work, remove rest
    - [X] fix AND/OR escaping issue
    - [ ] man page / help
-   - [ ] add mkmdir
-   - [ ] re-add symlink support for search
+   - [X] add mkmdir
+   - [X] re-add symlink support for search
    - [X] support MAILDIR
    - [X] config system (centralize options)
    - [X] logging system
@@ -21,7 +21,6 @@
    - [X] check existing bugs in c.g.c
    - [X] cleanup ascending/descending stuff
    - [ ] testing
-
 
 ** release 0.7 [%]
 
@@ -37,11 +36,3 @@
    - [ ] mu-setup
    - [ ] config system (config file)
    - [ ] UTF-8 output to console
-
-
-
-
-
- 
-	 
-	 

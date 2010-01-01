@@ -30,50 +30,10 @@
 
 #include "mu-util.h"
 #include "mu-config.h"
+#include "mu-cmd.h"
 #include "mu-log.h"
 
 #include "mu-msg-gmime.h"
-
-enum _MuCmd {
-	MU_CMD_INDEX,
-	MU_CMD_QUERY,
-	MU_CMD_MKDIR,
-	MU_CMD_LINK,
-	MU_CMD_HELP,
-	MU_CMD_UNKNOWN
-};
-typedef enum _MuCmd MuCmd;
-
-
-MuCmd 
-parse_cmd (const char* cmd)
-{
-	if (!cmd)
-		return MU_CMD_UNKNOWN;
-
-	if (strcmp (cmd, "index") == 0)
-		return MU_CMD_INDEX;
-
-	/* support some synonyms... */
-	if ((strcmp (cmd, "query") == 0) ||
-	    (strcmp (cmd, "find")  == 0) ||
-	    (strcmp (cmd, "search") == 0))
-		return MU_CMD_QUERY;
-
-	if ((strcmp (cmd, "mkmdir") == 0) ||
-	    (strcmp (cmd, "mkdir") == 0)) 
-		return MU_CMD_MKDIR;
-
-	if (strcmp (cmd, "link") == 0)
-		return MU_CMD_LINK;
-	
-	if ((strcmp (cmd, "help") == 0) ||
-	    (strcmp (cmd, "info") == 0))
-		return MU_CMD_HELP;
-	
-	return MU_CMD_UNKNOWN;
-}
-
 
 
 static MuResult
@@ -183,6 +143,28 @@ show_help (MuConfigOptions *opts)
 	return show_usage (FALSE);
 }
 
+static int
+run_index (MuConfigOptions *opts)
+{
+	MuIndex *midx;
+	MuIndexStats stats;
+	int rv;
+	
+	midx = mu_index_new (opts->muhome);
+	rv = mu_index_run (midx,
+			   opts->maildir,
+			   opts->reindex,
+			   &stats,
+			   opts->quiet ? NULL : msg_cb,
+			   NULL,
+			   NULL);
+	g_print ("\n");
+	mu_index_destroy (midx);
+
+	return rv;
+}
+
+
 
 static gboolean
 init_log (MuConfigOptions *opts)
@@ -219,7 +201,7 @@ main (int argc, char *argv[])
 	
 	g_type_init ();
 	
-	context = g_option_context_new ("- search your e-mail");
+	context = g_option_context_new ("- maildir utilities");
 	
 	g_option_context_set_main_group (context,
 					 mu_config_options_group_mu(&config));
@@ -231,10 +213,12 @@ main (int argc, char *argv[])
 	mu_config_init (&config);	
 	ok = g_option_context_parse (context, &argc, &argv, &error);
 	g_option_context_free (context);
-
+	
+	if (!init_log (&config))
+		return 1;
+	
 	if (!ok) {
-		g_printerr ("error in options: %s\n",
-			    error->message);
+		g_printerr ("error in options: %s\n", error->message);
 		g_error_free (error);
 		return 1;
 	}
@@ -245,9 +229,12 @@ main (int argc, char *argv[])
 	if (!config.params[0]) /* no command? */
 		return show_usage (FALSE);
 	
-	cmd = parse_cmd (config.params[0]);
+	cmd = mu_cmd_from_string (config.params[0]);
 	if (cmd == MU_CMD_UNKNOWN)
 		return show_usage (FALSE);
+	
+	if (!mu_cmd_check_parameters (cmd, &config))
+		return 1;
 	
 	if (cmd == MU_CMD_HELP)
 		return show_help (&config);
@@ -258,34 +245,13 @@ main (int argc, char *argv[])
 	if (cmd == MU_CMD_LINK)
 		return make_symlink (&config);
 	
-	if (!init_log (&config))
-		return 1;
-	
 	mu_msg_gmime_init ();
 	rv = MU_OK;
 	
-	if (cmd == MU_CMD_INDEX) {
-		MuIndex *midx;
-		MuIndexStats stats;
-		
-		midx = mu_index_new (config.muhome);
-		rv = mu_index_run (midx,
-				   config.maildir,
-				   config.reindex,
-				   &stats,
-				   config.quiet ? NULL : msg_cb,
-				   NULL,
-				   NULL);
-		g_print ("\n");
-		mu_index_destroy (midx);
-		
-	} else if (cmd == MU_CMD_QUERY) {
-		if (!config.params[1]) {
-			g_printerr ("error: missing something to search for\n");
-			rv = 1;
-		} else 
-			rv = mu_query_run (&config, &config.params[1]);
-	}
+	if (cmd == MU_CMD_INDEX)
+		rv = run_index (&config);
+	else if (cmd == MU_CMD_QUERY) 
+		rv = mu_query_run (&config, &config.params[1]);
 	
 	mu_msg_gmime_uninit();
 	mu_log_uninit();

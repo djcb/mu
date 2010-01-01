@@ -122,18 +122,17 @@ mu_config_init (MuConfigOptions *opts)
 	opts->log_stderr = FALSE;
 	
 	/* indexing */		
-	opts->maildir    = mu_util_guess_maildir ();
-
+	opts->maildir = mu_util_guess_maildir();
 	opts->cleanup = FALSE;
 	opts->reindex = FALSE;
 
 	/* querying */
-	opts->xquery        = FALSE;
-	opts->fields        = "d f s";
-	opts->sortfield     = "d";
-	opts->ascending     = FALSE;
-	opts->descending    = TRUE;
-	opts->linksdir      = NULL;
+	opts->xquery     = FALSE;
+	opts->fields     = "d f s";
+	opts->sortfield  = "d";
+	opts->ascending  = FALSE;
+	opts->descending = TRUE;
+	opts->linksdir   = NULL;
 }
 
 
@@ -145,6 +144,8 @@ mu_config_uninit (MuConfigOptions *opts)
 	g_free (opts->muhome);
 	g_free (opts->maildir);
 	g_free (opts->linksdir);
+
 	g_strfreev (opts->params);
 }
+
 
