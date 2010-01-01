@@ -125,29 +125,38 @@ _check_subdir (const char *src, gboolean *in_cur)
 }
 
 static gchar*
-_get_target_fullpath (const char* src,  const gchar *targetpath)
+_get_target_fullpath (const char* src, const gchar *targetpath)
 {
-	gchar *targetfullpath;
-	gchar *srcfile;
+	gchar *targetfullpath, *srcfile, *srcpath, *c;
 	gboolean in_cur;
 	
 	if (!_check_subdir (src, &in_cur))
 		return NULL;
 	
+	/* note: make the filename *cough* unique by making the pathname
+	 * part of the file name. This helps if there are copies of a
+	 * message (which all have the same basename)*/
+	c = srcpath = g_path_get_dirname (src);
+	while (c && *c) {
+		if (*c == G_DIR_SEPARATOR)
+			*c = '_';
+		++c;
+	}
 	srcfile = g_path_get_basename (src);
 
 	/* create & test targetpath  */
-	targetfullpath = g_strdup_printf ("%s%c%s%c%s",
+	targetfullpath = g_strdup_printf ("%s%c%s%c%s_%s",
 					  targetpath,
 					  G_DIR_SEPARATOR,
 					  in_cur ? "cur" : "new",
 					  G_DIR_SEPARATOR,
+					  srcpath,
 					  srcfile);
 	g_free (srcfile);
+	g_free (srcpath);
 	
 	return targetfullpath;
 }
-
 
 
 gboolean
@@ -256,7 +265,8 @@ has_noindex_file (const char *path)
 
 	fname = g_newa (char, strlen(path) + 1 +
 			strlen(MU_MAILDIR_NOINDEX_FILE) + 1);
-	g_sprintf (fname, "%s%c%s", path, G_DIR_SEPARATOR, MU_MAILDIR_NOINDEX_FILE);
+	g_sprintf (fname, "%s%c%s", path, G_DIR_SEPARATOR,
+		   MU_MAILDIR_NOINDEX_FILE);
 
 	if (access (fname, F_OK) == 0)
 		return TRUE;
