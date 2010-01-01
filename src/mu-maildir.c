@@ -302,11 +302,10 @@ _ignore_dir_entry (struct dirent *entry)
 		return TRUE;
 
 	/* ignore .notmuch, .nnmaildir */
-	if (name[1] == 'n')  {/* optimization */
-		if (strcmp (name, ".notmuch") == 0 ||
-		    strcmp (name, ".nnmaildir") == 0)
-			return TRUE;
-	}
+	if ((name[1] == 'n') &&/* optimization */
+	    (strcmp (name, ".notmuch") == 0 ||
+	     strcmp (name, ".nnmaildir") == 0)) 
+		return TRUE;
 	
 	return FALSE;
 }

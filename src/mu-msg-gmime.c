@@ -296,10 +296,8 @@ get_content_flags (MuMsgGMime *msg)
 	MuMsgFlags flags = 0;
 	GMimeObject *part;
 
-	if (!GMIME_IS_MESSAGE(msg->_mime_msg)) {
-		g_warning ("Neeeeee!");
-		return 0;
-	}
+	if (!GMIME_IS_MESSAGE(msg->_mime_msg))
+		return MU_MSG_FLAG_UNKNOWN;
 	
 	g_mime_message_foreach (msg->_mime_msg,
 				(GMimeObjectForeachFunc)msg_cflags_cb, 
@@ -633,9 +631,13 @@ mu_msg_gmime_get_body (MuMsgGMime *msg, gboolean want_html)
 				(GMimeObjectForeachFunc)get_body_cb,
 				&data);
 	if (want_html)
-		return data._html_part ? part_to_string (GMIME_PART(data._html_part), FALSE) : NULL; 
+		return data._html_part ?
+			part_to_string (GMIME_PART(data._html_part), FALSE) :
+			NULL; 
 	else
-		return data._txt_part ? part_to_string (GMIME_PART(data._txt_part), TRUE) : NULL;
+		return data._txt_part ?
+			part_to_string (GMIME_PART(data._txt_part), TRUE) :
+			NULL;
 }
 
 const char*
@@ -645,9 +647,9 @@ mu_msg_gmime_get_body_html (MuMsgGMime *msg)
 	
 	if (msg->_fields[HTML_FIELD])
 		return msg->_fields[HTML_FIELD];
-	else {
-		return msg->_fields[HTML_FIELD] = mu_msg_gmime_get_body (msg, TRUE);
-	}
+	else
+		return msg->_fields[HTML_FIELD] =
+			mu_msg_gmime_get_body (msg, TRUE);
 }
 
 
@@ -659,7 +661,8 @@ mu_msg_gmime_get_body_text (MuMsgGMime *msg)
 	if (msg->_fields[TEXT_FIELD])
 		return msg->_fields[TEXT_FIELD];
 	else
-		return msg->_fields[TEXT_FIELD] = mu_msg_gmime_get_body (msg, FALSE);
+		return msg->_fields[TEXT_FIELD] =
+			mu_msg_gmime_get_body (msg, FALSE);
 }
 
 
@@ -746,7 +749,7 @@ mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb,
 			result = (cb)(&contact,ptr);
 			
 			/* note: don't unref addr here, as it's owned */
-			/* by the list (at least that is what valgrind tells... */
+			/* by the list (well, hat is what valgrind says... */
 			if ((result = (cb)(&contact,ptr)) != 0) { 
 				/* callback tells us to stop */
 				if (list)
@@ -792,15 +795,15 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
 
 		MuMsgContact contact; /* stack allocated */
 		InternetAddressList *list;
-		int i;
+		int j;
 		
 		list = g_mime_message_get_recipients 
 			(msg->_mime_msg, ctypes[i]._gmime_type);
 		
-		for (i = 0; i != internet_address_list_length(list); ++i) {
+		for (j = 0; j != internet_address_list_length(list); ++j) {
 
 			InternetAddress *addr  = 
-				internet_address_list_get_address (list, i);
+				internet_address_list_get_address (list, j);
 			if (addr) {
 				
 				contact._name = internet_address_get_name (addr);
@@ -811,9 +814,6 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
 				 */
 				contact._addr = internet_address_mailbox_get_addr(
 					INTERNET_ADDRESS_MAILBOX(addr));
-
-				g_printerr ("%s\n", contact._name);
-				
 				
 				result = (cb)(&contact,ptr);
 	
@@ -822,6 +822,7 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
 			}
 		}
 	}
+	
 	return 0;
 }
 
