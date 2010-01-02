@@ -24,8 +24,6 @@
 #include "mu-msg-xapian.h"
 
 G_BEGIN_DECLS
-
-
 /*
  * MuQueryXapian
  */
@@ -79,7 +77,7 @@ MuMsgXapian*     mu_query_xapian_run      (MuQueryXapian *self,
  * @return a string with the combined xapian expression or NULL in
  * case of error; free with g_free when it's no longer needed
  */
-char*  mu_query_xapian_combine  (gchar **params, gboolean connect_or);
+char*  mu_query_xapian_combine  (const gchar **params, gboolean connect_or);
 
 /** 
  * get a string representation of the Xapian search query

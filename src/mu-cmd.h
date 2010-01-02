@@ -24,6 +24,8 @@
 #include <glib.h>
 #include "mu-config.h"
 
+G_BEGIN_DECLS
+
 enum _MuCmd {
 	MU_CMD_INDEX,
 	MU_CMD_QUERY,
@@ -36,24 +38,14 @@ enum _MuCmd {
 typedef enum _MuCmd MuCmd;
 
 /** 
- * determine the Mu command from a string
- * (as given on the cmdline)
+ * try to execute whatever is specified on the command line 
  * 
- * @param cmd string for a command
+ * @param config a config structure with the command line params
  * 
- * @return the MuCmd or MU_CMD_UNKNOWN
+ * @return TRUE if it succeeded, FALSE otherwise
  */
-MuCmd  mu_cmd_from_string (const char* cmd);
+gboolean mu_cmd_execute (MuConfigOptions *config);
 
-
-/** 
- * check the command line parameters
- * 
- * @param cmd the command
- * @param opts options
- * 
- * @return TRUE if there are no errors, FALSE otherwise
- */
-gboolean mu_cmd_check_parameters (MuCmd cmd, MuConfigOptions *opts);
+G_END_DECLS
 
 #endif /*__MU_CMD_H__*/

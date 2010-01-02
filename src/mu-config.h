@@ -23,6 +23,8 @@
 #include <glib.h>
 #include "mu-msg-fields.h"
 
+G_BEGIN_DECLS
+
 /* struct with all configuration options for mu; it will be filled
  * from the config file, and/or command line arguments */
 
@@ -34,7 +36,6 @@ struct _MuConfigOptions {
 	char		*muhome;        /* the House of Mu */
 	gboolean	 version;	/* request mu version */
 	gboolean	 log_stderr;	/* log to stderr (not logfile) */
-	gboolean	 log_append;	/* append to log (don't overwrite)*/
 	gchar**	         params;	/* parameters (for querying) */
 	
 	/* options for indexing */
@@ -51,7 +52,6 @@ struct _MuConfigOptions {
 	char            *linksdir;      /* maildir to output symlinks */
 	
 	gboolean        descending;	/* sort descending? */
-	gboolean        ascending;
 };
 typedef struct _MuConfigOptions MuConfigOptions;
 
@@ -65,6 +65,12 @@ typedef struct _MuConfigOptions MuConfigOptions;
  */
 void mu_config_init (MuConfigOptions *opts);
 
+/** 
+ * fill unset config options with defaults
+ * 
+ * @param opts options
+ */
+void mu_config_set_defaults (MuConfigOptions *opts);
 
 /** 
  * free the MuOptionsCOnfig structure; the the muhome and maildir
@@ -109,5 +115,7 @@ GOptionGroup* mu_config_options_group_query (MuConfigOptions *opts);
  * @return 
  */
 char* mu_config_expanded_mu_home (MuConfigOptions *opts);
+
+G_END_DECLS
 
 #endif /*__MU_CONFIG_H__*/

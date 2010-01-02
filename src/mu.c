@@ -24,154 +24,15 @@
 #include <string.h>
 #include <stdio.h> /* for fileno() */
 
-#include "mu-index.h"
-#include "mu-query.h"
-#include "mu-maildir.h"
 
-#include "mu-util.h"
 #include "mu-config.h"
 #include "mu-cmd.h"
 #include "mu-log.h"
-
-#include "mu-msg-gmime.h"
-
-
-static MuResult
-msg_cb  (MuIndexStats* stats, void *user_data)
-{
-	char *kars="-\\|/";
-	char output[100];
-	
-	static int i = 0;
-	static int len = 0;
-
-	while (len --> 0) 
-		printf ("\b");
-	
-	len = snprintf (output, sizeof(output),
-			"%c mu is indexing your mails; processed: %d; "
-			"updated/new: %d",
-			kars[i % 4], stats->_processed, stats->_updated);
-	g_print ("%s", output);
-	
-	++i;
-	
-	return MU_OK;
-}
-
-
-static int
-make_maildir (MuConfigOptions *opts)
-{
-	int i;
-	
-	if (!opts->params[0])
-		return 1;  /* shouldn't happen */
- 	
-	if (!opts->params[1]) {
-		g_printerr ("usage: mu mkdir <dir> [more dirs]\n");
-		return 1;
-	}
-	
-	i = 1;
-	while (opts->params[i]) {
-		if (!mu_maildir_mkmdir (opts->params[i], 0755, FALSE))
-			return 1;
-		++i;
-	}
-
-	return 0;
-}
-
-
-
-static int
-make_symlink (MuConfigOptions *opts)
-{
-	if (!opts->params[0])
-		return 1;  /* shouldn't happen */
- 	
-	if (!opts->params[1] || !opts->params[2]) {
-		g_printerr ("usage: mu link <src> <targetdir>\n");
-		return 1;
-	}
-
-	return mu_maildir_link (opts->params[1], opts->params[2]) ? 0 : 1;
-}
-
-
-
-
-static int
-show_usage (gboolean noerror)
-{
-	const char* usage=
-		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, query, help\n"
-		"see mu(1) for for information\n";
-
-	if (noerror)
-		g_print ("%s", usage);
-	else
-		g_printerr ("%s", usage);
-
-	return noerror ? 0 : 1;
-}
-
-static int
-show_version (void)
-{
-	const char* msg =
-		"mu (mail indexer / searcher version) " VERSION "\n\n"
-		"Copyright (C) 2010 Dirk-Jan C. Binnema\n"
-		"License GPLv3+: GNU GPL version 3 or later "
-		"<http://gnu.org/licenses/gpl.html>.\n\n"
-		"This is free software: you are free to change "
-		"and redistribute it.\n"
-		"There is NO WARRANTY, to the extent permitted by law.";
-
-	g_print ("%s\n", msg);
-
-	return 0;
-}
-
-static int
-show_help (MuConfigOptions *opts)
-{
-	/* FIXME: get context-sensitive help */
-	show_version ();
-	return show_usage (FALSE);
-}
-
-static int
-run_index (MuConfigOptions *opts)
-{
-	MuIndex *midx;
-	MuIndexStats stats;
-	int rv;
-	
-	midx = mu_index_new (opts->muhome);
-	rv = mu_index_run (midx,
-			   opts->maildir,
-			   opts->reindex,
-			   &stats,
-			   opts->quiet ? NULL : msg_cb,
-			   NULL,
-			   NULL);
-	g_print ("\n");
-	mu_index_destroy (midx);
-
-	return rv;
-}
-
-
 
 static gboolean
 init_log (MuConfigOptions *opts)
 {
 	gboolean rv;
-
-	/* TODO: check incompatible options (eg., silent + log_append) */
 	
 	if (opts->quiet)
 		rv = mu_log_init_silence ();	
@@ -179,8 +40,7 @@ init_log (MuConfigOptions *opts)
 		rv = mu_log_init_with_fd (fileno(stderr), FALSE,
 					  opts->debug);
 	else 
-		rv = mu_log_init (opts->muhome, opts->log_append,
-				  opts->debug);
+		rv = mu_log_init (opts->muhome, TRUE, opts->debug);
 
 	if (!rv)
 		g_print ("error: failed to initialize log\n");
@@ -188,75 +48,60 @@ init_log (MuConfigOptions *opts)
 	return rv;
 }
 
+static gboolean
+_parse_params (MuConfigOptions *config, int *argcp, char ***argvp)
+{
+	GError *error = NULL;
+	GOptionContext *context;
+	gboolean rv;
+	
+	context = g_option_context_new ("- maildir utilities");
+
+	g_option_context_set_main_group (context,
+					 mu_config_options_group_mu(config));
+	g_option_context_add_group (context,
+				    mu_config_options_group_index(config));
+	g_option_context_add_group (context,
+				    mu_config_options_group_query(config));
+	
+	rv = g_option_context_parse (context, argcp, argvp, &error);
+	if (!rv) {
+		g_printerr ("error in options: %s\n", error->message);
+		g_error_free (error);
+	} else {
+		g_option_context_free (context);
+		mu_config_set_defaults (config);
+	}
+		
+	return rv;
+}
+
 
 int
 main (int argc, char *argv[])
 {
-	GError *error = NULL;
-	GOptionContext *context;
 	MuConfigOptions config;
-	MuResult rv;
-	MuCmd cmd;
-	gboolean ok;
+	gboolean rv;
 	
 	g_type_init ();
-	
-	context = g_option_context_new ("- maildir utilities");
-	
-	g_option_context_set_main_group (context,
-					 mu_config_options_group_mu(&config));
-	g_option_context_add_group (context,
-				    mu_config_options_group_index(&config));
-	g_option_context_add_group (context,
-				    mu_config_options_group_query(&config));
 
-	mu_config_init (&config);	
-	ok = g_option_context_parse (context, &argc, &argv, &error);
-	g_option_context_free (context);
-	
-	if (!init_log (&config))
-		return 1;
-	
-	if (!ok) {
-		g_printerr ("error in options: %s\n", error->message);
-		g_error_free (error);
+	mu_config_init (&config);
+
+	if (!_parse_params (&config, &argc, &argv)) {
+		mu_config_uninit (&config);
 		return 1;
 	}
 	
-	if (config.version)
-		return show_version ();
-	
-	if (!config.params[0]) /* no command? */
-		return show_usage (FALSE);
-	
-	cmd = mu_cmd_from_string (config.params[0]);
-	if (cmd == MU_CMD_UNKNOWN)
-		return show_usage (FALSE);
-	
-	if (!mu_cmd_check_parameters (cmd, &config))
+	if (!init_log (&config)) {
+		mu_config_uninit (&config);
 		return 1;
-	
-	if (cmd == MU_CMD_HELP)
-		return show_help (&config);
+	}
 
-	if (cmd == MU_CMD_MKDIR)
-		return make_maildir (&config);
-	
-	if (cmd == MU_CMD_LINK)
-		return make_symlink (&config);
-	
-	mu_msg_gmime_init ();
-	rv = MU_OK;
-	
-	if (cmd == MU_CMD_INDEX)
-		rv = run_index (&config);
-	else if (cmd == MU_CMD_QUERY) 
-		rv = mu_query_run (&config, &config.params[1]);
-	
-	mu_msg_gmime_uninit();
+	rv = mu_cmd_execute (&config);
+
 	mu_log_uninit();
 	mu_config_uninit(&config);
 	
-	return rv == MU_OK ? 0 : 1;
+	return rv ? 0 : 1;
 }
 

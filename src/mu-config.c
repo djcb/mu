@@ -39,9 +39,6 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 		 "mu directory", NULL},
 		{"log-stderr", 'e', 0, G_OPTION_ARG_NONE, &opts->log_stderr,
 		 "log to standard error", NULL},
-		{"log-append", 'a', 0, G_OPTION_ARG_NONE, &opts->log_append,
-		 "append to the logfile (instead of overwriting)", 
-		 NULL},
 		{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		  &opts->params, "parameters", NULL },
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
@@ -88,10 +85,8 @@ mu_config_options_group_query (MuConfigOptions *opts)
 		 "fields to display in the output", NULL},
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
 		 "field to sort on", NULL},
-		{"ascending", 'u', 0, G_OPTION_ARG_NONE, &opts->ascending,
-		 "sort ascending (up)", NULL},
 		{"descending", 'd', 0, G_OPTION_ARG_NONE, &opts->descending,
-		 "sort descending (down)", NULL},
+		 "sort descending", NULL},
 		{"linksdir", 't', 0, G_OPTION_ARG_STRING, &opts->linksdir,
 		 "output as symbolic links to a target maildir", NULL },
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
@@ -113,27 +108,34 @@ mu_config_init (MuConfigOptions *opts)
 
 	/* start from zero */
 	memset (opts, 0, sizeof(MuConfigOptions));
+}
 
-	/* general */
-	opts->quiet	 = FALSE;
-	opts->debug	 = FALSE;
-	opts->muhome	 = mu_util_dir_expand ("~/.mu");
-	opts->log_append = TRUE;
+void
+mu_config_set_defaults (MuConfigOptions *opts)
+{
+	g_return_if_fail (opts);
+
+	if (!opts->muhome)
+		opts->muhome	 = mu_util_dir_expand ("~/.mu");
+	
 	opts->log_stderr = FALSE;
 	
 	/* indexing */		
-	opts->maildir = mu_util_guess_maildir();
-	opts->cleanup = FALSE;
-	opts->reindex = FALSE;
+	if (!opts->maildir)
+		opts->maildir = mu_util_guess_maildir();
 
 	/* querying */
-	opts->xquery     = FALSE;
-	opts->fields     = "d f s";
-	opts->sortfield  = "d";
-	opts->ascending  = FALSE;
-	opts->descending = TRUE;
-	opts->linksdir   = NULL;
+	
+	/* note, when no fields are specified, we use
+	 * date-from-subject, and sort descending by date. If fiels
+	 * *are* specified, we sort in ascending order. */
+	if (!opts->fields) {
+		opts->descending = TRUE;
+		opts->fields     = "d f s";
+		opts->sortfield  = "d";
+	}
 }
+
 
 
 void

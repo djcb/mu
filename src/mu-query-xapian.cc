@@ -218,8 +218,9 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 	return NULL;
 }
 
+
 char*
-mu_query_xapian_combine (gchar **params, gboolean connect_or)
+mu_query_xapian_combine (const gchar **params, gboolean connect_or)
 {
 	GString *str;
 	int i;
