@@ -168,7 +168,7 @@ log_write (const char* domain, GLogLevelFlags level,
 	ssize_t len;
 	
 	/* log lines will be truncated at 255 chars */
-	char buf [255], timebuf [32];
+	char buf [512], timebuf [32];
 
 	/* get the time/date string */
 	now = time(NULL);
@@ -177,6 +177,9 @@ log_write (const char* domain, GLogLevelFlags level,
 	/* now put it all together */
 	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf, 
 			pfx(level), msg);
+	/* if the buffer is full, add a newline */ 
+	if (len == sizeof(buf))
+		buf[sizeof(buf)-2] = '\n';
 	
 	len = write (MU_LOG->_fd, buf, len);
 	if (len < 0)
