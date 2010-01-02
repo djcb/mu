@@ -167,25 +167,22 @@ mu_maildir_link (const char* src, const char *targetpath)
 	
 	g_return_val_if_fail (src, FALSE);
 	g_return_val_if_fail (targetpath, FALSE);
-
-	/* just a basic check */
-	if (access (src, R_OK) != 0) {
-		g_warning ("Cannot read source message: %s",
-			   strerror (errno));
-		return FALSE;
-	}
 	
 	targetfullpath = _get_target_fullpath (src, targetpath);
 	if (!targetfullpath)
 		return FALSE;
 	
 	rv = symlink (src, targetfullpath);
-	g_free (targetfullpath);
+	
 	if (rv != 0) {
-		g_warning ("Error creating link: %s", strerror (errno));
+		g_warning ("Error creating link %s => %s: %s",
+			   targetfullpath, src,
+			   strerror (errno));
+		g_free (targetfullpath);
 		return FALSE;
 	}
 
+	g_free (targetfullpath);
 	return TRUE;
 }
 
@@ -235,7 +232,7 @@ process_file (const char* fullpath, MuMaildirWalkMsgCallback cb, void *data)
  * (we're skipping 'tmp' for obvious reasons)
  */
 G_GNUC_CONST static gboolean 
-is_maildir_new_or_cur (const char *path)
+_is_maildir_new_or_cur (const char *path)
 {
 	size_t len;
 	const char *sfx;
@@ -320,14 +317,15 @@ process_dir_entry (const char* path,struct dirent *entry,
 	/* ignore special dirs: */
 	if (_ignore_dir_entry (entry)) 
 		return MU_OK;
-	
-	fullpath = g_newa (char, strlen(path) + 1 + strlen(entry->d_name) + 1);
-	sprintf (fullpath, "%s%c%s", path, G_DIR_SEPARATOR, entry->d_name);
+
+	fullpath = g_newa (char, strlen(path) + strlen(entry->d_name) + 1);
+	sprintf (fullpath, "%s%c%s", path, G_DIR_SEPARATOR,
+		 entry->d_name);
 	
 	switch (entry->d_type) {
 	case DT_REG:
 		/* we only want files in cur/ and new/ */
-		if (!is_maildir_new_or_cur (path)) 
+		if (!_is_maildir_new_or_cur (path)) 
 			return MU_OK; 
 
 		return process_file (fullpath, cb_msg, data);
@@ -414,19 +412,15 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 	return result;
 }
 
+
 MuResult
 mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
 		 MuMaildirWalkDirCallback cb_dir, void *data)
 {
 	struct stat statbuf;
-
+	
 	g_return_val_if_fail (path && cb_msg, MU_ERROR);
-	
-	if (access(path, R_OK) != 0) {
-		g_warning ("cannot access %s: %s", path, strerror(errno));
-		return MU_ERROR;
-	}
-	
+		
 	if (stat (path, &statbuf) != 0) {
 		g_warning ("cannot stat %s: %s", path, strerror(errno));
 		return MU_ERROR;
@@ -434,12 +428,21 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 	
 	if (S_ISREG(statbuf.st_mode))
 		return process_file (path, cb_msg, data);
-	else if (S_ISDIR(statbuf.st_mode)) 
-		return process_dir (path, cb_msg, cb_dir, data);
-	else
-		g_warning ("%s: unsupported file type for %s", 
-			   __FUNCTION__, path);
+	
+	if (S_ISDIR(statbuf.st_mode)) {
+		/* skip the final slash from dirnames */
+		MuResult rv;
+		char *mypath = g_strdup (path);
+		if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
+			mypath[strlen(mypath)-1] = '\0';
+		rv = process_dir (mypath, cb_msg, cb_dir, data);
+		g_free (mypath);
+		
+		return rv;
+	}
 
+	g_warning ("%s: unsupported file type for %s", 
+		   __FUNCTION__, path);
 	return MU_ERROR;
 }
 
