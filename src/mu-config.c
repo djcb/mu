@@ -134,6 +134,12 @@ mu_config_set_defaults (MuConfigOptions *opts)
 		opts->fields     = "d f s";
 		opts->sortfield  = "d";
 	}
+
+	if (opts->linksdir) {
+		gchar *old = opts->linksdir;
+		opts->linksdir = mu_util_dir_expand (opts->linksdir);
+		g_free(old);
+	}
 }
 
 
