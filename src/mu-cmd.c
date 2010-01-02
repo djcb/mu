@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "mu-msg-gmime.h"
 #include "mu-maildir.h"
@@ -225,15 +226,23 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
 
 	/* iterate over the found rows */
-	while (!mu_msg_xapian_is_done (row)) {
+	for (;!mu_msg_xapian_is_done (row); mu_msg_xapian_next (row)) {
+
 		const char *path;
+		
 		path = mu_msg_xapian_get_field (row, pathfield);
-		if (path) {
-			retval = mu_maildir_link (path, opts->linksdir);
-			if (!retval)
-				break;
+		if (!path)
+			continue;
+			
+		/* this might happen  if the database is not up-to-date */
+		if (access (path, R_OK) != 0) {
+			g_warning ("Cannot read source message %s: %s",
+				   path, strerror (errno));
+			continue;
 		}
-		mu_msg_xapian_next (row);
+		
+		if (!mu_maildir_link (path, opts->linksdir))
+			break;
 	}
 	
 	mu_msg_xapian_destroy (row);
