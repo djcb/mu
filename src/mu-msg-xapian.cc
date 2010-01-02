@@ -174,7 +174,7 @@ mu_msg_xapian_get_id (MuMsgXapian *row)
 
 
 const char*
-mu_msg_xapian_get_path(MuMsgXapian *row)
+mu_msg_xapian_get_path (MuMsgXapian *row)
 {
 	return get_field (row, MU_MSG_FIELD_ID_PATH);
 }
