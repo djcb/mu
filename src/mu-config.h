@@ -50,6 +50,7 @@ struct _MuConfigOptions {
 	
 	char	        *sortfield;	/* field to sort by (string) */
 	char            *linksdir;      /* maildir to output symlinks */
+	gboolean	clearlinks;     /* clear a linksdir before filling */
 	
 	gboolean        descending;	/* sort descending? */
 };

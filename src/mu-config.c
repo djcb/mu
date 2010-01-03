@@ -89,6 +89,8 @@ mu_config_options_group_query (MuConfigOptions *opts)
 		 "sort descending", NULL},
 		{"linksdir", 't', 0, G_OPTION_ARG_STRING, &opts->linksdir,
 		 "output as symbolic links to a target maildir", NULL },
+		{"clearlinks", 'c', 0, G_OPTION_ARG_NONE, &opts->clearlinks,
+		 "clear old links before filling a linksdir", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
