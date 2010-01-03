@@ -54,9 +54,9 @@ _cmd_from_string (const char* cmd)
 	if (strcmp (cmd, "link") == 0)
 		return MU_CMD_LINK;
 	
-	if ((strcmp (cmd, "help") == 0) ||
-	    (strcmp (cmd, "info") == 0))
-		return MU_CMD_HELP;
+	/* if ((strcmp (cmd, "help") == 0) || */
+	/*     (strcmp (cmd, "info") == 0)) */
+	/* 	return MU_CMD_HELP; */
 	
 	return MU_CMD_UNKNOWN;
 }
@@ -123,6 +123,8 @@ _sort_field_from_string (const char* fieldstr)
 			    fieldstr);
 	return field;
 }
+
+
 
 
 static gboolean
@@ -428,8 +430,8 @@ _show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, query, help\n"
-		"see mu(1) for for information\n";
+		"\twhere command is one of index, find, mkdir, link\n"
+		"see mu(1) for more information\n";
 
 	if (noerror)
 		g_print ("%s", usage);
