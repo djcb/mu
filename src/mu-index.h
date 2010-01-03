@@ -124,7 +124,18 @@ MuResult mu_index_stats (MuIndex *index, const char* path, MuIndexStats *result,
 			 MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 			 void *user_data);
 
-typedef MuResult (*MuIndexCleanupCallback) (MuIndexStats*, void *user_data); 
+
+
+/** 
+ * callback function to determine if a message should be delete from
+ * the database; if it returs MU_OK it will be delete, if returns
+ * MU_IGNORE, the message will be ignored. In other cases, stop the callback
+ * 
+ * @param MuIndexCleanupCallback 
+ * 
+ * @return 
+ */
+typedef MuResult (*MuIndexCleanupDeleteCallback) (MuIndexStats*, void *user_data); 
 
 /** 
  * cleanup the database; ie. remove entries for which no longer a corresponding
@@ -140,7 +151,7 @@ typedef MuResult (*MuIndexCleanupCallback) (MuIndexStats*, void *user_data);
  * case of some error.
  */
 MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *result,
-			   MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
+			   MuIndexCleanupDeleteCallback cb,
 			   void *user_data);
 
 #endif /*__MU_INDEX_H__*/

@@ -282,16 +282,10 @@ mu_index_stats (MuIndex *index, const char* path,
 }
 
 
-MuResult
-mu_index_cleanup (MuIndex *index, MuIndexStats *stats, 
-		  MuIndexMsgCallback msg_cb,
-		  MuIndexDirCallback dir_cb, void *user_data)
+MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *result,
+			   MuIndexCleanupDeleteCallback cb,
+			   void *user_data)
 {
-	if (stats)
-		memset (stats, 0, sizeof(MuIndexStats));
-	
-	/* FIXME: implement this */
 	return MU_OK;
+
 }
-
-
