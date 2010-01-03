@@ -22,7 +22,6 @@
 
 enum _MuResult {
 	MU_OK,		/* all went ok */
-	MU_IGNORE,	/* ignore this */
 	MU_STOP,	/* user wants to stop */
 	MU_ERROR	/* some error occured */
 };
