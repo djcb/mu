@@ -333,3 +333,44 @@ mu_store_xapian_set_timestamp (MuStoreXapian *store, const char* msgpath,
 		g_warning ("%s: caught exception", __FUNCTION__);		
 	}
 }
+
+
+MuResult
+mu_store_xapian_foreach (MuStoreXapian *self, 
+			 MuStoreXapianForeachFunc func, void *user_data)  
+{
+	g_return_val_if_fail (self, MU_ERROR);
+	g_return_val_if_fail (func, MU_ERROR);
+	
+	try {
+		Xapian::Enquire enq (*self->_db);		
+		
+		enq.set_query  (Xapian::Query::MatchAll);
+		enq.set_cutoff (0,0);
+		
+		Xapian::MSet matches
+			(enq.get_mset (0, self->_db->get_doccount()));
+		if (matches.empty())
+			return MU_OK; /* database is empty */
+		
+		for (Xapian::MSet::iterator iter = matches.begin();
+		     iter != matches.end(); ++iter) {
+			Xapian::Document doc (iter.get_document());
+			const std::string path(
+				doc.get_value(MU_MSG_FIELD_ID_PATH));
+
+			MuResult res = func (path.c_str(), user_data);
+			if (res != MU_OK)
+				return res;
+		}
+		
+	} catch (const Xapian::Error &err) {
+		g_warning ("%s: caught xapian exception '%s' (%s)", 
+			   __FUNCTION__, err.get_msg().c_str(),
+			   err.get_error_string());
+	} catch (...) {
+		g_warning ("%s: caught exception", __FUNCTION__);
+	}
+
+	return MU_OK;
+}
