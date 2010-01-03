@@ -34,8 +34,6 @@ struct _MuIndexStats {
 };
 typedef struct _MuIndexStats MuIndexStats;
 
-
-
 /** 
  * create a new MuIndex instance. NOTE(1): the database does not
  * have to exist yet, but the directory already has to exist;

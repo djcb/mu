@@ -282,10 +282,50 @@ mu_index_stats (MuIndex *index, const char* path,
 }
 
 
-MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *result,
-			   MuIndexCleanupDeleteCallback cb,
-			   void *user_data)
-{
-	return MU_OK;
+struct _CleanupData {
+	MuStoreXapian *_xapian;
+	MuIndexStats  *_stats;
+	MuIndexCleanupDeleteCallback _cb;
+	void *_user_data;
+	
+};
+typedef struct _CleanupData CleanupData;
 
+
+static MuResult
+_foreach_doc_cb (const char* path, CleanupData *cudata)
+{
+	if (access (path, R_OK) != 0) {
+		g_message ("not readable: %s; removing",
+			   path);
+		/* FIXME: delete from db */
+		++cudata->_stats->_cleaned_up;
+	}
+
+	if (!cudata->_cb)
+		return MU_OK;
+
+	return cudata->_cb (cudata->_stats, cudata->_user_data);
+}
+
+
+MuResult
+mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
+		  MuIndexCleanupDeleteCallback cb,
+		  void *user_data)
+{
+	MuResult rv;
+	CleanupData cudata;
+	
+	g_return_val_if_fail (index, MU_ERROR);
+
+	cudata._xapian	  = index->_xapian;
+	cudata._stats	  = stats;
+	cudata._cb	  = cb;
+	cudata._user_data = user_data;
+	
+	rv = mu_store_xapian_foreach (index->_xapian,
+				      (MuStoreXapianForeachFunc)_foreach_doc_cb,
+				      &cudata);
+	return rv;
 }
