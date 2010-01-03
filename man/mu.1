@@ -95,8 +95,7 @@ command starts a search for a specific message in the database.
 .SS query syntax
 In its simplest form, you can just can just specify a number of words, and
 .B mu
-will try to find matches for those, for common fields like the e-mail's
-sender/recipient, the subject and the message body. So,
+will search for messages that match all of those words. So,
 .nf
  $ mu find monkey banana
 .fi
@@ -141,30 +140,9 @@ write logging information to standard error instead of to
 .I <mu-home-directory>/mu-find.log, 
 which is the default.
 
-.B --log-append, -a
-append to the log file instead of overwriting it for every run, which is the default.
 
 .B --debug, -d 
 add a lot of logging for debugging purposes
-
-.SS Performance tuning
-Even though the defaults should be fine for most use cases, it is possible to
-tune the indexing process.
-The following options are
-available: 
-
-.B --tune-sqlite-transaction-size=
-.B --tune-xapian-transaction-size=
-.I <size>
-Sets the number of messages that are updated/inserted per transaction, for
-sqlite and Xapian. Setting the number higher improves the performance, but
-also increases the memory usage very significantly. And of course, in case of
-problems, up to
-.I<size>
-changes will be rolled back (this is very rare though).  For SQLite, the
-default is 100 and for Xapian it is 1000. It seems that setting the value
-higher does not improve performance very much.
-
 
 .SH CONFIGURATION
 Instead of specifying the options on the command line, you can also specify
