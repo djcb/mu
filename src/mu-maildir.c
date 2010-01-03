@@ -88,7 +88,7 @@ _create_noindex (const char *path)
 
 
 gboolean
-mu_maildir_mkmdir (const char* path, int mode, gboolean noindex)
+mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex)
 {
 	
 	g_return_val_if_fail (path, FALSE);
@@ -308,8 +308,9 @@ _ignore_dir_entry (struct dirent *entry)
 }
 
 static MuResult
-process_dir_entry (const char* path,struct dirent *entry,
-		   MuMaildirWalkMsgCallback cb_msg, MuMaildirWalkDirCallback cb_dir, 
+process_dir_entry (const char* path, struct dirent *entry,
+		   MuMaildirWalkMsgCallback cb_msg,
+		   MuMaildirWalkDirCallback cb_dir, 
 		   void *data)
 {
 	char* fullpath;
@@ -448,3 +449,65 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 
 
 
+static gboolean
+_clear_links (const gchar* dirname, DIR *dir)
+{
+	struct dirent *entry;
+	gboolean rv;
+
+	g_message ("clearlinks: %s", dirname);
+	
+	rv = TRUE;
+	while ((entry = readdir (dir)) && rv) {
+		
+		char fullpath[4096];
+		size_t len;
+
+		/* ignore dot thingies */
+		if (entry->d_name && entry->d_name[0] == '.')
+			continue;
+		
+		/* ignore non-links / non-dirs */
+		if (entry->d_type != DT_LNK && entry->d_type != DT_DIR)
+			continue; 
+
+		len = snprintf (fullpath, sizeof(fullpath), "%s%c%s",
+				dirname, G_DIR_SEPARATOR, entry->d_name);
+		if (len == sizeof(fullpath)) {
+			g_warning ("name is too long: %s", fullpath);
+			continue;
+		}
+
+		if (entry->d_type == DT_LNK) {
+			if (unlink (fullpath) != 0) {
+				g_warning ("error unlinking %s: %s",
+					   fullpath, strerror(errno));
+				rv = FALSE;
+			}
+		} else /* == DT_DIR, see check before*/
+			rv = mu_maildir_clear_links (fullpath);
+	}
+	return rv;
+}
+
+
+gboolean
+mu_maildir_clear_links (const gchar* path)
+{
+	DIR *dir;
+	gboolean rv;
+	
+	g_return_val_if_fail (path, FALSE);
+	
+	dir = opendir (path);		
+	if (!dir) {
+		g_warning ("failed to open %s: %s", path, strerror(errno));
+		return FALSE;
+	}
+
+	g_message ("remove symlinks from %s", path);
+	rv = _clear_links (path, dir);
+	closedir (dir);
+
+	return rv;
+}

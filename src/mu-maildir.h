@@ -37,7 +37,7 @@
  * 
  * @return TRUE if creation succeeded, FALSE otherwise
  */
-gboolean mu_maildir_mkmdir (const char* path, int mode, gboolean noindex);
+gboolean mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex);
 
 
 /** 
@@ -96,5 +96,15 @@ typedef MuResult (*MuMaildirWalkDirCallback)
  */
 MuResult mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
 			  MuMaildirWalkDirCallback cb_dir, void *data);
+
+
+/** 
+ * recursively delete all the symbolic links in a directory tree
+ * 
+ * @param dir top dir
+ * 
+ * @return TRUE if it worked, FALSE in case of error
+ */
+gboolean mu_maildir_clear_links (const gchar* dir);
 
 #endif /*__MU_MAILDIR_H__*/
