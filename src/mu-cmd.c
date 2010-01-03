@@ -125,8 +125,6 @@ _sort_field_from_string (const char* fieldstr)
 }
 
 
-
-
 static gboolean
 _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 {
@@ -194,12 +192,17 @@ _do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts,
 	return retval;
 }
 
+
+/* create a linksdir if it not exist yet; if it already existed,
+ * remove old links if opts->clearlinks was specified */
 static gboolean
-_create_linkdir_if_nonexistant (const gchar* linkdir)
+_create_or_clear_linksdir_maybe (MuConfigOptions* opts)
 {
-	if (access (linkdir, F_OK) != 0)
-		if (!mu_maildir_mkmdir (linkdir, 0700, TRUE)) 
+	if (access (opts->linksdir, F_OK) != 0) {
+		if (!mu_maildir_mkmdir (opts->linksdir, 0700, TRUE)) 
 			return FALSE;
+	} else if (opts->clearlinks)
+		mu_maildir_clear_links (opts->linksdir);
 	
 	return TRUE;
 }
@@ -213,7 +216,7 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 	MuMsgXapian *row;
 	const MuMsgField *pathfield;
 
-	if (!_create_linkdir_if_nonexistant (opts->linksdir))
+	if (!_create_or_clear_linksdir_maybe (opts))
 		return FALSE;
 	
 	query = mu_query_xapian_combine (params, FALSE);
