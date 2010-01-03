@@ -145,7 +145,6 @@ mu_config_set_defaults (MuConfigOptions *opts)
 }
 
 
-
 void
 mu_config_uninit (MuConfigOptions *opts)
 {

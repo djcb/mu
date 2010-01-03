@@ -254,3 +254,5 @@ mu_query_xapian_combine (const gchar **params, gboolean connect_or)
 	}
 	return g_string_free (str, FALSE);
 }
+
+
