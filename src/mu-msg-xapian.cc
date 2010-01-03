@@ -20,12 +20,12 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string.h>
+#include <errno.h>
 
 #include "xapian.h"
 #include "mu-msg-xapian.h"
 
 struct _MuMsgXapian {
-
 	Xapian::Enquire		       *_enq;
 	Xapian::MSet                   _matches;
 	Xapian::MSet::const_iterator   _cursor;
@@ -34,6 +34,9 @@ struct _MuMsgXapian {
 	char*                          _str[MU_MSG_FIELD_ID_NUM];
 };
 
+
+/* FIXME: maybe use get_doccount() on the database object instead
+ * of specifying the batch size? */
 MuMsgXapian *
 mu_msg_xapian_new (const Xapian::Enquire& enq, size_t batchsize)
 {
@@ -76,19 +79,58 @@ mu_msg_xapian_destroy (MuMsgXapian *msg)
 	}
 }
 
+static gboolean
+_message_is_readable (MuMsgXapian *msg)
+{
+	Xapian::Document doc (msg->_cursor.get_document());
+	const std::string path(doc.get_value(MU_MSG_FIELD_ID_PATH));
+	
+	if (access (path.c_str(), R_OK) != 0) {
+		g_message ("cannot read %s: %s", path.c_str(),
+			   strerror(errno));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+		
+
+
 gboolean
 mu_msg_xapian_next (MuMsgXapian *msg)
 {
 	g_return_val_if_fail (msg, FALSE);
 	g_return_val_if_fail (!mu_msg_xapian_is_done(msg), FALSE);
-	
-	if (++msg->_cursor == msg->_matches.end()) 
-		return FALSE; /* no more matches */
-	
-	for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) {
-		g_free (msg->_str[i]); 
-		msg->_str[i] = NULL;
-	}
+
+	try {
+		if (++msg->_cursor == msg->_matches.end()) 
+			return FALSE; /* no more matches */
+		
+		/* the message may not be readable / existant, eg., because
+		 * of the database not being fully up to date. in that case,
+		 * we ignore the message. it might be nice to auto-delete
+		 * these messages from the db, but that would might screw
+		 * up the search; also, we only have read-only access to the
+		 * db here */
+		if (!_message_is_readable (msg))
+			return mu_msg_xapian_next (msg);
+		
+		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) {
+			g_free (msg->_str[i]); 
+			msg->_str[i] = NULL;
+		}
+
+	} catch (const Xapian::Error &err) {
+		
+                g_warning ("%s: caught xapian exception '%s' (%s)",
+                           __FUNCTION__, err.get_msg().c_str(),
+                           err.get_error_string());
+		return FALSE;
+		
+        } catch (...) {
+                g_warning ("%s: caught exception", __FUNCTION__);
+		return FALSE;
+        }
 	
 	return TRUE; 
 }
@@ -114,7 +156,7 @@ mu_msg_xapian_get_field (MuMsgXapian *row, const MuMsgField *field)
 	
 	try {
 		MuMsgFieldId id;
-
+		
 		id = mu_msg_field_id (field);
 		if (!row->_str[id]) { 	/* cache the value */
 			Xapian::Document doc (row->_cursor.get_document());
