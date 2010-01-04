@@ -60,6 +60,21 @@ void              mu_store_xapian_destroy (MuStoreXapian *store);
 MuResult	  mu_store_xapian_store   (MuStoreXapian *store,
 					   MuMsgGMime *msg);
 
+
+/** 
+ * remove a message from the database
+ * 
+ * @param store a valid store
+ * @param msgpath path of the message (note, this is only used to
+ * *identify* the message; a common use of this function is to remove
+ * a message from the database, for which there is no message anymore
+ * in the filesystem.
+ * 
+ * @return TRUE if it succeeded, FALSE otherwise
+ */
+MuResult          mu_store_xapian_remove (MuStoreXapian *store,
+					  const char* msgpath);
+
 /** 
  * store a timestamp for a directory
  * 

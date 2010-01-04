@@ -57,7 +57,7 @@ mu_store_xapian_new  (const char* path)
 		store->_transaction_size = MU_STORE_XAPIAN_TRANSACTION_SIZE; 
 		store->_in_transaction = false;
 		store->_processed = 0;
-
+		
 		g_message ("%s: opened %s", __FUNCTION__, path);
 		return store;
 
@@ -160,10 +160,8 @@ add_terms_values_body (Xapian::Document& doc, MuMsgGMime *msg,
 	if (!str) /* FIXME: html->html fallback */
 		str = mu_msg_gmime_get_body_html (msg);
 	
-	if (!str)  {
-		//g_warning ("no body found");
+	if (!str)  
 		return; /* no body... */
-	}
 
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
@@ -206,15 +204,24 @@ add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 	g_return_if_reached ();
 }
 
-
-MuResult
-mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
+/* get a unique id for this message */
+static std::string
+_get_message_uid (MuMsgGMime *msg)
 {
 	static const MuMsgField* pathfield =
 		mu_msg_field_from_id(MU_MSG_FIELD_ID_PATH);
 	static const std::string pathprefix 
 		(mu_msg_field_xapian_prefix(pathfield));
-		
+
+	return pathprefix + mu_msg_gmime_get_path(msg);
+}
+
+
+
+
+MuResult
+mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
+{	
 	g_return_val_if_fail (store, MU_ERROR);
 	g_return_val_if_fail (msg, MU_ERROR);
 
@@ -223,21 +230,21 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		Xapian::docid id;
 		gboolean commit_now;
 		MsgDoc msgdoc = { &newdoc, msg };
-
+		const std::string uid(_get_message_uid(msg));
+		
 		// start transaction if needed
 		if (!store->_in_transaction) {
 			store->_db->begin_transaction();
 			store->_in_transaction = true;
 		}
-		
+		/* we must add a unique term, so we can replace matching
+		 * documents */
+		newdoc.add_term (uid);
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_terms_values,
 				      &msgdoc);
 			
 		/* we replace all existing documents for this file */
-		const std::string pathterm (pathprefix +
-					    mu_msg_gmime_get_path(msg));
-		id = store->_db->replace_document (pathterm, newdoc);
-		
+		id = store->_db->replace_document (uid, newdoc);
 		commit_now = ++store->_processed % store->_transaction_size == 0;
 		if (commit_now) {
 			store->_in_transaction = false;
@@ -264,7 +271,7 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 
 
 MuResult
-mu_store_xapian_cleanup (MuStoreXapian *store, const char* msgpath)
+mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 {
 	g_return_val_if_fail (store, MU_ERROR);
 	g_return_val_if_fail (msgpath, MU_ERROR);
