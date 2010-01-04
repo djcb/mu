@@ -40,7 +40,7 @@ struct _MuConfigOptions {
 	
 	/* options for indexing */
 	char	        *maildir;	/* where the mails are */
-	gboolean         cleanup;	/* cleanup deleted mails form db */
+	gboolean         cleanup;	/* cleanup deleted mails from db */
 	gboolean         reindex;	/* re-index existing mails */
 	
 	/* options for querying */

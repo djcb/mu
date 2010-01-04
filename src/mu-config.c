@@ -62,7 +62,9 @@ mu_config_options_group_index (MuConfigOptions *opts)
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
 		 "top of the maildir", NULL},
 		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
-		 "index even already indexed messages ", NULL},
+		 "index alread indexed messages too", NULL},
+		{"cleanup", 'u', 0, G_OPTION_ARG_NONE, &opts->cleanup,
+		 "cleanup database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 	
@@ -116,14 +118,17 @@ void
 mu_config_set_defaults (MuConfigOptions *opts)
 {
 	g_return_if_fail (opts);
-
+	
 	if (!opts->muhome)
-		opts->muhome	 = mu_util_dir_expand ("~/.mu");
+		opts->muhome = "~/.mu";
+	opts->muhome = mu_util_dir_expand ("~/.mu");
 	
 	opts->log_stderr = FALSE;
 	
 	/* indexing */		
-	if (!opts->maildir)
+	if (opts->maildir)
+		opts->maildir = mu_util_dir_expand (opts->maildir);
+	else
 		opts->maildir = mu_util_guess_maildir();
 
 	/* querying */
