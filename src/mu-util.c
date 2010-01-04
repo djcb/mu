@@ -27,6 +27,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <glib/gstdio.h>
+#include <errno.h>
 
 #include "mu-util.h"
 
@@ -41,7 +43,7 @@ mu_util_dir_expand (const char *path)
 	dir = NULL;
 	wordexp (path, &wexp, 0);
 	if (wexp.we_wordc != 1) 
-		g_printerr ("error expanding dir '%s'", path);
+		g_warning ("error expanding dir '%s'", path);
 	else 
 		dir = g_strdup (wexp.we_wordv[0]);
 	
@@ -49,6 +51,7 @@ mu_util_dir_expand (const char *path)
 
 	return dir;
 }
+
 
 
 
@@ -80,4 +83,30 @@ mu_util_guess_maildir (void)
 
 	/* nope; nothing found */
 	return NULL;
+}
+
+
+gboolean
+mu_util_create_dir_maybe (const gchar *path)
+{
+	struct stat statbuf;
+	
+	g_return_val_if_fail (path, FALSE);
+
+	/* if it exists, it must be a readable dir */ 
+	if (stat (path, &statbuf) == 0) {
+		if ((!S_ISDIR(statbuf.st_mode)) ||
+		    (access (path, W_OK|R_OK) != 0)) {
+			g_warning ("Not a rw-directory: %s", path);
+			return FALSE;
+		}
+	}		
+		
+	if (g_mkdir_with_parents (path, 0700) != 0) {
+		g_warning ("failed to create %s: %s",
+			   path, strerror(errno));
+		return FALSE;
+	}
+
+	return TRUE;
 }

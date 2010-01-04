@@ -45,6 +45,18 @@ char*       mu_util_dir_expand (const char* path);
 char*       mu_util_guess_maildir (void);
 
 
+
+/** 
+ * if path exists, check that's a read/writeable dir; otherwise try to
+ * create it (with perms 0700)
+ * 
+ * @param path path to the dir 
+ * 
+ * @return TRUE if a read/writeable directory `path' exists after
+ * leaving this function, FALSE otherwise
+ */
+gboolean mu_util_create_dir_maybe (const gchar *path);
+
 G_END_DECLS
 
 #endif /*__MU_UTIL_H__*/
