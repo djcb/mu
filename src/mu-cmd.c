@@ -47,12 +47,15 @@ _cmd_from_string (const char* cmd)
 	    (strcmp (cmd, "search") == 0))
 		return MU_CMD_QUERY;
 
+	if (strcmp (cmd, "cleanup") == 0)
+		return MU_CMD_CLEANUP;
+	
 	if ((strcmp (cmd, "mkmdir") == 0) ||
 	    (strcmp (cmd, "mkdir") == 0)) 
 		return MU_CMD_MKDIR;
-
-	if (strcmp (cmd, "link") == 0)
-		return MU_CMD_LINK;
+	
+	/* if (strcmp (cmd, "link") == 0) */
+	/* 	return MU_CMD_LINK; */
 	
 	/* if ((strcmp (cmd, "help") == 0) || */
 	/*     (strcmp (cmd, "info") == 0)) */
@@ -265,12 +268,6 @@ _check_query_params (MuConfigOptions *opts)
 			g_warning ("Invalid option for '--linksdir'");
 			return FALSE;
 		}
-	
-	if (opts->xquery) 
-		if (opts->fields || opts->sortfield) {
-			g_warning ("Invalid option for '--xquery'");
-			return FALSE;
-		}
 		
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("Missing search expression");
@@ -332,7 +329,7 @@ _check_index_params (MuConfigOptions *opts)
 	
 
 static MuResult
-_msg_cb  (MuIndexStats* stats, void *user_data)
+_index_msg_cb  (MuIndexStats* stats, void *user_data)
 {
 	char *kars="-\\|/";
 	char output[100];
@@ -344,9 +341,10 @@ _msg_cb  (MuIndexStats* stats, void *user_data)
 		printf ("\b");
 	
 	len = snprintf (output, sizeof(output),
-			"%c mu is indexing your mails; processed: %d; "
-			"updated/new: %d",
-			kars[i % 4], stats->_processed, stats->_updated);
+			"%c indexing mail; processed: %d; "
+			"updated/new: %d, cleaned up: %d",
+			kars[i % 4], stats->_processed,
+			stats->_updated, stats->_cleaned_up);
 	g_print ("%s", output);
 	
 	++i;
@@ -358,8 +356,6 @@ _msg_cb  (MuIndexStats* stats, void *user_data)
 static gboolean
 _cmd_index (MuConfigOptions *opts)
 {
-	MuIndex *midx;
-	MuIndexStats stats;
 	int rv;
 
 	if (!_check_index_params (opts))
@@ -367,14 +363,21 @@ _cmd_index (MuConfigOptions *opts)
 
 	mu_msg_gmime_init ();
 	{
+		MuIndex *midx;
+		MuIndexStats stats;
+
+		mu_index_stats_clear (&stats);
 		midx = mu_index_new (opts->muhome);
-		rv = mu_index_run (midx,
-				   opts->maildir,
-				   opts->reindex,
-				   &stats,
-				   opts->quiet ? NULL : _msg_cb,
-				   NULL,
-				   NULL);
+		rv = mu_index_run (midx, opts->maildir,
+				   opts->reindex, &stats,
+				   opts->quiet ? NULL : _index_msg_cb,
+				   NULL, NULL);
+		if (opts->cleanup) {
+			stats._processed = 0; /* start over */
+			mu_index_cleanup (midx, &stats,
+					  opts->quiet ? NULL : _index_msg_cb,
+					  NULL);
+		}
 		g_print ("\n");
 		mu_index_destroy (midx);
 	}
@@ -382,6 +385,58 @@ _cmd_index (MuConfigOptions *opts)
 	
 	return rv == MU_OK ? TRUE : FALSE;
 }
+
+
+MuResult
+_cleanup_cb (MuIndexStats *stats, void *user_data)
+{
+	char *kars="-\\|/";
+	char output[100];
+	
+	static int i = 0;
+	static int len = 0;
+
+	while (len --> 0) 
+		printf ("\b");
+	
+	len = snprintf (output, sizeof(output),
+			"%c mu is cleaning up the message database; "
+			"processed: %d; cleaned-up: %d",
+			kars[i % 4], stats->_processed, stats->_cleaned_up);
+	g_print ("%s", output);
+	++i;
+
+	return MU_OK;
+}
+
+
+
+static gboolean
+_cmd_cleanup (MuConfigOptions *opts)
+{
+	int rv;
+	
+	if (!_check_index_params (opts))
+		return FALSE;
+
+	mu_msg_gmime_init ();
+	{
+		MuIndex *midx;
+		MuIndexStats stats;
+
+		mu_index_stats_clear (&stats);
+		midx = mu_index_new (opts->muhome);
+		mu_index_cleanup (midx, &stats,
+				  opts->quiet ? NULL :_cleanup_cb,
+				  NULL);
+		mu_index_destroy (midx);
+	}
+	g_print ("\n");
+	mu_msg_gmime_uninit ();
+	
+	return rv == MU_OK ? TRUE : FALSE;
+}
+
 
 
 static int
@@ -409,6 +464,7 @@ _cmd_mkdir (MuConfigOptions *opts)
 
 
 
+#if 0 /* currently, turned off */
 static gboolean
 _cmd_link (MuConfigOptions *opts)
 {
@@ -424,13 +480,23 @@ _cmd_link (MuConfigOptions *opts)
 }
 
 
+static gboolean
+_cmd_help (MuConfigOptions *opts)
+{
+	/* FIXME: get context-sensitive help */
+	_show_version ();
+	return _show_usage (FALSE);
+}
+#endif /* 0 */
+
+
 
 static gboolean
 _show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, find, mkdir, link\n"
+		"\twhere command is one of index, find, cleanup, mkdir\n"
 		"see mu(1) for more information\n";
 
 	if (noerror)
@@ -459,13 +525,6 @@ _show_version (void)
 }
 
 
-static gboolean
-_cmd_help (MuConfigOptions *opts)
-{
-	/* FIXME: get context-sensitive help */
-	_show_version ();
-	return _show_usage (FALSE);
-}
 
 
 
@@ -483,12 +542,14 @@ mu_cmd_execute (MuConfigOptions *opts)
 	cmd = _cmd_from_string (opts->params[0]);
 
 	switch (cmd) {
-	case MU_CMD_UNKNOWN: return _show_usage (FALSE);
-	case MU_CMD_HELP:    return _cmd_help  (opts);
-	case MU_CMD_MKDIR:   return _cmd_mkdir (opts);
-	case MU_CMD_LINK:    return _cmd_link  (opts);
+
 	case MU_CMD_INDEX:   return _cmd_index (opts);
 	case MU_CMD_QUERY:   return _cmd_query (opts);
+	case MU_CMD_CLEANUP: return _cmd_cleanup (opts);
+	case MU_CMD_MKDIR:   return _cmd_mkdir (opts);
+	/* case MU_CMD_HELP:    return _cmd_help  (opts); */
+	/* case MU_CMD_LINK:    return _cmd_link  (opts); */
+	case MU_CMD_UNKNOWN: return _show_usage (FALSE);
 	default:
 		g_return_val_if_reached (FALSE);
 	}	

@@ -29,9 +29,11 @@ G_BEGIN_DECLS
 enum _MuCmd {
 	MU_CMD_INDEX,
 	MU_CMD_QUERY,
+	MU_CMD_CLEANUP,
 	MU_CMD_MKDIR,
-	MU_CMD_LINK,
-	MU_CMD_HELP,
+	/* not currently present */
+	/* MU_CMD_LINK, */
+	/* MU_CMD_HELP, */
 	
 	MU_CMD_UNKNOWN
 };
