@@ -81,7 +81,6 @@ mu_index_destroy (MuIndex *index)
 	g_free (index);
 }
 
-
 struct _MuIndexCallbackData {
 	MuIndexMsgCallback    _idx_msg_cb;
 	MuIndexDirCallback    _idx_dir_cb;
@@ -93,6 +92,7 @@ struct _MuIndexCallbackData {
 };
 typedef struct _MuIndexCallbackData MuIndexCallbackData;
 
+
 static MuResult
 insert_or_update_maybe (const char* fullpath, time_t filestamp,
 			MuIndexCallbackData *data, gboolean *updated)
@@ -101,11 +101,9 @@ insert_or_update_maybe (const char* fullpath, time_t filestamp,
 
 	*updated = FALSE;
 	
-	if ((size_t)filestamp <= (size_t)data->_dirstamp) {
-		if (!data->_reindex)
-			return MU_OK;
-	}
-   
+	if (!data->_reindex && (size_t)filestamp <= (size_t)data->_dirstamp)
+		return MU_OK;
+	
 	msg = mu_msg_gmime_new (fullpath);
 	if (!msg) {
 		g_warning ("%s: failed to create mu_msg for %s",
@@ -121,8 +119,8 @@ insert_or_update_maybe (const char* fullpath, time_t filestamp,
 	} 
 	
 	mu_msg_gmime_destroy (msg);
-	
 	*updated = TRUE;
+
 	return MU_OK;	
 }
 
@@ -158,7 +156,7 @@ on_run_maildir_msg (const char* fullpath, time_t filestamp,
 					 &updated);
 		
 	/* update statistics */
-	if (result == MU_OK && data && data->_stats) {
+	if (data && data->_stats) {
 		++data->_stats->_processed;
 		if (data && data->_stats)  {
 			if (updated) 
