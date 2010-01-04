@@ -378,7 +378,10 @@ _cmd_index (MuConfigOptions *opts)
 					  opts->quiet ? NULL : _index_msg_cb,
 					  NULL);
 		}
-		g_print ("\n");
+
+		if (!opts->quiet)
+			g_print ("\n");
+			
 		mu_index_destroy (midx);
 	}
 	mu_msg_gmime_uninit ();
@@ -431,7 +434,10 @@ _cmd_cleanup (MuConfigOptions *opts)
 				  NULL);
 		mu_index_destroy (midx);
 	}
-	g_print ("\n");
+
+	if (!opts->quiet)
+		g_print ("\n");
+
 	mu_msg_gmime_uninit ();
 	
 	return rv == MU_OK ? TRUE : FALSE;
