@@ -31,6 +31,7 @@
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-store-xapian.h"
+#include "mu-util.h"
 
 #define MU_XAPIAN_DIR_NAME "xapian"
 
@@ -47,6 +48,11 @@ mu_index_new (const char *muhome)
 	char *xpath;
 	
 	g_return_val_if_fail (muhome, NULL);
+
+	if (!mu_util_create_dir_maybe(muhome)) {
+		g_warning ("Failed to create %s", muhome);
+		return NULL;
+	}
 	
 	index = g_new0 (MuIndex, 1);				
 	xpath = g_strdup_printf ("%s%c%s", muhome,
@@ -189,7 +195,7 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 }
 
 static gboolean
-check_path (const char* path)
+_check_path (const char* path)
 {
 	g_return_val_if_fail (path, FALSE);
 	
@@ -212,7 +218,9 @@ mu_index_run (MuIndex *index, const char* path,
 	MuIndexCallbackData cb_data;
 	
 	g_return_val_if_fail (index && index->_xapian, MU_ERROR);
-	g_return_val_if_fail (check_path (path), MU_ERROR);
+	
+	if (!_check_path (path))
+		return MU_ERROR;
 
 	if (stats)
 		memset (stats, 0, sizeof(MuIndexStats));
@@ -263,7 +271,9 @@ mu_index_stats (MuIndex *index, const char* path,
 	MuIndexCallbackData cb_data;
 	
 	g_return_val_if_fail (index, MU_ERROR);
-	g_return_val_if_fail (check_path (path), MU_ERROR);
+
+	if (!_check_path (path))
+		return MU_ERROR;
 
 	if (stats)
 		memset (stats, 0, sizeof(MuIndexStats));
@@ -299,9 +309,13 @@ _foreach_doc_cb (const char* path, CleanupData *cudata)
 		g_message ("not readable: %s; removing",
 			   path);
 		/* FIXME: delete from db */
-		++cudata->_stats->_cleaned_up;
+		if (cudata->_stats)
+			++cudata->_stats->_cleaned_up;
 	}
 
+	if (cudata->_stats)
+		++cudata->_stats->_processed;
+	
 	if (!cudata->_cb)
 		return MU_OK;
 
@@ -328,4 +342,15 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 				      (MuStoreXapianForeachFunc)_foreach_doc_cb,
 				      &cudata);
 	return rv;
+}
+
+
+gboolean
+mu_index_stats_clear (MuIndexStats *stats)
+{
+	if (!stats)
+		return FALSE;
+
+	memset (stats, 0, sizeof(MuIndexStats));
+	return TRUE;
 }

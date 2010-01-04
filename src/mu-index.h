@@ -89,7 +89,10 @@ typedef MuResult (*MuIndexDirCallback) (const char* path, gboolean enter,
  * @param path the path to index
  * @param force if != 0, force re-indexing already index messages; this is
  *         obviously a lot slower than only indexing new/changed messages
- * @param result a structure with some statistics about the results
+ * @param stats a structure with some statistics about the results;
+ * note that this function does *not* reset the struct values to allow
+ * for cumulative stats from multiple calls. If needed, you can use
+ * @mu_index_stats_clear before calling this function
  * @param cb_msg a callback function called for every msg indexed;
  * @param cb_dir a callback function called for every dir entered/left; 
  * @param user_data a user pointer that will be passed to the callback function
@@ -99,7 +102,7 @@ typedef MuResult (*MuIndexDirCallback) (const char* path, gboolean enter,
  * case of some error.
  */
 MuResult mu_index_run (MuIndex *index, const char* path, gboolean force, 
-		       MuIndexStats *result, MuIndexMsgCallback msg_cb,
+		       MuIndexStats *stats, MuIndexMsgCallback msg_cb,
 		       MuIndexDirCallback dir_cb, void *user_data);
 
 /** 
@@ -110,7 +113,10 @@ MuResult mu_index_run (MuIndex *index, const char* path, gboolean force,
  * 
  * @param index a valid MuIndex instance
  * @param path the path to get stats for
- * @param result a structure with some statistics about the results
+  * @param stats a structure with some statistics about the results;
+ * note that this function does *not* reset the struct values to allow
+ * for cumulative stats from multiple calls. If needed, you can use
+ * @mu_index_stats_clear before calling this function
  * @param cb a callback function which will be called for every msg; 
  * @param user_data a user pointer that will be passed to the callback function
  * xb
@@ -118,7 +124,7 @@ MuResult mu_index_run (MuIndex *index, const char* path, gboolean force,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuResult mu_index_stats (MuIndex *index, const char* path, MuIndexStats *result,
+MuResult mu_index_stats (MuIndex *index, const char* path, MuIndexStats *stats,
 			 MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 			 void *user_data);
 
@@ -133,14 +139,18 @@ MuResult mu_index_stats (MuIndex *index, const char* path, MuIndexStats *result,
  * 
  * @return 
  */
-typedef MuResult (*MuIndexCleanupDeleteCallback) (MuIndexStats*, void *user_data); 
+typedef MuResult (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
+						  void *user_data); 
 
 /** 
  * cleanup the database; ie. remove entries for which no longer a corresponding
  * file exists in the maildir
  * 
  * @param index a valid MuIndex instance
- * @param result a structure with some statistics about the results
+ * @param stats a structure with some statistics about the results;
+ * note that this function does *not* reset the struct values to allow
+ * for cumulative stats from multiple calls. If needed, you can use
+ * @mu_index_stats_clear before calling this function
  * @param cb a callback function which will be called for every msg; 
  * @param user_data a user pointer that will be passed to the callback function
  * 
@@ -148,8 +158,17 @@ typedef MuResult (*MuIndexCleanupDeleteCallback) (MuIndexStats*, void *user_data
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *result,
+MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 			   MuIndexCleanupDeleteCallback cb,
 			   void *user_data);
+
+/** 
+ * clear the stats structure
+ * 
+ * @param stats a MuIndexStats object
+ * 
+ * @return TRUE if stats != NULL, FALSE otherwise
+ */
+gboolean mu_index_stats_clear (MuIndexStats *stats);
 
 #endif /*__MU_INDEX_H__*/
