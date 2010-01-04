@@ -7,14 +7,23 @@ mu \- index and search the contents of e-mail messages stored in Maildirs
 
 .SH DESCRIPTION
 .B mu
-is a tool for indexing and searching e-mail messages stored in Maildirs. It
-does so by recursively scanning a Maildir directory tree and analyzing the
-e-mail messages found. The results of this analysis are then stored in a
-database. Using this database, you can quickly search for specific messages.
+is a set of tools for indexing and searching e-mail messages stored in
+Maildirs. It does so by recursively scanning a Maildir directory tree and
+analyzing the e-mail messages found. The results of this analysis are then
+stored in a database. Using this database, you can quickly search for specific
+messages.
+
+.B mu
+also offers functionality for creating maildirs.
+
+The various tools are available as commands for a single
+.B mu
+executable.
 
 .SH COMMANDS
 .B mu
-offers the following commands.
+offers the following commands:
+
 .TP
 \fBindex\fR
 for indexing (analyzing) the contents of your Maildirs, and storing the
@@ -27,9 +36,13 @@ below for details). You can use \fBquery\fR and \fBsearch\fR as synonyms for
 \fBfind\fR.
 
 .TP
-One can can run these command by either using \fBmu index\fR or \fBmu find\fR \
-from the command line, plus any parameters they take. In the following, we \
-discusses these commands in detail.
+\fBcleanup\fR
+for removing messages from your database for which there is no corresponding
+message file anymore. This commonly happens when you delete or move messages.
+
+.TP
+\fBmkdir\fR
+for creating Maildirs.
 
 .SH THE INDEX COMMAND
 Using the
@@ -47,7 +60,7 @@ leaf directory are ignored.
 
 Currently, symlinks are not followed.
 
-Also, if there's a file called
+If there is a file called
 .B .noindex
 in a directory, the contents of that directory and any of its subdirectories
 will be ignored. This can be useful to exclude certain directories from the
@@ -55,23 +68,35 @@ indexing process, for example directories with spam-messages.
 
 The first run of 
 .B mu index
-can take some time; on the author's laptop using mu version 0.6, scans more
-than 1000 messages per second. Note that a full scan has to be done only once,
-after that it suffices to index the changes, which goes much faster.
+may take a few minutes if you have a lot of mail (ten thousands of messages).
+Note that a full scan has to be done only once, after that it suffices to
+index the changes, which goes much faster.
 
 .SS Indexing options
 
 .TP
-\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
-start searching at Maildir \fB<maildir>\fR. By default,
+\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR start searching
+at\fI<maildir>\fR. By default,
 .B mu
-uses whatever
+uses whatever the
 .B MAILDIR
-is set to; if that is not set, it tries
+environment variable is set to; if that is not set, it tries
 .B ~/Maildir
+\.
+
 .TP
 \fB\-r\fR, \fB\-\-reindex\fR
 re-index all mails, even ones that are already in the database.
+
+.TP
+\fB\-u\fR, \fB\-\-cleanup\fR automatically clean up the database after
+indexing. This is equivalent to calling the
+.B cleanup
+command after indexing. Please see the information for
+.B cleanup
+for details.
+
+.TP
 
 .B NOTE:
 It is probably not a good idea to run multiple instances of
@@ -102,10 +127,10 @@ will search for messages that match all of those words. So,
 will find all messages which have both "monkey" AND "banana" in one of those
 fields.
 
+.SH THE CLEANUP COMMAND
 
 
-
-
+.SH THE MKDIR COMMAND
 
 .SH OPTIONS
 .B mu
@@ -144,57 +169,6 @@ which is the default.
 .B --debug, -d 
 add a lot of logging for debugging purposes
 
-.SH CONFIGURATION
-Instead of specifying the options on the command line, you can also specify
-them in the
-.B mu-conf
-configuration file, in the mu home directory (by default,
-.B ~/.mu
-). The
-.B General options
-go in the section
-.B [mu]
-while the
-.B mu-index
-specific options go under
-.B [mu-index].
-For example, your configuration file could look something like this:
-
-.nf
-[mu]
-debug=false
-
-[mu-index]
-maildir=~/MyMaildir
-.fi
-
-Note that command line arguments take precedence over the configuration file.
-
-.SH MAILDIR SUPPORT
-.B mu-index
-supports an extended version of
-.BR maildir(5)
-; in particular, it supports (a) a tree of Maildirs (strictly, the maildir
-specification does not allow this, but it is useful and widely supported), and
-(b) it supports '!' in addition to ':' as separators in mail filenames, which
-some e-mail programs (such as 
-.BR modest(1)
-and the Maildir module in
-.BR python(1)
-use to support on VFAT filesystems, which don't allow ':' in filenames.
-
-.B mu-index
-ignores messages it cannot read or
-.BR stat(2)
-; but failure to read or stat will be logged. Files starting with '.' are
-ignored, but directories are not. Thus, if there is a message
-.B .dotdir/new/mymsg1234
-it will be indexed. This allows indexing 
-.B Maildir++ 
-directories, as used by
-.I CourierIMAP
-and 
-.I Dovecot
 
 .B mu-index
 processes messages in
