@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "mu-log.h"
+#include "mu-util.h"
 
 #define MU_LOG_FILE "mu.log"
 
@@ -46,12 +47,16 @@ static void log_write (const char* domain, GLogLevelFlags level,
 
 static MuLog* MU_LOG = NULL;
 
+
 static void
-try_close (int fd)
+_try_close (int fd)
 {
+	if (fd < 0)
+		return;
+	
 	if (close (fd) < 0) 
-		fprintf (stderr, "%s: close() of fd %d failed: %s\n",
-			 __FUNCTION__, fd, strerror(errno));
+		g_printerr ("%s: close() of fd %d failed: %s\n",
+			    __FUNCTION__, fd, strerror(errno));
 }
 
 
@@ -113,6 +118,11 @@ mu_log_init  (const char* muhome, gboolean append, gboolean debug)
 	/* only init once... */
 	g_return_val_if_fail (!MU_LOG, FALSE);	
 	g_return_val_if_fail (muhome, FALSE);
+
+	if (!mu_util_create_dir_maybe(muhome)) {
+		g_warning ("Failed to init log in %s", muhome);
+		return FALSE;
+	}
 	
 	logfile = g_strdup_printf ("%s%c%s", muhome,
 				   G_DIR_SEPARATOR, MU_LOG_FILE);
@@ -124,7 +134,7 @@ mu_log_init  (const char* muhome, gboolean append, gboolean debug)
 	g_free (logfile);
 	
 	if (fd < 0 || !mu_log_init_with_fd (fd, FALSE, debug)) {
-		try_close (fd);
+		_try_close (fd);
 		return FALSE;
 	}
 	
@@ -139,7 +149,7 @@ mu_log_uninit (void)
 	g_return_if_fail (MU_LOG);
 
 	if (MU_LOG->_own)
-		try_close (MU_LOG->_fd);
+		_try_close (MU_LOG->_fd);
 
 	g_free (MU_LOG);
 	MU_LOG = NULL;
