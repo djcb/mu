@@ -29,7 +29,7 @@
 
 #include "mu-maildir.h"
 
-#define MU_MAILDIR_WALK_MAX_FILE_SIZE (15*1000*1000)
+#define MU_MAILDIR_WALK_MAX_FILE_SIZE (32*1000*1000)
 #define MU_MAILDIR_NOINDEX_FILE  ".noindex"
 
 
@@ -212,7 +212,7 @@ process_file (const char* fullpath, MuMaildirWalkMsgCallback cb, void *data)
 	if (G_UNLIKELY(statbuf.st_size > MU_MAILDIR_WALK_MAX_FILE_SIZE)) {
 		g_warning ("ignoring because bigger than %d bytes: %s",
 			   MU_MAILDIR_WALK_MAX_FILE_SIZE, fullpath);
-		return MU_ERROR;
+		return MU_OK; /* not an error */
 	}
 	
 	result = (cb)(fullpath,statbuf.st_mtime,data);
@@ -501,7 +501,8 @@ mu_maildir_clear_links (const gchar* path)
 	
 	dir = opendir (path);		
 	if (!dir) {
-		g_warning ("failed to open %s: %s", path, strerror(errno));
+		g_warning ("failed to open %s: %s", path,
+			   strerror(errno));
 		return FALSE;
 	}
 
