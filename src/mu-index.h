@@ -27,10 +27,10 @@ struct _MuIndex;
 typedef struct _MuIndex MuIndex;
 
 struct _MuIndexStats {
-	int _processed;     /* number of msgs processed or counted */
-	int _updated;       /* number of msgs new or updated */
-	int _cleaned_up;    /* number of msgs cleaned up */
-	int _uptodate;      /* number of msgs already uptodate */
+	size_t _processed;     /* number of msgs processed or counted */
+	size_t _updated;       /* number of msgs new or updated */
+	size_t _cleaned_up;    /* number of msgs cleaned up */
+	size_t _uptodate;      /* number of msgs already uptodate */
 };
 typedef struct _MuIndexStats MuIndexStats;
 
