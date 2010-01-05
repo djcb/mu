@@ -1,4 +1,4 @@
-## Copyright (C) 2009 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,17 +19,15 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.c])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
-# we set the set the version of the metadata database schema here;
-# it will become part of the db name, so we can automtically 
-# recreate the database when we incompatible changes.
+# we set the set the version of the Xapian database layout here; it
+# will become part of the db name, so we can automtically recreate the
+# database when we incompatible have changes.
 #
-# the Xapian and SQLite database share this number, so when
-# we upgrade, we can simply update all.
+# note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
+# versioning, as we hopefully don't have updates for each version;
+# also, this has nothing to do with the version of the Xapian library
 #
-# note that MU_DATABASE_VERSION does not necessarily follow
-# MU versioning.
-#
-AC_DEFINE(MU_DATABASE_VERSION,["0.5"], [Schema version of the database])
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["0.6"], [Schema version of the database])
 
 AC_PROG_LIBTOOL
 
@@ -68,7 +66,7 @@ AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
 if test "x$XAPIAN" = "xno"; then
       AC_MSG_ERROR([
    *** xapian could not be found; please install it
-   *** in debian/ubuntu the package wouldbe 'libxapian-dev'])   
+   *** e.g., in debian/ubuntu the package would be 'libxapian-dev'])   
 else
    XAPIAN_CXXFLAGS=`$XAPIAN --cxxflags`
    XAPIAN_LIBS=`$XAPIAN --libs`		
@@ -84,5 +82,5 @@ Makefile
 src/Makefile
 ])
 
-
-echo "now, type 'make' to build mu, or 'make test' to run the test suite"
+echo
+echo "now, type 'make' to build mu"
