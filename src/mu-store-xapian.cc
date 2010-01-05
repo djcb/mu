@@ -43,26 +43,26 @@ struct _MuStoreXapian {
 };
 
 MuStoreXapian*
-mu_store_xapian_new  (const char* path)
+mu_store_xapian_new  (const char* xpath)
 {
 	MuStoreXapian *store;
 	
-	g_return_val_if_fail (path, NULL);
+	g_return_val_if_fail (xpath, NULL);
 	
 	try {
 		store = g_new0(MuStoreXapian,1);
 		store->_db = new Xapian::WritableDatabase
-			(path,Xapian::DB_CREATE_OR_OPEN);
-
+			(xpath, Xapian::DB_CREATE_OR_OPEN);
+		
 		/* keep count of processed docs */
 		store->_trx_size = MU_STORE_XAPIAN_TRX_SIZE; 
 		store->_in_transaction = false;
 		store->_processed = 0;
 		
-		g_message ("%s: opened %s", __FUNCTION__, path);
+		MU_WRITE_LOG ("%s: opened %s", __FUNCTION__, xpath);
 		return store;
 
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;		
+	} MU_XAPIAN_CATCH_BLOCK;		
 
 	delete store->_db;
 	g_free (store);
@@ -75,7 +75,7 @@ static void
 _begin_transaction_if (MuStoreXapian *store, gboolean cond)
 {
 	if (cond) {
-		g_message ("beginning Xapian transaction");
+		g_debug ("beginning Xapian transaction");
 		store->_db->begin_transaction();
 		store->_in_transaction = true;
 	}
@@ -85,7 +85,7 @@ static void
 _commit_transaction_if (MuStoreXapian *store, gboolean cond)
 {
 	if (cond) {
-		g_message ("starting Xapian transaction");
+		g_debug ("comitting Xapian transaction");
 		store->_in_transaction = false;
 		store->_db->commit_transaction();
 	}
@@ -95,7 +95,7 @@ static void
 _rollback_transaction_if (MuStoreXapian *store, gboolean cond)
 {
 	if (cond) {
-		g_message ("rolling back Xapian transaction");
+		g_debug ("rolling back Xapian transaction");
 		store->_in_transaction = false;
 		store->_db->cancel_transaction();
 	}
@@ -109,16 +109,28 @@ mu_store_xapian_destroy (MuStoreXapian *store)
 		return;
 
 	try {
-		_commit_transaction_if (store, store->_in_transaction);
-		store->_db->flush();
-
-		g_message ("closing xapian database with %d documents",
-			   (int)store->_db->get_doccount());
+		mu_store_xapian_flush (store);
+		
+		MU_WRITE_LOG ("closing xapian database with %d documents",
+			(int)store->_db->get_doccount());
 
 		delete store->_db;
 		g_free (store);
 
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK;
+}
+
+void
+mu_store_xapian_flush (MuStoreXapian *store)
+{
+	g_return_if_fail (store);
+	
+	try {
+		_commit_transaction_if (store, store->_in_transaction);
+		store->_db->flush ();
+
+	} MU_XAPIAN_CATCH_BLOCK;
+	
 }
 
 
@@ -245,7 +257,6 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 	try {
 		Xapian::Document newdoc;
 		Xapian::docid id;
-		gboolean commit_now;
 		MsgDoc msgdoc = { &newdoc, msg };
 		const std::string uid(_get_message_uid(msg));
 
@@ -259,11 +270,12 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		/* we replace all existing documents for this file */
 		id = store->_db->replace_document (uid, newdoc);
 		++store->_processed;
-		_commit_transaction_if (store, store->_processed % store->_trx_size == 0);
+		_commit_transaction_if (store,
+					store->_processed % store->_trx_size == 0);
 
 		return MU_OK;
 
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK;
 
 	_rollback_transaction_if (store, store->_in_transaction);
 
@@ -283,14 +295,15 @@ mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 		_begin_transaction_if (store, !store->_in_transaction);
 		
 		store->_db->delete_document (uid);
-		g_message ("deleting %s", msgpath);
+		g_debug ("deleting %s", msgpath);
 		
 		++store->_processed;
-		_commit_transaction_if (store, store->_processed % store->_trx_size == 0);
+		_commit_transaction_if (store,
+					store->_processed % store->_trx_size == 0);
 
 		return MU_OK; 
 		
-	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
 	
 }
 
@@ -307,7 +320,7 @@ mu_store_xapian_get_timestamp (MuStoreXapian *store, const char* msgpath)
 	
 		return (time_t) g_ascii_strtoull (stamp.c_str(), NULL, 10);
 		
-	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN (0);
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (0);
 
 	return 0;
 }
@@ -325,7 +338,7 @@ mu_store_xapian_set_timestamp (MuStoreXapian *store, const char* msgpath,
 		sprintf (buf, "%" G_GUINT64_FORMAT, (guint64)stamp);
 		store->_db->set_metadata (msgpath, buf);
 				
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK;
 }
 
 
@@ -358,7 +371,7 @@ mu_store_xapian_foreach (MuStoreXapian *self,
 				return res;
 		}
 		
-	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
 
 	return MU_OK;
 }

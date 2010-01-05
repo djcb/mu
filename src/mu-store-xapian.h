@@ -50,6 +50,13 @@ void              mu_store_xapian_destroy (MuStoreXapian *store);
 
 
 /** 
+ * try to flush/commit all outstanding work
+ * 
+ * @param store a valid xapian store
+ */
+void mu_store_xapian_flush (MuStoreXapian *store);
+
+/** 
  * store an email message in the XapianStore
  * 
  * @param store a valid store
