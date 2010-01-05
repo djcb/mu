@@ -129,7 +129,7 @@ mu_query_xapian_new (const char* path)
 	g_return_val_if_fail (path, NULL);
 	
 	xpath = g_strdup_printf ("%s%c%s", path, G_DIR_SEPARATOR, "xapian");
-	if (!access(xpath, R_OK) != 0) { 
+	if (access(xpath, R_OK) != 0) { 
 		g_warning ("'%s' is not a readable xapian dir",xpath);
 		g_free (xpath);
 		return NULL;
