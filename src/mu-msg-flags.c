@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <string.h>
 
+#include "mu-util.h"
 #include "mu-msg-flags.h"
 
 
@@ -140,11 +141,11 @@ check_msg_type (const char* path, char **info)
 	
 	if (g_str_has_suffix (dir, G_DIR_SEPARATOR_S "cur")) {
 		if (!*info)
-			g_message ("'cur' file, but no info part: %s", path);
+			g_debug ("'cur' file, but no info part: %s", path);
 		mtype = MSG_TYPE_CUR;
 	} else if (g_str_has_suffix (dir, G_DIR_SEPARATOR_S "new")) {
-		/* if (*info) */
-		/* 	g_message ("'new' file, ignoring info part: %s", path); */
+		if (*info)
+			g_debug ("'new' file, ignoring info part: %s", path);
 		mtype = MSG_TYPE_NEW;
 	} else 
 		mtype = MSG_TYPE_OTHER; /* file has been added explicitly as
