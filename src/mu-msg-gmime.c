@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "mu-util.h"
 #include "mu-msg-gmime.h"
 
 
@@ -536,14 +537,15 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	
 	/* of course, the charset specified may be incorrect... */
 	if (charset) {
-		char * utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
-						       charset, (gchar*)".", 
-						       NULL, NULL,
-						       &err);
+		char * utf8;
+		utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
+						charset, (gchar*)".", 
+						NULL, NULL,
+						&err);
 		if (!utf8) {
-			/* g_message ("%s: conversion failed from %s: %s", */
-			/* 	   __FUNCTION__, charset, */
-			/* 	   err ? err ->message : ""); */
+			MU_WRITE_LOG ("%s: conversion failed from %s: %s",
+				      __FUNCTION__, charset,
+				      err ? err ->message : "");
 			if (err)
 				g_error_free (err);
 		} else {
@@ -714,13 +716,64 @@ mu_msg_gmime_get_field_numeric (MuMsgGMime *msg, const MuMsgField* field)
 }
 
 
+static gboolean
+_fill_contact (MuMsgContact *contact, InternetAddress *addr,
+	       MuMsgContactType ctype)
+{
+	if (!addr)
+		return FALSE;
+	
+	contact->_name = internet_address_get_name (addr);
+	contact->_type = ctype;  
+	
+	/* we only support internet addresses;
+	 * if we don't check, g_mime hits an assert
+	 */
+	contact->_addr = internet_address_mailbox_get_addr
+		(INTERNET_ADDRESS_MAILBOX(addr));
+	
+	return TRUE;
+}
+
+
+static int
+_address_list_foreach (InternetAddressList *addrlist,
+		       MuMsgContactType     ctype,
+		       MuMsgGMimeContactsCallback cb, 
+		       void *ptr)
+{
+	int i,rv;
+	
+	if (!addrlist)
+		return 0;
+	
+	for (i = 0, rv = 0; i != internet_address_list_length(addrlist); ++i) {
+
+		MuMsgContact contact;
+		if (!_fill_contact(&contact,
+				   internet_address_list_get_address (addrlist, i),
+				   ctype))
+		{
+			MU_WRITE_LOG ("ignoring contact");
+			continue;
+		}
+		
+		rv = (cb)(&contact, ptr);
+		if (rv != 0)
+			break;
+	}
+	return rv;
+}
+
+
+
 static int
 mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb, 
 				void *ptr)
 {
-	int i;
 	InternetAddressList *list;
-
+	int rv;
+	
 	/* we go through this whole excercise of trying to get a *list*
 	 * of 'From:' address (usually there is only one...), because
 	 * internet_address_parse_string has the nice side-effect of
@@ -729,53 +782,20 @@ mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb,
 	list = internet_address_list_parse_string (
 		g_mime_message_get_sender (msg->_mime_msg));
 
+	rv = _address_list_foreach (list, MU_MSG_CONTACT_TYPE_FROM, cb, ptr);
 
-	for (i = 0; i != internet_address_list_length(list); ++i) {
-
-		MuMsgContact contact; /* stack allocated */
-		InternetAddress *addr  = 
-			internet_address_list_get_address (list, i);
-		if (addr) {
-			int result;
-				    
-			contact._name = internet_address_get_name (addr);
-			contact._type = MU_MSG_CONTACT_TYPE_FROM;  
-	
-			/* we only support internet addresses;
-			 * if we don't check, g_mime hits an assert
-			 */
-			contact._addr = internet_address_mailbox_get_addr
-				(INTERNET_ADDRESS_MAILBOX(addr));
-			result = (cb)(&contact,ptr);
-			
-			/* note: don't unref addr here, as it's owned */
-			/* by the list (well, hat is what valgrind says... */
-			if ((result = (cb)(&contact,ptr)) != 0) { 
-				/* callback tells us to stop */
-				if (list)
-					g_object_unref (G_OBJECT(list));
-
-				return result;
-			}
-		}
-	}
-	
 	if (list)
 		g_object_unref (G_OBJECT(list));
 	
-	return 0;
+	return rv;
 }
 
 
-
-/* FIXME: this is too complicated */
 int
-mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg, 
-				   MuMsgGMimeContactsCallback cb, 
+mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb, 
 				   void *ptr)
 {
-	int i, result;
-
+	int i, rv;		
 	struct { 
 		GMimeRecipientType     _gmime_type;
 		MuMsgContactType       _type;
@@ -788,42 +808,20 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
 	g_return_val_if_fail (cb && msg, -1);
 
 	/* first, get the from address */
-	if ((result = mu_msg_gmime_get_contacts_from (msg, cb, ptr)) != 0)
-		return result; /* callback told us to stop */
-	
-	for (i = 0; i != sizeof(ctypes)/sizeof(ctypes[0]); ++i) {
+	rv = mu_msg_gmime_get_contacts_from (msg, cb, ptr);
+	if (rv != 0)
+		return rv; /* callback told us to stop */
 
-		MuMsgContact contact; /* stack allocated */
-		InternetAddressList *list;
-		int j;
-		
-		list = g_mime_message_get_recipients 
-			(msg->_mime_msg, ctypes[i]._gmime_type);
-		
-		for (j = 0; j != internet_address_list_length(list); ++j) {
-
-			InternetAddress *addr  = 
-				internet_address_list_get_address (list, j);
-			if (addr) {
-				
-				contact._name = internet_address_get_name (addr);
-				contact._type = ctypes[i]._type;  
-
-				/* we only support internet addresses;
-				 * if we don't check, g_mime hits an assert
-				 */
-				contact._addr = internet_address_mailbox_get_addr(
-					INTERNET_ADDRESS_MAILBOX(addr));
-				
-				result = (cb)(&contact,ptr);
-	
-				if (result != 0) /* callback tells us to stop */
-					return result;
-			}
-		}
+	for (i = 0, rv = 0; i != G_N_ELEMENTS(ctypes); ++i) {
+		InternetAddressList *addrlist;
+		addrlist = g_mime_message_get_recipients (msg->_mime_msg,
+							  ctypes[i]._gmime_type);
+		rv = _address_list_foreach (addrlist, ctypes[i]._type,cb, ptr);
+		if (rv != 0)
+			break;
 	}
-	
-	return 0;
+
+	return rv;
 }
 
 
@@ -837,6 +835,7 @@ mu_msg_gmime_init  (void)
 	if (!_initialized) {
 		g_mime_init(0);
 		_initialized = TRUE;
+		MU_WRITE_LOG ("%s", __FUNCTION__);
 	}
 }
 
@@ -847,5 +846,6 @@ mu_msg_gmime_uninit (void)
 	if (_initialized) {
 		g_mime_shutdown();
 		_initialized = FALSE;
+		MU_WRITE_LOG ("%s", __FUNCTION__);
 	}	
 }  
