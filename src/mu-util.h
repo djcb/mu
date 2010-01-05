@@ -21,6 +21,7 @@
 #define __MU_UTIL_H__
 
 #include <glib.h>
+#include "config.h"
 
 G_BEGIN_DECLS
 
@@ -58,13 +59,26 @@ char*       mu_util_guess_maildir (void);
 gboolean mu_util_create_dir_maybe (const gchar *path);
 
 
+/** 
+ * check whether path is readable and/or writeable
+ *  
+ * @param path dir path
+ * @param readable check for readability
+ * @param writeable check fro writability
+ * 
+ * @return TRUE if dir exist and has the specified properties
+ */
+gboolean mu_util_check_dir (const gchar* path, gboolean readable,
+			    gboolean writeable);
+
+
 
 /** 
  * 
- * don't repeat this catch blocks everywhere...
+ * don't repeat these catch blocks everywhere...
  * 
  */
-#define MU_UTIL_XAPIAN_CATCH_BLOCK					\
+#define MU_XAPIAN_CATCH_BLOCK						\
 	catch (const Xapian::Error &err) {				\
                 g_warning ("%s: caught xapian exception '%s' (%s)",	\
                            __FUNCTION__, err.get_msg().c_str(),		\
@@ -74,7 +88,7 @@ gboolean mu_util_create_dir_maybe (const gchar *path);
         }
 
 
-#define MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN(R)				\
+#define MU_XAPIAN_CATCH_BLOCK_RETURN(R)					\
 	catch (const Xapian::Error &err) {				\
                 g_warning ("%s: caught xapian exception '%s' (%s)",	\
                            __FUNCTION__, err.get_msg().c_str(),		\
@@ -85,8 +99,23 @@ gboolean mu_util_create_dir_maybe (const gchar *path);
 		return (R);						\
         }
 
+/* the name of the (leaf) dir which has the xapian database */
+#define MU_XAPIAN_DIR_NAME "xapian-" MU_XAPIAN_DB_VERSION
 
-
+/** 
+ * log something in the log file; note, we use G_LOG_LEVEL_INFO
+ * for such messages
+ */
+#ifdef G_HAVE_GNUC_VARARGS
+#define MU_WRITE_LOG(format...)					     \
+	G_STMT_START {						     \
+		g_log (G_LOG_DOMAIN,				     \
+		       G_LOG_LEVEL_INFO,			     \
+		       format);					     \
+	} G_STMT_END
+#else
+#define MU_WRITE_LOG(x)
+#endif /*G_HAVE_GNUC_VARARGS*/
 
 G_END_DECLS
 

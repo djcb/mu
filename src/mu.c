@@ -96,7 +96,7 @@ main (int argc, char *argv[])
 		mu_config_uninit (&config);
 		return 1;
 	}
-
+	
 	rv = mu_cmd_execute (&config);
 
 	mu_log_uninit();
