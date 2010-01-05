@@ -158,8 +158,6 @@ mu_query_xapian_destroy (MuQueryXapian *self)
 }
 
 
-
-
 MuMsgXapian*
 mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 		     const MuMsgField* sortfield, gboolean ascending)  

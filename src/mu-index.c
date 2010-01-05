@@ -303,10 +303,15 @@ typedef struct _CleanupData CleanupData;
 static MuResult
 _foreach_doc_cb (const char* path, CleanupData *cudata)
 {
+	MuResult rv;
+	
 	if (access (path, R_OK) != 0) {
-		g_message ("not readable: %s; removing",
-			   path);
-		/* FIXME: delete from db */
+		
+		g_message ("not readable: %s; removing", path);
+		rv = mu_store_xapian_remove (cudata->_xapian, path);
+		if (rv != MU_OK)
+			return rv; /* something went wrong... bail out */	
+		
 		if (cudata->_stats)
 			++cudata->_stats->_cleaned_up;
 	}

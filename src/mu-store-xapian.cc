@@ -31,7 +31,7 @@
 #include "mu-util.h"
 
 /* number of new messages after which we commit to the database */
-#define MU_STORE_XAPIAN_TRANSACTION_SIZE 2000
+#define MU_STORE_XAPIAN_TRX_SIZE 2000
 
 struct _MuStoreXapian {
 	Xapian::WritableDatabase *_db;
@@ -39,7 +39,7 @@ struct _MuStoreXapian {
 	/* transaction handling */
 	bool   _in_transaction;
 	int    _processed;
-	size_t _transaction_size;
+	size_t _trx_size;
 };
 
 MuStoreXapian*
@@ -55,7 +55,7 @@ mu_store_xapian_new  (const char* path)
 			(path,Xapian::DB_CREATE_OR_OPEN);
 
 		/* keep count of processed docs */
-		store->_transaction_size = MU_STORE_XAPIAN_TRANSACTION_SIZE; 
+		store->_trx_size = MU_STORE_XAPIAN_TRX_SIZE; 
 		store->_in_transaction = false;
 		store->_processed = 0;
 		
@@ -71,17 +71,45 @@ mu_store_xapian_new  (const char* path)
 }
 
 
+static void
+_begin_transaction_if (MuStoreXapian *store, gboolean cond)
+{
+	if (cond) {
+		g_message ("beginning Xapian transaction");
+		store->_db->begin_transaction();
+		store->_in_transaction = true;
+	}
+}
+
+static void
+_commit_transaction_if (MuStoreXapian *store, gboolean cond)
+{
+	if (cond) {
+		g_message ("starting Xapian transaction");
+		store->_in_transaction = false;
+		store->_db->commit_transaction();
+	}
+}
+
+static void
+_rollback_transaction_if (MuStoreXapian *store, gboolean cond)
+{
+	if (cond) {
+		g_message ("rolling back Xapian transaction");
+		store->_in_transaction = false;
+		store->_db->cancel_transaction();
+	}
+}
+
+
 void
 mu_store_xapian_destroy (MuStoreXapian *store)
 {
 	if (!store)
 		return;
 
-	try { 	
-		if (store->_in_transaction) {
-			store->_in_transaction = false;
-			store->_db->commit_transaction();
-		}
+	try {
+		_commit_transaction_if (store, store->_in_transaction);
 		store->_db->flush();
 
 		g_message ("closing xapian database with %d documents",
@@ -190,16 +218,21 @@ add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 
 /* get a unique id for this message */
 static std::string
-_get_message_uid (MuMsgGMime *msg)
+_get_message_uid (const char* path)
 {
 	static const MuMsgField* pathfield =
 		mu_msg_field_from_id(MU_MSG_FIELD_ID_PATH);
 	static const std::string pathprefix 
 		(mu_msg_field_xapian_prefix(pathfield));
 
-	return pathprefix + mu_msg_gmime_get_path(msg);
+	return pathprefix + path;
 }
 
+static std::string
+_get_message_uid (MuMsgGMime *msg)
+{
+	return _get_message_uid (mu_msg_gmime_get_path(msg));
+}
 
 
 
@@ -215,12 +248,8 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		gboolean commit_now;
 		MsgDoc msgdoc = { &newdoc, msg };
 		const std::string uid(_get_message_uid(msg));
-		
-		// start transaction if needed
-		if (!store->_in_transaction) {
-			store->_db->begin_transaction();
-			store->_in_transaction = true;
-		}
+
+		_begin_transaction_if (store, !store->_in_transaction);
 		/* we must add a unique term, so we can replace matching
 		 * documents */
 		newdoc.add_term (uid);
@@ -229,20 +258,14 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 			
 		/* we replace all existing documents for this file */
 		id = store->_db->replace_document (uid, newdoc);
-		commit_now = ++store->_processed % store->_transaction_size == 0;
-		if (commit_now) {
-			store->_in_transaction = false;
-			store->_db->commit_transaction();
-		}
+		++store->_processed;
+		_commit_transaction_if (store, store->_processed % store->_trx_size == 0);
 
 		return MU_OK;
 
 	} MU_UTIL_XAPIAN_CATCH_BLOCK;
-	
-	if (store->_in_transaction) {
-		store->_in_transaction = false;
-		store->_db->cancel_transaction();
-	}
+
+	_rollback_transaction_if (store, store->_in_transaction);
 
 	return MU_ERROR;
 }
@@ -255,7 +278,17 @@ mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 	g_return_val_if_fail (msgpath, MU_ERROR);
 
 	try {
-		return MU_OK; /* FIXME: TODO: */
+		const std::string uid (_get_message_uid (msgpath));
+
+		_begin_transaction_if (store, !store->_in_transaction);
+		
+		store->_db->delete_document (uid);
+		g_message ("deleting %s", msgpath);
+		
+		++store->_processed;
+		_commit_transaction_if (store, store->_processed % store->_trx_size == 0);
+
+		return MU_OK; 
 		
 	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
 	
