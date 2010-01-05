@@ -77,6 +77,7 @@ mu_log_init_silence (void)
 	
 	MU_LOG->_old_log_func =
 		g_log_set_default_handler ((GLogFunc)silence, NULL);
+
 	return TRUE;
 }
 
@@ -85,7 +86,7 @@ static void
 log_handler (const gchar* log_domain, GLogLevelFlags log_level,
 	     const gchar* msg)
 {
-	if (log_level == G_LOG_LEVEL_DEBUG && MU_LOG->_debug)
+	if (log_level == G_LOG_LEVEL_DEBUG && !MU_LOG->_debug)
 	 	return;
 
 	log_write (log_domain ? log_domain : "mu", log_level, msg);
@@ -195,6 +196,9 @@ log_write (const char* domain, GLogLevelFlags level,
 	if (len < 0)
 		fprintf (stderr, "%s: failed to write to log: %s\n",
 			 __FUNCTION__,  strerror(errno));
+
+	if (level & G_LOG_LEVEL_MESSAGE)
+		g_print ("mu: %s\n", msg);
 	
 	/* for serious errors, log them to stderr as well */
 	if (level & G_LOG_LEVEL_ERROR)
