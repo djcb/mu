@@ -86,8 +86,8 @@ _message_is_readable (MuMsgXapian *msg)
 	const std::string path(doc.get_value(MU_MSG_FIELD_ID_PATH));
 	
 	if (access (path.c_str(), R_OK) != 0) {
-		g_message ("cannot read %s: %s", path.c_str(),
-			   strerror(errno));
+		g_debug ("cannot read %s: %s", path.c_str(),
+			 strerror(errno));
 		return FALSE;
 	}
 
