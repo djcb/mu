@@ -28,6 +28,7 @@
 #include "mu-msg.h"
 #include "mu-msg-gmime.h"
 #include "mu-store-xapian.h"
+#include "mu-util.h"
 
 /* number of new messages after which we commit to the database */
 #define MU_STORE_XAPIAN_TRANSACTION_SIZE 2000
@@ -61,21 +62,12 @@ mu_store_xapian_new  (const char* path)
 		g_message ("%s: opened %s", __FUNCTION__, path);
 		return store;
 
-	} catch (const Xapian::Error &err) {
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;		
 
-		delete store->_db;
-		g_free (store);
-		g_warning ("%s: caught xapian exception '%s' (%s)",
-			   __FUNCTION__, err.get_msg().c_str(),
-			   err.get_error_string());
-		return NULL;
+	delete store->_db;
+	g_free (store);
 
-	} catch (...) {
-		delete store->_db;
-		g_free (store);
-		g_warning ("%s: caught exception", __FUNCTION__);
-		return NULL;
-	}
+	return NULL;
 }
 
 
@@ -98,15 +90,7 @@ mu_store_xapian_destroy (MuStoreXapian *store)
 		delete store->_db;
 		g_free (store);
 
-	} catch (const Xapian::Error &err) {
-		g_free (store);
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(), 
-			   err.get_error_string());
-	} catch (...) {
-		g_free (store);
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;
 }
 
 
@@ -253,13 +237,7 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 
 		return MU_OK;
 
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(), 
-			   err.get_error_string());
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;
 	
 	if (store->_in_transaction) {
 		store->_in_transaction = false;
@@ -279,16 +257,7 @@ mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 	try {
 		return MU_OK; /* FIXME: TODO: */
 		
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(), 
-			   err.get_error_string());
-		
-		return MU_ERROR;
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);		
-		return MU_ERROR;
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
 	
 }
 
@@ -305,16 +274,7 @@ mu_store_xapian_get_timestamp (MuStoreXapian *store, const char* msgpath)
 	
 		return (time_t) g_ascii_strtoull (stamp.c_str(), NULL, 10);
 		
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(), 
-			   err.get_error_string());
-		
-		return MU_ERROR;
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);		
-		return MU_ERROR;
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN (0);
 
 	return 0;
 }
@@ -332,13 +292,7 @@ mu_store_xapian_set_timestamp (MuStoreXapian *store, const char* msgpath,
 		sprintf (buf, "%" G_GUINT64_FORMAT, (guint64)stamp);
 		store->_db->set_metadata (msgpath, buf);
 				
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(), 
-			   err.get_error_string());
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);		
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;
 }
 
 
@@ -371,13 +325,8 @@ mu_store_xapian_foreach (MuStoreXapian *self,
 				return res;
 		}
 		
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(),
-			   err.get_error_string());
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
 
 	return MU_OK;
 }
+

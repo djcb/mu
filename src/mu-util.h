@@ -57,6 +57,37 @@ char*       mu_util_guess_maildir (void);
  */
 gboolean mu_util_create_dir_maybe (const gchar *path);
 
+
+
+/** 
+ * 
+ * don't repeat this catch blocks everywhere...
+ * 
+ */
+#define MU_UTIL_XAPIAN_CATCH_BLOCK					\
+	catch (const Xapian::Error &err) {				\
+                g_warning ("%s: caught xapian exception '%s' (%s)",	\
+                           __FUNCTION__, err.get_msg().c_str(),		\
+                           err.get_error_string());			\
+        } catch (...) {							\
+                g_warning ("%s: caught exception", __FUNCTION__);	\
+        }
+
+
+#define MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN(R)				\
+	catch (const Xapian::Error &err) {				\
+                g_warning ("%s: caught xapian exception '%s' (%s)",	\
+                           __FUNCTION__, err.get_msg().c_str(),		\
+                           err.get_error_string());			\
+		return (R);						\
+        } catch (...) {							\
+                g_warning ("%s: caught exception", __FUNCTION__);	\
+		return (R);						\
+        }
+
+
+
+
 G_END_DECLS
 
 #endif /*__MU_UTIL_H__*/

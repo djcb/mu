@@ -28,6 +28,9 @@
 #include "mu-msg-xapian.h"
 #include "mu-msg-xapian-priv.hh"
 
+#include "mu-util.h"
+
+
 static void add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser);
 
 struct _MuQueryXapian {
@@ -48,22 +51,20 @@ _init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 		
 		mqx->_qparser->set_database(*mqx->_db);
 		mqx->_qparser->set_default_op(Xapian::Query::OP_OR);
-		mqx->_qparser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
+		mqx->_qparser->set_stemming_strategy
+			(Xapian::QueryParser::STEM_SOME);
 
 		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
-		
-	} catch (...) {
+		return TRUE;
 
-		g_warning ("%s: caught exception", __FUNCTION__);
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+
+	delete mqx->_db;
+	delete mqx->_qparser;
 		
-		delete mqx->_db;
-		delete mqx->_qparser;
-		
-		return FALSE;
-	}
-	return TRUE;
+	return FALSE;
 }
 
 	
@@ -77,10 +78,7 @@ _uninit_mu_query_xapian (MuQueryXapian *mqx)
 		for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) 
 			delete mqx->_sorters[i];
 		
-	} catch (...) {
-		
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;
 }
 
 static Xapian::Query
@@ -97,14 +95,8 @@ _get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_PARTIAL);
 
-	} catch (const Xapian::Error& ex) {
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;
 
-		g_warning ("error in query: %s (\"%s\")",
-			   ex.get_msg().c_str(), searchexpr);
-	} catch (...) {
-
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}	
 	if (err)
 		*err  = 1;
 	
@@ -137,17 +129,20 @@ mu_query_xapian_new (const char* path)
 	g_return_val_if_fail (path, NULL);
 	
 	xpath = g_strdup_printf ("%s%c%s", path, G_DIR_SEPARATOR, "xapian");
-	if (!g_file_test (xpath, G_FILE_TEST_IS_DIR) ||
-	    g_access(xpath, R_OK) != 0) { 
-		g_warning ("'%s' is not a readable xapian dir", xpath);
+	if (!access(xpath, R_OK) != 0) { 
+		g_warning ("'%s' is not a readable xapian dir",xpath);
 		g_free (xpath);
 		return NULL;
 	}
 
 	mqx = g_new (MuQueryXapian, 1);
-	_init_mu_query_xapian (mqx, xpath);
+	try {
+		_init_mu_query_xapian (mqx, xpath);
+	} catch (...) {
+		g_free (mqx);
+		mqx = NULL;
+	}
 	g_free (xpath);
-
 	return mqx;
 }
 
@@ -186,13 +181,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 
 		return mu_msg_xapian_new (enq, 10000);
 		
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' for expr '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(),
-			   searchexpr, err.get_error_string());
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}
+	} MU_UTIL_XAPIAN_CATCH_BLOCK;
 
 	return NULL;
 }
@@ -207,15 +196,7 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 		Xapian::Query q(_get_query(self, searchexpr));
 		return g_strdup(q.get_description().c_str());
 		
-	} catch (const Xapian::Error &err) {
-		g_warning ("%s: caught xapian exception '%s' (%s)", 
-			   __FUNCTION__, err.get_msg().c_str(), 
-			   err.get_error_string());
-	} catch (...) {
-		g_warning ("%s: caught exception", __FUNCTION__);
-	}
-
-	return NULL;
+	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
 
