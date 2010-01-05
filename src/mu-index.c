@@ -17,9 +17,7 @@
 **  
 */
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,36 +31,23 @@
 #include "mu-store-xapian.h"
 #include "mu-util.h"
 
-#define MU_XAPIAN_DIR_NAME "xapian"
-
-
 struct _MuIndex {
 	MuStoreXapian  *_xapian;
 };
 
-
 MuIndex* 
-mu_index_new (const char *muhome)
+mu_index_new (const char *xpath)
 {
 	MuIndex *index;
-	char *xpath;
-	
-	g_return_val_if_fail (muhome, NULL);
 
-	if (!mu_util_create_dir_maybe(muhome)) {
-		g_warning ("Failed to create %s", muhome);
-		return NULL;
-	}
+	g_return_val_if_fail (xpath, NULL);
 	
 	index = g_new0 (MuIndex, 1);				
-	xpath = g_strdup_printf ("%s%c%s", muhome,
-				 G_DIR_SEPARATOR, MU_XAPIAN_DIR_NAME);
 	index->_xapian = mu_store_xapian_new (xpath);
-	g_free (xpath);
 	
 	if (!index->_xapian) {
 		g_warning ("%s: failed to open xapian store (%s)",
-			   __FUNCTION__, muhome); 
+			   __FUNCTION__, xpath); 
 		g_free (index);
 		return NULL;
 	}
@@ -214,6 +199,7 @@ mu_index_run (MuIndex *index, const char* path,
 	      void *user_data)
 {
 	MuIndexCallbackData cb_data;
+	MuResult rv;
 	
 	g_return_val_if_fail (index && index->_xapian, MU_ERROR);
 	
@@ -233,10 +219,13 @@ mu_index_run (MuIndex *index, const char* path,
 
 	cb_data._dirstamp  = 0;
 
-	return mu_maildir_walk (path,
-				(MuMaildirWalkMsgCallback)on_run_maildir_msg,
-				(MuMaildirWalkDirCallback)on_run_maildir_dir,
-				&cb_data);
+	rv = mu_maildir_walk (path,
+			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
+			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
+			      &cb_data);
+	mu_store_xapian_flush (index->_xapian);
+
+	return rv;
 }
 
 static MuResult
@@ -307,7 +296,7 @@ _foreach_doc_cb (const char* path, CleanupData *cudata)
 	
 	if (access (path, R_OK) != 0) {
 		
-		g_message ("not readable: %s; removing", path);
+		g_debug ("not readable: %s; removing", path);
 		rv = mu_store_xapian_remove (cudata->_xapian, path);
 		if (rv != MU_OK)
 			return rv; /* something went wrong... bail out */	
@@ -344,6 +333,8 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 	rv = mu_store_xapian_foreach (index->_xapian,
 				      (MuStoreXapianForeachFunc)_foreach_doc_cb,
 				      &cudata);
+	mu_store_xapian_flush (index->_xapian);
+
 	return rv;
 }
 
