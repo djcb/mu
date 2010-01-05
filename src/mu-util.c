@@ -54,17 +54,30 @@ mu_util_dir_expand (const char *path)
 
 
 
-
-static gboolean
-_is_readable_dir (const gchar* path)
+gboolean
+mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
 {
+	mode_t mode;
 	struct stat statbuf;
+	
+	if (!path) 
+		return FALSE;
+	
+	mode = F_OK | (readable ? R_OK : 0) | (writeable ? W_OK : 0);
 
-	return path &&
-		access (path, R_OK) == 0 &&
-		stat (path, &statbuf) == 0 &&
-		S_ISDIR(statbuf.st_mode);
+	if (access (path, mode) != 0) {
+		MU_WRITE_LOG ("Cannot access %s: %s", path, strerror (errno));
+		return FALSE;
+	}
+
+	if (stat (path, &statbuf) != 0) {
+		MU_WRITE_LOG ("Cannot stat %s: %s", path, strerror (errno));
+		return FALSE;
+	}
+	
+	return S_ISDIR(statbuf.st_mode);
 }
+
 
 gchar*
 mu_util_guess_maildir (void)
@@ -73,17 +86,18 @@ mu_util_guess_maildir (void)
 
 	/* first, try MAILDIR */
 	dir = getenv ("MAILDIR");
-	if (_is_readable_dir (dir))
+	if (mu_util_check_dir (dir, TRUE, FALSE))
 		return g_strdup (dir);
 
 	/* then, try ~/Maildir */
 	dir = mu_util_dir_expand ("~/Maildir");
-	if (_is_readable_dir (dir))
+	if (!mu_util_check_dir (dir, TRUE, FALSE))
 		return dir;
 
 	/* nope; nothing found */
 	return NULL;
 }
+
 
 
 gboolean
