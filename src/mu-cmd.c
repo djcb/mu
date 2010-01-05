@@ -261,7 +261,7 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 
 
 static gboolean
-_check_query_params (MuConfigOptions *opts)
+_query_params_valid (MuConfigOptions *opts)
 {
 	if (opts->linksdir) 
 		if (opts->xquery) {
@@ -273,10 +273,15 @@ _check_query_params (MuConfigOptions *opts)
 		g_warning ("Missing search expression");
 		return FALSE;
 	}
-	
-	return TRUE;
-}
 
+	if (mu_util_check_dir (opts->xpath, TRUE, FALSE))
+		return TRUE;
+
+	g_warning ("%s is not a readable Xapian directory", opts->xpath);
+	g_message ("Did you run 'mu index'?");
+	
+	return FALSE;
+}
 
 
 gboolean
@@ -286,15 +291,15 @@ _cmd_query (MuConfigOptions *opts)
 	gboolean rv;
 	const gchar **params;
 		
-	if (!_check_query_params (opts))
+	if (!_query_params_valid (opts))
 		return FALSE;
-
+	
 	/* first param is 'query', search params are after that */
 	params = (const gchar**)&opts->params[1];
 
 	mu_msg_gmime_init();
 	
-	xapian = mu_query_xapian_new (opts->muhome);
+	xapian = mu_query_xapian_new (opts->xpath);
 	if (!xapian) {
 		mu_msg_gmime_uninit ();
 		return FALSE;
@@ -312,17 +317,19 @@ _cmd_query (MuConfigOptions *opts)
 }
 
 
-
 static gboolean
 _check_index_params (MuConfigOptions *opts)
 {
-	if (opts->linksdir) 
-		if (opts->linksdir  || opts->fields ||
-		    opts->sortfield || opts->xquery ||
-		    opts->descending|| opts->xquery) {
-			g_warning ("Invalid option(s) for command");
-			return FALSE;
-		}
+	if (opts->linksdir || opts->xquery) {
+		g_warning ("Invalid option(s) for command");
+		return FALSE;
+	}
+	
+	
+	if (!mu_util_check_dir (opts->maildir, TRUE, TRUE)) {
+		g_message ("Please provide a valid Maildir");
+		return FALSE;
+	}
 	
 	return TRUE;
 }
@@ -332,12 +339,12 @@ static MuResult
 _index_msg_cb  (MuIndexStats* stats, void *user_data)
 {
 	char *kars="-\\|/";
-	char output[100];
+	char output[314];
 	
 	static int i = 0;
 	static int len = 0;
 
-	while (len --> 0) 
+	while (len --> 0) /* note the --> operator :-) */
 		printf ("\b");
 	
 	len = snprintf (output, sizeof(output),
@@ -346,7 +353,6 @@ _index_msg_cb  (MuIndexStats* stats, void *user_data)
 			kars[i % 4], stats->_processed,
 			stats->_updated, stats->_cleaned_up);
 	g_print ("%s", output);
-	
 	++i;
 	
 	return MU_OK;
@@ -366,8 +372,11 @@ _cmd_index (MuConfigOptions *opts)
 		MuIndex *midx;
 		MuIndexStats stats;
 
+		g_message ("Indexing messages from %s", opts->maildir);
+		g_message ("Database: %s", opts->xpath);
+		
 		mu_index_stats_clear (&stats);
-		midx = mu_index_new (opts->muhome);
+		midx = mu_index_new (opts->xpath);
 		rv = mu_index_run (midx, opts->maildir,
 				   opts->reindex, &stats,
 				   opts->quiet ? NULL : _index_msg_cb,
@@ -427,9 +436,11 @@ _cmd_cleanup (MuConfigOptions *opts)
 	{
 		MuIndex *midx;
 		MuIndexStats stats;
-
+		
+		g_message ("Cleaning up removed messages from %s",
+			   opts->xpath);
 		mu_index_stats_clear (&stats);
-		midx = mu_index_new (opts->muhome);
+		midx = mu_index_new (opts->xpath);
 		mu_index_cleanup (midx, &stats,
 				  opts->quiet ? NULL :_cleanup_cb,
 				  NULL);
