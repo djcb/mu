@@ -334,7 +334,7 @@ process_dir_entry (const char* path, struct dirent *entry,
 	case DT_DIR: {
 		/* if it has a noindex file, we ignore this dir */
 		if (has_noindex_file (fullpath)) {
-			g_message ("ignoring dir %s", fullpath);
+			g_debug ("ignoring dir %s", fullpath);
 			return MU_OK;
 		}
 		
@@ -454,8 +454,6 @@ _clear_links (const gchar* dirname, DIR *dir)
 {
 	struct dirent *entry;
 	gboolean rv;
-
-	g_message ("clearlinks: %s", dirname);
 	
 	rv = TRUE;
 	while ((entry = readdir (dir)) && rv) {
@@ -506,7 +504,7 @@ mu_maildir_clear_links (const gchar* path)
 		return FALSE;
 	}
 
-	g_message ("remove symlinks from %s", path);
+	g_debug ("remove symlinks from %s", path);
 	rv = _clear_links (path, dir);
 	closedir (dir);
 
