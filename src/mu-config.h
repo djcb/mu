@@ -34,6 +34,7 @@ struct _MuConfigOptions {
 	gboolean	 quiet;         /* don't give any output */
 	gboolean	 debug;         /* spew out debug info */
 	char		*muhome;        /* the House of Mu */
+	char             *xpath;	/* path to the Xapian dir */
 	gboolean	 version;	/* request mu version */
 	gboolean	 log_stderr;	/* log to stderr (not logfile) */
 	gchar**	         params;	/* parameters (for querying) */

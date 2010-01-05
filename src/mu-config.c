@@ -62,7 +62,7 @@ mu_config_options_group_index (MuConfigOptions *opts)
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
 		 "top of the maildir", NULL},
 		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
-		 "index alread indexed messages too", NULL},
+		 "index already indexed messages too", NULL},
 		{"cleanup", 'u', 0, G_OPTION_ARG_NONE, &opts->cleanup,
 		 "cleanup database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
@@ -114,27 +114,48 @@ mu_config_init (MuConfigOptions *opts)
 	memset (opts, 0, sizeof(MuConfigOptions));
 }
 
+static gchar*
+_guess_muhome (void)
+{
+	const char* home;
+
+	home = g_getenv ("HOME");
+	if (!home)
+		home = g_get_home_dir ();
+
+	if (!home)
+		MU_WRITE_LOG ("failed to determine homedir");
+	
+	return g_strdup_printf ("%s%c%s", home ? home : ".", G_DIR_SEPARATOR,
+				".mu");
+}
+
+
 void
 mu_config_set_defaults (MuConfigOptions *opts)
 {
+	gchar *old;
 	g_return_if_fail (opts);
 	
 	if (!opts->muhome)
-		opts->muhome = "~/.mu";
-	opts->muhome = mu_util_dir_expand ("~/.mu");
+		opts->muhome = _guess_muhome ();
 	
-	opts->log_stderr = FALSE;
-	
-	/* indexing */		
+	/* note: xpath is is *not* settable from the cmdline */
+	opts->xpath = g_strdup_printf ("%s%c%s", opts->muhome,G_DIR_SEPARATOR,
+				       MU_XAPIAN_DIR_NAME);
+
+	/* indexing */
+	old = opts->maildir;
 	if (opts->maildir)
 		opts->maildir = mu_util_dir_expand (opts->maildir);
 	else
 		opts->maildir = mu_util_guess_maildir();
-
+	g_free (old);
+	
 	/* querying */
 	
 	/* note, when no fields are specified, we use
-	 * date-from-subject, and sort descending by date. If fiels
+	 * date-from-subject, and sort descending by date. If fields
 	 * *are* specified, we sort in ascending order. */
 	if (!opts->fields) {
 		opts->descending = TRUE;
@@ -156,6 +177,7 @@ mu_config_uninit (MuConfigOptions *opts)
 	g_return_if_fail (opts);
 
 	g_free (opts->muhome);
+	g_free (opts->xpath);
 	g_free (opts->maildir);
 	g_free (opts->linksdir);
 
