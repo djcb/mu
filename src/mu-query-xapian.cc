@@ -59,7 +59,7 @@ _init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 				      (gpointer)mqx->_qparser);
 		return TRUE;
 
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK;
 
 	delete mqx->_db;
 	delete mqx->_qparser;
@@ -78,7 +78,7 @@ _uninit_mu_query_xapian (MuQueryXapian *mqx)
 		for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) 
 			delete mqx->_sorters[i];
 		
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK;
 }
 
 static Xapian::Query
@@ -95,7 +95,7 @@ _get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_PARTIAL);
 
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK;
 
 	if (err)
 		*err  = 1;
@@ -121,28 +121,27 @@ add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 }
 
 MuQueryXapian*
-mu_query_xapian_new (const char* path)
+mu_query_xapian_new (const char* xpath)
 {
-	char *xpath;	
 	MuQueryXapian *mqx;
 	
-	g_return_val_if_fail (path, NULL);
-	
-	xpath = g_strdup_printf ("%s%c%s", path, G_DIR_SEPARATOR, "xapian");
-	if (access(xpath, R_OK) != 0) { 
-		g_warning ("'%s' is not a readable xapian dir",xpath);
-		g_free (xpath);
+	g_return_val_if_fail (xpath, NULL);
+
+	if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
+		g_warning ("'%s' is not a readable xapian dir",
+			   xpath);
 		return NULL;
 	}
 
 	mqx = g_new (MuQueryXapian, 1);
 	try {
 		_init_mu_query_xapian (mqx, xpath);
+
 	} catch (...) {
 		g_free (mqx);
 		mqx = NULL;
 	}
-	g_free (xpath);
+
 	return mqx;
 }
 
@@ -179,7 +178,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 
 		return mu_msg_xapian_new (enq, 10000);
 		
-	} MU_UTIL_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK;
 
 	return NULL;
 }
@@ -194,7 +193,7 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 		Xapian::Query q(_get_query(self, searchexpr));
 		return g_strdup(q.get_description().c_str());
 		
-	} MU_UTIL_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
 
