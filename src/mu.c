@@ -24,26 +24,24 @@
 #include <string.h>
 #include <stdio.h> /* for fileno() */
 
-
 #include "mu-config.h"
 #include "mu-cmd.h"
 #include "mu-log.h"
 
 static gboolean
-init_log (MuConfigOptions *opts)
+_init_log (MuConfigOptions *opts)
 {
 	gboolean rv;
 	
-	if (opts->quiet)
-		rv = mu_log_init_silence ();	
-	else if (opts->log_stderr) 
+	if (opts->log_stderr)
 		rv = mu_log_init_with_fd (fileno(stderr), FALSE,
-					  opts->debug);
-	else 
-		rv = mu_log_init (opts->muhome, TRUE, opts->debug);
+					  opts->quiet, opts->debug);
+	else
+		rv = mu_log_init (opts->muhome, TRUE, opts->quiet,
+				  opts->debug);
 
 	if (!rv)
-		g_print ("error: failed to initialize log\n");
+		g_printerr ("error: failed to initialize log\n");
 	
 	return rv;
 }
@@ -86,21 +84,23 @@ main (int argc, char *argv[])
 	g_type_init ();
 
 	mu_config_init (&config);
-
-	if (!_parse_params (&config, &argc, &argv)) {
-		mu_config_uninit (&config);
-		return 1;
-	}
 	
-	if (!init_log (&config)) {
-		mu_config_uninit (&config);
-		return 1;
-	}
-	
-	rv = mu_cmd_execute (&config);
+	do {
+		rv = FALSE;
 
-	mu_log_uninit();
-	mu_config_uninit(&config);
+		if (!_parse_params (&config, &argc, &argv))
+			break;
+
+		if (!_init_log (&config))
+			break;
+		
+		rv = mu_cmd_execute (&config);
+
+		mu_log_uninit();
+
+	} while (0); 
+
+	mu_config_uninit (&config);
 	
 	return rv ? 0 : 1;
 }
