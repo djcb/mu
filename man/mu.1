@@ -1,4 +1,4 @@
-.TH MU 1 "December 2009" "User Manuals"
+.TH MU 1 "January 2010" "User Manuals"
 .SH NAME 
 mu \- index and search the contents of e-mail messages stored in Maildirs
 
@@ -19,6 +19,38 @@ also offers functionality for creating maildirs.
 The various tools are available as commands for a single
 .B mu
 executable.
+
+.SH GENERAL OPTIONS
+.B mu
+offers a number of general options -- options that apply to all commands:
+
+.TP
+\fB\-a\fR, \fB\-\-muhome\fR causes \fBmu\fR to use an alternative directory to
+store and read its database and logs. By default, \fB~/.mu\fR is used.
+
+.TP
+\fB\-d\fR, \fB\-\-debug\fR makes \fBmu\fR generate extra debug information,
+useful for debugging the program itself. Note that by default, debug
+information goes to the log file, \fB~/.mu/mu.log\fR.
+
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR causes \fBmu\fR not to output informational
+messages to standard output, but only to the log file. Error messages will
+still be sent to standard error.
+
+.TP
+\fB\-e\fR, \fB\-\-log-stderr\fR causes \fBmu\fR not to output all log messages
+to standard error, in addition to sending them to the log file.
+
+.TP
+\fB\-v\fR, \fB\-\-version\fR outputs the \fBmu\fR-version and copyright
+information.
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR list the various command line options, while
+\fB\-\-help\-index\fR, \fB\-\-help\-find\fR and \fB\-\-help\-all\fR list only
+the options for one command, or all of the commands.
+
 
 .SH COMMANDS
 .B mu
@@ -56,7 +88,7 @@ understands recursive Maildirs (Maildirs within Maildirs), and the
 VFAT-version of Maildir, as used by Tinymail/Modest.
 
 E-mail messages which are not stored in something that looks like a Maildir
-leaf directory are ignored.
+leaf directory (\fIcur\fR and \fInew\fR) are ignored.
 
 Currently, symlinks are not followed.
 
@@ -69,13 +101,15 @@ indexing process, for example directories with spam-messages.
 The first run of 
 .B mu index
 may take a few minutes if you have a lot of mail (ten thousands of messages).
-Note that a full scan has to be done only once, after that it suffices to
-index the changes, which goes much faster.
+Fortunately, such a full scan needs to be done only once, after that it
+suffices to index the changes, which goes much faster. Also note that a
+substantial amount of the time goes to printing the progress information; if
+you turn that off (with \fB\-q\fR or \fB\-\-quiet\fR), it goes a lot faster.
 
 .SS Indexing options
 
 .TP
-\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR start searching
+\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR starts searching
 at\fI<maildir>\fR. By default,
 .B mu
 uses whatever the
@@ -88,9 +122,9 @@ environment variable is set to; if that is not set, it tries
 \fB\-r\fR, \fB\-\-reindex\fR
 re-index all mails, even ones that are already in the database.
 
-.TP
+.T
 \fB\-u\fR, \fB\-\-cleanup\fR automatically clean up the database after
-indexing. This is equivalent to calling the
+indexing. This is functionally equivalent to calling the
 .B cleanup
 command after indexing. Please see the information for
 .B cleanup
@@ -112,7 +146,22 @@ information will only be written in batches during the indexing process.
 
 The
 .B find
-command starts a search for a specific message in the database.
+command starts a search for messages in the database that match the search
+pattern. The search pattern is taken as a command line parameter. If the
+search parameter consists of multiple parts (multiple command line parameters)
+they are treated as if there were a logical \fBAND\fR between them.
+
+If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
+\fBNOT\fR etc., you have to put quote them so \fBmu\fR can consider them as a
+unit.
+
+\fBmu\fR relies on the Xapian database for its searching capabilities, so it
+offers all the search functionality that Xapian offers; please refer to:
+
+\fIhttp://xapian.org/docs/queryparser.html\fR
+
+Here, we will show the mu-specific ways to specify search patterns.
+
 
 
 .SS find options
@@ -150,61 +199,11 @@ makes
 not put out any progress info during its indexing. This is not the default, as
 running may take quite some time, and might confuse novice users.
 
-.SS General options
-.B --home=, -h 
-.I <dir>
-sets the
-.B mu 
-home directory; default is 
-.I ~/.mu
-\. This directory is where the message database
-is stored, as well as configuration files and logs.
-
-.B --log-stderr, -s
-write logging information to standard error instead of to 
-.I <mu-home-directory>/mu-find.log, 
-which is the default.
-
-
-.B --debug, -d 
-add a lot of logging for debugging purposes
-
-
-.B mu-index
-processes messages in
-.B cur/
-and
-.B new/
-leaf directories; it will ignore messages in
-.B tmp/
-
-Thus,
-.B [....]/tmp/msg02
-will be ignored, while
-.B [....]/new/msg01
-won't. 
-
-On the other hand,
-.B [....]/tmp/cur/msg03
-would not be ignored, while
-.B [....]/cur/tmp/msg04
-would.
-
-Note: single messages that are added by providing their full pathname to
-.B mu-index
-will not have their path checked.
 
 .SH ENVIRONMENT
-As mentioned,
-.B mu index
-uses 
-.B MAILDIR
-to find the user's Maildir if it has not been specified explicitly. If
-.B MAILDIR
-is not set, 
-.B mu index
-will try 
-.B $HOME/Maildir
+As mentioned, \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if
+it has not been specified explicitly \fB\-\-maildir\fR=\fI<maildir>\fR. If
+MAILDIR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
 .
 .SH BUGS
 There probably are some; please report bugs when you find them:
