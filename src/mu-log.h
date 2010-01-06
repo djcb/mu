@@ -29,25 +29,26 @@
  * 
  * @param muhome the mu home directory
  * @param append append to logfile, instead of overwriting
+ * @param quiet don't log non-errors to stdout/stderr
  * @param debug include debug-level information.
  * 
  * @return TRUE if initialization succeeds, FALSE otherwise
  */
 gboolean mu_log_init  (const char* muhome, gboolean append,
-		       gboolean debug);
+		       gboolean quiet, gboolean debug);
 
 /** 
  * write logging information to a file descriptor
  * 
  * @param fd an open file descriptor
  * @param doclose if true, mu-log will close it upon mu_log_uninit
+ * @param quiet don't log non-errors to stdout/stderr
  * @param debug include debug-level info
  * 
  * @return TRUE if initialization succeeds, FALSE otherwise
  */
-gboolean mu_log_init_with_fd    (int fd, gboolean doclose, gboolean debug);
-
-
+gboolean mu_log_init_with_fd    (int fd, gboolean doclose, gboolean quiet,
+				 gboolean debug);
 
 /** 
  * be absolutely silent, except for runtime errors, which will be

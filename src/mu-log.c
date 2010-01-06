@@ -35,9 +35,11 @@
 
 struct _MuLog {
 	int _fd;      /* log file descriptor */
-	int _own;     /* close _fd with log_destroy? */
-	int _debug;   /* add debug-level stuff? */
 
+	gboolean _own;     /* close _fd with log_destroy? */
+	gboolean _debug;   /* add debug-level stuff? */
+	gboolean _quiet;   /* don't write non-error to stdout/stderr */
+	
 	GLogFunc _old_log_func;
 };
 typedef struct _MuLog MuLog;
@@ -94,13 +96,14 @@ log_handler (const gchar* log_domain, GLogLevelFlags log_level,
 
 
 gboolean
-mu_log_init_with_fd (int fd, gboolean doclose, gboolean debug)
+mu_log_init_with_fd (int fd, gboolean doclose, gboolean quiet, gboolean debug)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
 	
         MU_LOG = g_new(MuLog, 1);
 
         MU_LOG->_fd     = fd;
+	MU_LOG->_quiet  = quiet;
 	MU_LOG->_debug  = debug;
         MU_LOG->_own    = doclose; /* if we now own the fd, close it
 				    * in _destroy */
@@ -111,7 +114,8 @@ mu_log_init_with_fd (int fd, gboolean doclose, gboolean debug)
 }
 
 gboolean
-mu_log_init  (const char* muhome, gboolean append, gboolean debug)
+mu_log_init  (const char* muhome, gboolean append,
+	      gboolean quiet, gboolean debug)
 {
 	int fd;
 	gchar *logfile;
@@ -134,7 +138,7 @@ mu_log_init  (const char* muhome, gboolean append, gboolean debug)
 			   logfile, strerror(errno));
 	g_free (logfile);
 	
-	if (fd < 0 || !mu_log_init_with_fd (fd, FALSE, debug)) {
+	if (fd < 0 || !mu_log_init_with_fd (fd, FALSE, quiet, debug)) {
 		_try_close (fd);
 		return FALSE;
 	}
@@ -197,7 +201,7 @@ log_write (const char* domain, GLogLevelFlags level,
 		fprintf (stderr, "%s: failed to write to log: %s\n",
 			 __FUNCTION__,  strerror(errno));
 
-	if (level & G_LOG_LEVEL_MESSAGE)
+	if (!(MU_LOG->_quiet) && level & G_LOG_LEVEL_MESSAGE)
 		g_print ("mu: %s\n", msg);
 	
 	/* for serious errors, log them to stderr as well */
