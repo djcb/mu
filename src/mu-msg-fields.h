@@ -48,7 +48,7 @@ static const guint MU_MSG_FIELD_ID_NONE = MU_MSG_FIELD_ID_NUM + 1;
 struct _MuMsgField;
 typedef struct _MuMsgField MuMsgField;
 
-/* don't change the order, add new types at the end */
+/* don't change the order, add new types at the end (before _NUM)*/
 enum _MuMsgFieldType {
 	MU_MSG_FIELD_TYPE_STRING,
 
@@ -65,6 +65,7 @@ static const guint MU_MSG_FIELD_TYPE_NONE = MU_MSG_FIELD_TYPE_NUM + 1;
 typedef void (*MuMsgFieldForEachFunc) (const MuMsgField *field, 
 				       gconstpointer data);
 void mu_msg_field_foreach (MuMsgFieldForEachFunc func, gconstpointer data);
+
 
 const char*  mu_msg_field_name (const MuMsgField *field)         G_GNUC_CONST;
 const char*  mu_msg_field_shortcut (const MuMsgField *field)     G_GNUC_CONST;

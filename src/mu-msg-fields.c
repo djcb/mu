@@ -21,7 +21,7 @@
 #include "mu-msg-fields.h"
 
 enum _FieldFlags { 
-	FLAG_XAPIAN         = 1 << 1, /* field stored in xapian db*/
+	FLAG_XAPIAN         = 1 << 1, /* field stored as a string the in xapian db*/
 	FLAG_GMIME          = 1 << 2, /* field retrieved by reading msg with gmime */
 	FLAG_XAPIAN_INDEX   = 1 << 3  /* field is indexed in xapian */
 };
@@ -43,94 +43,94 @@ struct _MuMsgField {
 static const MuMsgField FIELD_DATA[] = {
 	
 	{  
-	  MU_MSG_FIELD_ID_BODY_TEXT,
-	  MU_MSG_FIELD_TYPE_STRING,
-	  "body", "b", "B",
-	  FLAG_GMIME | FLAG_XAPIAN_INDEX
+		MU_MSG_FIELD_ID_BODY_TEXT,
+		MU_MSG_FIELD_TYPE_STRING,
+		"body", "b", "B",
+		FLAG_GMIME | FLAG_XAPIAN_INDEX
 	},
 	
 	{ 
-	  MU_MSG_FIELD_ID_BODY_HTML,
-	  MU_MSG_FIELD_TYPE_STRING,
-	  "bodyhtml", "h", NULL,
-	  FLAG_GMIME
+		MU_MSG_FIELD_ID_BODY_HTML,
+		MU_MSG_FIELD_TYPE_STRING,
+		"bodyhtml", "h", NULL,
+		FLAG_GMIME
 	},
 	
 	{ 
-	  MU_MSG_FIELD_ID_CC,
-	  MU_MSG_FIELD_TYPE_STRING,
-	  "cc", "c", "C",
-	  FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		MU_MSG_FIELD_ID_CC,
+		MU_MSG_FIELD_TYPE_STRING,
+		"cc", "c", "C",
+		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
 	},
 	
 	{ 
-	  MU_MSG_FIELD_ID_DATE, 
-	  MU_MSG_FIELD_TYPE_TIME_T,
-	  "date", "d", "D",
-	  FLAG_XAPIAN | FLAG_GMIME  
+		MU_MSG_FIELD_ID_DATE, 
+		MU_MSG_FIELD_TYPE_TIME_T,
+		"date", "d", "D",
+		FLAG_XAPIAN | FLAG_GMIME  
 	},
 	
 	{ 
-	  MU_MSG_FIELD_ID_FLAGS, 
-	  MU_MSG_FIELD_TYPE_INT,
-	  "flags", "F", "G",
-	  FLAG_XAPIAN | FLAG_GMIME
+		MU_MSG_FIELD_ID_FLAGS, 
+		MU_MSG_FIELD_TYPE_INT,
+		"flags", "F", "G",
+		FLAG_XAPIAN | FLAG_GMIME
 	},
 
 	{ 
-	  MU_MSG_FIELD_ID_FROM,
-	  MU_MSG_FIELD_TYPE_STRING,
-	  "from", "f", "F",
-	  FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		MU_MSG_FIELD_ID_FROM,
+		MU_MSG_FIELD_TYPE_STRING,
+		"from", "f", "F",
+		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
 	},
 
 	{   
-	  MU_MSG_FIELD_ID_PATH, 
-	  MU_MSG_FIELD_TYPE_STRING,
-	  "path", "p", "P",
-	  FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		MU_MSG_FIELD_ID_PATH, 
+		MU_MSG_FIELD_TYPE_STRING,
+		"path", "p", "P",
+		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
 	},
 	
 	{ 
-	  MU_MSG_FIELD_ID_PRIORITY,
-	  MU_MSG_FIELD_TYPE_INT,
-	  "prio", "P", "I",
-	  FLAG_GMIME | FLAG_XAPIAN
+		MU_MSG_FIELD_ID_PRIORITY,
+		MU_MSG_FIELD_TYPE_INT,
+		"prio", "P", "I",
+		FLAG_GMIME | FLAG_XAPIAN
 	},
 
 	{ 
-	  MU_MSG_FIELD_ID_SIZE,
-	  MU_MSG_FIELD_TYPE_BYTESIZE,
-	  "size", "z", "Z",
-	  FLAG_GMIME
+		MU_MSG_FIELD_ID_SIZE,
+		MU_MSG_FIELD_TYPE_BYTESIZE,
+		"size", "z", "Z",
+		FLAG_GMIME
 	},
 	
 	 { 
-	   MU_MSG_FIELD_ID_SUBJECT,
-	   MU_MSG_FIELD_TYPE_STRING,
-	   "subject", "s", "S",
-	   FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		 MU_MSG_FIELD_ID_SUBJECT,
+		 MU_MSG_FIELD_TYPE_STRING,
+		 "subject", "s", "S",
+		 FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
 	 },
 	
 	{ 
-	  MU_MSG_FIELD_ID_TO,
-	  MU_MSG_FIELD_TYPE_STRING,
-	  "to", "t", "T",
-	  FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		MU_MSG_FIELD_ID_TO,
+		MU_MSG_FIELD_TYPE_STRING,
+		"to", "t", "T",
+		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
 	},
 	
 	{ 
-	  MU_MSG_FIELD_ID_MSGID,
-	  MU_MSG_FIELD_TYPE_STRING,
-	  "msgid", "m", NULL,
-	  FLAG_GMIME 
+		MU_MSG_FIELD_ID_MSGID,
+		MU_MSG_FIELD_TYPE_STRING,
+		"msgid", "m", NULL,
+		FLAG_GMIME 
 	},
 	
 	{ 
-	  MU_MSG_FIELD_ID_TIMESTAMP,
-	  MU_MSG_FIELD_TYPE_TIME_T,
-	  "timestamp", "i", NULL,
-	  FLAG_GMIME 
+		MU_MSG_FIELD_ID_TIMESTAMP,
+		MU_MSG_FIELD_TYPE_TIME_T,
+		"timestamp", "i", NULL,
+		FLAG_GMIME 
 	}
 };
 
