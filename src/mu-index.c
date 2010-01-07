@@ -140,7 +140,7 @@ on_run_maildir_msg (const char* fullpath, time_t filestamp,
 	/* see if we need to update/insert anything...*/
 	result = _insert_or_update_maybe (fullpath, filestamp, data,
 					  &updated);
-		
+	
 	/* update statistics */
 	if (data && data->_stats) {
 		++data->_stats->_processed;
