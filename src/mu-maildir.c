@@ -214,8 +214,12 @@ process_file (const char* fullpath, MuMaildirWalkMsgCallback cb, void *data)
 			   MU_MAILDIR_WALK_MAX_FILE_SIZE, fullpath);
 		return MU_OK; /* not an error */
 	}
-	
-	result = (cb)(fullpath,statbuf.st_mtime,data);
+
+	/*
+	 * use the ctime, so any status change will be visible (perms,
+	 * filename etc.)
+	 */
+	result = (cb)(fullpath,statbuf.st_ctime,data);
 	
 	if (G_LIKELY(result == MU_OK || result == MU_STOP))
 		return result;
@@ -322,13 +326,15 @@ process_dir_entry (const char* path, struct dirent *entry,
 	fullpath = g_newa (char, strlen(path) + strlen(entry->d_name) + 1);
 	sprintf (fullpath, "%s%c%s", path, G_DIR_SEPARATOR,
 		 entry->d_name);
+
+	g_debug ("looking at: %s", fullpath);
 	
 	switch (entry->d_type) {
 	case DT_REG:
 		/* we only want files in cur/ and new/ */
 		if (!_is_maildir_new_or_cur (path)) 
 			return MU_OK; 
-
+		
 		return process_file (fullpath, cb_msg, data);
 		
 	case DT_DIR: {
@@ -372,7 +378,7 @@ static MuResult
 process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb, 
 	     MuMaildirWalkDirCallback dir_cb, void *data)
 {
-	MuResult result = MU_OK;
+	MuResult result;
 	GList *lst, *c;
 	struct dirent *entry;
 	DIR* dir;
@@ -398,7 +404,7 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 		lst = g_list_prepend (lst, dirent_copy(entry));
 
 	c = lst = g_list_sort (lst, (GCompareFunc)dirent_cmp);
-	for (c = lst; c && result == MU_OK; c = c->next) 
+	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) 
 		result = process_dir_entry (path, (struct dirent*)c->data, 
 					    msg_cb, dir_cb, data);
 
@@ -444,6 +450,7 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 
 	g_warning ("%s: unsupported file type for %s", 
 		   __FUNCTION__, path);
+
 	return MU_ERROR;
 }
 
@@ -505,6 +512,7 @@ mu_maildir_clear_links (const gchar* path)
 	}
 
 	g_debug ("remove symlinks from %s", path);
+
 	rv = _clear_links (path, dir);
 	closedir (dir);
 
