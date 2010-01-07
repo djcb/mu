@@ -36,7 +36,7 @@
    - [ ] test suite
    - [ ] moving msg field formatting to MuMsgField
    - [ ] bookmarks
-   - [ ] mu-setup
-   - [ ] config system (config file)
+   - [ ] mu-setup (?)
+   - [ ] config system (config file) (?)
    - [ ] UTF-8 output to console
    - [ ] auto clean log file
