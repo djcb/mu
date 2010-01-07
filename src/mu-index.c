@@ -79,15 +79,16 @@ typedef struct _MuIndexCallbackData MuIndexCallbackData;
 
 
 static MuResult
-insert_or_update_maybe (const char* fullpath, time_t filestamp,
-			MuIndexCallbackData *data, gboolean *updated)
+_insert_or_update_maybe (const char* fullpath, time_t filestamp,
+			 MuIndexCallbackData *data, gboolean *updated)
 { 
 	MuMsgGMime *msg;
 
 	*updated = FALSE;
 	
-	if (!data->_reindex && (size_t)filestamp <= (size_t)data->_dirstamp)
-		return MU_OK;
+	if (!data->_reindex) 
+		if ((size_t)filestamp <= (size_t)data->_dirstamp)
+			return MU_OK;
 	
 	msg = mu_msg_gmime_new (fullpath);
 	if (!msg) {
@@ -110,7 +111,7 @@ insert_or_update_maybe (const char* fullpath, time_t filestamp,
 }
 
 static MuResult
-run_msg_callback_maybe (MuIndexCallbackData *data)
+_run_msg_callback_maybe (MuIndexCallbackData *data)
 {
 	if (data && data->_idx_msg_cb) {
 		
@@ -132,13 +133,13 @@ on_run_maildir_msg (const char* fullpath, time_t filestamp,
 	MuResult result;
 	gboolean updated;
 	
-	result = run_msg_callback_maybe (data);
+	result = _run_msg_callback_maybe (data);
 	if (result != MU_OK)
 		return result;
 			
 	/* see if we need to update/insert anything...*/
-	result = insert_or_update_maybe (fullpath, filestamp, data,
-					 &updated);
+	result = _insert_or_update_maybe (fullpath, filestamp, data,
+					  &updated);
 		
 	/* update statistics */
 	if (data && data->_stats) {
@@ -162,13 +163,19 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 	/* xapian stores a per-dir timestamp; we use this timestamp
 	 *  to determine whether a message is up-to-data
 	 */
-	if (enter)
+	if (enter) {
 		data->_dirstamp =
 			mu_store_xapian_get_timestamp (data->_xapian,
 						       fullpath);
-	else
+		g_debug ("entering %s; timestamp == %u",
+			 fullpath, (unsigned)data->_dirstamp);
+	} else {
+		time_t now = time (NULL);
 		mu_store_xapian_set_timestamp (data->_xapian, fullpath,
-					       time(NULL));
+					       now);
+		g_debug ("leaving %s; timestamp = %u",
+			 fullpath, (unsigned)data->_dirstamp);
+	}
 	
 	if (data->_idx_dir_cb)
 		return data->_idx_dir_cb (fullpath, enter, 
