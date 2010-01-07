@@ -835,7 +835,7 @@ mu_msg_gmime_init  (void)
 	if (!_initialized) {
 		g_mime_init(0);
 		_initialized = TRUE;
-		MU_WRITE_LOG ("%s", __FUNCTION__);
+		g_debug ("%s", __FUNCTION__);
 	}
 }
 
@@ -846,6 +846,6 @@ mu_msg_gmime_uninit (void)
 	if (_initialized) {
 		g_mime_shutdown();
 		_initialized = FALSE;
-		MU_WRITE_LOG ("%s", __FUNCTION__);
+		g_debug ("%s", __FUNCTION__);
 	}	
 }  
