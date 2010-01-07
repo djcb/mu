@@ -376,3 +376,4 @@ mu_store_xapian_foreach (MuStoreXapian *self,
 	return MU_OK;
 }
 
+
