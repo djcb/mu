@@ -31,6 +31,7 @@
 #include "mu-msg-xapian.h"
 #include "mu-msg-str.h"
 #include "mu-cmd.h"
+#include "mu-util.h"
 
 static MuCmd 
 _cmd_from_string (const char* cmd)
@@ -349,7 +350,7 @@ _index_msg_cb  (MuIndexStats* stats, void *user_data)
 	
 	len = snprintf (output, sizeof(output),
 			"%c indexing mail; processed: %d; "
-			"updated/new: %d, cleaned up: %d",
+			"updated/new: %d, cleaned-up: %d",
 			kars[i % 4], stats->_processed,
 			stats->_updated, stats->_cleaned_up);
 	g_print ("%s", output);
@@ -392,6 +393,11 @@ _cmd_index (MuConfigOptions *opts)
 			_index_msg_cb (&stats, NULL);
 			g_print ("\n");
 		}
+
+		MU_WRITE_LOG ("processed: %d; updated/new: %d, cleaned-up: %d",
+			      stats._processed, stats._updated,
+			      stats._cleaned_up);
+		
 		mu_index_destroy (midx);
 	}
 	mu_msg_gmime_uninit ();
