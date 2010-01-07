@@ -465,10 +465,31 @@ struct _GetBodyData {
 };
 typedef struct _GetBodyData GetBodyData;
 
+
+static gboolean
+_looks_like_attachment (GMimeObject *part)
+{
+	const char *str;
+	GMimeContentDisposition *disp;
+	
+	disp = g_mime_object_get_content_disposition (GMIME_OBJECT(part));
+	if (!GMIME_IS_CONTENT_DISPOSITION(disp))
+		return FALSE;  
+
+	str = g_mime_content_disposition_get_disposition (disp);
+	if (!str)
+		return FALSE;
+	
+	if (strcmp(str,GMIME_DISPOSITION_INLINE) == 0)
+		return FALSE; /* inline, so it's not an attachment */
+	
+	return TRUE; /* looks like an attachment */
+}
+
 static void
 get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 {
-	GMimeContentDisposition *disp;
+	
 	GMimeContentType *ct;		
 
 	/* already found what we're looking for? */
@@ -481,15 +502,9 @@ get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 		g_warning ("not a content type!");
 		return;
 	}
-
-	/* is it not an attachment? */
-	disp = g_mime_object_get_content_disposition (GMIME_OBJECT(part));
-	if (GMIME_IS_CONTENT_DISPOSITION(disp)) {
-		const char *str;
-		str = g_mime_content_disposition_get_disposition (disp);
-		if (str && (strcmp(str,GMIME_DISPOSITION_INLINE) != 0))
-			return; /* not inline, so it's not the body */
-	}
+	
+	if (_looks_like_attachment (part))
+		return; /* not the body */
 	
 	/* is it right content type? */
 	if (g_mime_content_type_is_type (ct, "text", "plain"))
