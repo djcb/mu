@@ -23,6 +23,8 @@
 #include <errno.h>
 
 #include "xapian.h"
+
+#include "mu-util.h"
 #include "mu-msg-xapian.h"
 
 struct _MuMsgXapian {
@@ -56,15 +58,7 @@ mu_msg_xapian_new (const Xapian::Enquire& enq, size_t batchsize)
 		
 		return msg;
 
-	} catch (const Xapian::Error &err) {
-                g_warning ("%s: caught xapian exception '%s' (%s)",
-                           __FUNCTION__, err.get_msg().c_str(),
-                           err.get_error_string());
-        } catch (...) {
-                g_warning ("%s: caught exception", __FUNCTION__);
-        }
-
-	return msg;
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
 void
@@ -74,8 +68,11 @@ mu_msg_xapian_destroy (MuMsgXapian *msg)
 		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) 
 			g_free (msg->_str[i]); 
 
-		delete msg->_enq;
-		delete msg;
+		try {
+			delete msg->_enq;
+			delete msg;
+			
+		} MU_XAPIAN_CATCH_BLOCK;
 	}
 }
 
@@ -106,7 +103,7 @@ mu_msg_xapian_next (MuMsgXapian *msg)
 		if (++msg->_cursor == msg->_matches.end()) 
 			return FALSE; /* no more matches */
 		
-		/* the message may not be readable / existant, eg., because
+		/* the message may not be readable / existing, e.g., because
 		 * of the database not being fully up to date. in that case,
 		 * we ignore the message. it might be nice to auto-delete
 		 * these messages from the db, but that would might screw
@@ -120,29 +117,23 @@ mu_msg_xapian_next (MuMsgXapian *msg)
 			msg->_str[i] = NULL;
 		}
 
-	} catch (const Xapian::Error &err) {
+		return TRUE;
 		
-                g_warning ("%s: caught xapian exception '%s' (%s)",
-                           __FUNCTION__, err.get_msg().c_str(),
-                           err.get_error_string());
-		return FALSE;
-		
-        } catch (...) {
-                g_warning ("%s: caught exception", __FUNCTION__);
-		return FALSE;
-        }
-	
-	return TRUE; 
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
 
 
 gboolean
 mu_msg_xapian_is_done (MuMsgXapian *msg)
 {
+	g_return_val_if_fail (msg, TRUE);
+
 	if (msg->_matches.empty())
 		return TRUE;
+
 	if (msg->_cursor == msg->_matches.end())
 		return TRUE;
+
 	return FALSE;
 }
 
@@ -165,114 +156,107 @@ mu_msg_xapian_get_field (MuMsgXapian *row, const MuMsgField *field)
 		
 		return row->_str[id];
 						 
-	} catch (const Xapian::Error &err) {
-                g_warning ("%s: caught xapian exception '%s' (%s)",
-                           __FUNCTION__, err.get_msg().c_str(),
-                           err.get_error_string());
-        } catch (...) {
-                g_warning ("%s: caught exception", __FUNCTION__);
-        }
-
-	return NULL;
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
+
 
 gint64
 mu_msg_xapian_get_field_numeric (MuMsgXapian *row, const MuMsgField *field)
 {
 	g_return_val_if_fail (mu_msg_field_is_numeric(field), -1);
-	
-	return Xapian::sortable_unserialise(
-		mu_msg_xapian_get_field(row, field));
+
+	try {
+		return Xapian::sortable_unserialise(
+			mu_msg_xapian_get_field(row, field));
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);
 }
 
 
 
 static const gchar*
-get_field (MuMsgXapian *row, MuMsgFieldId id)
+_get_field (MuMsgXapian *row, MuMsgFieldId id)
 {
 	return mu_msg_xapian_get_field(row, mu_msg_field_from_id (id));
 }
 
-
-
-unsigned int
-mu_msg_xapian_get_id (MuMsgXapian *row)
+static long
+_get_field_number (MuMsgXapian *row, MuMsgFieldId id)
 {
-	g_return_val_if_fail (row, NULL);
+	const char* str = _get_field (row, id);
+	return str ? atol (str) : 0;
+}
+
+
+
+/* hmmm.... is it impossible to get a 0 docid, or just very improbable? */
+unsigned int
+mu_msg_xapian_get_docid (MuMsgXapian *row)
+{
+	g_return_val_if_fail (row, 0);
 
 	try {
 		return row->_cursor.get_document().get_docid();
 
-	} catch (const Xapian::Error &err) {
-                g_warning ("%s: caught xapian exception '%s' (%s)",
-                           __FUNCTION__, err.get_msg().c_str(),
-                           err.get_error_string());
-        } catch (...) {
-                g_warning ("%s: caught exception", __FUNCTION__);
-        }
-
-	return 0;
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (0);
 }
 
 
 const char*
 mu_msg_xapian_get_path (MuMsgXapian *row)
 {
-	return get_field (row, MU_MSG_FIELD_ID_PATH);
+	return _get_field (row, MU_MSG_FIELD_ID_PATH);
 }
 
 
 const char*
 mu_msg_xapian_get_from (MuMsgXapian *row)
 {
-	return get_field (row, MU_MSG_FIELD_ID_FROM);
+	return _get_field (row, MU_MSG_FIELD_ID_FROM);
 }
 
 const char*
 mu_msg_xapian_get_to (MuMsgXapian *row)
 {
-	return get_field (row, MU_MSG_FIELD_ID_TO);
+	return _get_field (row, MU_MSG_FIELD_ID_TO);
 }
 
 
 const char*
 mu_msg_xapian_get_cc (MuMsgXapian *row)
 {
-	return get_field (row, MU_MSG_FIELD_ID_CC);
+	return _get_field (row, MU_MSG_FIELD_ID_CC);
 }
 
 
 const char*
 mu_msg_xapian_get_subject (MuMsgXapian *row)
 {
-	return get_field (row, MU_MSG_FIELD_ID_SUBJECT);
+	return _get_field (row, MU_MSG_FIELD_ID_SUBJECT);
 }
+
 
 size_t
 mu_msg_xapian_get_size (MuMsgXapian *row)
 {
-	return atoi(get_field (row, MU_MSG_FIELD_ID_SIZE));
+	return (size_t) _get_field_number (row, MU_MSG_FIELD_ID_SIZE);
 } 
 
 
 time_t
 mu_msg_xapian_get_date (MuMsgXapian *row)
 {
-	return atoi(get_field (row, MU_MSG_FIELD_ID_DATE));
+	return (size_t) _get_field_number (row, MU_MSG_FIELD_ID_DATE);
 } 
 
 
 MuMsgFlags
 mu_msg_xapian_get_flags (MuMsgXapian *row)
 {
-	return (MuMsgFlags)atoi(get_field 
-				(row, MU_MSG_FIELD_ID_FLAGS));
-
+	return (MuMsgFlags) _get_field_number (row, MU_MSG_FIELD_ID_FLAGS);
 } 
 
 MuMsgPriority
 mu_msg_xapian_get_priority (MuMsgXapian *row)
 {
-	return (MuMsgPriority)atoi(get_field 
-				   (row, MU_MSG_FIELD_ID_PRIORITY));
+	return (MuMsgPriority) _get_field_number (row, MU_MSG_FIELD_ID_PRIORITY);
 } 
