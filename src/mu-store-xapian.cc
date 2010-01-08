@@ -64,9 +64,11 @@ mu_store_xapian_new  (const char* xpath)
 
 	} MU_XAPIAN_CATCH_BLOCK;		
 
-	delete store->_db;
+	try {
+		delete store->_db;
+	} MU_XAPIAN_CATCH_BLOCK;
+	
 	g_free (store);
-
 	return NULL;
 }
 
