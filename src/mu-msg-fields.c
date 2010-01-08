@@ -21,9 +21,9 @@
 #include "mu-msg-fields.h"
 
 enum _FieldFlags { 
-	FLAG_XAPIAN         = 1 << 1, /* field stored as a string the in xapian db*/
-	FLAG_GMIME          = 1 << 2, /* field retrieved by reading msg with gmime */
-	FLAG_XAPIAN_INDEX   = 1 << 3  /* field is indexed in xapian */
+	FLAG_XAPIAN        = 1 << 1, /* field stored as a string  in xapian db */
+	FLAG_GMIME         = 1 << 2, /* field retrieved by through gmime */
+	FLAG_XAPIAN_INDEX  = 1 << 3  /* field is indexed in xapian */
 };
 typedef enum _FieldFlags FieldFlags;
 
