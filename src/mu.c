@@ -56,11 +56,11 @@ _parse_params (MuConfigOptions *config, int *argcp, char ***argvp)
 	context = g_option_context_new ("- maildir utilities");
 
 	g_option_context_set_main_group (context,
-					 mu_config_options_group_mu(config));
+					 mu_config_options_group_mu (config));
 	g_option_context_add_group (context,
-				    mu_config_options_group_index(config));
+				    mu_config_options_group_index (config));
 	g_option_context_add_group (context,
-				    mu_config_options_group_query(config));
+				    mu_config_options_group_find (config));
 	
 	rv = g_option_context_parse (context, argcp, argvp, &error);
 	if (!rv) {
