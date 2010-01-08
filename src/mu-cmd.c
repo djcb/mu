@@ -46,7 +46,7 @@ _cmd_from_string (const char* cmd)
 	if ((strcmp (cmd, "query") == 0) ||
 	    (strcmp (cmd, "find")  == 0) ||
 	    (strcmp (cmd, "search") == 0))
-		return MU_CMD_QUERY;
+		return MU_CMD_FIND;
 
 	if (strcmp (cmd, "cleanup") == 0)
 		return MU_CMD_CLEANUP;
@@ -70,6 +70,8 @@ static gboolean
 _print_query (MuQueryXapian *xapian, const gchar *query)
 {
 	char *querystr;
+
+	MU_WRITE_LOG ("query: '%s' (xquery)", query); 
 	
 	querystr = mu_query_xapian_as_string (xapian, query);
 	g_print ("%s\n", querystr);
@@ -141,6 +143,8 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	MuMsgXapian *row;
 	const MuMsgField *sortfield;
 
+	MU_WRITE_LOG ("query: '%s' (rows)", query); 
+	
 	sortfield = NULL;
 	if (opts->sortfield) {
 		sortfield = _sort_field_from_string (opts->sortfield);
@@ -194,7 +198,7 @@ _do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts,
 	gboolean retval = TRUE;
 	
 	query = mu_query_xapian_combine (params, FALSE);
-	
+		
 	/* if xquery is set, we print the xapian query instead of the
 	 * output; this is for debugging purposes */
 	if (opts->xquery) 
@@ -235,6 +239,8 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 		return FALSE;
 	
 	query = mu_query_xapian_combine (params, FALSE);
+	
+	MU_WRITE_LOG ("query: '%s' (links)", query); 
 	row = mu_query_xapian_run (xapian, query, NULL, FALSE);
 	if (!row) {
 		g_printerr ("error: running query failed\n");
@@ -300,7 +306,7 @@ _query_params_valid (MuConfigOptions *opts)
 
 
 gboolean
-_cmd_query (MuConfigOptions *opts)
+_cmd_find (MuConfigOptions *opts)
 {
 	MuQueryXapian *xapian;
 	gboolean rv;
@@ -396,7 +402,7 @@ _cmd_index (MuConfigOptions *opts)
 				   opts->reindex, &stats,
 				   opts->quiet ? NULL : _index_msg_cb,
 				   NULL, NULL);
-		if (opts->cleanup) {
+		if (!opts->nocleanup) {
 			stats._processed = 0; /* start over */
 			mu_index_cleanup (midx, &stats,
 					  opts->quiet ? NULL : _index_msg_cb,
@@ -444,40 +450,6 @@ _cleanup_cb (MuIndexStats *stats, void *user_data)
 
 
 
-static gboolean
-_cmd_cleanup (MuConfigOptions *opts)
-{
-	int rv;
-	
-	if (!_check_index_params (opts))
-		return FALSE;
-
-	mu_msg_gmime_init ();
-	{
-		MuIndex *midx;
-		MuIndexStats stats;
-		
-		g_message ("Cleaning up removed messages from %s",
-			   opts->xpath);
-		mu_index_stats_clear (&stats);
-		midx = mu_index_new (opts->xpath);
-		mu_index_cleanup (midx, &stats,
-				  opts->quiet ? NULL :_cleanup_cb,
-				  NULL);
-		mu_index_destroy (midx);
-
-		if (!opts->quiet) {
-			_cleanup_cb (&stats, NULL);
-			g_print ("\n");
-		}
-	}
-	
-	mu_msg_gmime_uninit ();
-	
-	return rv == MU_OK ? TRUE : FALSE;
-}
-
-
 
 static int
 _cmd_mkdir (MuConfigOptions *opts)
@@ -494,6 +466,8 @@ _cmd_mkdir (MuConfigOptions *opts)
 	
 	i = 1;
 	while (opts->params[i]) {
+		MU_WRITE_LOG ("mu_maildir_mkdir (%s, 0755, FALSE)",
+			     opts->params[i]);
 		if (!mu_maildir_mkmdir (opts->params[i], 0755, FALSE))
 			return FALSE;
 		++i;
@@ -526,6 +500,39 @@ _cmd_help (MuConfigOptions *opts)
 	/* FIXME: get context-sensitive help */
 	_show_version ();
 	return _show_usage (FALSE);
+}
+
+static gboolean
+_cmd_cleanup (MuConfigOptions *opts)
+{
+	int rv;
+	
+	if (!_check_index_params (opts))
+		return FALSE;
+	
+	mu_msg_gmime_init ();
+	{
+		MuIndex *midx;
+		MuIndexStats stats;
+		
+		g_message ("Cleaning up removed messages from %s",
+			   opts->xpath);
+		mu_index_stats_clear (&stats);
+		midx = mu_index_new (opts->xpath);
+		mu_index_cleanup (midx, &stats,
+				  opts->quiet ? NULL :_cleanup_cb,
+				  NULL);
+		mu_index_destroy (midx);
+
+		if (!opts->quiet) {
+			_cleanup_cb (&stats, NULL);
+			g_print ("\n");
+		}
+	}
+	
+	mu_msg_gmime_uninit ();
+	
+	return rv == MU_OK ? TRUE : FALSE;
 }
 #endif /* 0 */
 
@@ -584,11 +591,14 @@ mu_cmd_execute (MuConfigOptions *opts)
 	switch (cmd) {
 
 	case MU_CMD_INDEX:   return _cmd_index (opts);
-	case MU_CMD_QUERY:   return _cmd_query (opts);
-	case MU_CMD_CLEANUP: return _cmd_cleanup (opts);
+	case MU_CMD_FIND:    return _cmd_find (opts);
+
 	case MU_CMD_MKDIR:   return _cmd_mkdir (opts);
-	/* case MU_CMD_HELP:    return _cmd_help  (opts); */
-	/* case MU_CMD_LINK:    return _cmd_link  (opts); */
+
+		/* case MU_CMD_CLEANUP: return _cmd_cleanup (opts); */
+		/* case MU_CMD_HELP:    return _cmd_help  (opts); */
+		/* case MU_CMD_LINK:    return _cmd_link  (opts); */
+
 	case MU_CMD_UNKNOWN: return _show_usage (FALSE);
 	default:
 		g_return_val_if_reached (FALSE);
