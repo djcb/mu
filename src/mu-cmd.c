@@ -101,9 +101,11 @@ _display_field (MuMsgXapian *row, const MuMsgField* field)
 		}
 
 		return mu_msg_xapian_get_field (row, field); /* as string */
+
 	case MU_MSG_FIELD_TYPE_TIME_T: 
 		val = mu_msg_xapian_get_field_numeric (row, field);
 		return mu_msg_str_date_s ((time_t)val);
+
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
 		val = mu_msg_xapian_get_field_numeric (row, field);
 		return mu_msg_str_size_s ((time_t)val);
@@ -120,8 +122,10 @@ _sort_field_from_string (const char* fieldstr)
 	const MuMsgField *field;
 		
 	field = mu_msg_field_from_name (fieldstr);
+
 	if (!field && strlen(fieldstr) == 1)
 		field = mu_msg_field_from_shortcut(fieldstr[0]);
+
 	if (!field)
 		g_printerr ("not a valid sort field: '%s'\n",
 			    fieldstr);
@@ -149,10 +153,14 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	if (!row) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
+	} else if (mu_msg_xapian_is_done (row)) {
+		g_printerr ("No matches found\n");
+		mu_msg_xapian_destroy (row);
+		return FALSE;
 	}
 
 	/* iterate over the found rows */
-	while (!mu_msg_xapian_is_done (row)) {
+	do  {
 	 	const char*	fields		= opts->fields;
 		int		printlen	= 0;
 		while (*fields) {
@@ -166,11 +174,12 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 						    _display_field(row, field));
 			++fields;
 		}	
-		if (printlen >0)
+		if (printlen > 0)
 			printf ("\n");
 		
 		mu_msg_xapian_next (row);
-	}
+		
+	} while (!mu_msg_xapian_is_done (row));
 	
 	mu_msg_xapian_destroy (row);
 	return TRUE;
@@ -230,16 +239,18 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 	if (!row) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
+	} else if (mu_msg_xapian_is_done (row)) {
+		g_printerr ("No matches found\n");
+		mu_msg_xapian_destroy (row);
+		return FALSE;
 	}
 	
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
-
+	
 	/* iterate over the found rows */
-	for (;!mu_msg_xapian_is_done (row); mu_msg_xapian_next (row)) {
-
-		const char *path;
-		
-		path = mu_msg_xapian_get_field (row, pathfield);
+	do {
+		const char *path =
+			mu_msg_xapian_get_field (row, pathfield);
 		if (!path)
 			continue;
 			
@@ -252,7 +263,10 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 		
 		if (!mu_maildir_link (path, opts->linksdir))
 			break;
-	}
+
+		mu_msg_xapian_next (row);
+		
+	} while (!mu_msg_xapian_is_done (row));
 	
 	mu_msg_xapian_destroy (row);
 	g_free (query);
