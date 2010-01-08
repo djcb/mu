@@ -6,23 +6,19 @@ mu \- index and search the contents of e-mail messages stored in Maildirs
 .B mu <command> [options] [parameter(s)]  
 
 .SH DESCRIPTION
-.B mu
-is a set of tools for indexing and searching e-mail messages stored in
+\fBmu\fR is a set of tools for indexing and searching e-mail messages stored in
 Maildirs. It does so by recursively scanning a Maildir directory tree and
 analyzing the e-mail messages found. The results of this analysis are then
 stored in a database. Using this database, you can quickly search for specific
 messages.
 
-.B mu
-also offers functionality for creating maildirs.
+\fBmu\fR also offers functionality for creating maildirs.
 
 The various tools are available as commands for a single
-.B mu
-executable.
+\fBmu\fR executable.
 
 .SH GENERAL OPTIONS
-.B mu
-offers a number of general options -- options that apply to all commands:
+\fBmu\fR offers a number of general options -- options that apply to all commands:
 
 .TP
 \fB\-a\fR, \fB\-\-muhome\fR causes \fBmu\fR to use an alternative directory to
@@ -31,7 +27,7 @@ store and read its database and logs. By default, \fB~/.mu\fR is used.
 .TP
 \fB\-d\fR, \fB\-\-debug\fR makes \fBmu\fR generate extra debug information,
 useful for debugging the program itself. Note that by default, debug
-information goes to the log file, \fB~/.mu/mu.log\fR.
+information goes to the log file, \fI~/.mu/mu.log\fR.
 
 .TP
 \fB\-q\fR, \fB\-\-quiet\fR causes \fBmu\fR not to output informational
@@ -53,8 +49,7 @@ the options for one command, or all of the commands.
 
 
 .SH COMMANDS
-.B mu
-offers the following commands:
+\fBmu\fR offers the following commands:
 
 .TP
 \fBindex\fR
@@ -66,11 +61,6 @@ information in a database
 for finding messages in your database, using certain search parameters (see
 below for details). You can use \fBquery\fR and \fBsearch\fR as synonyms for
 \fBfind\fR.
-
-.TP
-\fBcleanup\fR
-for removing messages from your database for which there is no corresponding
-message file anymore. This commonly happens when you delete or move messages.
 
 .TP
 \fBmkdir\fR
@@ -106,13 +96,16 @@ suffices to index the changes, which goes much faster. Also note that a
 substantial amount of the time goes to printing the progress information; if
 you turn that off (with \fB\-q\fR or \fB\-\-quiet\fR), it goes a lot faster.
 
+Phase two of the indexing-process is the removal of messages from the database
+for which there is no longer a corresponding file in the Maildir. If you do
+not want this, you can use \fB\-u\fR, \fB\-\-nocleanup\fR.
+
 .SS Indexing options
 
 .TP
 \fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR starts searching
 at\fI<maildir>\fR. By default,
-.B mu
-uses whatever the
+\fBmu\fR uses whatever the
 .B MAILDIR
 environment variable is set to; if that is not set, it tries
 .B ~/Maildir
@@ -123,12 +116,9 @@ environment variable is set to; if that is not set, it tries
 re-index all mails, even ones that are already in the database.
 
 .T
-\fB\-u\fR, \fB\-\-cleanup\fR automatically clean up the database after
-indexing. This is functionally equivalent to calling the
-.B cleanup
-command after indexing. Please see the information for
-.B cleanup
-for details.
+\fB\-u\fR, \fB\-\-nocleanup\fR disables the database cleanup that
+\fBmu\fR does by default after indexing.
+
 
 .TP
 
@@ -163,42 +153,28 @@ offers all the search functionality that Xapian offers; please refer to:
 Here, we will show the mu-specific ways to specify search patterns.
 
 
-
 .SS find options
 
 .SS query syntax
 In its simplest form, you can just can just specify a number of words, and
-.B mu
-will search for messages that match all of those words. So,
+\fBmu\fR will search for messages that match all of those words. So,
 .nf
  $ mu find monkey banana
 .fi
 will find all messages which have both "monkey" AND "banana" in one of those
 fields.
 
-.SH THE CLEANUP COMMAND
-
-
 .SH THE MKDIR COMMAND
+With the
+.B mkdir
+command, you can create new Maildirs with permissions 0755. For example,
+.nf
+   mu mkdir tom dick harry
+.fi
+will create three Maildirs \fItom\fR, \fIdick\fR and \fIharry\fR.
 
-.SH OPTIONS
-.B mu
-has a number of general options, which work with all the commands.
-
-.B --maildir=, -m
-.I <maildir>
-set the full path to the maildir; note that you can also specify this path as
-a non-option argument to 
-.B
-mu-index
-; if you use both, the non-option argument wins.
-
-.B --quiet|-q
-makes 
-.B mu-index
-not put out any progress info during its indexing. This is not the default, as
-running may take quite some time, and might confuse novice users.
-
+If the creation somehow fails, for safety reasons, \fBno\fR attempt is made to
+remove any parts that were created.
 
 .SH ENVIRONMENT
 As mentioned, \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if
