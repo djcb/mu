@@ -44,11 +44,10 @@ struct _MuLog {
 };
 typedef struct _MuLog MuLog;
 
-static void log_write (const char* domain, GLogLevelFlags level, 
-		       const gchar *msg);
-
 static MuLog* MU_LOG = NULL;
 
+static void _log_write (const char* domain, GLogLevelFlags level, 
+			const gchar *msg);
 
 static void
 _try_close (int fd)
@@ -91,12 +90,13 @@ log_handler (const gchar* log_domain, GLogLevelFlags log_level,
 	if (log_level == G_LOG_LEVEL_DEBUG && !MU_LOG->_debug)
 	 	return;
 
-	log_write (log_domain ? log_domain : "mu", log_level, msg);
+	_log_write (log_domain ? log_domain : "mu", log_level, msg);
 }
 
 
 gboolean
-mu_log_init_with_fd (int fd, gboolean doclose, gboolean quiet, gboolean debug)
+mu_log_init_with_fd (int fd, gboolean doclose,
+		     gboolean quiet, gboolean debug)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
 	
@@ -176,8 +176,8 @@ pfx (GLogLevelFlags level)
 }
 
 static void
-log_write (const char* domain, GLogLevelFlags level, 
-	   const gchar *msg)
+_log_write (const char* domain, GLogLevelFlags level, 
+	    const gchar *msg)
 {
 	time_t now;
 	ssize_t len;
