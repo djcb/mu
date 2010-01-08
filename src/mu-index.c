@@ -85,7 +85,9 @@ _insert_or_update_maybe (const char* fullpath, time_t filestamp,
 	MuMsgGMime *msg;
 
 	*updated = FALSE;
-	
+
+	g_debug ("msg: %s (%u)", fullpath,(size_t)filestamp);
+		
 	if (!data->_reindex) 
 		if ((size_t)filestamp <= (size_t)data->_dirstamp)
 			return MU_OK;
@@ -167,13 +169,13 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 		data->_dirstamp =
 			mu_store_xapian_get_timestamp (data->_xapian,
 						       fullpath);
-		g_debug ("entering %s; timestamp == %u",
+		g_debug ("entering %s (ts==%u)",
 			 fullpath, (unsigned)data->_dirstamp);
 	} else {
 		time_t now = time (NULL);
 		mu_store_xapian_set_timestamp (data->_xapian, fullpath,
 					       now);
-		g_debug ("leaving %s; timestamp = %u",
+		g_debug ("leaving %s (ts=%u)",
 			 fullpath, (unsigned)data->_dirstamp);
 	}
 	
