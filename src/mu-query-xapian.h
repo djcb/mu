@@ -41,7 +41,7 @@ typedef struct _MuQueryXapian MuQueryXapian;
  * when the instance is no longer needed, use mu_query_xapian_destroy
  * to free it
  */
-MuQueryXapian  *mu_query_xapian_new      (const char* path);
+MuQueryXapian  *mu_query_xapian_new  (const char* path) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * destroy the MuQueryXapian instance
@@ -61,10 +61,10 @@ void            mu_query_xapian_destroy  (MuQueryXapian *self);
  * @return a MuMsgXapian instance you can iterate over, or NULL in
  * case of error
  */
-MuMsgXapian*     mu_query_xapian_run      (MuQueryXapian *self, 
-					   const char* expr,
-					   const MuMsgField* sortfield,
-					   gboolean ascending);
+MuMsgXapian* mu_query_xapian_run (MuQueryXapian *self, 
+				  const char* expr,
+				  const MuMsgField* sortfield,
+				  gboolean ascending) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * create a xapian query from list of expressions; for the syntax,
@@ -77,7 +77,8 @@ MuMsgXapian*     mu_query_xapian_run      (MuQueryXapian *self,
  * @return a string with the combined xapian expression or NULL in
  * case of error; free with g_free when it's no longer needed
  */
-char*  mu_query_xapian_combine  (const gchar **params, gboolean connect_or);
+char*  mu_query_xapian_combine  (const gchar **params,
+				 gboolean connect_or) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * get a string representation of the Xapian search query
@@ -88,7 +89,8 @@ char*  mu_query_xapian_combine  (const gchar **params, gboolean connect_or);
  * @return the string representation of the xapian query, or NULL in case of
  * error; free the returned value with g_free
  */
-char* mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr);
+char* mu_query_xapian_as_string (MuQueryXapian *self,
+				 const char* searchexpr) G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS
