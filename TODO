@@ -7,6 +7,7 @@
    - [X] mu-index config options
    - [X] check which options actually work, remove rest
    - [X] fix AND/OR escaping issue
+   - [ ] update web page
    - [ ] man page / help
    - [X] add mu cleanup
    - [X] add --clear option for --linksdir
@@ -29,6 +30,7 @@
 ** release 0.7 [%]
 
    - [ ] detect mail threads
+   - [ ] --mode for mkdir
    - [ ] signal handler
    - [ ] mu help <cmd>
    - [ ] add move-mail support

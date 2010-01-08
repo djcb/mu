@@ -1,12 +1,11 @@
 * HACKING
 
-Here are some short guidelines for hacking on the 'mu' source code. Note, this
-is fairly long list. This is not meant to discourage anyone from working on
-the mu source code; I think most of the rules are common sense anyway, and
-some of the more stylistic-aesthetic rules are clearly visible in current
-source code, so as long as any new code 'fits in', it should go a long way in
-satisfying these rules. 
-
+  Here are some guidelines for hacking on the 'mu' source code. Note, this is
+  fairly long list. This is not meant to discourage anyone from working on the
+  mu source code; I think most of the rules are common sense anyway, and some
+  of the more stylistic-aesthetic rules are clearly visible in current source
+  code, so as long as any new code 'fits in', it should go a long way in
+  satisfying the rules.
 
 ** Coding style
 
@@ -26,7 +25,8 @@ satisfying these rules.
 
    5. a function's cyclomatic complexity should not exceed 10 (there may be
       rare exceptions). You can test the cyclomatic complexity with the
-      pmccabe tool
+      pmccabe tool; if you installed that, you can use 'make cc10' to list all
+      functions that violate this rule; there should be none.
 
    6. filenames have their components separated with dashes (e.g, 'mu-log.h')
 
@@ -55,13 +55,13 @@ satisfying these rules.
    ~/.mu/mu.log). g_warning, g_message and g_critical are shown to the user,
    except when running with --quiet, in which case g_message is *not* shown.
 
-   =g_message= are for non-error messages the user will see (unless running with --quiet)
-   =g_warning= is for problems the user may be able to do something about (and
-   they are written on stderr)
-   =g_critical= is for serious, internal problems (g_return_if_fail and
-   friends use this). (and they are written on stderr)
-
-   don't use g_error
+   - g_message is for non-error messages the user will see (unless running
+     with --quiet)
+   - g_warning is for problems the user may be able to do something about (and
+     they are written on stderr)
+   - g_critical is for serious, internal problems (g_return_if_fail and
+     friends use this). (and they are written on stderr)
+   - don't use g_error
 
    if you just want to log something in the log file, use MU_LOG_WRITE, as
    defined in mu-util.h
