@@ -96,8 +96,6 @@ typedef MuResult (*MuMaildirWalkDirCallback)
  */
 MuResult mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
 			  MuMaildirWalkDirCallback cb_dir, void *data);
-
-
 /** 
  * recursively delete all the symbolic links in a directory tree
  * 

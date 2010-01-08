@@ -219,8 +219,7 @@ process_file (const char* fullpath, MuMaildirWalkMsgCallback cb, void *data)
 	 * use the ctime, so any status change will be visible (perms,
 	 * filename etc.)
 	 */
-	result = (cb)(fullpath,statbuf.st_ctime,data);
-	
+	result = (cb)(fullpath, statbuf.st_ctime, data);
 	if (G_LIKELY(result == MU_OK || result == MU_STOP))
 		return result;
 	else {
@@ -303,7 +302,7 @@ _ignore_dir_entry (struct dirent *entry)
 		return TRUE;
 
 	/* ignore .notmuch, .nnmaildir */
-	if ((name[1] == 'n') &&/* optimization */
+	if ((name[1] == 'n') && /* optimization */
 	    (strcmp (name, ".notmuch") == 0 ||
 	     strcmp (name, ".nnmaildir") == 0)) 
 		return TRUE;
@@ -326,8 +325,6 @@ process_dir_entry (const char* path, struct dirent *entry,
 	fullpath = g_newa (char, strlen(path) + strlen(entry->d_name) + 1);
 	sprintf (fullpath, "%s%c%s", path, G_DIR_SEPARATOR,
 		 entry->d_name);
-
-	g_debug ("looking at: %s", fullpath);
 	
 	switch (entry->d_type) {
 	case DT_REG:
