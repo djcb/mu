@@ -41,7 +41,7 @@
  * for what to do with it
  */
 const char* mu_msg_str_date_s (time_t t) G_GNUC_CONST;
-char*       mu_msg_str_date   (time_t t);
+char*       mu_msg_str_date   (time_t t) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /** 
@@ -58,7 +58,7 @@ char*       mu_msg_str_date   (time_t t);
  * for what to do with it
  */
 const char* mu_msg_str_size_s  (size_t s) G_GNUC_CONST;
-char*       mu_msg_str_size    (size_t s);
+char*       mu_msg_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * get a display string for a given set of flags, OR'ed in 
@@ -76,7 +76,7 @@ char*       mu_msg_str_size    (size_t s);
  * for what to do with it
  */
 const char* mu_msg_str_flags_s  (MuMsgFlags flags) G_GNUC_CONST;
-char*       mu_msg_str_flags    (MuMsgFlags flags);
+char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /** 
