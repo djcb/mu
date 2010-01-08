@@ -17,6 +17,8 @@
 **
 */
 
+#include "config.h"
+
 #include <glib.h>
 #include <string.h> /* memset */
 
@@ -63,8 +65,8 @@ mu_config_options_group_index (MuConfigOptions *opts)
 		 "top of the maildir", NULL},
 		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
 		 "index already indexed messages too", NULL},
-		{"cleanup", 'u', 0, G_OPTION_ARG_NONE, &opts->cleanup,
-		 "cleanup database after indexing", NULL},
+		{"nocleanup", 'u', 0, G_OPTION_ARG_NONE, &opts->nocleanup,
+		 "don't clean up the database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 	
@@ -77,7 +79,7 @@ mu_config_options_group_index (MuConfigOptions *opts)
 }
 
 GOptionGroup*
-mu_config_options_group_query (MuConfigOptions *opts)
+mu_config_options_group_find (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
@@ -96,8 +98,8 @@ mu_config_options_group_query (MuConfigOptions *opts)
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
-	og = g_option_group_new ("query",
-				 "options for the 'query' command",
+	og = g_option_group_new ("find",
+				 "options for the 'find' command",
 				 "", NULL, NULL);	
 	g_option_group_add_entries (og, entries);
 	

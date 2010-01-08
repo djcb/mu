@@ -41,7 +41,7 @@ struct _MuConfigOptions {
 	
 	/* options for indexing */
 	char	        *maildir;	/* where the mails are */
-	gboolean         cleanup;	/* cleanup deleted mails from db */
+	gboolean         nocleanup;	/* don't cleanup deleted mails from db */
 	gboolean         reindex;	/* re-index existing mails */
 	
 	/* options for querying */
@@ -101,22 +101,14 @@ GOptionGroup* mu_config_options_group_mu (MuConfigOptions *opts);
 GOptionGroup* mu_config_options_group_index (MuConfigOptions *opts);
 
 /** 
- * get the query-options option group 
+ * get the find-options option group 
  * 
  * @param opts the MuConfigOptions to fill from this option group
  * 
  * @return a new option group; *DON'T* unref when added to an optioncontext
  */
-GOptionGroup* mu_config_options_group_query (MuConfigOptions *opts);
+GOptionGroup* mu_config_options_group_find (MuConfigOptions *opts);
 
-/** 
- * 
- * 
- * @param opts 
- * 
- * @return 
- */
-char* mu_config_expanded_mu_home (MuConfigOptions *opts);
 
 G_END_DECLS
 
