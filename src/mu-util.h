@@ -21,7 +21,6 @@
 #define __MU_UTIL_H__
 
 #include <glib.h>
-#include "config.h"
 
 G_BEGIN_DECLS
 
@@ -34,8 +33,6 @@ G_BEGIN_DECLS
  * case of error
  */
 char*       mu_util_dir_expand (const char* path);
-
-
 
 /** 
  * guess the maildir; first try MAILDIR, then try ~/Maildir
