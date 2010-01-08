@@ -61,9 +61,12 @@ _init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 
 	} MU_XAPIAN_CATCH_BLOCK;
 
-	delete mqx->_db;
-	delete mqx->_qparser;
-		
+	try {
+		delete mqx->_db;
+		delete mqx->_qparser;
+
+	} MU_XAPIAN_CATCH_BLOCK;
+	
 	return FALSE;
 }
 
@@ -134,14 +137,13 @@ mu_query_xapian_new (const char* xpath)
 	}
 
 	mqx = g_new (MuQueryXapian, 1);
-	try {
-		_init_mu_query_xapian (mqx, xpath);
 
-	} catch (...) {
+	if (!_init_mu_query_xapian (mqx, xpath)) {
+		g_warning ("failed to initalize xapian query");
 		g_free (mqx);
-		mqx = NULL;
+		return NULL;
 	}
-
+	
 	return mqx;
 }
 
@@ -178,9 +180,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 
 		return mu_msg_xapian_new (enq, 10000);
 		
-	} MU_XAPIAN_CATCH_BLOCK;
-
-	return NULL;
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
 char*
@@ -230,6 +230,7 @@ mu_query_xapian_combine (const gchar **params, gboolean connect_or)
 					do_quote ? "\"" : "",
 					cnx);	
 	}
+
 	return g_string_free (str, FALSE);
 }
 
