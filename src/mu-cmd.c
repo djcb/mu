@@ -167,9 +167,11 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	do  {
 	 	const char*	fields		= opts->fields;
 		int		printlen	= 0;
+
 		while (*fields) {
-			const MuMsgField* field = 
-				mu_msg_field_from_shortcut (*fields);
+			
+			const MuMsgField* field;
+			field =	mu_msg_field_from_shortcut (*fields);
 			if (!field || 
 			    !mu_msg_field_is_xapian_enabled (field)) 
 				printlen += printf ("%c", *fields);
@@ -177,7 +179,8 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 				printlen += printf ("%s",
 						    _display_field(row, field));
 			++fields;
-		}	
+		}
+		
 		if (printlen > 0)
 			printf ("\n");
 		
@@ -186,6 +189,7 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	} while (!mu_msg_xapian_is_done (row));
 	
 	mu_msg_xapian_destroy (row);
+
 	return TRUE;
 }
 
@@ -218,8 +222,10 @@ static gboolean
 _create_or_clear_linksdir_maybe (MuConfigOptions* opts)
 {
 	if (access (opts->linksdir, F_OK) != 0) {
+
 		if (!mu_maildir_mkmdir (opts->linksdir, 0700, TRUE)) 
 			return FALSE;
+
 	} else if (opts->clearlinks)
 		mu_maildir_clear_links (opts->linksdir);
 	
@@ -254,9 +260,11 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
 	
 	/* iterate over the found rows */
-	do {
-		const char *path =
-			mu_msg_xapian_get_field (row, pathfield);
+	for (; !mu_msg_xapian_is_done (row); mu_msg_xapian_next (row)) {
+
+		const char *path;
+		
+		path = mu_msg_xapian_get_field (row, pathfield);
 		if (!path)
 			continue;
 			
@@ -265,14 +273,11 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 			g_warning ("Cannot read source message %s: %s",
 				   path, strerror (errno));
 			continue;
-		}
+		} 
 		
 		if (!mu_maildir_link (path, opts->linksdir))
 			break;
-
-		mu_msg_xapian_next (row);
-		
-	} while (!mu_msg_xapian_is_done (row));
+	}
 	
 	mu_msg_xapian_destroy (row);
 	g_free (query);
