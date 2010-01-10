@@ -322,6 +322,7 @@ _cmd_find (MuConfigOptions *opts)
 	
 	xapian = mu_query_xapian_new (opts->xpath);
 	if (!xapian) {
+		g_warning ("Failed to create Xapian query");
 		mu_msg_gmime_uninit ();
 		return FALSE;
 	}
@@ -392,12 +393,18 @@ _cmd_index (MuConfigOptions *opts)
 	{
 		MuIndex *midx;
 		MuIndexStats stats;
+		
+		mu_index_stats_clear (&stats);
+		midx = mu_index_new (opts->xpath);
+		
+		if (!midx) {
+			g_warning ("Indexing failed");
+			return FALSE;
+		} 
 
 		g_message ("Indexing messages from %s", opts->maildir);
 		g_message ("Database: %s", opts->xpath);
 		
-		mu_index_stats_clear (&stats);
-		midx = mu_index_new (opts->xpath);
 		rv = mu_index_run (midx, opts->maildir,
 				   opts->reindex, &stats,
 				   opts->quiet ? NULL : _index_msg_cb,
@@ -515,10 +522,16 @@ _cmd_cleanup (MuConfigOptions *opts)
 		MuIndex *midx;
 		MuIndexStats stats;
 		
+		mu_index_stats_clear (&stats);
+		
+		midx = mu_index_new (opts->xpath);
+		if (!midx) {
+			g_warning ("Cleanup failed");
+			return FALSE;
+		}
+		
 		g_message ("Cleaning up removed messages from %s",
 			   opts->xpath);
-		mu_index_stats_clear (&stats);
-		midx = mu_index_new (opts->xpath);
 		mu_index_cleanup (midx, &stats,
 				  opts->quiet ? NULL :_cleanup_cb,
 				  NULL);
