@@ -83,15 +83,30 @@ _insert_or_update_maybe (const char* fullpath, time_t filestamp,
 			 MuIndexCallbackData *data, gboolean *updated)
 { 
 	MuMsgGMime *msg;
-
+	
 	*updated = FALSE;
 
-	g_debug ("msg: %s (%u)", fullpath,(size_t)filestamp);
+	/* checks to determine if we need to (re)index this message */
+	do {
+		/* unconditionally reindex */
+		if (data->_reindex)
+			break;
+
+		/* it's not in the database yet */
+		if (!mu_store_contains_message (data->_xapian, fullpath)) {
+			g_debug ("not yet in db: %s", fullpath);
+			break;
+		}
+
+		/* it's there, but it's not up to date */
+		if ((size_t)filestamp >= (size_t)data->_dirstamp)
+			break;
+
+		return MU_OK; /* nope: no need to insert/update! */
+
+	} while (0);
+
 		
-	if (!data->_reindex) 
-		if ((size_t)filestamp <= (size_t)data->_dirstamp)
-			return MU_OK;
-	
 	msg = mu_msg_gmime_new (fullpath);
 	if (!msg) {
 		g_warning ("%s: failed to create mu_msg for %s",

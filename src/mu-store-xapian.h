@@ -82,6 +82,18 @@ MuResult	  mu_store_xapian_store   (MuStoreXapian *store,
 MuResult          mu_store_xapian_remove (MuStoreXapian *store,
 					  const char* msgpath);
 
+
+/** 
+ * does a certain message exist in the database already?
+ * 
+ * @param store a store
+ * @param path the message path
+ * 
+ * @return 
+ */
+gboolean          mu_store_contains_message (MuStoreXapian *store,
+					     const char* path);
+
 /** 
  * store a timestamp for a directory
  * 

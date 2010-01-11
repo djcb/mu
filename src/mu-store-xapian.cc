@@ -300,14 +300,31 @@ mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 		g_debug ("deleting %s", msgpath);
 		
 		++store->_processed;
-		_commit_transaction_if (store,
-					store->_processed % store->_trx_size == 0);
+
+		/* do we need to commit now? */
+		bool commit_now = store->_processed % store->_trx_size == 0;
+		_commit_transaction_if (store, commit_now);
 
 		return MU_OK; 
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
 	
 }
+
+gboolean
+mu_store_contains_message (MuStoreXapian *store, const char* path)
+{
+	g_return_val_if_fail (store, NULL);
+	g_return_val_if_fail (path, NULL);
+	
+	try {
+		const std::string uid (_get_message_uid(path));
+		return store->_db->term_exists (uid) ? TRUE: FALSE;
+		
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (FALSE);
+}
+
+
 
 time_t
 mu_store_xapian_get_timestamp (MuStoreXapian *store, const char* msgpath)
@@ -352,7 +369,8 @@ mu_store_xapian_foreach (MuStoreXapian *self,
 	g_return_val_if_fail (func, MU_ERROR);
 	
 	try {
-		Xapian::Enquire enq (*self->_db);		
+		Xapian::Enquire enq (*self->_db);
+
 		
 		enq.set_query  (Xapian::Query::MatchAll);
 		enq.set_cutoff (0,0);
