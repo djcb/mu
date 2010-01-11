@@ -86,7 +86,10 @@ _insert_or_update_maybe (const char* fullpath, time_t filestamp,
 	
 	*updated = FALSE;
 
-	/* checks to determine if we need to (re)index this message */
+	/* checks to determine if we need to (re)index this message
+	 * note: just check timestamps is not good enough because
+	 * message may be moved from other dirs (e.g. from 'new' to
+	 * 'cur') and the time stamps won't change.*/
 	do {
 		/* unconditionally reindex */
 		if (data->_reindex)
