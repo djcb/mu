@@ -30,7 +30,8 @@
 #include "mu-maildir.h"
 
 #define MU_MAILDIR_WALK_MAX_FILE_SIZE (32*1000*1000)
-#define MU_MAILDIR_NOINDEX_FILE  ".noindex"
+#define MU_MAILDIR_NOINDEX_FILE       ".noindex"
+#define MU_MAILDIR_CACHE_FILE         ".mu.cache"
 
 
 static gboolean
@@ -259,7 +260,7 @@ _is_maildir_new_or_cur (const char *path)
 
 /* check if there is a noindex file (MU_WALK_NOINDEX_FILE) in this dir; */
 static gboolean
-has_noindex_file (const char *path)
+_has_noindex_file (const char *path)
 {
 	char *fname;
 
@@ -336,22 +337,22 @@ process_dir_entry (const char* path, struct dirent *entry,
 		
 	case DT_DIR: {
 		/* if it has a noindex file, we ignore this dir */
-		if (has_noindex_file (fullpath)) {
+		if (_has_noindex_file (fullpath)) {
 			g_debug ("ignoring dir %s", fullpath);
 			return MU_OK;
 		}
 		
 		return process_dir (fullpath, cb_msg, cb_dir, data);
 	}
-
 		
 	default:
 		return MU_OK; /* ignore other types */
 	}
 }
 
+
 static struct dirent* 
-dirent_copy (struct dirent *entry)
+_dirent_copy (struct dirent *entry)
 {
 	struct dirent *d = g_slice_new (struct dirent);
 	/* NOTE: simply memcpy'ing sizeof(struct dirent) bytes will
@@ -360,13 +361,13 @@ dirent_copy (struct dirent *entry)
 }
 
 static void
-dirent_destroy (struct dirent *entry)
+_dirent_destroy (struct dirent *entry)
 {
 	g_slice_free(struct dirent, entry);
 }
 
 static gint
-dirent_cmp (struct dirent *d1, struct dirent *d2)
+_dirent_cmp (struct dirent *d1, struct dirent *d2)
 {
 	return d1->d_ino - d2->d_ino;
 }
@@ -398,14 +399,14 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 	   some filesystems, such as ext3fs */
 	lst = NULL;
 	while ((entry = readdir (dir)))
-		lst = g_list_prepend (lst, dirent_copy(entry));
-
-	c = lst = g_list_sort (lst, (GCompareFunc)dirent_cmp);
+		lst = g_list_prepend (lst, _dirent_copy(entry));
+	
+	c = lst = g_list_sort (lst, (GCompareFunc)_dirent_cmp);
 	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) 
 		result = process_dir_entry (path, (struct dirent*)c->data, 
 					    msg_cb, dir_cb, data);
 
-	g_list_foreach (lst, (GFunc)dirent_destroy, NULL);
+	g_list_foreach (lst, (GFunc)_dirent_destroy, NULL);
 	g_list_free (lst);
 	
 	closedir (dir);

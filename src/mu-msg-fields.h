@@ -137,7 +137,7 @@ MuMsgFieldType mu_msg_field_type (const MuMsgField *field)         G_GNUC_CONST;
 gboolean mu_msg_field_is_numeric          (const MuMsgField *field) G_GNUC_CONST;
 
 /** 
- * is the field Xapian-enabled? That is, should this field be stored
+\ * is the field Xapian-enabled? That is, should this field be stored
  * (as a string) in the Xapian database?
  * 
  * @param field a MuMsgField
