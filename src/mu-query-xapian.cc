@@ -197,6 +197,22 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 }
 
 
+static gboolean
+_needs_quotes (const char* str)
+{
+	int i;
+	const char *keywords[] = {
+		"ANO", "OR", "NOT", "NEAR", "ADJ"
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(keywords); ++i)
+		if (g_strcasecmp (str, keywords[i]) == 0)
+			return TRUE;
+
+	return FALSE;
+}
+
+
 char*
 mu_query_xapian_combine (const gchar **params, gboolean connect_or)
 {
@@ -219,11 +235,8 @@ mu_query_xapian_combine (const gchar **params, gboolean connect_or)
 		
 		if (params[i + 1])
 			cnx = connect_or ? " OR " : " AND ";
-
-		do_quote = (strcasecmp (elm, "OR") == 0  ||
-			    strcasecmp (elm, "AND") == 0 ||
-			    strcasecmp (elm, "NOT") == 0);
 		
+		do_quote = _needs_quotes (elm);
 		g_string_append_printf (str, "%s%s%s%s",
 					do_quote ? "\"" : "",
 					elm,
