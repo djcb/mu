@@ -40,7 +40,7 @@ struct _MuQueryXapian {
 };
 
 gboolean
-_init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
+init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 {
 	mqx->_db = 0;
 	mqx->_qparser = 0;
@@ -72,7 +72,7 @@ _init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 
 	
 static void
-_uninit_mu_query_xapian (MuQueryXapian *mqx)
+uninit_mu_query_xapian (MuQueryXapian *mqx)
 {
 	try {
 		delete mqx->_db;
@@ -85,7 +85,7 @@ _uninit_mu_query_xapian (MuQueryXapian *mqx)
 }
 
 static Xapian::Query
-_get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
+get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 	
 	try {
 		return mqx->_qparser->parse_query
@@ -138,7 +138,7 @@ mu_query_xapian_new (const char* xpath)
 
 	mqx = g_new (MuQueryXapian, 1);
 
-	if (!_init_mu_query_xapian (mqx, xpath)) {
+	if (!init_mu_query_xapian (mqx, xpath)) {
 		g_warning ("failed to initalize xapian query");
 		g_free (mqx);
 		return NULL;
@@ -154,7 +154,7 @@ mu_query_xapian_destroy (MuQueryXapian *self)
 	if (!self)
 		return;
 
-	_uninit_mu_query_xapian (self);
+	uninit_mu_query_xapian (self);
 	g_free (self);
 }
 
@@ -167,7 +167,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query q(_get_query(self, searchexpr));
+		Xapian::Query q(get_query(self, searchexpr));
 		Xapian::Enquire enq (*self->_db);
 		
 		if (sortfield) 
@@ -190,7 +190,7 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query q(_get_query(self, searchexpr));
+		Xapian::Query q(get_query(self, searchexpr));
 		return g_strdup(q.get_description().c_str());
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
@@ -198,7 +198,7 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 
 
 static gboolean
-_needs_quotes (const char* str)
+needs_quotes (const char* str)
 {
 	int i;
 	const char *keywords[] = {
@@ -236,7 +236,7 @@ mu_query_xapian_combine (const gchar **params, gboolean connect_or)
 		if (params[i + 1])
 			cnx = connect_or ? " OR " : " AND ";
 		
-		do_quote = _needs_quotes (elm);
+		do_quote = needs_quotes (elm);
 		g_string_append_printf (str, "%s%s%s%s",
 					do_quote ? "\"" : "",
 					elm,

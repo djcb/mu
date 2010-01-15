@@ -77,7 +77,7 @@ mu_msg_xapian_destroy (MuMsgXapian *msg)
 }
 
 static gboolean
-_message_is_readable (MuMsgXapian *msg)
+message_is_readable (MuMsgXapian *msg)
 {
 	Xapian::Document doc (msg->_cursor.get_document());
 	const std::string path(doc.get_value(MU_MSG_FIELD_ID_PATH));
@@ -109,7 +109,7 @@ mu_msg_xapian_next (MuMsgXapian *msg)
 		 * these messages from the db, but that would might screw
 		 * up the search; also, we only have read-only access to the
 		 * db here */
-		if (!_message_is_readable (msg))
+		if (!message_is_readable (msg))
 			return mu_msg_xapian_next (msg);
 		
 		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) {
@@ -174,15 +174,15 @@ mu_msg_xapian_get_field_numeric (MuMsgXapian *row, const MuMsgField *field)
 
 
 static const gchar*
-_get_field (MuMsgXapian *row, MuMsgFieldId id)
+get_field (MuMsgXapian *row, MuMsgFieldId id)
 {
 	return mu_msg_xapian_get_field(row, mu_msg_field_from_id (id));
 }
 
 static long
-_get_field_number (MuMsgXapian *row, MuMsgFieldId id)
+get_field_number (MuMsgXapian *row, MuMsgFieldId id)
 {
-	const char* str = _get_field (row, id);
+	const char* str = get_field (row, id);
 	return str ? atol (str) : 0;
 }
 
@@ -204,59 +204,59 @@ mu_msg_xapian_get_docid (MuMsgXapian *row)
 const char*
 mu_msg_xapian_get_path (MuMsgXapian *row)
 {
-	return _get_field (row, MU_MSG_FIELD_ID_PATH);
+	return get_field (row, MU_MSG_FIELD_ID_PATH);
 }
 
 
 const char*
 mu_msg_xapian_get_from (MuMsgXapian *row)
 {
-	return _get_field (row, MU_MSG_FIELD_ID_FROM);
+	return get_field (row, MU_MSG_FIELD_ID_FROM);
 }
 
 const char*
 mu_msg_xapian_get_to (MuMsgXapian *row)
 {
-	return _get_field (row, MU_MSG_FIELD_ID_TO);
+	return get_field (row, MU_MSG_FIELD_ID_TO);
 }
 
 
 const char*
 mu_msg_xapian_get_cc (MuMsgXapian *row)
 {
-	return _get_field (row, MU_MSG_FIELD_ID_CC);
+	return get_field (row, MU_MSG_FIELD_ID_CC);
 }
 
 
 const char*
 mu_msg_xapian_get_subject (MuMsgXapian *row)
 {
-	return _get_field (row, MU_MSG_FIELD_ID_SUBJECT);
+	return get_field (row, MU_MSG_FIELD_ID_SUBJECT);
 }
 
 
 size_t
 mu_msg_xapian_get_size (MuMsgXapian *row)
 {
-	return (size_t) _get_field_number (row, MU_MSG_FIELD_ID_SIZE);
+	return (size_t) get_field_number (row, MU_MSG_FIELD_ID_SIZE);
 } 
 
 
 time_t
 mu_msg_xapian_get_date (MuMsgXapian *row)
 {
-	return (size_t) _get_field_number (row, MU_MSG_FIELD_ID_DATE);
+	return (size_t) get_field_number (row, MU_MSG_FIELD_ID_DATE);
 } 
 
 
 MuMsgFlags
 mu_msg_xapian_get_flags (MuMsgXapian *row)
 {
-	return (MuMsgFlags) _get_field_number (row, MU_MSG_FIELD_ID_FLAGS);
+	return (MuMsgFlags) get_field_number (row, MU_MSG_FIELD_ID_FLAGS);
 } 
 
 MuMsgPriority
 mu_msg_xapian_get_priority (MuMsgXapian *row)
 {
-	return (MuMsgPriority) _get_field_number (row, MU_MSG_FIELD_ID_PRIORITY);
+	return (MuMsgPriority) get_field_number (row, MU_MSG_FIELD_ID_PRIORITY);
 } 
