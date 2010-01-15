@@ -146,7 +146,7 @@ typedef gboolean (*FieldMatchFunc) (const MuMsgField *field,
 				    gconstpointer data);
 
 static const MuMsgField*
-_find_field (FieldMatchFunc matcher, gconstpointer data)
+find_field (FieldMatchFunc matcher, gconstpointer data)
 {
 	int i;
 	for (i = 0; i != sizeof(FIELD_DATA)/sizeof(FIELD_DATA[0]); ++i)
@@ -157,7 +157,7 @@ _find_field (FieldMatchFunc matcher, gconstpointer data)
 }
 
 static gboolean
-_match_name (const MuMsgField *field, const gchar* name)
+match_name (const MuMsgField *field, const gchar* name)
 {
 	return strcmp (field->_name, name) == 0;
 }
@@ -166,11 +166,11 @@ const MuMsgField*
 mu_msg_field_from_name (const char* str)
 {
 	g_return_val_if_fail (str, NULL);
-	return _find_field ((FieldMatchFunc)_match_name, str);
+	return find_field ((FieldMatchFunc)match_name, str);
 }
 
 static gboolean
-_match_shortcut (const MuMsgField *field, char kar)
+match_shortcut (const MuMsgField *field, char kar)
 {
 	return field->_shortcut[0] == kar;
 }
@@ -178,7 +178,7 @@ _match_shortcut (const MuMsgField *field, char kar)
 const MuMsgField*
 mu_msg_field_from_shortcut (char kar)
 {
-	return _find_field ((FieldMatchFunc)_match_shortcut,
+	return find_field ((FieldMatchFunc)match_shortcut,
 			   GUINT_TO_POINTER((guint)kar));
 }
 
@@ -191,7 +191,7 @@ match_id (const MuMsgField *field, MuMsgFieldId id)
 const MuMsgField*  
 mu_msg_field_from_id (MuMsgFieldId id)    
 {
-	return _find_field ((FieldMatchFunc)match_id,
+	return find_field ((FieldMatchFunc)match_id,
 			   GUINT_TO_POINTER(id));
 }
 

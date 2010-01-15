@@ -35,7 +35,7 @@
 
 
 static gboolean
-_create_maildir (const char *path, int mode)
+create_maildir (const char *path, int mode)
 {
 	int i;
 	const gchar* subdirs[] = {"new", "cur", "tmp"};
@@ -69,7 +69,7 @@ _create_maildir (const char *path, int mode)
 }
 
 static gboolean
-_create_noindex (const char *path)
+create_noindex (const char *path)
 {	
 	/* create a noindex file if requested */
 	int fd;
@@ -95,10 +95,10 @@ mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex)
 	
 	g_return_val_if_fail (path, FALSE);
 	
-	if (!_create_maildir (path, mode))
+	if (!create_maildir (path, mode))
 		return FALSE;
 
-	if (noindex && !_create_noindex (path))
+	if (noindex && !create_noindex (path))
 		return FALSE;
 	
 	return TRUE;
@@ -107,7 +107,7 @@ mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex)
 /* determine whether the source message is in 'new' or in 'cur';
  * we ignore messages in 'tmp' for obvious reasons */
 static gboolean
-_check_subdir (const char *src, gboolean *in_cur)
+check_subdir (const char *src, gboolean *in_cur)
 {
 	gchar *srcpath;
 
@@ -127,12 +127,12 @@ _check_subdir (const char *src, gboolean *in_cur)
 }
 
 static gchar*
-_get_target_fullpath (const char* src, const gchar *targetpath)
+get_target_fullpath (const char* src, const gchar *targetpath)
 {
 	gchar *targetfullpath, *srcfile, *srcpath, *c;
 	gboolean in_cur;
 	
-	if (!_check_subdir (src, &in_cur))
+	if (!check_subdir (src, &in_cur))
 		return NULL;
 	
 	/* note: make the filename *cough* unique by making the pathname
@@ -170,7 +170,7 @@ mu_maildir_link (const char* src, const char *targetpath)
 	g_return_val_if_fail (src, FALSE);
 	g_return_val_if_fail (targetpath, FALSE);
 	
-	targetfullpath = _get_target_fullpath (src, targetpath);
+	targetfullpath = get_target_fullpath (src, targetpath);
 	if (!targetfullpath)
 		return FALSE;
 	
@@ -237,7 +237,7 @@ process_file (const char* fullpath, MuMaildirWalkMsgCallback cb, void *data)
  * (we're skipping 'tmp' for obvious reasons)
  */
 G_GNUC_CONST static gboolean 
-_is_maildir_new_or_cur (const char *path)
+is_maildir_new_or_cur (const char *path)
 {
 	size_t len;
 	const char *sfx;
@@ -261,7 +261,7 @@ _is_maildir_new_or_cur (const char *path)
 
 /* check if there is a noindex file (MU_WALK_NOINDEX_FILE) in this dir; */
 static gboolean
-_has_noindex_file (const char *path)
+has_noindex_file (const char *path)
 {
 	char *fname;
 
@@ -283,7 +283,7 @@ _has_noindex_file (const char *path)
  * this is slower (extra stat) but at least it works
  */
 static gboolean
-_set_dtype (const char* path, struct dirent *entry)
+set_dtype (const char* path, struct dirent *entry)
 {
 	struct stat statbuf;
 	char fullpath[4096];
@@ -311,7 +311,7 @@ _set_dtype (const char* path, struct dirent *entry)
 
 
 static gboolean
-_ignore_dir_entry (struct dirent *entry)
+ignore_dir_entry (struct dirent *entry)
 {
 	const char *name;
 
@@ -352,7 +352,7 @@ process_dir_entry (const char* path, struct dirent *entry,
 	char* fullpath;
 	
 	/* ignore special dirs: */
-	if (_ignore_dir_entry (entry)) 
+	if (ignore_dir_entry (entry)) 
 		return MU_OK;
 
 	fullpath = g_newa (char, strlen(path) + strlen(entry->d_name) + 1);
@@ -362,14 +362,14 @@ process_dir_entry (const char* path, struct dirent *entry,
 	switch (entry->d_type) {
 	case DT_REG:
 		/* we only want files in cur/ and new/ */
-		if (!_is_maildir_new_or_cur (path)) 
+		if (!is_maildir_new_or_cur (path)) 
 			return MU_OK; 
 		
 		return process_file (fullpath, cb_msg, data);
 		
 	case DT_DIR: {
 		/* if it has a noindex file, we ignore this dir */
-		if (_has_noindex_file (fullpath)) {
+		if (has_noindex_file (fullpath)) {
 			g_debug ("ignoring dir %s", fullpath);
 			return MU_OK;
 		}
@@ -384,7 +384,7 @@ process_dir_entry (const char* path, struct dirent *entry,
 
 
 static struct dirent* 
-_dirent_copy (struct dirent *entry)
+dirent_copy (struct dirent *entry)
 {
 	struct dirent *d = g_slice_new (struct dirent);
 	/* NOTE: simply memcpy'ing sizeof(struct dirent) bytes will
@@ -393,13 +393,13 @@ _dirent_copy (struct dirent *entry)
 }
 
 static void
-_dirent_destroy (struct dirent *entry)
+dirent_destroy (struct dirent *entry)
 {
 	g_slice_free(struct dirent, entry);
 }
 
 static gint
-_dirent_cmp (struct dirent *d1, struct dirent *d2)
+dirent_cmp (struct dirent *d1, struct dirent *d2)
 {
 	return d1->d_ino - d2->d_ino;
 }
@@ -434,17 +434,17 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 
 		/* handle FSs that don't support entry->d_type */
 		if (entry->d_type == DT_UNKNOWN) 
-			_set_dtype (path, entry);
+			set_dtype (path, entry);
 		
-		lst = g_list_prepend (lst, _dirent_copy(entry));
+		lst = g_list_prepend (lst, dirent_copy(entry));
 	}
 	
-	c = lst = g_list_sort (lst, (GCompareFunc)_dirent_cmp);
+	c = lst = g_list_sort (lst, (GCompareFunc)dirent_cmp);
 	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) 
 		result = process_dir_entry (path, (struct dirent*)c->data, 
 					    msg_cb, dir_cb, data);
 
-	g_list_foreach (lst, (GFunc)_dirent_destroy, NULL);
+	g_list_foreach (lst, (GFunc)dirent_destroy, NULL);
 	g_list_free (lst);
 	
 	closedir (dir);
@@ -493,7 +493,7 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 
 
 static gboolean
-_clear_links (const gchar* dirname, DIR *dir)
+clear_links (const gchar* dirname, DIR *dir)
 {
 	struct dirent *entry;
 	gboolean rv;
@@ -510,7 +510,7 @@ _clear_links (const gchar* dirname, DIR *dir)
 
 		/* handle FSs that don't support entry->d_type */
 		if (entry->d_type == DT_UNKNOWN) 
-			_set_dtype (dirname, entry);
+			set_dtype (dirname, entry);
 		
 		/* ignore non-links / non-dirs */
 		if (entry->d_type != DT_LNK && entry->d_type != DT_DIR)
@@ -553,7 +553,7 @@ mu_maildir_clear_links (const gchar* path)
 
 	g_debug ("remove symlinks from %s", path);
 
-	rv = _clear_links (path, dir);
+	rv = clear_links (path, dir);
 	closedir (dir);
 
 	return rv;

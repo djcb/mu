@@ -34,7 +34,7 @@
 #include "mu-util.h"
 
 static MuCmd 
-_cmd_from_string (const char* cmd)
+cmd_from_string (const char* cmd)
 {
 	if (!cmd)
 		return MU_CMD_UNKNOWN;
@@ -67,7 +67,7 @@ _cmd_from_string (const char* cmd)
 
 
 static gboolean
-_print_query (MuQueryXapian *xapian, const gchar *query)
+print_query (MuQueryXapian *xapian, const gchar *query)
 {
 	char *querystr;
 
@@ -82,7 +82,7 @@ _print_query (MuQueryXapian *xapian, const gchar *query)
 
 
 static const gchar*
-_display_field (MuMsgXapian *row, const MuMsgField* field)
+display_field (MuMsgXapian *row, const MuMsgField* field)
 {
 	gint64 val;
 
@@ -119,7 +119,7 @@ _display_field (MuMsgXapian *row, const MuMsgField* field)
 
 /* returns NULL if there is an error */
 const MuMsgField*
-_sort_field_from_string (const char* fieldstr)
+sort_field_from_string (const char* fieldstr)
 {
 	const MuMsgField *field;
 		
@@ -138,7 +138,7 @@ _sort_field_from_string (const char* fieldstr)
 
 
 static gboolean
-_print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
+print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 {
 	MuMsgXapian *row;
 	const MuMsgField *sortfield;
@@ -147,7 +147,7 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	
 	sortfield = NULL;
 	if (opts->sortfield) {
-		sortfield = _sort_field_from_string (opts->sortfield);
+		sortfield = sort_field_from_string (opts->sortfield);
 		if (!sortfield) /* error occured? */
 			return FALSE;
 	}
@@ -177,7 +177,7 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 				printlen += printf ("%c", *fields);
 			else
 				printlen += printf ("%s",
-						    _display_field(row, field));
+						    display_field(row, field));
 			++fields;
 		}
 		
@@ -195,7 +195,7 @@ _print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 
 
 static gboolean
-_do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts,
+do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts,
 		 const gchar **params)
 {
 	gchar *query;
@@ -206,9 +206,9 @@ _do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts,
 	/* if xquery is set, we print the xapian query instead of the
 	 * output; this is for debugging purposes */
 	if (opts->xquery) 
-		retval = _print_query (xapian, query);
+		retval = print_query (xapian, query);
 	else
-		retval = _print_rows (xapian, query, opts);
+		retval = print_rows (xapian, query, opts);
 	
 	g_free (query);
 
@@ -219,7 +219,7 @@ _do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts,
 /* create a linksdir if it not exist yet; if it already existed,
  * remove old links if opts->clearlinks was specified */
 static gboolean
-_create_or_clear_linksdir_maybe (MuConfigOptions* opts)
+create_or_clear_linksdir_maybe (MuConfigOptions* opts)
 {
 	if (access (opts->linksdir, F_OK) != 0) {
 
@@ -233,7 +233,7 @@ _create_or_clear_linksdir_maybe (MuConfigOptions* opts)
 }
 
 static gboolean
-_do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
+do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 		  const gchar **params)
 {
 	gchar *query;
@@ -241,7 +241,7 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 	MuMsgXapian *row;
 	const MuMsgField *pathfield;
 
-	if (!_create_or_clear_linksdir_maybe (opts))
+	if (!create_or_clear_linksdir_maybe (opts))
 		return FALSE;
 	
 	query = mu_query_xapian_combine (params, FALSE);
@@ -287,7 +287,7 @@ _do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 
 
 static gboolean
-_query_params_valid (MuConfigOptions *opts)
+query_params_valid (MuConfigOptions *opts)
 {
 	if (opts->linksdir) 
 		if (opts->xquery) {
@@ -311,13 +311,13 @@ _query_params_valid (MuConfigOptions *opts)
 
 
 gboolean
-_cmd_find (MuConfigOptions *opts)
+cmd_find (MuConfigOptions *opts)
 {
 	MuQueryXapian *xapian;
 	gboolean rv;
 	const gchar **params;
 		
-	if (!_query_params_valid (opts))
+	if (!query_params_valid (opts))
 		return FALSE;
 	
 	/* first param is 'query', search params are after that */
@@ -333,9 +333,9 @@ _cmd_find (MuConfigOptions *opts)
 	}
 
 	if (opts->linksdir)
-		rv = _do_output_links (xapian, opts, params);
+		rv = do_output_links (xapian, opts, params);
 	else
-		rv = _do_output_text (xapian, opts, params);
+		rv = do_output_text (xapian, opts, params);
 	
 	mu_query_xapian_destroy (xapian);
 	mu_msg_gmime_uninit();
@@ -345,7 +345,7 @@ _cmd_find (MuConfigOptions *opts)
 
 
 static gboolean
-_check_index_params (MuConfigOptions *opts)
+check_index_params (MuConfigOptions *opts)
 {
 	if (opts->linksdir || opts->xquery) {
 		g_warning ("Invalid option(s) for command");
@@ -363,7 +363,7 @@ _check_index_params (MuConfigOptions *opts)
 	
 
 static MuResult
-_index_msg_cb  (MuIndexStats* stats, void *user_data)
+index_msg_cb  (MuIndexStats* stats, void *user_data)
 {
 	char *kars="-\\|/";
 	char output[314];
@@ -387,11 +387,11 @@ _index_msg_cb  (MuIndexStats* stats, void *user_data)
 
 
 static gboolean
-_cmd_index (MuConfigOptions *opts)
+cmd_index (MuConfigOptions *opts)
 {
 	int rv;
 
-	if (!_check_index_params (opts))
+	if (!check_index_params (opts))
 		return FALSE;
 
 	mu_msg_gmime_init ();
@@ -412,17 +412,17 @@ _cmd_index (MuConfigOptions *opts)
 		
 		rv = mu_index_run (midx, opts->maildir,
 				   opts->reindex, &stats,
-				   opts->quiet ? NULL : _index_msg_cb,
+				   opts->quiet ? NULL : index_msg_cb,
 				   NULL, NULL);
 		if (!opts->nocleanup) {
 			stats._processed = 0; /* start over */
 			mu_index_cleanup (midx, &stats,
-					  opts->quiet ? NULL : _index_msg_cb,
+					  opts->quiet ? NULL : index_msg_cb,
 					  NULL);
 		}
 
 		if (!opts->quiet) {
-			_index_msg_cb (&stats, NULL);
+			index_msg_cb (&stats, NULL);
 			g_print ("\n");
 		}
 
@@ -439,7 +439,7 @@ _cmd_index (MuConfigOptions *opts)
 
 
 MuResult
-_cleanup_cb (MuIndexStats *stats, void *user_data)
+cleanup_cb (MuIndexStats *stats, void *user_data)
 {
 	char *kars="-\\|/";
 	char output[100];
@@ -464,7 +464,7 @@ _cleanup_cb (MuIndexStats *stats, void *user_data)
 
 
 static int
-_cmd_mkdir (MuConfigOptions *opts)
+cmd_mkdir (MuConfigOptions *opts)
 {
 	int i;
 	
@@ -492,7 +492,7 @@ _cmd_mkdir (MuConfigOptions *opts)
 
 #if 0 /* currently, turned off */
 static gboolean
-_cmd_link (MuConfigOptions *opts)
+cmd_link (MuConfigOptions *opts)
 {
 	if (!opts->params[0])
 		return FALSE;  /* shouldn't happen */
@@ -507,7 +507,7 @@ _cmd_link (MuConfigOptions *opts)
 
 
 static gboolean
-_cmd_help (MuConfigOptions *opts)
+cmd_help (MuConfigOptions *opts)
 {
 	/* FIXME: get context-sensitive help */
 	_show_version ();
@@ -515,7 +515,7 @@ _cmd_help (MuConfigOptions *opts)
 }
 
 static gboolean
-_cmd_cleanup (MuConfigOptions *opts)
+cmd_cleanup (MuConfigOptions *opts)
 {
 	int rv;
 	
@@ -557,7 +557,7 @@ _cmd_cleanup (MuConfigOptions *opts)
 
 
 static gboolean
-_show_usage (gboolean noerror)
+show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
@@ -573,7 +573,7 @@ _show_usage (gboolean noerror)
 }
 
 static gboolean
-_show_version (void)
+show_version (void)
 {
 	const char* msg =
 		"mu (mail indexer / searcher version) " VERSION "\n\n"
@@ -590,34 +590,31 @@ _show_version (void)
 }
 
 
-
-
-
 gboolean
 mu_cmd_execute (MuConfigOptions *opts)
 {
 	MuCmd cmd;
 	
 	if (opts->version)
-		return _show_version ();
+		return show_version ();
 	
 	if (!opts->params||!opts->params[0]) /* no command? */
-		return _show_usage (FALSE);
+		return show_usage (FALSE);
 	
-	cmd = _cmd_from_string (opts->params[0]);
+	cmd = cmd_from_string (opts->params[0]);
 
 	switch (cmd) {
 
-	case MU_CMD_INDEX:   return _cmd_index (opts);
-	case MU_CMD_FIND:    return _cmd_find (opts);
+	case MU_CMD_INDEX:   return cmd_index (opts);
+	case MU_CMD_FIND:    return cmd_find (opts);
 
-	case MU_CMD_MKDIR:   return _cmd_mkdir (opts);
+	case MU_CMD_MKDIR:   return cmd_mkdir (opts);
 
 		/* case MU_CMD_CLEANUP: return _cmd_cleanup (opts); */
 		/* case MU_CMD_HELP:    return _cmd_help  (opts); */
 		/* case MU_CMD_LINK:    return _cmd_link  (opts); */
 
-	case MU_CMD_UNKNOWN: return _show_usage (FALSE);
+	case MU_CMD_UNKNOWN: return show_usage (FALSE);
 	default:
 		g_return_val_if_reached (FALSE);
 	}	

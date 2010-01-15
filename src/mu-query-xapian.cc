@@ -92,8 +92,8 @@ _get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          | 
 			 Xapian::QueryParser::FLAG_PHRASE           |
-			 Xapian::QueryParser::FLAG_LOVEHATE         |
-			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
+			 //	 Xapian::QueryParser::FLAG_LOVEHATE         |
+			 //      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
 			 Xapian::QueryParser::FLAG_WILDCARD         |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_PARTIAL);

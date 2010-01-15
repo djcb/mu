@@ -29,7 +29,7 @@
 #include "mu-log.h"
 
 static gboolean
-_init_log (MuConfigOptions *opts)
+init_log (MuConfigOptions *opts)
 {
 	gboolean rv;
 	
@@ -47,7 +47,7 @@ _init_log (MuConfigOptions *opts)
 }
 
 static gboolean
-_parse_params (MuConfigOptions *config, int *argcp, char ***argvp)
+parse_params (MuConfigOptions *config, int *argcp, char ***argvp)
 {
 	GError *error = NULL;
 	GOptionContext *context;
@@ -88,10 +88,10 @@ main (int argc, char *argv[])
 	do {
 		rv = FALSE;
 
-		if (!_parse_params (&config, &argc, &argv))
+		if (!parse_params (&config, &argc, &argv))
 			break;
 
-		if (!_init_log (&config))
+		if (!init_log (&config))
 			break;
 		
 		rv = mu_cmd_execute (&config);

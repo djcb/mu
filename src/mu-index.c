@@ -79,7 +79,7 @@ typedef struct _MuIndexCallbackData MuIndexCallbackData;
 
 
 static MuResult
-_insert_or_update_maybe (const char* fullpath, time_t filestamp,
+insert_or_update_maybe (const char* fullpath, time_t filestamp,
 			 MuIndexCallbackData *data, gboolean *updated)
 { 
 	MuMsgGMime *msg;
@@ -131,7 +131,7 @@ _insert_or_update_maybe (const char* fullpath, time_t filestamp,
 }
 
 static MuResult
-_run_msg_callback_maybe (MuIndexCallbackData *data)
+run_msg_callback_maybe (MuIndexCallbackData *data)
 {
 	if (data && data->_idx_msg_cb) {
 		
@@ -153,12 +153,12 @@ on_run_maildir_msg (const char* fullpath, time_t filestamp,
 	MuResult result;
 	gboolean updated;
 	
-	result = _run_msg_callback_maybe (data);
+	result = run_msg_callback_maybe (data);
 	if (result != MU_OK)
 		return result;
 			
 	/* see if we need to update/insert anything...*/
-	result = _insert_or_update_maybe (fullpath, filestamp, data,
+	result = insert_or_update_maybe (fullpath, filestamp, data,
 					  &updated);
 	
 	/* update statistics */
@@ -205,7 +205,7 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 }
 
 static gboolean
-_check_path (const char* path)
+check_path (const char* path)
 {
 	g_return_val_if_fail (path, FALSE);
 	
@@ -230,7 +230,7 @@ mu_index_run (MuIndex *index, const char* path,
 	
 	g_return_val_if_fail (index && index->_xapian, MU_ERROR);
 	
-	if (!_check_path (path))
+	if (!check_path (path))
 		return MU_ERROR;
 
 	if (stats)
@@ -286,7 +286,7 @@ mu_index_stats (MuIndex *index, const char* path,
 	
 	g_return_val_if_fail (index, MU_ERROR);
 
-	if (!_check_path (path))
+	if (!check_path (path))
 		return MU_ERROR;
 
 	if (stats)
@@ -317,7 +317,7 @@ typedef struct _CleanupData CleanupData;
 
 
 static MuResult
-_foreach_doc_cb (const char* path, CleanupData *cudata)
+foreach_doc_cb (const char* path, CleanupData *cudata)
 {
 	MuResult rv;
 	
@@ -358,7 +358,7 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 	cudata._user_data = user_data;
 	
 	rv = mu_store_xapian_foreach (index->_xapian,
-				      (MuStoreXapianForeachFunc)_foreach_doc_cb,
+				      (MuStoreXapianForeachFunc)foreach_doc_cb,
 				      &cudata);
 	mu_store_xapian_flush (index->_xapian);
 

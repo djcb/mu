@@ -207,7 +207,7 @@ mu_msg_gmime_get_from (MuMsgGMime *msg)
 
 
 static const char*
-_get_recipient (MuMsgGMime *msg, GMimeRecipientType rtype, StringFields field)
+get_recipient (MuMsgGMime *msg, GMimeRecipientType rtype, StringFields field)
 {
 	/* can only be set once */
 	if (!msg->_fields[field]) {
@@ -233,14 +233,14 @@ const char*
 mu_msg_gmime_get_to (MuMsgGMime *msg)
 {
 	g_return_val_if_fail (msg, NULL);
-	return _get_recipient (msg, GMIME_RECIPIENT_TYPE_TO, TO_FIELD);
+	return get_recipient (msg, GMIME_RECIPIENT_TYPE_TO, TO_FIELD);
 }
 
 const char*
 mu_msg_gmime_get_cc (MuMsgGMime *msg)
 {
 	g_return_val_if_fail (msg, NULL);
-	return _get_recipient (msg, GMIME_RECIPIENT_TYPE_CC, CC_FIELD);
+	return get_recipient (msg, GMIME_RECIPIENT_TYPE_CC, CC_FIELD);
 }
 
 
@@ -467,7 +467,7 @@ typedef struct _GetBodyData GetBodyData;
 
 
 static gboolean
-_looks_like_attachment (GMimeObject *part)
+looks_like_attachment (GMimeObject *part)
 {
 	const char *str;
 	GMimeContentDisposition *disp;
@@ -503,7 +503,7 @@ get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 		return;
 	}
 	
-	if (_looks_like_attachment (part))
+	if (looks_like_attachment (part))
 		return; /* not the body */
 	
 	/* is it right content type? */
@@ -732,7 +732,7 @@ mu_msg_gmime_get_field_numeric (MuMsgGMime *msg, const MuMsgField* field)
 
 
 static gboolean
-_fill_contact (MuMsgContact *contact, InternetAddress *addr,
+fill_contact (MuMsgContact *contact, InternetAddress *addr,
 	       MuMsgContactType ctype)
 {
 	if (!addr)
@@ -752,7 +752,7 @@ _fill_contact (MuMsgContact *contact, InternetAddress *addr,
 
 
 static int
-_address_list_foreach (InternetAddressList *addrlist,
+address_list_foreach (InternetAddressList *addrlist,
 		       MuMsgContactType     ctype,
 		       MuMsgGMimeContactsCallback cb, 
 		       void *ptr)
@@ -765,8 +765,8 @@ _address_list_foreach (InternetAddressList *addrlist,
 	for (i = 0, rv = 0; i != internet_address_list_length(addrlist); ++i) {
 
 		MuMsgContact contact;
-		if (!_fill_contact(&contact,
-				   internet_address_list_get_address (addrlist, i),
+		if (!fill_contact(&contact,
+				  internet_address_list_get_address (addrlist, i),
 				   ctype))
 		{
 			MU_WRITE_LOG ("ignoring contact");
@@ -797,7 +797,7 @@ mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb,
 	list = internet_address_list_parse_string (
 		g_mime_message_get_sender (msg->_mime_msg));
 
-	rv = _address_list_foreach (list, MU_MSG_CONTACT_TYPE_FROM, cb, ptr);
+	rv = address_list_foreach (list, MU_MSG_CONTACT_TYPE_FROM, cb, ptr);
 
 	if (list)
 		g_object_unref (G_OBJECT(list));
@@ -831,7 +831,7 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsCallback c
 		InternetAddressList *addrlist;
 		addrlist = g_mime_message_get_recipients (msg->_mime_msg,
 							  ctypes[i]._gmime_type);
-		rv = _address_list_foreach (addrlist, ctypes[i]._type,cb, ptr);
+		rv = address_list_foreach (addrlist, ctypes[i]._type,cb, ptr);
 		if (rv != 0)
 			break;
 	}

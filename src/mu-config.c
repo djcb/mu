@@ -117,7 +117,7 @@ mu_config_init (MuConfigOptions *opts)
 }
 
 static gchar*
-_guess_muhome (void)
+guess_muhome (void)
 {
 	const char* home;
 
@@ -140,7 +140,7 @@ mu_config_set_defaults (MuConfigOptions *opts)
 	g_return_if_fail (opts);
 	
 	if (!opts->muhome)
-		opts->muhome = _guess_muhome ();
+		opts->muhome = guess_muhome ();
 	
 	/* note: xpath is is *not* settable from the cmdline */
 	opts->xpath = g_strdup_printf ("%s%c%s", opts->muhome,G_DIR_SEPARATOR,
