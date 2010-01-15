@@ -88,6 +88,7 @@ _create_noindex (const char *path)
 }
 
 
+
 gboolean
 mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex)
 {
@@ -278,6 +279,37 @@ _has_noindex_file (const char *path)
 	return FALSE;
 }
 
+/* if the file system does not support entry->d_type, we add it ourselves
+ * this is slower (extra stat) but at least it works
+ */
+static gboolean
+_set_dtype (const char* path, struct dirent *entry)
+{
+	struct stat statbuf;
+	char fullpath[4096];
+	
+	snprintf (fullpath, sizeof(fullpath), "%s%c%s",
+		  path, G_DIR_SEPARATOR, entry->d_name);
+
+	if (stat (fullpath, &statbuf) != 0) {
+		g_warning ("stat failed on %s: %s", fullpath,
+			   strerror(errno));
+		return FALSE;
+	}
+
+	/* we only care about dirs, regular files and links */
+	if (S_ISREG (statbuf.st_mode))
+		entry->d_type = DT_REG;
+	else if (S_ISDIR (statbuf.st_mode))
+		entry->d_type = DT_DIR;
+	else if (S_ISLNK (statbuf.st_mode))
+		entry->d_type = DT_LNK;
+	
+	return TRUE;
+}
+
+
+
 static gboolean
 _ignore_dir_entry (struct dirent *entry)
 {
@@ -398,8 +430,14 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 	/* we sort the inodes, which makes file-access much faster on 
 	   some filesystems, such as ext3fs */
 	lst = NULL;
-	while ((entry = readdir (dir)))
+	while ((entry = readdir (dir))) {
+
+		/* handle FSs that don't support entry->d_type */
+		if (entry->d_type == DT_UNKNOWN) 
+			_set_dtype (path, entry);
+		
 		lst = g_list_prepend (lst, _dirent_copy(entry));
+	}
 	
 	c = lst = g_list_sort (lst, (GCompareFunc)_dirent_cmp);
 	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) 
@@ -469,6 +507,10 @@ _clear_links (const gchar* dirname, DIR *dir)
 		/* ignore dot thingies */
 		if (entry->d_name && entry->d_name[0] == '.')
 			continue;
+
+		/* handle FSs that don't support entry->d_type */
+		if (entry->d_type == DT_UNKNOWN) 
+			_set_dtype (dirname, entry);
 		
 		/* ignore non-links / non-dirs */
 		if (entry->d_type != DT_LNK && entry->d_type != DT_DIR)
