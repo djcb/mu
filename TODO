@@ -32,11 +32,12 @@
    - [ ] detect mail threads
    - [ ] --mode for mkdir
    - [ ] signal handler
+   - [ ] clean up mu-msg-field
    - [ ] mu help <cmd>
    - [ ] add move-mail support
    - [ ] add symlink-following option for index
    - [ ] test suite
-   - [ ] moving msg field formatting to MuMsgField
+   - [ ] moving msg field formatting to MuMsgField (?)
    - [ ] bookmarks
    - [ ] mu-setup (?)
    - [ ] config system (config file) (?)

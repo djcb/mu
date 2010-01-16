@@ -16,7 +16,7 @@
       on the same line as the statement, except for functions. Tabs/spaces
       have width 8.
 
-   2. lines must not exceed 80 characters
+   2. lines must not exceed 80 characters (C) or 100 characters (C++)
 
    3. functions must not exceed 50 lines (there may be rare exceptions), and
       30 lines is already pretty long.
@@ -34,10 +34,17 @@
       declares a function of 'mu_foo_bar (int a);', mu-foo.c implements this.
 
    8. non-global functions *don't* have the module prefix, and are declared
-      static. Their names may start with '_'
+      static.'
 
    9. functions have their return type on a separate line before the function
-      name
+      name, so:
+
+      int
+      foo (const char* bar)
+      {
+	....
+      }
+
 
    10. in C code, variable-declarations are at the beginning of a block; in
        principle, C++ follows that same guideline, unless for heavy yet
