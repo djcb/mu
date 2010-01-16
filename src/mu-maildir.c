@@ -17,6 +17,8 @@
 **  
 */
 
+#include "config.h"
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -398,11 +400,13 @@ dirent_destroy (struct dirent *entry)
 	g_slice_free(struct dirent, entry);
 }
 
+#ifdef HAVE_STRUCT_DIRENT_D_INO	
 static gint
 dirent_cmp (struct dirent *d1, struct dirent *d2)
 {
 	return d1->d_ino - d2->d_ino;
 }
+#endif /*HAVE_STRUCT_DIRENT_D_INO*/
 
 static MuResult
 process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb, 
@@ -438,8 +442,10 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 		
 		lst = g_list_prepend (lst, dirent_copy(entry));
 	}
-	
+#if HAVE_STRUCT_DIRENT_D_INO		
 	c = lst = g_list_sort (lst, (GCompareFunc)dirent_cmp);
+#endif /*HAVE_STRUCT_DIRENT_D_INO*/	
+
 	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) 
 		result = process_dir_entry (path, (struct dirent*)c->data, 
 					    msg_cb, dir_cb, data);
@@ -489,7 +495,6 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 
 	return MU_ERROR;
 }
-
 
 
 static gboolean

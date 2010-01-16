@@ -31,9 +31,8 @@ AC_DEFINE(MU_XAPIAN_DB_VERSION,["0.6"], [Schema version of the database])
 
 AC_PROG_LIBTOOL
 
-if test x$prefix = xNONE; then
-   prefix=/usr/local
-fi
+AS_IF([test x$prefix = xNONE],[
+   prefix=/usr/local])
 AC_SUBST(prefix)
 
 AC_PROG_CC
@@ -41,14 +40,31 @@ AC_PROG_CXX
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 
-# have pkg-config?
+# require pkg-config
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
-if test "x$PKG_CONFIG" = "xno"; then
+AS_IF([test "x$PKG_CONFIG" = "xno"],[
    AC_MSG_ERROR([
-   *** The pkg-config script could not be found. Please make sure it is
+   *** The pkg-config script could not be found. Make sure it is
    *** in your path, or set the PKG_CONFIG environment variable
    *** to the full path to pkg-config.])
-fi
+   ])
+
+#
+# currently, we don' support systems without d_type in their struct
+# dirent (Solaris 10); but we do support FSs for which d_type is always
+# DT_UNKNOWN (Like ReiserFS, XFS on Linux)
+#
+# note, we could work around this if there are many people for which
+# this breaks
+AC_STRUCT_DIRENT_D_TYPE
+AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],[
+   AC_MSG_ERROR([
+   *** We need the d_type-member in struct dirent, but unfortunately
+   *** your system does not seem to have it])
+   ])
+# support for d_ino in struct dirent is optional     
+AC_STRUCT_DIRENT_D_INO
+
 
 # glib2?
 PKG_CHECK_MODULES(GLIB,glib-2.0)
@@ -63,16 +79,17 @@ AC_SUBST(GMIME_LIBS)
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
 AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
-if test "x$XAPIAN" = "xno"; then
-      AC_MSG_ERROR([
+AS_IF([test "x$XAPIAN" = "xno"],[
+   AC_MSG_ERROR([
    *** xapian could not be found; please install it
-   *** e.g., in debian/ubuntu the package would be 'libxapian-dev'])   
-else
+   *** e.g., in debian/ubuntu the package would be 'libxapian-dev'])
+],[
    XAPIAN_CXXFLAGS=`$XAPIAN --cxxflags`
    XAPIAN_LIBS=`$XAPIAN --libs`		
    have_xapian="yes"
    AC_DEFINE(HAVE_XAPIAN,[1],[Whether we have Xapian])
-fi
+])
+   
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
@@ -82,5 +99,8 @@ Makefile
 src/Makefile
 ])
 
+
 echo
-echo "now, type 'make' to build mu"
+echo "-----------------------------"
+echo "mu configuration is complete."
+echo "type 'make' to build it"
