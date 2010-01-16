@@ -41,6 +41,7 @@ mu_SOURCES=			\
 	mu-msg-xapian-priv.hh	\
 	mu-msg-xapian.cc	\
 	mu-msg-xapian.h		\
+	mu-msg.h		\
 	mu-query-xapian.cc	\
 	mu-query-xapian.h	\
 	mu-result.h		\

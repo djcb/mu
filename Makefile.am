@@ -14,11 +14,11 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-SUBDIRS=src
+SUBDIRS=src man
 
 # calculate the cyclomatic-complexity, which should not go over 10
-#cc10:
-#	@pmccabe `find . -regex '.*\.\(c\|cc\|h\)$'`  | sort -nr | awk '($$1 > 10)'
+cc10:
+	@pmccabe `find . -regex '.*\.\(c\|cc\|h\)$'`  | sort -nr | awk '($$1 > 10)'
 
 EXTRA_DIST=	\
 	TODO	\

@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.6],[http://www.djcbsoftware.nl/code/mu])
+AC_INIT([mu],[0.6-beta],[http://www.djcbsoftware.nl/code/mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.c])
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -97,10 +97,10 @@ AC_SUBST(XAPIAN_LIBS)
 AC_OUTPUT([
 Makefile
 src/Makefile
+man/Makefile
 ])
 
 
 echo
-echo "-----------------------------"
 echo "mu configuration is complete."
 echo "type 'make' to build it"
