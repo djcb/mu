@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-15">
+<title>mu - e-mail searching and indexing</title>
+<style type="text/css">
+body {
+	margin:0px;
+        background:#666666;
+	color: black;
+	padding: 0px;
+	font-family: arial, Helvetica, 'Bitstream Vera Sans', 'Luxi Sans', Verdana,
+                     Sans-Serif;
+	font-size: 12px;
+}
+a.menu         {font-weight: bold}
+a.menu:link    {color: #ffffff; text-decoration: none;  }
+a.menu:active  {color: #ff0000; text-decoration: none; }
+a.menu:visited {color: #ffffff; text-decoration: none; }
+a.menu:hover   {color: #ff0000; text-decoration: underline; }
+
+.mine          {color: #ffffff; font-weight: bold}
+</style> 
+</head>
+
+<body>
+<table width="100%" bgcolor="#666666">
+<tr><td><img src="mu-small.png" align="left">
+<td align="right" class="menu">
+  <a class="menu" href="#welcome" >welcome</a> |
+  <a class="menu" href="#news" >news</a> |
+  <a class="menu" href="#features" >features</a> |
+  <a class="menu" href="#download" >download</a> |
+  <a class="menu" href="#repo"     >repository</a> |
+  <a class="menu" href="#building" >building</a> |
+  <a class="menu" href="#license" >license</a> |
+  <a class="menu" href="#contact" >contact</a>                     
+</table>
+<table width="800" align="center" bgcolor="#cccccc">
+<tr><td>  
+<!-- <img src="mu.jpg" align="left"> -->
+<img src="mu.jpg" align="right">
+  <!-- <img src="mu.png" align="right"> -->
+
+<h2><a name="welcome">welcome to mu</a></h2>
+
+E-mail is the 'flow' in the work flow of many people. Consequently, one spends
+a <em>lot</em> of time searching for old e-mails, to dig up some important
+piece of information. With people having tens of thousands of e-mails (or
+more), this is becoming harder and harder. How to find that one e-mail in an
+evergrowing haystack?
+
+<p>Enter <strong>mu</strong>. 'mu' is a set of command-line tools for
+Linux/Unix that enable you to quickly find the e-mails you are looking
+for.
+
+<p>First there is <tt>mu index</tt> which fills a database with
+information about all your e-mails; this may take a couple of minutes
+the first time you do it, but after that it's a lot faster.
+
+<pre>
+  $ mu index
+</pre>
+It tries to pick reasonable defaults, but you can of course specify
+your own options. You can run <tt>mu index</tt> periodically to keep
+your database up-to-date.
+
+<p>After building the database, it's easy to search for messages. For example:
+<pre>
+  # get all Smith's mails with 'capybara' in the subject line
+  $ mu find f:smith capybara
+
+  # get the mails in the archive folder where Mary was Cc'd 
+  $ mu find p:archive c:mary 
+</pre>
+
+The way to express the searches is a bit cryptic at first, but easy to
+learn (in the author's humble opinion); the mu manpage discusses
+syntax and usage, and contains examples.
+  
+<p><strong>mu</strong> is <em>Free Software</em> (GPLv3), runs on Unix/Linux-based
+systems, and combines the power of the <a href="http://sqlite.org" >SQLite</a>
+database and the <a href="http://www.xapian.org" >Xapian</a> text indexing
+engine. <strong>Important</strong>: for mu to work, your mails must be stored in a
+set of <a href="http://www.qmail.org/qmail-manual-html/man5/maildir.html"
+>maildirs</a>
+
+<h2><a name="news" >news</a></h2>
+<ul>
+  <li>[2010-01-26] <strong>mu version 0.6-beta</strong>. After some
+  hiatus in the release schedule, <tt>mu</tt> is back now! The new
+  version is a total overhaul of what was there before. It's smaller
+  and faster, and removes quite a bit of the (in the eyes of the
+  author) needless complexity.
+
+  It adds some new features that users asked for, such as a way to
+  exclude directories from indexing (simply put a file called
+  <tt>.noindex</tt> in it.
+
+  The queries are bit less featureful, the more useful parts will
+  slowly be added again in future versions.
+
+  Note, this is version 0.6-beta, the 'real' 0.6 will follow in a few
+  weeks.
+  
+  <li>[2008-11-01] <strong>mu version 0.4</strong> released. This version adds
+  extensions to the query language and the ability to get statistics about the
+  messages that match some queries. <tt>mu-index</tt> is substantially faster.
+  Also, <tt>mu-msginfo</tt> has been extended. Small optimizations have been
+  done, and some bugs have been fixed.  Finally, some GTK+-widgets have been
+  added; they are to be considered 'experimental'.
+
+  <li>[2008-09-25] <strong>mu version 0.3</strong> released; this version adds
+  further signicant indexing speedups (esp. on <tt>ext3</tt>-file
+  systems). Added searching for relative dates ('3w' for 'three weeks ago');
+  search for message properties such as has-attachment/signed/encrypted;
+  search for message priority; updated documentation; define bookmarks for
+  search queries; more unit-tests.
+
+  <li>[2008-09-10] <strong>mu version 0.2</strong> released; this version adds
+  supports for message-body searches (Xapian); indexing is much faster; added
+  Maildir++ support; sorting of results; added
+  <tt>mu-mkmdir</tt>/<tt>mu-msginfo</tt>. Improved documentation, unit tests.
+
+  <li>[2008-08-25] <strong>mu version 0.1</strong> released
+</ul>
+
+<h2><a name="features" >features</a></h2>
+<strong><tt>mu find</tt></strong>:
+<ul>
+  <li>search for sender and recipient; subject,message body text
+  <li>output to stdout, or as maildirs with links to the original messages
+</ul>
+<strong><tt>mu index</tt></strong>:
+<ul>
+  <li>scan messages in recursive Maildirs, Maildir++ or separate files;
+  <li>only changed messages are considered when re-indexing;
+</ul>
+  
+<h2><a name="download" >download and license</a></h2>
+
+You can download mu releases from their <a
+href="http://code.google.com/p/mu0/downloads/list" >download page</a> (Google
+Code). <tt>mu</tt> is released under the terms of the <a
+href="http://www.gnu.org/licenses/gpl-3.0.html" >GNU General Public
+License</a> (GPL), version 3 or later.
+<P>
+
+
+<h2><a name="repo" repository</a></h2>
+
+The mu source code is available in Gitorious; get it from there:
+<pre>
+  git clone git://gitorious.org/mu/mu-ng.git
+</pre>
+
+This is the source code for the new versions of mu (0.6 beta and
+beyond). Unless you want to track development, it's better to track
+the released versions.
+
+  
+
+<h2><a name="building">building and dependencies</a></h2>
+
+<tt>mu</tt> uses <a href="http://spruce.sourceforge.net/gmime/" >GMime
+2.4</a> and <a href="http://xapian.org" >Xapian</a>; you'll need to
+have those installed to build <tt>mu</tt>. On Debian/Ubuntu, the
+following should get you all you need:
+
+<pre> # apt-get install libxapian-dev libgmime-2.4-dev </pre>
+(obviously, you also need the normal build tools;
+<tt>gcc</tt>/<tt>g++</tt>, <tt>make</tt> and friends).
+
+<p>mu uses autotools, so building follows the normal
+<tt>configure</tt>/<tt>make</tt> pattern.
+
+<p>This should work without any problems at least on recent Debian/Ubuntu, for
+both 32-bit and 64-bit architectures. If it does not work for your
+distribution, please <a href="http://code.google.com/p/mu0/issues/list" >file
+a bug</a> with all the error messages, relevant information about your system
+etc. that you got.
+
+<h2><img src="mu.png" align="right"><a name="contact" >contact</a></h2> If you
+think you have found a bug, or you have a good idea for a feature, please put
+them in the <a href="http://code.google.com/p/mu0/issues/list" >issue list</a>
+(Google Code).
+
+<p><tt>mu</tt> was designed and implemented by me, <strong>Dirk-Jan
+C. Binnema</strong>, as a hobby project for my copious free time. It has no
+relation to my employer. <p>You can send e-mail to
+djcb-at-djcbsoftware-dot-nl.
+
+<p>Or, if you're interested, you can read my <a
+href="http://www.djcbsoftware.nl/ChangeLog" >Dutch blog</a> or <a
+href="http://djcbflux.blogspot.com" >English blog</a>.
+
+</table>
+<p>
+<div align="right" class="mine">
+&copy;2008 Dirk-Jan C. Binnema
+</div>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-578531-1");
+pageTracker._trackPageview();
+</script>
+</body> </html>
