@@ -89,12 +89,9 @@ create_noindex (const char *path)
 	return TRUE;
 }
 
-
-
 gboolean
 mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex)
-{
-	
+{	
 	g_return_val_if_fail (path, FALSE);
 	
 	if (!create_maildir (path, mode))

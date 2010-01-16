@@ -222,7 +222,6 @@ static gboolean
 create_or_clear_linksdir_maybe (MuConfigOptions* opts)
 {
 	if (access (opts->linksdir, F_OK) != 0) {
-
 		if (!mu_maildir_mkmdir (opts->linksdir, 0700, TRUE)) 
 			return FALSE;
 
