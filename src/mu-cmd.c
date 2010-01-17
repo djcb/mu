@@ -560,7 +560,7 @@ show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, find, cleanup, mkdir\n"
+		"\twhere command is one of index, find, mkdir\n"
 		"see mu(1) for more information\n";
 
 	if (noerror)
