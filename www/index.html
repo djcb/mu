@@ -74,6 +74,18 @@ your database up-to-date.
 <p>After building the database, it's easy to search for messages. For example:
 <ul>
   <li>
+    <i>get all mails about birds <b>and</b> bees</i> (and similar words)
+  <pre>
+  $ mu find bird bee
+  </pre>
+  if you want to find message with either one of those, you can do:
+  <pre>
+  $ mu find 'bird OR bee'
+  </pre>
+  
+  </li>
+  
+  <li>
     <i>get all Smith's mails with 'capybara' in the subject line</i>
   <pre>
   $ mu find from:smith subject:capybara
@@ -165,7 +177,7 @@ License</a> (GPL), version 3 or later.
 
 The mu source code is available in Gitorious; get it from there:
 <pre>
-  git clone git://gitorious.org/mu/mu-ng.git
+  $ git clone git://gitorious.org/mu/mu-ng.git
 </pre>
 
 This is the source code for the new versions of mu (0.6 beta and
