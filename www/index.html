@@ -72,15 +72,23 @@ your own options. You can run <tt>mu index</tt> periodically to keep
 your database up-to-date.
 
 <p>After building the database, it's easy to search for messages. For example:
-<pre>
-  # get all Smith's mails with 'capybara' in the subject line
-  $ mu find f:smith capybara
+<ul>
+  <li>
+    <i>get all Smith's mails with 'capybara' in the subject line</i>
+  <pre>
+  $ mu find from:smith subject:capybara
+  </pre>
+  </li>
+  
+  <li>
+    <i>get the mails in the archive folder where Mary was Cc'd</i>
+  <pre>
+  $ mu find path:archive cc:mary
+  </pre>
+  </li>
+</ul>
 
-  # get the mails in the archive folder where Mary was Cc'd 
-  $ mu find p:archive c:mary 
-</pre>
-
-The way to express the searches is a bit cryptic at first, but easy to
+The way to express the searches may be a bit cryptic at first, but easy to
 learn (in the author's humble opinion); the mu manpage discusses
 syntax and usage, and contains examples.
   
