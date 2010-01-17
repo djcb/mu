@@ -1,38 +1,49 @@
 .TH MU 1 "January 2010" "User Manuals"
+
 .SH NAME 
+
 mu \- index and search the contents of e-mail messages stored in Maildirs
 
 .SH SYNOPSIS
-.B mu <command> [options] [parameter(s)]  
+
+.B mu index [options]
+
+.B mu find  [options] <search expression>
+
+.B mu mkdir [options] <dir> [<dirs>]
 
 .SH DESCRIPTION
-\fBmu\fR is a set of tools for indexing and searching e-mail messages stored in
-Maildirs. It does so by recursively scanning a Maildir directory tree and
+
+\fBmu\fR is a set of tools for indexing and searching e-mail messages stored
+in Maildirs. It does so by recursively scanning a Maildir directory tree and
 analyzing the e-mail messages found. The results of this analysis are then
-stored in a database. Using this database, you can quickly search for specific
-messages.
+stored in a database, which can then be queried for specific messages. 
 
-\fBmu\fR also offers functionality for creating maildirs.
+\fBmu\fR can be used from the command line or can be integrated with e-mail
+clients. This manpage has some examples.
 
-The various tools are available as commands for a single
-\fBmu\fR executable.
+The various tools are available as commands for a single \fBmu\fR executable.
 
 .SH GENERAL OPTIONS
-\fBmu\fR offers a number of general options -- options that apply to all commands:
+
+\fBmu\fR offers a number of general options that apply to all commands:
 
 .TP
 \fB\-a\fR, \fB\-\-muhome\fR causes \fBmu\fR to use an alternative directory to
-store and read its database and logs. By default, \fB~/.mu\fR is used.
+store and read its database and logs. By default, \fI~/.mu\fR is used.
 
 .TP
 \fB\-d\fR, \fB\-\-debug\fR makes \fBmu\fR generate extra debug information,
-useful for debugging the program itself. Note that by default, debug
-information goes to the log file, \fI~/.mu/mu.log\fR.
+useful for debugging the program itself. By default, debug information goes to
+the log file, \fI~/.mu/mu.log\fR. It can safely be deleted when \fBmu\fR is
+not running.
 
 .TP
 \fB\-q\fR, \fB\-\-quiet\fR causes \fBmu\fR not to output informational
-messages to standard output, but only to the log file. Error messages will
-still be sent to standard error.
+messages and progress information to standard output, but only to the log
+file. Error messages will still be sent to standard error. Note that \fBmu
+index\fR is \fBmuch\fR faster with \fB\-\-quiet\fR, so it is recommended you
+use this option when using \fBmu\fR from scripts etc.
 
 .TP
 \fB\-e\fR, \fB\-\-log-stderr\fR causes \fBmu\fR not to output all log messages
@@ -49,6 +60,7 @@ the options for one command, or all of the commands.
 
 
 .SH COMMANDS
+
 \fBmu\fR offers the following commands:
 
 .TP
@@ -67,6 +79,7 @@ below for details). You can use \fBquery\fR and \fBsearch\fR as synonyms for
 for creating Maildirs.
 
 .SH THE INDEX COMMAND
+
 Using the
 .B index
 command, you can index your Maildir directories, and store the information in
@@ -185,8 +198,10 @@ search fields and their abbreviations:
 
 
 .SS Find options
-The find command has various options that influence the way it outputs its
-results.
+
+The \fBfind\fR-command has various options that influence the way \fBmu\fR
+displays the results. If you don't specify anything, the defaults are
+\fI\-\-fields="d f s"\fR, \fI\-\-sortfield=date\fR and \fI\-\-descending\fR.   
 
 .TP
 \fB\-f\fR, \fB\-\-fields\fR=\fI<fields>\fR
@@ -296,11 +311,11 @@ For \fBmutt\fR you can use the following in your \fImuttrc\fR; pressing the F8
 key will start a search, and F9 will take you to the results.
 
 .nf
-#############################################################################
+###### mutt macros for mu
 macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search "  "mu find"
 macro index <F9> "<change-folder-readonly>~/Maildir/search" "display mu find
 results"
-############################################################################
+#######
 .fi
 
 
@@ -311,7 +326,7 @@ If you use Wanderlust for \fBemacs\fR, the following definitons can be used;
 typing 'Q' will start a query.
 
 .nf
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;; mu integration for Wanderlust
 (defvar mu-wl-mu-program     "mu")
 (defvar mu-wl-search-folder  "search")
 
@@ -338,10 +353,11 @@ results"
   '(lambda()(interactive)(mu-wl-search-and-goto))) 
 (define-key wl-folder-mode-map (kbd "Q") ;; => query
   '(lambda()(interactive)(mu-wl-search-and-goto))) 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;
 .fi
 
 .SH THE MKDIR COMMAND
+
 With the
 .B mkdir
 command, you can create new Maildirs with permissions 0755. For example,
@@ -355,17 +371,36 @@ will create three Maildirs \fItom\fR, \fIdick\fR and \fIharry\fR.
 If the creation somehow fails, for safety reasons, \fBno\fR attempt is made to
 remove any parts that were created.
 
+.SH FILES
+By default, \fBmu index\fR stores its message database in
+\fI~/.mu/xapian-<version>\fR, where \fI<version>\fR is the version of the
+database layout, which is not necessarily the same as the \fBmu\fR version
+number.
+
+\fBmu\fR stores logs of its operations in \fI~/.mu/mu.log\fR. These can grow
+quite big when using the \fI\-\-debug\fR option, but they can be safely
+delete when \fBmu\fR is not running.
+
+To store various \fBmu\fR-files elsewhere from their default location, one can
+use the \fI\-\-muhome\fR option, as discussed in the \fBGENERAL OPTIONS\fR
+section.
+
+
 .SH ENVIRONMENT
+
 As mentioned, \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if
 it has not been specified explicitly \fB\-\-maildir\fR=\fI<maildir>\fR. If
 MAILDIR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
 .
 .SH BUGS
+
 There probably are some; please report bugs when you find them:
 .BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR
+
 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
+
 .BR maildir(5)
