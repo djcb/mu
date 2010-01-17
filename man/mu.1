@@ -12,6 +12,8 @@ mu \- index and search the contents of e-mail messages stored in Maildirs
 
 .B mu mkdir [options] <dir> [<dirs>]
 
+.B mu [options]
+
 .SH DESCRIPTION
 
 \fBmu\fR is a set of tools for indexing and searching e-mail messages stored
@@ -29,32 +31,38 @@ The various tools are available as commands for a single \fBmu\fR executable.
 \fBmu\fR offers a number of general options that apply to all commands:
 
 .TP
-\fB\-a\fR, \fB\-\-muhome\fR causes \fBmu\fR to use an alternative directory to
+\fB\-a\fR, \fB\-\-muhome\fR
+causes \fBmu\fR to use an alternative directory to
 store and read its database and logs. By default, \fI~/.mu\fR is used.
 
 .TP
-\fB\-d\fR, \fB\-\-debug\fR makes \fBmu\fR generate extra debug information,
+\fB\-d\fR, \fB\-\-debug\fR
+makes \fBmu\fR generate extra debug information,
 useful for debugging the program itself. By default, debug information goes to
 the log file, \fI~/.mu/mu.log\fR. It can safely be deleted when \fBmu\fR is
 not running.
 
 .TP
-\fB\-q\fR, \fB\-\-quiet\fR causes \fBmu\fR not to output informational
+\fB\-q\fR, \fB\-\-quiet\fR
+causes \fBmu\fR not to output informational
 messages and progress information to standard output, but only to the log
 file. Error messages will still be sent to standard error. Note that \fBmu
 index\fR is \fBmuch\fR faster with \fB\-\-quiet\fR, so it is recommended you
 use this option when using \fBmu\fR from scripts etc.
 
 .TP
-\fB\-e\fR, \fB\-\-log-stderr\fR causes \fBmu\fR not to output all log messages
+\fB\-e\fR, \fB\-\-log-stderr\fR
+causes \fBmu\fR not to output all log messages
 to standard error, in addition to sending them to the log file.
 
 .TP
-\fB\-v\fR, \fB\-\-version\fR outputs the \fBmu\fR-version and copyright
+\fB\-v\fR, \fB\-\-version\fR
+outputs the \fBmu\fR-version and copyright
 information.
 
 .TP
-\fB\-h\fR, \fB\-\-help\fR list the various command line options, while
+\fB\-h\fR, \fB\-\-help\fR
+list the various command line options, while
 \fB\-\-help\-index\fR, \fB\-\-help\-find\fR and \fB\-\-help\-all\fR list only
 the options for one command, or all of the commands.
 
@@ -116,8 +124,8 @@ not want this, you can use \fB\-u\fR, \fB\-\-nocleanup\fR.
 .SS Indexing options
 
 .TP
-\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR starts searching
-at\fI<maildir>\fR. By default,
+\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
+starts searching at \fI<maildir>\fR. By default,
 \fBmu\fR uses whatever the
 .B MAILDIR
 environment variable is set to; if that is not set, it tries
@@ -128,9 +136,9 @@ environment variable is set to; if that is not set, it tries
 \fB\-r\fR, \fB\-\-reindex\fR
 re-index all mails, even ones that are already in the database.
 
-.T
-\fB\-u\fR, \fB\-\-nocleanup\fR disables the database cleanup that
-\fBmu\fR does by default after indexing.
+.TP
+\fB\-u\fR, \fB\-\-nocleanup\fR
+disables the database cleanup that \fBmu\fR does by default after indexing.
 
 
 .TP
@@ -268,7 +276,7 @@ following fields are supported:
 Thus, for example, to sort messages by date, you could specify:
 
 .nf
-	mu find fahrrad --fields "d f s" --sortfield=date --descending
+  $ mu find fahrrad --fields "d f s" --sortfield=date --descending
 .fi
 
 Note, if you specify a sortfield, by default, they are sorted in descending
@@ -292,7 +300,7 @@ alternative would be to delete the target directory before, but this has a big
 chance of accidentaly removing something that should not be removed.
 
 .nf
-	mu find grolsch --linksdir=~/Maildir/search --clearlinks
+  $ mu find grolsch --linksdir=~/Maildir/search --clearlinks
 .fi
 
 will store links to found messages in \fI~/Maildir/search\fR. If the directory
@@ -302,7 +310,46 @@ Note: when \fBmu\fR creates a Maildir for these links, it automatically
 inserts a \fI.noindex\fR file, to exclude the directory from \fBmu
 index\fR.
 
-.SH Integrating mu find with mail clients
+
+.SS Example queries
+
+Here are some simple examples of \fBmu\fR search queries; you can make many
+more complicated queries using various logical operators, parentheses and so
+on, but in the author's experience, it's usually faster to find a message with
+a simple query just searching for some words.
+
+Find all messages with both 'bee' and 'bird' (in any field)
+
+.nf
+  $ mu find 'bee AND bird'
+.fi
+
+or shorter, because \fBAND\fR is implied:
+
+.nf
+  $ mu find bee bird
+.fi
+
+Find all messages with either Frodo or Sam:
+
+.nf
+  $ mu find 'Frodo OR Sam'
+.fi
+
+Find all messages with the 'wombat' as subject, and 'capibara' anywhere:
+
+.nf
+  $ mu find subject:wombat capibara
+.fi
+
+Find all messages in the 'Archive' folder from Fred:
+
+.nf
+  $ mu find from:fred path:archive
+.fi
+
+
+.SS Integrating mu find with mail clients
 
 .TP
 
