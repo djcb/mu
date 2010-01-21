@@ -101,15 +101,18 @@ your database up-to-date.
 </ul>
 
 The way to express the searches may be a bit cryptic at first, but easy to
-learn (in the author's humble opinion); the mu manpage discusses
-syntax and usage, and contains examples.
-  
+learn (in the author's humble opinion); the mu manpage discusses syntax and
+usage, and contains examples.
+
+NOTE: while searching from the command-line is sometimes useful, mu is most
+easily used when integrated with an e-mail program. The documentation includes
+examples for integration with <em>mutt</em> and <em>Wanderlust</em>.
+
 <p><strong>mu</strong> is <em>Free Software</em> (GPLv3), runs on
 Unix/Linux-based systems, and uses the <a href="http://www.xapian.org"
->Xapian</a> text indexing engine. <strong>Important</strong>: for mu
-to work, your mails must be stored in a set of <a
-href="http://www.qmail.org/qmail-manual-html/man5/maildir.html"
->maildirs</a>
+>Xapian</a> text indexing engine. <strong>Important</strong>: for mu to work,
+your mails must be stored in a set of <a
+href="http://www.qmail.org/qmail-manual-html/man5/maildir.html" >maildirs</a>
 
 <h2><a name="news" >news</a></h2>
 <ul>
@@ -146,9 +149,11 @@ href="http://www.qmail.org/qmail-manual-html/man5/maildir.html"
   <li>[2008-09-10] <strong>mu version 0.2</strong> released; this version adds
   supports for message-body searches (Xapian); indexing is much faster; added
   Maildir++ support; sorting of results; added
-  <tt>mu-mkmdir</tt>/<tt>mu-msginfo</tt>. Improved documentation, unit tests.</li>
+  <tt>mu-mkmdir</tt>/<tt>mu-msginfo</tt>. Improved documentation, unit
+  tests.</li>
 
   <li>[2008-08-25] <strong>mu version 0.1</strong> released</li>
+
 </ul>
 
 <h2><a name="features" >features</a></h2>
@@ -180,9 +185,10 @@ The mu source code is available in Gitorious; get it from there:
   $ git clone git://gitorious.org/mu/mu-ng.git
 </pre>
 
-This is the source code for the new versions of mu (0.6 beta and
-beyond). Unless you are a developer, it is recommend you use the
-actual releases, as the git-version may break at times.
+This is the source code for the development versions of mu (0.6 beta and
+beyond). If you're not planning on get involved in the development of mu, it
+is recommended you use the actual releases, as the git-version may break at
+times.
 
 <h2><a name="building">building and dependencies</a></h2>
 
@@ -196,7 +202,7 @@ following should get you all you need:
 <tt>gcc</tt>/<tt>g++</tt>, <tt>make</tt> and friends).
 
 <p>mu uses autotools, so building follows the normal
-<tt>configure</tt>/<tt>make</tt> pattern.
+<tt>./configure</tt>/<tt>make</tt> pattern.
 
 <p>This should work without any problems at least on recent Debian/Ubuntu, for
 both 32-bit and 64-bit architectures. If it does not work for your
@@ -211,9 +217,11 @@ them in the <a href="http://code.google.com/p/mu0/issues/list" >issue list</a>
 
 <p><tt>mu</tt> was designed and implemented by me, <strong>Dirk-Jan
 C. Binnema</strong>, as a hobby project for my copious free time. It has no
-relation to my employer. <p>You can send e-mail to
-djcb-at-djcbsoftware-dot-nl.
-</td></tr>
+relation to my employer.
+
+<p>You can send e-mail to djcb-at-djcbsoftware-dot-nl.</td>
+
+</tr>
 </table>
 <div align="right" class="mine">
 &copy;2008 Dirk-Jan C. Binnema
