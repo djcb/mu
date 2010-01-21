@@ -1,7 +1,7 @@
 #+STARTUP:showall
 * to-do list for mu-ng first release
 
-** release 0.6 [86%]
+** release 0.6 [87%]
 
    - [X] implement re-index
    - [X] mu-index config options
@@ -9,9 +9,10 @@
    - [X] fix AND/OR escaping issue
    - [ ] update web page
    - [ ] man page / help
+   - [X] --mode for mkdir
    - [X] add mu cleanup
    - [X] add --clear option for --linksdir
-   - [ ] document support for mutt, wanderlust
+   - [X] document support for mutt, wanderlust
    - [X] check cmdline letters
    - [X] add mkmdir
    - [X] re-add symlink support for search
@@ -30,10 +31,10 @@
 ** release 0.7 [%]
 
    - [ ] detect mail threads
-   - [ ] --mode for mkdir
    - [ ] signal handler
    - [ ] clean up mu-msg-field
    - [ ] mu help <cmd>
+   - [ ] mu view <path>
    - [ ] add move-mail support
    - [ ] add symlink-following option for index
    - [ ] test suite
