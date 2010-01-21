@@ -358,11 +358,11 @@ For \fBmutt\fR you can use the following in your \fImuttrc\fR; pressing the F8
 key will start a search, and F9 will take you to the results.
 
 .nf
-###### mutt macros for mu
-macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search "  "mu find"
-macro index <F9> "<change-folder-readonly>~/Maildir/search" "display mu find
-results"
-#######
+# mutt macros for mu
+macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search " \
+					"mu find"
+macro index <F9> "<change-folder-readonly>~/Maildir/search" \
+					"display mu find results"
 .fi
 
 
@@ -373,18 +373,19 @@ If you use Wanderlust for \fBemacs\fR, the following definitons can be used;
 typing 'Q' will start a query.
 
 .nf
-;;;;;;; mu integration for Wanderlust
+;; mu integration for Wanderlust
 (defvar mu-wl-mu-program     "mu")
 (defvar mu-wl-search-folder  "search")
 
 (defun mu-wl-search ()
-  "search a maildir using `mu', and jump to a folder with the
-results"
+  "search for messages with `mu', and jump to the results"
   (interactive)
   (let* ((muexpr (read-string "Find messages matching: "))
-	  (sfldr  (concat elmo-maildir-folder-path "/" mu-wl-search-folder))
+	  (sfldr  (concat elmo-maildir-folder-path "/"
+		    mu-wl-search-folder))
 	  (cmdline (concat mu-wl-mu-program " find "
-		      "--clearlinks --linksdir='" sfldr "' " muexpr)))
+		      "--clearlinks --linksdir='" sfldr "' "
+		     muexpr)))
     (= 0 (shell-command cmdline))))
 
 (defun mu-wl-search-and-goto ()
@@ -392,16 +393,12 @@ results"
   (interactive)
   
   (if (mu-wl-search)
-    (wl-summary-goto-folder-subr (concat "." mu-wl-search-folder)
+    (wl-summary-goto-folder-subr
+      (concat "." mu-wl-search-folder)
       'force-update nil nil t)
     (message "Query failed")))
-
-(define-key wl-summary-mode-map (kbd "Q") ;; => query
-  '(lambda()(interactive)(mu-wl-search-and-goto))) 
-(define-key wl-folder-mode-map (kbd "Q") ;; => query
-  '(lambda()(interactive)(mu-wl-search-and-goto))) 
-;;;;;;;;;;;;;
 .fi
+
 
 .SH THE MKDIR COMMAND
 
