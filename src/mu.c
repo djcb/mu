@@ -46,34 +46,6 @@ init_log (MuConfigOptions *opts)
 	return rv;
 }
 
-static gboolean
-parse_params (MuConfigOptions *config, int *argcp, char ***argvp)
-{
-	GError *error = NULL;
-	GOptionContext *context;
-	gboolean rv;
-	
-	context = g_option_context_new ("- maildir utilities");
-
-	g_option_context_set_main_group (context,
-					 mu_config_options_group_mu (config));
-	g_option_context_add_group (context,
-				    mu_config_options_group_index (config));
-	g_option_context_add_group (context,
-				    mu_config_options_group_find (config));
-	
-	rv = g_option_context_parse (context, argcp, argvp, &error);
-	if (!rv) {
-		g_printerr ("error in options: %s\n", error->message);
-		g_error_free (error);
-	} else {
-		g_option_context_free (context);
-		mu_config_set_defaults (config);
-	}
-		
-	return rv;
-}
-
 
 int
 main (int argc, char *argv[])
@@ -83,23 +55,17 @@ main (int argc, char *argv[])
 	
 	g_type_init ();
 
-	mu_config_init (&config);
-	
-	do {
-		rv = FALSE;
+	if (!mu_config_init (&config, &argc, &argv))
+		return 1;
 
-		if (!parse_params (&config, &argc, &argv))
-			break;
+	if (!init_log (&config)) {
+		mu_config_uninit (&config);
+		return 1;
+	}
+			
+	rv = mu_cmd_execute (&config);
 
-		if (!init_log (&config))
-			break;
-		
-		rv = mu_cmd_execute (&config);
-
-		mu_log_uninit();
-
-	} while (0); 
-
+	mu_log_uninit();
 	mu_config_uninit (&config);
 	
 	return rv ? 0 : 1;

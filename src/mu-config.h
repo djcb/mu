@@ -21,6 +21,8 @@
 #define __MU_CONFIG_H__
 
 #include <glib.h>
+#include <sys/types.h> /* for mode_t */
+
 #include "mu-msg-fields.h"
 
 G_BEGIN_DECLS
@@ -54,6 +56,9 @@ struct _MuConfigOptions {
 	gboolean	clearlinks;     /* clear a linksdir before filling */
 	
 	gboolean        descending;	/* sort descending? */
+
+	/* options for mkdir */
+	mode_t		dirmode;	/* mode for the created maildir */
 };
 typedef struct _MuConfigOptions MuConfigOptions;
 
@@ -65,14 +70,8 @@ typedef struct _MuConfigOptions MuConfigOptions;
  * 
  * @param opts options 
  */
-void mu_config_init (MuConfigOptions *opts);
+gboolean mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp);
 
-/** 
- * fill unset config options with defaults
- * 
- * @param opts options
- */
-void mu_config_set_defaults (MuConfigOptions *opts);
 
 /** 
  * free the MuOptionsCOnfig structure; the the muhome and maildir
@@ -81,33 +80,6 @@ void mu_config_set_defaults (MuConfigOptions *opts);
  * @param opts 
  */
 void  mu_config_uninit (MuConfigOptions *opts);
-
-/**
- * get the general options option group
- * 
- * @param opts the MuConfigOptions to fill from this option group
- * 
- * @return a new option group; *DON'T* unref when added to an optioncontext
- */
-GOptionGroup* mu_config_options_group_mu (MuConfigOptions *opts);
-
-/** 
- * get the index-options option group 
- * 
- * @param opts the MuConfigOptions to fill from this option group
- * 
- * @return a new option group; *DON'T* unref when added to an optioncontext
- */
-GOptionGroup* mu_config_options_group_index (MuConfigOptions *opts);
-
-/** 
- * get the find-options option group 
- * 
- * @param opts the MuConfigOptions to fill from this option group
- * 
- * @return a new option group; *DON'T* unref when added to an optioncontext
- */
-GOptionGroup* mu_config_options_group_find (MuConfigOptions *opts);
 
 
 G_END_DECLS

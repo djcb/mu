@@ -471,15 +471,14 @@ cmd_mkdir (MuConfigOptions *opts)
 		return FALSE;  /* shouldn't happen */
  	
 	if (!opts->params[1]) {
-		g_printerr ("usage: mu mkdir <dir> [more dirs]\n");
+		g_printerr (
+			"usage: mu mkdir [-u,--mode=<mode>] <dir> [more dirs]\n");
 		return FALSE;
 	}
 	
 	i = 1;
 	while (opts->params[i]) {
-		MU_WRITE_LOG ("mu_maildir_mkdir (%s, 0755, FALSE)",
-			     opts->params[i]);
-		if (!mu_maildir_mkmdir (opts->params[i], 0755, FALSE))
+		if (!mu_maildir_mkmdir (opts->params[i], opts->dirmode, FALSE))
 			return FALSE;
 		++i;
 	}

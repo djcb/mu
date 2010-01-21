@@ -26,8 +26,8 @@
 #include "mu-config.h"
 
 
-GOptionGroup*
-mu_config_options_group_mu (MuConfigOptions *opts)
+static GOptionGroup*
+config_options_group_mu (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
@@ -56,8 +56,8 @@ mu_config_options_group_mu (MuConfigOptions *opts)
 
 
 
-GOptionGroup*
-mu_config_options_group_index (MuConfigOptions *opts)
+static GOptionGroup*
+config_options_group_index (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
@@ -78,8 +78,8 @@ mu_config_options_group_index (MuConfigOptions *opts)
 	return og;
 }
 
-GOptionGroup*
-mu_config_options_group_find (MuConfigOptions *opts)
+static GOptionGroup*
+config_options_group_find (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
@@ -107,14 +107,24 @@ mu_config_options_group_find (MuConfigOptions *opts)
 }
 
 
-void
-mu_config_init (MuConfigOptions *opts)
+static GOptionGroup*
+config_options_group_mkdir (MuConfigOptions *opts)
 {
-	g_return_if_fail (opts);
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"mode", 'p', 0, G_OPTION_ARG_INT, &opts->dirmode,
+		 "set the mode (as in chmod), in octal notation", NULL},
+		{ NULL, 0, 0, 0, NULL, NULL, NULL }
+	};
 
-	/* start from zero */
-	memset (opts, 0, sizeof(MuConfigOptions));
+	og = g_option_group_new ("mkdir",
+				 "options for the 'mkdir' command",
+				 "", NULL, NULL);	
+	g_option_group_add_entries (og, entries);
+	
+	return og;
 }
+
 
 static gchar*
 guess_muhome (void)
@@ -133,11 +143,48 @@ guess_muhome (void)
 }
 
 
-void
-mu_config_set_defaults (MuConfigOptions *opts)
+static gboolean
+parse_params (MuConfigOptions *config, int *argcp, char ***argvp)
+{
+	GError *error = NULL;
+	GOptionContext *context;
+	gboolean rv;
+	
+	context = g_option_context_new ("- maildir utilities");
+
+	g_option_context_set_main_group (context,
+					 config_options_group_mu (config));
+	g_option_context_add_group (context,
+				    config_options_group_index (config));
+	g_option_context_add_group (context,
+				    config_options_group_find (config));
+	g_option_context_add_group (context,
+				    config_options_group_mkdir (config));
+
+	rv = g_option_context_parse (context, argcp, argvp, &error);
+	if (!rv) {
+		g_printerr ("error in options: %s\n", error->message);
+		g_error_free (error);
+	} else
+		g_option_context_free (context);
+	
+	return rv;
+}
+
+
+gboolean
+mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
 {
 	gchar *old;
-	g_return_if_fail (opts);
+
+	g_return_if_fail (opts);	
+	memset (opts, 0, sizeof(MuConfigOptions));
+
+	/* set dirmode before, because '0000' is a valid mode */
+	opts->dirmode = 0755;
+
+	if (!parse_params (opts, argcp, argvp))
+		return FALSE;
 	
 	if (!opts->muhome)
 		opts->muhome = guess_muhome ();
@@ -153,7 +200,7 @@ mu_config_set_defaults (MuConfigOptions *opts)
 	else
 		opts->maildir = mu_util_guess_maildir();
 	g_free (old);
-	
+		      
 	/* querying */
 	
 	/* note, when no fields are specified, we use
@@ -170,8 +217,9 @@ mu_config_set_defaults (MuConfigOptions *opts)
 		opts->linksdir = mu_util_dir_expand (opts->linksdir);
 		g_free(old);
 	}
-}
 
+	return TRUE;
+}
 
 void
 mu_config_uninit (MuConfigOptions *opts)
