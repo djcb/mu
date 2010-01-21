@@ -29,7 +29,9 @@
 #include <errno.h>
 #include <glib/gprintf.h>
 
+#include "mu-util.h"
 #include "mu-maildir.h"
+
 
 #define MU_MAILDIR_WALK_MAX_FILE_SIZE (32*1000*1000)
 #define MU_MAILDIR_NOINDEX_FILE       ".noindex"
@@ -93,6 +95,9 @@ gboolean
 mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex)
 {	
 	g_return_val_if_fail (path, FALSE);
+
+	MU_WRITE_LOG ("mu_maildir_mkdir (%s, %o, %s)",
+		      path, mode, noindex ?"TRUE":"FALSE");
 	
 	if (!create_maildir (path, mode))
 		return FALSE;
