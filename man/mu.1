@@ -198,10 +198,11 @@ search fields and their abbreviations:
 
 .nf
 	cc,c            CC (Carbon-Copy) recipient
-	from,f          message sender
-	path,p          full path to the message
-	subject,s       message subject
+	from,f          Message sender
+	path,p          Full path to the message
+	subject,s       Message subject
 	to,t            To: recipient
+	msgid,m         Message-ID
 .fi
 
 
@@ -229,13 +230,15 @@ The table of replacement characters is superset of the list mentions for
 search parameters:
 
 .nf
+	t	To: recipient
 	c	CC (Carbon-Copy) recipient
-	d	the sent-date of the message
-	f	message sender (From:)
-	F	message flags
-	p	full path to the message
-	P	message priority (high, normal, low)      
-	s	message subject
+	d	Sent date of the message
+	f	Message sender (From:)
+	F	Message flags
+	p	Full path to the message
+	P	Message priority (high, normal, low)      
+	s	Message subject
+	m       Message ID
 	t	To: recipient
 .fi
 
@@ -267,6 +270,7 @@ following fields are supported:
 	cc,c            CC (Carbon-Copy) recipient
 	date,d          message sent date
 	from,f          message sender
+	msgid,m         message id
 	path,p          full path to the message
 	prio,P          message priority
 	subject,s       message subject
