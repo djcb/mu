@@ -91,7 +91,7 @@ mu_util_guess_maildir (void)
 
 	/* then, try ~/Maildir */
 	dir = mu_util_dir_expand ("~/Maildir");
-	if (!mu_util_check_dir (dir, TRUE, FALSE))
+	if (mu_util_check_dir (dir, TRUE, FALSE))
 		return dir;
 
 	/* nope; nothing found */
