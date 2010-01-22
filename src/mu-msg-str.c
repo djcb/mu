@@ -52,7 +52,7 @@ mu_msg_str_size_s  (size_t s)
 		g_snprintf(buf, 32, "%.1fM", (double)s/(1000*1000));
 	else
 		g_snprintf(buf, 32, "%.1fk", (double)s/(1000));
-	
+
 	return buf;
 }
 
