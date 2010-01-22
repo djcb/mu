@@ -17,13 +17,12 @@
 **
 */
 
-#include <xapian.h>
-#include <string.h>
-#include <stdio.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
+
+#include <cstdio>
+#include <xapian.h>
 
 #include "mu-msg.h"
 #include "mu-msg-gmime.h"
@@ -32,6 +31,9 @@
 
 /* number of new messages after which we commit to the database */
 #define MU_STORE_XAPIAN_TRX_SIZE 2000
+
+/* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
+#define MU_STORE_XAPIAN_MAX_TERM_LENGTH 240
 
 struct _MuStoreXapian {
 	Xapian::WritableDatabase *_db;
@@ -154,22 +156,27 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 			 const MuMsgField* field)
 {
 	const char* str;
-
+	
 	str = mu_msg_gmime_get_field_string (msg, field);
 	if (!str)
 		return;
-	
-	const std::string value (str);
+
+	const std::string value  (str);
 	const std::string prefix (mu_msg_field_xapian_prefix(field));
 	
 	if (mu_msg_field_is_xapian_indexable (field)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
-		termgen.index_text_without_positions (value, 1, prefix);
-	} else
-		doc.add_term(prefix + value);
+		termgen.index_text_without_positions (str, 1, prefix);
+	} else {
+		/* terms can be up to
+		 *  MU_STORE_XAPIAN_MAX_TERM_LENGTH (240) long; this is
+		 *  a Xapian limit */
+		doc.add_term (std::string (prefix + value, 0,
+					   MU_STORE_XAPIAN_MAX_TERM_LENGTH));
+	}
 	
-	doc.add_value ((Xapian::valueno)mu_msg_field_id(field),
+	doc.add_value ((Xapian::valueno)mu_msg_field_id (field),
 		       value);
 }
 
@@ -370,8 +377,6 @@ mu_store_xapian_foreach (MuStoreXapian *self,
 	
 	try {
 		Xapian::Enquire enq (*self->_db);
-
-		
 		enq.set_query  (Xapian::Query::MatchAll);
 		enq.set_cutoff (0,0);
 		
