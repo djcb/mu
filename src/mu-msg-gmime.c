@@ -193,7 +193,7 @@ const char*
 mu_msg_gmime_get_msgid (MuMsgGMime *msg)
 {
 	g_return_val_if_fail (msg, NULL);
-
+	
 	return g_mime_message_get_message_id (msg->_mime_msg);
 }
 
@@ -700,7 +700,7 @@ mu_msg_gmime_get_field_string (MuMsgGMime *msg, const MuMsgField* field)
 	case MU_MSG_FIELD_ID_PATH:       return mu_msg_gmime_get_path (msg);	
 	case MU_MSG_FIELD_ID_SUBJECT:    return mu_msg_gmime_get_subject (msg);
 	case MU_MSG_FIELD_ID_TO:         return mu_msg_gmime_get_to (msg);
-	case MU_MSG_FIELD_ID_MSGID:      return mu_msg_gmime_get_to (msg);
+	case MU_MSG_FIELD_ID_MSGID:      return mu_msg_gmime_get_msgid (msg);
 	default:
 		g_return_val_if_reached (NULL);
 	}
