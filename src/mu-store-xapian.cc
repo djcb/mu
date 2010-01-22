@@ -33,7 +33,7 @@
 #define MU_STORE_XAPIAN_TRX_SIZE 2000
 
 /* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
-#define MU_STORE_XAPIAN_MAX_TERM_LENGTH 240
+#define MU_STORE_XAPIAN_MAX_TERM_LENGTH 240 /* not currently used */
 
 struct _MuStoreXapian {
 	Xapian::WritableDatabase *_db;
@@ -168,13 +168,7 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (str, 1, prefix);
-	} else {
-		/* terms can be up to
-		 *  MU_STORE_XAPIAN_MAX_TERM_LENGTH (240) long; this is
-		 *  a Xapian limit */
-		doc.add_term (std::string (prefix + value, 0,
-					   MU_STORE_XAPIAN_MAX_TERM_LENGTH));
-	}
+	} 
 	
 	doc.add_value ((Xapian::valueno)mu_msg_field_id (field),
 		       value);
