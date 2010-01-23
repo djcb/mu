@@ -76,7 +76,7 @@ mu_store_xapian_new  (const char* xpath)
 
 
 static void
-begin_transaction_if (MuStoreXapian *store, gboolean cond)
+begin_trx_if (MuStoreXapian *store, gboolean cond)
 {
 	if (cond) {
 		g_debug ("beginning Xapian transaction");
@@ -86,7 +86,7 @@ begin_transaction_if (MuStoreXapian *store, gboolean cond)
 }
 
 static void
-commit_transaction_if (MuStoreXapian *store, gboolean cond)
+commit_trx_if (MuStoreXapian *store, gboolean cond)
 {
 	if (cond) {
 		g_debug ("comitting Xapian transaction");
@@ -96,7 +96,7 @@ commit_transaction_if (MuStoreXapian *store, gboolean cond)
 }
 
 static void
-rollback_transaction_if (MuStoreXapian *store, gboolean cond)
+rollback_trx_if (MuStoreXapian *store, gboolean cond)
 {
 	if (cond) {
 		g_debug ("rolling back Xapian transaction");
@@ -130,7 +130,7 @@ mu_store_xapian_flush (MuStoreXapian *store)
 	g_return_if_fail (store);
 	
 	try {
-		commit_transaction_if (store, store->_in_transaction);
+		commit_trx_if (store, store->_in_transaction);
 		store->_db->flush ();
 
 	} MU_XAPIAN_CATCH_BLOCK;
@@ -263,7 +263,7 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		MsgDoc msgdoc = { &newdoc, msg };
 		const std::string uid(get_message_uid(msg));
 
-		begin_transaction_if (store, !store->_in_transaction);
+		begin_trx_if (store, !store->_in_transaction);
 		/* we must add a unique term, so we can replace matching
 		 * documents */
 		newdoc.add_term (uid);
@@ -273,14 +273,14 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		/* we replace all existing documents for this file */
 		id = store->_db->replace_document (uid, newdoc);
 		++store->_processed;
-		commit_transaction_if (store,
+		commit_trx_if (store,
 				       store->_processed % store->_trx_size == 0);
 
 		return MU_OK;
 
 	} MU_XAPIAN_CATCH_BLOCK;
 
-	rollback_transaction_if (store, store->_in_transaction);
+	rollback_trx_if (store, store->_in_transaction);
 
 	return MU_ERROR;
 }
@@ -295,7 +295,7 @@ mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 	try {
 		const std::string uid (get_message_uid (msgpath));
 
-		begin_transaction_if (store, !store->_in_transaction);
+		begin_trx_if (store, !store->_in_transaction);
 		
 		store->_db->delete_document (uid);
 		g_debug ("deleting %s", msgpath);
@@ -304,7 +304,7 @@ mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 
 		/* do we need to commit now? */
 		bool commit_now = store->_processed % store->_trx_size == 0;
-		commit_transaction_if (store, commit_now);
+		commit_trx_if (store, commit_now);
 
 		return MU_OK; 
 		
