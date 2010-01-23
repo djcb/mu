@@ -35,7 +35,7 @@ G_BEGIN_DECLS
  * @return the version of the database as a newly allocated string
  * (free with g_free); if there is no version yet, it will return NULL
  */
-char* mu_util_xapian_db_version (const gchar *xpath);
+gchar* mu_util_xapian_db_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /** 
@@ -46,8 +46,6 @@ char* mu_util_xapian_db_version (const gchar *xpath);
  * @return TRUE if it's up-to-date, FALSE otherwise
  */
 gboolean mu_util_xapian_db_version_up_to_date (const gchar *xpath);
-
-
 
 /** 
  * clear the database, ie., remove all of the contents. This is a
