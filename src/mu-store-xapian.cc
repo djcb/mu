@@ -33,7 +33,7 @@
 #define MU_STORE_XAPIAN_TRX_SIZE 2000
 
 /* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
-#define MU_STORE_XAPIAN_MAX_TERM_LENGTH 240 /* not currently used */
+#define MU_STORE_XAPIAN_MAX_TERM_LENGTH 240
 
 struct _MuStoreXapian {
 	Xapian::WritableDatabase *_db;
@@ -146,11 +146,18 @@ add_terms_values_number (Xapian::Document& doc, MuMsgGMime *msg,
 	gint64 num = mu_msg_gmime_get_field_numeric (msg, field);
 	const std::string numstr (Xapian::sortable_serialise((double)num));
 	
-	doc.add_value ((Xapian::valueno)mu_msg_field_id(field), numstr);	
+	doc.add_value ((Xapian::valueno)mu_msg_field_id(field), numstr);
 	doc.add_term  (pfx + numstr);
 }
 
 
+
+
+/* FIXME: note that we store the same data as both a term and a value;
+ * we use the term for search and the value for getting the the data
+ * from the document; it's better to only use the value; however, this
+ * requires some changes in the query processing.
+ */
 static void
 add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 			 const MuMsgField* field)
@@ -168,7 +175,13 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (str, 1, prefix);
-	} 
+	} else {
+		/* terms can be up to
+		 * MU_STORE_XAPIAN_MAX_TERM_LENGTH (240) long; this is
+		 * a Xapian limit */
+		doc.add_term (std::string (prefix + value, 0,
+					   MU_STORE_XAPIAN_MAX_TERM_LENGTH));
+	}
 	
 	doc.add_value ((Xapian::valueno)mu_msg_field_id (field),
 		       value);
@@ -274,7 +287,7 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		id = store->_db->replace_document (uid, newdoc);
 		++store->_processed;
 		commit_trx_if (store,
-				       store->_processed % store->_trx_size == 0);
+			       store->_processed % store->_trx_size == 0);
 
 		return MU_OK;
 
