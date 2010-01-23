@@ -28,7 +28,7 @@
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-query-xapian.h"
-#include "mu-msg-xapian.h"
+#include "mu-msg-iter-xapian.h"
 #include "mu-msg-str.h"
 #include "mu-cmd.h"
 #include "mu-util.h"
@@ -87,34 +87,34 @@ print_query (MuQueryXapian *xapian, const gchar *query)
 
 
 static const gchar*
-display_field (MuMsgXapian *row, const MuMsgField* field)
+display_field (MuMsgIterXapian *row, const MuMsgField* field)
 {
 	gint64 val;
 
 	switch (mu_msg_field_type(field)) {
 	case MU_MSG_FIELD_TYPE_STRING:
-		return mu_msg_xapian_get_field (row, field);
+		return mu_msg_iter_xapian_get_field (row, field);
 
 	case MU_MSG_FIELD_TYPE_INT:
 	
 		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_PRIORITY) {
-			val = mu_msg_xapian_get_field_numeric (row, field);
+			val = mu_msg_iter_xapian_get_field_numeric (row, field);
 			return mu_msg_str_prio ((MuMsgPriority)val);
 		}
 		
 		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_FLAGS) {
-			val = mu_msg_xapian_get_field_numeric (row, field);
+			val = mu_msg_iter_xapian_get_field_numeric (row, field);
 			return mu_msg_str_flags_s ((MuMsgPriority)val);
 		}
 
-		return mu_msg_xapian_get_field (row, field); /* as string */
+		return mu_msg_iter_xapian_get_field (row, field); /* as string */
 
 	case MU_MSG_FIELD_TYPE_TIME_T: 
-		val = mu_msg_xapian_get_field_numeric (row, field);
+		val = mu_msg_iter_xapian_get_field_numeric (row, field);
 		return mu_msg_str_date_s ((time_t)val);
 
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
-		val = mu_msg_xapian_get_field_numeric (row, field);
+		val = mu_msg_iter_xapian_get_field_numeric (row, field);
 		return mu_msg_str_size_s ((time_t)val);
 	default:
 		g_return_val_if_reached (NULL);
@@ -142,7 +142,7 @@ sort_field_from_string (const char* fieldstr)
 static gboolean
 print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 {
-	MuMsgXapian *row;
+	MuMsgIterXapian *row;
 	const MuMsgField *sortfield;
 
 	MU_WRITE_LOG ("query: '%s' (rows)", query); 
@@ -159,9 +159,9 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	if (!row) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
-	} else if (mu_msg_xapian_is_done (row)) {
+	} else if (mu_msg_iter_xapian_is_done (row)) {
 		g_printerr ("No matches found\n");
-		mu_msg_xapian_destroy (row);
+		mu_msg_iter_xapian_destroy (row);
 		return FALSE;
 	}
 
@@ -187,11 +187,11 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 		if (printlen > 0)
 			printf ("\n");
 		
-		mu_msg_xapian_next (row);
+		mu_msg_iter_xapian_next (row);
 		
-	} while (!mu_msg_xapian_is_done (row));
+	} while (!mu_msg_iter_xapian_is_done (row));
 	
-	mu_msg_xapian_destroy (row);
+	mu_msg_iter_xapian_destroy (row);
 
 	return TRUE;
 }
@@ -240,7 +240,7 @@ do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 {
 	gchar *query;
 	gboolean retval = TRUE;
-	MuMsgXapian *row;
+	MuMsgIterXapian *row;
 	const MuMsgField *pathfield;
 
 	if (!create_or_clear_linksdir_maybe (opts))
@@ -253,20 +253,20 @@ do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 	if (!row) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
-	} else if (mu_msg_xapian_is_done (row)) {
+	} else if (mu_msg_iter_xapian_is_done (row)) {
 		g_printerr ("No matches found\n");
-		mu_msg_xapian_destroy (row);
+		mu_msg_iter_xapian_destroy (row);
 		return FALSE;
 	}
 	
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
 	
 	/* iterate over the found rows */
-	for (; !mu_msg_xapian_is_done (row); mu_msg_xapian_next (row)) {
+	for (; !mu_msg_iter_xapian_is_done (row); mu_msg_iter_xapian_next (row)) {
 
 		const char *path;
 		
-		path = mu_msg_xapian_get_field (row, pathfield);
+		path = mu_msg_iter_xapian_get_field (row, pathfield);
 		if (!path)
 			continue;
 			
@@ -281,7 +281,7 @@ do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 			break;
 	}
 	
-	mu_msg_xapian_destroy (row);
+	mu_msg_iter_xapian_destroy (row);
 	g_free (query);
 
 	return retval;

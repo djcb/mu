@@ -19,37 +19,38 @@ INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 bin_PROGRAMS=			\
 	mu
 
-mu_SOURCES=			\
-	mu-cmd.h		\
-	mu-cmd.c		\
-	mu-config.h		\
-	mu-config.c		\
-	mu-index.c		\
-	mu-index.h		\
-	mu-log.c		\
-	mu-log.h		\
-	mu-maildir.c		\
-	mu-maildir.h		\
-	mu-msg-fields.c		\
-	mu-msg-fields.h		\
-	mu-msg-flags.c		\
-	mu-msg-flags.h		\
-	mu-msg-gmime.c		\
-	mu-msg-gmime.h		\
-	mu-msg-str.c		\
-	mu-msg-str.h		\
-	mu-msg-xapian.cc	\
-	mu-msg-xapian.h		\
-	mu-msg.h		\
-	mu-query-xapian.cc	\
-	mu-query-xapian.h	\
-	mu-result.h		\
-	mu-store-xapian.cc	\
-	mu-store-xapian.h	\
-	mu-util.h		\
-	mu-util.c		\
-	mu-util-xapian.cc	\
-	mu-util-xapian.h	\
+mu_SOURCES=				\
+	mu-cmd.c			\
+	mu-cmd.h			\
+	mu-config.c			\
+	mu-config.h			\
+	mu-index.c			\
+	mu-index.h			\
+	mu-log.c			\
+	mu-log.h			\
+	mu-maildir.c			\
+	mu-maildir.h			\
+	mu-msg-fields.c			\
+	mu-msg-fields.h			\
+	mu-msg-flags.c			\
+	mu-msg-flags.h			\
+	mu-msg-gmime.c			\
+	mu-msg-gmime.h			\
+	mu-msg-iter-xapian-priv.hh	\
+	mu-msg-iter-xapian.cc		\
+	mu-msg-iter-xapian.h		\
+	mu-msg-str.c			\
+	mu-msg-str.h			\
+	mu-msg.h			\
+	mu-query-xapian.cc		\
+	mu-query-xapian.h		\
+	mu-result.h			\
+	mu-store-xapian.cc		\
+	mu-store-xapian.h		\
+	mu-util-xapian.cc		\
+	mu-util-xapian.h		\
+	mu-util.c			\
+	mu-util.h			\
 	mu.c
 
 mu_LDADD=			\

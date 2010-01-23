@@ -25,8 +25,8 @@
 
 #include "mu-query-xapian.h"
 
-#include "mu-msg-xapian.h"
-#include "mu-msg-xapian-priv.hh"
+#include "mu-msg-iter-xapian.h"
+#include "mu-msg-iter-xapian-priv.hh"
 
 #include "mu-util.h"
 #include "mu-util-xapian.h"
@@ -167,7 +167,7 @@ mu_query_xapian_destroy (MuQueryXapian *self)
 }
 
 
-MuMsgXapian*
+MuMsgIterXapian*
 mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 		     const MuMsgField* sortfield, gboolean ascending)  
 {
@@ -187,7 +187,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 		enq.set_query  (q);
 		enq.set_cutoff (0,0);
 
-		return mu_msg_xapian_new (enq, 10000);
+		return mu_msg_iter_xapian_new (enq, 10000); /* FIXME */
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

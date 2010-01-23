@@ -21,7 +21,7 @@
 #define __MU_QUERY_XAPIAN_H__
 
 #include <glib.h>
-#include "mu-msg-xapian.h"
+#include "mu-msg-iter-xapian.h"
 
 G_BEGIN_DECLS
 /*
@@ -68,13 +68,14 @@ char* mu_query_xapian_version (MuQueryXapian *store);
  * @param self a valid MuQueryXapian instance
  * @param expr the search expression
  *
- * @return a MuMsgXapian instance you can iterate over, or NULL in
+ * @return a MuMsgIterXapian instance you can iterate over, or NULL in
  * case of error
  */
-MuMsgXapian* mu_query_xapian_run (MuQueryXapian *self, 
-				  const char* expr,
-				  const MuMsgField* sortfield,
-				  gboolean ascending) G_GNUC_WARN_UNUSED_RESULT;
+MuMsgIterXapian* mu_query_xapian_run (MuQueryXapian *self, 
+				      const char* expr,
+				      const MuMsgField* sortfield,
+				      gboolean ascending)
+G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * create a xapian query from list of expressions; for the syntax,
