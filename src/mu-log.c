@@ -146,8 +146,6 @@ mu_log_init  (const char* muhome, gboolean append,
 	return TRUE;
 }
 
-
-
 void 
 mu_log_uninit (void)
 {
