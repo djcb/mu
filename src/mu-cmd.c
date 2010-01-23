@@ -44,16 +44,13 @@ cmd_from_string (const char* cmd)
 		return MU_CMD_INDEX;
 
 	/* support some synonyms... */
-	if ((strcmp (cmd, "query") == 0) ||
-	    (strcmp (cmd, "find")  == 0) ||
-	    (strcmp (cmd, "search") == 0))
+	if (strcmp (cmd, "find")  == 0) 
 		return MU_CMD_FIND;
 
 	if (strcmp (cmd, "cleanup") == 0)
 		return MU_CMD_CLEANUP;
 	
-	if ((strcmp (cmd, "mkmdir") == 0) ||
-	    (strcmp (cmd, "mkdir") == 0)) 
+	if (strcmp (cmd, "mkdir") == 0) 
 		return MU_CMD_MKDIR;
 	
 	/* if ((strcmp (cmd, "help") == 0) || */
@@ -63,26 +60,12 @@ cmd_from_string (const char* cmd)
 	return MU_CMD_UNKNOWN;
 }
 
-static gboolean
-database_needs_reindex (MuConfigOptions *opts)
+static void
+update_warning (void)
 {
-	gchar *version;
-	gboolean reindex;
-	
-	version = mu_util_xapian_db_version (opts->xpath);		
-	if (!version || strcmp (version, MU_XAPIAN_DB_VERSION) != 0) {
-		g_warning ("expected database version %s, "
-			   "but current version is %s",
-			   MU_XAPIAN_DB_VERSION,
-			   version ? version : "<none>");
-		g_message ("please run `mu index --reindex' for your full "
-			   "maildir");
-		reindex = TRUE;
-	} else
-		reindex = FALSE;
-
-	g_free (version);
-	return reindex;
+	g_warning ("the database needs to be updated to version %s",
+		   MU_XAPIAN_DB_VERSION);
+	g_message ("please run 'mu index --empty' (see the manpage)");
 }
 
 
@@ -338,9 +321,11 @@ cmd_find (MuConfigOptions *opts)
 		
 	if (!query_params_valid (opts))
 		return FALSE;
-
-	if (database_needs_reindex(opts))
+	
+	if (mu_util_xapian_db_version_up_to_date (opts->xpath)) {
+		update_warning ();
 		return FALSE;
+	}
 	
 	/* first param is 'query', search params are after that */
 	params = (const gchar**)&opts->params[1];
@@ -409,16 +394,41 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 
 
 static gboolean
+database_version_check_and_update (MuConfigOptions *opts)
+{
+	/* we empty the database before doing anything */
+	if (opts->empty) {
+		opts->reindex = TRUE;
+		g_message ("Emptying database %s", opts->xpath);
+		return mu_util_xapian_clear_database (opts->xpath);
+	}
+		
+	if (mu_util_xapian_db_version_up_to_date (opts->xpath))
+		return TRUE; /* ok, nothing to do */
+	
+	/* ok, database is not up to date */
+	if (opts->autoupgrade) {
+		opts->reindex = TRUE;
+		g_message ("Auto-upgrade: clearing old database first");
+		return mu_util_xapian_clear_database (opts->xpath);
+	}
+
+	update_warning ();
+	return FALSE;
+}
+
+
+static gboolean
 cmd_index (MuConfigOptions *opts)
 {
 	int rv;
 
 	if (!check_index_params (opts))
 		return FALSE;
-
-	if (!opts->reindex && database_needs_reindex(opts))
-		return FALSE;
 	
+	if (!database_version_check_and_update(opts))
+		return FALSE;
+		
 	mu_msg_gmime_init ();
 	{
 		MuIndex *midx;

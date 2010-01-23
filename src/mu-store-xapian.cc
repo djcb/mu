@@ -73,6 +73,7 @@ mu_store_xapian_new  (const char* xpath)
 }
 
 
+
 char*
 mu_store_xapian_version (MuStoreXapian *store)
 {

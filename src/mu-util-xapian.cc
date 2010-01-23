@@ -20,14 +20,25 @@
 #include "config.h"
 #include <xapian.h>
 
+
 #include <cstring>
+#include <errno.h>
+
 #include "mu-util.h"
 #include "mu-util-xapian.h"
 
 char*
 mu_util_xapian_db_version (const gchar *xpath)
 {
+	g_return_val_if_fail (xpath, NULL);
+	
 	try {
+		if (!access(xpath, F_OK) == 0) {
+			g_warning ("cannot access %s: %s",
+				   xpath, strerror(errno));
+			return NULL;
+		}
+		
 		Xapian::Database db (xpath);
 		const std::string version
 			(db.get_metadata (MU_XAPIAN_VERSION_KEY));
@@ -45,6 +56,8 @@ mu_util_xapian_db_version_up_to_date (const gchar *xpath)
 {
 	gchar *version;
 	gboolean uptodate;
+
+	g_return_val_if_fail (xpath, FALSE);
 	
 	version = mu_util_xapian_db_version (xpath);
 	if (!version)
@@ -57,5 +70,20 @@ mu_util_xapian_db_version_up_to_date (const gchar *xpath)
 }
 
 
-
+gboolean
+mu_util_xapian_clear_database (const gchar *xpath)
+{
+	g_return_val_if_fail (xpath, FALSE);
+	
+	try {
+		Xapian::WritableDatabase db
+			(xpath, Xapian::DB_CREATE_OR_OVERWRITE);
+		db.flush ();
+		
+		return TRUE;
+		
+	} MU_XAPIAN_CATCH_BLOCK;
+	
+	return FALSE;
+}
 

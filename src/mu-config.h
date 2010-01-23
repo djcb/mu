@@ -45,6 +45,9 @@ struct _MuConfigOptions {
 	char	        *maildir;	/* where the mails are */
 	gboolean         nocleanup;	/* don't cleanup deleted mails from db */
 	gboolean         reindex;	/* re-index existing mails */
+	gboolean         empty;         /* empty the database before indexing */
+	gboolean         autoupgrade;   /* automatically upgrade db
+					 * when needed */
 	
 	/* options for querying */
 	gboolean         xquery;        /* give the Xapian query instead of

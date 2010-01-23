@@ -47,6 +47,20 @@ char* mu_util_xapian_db_version (const gchar *xpath);
  */
 gboolean mu_util_xapian_db_version_up_to_date (const gchar *xpath);
 
+
+
+/** 
+ * clear the database, ie., remove all of the contents. This is a
+ * destructive operation, but the database can be restored be doing a
+ * full scan of the maildirs.
+ * 
+ * @param xpath path to the database
+ * 
+ * @return TRUE if the clearing succeeded, FALSE otherwise.
+ */
+gboolean mu_util_xapian_clear_database (const gchar *xpath);
+
+
 G_END_DECLS
 
 #endif /*__MU_UTIL_XAPIAN_H__*/

@@ -36,8 +36,7 @@ information in a database
 .TP
 \fBfind\fR
 for finding messages in your database, using certain search parameters (see
-below for details). You can use \fBquery\fR and \fBsearch\fR as synonyms for
-\fBfind\fR.
+below for details).
 
 .TP
 \fBmkdir\fR
@@ -140,6 +139,24 @@ re-index all mails, even ones that are already in the database.
 .TP
 \fB\-u\fR, \fB\-\-nocleanup\fR
 disables the database cleanup that \fBmu\fR does by default after indexing.
+
+.TP
+\fB\-y\fR, \fB\-\-empty\fR
+clear all messages from the database before
+indexing. This is effectively the same as removing the database. The
+difference with \fB\-\-reindex\fR is that \fB\-\-empty\fR guarantees that
+after the indexing has finished, there are no 'old' messages in the database
+anymore, which is not true with \fB\-\-reindex\fR when indexing only a part of
+messages (using \fB\-\-maildir\fR). For this reason, it's necessary to run
+\fBmu index \-\-empty\fR when there is an upgrade in the database
+format. \fBmu index\fR will warn you about this.
+
+.TP
+\fB\-u\fR, \fB\-\-autoupgrade\fR
+automatically use \fB\-y\fR, \fB\-\-empty\fR when \fBmu\fR notices that the
+database version is not up-to-date. This option is for use in cron scripts
+etc., so they won't require any user interaction, even when mu introduces a
+new database vesion.
 
 .TP
 
