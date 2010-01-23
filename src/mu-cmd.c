@@ -32,6 +32,7 @@
 #include "mu-msg-str.h"
 #include "mu-cmd.h"
 #include "mu-util.h"
+#include "mu-util-xapian.h"
 
 static MuCmd 
 cmd_from_string (const char* cmd)
@@ -61,6 +62,30 @@ cmd_from_string (const char* cmd)
 	
 	return MU_CMD_UNKNOWN;
 }
+
+static gboolean
+database_needs_reindex (MuConfigOptions *opts)
+{
+	gchar *version;
+	gboolean reindex;
+	
+	version = mu_util_xapian_db_version (opts->xpath);		
+	if (!version || strcmp (version, MU_XAPIAN_DB_VERSION) != 0) {
+		g_warning ("expected database version %s, "
+			   "but current version is %s",
+			   MU_XAPIAN_DB_VERSION,
+			   version ? version : "<none>");
+		g_message ("please run `mu index --reindex' for your full "
+			   "maildir");
+		reindex = TRUE;
+	} else
+		reindex = FALSE;
+
+	g_free (version);
+	return reindex;
+}
+
+
 
 
 static gboolean
@@ -130,9 +155,6 @@ sort_field_from_string (const char* fieldstr)
 			    fieldstr);
 	return field;
 }
-
-
-
 
 static gboolean
 print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
@@ -316,6 +338,9 @@ cmd_find (MuConfigOptions *opts)
 		
 	if (!query_params_valid (opts))
 		return FALSE;
+
+	if (database_needs_reindex(opts))
+		return FALSE;
 	
 	/* first param is 'query', search params are after that */
 	params = (const gchar**)&opts->params[1];
@@ -391,10 +416,14 @@ cmd_index (MuConfigOptions *opts)
 	if (!check_index_params (opts))
 		return FALSE;
 
+	if (!opts->reindex && database_needs_reindex(opts))
+		return FALSE;
+	
 	mu_msg_gmime_init ();
 	{
 		MuIndex *midx;
 		MuIndexStats stats;
+		gboolean reindex;
 		
 		mu_index_stats_clear (&stats);
 		midx = mu_index_new (opts->xpath);

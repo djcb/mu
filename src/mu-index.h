@@ -57,6 +57,7 @@ MuIndex* mu_index_new (const char* muhome);
 void mu_index_destroy (MuIndex *index);
 
 
+
 /** 
  * callback function for mu_index_(run|stats|cleanup), for each message
  * 

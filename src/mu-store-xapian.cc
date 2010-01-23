@@ -53,7 +53,7 @@ mu_store_xapian_new  (const char* xpath)
 	
 	try {
 		store = g_new0(MuStoreXapian,1);
-		store->_db = new Xapian::WritableDatabase
+		store->_db = new Xapian::WritableDatabase 
 			(xpath, Xapian::DB_CREATE_OR_OPEN);
 		
 		/* keep count of processed docs */
@@ -66,12 +66,42 @@ mu_store_xapian_new  (const char* xpath)
 
 	} MU_XAPIAN_CATCH_BLOCK;		
 
-	try {
-		delete store->_db;
-	} MU_XAPIAN_CATCH_BLOCK;
+	try { delete store->_db; } MU_XAPIAN_CATCH_BLOCK;
 	
 	g_free (store);
 	return NULL;
+}
+
+
+char*
+mu_store_xapian_version (MuStoreXapian *store)
+{
+	g_return_val_if_fail (store, NULL);
+
+	try {
+		const std::string version (
+			store->_db->get_metadata (MU_XAPIAN_VERSION_KEY));
+		
+		return version.empty() ? NULL : g_strdup (version.c_str());
+		
+	} MU_XAPIAN_CATCH_BLOCK;
+
+	return NULL;
+}
+
+gboolean
+mu_store_xapian_set_version (MuStoreXapian *store, const char* version)
+{
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (version, FALSE);
+	
+	try {
+		store->_db->set_metadata (MU_XAPIAN_VERSION_KEY, version);
+		return TRUE;
+		
+	} MU_XAPIAN_CATCH_BLOCK;
+
+	return FALSE;
 }
 
 

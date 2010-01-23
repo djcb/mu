@@ -14,20 +14,20 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.6],[http://www.djcbsoftware.nl/code/mu])
+AC_INIT([mu],[0.7dev],[http://www.djcbsoftware.nl/code/mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.c])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 # we set the set the version of the Xapian database layout here; it
-# will become part of the db name, so we can automtically recreate the
+# will become part of the db name, so we can automatically recreate the
 # database when we incompatible have changes.
 #
 # note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with the version of the Xapian library
 #
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["0.6"], [Schema version of the database])
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["6.99"], [Schema version of the database])
 
 AC_PROG_LIBTOOL
 
@@ -100,6 +100,10 @@ src/Makefile
 man/Makefile
 ])
 
+echo
+echo "Note: the Xapian database is no longer stored as <muhome>/xapian-0.6"
+echo "but instead simply as <muhome>/xapian. You can remove the older"
+echo "<muhome>xapian-0.6 directory to save some disk space"
 
 echo
 echo "mu configuration is complete."

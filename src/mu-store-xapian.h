@@ -31,7 +31,6 @@ G_BEGIN_DECLS
 struct _MuStoreXapian;
 typedef struct _MuStoreXapian MuStoreXapian;
 
-
 /** 
  * create a new Xapian store, a place to store documents
  * 
@@ -47,6 +46,28 @@ MuStoreXapian*    mu_store_xapian_new     (const char* path);
  * @param store a valid store, or NULL
  */
 void              mu_store_xapian_destroy (MuStoreXapian *store);
+
+
+
+/** 
+ * get a version string for the database
+ * 
+ * @param store a valid MuStoreXapian
+ * 
+ * @return the version string (free with g_free), or NULL in case of error
+ */
+char* mu_store_xapian_version (MuStoreXapian *store);
+
+/** 
+ * set the version string for the database
+ * 
+ * @param store a valid MuStoreXapian
+ * @param version the version string (non-NULL)
+ *
+ * @return TRUE if setting the version succeeded, FALSE otherwise  
+ */
+gboolean  mu_store_xapian_set_version (MuStoreXapian *store,
+				       const char* version);
 
 
 /** 

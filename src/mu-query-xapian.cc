@@ -29,6 +29,7 @@
 #include "mu-msg-xapian-priv.hh"
 
 #include "mu-util.h"
+#include "mu-util-xapian.h"
 
 
 static void add_prefix (const MuMsgField* field,
@@ -132,11 +133,16 @@ mu_query_xapian_new (const char* xpath)
 	g_return_val_if_fail (xpath, NULL);
 
 	if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
-		g_warning ("'%s' is not a readable xapian dir",
-			   xpath);
+		g_warning ("'%s' is not a readable xapian dir", xpath);
 		return NULL;
 	}
 
+	if (!mu_util_xapian_db_version_up_to_date (xpath)) {
+		g_warning ("%s is not up-to-date, needs full reindex",
+			   xpath);
+		return NULL;
+	}
+	
 	mqx = g_new (MuQueryXapian, 1);
 
 	if (!init_mu_query_xapian (mqx, xpath)) {
@@ -147,6 +153,7 @@ mu_query_xapian_new (const char* xpath)
 	
 	return mqx;
 }
+
 
 
 void
@@ -168,6 +175,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
+	
 		Xapian::Query q(get_query(self, searchexpr));
 		Xapian::Enquire enq (*self->_db);
 		

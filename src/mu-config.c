@@ -183,8 +183,9 @@ mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
 	/* set dirmode before, because '0000' is a valid mode */
 	opts->dirmode = 0755;
 
-	if (!parse_params (opts, argcp, argvp))
-		return FALSE;
+	if (argcp && argvp)
+		if (!parse_params (opts, argcp, argvp))
+			return FALSE;
 	
 	if (!opts->muhome)
 		opts->muhome = guess_muhome ();

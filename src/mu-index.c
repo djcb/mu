@@ -30,9 +30,11 @@
 #include "mu-index.h"
 #include "mu-store-xapian.h"
 #include "mu-util.h"
+#include "mu-util-xapian.h"
 
 struct _MuIndex {
 	MuStoreXapian  *_xapian;
+	gboolean _needs_reindex;
 };
 
 MuIndex* 
@@ -51,7 +53,11 @@ mu_index_new (const char *xpath)
 		g_free (index);
 		return NULL;
 	}
-	
+
+	/* see we need to reindex the database */
+	index->_needs_reindex = 
+		mu_util_xapian_db_version_up_to_date (xpath) ? FALSE : TRUE;
+		
 	return index;
 }
 
@@ -65,6 +71,8 @@ mu_index_destroy (MuIndex *index)
 	mu_store_xapian_destroy (index->_xapian);
 	g_free (index);
 }
+
+
 
 struct _MuIndexCallbackData {
 	MuIndexMsgCallback    _idx_msg_cb;
@@ -227,12 +235,18 @@ mu_index_run (MuIndex *index, const char* path,
 {
 	MuIndexCallbackData cb_data;
 	MuResult rv;
+	gchar *version;
 	
 	g_return_val_if_fail (index && index->_xapian, MU_ERROR);
 	
 	if (!check_path (path))
 		return MU_ERROR;
-
+	
+	if (!reindex && index->_needs_reindex) {
+		g_warning ("database not up-to-date; needs full reindex");
+		return MU_ERROR;
+	}
+	
 	if (stats)
 		memset (stats, 0, sizeof(MuIndexStats));
 	
@@ -242,16 +256,21 @@ mu_index_run (MuIndex *index, const char* path,
 	cb_data._user_data = user_data;
 	cb_data._xapian    = index->_xapian;
 	cb_data._stats     = stats;
+	
 	cb_data._reindex   = reindex;
-
 	cb_data._dirstamp  = 0;
 
 	rv = mu_maildir_walk (path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
 			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
 			      &cb_data);
+	if (rv == MU_OK) {
+		if (!mu_store_xapian_set_version (index->_xapian,
+						  MU_XAPIAN_DB_VERSION))
+			g_warning ("failed to set database version");
+	}
+	
 	mu_store_xapian_flush (index->_xapian);
-
 	return rv;
 }
 

@@ -38,7 +38,6 @@ mu_SOURCES=			\
 	mu-msg-gmime.h		\
 	mu-msg-str.c		\
 	mu-msg-str.h		\
-	mu-msg-xapian-priv.hh	\
 	mu-msg-xapian.cc	\
 	mu-msg-xapian.h		\
 	mu-msg.h		\
@@ -49,6 +48,8 @@ mu_SOURCES=			\
 	mu-store-xapian.h	\
 	mu-util.h		\
 	mu-util.c		\
+	mu-util-xapian.cc	\
+	mu-util-xapian.h	\
 	mu.c
 
 mu_LDADD=			\

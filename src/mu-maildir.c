@@ -530,12 +530,10 @@ clear_links (const gchar* dirname, DIR *dir)
 			continue;
 		}
 
-		if (entry->d_type == DT_LNK) {
-			if (unlink (fullpath) != 0) {
-				g_warning ("error unlinking %s: %s",
-					   fullpath, strerror(errno));
-				rv = FALSE;
-			}
+		if (entry->d_type == DT_LNK && unlink (fullpath) != 0) {
+			g_warning ("error unlinking %s: %s",
+				   fullpath, strerror(errno));
+			rv = FALSE;
 		} else /* == DT_DIR, see check before*/
 			rv = mu_maildir_clear_links (fullpath);
 	}

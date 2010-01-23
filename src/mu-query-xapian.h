@@ -48,7 +48,17 @@ MuQueryXapian  *mu_query_xapian_new  (const char* path) G_GNUC_WARN_UNUSED_RESUL
  * 
  * @param self a MuQueryXapian instance, or NULL
  */
-void            mu_query_xapian_destroy  (MuQueryXapian *self);
+void mu_query_xapian_destroy  (MuQueryXapian *self);
+
+
+/** 
+ * get a version string for the database
+ * 
+ * @param store a valid MuQueryXapian
+ * 
+ * @return the version string (free with g_free), or NULL in case of error
+ */
+char* mu_query_xapian_version (MuQueryXapian *store);
 
 
 /** 

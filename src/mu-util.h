@@ -95,7 +95,8 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
         }
 
 /* the name of the (leaf) dir which has the xapian database */
-#define MU_XAPIAN_DIR_NAME "xapian-" MU_XAPIAN_DB_VERSION
+#define MU_XAPIAN_DIR_NAME    "xapian"
+#define MU_XAPIAN_VERSION_KEY "db_version"
 
 /** 
  * log something in the log file; note, we use G_LOG_LEVEL_INFO

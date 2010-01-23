@@ -18,7 +18,7 @@ SUBDIRS=src man
 
 # calculate the cyclomatic-complexity, which should not go over 10
 cc10:
-	@pmccabe `find . -regex '.*\.\(c\|cc\|h\)$'`  | sort -nr | awk '($$1 > 10)'
+	@pmccabe `find . -regex '.*\.\(c\|cc\|h\)$'` | sort -nr | awk '($$1 > 10)'
 
 EXTRA_DIST=	\
 	TODO	\
