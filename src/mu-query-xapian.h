@@ -67,6 +67,11 @@ char* mu_query_xapian_version (MuQueryXapian *store);
  * 
  * @param self a valid MuQueryXapian instance
  * @param expr the search expression
+ * @param sortfield the field to sort by
+ * @param ascending if TRUE sort in ascending (A-Z) order, otherwise,
+ * sort in descending (Z-A) order
+ * @param batchsize the size of batches to receive; this is mainly for
+ * reasons - it's best to get the size one wants to show the user at once
  *
  * @return a MuMsgIterXapian instance you can iterate over, or NULL in
  * case of error
@@ -74,7 +79,8 @@ char* mu_query_xapian_version (MuQueryXapian *store);
 MuMsgIterXapian* mu_query_xapian_run (MuQueryXapian *self, 
 				      const char* expr,
 				      const MuMsgField* sortfield,
-				      gboolean ascending)
+				      gboolean ascending,
+				      size_t batchsize)
 G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
@@ -89,7 +95,8 @@ G_GNUC_WARN_UNUSED_RESULT;
  * case of error; free with g_free when it's no longer needed
  */
 char*  mu_query_xapian_combine  (const gchar **params,
-				 gboolean connect_or) G_GNUC_WARN_UNUSED_RESULT;
+				 gboolean connect_or)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * get a string representation of the Xapian search query
@@ -101,7 +108,8 @@ char*  mu_query_xapian_combine  (const gchar **params,
  * error; free the returned value with g_free
  */
 char* mu_query_xapian_as_string (MuQueryXapian *self,
-				 const char* searchexpr) G_GNUC_WARN_UNUSED_RESULT;
+				 const char* searchexpr)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS

@@ -169,13 +169,14 @@ mu_query_xapian_destroy (MuQueryXapian *self)
 
 MuMsgIterXapian*
 mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
-		     const MuMsgField* sortfield, gboolean ascending)  
+		     const MuMsgField* sortfield, gboolean ascending,
+		     size_t batchsize)  
 {
 	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (searchexpr, NULL);
-		
-	try {
+	g_return_val_if_fail (searchexpr, NULL);	
+	g_return_val_if_fail (batchsize>0, NULL);
 	
+	try {
 		Xapian::Query q(get_query(self, searchexpr));
 		Xapian::Enquire enq (*self->_db);
 		
@@ -184,10 +185,10 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 				(Xapian::valueno)mu_msg_field_id(sortfield),
 				ascending);
 
-		enq.set_query  (q);
-		enq.set_cutoff (0,0);
+		enq.set_query(q);
+		enq.set_cutoff(0,0);
 
-		return mu_msg_iter_xapian_new (enq, 10000); /* FIXME */
+		return mu_msg_iter_xapian_new (enq, batchsize);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
