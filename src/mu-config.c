@@ -181,7 +181,7 @@ mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
 {
 	gchar *old;
 
-	g_return_if_fail (opts);	
+	g_return_val_if_fail (opts, FALSE);	
 	memset (opts, 0, sizeof(MuConfigOptions));
 
 	/* set dirmode before, because '0000' is a valid mode */

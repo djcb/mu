@@ -235,7 +235,6 @@ mu_index_run (MuIndex *index, const char* path,
 {
 	MuIndexCallbackData cb_data;
 	MuResult rv;
-	gchar *version;
 	
 	g_return_val_if_fail (index && index->_xapian, MU_ERROR);
 	

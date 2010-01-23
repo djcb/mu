@@ -37,9 +37,8 @@ struct _MuMsgIterXapian {
 };
 
 
-/* FIXME: maybe use get_doccount() on the database object instead
- * of specifying the batch size? */
-MuMsgIterXapian *
+
+MuMsgIterXapian*
 mu_msg_iter_xapian_new (const Xapian::Enquire& enq, size_t batchsize)
 {
 	MuMsgIterXapian *iter;
@@ -91,7 +90,18 @@ message_is_readable (MuMsgIterXapian *iter)
 	return TRUE;
 }
 		
+static MuMsgIterXapian*
+get_next_batch (MuMsgIterXapian *iter)
+{	
+	iter->_matches = iter->_enq->get_mset (iter->_offset,
+					       iter->_batchsize);
+	if (iter->_matches.empty())
+		iter->_cursor = iter->_matches.end();
+	else
+		iter->_cursor = iter->_matches.begin();
 
+	return iter;
+}
 
 gboolean
 mu_msg_iter_xapian_next (MuMsgIterXapian *iter)
@@ -100,9 +110,12 @@ mu_msg_iter_xapian_next (MuMsgIterXapian *iter)
 	g_return_val_if_fail (!mu_msg_iter_xapian_is_done(iter), FALSE);
 
 	try {
-		if (++iter->_cursor == iter->_matches.end()) 
+		++iter->_offset;
+		if (++iter->_cursor == iter->_matches.end())
+			iter = get_next_batch (iter);
+		if (iter->_cursor == iter->_matches.end())
 			return FALSE; /* no more matches */
-		
+			
 		/* the message may not be readable / existing, e.g., because
 		 * of the database not being fully up to date. in that case,
 		 * we ignore the message. it might be nice to auto-delete
@@ -259,5 +272,6 @@ mu_msg_iter_xapian_get_flags (MuMsgIterXapian *iter)
 MuMsgPriority
 mu_msg_iter_xapian_get_priority (MuMsgIterXapian *iter)
 {
-	return (MuMsgPriority) get_field_number (iter, MU_MSG_FIELD_ID_PRIORITY);
+	return (MuMsgPriority) get_field_number (iter,
+						 MU_MSG_FIELD_ID_PRIORITY);
 } 
