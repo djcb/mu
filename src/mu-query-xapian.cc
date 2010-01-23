@@ -31,7 +31,8 @@
 #include "mu-util.h"
 
 
-static void add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser);
+static void add_prefix (const MuMsgField* field,
+			Xapian::QueryParser* qparser);
 
 struct _MuQueryXapian {
 	Xapian::Database*         _db;
