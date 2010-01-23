@@ -116,11 +116,11 @@ add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 
 	const std::string prefix (mu_msg_field_xapian_prefix(field));
 	
-	qparser->add_boolean_prefix(std::string(mu_msg_field_name(field)),
-				   prefix);
-	qparser->add_boolean_prefix(std::string(mu_msg_field_shortcut(field)),
-				    prefix);
-
+	qparser->add_boolean_prefix
+		(std::string(mu_msg_field_name(field)), prefix);
+	qparser->add_boolean_prefix
+		(std::string(mu_msg_field_shortcut(field)), prefix);
+	
 	/* make the empty string match this field too*/
 	qparser->add_prefix ("", prefix);
 }
@@ -138,7 +138,7 @@ mu_query_xapian_new (const char* xpath)
 	}
 
 	if (!mu_util_xapian_db_version_up_to_date (xpath)) {
-		g_warning ("%s is not up-to-date, needs full reindex",
+		g_warning ("%s is not up-to-date, needs a full update",
 			   xpath);
 		return NULL;
 	}
@@ -146,14 +146,13 @@ mu_query_xapian_new (const char* xpath)
 	mqx = g_new (MuQueryXapian, 1);
 
 	if (!init_mu_query_xapian (mqx, xpath)) {
-		g_warning ("failed to initalize xapian query");
+		g_warning ("failed to initialize the Xapian query");
 		g_free (mqx);
 		return NULL;
 	}
 	
 	return mqx;
 }
-
 
 
 void
@@ -163,6 +162,7 @@ mu_query_xapian_destroy (MuQueryXapian *self)
 		return;
 
 	uninit_mu_query_xapian (self);
+
 	g_free (self);
 }
 
@@ -221,7 +221,6 @@ needs_quotes (const char* str)
 
 	return FALSE;
 }
-
 
 char*
 mu_query_xapian_combine (const gchar **params, gboolean connect_or)

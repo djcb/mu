@@ -207,9 +207,8 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (str, 1, prefix);
 	} else {
-		/* terms can be up to
-		 * MU_STORE_XAPIAN_MAX_TERM_LENGTH (240) long; this is
-		 * a Xapian limit */
+		/* terms can be up to MU_STORE_XAPIAN_MAX_TERM_LENGTH
+		 * (240) long; this is a Xapian limit */
 		doc.add_term (std::string (prefix + value, 0,
 					   MU_STORE_XAPIAN_MAX_TERM_LENGTH));
 	}
