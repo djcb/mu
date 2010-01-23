@@ -1,14 +1,14 @@
 #+STARTUP:showall
 * to-do list for mu-ng first release
 
-** release 0.6 [87%]
+** release 0.6 [100%]
 
    - [X] implement re-index
    - [X] mu-index config options
    - [X] check which options actually work, remove rest
    - [X] fix AND/OR escaping issue
-   - [ ] update web page
-   - [ ] man page / help
+   - [X] update web page
+   - [X] man page / help
    - [X] --mode for mkdir
    - [X] add mu cleanup
    - [X] add --clear option for --linksdir
@@ -26,7 +26,7 @@
    - [X] valgrind checking
    - [X] check existing bugs in c.g.c
    - [X] cleanup ascending/descending stuff
-   - [ ] testing
+   - [X] testing
 
 ** release 0.7 [%]
 
