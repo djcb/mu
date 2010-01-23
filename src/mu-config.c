@@ -69,7 +69,7 @@ config_options_group_index (MuConfigOptions *opts)
 		 "empty the database before indexing"},
 		{"autoupgrade", 'u', 0, G_OPTION_ARG_NONE, &opts->autoupgrade,
 		 "automatically upgrade the database with new mu versions"},
-		{"nocleanup", 'u', 0, G_OPTION_ARG_NONE, &opts->nocleanup,
+		{"nocleanup", 'n', 0, G_OPTION_ARG_NONE, &opts->nocleanup,
 		 "don't clean up the database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
