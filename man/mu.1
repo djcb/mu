@@ -12,6 +12,10 @@ mu \- index and search e-mail messages stored in Maildirs
 
 .B mu mkdir [options] <dir> [<dirs>]
 
+.B mu cleanup [options]
+
+.B mu help [options]
+
 .B mu [options]
 
 .SH DESCRIPTION
@@ -204,12 +208,15 @@ which is more than 35,0000 messages per second (there is some variance here,
 but the author has not seen it getting under 30,0000 messages per second).
 
 
+.SH THE CLEANUP COMMAND
+The \fBcleanup\fR command removes messages for which no corresponding file can
+be found, from the database.  
+
+
 .SH THE FIND COMMAND
 
-The
-.B find
-command starts a search for messages in the database that match the search
-pattern.
+The \fBfind\fR command starts a search for messages in the database that match
+the search pattern.
 
 The search pattern is taken as a command line parameter. If the search
 parameter consists of multiple parts (multiple command line parameters) they
