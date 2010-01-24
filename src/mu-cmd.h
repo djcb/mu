@@ -31,9 +31,8 @@ enum _MuCmd {
 	MU_CMD_FIND,
 	MU_CMD_CLEANUP,
 	MU_CMD_MKDIR,
-	/* not currently present */
-	/* MU_CMD_LINK, */
-	/* MU_CMD_HELP, */
+	MU_CMD_HELP,
+	
 	MU_CMD_UNKNOWN
 };
 typedef enum _MuCmd MuCmd;

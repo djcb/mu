@@ -156,7 +156,7 @@ print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	
 	iter = mu_query_xapian_run (xapian, query, sortfield,
 				    !opts->descending,
-				    10000);
+				    0);
 	if (!iter) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
@@ -384,7 +384,7 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 		printf ("\b");
 	
 	len = snprintf (output, sizeof(output),
-			"%c indexing mail; processed: %d; "
+			"%c processing mail; processed: %d; "
 			"updated/new: %d, cleaned-up: %d",
 			kars[i % 4], stats->_processed,
 			stats->_updated, stats->_cleaned_up);
@@ -392,6 +392,37 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	++i;
 	
 	return MU_OK;
+}
+
+static gboolean
+cmd_cleanup (MuConfigOptions *opts)
+{
+	int rv;	
+	MuIndex *midx;
+	MuIndexStats stats;
+	
+	if (!check_index_params (opts))
+		return FALSE;
+	
+	midx = mu_index_new (opts->xpath);
+	if (!midx) {
+		g_warning ("Cleanup failed");
+		return FALSE;
+	}
+	
+	g_message ("Cleaning up removed messages from %s",
+		   opts->xpath);
+	
+	mu_index_stats_clear (&stats);
+	rv = mu_index_cleanup (midx, &stats,
+			       opts->quiet ? NULL : index_msg_cb,
+			       NULL);
+	mu_index_destroy (midx);
+
+	if (!opts->quiet)
+		g_print ("\n");
+	
+	return rv == MU_OK ? TRUE : FALSE;
 }
 
 
@@ -478,31 +509,6 @@ cmd_index (MuConfigOptions *opts)
 }
 
 
-MuResult
-cleanup_cb (MuIndexStats *stats, void *user_data)
-{
-	char *kars="-\\|/";
-	char output[100];
-	
-	static int i = 0;
-	static int len = 0;
-
-	while (len --> 0) 
-		printf ("\b");
-	
-	len = snprintf (output, sizeof(output),
-			"%c mu is cleaning up the message database; "
-			"processed: %d; cleaned-up: %d",
-			kars[i % 4], stats->_processed, stats->_cleaned_up);
-	g_print ("%s", output);
-	++i;
-
-	return MU_OK;
-}
-
-
-
-
 static int
 cmd_mkdir (MuConfigOptions *opts)
 {
@@ -528,60 +534,6 @@ cmd_mkdir (MuConfigOptions *opts)
 
 	return TRUE;
 }
-
-
-
-#if 0 /* currently, turned off */
-
-static gboolean
-cmd_help (MuConfigOptions *opts)
-{
-	/* FIXME: get context-sensitive help */
-	_show_version ();
-	return _show_usage (FALSE);
-}
-
-static gboolean
-cmd_cleanup (MuConfigOptions *opts)
-{
-	int rv;
-	
-	if (!_check_index_params (opts))
-		return FALSE;
-	
-	mu_msg_gmime_init ();
-	{
-		MuIndex *midx;
-		MuIndexStats stats;
-		
-		mu_index_stats_clear (&stats);
-		
-		midx = mu_index_new (opts->xpath);
-		if (!midx) {
-			g_warning ("Cleanup failed");
-			return FALSE;
-		}
-		
-		g_message ("Cleaning up removed messages from %s",
-			   opts->xpath);
-		mu_index_cleanup (midx, &stats,
-				  opts->quiet ? NULL :_cleanup_cb,
-				  NULL);
-		mu_index_destroy (midx);
-
-		if (!opts->quiet) {
-			_cleanup_cb (&stats, NULL);
-			g_print ("\n");
-		}
-	}
-	
-	mu_msg_gmime_uninit ();
-	
-	return rv == MU_OK ? TRUE : FALSE;
-}
-#endif /* 0 */
-
-
 
 static gboolean
 show_usage (gboolean noerror)
@@ -617,6 +569,16 @@ show_version (void)
 }
 
 
+static gboolean
+cmd_help (MuConfigOptions *opts)
+{
+	/* FIXME: get context-sensitive help */
+	show_version ();
+	return show_usage (FALSE);
+}
+
+
+
 gboolean
 mu_cmd_execute (MuConfigOptions *opts)
 {
@@ -635,9 +597,8 @@ mu_cmd_execute (MuConfigOptions *opts)
 	case MU_CMD_INDEX:   return cmd_index (opts);
 	case MU_CMD_FIND:    return cmd_find (opts);
 	case MU_CMD_MKDIR:   return cmd_mkdir (opts);
-
-		/* case MU_CMD_CLEANUP: return cmd_cleanup (opts); */
-		/* case MU_CMD_HELP:    return cmd_help  (opts); */
+	case MU_CMD_CLEANUP: return cmd_cleanup (opts);
+	case MU_CMD_HELP:    return cmd_help  (opts);
 
 	case MU_CMD_UNKNOWN: return show_usage (FALSE);
 	default:
