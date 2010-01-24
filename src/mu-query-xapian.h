@@ -71,7 +71,9 @@ char* mu_query_xapian_version (MuQueryXapian *store);
  * @param ascending if TRUE sort in ascending (A-Z) order, otherwise,
  * sort in descending (Z-A) order
  * @param batchsize the size of batches to receive; this is mainly for
- * reasons - it's best to get the size one wants to show the user at once
+ * reasons - it's best to get the size one wants to show the user at once.
+ * If you pass '0' as the batchsize, mu will use the maximum size (the count
+ * of documents in the database)
  *
  * @return a MuMsgIterXapian instance you can iterate over, or NULL in
  * case of error

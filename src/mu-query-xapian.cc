@@ -174,11 +174,13 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);	
-	g_return_val_if_fail (batchsize>0, NULL);
 	
 	try {
 		Xapian::Query q(get_query(self, searchexpr));
 		Xapian::Enquire enq (*self->_db);
+
+		if (batchsize == 0)
+			batchsize = self->_db->get_doccount();
 		
 		if (sortfield) 
 			enq.set_sort_by_value (
