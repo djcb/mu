@@ -57,11 +57,12 @@ gboolean mu_util_create_dir_maybe (const gchar *path);
 
 
 /** 
- * check whether path is readable and/or writeable
+ * check whether path is a directory, and optionally, if it's readable
+ * and/or writeable
  *  
  * @param path dir path
  * @param readable check for readability
- * @param writeable check fro writability
+ * @param writeable check for writability
  * 
  * @return TRUE if dir exist and has the specified properties
  */

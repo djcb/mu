@@ -102,6 +102,54 @@ test_mu_util_guess_maildir_02 (void)
 }
 
 
+static void
+test_mu_util_check_dir_01 (void)
+{
+	if (g_access ("/usr/bin", F_OK) == 0) {
+		g_assert_cmpuint (
+			mu_util_check_dir ("/usr/bin", TRUE, FALSE) == TRUE,
+			==,
+			g_access ("/usr/bin", R_OK) == 0);
+	}	
+}
+
+
+static void
+test_mu_util_check_dir_02 (void)
+{
+	if (g_access ("/tmp", F_OK) == 0) {
+		g_assert_cmpuint (
+			mu_util_check_dir ("/tmp", FALSE, TRUE) == TRUE,
+			==,
+			g_access ("/tmp", W_OK) == 0);
+	}	
+}
+
+
+static void
+test_mu_util_check_dir_03 (void)
+{
+	if (g_access (".", F_OK) == 0) {
+		g_assert_cmpuint (
+			mu_util_check_dir (".", TRUE, TRUE) == TRUE,
+			==,
+			g_access (".", W_OK | R_OK) == 0);
+	}	
+}
+
+
+static void
+test_mu_util_check_dir_04 (void)
+{
+	/* not a dir, so it must be false */
+	g_assert_cmpuint (
+		mu_util_check_dir ("test-util.c", TRUE, TRUE),
+		==,
+		FALSE);	
+}
+
+
+
 
 
 
@@ -124,6 +172,17 @@ main (int argc, char *argv[])
 			 test_mu_util_guess_maildir_01);
 	g_test_add_func ("/mu-util/mu-util-guess-maildir-02",
 			 test_mu_util_guess_maildir_02);
+
+	/* mu_util_check_dir */
+	g_test_add_func ("/mu-util/mu-util-check-dir-01",
+			 test_mu_util_check_dir_01);
+	g_test_add_func ("/mu-util/mu-util-check-dir-02",
+			 test_mu_util_check_dir_02);
+	g_test_add_func ("/mu-util/mu-util-check-dir-03",
+			 test_mu_util_check_dir_03);
+	g_test_add_func ("/mu-util/mu-util-check-dir-04",
+			 test_mu_util_check_dir_04);
+	
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_DEBUG|
