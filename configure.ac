@@ -71,10 +71,20 @@ PKG_CHECK_MODULES(GLIB,glib-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
+# g_test was introduced in glib 2.16
+PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.16,
+		  [have_gtest=yes],[have_gtest=no])
+AM_CONDITIONAL(HAVE_GTEST, test "x$have_gtest" = "xyes")
+if test "x$have_gtest" = "xno"; then
+   AC_MSG_WARN([You need GLIB version >= 2.16 to build the tests])
+fi
+
+
 # gmime2?	
 PKG_CHECK_MODULES(GMIME,gmime-2.4)
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
+
 
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
@@ -93,10 +103,10 @@ AS_IF([test "x$XAPIAN" = "xno"],[
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
-
 AC_OUTPUT([
 Makefile
 src/Makefile
+src/tests/Makefile
 man/Makefile
 ])
 

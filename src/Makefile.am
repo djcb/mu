@@ -14,6 +14,16 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+include $(top_srcdir)/gtest.mk
+
+# enforce compiling this dir first before decending into tests/
+SUBDIRS= .
+
+if HAVE_GTEST
+SUBDIRS += tests
+endif
+
+
 INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 
 bin_PROGRAMS=				\
