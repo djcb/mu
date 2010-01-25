@@ -35,8 +35,8 @@ G_BEGIN_DECLS
 char*       mu_util_dir_expand (const char* path);
 
 /** 
- * guess the maildir; first try MAILDIR, then try ~/Maildir
- * if both fail, return NULL
+ * guess the maildir; first try $MAILDIR; if it is unset or
+ * non-existant, try ~/Maildir if both fail, return NULL
  * 
  * @return full path of the guessed Maildir, or NULL; must be freed (gfree)
  */
