@@ -28,10 +28,9 @@
    - [X] cleanup ascending/descending stuff
    - [X] testing
 
-** release 0.7 [28%]
+** release 0.7 [30%]
 
-   - [ ] detect mail threads (?)
-   - [ ] signal handler
+   - [ ] signal handler for indexing
    - [X] fix max 10000 matches limit
    - [X] embed database version in database
    - [X] MuMsgXapian => MuMsgIterXapian
@@ -44,6 +43,7 @@
    - [ ] test suite
    - [ ] moving msg field formatting to MuMsgField (?)
    - [ ] auto clean log file
+   - [ ] configure error for missing ->dt_dtype
 
 ** release 0.8 [%]
    - [ ] bookmarks
@@ -51,3 +51,4 @@
    - [ ] config system (config file) (?)
    - [ ] UTF-8 output to console
    - [ ] search for date interval etc.
+   - [ ] detect mail threads (?)
