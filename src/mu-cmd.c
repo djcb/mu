@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <signal.h>
 
 #include "mu-msg-gmime.h"
 #include "mu-maildir.h"
@@ -353,6 +355,38 @@ cmd_find (MuConfigOptions *opts)
 }
 
 
+static gboolean MU_CAUGHT_SIGNAL;
+
+static void
+sig_handler (int sig)
+{
+        g_debug ("caught signal %d", sig);
+	g_print ("\n");
+	g_message ("Shutting down gracefully, "
+		   "press again to kill immediately");
+	
+        MU_CAUGHT_SIGNAL = TRUE;
+}
+
+static void
+install_sig_handler (void)
+{
+        struct sigaction action;
+        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM };
+	
+        MU_CAUGHT_SIGNAL = FALSE;
+
+        action.sa_handler = sig_handler;
+        sigemptyset(&action.sa_mask);
+        action.sa_flags = SA_RESETHAND;
+
+        for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
+                if (sigaction (sigs[i], &action, NULL) != 0)
+                        g_warning ("error: set sigaction for %d failed: %s",
+				   sigs[i], strerror (errno));;
+}
+
+
 static gboolean
 check_index_params (MuConfigOptions *opts)
 {
@@ -361,7 +395,6 @@ check_index_params (MuConfigOptions *opts)
 		return FALSE;
 	}
 	
-	
 	if (!mu_util_check_dir (opts->maildir, TRUE, TRUE)) {
 		g_message ("Please provide a valid Maildir");
 		return FALSE;
@@ -369,7 +402,14 @@ check_index_params (MuConfigOptions *opts)
 	
 	return TRUE;
 }
-	
+
+
+static MuResult
+index_msg_silent_cb  (MuIndexStats* stats, void *user_data)
+{
+	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
+}
+
 
 static MuResult
 index_msg_cb  (MuIndexStats* stats, void *user_data)
@@ -391,7 +431,7 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	g_print ("%s", output);
 	++i;
 	
-	return MU_OK;
+	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
 
 static gboolean
@@ -403,6 +443,8 @@ cmd_cleanup (MuConfigOptions *opts)
 	
 	if (!check_index_params (opts))
 		return FALSE;
+
+	install_sig_handler ();
 	
 	midx = mu_index_new (opts->xpath);
 	if (!midx) {
@@ -415,14 +457,17 @@ cmd_cleanup (MuConfigOptions *opts)
 	
 	mu_index_stats_clear (&stats);
 	rv = mu_index_cleanup (midx, &stats,
-			       opts->quiet ? NULL : index_msg_cb,
+			       opts->quiet ? index_msg_silent_cb : index_msg_cb,
 			       NULL);
 	mu_index_destroy (midx);
 
 	if (!opts->quiet)
 		g_print ("\n");
-	
-	return rv == MU_OK ? TRUE : FALSE;
+
+	if (rv == MU_OK || rv == MU_STOP)
+		return TRUE;
+	else
+		return FALSE;
 }
 
 
@@ -461,7 +506,9 @@ cmd_index (MuConfigOptions *opts)
 	
 	if (!database_version_check_and_update(opts))
 		return FALSE;
-		
+
+	install_sig_handler ();
+	
 	mu_msg_gmime_init ();
 	{
 		MuIndex *midx;
@@ -480,14 +527,16 @@ cmd_index (MuConfigOptions *opts)
 		
 		rv = mu_index_run (midx, opts->maildir,
 				   opts->reindex, &stats,
-				   opts->quiet ? NULL : index_msg_cb,
+				   opts->quiet ?
+				        index_msg_silent_cb :index_msg_cb,
 				   NULL, NULL);
-		if (!opts->nocleanup) {
+		if (!opts->nocleanup && !MU_CAUGHT_SIGNAL) {
 			stats._processed = 0; /* start over */
 			g_print ("\n");
 			g_message ("Cleaning up missing messages");
 			mu_index_cleanup (midx, &stats,
-					  opts->quiet ? NULL : index_msg_cb,
+					  opts->quiet ?
+					       index_msg_silent_cb : index_msg_cb,
 					  NULL);
 		}
 

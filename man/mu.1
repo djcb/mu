@@ -125,6 +125,12 @@ The optional phase two of the indexing-process is the removal of messages from
 the database for which there is no longer a corresponding file in the
 Maildir. If you do not want this, you can use \fB\-n\fR, \fB\-\-nocleanup\fR.
 
+When \fBmu index\fR catches on of the signals \fBSIGINT\fR, \fBSIGHUP\fR or
+\fBSIGTERM\fR (e.g,, when you press Ctrl-C during the indexing process), it
+tries to shutdown gracefully; it tries to save and commit data, and close the
+database etc. If it receives another signal (e.g,, when pressing Ctrl-C once
+more), \fBmu index\fR will terminate immediately.
+
 .SS Indexing options
 
 .TP

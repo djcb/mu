@@ -95,7 +95,7 @@ typedef MuResult (*MuIndexDirCallback) (const char* path, gboolean enter,
  * for cumulative stats from multiple calls. If needed, you can use
  * @mu_index_stats_clear before calling this function
  * @param cb_msg a callback function called for every msg indexed;
- * @param cb_dir a callback function called for every dir entered/left; 
+ * @param cb_dir a callback function called for every dir entered/left or NULL 
  * @param user_data a user pointer that will be passed to the callback function
  * 
  * @return MU_OK if the stats gathering was completed succesfully, 
@@ -118,7 +118,8 @@ MuResult mu_index_run (MuIndex *index, const char* path, gboolean force,
  * note that this function does *not* reset the struct values to allow
  * for cumulative stats from multiple calls. If needed, you can use
  * @mu_index_stats_clear before calling this function
- * @param cb a callback function which will be called for every msg; 
+ * @param msg_cb a callback function which will be called for every msg;
+ * @param dir_cb a callback function which will be called for every dir or NULL 
  * @param user_data a user pointer that will be passed to the callback function
  * xb
  * @return MU_OK if the stats gathering was completed succesfully, 

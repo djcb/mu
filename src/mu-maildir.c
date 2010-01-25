@@ -212,12 +212,13 @@ static MuResult process_dir (const char* path,
 			     MuMaildirWalkDirCallback dir_cb, void *data);
 
 static MuResult 
-process_file (const char* fullpath, MuMaildirWalkMsgCallback cb, void *data)
+process_file (const char* fullpath, MuMaildirWalkMsgCallback msg_cb,
+	      void *data)
 {
 	MuResult result;
 	struct stat statbuf;
 	
-	if (!cb)
+	if (!msg_cb)
 		return MU_OK;
 
 	if (G_UNLIKELY(access(fullpath, R_OK) != 0)) {
@@ -241,14 +242,13 @@ process_file (const char* fullpath, MuMaildirWalkMsgCallback cb, void *data)
 	 * use the ctime, so any status change will be visible (perms,
 	 * filename etc.)
 	 */
-	result = (cb)(fullpath, statbuf.st_ctime, data);
-	if (G_LIKELY(result == MU_OK || result == MU_STOP))
-		return result;
-	else {
+	result = (msg_cb)(fullpath, statbuf.st_ctime, data);
+	if (result == MU_STOP) 
+		g_debug ("callback said 'MU_STOP' for %s", fullpath);
+	else if (result == MU_ERROR)
 		g_warning ("%s: failed %d in callback (%s)",  
 			   __FUNCTION__, result, fullpath);
-		return result;
-	}
+	return result;
 }
 
 
@@ -481,9 +481,13 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 	c = lst = g_list_sort (lst, (GCompareFunc)dirent_cmp);
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/	
 
-	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) 
+	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) {
 		result = process_dir_entry (path, (struct dirent*)c->data, 
 					    msg_cb, dir_cb, data);
+		/* hmmm, break on MU_ERROR as well? */
+		if (result == MU_STOP)
+			break;
+	}
 
 	g_list_foreach (lst, (GFunc)dirent_destroy, NULL);
 	g_list_free (lst);
@@ -517,8 +521,11 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 		/* skip the final slash from dirnames */
 		MuResult rv;
 		char *mypath = g_strdup (path);
+
+		/* strip the final / or \ */
 		if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
 			mypath[strlen(mypath)-1] = '\0';
+
 		rv = process_dir (mypath, cb_msg, cb_dir, data);
 		g_free (mypath);
 		

@@ -141,16 +141,16 @@ insert_or_update_maybe (const char* fullpath, time_t filestamp,
 static MuResult
 run_msg_callback_maybe (MuIndexCallbackData *data)
 {
-	if (data && data->_idx_msg_cb) {
-		
-		MuResult result;
-		
-		result = data->_idx_msg_cb (data->_stats, data->_user_data);
-		if (result != MU_OK && result != MU_STOP)
- 			g_warning ("%s: callback said %d", __FUNCTION__, result);
-	}
+	MuResult result;
 
-	return MU_OK;
+	if (!data || !data->_idx_msg_cb)
+		return MU_OK;
+	
+	result = data->_idx_msg_cb (data->_stats, data->_user_data);
+	if (result != MU_OK && result != MU_STOP)
+		g_warning ("Error in callback");
+
+	return result;
 }
 
 
@@ -237,6 +237,7 @@ mu_index_run (MuIndex *index, const char* path,
 	MuResult rv;
 	
 	g_return_val_if_fail (index && index->_xapian, MU_ERROR);
+	g_return_val_if_fail (msg_cb, MU_ERROR);
 	
 	if (!check_path (path))
 		return MU_ERROR;
@@ -303,7 +304,8 @@ mu_index_stats (MuIndex *index, const char* path,
 	MuIndexCallbackData cb_data;
 	
 	g_return_val_if_fail (index, MU_ERROR);
-
+	g_return_val_if_fail (cb_msg, MU_ERROR);
+	
 	if (!check_path (path))
 		return MU_ERROR;
 
@@ -369,7 +371,8 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 	CleanupData cudata;
 	
 	g_return_val_if_fail (index, MU_ERROR);
-
+	g_return_val_if_fail (cb, MU_ERROR);
+	
 	cudata._xapian	  = index->_xapian;
 	cudata._stats	  = stats;
 	cudata._cb	  = cb;
