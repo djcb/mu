@@ -16,10 +16,19 @@
 
 INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 
-bin_PROGRAMS=			\
+bin_PROGRAMS=				\
 	mu
 
+noinst_LTLIBRARIES=			\
+	libmu.la
+
 mu_SOURCES=				\
+	mu.c
+
+mu_LDADD=				\
+	libmu.la
+
+libmu_la_SOURCES=			\
 	mu-cmd.c			\
 	mu-cmd.h			\
 	mu-config.c			\
@@ -50,10 +59,9 @@ mu_SOURCES=				\
 	mu-util-xapian.cc		\
 	mu-util-xapian.h		\
 	mu-util.c			\
-	mu-util.h			\
-	mu.c
+	mu-util.h
 
-mu_LDADD=			\
-	$(XAPIAN_LIBS)		\
-	$(GMIME_LIBS)		\
+libmu_la_LIBADD=			\
+	$(XAPIAN_LIBS)			\
+	$(GMIME_LIBS)			\
 	$(GLIB_LIBS)
