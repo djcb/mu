@@ -59,8 +59,8 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
 AC_STRUCT_DIRENT_D_TYPE
 AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],[
    AC_MSG_ERROR([
-   *** We need the d_type-member in struct dirent, but unfortunately
-   *** your system does not seem to have it])
+   *** We need the d_type member in struct dirent, but it seems
+   *** your system does not have it])
    ])
 # support for d_ino in struct dirent is optional     
 AC_STRUCT_DIRENT_D_INO
