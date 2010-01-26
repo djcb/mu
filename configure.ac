@@ -29,7 +29,7 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 #
 AC_DEFINE(MU_XAPIAN_DB_VERSION,["6.99"], [Schema version of the database])
 
-AC_PROG_LIBTOOL
+LT_INIT # don't use AC_PROG_LIBTOOL anymore
 
 AS_IF([test x$prefix = xNONE],[
    prefix=/usr/local])
@@ -37,7 +37,6 @@ AC_SUBST(prefix)
 
 AC_PROG_CC
 AC_PROG_CXX
-AM_PROG_CC_STDC
 AC_HEADER_STDC
 
 # require pkg-config
@@ -103,12 +102,13 @@ AS_IF([test "x$XAPIAN" = "xno"],[
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/tests/Makefile
 man/Makefile
 ])
+AC_OUTPUT
 
 echo
 echo "Note: the Xapian database is no longer stored as <muhome>/xapian-0.6"
