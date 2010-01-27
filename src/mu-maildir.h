@@ -28,7 +28,9 @@
 
 /** 
  * create a new maildir. Note, if the function fails 'halfway', it
- * will *not* try to remove the parts the were created.
+ * will *not* try to remove the parts the were created. it *will*
+ * create any parent dirs that are not yet existant.
+ * 
  * 
  * @param path the path (missing components will be created, as in 'mkdir -p')
  * @param mode the file mode (e.g., 0755)

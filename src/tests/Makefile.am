@@ -24,9 +24,15 @@ INCLUDES=$(XAPIAN_CXXFLAGS)			\
 
 noinst_PROGRAMS= $(TEST_PROGS)
 
-TEST_PROGS += test-util
-test_util_SOURCES= test-util.c
-test_util_LDADD=   ${top_srcdir}/src/libmu.la
+TEST_PROGS += test-mu-util
+test_mu_util_SOURCES= test-mu-util.c
+test_mu_util_LDADD=   ${top_srcdir}/src/libmu.la
+
+
+TEST_PROGS += test-mu-maildir
+test_mu_maildir_SOURCES= test-mu-maildir.c
+test_mu_maildir_LDADD=   ${top_srcdir}/src/libmu.la
+
 
 
 # note the question marks; make does not like files with ':'...
