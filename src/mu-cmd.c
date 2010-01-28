@@ -36,29 +36,28 @@
 #include "mu-util.h"
 #include "mu-util-xapian.h"
 
+
 static MuCmd 
 cmd_from_string (const char* cmd)
 {
-	if (!cmd)
-		return MU_CMD_UNKNOWN;
+	int i;
+	typedef struct {
+		const gchar* _name;
+		MuCmd        _cmd;
+	} Cmd;
 
-	if (strcmp (cmd, "index") == 0)
-		return MU_CMD_INDEX;
+	Cmd cmd_map[]= {
+		{ "index",   MU_CMD_INDEX },
+		{ "find",    MU_CMD_FIND },
+		{ "cleanup", MU_CMD_CLEANUP },
+		{ "mkdir",   MU_CMD_MKDIR },
+		{ "view",    MU_CMD_VIEW },
+		{ "index",   MU_CMD_INDEX }};
+	
+	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
+		if (strcmp (cmd, cmd_map[i]._name) == 0)
+			return cmd_map[i]._cmd;
 
-	/* support some synonyms... */
-	if (strcmp (cmd, "find")  == 0) 
-		return MU_CMD_FIND;
-
-	if (strcmp (cmd, "cleanup") == 0)
-		return MU_CMD_CLEANUP;
-	
-	if (strcmp (cmd, "mkdir") == 0) 
-		return MU_CMD_MKDIR;
-	
-	/* if ((strcmp (cmd, "help") == 0) || */
-	/*     (strcmp (cmd, "info") == 0)) */
-	/* 	return MU_CMD_HELP; */
-	
 	return MU_CMD_UNKNOWN;
 }
 
@@ -69,7 +68,6 @@ update_warning (void)
 		   MU_XAPIAN_DB_VERSION);
 	g_message ("please run 'mu index --empty' (see the manpage)");
 }
-
 
 
 
@@ -495,6 +493,13 @@ database_version_check_and_update (MuConfigOptions *opts)
 	return FALSE;
 }
 
+static gboolean
+cmd_view (MuConfigOptions *opts)
+{
+	return TRUE; /* FIXME */
+}
+
+
 
 static gboolean
 cmd_index (MuConfigOptions *opts)
@@ -647,7 +652,9 @@ mu_cmd_execute (MuConfigOptions *opts)
 	case MU_CMD_FIND:    return cmd_find (opts);
 	case MU_CMD_MKDIR:   return cmd_mkdir (opts);
 	case MU_CMD_CLEANUP: return cmd_cleanup (opts);
-	case MU_CMD_HELP:    return cmd_help  (opts);
+	case MU_CMD_VIEW:    return cmd_view (opts);
+
+		//case MU_CMD_HELP:    return cmd_help  (opts);
 
 	case MU_CMD_UNKNOWN: return show_usage (FALSE);
 	default:

@@ -39,7 +39,6 @@
    - [X] fix the batch stuff
    - [ ] mu help <cmd> (?)
    - [ ] mu view <path>
-   - [ ] add symlink-following option for index
    - [ ] test suite
    - [ ] auto clean log file
    - [X] configure error for missing ->dt_dtype
