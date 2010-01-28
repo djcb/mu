@@ -1,0 +1,209 @@
+Return-Path: <sqlite-dev-bounces@sqlite.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.2 required=3.0 tests=BAYES_00,HTML_MESSAGE,
+	MIME_QP_LONG_LINE autolearn=no version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id 4E3CF6963B
+	for <xxxx@localhost>; Mon,  4 Aug 2008 21:49:37 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [72.14.221.111]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Mon, 04 Aug 2008 21:49:37 +0300 (EEST)
+Received: by 10.142.51.12 with SMTP id y12cs94317wfy; Mon, 4 Aug 2008 05:48:28
+ -0700 (PDT)
+Received: by 10.150.152.17 with SMTP id z17mr1245909ybd.194.1217854107583;
+ Mon, 04 Aug 2008 05:48:27 -0700 (PDT)
+Received: from sqlite.org (sqlite.org [67.18.92.124]) by mx.google.com with
+ ESMTP id 9si6334793yws.5.2008.08.04.05.47.57; Mon, 04 Aug 2008 05:48:27 -0700
+ (PDT)
+Received-SPF: pass (google.com: best guess record for domain of
+ sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as permitted sender)
+ client-ip=67.18.92.124;
+Authentication-Results: mx.google.com; spf=pass (google.com: best guess record
+ for domain of sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as
+ permitted sender) smtp.mail=sqlite-dev-bounces@sqlite.org
+Received: from sqlite.org (localhost [127.0.0.1]) by sqlite.org (Postfix) with
+ ESMTP id 4FBC111C6F; Mon,  4 Aug 2008 08:47:54 -0400 (EDT)
+X-Original-To: sqlite-dev@sqlite.org
+Delivered-To: sqlite-dev@sqlite.org
+Received: from cpsmtpo-eml02.kpnxchange.com (cpsmtpo-eml02.kpnxchange.com
+ [213.75.38.151]) by sqlite.org (Postfix) with ESMTP id AA4F111C10 for
+ <sqlite-dev@sqlite.org>; Mon,  4 Aug 2008 08:47:51 -0400 (EDT)
+Received: from hpsmtp-eml21.kpnxchange.com ([213.75.38.121]) by
+ cpsmtpo-eml02.kpnxchange.com with Microsoft SMTPSVC(6.0.3790.1830);  Mon, 4
+ Aug 2008 14:47:50 +0200
+Received: from cpbrm-eml13.kpnsp.local ([195.121.247.250]) by
+ hpsmtp-eml21.kpnxchange.com with Microsoft SMTPSVC(6.0.3790.1830);  Mon, 4
+ Aug 2008 14:47:50 +0200
+Received: from hpsmtp-eml30.kpnxchange.com ([10.94.53.250]) by
+ cpbrm-eml13.kpnsp.local with Microsoft SMTPSVC(6.0.3790.1830);  Mon, 4 Aug
+ 2008 14:47:50 +0200
+Received: from localhost ([10.94.53.250]) by hpsmtp-eml30.kpnxchange.com with
+ Microsoft SMTPSVC(6.0.3790.1830); Mon, 4 Aug 2008 14:47:49 +0200
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+X-MimeOLE: Produced By Microsoft Exchange V6.5
+Date: Mon, 4 Aug 2008 14:46:06 +0200
+Message-ID: <F687EC042917A94E8BB4B0902946453AE17D6C@CPEXBE-EML18.kpnsp.local>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: [sqlite-dev] VM optimization inside sqlite3VdbeExec
+Thread-Index: Acj2FjkWvteFtLHTTYeVz4ES7E2ggAAGRxeI
+References: <83B5AF40-DBFA-4578-A043-04C80276E195@sqlabs.net>
+From: anon@example.com
+To: <sqlite-dev@sqlite.org>
+X-OriginalArrivalTime: 04 Aug 2008 12:47:49.0650 (UTC)
+ FILETIME=[4D577720:01C8F630]
+Subject: Re: [sqlite-dev] VM optimization inside sqlite3VdbeExec
+X-BeenThere: sqlite-dev@sqlite.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+Reply-To: sqlite-dev@sqlite.org
+List-Id: <sqlite-dev.sqlite.org>
+List-Unsubscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>,
+  <mailto:sqlite-dev-request@sqlite.org?subject=unsubscribe>
+List-Archive: <http://sqlite.org:8080/cgi-bin/mailman/private/sqlite-dev>
+List-Post: <mailto:sqlite-dev@sqlite.org>
+List-Help: <mailto:sqlite-dev-request@sqlite.org?subject=help>
+List-Subscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>, 
+ <mailto:sqlite-dev-request@sqlite.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1911358387=="
+Mime-version: 1.0
+Sender: sqlite-dev-bounces@sqlite.org
+Errors-To: sqlite-dev-bounces@sqlite.org
+Content-Length: 5318
+
+This is a multi-part message in MIME format.
+
+--===============1911358387==
+Content-class: urn:content-classes:message
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01C8F630.0FC2EC1E"
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01C8F630.0FC2EC1E
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Actually, almost every C compiler will already do what you suggest: if =
+the range of case labels is compact, the switch will be compiled using a =
+jump table. Only if the range is limited and/or sparse other techniques =
+will be used, such as linear search and binary search.
+=20
+I'm pretty sure, if you perform the tests suggested by Mihai, that you =
+will find zero performance difference, neither better, nor worse.
+=20
+Paul
+=20
+________________________________
+
+From: anon@example.com
+Sent: Mon 8/4/2008 11:40 AM
+To: sqlite-dev@sqlite.org
+Subject: [sqlite-dev] VM optimization inside sqlite3VdbeExec
+
+
+
+Inside sqlite3VdbeExec there is a very big switch statement.
+In order to increase performance with few modifications to the=20
+original code, why not use this technique ?
+http://docs.freebsd.org/info/gcc/gcc.info.Labels_as_Values.html =
+<http://docs.freebsd.org/info/gcc/gcc.info.Labels_as_Values.html>=20
+
+With a properly defined "instructions" array, instead of the switch=20
+statement you can use something like:
+goto * instructions[pOp->opcode];
+---
+Marco Bambini
+http://www.sqlabs.net <http://www.sqlabs.net/>=20
+http://www.sqlabs.net/blog/ <http://www.sqlabs.net/blog/>=20
+http://www.sqlabs.net/realsqlserver/ =
+<http://www.sqlabs.net/realsqlserver/>=20
+
+
+
+_______________________________________________
+sqlite-dev mailing list
+sqlite-dev@sqlite.org
+http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev =
+<http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>=20
+
+
+
+------_=_NextPart_001_01C8F630.0FC2EC1E
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<HTML dir=3Dltr><HEAD><TITLE>[sqlite-dev] VM optimization inside =
+sqlite3VdbeExec</TITLE>=0A=
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Dunicode">=0A=
+<META content=3D"MSHTML 6.00.2715.400" name=3DGENERATOR></HEAD>=0A=
+<BODY>=0A=
+<DIV id=3DidOWAReplyText54900 dir=3Dltr>=0A=
+<DIV dir=3Dltr><FONT face=3DArial color=3D#000000 size=3D2>Actually, =
+almost every C compiler will already do what you suggest: if the range =
+of case labels is compact, the switch will be compiled using a jump =
+table. Only if the range is limited and/or sparse other techniques will =
+be used, such as linear search and binary search.</FONT></DIV>=0A=
+<DIV dir=3Dltr><FONT face=3DArial size=3D2></FONT>&nbsp;</DIV>=0A=
+<DIV dir=3Dltr><FONT face=3DArial size=3D2>I'm pretty sure, if you =
+perform the tests suggested by Mihai, that you will find zero =
+performance difference, neither better, nor worse.</FONT></DIV>=0A=
+<DIV dir=3Dltr><FONT face=3DArial size=3D2></FONT>&nbsp;</DIV>=0A=
+<DIV dir=3Dltr><FONT face=3DArial size=3D2>Paul</FONT></DIV>=0A=
+<DIV dir=3Dltr><FONT face=3DArial size=3D2></FONT>&nbsp;</DIV>=0A=
+<DIV dir=3Dltr><FONT face=3DArial size=3D2>=0A=
+<HR tabIndex=3D-1>=0A=
+</FONT></DIV>=0A=
+<DIV dir=3Dltr><FONT face=3DArial><FONT size=3D2><B>From:</B> =
+sqlite-dev-bounces@sqlite.org on behalf of Marco Bambini<BR><B>Sent:</B> =
+Mon 8/4/2008 11:40 AM<BR><B>To:</B> =
+sqlite-dev@sqlite.org<BR><B>Subject:</B> [sqlite-dev] VM optimization =
+inside sqlite3VdbeExec<BR><BR></FONT></FONT></DIV></DIV>=0A=
+<DIV>=0A=
+<P><FONT face=3DArial size=3D2>Inside sqlite3VdbeExec there is a very =
+big switch statement.<BR>In order to increase performance with few =
+modifications to the&nbsp;<BR>original code, why not use this technique =
+?<BR></FONT><A =
+href=3D"http://docs.freebsd.org/info/gcc/gcc.info.Labels_as_Values.html">=
+<FONT face=3DArial =
+size=3D2>http://docs.freebsd.org/info/gcc/gcc.info.Labels_as_Values.html<=
+/FONT></A><BR><BR><FONT face=3DArial size=3D2>With a properly defined =
+"instructions" array, instead of the switch&nbsp;<BR>statement you can =
+use something like:<BR>goto * =
+instructions[pOp-&gt;opcode];<BR>---<BR>Marco Bambini<BR></FONT><A =
+href=3D"http://www.sqlabs.net/"><FONT face=3DArial =
+size=3D2>http://www.sqlabs.net</FONT></A><BR><A =
+href=3D"http://www.sqlabs.net/blog/"><FONT face=3DArial =
+size=3D2>http://www.sqlabs.net/blog/</FONT></A><BR><A =
+href=3D"http://www.sqlabs.net/realsqlserver/"><FONT face=3DArial =
+size=3D2>http://www.sqlabs.net/realsqlserver/</FONT></A><BR><BR><BR><BR><=
+FONT face=3DArial =
+size=3D2>_______________________________________________<BR>sqlite-dev =
+mailing list<BR>sqlite-dev@sqlite.org<BR></FONT><A =
+href=3D"http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev"><FONT=
+ face=3DArial =
+size=3D2>http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev</FONT=
+></A><BR></P></DIV></BODY></HTML>
+------_=_NextPart_001_01C8F630.0FC2EC1E--
+
+
+--===============1911358387==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+sqlite-dev mailing list
+sqlite-dev@sqlite.org
+http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev
+
+--===============1911358387==--
+

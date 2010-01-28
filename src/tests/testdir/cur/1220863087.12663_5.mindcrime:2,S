@@ -1,0 +1,84 @@
+Return-Path: <sqlite-dev-bounces@sqlite.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00 autolearn=ham
+	version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id 32F276963F
+	for <xxxx@localhost>; Mon,  4 Aug 2008 21:49:34 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [72.14.221.111]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Mon, 04 Aug 2008 21:49:34 +0300 (EEST)
+Received: by 10.142.51.12 with SMTP id y12cs89397wfy; Mon, 4 Aug 2008 02:41:16
+ -0700 (PDT)
+Received: by 10.150.156.20 with SMTP id d20mr963580ybe.104.1217842875596; Mon,
+ 04 Aug 2008 02:41:15 -0700 (PDT)
+Received: from sqlite.org (sqlite.org [67.18.92.124]) by mx.google.com with
+ ESMTP id 6si3605185ywi.1.2008.08.04.02.40.57; Mon, 04 Aug 2008 02:41:15 -0700
+ (PDT)
+Received-SPF: pass (google.com: best guess record for domain of
+ sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as permitted sender)
+ client-ip=67.18.92.124;
+Authentication-Results: mx.google.com; spf=pass (google.com: best guess record
+ for domain of sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as
+ permitted sender) smtp.mail=sqlite-dev-bounces@sqlite.org
+Received: from sqlite.org (localhost [127.0.0.1]) by sqlite.org (Postfix) with
+ ESMTP id 7147F11C45; Mon,  4 Aug 2008 05:40:55 -0400 (EDT)
+X-Original-To: sqlite-dev@sqlite.org
+Delivered-To: sqlite-dev@sqlite.org
+Received: from relay00.pair.com (relay00.pair.com [209.68.5.9]) by sqlite.org
+ (Postfix) with SMTP id B5F901192C for <sqlite-dev@sqlite.org>; Mon,  4 Aug
+ 2008 05:40:52 -0400 (EDT)
+Received: (qmail 59961 invoked from network); 4 Aug 2008 09:40:50 -0000
+Received: from unknown (HELO ?192.168.0.17?) (unknown) by unknown with SMTP; 4
+ Aug 2008 09:40:50 -0000
+X-pair-Authenticated: 87.13.75.164
+Message-Id: <83B5AF40-DBFA-4578-A043-04C80276E195@sqlabs.net>
+From: anon@example.com
+To: sqlite-dev@sqlite.org
+Mime-Version: 1.0 (Apple Message framework v926)
+Date: Mon, 4 Aug 2008 11:40:49 +0200
+X-Mailer: Apple Mail (2.926)
+Subject: [sqlite-dev] VM optimization inside sqlite3VdbeExec
+X-BeenThere: sqlite-dev@sqlite.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+Reply-To: sqlite-dev@sqlite.org
+List-Id: <sqlite-dev.sqlite.org>
+List-Unsubscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>,
+  <mailto:sqlite-dev-request@sqlite.org?subject=unsubscribe>
+List-Archive: <http://sqlite.org:8080/cgi-bin/mailman/private/sqlite-dev>
+List-Post: <mailto:sqlite-dev@sqlite.org>
+List-Help: <mailto:sqlite-dev-request@sqlite.org?subject=help>
+List-Subscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>, 
+ <mailto:sqlite-dev-request@sqlite.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Sender: sqlite-dev-bounces@sqlite.org
+Errors-To: sqlite-dev-bounces@sqlite.org
+Content-Length: 639
+
+Inside sqlite3VdbeExec there is a very big switch statement.
+In order to increase performance with few modifications to the  
+original code, why not use this technique ?
+http://docs.freebsd.org/info/gcc/gcc.info.Labels_as_Values.html
+
+With a properly defined "instructions" array, instead of the switch  
+statement you can use something like:
+goto * instructions[pOp->opcode];
+---
+Marco Bambini
+http://www.sqlabs.net
+http://www.sqlabs.net/blog/
+http://www.sqlabs.net/realsqlserver/
+
+
+
+_______________________________________________
+sqlite-dev mailing list
+sqlite-dev@sqlite.org
+http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev
+

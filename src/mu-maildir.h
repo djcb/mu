@@ -43,8 +43,7 @@ gboolean mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex);
 
 
 /** 
- * create a symbolic link to a mail message; the function will
- * automatically
+ * create a symbolic link to a mail message
  * 
  * @param src the full path to the source message
  * @param targetpath the path to the target maildir; ie., *not*
@@ -81,7 +80,8 @@ typedef MuResult (*MuMaildirWalkDirCallback)
  * files outside cur/ and new/ dirs and unreadable files; however,
  * dotdirs are visited (ie. '.dotdir/cur'), so this enables Maildir++.
  * (http://www.inter7.com/courierimap/README.maildirquota.html, search
- * for 'Mission statement')
+ * for 'Mission statement'). In addition, dirs containing a file named
+ * '.noindex' are ignored, as are their subdirectories.
  *
  * mu_walk_maildir stops if the callbacks return something different
  * from MU_OK. For example, it can return MU_STOP to stop the scan, or

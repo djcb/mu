@@ -117,4 +117,4 @@ echo "<muhome>xapian-0.6 directory to save some disk space"
 
 echo
 echo "mu configuration is complete."
-echo "type 'make' to build it"
+echo "type 'make' to build mu, or 'make check' to perform the unit tests."

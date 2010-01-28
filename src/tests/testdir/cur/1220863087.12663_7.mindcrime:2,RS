@@ -1,0 +1,138 @@
+Return-Path: <sqlite-dev-bounces@sqlite.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00 autolearn=ham
+	version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id 3EBAB6963B
+	for <xxxx@localhost>; Mon,  4 Aug 2008 21:49:35 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [72.14.221.111]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Mon, 04 Aug 2008 21:49:35 +0300 (EEST)
+Received: by 10.142.51.12 with SMTP id y12cs89536wfy; Mon, 4 Aug 2008 02:48:56
+ -0700 (PDT)
+Received: by 10.150.134.21 with SMTP id h21mr7950048ybd.181.1217843335665;
+ Mon, 04 Aug 2008 02:48:55 -0700 (PDT)
+Received: from sqlite.org (sqlite.org [67.18.92.124]) by mx.google.com with
+ ESMTP id 6si5897081ywi.1.2008.08.04.02.48.35; Mon, 04 Aug 2008 02:48:55 -0700
+ (PDT)
+Received-SPF: pass (google.com: best guess record for domain of
+ sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as permitted sender)
+ client-ip=67.18.92.124;
+Authentication-Results: mx.google.com; spf=pass (google.com: best guess record
+ for domain of sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as
+ permitted sender) smtp.mail=sqlite-dev-bounces@sqlite.org
+Received: from sqlite.org (localhost [127.0.0.1]) by sqlite.org (Postfix) with
+ ESMTP id ED01611C4E; Mon,  4 Aug 2008 05:48:31 -0400 (EDT)
+X-Original-To: sqlite-dev@sqlite.org
+Delivered-To: sqlite-dev@sqlite.org
+Received: from mx0.security.ro (mx0.security.ro [80.96.72.194]) by sqlite.org
+ (Postfix) with ESMTP id EB3F51192C for <sqlite-dev@sqlite.org>; Mon,  4 Aug
+ 2008 05:48:28 -0400 (EDT)
+Received: (qmail 348 invoked from network); 4 Aug 2008 12:48:03 +0300
+Received: from dev.security.ro (HELO ?192.168.1.70?) (192.168.1.70) by
+ mx0.security.ro with SMTP; 4 Aug 2008 12:48:03 +0300
+Message-ID: <4896D06A.8000901@security.ro>
+Date: Mon, 04 Aug 2008 12:48:26 +0300
+From: anon@example.com
+User-Agent: Thunderbird 2.0.0.16 (Windows/20080708)
+MIME-Version: 1.0
+To: sqlite-dev@sqlite.org
+References: <83B5AF40-DBFA-4578-A043-04C80276E195@sqlabs.net>
+In-Reply-To: <83B5AF40-DBFA-4578-A043-04C80276E195@sqlabs.net>
+Content-Type: multipart/mixed; boundary="------------000207070200050102060301"
+X-BitDefender-Scanner: Clean, Agent: BitDefender qmail 2.0.0 on
+ mx0.security.ro
+X-BitDefender-Spam: No (0)
+X-BitDefender-SpamStamp: v1, whitelisted, total: 0
+Subject: Re: [sqlite-dev] VM optimization inside sqlite3VdbeExec
+X-BeenThere: sqlite-dev@sqlite.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+Reply-To: sqlite-dev@sqlite.org
+List-Id: <sqlite-dev.sqlite.org>
+List-Unsubscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>,
+  <mailto:sqlite-dev-request@sqlite.org?subject=unsubscribe>
+List-Archive: <http://sqlite.org:8080/cgi-bin/mailman/private/sqlite-dev>
+List-Post: <mailto:sqlite-dev@sqlite.org>
+List-Help: <mailto:sqlite-dev-request@sqlite.org?subject=help>
+List-Subscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>, 
+ <mailto:sqlite-dev-request@sqlite.org?subject=subscribe>
+Sender: sqlite-dev-bounces@sqlite.org
+Errors-To: sqlite-dev-bounces@sqlite.org
+Content-Length: 2212
+
+This is a multi-part message in MIME format.
+--------------000207070200050102060301
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Marco Bambini wrote:
+> Inside sqlite3VdbeExec there is a very big switch statement.
+> In order to increase performance with few modifications to the  
+> original code, why not use this technique ?
+> http://docs.freebsd.org/info/gcc/gcc.info.Labels_as_Values.html
+>
+> With a properly defined "instructions" array, instead of the switch  
+> statement you can use something like:
+> goto * instructions[pOp->opcode];
+> ---
+> Marco Bambini
+> http://www.sqlabs.net
+> http://www.sqlabs.net/blog/
+> http://www.sqlabs.net/realsqlserver/
+>
+>
+>
+> _______________________________________________
+> sqlite-dev mailing list
+> sqlite-dev@sqlite.org
+> http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev
+>   
+All the world's not a VAX.  This technique is GCC-specific. The SQLite 
+source must be as portable as possible thus tying it to a specific 
+compiler is out of the question. While one could conceivably use some 
+preprocessor magic to provide alternate implementations, that would be 
+impractical considering the sheer size of the code affected.
+On the other hand - perhaps you could benchmark the change and provide 
+some data on whether this actually improves performance?
+
+
+--------------000207070200050102060301
+Content-Type: text/x-vcard; charset=utf-8;
+ name="mihailim.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="mihailim.vcf"
+
+begin:vcard
+fn:Mihai Limbasan
+n:Limbasan;Mihai
+org:SC SECPRAL COM SRL
+adr:;;str. Actorului nr. 9;Cluj-Napoca;Cluj;400441;Romania
+email;internet:mihailim@security.ro
+title:SoftwareDeveloper
+tel;work:+40 264 449579
+tel;fax:+40 264 418594
+tel;cell:+40 729 038302
+url:http://secpral.ro/
+version:2.1
+end:vcard
+
+
+--------------000207070200050102060301
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+sqlite-dev mailing list
+sqlite-dev@sqlite.org
+http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev
+
+--------------000207070200050102060301--
+

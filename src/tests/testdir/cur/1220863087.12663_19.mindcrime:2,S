@@ -1,0 +1,77 @@
+Return-Path: <help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00 autolearn=ham
+	version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id C4D6569CB3
+	for <xxxx@localhost>; Thu,  7 Aug 2008 08:10:08 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [66.249.91.109]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Thu, 07 Aug 2008 08:10:08 +0300 (EEST)
+Received: by 10.142.237.21 with SMTP id k21cs34794wfh; Wed, 6 Aug 2008
+ 13:40:29 -0700 (PDT)
+Received: by 10.100.33.13 with SMTP id g13mr1093301ang.79.1218055228418; Wed,
+ 06 Aug 2008 13:40:28 -0700 (PDT)
+Received: from lists.gnu.org (lists.gnu.org [199.232.76.165]) by mx.google.com
+ with ESMTP id d19si15908789and.17.2008.08.06.13.40.27; Wed, 06 Aug 2008
+ 13:40:28 -0700 (PDT)
+Received-SPF: pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender) client-ip=199.232.76.165;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender)
+ smtp.mail=help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Received: from localhost ([127.0.0.1]:56316 helo=lists.gnu.org) by
+ lists.gnu.org with esmtp (Exim 4.43) id 1KQpo3-0007Pc-Qk for
+ xxxx.klub@gmail.com; Wed, 06 Aug 2008 16:40:27 -0400
+From: anon@example.com
+Newsgroups: gnu.emacs.help
+Date: Wed, 6 Aug 2008 20:38:35 +0100
+Message-ID: <r6bpm5-6n6.ln1@news.ducksburg.com>
+References: <55dbm5-qcl.ln1@news.ducksburg.com>
+ <mailman.15710.1217599959.18990.help-gnu-emacs@gnu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Trace: individual.net bABVU1hcJwWAuRwe/097AAoOXnGGeYR8G1In635iFGIyfDLPUv
+X-Orig-Path: news.ducksburg.com!news
+Cancel-Lock: sha1:wK7dsPRpNiVxpL/SfvmNzlvUR94=
+ sha1:oepBoM0tJBLN52DotWmBBvW5wbg=
+User-Agent: slrn/pre0.9.9-120/mm/ao (Ubuntu Hardy)
+Path: news.stanford.edu!headwall.stanford.edu!newshub.sdsu.edu!feeder.erje.net!proxad.net!feeder1-2.proxad.net!feed.ac-versailles.fr!fu-berlin.de!uni-berlin.de!individual.net!not-for-mail
+Xref: news.stanford.edu gnu.emacs.help:160868
+To: help-gnu-emacs@gnu.org
+Subject: Re: Learning LISP; Scheme vs elisp.
+X-BeenThere: help-gnu-emacs@gnu.org
+X-Mailman-Version: 2.1.5
+Precedence: list
+List-Id: Users list for the GNU Emacs text editor <help-gnu-emacs.gnu.org>
+List-Unsubscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=unsubscribe>
+List-Archive: <http://lists.gnu.org/pipermail/help-gnu-emacs>
+List-Post: <mailto:help-gnu-emacs@gnu.org>
+List-Help: <mailto:help-gnu-emacs-request@gnu.org?subject=help>
+List-Subscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=subscribe>
+Sender: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Errors-To: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Content-Length: 417
+Lines: 11
+
+On 2008-08-01, Thien-Thi Nguyen wrote:
+
+> warriors attack, felling foe after foe,
+> few growing old til they realize: to know
+> what deceit is worth deflection;
+> such receipt reversed rejection!
+> then their heavy arms, e'er transformed to shields:
+> balanced hooked charms, ploughed deep, rich yields.
+
+Aha: the exercise for the reader is to place the parens correctly.
+Might take me a while to solve this puzzle.
+

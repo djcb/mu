@@ -28,12 +28,13 @@ TEST_PROGS += test-mu-util
 test_mu_util_SOURCES= test-mu-util.c
 test_mu_util_LDADD=   ${top_srcdir}/src/libmu.la
 
-
 TEST_PROGS += test-mu-maildir
 test_mu_maildir_SOURCES= test-mu-maildir.c
 test_mu_maildir_LDADD=   ${top_srcdir}/src/libmu.la
 
-
+TEST_PROGS += test-mu-msg-str
+test_mu_msg_str_SOURCES= test-mu-msg-str.c
+test_mu_msg_str_LDADD=   ${top_srcdir}/src/libmu.la
 
 # note the question marks; make does not like files with ':'...
 # 11 messages, the '.ignore' message should be ignored when indexing

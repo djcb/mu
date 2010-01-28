@@ -1,0 +1,136 @@
+Return-Path: <help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,RCVD_IN_DNSWL_LOW,
+	SPF_PASS,WHOIS_NETSOLPR autolearn=ham version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id 1A6CD69CB6
+	for <xxxx@localhost>; Tue, 12 Aug 2008 21:42:38 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [72.14.221.109]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Tue, 12 Aug 2008 21:42:38 +0300 (EEST)
+Received: by 10.142.237.21 with SMTP id k21cs123119wfh; Sun, 10 Aug 2008
+ 22:06:31 -0700 (PDT)
+Received: by 10.100.166.10 with SMTP id o10mr9327844ane.0.1218431190107; Sun,
+ 10 Aug 2008 22:06:30 -0700 (PDT)
+Received: from lists.gnu.org (lists.gnu.org [199.232.76.165]) by mx.google.com
+ with ESMTP id c29si10110392anc.13.2008.08.10.22.06.29; Sun, 10 Aug 2008
+ 22:06:30 -0700 (PDT)
+Received-SPF: pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender) client-ip=199.232.76.165;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender)
+ smtp.mail=help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Received: from localhost ([127.0.0.1]:45637 helo=lists.gnu.org) by
+ lists.gnu.org with esmtp (Exim 4.43) id 1KSPbx-0006dj-96 for
+ xxxx.klub@gmail.com; Mon, 11 Aug 2008 01:06:29 -0400
+Received: from mailman by lists.gnu.org with tmda-scanned (Exim 4.43) id
+ 1KSPbE-0006cQ-Nd for help-gnu-emacs@gnu.org; Mon, 11 Aug 2008 01:05:44 -0400
+Received: from exim by lists.gnu.org with spam-scanned (Exim 4.43) id
+ 1KSPbD-0006bs-Px for help-gnu-emacs@gnu.org; Mon, 11 Aug 2008 01:05:44 -0400
+Received: from [199.232.76.173] (port=37426 helo=monty-python.gnu.org) by
+ lists.gnu.org with esmtp (Exim 4.43) id 1KSPbD-0006bk-HT for
+ help-gnu-emacs@gnu.org; Mon, 11 Aug 2008 01:05:43 -0400
+Received: from main.gmane.org ([80.91.229.2]:46446 helo=ciao.gmane.org) by
+ monty-python.gnu.org with esmtps (TLS-1.0:RSA_AES_256_CBC_SHA1:32) (Exim
+ 4.60) (envelope-from <geh-help-gnu-emacs@m.gmane.org>) id 1KSPbD-0003Kl-CA
+ for help-gnu-emacs@gnu.org; Mon, 11 Aug 2008 01:05:43 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43) id
+ 1KSPb9-00080r-CX for help-gnu-emacs@gnu.org; Mon, 11 Aug 2008 05:05:39 +0000
+Received: from bas2-toronto63-1088792724.dsl.bell.ca ([64.229.168.148]) by
+ main.gmane.org with esmtp (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00 for
+ <help-gnu-emacs@gnu.org>; Mon, 11 Aug 2008 05:05:39 +0000
+Received: from cpchan by bas2-toronto63-1088792724.dsl.bell.ca with local
+ (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00 for <help-gnu-emacs@gnu.org>; Mon,
+ 11 Aug 2008 05:05:39 +0000
+X-Injected-Via-Gmane: http://gmane.org/
+To: help-gnu-emacs@gnu.org
+From: anon@example.com
+Date: Mon, 11 Aug 2008 01:03:22 -0400
+Organization: Linux Private Site
+Message-ID: <87bq00nnxh.fsf@MagnumOpus.Mercurius>
+References: <877iav5s49.fsf@163.com> <86hc9yc5sj.fsf@timbral.net>
+ <877iat7udd.fsf@163.com> <87fxphcsxi.fsf@lion.rapttech.com.au>
+ <8504ddd4-5e3b-4ed5-bf77-aa9cce81b59a@1g2000pre.googlegroups.com>
+ <87k5es59we.fsf@lion.rapttech.com.au>
+ <63c824e3-62b1-4a93-8fa8-2813e1f9397f@v13g2000pro.googlegroups.com>
+ <874p5vsgg8.fsf@nonospaz.fatphil.org>
+ <8250972e-1886-4021-80bc-376e34881c80@v39g2000pro.googlegroups.com>
+ <87zlnnqvvs.fsf@nonospaz.fatphil.org>
+ <57add0e0-b39d-4c71-8d2c-d3b9ddfaa1a9@1g2000pre.googlegroups.com>
+ <87sktfnz5p.fsf@atthis.clsnet.nl>
+ <562e1111-d9e7-4b6a-b661-3f9af13fea17@b30g2000prf.googlegroups.com>
+ <87d4khoq97.fsf@atthis.clsnet.nl>
+ <0fe404c5-cab8-4692-8a27-532e737a7813@i24g2000prf.googlegroups.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
+ protocol="application/pgp-signature"
+X-Complaints-To: usenet@ger.gmane.org
+X-Gmane-NNTP-Posting-Host: bas2-toronto63-1088792724.dsl.bell.ca
+X-Face: G;
+ Z,`sm>)4t4LB/GUrgH$W`!AmfHMj,LG)Z}X0ax@s9:0>0)B&@vcm{v-le)wng)?|o]D<V6&ay<F=H{M5?$T%p!dPdJeF,au\E@TA"v22K!Zl\\mzpU4]6$ZnAI3_L)h;
+ fpd}mn2py/7gv^|*85-D_f:07cT>\Z}0:6X
+User-Agent: Gnus/5.110011 (No Gnus v0.11) Emacs/23.0.60 (gnu/linux)
+Cancel-Lock: sha1:IKyfrl5drOw6HllHFSmWHAKEeC8=
+X-detected-kernel: by monty-python.gnu.org: Linux 2.6, seldom 2.4 (older, 4)
+Subject: Re: Can anybody tell me how to send HTML-format mail in gnus
+X-BeenThere: help-gnu-emacs@gnu.org
+X-Mailman-Version: 2.1.5
+Precedence: list
+List-Id: Users list for the GNU Emacs text editor <help-gnu-emacs.gnu.org>
+List-Unsubscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=unsubscribe>
+List-Archive: <http://lists.gnu.org/pipermail/help-gnu-emacs>
+List-Post: <mailto:help-gnu-emacs@gnu.org>
+List-Help: <mailto:help-gnu-emacs-request@gnu.org?subject=help>
+List-Subscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=subscribe>
+Sender: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Errors-To: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Content-Length: 1229
+Lines: 36
+
+--=-=-=
+Content-Type: text/plain
+
+Xah <xahlee@gmail.com> writes:
+
+> So, i was reading about it in Wikipedia. Although i don't have a TV,
+> and haven't had since 2000, but i still enjoyed the festive spirits
+> anyhow. After all, i'm Chinese by blood. So, in my wandering, i ran
+> into this welcome song on youtube:
+>
+> http://www.youtube.com/watch?v=1HEndNYVhZo
+
+What is your point? Your email is in plain text and I can click on the
+link just fine- it is not exactly rocket science to implement parsing of
+URL's to workable links in an Email program (a lot of programs does
+that, including Gnus). Images can be included inline if you want. Also
+mail markups such as *this*, **this** and _this_ have been around since
+the Usenet days and displayed appropriately by a number of mailers. Like
+others have said, most html messages that I have seen either contains
+useless information, or are plain spam and can introduce a host of
+security problems in some mailers.
+
+Charles
+
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQFIn8gm3epPyyKbwPYRApbvAKDRirXwzMzI+NHV77+QcP3EgTPaCgCfb/6m
+GtNVKdYAeftaYm1nwRVoCDA=
+=ULo3
+-----END PGP SIGNATURE-----
+--=-=-=--
+
+
+

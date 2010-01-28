@@ -24,6 +24,8 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+
 
 #include "src/mu-maildir.h"
 
@@ -127,13 +129,110 @@ static void
 shutup (void) {}
 
 
+static gchar*
+copy_test_data (void)
+{
+	gchar *dir, *cmd;
+	
+	dir = random_tmpdir();
+	cmd = g_strdup_printf ("mkdir %s", dir);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+	cmd = g_strdup_printf ("cp -R testdir %s", dir);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+	
+	return dir;
+}
+
+
+typedef struct {
+	int _file_count;
+	int _dir_entered;
+	int _dir_left;
+} WalkData;
+
+static MuResult
+dir_cb (const char *fullpath, gboolean enter, WalkData *data)
+{
+	if (enter)
+		++data->_dir_entered;
+	else
+		++data->_dir_left;
+
+	return MU_OK;
+}
+
+
+static MuResult
+msg_cb (const char *fullpath, gboolean enter, WalkData *data)
+{
+	++data->_file_count;
+	return MU_OK;
+}
+
+
+
+static void
+test_mu_maildir_walk_01 (void)
+{
+	char *tmpdir;
+	WalkData data;
+	MuResult rv;
+	
+	tmpdir = copy_test_data ();
+	memset (&data, 0, sizeof(WalkData));
+	
+	rv = mu_maildir_walk (tmpdir,
+			      (MuMaildirWalkMsgCallback)msg_cb, 
+			      (MuMaildirWalkDirCallback)dir_cb,
+			      &data);
+
+	g_assert_cmpuint (MU_OK, ==, rv);
+	g_assert_cmpuint (data._file_count, ==, 10);
+	g_assert_cmpuint (data._dir_entered,==, 5);
+	g_assert_cmpuint (data._dir_left,==, 5);
+
+	g_free (tmpdir);
+}
+
+
+static void
+test_mu_maildir_walk_02 (void)
+{
+	char *tmpdir, *cmd;
+	WalkData data;
+	MuResult rv;
+	
+	tmpdir = copy_test_data ();
+	memset (&data, 0, sizeof(WalkData));
+
+	/* mark the 'new' dir with '.noindex', to ignore it */ 
+	cmd = g_strdup_printf ("touch %s%ctestdir%cnew%c.noindex", tmpdir,
+			       G_DIR_SEPARATOR, G_DIR_SEPARATOR,
+			       G_DIR_SEPARATOR);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+		
+	rv = mu_maildir_walk (tmpdir,
+			      (MuMaildirWalkMsgCallback)msg_cb, 
+			      (MuMaildirWalkDirCallback)dir_cb,
+			      &data);
+
+	g_assert_cmpuint (MU_OK, ==, rv);
+	g_assert_cmpuint (data._file_count, ==, 6);
+	g_assert_cmpuint (data._dir_entered,==, 4);
+	g_assert_cmpuint (data._dir_left,==, 4);
+
+	g_free (tmpdir);
+}
 
 int
 main (int argc, char *argv[])
 {
 	g_test_init (&argc, &argv, NULL);
 
-	/* mu_util_dir_expand */
+	/* mu_util_maildir_mkmdir */
  	g_test_add_func ("/mu-maildir/mu-maildir-mkmdir-01",
 			 test_mu_maildir_mkmdir_01);
 	g_test_add_func ("/mu-maildir/mu-maildir-mkmdir-02",
@@ -141,6 +240,12 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-maildir/mu-maildir-mkmdir-03",
 			 test_mu_maildir_mkmdir_03);
 
+	/* mu_util_maildir_walk */
+	g_test_add_func ("/mu-maildir/mu-maildir-walk-01",
+			 test_mu_maildir_walk_01);
+	g_test_add_func ("/mu-maildir/mu-maildir-walk-02",
+			 test_mu_maildir_walk_02);
+	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)shutup, NULL);

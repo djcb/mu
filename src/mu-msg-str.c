@@ -18,6 +18,7 @@
 */
 
 #include <glib.h>
+
 #include "mu-msg-str.h"
 #include "mu-msg-flags.h"
 
@@ -29,7 +30,7 @@ mu_msg_str_date_s (time_t t)
 
 	tmbuf = localtime(&t);
 	
-	strftime (buf, 64, "%c", tmbuf);
+	strftime (buf, sizeof(buf), "%c", tmbuf);
 
 	return buf;
 }
@@ -49,9 +50,9 @@ mu_msg_str_size_s  (size_t s)
 	static char buf[32];
 	
 	if (s >= 1000 * 1000)
-		g_snprintf(buf, 32, "%.1fM", (double)s/(1000*1000));
+		g_snprintf(buf, sizeof(buf), "%.1f MB", (double)s/(1000*1000));
 	else
-		g_snprintf(buf, 32, "%.1fk", (double)s/(1000));
+		g_snprintf(buf, sizeof(buf), "%.1f kB", (double)s/(1000));
 
 	return buf;
 }
@@ -91,7 +92,7 @@ mu_msg_str_prio  (MuMsgPriority prio)
 
 	default:
 		g_warning ("%s: invalid priority %d", __FUNCTION__, prio);
-		return "<error>";
+		return NULL;
 	}
 }
 

@@ -1,0 +1,230 @@
+Return-Path: <sqlite-dev-bounces@sqlite.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00,HTML_MESSAGE
+	autolearn=ham version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id D724F6963B
+	for <xxxx@localhost>; Mon,  4 Aug 2008 21:49:27 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [72.14.221.111]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Mon, 04 Aug 2008 21:49:27 +0300 (EEST)
+Received: by 10.142.51.12 with SMTP id y12cs86537wfy; Mon, 4 Aug 2008 00:38:51
+ -0700 (PDT)
+Received: by 10.151.113.5 with SMTP id q5mr272266ybm.37.1217835529913; Mon, 04
+ Aug 2008 00:38:49 -0700 (PDT)
+Received: from sqlite.org (sqlite.org [67.18.92.124]) by mx.google.com with
+ ESMTP id 5si5754915ywd.8.2008.08.04.00.38.30; Mon, 04 Aug 2008 00:38:50 -0700
+ (PDT)
+Received-SPF: pass (google.com: best guess record for domain of
+ sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as permitted sender)
+ client-ip=67.18.92.124;
+Authentication-Results: mx.google.com; spf=pass (google.com: best guess record
+ for domain of sqlite-dev-bounces@sqlite.org designates 67.18.92.124 as
+ permitted sender) smtp.mail=sqlite-dev-bounces@sqlite.org
+Received: from sqlite.org (localhost [127.0.0.1]) by sqlite.org (Postfix) with
+ ESMTP id 765A511C46; Mon,  4 Aug 2008 03:38:27 -0400 (EDT)
+X-Original-To: sqlite-dev@sqlite.org
+Delivered-To: sqlite-dev@sqlite.org
+Received: from ik-out-1112.google.com (ik-out-1112.google.com [66.249.90.176])
+ by sqlite.org (Postfix) with ESMTP id 4C59511C41 for <sqlite-dev@sqlite.org>;
+ Mon,  4 Aug 2008 03:38:23 -0400 (EDT)
+Received: by ik-out-1112.google.com with SMTP id b32so2163423ika.0 for
+ <sqlite-dev@sqlite.org>; Mon, 04 Aug 2008 00:38:23 -0700 (PDT)
+Received: by 10.210.54.19 with SMTP id c19mr14589042eba.107.1217835502549;
+ Mon, 04 Aug 2008 00:38:22 -0700 (PDT)
+Received: by 10.210.115.10 with HTTP; Mon, 4 Aug 2008 00:38:22 -0700 (PDT)
+Message-ID: <477821040808040038s381bf382p7411451e3c1a2e4e@mail.gmail.com>
+Date: Mon, 4 Aug 2008 10:38:22 +0300
+From: anon@example.com
+To: sqlite-dev@sqlite.org
+In-Reply-To: <73d4fc50808030747g303a170ieac567723c2d4f24@mail.gmail.com>
+MIME-Version: 1.0
+References: <477821040808030533y41f1501dq32447b568b6e6ca5@mail.gmail.com>
+ <73d4fc50808030747g303a170ieac567723c2d4f24@mail.gmail.com>
+Subject: Re: [sqlite-dev] SQLite exception
+X-BeenThere: sqlite-dev@sqlite.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+Reply-To: sqlite-dev@sqlite.org
+List-Id: <sqlite-dev.sqlite.org>
+List-Unsubscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>,
+  <mailto:sqlite-dev-request@sqlite.org?subject=unsubscribe>
+List-Archive: <http://sqlite.org:8080/cgi-bin/mailman/private/sqlite-dev>
+List-Post: <mailto:sqlite-dev@sqlite.org>
+List-Help: <mailto:sqlite-dev-request@sqlite.org?subject=help>
+List-Subscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>, 
+ <mailto:sqlite-dev-request@sqlite.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============2123623832=="
+Mime-version: 1.0
+Sender: sqlite-dev-bounces@sqlite.org
+Errors-To: sqlite-dev-bounces@sqlite.org
+Content-Length: 8475
+
+--===============2123623832==
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_29556_25702991.1217835502493"
+
+------=_Part_29556_25702991.1217835502493
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+Hi Grant,
+
+Thanks for your reply.
+I am using a different session for each thread, whenever a thread wishes to
+access the database it gets a session from the session pool and works with
+that session until its work is done.
+
+Most of the actions the threads are doing on the database are quite
+complicated and are required to be fully committed or completely ignored, so
+yes, I am (most of the time) explicitly beginning and committing my
+transactions.
+
+Regarding the SQLiteStatementImpl, I believe the Poco manual explains that
+sessions and statements for that matter cannot be shared between threads,
+therefore if you are using a session via one thread only it should work
+fine.
+
+My first impression was that the problem was in the Poco infrastructure (I
+have found several Poco related bugs in the past), but the problem ALWAYS
+occurs when I perform the "BEGIN IMMEDIATE" action, if it were a Poco
+related bug, I would expect to see it here and there without any relation to
+this specific statement, but that is not the case.
+
+None the less, I will also post my question on the Poco forums.
+
+Nadav.
+
+On Sun, Aug 3, 2008 at 5:47 PM, Grant Gatchel <grant.gatchel@gmail.com>wrote:
+
+> Are you using the same Poco::Session for every thread or does each call
+> create a new session/handle to the database?
+>
+> Are you explicitly BEGINning and COMMITting your transactions?
+>
+> In looking at the 1.3.2 branch of Poco::Data::SQLite, there appears to be a
+> race condition in the SQLiteStatementImpl::next() method in which the member
+> _nextResponse is being accessed before the SQLiteStatementImpl::hasNext()
+> method has a chance to interpret that value and throw an exception.
+>
+> This question might be more suitable in the Poco forums or mailinglist.
+>
+> - Grant
+>
+> On Sun, Aug 3, 2008 at 8:33 AM, nadav g <nadav.gr@gmail.com> wrote:
+>
+>> Hi All,
+>>
+>> I have been using SQLite with Poco (www.appinf.com) as my infrastructure.
+>> The program is running several threads that access this database very
+>> often and are synchronized by SQLite itself.
+>> Everything seems to work just fine most of time (usually days - weeks) but
+>> I do get an occasional exception:
+>>
+>> Exception: SQL error or missing database: Iterator Error: trying to check
+>> if there is a next value
+>>
+>> The backtrace leads to this statement:
+>> *"BEGIN IMMEDIATE"*
+>>
+>> This specific code runs numerous times before an exception occurs (if
+>> occurs at all) and I cannot think of any reason for it to fail later rather
+>> than sooner.
+>> It is pretty obvious that this situation occurs due to some rare thread
+>> state, but I could not find any information that gives me any hint as to
+>> what this state might be.
+>>
+>> So what I am asking is:
+>> 1) Does anyone know why this sort of exception occurs?
+>> 2) Can anyone think of a reason for such an exception to occur in the
+>> situation I have described?
+>>
+>> Thanks in advance,
+>> Nadav.
+>>
+>>
+>> _______________________________________________
+>> sqlite-dev mailing list
+>> sqlite-dev@sqlite.org
+>> http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev
+>>
+>>
+>
+> _______________________________________________
+> sqlite-dev mailing list
+> sqlite-dev@sqlite.org
+> http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev
+>
+>
+
+------=_Part_29556_25702991.1217835502493
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+<div dir="ltr">Hi Grant,<br><br>Thanks for your reply.<br>I am using a different session for each thread, whenever a thread wishes to access the database it gets a session from the session pool and works with that session until its work is done.<br>
+<br>Most of the actions the threads are doing on the database are quite complicated and are required to be fully committed or completely ignored, so yes, I am (most of the time) explicitly beginning and committing my transactions.<br>
+<br>Regarding the SQLiteStatementImpl, I believe the Poco manual explains that sessions and statements for that matter cannot be shared between threads, therefore if you are using a session via one thread only it should work fine.<br>
+<br>My first impression was that the problem was in the Poco infrastructure (I have found several Poco related bugs in the past), but the problem ALWAYS occurs when I perform the &quot;BEGIN IMMEDIATE&quot; action, if it were a Poco related bug, I would expect to see it here and there without any relation to this specific statement, but that is not the case.<br>
+<br>None the less, I will also post my question on the Poco forums.<br><br>Nadav.<br><br><div class="gmail_quote">On Sun, Aug 3, 2008 at 5:47 PM, Grant Gatchel <span dir="ltr">&lt;<a href="mailto:grant.gatchel@gmail.com">grant.gatchel@gmail.com</a>&gt;</span> wrote:<br>
+<blockquote class="gmail_quote" style="border-left: 1px solid rgb(204, 204, 204); margin: 0pt 0pt 0pt 0.8ex; padding-left: 1ex;"><div dir="ltr">Are you using the same Poco::Session for every thread or does each call create a new session/handle to the database?<br>
+<br>Are you explicitly BEGINning and COMMITting your transactions?<br><br>In looking at the 1.3.2 branch of Poco::Data::SQLite, there appears to be a race condition in the SQLiteStatementImpl::next() method in which the member _nextResponse is being accessed before the SQLiteStatementImpl::hasNext() method has a chance to interpret that value and throw an exception.<br>
+
+<br>This question might be more suitable in the Poco forums or mailinglist.<br><br>- Grant<br>
+<br><div class="gmail_quote"><div><div></div><div class="Wj3C7c">
+On Sun, Aug 3, 2008 at 8:33 AM, nadav g <span dir="ltr">&lt;<a href="http://nadav.gr" target="_blank">nadav.gr</a>@<a href="http://gmail.com" target="_blank">gmail.com</a>&gt;</span> wrote:<br></div></div><blockquote class="gmail_quote" style="border-left: 1px solid rgb(204, 204, 204); margin: 0pt 0pt 0pt 0.8ex; padding-left: 1ex;">
+<div><div></div><div class="Wj3C7c">
+
+
+<div dir="ltr">Hi All,<br><br>I have been using SQLite with Poco (<a href="http://www.appinf.com" target="_blank">www.appinf.com</a>) as my infrastructure.<br>The program is running several threads that access this database very often and are synchronized by SQLite itself.<br>
+
+
+
+
+Everything seems to work just fine most of time (usually days - weeks) but I do get an occasional exception:<br><br>Exception: SQL error or missing database: Iterator Error: trying to check if there is a next value<br><br>
+
+
+
+
+The backtrace leads to this statement:<br><b>&quot;BEGIN IMMEDIATE&quot;</b><br><br>This specific code runs numerous times before an exception occurs (if occurs at all) and I cannot think of any reason for it to fail later rather than sooner.<br>
+
+
+
+
+It is pretty obvious that this situation occurs due to some rare thread state, but I could not find any information that gives me any hint as to what this state might be.<br><br>So what I am asking is:<br>1) Does anyone know why this sort of exception occurs?<br>
+
+
+
+
+2) Can anyone think of a reason for such an exception to occur in the situation I have described?<br><br>Thanks in advance,<br>Nadav.<br><br></div>
+<br></div></div>_______________________________________________<br>
+sqlite-dev mailing list<br>
+<a href="mailto:sqlite-dev@sqlite.org" target="_blank">sqlite-dev@sqlite.org</a><br>
+<a href="http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev" target="_blank">http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev</a><br>
+<br></blockquote></div><br></div>
+<br>_______________________________________________<br>
+sqlite-dev mailing list<br>
+<a href="mailto:sqlite-dev@sqlite.org">sqlite-dev@sqlite.org</a><br>
+<a href="http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev" target="_blank">http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev</a><br>
+<br></blockquote></div><br></div>
+
+------=_Part_29556_25702991.1217835502493--
+
+--===============2123623832==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+sqlite-dev mailing list
+sqlite-dev@sqlite.org
+http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev
+
+--===============2123623832==--
+

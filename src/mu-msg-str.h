@@ -45,14 +45,15 @@ char*       mu_msg_str_date   (time_t t) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /** 
- * get a display size for a given off_t;
- * uses M for sizes > 1000*1000, k for smaller sizes
+ * get a display size for a given size_t; uses M for sizes >
+ * 1000*1000, k for smaller sizes. Note: this function use the
+ * 10-based SI units, _not_ the powers-of-2 based ones.
  * 
  * mu_msg_str_size_s returns a ptr to a static buffer,
  * while mu_msg_str_size returns dynamically allocated
  * memory that must be freed after use.
  *
- * @param t the size as an off_t
+ * @param t the size as an size_t
  * 
  * @return a string representation of the size; see above
  * for what to do with it
@@ -81,7 +82,7 @@ char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * get a display string for a message priority; either
- * High,Low or Normal
+ * high, low or normal
  *
  * @param flags file flags
  * 

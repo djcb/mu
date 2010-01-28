@@ -1,0 +1,105 @@
+Return-Path: <help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00 autolearn=ham
+	version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id C3EF069CB3
+	for <xxxx@localhost>; Thu,  7 Aug 2008 08:10:10 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [66.249.91.109]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Thu, 07 Aug 2008 08:10:10 +0300 (EEST)
+Received: by 10.142.237.21 with SMTP id k21cs35153wfh; Wed, 6 Aug 2008
+ 13:58:17 -0700 (PDT)
+Received: by 10.100.166.10 with SMTP id o10mr4182182ane.0.1218056296101; Wed,
+ 06 Aug 2008 13:58:16 -0700 (PDT)
+Received: from lists.gnu.org (lists.gnu.org [199.232.76.165]) by mx.google.com
+ with ESMTP id d34si13875743and.3.2008.08.06.13.58.14; Wed, 06 Aug 2008
+ 13:58:16 -0700 (PDT)
+Received-SPF: pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender) client-ip=199.232.76.165;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender)
+ smtp.mail=help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org; dkim=pass (test
+ mode) header.i=@gmail.com
+Received: from localhost ([127.0.0.1]:33418 helo=lists.gnu.org) by
+ lists.gnu.org with esmtp (Exim 4.43) id 1KQq5G-0001aY-Cr for
+ xxxx.klub@gmail.com; Wed, 06 Aug 2008 16:58:14 -0400
+Received: from mailman by lists.gnu.org with tmda-scanned (Exim 4.43) id
+ 1KQq4n-0001Z9-06 for help-gnu-emacs@gnu.org; Wed, 06 Aug 2008 16:57:45 -0400
+Received: from exim by lists.gnu.org with spam-scanned (Exim 4.43) id
+ 1KQq4l-0001V8-6c for help-gnu-emacs@gnu.org; Wed, 06 Aug 2008 16:57:44 -0400
+Received: from [199.232.76.173] (port=46438 helo=monty-python.gnu.org) by
+ lists.gnu.org with esmtp (Exim 4.43) id 1KQq4k-0001Un-V2 for
+ help-gnu-emacs@gnu.org; Wed, 06 Aug 2008 16:57:42 -0400
+Received: from ik-out-1112.google.com ([66.249.90.180]:17562) by
+ monty-python.gnu.org with esmtp (Exim 4.60) (envelope-from
+ <lekktu@gmail.com>) id 1KQq4k-0001fk-OW for help-gnu-emacs@gnu.org; Wed, 06
+ Aug 2008 16:57:42 -0400
+Received: by ik-out-1112.google.com with SMTP id c21so94956ika.2 for
+ <help-gnu-emacs@gnu.org>; Wed, 06 Aug 2008 13:57:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
+ h=domainkey-signature:received:received:message-id:date:from:to
+ :subject:cc:in-reply-to:mime-version:content-type
+ :content-transfer-encoding:content-disposition:references;
+ bh=TTNY9749hpg1+TXOwdaCr+zbQGhBUt3IvsjLWp+pxp0=;
+ b=BOfudUT/SiW9V4e9+k3dXDzwm+ogdrq4m5OlO+f1H+oE6OAYGIm8dbdqDAOwUewBoS
+ jRpfZo07YamP9rkko79SeFdQnf7UAPFAw9x7DFCm3x6muSlCcJBR7vYs1rgHOSINAn2B
+ vQx2//lKR4fXfKNURNu+B30KrvoEmw6m2C8dI=
+DomainKey-Signature: a=rsa-sha1; c=nofws; d=gmail.com; s=gamma;
+ h=message-id:date:from:to:subject:cc:in-reply-to:mime-version
+ :content-type:content-transfer-encoding:content-disposition :references;
+ b=UMDBulH/LwxDywEH0pfK3DbJ4u2kIZCVDLIM++PqrdcR82HjcS/O3Jhf5OFrf7Fnyj
+ GH76xmc7zkTG/3aQy2WY6DeWCJaFarEItmhxy3h/xS+kUKeDARzNox0OzK6lIv/u9bdy
+ f2LnFlYRJ7Q5vy3lxpxAWB4v0qCwtF9LjWFg4=
+Received: by 10.210.47.7 with SMTP id u7mr3100239ebu.30.1218056261587; Wed, 06
+ Aug 2008 13:57:41 -0700 (PDT)
+Received: by 10.210.71.14 with HTTP; Wed, 6 Aug 2008 13:57:41 -0700 (PDT)
+Message-ID: <f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com>
+Date: Wed, 6 Aug 2008 22:57:41 +0200
+From: anon@example.com
+To: Juanma <juanma_bellon@yahoo.es>
+In-Reply-To: <200808062238.15634.juanma_bellon@yahoo.es>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+References: <mailman.15123.1216681940.18990.help-gnu-emacs@gnu.org>
+ <mailman.15143.1216715014.18990.help-gnu-emacs@gnu.org>
+ <9bc17528-8ea9-49f7-8e9d-07f5ede91415@p31g2000prf.googlegroups.com>
+ <200808062238.15634.juanma_bellon@yahoo.es>
+X-detected-kernel: by monty-python.gnu.org: Linux 2.6 (newer, 2)
+Cc: help-gnu-emacs@gnu.org
+Subject: Re: basic question: going back to dired
+X-BeenThere: help-gnu-emacs@gnu.org
+X-Mailman-Version: 2.1.5
+Precedence: list
+List-Id: Users list for the GNU Emacs text editor <help-gnu-emacs.gnu.org>
+List-Unsubscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=unsubscribe>
+List-Archive: <http://lists.gnu.org/pipermail/help-gnu-emacs>
+List-Post: <mailto:help-gnu-emacs@gnu.org>
+List-Help: <mailto:help-gnu-emacs-request@gnu.org?subject=help>
+List-Subscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=subscribe>
+Sender: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Errors-To: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Content-Length: 309
+
+On Wed, Aug 6, 2008 at 22:38, Juanma <juanma_bellon@yahoo.es> wrote:
+
+> For all I know, it comes from "0 Knock-outs" (from USA civil war times,
+> IIRC), i.e., all went really well.
+
+See http://en.wikipedia.org/wiki/Okay#Etymology
+
+"0 knock-outs" is among the "Improbable or refuted etymologies".
+
+   Juanma
+
+

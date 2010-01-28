@@ -18,9 +18,12 @@ include $(top_srcdir)/gtest.mk
 
 SUBDIRS=src man
 
-
 # so we can say 'make test'
-check: test
+check: test cleanupnote
+
+cleanupnote:
+	@echo -e  "\nNote: you can remove the mu-test-XXXX dirs in your temp-file dir"
+	@echo "after 'make check' has finished."
 
 tags:
 	gtags
