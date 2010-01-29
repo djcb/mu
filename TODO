@@ -1,5 +1,37 @@
 #+STARTUP:showall
-* to-do list for mu-ng first release
+
+* Future release
+
+** release 0.7 [54%]
+
+   - [X] signal handler for indexing
+   - [X] fix max 10000 matches limit
+   - [X] embed database version in database
+   - [X] MuMsgXapian => MuMsgIterXapian
+   - [ ] don't store both values and terms
+   - [ ] clean up mu-msg-field, add formatting(?)
+   - [X] fix the batch stuff
+   - [ ] mu view <path>
+   - [ ] basic test suite
+   - [ ] auto clean log file
+   - [X] configure error for missing ->dt_dtype
+
+** release 0.8 [%]
+   - [ ] bookmarks
+   - [ ] query on time
+   - [ ] mu-setup (?)
+   - [ ] mu stats
+   - [ ] mu help <cmd> (?)
+   - [ ] muex.7, man page with simple examples
+   - [ ] follow symlinks when indexing
+   - [ ] ansi-colors in output
+   - [ ] config system (config file) (?)
+   - [ ] UTF-8 output to console
+   - [ ] search for date interval etc.
+   - [ ] detect mail threads (?)
+
+
+* Release already done
 
 ** release 0.6 [100%]
 
@@ -28,26 +60,3 @@
    - [X] cleanup ascending/descending stuff
    - [X] testing
 
-** release 0.7 [46%]
-
-   - [X] signal handler for indexing
-   - [X] fix max 10000 matches limit
-   - [X] embed database version in database
-   - [X] MuMsgXapian => MuMsgIterXapian
-   - [ ] don't store both values and terms
-   - [ ] clean up mu-msg-field, add formatting(?)
-   - [X] fix the batch stuff
-   - [ ] mu help <cmd> (?)
-   - [ ] mu view <path>
-   - [ ] test suite
-   - [ ] auto clean log file
-   - [X] configure error for missing ->dt_dtype
-
-** release 0.8 [%]
-   - [ ] bookmarks
-   - [ ] query on time
-   - [ ] mu-setup (?)
-   - [ ] config system (config file) (?)
-   - [ ] UTF-8 output to console
-   - [ ] search for date interval etc.
-   - [ ] detect mail threads (?)
