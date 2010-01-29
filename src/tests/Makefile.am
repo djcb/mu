@@ -16,10 +16,10 @@
 
 include $(top_srcdir)/gtest.mk
 
-INCLUDES=$(XAPIAN_CXXFLAGS)			\
-	 $(GMIME_CFLAGS)			\
-	 $(GLIB_CFLAGS)				\
-	-I ${top_srcdir}			\
+INCLUDES=$(XAPIAN_CXXFLAGS)					\
+	 $(GMIME_CFLAGS)					\
+	 $(GLIB_CFLAGS)						\
+	-I ${top_srcdir}					\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 noinst_PROGRAMS= $(TEST_PROGS)
@@ -28,25 +28,26 @@ TEST_PROGS += test-mu-util
 test_mu_util_SOURCES= test-mu-util.c
 test_mu_util_LDADD=   ${top_srcdir}/src/libmu.la
 
-TEST_PROGS += test-mu-maildir
-test_mu_maildir_SOURCES= test-mu-maildir.c
-test_mu_maildir_LDADD=   ${top_srcdir}/src/libmu.la
-
 TEST_PROGS += test-mu-msg-str
 test_mu_msg_str_SOURCES= test-mu-msg-str.c
 test_mu_msg_str_LDADD=   ${top_srcdir}/src/libmu.la
 
-# note the question marks; make does not like files with ':'...
-# 11 messages, the '.ignore' message should be ignored when indexing
-# EXTRA_DIST=							\
-# 	TestMaildir/tmp/1220863087.12663.ignore			\
-# 	TestMaildir/new/1220863087.12663_9.mindcrime		\
-# 	TestMaildir/new/1220863087.12663_25.mindcrime		\
-# 	TestMaildir/new/1220863087.12663_21.mindcrime		\
-# 	TestMaildir/new/1220863087.12663_23.mindcrime		\
-# 	TestMaildir/cur/1220863087.12663_5.mindcrime?2,S	\
-# 	TestMaildir/cur/1220863087.12663_7.mindcrime?2,RS	\
-# 	TestMaildir/cur/1220863087.12663_15.mindcrime?2,PS	\
-# 	TestMaildir/cur/1220863087.12663_19.mindcrime?2,S	\
-# 	TestMaildir/cur/1220863042.12663_1.mindcrime?2,S	\
-# 	TestMaildir/cur/1220863060.12663_3.mindcrime?2,S
+TEST_PROGS += test-mu-maildir
+test_mu_maildir_SOURCES= test-mu-maildir.c
+test_mu_maildir_LDADD=   ${top_srcdir}/src/libmu.la
+
+# note the question marks; make does not like files with ':'
+# 11 messages, the '.ignore' message should be ignored
+# when indexing
+EXTRA_DIST=							\
+	testdir/tmp/1220863087.12663.ignore			\
+	testdir/new/1220863087.12663_9.mindcrime		\
+	testdir/new/1220863087.12663_25.mindcrime		\
+	testdir/new/1220863087.12663_21.mindcrime		\
+	testdir/new/1220863087.12663_23.mindcrime		\
+	testdir/cur/1220863087.12663_5.mindcrime?2,S		\
+	testdir/cur/1220863087.12663_7.mindcrime?2,RS		\
+	testdir/cur/1220863087.12663_15.mindcrime?2,PS		\
+	testdir/cur/1220863087.12663_19.mindcrime?2,S		\
+	testdir/cur/1220863042.12663_1.mindcrime?2,S		\
+	testdir/cur/1220863060.12663_3.mindcrime?2,S
