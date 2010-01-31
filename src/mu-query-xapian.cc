@@ -101,9 +101,11 @@ get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 			 Xapian::QueryParser::FLAG_PARTIAL);
 
 	} MU_XAPIAN_CATCH_BLOCK;
-
+	
 	if (err)
 		*err  = 1;
+	
+	
 	
 	return Xapian::Query();
 }
@@ -218,10 +220,8 @@ static gboolean
 needs_quotes (const char* str)
 {
 	int i;
-	const char *keywords[] = {
-		"ANO", "OR", "NOT", "NEAR", "ADJ"
-	};
-
+	const char *keywords[] = { "AND", "OR", "NOT", "NEAR", "ADJ" };
+	
 	for (i = 0; i != G_N_ELEMENTS(keywords); ++i)
 		if (g_strcasecmp (str, keywords[i]) == 0)
 			return TRUE;
