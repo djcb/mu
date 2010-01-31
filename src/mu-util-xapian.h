@@ -39,6 +39,16 @@ gchar* mu_util_xapian_db_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /** 
+ * check whether the database is empty (contains 0 documents); in
+ * addition, a non-existing database is considered 'empty' too
+ * 
+ * @param xpath path to the xapian database
+ * 
+ * @return TRUE if the database is empty, FALSE otherwise
+ */
+gboolean mu_util_xapian_db_is_empty (const gchar *xpath);
+
+/** 
  * check if the 'schema' of the current database is up-to-date
  * 
  * @param xpath path to the xapian database

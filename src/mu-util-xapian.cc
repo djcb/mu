@@ -31,18 +31,17 @@ char*
 mu_util_xapian_db_version (const gchar *xpath)
 {
 	g_return_val_if_fail (xpath, NULL);
+
+	if (!access(xpath, F_OK) == 0) {
+		g_warning ("cannot access %s: %s", xpath, strerror(errno));
+		return NULL;
+	}
 	
-	try {
-		if (!access(xpath, F_OK) == 0) {
-			g_warning ("cannot access %s: %s",
-				   xpath, strerror(errno));
-			return NULL;
-		}
-		
+	try {			
 		Xapian::Database db (xpath);
 		const std::string version
 			(db.get_metadata (MU_XAPIAN_VERSION_KEY));
-
+		
 		MU_WRITE_LOG ("database version: '%s', expected '%s'",
 			      version.empty() ? "<none>" : version.c_str(),
 			      MU_XAPIAN_DB_VERSION);
@@ -62,7 +61,7 @@ mu_util_xapian_db_version_up_to_date (const gchar *xpath)
 	gboolean uptodate;
 
 	g_return_val_if_fail (xpath, FALSE);
-	
+		
 	version = mu_util_xapian_db_version (xpath);
 	if (!version)
 		return FALSE;
@@ -72,6 +71,26 @@ mu_util_xapian_db_version_up_to_date (const gchar *xpath)
 
 	return uptodate;
 }
+
+
+gboolean
+mu_util_xapian_db_is_empty (const gchar* xpath)
+{
+	g_return_val_if_fail (xpath, TRUE);
+	
+	/* it's 'empty' (non-existant) */
+	if (access(xpath, F_OK) != 0 && errno == ENOENT)
+		return TRUE;
+
+	try {
+		Xapian::Database db (xpath);
+		return db.get_doccount() == 0 ? TRUE : FALSE;
+			
+	} MU_XAPIAN_CATCH_BLOCK;
+	
+	return FALSE;
+}
+
 
 
 gboolean

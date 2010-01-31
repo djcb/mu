@@ -137,6 +137,11 @@ mu_query_xapian_new (const char* xpath)
 		return NULL;
 	}
 
+	if (mu_util_xapian_db_is_empty (xpath)) {
+		g_warning ("database %s is empty; nothing to do", xpath);
+		return NULL;
+	}
+	
 	if (!mu_util_xapian_db_version_up_to_date (xpath)) {
 		g_warning ("%s is not up-to-date, needs a full update",
 			   xpath);
