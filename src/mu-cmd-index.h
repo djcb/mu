@@ -23,7 +23,23 @@
 #include <glib.h>
 #include "mu-config.h"
 
+/** 
+ * execute the 'index' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
 gboolean mu_cmd_index   (MuConfigOptions *opts);
+
+
+/** 
+ * execute the 'cleanup' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
 gboolean mu_cmd_cleanup (MuConfigOptions *opts);
 
 

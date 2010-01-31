@@ -223,7 +223,8 @@ mu_cmd_index (MuConfigOptions *opts)
 				   NULL, NULL);
 		if (!opts->nocleanup && !MU_CAUGHT_SIGNAL) {
 			stats._processed = 0; /* start over */
-			g_print ("\n");
+			if (!opts->quiet)
+				g_print ("\n");
 			g_message ("Cleaning up missing messages");
 			mu_index_cleanup (midx, &stats,
 					  opts->quiet ?
