@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 struct _MuMsgIterXapian;
 typedef struct _MuMsgIterXapian MuMsgIterXapian;
 
+
 /** 
  * get the next next message (which you got from
  * e.g. mu_query_xapian_run)
@@ -38,15 +39,15 @@ typedef struct _MuMsgIterXapian MuMsgIterXapian;
  */
 gboolean         mu_msg_iter_xapian_next              (MuMsgIterXapian *iter);
 
+
 /** 
- * are there any message left? together with mu_msg_iter_xapian_next, this
- * function can be used to iterate over query results.
+ * does the iter point to a real message?
  * 
- * @param msg a valid MuMsgIterXapian message
+ * @param msg a valid MuMsgIterXapian iter
  * 
- * @return TRUE if there are messages left, FALSE otherwise
+ * @return TRUE if the iterator points to a message, FALSE other
  */
-gboolean         mu_msg_iter_xapian_is_done           (MuMsgIterXapian *iter);
+gboolean         mu_msg_iter_xapian_is_null (MuMsgIterXapian *iter);
 
 /** 
  * destroy the sequence of messages

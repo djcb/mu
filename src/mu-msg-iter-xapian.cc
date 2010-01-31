@@ -33,6 +33,7 @@ struct _MuMsgIterXapian {
 	size_t                         _batchsize;
 	size_t		               _offset;
 	char*                          _str[MU_MSG_FIELD_ID_NUM];
+	bool                           _is_null; 
 };
 
 
@@ -48,8 +49,11 @@ mu_msg_iter_xapian_new (const Xapian::Enquire& enq, size_t batchsize)
 
 		iter->_enq       = new Xapian::Enquire(enq);
 		iter->_matches   = iter->_enq->get_mset (0, batchsize);
-		if (!iter->_matches.empty()) 
+		if (!iter->_matches.empty()) {
 			iter->_cursor    = iter->_matches.begin();
+			iter->_is_null   = false;
+		} else
+			iter->_is_null = true;
 		
 		iter->_batchsize = batchsize; 
 		iter->_offset    = 0;
@@ -94,11 +98,14 @@ get_next_batch (MuMsgIterXapian *iter)
 {	
 	iter->_matches = iter->_enq->get_mset (iter->_offset,
 					       iter->_batchsize);
-	if (iter->_matches.empty())
+	if (iter->_matches.empty()) {
 		iter->_cursor = iter->_matches.end();
-	else
+		iter->_is_null = true;
+	} else {
 		iter->_cursor = iter->_matches.begin();
-
+		iter->_is_null = false;
+	}
+		
 	return iter;
 }
 
@@ -106,7 +113,6 @@ gboolean
 mu_msg_iter_xapian_next (MuMsgIterXapian *iter)
 {
 	g_return_val_if_fail (iter, FALSE);
-	g_return_val_if_fail (!mu_msg_iter_xapian_is_done(iter), FALSE);
 
 	try {
 		++iter->_offset;
@@ -136,17 +142,11 @@ mu_msg_iter_xapian_next (MuMsgIterXapian *iter)
 
 
 gboolean
-mu_msg_iter_xapian_is_done (MuMsgIterXapian *iter)
+mu_msg_iter_xapian_is_null (MuMsgIterXapian *iter)
 {
 	g_return_val_if_fail (iter, TRUE);
 
-	if (iter->_matches.empty())
-		return TRUE;
-
-	if (iter->_cursor == iter->_matches.end())
-		return TRUE;
-
-	return FALSE;
+	return iter->_is_null;
 }
 
 
@@ -154,7 +154,7 @@ const gchar*
 mu_msg_iter_xapian_get_field (MuMsgIterXapian *iter, const MuMsgField *field)
 {
 	g_return_val_if_fail (iter, NULL);
-	g_return_val_if_fail (!mu_msg_iter_xapian_is_done(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_xapian_is_null(iter), NULL);
 	g_return_val_if_fail (field, NULL);
 	
 	try {

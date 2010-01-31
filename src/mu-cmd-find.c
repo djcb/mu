@@ -35,7 +35,6 @@
 
 #include "mu-util.h"
 #include "mu-util-xapian.h"
-
 #include "mu-cmd-find.h"
 
 
@@ -50,7 +49,7 @@ update_warning (void)
 
 
 static gboolean
-print_query (MuQueryXapian *xapian, const gchar *query)
+print_xapian_query (MuQueryXapian *xapian, const gchar *query)
 {
 	char *querystr;
 
@@ -117,134 +116,71 @@ sort_field_from_string (const char* fieldstr)
 	return field;
 }
 
-static gboolean
-print_rows (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
+static size_t
+print_rows (MuMsgIterXapian *iter, const char *fields)
 {
-	MuMsgIterXapian *iter;
-	const MuMsgField *sortfield;
-
-	MU_WRITE_LOG ("query: '%s' (iters)", query); 
+	size_t count = 0;
+	const char* myfields;
 	
-	sortfield = NULL;
-	if (opts->sortfield) {
-		sortfield = sort_field_from_string (opts->sortfield);
-		if (!sortfield) /* error occured? */
-			return FALSE;
-	}
-	
-	iter = mu_query_xapian_run (xapian, query, sortfield,
-				    !opts->descending,
-				    0);
-	if (!iter) {
-		g_printerr ("error: running query failed\n");
-		return FALSE;
-	} else if (mu_msg_iter_xapian_is_done (iter)) {
-		g_printerr ("No matches found\n");
-		mu_msg_iter_xapian_destroy (iter);
-		return FALSE;
-	}
+	do {
+		int len = 0;
 
-	/* iterate over the found iters */
-	do  {
-	 	const char*	fields		= opts->fields;
-		int		printlen	= 0;
-
-		while (*fields) {
-			
+		myfields = fields;
+		while (*myfields) {
 			const MuMsgField* field;
-			field =	mu_msg_field_from_shortcut (*fields);
-			if (!field ||
-			    !mu_msg_field_is_xapian_enabled (field)) 
-				printlen += printf ("%c", *fields);
+			field =	mu_msg_field_from_shortcut (*myfields);
+			if (!field || !mu_msg_field_is_xapian_enabled (field)) 
+				len += printf ("%c", *myfields);
 			else
-				printlen +=
-					printf ("%s",
-						display_field(iter, field));
-			++fields;
+				len += printf ("%s",
+					       display_field(iter, field));
+			++myfields;
 		}
 		
-		if (printlen > 0)
-			printf ("\n");
-		
-		mu_msg_iter_xapian_next (iter);
-		
-	} while (!mu_msg_iter_xapian_is_done (iter));
-	
-	mu_msg_iter_xapian_destroy (iter);
+		if (len > 0)
+			g_print ("\n");
 
-	return TRUE;
+		++count;
+		
+	} while (mu_msg_iter_xapian_next (iter));
+	
+	return count;
 }
-
-
-static gboolean
-do_output_text (MuQueryXapian *xapian, MuConfigOptions* opts,
-		 const gchar **params)
-{
-	gchar *query;
-	gboolean retval = TRUE;
-	
-	query = mu_query_xapian_combine (params, FALSE);
-		
-	/* if xquery is set, we print the xapian query instead of the
-	 * output; this is for debugging purposes */
-	if (opts->xquery) 
-		retval = print_query (xapian, query);
-	else
-		retval = print_rows (xapian, query, opts);
-	
-	g_free (query);
-
-	return retval;
-}
-
 
 /* create a linksdir if it not exist yet; if it already existed,
  * remove old links if opts->clearlinks was specified */
 static gboolean
-create_or_clear_linksdir_maybe (MuConfigOptions* opts)
+create_or_clear_linksdir_maybe (const char *linksdir, gboolean clearlinks)
 {
-	if (access (opts->linksdir, F_OK) != 0) {
-		if (!mu_maildir_mkmdir (opts->linksdir, 0700, TRUE)) 
+	if (access (linksdir, F_OK) != 0) {
+		if (!mu_maildir_mkmdir (linksdir, 0700, TRUE)) 
 			return FALSE;
 
-	} else if (opts->clearlinks)
-		mu_maildir_clear_links (opts->linksdir);
+	} else if (clearlinks)
+		mu_maildir_clear_links (linksdir);
 	
 	return TRUE;
 }
 
-static gboolean
-do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
-		  const gchar **params)
-{
-	gchar *query;
-	gboolean retval = TRUE;
-	MuMsgIterXapian *iter;
-	const MuMsgField *pathfield;
 
-	if (!create_or_clear_linksdir_maybe (opts))
-		return FALSE;
+static size_t
+make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
+{
+	size_t count = 0;
+	const MuMsgField *pathfield;
 	
-	query = mu_query_xapian_combine (params, FALSE);
-	
-	MU_WRITE_LOG ("query: '%s' (links)", query); 
-	iter = mu_query_xapian_run (xapian, query, NULL, FALSE, 0);
-	if (!iter) {
-		g_printerr ("error: running query failed\n");
-		return FALSE;
-	} else if (mu_msg_iter_xapian_is_done (iter)) {
-		g_printerr ("No matches found\n");
-		mu_msg_iter_xapian_destroy (iter);
-		return FALSE;
-	}
+	if (!create_or_clear_linksdir_maybe (linksdir, clearlinks))
+		return 0;
 	
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
 	
 	/* iterate over the found iters */
-	for (; !mu_msg_iter_xapian_is_done (iter);
-	     mu_msg_iter_xapian_next (iter)) {
-
+	do {
 		const char *path;
+		
+		/* there's no data in the iter */
+		if (mu_msg_iter_xapian_is_null (iter))
+			return count;		
 		
 		path = mu_msg_iter_xapian_get_field (iter, pathfield);
 		if (!path)
@@ -257,15 +193,75 @@ do_output_links (MuQueryXapian *xapian, MuConfigOptions* opts,
 			continue;
 		} 
 		
-		if (!mu_maildir_link (path, opts->linksdir))
+		if (!mu_maildir_link (path, linksdir))
 			break;
+		++count;
+	} while (mu_msg_iter_xapian_next (iter));
+		 
+	return count;
+}
+
+
+
+static gboolean
+run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
+{
+	MuMsgIterXapian *iter;
+	const MuMsgField *sortfield;
+	size_t matches;
+	
+	MU_WRITE_LOG ("query: '%s'", query); 
+	
+	sortfield = NULL;
+	if (opts->sortfield) {
+		sortfield = sort_field_from_string (opts->sortfield);
+		if (!sortfield) /* error occured? */
+			return FALSE;
 	}
 	
+	iter = mu_query_xapian_run (xapian, query, sortfield,
+				    !opts->descending, 0);
+	if (!iter) {
+		g_printerr ("error: running query failed\n");
+		return FALSE;
+	}
+
+	if (opts->linksdir)
+		matches = make_links (iter, opts->linksdir, opts->clearlinks);
+	else
+		matches = print_rows (iter, opts->fields);
+	
+	if (matches == 0) 
+		g_printerr ("No matches found\n");
 	mu_msg_iter_xapian_destroy (iter);
+
+	return matches > 0;
+}
+
+
+
+static gboolean
+do_output (MuQueryXapian *xapian, MuConfigOptions* opts,
+		 const gchar **params)
+{
+	gchar *query;
+	gboolean retval = TRUE;
+	
+	query = mu_query_xapian_combine (params, FALSE);
+		
+	/* if xquery is set, we print the xapian query instead of the
+	 * output; this is for debugging purposes */
+	if (opts->xquery) 
+		retval = print_xapian_query (xapian, query);
+	else
+		retval = run_query (xapian, query, opts);
+	
 	g_free (query);
 
 	return retval;
 }
+
+
 
 
 static gboolean
@@ -326,10 +322,7 @@ mu_cmd_find (MuConfigOptions *opts)
 		return FALSE;
 	}
 
-	if (opts->linksdir)
-		rv = do_output_links (xapian, opts, params);
-	else
-		rv = do_output_text (xapian, opts, params);
+	rv = do_output (xapian, opts, params);
 	
 	mu_query_xapian_destroy (xapian);
 	mu_msg_gmime_uninit();
@@ -347,6 +340,3 @@ mu_cmd_view (MuConfigOptions *opts)
 	
 	return TRUE; /* FIXME */
 }
-
-
-

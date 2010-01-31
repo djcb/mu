@@ -146,10 +146,21 @@ database_version_check_and_update (MuConfigOptions *opts)
 	return FALSE;
 }
 
+
+static MuResult
+run_cleanup (MuIndex *midx, MuIndexStats *stats, gboolean quiet)
+{
+	mu_index_stats_clear (stats);
+	return  mu_index_cleanup (midx, stats,
+				  quiet ? index_msg_silent_cb : index_msg_cb,
+				  NULL);
+}
+
+
 gboolean
 mu_cmd_cleanup (MuConfigOptions *opts)
 {
-	int rv;	
+	MuResult rv;	
 	MuIndex *midx;
 	MuIndexStats stats;
 
@@ -165,31 +176,46 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 		g_warning ("Cleanup failed");
 		return FALSE;
 	}
+
 	
 	g_message ("Cleaning up removed messages from %s",
 		   opts->xpath);
+	rv = run_cleanup (midx, &stats, opts->quiet);
 	
-	mu_index_stats_clear (&stats);
-	rv = mu_index_cleanup (midx, &stats,
-			       opts->quiet ? index_msg_silent_cb : index_msg_cb,
-			       NULL);
 	mu_index_destroy (midx);
 
 	if (!opts->quiet)
 		g_print ("\n");
 
-	if (rv == MU_OK || rv == MU_STOP)
-		return TRUE;
-	else
-		return FALSE;
+	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
+}
+
+static MuResult
+run_index (MuIndex *midx, const char* maildir, MuIndexStats *stats,
+	   gboolean reindex, gboolean quiet)
+{
+	MuResult rv;
+	
+	mu_index_stats_clear (stats);
+	mu_msg_gmime_init ();
+
+	rv = mu_index_run (midx, maildir, reindex, stats,
+			   quiet ? index_msg_silent_cb :index_msg_cb,
+			   NULL, NULL);
+	
+	mu_msg_gmime_init ();
+
+	return rv;
 }
 
 
 gboolean
 mu_cmd_index (MuConfigOptions *opts)
 {
-	int rv;
-
+	gboolean rv;	
+	MuIndex *midx;
+	MuIndexStats stats;
+	
 	g_return_val_if_fail (opts, FALSE);
 	
 	if (!check_index_params (opts))
@@ -200,51 +226,26 @@ mu_cmd_index (MuConfigOptions *opts)
 
 	install_sig_handler ();
 	
-	mu_msg_gmime_init ();
-	{
-		MuIndex *midx;
-		MuIndexStats stats;
-		
-		mu_index_stats_clear (&stats);
-		midx = mu_index_new (opts->xpath);
-		
-		if (!midx) {
-			g_warning ("Indexing failed");
-			return FALSE;
-		} 
+	midx = mu_index_new (opts->xpath);
+	if (!midx) {
+		g_warning ("Indexing failed");
+		return FALSE;
+	} 
 
-		g_message ("Indexing messages from %s", opts->maildir);
-		g_message ("Database: %s", opts->xpath);
-		
-		rv = mu_index_run (midx, opts->maildir,
-				   opts->reindex, &stats,
-				   opts->quiet ?
-				        index_msg_silent_cb :index_msg_cb,
-				   NULL, NULL);
-		if (!opts->nocleanup && !MU_CAUGHT_SIGNAL) {
-			stats._processed = 0; /* start over */
-			if (!opts->quiet)
-				g_print ("\n");
-			g_message ("Cleaning up missing messages");
-			mu_index_cleanup (midx, &stats,
-					  opts->quiet ?
-					       index_msg_silent_cb : index_msg_cb,
-					  NULL);
-		}
-
-		if (!opts->quiet) {
-			index_msg_cb (&stats, NULL);
-			g_print ("\n");
-		}
-		
-		MU_WRITE_LOG ("processed: %d; updated/new: %d, "
-			      "cleaned-up: %d",
-			      stats._processed, stats._updated,
-			      stats._cleaned_up);
-		
-		mu_index_destroy (midx);
-	}
-	mu_msg_gmime_uninit ();
+	g_message ("Indexing messages from %s", opts->maildir);
+	g_message ("Database: %s", opts->xpath);
 	
-	return rv == MU_OK ? TRUE : FALSE;
+	rv = run_index (midx, opts->maildir, &stats, opts->reindex, opts->quiet);
+	if (rv == MU_OK  && !opts->nocleanup)
+		rv = run_cleanup (midx, &stats, opts->quiet);
+	
+	mu_index_destroy (midx);
+	
+	MU_WRITE_LOG ("processed: %d; updated/new: %d, cleaned-up: %d",
+		      stats._processed, stats._updated,stats._cleaned_up);
+
+	if (!opts->quiet)
+		g_print ("\n");
+	
+	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
 }

@@ -104,12 +104,13 @@ test_mu_query_01 (void)
 		int count;
 		MuMsgIterXapian *iter;
 		
-		iter = mu_query_xapian_run (query, queries[i].query, NULL, FALSE, 0);
+		iter = mu_query_xapian_run (query, queries[i].query, NULL, FALSE, 1);
 
 		count = 0;
-		while (!mu_msg_iter_xapian_is_done (iter)) {
-			mu_msg_iter_xapian_next (iter);
-			++count;
+		if (!mu_msg_iter_xapian_is_null (iter)) {
+			do {
+				++count;
+			} while (mu_msg_iter_xapian_next (iter));
 		}
 		
 		g_assert_cmpuint (queries[i].count, ==, count);
