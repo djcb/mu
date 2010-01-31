@@ -34,11 +34,11 @@ tags:
 cc10:
 	@pmccabe `find -name '*.c' -o -name '*.cc'` | sort -nr | awk '($$1 > 10)'
 
-# this warns about functions that are over 30 non-comment lines long, which is a
+# this warns about functions that are over 40 non-comment lines long, which is a
 # sign that they need some refactoring. requires the pmccabe tool. if
 # all is fine, it outputs nothing
-line30:
-	@pmccabe -c `find -name '*.c' -o -name '*.cc'` | sort -nr | awk '($$5 > 30)'
+line40:
+	@pmccabe -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 40)'
 
 
 

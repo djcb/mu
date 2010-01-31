@@ -577,13 +577,40 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 }
 
 
-static char*
+static gchar*
+stream_to_string (GMimeStream *stream, size_t buflen, gboolean convert_utf8)
+{
+	char *buffer;
+	ssize_t bytes;
+	
+	buffer = (char*)malloc(buflen + 1);
+	if (!buffer) {
+		g_warning ("%s: failed to allocate %u bytes", __FUNCTION__,
+			   buflen);
+		return NULL;
+	}
+	g_mime_stream_reset (stream);
+	
+	/* we read everything in one go */
+	bytes = g_mime_stream_read (stream, buffer, buflen);
+	if (bytes < 0) {
+		g_warning ("%s: failed to read from stream", __FUNCTION__);
+		free (buffer);
+		return NULL;
+	}
+	
+	buffer[bytes]='\0'; 
+
+	return buffer;
+}
+
+
+static gchar*
 part_to_string (GMimePart *part, gboolean convert_utf8)
 {
 	GMimeDataWrapper *wrapper;
 	GMimeStream *stream = NULL;
-	
-	ssize_t buflen, bytes;
+	ssize_t buflen;
 	char *buffer = NULL;
 
 	g_return_val_if_fail (GMIME_IS_OBJECT(part), NULL);
@@ -601,33 +628,18 @@ part_to_string (GMimePart *part, gboolean convert_utf8)
 	}
 
 	buflen = g_mime_data_wrapper_write_to_stream (wrapper, stream);
-	if (buflen == 0)  /* empty buffer */
+	if (buflen <= 0)  /* empty buffer */
 		goto cleanup;
 	
-	buffer = (char*)malloc(buflen + 1);
-	if (!buffer) {
-		g_warning ("failed to allocate %d bytes", (int)buflen);
-		goto cleanup;
-	}	
-	g_mime_stream_reset (stream);
+	buffer = stream_to_string (stream, (size_t)buflen, convert_utf8);
 	
-	/* we read everything in one go */
-	bytes = g_mime_stream_read (stream, buffer, buflen);
-	if (bytes < 0) {
-		free (buffer);
-		buffer = NULL;
-	} else
-		buffer[bytes]='\0';
-
 	/* convert_to_utf8 will free the old 'buffer' if needed */
-	if (buffer && convert_utf8) 
+	if (convert_utf8) 
 		buffer = convert_to_utf8 (part, buffer);
 	
 cleanup:				
 	if (stream)
 		g_object_unref (G_OBJECT(stream));
-	/* if (wrapper) */
-	/* 	g_object_unref (G_OBJECT(wrapper)); */
 	
 	return buffer;
 }
