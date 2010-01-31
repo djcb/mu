@@ -20,6 +20,9 @@
 #ifndef __MU_INDEX_H__
 #define __MU_INDEX_H__
 
+#include <stdlib.h>
+#include <glib.h>
+
 #include "mu-result.h" /* for MuResult */
 
 /* opaque structure */

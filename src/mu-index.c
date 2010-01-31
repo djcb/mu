@@ -54,9 +54,15 @@ mu_index_new (const char *xpath)
 		return NULL;
 	}
 
-	/* see we need to reindex the database */
-	index->_needs_reindex = 
-		mu_util_xapian_db_version_up_to_date (xpath) ? FALSE : TRUE;
+	/* see we need to reindex the database; note, there is a small race-condition
+	 * here, between mu_index_new and mu_index_run. Maybe do the check in
+	 * mu_index_run instead? */
+	if (mu_util_xapian_db_is_empty (xpath))
+		index->_needs_reindex = FALSE;
+	else {
+		index->_needs_reindex =
+			mu_util_xapian_db_version_up_to_date (xpath) ? FALSE : TRUE;
+	}
 		
 	return index;
 }
@@ -385,7 +391,6 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 
 	return rv;
 }
-
 
 gboolean
 mu_index_stats_clear (MuIndexStats *stats)
