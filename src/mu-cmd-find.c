@@ -336,3 +336,17 @@ mu_cmd_find (MuConfigOptions *opts)
 	
 	return rv;
 }
+
+
+
+
+gboolean
+mu_cmd_view (MuConfigOptions *opts)
+{
+	g_return_val_if_fail (opts, FALSE);
+	
+	return TRUE; /* FIXME */
+}
+
+
+

@@ -23,6 +23,24 @@
 #include <glib.h>
 #include "mu-config.h"
 
+/** 
+ * execute the 'find' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
 gboolean mu_cmd_find (MuConfigOptions *opts);
+
+
+/** 
+ * execute the 'view' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
+gboolean mu_cmd_view (MuConfigOptions *opts);
+
 
 #endif /*__MU_CMD_FIND_H__*/
