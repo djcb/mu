@@ -20,7 +20,6 @@
 #include "config.h"
 #include <xapian.h>
 
-
 #include <cstring>
 #include <errno.h>
 
@@ -41,10 +40,6 @@ mu_util_xapian_db_version (const gchar *xpath)
 		Xapian::Database db (xpath);
 		const std::string version
 			(db.get_metadata (MU_XAPIAN_VERSION_KEY));
-		
-		MU_WRITE_LOG ("database version: '%s', expected '%s'",
-			      version.empty() ? "<none>" : version.c_str(),
-			      MU_XAPIAN_DB_VERSION);
 		
 		return version.empty() ? NULL : g_strdup (version.c_str());
 		
