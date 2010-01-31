@@ -21,7 +21,6 @@
 #include <iostream>
 #include <string.h>
 #include <errno.h>
-
 #include "xapian.h"
 
 #include "mu-util.h"
