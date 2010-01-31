@@ -24,6 +24,8 @@
 
 /* mu log is the global logging system */
 
+G_BEGIN_DECLS
+
 /** 
  * write logging information to a log file
  * 
@@ -63,5 +65,7 @@ gboolean mu_log_init_silence    (void);
  * unitialize the logging system, and free all resources
  */
 void mu_log_uninit             (void);
+
+G_END_DECLS
 
 #endif /*__MU_LOG_H__*/
