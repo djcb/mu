@@ -59,17 +59,6 @@ cmd_from_string (const char* cmd)
 
 
 
-
-static gboolean
-cmd_view (MuConfigOptions *opts)
-{
-	return TRUE; /* FIXME */
-}
-
-
-
-
-
 static int
 cmd_mkdir (MuConfigOptions *opts)
 {
@@ -151,7 +140,7 @@ mu_cmd_execute (MuConfigOptions *opts)
 	case MU_CMD_FIND:    return mu_cmd_find (opts);
 	case MU_CMD_MKDIR:   return cmd_mkdir (opts);
 	case MU_CMD_CLEANUP: return mu_cmd_cleanup (opts);
-	case MU_CMD_VIEW:    return cmd_view (opts);
+	case MU_CMD_VIEW:    return mu_cmd_view (opts);
 
 		//case MU_CMD_HELP:    return cmd_help  (opts);
 
