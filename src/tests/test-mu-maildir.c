@@ -22,6 +22,8 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include <glib.h>
+#include <glib/gstdio.h>
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
