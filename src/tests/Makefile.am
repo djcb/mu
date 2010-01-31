@@ -20,6 +20,7 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	 $(GMIME_CFLAGS)					\
 	 $(GLIB_CFLAGS)						\
 	-I ${top_srcdir}					\
+	-DMU_PROGRAM=\"${top_srcdir}/src/mu\"			\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 noinst_PROGRAMS= $(TEST_PROGS)
@@ -35,6 +36,11 @@ test_mu_msg_str_LDADD=   ${top_srcdir}/src/libmu.la
 TEST_PROGS += test-mu-maildir
 test_mu_maildir_SOURCES= test-mu-maildir.c
 test_mu_maildir_LDADD=   ${top_srcdir}/src/libmu.la
+
+TEST_PROGS += test-mu-query
+test_mu_query_SOURCES= test-mu-query.c dummy.cc
+test_mu_query_LDADD=   ${top_srcdir}/src/libmu.la
+
 
 # note the question marks; make does not like files with ':'
 # 11 messages, the '.ignore' message should be ignored
