@@ -32,8 +32,10 @@ bin_PROGRAMS=				\
 noinst_LTLIBRARIES=			\
 	libmu.la
 
+# note, mu.cc is only '.cc' and not '.c' because libmu must explicitly
+# be linked as c++, not c.
 mu_SOURCES=				\
-	mu.c
+	mu.cc
 
 mu_LDADD=				\
 	libmu.la
@@ -41,6 +43,10 @@ mu_LDADD=				\
 libmu_la_SOURCES=			\
 	mu-cmd.c			\
 	mu-cmd.h			\
+	mu-cmd-find.h			\
+	mu-cmd-find.c			\
+	mu-cmd-index.h			\
+	mu-cmd-index.c			\
 	mu-config.c			\
 	mu-config.h			\
 	mu-index.c			\

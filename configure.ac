@@ -16,7 +16,7 @@
 
 AC_INIT([mu],[0.7dev],[http://www.djcbsoftware.nl/code/mu])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_SRCDIR([src/mu.c])
+AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 # we set the set the version of the Xapian database layout here; it
