@@ -88,7 +88,9 @@ test_mu_query_01 (void)
 		{ "subject:elisp",      1 },
 		{ "html",               4 },
 		{ "html AND contains",  1 },
-		{ "from:pepernoot",     0 },		
+		{ "from:pepernoot",     0 },
+		{ "p:cur",              6 },
+		{ "path:new",           4 }
 	};
 
 	
