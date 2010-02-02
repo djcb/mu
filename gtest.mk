@@ -17,11 +17,10 @@
 TEST_PROGS=
 
 test: all $(TEST_PROGS)
-	@ test -z "$(TEST_PROGS)" || gtester --verbose $(TEST_PROGS); \
-	  test -z "$(SUBDIRS)" || \
+	 @test -z "$(TEST_PROGS)" || gtester --verbose $(TEST_PROGS) || exit $$?; \
+	 test -z "$(SUBDIRS)" || \
 		for subdir in $(SUBDIRS); do \
 			test "$$subdir" = "." || \
-		(cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@ ) || exit $? ; \
+		(cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@ ) || exit $$? ; \
 		done
-
 .PHONY: test
