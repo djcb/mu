@@ -26,6 +26,12 @@ endif
 
 INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 
+# don't use -Werror, as it might break on other compilers
+# use -Wno-unused-parameters, because some callbacks may not
+# really need all the params they get
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+
 bin_PROGRAMS=				\
 	mu
 
