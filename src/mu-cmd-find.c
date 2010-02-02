@@ -121,6 +121,9 @@ print_rows (MuMsgIterXapian *iter, const char *fields)
 {
 	size_t count = 0;
 	const char* myfields;
+
+	if (mu_msg_iter_xapian_is_null (iter))
+		return 0;
 	
 	do {
 		int len = 0;
@@ -171,6 +174,9 @@ make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
 	
 	if (!create_or_clear_linksdir_maybe (linksdir, clearlinks))
 		return 0;
+
+	if (mu_msg_iter_xapian_is_null (iter))
+		return 0;
 	
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
 	
@@ -196,6 +202,7 @@ make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
 		if (!mu_maildir_link (path, linksdir))
 			break;
 		++count;
+
 	} while (mu_msg_iter_xapian_next (iter));
 		 
 	return count;
@@ -233,6 +240,7 @@ run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	
 	if (matches == 0) 
 		g_printerr ("No matches found\n");
+
 	mu_msg_iter_xapian_destroy (iter);
 
 	return matches > 0;
