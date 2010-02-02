@@ -28,17 +28,8 @@
 #include <unistd.h>
 #include <string.h>
 
-
+#include "test-mu-common.h"
 #include "src/mu-maildir.h"
-
-static char*
-random_tmpdir (void)
-{
-        return g_strdup_printf ("%s%cmu-test-%x", g_get_tmp_dir(),
-                                G_DIR_SEPARATOR,
-                                (int)random()*getpid()*(int)time(NULL));
-}
-
 
 static void
 test_mu_maildir_mkmdir_01 (void)
@@ -47,7 +38,7 @@ test_mu_maildir_mkmdir_01 (void)
 	gchar *tmpdir, *mdir, *tmp;
 	const gchar *subs[] = {"tmp", "cur", "new"};
 	
-	tmpdir = random_tmpdir ();
+	tmpdir = test_mu_common_get_random_tmpdir ();
 	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
 				  "cuux");
 	
@@ -81,7 +72,7 @@ test_mu_maildir_mkmdir_02 (void)
 	gchar *tmpdir, *mdir, *tmp;
 	const gchar *subs[] = {"tmp", "cur", "new"};
 	
-	tmpdir = random_tmpdir ();
+	tmpdir = test_mu_common_get_random_tmpdir ();
 	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
 				  "cuux");
 	
@@ -136,11 +127,17 @@ copy_test_data (void)
 {
 	gchar *dir, *cmd;
 	
-	dir = random_tmpdir();
+	dir = test_mu_common_get_random_tmpdir();
 	cmd = g_strdup_printf ("mkdir %s", dir);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
-	cmd = g_strdup_printf ("cp -R testdir %s", dir);
+	
+	cmd = g_strdup_printf ("cp -R %s %s", MU_TESTMAILDIR, dir);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+
+	/* unbreak make distcheck */
+	cmd = g_strdup_printf ("chmod -R 700 %s", dir);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
 	
@@ -172,7 +169,6 @@ msg_cb (const char *fullpath, gboolean enter, WalkData *data)
 	++data->_file_count;
 	return MU_OK;
 }
-
 
 
 static void
@@ -208,7 +204,7 @@ test_mu_maildir_walk_02 (void)
 	
 	tmpdir = copy_test_data ();
 	memset (&data, 0, sizeof(WalkData));
-
+	
 	/* mark the 'new' dir with '.noindex', to ignore it */ 
 	cmd = g_strdup_printf ("touch %s%ctestdir%cnew%c.noindex", tmpdir,
 			       G_DIR_SEPARATOR, G_DIR_SEPARATOR,

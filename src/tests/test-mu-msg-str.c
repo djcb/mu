@@ -27,6 +27,8 @@
 #include <time.h>
 
 #include <locale.h>
+
+#include "test-mu-common.h"
 #include "src/mu-msg-str.h"
 
 static void

@@ -29,24 +29,9 @@
 #include <string.h>
 
 
+#include "test-mu-common.h"
 #include "src/mu-query-xapian.h"
 
-static char*
-random_tmpdir (void)
-{
-        return g_strdup_printf ("%s%cmu-test-%x", g_get_tmp_dir(),
-                                G_DIR_SEPARATOR,
-                                (int)random()*getpid()*(int)time(NULL));
-}
-
-
-
-/* static gboolean */
-/* ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg, */
-/* 	      gpointer user_data) */
-/* { */
-/* 	return FALSE; /\* don't abort *\/ */
-/* } */
 
 static void shutup (void) {}
 
@@ -56,10 +41,12 @@ fill_database (void)
 {
 	gchar *cmdline, *tmpdir, *xpath;
 	
-	tmpdir = random_tmpdir();
-	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s%ctestdir"
+	tmpdir = test_mu_common_get_random_tmpdir();
+	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
-				   MU_PROGRAM, tmpdir, ABS_SRCDIR, G_DIR_SEPARATOR);
+				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR);
+	
+	g_print ("[%s]\n", cmdline);
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL, NULL, NULL));
 	g_free (cmdline);
 
@@ -106,7 +93,8 @@ test_mu_query_01 (void)
 
 		if (!mu_msg_iter_xapian_is_null (iter)) 
 			do { ++count; } while (mu_msg_iter_xapian_next (iter));
-				
+
+		g_print ("[%s][%d,%d]\n", queries[i].query,queries[i].count,count);
 		g_assert_cmpuint (queries[i].count, ==, count);
 		mu_msg_iter_xapian_destroy (iter);
 	}

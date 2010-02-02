@@ -20,29 +20,39 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	 $(GMIME_CFLAGS)					\
 	 $(GLIB_CFLAGS)						\
 	-I ${top_srcdir}					\
-	-DMU_PROGRAM=\"${top_srcdir}/src/mu\"			\
+	-DMU_TESTMAILDIR=\"${top_srcdir}/src/tests/testdir\"	\
+	-DMU_PROGRAM=\"${top_builddir}/src//mu\"		\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 noinst_PROGRAMS= $(TEST_PROGS)
 
+noinst_LTLIBRARIES=libtestmucommon.la
+
 TEST_PROGS += test-mu-util
 test_mu_util_SOURCES= test-mu-util.c
-test_mu_util_LDADD=   ${top_srcdir}/src/libmu.la
+test_mu_util_LDADD=   libtestmucommon.la
 
 TEST_PROGS += test-mu-msg-str
 test_mu_msg_str_SOURCES= test-mu-msg-str.c
-test_mu_msg_str_LDADD=   ${top_srcdir}/src/libmu.la
+test_mu_msg_str_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-maildir
 test_mu_maildir_SOURCES= test-mu-maildir.c
-test_mu_maildir_LDADD=   ${top_srcdir}/src/libmu.la
+test_mu_maildir_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-query
 test_mu_query_SOURCES= test-mu-query.c dummy.cc
-test_mu_query_LDADD=   ${top_srcdir}/src/libmu.la
+test_mu_query_LDADD=    libtestmucommon.la
 
+libtestmucommon_la_SOURCES=		\
+	test-mu-common.c		\
+	test-mu-common.h
+libtestmucommon_la_LIBADD= ../libmu.la
 
-# note the question marks; make does not like files with ':'
+# note the question marks; make does not like files with ':', so we
+# use the (also supported) version with '!' instead. We could escape
+# the : with \: but automake does not recognize that....
+
 # 11 messages, the '.ignore' message should be ignored
 # when indexing
 EXTRA_DIST=							\
@@ -51,9 +61,9 @@ EXTRA_DIST=							\
 	testdir/new/1220863087.12663_25.mindcrime		\
 	testdir/new/1220863087.12663_21.mindcrime		\
 	testdir/new/1220863087.12663_23.mindcrime		\
-	testdir/cur/1220863087.12663_5.mindcrime?2,S		\
-	testdir/cur/1220863087.12663_7.mindcrime?2,RS		\
-	testdir/cur/1220863087.12663_15.mindcrime?2,PS		\
-	testdir/cur/1220863087.12663_19.mindcrime?2,S		\
-	testdir/cur/1220863042.12663_1.mindcrime?2,S		\
-	testdir/cur/1220863060.12663_3.mindcrime?2,S
+	testdir/cur/1220863087.12663_5.mindcrime!2,S		\
+	testdir/cur/1220863087.12663_7.mindcrime!2,RS		\
+	testdir/cur/1220863087.12663_15.mindcrime!2,PS		\
+	testdir/cur/1220863087.12663_19.mindcrime!2,S		\
+	testdir/cur/1220863042.12663_1.mindcrime!2,S		\
+	testdir/cur/1220863060.12663_3.mindcrime!2,S
