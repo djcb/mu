@@ -37,9 +37,8 @@ cc10:
 # this warns about functions that are over 40 non-comment lines long, which is a
 # sign that they need some refactoring. requires the pmccabe tool. if
 # all is fine, it outputs nothing
-line40:
-	@pmccabe -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 40)'
-
+line35:
+	@pmccabe -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 35)'
 
 
 EXTRA_DIST=		\
