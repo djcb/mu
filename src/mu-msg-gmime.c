@@ -530,21 +530,36 @@ asciify (char *buf)
 
 
 
+static gchar*
+text_to_utf8 (const char* buffer, const char *charset)
+{
+	GError *err;
+	gchar * utf8;
+
+	err = NULL;
+	utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
+					charset, (gchar*)".", 
+					NULL, NULL, &err);
+	if (!utf8) {
+		MU_WRITE_LOG ("%s: conversion failed from %s: %s",
+			      __FUNCTION__, charset, err ? err ->message : "");
+		if (err)
+			g_error_free (err);
+	}
+	
+	return utf8;
+}
+
+
 /* NOTE: buffer will be *freed* or returned unchanged */
 static char*
 convert_to_utf8 (GMimePart *part, char *buffer)
 {
 	GMimeContentType *ctype;
 	const char* charset;
-	GError *err = NULL;
-
-	g_return_val_if_fail (GMIME_IS_OBJECT(part), NULL);
-	
+		
 	ctype = g_mime_object_get_content_type (GMIME_OBJECT(part));
-	if (!GMIME_IS_CONTENT_TYPE(ctype)) {
-		g_warning ("not a content type!");
-		return NULL;
-	}
+	g_return_val_if_fail (GMIME_IS_CONTENT_TYPE(ctype), NULL);
 	
 	charset = g_mime_content_type_get_parameter (ctype, "charset");
 	if (charset) 
@@ -552,21 +567,9 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	
 	/* of course, the charset specified may be incorrect... */
 	if (charset) {
-		char * utf8;
-		utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
-						charset, (gchar*)".", 
-						NULL, NULL,
-						&err);
-		if (!utf8) {
-			MU_WRITE_LOG ("%s: conversion failed from %s: %s",
-				      __FUNCTION__, charset,
-				      err ? err ->message : "");
-			if (err)
-				g_error_free (err);
-		} else {
-			g_free (buffer);
+		char *utf8 = text_to_utf8 (buffer, charset);
+		if (utf8)
 			return utf8;
-		}
 	}
 
 	/* hmmm.... no charset at all, or conversion failed; ugly hack:
