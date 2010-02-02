@@ -16,13 +16,13 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=src man
+SUBDIRS=man src
 
 # so we can say 'make test'
 check: test cleanupnote
 
 cleanupnote:
-	@echo -e  "\nNote: you can remove the mu-test-XXXX dirs in your temp-file dir"
+	@echo -e  "\nNote: you can remove the mu-test-<uid> dir in your tempdir"
 	@echo "after 'make check' has finished."
 
 tags:
@@ -34,11 +34,11 @@ tags:
 cc10:
 	@pmccabe `find -name '*.c' -o -name '*.cc'` | sort -nr | awk '($$1 > 10)'
 
-# this warns about functions that are over 40 non-comment lines long, which is a
+# this warns about functions that are over 33 non-comment lines long, which is a
 # sign that they need some refactoring. requires the pmccabe tool. if
 # all is fine, it outputs nothing
-line35:
-	@pmccabe -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 35)'
+line33:
+	@pmccabe -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 33)'
 
 
 EXTRA_DIST=		\
