@@ -18,8 +18,10 @@
 
    2. lines must not exceed 80 characters (C) or 100 characters (C++)
 
-   3. functions must not exceed 50 lines (there may be rare exceptions), and
-      30 lines is already pretty long.
+   3. functions must not exceed 40 lines (there may be rare exceptions), and
+      30 lines is already pretty long. You can easily check if any functions
+      violate this rule with 'make line33', which lists all functions with
+      more than 33 non-comment lines.
 
    4. source files should not exceed 1000 lines
 
