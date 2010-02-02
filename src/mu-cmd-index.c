@@ -78,7 +78,7 @@ check_index_params (MuConfigOptions *opts)
 		return FALSE;
 	}
 	
-	if (!mu_util_check_dir (opts->maildir, TRUE, TRUE)) {
+	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
 		g_message ("Please provide a valid Maildir");
 		return FALSE;
 	}
