@@ -232,6 +232,27 @@ check_path (const char* path)
 	return TRUE;
 }
 
+static void
+init_cb_data (MuIndexCallbackData *cb_data, MuStoreXapian  *xapian,
+	      gboolean reindex, MuIndexStats *stats,
+	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb, 
+	      void *user_data)
+{
+	cb_data->_idx_msg_cb    = msg_cb;
+	cb_data->_idx_dir_cb    = dir_cb;
+	
+	cb_data->_user_data     = user_data;
+	cb_data->_xapian        = xapian;
+			         
+	cb_data->_reindex       = reindex;
+	cb_data->_dirstamp      = 0;	
+
+	cb_data->_stats         = stats;
+	if (cb_data->_stats)
+		memset (cb_data->_stats, 0, sizeof(MuIndexStats));
+}
+	      
+
 
 MuResult
 mu_index_run (MuIndex *index, const char* path,
@@ -253,18 +274,8 @@ mu_index_run (MuIndex *index, const char* path,
 		return MU_ERROR;
 	}
 	
-	if (stats)
-		memset (stats, 0, sizeof(MuIndexStats));
-	
-	cb_data._idx_msg_cb    = msg_cb;
-	cb_data._idx_dir_cb    = dir_cb;
-	
-	cb_data._user_data = user_data;
-	cb_data._xapian    = index->_xapian;
-	cb_data._stats     = stats;
-	
-	cb_data._reindex   = reindex;
-	cb_data._dirstamp  = 0;
+	init_cb_data (&cb_data, index->_xapian, reindex, stats,
+		      msg_cb, dir_cb, user_data);
 
 	rv = mu_maildir_walk (path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,

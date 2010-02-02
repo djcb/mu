@@ -92,8 +92,6 @@ test_mu_query_01 (void)
 		{ "p:cur",              6 },
 		{ "path:new",           4 }
 	};
-
-	
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
 	
@@ -101,18 +99,14 @@ test_mu_query_01 (void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		
-		int count;
-		MuMsgIterXapian *iter;
-		
-		iter = mu_query_xapian_run (query, queries[i].query, NULL, FALSE, 1);
+		int count = 0;
+		MuMsgIterXapian *iter =
+			mu_query_xapian_run (query, queries[i].query, NULL,
+					     FALSE, 1);
 
-		count = 0;
-		if (!mu_msg_iter_xapian_is_null (iter)) {
-			do {
-				++count;
-			} while (mu_msg_iter_xapian_next (iter));
-		}
-		
+		if (!mu_msg_iter_xapian_is_null (iter)) 
+			do { ++count; } while (mu_msg_iter_xapian_next (iter));
+				
 		g_assert_cmpuint (queries[i].count, ==, count);
 		mu_msg_iter_xapian_destroy (iter);
 	}

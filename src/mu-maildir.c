@@ -443,36 +443,22 @@ dirent_cmp (struct dirent *d1, struct dirent *d2)
 }
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/
 
+
+/* we sort the inodes if the FS's dirent has them. It makes
+ * file-access much faster on some filesystems, such as
+ * ext3,4. readdir_with_stat_fallback is a wrapper for readdir
+ * that falls back to (slow) stats if the FS does not support
+ * entry->d_type
+ */
 static MuResult
-process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb, 
-	     MuMaildirWalkDirCallback dir_cb, void *data)
+process_dir_entries_sorted (DIR *dir, const char* path,
+			    MuMaildirWalkMsgCallback msg_cb,
+			    MuMaildirWalkDirCallback dir_cb, void *data)
 {
 	MuResult result;
 	GList *lst, *c;
 	struct dirent *entry;
-	DIR* dir;
 	
-	dir = opendir (path);		
-	if (G_UNLIKELY(!dir)) {
-		g_warning ("%s: ignoring  %s: %s", path,
-			   __FUNCTION__, strerror(errno));
-		return MU_OK;
-	}
-	
-	if (dir_cb) {
-		MuResult rv = dir_cb (path, TRUE, data);
-		if (rv != MU_OK) {
-			closedir (dir);
-			return rv;
-		}
-	}
-	
-	/* we sort the inodes if the FS's dirent has them. It makes
-	 * file-access much faster on some filesystems, such as
-	 * ext3,4. readdir_with_stat_fallback is a wrapper for readdir
-	 * that falls back to (slow) stats if the FS does not support
-	 * entry->d_type
-	 */
 	lst = NULL;
 	while ((entry = readdir_with_stat_fallback (dir, path)))
 		lst = g_list_prepend (lst, dirent_copy(entry));
@@ -491,6 +477,35 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 
 	g_list_foreach (lst, (GFunc)dirent_destroy, NULL);
 	g_list_free (lst);
+	
+	return result;
+}
+
+
+static MuResult
+process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb, 
+	     MuMaildirWalkDirCallback dir_cb, void *data)
+{
+	MuResult result;
+	DIR* dir;
+	
+	dir = opendir (path);		
+	if (G_UNLIKELY(!dir)) {
+		g_warning ("%s: ignoring  %s: %s", path,
+			   __FUNCTION__, strerror(errno));
+		return MU_OK;
+	}
+	
+	if (dir_cb) {
+		MuResult rv = dir_cb (path, TRUE, data);
+		if (rv != MU_OK) {
+			closedir (dir);
+			return rv;
+		}
+	}
+	
+	result = process_dir_entries_sorted (dir, path, msg_cb, dir_cb,
+					     data);
 	
 	closedir (dir);
 
