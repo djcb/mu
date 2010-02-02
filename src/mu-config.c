@@ -66,9 +66,9 @@ config_options_group_index (MuConfigOptions *opts)
 		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
 		 "index already indexed messages too", NULL},
 		{"empty", 'y', 0, G_OPTION_ARG_NONE, &opts->empty,
-		 "empty the database before indexing"},
+		 "empty the database before indexing", NULL},
 		{"autoupgrade", 'u', 0, G_OPTION_ARG_NONE, &opts->autoupgrade,
-		 "automatically upgrade the database with new mu versions"},
+		 "automatically upgrade the database with new mu versions", NULL},
 		{"nocleanup", 'n', 0, G_OPTION_ARG_NONE, &opts->nocleanup,
 		 "don't clean up the database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
