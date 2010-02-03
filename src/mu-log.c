@@ -27,6 +27,7 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <gio/gio.h>
 
 #include "mu-log.h"
 #include "mu-util.h"
@@ -113,9 +114,58 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 	return TRUE;
 }
 
+static gboolean
+log_file_backup_maybe (const char *logfile)
+{
+	struct stat statbuf;
+	
+	if (stat (logfile, &statbuf) != 0) {
+		if (errno == ENOENT)
+			return TRUE; /* it did not exist yet, no problem */
+		else {
+			g_warning ("Failed to stat(2) %s", logfile);
+			return FALSE;
+		}
+	}
+
+	/* log file is still below the max size? */
+	if (statbuf.st_size <= MU_MAX_LOG_FILE_SIZE)
+		return TRUE;
+
+	/* log file is too big!; we move it to <logfile>.old, overwriting */
+	{
+		GFile *src, *dst;
+		gchar *tmp;
+		GError *err;
+		gboolean rv;
+		
+		src = g_file_new_for_path (logfile);
+		tmp = g_strdup_printf ("%s.old", logfile);
+		dst = g_file_new_for_path (tmp);
+		g_free (tmp);
+
+		err = NULL;
+		rv = g_file_move (src, dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &err);
+
+		if (!rv) {
+			g_warning ("Failed to move %s to %s.old: %s", logfile, logfile,
+				   err ? err->message : "?");
+			if (err)
+				g_error_free (err);
+		}
+			
+		g_object_unref (G_OBJECT(src));
+		g_object_unref (G_OBJECT(dst));
+
+		return rv;
+		
+	}
+}
+
+
 gboolean
-mu_log_init  (const char* muhome, gboolean append,
-	      gboolean quiet, gboolean debug)
+mu_log_init  (const char* muhome,
+	      gboolean backup, gboolean quiet, gboolean debug)
 {
 	int fd;
 	gchar *logfile;
@@ -131,8 +181,13 @@ mu_log_init  (const char* muhome, gboolean append,
 	
 	logfile = g_strdup_printf ("%s%c%s", muhome,
 				   G_DIR_SEPARATOR, MU_LOG_FILE);
-	fd = open (logfile,  O_WRONLY|O_CREAT|(append ? O_APPEND : O_TRUNC),
-		   00600);
+
+	if (backup && !log_file_backup_maybe(logfile)) {
+		g_warning ("Failed to backup log file");
+		return FALSE;
+	}
+	
+	fd = open (logfile,  O_WRONLY|O_CREAT|O_APPEND, 00600);
 	if (fd < 0) 
 		g_warning ("%s: open() of '%s' failed: %s\n",  __FUNCTION__,
 			   logfile, strerror(errno));

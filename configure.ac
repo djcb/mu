@@ -27,7 +27,7 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with the version of the Xapian library
 #
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["6.999"], [Schema version of the database])
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["6.9999"], [Schema version of the database])
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
 
@@ -66,7 +66,7 @@ AC_STRUCT_DIRENT_D_INO
 
 
 # glib2?
-PKG_CHECK_MODULES(GLIB,glib-2.0)
+PKG_CHECK_MODULES(GLIB, glib-2.0 gio-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 

@@ -63,7 +63,8 @@ store and read its database and logs. By default, \fI~/.mu\fR is used.
 makes \fBmu\fR generate extra debug information,
 useful for debugging the program itself. By default, debug information goes to
 the log file, \fI~/.mu/mu.log\fR. It can safely be deleted when \fBmu\fR is
-not running. Note, with the debug option, the log file can grow rather quickly.
+not running. Note, with the debug option, the log file can grow rather
+quickly. See the note on logging below.
 
 .TP
 \fB\-q\fR, \fB\-\-quiet\fR
@@ -485,19 +486,26 @@ If the creation somehow fails, for safety reasons, \fBno\fR attempt is made to
 remove any parts that were created.
 
 .SH FILES
-By default, \fBmu index\fR stores its message database in
-\fI~/.mu/xapian-<version>\fR, where \fI<version>\fR is the version of the
-database layout, which is not necessarily the same as the \fBmu\fR version
-number.
+By default, \fBmu index\fR stores its message database in \fI~/.mu/xapian\fR;
+the database has an embedded version number, and \fBmu\fR will automatically
+update it when it notices a different version. This allows for automatic
+updating of \fBmu\fR-versions, without the need to clear out any old
+databases.
 
-\fBmu\fR stores logs of its operations in \fI~/.mu/mu.log\fR. These can grow
-quite big when using the \fI\-\-debug\fR option, but they can be safely
-delete when \fBmu\fR is not running.
+However, note that versions of \fBmu\fR before 0.7 used a different scheme,
+which put the database in \fI~/.mu/xapian\-<version>\fR. These older databases
+can safely be deleted. Starting from version 0.7, this manual cleanup should
+no longer be needed.
 
-To store various \fBmu\fR-files elsewhere from their default location, one can
-use the \fI\-\-muhome\fR option, as discussed in the \fBGENERAL OPTIONS\fR
-section.
+By default, \fBmu\fR stores logs of its operations and queries in \fI~/.mu/mu.log\fR.
+Upon startup, \fBmu\fR checks the size of this log file. If it exceeds 1 MB,
+it will be moved to \fI~/.mu/mu.log.old\fR, overwriting any existing file of
+that name, and start with an empty \fI~/.mu/mu.log\fR. This scheme allows for
+continued use of \fBmu\fR without the need for any manual maintenance of log
+files.
 
+To store these files elsewhere from their default location, one can use the
+\fI\-\-muhome\fR option, as discussed in the \fBGENERAL OPTIONS\fR section.
 
 .SH ENVIRONMENT
 
