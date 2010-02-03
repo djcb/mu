@@ -53,8 +53,7 @@ mu_util_dir_expand (const char *path)
 }
 
 gboolean
-mu_util_check_dir (const gchar* path, gboolean readable,
-		   gboolean writeable)
+mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
 {
 	mode_t mode;
 	struct stat statbuf;
@@ -126,4 +125,27 @@ mu_util_create_dir_maybe (const gchar *path)
 	}
 
 	return TRUE;
+}
+
+
+gchar*
+mu_util_str_from_strv (const gchar **params)
+{
+	GString *str;
+	int i;
+	
+	g_return_val_if_fail (params, NULL);
+	
+	if (!params[0])
+		return g_strdup ("");
+	
+	str = g_string_sized_new (64); /* just a guess */
+	
+	for (i = 0; params[i]; ++i) {
+		if (i>0)
+			g_string_append_c (str, ' ');
+		g_string_append (str, params[i]);
+	}		
+	
+	return g_string_free (str, FALSE);
 }

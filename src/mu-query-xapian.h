@@ -58,8 +58,7 @@ void mu_query_xapian_destroy  (MuQueryXapian *self);
  * 
  * @return the version string (free with g_free), or NULL in case of error
  */
-char* mu_query_xapian_version (MuQueryXapian *store);
-
+char* mu_query_xapian_version (MuQueryXapian *store) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * run a Xapian query; for the syntax, please refer to the mu-find
@@ -85,20 +84,6 @@ MuMsgIterXapian* mu_query_xapian_run (MuQueryXapian *self,
 				      size_t batchsize)
 G_GNUC_WARN_UNUSED_RESULT;
 
-/** 
- * create a xapian query from list of expressions; for the syntax,
- * please refer to the mu-find manpage, or
- * http://xapian.org/docs/queryparser.html
- *
- * @param string array of search expressions
- * @param connect_or if TRUE, combine the expressions with OR, otherwise use AND
- * 
- * @return a string with the combined xapian expression or NULL in
- * case of error; free with g_free when it's no longer needed
- */
-char*  mu_query_xapian_combine  (const gchar **params,
-				 gboolean connect_or)
-	G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * get a string representation of the Xapian search query

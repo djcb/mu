@@ -32,7 +32,7 @@ G_BEGIN_DECLS
  * @return the expanded path as a newly allocated string, or NULL in
  * case of error
  */
-char*       mu_util_dir_expand (const char* path);
+char*       mu_util_dir_expand (const char* path) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * guess the maildir; first try $MAILDIR; if it is unset or
@@ -40,7 +40,7 @@ char*       mu_util_dir_expand (const char* path);
  * 
  * @return full path of the guessed Maildir, or NULL; must be freed (gfree)
  */
-char*       mu_util_guess_maildir (void);
+char*       mu_util_guess_maildir (void) G_GNUC_WARN_UNUSED_RESULT;
 
 
 
@@ -53,7 +53,7 @@ char*       mu_util_guess_maildir (void);
  * @return TRUE if a read/writeable directory `path' exists after
  * leaving this function, FALSE otherwise
  */
-gboolean mu_util_create_dir_maybe (const gchar *path);
+gboolean mu_util_create_dir_maybe (const gchar *path) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /** 
@@ -67,9 +67,18 @@ gboolean mu_util_create_dir_maybe (const gchar *path);
  * @return TRUE if dir exist and has the specified properties
  */
 gboolean mu_util_check_dir (const gchar* path, gboolean readable,
-			    gboolean writeable);
+			    gboolean writeable) G_GNUC_WARN_UNUSED_RESULT;
 
 
+/** 
+ * convert a string array in to a string, with the elements separated
+ * by ' '
+ * 
+ * @param params a non-NULL, NULL-terminated string array
+ * 
+ * @return a newly allocated string
+ */
+gchar* mu_util_str_from_strv (const gchar **params) G_GNUC_WARN_UNUSED_RESULT;
 
 /** 
  * 

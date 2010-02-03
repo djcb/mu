@@ -52,7 +52,7 @@ init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 		mqx->_qparser = new Xapian::QueryParser;
 		
 		mqx->_qparser->set_database(*mqx->_db);
-		mqx->_qparser->set_default_op(Xapian::Query::OP_OR);
+		mqx->_qparser->set_default_op(Xapian::Query::OP_AND);
 		mqx->_qparser->set_stemming_strategy
 			(Xapian::QueryParser::STEM_SOME);
 
@@ -94,8 +94,7 @@ get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          | 
 			 Xapian::QueryParser::FLAG_PHRASE           |
-			 //	 Xapian::QueryParser::FLAG_LOVEHATE         |
-			 //      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
+			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
 			 Xapian::QueryParser::FLAG_WILDCARD         |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_PARTIAL);
@@ -104,8 +103,6 @@ get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 	
 	if (err)
 		*err  = 1;
-	
-	
 	
 	return Xapian::Query();
 }
@@ -183,7 +180,14 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 	g_return_val_if_fail (searchexpr, NULL);	
 	
 	try {
-		Xapian::Query q(get_query(self, searchexpr));
+		int err (0);
+
+		Xapian::Query q(get_query(self, searchexpr, &err));
+		if (err) {
+			g_warning ("Error in query '%s'", searchexpr);
+			return NULL;
+		}
+				
 		Xapian::Enquire enq (*self->_db);
 
 		if (batchsize == 0)
@@ -209,58 +213,17 @@ mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr)
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query q(get_query(self, searchexpr));
+		int err (0);
+		
+		Xapian::Query q(get_query(self, searchexpr, &err));
+		if (err)  {
+			g_warning ("Error in query '%s'", searchexpr);
+			return NULL;
+		}
+
 		return g_strdup(q.get_description().c_str());
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
-}
-
-
-static gboolean
-needs_quotes (const char* str)
-{
-	int i;
-	const char *keywords[] = { "AND", "OR", "NOT", "NEAR", "ADJ" };
-	
-	for (i = 0; i != G_N_ELEMENTS(keywords); ++i)
-		if (g_strcasecmp (str, keywords[i]) == 0)
-			return TRUE;
-
-	return FALSE;
-}
-
-char*
-mu_query_xapian_combine (const gchar **params, gboolean connect_or)
-{
-	GString *str;
-	int i;
-	
-	g_return_val_if_fail (params && params[0], NULL);
-	
-	str = g_string_sized_new (64); /* just a guess */
-	
-	for (i = 0; params && params[i]; ++i) { 
-
-		const char* elm;
-		const char* cnx = "";
-		gboolean do_quote;
-
-		elm = (const gchar*)params[i];
-		if (!elm) /* shouldn't happen */
-			break;  
-		
-		if (params[i + 1])
-			cnx = connect_or ? " OR " : " AND ";
-		
-		do_quote = needs_quotes (elm);
-		g_string_append_printf (str, "%s%s%s%s",
-					do_quote ? "\"" : "",
-					elm,
-					do_quote ? "\"" : "",
-					cnx);	
-	}
-
-	return g_string_free (str, FALSE);
 }
 
 
