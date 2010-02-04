@@ -46,7 +46,18 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
    *** The pkg-config script could not be found. Make sure it is
    *** in your path, or set the PKG_CONFIG environment variable
    *** to the full path to pkg-config.])
-   ])
+])
+
+
+# check for pmccabe		
+AC_PATH_PROG([PMCCABE], [pmccabe], [no])
+AS_IF([test "x$PMCCABE" = "xno"],[
+   AC_MSG_WARN([
+   *** Developers: you don't seem to have the 'pmccabe' tool installed.
+   *** Please install it if you want to run the automated code checks])
+])
+
+
 
 #
 # currently, we don' support systems without d_type in their struct
@@ -110,11 +121,15 @@ man/Makefile
 ])
 AC_OUTPUT
 
+
+echo 
+echo "mu configuration is complete."
+echo "-----------------------------"
+
 echo
 echo "Note: the Xapian database is no longer stored as <muhome>/xapian-0.6"
 echo "but instead simply as <muhome>/xapian. You can remove the older"
 echo "<muhome>xapian-0.6 directory to save some disk space"
 
 echo
-echo "mu configuration is complete."
-echo "type 'make' to build mu, or 'make check' to perform the unit tests."
+echo "type 'make' to build mu, or 'make check' to run the unit tests."

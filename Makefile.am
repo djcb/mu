@@ -28,18 +28,18 @@ cleanupnote:
 tags:
 	gtags
 
+
 # this warns about function that have a cyclomatic complexity of > 10,
 # which is a sign that it needs some refactoring. requires the pmccabe
 # tool. If all is fine, it outputs nothing
 cc10:
-	@pmccabe `find -name '*.c' -o -name '*.cc'` | sort -nr | awk '($$1 > 10)'
+	@$(PMCCABE) `find -name '*.c' -o -name '*.cc'` | sort -nr | awk '($$1 > 10)'
 
 # this warns about functions that are over 33 non-comment lines long, which is a
 # sign that they need some refactoring. requires the pmccabe tool. if
 # all is fine, it outputs nothing
 line33:
-	@pmccabe -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 33)'
-
+	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 33)'
 
 EXTRA_DIST=		\
 	TODO		\
