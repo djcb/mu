@@ -41,7 +41,7 @@
 static void
 update_warning (void)
 {
-	g_warning ("the database needs to be updated to version %s",
+	g_printerr ("the database needs to be updated to version %s\n",
 		   MU_XAPIAN_DB_VERSION);
 	g_message ("please run 'mu index --empty' (see the manpage)");
 }
@@ -274,19 +274,19 @@ query_params_valid (MuConfigOptions *opts)
 {
 	if (opts->linksdir) 
 		if (opts->xquery) {
-			g_warning ("Invalid option for '--linksdir'");
+			g_printerr ("Invalid option for '--linksdir'\n");
 			return FALSE;
 		}
 		
 	if (!opts->params[0] || !opts->params[1]) {
-		g_warning ("Missing search expression");
+		g_printerr ("Missing search expression\n");
 		return FALSE;
 	}
 
 	if (mu_util_check_dir (opts->xpath, TRUE, FALSE))
 		return TRUE;
 
-	g_warning ("%s is not a readable Xapian directory", opts->xpath);
+	g_printerr ("%s is not a readable Xapian directory\n", opts->xpath);
 	g_message ("Did you run 'mu index'?");
 	
 	return FALSE;
@@ -305,8 +305,8 @@ mu_cmd_find (MuConfigOptions *opts)
 		return FALSE;
 
 	if (mu_util_xapian_db_is_empty (opts->xpath)) {
-		g_warning ("The database is empty; "
-			   "use 'mu index' to add some messages");
+		g_printerr ("The database is empty; "
+			    "use 'mu index' to add some messages\n");
 		return FALSE;
 	}
 		
@@ -322,7 +322,7 @@ mu_cmd_find (MuConfigOptions *opts)
 	
 	xapian = mu_query_xapian_new (opts->xpath);
 	if (!xapian) {
-		g_warning ("Failed to create Xapian query");
+		g_printerr ("Failed to create a Xapian query\n");
 		mu_msg_gmime_uninit ();
 		return FALSE;
 	}
@@ -335,13 +335,71 @@ mu_cmd_find (MuConfigOptions *opts)
 	return rv;
 }
 
+/* we ignore fields for now */
+static gboolean
+view_file (const gchar *path, const gchar *fields)
+{
+	MuMsgGMime* msg;
+	const char *field;
+	time_t date;
+	
+	msg = mu_msg_gmime_new (path);
+	if (!msg)
+		return FALSE;
 
+	field = mu_msg_gmime_get_from (msg);
+	if (field)
+		g_print ("From: %s\n", field);
+	
+	field = mu_msg_gmime_get_to (msg);
+	if (field)
+		g_print ("To: %s\n", field);
 
+	field = mu_msg_gmime_get_cc (msg);
+	if (field)
+		g_print ("Cc: %s\n", field);
+
+	field = mu_msg_gmime_get_subject (msg);
+	if (field)
+		g_print ("Subject: %s\n", field);
+	
+	date = mu_msg_gmime_get_date (msg);
+	if (date)
+		g_print ("Date: %s\n",
+			 mu_msg_str_date_s (date));
+			 
+	field = mu_msg_gmime_get_body_text (msg);
+	if (field) 
+		g_print ("\n%s\n", field);
+	else
+		/* not really an error */
+		g_warning ("No text body found for %s", path);
+
+	mu_msg_gmime_destroy (msg);
+	return TRUE;
+}
 
 gboolean
 mu_cmd_view (MuConfigOptions *opts)
 {
-	g_return_val_if_fail (opts, FALSE);
+	gboolean rv;
+	int i;
 	
-	return TRUE; /* FIXME */
+	g_return_val_if_fail (opts, FALSE);
+
+	/* note: params[0] will be 'view' */
+	if (!opts->params[0] || !opts->params[1]) {
+		g_printerr ("Missing files to view\n");
+		return FALSE;
+	}
+	
+	mu_msg_gmime_init();
+
+	rv = TRUE;
+	for (i = 1; opts->params[i] && rv; ++i) 	
+		rv = view_file (opts->params[i], NULL);
+
+	mu_msg_gmime_uninit();
+	
+	return rv;
 }

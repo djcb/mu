@@ -1,4 +1,4 @@
-.TH MU 1 "January 2010" "User Manuals"
+.TH MU 1 "February 2010" "User Manuals"
 
 .SH NAME 
 
@@ -8,22 +8,26 @@ mu \- index and search e-mail messages stored in Maildirs
 
 .B mu index [options]
 
-.B mu find  [options] <search expression>
-
-.B mu mkdir [options] <dir> [<dirs>]
-
 .B mu cleanup [options]
 
-.B mu help [options]
+.B mu find [options] <search expression>
+
+.B mu view <file> [<files>]
+
+.B mu mkdir [options] <dir> [<dirs>]
 
 .B mu [options]
 
 .SH DESCRIPTION
 
-\fBmu\fR is a set of tools for indexing and searching e-mail messages stored
-in Maildirs. It does so by scanning a Maildir directory tree and analyzing the
-e-mail messages found. The results of this analysis are stored in a database,
-which can then be queried.
+\fBmu\fR is a set of tools for dealing with e-mail messages in Maildirs. 
+
+Its main function is enable searching of e-mail messages. It does so by
+scanning a Maildir directory tree and analyzing the e-mail messages found. The
+results of this analysis are stored in a database, which can then be queried.
+
+In addition to indexing and searching, \fBmu\fR also offers functionality for
+viewing messages and creating maildirs.
 
 \fBmu\fR can be used from the command line, or can be integrated with e-mail
 clients. This manpage contains examples of both.
@@ -40,14 +44,18 @@ information in a database
 .TP
 \fBfind\fR
 for finding messages in your database, using certain search parameters (see
-below for details).
+below for details)
+
+.TP
+\fBview\fR
+for displaying e-mail messages
 
 .TP
 \fBmkdir\fR
-for creating Maildirs.
+for creating Maildirs
 
 .TP
-The various commands are discussed in more detail below.
+The various commands are discussed in more detail below
 
 .SH GENERAL OPTIONS
 
@@ -217,7 +225,8 @@ but the author has not seen it getting under 30,0000 messages per second).
 
 .SH THE CLEANUP COMMAND
 The \fBcleanup\fR command removes messages for which no corresponding file can
-be found, from the database.  
+be found, from the database. Note that this is done automatically when running
+\fBmu index\fR (unless \fB\-\-nocleanup\fR was specified). 
 
 
 .SH THE FIND COMMAND
@@ -469,12 +478,17 @@ typing 'Q' will start a query.
     (message "Query failed")))
 .fi
 
+.SH THE VIEW COMMAND
+With the \fBview\fR command, you can view one or more e-mail messages as they
+are stored as files on disk. It does not require or use the Xapian database.
+
+Currently, the command shows some common headers (From:, To:, Cc:, Subject:
+and Date:) and the plain-text body of the message.
 
 .SH THE MKDIR COMMAND
 
-With the
-.B mkdir
-command, you can create new Maildirs with permissions 0755. For example,
+With the \fBmkdir\fR command, you can create new Maildirs with permissions
+0755. For example,
 
 .nf
    mu mkdir tom dick harry
