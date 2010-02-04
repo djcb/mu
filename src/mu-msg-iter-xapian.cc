@@ -121,12 +121,13 @@ mu_msg_iter_xapian_next (MuMsgIterXapian *iter)
 		if (iter->_cursor == iter->_matches.end())
 			return FALSE; /* no more matches */
 			
-		/* the message may not be readable / existing, e.g., because
-		 * of the database not being fully up to date. in that case,
-		 * we ignore the message. it might be nice to auto-delete
-		 * these messages from the db, but that would might screw
-		 * up the search; also, we only have read-only access to the
-		 * db here */
+		/* the message may not be readable / existing, e.g.,
+		    * because of the database not being fully up to
+		    * date. in that case, we ignore the message. it
+		    * might be nice to auto-delete these messages from
+		    * the db, but that would might screw up the
+		    * search; also, we only have read-only access to
+		    * the db here */
 		if (!message_is_readable (iter))
 			return mu_msg_iter_xapian_next (iter);
 		
