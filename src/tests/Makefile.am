@@ -20,8 +20,8 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	 $(GMIME_CFLAGS)					\
 	 $(GLIB_CFLAGS)						\
 	-I ${top_srcdir}					\
-	-DMU_TESTMAILDIR=\"${top_srcdir}/src/tests/testdir\"	\
-	-DMU_PROGRAM=\"${top_builddir}/src//mu\"		\
+	-DMU_TESTMAILDIR=\"${abs_srcdir}/src/tests/testdir\"	\
+	-DMU_PROGRAM=\"${abs_builddir}/src//mu\"		\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 noinst_PROGRAMS= $(TEST_PROGS)

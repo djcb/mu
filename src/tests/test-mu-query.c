@@ -45,8 +45,6 @@ fill_database (void)
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR);
-	
-	g_print ("[%s]\n", cmdline);
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL, NULL, NULL));
 	g_free (cmdline);
 
@@ -85,7 +83,6 @@ test_mu_query_01 (void)
 	query = mu_query_xapian_new (xpath);
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
-		
 		int count = 0;
 		MuMsgIterXapian *iter =
 			mu_query_xapian_run (query, queries[i].query, NULL,
@@ -94,7 +91,6 @@ test_mu_query_01 (void)
 		if (!mu_msg_iter_xapian_is_null (iter)) 
 			do { ++count; } while (mu_msg_iter_xapian_next (iter));
 
-		g_print ("[%s][%d,%d]\n", queries[i].query,queries[i].count,count);
 		g_assert_cmpuint (queries[i].count, ==, count);
 		mu_msg_iter_xapian_destroy (iter);
 	}
@@ -102,6 +98,32 @@ test_mu_query_01 (void)
 	mu_query_xapian_destroy (query);
 	g_free (xpath);
 }
+
+
+static void
+test_mu_query_02 (void)
+{
+	MuMsgIterXapian *iter;
+	MuQueryXapian *query;
+	const char* q;
+	gchar *xpath;
+	int i;
+	
+	xpath = fill_database ();
+	g_assert (xpath != NULL);
+	
+	query = mu_query_xapian_new (xpath);
+	g_assert (query);
+
+	q = "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com";
+	iter = mu_query_xapian_run (query, q, NULL, FALSE, 0);
+	g_assert  (!mu_msg_iter_xapian_is_null (iter));
+
+	mu_query_xapian_destroy (query);
+	g_free (xpath);
+}
+
+
 
 int
 main (int argc, char *argv[])
@@ -111,6 +133,11 @@ main (int argc, char *argv[])
 	/* mu_util_maildir_mkmdir */
  	g_test_add_func ("/mu-query/test-mu-query-01",
 			 test_mu_query_01);
+		/* mu_util_maildir_mkmdir */
+ 	g_test_add_func ("/mu-query/test-mu-query-02",
+			 test_mu_query_02);
+
+
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,

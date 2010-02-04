@@ -153,6 +153,35 @@ test_mu_util_check_dir_04 (void)
 }
 
 
+static void
+test_mu_util_str_from_strv_01 (void)
+{	
+	const gchar *strv[] = { "aap", "noot", "mies", NULL };
+	gchar *str = mu_util_str_from_strv (strv);
+	g_assert_cmpstr (str, ==, "aap noot mies");
+	g_free (str);
+
+}
+
+static void
+test_mu_util_str_from_strv_02 (void)
+{	
+	const gchar *strv[] = { "test", NULL };
+	gchar *str = mu_util_str_from_strv (strv);
+	g_assert_cmpstr (str, ==, "test");
+	g_free (str);
+
+}
+
+static void
+test_mu_util_str_from_strv_03 (void)
+{	
+	const gchar *strv[] = { NULL };
+	gchar *str = mu_util_str_from_strv (strv);
+	g_assert_cmpstr (str, ==, "");
+	g_free (str);
+}
+
 
 
 
@@ -186,7 +215,14 @@ main (int argc, char *argv[])
 			 test_mu_util_check_dir_03);
 	g_test_add_func ("/mu-util/mu-util-check-dir-04",
 			 test_mu_util_check_dir_04);
-	
+
+	/* test_mu_util_str_from_strv */
+	g_test_add_func ("/mu-util/mu-util-str-from-strv-01",
+			 test_mu_util_str_from_strv_01);
+	g_test_add_func ("/mu-util/mu-util-str-from-strv-02",
+			 test_mu_util_str_from_strv_02);
+	g_test_add_func ("/mu-util/mu-util-str-from-strv-03",
+			 test_mu_util_str_from_strv_03);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_DEBUG|
