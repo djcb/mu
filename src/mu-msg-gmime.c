@@ -31,12 +31,15 @@
 
 
 enum _StringFields {
-	HTML_FIELD  = 0, 
-	TEXT_FIELD,
-	TO_FIELD,
-	CC_FIELD,
-	PATH_FIELD,
-	FLAGS_FIELD_STR,
+
+	HTML_FIELD  = 0,   /* body as HTML */
+	TEXT_FIELD,        /* body as plain text */
+	TO_FIELD,          /* To: */
+	CC_FIELD,	   /* Cc: */
+	
+	PATH_FIELD,        /* full path */
+
+	FLAGS_FIELD_STR,   /* message flags */
 	
 	FIELD_NUM
 };
@@ -853,8 +856,6 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsCallback c
 
 	return rv;
 }
-
-
 
 
 static gboolean _initialized = FALSE;
