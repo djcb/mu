@@ -114,6 +114,37 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 	return TRUE;
 }
 
+
+
+/* log file is too big!; we move it to <logfile>.old, overwriting */
+static gboolean
+move_log_file (const char* logfile)
+{
+	GFile *src, *dst;
+	gchar *tmp;
+	GError *err;
+	gboolean rv;
+	
+	src = g_file_new_for_path (logfile);
+	tmp = g_strdup_printf ("%s.old", logfile);
+	dst = g_file_new_for_path (tmp);
+	g_free (tmp);
+	
+	err = NULL;
+	rv = g_file_move (src, dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &err);
+	if (!rv) {
+		g_warning ("Failed to move %s to %s.old: %s", logfile, logfile,
+				   err ? err->message : "?");
+		if (err)
+			g_error_free (err);
+		}
+	
+	g_object_unref (G_OBJECT(src));
+	g_object_unref (G_OBJECT(dst));
+	
+	return rv;
+}
+
 static gboolean
 log_file_backup_maybe (const char *logfile)
 {
@@ -133,33 +164,7 @@ log_file_backup_maybe (const char *logfile)
 		return TRUE;
 
 	/* log file is too big!; we move it to <logfile>.old, overwriting */
-	{
-		GFile *src, *dst;
-		gchar *tmp;
-		GError *err;
-		gboolean rv;
-		
-		src = g_file_new_for_path (logfile);
-		tmp = g_strdup_printf ("%s.old", logfile);
-		dst = g_file_new_for_path (tmp);
-		g_free (tmp);
-
-		err = NULL;
-		rv = g_file_move (src, dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &err);
-
-		if (!rv) {
-			g_warning ("Failed to move %s to %s.old: %s", logfile, logfile,
-				   err ? err->message : "?");
-			if (err)
-				g_error_free (err);
-		}
-			
-		g_object_unref (G_OBJECT(src));
-		g_object_unref (G_OBJECT(dst));
-
-		return rv;
-		
-	}
+	return move_log_file (logfile);
 }
 
 
