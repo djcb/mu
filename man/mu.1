@@ -144,12 +144,9 @@ more), \fBmu index\fR will terminate immediately.
 
 .TP
 \fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
-starts searching at \fI<maildir>\fR. By default,
-\fBmu\fR uses whatever the
-.B MAILDIR
-environment variable is set to; if that is not set, it tries
-.B ~/Maildir
-\.
+starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
+\fBMAILDIR\fR environment variable is set to; if that is not set, it tries
+\fI~/Maildir\fR \. In either case, the path must be \fBabsolute\fR.
 
 .TP
 \fB\-r\fR, \fB\-\-reindex\fR

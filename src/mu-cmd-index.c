@@ -36,17 +36,17 @@ static gboolean MU_CAUGHT_SIGNAL;
 static void
 update_warning (void)
 {
-	g_warning ("the database needs to be updated to version %s",
+	g_warning ("Note: the database needs to be updated to version %s\n",
 		   MU_XAPIAN_DB_VERSION);
-	g_message ("please run 'mu index --empty' (see the manpage)");
+	g_warning ("please run 'mu index --empty' (see the manpage)\n");
 }
 
 static void
 sig_handler (int sig)
 {
 	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) /* Ctrl-C */
-		g_message ("Shutting down gracefully, "
-			   "press again to kill immediately");
+		g_warning ("Shutting down gracefully, "
+			   "press again to kill immediately\n");
 	
         MU_CAUGHT_SIGNAL = TRUE;
 }
@@ -74,12 +74,17 @@ static gboolean
 check_index_params (MuConfigOptions *opts)
 {
 	if (opts->linksdir || opts->xquery) {
-		g_warning ("Invalid option(s) for command");
+		g_warning ("Error: Invalid option(s) for command\n");
+		return FALSE;
+	}
+
+	if (!g_path_is_absolute (opts->maildir)) {
+		g_warning ("Error: maildir path must be absolute\n");
 		return FALSE;
 	}
 	
 	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
-		g_message ("Please provide a valid Maildir");
+		g_warning ("Error: not a valid Maildir\n");
 		return FALSE;
 	}
 	

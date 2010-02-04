@@ -222,6 +222,12 @@ static gboolean
 check_path (const char* path)
 {
 	g_return_val_if_fail (path, FALSE);
+
+	if (!g_path_is_absolute (path)) {
+		g_warning ("%s: not an absolute path: %s",
+			   __FUNCTION__, path);
+		return FALSE;
+	}
 	
 	if (access (path, R_OK) != 0) {
 		g_warning ("%s: cannot open '%s': %s", 

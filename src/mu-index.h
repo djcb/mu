@@ -90,7 +90,7 @@ typedef MuResult (*MuIndexDirCallback) (const char* path, gboolean enter,
  * start the indexing process 
  * 
  * @param index a valid MuIndex instance
- * @param path the path to index
+ * @param path the path to index. This must be an absolute path
  * @param force if != 0, force re-indexing already index messages; this is
  *         obviously a lot slower than only indexing new/changed messages
  * @param stats a structure with some statistics about the results;
@@ -116,8 +116,8 @@ MuResult mu_index_run (MuIndex *index, const char* path, gboolean force,
  * mu_index_run sees, when there are updates in the Maildir
  * 
  * @param index a valid MuIndex instance
- * @param path the path to get stats for
-  * @param stats a structure with some statistics about the results;
+ * @param path the path to get stats for; this must be an absolute path
+ * @param stats a structure with some statistics about the results;
  * note that this function does *not* reset the struct values to allow
  * for cumulative stats from multiple calls. If needed, you can use
  * @mu_index_stats_clear before calling this function
