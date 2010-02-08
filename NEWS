@@ -4,6 +4,7 @@
    - Database format changed
    - Automatic database scheme version check, notifies users when an upgrade
      is needed
+   - 'mu view', to view mail message files
    - Support for >10K matches
    - Support for unattended upgrades - that is, the database can automatically
      by upgraded (--autoupgrade). Also, the log file is automatically cleaned
