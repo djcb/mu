@@ -33,6 +33,7 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_FLAGS,
 	MU_MSG_FIELD_ID_FROM,
 	MU_MSG_FIELD_ID_PATH,
+	MU_MSG_FIELD_ID_MAILDIR, 
 	MU_MSG_FIELD_ID_PRIORITY,
 	MU_MSG_FIELD_ID_SIZE,
 	MU_MSG_FIELD_ID_SUBJECT,
@@ -136,15 +137,6 @@ MuMsgFieldType mu_msg_field_type (const MuMsgField *field)         G_GNUC_CONST;
  */
 gboolean mu_msg_field_is_numeric          (const MuMsgField *field) G_GNUC_CONST;
 
-/** 
-\ * is the field Xapian-enabled? That is, should this field be stored
- * (as a string) in the Xapian database?
- * 
- * @param field a MuMsgField
- * 
- * @return TRUE if the field is Xapian-enabled, FALSE otherwise
- */
-gboolean mu_msg_field_is_xapian_enabled   (const MuMsgField *field) G_GNUC_PURE;
 
 
 /** 
@@ -156,7 +148,25 @@ gboolean mu_msg_field_is_xapian_enabled   (const MuMsgField *field) G_GNUC_PURE;
  * 
  * @return TRUE if the field is Xapian-enabled, FALSE otherwise
  */
-gboolean mu_msg_field_is_xapian_indexable (const MuMsgField *field) G_GNUC_PURE;
+gboolean mu_msg_field_xapian_index (const MuMsgField *field) G_GNUC_PURE;
+
+/** 
+ * should this field be stored as a xapian term?
+ * 
+ * @param field a MuMsgField
+ * 
+ * @return TRUE if the field is Xapian-enabled, FALSE otherwise
+ */
+gboolean mu_msg_field_xapian_term (const MuMsgField *field) G_GNUC_PURE;
+
+/** 
+ * should this field be stored as a xapian value?
+ * 
+ * @param field a MuMsgField
+ * 
+ * @return TRUE if the field is Xapian-enabled, FALSE otherwise
+ */
+gboolean mu_msg_field_xapian_value (const MuMsgField *field) G_GNUC_PURE;
 
 
 /** 
@@ -167,7 +177,7 @@ gboolean mu_msg_field_is_xapian_indexable (const MuMsgField *field) G_GNUC_PURE;
  * 
  * @return TRUE if the field is Gmime-enabled, FALSE otherwise
  */
-gboolean mu_msg_field_is_gmime_enabled    (const MuMsgField *field) G_GNUC_PURE;
+gboolean mu_msg_field_gmime (const MuMsgField *field) G_GNUC_PURE;
 
 
 /** 

@@ -21,9 +21,10 @@
 #include "mu-msg-fields.h"
 
 enum _FieldFlags { 
-	FLAG_XAPIAN        = 1 << 1, /* field stored as a string  in xapian db */
-	FLAG_GMIME         = 1 << 2, /* field retrieved by through gmime */
-	FLAG_XAPIAN_INDEX  = 1 << 3  /* field is indexed in xapian */
+	FLAG_GMIME         = 1 << 1, /* field retrieved through gmime */
+	FLAG_XAPIAN_INDEX  = 1 << 2, /* field is indexed in xapian */
+	FLAG_XAPIAN_TERM   = 1 << 3, /* field stored as term in xapian */
+	FLAG_XAPIAN_VALUE  = 1 << 4  /* field stored as value in xapian */
 };
 typedef enum _FieldFlags FieldFlags;
 
@@ -41,7 +42,6 @@ struct _MuMsgField {
 
 
 static const MuMsgField FIELD_DATA[] = {
-	
 	{  
 		MU_MSG_FIELD_ID_BODY_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,
@@ -60,42 +60,49 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_CC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"cc", "c", "C",
-		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
 	},
 	
 	{ 
 		MU_MSG_FIELD_ID_DATE, 
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"date", "d", "D",
-		FLAG_XAPIAN | FLAG_GMIME  
+		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	},
 	
 	{ 
 		MU_MSG_FIELD_ID_FLAGS, 
 		MU_MSG_FIELD_TYPE_INT,
 		"flags", "F", "G",
-		FLAG_XAPIAN | FLAG_GMIME
+		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	},
 
 	{ 
 		MU_MSG_FIELD_ID_FROM,
 		MU_MSG_FIELD_TYPE_STRING,
 		"from", "f", "F",
-		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
 	},
 
 	{   
 		MU_MSG_FIELD_ID_PATH, 
 		MU_MSG_FIELD_TYPE_STRING,
 		"path", "p", "P",
-		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		FLAG_GMIME | FLAG_XAPIAN_VALUE
+	},
+
+	{   
+		MU_MSG_FIELD_ID_MAILDIR, 
+		MU_MSG_FIELD_TYPE_STRING,
+		"maildir", "m", "M",
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
 	},
 	
 	{ 
 		MU_MSG_FIELD_ID_PRIORITY,
 		MU_MSG_FIELD_TYPE_INT,
 		"prio", "P", "I",
-		FLAG_GMIME | FLAG_XAPIAN
+		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	},
 
 	{ 
@@ -105,25 +112,25 @@ static const MuMsgField FIELD_DATA[] = {
 		FLAG_GMIME
 	},
 	
-	 { 
-		 MU_MSG_FIELD_ID_SUBJECT,
-		 MU_MSG_FIELD_TYPE_STRING,
-		 "subject", "s", "S",
-		 FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
-	 },
+	{ 
+		MU_MSG_FIELD_ID_SUBJECT,
+		MU_MSG_FIELD_TYPE_STRING,
+		"subject", "s", "S",
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
+	},
 	
 	{ 
 		MU_MSG_FIELD_ID_TO,
 		MU_MSG_FIELD_TYPE_STRING,
 		"to", "t", "T",
-		FLAG_XAPIAN | FLAG_GMIME | FLAG_XAPIAN_INDEX
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
 	},
 	
 	{ 
 		MU_MSG_FIELD_ID_MSGID,
 		MU_MSG_FIELD_TYPE_STRING,
-		"msgid", "m", "M",
-		FLAG_GMIME | FLAG_XAPIAN
+		"msgid", "i", "I",
+		FLAG_GMIME | FLAG_XAPIAN_TERM
 	},
 	
 	{ 
@@ -197,15 +204,7 @@ mu_msg_field_from_id (MuMsgFieldId id)
 
 
 gboolean
-mu_msg_field_is_xapian_enabled (const MuMsgField *field)
-{
-	g_return_val_if_fail (field, FALSE);
-	return field->_flags & (FLAG_XAPIAN|FLAG_XAPIAN_INDEX);
-}
-
-
-gboolean
-mu_msg_field_is_gmime_enabled     (const MuMsgField *field)
+mu_msg_field_gmime (const MuMsgField *field)
 {
 	g_return_val_if_fail (field, FALSE);
 	return field->_flags & FLAG_GMIME;
@@ -213,11 +212,27 @@ mu_msg_field_is_gmime_enabled     (const MuMsgField *field)
 
 
 gboolean
-mu_msg_field_is_xapian_indexable  (const MuMsgField *field)
+mu_msg_field_xapian_index  (const MuMsgField *field)
 {
 	g_return_val_if_fail (field, FALSE);
 	return field->_flags & FLAG_XAPIAN_INDEX;
 }
+
+gboolean
+mu_msg_field_xapian_value (const MuMsgField *field)
+{
+	g_return_val_if_fail (field, FALSE);
+	return field->_flags & FLAG_XAPIAN_VALUE;
+}
+
+gboolean
+mu_msg_field_xapian_term (const MuMsgField *field)
+{
+	g_return_val_if_fail (field, FALSE);
+	return field->_flags & FLAG_XAPIAN_TERM;
+}
+
+
 
 
 gboolean
