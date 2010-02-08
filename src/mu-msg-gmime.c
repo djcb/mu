@@ -38,7 +38,8 @@ enum _StringFields {
 	CC_FIELD,	   /* Cc: */
 	
 	PATH_FIELD,        /* full path */
-
+	MDIR_FIELD,        /* the maildir */
+	
 	FLAGS_FIELD_STR,   /* message flags */
 	
 	FIELD_NUM
@@ -80,7 +81,7 @@ mu_msg_gmime_destroy (MuMsgGMime *msg)
 
 
 static gboolean
-init_file_metadata (MuMsgGMime* msg, const char* path)
+init_file_metadata (MuMsgGMime* msg, const char* path, const gchar* mdir)
 {
 	struct stat statbuf;
 
@@ -106,6 +107,9 @@ init_file_metadata (MuMsgGMime* msg, const char* path)
 	msg->_size                 = statbuf.st_size; 	
 	msg->_fields[PATH_FIELD]   = strdup (path);
 
+	if (mdir) 
+		msg->_fields[MDIR_FIELD]   = strdup (mdir);
+	
 	return TRUE;
 }
 
@@ -151,7 +155,7 @@ init_mime_msg (MuMsgGMime *msg)
 
 
 MuMsgGMime*   
-mu_msg_gmime_new (const char* filepath)
+mu_msg_gmime_new (const char* filepath, const gchar* mdir)
 {
 	MuMsgGMime *msg;
 		
@@ -161,7 +165,7 @@ mu_msg_gmime_new (const char* filepath)
 	if (!msg)
 		return NULL;
 
-	if (!init_file_metadata(msg, filepath)) {
+	if (!init_file_metadata(msg, filepath, mdir)) {
 		mu_msg_gmime_destroy (msg);
 		return NULL;
 	}
@@ -170,7 +174,7 @@ mu_msg_gmime_new (const char* filepath)
 		mu_msg_gmime_destroy (msg);
 		return NULL;
 	}
-		
+
 	return msg;
 }
 
@@ -199,6 +203,17 @@ mu_msg_gmime_get_msgid (MuMsgGMime *msg)
 	
 	return g_mime_message_get_message_id (msg->_mime_msg);
 }
+
+
+const char*
+mu_msg_gmime_get_maildir (MuMsgGMime *msg)
+{
+	g_return_val_if_fail (msg, NULL);
+	
+	return msg->_fields[MDIR_FIELD];
+}
+
+
 
 const char*    
 mu_msg_gmime_get_from (MuMsgGMime *msg)
@@ -719,6 +734,7 @@ mu_msg_gmime_get_field_string (MuMsgGMime *msg, const MuMsgField* field)
 	case MU_MSG_FIELD_ID_SUBJECT:    return mu_msg_gmime_get_subject (msg);
 	case MU_MSG_FIELD_ID_TO:         return mu_msg_gmime_get_to (msg);
 	case MU_MSG_FIELD_ID_MSGID:      return mu_msg_gmime_get_msgid (msg);
+	case MU_MSG_FIELD_ID_MAILDIR:    return mu_msg_gmime_get_maildir (msg);
 	default:
 		g_return_val_if_reached (NULL);
 	}

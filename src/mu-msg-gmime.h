@@ -52,10 +52,13 @@ void     mu_msg_gmime_uninit          (void);
  * done with it.
  *
  * @param path full path to an email message file
+ * @param mdir the maildir for this message; ie, if the path is
+ * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar
  * 
  * @return a new MuMsgGMime instance or NULL in case of error
  */
-MuMsgGMime*   mu_msg_gmime_new		   (const char* filepath);
+MuMsgGMime*   mu_msg_gmime_new		   (const char* filepath,
+					    const char *maildir);
 
 
 /** 
@@ -71,7 +74,7 @@ void     mu_msg_gmime_destroy         (MuMsgGMime *msg);
 /** 
  * get the plain text body of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the plain text body or NULL in case of error or if there is no
  * such body. the returned string should *not* be modified or freed.
@@ -83,7 +86,7 @@ const char*     mu_msg_gmime_get_body_text       (MuMsgGMime *msg);
 /** 
  * get the html body of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the html body or NULL in case of error or if there is no
  * such body. the returned string should *not* be modified or freed.
@@ -94,7 +97,7 @@ const char*     mu_msg_gmime_get_body_html       (MuMsgGMime *msg);
 /** 
  * get the sender (From:) of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the sender of this Message or NULL in case of error or if there 
  * is no sender. the returned string should *not* be modified or freed.
@@ -105,7 +108,7 @@ const char*     mu_msg_gmime_get_from	   (MuMsgGMime *msg);
 /** 
  * get the recipients (To:) of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the sender of this Message or NULL in case of error or if there 
  * are no recipients. the returned string should *not* be modified or freed.
@@ -116,7 +119,7 @@ const char*     mu_msg_gmime_get_to	   (MuMsgGMime *msg);
 /** 
  * get the carbon-copy recipients (Cc:) of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the Cc: recipients of this Message or NULL in case of error or if 
  * there are no such recipients. the returned string should *not* be modified 
@@ -127,7 +130,7 @@ const char*     mu_msg_gmime_get_cc	     (MuMsgGMime *msg);
 /** 
  * get the file system path of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the path of this Message or NULL in case of error. 
  * the returned string should *not* be modified or freed.
@@ -136,9 +139,21 @@ const char*     mu_msg_gmime_get_path            (MuMsgGMime *msg);
 
 
 /** 
+ * get the maildir this message lives in; ie, if the path is
+ * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar
+ *
+ * @param msg a valid MuMsgGMime* instance
+ * 
+ * @return the maildir requested or NULL in case of error. The returned
+ * string should *not* be modified or freed.
+ */
+const char*    mu_msg_gmime_get_maildir        (MuMsgGMime *msg);
+
+
+/** 
  * get the subject of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the subject of this Message or NULL in case of error or if there 
  * is no subject. the returned string should *not* be modified or freed.
@@ -148,7 +163,7 @@ const char*     mu_msg_gmime_get_subject         (MuMsgGMime *msg);
 /** 
  * get the Message-Id of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the Message-Id of this Message or NULL in case of error or if there 
  * is none. the returned string should *not* be modified or freed.
@@ -159,7 +174,7 @@ const char*     mu_msg_gmime_get_msgid           (MuMsgGMime *msg);
 /** 
  * get any arbitrary header from this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * @header the header requested
  * 
  * @return the header requested or NULL in case of error or if there 
@@ -168,10 +183,12 @@ const char*     mu_msg_gmime_get_msgid           (MuMsgGMime *msg);
 const char*     mu_msg_gmime_get_header          (MuMsgGMime *msg, 
 					      const char* header);
 
+
+
 /** 
  * get the message date/time (the Date: field) as time_t, using UTC
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return message date/time or 0 in case of error or if there 
  * is no such header.
@@ -192,7 +209,7 @@ MuMsgFlags     mu_msg_gmime_get_flags      (MuMsgGMime *msg);
 /** 
  * get the file size in bytes of this message
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the filesize 
  */
@@ -228,7 +245,7 @@ gint64      mu_msg_gmime_get_field_numeric (MuMsgGMime *msg,
  * checked, in that order. 
  * if no explicit priority is set, MU_MSG_PRIORITY_NORMAL is assumed
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the message priority (!= 0) or 0 in case of error
  */
@@ -237,7 +254,7 @@ MuMsgPriority   mu_msg_gmime_get_priority        (MuMsgGMime *msg);
 /** 
  * get the timestamp (mtime) for the file containing this message 
  *
- * @param a valid MuMsgGMime* instance
+ * @param msg a valid MuMsgGMime* instance
  * 
  * @return the timestamp or 0 in case of error
  */
