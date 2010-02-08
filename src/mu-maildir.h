@@ -55,14 +55,16 @@ gboolean mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex);
 gboolean mu_maildir_link   (const char* src, const char *targetpath);
 
 /** 
- * MuMaildirWalkMsgCallback -- callback function for mu_path_walk_maildir;
- * see the documentation there. It will be called for each message
- * found, with fullpath contain the full path to the message, a
- * timestamp of the last modification time of this file, and a user_data
- * pointer
+ * MuMaildirWalkMsgCallback -- callback function for
+ * mu_path_walk_maildir; see the documentation there. It will be
+ * called for each message found, with fullpath containing the full
+ * path to the message, mdir containing the maildir -- that is, when
+ * indexing ~/Maildir, a message ~/Maildir/foo/bar/cur/msg would have
+ * the maildir "foo/bar". Then, a timestamp of the last modification
+ * time of this file, and a user_data pointer
  */
 typedef MuResult (*MuMaildirWalkMsgCallback)
-(const char* fullpath, time_t timestamp, void *user_data);
+(const char* fullpath, const char* mdir, time_t timestamp, void *user_data);
 
 /** 
  * MuPathWalkDirCallback -- callback function for mu_path_walk_maildir; see the

@@ -207,13 +207,13 @@ mu_maildir_link (const char* src, const char *targetpath)
 }
 
 
-static MuResult process_dir (const char* path,
+static MuResult process_dir (const char* path, const gchar *mdir,
 			     MuMaildirWalkMsgCallback msg_cb, 
 			     MuMaildirWalkDirCallback dir_cb, void *data);
 
 static MuResult 
-process_file (const char* fullpath, MuMaildirWalkMsgCallback msg_cb,
-	      void *data)
+process_file (const char* fullpath, const gchar* mdir,
+	      MuMaildirWalkMsgCallback msg_cb, void *data)
 {
 	MuResult result;
 	struct stat statbuf;
@@ -242,12 +242,14 @@ process_file (const char* fullpath, MuMaildirWalkMsgCallback msg_cb,
 	 * use the ctime, so any status change will be visible (perms,
 	 * filename etc.)
 	 */
-	result = (msg_cb)(fullpath, statbuf.st_ctime, data);
+	g_debug ("[%s]", mdir);
+	result = (msg_cb)(fullpath, mdir, statbuf.st_ctime, data);
 	if (result == MU_STOP) 
 		g_debug ("callback said 'MU_STOP' for %s", fullpath);
 	else if (result == MU_ERROR)
 		g_warning ("%s: failed %d in callback (%s)",  
 			   __FUNCTION__, result, fullpath);
+
 	return result;
 }
 
@@ -377,8 +379,23 @@ ignore_dir_entry (struct dirent *entry)
 	return FALSE;
 }
 
+
+static gchar*
+get_mdir_for_path (const gchar *old_mdir, const gchar *dir)
+{
+	if (dir[0] != 'n' && dir[0] != 'c' &&
+	    strcmp(dir, "cur") != 0 && strcmp(dir, "new") != 0)  
+		return g_strconcat (old_mdir, strlen(old_mdir)?G_DIR_SEPARATOR_S:"",
+				    dir, NULL);
+	else
+		return strdup (old_mdir);
+}
+
+
 static MuResult
-process_dir_entry (const char* path, struct dirent *entry,
+process_dir_entry (const char* path,
+		   const char* mdir,
+		   struct dirent *entry,
 		   MuMaildirWalkMsgCallback cb_msg,
 		   MuMaildirWalkDirCallback cb_dir, 
 		   void *data)
@@ -402,16 +419,22 @@ process_dir_entry (const char* path, struct dirent *entry,
 		if (!is_maildir_new_or_cur (path)) 
 			return MU_OK; 
 		
-		return process_file (fullpath, cb_msg, data);
+		return process_file (fullpath, mdir, cb_msg, data);
 		
 	case DT_DIR: {
+		char *my_mdir;
+		MuResult rv;
+		
 		/* if it has a noindex file, we ignore this dir */
 		if (has_noindex_file (fullpath)) {
 			g_debug ("ignoring dir %s", fullpath);
 			return MU_OK;
 		}
-		
-		return process_dir (fullpath, cb_msg, cb_dir, data);
+
+		my_mdir = get_mdir_for_path (mdir, entry->d_name);
+		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, data);
+		g_free (my_mdir);
+		return rv;
 	}
 		
 	default:
@@ -451,7 +474,7 @@ dirent_cmp (struct dirent *d1, struct dirent *d2)
  * entry->d_type
  */
 static MuResult
-process_dir_entries_sorted (DIR *dir, const char* path,
+process_dir_entries_sorted (DIR *dir, const char* path, const char* mdir,
 			    MuMaildirWalkMsgCallback msg_cb,
 			    MuMaildirWalkDirCallback dir_cb, void *data)
 {
@@ -468,7 +491,7 @@ process_dir_entries_sorted (DIR *dir, const char* path,
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/	
 
 	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) {
-		result = process_dir_entry (path, (struct dirent*)c->data, 
+		result = process_dir_entry (path, mdir, (struct dirent*)c->data, 
 					    msg_cb, dir_cb, data);
 		/* hmmm, break on MU_ERROR as well? */
 		if (result == MU_STOP)
@@ -483,7 +506,8 @@ process_dir_entries_sorted (DIR *dir, const char* path,
 
 
 static MuResult
-process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb, 
+process_dir (const char* path, const char* mdir,
+	     MuMaildirWalkMsgCallback msg_cb, 
 	     MuMaildirWalkDirCallback dir_cb, void *data)
 {
 	MuResult result;
@@ -504,7 +528,7 @@ process_dir (const char* path, MuMaildirWalkMsgCallback msg_cb,
 		}
 	}
 	
-	result = process_dir_entries_sorted (dir, path, msg_cb, dir_cb,
+	result = process_dir_entries_sorted (dir, path, mdir, msg_cb, dir_cb,
 					     data);
 	
 	closedir (dir);
@@ -520,37 +544,23 @@ MuResult
 mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
 		 MuMaildirWalkDirCallback cb_dir, void *data)
 {
-	struct stat statbuf;
+	MuResult rv;
+	char *mypath;
 	
 	g_return_val_if_fail (path && cb_msg, MU_ERROR);
-		
-	if (stat (path, &statbuf) != 0) {
-		g_warning ("cannot stat %s: %s", path, strerror(errno));
-		return MU_ERROR;
-	}
+	g_return_val_if_fail (mu_util_check_dir(path, TRUE, FALSE), MU_ERROR);	
 	
-	if (S_ISREG(statbuf.st_mode))
-		return process_file (path, cb_msg, data);
+	/* skip the final slash from dirnames */
+	mypath = g_strdup (path);
 	
-	if (S_ISDIR(statbuf.st_mode)) {
-		/* skip the final slash from dirnames */
-		MuResult rv;
-		char *mypath = g_strdup (path);
-
 		/* strip the final / or \ */
-		if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
-			mypath[strlen(mypath)-1] = '\0';
-
-		rv = process_dir (mypath, cb_msg, cb_dir, data);
-		g_free (mypath);
-		
-		return rv;
-	}
-
-	g_warning ("%s: unsupported file type for %s", 
-		   __FUNCTION__, path);
-
-	return MU_ERROR;
+	if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
+		mypath[strlen(mypath)-1] = '\0';
+	
+	rv = process_dir (mypath, "", cb_msg, cb_dir, data);
+	g_free (mypath);
+	
+	return rv;
 }
 
 
