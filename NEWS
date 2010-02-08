@@ -1,0 +1,22 @@
+* NEWS (user visible changes)
+
+** Release 0.7
+   - Database format changed
+   - Automatic database scheme version check, notifies users when an upgrade
+     is needed
+   - Support for >10K matches
+   - Support for unattended upgrades - that is, the database can automatically
+     by upgraded (--autoupgrade). Also, the log file is automatically cleaned
+     when it gets too big (unless you use --nocleanup)
+   - Search for a certain Maildir using the maildir:,m: search prefixes. For
+     example, you can find all messages located in ~/Maildir/foo/bar/cur/msg
+     ~/Maildir/foo/bar/new/msg and with
+	m:foo/bar
+     this replace the search for path/p in 0.6
+   - Fixes for reported issues ()
+   - A test suite with a growing number of unit tests
+
+
+**  Release 0.6 <2010-01-23 Sat> 
+    - First new release of mu since 2008
+    - No longer depends on sqlite
