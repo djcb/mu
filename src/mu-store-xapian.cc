@@ -47,7 +47,7 @@ struct _MuStoreXapian {
 MuStoreXapian*
 mu_store_xapian_new  (const char* xpath)
 {
-	MuStoreXapian *store;
+	MuStoreXapian *store (0);
 	
 	g_return_val_if_fail (xpath, NULL);
 	
@@ -202,19 +202,22 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 	const std::string value  (str);
 	const std::string prefix (mu_msg_field_xapian_prefix(field));
 	
-	if (mu_msg_field_is_xapian_indexable (field)) {
+	if (mu_msg_field_xapian_index (field)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (str, 1, prefix);
-	} else {
-		/* terms can be up to MU_STORE_XAPIAN_MAX_TERM_LENGTH
-		 * (240) long; this is a Xapian limit */
-		doc.add_term (std::string (prefix + value, 0,
-					   MU_STORE_XAPIAN_MAX_TERM_LENGTH));
 	}
-	
-	doc.add_value ((Xapian::valueno)mu_msg_field_id (field),
-		       value);
+
+	if (mu_msg_field_xapian_term(field))
+		/* terms can be up to MU_STORE_XAPIAN_MAX_TERM_LENGTH
+		    * (240) long; this is a Xapian limit
+		    * */
+		doc.add_term (std::string (prefix + value, 0,
+		 			   MU_STORE_XAPIAN_MAX_TERM_LENGTH));
+
+	if (mu_msg_field_xapian_value(field)) 			 
+		doc.add_value ((Xapian::valueno)mu_msg_field_id (field),
+			       value);
 }
 
 static void
@@ -249,9 +252,11 @@ add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 {
 	MuMsgFieldType type;
 	
-	if (!mu_msg_field_is_xapian_enabled(field))
+	if (!mu_msg_field_xapian_index(field) &&
+	    !mu_msg_field_xapian_term(field) &&
+	    !mu_msg_field_xapian_value(field))
 		return;
-	
+
 	type = mu_msg_field_type (field);
 
 	if (type == MU_MSG_FIELD_TYPE_STRING) {		
@@ -307,8 +312,8 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
 		const std::string uid(get_message_uid(msg));
 
 		begin_trx_if (store, !store->_in_transaction);
-		/* we must add a unique term, so we can replace matching
-		 * documents */
+		/* we must add a unique term, so we can replace
+		    * matching documents */
 		newdoc.add_term (uid);
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_terms_values,
 				      &msgdoc);
