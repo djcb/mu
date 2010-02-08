@@ -264,9 +264,9 @@ log_write (const char* domain, GLogLevelFlags level,
 	
 	/* for serious errors, log them to stderr as well */
 	if (level & G_LOG_LEVEL_ERROR)
-		g_printerr ("mu(e): %s\n", msg);
+		g_printerr ("mu: %s\n", msg);
 	else if (level & G_LOG_LEVEL_CRITICAL)
-		g_printerr ("mu(c): %s\n", msg);
+		g_printerr ("mu: %s\n", msg);
 	else if (level & G_LOG_LEVEL_WARNING)
-		g_printerr ("mu(w): %s\n", msg);
+		g_printerr ("mu: %s\n", msg);
 }
