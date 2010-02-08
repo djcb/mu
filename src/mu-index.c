@@ -93,8 +93,9 @@ typedef struct _MuIndexCallbackData MuIndexCallbackData;
 
 
 static MuResult
-insert_or_update_maybe (const char* fullpath, time_t filestamp,
-			 MuIndexCallbackData *data, gboolean *updated)
+insert_or_update_maybe (const char* fullpath, const char* mdir,
+			time_t filestamp,
+			MuIndexCallbackData *data, gboolean *updated)
 { 
 	MuMsgGMime *msg;
 	
@@ -124,7 +125,7 @@ insert_or_update_maybe (const char* fullpath, time_t filestamp,
 	} while (0);
 
 		
-	msg = mu_msg_gmime_new (fullpath);
+	msg = mu_msg_gmime_new (fullpath, mdir);
 	if (!msg) {
 		g_warning ("%s: failed to create mu_msg for %s",
 			   __FUNCTION__, fullpath);
@@ -161,8 +162,8 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 
 
 static MuResult
-on_run_maildir_msg (const char* fullpath, time_t filestamp, 
-		    MuIndexCallbackData *data)
+on_run_maildir_msg (const char* fullpath, const char* mdir,
+		    time_t filestamp, MuIndexCallbackData *data)
 {
 	MuResult result;
 	gboolean updated;
@@ -170,9 +171,9 @@ on_run_maildir_msg (const char* fullpath, time_t filestamp,
 	result = run_msg_callback_maybe (data);
 	if (result != MU_OK)
 		return result;
-			
+	
 	/* see if we need to update/insert anything...*/
-	result = insert_or_update_maybe (fullpath, filestamp, data,
+	result = insert_or_update_maybe (fullpath, mdir, filestamp, data,
 					  &updated);
 	
 	/* update statistics */
@@ -298,7 +299,8 @@ mu_index_run (MuIndex *index, const char* path,
 }
 
 static MuResult
-on_stats_maildir_file (const char *fullpath, time_t timestamp, 
+on_stats_maildir_file (const char *fullpath, const char* mdir,
+		       time_t timestamp, 
 		       MuIndexCallbackData *cb_data)
 {
 	MuResult result;
