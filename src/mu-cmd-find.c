@@ -132,7 +132,7 @@ print_rows (MuMsgIterXapian *iter, const char *fields)
 		while (*myfields) {
 			const MuMsgField* field;
 			field =	mu_msg_field_from_shortcut (*myfields);
-			if (!field || !mu_msg_field_is_xapian_enabled (field)) 
+			if (!field || !mu_msg_field_xapian_value (field)) 
 				len += printf ("%c", *myfields);
 			else
 				len += printf ("%s",
@@ -343,7 +343,7 @@ view_file (const gchar *path, const gchar *fields)
 	const char *field;
 	time_t date;
 	
-	msg = mu_msg_gmime_new (path);
+	msg = mu_msg_gmime_new (path, NULL);
 	if (!msg)
 		return FALSE;
 
