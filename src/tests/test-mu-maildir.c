@@ -164,7 +164,8 @@ dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 
 
 static MuResult
-msg_cb (const char *fullpath, gboolean enter, WalkData *data)
+msg_cb (const char *fullpath, const char* mdir, gboolean enter,
+	WalkData *data)
 {
 	++data->_file_count;
 	return MU_OK;

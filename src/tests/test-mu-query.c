@@ -73,9 +73,7 @@ test_mu_query_01 (void)
 		{ "subject:elisp",      1 },
 		{ "html",               4 },
 		{ "html AND contains",  1 },
-		{ "from:pepernoot",     0 },
-		{ "p:cur",              6 },
-		{ "path:new",           4 }
+		{ "from:pepernoot",     0 }
 	};
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
@@ -115,9 +113,13 @@ test_mu_query_02 (void)
 	query = mu_query_xapian_new (xpath);
 	g_assert (query);
 
-	q = "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com";
+	q = "m:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com";
+	     
 	iter = mu_query_xapian_run (query, q, NULL, FALSE, 0);
-	g_assert  (!mu_msg_iter_xapian_is_null (iter));
+	g_print ("xpath: %s", xpath);
+	
+	g_assert (iter);
+	g_assert (!mu_msg_iter_xapian_is_null (iter));
 
 	mu_query_xapian_destroy (query);
 	g_free (xpath);
