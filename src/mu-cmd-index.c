@@ -36,9 +36,9 @@ static gboolean MU_CAUGHT_SIGNAL;
 static void
 update_warning (void)
 {
-	g_warning ("Note: the database needs to be updated to version %s\n",
+	g_warning ("Note: the database needs to be upgraded to version %s\n",
 		   MU_XAPIAN_DB_VERSION);
-	g_warning ("please run 'mu index --empty' (see the manpage)\n");
+	g_warning ("Please run 'mu index --rebuild' (see the manpage)\n");
 }
 
 static void
@@ -131,9 +131,9 @@ database_version_check_and_update (MuConfigOptions *opts)
 		return TRUE;
 	
 	/* we empty the database before doing anything */
-	if (opts->empty) {
+	if (opts->rebuild) {
 		opts->reindex = TRUE;
-		g_message ("Emptying database %s", opts->xpath);
+		g_message ("Clearing database %s", opts->xpath);
 		return mu_util_xapian_clear_database (opts->xpath);
 	}
 
@@ -181,7 +181,6 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 		g_warning ("Cleanup failed");
 		return FALSE;
 	}
-
 	
 	g_message ("Cleaning up removed messages from %s",
 		   opts->xpath);
