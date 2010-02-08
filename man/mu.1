@@ -157,15 +157,15 @@ re-index all mails, even ones that are already in the database.
 disables the database cleanup that \fBmu\fR does by default after indexing.
 
 .TP
-\fB\-y\fR, \fB\-\-empty\fR
+\fB\-y\fR, \fB\-\-rebuild\fR
 clear all messages from the database before
 indexing. This is effectively the same as removing the database. The
-difference with \fB\-\-reindex\fR is that \fB\-\-empty\fR guarantees that
+difference with \fB\-\-reindex\fR is that \fB\-\-rebuild\fR guarantees that
 after the indexing has finished, there are no 'old' messages in the database
 anymore, which is not true with \fB\-\-reindex\fR when indexing only a part of
-messages (using \fB\-\-maildir\fR). For this reason, it's necessary to run
-\fBmu index \-\-empty\fR when there is an upgrade in the database
-format. \fBmu index\fR will warn you about this.
+messages (using \fB\-\-maildir\fR). For this reason, it is necessary to run
+\fBmu index \-\-rebuild\fR when there is an upgrade in the database
+format. \fBmu index\fR will issue a warning about this.
 
 .TP
 \fB\-u\fR, \fB\-\-autoupgrade\fR
@@ -271,10 +271,10 @@ search fields and their abbreviations:
 .nf
 	cc,c            CC (Carbon-Copy) recipient
 	from,f          Message sender
-	path,p          Full path to the message
 	subject,s       Message subject
 	to,t            To: recipient
-	msgid,m         Message-ID
+	maildir,m	Maildir	
+	msgid,i         Message-ID
 .fi
 
 
@@ -310,7 +310,8 @@ search parameters:
 	p	Full path to the message
 	P	Message priority (high, normal, low)      
 	s	Message subject
-	m	Message ID
+	i	Message ID
+	m	Maildir
 	t	To: recipient
 .fi
 
@@ -342,8 +343,8 @@ following fields are supported:
 	cc,c            CC (Carbon-Copy) recipient
 	date,d          message sent date
 	from,f          message sender
-	msgid,m         message id
-	path,p          full path to the message
+	maildir,m       maildir
+	msgid,i         message id
 	prio,P          message priority
 	subject,s       message subject
 	to,t            To:-recipient
@@ -421,7 +422,7 @@ Find all messages with the 'wombat' as subject, and 'capibara' anywhere:
 Find all messages in the 'Archive' folder from Fred:
 
 .nf
-  $ mu find from:fred path:archive
+  $ mu find from:fred maildir:Archive
 .fi
 
 
