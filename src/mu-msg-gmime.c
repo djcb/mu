@@ -586,8 +586,10 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	/* of course, the charset specified may be incorrect... */
 	if (charset) {
 		char *utf8 = text_to_utf8 (buffer, charset);
-		if (utf8)
+		if (utf8) {
+			g_free (buffer);
 			return utf8;
+		}
 	}
 
 	/* hmmm.... no charset at all, or conversion failed; ugly hack:
@@ -604,19 +606,14 @@ stream_to_string (GMimeStream *stream, size_t buflen, gboolean convert_utf8)
 	char *buffer;
 	ssize_t bytes;
 	
-	buffer = (char*)malloc(buflen + 1);
-	if (!buffer) {
-		g_warning ("%s: failed to allocate %u bytes", __FUNCTION__,
-			   buflen);
-		return NULL;
-	}
+	buffer = g_new(char, buflen + 1);
 	g_mime_stream_reset (stream);
 	
 	/* we read everything in one go */
 	bytes = g_mime_stream_read (stream, buffer, buflen);
 	if (bytes < 0) {
 		g_warning ("%s: failed to read from stream", __FUNCTION__);
-		free (buffer);
+		g_free (buffer);
 		return NULL;
 	}
 	
@@ -667,7 +664,7 @@ cleanup:
 
 
 static char*
-mu_msg_gmime_get_body (MuMsgGMime *msg, gboolean want_html)
+get_body (MuMsgGMime *msg, gboolean want_html)
 {
 	GetBodyData data;
 
@@ -698,8 +695,7 @@ mu_msg_gmime_get_body_html (MuMsgGMime *msg)
 	if (msg->_fields[HTML_FIELD])
 		return msg->_fields[HTML_FIELD];
 	else
-		return msg->_fields[HTML_FIELD] =
-			mu_msg_gmime_get_body (msg, TRUE);
+		return msg->_fields[HTML_FIELD] = get_body (msg, TRUE);
 }
 
 
@@ -711,8 +707,7 @@ mu_msg_gmime_get_body_text (MuMsgGMime *msg)
 	if (msg->_fields[TEXT_FIELD])
 		return msg->_fields[TEXT_FIELD];
 	else
-		return msg->_fields[TEXT_FIELD] =
-			mu_msg_gmime_get_body (msg, FALSE);
+		return msg->_fields[TEXT_FIELD] = get_body (msg, FALSE);
 }
 
 
