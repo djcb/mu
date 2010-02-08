@@ -110,7 +110,8 @@ get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
 static void
 add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 {
-	if (!mu_msg_field_is_xapian_enabled(field)) 
+	if (!mu_msg_field_xapian_index(field) &&
+	    !mu_msg_field_xapian_term(field))
 		return;
 
 	const std::string prefix (mu_msg_field_xapian_prefix(field));
