@@ -262,7 +262,7 @@ add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 	if (type == MU_MSG_FIELD_TYPE_STRING) {		
 		if (mu_msg_field_id (field) == MU_MSG_FIELD_ID_BODY_TEXT) 
 			add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, 
-					       field);
+ 					       field);
 		else
 			add_terms_values_string (*msgdoc->_doc, msgdoc->_msg,
 						 field);
