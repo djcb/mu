@@ -237,7 +237,7 @@ process_file (const char* fullpath, const gchar* mdir,
 			   MU_MAILDIR_WALK_MAX_FILE_SIZE, fullpath);
 		return MU_OK; /* not an error */
 	}
-
+	
 	/*
 	 * use the ctime, so any status change will be visible (perms,
 	 * filename etc.)
@@ -424,12 +424,6 @@ process_dir_entry (const char* path,
 	case DT_DIR: {
 		char *my_mdir;
 		MuResult rv;
-		
-		/* if it has a noindex file, we ignore this dir */
-		if (has_noindex_file (fullpath)) {
-			g_debug ("ignoring dir %s", fullpath);
-			return MU_OK;
-		}
 
 		my_mdir = get_mdir_for_path (mdir, entry->d_name);
 		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, data);
@@ -513,6 +507,12 @@ process_dir (const char* path, const char* mdir,
 	MuResult result;
 	DIR* dir;
 	
+	/* if it has a noindex file, we ignore this dir */
+	if (has_noindex_file (path)) {
+		g_debug ("found .noindex: ignoring dir %s", path);
+		return MU_OK;
+	}
+
 	dir = opendir (path);		
 	if (G_UNLIKELY(!dir)) {
 		g_warning ("%s: ignoring  %s: %s", path,
