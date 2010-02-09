@@ -113,8 +113,7 @@ test_mu_query_02 (void)
 	query = mu_query_xapian_new (xpath);
 	g_assert (query);
 
-	q = "m:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com";
-	     
+	q = "i:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com";
 	iter = mu_query_xapian_run (query, q, NULL, FALSE, 0);
 	g_print ("xpath: %s", xpath);
 	
