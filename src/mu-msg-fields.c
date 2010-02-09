@@ -73,7 +73,7 @@ static const MuMsgField FIELD_DATA[] = {
 	{ 
 		MU_MSG_FIELD_ID_FLAGS, 
 		MU_MSG_FIELD_TYPE_INT,
-		"flags", "F", "G",
+		"flags", "g", "G",  /* flaGs */
 		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	},
 
@@ -87,8 +87,8 @@ static const MuMsgField FIELD_DATA[] = {
 	{   
 		MU_MSG_FIELD_ID_PATH, 
 		MU_MSG_FIELD_TYPE_STRING,
-		"path", "p", "P",
-		FLAG_GMIME | FLAG_XAPIAN_VALUE
+		"path", "l", "L",   /* 'l' for location */
+ 		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	},
 
 	{   
@@ -101,14 +101,14 @@ static const MuMsgField FIELD_DATA[] = {
 	{ 
 		MU_MSG_FIELD_ID_PRIORITY,
 		MU_MSG_FIELD_TYPE_INT,
-		"prio", "P", "I",
+		"prio", "p", "P",  
 		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	},
 
 	{ 
 		MU_MSG_FIELD_ID_SIZE,
 		MU_MSG_FIELD_TYPE_BYTESIZE,
-		"size", "z", "Z",
+		"size", "z", "Z", /* siZe */
 		FLAG_GMIME
 	},
 	
@@ -129,14 +129,14 @@ static const MuMsgField FIELD_DATA[] = {
 	{ 
 		MU_MSG_FIELD_ID_MSGID,
 		MU_MSG_FIELD_TYPE_STRING,
-		"msgid", "i", "I",
+		"msgid", "i", "I",  /* 'i' for Id */
 		FLAG_GMIME | FLAG_XAPIAN_TERM
 	},
 	
 	{ 
 		MU_MSG_FIELD_ID_TIMESTAMP,
 		MU_MSG_FIELD_TYPE_TIME_T,
-		"timestamp", "i", NULL,
+		"timestamp", "x", NULL,
 		FLAG_GMIME 
 	}
 };

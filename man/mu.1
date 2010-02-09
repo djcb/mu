@@ -302,17 +302,16 @@ The table of replacement characters is superset of the list mentions for
 search parameters:
 
 .nf
-	t	To: recipient
-	c	CC (Carbon-Copy) recipient
-	d	Sent date of the message
-	f	Message sender (From:)
-	F	Message flags
-	p	Full path to the message
-	P	Message priority (high, normal, low)      
-	s	Message subject
-	i	Message ID
-	m	Maildir
-	t	To: recipient
+	t	\fBt\fRo: recipient
+	c	\fBcfRc: (Carbon-Copy) recipient
+	d	Sent \fBd\fRate of the message
+	f	Message sender (\fBf\fRrom:)
+	g	Message flags (fla\fBg\fRs)
+	l	Full path to the message (\fBl\fRocation)       
+	p	Message \fBp\fRriority (high, normal, low) 
+	s	Message \fBs\fRubject
+	i	Message-\fBi\fRd
+	m	\fBm\fRaildir
 .fi
 
 The message-flags output is a string, consisting of zero or more of the
@@ -345,7 +344,7 @@ following fields are supported:
 	from,f          message sender
 	maildir,m       maildir
 	msgid,i         message id
-	prio,P          message priority
+	prio,p          message priority
 	subject,s       message subject
 	to,t            To:-recipient
 .fi
