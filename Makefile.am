@@ -28,7 +28,6 @@ cleanupnote:
 tags:
 	gtags
 
-
 # this warns about function that have a cyclomatic complexity of > 10,
 # which is a sign that it needs some refactoring. requires the pmccabe
 # tool. If all is fine, it outputs nothing
@@ -41,7 +40,13 @@ cc10:
 line33:
 	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'` | awk '($$5 > 33)'
 
+# get all todo/fixme messages
+fixme:
+	@grep -i 'FIXME\|TODO' `find src -type f`
+
+
 EXTRA_DIST=		\
 	TODO		\
 	HACKING		\
-	gtest.mk
+	gtest.mk	\
+	NEWS
