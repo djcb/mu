@@ -115,6 +115,28 @@ href="http://www.qmail.org/qmail-manual-html/man5/maildir.html" >maildirs</a>
 
 <h2><a name="news" >news</a></h2>
 <ul>
+  <li>[2010-02-11] <strong>mu version 0.7-beta</strong> released. A lot of changes:
+  <ul>
+    <li>Automatic database scheme version check, notifies users when an upgrade
+     is needed</li>
+     <li>Adds the <tt>mu view</tt> command, to view mail message files</li>
+     <li>Removes the 10K match limit</li>
+     <li>Support for unattended upgrades - that is, the database can automatically
+     by upgraded (--autoupgrade). Also, the log file is automatically cleaned
+     when it gets too big (unless you use --nocleanup)</li>
+     <li>Search for a certain Maildir using the
+     <tt>maildir:</tt>,<tt>m:</tt> search prefixes. For
+     example, you can find all messages located in <tt>~/Maildir/foo/bar/(cur|new)/msg</tt>
+      with <tt>m:foo/bar</tt>. This replace the search for path/p in 0.6</li>
+   <li>Fixes for reported issues #17 and #18</li>
+   <li>A test suite with a growing number of unit tests</li>
+   <li>Updated documentation</li>
+   <li>Many internal refactoring and other changes</li>
+  </ul>
+  <p>This version has been tagged as <tt>v0.7-beta</tt> in repository, and must
+  be considered a code-complete preview of the upcoming release 0.7. Please
+  report any problems you encounter with it.</li>
+  </li>
   
   <li>[2010-01-23] <strong>mu version 0.6</strong> released. Changes compared
   to the beta version are:
