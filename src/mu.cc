@@ -66,6 +66,7 @@ main (int argc, char *argv[])
 	rv = mu_cmd_execute (&config);
 
 	mu_log_uninit();
+
 	mu_config_uninit (&config);
 	
 	return rv ? 0 : 1;
