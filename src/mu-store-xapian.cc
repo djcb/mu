@@ -181,14 +181,6 @@ add_terms_values_number (Xapian::Document& doc, MuMsgGMime *msg,
 	doc.add_term  (pfx + numstr);
 }
 
-
-
-
-/* FIXME: note that we store the same data as both a term and a value;
- * we use the term for search and the value for getting the the data
- * from the document; it's better to only use the value; however, this
- * requires some changes in the query processing.
- */
 static void
 add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 			 const MuMsgField* field)
@@ -229,8 +221,8 @@ add_terms_values_body (Xapian::Document& doc, MuMsgGMime *msg,
 	if (mu_msg_gmime_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
 		return; /* don't store encrypted bodies */
 
-	str = mu_msg_gmime_get_body_text(msg);
-	if (!str) /* FIXME: html->html fallback */
+	str = mu_msg_gmime_get_body_text (msg);
+	if (!str) /* FIXME: html->txt fallback needed */
 		str = mu_msg_gmime_get_body_html (msg);
 	
 	if (!str)  
