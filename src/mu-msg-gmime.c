@@ -269,7 +269,7 @@ mu_msg_gmime_get_date (MuMsgGMime *msg)
 	
 	g_return_val_if_fail (msg, 0);
 
-	/* TODO: is the GMT-offset relevant? */
+	/* TODO: check: is the GMT-offset relevant? */
 	g_mime_message_get_date(msg->_mime_msg, &t, NULL);
 	
 	return t;
