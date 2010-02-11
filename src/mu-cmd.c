@@ -90,8 +90,8 @@ show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, find, mkdir\n"
-		"see mu(1) for more information\n";
+		"\twhere command is one of index, find, mkdir, cleanup or view\n"
+		"see mu(1) (the mu manpage) for more information\n";
 
 	if (noerror)
 		g_print ("%s", usage);
@@ -129,8 +129,11 @@ mu_cmd_execute (MuConfigOptions *opts)
 	if (opts->version)
 		return show_version ();
 	
-	if (!opts->params||!opts->params[0]) /* no command? */
+	if (!opts->params||!opts->params[0]) {/* no command? */
+		show_version ();
+		g_print ("\n");
 		return show_usage (FALSE);
+	}
 	
 	cmd = cmd_from_string (opts->params[0]);
 
@@ -142,9 +145,8 @@ mu_cmd_execute (MuConfigOptions *opts)
 	case MU_CMD_CLEANUP: return mu_cmd_cleanup (opts);
 	case MU_CMD_VIEW:    return mu_cmd_view (opts);
 
-		//case MU_CMD_HELP:    return cmd_help  (opts);
-
-	case MU_CMD_UNKNOWN: return show_usage (FALSE);
+	case MU_CMD_UNKNOWN:
+		return show_usage (FALSE);
 	default:
 		g_return_val_if_reached (FALSE);
 	}	
