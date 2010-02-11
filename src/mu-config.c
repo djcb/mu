@@ -38,7 +38,7 @@ config_options_group_mu (MuConfigOptions *opts)
 		{"version", 'v', 0, G_OPTION_ARG_NONE, &opts->version,
 		 "display version and copyright information", NULL},
 		{"muhome", 'a', 0, G_OPTION_ARG_FILENAME, &opts->muhome,
-		 "specify an alternative mu directory ", NULL},
+		 "specify an alternative mu directory", NULL},
 		{"log-stderr", 'e', 0, G_OPTION_ARG_NONE, &opts->log_stderr,
 		 "log to standard error", NULL},
 		{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
