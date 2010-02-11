@@ -42,6 +42,11 @@ for indexing (analyzing) the contents of your Maildirs, and storing the
 information in a database
 
 .TP
+\fBcleanup\fR
+for removing messages from the database for which there is no longer a
+corresponding message file in the file system
+
+.TP
 \fBfind\fR
 for finding messages in your database, using certain search parameters (see
 below for details)
@@ -168,11 +173,10 @@ messages (using \fB\-\-maildir\fR). For this reason, it is necessary to run
 format. \fBmu index\fR will issue a warning about this.
 
 .TP
-\fB\-u\fR, \fB\-\-autoupgrade\fR
-automatically use \fB\-y\fR, \fB\-\-empty\fR when \fBmu\fR notices that the
-database version is not up-to-date. This option is for use in cron scripts
-etc., so they won't require any user interaction, even when mu introduces a
-new database vesion.
+\fB\-u\fR, \fB\-\-autoupgrade\fR automatically use \fB\-y\fR, \fB\-\-empty\fR
+when \fBmu\fR notices that the database version is not up-to-date. This option
+is for use in cron scripts and the like, so they won't require any user
+interaction, even when mu introduces a new database vesion.
 
 .TP
 
@@ -273,8 +277,18 @@ search fields and their abbreviations:
 	from,f          Message sender
 	subject,s       Message subject
 	to,t            To: recipient
-	maildir,m	Maildir	
+	maildir,m       Maildir	
 	msgid,i         Message-ID
+.fi
+
+The Maildir field describes the directory path starting \fBafter\fR the
+Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part. So for
+example, if there's a message with the file name
+\fI~/Maildir/lists/running/cur/1234.213:2,\fR, you could find it (and all the
+other messages in the same maildir) with:
+
+.nf
+	mu find maildir:lists/running
 .fi
 
 
@@ -282,7 +296,7 @@ search fields and their abbreviations:
 
 The \fBfind\fR-command has various options that influence the way \fBmu\fR
 displays the results. If you don't specify anything, the defaults are
-\fI\-\-fields="d f s"\fR, \fI\-\-sortfield=date\fR and \fI\-\-descending\fR.   
+\fI\-\-fields="d f s"\fR, \fI\-\-sortfield=date\fR and \fI\-\-descending\fR.
 
 .TP
 \fB\-f\fR, \fB\-\-fields\fR=\fI<fields>\fR
@@ -303,7 +317,7 @@ search parameters:
 
 .nf
 	t	\fBt\fRo: recipient
-	c	\fBcfRc: (Carbon-Copy) recipient
+	c	\fBc\fRc: (Carbon-Copy) recipient
 	d	Sent \fBd\fRate of the message
 	f	Message sender (\fBf\fRrom:)
 	g	Message flags (fla\fBg\fRs)
