@@ -240,8 +240,10 @@ mu_cmd_index (MuConfigOptions *opts)
 	g_message ("Database: %s", opts->xpath);
 	
 	rv = run_index (midx, opts->maildir, &stats, opts->reindex, opts->quiet);
-	if (rv == MU_OK  && !opts->nocleanup)
+	if (rv == MU_OK  && !opts->nocleanup) {
+		stats._processed = 0; /* restart processed at 0 */
 		rv = run_cleanup (midx, &stats, opts->quiet);
+	}
 	
 	mu_index_destroy (midx);
 	
