@@ -155,7 +155,6 @@ database_version_check_and_update (MuConfigOptions *opts)
 static MuResult
 run_cleanup (MuIndex *midx, MuIndexStats *stats, gboolean quiet)
 {
-	mu_index_stats_clear (stats);
 	return  mu_index_cleanup (midx, stats,
 				  quiet ? index_msg_silent_cb : index_msg_cb,
 				  NULL);
@@ -184,6 +183,7 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	
 	g_message ("Cleaning up removed messages from %s",
 		   opts->xpath);
+	mu_index_stats_clear (&stats);
 	rv = run_cleanup (midx, &stats, opts->quiet);
 	
 	mu_index_destroy (midx);
