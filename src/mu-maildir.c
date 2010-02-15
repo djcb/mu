@@ -384,11 +384,11 @@ static gchar*
 get_mdir_for_path (const gchar *old_mdir, const gchar *dir)
 {
 	if (dir[0] != 'n' && dir[0] != 'c' &&
-	    strcmp(dir, "cur") != 0 && strcmp(dir, "new") != 0)  
-		return g_strconcat (old_mdir, strlen(old_mdir)?G_DIR_SEPARATOR_S:"",
-				    dir, NULL);
+	    strcmp(dir, "cur") != 0 && strcmp(dir, "new") != 0)
+		return g_strconcat (old_mdir ? old_mdir : "",
+				    G_DIR_SEPARATOR_S, dir, NULL);
 	else
-		return strdup (old_mdir);
+		return strdup (old_mdir ? old_mdir : G_DIR_SEPARATOR_S);
 }
 
 
@@ -553,11 +553,12 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 	/* skip the final slash from dirnames */
 	mypath = g_strdup (path);
 	
-		/* strip the final / or \ */
+	/* strip the final / or \ */
 	if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
 		mypath[strlen(mypath)-1] = '\0';
 	
-	rv = process_dir (mypath, "", cb_msg, cb_dir, data);
+	rv = process_dir (mypath, NULL, cb_msg,
+			  cb_dir, data);
 	g_free (mypath);
 	
 	return rv;
@@ -584,8 +585,9 @@ clear_links (const gchar* dirname, DIR *dir)
 		if (entry->d_type != DT_LNK && entry->d_type != DT_DIR)
 			continue; 
 
-		/* we have to copy the buffer from fullpath_s, because it
-		 * returns a static buffer and we are recursive*/
+		/* we have to copy the buffer from fullpath_s, because
+		    * it returns a static buffer and we are
+		    * recursive*/
 		fp = fullpath_s (dirname, entry->d_name);
 		fullpath = g_newa (char, strlen(fp) + 1);
 		strcpy (fullpath, fp);
