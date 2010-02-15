@@ -153,6 +153,8 @@ starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
 \fBMAILDIR\fR environment variable is set to; if that is not set, it tries
 \fI~/Maildir\fR \. In either case, the path must be \fBabsolute\fR.
 
+Also please see the note on mixing sub-maildirs below.
+
 .TP
 \fB\-r\fR, \fB\-\-reindex\fR
 re-index all mails, even ones that are already in the database.
@@ -189,6 +191,13 @@ experience errors due to database locks.
 Also note that, before indexing is completed, searches for messages may fail,
 even if they have already been indexed, as some of the esssential database
 information will only be written in batches during the indexing process.
+
+Furthermore, it is not recommended tot mix maildirs and sub-maildirs within
+the hierarchy in the same database; for example, it's better not to index both
+with \fB\-\-maildir\fR=~/MyMaildir and \fB\-\-maildir\fR=~/MyMaildir/foo, as
+this may lead to unexpected results when searching with the the 'maildir:'
+search parameter (see below).
+
 
 .SS A note on performance
 As a non-scientific benchmark, a simple test on the authors machine (a
@@ -286,10 +295,15 @@ Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part. So for
 example, if there's a message with the file name
 \fI~/Maildir/lists/running/cur/1234.213:2,\fR, you could find it (and all the
 other messages in the same maildir) with:
-
 .nf
-	mu find maildir:lists/running
+	mu find maildir:/lists/running
 .fi
+Note the starting '/'. If you want to match mails in the 'root' maildir, you
+can do with a single '/':
+.nf
+	mu find maildir:/ 
+.fi
+
 
 
 .SS Find options
