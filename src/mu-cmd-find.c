@@ -43,7 +43,7 @@ update_warning (void)
 {
 	g_printerr ("the database needs to be updated to version %s\n",
 		   MU_XAPIAN_DB_VERSION);
-	g_message ("please run 'mu index --empty' (see the manpage)");
+	g_message ("please run 'mu index --rebuild' (see the man page)");
 }
 
 
