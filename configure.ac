@@ -19,6 +19,9 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
+# silent build
+AM_SILENT_RULES([yes])
+
 # we set the set the version of the Xapian database layout here; it
 # will become part of the db name, so we can automatically recreate the
 # database when we incompatible have changes.
