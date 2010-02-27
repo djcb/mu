@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.7-beta],[http://www.djcbsoftware.nl/code/mu])
+AC_INIT([mu],[0.7],[http://www.djcbsoftware.nl/code/mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -30,7 +30,7 @@ AM_SILENT_RULES([yes])
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with the version of the Xapian library
 #
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["6.99999"], [Schema version of the database])
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["7.0"], [Schema version of the database])
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
 
