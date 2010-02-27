@@ -1,6 +1,6 @@
 * NEWS (user visible changes)
 
-** Release 0.7
+** Release 0.7 <2010-02-27 Sat>
    - Database format changed
    - Automatic database scheme version check, notifies users when an upgrade
      is needed
@@ -12,7 +12,7 @@
    - Search for a certain Maildir using the maildir:,m: search prefixes. For
      example, you can find all messages located in ~/Maildir/foo/bar/cur/msg
      ~/Maildir/foo/bar/new/msg and with
-	m:foo/bar
+	m:/foo/bar
      this replace the search for path/p in 0.6
    - Fixes for reported issues ()
    - A test suite with a growing number of unit tests

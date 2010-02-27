@@ -115,6 +115,12 @@ href="http://www.qmail.org/qmail-manual-html/man5/maildir.html" >maildirs</a>
 
 <h2><a name="news" >news</a></h2>
 <ul>
+  <li>[2010-02-27] <strong>mu version 0.7</strong> released. Compared to the
+  beta version, there are few changes. The maildir-matching syntax now
+  contains a starting <tt>/</tt>, so <tt>~/Maildir/foo/bar/(cur|new)/msg</tt>
+  can be matched with <tt>m:/foo/bar</tt>. The top-level maildir can be
+  matched with <tt>m:/</tt>. Apart from that, there are so small cosmetic
+  fixes and documentation updates.
   <li>[2010-02-11] <strong>mu version 0.7-beta</strong> released. A lot of changes:
   <ul>
     <li>Automatic database scheme version check, notifies users when an upgrade
@@ -127,7 +133,7 @@ href="http://www.qmail.org/qmail-manual-html/man5/maildir.html" >maildirs</a>
      <li>Search for a certain Maildir using the
      <tt>maildir:</tt>,<tt>m:</tt> search prefixes. For
      example, you can find all messages located in <tt>~/Maildir/foo/bar/(cur|new)/msg</tt>
-      with <tt>m:foo/bar</tt>. This replace the search for path/p in 0.6</li>
+      with <tt>m:foo/bar</tt>. This replaces the search for path/p in 0.6</li>
    <li>Fixes for reported issues #17 and #18</li>
    <li>A test suite with a growing number of unit tests</li>
    <li>Updated documentation</li>
