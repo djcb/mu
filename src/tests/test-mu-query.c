@@ -54,6 +54,22 @@ fill_database (void)
 	return xpath;
 }
 
+static guint
+count_matches (	MuMsgIterXapian *iter)
+{
+	guint count;
+
+	if (mu_msg_iter_xapian_is_null(iter))
+		return 0;
+
+	count = 1;
+	while (mu_msg_iter_xapian_next (iter))
+		++count;
+
+	return count;
+}
+
+
 typedef struct  {
 	const char *query;
 	size_t count; /* expected number of matches */
@@ -86,10 +102,7 @@ test_mu_query_01 (void)
 			mu_query_xapian_run (query, queries[i].query, NULL,
 					     FALSE, 1);
 
-		if (!mu_msg_iter_xapian_is_null (iter)) 
-			do { ++count; } while (mu_msg_iter_xapian_next (iter));
-
-		g_assert_cmpuint (queries[i].count, ==, count);
+		g_assert_cmpuint (queries[i].count, ==, count_matches(iter));
 		mu_msg_iter_xapian_destroy (iter);
 	}
 
@@ -117,12 +130,41 @@ test_mu_query_02 (void)
 	iter = mu_query_xapian_run (query, q, NULL, FALSE, 0);
 	
 	g_assert (iter);
-	g_assert (!mu_msg_iter_xapian_is_null (iter));
+	g_assert_cmpuint (count_matches(iter), ==, 1);
 
 	mu_query_xapian_destroy (query);
 	g_free (xpath);
 }
 
+
+static void
+test_mu_query_03 (void)
+{
+	MuQueryXapian *query;
+	gchar *xpath;
+	int i;
+	
+	QResults queries[] = {
+		{ "t:help-gnu-emacs@gnu.org",1 },
+	};
+	xpath = fill_database ();
+	g_assert (xpath != NULL);
+	
+	query = mu_query_xapian_new (xpath);
+
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+		int count = 0;
+		MuMsgIterXapian *iter =
+			mu_query_xapian_run (query, queries[i].query, NULL,
+					     FALSE, 1);
+
+		g_assert_cmpuint (queries[i].count, ==, count_matches(iter));
+		mu_msg_iter_xapian_destroy (iter);
+	}
+
+	mu_query_xapian_destroy (query);
+	g_free (xpath);
+}
 
 
 int
@@ -130,14 +172,9 @@ main (int argc, char *argv[])
 {
 	g_test_init (&argc, &argv, NULL);
 
-	/* mu_util_maildir_mkmdir */
- 	g_test_add_func ("/mu-query/test-mu-query-01",
-			 test_mu_query_01);
-		/* mu_util_maildir_mkmdir */
- 	g_test_add_func ("/mu-query/test-mu-query-02",
-			 test_mu_query_02);
-
-
+	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
+ 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);
+	/* g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03); */
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
