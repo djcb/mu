@@ -260,15 +260,16 @@ offers all the search functionality that Xapian offers; please refer to:
 All queries are logged in \fI<mu-home>/mu.log\fR.   
      
 The basic way to search a message is to type some words matching it, as you
-would do in a search engine on the internet, ie.	
+would do in an internet search engine. For example,
 
 .nf
 	mu find monkey banana
 .fi
 
-will find all message that have both 'monkey' and 'banana'. Matching is
-case-insensitive and somewhat intelligent, in that it tries to recognize
-various forms of a word (such as plulars); this is all courtesy of Xapina.
+will find all message that contain both 'monkey' and 'banana'. Matching is
+case-insensitive and recognizes various forms of a word such as plurals; this
+is all courtesy of Xapian.
+
 
 \fBmu\fR also recognizes prefixes for specific fields in a messages; for
 example:
