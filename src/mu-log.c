@@ -27,7 +27,10 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+
+#ifdef HAVE_GIO
 #include <gio/gio.h>
+#endif /*HAVE_GIO*/
 
 #include "mu-log.h"
 #include "mu-util.h"
@@ -60,7 +63,6 @@ try_close (int fd)
 		g_printerr ("%s: close() of fd %d failed: %s\n",
 			    __FUNCTION__, fd, strerror(errno));
 }
-
 
 static void
 silence (void)
@@ -117,6 +119,7 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 
 
 /* log file is too big!; we move it to <logfile>.old, overwriting */
+#ifdef HAVE_GIO
 static gboolean
 move_log_file (const char* logfile)
 {
@@ -131,19 +134,31 @@ move_log_file (const char* logfile)
 	g_free (tmp);
 	
 	err = NULL;
-	rv = g_file_move (src, dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &err);
+	rv = g_file_move (src, dst, G_FILE_COPY_OVERWRITE, NULL,
+			  NULL, NULL, &err);
 	if (!rv) {
-		g_warning ("Failed to move %s to %s.old: %s", logfile, logfile,
-				   err ? err->message : "?");
+		g_warning ("Failed to move %s to %s.old: %s",
+			   logfile, logfile, err ? err->message : "?");
 		if (err)
 			g_error_free (err);
-		}
+	}
 	
 	g_object_unref (G_OBJECT(src));
 	g_object_unref (G_OBJECT(dst));
 	
 	return rv;
 }
+#else
+static gboolean
+move_log_file (const char *logfile)
+{
+	g_warning ("Failed to move log file '%s', because this 'mu'"
+		   "was built without GIO support", logfile);
+	return FALSE;
+}
+#endif /* HAVE_GIO */
+
+
 
 static gboolean
 log_file_backup_maybe (const char *logfile)
