@@ -180,9 +180,11 @@ mu_msg_iter_xapian_get_field_numeric (MuMsgIterXapian *iter,
 	g_return_val_if_fail (mu_msg_field_is_numeric(field), -1);
 
 	try {
-		return Xapian::sortable_unserialise(
-			mu_msg_iter_xapian_get_field(iter, field));
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);
+		return static_cast<gint64>(
+			Xapian::sortable_unserialise(
+				mu_msg_iter_xapian_get_field(iter, field)));
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(static_cast<gint64>(-1));
 }
 
 
