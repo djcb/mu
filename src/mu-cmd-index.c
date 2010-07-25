@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
 
 #include "mu-util.h"
 #include "mu-util-xapian.h"
