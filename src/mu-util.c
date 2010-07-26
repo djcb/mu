@@ -37,20 +37,25 @@ mu_util_dir_expand (const char *path)
 {
 	wordexp_t wexp;
 	char *dir;
+	int rv;
 	
 	g_return_val_if_fail (path, NULL);
 
 	dir = NULL;
-	wordexp (path, &wexp, 0);
-	if (wexp.we_wordc != 1) 
-		g_warning ("error expanding dir '%s'", path);
-	else 
+
+	rv = wordexp (path, &wexp, 0);
+	if (rv != 0) {
+		g_warning ("%s: expansion failed for '%s' [%d]",
+			   __FUNCTION__, path, rv);
+		return NULL;
+	} else
 		dir = g_strdup (wexp.we_wordv[0]);
 	
 	wordfree (&wexp);
 
 	return dir;
 }
+
 
 gboolean
 mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)

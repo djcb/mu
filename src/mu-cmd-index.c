@@ -78,9 +78,9 @@ check_index_params (MuConfigOptions *opts)
 		g_warning ("Error: Invalid option(s) for command\n");
 		return FALSE;
 	}
-
-	if (!g_path_is_absolute (opts->maildir)) {
-		g_warning ("Error: maildir path must be absolute\n");
+	
+	if (!opts->maildir || !g_path_is_absolute (opts->maildir)) {
+		g_warning ("Error: maildir path is not valid\n");
 		return FALSE;
 	}
 	
