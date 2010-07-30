@@ -207,7 +207,7 @@ mu_log_init  (const char* muhome,
 		return FALSE;
 	}
 	
-	fd = open (logfile,  O_WRONLY|O_CREAT|O_APPEND, 00600);
+	fd = open (logfile, O_WRONLY|O_CREAT|O_APPEND, 00600);
 	if (fd < 0) 
 		g_warning ("%s: open() of '%s' failed: %s\n",  __FUNCTION__,
 			   logfile, strerror(errno));
@@ -274,7 +274,7 @@ log_write (const char* domain, GLogLevelFlags level,
 		fprintf (stderr, "%s: failed to write to log: %s\n",
 			 __FUNCTION__,  strerror(errno));
 
-	if (!(MU_LOG->_quiet) && level & G_LOG_LEVEL_MESSAGE)
+	if (!(MU_LOG->_quiet) && (level & G_LOG_LEVEL_MESSAGE))
 		g_print ("mu: %s\n", msg);
 	
 	/* for serious errors, log them to stderr as well */
