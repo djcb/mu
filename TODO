@@ -1,20 +1,7 @@
+#-*-mode:org-*-
 #+STARTUP:showall
 
 * Future release
-
-** release 0.7 [100%]
-
-   - [X] signal handler for indexing
-   - [X] fix max 10000 matches limit
-   - [X] embed database version in database
-   - [X] MuMsgXapian => MuMsgIterXapian
-   - [X] make 'make distcheck' work
-   - [X] don't store both values and terms
-   - [X] fix the batch stuff
-   - [X] mu view <path>
-   - [X] basic test suite
-   - [X] auto clean log file
-   - [X] configure error for missing ->dt_dtype
 
 ** release 0.8 [%]
    - [ ] bookmarks
@@ -31,10 +18,33 @@
    - [ ] search for date interval etc.
    - [ ] detect mail threads (?)
    - [ ] clean up mu-msg-field, add formatting(?)
+   - [ ] xml output
 
+
+** release 0.7.1
+   - [X] remove gio dependency
+   - [ ] fix macos/wordexp bug(?)
+   - [X] fix rhel5 installation issue
+   - [ ] (maybe) summary, xml in search results?
+   - [ ] review docs
 
 
 * Release already done
+
+** release 0.7 [100%]
+
+   - [X] signal handler for indexing
+   - [X] fix max 10000 matches limit
+   - [X] embed database version in database
+   - [X] MuMsgXapian => MuMsgIterXapian
+   - [X] make 'make distcheck' work
+   - [X] don't store both values and terms
+   - [X] fix the batch stuff
+   - [X] mu view <path>
+   - [X] basic test suite
+   - [X] auto clean log file
+   - [X] configure error for missing ->dt_dtype
+
 
 ** release 0.6 [100%] <2010-01-23 Sat>
 
