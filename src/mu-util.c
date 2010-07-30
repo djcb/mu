@@ -45,14 +45,23 @@ mu_util_dir_expand (const char *path)
 
 	rv = wordexp (path, &wexp, 0);
 	if (rv != 0) {
-		g_warning ("%s: expansion failed for '%s' [%d]",
+		g_debug ("%s: expansion failed for '%s' [%d]",
 			   __FUNCTION__, path, rv);
 		return NULL;
-	} else
+	} else if (wexp.we_wordc != 1) {
+		g_debug ("%s: expansion ambiguous for '%s'",
+			 __FUNCTION__, path);
+	} else	
 		dir = g_strdup (wexp.we_wordv[0]);
-	
-	wordfree (&wexp);
 
+	/* strangely, below seems to load to a crash on MacOS (BSD);
+	   so we have to allow for a tiny leak here on that
+	   platform... maybe instead of __APPLE__ it should be
+	   __BSD__?*/
+#ifndef __APPLE__     
+	wordfree (&wexp);
+#endif /*__APPLE__*/
+	
 	return dir;
 }
 
@@ -69,14 +78,12 @@ mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
 	mode = F_OK | (readable ? R_OK : 0) | (writeable ? W_OK : 0);
 
 	if (access (path, mode) != 0) {
-		MU_WRITE_LOG ("Cannot access %s: %s", path,
-			      strerror (errno));
+		g_debug ("Cannot access %s: %s", path, strerror (errno));
 		return FALSE;
 	}
 
 	if (stat (path, &statbuf) != 0) {
-		MU_WRITE_LOG ("Cannot stat %s: %s", path,
-			      strerror (errno));
+		g_debug ("Cannot stat %s: %s", path, strerror (errno));
 		return FALSE;
 	}
 	
