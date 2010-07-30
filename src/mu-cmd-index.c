@@ -85,7 +85,8 @@ check_index_params (MuConfigOptions *opts)
 	}
 	
 	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
-		g_warning ("Error: not a valid Maildir\n");
+		g_warning ("Error: not a valid Maildir (%s)\n",
+			   opts->maildir);
 		return FALSE;
 	}
 	
