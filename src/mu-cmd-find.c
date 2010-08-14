@@ -373,7 +373,7 @@ view_file (const gchar *path, const gchar *fields)
 		g_print ("\n%s\n", field);
 	else
 		/* not really an error */
-		g_warning ("No text body found for %s", path);
+		g_debug ("No text body found for %s", path);
 
 	mu_msg_gmime_destroy (msg);
 	return TRUE;
