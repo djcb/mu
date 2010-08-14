@@ -238,7 +238,7 @@ mu_cmd_index (MuConfigOptions *opts)
 		return FALSE;
 	} 
 
-	g_message ("Indexing messages from %s", opts->maildir);
+	g_message ("Indexing messages under %s", opts->maildir);
 	g_message ("Database: %s", opts->xpath);
 	
 	rv = run_index (midx, opts->maildir, &stats, opts->reindex, opts->quiet);

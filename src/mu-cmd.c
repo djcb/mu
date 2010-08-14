@@ -90,8 +90,9 @@ show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, find, mkdir, cleanup or view\n"
-		"see mu(1) (the mu manpage) for more information\n";
+		"\twhere command is one of index, find, mkdir, cleanup or view\n\n"
+		"see mu(1) (the mu manpage) for more information, or try "
+		"mu --help\n";
 
 	if (noerror)
 		g_print ("%s", usage);
@@ -106,7 +107,7 @@ show_version (void)
 {
 	const char* msg =
 		"mu (mail indexer / searcher version) " VERSION "\n\n"
-		"Copyright (C) 2010 Dirk-Jan C. Binnema\n"
+		"Copyright (C) 2008-2010 Dirk-Jan C. Binnema\n"
 		"License GPLv3+: GNU GPL version 3 or later "
 		"<http://gnu.org/licenses/gpl.html>.\n\n"
 		"This is free software: you are free to change "
