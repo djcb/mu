@@ -154,10 +154,13 @@ typedef struct {
 static MuResult
 dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 {
-	if (enter)
+	if (enter) 
 		++data->_dir_entered;
 	else
 		++data->_dir_left;
+
+	/* g_print ("%s: %s: %s\n", __FUNCTION__, enter ? "entering" : "leaving", */
+	/* 	 fullpath); */
 
 	return MU_OK;
 }
@@ -181,6 +184,8 @@ test_mu_maildir_walk_01 (void)
 	
 	tmpdir = copy_test_data ();
 	memset (&data, 0, sizeof(WalkData));
+
+	/* g_print ("tmpdir: %s\n", tmpdir); */
 	
 	rv = mu_maildir_walk (tmpdir,
 			      (MuMaildirWalkMsgCallback)msg_cb, 
