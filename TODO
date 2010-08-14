@@ -21,8 +21,8 @@
    - [ ] xml output
 
 
-** release 0.7.1
-   - [X] remove gio dependency
+** release 0.7.1 [40%]
+   - [X] remove hard gio dependency
    - [ ] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
    - [ ] (maybe) summary, xml in search results?
