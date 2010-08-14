@@ -152,9 +152,10 @@ move_log_file (const char* logfile)
 static gboolean
 move_log_file (const char *logfile)
 {
-	g_warning ("Failed to move log file '%s', because this 'mu'"
+	g_message ("Failed to move log file '%s', because this mu "
 		   "was built without GIO support", logfile);
-	return FALSE;
+
+	return TRUE; /* ignore the error */
 }
 #endif /* HAVE_GIO */
 
