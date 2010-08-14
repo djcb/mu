@@ -52,15 +52,15 @@ struct _MuConfigOptions {
 	/* options for querying */
 	gboolean         xquery;        /* give the Xapian query instead of
 					   search results */
-	char		*fields;	/* fields to show in output */
-	
+	char		*fields;	/* fields to show in output */	
 	char	        *sortfield;	/* field to sort by (string) */
+	gboolean        descending;	/* sort descending? */
+	gboolean	summary;        /* output summary of mail */
+	unsigned        summary_len;    /* max # of lines of msg in summary */
+		
+	/* output to a maildir with symlinks */
 	char            *linksdir;      /* maildir to output symlinks */
 	gboolean	clearlinks;     /* clear a linksdir before filling */
-	
-	gboolean        descending;	/* sort descending? */
-
-	/* options for mkdir */
 	mode_t		dirmode;	/* mode for the created maildir */
 };
 typedef struct _MuConfigOptions MuConfigOptions;

@@ -26,6 +26,34 @@
 #include "mu-config.h"
 
 
+static gchar*
+guess_muhome (void)
+{
+	const char* home;
+
+	home = g_getenv ("HOME");
+	if (!home)
+		home = g_get_home_dir ();
+
+	if (!home)
+		MU_WRITE_LOG ("failed to determine homedir");
+	
+	return g_strdup_printf ("%s%c%s", home ? home : ".", G_DIR_SEPARATOR,
+				".mu");
+}
+
+static void
+set_group_mu_defaults (MuConfigOptions *opts)
+{
+	if (!opts->muhome)
+		opts->muhome = guess_muhome ();
+	
+	/* note: xpath is is *not* settable from the cmdline */
+	opts->xpath = g_strdup_printf ("%s%c%s", opts->muhome,G_DIR_SEPARATOR,
+				       MU_XAPIAN_DIR_NAME);
+}
+
+
 static GOptionGroup*
 config_options_group_mu (MuConfigOptions *opts)
 {
@@ -45,13 +73,29 @@ config_options_group_mu (MuConfigOptions *opts)
 		  &opts->params, "parameters", NULL },
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
-	
+
+
 	og = g_option_group_new ("mu",
 				 "general mu options",
 				 "", NULL, NULL);	
 	g_option_group_add_entries (og, entries);
 	
 	return og;
+}
+
+
+static void
+set_group_index_defaults (MuConfigOptions  *opts)
+{
+	gchar *old;
+	
+	old = opts->maildir;
+	if (opts->maildir)
+		opts->maildir = mu_util_dir_expand (opts->maildir);
+	else
+		opts->maildir = mu_util_guess_maildir();
+
+	g_free (old);
 }
 
 
@@ -73,7 +117,8 @@ config_options_group_index (MuConfigOptions *opts)
 		 "don't clean up the database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
-	
+
+
 	og = g_option_group_new ("index",
 				 "options for the 'index' command",
 				 "", NULL, NULL);	
@@ -82,132 +127,10 @@ config_options_group_index (MuConfigOptions *opts)
 	return og;
 }
 
-static GOptionGroup*
-config_options_group_find (MuConfigOptions *opts)
+
+static void
+set_group_find_defaults (MuConfigOptions *opts)
 {
-	GOptionGroup *og;
-	GOptionEntry entries[] = {
-		{"xquery", 'x', 0, G_OPTION_ARG_NONE, &opts->xquery,
-		 "print the Xapian query", NULL},
-		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
-		 "fields to display in the output", NULL},
-		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
-		 "field to sort on", NULL},
-		{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,
-		 "sort in descending order (z -> a)", NULL},
-		{"linksdir", 'l', 0, G_OPTION_ARG_STRING, &opts->linksdir,
-		 "output as symbolic links to a target maildir", NULL },
-		{"clearlinks", 'c', 0, G_OPTION_ARG_NONE, &opts->clearlinks,
-		 "clear old links before filling a linksdir", NULL},
-		{ NULL, 0, 0, 0, NULL, NULL, NULL }
-	};
-
-	og = g_option_group_new ("find",
-				 "options for the 'find' command",
-				 "", NULL, NULL);	
-	g_option_group_add_entries (og, entries);
-	
-	return og;
-}
-
-
-static GOptionGroup*
-config_options_group_mkdir (MuConfigOptions *opts)
-{
-	GOptionGroup *og;
-	GOptionEntry entries[] = {
-		{"mode", 'p', 0, G_OPTION_ARG_INT, &opts->dirmode,
-		 "set the mode (as in chmod), in octal notation", NULL},
-		{ NULL, 0, 0, 0, NULL, NULL, NULL }
-	};
-
-	og = g_option_group_new ("mkdir",
-				 "options for the 'mkdir' command",
-				 "", NULL, NULL);	
-	g_option_group_add_entries (og, entries);
-	
-	return og;
-}
-
-
-static gchar*
-guess_muhome (void)
-{
-	const char* home;
-
-	home = g_getenv ("HOME");
-	if (!home)
-		home = g_get_home_dir ();
-
-	if (!home)
-		MU_WRITE_LOG ("failed to determine homedir");
-	
-	return g_strdup_printf ("%s%c%s", home ? home : ".", G_DIR_SEPARATOR,
-				".mu");
-}
-
-
-static gboolean
-parse_params (MuConfigOptions *config, int *argcp, char ***argvp)
-{
-	GError *error = NULL;
-	GOptionContext *context;
-	gboolean rv;
-	
-	context = g_option_context_new ("- maildir utilities");
-
-	g_option_context_set_main_group (context,
-					 config_options_group_mu (config));
-	g_option_context_add_group (context,
-				    config_options_group_index (config));
-	g_option_context_add_group (context,
-				    config_options_group_find (config));
-	g_option_context_add_group (context,
-				    config_options_group_mkdir (config));
-
-	rv = g_option_context_parse (context, argcp, argvp, &error);
-	if (!rv) {
-		g_printerr ("error in options: %s\n", error->message);
-		g_error_free (error);
-	} else
-		g_option_context_free (context);
-	
-	return rv;
-}
-
-
-gboolean
-mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
-{
-	gchar *old;
-
-	g_return_val_if_fail (opts, FALSE);	
-	memset (opts, 0, sizeof(MuConfigOptions));
-
-	/* set dirmode before, because '0000' is a valid mode */
-	opts->dirmode = 0755;
-
-	if (argcp && argvp)
-		if (!parse_params (opts, argcp, argvp))
-			return FALSE;
-	
-	if (!opts->muhome)
-		opts->muhome = guess_muhome ();
-	
-	/* note: xpath is is *not* settable from the cmdline */
-	opts->xpath = g_strdup_printf ("%s%c%s", opts->muhome,G_DIR_SEPARATOR,
-				       MU_XAPIAN_DIR_NAME);
-
-	/* indexing */
-	old = opts->maildir;
-	if (opts->maildir)
-		opts->maildir = mu_util_dir_expand (opts->maildir);
-	else
-		opts->maildir = mu_util_guess_maildir();
-	g_free (old);
-		      
-	/* querying */
-	
 	/* note, when no fields are specified, we use
 	 * date-from-subject, and sort descending by date. If fields
 	 * *are* specified, we sort in ascending order. */
@@ -222,7 +145,113 @@ mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
 		opts->linksdir = mu_util_dir_expand (opts->linksdir);
 		g_free(old);
 	}
+}
 
+
+static GOptionGroup*
+config_options_group_find (MuConfigOptions *opts)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"xquery", 'x', 0, G_OPTION_ARG_NONE, &opts->xquery,
+		 "print the Xapian query (for debugging)", NULL},
+		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
+		 "fields to display in the output", NULL},
+		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
+		 "field to sort on", NULL},
+		{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,
+		 "sort in descending order (z -> a)", NULL},
+		{"summary", 'j', 0, G_OPTION_ARG_NONE, &opts->summary,
+		 "output summary of message", NULL},
+		{"summary-len", 'k', 0, G_OPTION_ARG_INT, &opts->summary_len,
+		 "max number of lines for summary", NULL},
+		{"linksdir", 'l', 0, G_OPTION_ARG_STRING, &opts->linksdir,
+		 "output as symbolic links to a target maildir", NULL },
+		{"clearlinks", 'c', 0, G_OPTION_ARG_NONE, &opts->clearlinks,
+		 "clear old links before filling a linksdir", NULL},
+		{ NULL, 0, 0, 0, NULL, NULL, NULL }
+	};
+	
+	og = g_option_group_new ("find",
+				 "options for the 'find' command",
+				 "", NULL, NULL);	
+	g_option_group_add_entries (og, entries);
+	
+	return og;
+}
+
+
+
+static GOptionGroup*
+config_options_group_mkdir (MuConfigOptions *opts)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"mode", 'p', 0, G_OPTION_ARG_INT, &opts->dirmode,
+		 "set the mode (as in chmod), in octal notation", NULL},
+		{ NULL, 0, 0, 0, NULL, NULL, NULL }
+	};
+
+	/* set dirmode before, because '0000' is a valid mode */
+	opts->dirmode = 0755;
+	
+	og = g_option_group_new ("mkdir",
+				 "options for the 'mkdir' command",
+				 "", NULL, NULL);	
+	g_option_group_add_entries (og, entries);
+	
+	return og;
+}
+
+
+
+static gboolean
+parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
+{
+	GError *error = NULL;
+	GOptionContext *context;
+	gboolean rv;
+	
+	context = g_option_context_new ("- maildir utilities");
+
+	g_option_context_set_main_group (context,
+					 config_options_group_mu (opts));
+	g_option_context_add_group (context,
+				    config_options_group_index (opts));
+	g_option_context_add_group (context,
+				    config_options_group_find (opts));
+	g_option_context_add_group (context,
+				    config_options_group_mkdir (opts));
+	
+	rv = g_option_context_parse (context, argcp, argvp, &error);
+	if (!rv) {
+		g_printerr ("error in options: %s\n", error->message);
+		g_error_free (error);
+	} else
+		g_option_context_free (context);
+
+	/* fill in the defaults if user did not specify */
+	set_group_mu_defaults (opts);
+	set_group_index_defaults (opts);
+	set_group_find_defaults (opts);
+	/* set_group_mkdir_defaults (opts); */
+	
+	return rv;
+}
+
+
+gboolean
+mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
+{
+	g_return_val_if_fail (opts, FALSE);	
+	memset (opts, 0, sizeof(MuConfigOptions));
+
+	/* defaults are set in parse_params */
+	
+	if (argcp && argvp)
+		if (!parse_params (opts, argcp, argvp))
+			return FALSE;
+		
 	return TRUE;
 }
 
