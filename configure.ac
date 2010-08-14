@@ -103,10 +103,15 @@ AS_IF([test "x$have_gtest" = "xno"],[
 ])
 
 
-# gmime2?	
-PKG_CHECK_MODULES(GMIME,gmime-2.4)
+# gmime2.4?	
+PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime=yes],[have_gmime=no])
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
+AS_IF([test "x$have_gmime" = "xno"],[
+   AC_MSG_ERROR([
+   *** gmime-2.4 could not be found; please install it
+   *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'])
+])
 
 
 # xapian?
