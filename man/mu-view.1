@@ -6,7 +6,7 @@ mu view\- display an e-mail message file
 
 .SH SYNOPSIS
 
-.B mu view <file> [<files>]
+.B mu view [options] <file> [<files>]
 
 .SH DESCRIPTION
 
@@ -18,6 +18,15 @@ using
 
 Currently, the command shows some common headers (From:, To:, Cc:, Subject:
 and Date:) and the plain-text body of the message.
+
+.SH OPTIONS
+
+.TP
+\fB\-k\fR, \fB\-\-summary\-len\fR=\fI<len>\fR
+instead of the full message, output a summary based on up to \fI\len\fR lines
+of the message. The default is
+.B 0
+, which means 'show full body'.
 
 .SH BUGS
 

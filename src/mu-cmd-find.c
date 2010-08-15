@@ -366,7 +366,7 @@ mu_cmd_find (MuConfigOptions *opts)
 
 /* we ignore fields for now */
 static gboolean
-view_file (const gchar *path, const gchar *fields)
+view_file (const gchar *path, const gchar *fields, size_t summary_len)
 {
 	MuMsgGMime* msg;
 	const char *field;
@@ -396,15 +396,22 @@ view_file (const gchar *path, const gchar *fields)
 	if (date)
 		g_print ("Date: %s\n",
 			 mu_msg_str_date_s (date));
-			 
-	field = mu_msg_gmime_get_body_text (msg);
-	if (field) 
-		g_print ("\n%s\n", field);
-	else
-		/* not really an error */
-		g_debug ("No text body found for %s", path);
 
+	if (summary_len > 0) {
+		field = mu_msg_gmime_get_summary (msg, summary_len);
+		g_print ("Summary: %s\n", field ? field : "<none>");
+	} else {
+	
+		field = mu_msg_gmime_get_body_text (msg);
+		if (field) 
+			g_print ("\n%s\n", field);
+		else
+			/* not really an error */
+			g_debug ("No text body found for %s", path);
+	}
+		
 	mu_msg_gmime_destroy (msg);
+
 	return TRUE;
 }
 
@@ -426,7 +433,8 @@ mu_cmd_view (MuConfigOptions *opts)
 
 	rv = TRUE;
 	for (i = 1; opts->params[i] && rv; ++i) 	
-		rv = view_file (opts->params[i], NULL);
+		rv = view_file (opts->params[i], NULL,
+				opts->summary_len);
 
 	mu_msg_gmime_uninit();
 	
