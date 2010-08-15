@@ -212,7 +212,7 @@ parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 	GOptionContext *context;
 	gboolean rv;
 	
-	context = g_option_context_new ("- maildir utilities");
+	context = g_option_context_new ("- mu general option");
 
 	g_option_context_set_main_group (context,
 					 config_options_group_mu (opts));
