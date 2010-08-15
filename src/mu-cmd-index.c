@@ -114,10 +114,12 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 		printf ("\b");
 	
 	len = snprintf (output, sizeof(output),
-			"%c processing mail; processed: %d; "
-			"updated/new: %d, cleaned-up: %d",
-			kars[i % 4], stats->_processed,
-			stats->_updated, stats->_cleaned_up);
+			"%c processing mail; processed: %u; "
+			"updated/new: %u, cleaned-up: %u",
+			(unsigned)kars[i % 4],
+			(unsigned)stats->_processed,
+			(unsigned)stats->_updated,
+			(unsigned)stats->_cleaned_up);
 	g_print ("%s", output);
 	++i;
 	
@@ -249,8 +251,10 @@ mu_cmd_index (MuConfigOptions *opts)
 	
 	mu_index_destroy (midx);
 	
-	MU_WRITE_LOG ("processed: %d; updated/new: %d, cleaned-up: %d",
-		      stats._processed, stats._updated,stats._cleaned_up);
+	MU_WRITE_LOG ("processed: %u; updated/new: %u, cleaned-up: %u",
+		      (unsigned)stats._processed,
+		      (unsigned)stats._updated,
+		      (unsigned)stats._cleaned_up);
 
 	if (!opts->quiet)
 		g_print ("\n");
