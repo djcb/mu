@@ -48,12 +48,23 @@ mu_msg_str_size_s  (size_t s)
 	/* note: we we use the powers-of-10, not powers-of-2 */
 
 	static char buf[32];
-	
+
+#ifdef HAVE_GLIB216
+	char *tmp;
+
+	tmp = g_format_size_for_display ((goffset)s);
+	strncpy (buf, tmp, sizeof(buf));
+	buf[sizeof(buf) -1] = '\0'; /* just in case */
+	g_free (tmp);
+
+#else
 	if (s >= 1000 * 1000)
 		g_snprintf(buf, sizeof(buf), "%.1f MB", (double)s/(1000*1000));
 	else
 		g_snprintf(buf, sizeof(buf), "%.1f kB", (double)s/(1000));
+#endif /*HAVE_GLIB216*/
 
+	
 	return buf;
 }
 
