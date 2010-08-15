@@ -116,8 +116,34 @@ sort_field_from_string (const char* fieldstr)
 	return field;
 }
 
+static void
+print_summary (MuMsgIterXapian *iter, size_t summary_len)
+{
+	const char *path, *summ;
+	MuMsgGMime *msg;
+	
+	path = mu_msg_iter_xapian_get_path (iter);
+	if (!path) {
+		g_warning ("%s: no path for message", __FUNCTION__);
+		return;
+	}
+
+	msg = mu_msg_gmime_new (path, NULL);
+	if (!msg) {
+		g_warning ("%s: failed to create msg object", __FUNCTION__);
+		return;
+	}
+
+	summ = mu_msg_gmime_get_summary (msg, summary_len);
+	g_print ("Summary: %s\n", summ ? summ : "<none>");
+	
+	mu_msg_gmime_destroy (msg);
+}
+
+
+
 static size_t
-print_rows (MuMsgIterXapian *iter, const char *fields)
+print_rows (MuMsgIterXapian *iter, const char *fields, size_t summary_len)
 {
 	size_t count = 0;
 	const char* myfields;
@@ -142,6 +168,9 @@ print_rows (MuMsgIterXapian *iter, const char *fields)
 		
 		if (len > 0)
 			g_print ("\n");
+
+		if (summary_len > 0)
+			print_summary (iter, summary_len);
 
 		++count;
 		
@@ -236,7 +265,7 @@ run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	if (opts->linksdir)
 		matches = make_links (iter, opts->linksdir, opts->clearlinks);
 	else
-		matches = print_rows (iter, opts->fields);
+		matches = print_rows (iter, opts->fields, opts->summary_len);
 	
 	if (matches == 0) 
 		g_printerr ("No matches found\n");
