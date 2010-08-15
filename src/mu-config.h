@@ -55,7 +55,6 @@ struct _MuConfigOptions {
 	char		*fields;	/* fields to show in output */	
 	char	        *sortfield;	/* field to sort by (string) */
 	gboolean        descending;	/* sort descending? */
-	gboolean	summary;        /* output summary of mail */
 	unsigned        summary_len;    /* max # of lines of msg in summary */
 		
 	/* output to a maildir with symlinks */

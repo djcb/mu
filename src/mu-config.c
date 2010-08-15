@@ -74,9 +74,7 @@ config_options_group_mu (MuConfigOptions *opts)
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
-
-	og = g_option_group_new ("mu",
-				 "general mu options",
+	og = g_option_group_new ("mu", "general mu options",
 				 "", NULL, NULL);	
 	g_option_group_add_entries (og, entries);
 	
@@ -145,6 +143,10 @@ set_group_find_defaults (MuConfigOptions *opts)
 		opts->linksdir = mu_util_dir_expand (opts->linksdir);
 		g_free(old);
 	}
+
+	/* FIXME: some warning when summary_len < 0? */
+	if (opts->summary_len < 1)
+		opts->summary_len = 0;
 }
 
 
@@ -161,8 +163,6 @@ config_options_group_find (MuConfigOptions *opts)
 		 "field to sort on", NULL},
 		{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,
 		 "sort in descending order (z -> a)", NULL},
-		{"summary", 'j', 0, G_OPTION_ARG_NONE, &opts->summary,
-		 "output summary of message", NULL},
 		{"summary-len", 'k', 0, G_OPTION_ARG_INT, &opts->summary_len,
 		 "max number of lines for summary", NULL},
 		{"linksdir", 'l', 0, G_OPTION_ARG_STRING, &opts->linksdir,
