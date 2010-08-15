@@ -16,5 +16,10 @@
 
 include $(top_srcdir)/gtest.mk
 
-
-dist_man_MANS = mu.1
+dist_man_MANS =		\
+	mu.1		\
+	mu-find.1	\
+	mu-index.1	\
+	mu-cleanup.1	\
+	mu-mkdir.1	\
+	mu-view.1

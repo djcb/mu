@@ -1,0 +1,40 @@
+.TH MU MKDIR 1 "August 2010" "User Manuals"
+
+.SH NAME 
+
+mu mkdir\-  create a new Maildir 
+
+.SH SYNOPSIS
+
+.B mu mkdir [options] <dir> [<dirs>]
+
+.SH DESCRIPTION
+
+\fBmu mkdir\fR is the \fBmu\fR sub-command for creating Maildirs. It does not
+depend on the mu database.
+
+With the \fBmkdir\fR command, you can create new Maildirs with permissions
+0755. For example,
+
+.nf
+   mu mkdir tom dick harry
+.fi
+
+will create three Maildirs \fItom\fR, \fIdick\fR and \fIharry\fR.
+
+If the creation somehow fails, for safety reasons, \fBno\fR attempt is made to
+remove any parts that were created.
+
+.SH BUGS
+
+There probably are some; please report bugs when you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR maildir(5)
+.BR mu(1)

@@ -1,4 +1,4 @@
-.TH MU 1 "February 2010" "User Manuals"
+.TH MU 1 "August 2010" "User Manuals"
 
 .SH NAME 
 
@@ -30,7 +30,7 @@ In addition to indexing and searching, \fBmu\fR also offers functionality for
 viewing messages and creating maildirs.
 
 \fBmu\fR can be used from the command line, or can be integrated with e-mail
-clients. This manpage contains examples of both.
+clients. Note: the various sub-commands have their own manpages.
 
 .SH COMMANDS
 
@@ -39,28 +39,38 @@ clients. This manpage contains examples of both.
 .TP
 \fBindex\fR
 for indexing (analyzing) the contents of your Maildirs, and storing the
-information in a database
+information in a database. See
+.BR mu-index(1)
+\.
 
 .TP
 \fBcleanup\fR
 for removing messages from the database for which there is no longer a
-corresponding message file in the file system
+corresponding message file in the file system. See
+.BR mu-cleanup(1)
+\.
 
 .TP
-\fBfind\fR
-for finding messages in your database, using certain search parameters (see
-below for details)
+\fBfind\fR for finding messages in your database, using certain search
+parameters. See
+.BR mu-find(1)
+\.
 
 .TP
 \fBview\fR
-for displaying e-mail messages
+for displaying e-mail messages. See
+.BR mu-view(1)
+\.
 
 .TP
 \fBmkdir\fR
-for creating Maildirs
+for creating Maildirs. See
+.BR mu-mkdir(1)
+\.
 
 .TP
-The various commands are discussed in more detail below
+The various commands are discussed in their separate manpages; here the
+general options are discussed.
 
 .SH GENERAL OPTIONS
 
@@ -103,450 +113,6 @@ list the various command line options, while
 \fB\-\-help\-index\fR, \fB\-\-help\-find\fR and \fB\-\-help\-all\fR list only
 the options for one command, or all of the commands.
 
-
-.SH THE INDEX COMMAND
-
-Using the
-.B index
-command, you can index your Maildir directories, and store the information in
-a Xapian database. 
-
-.B index
-understands Maildirs as defined by Dan Bernstein for qmail(7). In addition, it
-understands recursive Maildirs (Maildirs within Maildirs), Maildir++. It can
-also deal with VFAT-based Maildirs which use '!' as the seperators instead
-of ':' as used by Tinymail/Modest and some other e-mail programs.
-
-E-mail messages which are not stored in something resembling a maildir leaf
-directory (\fIcur\fR and \fInew\fR) are ignored.
-
-Currently, symlinks are not followed.
-
-If there is a file called \fI.noindex\fR in a directory, the contents of that
-directory and all of its subdirectories will be ignored. This can be useful to
-exclude certain directories from the indexing process, for example directories
-with spam-messages.
-
-The first run of \fBmu index\fR may take a few minutes if you have a lot of
-mail (ten thousands of messages).  Fortunately, such a full scan needs to be
-done only once, after that it suffices to index the changes, which goes much
-faster. Also note that a substantial amount of the time goes to printing the
-progress information; if you turn that off (with \fB\-q\fR or
-\fB\-\-quiet\fR), it goes a lot faster. See the 'Note on performance' below
-for more information.
-
-The optional phase two of the indexing-process is the removal of messages from
-the database for which there is no longer a corresponding file in the
-Maildir. If you do not want this, you can use \fB\-n\fR, \fB\-\-nocleanup\fR.
-
-When \fBmu index\fR catches on of the signals \fBSIGINT\fR, \fBSIGHUP\fR or
-\fBSIGTERM\fR (e.g,, when you press Ctrl-C during the indexing process), it
-tries to shutdown gracefully; it tries to save and commit data, and close the
-database etc. If it receives another signal (e.g,, when pressing Ctrl-C once
-more), \fBmu index\fR will terminate immediately.
-
-.SS Indexing options
-
-.TP
-\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
-starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
-\fBMAILDIR\fR environment variable is set to; if that is not set, it tries
-\fI~/Maildir\fR \. In either case, the path must be \fBabsolute\fR.
-
-Also please see the note on mixing sub-maildirs below.
-
-.TP
-\fB\-r\fR, \fB\-\-reindex\fR
-re-index all mails, even ones that are already in the database.
-
-.TP
-\fB\-n\fR, \fB\-\-nocleanup\fR
-disables the database cleanup that \fBmu\fR does by default after indexing.
-
-.TP
-\fB\-y\fR, \fB\-\-rebuild\fR
-clear all messages from the database before
-indexing. This is effectively the same as removing the database. The
-difference with \fB\-\-reindex\fR is that \fB\-\-rebuild\fR guarantees that
-after the indexing has finished, there are no 'old' messages in the database
-anymore, which is not true with \fB\-\-reindex\fR when indexing only a part of
-messages (using \fB\-\-maildir\fR). For this reason, it is necessary to run
-\fBmu index \-\-rebuild\fR when there is an upgrade in the database
-format. \fBmu index\fR will issue a warning about this.
-
-.TP
-\fB\-u\fR, \fB\-\-autoupgrade\fR automatically use \fB\-y\fR, \fB\-\-empty\fR
-when \fBmu\fR notices that the database version is not up-to-date. This option
-is for use in cron scripts and the like, so they won't require any user
-interaction, even when mu introduces a new database vesion.
-
-.TP
-
-.B NOTE:
-It is probably not a good idea to run multiple instances of
-.B mu index
-concurrently. No data loss should occur, but one or more of the instances may
-experience errors due to database locks.
-
-Also note that, before indexing is completed, searches for messages may fail,
-even if they have already been indexed, as some of the esssential database
-information will only be written in batches during the indexing process.
-
-Furthermore, it is not recommended tot mix maildirs and sub-maildirs within
-the hierarchy in the same database; for example, it's better not to index both
-with \fB\-\-maildir\fR=~/MyMaildir and \fB\-\-maildir\fR=~/MyMaildir/foo, as
-this may lead to unexpected results when searching with the the 'maildir:'
-search parameter (see below).
-
-
-.SS A note on performance
-As a non-scientific benchmark, a simple test on the authors machine (a
-Thinkpad X61s laptop using Linux 2.6.31 and an ext3 file system) with no
-existing database, and a maildir with 14,200 messages:
-
-.nf
- $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
- $ time mu index --quiet
- 83.36s user 6.49s system 43% cpu 3:26.21 total
-.si
-(about 69 messages per second)
-
-A second run, which is the more typical use case when there is a database
-already, goes much faster:
-
-.nf
- $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
- $ time mu index --quiet
- 0.29s user 0.62s system 14% cpu 6.409 total
-.si
-(about 2219 message per second)
-
-Note that each of test flushes the caches first; a more common use case might
-be to run \fBmu index\fR when new mail has arrived; the cache may stay
-quite 'warm' in that case:
-
-.nf
- $ time mu index --quiet
-0.19s user 0.21s system 98% cpu 0.402 total
-.si
-which is more than 35,0000 messages per second (there is some variance here,
-but the author has not seen it getting under 30,0000 messages per second).
-
-
-.SH THE CLEANUP COMMAND
-The \fBcleanup\fR command removes messages for which no corresponding file can
-be found, from the database. Note that this is done automatically when running
-\fBmu index\fR (unless \fB\-\-nocleanup\fR was specified). 
-
-
-.SH THE FIND COMMAND
-
-The \fBfind\fR command starts a search for messages in the database that match
-the search pattern.
-
-The search pattern is taken as a command line parameter. If the search
-parameter consists of multiple parts (multiple command line parameters) they
-are treated as if there were a logical \fBAND\fR between them.
-
-If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
-\fBNOT\fR etc., you have to put quote them so \fBmu\fR can consider them as a
-unit.
-
-\fBmu\fR relies on the Xapian database for its searching capabilities, so it
-offers all the search functionality that Xapian offers; please refer to:
-
-     \fIhttp://xapian.org/docs/queryparser.html\fR
-
-All queries are logged in \fI<mu-home>/mu.log\fR.   
-     
-The basic way to search a message is to type some words matching it, as you
-would do in an internet search engine. For example,
-
-.nf
-	mu find monkey banana
-.fi
-
-will find all message that contain both 'monkey' and 'banana'. Matching is
-case-insensitive and recognizes various forms of a word such as plurals; this
-is all courtesy of Xapian.
-
-
-\fBmu\fR also recognizes prefixes for specific fields in a messages; for
-example:
-
-.nf
-	mu find subject:penguin
-.fi
-
-to find messages with have the word \fBpenguin\fR in the subject field. You
-can abbreviate \fBsubject:\fR to just \fBs:\fR. Here is the full table of the
-search fields and their abbreviations:
-
-.nf
-	cc,c            CC (Carbon-Copy) recipient
-	from,f          Message sender
-	subject,s       Message subject
-	to,t            To: recipient
-	maildir,m       Maildir	
-	msgid,i         Message-ID
-.fi
-
-The Maildir field describes the directory path starting \fBafter\fR the
-Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part. So for
-example, if there's a message with the file name
-\fI~/Maildir/lists/running/cur/1234.213:2,\fR, you could find it (and all the
-other messages in the same maildir) with:
-.nf
-	mu find maildir:/lists/running
-.fi
-Note the starting '/'. If you want to match mails in the 'root' maildir, you
-can do with a single '/':
-.nf
-	mu find maildir:/ 
-.fi
-
-
-
-.SS Find options
-
-The \fBfind\fR-command has various options that influence the way \fBmu\fR
-displays the results. If you don't specify anything, the defaults are
-\fI\-\-fields="d f s"\fR, \fI\-\-sortfield=date\fR and \fI\-\-descending\fR.
-
-.TP
-\fB\-f\fR, \fB\-\-fields\fR=\fI<fields>\fR
-specifies a string that determines which fields are shown in the output. This
-string consists of a number of characters (such as 's' for subject or 'f' for
-from), which will replace with the actual field in the output. Fields that are
-not known will be output as-is, allowing for some simple formatting.
-
-For example:
-.nf
-	mu find subject:snow --fields "d f s"
-.fi
-would list the date, subject and sender of all messages with 'snow' in the
-their subject.
-
-The table of replacement characters is superset of the list mentions for
-search parameters:
-
-.nf
-	t	\fBt\fRo: recipient
-	c	\fBc\fRc: (Carbon-Copy) recipient
-	d	Sent \fBd\fRate of the message
-	f	Message sender (\fBf\fRrom:)
-	g	Message flags (fla\fBg\fRs)
-	l	Full path to the message (\fBl\fRocation)       
-	p	Message \fBp\fRriority (high, normal, low) 
-	s	Message \fBs\fRubject
-	i	Message-\fBi\fRd
-	m	\fBm\fRaildir
-.fi
-
-The message-flags output is a string, consisting of zero or more of the
-following characters.
-
-.nf
-	D	Draft Message
-	F	Flagged
-	N	New message (in new/ Maildir)
-	P	Passed ('Handled')
-	R	Replied
-	S	Seen
-	T	Marked for deletion
-	a	Has attachment
-	s	Signed message
-	x	Encrypted message
-.fi
-
-Note that these are theoretical flags, which may or may not be actually in
-use.
- 
-.TP
-\fB\-s\fR, \fB\-\-sortfield\fR \fR=\fI<field>\fR and \fB\-z\fR, \fB\-\-descending\fR
-specifies the field to sort the search results by, and the direction. The
-following fields are supported:
-
-.nf
-	cc,c            CC (Carbon-Copy) recipient
-	date,d          message sent date
-	from,f          message sender
-	maildir,m       maildir
-	msgid,i         message id
-	prio,p          message priority
-	subject,s       message subject
-	to,t            To:-recipient
-.fi
-
-Thus, for example, to sort messages by date, you could specify:
-
-.nf
-  $ mu find fahrrad --fields "d f s" --sortfield=date --descending
-.fi
-
-Note, if you specify a sortfield, by default, they are sorted in descending
-order (e.g., from lowest to highest). This is usually a good choice, but for
-dates it may be more useful to sort in the opposite direction.
-
-.TP
-\fB\-x\fR, \fB\-\-xquery\fR
-shows the Xapian query corresponding to your search terms. This is mostly
-useful for debugging.
-
-.TP
-\fB\-l\fR, \fB\-\-linksdir\fR \fR=\fI<dir>\fR and \fB\-c\fR, \fB\-\-clearlinks\fR
-output the results as a maildir with symbolic links to the found
-messages. This enables easy integration with mail-clients (see below for more
-information). \fBmu\fR will create the maildir if it does not exist yet.
-
-If you specify \fB\-\-clearlinks\fR, all existing symlinks will be cleared
-from the target maildir; this allows for re-use of the same directory. An
-alternative would be to delete the target directory before, but this has a big
-chance of accidentaly removing something that should not be removed.
-
-.nf
-  $ mu find grolsch --linksdir=~/Maildir/search --clearlinks
-.fi
-
-will store links to found messages in \fI~/Maildir/search\fR. If the directory
-does not exist yet, it will be created.
-
-Note: when \fBmu\fR creates a Maildir for these links, it automatically
-inserts a \fI.noindex\fR file, to exclude the directory from \fBmu
-index\fR.
-
-
-.SS Example queries
-
-Here are some simple examples of \fBmu\fR search queries; you can make many
-more complicated queries using various logical operators, parentheses and so
-on, but in the author's experience, it's usually faster to find a message with
-a simple query just searching for some words.
-
-Find all messages with both 'bee' and 'bird' (in any field)
-
-.nf
-  $ mu find 'bee AND bird'
-.fi
-
-or shorter, because \fBAND\fR is implied:
-
-.nf
-  $ mu find bee bird
-.fi
-
-Find all messages with either Frodo or Sam:
-
-.nf
-  $ mu find 'Frodo OR Sam'
-.fi
-
-Find all messages with the 'wombat' as subject, and 'capibara' anywhere:
-
-.nf
-  $ mu find subject:wombat capibara
-.fi
-
-Find all messages in the 'Archive' folder from Fred:
-
-.nf
-  $ mu find from:fred maildir:Archive
-.fi
-
-
-.SS Integrating mu find with mail clients
-
-.TP
-
-\fBmutt\fR
-For \fBmutt\fR you can use the following in your \fImuttrc\fR; pressing the F8
-key will start a search, and F9 will take you to the results.
-
-.nf
-# mutt macros for mu
-macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search " \
-					"mu find"
-macro index <F9> "<change-folder-readonly>~/Maildir/search" \
-					"display mu find results"
-.fi
-
-
-.TP
-
-\fBWanderlust\fR
-If you use Wanderlust for \fBemacs\fR, the following definitons can be used;
-typing 'Q' will start a query.
-
-.nf
-;; mu integration for Wanderlust
-(defvar mu-wl-mu-program     "mu")
-(defvar mu-wl-search-folder  "search")
-
-(defun mu-wl-search ()
-  "search for messages with `mu', and jump to the results"
-  (interactive)
-  (let* ((muexpr (read-string "Find messages matching: "))
-	  (sfldr  (concat elmo-maildir-folder-path "/"
-		    mu-wl-search-folder))
-	  (cmdline (concat mu-wl-mu-program " find "
-		      "--clearlinks --linksdir='" sfldr "' "
-		     muexpr)))
-    (= 0 (shell-command cmdline))))
-
-(defun mu-wl-search-and-goto ()
-  "search and jump to the folder with the results"
-  (interactive)
-  
-  (if (mu-wl-search)
-    (wl-summary-goto-folder-subr
-      (concat "." mu-wl-search-folder)
-      'force-update nil nil t)
-    (message "Query failed")))
-.fi
-
-.SH THE VIEW COMMAND
-With the \fBview\fR command, you can view one or more e-mail messages as they
-are stored as files on disk. It does not require or use the Xapian database.
-
-Currently, the command shows some common headers (From:, To:, Cc:, Subject:
-and Date:) and the plain-text body of the message.
-
-.SH THE MKDIR COMMAND
-
-With the \fBmkdir\fR command, you can create new Maildirs with permissions
-0755. For example,
-
-.nf
-   mu mkdir tom dick harry
-.fi
-
-will create three Maildirs \fItom\fR, \fIdick\fR and \fIharry\fR.
-
-If the creation somehow fails, for safety reasons, \fBno\fR attempt is made to
-remove any parts that were created.
-
-.SH FILES
-By default, \fBmu index\fR stores its message database in \fI~/.mu/xapian\fR;
-the database has an embedded version number, and \fBmu\fR will automatically
-update it when it notices a different version. This allows for automatic
-updating of \fBmu\fR-versions, without the need to clear out any old
-databases.
-
-However, note that versions of \fBmu\fR before 0.7 used a different scheme,
-which put the database in \fI~/.mu/xapian\-<version>\fR. These older databases
-can safely be deleted. Starting from version 0.7, this manual cleanup should
-no longer be needed.
-
-By default, \fBmu\fR stores logs of its operations and queries in \fI~/.mu/mu.log\fR.
-Upon startup, \fBmu\fR checks the size of this log file. If it exceeds 1 MB,
-it will be moved to \fI~/.mu/mu.log.old\fR, overwriting any existing file of
-that name, and start with an empty \fI~/.mu/mu.log\fR. This scheme allows for
-continued use of \fBmu\fR without the need for any manual maintenance of log
-files.
-
-To store these files elsewhere from their default location, one can use the
-\fI\-\-muhome\fR option, as discussed in the \fBGENERAL OPTIONS\fR section.
-
 .SH ENVIRONMENT
 
 As mentioned, \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if
@@ -564,4 +130,8 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR maildir(5)
+.BR mu-index(1)
+.BR mu-find(1)
+.BR mu-mkdir(1)
+.BR mu-view(1)
+.BR mu-cleanup(1)

@@ -1,0 +1,186 @@
+.TH MU-INDEX 1 "August 2010" "User Manuals"
+
+.SH NAME 
+
+mu index \- index e-mail messages stored in Maildirs
+
+.SH SYNOPSIS
+
+.B mu index [options]
+
+.SH DESCRIPTION
+
+\fBmu index\fR is the \fBmu\fR sub-command for scanning the contents of
+Maildir directories and storing it in a database which can then be searched
+using
+.BR mu-find(1)
+\.
+
+Using the
+.B index
+command, you can index your Maildir directories, and store the information in
+a Xapian database. 
+
+.B index
+understands Maildirs as defined by Dan Bernstein for qmail(7). In addition, it
+understands recursive Maildirs (Maildirs within Maildirs), Maildir++. It can
+also deal with VFAT-based Maildirs which use '!' as the seperators instead
+of ':' as used by Tinymail/Modest and some other e-mail programs.
+
+E-mail messages which are not stored in something resembling a maildir leaf
+directory (\fIcur\fR and \fInew\fR) are ignored.
+
+Currently, symlinks are not followed.
+
+If there is a file called \fI.noindex\fR in a directory, the contents of that
+directory and all of its subdirectories will be ignored. This can be useful to
+exclude certain directories from the indexing process, for example directories
+with spam-messages.
+
+The first run of \fBmu index\fR may take a few minutes if you have a lot of
+mail (ten thousands of messages).  Fortunately, such a full scan needs to be
+done only once, after that it suffices to index the changes, which goes much
+faster. Also note that a substantial amount of the time goes to printing the
+progress information; if you turn that off (with \fB\-q\fR or
+\fB\-\-quiet\fR), it goes a lot faster. See the 'Note on performance' below
+for more information.
+
+The optional phase two of the indexing-process is the removal of messages from
+the database for which there is no longer a corresponding file in the
+Maildir. If you do not want this, you can use \fB\-n\fR, \fB\-\-nocleanup\fR.
+
+When \fBmu index\fR catches on of the signals \fBSIGINT\fR, \fBSIGHUP\fR or
+\fBSIGTERM\fR (e.g,, when you press Ctrl-C during the indexing process), it
+tries to shutdown gracefully; it tries to save and commit data, and close the
+database etc. If it receives another signal (e.g,, when pressing Ctrl-C once
+more), \fBmu index\fR will terminate immediately.
+
+.SS Indexing options
+
+.TP
+\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
+starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
+\fBMAILDIR\fR environment variable is set to; if that is not set, it tries
+\fI~/Maildir\fR \. In either case, the path must be \fBabsolute\fR.
+
+Also please see the note on mixing sub-maildirs below.
+
+.TP
+\fB\-r\fR, \fB\-\-reindex\fR
+re-index all mails, even ones that are already in the database.
+
+.TP
+\fB\-n\fR, \fB\-\-nocleanup\fR
+disables the database cleanup that \fBmu\fR does by default after indexing.
+
+.TP
+\fB\-y\fR, \fB\-\-rebuild\fR
+clear all messages from the database before
+indexing. This is effectively the same as removing the database. The
+difference with \fB\-\-reindex\fR is that \fB\-\-rebuild\fR guarantees that
+after the indexing has finished, there are no 'old' messages in the database
+anymore, which is not true with \fB\-\-reindex\fR when indexing only a part of
+messages (using \fB\-\-maildir\fR). For this reason, it is necessary to run
+\fBmu index \-\-rebuild\fR when there is an upgrade in the database
+format. \fBmu index\fR will issue a warning about this.
+
+.TP
+\fB\-u\fR, \fB\-\-autoupgrade\fR automatically use \fB\-y\fR, \fB\-\-empty\fR
+when \fBmu\fR notices that the database version is not up-to-date. This option
+is for use in cron scripts and the like, so they won't require any user
+interaction, even when mu introduces a new database vesion.
+
+.TP
+
+.B NOTE:
+It is probably not a good idea to run multiple instances of
+.B mu index
+concurrently. No data loss should occur, but one or more of the instances may
+experience errors due to database locks.
+
+Also note that, before indexing is completed, searches for messages may fail,
+even if they have already been indexed, as some of the esssential database
+information will only be written in batches during the indexing process.
+
+Furthermore, it is not recommended tot mix maildirs and sub-maildirs within
+the hierarchy in the same database; for example, it's better not to index both
+with \fB\-\-maildir\fR=~/MyMaildir and \fB\-\-maildir\fR=~/MyMaildir/foo, as
+this may lead to unexpected results when searching with the the 'maildir:'
+search parameter (see below).
+
+
+.SS A note on performance
+As a non-scientific benchmark, a simple test on the authors machine (a
+Thinkpad X61s laptop using Linux 2.6.31 and an ext3 file system) with no
+existing database, and a maildir with 14,200 messages:
+
+.nf
+ $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
+ $ time mu index --quiet
+ 83.36s user 6.49s system 43% cpu 3:26.21 total
+.si
+(about 69 messages per second)
+
+A second run, which is the more typical use case when there is a database
+already, goes much faster:
+
+.nf
+ $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
+ $ time mu index --quiet
+ 0.29s user 0.62s system 14% cpu 6.409 total
+.si
+(about 2219 message per second)
+
+Note that each of test flushes the caches first; a more common use case might
+be to run \fBmu index\fR when new mail has arrived; the cache may stay
+quite 'warm' in that case:
+
+.nf
+ $ time mu index --quiet
+0.19s user 0.21s system 98% cpu 0.402 total
+.si
+which is more than 35,0000 messages per second (there is some variance here,
+but the author has not seen it getting under 30,0000 messages per second).
+
+.SH FILES
+By default, \fBmu index\fR stores its message database in \fI~/.mu/xapian\fR;
+the database has an embedded version number, and \fBmu\fR will automatically
+update it when it notices a different version. This allows for automatic
+updating of \fBmu\fR-versions, without the need to clear out any old
+databases.
+
+However, note that versions of \fBmu\fR before 0.7 used a different scheme,
+which put the database in \fI~/.mu/xapian\-<version>\fR. These older databases
+can safely be deleted. Starting from version 0.7, this manual cleanup should
+no longer be needed.
+
+By default, \fBmu\fR stores logs of its operations and queries in \fI~/.mu/mu.log\fR.
+Upon startup, \fBmu\fR checks the size of this log file. If it exceeds 1 MB,
+it will be moved to \fI~/.mu/mu.log.old\fR, overwriting any existing file of
+that name, and start with an empty \fI~/.mu/mu.log\fR. This scheme allows for
+continued use of \fBmu\fR without the need for any manual maintenance of log
+files.
+
+To store these files elsewhere from their default location, one can use the
+\fI\-\-muhome\fR option, as discussed in the \fBGENERAL OPTIONS\fR section.
+
+.SH ENVIRONMENT
+
+As mentioned, \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if
+it has not been specified explicitly \fB\-\-maildir\fR=\fI<maildir>\fR. If
+MAILDIR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
+.
+.SH BUGS
+
+There probably are some; please report bugs when you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR maildir(5)
+.BR mu(1)
+.BR mu-find(1)

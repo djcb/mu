@@ -1,0 +1,40 @@
+.TH MU CLEANUP 1 "August 2010" "User Manuals"
+
+.SH NAME 
+
+mu cleanup \- clean up the mu database
+
+.SH SYNOPSIS
+
+.B mu cleanup [options]
+
+.SH DESCRIPTION
+
+\fBmu cleanup\fR is the \fBmu\fR sub-command for removing messages from the mu
+database that are no longer present in the file system.
+
+The \fBcleanup\fR command removes messages for which no corresponding file can
+be found, from the database. Note that this is done automatically when running
+\fBmu index\fR (unless \fB\-\-nocleanup\fR was specified). 
+
+.SH ENVIRONMENT
+
+Like \fBmu index\fR, \fBmu cleanup\fR uses \fBMAILDIR\fR to find the user's
+Maildir if it has not been specified explicitly
+\fB\-\-maildir\fR=\fI<maildir>\fR. If MAILDIR is not set, \fBmu cleanup\fR will
+try \fI~/Maildir\fR.
+.
+.SH BUGS
+
+There probably are some; please report bugs when you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR maildir(5)
+.BR mu-index(1)
+.BR mu(1)

@@ -1,0 +1,303 @@
+.TH MU FIND 1 "August 2010" "User Manuals"
+
+.SH NAME 
+
+mu find \- search for e-mails in the
+.B mu
+database
+
+.SH SYNOPSIS
+
+.B mu find [options] <search expression>
+
+.SH DESCRIPTION
+
+\fBmu find\fR is the \fBmu\fR sub-command for searching e-mails there were
+store earlier using
+.BR mu-index(1)
+\.
+
+The \fBfind\fR command starts a search for messages in the database that match
+the search pattern.
+
+The search pattern is taken as a command line parameter. If the search
+parameter consists of multiple parts (multiple command line parameters) they
+are treated as if there were a logical \fBAND\fR between them.
+
+If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
+\fBNOT\fR etc., you have to put quote them so \fBmu\fR can consider them as a
+unit.
+
+\fBmu\fR relies on the Xapian database for its searching capabilities, so it
+offers all the search functionality that Xapian offers; please refer to:
+
+     \fIhttp://xapian.org/docs/queryparser.html\fR
+
+All queries are logged in \fI<mu-home>/mu.log\fR.   
+     
+The basic way to search a message is to type some words matching it, as you
+would do in an internet search engine. For example,
+
+.nf
+	mu find monkey banana
+.fi
+
+will find all message that contain both 'monkey' and 'banana'. Matching is
+case-insensitive and recognizes various forms of a word such as plurals; this
+is all courtesy of Xapian.
+
+
+\fBmu\fR also recognizes prefixes for specific fields in a messages; for
+example:
+
+.nf
+	mu find subject:penguin
+.fi
+
+to find messages with have the word \fBpenguin\fR in the subject field. You
+can abbreviate \fBsubject:\fR to just \fBs:\fR. Here is the full table of the
+search fields and their abbreviations:
+
+.nf
+	cc,c            CC (Carbon-Copy) recipient
+	from,f          Message sender
+	subject,s       Message subject
+	to,t            To: recipient
+	maildir,m       Maildir	
+	msgid,i         Message-ID
+.fi
+
+The Maildir field describes the directory path starting \fBafter\fR the
+Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part. So for
+example, if there's a message with the file name
+\fI~/Maildir/lists/running/cur/1234.213:2,\fR, you could find it (and all the
+other messages in the same maildir) with:
+.nf
+	mu find maildir:/lists/running
+.fi
+Note the starting '/'. If you want to match mails in the 'root' maildir, you
+can do with a single '/':
+.nf
+	mu find maildir:/ 
+.fi
+
+
+
+.SS Find options
+
+The \fBfind\fR-command has various options that influence the way \fBmu\fR
+displays the results. If you don't specify anything, the defaults are
+\fI\-\-fields="d f s"\fR, \fI\-\-sortfield=date\fR and \fI\-\-descending\fR.
+
+.TP
+\fB\-f\fR, \fB\-\-fields\fR=\fI<fields>\fR
+specifies a string that determines which fields are shown in the output. This
+string consists of a number of characters (such as 's' for subject or 'f' for
+from), which will replace with the actual field in the output. Fields that are
+not known will be output as-is, allowing for some simple formatting.
+
+For example:
+.nf
+	mu find subject:snow --fields "d f s"
+.fi
+would list the date, subject and sender of all messages with 'snow' in the
+their subject.
+
+The table of replacement characters is superset of the list mentions for
+search parameters:
+
+.nf
+	t	\fBt\fRo: recipient
+	c	\fBc\fRc: (Carbon-Copy) recipient
+	d	Sent \fBd\fRate of the message
+	f	Message sender (\fBf\fRrom:)
+	g	Message flags (fla\fBg\fRs)
+	l	Full path to the message (\fBl\fRocation)       
+	p	Message \fBp\fRriority (high, normal, low) 
+	s	Message \fBs\fRubject
+	i	Message-\fBi\fRd
+	m	\fBm\fRaildir
+.fi
+
+The message-flags output is a string, consisting of zero or more of the
+following characters.
+
+.nf
+	D	Draft Message
+	F	Flagged
+	N	New message (in new/ Maildir)
+	P	Passed ('Handled')
+	R	Replied
+	S	Seen
+	T	Marked for deletion
+	a	Has attachment
+	s	Signed message
+	x	Encrypted message
+.fi
+
+Note that these are theoretical flags, which may or may not be actually in
+use.
+ 
+.TP
+\fB\-s\fR, \fB\-\-sortfield\fR \fR=\fI<field>\fR and \fB\-z\fR, \fB\-\-descending\fR
+specifies the field to sort the search results by, and the direction. The
+following fields are supported:
+
+.nf
+	cc,c            CC (Carbon-Copy) recipient
+	date,d          message sent date
+	from,f          message sender
+	maildir,m       maildir
+	msgid,i         message id
+	prio,p          message priority
+	subject,s       message subject
+	to,t            To:-recipient
+.fi
+
+Thus, for example, to sort messages by date, you could specify:
+
+.nf
+  $ mu find fahrrad --fields "d f s" --sortfield=date --descending
+.fi
+
+Note, if you specify a sortfield, by default, they are sorted in descending
+order (e.g., from lowest to highest). This is usually a good choice, but for
+dates it may be more useful to sort in the opposite direction.
+
+.TP
+\fB\-x\fR, \fB\-\-xquery\fR
+shows the Xapian query corresponding to your search terms. This is primarily
+meant for for debugging purposes.
+
+.TP
+\fB\-k\fR, \fB\-\-summary\-len\fR=\fI<len>\fR
+output a summary based on up to \fI\len\fR lines of the message. Will read the
+first lines of the message, and remove any newlines. The default is
+.B 0
+, or no summary.
+
+.TP
+\fB\-l\fR, \fB\-\-linksdir\fR \fR=\fI<dir>\fR and \fB\-c\fR, \fB\-\-clearlinks\fR
+output the results as a maildir with symbolic links to the found
+messages. This enables easy integration with mail-clients (see below for more
+information). \fBmu\fR will create the maildir if it does not exist yet.
+
+If you specify \fB\-\-clearlinks\fR, all existing symlinks will be cleared
+from the target maildir; this allows for re-use of the same directory. An
+alternative would be to delete the target directory before, but this has a big
+chance of accidentaly removing something that should not be removed.
+
+.nf
+  $ mu find grolsch --linksdir=~/Maildir/search --clearlinks
+.fi
+
+will store links to found messages in \fI~/Maildir/search\fR. If the directory
+does not exist yet, it will be created.
+
+Note: when \fBmu\fR creates a Maildir for these links, it automatically
+inserts a \fI.noindex\fR file, to exclude the directory from \fBmu
+index\fR.
+
+
+.SS Example queries
+
+Here are some simple examples of \fBmu\fR search queries; you can make many
+more complicated queries using various logical operators, parentheses and so
+on, but in the author's experience, it's usually faster to find a message with
+a simple query just searching for some words.
+
+Find all messages with both 'bee' and 'bird' (in any field)
+
+.nf
+  $ mu find 'bee AND bird'
+.fi
+
+or shorter, because \fBAND\fR is implied:
+
+.nf
+  $ mu find bee bird
+.fi
+
+Find all messages with either Frodo or Sam:
+
+.nf
+  $ mu find 'Frodo OR Sam'
+.fi
+
+Find all messages with the 'wombat' as subject, and 'capibara' anywhere:
+
+.nf
+  $ mu find subject:wombat capibara
+.fi
+
+Find all messages in the 'Archive' folder from Fred:
+
+.nf
+  $ mu find from:fred maildir:Archive
+.fi
+
+
+.SS Integrating mu find with mail clients
+
+.TP
+
+\fBmutt\fR
+For \fBmutt\fR you can use the following in your \fImuttrc\fR; pressing the F8
+key will start a search, and F9 will take you to the results.
+
+.nf
+# mutt macros for mu
+macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search " \
+					"mu find"
+macro index <F9> "<change-folder-readonly>~/Maildir/search" \
+					"display mu find results"
+.fi
+
+
+.TP
+
+\fBWanderlust\fR
+If you use Wanderlust for \fBemacs\fR, the following definitons can be used;
+typing 'Q' will start a query.
+
+.nf
+;; mu integration for Wanderlust
+(defvar mu-wl-mu-program     "mu")
+(defvar mu-wl-search-folder  "search")
+
+(defun mu-wl-search ()
+  "search for messages with `mu', and jump to the results"
+  (interactive)
+  (let* ((muexpr (read-string "Find messages matching: "))
+	  (sfldr  (concat elmo-maildir-folder-path "/"
+		    mu-wl-search-folder))
+	  (cmdline (concat mu-wl-mu-program " find "
+		      "--clearlinks --linksdir='" sfldr "' "
+		     muexpr)))
+    (= 0 (shell-command cmdline))))
+
+(defun mu-wl-search-and-goto ()
+  "search and jump to the folder with the results"
+  (interactive)
+  
+  (if (mu-wl-search)
+    (wl-summary-goto-folder-subr
+      (concat "." mu-wl-search-folder)
+      'force-update nil nil t)
+    (message "Query failed")))
+.fi
+
+
+.SH BUGS
+
+There probably are some; please report bugs when you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR mu(1)
+.BR mu-index(1)
