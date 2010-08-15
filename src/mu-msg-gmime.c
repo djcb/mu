@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@ enum _StringFields {
 
 	HTML_FIELD  = 0,   /* body as HTML */
 	TEXT_FIELD,        /* body as plain text */
+	SUMMARY_FIELD,     /* body summary */
+
 	TO_FIELD,          /* To: */
 	CC_FIELD,	   /* Cc: */
 	
@@ -107,6 +109,7 @@ init_file_metadata (MuMsgGMime* msg, const char* path, const gchar* mdir)
 	msg->_size                 = statbuf.st_size; 	
 	msg->_fields[PATH_FIELD]   = strdup (path);
 
+	/* FIXME: maybe try to derive it from the path? */
 	if (mdir) 
 		msg->_fields[MDIR_FIELD]   = strdup (mdir);
 	
@@ -710,6 +713,64 @@ mu_msg_gmime_get_body_text (MuMsgGMime *msg)
 		return msg->_fields[TEXT_FIELD] = get_body (msg, FALSE);
 }
 
+/* maybe move to str functions file? */
+static char*
+summarize (const char* str, size_t max_lines)
+{
+	char *summary;
+	size_t nl_seen;
+	int i;
+	
+	if (!str || max_lines == 0)
+		return NULL;
+
+	/* len for summary <= original len */
+	summary = g_new (gchar, strlen(str) + 1);
+
+	/* copy the string up to max_lines lines, replace CR/LF/tab with
+	 * single space */
+	for (i = 0, nl_seen = 0; nl_seen < max_lines && str[i] != '\0'; ++i) {
+		switch (str[i]) {
+		case '\n':
+			++nl_seen;
+			summary[i] = ' ';
+			break;
+		case '\r':
+		case '\t':
+			summary[i] = ' ';
+			break;
+		default:
+			summary[i] = str[i];	
+		}
+	}
+
+	/* FIXME: word-wrap the string */
+	
+	summary[i] = '\0';
+	return summary;
+}
+
+
+const char*
+mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines)
+{
+	const char *body;
+	
+	g_return_val_if_fail (msg, NULL);
+	g_return_val_if_fail (max_lines > 0, NULL);
+	
+	/* do we have a summary cached already? */
+	if (msg->_fields[SUMMARY_FIELD])
+		return msg->_fields[SUMMARY_FIELD];
+
+	/* nope; calculate it */
+	body = mu_msg_gmime_get_body_text (msg);
+	if (!body)
+		return NULL; /* there was no text body */
+
+	return msg->_fields[SUMMARY_FIELD] = summarize (body, max_lines);
+}
+
 
 const char*
 mu_msg_gmime_get_field_string (MuMsgGMime *msg, const MuMsgField* field)
@@ -796,8 +857,7 @@ address_list_foreach (InternetAddressList *addrlist,
 		MuMsgContact contact;
 		if (!fill_contact(&contact,
 				  internet_address_list_get_address (addrlist, i),
-				   ctype))
-		{
+				   ctype)) {
 			MU_WRITE_LOG ("ignoring contact");
 			continue;
 		}

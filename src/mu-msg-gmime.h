@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 struct _MuMsgGMime;
 typedef struct _MuMsgGMime MuMsgGMime;
 
-/** 
+/**
  * initialize the message parsing system; this function must be called
  * before doing any message parsing (ie., any of the other
  * mu_msg_gmime functions). when done with the message parsing system,
@@ -36,7 +36,7 @@ typedef struct _MuMsgGMime MuMsgGMime;
  */
 void     mu_msg_gmime_init            (void);
 
-/** 
+/**
  * uninitialize the messge parsing system that has previously been
  * initialized with mu_msg_init. not calling mu_msg_uninit after
  * mu_msg_init has been called will lead to memory leakage. Note:
@@ -46,14 +46,16 @@ void     mu_msg_gmime_init            (void);
 void     mu_msg_gmime_uninit          (void);
 
 
-/** 
+/**
  * create a new MuMsgGMime* instance which parses a message and provides
- * read access to its properties; call mu_msg_destroy when done with
- * done with it.
+ * read access to its properties; call mu_msg_destroy when done with it.
  *
  * @param path full path to an email message file
+ *
  * @param mdir the maildir for this message; ie, if the path is
- * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar
+ * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
+ * pass NULL for this parameter, in which case some maildir-specific
+ * information is not available.
  * 
  * @return a new MuMsgGMime instance or NULL in case of error
  */
@@ -61,7 +63,7 @@ MuMsgGMime*   mu_msg_gmime_new		   (const char* filepath,
 					    const char *maildir);
 
 
-/** 
+/**
  * destroy a MuMsgGMime* instance; call this function when done with
  * a MuMsgGMime
  * 
@@ -71,7 +73,7 @@ void     mu_msg_gmime_destroy         (MuMsgGMime *msg);
 
 
 
-/** 
+/**
  * get the plain text body of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -83,7 +85,7 @@ void     mu_msg_gmime_destroy         (MuMsgGMime *msg);
 const char*     mu_msg_gmime_get_body_text       (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get the html body of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -94,7 +96,23 @@ const char*     mu_msg_gmime_get_body_text       (MuMsgGMime *msg);
 const char*     mu_msg_gmime_get_body_html       (MuMsgGMime *msg);
 
 
-/** 
+/**
+ * get a summary of the body of this message; a summary takes up to
+ * the first @max_lines from the message, and replaces newlines
+ * etc. with single whitespace characters. This only works if there's
+ * a text-body for the message
+ *
+ * @param msg a valid MuMsgGMime* instance
+ * @param max_lines the max number of lines to summarize
+ * 
+ * @return the summary of the message or NULL in case of error or if
+ * there is no such body. the returned string should *not* be modified
+ * or freed. When called multiple times, the function will always
+ * return the same summary, regardless of a different max_lines value.
+ */
+const char*     mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines);
+
+/**
  * get the sender (From:) of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -105,7 +123,7 @@ const char*     mu_msg_gmime_get_body_html       (MuMsgGMime *msg);
 const char*     mu_msg_gmime_get_from	   (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get the recipients (To:) of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -116,7 +134,7 @@ const char*     mu_msg_gmime_get_from	   (MuMsgGMime *msg);
 const char*     mu_msg_gmime_get_to	   (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get the carbon-copy recipients (Cc:) of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -127,7 +145,7 @@ const char*     mu_msg_gmime_get_to	   (MuMsgGMime *msg);
  */
 const char*     mu_msg_gmime_get_cc	     (MuMsgGMime *msg);
 
-/** 
+/**
  * get the file system path of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -138,7 +156,7 @@ const char*     mu_msg_gmime_get_cc	     (MuMsgGMime *msg);
 const char*     mu_msg_gmime_get_path            (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get the maildir this message lives in; ie, if the path is
  * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar
  *
@@ -150,7 +168,7 @@ const char*     mu_msg_gmime_get_path            (MuMsgGMime *msg);
 const char*    mu_msg_gmime_get_maildir        (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get the subject of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -160,7 +178,7 @@ const char*    mu_msg_gmime_get_maildir        (MuMsgGMime *msg);
  */
 const char*     mu_msg_gmime_get_subject         (MuMsgGMime *msg);
 
-/** 
+/**
  * get the Message-Id of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -171,7 +189,7 @@ const char*     mu_msg_gmime_get_subject         (MuMsgGMime *msg);
 const char*     mu_msg_gmime_get_msgid           (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get any arbitrary header from this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -185,7 +203,7 @@ const char*     mu_msg_gmime_get_header          (MuMsgGMime *msg,
 
 
 
-/** 
+/**
  * get the message date/time (the Date: field) as time_t, using UTC
  *
  * @param msg a valid MuMsgGMime* instance
@@ -195,7 +213,7 @@ const char*     mu_msg_gmime_get_header          (MuMsgGMime *msg,
  */
 time_t          mu_msg_gmime_get_date            (MuMsgGMime *msg);
 
-/** 
+/**
  * get the flags for this message
  *
  * @param msg valid MuMsgGMime* instance
@@ -206,7 +224,7 @@ time_t          mu_msg_gmime_get_date            (MuMsgGMime *msg);
 MuMsgFlags     mu_msg_gmime_get_flags      (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get the file size in bytes of this message
  *
  * @param msg a valid MuMsgGMime* instance
@@ -216,7 +234,7 @@ MuMsgFlags     mu_msg_gmime_get_flags      (MuMsgGMime *msg);
 size_t          mu_msg_gmime_get_size       (MuMsgGMime *msg);
 
 
-/** 
+/**
  * get some field value as string
  * 
  * @param msg a valid MuMsgGmime instance
@@ -227,7 +245,7 @@ size_t          mu_msg_gmime_get_size       (MuMsgGMime *msg);
 const char*  mu_msg_gmime_get_field_string  (MuMsgGMime *msg, 
 					     const MuMsgField* field);
 
-/** 
+/**
  * get some field value as string
  * 
  * @param msg a valid MuMsgGmime instance
@@ -238,7 +256,7 @@ const char*  mu_msg_gmime_get_field_string  (MuMsgGMime *msg,
 gint64      mu_msg_gmime_get_field_numeric (MuMsgGMime *msg, 
 					    const MuMsgField* field);
 
-/** 
+/**
  * get the message priority for this message 
  * (MU_MSG_PRIORITY_LOW, MU_MSG_PRIORITY_NORMAL or MU_MSG_PRIORITY_HIGH)
  * the X-Priority, X-MSMailPriority, Importance and Precedence header are
@@ -251,7 +269,7 @@ gint64      mu_msg_gmime_get_field_numeric (MuMsgGMime *msg,
  */
 MuMsgPriority   mu_msg_gmime_get_priority        (MuMsgGMime *msg);
 
-/** 
+/**
  * get the timestamp (mtime) for the file containing this message 
  *
  * @param msg a valid MuMsgGMime* instance
@@ -264,7 +282,7 @@ time_t          mu_msg_gmime_get_timestamp       (MuMsgGMime *msg);
 typedef int (*MuMsgGMimeContactsCallback) (MuMsgContact*, void *ptr);
 
 
-/** 
+/**
  * call a function for each of the contacts in a message 
  *
  * @param msg a valid MuMsgGMime* instance
