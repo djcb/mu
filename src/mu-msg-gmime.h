@@ -17,8 +17,8 @@
 **  
 */
 
-#ifndef __MU_MSG_READ_H__
-#define __MU_MSG_READ_H__
+#ifndef __MU_MSG_GMIME_H__
+#define __MU_MSG_GMIME_H__
 
 #include "mu-msg.h"
 
@@ -281,4 +281,4 @@ int mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
 				       void *ptr);
 G_END_DECLS
 
-#endif /*__MU_MSG_H__*/
+#endif /*__MU_MSG_GIME_H__*/
