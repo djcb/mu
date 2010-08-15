@@ -98,6 +98,7 @@ AS_IF([test "x$have_gio" = "xno"],[
 # g_test was introduced in glib 2.16
 PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.16, [have_gtest=yes],[have_gtest=no])
 AM_CONDITIONAL(HAVE_GTEST, test "x$have_gtest" = "xyes")
+AM_CONDITIONAL(HAVE_GLIB216, test "x$have_gtest" = "xyes")
 AS_IF([test "x$have_gtest" = "xno"],[
      AC_MSG_WARN([You need GLIB version >= 2.16 to build the tests])
 ])
