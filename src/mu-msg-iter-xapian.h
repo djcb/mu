@@ -28,7 +28,7 @@ struct _MuMsgIterXapian;
 typedef struct _MuMsgIterXapian MuMsgIterXapian;
 
 
-/** 
+/**
  * get the next next message (which you got from
  * e.g. mu_query_xapian_run)
  * 
@@ -40,7 +40,7 @@ typedef struct _MuMsgIterXapian MuMsgIterXapian;
 gboolean         mu_msg_iter_xapian_next              (MuMsgIterXapian *iter);
 
 
-/** 
+/**
  * does the iter point to a real message?
  * 
  * @param msg a valid MuMsgIterXapian iter
@@ -49,14 +49,14 @@ gboolean         mu_msg_iter_xapian_next              (MuMsgIterXapian *iter);
  */
 gboolean         mu_msg_iter_xapian_is_null (MuMsgIterXapian *iter);
 
-/** 
+/**
  * destroy the sequence of messages
  * 
  * @param msg a valid MuMsgIterXapian message or NULL
  */
 void		 mu_msg_iter_xapian_destroy           (MuMsgIterXapian *iter);
 
-/** 
+/**
  * get the document id for the current message
  * 
  * @param iter a message
@@ -66,7 +66,7 @@ void		 mu_msg_iter_xapian_destroy           (MuMsgIterXapian *iter);
 unsigned int     mu_msg_iter_xapian_get_docid         (MuMsgIterXapian *iter);
 
 
-/** 
+/**
  * get the directory path of the message
  * 
  * @param iter a message
@@ -76,7 +76,7 @@ unsigned int     mu_msg_iter_xapian_get_docid         (MuMsgIterXapian *iter);
 const char*      mu_msg_iter_xapian_get_path          (MuMsgIterXapian *iter);
 
 
-/** 
+/**
  * get the size of the message
  * 
  * @param iter a message
@@ -85,7 +85,7 @@ const char*      mu_msg_iter_xapian_get_path          (MuMsgIterXapian *iter);
  */
 size_t           mu_msg_iter_xapian_get_size          (MuMsgIterXapian *iter);  
 
-/** 
+/**
  * get the timestamp (ctime) of the message file
  * 
  * @param iter a message
@@ -94,7 +94,7 @@ size_t           mu_msg_iter_xapian_get_size          (MuMsgIterXapian *iter);
  */
 time_t           mu_msg_iter_xapian_get_timestamp     (MuMsgIterXapian *iter);  
 
-/** 
+/**
  * get the sent time of the message
  * 
  * @param iter a message
@@ -103,7 +103,7 @@ time_t           mu_msg_iter_xapian_get_timestamp     (MuMsgIterXapian *iter);
  */
 time_t           mu_msg_iter_xapian_get_date          (MuMsgIterXapian *iter);  
 
-/** 
+/**
  * get the message sender(s) of the message
  * 
  * @param iter a message
@@ -112,7 +112,7 @@ time_t           mu_msg_iter_xapian_get_date          (MuMsgIterXapian *iter);
  */
 const char*      mu_msg_iter_xapian_get_from          (MuMsgIterXapian *iter);
 
-/** 
+/**
  * get the message recipient (To:) of the message
  * 
  * @param iter a message
@@ -122,7 +122,7 @@ const char*      mu_msg_iter_xapian_get_from          (MuMsgIterXapian *iter);
 const char*      mu_msg_iter_xapian_get_to            (MuMsgIterXapian *iter);
 
 
-/** 
+/**
  * get the message recipient (Cc:) of the message
  * 
  * @param iter a message
@@ -131,7 +131,7 @@ const char*      mu_msg_iter_xapian_get_to            (MuMsgIterXapian *iter);
  */
 const char*      mu_msg_iter_xapian_get_cc            (MuMsgIterXapian *iter);
 
-/** 
+/**
  * get the subject of the message
  * 
  * @param iter a message
@@ -140,7 +140,7 @@ const char*      mu_msg_iter_xapian_get_cc            (MuMsgIterXapian *iter);
  */
 const char*      mu_msg_iter_xapian_get_subject       (MuMsgIterXapian *iter);
 
-/** 
+/**
  * get the message flags 
  * 
  * @param iter a message
@@ -150,7 +150,7 @@ const char*      mu_msg_iter_xapian_get_subject       (MuMsgIterXapian *iter);
 MuMsgFlags       mu_msg_iter_xapian_get_flags         (MuMsgIterXapian *iter);
 
 
-/** 
+/**
  * get the message priority 
  * 
  * @param iter a message
@@ -160,7 +160,7 @@ MuMsgFlags       mu_msg_iter_xapian_get_flags         (MuMsgIterXapian *iter);
 MuMsgPriority    mu_msg_iter_xapian_get_priority      (MuMsgIterXapian *iter);
 
 
-/** 
+/**
  * get some message field
  * 
  * @param iter a message
@@ -171,7 +171,7 @@ MuMsgPriority    mu_msg_iter_xapian_get_priority      (MuMsgIterXapian *iter);
 const gchar*     mu_msg_iter_xapian_get_field         (MuMsgIterXapian *iter, 
 						  const MuMsgField *field);
 
-/** 
+/**
  * get some numeric message field
  * 
  * @param iter a message
