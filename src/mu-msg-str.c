@@ -45,8 +45,6 @@ mu_msg_str_date (time_t t)
 const char*
 mu_msg_str_size_s  (size_t s)
 {
-	/* note: we we use the powers-of-10, not powers-of-2 */
-
 	static char buf[32];
 
 #ifdef HAVE_GLIB216
