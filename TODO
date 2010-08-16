@@ -9,24 +9,24 @@
    - [ ] query on time
    - [ ] mu-setup (?)
    - [ ] mu stats
-   - [ ] mu help <cmd> (?)
    - [ ] muex.7, man page with simple examples
    - [ ] follow symlinks when indexing
    - [ ] ansi-colors in output
    - [ ] config system (config file) (?)
-   - [ ] UTF-8 output to console
    - [ ] search for date interval etc.
    - [ ] detect mail threads (?)
    - [ ] clean up mu-msg-field, add formatting(?)
-   - [ ] xml output
 
 
-** release 0.7.1 [40%]
+** release 0.7.1 [71%]
    - [X] remove hard gio dependency
-   - [ ] fix macos/wordexp bug(?)
+   - [X] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
-   - [ ] (maybe) summary, xml in search results?
+   - [X] don't require gio
+   - [X] summary
    - [ ] review docs
+   - [ ] xml,json,sexp output
+	  
 
 
 * Release already done
