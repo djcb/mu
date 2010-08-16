@@ -17,8 +17,9 @@
 **  
 */
 
-#include <stdio.h>
+#include <config.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -27,10 +28,6 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
-
-#ifdef HAVE_GIO
-#include <gio/gio.h>
-#endif /*HAVE_GIO*/
 
 #include "mu-log.h"
 #include "mu-util.h"
@@ -116,49 +113,24 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 	return TRUE;
 }
 
-
-
-/* log file is too big!; we move it to <logfile>.old, overwriting */
-#ifdef HAVE_GIO
-static gboolean
-move_log_file (const char* logfile)
-{
-	GFile *src, *dst;
-	gchar *tmp;
-	GError *err;
-	gboolean rv;
-	
-	src = g_file_new_for_path (logfile);
-	tmp = g_strdup_printf ("%s.old", logfile);
-	dst = g_file_new_for_path (tmp);
-	g_free (tmp);
-	
-	err = NULL;
-	rv = g_file_move (src, dst, G_FILE_COPY_OVERWRITE, NULL,
-			  NULL, NULL, &err);
-	if (!rv) {
-		g_warning ("Failed to move %s to %s.old: %s",
-			   logfile, logfile, err ? err->message : "?");
-		if (err)
-			g_error_free (err);
-	}
-	
-	g_object_unref (G_OBJECT(src));
-	g_object_unref (G_OBJECT(dst));
-	
-	return rv;
-}
-#else
 static gboolean
 move_log_file (const char *logfile)
 {
-	g_message ("Failed to move log file '%s', because this mu "
-		   "was built without GIO support", logfile);
+	gchar *logfile_old;
+	int rv;
+	
+	logfile_old = g_strdup_printf ("%s.old", logfile);
+	rv = rename (logfile, logfile_old);
+	g_free (logfile_old);
+	
+	if (rv != 0) {
+		g_warning ("Failed to move %s to %s.old: %s",
+			   logfile, logfile, strerror(rv));
+		return FALSE;
+	} else
+		return TRUE;
 
-	return TRUE; /* ignore the error */
 }
-#endif /* HAVE_GIO */
-
 
 
 static gboolean

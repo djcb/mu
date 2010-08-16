@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.7],[http://www.djcbsoftware.nl/code/mu])
+AC_INIT([mu],[0.7.1],[http://www.djcbsoftware.nl/code/mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -61,7 +61,6 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 ])
 
 
-
 #
 # currently, we don' support systems without d_type in their struct
 # dirent (Solaris 10); but we do support FSs for which d_type is always
@@ -84,16 +83,14 @@ PKG_CHECK_MODULES(GLIB, glib-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-
 # gio has only been added to recent glib
-PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
-AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
-AS_IF([test "x$have_gio" = "xno"],[
-   AC_MSG_WARN([GIO not supported])
-],[
-   AC_DEFINE(HAVE_GIO,[1],[Wether we have GIO])
-])
-
+dnl PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
+dnl AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
+dnl AS_IF([test "x$have_gio" = "xno"],[
+dnl    AC_MSG_WARN([GIO not supported])
+dnl ],[
+dnl    AC_DEFINE(HAVE_GIO,[1],[Wether we have GIO])
+dnl ])
 
 # g_test was introduced in glib 2.16
 PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.16, [have_gtest=yes],[have_gtest=no])
@@ -111,7 +108,11 @@ AC_SUBST(GMIME_LIBS)
 AS_IF([test "x$have_gmime" = "xno"],[
    AC_MSG_ERROR([
    *** gmime-2.4 could not be found; please install it
-   *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'])
+   *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'
+   *** If you compiled it yourself, you should ensure that the pkgconfig
+   *** installation dir (e.g., /usr/local/lib/pkgconfig) is in your
+   *** PKG_CONFIG_PATH.
+   ])
 ])
 
 
@@ -121,7 +122,10 @@ AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
 AS_IF([test "x$XAPIAN" = "xno"],[
    AC_MSG_ERROR([
    *** xapian could not be found; please install it
-   *** e.g., in debian/ubuntu the package would be 'libxapian-dev'])
+   *** e.g., in debian/ubuntu the package would be 'libxapian-dev'
+   *** If you compiled it yourself, you should ensure that xapian-config
+   *** is in your PATH.
+   ])
 ],[
    XAPIAN_CXXFLAGS=`$XAPIAN --cxxflags`
    XAPIAN_LIBS=`$XAPIAN --libs`		
@@ -148,7 +152,7 @@ echo "-----------------------------"
 echo
 echo "Note: the Xapian database is no longer stored as <muhome>/xapian-0.6"
 echo "but instead simply as <muhome>/xapian. You can remove the older"
-echo "<muhome>xapian-0.6 directory to save some disk space"
+echo "<muhome>/xapian-0.6 directory to save some disk space"
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."

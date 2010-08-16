@@ -23,7 +23,6 @@ if HAVE_GTEST
 SUBDIRS += tests
 endif
 
-
 INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
