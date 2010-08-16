@@ -1,0 +1,98 @@
+Return-Path: <help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,RCVD_IN_DNSWL_LOW,
+	SPF_PASS autolearn=ham version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id D68E769CB5
+	for <xxxx@localhost>; Fri,  8 Aug 2008 20:56:25 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [72.14.221.111]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Fri, 08 Aug 2008 20:56:25 +0300 (EEST)
+Received: by 10.142.237.21 with SMTP id k21cs71287wfh; Fri, 8 Aug 2008
+ 07:40:46 -0700 (PDT)
+Received: by 10.100.122.8 with SMTP id u8mr3824321anc.77.1218206446062; Fri,
+ 08 Aug 2008 07:40:46 -0700 (PDT)
+Received: from lists.gnu.org (lists.gnu.org [199.232.76.165]) by mx.google.com
+ with ESMTP id d35si2718351and.38.2008.08.08.07.40.45; Fri, 08 Aug 2008
+ 07:40:46 -0700 (PDT)
+Received-SPF: pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender) client-ip=199.232.76.165;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of
+ help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org designates 199.232.76.165
+ as permitted sender)
+ smtp.mail=help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Received: from localhost ([127.0.0.1]:47349 helo=lists.gnu.org) by
+ lists.gnu.org with esmtp (Exim 4.43) id 1KRT93-0006Po-A3 for
+ xxxx.klub@gmail.com; Fri, 08 Aug 2008 10:40:45 -0400
+Path: news.stanford.edu!headwall.stanford.edu!newshub.sdsu.edu!news-out.readnews.com!news-xxxfer.readnews.com!panix!not-for-mail
+From: anon@example.com
+Newsgroups: gnu.emacs.help
+Date: Fri, 08 Aug 2008 10:07:30 -0400
+Organization: PANIX Public Access Internet and UNIX, NYC
+Message-ID: <uwsireh25.fsf@one.dot.net>
+References: <mailman.15123.1216681940.18990.help-gnu-emacs@gnu.org>
+ <mailman.15143.1216715014.18990.help-gnu-emacs@gnu.org>
+ <9bc17528-8ea9-49f7-8e9d-07f5ede91415@p31g2000prf.googlegroups.com>
+ <200808062238.15634.juanma_bellon@yahoo.es>
+ <mailman.15958.1218056266.18990.help-gnu-emacs@gnu.org>
+NNTP-Posting-Host: panix5.panix.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+X-Trace: reader1.panix.com 1218204439 22850 166.84.1.5 (8 Aug 2008 14:07:19
+ GMT)
+X-Complaints-To: abuse@panix.com
+NNTP-Posting-Date: Fri, 8 Aug 2008 14:07:19 +0000 (UTC)
+User-Agent: Gnus/5.11 (Gnus v5.11) Emacs/22.2 (windows-nt)
+Cancel-Lock: sha1:Ckkp5oJPIMuAVgEHGnS/9MkZsEs=
+Xref: news.stanford.edu gnu.emacs.help:160963
+To: help-gnu-emacs@gnu.org
+Subject: Re: basic question: going back to dired
+X-BeenThere: help-gnu-emacs@gnu.org
+X-Mailman-Version: 2.1.5
+Precedence: list
+List-Id: Users list for the GNU Emacs text editor <help-gnu-emacs.gnu.org>
+List-Unsubscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=unsubscribe>
+List-Archive: <http://lists.gnu.org/pipermail/help-gnu-emacs>
+List-Post: <mailto:help-gnu-emacs@gnu.org>
+List-Help: <mailto:help-gnu-emacs-request@gnu.org?subject=help>
+List-Subscribe: <http://lists.gnu.org/mailman/listinfo/help-gnu-emacs>,
+ <mailto:help-gnu-emacs-request@gnu.org?subject=subscribe>
+Sender: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Errors-To: help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org
+Content-Length: 710
+Lines: 27
+
+I seem to remember from my early school days it was a campaign slogan
+for someone nick-named Kinderhook that went something like
+
+Old Kinderhook is OK
+
+- Chris
+
+"Juanma Barranquero" <lekktu@gmail.com> writes:
+
+> On Wed, Aug 6, 2008 at 22:38, Juanma <juanma_bellon@yahoo.es> wrote:
+>
+>> For all I know, it comes from "0 Knock-outs" (from USA civil war times,
+>> IIRC), i.e., all went really well.
+>
+> See http://en.wikipedia.org/wiki/Okay#Etymology
+>
+> "0 knock-outs" is among the "Improbable or refuted etymologies".
+>
+>    Juanma
+>
+>
+
+-- 
+     (.   .)
+  =ooO=(_)=Ooo=====================================
+  Chris McMahan | first_initiallastname@one.dot.net
+  =================================================
+
