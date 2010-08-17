@@ -771,7 +771,6 @@ mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines)
 	return msg->_fields[SUMMARY_FIELD] = summarize (body, max_lines);
 }
 
-
 void
 mu_msg_gmime_attach_foreach (MuMsgGMime* msg, MuMsgGMimeAttachForeachFunc func,
 			     gpointer user_data)
@@ -786,7 +785,6 @@ mu_msg_gmime_save_attachment (MuMsgGMime *msg, unsigned num,
 {
 	return TRUE; /* FIXME */
 }
-
 
 
 

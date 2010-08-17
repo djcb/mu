@@ -112,7 +112,6 @@ const char*     mu_msg_gmime_get_body_html       (MuMsgGMime *msg);
  */
 const char*     mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines);
 
-
 struct _MuMsgGMimeAttach {
 	unsigned    index;     /* index of the attachment (names may not be unique) */
 	const char* name;      /* name of the attachment */
@@ -149,8 +148,6 @@ void 	mu_msg_gmime_attach_foreach (MuMsgGMime* msg,
  */
 gboolean	mu_msg_gmime_save_attachment (MuMsgGMime *msg, unsigned num,
 					      const char *targetdir);
-
-
 
 /**
  * get the sender (From:) of this message
