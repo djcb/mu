@@ -115,7 +115,6 @@ AS_IF([test "x$have_gmime" = "xno"],[
    ])
 ])
 
-
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
 AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
