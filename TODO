@@ -24,6 +24,7 @@
    - [X] fix rhel5 installation issue
    - [X] don't require gio
    - [X] summary
+   - [ ] attachment handling
    - [ ] review docs
    - [ ] xml,json,sexp output
 	  

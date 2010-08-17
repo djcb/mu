@@ -23,4 +23,6 @@ test: all $(TEST_PROGS)
 			test "$$subdir" = "." || \
 		(cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@ ) || exit $$? ; \
 		done
-.PHONY: test
+
+.PHONY: test gprof
+

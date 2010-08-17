@@ -112,6 +112,46 @@ const char*     mu_msg_gmime_get_body_html       (MuMsgGMime *msg);
  */
 const char*     mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines);
 
+
+struct _MuMsgGMimeAttach {
+	unsigned    index;     /* index of the attachment (names may not be unique) */
+	const char* name;      /* name of the attachment */
+	size_t      size;      /* size in bytes, or 0 if not available */
+	const char* mime_type; /* the mime type */
+};
+typedef struct _MuMsgGMimeAttach MuMsgGMimeAttach;
+
+typedef gboolean (*MuMsgGMimeAttachForeachFunc) (MuMsgGMimeAttach *att, gpointer data);
+
+/**
+ * call a user function for each attachment found in the message. the
+ * function will be calle d for each attachment and as long a the
+ * user-function returns TRUE
+ * 
+ * @param msg a valid MuMsgGMime
+ * @param the function to call (callback)
+ * @param user_data a user pointer which will be passed to the callback function
+ * 
+ * @return a list of attachment 
+ */
+void 	mu_msg_gmime_attach_foreach (MuMsgGMime* msg,
+				     MuMsgGMimeAttachForeachFunc func,
+				     gpointer user_data);
+
+/**
+ * save a specific attachment to some targetdir 
+ * 
+ * @param msg a valid MuMsgGMime instance
+ * @param index index of the attachment you want to save
+ * @param targetdir filesystem directory to save the attachment
+ * 
+ * @return TRUE if saving succeeded, FALSE otherwise
+ */
+gboolean	mu_msg_gmime_save_attachment (MuMsgGMime *msg, unsigned num,
+					      const char *targetdir);
+
+
+
 /**
  * get the sender (From:) of this message
  *
@@ -199,9 +239,7 @@ const char*     mu_msg_gmime_get_msgid           (MuMsgGMime *msg);
  * is no such header. the returned string should *not* be modified or freed.
  */
 const char*     mu_msg_gmime_get_header          (MuMsgGMime *msg, 
-					      const char* header);
-
-
+						  const char* header);
 
 /**
  * get the message date/time (the Date: field) as time_t, using UTC
@@ -278,25 +316,21 @@ MuMsgPriority   mu_msg_gmime_get_priority        (MuMsgGMime *msg);
  */
 time_t          mu_msg_gmime_get_timestamp       (MuMsgGMime *msg);
 
-
-typedef int (*MuMsgGMimeContactsCallback) (MuMsgContact*, void *ptr);
-
+typedef gboolean  (*MuMsgGMimeContactsForeachFunc) (MuMsgContact* contact,
+						    gpointer user_data);
 
 /**
  * call a function for each of the contacts in a message 
  *
  * @param msg a valid MuMsgGMime* instance
- * @param cb a callback function to call for each contact; when
- * the callback returns non-0, the function stops, and this last
- * callback return value is returned
- * @param ptr a user-provide pointer that will be passed to the callback
+ * @param func a callback function to call for each contact; when
+ * the callback does not return TRUE, it won't be called again
+ * @param user_data a user-provide pointer that will be passed to the callback
  * 
- * @return 0 if the callback was called for each recipient, -1 if there
- * was an error and any other != 0 number the callback returned
  */
-int mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg,
-				       MuMsgGMimeContactsCallback cb,
-				       void *ptr);
+void mu_msg_gmime_contacts_foreach (MuMsgGMime *msg,
+				    MuMsgGMimeContactsForeachFunc func,
+				    gpointer user_data);
 G_END_DECLS
 
 #endif /*__MU_MSG_GIME_H__*/

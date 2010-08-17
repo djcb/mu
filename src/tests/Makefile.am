@@ -44,6 +44,11 @@ TEST_PROGS += test-mu-query
 test_mu_query_SOURCES= test-mu-query.c dummy.cc
 test_mu_query_LDADD=    libtestmucommon.la
 
+TEST_PROGS += test-mu-msg-gmime
+test_mu_msg_gmime_SOURCES= test-mu-msg-gmime.c
+test_mu_msg_gmime_LDADD=  libtestmucommon.la
+
+
 libtestmucommon_la_SOURCES=		\
 	test-mu-common.c		\
 	test-mu-common.h

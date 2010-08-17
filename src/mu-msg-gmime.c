@@ -772,6 +772,24 @@ mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines)
 }
 
 
+void
+mu_msg_gmime_attach_foreach (MuMsgGMime* msg, MuMsgGMimeAttachForeachFunc func,
+			     gpointer user_data)
+{
+	/* FIXME */
+}
+
+
+gboolean
+mu_msg_gmime_save_attachment (MuMsgGMime *msg, unsigned num,
+			      const char *targetdir)
+{
+	return TRUE; /* FIXME */
+}
+
+
+
+
 const char*
 mu_msg_gmime_get_field_string (MuMsgGMime *msg, const MuMsgField* field)
 {
@@ -844,8 +862,8 @@ fill_contact (MuMsgContact *contact, InternetAddress *addr,
 static int
 address_list_foreach (InternetAddressList *addrlist,
 		       MuMsgContactType     ctype,
-		       MuMsgGMimeContactsCallback cb, 
-		       void *ptr)
+		       MuMsgGMimeContactsForeachFunc func, 
+		       gpointer user_data)
 {
 	int i,rv;
 	
@@ -862,7 +880,7 @@ address_list_foreach (InternetAddressList *addrlist,
 			continue;
 		}
 		
-		rv = (cb)(&contact, ptr);
+		rv = (func)(&contact, user_data);
 		if (rv != 0)
 			break;
 	}
@@ -872,8 +890,8 @@ address_list_foreach (InternetAddressList *addrlist,
 
 
 static int
-mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb, 
-				void *ptr)
+mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsForeachFunc func, 
+				gpointer user_data)
 {
 	InternetAddressList *list;
 	int rv;
@@ -886,7 +904,7 @@ mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb,
 	list = internet_address_list_parse_string (
 		g_mime_message_get_sender (msg->_mime_msg));
 
-	rv = address_list_foreach (list, MU_MSG_CONTACT_TYPE_FROM, cb, ptr);
+	rv = address_list_foreach (list, MU_MSG_CONTACT_TYPE_FROM, func, user_data);
 
 	if (list)
 		g_object_unref (G_OBJECT(list));
@@ -895,9 +913,9 @@ mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb,
 }
 
 
-int
-mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsCallback cb, 
-				   void *ptr)
+void
+mu_msg_gmime_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsForeachFunc func, 
+			       gpointer user_data)
 {
 	int i, rv;		
 	struct { 
@@ -909,23 +927,21 @@ mu_msg_gmime_get_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsCallback c
 		{GMIME_RECIPIENT_TYPE_BCC, MU_MSG_CONTACT_TYPE_BCC},
 	};
 
-	g_return_val_if_fail (cb && msg, -1);
+	g_return_if_fail (func && msg);
 
 	/* first, get the from address */
-	rv = mu_msg_gmime_get_contacts_from (msg, cb, ptr);
+	rv = mu_msg_gmime_get_contacts_from (msg, func, user_data);
 	if (rv != 0)
-		return rv; /* callback told us to stop */
+		return; /* callback told us to stop */
 
 	for (i = 0, rv = 0; i != G_N_ELEMENTS(ctypes); ++i) {
 		InternetAddressList *addrlist;
 		addrlist = g_mime_message_get_recipients (msg->_mime_msg,
 							  ctypes[i]._gmime_type);
-		rv = address_list_foreach (addrlist, ctypes[i]._type,cb, ptr);
+		rv = address_list_foreach (addrlist, ctypes[i]._type, func, user_data);
 		if (rv != 0)
 			break;
 	}
-
-	return rv;
 }
 
 
