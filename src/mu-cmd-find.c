@@ -119,16 +119,10 @@ sort_field_from_string (const char* fieldstr)
 static void
 print_summary (MuMsgIterXapian *iter, size_t summary_len)
 {
-	const char *path, *summ;
+	const char *summ;
 	MuMsgGMime *msg;
-	
-	path = mu_msg_iter_xapian_get_path (iter);
-	if (!path) {
-		g_warning ("%s: no path for message", __FUNCTION__);
-		return;
-	}
 
-	msg = mu_msg_gmime_new (path, NULL);
+	msg = mu_msg_iter_xapian_get_msg_gmime (iter);
 	if (!msg) {
 		g_warning ("%s: failed to create msg object", __FUNCTION__);
 		return;

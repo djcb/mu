@@ -63,6 +63,7 @@ mu_msg_iter_xapian_new (const Xapian::Enquire& enq, size_t batchsize)
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
+
 void
 mu_msg_iter_xapian_destroy (MuMsgIterXapian *iter)
 {
@@ -77,6 +78,31 @@ mu_msg_iter_xapian_destroy (MuMsgIterXapian *iter)
 		} MU_XAPIAN_CATCH_BLOCK;
 	}
 }
+
+
+MuMsgGMime*
+mu_msg_iter_xapian_get_msg_gmime (MuMsgIterXapian *iter)
+{	
+	const char *path;
+	MuMsgGMime *msg;
+	
+	g_return_val_if_fail (iter, NULL);
+	
+	path = mu_msg_iter_xapian_get_path (iter);
+	if (!path) {
+		g_warning ("%s: no path for message", __FUNCTION__);
+		return NULL;
+	}
+
+	msg = mu_msg_gmime_new (path, NULL);
+	if (!msg) {
+		g_warning ("%s: failed to create msg object", __FUNCTION__);
+		return NULL;
+	}
+
+	return msg;
+}
+
 
 static gboolean
 message_is_readable (MuMsgIterXapian *iter)
