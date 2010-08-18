@@ -220,8 +220,9 @@ const char*     mu_msg_gmime_get_subject         (MuMsgGMime *msg);
  *
  * @param msg a valid MuMsgGMime* instance
  * 
- * @return the Message-Id of this Message or NULL in case of error or if there 
- * is none. the returned string should *not* be modified or freed.
+ * @return the Message-Id of this Message (without the enclosing <>)
+ * or NULL in case of error or if there is none. the returned string
+ * should *not* be modified or freed.
  */
 const char*     mu_msg_gmime_get_msgid           (MuMsgGMime *msg);
 
