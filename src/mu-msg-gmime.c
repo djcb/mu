@@ -29,7 +29,6 @@
 #include "mu-util.h"
 #include "mu-msg-gmime.h"
 
-
 enum _StringFields {
 
 	HTML_FIELD  = 0,   /* body as HTML */
@@ -844,13 +843,13 @@ fill_contact (MuMsgContact *contact, InternetAddress *addr,
 	if (!addr)
 		return FALSE;
 	
-	contact->_name = internet_address_get_name (addr);
-	contact->_type = ctype;  
+	contact->name = internet_address_get_name (addr);
+	contact->type = ctype;  
 	
 	/* we only support internet addresses;
 	 * if we don't check, g_mime hits an assert
 	 */
-	contact->_addr = internet_address_mailbox_get_addr
+	contact->address = internet_address_mailbox_get_addr
 		(INTERNET_ADDRESS_MAILBOX(addr));
 	
 	return TRUE;
@@ -873,7 +872,7 @@ address_list_foreach (InternetAddressList *addrlist,
 		MuMsgContact contact;
 		if (!fill_contact(&contact,
 				  internet_address_list_get_address (addrlist, i),
-				   ctype)) {
+				  ctype)) {
 			MU_WRITE_LOG ("ignoring contact");
 			continue;
 		}

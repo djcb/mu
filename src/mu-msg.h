@@ -52,9 +52,9 @@ enum _MuMsgContactType {  /* Reply-To:? */
 typedef enum _MuMsgContactType MuMsgContactType;
 
 struct _MuMsgContact {
-	const char          *_name; /* Foo Bar */
-	const char          *_addr; /* foo@bar.cuux */
-	MuMsgContactType     _type; /*MU_MSG_CONTACT_TYPE_{TO,CC,BCC,FROM}*/  
+	const char          *name;    /* Foo Bar */
+	const char          *address; /* foo@bar.cuux */
+	MuMsgContactType     type;    /*MU_MSG_CONTACT_TYPE_{TO,CC,BCC,FROM}*/  
 };
 typedef struct _MuMsgContact MuMsgContact;
 

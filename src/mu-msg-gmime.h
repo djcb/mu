@@ -293,11 +293,11 @@ gint64      mu_msg_gmime_get_field_numeric (MuMsgGMime *msg,
 					    const MuMsgField* field);
 
 /**
- * get the message priority for this message 
- * (MU_MSG_PRIORITY_LOW, MU_MSG_PRIORITY_NORMAL or MU_MSG_PRIORITY_HIGH)
- * the X-Priority, X-MSMailPriority, Importance and Precedence header are
- * checked, in that order. 
- * if no explicit priority is set, MU_MSG_PRIORITY_NORMAL is assumed
+ * get the message priority for this message (MU_MSG_PRIORITY_LOW,
+ * MU_MSG_PRIORITY_NORMAL or MU_MSG_PRIORITY_HIGH) the X-Priority,
+ * X-MSMailPriority, Importance and Precedence header are checked, in
+ * that order.  if no known or explicit priority is set,
+ * MU_MSG_PRIORITY_NORMAL is assumed
  *
  * @param msg a valid MuMsgGMime* instance
  * 
@@ -314,6 +314,16 @@ MuMsgPriority   mu_msg_gmime_get_priority        (MuMsgGMime *msg);
  */
 time_t          mu_msg_gmime_get_timestamp       (MuMsgGMime *msg);
 
+
+
+/**
+ * callback function
+ * 
+ * @param contact
+ * @param user_data a user provided data pointer
+ * 
+ * @return TRUE if we should continue the foreach, FALSE otherwise
+ */
 typedef gboolean  (*MuMsgGMimeContactsForeachFunc) (MuMsgContact* contact,
 						    gpointer user_data);
 
