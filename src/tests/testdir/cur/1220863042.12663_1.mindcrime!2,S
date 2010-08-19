@@ -43,9 +43,9 @@ Received: from EMSS35M06.us.lmco.com ([158.187.107.143]) by
  EMSS04I00.us.lmco.com with Microsoft SMTPSVC(5.0.2195.6713); Wed,  06 Aug
  2008 23:14:20 -0400
 Date: Thu, 31 Jul 2008 14:57:25 -0400
-From: anon@example.com
+From: "Mickey Mouse" <anon@example.com>
 Subject: gcc include search order
-To: gcc-help@gcc.gnu.org
+To: "Donald Duck" <gcc-help@gcc.gnu.org>
 Message-id: <3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com>
 MIME-version: 1.0
 Content-type: text/plain; charset=us-ascii

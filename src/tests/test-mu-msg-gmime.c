@@ -75,11 +75,11 @@ test_mu_msg_gmime_01 (void)
 	msg = mu_msg_gmime_new (mfile, NULL);
 
 	g_assert_cmpstr (mu_msg_gmime_get_to(msg),
-			 ==, "gcc-help@gcc.gnu.org");
+			 ==, "Donald Duck <gcc-help@gcc.gnu.org>");
 	g_assert_cmpstr (mu_msg_gmime_get_subject(msg),
 			 ==, "gcc include search order");
 	g_assert_cmpstr (mu_msg_gmime_get_from(msg),
-			 ==, "anon@example.com");
+			 ==, "Mickey Mouse <anon@example.com>");
 	g_assert_cmpstr (mu_msg_gmime_get_msgid(msg),
 			 ==, "3BE9E6535E3029448670913581E7A1A20D852173@"
 			 "emss35m06.us.lmco.com");
@@ -92,13 +92,21 @@ test_mu_msg_gmime_01 (void)
 	{
 		GSList *lst, *cur;
 		lst = mu_msg_gmime_contacts_list (msg);
-		g_assert_cmpuint (g_slist_length(lst),==, 1);
+		g_assert_cmpuint (g_slist_length(lst),==, 2);
 		cur = lst;
 
 		g_assert_cmpstr (mu_msg_contact_name ((MuMsgContact*)cur->data),
-				 ==, NULL);
+				 ==, "Mickey Mouse");
 		g_assert_cmpstr (mu_msg_contact_address ((MuMsgContact*)cur->data),
 				 ==, "anon@example.com");
+
+		cur = g_slist_next (cur);
+
+		g_assert_cmpstr (mu_msg_contact_name ((MuMsgContact*)cur->data),
+				 ==, "Donald Duck");
+		g_assert_cmpstr (mu_msg_contact_address ((MuMsgContact*)cur->data),
+				 ==, "gcc-help@gcc.gnu.org");
+	
 		
 		mu_msg_contact_list_free (lst);
 	}
@@ -141,14 +149,22 @@ test_mu_msg_gmime_02 (void)
 	{
 		GSList *lst, *cur;
 		lst = mu_msg_gmime_contacts_list (msg);
-		g_assert_cmpuint (g_slist_length(lst),==, 1);
+		g_assert_cmpuint (g_slist_length(lst),==, 2);
 		cur = lst;
-
+		
 		g_assert_cmpstr (mu_msg_contact_name ((MuMsgContact*)cur->data),
 				 ==, NULL);
 		g_assert_cmpstr (mu_msg_contact_address ((MuMsgContact*)cur->data),
 				 ==, "anon@example.com");
 
+		cur = g_slist_next (cur);
+
+		g_assert_cmpstr (mu_msg_contact_name ((MuMsgContact*)cur->data),
+				 ==, NULL);
+		g_assert_cmpstr (mu_msg_contact_address ((MuMsgContact*)cur->data),
+				 ==, "help-gnu-emacs@gnu.org");
+
+		
 		mu_msg_contact_list_free (lst);
 	}
 

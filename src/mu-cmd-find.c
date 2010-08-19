@@ -369,7 +369,7 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 	msg = mu_msg_gmime_new (path, NULL);
 	if (!msg)
 		return FALSE;
-
+	
 	field = mu_msg_gmime_get_from (msg);
 	if (field)
 		g_print ("From: %s\n", field);

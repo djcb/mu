@@ -856,18 +856,18 @@ fill_contact (MuMsgContact *contact, InternetAddress *addr,
 }
 
 
-static int
+static gboolean
 address_list_foreach (InternetAddressList *addrlist,
 		      MuMsgContactType     ctype,
 		      MuMsgContactForeachFunc func, 
 		      gpointer user_data)
 {
-	int i,rv;
+	int i, rv;
 	
 	if (!addrlist)
 		return 0;
 	
-	for (i = 0, rv = 0; i != internet_address_list_length(addrlist); ++i) {
+	for (i = 0, rv = FALSE; i != internet_address_list_length(addrlist); ++i) {
 		
 		MuMsgContact contact;
 		if (!fill_contact(&contact,
@@ -877,34 +877,34 @@ address_list_foreach (InternetAddressList *addrlist,
 			continue;
 		}
 		
-		rv = (func)(&contact, user_data);
-		if (rv != 0)
+		if (!(func)(&contact, user_data))
 			break;
 	}
+
 	return rv;
 }
 
 
 
-static int
+static gboolean
 get_contacts_from (MuMsgGMime *msg, MuMsgContactForeachFunc func, 
-				gpointer user_data)
+		   gpointer user_data)
 {
 	InternetAddressList *lst;
-	int rv;
+	gboolean rv;
 	
 	/* we go through this whole excercise of trying to get a *list*
 	 * of 'From:' address (usually there is only one...), because
 	 * internet_address_parse_string has the nice side-effect of
 	 * splitting in names and addresses for us */
-
+	rv = FALSE;
 	lst = internet_address_list_parse_string (
 		g_mime_message_get_sender (msg->_mime_msg));
 	if (lst) {
 		rv = address_list_foreach (lst, MU_MSG_CONTACT_TYPE_FROM,
 					   func, user_data);
 		g_object_unref (G_OBJECT(lst));
-	}
+	} 
 		
 	return rv;
 }
