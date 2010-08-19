@@ -21,6 +21,7 @@
 #define __MU_MSG_GMIME_H__
 
 #include "mu-msg.h"
+#include "mu-msg-contact.h"
 
 G_BEGIN_DECLS
 
@@ -316,16 +317,18 @@ time_t          mu_msg_gmime_get_timestamp       (MuMsgGMime *msg);
 
 
 
+
 /**
- * callback function
- * 
- * @param contact
- * @param user_data a user provided data pointer
- * 
- * @return TRUE if we should continue the foreach, FALSE otherwise
+ * get a list of contacts (MuMsgContact) for this message; you can use
+ * GSList functions or mu_msg_contact_list_foreach to read the items.
+ *
+ * @param msg a valid MuMsgGMime* instance
+ *
+ * @return a list of contacts for this message; use mu_msg_contact_list_free
+ * to free it when done
  */
-typedef gboolean  (*MuMsgGMimeContactsForeachFunc) (MuMsgContact* contact,
-						    gpointer user_data);
+GSList * mu_msg_gmime_contacts_list (MuMsgGMime *msg);
+
 
 /**
  * call a function for each of the contacts in a message 
@@ -337,7 +340,7 @@ typedef gboolean  (*MuMsgGMimeContactsForeachFunc) (MuMsgContact* contact,
  * 
  */
 void mu_msg_gmime_contacts_foreach (MuMsgGMime *msg,
-				    MuMsgGMimeContactsForeachFunc func,
+				    MuMsgContactForeachFunc func,
 				    gpointer user_data);
 G_END_DECLS
 

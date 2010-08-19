@@ -60,6 +60,8 @@ libmu_la_SOURCES=			\
 	mu-log.h			\
 	mu-maildir.c			\
 	mu-maildir.h			\
+	mu-msg-contact.c		\
+	mu-msg-contact.h		\
 	mu-msg-fields.c			\
 	mu-msg-fields.h			\
 	mu-msg-flags.c			\

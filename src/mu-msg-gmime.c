@@ -843,13 +843,13 @@ fill_contact (MuMsgContact *contact, InternetAddress *addr,
 	if (!addr)
 		return FALSE;
 	
-	contact->name = internet_address_get_name (addr);
+	contact->name = (char*)internet_address_get_name (addr);
 	contact->type = ctype;  
 	
 	/* we only support internet addresses;
 	 * if we don't check, g_mime hits an assert
 	 */
-	contact->address = internet_address_mailbox_get_addr
+	contact->address = (char*)internet_address_mailbox_get_addr
 		(INTERNET_ADDRESS_MAILBOX(addr));
 	
 	return TRUE;
@@ -858,9 +858,9 @@ fill_contact (MuMsgContact *contact, InternetAddress *addr,
 
 static int
 address_list_foreach (InternetAddressList *addrlist,
-		       MuMsgContactType     ctype,
-		       MuMsgGMimeContactsForeachFunc func, 
-		       gpointer user_data)
+		      MuMsgContactType     ctype,
+		      MuMsgContactForeachFunc func, 
+		      gpointer user_data)
 {
 	int i,rv;
 	
@@ -868,7 +868,7 @@ address_list_foreach (InternetAddressList *addrlist,
 		return 0;
 	
 	for (i = 0, rv = 0; i != internet_address_list_length(addrlist); ++i) {
-
+		
 		MuMsgContact contact;
 		if (!fill_contact(&contact,
 				  internet_address_list_get_address (addrlist, i),
@@ -887,10 +887,10 @@ address_list_foreach (InternetAddressList *addrlist,
 
 
 static int
-mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsForeachFunc func, 
+get_contacts_from (MuMsgGMime *msg, MuMsgContactForeachFunc func, 
 				gpointer user_data)
 {
-	InternetAddressList *list;
+	InternetAddressList *lst;
 	int rv;
 	
 	/* we go through this whole excercise of trying to get a *list*
@@ -898,20 +898,22 @@ mu_msg_gmime_get_contacts_from (MuMsgGMime *msg, MuMsgGMimeContactsForeachFunc f
 	 * internet_address_parse_string has the nice side-effect of
 	 * splitting in names and addresses for us */
 
-	list = internet_address_list_parse_string (
+	lst = internet_address_list_parse_string (
 		g_mime_message_get_sender (msg->_mime_msg));
-
-	rv = address_list_foreach (list, MU_MSG_CONTACT_TYPE_FROM, func, user_data);
-
-	if (list)
-		g_object_unref (G_OBJECT(list));
-	
+	if (lst) {
+		rv = address_list_foreach (lst, MU_MSG_CONTACT_TYPE_FROM,
+					   func, user_data);
+		g_object_unref (G_OBJECT(lst));
+	}
+		
 	return rv;
 }
 
 
+
+
 void
-mu_msg_gmime_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsForeachFunc func, 
+mu_msg_gmime_contacts_foreach (MuMsgGMime *msg, MuMsgContactForeachFunc func, 
 			       gpointer user_data)
 {
 	int i, rv;		
@@ -926,8 +928,8 @@ mu_msg_gmime_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsForeachFunc fu
 
 	g_return_if_fail (func && msg);
 
-	/* first, get the from address */
-	rv = mu_msg_gmime_get_contacts_from (msg, func, user_data);
+	/* first, get the from address(es) */
+	rv = get_contacts_from (msg, func, user_data);
 	if (rv != 0)
 		return; /* callback told us to stop */
 
@@ -940,6 +942,36 @@ mu_msg_gmime_contacts_foreach (MuMsgGMime *msg, MuMsgGMimeContactsForeachFunc fu
 			break;
 	}
 }
+
+
+static gboolean
+each_contact (MuMsgContact *contact, GSList **lst)
+{
+	MuMsgContact *ct;
+
+	ct = mu_msg_contact_new (mu_msg_contact_name(contact),
+				 mu_msg_contact_address (contact),
+				 mu_msg_contact_type (contact));
+
+	*lst = g_slist_append (*lst, ct);
+	return TRUE;
+}
+
+
+GSList *
+mu_msg_gmime_contacts_list (MuMsgGMime *msg)
+{
+	GSList *contacts;
+
+	g_return_val_if_fail (msg, NULL);
+	
+	contacts = NULL;
+	mu_msg_gmime_contacts_foreach (msg,
+				       (MuMsgContactForeachFunc)each_contact,
+				       &contacts);
+	return contacts;
+}
+
 
 
 static gboolean _initialized = FALSE;

@@ -91,17 +91,16 @@ test_mu_msg_gmime_01 (void)
 			  ==, 1217530645);
 	{
 		GSList *lst, *cur;
-		lst = NULL;
-		mu_msg_gmime_contacts_foreach (msg,
-					       (MuMsgGMimeContactsForeachFunc)each_contact,
-					       &lst);
+		lst = mu_msg_gmime_contacts_list (msg);
 		g_assert_cmpuint (g_slist_length(lst),==, 1);
 		cur = lst;
-		g_assert_cmpstr ((const char*)cur->data, ==,
-				 "<none> <anon@example.com>");
 
-		g_slist_foreach (lst, (GFunc)g_free, NULL);
-		g_slist_free (lst);
+		g_assert_cmpstr (mu_msg_contact_name ((MuMsgContact*)cur->data),
+				 ==, NULL);
+		g_assert_cmpstr (mu_msg_contact_address ((MuMsgContact*)cur->data),
+				 ==, "anon@example.com");
+		
+		mu_msg_contact_list_free (lst);
 	}
 		
 	mu_msg_gmime_destroy (msg);
@@ -138,21 +137,22 @@ test_mu_msg_gmime_02 (void)
 			  ==, MU_MSG_PRIORITY_LOW);
 	g_assert_cmpuint (mu_msg_gmime_get_date(msg), 
 			  ==, 1218051515);
+	
 	{
 		GSList *lst, *cur;
-		lst = NULL;
-		mu_msg_gmime_contacts_foreach (msg,
-					       (MuMsgGMimeContactsForeachFunc)each_contact,
-					       &lst);
+		lst = mu_msg_gmime_contacts_list (msg);
 		g_assert_cmpuint (g_slist_length(lst),==, 1);
 		cur = lst;
-		g_assert_cmpstr ((const char*)cur->data, ==,
-				 "<none> <anon@example.com>");
 
-		g_slist_foreach (lst, (GFunc)g_free, NULL);
-		g_slist_free (lst);
+		g_assert_cmpstr (mu_msg_contact_name ((MuMsgContact*)cur->data),
+				 ==, NULL);
+		g_assert_cmpstr (mu_msg_contact_address ((MuMsgContact*)cur->data),
+				 ==, "anon@example.com");
+
+		mu_msg_contact_list_free (lst);
 	}
-		
+
+	
 	mu_msg_gmime_destroy (msg);
 	
 	g_free (mfile);

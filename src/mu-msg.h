@@ -43,20 +43,4 @@ enum _MuMsgPriority {
 };
 typedef enum _MuMsgPriority MuMsgPriority;
 
-enum _MuMsgContactType {  /* Reply-To:? */
-	MU_MSG_CONTACT_TYPE_TO,
-	MU_MSG_CONTACT_TYPE_FROM,
-	MU_MSG_CONTACT_TYPE_CC,
-	MU_MSG_CONTACT_TYPE_BCC
-};
-typedef enum _MuMsgContactType MuMsgContactType;
-
-struct _MuMsgContact {
-	const char          *name;    /* Foo Bar */
-	const char          *address; /* foo@bar.cuux */
-	MuMsgContactType     type;    /*MU_MSG_CONTACT_TYPE_{TO,CC,BCC,FROM}*/  
-};
-typedef struct _MuMsgContact MuMsgContact;
-
-
 #endif /*__MU_MSG_H__*/
