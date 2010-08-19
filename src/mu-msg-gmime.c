@@ -865,7 +865,7 @@ address_list_foreach (InternetAddressList *addrlist,
 	int i, rv;
 	
 	if (!addrlist)
-		return 0;
+		return FALSE;
 	
 	for (i = 0, rv = FALSE; i != internet_address_list_length(addrlist); ++i) {
 		
@@ -908,8 +908,6 @@ get_contacts_from (MuMsgGMime *msg, MuMsgContactForeachFunc func,
 		
 	return rv;
 }
-
-
 
 
 void
