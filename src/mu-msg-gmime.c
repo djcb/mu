@@ -856,18 +856,18 @@ fill_contact (MuMsgContact *contact, InternetAddress *addr,
 }
 
 
-static gboolean
+static void
 address_list_foreach (InternetAddressList *addrlist,
 		      MuMsgContactType     ctype,
 		      MuMsgContactForeachFunc func, 
 		      gpointer user_data)
 {
-	int i, rv;
+	int i;
 	
 	if (!addrlist)
-		return FALSE;
+		return;
 	
-	for (i = 0, rv = FALSE; i != internet_address_list_length(addrlist); ++i) {
+	for (i = 0; i != internet_address_list_length(addrlist); ++i) {
 		
 		MuMsgContact contact;
 		if (!fill_contact(&contact,
@@ -881,32 +881,28 @@ address_list_foreach (InternetAddressList *addrlist,
 			break;
 	}
 
-	return rv;
+	return;
 }
 
 
 
-static gboolean
+static void
 get_contacts_from (MuMsgGMime *msg, MuMsgContactForeachFunc func, 
 		   gpointer user_data)
 {
 	InternetAddressList *lst;
-	gboolean rv;
 	
 	/* we go through this whole excercise of trying to get a *list*
 	 * of 'From:' address (usually there is only one...), because
 	 * internet_address_parse_string has the nice side-effect of
 	 * splitting in names and addresses for us */
-	rv = FALSE;
 	lst = internet_address_list_parse_string (
 		g_mime_message_get_sender (msg->_mime_msg));
 	if (lst) {
-		rv = address_list_foreach (lst, MU_MSG_CONTACT_TYPE_FROM,
-					   func, user_data);
+		address_list_foreach (lst, MU_MSG_CONTACT_TYPE_FROM,
+				      func, user_data);
 		g_object_unref (G_OBJECT(lst));
 	} 
-		
-	return rv;
 }
 
 
@@ -914,7 +910,7 @@ void
 mu_msg_gmime_contacts_foreach (MuMsgGMime *msg, MuMsgContactForeachFunc func, 
 			       gpointer user_data)
 {
-	int i, rv;		
+	int i;		
 	struct { 
 		GMimeRecipientType     _gmime_type;
 		MuMsgContactType       _type;
@@ -927,17 +923,14 @@ mu_msg_gmime_contacts_foreach (MuMsgGMime *msg, MuMsgContactForeachFunc func,
 	g_return_if_fail (func && msg);
 
 	/* first, get the from address(es) */
-	rv = get_contacts_from (msg, func, user_data);
-	if (rv != 0)
-		return; /* callback told us to stop */
+	get_contacts_from (msg, func, user_data);
 
-	for (i = 0, rv = 0; i != G_N_ELEMENTS(ctypes); ++i) {
+	/* get to, cc, bcc */
+	for (i = 0; i != G_N_ELEMENTS(ctypes); ++i) {
 		InternetAddressList *addrlist;
 		addrlist = g_mime_message_get_recipients (msg->_mime_msg,
 							  ctypes[i]._gmime_type);
-		rv = address_list_foreach (addrlist, ctypes[i]._type, func, user_data);
-		if (rv != 0)
-			break;
+		address_list_foreach (addrlist, ctypes[i]._type, func, user_data);
 	}
 }
 
