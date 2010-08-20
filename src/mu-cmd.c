@@ -26,12 +26,7 @@
 #include <stdlib.h>
 
 #include "mu-maildir.h"
-
-#include "mu-cmd-index.h"
-#include "mu-cmd-find.h"
-
 #include "mu-cmd.h"
-
 
 static MuCmd 
 cmd_from_string (const char* cmd)
@@ -55,34 +50,6 @@ cmd_from_string (const char* cmd)
 			return cmd_map[i]._cmd;
 
 	return MU_CMD_UNKNOWN;
-}
-
-
-
-static int
-cmd_mkdir (MuConfigOptions *opts)
-{
-	int i;
-	
-	if (!opts->params[0])
-		return FALSE;  /* shouldn't happen */
- 	
-	if (!opts->params[1]) {
-		g_printerr (
-			"usage: mu mkdir [-u,--mode=<mode>] "
-			"<dir> [more dirs]\n");
-		return FALSE;
-	}
-	
-	i = 1;
-	while (opts->params[i]) {
-		if (!mu_maildir_mkmdir (opts->params[i], opts->dirmode,
-					FALSE))
-			return FALSE;
-		++i;
-	}
-
-	return TRUE;
 }
 
 static gboolean
@@ -142,7 +109,7 @@ mu_cmd_execute (MuConfigOptions *opts)
 
 	case MU_CMD_INDEX:   return mu_cmd_index (opts);
 	case MU_CMD_FIND:    return mu_cmd_find (opts);
-	case MU_CMD_MKDIR:   return cmd_mkdir (opts);
+	case MU_CMD_MKDIR:   return mu_cmd_mkdir (opts);
 	case MU_CMD_CLEANUP: return mu_cmd_cleanup (opts);
 	case MU_CMD_VIEW:    return mu_cmd_view (opts);
 

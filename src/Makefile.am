@@ -48,10 +48,10 @@ mu_LDADD=				\
 libmu_la_SOURCES=			\
 	mu-cmd.c			\
 	mu-cmd.h			\
-	mu-cmd-find.h			\
 	mu-cmd-find.c			\
-	mu-cmd-index.h			\
 	mu-cmd-index.c			\
+	mu-cmd-view.c			\
+	mu-cmd-mkdir.c			\
 	mu-config.c			\
 	mu-config.h			\
 	mu-index.c			\

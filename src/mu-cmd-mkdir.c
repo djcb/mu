@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,31 +17,41 @@
 **
 */
 
-#ifndef __MU_CMD_INDEX_H__
-#define __MU_CMD_INDEX_H__
+#include "config.h"
 
-#include <glib.h>
-#include "mu-config.h"
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
 
-/** 
- * execute the 'index' command
- * 
- * @param opts configuration options
- * 
- * @return TRUE if the command succeede, FALSE otherwise
- */
-gboolean mu_cmd_index   (MuConfigOptions *opts);
+#include "mu-maildir.h"
+#include "mu-cmd.h"
 
+#include "mu-util.h"
 
-/** 
- * execute the 'cleanup' command
- * 
- * @param opts configuration options
- * 
- * @return TRUE if the command succeede, FALSE otherwise
- */
-gboolean mu_cmd_cleanup (MuConfigOptions *opts);
+gboolean
+mu_cmd_mkdir (MuConfigOptions *opts)
+{
+	int i;
+	
+	if (!opts->params[0])
+		return FALSE;  /* shouldn't happen */
+ 	
+	if (!opts->params[1]) {
+		g_printerr (
+			"usage: mu mkdir [-u,--mode=<mode>] "
+			"<dir> [more dirs]\n");
+		return FALSE;
+	}
+	
+	i = 1;
+	while (opts->params[i]) {
+		if (!mu_maildir_mkmdir (opts->params[i], opts->dirmode,
+					FALSE))
+			return FALSE;
+		++i;
+	}
 
-
-
-#endif /*__MU_CMD_INDEX_H__*/
+	return TRUE;
+}

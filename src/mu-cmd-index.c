@@ -30,7 +30,7 @@
 #include "mu-msg-gmime.h"
 
 #include "mu-index.h"
-#include "mu-cmd-index.h"
+#include "mu-cmd.h"
 
 static gboolean MU_CAUGHT_SIGNAL;
 

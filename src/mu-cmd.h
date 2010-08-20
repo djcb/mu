@@ -38,7 +38,7 @@ enum _MuCmd {
 };
 typedef enum _MuCmd MuCmd;
 
-/** 
+/**
  * try to execute whatever is specified on the command line 
  * 
  * @param config a config structure with the command line params
@@ -46,6 +46,58 @@ typedef enum _MuCmd MuCmd;
  * @return TRUE if it succeeded, FALSE otherwise
  */
 gboolean mu_cmd_execute (MuConfigOptions *config);
+
+
+
+/**
+ * execute the 'mkdir' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeeded, FALSE otherwise
+ */
+gboolean mu_cmd_mkdir (MuConfigOptions *opts);
+
+
+/**
+ * execute the 'view' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeeded, FALSE otherwise
+ */
+gboolean mu_cmd_view (MuConfigOptions *opts);
+
+
+/**
+ * execute the 'index' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
+gboolean mu_cmd_index   (MuConfigOptions *opts);
+
+
+/**
+ * execute the 'cleanup' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
+gboolean mu_cmd_cleanup (MuConfigOptions *opts);
+
+
+/**
+ * execute the 'find' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
+gboolean mu_cmd_find (MuConfigOptions *opts);
+
 
 G_END_DECLS
 
