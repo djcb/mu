@@ -43,7 +43,9 @@ cmd_from_string (const char* cmd)
 		{ "cleanup", MU_CMD_CLEANUP },
 		{ "mkdir",   MU_CMD_MKDIR },
 		{ "view",    MU_CMD_VIEW },
-		{ "index",   MU_CMD_INDEX }};
+		{ "index",   MU_CMD_INDEX },
+		{ "extract",   MU_CMD_EXTRACT }
+	};
 	
 	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
 		if (strcmp (cmd, cmd_map[i]._name) == 0)
@@ -57,7 +59,8 @@ show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, find, mkdir, cleanup or view\n\n"
+		"\twhere command is one of index, find, view, mkdir, cleanup "
+		"or extract\n\n"
 		"see mu(1) (the mu manpage) for more information, or try "
 		"mu --help\n";
 
@@ -107,12 +110,13 @@ mu_cmd_execute (MuConfigOptions *opts)
 
 	switch (cmd) {
 
-	case MU_CMD_INDEX:   return mu_cmd_index (opts);
-	case MU_CMD_FIND:    return mu_cmd_find (opts);
-	case MU_CMD_MKDIR:   return mu_cmd_mkdir (opts);
-	case MU_CMD_CLEANUP: return mu_cmd_cleanup (opts);
-	case MU_CMD_VIEW:    return mu_cmd_view (opts);
-
+	case MU_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
+	case MU_CMD_EXTRACT:    return mu_cmd_extract (opts);
+	case MU_CMD_FIND:       return mu_cmd_find (opts);
+	case MU_CMD_INDEX:      return mu_cmd_index (opts);
+	case MU_CMD_MKDIR:      return mu_cmd_mkdir (opts);
+	case MU_CMD_VIEW:       return mu_cmd_view (opts);
+		
 	case MU_CMD_UNKNOWN:
 		return show_usage (FALSE);
 	default:

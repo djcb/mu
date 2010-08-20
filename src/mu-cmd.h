@@ -32,7 +32,7 @@ enum _MuCmd {
 	MU_CMD_CLEANUP,
 	MU_CMD_MKDIR,
 	MU_CMD_VIEW,
-	MU_CMD_HELP,
+	MU_CMD_EXTRACT,
 	
 	MU_CMD_UNKNOWN
 };
@@ -97,6 +97,16 @@ gboolean mu_cmd_cleanup (MuConfigOptions *opts);
  * @return TRUE if the command succeede, FALSE otherwise
  */
 gboolean mu_cmd_find (MuConfigOptions *opts);
+
+
+/**
+ * execute the 'extract' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return TRUE if the command succeede, FALSE otherwise
+ */
+gboolean mu_cmd_extract (MuConfigOptions *opts);
 
 
 G_END_DECLS

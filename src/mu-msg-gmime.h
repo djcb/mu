@@ -119,10 +119,9 @@ struct _MuMsgGMimeAttach {
 	size_t      size;      /* size in bytes, or 0 if not available */
 	const char* mime_type; /* the mime type */
 };
-typedef struct _MuMsgGMimeAttach MuMsgGMimeAttach;
+typedef struct _MuMsgMimePart MuMsgMimePart;
 
-typedef gboolean (*MuMsgGMimeAttachForeachFunc) (MuMsgGMimeAttach *att, gpointer data);
-
+typedef gboolean (*MuMsgMimePartForeachFunc) (MuMsgMimePart *part, gpointer data);
 /**
  * call a user function for each attachment found in the message. the
  * function will be calle d for each attachment and as long a the
@@ -134,9 +133,9 @@ typedef gboolean (*MuMsgGMimeAttachForeachFunc) (MuMsgGMimeAttach *att, gpointer
  * 
  * @return a list of attachment 
  */
-void 	mu_msg_gmime_attach_foreach (MuMsgGMime* msg,
-				     MuMsgGMimeAttachForeachFunc func,
-				     gpointer user_data);
+void 	mu_msg_gmime_mime_part_foreach (MuMsgGMime* msg,
+					MuMsgMimePartForeachFunc func,
+					gpointer user_data);
 
 /**
  * save a specific attachment to some targetdir 
@@ -147,8 +146,8 @@ void 	mu_msg_gmime_attach_foreach (MuMsgGMime* msg,
  * 
  * @return TRUE if saving succeeded, FALSE otherwise
  */
-gboolean	mu_msg_gmime_save_attachment (MuMsgGMime *msg, unsigned num,
-					      const char *targetdir);
+gboolean	mu_msg_gmime_mime_part_save (MuMsgGMime *msg, unsigned num,
+					     const char *targetdir);
 
 /**
  * get the sender (From:) of this message

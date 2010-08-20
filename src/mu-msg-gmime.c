@@ -770,17 +770,44 @@ mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines)
 	return msg->_fields[SUMMARY_FIELD] = summarize (body, max_lines);
 }
 
-void
-mu_msg_gmime_attach_foreach (MuMsgGMime* msg, MuMsgGMimeAttachForeachFunc func,
-			     gpointer user_data)
+
+
+struct _PartForeachData {};
+typedef struct _PartForeachData PartForeachData;
+
+
+static void
+part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartForeachData *data)
 {
-	/* FIXME */
+	GMimeContentType *ct;		
+	
+	ct = g_mime_object_get_content_type (part);
+	if (!GMIME_IS_CONTENT_TYPE(ct)) {
+		g_warning ("not a content type!");
+		return;
+	}
+	
+	g_print ("%s\n", g_mime_content_type_to_string (ct));
+}	
+
+
+
+void
+mu_msg_gmime_mime_part_foreach (MuMsgGMime* msg, MuMsgMimePartForeachFunc func,
+			   gpointer user_data)
+{
+	g_return_if_fail (msg);
+	g_return_if_fail (GMIME_IS_OBJECT(msg->_mime_msg));
+	
+	g_mime_message_foreach (msg->_mime_msg,
+				(GMimeObjectForeachFunc)part_foreach_cb,
+				NULL);	
 }
 
 
 gboolean
-mu_msg_gmime_save_attachment (MuMsgGMime *msg, unsigned num,
-			      const char *targetdir)
+mu_msg_gmime_mime_part_save (MuMsgGMime *msg, unsigned num,
+			     const char *targetdir)
 {
 	return TRUE; /* FIXME */
 }

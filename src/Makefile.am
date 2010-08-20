@@ -52,6 +52,7 @@ libmu_la_SOURCES=			\
 	mu-cmd-index.c			\
 	mu-cmd-view.c			\
 	mu-cmd-mkdir.c			\
+	mu-cmd-extract.c		\
 	mu-config.c			\
 	mu-config.h			\
 	mu-index.c			\
