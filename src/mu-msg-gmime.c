@@ -772,16 +772,20 @@ mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines)
 
 
 
-struct _PartForeachData {};
-typedef struct _PartForeachData PartForeachData;
+struct _PartData {
+	MuMsgMimePartForeachFunc	_func;
+	gpointer			_user_data;
+};
+typedef struct _PartData PartData;
 
 
 static void
-part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartForeachData *data)
+part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *data)
 {
 	GMimeContentType *ct;		
 	
 	ct = g_mime_object_get_content_type (part);
+	
 	if (!GMIME_IS_CONTENT_TYPE(ct)) {
 		g_warning ("not a content type!");
 		return;
@@ -794,19 +798,24 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartForeachData *data)
 
 void
 mu_msg_gmime_mime_part_foreach (MuMsgGMime* msg, MuMsgMimePartForeachFunc func,
-			   gpointer user_data)
+				gpointer user_data)
 {
+	PartData pdata;
+	
 	g_return_if_fail (msg);
 	g_return_if_fail (GMIME_IS_OBJECT(msg->_mime_msg));
+
+	pdata._func	 = func;
+	pdata._user_data = user_data;
 	
 	g_mime_message_foreach (msg->_mime_msg,
 				(GMimeObjectForeachFunc)part_foreach_cb,
-				NULL);	
+				&pdata);	
 }
 
 
 gboolean
-mu_msg_gmime_mime_part_save (MuMsgGMime *msg, unsigned num,
+mu_msg_gmime_mime_part_save (MuMsgGMime *msg, unsigned idx,
 			     const char *targetdir)
 {
 	return TRUE; /* FIXME */

@@ -46,13 +46,13 @@ mu_LDADD=				\
 	libmu.la
 
 libmu_la_SOURCES=			\
-	mu-cmd.c			\
-	mu-cmd.h			\
+	mu-cmd-extract.c		\
 	mu-cmd-find.c			\
 	mu-cmd-index.c			\
-	mu-cmd-view.c			\
 	mu-cmd-mkdir.c			\
-	mu-cmd-extract.c		\
+	mu-cmd-view.c			\
+	mu-cmd.c			\
+	mu-cmd.h			\
 	mu-config.c			\
 	mu-config.h			\
 	mu-index.c			\
@@ -72,6 +72,8 @@ libmu_la_SOURCES=			\
 	mu-msg-iter-xapian-priv.hh	\
 	mu-msg-iter-xapian.cc		\
 	mu-msg-iter-xapian.h		\
+	mu-msg-part-info.c		\
+	mu-msg-part-info.h		\
 	mu-msg-str.c			\
 	mu-msg-str.h			\
 	mu-msg.h			\
