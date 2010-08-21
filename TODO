@@ -3,9 +3,8 @@
 
 * Future release
 
-** release 0.8 [%]
+** release 0.9 [%]
    - [ ] bookmarks
-   - [ ] completion for zsh
    - [ ] query on time
    - [ ] mu-setup (?)
    - [ ] mu stats
@@ -16,19 +15,18 @@
    - [ ] search for date interval etc.
    - [ ] detect mail threads (?)
    - [ ] clean up mu-msg-field, add formatting(?)
+   - [ ] xml,json,sexp output
 
 
-** release 0.7.1 [71%]
-   - [X] remove hard gio dependency
+** release 0.8 [57%]
+   - [X] remove gio dependency
    - [X] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
-   - [X] don't require gio
    - [X] summary
    - [ ] attachment handling
    - [ ] review docs
-   - [ ] xml,json,sexp output
+   - [ ] completion for zsh
 	  
-
 
 * Release already done
 

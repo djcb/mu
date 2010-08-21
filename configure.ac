@@ -1,4 +1,4 @@
-## Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -28,8 +28,7 @@ AM_SILENT_RULES([yes])
 #
 # note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
-# also, this has nothing to do with the version of the Xapian library
-#
+# also, this has nothing to do with Xapian's software version
 AC_DEFINE(MU_XAPIAN_DB_VERSION,["7.0"], [Schema version of the database])
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
@@ -140,9 +139,9 @@ Makefile
 src/Makefile
 src/tests/Makefile
 man/Makefile
+contrib/Makefile
 ])
 AC_OUTPUT
-
 
 echo 
 echo "mu configuration is complete."
@@ -155,3 +154,4 @@ echo "<muhome>/xapian-0.6 directory to save some disk space"
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
+echo "use 'make V=1' to show the detailed output during the build"
