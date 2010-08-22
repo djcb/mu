@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -154,10 +155,40 @@ mu_util_str_from_strv (const gchar **params)
 	str = g_string_sized_new (64); /* just a guess */
 	
 	for (i = 0; params[i]; ++i) {
+
 		if (i>0)
 			g_string_append_c (str, ' ');
+
 		g_string_append (str, params[i]);
 	}		
 	
 	return g_string_free (str, FALSE);
+}
+
+int
+mu_util_create_writeable_file (const char* filename, const char* dir, gboolean overwrite)
+{
+	int fd;
+	char *fullpath;
+	
+	errno = 0; /* clear! */
+	g_return_val_if_fail (filename, -1);
+
+	fullpath = g_strdup_printf ("%s%s%s",
+				    dir ? dir : "",
+				    dir ? G_DIR_SEPARATOR_S : "",
+				    filename);
+
+	if (overwrite)
+		fd = open (fullpath, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+	else
+		fd = open (fullpath, O_WRONLY|O_CREAT, 0644);
+
+	if (fd < 0)
+		g_debug ("%s: cannot open %s for writing: %s",
+			 __FUNCTION__, fullpath, strerror(errno));
+
+	g_free (fullpath);
+	
+	return fd;
 }

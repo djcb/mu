@@ -142,13 +142,15 @@ void 	mu_msg_gmime_mime_part_foreach (MuMsgGMime* msg,
  * save a specific attachment to some targetdir 
  * 
  * @param msg a valid MuMsgGMime instance
- * @param index index of the attachment you want to save
+ * @param wanted_idx index of the attachment you want to save
  * @param targetdir filesystem directory to save the attachment
+ * @param overwrite existing files?
  * 
  * @return TRUE if saving succeeded, FALSE otherwise
  */
-gboolean	mu_msg_gmime_mime_part_save (MuMsgGMime *msg, unsigned num,
-					     const char *targetdir);
+gboolean
+mu_msg_gmime_mime_part_save (MuMsgGMime *msg, int wanted_idx,
+			     const char *targetdir, gboolean overwrite);
 
 /**
  * get the sender (From:) of this message

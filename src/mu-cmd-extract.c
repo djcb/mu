@@ -19,9 +19,29 @@
 
 #include "config.h"
 
+#include <stdlib.h>
+
 #include "mu-msg-gmime.h"
 #include "mu-msg-str.h"
 #include "mu-cmd.h"
+
+
+static gboolean
+save_part (const char* path, unsigned idx)
+{
+	MuMsgGMime* msg;
+	
+	msg = mu_msg_gmime_new (path, NULL);
+	if (!msg)
+		return FALSE;
+	
+	mu_msg_gmime_mime_part_save (msg, idx, NULL, TRUE); /* FIXME */
+	
+	mu_msg_gmime_destroy (msg);
+	
+	return TRUE;
+}
+
 
 
 static void
@@ -62,14 +82,32 @@ mu_cmd_extract (MuConfigOptions *opts)
 
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_printerr ("Missing files to view\n");
+		g_printerr ("missing file to extract\n");
 		return FALSE;
 	}
-	
 	mu_msg_gmime_init();
 
-	rv = show_parts (opts->params[1]);
-
+	rv = FALSE;
+	if (!opts->params[2]) /* no explicit part, show, don't save */
+		rv = show_parts (opts->params[1]);
+	else {
+		int i;
+		for (i = 2; opts->params[i]; ++i) {
+			unsigned idx = atoi (opts->params[i]);
+			if (idx == 0) {
+				g_printerr ("not a valid index: %s", opts->params[i]);
+				rv = FALSE;
+				break;
+			}
+			if (!save_part (opts->params[1], idx)) {
+				g_printerr ("failed to save part %d of %s", idx,
+					    opts->params[1]);
+				rv = FALSE;
+				break;
+			}
+		}
+	}
+	
 	mu_msg_gmime_uninit();
 	
 	return rv;

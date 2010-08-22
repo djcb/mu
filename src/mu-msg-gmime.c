@@ -771,18 +771,6 @@ mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines)
 }
 
 
-
-
-
-gboolean
-mu_msg_gmime_mime_part_save (MuMsgGMime *msg, unsigned idx,
-			     const char *targetdir)
-{
-	return TRUE; /* FIXME */
-}
-
-
-
 const char*
 mu_msg_gmime_get_field_string (MuMsgGMime *msg, const MuMsgField* field)
 {
@@ -984,7 +972,6 @@ mu_msg_gmime_uninit (void)
 	}	
 }  
 
-
 struct _PartData {
 	unsigned			_idx;
 	MuMsgPartInfoForeachFunc	_func;
@@ -997,28 +984,22 @@ static void
 part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 {
 	GMimeContentType *ct;
-	GMimeContentDisposition *cd;
 	MuMsgPartInfo pi;
-	
-	ct = g_mime_object_get_content_type (part);
-
-	/* ignore non-MIME */
-	if (!GMIME_IS_CONTENT_TYPE(ct)) {
-		g_debug ("not a content type!");
-		return;
-	}
 
 	memset (&pi, 0, sizeof pi);
 	pi.index       = pdata->_idx++;
 	pi.content_id  = (char*)g_mime_object_get_content_id (part);
-	pi.type	       = (char*)g_mime_content_type_get_media_type (ct);
-	pi.subtype     = (char*)g_mime_content_type_get_media_subtype (ct);
-	pi.disposition = (char*)g_mime_object_get_disposition (part);
-	
-	cd = g_mime_object_get_content_disposition (part);
-	if (GMIME_IS_CONTENT_DISPOSITION(cd))
-		pi.file_name = (char*)g_mime_content_disposition_get_parameter
-			(cd , "filename");
+
+	ct = g_mime_object_get_content_type (part);
+	if (GMIME_IS_CONTENT_TYPE(ct)) {
+		pi.type	   = (char*)g_mime_content_type_get_media_type (ct);
+		pi.subtype = (char*)g_mime_content_type_get_media_subtype (ct);	
+	}
+
+	if (GMIME_IS_PART(part)) {
+		pi.disposition = (char*)g_mime_object_get_disposition (part);
+		pi.file_name   = (char*)g_mime_part_get_filename (GMIME_PART(part));
+	}
 	
 	pdata->_func(&pi, pdata->_user_data);	
 }
@@ -1045,4 +1026,76 @@ mu_msg_gmime_msg_part_infos_foreach (MuMsgGMime *msg,
 }
 
 
+
+struct _SavePartData {
+	guint        idx, wanted_idx;
+	const gchar* targetdir;
+	gboolean     overwrite;
+	gboolean     stream;
+	gboolean     result;
+};
+typedef struct _SavePartData SavePartData;
+
+
+static void
+part_foreach_save_cb (GMimeObject *parent, GMimeObject *part,
+		      SavePartData *spd)
+{
+	const gchar* filename;
+	
+	/* did we find the right part yet? */
+	if (spd->result || spd->wanted_idx != spd->idx++)
+		return;
+	
+	if (!GMIME_IS_PART(part))
+		return;
+	
+	filename = g_mime_part_get_filename (GMIME_PART(part));
+	if (filename) {
+		int fd, rv;
+		GMimeDataWrapper *wrapper;
+		GMimeStream *stream;
+		
+		fd = mu_util_create_writeable_file (filename, spd->targetdir,
+						    spd->overwrite);
+		if (fd == -1) {
+			g_warning ("error saving file %s", filename);
+			spd->result = FALSE;
+			return;
+		}
+		stream = g_mime_stream_fs_new (fd);
+		g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream),
+					    TRUE); /* GMimeStream will close fd */
+		
+		wrapper = g_mime_part_get_content_object (GMIME_PART(part));
+		rv = g_mime_data_wrapper_write_to_stream (wrapper, stream);
+				
+		g_object_unref (G_OBJECT(stream));
+		//g_object_unref (G_OBJECT(wrapper));
+		
+		spd->result = (rv != -1);
+	} else
+		spd->result = FALSE;
+}
+
+
+
+gboolean
+mu_msg_gmime_mime_part_save (MuMsgGMime *msg, int wanted_idx,
+			     const char *targetdir, gboolean overwrite)
+{
+	SavePartData	spd;
+	spd.idx	       = 0;
+	spd.wanted_idx = wanted_idx;
+	spd.targetdir  = targetdir;
+	spd.overwrite  = overwrite;
+	spd.stream     = FALSE;
+	spd.result     = FALSE;
+
+	g_mime_message_foreach (msg->_mime_msg,
+				(GMimeObjectForeachFunc)part_foreach_save_cb,
+				&spd);
+	
+	return spd.result;
+}
 

@@ -70,6 +70,22 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
 			    gboolean writeable) G_GNUC_WARN_UNUSED_RESULT;
 
 
+
+/** 
+ * create a writeable file and return its file descriptor (which
+ * you'll need to close(2) when done with it.)
+ * 
+ * @param filename the filename
+ * @param dir the target directory, or NULL for the current
+ * @param overwrite should we allow for overwriting existing files?
+ * 
+ * @return a file descriptor, or -1 in case of error. If it's a fily
+ * system error, 'errno' may have more info.
+ */
+int mu_util_create_writeable_file (const char* filename, const char* dir,
+				   gboolean overwrite);
+
+
 /** 
  * convert a string array in to a string, with the elements separated
  * by ' '
