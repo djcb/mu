@@ -60,7 +60,7 @@ mu_msg_contact_destroy (MuMsgContact *ct)
 		
 
 void
-mu_msg_contact_list_foreach (GSList *lst,
+mu_msg_contacts_foreach (GSList *lst,
 			     MuMsgContactForeachFunc func,
 			     gpointer user_data)
 {
@@ -71,7 +71,7 @@ mu_msg_contact_list_foreach (GSList *lst,
 	
 
 void
-mu_msg_contact_list_free (GSList *lst)
+mu_msg_contacts_free (GSList *lst)
 {
 	g_slist_foreach (lst, (GFunc)mu_msg_contact_destroy, NULL);
 	g_slist_free (lst);

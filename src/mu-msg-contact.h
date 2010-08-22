@@ -106,7 +106,7 @@ typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
  * @param func a callback function
  * @param user_data user pointer, passed to the callback
  */
-void mu_msg_contact_list_foreach (GSList *lst,
+void mu_msg_contacts_foreach (GSList *lst,
 				  MuMsgContactForeachFunc func,
 				  gpointer user_data);
 
@@ -115,7 +115,7 @@ void mu_msg_contact_list_foreach (GSList *lst,
  * 
  * @param lst list of MuMsgContact object
  */
-void mu_msg_contact_list_free (GSList *lst);
+void mu_msg_contacts_free (GSList *lst);
 
 
 
