@@ -91,7 +91,7 @@ test_mu_msg_gmime_01 (void)
 			  ==, 1217530645);
 	{
 		GSList *lst, *cur;
-		lst = mu_msg_gmime_contacts_list (msg);
+		lst = mu_msg_gmime_get_contacts (msg);
 		g_assert_cmpuint (g_slist_length(lst),==, 2);
 		cur = lst;
 
@@ -108,7 +108,7 @@ test_mu_msg_gmime_01 (void)
 				 ==, "gcc-help@gcc.gnu.org");
 	
 		
-		mu_msg_contact_list_free (lst);
+		mu_msg_contacts_free (lst);
 	}
 		
 	mu_msg_gmime_destroy (msg);
@@ -148,7 +148,7 @@ test_mu_msg_gmime_02 (void)
 	
 	{
 		GSList *lst, *cur;
-		lst = mu_msg_gmime_contacts_list (msg);
+		lst = mu_msg_gmime_get_contacts (msg);
 		g_assert_cmpuint (g_slist_length(lst),==, 2);
 		cur = lst;
 		
@@ -165,7 +165,7 @@ test_mu_msg_gmime_02 (void)
 				 ==, "help-gnu-emacs@gnu.org");
 
 		
-		mu_msg_contact_list_free (lst);
+		mu_msg_contacts_free (lst);
 	}
 
 	

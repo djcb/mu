@@ -24,6 +24,18 @@
 #include "mu-cmd.h"
 
 
+static void
+each_part (MuMsgPartInfo* part, gpointer user_data)
+{
+	g_print ("%u %s %s/%s [%s]\n",
+		 part->index,
+		 part->file_name ? part->file_name : "<none>",
+		 part->type ? part->type : "",
+		 part->subtype ? part->subtype : "",
+		 part->disposition ? part->disposition : "<none>");
+}
+
+
 static gboolean
 show_parts (const char* path)
 {
@@ -33,7 +45,9 @@ show_parts (const char* path)
 	if (!msg)
 		return FALSE;
 
-	mu_msg_gmime_mime_part_foreach (msg, NULL, NULL);
+	mu_msg_gmime_msg_part_infos_foreach (msg,  each_part, NULL);
+
+	mu_msg_gmime_destroy (msg);
 	
 	return TRUE;
 	

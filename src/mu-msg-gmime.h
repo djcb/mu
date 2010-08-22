@@ -22,6 +22,7 @@
 
 #include "mu-msg.h"
 #include "mu-msg-contact.h"
+#include "mu-msg-part-info.h"
 
 G_BEGIN_DECLS
 
@@ -323,10 +324,10 @@ time_t          mu_msg_gmime_get_timestamp       (MuMsgGMime *msg);
  *
  * @param msg a valid MuMsgGMime* instance
  *
- * @return a list of contacts for this message; use mu_msg_contact_list_free
- * to free it when done
+ * @return a list of contacts for this message; use
+ * mu_msg_contacts_free to free it when done
  */
-GSList * mu_msg_gmime_contacts_list (MuMsgGMime *msg);
+GSList * mu_msg_gmime_get_contacts (MuMsgGMime *msg);
 
 
 /**
@@ -341,6 +342,32 @@ GSList * mu_msg_gmime_contacts_list (MuMsgGMime *msg);
 void mu_msg_gmime_contacts_foreach (MuMsgGMime *msg,
 				    MuMsgContactForeachFunc func,
 				    gpointer user_data);
+
+/* /\** */
+/*  * get a list of message part info objects (MuMsgPartInfo) for this */
+/*  * message; you can use GSList functions or */
+/*  * mu_msg_part_info_list_foreach to read the items. */
+/*  * */
+/*  * @param msg a valid MuMsgGMime* instance */
+/*  * */
+/*  * @return a list of contacts for this message; use */
+/*  * mu_msg_part_infos_free to free it when done */
+/*  *\/ */
+/* GSList *mu_msg_gmime_get_part_infos (MuMsgGMime *msg); */
+
+
+/**
+ * call a function for each of the contacts in a message 
+ *
+ * @param msg a valid MuMsgGMime* instance
+ * @param func a callback function to call for each contact; when
+ * the callback does not return TRUE, it won't be called again
+ * @param user_data a user-provide pointer that will be passed to the callback
+ * 
+ */
+void mu_msg_gmime_msg_part_infos_foreach (MuMsgGMime *msg,
+					  MuMsgPartInfoForeachFunc func,
+					  gpointer user_data);
 G_END_DECLS
 
 #endif /*__MU_MSG_GIME_H__*/

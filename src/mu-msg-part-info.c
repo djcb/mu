@@ -21,9 +21,7 @@
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
-#include <glib.h>
 #include "mu-msg-part-info.h"
-
 
 MuMsgPartInfo*
 mu_msg_part_info_new (void)
@@ -33,16 +31,16 @@ mu_msg_part_info_new (void)
 
 
 void
-mu_msg_part_info_destroy (MuMsgPartInfo *pi, gboolean destroy_members)
+mu_msg_part_info_destroy (MuMsgPartInfo *pi)
 {
 	if (!pi)
 		return;
 
-	if (destroy_members) {
+	if (pi->own_members) {
 		g_free (pi->content_id);
 		g_free (pi->type);
 		g_free (pi->subtype);
-		g_free (pi->content_type);
+		/* g_free (pi->content_type); */
 		g_free (pi->file_name);
 		g_free (pi->disposition);
 	}
@@ -53,20 +51,18 @@ mu_msg_part_info_destroy (MuMsgPartInfo *pi, gboolean destroy_members)
 		
 
 void
-mu_msg_part_info_list_foreach (GSList *lst,
-			       MuMsgPartInfoForeachFunc func,
-			       gpointer user_data)
+mu_msg_part_infos_foreach (GSList *lst,
+			   MuMsgPartInfoForeachFunc func,
+			   gpointer user_data)
 {
-	while (lst && func((MuMsgPartInfo*)lst->data, user_data))
-		lst = g_slist_next(lst);
+	for (; lst ; lst = g_slist_next (lst))
+		func((MuMsgPartInfo*)lst->data, user_data);
 }
 
-	
 
-void /* FIXME: destroy_members */
-mu_msg_part_info_list_free (GSList *lst, gboolean destroy_members)
+void
+mu_msg_part_infos_free (GSList *lst)
 {	
-
 	g_slist_foreach (lst, (GFunc)mu_msg_part_info_destroy, NULL);
 	g_slist_free (lst);
 }

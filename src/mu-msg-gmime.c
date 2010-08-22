@@ -772,46 +772,6 @@ mu_msg_gmime_get_summary (MuMsgGMime *msg, size_t max_lines)
 
 
 
-struct _PartData {
-	MuMsgMimePartForeachFunc	_func;
-	gpointer			_user_data;
-};
-typedef struct _PartData PartData;
-
-
-static void
-part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *data)
-{
-	GMimeContentType *ct;		
-	
-	ct = g_mime_object_get_content_type (part);
-	
-	if (!GMIME_IS_CONTENT_TYPE(ct)) {
-		g_warning ("not a content type!");
-		return;
-	}
-	
-	g_print ("%s\n", g_mime_content_type_to_string (ct));
-}	
-
-
-
-void
-mu_msg_gmime_mime_part_foreach (MuMsgGMime* msg, MuMsgMimePartForeachFunc func,
-				gpointer user_data)
-{
-	PartData pdata;
-	
-	g_return_if_fail (msg);
-	g_return_if_fail (GMIME_IS_OBJECT(msg->_mime_msg));
-
-	pdata._func	 = func;
-	pdata._user_data = user_data;
-	
-	g_mime_message_foreach (msg->_mime_msg,
-				(GMimeObjectForeachFunc)part_foreach_cb,
-				&pdata);	
-}
 
 
 gboolean
@@ -986,7 +946,7 @@ each_contact (MuMsgContact *contact, GSList **lst)
 
 
 GSList *
-mu_msg_gmime_contacts_list (MuMsgGMime *msg)
+mu_msg_gmime_get_contacts (MuMsgGMime *msg)
 {
 	GSList *contacts;
 
@@ -1023,3 +983,66 @@ mu_msg_gmime_uninit (void)
 		g_debug ("%s", __FUNCTION__);
 	}	
 }  
+
+
+struct _PartData {
+	unsigned			_idx;
+	MuMsgPartInfoForeachFunc	_func;
+	gpointer			_user_data;
+};
+typedef struct _PartData PartData;
+
+
+static void
+part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
+{
+	GMimeContentType *ct;
+	GMimeContentDisposition *cd;
+	MuMsgPartInfo pi;
+	
+	ct = g_mime_object_get_content_type (part);
+
+	/* ignore non-MIME */
+	if (!GMIME_IS_CONTENT_TYPE(ct)) {
+		g_debug ("not a content type!");
+		return;
+	}
+
+	memset (&pi, 0, sizeof pi);
+	pi.index       = pdata->_idx++;
+	pi.content_id  = (char*)g_mime_object_get_content_id (part);
+	pi.type	       = (char*)g_mime_content_type_get_media_type (ct);
+	pi.subtype     = (char*)g_mime_content_type_get_media_subtype (ct);
+	pi.disposition = (char*)g_mime_object_get_disposition (part);
+	
+	cd = g_mime_object_get_content_disposition (part);
+	if (GMIME_IS_CONTENT_DISPOSITION(cd))
+		pi.file_name = (char*)g_mime_content_disposition_get_parameter
+			(cd , "filename");
+	
+	pdata->_func(&pi, pdata->_user_data);	
+}
+
+
+
+void
+mu_msg_gmime_msg_part_infos_foreach (MuMsgGMime *msg,
+				     MuMsgPartInfoForeachFunc func,
+				     gpointer user_data)
+{
+	PartData pdata;
+	
+	g_return_if_fail (msg);
+	g_return_if_fail (GMIME_IS_OBJECT(msg->_mime_msg));
+
+	pdata._idx       = 0;
+	pdata._func	 = func;
+	pdata._user_data = user_data;
+	
+	g_mime_message_foreach (msg->_mime_msg,
+				(GMimeObjectForeachFunc)part_foreach_cb,
+				&pdata);
+}
+
+
+

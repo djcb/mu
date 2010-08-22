@@ -25,7 +25,7 @@
 struct _MuMsgPartInfo {
 
 	/* index of this message */
-	guint             index;
+	unsigned         index;
 
 	/* cid */
 	char             *content_id;
@@ -34,7 +34,7 @@ struct _MuMsgPartInfo {
 	char             *type;    
 	char             *subtype;
 	/* full content-type, e.g. image/jpeg  */
-	char             *content_type;
+	/* char             *content_type; */
 
 	/* the file name (if any) */
 	char             *file_name;
@@ -46,6 +46,10 @@ struct _MuMsgPartInfo {
 	
 	/* size of the part; or 0 if unknown */
 	size_t		 *size;	
+
+	/* if TRUE, mu_msg_part_info_destroy will free the member vars
+	 * as well*/
+	gboolean          own_members;
 };
 typedef struct _MuMsgPartInfo MuMsgPartInfo;
 
@@ -64,12 +68,8 @@ MuMsgPartInfo *mu_msg_part_info_new (void);
  * destroy a MuMsgPartInfo object
  * 
  * @param ct a MuMsgPartInfo object, or NULL
- * @param destroy_members TRUE if members should be destroyed as well,
- * FALSE otherwise
  */
-void mu_msg_part_info_destroy (MuMsgPartInfo *pinfo,
-			       gboolean destroy_members);
-
+void mu_msg_part_info_destroy (MuMsgPartInfo *pinfo);
 
 /**
  * macro to get the file name for this mime-part
@@ -96,10 +96,9 @@ void mu_msg_part_info_destroy (MuMsgPartInfo *pinfo,
  * @param a msg part info object
  * @param user_data a user provided data pointer
  * 
- * @return TRUE if we should continue the foreach, FALSE otherwise
  */
-typedef gboolean  (*MuMsgPartInfoForeachFunc) (MuMsgPartInfo* part,
-					       gpointer user_data);
+typedef void  (*MuMsgPartInfoForeachFunc) (MuMsgPartInfo* part,
+					   gpointer user_data);
 
 /**
  * call a function for each MuMsgPartInfo (MIME-part) in the list
@@ -108,15 +107,15 @@ typedef gboolean  (*MuMsgPartInfoForeachFunc) (MuMsgPartInfo* part,
  * @param func a callback function
  * @param user_data user pointer, passed to the callback
  */
-void mu_msg_part_info_list_foreach (GSList *lst,
-				    MuMsgPartInfoForeachFunc func,
-				    gpointer user_data);
+void mu_msg_part_infos_foreach (GSList *lst,
+				MuMsgPartInfoForeachFunc func,
+				gpointer user_data);
 
 /**
  * free a list of MuMsgPartInfo objects
  * 
  * @param lst list of MuMsgPartInfo object
  */
-void mu_msg_part_info_list_free (GSList *lst, gboolean destroy_members);
+void mu_msg_part_infos_free (GSList *lst);
 
 #endif /*__MU_MSG_PART_INFO_H__*/
