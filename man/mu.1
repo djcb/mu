@@ -16,6 +16,8 @@ mu \- index and search e-mail messages stored in Maildirs
 
 .B mu mkdir [options] <dir> [<dirs>]
 
+.B mu extract [options] <file> [<parts>]
+
 .B mu [options]
 
 .SH DESCRIPTION
@@ -68,9 +70,20 @@ for creating Maildirs. See
 .BR mu-mkdir(1)
 \.
 
+
 .TP
-The various commands are discussed in their separate manpages; here the
-general options are discussed.
+\fBextract\fR
+for extract MIME-parts (such as attachments) from messages. See
+.BR mu-extract(1)
+\.
+
+Subcommands \findex\fR, \ffind\fR and \cleanup\fR work with the database,
+while the other ones work on invidual mail files. Hence, running \fview\fR,
+\fBmkdir\fR and \fBextract\fR does not require the mu database.
+
+.TP
+The various commands are discussed in more detail in their own separate
+man-pages; here the general options are discussed.
 
 .SH GENERAL OPTIONS
 
@@ -113,12 +126,6 @@ list the various command line options, while
 \fB\-\-help\-index\fR, \fB\-\-help\-find\fR and \fB\-\-help\-all\fR list only
 the options for one command, or all of the commands.
 
-.SH ENVIRONMENT
-
-As mentioned, \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if
-it has not been specified explicitly \fB\-\-maildir\fR=\fI<maildir>\fR. If
-MAILDIR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
-.
 .SH BUGS
 
 There probably are some; please report bugs when you find them:
@@ -131,7 +138,13 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .SH "SEE ALSO"
 
 .BR mu-index(1)
-.BR mu-find(1)
-.BR mu-mkdir(1)
-.BR mu-view(1)
+
 .BR mu-cleanup(1)
+
+.BR mu-find(1)
+
+.BR mu-mkdir(1)
+
+.BR mu-view(1)
+
+.BR mu-extract(1)

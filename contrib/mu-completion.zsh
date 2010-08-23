@@ -1,5 +1,4 @@
 #compdef mu
-#-*-mode:sh-*-
 
 ## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
@@ -38,7 +37,7 @@ _mu_view() {
 }
 
 _mu_extract() {
-  _files
+ _files
 }
 
 _mu_find() {
@@ -74,3 +73,7 @@ _mu() {
 
 _mu "$@"
 
+
+# Local variables:
+# mode: sh
+# End:
