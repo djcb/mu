@@ -22,4 +22,5 @@ dist_man_MANS =		\
 	mu-index.1	\
 	mu-cleanup.1	\
 	mu-mkdir.1	\
-	mu-view.1
+	mu-view.1	\
+	mu-extract.1

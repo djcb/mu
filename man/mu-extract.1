@@ -1,0 +1,39 @@
+.TH MU VIEW 1 "August 2010" "User Manuals"
+
+.SH NAME 
+
+mu extract\- display and save message parts (attachments)
+
+.SH SYNOPSIS
+
+.B mu extract [options] <file> [<parts-to-save>]
+
+.SH DESCRIPTION
+
+\fBmu extact\fR is the \fBmu\fR sub-command for extracting attachments from
+mail messages. It works on files, and does not require the message to be
+indexed before using
+.BR mu-index(1)
+\.
+
+.SH OPTIONS
+
+.TP
+\fB\-k\fR, \fB\-\-summary\-len\fR=\fI<len>\fR
+instead of the full message, output a summary based on up to \fI\len\fR lines
+of the message. The default is
+.B 0
+, which means 'show full body'.
+
+.SH BUGS
+
+There probably are some; please report bugs when you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR mu(1)
