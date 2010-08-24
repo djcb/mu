@@ -1026,7 +1026,6 @@ mu_msg_gmime_msg_part_infos_foreach (MuMsgGMime *msg,
 }
 
 
-
 struct _SavePartData {
 	guint        idx, wanted_idx;
 	const gchar* targetdir;
@@ -1036,6 +1035,49 @@ struct _SavePartData {
 };
 typedef struct _SavePartData SavePartData;
 
+
+static gboolean
+save_part (GMimeObject *part, const char *filename,
+	   const char *targetdir, gboolean overwrite)
+{
+	int fd, rv;
+	GMimeDataWrapper *wrapper;
+	GMimeStream *stream;
+
+	rv = TRUE; 
+	fd = mu_util_create_writeable_fd (filename, targetdir,
+					  overwrite);
+	if (fd == -1) {
+		g_warning ("error saving file %s%s %s",
+			   filename, errno != 0 ? ":" : "",
+			   errno != 0 ? strerror(errno) : "");
+		return FALSE;
+	}
+
+	stream = g_mime_stream_fs_new (fd);
+	if (!stream) {
+		g_warning ("%s: failed to create stream", __FUNCTION__);
+		close (fd);
+		return FALSE;
+	}
+	
+	g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream),
+				    TRUE); /* GMimeStream will close fd */
+	
+	wrapper = g_mime_part_get_content_object (GMIME_PART(part));
+	if (!wrapper) {
+		g_object_unref (G_OBJECT(stream));
+		g_warning ("%s: failed to create wrapper", __FUNCTION__);
+		return FALSE;
+	}
+	
+	rv = g_mime_data_wrapper_write_to_stream (wrapper, stream);
+	g_object_unref (G_OBJECT(rv));
+
+	return rv == -1 ? FALSE : TRUE;
+}
+
+	
 
 static void
 part_foreach_save_cb (GMimeObject *parent, GMimeObject *part,
@@ -1052,28 +1094,9 @@ part_foreach_save_cb (GMimeObject *parent, GMimeObject *part,
 	
 	filename = g_mime_part_get_filename (GMIME_PART(part));
 	if (filename) {
-		int fd, rv;
-		GMimeDataWrapper *wrapper;
-		GMimeStream *stream;
-		
-		fd = mu_util_create_writeable_file (filename, spd->targetdir,
-						    spd->overwrite);
-		if (fd == -1) {
-			g_warning ("error saving file %s", filename);
-			spd->result = FALSE;
-			return;
-		}
-		stream = g_mime_stream_fs_new (fd);
-		g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream),
-					    TRUE); /* GMimeStream will close fd */
-		
-		wrapper = g_mime_part_get_content_object (GMIME_PART(part));
-		rv = g_mime_data_wrapper_write_to_stream (wrapper, stream);
-				
-		g_object_unref (G_OBJECT(stream));
-		//g_object_unref (G_OBJECT(wrapper));
-		
-		spd->result = (rv != -1);
+		spd->result = save_part (part, filename,
+					 spd->targetdir,
+					 spd->overwrite);
 	} else
 		spd->result = FALSE;
 }

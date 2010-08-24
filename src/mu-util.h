@@ -82,8 +82,8 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
  * @return a file descriptor, or -1 in case of error. If it's a fily
  * system error, 'errno' may have more info.
  */
-int mu_util_create_writeable_file (const char* filename, const char* dir,
-				   gboolean overwrite);
+int mu_util_create_writeable_fd (const char* filename, const char* dir,
+				 gboolean overwrite);
 
 
 /** 

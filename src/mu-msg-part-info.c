@@ -66,3 +66,5 @@ mu_msg_part_infos_free (GSList *lst)
 	g_slist_foreach (lst, (GFunc)mu_msg_part_info_destroy, NULL);
 	g_slist_free (lst);
 }
+
+

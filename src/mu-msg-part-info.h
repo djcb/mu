@@ -47,6 +47,8 @@ struct _MuMsgPartInfo {
 	/* size of the part; or 0 if unknown */
 	size_t		 *size;	
 
+	gpointer         data; /* opaque data */
+	
 	/* if TRUE, mu_msg_part_info_destroy will free the member vars
 	 * as well*/
 	gboolean          own_members;
