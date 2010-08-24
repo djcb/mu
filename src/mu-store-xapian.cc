@@ -25,7 +25,6 @@
 #include <xapian.h>
 
 #include "mu-msg.h"
-#include "mu-msg-gmime.h"
 #include "mu-store-xapian.h"
 #include "mu-util.h"
 
@@ -170,11 +169,11 @@ mu_store_xapian_flush (MuStoreXapian *store)
 
 
 static void
-add_terms_values_number (Xapian::Document& doc, MuMsgGMime *msg, 
+add_terms_values_number (Xapian::Document& doc, MuMsg *msg, 
 			 const MuMsgField* field)
 {
 	const std::string pfx (mu_msg_field_xapian_prefix(field), 1);
-	gint64 num = mu_msg_gmime_get_field_numeric (msg, field);
+	gint64 num = mu_msg_get_field_numeric (msg, field);
 	const std::string numstr (Xapian::sortable_serialise((double)num));
 	
 	doc.add_value ((Xapian::valueno)mu_msg_field_id(field), numstr);
@@ -182,12 +181,12 @@ add_terms_values_number (Xapian::Document& doc, MuMsgGMime *msg,
 }
 
 static void
-add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
+add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 			 const MuMsgField* field)
 {
 	const char* str;
 	
-	str = mu_msg_gmime_get_field_string (msg, field);
+	str = mu_msg_get_field_string (msg, field);
 	if (!str)
 		return;
 
@@ -213,17 +212,17 @@ add_terms_values_string (Xapian::Document& doc, MuMsgGMime *msg,
 }
 
 static void
-add_terms_values_body (Xapian::Document& doc, MuMsgGMime *msg,
+add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 		       const MuMsgField* field)
 {
 	const char *str;
 	
-	if (mu_msg_gmime_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
+	if (mu_msg_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
 		return; /* don't store encrypted bodies */
 
-	str = mu_msg_gmime_get_body_text (msg);
+	str = mu_msg_get_body_text (msg);
 	if (!str) /* FIXME: html->txt fallback needed */
-		str = mu_msg_gmime_get_body_html (msg);
+		str = mu_msg_get_body_html (msg);
 	
 	if (!str)  
 		return; /* no body... */
@@ -235,7 +234,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsgGMime *msg,
 
 struct _MsgDoc {
 	Xapian::Document *_doc;
-	MuMsgGMime       *_msg;
+	MuMsg       *_msg;
 };
 typedef struct _MsgDoc MsgDoc;
 
@@ -284,15 +283,15 @@ get_message_uid (const char* path)
 }
 
 static std::string
-get_message_uid (MuMsgGMime *msg)
+get_message_uid (MuMsg *msg)
 {
-	return get_message_uid (mu_msg_gmime_get_path(msg));
+	return get_message_uid (mu_msg_get_path(msg));
 }
 
 
 
 MuResult
-mu_store_xapian_store (MuStoreXapian *store, MuMsgGMime *msg)
+mu_store_xapian_store (MuStoreXapian *store, MuMsg *msg)
 {	
 	g_return_val_if_fail (store, MU_ERROR);
 	g_return_val_if_fail (msg, MU_ERROR);

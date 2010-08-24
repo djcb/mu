@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,11 +80,11 @@ mu_msg_iter_xapian_destroy (MuMsgIterXapian *iter)
 }
 
 
-MuMsgGMime*
-mu_msg_iter_xapian_get_msg_gmime (MuMsgIterXapian *iter)
+MuMsg*
+mu_msg_iter_xapian_get_msg (MuMsgIterXapian *iter)
 {	
 	const char *path;
-	MuMsgGMime *msg;
+	MuMsg *msg;
 	
 	g_return_val_if_fail (iter, NULL);
 	
@@ -94,7 +94,7 @@ mu_msg_iter_xapian_get_msg_gmime (MuMsgIterXapian *iter)
 		return NULL;
 	}
 
-	msg = mu_msg_gmime_new (path, NULL);
+	msg = mu_msg_new (path, NULL);
 	if (!msg) {
 		g_warning ("%s: failed to create msg object", __FUNCTION__);
 		return NULL;
@@ -297,9 +297,8 @@ mu_msg_iter_xapian_get_flags (MuMsgIterXapian *iter)
 	return (MuMsgFlags) get_field_number (iter, MU_MSG_FIELD_ID_FLAGS);
 } 
 
-MuMsgPriority
-mu_msg_iter_xapian_get_priority (MuMsgIterXapian *iter)
+MuMsgPrio
+mu_msg_iter_xapian_get_prio (MuMsgIterXapian *iter)
 {
-	return (MuMsgPriority) get_field_number (iter,
-						 MU_MSG_FIELD_ID_PRIORITY);
+	return (MuMsgPrio) get_field_number (iter, MU_MSG_FIELD_ID_PRIO);
 } 

@@ -17,12 +17,12 @@
 **
 */
 
-#ifndef __MU_MSG_PART_INFO_H__
-#define __MU_MSG_PART_INFO_H__
+#ifndef __MU_MSG_PART_H__
+#define __MU_MSG_PART_H__
 
 #include <glib.h>
 
-struct _MuMsgPartInfo {
+struct _MuMsgPart {
 
 	/* index of this message */
 	unsigned         index;
@@ -40,7 +40,7 @@ struct _MuMsgPartInfo {
 	char             *file_name;
 
 	/* usually, "attachment" or "inline"; use
-	 * mu_msg_part_info_is_(attachment|inline)
+	 * mu_msg_part_is_(attachment|inline)
 	 * to test */
 	char             *disposition;
 	
@@ -49,75 +49,45 @@ struct _MuMsgPartInfo {
 
 	gpointer         data; /* opaque data */
 	
-	/* if TRUE, mu_msg_part_info_destroy will free the member vars
+	/* if TRUE, mu_msg_part_destroy will free the member vars
 	 * as well*/
 	gboolean          own_members;
 };
-typedef struct _MuMsgPartInfo MuMsgPartInfo;
-
-
-/**
- * create a new MuMsgPartInfo instance; this just allocates the
- * memory, you'll have to fill it yourself
- *
- * 
- * @return a new MuMsgPartInfo instance; use mu_msg_part_info_destroy
- * when finished.
- */
-MuMsgPartInfo *mu_msg_part_info_new (void);
-
-/**
- * destroy a MuMsgPartInfo object
- * 
- * @param ct a MuMsgPartInfo object, or NULL
- */
-void mu_msg_part_info_destroy (MuMsgPartInfo *pinfo);
+typedef struct _MuMsgPart MuMsgPart;
 
 /**
  * macro to get the file name for this mime-part
  * 
- * @param pi a MuMsgPartInfo instance
+ * @param pi a MuMsgPart instance
  * 
  * @return the file name
  */
-#define mu_msg_part_info_file_name(pi)    ((pi)->file_name)
+#define mu_msg_part_file_name(pi)    ((pi)->file_name)
 
 /**
  * macro to get the file name for this mime-part
  * 
- * @param pi a MuMsgPartInfo instance
+ * @param pi a MuMsgPart instance
  * 
  * @return the file name
  */
 #define  mu_msg_part_content_type(pi) ((pi)->content_type)
  
 
-/**
- * callback function
- * 
- * @param a msg part info object
- * @param user_data a user provided data pointer
- * 
- */
-typedef void  (*MuMsgPartInfoForeachFunc) (MuMsgPartInfo* part,
-					   gpointer user_data);
+typedef void (*MuMsgPartForeachFunc) (MuMsgPart *part, gpointer data);
 
 /**
- * call a function for each MuMsgPartInfo (MIME-part) in the list
+ * call a function for each of the contacts in a message 
+ *
+ * @param msg a valid MuMsg* instance
+ * @param func a callback function to call for each contact; when
+ * the callback does not return TRUE, it won't be called again
+ * @param user_data a user-provide pointer that will be passed to the callback
  * 
- * @param lst a list of MuMsgPartInfo objects
- * @param func a callback function
- * @param user_data user pointer, passed to the callback
  */
-void mu_msg_part_infos_foreach (GSList *lst,
-				MuMsgPartInfoForeachFunc func,
-				gpointer user_data);
+void mu_msg_msg_part_foreach (MuMsg *msg,
+			      MuMsgPartForeachFunc func,
+			      gpointer user_data);
 
-/**
- * free a list of MuMsgPartInfo objects
- * 
- * @param lst list of MuMsgPartInfo object
- */
-void mu_msg_part_infos_free (GSList *lst);
 
-#endif /*__MU_MSG_PART_INFO_H__*/
+#endif /*__MU_MSG_PART_H__*/

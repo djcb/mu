@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "mu-msg-gmime.h"
+#include "mu-msg.h"
 #include "mu-msg-str.h"
 #include "mu-cmd.h"
 
@@ -36,41 +36,41 @@
 static gboolean
 view_file (const gchar *path, const gchar *fields, size_t summary_len)
 {
-	MuMsgGMime* msg;
+	MuMsg* msg;
 	const char *field;
 	time_t date;
 	
-	msg = mu_msg_gmime_new (path, NULL);
+	msg = mu_msg_new (path, NULL);
 	if (!msg)
 		return FALSE;
 	
-	field = mu_msg_gmime_get_from (msg);
+	field = mu_msg_get_from (msg);
 	if (field)
 		g_print ("From: %s\n", field);
 	
-	field = mu_msg_gmime_get_to (msg);
+	field = mu_msg_get_to (msg);
 	if (field)
 		g_print ("To: %s\n", field);
 
-	field = mu_msg_gmime_get_cc (msg);
+	field = mu_msg_get_cc (msg);
 	if (field)
 		g_print ("Cc: %s\n", field);
 
-	field = mu_msg_gmime_get_subject (msg);
+	field = mu_msg_get_subject (msg);
 	if (field)
 		g_print ("Subject: %s\n", field);
 	
-	date = mu_msg_gmime_get_date (msg);
+	date = mu_msg_get_date (msg);
 	if (date)
 		g_print ("Date: %s\n",
 			 mu_msg_str_date_s (date));
 
 	if (summary_len > 0) {
-		field = mu_msg_gmime_get_summary (msg, summary_len);
+		field = mu_msg_get_summary (msg, summary_len);
 		g_print ("Summary: %s\n", field ? field : "<none>");
 	} else {
 	
-		field = mu_msg_gmime_get_body_text (msg);
+		field = mu_msg_get_body_text (msg);
 		if (field) 
 			g_print ("\n%s\n", field);
 		else
@@ -78,7 +78,7 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 			g_debug ("No text body found for %s", path);
 	}
 		
-	mu_msg_gmime_destroy (msg);
+	mu_msg_destroy (msg);
 
 	return TRUE;
 }
@@ -97,14 +97,14 @@ mu_cmd_view (MuConfigOptions *opts)
 		return FALSE;
 	}
 	
-	mu_msg_gmime_init();
+	mu_msg_init();
 
 	rv = TRUE;
 	for (i = 1; opts->params[i] && rv; ++i) 	
 		rv = view_file (opts->params[i], NULL,
 				opts->summary_len);
 
-	mu_msg_gmime_uninit();
+	mu_msg_uninit();
 	
 	return rv;
 }

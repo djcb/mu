@@ -97,7 +97,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 			time_t filestamp,
 			MuIndexCallbackData *data, gboolean *updated)
 { 
-	MuMsgGMime *msg;
+	MuMsg *msg;
 	
 	*updated = FALSE;
 
@@ -125,7 +125,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 	} while (0);
 
 		
-	msg = mu_msg_gmime_new (fullpath, mdir);
+	msg = mu_msg_new (fullpath, mdir);
 	if (!msg) {
 		g_warning ("%s: failed to create mu_msg for %s",
 			   __FUNCTION__, fullpath);
@@ -139,7 +139,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 		/* ignore...*/
 	} 
 	
-	mu_msg_gmime_destroy (msg);
+	mu_msg_destroy (msg);
 	*updated = TRUE;
 
 	return MU_OK;	

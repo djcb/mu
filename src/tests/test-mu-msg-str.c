@@ -102,9 +102,9 @@ test_mu_msg_str_size_02 (void)
 static void
 test_mu_msg_str_prio_01 (void)
 {
-	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIORITY_LOW), ==, "low");
-	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIORITY_NORMAL), ==, "normal");
-	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIORITY_HIGH), ==, "high");
+	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIO_LOW), ==, "low");
+	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIO_NORMAL), ==, "normal");
+	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIO_HIGH), ==, "high");
 }
 
 

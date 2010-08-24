@@ -21,6 +21,7 @@
 #define __MU_MSG_CONTACT_H__
 
 #include <glib.h>
+#include "mu-msg.h"
 
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO,
@@ -37,28 +38,6 @@ struct _MuMsgContact {
 	MuMsgContactType  type;    /*MU_MSG_CONTACT_TYPE_{TO,CC,BCC,FROM}*/  
 };
 typedef struct _MuMsgContact MuMsgContact;
-
-
-/**
- * create a new MuMsgContact instance
- * 
- * @param name name of the contact (or NULL)
- * @param addr address of the contact (or NULL)
- * @param ctype a valid contact type
- * 
- * @return a new MuMsgContact instance; use mu_msg_contact_destroy
- * when finished.
- */
-MuMsgContact *mu_msg_contact_new (const char *name, const char *addr,
-				  MuMsgContactType ctype);
-
-/**
- * destroy a MuMsgContact
- * 
- * @param ct a MuMsgContact, or NULL
- */
-void mu_msg_contact_destroy (MuMsgContact *ct);
-
 
 /**
  * macro to get the name of a contact
@@ -90,33 +69,27 @@ void mu_msg_contact_destroy (MuMsgContact *ct);
 
 /**
  * callback function
- * 
+ *
  * @param contact
  * @param user_data a user provided data pointer
- * 
+ *
  * @return TRUE if we should continue the foreach, FALSE otherwise
  */
 typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
 					      gpointer user_data);
 
-/**
- * call a function for each MuMsgContact in the list
- * 
- * @param lst a list of MuMsgContact objects
- * @param func a callback function
- * @param user_data user pointer, passed to the callback
- */
-void mu_msg_contacts_foreach (GSList *lst,
-				  MuMsgContactForeachFunc func,
-				  gpointer user_data);
 
 /**
- * free a list of MuMsgContact objects
+ * call a function for each of the contacts in a message 
+ *
+ * @param msg a valid MuMsgGMime* instance
+ * @param func a callback function to call for each contact; when
+ * the callback does not return TRUE, it won't be called again
+ * @param user_data a user-provide pointer that will be passed to the callback
  * 
- * @param lst list of MuMsgContact object
  */
-void mu_msg_contacts_free (GSList *lst);
-
+void mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
+			     gpointer user_data);
 
 
 #endif /*__MU_MSG_CONTACT_H__*/

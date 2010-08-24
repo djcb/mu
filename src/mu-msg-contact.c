@@ -22,57 +22,110 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include <glib.h>
+#include <gmime/gmime.h>
+
+#include "mu-msg-priv.h"
+#include "mu-msg.h"
+
 #include "mu-msg-contact.h"
+#include "mu-util.h"
 
+	
 
-MuMsgContact*
-mu_msg_contact_new (const char *name, const char* address,
-		    MuMsgContactType ctype)
+static gboolean
+fill_contact (MuMsgContact *contact, InternetAddress *addr,
+	      MuMsgContactType ctype)
 {
-	MuMsgContact *ct;
+	if (!addr)
+		return FALSE;
 	
-	g_return_val_if_fail (ctype == MU_MSG_CONTACT_TYPE_TO ||
-			      ctype == MU_MSG_CONTACT_TYPE_FROM ||
-			      ctype == MU_MSG_CONTACT_TYPE_CC ||
-			      ctype == MU_MSG_CONTACT_TYPE_BCC,
-			      NULL);
+	contact->name = (char*)internet_address_get_name (addr);
+	contact->type = ctype;  
 	
-	ct		= g_slice_new (MuMsgContact);
-	ct->name	= name ? g_strdup(name) : NULL;
-	ct->address	= address ? g_strdup(address) : NULL;
-	ct->type	= ctype;
-
-	return ct;
+	/* we only support internet addresses;
+	 * if we don't check, g_mime hits an assert
+	 */
+	contact->address = (char*)internet_address_mailbox_get_addr
+		(INTERNET_ADDRESS_MAILBOX(addr));
+	
+	return TRUE;
 }
 
 
-void
-mu_msg_contact_destroy (MuMsgContact *ct)
+static void
+address_list_foreach (InternetAddressList *addrlist,
+		      MuMsgContactType     ctype,
+		      MuMsgContactForeachFunc func, 
+		      gpointer user_data)
 {
-	if (ct) {
-		g_free (ct->name);
-		g_free (ct->address);
+	int i;
+	
+	if (!addrlist)
+		return;
+	
+	for (i = 0; i != internet_address_list_length(addrlist); ++i) {
+		
+		MuMsgContact contact;
+		if (!fill_contact(&contact,
+				  internet_address_list_get_address (addrlist, i),
+				  ctype)) {
+			MU_WRITE_LOG ("ignoring contact");
+			continue;
+		}
+		
+		if (!(func)(&contact, user_data))
+			break;
 	}
 
-	g_slice_free (MuMsgContact, ct);
+	return;
 }
 
-		
 
-void
-mu_msg_contacts_foreach (GSList *lst,
-			     MuMsgContactForeachFunc func,
-			     gpointer user_data)
+
+static void
+get_contacts_from (MuMsg *msg, MuMsgContactForeachFunc func, 
+		   gpointer user_data)
 {
-	while (lst && func((MuMsgContact*)lst->data, user_data))
-		lst = g_slist_next(lst);
-}
-
+	InternetAddressList *lst;
 	
+	/* we go through this whole excercise of trying to get a *list*
+	 * of 'From:' address (usually there is only one...), because
+	 * internet_address_parse_string has the nice side-effect of
+	 * splitting in names and addresses for us */
+	lst = internet_address_list_parse_string (
+		g_mime_message_get_sender (msg->_mime_msg));
+	if (lst) {
+		address_list_foreach (lst, MU_MSG_CONTACT_TYPE_FROM,
+				      func, user_data);
+		g_object_unref (G_OBJECT(lst));
+	} 
+}
+
 
 void
-mu_msg_contacts_free (GSList *lst)
+mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func, 
+			gpointer user_data)
 {
-	g_slist_foreach (lst, (GFunc)mu_msg_contact_destroy, NULL);
-	g_slist_free (lst);
+	int i;		
+	struct { 
+		GMimeRecipientType     _gmime_type;
+		MuMsgContactType       _type;
+	} ctypes[] = {
+		{GMIME_RECIPIENT_TYPE_TO,  MU_MSG_CONTACT_TYPE_TO},
+		{GMIME_RECIPIENT_TYPE_CC,  MU_MSG_CONTACT_TYPE_CC},
+		{GMIME_RECIPIENT_TYPE_BCC, MU_MSG_CONTACT_TYPE_BCC},
+	};
+
+	g_return_if_fail (func && msg);
+
+	/* first, get the from address(es) */
+	get_contacts_from (msg, func, user_data);
+
+	/* get to, cc, bcc */
+	for (i = 0; i != G_N_ELEMENTS(ctypes); ++i) {
+		InternetAddressList *addrlist;
+		addrlist = g_mime_message_get_recipients (msg->_mime_msg,
+							  ctypes[i]._gmime_type);
+		address_list_foreach (addrlist, ctypes[i]._type, func, user_data);
+	}
 }

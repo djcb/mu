@@ -99,7 +99,7 @@ static const MuMsgField FIELD_DATA[] = {
 	},
 	
 	{ 
-		MU_MSG_FIELD_ID_PRIORITY,
+		MU_MSG_FIELD_ID_PRIO,
 		MU_MSG_FIELD_TYPE_INT,
 		"prio", "p", "P",  
 		FLAG_GMIME | FLAG_XAPIAN_VALUE

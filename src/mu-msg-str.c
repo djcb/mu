@@ -85,18 +85,18 @@ mu_msg_str_flags  (MuMsgFlags flags)
 }
 
 const char* 
-mu_msg_str_prio  (MuMsgPriority prio)
+mu_msg_str_prio  (MuMsgPrio prio)
 {
 	switch (prio) {
 
-	case MU_MSG_PRIORITY_LOW:
+	case MU_MSG_PRIO_LOW:
 		return "low";
 		
-	case MU_MSG_PRIORITY_NONE:
-	case MU_MSG_PRIORITY_NORMAL:
+	case MU_MSG_PRIO_NONE:
+	case MU_MSG_PRIO_NORMAL:
 		return "normal";
 
-	case MU_MSG_PRIORITY_HIGH:
+	case MU_MSG_PRIO_HIGH:
 		return "high";
 
 	default:

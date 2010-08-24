@@ -89,7 +89,7 @@ char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
  * @return a string representation of the priority; see above
  * for what to do with it, or NULL in case of error
  */
-const char* mu_msg_str_prio  (MuMsgPriority prio) G_GNUC_CONST;
+const char* mu_msg_str_prio  (MuMsgPrio prio) G_GNUC_CONST;
 
 
 #endif /*__MU_MSG_STR_H__*/

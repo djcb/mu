@@ -21,7 +21,6 @@
 #define __MU_MSG_ITER_XAPIAN_H__
 
 #include "mu-msg.h"
-#include "mu-msg-gmime.h"
 
 G_BEGIN_DECLS
 
@@ -60,7 +59,7 @@ void		 mu_msg_iter_xapian_destroy           (MuMsgIterXapian *iter);
 
 
 /**
- * get the corresponding GMime message for this iter; this requires
+ * get the corresponding MuMsg for this iter; this requires
  * the corresponding message file to be present at the expected place
  * 
  * @param iter a valid MuMsgIterXapian instance
@@ -68,7 +67,7 @@ void		 mu_msg_iter_xapian_destroy           (MuMsgIterXapian *iter);
  * @return a MuMsgGMime instance, or NULL in case of error. Use
  * mu_msg_gmime_destroy when the instance is no longer needed
  */
-MuMsgGMime* mu_msg_iter_xapian_get_msg_gmime (MuMsgIterXapian *iter);
+MuMsg* mu_msg_iter_xapian_get_msg (MuMsgIterXapian *iter);
 
 /**
  * get the document id for the current message
@@ -169,9 +168,9 @@ MuMsgFlags       mu_msg_iter_xapian_get_flags         (MuMsgIterXapian *iter);
  * 
  * @param iter a valid MuMsgIterXapian iterator
  * 
- * @return the message priority, or MU_MSG_PRIORITY_NONE
+ * @return the message priority, or MU_MSG_PRIO_NONE
  */
-MuMsgPriority    mu_msg_iter_xapian_get_priority      (MuMsgIterXapian *iter);
+MuMsgPrio    mu_msg_iter_xapian_get_prio      (MuMsgIterXapian *iter);
 
 
 /**

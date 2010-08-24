@@ -67,13 +67,16 @@ libmu_la_SOURCES=			\
 	mu-msg-fields.h			\
 	mu-msg-flags.c			\
 	mu-msg-flags.h			\
-	mu-msg-gmime.c			\
-	mu-msg-gmime.h			\
+	mu-msg-prio.h			\
+	mu-msg-status.h			\
+	mu-msg.c			\
+	mu-msg.h			\
+	mu-msg-priv.h			\
 	mu-msg-iter-xapian-priv.hh	\
 	mu-msg-iter-xapian.cc		\
 	mu-msg-iter-xapian.h		\
-	mu-msg-part-info.c		\
-	mu-msg-part-info.h		\
+	mu-msg-part.c			\
+	mu-msg-part.h			\
 	mu-msg-str.c			\
 	mu-msg-str.h			\
 	mu-msg.h			\

@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -24,7 +24,7 @@
 #include <inttypes.h>
 
 #include "mu-result.h"
-#include "mu-msg-gmime.h"
+#include "mu-msg.h"
 
 G_BEGIN_DECLS
 
@@ -85,8 +85,7 @@ void mu_store_xapian_flush (MuStoreXapian *store);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult	  mu_store_xapian_store   (MuStoreXapian *store,
-					   MuMsgGMime *msg);
+MuResult	  mu_store_xapian_store   (MuStoreXapian *store, MuMsg *msg);
 
 
 /** 

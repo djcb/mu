@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,9 @@
 **
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
 
 #include <unistd.h>
 #include <stdio.h>
@@ -26,7 +28,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "mu-msg-gmime.h"
+#include "mu-msg.h"
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-query-xapian.h"
@@ -74,14 +76,14 @@ display_field (MuMsgIterXapian *iter, const MuMsgField* field)
 
 	case MU_MSG_FIELD_TYPE_INT:
 	
-		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_PRIORITY) {
+		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_PRIO) {
 			val = mu_msg_iter_xapian_get_field_numeric (iter, field);
-			return mu_msg_str_prio ((MuMsgPriority)val);
+			return mu_msg_str_prio ((MuMsgPrio)val);
 		}
 		
 		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_FLAGS) {
 			val = mu_msg_iter_xapian_get_field_numeric (iter, field);
-			return mu_msg_str_flags_s ((MuMsgPriority)val);
+			return mu_msg_str_flags_s ((MuMsgPrio)val);
 		}
 
 		return mu_msg_iter_xapian_get_field (iter, field); /* as string */
@@ -120,18 +122,18 @@ static void
 print_summary (MuMsgIterXapian *iter, size_t summary_len)
 {
 	const char *summ;
-	MuMsgGMime *msg;
+	MuMsg *msg;
 
-	msg = mu_msg_iter_xapian_get_msg_gmime (iter);
+	msg = mu_msg_iter_xapian_get_msg (iter);
 	if (!msg) {
 		g_warning ("%s: failed to create msg object", __FUNCTION__);
 		return;
 	}
 
-	summ = mu_msg_gmime_get_summary (msg, summary_len);
+	summ = mu_msg_get_summary (msg, summary_len);
 	g_print ("Summary: %s\n", summ ? summ : "<none>");
 	
-	mu_msg_gmime_destroy (msg);
+	mu_msg_destroy (msg);
 }
 
 
@@ -341,19 +343,19 @@ mu_cmd_find (MuConfigOptions *opts)
 	/* first param is 'query', search params are after that */
 	params = (const gchar**)&opts->params[1];
 
-	mu_msg_gmime_init();
+	mu_msg_init();
 	
 	xapian = mu_query_xapian_new (opts->xpath);
 	if (!xapian) {
 		g_printerr ("Failed to create a Xapian query\n");
-		mu_msg_gmime_uninit ();
+		mu_msg_uninit ();
 		return FALSE;
 	}
 
 	rv = do_output (xapian, opts, params);
 	
 	mu_query_xapian_destroy (xapian);
-	mu_msg_gmime_uninit();
+	mu_msg_uninit();
 	
 	return rv;
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,27 +17,29 @@
 **
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
 
 #include <stdlib.h>
 
-#include "mu-msg-gmime.h"
+#include "mu-msg.h"
+#include "mu-msg-part.h"
 #include "mu-msg-str.h"
 #include "mu-cmd.h"
-
 
 static gboolean
 save_part (const char* path, unsigned idx)
 {
-	MuMsgGMime* msg;
+	MuMsg* msg;
 	
-	msg = mu_msg_gmime_new (path, NULL);
+	msg = mu_msg_new (path, NULL);
 	if (!msg)
 		return FALSE;
 	
-	mu_msg_gmime_mime_part_save (msg, idx, NULL, TRUE); /* FIXME */
+	mu_msg_mime_part_save (msg, idx, NULL, TRUE); /* FIXME */
 	
-	mu_msg_gmime_destroy (msg);
+	mu_msg_destroy (msg);
 	
 	return TRUE;
 }
@@ -45,7 +47,7 @@ save_part (const char* path, unsigned idx)
 
 
 static void
-each_part (MuMsgPartInfo* part, gpointer user_data)
+each_part (MuMsgPart *part, gpointer user_data)
 {
 	g_print ("%u %s %s/%s [%s]\n",
 		 part->index,
@@ -59,15 +61,15 @@ each_part (MuMsgPartInfo* part, gpointer user_data)
 static gboolean
 show_parts (const char* path)
 {
-	MuMsgGMime* msg;
+	MuMsg* msg;
 	
-	msg = mu_msg_gmime_new (path, NULL);
+	msg = mu_msg_new (path, NULL);
 	if (!msg)
 		return FALSE;
 
-	mu_msg_gmime_msg_part_infos_foreach (msg,  each_part, NULL);
+	mu_msg_msg_part_foreach (msg, each_part, NULL);
 
-	mu_msg_gmime_destroy (msg);
+	mu_msg_destroy (msg);
 	
 	return TRUE;
 	
@@ -82,12 +84,12 @@ mu_cmd_extract (MuConfigOptions *opts)
 
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_printerr ("missing file to extract\n");
+		g_warning ("missing mail file to extract something from");
 		return FALSE;
 	}
-	mu_msg_gmime_init();
+	mu_msg_init();
 
-	rv = FALSE;
+	rv = TRUE;
 	if (!opts->params[2]) /* no explicit part, show, don't save */
 		rv = show_parts (opts->params[1]);
 	else {
@@ -95,20 +97,20 @@ mu_cmd_extract (MuConfigOptions *opts)
 		for (i = 2; opts->params[i]; ++i) {
 			unsigned idx = atoi (opts->params[i]);
 			if (idx == 0) {
-				g_printerr ("not a valid index: %s", opts->params[i]);
+				g_warning ("not a valid index: %s", opts->params[i]);
 				rv = FALSE;
 				break;
 			}
 			if (!save_part (opts->params[1], idx)) {
-				g_printerr ("failed to save part %d of %s", idx,
+				g_warning ("failed to save part %d of %s", idx,
 					    opts->params[1]);
 				rv = FALSE;
 				break;
 			}
 		}
 	}
-	
-	mu_msg_gmime_uninit();
+
+	mu_msg_uninit();
 	
 	return rv;
 }
