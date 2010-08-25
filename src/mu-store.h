@@ -17,8 +17,8 @@
 **  
 */
 
-#ifndef __MU_STORE_XAPIAN_H__
-#define __MU_STORE_XAPIAN_H__
+#ifndef __MU_STORE_H__
+#define __MU_STORE_H__
 
 #include <glib.h>
 #include <inttypes.h>
@@ -28,56 +28,56 @@
 
 G_BEGIN_DECLS
 
-struct _MuStoreXapian;
-typedef struct _MuStoreXapian MuStoreXapian;
+struct _MuStore;
+typedef struct _MuStore MuStore;
 
-/** 
+/**
  * create a new Xapian store, a place to store documents
  * 
  * @param path the path to the database
  * 
- * @return a new MuStoreXapian object, or NULL in case of error
+ * @return a new MuStore object, or NULL in case of error
  */
-MuStoreXapian*    mu_store_xapian_new     (const char* path);
+MuStore*    mu_store_new     (const char* path);
 
-/** 
- * destroy the MuStoreXapian object and free resources
+/**
+ * destroy the MuStore object and free resources
  * 
  * @param store a valid store, or NULL
  */
-void              mu_store_xapian_destroy (MuStoreXapian *store);
+void              mu_store_destroy (MuStore *store);
 
 
 
-/** 
+/**
  * get a version string for the database
  * 
- * @param store a valid MuStoreXapian
+ * @param store a valid MuStore
  * 
  * @return the version string (free with g_free), or NULL in case of error
  */
-char* mu_store_xapian_version (MuStoreXapian *store);
+char* mu_store_version (MuStore *store);
 
-/** 
+/**
  * set the version string for the database
  * 
- * @param store a valid MuStoreXapian
+ * @param store a valid MuStore
  * @param version the version string (non-NULL)
  *
  * @return TRUE if setting the version succeeded, FALSE otherwise  
  */
-gboolean  mu_store_xapian_set_version (MuStoreXapian *store,
+gboolean  mu_store_set_version (MuStore *store,
 				       const char* version);
 
 
-/** 
+/**
  * try to flush/commit all outstanding work
  * 
  * @param store a valid xapian store
  */
-void mu_store_xapian_flush (MuStoreXapian *store);
+void mu_store_flush (MuStore *store);
 
-/** 
+/**
  * store an email message in the XapianStore
  * 
  * @param store a valid store
@@ -85,10 +85,10 @@ void mu_store_xapian_flush (MuStoreXapian *store);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult	  mu_store_xapian_store   (MuStoreXapian *store, MuMsg *msg);
+MuResult	  mu_store_store   (MuStore *store, MuMsg *msg);
 
 
-/** 
+/**
  * remove a message from the database
  * 
  * @param store a valid store
@@ -99,11 +99,11 @@ MuResult	  mu_store_xapian_store   (MuStoreXapian *store, MuMsg *msg);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult          mu_store_xapian_remove (MuStoreXapian *store,
+MuResult          mu_store_remove (MuStore *store,
 					  const char* msgpath);
 
 
-/** 
+/**
  * does a certain message exist in the database already?
  * 
  * @param store a store
@@ -111,21 +111,21 @@ MuResult          mu_store_xapian_remove (MuStoreXapian *store,
  * 
  * @return 
  */
-gboolean          mu_store_contains_message (MuStoreXapian *store,
+gboolean          mu_store_contains_message (MuStore *store,
 					     const char* path);
 
-/** 
+/**
  * store a timestamp for a directory
  * 
  * @param store a valid store
  * @param msgpath path to a maildir
  * @param stamp a timestamp
  */
-void              mu_store_xapian_set_timestamp (MuStoreXapian *store,
+void              mu_store_set_timestamp (MuStore *store,
 						 const char* msgpath, 
 						 time_t stamp);
 
-/** 
+/**
  * get the timestamp for a directory
  * 
  * @param store a valid store
@@ -133,10 +133,10 @@ void              mu_store_xapian_set_timestamp (MuStoreXapian *store,
  * 
  * @return the timestamp, or 0 in case of error
  */
-time_t            mu_store_xapian_get_timestamp (MuStoreXapian *store,
+time_t            mu_store_get_timestamp (MuStore *store,
 						 const char* msgpath);
 
-/** 
+/**
  * call a function for each document in the database
  * 
  * @param self a valid store
@@ -146,12 +146,12 @@ time_t            mu_store_xapian_get_timestamp (MuStoreXapian *store,
  * @return MU_OK if all went well, MU_STOP if the foreach was interrupted,
  * MU_ERROR in case of error
  */
-typedef MuResult (*MuStoreXapianForeachFunc) (const char* path,
+typedef MuResult (*MuStoreForeachFunc) (const char* path,
 					      void *user_data);
-MuResult         mu_store_xapian_foreach (MuStoreXapian *self,
-					  MuStoreXapianForeachFunc func,
-					  void *user_data);
+MuResult         mu_store_foreach (MuStore *self,
+				   MuStoreForeachFunc func,
+				   void *user_data);
 
 G_END_DECLS
 
-#endif /*__MU_STORE_XAPIAN_H__*/
+#endif /*__MU_STORE_H__*/

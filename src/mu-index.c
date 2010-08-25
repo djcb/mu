@@ -28,12 +28,12 @@
 
 #include "mu-maildir.h"
 #include "mu-index.h"
-#include "mu-store-xapian.h"
+#include "mu-store.h"
 #include "mu-util.h"
 #include "mu-util-db.h"
 
 struct _MuIndex {
-	MuStoreXapian  *_xapian;
+	MuStore  *_xapian;
 	gboolean _needs_reindex;
 };
 
@@ -45,7 +45,7 @@ mu_index_new (const char *xpath)
 	g_return_val_if_fail (xpath, NULL);
 	
 	index = g_new0 (MuIndex, 1);				
-	index->_xapian = mu_store_xapian_new (xpath);
+	index->_xapian = mu_store_new (xpath);
 	
 	if (!index->_xapian) {
 		g_warning ("%s: failed to open xapian store (%s)",
@@ -74,7 +74,7 @@ mu_index_destroy (MuIndex *index)
 	if (!index)
 		return;
 	
-	mu_store_xapian_destroy (index->_xapian);
+	mu_store_destroy (index->_xapian);
 	g_free (index);
 }
 
@@ -83,7 +83,7 @@ mu_index_destroy (MuIndex *index)
 struct _MuIndexCallbackData {
 	MuIndexMsgCallback    _idx_msg_cb;
 	MuIndexDirCallback    _idx_dir_cb;
-	MuStoreXapian*        _xapian;
+	MuStore*        _xapian;
 	void*                 _user_data;
 	MuIndexStats*         _stats;
 	gboolean	      _reindex;
@@ -133,7 +133,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 	}
 	
 	/* we got a valid id; scan the message contents as well */
-	if (mu_store_xapian_store (data->_xapian, msg) != MU_OK) {
+	if (mu_store_store (data->_xapian, msg) != MU_OK) {
 		g_warning ("%s: storing content %s failed", __FUNCTION__, 
 			   fullpath);
 		/* ignore...*/
@@ -200,13 +200,13 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 	 */
 	if (enter) {
 		data->_dirstamp =
-			mu_store_xapian_get_timestamp (data->_xapian,
+			mu_store_get_timestamp (data->_xapian,
 						       fullpath);
 		g_debug ("entering %s (ts==%u)",
 			 fullpath, (unsigned)data->_dirstamp);
 	} else {
 		time_t now = time (NULL);
-		mu_store_xapian_set_timestamp (data->_xapian, fullpath,
+		mu_store_set_timestamp (data->_xapian, fullpath,
 					       now);
 		g_debug ("leaving %s (ts=%u)",
 			 fullpath, (unsigned)data->_dirstamp);
@@ -240,7 +240,7 @@ check_path (const char* path)
 }
 
 static void
-init_cb_data (MuIndexCallbackData *cb_data, MuStoreXapian  *xapian,
+init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
 	      gboolean reindex, MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb, 
 	      void *user_data)
@@ -289,12 +289,12 @@ mu_index_run (MuIndex *index, const char* path,
 			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
 			      &cb_data);
 	if (rv == MU_OK) {
-		if (!mu_store_xapian_set_version (index->_xapian,
+		if (!mu_store_set_version (index->_xapian,
 						  MU_XAPIAN_DB_VERSION))
 			g_warning ("failed to set database version");
 	}
 	
-	mu_store_xapian_flush (index->_xapian);
+	mu_store_flush (index->_xapian);
 	return rv;
 }
 
@@ -352,7 +352,7 @@ mu_index_stats (MuIndex *index, const char* path,
 
 
 struct _CleanupData {
-	MuStoreXapian *_xapian;
+	MuStore *_xapian;
 	MuIndexStats  *_stats;
 	MuIndexCleanupDeleteCallback _cb;
 	void *_user_data;
@@ -369,7 +369,7 @@ foreach_doc_cb (const char* path, CleanupData *cudata)
 	if (access (path, R_OK) != 0) {
 		
 		g_debug ("not readable: %s; removing", path);
-		rv = mu_store_xapian_remove (cudata->_xapian, path);
+		rv = mu_store_remove (cudata->_xapian, path);
 		if (rv != MU_OK)
 			return rv; /* something went wrong... bail out */	
 		
@@ -403,10 +403,10 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 	cudata._cb	  = cb;
 	cudata._user_data = user_data;
 	
-	rv = mu_store_xapian_foreach (index->_xapian,
-				      (MuStoreXapianForeachFunc)foreach_doc_cb,
+	rv = mu_store_foreach (index->_xapian,
+				      (MuStoreForeachFunc)foreach_doc_cb,
 				      &cudata);
-	mu_store_xapian_flush (index->_xapian);
+	mu_store_flush (index->_xapian);
 
 	return rv;
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -25,16 +25,16 @@
 #include <xapian.h>
 
 #include "mu-msg.h"
-#include "mu-store-xapian.h"
+#include "mu-store.h"
 #include "mu-util.h"
 
 /* number of new messages after which we commit to the database */
-#define MU_STORE_XAPIAN_TRX_SIZE 2000
+#define MU_STORE_TRX_SIZE 2000
 
 /* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
-#define MU_STORE_XAPIAN_MAX_TERM_LENGTH 240
+#define MU_STORE_MAX_TERM_LENGTH 240
 
-struct _MuStoreXapian {
+struct _MuStore {
 	Xapian::WritableDatabase *_db;
 
 	/* transaction handling */
@@ -43,20 +43,20 @@ struct _MuStoreXapian {
 	size_t _trx_size;
 };
 
-MuStoreXapian*
-mu_store_xapian_new  (const char* xpath)
+MuStore*
+mu_store_new  (const char* xpath)
 {
-	MuStoreXapian *store (0);
+	MuStore *store (0);
 	
 	g_return_val_if_fail (xpath, NULL);
 	
 	try {
-		store = g_new0(MuStoreXapian,1);
+		store = g_new0(MuStore,1);
 		store->_db = new Xapian::WritableDatabase 
 			(xpath, Xapian::DB_CREATE_OR_OPEN);
 		
 		/* keep count of processed docs */
-		store->_trx_size = MU_STORE_XAPIAN_TRX_SIZE; 
+		store->_trx_size = MU_STORE_TRX_SIZE; 
 		store->_in_transaction = false;
 		store->_processed = 0;
 		
@@ -74,7 +74,7 @@ mu_store_xapian_new  (const char* xpath)
 
 
 char*
-mu_store_xapian_version (MuStoreXapian *store)
+mu_store_version (MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
 
@@ -90,7 +90,7 @@ mu_store_xapian_version (MuStoreXapian *store)
 }
 
 gboolean
-mu_store_xapian_set_version (MuStoreXapian *store, const char* version)
+mu_store_set_version (MuStore *store, const char* version)
 {
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (version, FALSE);
@@ -106,7 +106,7 @@ mu_store_xapian_set_version (MuStoreXapian *store, const char* version)
 
 
 static void
-begin_trx_if (MuStoreXapian *store, gboolean cond)
+begin_trx_if (MuStore *store, gboolean cond)
 {
 	if (cond) {
 		g_debug ("beginning Xapian transaction");
@@ -116,7 +116,7 @@ begin_trx_if (MuStoreXapian *store, gboolean cond)
 }
 
 static void
-commit_trx_if (MuStoreXapian *store, gboolean cond)
+commit_trx_if (MuStore *store, gboolean cond)
 {
 	if (cond) {
 		g_debug ("comitting Xapian transaction");
@@ -126,7 +126,7 @@ commit_trx_if (MuStoreXapian *store, gboolean cond)
 }
 
 static void
-rollback_trx_if (MuStoreXapian *store, gboolean cond)
+rollback_trx_if (MuStore *store, gboolean cond)
 {
 	if (cond) {
 		g_debug ("rolling back Xapian transaction");
@@ -137,13 +137,13 @@ rollback_trx_if (MuStoreXapian *store, gboolean cond)
 
 
 void
-mu_store_xapian_destroy (MuStoreXapian *store)
+mu_store_destroy (MuStore *store)
 {
 	if (!store)
 		return;
 
 	try {
-		mu_store_xapian_flush (store);
+		mu_store_flush (store);
 		
 		MU_WRITE_LOG ("closing xapian database with %d documents",
 			(int)store->_db->get_doccount());
@@ -155,7 +155,7 @@ mu_store_xapian_destroy (MuStoreXapian *store)
 }
 
 void
-mu_store_xapian_flush (MuStoreXapian *store)
+mu_store_flush (MuStore *store)
 {
 	g_return_if_fail (store);
 	
@@ -200,11 +200,11 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	}
 
 	if (mu_msg_field_xapian_term(field))
-		/* terms can be up to MU_STORE_XAPIAN_MAX_TERM_LENGTH
+		/* terms can be up to MU_STORE_MAX_TERM_LENGTH
 		    * (240) long; this is a Xapian limit
 		    * */
 		doc.add_term (std::string (prefix + value, 0,
-		 			   MU_STORE_XAPIAN_MAX_TERM_LENGTH));
+		 			   MU_STORE_MAX_TERM_LENGTH));
 
 	if (mu_msg_field_xapian_value(field)) 			 
 		doc.add_value ((Xapian::valueno)mu_msg_field_id (field),
@@ -291,7 +291,7 @@ get_message_uid (MuMsg *msg)
 
 
 MuResult
-mu_store_xapian_store (MuStoreXapian *store, MuMsg *msg)
+mu_store_store (MuStore *store, MuMsg *msg)
 {	
 	g_return_val_if_fail (store, MU_ERROR);
 	g_return_val_if_fail (msg, MU_ERROR);
@@ -326,7 +326,7 @@ mu_store_xapian_store (MuStoreXapian *store, MuMsg *msg)
 
 
 MuResult
-mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
+mu_store_remove (MuStore *store, const char* msgpath)
 {
 	g_return_val_if_fail (store, MU_ERROR);
 	g_return_val_if_fail (msgpath, MU_ERROR);
@@ -352,7 +352,7 @@ mu_store_xapian_remove (MuStoreXapian *store, const char* msgpath)
 }
 
 gboolean
-mu_store_contains_message (MuStoreXapian *store, const char* path)
+mu_store_contains_message (MuStore *store, const char* path)
 {
 	g_return_val_if_fail (store, NULL);
 	g_return_val_if_fail (path, NULL);
@@ -367,7 +367,7 @@ mu_store_contains_message (MuStoreXapian *store, const char* path)
 
 
 time_t
-mu_store_xapian_get_timestamp (MuStoreXapian *store, const char* msgpath)
+mu_store_get_timestamp (MuStore *store, const char* msgpath)
 {
 	g_return_val_if_fail (store, 0);
 	g_return_val_if_fail (msgpath, 0);
@@ -386,8 +386,8 @@ mu_store_xapian_get_timestamp (MuStoreXapian *store, const char* msgpath)
 
 
 void
-mu_store_xapian_set_timestamp (MuStoreXapian *store, const char* msgpath, 
-				 time_t stamp)
+mu_store_set_timestamp (MuStore *store, const char* msgpath, 
+			time_t stamp)
 {
 	g_return_if_fail (store);
 	g_return_if_fail (msgpath);
@@ -402,8 +402,8 @@ mu_store_xapian_set_timestamp (MuStoreXapian *store, const char* msgpath,
 
 
 MuResult
-mu_store_xapian_foreach (MuStoreXapian *self, 
-			 MuStoreXapianForeachFunc func, void *user_data)  
+mu_store_foreach (MuStore *self, 
+		  MuStoreForeachFunc func, void *user_data)  
 {
 	g_return_val_if_fail (self, MU_ERROR);
 	g_return_val_if_fail (func, MU_ERROR);

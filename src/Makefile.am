@@ -83,8 +83,8 @@ libmu_la_SOURCES=			\
 	mu-query.cc			\
 	mu-query.h			\
 	mu-result.h			\
-	mu-store-xapian.cc		\
-	mu-store-xapian.h		\
+	mu-store.cc			\
+	mu-store.h			\
 	mu-util-db.cc			\
 	mu-util-db.h			\
 	mu-util.c			\
