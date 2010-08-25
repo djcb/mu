@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -101,6 +101,7 @@ gchar* mu_util_str_from_strv (const gchar **params) G_GNUC_WARN_UNUSED_RESULT;
  * don't repeat these catch blocks everywhere...
  * 
  */
+
 #define MU_XAPIAN_CATCH_BLOCK						\
 	catch (const Xapian::Error &err) {				\
                 g_critical ("%s: caught xapian exception '%s'",		\

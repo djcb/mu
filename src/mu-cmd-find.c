@@ -32,7 +32,7 @@
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-query-xapian.h"
-#include "mu-msg-iter-xapian.h"
+#include "mu-msg-iter.h"
 #include "mu-msg-str.h"
 
 #include "mu-util.h"
@@ -66,34 +66,34 @@ print_xapian_query (MuQueryXapian *xapian, const gchar *query)
 
 
 static const gchar*
-display_field (MuMsgIterXapian *iter, const MuMsgField* field)
+display_field (MuMsgIter *iter, const MuMsgField* field)
 {
 	gint64 val;
 
 	switch (mu_msg_field_type(field)) {
 	case MU_MSG_FIELD_TYPE_STRING:
-		return mu_msg_iter_xapian_get_field (iter, field);
+		return mu_msg_iter_get_field (iter, field);
 
 	case MU_MSG_FIELD_TYPE_INT:
 	
 		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_PRIO) {
-			val = mu_msg_iter_xapian_get_field_numeric (iter, field);
+			val = mu_msg_iter_get_field_numeric (iter, field);
 			return mu_msg_str_prio ((MuMsgPrio)val);
 		}
 		
 		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_FLAGS) {
-			val = mu_msg_iter_xapian_get_field_numeric (iter, field);
+			val = mu_msg_iter_get_field_numeric (iter, field);
 			return mu_msg_str_flags_s ((MuMsgPrio)val);
 		}
 
-		return mu_msg_iter_xapian_get_field (iter, field); /* as string */
+		return mu_msg_iter_get_field (iter, field); /* as string */
 
 	case MU_MSG_FIELD_TYPE_TIME_T: 
-		val = mu_msg_iter_xapian_get_field_numeric (iter, field);
+		val = mu_msg_iter_get_field_numeric (iter, field);
 		return mu_msg_str_date_s ((time_t)val);
 
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
-		val = mu_msg_iter_xapian_get_field_numeric (iter, field);
+		val = mu_msg_iter_get_field_numeric (iter, field);
 		return mu_msg_str_size_s ((time_t)val);
 	default:
 		g_return_val_if_reached (NULL);
@@ -119,12 +119,12 @@ sort_field_from_string (const char* fieldstr)
 }
 
 static void
-print_summary (MuMsgIterXapian *iter, size_t summary_len)
+print_summary (MuMsgIter *iter, size_t summary_len)
 {
 	const char *summ;
 	MuMsg *msg;
 
-	msg = mu_msg_iter_xapian_get_msg (iter);
+	msg = mu_msg_iter_get_msg (iter);
 	if (!msg) {
 		g_warning ("%s: failed to create msg object", __FUNCTION__);
 		return;
@@ -139,12 +139,12 @@ print_summary (MuMsgIterXapian *iter, size_t summary_len)
 
 
 static size_t
-print_rows (MuMsgIterXapian *iter, const char *fields, size_t summary_len)
+print_rows (MuMsgIter *iter, const char *fields, size_t summary_len)
 {
 	size_t count = 0;
 	const char* myfields;
 
-	if (mu_msg_iter_xapian_is_null (iter))
+	if (mu_msg_iter_is_null (iter))
 		return 0;
 	
 	do {
@@ -170,7 +170,7 @@ print_rows (MuMsgIterXapian *iter, const char *fields, size_t summary_len)
 
 		++count;
 		
-	} while (mu_msg_iter_xapian_next (iter));
+	} while (mu_msg_iter_next (iter));
 	
 	return count;
 }
@@ -192,7 +192,7 @@ create_or_clear_linksdir_maybe (const char *linksdir, gboolean clearlinks)
 
 
 static size_t
-make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
+make_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks)
 {
 	size_t count = 0;
 	const MuMsgField *pathfield;
@@ -200,7 +200,7 @@ make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
 	if (!create_or_clear_linksdir_maybe (linksdir, clearlinks))
 		return 0;
 
-	if (mu_msg_iter_xapian_is_null (iter))
+	if (mu_msg_iter_is_null (iter))
 		return 0;
 	
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
@@ -210,10 +210,10 @@ make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
 		const char *path;
 		
 		/* there's no data in the iter */
-		if (mu_msg_iter_xapian_is_null (iter))
+		if (mu_msg_iter_is_null (iter))
 			return count;		
 		
-		path = mu_msg_iter_xapian_get_field (iter, pathfield);
+		path = mu_msg_iter_get_field (iter, pathfield);
 		if (!path)
 			continue;
 			
@@ -228,7 +228,7 @@ make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
 			break;
 		++count;
 
-	} while (mu_msg_iter_xapian_next (iter));
+	} while (mu_msg_iter_next (iter));
 		 
 	return count;
 }
@@ -238,7 +238,7 @@ make_links (MuMsgIterXapian *iter, const char* linksdir, gboolean clearlinks)
 static gboolean
 run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 {
-	MuMsgIterXapian *iter;
+	MuMsgIter *iter;
 	const MuMsgField *sortfield;
 	size_t matches;
 	
@@ -266,7 +266,7 @@ run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 	if (matches == 0) 
 		g_printerr ("No matches found\n");
 
-	mu_msg_iter_xapian_destroy (iter);
+	mu_msg_iter_destroy (iter);
 
 	return matches > 0;
 }

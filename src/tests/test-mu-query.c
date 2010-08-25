@@ -55,15 +55,15 @@ fill_database (void)
 }
 
 static guint
-count_matches (	MuMsgIterXapian *iter)
+count_matches (	MuMsgIter *iter)
 {
 	guint count;
 
-	if (mu_msg_iter_xapian_is_null(iter))
+	if (mu_msg_iter_is_null(iter))
 		return 0;
 
 	count = 1;
-	while (mu_msg_iter_xapian_next (iter))
+	while (mu_msg_iter_next (iter))
 		++count;
 
 	return count;
@@ -98,12 +98,12 @@ test_mu_query_01 (void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		int count = 0;
-		MuMsgIterXapian *iter =
+		MuMsgIter *iter =
 			mu_query_xapian_run (query, queries[i].query, NULL,
 					     FALSE, 1);
 
 		g_assert_cmpuint (queries[i].count, ==, count_matches(iter));
-		mu_msg_iter_xapian_destroy (iter);
+		mu_msg_iter_destroy (iter);
 	}
 
 	mu_query_xapian_destroy (query);
@@ -114,7 +114,7 @@ test_mu_query_01 (void)
 static void
 test_mu_query_02 (void)
 {
-	MuMsgIterXapian *iter;
+	MuMsgIter *iter;
 	MuQueryXapian *query;
 	const char* q;
 	gchar *xpath;
@@ -154,12 +154,12 @@ test_mu_query_03 (void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		int count = 0;
-		MuMsgIterXapian *iter =
+		MuMsgIter *iter =
 			mu_query_xapian_run (query, queries[i].query, NULL,
 					     FALSE, 1);
 
 		g_assert_cmpuint (queries[i].count, ==, count_matches(iter));
-		mu_msg_iter_xapian_destroy (iter);
+		mu_msg_iter_destroy (iter);
 	}
 
 	mu_query_xapian_destroy (query);

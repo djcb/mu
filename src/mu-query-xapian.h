@@ -21,7 +21,7 @@
 #define __MU_QUERY_XAPIAN_H__
 
 #include <glib.h>
-#include "mu-msg-iter-xapian.h"
+#include "mu-msg-iter.h"
 
 G_BEGIN_DECLS
 /*
@@ -74,15 +74,14 @@ char* mu_query_xapian_version (MuQueryXapian *store) G_GNUC_WARN_UNUSED_RESULT;
  * If you pass '0' as the batchsize, mu will use the maximum size (the count
  * of documents in the database)
  *
- * @return a MuMsgIterXapian instance you can iterate over, or NULL in
+ * @return a MuMsgIter instance you can iterate over, or NULL in
  * case of error
  */
-MuMsgIterXapian* mu_query_xapian_run (MuQueryXapian *self, 
-				      const char* expr,
-				      const MuMsgField* sortfield,
-				      gboolean ascending,
-				      size_t batchsize)
-G_GNUC_WARN_UNUSED_RESULT;
+MuMsgIter* mu_query_xapian_run (MuQueryXapian *self, 
+				const char* expr,
+				const MuMsgField* sortfield,
+				gboolean ascending,
+				size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /** 
@@ -95,8 +94,7 @@ G_GNUC_WARN_UNUSED_RESULT;
  * error; free the returned value with g_free
  */
 char* mu_query_xapian_as_string (MuQueryXapian *self,
-				 const char* searchexpr)
-	G_GNUC_WARN_UNUSED_RESULT;
+				 const char* searchexpr) G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS

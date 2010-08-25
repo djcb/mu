@@ -72,9 +72,9 @@ libmu_la_SOURCES=			\
 	mu-msg.c			\
 	mu-msg.h			\
 	mu-msg-priv.h			\
-	mu-msg-iter-xapian-priv.hh	\
-	mu-msg-iter-xapian.cc		\
-	mu-msg-iter-xapian.h		\
+	mu-msg-iter-priv.hh		\
+	mu-msg-iter.cc			\
+	mu-msg-iter.h			\
 	mu-msg-part.c			\
 	mu-msg-part.h			\
 	mu-msg-str.c			\
