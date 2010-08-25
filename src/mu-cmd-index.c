@@ -25,7 +25,7 @@
 #include <signal.h>
 
 #include "mu-util.h"
-#include "mu-util-xapian.h"
+#include "mu-util-db.h"
 
 #include "mu-msg.h"
 
@@ -131,24 +131,24 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 static gboolean
 database_version_check_and_update (MuConfigOptions *opts)
 {
-	if (mu_util_xapian_db_is_empty (opts->xpath))
+	if (mu_util_db_is_empty (opts->xpath))
 		return TRUE;
 	
 	/* we empty the database before doing anything */
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
 		g_message ("Clearing database %s", opts->xpath);
-		return mu_util_xapian_clear_database (opts->xpath);
+		return mu_util_clear_database (opts->xpath);
 	}
 
-	if (mu_util_xapian_db_version_up_to_date (opts->xpath))
+	if (mu_util_db_version_up_to_date (opts->xpath))
 		return TRUE; /* ok, nothing to do */
 	
 	/* ok, database is not up to date */
 	if (opts->autoupgrade) {
 		opts->reindex = TRUE;
 		g_message ("Auto-upgrade: clearing old database first");
-		return mu_util_xapian_clear_database (opts->xpath);
+		return mu_util_clear_database (opts->xpath);
 	}
 
 	update_warning ();

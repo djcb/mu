@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 1** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include "mu-index.h"
 #include "mu-store-xapian.h"
 #include "mu-util.h"
-#include "mu-util-xapian.h"
+#include "mu-util-db.h"
 
 struct _MuIndex {
 	MuStoreXapian  *_xapian;
@@ -57,11 +57,11 @@ mu_index_new (const char *xpath)
 	/* see we need to reindex the database; note, there is a small race-condition
 	 * here, between mu_index_new and mu_index_run. Maybe do the check in
 	 * mu_index_run instead? */
-	if (mu_util_xapian_db_is_empty (xpath))
+	if (mu_util_db_is_empty (xpath))
 		index->_needs_reindex = FALSE;
 	else {
 		index->_needs_reindex =
-			mu_util_xapian_db_version_up_to_date (xpath) ? FALSE : TRUE;
+			mu_util_db_version_up_to_date (xpath) ? FALSE : TRUE;
 	}
 		
 	return index;

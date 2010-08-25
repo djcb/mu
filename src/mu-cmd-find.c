@@ -36,7 +36,7 @@
 #include "mu-msg-str.h"
 
 #include "mu-util.h"
-#include "mu-util-xapian.h"
+#include "mu-util-db.h"
 #include "mu-cmd.h"
 
 
@@ -329,13 +329,13 @@ mu_cmd_find (MuConfigOptions *opts)
 	if (!query_params_valid (opts))
 		return FALSE;
 
-	if (mu_util_xapian_db_is_empty (opts->xpath)) {
+	if (mu_util_db_is_empty (opts->xpath)) {
 		g_printerr ("The database is empty; "
 			    "use 'mu index' to add some messages\n");
 		return FALSE;
 	}
 		
-	if (!mu_util_xapian_db_version_up_to_date (opts->xpath)) {
+	if (!mu_util_db_version_up_to_date (opts->xpath)) {
 		update_warning ();
 		return FALSE;
 	}

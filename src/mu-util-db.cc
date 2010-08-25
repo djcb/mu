@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,17 +17,20 @@
 **
 */
 
+#if HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
+
 #include <xapian.h>
 
 #include <cstring>
 #include <errno.h>
 
 #include "mu-util.h"
-#include "mu-util-xapian.h"
+#include "mu-util-db.h"
 
 char*
-mu_util_xapian_db_version (const gchar *xpath)
+mu_util_db_version (const gchar *xpath)
 {
 	g_return_val_if_fail (xpath, NULL);
 
@@ -50,14 +53,14 @@ mu_util_xapian_db_version (const gchar *xpath)
 
 
 gboolean
-mu_util_xapian_db_version_up_to_date (const gchar *xpath)
+mu_util_db_version_up_to_date (const gchar *xpath)
 {
 	gchar *version;
 	gboolean uptodate;
 
 	g_return_val_if_fail (xpath, FALSE);
 		
-	version = mu_util_xapian_db_version (xpath);
+	version = mu_util_db_version (xpath);
 	if (!version)
 		return FALSE;
 	
@@ -69,7 +72,7 @@ mu_util_xapian_db_version_up_to_date (const gchar *xpath)
 
 
 gboolean
-mu_util_xapian_db_is_empty (const gchar* xpath)
+mu_util_db_is_empty (const gchar* xpath)
 {
 	g_return_val_if_fail (xpath, TRUE);
 	
@@ -89,7 +92,7 @@ mu_util_xapian_db_is_empty (const gchar* xpath)
 
 
 gboolean
-mu_util_xapian_clear_database (const gchar *xpath)
+mu_util_clear_database (const gchar *xpath)
 {
 	g_return_val_if_fail (xpath, FALSE);
 	
