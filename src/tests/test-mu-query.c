@@ -30,7 +30,7 @@
 
 
 #include "test-mu-common.h"
-#include "src/mu-query-xapian.h"
+#include "src/mu-query.h"
 
 
 static void shutup (void) {}
@@ -78,7 +78,7 @@ typedef struct  {
 static void
 test_mu_query_01 (void)
 {
-	MuQueryXapian *query;
+	MuQuery *query;
 	gchar *xpath;
 	int i;
 	
@@ -94,19 +94,19 @@ test_mu_query_01 (void)
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
 	
-	query = mu_query_xapian_new (xpath);
+	query = mu_query_new (xpath);
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		int count = 0;
 		MuMsgIter *iter =
-			mu_query_xapian_run (query, queries[i].query, NULL,
+			mu_query_run (query, queries[i].query, NULL,
 					     FALSE, 1);
 
 		g_assert_cmpuint (queries[i].count, ==, count_matches(iter));
 		mu_msg_iter_destroy (iter);
 	}
 
-	mu_query_xapian_destroy (query);
+	mu_query_destroy (query);
 	g_free (xpath);
 }
 
@@ -115,7 +115,7 @@ static void
 test_mu_query_02 (void)
 {
 	MuMsgIter *iter;
-	MuQueryXapian *query;
+	MuQuery *query;
 	const char* q;
 	gchar *xpath;
 	int i;
@@ -123,16 +123,16 @@ test_mu_query_02 (void)
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
 	
-	query = mu_query_xapian_new (xpath);
+	query = mu_query_new (xpath);
 	g_assert (query);
 
 	q = "i:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com";
-	iter = mu_query_xapian_run (query, q, NULL, FALSE, 0);
+	iter = mu_query_run (query, q, NULL, FALSE, 0);
 	
 	g_assert (iter);
 	g_assert_cmpuint (count_matches(iter), ==, 1);
 
-	mu_query_xapian_destroy (query);
+	mu_query_destroy (query);
 	g_free (xpath);
 }
 
@@ -140,7 +140,7 @@ test_mu_query_02 (void)
 static void
 test_mu_query_03 (void)
 {
-	MuQueryXapian *query;
+	MuQuery *query;
 	gchar *xpath;
 	int i;
 	
@@ -150,19 +150,19 @@ test_mu_query_03 (void)
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
 	
-	query = mu_query_xapian_new (xpath);
+	query = mu_query_new (xpath);
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		int count = 0;
 		MuMsgIter *iter =
-			mu_query_xapian_run (query, queries[i].query, NULL,
+			mu_query_run (query, queries[i].query, NULL,
 					     FALSE, 1);
 
 		g_assert_cmpuint (queries[i].count, ==, count_matches(iter));
 		mu_msg_iter_destroy (iter);
 	}
 
-	mu_query_xapian_destroy (query);
+	mu_query_destroy (query);
 	g_free (xpath);
 }
 

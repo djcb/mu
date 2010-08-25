@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #include <string.h>
 #include <string>
 
-#include "mu-query-xapian.h"
+#include "mu-query.h"
 
 #include "mu-msg-iter.h"
 #include "mu-msg-iter-priv.hh"
@@ -35,14 +35,14 @@
 static void add_prefix (const MuMsgField* field,
 			Xapian::QueryParser* qparser);
 
-struct _MuQueryXapian {
+struct _MuQuery {
 	Xapian::Database*         _db;
 	Xapian::QueryParser*	  _qparser;
 	Xapian::Sorter*           _sorters[MU_MSG_FIELD_TYPE_NUM];
 };
 
 gboolean
-init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
+init_mu_query (MuQuery *mqx, const char* dbpath)
 {
 	mqx->_db = 0;
 	mqx->_qparser = 0;
@@ -74,7 +74,7 @@ init_mu_query_xapian (MuQueryXapian *mqx, const char* dbpath)
 
 	
 static void
-uninit_mu_query_xapian (MuQueryXapian *mqx)
+uninit_mu_query (MuQuery *mqx)
 {
 	try {
 		delete mqx->_db;
@@ -87,7 +87,7 @@ uninit_mu_query_xapian (MuQueryXapian *mqx)
 }
 
 static Xapian::Query
-get_query  (MuQueryXapian * mqx, const char* searchexpr, int *err = 0)  {
+get_query  (MuQuery * mqx, const char* searchexpr, int *err = 0)  {
 	
 	try {
 		return mqx->_qparser->parse_query
@@ -125,10 +125,10 @@ add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 	qparser->add_prefix ("", prefix);
 }
 
-MuQueryXapian*
-mu_query_xapian_new (const char* xpath)
+MuQuery*
+mu_query_new (const char* xpath)
 {
-	MuQueryXapian *mqx;
+	MuQuery *mqx;
 	
 	g_return_val_if_fail (xpath, NULL);
 
@@ -148,9 +148,9 @@ mu_query_xapian_new (const char* xpath)
 		return NULL;
 	}
 	
-	mqx = g_new (MuQueryXapian, 1);
+	mqx = g_new (MuQuery, 1);
 
-	if (!init_mu_query_xapian (mqx, xpath)) {
+	if (!init_mu_query (mqx, xpath)) {
 		g_warning ("failed to initialize the Xapian query");
 		g_free (mqx);
 		return NULL;
@@ -161,19 +161,19 @@ mu_query_xapian_new (const char* xpath)
 
 
 void
-mu_query_xapian_destroy (MuQueryXapian *self)
+mu_query_destroy (MuQuery *self)
 {
 	if (!self)
 		return;
 
-	uninit_mu_query_xapian (self);
+	uninit_mu_query (self);
 
 	g_free (self);
 }
 
 
 MuMsgIter*
-mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
+mu_query_run (MuQuery *self, const char* searchexpr,
 		     const MuMsgField* sortfield, gboolean ascending,
 		     size_t batchsize)  
 {
@@ -208,7 +208,7 @@ mu_query_xapian_run (MuQueryXapian *self, const char* searchexpr,
 }
 
 char*
-mu_query_xapian_as_string  (MuQueryXapian *self, const char* searchexpr) 
+mu_query_as_string  (MuQuery *self, const char* searchexpr) 
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);

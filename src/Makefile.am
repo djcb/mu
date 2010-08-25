@@ -80,8 +80,8 @@ libmu_la_SOURCES=			\
 	mu-msg-str.c			\
 	mu-msg-str.h			\
 	mu-msg.h			\
-	mu-query-xapian.cc		\
-	mu-query-xapian.h		\
+	mu-query.cc			\
+	mu-query.h			\
 	mu-result.h			\
 	mu-store-xapian.cc		\
 	mu-store-xapian.h		\

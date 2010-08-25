@@ -31,7 +31,7 @@
 #include "mu-msg.h"
 #include "mu-maildir.h"
 #include "mu-index.h"
-#include "mu-query-xapian.h"
+#include "mu-query.h"
 #include "mu-msg-iter.h"
 #include "mu-msg-str.h"
 
@@ -51,13 +51,13 @@ update_warning (void)
 
 
 static gboolean
-print_xapian_query (MuQueryXapian *xapian, const gchar *query)
+print_xapian_query (MuQuery *xapian, const gchar *query)
 {
 	char *querystr;
 
 	MU_WRITE_LOG ("query: '%s' (xquery)", query); 
 	
-	querystr = mu_query_xapian_as_string (xapian, query);
+	querystr = mu_query_as_string (xapian, query);
 	g_print ("%s\n", querystr);
 	g_free (querystr);
 
@@ -236,7 +236,7 @@ make_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks)
 
 
 static gboolean
-run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
+run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 {
 	MuMsgIter *iter;
 	const MuMsgField *sortfield;
@@ -251,7 +251,7 @@ run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 			return FALSE;
 	}
 	
-	iter = mu_query_xapian_run (xapian, query, sortfield,
+	iter = mu_query_run (xapian, query, sortfield,
 				    !opts->descending, 0);
 	if (!iter) {
 		g_printerr ("error: running query failed\n");
@@ -273,7 +273,7 @@ run_query (MuQueryXapian *xapian, const gchar *query, MuConfigOptions *opts)
 
 
 static gboolean
-do_output (MuQueryXapian *xapian, MuConfigOptions* opts,
+do_output (MuQuery *xapian, MuConfigOptions* opts,
 	   const gchar **params)
 {
 	gchar *query;
@@ -320,7 +320,7 @@ query_params_valid (MuConfigOptions *opts)
 gboolean
 mu_cmd_find (MuConfigOptions *opts)
 {
-	MuQueryXapian *xapian;
+	MuQuery *xapian;
 	gboolean rv;
 	const gchar **params;
 
@@ -345,7 +345,7 @@ mu_cmd_find (MuConfigOptions *opts)
 
 	mu_msg_init();
 	
-	xapian = mu_query_xapian_new (opts->xpath);
+	xapian = mu_query_new (opts->xpath);
 	if (!xapian) {
 		g_printerr ("Failed to create a Xapian query\n");
 		mu_msg_uninit ();
@@ -354,7 +354,7 @@ mu_cmd_find (MuConfigOptions *opts)
 
 	rv = do_output (xapian, opts, params);
 	
-	mu_query_xapian_destroy (xapian);
+	mu_query_destroy (xapian);
 	mu_msg_uninit();
 	
 	return rv;

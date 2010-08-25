@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,54 +17,51 @@
 **  
 */
 
-#ifndef __MU_QUERY_XAPIAN_H__
-#define __MU_QUERY_XAPIAN_H__
+#ifndef __MU_QUERY_H__
+#define __MU_QUERY_H__
 
 #include <glib.h>
 #include "mu-msg-iter.h"
 
 G_BEGIN_DECLS
-/*
- * MuQueryXapian
- */
 
-struct _MuQueryXapian;
-typedef struct _MuQueryXapian MuQueryXapian;
+struct _MuQuery;
+typedef struct _MuQuery MuQuery;
 
-/** 
- * create a new MuQueryXapian instance. 
+/**
+ * create a new MuQuery instance. 
  * 
  * @param path path to the xapian db to search
  * @param err receives error information (if there is any)
  *
- * @return a new MuQueryXapian instance, or NULL in case of error.
- * when the instance is no longer needed, use mu_query_xapian_destroy
+ * @return a new MuQuery instance, or NULL in case of error.
+ * when the instance is no longer needed, use mu_query_destroy
  * to free it
  */
-MuQueryXapian  *mu_query_xapian_new  (const char* path) G_GNUC_WARN_UNUSED_RESULT;
+MuQuery  *mu_query_new  (const char* path) G_GNUC_WARN_UNUSED_RESULT;
 
-/** 
- * destroy the MuQueryXapian instance
+/**
+ * destroy the MuQuery instance
  * 
- * @param self a MuQueryXapian instance, or NULL
+ * @param self a MuQuery instance, or NULL
  */
-void mu_query_xapian_destroy  (MuQueryXapian *self);
+void mu_query_destroy  (MuQuery *self);
 
 
-/** 
+/**
  * get a version string for the database
  * 
- * @param store a valid MuQueryXapian
+ * @param store a valid MuQuery
  * 
  * @return the version string (free with g_free), or NULL in case of error
  */
-char* mu_query_xapian_version (MuQueryXapian *store) G_GNUC_WARN_UNUSED_RESULT;
+char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
 
-/** 
+/**
  * run a Xapian query; for the syntax, please refer to the mu-find
  * manpage, or http://xapian.org/docs/queryparser.html
  * 
- * @param self a valid MuQueryXapian instance
+ * @param self a valid MuQuery instance
  * @param expr the search expression
  * @param sortfield the field to sort by
  * @param ascending if TRUE sort in ascending (A-Z) order, otherwise,
@@ -77,26 +74,25 @@ char* mu_query_xapian_version (MuQueryXapian *store) G_GNUC_WARN_UNUSED_RESULT;
  * @return a MuMsgIter instance you can iterate over, or NULL in
  * case of error
  */
-MuMsgIter* mu_query_xapian_run (MuQueryXapian *self, 
+MuMsgIter* mu_query_run (MuQuery *self, 
 				const char* expr,
 				const MuMsgField* sortfield,
 				gboolean ascending,
 				size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
 
-
-/** 
+/**
  * get a string representation of the Xapian search query
  * 
- * @param self a MuQueryXapian instance 
+ * @param self a MuQuery instance 
  * @param searchexpr a xapian search expression
  * 
  * @return the string representation of the xapian query, or NULL in case of
  * error; free the returned value with g_free
  */
-char* mu_query_xapian_as_string (MuQueryXapian *self,
-				 const char* searchexpr) G_GNUC_WARN_UNUSED_RESULT;
+char* mu_query_as_string (MuQuery *self,
+			  const char* searchexpr) G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS
 
-#endif /*__MU_QUERY_XAPIAN_H__*/
+#endif /*__MU_QUERY_H__*/
