@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -26,7 +26,7 @@
 #include "mu-result.h"          /* for MuResult */
 
 
-/** 
+/**
  * create a new maildir. Note, if the function fails 'halfway', it
  * will *not* try to remove the parts the were created. it *will*
  * create any parent dirs that are not yet existant.
@@ -42,7 +42,7 @@
 gboolean mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex);
 
 
-/** 
+/**
  * create a symbolic link to a mail message
  * 
  * @param src the full path to the source message
@@ -54,7 +54,7 @@ gboolean mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex);
  */
 gboolean mu_maildir_link   (const char* src, const char *targetpath);
 
-/** 
+/**
  * MuMaildirWalkMsgCallback -- callback function for
  * mu_path_walk_maildir; see the documentation there. It will be
  * called for each message found, with fullpath containing the full
@@ -66,7 +66,7 @@ gboolean mu_maildir_link   (const char* src, const char *targetpath);
 typedef MuResult (*MuMaildirWalkMsgCallback)
 (const char* fullpath, const char* mdir, time_t timestamp, void *user_data);
 
-/** 
+/**
  * MuPathWalkDirCallback -- callback function for mu_path_walk_maildir; see the
  * documentation there. It will be called each time a dir is entered or left,
  * with 'enter' being TRUE upon entering, FALSE otherwise 
@@ -74,7 +74,7 @@ typedef MuResult (*MuMaildirWalkMsgCallback)
 typedef MuResult (*MuMaildirWalkDirCallback)
 (const char* fullpath, gboolean enter, void *user_data);
 
-/** 
+/**
  * start a recursive walk of a maildir; for each file found, we call
  * callback with the path (with the Maildir path of scanner_new as
  * root), the filename, the timestamp (mtime) of the file,and the
@@ -100,7 +100,7 @@ typedef MuResult (*MuMaildirWalkDirCallback)
  */
 MuResult mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
 			  MuMaildirWalkDirCallback cb_dir, void *data);
-/** 
+/**
  * recursively delete all the symbolic links in a directory tree
  * 
  * @param dir top dir

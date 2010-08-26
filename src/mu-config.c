@@ -83,7 +83,7 @@ config_options_group_mu (MuConfigOptions *opts)
 
 
 static void
-set_group_index_defaults (MuConfigOptions  *opts)
+set_group_index_defaults (MuConfigOptions *opts)
 {
 	gchar *old;
 	

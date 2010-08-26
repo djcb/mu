@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,9 @@
 **  
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -32,13 +34,12 @@
 #include "mu-util.h"
 #include "mu-maildir.h"
 
-
 #define MU_MAILDIR_WALK_MAX_FILE_SIZE (32*1000*1000)
 #define MU_MAILDIR_NOINDEX_FILE       ".noindex"
 #define MU_MAILDIR_CACHE_FILE         ".mu.cache"
 
 /* note: this function is *not* re-entrant, it returns a static buffer */
-const char*
+static const char*
 fullpath_s (const char* path, const char* name)
 {
 	static char buf[4096];
@@ -242,7 +243,6 @@ process_file (const char* fullpath, const gchar* mdir,
 	 * use the ctime, so any status change will be visible (perms,
 	 * filename etc.)
 	 */
-	g_debug ("[%s]", mdir);
 	result = (msg_cb)(fullpath, mdir, statbuf.st_ctime, data);
 	if (result == MU_STOP) 
 		g_debug ("callback said 'MU_STOP' for %s", fullpath);
@@ -313,7 +313,7 @@ readdir_with_stat_fallback (DIR* dir, const char* path)
 	entry = readdir (dir);
 	
 	if (!entry) {
-		if (errno) 
+		if (errno != 0) 
 			g_warning ("readdir failed in %s: %s",
 				   path, strerror (errno));
 		return NULL;
