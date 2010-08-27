@@ -87,10 +87,11 @@ man-pages; here the general options are discussed.
 
 .SH GENERAL OPTIONS
 
-\fBmu\fR offers a number of general options that apply to all commands:
+\fBmu\fR offers a number of general options that apply to all commands,
+including \fBmu\fR without any command.
 
 .TP
-\fB\-a\fR, \fB\-\-muhome\fR
+\fB\-m\fR, \fB\-\-muhome\fR
 causes \fBmu\fR to use an alternative directory to
 store and read its database and logs. By default, \fI~/.mu\fR is used.
 
@@ -111,7 +112,7 @@ index\fR is \fBmuch\fR faster with \fB\-\-quiet\fR, so it is recommended you
 use this option when using \fBmu\fR from scripts etc.
 
 .TP
-\fB\-e\fR, \fB\-\-log-stderr\fR
+\fB\-\-log-stderr\fR
 causes \fBmu\fR not to output all log messages
 to standard error, in addition to sending them to the log file.
 

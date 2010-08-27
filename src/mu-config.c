@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,9 @@
 **
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
 
 #include <glib.h>
 #include <string.h> /* memset */
@@ -65,9 +67,9 @@ config_options_group_mu (MuConfigOptions *opts)
 		  "don't give any progress information", NULL },
 		{"version", 'v', 0, G_OPTION_ARG_NONE, &opts->version,
 		 "display version and copyright information", NULL},
-		{"muhome", 'a', 0, G_OPTION_ARG_FILENAME, &opts->muhome,
+		{"muhome", 'm', 0, G_OPTION_ARG_FILENAME, &opts->muhome,
 		 "specify an alternative mu directory", NULL},
-		{"log-stderr", 'e', 0, G_OPTION_ARG_NONE, &opts->log_stderr,
+		{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &opts->log_stderr,
 		 "log to standard error", NULL},
 		{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		  &opts->params, "parameters", NULL },
@@ -105,13 +107,13 @@ config_options_group_index (MuConfigOptions *opts)
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
 		 "top of the maildir", NULL},
-		{"reindex", 'r', 0, G_OPTION_ARG_NONE, &opts->reindex,
+		{"reindex", 0, 0, G_OPTION_ARG_NONE, &opts->reindex,
 		 "index already indexed messages too", NULL},
-		{"rebuild", 'y', 0, G_OPTION_ARG_NONE, &opts->rebuild,
+		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &opts->rebuild,
 		 "rebuild the database from scratch", NULL},
-		{"autoupgrade", 'u', 0, G_OPTION_ARG_NONE, &opts->autoupgrade,
+		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &opts->autoupgrade,
 		 "automatically upgrade the database with new mu versions", NULL},
-		{"nocleanup", 'n', 0, G_OPTION_ARG_NONE, &opts->nocleanup,
+		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &opts->nocleanup,
 		 "don't clean up the database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
@@ -155,7 +157,7 @@ config_options_group_find (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"xquery", 'x', 0, G_OPTION_ARG_NONE, &opts->xquery,
+		{"xquery", 0, 0, G_OPTION_ARG_NONE, &opts->xquery,
 		 "print the Xapian query (for debugging)", NULL},
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
 		 "fields to display in the output", NULL},
@@ -165,9 +167,9 @@ config_options_group_find (MuConfigOptions *opts)
 		 "sort in descending order (z -> a)", NULL},
 		{"summary-len", 'k', 0, G_OPTION_ARG_INT, &opts->summary_len,
 		 "max number of lines for summary", NULL},
-		{"linksdir", 'l', 0, G_OPTION_ARG_STRING, &opts->linksdir,
+		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &opts->linksdir,
 		 "output as symbolic links to a target maildir", NULL },
-		{"clearlinks", 'c', 0, G_OPTION_ARG_NONE, &opts->clearlinks,
+		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &opts->clearlinks,
 		 "clear old links before filling a linksdir", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
@@ -187,7 +189,7 @@ config_options_group_mkdir (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"mode", 'p', 0, G_OPTION_ARG_INT, &opts->dirmode,
+		{"mode", 0, 0, G_OPTION_ARG_INT, &opts->dirmode,
 		 "set the mode (as in chmod), in octal notation", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};

@@ -25,6 +25,12 @@ will create three Maildirs \fItom\fR, \fIdick\fR and \fIharry\fR.
 If the creation somehow fails, for safety reasons, \fBno\fR attempt is made to
 remove any parts that were created.
 
+.SH OPTIONS
+
+.TP
+\fB\-\-mode\fR=<mode>
+set the file access mode for the new maildir as in chmod(1)
+
 .SH BUGS
 
 There probably are some; please report bugs when you find them:
@@ -38,3 +44,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .BR maildir(5)
 .BR mu(1)
+.BR chmod(1)
