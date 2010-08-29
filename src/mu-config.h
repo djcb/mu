@@ -48,19 +48,22 @@ struct _MuConfigOptions {
 	gboolean         rebuild;       /* empty the database before indexing */
 	gboolean         autoupgrade;   /* automatically upgrade db
 					 * when needed */
-	
 	/* options for querying */
 	gboolean         xquery;        /* give the Xapian query instead of
 					   search results */
 	char		*fields;	/* fields to show in output */	
 	char	        *sortfield;	/* field to sort by (string) */
 	gboolean        descending;	/* sort descending? */
-	unsigned        summary_len;    /* max # of lines of msg in summary */
-		
+	unsigned        summary_len;    /* max # of lines of msg in summary */		
 	/* output to a maildir with symlinks */
 	char            *linksdir;      /* maildir to output symlinks */
 	gboolean	clearlinks;     /* clear a linksdir before filling */
 	mode_t		dirmode;	/* mode for the created maildir */
+
+	/* options for extracting parts */
+	gboolean        *all_parts;     /* extract all parts */
+	gboolean	*all;           /* extract all attachments */
+	char            *targetdir;     /* where to save the attachments */
 };
 typedef struct _MuConfigOptions MuConfigOptions;
 

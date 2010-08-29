@@ -206,6 +206,31 @@ config_options_group_mkdir (MuConfigOptions *opts)
 }
 
 
+static GOptionGroup*
+config_options_group_extract (MuConfigOptions *opts)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"all", 0, 0, G_OPTION_ARG_NONE, &opts->all,
+		 "extract all attachments", NULL},
+		{"all-parts", 0, 0, G_OPTION_ARG_NONE, &opts->all_parts,
+		 "extract all parts (incl. non-attachments)", NULL},
+		{"target-dir", 0, 0, G_OPTION_ARG_STRING, &opts->targetdir,
+		 "target directory for saving", NULL},
+		{ NULL, 0, 0, 0, NULL, NULL, NULL }
+	};
+	
+	og = g_option_group_new ("extract",
+				 "options for the 'extract' command",
+				 "", NULL, NULL);	
+	g_option_group_add_entries (og, entries);
+	
+	return og;
+}
+
+
+
+
 
 static gboolean
 parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
@@ -224,6 +249,8 @@ parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 				    config_options_group_find (opts));
 	g_option_context_add_group (context,
 				    config_options_group_mkdir (opts));
+	g_option_context_add_group (context,
+				    config_options_group_extract (opts));
 	
 	rv = g_option_context_parse (context, argcp, argvp, &error);
 	if (!rv) {
