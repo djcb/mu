@@ -800,6 +800,9 @@ void
 mu_msg_init  (void)
 {
 	if (!_initialized) {
+
+		srandom (getpid()*time(NULL));
+
 		g_mime_init(0);
 		_initialized = TRUE;
 		g_debug ("%s", __FUNCTION__);

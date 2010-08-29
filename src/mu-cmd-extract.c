@@ -29,27 +29,131 @@
 #include "mu-cmd.h"
 
 static gboolean
-save_part (const char* path, unsigned idx)
+save_numbered_parts (MuMsg *msg, MuConfigOptions *opts)
 {
+	gboolean rv;
+	char **parts, **cur;
+
+	parts = g_strsplit (opts->parts, ",", 0);
+	
+	for (rv = TRUE, cur = parts; cur && *cur; ++cur) {
+
+		int idx;
+		char *endptr;
+
+		idx = (int)strtol (*cur, &endptr, 10);
+		if (idx < 0 || *cur == endptr) {
+			g_warning ("invalid MIME-part index '%s'", *cur);
+			rv = FALSE;
+			break;
+		}
+
+		/* FIXME: targetdir, overwrite */
+		if  (!mu_msg_mime_part_save (msg, idx, NULL, TRUE)) {
+			g_warning ("failed to save MIME-part %d", idx);
+			rv = FALSE;
+			break;
+		}			
+	}
+
+	g_strfreev (parts);
+	
+	return rv;
+}
+
+struct _SaveData {
+	MuMsg			*msg;
+	gboolean		 attachments_only;
+	gboolean		 result;
+	guint			 saved_num;
+};
+typedef struct _SaveData	 SaveData;
+
+
+static void
+save_part_if (MuMsgPart *part, SaveData *sd)
+{
+	/* something went wrong somewhere; stop */
+	if (!sd->result)
+		return;
+	
+	/* filter out non-attachments if only want attachments. Note,
+	 * the attachment check may be a bit too strict */
+	if (sd->attachments_only) 
+		if (!part->disposition ||
+		    g_ascii_strcasecmp (part->disposition, "attachment") != 0)
+			return;
+
+	/* ignore multiparts */
+	if (part->type && 
+	    g_ascii_strcasecmp (part->type, "multipart") == 0)
+		return;
+	
+	sd->result = mu_msg_mime_part_save (sd->msg, part->index, NULL, TRUE);
+	if (!sd->result) 
+		g_warning ("failed to save MIME-part %u", part->index);
+	else
+		++sd->saved_num;
+	
+}
+
+static gboolean
+save_certain_parts (MuMsg *msg, gboolean attachments_only)
+{
+	SaveData sd;
+
+	sd.msg		    = msg;
+	sd.result	    = TRUE;
+	sd.saved_num        = 0;
+	sd.attachments_only = attachments_only;
+	
+	mu_msg_msg_part_foreach (msg,
+				 (MuMsgPartForeachFunc)save_part_if,
+				 &sd);
+
+	if (sd.saved_num == 0) {
+		g_warning ("no %s extracted from this message",
+			   attachments_only ? "attachments" : "parts");
+		sd.result = FALSE;
+	}
+	
+	return sd.result;
+}
+
+
+static gboolean
+save_parts (const char *path, MuConfigOptions *opts)
+{	
 	MuMsg* msg;
+	gboolean rv;
 	
 	msg = mu_msg_new (path, NULL);
 	if (!msg)
 		return FALSE;
+
+	/* note, mu_cmd_extract already checks whether what's in opts
+	 * is somewhat, so no need for extensive checking here */
 	
-	mu_msg_mime_part_save (msg, idx, NULL, TRUE); /* FIXME */
-	
+	/* should we save some explicit parts? */
+	if (opts->parts)
+		rv = save_numbered_parts (msg, opts);	
+	else if (opts->save_attachments)  /* all attachments */
+		rv = save_certain_parts (msg, TRUE);
+	else if (opts->save_all)  /* all parts */
+		rv = save_certain_parts (msg, FALSE);
+	else
+		g_assert_not_reached ();
+		
 	mu_msg_destroy (msg);
 	
-	return TRUE;
+	return rv;
 }
 
 
-
 static void
-each_part (MuMsgPart *part, gpointer user_data)
+each_part_show (MuMsgPart *part, gpointer user_data)
 {
-	g_print ("%u %s %s/%s [%s]\n",
+	g_print ("  %u %s %s/%s [%s]\n",
 		 part->index,
 		 part->file_name ? part->file_name : "<none>",
 		 part->type ? part->type : "",
@@ -59,7 +163,7 @@ each_part (MuMsgPart *part, gpointer user_data)
 
 
 static gboolean
-show_parts (const char* path)
+show_parts (const char* path, MuConfigOptions *opts)
 {
 	MuMsg* msg;
 	
@@ -67,7 +171,8 @@ show_parts (const char* path)
 	if (!msg)
 		return FALSE;
 
-	mu_msg_msg_part_foreach (msg, each_part, NULL);
+	g_print ("MIME-parts in this message:\n");
+	mu_msg_msg_part_foreach (msg, each_part_show, NULL);
 
 	mu_msg_destroy (msg);
 	
@@ -83,35 +188,31 @@ mu_cmd_extract (MuConfigOptions *opts)
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "extract"), FALSE);
 	
-	/* note: params[0] will be 'view' */
-	if (!opts->params[0] || !opts->params[1]) {
+	if (!opts->params[1]) {
 		g_warning ("missing mail file to extract something from");
 		return FALSE;
 	}
-	mu_msg_init();
-
-	rv = TRUE;
-	if (!opts->params[2]) /* no explicit part, show, don't save */
-		rv = show_parts (opts->params[1]);
-	else {
-		int i;
-		for (i = 2; opts->params[i]; ++i) {
-			unsigned idx = atoi (opts->params[i]);
-			if (idx == 0) {
-				g_warning ("not a valid index: %s", opts->params[i]);
-				rv = FALSE;
-				break;
-			}
-			if (!save_part (opts->params[1], idx)) {
-				g_warning ("failed to save part %d of %s", idx,
-					    opts->params[1]);
-				rv = FALSE;
-				break;
-			}
-		}
+	
+	if (opts->save_attachments && opts->save_all) {
+		g_warning ("only one of --save-attachments and --save-all is allowed");
+		return FALSE;
+	}
+	
+	if ((opts->save_attachments || opts->save_all) && opts->parts) {
+		g_warning ("with --save-attachments/--save-all, parts should not be specified");
+		return FALSE;
 	}
 
-	mu_msg_uninit();
+	mu_msg_init();
+
+	if (!opts->parts &&
+	    !opts->save_attachments &&
+	    !opts->save_all)  /* show, don't save */
+		rv = show_parts (opts->params[1], opts);
+	else
+		rv = save_parts (opts->params[1], opts); /* save */
+
+ 	mu_msg_uninit();
 	
 	return rv;
 }

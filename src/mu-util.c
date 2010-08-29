@@ -166,7 +166,8 @@ mu_util_str_from_strv (const gchar **params)
 }
 
 int
-mu_util_create_writeable_fd (const char* filename, const char* dir, gboolean overwrite)
+mu_util_create_writeable_fd (const char* filename, const char* dir,
+			     gboolean overwrite)
 {
 	int fd;
 	char *fullpath;
@@ -192,3 +193,5 @@ mu_util_create_writeable_fd (const char* filename, const char* dir, gboolean ove
 	
 	return fd;
 }
+
+

@@ -64,8 +64,8 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 
 void
 mu_msg_msg_part_foreach (MuMsg *msg,
-			  MuMsgPartForeachFunc func,
-			  gpointer user_data)
+			 MuMsgPartForeachFunc func,
+			 gpointer user_data)
 {
 	PartData pdata;
 	
@@ -87,6 +87,7 @@ struct _SavePartData {
 	const gchar* targetdir;
 	gboolean     overwrite;
 	gboolean     stream;
+	guint        cookie;
 	gboolean     result;
 };
 typedef struct _SavePartData SavePartData;
@@ -112,7 +113,7 @@ save_part (GMimeObject *part, const char *filename,
 
 	stream = g_mime_stream_fs_new (fd);
 	if (!stream) {
-		g_warning ("%s: failed to create stream", __FUNCTION__);
+		g_critical ("%s: failed to create stream", __FUNCTION__);
 		close (fd);
 		return FALSE;
 	}
@@ -123,7 +124,7 @@ save_part (GMimeObject *part, const char *filename,
 	wrapper = g_mime_part_get_content_object (GMIME_PART(part));
 	if (!wrapper) {
 		g_object_unref (G_OBJECT(stream));
-		g_warning ("%s: failed to create wrapper", __FUNCTION__);
+		g_critical ("%s: failed to create wrapper", __FUNCTION__);
 		return FALSE;
 	}
 	
@@ -145,7 +146,7 @@ part_foreach_save_cb (GMimeObject *parent, GMimeObject *part,
 	if (spd->result || spd->wanted_idx != spd->idx++)
 		return;
 	
-	if (!GMIME_IS_PART(part))
+	if (!GMIME_IS_PART(part)) /* ie., multiparts are ignored */
 		return;
 	
 	filename = g_mime_part_get_filename (GMIME_PART(part));
@@ -153,24 +154,43 @@ part_foreach_save_cb (GMimeObject *parent, GMimeObject *part,
 		spd->result = save_part (part, filename,
 					 spd->targetdir,
 					 spd->overwrite);
-	} else
-		spd->result = FALSE;
+	} else { /* make up a filename */
+		gchar *my_filename;
+		my_filename = g_strdup_printf ("%x-part-%u",
+					       spd->cookie,
+					       spd->wanted_idx);
+		spd->result = save_part (part, my_filename,
+					 spd->targetdir,
+					 spd->overwrite);
+		g_free (my_filename);
+	}
 }
-
-
 
 gboolean
 mu_msg_mime_part_save (MuMsg *msg, int wanted_idx,
 		       const char *targetdir, gboolean overwrite)
 {
 	SavePartData	spd;
+	const char *msgid;
+	
+	g_return_val_if_fail (msg, FALSE);
+	g_return_val_if_fail (wanted_idx >= 0, FALSE);
+	
 	spd.idx	       = 0;
 	spd.wanted_idx = wanted_idx;
 	spd.targetdir  = targetdir;
 	spd.overwrite  = overwrite;
 	spd.stream     = FALSE;
 	spd.result     = FALSE;
-
+	
+	/* get something fairly unique for building a filename;
+	 * normally based on the message id, but if that is not
+	 * available, a random number. basing it on the message id
+	 * gives makes it easy to distinguish the parts of different
+	 * messages */
+	msgid = mu_msg_get_msgid (msg);
+	spd.cookie = (guint)(msgid ? g_str_hash (msgid) : (guint)random());
+	
 	g_mime_message_foreach (msg->_mime_msg,
 				(GMimeObjectForeachFunc)part_foreach_save_cb,
 				&spd);	

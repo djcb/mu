@@ -61,9 +61,10 @@ struct _MuConfigOptions {
 	mode_t		dirmode;	/* mode for the created maildir */
 
 	/* options for extracting parts */
-	gboolean        *all_parts;     /* extract all parts */
-	gboolean	*all;           /* extract all attachments */
-	char            *targetdir;     /* where to save the attachments */
+	gboolean        *save_all;           /* extract all parts */
+	gboolean	*save_attachments;   /* extract all attachment parts */
+	gchar           *parts;              /* comma-sep'd list of parts to save */
+	char            *targetdir;          /* where to save the attachments */
 };
 typedef struct _MuConfigOptions MuConfigOptions;
 

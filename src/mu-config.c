@@ -117,8 +117,7 @@ config_options_group_index (MuConfigOptions *opts)
 		 "don't clean up the database after indexing", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
-
-
+	
 	og = g_option_group_new ("index",
 				 "options for the 'index' command",
 				 "", NULL, NULL);	
@@ -211,11 +210,13 @@ config_options_group_extract (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"all", 0, 0, G_OPTION_ARG_NONE, &opts->all,
-		 "extract all attachments", NULL},
-		{"all-parts", 0, 0, G_OPTION_ARG_NONE, &opts->all_parts,
-		 "extract all parts (incl. non-attachments)", NULL},
-		{"target-dir", 0, 0, G_OPTION_ARG_STRING, &opts->targetdir,
+		{"save-attachments", 'a', 0, G_OPTION_ARG_NONE, &opts->save_attachments,
+		 "save all attachments", NULL},
+		{"save-all", 0, 0, G_OPTION_ARG_NONE, &opts->save_all,
+		 "save all parts (incl. non-attachments)", NULL},
+		{"parts", 0, 0, G_OPTION_ARG_STRING, &opts->parts,
+		 "save specific parts", NULL},
+		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &opts->targetdir,
 		 "target directory for saving", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
