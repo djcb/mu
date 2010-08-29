@@ -325,6 +325,7 @@ mu_cmd_find (MuConfigOptions *opts)
 	const gchar **params;
 
 	g_return_val_if_fail (opts, FALSE);
+	g_return_val_if_fail (mu_cmd_equals (opts, "find"), FALSE);
 	
 	if (!query_params_valid (opts))
 		return FALSE;

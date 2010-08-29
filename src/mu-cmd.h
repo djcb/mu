@@ -38,6 +38,17 @@ enum _MuCmd {
 };
 typedef enum _MuCmd MuCmd;
 
+
+/** 
+ * check whether the MuConfigOptions are for command X
+ * 
+ * @param config the config options
+ * @param cmd the command to check (ie., "mkdir" or "find")
+ * 
+ * @return TRUE if the options are for cmd, FALSE otherwise
+ */
+gboolean mu_cmd_equals (MuConfigOptions *config, const gchar *cmd);
+
 /**
  * try to execute whatever is specified on the command line 
  * 
@@ -46,8 +57,6 @@ typedef enum _MuCmd MuCmd;
  * @return TRUE if it succeeded, FALSE otherwise
  */
 gboolean mu_cmd_execute (MuConfigOptions *config);
-
-
 
 /**
  * execute the 'mkdir' command
@@ -107,7 +116,6 @@ gboolean mu_cmd_find (MuConfigOptions *opts);
  * @return TRUE if the command succeede, FALSE otherwise
  */
 gboolean mu_cmd_extract (MuConfigOptions *opts);
-
 
 G_END_DECLS
 

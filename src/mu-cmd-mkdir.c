@@ -34,10 +34,10 @@ gboolean
 mu_cmd_mkdir (MuConfigOptions *opts)
 {
 	int i;
+
+	g_return_val_if_fail (opts, FALSE);
+	g_return_val_if_fail (mu_cmd_equals (opts, "mkdir"), FALSE);
 	
-	if (!opts->params[0])
-		return FALSE;  /* shouldn't happen */
- 	
 	if (!opts->params[1]) {
 		g_printerr (
 			"usage: mu mkdir [-u,--mode=<mode>] "

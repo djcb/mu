@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,6 +27,19 @@
 
 #include "mu-maildir.h"
 #include "mu-cmd.h"
+
+gboolean
+mu_cmd_equals (MuConfigOptions *config, const gchar *cmd)
+{
+	g_return_val_if_fail (config, FALSE);
+	g_return_val_if_fail (cmd, FALSE);
+	
+	if (!config->params || !config->params[0])
+		return FALSE;
+
+	return (strcmp (config->params[0], cmd) == 0);
+}
+
 
 static MuCmd 
 cmd_from_string (const char* cmd)

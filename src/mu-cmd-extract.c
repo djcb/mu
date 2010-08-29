@@ -81,7 +81,8 @@ mu_cmd_extract (MuConfigOptions *opts)
 	gboolean rv;
 	
 	g_return_val_if_fail (opts, FALSE);
-
+	g_return_val_if_fail (mu_cmd_equals (opts, "extract"), FALSE);
+	
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("missing mail file to extract something from");
