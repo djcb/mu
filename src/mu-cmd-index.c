@@ -227,7 +227,7 @@ mu_cmd_index (MuConfigOptions *opts)
 	MuIndexStats stats;
 	
 	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "find"), FALSE);
+	g_return_val_if_fail (mu_cmd_equals (opts, "index"), FALSE);
 	
 	if (!check_index_params (opts))
 		return FALSE;
