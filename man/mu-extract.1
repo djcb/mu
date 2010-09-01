@@ -10,20 +10,27 @@ mu extract\- display and save message parts (attachments)
 
 .SH DESCRIPTION
 
-\fBmu extact\fR is the \fBmu\fR sub-command for extracting attachments from
-mail messages. It works on files, and does not require the message to be
-indexed before using
-.BR mu-index(1)
-\.
+\fBmu extact\fR is the \fBmu\fR sub-command for extracting MIME-parts (e.g.,
+attachments) from mail messages. It works on files, and does not require the
+message to be indexed.
+
+For attachments, the name specified in the message is used; when saving
+mime-parts, a name is used, derived from the message-id of the message. Thus,
 
 .SH OPTIONS
 
 .TP
-\fB\-k\fR, \fB\-\-summary\-len\fR=\fI<len>\fR
-instead of the full message, output a summary based on up to \fI\len\fR lines
-of the message. The default is
-.B 0
-, which means 'show full body'.
+\fB\-a\fR, \fB\-\-save\-attachments\fR
+save all MIME-parts that look like attachments.
+
+\fB\-\-save\-all-parts\fR
+save all non-multipart MIME-parts.
+
+\fB\-\-target\-dir\fR=<dir>
+save the parts in some other directory than the current one.
+
+\fB\-\-overwrite\fR
+overwrite existing files with the same name.
 
 .SH BUGS
 
