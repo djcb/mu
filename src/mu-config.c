@@ -218,6 +218,8 @@ config_options_group_extract (MuConfigOptions *opts)
 		 "save specific parts", NULL},
 		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &opts->targetdir,
 		 "target directory for saving", NULL},
+		{"overwrite", 0, 0, G_OPTION_ARG_NONE, &opts->overwrite,
+		 "overwrite existing files", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 	

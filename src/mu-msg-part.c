@@ -100,7 +100,7 @@ save_part (GMimeObject *part, const char *filename,
 	int fd, rv;
 	GMimeDataWrapper *wrapper;
 	GMimeStream *stream;
-
+	
 	rv = TRUE; 
 	fd = mu_util_create_writeable_fd (filename, targetdir,
 					  overwrite);
@@ -110,7 +110,7 @@ save_part (GMimeObject *part, const char *filename,
 			   errno != 0 ? strerror(errno) : "");
 		return FALSE;
 	}
-
+	
 	stream = g_mime_stream_fs_new (fd);
 	if (!stream) {
 		g_critical ("%s: failed to create stream", __FUNCTION__);
@@ -119,7 +119,7 @@ save_part (GMimeObject *part, const char *filename,
 	}
 	
 	g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream),
-				    TRUE); /* GMimeStream will close fd */
+				    TRUE); /* GMimeStream will close the fd */
 	
 	wrapper = g_mime_part_get_content_object (GMIME_PART(part));
 	if (!wrapper) {
@@ -180,7 +180,7 @@ mu_msg_mime_part_save (MuMsg *msg, int wanted_idx,
 	spd.wanted_idx = wanted_idx;
 	spd.targetdir  = targetdir;
 	spd.overwrite  = overwrite;
-	spd.stream     = FALSE;
+	spd.stream     = FALSE; /* not used yet */
 	spd.result     = FALSE;
 	
 	/* get something fairly unique for building a filename;

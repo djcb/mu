@@ -48,8 +48,8 @@ save_numbered_parts (MuMsg *msg, MuConfigOptions *opts)
 			break;
 		}
 
-		/* FIXME: targetdir, overwrite */
-		if  (!mu_msg_mime_part_save (msg, idx, NULL, TRUE)) {
+		if  (!mu_msg_mime_part_save
+		     (msg, idx, opts->targetdir, opts->overwrite)) {
 			g_warning ("failed to save MIME-part %d", idx);
 			rv = FALSE;
 			break;
@@ -66,6 +66,8 @@ struct _SaveData {
 	gboolean		 attachments_only;
 	gboolean		 result;
 	guint			 saved_num;
+	const gchar*		 targetdir;
+	gboolean		 overwrite;
 };
 typedef struct _SaveData	 SaveData;
 
@@ -89,7 +91,8 @@ save_part_if (MuMsgPart *part, SaveData *sd)
 	    g_ascii_strcasecmp (part->type, "multipart") == 0)
 		return;
 	
-	sd->result = mu_msg_mime_part_save (sd->msg, part->index, NULL, TRUE);
+	sd->result = mu_msg_mime_part_save (sd->msg, part->index,
+					    sd->targetdir, sd->overwrite);
 	if (!sd->result) 
 		g_warning ("failed to save MIME-part %u", part->index);
 	else
@@ -98,7 +101,8 @@ save_part_if (MuMsgPart *part, SaveData *sd)
 }
 
 static gboolean
-save_certain_parts (MuMsg *msg, gboolean attachments_only)
+save_certain_parts (MuMsg *msg, gboolean attachments_only, const gchar *targetdir,
+		    gboolean overwrite)
 {
 	SaveData sd;
 
@@ -106,6 +110,8 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only)
 	sd.result	    = TRUE;
 	sd.saved_num        = 0;
 	sd.attachments_only = attachments_only;
+	sd.overwrite	    = overwrite;
+	sd.targetdir	    = targetdir;
 	
 	mu_msg_msg_part_foreach (msg,
 				 (MuMsgPartForeachFunc)save_part_if,
@@ -138,9 +144,11 @@ save_parts (const char *path, MuConfigOptions *opts)
 	if (opts->parts)
 		rv = save_numbered_parts (msg, opts);	
 	else if (opts->save_attachments)  /* all attachments */
-		rv = save_certain_parts (msg, TRUE);
+		rv = save_certain_parts (msg, TRUE,
+					 opts->targetdir, opts->overwrite);
 	else if (opts->save_all)  /* all parts */
-		rv = save_certain_parts (msg, FALSE);
+		rv = save_certain_parts (msg, FALSE,
+					 opts->targetdir, opts->overwrite);
 	else
 		g_assert_not_reached ();
 		

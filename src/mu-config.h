@@ -65,6 +65,7 @@ struct _MuConfigOptions {
 	gboolean	*save_attachments;   /* extract all attachment parts */
 	gchar           *parts;              /* comma-sep'd list of parts to save */
 	char            *targetdir;          /* where to save the attachments */
+	gboolean        overwrite;           /* should we overwrite same-named files */
 };
 typedef struct _MuConfigOptions MuConfigOptions;
 
