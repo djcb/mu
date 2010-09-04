@@ -58,7 +58,7 @@ libtestmucommon_la_LIBADD= ../libmu.la
 # use the (also supported) version with '!' instead. We could escape
 # the : with \: but automake does not recognize that....
 
-# 11 messages, the '.ignore' message should be ignored
+# 12 messages, the '.ignore' message should be ignored
 # when indexing
 EXTRA_DIST=							\
 	testdir/tmp/1220863087.12663.ignore			\
@@ -71,4 +71,5 @@ EXTRA_DIST=							\
 	testdir/cur/1220863087.12663_15.mindcrime!2,PS		\
 	testdir/cur/1220863087.12663_19.mindcrime!2,S		\
 	testdir/cur/1220863042.12663_1.mindcrime!2,S		\
-	testdir/cur/1220863060.12663_3.mindcrime!2,S
+	testdir/cur/1220863060.12663_3.mindcrime!2,S		\
+	testdir/cur/1283599333.1840_11.cthulhu!2,

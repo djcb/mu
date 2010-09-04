@@ -193,7 +193,7 @@ test_mu_maildir_walk_01 (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 10);
+	g_assert_cmpuint (data._file_count, ==, 11); 
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
 
@@ -224,7 +224,7 @@ test_mu_maildir_walk_02 (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 6);
+	g_assert_cmpuint (data._file_count, ==, 7);
 	g_assert_cmpuint (data._dir_entered,==, 4);
 	g_assert_cmpuint (data._dir_left,==, 4);
 
