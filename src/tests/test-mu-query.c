@@ -89,7 +89,8 @@ test_mu_query_01 (void)
 		{ "subject:elisp",      1 },
 		{ "html",               4 },
 		{ "html AND contains",  1 },
-		{ "from:pepernoot",     0 }
+		{ "from:pepernoot",     0 },
+		{ "fünkÿ",              1 }
 	};
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
