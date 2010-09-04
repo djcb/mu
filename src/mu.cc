@@ -21,8 +21,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <string.h>
 #include <stdio.h> /* for fileno() */
+#include <locale.h> /* for setlocale() */
 
 #include "mu-config.h"
 #include "mu-cmd.h"
@@ -52,9 +52,11 @@ main (int argc, char *argv[])
 {
 	MuConfigOptions config;
 	gboolean rv;
+
+	setlocale (LC_ALL, "");
 	
 	g_type_init ();
-
+	
 	if (!mu_config_init (&config, &argc, &argv))
 		return 1;
 

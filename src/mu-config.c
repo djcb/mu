@@ -276,7 +276,7 @@ gboolean
 mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
 {
 	g_return_val_if_fail (opts, FALSE);	
-	memset (opts, 0, sizeof(MuConfigOptions));
+	memset (opts, 0, sizeof(MuConfigOptions));	
 
 	/* defaults are set in parse_params */
 	
