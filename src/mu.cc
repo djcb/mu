@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+b** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -53,6 +53,8 @@ main (int argc, char *argv[])
 	MuConfigOptions config;
 	gboolean rv;
 
+	/* without setlocale, non-ascii cmdline params (like search
+	 * terms) won't work */
 	setlocale (LC_ALL, "");
 	
 	g_type_init ();
