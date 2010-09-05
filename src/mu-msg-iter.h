@@ -58,8 +58,12 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
 
 
 /**
- * get the corresponding MuMsg for this iter; this requires
- * the corresponding message file to be present at the expected place
+ * get the corresponding MuMsg for this iter; this requires the
+ * corresponding message file to be present at the expected place in
+ * the maildir in the file system. Note, it's faster to use the
+ * database fields (the various mu_msg_iter_get_... functions), so
+ * MuMsg should use only when information is needed that is not
+ * provided from the iter).
  * 
  * @param iter a valid MuMsgIter instance
  * 
