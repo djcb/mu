@@ -1,11 +1,19 @@
 * NEWS (user visible changes)
 
 ** Release 0.8 (unreleased)
-
-  - setting mu home dir now goes with -m, --muhome
-  - log-stderr does have a single-char version anymore
-  - --reindex, --rebuild, --autoupgrade, --nocleanup lost their single char version
-  - --mode lost its single char version
+   
+   - There's now 'mu extract' for getting information about MIME-parts
+     (attachments) and saving them
+   - Queries are now internally converted to lowercase; this solves some of the
+     false-negative issues
+   - All mu sub-commands now have their own man-page
+   - 'mu find' now takes a --summary-len=<n> argument to print a summary of
+     up-to-n lines of the message
+   - Same for 'mu view'; the summary replaces the full body
+   - Setting the mu home dir now goes with -m, --muhome
+   - log-stderr does not have a single-char version anymore
+   - --reindex, --rebuild, --autoupgrade, --nocleanup lost their single char version
+   - --mode lost its single char version
   
 ** Release 0.7 <2010-02-27 Sat>
    - Database format changed
