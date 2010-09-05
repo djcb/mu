@@ -1,4 +1,4 @@
-.TH MU VIEW 1 "August 2010" "User Manuals"
+.TH MU VIEW 1 "September 2010" "User Manuals"
 
 .SH NAME 
 
@@ -11,26 +11,24 @@ mu view\- display an e-mail message file
 .SH DESCRIPTION
 
 \fBmu view\fR is the \fBmu\fR sub-command for displaying an e-mail message
-file. It works on files, and does not require the message to be indexed before
-using
+file. It works on message files and does not require the message to be indexed
+in the mu database with
 .BR mu-index(1)
 \.
 
-Currently, the command shows some common headers (From:, To:, Cc:, Subject:
-and Date:) and the plain-text body of the message.
+The command shows some common headers (From:, To:, Cc:, Subject: and Date:)
+and the plain-text body of the message, if there is any.
 
 .SH OPTIONS
 
 .TP
 \fB\-k\fR, \fB\-\-summary\-len\fR=\fI<len>\fR
 instead of the full message, output a summary based on up to \fI\len\fR lines
-of the message. The default is
-.B 0
-, which means 'show full body'.
+of the message. The default is 0, which means 'show full body'.
 
 .SH BUGS
 
-There probably are some; please report bugs when you find them:
+Please report bugs if you find them:
 .BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR

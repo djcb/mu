@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "August 2010" "User Manuals"
+.TH MU-INDEX 1 "September 2010" "User Manuals"
 
 .SH NAME 
 
@@ -11,26 +11,21 @@ mu index \- index e-mail messages stored in Maildirs
 .SH DESCRIPTION
 
 \fBmu index\fR is the \fBmu\fR sub-command for scanning the contents of
-Maildir directories and storing it in a database which can then be searched
-using
+Maildir directories and storing the results in a Xapian database which can
+then be searched using
 .BR mu-find(1)
 \.
 
-Using the
 .B index
-command, you can index your Maildir directories, and store the information in
-a Xapian database. 
-
-.B index
-understands Maildirs as defined by Dan Bernstein for qmail(7). In addition, it
-understands recursive Maildirs (Maildirs within Maildirs), Maildir++. It can
-also deal with VFAT-based Maildirs which use '!' as the seperators instead
+understands Maildirs as defined by Daniel Bernstein for qmail(7). In addition,
+it understands recursive Maildirs (Maildirs within Maildirs), Maildir++. It
+can also deal with VFAT-based Maildirs which use '!' as the seperators instead
 of ':' as used by Tinymail/Modest and some other e-mail programs.
 
 E-mail messages which are not stored in something resembling a maildir leaf
 directory (\fIcur\fR and \fInew\fR) are ignored.
 
-Currently, symlinks are not followed.
+Symlinks are not followed.
 
 If there is a file called \fI.noindex\fR in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to
@@ -169,11 +164,10 @@ To store these files elsewhere from their default location, one can use the
 \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if it has not
 been specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If MAILDIR
 is not set, \fBmu index\fR will try \fI~/Maildir\fR.
-.
 
 .SH BUGS
 
-There probably are some; please report bugs when you find them:
+Please report bugs if you find them:
 .BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR

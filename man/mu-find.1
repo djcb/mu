@@ -1,4 +1,4 @@
-.TH MU FIND 1 "August 2010" "User Manuals"
+.TH MU FIND 1 "September 2010" "User Manuals"
 
 .SH NAME 
 
@@ -20,20 +20,27 @@ store earlier using
 The \fBfind\fR command starts a search for messages in the database that match
 the search pattern.
 
-The search pattern is taken as a command line parameter. If the search
+The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (multiple command line parameters) they
 are treated as if there were a logical \fBAND\fR between them.
 
 If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
-\fBNOT\fR etc., you have to put quote them so \fBmu\fR can consider them as a
-unit.
+\fBNOT\fR etc., you have to put quotes around them so \fBmu\fR can consider
+them as a unit; for example to find mails with oranges OR mandarins in the
+subject-field, you'd use:
+.nf
+	mu find 'subject:orange OR subject:mandarin'
+.fi
+
+\fBmu find\fR does not distinguish between uppercase or lowercase for search
+terms.
 
 \fBmu\fR relies on the Xapian database for its searching capabilities, so it
 offers all the search functionality that Xapian offers; please refer to:
 
      \fIhttp://xapian.org/docs/queryparser.html\fR
 
-All queries are logged in \fI<mu-home>/mu.log\fR.   
+Note that queries are logged in \fI<mu-home>/mu.log\fR.   
      
 The basic way to search a message is to type some words matching it, as you
 would do in an internet search engine. For example,
@@ -45,7 +52,6 @@ would do in an internet search engine. For example,
 will find all message that contain both 'monkey' and 'banana'. Matching is
 case-insensitive and recognizes various forms of a word such as plurals; this
 is all courtesy of Xapian.
-
 
 \fBmu\fR also recognizes prefixes for specific fields in a messages; for
 example:
@@ -289,7 +295,7 @@ typing 'Q' will start a query.
 
 .SH BUGS
 
-There probably are some; please report bugs when you find them:
+Please report bugs if you find them:
 .BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR

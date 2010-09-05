@@ -1,4 +1,4 @@
-.TH MU VIEW 1 "August 2010" "User Manuals"
+.TH MU EXTRACT 1 "September 2010" "User Manuals"
 
 .SH NAME 
 
@@ -11,7 +11,7 @@ mu extract\- display and save message parts (attachments)
 .SH DESCRIPTION
 
 \fBmu extact\fR is the \fBmu\fR sub-command for extracting MIME-parts (e.g.,
-attachments) from mail messages. It works on files, and does not require the
+attachments) from mail messages. It works on message files, and does not require the
 message to be indexed.
 
 For attachments, the name specified in the message is used; when saving
@@ -27,14 +27,14 @@ save all MIME-parts that look like attachments.
 save all non-multipart MIME-parts.
 
 \fB\-\-target\-dir\fR=<dir>
-save the parts in some other directory than the current one.
+save the parts in the target directory rather than the current one.
 
 \fB\-\-overwrite\fR
 overwrite existing files with the same name.
 
 .SH BUGS
 
-There probably are some; please report bugs when you find them:
+Please report bugs if you find them:
 .BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR
