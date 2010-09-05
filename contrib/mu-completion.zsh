@@ -26,36 +26,53 @@ _mu_commands() {
     'cleanup:remove references to deleted messages from the database'
     'extract:list message-parts (attachments) and extract them to files'
     'mkdir:create maildirs'
-    'view:display specific messages'
-  )
+    'view:display specific messages')
 
   _describe -t command 'command' mu_commands
 }
 
+_mu_common_options=(
+    '--debug[output information useful for debugging mu]'
+    '--quiet[do not give any non-critical information]'
+    '--version[display mu version and copyright information]'
+    '--log-stderr[log to standard error]'
+)
+
+_mu_db_options=(
+    '--muhome[use some non-default location for the mu database]:directory:_files'    
+)
+
+
 _mu_view() {
-  _files
+  _files  
 }
 
 _mu_extract() {
- _files
+ _files 
 }
 
 _mu_find() {
-
+    _arguments -s : \
+        $_mu_common_options
 }
 
 _mu_index() {
-
+    _arguments -s : \
+	$_mu_db_options \
+        $_mu_common_options
 }
 
 _mu_cleanup() {
-
+    _arguments -s : \
+	$_mu_db_options \
+       $_mu_common_options
 }
 
 
 _mu_mkdir() {
    _arguments -s : \
-    '--mode=[file mode for the new Maildir]:file mode: '
+    '--mode=[file mode for the new Maildir]:file mode: ' \
+    $_mu_common_options
 }
 
 _mu() {
@@ -72,7 +89,6 @@ _mu() {
 }
 
 _mu "$@"
-
 
 # Local variables:
 # mode: sh
