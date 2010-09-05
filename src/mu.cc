@@ -40,6 +40,8 @@ init_log (MuConfigOptions *opts)
 		rv = mu_log_init (opts->muhome, TRUE, opts->quiet,
 				  opts->debug);
 
+	/* we use g_printerr here because g_warning does not give
+	 * the desired result when log initialization failed */
 	if (!rv)
 		g_printerr ("error: failed to initialize log\n");
 	
