@@ -255,8 +255,7 @@ mu_cmd_index (MuConfigOptions *opts)
 	mu_index_destroy (midx);
 	
 	MU_WRITE_LOG ("processed: %u; updated/new: %u, cleaned-up: %u",
-		      (unsigned)stats._processed,
-		      (unsigned)stats._updated,
+		      (unsigned)stats._processed, (unsigned)stats._updated,
 		      (unsigned)stats._cleaned_up);
 
 	if (!opts->quiet)

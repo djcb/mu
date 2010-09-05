@@ -117,12 +117,11 @@ save_part (GMimeObject *part, const char *filename,
 		close (fd);
 		return FALSE;
 	}
+
+	/* GMimeStream will close the fd */
+	g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream), TRUE); 
 	
-	g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream),
-				    TRUE); /* GMimeStream will close the fd */
-	
-	wrapper = g_mime_part_get_content_object (GMIME_PART(part));
-	if (!wrapper) {
+	if (!(wrapper = g_mime_part_get_content_object (GMIME_PART(part)))) {
 		g_object_unref (G_OBJECT(stream));
 		g_critical ("%s: failed to create wrapper", __FUNCTION__);
 		return FALSE;

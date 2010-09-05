@@ -44,39 +44,29 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 	if (!msg)
 		return FALSE;
 	
-	field = mu_msg_get_from (msg);
-	if (field)
+	if ((field = mu_msg_get_from (msg)))
 		g_print ("From: %s\n", field);
 	
-	field = mu_msg_get_to (msg);
-	if (field)
+	if ((field = mu_msg_get_to (msg)))
 		g_print ("To: %s\n", field);
 
-	field = mu_msg_get_cc (msg);
-	if (field)
+	if ((field = mu_msg_get_cc (msg)))
 		g_print ("Cc: %s\n", field);
 
-	field = mu_msg_get_subject (msg);
-	if (field)
+	if ((field = mu_msg_get_subject (msg)))
 		g_print ("Subject: %s\n", field);
 	
-	date = mu_msg_get_date (msg);
-	if (date)
-		g_print ("Date: %s\n",
-			 mu_msg_str_date_s (date));
+	if ((date = mu_msg_get_date (msg)))
+		g_print ("Date: %s\n", mu_msg_str_date_s (date));
 
 	if (summary_len > 0) {
 		field = mu_msg_get_summary (msg, summary_len);
 		g_print ("Summary: %s\n", field ? field : "<none>");
-	} else {
-	
-		field = mu_msg_get_body_text (msg);
-		if (field) 
-			g_print ("\n%s\n", field);
-		else
-			/* not really an error */
-			g_debug ("No text body found for %s", path);
-	}
+	} else if ((mu_msg_get_body_text (msg))) 
+		g_print ("\n%s\n", field);
+	else
+		/* not really an error */
+		g_debug ("No text body found for %s", path);
 		
 	mu_msg_destroy (msg);
 
