@@ -54,6 +54,8 @@ fill_database (void)
 	return xpath;
 }
 
+
+/* note: this also *moves the iter* */
 static guint
 count_matches (	MuMsgIter *iter)
 {
@@ -102,7 +104,6 @@ test_mu_query_01 (void)
 		MuMsgIter *iter =
 			mu_query_run (query, queries[i].query, NULL,
 					     FALSE, 1);
-
 		g_assert_cmpuint (queries[i].count, ==, count_matches(iter));
 		mu_msg_iter_destroy (iter);
 	}
@@ -110,6 +111,10 @@ test_mu_query_01 (void)
 	mu_query_destroy (query);
 	g_free (xpath);
 }
+
+
+
+
 
 
 static void
@@ -146,7 +151,7 @@ test_mu_query_03 (void)
 	int i;
 	
 	QResults queries[] = {
-		{ "t:help-gnu-emacs@gnu.org",1 },
+		{ "t:help-gnu-emacs@gnu.org", 1},
 	};
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
@@ -168,6 +173,40 @@ test_mu_query_03 (void)
 }
 
 
+static void
+test_mu_query_04 (void)
+{
+	MuQuery *query;
+	MuMsgIter *iter;
+	MuMsg *msg;
+	gchar *xpath;
+	
+	xpath = fill_database ();
+	g_assert (xpath != NULL);
+
+	
+	query = mu_query_new (xpath);
+	iter = mu_query_run (query, "fünkÿ", NULL, FALSE, 1);
+
+	mu_msg_init ();
+	msg = mu_msg_iter_get_msg (iter);
+
+	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
+			 "Greetings from Lothlórien");
+	g_assert_cmpstr (mu_msg_get_summary(msg,5),==,
+		" Let's write some fünkÿ text using umlauts. ");
+	
+	mu_msg_destroy (msg);
+	mu_msg_uninit ();
+	
+	mu_msg_iter_destroy (iter);
+	mu_query_destroy (query);
+	g_free (xpath);
+}
+
+
+
+
 int
 main (int argc, char *argv[])
 {
@@ -176,6 +215,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
  	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);
 	/* g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03); */
+	g_test_add_func ("/mu-query/test-mu-query-04", test_mu_query_04);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
