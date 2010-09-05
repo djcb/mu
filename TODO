@@ -18,7 +18,7 @@
    - [ ] xml,json,sexp output
 
 
-** release 0.8 [54%]
+** release 0.8 [63%]
    - [X] remove gio dependency
    - [X] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
@@ -28,7 +28,7 @@
    - [ ] review docs
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
-   - [ ] add summary unit test(s)
+   - [X] add summary unit test(s)
    - [ ] add attachment unit test(s)
 
 
