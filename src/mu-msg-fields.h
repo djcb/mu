@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@
 
 G_BEGIN_DECLS
 
-/* don't change the order, add new types at the end */
+/* don't change the order, add new types at the end, as these numbers
+ * are used in the database */
 enum _MuMsgFieldId {	
 	MU_MSG_FIELD_ID_BODY_TEXT,
 	MU_MSG_FIELD_ID_BODY_HTML,

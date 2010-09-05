@@ -62,8 +62,7 @@ typedef enum _MuMsgFlags MuMsgFlags;
 MuMsgFlags mu_msg_flags_from_str  (const char* str) G_GNUC_PURE;
 
 /** 
- * convert the char-per-flag description into a MuMsgFlags value; NOTE, each
- *  of the characters must be a valid
+ * convert the char-per-flag description into a MuMsgFlags value
  * 
  * @param c a character
  * 
