@@ -174,21 +174,31 @@ mu_query_destroy (MuQuery *self)
 
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr,
-		     const MuMsgField* sortfield, gboolean ascending,
-		     size_t batchsize)  
+	      const MuMsgField* sortfield, gboolean ascending,
+	      size_t batchsize)  
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);	
 	
 	try {
+		char *lower_expr;
+		
 		int err (0);
 
-		Xapian::Query q(get_query(self, searchexpr, &err));
+		/* translate the the searchexpr to all lowercase; this
+		 * fill fixes some of the false-negatives. A full fix
+		 * probably require some custom query parser.
+	         */
+		lower_expr = g_utf8_strdown (searchexpr, -1);
+		
+		Xapian::Query q(get_query(self, lower_expr, &err));
 		if (err) {
-			g_warning ("Error in query '%s'", searchexpr);
+			g_warning ("Error in query '%s'", lower_expr);
+			g_free (lower_expr);
 			return NULL;
 		}
-				
+		g_free (lower_expr);
+		
 		Xapian::Enquire enq (*self->_db);
 
 		if (batchsize == 0)
