@@ -40,13 +40,14 @@ gboolean         mu_msg_iter_next              (MuMsgIter *iter);
 
 
 /**
- * does the iter point to a real message?
+ * does this iterator point past the end of the list?
  * 
  * @param iter a valid MuMsgIter iterator
  * 
- * @return TRUE if the iterator points to a message, FALSE other
+ * @return TRUE if the iter points past end of the list, FALSE
+ * otherwise
  */
-gboolean         mu_msg_iter_is_null (MuMsgIter *iter);
+gboolean         mu_msg_iter_is_done (MuMsgIter *iter);
 
 
 /**

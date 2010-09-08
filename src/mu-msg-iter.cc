@@ -88,7 +88,7 @@ mu_msg_iter_get_msg (MuMsgIter *iter)
 	MuMsg *msg;
 	
 	g_return_val_if_fail (iter, NULL);
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	
 	path = mu_msg_iter_get_path (iter);
 	if (!path) {
@@ -141,7 +141,9 @@ gboolean
 mu_msg_iter_next (MuMsgIter *iter)
 {
 	g_return_val_if_fail (iter, FALSE);
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), FALSE);
+
+	if (mu_msg_iter_is_done(iter))
+		return FALSE;
 	
 	try {
 		++iter->_offset;
@@ -172,7 +174,7 @@ mu_msg_iter_next (MuMsgIter *iter)
 
 
 gboolean
-mu_msg_iter_is_null (MuMsgIter *iter)
+mu_msg_iter_is_done (MuMsgIter *iter)
 {
 	return iter ? iter->_is_null : TRUE;
 }
@@ -182,7 +184,7 @@ const gchar*
 mu_msg_iter_get_field (MuMsgIter *iter, const MuMsgField *field)
 {
 	g_return_val_if_fail (field, NULL);
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	
 	try {
 		MuMsgFieldId id;
@@ -204,7 +206,7 @@ mu_msg_iter_get_field_numeric (MuMsgIter *iter,
 			       const MuMsgField *field)
 {
 	g_return_val_if_fail (field, -1);
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), -1);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), -1);
 	g_return_val_if_fail (mu_msg_field_is_numeric(field), -1);
 	
 	try {
@@ -236,7 +238,7 @@ get_field_number (MuMsgIter *iter, MuMsgFieldId id)
 unsigned int
 mu_msg_iter_get_docid (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), -1);	
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), -1);	
 	try {
 		return iter->_cursor.get_document().get_docid();
 
@@ -247,7 +249,7 @@ mu_msg_iter_get_docid (MuMsgIter *iter)
 const char*
 mu_msg_iter_get_path (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	return get_field (iter, MU_MSG_FIELD_ID_PATH);
 }
 
@@ -255,14 +257,14 @@ mu_msg_iter_get_path (MuMsgIter *iter)
 const char*
 mu_msg_iter_get_from (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	return get_field (iter, MU_MSG_FIELD_ID_FROM);
 }
 
 const char*
 mu_msg_iter_get_to (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	return get_field (iter, MU_MSG_FIELD_ID_TO);
 }
 
@@ -270,7 +272,7 @@ mu_msg_iter_get_to (MuMsgIter *iter)
 const char*
 mu_msg_iter_get_cc (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	return get_field (iter, MU_MSG_FIELD_ID_CC);
 }
 
@@ -278,7 +280,7 @@ mu_msg_iter_get_cc (MuMsgIter *iter)
 const char*
 mu_msg_iter_get_subject (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	return get_field (iter, MU_MSG_FIELD_ID_SUBJECT);
 }
 
@@ -286,7 +288,7 @@ mu_msg_iter_get_subject (MuMsgIter *iter)
 size_t
 mu_msg_iter_get_size (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), 0);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), 0);
 	return static_cast<size_t>(get_field_number (iter, MU_MSG_FIELD_ID_SIZE));
 } 
 
@@ -294,15 +296,15 @@ mu_msg_iter_get_size (MuMsgIter *iter)
 time_t
 mu_msg_iter_get_date (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), 0);
-	return static_cast<size_t> (get_field_number (iter, MU_MSG_FIELD_ID_DATE));
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), 0);
+	return static_cast<size_t>(get_field_number (iter, MU_MSG_FIELD_ID_DATE));
 } 
 
 
 MuMsgFlags
 mu_msg_iter_get_flags (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), MU_MSG_FLAG_NONE);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), MU_MSG_FLAG_NONE);
 	return static_cast<MuMsgFlags>
 		(get_field_number (iter, MU_MSG_FIELD_ID_FLAGS));
 } 
@@ -310,6 +312,6 @@ mu_msg_iter_get_flags (MuMsgIter *iter)
 MuMsgPrio
 mu_msg_iter_get_prio (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_null(iter), MU_MSG_PRIO_NONE);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), MU_MSG_PRIO_NONE);
 	return static_cast<MuMsgPrio>(get_field_number (iter, MU_MSG_FIELD_ID_PRIO));
 } 
