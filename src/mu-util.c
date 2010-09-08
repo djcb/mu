@@ -1,4 +1,4 @@
-/*
+/* 
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -22,12 +22,14 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h> /* for setlocale() */
 
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <glib-object.h>
 #include <glib/gstdio.h>
 #include <errno.h>
 
@@ -64,6 +66,28 @@ mu_util_dir_expand (const char *path)
 #endif /*__APPLE__*/
 	
 	return dir;
+}
+
+gboolean
+mu_util_init_system (void)
+{
+	/* without setlocale, non-ascii cmdline params (like search
+	 * terms) won't work */
+	setlocale (LC_ALL, "");
+
+	/* on FreeBSD, it seems g_slice_new and friends lead to
+	 * segfaults. So we shut if off */
+#ifdef 	__FreeBSD__
+	if (!g_setenv ("G_SLICE", "always-malloc", TRUE)) {
+		g_critical ("cannot set G_SLICE");
+		return FALSE;
+	}
+	MU_LOG_FILE("setting G_SLICE to always-malloc");
+#endif /*__FreeBSD__*/
+
+	g_type_init ();
+
+	return TRUE;
 }
 
 

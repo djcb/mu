@@ -25,6 +25,14 @@
 G_BEGIN_DECLS
 
 /** 
+ * do system-specific initialization. should be called before anything
+ * else. Initializes the locale and Gtype
+ * 
+ * @return TRUE if is succeeds, FALSE otherwise
+ */
+gboolean mu_util_init_system (void);
+
+/** 
  * get the expanded path; ie. perform shell expansion on the path
  *
  * @param path path to expand

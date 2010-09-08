@@ -1,5 +1,5 @@
 /*
-b** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,10 +20,9 @@ b** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 #include <config.h>
 
 #include <glib.h>
-#include <glib-object.h>
 #include <stdio.h> /* for fileno() */
-#include <locale.h> /* for setlocale() */
 
+#include "mu-util.h"
 #include "mu-config.h"
 #include "mu-cmd.h"
 #include "mu-log.h"
@@ -48,18 +47,14 @@ init_log (MuConfigOptions *opts)
 	return rv;
 }
 
-
 int
 main (int argc, char *argv[])
 {
 	MuConfigOptions config;
 	gboolean rv;
 
-	/* without setlocale, non-ascii cmdline params (like search
-	 * terms) won't work */
-	setlocale (LC_ALL, "");
-	
-	g_type_init ();
+	if (!mu_util_init_system()) 
+		return 1;
 	
 	if (!mu_config_init (&config, &argc, &argv))
 		return 1;
