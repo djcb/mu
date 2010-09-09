@@ -144,7 +144,7 @@ print_rows (MuMsgIter *iter, const char *fields, size_t summary_len)
 	size_t count = 0;
 	const char* myfields;
 
-	if (mu_msg_iter_is_null (iter))
+	if (mu_msg_iter_is_done (iter))
 		return 0;
 	
 	do {
@@ -200,7 +200,7 @@ make_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks)
 	if (!create_or_clear_linksdir_maybe (linksdir, clearlinks))
 		return 0;
 
-	if (mu_msg_iter_is_null (iter))
+	if (mu_msg_iter_is_done (iter))
 		return 0;
 	
 	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
@@ -210,7 +210,7 @@ make_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks)
 		const char *path;
 		
 		/* there's no data in the iter */
-		if (mu_msg_iter_is_null (iter))
+		if (mu_msg_iter_is_done (iter))
 			return count;		
 		
 		path = mu_msg_iter_get_field (iter, pathfield);
