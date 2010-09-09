@@ -59,11 +59,10 @@ mu_index_new (const char *xpath)
 	 * mu_index_run instead? */
 	if (mu_util_db_is_empty (xpath))
 		index->_needs_reindex = FALSE;
-	else {
+	else
 		index->_needs_reindex =
 			mu_util_db_version_up_to_date (xpath) ? FALSE : TRUE;
-	}
-		
+	
 	return index;
 }
 
