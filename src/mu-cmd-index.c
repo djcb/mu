@@ -159,9 +159,11 @@ database_version_check_and_update (MuConfigOptions *opts)
 static MuResult
 run_cleanup (MuIndex *midx, MuIndexStats *stats, gboolean quiet)
 {
-	return  mu_index_cleanup (midx, stats,
-				  quiet ? index_msg_silent_cb : index_msg_cb,
-				  NULL);
+	g_message ("Cleaning up database");
+
+	return mu_index_cleanup (midx, stats,
+				 quiet ? index_msg_silent_cb : index_msg_cb,
+				 NULL);
 }
 
 
@@ -174,7 +176,6 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "cleanup"), FALSE);
-
 	
 	if (!check_index_params (opts))
 		return FALSE;
@@ -246,7 +247,8 @@ mu_cmd_index (MuConfigOptions *opts)
 	g_message ("Indexing messages under %s", opts->maildir);
 	g_message ("Database: %s", opts->xpath);
 	
-	rv = run_index (midx, opts->maildir, &stats, opts->reindex, opts->quiet);
+	rv = run_index (midx, opts->maildir, &stats,
+			opts->reindex, opts->quiet);
 	if (rv == MU_OK  && !opts->nocleanup) {
 		stats._processed = 0; /* restart processed at 0 */
 		rv = run_cleanup (midx, &stats, opts->quiet);
