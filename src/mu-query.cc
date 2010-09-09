@@ -54,7 +54,7 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mqx->_qparser->set_database(*mqx->_db);
 		mqx->_qparser->set_default_op(Xapian::Query::OP_AND);
 		mqx->_qparser->set_stemming_strategy
-			(Xapian::QueryParser::STEM_SOME);
+			(Xapian::QueryParser::STEM_ALL);
 
 		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
@@ -171,6 +171,29 @@ mu_query_destroy (MuQuery *self)
 	g_free (self);
 }
 
+/* preprocess a query to make them a bit more permissive */
+gchar*
+query_preprocess (const char *query)
+{
+	gchar *my_query;
+	//gchar *cur;
+	
+	/* translate the the searchexpr to all lowercase; this
+	 * fill fixes some of the false-negatives. A full fix
+	 * probably require some custom query parser.
+	 */
+	my_query = g_utf8_strdown (query, -1);
+
+	/* replace @ with ' '; this fixes some other Xapian issues.
+	 * should be done in a bit nice way though...
+	 */
+	// for (cur = my_query; *cur; ++cur)
+	// 	if (*cur == '@')
+	// 		*cur = ' ';
+
+	return my_query;
+}
+
 
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr,
@@ -181,23 +204,18 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 	g_return_val_if_fail (searchexpr, NULL);	
 	
 	try {
-		char *lower_expr;
-		
+		char *preprocessed;	
 		int err (0);
 
-		/* translate the the searchexpr to all lowercase; this
-		 * fill fixes some of the false-negatives. A full fix
-		 * probably require some custom query parser.
-	         */
-		lower_expr = g_utf8_strdown (searchexpr, -1);
+		preprocessed = query_preprocess (searchexpr);
 		
-		Xapian::Query q(get_query(self, lower_expr, &err));
+		Xapian::Query q(get_query(self, preprocessed, &err));
 		if (err) {
-			g_warning ("Error in query '%s'", lower_expr);
-			g_free (lower_expr);
+			g_warning ("Error in query '%s'", preprocessed);
+			g_free (preprocessed);
 			return NULL;
 		}
-		g_free (lower_expr);
+		g_free (preprocessed);
 		
 		Xapian::Enquire enq (*self->_db);
 
