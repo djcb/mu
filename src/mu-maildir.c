@@ -440,16 +440,20 @@ process_dir_entry (const char* path,
 static struct dirent* 
 dirent_copy (struct dirent *entry)
 {
-	struct dirent *d = g_slice_new (struct dirent);
+	struct dirent *d; 
+
 	/* NOTE: simply memcpy'ing sizeof(struct dirent) bytes will
-	 * give memory errors*/
-	return (struct dirent*)memcpy (d, entry, entry->d_reclen);
+	 * give memory errors. Also note, g_slice_new has been to
+	 * crash on FreeBSD */
+	d = g_slice_new (struct dirent);
+	
+	return (struct dirent*) memcpy (d, entry, entry->d_reclen);
 }
 
 static void
 dirent_destroy (struct dirent *entry)
 {
-	g_slice_free(struct dirent, entry);
+	g_slice_free (struct dirent, entry);
 }
 
 #ifdef HAVE_STRUCT_DIRENT_D_INO	
