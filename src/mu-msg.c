@@ -504,7 +504,6 @@ looks_like_attachment (GMimeObject *part)
 static void
 get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 {
-	
 	GMimeContentType *ct;		
 
 	/* already found what we're looking for? */
