@@ -208,14 +208,9 @@ run_index (MuIndex *midx, const char* maildir, MuIndexStats *stats,
 	MuResult rv;
 	
 	mu_index_stats_clear (stats);
-	mu_msg_init ();
-
 	rv = mu_index_run (midx, maildir, reindex, stats,
 			   quiet ? index_msg_silent_cb :index_msg_cb,
 			   NULL, NULL);
-	
-	mu_msg_init ();
-
 	return rv;
 }
 

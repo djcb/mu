@@ -31,25 +31,6 @@ struct _MuMsg;
 typedef struct _MuMsg MuMsg;
 
 /**
- * initialize the message parsing system; this function must be called
- * before doing any message parsing (ie., any of the other
- * mu_msg functions). when done with the message parsing system,
- * call mu_msg_uninit. Note: calling this function on an already
- * initialized system has no effect
- */
-void     mu_msg_init            (void);
-
-/**
- * uninitialize the messge parsing system that has previously been
- * initialized with mu_msg_init. not calling mu_msg_uninit after
- * mu_msg_init has been called will lead to memory leakage. Note:
- * calling mu_msg_uninit on an uninitialized system has no
- * effect
- */
-void     mu_msg_uninit          (void);
-
-
-/**
  * create a new MuMsg* instance which parses a message and provides
  * read access to its properties; call mu_msg_destroy when done with it.
  *

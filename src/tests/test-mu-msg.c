@@ -84,7 +84,6 @@ test_mu_msg_01 (void)
 	MuMsg *msg;
 	gint i;
 	
-	mu_msg_init ();
 	mfile = get_mailpath (1);
 
 	msg = mu_msg_new (mfile, NULL);
@@ -113,7 +112,6 @@ test_mu_msg_01 (void)
 	mu_msg_destroy (msg);
 	
 	g_free (mfile);
-	mu_msg_uninit ();
 }
 
 
@@ -150,8 +148,7 @@ test_mu_msg_02 (void)
 	char *mfile;
 	MuMsg *msg;
 	int i;
-	
-	mu_msg_init ();
+
 	mfile = get_mailpath (2);
 
 	msg = mu_msg_new (mfile, NULL);
@@ -179,7 +176,6 @@ test_mu_msg_02 (void)
 	mu_msg_destroy (msg);
 	
 	g_free (mfile);
-	mu_msg_uninit ();
 }
 
 

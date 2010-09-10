@@ -87,14 +87,10 @@ mu_cmd_view (MuConfigOptions *opts)
 		return FALSE;
 	}
 	
-	mu_msg_init();
-
 	rv = TRUE;
 	for (i = 1; opts->params[i] && rv; ++i) 	
 		rv = view_file (opts->params[i], NULL,
 				opts->summary_len);
-
-	mu_msg_uninit();
 	
 	return rv;
 }

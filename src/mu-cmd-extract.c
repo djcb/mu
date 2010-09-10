@@ -211,16 +211,12 @@ mu_cmd_extract (MuConfigOptions *opts)
 		return FALSE;
 	}
 
-	mu_msg_init();
-
 	if (!opts->parts &&
 	    !opts->save_attachments &&
 	    !opts->save_all)  /* show, don't save */
 		rv = show_parts (opts->params[1], opts);
 	else
 		rv = save_parts (opts->params[1], opts); /* save */
-
- 	mu_msg_uninit();
 	
 	return rv;
 }

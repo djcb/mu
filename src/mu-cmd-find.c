@@ -343,20 +343,16 @@ mu_cmd_find (MuConfigOptions *opts)
 	
 	/* first param is 'query', search params are after that */
 	params = (const gchar**)&opts->params[1];
-
-	mu_msg_init();
 	
 	xapian = mu_query_new (opts->xpath);
 	if (!xapian) {
 		g_printerr ("Failed to create a Xapian query\n");
-		mu_msg_uninit ();
 		return FALSE;
 	}
 
 	rv = do_output (xapian, opts, params);
 	
 	mu_query_destroy (xapian);
-	mu_msg_uninit();
 	
 	return rv;
 }

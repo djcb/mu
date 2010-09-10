@@ -32,6 +32,28 @@
 #include "mu-msg.h"
 
 
+static guint _refcount = 0;
+
+static void
+ref_gmime (void)
+{
+	if (G_UNLIKELY(_refcount == 0)) {
+		srandom (getpid()*time(NULL));
+		g_mime_init(0);
+	}
+	++_refcount;	
+}
+
+
+static void
+unref_gmime (void)
+{
+	g_return_if_fail (_refcount > 0);
+
+	--_refcount;
+	if (G_UNLIKELY(_refcount == 0))
+		g_mime_shutdown();
+}
 
 void 
 mu_msg_destroy (MuMsg *msg)
@@ -50,6 +72,7 @@ mu_msg_destroy (MuMsg *msg)
 		g_free (msg->_fields[i]);
 	
 	g_slice_free (MuMsg, msg);
+	unref_gmime ();
 }
 
 
@@ -135,9 +158,9 @@ mu_msg_new (const char* filepath, const gchar* mdir)
 		
 	g_return_val_if_fail (filepath, NULL);
 
+	ref_gmime ();
+	
 	msg = g_slice_new0 (MuMsg);
-	if (!msg)
-		return NULL;
 
 	if (!init_file_metadata(msg, filepath, mdir)) {
 		mu_msg_destroy (msg);
@@ -793,30 +816,4 @@ mu_msg_get_field_numeric (MuMsg *msg, const MuMsgField* field)
 
 
 
-
-static gboolean _initialized = FALSE;
-
-void 
-mu_msg_init  (void)
-{
-	if (!_initialized) {
-
-		srandom (getpid()*time(NULL));
-
-		g_mime_init(0);
-		_initialized = TRUE;
-		g_debug ("%s", __FUNCTION__);
-	}
-}
-
-
-void
-mu_msg_uninit (void)
-{
-	if (_initialized) {
-		g_mime_shutdown();
-		_initialized = FALSE;
-		g_debug ("%s", __FUNCTION__);
-	}	
-}  
 

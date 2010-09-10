@@ -159,8 +159,6 @@ test_mu_query_04 (void)
 	
 	query = mu_query_new (xpath);
 	iter = mu_query_run (query, "fünkÿ", NULL, FALSE, 1);
-
-	mu_msg_init ();
 	msg = mu_msg_iter_get_msg (iter);
 
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
@@ -169,8 +167,6 @@ test_mu_query_04 (void)
 		" Let's write some fünkÿ text using umlauts. ");
 	
 	mu_msg_destroy (msg);
-	mu_msg_uninit ();
-	
 	mu_msg_iter_destroy (iter);
 	mu_query_destroy (query);
 	g_free (xpath);
