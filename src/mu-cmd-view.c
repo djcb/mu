@@ -62,7 +62,7 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 	if (summary_len > 0) {
 		field = mu_msg_get_summary (msg, summary_len);
 		g_print ("Summary: %s\n", field ? field : "<none>");
-	} else if ((mu_msg_get_body_text (msg))) 
+	} else if ((field = mu_msg_get_body_text (msg))) 
 		g_print ("\n%s\n", field);
 	else
 		/* not really an error */
