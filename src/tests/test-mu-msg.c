@@ -32,24 +32,6 @@
 #include "src/mu-msg.h"
 #include "src/mu-msg-contact.h"
 
-static gchar*
-get_mailpath (unsigned idx)
-{
-	const char* mailfile;
-	
-	switch (idx) {
-	case 1:  mailfile = "cur/1220863042.12663_1.mindcrime!2,S"; break;
-	case 2:  mailfile = "cur/1220863087.12663_19.mindcrime!2,S"; break;
-	default: mailfile = NULL;	
-	}
-
-	if (mailfile)
-		return g_strdup_printf ("%s/%s", MU_TESTMAILDIR, mailfile);
-	else
-		return NULL;		
-}
-
-
 static gboolean
 check_contact_01 (MuMsgContact *contact, int *idx)
 {
@@ -80,13 +62,11 @@ check_contact_01 (MuMsgContact *contact, int *idx)
 static void
 test_mu_msg_01 (void)
 {
-	char *mfile;
 	MuMsg *msg;
 	gint i;
-	
-	mfile = get_mailpath (1);
 
-	msg = mu_msg_new (mfile, NULL);
+	msg = mu_msg_new (MU_TESTMAILDIR
+			  "cur/1220863042.12663_1.mindcrime!2,S", NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "Donald Duck <gcc-help@gcc.gnu.org>");
@@ -110,8 +90,6 @@ test_mu_msg_01 (void)
 	g_assert_cmpint (i,==,2);
 
 	mu_msg_destroy (msg);
-	
-	g_free (mfile);
 }
 
 
@@ -145,13 +123,11 @@ check_contact_02 (MuMsgContact *contact, int *idx)
 static void
 test_mu_msg_02 (void)
 {
-	char *mfile;
 	MuMsg *msg;
 	int i;
 
-	mfile = get_mailpath (2);
-
-	msg = mu_msg_new (mfile, NULL);
+	msg = mu_msg_new (MU_TESTMAILDIR
+			  "cur/1220863087.12663_19.mindcrime!2,S", NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "help-gnu-emacs@gnu.org");
@@ -174,9 +150,35 @@ test_mu_msg_02 (void)
 	g_assert_cmpint (i,==,2);
 	
 	mu_msg_destroy (msg);
-	
-	g_free (mfile);
 }
+
+static void
+test_mu_msg_03 (void)
+{
+	MuMsg *msg;
+	int i;
+
+	msg = mu_msg_new (MU_TESTMAILDIR
+			  "cur/1283599333.1840_11.cthulhu!2,", NULL);
+
+	g_assert_cmpstr (mu_msg_get_to(msg),
+			 ==, "Bilbo Baggins <bilbo@anotherexample.com>");
+	g_assert_cmpstr (mu_msg_get_subject(msg),
+			 ==, "Greetings from Lothlórien");
+	g_assert_cmpstr (mu_msg_get_from(msg),
+			 ==, "Frodo Baggins <frodo@example.com>");
+	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+			  ==, MU_MSG_PRIO_NORMAL);
+	g_assert_cmpuint (mu_msg_get_date(msg),
+			  ==, 0);
+	g_assert_cmpstr (mu_msg_get_body_text(msg),
+			 ==,
+			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
+	
+	mu_msg_destroy (msg);
+}
+
+
 
 
 
@@ -203,10 +205,12 @@ main (int argc, char *argv[])
 			 test_mu_msg_01);
 	g_test_add_func ("/mu-msg/mu-msg-02",
 			 test_mu_msg_02);
+	g_test_add_func ("/mu-msg/mu-msg-03",
+			 test_mu_msg_03);
 	
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)shutup, NULL);
+	/* g_log_set_handler (NULL, */
+	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
+	/* 		   (GLogFunc)shutup, NULL); */
 	
 	return g_test_run ();
 }
