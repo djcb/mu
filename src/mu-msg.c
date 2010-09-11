@@ -27,6 +27,7 @@
 #include <ctype.h>
 
 #include "mu-util.h"
+#include "mu-msg-str.h"
 
 #include "mu-msg-priv.h" /* include before mu-msg.h */
 #include "mu-msg.h"
@@ -706,44 +707,6 @@ mu_msg_get_body_text (MuMsg *msg)
 		return msg->_fields[TEXT_FIELD] = get_body (msg, FALSE);
 }
 
-/* maybe move to str functions file? */
-static char*
-summarize (const char* str, size_t max_lines)
-{
-	char *summary;
-	size_t nl_seen;
-	int i;
-	
-	if (!str || max_lines == 0)
-		return NULL;
-
-	/* len for summary <= original len */
-	summary = g_new (gchar, strlen(str) + 1);
-
-	/* copy the string up to max_lines lines, replace CR/LF/tab with
-	 * single space */
-	for (i = 0, nl_seen = 0; nl_seen < max_lines && str[i] != '\0'; ++i) {
-		switch (str[i]) {
-		case '\n':
-			++nl_seen;
-			summary[i] = ' ';
-			break;
-		case '\r':
-		case '\t':
-			summary[i] = ' ';
-			break;
-		default:
-			summary[i] = str[i];	
-		}
-	}
-
-	/* FIXME: word-wrap the string */
-	
-	summary[i] = '\0';
-	return summary;
-}
-
-
 const char*
 mu_msg_get_summary (MuMsg *msg, size_t max_lines)
 {
@@ -761,7 +724,8 @@ mu_msg_get_summary (MuMsg *msg, size_t max_lines)
 	if (!body)
 		return NULL; /* there was no text body */
 
-	return msg->_fields[SUMMARY_FIELD] = summarize (body, max_lines);
+	return msg->_fields[SUMMARY_FIELD] =
+		mu_msg_str_summarize (body, max_lines);
 }
 
 

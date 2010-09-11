@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 #include "mu-msg.h"
 #include "mu-msg-flags.h"
 
-/** 
+/**
  * get a display string for a given time_t;
  * use the preferred date/time for the current locale
  * (ie., '%c' in strftime).
@@ -44,7 +44,7 @@ const char* mu_msg_str_date_s (time_t t) G_GNUC_CONST;
 char*       mu_msg_str_date   (time_t t) G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+/**
  * get a display size for a given size_t; uses M for sizes >
  * 1000*1000, k for smaller sizes. Note: this function use the
  * 10-based SI units, _not_ the powers-of-2 based ones.
@@ -61,7 +61,7 @@ char*       mu_msg_str_date   (time_t t) G_GNUC_WARN_UNUSED_RESULT;
 const char* mu_msg_str_size_s  (size_t s) G_GNUC_CONST;
 char*       mu_msg_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
 
-/** 
+/**
  * get a display string for a given set of flags, OR'ed in 
  * @param flags; one character per flag:
  * D=draft,F=flagged,N=new,P=passed,R=replied,S=seen,T=trashed 
@@ -80,7 +80,7 @@ const char* mu_msg_str_flags_s  (MuMsgFlags flags) G_GNUC_CONST;
 char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+/**
  * get a display string for a message priority; either
  * high, low or normal
  *
@@ -91,5 +91,16 @@ char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
  */
 const char* mu_msg_str_prio  (MuMsgPrio prio) G_GNUC_CONST;
 
+
+/**
+ * get a 'summary' of the string, ie. the first /n/ lines of the
+ * strings, with all newlines removed, replaced by single spaces
+ * 
+ * @param str the source string
+ * @param max_lines the maximum number of lines to include in the summary
+ * 
+ * @return a newly allocated string with the summary. use g_free to free it.
+ */
+char* mu_msg_str_summarize (const char* str, size_t max_lines);
 
 #endif /*__MU_MSG_STR_H__*/

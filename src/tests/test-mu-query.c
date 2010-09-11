@@ -164,7 +164,7 @@ test_mu_query_04 (void)
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
 			 "Greetings from Lothlórien");
 	g_assert_cmpstr (mu_msg_get_summary(msg,5),==,
-		" Let's write some fünkÿ text using umlauts.  Foo. ");
+		"Let's write some fünkÿ text using umlauts. Foo.");
 	
 	mu_msg_destroy (msg);
 	mu_msg_iter_destroy (iter);
@@ -189,3 +189,4 @@ main (int argc, char *argv[])
 	
 	return g_test_run ();
 }
+
