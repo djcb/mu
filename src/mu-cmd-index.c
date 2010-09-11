@@ -225,12 +225,10 @@ mu_cmd_index (MuConfigOptions *opts)
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "index"), FALSE);
 	
-	if (!check_index_params (opts))
+	if (!check_index_params (opts) ||
+	    !database_version_check_and_update(opts))
 		return FALSE;
 	
-	if (!database_version_check_and_update(opts))
-		return FALSE;
-
 	install_sig_handler ();
 	
 	midx = mu_index_new (opts->xpath);
@@ -255,8 +253,7 @@ mu_cmd_index (MuConfigOptions *opts)
 		      (unsigned)stats._processed, (unsigned)stats._updated,
 		      (unsigned)stats._cleaned_up);
 
-	if (!opts->quiet)
-		g_print ("\n");
+	g_message ("\n");
 	
 	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
 }
