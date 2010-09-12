@@ -23,6 +23,8 @@
 #include <glib.h>
 #include "mu-msg.h"
 
+G_BEGIN_DECLS
+
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO,
 	MU_MSG_CONTACT_TYPE_FROM,
@@ -91,5 +93,6 @@ typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
 void mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 			     gpointer user_data);
 
+G_END_DECLS
 
 #endif /*__MU_MSG_CONTACT_H__*/
