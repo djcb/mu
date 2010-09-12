@@ -223,9 +223,9 @@ run_index (MuIndex *midx, const char* maildir, MuIndexStats *stats,
 static void
 show_time (unsigned t, unsigned processed)
 {
-	if (processed)
-		g_message ("Elapsed: %u second(s), ca. %.2f seconds per message",
-			   t, (double)((t+.0)/(processed+.0)));
+	if (t)
+		g_message ("Elapsed: %u second(s), ca. %u msg/s",
+			   t, processed/t);
 	else
 		g_message ("Elapsed: %u second(s)", t);
 }
