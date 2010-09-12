@@ -111,7 +111,7 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	static int len = 0;
 
 	while (len --> 0) /* note the --> operator :-) */
-		printf ("\b");
+		g_print ("\b");
 	
 	len = snprintf (output, sizeof(output),
 			"%c processing mail; processed: %u; "
