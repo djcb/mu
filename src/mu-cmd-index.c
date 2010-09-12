@@ -35,11 +35,18 @@
 static gboolean MU_CAUGHT_SIGNAL;
 
 static void
+maybe_newline (gboolean quiet)
+{
+	if (!quiet)
+		g_print ("\n");
+}
+
+static void
 update_warning (void)
 {
-	g_warning ("Note: the database needs to be upgraded to version %s\n",
+	g_warning ("Note: the database needs to be upgraded to version %s",
 		   MU_XAPIAN_DB_VERSION);
-	g_warning ("Please run 'mu index --rebuild' (see the manpage)\n");
+	g_warning ("Please run 'mu index --rebuild' (see the manpage)");
 }
 
 static void
@@ -75,17 +82,17 @@ static gboolean
 check_index_params (MuConfigOptions *opts)
 {
 	if (opts->linksdir || opts->xquery) {
-		g_warning ("Error: Invalid option(s) for command\n");
+		g_warning ("Error: Invalid option(s) for command");
 		return FALSE;
 	}
 	
 	if (!opts->maildir || !g_path_is_absolute (opts->maildir)) {
-		g_warning ("Error: maildir path is not valid\n");
+		g_warning ("Error: maildir path is not valid");
 		return FALSE;
 	}
 	
 	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
-		g_warning ("Error: not a valid Maildir (%s)\n",
+		g_warning ("Error: not a valid Maildir (%s)",
 			   opts->maildir);
 		return FALSE;
 	}
@@ -194,9 +201,7 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	rv = run_cleanup (midx, &stats, opts->quiet);
 	
 	mu_index_destroy (midx);
-
-	if (!opts->quiet)
-		g_print ("\n");
+	maybe_newline (opts->quiet);	
 
 	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
 }
@@ -243,6 +248,7 @@ mu_cmd_index (MuConfigOptions *opts)
 	rv = run_index (midx, opts->maildir, &stats,
 			opts->reindex, opts->quiet);
 	if (rv == MU_OK  && !opts->nocleanup) {
+		maybe_newline (opts->quiet);
 		stats._processed = 0; /* restart processed at 0 */
 		rv = run_cleanup (midx, &stats, opts->quiet);
 	}
@@ -253,7 +259,7 @@ mu_cmd_index (MuConfigOptions *opts)
 		      (unsigned)stats._processed, (unsigned)stats._updated,
 		      (unsigned)stats._cleaned_up);
 
-	g_message ("\n");
+	maybe_newline (opts->quiet);	
 	
 	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
 }
