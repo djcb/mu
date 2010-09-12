@@ -44,17 +44,17 @@ struct _MuQuery {
 gboolean
 init_mu_query (MuQuery *mqx, const char* dbpath)
 {
-	mqx->_db = 0;
+	mqx->_db      = 0;
 	mqx->_qparser = 0;
 	
 	try {
-		mqx->_db = new Xapian::Database(dbpath);
+		mqx->_db      = new Xapian::Database(dbpath);
 		mqx->_qparser = new Xapian::QueryParser;
 		
 		mqx->_qparser->set_database(*mqx->_db);
 		mqx->_qparser->set_default_op(Xapian::Query::OP_AND);
 		mqx->_qparser->set_stemming_strategy
-			(Xapian::QueryParser::STEM_ALL);
+			(Xapian::QueryParser::STEM_NONE);
 
 		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
@@ -86,6 +86,7 @@ uninit_mu_query (MuQuery *mqx)
 	} MU_XAPIAN_CATCH_BLOCK;
 }
 
+
 static Xapian::Query
 get_query  (MuQuery * mqx, const char* searchexpr, int *err = 0)  {
 	
@@ -94,10 +95,7 @@ get_query  (MuQuery * mqx, const char* searchexpr, int *err = 0)  {
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          | 
 			 Xapian::QueryParser::FLAG_PHRASE           |
-			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
-			 Xapian::QueryParser::FLAG_WILDCARD         |
-			 Xapian::QueryParser::FLAG_PURE_NOT         |
-			 Xapian::QueryParser::FLAG_PARTIAL);
+			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
 
 	} MU_XAPIAN_CATCH_BLOCK;
 	
@@ -111,7 +109,8 @@ static void
 add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
 {
 	if (!mu_msg_field_xapian_index(field) &&
-	    !mu_msg_field_xapian_term(field))
+	    !mu_msg_field_xapian_term(field) &&
+	    !mu_msg_field_xapian_contact(field))
 		return;
 
 	const std::string prefix (mu_msg_field_xapian_prefix(field));
@@ -151,7 +150,7 @@ mu_query_new (const char* xpath)
 	mqx = g_new (MuQuery, 1);
 
 	if (!init_mu_query (mqx, xpath)) {
-		g_warning ("failed to initialize the Xapian query");
+		g_critical ("failed to initialize the Xapian query object");
 		g_free (mqx);
 		return NULL;
 	}
@@ -163,34 +162,102 @@ mu_query_new (const char* xpath)
 void
 mu_query_destroy (MuQuery *self)
 {
-	if (!self)
-		return;
-
-	uninit_mu_query (self);
-
-	g_free (self);
+	if (self) {
+		uninit_mu_query (self);
+		g_free (self);
+	}
 }
 
+struct _CheckPrefix {
+	const char		*pfx;
+	guint			 len;
+	gboolean		 match;
+};
+typedef struct _CheckPrefix	 CheckPrefix;
+
+static void
+each_check_prefix (const MuMsgField *field, CheckPrefix *cpfx)
+{
+	const char *field_name, *field_shortcut;
+
+	if (cpfx->match)
+		return;
+	
+	field_shortcut = mu_msg_field_shortcut (field);
+	if (field_shortcut &&
+	    strncmp (cpfx->pfx, field_shortcut, cpfx->len) == 0) {
+		cpfx->match = TRUE;
+		return;
+	}
+
+	field_name = mu_msg_field_name (field);
+	if (field_name &&
+	    strncmp (cpfx->pfx, field_name, cpfx->len) == 0) {
+		cpfx->match = TRUE;
+		return;
+	}
+}
+
+
+/* colon is a position inside q pointing at a ':' character. function
+ * determines whether the prefix is a registered prefix (like
+ * 'subject' or 'from' or 's') */
+static gboolean
+is_xapian_prefix (const char *q, const char *colon)
+{
+	const char *cur;
+	
+	if (colon == q)
+		return FALSE; /* : at beginning, not a prefix */
+	
+	/* track back from colon until a boundary or beginning of the
+	 * str */
+	for (cur = colon - 1; cur >= q; --cur) {
+
+		if (cur == q || !isalpha (*(cur-1))) {
+
+			CheckPrefix cpfx;
+			memset (&cpfx, 0, sizeof(CheckPrefix));
+
+			cpfx.pfx   = cur;
+			cpfx.len   = (colon - cur);
+			cpfx.match = FALSE;
+			
+			mu_msg_field_foreach ((MuMsgFieldForEachFunc)each_check_prefix,
+					      &cpfx);
+			
+			return (cpfx.match);
+		}
+	}
+	
+	return FALSE;
+}
+	
 /* preprocess a query to make them a bit more permissive */
-gchar*
-query_preprocess (const char *query)
+char*
+mu_query_preprocess (const char *query)
 {
 	gchar *my_query;
-	//gchar *cur;
+	gchar *cur;
+
+	g_return_val_if_fail (query, NULL);
 	
 	/* translate the the searchexpr to all lowercase; this
 	 * fill fixes some of the false-negatives. A full fix
 	 * probably require some custom query parser.
 	 */
 	my_query = g_utf8_strdown (query, -1);
-
-	/* replace @ with ' '; this fixes some other Xapian issues.
-	 * should be done in a bit nice way though...
-	 */
-	// for (cur = my_query; *cur; ++cur)
-	// 	if (*cur == '@')
-	// 		*cur = ' ';
-
+	
+	for (cur = my_query; *cur; ++cur) {
+		if (*cur == ':') /* we found a ':' */
+			 /* if there's a registered xapian prefix before the
+			  * ':', don't touch it. Otherwise replace ':' with
+			  * a space'
+			  */			 
+			 if (!is_xapian_prefix (my_query, cur))
+				 *cur = ' ';
+	}
+	
 	return my_query;
 }
 
@@ -207,7 +274,7 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		char *preprocessed;	
 		int err (0);
 
-		preprocessed = query_preprocess (searchexpr);
+		preprocessed = mu_query_preprocess (searchexpr);
 		
 		Xapian::Query q(get_query(self, preprocessed, &err));
 		if (err) {

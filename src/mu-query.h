@@ -92,6 +92,15 @@ MuMsgIter* mu_query_run (MuQuery *self,
 char* mu_query_as_string (MuQuery *self,
 			  const char* searchexpr) G_GNUC_WARN_UNUSED_RESULT;
 
+/**
+ * pre-process the query; this function is useful mainly for debugging mu
+ * 
+ * @param query a query string
+ * 
+ * @return a pre-processed query, free it with g_free
+ */
+char* mu_query_preprocess (const char *query) G_GNUC_WARN_UNUSED_RESULT;
+
 
 G_END_DECLS
 
