@@ -31,7 +31,7 @@
 #include "mu-util.h"
 
 /* number of new messages after which we commit to the database */
-#define MU_STORE_TRX_SIZE 2000
+#define MU_STORE_TRX_SIZE 6666
 
 /* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
 #define MU_STORE_MAX_TERM_LENGTH 240
