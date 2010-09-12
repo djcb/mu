@@ -519,13 +519,14 @@ process_dir (const char* path, const char* mdir,
 
 	dir = opendir (path);		
 	if (G_UNLIKELY(!dir)) {
-		g_warning ("%s: ignoring  %s: %s", path,
-			   __FUNCTION__, strerror(errno));
+		g_warning ("%s: ignoring  %s: %s",  __FUNCTION__,
+			   path, strerror(errno));
 		return MU_OK;
 	}
 	
 	if (dir_cb) {
-		MuResult rv = dir_cb (path, TRUE, data);
+		MuResult rv;
+		rv = dir_cb (path, TRUE, data);
 		if (rv != MU_OK) {
 			closedir (dir);
 			return rv;
@@ -534,10 +535,10 @@ process_dir (const char* path, const char* mdir,
 	
 	result = process_dir_entries_sorted (dir, path, mdir, msg_cb, dir_cb,
 					     data);
-	
 	closedir (dir);
 
-	if (dir_cb) 
+	/* only run dir_cb if it exists and so far, things went ok */
+	if (dir_cb && result == MU_OK)
 		return dir_cb (path, FALSE, data);
 	
 	return result;
