@@ -23,8 +23,10 @@
 
 #include <cstdio>
 #include <xapian.h>
+#include <cstring>
 
 #include "mu-msg.h"
+#include "mu-msg-contact.h"
 #include "mu-store.h"
 #include "mu-util.h"
 
@@ -146,7 +148,7 @@ mu_store_destroy (MuStore *store)
 		mu_store_flush (store);
 		
 		MU_WRITE_LOG ("closing xapian database with %d documents",
-			(int)store->_db->get_doccount());
+			      (int)store->_db->get_doccount());
 
 		delete store->_db;
 		g_free (store);
@@ -164,7 +166,6 @@ mu_store_flush (MuStore *store)
 		store->_db->flush ();
 
 	} MU_XAPIAN_CATCH_BLOCK;
-	
 }
 
 
@@ -200,9 +201,8 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	}
 
 	if (mu_msg_field_xapian_term(field))
-		/* terms can be up to MU_STORE_MAX_TERM_LENGTH
-		    * (240) long; this is a Xapian limit
-		    * */
+		/* terms can be up to MU_STORE_MAX_TERM_LENGTH (240)
+		 * long; this is a Xapian limit */
 		doc.add_term (std::string (prefix + value, 0,
 		 			   MU_STORE_MAX_TERM_LENGTH));
 
@@ -233,21 +233,23 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 }
 
 struct _MsgDoc {
-	Xapian::Document *_doc;
-	MuMsg       *_msg;
+	Xapian::Document	*_doc;
+	MuMsg			*_msg;
 };
-typedef struct _MsgDoc MsgDoc;
+typedef struct _MsgDoc		 MsgDoc;
 
 static void
 add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 {
 	MuMsgFieldType type;
-	
+
+	/* note: contact-stuff (To/Cc/From) will handled in
+	 * add_contact_info, not here */
 	if (!mu_msg_field_xapian_index(field) &&
 	    !mu_msg_field_xapian_term(field) &&
 	    !mu_msg_field_xapian_value(field))
 		return;
-
+	
 	type = mu_msg_field_type (field);
 
 	if (type == MU_MSG_FIELD_TYPE_STRING) {		
@@ -270,6 +272,45 @@ add_terms_values (const MuMsgField* field, MsgDoc* msgdoc)
 	g_return_if_reached ();
 }
 
+
+static void
+each_contact_info (MuMsgContact *contact, MsgDoc *data)
+{
+	std::string pfx;
+	
+	static const MuMsgField *to_field =
+		mu_msg_field_from_id (MU_MSG_FIELD_ID_TO);
+	static const MuMsgField *from_field =
+		mu_msg_field_from_id (MU_MSG_FIELD_ID_FROM);
+	static const MuMsgField *cc_field =
+		mu_msg_field_from_id (MU_MSG_FIELD_ID_CC);
+
+	static const std::string to_pfx (mu_msg_field_xapian_prefix(to_field));
+	static const std::string from_pfx (mu_msg_field_xapian_prefix(from_field));
+	static const std::string cc_pfx (mu_msg_field_xapian_prefix(cc_field));
+	
+	switch (contact->type) {
+	case MU_MSG_CONTACT_TYPE_TO: pfx   = to_pfx; break;
+	case MU_MSG_CONTACT_TYPE_FROM: pfx = from_pfx; break;
+	case MU_MSG_CONTACT_TYPE_CC: pfx   = cc_pfx; break;
+	default: return;		/* other types (like bcc) are ignored */
+	}
+
+	// g_print ("[%s %s]\n", pfx.c_str(), contact->address);
+	
+	if (contact->name && strlen(contact->name) > 0) {
+		Xapian::TermGenerator termgen;
+		termgen.set_document (*data->_doc);
+		termgen.index_text_without_positions (contact->name, 1, pfx);
+	}
+
+	if (contact->address && strlen (contact->address)) 
+		data->_doc->add_term (std::string (pfx + contact->address, 0,
+						   MU_STORE_MAX_TERM_LENGTH));	
+}
+
+
+
 /* get a unique id for this message */
 static std::string
 get_message_uid (const char* path)
@@ -282,7 +323,7 @@ get_message_uid (const char* path)
 	return pathprefix + path;
 }
 
-static std::string
+static const std::string
 get_message_uid (MuMsg *msg)
 {
 	return get_message_uid (mu_msg_get_path(msg));
@@ -304,10 +345,14 @@ mu_store_store (MuStore *store, MuMsg *msg)
 
 		begin_trx_if (store, !store->_in_transaction);
 		/* we must add a unique term, so we can replace
-		    * matching documents */
+		 * matching documents */
 		newdoc.add_term (uid);
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_terms_values,
 				      &msgdoc);
+		/* also store the contact-info as separate terms */
+		mu_msg_contact_foreach (msg,
+					(MuMsgContactForeachFunc)each_contact_info,
+					&msgdoc);
 			
 		/* we replace all existing documents for this file */
 		id = store->_db->replace_document (uid, newdoc);

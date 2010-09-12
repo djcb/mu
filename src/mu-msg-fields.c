@@ -20,13 +20,22 @@
 #include <string.h>
 #include "mu-msg-fields.h"
 
+/*
+ * note: the differences for our purposes between a xapian field and a term:
+ * - there is only a single value for some item in per document (msg), ie.
+ *   one value containing the list of To: addresses
+ * - there can be multiple terms, each containing e.g. one of the To: addresses
+ * - searching uses terms, but to display some field, it must be in the
+ *   value (at least when using MuMsgIter)
+ */
 enum _FieldFlags { 
-	FLAG_GMIME         = 1 << 1, /* field retrieved through gmime */
-	FLAG_XAPIAN_INDEX  = 1 << 2, /* field is indexed in xapian */
-	FLAG_XAPIAN_TERM   = 1 << 3, /* field stored as term in xapian */
-	FLAG_XAPIAN_VALUE  = 1 << 4  /* field stored as value in xapian */
+	FLAG_GMIME	    = 1 << 1,	/* field retrieved through gmime */
+	FLAG_XAPIAN_INDEX   = 1 << 2,	/* field is indexed in xapian */
+	FLAG_XAPIAN_TERM    = 1 << 3,	/* field stored as term in xapian */
+	FLAG_XAPIAN_VALUE   = 1 << 4,	/* field stored as value in xapian */
+	FLAG_XAPIAN_CONTACT = 1 << 5    /* field contains e-mail address */
 };
-typedef enum _FieldFlags FieldFlags;
+typedef enum _FieldFlags	FieldFlags;
 
 /*
  * this struct describes the fields of an e-mail
@@ -40,7 +49,9 @@ struct _MuMsgField {
 	FieldFlags      _flags;		/* the flags that tells us what to do */
 };
 
-
+/* the name and shortcut fields must be lower case, or they might be
+ * misinterpreted by the query-preprocesser which turns queries into
+ * lowercase */
 static const MuMsgField FIELD_DATA[] = {
 	{  
 		MU_MSG_FIELD_ID_BODY_TEXT,
@@ -60,7 +71,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_CC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"cc", "c", "C",
-		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE 
 	},
 	
 	{ 
@@ -81,7 +92,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_FROM,
 		MU_MSG_FIELD_TYPE_STRING,
 		"from", "f", "F",
-		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
 
 	{   
@@ -123,7 +134,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_TO,
 		MU_MSG_FIELD_TYPE_STRING,
 		"to", "t", "T",
-		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT  | FLAG_XAPIAN_VALUE 
 	},
 	
 	{ 
@@ -232,7 +243,12 @@ mu_msg_field_xapian_term (const MuMsgField *field)
 	return field->_flags & FLAG_XAPIAN_TERM;
 }
 
-
+gboolean
+mu_msg_field_xapian_contact (const MuMsgField *field)
+{
+	g_return_val_if_fail (field, FALSE);
+	return field->_flags & FLAG_XAPIAN_CONTACT;
+}
 
 
 gboolean
