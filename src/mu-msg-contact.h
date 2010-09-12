@@ -35,11 +35,11 @@ typedef enum _MuMsgContactType MuMsgContactType;
 
 
 struct _MuMsgContact {
-	char             *name;    /* Foo Bar */
-	char             *address; /* foo@bar.cuux */
-	MuMsgContactType  type;    /*MU_MSG_CONTACT_TYPE_{TO,CC,BCC,FROM}*/  
+	const char		*name;	/* Foo Bar */
+	const char		*address;	/* foo@bar.cuux */
+	MuMsgContactType	 type;	/*MU_MSG_CONTACT_TYPE_{TO,CC,BCC,FROM}*/  
 };
-typedef struct _MuMsgContact MuMsgContact;
+typedef struct _MuMsgContact	 MuMsgContact;
 
 /**
  * macro to get the name of a contact

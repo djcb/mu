@@ -39,14 +39,17 @@ fill_contact (MuMsgContact *contact, InternetAddress *addr,
 	if (!addr)
 		return FALSE;
 	
-	contact->name = (char*)internet_address_get_name (addr);
+	contact->name = internet_address_get_name (addr);
 	contact->type = ctype;  
 	
-	/* we only support internet addresses;
-	 * if we don't check, g_mime hits an assert
+	/* we only support internet mailbox addresses; if we don't
+	 * check, g_mime hits an assert
 	 */
-	contact->address = (char*)internet_address_mailbox_get_addr
-		(INTERNET_ADDRESS_MAILBOX(addr));
+	if (INTERNET_ADDRESS_IS_MAILBOX(addr)) {
+		contact->address = internet_address_mailbox_get_addr
+			(INTERNET_ADDRESS_MAILBOX(addr));
+	} else
+		contact->address  = NULL;
 	
 	return TRUE;
 }
