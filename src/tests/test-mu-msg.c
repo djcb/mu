@@ -156,7 +156,6 @@ static void
 test_mu_msg_03 (void)
 {
 	MuMsg *msg;
-	int i;
 
 	msg = mu_msg_new (MU_TESTMAILDIR
 			  "cur/1283599333.1840_11.cthulhu!2,", NULL);
@@ -179,12 +178,12 @@ test_mu_msg_03 (void)
 }
 
 
-static gboolean
-ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg,
-	      gpointer user_data)
-{
-	return FALSE; /* don't abort */
-}
+/* static gboolean */
+/* ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg, */
+/* 	      gpointer user_data) */
+/* { */
+/* 	return FALSE; /\* don't abort *\/ */
+/* } */
 
 static void
 shutup (void) {}

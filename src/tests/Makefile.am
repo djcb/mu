@@ -24,6 +24,12 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	-DMU_PROGRAM=\"${abs_top_builddir}/src/mu\"		\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
+# don't use -Werror, as it might break on other compilers
+# use -Wno-unused-parameters, because some callbacks may not
+# really need all the params they get
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+
 noinst_PROGRAMS= $(TEST_PROGS)
 
 noinst_LTLIBRARIES=libtestmucommon.la
