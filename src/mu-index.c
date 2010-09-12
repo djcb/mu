@@ -153,7 +153,7 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 		return MU_OK;
 	
 	result = data->_idx_msg_cb (data->_stats, data->_user_data);
-	if (result != MU_OK && result != MU_STOP)
+	if G_UNLIKELY((result != MU_OK && result != MU_STOP))
 		g_warning ("Error in callback");
 
 	return result;
@@ -287,13 +287,12 @@ mu_index_run (MuIndex *index, const char* path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
 			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
 			      &cb_data);
-	if (rv == MU_OK) {
-		if (!mu_store_set_version (index->_xapian,
-						  MU_XAPIAN_DB_VERSION))
+	if (rv == MU_OK)
+		if (!mu_store_set_version (index->_xapian, MU_XAPIAN_DB_VERSION))
 			g_warning ("failed to set database version");
-	}
 	
 	mu_store_flush (index->_xapian);
+	
 	return rv;
 }
 
