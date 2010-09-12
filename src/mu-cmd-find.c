@@ -154,7 +154,8 @@ print_rows (MuMsgIter *iter, const char *fields, size_t summary_len)
 		while (*myfields) {
 			const MuMsgField* field;
 			field =	mu_msg_field_from_shortcut (*myfields);
-			if (!field || !mu_msg_field_xapian_value (field)) 
+			if (!field || ( !mu_msg_field_xapian_value (field) &&
+					!mu_msg_field_xapian_contact (field)))
 				len += printf ("%c", *myfields);
 			else
 				len += printf ("%s",
