@@ -179,10 +179,6 @@ test_mu_msg_03 (void)
 }
 
 
-
-
-
-
 static gboolean
 ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg,
 	      gpointer user_data)
@@ -208,9 +204,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-msg/mu-msg-03",
 			 test_mu_msg_03);
 	
-	/* g_log_set_handler (NULL, */
-	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
-	/* 		   (GLogFunc)shutup, NULL); */
+	g_log_set_handler (NULL,
+			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   (GLogFunc)shutup, NULL);
 	
 	return g_test_run ();
 }

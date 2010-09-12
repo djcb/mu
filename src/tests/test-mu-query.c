@@ -62,6 +62,7 @@ run_and_count_matches (const char *xpath, const char *query)
 	MuQuery  *mquery;
 	MuMsgIter *iter;
 	guint count;
+	gchar *prep;
 	
 	mquery = mu_query_new (xpath);
 	g_assert (query);
@@ -69,6 +70,10 @@ run_and_count_matches (const char *xpath, const char *query)
 	iter = mu_query_run (mquery, query, NULL, FALSE, 1);
 	g_assert (iter);
 
+	/* prep = mu_query_preprocess (query); */
+	/* g_print ("\n%s:\n(1)'%s'\n(2)'%s'\n", xpath, query, prep); */
+	/* g_free (prep); */
+	
 	for (count = 0; !mu_msg_iter_is_done(iter);
 	     mu_msg_iter_next(iter), ++count);
 	
@@ -95,10 +100,12 @@ test_mu_query_01 (void)
 		{ "basic",              3 },
 		{ "question",           5 },
 		{ "thanks",             2 },
-		{ "subject:elisp",      1 },
 		{ "html",               4 },
+		{ "subject:elisp",      1 },
 		{ "html AND contains",  1 },
+		{ "html and contains",  1 },
 		{ "from:pepernoot",     0 },
+		{ "foo:pepernoot",      0 },
 		{ "fünkÿ",              1 }
 	};
 	xpath = fill_database ();
@@ -129,25 +136,60 @@ test_mu_query_02 (void)
 static void
 test_mu_query_03 (void)
 {
+	MuQuery *query;
 	gchar *xpath;
 	int i;
 	
 	QResults queries[] = {
-//		{ "t:help-gnu-emacs@gnu.org", 1}
-		{ "t:help-gnu-emacs", 0}
+		{ "ploughed", 1},
+		{ "s:Re:Learning LISP; Scheme vs elisp.", 1},
+		{ "subject:Re Learning LISP; Scheme vs elisp.", 1},
+		{ "t:help-gnu-emacs@gnu.org", 4},
+		{ "t:help-gnu-emacs", 0},
 	};
+	
 	xpath = fill_database ();
-	g_assert (xpath);
-
+	g_assert (xpath != NULL);
+	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
 				  ==, queries[i].count);
 	g_free (xpath);
+
 }
 
 
 static void
 test_mu_query_04 (void)
+{
+	MuQuery *query;
+	gchar *xpath;
+	int i;
+	
+	QResults queries[] = {
+//		{ "frodo@example.com", 1},
+		{ "f:frodo@example.com", 1},
+		{ "f:Frodo Baggins", 1},
+//		{ "bilbo@anotherexample.com", 1},
+		{ "t:bilbo@anotherexample.com", 1},
+		{ "t:bilbo", 1},
+		{ "f:bilbo", 0},
+		{ "baggins", 1}
+	};
+	
+	xpath = fill_database ();
+	g_assert (xpath != NULL);
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+	g_free (xpath);
+
+}
+
+
+static void
+test_mu_query_05 (void)
 {
 	MuQuery *query;
 	MuMsgIter *iter;
@@ -177,11 +219,12 @@ int
 main (int argc, char *argv[])
 {
 	g_test_init (&argc, &argv, NULL);
-
+	
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
- 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);
-	/* g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03); */
+	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02); 
+	g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03);
 	g_test_add_func ("/mu-query/test-mu-query-04", test_mu_query_04);
+	g_test_add_func ("/mu-query/test-mu-query-05", test_mu_query_05);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
