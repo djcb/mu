@@ -33,8 +33,8 @@
 #include "mu-util-db.h"
 
 struct _MuIndex {
-	MuStore  *_xapian;
-	gboolean _needs_reindex;
+	MuStore		*_xapian;
+	gboolean	 _needs_reindex;
 };
 
 MuIndex* 
@@ -80,15 +80,15 @@ mu_index_destroy (MuIndex *index)
 
 
 struct _MuIndexCallbackData {
-	MuIndexMsgCallback    _idx_msg_cb;
-	MuIndexDirCallback    _idx_dir_cb;
-	MuStore*        _xapian;
-	void*                 _user_data;
-	MuIndexStats*         _stats;
-	gboolean	      _reindex;
-	time_t		      _dirstamp;
+	MuIndexMsgCallback		_idx_msg_cb;
+	MuIndexDirCallback		_idx_dir_cb;
+	MuStore*			_xapian;
+	void*				_user_data;
+	MuIndexStats*			_stats;
+	gboolean			_reindex;
+	time_t				_dirstamp;
 };
-typedef struct _MuIndexCallbackData MuIndexCallbackData;
+typedef struct _MuIndexCallbackData	MuIndexCallbackData;
 
 
 static MuResult
@@ -116,7 +116,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 		}
 
 		/* it's there, but it's not up to date */
-		if ((size_t)filestamp >= (size_t)data->_dirstamp)
+		if ((unsigned)filestamp >= (unsigned)data->_dirstamp)
 			break;
 
 		return MU_OK; /* nope: no need to insert/update! */
