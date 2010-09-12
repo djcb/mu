@@ -101,6 +101,7 @@ const char* mu_msg_str_prio  (MuMsgPrio prio) G_GNUC_CONST;
  * 
  * @return a newly allocated string with the summary. use g_free to free it.
  */
-char* mu_msg_str_summarize (const char* str, size_t max_lines);
+char* mu_msg_str_summarize (const char* str,
+			    size_t max_lines) G_GNUC_WARN_UNUSED_RESULT;
 
 #endif /*__MU_MSG_STR_H__*/
