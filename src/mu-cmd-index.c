@@ -52,9 +52,10 @@ update_warning (void)
 static void
 sig_handler (int sig)
 {
-	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) /* Ctrl-C */
+	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) { /* Ctrl-C */
 		g_warning ("Shutting down gracefully, "
-			   "press again to kill immediately\n");
+			   "press again to kill immediately");
+	}
 	
         MU_CAUGHT_SIGNAL = TRUE;
 }
@@ -219,6 +220,16 @@ run_index (MuIndex *midx, const char* maildir, MuIndexStats *stats,
 	return rv;
 }
 
+static void
+show_time (unsigned t, unsigned processed)
+{
+	if (processed)
+		g_message ("Elapsed: %u second(s), ca. %.2f seconds per message",
+			   t, (double)((t+.0)/(processed+.0)));
+	else
+		g_message ("Elapsed: %u second(s)", t);
+}
+
 
 gboolean
 mu_cmd_index (MuConfigOptions *opts)
@@ -226,12 +237,12 @@ mu_cmd_index (MuConfigOptions *opts)
 	gboolean rv;	
 	MuIndex *midx;
 	MuIndexStats stats;
+	time_t t;
 	
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "index"), FALSE);
 	
-	if (!check_index_params (opts) ||
-	    !database_version_check_and_update(opts))
+	if (!check_index_params (opts) || !database_version_check_and_update(opts))
 		return FALSE;
 	
 	install_sig_handler ();
@@ -244,22 +255,22 @@ mu_cmd_index (MuConfigOptions *opts)
 
 	g_message ("Indexing messages under %s", opts->maildir);
 	g_message ("Database: %s", opts->xpath);
-	
-	rv = run_index (midx, opts->maildir, &stats,
-			opts->reindex, opts->quiet);
+	t = time (NULL);
+	rv = run_index (midx, opts->maildir, &stats, opts->reindex, opts->quiet);
+	maybe_newline (opts->quiet);
+	show_time ((unsigned)(time(NULL)-t), stats._processed);	
 	if (rv == MU_OK  && !opts->nocleanup) {
-		maybe_newline (opts->quiet);
 		stats._processed = 0; /* restart processed at 0 */
+		t = time (NULL);
 		rv = run_cleanup (midx, &stats, opts->quiet);
+		maybe_newline (opts->quiet);
+		show_time ((unsigned)(time(NULL)-t),stats._processed);		
 	}
 	
 	mu_index_destroy (midx);
 	
 	MU_WRITE_LOG ("processed: %u; updated/new: %u, cleaned-up: %u",
-		      (unsigned)stats._processed, (unsigned)stats._updated,
-		      (unsigned)stats._cleaned_up);
-
-	maybe_newline (opts->quiet);	
+		      stats._processed, stats._updated, stats._cleaned_up);
 	
 	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
 }
