@@ -182,7 +182,7 @@ mu_log_init  (const char* muhome,
 	
 	fd = open (logfile, O_WRONLY|O_CREAT|O_APPEND, 00600);
 	if (fd < 0) 
-		g_warning ("%s: open() of '%s' failed: %s\n",  __FUNCTION__,
+		g_warning ("%s: open() of '%s' failed: %s",  __FUNCTION__,
 			   logfile, strerror(errno));
 	g_free (logfile);
 	
