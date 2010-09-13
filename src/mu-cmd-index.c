@@ -164,16 +164,15 @@ database_version_check_and_update (MuConfigOptions *opts)
 }
 
 
-static MuResult
-run_cleanup (MuIndex *midx, MuIndexStats *stats, gboolean quiet)
+static void
+show_time (unsigned t, unsigned processed)
 {
-	g_message ("Cleaning up database");
-
-	return mu_index_cleanup (midx, stats,
-				 quiet ? index_msg_silent_cb : index_msg_cb,
-				 NULL);
+	if (t)
+		g_message ("Elapsed: %u second(s), ~ %u msg/s",
+			   t, processed/t);
+	else
+		g_message ("Elapsed: %u second(s)", t);
 }
-
 
 gboolean
 mu_cmd_cleanup (MuConfigOptions *opts)
@@ -181,9 +180,12 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	MuResult rv;	
 	MuIndex *midx;
 	MuIndexStats stats;
-
+	time_t t;
+	
 	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "cleanup"), FALSE);
+	g_return_val_if_fail (mu_cmd_equals (opts, "cleanup") ||
+			      mu_cmd_equals (opts, "index"),
+			      FALSE);
 	
 	if (!check_index_params (opts))
 		return FALSE;
@@ -199,10 +201,15 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	g_message ("Cleaning up removed messages from %s",
 		   opts->xpath);
 	mu_index_stats_clear (&stats);
-	rv = run_cleanup (midx, &stats, opts->quiet);
+
+	t = time (NULL);
+	rv = mu_index_cleanup (midx, &stats,
+			       opts->quiet ? index_msg_silent_cb : index_msg_cb,
+			       NULL);
+	maybe_newline (opts->quiet);
+	show_time ((unsigned)(time(NULL)-t),stats._processed);		
 	
 	mu_index_destroy (midx);
-	maybe_newline (opts->quiet);	
 
 	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
 }
@@ -218,16 +225,6 @@ run_index (MuIndex *midx, const char* maildir, MuIndexStats *stats,
 			   quiet ? index_msg_silent_cb :index_msg_cb,
 			   NULL, NULL);
 	return rv;
-}
-
-static void
-show_time (unsigned t, unsigned processed)
-{
-	if (t)
-		g_message ("Elapsed: %u second(s), ca. %u msg/s",
-			   t, processed/t);
-	else
-		g_message ("Elapsed: %u second(s)", t);
 }
 
 
@@ -259,15 +256,10 @@ mu_cmd_index (MuConfigOptions *opts)
 	rv = run_index (midx, opts->maildir, &stats, opts->reindex, opts->quiet);
 	maybe_newline (opts->quiet);
 	show_time ((unsigned)(time(NULL)-t), stats._processed);	
-	if (rv == MU_OK  && !opts->nocleanup) {
-		stats._processed = 0; /* restart processed at 0 */
-		t = time (NULL);
-		rv = run_cleanup (midx, &stats, opts->quiet);
-		maybe_newline (opts->quiet);
-		show_time ((unsigned)(time(NULL)-t),stats._processed);		
-	}
-	
 	mu_index_destroy (midx);
+	
+	if (rv == MU_OK  && !opts->nocleanup)
+		rv = mu_cmd_cleanup (opts);
 	
 	MU_WRITE_LOG ("processed: %u; updated/new: %u, cleaned-up: %u",
 		      stats._processed, stats._updated, stats._cleaned_up);
