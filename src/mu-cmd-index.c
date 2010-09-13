@@ -53,6 +53,7 @@ static void
 sig_handler (int sig)
 {
 	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) { /* Ctrl-C */
+		g_print ("\n");
 		g_warning ("Shutting down gracefully, "
 			   "press again to kill immediately");
 	}
@@ -117,7 +118,10 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	
 	static int i = 0;
 	static int len = 0;
-
+	
+	if (MU_CAUGHT_SIGNAL)
+		return MU_STOP;
+	
 	while (len --> 0) /* note the --> operator :-) */
 		g_print ("\b");
 	
