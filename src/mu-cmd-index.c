@@ -114,7 +114,7 @@ static MuResult
 index_msg_cb  (MuIndexStats* stats, void *user_data)
 {
 	char *kars="-\\|/";
-	char output[314];
+	char output[120];
 	
 	static int i = 0;
 	static int len = 0;
@@ -128,12 +128,11 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	len = snprintf (output, sizeof(output),
 			"%c processing mail; processed: %u; "
 			"updated/new: %u, cleaned-up: %u",
-			(unsigned)kars[i % 4],
+			(unsigned)kars[(++i/500) % 4],
 			(unsigned)stats->_processed,
 			(unsigned)stats->_updated,
 			(unsigned)stats->_cleaned_up);
 	g_print ("%s", output);
-	++i;
 	
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
