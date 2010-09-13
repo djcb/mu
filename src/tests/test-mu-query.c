@@ -68,11 +68,11 @@ run_and_count_matches (const char *xpath, const char *query)
 
 	iter = mu_query_run (mquery, query, NULL, FALSE, 1);
 	g_assert (iter);
-	{
-		gchar *prep = mu_query_preprocess (query);
-		g_print ("\n%s:\n(1)'%s'\n(2)'%s'\n", xpath, query, prep);
-		g_free (prep);
-	}
+	/* { */
+	/* 	gchar *prep = mu_query_preprocess (query); */
+	/* 	g_print ("\n%s:\n(1)'%s'\n(2)'%s'\n", xpath, query, prep); */
+	/* 	g_free (prep); */
+	/* } */
 	
 	for (count = 0; !mu_msg_iter_is_done(iter);
 	     mu_msg_iter_next(iter), ++count);
