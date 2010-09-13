@@ -676,7 +676,8 @@ get_body (MuMsg *msg, gboolean want_html)
 	
 	memset (&data, 0, sizeof(GetBodyData));
 	data._want_html = want_html;
-	
+
+	err = FALSE;
 	g_mime_message_foreach (msg->_mime_msg,
 				(GMimeObjectForeachFunc)get_body_cb,
 				&data);
@@ -692,7 +693,8 @@ get_body (MuMsg *msg, gboolean want_html)
 	/* note, str may be NULL (no body), but that's not necessarily
 	 * an error; we only warn when an actual error occured */
 	if (err) 
-		g_warning ("error occured while retrieving body for message %s",
+		g_warning ("error occured while retrieving %s body for message %s",
+			   want_html ? "html" : "text",
 			   mu_msg_get_path(msg));
 
 	return str;	
