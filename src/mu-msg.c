@@ -621,18 +621,20 @@ stream_to_string (GMimeStream *stream, size_t buflen, gboolean convert_utf8)
 
 
 static gchar*
-part_to_string (GMimePart *part, gboolean convert_utf8)
+part_to_string (GMimePart *part, gboolean convert_utf8, gboolean *err)
 {
 	GMimeDataWrapper *wrapper;
 	GMimeStream *stream = NULL;
 	ssize_t buflen;
 	char *buffer = NULL;
 
-	g_return_val_if_fail (GMIME_IS_OBJECT(part), NULL);
+	*err = TRUE;
+	g_return_val_if_fail (GMIME_IS_PART(part), NULL);
 	
 	wrapper = g_mime_part_get_content_object (part);
 	if (!wrapper) {
-		g_warning ("failed to create data wrapper");
+		/* this happens with invalid mails */
+		g_debug ("failed to create data wrapper");
 		goto cleanup;
 	}
 
@@ -651,6 +653,8 @@ part_to_string (GMimePart *part, gboolean convert_utf8)
 	/* convert_to_utf8 will free the old 'buffer' if needed */
 	if (convert_utf8) 
 		buffer = convert_to_utf8 (part, buffer);
+
+	*err = FALSE;
 	
 cleanup:				
 	if (stream)
@@ -664,9 +668,11 @@ static char*
 get_body (MuMsg *msg, gboolean want_html)
 {
 	GetBodyData data;
-
+	char *str;
+	gboolean err;
+	
 	g_return_val_if_fail (msg, NULL);
-	g_return_val_if_fail (GMIME_IS_OBJECT(msg->_mime_msg), NULL);
+	g_return_val_if_fail (GMIME_IS_MESSAGE(msg->_mime_msg), NULL);
 	
 	memset (&data, 0, sizeof(GetBodyData));
 	data._want_html = want_html;
@@ -675,13 +681,21 @@ get_body (MuMsg *msg, gboolean want_html)
 				(GMimeObjectForeachFunc)get_body_cb,
 				&data);
 	if (want_html)
-		return data._html_part ?
-			part_to_string (GMIME_PART(data._html_part), FALSE) :
+		str = data._html_part ?
+			part_to_string (GMIME_PART(data._html_part), FALSE, &err) :
 			NULL; 
 	else
-		return data._txt_part ?
-			part_to_string (GMIME_PART(data._txt_part), TRUE) :
+		str = data._txt_part ?
+			part_to_string (GMIME_PART(data._txt_part), TRUE, &err) :
 			NULL;
+
+	/* note, str may be NULL (no body), but that's not necessarily
+	 * an error; we only warn when an actual error occured */
+	if (err) 
+		g_warning ("error occured while retrieving body for message %s",
+			   mu_msg_get_path(msg));
+
+	return str;	
 }
 
 const char*
