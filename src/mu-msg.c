@@ -645,8 +645,10 @@ part_to_string (GMimePart *part, gboolean convert_utf8, gboolean *err)
 	}
 
 	buflen = g_mime_data_wrapper_write_to_stream (wrapper, stream);
-	if (buflen <= 0)  /* empty buffer */
+	if (buflen <= 0)  {/* empty buffer, not an error */
+		*err = FALSE;
 		goto cleanup;
+	}
 	
 	buffer = stream_to_string (stream, (size_t)buflen, convert_utf8);
 	
