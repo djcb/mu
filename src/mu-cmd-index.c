@@ -121,6 +121,9 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	
 	if (MU_CAUGHT_SIGNAL)
 		return MU_STOP;
+
+	if (stats->_processed % 25)
+		return MU_OK;
 	
 	while (len --> 0) /* note the --> operator :-) */
 		g_print ("\b");
@@ -128,7 +131,7 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	len = snprintf (output, sizeof(output),
 			"%c processing mail; processed: %u; "
 			"updated/new: %u, cleaned-up: %u",
-			(unsigned)kars[(++i/500) % 4],
+			(unsigned)kars[++i % 4],
 			(unsigned)stats->_processed,
 			(unsigned)stats->_updated,
 			(unsigned)stats->_cleaned_up);
