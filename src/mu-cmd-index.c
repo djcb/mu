@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include "mu-util.h"
 #include "mu-util-db.h"
@@ -121,7 +122,7 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 	
 	if (MU_CAUGHT_SIGNAL)
 		return MU_STOP;
-
+	
 	if (stats->_processed % 25)
 		return MU_OK;
 	
@@ -187,6 +188,7 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	MuIndex *midx;
 	MuIndexStats stats;
 	time_t t;
+	gboolean quiet;
 	
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "cleanup") ||
@@ -209,8 +211,9 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	mu_index_stats_clear (&stats);
 
 	t = time (NULL);
+	quiet = opts->quiet || !isatty(fileno(stdout));
 	rv = mu_index_cleanup (midx, &stats,
-			       opts->quiet ? index_msg_silent_cb : index_msg_cb,
+			       quiet ? index_msg_silent_cb : index_msg_cb,
 			       NULL);
 	maybe_newline (opts->quiet);
 	show_time ((unsigned)(time(NULL)-t),stats._processed);		
@@ -220,24 +223,12 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
 }
 
-static MuResult
-run_index (MuIndex *midx, const char* maildir, MuIndexStats *stats,
-	   gboolean reindex, gboolean quiet)
-{
-	MuResult rv;
-	
-	mu_index_stats_clear (stats);
-	rv = mu_index_run (midx, maildir, reindex, stats,
-			   quiet ? index_msg_silent_cb :index_msg_cb,
-			   NULL, NULL);
-	return rv;
-}
-
 
 gboolean
 mu_cmd_index (MuConfigOptions *opts)
 {
-	gboolean rv;	
+	MuResult rv;
+	gboolean quiet;	
 	MuIndex *midx;
 	MuIndexStats stats;
 	time_t t;
@@ -259,7 +250,12 @@ mu_cmd_index (MuConfigOptions *opts)
 	g_message ("Indexing messages under %s", opts->maildir);
 	g_message ("Database: %s", opts->xpath);
 	t = time (NULL);
-	rv = run_index (midx, opts->maildir, &stats, opts->reindex, opts->quiet);
+
+	mu_index_stats_clear (&stats);
+	quiet = opts->quiet || !isatty(fileno(stdout));
+	rv = mu_index_run (midx, opts->maildir, opts->reindex, &stats,
+			   quiet ? index_msg_silent_cb :index_msg_cb,
+			   NULL, NULL);
 	maybe_newline (opts->quiet);
 	show_time ((unsigned)(time(NULL)-t), stats._processed);	
 	mu_index_destroy (midx);
