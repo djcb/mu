@@ -94,7 +94,7 @@ set_group_index_defaults (MuConfigOptions *opts)
 		opts->maildir = mu_util_dir_expand (opts->maildir);
 	else
 		opts->maildir = mu_util_guess_maildir();
-
+	
 	g_free (old);
 }
 
