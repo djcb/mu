@@ -76,8 +76,8 @@ install_sig_handler (void)
 
         for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
                 if (sigaction (sigs[i], &action, NULL) != 0)
-                        g_warning ("error: set sigaction for %d failed: %s",
-				   sigs[i], strerror (errno));;
+                        g_critical ("set sigaction for %d failed: %s",
+				    sigs[i], strerror (errno));;
 }
 
 
@@ -85,17 +85,18 @@ static gboolean
 check_index_params (MuConfigOptions *opts)
 {
 	if (opts->linksdir || opts->xquery) {
-		g_warning ("Error: Invalid option(s) for command");
+		g_warning ("invalid option(s) for command");
 		return FALSE;
 	}
 	
 	if (!opts->maildir || !g_path_is_absolute (opts->maildir)) {
-		g_warning ("Error: maildir path is not valid");
+		g_warning ("maildir path '%s' is not valid",
+			   opts->maildir);
 		return FALSE;
 	}
 	
 	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
-		g_warning ("Error: not a valid Maildir (%s)",
+		g_warning ("not a valid Maildir: %s",
 			   opts->maildir);
 		return FALSE;
 	}
@@ -233,29 +234,25 @@ mu_cmd_index (MuConfigOptions *opts)
 	MuIndexStats stats;
 	time_t t;
 	
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "index"), FALSE);
+	g_return_val_if_fail (opts && mu_cmd_equals (opts, "index"), FALSE);
 	
 	if (!check_index_params (opts) || !database_version_check_and_update(opts))
 		return FALSE;
 	
-	install_sig_handler ();
-	
-	midx = mu_index_new (opts->xpath);
-	if (!midx) {
+	if (!(midx = mu_index_new (opts->xpath))) {
 		g_warning ("Indexing failed");
 		return FALSE;
 	} 
-
+	
 	g_message ("Indexing messages under %s", opts->maildir);
 	g_message ("Database: %s", opts->xpath);
 	t = time (NULL);
 
 	mu_index_stats_clear (&stats);
 	quiet = opts->quiet || !isatty(fileno(stdout));
-	rv = mu_index_run (midx, opts->maildir, opts->reindex, &stats,
-			   quiet ? index_msg_silent_cb :index_msg_cb,
-			   NULL, NULL);
+	install_sig_handler ();
+	rv    = mu_index_run (midx, opts->maildir, opts->reindex, &stats,
+			   quiet ? index_msg_silent_cb :index_msg_cb, NULL, NULL);
 	maybe_newline (opts->quiet);
 	show_time ((unsigned)(time(NULL)-t), stats._processed);	
 	mu_index_destroy (midx);
