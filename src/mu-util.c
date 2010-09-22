@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,10 +17,20 @@
 **
 */
 
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
 #include <wordexp.h> /* for shell-style globbing */
-
 #include <stdlib.h>
+
+/* hopefully, the should get us a sane PATH_MAX */
+#include <limits.h>
+/* not all systems provide PATH_MAX in limits.h */
+#ifndef PATH_MAX
+#include <sys/param.h>
+#ifndef PATH_MAX
+#define PATH_MAX MAXPATHLEN
+#endif /*!PATH_MAX*/
+#endif /*PATH_MAX*/
+
 #include <string.h>
 #include <locale.h> /* for setlocale() */
 
@@ -40,16 +50,16 @@ mu_util_dir_expand (const char *path)
 {
 	wordexp_t wexp;
 	char *dir;
+	char resolved[PATH_MAX + 1];
 	int rv;
 	
 	g_return_val_if_fail (path, NULL);
 
 	dir = NULL;
-
 	rv = wordexp (path, &wexp, 0);
 	if (rv != 0) {
 		g_debug ("%s: expansion failed for '%s' [%d]",
-			   __FUNCTION__, path, rv);
+			 __FUNCTION__, path, rv);
 		return NULL;
 	} else if (wexp.we_wordc != 1) {
 		g_debug ("%s: expansion ambiguous for '%s'",
@@ -64,8 +74,17 @@ mu_util_dir_expand (const char *path)
 #ifndef __APPLE__     
 	wordfree (&wexp);
 #endif /*__APPLE__*/
+
+	/* now, resolve any symlinks, .. etc. */
+	if (!realpath (dir, resolved)) {
+		g_debug ("%s: good not get realpath for '%s': %s",
+			 __FUNCTION__, dir, strerror(errno));
+		g_free (dir);
+		return NULL;
+	} else 
+		g_free (dir);
 	
-	return dir;
+	return g_strdup(resolved);
 }
 
 gboolean

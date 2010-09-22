@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-/** 
+/**
  * do system-specific initialization. should be called before anything
  * else. Initializes the locale and Gtype
  * 
@@ -32,7 +32,7 @@ G_BEGIN_DECLS
  */
 gboolean mu_util_init_system (void);
 
-/** 
+/**
  * get the expanded path; ie. perform shell expansion on the path
  *
  * @param path path to expand
@@ -42,7 +42,7 @@ gboolean mu_util_init_system (void);
  */
 char*       mu_util_dir_expand (const char* path) G_GNUC_WARN_UNUSED_RESULT;
 
-/** 
+/**
  * guess the maildir; first try $MAILDIR; if it is unset or
  * non-existant, try ~/Maildir if both fail, return NULL
  * 
@@ -52,7 +52,7 @@ char*       mu_util_guess_maildir (void) G_GNUC_WARN_UNUSED_RESULT;
 
 
 
-/** 
+/**
  * if path exists, check that's a read/writeable dir; otherwise try to
  * create it (with perms 0700)
  * 
@@ -64,7 +64,7 @@ char*       mu_util_guess_maildir (void) G_GNUC_WARN_UNUSED_RESULT;
 gboolean mu_util_create_dir_maybe (const gchar *path) G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+/**
  * check whether path is a directory, and optionally, if it's readable
  * and/or writeable
  *  
@@ -79,7 +79,7 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
 
 
 
-/** 
+/**
  * create a writeable file and return its file descriptor (which
  * you'll need to close(2) when done with it.)
  * 
@@ -94,7 +94,7 @@ int mu_util_create_writeable_fd (const char* filename, const char* dir,
 				 gboolean overwrite);
 
 
-/** 
+/**
  * convert a string array in to a string, with the elements separated
  * by ' '
  * 
@@ -104,7 +104,7 @@ int mu_util_create_writeable_fd (const char* filename, const char* dir,
  */
 gchar* mu_util_str_from_strv (const gchar **params) G_GNUC_WARN_UNUSED_RESULT;
 
-/** 
+/**
  * 
  * don't repeat these catch blocks everywhere...
  * 
@@ -133,7 +133,7 @@ gchar* mu_util_str_from_strv (const gchar **params) G_GNUC_WARN_UNUSED_RESULT;
 #define MU_XAPIAN_DIR_NAME    "xapian"
 #define MU_XAPIAN_VERSION_KEY "db_version"
 
-/** 
+/**
  * log something in the log file; note, we use G_LOG_LEVEL_INFO
  * for such messages
  */
