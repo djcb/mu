@@ -76,6 +76,8 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],[
 # support for d_ino in struct dirent is optional     
 AC_STRUCT_DIRENT_D_INO
 
+# we need these
+AC_CHECK_FUNCS([memset realpath setlocale strerror])
 
 # glib2?
 PKG_CHECK_MODULES(GLIB, glib-2.0)
