@@ -1,0 +1,62 @@
+.TH MU-EASY 1 "September 2010" "User Manuals"
+
+.SH NAME 
+
+mu easy \- a quick introduction to mu
+
+.SH DESCRIPTION
+
+As you may know, \fBmu\fR is a set of tools for dealing with e-mail messages
+in Maildirs. There are many options, which are all described in the individual
+man pages for the various sub-commands. This man pages jumps over all the
+details and gives examples of the more common use cases. If the use cases
+described here do not precisely do what you want, please check the more
+extensive information in the man page about the sub-command you are using --
+for example, the mu-index or mu-find man pages.
+
+\fBNOTE\fR: the 'index' command (and therefore, the ones that depend on
+that, 'cleanup' and 'search'), require that you store your mail in the
+Maildir-format. If you don't do so, you can still use the other commands, but
+cannot index/search your mail.
+
+.SH INDEXING YOUR E-MAIL
+Before you can search e-mails, you'll first need to index them: 
+
+.nf
+\fB$ mu index\fR 
+.fi
+
+The process can take a few minutes, depending on the amount of mail you
+have, the speed of your computer, drive etc. Usually, indexing should be able
+to reach a speed of a few hundred messages per second. 
+
+Indexing gives some progress information, and it shows which directories it is
+indexing. If the Maildir-directory it guessed is not the right one, you can
+use the \fI--maildir\fR option. See the \fBmu-index\fR man page for more
+detail.
+
+Note, you 
+
+.SH SEARCHING YOUR E-MAIL
+After you have indexed your mail, you can search it. Normally, the search
+results are to standard output, but the output can also be in the form of
+Maildir with symbolic links to the found messages. This enables integration
+with e-mail clients; see the \fBmu-find\fR man page for details, the syntax of
+the search parameters and so on. Here, we just give some examples for common
+cases.
+
+First, let's search for all mail from Mickey Mouse about birds: 
+.nf
+\fB$ mu find f:mickey birds\fR 
+.fi
+
+
+.SH BUGS
+Please report bugs if you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+mu(1) mu-index(1) mu-cleanup(1) mu-find(1) mu-mkdir(1) mu-view(1) mu-extract(1)
