@@ -78,7 +78,6 @@ mu_index_destroy (MuIndex *index)
 }
 
 
-
 struct _MuIndexCallbackData {
 	MuIndexMsgCallback		_idx_msg_cb;
 	MuIndexDirCallback		_idx_dir_cb;

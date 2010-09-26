@@ -1,5 +1,5 @@
-/* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+/*
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,12 +37,11 @@ struct _MuIndexStats {
 };
 typedef struct _MuIndexStats MuIndexStats;
 
-/** 
- * create a new MuIndex instance. NOTE(1): the database does not
- * have to exist yet, but the directory already has to exist;
- * NOTE(2): before doing anything with the returned Index object,
- * make sure you haved called g_type_init, and mu_msg_init somewhere
- * in your code.
+/**
+ * create a new MuIndex instance. NOTE(1): the database does not have
+ * to exist yet, but the directory must already exist; NOTE(2): before
+ * doing anything with the returned Index object, make sure you haved
+ * called g_type_init, and mu_msg_init somewhere in your code.
  *
  * @param xpath path to the 'homedir'; the xapian directory will be
  * this homedir/xapian
@@ -52,7 +51,7 @@ typedef struct _MuIndexStats MuIndexStats;
 MuIndex* mu_index_new (const char* muhome);
 
 
-/** 
+/**
  * destroy the index instance
  * 
  * @param index a MuIndex instance, or NULL
@@ -60,8 +59,7 @@ MuIndex* mu_index_new (const char* muhome);
 void mu_index_destroy (MuIndex *index);
 
 
-
-/** 
+/**
  * callback function for mu_index_(run|stats|cleanup), for each message
  * 
  * @param stats pointer to structure to receive statistics data 
@@ -73,7 +71,7 @@ void mu_index_destroy (MuIndex *index);
 typedef MuResult (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data); 
 
 
-/** 
+/**
  * callback function for mu_index_(run|stats|cleanup), for each dir enter/leave
  * 
  * @param path dirpath we just entered / left
@@ -86,7 +84,7 @@ typedef MuResult (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data);
 typedef MuResult (*MuIndexDirCallback) (const char* path, gboolean enter, 
 					void *user_data);
 
-/** 
+/**
  * start the indexing process 
  * 
  * @param index a valid MuIndex instance
@@ -109,7 +107,7 @@ MuResult mu_index_run (MuIndex *index, const char* path, gboolean force,
 		       MuIndexStats *stats, MuIndexMsgCallback msg_cb,
 		       MuIndexDirCallback dir_cb, void *user_data);
 
-/** 
+/**
  * gather some statistics about the Maildir; this is usually much faster
  * than mu_index_run, and can thus be used to provide some information to the user
  * note though that the statistics may be different from the reality that 
@@ -135,7 +133,7 @@ MuResult mu_index_stats (MuIndex *index, const char* path, MuIndexStats *stats,
 
 
 
-/** 
+/**
  * callback function to determine if a message should be delete from
  * the database; if it returs MU_OK it will be delete, if returns
  * MU_IGNORE, the message will be ignored. In other cases, stop the callback
@@ -147,7 +145,7 @@ MuResult mu_index_stats (MuIndex *index, const char* path, MuIndexStats *stats,
 typedef MuResult (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
 						  void *user_data); 
 
-/** 
+/**
  * cleanup the database; ie. remove entries for which no longer a corresponding
  * file exists in the maildir
  * 
@@ -167,7 +165,7 @@ MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 			   MuIndexCleanupDeleteCallback cb,
 			   void *user_data);
 
-/** 
+/**
  * clear the stats structure
  * 
  * @param stats a MuIndexStats object
