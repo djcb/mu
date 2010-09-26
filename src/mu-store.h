@@ -48,6 +48,15 @@ MuStore*    mu_store_new     (const char* path);
 void              mu_store_destroy (MuStore *store);
 
 
+/**
+ * get the numbers of documents in the database
+ * 
+ * @param index a valid MuStore instance
+ * 
+ * @return the number of documents in the database; 0 in case of error
+ * or an empty database
+ */
+unsigned mu_store_count (MuStore *store);
 
 /**
  * get a version string for the database

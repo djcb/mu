@@ -75,6 +75,20 @@ mu_store_new  (const char* xpath)
 
 
 
+unsigned
+mu_store_count (MuStore *store)
+{
+	g_return_val_if_fail (store, NULL);
+
+	try {
+		return store->_db->get_doccount();
+		
+	} MU_XAPIAN_CATCH_BLOCK;
+
+	return 0;
+}
+
+
 char*
 mu_store_version (MuStore *store)
 {
