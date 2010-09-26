@@ -166,14 +166,13 @@ part_foreach_save_cb (GMimeObject *parent, GMimeObject *part,
 }
 
 gboolean
-mu_msg_mime_part_save (MuMsg *msg, int wanted_idx,
+mu_msg_mime_part_save (MuMsg *msg, unsigned wanted_idx,
 		       const char *targetdir, gboolean overwrite)
 {
-	SavePartData	spd;
+	SavePartData spd;
 	const char *msgid;
 	
 	g_return_val_if_fail (msg, FALSE);
-	g_return_val_if_fail (wanted_idx >= 0, FALSE);
 	
 	spd.idx	       = 0;
 	spd.wanted_idx = wanted_idx;

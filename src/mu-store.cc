@@ -78,7 +78,7 @@ mu_store_new  (const char* xpath)
 unsigned
 mu_store_count (MuStore *store)
 {
-	g_return_val_if_fail (store, NULL);
+	g_return_val_if_fail (store, 0);
 
 	try {
 		return store->_db->get_doccount();
@@ -413,8 +413,8 @@ mu_store_remove (MuStore *store, const char* msgpath)
 gboolean
 mu_store_contains_message (MuStore *store, const char* path)
 {
-	g_return_val_if_fail (store, NULL);
-	g_return_val_if_fail (path, NULL);
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (path, FALSE);
 	
 	try {
 		const std::string uid (get_message_uid(path));

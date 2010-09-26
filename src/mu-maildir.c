@@ -53,7 +53,7 @@ fullpath_s (const char* path, const char* name)
 
 
 static gboolean
-create_maildir (const char *path, int mode)
+create_maildir (const char *path, mode_t mode)
 {
 	int i;
 	const gchar* subdirs[] = {"new", "cur", "tmp"};
@@ -73,8 +73,7 @@ create_maildir (const char *path, int mode)
 
 		/* static buffer */
 		fullpath = fullpath_s (path, subdirs[i]);
-		
-		rv = g_mkdir_with_parents (fullpath, mode);
+		rv = g_mkdir_with_parents (fullpath, (int)mode);
 		if (rv != 0) {
 			g_warning ("g_mkdir_with_parents failed: %s",
 				   strerror (errno));
@@ -457,10 +456,18 @@ dirent_destroy (struct dirent *entry)
 }
 
 #ifdef HAVE_STRUCT_DIRENT_D_INO	
-static gint
+static int
 dirent_cmp (struct dirent *d1, struct dirent *d2)
 {
-	return d1->d_ino - d2->d_ino;
+	/* we do it his way instead of a simple d1->d_ino - d2->d_ino
+	 * because this way, we don't need 64-bit numbers for the
+	 * actual sorting */
+	if (d1->d_ino < d2->d_ino)
+		return -1;
+	else if (d1->d_ino > d2->d_ino)
+		return 1;
+	else
+		return 0;
 }
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/
 

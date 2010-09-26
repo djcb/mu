@@ -106,7 +106,7 @@ const char*     mu_msg_get_summary (MuMsg *msg, size_t max_lines);
  * @return TRUE if saving succeeded, FALSE otherwise
  */
 gboolean
-mu_msg_mime_part_save (MuMsg *msg, int wanted_idx,
+mu_msg_mime_part_save (MuMsg *msg, unsigned wanted_idx,
 		       const char *targetdir, gboolean overwrite);
 
 /**

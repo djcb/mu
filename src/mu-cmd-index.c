@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,11 @@
 **
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
+
+#include "mu-cmd.h"
 
 #include <errno.h>
 #include <string.h>
@@ -29,17 +33,15 @@
 #include "mu-util-db.h"
 
 #include "mu-msg.h"
-
 #include "mu-index.h"
-#include "mu-cmd.h"
 
 static gboolean MU_CAUGHT_SIGNAL;
 
 static void
 maybe_newline (gboolean quiet)
 {
-	if (!quiet)
-		g_print ("\n");
+if (!quiet)
+	g_print ("\n");
 }
 
 static void
@@ -111,34 +113,44 @@ index_msg_silent_cb  (MuIndexStats* stats, void *user_data)
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
 
-
-static MuResult
-index_msg_cb  (MuIndexStats* stats, void *user_data)
+static unsigned
+print_stats (MuIndexStats* stats)
 {
 	char *kars="-\\|/";
 	char output[120];
 	
 	static int i = 0;
-	static int len = 0;
+	unsigned len = 0;
+
+	len = (unsigned) snprintf (output, sizeof(output),
+				   "%c processing mail; processed: %u; "
+				   "updated/new: %u, cleaned-up: %u",
+				   (unsigned)kars[++i % 4],
+				   (unsigned)stats->_processed,
+				   (unsigned)stats->_updated,
+				   (unsigned)stats->_cleaned_up);
+
+        g_print ("%s", output);
+	return len;
+}
+
+
+static MuResult
+index_msg_cb  (MuIndexStats* stats, void *user_data)
+{
+	static unsigned len = 0;
 	
 	if (MU_CAUGHT_SIGNAL)
 		return MU_STOP;
 	
 	if (stats->_processed % 25)
-		return MU_OK;
+	 	return MU_OK;
 	
 	while (len --> 0) /* note the --> operator :-) */
 		g_print ("\b");
-	
-	len = snprintf (output, sizeof(output),
-			"%c processing mail; processed: %u; "
-			"updated/new: %u, cleaned-up: %u",
-			(unsigned)kars[++i % 4],
-			(unsigned)stats->_processed,
-			(unsigned)stats->_updated,
-			(unsigned)stats->_cleaned_up);
-	g_print ("%s", output);
-	
+
+	len = print_stats (stats);
+		
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
 

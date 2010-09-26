@@ -39,7 +39,7 @@ static void
 ref_gmime (void)
 {
 	if (G_UNLIKELY(_refcount == 0)) {
-		srandom (getpid()*time(NULL));
+		srandom ((unsigned)(getpid()*time(NULL)));
 		g_mime_init(0);
 	}
 	++_refcount;	
@@ -101,7 +101,8 @@ init_file_metadata (MuMsg* msg, const char* path, const gchar* mdir)
 	}
 	
 	msg->_timestamp            = statbuf.st_mtime;
-	msg->_size                 = statbuf.st_size; 	
+	/* size_t should be enough for message size... */
+	msg->_size                 = (size_t)statbuf.st_size; 
 	msg->_fields[PATH_FIELD]   = strdup (path);
 
 	/* FIXME: maybe try to derive it from the path? */
@@ -362,7 +363,7 @@ mu_msg_get_flags (MuMsg *msg)
 size_t
 mu_msg_get_size (MuMsg *msg)
 {
-	g_return_val_if_fail (msg, -1);
+	g_return_val_if_fail (msg, 0);
 
 	return msg->_size;
 }

@@ -17,7 +17,11 @@
 **  
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
+
+#include "mu-index.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +31,6 @@
 #include <errno.h>
 
 #include "mu-maildir.h"
-#include "mu-index.h"
 #include "mu-store.h"
 #include "mu-util.h"
 #include "mu-util-db.h"

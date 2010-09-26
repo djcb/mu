@@ -242,7 +242,7 @@ log_write (const char* domain, GLogLevelFlags level,
 	if (len == sizeof(buf))
 		buf[sizeof(buf)-2] = '\n';
 	
-	len = write (MU_LOG->_fd, buf, len);
+	len = write (MU_LOG->_fd, buf, (size_t)len);
 	if (len < 0)
 		fprintf (stderr, "%s: failed to write to log: %s\n",
 			 __FUNCTION__,  strerror(errno));

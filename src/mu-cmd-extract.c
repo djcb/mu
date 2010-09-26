@@ -38,16 +38,17 @@ save_numbered_parts (MuMsg *msg, MuConfigOptions *opts)
 	
 	for (rv = TRUE, cur = parts; cur && *cur; ++cur) {
 
-		int idx;
+		unsigned idx;
+		int i;
 		char *endptr;
 
-		idx = (int)strtol (*cur, &endptr, 10);
-		if (idx < 0 || *cur == endptr) {
+		idx = (unsigned)(i = strtol (*cur, &endptr, 10));
+		if (i < 0 || *cur == endptr) {
 			g_warning ("invalid MIME-part index '%s'", *cur);
 			rv = FALSE;
 			break;
 		}
-
+		
 		if  (!mu_msg_mime_part_save
 		     (msg, idx, opts->targetdir, opts->overwrite)) {
 			g_warning ("failed to save MIME-part %d", idx);

@@ -113,7 +113,7 @@ mu_util_init_system (void)
 gboolean
 mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
 {
-	mode_t mode;
+	int mode;
 	struct stat statbuf;
 	
 	if (!path) 
