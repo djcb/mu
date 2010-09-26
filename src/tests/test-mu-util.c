@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,8 +27,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-
-
+#include "test-mu-common.h"
 #include "src/mu-util.h"
 
 static void
@@ -183,12 +182,6 @@ test_mu_util_str_from_strv_03 (void)
 }
 
 
-
-
-
-static void
-shutup (void) {}
-
 int
 main (int argc, char *argv[])
 {
@@ -227,7 +220,7 @@ main (int argc, char *argv[])
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_DEBUG|
 			   G_LOG_LEVEL_MESSAGE|
-			   G_LOG_LEVEL_INFO, (GLogFunc)shutup, NULL);
+			   G_LOG_LEVEL_INFO, (GLogFunc)black_hole, NULL);
 
 	return g_test_run ();
 }

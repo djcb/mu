@@ -185,9 +185,6 @@ test_mu_msg_03 (void)
 /* 	return FALSE; /\* don't abort *\/ */
 /* } */
 
-static void
-shutup (void) {}
-
 
 
 int
@@ -205,7 +202,7 @@ main (int argc, char *argv[])
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)shutup, NULL);
+			   (GLogFunc)black_hole, NULL);
 	
 	return g_test_run ();
 }

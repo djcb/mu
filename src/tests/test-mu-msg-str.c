@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -125,13 +125,6 @@ test_mu_msg_str_prio_02 (void)
 	g_assert_cmpstr (mu_msg_str_prio(666), ==, NULL);
 }
 
-
-
-static void
-shutup (void) {}
-
-
-
 int
 main (int argc, char *argv[])
 {
@@ -158,7 +151,7 @@ main (int argc, char *argv[])
 		
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)shutup, NULL);
+			   (GLogFunc)black_hole, NULL);
 	
 	return g_test_run ();
 }

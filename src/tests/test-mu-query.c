@@ -105,7 +105,8 @@ test_mu_query_01 (void)
 		{ "html and contains",  1 },
 		{ "from:pepernoot",     0 },
 		{ "foo:pepernoot",      0 },
-		{ "fünkÿ",              1 }
+		{ "fünkÿ",              1 },
+//		{ "funky",              1 }
 	};
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
@@ -225,7 +226,7 @@ main (int argc, char *argv[])
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)shutup, NULL);
+			   (GLogFunc)black_hole, NULL);
 	
 	return g_test_run ();
 }

@@ -118,10 +118,6 @@ test_mu_maildir_mkmdir_03 (void)
 }
 		
 
-static void
-shutup (void) {}
-
-
 static gchar*
 copy_test_data (void)
 {
@@ -252,7 +248,7 @@ main (int argc, char *argv[])
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)shutup, NULL);
+			   (GLogFunc)black_hole, NULL);
 	
 	return g_test_run ();
 }
