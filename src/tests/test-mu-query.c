@@ -32,8 +32,6 @@
 #include "src/mu-query.h"
 
 
-static void shutup (void) {}
-
 
 static gchar*
 fill_database (void)
