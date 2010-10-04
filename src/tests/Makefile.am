@@ -85,4 +85,6 @@ EXTRA_DIST=							\
 	testdir/cur/1220863060.12663_3.mindcrime!2,S		\
 	testdir/cur/1283599333.1840_11.cthulhu!2,		\
 	testdir2/bar/cur/mail1					\
-	testdir2/bar/cur/mail2
+	testdir2/bar/cur/mail2					\
+	testdir2/bar/cur/mail3
+
