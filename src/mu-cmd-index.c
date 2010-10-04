@@ -38,13 +38,6 @@
 static gboolean MU_CAUGHT_SIGNAL;
 
 static void
-maybe_newline (gboolean quiet)
-{
-if (!quiet)
-	g_print ("\n");
-}
-
-static void
 update_warning (void)
 {
 	g_warning ("Note: the database needs to be upgraded to version %s",
@@ -113,15 +106,19 @@ index_msg_silent_cb  (MuIndexStats* stats, void *user_data)
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
 
-static unsigned
-print_stats (MuIndexStats* stats)
+static void
+print_stats (MuIndexStats* stats, gboolean clear)
 {
 	char *kars="-\\|/";
 	char output[120];
 	
 	static int i = 0;
-	unsigned len = 0;
+	static unsigned len = 0;
 
+	if (clear)
+		while (len --> 0) /* note the --> operator :-) */
+			g_print ("\b");
+	
 	len = (unsigned) snprintf (output, sizeof(output),
 				   "%c processing mail; processed: %u; "
 				   "updated/new: %u, cleaned-up: %u",
@@ -131,25 +128,16 @@ print_stats (MuIndexStats* stats)
 				   (unsigned)stats->_cleaned_up);
 
         g_print ("%s", output);
-	return len;
 }
 
 
 static MuResult
 index_msg_cb  (MuIndexStats* stats, void *user_data)
 {
-	static unsigned len = 0;
-	
-	if (MU_CAUGHT_SIGNAL)
-		return MU_STOP;
-	
 	if (stats->_processed % 25)
 	 	return MU_OK;
 	
-	while (len --> 0) /* note the --> operator :-) */
-		g_print ("\b");
-
-	len = print_stats (stats);
+	print_stats (stats, TRUE);
 		
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
@@ -228,8 +216,11 @@ mu_cmd_cleanup (MuConfigOptions *opts)
 	rv = mu_index_cleanup (midx, &stats,
 			       quiet ? index_msg_silent_cb : index_msg_cb,
 			       NULL);
-	maybe_newline (opts->quiet);
-	show_time ((unsigned)(time(NULL)-t),stats._processed);		
+	if (!quiet) {
+		print_stats (&stats, TRUE);
+		g_print ("\n");
+		show_time ((unsigned)(time(NULL)-t),stats._processed);
+	}
 	
 	mu_index_destroy (midx);
 
@@ -264,9 +255,13 @@ mu_cmd_index (MuConfigOptions *opts)
 	quiet = opts->quiet || !isatty(fileno(stdout));
 	install_sig_handler ();
 	rv    = mu_index_run (midx, opts->maildir, opts->reindex, &stats,
-			   quiet ? index_msg_silent_cb :index_msg_cb, NULL, NULL);
-	maybe_newline (opts->quiet);
-	show_time ((unsigned)(time(NULL)-t), stats._processed);	
+			      quiet ? index_msg_silent_cb :index_msg_cb, NULL, NULL);
+	if (!quiet) {
+		print_stats (&stats, TRUE);
+		g_print ("\n");
+		show_time ((unsigned)(time(NULL)-t),stats._processed);
+	}
+
 	mu_index_destroy (midx);
 	
 	if (rv == MU_OK  && !opts->nocleanup)

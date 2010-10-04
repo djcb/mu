@@ -8,7 +8,6 @@
    - [ ] query on time
    - [ ] mu-setup (?)
    - [ ] mu stats
-   - [ ] muex.7, man page with simple examples
    - [ ] follow symlinks when indexing
    - [ ] ansi-colors in output
    - [ ] config system (config file) (?)
@@ -16,9 +15,9 @@
    - [ ] detect mail threads (?)
    - [ ] clean up mu-msg-field, add formatting(?)
    - [ ] xml,json,sexp output
+   - [ ] completion for zsh
 
-
-** release 0.8 [63%]
+** release 0.8 [61%]
    - [X] remove gio dependency
    - [X] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
@@ -26,11 +25,12 @@
    - [X] summary
    - [X] attachment handling
    - [ ] review docs
-   - [ ] completion for zsh
    - [ ] don't make test mail files executable
    - [X] add summary unit test(s)
    - [ ] add attachment unit test(s)
    - [ ] fix e-mail address searches (issue #21)
+   - [ ] mu-easy.1, man page with simple examples
+   - [X] fix progress info
 
 
 
