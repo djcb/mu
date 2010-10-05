@@ -182,93 +182,129 @@ show_time (unsigned t, unsigned processed)
 		g_message ("Elapsed: %u second(s)", t);
 }
 
-gboolean
-mu_cmd_cleanup (MuConfigOptions *opts)
-{
-	MuResult rv;	
-	MuIndex *midx;
-	MuIndexStats stats;
-	time_t t;
-	gboolean quiet;
-	
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "cleanup") ||
-			      mu_cmd_equals (opts, "index"),
-			      FALSE);
-	
-	if (!check_index_params (opts))
-		return FALSE;
 
-	install_sig_handler ();
+
+static gboolean
+cmd_cleanup (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
+	     gboolean show_progress)
+{
+	MuResult rv;
+	time_t t;
 	
-	midx = mu_index_new (opts->xpath);
-	if (!midx) {
-		g_warning ("Cleanup failed");
-		return FALSE;
+	g_message ("Cleaning up messages [%s]", opts->xpath);
+	
+	t = time (NULL);
+	rv = mu_index_cleanup (midx, stats,
+			       show_progress ? index_msg_cb : index_msg_silent_cb,
+			       NULL);
+	
+	if (!opts->quiet) {
+		print_stats (stats, TRUE);
+		g_print ("\n");
+		show_time ((unsigned)(time(NULL)-t),stats->_processed);
 	}
 	
-	g_message ("Cleaning up removed messages from %s",
-		   opts->xpath);
-	mu_index_stats_clear (&stats);
+	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
+}
+
+
+
+static gboolean
+cmd_index (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
+	   gboolean show_progress)
+{
+	MuResult rv;
+	time_t t;
+	
+	g_message ("Indexing messages under %s [%s]", opts->maildir, opts->xpath);
 
 	t = time (NULL);
-	quiet = opts->quiet || !isatty(fileno(stdout));
-	rv = mu_index_cleanup (midx, &stats,
-			       quiet ? index_msg_silent_cb : index_msg_cb,
-			       NULL);
-	if (!quiet) {
-		print_stats (&stats, TRUE);
+	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
+			   show_progress ? index_msg_cb : index_msg_silent_cb,
+			   NULL, NULL);
+
+	if (!opts->quiet) {
+		print_stats (stats, TRUE);
 		g_print ("\n");
-		show_time ((unsigned)(time(NULL)-t),stats._processed);
+		show_time ((unsigned)(time(NULL)-t),stats->_processed);
 	}
 	
-	mu_index_destroy (midx);
+	if (rv == MU_OK && !opts->nocleanup) {
+		mu_index_stats_clear (stats);
+		rv = cmd_cleanup (midx, opts, stats, show_progress);
+	}
+	
+	if (rv == MU_OK || rv == MU_STOP) {
+		MU_WRITE_LOG ("processed: %u; updated/new: %u, cleaned-up: %u",
+			      stats->_processed, stats->_updated,
+			      stats->_cleaned_up);
+		return TRUE;
+	}
+	
+	return FALSE;
+}
 
-	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
+
+
+static gboolean
+cmd_index_or_cleanup (MuConfigOptions *opts)
+{
+	gboolean rv;
+	MuIndex *midx;
+	MuIndexStats stats;
+	gboolean show_progress;
+	
+	g_return_val_if_fail (opts, FALSE);
+	g_return_val_if_fail (mu_cmd_equals (opts, "index") ||
+			      mu_cmd_equals (opts, "cleanup"), FALSE);
+			  
+	if (!check_index_params (opts) || !database_version_check_and_update(opts))
+		return FALSE;
+	
+	if (!(midx = mu_index_new (opts->xpath))) {
+		g_warning ("Indexing/Cleanup failed");
+		return FALSE;
+	} 
+
+	/* note, 'opts->quiet' already cause g_message output not to
+	 * be shown; here, we make sure we only print progress info if
+	 * opts->quiet is false case and when stdout is a tty */
+	show_progress = !opts->quiet && isatty(fileno(stdout));
+
+	mu_index_stats_clear (&stats);
+	install_sig_handler ();
+	
+	if (mu_cmd_equals (opts, "index"))
+		rv = cmd_index (midx, opts, &stats, show_progress);
+	else if (mu_cmd_equals (opts, "cleanup"))
+		rv = cmd_cleanup (midx, opts, &stats, show_progress);
+	else
+		g_assert_not_reached ();
+	
+	mu_index_destroy (midx);
+		
+	return rv;
 }
 
 
 gboolean
 mu_cmd_index (MuConfigOptions *opts)
 {
-	MuResult rv;
-	gboolean quiet;	
-	MuIndex *midx;
-	MuIndexStats stats;
-	time_t t;
+	g_return_val_if_fail (opts && mu_cmd_equals (opts, "index"),
+			      FALSE);
 	
-	g_return_val_if_fail (opts && mu_cmd_equals (opts, "index"), FALSE);
-	
-	if (!check_index_params (opts) || !database_version_check_and_update(opts))
-		return FALSE;
-	
-	if (!(midx = mu_index_new (opts->xpath))) {
-		g_warning ("Indexing failed");
-		return FALSE;
-	} 
-	
-	g_message ("Indexing messages under %s", opts->maildir);
-	g_message ("Database: %s", opts->xpath);
-	t = time (NULL);
-
-	mu_index_stats_clear (&stats);
-	quiet = opts->quiet || !isatty(fileno(stdout));
-	install_sig_handler ();
-	rv    = mu_index_run (midx, opts->maildir, opts->reindex, &stats,
-			      quiet ? index_msg_silent_cb :index_msg_cb, NULL, NULL);
-	if (!quiet) {
-		print_stats (&stats, TRUE);
-		g_print ("\n");
-		show_time ((unsigned)(time(NULL)-t),stats._processed);
-	}
-
-	mu_index_destroy (midx);
-	
-	if (rv == MU_OK  && !opts->nocleanup)
-		rv = mu_cmd_cleanup (opts);
-	
-	MU_WRITE_LOG ("processed: %u; updated/new: %u, cleaned-up: %u",
-		      stats._processed, stats._updated, stats._cleaned_up);
-	
-	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
+	return cmd_index_or_cleanup (opts);
 }
+
+gboolean
+mu_cmd_cleanup (MuConfigOptions *opts)
+{
+	g_return_val_if_fail (opts && mu_cmd_equals (opts, "cleanup"),
+			      FALSE);
+	
+	return cmd_index_or_cleanup (opts);
+}
+
+
+
+
