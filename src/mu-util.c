@@ -45,29 +45,28 @@
 
 #include "mu-util.h"
 
-char*
-mu_util_dir_expand (const char *path)
+static char*
+do_wordexp (const char *path)
 {
 	wordexp_t wexp;
 	char *dir;
-	char resolved[PATH_MAX + 1];
-	int rv;
-	
-	g_return_val_if_fail (path, NULL);
 
-	dir = NULL;
-	rv = wordexp (path, &wexp, 0);
-	if (rv != 0) {
-		g_debug ("%s: expansion failed for '%s' [%d]",
-			 __FUNCTION__, path, rv);
+	if (!path) {
+		g_debug ("%s: path is empty", __FUNCTION__);
 		return NULL;
-	} else if (wexp.we_wordc != 1) {
-		g_debug ("%s: expansion ambiguous for '%s'",
-			 __FUNCTION__, path);
-	} else	
-		dir = g_strdup (wexp.we_wordv[0]);
+	}
+	
+	if (wordexp (path, &wexp, 0) != 0) {
+		g_debug ("%s: expansion failed for %s", __FUNCTION__, path);
+		return NULL;
+	}
+	
+	if (wexp.we_wordc != 1) /* not an *error*, we just take the first one */
+		g_debug ("%s: expansion ambiguous for '%s'", __FUNCTION__, path);
+	
+	dir = g_strdup (wexp.we_wordv[0]);
 
-	/* strangely, below seems to load to a crash on MacOS (BSD);
+	/* strangely, below seems to lead to a crash on MacOS (BSD);
 	   so we have to allow for a tiny leak here on that
 	   platform... maybe instead of __APPLE__ it should be
 	   __BSD__?*/
@@ -75,16 +74,32 @@ mu_util_dir_expand (const char *path)
 	wordfree (&wexp);
 #endif /*__APPLE__*/
 
+	return dir;
+}
+
+
+char*
+mu_util_dir_expand (const char *path)
+{
+	char *dir;
+	char resolved[PATH_MAX + 1];
+	
+	g_return_val_if_fail (path, NULL);
+
+	dir = do_wordexp (path);
+	if (!dir)
+		return NULL; /* error */
+	
 	/* now, resolve any symlinks, .. etc. */
 	if (!realpath (dir, resolved)) {
-		g_debug ("%s: good not get realpath for '%s': %s",
+		g_debug ("%s: could not get realpath for '%s': %s",
 			 __FUNCTION__, dir, strerror(errno));
 		g_free (dir);
 		return NULL;
 	} else 
 		g_free (dir);
 	
-	return g_strdup(resolved);
+	return g_strdup (resolved);
 }
 
 gboolean

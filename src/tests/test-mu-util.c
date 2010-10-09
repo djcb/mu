@@ -65,6 +65,20 @@ test_mu_util_dir_expand_02 (void)
 
 
 static void
+test_mu_util_dir_expand_03 (void)
+{
+	gchar *got;
+	
+	got = mu_util_dir_expand (".");	
+	g_assert_cmpstr (got,==,ABS_SRCDIR);
+
+	g_free (got);
+}
+
+
+
+
+static void
 test_mu_util_guess_maildir_01 (void)
 {
 	char *got;
@@ -182,6 +196,7 @@ test_mu_util_str_from_strv_03 (void)
 }
 
 
+
 int
 main (int argc, char *argv[])
 {
@@ -192,7 +207,9 @@ main (int argc, char *argv[])
 			 test_mu_util_dir_expand_01);
 	g_test_add_func ("/mu-util/mu-util-dir-expand-02",
 			 test_mu_util_dir_expand_02);
-
+	g_test_add_func ("/mu-util/mu-util-dir-expand-03",
+			 test_mu_util_dir_expand_03);
+	
 	/* mu_util_guess_maildir */
 	g_test_add_func ("/mu-util/mu-util-guess-maildir-01",
 			 test_mu_util_guess_maildir_01);
