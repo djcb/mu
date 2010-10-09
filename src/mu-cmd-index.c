@@ -86,13 +86,13 @@ check_index_params (MuConfigOptions *opts)
 	
 	if (!opts->maildir || !g_path_is_absolute (opts->maildir)) {
 		g_warning ("maildir path '%s' is not valid",
-			   opts->maildir);
+			   opts->maildir ? opts->maildir : "<none>");
 		return FALSE;
 	}
 	
 	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
 		g_warning ("not a valid Maildir: %s",
-			   opts->maildir);
+			   opts->maildir ? opts->maildir : "<none>");
 		return FALSE;
 	}
 	
