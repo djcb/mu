@@ -94,8 +94,13 @@ set_group_index_defaults (MuConfigOptions *opts)
 		opts->maildir = mu_util_dir_expand (opts->maildir);
 	else
 		opts->maildir = mu_util_guess_maildir();
-	
-	g_free (old);
+
+	/* note, this may be an invalid dir, but we're checking for
+	 * validity of the dir later */
+	if (!opts->maildir)
+		opts->maildir = old;
+	else
+		g_free (old);
 }
 
 
@@ -142,7 +147,10 @@ set_group_find_defaults (MuConfigOptions *opts)
 	if (opts->linksdir) {
 		gchar *old = opts->linksdir;
 		opts->linksdir = mu_util_dir_expand (opts->linksdir);
-		g_free(old);
+		if (!opts->linksdir) /* we'll check the dir later */
+			opts->linksdir = old;
+		else
+			g_free(old);
 	}
 
 	/* FIXME: some warning when summary_len < 0? */
