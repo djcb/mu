@@ -17,7 +17,7 @@
    - [ ] xml,json,sexp output
    - [ ] completion for zsh
 
-** release 0.8 [61%]
+** release 0.8 [69%]
    - [X] remove gio dependency
    - [X] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
@@ -28,7 +28,7 @@
    - [ ] don't make test mail files executable
    - [X] add summary unit test(s)
    - [ ] add attachment unit test(s)
-   - [ ] fix e-mail address searches (issue #21)
+   - [X] fix e-mail address searches (issue #21)
    - [ ] mu-easy.1, man page with simple examples
    - [X] fix progress info
 
