@@ -50,14 +50,13 @@ cmd_from_string (const char* cmd)
 		MuCmd        _cmd;
 	} Cmd;
 
-	Cmd cmd_map[]= {
+	Cmd cmd_map[] = {
 		{ "index",   MU_CMD_INDEX },
 		{ "find",    MU_CMD_FIND },
 		{ "cleanup", MU_CMD_CLEANUP },
 		{ "mkdir",   MU_CMD_MKDIR },
 		{ "view",    MU_CMD_VIEW },
-		{ "index",   MU_CMD_INDEX },
-		{ "extract",   MU_CMD_EXTRACT }
+		{ "extract", MU_CMD_EXTRACT }
 	};
 	
 	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
@@ -67,53 +66,43 @@ cmd_from_string (const char* cmd)
 	return MU_CMD_UNKNOWN;
 }
 
-static gboolean
+static void
 show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu [options] command [parameters]\n"
-		"\twhere command is one of index, find, view, mkdir, cleanup "
+		"where command is one of index, find, view, mkdir, cleanup "
 		"or extract\n\n"
-		"see mu(1) (the mu manpage) for more information, or try "
-		"mu --help\n";
+		"see the mu or mu-easy manpages for more information\n";
 
 	if (noerror)
 		g_print ("%s", usage);
 	else
 		g_printerr ("%s", usage);
-
-	return noerror;
 }
 
-static gboolean
+static void
 show_version (void)
 {
-	const char* msg =
-		"mu (mail indexer / searcher version) " VERSION "\n\n"
-		"Copyright (C) 2008-2010 Dirk-Jan C. Binnema\n"
-		"License GPLv3+: GNU GPL version 3 or later "
-		"<http://gnu.org/licenses/gpl.html>.";
-
-	g_print ("%s\n", msg);
-
-	return TRUE;
+	g_print ("mu (mail indexer/searcher) " VERSION "\n"
+		 "Copyright (C) 2008-2010 Dirk-Jan C. Binnema (GPLv3+)\n");
 }
-
-
-
 
 gboolean
 mu_cmd_execute (MuConfigOptions *opts)
 {
 	MuCmd cmd;
 	
-	if (opts->version)
-		return show_version ();
+	if (opts->version) {
+		show_version ();
+		return TRUE;
+	}
 	
 	if (!opts->params||!opts->params[0]) {/* no command? */
 		show_version ();
 		g_print ("\n");
-		return show_usage (FALSE);
+		show_usage (TRUE);
+		return FALSE;
 	}
 	
 	cmd = cmd_from_string (opts->params[0]);
@@ -128,7 +117,8 @@ mu_cmd_execute (MuConfigOptions *opts)
 	case MU_CMD_VIEW:       return mu_cmd_view (opts);
 		
 	case MU_CMD_UNKNOWN:
-		return show_usage (FALSE);
+		show_usage (FALSE);
+		return FALSE;
 	default:
 		g_return_val_if_reached (FALSE);
 	}	
