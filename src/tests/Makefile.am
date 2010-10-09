@@ -23,6 +23,7 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir/\"		\
 	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2/\"		\
 	-DMU_PROGRAM=\"${abs_top_builddir}/src/mu\"		\
+	-DABS_CURDIR=\"${abs_builddir}\"			\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 # don't use -Werror, as it might break on other compilers

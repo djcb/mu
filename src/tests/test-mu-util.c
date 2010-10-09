@@ -70,7 +70,7 @@ test_mu_util_dir_expand_03 (void)
 	gchar *got;
 	
 	got = mu_util_dir_expand (".");	
-	g_assert_cmpstr (got,==,ABS_SRCDIR);
+	g_assert_cmpstr (got,==,ABS_CURDIR);
 
 	g_free (got);
 }
