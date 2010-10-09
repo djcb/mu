@@ -54,7 +54,7 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mqx->_qparser->set_database(*mqx->_db);
 		mqx->_qparser->set_default_op(Xapian::Query::OP_AND);
 		mqx->_qparser->set_stemming_strategy
-			(Xapian::QueryParser::STEM_NONE);
+			(Xapian::QueryParser::STEM_ALL);
 
 		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
