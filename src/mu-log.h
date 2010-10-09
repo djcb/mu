@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 
 #define MU_MAX_LOG_FILE_SIZE 1000 * 1000 /* 1 MB (SI units) */
 
-/** 
+/**
  * write logging information to a log file
  * 
  * @param muhome the mu home directory
@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 gboolean mu_log_init  (const char* muhome, gboolean backup,
 		       gboolean quiet, gboolean debug);
 
-/** 
+/**
  * write logging information to a file descriptor
  * 
  * @param fd an open file descriptor
@@ -56,7 +56,7 @@ gboolean mu_log_init  (const char* muhome, gboolean backup,
 gboolean mu_log_init_with_fd    (int fd, gboolean doclose, gboolean quiet,
 				 gboolean debug);
 
-/** 
+/**
  * be absolutely silent, except for runtime errors, which will be
  * written to stderr.
  *  
@@ -65,7 +65,7 @@ gboolean mu_log_init_with_fd    (int fd, gboolean doclose, gboolean quiet,
 gboolean mu_log_init_silence    (void);
 
 
-/** 
+/**
  * unitialize the logging system, and free all resources
  */
 void mu_log_uninit             (void);

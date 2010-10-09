@@ -17,6 +17,12 @@
 **
 */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /*HAVE_CONFIG_H*/
+
+#include "mu-util.h"
+
 #define _XOPEN_SOURCE 500
 #include <wordexp.h> /* for shell-style globbing */
 #include <stdlib.h>
@@ -43,8 +49,6 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#include "mu-util.h"
-
 static char*
 do_wordexp (const char *path)
 {
@@ -57,12 +61,12 @@ do_wordexp (const char *path)
 	}
 	
 	if (wordexp (path, &wexp, 0) != 0) {
-		g_debug ("%s: expansion failed for %s", __FUNCTION__, path);
+		/* g_debug ("%s: expansion failed for %s", __FUNCTION__, path); */
 		return NULL;
 	}
 	
-	if (wexp.we_wordc != 1) /* not an *error*, we just take the first one */
-		g_debug ("%s: expansion ambiguous for '%s'", __FUNCTION__, path);
+	/* if (wexp.we_wordc != 1) /\* not an *error*, we just take the first one *\/ */
+	/* 	g_debug ("%s: expansion ambiguous for '%s'", __FUNCTION__, path); */
 	
 	dir = g_strdup (wexp.we_wordv[0]);
 
@@ -78,6 +82,8 @@ do_wordexp (const char *path)
 }
 
 
+/* note, the g_debugs are commented out because this function may be
+ * called before the log handler is installed. */
 char*
 mu_util_dir_expand (const char *path)
 {
@@ -92,8 +98,8 @@ mu_util_dir_expand (const char *path)
 	
 	/* now, resolve any symlinks, .. etc. */
 	if (!realpath (dir, resolved)) {
-		g_debug ("%s: could not get realpath for '%s': %s",
-			 __FUNCTION__, dir, strerror(errno));
+		/* g_debug ("%s: could not get realpath for '%s': %s", */
+		/* 	 __FUNCTION__, dir, strerror(errno)); */
 		g_free (dir);
 		return NULL;
 	} else 

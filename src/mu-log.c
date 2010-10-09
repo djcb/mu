@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,11 @@
 **  
 */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif /*HAVE_CONFIG_H*/
+
+#include "mu-log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +33,6 @@
 #include <errno.h>
 #include <string.h>
 
-#include "mu-log.h"
 #include "mu-util.h"
 
 #define MU_LOG_FILE "mu.log"
@@ -72,9 +75,9 @@ mu_log_init_silence (void)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
 	
-        MU_LOG = g_new(MuLog, 1);
-        MU_LOG->_fd     = -1;
-	MU_LOG->_own    = FALSE; /* nobody owns silence */
+        MU_LOG	     = g_new(MuLog, 1);
+        MU_LOG->_fd  = -1;
+	MU_LOG->_own = FALSE;	/* nobody owns silence */
 	
 	MU_LOG->_old_log_func =
 		g_log_set_default_handler ((GLogFunc)silence, NULL);
@@ -142,7 +145,7 @@ log_file_backup_maybe (const char *logfile)
 		if (errno == ENOENT)
 			return TRUE; /* it did not exist yet, no problem */
 		else {
-			g_warning ("Failed to stat(2) %s", logfile);
+			g_warning ("failed to stat(2) %s", logfile);
 			return FALSE;
 		}
 	}
@@ -168,7 +171,7 @@ mu_log_init  (const char* muhome,
 	g_return_val_if_fail (muhome, FALSE);
 
 	if (!mu_util_create_dir_maybe(muhome)) {
-		g_warning ("Failed to init log in %s", muhome);
+		g_warning ("failed to init log in %s", muhome);
 		return FALSE;
 	}
 	
@@ -176,7 +179,7 @@ mu_log_init  (const char* muhome,
 				   G_DIR_SEPARATOR, MU_LOG_FILE);
 
 	if (backup && !log_file_backup_maybe(logfile)) {
-		g_warning ("Failed to backup log file");
+		g_warning ("failed to backup log file");
 		return FALSE;
 	}
 	
