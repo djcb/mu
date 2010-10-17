@@ -230,6 +230,8 @@ config_options_group_extract (MuConfigOptions *opts)
 		 "overwrite existing files", NULL},
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
+
+	opts->targetdir = g_strdup("."); /* default is the current dir */
 	
 	og = g_option_group_new ("extract",
 				 "options for the 'extract' command",
