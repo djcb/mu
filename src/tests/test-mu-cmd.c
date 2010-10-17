@@ -79,10 +79,13 @@ search (const char* query, unsigned expected)
 	
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
 
+	/* g_print ("%s\n", query); */
 	g_assert_cmpuint (newlines_in_output(output),==,expected);
 
-	/* we expect zero lines of error output */
-	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
+	/* we expect zero lines of error output if there is a match;
+	 * otherwise there should be one line 'No matches found' */
+	g_assert_cmpuint (newlines_in_output(erroutput),==,
+			  expected == 0 ? 1 : 0);
 	
 	g_free (output);
 	g_free (erroutput);
@@ -107,7 +110,7 @@ test_mu_index (void)
 	store = mu_store_new (xpath);
 	g_assert (store);
 
-	g_assert_cmpuint (mu_store_count (store), ==, 3);	
+	g_assert_cmpuint (mu_store_count (store), ==, 4);	
 	mu_store_destroy (store);
 
 	g_free (muhome);
@@ -131,16 +134,30 @@ test_mu_find_01 (void)
 }
 
 
-static void /* error cases */
+/* index testdir2, and make sure it adds two documents */
+static void
 test_mu_find_02 (void)
+{
+	search ("bull", 1);
+	search ("bull m:foo", 0);	
+	search ("bull m:/foo", 1);
+}
+
+
+
+static void /* error cases */
+test_mu_find_03 (void)
 {
         gchar *muhome, *cmdline, *erroutput;
 
 	muhome = fill_database ();
 	g_assert (muhome);
 
-	cmdline = g_strdup_printf ("%s --muhome=/foo/bar/nonexistent find f:socrates",
-				   MU_PROGRAM);
+	cmdline = g_strdup_printf ("%s --muhome=%cfoo%cbar%cnonexistent find f:socrates",
+				   MU_PROGRAM,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR);
 	
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, &erroutput,
 					     NULL, NULL));
@@ -154,6 +171,36 @@ test_mu_find_02 (void)
 }
 
 
+static void /* error cases */
+test_mu_extract_01 (void)
+{
+        gchar *cmdline, *output, *erroutput;
+
+	cmdline = g_strdup_printf ("%s extract %s%cfoo%ccur%cmail4",
+				   MU_PROGRAM,
+				   MU_TESTMAILDIR2,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR);
+
+	output = erroutput = NULL;
+	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
+	g_assert_cmpstr (output,
+			 ==,
+			 "MIME-parts in this message:\n"
+			 "  0 <none> multipart/mixed [<none>]\n"
+			 "  1 <none> text/plain [<none>]\n"
+			 "  2 sittingbull.jpg image/jpeg [inline]\n"
+			 "  3 custer.jpg image/jpeg [inline]\n");
+	
+	/* we expect multiple lines of error output */
+	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
+
+	g_free (output);
+	g_free (erroutput);
+	g_free (cmdline);
+}
+
 
 
 int
@@ -164,6 +211,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-index", test_mu_index);
 	g_test_add_func ("/mu-cmd/test-mu-find-01",  test_mu_find_01); 
 	g_test_add_func ("/mu-cmd/test-mu-find-02",  test_mu_find_02);
+ 	g_test_add_func ("/mu-cmd/test-mu-find-03",  test_mu_find_03);
+	g_test_add_func ("/mu-cmd/test-mu-extract-01",  test_mu_extract_01);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
