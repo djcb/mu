@@ -27,6 +27,7 @@
 #include "mu-msg-part.h"
 #include "mu-msg-str.h"
 #include "mu-cmd.h"
+#include "mu-util.h"
 
 static gboolean
 save_numbered_parts (MuMsg *msg, MuConfigOptions *opts)
@@ -201,6 +202,11 @@ mu_cmd_extract (MuConfigOptions *opts)
 		g_warning ("missing mail file to extract something from");
 		return FALSE;
 	}
+
+	if (!mu_util_check_dir(opts->targetdir, FALSE, TRUE)) {
+		g_warning ("target '%s' is not a writable directory", opts->targetdir);
+		return FALSE;
+	}
 	
 	if (opts->save_attachments && opts->save_all) {
 		g_warning ("only one of --save-attachments and --save-all is allowed");
@@ -208,7 +214,8 @@ mu_cmd_extract (MuConfigOptions *opts)
 	}
 	
 	if ((opts->save_attachments || opts->save_all) && opts->parts) {
-		g_warning ("with --save-attachments/--save-all, parts should not be specified");
+		g_warning ("with --save-attachments/--save-all, " 
+			   "parts should not be specified");
 		return FALSE;
 	}
 
