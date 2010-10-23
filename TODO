@@ -16,26 +16,23 @@
    - [ ] clean up mu-msg-field, add formatting(?)
    - [ ] xml,json,sexp output
    - [ ] completion for zsh
+   - [ ] don't make test mail files executable
 
-** release 0.8 [69%]
+** release 0.8 [100%]
    - [X] remove gio dependency
    - [X] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
    - [X] fix non-ascii searches 
    - [X] summary
    - [X] attachment handling
-   - [ ] review docs
-   - [ ] don't make test mail files executable
+   - [X] review docs
    - [X] add summary unit test(s)
-   - [ ] add attachment unit test(s)
+   - [X] add attachment unit test(s)
    - [X] fix e-mail address searches (issue #21)
-   - [ ] mu-easy.1, man page with simple examples
+   - [X] mu-easy.1, man page with simple examples
    - [X] fix progress info
 
-
-
 	  
-
 * Release already done
 
 ** release 0.7 [100%]
