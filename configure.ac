@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.8],[http://www.djcbsoftware.nl/code/mu])
+AC_INIT([mu],[0.8-beta],[http://www.djcbsoftware.nl/code/mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])

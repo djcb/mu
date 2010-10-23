@@ -18,6 +18,8 @@
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
 
+* Release already done
+
 ** release 0.8 [100%]
    - [X] remove gio dependency
    - [X] fix macos/wordexp bug(?)
@@ -32,8 +34,6 @@
    - [X] mu-easy.1, man page with simple examples
    - [X] fix progress info
 
-	  
-* Release already done
 
 ** release 0.7 [100%]
 
