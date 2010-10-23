@@ -222,7 +222,7 @@ config_options_group_extract (MuConfigOptions *opts)
 		 "save all attachments", NULL},
 		{"save-all", 0, 0, G_OPTION_ARG_NONE, &opts->save_all,
 		 "save all parts (incl. non-attachments)", NULL},
-		{"parts", 0, 0, G_OPTION_ARG_STRING, &opts->parts,
+		{"parts <numbers>", 0, 0, G_OPTION_ARG_STRING, &opts->parts,
 		 "save specific parts", NULL},
 		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &opts->targetdir,
 		 "target directory for saving", NULL},

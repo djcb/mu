@@ -1,4 +1,4 @@
-.TH MU EXTRACT 1 "September 2010" "User Manuals"
+.TH MU EXTRACT 1 "October 2010" "User Manuals"
 
 .SH NAME 
 
@@ -14,8 +14,9 @@ mu extract\- display and save message parts (attachments)
 attachments) from mail messages. It works on message files, and does not require the
 message to be indexed.
 
-For attachments, the name specified in the message is used; when saving
-mime-parts, a name is used, derived from the message-id of the message. Thus,
+For attachments, the file name specified in the mail message is used (if
+any). If there is no name, or when saving other mime-parts, a name is used
+derived from the message-id of the message.
 
 .SH OPTIONS
 
@@ -23,18 +24,28 @@ mime-parts, a name is used, derived from the message-id of the message. Thus,
 \fB\-a\fR, \fB\-\-save\-attachments\fR
 save all MIME-parts that look like attachments.
 
-\fB\-\-save\-all-parts\fR
+.TP
+\fB\-\-save\-all\fR
 save all non-multipart MIME-parts.
 
-\fB\-\-target\-dir\fR=<dir>
-save the parts in the target directory rather than the current one.
+.TP
+\fB\-\-parts\fR=<parts>
+only consider the following numbered parts
+(comma-separated list).The numbers for the parts can be seen from running
+\fBmu extract\fR without any options but only the message file.
 
+.TP
+\fB\-\-target\-dir\fR=<dir>
+save the parts in the target directory rather than
+the current working directory.
+
+.TP
 \fB\-\-overwrite\fR
 overwrite existing files with the same name.
 
 .SH BUGS
-
 Please report bugs if you find them:
+
 .BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR
