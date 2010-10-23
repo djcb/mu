@@ -87,5 +87,6 @@ EXTRA_DIST=							\
 	testdir/cur/1283599333.1840_11.cthulhu!2,		\
 	testdir2/bar/cur/mail1					\
 	testdir2/bar/cur/mail2					\
-	testdir2/bar/cur/mail3
+	testdir2/bar/cur/mail3					\
+	testdir2/foo/cur/mail4
 
