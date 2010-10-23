@@ -1,6 +1,6 @@
 * NEWS (user visible changes)
 
-** Release 0.8 <2010-10-23 Sat>
+** Release 0.8 (beta) <2010-10-23 Sat>
    
    - There's now 'mu extract' for getting information about MIME-parts
      (attachments) and saving them
