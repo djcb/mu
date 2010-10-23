@@ -85,7 +85,8 @@ save_part_if (MuMsgPart *part, SaveData *sd)
 	 * the attachment check may be a bit too strict */
 	if (sd->attachments_only) 
 		if (!part->disposition ||
-		    g_ascii_strcasecmp (part->disposition, "attachment") != 0)
+		    ((g_ascii_strcasecmp (part->disposition, "attachment") != 0) &&
+		     g_ascii_strcasecmp (part->disposition, "inline")))
 			return;
 
 	/* ignore multiparts */
@@ -118,7 +119,7 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only, const gchar *targetdi
 	mu_msg_msg_part_foreach (msg,
 				 (MuMsgPartForeachFunc)save_part_if,
 				 &sd);
-
+	
 	if (sd.saved_num == 0) {
 		g_warning ("no %s extracted from this message",
 			   attachments_only ? "attachments" : "parts");
