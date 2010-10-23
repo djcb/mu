@@ -171,7 +171,7 @@ test_mu_find_03 (void)
 }
 
 
-static void /* error cases */
+static void
 test_mu_extract_01 (void)
 {
         gchar *cmdline, *output, *erroutput;
@@ -193,13 +193,100 @@ test_mu_extract_01 (void)
 			 "  2 sittingbull.jpg image/jpeg [inline]\n"
 			 "  3 custer.jpg image/jpeg [inline]\n");
 	
-	/* we expect multiple lines of error output */
+	/* we expect zero lines of error output */
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
 
 	g_free (output);
 	g_free (erroutput);
 	g_free (cmdline);
 }
+
+static gint64
+get_file_size (const char* path)
+{
+	int rv;
+	struct stat statbuf;
+
+	rv = stat (path, &statbuf);
+	if (rv != 0)
+		return -1;
+
+	return (gint64)statbuf.st_size;
+}
+
+
+static void 
+test_mu_extract_02 (void)
+{
+        gchar *cmdline, *output,  *tmpdir;
+	gchar *att1, *att2;
+	
+	tmpdir = test_mu_common_get_random_tmpdir();
+
+	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+	
+	cmdline = g_strdup_printf ("%s extract -a --target-dir=%s %s%cfoo%ccur%cmail4",
+				   MU_PROGRAM,
+				   tmpdir,
+				   MU_TESTMAILDIR2,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR);
+
+	output = NULL;
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert_cmpstr (output, ==, "");
+	
+	att1 = g_strdup_printf ("%s%ccuster.jpg", tmpdir, G_DIR_SEPARATOR);
+	att2 = g_strdup_printf ("%s%csittingbull.jpg", tmpdir, G_DIR_SEPARATOR);
+	
+	g_assert_cmpint (get_file_size(att1),==,15960);
+	g_assert_cmpint (get_file_size(att2),==,17674);
+	
+	g_free (output);
+	g_free (tmpdir);
+	g_free (cmdline);
+	g_free (att1);
+	g_free (att2);
+}
+
+
+static void 
+test_mu_extract_03 (void)
+{
+        gchar *cmdline, *output,  *tmpdir;
+	gchar *att1, *att2;
+	
+	tmpdir = test_mu_common_get_random_tmpdir();
+
+	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+	
+	cmdline = g_strdup_printf ("%s extract --parts 3 "
+				   "--target-dir=%s %s%cfoo%ccur%cmail4",
+				   MU_PROGRAM,
+				   tmpdir,
+				   MU_TESTMAILDIR2,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR);
+
+	output = NULL;
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert_cmpstr (output, ==, "");
+
+	att1 = g_strdup_printf ("%s%ccuster.jpg", tmpdir, G_DIR_SEPARATOR);
+	att2 = g_strdup_printf ("%s%csittingbull.jpg", tmpdir, G_DIR_SEPARATOR);
+	
+	g_assert_cmpint (get_file_size(att1),==,15960); /* should not exist */
+	g_assert_cmpint (get_file_size(att2),==,-1);
+	
+	g_free (output);
+	g_free (tmpdir);
+	g_free (cmdline);
+	g_free (att1);
+	g_free (att2);
+}
+
 
 
 
@@ -213,6 +300,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-find-02",  test_mu_find_02);
  	g_test_add_func ("/mu-cmd/test-mu-find-03",  test_mu_find_03);
 	g_test_add_func ("/mu-cmd/test-mu-extract-01",  test_mu_extract_01);
+	g_test_add_func ("/mu-cmd/test-mu-extract-02",  test_mu_extract_02);
+	g_test_add_func ("/mu-cmd/test-mu-extract-03",  test_mu_extract_03);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
