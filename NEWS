@@ -3,7 +3,7 @@
 ** Release 0.8 (beta) <2010-10-23 Sat>
    
    - There's now 'mu extract' for getting information about MIME-parts
-     (attachments) and saving them
+     (attachments) and extracting them
    - Queries are now internally converted to lowercase; this solves some of the
      false-negative issues
    - All mu sub-commands now have their own man-page
@@ -11,10 +11,9 @@
      up-to-n lines of the message
    - Same for 'mu view'; the summary replaces the full body
    - Setting the mu home dir now goes with -m, --muhome
-   - log-stderr does not have a single-char version anymore
-   - --reindex, --rebuild, --autoupgrade, --nocleanup lost their single char version
-   - --mode lost its single char version
-  
+   - --log-stderr, --reindex, --rebuild, --autoupgrade, --nocleanup, --mode,
+     --linksdir, --clearlinks lost their single char version
+     
 ** Release 0.7 <2010-02-27 Sat>
    - Database format changed
    - Automatic database scheme version check, notifies users when an upgrade
@@ -36,3 +35,9 @@
 **  Release 0.6 <2010-01-23 Sat> 
     - First new release of mu since 2008
     - No longer depends on sqlite
+
+# Local Variables:
+# mode: org; org-startup-folded: nil
+# End:
+
+

@@ -1,4 +1,4 @@
-.TH MU 1 "September 2010" "User Manuals"
+.TH MU 1 "October 2010" "User Manuals"
 
 .SH NAME 
 
@@ -29,9 +29,9 @@ scanning a Maildir directory tree and analyzing the e-mail messages found. The
 results of this analysis are stored in a database, which can then be queried.
 
 In addition to indexing and searching, \fBmu\fR also offers functionality for
-viewing messages and creating maildirs.
+viewing messages, extracting attachments and creating maildirs.
 
-\fBmu\fR can be used from the command line, or can be integrated with e-mail
+\fBmu\fR can be used from the command line or can be integrated with e-mail
 clients. Note: the various sub-commands have their own manpages.
 
 .SH COMMANDS
@@ -53,7 +53,8 @@ corresponding message file in the file system. See
 \.
 
 .TP
-\fBfind\fR for finding messages in your database, using certain search
+\fBfind\fR
+for finding messages in your database, using certain search
 parameters. See
 .BR mu-find(1)
 \.
@@ -70,22 +71,23 @@ for creating Maildirs. See
 .BR mu-mkdir(1)
 \.
 
-
 .TP
 \fBextract\fR
 for extract MIME-parts (such as attachments) from messages. See
 .BR mu-extract(1)
 \.
 
-Subcommands \findex\fR, \ffind\fR and \cleanup\fR work with the database,
+
+.SH " "
+
+Commands \fBmu index\fR, \fBfind\fR and \fBcleanup\fR work with the database,
 while the other ones work on invidual mail files. Hence, running \fview\fR,
 \fBmkdir\fR and \fBextract\fR does not require the mu database.
 
-.TP
 The various commands are discussed in more detail in their own separate
 man-pages; here the general options are discussed.
 
-.SH GENERAL OPTIONS
+.SH OPTIONS
 
 \fBmu\fR offers a number of general options that apply to all commands,
 including \fBmu\fR without any command.

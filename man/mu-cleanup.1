@@ -1,4 +1,4 @@
-.TH MU CLEANUP 1 "September 2010" "User Manuals"
+.TH MU CLEANUP 1 "October 2010" "User Manuals"
 
 .SH NAME 
 
@@ -15,15 +15,11 @@ database that are no longer present in the file system.
 
 The \fBcleanup\fR command removes messages for which no corresponding file can
 be found, from the database. Note that this is done automatically when running
-\fBmu index\fR (unless \fB\-\-nocleanup\fR was specified). 
+\fBmu index\fR (unless \fB\-\-nocleanup\fR was specified).
 
-.SH ENVIRONMENT
+\fBmu cleanup\fR does not remove messages that are outside the currently
+specified Maildir as long as they still exist.
 
-Like \fBmu index\fR, \fBmu cleanup\fR uses \fBMAILDIR\fR to find the user's
-Maildir if it has not been specified explicitly with
-\fB\-\-maildir\fR=\fI<maildir>\fR. If MAILDIR is not set, \fBmu cleanup\fR will
-try \fI~/Maildir\fR.
-.
 .SH BUGS
 
 Please report bugs if you find them:

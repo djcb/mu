@@ -1,4 +1,4 @@
-.TH MU-EASY 1 "September 2010" "User Manuals"
+.TH MU-EASY 1 "October 2010" "User Manuals"
 
 .SH NAME 
 
@@ -14,28 +14,26 @@ described here do not precisely do what you want, please check the more
 extensive information in the man page about the sub-command you are using --
 for example, the mu-index or mu-find man pages.
 
-\fBNOTE\fR: the 'index' command (and therefore, the ones that depend on
-that, 'cleanup' and 'search'), require that you store your mail in the
+\fBNOTE\fR: the \fBindex\fR command (and therefore, the ones that depend on
+that, such as \fBfind\fR), require that you store your mail in the
 Maildir-format. If you don't do so, you can still use the other commands, but
 cannot index/search your mail.
 
 .SH INDEXING YOUR E-MAIL
-Before you can search e-mails, you'll first need to index them: 
+Before you can search e-mails, you'll first need to index them:
 
 .nf
 \fB$ mu index\fR 
 .fi
 
-The process can take a few minutes, depending on the amount of mail you
-have, the speed of your computer, drive etc. Usually, indexing should be able
-to reach a speed of a few hundred messages per second. 
+The process can take a few minutes, depending on the amount of mail you have,
+the speed of your computer, hard drive etc. Usually, indexing should be able to
+reach a speed of a few hundred messages per second.
 
-Indexing gives some progress information, and it shows which directories it is
-indexing. If the Maildir-directory it guessed is not the right one, you can
-use the \fI--maildir\fR option. See the \fBmu-index\fR man page for more
+\fBmu index\fR guesses the top-level Maildir to do its job; if it guesses
+wrong, you can use the \fI--maildir\fR option to specify the top-level
+directory that should be processed. See the \fBmu-index\fR man page for more
 detail.
-
-Note, you 
 
 .SH SEARCHING YOUR E-MAIL
 After you have indexed your mail, you can search it. Normally, the search
@@ -78,9 +76,9 @@ return something like:
 
 This is the same message found before, only with some different fields displayed.
 
-By default, \fBmu\fR uses the logical \fBand\fR for the search parameters --
-that is, it displays messages that match all the parameters. However, we can
-use logical \fBor\fR as well:
+By default, \fBmu\fR uses the logical AND for the search parameters -- that
+is, it displays messages that match all the parameters. However, we can use
+logical OR as well:
 
 .nf
 \fB$ mu find t:julius OR f:socrates\fR 

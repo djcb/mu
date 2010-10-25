@@ -1,15 +1,15 @@
 * HACKING
 
   Here are some guidelines for hacking on the 'mu' source code. This is fairly
-  long list -- this is not meant to discourage anyone from working on the mu
-  source code; I think most of the rules are common sense anyway, and some of
+  long list -- this is not meant to discourage anyone from working on mu; I
+  think most of the rules are common sense anyway (or should be), and some of
   the more stylistic-aesthetic rules are clearly visible in current source code,
   so as long as any new code 'fits in', it should go a long way in satisfying
-  the rules.
+  them.
 
 ** Coding style
 
-   For consistency and even more important, to keep things understandable, mu
+   For consistency and, even more important, to keep things understandable, mu
    follows the following rules:
 
    1. basic code layout is like in the Linux kernel coding style, with the '{'
@@ -18,17 +18,18 @@
 
    2. lines must not exceed 80 characters (C) or 100 characters (C++)
 
-   3. functions must not exceed 40 lines (there may be rare exceptions), and
-      30 lines is already pretty long. You can easily check if any functions
-      violate this rule with 'make line33', which lists all functions with
-      more than 33 non-comment lines.
+   3. functions must not exceed 40 lines (there could be rare exceptions,
+      currently there are none in mu), and 30 lines is already pretty long. You
+      can easily check if any functions violate this rule with 'make line33',
+      which lists all functions with more than 33 non-comment lines.
 
    4. source files should not exceed 1000 lines
 
-   5. a function's cyclomatic complexity should not exceed 10 (there may be
-      rare exceptions). You can test the cyclomatic complexity with the
-      pmccabe tool; if you installed that, you can use 'make cc10' to list all
-      functions that violate this rule; there should be none.
+   5. a function's cyclomatic complexity should not exceed 10 (there could be
+      rare exceptions, currently there are none in mu). You can test the
+      cyclomatic complexity with the pmccabe tool; if you installed that, you
+      can use 'make cc10' to list all functions that violate this rule; there
+      should be none.
 
    6. filenames have their components separated with dashes (e.g, 'mu-log.h')
 
@@ -58,6 +59,21 @@
    11. returned strings of type char* must be freed by the caller; if they are
        not to be freed, 'const char*' should be used instead
 
+   12. functions calls have a space between function name and arguments, unless
+       there are none, so:
+
+	foo(12, 3);
+
+       and
+
+	bar();
+
+       after a comma, a space should follow.
+
+   13. functions that do not take arguments are explicitly declared as f(void)
+       and not f(). Reason: f() means that the arguments are /unspecified/ (in
+       C)
+
 ** Logging
    
    For logging, mu uses the GLib logging functions/macros as listed below,
@@ -79,7 +95,8 @@
    use MU_LOG_WRITE, as defined in mu-util.h
 
 
-#+ Local Variables: ***
-#+ mode:org ***
-#+ End: ***
-       
+# Local Variables:
+# mode: org; org-startup-folded: nil
+# End:
+   
+   
