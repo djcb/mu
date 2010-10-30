@@ -191,14 +191,9 @@ show_parts (const char* path, MuConfigOptions *opts)
 	
 }
 
-gboolean
-mu_cmd_extract (MuConfigOptions *opts)
+static gboolean
+check_params (MuConfigOptions *opts)
 {
-	gboolean rv;
-	
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "extract"), FALSE);
-	
 	if (!opts->params[1]) {
 		g_warning ("missing mail file to extract something from");
 		return FALSE;
@@ -220,6 +215,20 @@ mu_cmd_extract (MuConfigOptions *opts)
 		return FALSE;
 	}
 
+	return TRUE;
+}
+
+gboolean
+mu_cmd_extract (MuConfigOptions *opts)
+{
+	gboolean rv;
+	
+	g_return_val_if_fail (opts, FALSE);
+	g_return_val_if_fail (mu_cmd_equals (opts, "extract"), FALSE);
+
+	if (!check_params (opts))
+		return FALSE;
+	
 	if (!opts->parts &&
 	    !opts->save_attachments &&
 	    !opts->save_all)  /* show, don't save */
