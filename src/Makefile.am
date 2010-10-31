@@ -80,6 +80,10 @@ libmu_la_SOURCES=			\
 	mu-msg-str.c			\
 	mu-msg-str.h			\
 	mu-msg.h			\
+	mu-output-link.c		\
+	mu-output-link.h		\
+	mu-output-plain.c		\
+	mu-output-plain.h		\
 	mu-query.cc			\
 	mu-query.h			\
 	mu-result.h			\
