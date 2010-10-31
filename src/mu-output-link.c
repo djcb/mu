@@ -73,7 +73,7 @@ mu_output_link_row (MuMsgIter *iter, const char* linksdir)
 	if (access (path, R_OK) != 0) {
 		if (errno == ENOENT)
 			g_warning ("Cannot find source message %s: "
-				   "the database is not up-to-date", pathq);
+				   "the database is not up-to-date", path);
 		else
 			g_warning ("Cannot read source message %s: %s", path,
 				   strerror (errno));
