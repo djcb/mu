@@ -141,6 +141,7 @@ test_mu_find_02 (void)
 	search ("bull", 1);
 	search ("bull m:foo", 0);	
 	search ("bull m:/foo", 1);
+	search ("bull m:/Foo", 1);
 }
 
 
@@ -176,7 +177,7 @@ test_mu_extract_01 (void)
 {
         gchar *cmdline, *output, *erroutput;
 
-	cmdline = g_strdup_printf ("%s extract %s%cfoo%ccur%cmail4",
+	cmdline = g_strdup_printf ("%s extract %s%cFoo%ccur%cmail4",
 				   MU_PROGRAM,
 				   MU_TESTMAILDIR2,
 				   G_DIR_SEPARATOR,
@@ -225,7 +226,7 @@ test_mu_extract_02 (void)
 
 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 	
-	cmdline = g_strdup_printf ("%s extract -a --target-dir=%s %s%cfoo%ccur%cmail4",
+	cmdline = g_strdup_printf ("%s extract -a --target-dir=%s %s%cFoo%ccur%cmail4",
 				   MU_PROGRAM,
 				   tmpdir,
 				   MU_TESTMAILDIR2,
@@ -262,7 +263,7 @@ test_mu_extract_03 (void)
 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 	
 	cmdline = g_strdup_printf ("%s extract --parts 3 "
-				   "--target-dir=%s %s%cfoo%ccur%cmail4",
+				   "--target-dir=%s %s%cFoo%ccur%cmail4",
 				   MU_PROGRAM,
 				   tmpdir,
 				   MU_TESTMAILDIR2,
