@@ -29,6 +29,7 @@
 #include "mu-msg-contact.h"
 #include "mu-store.h"
 #include "mu-util.h"
+#include "mu-msg-str.h"
 
 /* number of new messages after which we commit to the database */
 #define MU_STORE_TRX_SIZE 6666
@@ -214,12 +215,18 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 		termgen.index_text_without_positions (str, 1, prefix);
 	}
 
-	if (mu_msg_field_xapian_term(field))
+	if (mu_msg_field_xapian_term(field)) {
 		/* terms can be up to MU_STORE_MAX_TERM_LENGTH (240)
 		 * long; this is a Xapian limit */
 		doc.add_term (std::string (prefix + value, 0,
 		 			   MU_STORE_MAX_TERM_LENGTH));
 
+		/* add a normalized version as well (accents removed, lowercase) */
+		std::string norm(mu_msg_str_normalize(str, TRUE));
+		doc.add_term (std::string (prefix + norm, 0,
+		 			   MU_STORE_MAX_TERM_LENGTH));
+	}
+	
 	if (mu_msg_field_xapian_value(field)) 			 
 		doc.add_value ((Xapian::valueno)mu_msg_field_id (field),
 			       value);
