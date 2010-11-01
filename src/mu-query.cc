@@ -243,8 +243,8 @@ mu_query_preprocess (const char *query)
 	g_return_val_if_fail (query, NULL);
 	
 	/* translate the the searchexpr to all lowercase; this
-	 * fill fixes some of the false-negatives. A full fix
-	 * probably require some custom query parser.
+	 * will fixes some of the false-negatives. A full fix
+	 * probably requires some custom query parser.
 	 */
 	my_query = g_utf8_strdown (query, -1);
 	
@@ -252,7 +252,7 @@ mu_query_preprocess (const char *query)
 		if (*cur == ':') /* we found a ':' */
 			 /* if there's a registered xapian prefix before the
 			  * ':', don't touch it. Otherwise replace ':' with
-			  * a space'
+			  * a space'... ugly...
 			  */			 
 			 if (!is_xapian_prefix (my_query, cur))
 				 *cur = ' ';
