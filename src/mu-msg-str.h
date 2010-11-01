@@ -26,6 +26,8 @@
 #include "mu-msg.h"
 #include "mu-msg-flags.h"
 
+G_BEGIN_DECLS
+
 /**
  * get a display string for a given time_t;
  * use the preferred date/time for the current locale
@@ -103,5 +105,20 @@ const char* mu_msg_str_prio  (MuMsgPrio prio) G_GNUC_CONST;
  */
 char* mu_msg_str_summarize (const char* str,
 			    size_t max_lines) G_GNUC_WARN_UNUSED_RESULT;
+
+
+
+/** 
+ * normalize a string (ie., collapse accented characters etc.), and
+ * optionally, downcase it
+ * 
+ * @param str a valid utf8 string or NULL
+ * @param downcase if TRUE, convert the string to lowercase
+ * 
+ * @return the normalize string, or NULL in case of error or str was NULL
+ */
+char* mu_msg_str_normalize (const char *str, gboolean downcase);
+
+G_END_DECLS
 
 #endif /*__MU_MSG_STR_H__*/

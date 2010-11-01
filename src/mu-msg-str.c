@@ -23,6 +23,31 @@
 #include "mu-msg-str.h"
 #include "mu-msg-flags.h"
 
+char*
+mu_msg_str_normalize (const char *str, gboolean downcase)
+{
+	gchar *s;
+	
+	if (!str)
+		return NULL;
+
+	s = g_utf8_normalize (str, -1, G_NORMALIZE_ALL);
+	if (!s) {
+		g_warning ("%s: not valid utf8 '%s'", __FUNCTION__, str);
+		return NULL;
+	}
+		
+	if (downcase) {
+		gchar *tmp;
+		tmp = g_utf8_strdown (s, -1);
+		g_free (s);
+		s = tmp;
+	}
+
+	return s;
+}
+
+
 
 const char* 
 mu_msg_str_date_s (time_t t)
