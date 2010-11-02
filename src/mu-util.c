@@ -178,6 +178,36 @@ mu_util_guess_maildir (void)
 }
 
 
+gchar*
+mu_util_guess_mu_homedir (void)
+{
+	const char* home;
+
+	home = g_getenv ("HOME");
+	if (!home)
+		home = g_get_home_dir ();
+
+	if (!home)
+		MU_WRITE_LOG ("failed to determine homedir");
+	
+	return g_strdup_printf ("%s%c%s", home ? home : ".", G_DIR_SEPARATOR,
+				".mu");
+}
+
+
+gchar*
+mu_util_guess_xapian_dir (const char* muhome)
+{
+	gchar *homedir, *xdir;
+
+	homedir = muhome ? g_strdup(muhome) : mu_util_guess_mu_homedir ();
+	xdir	= g_strdup_printf ("%s%c%s", homedir, G_DIR_SEPARATOR,
+				   MU_XAPIAN_DIR_NAME);
+	g_free (homedir);
+
+	return xdir;
+}
+
 
 gboolean
 mu_util_create_dir_maybe (const gchar *path)

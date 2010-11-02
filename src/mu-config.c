@@ -27,32 +27,14 @@
 #include "mu-util.h"
 #include "mu-config.h"
 
-
-static gchar*
-guess_muhome (void)
-{
-	const char* home;
-
-	home = g_getenv ("HOME");
-	if (!home)
-		home = g_get_home_dir ();
-
-	if (!home)
-		MU_WRITE_LOG ("failed to determine homedir");
-	
-	return g_strdup_printf ("%s%c%s", home ? home : ".", G_DIR_SEPARATOR,
-				".mu");
-}
-
 static void
 set_group_mu_defaults (MuConfigOptions *opts)
 {
-	if (!opts->muhome)
-		opts->muhome = guess_muhome ();
-	
+	if (!opts->muhome) 
+		opts->muhome = mu_util_guess_mu_homedir ();
+
 	/* note: xpath is is *not* settable from the cmdline */
-	opts->xpath = g_strdup_printf ("%s%c%s", opts->muhome,G_DIR_SEPARATOR,
-				       MU_XAPIAN_DIR_NAME);
+	opts->xpath = mu_util_guess_xapian_dir (opts->muhome);
 }
 
 
