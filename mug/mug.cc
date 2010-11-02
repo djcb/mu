@@ -54,7 +54,8 @@ enum _ToolAction {
 	ACTION_PREV_MSG = 1,
 	ACTION_NEXT_MSG,
 	ACTION_SHOW_PREFS,
-	ACTION_DO_QUIT
+	ACTION_DO_QUIT,
+	ACTION_SEPARATOR /* pseudo action */
 };
 typedef enum _ToolAction ToolAction;
 
@@ -91,14 +92,26 @@ mug_toolbar (MugData *mugdata)
 	} tools[] = {
 		{GTK_STOCK_GO_UP, ACTION_PREV_MSG},
 		{GTK_STOCK_GO_DOWN, ACTION_NEXT_MSG},
+		{NULL, ACTION_SEPARATOR},
 		{GTK_STOCK_PREFERENCES, ACTION_SHOW_PREFS},
+		{NULL, ACTION_SEPARATOR},
 		{GTK_STOCK_QUIT, ACTION_DO_QUIT}
 	};	
 	
 	for (toolbar = gtk_toolbar_new(), i = 0; i != G_N_ELEMENTS(tools); ++i) {
 		GtkToolItem *btn;
+
+		/* separator item ? */
+		if (tools[i].action == ACTION_SEPARATOR) {
+			gtk_toolbar_insert (GTK_TOOLBAR(toolbar),
+					    gtk_separator_tool_item_new(), i);
+			continue;
+		}
+
+		/* nope: a real item */
 		btn = gtk_tool_button_new_from_stock (tools[i].stock_id);
-		g_object_set_data (G_OBJECT(btn), "action", GUINT_TO_POINTER(tools[i].action));
+		g_object_set_data (G_OBJECT(btn), "action",
+				   GUINT_TO_POINTER(tools[i].action));
 		g_signal_connect (G_OBJECT(btn), "clicked",
 				  G_CALLBACK(on_tool_button_clicked),
 				  mugdata);
