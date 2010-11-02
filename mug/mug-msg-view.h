@@ -55,6 +55,7 @@ GType        mug_msg_view_get_type    (void) G_GNUC_CONST;
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
 GtkWidget*   mug_msg_view_new         (void);
 gboolean     mug_msg_view_set_msg     (MugMsgView *self, const char* msgpath);
+gboolean     mug_msg_view_set_text    (MugMsgView *self, const char* txt);
 
 G_END_DECLS
 

@@ -117,13 +117,29 @@ mug_msg_view_new (void)
 }
  
 
+
+gboolean
+mug_msg_view_set_text (MugMsgView *self, const char* txt)
+{
+	MugMsgViewPrivate *priv;
+	GtkTextBuffer *buf;
+	
+	g_return_val_if_fail (MUG_IS_MSG_VIEW(self), FALSE);
+	priv = MUG_MSG_VIEW_GET_PRIVATE(self);
+
+	buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(priv->_view));
+	gtk_text_buffer_set_text (buf, txt ? txt : "", -1);
+	
+	return TRUE;
+}
+
+
 gboolean
 mug_msg_view_set_msg (MugMsgView *self, const char* msgpath)
 {
 	MugMsgViewPrivate *priv;
 	MuMsg* msg;
-	const char *txt;
-	GtkTextBuffer *buf;
+	gboolean rv;
 	
 	g_return_val_if_fail (MUG_IS_MSG_VIEW(self), FALSE);
 	g_return_val_if_fail (msgpath, FALSE);
@@ -133,12 +149,10 @@ mug_msg_view_set_msg (MugMsgView *self, const char* msgpath)
 	msg = mu_msg_new (msgpath, NULL);
 	if (!msg)
 		return FALSE;
-
-	txt = mu_msg_get_body_text (msg);
-	buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(priv->_view));
-
-	gtk_text_buffer_set_text (buf, txt ? txt : "", -1);
 	
-	return TRUE;
-}
+	rv = mug_msg_view_set_text (self, mu_msg_get_body_text(msg));
 
+	mu_msg_destroy (msg);
+	
+	return rv;
+}
