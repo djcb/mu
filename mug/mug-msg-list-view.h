@@ -59,6 +59,7 @@ int      mug_msg_list_view_query   (MugMsgListView *self, const char *query);
 gboolean mug_msg_list_view_move_prev (MugMsgListView *self);
 gboolean mug_msg_list_view_move_next (MugMsgListView *self);
 
+const gchar* mug_msg_list_view_get_query (MugMsgListView *self);
 
 G_END_DECLS
 

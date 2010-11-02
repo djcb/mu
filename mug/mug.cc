@@ -35,7 +35,7 @@ struct _MugData {
 	GtkWidget *statusbar;
 	GtkWidget *mlist;
 	GtkWidget *toolbar;
-	GtkWidget *msg;
+	GtkWidget *msgview;
 };
 typedef struct _MugData MugData;
 	
@@ -136,11 +136,18 @@ on_query_changed (MugQueryBar *bar, const char* query, MugData *mugdata)
 {
 	int count;
 
+	/* clear the old message */
+	mug_msg_view_set_text (MUG_MSG_VIEW(mugdata->msgview), NULL);
+		
 	count = mug_msg_list_view_query (MUG_MSG_LIST_VIEW(mugdata->mlist),
 					 query);
 	if (count >= 0) {
-		gchar *msg = g_strdup_printf ("%d message%s found", count,
-					     count > 1 ? "s" : "");
+		gchar *msg =
+			g_strdup_printf ("%d message%s found matching '%s'",
+					 count,
+					 count > 1 ? "s" : "",
+					 mug_msg_list_view_get_query
+					 (MUG_MSG_LIST_VIEW(mugdata->mlist)));
 		gtk_statusbar_push (GTK_STATUSBAR(mugdata->statusbar), 0, msg);
 		g_free (msg);
 	}	
@@ -151,7 +158,7 @@ static void
 on_msg_selected (MugMsgListView *mlist, const char* mpath, MugData *mugdata)
 {
 	// g_warning ("msg selected: %s", mpath);
-	mug_msg_view_set_msg (MUG_MSG_VIEW(mugdata->msg), mpath);
+	mug_msg_view_set_msg (MUG_MSG_VIEW(mugdata->msgview), mpath);
 }
 
 
@@ -209,13 +216,13 @@ mug_query_area (MugData *mugdata)
 	gtk_container_add (GTK_CONTAINER(scrolled), mugdata->mlist);
 	gtk_paned_add1 (GTK_PANED (paned), scrolled);
 
-	mugdata->msg = mug_msg_view_new ();	
+	mugdata->msgview = mug_msg_view_new ();	
 	g_signal_connect (G_OBJECT(mugdata->mlist), "msg-selected",
 			  G_CALLBACK(on_msg_selected), mugdata);
 
 	scrolled = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrolled),
-					       mugdata->msg);
+					       mugdata->msgview);
 	gtk_paned_add2 (GTK_PANED (paned), scrolled);
 
 	querybar = mug_querybar();	
@@ -243,7 +250,6 @@ mug_main_area (MugData *mugdata)
 
 	return mainarea;
 }
-
 
 
 GtkWidget*

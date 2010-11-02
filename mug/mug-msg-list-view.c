@@ -47,6 +47,7 @@ typedef struct _MugMsgListViewPrivate MugMsgListViewPrivate;
 struct _MugMsgListViewPrivate {
 	GtkListStore *_store;
 	char *_xpath;
+	char *_query;
 };
 #define MUG_MSG_LIST_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                           MUG_TYPE_MSG_LIST_VIEW, \
@@ -155,6 +156,7 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE(obj);
 
 	priv->_xpath = NULL;
+	priv->_query = NULL;
 	
 	priv->_store = gtk_list_store_new (MUG_N_COLS,
 					   G_TYPE_STRING,
@@ -198,6 +200,7 @@ mug_msg_list_view_finalize (GObject *obj)
 		g_object_unref (priv->_store);
 
 	g_free (priv->_xpath);
+	g_free (priv->_query);
 	
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -243,9 +246,6 @@ mug_msg_list_view_move_prev (MugMsgListView *self)
 	return msg_list_view_move (self, FALSE);
 }
 
-
-
-
 GtkWidget*
 mug_msg_list_view_new (const char *xpath)
 {
@@ -269,7 +269,7 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 	MuQuery *xapian;
 	MuMsgIter *iter;
 	int count;
-	
+
 	xapian = mu_query_new (xpath);
 	if (!xapian) {
 		g_printerr ("Failed to create a Xapian query\n");
@@ -319,8 +319,20 @@ mug_msg_list_view_query (MugMsgListView *self, const char *query)
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE(self);
 	gtk_list_store_clear (priv->_store);
 
+	g_free (priv->_query);
+	priv->_query = query ? g_strdup(query) : NULL;
+	
 	if (!query)
 		return TRUE;
-
+	
 	return update_model (priv->_store, priv->_xpath, query);
+}
+
+
+const gchar*
+mug_msg_list_view_get_query (MugMsgListView *self)
+{
+	g_return_val_if_fail (MUG_IS_MSG_LIST_VIEW(self), NULL);
+	
+	return MUG_MSG_LIST_VIEW_GET_PRIVATE(self)->_query;
 }
