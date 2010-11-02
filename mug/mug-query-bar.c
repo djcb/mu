@@ -115,6 +115,14 @@ mug_query_bar_new (void)
 	return GTK_WIDGET(g_object_new(MUG_TYPE_QUERY_BAR, NULL));
 }
 
-/* following: other function implementations */
-/* such as mug_query_bar_do_something, or mug_query_bar_has_foo */
+
+
+void
+mug_query_bar_grab_focus (MugQueryBar *self)
+{
+	g_return_if_fail (MUG_IS_QUERY_BAR(self));
+
+	gtk_widget_grab_focus
+		(GTK_WIDGET(MUG_QUERY_BAR_GET_PRIVATE(self)->_entry));
+}
 

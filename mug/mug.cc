@@ -56,6 +56,7 @@ enum _ToolAction {
 	ACTION_NEXT_MSG,
 	ACTION_SHOW_PREFS,
 	ACTION_DO_QUIT,
+	ACTION_ABOUT,
 	ACTION_SEPARATOR /* pseudo action */
 };
 typedef enum _ToolAction ToolAction;
@@ -76,7 +77,10 @@ on_tool_button_clicked (GtkToolButton *btn, MugData *mugdata)
 		break;
 	case ACTION_PREV_MSG:
 		mug_msg_list_view_move_prev (MUG_MSG_LIST_VIEW(mugdata->mlist));
-		break;		
+		break;
+	case ACTION_ABOUT:
+		g_print ("About Mug\n");
+		break;
 	default:
 		g_print ("%u\n", action);
 	}
@@ -95,8 +99,9 @@ mug_toolbar (MugData *mugdata)
 		{GTK_STOCK_GO_DOWN, ACTION_NEXT_MSG},
 		{NULL, ACTION_SEPARATOR},
 		{GTK_STOCK_PREFERENCES, ACTION_SHOW_PREFS},
+		{GTK_STOCK_ABOUT, ACTION_ABOUT},
 		{NULL, ACTION_SEPARATOR},
-		{GTK_STOCK_QUIT, ACTION_DO_QUIT}
+		{GTK_STOCK_QUIT, ACTION_DO_QUIT},
 	};	
 	
 	for (toolbar = gtk_toolbar_new(), i = 0; i != G_N_ELEMENTS(tools); ++i) {
@@ -295,7 +300,8 @@ main (int argc, char *argv[])
 			 G_CALLBACK(gtk_main_quit), NULL);
 	
 	gtk_widget_show (mugshell);
-
+	mug_query_bar_grab_focus (MUG_QUERY_BAR(mugdata.querybar));
+ 	
 	gtk_main ();
 	
 	return 0;

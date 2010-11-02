@@ -1,27 +1,26 @@
 * todo for mug
 
-** TODO column sizing
-** DONE query in status bar
-   CLOSED: [2010-11-02 Tue 22:18]
-** TODO tool bar working
-** TODO pretty-print addresses
-** TODO pretty-print dates
-** DONE up/down arrows => need msg-list-view support
-   CLOSED: [2010-11-02 Tue 21:56]
-** TODO unread mails => bold, important mails => red
-** TODO detail info about current msg
-** DONE guess maildir
-   CLOSED: [2010-11-02 Tue 21:57]
-** TODO properties dialog
-** TODO bookmarks
-** TODO icon / .desktop file
-** DONE clear msg when starting new query
-   CLOSED: [2010-11-02 Tue 22:18]
+  - [ ] column sizing
+  - [X] query in status bar
+  - [ ] tool bar working
+  - [ ] pretty-print addresses
+  - [ ] pretty-print dates
+  - [X] up/down arrows => need msg-list-view support
+  - [ ] unread mails => bold, important mails => red
+  - [ ] detail info about current msg
+  - [X] guess maildir
+  - [ ] properties dialog
+  - [ ] bookmarks
+  - [ ] icon / .desktop file
+  - [X] clear msg when starting new query
+  - [X] focus search bar at startup
+  - [X] focus first msg after query
+  - [ ] sorting for columns
+  - [ ] add about menu
+  - [ ] make scrollbars automatic
 
-
-
-
-** TODO focus search bar at startup
-** DONE focus first msg after query
-   CLOSED: [2010-11-02 Tue 22:44]
-** TODO sorting for columns
+# Local Variables:
+# mode: org; org-startup-folded: t
+# End:
+   
+   

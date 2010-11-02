@@ -38,6 +38,7 @@ GType        mug_query_bar_get_type    (void) G_GNUC_CONST;
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
 GtkWidget*   mug_query_bar_new         (void);
 
+void mug_query_bar_grab_focus (MugQueryBar *self);
 
 G_END_DECLS
 
