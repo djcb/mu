@@ -57,7 +57,7 @@ mu_msg_str_date_s (time_t t)
 
 	tmbuf = localtime(&t);
 	
-	strftime (buf, sizeof(buf), "%c", tmbuf);
+	strftime (buf, sizeof(buf), "%x", tmbuf);
 
 	return buf;
 }
