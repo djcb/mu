@@ -63,7 +63,7 @@ char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
  * 
  * @param self a valid MuQuery instance
  * @param expr the search expression
- * @param sortfield the field to sort by
+ * @param sortfield the field to sort by or NULL
  * @param ascending if TRUE sort in ascending (A-Z) order, otherwise,
  * sort in descending (Z-A) order
  * @param batchsize the size of batches to receive; this is mainly for
@@ -75,10 +75,10 @@ char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
  * case of error
  */
 MuMsgIter* mu_query_run (MuQuery *self, 
-				const char* expr,
-				const MuMsgField* sortfield,
-				gboolean ascending,
-				size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
+			 const char* expr,
+			 const MuMsgField* sortfield,
+			 gboolean ascending,
+			 size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string representation of the Xapian search query
