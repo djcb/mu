@@ -202,6 +202,50 @@ mug_msg_list_view_finalize (GObject *obj)
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
 
+
+static gboolean
+msg_list_view_move (MugMsgListView *self, gboolean next)
+{
+	GtkTreePath *path;
+	
+	gtk_tree_view_get_cursor (GTK_TREE_VIEW(self), &path, NULL);
+	if (!path)
+		return FALSE;
+
+	if (next)
+		gtk_tree_path_next (path);
+	else
+		gtk_tree_path_prev (path);
+	
+	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path,
+				  NULL, FALSE);
+
+	gtk_tree_path_free (path);
+	
+	return TRUE;
+}
+
+
+gboolean
+mug_msg_list_view_move_next (MugMsgListView *self)
+{
+	g_return_val_if_fail (MUG_IS_MSG_LIST_VIEW(self), FALSE);
+
+	return msg_list_view_move (self, TRUE);
+}
+
+
+gboolean
+mug_msg_list_view_move_prev (MugMsgListView *self)
+{
+	g_return_val_if_fail (MUG_IS_MSG_LIST_VIEW(self), FALSE);
+
+	return msg_list_view_move (self, FALSE);
+}
+
+
+
+
 GtkWidget*
 mug_msg_list_view_new (const char *xpath)
 {

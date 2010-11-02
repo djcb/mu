@@ -59,15 +59,22 @@ enum _ToolAction {
 typedef enum _ToolAction ToolAction;
 
 static void
-on_tool_button_clicked (GtkToolButton *btn, MugData *data)
+on_tool_button_clicked (GtkToolButton *btn, MugData *mugdata)
 {
 	ToolAction action;
-	action = (ToolAction)GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(btn), "action"));
-
+	action = (ToolAction)GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(btn),
+								"action"));
 	switch (action) {
+		
 	case ACTION_DO_QUIT:
 		gtk_main_quit();
 		break;
+	case ACTION_NEXT_MSG:
+		mug_msg_list_view_move_next (MUG_MSG_LIST_VIEW(mugdata->mlist));
+		break;
+	case ACTION_PREV_MSG:
+		mug_msg_list_view_move_prev (MUG_MSG_LIST_VIEW(mugdata->mlist));
+		break;		
 	default:
 		g_print ("%u\n", action);
 	}
@@ -174,11 +181,16 @@ mug_query_area (MugData *mugdata)
 	GtkWidget *queryarea;
 	GtkWidget *paned, *querybar;
 	GtkWidget *scrolled;
+
+	gchar* xdir;
 	
 	queryarea = gtk_vbox_new (FALSE, 2);
 	
 	paned = gtk_vpaned_new ();
-	mugdata->mlist = mug_msg_list_view_new("/home/dbinnema/.mu/xapian/");
+
+	xdir = mu_util_guess_xapian_dir (NULL);
+	mugdata->mlist = mug_msg_list_view_new(xdir);
+	g_free (xdir);
 	
 	scrolled = gtk_scrolled_window_new (NULL, NULL);
 	gtk_container_add (GTK_CONTAINER(scrolled), mugdata->mlist);
