@@ -795,7 +795,3 @@ mu_msg_get_field_numeric (MuMsg *msg, const MuMsgField* field)
 		g_return_val_if_reached (0);
 	}
 }
-
-
-
-
