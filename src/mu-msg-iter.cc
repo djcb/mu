@@ -296,10 +296,17 @@ mu_msg_iter_get_size (MuMsgIter *iter)
 time_t
 mu_msg_iter_get_date (MuMsgIter *iter)
 {
+	static const MuMsgField *date_field =
+		mu_msg_field_from_id (MU_MSG_FIELD_ID_DATE);
+	
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), 0);
-	return static_cast<size_t>(get_field_number (iter, MU_MSG_FIELD_ID_DATE));
-} 
 
+	try {
+		return static_cast<time_t>(
+			Xapian::sortable_unserialise(
+				mu_msg_iter_get_field(iter, date_field)));
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(0);
+}
 
 MuMsgFlags
 mu_msg_iter_get_flags (MuMsgIter *iter)
