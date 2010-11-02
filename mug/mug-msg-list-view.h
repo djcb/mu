@@ -56,6 +56,9 @@ GtkWidget*   mug_msg_list_view_new (const char *xpath);
 
 int      mug_msg_list_view_query   (MugMsgListView *self, const char *query);
 
+
+void mug_msg_list_view_move_first (MugMsgListView *self);
+
 gboolean mug_msg_list_view_move_prev (MugMsgListView *self);
 gboolean mug_msg_list_view_move_next (MugMsgListView *self);
 

@@ -205,6 +205,20 @@ mug_msg_list_view_finalize (GObject *obj)
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
 
+void
+mug_msg_list_view_move_first (MugMsgListView *self)
+{
+	GtkTreePath *path;
+	
+	g_return_val_if_fail (MUG_IS_MSG_LIST_VIEW(self), FALSE);
+
+	path = gtk_tree_path_new_first ();
+	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path,
+				  NULL, FALSE);
+	
+	gtk_tree_path_free (path);	
+}
+
 
 static gboolean
 msg_list_view_move (MugMsgListView *self, gboolean next)

@@ -36,6 +36,7 @@ struct _MugData {
 	GtkWidget *mlist;
 	GtkWidget *toolbar;
 	GtkWidget *msgview;
+	GtkWidget *querybar;
 };
 typedef struct _MugData MugData;
 	
@@ -150,6 +151,7 @@ on_query_changed (MugQueryBar *bar, const char* query, MugData *mugdata)
 					 (MUG_MSG_LIST_VIEW(mugdata->mlist)));
 		gtk_statusbar_push (GTK_STATUSBAR(mugdata->statusbar), 0, msg);
 		g_free (msg);
+		mug_msg_list_view_move_first (MUG_MSG_LIST_VIEW(mugdata->mlist));
 	}	
 }
 
@@ -199,7 +201,7 @@ static GtkWidget*
 mug_query_area (MugData *mugdata)
 {
 	GtkWidget *queryarea;
-	GtkWidget *paned, *querybar;
+	GtkWidget *paned;
 	GtkWidget *scrolled;
 
 	gchar* xdir;
@@ -225,13 +227,13 @@ mug_query_area (MugData *mugdata)
 					       mugdata->msgview);
 	gtk_paned_add2 (GTK_PANED (paned), scrolled);
 
-	querybar = mug_querybar();	
-	g_signal_connect (G_OBJECT(querybar), "query_changed",
+	mugdata->querybar = mug_querybar();	
+	g_signal_connect (G_OBJECT(mugdata->querybar), "query_changed",
 			  G_CALLBACK(on_query_changed),
 			  mugdata);
 	
 	gtk_box_pack_start (GTK_BOX(queryarea),
-			    querybar, FALSE, FALSE, 2);
+			    mugdata->querybar, FALSE, FALSE, 2);
 	gtk_box_pack_start (GTK_BOX(queryarea),
 			    paned, TRUE, TRUE, 2);
 	
@@ -267,7 +269,7 @@ mug_shell (MugData *mugdata)
 	mugdata->toolbar = mug_toolbar(mugdata);
 	gtk_box_pack_start (GTK_BOX(vbox), mugdata->toolbar, FALSE, FALSE, 2);
 	gtk_box_pack_start (GTK_BOX(vbox), mug_main_area(mugdata), TRUE, TRUE, 2);
-
+	
 	mugdata->statusbar = mug_statusbar();
 	gtk_box_pack_start (GTK_BOX(vbox), mugdata->statusbar, FALSE, FALSE, 2);
 	
@@ -293,6 +295,7 @@ main (int argc, char *argv[])
 			 G_CALLBACK(gtk_main_quit), NULL);
 	
 	gtk_widget_show (mugshell);
+
 	gtk_main ();
 	
 	return 0;
