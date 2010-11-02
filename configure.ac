@@ -116,6 +116,29 @@ AS_IF([test "x$have_gmime" = "xno"],[
    ])
 ])
 
+# do we have gtk+ installed? if not, don't build 'mug'
+PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk=yes],[have_gtk=no])
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+AS_IF([test "x$have_gtk" = "xno"],[
+   AC_MSG_WARN([
+   *** gtk+-2.0 not found, mug will not be built
+   ])
+])
+AM_CONDITIONAL(HAVE_GTK,test "x$have_gtk" = "xyes")
+
+# do we have webkit/gtk installed? if not, don't try to use it for 'mug'
+PKG_CHECK_MODULES(WEBKIT,webkit-1.0,[have_webkit=yes],[have_webkit=no])
+AC_SUBST(WEBKIT_CFLAGS)
+AC_SUBST(WEBKIT_LIBS)
+AS_IF([test "x$have_webkit" = "xno"],[
+   AC_MSG_WARN([
+   *** webkit-1.0 not found, mug will not use webkit
+   ])
+])
+AC_DEFINE(HAVE_WEBKIT,[1],[Whether we have Webkit/Gtk])
+
+
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
 AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
@@ -130,9 +153,7 @@ AS_IF([test "x$XAPIAN" = "xno"],[
    XAPIAN_CXXFLAGS=`$XAPIAN --cxxflags`
    XAPIAN_LIBS=`$XAPIAN --libs`		
    have_xapian="yes"
-   AC_DEFINE(HAVE_XAPIAN,[1],[Whether we have Xapian])
-])
-   
+])   
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
@@ -140,6 +161,7 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/tests/Makefile
+mug/Makefile
 man/Makefile
 contrib/Makefile
 ])

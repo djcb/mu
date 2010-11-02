@@ -1,0 +1,18 @@
+* todo for mug
+
+** TODO column sizing
+** TODO query in status bar
+** TODO tool bar working
+** TODO pretty-print addresses
+** TODO pretty-print dates
+** TODO up/down arrows => need msg-list-view support
+** TODO unread mails => bold, important mails => red
+** TODO detail info about current msg
+** TODO guess maildir
+** TODO properties dialog
+** TODO bookmarks
+** TODO icon / .desktop file
+** TODO clear msg when starting new query
+
+
+

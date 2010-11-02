@@ -16,7 +16,12 @@
 
 include $(top_srcdir)/gtest.mk
 
+if HAVE_GTK
+SUBDIRS=man src mug contrib
+else
 SUBDIRS=man src contrib
+endif
+
 
 # so we can say 'make test'
 check: test cleanupnote
