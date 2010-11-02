@@ -44,7 +44,7 @@ typedef struct _MuMsg MuMsg;
  * @return a new MuMsg instance or NULL in case of error
  */
 MuMsg*   mu_msg_new		   (const char* filepath,
-					    const char *maildir);
+				    const char *maildir);
 
 
 /**
