@@ -180,27 +180,6 @@ mug_querybar (void)
 	return querybar;
 }
 
-#if 0
-static GtkWidget*
-mug_shortcuts (void)
-{
-	GtkWidget *shortcuts;
-
-	shortcuts = gtk_vbutton_box_new ();
-
-	gtk_box_pack_start (GTK_BOX(shortcuts),
-			    gtk_button_new_with_label ("Inbox"), FALSE, FALSE, 2);
-	gtk_box_pack_start (GTK_BOX(shortcuts),
-			    gtk_button_new_with_label ("Archive"), FALSE, FALSE, 2);
-	gtk_box_pack_start (GTK_BOX(shortcuts),
-			    gtk_button_new_with_label ("Sent"), FALSE, FALSE, 2);
-
-	gtk_button_box_set_layout (GTK_BUTTON_BOX(shortcuts), GTK_BUTTONBOX_START);
-	
-	return shortcuts;
-}
-#endif 
-
 
 static GtkWidget*
 mug_query_area (MugData *mugdata)

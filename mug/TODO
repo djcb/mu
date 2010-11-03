@@ -17,7 +17,7 @@
   - [X] focus first msg after query
   - [ ] sorting for columns
   - [ ] add about menu
-  - [ ] make scrollbars automatic
+  - [X] make scrollbars automatic
 
 # Local Variables:
 # mode: org; org-startup-folded: t
