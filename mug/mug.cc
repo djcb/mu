@@ -220,6 +220,9 @@ mug_query_area (MugData *mugdata)
 	g_free (xdir);
 	
 	scrolled = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled),
+					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	
 	gtk_container_add (GTK_CONTAINER(scrolled), mugdata->mlist);
 	gtk_paned_add1 (GTK_PANED (paned), scrolled);
 
@@ -228,6 +231,8 @@ mug_query_area (MugData *mugdata)
 			  G_CALLBACK(on_msg_selected), mugdata);
 
 	scrolled = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled),
+					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrolled),
 					       mugdata->msgview);
 	gtk_paned_add2 (GTK_PANED (paned), scrolled);
