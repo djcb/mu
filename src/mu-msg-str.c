@@ -50,22 +50,24 @@ mu_msg_str_normalize (const char *str, gboolean downcase)
 
 
 const char* 
-mu_msg_str_date_s (time_t t)
+mu_msg_str_date_s (const char* frm, time_t t)
 {
 	struct tm *tmbuf;
-	static char buf[64];
+	static char buf[128];
 
+	g_return_val_if_fail (frm, NULL);
+	
 	tmbuf = localtime(&t);
 	
-	strftime (buf, sizeof(buf), "%x", tmbuf);
+	strftime (buf, sizeof(buf), frm, tmbuf);
 
 	return buf;
 }
 
 char* 
-mu_msg_str_date (time_t t)
+mu_msg_str_date (const char* frm, time_t t)
 {
-	return g_strdup (mu_msg_str_date_s(t));
+	return g_strdup (mu_msg_str_date_s(frm, t));
 }
 
 

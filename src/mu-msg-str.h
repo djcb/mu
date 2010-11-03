@@ -31,19 +31,21 @@ G_BEGIN_DECLS
 /**
  * get a display string for a given time_t;
  * use the preferred date/time for the current locale
- * (ie., '%c' in strftime).
  * 
  * mu_msg_str_date_s returns a ptr to a static buffer,
  * while mu_msg_str_date returns dynamically allocated
  * memory that must be freed after use.
  *
+ * @param frm the format of the string (in strftime(3) format) 
  * @param t the time as time_t
  * 
- * @return a string representation of the time; see above
- * for what to do with it
+ * @return a string representation of the time; see above for what to
+ * do with it. Lenght is max. 128 bytes, inc. the ending \0.  if the
+ * format is too long, the value will be truncated. in practice this
+ * should not happen.
  */
-const char* mu_msg_str_date_s (time_t t) G_GNUC_CONST;
-char*       mu_msg_str_date   (time_t t) G_GNUC_WARN_UNUSED_RESULT;
+const char* mu_msg_str_date_s (const char* frm, time_t t) G_GNUC_CONST;
+char*       mu_msg_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**

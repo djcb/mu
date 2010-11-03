@@ -210,7 +210,7 @@ mug_msg_list_view_move_first (MugMsgListView *self)
 {
 	GtkTreePath *path;
 	
-	g_return_val_if_fail (MUG_IS_MSG_LIST_VIEW(self), FALSE);
+	g_return_if_fail (MUG_IS_MSG_LIST_VIEW(self));
 
 	path = gtk_tree_path_new_first ();
 	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path,
@@ -303,7 +303,7 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 			GtkTreeIter treeiter;
 			const gchar *date, *from, *subject, *path, *to;
 			
-			date	= mu_msg_str_date_s (mu_msg_iter_get_date (iter));
+			date	= mu_msg_str_date_s ("%x", mu_msg_iter_get_date (iter));
 			from	= mu_msg_iter_get_from(iter);
 			to      = mu_msg_iter_get_to (iter);
 			subject = mu_msg_iter_get_subject (iter);

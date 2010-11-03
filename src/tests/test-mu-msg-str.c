@@ -44,13 +44,13 @@ test_mu_msg_str_date_01 (void)
 	strftime (buf, 64, "%x", tmbuf);
 
 	/*  $ date -ud@1234567890; Fri Feb 13 23:31:30 UTC 2009 */
-	g_assert_cmpstr (mu_msg_str_date_s (some_time), ==, buf);
+	g_assert_cmpstr (mu_msg_str_date_s ("%x", some_time), ==, buf);
 
 	/* date -ud@987654321 Thu Apr 19 04:25:21 UTC 2001 */
 	some_time = 987654321;
 	tmbuf = localtime (&some_time);
-	strftime (buf, 64, "%x", tmbuf);
-	tmp = mu_msg_str_date (some_time);
+	strftime (buf, 64, "%c", tmbuf);
+	tmp = mu_msg_str_date ("%c", some_time);
 	
 	g_assert_cmpstr (tmp, ==, buf);
 	g_free (tmp);

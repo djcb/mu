@@ -64,11 +64,11 @@ display_field (MuMsgIter *iter, const MuMsgField* field)
 
 	case MU_MSG_FIELD_TYPE_TIME_T: 
 		val = mu_msg_iter_get_field_numeric (iter, field);
-		return mu_msg_str_date_s ((time_t)val);
+		return mu_msg_str_date_s ("%c", (time_t)val);
 
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
 		val = mu_msg_iter_get_field_numeric (iter, field);
-		return mu_msg_str_size_s ((time_t)val);
+		return mu_msg_str_size_s ((unsigned)val);
 	default:
 		g_return_val_if_reached (NULL);
 	}

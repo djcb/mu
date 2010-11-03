@@ -57,7 +57,7 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 		g_print ("Subject: %s\n", field);
 	
 	if ((date = mu_msg_get_date (msg)))
-		g_print ("Date: %s\n", mu_msg_str_date_s (date));
+		g_print ("Date: %s\n", mu_msg_str_date_s ("%c", date));
 
 	if (summary_len > 0) {
 		field = mu_msg_get_summary (msg, summary_len);
