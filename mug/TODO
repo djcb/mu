@@ -9,7 +9,6 @@
   - [ ] unread mails => bold, important mails => red
   - [ ] detail info about current msg
   - [X] guess maildir
-  - [ ] properties dialog
   - [ ] bookmarks
   - [ ] icon / .desktop file
   - [X] clear msg when starting new query
