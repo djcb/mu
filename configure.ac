@@ -127,18 +127,6 @@ AS_IF([test "x$have_gtk" = "xno"],[
 ])
 AM_CONDITIONAL(HAVE_GTK,test "x$have_gtk" = "xyes")
 
-# do we have webkit/gtk installed? if not, don't try to use it for 'mug'
-PKG_CHECK_MODULES(WEBKIT,webkit-1.0,[have_webkit=yes],[have_webkit=no])
-AC_SUBST(WEBKIT_CFLAGS)
-AC_SUBST(WEBKIT_LIBS)
-AS_IF([test "x$have_webkit" = "xno"],[
-   AC_MSG_WARN([
-   *** webkit-1.0 not found, mug will not use webkit
-   ])
-])
-AC_DEFINE(HAVE_WEBKIT,[1],[Whether we have Webkit/Gtk])
-
-
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
 AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
