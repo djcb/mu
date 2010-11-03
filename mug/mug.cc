@@ -67,7 +67,7 @@ on_tool_button_clicked (GtkToolButton *btn, MugData *mugdata)
 	action = (ToolAction)GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(btn),
 								"action"));
 	switch (action) {
-		
+		 
 	case ACTION_DO_QUIT:
 		gtk_main_quit();
 		break;
