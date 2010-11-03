@@ -311,14 +311,23 @@ mu_msg_iter_get_date (MuMsgIter *iter)
 MuMsgFlags
 mu_msg_iter_get_flags (MuMsgIter *iter)
 {
+	static const MuMsgField *flags_field =
+		mu_msg_field_from_id (MU_MSG_FIELD_ID_FLAGS);
+	
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), MU_MSG_FLAG_NONE);
-	return static_cast<MuMsgFlags>
-		(get_field_number (iter, MU_MSG_FIELD_ID_FLAGS));
+	
+	return static_cast<MuMsgFlags>(mu_msg_iter_get_field_numeric
+				      (iter, flags_field));
 } 
 
 MuMsgPrio
 mu_msg_iter_get_prio (MuMsgIter *iter)
 {
+	static const MuMsgField *prio_field =
+		mu_msg_field_from_id (MU_MSG_FIELD_ID_PRIO);
+	
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), MU_MSG_PRIO_NONE);
-	return static_cast<MuMsgPrio>(get_field_number (iter, MU_MSG_FIELD_ID_PRIO));
+	
+	return static_cast<MuMsgPrio>(mu_msg_iter_get_field_numeric
+				      (iter, prio_field));
 } 

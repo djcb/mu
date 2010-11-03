@@ -43,7 +43,7 @@ enum _MuMsgFlags {
 	MU_MSG_FLAG_ENCRYPTED   = 1 << 11,
 	MU_MSG_FLAG_HAS_ATTACH  = 1 << 12
 
-	/* any new fields go here  */
+/* any new fields go here  */
 	/* so the existing numbers stay valid note that we're also */
 	/* using these numbers in the database, so they should not change */
 };

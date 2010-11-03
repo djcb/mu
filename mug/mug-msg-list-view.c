@@ -33,12 +33,15 @@ enum {
 	LAST_SIGNAL
 };
 
+
 enum {
 	MUG_COL_DATE,
 	MUG_COL_FROM,
 	MUG_COL_TO,
 	MUG_COL_SUBJECT,
 	MUG_COL_PATH,
+	MUG_COL_PRIO,
+	MUG_COL_FLAGS,
 	
 	MUG_N_COLS
 };
@@ -127,6 +130,28 @@ on_cursor_changed (GtkTreeView *tview, MugMsgListView *lst)
 	}
 }
 
+
+static void
+treecell_func (GtkTreeViewColumn *tree_column, GtkCellRenderer *renderer,
+	       GtkTreeModel *tree_model, GtkTreeIter *iter, gpointer data)
+{
+	MuMsgFlags flags;
+	MuMsgPrio prio;
+	
+	gtk_tree_model_get (tree_model, iter,
+			    MUG_COL_FLAGS, &flags,
+			    MUG_COL_PRIO, &prio,
+			    -1);
+	
+	g_object_set (G_OBJECT(renderer),
+		      "weight", (flags & MU_MSG_FLAG_NEW)    ? 800 : 400,
+		      "weight", (flags & MU_MSG_FLAG_UNREAD) ? 800 : 400,
+		      "weight", (flags & MU_MSG_FLAG_SEEN)   ? 400 : 800,
+		      "foreground", prio == MU_MSG_PRIO_HIGH ? "red" : NULL,
+		      NULL);
+}
+
+
 static GtkTreeViewColumn *
 get_col (const char* label, int colidx, gint maxwidth)
 {
@@ -151,11 +176,12 @@ get_col (const char* label, int colidx, gint maxwidth)
 		gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_GROW_ONLY);
 		gtk_tree_view_column_set_expand (col, TRUE);
 	}
+
+	gtk_tree_view_column_set_cell_data_func
+	 	(col, renderer, (GtkTreeCellDataFunc) treecell_func, NULL, NULL);
 	
 	return col;
 }
-
-
 
 static void
 mug_msg_list_view_init (MugMsgListView *obj)
@@ -172,7 +198,9 @@ mug_msg_list_view_init (MugMsgListView *obj)
 					   G_TYPE_STRING,
 					   G_TYPE_STRING,
 					   G_TYPE_STRING,
-					   G_TYPE_STRING);
+					   G_TYPE_STRING,
+					   G_TYPE_UINT,
+					   G_TYPE_UINT);
 	
 	gtk_tree_view_set_model (GTK_TREE_VIEW (obj),
 				 GTK_TREE_MODEL(priv->_store));
@@ -310,13 +338,13 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 
 			GtkTreeIter treeiter;
 			const gchar *date, *from, *subject, *path, *to;
-			
+						
 			date	= mu_msg_str_date_s ("%x",
 						     mu_msg_iter_get_date (iter));
 			from	= mu_msg_iter_get_from(iter);
 			to      = mu_msg_iter_get_to (iter);
 			subject = mu_msg_iter_get_subject (iter);
-			path    = mu_msg_iter_get_path (iter);
+			path    = mu_msg_iter_get_path (iter);			
 			
 			gtk_list_store_append (store, &treeiter);
 			gtk_list_store_set (store, &treeiter,
@@ -325,6 +353,8 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 					    MUG_COL_TO, to,
 					    MUG_COL_SUBJECT, subject,
 					    MUG_COL_PATH, path,
+					    MUG_COL_PRIO, mu_msg_iter_get_prio(iter),
+					    MUG_COL_FLAGS, mu_msg_iter_get_flags(iter),
 					    -1);
 	}
 	mu_query_destroy (xapian);
