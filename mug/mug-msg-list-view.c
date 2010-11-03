@@ -128,7 +128,7 @@ on_cursor_changed (GtkTreeView *tview, MugMsgListView *lst)
 }
 
 static GtkTreeViewColumn *
-get_col (const char* label, int colidx)
+get_col (const char* label, int colidx, gint maxwidth)
 {
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *renderer;
@@ -139,9 +139,19 @@ get_col (const char* label, int colidx)
 	col = gtk_tree_view_column_new_with_attributes (label, renderer, "text",
 							colidx, NULL);
  	g_object_set (G_OBJECT(col), "resizable", TRUE, NULL);
-	
-	//g_object_unref (renderer);
 
+	gtk_tree_view_column_set_sort_indicator (col, TRUE);
+	gtk_tree_view_column_set_sort_column_id (col, colidx);
+	
+	if (maxwidth) {
+		gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_FIXED);
+		gtk_tree_view_column_set_fixed_width (col, maxwidth);
+		gtk_tree_view_column_set_expand (col, FALSE);
+	} else {
+		gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_GROW_ONLY);
+		gtk_tree_view_column_set_expand (col, TRUE);
+	}
+	
 	return col;
 }
 
@@ -155,8 +165,7 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE(obj);
 
-	priv->_xpath = NULL;
-	priv->_query = NULL;
+	priv->_xpath = priv->_query = NULL;
 	
 	priv->_store = gtk_list_store_new (MUG_N_COLS,
 					   G_TYPE_STRING,
@@ -173,17 +182,16 @@ mug_msg_list_view_init (MugMsgListView *obj)
 				      GTK_TREE_VIEW_GRID_LINES_VERTICAL);	
 	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW(obj), TRUE);
 	
-
-	col = get_col ("Date", MUG_COL_DATE);
+	col = get_col ("Date", MUG_COL_DATE, 80);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-
-	col = get_col ("From", MUG_COL_FROM);
+	
+	col = get_col ("From", MUG_COL_FROM, 0);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-
-	col = get_col ("To", MUG_COL_TO);
+	
+	col = get_col ("To", MUG_COL_TO, 0);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-
-	col = get_col ("Subject", MUG_COL_SUBJECT);
+	
+	col = get_col ("Subject", MUG_COL_SUBJECT, 0);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
 	
 	g_signal_connect (G_OBJECT(obj), "cursor-changed", G_CALLBACK(on_cursor_changed),
@@ -303,7 +311,8 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 			GtkTreeIter treeiter;
 			const gchar *date, *from, *subject, *path, *to;
 			
-			date	= mu_msg_str_date_s ("%x", mu_msg_iter_get_date (iter));
+			date	= mu_msg_str_date_s ("%x",
+						     mu_msg_iter_get_date (iter));
 			from	= mu_msg_iter_get_from(iter);
 			to      = mu_msg_iter_get_to (iter);
 			subject = mu_msg_iter_get_subject (iter);
@@ -328,6 +337,8 @@ int
 mug_msg_list_view_query (MugMsgListView *self, const char *query)
 {
 	MugMsgListViewPrivate *priv;
+	gboolean rv;
+	
 	g_return_val_if_fail (MUG_IS_MSG_LIST_VIEW(self), FALSE);
 	
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE(self);
@@ -339,7 +350,11 @@ mug_msg_list_view_query (MugMsgListView *self, const char *query)
 	if (!query)
 		return TRUE;
 	
-	return update_model (priv->_store, priv->_xpath, query);
+	rv = update_model (priv->_store, priv->_xpath, query);
+
+	gtk_tree_view_columns_autosize (GTK_TREE_VIEW(self));
+	
+	return rv;
 }
 
 

@@ -1,6 +1,6 @@
 * todo for mug
 
-  - [ ] column sizing
+  - [X] column sizing
   - [X] query in status bar
   - [ ] tool bar working
   - [ ] pretty-print addresses
@@ -14,9 +14,10 @@
   - [X] clear msg when starting new query
   - [X] focus search bar at startup
   - [X] focus first msg after query
-  - [ ] sorting for columns
+  - [X] sorting for columns
   - [ ] add about menu
   - [X] make scrollbars automatic
+  - [ ] progress-bar, incremental
 
 # Local Variables:
 # mode: org; org-startup-folded: t
