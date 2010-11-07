@@ -7,7 +7,7 @@
   - [ ] pretty-print dates
   - [X] up/down arrows => need msg-list-view support
   - [X] unread mails => bold, important mails => red
-  - [ ] detail info about current msg
+  - [X] detail info about current msg
   - [X] guess maildir
   - [ ] bookmarks
   - [ ] icon / .desktop file
@@ -15,7 +15,7 @@
   - [X] focus search bar at startup
   - [X] focus first msg after query
   - [X] sorting for columns
-  - [ ] add about menu
+  - [X] add about menu
   - [X] make scrollbars automatic
   - [ ] progress-bar, incremental
   - [ ] cmdline arg for mu home dir
