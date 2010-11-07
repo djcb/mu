@@ -219,16 +219,11 @@ mug_query_area (MugData *mugdata)
 	gtk_container_add (GTK_CONTAINER(scrolled), mugdata->mlist);
 	gtk_paned_add1 (GTK_PANED (paned), scrolled);
 
-	mugdata->msgview = mug_msg_view_new ();	
+	mugdata->msgview = mug_msg_view_new ();
+	mug_msg_view_set_msg (MUG_MSG_VIEW(mugdata->msgview), NULL);
 	g_signal_connect (G_OBJECT(mugdata->mlist), "msg-selected",
 			  G_CALLBACK(on_msg_selected), mugdata);
-
-	scrolled = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled),
-					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrolled),
-					       mugdata->msgview);
-	gtk_paned_add2 (GTK_PANED (paned), scrolled);
+	gtk_paned_add2 (GTK_PANED (paned), mugdata->msgview);
 
 	mugdata->querybar = mug_querybar();	
 	g_signal_connect (G_OBJECT(mugdata->querybar), "query_changed",
@@ -279,7 +274,7 @@ mug_shell (MugData *mugdata)
 	gtk_container_add (GTK_CONTAINER(mugdata->win), vbox);
 	gtk_widget_show_all (vbox);
 
-	gtk_window_set_default_size (GTK_WINDOW(mugdata->win), 500, 500);
+	gtk_window_set_default_size (GTK_WINDOW(mugdata->win), 700, 500);
 	gtk_window_set_resizable (GTK_WINDOW(mugdata->win), TRUE);
 	
 	return mugdata->win;
