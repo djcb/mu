@@ -17,9 +17,7 @@
 **
 */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif /*HAVE_CONFIG_H*/
+#include "config.h"
 
 #include <gtk/gtk.h>
 
@@ -32,6 +30,7 @@
 #include "mug-msg-view.h"
 
 struct _MugData {
+	GtkWidget *win;
 	GtkWidget *statusbar;
 	GtkWidget *mlist;
 	GtkWidget *toolbar;
@@ -49,6 +48,23 @@ mug_menu (void)
 	menu = gtk_menu_bar_new ();
 
 	return menu;
+}
+
+
+static void
+about_mug (MugData *mugdata)
+{
+	GtkWidget *about;
+	about = gtk_message_dialog_new
+		(GTK_WINDOW(mugdata->win), GTK_DIALOG_MODAL,
+		 GTK_MESSAGE_INFO,GTK_BUTTONS_OK,
+		 "Mug version %s\n"
+		 "A graphical frontend to the 'mu' e-mail search engine\n\n"
+		 "(c) 2008-2010 Dirk-Jan C. Binnema\n"
+		 "Released under the terms of the GPLv3+", VERSION);
+	
+	gtk_dialog_run (GTK_DIALOG(about));
+	gtk_widget_destroy (about);
 }
 
 enum _ToolAction {
@@ -78,7 +94,7 @@ on_tool_button_clicked (GtkToolButton *btn, MugData *mugdata)
 		mug_msg_list_view_move_prev (MUG_MSG_LIST_VIEW(mugdata->mlist));
 		break;
 	case ACTION_ABOUT:
-		g_print ("About Mug\n");
+		about_mug (mugdata);
 		break;
 	default:
 		g_print ("%u\n", action);
@@ -244,10 +260,10 @@ mug_main_area (MugData *mugdata)
 GtkWidget*
 mug_shell (MugData *mugdata)
 {
-	GtkWidget *win, *vbox;
+	GtkWidget *vbox;
 	
-	win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW(win), "mu");
+	mugdata->win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title (GTK_WINDOW(mugdata->win), "mu");
 
 	vbox = gtk_vbox_new (FALSE, 2);
 
@@ -260,13 +276,13 @@ mug_shell (MugData *mugdata)
 	mugdata->statusbar = mug_statusbar();
 	gtk_box_pack_start (GTK_BOX(vbox), mugdata->statusbar, FALSE, FALSE, 2);
 	
-	gtk_container_add (GTK_CONTAINER(win), vbox);
+	gtk_container_add (GTK_CONTAINER(mugdata->win), vbox);
 	gtk_widget_show_all (vbox);
 
-	gtk_window_set_default_size (GTK_WINDOW(win), 500, 500);
-	gtk_window_set_resizable (GTK_WINDOW(win), TRUE);
+	gtk_window_set_default_size (GTK_WINDOW(mugdata->win), 500, 500);
+	gtk_window_set_resizable (GTK_WINDOW(mugdata->win), TRUE);
 	
-	return win;
+	return mugdata->win;
 }
 
 int
