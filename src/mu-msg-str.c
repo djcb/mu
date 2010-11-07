@@ -195,3 +195,37 @@ mu_msg_str_summarize (const char* str, size_t max_lines)
 	return summary;
 }
 
+
+const char*
+mu_msg_str_display_contact_s (const char *str)
+{
+	static gchar contact[255];
+	gchar *c, *c2;
+	
+	if (!str)
+		str = "";
+	
+	g_strlcpy (contact, str, sizeof(contact));
+
+	/* strip the address, if any */
+	c = g_strstr_len (contact, -1, "<");
+	if (c != NULL)
+		*c = '\0';
+
+	/* replace " with space */
+	for (c2 = contact; *c2; ++c2)
+		if (*c2 == '"')
+			*c2 = ' ';
+
+	g_strstrip (contact);
+
+	return contact;
+}
+
+char*
+mu_msg_str_display_contact (const char *str)
+{
+	g_return_val_if_fail (str, NULL);
+
+	return g_strdup (mu_msg_str_display_contact_s (str));
+}

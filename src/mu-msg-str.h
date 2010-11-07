@@ -61,6 +61,27 @@ char*       mu_msg_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RES
 const char* mu_msg_str_display_date_s (time_t t);
 
 
+/** 
+ * create a 'display contact' from an email header To/Cc/Bcc/From-type address
+ * ie., turn
+ *     "Foo Bar" <foo@bar.com>
+ * into
+ *      Foo Bar
+ * Note that this is based on some simple heuristics. Max length is 255 bytes.
+ *
+ *   mu_msg_str_display_contact_s returns a statically allocated
+ *   buffer (ie, non-reentrant), while mu_msg_str_display_contact
+ *   returns a newly allocated string that you must free with g_free
+ *   when done with it.
+ * 
+ * @param str a 'contact str' (ie., what is in the To/Cc/Bcc/From fields), or NULL
+ * 
+ * @return a newly allocated string with a display contact
+ */
+const char* mu_msg_str_display_contact_s (const char *str);
+char *mu_msg_str_display_contact (const char *str);
+
+
 /**
  * get a display size for a given size_t; uses M for sizes >
  * 1000*1000, k for smaller sizes. Note: this function use the
