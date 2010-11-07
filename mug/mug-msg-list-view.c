@@ -322,11 +322,12 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 	     mu_msg_iter_next (iter), ++count) {
 
 			GtkTreeIter treeiter;
-			const gchar *date, *from, *subject, *path, *to, *mdir;
+			const gchar *date, *subject, *path, *mdir;
+			gchar *from, *to;
 						
 			date	= mu_msg_str_display_date_s (mu_msg_iter_get_date (iter));
-			from	= mu_msg_iter_get_from(iter);
-			to      = mu_msg_iter_get_to (iter);
+			from	= mu_msg_str_display_contact (mu_msg_iter_get_from(iter));
+			to	= mu_msg_str_display_contact (mu_msg_iter_get_to(iter));
 			subject = mu_msg_iter_get_subject (iter);
 			path    = mu_msg_iter_get_path (iter);
 			mdir    = mu_msg_iter_get_maildir (iter);
@@ -342,6 +343,8 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 					    MUG_COL_PRIO, mu_msg_iter_get_prio(iter),
 					    MUG_COL_FLAGS, mu_msg_iter_get_flags(iter),
 					    -1);
+			g_free (from);
+			g_free (to);
 	}
 	mu_query_destroy (xapian);
 	
