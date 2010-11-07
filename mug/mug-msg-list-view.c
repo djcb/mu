@@ -324,8 +324,7 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 			GtkTreeIter treeiter;
 			const gchar *date, *from, *subject, *path, *to, *mdir;
 						
-			date	= mu_msg_str_date_s ("%x",
-						     mu_msg_iter_get_date (iter));
+			date	= mu_msg_str_display_date_s (mu_msg_iter_get_date (iter));
 			from	= mu_msg_iter_get_from(iter);
 			to      = mu_msg_iter_get_to (iter);
 			subject = mu_msg_iter_get_subject (iter);
