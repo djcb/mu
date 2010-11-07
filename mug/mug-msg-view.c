@@ -20,6 +20,7 @@
 
 #include "mug-msg-view.h"
 #include "mu-msg.h"
+#include "mu-msg-str.h"
 
 /* 'private'/'protected' functions */
 static void mug_msg_view_class_init (MugMsgViewClass *klass);
@@ -33,8 +34,46 @@ enum {
 	LAST_SIGNAL
 };
 
+enum _HeaderRow {
+	HEADER_ROW_FROM,
+	HEADER_ROW_TO,
+	HEADER_ROW_SUBJECT,
+	HEADER_ROW_CC,
+	HEADER_ROW_DATE,
+	HEADER_ROW_PATH,
+	HEADER_ROW_MSGID,
+	HEADER_ROW_SIZE,
+	HEADER_ROW_NUM
+};
+typedef enum _HeaderRow HeaderRow;
+
+struct _HeaderInfo  {
+	HeaderRow	 row;
+	const char	*title;
+};
+typedef struct _HeaderInfo HeaderInfo;
+
+static const HeaderInfo HEADER_INFO[] = {
+	{HEADER_ROW_CC,      "Cc"},
+	{HEADER_ROW_SUBJECT, "Subject"},
+	{HEADER_ROW_DATE,    "Date"}
+};
+
+static const HeaderInfo HEADER_INFO_EXPANDER[] = {
+	{HEADER_ROW_FROM,    "From"},
+	{HEADER_ROW_TO,      "To"},
+	{HEADER_ROW_PATH,    "Path"},
+	{HEADER_ROW_MSGID,   "Message-Id" },   
+	{HEADER_ROW_SIZE,    "Size"}
+};
+
 typedef struct _MugMsgViewPrivate MugMsgViewPrivate;
 struct _MugMsgViewPrivate {
+	
+	GtkWidget *_tablemain, *_tableexpander;
+	GtkWidget *_headervals   [HEADER_ROW_NUM];
+	
+	GtkWidget *_expander_header, *_expander;
 	GtkWidget *_view;
 };
 #define MUG_MSG_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
@@ -45,29 +84,8 @@ static GtkVBoxClass *parent_class = NULL;
 /* uncomment the following if you have defined any signals */
 /* static guint signals[LAST_SIGNAL] = {0}; */
 
-GType
-mug_msg_view_get_type (void)
-{
-	static GType my_type = 0;
-	if (!my_type) {
-		static const GTypeInfo my_info = {
-			sizeof(MugMsgViewClass),
-			NULL,		/* base init */
-			NULL,		/* base finalize */
-			(GClassInitFunc) mug_msg_view_class_init,
-			NULL,		/* class finalize */
-			NULL,		/* class data */
-			sizeof(MugMsgView),
-			0,		/* n_preallocs, ignored since 2.10 */
-			(GInstanceInitFunc) mug_msg_view_init,
-			NULL
-		};
-		my_type = g_type_register_static (GTK_TYPE_VBOX,
-		                                  "MugMsgView",
-		                                  &my_info, 0);
-	}
-	return my_type;
-}
+
+G_DEFINE_TYPE (MugMsgView, mug_msg_view, GTK_TYPE_VBOX);
 
 static void
 mug_msg_view_class_init (MugMsgViewClass *klass)
@@ -88,19 +106,83 @@ mug_msg_view_class_init (MugMsgViewClass *klass)
 /* 	etc. */
 }
 
+
+static GtkWidget*
+create_table (MugMsgViewPrivate *priv, const HeaderInfo *hinfo, guint num)
+{
+	guint i;
+	GtkWidget *table;
+	
+	table = gtk_table_new (num, 2, FALSE);
+	gtk_table_set_col_spacings (GTK_TABLE(table), 5);
+	
+	for (i = 0; i < num; ++i) {
+
+		char *str;
+		GtkWidget *l, *al;
+		
+		l   = gtk_label_new(NULL);
+		gtk_misc_set_alignment (GTK_MISC(l), 0.0, 0.5);
+		
+		gtk_label_set_justify (GTK_LABEL(l), GTK_JUSTIFY_LEFT);
+		str = g_strdup_printf ("<b>%s</b>:", hinfo[i].title);
+		gtk_label_set_markup (GTK_LABEL(l), str);
+		g_free (str);
+
+		gtk_table_attach (GTK_TABLE(table), l,
+				  0, 1, i, i+1,
+				  GTK_FILL, GTK_FILL,
+				  0, 0); 
+
+		l = priv->_headervals[hinfo[i].row] = gtk_label_new (NULL);
+		al = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+		gtk_container_add (GTK_CONTAINER(al), l);
+		gtk_label_set_justify (GTK_LABEL(l), GTK_JUSTIFY_LEFT);
+		gtk_table_attach (GTK_TABLE(table), al,
+				  1, 2, i, i+1,
+				  GTK_FILL, GTK_FILL,
+				  0, 0);
+	}
+
+	return table;
+}
+
+
+
 static void
 mug_msg_view_init (MugMsgView *obj)
 {
 	MugMsgViewPrivate *priv;
-
+	GtkWidget *scrolled;
+	
 	priv = MUG_MSG_VIEW_GET_PRIVATE(obj);
-
+	
+	priv->_tablemain     = create_table (priv, HEADER_INFO,
+					     G_N_ELEMENTS(HEADER_INFO));
+	priv->_tableexpander = create_table (priv, HEADER_INFO_EXPANDER,
+					     G_N_ELEMENTS(HEADER_INFO_EXPANDER));
+	
+	priv->_expander = gtk_expander_new ("Details");
+	gtk_container_add (GTK_CONTAINER(priv->_expander), priv->_tableexpander);
+	
 	priv->_view = gtk_text_view_new ();
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(priv->_view), FALSE);
 	gtk_text_view_set_left_margin (GTK_TEXT_VIEW(priv->_view), 10);	
 	gtk_text_view_set_right_margin (GTK_TEXT_VIEW(priv->_view), 10);
+
+	scrolled = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled),
+					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrolled),
+					       priv->_view);
 	
-	gtk_box_pack_start (GTK_BOX(obj), priv->_view, TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX(obj), priv->_tablemain, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX(obj), priv->_expander, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX(obj), scrolled, TRUE, TRUE, 0);
+
+	gtk_widget_hide (priv->_tablemain);
+	gtk_widget_hide (priv->_expander);
+	
 }
 
 static void
@@ -134,6 +216,40 @@ mug_msg_view_set_text (MugMsgView *self, const char* txt)
 }
 
 
+static void
+fill_header (MugMsgViewPrivate *priv, MuMsg* msg)
+{
+	int			i;
+	for (i = 0; i != HEADER_ROW_NUM; ++i) {
+		const gchar*	val;
+		switch (i) {
+		case HEADER_ROW_FROM: val    = mu_msg_get_from(msg); break;
+		case HEADER_ROW_TO: val	     = mu_msg_get_to(msg); break;
+		case HEADER_ROW_SUBJECT: val = mu_msg_get_subject(msg); break;
+		case HEADER_ROW_MSGID: val   = mu_msg_get_msgid(msg); break;
+		case HEADER_ROW_CC: val	     = mu_msg_get_cc (msg); break;
+		case HEADER_ROW_PATH: val    = mu_msg_get_path (msg); break;
+		case HEADER_ROW_DATE: val    = mu_msg_str_date_s(
+			"%c", mu_msg_get_date (msg));
+			break;
+		case HEADER_ROW_SIZE: val    = mu_msg_str_size_s (mu_msg_get_size(msg));
+			break;
+		default: val		     = NULL;
+		}
+
+		if (val) {
+			gchar *str;
+			str = g_markup_escape_text (val, -1);
+			gtk_label_set_markup (GTK_LABEL(priv->_headervals[i]), str);
+			g_free (str);
+		}
+	}
+
+	gtk_widget_show (priv->_tablemain);
+	gtk_widget_show (priv->_expander);
+}
+	
+
 gboolean
 mug_msg_view_set_msg (MugMsgView *self, const char* msgpath)
 {
@@ -142,16 +258,23 @@ mug_msg_view_set_msg (MugMsgView *self, const char* msgpath)
 	gboolean rv;
 	
 	g_return_val_if_fail (MUG_IS_MSG_VIEW(self), FALSE);
-	g_return_val_if_fail (msgpath, FALSE);
 
 	priv = MUG_MSG_VIEW_GET_PRIVATE(self);
 
+	if (!msgpath) {
+		mug_msg_view_set_text (self, "");
+		gtk_widget_hide (priv->_tablemain);
+		gtk_widget_hide (priv->_expander);
+		return TRUE;
+	}
+	
 	msg = mu_msg_new (msgpath, NULL);
 	if (!msg)
 		return FALSE;
 	
 	rv = mug_msg_view_set_text (self, mu_msg_get_body_text(msg));
-
+	fill_header (priv, msg);
+	
 	mu_msg_destroy (msg);
 	
 	return rv;
