@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 /* don't change the order, add new types at the end, as these numbers
  * are used in the database */
 enum _MuMsgFieldId {	
-	MU_MSG_FIELD_ID_BODY_TEXT,
+ 	MU_MSG_FIELD_ID_BODY_TEXT,
 	MU_MSG_FIELD_ID_BODY_HTML,
 	MU_MSG_FIELD_ID_CC,
 	MU_MSG_FIELD_ID_DATE,
