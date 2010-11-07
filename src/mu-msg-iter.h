@@ -84,13 +84,25 @@ unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 
 
 /**
- * get the directory path of the message
+ * get the full path of the message file
  * 
  * @param iter a valid MuMsgIter iterator
  * 
  * @return the path, or NULL in case of error
  */
 const char*      mu_msg_iter_get_path          (MuMsgIter *iter);
+
+
+/**
+ * get the maildir of the message - e.g., a message file 
+ * /home/user/Maildir/foo/bar/cur/abc123 would have maildir
+ *   "/foo/bar"
+ * 
+ * @param iter a valid MuMsgIter iterator
+ * 
+ * @return the path, or NULL in case of error
+ */
+const char*      mu_msg_iter_get_maildir (MuMsgIter *iter);
 
 
 /**
