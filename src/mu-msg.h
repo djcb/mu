@@ -197,7 +197,7 @@ const char*     mu_msg_get_msgid           (MuMsg *msg);
  * is no such header. the returned string should *not* be modified or freed.
  */
 const char*     mu_msg_get_header          (MuMsg *msg, 
-						  const char* header);
+					    const char* header);
 
 /**
  * get the message date/time (the Date: field) as time_t, using UTC
@@ -273,9 +273,6 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
  * @return the timestamp or 0 in case of error
  */
 time_t          mu_msg_get_timestamp       (MuMsg *msg);
-
-
-
 
 G_END_DECLS
 
