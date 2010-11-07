@@ -237,12 +237,12 @@ fill_header (MugMsgViewPrivate *priv, MuMsg* msg)
 		default: val		     = NULL;
 		}
 
-		if (val) {
-			gchar *str;
-			str = g_markup_escape_text (val, -1);
-			gtk_label_set_markup (GTK_LABEL(priv->_headervals[i]), str);
-			g_free (str);
-		}
+		 {
+			 gchar *str;
+			 str = g_markup_escape_text (val ? val : "", -1);
+			 gtk_label_set_markup (GTK_LABEL(priv->_headervals[i]), str);
+			 g_free (str);
+		 }
 	}
 
 	gtk_widget_show (priv->_tablemain);
