@@ -255,9 +255,8 @@ msg_list_view_move (MugMsgListView *self, gboolean next)
 	else
 		gtk_tree_path_prev (path);
 	
-	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path,
-				  NULL, FALSE);
-
+	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path, NULL, FALSE);
+	
 	gtk_tree_path_free (path);
 	
 	return TRUE;
@@ -298,6 +297,16 @@ mug_msg_list_view_new (const char *xpath)
 }
 
 
+static gchar*
+empty_or_display_contact (const gchar* str)
+{
+	if (!str || *str == '\0')
+		return g_strdup ("-");
+	else
+		return mu_msg_str_display_contact (str);
+	
+}
+
 static int
 update_model (GtkListStore *store, const char *xpath, const char *query)
 {
@@ -322,24 +331,21 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 	     mu_msg_iter_next (iter), ++count) {
 
 			GtkTreeIter treeiter;
-			const gchar *date, *subject, *path, *mdir;
+			const gchar *date;
 			gchar *from, *to;
-						
-			date	= mu_msg_str_display_date_s (mu_msg_iter_get_date (iter));
-			from	= mu_msg_str_display_contact (mu_msg_iter_get_from(iter));
-			to	= mu_msg_str_display_contact (mu_msg_iter_get_to(iter));
-			subject = mu_msg_iter_get_subject (iter);
-			path    = mu_msg_iter_get_path (iter);
-			mdir    = mu_msg_iter_get_maildir (iter);
 			
+			date	= mu_msg_str_display_date_s (mu_msg_iter_get_date (iter));
+			from	= empty_or_display_contact (mu_msg_iter_get_from(iter));
+			to	= empty_or_display_contact (mu_msg_iter_get_to(iter));
+
 			gtk_list_store_append (store, &treeiter);
 			gtk_list_store_set (store, &treeiter,
 					    MUG_COL_DATE, date,
-					    MUG_COL_MAILDIR, mdir,
+					    MUG_COL_MAILDIR, mu_msg_iter_get_maildir (iter),
 					    MUG_COL_FROM, from,
 					    MUG_COL_TO, to,
-					    MUG_COL_SUBJECT, subject,
-					    MUG_COL_PATH, path,
+					    MUG_COL_SUBJECT,mu_msg_iter_get_subject (iter),
+					    MUG_COL_PATH, mu_msg_iter_get_path (iter),
 					    MUG_COL_PRIO, mu_msg_iter_get_prio(iter),
 					    MUG_COL_FLAGS, mu_msg_iter_get_flags(iter),
 					    -1);
