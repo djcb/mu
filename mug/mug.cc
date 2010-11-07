@@ -170,7 +170,9 @@ on_query_changed (MugQueryBar *bar, const char* query, MugData *mugdata)
 					 (MUG_MSG_LIST_VIEW(mugdata->mlist)));
 		gtk_statusbar_push (GTK_STATUSBAR(mugdata->statusbar), 0, msg);
 		g_free (msg);
+		
 		mug_msg_list_view_move_first (MUG_MSG_LIST_VIEW(mugdata->mlist));
+		gtk_widget_grab_focus (GTK_WIDGET(mugdata->mlist));
 	}	
 }
 
