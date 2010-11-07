@@ -36,6 +36,7 @@ enum {
 
 enum {
 	MUG_COL_DATE,
+	MUG_COL_MAILDIR,
 	MUG_COL_FROM,
 	MUG_COL_TO,
 	MUG_COL_SUBJECT,
@@ -61,30 +62,9 @@ static GtkTreeViewClass *parent_class = NULL;
 /* uncomment the following if you have defined any signals */
 static guint signals[LAST_SIGNAL] = {0};
 
-GType
-mug_msg_list_view_get_type (void)
-{
-	static GType my_type = 0;
-	if (!my_type) {
-		static const GTypeInfo my_info = {
-			sizeof(MugMsgListViewClass),
-			NULL,		/* base init */
-			NULL,		/* base finalize */
-			(GClassInitFunc) mug_msg_list_view_class_init,
-			NULL,		/* class finalize */
-			NULL,		/* class data */
-			sizeof(MugMsgListView),
-			0,		/* n_preallocs, ignored since 2.10 */
-			(GInstanceInitFunc) mug_msg_list_view_init,
-			NULL
-		};
-		my_type = g_type_register_static (GTK_TYPE_TREE_VIEW,
-		                                  "MugMsgListView",
-		                                  &my_info, 0);
-	}
-	return my_type;
-}
+G_DEFINE_TYPE (MugMsgListView, mug_msg_list_view, GTK_TYPE_TREE_VIEW);
 
+ 
 static void
 mug_msg_list_view_class_init (MugMsgListViewClass *klass)
 {
@@ -178,9 +158,9 @@ get_col (const char* label, int colidx, gint maxwidth)
 	}
 
 	gtk_tree_view_column_set_cell_data_func
-	 	(col, renderer, (GtkTreeCellDataFunc) treecell_func, NULL, NULL);
+	(col, renderer, (GtkTreeCellDataFunc) treecell_func, NULL, NULL);
 	
-	return col;
+return col;
 }
 
 static void
@@ -190,10 +170,11 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	MugMsgListViewPrivate *priv;
 	
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE(obj);
-
+	
 	priv->_xpath = priv->_query = NULL;
 	
 	priv->_store = gtk_list_store_new (MUG_N_COLS,
+					   G_TYPE_STRING,
 					   G_TYPE_STRING,
 					   G_TYPE_STRING,
 					   G_TYPE_STRING,
@@ -212,7 +193,10 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	
 	col = get_col ("Date", MUG_COL_DATE, 80);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-	
+
+	col = get_col ("Folder", MUG_COL_MAILDIR, 60);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
+
 	col = get_col ("From", MUG_COL_FROM, 0);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
 	
@@ -222,8 +206,9 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	col = get_col ("Subject", MUG_COL_SUBJECT, 0);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
 	
-	g_signal_connect (G_OBJECT(obj), "cursor-changed", G_CALLBACK(on_cursor_changed),
-			  obj);
+	g_signal_connect (G_OBJECT(obj), "cursor-changed",
+				  G_CALLBACK(on_cursor_changed),
+				  obj);
 }
 
 static void
@@ -337,18 +322,20 @@ update_model (GtkListStore *store, const char *xpath, const char *query)
 	     mu_msg_iter_next (iter), ++count) {
 
 			GtkTreeIter treeiter;
-			const gchar *date, *from, *subject, *path, *to;
+			const gchar *date, *from, *subject, *path, *to, *mdir;
 						
 			date	= mu_msg_str_date_s ("%x",
 						     mu_msg_iter_get_date (iter));
 			from	= mu_msg_iter_get_from(iter);
 			to      = mu_msg_iter_get_to (iter);
 			subject = mu_msg_iter_get_subject (iter);
-			path    = mu_msg_iter_get_path (iter);			
+			path    = mu_msg_iter_get_path (iter);
+			mdir    = mu_msg_iter_get_maildir (iter);
 			
 			gtk_list_store_append (store, &treeiter);
 			gtk_list_store_set (store, &treeiter,
 					    MUG_COL_DATE, date,
+					    MUG_COL_MAILDIR, mdir,
 					    MUG_COL_FROM, from,
 					    MUG_COL_TO, to,
 					    MUG_COL_SUBJECT, subject,
