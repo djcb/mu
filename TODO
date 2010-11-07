@@ -1,21 +1,23 @@
 * Future release
 
 ** release 0.9 [%]
-   - [ ] bookmarks
-   - [ ] query on time
-   - [ ] mu-setup (?)
+
    - [ ] mu stats
    - [ ] follow symlinks when indexing
    - [ ] ansi-colors in output
    - [ ] config system (config file) (?)
-   - [ ] search for date interval etc.
+   - [ ] search for time, date interval etc.
    - [ ] detect mail threads (?)
-   - [ ] clean up mu-msg-field, add formatting(?)
    - [ ] xml,json,sexp output
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
 
-* Release already done
+** release 0.9 [%]
+   - [ ] bookmarks
+   - [ ] gtk-ui for searching
+   - [ ] clean up mu-msg-field, add formatting(?)
+
+* Releases already done
 
 ** release 0.8 [100%]
    - [X] remove gio dependency
