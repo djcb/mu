@@ -29,8 +29,7 @@
 G_BEGIN_DECLS
 
 /**
- * get a display string for a given time_t;
- * use the preferred date/time for the current locale
+ * get a string for a given time_t
  * 
  * mu_msg_str_date_s returns a ptr to a static buffer,
  * while mu_msg_str_date returns dynamically allocated
@@ -46,6 +45,20 @@ G_BEGIN_DECLS
  */
 const char* mu_msg_str_date_s (const char* frm, time_t t) G_GNUC_CONST;
 char*       mu_msg_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RESULT;
+
+
+/**
+ * get a display string for a given time_t; if the given is less than
+ * 24h from the current time, we display the time, otherwise the date,
+ * using the preferred date/time for the current locale
+ * 
+ * mu_msg_str_display_date_s returns a ptr to a static buffer,
+ *
+ * @param t the time as time_t
+ * 
+ * @return a string representation of the time/date
+ */
+const char* mu_msg_str_display_date_s (time_t t);
 
 
 /**

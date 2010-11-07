@@ -65,10 +65,29 @@ mu_msg_str_date_s (const char* frm, time_t t)
 }
 
 char* 
-mu_msg_str_date (const char* frm, time_t t)
+mu_msg_str_date (const char *frm, time_t t)
 {
 	return g_strdup (mu_msg_str_date_s(frm, t));
 }
+
+
+
+const char* 
+mu_msg_str_display_date_s (time_t t)
+{
+	time_t now;
+	static const guint SECS_IN_DAY = 24 * 60 * 60;
+	
+	now = time (NULL);
+
+	if (ABS(now - t) > SECS_IN_DAY)
+		return mu_msg_str_date_s ("%x", t);
+	else
+		return mu_msg_str_date_s ("%X", t);
+}
+
+
+
 
 
 const char*
