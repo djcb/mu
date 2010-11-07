@@ -327,7 +327,7 @@ readdir_with_stat_fallback (DIR* dir, const char* path)
 
 		/* note, fullpath_s returns a static buffer */
 		fullpath = fullpath_s (path, entry->d_name);
-		if (stat (fullpath, &statbuf) != 0) {
+		if (lstat (fullpath, &statbuf) != 0) {
 			g_warning ("stat failed on %s: %s", fullpath,
 				   strerror(errno));
 			return FALSE;
