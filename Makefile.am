@@ -16,10 +16,11 @@
 
 include $(top_srcdir)/gtest.mk
 
-if HAVE_GTK
-SUBDIRS=man src mug contrib
-else
 SUBDIRS=man src contrib
+
+# build if there is some gtk available
+if HAVE_GTK
+SUBDIRS += mug
 endif
 
 

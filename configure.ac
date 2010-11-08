@@ -108,16 +108,17 @@ AS_IF([test "x$have_gmime" = "xno"],[
    ])
 ])
 
-# do we have gtk+ installed? if not, don't build 'mug'
-PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk=yes],[have_gtk=no])
+# do we have gtk3+ installed? this is just for testing the new gtk3
+PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
-AS_IF([test "x$have_gtk" = "xno"],[
-   AC_MSG_WARN([
-   *** gtk+-2.0 not found, 'mug' will not be built
-   ])
+AS_IF([test "x$have_gtk3" = "xno"],[
+  PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
+  AC_SUBST(GTK_CFLAGS)
+  AC_SUBST(GTK_LIBS)
 ])
-AM_CONDITIONAL(HAVE_GTK,test "x$have_gtk" = "xyes")
+AM_CONDITIONAL(HAVE_GTK, [test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"])
+
 
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
