@@ -1,6 +1,15 @@
 * NEWS (user visible changes)
 
-** Release 0.8 (beta) <2010-10-30 Sat>
+** Release 0.9
+   
+   - add a simple graphical UI for searching, called 'mug'
+   - fix --clearlinks for file systems without entry->d_type (fixes issue #28)
+   - fix searching of mixed-caps maildirs with
+   - match the non-accented ('normalized') versions of strings in header fields
+     as well
+   - updated the man-pages
+
+** Release 0.8 <2010-10-30 Sat>
    
    - There's now 'mu extract' for getting information about MIME-parts
      (attachments) and extracting them
