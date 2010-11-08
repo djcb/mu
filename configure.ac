@@ -84,14 +84,6 @@ PKG_CHECK_MODULES(GLIB, glib-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-# gio has only been added to recent glib
-dnl PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
-dnl AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
-dnl AS_IF([test "x$have_gio" = "xno"],[
-dnl    AC_MSG_WARN([GIO not supported])
-dnl ],[
-dnl    AC_DEFINE(HAVE_GIO,[1],[Wether we have GIO])
-dnl ])
 
 # g_test was introduced in glib 2.16
 PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.16, [have_gtest=yes],[have_gtest=no])
@@ -122,7 +114,7 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 AS_IF([test "x$have_gtk" = "xno"],[
    AC_MSG_WARN([
-   *** gtk+-2.0 not found, mug will not be built
+   *** gtk+-2.0 not found, 'mug' will not be built
    ])
 ])
 AM_CONDITIONAL(HAVE_GTK,test "x$have_gtk" = "xyes")
