@@ -40,17 +40,6 @@ struct _MugData {
 typedef struct _MugData MugData;
 	
 
-static GtkWidget*
-mug_menu (void)
-{
-	GtkWidget *menu;
-
-	menu = gtk_menu_bar_new ();
-
-	return menu;
-}
-
-
 static void
 about_mug (MugData *mugdata)
 {
@@ -60,7 +49,7 @@ about_mug (MugData *mugdata)
 		 GTK_MESSAGE_INFO,GTK_BUTTONS_OK,
 		 "Mug version %s\n"
 		 "A graphical frontend to the 'mu' e-mail search engine\n\n"
-		 "(c) 2008-2010 Dirk-Jan C. Binnema\n"
+		 "(c) 2010 Dirk-Jan C. Binnema\n"
 		 "Released under the terms of the GPLv3+", VERSION);
 	
 	gtk_dialog_run (GTK_DIALOG(about));
@@ -110,12 +99,12 @@ mug_toolbar (MugData *mugdata)
 		const char* stock_id;
 		ToolAction action;
 	} tools[] = {
-		{GTK_STOCK_GO_UP, ACTION_PREV_MSG},
-		{GTK_STOCK_GO_DOWN, ACTION_NEXT_MSG},
-		{NULL, ACTION_SEPARATOR},
-		{GTK_STOCK_ABOUT, ACTION_ABOUT},
-		{NULL, ACTION_SEPARATOR},
-		{GTK_STOCK_QUIT, ACTION_DO_QUIT},
+		{ GTK_STOCK_GO_UP, ACTION_PREV_MSG },
+		{ GTK_STOCK_GO_DOWN, ACTION_NEXT_MSG },
+		{ NULL, ACTION_SEPARATOR },
+		{ GTK_STOCK_ABOUT, ACTION_ABOUT },
+		{ NULL, ACTION_SEPARATOR },
+		{ GTK_STOCK_QUIT, ACTION_DO_QUIT },
 	};	
 	
 	for (toolbar = gtk_toolbar_new(), i = 0; i != G_N_ELEMENTS(tools); ++i) {
@@ -263,9 +252,6 @@ mug_shell (MugData *mugdata)
 	gtk_window_set_title (GTK_WINDOW(mugdata->win), "mu");
 
 	vbox = gtk_vbox_new (FALSE, 2);
-
-	gtk_box_pack_start (GTK_BOX(vbox), mug_menu(), FALSE, FALSE, 2);
-
 	mugdata->toolbar = mug_toolbar(mugdata);
 	gtk_box_pack_start (GTK_BOX(vbox), mugdata->toolbar, FALSE, FALSE, 2);
 	gtk_box_pack_start (GTK_BOX(vbox), mug_main_area(mugdata), TRUE, TRUE, 2);
