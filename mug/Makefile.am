@@ -49,3 +49,18 @@ mug_LDADD=				\
 	${top_srcdir}/src/libmu.la	\
 	${GTK_LIBS}
 
+icondir=				\
+	$(datarootdir)/icons
+
+icon_DATA=				\
+	mug.png
+
+desktopdir=				\
+	$(datarootdir)/applications
+
+desktop_DATA=				\
+	mug.desktop
+
+EXTRA_DIST=				\
+	$(desktopentry_DATA)
+

@@ -150,6 +150,7 @@ Makefile
 src/Makefile
 src/tests/Makefile
 mug/Makefile
+mug/mug.desktop
 man/Makefile
 contrib/Makefile
 ])
