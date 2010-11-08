@@ -17,7 +17,7 @@
 **  
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
@@ -442,7 +442,7 @@ dirent_copy (struct dirent *entry)
 	struct dirent *d; 
 
 	/* NOTE: simply memcpy'ing sizeof(struct dirent) bytes will
-	 * give memory errors. Also note, g_slice_new has been to
+	 * give memory errors. Also note, g_slice_new has been known to
 	 * crash on FreeBSD */
 	d = g_slice_new (struct dirent);
 	
@@ -473,10 +473,10 @@ dirent_cmp (struct dirent *d1, struct dirent *d2)
 
 
 /* we sort the inodes if the FS's dirent has them. It makes
- * file-access much faster on some filesystems, such as
- * ext3,4. readdir_with_stat_fallback is a wrapper for readdir
- * that falls back to (slow) stats if the FS does not support
- * entry->d_type
+ * file-access much faster on some filesystems, such as ext3,4.
+ *
+ * readdir_with_stat_fallback is a wrapper for readdir that falls back
+ * to (slow) lstats if the FS does not support entry->d_type
  */
 static MuResult
 process_dir_entries_sorted (DIR *dir, const char* path, const char* mdir,
