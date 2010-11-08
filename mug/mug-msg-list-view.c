@@ -132,8 +132,8 @@ treecell_func (GtkTreeViewColumn *tree_column, GtkCellRenderer *renderer,
 }
 
 
-static GtkTreeViewColumn *
-get_col (const char* label, int colidx, gint maxwidth)
+static void
+append_col (GtkTreeView *treeview, const char* label, int colidx, gint maxwidth)
 {
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *renderer;
@@ -157,22 +157,22 @@ get_col (const char* label, int colidx, gint maxwidth)
 		gtk_tree_view_column_set_expand (col, TRUE);
 	}
 
-	gtk_tree_view_column_set_cell_data_func
-	(col, renderer, (GtkTreeCellDataFunc) treecell_func, NULL, NULL);
-	
-return col;
+	gtk_tree_view_column_set_cell_data_func (col, renderer,
+						 (GtkTreeCellDataFunc) treecell_func,
+						 NULL, NULL);
+
+	gtk_tree_view_append_column (treeview, col);
 }
 
 static void
 mug_msg_list_view_init (MugMsgListView *obj)
 {
-	GtkTreeViewColumn *col;
 	MugMsgListViewPrivate *priv;
+	GtkTreeView *tview;
 	
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE(obj);
 	
 	priv->_xpath = priv->_query = NULL;
-	
 	priv->_store = gtk_list_store_new (MUG_N_COLS,
 					   G_TYPE_STRING,
 					   G_TYPE_STRING,
@@ -182,29 +182,20 @@ mug_msg_list_view_init (MugMsgListView *obj)
 					   G_TYPE_STRING,
 					   G_TYPE_UINT,
 					   G_TYPE_UINT);
-	
-	gtk_tree_view_set_model (GTK_TREE_VIEW (obj),
-				 GTK_TREE_MODEL(priv->_store));
+
+	tview = GTK_TREE_VIEW (obj);
+	gtk_tree_view_set_model (tview, GTK_TREE_MODEL(priv->_store));
 
 	gtk_tree_view_set_headers_clickable (GTK_TREE_VIEW(obj), TRUE);
 	gtk_tree_view_set_grid_lines (GTK_TREE_VIEW(obj),
 				      GTK_TREE_VIEW_GRID_LINES_VERTICAL);	
 	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW(obj), TRUE);
 	
-	col = get_col ("Date", MUG_COL_DATE, 80);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-
-	col = get_col ("Folder", MUG_COL_MAILDIR, 60);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-
-	col = get_col ("From", MUG_COL_FROM, 0);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-	
-	col = get_col ("To", MUG_COL_TO, 0);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
-	
-	col = get_col ("Subject", MUG_COL_SUBJECT, 0);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (obj), col);
+ 	append_col (tview, "Date", MUG_COL_DATE, 80);
+	append_col (tview, "Folder", MUG_COL_MAILDIR, 60);
+	append_col (tview, "From", MUG_COL_FROM, 0);
+	append_col (tview, "To", MUG_COL_TO, 0);
+	append_col (tview, "Subject", MUG_COL_SUBJECT, 0);
 	
 	g_signal_connect (G_OBJECT(obj), "cursor-changed",
 				  G_CALLBACK(on_cursor_changed),
@@ -256,7 +247,6 @@ msg_list_view_move (MugMsgListView *self, gboolean next)
 		gtk_tree_path_prev (path);
 	
 	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path, NULL, FALSE);
-	
 	gtk_tree_path_free (path);
 	
 	return TRUE;
@@ -307,53 +297,73 @@ empty_or_display_contact (const gchar* str)
 	
 }
 
-static int
-update_model (GtkListStore *store, const char *xpath, const char *query)
+static MuMsgIter *
+run_query (const char *xpath, const char *query)
 {
 	MuQuery *xapian;
 	MuMsgIter *iter;
-	int count;
 
 	xapian = mu_query_new (xpath);
 	if (!xapian) {
 		g_printerr ("Failed to create a Xapian query\n");
-		return -1;
+		return NULL;
 	}
 
 	iter = mu_query_run (xapian, query, NULL, TRUE, 0);
+	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("error: running query failed\n");
-		mu_query_destroy (xapian);
+		return NULL;
+	}
+	
+	return iter;
+}
+
+static void
+add_row (GtkListStore *store, MuMsgIter *iter)
+{
+	GtkTreeIter treeiter;
+	const gchar *date;
+	gchar *from, *to;
+			
+	date	= mu_msg_str_display_date_s (mu_msg_iter_get_date (iter));
+	from	= empty_or_display_contact (mu_msg_iter_get_from(iter));
+	to	= empty_or_display_contact (mu_msg_iter_get_to(iter));
+	
+	gtk_list_store_append (store, &treeiter);
+	gtk_list_store_set (store, &treeiter,
+			    MUG_COL_DATE, date,
+			    MUG_COL_MAILDIR, mu_msg_iter_get_maildir (iter),
+			    MUG_COL_FROM, from,
+			    MUG_COL_TO, to,
+			    MUG_COL_SUBJECT,mu_msg_iter_get_subject (iter),
+			    MUG_COL_PATH, mu_msg_iter_get_path (iter),
+			    MUG_COL_PRIO, mu_msg_iter_get_prio(iter),
+			    MUG_COL_FLAGS, mu_msg_iter_get_flags(iter),
+			    -1);
+	g_free (from);
+	g_free (to);
+}
+
+
+static int
+update_model (GtkListStore *store, const char *xpath, const char *query)
+{
+	MuMsgIter *iter;
+	int count;
+
+	iter = run_query  (xpath, query);
+	if (!iter) {
+		g_warning ("error: running query failed\n");
 		return -1;
 	}
 
 	for (count = 0; !mu_msg_iter_is_done (iter);
-	     mu_msg_iter_next (iter), ++count) {
-
-			GtkTreeIter treeiter;
-			const gchar *date;
-			gchar *from, *to;
-			
-			date	= mu_msg_str_display_date_s (mu_msg_iter_get_date (iter));
-			from	= empty_or_display_contact (mu_msg_iter_get_from(iter));
-			to	= empty_or_display_contact (mu_msg_iter_get_to(iter));
-
-			gtk_list_store_append (store, &treeiter);
-			gtk_list_store_set (store, &treeiter,
-					    MUG_COL_DATE, date,
-					    MUG_COL_MAILDIR, mu_msg_iter_get_maildir (iter),
-					    MUG_COL_FROM, from,
-					    MUG_COL_TO, to,
-					    MUG_COL_SUBJECT,mu_msg_iter_get_subject (iter),
-					    MUG_COL_PATH, mu_msg_iter_get_path (iter),
-					    MUG_COL_PRIO, mu_msg_iter_get_prio(iter),
-					    MUG_COL_FLAGS, mu_msg_iter_get_flags(iter),
-					    -1);
-			g_free (from);
-			g_free (to);
-	}
-	mu_query_destroy (xapian);
+	     mu_msg_iter_next (iter), ++count)
+		add_row (store, iter);
 	
+	mu_msg_iter_destroy (iter);
+
 	return count;
 }
 
