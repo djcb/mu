@@ -139,6 +139,7 @@ test_mu_query_03 (void)
 	
 	QResults queries[] = {
 		{ "ploughed", 1},
+		{ "i:3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com", 1},
 		{ "s:Re:Learning LISP; Scheme vs elisp.", 1},
 		{ "subject:Re Learning LISP; Scheme vs elisp.", 1},
 		{ "t:help-gnu-emacs@gnu.org", 4},
