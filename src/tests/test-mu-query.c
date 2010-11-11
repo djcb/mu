@@ -65,18 +65,13 @@ run_and_count_matches (const char *xpath, const char *query)
 	g_assert (query);
 
 	iter = mu_query_run (mquery, query, NULL, FALSE, 1);
+	mu_query_destroy (mquery);
 	g_assert (iter);
-	/* { */
-	/* 	gchar *prep = mu_query_preprocess (query); */
-	/* 	g_print ("\n%s:\n(1)'%s'\n(2)'%s'\n", xpath, query, prep); */
-	/* 	g_free (prep); */
-	/* } */
 	
 	for (count = 0; !mu_msg_iter_is_done(iter);
 	     mu_msg_iter_next(iter), ++count);
 	
 	mu_msg_iter_destroy (iter);
-	mu_query_destroy (mquery);
 	
 	return count;
 }
@@ -103,8 +98,9 @@ test_mu_query_01 (void)
 		{ "html and contains",  1 },
 		{ "from:pepernoot",     0 },
 		{ "foo:pepernoot",      0 },
+		{ "funky",              1 },
 		{ "fünkÿ",              1 },
-//		{ "funky",              1 }
+
 	};
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
@@ -140,9 +136,19 @@ test_mu_query_03 (void)
 	QResults queries[] = {
 		{ "ploughed", 1},
 		{ "i:3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com", 1},
-		{ "s:Re:Learning LISP; Scheme vs elisp.", 1},
+
+		/* subsets of the words in the subject should match */
+		{ "s:gcc include search order" , 1},
+		{ "s:gcc include search" , 1},
+		{ "s:search order" , 1},
+		{ "s:include" , 1},
+		
+		{ "s:lisp", 1},
+		{ "s:LISP", 1},
+		
+		{ "s:Learning LISP; Scheme vs elisp.", 1},
 		{ "subject:Re Learning LISP; Scheme vs elisp.", 1},
-		{ "t:help-gnu-emacs@gnu.org", 4},
+		{ "to:help-gnu-emacs@gnu.org", 4},
 		{ "t:help-gnu-emacs", 0},
 	};
 	
@@ -167,7 +173,7 @@ test_mu_query_04 (void)
 //		{ "frodo@example.com", 1},
 		{ "f:frodo@example.com", 1},
 		{ "f:Frodo Baggins", 1},
-//		{ "bilbo@anotherexample.com", 1},
+//     	{ "bilbo@anotherexample.com", 1},
 		{ "t:bilbo@anotherexample.com", 1},
 		{ "t:bilbo", 1},
 		{ "f:bilbo", 0},

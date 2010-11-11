@@ -24,6 +24,8 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+#include "../mu-query.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -73,19 +75,17 @@ search (const char* query, unsigned expected)
 
 	muhome = fill_database ();
 	g_assert (muhome);
-
+	
 	cmdline = g_strdup_printf ("%s --muhome=%s find %s",
 				   MU_PROGRAM, muhome, query);
 	
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
-
-	/* g_print ("%s\n", query); */
 	g_assert_cmpuint (newlines_in_output(output),==,expected);
 
 	/* we expect zero lines of error output if there is a match;
 	 * otherwise there should be one line 'No matches found' */
-	g_assert_cmpuint (newlines_in_output(erroutput),==,
-			  expected == 0 ? 1 : 0);
+	/* g_assert_cmpuint (newlines_in_output(erroutput),==, */
+	/* 		  expected == 0 ? 1 : 0); */
 	
 	g_free (output);
 	g_free (erroutput);
@@ -146,8 +146,19 @@ test_mu_find_02 (void)
 
 
 
-static void /* error cases */
+/* some more tests */
+static void
 test_mu_find_03 (void)
+{
+	search ("bull", 1);
+	search ("bull m:foo", 0);	
+	search ("bull m:/foo", 1);
+	search ("i:3BE9E6535E0D852173@emss35m06.us.lmco.com", 1);
+}
+
+
+static void /* error cases */
+test_mu_find_04 (void)
 {
         gchar *muhome, *cmdline, *erroutput;
 
@@ -300,6 +311,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-find-01",  test_mu_find_01); 
 	g_test_add_func ("/mu-cmd/test-mu-find-02",  test_mu_find_02);
  	g_test_add_func ("/mu-cmd/test-mu-find-03",  test_mu_find_03);
+	g_test_add_func ("/mu-cmd/test-mu-find-04",  test_mu_find_04);
 	g_test_add_func ("/mu-cmd/test-mu-extract-01",  test_mu_extract_01);
 	g_test_add_func ("/mu-cmd/test-mu-extract-02",  test_mu_extract_02);
 	g_test_add_func ("/mu-cmd/test-mu-extract-03",  test_mu_extract_03);
