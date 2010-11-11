@@ -33,7 +33,7 @@ enum _FieldFlags {
 	FLAG_XAPIAN_INDEX   = 1 << 2,	/* field is indexed in xapian */
 	FLAG_XAPIAN_TERM    = 1 << 3,	/* field stored as term in xapian */
 	FLAG_XAPIAN_VALUE   = 1 << 4,	/* field stored as value in xapian */
-	FLAG_XAPIAN_CONTACT = 1 << 5    /* field contains e-mail address */
+	FLAG_XAPIAN_CONTACT = 1 << 5    /* field contains an e-mail address */
 };
 typedef enum _FieldFlags	FieldFlags;
 
