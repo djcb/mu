@@ -19,34 +19,127 @@
 
 #include <glib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "mu-msg-str.h"
 #include "mu-msg-flags.h"
 
+
+
 char*
 mu_msg_str_normalize (const char *str, gboolean downcase)
 {
-	gchar *s;
+	const guchar *cur;
+	gchar *output;
+	size_t len;
+	int i;
 	
-	if (!str)
-		return NULL;
+	g_return_val_if_fail (str, NULL);
 
-	s = g_utf8_normalize (str, -1, G_NORMALIZE_ALL);
-	if (!s) {
-		g_warning ("%s: not valid utf8 '%s'", __FUNCTION__, str);
-		return NULL;
+	len = strlen (str);
+	output = g_new0 (char, 2 * len);
+	
+	for (i = 0, cur = (const guchar*)str; *cur; ++cur) {
+		if (*cur != 0xc3) { /* != latin-1 supplement? */
+			output[i++] = *cur;
+			continue; 
+		}
+		++cur;
+
+		switch (*cur) {
+
+		case 0x80:
+		case 0x81:
+		case 0x82:
+		case 0x83:
+		case 0x84:
+		case 0x85: output[i++] = 'A'; break;
+
+		case 0x86: output[i++] = 'A'; output[i++] = 'e'; break;
+		case 0x87: output[i++] = 'C'; break;
+			
+		case 0x88:
+		case 0x89:
+		case 0x8a:
+		case 0x8b: output[i++] = 'E'; break;
+
+		case 0x8c:
+		case 0x8d:
+		case 0x8e:
+		case 0x8f: output[i++] = 'I'; break;
+
+		case 0x90: output[i++] = 'D'; break;
+		case 0x91: output[i++] = 'N'; break;
+			
+		case 0x92:
+		case 0x93:
+		case 0x94:
+		case 0x95:
+		case 0x96: output[i++] = 'O'; break;
+
+		case 0x99:
+		case 0x9a:
+		case 0x9b:
+		case 0x9c: output[i++] = 'U'; break;
+			
+		case 0x9d: output[i++] = 'Y'; break;
+		case 0x9e: output[i++] = 'T'; output[i++] = 'h'; break;
+		case 0x9f: output[i++] = 's'; output[i++] = 's'; break;
+			
+		case 0xa0:
+		case 0xa1:
+		case 0xa2:
+		case 0xa3:
+		case 0xa4:
+		case 0xa5: output[i++] = 'a'; break;
+
+		case 0xa6: output[i++] = 'a'; output[i++] = 'e'; break;
+		case 0xa7: output[i++] = 'c'; break;
+			
+		case 0xa8:
+		case 0xa9:
+		case 0xaa:
+		case 0xab: output[i++] = 'e'; break;
+
+		case 0xac:
+		case 0xad:
+		case 0xae:
+		case 0xaf: output[i++] = 'i'; break;
+
+		case 0xb0: output[i++] = 'd'; break;
+		case 0xb1: output[i++] = 'n'; break;
+			
+		case 0xb2:
+		case 0xb3:
+		case 0xb4:
+		case 0xb5:
+		case 0xb6: output[i++] = 'o'; break;
+
+		case 0xb9:
+		case 0xba:
+		case 0xbb:
+		case 0xbc: output[i++] = 'u'; break;
+
+		case 0xbd: output[i++] = 'y'; break;
+		case 0xbe: output[i++] = 't'; output[i++] = 'h'; break;
+		case 0xbf: output[i++] = 'y'; break;
+
+		default:
+			output[i++] = *cur;
+		}
 	}
-		
+
+	output [i] = '\0';
+
+	/* for utf8, this should not interfere with anything it shouldn't... */
 	if (downcase) {
-		gchar *tmp;
-		tmp = g_utf8_strdown (s, -1);
-		g_free (s);
-		s = tmp;
+		gchar *c;
+		for (c = output; *c; ++c)
+			*c = tolower (*c);
 	}
-
-	return s;
+	
+	return output;
 }
-
 
 
 const char* 

@@ -121,9 +121,37 @@ test_mu_msg_str_prio_02 (void)
 {
 	/* this must fail */
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
-
 	g_assert_cmpstr (mu_msg_str_prio(666), ==, NULL);
 }
+	
+
+
+static void
+test_mu_msg_str_normalize_01 (void)
+{
+	int			i;
+	struct {
+		const char*	word;
+		const char*	norm;
+	} words [] = {
+		{ "dantès", "dantes"}, 
+		{ "foo", "foo" },
+		{ "Föö", "foo" },
+		{ "hÆvý mëÐal ümláõt", "haevy medal umlaot"}
+	};
+
+	
+	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
+		gchar *str;
+		str = mu_msg_str_normalize (words[i].word, TRUE);
+		g_assert_cmpstr (str, ==, words[i].norm);
+		g_free (str);
+	}
+}
+
+
+
+
 
 int
 main (int argc, char *argv[])
@@ -146,6 +174,11 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-msg-str/mu-msg-str-prio-02",
 			 test_mu_msg_str_prio_02);
 
+	/* mu_msg_str_normalize */
+	g_test_add_func ("/mu-msg-str/mu-msg-str-normalize-01",
+			 test_mu_msg_str_normalize_01);
+
+	
 	/* FIXME: add tests for mu_msg_str_flags; but note the
 	 * function simply calls mu_msg_field_str */
 		
