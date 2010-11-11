@@ -31,13 +31,14 @@ mu_msg_str_normalize (const char *str, gboolean downcase)
 {
 	const guchar *cur;
 	gchar *output;
-	size_t len;
 	int i;
 	
 	g_return_val_if_fail (str, NULL);
 
-	len = strlen (str);
-	output = g_new0 (char, 2 * len);
+	if (*str == '\0')
+		return g_strdup ("");
+	
+	output = g_new0 (char, 2 * strlen(str));
 	
 	for (i = 0, cur = (const guchar*)str; *cur; ++cur) {
 		if (*cur != 0xc3) { /* != latin-1 supplement? */
