@@ -17,7 +17,7 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
@@ -211,20 +211,24 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	
 	if (mu_msg_field_xapian_index (field)) {
 		Xapian::TermGenerator termgen;
+		gchar *norm (mu_msg_str_normalize(str, TRUE));
 		termgen.set_document (doc);
-		termgen.index_text_without_positions (str, 1, prefix);
+		termgen.index_text_without_positions (norm, 1, prefix);
+		g_free(norm);
 	}
 
 	if (mu_msg_field_xapian_term(field)) {
 		/* terms can be up to MU_STORE_MAX_TERM_LENGTH (240)
 		 * long; this is a Xapian limit */
-		doc.add_term (std::string (prefix + value, 0,
-		 			   MU_STORE_MAX_TERM_LENGTH));
+		// doc.add_term (std::string (prefix + value, 0,
+		//  			   MU_STORE_MAX_TERM_LENGTH));
 
-		/* add a normalized version as well (accents removed, lowercase) */
-		std::string norm(mu_msg_str_normalize(str, TRUE));
-		doc.add_term (std::string (prefix + norm, 0,
-		 			   MU_STORE_MAX_TERM_LENGTH));
+		/* add a normalized version as well (accents removed,
+		 * lowercase), if it's actually different */
+		gchar *norm =  mu_msg_str_normalize(str, TRUE);
+		doc.add_term (std::string (prefix + std::string(norm), 0,
+					   MU_STORE_MAX_TERM_LENGTH));
+		g_free (norm);
 	}
 	
 	if (mu_msg_field_xapian_value(field)) 			 
@@ -237,6 +241,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 		       const MuMsgField* field)
 {
 	const char *str;
+	char *norm;
 	
 	if (mu_msg_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
 		return; /* don't store encrypted bodies */
@@ -247,10 +252,13 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	
 	if (!str)  
 		return; /* no body... */
-
+	
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
-	termgen.index_text(str, 1, mu_msg_field_xapian_prefix(field));
+	
+	norm = mu_msg_str_normalize (str, TRUE);
+	termgen.index_text(norm, 1, mu_msg_field_xapian_prefix(field));
+	g_free (norm);
 }
 
 struct _MsgDoc {
@@ -316,20 +324,23 @@ each_contact_info (MuMsgContact *contact, MsgDoc *data)
 	case MU_MSG_CONTACT_TYPE_CC: pfx   = cc_pfx; break;
 	default: return;		/* other types (like bcc) are ignored */
 	}
-
-	// g_print ("[%s %s]\n", pfx.c_str(), contact->address);
 	
 	if (contact->name && strlen(contact->name) > 0) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (*data->_doc);
-		termgen.index_text_without_positions (contact->name, 1, pfx);
+		char *norm = mu_msg_str_normalize (contact->name, TRUE);
+		termgen.index_text_without_positions (norm, 1, pfx);
+		g_free (norm);
 	}
 
-	if (contact->address && strlen (contact->address)) 
-		data->_doc->add_term (std::string (pfx + contact->address, 0,
-						   MU_STORE_MAX_TERM_LENGTH));	
+	/* don't normalize e-mail address, but do lowercase it */
+	if (contact->address && strlen (contact->address)) {
+		char *lower = g_utf8_strdown (contact->address, -1);
+		data->_doc->add_term (std::string (pfx + lower, 0,
+						   MU_STORE_MAX_TERM_LENGTH));
+		g_free (lower);
+	}
 }
-
 
 
 /* get a unique id for this message */
@@ -349,8 +360,6 @@ get_message_uid (MuMsg *msg)
 {
 	return get_message_uid (mu_msg_get_path(msg));
 }
-
-
 
 MuResult
 mu_store_store (MuStore *store, MuMsg *msg)
