@@ -136,6 +136,10 @@ create_table (MugMsgViewPrivate *priv, const HeaderInfo *hinfo, guint num)
 
 		l = priv->_headervals[hinfo[i].row] = gtk_label_new (NULL);
 		al = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+		gtk_label_set_line_wrap_mode (GTK_LABEL(l), PANGO_WRAP_WORD_CHAR);
+		gtk_label_set_line_wrap (GTK_LABEL(l), TRUE);
+		gtk_label_set_selectable (GTK_LABEL(l), TRUE);
+		
 		gtk_container_add (GTK_CONTAINER(al), l);
 		gtk_label_set_justify (GTK_LABEL(l), GTK_JUSTIFY_LEFT);
 		gtk_table_attach (GTK_TABLE(table), al,
