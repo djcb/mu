@@ -30,7 +30,7 @@
 
 #include "mu-util.h"
 #include "mu-util-db.h"
-
+#include "mu-msg-str.h"
 
 static void add_prefix (const MuMsgField* field,
 			Xapian::QueryParser* qparser);
@@ -246,7 +246,7 @@ mu_query_preprocess (const char *query)
 	 * will fixes some of the false-negatives. A full fix
 	 * probably requires some custom query parser.
 	 */
-	my_query = g_utf8_strdown (query, -1);
+	my_query = mu_msg_str_normalize(query, TRUE);
 	
 	for (cur = my_query; *cur; ++cur) {
 		if (*cur == ':') /* we found a ':' */
@@ -254,8 +254,8 @@ mu_query_preprocess (const char *query)
 			  * ':', don't touch it. Otherwise replace ':' with
 			  * a space'... ugly...
 			  */			 
-			 if (!is_xapian_prefix (my_query, cur))
-				 *cur = ' ';
+			if (!is_xapian_prefix (my_query, cur))
+				*cur = ' ';
 	}
 	
 	return my_query;
@@ -273,9 +273,9 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 	try {
 		char *preprocessed;	
 		int err (0);
-
-		preprocessed = mu_query_preprocess (searchexpr);
 		
+		preprocessed = mu_query_preprocess (searchexpr);
+
 		Xapian::Query q(get_query(self, preprocessed, &err));
 		if (err) {
 			g_warning ("Error in query '%s'", preprocessed);
