@@ -153,7 +153,7 @@ append_col (GtkTreeView *treeview, const char* label, int colidx, gint maxwidth)
 		gtk_tree_view_column_set_fixed_width (col, maxwidth);
 		gtk_tree_view_column_set_expand (col, FALSE);
 	} else {
-		gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_GROW_ONLY);
+		//gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_GROW_ONLY);
 		gtk_tree_view_column_set_expand (col, TRUE);
 	}
 
@@ -323,16 +323,18 @@ static void
 add_row (GtkListStore *store, MuMsgIter *iter)
 {
 	GtkTreeIter treeiter;
-	const gchar *date;
+	const gchar *datestr;
 	gchar *from, *to;
-			
-	date	= mu_msg_str_display_date_s (mu_msg_iter_get_date (iter));
+	time_t date;
+	
+	date	= mu_msg_iter_get_date (iter);
+	datestr	= date == 0 ? "-" : mu_msg_str_display_date_s (date);
 	from	= empty_or_display_contact (mu_msg_iter_get_from(iter));
 	to	= empty_or_display_contact (mu_msg_iter_get_to(iter));
 	
 	gtk_list_store_append (store, &treeiter);
 	gtk_list_store_set (store, &treeiter,
-			    MUG_COL_DATE, date,
+			    MUG_COL_DATE, datestr,
 			    MUG_COL_MAILDIR, mu_msg_iter_get_maildir (iter),
 			    MUG_COL_FROM, from,
 			    MUG_COL_TO, to,
