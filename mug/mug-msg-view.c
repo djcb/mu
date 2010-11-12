@@ -69,7 +69,8 @@ static const HeaderInfo HEADER_INFO_EXPANDER[] = {
 
 typedef struct _MugMsgViewPrivate MugMsgViewPrivate;
 struct _MugMsgViewPrivate {
-	
+
+	GtkWidget *_headers_area;
 	GtkWidget *_tablemain, *_tableexpander;
 	GtkWidget *_headervals   [HEADER_ROW_NUM];
 	
@@ -151,6 +152,30 @@ create_table (MugMsgViewPrivate *priv, const HeaderInfo *hinfo, guint num)
 	return table;
 }
 
+static GtkWidget*
+headers_area (MugMsgViewPrivate *priv)
+{
+	GtkWidget *scrolled, *vbox;
+	
+	priv->_tablemain     = create_table (priv, HEADER_INFO,
+					     G_N_ELEMENTS(HEADER_INFO));
+	priv->_tableexpander = create_table (priv, HEADER_INFO_EXPANDER,
+					     G_N_ELEMENTS(HEADER_INFO_EXPANDER));
+	priv->_expander = gtk_expander_new ("Details");
+	gtk_container_add (GTK_CONTAINER(priv->_expander),
+			   priv->_tableexpander);
+	
+	vbox = gtk_vbox_new (FALSE, FALSE);
+	gtk_box_pack_start (GTK_BOX(vbox), priv->_tablemain, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX(vbox), priv->_expander, FALSE, FALSE, 0);
+
+	scrolled = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled),
+					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrolled), vbox);
+
+	return priv->_headers_area = scrolled;
+}
 
 
 static void
@@ -161,14 +186,6 @@ mug_msg_view_init (MugMsgView *obj)
 	
 	priv = MUG_MSG_VIEW_GET_PRIVATE(obj);
 	
-	priv->_tablemain     = create_table (priv, HEADER_INFO,
-					     G_N_ELEMENTS(HEADER_INFO));
-	priv->_tableexpander = create_table (priv, HEADER_INFO_EXPANDER,
-					     G_N_ELEMENTS(HEADER_INFO_EXPANDER));
-	
-	priv->_expander = gtk_expander_new ("Details");
-	gtk_container_add (GTK_CONTAINER(priv->_expander), priv->_tableexpander);
-	
 	priv->_view = gtk_text_view_new ();
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(priv->_view), FALSE);
 	gtk_text_view_set_left_margin (GTK_TEXT_VIEW(priv->_view), 10);	
@@ -178,17 +195,11 @@ mug_msg_view_init (MugMsgView *obj)
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled),
 					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_container_add (GTK_CONTAINER (scrolled), priv->_view);
-	
-	/* gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(scrolled), */
-	/* 				       priv->_view); */
-	
-	gtk_box_pack_start (GTK_BOX(obj), priv->_tablemain, FALSE, FALSE, 0);
-	gtk_box_pack_start (GTK_BOX(obj), priv->_expander, FALSE, FALSE, 0);
+		
+	gtk_box_pack_start (GTK_BOX(obj), headers_area(priv), FALSE, FALSE, 0);
 	gtk_box_pack_start (GTK_BOX(obj), scrolled, TRUE, TRUE, 0);
 
-	gtk_widget_hide (priv->_tablemain);
-	gtk_widget_hide (priv->_expander);
-	
+	gtk_widget_hide (priv->_headers_area);	
 }
 
 static void
@@ -269,8 +280,7 @@ mug_msg_view_set_msg (MugMsgView *self, const char* msgpath)
 
 	if (!msgpath) {
 		mug_msg_view_set_text (self, "");
-		gtk_widget_hide (priv->_tablemain);
-		gtk_widget_hide (priv->_expander);
+		gtk_widget_hide (priv->_headers_area);
 		return TRUE;
 	}
 	
@@ -280,6 +290,7 @@ mug_msg_view_set_msg (MugMsgView *self, const char* msgpath)
 	
 	rv = mug_msg_view_set_text (self, mu_msg_get_body_text(msg));
 	fill_header (priv, msg);
+	gtk_widget_show (priv->_headers_area);
 	
 	mu_msg_destroy (msg);
 	
