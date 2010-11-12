@@ -137,6 +137,7 @@ test_mu_msg_str_normalize_01 (void)
 		{ "dantès", "dantes"}, 
 		{ "foo", "foo" },
 		{ "Föö", "foo" },
+		{ "číslo", "cislo" },
 		{ "hÆvý mëÐal ümláõt", "haevy medal umlaot"}
 	};
 
