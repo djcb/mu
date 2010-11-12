@@ -4,9 +4,7 @@
    
    - add a simple graphical UI for searching, called 'mug'
    - fix --clearlinks for file systems without entry->d_type (fixes issue #28)
-   - fix searching of mixed-caps maildirs with
-   - match the non-accented ('normalized') versions of strings in header fields
-     as well
+   - make matching case-insensitive and accent-insensitive
    - updated the man-pages
 
 ** Release 0.8 <2010-10-30 Sat>
