@@ -16,6 +16,7 @@
    - [ ] bookmarks
    - [ ] gtk-ui for searching
    - [ ] clean up mu-msg-field, add formatting(?)
+   - [ ] normalize search fields
 
 * Releases already done
 
