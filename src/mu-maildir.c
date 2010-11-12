@@ -319,7 +319,7 @@ readdir_with_stat_fallback (DIR* dir, const char* path)
 	}
 	
 	/* XFS, ReiserFS and some other FSs don't support d_type, and
-	 * always set it to NULL; we use (slow) stat instead then */
+	 * always set it to NULL; we use (slow) lstat instead then */
 	if (G_UNLIKELY(entry->d_type == DT_UNKNOWN)) {
 
 		struct stat statbuf;
