@@ -264,6 +264,9 @@ mug_shell (MugData *mugdata)
 
 	gtk_window_set_default_size (GTK_WINDOW(mugdata->win), 700, 500);
 	gtk_window_set_resizable (GTK_WINDOW(mugdata->win), TRUE);
+	gtk_window_set_icon_from_file (GTK_WINDOW(mugdata->win),
+				       ICONDIR "/mug.svg", NULL);
+	
 	
 	return mugdata->win;
 }

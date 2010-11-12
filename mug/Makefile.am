@@ -28,8 +28,9 @@ INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS)
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement 
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter -DICONDIR='"$(icondir)"' \
+	-DICONDIR='"$(icondir)"'
 
 bin_PROGRAMS=				\
 	mug
@@ -53,7 +54,7 @@ icondir=				\
 	$(datarootdir)/icons
 
 icon_DATA=				\
-	mug.png
+	mug.svg
 
 desktopdir=				\
 	$(datarootdir)/applications
