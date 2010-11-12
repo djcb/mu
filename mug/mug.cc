@@ -17,9 +17,12 @@
 **
 */
 
+#if HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG*/
 
 #include <gtk/gtk.h>
+#include <string.h> /* for memset */
 
 #include "mu-config.h"
 #include "mu-log.h"
@@ -36,6 +39,7 @@ struct _MugData {
 	GtkWidget *toolbar;
 	GtkWidget *msgview;
 	GtkWidget *querybar;
+	gchar *muhome;
 };
 typedef struct _MugData MugData;
 	
@@ -199,7 +203,7 @@ mug_query_area (MugData *mugdata)
 	
 	paned = gtk_vpaned_new ();
 
-	xdir = mu_util_guess_xapian_dir (NULL);
+	xdir = mu_util_guess_xapian_dir (mugdata->muhome);
 	mugdata->mlist = mug_msg_list_view_new(xdir);
 	g_free (xdir);
 	
@@ -247,9 +251,10 @@ GtkWidget*
 mug_shell (MugData *mugdata)
 {
 	GtkWidget *vbox;
+	gchar *icon;
 	
 	mugdata->win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW(mugdata->win), "mu");
+	gtk_window_set_title (GTK_WINDOW(mugdata->win), "Mug Mail Search");
 
 	vbox = gtk_vbox_new (FALSE, 2);
 	mugdata->toolbar = mug_toolbar(mugdata);
@@ -264,9 +269,10 @@ mug_shell (MugData *mugdata)
 
 	gtk_window_set_default_size (GTK_WINDOW(mugdata->win), 700, 500);
 	gtk_window_set_resizable (GTK_WINDOW(mugdata->win), TRUE);
-	gtk_window_set_icon_from_file (GTK_WINDOW(mugdata->win),
-				       ICONDIR "/mug.svg", NULL);
-	
+
+	icon = g_strdup_printf ("%s%cmug.svg", ICONDIR, G_DIR_SEPARATOR);
+	gtk_window_set_icon_from_file (GTK_WINDOW(mugdata->win), icon, NULL);
+	g_free (icon);
 	
 	return mugdata->win;
 }
@@ -276,9 +282,24 @@ main (int argc, char *argv[])
 {
 	MugData mugdata;
 	GtkWidget *mugshell;
-	
+	GOptionContext *octx;
+	GOptionEntry entries[] = {
+		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &mugdata.muhome,
+		 "specify an alternative mu directory", NULL},
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL} /* sentinel */
+	};
+
 	gtk_init (&argc, &argv);
-			
+
+	octx = g_option_context_new ("- mug options");
+	g_option_context_add_main_entries (octx, entries, "Mug");
+
+	memset (&mugdata, 0, sizeof(MugData));
+	if (!g_option_context_parse (octx, &argc, &argv, NULL)) {
+		g_printerr ("mug: error in options\n");
+		return 1;
+	}
+	
 	mugshell = mug_shell (&mugdata);	
 	g_signal_connect(G_OBJECT(mugshell), "destroy", 
 			 G_CALLBACK(gtk_main_quit), NULL);
@@ -287,6 +308,7 @@ main (int argc, char *argv[])
 	mug_query_bar_grab_focus (MUG_QUERY_BAR(mugdata.querybar));
  	
 	gtk_main ();
+	g_free (mugdata.muhome);
 	
 	return 0;
 }
