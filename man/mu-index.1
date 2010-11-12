@@ -52,6 +52,9 @@ more), \fBmu index\fR will terminate immediately.
 
 .SH OPTIONS
 
+Note, some of the important options are described in the \fBmu(1)\fR man-page
+and not here, as they apply to multiple mu-commands.
+
 .TP
 \fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
 starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
@@ -102,7 +105,6 @@ the hierarchy in the same database; for example, it's better not to index both
 with \fB\-\-maildir\fR=~/MyMaildir and \fB\-\-maildir\fR=~/MyMaildir/foo, as
 this may lead to unexpected results when searching with the the 'maildir:'
 search parameter (see below).
-
 
 .SS A note on performance
 As a non-scientific benchmark, a simple test on the authors machine (a
@@ -157,7 +159,7 @@ continued use of \fBmu\fR without the need for any manual maintenance of log
 files.
 
 To store these files elsewhere from their default location, one can use the
-\fI\-\-muhome\fR option, as discussed in the \fBGENERAL OPTIONS\fR section.
+\fI\-\-muhome\fR option, as discussed in the \fBmu\fR-manpage.
 
 .SH ENVIRONMENT
 

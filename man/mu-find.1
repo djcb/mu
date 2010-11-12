@@ -1,4 +1,4 @@
-.TH MU FIND 1 "September 2010" "User Manuals"
+.TH MU FIND 1 "November 2010" "User Manuals"
 
 .SH NAME 
 
@@ -12,10 +12,12 @@ database
 
 .SH DESCRIPTION
 
-\fBmu find\fR is the \fBmu\fR sub-command for searching e-mails there were
-store earlier using
+\fBmu find\fR is the \fBmu\fR sub-command for searching e-mails that were
+stored earlier using
 .BR mu-index(1)
 \.
+
+.SH SEARCHING MAIL
 
 The \fBfind\fR command starts a search for messages in the database that match
 the search pattern.
@@ -27,16 +29,18 @@ are treated as if there were a logical \fBAND\fR between them.
 If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
 \fBNOT\fR etc., you have to put quotes around them so \fBmu\fR can consider
 them as a unit; for example to find mails with oranges OR mandarins in the
-subject-field, you'd use:
+subject-field, you can use:
 .nf
 	mu find 'subject:orange OR subject:mandarin'
 .fi
+
+
 
 \fBmu find\fR does not distinguish between uppercase or lowercase for search
 terms.
 
 \fBmu\fR relies on the Xapian database for its searching capabilities, so it
-offers all the search functionality that Xapian offers; please refer to:
+offers all the search functionality that Xapian offers; for all the details, see:
 
      \fIhttp://xapian.org/docs/queryparser.html\fR
 
@@ -50,8 +54,13 @@ would do in an internet search engine. For example,
 .fi
 
 will find all message that contain both 'monkey' and 'banana'. Matching is
-case-insensitive and recognizes various forms of a word such as plurals; this
-is all courtesy of Xapian.
+case-insensitive and accent-insensitive; thus 
+
+.nf
+	mu find Mönkey BÄNANA
+.fi
+
+yields the same results as the example above.
 
 \fBmu\fR also recognizes prefixes for specific fields in a messages; for
 example:
@@ -73,23 +82,31 @@ search fields and their abbreviations:
 	msgid,i         Message-ID
 .fi
 
+For clarity, this man-page uses the longer versions.
+
 The Maildir field describes the directory path starting \fBafter\fR the
 Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part. So for
 example, if there's a message with the file name
 \fI~/Maildir/lists/running/cur/1234.213:2,\fR, you could find it (and all the
 other messages in the same maildir) with:
+
 .nf
 	mu find maildir:/lists/running
 .fi
+
 Note the starting '/'. If you want to match mails in the 'root' maildir, you
 can do with a single '/':
+
 .nf
 	mu find maildir:/ 
 .fi
 
+(and of course you can use the \fBm:\fR shortcut instead of \fBmaildir:\fR) 
 
+.SH OPTIONS
 
-.SS Find options
+Note, some of the important options are described in the \fBmu(1)\fR man-page
+and not here, as they apply to multiple mu-commands.
 
 The \fBfind\fR-command has various options that influence the way \fBmu\fR
 displays the results. If you don't specify anything, the defaults are
@@ -262,8 +279,8 @@ macro index <F9> "<change-folder-readonly>~/Maildir/search" \
 .TP
 
 \fBWanderlust\fR
-If you use Wanderlust for \fBemacs\fR, the following definitons can be used;
-typing 'Q' will start a query.
+If you use the Wanderlust e-mail client for \fBemacs\fR, the following
+definitions can be used; typing 'Q' will start a query.
 
 .nf
 ;; mu integration for Wanderlust
@@ -291,7 +308,6 @@ typing 'Q' will start a query.
       'force-update nil nil t)
     (message "Query failed")))
 .fi
-
 
 .SH BUGS
 
