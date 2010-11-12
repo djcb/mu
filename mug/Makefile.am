@@ -47,14 +47,14 @@ mug_SOURCES=				\
 	mug-query-bar.c
 
 mug_LDADD=				\
-	${top_srcdir}/src/libmu.la	\
+	${top_builddir}/src/libmu.la	\
 	${GTK_LIBS}
 
 icondir=				\
 	$(datarootdir)/icons
 
 icon_DATA=				\
-	mug.svg
+	${top_srcdir}/mug/mug.svg
 
 desktopdir=				\
 	$(datarootdir)/applications
