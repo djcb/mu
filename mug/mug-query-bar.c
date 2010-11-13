@@ -94,7 +94,6 @@ mug_query_bar_init (MugQueryBar *obj)
 	priv = MUG_QUERY_BAR_GET_PRIVATE(obj);
 
 	priv->_entry = gtk_entry_new ();
- 	/* gtk_entry_set_max_length (GTK_ENTRY(priv->_entry), 32); */
 
 	g_signal_connect (priv->_entry, "activate", G_CALLBACK(on_entry_activated),
 			  obj);
@@ -115,6 +114,20 @@ mug_query_bar_new (void)
 	return GTK_WIDGET(g_object_new(MUG_TYPE_QUERY_BAR, NULL));
 }
 
+
+void
+mug_query_bar_set_query (MugQueryBar *self, const char *query, gboolean run)
+{
+	MugQueryBarPrivate *priv;
+	
+	g_return_if_fail (MUG_IS_QUERY_BAR(self));
+	priv = MUG_QUERY_BAR_GET_PRIVATE(self);
+
+	gtk_entry_set_text (priv->_entry, query ? query : "");
+
+	if (run)
+		on_entry_activated (priv->_entry, self);
+}
 
 
 void

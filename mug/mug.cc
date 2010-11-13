@@ -31,6 +31,7 @@
 #include "mug-msg-list-view.h"
 #include "mug-query-bar.h"
 #include "mug-msg-view.h"
+#include "mug-shortcuts.h"
 
 struct _MugData {
 	GtkWidget *win;
@@ -39,6 +40,7 @@ struct _MugData {
 	GtkWidget *toolbar;
 	GtkWidget *msgview;
 	GtkWidget *querybar;
+	GtkWidget *shortcuts;
 	gchar *muhome;
 };
 typedef struct _MugData MugData;
@@ -133,6 +135,31 @@ mug_toolbar (MugData *mugdata)
 	
 	return toolbar;
 }
+
+static void
+on_shortcut_clicked (GtkWidget *w, const gchar *query, MugData *mdata)
+{
+	mug_query_bar_set_query (MUG_QUERY_BAR(mdata->querybar),
+				 query, TRUE);
+}
+
+
+static GtkWidget*
+mug_shortcuts_bar (MugData *data)
+{
+	gchar* bmpath;
+
+	bmpath = mu_util_guess_bookmark_file (data->muhome);
+	data->shortcuts = mug_shortcuts_new (bmpath);
+	
+	g_free (bmpath);
+
+	g_signal_connect (G_OBJECT(data->shortcuts), "clicked",
+			  G_CALLBACK(on_shortcut_clicked), data);
+	
+	return data->shortcuts;
+}
+
 
 static GtkWidget*
 mug_statusbar (void)
@@ -239,9 +266,12 @@ mug_main_area (MugData *mugdata)
 {
 	GtkWidget *mainarea;
 
-	mainarea = gtk_hpaned_new ();
-	//gtk_paned_add1 (GTK_PANED (mainarea), mug_shortcuts());
-	gtk_paned_add2 (GTK_PANED (mainarea), mug_query_area (mugdata));
+	mainarea = gtk_hbox_new (FALSE, 0);
+
+	gtk_box_pack_start (GTK_BOX(mainarea), mug_shortcuts_bar(mugdata),
+			    FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX(mainarea), mug_query_area(mugdata),
+			    TRUE, TRUE, 0);
 
 	return mainarea;
 }

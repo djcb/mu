@@ -40,6 +40,8 @@ GtkWidget*   mug_query_bar_new         (void);
 
 void mug_query_bar_grab_focus (MugQueryBar *self);
 
+void mug_query_bar_set_query (MugQueryBar *self, const char *query, gboolean run);
+
 G_END_DECLS
 
 #endif /* __MUG_QUERY_BAR_H__ */

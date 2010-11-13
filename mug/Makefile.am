@@ -44,7 +44,9 @@ mug_SOURCES=				\
 	mug-msg-view.h			\
 	mug-msg-view.c			\
 	mug-query-bar.h			\
-	mug-query-bar.c
+	mug-query-bar.c			\
+	mug-shortcuts.c			\
+	mug-shortcuts.h
 
 mug_LDADD=				\
 	${top_builddir}/src/libmu.la	\
