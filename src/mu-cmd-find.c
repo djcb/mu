@@ -34,6 +34,7 @@
 #include "mu-query.h"
 #include "mu-msg-iter.h"
 #include "mu-msg-str.h"
+#include "mu-bookmarks.h"
 
 #include "mu-util.h"
 #include "mu-util-db.h"
@@ -133,8 +134,6 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 	const MuMsgField *sortfield;
 	size_t matches;
 	
-	MU_WRITE_LOG ("query: '%s'", query); 
-	
 	sortfield = NULL;
 	if (opts->sortfield) {
 		sortfield = sort_field_from_string (opts->sortfield);
@@ -142,8 +141,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 			return FALSE;
 	}
 	
-	iter = mu_query_run (xapian, query, sortfield,
-				    !opts->descending, 0);
+	iter = mu_query_run (xapian, query, sortfield, !opts->descending, 0);
 	if (!iter) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
@@ -164,28 +162,6 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 
 
 static gboolean
-do_output (MuQuery *xapian, MuConfigOptions* opts,
-	   const gchar **params)
-{
-	gchar *query;
-	gboolean retval = TRUE;
-	
-	query = mu_util_str_from_strv (params);
-		
-	/* if xquery is set, we print the xapian query instead of the
-	 * output; this is for debugging purposes */
-	if (opts->xquery) 
-		retval = print_xapian_query (xapian, query);
-	else
-		retval = run_query (xapian, query, opts);
-	
-	g_free (query);
-	
-	return retval;
-}
-
-
-static gboolean
 query_params_valid (MuConfigOptions *opts)
 {
 	if (opts->linksdir) 
@@ -193,12 +169,7 @@ query_params_valid (MuConfigOptions *opts)
 			g_printerr ("Invalid option for '--linksdir'\n");
 			return FALSE;
 		}
-		
-	if (!opts->params[0] || !opts->params[1]) {
-		g_printerr ("Missing search expression\n");
-		return FALSE;
-	}
-
+	
 	if (mu_util_check_dir (opts->xpath, TRUE, FALSE))
 		return TRUE;
 
@@ -208,13 +179,65 @@ query_params_valid (MuConfigOptions *opts)
 	return FALSE;
 }
 
+static gchar*
+resolve_bookmark (MuConfigOptions *opts)
+{
+	MuBookmarks *bm;
+	char* val;
+	
+	bm = mu_bookmarks_new (opts->bmpath);
+	if (!bm) {
+		g_warning ("Failed to open bookmarks file '%s'", opts->bmpath);
+		return FALSE;
+	}
+	
+	val = (gchar*)mu_bookmarks_lookup (bm, opts->bookmark); 
+	if (!val) 
+		g_warning ("Bookmark '%s' not found", opts->bookmark);
+	else
+		val = g_strdup (val);
+	
+	mu_bookmarks_destroy (bm);
+
+	return val;
+}
+
+
+static gchar*
+get_query (MuConfigOptions *opts)
+{
+	gchar *query, *bookmarkval;
+
+	/* params[0] is 'find', actual search params start with [1] */
+	if (!opts->bookmark && !opts->params[1]) {
+		g_warning ("Empty search query");
+		return FALSE;
+	}
+	
+	if (opts->bookmark && ((bookmarkval = resolve_bookmark (opts)) == NULL))
+		return NULL;
+	
+	query = mu_util_str_from_strv ((const gchar**)&opts->params[1]);
+	if (bookmarkval) {
+		gchar *tmp;
+		tmp = g_strdup_printf ("%s %s", bookmarkval, query);
+		g_free (query);
+		query = tmp;
+	}
+
+	g_free (bookmarkval);
+	
+	return query;
+}
+
+
 gboolean
 mu_cmd_find (MuConfigOptions *opts)
 {
 	MuQuery *xapian;
 	gboolean rv;
-	const gchar **params;
-
+	gchar *query;
+	
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "find"), FALSE);
 	
@@ -222,8 +245,7 @@ mu_cmd_find (MuConfigOptions *opts)
 		return FALSE;
 
 	if (mu_util_db_is_empty (opts->xpath)) {
-		g_printerr ("The database is empty; "
-			    "use 'mu index' to add some messages\n");
+		g_warning ("Database is empty; use 'mu index' to add messages");
 		return FALSE;
 	}
 		
@@ -233,17 +255,23 @@ mu_cmd_find (MuConfigOptions *opts)
 	}
 	
 	/* first param is 'query', search params are after that */
-	params = (const gchar**)&opts->params[1];
+	query = get_query (opts);
+	if (!query) 
+		return FALSE;
 	
 	xapian = mu_query_new (opts->xpath);
 	if (!xapian) {
-		g_printerr ("Failed to create a Xapian query\n");
+		g_warning ("Failed to create a Xapian query\n");
 		return FALSE;
 	}
 
-	rv = do_output (xapian, opts, params);
-	
+	if (opts->xquery) 
+		rv = print_xapian_query (xapian, query);
+	else
+		rv = run_query (xapian, query, opts);
+
 	mu_query_destroy (xapian);
+	g_free (query);
 	
 	return rv;
 }

@@ -194,7 +194,6 @@ mu_util_guess_mu_homedir (void)
 				".mu");
 }
 
-
 gchar*
 mu_util_guess_xapian_dir (const char* muhome)
 {
@@ -206,6 +205,19 @@ mu_util_guess_xapian_dir (const char* muhome)
 	g_free (homedir);
 
 	return xdir;
+}
+
+gchar*
+mu_util_guess_bookmark_file (const char* muhome)
+{
+	gchar *homedir, *bmpath;
+
+	homedir = muhome ? g_strdup(muhome) : mu_util_guess_mu_homedir ();
+	bmpath	= g_strdup_printf ("%s%c%s", homedir, G_DIR_SEPARATOR,
+				   MU_BOOKMARK_FILENAME);
+	g_free (homedir);
+
+	return bmpath;
 }
 
 

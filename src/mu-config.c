@@ -138,6 +138,9 @@ set_group_find_defaults (MuConfigOptions *opts)
 	/* FIXME: some warning when summary_len < 0? */
 	if (opts->summary_len < 1)
 		opts->summary_len = 0;
+
+	/* note: xpath is is *not* settable from the cmdline */
+	opts->bmpath = mu_util_guess_bookmark_file (opts->muhome);
 }
 
 
@@ -152,6 +155,8 @@ config_options_group_find (MuConfigOptions *opts)
 		 "fields to display in the output", NULL},
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
 		 "field to sort on", NULL},
+		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &opts->bookmark,
+		 "use a bookmarked query", NULL},
 		{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,
 		 "sort in descending order (z -> a)", NULL},
 		{"summary-len", 'k', 0, G_OPTION_ARG_INT, &opts->summary_len,
@@ -230,7 +235,7 @@ config_options_group_extract (MuConfigOptions *opts)
 static gboolean
 parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 {
-	GError *error = NULL;
+	GError *err;
 	GOptionContext *context;
 	gboolean rv;
 	
@@ -246,13 +251,15 @@ parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 				    config_options_group_mkdir (opts));
 	g_option_context_add_group (context,
 				    config_options_group_extract (opts));
-	
-	rv = g_option_context_parse (context, argcp, argvp, &error);
+
+	err = NULL;
+	rv = g_option_context_parse (context, argcp, argvp, &err);
 	if (!rv) {
-		g_printerr ("error in options: %s\n", error->message);
-		g_error_free (error);
-	} else
-		g_option_context_free (context);
+		g_printerr ("error in options: %s\n", err->message);
+		g_error_free (err);
+	}
+
+	g_option_context_free (context);
 
 	/* fill in the defaults if user did not specify */
 	set_group_mu_defaults (opts);
@@ -288,7 +295,9 @@ mu_config_uninit (MuConfigOptions *opts)
 	g_free (opts->xpath);
 	g_free (opts->maildir);
 	g_free (opts->linksdir);
-
+	g_free (opts->targetdir);
+	g_free (opts->bmpath);
+	
 	g_strfreev (opts->params);
 }
 
