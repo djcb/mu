@@ -1,0 +1,39 @@
+.TH MU-BOOKMARKS 5 "November 2010" "User Manuals"
+
+.SH NAME 
+
+bookmarks \- file with bookmarks (shortcuts) for mu
+
+.SH DESCRIPTION
+
+Bookmarks are named shortcuts for search queries. They allow using a
+convenient name for oft-used queries.
+
+.B mu
+supports bookmarks stored in a file called \bFbookmarks\fR in the mu home
+directory (typically, \fI~/.mu/\fR).
+
+The bookmarks file is a typical key=value '.ini' file, which is best shown
+trough an example: 
+.nf
+    [mu]
+    inbox=maildir:/inbox                  # inbox
+    oldhat=maildir:/archive subject:hat   # archived with subject containing 'hat'
+.fi
+
+The \fB[mu]\fR group header is required.
+
+For practical use of bookmarks, see mu-find(1) or mug(1).
+
+.SH LOCATION
+The bookmarks file is read from \fI<muhome>/bookmarks\fR. Typically, this
+would be \fI~/.mu/bookmarks\fR, but this can be influenced using the
+\fB\-\-muhome\fR parameter for mu-find(1) and mug(1). 
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+mu(1) mu-find(1) mug(1)
