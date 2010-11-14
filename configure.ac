@@ -60,8 +60,19 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 ])
 
 
+# by default, we 'normalize' strings -- ie., we get rid of accents
+# etc. both in the database and in the queries. normalization makes
+# indexing significantly slower, but on the other hand, it makes
+# querying for accented data much more convenient. by default,
+# normalization is enabled.
+AC_ARG_ENABLE([normalization],
+AS_HELP_STRING([--disable-normalization], [Disable string normalization]))
+AS_IF([test "x$enable_normalization" = "xno"],
+[AC_DEFINE(MU_DISABLE_NORMALIZATION,1,[whether data should be normalized])  	    	 
+])
+
 #
-# currently, we don' support systems without d_type in their struct
+# currently, we don't support systems without d_type in their struct
 # dirent (Solaris 10); but we do support FSs for which d_type is always
 # DT_UNKNOWN (Like ReiserFS, XFS on Linux)
 #
