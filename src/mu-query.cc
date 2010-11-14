@@ -223,7 +223,8 @@ is_xapian_prefix (const char *q, const char *colon)
 			cpfx.len   = (colon - cur);
 			cpfx.match = FALSE;
 			
-			mu_msg_field_foreach ((MuMsgFieldForEachFunc)each_check_prefix,
+			mu_msg_field_foreach ((MuMsgFieldForEachFunc)
+					      each_check_prefix,
 					      &cpfx);
 			
 			return (cpfx.match);
@@ -303,21 +304,24 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 }
 
 char*
-mu_query_as_string  (MuQuery *self, const char* searchexpr) 
+mu_query_as_string  (MuQuery *self, const char *searchexpr) 
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
+		char *preprocessed;
 		int err (0);
-		
-		Xapian::Query q(get_query(self, searchexpr, &err));
-		if (err)  {
-			g_warning ("Error in query '%s'", searchexpr);
-			return NULL;
-		}
 
-		return g_strdup(q.get_description().c_str());
+		preprocessed = mu_query_preprocess (searchexpr);
+		
+		Xapian::Query q(get_query(self, preprocessed, &err));
+		if (err)
+			g_warning ("Error in query '%s'", preprocessed);
+
+		g_free (preprocessed);
+
+		return err ? NULL : g_strdup(q.get_description().c_str());
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
