@@ -315,7 +315,7 @@ get_content_flags (MuMsg *msg)
 	GMimeObject *part;
 
 	if (!GMIME_IS_MESSAGE(msg->_mime_msg))
-		return MU_MSG_FLAG_UNKNOWN;
+		return MU_MSG_FLAG_NONE;
 	
 	g_mime_message_foreach (msg->_mime_msg,
 				(GMimeObjectForeachFunc)msg_cflags_cb, 
@@ -348,9 +348,9 @@ get_content_flags (MuMsg *msg)
 MuMsgFlags
 mu_msg_get_flags (MuMsg *msg)
 {
-	g_return_val_if_fail (msg, MU_MSG_FLAG_UNKNOWN);
+	g_return_val_if_fail (msg, MU_MSG_FLAG_NONE);
 	
-	if (msg->_flags == MU_MSG_FLAG_UNKNOWN) {
+	if (msg->_flags == MU_MSG_FLAG_NONE) {
 		msg->_flags = 0;
 		msg->_flags = mu_msg_flags_from_file (mu_msg_get_path(msg));
 		msg->_flags |= get_content_flags (msg);
