@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -24,84 +24,100 @@
 #include "mu-msg-flags.h"
 
 
-static struct {
-	char       kar;
-	MuMsgFlags flag;
-	gboolean   file_flag;
-} FLAG_CHARS[] = {
-	{'D', MU_MSG_FLAG_DRAFT, TRUE},
-	{'F', MU_MSG_FLAG_FLAGGED, TRUE},
-	{'N', MU_MSG_FLAG_NEW, TRUE},
-	{'P', MU_MSG_FLAG_PASSED, TRUE},
-	{'R', MU_MSG_FLAG_REPLIED, TRUE},
-	{'S', MU_MSG_FLAG_SEEN, TRUE},
-	{'T', MU_MSG_FLAG_TRASHED, TRUE},
-	{'a', MU_MSG_FLAG_HAS_ATTACH, FALSE},
-	{'s', MU_MSG_FLAG_SIGNED, FALSE},
-	{'x', MU_MSG_FLAG_ENCRYPTED, FALSE}
+static const MuMsgFlags ALL_FLAGS[] = {
+	MU_MSG_FLAG_NEW,
+	MU_MSG_FLAG_PASSED,
+	MU_MSG_FLAG_REPLIED,
+	MU_MSG_FLAG_SEEN,
+	MU_MSG_FLAG_TRASHED,
+	MU_MSG_FLAG_DRAFT,
+	MU_MSG_FLAG_FLAGGED,
+	MU_MSG_FLAG_SIGNED,
+	MU_MSG_FLAG_ENCRYPTED,
+	MU_MSG_FLAG_HAS_ATTACH	
 };
 
 
 MuMsgFlags
-mu_msg_flags_from_str (const char* str)
+mu_msg_flag_from_char (char k)
 {
-	MuMsgFlags flags = 0;	
-	while (str[0]) {
-		int i;
-		MuMsgFlags oneflag = MU_MSG_FLAG_UNKNOWN;
-		for (i = 0; i != G_N_ELEMENTS(FLAG_CHARS); ++i) {
-			if (str[0] == FLAG_CHARS[i].kar) {
-				oneflag = FLAG_CHARS[i].flag;
-				break;
-			}
-		}
-		if (oneflag == MU_MSG_FLAG_UNKNOWN)
-			return MU_MSG_FLAG_UNKNOWN;
-		else
-			flags |= oneflag;
+	switch (k) {
+	case 'N': return MU_MSG_FLAG_NEW;
+		
+	case 'P': return MU_MSG_FLAG_PASSED;
+	case 'R': return MU_MSG_FLAG_REPLIED;
+	case 'S': return MU_MSG_FLAG_SEEN;
+	case 'T': return MU_MSG_FLAG_TRASHED;
+	case 'D': return MU_MSG_FLAG_DRAFT;
+	case 'F': return MU_MSG_FLAG_FLAGGED;
 
-		++str;
+	case 'Z': return MU_MSG_FLAG_SIGNED;
+	case 'X': return MU_MSG_FLAG_ENCRYPTED;
+	case 'A': return MU_MSG_FLAG_HAS_ATTACH;
+		
+	default:
+		g_warning ("%s: unknown flag %c", __FUNCTION__, k);
+		return MU_MSG_FLAG_NONE;
 	}
- 
-	return flags;
 }
 
-MuMsgFlags
-mu_msg_flags_from_char (char c)
+char
+mu_msg_flag_to_char (MuMsgFlags flag)
 {
-	char str[2];
-
-	str[0] = c;
-	str[1] = '\0';
-
-	return mu_msg_flags_from_str (str);
+	switch (flag) {
+	case MU_MSG_FLAG_NEW: return 'N';
+	case MU_MSG_FLAG_PASSED: return 'P';
+	case MU_MSG_FLAG_REPLIED: return 'R';
+	case MU_MSG_FLAG_SEEN: return 'S';
+	case MU_MSG_FLAG_TRASHED: return 'T';
+	case MU_MSG_FLAG_DRAFT: return 'D';
+	case MU_MSG_FLAG_FLAGGED: return 'F';
+		
+	case MU_MSG_FLAG_SIGNED: return 'Z';
+	case MU_MSG_FLAG_ENCRYPTED: return 'X';
+	case MU_MSG_FLAG_HAS_ATTACH: return 'A';
+		
+	default:
+		g_warning ("%s: unknown flag 0x%x", __FUNCTION__, flag);
+		return 0;
+	}
 }
 
 
 const char*
-mu_msg_flags_to_str_s  (MuMsgFlags flags)
+mu_msg_flags_to_str_s (MuMsgFlags flags)
 {
-	int i = 0, j = 0;
-	static char buf[G_N_ELEMENTS(FLAG_CHARS) + 1];
+	int i, j;
+	static char buf[16]; /* more than enough */
 	
-	for (i = 0; i != G_N_ELEMENTS(FLAG_CHARS); ++i)
-		if (flags & FLAG_CHARS[i].flag)
-			buf[j++] = FLAG_CHARS[i].kar;
+	for (i = j = 0; i != G_N_ELEMENTS(ALL_FLAGS); ++i) {
+		if (flags & ALL_FLAGS[i]) {
+			char k;
+			if ((k = mu_msg_flag_to_char (ALL_FLAGS[i])) == 0)
+				return NULL;
+			buf[j++] = k;
+		}
+	}
 	buf[j] = '\0';
+	
 	return buf;
 }
 
-
-gboolean
-mu_msg_flags_is_file_flag (MuMsgFlags flag)
+MuMsgFlags
+mu_msg_flags_from_str (const char* str)
 {
-	int i = 0;
+	MuMsgFlags flags;
 	
-	for (i = 0; i != G_N_ELEMENTS(FLAG_CHARS); ++i)
-		if (flag == FLAG_CHARS[i].flag)
-			return FLAG_CHARS[i].file_flag;
-
-	return FALSE;
+	for (flags = MU_MSG_FLAG_NONE; str && *str; ++str) {
+		MuMsgFlags flag;
+		if ((flag = mu_msg_flag_to_char (*str)) == 0) {
+			flags = 0;
+			break;
+		}
+		flags |= flag;
+	}
+	
+	return flags;
 }
 
 
@@ -166,9 +182,9 @@ mu_msg_flags_from_file (const char* path)
 	MsgType mtype;
 	char *info = NULL;
 
-	g_return_val_if_fail (path, MU_MSG_FLAG_UNKNOWN);
+	g_return_val_if_fail (path, MU_MSG_FLAG_NONE);
 	g_return_val_if_fail (!g_str_has_suffix(path,G_DIR_SEPARATOR_S),
-			      MU_MSG_FLAG_UNKNOWN);
+			      MU_MSG_FLAG_NONE);
 	
 	mtype = check_msg_type (path, &info);
 	
@@ -185,16 +201,19 @@ mu_msg_flags_from_file (const char* path)
 		if (cursor && cursor[0]=='2' && cursor[1]==',') {
 			cursor += 2; /* jump past 2, */
 			while (*cursor) {
-				MuMsgFlags oneflag = 
-					mu_msg_flags_from_char (*cursor);
-				/* ignore anything but file flags */
-				if (mu_msg_flags_is_file_flag(oneflag))
-					flags |= oneflag;			
+				switch (*cursor) {
+				case 'P': flags |= MU_MSG_FLAG_PASSED; break;
+				case 'T': flags |= MU_MSG_FLAG_TRASHED; break;
+				case 'R': flags |= MU_MSG_FLAG_REPLIED; break;
+				case 'S': flags |= MU_MSG_FLAG_SEEN; break;
+				case 'D': flags |= MU_MSG_FLAG_DRAFT; break;
+				case 'F': flags |= MU_MSG_FLAG_FLAGGED; break;
+				}
 				++cursor;
 			}
 		}
 	} 
 	g_free (info);
+	
 	return flags;
 }
-
