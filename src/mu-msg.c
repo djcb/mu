@@ -278,31 +278,32 @@ static gboolean
 part_is_inline (GMimeObject *part)
 {
 	GMimeContentDisposition *disp;
-	gboolean result;
 	const char *str;
-
-	g_return_val_if_fail (GMIME_IS_PART(part), FALSE);
 	
 	disp  = g_mime_object_get_content_disposition (part);
 	if (!GMIME_IS_CONTENT_DISPOSITION(disp))
-		return FALSE;
+		return TRUE;
 	
 	str = g_mime_content_disposition_get_disposition (disp);
 
-	/* if it's not inline, it's an attachment */
-	result = (str && (strcmp(str,GMIME_DISPOSITION_INLINE) == 0));
-	
-	return result;
+	if (str && (strcmp (str, GMIME_DISPOSITION_ATTACHMENT) == 0))
+		return FALSE;
+
+	return TRUE;
 }
 					  
 
 static void
 msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuMsgFlags *flags)
-{	
-	if (GMIME_IS_PART(part)) 
-		if ((*flags & MU_MSG_FLAG_HAS_ATTACH) == 0)
-			if (!part_is_inline(part))
-				*flags |= MU_MSG_FLAG_HAS_ATTACH;
+{
+	if (*flags & MU_MSG_FLAG_HAS_ATTACH)
+		return;
+	
+	if (!GMIME_IS_PART(part))
+		return;
+	
+	if (!part_is_inline(part))
+		*flags |= MU_MSG_FLAG_HAS_ATTACH;
 }
 
 
@@ -311,12 +312,13 @@ static MuMsgFlags
 get_content_flags (MuMsg *msg)
 {
 	GMimeContentType *ctype;
-	MuMsgFlags flags = 0;
+	MuMsgFlags flags;
 	GMimeObject *part;
 
 	if (!GMIME_IS_MESSAGE(msg->_mime_msg))
 		return MU_MSG_FLAG_NONE;
-	
+
+	flags = 0;
 	g_mime_message_foreach (msg->_mime_msg,
 				(GMimeObjectForeachFunc)msg_cflags_cb, 
 				&flags);
