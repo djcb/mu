@@ -264,8 +264,7 @@ is_maildir_new_or_cur (const char *path)
 	const char *sfx;
 
 	/* path is the full path; it cannot possibly be shorter
-	 * than 4 for a maildir (/cur or /new)
-	 */
+	 * than 4 for a maildir (/cur or /new) */
 	if (!path||(len = strlen(path)) < 4)
 		return FALSE;
 	
@@ -292,7 +291,7 @@ has_noindex_file (const char *path)
 	if (access (noindexpath, F_OK) == 0)
 		return TRUE;
 	
-	else if (errno != ENOENT)
+	else if (G_UNLIKELY(errno != ENOENT))
 		g_warning ("error testing for noindex file %s: %s",
 			   noindexpath, strerror(errno));
 
@@ -311,7 +310,7 @@ readdir_with_stat_fallback (DIR* dir, const char* path)
 	errno = 0;
 	entry = readdir (dir);
 	
-	if (!entry) {
+	if (G_UNLIKELY(!entry)) {
 		if (errno != 0) 
 			g_warning ("readdir failed in %s: %s",
 				   path, strerror (errno));
@@ -327,9 +326,8 @@ readdir_with_stat_fallback (DIR* dir, const char* path)
 
 		/* note, fullpath_s returns a static buffer */
 		fullpath = fullpath_s (path, entry->d_name);
-		if (lstat (fullpath, &statbuf) != 0) {
-			g_warning ("stat failed on %s: %s", fullpath,
-				   strerror(errno));
+		if G_UNLIKELY(lstat (fullpath, &statbuf) != 0) {
+			g_warning ("stat failed on %s: %s", fullpath, strerror(errno));
 			return FALSE;
 		}
 
@@ -392,9 +390,7 @@ get_mdir_for_path (const gchar *old_mdir, const gchar *dir)
 
 
 static MuResult
-process_dir_entry (const char* path,
-		   const char* mdir,
-		   struct dirent *entry,
+process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 		   MuMaildirWalkMsgCallback cb_msg,
 		   MuMaildirWalkDirCallback cb_dir, 
 		   void *data)
