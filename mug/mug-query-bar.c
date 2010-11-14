@@ -76,14 +76,14 @@ mug_query_bar_class_init (MugQueryBarClass *klass)
 
 
 static void
-on_entry_activated (GtkEntry *w, MugQueryBar *bar)
+on_entry_activated (GtkWidget *w, MugQueryBar *bar)
 {	
  	MugQueryBarPrivate *priv;
 
 	priv = MUG_QUERY_BAR_GET_PRIVATE(bar);
 
 	g_signal_emit (G_OBJECT(bar), signals[MUG_QUERY_CHANGED], 0,
-		       gtk_entry_get_text(w));	
+		       gtk_entry_get_text(GTK_ENTRY(w)));	
 }
 
 static void
@@ -123,7 +123,7 @@ mug_query_bar_set_query (MugQueryBar *self, const char *query, gboolean run)
 	g_return_if_fail (MUG_IS_QUERY_BAR(self));
 	priv = MUG_QUERY_BAR_GET_PRIVATE(self);
 
-	gtk_entry_set_text (priv->_entry, query ? query : "");
+	gtk_entry_set_text (GTK_ENTRY(priv->_entry), query ? query : "");
 
 	if (run)
 		on_entry_activated (priv->_entry, self);
