@@ -17,7 +17,7 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
@@ -30,11 +30,16 @@
 static void
 set_group_mu_defaults (MuConfigOptions *opts)
 {
+	gchar *exp;
+	
 	if (!opts->muhome) 
 		opts->muhome = mu_util_guess_mu_homedir ();
 
-	/* note: xpath is is *not* settable from the cmdline */
-	opts->xpath = mu_util_guess_xapian_dir (opts->muhome);
+	exp = mu_util_dir_expand (opts->muhome);
+	if (exp) {
+		g_free (opts->muhome);
+		opts->muhome = exp;
+	}
 }
 
 
@@ -69,20 +74,16 @@ config_options_group_mu (MuConfigOptions *opts)
 static void
 set_group_index_defaults (MuConfigOptions *opts)
 {
-	gchar *old;
-	
-	old = opts->maildir;
-	if (opts->maildir)
-		opts->maildir = mu_util_dir_expand (opts->maildir);
-	else
+	gchar *exp;
+
+	if (!opts->maildir)
 		opts->maildir = mu_util_guess_maildir();
 
-	/* note, this may be an invalid dir, but we're checking for
-	 * validity of the dir later */
-	if (!opts->maildir)
-		opts->maildir = old;
-	else
-		g_free (old);
+	exp = mu_util_dir_expand (opts->maildir);
+	if (exp) {
+		g_free (opts->maildir);
+		opts->maildir = exp;
+	}	
 }
 
 
@@ -138,9 +139,6 @@ set_group_find_defaults (MuConfigOptions *opts)
 	/* FIXME: some warning when summary_len < 0? */
 	if (opts->summary_len < 1)
 		opts->summary_len = 0;
-
-	/* note: xpath is is *not* settable from the cmdline */
-	opts->bmpath = mu_util_guess_bookmark_file (opts->muhome);
 }
 
 
@@ -205,7 +203,8 @@ config_options_group_extract (MuConfigOptions *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"save-attachments", 'a', 0, G_OPTION_ARG_NONE, &opts->save_attachments,
+		{"save-attachments", 'a', 0, G_OPTION_ARG_NONE,
+		 &opts->save_attachments,
 		 "save all attachments", NULL},
 		{"save-all", 0, 0, G_OPTION_ARG_NONE, &opts->save_all,
 		 "save all parts (incl. non-attachments)", NULL},
@@ -292,11 +291,9 @@ mu_config_uninit (MuConfigOptions *opts)
 	g_return_if_fail (opts);
 
 	g_free (opts->muhome);
-	g_free (opts->xpath);
 	g_free (opts->maildir);
 	g_free (opts->linksdir);
 	g_free (opts->targetdir);
-	g_free (opts->bmpath);
 	
 	g_strfreev (opts->params);
 }

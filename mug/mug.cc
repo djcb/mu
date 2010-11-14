@@ -24,9 +24,8 @@
 #include <gtk/gtk.h>
 #include <string.h> /* for memset */
 
-#include "mu-config.h"
-#include "mu-log.h"
 #include "mu-util.h"
+#include "mu-runtime.h"
 
 #include "mug-msg-list-view.h"
 #include "mug-query-bar.h"
@@ -147,13 +146,8 @@ on_shortcut_clicked (GtkWidget *w, const gchar *query, MugData *mdata)
 static GtkWidget*
 mug_shortcuts_bar (MugData *data)
 {
-	gchar* bmpath;
-
-	bmpath = mu_util_guess_bookmark_file (data->muhome);
-	data->shortcuts = mug_shortcuts_new (bmpath);
+	data->shortcuts = mug_shortcuts_new (mu_runtime_bookmarks_file());
 	
-	g_free (bmpath);
-
 	g_signal_connect (G_OBJECT(data->shortcuts), "clicked",
 			  G_CALLBACK(on_shortcut_clicked), data);
 	
@@ -224,19 +218,15 @@ mug_query_area (MugData *mugdata)
 	GtkWidget *paned;
 	GtkWidget *scrolled;
 
-	gchar* xdir;
-	
 	queryarea = gtk_vbox_new (FALSE, 2);
-	
-	paned = gtk_vpaned_new ();
+	paned	  = gtk_vpaned_new ();
 
-	xdir = mu_util_guess_xapian_dir (mugdata->muhome);
-	mugdata->mlist = mug_msg_list_view_new(xdir);
-	g_free (xdir);
+	mugdata->mlist = mug_msg_list_view_new(mu_runtime_xapian_dir());
 	
 	scrolled = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled),
-					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+					GTK_POLICY_AUTOMATIC,
+					GTK_POLICY_AUTOMATIC);
 	
 	gtk_container_add (GTK_CONTAINER(scrolled), mugdata->mlist);
 	gtk_paned_add1 (GTK_PANED (paned), scrolled);
@@ -248,7 +238,7 @@ mug_query_area (MugData *mugdata)
 	gtk_paned_add2 (GTK_PANED (paned), mugdata->msgview);
 
 	mugdata->querybar = mug_querybar();	
-	g_signal_connect (G_OBJECT(mugdata->querybar), "query_changed",
+	g_signal_connect (G_OBJECT(mugdata->querybar), "query-changed",
 			  G_CALLBACK(on_query_changed),
 			  mugdata);
 	
@@ -329,6 +319,8 @@ main (int argc, char *argv[])
 		g_printerr ("mug: error in options\n");
 		return 1;
 	}
+
+	mu_runtime_init (mugdata.muhome);
 	
 	mugshell = mug_shell (&mugdata);	
 	g_signal_connect(G_OBJECT(mugshell), "destroy", 
@@ -339,6 +331,8 @@ main (int argc, char *argv[])
  	
 	gtk_main ();
 	g_free (mugdata.muhome);
+
+	mu_runtime_uninit ();
 	
 	return 0;
 }

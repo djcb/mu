@@ -89,6 +89,8 @@ libmu_la_SOURCES=			\
 	mu-query.cc			\
 	mu-query.h			\
 	mu-result.h			\
+	mu-runtime.c			\
+	mu-runtime.h			\
 	mu-store.cc			\
 	mu-store.h			\
 	mu-util-db.cc			\

@@ -36,6 +36,8 @@
 #include "mu-msg-str.h"
 #include "mu-bookmarks.h"
 
+#include "mu-runtime.h"
+
 #include "mu-util.h"
 #include "mu-util-db.h"
 #include "mu-cmd.h"
@@ -164,16 +166,20 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 static gboolean
 query_params_valid (MuConfigOptions *opts)
 {
+	const gchar *xpath;
+	
 	if (opts->linksdir) 
 		if (opts->xquery) {
 			g_printerr ("Invalid option for '--linksdir'\n");
 			return FALSE;
 		}
-	
-	if (mu_util_check_dir (opts->xpath, TRUE, FALSE))
-		return TRUE;
 
-	g_printerr ("%s is not a readable Xapian directory\n", opts->xpath);
+	xpath = mu_runtime_xapian_dir();
+	
+	if (mu_util_check_dir (xpath, TRUE, FALSE))
+		return TRUE;
+	
+	g_warning ("'%s' is not a readable Xapian directory\n", xpath);
 	g_message ("Did you run 'mu index'?");
 	
 	return FALSE;
@@ -184,10 +190,12 @@ resolve_bookmark (MuConfigOptions *opts)
 {
 	MuBookmarks *bm;
 	char* val;
+	const gchar *bmfile;
 	
-	bm = mu_bookmarks_new (opts->bmpath);
+	bmfile = mu_runtime_bookmarks_file();
+	bm = mu_bookmarks_new (bmfile);
 	if (!bm) {
-		g_warning ("Failed to open bookmarks file '%s'", opts->bmpath);
+		g_warning ("Failed to open bookmarks file '%s'", bmfile);
 		return FALSE;
 	}
 	
@@ -237,6 +245,7 @@ mu_cmd_find (MuConfigOptions *opts)
 	MuQuery *xapian;
 	gboolean rv;
 	gchar *query;
+	const gchar *xpath;
 	
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "find"), FALSE);
@@ -244,12 +253,14 @@ mu_cmd_find (MuConfigOptions *opts)
 	if (!query_params_valid (opts))
 		return FALSE;
 
-	if (mu_util_db_is_empty (opts->xpath)) {
+	xpath = mu_runtime_xapian_dir ();
+	
+	if (mu_util_db_is_empty (xpath)) {
 		g_warning ("Database is empty; use 'mu index' to add messages");
 		return FALSE;
 	}
 		
-	if (!mu_util_db_version_up_to_date (opts->xpath)) {
+	if (!mu_util_db_version_up_to_date (xpath)) {
 		update_warning ();
 		return FALSE;
 	}
@@ -259,7 +270,7 @@ mu_cmd_find (MuConfigOptions *opts)
 	if (!query) 
 		return FALSE;
 	
-	xapian = mu_query_new (opts->xpath);
+	xapian = mu_query_new (xpath);
 	if (!xapian) {
 		g_warning ("Failed to create a Xapian query\n");
 		return FALSE;

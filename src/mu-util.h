@@ -61,38 +61,6 @@ char*       mu_util_guess_maildir (void) G_GNUC_WARN_UNUSED_RESULT;
  */
 gchar* mu_util_guess_mu_homedir (void);
 
-
-/**
- * guess the place of the xapian database (typically,
- * ~/.mu/xapian/). Note, this directory does not necessarily
- * exist. mu_util_check_dir can be use to check that
- *
- * @param muhome the mu home directory or NULL, in which the muhome
- * directoy will be guessed as well
- *  
- * @return the guessed xapian dir, which needs to be freed with g_free
- * when no longer needed.
- */
-gchar* mu_util_guess_xapian_dir (const gchar *muhome);
-
-
-/**
- * guess the place of the bookmark file (typically,
- * ~/.mu/bookmarks). Note that this does not mean the file actually
- * exists.
- * 
- * @param muhome the mu home directory or NULL, in which the muhome
- * directoy will be guessed as well
- *  
- * @return the guessed mu bookmark file, which needs to be freed with
- * g_free when no longer needed.
- */
-gchar* mu_util_guess_bookmark_file (const gchar *muhome);
-
-
-
-
-
 /**
  * if path exists, check that's a read/writeable dir; otherwise try to
  * create it (with perms 0700)

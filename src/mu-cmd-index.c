@@ -34,6 +34,7 @@
 
 #include "mu-msg.h"
 #include "mu-index.h"
+#include "mu-runtime.h"
 
 static gboolean MU_CAUGHT_SIGNAL;
 
@@ -147,24 +148,28 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 static gboolean
 database_version_check_and_update (MuConfigOptions *opts)
 {
-	if (mu_util_db_is_empty (opts->xpath))
+	const gchar *xpath;
+
+	xpath = mu_runtime_xapian_dir ();
+	
+	if (mu_util_db_is_empty (xpath))
 		return TRUE;
 	
 	/* we empty the database before doing anything */
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
-		g_message ("Clearing database %s", opts->xpath);
-		return mu_util_clear_database (opts->xpath);
+		g_message ("Clearing database %s", xpath);
+		return mu_util_clear_database (xpath);
 	}
 
-	if (mu_util_db_version_up_to_date (opts->xpath))
+	if (mu_util_db_version_up_to_date (xpath))
 		return TRUE; /* ok, nothing to do */
 	
 	/* ok, database is not up to date */
 	if (opts->autoupgrade) {
 		opts->reindex = TRUE;
 		g_message ("Auto-upgrade: clearing old database first");
-		return mu_util_clear_database (opts->xpath);
+		return mu_util_clear_database (xpath);
 	}
 
 	update_warning ();
@@ -191,7 +196,7 @@ cmd_cleanup (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 	MuResult rv;
 	time_t t;
 	
-	g_message ("Cleaning up messages [%s]", opts->xpath);
+	g_message ("Cleaning up messages [%s]", mu_runtime_xapian_dir());
 	
 	t = time (NULL);
 	rv = mu_index_cleanup (midx, stats,
@@ -216,7 +221,8 @@ cmd_index (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 	MuResult rv;
 	time_t t;
 	
-	g_message ("Indexing messages under %s [%s]", opts->maildir, opts->xpath);
+	g_message ("Indexing messages under %s [%s]", opts->maildir,
+		   mu_runtime_xapian_dir());
 
 	t = time (NULL);
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
@@ -261,7 +267,7 @@ cmd_index_or_cleanup (MuConfigOptions *opts)
 	if (!check_index_params (opts) || !database_version_check_and_update(opts))
 		return FALSE;
 	
-	if (!(midx = mu_index_new (opts->xpath))) {
+	if (!(midx = mu_index_new (mu_runtime_xapian_dir()))) {
 		g_warning ("Indexing/Cleanup failed");
 		return FALSE;
 	} 

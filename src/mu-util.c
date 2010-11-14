@@ -65,9 +65,7 @@ do_wordexp (const char *path)
 		return NULL;
 	}
 	
-	/* if (wexp.we_wordc != 1) /\* not an *error*, we just take the first one *\/ */
-	/* 	g_debug ("%s: expansion ambiguous for '%s'", __FUNCTION__, path); */
-	
+	/* we just pick the first one */
 	dir = g_strdup (wexp.we_wordv[0]);
 
 	/* strangely, below seems to lead to a crash on MacOS (BSD);
@@ -194,33 +192,6 @@ mu_util_guess_mu_homedir (void)
 				".mu");
 }
 
-gchar*
-mu_util_guess_xapian_dir (const char* muhome)
-{
-	gchar *homedir, *xdir;
-
-	homedir = muhome ? g_strdup(muhome) : mu_util_guess_mu_homedir ();
-	xdir	= g_strdup_printf ("%s%c%s", homedir, G_DIR_SEPARATOR,
-				   MU_XAPIAN_DIR_NAME);
-	g_free (homedir);
-
-	return xdir;
-}
-
-gchar*
-mu_util_guess_bookmark_file (const char* muhome)
-{
-	gchar *homedir, *bmpath;
-
-	homedir = muhome ? g_strdup(muhome) : mu_util_guess_mu_homedir ();
-	bmpath	= g_strdup_printf ("%s%c%s", homedir, G_DIR_SEPARATOR,
-				   MU_BOOKMARK_FILENAME);
-	g_free (homedir);
-
-	return bmpath;
-}
-
-
 gboolean
 mu_util_create_dir_maybe (const gchar *path)
 {
@@ -295,8 +266,7 @@ mu_util_create_writeable_fd (const char* filename, const char* dir,
 		g_debug ("%s: cannot open %s for writing: %s",
 			 __FUNCTION__, fullpath, strerror(errno));
 
-	g_free (fullpath);
-	
+	g_free (fullpath);	
 	return fd;
 }
 

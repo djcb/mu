@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,23 +16,23 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#ifndef __MU_RUNTIME_H__
+#define __MU_RUNTIME_H__
 
 #include <glib.h>
-#include "mu-cmd.h"
-#include "mu-runtime.h"
+#include "mu-config.h"
 
-int
-main (int argc, char *argv[])
-{
-	gboolean rv;
-	
-	if (!mu_runtime_init_from_cmdline (&argc, &argv))
-		return 1;
-	
-	rv = mu_cmd_execute (mu_runtime_config_options());
+G_BEGIN_DECLS
 
-	mu_runtime_uninit ();
-	
-	return rv ? 0 : 1;
-}
+gboolean mu_runtime_init              (const char* muhome);
+gboolean mu_runtime_init_from_cmdline (int *pargc, char ***pargv);
+void mu_runtime_uninit (void);
 
+const char* mu_runtime_mu_home_dir     (void);
+const char* mu_runtime_xapian_dir      (void);
+const char* mu_runtime_bookmarks_file  (void);
+MuConfigOptions* mu_runtime_config_options (void);
+
+G_END_DECLS
+
+#endif /*__MU_RUNTIME_H__*/
