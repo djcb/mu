@@ -37,6 +37,7 @@ enum {
 enum {
 	MUG_COL_DATE,
 	MUG_COL_MAILDIR,
+	MUG_COL_FLAGSSTR,
 	MUG_COL_FROM,
 	MUG_COL_TO,
 	MUG_COL_SUBJECT,
@@ -125,7 +126,6 @@ treecell_func (GtkTreeViewColumn *tree_column, GtkCellRenderer *renderer,
 	
 	g_object_set (G_OBJECT(renderer),
 		      "weight", (flags & MU_MSG_FLAG_NEW)    ? 800 : 400,
-		      "weight", (flags & MU_MSG_FLAG_UNREAD) ? 800 : 400,
 		      "weight", (flags & MU_MSG_FLAG_SEEN)   ? 400 : 800,
 		      "foreground", prio == MU_MSG_PRIO_HIGH ? "red" : NULL,
 		      NULL);
@@ -174,14 +174,15 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	
 	priv->_xpath = priv->_query = NULL;
 	priv->_store = gtk_list_store_new (MUG_N_COLS,
-					   G_TYPE_STRING,
-					   G_TYPE_STRING,
-					   G_TYPE_STRING,
-					   G_TYPE_STRING,
-					   G_TYPE_STRING,
-					   G_TYPE_STRING,
-					   G_TYPE_UINT,
-					   G_TYPE_UINT);
+					   G_TYPE_STRING, /* date */
+					   G_TYPE_STRING, /* folder */
+					   G_TYPE_STRING,  /* flagstr */
+					   G_TYPE_STRING, /* from */
+					   G_TYPE_STRING, /* to */
+					   G_TYPE_STRING, /* subject */
+					   G_TYPE_STRING, /* path */
+					   G_TYPE_UINT,   /* prio */
+					   G_TYPE_UINT);  /* flags */ 
 
 	tview = GTK_TREE_VIEW (obj);
 	gtk_tree_view_set_model (tview, GTK_TREE_MODEL(priv->_store));
@@ -193,6 +194,7 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	
  	append_col (tview, "Date", MUG_COL_DATE, 80);
 	append_col (tview, "Folder", MUG_COL_MAILDIR, 60);
+	append_col (tview, "Flags", MUG_COL_FLAGSSTR, 20);
 	append_col (tview, "From", MUG_COL_FROM, 0);
 	append_col (tview, "To", MUG_COL_TO, 0);
 	append_col (tview, "Subject", MUG_COL_SUBJECT, 0);
@@ -323,7 +325,7 @@ static void
 add_row (GtkListStore *store, MuMsgIter *iter)
 {
 	GtkTreeIter treeiter;
-	const gchar *datestr;
+	const gchar *datestr, *flagstr;
 	gchar *from, *to;
 	time_t date;
 	
@@ -331,11 +333,13 @@ add_row (GtkListStore *store, MuMsgIter *iter)
 	datestr	= date == 0 ? "-" : mu_msg_str_display_date_s (date);
 	from	= empty_or_display_contact (mu_msg_iter_get_from(iter));
 	to	= empty_or_display_contact (mu_msg_iter_get_to(iter));
+	flagstr = mu_msg_flags_to_str_s(mu_msg_iter_get_flags (iter));
 	
 	gtk_list_store_append (store, &treeiter);
 	gtk_list_store_set (store, &treeiter,
 			    MUG_COL_DATE, datestr,
 			    MUG_COL_MAILDIR, mu_msg_iter_get_maildir (iter),
+			    MUG_COL_FLAGSSTR, flagstr,
 			    MUG_COL_FROM, from,
 			    MUG_COL_TO, to,
 			    MUG_COL_SUBJECT,mu_msg_iter_get_subject (iter),
