@@ -61,7 +61,7 @@ char*       mu_msg_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RES
 const char* mu_msg_str_display_date_s (time_t t);
 
 
-/** 
+/**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
  * ie., turn
  *     "Foo Bar" <foo@bar.com>
@@ -144,9 +144,10 @@ char* mu_msg_str_summarize (const char* str,
 
 
 
-/** 
+/**
  * normalize a string (ie., collapse accented characters etc.), and
  * optionally, downcase it
+ *
  * 
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
@@ -154,6 +155,20 @@ char* mu_msg_str_summarize (const char* str,
  * @return the normalize string, or NULL in case of error or str was NULL
  */
 char* mu_msg_str_normalize (const char *str, gboolean downcase);
+
+
+/**
+ * normalize a string (ie., collapse accented characters etc.), and
+ * optionally, downcase it. this happen by changing the string; if
+ * that is not desired, use mu_msg_str_normalize
+ * 
+ * @param str a valid utf8 string or NULL
+ * @param downcase if TRUE, convert the string to lowercase
+ * 
+ * @return the normalize string, or NULL in case of error or str was NULL
+ */
+char* mu_msg_str_normalize_in_place (char *str, gboolean downcase);
+
 
 G_END_DECLS
 
