@@ -155,7 +155,8 @@ database_version_check_and_update (MuConfigOptions *opts)
 	if (mu_util_db_is_empty (xpath))
 		return TRUE;
 	
-	/* we empty the database before doing anything */
+	/* when rebuilding, we empty the database before doing
+	 * anything */
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
 		g_message ("Clearing database %s", xpath);
