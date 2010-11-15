@@ -56,7 +56,7 @@ icondir=				\
 	$(datarootdir)/icons
 
 icon_DATA=				\
-	${top_srcdir}/mug/mug.svg
+	${top_srcdir}/toys/mug/mug.svg
 
 desktopdir=				\
 	$(datarootdir)/applications

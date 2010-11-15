@@ -16,13 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=man src contrib
-
-# build if there is some gtk available
-if HAVE_GTK
-SUBDIRS += mug
-endif
-
+SUBDIRS=man src contrib toys
 
 # so we can say 'make test'
 check: test cleanupnote

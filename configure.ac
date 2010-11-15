@@ -153,8 +153,9 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/tests/Makefile
-mug/Makefile
-mug/mug.desktop
+toys/Makefile
+toys/mug/Makefile
+toys/mug/mug.desktop
 man/Makefile
 contrib/Makefile
 ])
@@ -165,9 +166,9 @@ echo "mu configuration is complete."
 echo "-----------------------------"
 
 echo
-echo "Note: the Xapian database is no longer stored as <muhome>/xapian-0.6"
-echo "but instead simply as <muhome>/xapian. You can remove the older"
-echo "<muhome>/xapian-0.6 directory to save some disk space"
+echo "Note: since version 0.7, the Xapian database is no longer stored as "
+echo "<muhome>/xapian-0.6 but instead simply as <muhome>/xapian. You can "
+echo "remove the olde <muhome>/xapian-0.6 directory to save some disk space"
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
