@@ -165,7 +165,7 @@ static const MuMsgField* mu_msg_field (MuMsgFieldId id)
 
 	/* initialize the array, but only once... */
 	if (G_UNLIKELY(!_initialized)) {
-		int i;
+		int i; 
 		for (i = 0; i != G_N_ELEMENTS(FIELD_DATA); ++i)
 			_msg_field_data[FIELD_DATA[i]._id] =
 				(MuMsgField*)&FIELD_DATA[i];
@@ -221,7 +221,6 @@ mu_msg_field_id_from_shortcut (char kar, gboolean err)
 gboolean
 mu_msg_field_gmime (MuMsgFieldId id)
 {
-
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
 	return mu_msg_field(id)->_flags & FLAG_GMIME;
 }
@@ -259,11 +258,15 @@ mu_msg_field_xapian_contact (MuMsgFieldId id)
 gboolean
 mu_msg_field_is_numeric (MuMsgFieldId mfid)
 {
-	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid),FALSE);
+	MuMsgFieldType type;
 	
-	return  mfid == MU_MSG_FIELD_TYPE_BYTESIZE ||
-		mfid == MU_MSG_FIELD_TYPE_TIME_T ||
-		mfid == MU_MSG_FIELD_TYPE_INT;
+	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid),FALSE);
+
+	type = mu_msg_field_type (mfid);
+	
+	return  type == MU_MSG_FIELD_TYPE_BYTESIZE ||
+		type == MU_MSG_FIELD_TYPE_TIME_T ||
+		type == MU_MSG_FIELD_TYPE_INT;
 }
 
 const char*    
