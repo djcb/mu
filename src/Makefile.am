@@ -80,6 +80,7 @@ libmu_la_SOURCES=			\
 	mu-msg-part.c			\
 	mu-msg-part.h			\
 	mu-msg-str.c			\
+	mu-msg-str-normalize.c		\
 	mu-msg-str.h			\
 	mu-msg.h			\
 	mu-output-link.c		\

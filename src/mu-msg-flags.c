@@ -181,8 +181,10 @@ check_msg_type (const char* path, char **info)
 	 * documentation at http://docs.python.org/lib/mailbox-maildir.html
 	 * mentions the '!' as well as a 'popular choice'
 	 */
-	dir =  g_path_get_dirname (path);
-	file = g_path_get_basename (path);
+	
+	*info = NULL;
+	dir   = g_path_get_dirname (path);
+	file  = g_path_get_basename (path);
 	
 	if (!(*info = strrchr(file, ':')))
 		*info = strrchr (file, '!'); /* Tinymail */
@@ -221,36 +223,26 @@ mu_msg_flags_from_file (const char* path)
 			      MU_MSG_FLAG_NONE);
 	
 	mtype = check_msg_type (path, &info);
-	
-	/* we ignore any flags for a new message */
-	if (mtype == MSG_TYPE_NEW) {
+	if (mtype == MSG_TYPE_NEW) { /* we ignore any new-msg flags */
 		g_free (info);
 		return MU_MSG_FLAG_NEW;
 	}
 	
-	flags = 0;
+	flags = MU_MSG_FLAG_NONE;
 	if (mtype == MSG_TYPE_CUR || mtype == MSG_TYPE_OTHER) {
 		char *cursor = info;
 		/* only support the "2," format */
 		if (cursor && cursor[0]=='2' && cursor[1]==',') {
 			cursor += 2; /* jump past 2, */
-			while (*cursor) {
+			for (; *cursor; ++cursor)
 				switch (*cursor) {
-				case 'P': flags |= MU_MSG_FLAG_PASSED;
-					break;
-				case 'T': flags |= MU_MSG_FLAG_TRASHED;
-					break;
-				case 'R': flags |= MU_MSG_FLAG_REPLIED;
-					break;
-				case 'S': flags |= MU_MSG_FLAG_SEEN;
-					break;
-				case 'D': flags |= MU_MSG_FLAG_DRAFT;
-					break;
-				case 'F': flags |= MU_MSG_FLAG_FLAGGED;
-					break;
+				case 'P': flags|= MU_MSG_FLAG_PASSED; break;
+				case 'T': flags|= MU_MSG_FLAG_TRASHED; break;
+				case 'R': flags|= MU_MSG_FLAG_REPLIED; break;
+				case 'S': flags|= MU_MSG_FLAG_SEEN; break;
+				case 'D': flags|= MU_MSG_FLAG_DRAFT;break;
+				case 'F': flags|= MU_MSG_FLAG_FLAGGED; break;
 				}
-				++cursor;
-			}
 		}
 	} 
 	g_free (info);

@@ -243,6 +243,23 @@ get_query (MuConfigOptions *opts)
 	return query;
 }
 
+static gboolean
+db_is_ready (const char *xpath)
+{	
+	if (mu_util_db_is_empty (xpath)) {
+		g_warning ("Database is empty; use 'mu index' to "
+			   "add messages");
+		return FALSE;
+	}
+		
+	if (!mu_util_db_version_up_to_date (xpath)) {
+		update_warning ();
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 gboolean
 mu_cmd_find (MuConfigOptions *opts)
@@ -259,16 +276,8 @@ mu_cmd_find (MuConfigOptions *opts)
 		return FALSE;
 
 	xpath = mu_runtime_xapian_dir ();
-	
-	if (mu_util_db_is_empty (xpath)) {
-		g_warning ("Database is empty; use 'mu index' to add messages");
+	if (!db_is_ready(xpath))
 		return FALSE;
-	}
-		
-	if (!mu_util_db_version_up_to_date (xpath)) {
-		update_warning ();
-		return FALSE;
-	}
 	
 	/* first param is 'query', search params are after that */
 	query = get_query (opts);
