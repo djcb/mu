@@ -42,8 +42,11 @@ fill_database (void)
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR);
+
+	/* g_printerr ("\n%s\n", cmdline); */
 	
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+					     NULL, NULL));
 	g_free (cmdline);
 
 	xpath= g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR, "xapian");
@@ -63,10 +66,13 @@ run_and_count_matches (const char *xpath, const char *query)
 	
 	mquery = mu_query_new (xpath);
 	g_assert (query);
-
-	iter = mu_query_run (mquery, query, NULL, FALSE, 1);
+	
+	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE,
+			     FALSE, 1);
 	mu_query_destroy (mquery);
 	g_assert (iter);
+
+	/* g_printerr ("\n=> %s\n", query); */
 	
 	for (count = 0; !mu_msg_iter_is_done(iter);
 	     mu_msg_iter_next(iter), ++count);
@@ -100,12 +106,11 @@ test_mu_query_01 (void)
 		{ "foo:pepernoot",      0 },
 		{ "funky",              1 },
 		{ "fünkÿ",              1 },
-
 	};
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
 	
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
 				  ==, queries[i].count);
 	g_free (xpath);
@@ -135,7 +140,8 @@ test_mu_query_03 (void)
 	
 	QResults queries[] = {
 		{ "ploughed", 1},
-		{ "i:3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com", 1},
+		{ "i:3BE9E6535E3029448670913581E7A1A20D852173@"
+		  "emss35m06.us.lmco.com", 1},
 
 		/* subsets of the words in the subject should match */
 		{ "s:gcc include search order" , 1},
@@ -170,14 +176,14 @@ test_mu_query_04 (void)
 	int i;
 	
 	QResults queries[] = {
-//		{ "frodo@example.com", 1},
+//     	{ "frodo@example.com", 1}, /* does not match: see mu-find (1) */
 		{ "f:frodo@example.com", 1},
 		{ "f:Frodo Baggins", 1},
-//     	{ "bilbo@anotherexample.com", 1},
+//		{ "bilbo@anotherexample.com", 1}, /* same things */
 		{ "t:bilbo@anotherexample.com", 1},
 		{ "t:bilbo", 1},
 		{ "f:bilbo", 0},
-		{ "baggins", 1}
+ 		{ "baggins", 1}
 	};
 	
 	xpath = fill_database ();
@@ -203,7 +209,8 @@ test_mu_query_05 (void)
 	g_assert (xpath != NULL);
 	
 	query = mu_query_new (xpath);
-	iter = mu_query_run (query, "fünkÿ", NULL, FALSE, 1);
+	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
+			     FALSE, 1);
 	msg = mu_msg_iter_get_msg (iter);
 
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 

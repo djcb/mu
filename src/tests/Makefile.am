@@ -48,6 +48,10 @@ TEST_PROGS += test-mu-maildir
 test_mu_maildir_SOURCES= test-mu-maildir.c
 test_mu_maildir_LDADD=  libtestmucommon.la
 
+TEST_PROGS += test-mu-msg-fields
+test_mu_msg_fields_SOURCES= test-mu-msg-fields.c
+test_mu_msg_fields_LDADD=  libtestmucommon.la
+
 TEST_PROGS += test-mu-query
 test_mu_query_SOURCES= test-mu-query.c dummy.cc
 test_mu_query_LDADD=    libtestmucommon.la
