@@ -94,6 +94,21 @@
    if you just want to log something in the log file without writing to screen,
    use MU_LOG_WRITE, as defined in mu-util.h
 
+** Compiling from git
+
+   For hacking, you're strongly advised to use the latest git
+   version. Compilation from git should be straightforward, if you have the
+   right tools (automake, autoconf and friends) installed -- but if you do
+   development, you'd probably have those.
+
+   Anyhow, to compile straight from git:
+
+   $ git clone git://gitorious.org/mu/mu-ng.git
+   $ cd mu-ng
+   $ autoreconf -i 
+   $ ./configure
+   $ make
+
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
