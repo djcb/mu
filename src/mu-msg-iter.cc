@@ -202,12 +202,7 @@ mu_msg_iter_get_field (MuMsgIter *iter, MuMsgFieldId mfid)
 gint64
 mu_msg_iter_get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_done(iter), -1);
-
-	if (!mu_msg_field_is_numeric(mfid))
-		g_printerr ("%s: %s\n", __FUNCTION__,
-			    mu_msg_field_name (mfid));
-	
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), -1);	
 	g_return_val_if_fail (mu_msg_field_is_numeric(mfid), -1);
 	
 	try {
