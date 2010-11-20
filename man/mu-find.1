@@ -31,20 +31,23 @@ If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
 them as a unit; for example to find mails with oranges OR mandarins in the
 subject-field, you can use:
 .nf
-	mu find 'subject:orange OR subject:mandarin'
+less	mu find 'subject:orange OR subject:mandarin'
 .fi
 
 
-
-\fBmu find\fR does not distinguish between uppercase or lowercase for search
-terms.
-
 \fBmu\fR relies on the Xapian database for its searching capabilities, so it
-offers all the search functionality that Xapian offers; for all the details, see:
-
+offers all the search functionality that Xapian offers; for all the details,
+see:
      \fIhttp://xapian.org/docs/queryparser.html\fR
 
-Note that queries are logged in \fI<mu-home>/mu.log\fR.   
+One special feature of \fBmu\fR is that is does not distinguish between
+uppercase and lowercase, nor the accented or unaccented versions of
+characters. All match. In general, \fBmu\fR tries to be 'eager' in matching,
+as filtering out unwanted results is usually preferrable over non matching
+messages.
+     
+In older versions of mu, queries were logged in \fI<mu-home>/mu.log\fR;
+however, since version 0.9 mu no longer does this.
      
 The basic way to search a message is to type some words matching it, as you
 would do in an internet search engine. For example,
@@ -53,11 +56,32 @@ would do in an internet search engine. For example,
 	mu find monkey banana
 .fi
 
-will find all message that contain both 'monkey' and 'banana'. Matching is
-case-insensitive and accent-insensitive; thus 
+will find all messages that contain both 'monkey' and 'banana' in either body
+or subject or one of the address-fields (to/from/cc).
+
+Note that due to the way to Xapian query parser functions, the match with
+e-mail addresses may fail, because Xapian handles characters like '@', '.' (as
+seen in e-mail addresses) in a special way. However, you can match those still
+if you an explicit search prefix; in other words, if, for example:
 
 .nf
-	mu find Mönkey BÄNANA
+	mu find foo@example.com
+.fi
+
+does not work, 
+
+.nf
+	mu find f:foo@example.com
+.fi
+
+might.
+
+
+As mentioned, matching is case-insensitive and accent-insensitive;
+thus
+
+.nf
+	mu find Mönkey BÄNAÑå
 .fi
 
 yields the same results as the example above.
@@ -183,9 +207,9 @@ Thus, for example, to sort messages by date, you could specify:
   $ mu find fahrrad --fields "d f s" --sortfield=date --descending
 .fi
 
-Note, if you specify a sortfield, by default, they are sorted in descending
-order (e.g., from lowest to highest). This is usually a good choice, but for
-dates it may be more useful to sort in the opposite direction.
+Note, if you specify a sortfield, by default, messages are sorted in
+descending order (e.g., from lowest to highest). This is usually a good
+choice, but for dates it may be more useful to sort in the opposite direction.
 
 .TP
 \fB\-\-xquery\fR
