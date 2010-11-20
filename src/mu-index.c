@@ -289,9 +289,6 @@ mu_index_run (MuIndex *index, const char* path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
 			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
 			      &cb_data);
-	if (rv == MU_OK)
-		if (!mu_store_set_version (index->_xapian, MU_XAPIAN_DB_VERSION))
-			g_warning ("failed to set database version");
 	
 	mu_store_flush (index->_xapian);
 	
