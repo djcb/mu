@@ -24,13 +24,72 @@
 
 G_BEGIN_DECLS
 
+/**
+ * initialize the mu runtime system; initializes logging and other
+ * systems. To uninitialize, use mu_runtime_uninit
+ * 
+ * @param muhome path where to find the mu home directory (typicaly, ~/.mu)
+ * 
+ * @return TRUE if succeeded, FALSE in case of error
+ */
 gboolean mu_runtime_init              (const char* muhome);
+
+
+/**
+ * initialize the mu runtime system with comand line argument; this
+ * will parse the command line assuming the parameters of the 'mu'
+ * program. Initializes logging and other systems. To uninitialize,
+ * use mu_runtime_uninit
+ * 
+ * @param ptr to the param count (typically, argc)
+ * @param ptr to the params (typically, argv)
+ * 
+ * @return TRUE if succeeded, FALSE in case of error
+ */
 gboolean mu_runtime_init_from_cmdline (int *pargc, char ***pargv);
+
+
+/**
+ * free all resources 
+ * 
+ */
 void mu_runtime_uninit (void);
 
+/**
+ * get the mu home directory (typically, ~/.mu); this can only be
+ * called after mu_runtime_init and before mu_runtime_uninit
+ * 
+ * @return mu home directory as a string which should be not be
+ * modified, or NULL in case of error.
+ */
 const char* mu_runtime_mu_home_dir     (void);
+
+/**
+ * get the xapian directory (typically, ~/.mu/xapian/); this can only
+ * be called after mu_runtime_init and before mu_runtime_uninit
+ * 
+ * @return the xapian directory as a string which should be not be
+ * modified, or NULL in case of error.
+ */
 const char* mu_runtime_xapian_dir      (void);
+
+
+/**
+ * get the mu bookmarks file (typically, ~/.mu/bookmarks); this can
+ * only be called after mu_runtime_init and before mu_runtime_uninit
+ * 
+ * @return the bookmarks file as a string which should be not be
+ * modified, or NULL in case of error.
+ */
 const char* mu_runtime_bookmarks_file  (void);
+
+
+/**
+ * get the mu configuration options (ie., the parsed command line
+ * parameters)
+ * 
+ * @return the configuration options
+ */
 MuConfigOptions* mu_runtime_config_options (void);
 
 G_END_DECLS

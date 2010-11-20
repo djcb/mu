@@ -177,9 +177,10 @@ mu_runtime_xapian_dir (void)
 	g_return_val_if_fail (_initialized, NULL);
 
 	if (!_data->_xapian_dir)
-		_data->_xapian_dir = g_strdup_printf ("%s%c%s", _data->_muhome,
-							      G_DIR_SEPARATOR,
-							      MU_XAPIAN_DIRNAME);
+		_data->_xapian_dir = g_strdup_printf ("%s%c%s",
+						      _data->_muhome,
+						      G_DIR_SEPARATOR,
+						      MU_XAPIAN_DIRNAME);
 	return _data->_xapian_dir;
 }
 
