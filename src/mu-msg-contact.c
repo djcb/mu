@@ -30,6 +30,37 @@
 #include "mu-msg-contact.h"
 #include "mu-util.h"
 
+
+MuMsgContact *
+mu_msg_contact_new (const char *name, const char *address,
+		    MuMsgContactType type)
+{
+	MuMsgContact *contact;
+	
+	g_return_val_if_fail (name, NULL);
+	g_return_val_if_fail (address, NULL);
+	g_return_val_if_fail (!mu_msg_contact_type_is_valid(type),
+			      NULL);
+
+	contact = g_slice_new (MuMsgContact);
+
+	contact->name	 = g_strdup(name);
+	contact->address = g_strdup(address);
+	contact->type    = type;
+
+	return contact;	
+}
+
+
+void
+mu_msg_contact_destroy (MuMsgContact *contacts)
+{
+	if (contacts) {
+		g_free ((gchar*)contacts->name);
+		g_free ((gchar*)contacts->address);
+		g_slice_free (MuMsgContact, contacts);
+	}
+}
 	
 
 static gboolean

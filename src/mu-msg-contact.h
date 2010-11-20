@@ -26,20 +26,47 @@
 G_BEGIN_DECLS
 
 enum _MuMsgContactType {  /* Reply-To:? */
-	MU_MSG_CONTACT_TYPE_TO,
+	MU_MSG_CONTACT_TYPE_TO = 0,
 	MU_MSG_CONTACT_TYPE_FROM,
 	MU_MSG_CONTACT_TYPE_CC,
-	MU_MSG_CONTACT_TYPE_BCC
+	MU_MSG_CONTACT_TYPE_BCC,
+	
+	MU_MSG_CONTACT_TYPE_NUM
 };
-typedef enum _MuMsgContactType MuMsgContactType;
+typedef guint MuMsgContactType;
 
+#define mu_msg_contact_type_is_valid(MCT)\
+	((MCT) < MU_MSG_CONTACT_TYPE_NUM)
 
 struct _MuMsgContact {
 	const char		*name;	/* Foo Bar */
 	const char		*address;	/* foo@bar.cuux */
-	MuMsgContactType	 type;	/*MU_MSG_CONTACT_TYPE_{TO,CC,BCC,FROM}*/  
+	MuMsgContactType	 type;	/*MU_MSG_CONTACT_TYPE_{ TO,
+					 * CC, BCC, FROM}*/  
 };
 typedef struct _MuMsgContact	 MuMsgContact;
+
+/**
+ * create a new MuMsgContact object; note, in many case, this is not
+ * needed, any a stack-allocated struct can be uses.
+ * 
+ * @param name the name of the contact
+ * @param address the e-mail address of the contact
+ * @param type the type of contact: cc, bcc, from, to
+ * 
+ * @return a newly allocated MuMsgConcact or NULL in case of
+ * error. use mu_msg_contact_destroy to destroy it when it's no longer
+ * needed.
+ */
+MuMsgContact *mu_msg_contact_new (const char *name, const char *address,
+				  MuMsgContactType type);
+
+/**
+ * destroy a MuMsgConcact object
+ * 
+ * @param contact a contact object, or NULL
+ */
+void          mu_msg_contact_destroy (MuMsgContact *contact);
 
 /**
  * macro to get the name of a contact
