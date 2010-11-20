@@ -200,7 +200,8 @@ mu_log_init  (const char* muhome,
 void 
 mu_log_uninit (void)
 {
-	g_return_if_fail (MU_LOG);
+	if (!MU_LOG)
+		return;
 
 	if (MU_LOG->_own)
 		try_close (MU_LOG->_fd);
