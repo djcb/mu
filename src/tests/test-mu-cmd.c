@@ -46,7 +46,8 @@ fill_database (void)
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR2);
 	
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+					     NULL, NULL));
 	g_free (cmdline);
 
 	return tmpdir;
@@ -78,8 +79,12 @@ search (const char* query, unsigned expected)
 	
 	cmdline = g_strdup_printf ("%s --muhome=%s find %s",
 				   MU_PROGRAM, muhome, query);
+
+	/* g_printerr ("%s\n", cmdline); */
 	
-	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline,
+					     &output, &erroutput,
+					     NULL, NULL));
 	g_assert_cmpuint (newlines_in_output(output),==,expected);
 
 	/* we expect zero lines of error output if there is a match;
@@ -105,7 +110,8 @@ test_mu_index (void)
 	muhome = fill_database ();
 	g_assert (muhome != NULL);
 
-	xpath = g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR, "xapian");
+	xpath = g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
+				 "xapian");
 	
 	store = mu_store_new (xpath);
 	g_assert (store);
