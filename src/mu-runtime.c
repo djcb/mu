@@ -41,6 +41,7 @@ typedef struct _MuRuntimeData MuRuntimeData;
 
 /* static, global data for this singleton */
 static gboolean       _initialized = FALSE;
+
 static MuRuntimeData *_data = NULL;
 
 static void runtime_free (void);
