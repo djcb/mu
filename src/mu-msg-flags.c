@@ -42,8 +42,7 @@ MuMsgFlags
 mu_msg_flag_from_char (char k)
 {
 	switch (k) {
-	case 'N': return MU_MSG_FLAG_NEW;
-		
+	case 'N': return MU_MSG_FLAG_NEW;		
 	case 'P': return MU_MSG_FLAG_PASSED;
 	case 'R': return MU_MSG_FLAG_REPLIED;
 	case 'S': return MU_MSG_FLAG_SEEN;
@@ -61,21 +60,22 @@ mu_msg_flag_from_char (char k)
 	}
 }
 
-char
-mu_msg_flag_to_char (MuMsgFlags flag)
-{
+
+const char*
+mu_msg_flag_to_name (MuMsgFlags flag)
+{	
 	switch (flag) {
-	case MU_MSG_FLAG_NEW: return 'N';
-	case MU_MSG_FLAG_PASSED: return 'P';
-	case MU_MSG_FLAG_REPLIED: return 'R';
-	case MU_MSG_FLAG_SEEN: return 'S';
-	case MU_MSG_FLAG_TRASHED: return 'T';
-	case MU_MSG_FLAG_DRAFT: return 'D';
-	case MU_MSG_FLAG_FLAGGED: return 'F';
+	case MU_MSG_FLAG_NEW:		return "new";
+	case MU_MSG_FLAG_PASSED:	return "passed";
+	case MU_MSG_FLAG_REPLIED:	return "replied";
+	case MU_MSG_FLAG_SEEN:		return "seen";
+	case MU_MSG_FLAG_TRASHED:	return "trashed";
+	case MU_MSG_FLAG_DRAFT:		return "draft";
+	case MU_MSG_FLAG_FLAGGED:	return "flagged";
 		
-	case MU_MSG_FLAG_SIGNED: return 'Z';
-	case MU_MSG_FLAG_ENCRYPTED: return 'X';
-	case MU_MSG_FLAG_HAS_ATTACH: return 'A';
+	case MU_MSG_FLAG_SIGNED:	return "signed";
+	case MU_MSG_FLAG_ENCRYPTED:	return "encrypted";
+	case MU_MSG_FLAG_HAS_ATTACH:	return "attach";
 		
 	default:
 		g_warning ("%s: unknown flag 0x%x", __FUNCTION__, flag);
@@ -83,6 +83,27 @@ mu_msg_flag_to_char (MuMsgFlags flag)
 	}
 }
 
+char
+mu_msg_flag_char (MuMsgFlags flag)
+{
+	switch (flag) {
+	case MU_MSG_FLAG_NEW:		return 'N';
+	case MU_MSG_FLAG_PASSED:	return 'P';
+	case MU_MSG_FLAG_REPLIED:	return 'R';
+	case MU_MSG_FLAG_SEEN:		return 'S';
+	case MU_MSG_FLAG_TRASHED:	return 'T';
+	case MU_MSG_FLAG_DRAFT:		return 'D';
+	case MU_MSG_FLAG_FLAGGED:	return 'F';
+		
+	case MU_MSG_FLAG_SIGNED:	return 'Z';
+	case MU_MSG_FLAG_ENCRYPTED:	return 'X';
+	case MU_MSG_FLAG_HAS_ATTACH:	return 'A';
+		
+	default:
+		g_warning ("%s: unknown flag 0x%x", __FUNCTION__, flag);
+		return 0;
+	}
+}
 
 const char*
 mu_msg_flags_to_str_s (MuMsgFlags flags)
@@ -93,7 +114,7 @@ mu_msg_flags_to_str_s (MuMsgFlags flags)
 	for (i = j = 0; i != G_N_ELEMENTS(ALL_FLAGS); ++i) {
 		if (flags & ALL_FLAGS[i]) {
 			char k;
-			if ((k = mu_msg_flag_to_char (ALL_FLAGS[i])) == 0)
+			if ((k = mu_msg_flag_char (ALL_FLAGS[i])) == 0)
 				return NULL;
 			buf[j++] = k;
 		}
@@ -110,7 +131,7 @@ mu_msg_flags_from_str (const char* str)
 	
 	for (flags = MU_MSG_FLAG_NONE; str && *str; ++str) {
 		MuMsgFlags flag;
-		if ((flag = mu_msg_flag_to_char (*str)) == 0) {
+		if ((flag = mu_msg_flag_char (*str)) == 0) {
 			flags = 0;
 			break;
 		}
@@ -119,6 +140,19 @@ mu_msg_flags_from_str (const char* str)
 	
 	return flags;
 }
+
+
+void
+mu_msg_flags_foreach (MuMsgFlagsForeachFunc func, gpointer user_data)
+{
+	int i;
+	
+	g_return_if_fail (func);
+	
+	for (i = 0; i != G_N_ELEMENTS(ALL_FLAGS); ++i)
+		func (ALL_FLAGS[i], user_data);
+}
+
 
 
 /*
@@ -202,12 +236,18 @@ mu_msg_flags_from_file (const char* path)
 			cursor += 2; /* jump past 2, */
 			while (*cursor) {
 				switch (*cursor) {
-				case 'P': flags |= MU_MSG_FLAG_PASSED; break;
-				case 'T': flags |= MU_MSG_FLAG_TRASHED; break;
-				case 'R': flags |= MU_MSG_FLAG_REPLIED; break;
-				case 'S': flags |= MU_MSG_FLAG_SEEN; break;
-				case 'D': flags |= MU_MSG_FLAG_DRAFT; break;
-				case 'F': flags |= MU_MSG_FLAG_FLAGGED; break;
+				case 'P': flags |= MU_MSG_FLAG_PASSED;
+					break;
+				case 'T': flags |= MU_MSG_FLAG_TRASHED;
+					break;
+				case 'R': flags |= MU_MSG_FLAG_REPLIED;
+					break;
+				case 'S': flags |= MU_MSG_FLAG_SEEN;
+					break;
+				case 'D': flags |= MU_MSG_FLAG_DRAFT;
+					break;
+				case 'F': flags |= MU_MSG_FLAG_FLAGGED;
+					break;
 				}
 				++cursor;
 			}

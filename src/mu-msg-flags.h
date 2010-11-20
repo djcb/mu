@@ -112,7 +112,35 @@ const char* mu_msg_flags_to_str_s  (MuMsgFlags flags) G_GNUC_CONST;
  * 
  * @return the char for this flag, or 0 if not found
  */
-char mu_msg_flags_char  (MuMsgFlags flag);
+char mu_msg_flag_char  (MuMsgFlags flag) G_GNUC_CONST;
+
+
+
+/**
+ * get a string describing this flag
+ * 
+ * @param flag a single flag (not OR'ed)
+ * 
+ * @return a string describing this flag, e.g.,
+ * MU_MSG_FLAG_ATTACH=>"attach"
+ */
+const char* mu_msg_flag_to_name (MuMsgFlags flag) G_GNUC_CONST;
+
+
+
+
+typedef void (*MuMsgFlagsForeachFunc)
+	(MuMsgFlags flag, gpointer user_data);
+
+/**
+ * call a function for each available message flag
+ * 
+ * @param func a function to call (callback)
+ * @param user_data  user pointer passed to the callback
+ */
+void mu_msg_flags_foreach (MuMsgFlagsForeachFunc func, gpointer user_data);
+
+
 
 /**
  * get the Maildir flags from a mailfile. The flags are as specified
@@ -127,6 +155,7 @@ char mu_msg_flags_char  (MuMsgFlags flag);
  * @return the flags, or MU_MSG_FILE_FLAG_UNKNOWN in case of error
  */
 MuMsgFlags mu_msg_flags_from_file (const char* pathname) G_GNUC_PURE;
+
 
 /**
  * is the message flag a file flag? ie. encoded in the filename

@@ -30,6 +30,7 @@
 #include "mu-store.h"
 #include "mu-util.h"
 #include "mu-msg-str.h"
+#include "mu-msg-flags.h"
 
 /* number of new messages after which we commit to the database */
 #define MU_STORE_TRX_SIZE 6666
@@ -50,19 +51,20 @@ struct _MuStore {
 
 
 static void
-add_synonyms (MuStore *store)
+each_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
 {
 	std::string pfx (1, mu_msg_field_xapian_prefix
 			 (MU_MSG_FIELD_ID_FLAGS));
 	
-	store->_db->add_synonym (pfx + "n", pfx + "new");
-	store->_db->add_synonym (pfx + "unread", pfx + "n");
+	db->add_synonym (pfx + mu_msg_flag_to_name (flag),
+			 pfx + (std::string(1, mu_msg_flag_char (flag))));
+}
 
-	store->_db->add_synonym (pfx + "attach",     pfx + "a");
-	store->_db->add_synonym (pfx + "attachment", pfx + "a");
-	
-	store->_db->add_synonym ("Bfoo", "Bbar");
-	store->_db->add_synonym ("Gnew", "Gn");
+static void
+add_synonyms (MuStore *store)
+{
+	mu_msg_flags_foreach ((MuMsgFlagsForeachFunc)each_flag,
+			     store->_db);
 }
 
 static gboolean
@@ -103,8 +105,8 @@ mu_store_new  (const char* xpath)
 	
 	try {
 		store = g_new0(MuStore,1);
-		store->_db = new Xapian::WritableDatabase (xpath,
-							   Xapian::DB_CREATE_OR_OPEN);
+		store->_db = new Xapian::WritableDatabase
+			(xpath,Xapian::DB_CREATE_OR_OPEN);
 		if (!check_version (store)) {
 			mu_store_destroy (store);
 			return NULL;
@@ -175,7 +177,8 @@ mu_store_version (MuStore *store)
 		v = store->_db->get_metadata (MU_XAPIAN_VERSION_KEY);
 
 		g_free (store->_version);
-		return store->_version = v.empty() ? NULL : g_strdup (v.c_str());
+		return store->_version =
+			v.empty() ? NULL : g_strdup (v.c_str());
 	
 	} MU_XAPIAN_CATCH_BLOCK;
 
@@ -309,7 +312,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	char *norm;
 	
 	if (mu_msg_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
-		return; /* don't store encrypted bodies */
+		return; /* ignore encrypted bodies */
 
 	str = mu_msg_get_body_text (msg);
 	if (!str) /* FIXME: html->txt fallback needed */
@@ -323,7 +326,8 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	
 	norm = mu_msg_str_normalize (str, TRUE);
 	termgen.index_text_without_positions
-		(norm, 1, std::string(1,mu_msg_field_xapian_prefix(mfid)));
+		(norm, 1,
+		 std::string(1, mu_msg_field_xapian_prefix(mfid)));
 	g_free (norm);
 }
 
@@ -532,7 +536,7 @@ mu_store_set_timestamp (MuStore *store, const char* msgpath,
 	g_return_if_fail (msgpath);
 
 	try {
-		char buf[24];
+		char buf[21];
 		sprintf (buf, "%" G_GUINT64_FORMAT, (guint64)stamp);
 		store->_db->set_metadata (msgpath, buf);
 				
