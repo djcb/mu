@@ -57,15 +57,12 @@ gboolean
 mu_output_link_row (MuMsgIter *iter, const char* linksdir)
 {
 	const char *path;
-	const MuMsgField *pathfield;
-
+	
 	g_return_val_if_fail (iter, FALSE);
 	g_return_val_if_fail (linksdir, FALSE);	
 	g_return_val_if_fail (!mu_msg_iter_is_done (iter), FALSE);
-		
-	pathfield = mu_msg_field_from_id (MU_MSG_FIELD_ID_PATH);
-				
-	path = mu_msg_iter_get_field (iter, pathfield);
+	
+	path = mu_msg_iter_get_field (iter, MU_MSG_FIELD_ID_PATH);
 	if (!path)
 		return FALSE;
 	

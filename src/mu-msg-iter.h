@@ -198,7 +198,7 @@ MuMsgPrio    mu_msg_iter_get_prio      (MuMsgIter *iter);
  * @return the field value, or NULL
  */
 const gchar*     mu_msg_iter_get_field         (MuMsgIter *iter, 
-						  const MuMsgField *field);
+						MuMsgFieldId mfid);
 
 /**
  * get some numeric message field
@@ -209,7 +209,7 @@ const gchar*     mu_msg_iter_get_field         (MuMsgIter *iter,
  * @return the field value, or -1 in case of error
  */
 gint64           mu_msg_iter_get_field_numeric     (MuMsgIter *iter, 
-						      const MuMsgField *field);
+						    MuMsgFieldId mfid);
 G_END_DECLS
 
 #endif /*__MU_MSG_ITER_H__*/

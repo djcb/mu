@@ -311,7 +311,8 @@ run_query (const char *xpath, const char *query)
 		return NULL;
 	}
 
-	iter = mu_query_run (xapian, query, NULL, TRUE, 0);
+	iter = mu_query_run (xapian, query, MU_MSG_FIELD_ID_NONE,
+			     TRUE, 0);
 	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("error: running query failed\n");

@@ -238,8 +238,8 @@ size_t          mu_msg_get_size       (MuMsg *msg);
  * 
  * @return a string that should not be freed
  */
-const char*  mu_msg_get_field_string  (MuMsg *msg, 
-				       const MuMsgField* field);
+const char*  mu_msg_get_field_string  (MuMsg *msg, MuMsgFieldId mfid);
+
 
 /**
  * get some field value as string
@@ -249,8 +249,7 @@ const char*  mu_msg_get_field_string  (MuMsg *msg,
  * 
  * @return a string that should not be freed
  */
-gint64      mu_msg_get_field_numeric (MuMsg *msg, 
-				      const MuMsgField* field);
+gint64      mu_msg_get_field_numeric (MuMsg *msg, MuMsgFieldId mfid);
 
 /**
  * get the message priority for this message (MU_MSG_PRIO_LOW,

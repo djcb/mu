@@ -45,7 +45,7 @@ MuStore*    mu_store_new     (const char* path);
  * 
  * @param store a valid store, or NULL
  */
-void              mu_store_destroy (MuStore *store);
+void        mu_store_destroy (MuStore *store);
 
 
 /**
@@ -59,13 +59,15 @@ void              mu_store_destroy (MuStore *store);
 unsigned mu_store_count (MuStore *store);
 
 /**
- * get a version string for the database
+ * get a version string for the database; it's a const string, which
+ * is valid as long MuStore exists and mu_store_version is not called
+ * again.
  * 
  * @param store a valid MuStore
  * 
- * @return the version string (free with g_free), or NULL in case of error
+ * @return the version string or NULL in case of error
  */
-char* mu_store_version (MuStore *store);
+const char* mu_store_version (MuStore *store);
 
 /**
  * set the version string for the database

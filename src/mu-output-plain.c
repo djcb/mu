@@ -40,34 +40,31 @@
 
 
 static const gchar*
-display_field (MuMsgIter *iter, const MuMsgField* field)
+display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 {
 	gint64 val;
 
-	switch (mu_msg_field_type(field)) {
+	switch (mu_msg_field_type(mfid)) {
 	case MU_MSG_FIELD_TYPE_STRING:
-		return mu_msg_iter_get_field (iter, field);
+		return mu_msg_iter_get_field (iter, mfid);
 
 	case MU_MSG_FIELD_TYPE_INT:
 	
-		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_PRIO) {
-			val = mu_msg_iter_get_field_numeric (iter, field);
+		if (mfid == MU_MSG_FIELD_ID_PRIO) {
+			val = mu_msg_iter_get_field_numeric (iter, mfid);
 			return mu_msg_str_prio ((MuMsgPrio)val);
-		}
-		
-		if (mu_msg_field_id(field) == MU_MSG_FIELD_ID_FLAGS) {
-			val = mu_msg_iter_get_field_numeric (iter, field);
-			return mu_msg_str_flags_s ((MuMsgPrio)val);
-		}
-
-		return mu_msg_iter_get_field (iter, field); /* as string */
+ 		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
+			val = mu_msg_iter_get_field_numeric (iter, mfid);
+			return mu_msg_str_flags_s ((MuMsgFlags)val);
+		} else  /* as string */
+			return mu_msg_iter_get_field (iter, mfid); 
 
 	case MU_MSG_FIELD_TYPE_TIME_T: 
-		val = mu_msg_iter_get_field_numeric (iter, field);
+		val = mu_msg_iter_get_field_numeric (iter, mfid);
 		return mu_msg_str_date_s ("%c", (time_t)val);
 
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
-		val = mu_msg_iter_get_field_numeric (iter, field);
+		val = mu_msg_iter_get_field_numeric (iter, mfid);
 		return mu_msg_str_size_s ((unsigned)val);
 	default:
 		g_return_val_if_reached (NULL);
@@ -107,14 +104,15 @@ mu_output_plain_row (MuMsgIter *iter, const char *fields, size_t summary_len)
 
 	myfields = fields;
 	while (*myfields) {
-		const MuMsgField* field;
-		field =	mu_msg_field_from_shortcut (*myfields);
-		if (!field || ( !mu_msg_field_xapian_value (field) &&
-				!mu_msg_field_xapian_contact (field)))
+		MuMsgFieldId mfid;
+		mfid =	mu_msg_field_id_from_shortcut (*myfields, FALSE);
+		if (mfid == MU_MSG_FIELD_ID_NONE ||
+		    ( !mu_msg_field_xapian_value (mfid) &&
+		      !mu_msg_field_xapian_contact (mfid)))
 			len += printf ("%c", *myfields);
 		else
 			len += printf ("%s",
-				       display_field(iter, field));
+				       display_field(iter, mfid));
 		++myfields;
 	}
 	

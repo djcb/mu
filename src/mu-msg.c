@@ -751,15 +751,11 @@ mu_msg_get_summary (MuMsg *msg, size_t max_lines)
 
 
 const char*
-mu_msg_get_field_string (MuMsg *msg, const MuMsgField* field)
+mu_msg_get_field_string (MuMsg *msg, MuMsgFieldId mfid)
 {
-	MuMsgFieldId id;
-	
 	g_return_val_if_fail (msg, NULL);
-	id = mu_msg_field_id (field);
-	g_return_val_if_fail (id != MU_MSG_FIELD_ID_NONE, NULL);
 
-	switch (id) {
+	switch (mfid) {
 	case MU_MSG_FIELD_ID_BODY_TEXT:  return mu_msg_get_body_text (msg);
 	case MU_MSG_FIELD_ID_BODY_HTML:  return mu_msg_get_body_html (msg);
 	case MU_MSG_FIELD_ID_CC:         return mu_msg_get_cc (msg);
@@ -775,15 +771,11 @@ mu_msg_get_field_string (MuMsg *msg, const MuMsgField* field)
 }
 
 gint64
-mu_msg_get_field_numeric (MuMsg *msg, const MuMsgField* field)
+mu_msg_get_field_numeric (MuMsg *msg, const MuMsgFieldId mfid)
 {
-	MuMsgFieldId id;
-	
 	g_return_val_if_fail (msg, 0);
-	id = mu_msg_field_id (field);
-	g_return_val_if_fail (id != MU_MSG_FIELD_ID_NONE, 0);
 	
-	switch (id) {
+	switch (mfid) {
 	case MU_MSG_FIELD_ID_DATE:    
 		return mu_msg_get_date(msg);
 	case MU_MSG_FIELD_ID_FLAGS:   
@@ -793,7 +785,7 @@ mu_msg_get_field_numeric (MuMsg *msg, const MuMsgField* field)
 	case MU_MSG_FIELD_ID_SIZE:    
 		return mu_msg_get_size(msg);
 	default:
-		g_warning ("%s: %u", __FUNCTION__, (guint)id);
+		g_warning ("%s: %u", __FUNCTION__, mfid);
 		g_return_val_if_reached (0);
 	}
 }

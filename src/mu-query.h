@@ -63,7 +63,8 @@ char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
  * 
  * @param self a valid MuQuery instance
  * @param expr the search expression
- * @param sortfield the field to sort by or NULL
+ * @param sortfield the field id to sort by or MU_MSG_FIELD_ID_NONE if
+ * sorting is not desired
  * @param ascending if TRUE sort in ascending (A-Z) order, otherwise,
  * sort in descending (Z-A) order
  * @param batchsize the size of batches to receive; this is mainly for
@@ -76,7 +77,7 @@ char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
  */
 MuMsgIter* mu_query_run (MuQuery *self, 
 			 const char* expr,
-			 const MuMsgField* sortfield,
+			 MuMsgFieldId sortfieldid,
 			 gboolean ascending,
 			 size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
 

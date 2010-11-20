@@ -32,8 +32,7 @@
 #include "mu-util-db.h"
 #include "mu-msg-str.h"
 
-static void add_prefix (const MuMsgField* field,
-			Xapian::QueryParser* qparser);
+static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
 struct _MuQuery {
 	Xapian::Database*         _db;
@@ -51,14 +50,23 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mqx->_db      = new Xapian::Database(dbpath);
 		mqx->_qparser = new Xapian::QueryParser;
 		
-		mqx->_qparser->set_database(*mqx->_db);
-		mqx->_qparser->set_default_op(Xapian::Query::OP_AND);
-		mqx->_qparser->set_stemming_strategy
-			(Xapian::QueryParser::STEM_ALL);
+		mqx->_qparser->set_database (*mqx->_db);
+		mqx->_qparser->set_default_op (Xapian::Query::OP_AND);
+		//mqx->_qparser->set_stemming_strategy (Xapian::QueryParser::STEM_NONE);
 
 		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
+////// FIXME
+		// g_print ("synonyms:");
+		// for (Xapian::TermIterator iter = mqx->_db->synonym_keys_begin();
+		//      iter != mqx->_db->synonym_keys_end(); ++iter) {
+		// 	for (Xapian::TermIterator jter = mqx->_db->synonyms_begin(*iter);
+		// 	     jter != mqx->_db->synonyms_end(*iter); ++jter) {
+		// 		g_print ("%s => %s\n", (*iter).c_str(), (*jter).c_str());
+		// 	}
+		// }
+
 		return TRUE;
 
 	} MU_XAPIAN_CATCH_BLOCK;
@@ -95,8 +103,9 @@ get_query  (MuQuery * mqx, const char* searchexpr, int *err = 0)  {
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          | 
 			 Xapian::QueryParser::FLAG_PHRASE           |
+			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
 			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
-
+		
 	} MU_XAPIAN_CATCH_BLOCK;
 	
 	if (err)
@@ -106,22 +115,43 @@ get_query  (MuQuery * mqx, const char* searchexpr, int *err = 0)  {
 }
 
 static void
-add_prefix (const MuMsgField* field, Xapian::QueryParser* qparser)
+add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 {
-	if (!mu_msg_field_xapian_index(field) &&
-	    !mu_msg_field_xapian_term(field) &&
-	    !mu_msg_field_xapian_contact(field))
+	static char pfx[] = "\0\0";
+	static char shortcut[] = "\0\0";
+	
+	if (!mu_msg_field_xapian_index(mfid) &&
+	    !mu_msg_field_xapian_term(mfid) &&
+	    !mu_msg_field_xapian_contact(mfid))
 		return;
 
-	const std::string prefix (mu_msg_field_xapian_prefix(field));
+	pfx[0] = mu_msg_field_xapian_prefix (mfid);
+	shortcut[0] = mu_msg_field_shortcut (mfid);
 	
-	qparser->add_boolean_prefix
-		(std::string(mu_msg_field_name(field)), prefix);
-	qparser->add_boolean_prefix
-		(std::string(mu_msg_field_shortcut(field)), prefix);
+	try {
 	
-	/* make the empty string match this field too*/
-	qparser->add_prefix ("", prefix);
+		if (mfid == MU_MSG_FIELD_ID_MSGID ||
+		    mfid == MU_MSG_FIELD_ID_MAILDIR ||
+		    mu_msg_field_type (mfid) != MU_MSG_FIELD_TYPE_STRING ||
+		    mu_msg_field_xapian_contact(mfid)) {
+			    qparser->add_boolean_prefix
+				    (mu_msg_field_name(mfid), pfx);
+			qparser->add_boolean_prefix (shortcut, pfx);
+
+			/* make the empty string match this field too*/
+			qparser->add_prefix ("", pfx);
+
+		} else {
+			
+			qparser->add_boolean_prefix
+				(mu_msg_field_name(mfid), pfx);
+			qparser->add_prefix (shortcut, pfx);
+			
+			/* make the empty string match this field too*/
+			qparser->add_prefix ("", pfx);
+		}
+	
+	} MU_XAPIAN_CATCH_BLOCK;
 }
 
 MuQuery*
@@ -162,10 +192,11 @@ mu_query_new (const char* xpath)
 void
 mu_query_destroy (MuQuery *self)
 {
-	if (self) {
-		uninit_mu_query (self);
-		g_free (self);
-	}
+	if (!self)
+		return;
+	
+	uninit_mu_query (self);
+	g_free (self);
 }
 
 struct _CheckPrefix {
@@ -176,21 +207,21 @@ struct _CheckPrefix {
 typedef struct _CheckPrefix	 CheckPrefix;
 
 static void
-each_check_prefix (const MuMsgField *field, CheckPrefix *cpfx)
+each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
 {
-	const char *field_name, *field_shortcut;
+	const char *field_name;
+	char field_shortcut;
 
-	if (cpfx->match)
+	if (!cpfx || cpfx->match)
 		return;
 	
-	field_shortcut = mu_msg_field_shortcut (field);
-	if (field_shortcut &&
-	    strncmp (cpfx->pfx, field_shortcut, cpfx->len) == 0) {
+	field_shortcut = mu_msg_field_shortcut (mfid);
+	if (field_shortcut == cpfx->pfx[0]) {
 		cpfx->match = TRUE;
 		return;
 	}
 
-	field_name = mu_msg_field_name (field);
+	field_name = mu_msg_field_name (mfid);
 	if (field_name &&
 	    strncmp (cpfx->pfx, field_name, cpfx->len) == 0) {
 		cpfx->match = TRUE;
@@ -265,11 +296,13 @@ mu_query_preprocess (const char *query)
 
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr,
-	      const MuMsgField* sortfield, gboolean ascending,
+	      MuMsgFieldId sortfieldid, gboolean ascending,
 	      size_t batchsize)  
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);	
+	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfieldid) ||
+			      sortfieldid == MU_MSG_FIELD_ID_NONE, NULL);
 	
 	try {
 		char *preprocessed;	
@@ -290,9 +323,9 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		if (batchsize == 0)
 			batchsize = self->_db->get_doccount();
 		
-		if (sortfield) 
+		if (sortfieldid != MU_MSG_FIELD_ID_NONE) 
 			enq.set_sort_by_value (
-				(Xapian::valueno)mu_msg_field_id(sortfield),
+				(Xapian::valueno)sortfieldid,
 				ascending);
 
 		enq.set_query(q);
@@ -312,7 +345,7 @@ mu_query_as_string  (MuQuery *self, const char *searchexpr)
 	try {
 		char *preprocessed;
 		int err (0);
-
+		
 		preprocessed = mu_query_preprocess (searchexpr);
 		
 		Xapian::Query q(get_query(self, preprocessed, &err));

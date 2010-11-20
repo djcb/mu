@@ -70,20 +70,23 @@ print_xapian_query (MuQuery *xapian, const gchar *query)
 }
 
 /* returns NULL if there is an error */
-const MuMsgField*
+static MuMsgFieldId
 sort_field_from_string (const char* fieldstr)
 {
-	const MuMsgField *field;
+	MuMsgFieldId mfid;
 		
-	field = mu_msg_field_from_name (fieldstr);
+	mfid = mu_msg_field_id_from_name (fieldstr, FALSE);
 
-	if (!field && strlen(fieldstr) == 1)
-		field = mu_msg_field_from_shortcut(fieldstr[0]);
-
-	if (!field)
-		g_printerr ("not a valid sort field: '%s'\n",
-			    fieldstr);
-	return field;
+	/* not found? try a shortcut */
+	if (mfid == MU_MSG_FIELD_ID_NONE &&
+	    strlen(fieldstr) == 1)
+		mfid = mu_msg_field_id_from_shortcut(fieldstr[0],
+						     FALSE);
+	
+	if (mfid == MU_MSG_FIELD_ID_NONE)
+		g_warning ("Not a valid sort field: '%s'\n",
+			   fieldstr);
+	return mfid;
 }
 
 
@@ -133,26 +136,28 @@ static gboolean
 run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 {
 	MuMsgIter *iter;
-	const MuMsgField *sortfield;
+	MuMsgFieldId sortid;
 	size_t matches;
 	
-	sortfield = NULL;
+	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
-		sortfield = sort_field_from_string (opts->sortfield);
-		if (!sortfield) /* error occured? */
+		sortid = sort_field_from_string (opts->sortfield);
+		if (sortid == MU_MSG_FIELD_ID_NONE) /* error occured? */
 			return FALSE;
 	}
 	
-	iter = mu_query_run (xapian, query, sortfield, !opts->descending, 0);
+	iter = mu_query_run (xapian, query, sortid, !opts->descending, 0);
 	if (!iter) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;
 	}
 
 	if (opts->linksdir)
-		matches = make_links (iter, opts->linksdir, opts->clearlinks);
+		matches = make_links (iter, opts->linksdir,
+				      opts->clearlinks);
 	else
-		matches = print_rows (iter, opts->fields, opts->summary_len);
+		matches = print_rows (iter, opts->fields,
+				      opts->summary_len);
 	
 	if (matches == 0) 
 		g_printerr ("No matches found\n");
