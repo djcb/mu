@@ -145,9 +145,13 @@ test_mu_msg_02 (void)
 			  ==, 1218051515);
 	
 	i = 0;
-	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)check_contact_02,
+	mu_msg_contact_foreach (msg,
+				(MuMsgContactForeachFunc)check_contact_02,
 				&i);
 	g_assert_cmpint (i,==,2);
+
+	g_assert_cmpuint (mu_msg_get_flags(msg),
+			  ==, MU_MSG_FLAG_SEEN);
 	
 	mu_msg_destroy (msg);
 }
@@ -173,9 +177,40 @@ test_mu_msg_03 (void)
 	g_assert_cmpstr (mu_msg_get_body_text(msg),
 			 ==,
 			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
+
+	g_assert_cmpuint (mu_msg_get_flags(msg),
+			  ==, 0);
+
 	
 	mu_msg_destroy (msg);
 }
+
+
+static void
+test_mu_msg_04 (void)
+{
+	MuMsg *msg;
+
+	msg = mu_msg_new (MU_TESTMAILDIR2
+			  "Foo/cur/mail4", NULL);
+
+	g_assert_cmpstr (mu_msg_get_to(msg),
+			 ==, "George Custer <gac@example.com>");
+	g_assert_cmpstr (mu_msg_get_subject(msg),
+			 ==, "pics for you");
+	g_assert_cmpstr (mu_msg_get_from(msg),
+			 ==, "Sitting Bull <sb@example.com>");
+	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+			  ==, MU_MSG_PRIO_NORMAL);
+	g_assert_cmpuint (mu_msg_get_date(msg),
+			  ==, 0);
+
+	g_assert_cmpuint (mu_msg_get_flags(msg),
+			  ==, MU_MSG_FLAG_HAS_ATTACH);
+	
+	mu_msg_destroy (msg);
+}
+
 
 
 /* static gboolean */
@@ -199,6 +234,8 @@ main (int argc, char *argv[])
 			 test_mu_msg_02);
 	g_test_add_func ("/mu-msg/mu-msg-03",
 			 test_mu_msg_03);
+	g_test_add_func ("/mu-msg/mu-msg-04",
+			 test_mu_msg_04);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,

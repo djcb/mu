@@ -231,11 +231,12 @@ get_recipient (MuMsg *msg, GMimeRecipientType rtype, StringFields field)
 
 		char *recep;
 		InternetAddressList *receps;
-		receps = g_mime_message_get_recipients (msg->_mime_msg, rtype);
-
+		receps = g_mime_message_get_recipients (msg->_mime_msg,
+							rtype);
 		/* FIXME: is there an internal leak in
 		 * internet_address_list_to_string? */
-		recep = (char*)internet_address_list_to_string (receps, TRUE);
+		recep = (char*)internet_address_list_to_string (receps,
+								TRUE);
 		if (recep && recep[0]=='\0')
 			g_free (recep);
 		else 
@@ -275,21 +276,33 @@ mu_msg_get_date (MuMsg *msg)
 }
 
 static gboolean
-part_is_inline (GMimeObject *part)
+part_looks_like_attachment (GMimeObject *part)
 {
 	GMimeContentDisposition *disp;
 	const char *str;
 	
 	disp  = g_mime_object_get_content_disposition (part);
 	if (!GMIME_IS_CONTENT_DISPOSITION(disp))
-		return TRUE;
+		return FALSE; /* no content disp? prob not
+			       * an attachment. */
 	
 	str = g_mime_content_disposition_get_disposition (disp);
 
-	if (str && (strcmp (str, GMIME_DISPOSITION_ATTACHMENT) == 0))
-		return FALSE;
-
-	return TRUE;
+	/* ok, it says it's an attachment, so it probably is... */
+	if (!str)
+		return TRUE;
+	if (strcmp (str, GMIME_DISPOSITION_ATTACHMENT) == 0)
+		return TRUE;
+	else if (strcmp (str, GMIME_DISPOSITION_INLINE) == 0) {
+		/* inline-images are also considered attachments... */
+		GMimeContentType *ct;
+		ct = g_mime_object_get_content_type (part);
+		if (ct)
+			return g_mime_content_type_is_type
+				(ct, "image", "*");
+	}
+	
+	return FALSE;
 }
 					  
 
@@ -302,7 +315,7 @@ msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuMsgFlags *flags)
 	if (!GMIME_IS_PART(part))
 		return;
 	
-	if (!part_is_inline(part))
+	if (part_looks_like_attachment(part))
 		*flags |= MU_MSG_FLAG_HAS_ATTACH;
 }
 
@@ -335,9 +348,11 @@ get_content_flags (MuMsg *msg)
 		}	
 		
 		if (ctype) {
-			if (g_mime_content_type_is_type (ctype,"*", "signed")) 
+			if (g_mime_content_type_is_type
+			    (ctype,"*", "signed")) 
 				flags |= MU_MSG_FLAG_SIGNED;
-			if (g_mime_content_type_is_type (ctype,"*", "encrypted")) 
+			if (g_mime_content_type_is_type
+			    (ctype,"*", "encrypted")) 
 				flags |= MU_MSG_FLAG_ENCRYPTED;
 		}
 	} else
@@ -353,7 +368,6 @@ mu_msg_get_flags (MuMsg *msg)
 	g_return_val_if_fail (msg, MU_MSG_FLAG_NONE);
 	
 	if (msg->_flags == MU_MSG_FLAG_NONE) {
-		msg->_flags = 0;
 		msg->_flags = mu_msg_flags_from_file (mu_msg_get_path(msg));
 		msg->_flags |= get_content_flags (msg);
 	}
