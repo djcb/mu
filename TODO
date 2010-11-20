@@ -12,14 +12,14 @@
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
 
-** release 0.9 [75%]
+** release 0.9 [71%]
    - [X] bookmarks
    - [X] gtk-ui for searching
-   - [ ] clean up mu-msg-field, add formatting(?)
+   - [X] clean up mu-msg-field, add formatting(?)
    - [X] normalize search fields
    - [ ] cleanup version check
    - [ ] fix flag searches + synonyms
-   - [ ] unbreak cc10/line33
+   - [X] unbreak cc10/line33
 
 
 * Releases already done
