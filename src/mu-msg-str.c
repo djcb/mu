@@ -58,7 +58,7 @@ const char*
 mu_msg_str_display_date_s (time_t t)
 {
 	time_t now;
-	static const guint SECS_IN_DAY = 24 * 60 * 60;
+	static const time_t SECS_IN_DAY = 24 * 60 * 60;
 	
 	now = time (NULL);
 
@@ -83,7 +83,8 @@ mu_msg_str_size_s  (size_t s)
 
 #else
 	if (s >= 1000 * 1000)
-		g_snprintf(buf, sizeof(buf), "%.1f MB", (double)s/(1000*1000));
+		g_snprintf(buf, sizeof(buf), "%.1f MB",
+			   (double)s/(1000*1000));
 	else
 		g_snprintf(buf, sizeof(buf), "%.1f kB", (double)s/(1000));
 #endif /*HAVE_GLIB216*/
@@ -109,28 +110,6 @@ mu_msg_str_flags  (MuMsgFlags flags)
 {
 	return g_strdup (mu_msg_str_flags_s(flags));
 }
-
-const char* 
-mu_msg_str_prio  (MuMsgPrio prio)
-{
-	switch (prio) {
-
-	case MU_MSG_PRIO_LOW:
-		return "low";
-		
-	case MU_MSG_PRIO_NONE:
-	case MU_MSG_PRIO_NORMAL:
-		return "normal";
-
-	case MU_MSG_PRIO_HIGH:
-		return "high";
-
-	default:
-		g_warning ("%s: invalid priority %d", __FUNCTION__, prio);
-		return NULL;
-	}
-}
-
 
 char*
 mu_msg_str_summarize (const char* str, size_t max_lines)

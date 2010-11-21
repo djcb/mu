@@ -119,18 +119,6 @@ char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
- * get a display string for a message priority; either
- * high, low or normal
- *
- * @param flags file flags
- * 
- * @return a string representation of the priority; see above
- * for what to do with it, or NULL in case of error
- */
-const char* mu_msg_str_prio  (MuMsgPrio prio) G_GNUC_CONST;
-
-
-/**
  * get a 'summary' of the string, ie. the first /n/ lines of the
  * strings, with all newlines removed, replaced by single spaces
  * 
