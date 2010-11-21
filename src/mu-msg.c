@@ -399,7 +399,7 @@ to_lower (char *s)
 
 
 static char*
-get_prio_str (MuMsg *msg)
+get_prio_header_field (MuMsg *msg)
 {
 	const char *str;
 	GMimeObject *obj;
@@ -455,22 +455,20 @@ MuMsgPrio
 mu_msg_get_prio (MuMsg *msg)
 {
 	char* priostr;
-	MuMsgPrio prio;
 
 	g_return_val_if_fail (msg, 0);
 
 	if (msg->_prio != MU_MSG_PRIO_NONE)
 		return msg->_prio;
 
-	priostr = get_prio_str (msg);
+	priostr = get_prio_header_field (msg);
 	if (!priostr)
 		return MU_MSG_PRIO_NORMAL;
 	
-	prio = parse_prio_str (priostr);
-
+	msg->_prio = parse_prio_str (priostr);
 	g_free (priostr);
 
-	return prio;
+	return msg->_prio;
 }
 
 
@@ -575,7 +573,8 @@ text_to_utf8 (const char* buffer, const char *charset)
 					NULL, NULL, &err);
 	if (!utf8) {
 		MU_WRITE_LOG ("%s: conversion failed from %s: %s",
-			      __FUNCTION__, charset, err ? err ->message : "");
+			      __FUNCTION__, charset,
+			      err ? err ->message : "");
 		if (err)
 			g_error_free (err);
 	}
@@ -703,7 +702,8 @@ get_body (MuMsg *msg, gboolean want_html)
 				&data);
 	if (want_html)
 		str = data._html_part ?
-			part_to_string (GMIME_PART(data._html_part), FALSE, &err) :
+			part_to_string (GMIME_PART(data._html_part),
+					FALSE, &err) :
 			NULL; 
 	else
 		str = data._txt_part ?
@@ -791,16 +791,10 @@ mu_msg_get_field_numeric (MuMsg *msg, const MuMsgFieldId mfid)
 	g_return_val_if_fail (msg, 0);
 	
 	switch (mfid) {
-	case MU_MSG_FIELD_ID_DATE:    
-		return mu_msg_get_date(msg);
-	case MU_MSG_FIELD_ID_FLAGS:   
-		return mu_msg_get_flags(msg);
-	case MU_MSG_FIELD_ID_PRIO:
-		return mu_msg_get_prio(msg);
-	case MU_MSG_FIELD_ID_SIZE:    
-		return mu_msg_get_size(msg);
-	default:
-		g_warning ("%s: %u", __FUNCTION__, mfid);
-		g_return_val_if_reached (0);
+	case MU_MSG_FIELD_ID_DATE: return mu_msg_get_date(msg);
+	case MU_MSG_FIELD_ID_FLAGS: return mu_msg_get_flags(msg);
+	case MU_MSG_FIELD_ID_PRIO: return mu_msg_get_prio(msg);
+	case MU_MSG_FIELD_ID_SIZE: return mu_msg_get_size(msg);
+	default: g_return_val_if_reached (-1);
 	}
 }
