@@ -29,7 +29,7 @@ AM_SILENT_RULES([yes])
 # note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["8.0"], [Schema version of the database])
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["8.99"], [Schema version of the database])
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
 

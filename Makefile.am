@@ -49,6 +49,15 @@ line33:
 fixme:
 	@grep -i 'FIXME\|TODO' `find src -type f`
 
+# check whether we can run make distcheck from the repo version
+gitcheck:
+	cd `mktemp -d`; \
+	git clone git://gitorious.org/mu/mu-ng.git ; \
+	cd mu-ng ; \
+	autoreconf -i ;\
+	./configure ; \
+	make distcheck
+
 
 EXTRA_DIST=		\
 	TODO		\
