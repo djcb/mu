@@ -324,7 +324,8 @@ mu_msg_iter_get_flags (MuMsgIter *iter)
 MuMsgPrio
 mu_msg_iter_get_prio (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_done(iter), MU_MSG_PRIO_NONE);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter),
+			      MU_MSG_PRIO_NONE);
 	
 	return static_cast<MuMsgPrio>(mu_msg_iter_get_field_numeric
 				      (iter, MU_MSG_FIELD_ID_PRIO));

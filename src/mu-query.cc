@@ -58,8 +58,8 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
 
-		////// FIXME
-		// g_print ("synonyms:");
+		// ////// FIXME
+		// g_print ("\nsynonyms:\n");
 		// for (Xapian::TermIterator iter = mqx->_db->synonym_keys_begin();
 		//      iter != mqx->_db->synonym_keys_end(); ++iter) {
 		// 	for (Xapian::TermIterator jter = mqx->_db->synonyms_begin(*iter);
@@ -145,44 +145,6 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 			qparser->add_prefix ("", pfx);
 		}
 	} MU_XAPIAN_CATCH_BLOCK;
-	
-	// try {
-	// 	switch (mfid) {
-			
-	// 	case MU_MSG_FIELD_ID_FLAGS:
-	// 	case MU_MSG_FIELD_ID_MSGID:
-	// 	case MU_MSG_FIELD_ID_MAILDIR:
-	// 		qparser->add_prefix (shortcut, pfx);
-			
-	// 	}
-		
-	// 	if (mfid == MU_MSG_FIELD_ID_FLAGS ) {
-
-	// 		return;
-	// 	} else if (mfid == MU_MSG_FIELD_ID_MSGID ||
-	// 		   mfid == MU_MSG_FIELD_ID_MAILDIR) {
-			
-		    
-	// 	    mu_msg_field_type (mfid) != MU_MSG_FIELD_TYPE_STRING ||
-	// 	    mu_msg_field_xapian_contact(mfid)) {
-	// 		    qparser->add_boolean_prefix
-	// 			    (mu_msg_field_name(mfid), pfx);
-	// 		qparser->add_boolean_prefix (shortcut, pfx);
-
-	// 		/* make the empty string match this field too*/
-	// 		qparser->add_prefix ("", pfx);
-
-	// 	} else {
-			
-	// 		qparser->add_boolean_prefix
-	// 			(mu_msg_field_name(mfid), pfx);
-	// 		qparser->add_prefix (shortcut, pfx);
-			
-	// 		/* make the empty string match this field too*/
-	// 		qparser->add_prefix ("", pfx);
-	// 	}
-	
-	// } MU_XAPIAN_CATCH_BLOCK;
 }
 
 MuQuery*

@@ -51,7 +51,7 @@ struct _MuStore {
 
 
 static void
-each_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
+add_synonym_for_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
 {
 	std::string pfx (1, mu_msg_field_xapian_prefix
 			 (MU_MSG_FIELD_ID_FLAGS));
@@ -63,8 +63,8 @@ each_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
 static void
 add_synonyms (MuStore *store)
 {
-	mu_msg_flags_foreach ((MuMsgFlagsForeachFunc)each_flag,
-			     store->_db);
+	mu_msg_flags_foreach ((MuMsgFlagsForeachFunc)add_synonym_for_flag,
+			      store->_db);
 }
 
 static gboolean
