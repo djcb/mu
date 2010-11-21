@@ -64,9 +64,7 @@ enum _MuMsgFieldType {
 	MU_MSG_FIELD_TYPE_NUM
 };
 typedef enum _MuMsgFieldType MuMsgFieldType;
-static const guint MU_MSG_FIELD_TYPE_NONE = (guint)-1;
-
-
+static const MuMsgFieldType MU_MSG_FIELD_TYPE_NONE = (MuMsgFieldType)-1;
 
 typedef void (*MuMsgFieldForEachFunc) (MuMsgFieldId id,
 				       gconstpointer data);
