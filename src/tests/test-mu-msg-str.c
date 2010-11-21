@@ -30,6 +30,7 @@
 
 #include "test-mu-common.h"
 #include "src/mu-msg-str.h"
+#include "src/mu-msg-prio.h"
 
 static void
 test_mu_msg_str_date_01 (void)
@@ -102,15 +103,15 @@ test_mu_msg_str_size_02 (void)
 static void
 test_mu_msg_str_prio_01 (void)
 {
-	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIO_LOW), ==, "low");
-	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIO_NORMAL), ==, "normal");
-	g_assert_cmpstr (mu_msg_str_prio(MU_MSG_PRIO_HIGH), ==, "high");
+	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_LOW), ==, "low");
+	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_NORMAL), ==, "normal");
+	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_HIGH), ==, "high");
 }
 
 
 static gboolean
-ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg,
-	      gpointer user_data)
+ignore_error (const char* log_domain, GLogLevelFlags log_level,
+	      const gchar* msg, gpointer user_data)
 {
 	return FALSE; /* don't abort */
 }
@@ -121,7 +122,7 @@ test_mu_msg_str_prio_02 (void)
 {
 	/* this must fail */
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
-	g_assert_cmpstr (mu_msg_str_prio(666), ==, NULL);
+	g_assert_cmpstr (mu_msg_prio_name(666), ==, NULL);
 }
 	
 

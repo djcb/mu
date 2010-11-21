@@ -207,16 +207,16 @@ test_mu_query_05 (void)
 	
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
-	
+
 	query = mu_query_new (xpath);
 	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
 			     FALSE, 1);
 	msg = mu_msg_iter_get_msg (iter);
-
+	
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
 			 "Greetings from Lothlórien");
 	g_assert_cmpstr (mu_msg_get_summary(msg,5),==,
-		"Let's write some fünkÿ text using umlauts. Foo.");
+			 "Let's write some fünkÿ text using umlauts. Foo.");
 	
 	mu_msg_destroy (msg);
 	mu_msg_iter_destroy (iter);

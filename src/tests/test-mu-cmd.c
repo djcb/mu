@@ -150,6 +150,9 @@ test_mu_find_02 (void)
 	search ("bull m:/Foo", 1);
 	search ("bull flags:a", 1);
 	search ("g:x", 0);
+	search ("flags:encrypted", 0);
+	search ("flags:attach", 1);
+
 }
 
 
@@ -289,7 +292,6 @@ test_mu_extract_03 (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
-
 	output = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
