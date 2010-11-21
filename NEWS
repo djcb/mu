@@ -2,6 +2,12 @@
 
 ** Release 0.9
    
+   - you can now search for the message priority ('prio:high', 'prio:low',
+     'prio:normal')
+   - you can now search for message flags, e.g. 'flag:attach' for messages with
+     attachment, or 'flag:encrypted' for encrypted messages
+   - you can store bookmarked queries in ~/.mu/bookmarks
+   - the 'flags' parameter has been renamed in 'flag'
    - add a simple graphical UI for searching, called 'mug'
    - fix --clearlinks for file systems without entry->d_type (fixes issue #28)
    - make matching case-insensitive and accent-insensitive
@@ -22,6 +28,7 @@
      --linksdir, --clearlinks lost their single char version
      
 ** Release 0.7 <2010-02-27 Sat>
+
    - Database format changed
    - Automatic database scheme version check, notifies users when an upgrade
      is needed
