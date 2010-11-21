@@ -87,7 +87,7 @@ static const MuMsgField FIELD_DATA[] = {
 	{ 
 		MU_MSG_FIELD_ID_FLAGS, 
 		MU_MSG_FIELD_TYPE_INT,
-		"flags", 'g', 'G',  /* flaGs */
+		"flag", 'g', 'G',  /* flaGs */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
 	},
 
@@ -116,7 +116,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_PRIO,
 		MU_MSG_FIELD_TYPE_INT,
 		"prio", 'p', 'P',  
-		FLAG_GMIME | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
 	},
 
 	{ 

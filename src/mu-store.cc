@@ -55,16 +55,36 @@ add_synonym_for_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
 {
 	std::string pfx (1, mu_msg_field_xapian_prefix
 			 (MU_MSG_FIELD_ID_FLAGS));
-	
-	db->add_synonym (pfx + mu_msg_flag_to_name (flag),
+
+	db->clear_synonyms (pfx + mu_msg_flag_name (flag));
+	db->add_synonym (pfx + mu_msg_flag_name (flag),
 			 pfx + (std::string(1, mu_msg_flag_char (flag))));
 }
+
+
+static void
+add_synonym_for_prio (MuMsgPrio prio, Xapian::WritableDatabase *db)
+{
+	std::string pfx (1, mu_msg_field_xapian_prefix
+			 (MU_MSG_FIELD_ID_PRIO));
+	
+	std::string s1 (pfx + mu_msg_prio_name (prio));
+	std::string s2 (pfx + (std::string(1, mu_msg_prio_char (prio))));
+	
+	db->clear_synonyms (s1);
+	db->clear_synonyms (s2);
+	
+	db->add_synonym (s1, s2);
+}
+
 
 static void
 add_synonyms (MuStore *store)
 {
 	mu_msg_flags_foreach ((MuMsgFlagsForeachFunc)add_synonym_for_flag,
 			      store->_db);
+	mu_msg_prio_foreach ((MuMsgPrioForeachFunc)add_synonym_for_prio,
+			     store->_db);
 }
 
 static gboolean
@@ -258,13 +278,17 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg,
 	
 	if (mfid == MU_MSG_FIELD_ID_FLAGS) {
 		const char* flags, *cur;
-		cur = flags = mu_msg_flags_to_str_s ((MuMsgFlags)num);
+		cur = flags = mu_msg_flags_str_s ((MuMsgFlags)num);
 		while (cur && *cur) {
 			char kar = tolower (*cur);
 			doc.add_term  (pfx + kar);
 			++cur;
 		}
-	} else
+
+	} else if (mfid == MU_MSG_FIELD_ID_PRIO) {
+		doc.add_term (pfx + std::string(1,
+			      mu_msg_prio_char((MuMsgPrio)num)));
+	} else 
 		doc.add_term  (pfx + numstr);
 }
 

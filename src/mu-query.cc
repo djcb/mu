@@ -58,7 +58,7 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
 
-		// ////// FIXME
+		// // ////// FIXME
 		// g_print ("\nsynonyms:\n");
 		// for (Xapian::TermIterator iter = mqx->_db->synonym_keys_begin();
 		//      iter != mqx->_db->synonym_keys_end(); ++iter) {
@@ -102,8 +102,8 @@ get_query  (MuQuery * mqx, const char* searchexpr, int *err = 0)  {
 	try {
 		return mqx->_qparser->parse_query
 			(searchexpr,
-			 Xapian::QueryParser::FLAG_BOOLEAN          | 
-			 // Xapian::QueryParser::FLAG_PHRASE           |
+			 Xapian::QueryParser::FLAG_BOOLEAN          |
+			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
 			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
 		
@@ -129,7 +129,7 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 		const std::string shortcut
 			(1, mu_msg_field_shortcut (mfid));
 
-		if (mfid == MU_MSG_FIELD_ID_FLAGS) {
+		if (mfid == MU_MSG_FIELD_ID_FLAGS || mfid == MU_MSG_FIELD_ID_PRIO) {
 			qparser->add_prefix
 				(mu_msg_field_name(mfid), pfx);
 			qparser->add_prefix (shortcut, pfx);
