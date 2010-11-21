@@ -34,23 +34,17 @@ mu_msg_prio_name (MuMsgPrio prio)
 MuMsgPrio
 mu_msg_prio_from_char (char k)
 {
-	switch (k) {
-	case 'l': return MU_MSG_PRIO_LOW;
-	case 'n': return MU_MSG_PRIO_NORMAL;
-	case 'h': return MU_MSG_PRIO_HIGH;
-	default: g_return_val_if_reached (MU_MSG_PRIO_NONE);
-	}
+	g_return_val_if_fail (k == 'l' || k == 'n' || k == 'h',
+			      MU_MSG_PRIO_NONE);
+	return (MuMsgPrio)k;
 }
 
 char
-mu_msg_prio_to_char (MuMsgPrio prio)
+mu_msg_prio_char (MuMsgPrio prio)
 {
-	switch (prio) {
-	case MU_MSG_PRIO_LOW	: return 'l';
-	case MU_MSG_PRIO_NORMAL	: return 'n';
-	case MU_MSG_PRIO_HIGH	: return 'h';
-	default			: g_return_val_if_reached (0);
-	}
+	g_return_val_if_fail (prio == 'l' || prio == 'n' || prio == 'h',
+			      0);
+	return (char)prio;
 }
 
 

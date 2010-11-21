@@ -25,9 +25,9 @@
 G_BEGIN_DECLS
 
 enum _MuMsgPrio {
-	MU_MSG_PRIO_LOW,
-	MU_MSG_PRIO_NORMAL,
-	MU_MSG_PRIO_HIGH
+	MU_MSG_PRIO_LOW	   = 'l',
+	MU_MSG_PRIO_NORMAL = 'n',
+	MU_MSG_PRIO_HIGH   = 'h'
 };
 typedef enum _MuMsgPrio MuMsgPrio;
 
@@ -66,8 +66,7 @@ MuMsgPrio mu_msg_prio_from_char (char k) G_GNUC_CONST;
  * 
  * @return a shortcut character or 0 in case of error
  */
-char mu_msg_prio_to_char (MuMsgPrio prio) G_GNUC_CONST;
-
+char mu_msg_prio_char (MuMsgPrio prio) G_GNUC_CONST;
 
 typedef void (*MuMsgPrioForeachFunc) (MuMsgPrio prio, gpointer user_data);
 /**
