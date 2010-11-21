@@ -20,13 +20,66 @@
 #ifndef __MU_MSG_PRIO_H__
 #define __MU_MSG_PRIO_H__
 
-enum _MuMsgPrio {  
-	MU_MSG_PRIO_NONE    = 0,
+#include <glib.h>
 
-	MU_MSG_PRIO_LOW     = 1,
-	MU_MSG_PRIO_NORMAL  = 2,
-	MU_MSG_PRIO_HIGH    = 3
+G_BEGIN_DECLS
+
+enum _MuMsgPrio {
+	MU_MSG_PRIO_LOW,
+	MU_MSG_PRIO_NORMAL,
+	MU_MSG_PRIO_HIGH
 };
 typedef enum _MuMsgPrio MuMsgPrio;
+
+static const MuMsgPrio MU_MSG_PRIO_NONE = (MuMsgPrio)-1;
+
+
+/**
+ * get a printable name for the message priority
+ * (ie., MU_MSG_PRIO_LOW=>"low" etc.)
+ * 
+ * @param prio a message priority
+ * 
+ * @return a printable name for this priority
+ */
+const char* mu_msg_prio_name (MuMsgPrio prio) G_GNUC_CONST;
+
+
+/**
+ * get the MuMsgPriority corresponding to a one-character shortcut
+ * ('l'=>MU_MSG_PRIO_, 'n'=>MU_MSG_PRIO_NORMAL or
+ * 'h'=>MU_MSG_PRIO_HIGH)
+ * 
+ * @param k a character 
+ * 
+ * @return a message priority
+ */
+MuMsgPrio mu_msg_prio_from_char (char k) G_GNUC_CONST;
+
+
+/**
+ * get the one-character shortcut corresponding to a message priority
+ * ('l'=>MU_MSG_PRIO_, 'n'=>MU_MSG_PRIO_NORMAL or
+ * 'h'=>MU_MSG_PRIO_HIGH)
+ * 
+ * @param prio a mesage priority
+ * 
+ * @return a shortcut character or 0 in case of error
+ */
+char mu_msg_prio_to_char (MuMsgPrio prio) G_GNUC_CONST;
+
+
+typedef void (*MuMsgPrioForeachFunc) (MuMsgPrio prio, gpointer user_data);
+/**
+ * call a function for each message priority
+ * 
+ * @param func a callback function
+ * @param user_data a user pointer to pass to the callback
+ */
+void mu_msg_prio_foreach (MuMsgPrioForeachFunc func, gpointer user_data);
+
+
+
+G_END_DECLS
 
 #endif /*__MU_MSG_PRIO_H__*/

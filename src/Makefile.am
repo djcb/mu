@@ -69,6 +69,7 @@ libmu_la_SOURCES=			\
 	mu-msg-fields.h			\
 	mu-msg-flags.c			\
 	mu-msg-flags.h			\
+	mu-msg-prio.c			\
 	mu-msg-prio.h			\
 	mu-msg-status.h			\
 	mu-msg.c			\
