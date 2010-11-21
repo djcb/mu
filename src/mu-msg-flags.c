@@ -65,7 +65,7 @@ mu_msg_flag_from_char (char k)
 
 
 const char*
-mu_msg_flag_to_name (MuMsgFlags flag)
+mu_msg_flag_name (MuMsgFlags flag)
 {	
 	switch (flag) {
 	case MU_MSG_FLAG_NEW:		return "new";
@@ -107,7 +107,7 @@ mu_msg_flag_char (MuMsgFlags flag)
 }
 
 const char*
-mu_msg_flags_to_str_s (MuMsgFlags flags)
+mu_msg_flags_str_s (MuMsgFlags flags)
 {
 	int i, j;
 	static char buf[16]; /* more than enough */

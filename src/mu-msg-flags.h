@@ -103,7 +103,7 @@ MuMsgFlags  mu_msg_flags_from_char (char c) G_GNUC_CONST;
  * 
  * @return a string representation of the flags
  */
-const char* mu_msg_flags_to_str_s  (MuMsgFlags flags) G_GNUC_CONST;
+const char* mu_msg_flags_str_s  (MuMsgFlags flags) G_GNUC_CONST;
 
 
 /**
@@ -125,7 +125,7 @@ char mu_msg_flag_char  (MuMsgFlags flag) G_GNUC_CONST;
  * @return a string describing this flag, e.g.,
  * MU_MSG_FLAG_ATTACH=>"attach"
  */
-const char* mu_msg_flag_to_name (MuMsgFlags flag) G_GNUC_CONST;
+const char* mu_msg_flag_name (MuMsgFlags flag) G_GNUC_CONST;
 
 
 
