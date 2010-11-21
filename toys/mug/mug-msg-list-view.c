@@ -75,13 +75,15 @@ mug_msg_list_view_class_init (MugMsgListViewClass *klass)
 	parent_class            = g_type_class_peek_parent (klass);
 	gobject_class->finalize = mug_msg_list_view_finalize;
 
-	g_type_class_add_private (gobject_class, sizeof(MugMsgListViewPrivate));
+	g_type_class_add_private (gobject_class,
+				  sizeof(MugMsgListViewPrivate));
 
 	signals[MUG_MSG_SELECTED] = 
 		g_signal_new ("msg-selected",
 			      G_TYPE_FROM_CLASS(gobject_class),
 			      G_SIGNAL_RUN_FIRST,
-			      G_STRUCT_OFFSET(MugMsgListViewClass, msg_selected),
+			      G_STRUCT_OFFSET(MugMsgListViewClass,
+					      msg_selected),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
@@ -189,12 +191,12 @@ mug_msg_list_view_init (MugMsgListView *obj)
 
 	gtk_tree_view_set_headers_clickable (GTK_TREE_VIEW(obj), TRUE);
 	gtk_tree_view_set_grid_lines (GTK_TREE_VIEW(obj),
-				      GTK_TREE_VIEW_GRID_LINES_VERTICAL);	
+				      GTK_TREE_VIEW_GRID_LINES_VERTICAL);
 	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW(obj), TRUE);
 	
  	append_col (tview, "Date", MUG_COL_DATE, 80);
 	append_col (tview, "Folder", MUG_COL_MAILDIR, 60);
-	append_col (tview, "Flags", MUG_COL_FLAGSSTR, 20);
+	append_col (tview, "F", MUG_COL_FLAGSSTR, 25);
 	append_col (tview, "From", MUG_COL_FROM, 0);
 	append_col (tview, "To", MUG_COL_TO, 0);
 	append_col (tview, "Subject", MUG_COL_SUBJECT, 0);
@@ -248,7 +250,8 @@ msg_list_view_move (MugMsgListView *self, gboolean next)
 	else
 		gtk_tree_path_prev (path);
 	
-	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path, NULL, FALSE);
+	gtk_tree_view_set_cursor (GTK_TREE_VIEW(self), path,
+				  NULL, FALSE);
 	gtk_tree_path_free (path);
 	
 	return TRUE;
