@@ -162,8 +162,9 @@ mu_msg_new (const char* filepath, const gchar* mdir)
 
 	ref_gmime ();
 	
-	msg = g_slice_new0 (MuMsg);
-
+	msg = g_slice_new0 (MuMsg);	
+	msg->_prio      = MU_MSG_PRIO_NONE;
+	
 	if (!init_file_metadata(msg, filepath, mdir)) {
 		mu_msg_destroy (msg);
 		return NULL;
@@ -173,7 +174,7 @@ mu_msg_new (const char* filepath, const gchar* mdir)
 		mu_msg_destroy (msg);
 		return NULL;
 	}
-
+	
 	return msg;
 }
 
@@ -427,18 +428,18 @@ parse_prio_str (const char* priostr)
 		const char*   _str;
 		MuMsgPrio _prio;
 	} str_prio[] = {
-		{ "high", MU_MSG_PRIO_HIGH },
-		{ "1",    MU_MSG_PRIO_HIGH },
-		{ "2",    MU_MSG_PRIO_HIGH },
+		{ "high",	MU_MSG_PRIO_HIGH },
+		{ "1",		MU_MSG_PRIO_HIGH },
+		{ "2",		MU_MSG_PRIO_HIGH },
 		
-		{ "normal", MU_MSG_PRIO_NORMAL },
-		{ "3",      MU_MSG_PRIO_NORMAL },
+		{ "normal",	MU_MSG_PRIO_NORMAL },
+		{ "3",		MU_MSG_PRIO_NORMAL },
 
-		{ "low",  MU_MSG_PRIO_LOW },
-		{ "list", MU_MSG_PRIO_LOW },
-		{ "bulk", MU_MSG_PRIO_LOW },
-		{ "4",    MU_MSG_PRIO_LOW },
-		{ "5",    MU_MSG_PRIO_LOW }
+		{ "low",	MU_MSG_PRIO_LOW },
+		{ "list",	MU_MSG_PRIO_LOW },
+		{ "bulk",	MU_MSG_PRIO_LOW },
+		{ "4",		MU_MSG_PRIO_LOW },
+		{ "5",		MU_MSG_PRIO_LOW }
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(str_prio); ++i)
