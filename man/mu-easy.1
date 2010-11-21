@@ -67,7 +67,7 @@ of the date depends on your system locale.
 
 How do we know that the message was sent to Julius Caesar? Well, it's not
 visible from the results above, because the default fields that are shown are
-date-sender-subject. However, we can change this using the \fI--fields\fR
+date/sender/subject. However, we can change this using the \fI--fields\fR
 parameter (see the \fBmu-find\fR man page for the details):
 
 .nf
@@ -80,7 +80,8 @@ return something like:
   Julius Caesar <jc@example.com> Fere libenter homines id quod volunt credunt
 .fi
 
-This is the same message found before, only with some different fields displayed.
+This is the same message found before, only with some different fields
+displayed.
 
 By default, \fBmu\fR uses the logical AND for the search parameters -- that
 is, it displays messages that match all the parameters. However, we can use
@@ -118,6 +119,26 @@ whitespace removed.
 
 Also note the \fBm:/archive\fR parameter in the query. This means that we only
 match messages in a maildir called '/archive'.
+
+.SH MORE QUERIES
+
+Let's list some more queries that may be interesting:
+
+Get all important messages which are signed:
+.nf
+\fB$ mu find flag:signed prio:high \fR 
+.fi
+
+Get all messages from Jim without an attachment:
+.nf
+\fB$ mu find from:jim AND NOT flag:attach\fR 
+.fi
+
+Get all unread messages about some dance:
+.nf
+\fB$ mu find flag:new subject:tango\fR 
+.fi
+
 
 .SH DISPLAYING MESSAGES
 

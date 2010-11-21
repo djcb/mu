@@ -68,14 +68,12 @@ if you an explicit search prefix; in other words, if, for example:
 	mu find foo@example.com
 .fi
 
-does not work, 
+might not work, while 
 
 .nf
 	mu find f:foo@example.com
 .fi
-
-might.
-
+does.
 
 As mentioned, matching is case-insensitive and accent-insensitive;
 thus
@@ -104,9 +102,43 @@ search fields and their abbreviations:
 	to,t            To: recipient
 	maildir,m       Maildir	
 	msgid,i         Message-ID
+	prio,p          Message priority ('low', 'normal' or 'high')
+	flag,g		Message Flags
 .fi
 
 For clarity, this man-page uses the longer versions.
+
+The meaning of most of these fields should be clear, but some require some
+extra discusion.
+
+First, the message flags field describes certain properties of the message, as
+listed in the following table:
+.nf
+	d,draft		Draft Message
+	f,flagged	Flagged
+	n,new		New message (in new/ Maildir)
+	p,passed	Passed ('Handled')
+	r,replied	Replied
+	s,seen		Seen
+	t,thrashed	Marked for deletion
+	a,attach	Has attachment
+	z,signed	Signed message
+	x,encrypted	Encrypted message
+.fi
+
+Using this, we can search e.g. for all signed messages that have an
+attachment:
+.nf
+	$ mu find flag:signed flag:attach
+.fi
+
+The message-priority has three possible values: low, normal or high. We can
+match them using 'prio' - for example, to get all high-priority messages with
+a subject containing some bird:
+
+.nf
+	$ mu find prio:high subject:nightingale
+.fi
 
 The Maildir field describes the directory path starting \fBafter\fR the
 Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part. So for
@@ -115,7 +147,7 @@ example, if there's a message with the file name
 other messages in the same maildir) with:
 
 .nf
-	mu find maildir:/lists/running
+	$ mu find maildir:/lists/running
 .fi
 
 Note the starting '/'. If you want to match mails in the 'root' maildir, you
@@ -151,7 +183,7 @@ would list the date, subject and sender of all messages with 'snow' in the
 their subject.
 
 The table of replacement characters is superset of the list mentions for
-search parameters:
+search parameters; the complete list:
 
 .nf
 	t	\fBt\fRo: recipient
@@ -166,25 +198,12 @@ search parameters:
 	m	\fBm\fRaildir
 .fi
 
-The message-flags output is a string, consisting of zero or more of the
-following characters.
 
-.nf
-	D	Draft Message
-	F	Flagged
-	N	New message (in new/ Maildir)
-	P	Passed ('Handled')
-	R	Replied
-	S	Seen
-	T	Marked for deletion
-	a	Has attachment
-	s	Signed message
-	x	Encrypted message
-.fi
+The message flags are the same ones we already saw in the message flags
+above. Thus, a message which is 'seen', has an attachment and is signed would
+have 'asz' as its corresponding output string, while an encrypted new message
+would have 'nx'.
 
-Note that these are theoretical flags, which may or may not be actually in
-use.
- 
 .TP
 \fB\-s\fR, \fB\-\-sortfield\fR \fR=\fI<field>\fR and \fB\-z\fR, \fB\-\-descending\fR
 specifies the field to sort the search results by, and the direction. The
@@ -286,6 +305,13 @@ Find all messages in the 'Archive' folder from Fred:
 .nf
   $ mu find from:fred maildir:/Archive
 .fi
+
+Find all messages with attachments:
+
+.nf
+  $ mu find flag:attach
+.fi
+
 
 
 .SS Integrating mu find with mail clients

@@ -1,6 +1,6 @@
 * Future release
 
-** release 0.9 [%]
+** release 0.10 [%]
 
    - [ ] mu stats
    - [ ] follow symlinks when indexing
@@ -12,13 +12,13 @@
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
 
-** release 0.9 [71%]
+** release 0.9 [85%]
    - [X] bookmarks
    - [X] gtk-ui for searching
    - [X] clean up mu-msg-field, add formatting(?)
    - [X] normalize search fields
    - [ ] cleanup version check
-   - [ ] fix flag searches + synonyms
+   - [X] fix flag searches + synonyms
    - [X] unbreak cc10/line33
 
 
