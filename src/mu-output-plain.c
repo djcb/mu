@@ -52,7 +52,7 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 	
 		if (mfid == MU_MSG_FIELD_ID_PRIO) {
 			val = mu_msg_iter_get_field_numeric (iter, mfid);
-			return mu_msg_str_prio ((MuMsgPrio)val);
+			return mu_msg_prio_name ((MuMsgPrio)val);
  		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
 			val = mu_msg_iter_get_field_numeric (iter, mfid);
 			return mu_msg_str_flags_s ((MuMsgFlags)val);
