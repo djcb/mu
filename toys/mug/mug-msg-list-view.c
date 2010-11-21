@@ -337,7 +337,7 @@ add_row (GtkListStore *store, MuMsgIter *iter)
 	datestr	= date == 0 ? "-" : mu_msg_str_display_date_s (date);
 	from	= empty_or_display_contact (mu_msg_iter_get_from(iter));
 	to	= empty_or_display_contact (mu_msg_iter_get_to(iter));
-	flagstr = mu_msg_flags_to_str_s(mu_msg_iter_get_flags (iter));
+	flagstr = mu_msg_flags_str_s(mu_msg_iter_get_flags (iter));
 	
 	gtk_list_store_append (store, &treeiter);
 	gtk_list_store_set (store, &treeiter,
