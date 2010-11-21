@@ -41,12 +41,15 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_TO,
 	MU_MSG_FIELD_ID_MSGID,
 	MU_MSG_FIELD_ID_TIMESTAMP,
-
+	
 	MU_MSG_FIELD_ID_NUM
 };
+typedef enum _MuMsgFieldId MuMsgFieldId;
 
-static const guint MU_MSG_FIELD_ID_NONE = (guint)-1; 
-typedef guint MuMsgFieldId;
+/* some specials... */
+static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
+static const MuMsgFieldId MU_MSG_FIELD_ID_DATESTR =
+	(MuMsgFieldId) (MU_MSG_FIELD_ID_NUM + 1);
 
 #define mu_msg_field_id_is_valid(MFID) \
 	((MFID) < MU_MSG_FIELD_ID_NUM)

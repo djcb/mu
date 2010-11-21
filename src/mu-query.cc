@@ -1,4 +1,4 @@
-/* 
+make/* 
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -32,12 +32,36 @@
 #include "mu-util-db.h"
 #include "mu-msg-str.h"
 
+
+struct ISODateRangeProcessor : public Xapian::ValueRangeProcessor {
+    ISODateRangeProcessor() {}
+	
+    Xapian::valueno operator()(std::string &begin, std::string &end) {
+	    static const std::string colon (":");
+	    static const std::string name (
+		    mu_msg_field_name (MU_MSG_FIELD_ID_DATE) + colon);
+	    static const std::string shortcut (
+		    std::string(1, mu_msg_field_shortcut
+				(MU_MSG_FIELD_ID_DATE)) + colon);
+
+	    if (begin.find (name) == 0) 
+		    begin.erase (0, name.length());
+	    else if (begin.find (shortcut) == 0)
+		    begin.erase (0, shortcut.length());
+	    else
+		    return Xapian::BAD_VALUENO;
+	    
+	    return (Xapian::valueno)MU_MSG_FIELD_ID_DATESTR;
+    }
+};
+
 static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
 struct _MuQuery {
-	Xapian::Database*         _db;
-	Xapian::QueryParser*	  _qparser;
-	Xapian::Sorter*           _sorters[MU_MSG_FIELD_TYPE_NUM];
+	Xapian::Database*		_db;
+	Xapian::QueryParser*		_qparser;
+	Xapian::Sorter*			_sorters[MU_MSG_FIELD_TYPE_NUM];
+	Xapian::ValueRangeProcessor*	_range_processor;
 };
 
 gboolean
@@ -52,8 +76,11 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		
 		mqx->_qparser->set_database (*mqx->_db);
 		mqx->_qparser->set_default_op (Xapian::Query::OP_AND);
-		//mqx->_qparser->set_stemming_strategy (Xapian::QueryParser::STEM_NONE);
 
+		mqx->_range_processor = new ISODateRangeProcessor ();
+		mqx->_qparser->add_valuerangeprocessor
+			(mqx->_range_processor);
+		
 		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
@@ -88,7 +115,8 @@ uninit_mu_query (MuQuery *mqx)
 	try {
 		delete mqx->_db;
 		delete mqx->_qparser;
-
+		delete mqx->_range_processor;
+		
 		for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) 
 			delete mqx->_sorters[i];
 		

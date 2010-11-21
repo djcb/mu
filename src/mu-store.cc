@@ -267,6 +267,24 @@ mu_store_flush (MuStore *store)
 
 
 static void
+add_terms_values_date (Xapian::Document& doc, MuMsg *msg,
+		       MuMsgFieldId mfid)
+{
+	char datebuf[9];
+	static const std::string pfx (1, mu_msg_field_xapian_prefix(mfid));
+	gint64 num = mu_msg_get_field_numeric (msg, mfid);
+	
+	if (G_UNLIKELY(strftime(datebuf, sizeof(datebuf), "%Y%m%d",
+				gmtime((const time_t*)&num)) == 0))
+		g_return_if_reached();
+			     
+	const std::string numstr (Xapian::sortable_serialise((double)num));
+	doc.add_value ((Xapian::valueno)mfid, numstr);
+	doc.add_value ((Xapian::valueno)MU_MSG_FIELD_ID_DATESTR, datebuf);
+}
+
+
+static void
 add_terms_values_number (Xapian::Document& doc, MuMsg *msg, 
 			 MuMsgFieldId mfid)
 {
@@ -288,6 +306,7 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg,
 	} else if (mfid == MU_MSG_FIELD_ID_PRIO) {
 		doc.add_term (pfx + std::string(1,
 			      mu_msg_prio_char((MuMsgPrio)num)));
+
 	} else 
 		doc.add_term  (pfx + numstr);
 }
@@ -364,36 +383,32 @@ typedef struct _MsgDoc		 MsgDoc;
 static void
 add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 {
-	MuMsgFieldType type;
-
 	/* note: contact-stuff (To/Cc/From) will handled in
 	 * add_contact_info, not here */
 	if (!mu_msg_field_xapian_index(mfid) &&
 	    !mu_msg_field_xapian_term(mfid) &&
 	    !mu_msg_field_xapian_value(mfid))
 		return;
-	
-	type = mu_msg_field_type (mfid);
 
-	if (type == MU_MSG_FIELD_TYPE_STRING) {		
-		if (mfid == MU_MSG_FIELD_ID_BODY_TEXT) 
-			add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, 
- 					       mfid);
+	switch (mfid) {
+	case MU_MSG_FIELD_ID_DATE:
+		add_terms_values_date (*msgdoc->_doc, msgdoc->_msg, mfid);
+		break;
+	case MU_MSG_FIELD_ID_BODY_TEXT:
+		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid);
+		break;
+	default:	
+		if (mu_msg_field_is_numeric (mfid)) 
+			add_terms_values_number (*msgdoc->_doc, msgdoc->_msg,
+						 mfid);
+		else if (mu_msg_field_type (mfid) ==
+			 MU_MSG_FIELD_TYPE_STRING)
+			add_terms_values_string (*msgdoc->_doc,
+						 msgdoc->_msg,
+						 mfid);
 		else
-			add_terms_values_string (*msgdoc->_doc, msgdoc->_msg,
-						mfid);
-		return;
+			g_return_if_reached ();
 	}
-
-	if (type == MU_MSG_FIELD_TYPE_BYTESIZE ||
-	    type == MU_MSG_FIELD_TYPE_TIME_T ||
-	    type == MU_MSG_FIELD_TYPE_INT) {
-		add_terms_values_number (*msgdoc->_doc, msgdoc->_msg,
-					 mfid);
-		return;
-	}
-	
-	g_return_if_reached ();
 }
 
 

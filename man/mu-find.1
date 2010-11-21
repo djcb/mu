@@ -104,6 +104,7 @@ search fields and their abbreviations:
 	msgid,i         Message-ID
 	prio,p          Message priority ('low', 'normal' or 'high')
 	flag,g		Message Flags
+	date,d          Date-Range
 .fi
 
 For clarity, this man-page uses the longer versions.
@@ -158,6 +159,16 @@ can do with a single '/':
 .fi
 
 (and of course you can use the \fBm:\fR shortcut instead of \fBmaildir:\fR) 
+
+The date:/d: search parameter is 'special' in the fact that it takes a range
+of dates. For now, these dates are in ISO 8601 format (YYYYMMDD). To get all
+messages between (inclusive) the 5th of May 2009 and the 2nd of June 2010, you
+could use:
+
+.nf
+	mu find date:20090505..20100602 
+.fi
+
 
 .SH OPTIONS
 

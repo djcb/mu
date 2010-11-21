@@ -81,7 +81,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_DATE, 
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"date", 'd', 'D',
-		FLAG_GMIME | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
 	},
 	
 	{ 
