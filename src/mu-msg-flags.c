@@ -24,39 +24,42 @@
 #include "mu-msg-flags.h"
 
 
+/* put these in alpha-order, so output strings are ordered thusly
+ * note, these should be in lower-case, otherwise Xapian gets
+ * confused...
+ */
 static const MuMsgFlags ALL_FLAGS[] = {
-	MU_MSG_FLAG_NEW,
-	MU_MSG_FLAG_PASSED,
-	MU_MSG_FLAG_REPLIED,
-	MU_MSG_FLAG_SEEN,
-	MU_MSG_FLAG_TRASHED,
-	MU_MSG_FLAG_DRAFT,
-	MU_MSG_FLAG_FLAGGED,
-	MU_MSG_FLAG_SIGNED,
-	MU_MSG_FLAG_ENCRYPTED,
-	MU_MSG_FLAG_HAS_ATTACH	
+	/* a */ MU_MSG_FLAG_HAS_ATTACH,	
+	/* d */ MU_MSG_FLAG_DRAFT,
+	/* f */ MU_MSG_FLAG_FLAGGED,
+	/* n */ MU_MSG_FLAG_NEW,
+	/* p */ MU_MSG_FLAG_PASSED,
+	/* r */ MU_MSG_FLAG_REPLIED,
+	/* s */ MU_MSG_FLAG_SEEN,
+	/* t */ MU_MSG_FLAG_TRASHED,
+	/* x */ MU_MSG_FLAG_ENCRYPTED,
+	/* z */ MU_MSG_FLAG_SIGNED
 };
 
 
 MuMsgFlags
 mu_msg_flag_from_char (char k)
 {
-	switch (k) {
-	case 'N': return MU_MSG_FLAG_NEW;		
-	case 'P': return MU_MSG_FLAG_PASSED;
-	case 'R': return MU_MSG_FLAG_REPLIED;
-	case 'S': return MU_MSG_FLAG_SEEN;
-	case 'T': return MU_MSG_FLAG_TRASHED;
-	case 'D': return MU_MSG_FLAG_DRAFT;
-	case 'F': return MU_MSG_FLAG_FLAGGED;
+	switch (g_ascii_tolower(k)) {
+	case 'n': return MU_MSG_FLAG_NEW;		
+	case 'p': return MU_MSG_FLAG_PASSED;
+	case 'r': return MU_MSG_FLAG_REPLIED;
+	case 's': return MU_MSG_FLAG_SEEN;
+	case 't': return MU_MSG_FLAG_TRASHED;
+	case 'd': return MU_MSG_FLAG_DRAFT;
+	case 'f': return MU_MSG_FLAG_FLAGGED;
 
-	case 'Z': return MU_MSG_FLAG_SIGNED;
-	case 'X': return MU_MSG_FLAG_ENCRYPTED;
-	case 'A': return MU_MSG_FLAG_HAS_ATTACH;
+	case 'z': return MU_MSG_FLAG_SIGNED;
+	case 'x': return MU_MSG_FLAG_ENCRYPTED;
+	case 'a': return MU_MSG_FLAG_HAS_ATTACH;
 		
 	default:
-		g_warning ("%s: unknown flag %c", __FUNCTION__, k);
-		return MU_MSG_FLAG_NONE;
+		g_return_val_if_reached (MU_MSG_FLAG_NONE);
 	}
 }
 
@@ -78,8 +81,7 @@ mu_msg_flag_to_name (MuMsgFlags flag)
 	case MU_MSG_FLAG_HAS_ATTACH:	return "attach";
 		
 	default:
-		g_warning ("%s: unknown flag 0x%x", __FUNCTION__, flag);
-		return 0;
+		g_return_val_if_reached (NULL);
 	}
 }
 
@@ -87,21 +89,20 @@ char
 mu_msg_flag_char (MuMsgFlags flag)
 {
 	switch (flag) {
-	case MU_MSG_FLAG_NEW:		return 'N';
-	case MU_MSG_FLAG_PASSED:	return 'P';
-	case MU_MSG_FLAG_REPLIED:	return 'R';
-	case MU_MSG_FLAG_SEEN:		return 'S';
-	case MU_MSG_FLAG_TRASHED:	return 'T';
-	case MU_MSG_FLAG_DRAFT:		return 'D';
-	case MU_MSG_FLAG_FLAGGED:	return 'F';
+	case MU_MSG_FLAG_NEW:		return 'n';
+	case MU_MSG_FLAG_PASSED:	return 'p';
+	case MU_MSG_FLAG_REPLIED:	return 'r';
+	case MU_MSG_FLAG_SEEN:		return 's';
+	case MU_MSG_FLAG_TRASHED:	return 't';
+	case MU_MSG_FLAG_DRAFT:		return 'd';
+	case MU_MSG_FLAG_FLAGGED:	return 'f';
 		
-	case MU_MSG_FLAG_SIGNED:	return 'Z';
-	case MU_MSG_FLAG_ENCRYPTED:	return 'X';
-	case MU_MSG_FLAG_HAS_ATTACH:	return 'A';
+	case MU_MSG_FLAG_SIGNED:	return 'z';
+	case MU_MSG_FLAG_ENCRYPTED:	return 'x';
+	case MU_MSG_FLAG_HAS_ATTACH:	return 'a';
 		
 	default:
-		g_warning ("%s: unknown flag 0x%x", __FUNCTION__, flag);
-		return 0;
+		g_return_val_if_reached (0);
 	}
 }
 
