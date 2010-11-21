@@ -95,7 +95,7 @@ test_mu_msg_field_flags (void)
 
 	field = MU_MSG_FIELD_ID_FLAGS;
 	
-	g_assert_cmpstr (mu_msg_field_name(field),==, "flags");
+	g_assert_cmpstr (mu_msg_field_name(field),==, "flag");
 	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 'g');
 	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'G');
 

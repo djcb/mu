@@ -51,7 +51,7 @@ X-BitDefender-SpamStamp: v1, whitelisted, total: 0
 Subject: Re: [sqlite-dev] VM optimization inside sqlite3VdbeExec
 X-BeenThere: sqlite-dev@sqlite.org
 X-Mailman-Version: 2.1.9
-Precedence: list
+Precedence: high 
 Reply-To: sqlite-dev@sqlite.org
 List-Id: <sqlite-dev.sqlite.org>
 List-Unsubscribe: <http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev>,

@@ -183,7 +183,12 @@ test_mu_query_04 (void)
 		{ "t:bilbo@anotherexample.com", 1},
 		{ "t:bilbo", 1},
 		{ "f:bilbo", 0},
- 		{ "baggins", 1}
+ 		{ "baggins", 1},
+		{ "prio:high", 1},
+		{ "prio:normal", 3},
+		{ "prio:h", 1},
+		{ "prio:l", 7},
+		{ "not prio:l", 4}
 	};
 	
 	xpath = fill_database ();
