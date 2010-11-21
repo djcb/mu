@@ -102,7 +102,7 @@ mu_msg_str_size (size_t s)
 const char*
 mu_msg_str_flags_s  (MuMsgFlags flags)
 {
-	return mu_msg_flags_to_str_s (flags);
+	return mu_msg_flags_str_s (flags);
 }
 
 char*
