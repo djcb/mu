@@ -26,16 +26,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "mu-msg-str.h"
+#include "mu-str.h"
 
 static char* normalize_in_place_downcase (char *str);
 
 char*
-mu_msg_str_normalize (const char *str, gboolean downcase)
+mu_str_normalize (const char *str, gboolean downcase)
 {
 	g_return_val_if_fail (str, NULL);
 
-	return mu_msg_str_normalize_in_place (g_strdup(str), downcase);
+	return mu_str_normalize_in_place (g_strdup(str), downcase);
 }
 
 /* we can normalize in-place, as the normalized string will never be
@@ -44,7 +44,7 @@ mu_msg_str_normalize (const char *str, gboolean downcase)
  * original 0xc3 0x9f
  */
 char*
-mu_msg_str_normalize_in_place (char *str, gboolean downcase)
+mu_str_normalize_in_place (char *str, gboolean downcase)
 {
 	const guchar *cur;
 	int i;

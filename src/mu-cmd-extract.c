@@ -25,7 +25,6 @@
 
 #include "mu-msg.h"
 #include "mu-msg-part.h"
-#include "mu-msg-str.h"
 #include "mu-cmd.h"
 #include "mu-util.h"
 

@@ -30,7 +30,6 @@
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-msg-iter.h"
-#include "mu-msg-str.h"
 
 #include "mu-util.h"
 #include "mu-output-link.h"

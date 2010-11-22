@@ -27,7 +27,7 @@
 #include <ctype.h>
 
 #include "mu-util.h"
-#include "mu-msg-str.h"
+#include "mu-str.h"
 
 #include "mu-msg-priv.h" /* include before mu-msg.h */
 #include "mu-msg.h"
@@ -763,7 +763,7 @@ mu_msg_get_summary (MuMsg *msg, size_t max_lines)
 		return NULL; /* there was no text body */
 
 	return msg->_fields[SUMMARY_FIELD] =
-		mu_msg_str_summarize (body, max_lines);
+		mu_str_summarize (body, max_lines);
 }
 
 

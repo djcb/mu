@@ -19,7 +19,7 @@
 
 #include "mug-msg-list-view.h"
 #include "mu-query.h"
-#include "mu-msg-str.h"
+#include "mu-str.h"
 /* include other impl specific header files */
 
 /* 'private'/'protected' functions */
@@ -298,7 +298,7 @@ empty_or_display_contact (const gchar* str)
 	if (!str || *str == '\0')
 		return g_strdup ("-");
 	else
-		return mu_msg_str_display_contact (str);
+		return mu_str_display_contact (str);
 	
 }
 
@@ -334,7 +334,7 @@ add_row (GtkListStore *store, MuMsgIter *iter)
 	time_t date;
 	
 	date	= mu_msg_iter_get_date (iter);
-	datestr	= date == 0 ? "-" : mu_msg_str_display_date_s (date);
+	datestr	= date == 0 ? "-" : mu_str_display_date_s (date);
 	from	= empty_or_display_contact (mu_msg_iter_get_from(iter));
 	to	= empty_or_display_contact (mu_msg_iter_get_to(iter));
 	flagstr = mu_msg_flags_str_s(mu_msg_iter_get_flags (iter));

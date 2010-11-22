@@ -26,7 +26,7 @@
 #include <stdlib.h>
 
 #include "mu-msg.h"
-#include "mu-msg-str.h"
+#include "mu-str.h"
 #include "mu-cmd.h"
 
 #include "mu-util.h"
@@ -57,7 +57,7 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 		g_print ("Subject: %s\n", field);
 	
 	if ((date = mu_msg_get_date (msg)))
-		g_print ("Date: %s\n", mu_msg_str_date_s ("%c", date));
+		g_print ("Date: %s\n", mu_str_date_s ("%c", date));
 
 	if (summary_len > 0) {
 		field = mu_msg_get_summary (msg, summary_len);

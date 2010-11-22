@@ -17,8 +17,8 @@
 **  
 */
 
-#ifndef __MU_MSG_STR_H__
-#define __MU_MSG_STR_H__
+#ifndef __MU_STR_H__
+#define __MU_STR_H__
 
 #include <time.h>
 #include <sys/types.h>
@@ -31,8 +31,8 @@ G_BEGIN_DECLS
 /**
  * get a string for a given time_t
  * 
- * mu_msg_str_date_s returns a ptr to a static buffer,
- * while mu_msg_str_date returns dynamically allocated
+ * mu_str_date_s returns a ptr to a static buffer,
+ * while mu_str_date returns dynamically allocated
  * memory that must be freed after use.
  *
  * @param frm the format of the string (in strftime(3) format) 
@@ -43,8 +43,8 @@ G_BEGIN_DECLS
  * format is too long, the value will be truncated. in practice this
  * should not happen.
  */
-const char* mu_msg_str_date_s (const char* frm, time_t t) G_GNUC_CONST;
-char*       mu_msg_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RESULT;
+const char* mu_str_date_s (const char* frm, time_t t) G_GNUC_CONST;
+char*       mu_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -52,13 +52,13 @@ char*       mu_msg_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RES
  * 24h from the current time, we display the time, otherwise the date,
  * using the preferred date/time for the current locale
  * 
- * mu_msg_str_display_date_s returns a ptr to a static buffer,
+ * mu_str_display_date_s returns a ptr to a static buffer,
  *
  * @param t the time as time_t
  * 
  * @return a string representation of the time/date
  */
-const char* mu_msg_str_display_date_s (time_t t);
+const char* mu_str_display_date_s (time_t t);
 
 
 /**
@@ -69,8 +69,8 @@ const char* mu_msg_str_display_date_s (time_t t);
  *      Foo Bar
  * Note that this is based on some simple heuristics. Max length is 255 bytes.
  *
- *   mu_msg_str_display_contact_s returns a statically allocated
- *   buffer (ie, non-reentrant), while mu_msg_str_display_contact
+ *   mu_str_display_contact_s returns a statically allocated
+ *   buffer (ie, non-reentrant), while mu_str_display_contact
  *   returns a newly allocated string that you must free with g_free
  *   when done with it.
  * 
@@ -78,8 +78,8 @@ const char* mu_msg_str_display_date_s (time_t t);
  * 
  * @return a newly allocated string with a display contact
  */
-const char* mu_msg_str_display_contact_s (const char *str);
-char *mu_msg_str_display_contact (const char *str);
+const char* mu_str_display_contact_s (const char *str);
+char *mu_str_display_contact (const char *str);
 
 
 /**
@@ -87,8 +87,8 @@ char *mu_msg_str_display_contact (const char *str);
  * 1000*1000, k for smaller sizes. Note: this function use the
  * 10-based SI units, _not_ the powers-of-2 based ones.
  * 
- * mu_msg_str_size_s returns a ptr to a static buffer,
- * while mu_msg_str_size returns dynamically allocated
+ * mu_str_size_s returns a ptr to a static buffer,
+ * while mu_str_size returns dynamically allocated
  * memory that must be freed after use.
  *
  * @param t the size as an size_t
@@ -96,8 +96,8 @@ char *mu_msg_str_display_contact (const char *str);
  * @return a string representation of the size; see above
  * for what to do with it
  */
-const char* mu_msg_str_size_s  (size_t s) G_GNUC_CONST;
-char*       mu_msg_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
+const char* mu_str_size_s  (size_t s) G_GNUC_CONST;
+char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a display string for a given set of flags, OR'ed in 
@@ -105,8 +105,8 @@ char*       mu_msg_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
  * D=draft,F=flagged,N=new,P=passed,R=replied,S=seen,T=trashed 
  * a=has-attachment,s=signed, x=encrypted
  * 
- * mu_msg_str_file_flags_s  returns a ptr to a static buffer,
- * while mu_msg_str_file_flags returns dynamically allocated
+ * mu_str_file_flags_s  returns a ptr to a static buffer,
+ * while mu_str_file_flags returns dynamically allocated
  * memory that must be freed after use.
  *
  * @param flags file flags
@@ -114,8 +114,8 @@ char*       mu_msg_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
  * @return a string representation of the flags; see above
  * for what to do with it
  */
-const char* mu_msg_str_flags_s  (MuMsgFlags flags) G_GNUC_CONST;
-char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
+const char* mu_str_flags_s  (MuMsgFlags flags) G_GNUC_CONST;
+char*       mu_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -127,7 +127,7 @@ char*       mu_msg_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
  * 
  * @return a newly allocated string with the summary. use g_free to free it.
  */
-char* mu_msg_str_summarize (const char* str,
+char* mu_str_summarize (const char* str,
 			    size_t max_lines) G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -142,22 +142,22 @@ char* mu_msg_str_summarize (const char* str,
  * 
  * @return the normalize string, or NULL in case of error or str was NULL
  */
-char* mu_msg_str_normalize (const char *str, gboolean downcase);
+char* mu_str_normalize (const char *str, gboolean downcase);
 
 
 /**
  * normalize a string (ie., collapse accented characters etc.), and
  * optionally, downcase it. this happen by changing the string; if
- * that is not desired, use mu_msg_str_normalize
+ * that is not desired, use mu_str_normalize
  * 
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
  * 
  * @return the normalize string, or NULL in case of error or str was NULL
  */
-char* mu_msg_str_normalize_in_place (char *str, gboolean downcase);
+char* mu_str_normalize_in_place (char *str, gboolean downcase);
 
 
 G_END_DECLS
 
-#endif /*__MU_MSG_STR_H__*/
+#endif /*__MU_STR_H__*/

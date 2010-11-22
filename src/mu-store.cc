@@ -29,7 +29,7 @@
 #include "mu-msg-contact.h"
 #include "mu-store.h"
 #include "mu-util.h"
-#include "mu-msg-str.h"
+#include "mu-str.h"
 #include "mu-msg-flags.h"
 
 /* number of new messages after which we commit to the database */
@@ -325,7 +325,7 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
-		gchar *norm (mu_msg_str_normalize(str, TRUE));
+		gchar *norm (mu_str_normalize(str, TRUE));
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (norm, 1, prefix);
 		g_free(norm);
@@ -334,7 +334,7 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	if (mu_msg_field_xapian_term(mfid)) {
 		/* add a normalized version (accents removed,
 		 * lowercase) */
-		gchar *norm =  mu_msg_str_normalize(str, TRUE);
+		gchar *norm =  mu_str_normalize(str, TRUE);
 		doc.add_term (std::string (prefix + std::string(norm), 0,
 					   MU_STORE_MAX_TERM_LENGTH));
 		g_free (norm);
@@ -366,7 +366,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
 	
-	norm = mu_msg_str_normalize (str, TRUE);
+	norm = mu_str_normalize (str, TRUE);
 	termgen.index_text_without_positions
 		(norm, 1,
 		 std::string(1, mu_msg_field_xapian_prefix(mfid)));
@@ -435,7 +435,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *data)
 	if (contact->name && strlen(contact->name) > 0) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (*data->_doc);
-		char *norm = mu_msg_str_normalize (contact->name, TRUE);
+		char *norm = mu_str_normalize (contact->name, TRUE);
 		termgen.index_text_without_positions (norm, 1, *pfxp);
 		g_free (norm);
 	}

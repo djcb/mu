@@ -33,7 +33,6 @@
 #include "mu-index.h"
 #include "mu-query.h"
 #include "mu-msg-iter.h"
-#include "mu-msg-str.h"
 #include "mu-bookmarks.h"
 
 #include "mu-runtime.h"

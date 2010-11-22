@@ -20,7 +20,7 @@
 
 #include "mug-msg-view.h"
 #include "mu-msg.h"
-#include "mu-msg-str.h"
+#include "mu-str.h"
 
 /* 'private'/'protected' functions */
 static void mug_msg_view_class_init (MugMsgViewClass *klass);
@@ -243,10 +243,10 @@ fill_header (MugMsgViewPrivate *priv, MuMsg* msg)
 		case HEADER_ROW_MSGID: val   = mu_msg_get_msgid(msg); break;
 		case HEADER_ROW_CC: val	     = mu_msg_get_cc (msg); break;
 		case HEADER_ROW_PATH: val    = mu_msg_get_path (msg); break;
-		case HEADER_ROW_DATE: val    = mu_msg_str_date_s(
+		case HEADER_ROW_DATE: val    = mu_str_date_s(
 			"%c", mu_msg_get_date (msg));
 			break;
-		case HEADER_ROW_SIZE: val    = mu_msg_str_size_s (mu_msg_get_size(msg));
+		case HEADER_ROW_SIZE: val    = mu_str_size_s (mu_msg_get_size(msg));
 			break;
 		default: val		     = NULL;
 		}

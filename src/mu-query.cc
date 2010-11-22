@@ -35,7 +35,7 @@
 
 #include "mu-util.h"
 #include "mu-util-db.h"
-#include "mu-msg-str.h"
+#include "mu-str.h"
 
 /*
  * a xapian value date processor with the following properties:
@@ -391,7 +391,7 @@ mu_query_preprocess (const char *query)
 	 * will fixes some of the false-negatives. A full fix
 	 * probably requires some custom query parser.
 	 */
-	my_query = mu_msg_str_normalize(query, TRUE);
+	my_query = mu_str_normalize(query, TRUE);
 	
 	for (cur = my_query; *cur; ++cur) {
 		if (*cur == ':') /* we found a ':' */

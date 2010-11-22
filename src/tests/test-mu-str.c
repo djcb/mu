@@ -29,11 +29,11 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-msg-str.h"
+#include "src/mu-str.h"
 #include "src/mu-msg-prio.h"
 
 static void
-test_mu_msg_str_date_01 (void)
+test_mu_str_date_01 (void)
 {
 	struct tm *tmbuf;
 	char buf[64];
@@ -45,13 +45,13 @@ test_mu_msg_str_date_01 (void)
 	strftime (buf, 64, "%x", tmbuf);
 
 	/*  $ date -ud@1234567890; Fri Feb 13 23:31:30 UTC 2009 */
-	g_assert_cmpstr (mu_msg_str_date_s ("%x", some_time), ==, buf);
+	g_assert_cmpstr (mu_str_date_s ("%x", some_time), ==, buf);
 
 	/* date -ud@987654321 Thu Apr 19 04:25:21 UTC 2001 */
 	some_time = 987654321;
 	tmbuf = localtime (&some_time);
 	strftime (buf, 64, "%c", tmbuf);
-	tmp = mu_msg_str_date ("%c", some_time);
+	tmp = mu_str_date ("%c", some_time);
 	
 	g_assert_cmpstr (tmp, ==, buf);
 	g_free (tmp);
@@ -60,7 +60,7 @@ test_mu_msg_str_date_01 (void)
 
 
 static void
-test_mu_msg_str_size_01 (void)
+test_mu_str_size_01 (void)
 {
 	struct lconv *lc;
 	char *tmp2;
@@ -68,22 +68,22 @@ test_mu_msg_str_size_01 (void)
 	lc = localeconv();
 
 	tmp2 = g_strdup_printf ("0%s0 kB", lc->decimal_point);
-	g_assert_cmpstr (mu_msg_str_size_s (0),           ==,  tmp2);
+	g_assert_cmpstr (mu_str_size_s (0),           ==,  tmp2);
 	g_free (tmp2);
 
 	tmp2 = g_strdup_printf ("100%s0 kB", lc->decimal_point);
-	g_assert_cmpstr (mu_msg_str_size_s (100000),      ==,  tmp2);
+	g_assert_cmpstr (mu_str_size_s (100000),      ==,  tmp2);
 	g_free (tmp2);
 
 	tmp2 = g_strdup_printf ("1%s1 MB", lc->decimal_point);
-	g_assert_cmpstr (mu_msg_str_size_s (1100*1000), ==,  tmp2);
+	g_assert_cmpstr (mu_str_size_s (1100*1000), ==,  tmp2);
 	g_free (tmp2);
 }
 
 	
 
 static void
-test_mu_msg_str_size_02 (void)
+test_mu_str_size_02 (void)
 {
 	struct lconv *lc;
 	char *tmp1, *tmp2;
@@ -91,7 +91,7 @@ test_mu_msg_str_size_02 (void)
 	lc = localeconv();
 	
 	tmp2 = g_strdup_printf ("1%s0 MB", lc->decimal_point);
-	tmp1 = mu_msg_str_size (999999); 
+	tmp1 = mu_str_size (999999); 
 	g_assert_cmpstr (tmp1, !=, tmp2);
 
 	g_free (tmp1);
@@ -101,7 +101,7 @@ test_mu_msg_str_size_02 (void)
 
 
 static void
-test_mu_msg_str_prio_01 (void)
+test_mu_str_prio_01 (void)
 {
 	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_LOW), ==, "low");
 	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_NORMAL), ==, "normal");
@@ -118,7 +118,7 @@ ignore_error (const char* log_domain, GLogLevelFlags log_level,
 
 
 static void
-test_mu_msg_str_prio_02 (void)
+test_mu_str_prio_02 (void)
 {
 	/* this must fail */
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
@@ -128,7 +128,7 @@ test_mu_msg_str_prio_02 (void)
 
 
 static void
-test_mu_msg_str_normalize_01 (void)
+test_mu_str_normalize_01 (void)
 {
 	int			i;
 	struct {
@@ -145,7 +145,7 @@ test_mu_msg_str_normalize_01 (void)
 	
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *str;
-		str = mu_msg_str_normalize (words[i].word, TRUE);
+		str = mu_str_normalize (words[i].word, TRUE);
 		g_assert_cmpstr (str, ==, words[i].norm);
 		g_free (str);
 	}
@@ -160,28 +160,28 @@ main (int argc, char *argv[])
 {
 	g_test_init (&argc, &argv, NULL);
 
-	/* mu_msg_str_date */
+	/* mu_str_date */
 	g_test_add_func ("/mu-msg-str/mu-msg-str-date",
-			 test_mu_msg_str_date_01);
+			 test_mu_str_date_01);
 
-	/* mu_msg_str_size */
+	/* mu_str_size */
 	g_test_add_func ("/mu-msg-str/mu-msg-str-size-01",
-			 test_mu_msg_str_size_01);
+			 test_mu_str_size_01);
 	g_test_add_func ("/mu-msg-str/mu-msg-str-size-02",
-			 test_mu_msg_str_size_02);
+			 test_mu_str_size_02);
 
-	/* mu_msg_str_prio */
+	/* mu_str_prio */
 	g_test_add_func ("/mu-msg-str/mu-msg-str-prio-01",
-			 test_mu_msg_str_prio_01);
+			 test_mu_str_prio_01);
 	g_test_add_func ("/mu-msg-str/mu-msg-str-prio-02",
-			 test_mu_msg_str_prio_02);
+			 test_mu_str_prio_02);
 
-	/* mu_msg_str_normalize */
+	/* mu_str_normalize */
 	g_test_add_func ("/mu-msg-str/mu-msg-str-normalize-01",
-			 test_mu_msg_str_normalize_01);
+			 test_mu_str_normalize_01);
 
 	
-	/* FIXME: add tests for mu_msg_str_flags; but note the
+	/* FIXME: add tests for mu_str_flags; but note the
 	 * function simply calls mu_msg_field_str */
 		
 	g_log_set_handler (NULL,

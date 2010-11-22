@@ -40,9 +40,9 @@ TEST_PROGS += test-mu-util
 test_mu_util_SOURCES= test-mu-util.c
 test_mu_util_LDADD=   libtestmucommon.la
 
-TEST_PROGS += test-mu-msg-str
-test_mu_msg_str_SOURCES= test-mu-msg-str.c
-test_mu_msg_str_LDADD=  libtestmucommon.la
+TEST_PROGS += test-mu-str
+test_mu_str_SOURCES= test-mu-str.c
+test_mu_str_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-maildir
 test_mu_maildir_SOURCES= test-mu-maildir.c

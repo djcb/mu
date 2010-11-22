@@ -27,12 +27,12 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "mu-msg-str.h"
+#include "mu-str.h"
 #include "mu-msg-flags.h"
 
 
 const char* 
-mu_msg_str_date_s (const char* frm, time_t t)
+mu_str_date_s (const char* frm, time_t t)
 {
 	struct tm *tmbuf;
 	static char buf[128];
@@ -47,15 +47,15 @@ mu_msg_str_date_s (const char* frm, time_t t)
 }
 
 char* 
-mu_msg_str_date (const char *frm, time_t t)
+mu_str_date (const char *frm, time_t t)
 {
-	return g_strdup (mu_msg_str_date_s(frm, t));
+	return g_strdup (mu_str_date_s(frm, t));
 }
 
 
 
 const char* 
-mu_msg_str_display_date_s (time_t t)
+mu_str_display_date_s (time_t t)
 {
 	time_t now;
 	static const time_t SECS_IN_DAY = 24 * 60 * 60;
@@ -63,13 +63,13 @@ mu_msg_str_display_date_s (time_t t)
 	now = time (NULL);
 
 	if (ABS(now - t) > SECS_IN_DAY)
-		return mu_msg_str_date_s ("%x", t);
+		return mu_str_date_s ("%x", t);
 	else
-		return mu_msg_str_date_s ("%X", t);
+		return mu_str_date_s ("%X", t);
 }
 
 const char*
-mu_msg_str_size_s  (size_t s)
+mu_str_size_s  (size_t s)
 {
 	static char buf[32];
 
@@ -94,25 +94,25 @@ mu_msg_str_size_s  (size_t s)
 }
 
 char* 
-mu_msg_str_size (size_t s)
+mu_str_size (size_t s)
 {
-	return g_strdup (mu_msg_str_size_s(s));
+	return g_strdup (mu_str_size_s(s));
 }
 
 const char*
-mu_msg_str_flags_s  (MuMsgFlags flags)
+mu_str_flags_s  (MuMsgFlags flags)
 {
 	return mu_msg_flags_str_s (flags);
 }
 
 char*
-mu_msg_str_flags  (MuMsgFlags flags)
+mu_str_flags  (MuMsgFlags flags)
 {
-	return g_strdup (mu_msg_str_flags_s(flags));
+	return g_strdup (mu_str_flags_s(flags));
 }
 
 char*
-mu_msg_str_summarize (const char* str, size_t max_lines)
+mu_str_summarize (const char* str, size_t max_lines)
 {
 	char *summary;
 	size_t nl_seen;
@@ -154,7 +154,7 @@ mu_msg_str_summarize (const char* str, size_t max_lines)
 
 
 const char*
-mu_msg_str_display_contact_s (const char *str)
+mu_str_display_contact_s (const char *str)
 {
 	static gchar contact[255];
 	gchar *c, *c2;
@@ -180,9 +180,9 @@ mu_msg_str_display_contact_s (const char *str)
 }
 
 char*
-mu_msg_str_display_contact (const char *str)
+mu_str_display_contact (const char *str)
 {
 	g_return_val_if_fail (str, NULL);
 
-	return g_strdup (mu_msg_str_display_contact_s (str));
+	return g_strdup (mu_str_display_contact_s (str));
 }

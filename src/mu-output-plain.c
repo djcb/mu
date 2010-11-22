@@ -30,7 +30,7 @@
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-msg-iter.h"
-#include "mu-msg-str.h"
+#include "mu-str.h"
 
 /* #include "mu-util.h" */
 /* #include "mu-util-db.h" */
@@ -55,17 +55,17 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 			return mu_msg_prio_name ((MuMsgPrio)val);
  		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
 			val = mu_msg_iter_get_field_numeric (iter, mfid);
-			return mu_msg_str_flags_s ((MuMsgFlags)val);
+			return mu_str_flags_s ((MuMsgFlags)val);
 		} else  /* as string */
 			return mu_msg_iter_get_field (iter, mfid); 
 
 	case MU_MSG_FIELD_TYPE_TIME_T: 
 		val = mu_msg_iter_get_field_numeric (iter, mfid);
-		return mu_msg_str_date_s ("%c", (time_t)val);
+		return mu_str_date_s ("%c", (time_t)val);
 
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
 		val = mu_msg_iter_get_field_numeric (iter, mfid);
-		return mu_msg_str_size_s ((unsigned)val);
+		return mu_str_size_s ((unsigned)val);
 	default:
 		g_return_val_if_reached (NULL);
 	}
