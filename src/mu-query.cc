@@ -1,4 +1,4 @@
-make/* 
+/* 
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,13 +17,18 @@ make/*
 **  
 */
 
-#include <stdlib.h>
-#include <xapian.h>
-#include <glib/gstdio.h>
-#include <string.h>
+#include <stdexcept>
 #include <string>
 
+#include <cctype>
+#include <cstring>
+#include <stdlib.h>
+
+#include <xapian.h>
+#include <glib/gstdio.h>
+
 #include "mu-query.h"
+#include "mu-msg-fields.h"
 
 #include "mu-msg-iter.h"
 #include "mu-msg-iter-priv.hh"
@@ -32,28 +37,125 @@ make/*
 #include "mu-util-db.h"
 #include "mu-msg-str.h"
 
+/*
+ * a xapian value date processor with the following properties:
+ *
+ * - dates are specified in ISO-8601 format, so: '201001132345'
+ *    means 'January 13th 2010, 23:45'
+ *
+ * - with dates, you can add '.', '/', ':' and '-', ',' where you
+ *   want; they are ignored thus, the above could also be written as
+ *   e.g.: 2010-01-13/23:45
+ *
+ * - You can leave out the month, the day, the time or the seconds;
+     the value range processor handles these as follows:
+ *   - 'begin':
+ *      2010          => 2010-01-01/00:00
+ *      201002        => 2010-02-01/00:00
+ *      20100311      => 2010-03-11/00:00
+ *      2010031104    => 2010-03-11/04:00
+ *   - 'end':
+ *      2010          => 2010-31-12/23:59
+ *      201002        => 2010-02-31/23:59
+ *      20100311      => 2010-03-11/23:59
+ *      2010031104    => 2010-03-11/04:59
+ *
+ * - then we have some special dates:
+ *    - 'begin':
+ *       today        => date of today, 00:00
+ *       epoch        => 1970-01-01/00:00
+ *    - 'end':
+ *       today        => date of today, 23:59
+ *       now          => date time of right now
+ *      
+ * - all dates are in local time
+ *
+ */ 
 
-struct ISODateRangeProcessor : public Xapian::ValueRangeProcessor {
-    ISODateRangeProcessor() {}
+class MuDateRangeProcessor : public Xapian::ValueRangeProcessor {
+public:
+	MuDateRangeProcessor() {}
+
+	Xapian::valueno operator()(std::string &begin, std::string &end) {
+
+		if (!clear_prefix (begin))
+			return Xapian::BAD_VALUENO;
+
+		substitute_date (begin, true);
+		substitute_date (end, false);
+
+		normalize_date (begin);
+		normalize_date (end);
+
+		complete_date (begin, true);
+		complete_date (end, false);
+		
+		return (Xapian::valueno)MU_MSG_PSEUDO_FIELD_ID_DATESTR;
+	}
+private:
+	bool clear_prefix (std::string& begin) {
+		
+		const std::string colon (":");
+		const std::string name (mu_msg_field_name (MU_MSG_FIELD_ID_DATE) + colon);
+		const std::string shortcut (
+			std::string(1, mu_msg_field_shortcut
+				    (MU_MSG_FIELD_ID_DATE)) + colon);
+
+		if (begin.find (name) == 0) {
+			begin.erase (0, name.length());
+			return true;
+		} else if (begin.find (shortcut) == 0) {
+			begin.erase (0, shortcut.length());
+			return true;
+		} else
+			return false;		
+	}
 	
-    Xapian::valueno operator()(std::string &begin, std::string &end) {
-	    static const std::string colon (":");
-	    static const std::string name (
-		    mu_msg_field_name (MU_MSG_FIELD_ID_DATE) + colon);
-	    static const std::string shortcut (
-		    std::string(1, mu_msg_field_shortcut
-				(MU_MSG_FIELD_ID_DATE)) + colon);
+	void substitute_date (std::string& date, bool is_begin) {
+		char datebuf[13];
+		time_t now = time(NULL);
+		if (is_begin) {
+			if (date == "today") {
+				strftime(datebuf, sizeof(datebuf), "%Y%m%d0000",
+					 localtime(&now));
+				date = datebuf;
+			} else if (date == "epoch")
+				date = "197001010000";
+		} else { /* end */
+			if (date == "now") {
+				strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
+					 localtime(&now));
+				date = datebuf;
+			}
+		}
+	}
+		
+	void normalize_date (std::string& date) {
+		std::string cleanup;
+		for (unsigned i = 0; i != date.length(); ++i) {
+			char k = date[i];
+			if (std::isdigit(k))
+				cleanup += date[i];
+			else if (k != ':' && k != '-' && k != '/' && k != '.' &&
+				 k != ',')
+				throw std::runtime_error ("error in date str");
+		}
+		date = cleanup;
+	}
+	
+	void complete_date (std::string& date, bool is_begin) {
 
-	    if (begin.find (name) == 0) 
-		    begin.erase (0, name.length());
-	    else if (begin.find (shortcut) == 0)
-		    begin.erase (0, shortcut.length());
-	    else
-		    return Xapian::BAD_VALUENO;
-	    
-	    return (Xapian::valueno)MU_MSG_FIELD_ID_DATESTR;
-    }
+		const size_t len (date.length());
+		if (len % 2 || len < 4 || len > 12)
+			throw std::runtime_error ("error in date str");
+		
+		const std::string bsuffix ("01010000");
+		const std::string esuffix ("12312359");
+		
+		date += is_begin ? bsuffix.substr(len-4) : esuffix.substr (len-4);
+	}
 };
+
 
 static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
@@ -77,24 +179,14 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mqx->_qparser->set_database (*mqx->_db);
 		mqx->_qparser->set_default_op (Xapian::Query::OP_AND);
 
-		mqx->_range_processor = new ISODateRangeProcessor ();
+		mqx->_range_processor = new MuDateRangeProcessor ();
 		mqx->_qparser->add_valuerangeprocessor
 			(mqx->_range_processor);
 		
 		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
-
-		// // ////// FIXME
-		// g_print ("\nsynonyms:\n");
-		// for (Xapian::TermIterator iter = mqx->_db->synonym_keys_begin();
-		//      iter != mqx->_db->synonym_keys_end(); ++iter) {
-		// 	for (Xapian::TermIterator jter = mqx->_db->synonyms_begin(*iter);
-		// 	     jter != mqx->_db->synonyms_end(*iter); ++jter) {
-		// 		g_print ("%s => %s\n", (*iter).c_str(), (*jter).c_str());
-		// 	}
-		// }
-
+		
 		return TRUE;
 
 	} MU_XAPIAN_CATCH_BLOCK;

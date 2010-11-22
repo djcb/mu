@@ -114,8 +114,6 @@ check_version (MuStore *store)
 	return TRUE;
 }
 
-
-
 MuStore*
 mu_store_new  (const char* xpath)
 {
@@ -131,12 +129,12 @@ mu_store_new  (const char* xpath)
 			mu_store_destroy (store);
 			return NULL;
 		}
-		
+
 		/* keep count of processed docs */
 		store->_trx_size = MU_STORE_TRX_SIZE; 
 		store->_in_transaction = false;
 		store->_processed = 0;
-
+		
 		add_synonyms (store);
 		
 		MU_WRITE_LOG ("%s: opened %s", __FUNCTION__, xpath);
@@ -270,17 +268,18 @@ static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg,
 		       MuMsgFieldId mfid)
 {
-	char datebuf[9];
+	char datebuf[13]; /* YYYYMMDDHHMMSS */
 	static const std::string pfx (1, mu_msg_field_xapian_prefix(mfid));
 	gint64 num = mu_msg_get_field_numeric (msg, mfid);
 	
-	if (G_UNLIKELY(strftime(datebuf, sizeof(datebuf), "%Y%m%d",
-				gmtime((const time_t*)&num)) == 0))
+	if (G_UNLIKELY(strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
+				localtime((const time_t*)&num)) == 0))
 		g_return_if_reached();
-			     
+	
 	const std::string numstr (Xapian::sortable_serialise((double)num));
 	doc.add_value ((Xapian::valueno)mfid, numstr);
-	doc.add_value ((Xapian::valueno)MU_MSG_FIELD_ID_DATESTR, datebuf);
+	doc.add_value ((Xapian::valueno)MU_MSG_PSEUDO_FIELD_ID_DATESTR,
+		       datebuf);
 }
 
 
@@ -487,9 +486,10 @@ mu_store_store (MuStore *store, MuMsg *msg)
 		mu_msg_field_foreach
 			((MuMsgFieldForEachFunc)add_terms_values, &msgdoc);
 		/* also store the contact-info as separate terms */
-		mu_msg_contact_foreach (msg,
-					(MuMsgContactForeachFunc)each_contact_info,
-					&msgdoc);
+		mu_msg_contact_foreach
+			(msg,
+			 (MuMsgContactForeachFunc)each_contact_info,
+			 &msgdoc);
 			
 		/* we replace all existing documents for this file */
 		id = store->_db->replace_document (uid, newdoc);
