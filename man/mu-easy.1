@@ -134,15 +134,18 @@ Get all messages from Jim without an attachment:
 \fB$ mu find from:jim AND NOT flag:attach\fR 
 .fi
 
-Get all unread messages about some dance:
+Get all unread messages where the subject is about some dance:
 .nf
 \fB$ mu find flag:new subject:tango\fR 
 .fi
 
-Get all messages unread messages between March 2002 and August 2003 about scuba-diving:
+Get all messages unread messages between March 2002 and August 2003 about
+scuba-diving:
 .nf
 \fB$mu find date:20020301..20030831 flag:new scuba
 .fi
+(caveat: the dates we're matching here are based on UTC ('Greenwich time'),
+which may differ a few hours with your local hours)
 
 
 .SH DISPLAYING MESSAGES

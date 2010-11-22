@@ -164,11 +164,13 @@ The date:/d: search parameter is 'special' in the fact that it takes a range
 of dates. For now, these dates are in ISO 8601 format (YYYYMMDD). To get all
 messages between (inclusive) the 5th of May 2009 and the 2nd of June 2010, you
 could use:
-
 .nf
 	mu find date:20090505..20100602 
 .fi
-
+An important point here is that the date matches are against UTC (Universal
+Coordinated Time), while message are displayed using your local
+time. Depending on the timezone, this may lead to some messages which don't
+seem to fit in the interval.
 
 .SH OPTIONS
 
