@@ -707,13 +707,15 @@ get_body (MuMsg *msg, gboolean want_html)
 			NULL; 
 	else
 		str = data._txt_part ?
-			part_to_string (GMIME_PART(data._txt_part), TRUE, &err) :
+			part_to_string (GMIME_PART(data._txt_part),
+					TRUE, &err) :
 			NULL;
 
 	/* note, str may be NULL (no body), but that's not necessarily
 	 * an error; we only warn when an actual error occured */
 	if (err) 
-		g_warning ("error occured while retrieving %s body for message %s",
+		g_warning ("error occured while retrieving %s body" 
+			   "for message %s",
 			   want_html ? "html" : "text",
 			   mu_msg_get_path(msg));
 

@@ -41,20 +41,20 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_TO,
 	MU_MSG_FIELD_ID_MSGID,
 	MU_MSG_FIELD_ID_TIMESTAMP,
-	
-	MU_MSG_FIELD_ID_NUM
+	MU_MSG_FIELD_ID_NUM,
+
+	/* fake fields */
+	MU_MSG_PSEUDO_FIELD_ID_DATESTR,  /* used in to store datestr in db */
+	MU_MSG_FIELD_ID_NUM_WITH_PSEUDO /* number including these fake
+					 * fields */ 
 };
 typedef enum _MuMsgFieldId MuMsgFieldId;
 
 /* some specials... */
 static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
-static const MuMsgFieldId MU_MSG_FIELD_ID_DATESTR =
-	(MuMsgFieldId) (MU_MSG_FIELD_ID_NUM + 1);
 
 #define mu_msg_field_id_is_valid(MFID) \
 	((MFID) < MU_MSG_FIELD_ID_NUM)
-
-
 
 /* don't change the order, add new types at the end (before _NUM)*/
 enum _MuMsgFieldType {
