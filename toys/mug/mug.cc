@@ -256,7 +256,7 @@ mug_main_area (MugData *mugdata)
 {
 	GtkWidget *mainarea;
 
-	mainarea = gtk_hbox_new (FALSE, 0);
+	mainarea = gtk_hbox_new (FALSE, 5);
 
 	gtk_box_pack_start (GTK_BOX(mainarea), mug_shortcuts_bar(mugdata),
 			    FALSE, FALSE, 0);
