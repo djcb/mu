@@ -36,6 +36,7 @@
 #include "mu-util.h"
 #include "mu-util-db.h"
 #include "mu-str.h"
+#include "mu-result.h"
 
 /*
  * custom parser for date ranges
@@ -179,23 +180,26 @@ uninit_mu_query (MuQuery *mqx)
 }
 
 
-static Xapian::Query
-get_query  (MuQuery * mqx, const char* searchexpr, int *err = 0)  {
-	
+static bool
+set_query (MuQuery *mqx, Xapian::Query& q, const char* searchexpr,
+	   GError **err)  {
 	try {
-		return mqx->_qparser->parse_query
+		q = mqx->_qparser->parse_query
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
 			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
+
+		return true;
 		
 	} MU_XAPIAN_CATCH_BLOCK;
 	
-	if (err)
-		*err  = 1;
+	/* some error occured */
+	g_set_error (err, 0, MU_ERROR_QUERY, "parse error in query '%s'",
+		     searchexpr);
 	
-	return Xapian::Query();
+	return false;
 }
 
 static void
@@ -231,32 +235,34 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 }
 
 MuQuery*
-mu_query_new (const char* xpath)
+mu_query_new (const char* xpath, GError **err)
 {
 	MuQuery *mqx;
 	
 	g_return_val_if_fail (xpath, NULL);
 
 	if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
-		g_warning ("'%s' is not a readable xapian dir", xpath);
+		g_set_error (err, 0, MU_ERROR_XAPIAN_DIR,
+			     "'%s' is not a readable xapian dir", xpath);
 		return NULL;
 	}
 
-	if (mu_util_db_is_empty (xpath)) {
-		g_warning ("database %s is empty; nothing to do", xpath);
-		return NULL;
-	}
-	
+		
 	if (!mu_util_db_version_up_to_date (xpath)) {
-		g_warning ("%s is not up-to-date, needs a full update",
-			   xpath);
+		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UPTODATE,
+			     "%s is not up-to-date, needs a full update",
+			     xpath);
 		return NULL;
 	}
+
+	if (mu_util_db_is_empty (xpath)) 
+		g_warning ("database %s is empty; nothing to do", xpath);
 	
 	mqx = g_new (MuQuery, 1);
 
 	if (!init_mu_query (mqx, xpath)) {
-		g_critical ("failed to initialize the Xapian query object");
+		g_set_error (err, 0, MU_ERROR_INTERNAL,
+			     "failed to initialize the Xapian query object");
 		g_free (mqx);
 		return NULL;
 	}
@@ -373,7 +379,7 @@ mu_query_preprocess (const char *query)
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr,
 	      MuMsgFieldId sortfieldid, gboolean ascending,
-	      size_t batchsize)  
+	      size_t batchsize, GError **err)  
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);	
@@ -381,14 +387,12 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 			      sortfieldid == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
+		Xapian::Query query;
 		char *preprocessed;	
-		int err (0);
-		
+
 		preprocessed = mu_query_preprocess (searchexpr);
 
-		Xapian::Query q(get_query(self, preprocessed, &err));
-		if (err) {
-			g_warning ("Error in query '%s'", preprocessed);
+		if (!set_query(self, query, preprocessed, err)) {
 			g_free (preprocessed);
 			return NULL;
 		}
@@ -402,9 +406,8 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		if (sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
 					       ascending ? true : false);
-		enq.set_query(q);
+		enq.set_query(query);
 		enq.set_cutoff(0,0);
-
 		
 		return mu_msg_iter_new (enq, batchsize);
 		
@@ -412,24 +415,24 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 }
 
 char*
-mu_query_as_string  (MuQuery *self, const char *searchexpr) 
+mu_query_as_string  (MuQuery *self, const char *searchexpr, GError **err) 
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
+		Xapian::Query query;
 		char *preprocessed;
-		int err (0);
 		
 		preprocessed = mu_query_preprocess (searchexpr);
 		
-		Xapian::Query q(get_query(self, preprocessed, &err));
-		if (err)
-			g_warning ("Error in query '%s'", preprocessed);
-
+		if (!set_query(self, query, preprocessed, err)) {
+			g_free (preprocessed);
+			return NULL;
+		}
 		g_free (preprocessed);
 
-		return err ? NULL : g_strdup(q.get_description().c_str());
+		return g_strdup(query.get_description().c_str());
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

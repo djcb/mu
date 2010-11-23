@@ -31,14 +31,15 @@ typedef struct _MuQuery MuQuery;
 /**
  * create a new MuQuery instance. 
  * 
- * @param path path to the xapian db to search
- * @param err receives error information (if there is any)
- *
+ * @param path path to the xapian db to search 
+ * @param err receives error information (if there is any); if
+ * function returns non-NULL, err will _not_be set. err can be NULL
+ * 
  * @return a new MuQuery instance, or NULL in case of error.
  * when the instance is no longer needed, use mu_query_destroy
  * to free it
  */
-MuQuery  *mu_query_new  (const char* path) G_GNUC_WARN_UNUSED_RESULT;
+MuQuery  *mu_query_new  (const char* path, GError **err) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy the MuQuery instance
@@ -71,6 +72,8 @@ char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
  * reasons - it's best to get the size one wants to show the user at once.
  * If you pass '0' as the batchsize, mu will use the maximum size (the count
  * of documents in the database)
+ * @param err receives error information (if there is any); if
+ * function returns non-NULL, err will _not_be set. err can be NULL
  *
  * @return a MuMsgIter instance you can iterate over, or NULL in
  * case of error
@@ -79,19 +82,22 @@ MuMsgIter* mu_query_run (MuQuery *self,
 			 const char* expr,
 			 MuMsgFieldId sortfieldid,
 			 gboolean ascending,
-			 size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
+			 size_t batchsize,
+			 GError **err) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string representation of the Xapian search query
  * 
  * @param self a MuQuery instance 
  * @param searchexpr a xapian search expression
+ * @param err receives error information (if there is any); if
+ * function returns non-NULL, err will _not_be set. err can be NULL
  * 
  * @return the string representation of the xapian query, or NULL in case of
  * error; free the returned value with g_free
  */
 char* mu_query_as_string (MuQuery *self,
-			  const char* searchexpr) G_GNUC_WARN_UNUSED_RESULT;
+			  const char* searchexpr, GError **err) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * pre-process the query; this function is useful mainly for debugging mu

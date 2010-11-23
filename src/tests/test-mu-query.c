@@ -64,11 +64,11 @@ run_and_count_matches (const char *xpath, const char *query)
 	MuMsgIter *iter;
 	guint count;
 	
-	mquery = mu_query_new (xpath);
+	mquery = mu_query_new (xpath, NULL);
 	g_assert (query);
 	
 	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE,
-			     FALSE, 1);
+			     FALSE, 1, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
@@ -213,11 +213,11 @@ test_mu_query_05 (void)
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
 
-	query = mu_query_new (xpath);
+	query = mu_query_new (xpath, NULL);
 	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
-			     FALSE, 1);
+			     FALSE, 1, NULL);
 	msg = mu_msg_iter_get_msg (iter);
-	
+		
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
 			 "Greetings from Lothlórien");
 	g_assert_cmpstr (mu_msg_get_summary(msg,5),==,

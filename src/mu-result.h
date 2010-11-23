@@ -23,7 +23,16 @@
 enum _MuResult {
 	MU_OK,		/* all went ok */
 	MU_STOP,	/* user wants to stop */
+
+	MU_ERROR_XAPIAN_DIR,
+	MU_ERROR_XAPIAN_NOT_UPTODATE,
+	MU_ERROR_QUERY,
+	MU_ERROR_INTERNAL,
+	
 	MU_ERROR	/* some error occured */
+
+	
+
 };
 typedef enum _MuResult MuResult;
 

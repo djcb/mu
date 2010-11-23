@@ -311,21 +311,25 @@ empty_or_display_contact (const gchar* str)
 static MuMsgIter *
 run_query (const char *xpath, const char *query)
 {
+	GError *err;
 	MuQuery *xapian;
 	MuMsgIter *iter;
 
-	xapian = mu_query_new (xpath);
+	err = NULL;
+	xapian = mu_query_new (xpath, &err);
 	if (!xapian) {
-		g_printerr ("Failed to create a Xapian query\n");
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
 		return NULL;
 	}
 
 	iter = mu_query_run (xapian, query,
 			     MU_MSG_FIELD_ID_DATE,
-			     TRUE, 0);
+			     TRUE, 0, &err);
 	mu_query_destroy (xapian);
 	if (!iter) {
-		g_warning ("error: running query failed\n");
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
 		return NULL;
 	}
 	
