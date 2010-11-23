@@ -157,7 +157,6 @@ char* mu_str_normalize (const char *str, gboolean downcase);
  */
 char* mu_str_normalize_in_place (char *str, gboolean downcase);
 
-
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/

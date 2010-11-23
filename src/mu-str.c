@@ -186,3 +186,6 @@ mu_str_display_contact (const char *str)
 
 	return g_strdup (mu_str_display_contact_s (str));
 }
+
+
+

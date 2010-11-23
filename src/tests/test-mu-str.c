@@ -152,6 +152,60 @@ test_mu_str_normalize_01 (void)
 }
 
 
+#if 0
+
+static void
+test_mu_str_complete_iso_date_begin (void)
+{
+	int			i;
+	struct {
+		const char*	date1;
+		size_t len;
+		const char*	date2;
+	} dates [] = {
+		{ "2010", 14, "20100101000000"}, 
+		{ "2009", 12, "200901010000" },
+		{ "19721214", 14, "19721214000000" },
+		{ "197212", 8, "19721201" },
+	};
+
+	
+	for (i = 0; i != G_N_ELEMENTS(dates); ++i) {
+		gchar *str;
+		str = mu_str_complete_iso_date (dates[i].date1,
+						dates[i].len, TRUE);
+		g_assert_cmpstr (str, ==, dates[i].date2);
+		g_free (str);
+	}
+}
+
+
+static void
+test_mu_str_complete_iso_date_end (void)
+{
+	int			i;
+	struct {
+		const char*	date1;
+		size_t len;
+		const char*	date2;
+	} dates [] = {
+		{ "2010", 14,     "20101231235959"}, 
+		{ "2009", 12,     "200912312359" },
+		{ "19721214", 14, "19721214235959" },
+		{ "197212", 8,    "19721231" },
+	};
+
+	
+	for (i = 0; i != G_N_ELEMENTS(dates); ++i) {
+		gchar *str;
+		str = mu_str_complete_iso_date (dates[i].date1,
+						dates[i].len, FALSE);
+		g_assert_cmpstr (str, ==, dates[i].date2);
+		g_free (str);
+	}
+}
+
+#endif
 
 
 
@@ -161,24 +215,30 @@ main (int argc, char *argv[])
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_str_date */
-	g_test_add_func ("/mu-msg-str/mu-msg-str-date",
+	g_test_add_func ("/mu-str/mu-str-date",
 			 test_mu_str_date_01);
 
 	/* mu_str_size */
-	g_test_add_func ("/mu-msg-str/mu-msg-str-size-01",
+	g_test_add_func ("/mu-str/mu-str-size-01",
 			 test_mu_str_size_01);
-	g_test_add_func ("/mu-msg-str/mu-msg-str-size-02",
+	g_test_add_func ("/mu-str/mu-str-size-02",
 			 test_mu_str_size_02);
 
 	/* mu_str_prio */
-	g_test_add_func ("/mu-msg-str/mu-msg-str-prio-01",
+	g_test_add_func ("/mu-str/mu-str-prio-01",
 			 test_mu_str_prio_01);
-	g_test_add_func ("/mu-msg-str/mu-msg-str-prio-02",
+	g_test_add_func ("/mu-str/mu-str-prio-02",
 			 test_mu_str_prio_02);
 
 	/* mu_str_normalize */
-	g_test_add_func ("/mu-msg-str/mu-msg-str-normalize-01",
+	g_test_add_func ("/mu-str/mu-str-normalize-01",
 			 test_mu_str_normalize_01);
+	
+	/* mu_str_complete_iso_date_(begin|end) */
+	/* g_test_add_func ("/mu-str/mu-str-complete-iso-date-begin", */
+	/* 		 test_mu_str_complete_iso_date_begin); */
+	/* g_test_add_func ("/mu-str/mu-str-complete-iso-date-begin", */
+	/* 		 test_mu_str_complete_iso_date_end); */
 
 	
 	/* FIXME: add tests for mu_str_flags; but note the
