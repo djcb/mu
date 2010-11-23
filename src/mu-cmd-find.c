@@ -57,10 +57,18 @@ static gboolean
 print_xapian_query (MuQuery *xapian, const gchar *query)
 {
 	char *querystr;
-
-	MU_WRITE_LOG ("query: '%s' (xquery)", query); 
+	GError *err;
 	
-	querystr = mu_query_as_string (xapian, query);
+	MU_WRITE_LOG ("query: '%s' (xquery)", query); 
+
+	err = NULL;
+	querystr = mu_query_as_string (xapian, query, &err);
+	if (!querystr) {
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
+		return FALSE;
+	} 
+
 	g_print ("%s\n", querystr);
 	g_free (querystr);
 
@@ -132,6 +140,7 @@ make_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks)
 static gboolean
 run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 {
+	GError *err;
 	MuMsgIter *iter;
 	MuMsgFieldId sortid;
 	size_t matches;
@@ -142,11 +151,13 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 		if (sortid == MU_MSG_FIELD_ID_NONE) /* error occured? */
 			return FALSE;
 	}
-	
+
+	err  = NULL;
 	iter = mu_query_run (xapian, query, sortid,
-			     opts->descending ? FALSE : TRUE, 0);
+			     opts->descending ? FALSE : TRUE, 0, &err);
 	if (!iter) {
-		g_printerr ("error: running query failed\n");
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
 		return FALSE;
 	}
 
@@ -224,9 +235,13 @@ get_query (MuConfigOptions *opts)
 		g_warning ("Empty search query");
 		return FALSE;
 	}
-	
-	if (opts->bookmark && ((bookmarkval = resolve_bookmark (opts)) == NULL))
-		return NULL;
+
+	bookmarkval = NULL;
+	if (opts->bookmark) {
+		bookmarkval = resolve_bookmark (opts);
+		if (!bookmarkval)
+			return NULL;
+	}
 	
 	query = mu_util_str_from_strv ((const gchar**)&opts->params[1]);
 	if (bookmarkval) {
@@ -262,6 +277,7 @@ db_is_ready (const char *xpath)
 gboolean
 mu_cmd_find (MuConfigOptions *opts)
 {
+	GError *err;
 	MuQuery *xapian;
 	gboolean rv;
 	gchar *query;
@@ -281,10 +297,12 @@ mu_cmd_find (MuConfigOptions *opts)
 	query = get_query (opts);
 	if (!query) 
 		return FALSE;
-	
-	xapian = mu_query_new (xpath);
+
+	err = NULL;
+	xapian = mu_query_new (xpath, &err);
 	if (!xapian) {
-		g_warning ("Failed to create a Xapian query\n");
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
 		return FALSE;
 	}
 
