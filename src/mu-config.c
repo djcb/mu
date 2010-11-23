@@ -122,9 +122,11 @@ set_group_find_defaults (MuConfigOptions *opts)
 	 * date-from-subject, and sort descending by date. If fields
 	 * *are* specified, we sort in ascending order. */
 	if (!opts->fields) {
-		opts->descending = TRUE;
 		opts->fields     = "d f s";
-		opts->sortfield  = "d";
+		if (!opts->sortfield) {
+			opts->sortfield  = "d";
+			opts->descending = TRUE;
+		}
 	}
 
 	if (opts->linksdir) {

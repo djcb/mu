@@ -79,8 +79,7 @@ sort_field_from_string (const char* fieldstr)
 	if (mfid == MU_MSG_FIELD_ID_NONE &&
 	    strlen(fieldstr) == 1)
 		mfid = mu_msg_field_id_from_shortcut(fieldstr[0],
-						     FALSE);
-	
+						     FALSE);	
 	if (mfid == MU_MSG_FIELD_ID_NONE)
 		g_warning ("Not a valid sort field: '%s'\n",
 			   fieldstr);
@@ -144,7 +143,8 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 			return FALSE;
 	}
 	
-	iter = mu_query_run (xapian, query, sortid, !opts->descending, 0);
+	iter = mu_query_run (xapian, query, sortid,
+			     opts->descending ? FALSE : TRUE, 0);
 	if (!iter) {
 		g_printerr ("error: running query failed\n");
 		return FALSE;

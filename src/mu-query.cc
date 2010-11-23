@@ -130,7 +130,6 @@ static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 struct _MuQuery {
 	Xapian::Database*		_db;
 	Xapian::QueryParser*		_qparser;
-	Xapian::Sorter*			_sorters[MU_MSG_FIELD_TYPE_NUM];
 	Xapian::ValueRangeProcessor*	_range_processor;
 };
 
@@ -151,7 +150,6 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mqx->_qparser->add_valuerangeprocessor
 			(mqx->_range_processor);
 		
-		memset (mqx->_sorters, 0, sizeof(mqx->_sorters));
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
 		
@@ -176,10 +174,7 @@ uninit_mu_query (MuQuery *mqx)
 		delete mqx->_db;
 		delete mqx->_qparser;
 		delete mqx->_range_processor;
-		
-		for (int i = 0; i != MU_MSG_FIELD_TYPE_NUM; ++i) 
-			delete mqx->_sorters[i];
-		
+
 	} MU_XAPIAN_CATCH_BLOCK;
 }
 
@@ -383,8 +378,8 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);	
 	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfieldid) ||
-			      sortfieldid == MU_MSG_FIELD_ID_NONE, NULL);
-	
+			      sortfieldid == MU_MSG_FIELD_ID_NONE,
+			      NULL);
 	try {
 		char *preprocessed;	
 		int err (0);
@@ -403,15 +398,14 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 
 		if (batchsize == 0)
 			batchsize = self->_db->get_doccount();
-		
-		if (sortfieldid != MU_MSG_FIELD_ID_NONE) 
-			enq.set_sort_by_value (
-				(Xapian::valueno)sortfieldid,
-				ascending ? true : false);
 
+		if (sortfieldid != MU_MSG_FIELD_ID_NONE)
+			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
+					       ascending ? true : false);
 		enq.set_query(q);
 		enq.set_cutoff(0,0);
 
+		
 		return mu_msg_iter_new (enq, batchsize);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);

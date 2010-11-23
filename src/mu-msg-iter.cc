@@ -213,14 +213,6 @@ mu_msg_iter_get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(static_cast<gint64>(-1));
 }
 
-
-
-// static const gchar*
-// get_field (MuMsgIter *iter, MuMsgFieldId mfid)
-// {
-// 	return mu_msg_iter_get_field(iter, mfid);
-// }
-
 static long
 get_field_number (MuMsgIter *iter, MuMsgFieldId mfid)
 {
