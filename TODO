@@ -11,13 +11,14 @@
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
 
-** release 0.9 [71%]
+** release 0.9 [80%]
    - [X] bookmarks
    - [X] gtk-ui for searching
    - [X] clean up mu-msg-field, add formatting(?)
    - [X] normalize search fields
    - [ ] cleanup version check
-   - [ ] propagate errors to ui (GError?)
+   - [X] propagate errors to ui
+   - [ ] update mug for Gerrors feedback
    - [ ] improve date ranges
    - [X] improve spacing in mug
    - [X] fix flag searches + synonyms
@@ -25,7 +26,7 @@
    - [X] fix issue #28 (lstat)
    - [X] fix sorting by date in mug
    - [X] make mug icon square
-   - [ ] fix sort-order
+   - [X] fix sort-order
 
 
 * Releases already done
