@@ -34,7 +34,6 @@
 #include "mu-query.h"
 #include "mu-msg-iter.h"
 #include "mu-bookmarks.h"
-
 #include "mu-runtime.h"
 
 #include "mu-util.h"
