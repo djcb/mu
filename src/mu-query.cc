@@ -38,40 +38,8 @@
 #include "mu-str.h"
 
 /*
- * a xapian value date processor with the following properties:
- *
- * - dates are specified in ISO-8601 format, so: '201001132345'
- *    means 'January 13th 2010, 23:45'
- *
- * - with dates, you can add '.', '/', ':' and '-', ',' where you
- *   want; they are ignored thus, the above could also be written as
- *   e.g.: 2010-01-13/23:45
- *
- * - You can leave out the month, the day, the time or the seconds;
-     the value range processor handles these as follows:
- *   - 'begin':
- *      2010          => 2010-01-01/00:00
- *      201002        => 2010-02-01/00:00
- *      20100311      => 2010-03-11/00:00
- *      2010031104    => 2010-03-11/04:00
- *   - 'end':
- *      2010          => 2010-31-12/23:59
- *      201002        => 2010-02-31/23:59
- *      20100311      => 2010-03-11/23:59
- *      2010031104    => 2010-03-11/04:59
- *
- * - then we have some special dates:
- *    - 'begin':
- *       today        => date of today, 00:00
- *       epoch        => 1970-01-01/00:00
- *    - 'end':
- *       today        => date of today, 23:59
- *       now          => date time of right now
- *      
- * - all dates are in local time
- *
- */ 
-
+ * custom parser for date ranges
+ */
 class MuDateRangeProcessor : public Xapian::ValueRangeProcessor {
 public:
 	MuDateRangeProcessor() {}
@@ -86,9 +54,9 @@ public:
 
 		normalize_date (begin);
 		normalize_date (end);
-
-		complete_date (begin, true);
-		complete_date (end, false);
+		
+		complete_date (begin, 12, true);
+		complete_date (end, 12, false);
 		
 		return (Xapian::valueno)MU_MSG_PSEUDO_FIELD_ID_DATESTR;
 	}
@@ -143,16 +111,16 @@ private:
 		date = cleanup;
 	}
 	
-	void complete_date (std::string& date, bool is_begin) {
+	void complete_date (std::string& date, size_t len, bool is_begin) const {
 
-		const size_t len (date.length());
-		if (len % 2 || len < 4 || len > 12)
-			throw std::runtime_error ("error in date str");
-		
-		const std::string bsuffix ("01010000");
-		const std::string esuffix ("12312359");
-		
-		date += is_begin ? bsuffix.substr(len-4) : esuffix.substr (len-4);
+		const std::string bsuffix ("00000101000000");
+		const std::string esuffix ("99991231235959");
+
+		if (is_begin)
+			date = std::string (date + bsuffix.substr (date.length()), len);
+		else
+			date = std::string (date + esuffix.substr (date.length()), len);
+
 	}
 };
 
@@ -439,7 +407,7 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		if (sortfieldid != MU_MSG_FIELD_ID_NONE) 
 			enq.set_sort_by_value (
 				(Xapian::valueno)sortfieldid,
-				ascending);
+				ascending ? true : false);
 
 		enq.set_query(q);
 		enq.set_cutoff(0,0);
