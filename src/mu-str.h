@@ -157,6 +157,26 @@ char* mu_str_normalize (const char *str, gboolean downcase);
  */
 char* mu_str_normalize_in_place (char *str, gboolean downcase);
 
+
+/**
+ * 
+ * parse strings like 1h, 3w, 2m to mean '1 hour before now', '3 weeks
+ * before now' and '2 * 30 days before now'
+ * 
+ * the format is <n>(h|d|w|m|y), where <n> is an integer > 0, and
+ * h=hour, d=day, w=week, m=30 days, year=365 days. function returns
+ * *now* minus this value as time_t (UTC)
+ *
+ * if the number cannot be parsed, return (time_t)-1
+ * 
+ * @param str a str
+ * 
+ * @return the time_t of the point in time indicated by 'now' minus
+ * the value, or (time_t)-1 otherwise
+ */
+time_t mu_date_parse_hdwmy (const char* str);
+
+
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/

@@ -26,6 +26,7 @@
 #include <glib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #include "mu-str.h"
 #include "mu-msg-flags.h"
@@ -188,4 +189,40 @@ mu_str_display_contact (const char *str)
 }
 
 
+
+time_t
+mu_date_parse_hdwmy (const char* str)
+{
+	long int num;
+	char *end;
+	time_t now, delta;
+	time_t never = (time_t)-1;
+	
+	g_return_val_if_fail (str, never);
+	
+	num = strtol  (str, &end, 10);
+	if (num <= 0 || num > 9999)  
+		return never;
+
+	if (!end || end[1] != '\0')
+		return never;
+	
+	switch (end[0]) {
+	case 'h': /* hour */	
+		delta = num * 24 * 60; break;
+	case 'd': /* day */
+		delta = num * 24 * 60 * 60; break;
+	case 'w': /* week */
+		delta = num * 7 * 24 * 60 * 60; break;
+	case 'm':
+		delta = num * 30 * 24 * 60 * 60; break;
+	case 'y':
+		delta = num * 365 * 24 * 60 * 60; break; 
+	default:
+		return never;
+	}
+
+	now = time(NULL);
+	return delta <= now ? now - delta : never;  
+}
 

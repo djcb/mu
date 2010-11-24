@@ -50,8 +50,8 @@ public:
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
 
-		substitute_date (begin, true);
-		substitute_date (end, false);
+		substitute_date (begin);
+		substitute_date (end);
 
 		normalize_date (begin);
 		normalize_date (end);
@@ -65,7 +65,8 @@ private:
 	bool clear_prefix (std::string& begin) {
 		
 		const std::string colon (":");
-		const std::string name (mu_msg_field_name (MU_MSG_FIELD_ID_DATE) + colon);
+		const std::string name (mu_msg_field_name
+					(MU_MSG_FIELD_ID_DATE) + colon);
 		const std::string shortcut (
 			std::string(1, mu_msg_field_shortcut
 				    (MU_MSG_FIELD_ID_DATE)) + colon);
@@ -80,23 +81,27 @@ private:
 			return false;		
 	}
 	
-	void substitute_date (std::string& date, bool is_begin) {
+	void substitute_date (std::string& date) {
 		char datebuf[13];
 		time_t now = time(NULL);
-		if (is_begin) {
-			if (date == "today") {
-				strftime(datebuf, sizeof(datebuf), "%Y%m%d0000",
-					 localtime(&now));
-				date = datebuf;
-			} else if (date == "epoch")
-				date = "197001010000";
-		} else { /* end */
-			if (date == "now") {
+		
+		if (date == "today") {
+			strftime(datebuf, sizeof(datebuf), "%Y%m%d0000",
+				 localtime(&now));
+			date = datebuf;
+		} else if (date == "now") {
+			strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
+				 localtime(&now));
+			date = datebuf;
+		} else {
+			time_t t;
+			t = mu_date_parse_hdwmy (date.c_str());
+			if (t != (time_t)-1) {
 				strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
-					 localtime(&now));
+					 localtime(&t));
 				date = datebuf;
 			}
-		}
+		}		
 	}
 		
 	void normalize_date (std::string& date) {
@@ -118,10 +123,11 @@ private:
 		const std::string esuffix ("99991231235959");
 
 		if (is_begin)
-			date = std::string (date + bsuffix.substr (date.length()), len);
+			date = std::string (date + bsuffix.substr (date.length()));
 		else
-			date = std::string (date + esuffix.substr (date.length()), len);
+			date = std::string (date + esuffix.substr (date.length()));
 
+		date = date.substr (0, len);
 	}
 };
 
