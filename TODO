@@ -11,14 +11,14 @@
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
 
-** release 0.9 [80%]
+** release 0.9 [86%]
    - [X] bookmarks
    - [X] gtk-ui for searching
    - [X] clean up mu-msg-field, add formatting(?)
    - [X] normalize search fields
    - [ ] cleanup version check
    - [X] propagate errors to ui
-   - [ ] update mug for Gerrors feedback
+   - [X] update mug for Gerrors feedback
    - [ ] improve date ranges
    - [X] improve spacing in mug
    - [X] fix flag searches + synonyms
