@@ -74,18 +74,20 @@ static void
 on_tool_button_clicked (GtkToolButton *btn, MugData *mugdata)
 {
 	ToolAction action;
-	action = (ToolAction)GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(btn),
-								"action"));
+	action = (ToolAction)GPOINTER_TO_UINT(
+		g_object_get_data(G_OBJECT(btn),"action"));
 	switch (action) {
 		 
 	case ACTION_DO_QUIT:
 		gtk_main_quit();
 		break;
 	case ACTION_NEXT_MSG:
-		mug_msg_list_view_move_next (MUG_MSG_LIST_VIEW(mugdata->mlist));
+		mug_msg_list_view_move_next
+			(MUG_MSG_LIST_VIEW(mugdata->mlist));
 		break;
 	case ACTION_PREV_MSG:
-		mug_msg_list_view_move_prev (MUG_MSG_LIST_VIEW(mugdata->mlist));
+		mug_msg_list_view_move_prev
+			(MUG_MSG_LIST_VIEW(mugdata->mlist));
 		break;
 	case ACTION_ABOUT:
 		about_mug (mugdata);
@@ -199,6 +201,41 @@ on_msg_selected (MugMsgListView *mlist, const char* mpath, MugData *mugdata)
 }
 
 
+static void
+on_list_view_error (MugMsgListView *mlist, MugError err,
+		    MugData *mugdata)
+{
+	GtkWidget *errdialog;
+	const char* msg;
+
+	switch (err) {
+	case MUG_ERROR_XAPIAN_NOT_UPTODATE:
+		msg =  "The Xapian Database has the wrong version\n"
+			"Please run 'mu index --rebuild'"; break;
+	case MUG_ERROR_XAPIAN_DIR:
+		msg =  "Cannot find the Xapian database dir\n"
+			"Please restart mug with --muhome=... pointing\n"
+			"to your mu home directory";	break;
+	case MUG_ERROR_QUERY:
+		msg =   "Error in query"; break;
+	default:
+		msg =   "Some error occured"; break;
+	}
+	
+	errdialog = gtk_message_dialog_new
+		(GTK_WINDOW(mugdata->win), GTK_DIALOG_MODAL,
+		 GTK_MESSAGE_ERROR,GTK_BUTTONS_OK, "%s", msg);
+
+	gtk_dialog_run (GTK_DIALOG(errdialog));
+	gtk_widget_destroy (errdialog);
+
+	if (err == MUG_ERROR_QUERY) {
+		mug_query_bar_grab_focus
+			(MUG_QUERY_BAR(mugdata->querybar));	
+	}
+}
+
+
 
 static GtkWidget*
 mug_querybar (void)
@@ -235,6 +272,8 @@ mug_query_area (MugData *mugdata)
 	mug_msg_view_set_msg (MUG_MSG_VIEW(mugdata->msgview), NULL);
 	g_signal_connect (G_OBJECT(mugdata->mlist), "msg-selected",
 			  G_CALLBACK(on_msg_selected), mugdata);
+	g_signal_connect (G_OBJECT(mugdata->mlist), "error-occured",
+			  G_CALLBACK(on_list_view_error), mugdata);
 	gtk_paned_add2 (GTK_PANED (paned), mugdata->msgview);
 
 	mugdata->querybar = mug_querybar();	

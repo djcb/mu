@@ -29,7 +29,7 @@ enum _MuResult {
 	MU_ERROR_QUERY,
 	MU_ERROR_INTERNAL,
 	
-	MU_ERROR	/* some error occured */
+	MU_ERROR	/* some other error occured */
 
 	
 

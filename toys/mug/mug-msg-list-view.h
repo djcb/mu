@@ -21,7 +21,7 @@
 #define __MUG_MSG_LIST_VIEW_H__
 
 #include <gtk/gtk.h>
-/* other include files */
+#include "src/mu-result.h"
 
 G_BEGIN_DECLS
 
@@ -41,10 +41,20 @@ struct _MugMsgListView {
 	/* insert public members, if any */
 };
 
+enum _MugError {
+	MUG_ERROR_XAPIAN_NOT_UPTODATE,
+	MUG_ERROR_XAPIAN_DIR,
+	MUG_ERROR_QUERY,
+	MUG_ERROR_OTHER
+};
+typedef enum _MugError MugError;
+
+
 struct _MugMsgListViewClass {
 	GtkTreeViewClass parent_class;
 	/* insert signal callback declarations, e.g. */
 	void (* msg_selected) (MugMsgListView* obj, const char* msgpath);
+	void (* error_occured) (MugMsgListView* obj, MugError err);
 };
 
 /* member functions */

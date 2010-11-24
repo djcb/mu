@@ -30,6 +30,7 @@ static void mug_msg_list_view_finalize   (GObject *obj);
 /* list my signals  */
 enum {
 	MUG_MSG_SELECTED,
+	MUG_ERROR_OCCURED,
 	LAST_SIGNAL
 };
 
@@ -87,6 +88,15 @@ mug_msg_list_view_class_init (MugMsgListViewClass *klass)
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
+	signals[MUG_ERROR_OCCURED] = 
+		g_signal_new ("error-occured",
+			      G_TYPE_FROM_CLASS(gobject_class),
+			      G_SIGNAL_RUN_FIRST,
+			      G_STRUCT_OFFSET(MugMsgListViewClass,
+					      error_occured),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 
@@ -308,8 +318,25 @@ empty_or_display_contact (const gchar* str)
 	
 }
 
+static MugError
+mu_result_to_mug_error (MuResult r)
+{
+	switch (r) {
+	case MU_ERROR_XAPIAN_DIR:
+		return MUG_ERROR_XAPIAN_DIR;
+	case MU_ERROR_XAPIAN_NOT_UPTODATE:
+		return MUG_ERROR_XAPIAN_NOT_UPTODATE;
+	case MU_ERROR_QUERY:
+		return MUG_ERROR_QUERY;
+	default:
+		return MUG_ERROR_OTHER;
+	}
+}
+
+
 static MuMsgIter *
-run_query (const char *xpath, const char *query)
+run_query (const char *xpath, const char *query,
+	   MugMsgListView *self)
 {
 	GError *err;
 	MuQuery *xapian;
@@ -319,6 +346,9 @@ run_query (const char *xpath, const char *query)
 	xapian = mu_query_new (xpath, &err);
 	if (!xapian) {
 		g_warning ("Error: %s", err->message);
+		g_signal_emit (G_OBJECT(self),
+			       signals[MUG_ERROR_OCCURED], 0,
+			       mu_result_to_mug_error (err->code));
 		g_error_free (err);
 		return NULL;
 	}
@@ -329,6 +359,9 @@ run_query (const char *xpath, const char *query)
 	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("Error: %s", err->message);
+		g_signal_emit (G_OBJECT(self),
+			       signals[MUG_ERROR_OCCURED], 0,
+			       mu_result_to_mug_error (err->code));
 		g_error_free (err);
 		return NULL;
 	}
@@ -369,12 +402,13 @@ add_row (GtkListStore *store, MuMsgIter *iter)
 
 
 static int
-update_model (GtkListStore *store, const char *xpath, const char *query)
+update_model (GtkListStore *store, const char *xpath, const char *query,
+	      MugMsgListView *self)
 {
 	MuMsgIter *iter;
 	int count;
 
-	iter = run_query  (xpath, query);
+	iter = run_query  (xpath, query, self);
 	if (!iter) {
 		g_warning ("error: running query failed\n");
 		return -1;
@@ -407,7 +441,8 @@ mug_msg_list_view_query (MugMsgListView *self, const char *query)
 	if (!query)
 		return TRUE;
 	
-	rv = update_model (priv->_store, priv->_xpath, query);
+	rv = update_model (priv->_store, priv->_xpath, query,
+			   self);
 
 	gtk_tree_view_columns_autosize (GTK_TREE_VIEW(self));
 	
