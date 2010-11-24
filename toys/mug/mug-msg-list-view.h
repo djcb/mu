@@ -21,7 +21,7 @@
 #define __MUG_MSG_LIST_VIEW_H__
 
 #include <gtk/gtk.h>
-#include "src/mu-result.h"
+#include <mu-result.h>
 
 G_BEGIN_DECLS
 
