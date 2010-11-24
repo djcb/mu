@@ -204,7 +204,6 @@ mug_msg_list_view_init (MugMsgListView *obj)
 
 	tview = GTK_TREE_VIEW (obj);
 	gtk_tree_view_set_model (tview, GTK_TREE_MODEL(priv->_store));
-
 	gtk_tree_view_set_headers_clickable (GTK_TREE_VIEW(obj), TRUE);
 	gtk_tree_view_set_grid_lines (GTK_TREE_VIEW(obj),
 				      GTK_TREE_VIEW_GRID_LINES_VERTICAL);
@@ -218,8 +217,7 @@ mug_msg_list_view_init (MugMsgListView *obj)
 	append_col (tview, "Subject", MUG_COL_SUBJECT, -1, 0);
 	
 	g_signal_connect (G_OBJECT(obj), "cursor-changed",
-				  G_CALLBACK(on_cursor_changed),
-				  obj);
+				  G_CALLBACK(on_cursor_changed), obj);
 }
 
 static void

@@ -33,7 +33,7 @@ tags:
 # tool. If all is fine, it outputs nothing
 cc10:
 	@$(PMCCABE) `find -name '*.c' -o -name '*.cc'` \
-	| grep -v mu-msg-str-normalize.c \
+	| grep -v mu-str-normalize.c \
 	| sort -nr | awk '($$1 > 10)'
 
 # this warns about functions that are over 33 non-comment lines long, which is a
@@ -42,7 +42,7 @@ cc10:
 # note, mu_msg_str_normalize is excempted from this rule.
 line33:
 	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'` \
-	 | grep -v mu-msg-str-normalize.c \
+	 | grep -v mu-str-normalize.c \
          | awk '($$5 > 33)'
 
 # get all todo/fixme messages
