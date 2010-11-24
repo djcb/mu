@@ -113,7 +113,7 @@ test_mu_index (void)
 	xpath = g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
 				 "xapian");
 	
-	store = mu_store_new (xpath);
+	store = mu_store_new (xpath, NULL);
 	g_assert (store);
 
 	g_assert_cmpuint (mu_store_count (store), ==, 4);	

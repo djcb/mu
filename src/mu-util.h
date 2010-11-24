@@ -120,23 +120,47 @@ gchar* mu_util_str_from_strv (const gchar **params) G_GNUC_WARN_UNUSED_RESULT;
  */
 
 #define MU_XAPIAN_CATCH_BLOCK						\
-	catch (const Xapian::Error &err) {				\
+	catch (const Xapian::Error &xerr) {				\
                 g_critical ("%s: caught xapian exception '%s'",		\
-			__FUNCTION__, err.get_msg().c_str());		\
+			__FUNCTION__, xerr.get_msg().c_str());		\
         } catch (...) {							\
                 g_critical ("%s: caught exception", __FUNCTION__);	\
         }
+
+#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)				\
+	catch (const Xapian::Error &xerr) {				\
+		g_set_error ((GE),0,(E),				\
+			     "%s: caught xapian exception '%s'",	\
+			__FUNCTION__, xerr.get_msg().c_str());		\
+        } catch (...) {							\
+		g_set_error ((GE),0,(MU_ERROR_INTERNAL),		\
+			     "%s: caught exception", __FUNCTION__);	\
+        }
+
 
 
 #define MU_XAPIAN_CATCH_BLOCK_RETURN(R)					\
-	catch (const Xapian::Error &err) {				\
+	catch (const Xapian::Error &xerr) {				\
                 g_critical ("%s: caught xapian exception '%s'",		\
-			   __FUNCTION__, err.get_msg().c_str());	\
+			   __FUNCTION__, xerr.get_msg().c_str());	\
 		return (R);						\
         } catch (...) {							\
                 g_critical ("%s: caught exception", __FUNCTION__);	\
 		return (R);						\
         }
+
+#define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)			\
+	catch (const Xapian::Error &xerr) {				\
+		g_set_error ((GE),0,(E),				\
+			     "%s: caught xapian exception '%s'",	\
+			   __FUNCTION__, xerr.get_msg().c_str());	\
+		return (R);						\
+        } catch (...) {							\
+		g_set_error ((GE),0,(MU_ERROR_INTERNAL),		\
+			     "%s: caught exception", __FUNCTION__);	\
+		return (R);						\
+        }
+
 
 /* the name of the (leaf) dir which has the xapian database */
 #define MU_XAPIAN_DIR_NAME    "xapian"

@@ -41,14 +41,14 @@ struct _MuIndex {
 };
 
 MuIndex* 
-mu_index_new (const char *xpath)
+mu_index_new (const char *xpath, GError **err)
 {
 	MuIndex *index;
 
 	g_return_val_if_fail (xpath, NULL);
 	
 	index = g_new0 (MuIndex, 1);				
-	index->_xapian = mu_store_new (xpath);
+	index->_xapian = mu_store_new (xpath, err);
 	
 	if (!index->_xapian) {
 		g_warning ("%s: failed to open xapian store (%s)",
@@ -57,9 +57,10 @@ mu_index_new (const char *xpath)
 		return NULL;
 	}
 
-	/* see we need to reindex the database; note, there is a small race-condition
-	 * here, between mu_index_new and mu_index_run. Maybe do the check in
-	 * mu_index_run instead? */
+	/* see we need to reindex the database; note, there is a small
+	 * race-condition here, between mu_index_new and
+	 * mu_index_run. Maybe do the check in mu_index_run
+	 * instead? */
 	if (mu_util_db_is_empty (xpath))
 		index->_needs_reindex = FALSE;
 	else

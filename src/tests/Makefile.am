@@ -19,7 +19,7 @@ include $(top_srcdir)/gtest.mk
 INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	 $(GMIME_CFLAGS)					\
 	 $(GLIB_CFLAGS)						\
-	-I ${top_srcdir}					\
+	-I ${top_srcdir} -I ${top_srcdir}/src			\
 	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir/\"		\
 	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2/\"		\
 	-DMU_PROGRAM=\"${abs_top_builddir}/src/mu\"		\

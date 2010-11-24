@@ -260,16 +260,21 @@ cmd_index_or_cleanup (MuConfigOptions *opts)
 	MuIndex *midx;
 	MuIndexStats stats;
 	gboolean show_progress;
+	GError *err;
 	
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (mu_cmd_equals (opts, "index") ||
 			      mu_cmd_equals (opts, "cleanup"), FALSE);
 			  
-	if (!check_index_params (opts) || !database_version_check_and_update(opts))
+	if (!check_index_params (opts) ||
+	    !database_version_check_and_update(opts))
 		return FALSE;
-	
-	if (!(midx = mu_index_new (mu_runtime_xapian_dir()))) {
-		g_warning ("Indexing/Cleanup failed");
+
+	err = NULL;
+	if (!(midx = mu_index_new (mu_runtime_xapian_dir(), &err))) {
+		g_warning ("Indexing/Cleanup failed: %s",
+			   err->message);
+		g_error_free (err);
 		return FALSE;
 	} 
 

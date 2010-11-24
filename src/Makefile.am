@@ -57,6 +57,7 @@ libmu_la_SOURCES=			\
 	mu-cmd.h			\
 	mu-config.c			\
 	mu-config.h			\
+	mu-error.h			\
 	mu-index.c			\
 	mu-index.h			\
 	mu-log.c			\

@@ -1,4 +1,4 @@
-/* 
+/*
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -13,18 +13,27 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
-#ifndef __MU_RESULT_H__
-#define __MU_RESULT_H__
 
-enum _MuResult {
-	MU_OK,		/* all went ok */
-	MU_STOP,	/* user wants to stop */	
-	MU_ERROR	/* some other error occured */
+#ifndef __MU_ERROR_H__
+#define __MU_ERROR_H__
+
+enum _MuError {
+	/* general xapian related error */
+	MU_ERROR_XAPIAN,
+	/* xapian dir is not accessible */
+	MU_ERROR_XAPIAN_DIR,
+	/* database version is not uptodate (ie. not compatible with
+	 * the version that mu expects) */
+	MU_ERROR_XAPIAN_NOT_UPTODATE,
+	/* (parsnng) error in the query */ 
+	MU_ERROR_QUERY,
+	/* some other, internal error */
+	MU_ERROR_INTERNAL
 };
-typedef enum _MuResult MuResult;
+typedef enum _MuError MuError;
 
-#endif /*__MU_RESULT__*/
+#endif /*__MU_ERROR_H__*/

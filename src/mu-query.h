@@ -21,7 +21,8 @@
 #define __MU_QUERY_H__
 
 #include <glib.h>
-#include "mu-msg-iter.h"
+#include <mu-msg-iter.h>
+#include <mu-error.h>
 
 G_BEGIN_DECLS
 
@@ -34,6 +35,8 @@ typedef struct _MuQuery MuQuery;
  * @param path path to the xapian db to search 
  * @param err receives error information (if there is any); if
  * function returns non-NULL, err will _not_be set. err can be NULL
+ * possble errors (err->code) are MU_ERROR_XAPIAN_DIR and 
+ * MU_ERROR_XAPIAN_NOT_UPTODATE
  * 
  * @return a new MuQuery instance, or NULL in case of error.
  * when the instance is no longer needed, use mu_query_destroy
@@ -74,6 +77,7 @@ char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
  * of documents in the database)
  * @param err receives error information (if there is any); if
  * function returns non-NULL, err will _not_be set. err can be NULL
+ * possible error (err->code) is MU_ERROR_QUERY,
  *
  * @return a MuMsgIter instance you can iterate over, or NULL in
  * case of error

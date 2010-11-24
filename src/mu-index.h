@@ -45,10 +45,13 @@ typedef struct _MuIndexStats MuIndexStats;
  *
  * @param xpath path to the 'homedir'; the xapian directory will be
  * this homedir/xapian
+ *
+ * @param err to receive error or NULL; there are only errors when this
+ * function returns NULL. Possible errors: see mu-error.h
  * 
  * @return a new MuIndex instance, or NULL in case of error
  */
-MuIndex* mu_index_new (const char* muhome);
+MuIndex* mu_index_new (const char* muhome, GError **err);
 
 
 /**

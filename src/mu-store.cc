@@ -115,7 +115,7 @@ check_version (MuStore *store)
 }
 
 MuStore*
-mu_store_new  (const char* xpath)
+mu_store_new  (const char* xpath, GError **err)
 {
 	MuStore *store (0);
 	
@@ -141,7 +141,7 @@ mu_store_new  (const char* xpath)
 
 		return store;
 
-	} MU_XAPIAN_CATCH_BLOCK;		
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err,MU_ERROR_XAPIAN);		
 
 	try { delete store->_db; } MU_XAPIAN_CATCH_BLOCK;
 	

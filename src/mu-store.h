@@ -25,6 +25,7 @@
 
 #include "mu-result.h"
 #include "mu-msg.h"
+#include "mu-error.h"
 
 G_BEGIN_DECLS
 
@@ -35,10 +36,12 @@ typedef struct _MuStore MuStore;
  * create a new Xapian store, a place to store documents
  * 
  * @param path the path to the database
+  * @param err to receive error info or NULL. err->code can be found in
+ * mu-error.h
  * 
  * @return a new MuStore object, or NULL in case of error
  */
-MuStore*    mu_store_new     (const char* path);
+MuStore*    mu_store_new     (const char* path, GError **err);
 
 /**
  * destroy the MuStore object and free resources
@@ -78,7 +81,7 @@ const char* mu_store_version (MuStore *store);
  * @return TRUE if setting the version succeeded, FALSE otherwise  
  */
 gboolean  mu_store_set_version (MuStore *store,
-				       const char* version);
+				const char* version);
 
 
 /**
