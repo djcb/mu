@@ -2,7 +2,7 @@
 
 .SH NAME 
 
-mu find \- search for e-mails in the
+mu find \- find e-mail messages in the
 .B mu
 database
 
@@ -12,26 +12,32 @@ database
 
 .SH DESCRIPTION
 
-\fBmu find\fR is the \fBmu\fR sub-command for searching e-mails that were
-stored earlier using
-.BR mu-index(1)
-\.
+\fBmu find\fR is the \fBmu\fR sub-command for searching e-mail message that
+were stored earlier using
+\fBmu index(1)\bR.
 
 .SH SEARCHING MAIL
 
-The \fBfind\fR command starts a search for messages in the database that match
-the search pattern.
+\fBmu find\fR starts a search for messages in the database that match some
+search pattern. For example:
+
+.nf
+   $ mu find subject:snow from:john
+.fi
+
+would find all messages from John with 'snow' in the subject field.
 
 The search pattern is taken as a command-line parameter. If the search
-parameter consists of multiple parts (multiple command line parameters) they
-are treated as if there were a logical \fBAND\fR between them.
+parameter consists of multiple parts (as in the example) they are treated as
+if there were a logical \fBAND\fR between them.
 
 If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
 \fBNOT\fR etc., you have to put quotes around them so \fBmu\fR can consider
 them as a unit; for example to find mails with oranges OR mandarins in the
 subject-field, you can use:
+
 .nf
-less	mu find 'subject:orange OR subject:mandarin'
+  $ mu find 'subject:orange OR subject:mandarin'
 .fi
 
 
@@ -47,13 +53,13 @@ as filtering out unwanted results is usually preferrable over non matching
 messages.
      
 In older versions of mu, queries were logged in \fI<mu-home>/mu.log\fR;
-however, since version 0.9 mu no longer does this.
+however, since version 0.9, mu no longer does this.
      
 The basic way to search a message is to type some words matching it, as you
 would do in an internet search engine. For example,
 
 .nf
-	mu find monkey banana
+  $ mu find monkey banana
 .fi
 
 will find all messages that contain both 'monkey' and 'banana' in either body
@@ -65,21 +71,22 @@ seen in e-mail addresses) in a special way. However, you can match those still
 if you an explicit search prefix; in other words, if, for example:
 
 .nf
-	mu find foo@example.com
+  $ mu find foo@example.com
 .fi
 
 might not work, while 
 
 .nf
-	mu find f:foo@example.com
+  $ mu find f:foo@example.com
 .fi
+
 does.
 
 As mentioned, matching is case-insensitive and accent-insensitive;
 thus
 
 .nf
-	mu find Mönkey BÄNAÑå
+  $ mu find Mönkey BÄNAÑå
 .fi
 
 yields the same results as the example above.
@@ -88,7 +95,7 @@ yields the same results as the example above.
 example:
 
 .nf
-	mu find subject:penguin
+  $ mu find subject:penguin
 .fi
 
 to find messages with have the word \fBpenguin\fR in the subject field. You
@@ -115,22 +122,23 @@ extra discusion.
 First, the message flags field describes certain properties of the message, as
 listed in the following table:
 .nf
-	d,draft		Draft Message
-	f,flagged	Flagged
-	n,new		New message (in new/ Maildir)
-	p,passed	Passed ('Handled')
-	r,replied	Replied
-	s,seen		Seen
-	t,thrashed	Marked for deletion
-	a,attach	Has attachment
-	z,signed	Signed message
-	x,encrypted	Encrypted message
+	d,draft         Draft Message
+	f,flagged       Flagged
+	n,new           New message (in new/ Maildir)
+	p,passed        Passed ('Handled')
+	r,replied       Replied
+	s,seen          Seen
+	t,thrashed      Marked for deletion
+	a,attach        Has attachment
+	z,signed        Signed message
+	x,encrypted     Encrypted message
 .fi
 
 Using this, we can search e.g. for all signed messages that have an
 attachment:
+
 .nf
-	$ mu find flag:signed flag:attach
+  $ mu find flag:signed flag:attach
 .fi
 
 The message-priority has three possible values: low, normal or high. We can
@@ -138,7 +146,7 @@ match them using 'prio' - for example, to get all high-priority messages with
 a subject containing some bird:
 
 .nf
-	$ mu find prio:high subject:nightingale
+  $ mu find prio:high subject:nightingale
 .fi
 
 The Maildir field describes the directory path starting \fBafter\fR the
@@ -148,14 +156,14 @@ example, if there's a message with the file name
 other messages in the same maildir) with:
 
 .nf
-	$ mu find maildir:/lists/running
+  $ mu find maildir:/lists/running
 .fi
 
 Note the starting '/'. If you want to match mails in the 'root' maildir, you
 can do with a single '/':
 
 .nf
-	mu find maildir:/ 
+  $ mu find maildir:/ 
 .fi
 
 (and of course you can use the \fBm:\fR shortcut instead of \fBmaildir:\fR) 
@@ -171,17 +179,17 @@ as "20101231122359", or December 31, 2010 at 23:59.
 To get all messages between (inclusive) the 5th of May 2009 and the 2nd of
 June 2010, you could use:
 .nf
-	mu find date:20090505..20100602 
+  $ mu find date:20090505..20100602 
 .fi
 Characters like ':', '/', '-' and single '.' are ignore, so the following is
 equivalent but more readable:
 .nf
-	mu find date:2009-05-05..2010-06-02 
+  $ mu find date:2009-05-05..2010-06-02 
 .fi
 Precision is up to the minute and 24-hour notation for times is used, so
 another example would be:
 .nf
-	mu find date:2009-05-05/12:23..2010-06-02/17:18 
+  $ mu find date:2009-05-05/12:23..2010-06-02/17:18 
 .fi
 
 An important point here is that the date matches are against local the local
@@ -191,16 +199,18 @@ index\fR).
 \fBmu\fR also understand relative dates, in the form of a posiive number
 followed by h (hour), d (day), w (week), m (30 days) or y (365 days). Some
 examples will explain this:
+
 .nf
-	5h	five hours in the past
-	2w	one week in the past
-	3m	three times 30 days in the past
+	5h      five hours in the past
+	2w      one week in the past
+	3m      three times 30 days in the past
 	1y      365 days in the past
 .fi
+
 Using this notation, you can for example match messages between two and three
 weeks old:
 .nf
-	mu find date:3w..2w 
+  $ mu find date:3w..2w 
 .fi
 
 Finally, there are some special keywords for dates, namely 'now', meaning the
@@ -208,7 +218,7 @@ prsent moment and 'today' for the beginning of today. So to get all messages
 sent or received today, you could use:
 
 .nf
-	mu find date:today..now 
+  $ mu find date:today..now 
 .fi
 
 .SH OPTIONS
@@ -229,7 +239,7 @@ not known will be output as-is, allowing for some simple formatting.
 
 For example:
 .nf
-	mu find subject:snow --fields "d f s"
+  $ mu find subject:snow --fields "d f s"
 .fi
 would list the date, subject and sender of all messages with 'snow' in the
 their subject.
