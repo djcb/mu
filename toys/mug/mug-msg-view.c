@@ -281,9 +281,15 @@ mug_msg_view_set_msg (MugMsgView *self, const char* msgpath)
 		return TRUE;
 	}
 	
-	msg = mu_msg_new (msgpath, NULL);
-	if (!msg)
-		return FALSE;
+	msg = mu_msg_new (msgpath, NULL, NULL);
+	if (!msg) {
+			gtk_widget_hide (priv->_tablemain);
+			gtk_widget_hide (priv->_expander);
+			mug_msg_view_set_text (self,
+								   "Message not found; " 
+								   "please run 'mu index'");
+			return FALSE;
+	}
 	
 	rv = mug_msg_view_set_text (self, mu_msg_get_body_text(msg));
 	fill_header (priv, msg);
