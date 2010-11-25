@@ -216,7 +216,7 @@ test_mu_query_05 (void)
 	query = mu_query_new (xpath, NULL);
 	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
 			     FALSE, 1, NULL);
-	msg = mu_msg_iter_get_msg (iter);
+	msg = mu_msg_iter_get_msg (iter, NULL);
 		
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
 			 "Greetings from Lothlórien");

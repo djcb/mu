@@ -66,7 +66,8 @@ test_mu_msg_01 (void)
 	gint i;
 
 	msg = mu_msg_new (MU_TESTMAILDIR
-			  "cur/1220863042.12663_1.mindcrime!2,S", NULL);
+					  "cur/1220863042.12663_1.mindcrime!2,S",
+					  NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "Donald Duck <gcc-help@gcc.gnu.org>");
@@ -127,8 +128,9 @@ test_mu_msg_02 (void)
 	int i;
 
 	msg = mu_msg_new (MU_TESTMAILDIR
-			  "cur/1220863087.12663_19.mindcrime!2,S", NULL);
-
+					  "cur/1220863087.12663_19.mindcrime!2,S",
+					  NULL, NULL);
+	
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "help-gnu-emacs@gnu.org");
 	g_assert_cmpstr (mu_msg_get_subject(msg),
@@ -162,7 +164,8 @@ test_mu_msg_03 (void)
 	MuMsg *msg;
 
 	msg = mu_msg_new (MU_TESTMAILDIR
-			  "cur/1283599333.1840_11.cthulhu!2,", NULL);
+			  "cur/1283599333.1840_11.cthulhu!2,",
+					  NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "Bilbo Baggins <bilbo@anotherexample.com>");
@@ -192,7 +195,7 @@ test_mu_msg_04 (void)
 	MuMsg *msg;
 
 	msg = mu_msg_new (MU_TESTMAILDIR2
-			  "Foo/cur/mail4", NULL);
+					  "Foo/cur/mail4", NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "George Custer <gac@example.com>");
