@@ -161,16 +161,55 @@ can do with a single '/':
 (and of course you can use the \fBm:\fR shortcut instead of \fBmaildir:\fR) 
 
 The date:/d: search parameter is 'special' in the fact that it takes a range
-of dates. For now, these dates are in ISO 8601 format (YYYYMMDD). To get all
-messages between (inclusive) the 5th of May 2009 and the 2nd of June 2010, you
-could use:
+of dates. For now, these dates are in ISO 8601 format (YYYYMMDDHHMM); you can
+leave out the right part, and mu will add the rest, depending on whether this
+is the beginning or end of the date interval. For example, for the beginning
+of the interval "201012" would be interpreted as "20101201010000", or December
+1, 2010 at 00:00, while for the end of the interval, this would be interpreted
+as "20101231122359", or December 31, 2010 at 23:59.
+
+To get all messages between (inclusive) the 5th of May 2009 and the 2nd of
+June 2010, you could use:
 .nf
 	mu find date:20090505..20100602 
 .fi
-An important point here is that the date matches are against UTC (Universal
-Coordinated Time), while message are displayed using your local
-time. Depending on the timezone, this may lead to some messages which don't
-seem to fit in the interval.
+Characters like ':', '/', '-' and single '.' are ignore, so the following is
+equivalent but more readable:
+.nf
+	mu find date:2009-05-05..2010-06-02 
+.fi
+Precision is up to the minute and 24-hour notation for times is used, so
+another example would be:
+.nf
+	mu find date:2009-05-05/12:23..2010-06-02/17:18 
+.fi
+
+An important point here is that the date matches are against local the local
+time zone active the time when the mu database was filled (using \fBmu
+index\fR).
+
+\fBmu\fR also understand relative dates, in the form of a posiive number
+followed by h (hour), d (day), w (week), m (30 days) or y (365 days). Some
+examples will explain this:
+.nf
+	5h	five hours in the past
+	2w	one week in the past
+	3m	three times 30 days in the past
+	1y      365 days in the past
+.fi
+Using this notation, you can for example match messages between two and three
+weeks old:
+.nf
+	mu find date:3w..2w 
+.fi
+
+Finally, there are some special keywords for dates, namely 'now', meaning the
+prsent moment and 'today' for the beginning of today. So to get all messages
+sent or received today, you could use:
+
+.nf
+	mu find date:today..now 
+.fi
 
 .SH OPTIONS
 
@@ -324,7 +363,6 @@ Find all messages with attachments:
 .nf
   $ mu find flag:attach
 .fi
-
 
 
 .SS Integrating mu find with mail clients
