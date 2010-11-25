@@ -82,8 +82,8 @@ mu_msg_iter_destroy (MuMsgIter *iter)
 
 
 MuMsg*
-mu_msg_iter_get_msg (MuMsgIter *iter)
-{	
+mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
+{
 	const char *path;
 	MuMsg *msg;
 	
@@ -92,15 +92,14 @@ mu_msg_iter_get_msg (MuMsgIter *iter)
 	
 	path = mu_msg_iter_get_path (iter);
 	if (!path) {
-		g_warning ("%s: no path for message", __FUNCTION__);
+		g_set_error (err, 0, MU_ERROR_XAPIAN_MISSING_DATA,
+			     "no path for message");
 		return NULL;
 	}
 
-	msg = mu_msg_new (path, NULL);
-	if (!msg) {
-		g_warning ("%s: failed to create msg object", __FUNCTION__);
+	msg = mu_msg_new (path, NULL, err);
+	if (!msg) 
 		return NULL;
-	}
 
 	return msg;
 }

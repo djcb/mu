@@ -39,11 +39,16 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 	MuMsg* msg;
 	const char *field;
 	time_t date;
-	
-	msg = mu_msg_new (path, NULL);
-	if (!msg)
+	GError *err;
+
+	err = NULL;
+	msg = mu_msg_new (path, NULL, &err);
+	if (!msg) {
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
 		return FALSE;
-	
+	}
+
 	if ((field = mu_msg_get_from (msg)))
 		g_print ("From: %s\n", field);
 	

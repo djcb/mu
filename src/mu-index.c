@@ -100,6 +100,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 			MuIndexCallbackData *data, gboolean *updated)
 { 
 	MuMsg *msg;
+	GError *err;
 	
 	*updated = FALSE;
 
@@ -125,9 +126,9 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 		return MU_OK; /* nope: no need to insert/update! */
 
 	} while (0);
-
-		
-	msg = mu_msg_new (fullpath, mdir);
+	
+	err = NULL;
+	msg = mu_msg_new (fullpath, mdir, &err);
 	if (!msg) {
 		g_warning ("%s: failed to create mu_msg for %s",
 			   __FUNCTION__, fullpath);

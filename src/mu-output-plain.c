@@ -75,12 +75,15 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 static void
 print_summary (MuMsgIter *iter, size_t summary_len)
 {
+	GError *err;
 	const char *summ;
 	MuMsg *msg;
 
-	msg = mu_msg_iter_get_msg (iter);
+	err = NULL;
+	msg = mu_msg_iter_get_msg (iter, &err);
 	if (!msg) {
-		g_warning ("%s: failed to create msg object", __FUNCTION__);
+		g_warning ("error get message: %s", err->message);
+		g_error_free (err);
 		return;
 	}
 

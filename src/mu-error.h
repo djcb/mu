@@ -29,8 +29,14 @@ enum _MuError {
 	/* database version is not uptodate (ie. not compatible with
 	 * the version that mu expects) */
 	MU_ERROR_XAPIAN_NOT_UPTODATE,
+	/* missing data for a document */
+	MU_ERROR_XAPIAN_MISSING_DATA,
 	/* (parsnng) error in the query */ 
 	MU_ERROR_QUERY,
+	/* file loading related error */
+	MU_ERROR_FILE,
+	/* gmime parsing related error */
+	MU_ERROR_GMIME,
 	/* some other, internal error */
 	MU_ERROR_INTERNAL
 };

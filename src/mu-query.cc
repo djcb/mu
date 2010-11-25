@@ -117,7 +117,8 @@ private:
 		date = cleanup;
 	}
 	
-	void complete_date (std::string& date, size_t len, bool is_begin) const {
+	void complete_date (std::string& date, size_t len,
+			    bool is_begin) const {
 
 		const std::string bsuffix ("00000101000000");
 		const std::string esuffix ("99991231235959");

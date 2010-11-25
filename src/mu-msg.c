@@ -78,25 +78,28 @@ mu_msg_destroy (MuMsg *msg)
 
 
 static gboolean
-init_file_metadata (MuMsg* msg, const char* path, const gchar* mdir)
+init_file_metadata (MuMsg* msg, const char* path, const gchar* mdir,
+		    GError **err)
 {
 	struct stat statbuf;
 
 	if (access (path, R_OK) != 0) {
-		g_warning ("%s: cannot read file %s: %s", 
-			   __FUNCTION__, path, strerror(errno));
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "cannot read file %s: %s",
+			     path, strerror(errno));
 		return FALSE;
 	}
 
 	if (stat (path, &statbuf) < 0) {
-		g_warning ("%s: cannot stat %s: %s", 
-			   __FUNCTION__, path, strerror(errno));
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "cannot stat %s: %s",
+			     path, strerror(errno));
 		return FALSE;
 	}
 	
 	if (!S_ISREG(statbuf.st_mode)) {
-		g_warning ("%s: not a regular file: %s",
-			   __FUNCTION__, path);
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "not a regular file: %s", path);
 		return FALSE;
 	}
 	
@@ -114,7 +117,7 @@ init_file_metadata (MuMsg* msg, const char* path, const gchar* mdir)
 
 
 static gboolean
-init_mime_msg (MuMsg *msg)
+init_mime_msg (MuMsg *msg, GError **err)
 {
 	FILE *file;
 	GMimeStream *stream;
@@ -122,15 +125,17 @@ init_mime_msg (MuMsg *msg)
 	
 	file = fopen (mu_msg_get_path(msg), "r");
 	if (!file) {
-		g_warning ("%s:cannot open %s: %s", 
-			   __FUNCTION__, mu_msg_get_path(msg), 
-			   strerror (errno));
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "cannot open %s: %s", mu_msg_get_path(msg), 
+			     strerror (errno));
 		return FALSE;
 	}
 	
 	stream = g_mime_stream_file_new (file);
 	if (!stream) {
-		g_warning ("%s: cannot create mime stream", __FUNCTION__);
+		g_set_error (err, 0, MU_ERROR_GMIME,
+			     "cannot create mime stream for %s",
+			     mu_msg_get_path(msg));
 		fclose (file);
 		return FALSE;
 	}
@@ -138,14 +143,18 @@ init_mime_msg (MuMsg *msg)
 	parser = g_mime_parser_new_with_stream (stream);
 	g_object_unref (stream);
 	if (!parser) {
-		g_warning ("%s: cannot create mime parser", __FUNCTION__);
+		g_set_error (err, 0, MU_ERROR_GMIME,
+			     "cannot create mime parser for %s",
+			     mu_msg_get_path(msg));
 		return FALSE;
 	}
 	
 	msg->_mime_msg = g_mime_parser_construct_message (parser);
 	g_object_unref (parser);
 	if (!msg->_mime_msg) {
-		g_warning ("%s: cannot create mime message", __FUNCTION__);
+		g_set_error (err, 0, MU_ERROR_GMIME,
+			     "cannot construct mime message for %s",
+			     mu_msg_get_path(msg));
 		return FALSE;
 	}
 
@@ -154,7 +163,7 @@ init_mime_msg (MuMsg *msg)
 
 
 MuMsg*   
-mu_msg_new (const char* filepath, const gchar* mdir)
+mu_msg_new (const char* filepath, const gchar* mdir, GError **err)
 {
 	MuMsg *msg;
 		
@@ -165,12 +174,12 @@ mu_msg_new (const char* filepath, const gchar* mdir)
 	msg = g_slice_new0 (MuMsg);	
 	msg->_prio      = MU_MSG_PRIO_NONE;
 	
-	if (!init_file_metadata(msg, filepath, mdir)) {
+	if (!init_file_metadata(msg, filepath, mdir, err)) {
 		mu_msg_destroy (msg);
 		return NULL;
 	}
 	
-	if (!init_mime_msg(msg)) {
+	if (!init_mime_msg(msg, err)) {
 		mu_msg_destroy (msg);
 		return NULL;
 	}

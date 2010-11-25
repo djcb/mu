@@ -24,6 +24,7 @@
 #include "mu-msg-fields.h"
 #include "mu-msg-status.h"
 #include "mu-msg-prio.h"
+#include "mu-error.h"
 
 G_BEGIN_DECLS
 
@@ -35,16 +36,18 @@ typedef struct _MuMsg MuMsg;
  * read access to its properties; call mu_msg_destroy when done with it.
  *
  * @param path full path to an email message file
- *
  * @param mdir the maildir for this message; ie, if the path is
  * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
  * pass NULL for this parameter, in which case some maildir-specific
  * information is not available.
+ * @param err receive error information (MU_ERROR_FILE or MU_ERROR_GMIME), or NULL. There
+ * will only be err info if the function returns NULL
  * 
  * @return a new MuMsg instance or NULL in case of error
  */
 MuMsg*   mu_msg_new		   (const char* filepath,
-				    const char *maildir);
+				    const char *maildir,
+				    GError **err);
 
 
 /**

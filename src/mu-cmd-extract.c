@@ -134,11 +134,16 @@ save_parts (const char *path, MuConfigOptions *opts)
 {	
 	MuMsg* msg;
 	gboolean rv;
-	
-	msg = mu_msg_new (path, NULL);
-	if (!msg)
-		return FALSE;
+	GError *err;
 
+	err = NULL;
+	msg = mu_msg_new (path, NULL, &err);
+	if (!msg) {
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
+		return FALSE;
+	}
+		
 	/* note, mu_cmd_extract already checks whether what's in opts
 	 * is somewhat, so no need for extensive checking here */
 	
@@ -176,10 +181,15 @@ static gboolean
 show_parts (const char* path, MuConfigOptions *opts)
 {
 	MuMsg* msg;
-	
-	msg = mu_msg_new (path, NULL);
-	if (!msg)
+	GError *err;
+
+	err = NULL;
+	msg = mu_msg_new (path, NULL, &err);
+	if (!msg) {
+		g_warning ("Error: %s", err->message);
+		g_error_free (err);
 		return FALSE;
+	}
 
 	g_print ("MIME-parts in this message:\n");
 	mu_msg_msg_part_foreach (msg, each_part_show, NULL);

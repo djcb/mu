@@ -28,7 +28,7 @@ struct _MuMsgIter;
 typedef struct _MuMsgIter MuMsgIter;
 
 /**
- * get the next next message (which you got from
+ * get the next message (which you got from
  * e.g. mu_query_run)
  * 
  * @param iter a valid MuMsgIter iterator
@@ -66,12 +66,14 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
  * MuMsg should use only when information is needed that is not
  * provided from the iter).
  * 
- * @param iter a valid MuMsgIter instance
+ * @param iter a valid MuMsgIter instance 
+ * @param err which receives error info or NULL. err is only filled
+ * when the function returns NULL
  * 
  * @return a MuMsgGMime instance, or NULL in case of error. Use
  * mu_msg_gmime_destroy when the instance is no longer needed
  */
-MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter);
+MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err);
 
 /**
  * get the document id for the current message
