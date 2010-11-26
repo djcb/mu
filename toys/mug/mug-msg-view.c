@@ -130,20 +130,23 @@ create_table (MugMsgViewPrivate *priv, const HeaderInfo *hinfo, guint num)
 		gtk_label_set_markup (GTK_LABEL(l), str);
 		g_free (str);
 
-		gtk_table_attach (GTK_TABLE(table), l, 0, 1, i, i+1,
-				  GTK_FILL, GTK_FILL, 0, 0); 
-
+		al = gtk_alignment_new (0.0, 0.0, 0.0, 0.0);
+		gtk_container_add (GTK_CONTAINER(al), l);
+		gtk_table_attach (GTK_TABLE(table), al, 0, 1, i, i+1,
+						  GTK_FILL, 0, 0, 0); 
+				
 		l = priv->_headervals[hinfo[i].row] = gtk_label_new (NULL);
 		al = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-		gtk_label_set_line_wrap_mode (GTK_LABEL(l), PANGO_WRAP_WORD_CHAR);
-		gtk_label_set_line_wrap (GTK_LABEL(l), TRUE);
 		gtk_label_set_selectable (GTK_LABEL(l), TRUE);
 		
 		gtk_container_add (GTK_CONTAINER(al), l);
 		gtk_label_set_justify (GTK_LABEL(l), GTK_JUSTIFY_LEFT);
+		gtk_label_set_line_wrap_mode (GTK_LABEL(l), PANGO_WRAP_WORD_CHAR);
+		gtk_label_set_line_wrap (GTK_LABEL(l), FALSE);
 		gtk_table_attach (GTK_TABLE(table), al,
-				  1, 2, i, i+1, GTK_FILL, GTK_FILL,
-				  0, 0);
+						  1, 2, i, i+1,
+						  GTK_FILL,
+						  0, 0, 0);
 	}
 
 	return table;
