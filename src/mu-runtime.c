@@ -34,14 +34,12 @@ struct _MuRuntimeData {
 	gchar *_muhome;
 	gchar *_xapian_dir;
 	gchar *_bookmarks_file;
-
 	MuConfigOptions *_config;
 };
 typedef struct _MuRuntimeData MuRuntimeData;
 
 /* static, global data for this singleton */
-static gboolean       _initialized = FALSE;
-
+static gboolean _initialized	   = FALSE;
 static MuRuntimeData *_data = NULL;
 
 static void runtime_free (void);
@@ -78,7 +76,7 @@ mu_runtime_init (const char* muhome_arg)
 
 	if (!init_system())
 		return FALSE;
-
+	
 	if (muhome_arg)
 		muhome = g_strdup (muhome_arg);
 	else
