@@ -31,6 +31,24 @@ G_BEGIN_DECLS
 struct _MuMsg;
 typedef struct _MuMsg MuMsg;
 
+
+
+/**
+ * initialize the GMime-system; this function needs to be called
+ * before doing anything else with MuMsg. mu_runtime_init will call
+ * this function, so if you use that, you should not call this
+ * function.
+ */
+void mu_msg_gmime_init (void);
+
+/**
+ * uninitialize the GMime-system; this function needs to be called
+ * after you're done with MuMsg. mu_runtime_uninit will call this
+ * function, so if you use that, you should not call this function.
+ */
+void mu_msg_gmime_uninit (void);
+
+
 /**
  * create a new MuMsg* instance which parses a message and provides
  * read access to its properties; call mu_msg_destroy when done with it.

@@ -22,6 +22,11 @@
 #include <glib-object.h>
 #include <locale.h> /* for setlocale() */
 #include <stdio.h> /* for fileno() */
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <mu-msg.h>
+
 
 #include "mu-config.h"
 #include "mu-log.h"
@@ -51,6 +56,10 @@ init_system (void)
 	 * terms) won't work */
 	setlocale (LC_ALL, "");
 
+	/* init the random number generator; this is not really *that*
+	 * random, but good enough for our humble needs... */
+	srandom ((unsigned)(getpid()*time(NULL)));
+	
 	/* on FreeBSD, it seems g_slice_new and friends lead to
 	 * segfaults. So we shut if off */
 #ifdef 	__FreeBSD__
@@ -89,6 +98,8 @@ mu_runtime_init (const char* muhome_arg)
 	
 	_data = g_new0 (MuRuntimeData, 1);
  	_data->_muhome = muhome;
+
+	mu_msg_gmime_init ();
 	
 	return _initialized = TRUE;
 }
@@ -127,6 +138,8 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 	}
 	
 	_data->_muhome = g_strdup (_data->_config->muhome);
+
+	mu_msg_gmime_init ();
 	
 	return _initialized = TRUE;
 }
@@ -153,8 +166,10 @@ mu_runtime_uninit (void)
 {
 	g_return_if_fail (_initialized);
 
-	runtime_free ();
+	mu_msg_gmime_uninit ();
 	
+	runtime_free ();
+
 	_initialized = FALSE;
 }
 	

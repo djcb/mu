@@ -32,36 +32,35 @@
 #include "mu-msg-priv.h" /* include before mu-msg.h */
 #include "mu-msg.h"
 
-
-static guint _refcount = 0;
-
 /* note, we do the gmime initialization here rather than in
  * mu-runtime, because this way we don't need mu-runtime for simple
  * cases -- such as our unit tests */
+static gboolean _gmime_initialized = FALSE;
 
-static void
-ref_gmime (void)
+void
+mu_msg_gmime_init (void)
 {
-	if (G_UNLIKELY(_refcount == 0)) {
-		srandom ((unsigned)(getpid()*time(NULL)));
+	g_return_if_fail (!_gmime_initialized);
+
 #ifdef GMIME_ENABLE_RFC2047_WORKAROUNDS
 	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
 #else
 	g_mime_init(0);
 #endif /* GMIME_ENABLE_RFC2047_WORKAROUNDS */
-	}
-	++_refcount;	
+
+	_gmime_initialized = TRUE;
 }
 
-static void
-unref_gmime (void)
+
+void
+mu_msg_gmime_uninit (void)
 {
-	g_return_if_fail (_refcount > 0);
+	g_return_if_fail (_gmime_initialized);
 
-	--_refcount;
-	if (G_UNLIKELY(_refcount == 0))
-		g_mime_shutdown();
+	g_mime_shutdown();
+	_gmime_initialized = FALSE;
 }
+
 
 void 
 mu_msg_destroy (MuMsg *msg)
@@ -80,7 +79,6 @@ mu_msg_destroy (MuMsg *msg)
 		g_free (msg->_fields[i]);
 	
 	g_slice_free (MuMsg, msg);
-	unref_gmime ();
 }
 
 
@@ -187,9 +185,8 @@ mu_msg_new (const char* filepath, const gchar* mdir, GError **err)
 {
 	MuMsg *msg;
 		
-	g_return_val_if_fail (filepath, NULL);
-
-	ref_gmime ();
+	g_return_val_if_fail (filepath, NULL);	
+	g_return_val_if_fail (_gmime_initialized, NULL);
 	
 	msg = g_slice_new0 (MuMsg);	
 	msg->_prio      = MU_MSG_PRIO_NONE;
