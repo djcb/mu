@@ -134,9 +134,9 @@ char* mu_str_summarize (const char* str,
 
 /**
  * normalize a string (ie., collapse accented characters etc.), and
- * optionally, downcase it
+ * optionally, downcase it. Works for accented chars in Unicode Blocks
+ * 'Latin-1 Supplement' and 'Latin Extended-A'
  *
- * 
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
  * 
@@ -148,7 +148,8 @@ char* mu_str_normalize (const char *str, gboolean downcase);
 /**
  * normalize a string (ie., collapse accented characters etc.), and
  * optionally, downcase it. this happen by changing the string; if
- * that is not desired, use mu_str_normalize
+ * that is not desired, use mu_str_normalize. Works for accented chars
+ * in Unicode Blocks 'Latin-1 Supplement' and 'Latin Extended-A'
  * 
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
