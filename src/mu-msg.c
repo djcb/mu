@@ -35,16 +35,23 @@
 
 static guint _refcount = 0;
 
+/* note, we do the gmime initialization here rather than in
+ * mu-runtime, because this way we don't need mu-runtime for simple
+ * cases -- such as our unit tests */
+
 static void
 ref_gmime (void)
 {
 	if (G_UNLIKELY(_refcount == 0)) {
 		srandom ((unsigned)(getpid()*time(NULL)));
-		g_mime_init(0);
+#ifdef GMIME_ENABLE_RFC2047_WORKAROUNDS
+	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
+#else
+	g_mime_init(0);
+#endif /* GMIME_ENABLE_RFC2047_WORKAROUNDS */
 	}
 	++_refcount;	
 }
-
 
 static void
 unref_gmime (void)
@@ -116,19 +123,19 @@ init_file_metadata (MuMsg* msg, const char* path, const gchar* mdir,
 }
 
 
-static gboolean
-init_mime_msg (MuMsg *msg, GError **err)
+
+static GMimeStream*
+get_mime_stream (MuMsg *msg, GError **err)
 {
 	FILE *file;
 	GMimeStream *stream;
-	GMimeParser *parser;
 	
 	file = fopen (mu_msg_get_path(msg), "r");
 	if (!file) {
 		g_set_error (err, 0, MU_ERROR_FILE,
 			     "cannot open %s: %s", mu_msg_get_path(msg), 
 			     strerror (errno));
-		return FALSE;
+		return NULL;
 	}
 	
 	stream = g_mime_stream_file_new (file);
@@ -137,8 +144,21 @@ init_mime_msg (MuMsg *msg, GError **err)
 			     "cannot create mime stream for %s",
 			     mu_msg_get_path(msg));
 		fclose (file);
-		return FALSE;
+		return NULL;
 	}
+
+	return stream;
+}
+
+static gboolean
+init_mime_msg (MuMsg *msg, GError **err)
+{
+	GMimeStream *stream;
+	GMimeParser *parser;
+	
+	stream = get_mime_stream (msg, err);
+	if (!stream)
+		return FALSE;
 	
 	parser = g_mime_parser_new_with_stream (stream);
 	g_object_unref (stream);
