@@ -29,6 +29,7 @@ a.menu:hover   {color: #ff0000; text-decoration: underline; }
   <td><img src="mu-small.png" align="left" alt="mu-small"> </td>
   <td align="right" class="menu">
   <a class="menu" href="#welcome" >welcome</a> |
+  <a class="menu" href="#mug" >mug</a> |
   <a class="menu" href="#news" >news</a> |
   <a class="menu" href="#features" >features</a> |
   <a class="menu" href="#download" >download</a> |
@@ -73,35 +74,42 @@ your database up-to-date.
 <p>After building the database, it's easy to search for messages. For example:
 <ul>
   <li>
-    <i>get all mails about birds <b>and</b> bees</i> (and similar words)
-  <pre>
-  $ mu find bird bee
-  </pre>
-  if you want to find message with either one of those, you can do:
-  <pre>
-  $ mu find 'bird OR bee'
-  </pre>
-  
+    <i>get all mails about birds <b>and</b> bees</i> (and similar words)<pre>
+    $ mu find bird bee</pre>
+  if you want to find message with either one of those, you can do:<pre>
+    $ mu find 'bird OR bee'</pre>
   </li>
-  
   <li>
-    <i>get all Smith's mails with 'capybara' in the subject line</i>
-  <pre>
-  $ mu find from:smith subject:capybara
-  </pre>
+    <i>get all Smith's mails with 'capybara' in the subject line</i><pre>
+    $ mu find from:smith subject:capybara</pre>
   </li>
-  
   <li>
-    <i>get the mails in the archive folder where Mary was Cc'd</i>
-  <pre>
-  $ mu find maildir:/archive cc:mary
-  </pre>
+    <i>get the mails in the archive folder where Mary was Cc'd</i><pre>
+    $ mu find maildir:/archive cc:mary</pre>
   </li>
 </ul>
 
+Starting with version 0.9, you can search for date ranges, message flags and
+message priority as well:
+<ul>
+  <li>
+    <i>get mails with attachments from the last two weeks:</i><pre>
+    $ mu find flag:attach date:2w..now</pre>
+  </li>
+
+  <li>
+    <i>get all important mails in March and April 2010:</i><pre>
+    $ mu find prio:high date:2010-03..2010-04</pre>
+  </li>
+</ul>
+
+<p>Searches are case-insensitive as well as 'accent insensitive' (version 0.9
+  and up); so <i>angStroM</i> will match <i>Ångström</i>.
+
 <p>The way to express the searches may be a bit cryptic at first, but easy to
 learn (in the author's biased opinion); the mu manpages discuss syntax and
-usage, and contain examples.
+usage. There is also the <tt>mu-easy</tt> man-page which contains a lot of
+simple examples to get you going.
 
 <p>NOTE: while searching from the command-line is sometimes useful, mu is most
 easily used when integrated with an e-mail program. The documentation includes
@@ -113,8 +121,27 @@ Unix/Linux-based systems, and uses the <a href="http://www.xapian.org"
 your mails must be stored in a set of <a
 href="http://www.qmail.org/qmail-manual-html/man5/maildir.html" >maildirs</a>
 
+<h2><a name="mug" >mug</a><a href="mug-full.png"><img src="mug-thumb.png"
+align="right" border="0"></a></h2>
+Starting with version 0.9, there is now a simple UI called <tt>mug</tt>. It
+started as a little experiment, but it seems to be useful enough to
+include. Usage should be straigthforward.
+
+<p>The longer-term goal is to have a bit more complete graphical user-interface;
+for the time being, <tt>mug</tt> seems to work fine.
+
+<p>If you have defined bookmarks, mug will show them in the toolbar on the left
+side of the <tt>mug</tt>-window, as can be seen in the screenshot.
+
 <h2><a name="news" >news</a></h2>
 <ul>
+  <li>[2010-11-27] <strong>mu version 0.9-beta</strong> released. New
+  features: searching is now accent-insensitive; you can now search for
+  message priority (<tt>prio:</tt>), time-interval (<tt>date:</tt>) and
+  message flags (<tt>flag:</tt>). Also, you can now store ('bookmark')
+  often-used queries. To top it off, there is a simple graphical UI now,
+  called <tt>mug</tt>. Documentation has been update, and all known bugs have
+  been fixed.
   <li>[2010-10-30] <strong>mu version 0.8</strong> released, with only some
   small cosmetic updates compared to 0.8-beta. Hurray!
   <li>[2010-10-23] <strong>mu version 0.8-beta</strong> released. The new
