@@ -34,20 +34,10 @@
 
 /* we ignore fields for now */
 static gboolean
-view_file (const gchar *path, const gchar *fields, size_t summary_len)
+view_msg (MuMsg *msg, const gchar *fields, size_t summary_len)
 {
-	MuMsg* msg;
 	const char *field;
 	time_t date;
-	GError *err;
-
-	err = NULL;
-	msg = mu_msg_new (path, NULL, &err);
-	if (!msg) {
-		g_warning ("Error: %s", err->message);
-		g_error_free (err);
-		return FALSE;
-	}
 
 	if ((field = mu_msg_get_from (msg)))
 		g_print ("From: %s\n", field);
@@ -69,11 +59,6 @@ view_file (const gchar *path, const gchar *fields, size_t summary_len)
 		g_print ("Summary: %s\n", field ? field : "<none>");
 	} else if ((field = mu_msg_get_body_text (msg))) 
 		g_print ("\n%s\n", field);
-	else
-		/* not really an error */
-		g_debug ("No text body found for %s", path);
-		
-	mu_msg_destroy (msg);
 
 	return TRUE;
 }
@@ -93,9 +78,19 @@ mu_cmd_view (MuConfigOptions *opts)
 	}
 	
 	rv = TRUE;
-	for (i = 1; opts->params[i] && rv; ++i) 	
-		rv = view_file (opts->params[i], NULL,
-				opts->summary_len);
+	for (i = 1; opts->params[i] && rv; ++i) {
+
+		GError *err = NULL;
+		MuMsg  *msg = mu_msg_new (opts->params[i], NULL, &err);
+		if (!msg) {
+			g_warning ("Error: %s", err->message);
+			g_error_free (err);
+			return FALSE;
+		}
+		
+		rv = view_msg (msg, NULL, opts->summary_len);
+		mu_msg_destroy (msg);
+	}
 	
 	return rv;
 }
