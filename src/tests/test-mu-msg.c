@@ -228,21 +228,27 @@ test_mu_msg_04 (void)
 int
 main (int argc, char *argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+		int rv;
+		g_test_init (&argc, &argv, NULL);
 
-	/* mu_msg_str_date */
-	g_test_add_func ("/mu-msg/mu-msg-01",
-			 test_mu_msg_01);
-	g_test_add_func ("/mu-msg/mu-msg-02",
-			 test_mu_msg_02);
-	g_test_add_func ("/mu-msg/mu-msg-03",
-			 test_mu_msg_03);
-	g_test_add_func ("/mu-msg/mu-msg-04",
-			 test_mu_msg_04);
-	
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)black_hole, NULL);
-	
-	return g_test_run ();
+		/* mu_msg_str_date */
+		g_test_add_func ("/mu-msg/mu-msg-01",
+						 test_mu_msg_01);
+		g_test_add_func ("/mu-msg/mu-msg-02",
+						 test_mu_msg_02);
+		g_test_add_func ("/mu-msg/mu-msg-03",
+						 test_mu_msg_03);
+		g_test_add_func ("/mu-msg/mu-msg-04",
+						 test_mu_msg_04);
+		
+		g_log_set_handler (NULL,
+						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+						   (GLogFunc)black_hole, NULL);
+
+		mu_msg_gmime_init ();
+		rv = g_test_run ();
+		mu_msg_gmime_uninit ();
+		
+		return rv;
+		
 }

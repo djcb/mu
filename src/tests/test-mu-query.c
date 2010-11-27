@@ -107,12 +107,15 @@ test_mu_query_01 (void)
 		{ "funky",              1 },
 		{ "fünkÿ",              1 },
 	};
+
+	
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
 				  ==, queries[i].count);
+
 	g_free (xpath);
 }
 
@@ -233,8 +236,9 @@ test_mu_query_05 (void)
 int
 main (int argc, char *argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+	int rv;
 	
+	g_test_init (&argc, &argv, NULL);	
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02); 
 	g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03);
@@ -244,7 +248,11 @@ main (int argc, char *argv[])
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
+
+	mu_msg_gmime_init ();
+	rv = g_test_run ();
+	mu_msg_gmime_uninit ();
 	
-	return g_test_run ();
+	return rv;
 }
 

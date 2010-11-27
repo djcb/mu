@@ -314,21 +314,26 @@ test_mu_extract_03 (void)
 int
 main (int argc, char *argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+		int rv;
+		g_test_init (&argc, &argv, NULL);
 	
-	g_test_add_func ("/mu-cmd/test-mu-index", test_mu_index);
-	g_test_add_func ("/mu-cmd/test-mu-find-01",  test_mu_find_01); 
-	g_test_add_func ("/mu-cmd/test-mu-find-02",  test_mu_find_02);
- 	g_test_add_func ("/mu-cmd/test-mu-find-03",  test_mu_find_03);
-	g_test_add_func ("/mu-cmd/test-mu-find-04",  test_mu_find_04);
-	g_test_add_func ("/mu-cmd/test-mu-extract-01",  test_mu_extract_01);
-	g_test_add_func ("/mu-cmd/test-mu-extract-02",  test_mu_extract_02);
-	g_test_add_func ("/mu-cmd/test-mu-extract-03",  test_mu_extract_03);
-	
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)black_hole, NULL);
-	
-	return g_test_run ();
+		g_test_add_func ("/mu-cmd/test-mu-index", test_mu_index);
+		g_test_add_func ("/mu-cmd/test-mu-find-01",  test_mu_find_01); 
+		g_test_add_func ("/mu-cmd/test-mu-find-02",  test_mu_find_02);
+		g_test_add_func ("/mu-cmd/test-mu-find-03",  test_mu_find_03);
+		g_test_add_func ("/mu-cmd/test-mu-find-04",  test_mu_find_04);
+		g_test_add_func ("/mu-cmd/test-mu-extract-01",  test_mu_extract_01);
+		g_test_add_func ("/mu-cmd/test-mu-extract-02",  test_mu_extract_02);
+		g_test_add_func ("/mu-cmd/test-mu-extract-03",  test_mu_extract_03);
+		
+		g_log_set_handler (NULL,
+						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+						   (GLogFunc)black_hole, NULL);
+
+		mu_msg_gmime_init ();
+		rv = g_test_run ();
+		mu_msg_gmime_uninit();
+
+		return rv;
 }
 
