@@ -94,52 +94,56 @@ struct _MuIndexCallbackData {
 typedef struct _MuIndexCallbackData	MuIndexCallbackData;
 
 
+/* checks to determine if we need to (re)index this message
+ * note: just check timestamps is not good enough because
+ * message may be moved from other dirs (e.g. from 'new' to
+ * 'cur') and the time stamps won't change.
+ * */
+static inline gboolean
+needs_index (MuIndexCallbackData *data, const char *fullpath,
+	     time_t filestamp)
+{
+	/* unconditionally reindex */
+	if (data->_reindex)
+		return TRUE;
+	
+	/* it's not in the database yet */
+	if (!mu_store_contains_message (data->_xapian, fullpath))
+		return TRUE;
+
+	/* it's there, but it's not up to date */
+	if ((unsigned)filestamp >= (unsigned)data->_dirstamp)
+		return TRUE;
+
+	return FALSE; /* index not needed */
+}
+
+
 static MuResult
 insert_or_update_maybe (const char* fullpath, const char* mdir,
-			time_t filestamp,
-			MuIndexCallbackData *data, gboolean *updated)
+			time_t filestamp, MuIndexCallbackData *data,
+			gboolean *updated)
 { 
 	MuMsg *msg;
 	GError *err;
 	
 	*updated = FALSE;
-
-	/* checks to determine if we need to (re)index this message
-	 * note: just check timestamps is not good enough because
-	 * message may be moved from other dirs (e.g. from 'new' to
-	 * 'cur') and the time stamps won't change.*/
-	do {
-		/* unconditionally reindex */
-		if (data->_reindex)
-			break;
-
-		/* it's not in the database yet */
-		if (!mu_store_contains_message (data->_xapian, fullpath)) {
-			g_debug ("not yet in db: %s", fullpath);
-			break;
-		}
-
-		/* it's there, but it's not up to date */
-		if ((unsigned)filestamp >= (unsigned)data->_dirstamp)
-			break;
-
-		return MU_OK; /* nope: no need to insert/update! */
-
-	} while (0);
-	
+	if (!needs_index (data, fullpath, filestamp))
+		return MU_OK; /* nothing to do for this one */
+			
 	err = NULL;
 	msg = mu_msg_new (fullpath, mdir, &err);
-	if (!msg) {
+	if ((G_UNLIKELY(!msg))) {
 		g_warning ("%s: failed to create mu_msg for %s",
 			   __FUNCTION__, fullpath);
 		return MU_ERROR;
 	}
 	
 	/* we got a valid id; scan the message contents as well */
-	if (mu_store_store (data->_xapian, msg) != MU_OK) {
+	if (G_UNLIKELY((mu_store_store (data->_xapian, msg) != MU_OK))) {
 		g_warning ("%s: storing content %s failed", __FUNCTION__, 
 			   fullpath);
-		/* ignore...*/
+		return MU_ERROR;
 	} 
 	
 	mu_msg_destroy (msg);
