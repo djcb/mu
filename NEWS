@@ -6,11 +6,16 @@
      'prio:normal')
    - you can now search for message flags, e.g. 'flag:attach' for messages with
      attachment, or 'flag:encrypted' for encrypted messages
+   - you can search for time-intervals, e.g. 'date:2010-11-26..2010-11-29' for
+     messages in that range. See the mu-find(1) and mu-easy(1) man-pages for
+     details and examples.
    - you can store bookmarked queries in ~/.mu/bookmarks
    - the 'flags' parameter has been renamed in 'flag'
    - add a simple graphical UI for searching, called 'mug'
    - fix --clearlinks for file systems without entry->d_type (fixes issue #28)
-   - make matching case-insensitive and accent-insensitive
+   - make matching case-insensitive and accent-insensitive (accent-insensitive
+     for characters in Unicode Blocks 'Latin-1 Supplement' and 'Latin
+     Extended-A' )
    - updated the man-pages
 
 ** Release 0.8 <2010-10-30 Sat>
