@@ -49,11 +49,14 @@ struct _MugShortcutsClass {
 };
 
 /* member functions */
-GType mug_shortcuts_get_type(void) G_GNUC_CONST;
+GType
+mug_shortcuts_get_type (void)
+    G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget *mug_shortcuts_new(const char *bmpath);
+GtkWidget *
+mug_shortcuts_new (const char *bmpath);
 
 /* fill in other public functions, e.g.: */
 /* 	void       mug_shortcuts_do_something (MugShortcuts *self, const gchar* param); */

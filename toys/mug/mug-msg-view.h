@@ -46,12 +46,16 @@ struct _MugMsgViewClass {
 };
 
 /* member functions */
-GType mug_msg_view_get_type(void) G_GNUC_CONST;
+GType
+mug_msg_view_get_type (void)
+    G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget *mug_msg_view_new(void);
-gboolean mug_msg_view_set_msg(MugMsgView * self, const char *msgpath);
+GtkWidget *
+mug_msg_view_new (void);
+gboolean
+mug_msg_view_set_msg (MugMsgView * self, const char *msgpath);
 
 G_END_DECLS
 #endif				/* __MUG_MSG_VIEW_H__ */

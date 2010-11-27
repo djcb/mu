@@ -30,16 +30,20 @@ struct _MugQueryBarClass {
 };
 
 /* member functions */
-GType mug_query_bar_get_type(void) G_GNUC_CONST;
+GType
+mug_query_bar_get_type (void)
+    G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget *mug_query_bar_new(void);
+GtkWidget *
+mug_query_bar_new (void);
 
-void mug_query_bar_grab_focus(MugQueryBar * self);
+void
+mug_query_bar_grab_focus (MugQueryBar * self);
 
-void mug_query_bar_set_query(MugQueryBar * self, const char *query,
-			     gboolean run);
+void
+mug_query_bar_set_query (MugQueryBar * self, const char *query, gboolean run);
 
 G_END_DECLS
 #endif				/* __MUG_QUERY_BAR_H__ */

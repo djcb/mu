@@ -55,20 +55,28 @@ struct _MugMsgListViewClass {
 };
 
 /* member functions */
-GType mug_msg_list_view_get_type(void) G_GNUC_CONST;
+GType
+mug_msg_list_view_get_type (void)
+    G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget *mug_msg_list_view_new(const char *xpath);
+GtkWidget *
+mug_msg_list_view_new (const char *xpath);
 
-int mug_msg_list_view_query(MugMsgListView * self, const char *query);
+int
+mug_msg_list_view_query (MugMsgListView * self, const char *query);
 
-void mug_msg_list_view_move_first(MugMsgListView * self);
+void
+mug_msg_list_view_move_first (MugMsgListView * self);
 
-gboolean mug_msg_list_view_move_prev(MugMsgListView * self);
-gboolean mug_msg_list_view_move_next(MugMsgListView * self);
+gboolean
+mug_msg_list_view_move_prev (MugMsgListView * self);
+gboolean
+mug_msg_list_view_move_next (MugMsgListView * self);
 
-const gchar *mug_msg_list_view_get_query(MugMsgListView * self);
+const gchar *
+mug_msg_list_view_get_query (MugMsgListView * self);
 
 G_END_DECLS
 #endif				/* __MUG_MSG_LIST_VIEW_H__ */
