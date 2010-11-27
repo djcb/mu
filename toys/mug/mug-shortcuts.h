@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef __MUG_SHORTCUTS_H__
 #define __MUG_SHORTCUTS_H__
 
@@ -25,7 +24,6 @@
 /* other include files */
 
 G_BEGIN_DECLS
-
 /* convenience macros */
 #define MUG_TYPE_SHORTCUTS             (mug_shortcuts_get_type())
 #define MUG_SHORTCUTS(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),MUG_TYPE_SHORTCUTS,MugShortcuts))
@@ -33,13 +31,12 @@ G_BEGIN_DECLS
 #define MUG_IS_SHORTCUTS(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),MUG_TYPE_SHORTCUTS))
 #define MUG_IS_SHORTCUTS_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),MUG_TYPE_SHORTCUTS))
 #define MUG_SHORTCUTS_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),MUG_TYPE_SHORTCUTS,MugShortcutsClass))
-
-typedef struct _MugShortcuts      MugShortcuts;
+typedef struct _MugShortcuts MugShortcuts;
 typedef struct _MugShortcutsClass MugShortcutsClass;
-typedef struct _MugShortcutsPrivate         MugShortcutsPrivate;
+typedef struct _MugShortcutsPrivate MugShortcutsPrivate;
 
 struct _MugShortcuts {
-	 GtkVBox parent;
+	GtkVBox parent;
 	/* insert public members, if any */
 
 	/* private */
@@ -48,22 +45,19 @@ struct _MugShortcuts {
 
 struct _MugShortcutsClass {
 	GtkVBoxClass parent_class;
-	void (*clicked) (MugShortcuts* obj, const char* query);
+	void (*clicked) (MugShortcuts * obj, const char *query);
 };
 
 /* member functions */
-GType        mug_shortcuts_get_type    (void) G_GNUC_CONST;
+GType mug_shortcuts_get_type(void) G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget*   mug_shortcuts_new         (const char *bmpath);
+GtkWidget *mug_shortcuts_new(const char *bmpath);
 
 /* fill in other public functions, e.g.: */
 /* 	void       mug_shortcuts_do_something (MugShortcuts *self, const gchar* param); */
 /* 	gboolean   mug_shortcuts_has_foo      (MugShortcuts *self, gint value); */
 
-
 G_END_DECLS
-
-#endif /* __MUG_SHORTCUTS_H__ */
-
+#endif				/* __MUG_SHORTCUTS_H__ */

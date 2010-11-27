@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef __MUG_MSG_VIEW_H__
 #define __MUG_MSG_VIEW_H__
 
@@ -25,7 +24,6 @@
 /* other include files */
 
 G_BEGIN_DECLS
-
 /* convenience macros */
 #define MUG_TYPE_MSG_VIEW             (mug_msg_view_get_type())
 #define MUG_MSG_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),MUG_TYPE_MSG_VIEW,MugMsgView))
@@ -33,12 +31,11 @@ G_BEGIN_DECLS
 #define MUG_IS_MSG_VIEW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),MUG_TYPE_MSG_VIEW))
 #define MUG_IS_MSG_VIEW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),MUG_TYPE_MSG_VIEW))
 #define MUG_MSG_VIEW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),MUG_TYPE_MSG_VIEW,MugMsgViewClass))
-
-typedef struct _MugMsgView      MugMsgView;
+typedef struct _MugMsgView MugMsgView;
 typedef struct _MugMsgViewClass MugMsgViewClass;
 
 struct _MugMsgView {
-	 GtkVBox parent;
+	GtkVBox parent;
 	/* insert public members, if any */
 };
 
@@ -49,15 +46,12 @@ struct _MugMsgViewClass {
 };
 
 /* member functions */
-GType        mug_msg_view_get_type    (void) G_GNUC_CONST;
+GType mug_msg_view_get_type(void) G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget*   mug_msg_view_new         (void);
-gboolean     mug_msg_view_set_msg     (MugMsgView *self, const char* msgpath);
-gboolean     mug_msg_view_set_text    (MugMsgView *self, const char* txt);
+GtkWidget *mug_msg_view_new(void);
+gboolean mug_msg_view_set_msg(MugMsgView * self, const char *msgpath);
 
 G_END_DECLS
-
-#endif /* __MUG_MSG_VIEW_H__ */
-
+#endif				/* __MUG_MSG_VIEW_H__ */
