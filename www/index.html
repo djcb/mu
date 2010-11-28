@@ -47,29 +47,28 @@ a.menu:hover   {color: #ff0000; text-decoration: underline; }
 
 <h2><a name="welcome">welcome to mu</a></h2>
 
-<p>E-mail is the 'flow' in the work flow of many people. Consequently,
-one spends a <em>lot</em> of time searching for old e-mails, to dig up
-some important piece of information. With people having tens of
-thousands of e-mails (or more), this is becoming harder and
-harder. How to find that one e-mail in an evergrowing haystack?
+<p>For many people, e-mail is the 'flow' in their work-flow. One one spends
+a <em>lot</em> of time searching for old e-mails, to dig up some important
+piece of information. With people having tens of thousands of e-mails (or
+more), this is becoming harder and harder. How to find that one message in the
+evergrowing information haystack?
 
 <p>Enter <strong>mu</strong>. 'mu' is a set of command-line tools for
-Linux/Unix that enable you to quickly find the e-mails you are looking
-for, assuming that you store your e-mails in Maildirs (e-mail
-directories).
+Linux/Unix that enable you to quickly find the e-mails you are looking for,
+assuming that you store your e-mails in Maildirs (e-mail directories).
 
 <h3>how does it work?</h3>
 
-<p>First there is <tt>mu index</tt> which fills a database with
-information about all your e-mails; this may take a couple of minutes
-the first time you do it, but after that it's a lot faster.
-
+<p>First, you need to <i>index</i> your messages. Indexing means filling a
+database with information about your e-mails; this may take a couple of
+minutes the first time you do it, but after that it's a lot
+faster. <tt>mu</tt> indexes your mail with the <tt>index</tt> command:
 <pre>
   $ mu index
 </pre>
-It tries to pick reasonable defaults, but you can of course specify
-your own options. You can run <tt>mu index</tt> periodically to keep
-your database up-to-date.
+It tries to pick reasonable defaults, but you can specify your own options as
+well. You could run <tt>mu index</tt> periodically to keep your database
+up-to-date. Or you could trigger it after new mails has arrived.
 
 <p>After building the database, it's easy to search for messages. For example:
 <ul>
