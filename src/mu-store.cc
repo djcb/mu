@@ -314,36 +314,36 @@ static void
 add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 			 MuMsgFieldId mfid)
 {
-	const char* str;
-	
-	str = mu_msg_get_field_string (msg, mfid);
-	if (!str)
+	const char *orig;
+	char *val;
+		
+	orig = mu_msg_get_field_string (msg, mfid);
+	if (!orig)
 		return;
-
-	const std::string value  (str);
+	val = g_strdup (orig);
+		
 	const std::string prefix (1, mu_msg_field_xapian_prefix(mfid));
-	
-	if (mu_msg_field_xapian_index (mfid)) {
-		Xapian::TermGenerator termgen;
-		gchar *norm (mu_str_normalize(str, TRUE));
-		termgen.set_document (doc);
-		termgen.index_text_without_positions (norm, 1, prefix);
-		g_free(norm);
-	}
-
-	if (mu_msg_field_xapian_term(mfid)) {
-		/* add a normalized version (accents removed,
-		 * lowercase) */
-		gchar *norm =  mu_str_normalize(str, TRUE);
-		doc.add_term (std::string (prefix + std::string(norm), 0,
-					   MU_STORE_MAX_TERM_LENGTH));
-		g_free (norm);
-	}
 
 	/* the value is what we'll display; the unchanged original */
 	if (mu_msg_field_xapian_value(mfid)) 			 
-		doc.add_value ((Xapian::valueno)mfid,
-			       value);
+		doc.add_value ((Xapian::valueno)mfid, val);
+
+	/* now, let's create some search terms... */
+	if (mu_msg_field_normalize (mfid))
+		mu_str_normalize_in_place (val, TRUE);
+	if (mu_msg_field_xapian_escape (mfid))
+		mu_str_ascii_xapian_escape_in_place (val);
+	
+	if (mu_msg_field_xapian_index (mfid)) {
+		Xapian::TermGenerator termgen;
+		termgen.set_document (doc);
+		termgen.index_text_without_positions (val, 1, prefix);
+	}
+	
+	if (mu_msg_field_xapian_term(mfid))
+		doc.add_term (prefix + std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
+	
+	g_free (val);
 }
 
 static void
@@ -443,6 +443,9 @@ each_contact_info (MuMsgContact *contact, MsgDoc *data)
 	/* don't normalize e-mail address, but do lowercase it */
 	if (contact->address && strlen (contact->address)) {
 		char *lower = g_utf8_strdown (contact->address, -1);
+
+		g_strdelimit (lower, "@.", '_'); /* FIXME */
+
 		data->_doc->add_term
 			(std::string (*pfxp + lower, 0,
 				      MU_STORE_MAX_TERM_LENGTH));

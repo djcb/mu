@@ -66,14 +66,14 @@ run_and_count_matches (const char *xpath, const char *query)
 	
 	mquery = mu_query_new (xpath, NULL);
 	g_assert (query);
+
+	/* g_printerr ("\n=>'%s'\n", query); */
 	
 	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE,
 			     FALSE, 1, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
-	/* g_printerr ("\n=> %s\n", query); */
-	
 	for (count = 0; !mu_msg_iter_is_done(iter);
 	     mu_msg_iter_next(iter), ++count);
 	
@@ -179,10 +179,10 @@ test_mu_query_04 (void)
 	int i;
 	
 	QResults queries[] = {
-//     	{ "frodo@example.com", 1}, /* does not match: see mu-find (1) */
+		{ "frodo@example.com", 1}, /* does not match: see mu-find (1) */
 		{ "f:frodo@example.com", 1},
 		{ "f:Frodo Baggins", 1},
-//		{ "bilbo@anotherexample.com", 1}, /* same things */
+		{ "bilbo@anotherexample.com", 1}, /* same things */
 		{ "t:bilbo@anotherexample.com", 1},
 		{ "t:bilbo", 1},
 		{ "f:bilbo", 0},
