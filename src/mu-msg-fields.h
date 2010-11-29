@@ -163,6 +163,28 @@ gboolean mu_msg_field_xapian_term (MuMsgFieldId id) G_GNUC_PURE;
  */
 gboolean mu_msg_field_xapian_value (MuMsgFieldId id) G_GNUC_PURE;
 
+
+/**
+ * should this field be escaped for xapian? in practice, should
+ * word-breaking chars be replaced with '_'?
+ * 
+ * @param field a MuMsgField
+ * 
+ * @return TRUE if the field is Xapian-escaped, FALSE otherwise
+ */
+gboolean mu_msg_field_xapian_escape (MuMsgFieldId id) G_GNUC_PURE;
+
+
+/**
+ * should this field be normalized? ie. should it be downcased and
+ * accents removed?
+ * 
+ * @param field a MuMsgField
+ * 
+ * @return TRUE if the field is normalized, FALSE otherwise
+ */
+gboolean mu_msg_field_normalize (MuMsgFieldId id) G_GNUC_PURE;
+
 /**
  * should this field be stored as contact information? This means that
  * e-mail address will be stored as terms, and names will be indexed

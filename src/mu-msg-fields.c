@@ -29,12 +29,14 @@
  * must be in the value (at least when using MuMsgIter)
  */
 enum _FieldFlags { 
-	FLAG_GMIME	    = 1 << 0,	/* field retrieved through gmime */
-	FLAG_XAPIAN_INDEX   = 1 << 1,	/* field is indexed in xapian */
-	FLAG_XAPIAN_TERM    = 1 << 2,	/* field stored as term in xapian */
-	FLAG_XAPIAN_VALUE   = 1 << 3,	/* field stored as value in xapian */
-	FLAG_XAPIAN_CONTACT = 1 << 4    /* field contains an e-mail
-					 * address */
+	FLAG_GMIME	      = 1 << 0,	/* field retrieved through gmime */
+	FLAG_XAPIAN_INDEX     = 1 << 1,	/* field is indexed in xapian */
+	FLAG_XAPIAN_TERM      = 1 << 2,	/* field stored as term in xapian */
+	FLAG_XAPIAN_VALUE     = 1 << 3,	/* field stored as value in xapian */
+	FLAG_XAPIAN_CONTACT   = 1 << 4,	/* field contains an e-mail-addr */
+	FLAG_XAPIAN_ESCAPE    = 1 << 5, /* field needs escaping for xapian */
+	FLAG_NORMALIZE	      = 1 << 6  /* field needs fix for case/accents */
+
 };
 typedef enum _FieldFlags	FieldFlags;
 
@@ -61,7 +63,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_BODY_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"body", 'b', 'B',
-		FLAG_GMIME | FLAG_XAPIAN_INDEX
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE
 	},
 	
 	{ 
@@ -75,7 +77,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_CC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"cc", 'c', 'C',
-		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE 
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
 	
 	{ 
@@ -110,7 +112,8 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_MAILDIR, 
 		MU_MSG_FIELD_TYPE_STRING,
 		"maildir", 'm', 'M',
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
+		FLAG_NORMALIZE
 	},
 	
 	{ 
@@ -131,7 +134,8 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_SUBJECT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"subject", 's', 'S',
-		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE |
+		FLAG_NORMALIZE
 	},
 	
 	{ 
@@ -145,7 +149,8 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_MSGID,
 		MU_MSG_FIELD_TYPE_STRING,
 		"msgid", 'i', 'I',  /* 'i' for Id */
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
+		FLAG_XAPIAN_ESCAPE
 	},
 	
 	{ 
@@ -257,6 +262,21 @@ mu_msg_field_xapian_contact (MuMsgFieldId id)
 
 
 gboolean
+mu_msg_field_normalize (MuMsgFieldId id)
+{
+	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
+	return mu_msg_field(id)->_flags & FLAG_NORMALIZE;
+}
+
+gboolean
+mu_msg_field_xapian_escape (MuMsgFieldId id)
+{
+	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
+	return mu_msg_field(id)->_flags & FLAG_XAPIAN_ESCAPE;
+}
+
+
+gboolean
 mu_msg_field_is_numeric (MuMsgFieldId mfid)
 {
 	MuMsgFieldType type;
@@ -291,6 +311,8 @@ mu_msg_field_xapian_prefix (MuMsgFieldId id)
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),0);
 	return mu_msg_field(id)->_xprefix;
 }
+
+
 
 
 MuMsgFieldType 
