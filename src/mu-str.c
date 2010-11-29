@@ -30,7 +30,7 @@
 
 #include "mu-str.h"
 #include "mu-msg-flags.h"
-
+#include "mu-msg-fields.h"
 
 const char* 
 mu_str_date_s (const char* frm, time_t t)
@@ -224,5 +224,106 @@ mu_date_parse_hdwmy (const char* str)
 
 	now = time(NULL);
 	return delta <= now ? now - delta : never;  
+}
+
+
+struct _CheckPrefix {
+	const char		*pfx;
+	guint			 len;
+	gboolean		 match;
+};
+typedef struct _CheckPrefix	 CheckPrefix;
+
+static void
+each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
+{
+	const char *field_name;
+	char field_shortcut;
+
+	if (!cpfx || cpfx->match)
+		return;
+	
+	field_shortcut = mu_msg_field_shortcut (mfid);
+	if (field_shortcut == cpfx->pfx[0] && cpfx->pfx[1] == ':') {
+		cpfx->match = TRUE;
+		return;
+	}
+
+	field_name = mu_msg_field_name (mfid);
+	if (field_name &&
+	    strncmp (cpfx->pfx, field_name, cpfx->len) == 0) {
+		cpfx->match = TRUE;
+		return;
+	}
+}
+
+/* colon is a position inside q pointing at a ':' character. function
+ * determines whether the prefix is a registered prefix (like
+ * 'subject' or 'from' or 's') */
+static gboolean
+is_xapian_prefix (const char *q, const char *colon)
+{
+	const char *cur;
+	
+	if (colon == q)
+		return FALSE; /* : at beginning, not a prefix */
+	
+	/* track back from colon until a boundary or beginning of the
+	 * str */
+	for (cur = colon - 1; cur >= q; --cur) {
+
+		if (cur == q || !isalpha (*(cur-1))) {
+
+			CheckPrefix cpfx;
+			memset (&cpfx, 0, sizeof(CheckPrefix));
+
+			cpfx.pfx   = cur;
+			cpfx.len   = (colon - cur);
+			cpfx.match = FALSE;
+			
+			mu_msg_field_foreach ((MuMsgFieldForEachFunc)
+					      each_check_prefix,
+					      &cpfx);
+			
+			return (cpfx.match);
+		}
+	}
+	
+	return FALSE;
+}
+
+char*
+mu_str_ascii_xapian_escape_in_place (char *query)
+{
+	gchar *cur;
+	gboolean replace_dot;
+		
+	g_return_val_if_fail (query, NULL);
+
+	/* only replace the '.' if the string looks like an e-mail
+	 * address or msg-id */
+	replace_dot = (g_strstr_len(query, -1, "@") != NULL);
+	
+	for (cur = query; *cur; ++cur) {
+		if (*cur == '@') 
+			*cur = '_';
+
+		else if (replace_dot && *cur == '.') {
+			if (cur[1] == '.')  /* don't replace '..' */
+				cur += 2;
+			else
+				*cur = '_';
+		} else if (*cur == ':') {
+			/* if there's a registered xapian prefix before the
+			 * ':', don't touch it. Otherwise replace ':' with
+			  * a space'... ugly...
+			  */			 
+			if (!is_xapian_prefix (query, cur))
+				*cur = '_';
+		} else
+			*cur = tolower(*cur);
+	}
+	
+	return query;
 }
 

@@ -152,6 +152,59 @@ test_mu_str_normalize_01 (void)
 }
 
 
+static void
+test_mu_str_normalize_02 (void)
+{
+	int			i;
+	struct {
+		const char*	word;
+		const char*	norm;
+	} words [] = {
+		{ "DantèS", "DanteS"}, 
+		{ "foo", "foo" },
+		{ "Föö", "Foo" },
+		{ "číslO", "cislO" },
+		{ "hÆvý mëÐal ümláõt", "hAevy meDal umlaot"}
+	};
+
+	
+	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
+		gchar *str;
+		str = mu_str_normalize (words[i].word, FALSE);
+		g_assert_cmpstr (str, ==, words[i].norm);
+		g_free (str);
+	}
+}
+
+
+static void
+test_mu_str_ascii_xapian_escape (void)
+{
+		int			i;
+		struct {
+				const char*	word;
+				const char*	esc;
+		} words [] = {
+				{ "aap@noot.mies", "aap_noot_mies"}, 
+				{ "Foo..Bar", "foo..bar" },
+				{ "subject:test@foo", "subject:test_foo" },
+				{ "xxx:test@bar", "xxx_test_bar" },
+		};
+		
+		for (i = 0; i != G_N_ELEMENTS(words); ++i) {
+				gchar *a = g_strdup (words[i].word);
+				mu_str_ascii_xapian_escape_in_place (a);
+				g_assert_cmpstr (a, ==, words[i].esc);
+				g_free (a);
+		}
+}
+
+
+
+
+
+
+
 #if 0
 
 static void
@@ -233,6 +286,11 @@ main (int argc, char *argv[])
 	/* mu_str_normalize */
 	g_test_add_func ("/mu-str/mu-str-normalize-01",
 			 test_mu_str_normalize_01);
+	g_test_add_func ("/mu-str/mu-str-normalize-02",
+					 test_mu_str_normalize_02);
+
+	g_test_add_func ("/mu-str/mu-str-ascii-xapian-escape",
+					 test_mu_str_ascii_xapian_escape);
 	
 	/* mu_str_complete_iso_date_(begin|end) */
 	/* g_test_add_func ("/mu-str/mu-str-complete-iso-date-begin", */
