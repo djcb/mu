@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "September 2010" "User Manuals"
+.TH MU-INDEX 1 "November 2010" "User Manuals"
 
 .SH NAME 
 
@@ -155,21 +155,18 @@ which put the database in \fI~/.mu/xapian\-<version>\fR. These older databases
 can safely be deleted. Starting from version 0.7, this manual cleanup should
 no longer be needed.
 
-By default, \fBmu\fR stores logs of its operations and queries in \fI~/.mu/mu.log\fR.
-Upon startup, \fBmu\fR checks the size of this log file. If it exceeds 1 MB,
-it will be moved to \fI~/.mu/mu.log.old\fR, overwriting any existing file of
-that name, and start with an empty \fI~/.mu/mu.log\fR. This scheme allows for
-continued use of \fBmu\fR without the need for any manual maintenance of log
-files.
-
-To store these files elsewhere from their default location, one can use the
-\fI\-\-muhome\fR option, as discussed in the \fBmu\fR-manpage.
+\fBmu\fR stores logs of its operations and queries in \fI<muhome>/mu.log\fR
+(by default, this is \fI~/.mu/mu.log\fR). Upon startup, \fBmu\fR checks the
+size of this log file. If it exceeds 1 MB, it will be moved to
+\fI~/.mu/mu.log.old\fR, overwriting any existing file of that name, and start
+with an empty log file. This scheme allows for continued use of \fBmu\fR
+without the need for any manual maintenance of log files.
 
 .SH ENVIRONMENT
 
 \fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if it has not
-been specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If MAILDIR
-is not set, \fBmu index\fR will try \fI~/Maildir\fR.
+been specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If
+\fBMAILDIR\fR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
 
 .SH BUGS
 

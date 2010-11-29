@@ -14,7 +14,7 @@
 ** release 0.9 [100%]
    - [X] bookmarks
    - [X] gtk-ui for searching
-   - [X] clean up mu-msg-field, add formatting(?)
+   - [X] clean up mu-msg-field
    - [X] normalize search fields
    - [X] cleanup version check
    - [X] propagate errors to ui
@@ -27,6 +27,7 @@
    - [X] fix sorting by date in mug
    - [X] make mug icon square
    - [X] fix sort-order
+   - [X] pre-process terms, queries for '@'/':'/'.'
 
 
 * Releases already done

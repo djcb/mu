@@ -16,6 +16,8 @@
    - make matching case-insensitive and accent-insensitive (accent-insensitive
      for characters in Unicode Blocks 'Latin-1 Supplement' and 'Latin
      Extended-A' )
+   - more extensive pre-processing is done to make searching for email-addresses
+     and message-ids less likely to not work
    - updated the man-pages
 
 ** Release 0.8 <2010-10-30 Sat>
