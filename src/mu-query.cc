@@ -95,7 +95,7 @@ private:
 			date = datebuf;
 		} else {
 			time_t t;
-			t = mu_date_parse_hdwmy (date.c_str());
+			t = mu_str_date_parse_hdwmy (date.c_str());
 			if (t != (time_t)-1) {
 				strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
 					 localtime(&t));

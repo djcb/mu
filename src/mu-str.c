@@ -153,7 +153,7 @@ mu_str_summarize (const char* str, size_t max_lines)
 	return summary;
 }
 
-
+/* this is still somewhat simplistic... */
 const char*
 mu_str_display_contact_s (const char *str)
 {
@@ -165,14 +165,22 @@ mu_str_display_contact_s (const char *str)
 	
 	g_strlcpy (contact, str, sizeof(contact));
 
-	/* strip the address, if any */
+	/* we check for '<', so we can strip out the address stuff in
+	 * e.g. 'Hello World <hello@world.xx>, but only if there is
+	 * something alphanumeric before the <
+	 */
 	c = g_strstr_len (contact, -1, "<");
-	if (c != NULL)
-		*c = '\0';
-
+	if (c != NULL) {
+		
+		for (c2 = contact; c2 < c && !(isalnum(*c2)); ++c2);
+		if (c2 != c) /* apparently, there was something,
+			      * so we can remove the <... part*/
+			*c = '\0';
+	}
+	
 	/* replace " with space */
 	for (c2 = contact; *c2; ++c2)
-		if (*c2 == '"')
+		if (*c2 == '"' || *c2 == '<' || *c2 == '>')
 			*c2 = ' ';
 
 	g_strstrip (contact);
@@ -186,44 +194,6 @@ mu_str_display_contact (const char *str)
 	g_return_val_if_fail (str, NULL);
 
 	return g_strdup (mu_str_display_contact_s (str));
-}
-
-
-
-time_t
-mu_date_parse_hdwmy (const char* str)
-{
-	long int num;
-	char *end;
-	time_t now, delta;
-	time_t never = (time_t)-1;
-	
-	g_return_val_if_fail (str, never);
-	
-	num = strtol  (str, &end, 10);
-	if (num <= 0 || num > 9999)  
-		return never;
-
-	if (!end || end[1] != '\0')
-		return never;
-	
-	switch (end[0]) {
-	case 'h': /* hour */	
-		delta = num * 24 * 60; break;
-	case 'd': /* day */
-		delta = num * 24 * 60 * 60; break;
-	case 'w': /* week */
-		delta = num * 7 * 24 * 60 * 60; break;
-	case 'm':
-		delta = num * 30 * 24 * 60 * 60; break;
-	case 'y':
-		delta = num * 365 * 24 * 60 * 60; break; 
-	default:
-		return never;
-	}
-
-	now = time(NULL);
-	return delta <= now ? now - delta : never;  
 }
 
 
@@ -291,6 +261,43 @@ is_xapian_prefix (const char *q, const char *colon)
 	
 	return FALSE;
 }
+
+time_t
+mu_str_date_parse_hdwmy (const char* str)
+{
+       long int num;
+       char *end;
+       time_t now, delta;
+       time_t never = (time_t)-1;
+       
+       g_return_val_if_fail (str, never);
+       
+       num = strtol  (str, &end, 10);
+       if (num <= 0 || num > 9999)  
+               return never;
+
+       if (!end || end[1] != '\0')
+               return never;
+       
+       switch (end[0]) {
+       case 'h': /* hour */    
+               delta = num * 60 * 60; break;
+       case 'd': /* day */
+               delta = num * 24 * 60 * 60; break;
+       case 'w': /* week */
+               delta = num * 7 * 24 * 60 * 60; break;
+       case 'm':
+               delta = num * 30 * 24 * 60 * 60; break;
+       case 'y':
+               delta = num * 365 * 24 * 60 * 60; break; 
+       default:
+               return never;
+       }
+
+       now = time(NULL);
+       return delta <= now ? now - delta : never;  
+}
+
 
 char*
 mu_str_ascii_xapian_escape_in_place (char *query)

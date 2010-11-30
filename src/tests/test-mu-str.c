@@ -200,65 +200,55 @@ test_mu_str_ascii_xapian_escape (void)
 }
 
 
-
-
-
-
-
-#if 0
-
 static void
-test_mu_str_complete_iso_date_begin (void)
+test_mu_str_display_contact (void)
 {
-	int			i;
-	struct {
-		const char*	date1;
-		size_t len;
-		const char*	date2;
-	} dates [] = {
-		{ "2010", 14, "20100101000000"}, 
-		{ "2009", 12, "200901010000" },
-		{ "19721214", 14, "19721214000000" },
-		{ "197212", 8, "19721201" },
-	};
-
-	
-	for (i = 0; i != G_N_ELEMENTS(dates); ++i) {
-		gchar *str;
-		str = mu_str_complete_iso_date (dates[i].date1,
-						dates[i].len, TRUE);
-		g_assert_cmpstr (str, ==, dates[i].date2);
-		g_free (str);
-	}
+		int			i;
+		struct {
+				const char*	word;
+				const char*	disp;
+		} words [] = {
+			{ "\"Foo Bar\" <aap@noot.mies>", "Foo Bar"}, 
+			{ "Foo Bar <aap@noot.mies>", "Foo Bar" },
+			{ "<aap@noot.mies>", "aap@noot.mies" },
+			{ "foo@bar.nl", "foo@bar.nl" }
+		};
+		
+		for (i = 0; i != G_N_ELEMENTS(words); ++i) 
+			g_assert_cmpstr (mu_str_display_contact_s (words[i].word), ==, 
+					words[i].disp);
 }
 
 
+
 static void
-test_mu_str_complete_iso_date_end (void)
+test_mu_str_date_parse_hdwmy (void)
 {
-	int			i;
-	struct {
-		const char*	date1;
-		size_t len;
-		const char*	date2;
-	} dates [] = {
-		{ "2010", 14,     "20101231235959"}, 
-		{ "2009", 12,     "200912312359" },
-		{ "19721214", 14, "19721214235959" },
-		{ "197212", 8,    "19721231" },
-	};
+	time_t diff;
 
+	diff = time(NULL) - mu_str_date_parse_hdwmy ("3h");
+	g_assert (diff > 0);
+	g_assert_cmpuint (3 * 60 * 60 - diff, <=, 1);
+
+	diff = time(NULL) - mu_str_date_parse_hdwmy ("5y");
+	g_assert (diff > 0);
+	g_assert_cmpuint (5 * 365 * 24 * 60 * 60 - diff, <=, 1);
 	
-	for (i = 0; i != G_N_ELEMENTS(dates); ++i) {
-		gchar *str;
-		str = mu_str_complete_iso_date (dates[i].date1,
-						dates[i].len, FALSE);
-		g_assert_cmpstr (str, ==, dates[i].date2);
-		g_free (str);
-	}
-}
+	diff = time(NULL) - mu_str_date_parse_hdwmy ("3m");
+	g_assert (diff > 0);
+	g_assert_cmpuint (3 * 30 * 24 * 60 * 60 - diff, <=, 1);
 
-#endif
+	diff = time(NULL) - mu_str_date_parse_hdwmy ("21d");
+	g_assert (diff > 0);
+	g_assert_cmpuint (21 * 24 * 60 * 60 - diff, <=, 1);
+	
+	diff = time(NULL) - mu_str_date_parse_hdwmy ("2w");
+	g_assert (diff > 0);
+	g_assert_cmpuint (2 * 7 * 24 * 60 * 60 - diff, <=, 1);
+	
+	
+	g_assert_cmpint (mu_str_date_parse_hdwmy("-1y"),==, (time_t)-1);  
+}
 
 
 
@@ -287,16 +277,17 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-normalize-01",
 			 test_mu_str_normalize_01);
 	g_test_add_func ("/mu-str/mu-str-normalize-02",
-					 test_mu_str_normalize_02);
+			 test_mu_str_normalize_02);
 
 	g_test_add_func ("/mu-str/mu-str-ascii-xapian-escape",
-					 test_mu_str_ascii_xapian_escape);
+			 test_mu_str_ascii_xapian_escape);
+
+	g_test_add_func ("/mu-str/mu-str-display_contact",
+			 test_mu_str_display_contact);			 
 	
-	/* mu_str_complete_iso_date_(begin|end) */
-	/* g_test_add_func ("/mu-str/mu-str-complete-iso-date-begin", */
-	/* 		 test_mu_str_complete_iso_date_begin); */
-	/* g_test_add_func ("/mu-str/mu-str-complete-iso-date-begin", */
-	/* 		 test_mu_str_complete_iso_date_end); */
+
+	g_test_add_func ("/mu-str/mu-str_date_parse_hdwmy",
+			test_mu_str_date_parse_hdwmy);
 
 	
 	/* FIXME: add tests for mu_str_flags; but note the

@@ -191,7 +191,7 @@ char* mu_str_ascii_xapian_escape_in_place (char *query);
  * @return the time_t of the point in time indicated by 'now' minus
  * the value, or (time_t)-1 otherwise
  */
-time_t mu_date_parse_hdwmy (const char* str);
+time_t mu_str_date_parse_hdwmy (const char* str);
 
 
 G_END_DECLS
