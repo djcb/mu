@@ -162,7 +162,7 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 	
 	result = data->_idx_msg_cb (data->_stats, data->_user_data);
 	if G_UNLIKELY((result != MU_OK && result != MU_STOP))
-		g_warning ("Error in callback");
+		g_warning ("error in callback");
 
 	return result;
 }

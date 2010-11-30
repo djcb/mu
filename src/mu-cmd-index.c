@@ -41,9 +41,9 @@ static gboolean MU_CAUGHT_SIGNAL;
 static void
 update_warning (void)
 {
-	g_warning ("Note: the database needs to be upgraded to version %s",
+	g_warning ("note: the database needs to be upgraded to version %s",
 		   MU_XAPIAN_DB_VERSION);
-	g_warning ("Please run 'mu index --rebuild' (see the manpage)");
+	g_warning ("please run 'mu index --rebuild' (see the manpage)");
 }
 
 static void
@@ -51,7 +51,7 @@ sig_handler (int sig)
 {
 	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) { /* Ctrl-C */
 		g_print ("\n");
-		g_warning ("Shutting down gracefully, "
+		g_warning ("shutting down gracefully, "
 			   "press again to kill immediately");
 	}
 	
@@ -165,7 +165,7 @@ database_version_check_and_update (MuConfigOptions *opts)
 	 * anything */
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
-		g_message ("Clearing database %s", xpath);
+		g_message ("clearing database %s", xpath);
 		return mu_util_clear_database (xpath);
 	}
 
@@ -175,7 +175,7 @@ database_version_check_and_update (MuConfigOptions *opts)
 	/* ok, database is not up to date */
 	if (opts->autoupgrade) {
 		opts->reindex = TRUE;
-		g_message ("Auto-upgrade: clearing old database first");
+		g_message ("auto-upgrade: clearing old database first");
 		return mu_util_clear_database (xpath);
 	}
 
@@ -188,10 +188,10 @@ static void
 show_time (unsigned t, unsigned processed)
 {
 	if (t)
-		g_message ("Elapsed: %u second(s), ~ %u msg/s",
+		g_message ("elapsed: %u second(s), ~ %u msg/s",
 			   t, processed/t);
 	else
-		g_message ("Elapsed: %u second(s)", t);
+		g_message ("elapsed: %u second(s)", t);
 }
 
 
@@ -203,7 +203,7 @@ cmd_cleanup (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 	MuResult rv;
 	time_t t;
 	
-	g_message ("Cleaning up messages [%s]", mu_runtime_xapian_dir());
+	g_message ("cleaning up messages [%s]", mu_runtime_xapian_dir());
 	
 	t = time (NULL);
 	rv = mu_index_cleanup (midx, stats,
@@ -228,7 +228,7 @@ cmd_index (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 	MuResult rv;
 	time_t t;
 	
-	g_message ("Indexing messages under %s [%s]", opts->maildir,
+	g_message ("indexing messages under %s [%s]", opts->maildir,
 		   mu_runtime_xapian_dir());
 	
 	t = time (NULL);
@@ -279,7 +279,7 @@ cmd_index_or_cleanup (MuConfigOptions *opts)
 
 	err = NULL;
 	if (!(midx = mu_index_new (mu_runtime_xapian_dir(), &err))) {
-		g_warning ("Indexing/Cleanup failed: %s",
+		g_warning ("index/cleanup failed: %s",
 			   err->message);
 		g_error_free (err);
 		return FALSE;

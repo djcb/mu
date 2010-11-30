@@ -83,7 +83,7 @@ mu_cmd_view (MuConfigOptions *opts)
 		GError *err = NULL;
 		MuMsg  *msg = mu_msg_new (opts->params[i], NULL, &err);
 		if (!msg) {
-			g_warning ("Error: %s", err->message);
+			g_warning ("error: %s", err->message);
 			g_error_free (err);
 			return FALSE;
 		}

@@ -383,7 +383,7 @@ get_content_flags (MuMsg *msg)
 				flags |= MU_MSG_FLAG_ENCRYPTED;
 		}
 	} else
-		g_warning ("No top level mime part ?!");
+		g_warning ("no top level mime part found");
 
 	return flags;
 }

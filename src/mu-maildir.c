@@ -195,7 +195,7 @@ mu_maildir_link (const char* src, const char *targetpath)
 	rv = symlink (src, targetfullpath);
 	
 	if (rv != 0) {
-		g_warning ("Error creating link %s => %s: %s",
+		g_warning ("error creating link %s => %s: %s",
 			   targetfullpath, src,
 			   strerror (errno));
 		g_free (targetfullpath);

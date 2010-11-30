@@ -127,7 +127,7 @@ move_log_file (const char *logfile)
 	g_free (logfile_old);
 	
 	if (rv != 0) {
-		g_warning ("Failed to move %s to %s.old: %s",
+		g_warning ("failed to move %s to %s.old: %s",
 			   logfile, logfile, strerror(rv));
 		return FALSE;
 	} else

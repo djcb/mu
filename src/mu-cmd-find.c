@@ -89,7 +89,7 @@ sort_field_from_string (const char* fieldstr)
 		mfid = mu_msg_field_id_from_shortcut(fieldstr[0],
 						     FALSE);	
 	if (mfid == MU_MSG_FIELD_ID_NONE)
-		g_warning ("Not a valid sort field: '%s'\n",
+		g_warning ("not a valid sort field: '%s'\n",
 			   fieldstr);
 	return mfid;
 }
@@ -169,7 +169,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 				      opts->summary_len);
 	
 	if (matches == 0) 
-		g_warning ("No matches found");
+		g_warning ("no matches found");
 
 	mu_msg_iter_destroy (iter);
 
@@ -194,7 +194,7 @@ query_params_valid (MuConfigOptions *opts)
 		return TRUE;
 	
 	g_warning ("'%s' is not a readable Xapian directory\n", xpath);
-	g_message ("Did you run 'mu index'?");
+	g_message ("did you run 'mu index'?");
 	
 	return FALSE;
 }

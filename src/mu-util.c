@@ -203,7 +203,7 @@ mu_util_create_dir_maybe (const gchar *path)
 	if (stat (path, &statbuf) == 0) {
 		if ((!S_ISDIR(statbuf.st_mode)) ||
 		    (access (path, W_OK|R_OK) != 0)) {
-			g_warning ("Not a rw-directory: %s", path);
+			g_warning ("not a rw-directory: %s", path);
 			return FALSE;
 		}
 	}		
