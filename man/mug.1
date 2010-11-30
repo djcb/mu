@@ -2,7 +2,7 @@
 
 .SH NAME 
 
-mug \- a graphical user-interface for \fBmu\fR mail searches
+mug \- a graphical user interface for \fBmu\fR mail searches
 
 .SH SYNOPSIS
 
@@ -11,19 +11,19 @@ mug \- a graphical user-interface for \fBmu\fR mail searches
 .SH DESCRIPTION
 
 \fBmug\fR is a program for doing e-mail searches, using the \fBmu\fR-backend
-for the actual searches, and a GTK+ user-interface. \fBmug\fR is only a little
-toy-demonstration of the mu-framework, but can nevertheless be quite useful.
+for the actual searches and a GTK+ user-interface. \fBmug\fR is considered
+merely a toy-demonstration of the mu-framework, but can nevertheless be quite
+useful.
 
-When mug finds the \fIbookmarks\fR-file in the mu-home directory, the
+If \fBmug\fR finds the \fIbookmarks\fR-file in the mu-home directory, the
 bookmarks from this file will be shown in mug as a list of buttons in the left
 toolbar.
 
 .SH OPTIONS
 
 .TP
-\fB\-\-muhome\fR
-causes \fBmug\fR to use an alternative directory to read its
-database and logs. By default, \fI~/.mu\fR is used.
+\fB\-\-muhome\fR causes \fBmug\fR to use an alternative directory to read its
+database and bookmarks and write its logs. By default, \fI~/.mu\fR is used.
 
 .SH BUGS
 Please report bugs if you find them:
@@ -35,4 +35,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu(1)
+.BR mu(1) mu-bookmarks(5)
