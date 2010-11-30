@@ -10,6 +10,9 @@
    - [ ] xml,json,sexp output
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
+   - [ ] make commit batch size configure param
+   - [ ] fix -pedantic build
+	 
 
 ** release 0.9 [100%]
    - [X] bookmarks
