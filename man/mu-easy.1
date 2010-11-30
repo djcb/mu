@@ -6,24 +6,24 @@ mu easy \- a quick introduction to mu
 
 .SH DESCRIPTION
 
-As you may know, \fBmu\fR is a set of tools for dealing with e-mail messages
-in Maildirs. There are many options, which are all described in the individual
-man pages for the various sub-commands. This man pages jumps over all the
-details and gives examples of the more common use cases. If the use cases
-described here do not precisely do what you want, please check the more
-extensive information in the man page about the sub-command you are using --
-for example, the mu-index or mu-find man pages.
+\fBmu\fR is a set of tools for dealing with e-mail messages in Maildirs. There
+are many options, which are all described in the individual man pages for the
+various sub-commands. This man pages jumps over all the details and gives
+examples of the more common use cases. If the use cases described here do not
+precisely do what you want, please check the more extensive information in the
+man page about the sub-command you are using -- for example, the mu-index or
+mu-find man pages.
 
 \fBNOTE\fR: the \fBindex\fR command (and therefore, the ones that depend on
 that, such as \fBfind\fR), require that you store your mail in the
 Maildir-format. If you don't do so, you can still use the other commands, but
-cannot index/search your mail.
+you won't be able to index/search your mail.
 
 .SH INDEXING YOUR E-MAIL
 Before you can search e-mails, you'll first need to index them:
 
 .nf
-\fB$ mu index\fR 
+  \fB$ mu index\fR 
 .fi
 
 The process can take a few minutes, depending on the amount of mail you have,
@@ -71,7 +71,7 @@ date/sender/subject. However, we can change this using the \fI--fields\fR
 parameter (see the \fBmu-find\fR man page for the details):
 
 .nf
-\fB$ mu find --fields="t s" t:julius fruit\fR 
+  \fB$ mu find --fields="t s" t:julius fruit\fR 
 .fi
 
 In other words, display the 'To:'-field (t) and the subject (s). This should
@@ -88,7 +88,7 @@ is, it displays messages that match all the parameters. However, we can use
 logical OR as well:
 
 .nf
-\fB$ mu find t:julius OR f:socrates\fR 
+  \fB$ mu find t:julius OR f:socrates\fR 
 .fi
 
 In other words, display messages that are either sent to Julius Caesar
@@ -104,7 +104,7 @@ of) the message contents by using the --summary-len=\fIn\fR option, which
 will 'summarize' the first \fIn\fR lines of the message:
 
 .nf
-\fB$ mu find --summary-len=4 napoleon m:/archive\fR 
+  \fB$ mu find --summary-len=4 napoleon m:/archive\fR 
 .fi
 
 .nf
@@ -162,8 +162,6 @@ Get all message we got in the last two weeks about emacs:
   \fB$ mu find date:2w..now emacs\fR
 .fi
 
-
-
 .SH DISPLAYING MESSAGES
 
 We might also want to display complete messages. This can be done using \fBmu
@@ -175,7 +173,7 @@ need its path. To get the path (think \fBl\fRocation) for our first example we
 can use:
 
 .nf
-\fB$ mu find --fields="l" t:julius fruit\fR 
+  \fB$ mu find --fields="l" t:julius fruit\fR 
 .fi
 
 And we'll get someting like:
@@ -185,22 +183,18 @@ And we'll get someting like:
 We can now display this message: 
 
 .nf
-\fB$ mu view /home/someuser/Maildir/archive/cur/1266188485_0.6850.cthulhu:2,\fR
+  \fB$ mu view /home/someuser/Maildir/archive/cur/1266188485_0.6850.cthulhu:2,\fR
 
-  From: John Milton <jm@example.com>
-  To: Julius Caesar <jc@example.com>
-  Subject: Fere libenter homines id quod volunt credunt
-  Date: 2008-07-31T21:57:25 EEST
+     From: John Milton <jm@example.com>
+     To: Julius Caesar <jc@example.com>
+     Subject: Fere libenter homines id quod volunt credunt
+     Date: 2008-07-31T21:57:25 EEST
 
-  OF Mans First Disobedience, and the Fruit
-  Of that Forbidden Tree, whose mortal tast
-  Brought Death into the World, and all our woe,
-[...]
+     OF Mans First Disobedience, and the Fruit
+     Of that Forbidden Tree, whose mortal tast
+     Brought Death into the World, and all our woe,
+     [...]
 .fi
-
-.SH BUGS
-Please report bugs if you find them:
-.BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR
 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
