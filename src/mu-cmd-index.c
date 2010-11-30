@@ -127,7 +127,6 @@ print_stats (MuIndexStats* stats, gboolean clear)
 				   (unsigned)stats->_processed,
 				   (unsigned)stats->_updated,
 				   (unsigned)stats->_cleaned_up);
-
         g_print ("%s", output);
 }
 
