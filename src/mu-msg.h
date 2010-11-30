@@ -63,10 +63,8 @@ void mu_msg_gmime_uninit (void);
  * 
  * @return a new MuMsg instance or NULL in case of error
  */
-MuMsg*   mu_msg_new		   (const char* filepath,
-				    const char *maildir,
-				    GError **err);
-
+MuMsg *mu_msg_new (const char* filepath, const char *maildir,
+		   GError **err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a MuMsg* instance; call this function when done with
@@ -126,9 +124,8 @@ const char*     mu_msg_get_summary (MuMsg *msg, size_t max_lines);
  * 
  * @return TRUE if saving succeeded, FALSE otherwise
  */
-gboolean
-mu_msg_mime_part_save (MuMsg *msg, unsigned wanted_idx,
-		       const char *targetdir, gboolean overwrite);
+gboolean mu_msg_mime_part_save (MuMsg *msg, unsigned wanted_idx,
+				const char *targetdir, gboolean overwrite);
 
 /**
  * get the sender (From:) of this message

@@ -20,6 +20,10 @@
 #ifndef __MU_BOOKMARKS_H__
 #define __MU_BOOKMARKS_H__
 
+#include <glib.h>
+
+G_BEGIN_DECLS
+
 typedef struct _MuBookmarks MuBookmarks;
 
 
@@ -31,8 +35,8 @@ typedef struct _MuBookmarks MuBookmarks;
  * 
  * @return a new BookMarks object, or NULL in case of error
  */
-MuBookmarks *mu_bookmarks_new (const gchar *bmpath);
-
+MuBookmarks *mu_bookmarks_new (const gchar *bmpath)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a bookmarks object
@@ -66,5 +70,6 @@ typedef void (*MuBookmarksForeachFunc) (const gchar *key, const gchar *val,
 void         mu_bookmarks_foreach (MuBookmarks *bm, MuBookmarksForeachFunc func,
 				   gpointer user_data);
 
+G_END_DECLS
 
 #endif /*__MU_BOOKMARKS_H__*/

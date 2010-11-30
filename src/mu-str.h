@@ -115,8 +115,8 @@ char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
  * for what to do with it
  */
 const char* mu_str_flags_s  (MuMsgFlags flags) G_GNUC_CONST;
-char*       mu_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
-
+char*       mu_str_flags    (MuMsgFlags flags)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a 'summary' of the string, ie. the first /n/ lines of the
@@ -127,10 +127,8 @@ char*       mu_str_flags    (MuMsgFlags flags) G_GNUC_WARN_UNUSED_RESULT;
  * 
  * @return a newly allocated string with the summary. use g_free to free it.
  */
-char* mu_str_summarize (const char* str,
-			    size_t max_lines) G_GNUC_WARN_UNUSED_RESULT;
-
-
+char* mu_str_summarize (const char* str, size_t max_lines)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * normalize a string (ie., collapse accented characters etc.), and
@@ -142,7 +140,9 @@ char* mu_str_summarize (const char* str,
  * 
  * @return the normalize string, or NULL in case of error or str was NULL
  */
-char* mu_str_normalize (const char *str, gboolean downcase);
+char* mu_str_normalize (const char *str, gboolean downcase)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
 
 
 /**
@@ -158,7 +158,6 @@ char* mu_str_normalize (const char *str, gboolean downcase);
  * NULL
  */
 char* mu_str_normalize_in_place (char *str, gboolean downcase);
-
 
 /**
  * escape the string for use with xapian matching. in practice, if the

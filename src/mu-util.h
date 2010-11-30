@@ -40,7 +40,8 @@ gboolean mu_util_init_system (void);
  * @return the expanded path as a newly allocated string, or NULL in
  * case of error
  */
-char*       mu_util_dir_expand (const char* path) G_GNUC_WARN_UNUSED_RESULT;
+char* mu_util_dir_expand (const char* path)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * guess the maildir; first try $MAILDIR; if it is unset or
@@ -48,7 +49,8 @@ char*       mu_util_dir_expand (const char* path) G_GNUC_WARN_UNUSED_RESULT;
  * 
  * @return full path of the guessed Maildir, or NULL; must be freed (gfree)
  */
-char*       mu_util_guess_maildir (void) G_GNUC_WARN_UNUSED_RESULT;
+char* mu_util_guess_maildir (void)
+   G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -59,7 +61,8 @@ char*       mu_util_guess_maildir (void) G_GNUC_WARN_UNUSED_RESULT;
  * @return the guessed mu homedir, which needs to be freed with g_free
  * when no longer needed.
  */
-gchar* mu_util_guess_mu_homedir (void);
+gchar* mu_util_guess_mu_homedir (void)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * if path exists, check that's a read/writeable dir; otherwise try to
@@ -70,7 +73,8 @@ gchar* mu_util_guess_mu_homedir (void);
  * @return TRUE if a read/writeable directory `path' exists after
  * leaving this function, FALSE otherwise
  */
-gboolean mu_util_create_dir_maybe (const gchar *path) G_GNUC_WARN_UNUSED_RESULT;
+gboolean mu_util_create_dir_maybe (const gchar *path)
+    G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -84,7 +88,8 @@ gboolean mu_util_create_dir_maybe (const gchar *path) G_GNUC_WARN_UNUSED_RESULT;
  * @return TRUE if dir exist and has the specified properties
  */
 gboolean mu_util_check_dir (const gchar* path, gboolean readable,
-			    gboolean writeable) G_GNUC_WARN_UNUSED_RESULT;
+			    gboolean writeable)
+    G_GNUC_WARN_UNUSED_RESULT;
 
 
 
@@ -97,11 +102,12 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
  * @param overwrite should we allow for overwriting existing files?
  * 
  * @return a file descriptor, or -1 in case of error. If it's a fily
- * system error, 'errno' may have more info.
+ * system error, 'errno' may have more info. use 'close()' when done
+ * with the file descriptor
  */
 int mu_util_create_writeable_fd (const char* filename, const char* dir,
-				 gboolean overwrite);
-
+				 gboolean overwrite)
+    G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * convert a string array in to a string, with the elements separated
@@ -111,7 +117,8 @@ int mu_util_create_writeable_fd (const char* filename, const char* dir,
  * 
  * @return a newly allocated string
  */
-gchar* mu_util_str_from_strv (const gchar **params) G_GNUC_WARN_UNUSED_RESULT;
+gchar* mu_util_str_from_strv (const gchar **params)
+        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * 

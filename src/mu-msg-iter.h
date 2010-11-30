@@ -20,7 +20,8 @@
 #ifndef __MU_MSG_ITER_H__
 #define __MU_MSG_ITER_H__
 
-#include "mu-msg.h"
+#include <glib.h>
+#include <mu-msg.h>
 
 G_BEGIN_DECLS
 
@@ -73,8 +74,9 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
  * @return a MuMsgGMime instance, or NULL in case of error. Use
  * mu_msg_gmime_destroy when the instance is no longer needed
  */
-MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err);
-
+MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
+        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+   
 /**
  * get the document id for the current message
  * 

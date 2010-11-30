@@ -42,7 +42,8 @@ typedef struct _MuQuery MuQuery;
  * when the instance is no longer needed, use mu_query_destroy
  * to free it
  */
-MuQuery  *mu_query_new  (const char* path, GError **err) G_GNUC_WARN_UNUSED_RESULT;
+MuQuery  *mu_query_new  (const char* path, GError **err)
+      G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy the MuQuery instance
@@ -59,7 +60,8 @@ void mu_query_destroy  (MuQuery *self);
  * 
  * @return the version string (free with g_free), or NULL in case of error
  */
-char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
+char* mu_query_version (MuQuery *store)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * run a Xapian query; for the syntax, please refer to the mu-find
@@ -82,12 +84,10 @@ char* mu_query_version (MuQuery *store) G_GNUC_WARN_UNUSED_RESULT;
  * @return a MuMsgIter instance you can iterate over, or NULL in
  * case of error
  */
-MuMsgIter* mu_query_run (MuQuery *self, 
-			 const char* expr,
-			 MuMsgFieldId sortfieldid,
-			 gboolean ascending,
-			 size_t batchsize,
-			 GError **err) G_GNUC_WARN_UNUSED_RESULT;
+MuMsgIter* mu_query_run (MuQuery *self, const char* expr,
+			 MuMsgFieldId sortfieldid, gboolean ascending,
+			 size_t batchsize, GError **err)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string representation of the Xapian search query
@@ -100,9 +100,9 @@ MuMsgIter* mu_query_run (MuQuery *self,
  * @return the string representation of the xapian query, or NULL in case of
  * error; free the returned value with g_free
  */
-char* mu_query_as_string (MuQuery *self,
-			  const char* searchexpr, GError **err) G_GNUC_WARN_UNUSED_RESULT;
-
+char* mu_query_as_string (MuQuery *self, const char* searchexpr, GError **err)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+		
 /**
  * pre-process the query; this function is useful mainly for debugging mu
  * 
@@ -110,8 +110,8 @@ char* mu_query_as_string (MuQuery *self,
  * 
  * @return a pre-processed query, free it with g_free
  */
-char* mu_query_preprocess (const char *query) G_GNUC_WARN_UNUSED_RESULT;
-
+char* mu_query_preprocess (const char *query)
+        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 
