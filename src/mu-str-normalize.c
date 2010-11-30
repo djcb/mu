@@ -81,7 +81,6 @@ mu_str_normalize_in_place (char *str, gboolean downcase)
 			case 0x89:
 			case 0x8a:
 			case 0x8b:
-				g_printerr ("<%c>", downcase ? 'e' : 'E');
 				str[i++] = downcase ? 'e' : 'E';
 				break;
 				

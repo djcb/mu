@@ -78,8 +78,15 @@ install_sig_handler (void)
 
 
 static gboolean
-check_index_params (MuConfigOptions *opts)
+check_index_or_cleanup_params (MuConfigOptions *opts)
 {
+	/* param[0] == 'index' or 'cleanup', there should be no
+	 * param[1] */
+	if (opts->params[1]) {
+		g_warning ("usage: mu %s [options]", opts->params[0]);
+		return FALSE;
+	}
+		
 	if (opts->linksdir || opts->xquery) {
 		g_warning ("invalid option(s) for command");
 		return FALSE;
@@ -223,10 +230,10 @@ cmd_index (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 	
 	g_message ("Indexing messages under %s [%s]", opts->maildir,
 		   mu_runtime_xapian_dir());
-
+	
 	t = time (NULL);
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
-			   show_progress ? index_msg_cb : index_msg_silent_cb,
+			   show_progress ? index_msg_cb:index_msg_silent_cb,
 			   NULL, NULL);
 
 	if (!opts->quiet) {
@@ -241,7 +248,8 @@ cmd_index (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 	}
 	
 	if (rv == MU_OK || rv == MU_STOP) {
-		MU_WRITE_LOG ("processed: %u; updated/new: %u, cleaned-up: %u",
+		MU_WRITE_LOG ("processed: %u; updated/new: %u, "
+			      "cleaned-up: %u",
 			      stats->_processed, stats->_updated,
 			      stats->_cleaned_up);
 		return TRUE;
@@ -265,7 +273,7 @@ cmd_index_or_cleanup (MuConfigOptions *opts)
 	g_return_val_if_fail (mu_cmd_equals (opts, "index") ||
 			      mu_cmd_equals (opts, "cleanup"), FALSE);
 			  
-	if (!check_index_params (opts) ||
+	if (!check_index_or_cleanup_params (opts) ||
 	    !database_version_check_and_update(opts))
 		return FALSE;
 

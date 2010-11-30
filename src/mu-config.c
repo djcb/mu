@@ -256,7 +256,7 @@ parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 	err = NULL;
 	rv = g_option_context_parse (context, argcp, argvp, &err);
 	if (!rv) {
-		g_printerr ("error in options: %s\n", err->message);
+		g_warning ("error in options: %s\n", err->message);
 		g_error_free (err);
 	}
 

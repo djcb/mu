@@ -64,7 +64,7 @@ print_xapian_query (MuQuery *xapian, const gchar *query)
 	err = NULL;
 	querystr = mu_query_as_string (xapian, query, &err);
 	if (!querystr) {
-		g_warning ("Error: %s", err->message);
+		g_warning ("error: %s", err->message);
 		g_error_free (err);
 		return FALSE;
 	} 
@@ -156,7 +156,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 	iter = mu_query_run (xapian, query, sortid,
 			     opts->descending ? FALSE : TRUE, 0, &err);
 	if (!iter) {
-		g_warning ("Error: %s", err->message);
+		g_warning ("error: %s", err->message);
 		g_error_free (err);
 		return FALSE;
 	}
@@ -169,7 +169,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 				      opts->summary_len);
 	
 	if (matches == 0) 
-		g_printerr ("No matches found\n");
+		g_warning ("No matches found");
 
 	mu_msg_iter_destroy (iter);
 
@@ -184,7 +184,7 @@ query_params_valid (MuConfigOptions *opts)
 	
 	if (opts->linksdir) 
 		if (opts->xquery) {
-			g_printerr ("Invalid option for '--linksdir'\n");
+			g_warning ("invalid option for --linksdir");
 			return FALSE;
 		}
 
@@ -209,13 +209,13 @@ resolve_bookmark (MuConfigOptions *opts)
 	bmfile = mu_runtime_bookmarks_file();
 	bm = mu_bookmarks_new (bmfile);
 	if (!bm) {
-		g_warning ("Failed to open bookmarks file '%s'", bmfile);
+		g_warning ("failed to open bookmarks file '%s'", bmfile);
 		return FALSE;
 	}
 	
 	val = (gchar*)mu_bookmarks_lookup (bm, opts->bookmark); 
 	if (!val) 
-		g_warning ("Bookmark '%s' not found", opts->bookmark);
+		g_warning ("bookmark '%s' not found", opts->bookmark);
 	else
 		val = g_strdup (val);
 	
@@ -232,7 +232,7 @@ get_query (MuConfigOptions *opts)
 
 	/* params[0] is 'find', actual search params start with [1] */
 	if (!opts->bookmark && !opts->params[1]) {
-		g_warning ("Empty search query");
+		g_warning ("usage: mu find [options] search-expression");
 		return FALSE;
 	}
 
@@ -260,7 +260,7 @@ static gboolean
 db_is_ready (const char *xpath)
 {	
 	if (mu_util_db_is_empty (xpath)) {
-		g_warning ("Database is empty; use 'mu index' to "
+		g_warning ("database is empty; use 'mu index' to "
 			   "add messages");
 		return FALSE;
 	}
@@ -301,7 +301,7 @@ mu_cmd_find (MuConfigOptions *opts)
 	err = NULL;
 	xapian = mu_query_new (xpath, &err);
 	if (!xapian) {
-		g_warning ("Error: %s", err->message);
+		g_warning ("error: %s", err->message);
 		g_error_free (err);
 		return FALSE;
 	}

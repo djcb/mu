@@ -39,9 +39,9 @@ mu_cmd_mkdir (MuConfigOptions *opts)
 	g_return_val_if_fail (mu_cmd_equals (opts, "mkdir"), FALSE);
 	
 	if (!opts->params[1]) {
-		g_printerr (
+		g_warning (
 			"usage: mu mkdir [-u,--mode=<mode>] "
-			"<dir> [more dirs]\n");
+			"<dir> [more dirs]");
 		return FALSE;
 	}
 	

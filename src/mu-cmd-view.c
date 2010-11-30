@@ -73,7 +73,7 @@ mu_cmd_view (MuConfigOptions *opts)
 
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_printerr ("Missing files to view\n");
+		g_warning ("usage: mu view [options] <file> [<files>]");
 		return FALSE;
 	}
 	
