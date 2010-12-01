@@ -23,9 +23,9 @@
 #include <glib.h>
 #include <inttypes.h>
 
-#include "mu-result.h"
-#include "mu-msg.h"
-#include "mu-error.h"
+#include <mu-result.h>
+#include <mu-msg.h>
+#include <mu-error.h>
 
 G_BEGIN_DECLS
 
@@ -41,7 +41,9 @@ typedef struct _MuStore MuStore;
  * 
  * @return a new MuStore object, or NULL in case of error
  */
-MuStore*    mu_store_new     (const char* path, GError **err);
+MuStore*    mu_store_new     (const char *path, GError **err)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
 
 /**
  * destroy the MuStore object and free resources
@@ -136,8 +138,8 @@ gboolean          mu_store_contains_message (MuStore *store,
  * @param stamp a timestamp
  */
 void              mu_store_set_timestamp (MuStore *store,
-						 const char* msgpath, 
-						 time_t stamp);
+					 const char* msgpath, 
+					 time_t stamp);
 
 /**
  * get the timestamp for a directory
@@ -148,7 +150,7 @@ void              mu_store_set_timestamp (MuStore *store,
  * @return the timestamp, or 0 in case of error
  */
 time_t            mu_store_get_timestamp (MuStore *store,
-						 const char* msgpath);
+					 const char* msgpath);
 
 /**
  * call a function for each document in the database

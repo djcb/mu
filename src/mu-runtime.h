@@ -20,7 +20,7 @@
 #define __MU_RUNTIME_H__
 
 #include <glib.h>
-#include "mu-config.h"
+#include <mu-config.h>
 
 G_BEGIN_DECLS
 

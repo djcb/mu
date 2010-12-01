@@ -64,6 +64,14 @@ TEST_PROGS += test-mu-msg
 test_mu_msg_SOURCES= test-mu-msg.c
 test_mu_msg_LDADD=  libtestmucommon.la
 
+TEST_PROGS += test-mu-runtime
+test_mu_runtime_SOURCES= test-mu-runtime.c
+test_mu_runtime_LDADD=  libtestmucommon.la
+
+TEST_PROGS += test-mu-store
+test_mu_store_SOURCES= test-mu-store.c dummy.cc
+test_mu_store_LDADD= libtestmucommon.la
+
 
 libtestmucommon_la_SOURCES=		\
 	test-mu-common.c		\
