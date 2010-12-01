@@ -1,6 +1,6 @@
 * Future release
 
-** release 0.10 [%]
+** release 0.10 [9%]
 
    - [ ] mu stats
    - [ ] follow symlinks when indexing
@@ -12,6 +12,7 @@
    - [ ] don't make test mail files executable
    - [ ] make commit batch size configure param
    - [ ] fix -pedantic build
+   - [ ] better 'usage' info
 	 
 
 ** release 0.9 [100%]
