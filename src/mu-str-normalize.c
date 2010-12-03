@@ -28,6 +28,7 @@
 
 #include "mu-str.h"
 
+
 char*
 mu_str_normalize (const char *str, gboolean downcase)
 {
@@ -35,6 +36,17 @@ mu_str_normalize (const char *str, gboolean downcase)
 
 	return mu_str_normalize_in_place (g_strdup(str), downcase);
 }
+
+
+/*
+ * this implementation works for accented chars in Unicode Blocks
+ * 'Latin-1 Supplement' and 'Latin Extended-A'. An alternative (slower
+ * but much simpler) implementation would be to use g_utf8_normalize
+ * to decompose characters in the accent part and the character part,
+ * and then get rid of the former. That would be slower than what we
+ * do here, but also more *complete*.  It's unclear whether it would
+ * be slower *in practice* => needs checking
+ */
 
 /* we can normalize in-place, as the normalized string will never be
  * longer than the original.  even for replacements that are 2 chars
