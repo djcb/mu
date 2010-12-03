@@ -116,7 +116,7 @@ MuResult	  mu_store_store   (MuStore *store, MuMsg *msg);
  * @return TRUE if it succeeded, FALSE otherwise
  */
 MuResult          mu_store_remove (MuStore *store,
-					  const char* msgpath);
+				   const char* msgpath);
 
 
 /**
