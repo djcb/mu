@@ -47,15 +47,17 @@ a.menu:hover   {color: #ff0000; text-decoration: underline; }
 
 <h2><a name="welcome">welcome to mu</a></h2>
 
-<p>For many people, e-mail is the 'flow' in their work-flow. One one spends
-a <em>lot</em> of time searching for old e-mails, to dig up some important
+<p>For many people, e-mail is the 'flow' in their work-flow. One spends
+a <em>lot</em> of time searching for old e-mails, digging up some important
 piece of information. With people having tens of thousands of e-mails (or
 more), this is becoming harder and harder. How to find that one message in the
 evergrowing information haystack?
 
 <p>Enter <strong>mu</strong>. 'mu' is a set of command-line tools for
-Linux/Unix that enable you to quickly find the e-mails you are looking for,
-assuming that you store your e-mails in Maildirs (e-mail directories).
+Linux/Unix that enable you to quickly find the e-mails you are looking for.
+The main requirement is that you store your e-mails <strong>in
+Maildirs</strong>. If you have no idea what 'Maildirs' are, you are probably
+not using them.
 
 <h3>how does it work?</h3>
 
@@ -68,7 +70,7 @@ faster. <tt>mu</tt> indexes your mail with the <tt>index</tt> command:
 </pre>
 It tries to pick reasonable defaults, but you can specify your own options as
 well. You could run <tt>mu index</tt> periodically to keep your database
-up-to-date. Or you could trigger it after new mails has arrived.
+up-to-date. Or you could trigger it when new mails have arrived.
 
 <p>After building the database, it's easy to search for messages. For example:
 <ul>
@@ -103,16 +105,17 @@ message priority as well:
 </ul>
 
 <p>Searches are case-insensitive as well as 'accent insensitive' (version 0.9
-  and up); so <i>angStroM</i> will match <i>Ångström</i>.
+  and up); so <i>angStroM</i> will match <i>Ångström</i>. Often-used queries
+  can be stored in bookmarks file.
 
 <p>The way to express the searches may be a bit cryptic at first, but easy to
 learn (in the author's biased opinion); the mu manpages discuss syntax and
 usage. There is also the <tt>mu-easy</tt> man-page which contains a lot of
 simple examples to get you going.
 
-<p>NOTE: while searching from the command-line is sometimes useful, mu is most
-easily used when integrated with an e-mail program. The documentation includes
-examples for integration with <em>mutt</em> and <em>Wanderlust</em>.
+<p>NOTE: while searching from the command-line is useful, mu can also easily
+be integrated with some e-mail clients. The documentation includes examples
+for integration with <em>mutt</em> and <em>Wanderlust</em>.
 
 <p><strong>mu</strong> is <em>Free Software</em> (GPLv3), runs on
 Unix/Linux-based systems, and uses the <a href="http://www.xapian.org"
@@ -122,18 +125,22 @@ href="http://www.qmail.org/qmail-manual-html/man5/maildir.html" >maildirs</a>
 
 <h2><a name="mug" >mug</a><a href="mug-full.png"><img src="mug-thumb.png"
 align="right" border="0"></a></h2>
-Starting with version 0.9, there is now a simple UI called <tt>mug</tt>. It
-started as a little experiment, but it seems to be useful enough to
-include. Usage should be straigthforward.
+Starting with version 0.9, there is now a
+simple UI called <tt>mug</tt>. It started as a little experiment, but it seems
+to be useful enough to include. Usage should be straigthforward.
 
-<p>The longer-term goal is to have a bit more complete graphical user-interface;
-for the time being, <tt>mug</tt> seems to work fine.
+<p>The longer-term goal is to have a bit more complete graphical
+user-interface; for the time being, <tt>mug</tt> seems to work fine.
 
 <p>If you have defined bookmarks, mug will show them in the toolbar on the left
 side of the <tt>mug</tt>-window, as can be seen in the screenshot.
 
 <h2><a name="news" >news</a></h2>
 <ul>
+  <li>[2010-12-04] <strong>mu version 0.9</strong> released. Compared to the
+  bèta-release, there were a number of improvements to the documentation and
+  the unit tests. Pre-processing queries is a little bit smarter now, making
+  matching e-mail address more eager. Experimental support for Fedora-14.
   <li>[2010-11-27] <strong>mu version 0.9-beta</strong> released. New
   features: searching is now accent-insensitive; you can now search for
   message priority (<tt>prio:</tt>), time-interval (<tt>date:</tt>) and
@@ -255,12 +262,10 @@ License</a> (GPL), version 3 or later.
 
 The mu source code is available <a href="http://gitorious.org/mu/mu-ng">in
 Gitorious</a>; get it from there:
-
 <pre>
   $ git clone git://gitorious.org/mu/mu-ng.git
 </pre>
-
-This is the source code for future versions of mu; there are branches and tags
+This is the source code for future versions of mu; there are tags
 for released versions. If you're not planning on getting involved in the
 development of mu, it is recommended you use the actual releases. The git
 version, in particular the 'master' branch, may break at times.
