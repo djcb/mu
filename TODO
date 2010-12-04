@@ -13,6 +13,8 @@
    - [ ] make commit batch size configure param
    - [ ] fix -pedantic build
    - [ ] better 'usage' info
+   - [ ] add version info to output of configure, mu.log
+   - [ ] make 'make check' more useful for others
 	 
 
 ** release 0.9 [100%]
@@ -22,7 +24,7 @@
    - [X] normalize search fields
    - [X] cleanup version check
    - [X] propagate errors to ui
-   - [X] update mug for Gerrors feedback
+   - [X] update mug for GErrors feedback
    - [X] improve date ranges
    - [X] improve spacing in mug
    - [X] fix flag searches + synonyms
@@ -32,6 +34,7 @@
    - [X] make mug icon square
    - [X] fix sort-order
    - [X] pre-process terms, queries for '@'/':'/'.'
+   - [X] add support for Fedora14 (GMime 2.6)
 
 
 * Releases already done
