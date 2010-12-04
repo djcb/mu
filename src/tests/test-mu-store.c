@@ -90,8 +90,7 @@ test_mu_store_store_and_count (void)
 		MuMsg *msg;
 		MuStore *store;
 		gchar* tmpdir;
-		GError *err;
-		
+
 		tmpdir = test_mu_common_get_random_tmpdir();
 		g_assert (tmpdir);
 
@@ -103,10 +102,7 @@ test_mu_store_store_and_count (void)
 		mu_msg_gmime_init ();
 		
 		/* add one */
-		err = NULL;
-		msg = mu_msg_new (MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,",
-						  NULL, &err);
-		
+		msg = mu_msg_new (MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,", NULL, NULL);		
 		g_assert (msg);
 		g_assert_cmpuint (mu_store_store (store, msg), ==, MU_OK);
 		g_assert_cmpuint (1,==,mu_store_count (store));
@@ -115,18 +111,16 @@ test_mu_store_store_and_count (void)
 		mu_msg_destroy (msg);
 
 		/* add another one */
-		msg = mu_msg_new (MU_TESTMAILDIR2 "bar/cur/mail3",
-						  NULL, NULL);
+		msg = mu_msg_new (MU_TESTMAILDIR2 "bar/cur/mail3", NULL, NULL);
 		g_assert (msg);
 		g_assert_cmpuint (mu_store_store (store, msg), ==, MU_OK);
 		g_assert_cmpuint (2,==,mu_store_count (store));
-		g_assert_cmpuint (TRUE,==,mu_store_contains_message
-						  (store, MU_TESTMAILDIR2 "bar/cur/mail3"));	
+		g_assert_cmpuint (TRUE,==,mu_store_contains_message (store, MU_TESTMAILDIR2 "bar/cur/mail3"));	
 		mu_msg_destroy (msg);
 
 		/* try to add the first one again. count should be 2 still */
-		msg = mu_msg_new (MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,",
-						  NULL, NULL);
+		msg = mu_msg_new (MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,", NULL, NULL);
+		g_assert (msg);
 		g_assert_cmpuint (mu_store_store (store, msg), ==, MU_OK);
 		g_assert_cmpuint (2,==,mu_store_count (store));
 		
