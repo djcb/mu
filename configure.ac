@@ -14,7 +14,8 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.9-beta],[http://www.djcbsoftware.nl/code/mu])
+AC_INIT([mu],[0.9],[http://code.google.com/p/mu0/issues/list],
+	[mu],[http://www.djcbsoftware.nl/code/mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -29,7 +30,7 @@ AM_SILENT_RULES([yes])
 # note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["8.99"], [Schema version of the database])
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], [Schema version of the database])
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
 
@@ -105,19 +106,26 @@ AS_IF([test "x$have_gtest" = "xno"],[
 ])
 
 
-# gmime2.4?	
-PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime=yes],[have_gmime=no])
+# gmime 2.4 or 2.6? mu has only been tested with gmime-2.4, but Fedora
+# 14 ships with gmime 2.5.x, which registers itself (pkgconfig) as 2.6
+# it is reported mu works fine with this new gmime as well, so we support
+# both; based on patch by GooseYArd
+PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime_24=yes],[have_gmime_24=no])
+AS_IF([test "x$have_gmime_24" = "xno"],[
+   PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
+   AS_IF([test "x$have_gmime_26" = "xno"],[   
+      AC_MSG_ERROR([
+      *** neither gmime-2.4 nor gmime-2.6 could not be found; please install it
+      *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'
+      *** If you compiled it yourself, you should ensure that the pkgconfig
+      *** installation dir (e.g., /usr/local/lib/pkgconfig) is in your
+      *** PKG_CONFIG_PATH.
+      ])
+    ])
+ ])
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
-AS_IF([test "x$have_gmime" = "xno"],[
-   AC_MSG_ERROR([
-   *** gmime-2.4 could not be found; please install it
-   *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'
-   *** If you compiled it yourself, you should ensure that the pkgconfig
-   *** installation dir (e.g., /usr/local/lib/pkgconfig) is in your
-   *** PKG_CONFIG_PATH.
-   ])
-])
+ 
 
 # do we have gtk3+ installed? this is just for testing the new gtk3
 PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
@@ -168,7 +176,7 @@ echo "-----------------------------"
 echo
 echo "Note: since version 0.7, the Xapian database is no longer stored as "
 echo "<muhome>/xapian-0.6 but instead simply as <muhome>/xapian. You can "
-echo "remove the olde <muhome>/xapian-0.6 directory to save some disk space"
+echo "remove the old <muhome>/xapian-0.6 directory to save some disk space"
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
