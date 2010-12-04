@@ -17,7 +17,7 @@
 **  
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
@@ -37,7 +37,7 @@ test_mu_util_dir_expand_01 (void)
 	
 	got = mu_util_dir_expand ("~/Desktop");
 	expected = g_strdup_printf ("%s%cDesktop",
-				    getenv("HOME"), G_DIR_SEPARATOR);
+								getenv("HOME"), G_DIR_SEPARATOR);
 	
 	g_assert_cmpstr (got,==,expected);
 	

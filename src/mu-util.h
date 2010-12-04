@@ -33,7 +33,8 @@ G_BEGIN_DECLS
 gboolean mu_util_init_system (void);
 
 /**
- * get the expanded path; ie. perform shell expansion on the path
+ * get the expanded path; ie. perform shell expansion on the path. the
+ * path does not have to exist
  *
  * @param path path to expand
  * 

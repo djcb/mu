@@ -56,7 +56,7 @@ do_wordexp (const char *path)
 	char *dir;
 
 	if (!path) {
-		g_debug ("%s: path is empty", __FUNCTION__);
+		/* g_debug ("%s: path is empty", __FUNCTION__); */
 		return NULL;
 	}
 	
@@ -87,17 +87,17 @@ mu_util_dir_expand (const char *path)
 {
 	char *dir;
 	char resolved[PATH_MAX + 1];
-	
+
 	g_return_val_if_fail (path, NULL);
 
 	dir = do_wordexp (path);
 	if (!dir)
 		return NULL; /* error */
 	
-	/* now, resolve any symlinks, .. etc. */
-	if (!realpath (dir, resolved)) {
-		/* g_debug ("%s: could not get realpath for '%s': %s", */
-		/* 	 __FUNCTION__, dir, strerror(errno)); */
+	/* now resolve any symlinks, .. etc. */
+	if (realpath (dir, resolved) == NULL) {
+		g_debug ("%s: could not get realpath for '%s': %s",
+			 __FUNCTION__, dir, strerror(errno));
 		g_free (dir);
 		return NULL;
 	} else 
