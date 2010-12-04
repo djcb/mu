@@ -31,6 +31,22 @@
 #include "src/mu-util.h"
 
 static void
+test_mu_util_dir_expand_00 (void)
+{
+	gchar *got, *expected;
+	
+	got = mu_util_dir_expand ("~/IProbablyDoNotExist");
+	expected = g_strdup_printf ("%s%cIProbablyDoNotExist",
+								getenv("HOME"), G_DIR_SEPARATOR);
+	
+	g_assert_cmpstr (got,==,expected);
+	
+	g_free (got);
+	g_free (expected);
+	
+}
+
+static void
 test_mu_util_dir_expand_01 (void)
 {
 	gchar *got, *expected;
@@ -45,6 +61,7 @@ test_mu_util_dir_expand_01 (void)
 	g_free (expected);
 	
 }
+
 
 static void
 test_mu_util_dir_expand_02 (void)
@@ -203,6 +220,7 @@ main (int argc, char *argv[])
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_util_dir_expand */
+	g_test_add_func ("/mu-util/mu-util-dir-expand-00", test_mu_util_dir_expand_00);
 	g_test_add_func ("/mu-util/mu-util-dir-expand-01", test_mu_util_dir_expand_01);
 	g_test_add_func ("/mu-util/mu-util-dir-expand-02", test_mu_util_dir_expand_02);
 	g_test_add_func ("/mu-util/mu-util-dir-expand-03", test_mu_util_dir_expand_03);
