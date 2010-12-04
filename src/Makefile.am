@@ -70,20 +70,17 @@ libmu_la_SOURCES=			\
 	mu-msg-fields.h			\
 	mu-msg-flags.c			\
 	mu-msg-flags.h			\
-	mu-msg-prio.c			\
-	mu-msg-prio.h			\
-	mu-msg-status.h			\
-	mu-msg.c			\
-	mu-msg.h			\
-	mu-msg-priv.h			\
 	mu-msg-iter-priv.hh		\
 	mu-msg-iter.cc			\
 	mu-msg-iter.h			\
 	mu-msg-part.c			\
 	mu-msg-part.h			\
-	mu-str.c			\
-	mu-str-normalize.c		\
-	mu-str.h			\
+	mu-msg-prio.c			\
+	mu-msg-prio.h			\
+	mu-msg-priv.h			\
+	mu-msg-status.h			\
+	mu-msg.c			\
+	mu-msg.h			\
 	mu-msg.h			\
 	mu-output-link.c		\
 	mu-output-link.h		\
@@ -96,6 +93,9 @@ libmu_la_SOURCES=			\
 	mu-runtime.h			\
 	mu-store.cc			\
 	mu-store.h			\
+	mu-str-normalize.c		\
+	mu-str.c			\
+	mu-str.h			\
 	mu-util-db.cc			\
 	mu-util-db.h			\
 	mu-util.c			\
