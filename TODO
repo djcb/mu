@@ -15,6 +15,7 @@
    - [ ] better 'usage' info
    - [ ] add version info to output of configure, mu.log
    - [ ] make 'make check' more useful for others
+   - [ ] see whether the othe (slower, more complete) str_normalize is worth it
 	 
 
 ** release 0.9 [100%]
@@ -35,6 +36,7 @@
    - [X] fix sort-order
    - [X] pre-process terms, queries for '@'/':'/'.'
    - [X] add support for Fedora14 (GMime 2.6)
+   - [X] normalize error output
 
 
 * Releases already done

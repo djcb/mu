@@ -1,6 +1,6 @@
 * NEWS (user visible changes)
 
-** Release 0.9
+** Release 0.9 
    
    - you can now search for the message priority ('prio:high', 'prio:low',
      'prio:normal')
@@ -15,10 +15,11 @@
    - fix --clearlinks for file systems without entry->d_type (fixes issue #28)
    - make matching case-insensitive and accent-insensitive (accent-insensitive
      for characters in Unicode Blocks 'Latin-1 Supplement' and 'Latin
-     Extended-A' )
+     Extended-A')
    - more extensive pre-processing is done to make searching for email-addresses
-     and message-ids less likely to not work
+     and message-ids less likely to not work (issue #21)
    - updated the man-pages
+   - experimental support for Fedora 14, which uses GMime 2.5.x (fixes issue #29)
 
 ** Release 0.8 <2010-10-30 Sat>
    
