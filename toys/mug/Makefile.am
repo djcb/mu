@@ -2,7 +2,7 @@
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 3 of the License, or
+## t	he Free Software Foundation; either version 3 of the License, or
 ## (at your option) any later version.
 ##
 ## This program is distributed in the hope that it will be useful,
@@ -23,19 +23,19 @@ SUBDIRS= .
 #SUBDIRS += tests
 #endif
 
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS)
+INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"'
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement 
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter -DICONDIR='"$(icondir)"' \
-	-DICONDIR='"$(icondir)"'
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+
 
 bin_PROGRAMS=				\
 	mug
 
-# note, mu.cc is only '.cc' and not '.c' because libmu must explicitly
+# note, mug.cc is '.cc' only because libmu must explicitly
 # be linked as c++, not c.
 mug_SOURCES=				\
 	mug.cc				\
@@ -56,7 +56,7 @@ icondir=				\
 	$(datarootdir)/icons
 
 icon_DATA=				\
-	${top_srcdir}/toys/mug/mug.svg
+	mug.svg
 
 desktopdir=				\
 	$(datarootdir)/applications
@@ -65,5 +65,7 @@ desktop_DATA=				\
 	mug.desktop
 
 EXTRA_DIST=				\
-	$(desktopentry_DATA)
+	$(desktop_DATA)			\
+	$(icon_DATA)
+
 
