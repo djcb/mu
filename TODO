@@ -70,7 +70,7 @@
    - [X] configure error for missing ->dt_dtype
 
 
-** release 0.6 [100%] <2010-01-23 Sat>
+** release 0.6 [100%]
 
    - [X] implement re-index
    - [X] mu-index config options

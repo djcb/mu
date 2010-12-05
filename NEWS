@@ -1,6 +1,12 @@
 * NEWS (user visible changes)
 
-** Release 0.9 
+** Release 0.9.1 <2010-12-05 Sun>
+   
+   - Add missing icon for mug 
+   - Fix unit tests (Issue #30)
+   - Fix Fedora 14 build (broken GTK+ 3) (Issue #31)
+
+** Release 0.9 <2010-12-04 Sat>
    
    - you can now search for the message priority ('prio:high', 'prio:low',
      'prio:normal')
