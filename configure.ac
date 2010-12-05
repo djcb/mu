@@ -156,13 +156,19 @@ AS_IF([test "x$have_gtk3" != "xyes"],[
 AM_CONDITIONAL(HAVE_GTK, [test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"])
 
 
-# check for pmccabe		
-AC_PATH_PROG([PMCCABE],[pmccabe],[yes],[no])
-AS_IF([test "x$PMCCABE" != "xyes"],[
+# check for pmccabe
+AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
+AS_IF([test "x$PMCCABE" = "xno"],[
    AC_MSG_WARN([
    *** Developers: you don't seem to have the 'pmccabe' tool installed.
    *** Please install it if you want to run the automated code checks])
 ])
+
+if test "x$PMCCABE" = "xno"; then
+   have_pmccabe="no"
+else
+   have_pmccabe="yes"
+fi
 
 
 
@@ -190,8 +196,8 @@ fi
 
 echo "Xapian version                       : $xapian_version"
 echo "Build unit tests (glib >= 2.16)      : $have_gtest"
-echo "Build UI (requires GTK+)             : $have_gtk"
-echo "McCabe's Cyclomatic Complexity tool  : $PMCCABE"
+echo "Build 'mug' (requires GTK+)          : $have_gtk"
+echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
