@@ -41,37 +41,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_HEADER_STDC
 
-# require pkg-config
-AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
-AS_IF([test "x$PKG_CONFIG" = "xno"],[
-   AC_MSG_ERROR([
-   *** The pkg-config script could not be found. Make sure it is
-   *** in your path, or set the PKG_CONFIG environment variable
-   *** to the full path to pkg-config.])
-])
 
-
-# check for pmccabe		
-AC_PATH_PROG([PMCCABE], [pmccabe], [no])
-AS_IF([test "x$PMCCABE" = "xno"],[
-   AC_MSG_WARN([
-   *** Developers: you don't seem to have the 'pmccabe' tool installed.
-   *** Please install it if you want to run the automated code checks])
-])
-
-
-# by default, we 'normalize' strings -- ie., we get rid of accents
-# etc. both in the database and in the queries. normalization makes
-# indexing significantly slower, but on the other hand, it makes
-# querying for accented data much more convenient. by default,
-# normalization is enabled.
-AC_ARG_ENABLE([normalization],
-AS_HELP_STRING([--disable-normalization], [Disable string normalization]))
-AS_IF([test "x$enable_normalization" = "xno"],
-[AC_DEFINE(MU_DISABLE_NORMALIZATION,1,[whether data should be normalized])  	    	 
-])
-
-#
 # currently, we don't support systems without d_type in their struct
 # dirent (Solaris 10); but we do support FSs for which d_type is always
 # DT_UNKNOWN (Like ReiserFS, XFS on Linux)
@@ -90,13 +60,24 @@ AC_STRUCT_DIRENT_D_INO
 # we need these
 AC_CHECK_FUNCS([memset realpath setlocale strerror])
 
+
+# require pkg-config
+AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
+AS_IF([test "x$PKG_CONFIG" = "xno"],[
+   AC_MSG_ERROR([
+   *** The pkg-config script could not be found. Make sure it is
+   *** in your path, or set the PKG_CONFIG environment variable
+   *** to the full path to pkg-config.])
+])
+
+
 # glib2?
 PKG_CHECK_MODULES(GLIB, glib-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
 
-# g_test was introduced in glib 2.16
+# gtest was introduced in glib 2.16
 PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.16, [have_gtest=yes],[have_gtest=no])
 AM_CONDITIONAL(HAVE_GTEST, test "x$have_gtest" = "xyes")
 AM_CONDITIONAL(HAVE_GLIB216, test "x$have_gtest" = "xyes")
@@ -125,30 +106,6 @@ AS_IF([test "x$have_gmime_24" = "xno"],[
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
  
-#
-# we test for gtk, which we need if we want to build 'mug'; for
-# experiments it can try to build with gtk3, but since that is still
-# under development, you need to explicitly enable this with '--with-gtk3'
-#
-AC_ARG_WITH([gtk3],
-   [AS_HELP_STRING([--with-gtk3],
-   [enable support for gtk3])],
-   [],
-   [with_gtk3=no])
-   
-AS_IF([test "x$with_gtk3" != "xno"],[
-  PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
-  AC_SUBST(GTK_CFLAGS)
-  AC_SUBST(GTK_LIBS)
-])
-
-AS_IF([test "x$have_gtk3" != "xyes"],[
-  PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
-  AC_SUBST(GTK_CFLAGS)
-  AC_SUBST(GTK_LIBS)
-])
-AM_CONDITIONAL(HAVE_GTK, [test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"])
-
 
 
 # xapian?
@@ -165,9 +122,49 @@ AS_IF([test "x$XAPIAN" = "xno"],[
    XAPIAN_CXXFLAGS=`$XAPIAN --cxxflags`
    XAPIAN_LIBS=`$XAPIAN --libs`		
    have_xapian="yes"
+   xapian_version="`xapian-config --version`"
 ])   
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
+
+
+
+# we test for gtk, which we need if we want to build 'mug'; for
+# experiments it can try to build with gtk3, but since that is still
+# under development, you need to explicitly enable this with '--with-gtk3'
+#
+have_gtk=no
+AC_ARG_WITH([gtk3],
+   [AS_HELP_STRING([--with-gtk3],
+   [enable support for gtk3])],
+   [],
+   [with_gtk3=no])
+   
+AS_IF([test "x$with_gtk3" != "xno"],[
+  PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
+  AC_SUBST(GTK_CFLAGS)
+  AC_SUBST(GTK_LIBS)
+  have_gtk=gtk3
+])
+
+AS_IF([test "x$have_gtk3" != "xyes"],[
+  PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
+  AC_SUBST(GTK_CFLAGS)
+  AC_SUBST(GTK_LIBS)
+  have_gtk=gtk2
+])
+AM_CONDITIONAL(HAVE_GTK, [test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"])
+
+
+# check for pmccabe		
+AC_PATH_PROG([PMCCABE],[pmccabe],[yes],[no])
+AS_IF([test "x$PMCCABE" != "xyes"],[
+   AC_MSG_WARN([
+   *** Developers: you don't seem to have the 'pmccabe' tool installed.
+   *** Please install it if you want to run the automated code checks])
+])
+
+
 
 AC_CONFIG_FILES([
 Makefile
@@ -185,10 +182,16 @@ echo
 echo "mu configuration is complete."
 echo "-----------------------------"
 
-echo
-echo "Note: since version 0.7, the Xapian database is no longer stored as "
-echo "<muhome>/xapian-0.6 but instead simply as <muhome>/xapian. You can "
-echo "remove the old <muhome>/xapian-0.6 directory to save some disk space"
+if test -e ~/.mu/xapian-0.6; then
+   echo "Note: since version 0.7, the Xapian database is no longer stored as "
+   echo "~/.mu/xapian-0.6 but instead simply as ~/.mu/xapian. You can "
+   echo "remove the old <muhome>/xapian-0.6 directory to save some disk space"
+fi
+
+echo "Xapian version                       : $xapian_version"
+echo "Build unit tests (glib >= 2.16)      : $have_gtest"
+echo "Build UI (requires GTK+)             : $have_gtk"
+echo "McCabe's Cyclomatic Complexity tool  : $PMCCABE"
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
