@@ -63,4 +63,5 @@ EXTRA_DIST=		\
 	TODO		\
 	HACKING		\
 	gtest.mk	\
-	NEWS
+	NEWS		\
+	autogen.sh
