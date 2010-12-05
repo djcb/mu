@@ -25,6 +25,7 @@
 #include <sys/types.h>          /* for mode_t */
 #include "mu-result.h"          /* for MuResult */
 
+G_BEGIN_DECLS
 
 /**
  * create a new maildir. Note, if the function fails 'halfway', it
@@ -39,7 +40,7 @@
  * 
  * @return TRUE if creation succeeded, FALSE otherwise
  */
-gboolean mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex);
+gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex);
 
 
 /**
@@ -72,7 +73,7 @@ typedef MuResult (*MuMaildirWalkMsgCallback)
  * with 'enter' being TRUE upon entering, FALSE otherwise 
  */
 typedef MuResult (*MuMaildirWalkDirCallback)
-(const char* fullpath, gboolean enter, void *user_data);
+     (const char* fullpath, gboolean enter, void *user_data);
 
 /**
  * start a recursive walk of a maildir; for each file found, we call
@@ -108,5 +109,7 @@ MuResult mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
  * @return TRUE if it worked, FALSE in case of error
  */
 gboolean mu_maildir_clear_links (const gchar* dir);
+
+G_END_DECLS
 
 #endif /*__MU_MAILDIR_H__*/

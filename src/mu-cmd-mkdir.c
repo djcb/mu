@@ -47,7 +47,7 @@ mu_cmd_mkdir (MuConfigOptions *opts)
 	
 	i = 1;
 	while (opts->params[i]) {
-		if (!mu_maildir_mkmdir (opts->params[i], opts->dirmode,
+		if (!mu_maildir_mkdir (opts->params[i], opts->dirmode,
 					FALSE))
 			return FALSE;
 		++i;

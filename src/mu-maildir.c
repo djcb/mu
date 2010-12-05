@@ -106,11 +106,11 @@ create_noindex (const char *path)
 }
 
 gboolean
-mu_maildir_mkmdir (const char* path, mode_t mode, gboolean noindex)
+mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex)
 {	
 	g_return_val_if_fail (path, FALSE);
-
-	MU_WRITE_LOG ("mu_maildir_mkdir (%s, %o, %s)",
+	
+	MU_WRITE_LOG ("%s (%s, %o, %s)", __FUNCTION__,
 		      path, mode, noindex ?"TRUE":"FALSE");
 	
 	if (!create_maildir (path, mode))
