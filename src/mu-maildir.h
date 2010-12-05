@@ -23,7 +23,9 @@
 #include <glib.h>
 #include <time.h>
 #include <sys/types.h>          /* for mode_t */
-#include "mu-result.h"          /* for MuResult */
+
+#include <mu-result.h>          /* for MuResult */
+#include <mu-error.h>
 
 G_BEGIN_DECLS
 
@@ -37,10 +39,13 @@ G_BEGIN_DECLS
  * @param mode the file mode (e.g., 0755)
  * @param noindex add a .noindex file to the maildir, so it will be excluded
  * from indexing by 'mu index'
+ * @param err if function returns FALSE, err may contain extra
+ * information. if err is NULL, does nothing
  * 
  * @return TRUE if creation succeeded, FALSE otherwise
  */
-gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex);
+gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex,
+			   GError **err);
 
 
 /**
@@ -49,11 +54,13 @@ gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex);
  * @param src the full path to the source message
  * @param targetpath the path to the target maildir; ie., *not*
  * MyMaildir/cur, but just MyMaildir/. The function will figure out
- * the correct subdir then. *
+ * the correct subdir then. 
+ * @param err if function returns FALSE, err may contain extra
+ * information. if err is NULL, does nothing
  * 
  * @return 
  */
-gboolean mu_maildir_link   (const char* src, const char *targetpath);
+gboolean mu_maildir_link   (const char* src, const char *targetpath, GError **err);
 
 /**
  * MuMaildirWalkMsgCallback -- callback function for
@@ -105,10 +112,12 @@ MuResult mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
  * recursively delete all the symbolic links in a directory tree
  * 
  * @param dir top dir
+ * @param err if function returns FALSE, err may contain extra
+ * information. if err is NULL, does nothing
  * 
  * @return TRUE if it worked, FALSE in case of error
  */
-gboolean mu_maildir_clear_links (const gchar* dir);
+gboolean mu_maildir_clear_links (const gchar* dir, GError **err);
 
 G_END_DECLS
 

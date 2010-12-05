@@ -42,7 +42,7 @@ test_mu_maildir_mkmdir_01 (void)
 	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
 				  "cuux");
 	
-	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, FALSE),
+	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, FALSE, NULL),
 			  ==, TRUE);
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
@@ -76,7 +76,7 @@ test_mu_maildir_mkmdir_02 (void)
 	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
 				  "cuux");
 	
-	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, TRUE),
+	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, TRUE, NULL),
 			  ==, TRUE);
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
@@ -113,7 +113,7 @@ test_mu_maildir_mkmdir_03 (void)
 	/* this must fail */
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
 
-	g_assert_cmpuint (mu_maildir_mkdir (NULL, 0755, TRUE),
+	g_assert_cmpuint (mu_maildir_mkdir (NULL, 0755, TRUE, NULL),
 					    ==, FALSE);
 }
 		

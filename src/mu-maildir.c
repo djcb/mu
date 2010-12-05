@@ -36,7 +36,6 @@
 
 #define MU_MAILDIR_WALK_MAX_FILE_SIZE (32*1000*1000)
 #define MU_MAILDIR_NOINDEX_FILE       ".noindex"
-#define MU_MAILDIR_CACHE_FILE         ".mu.cache"
 
 /* note: this function is *not* re-entrant, it returns a static buffer */
 static const char*
@@ -53,7 +52,7 @@ fullpath_s (const char* path, const char* name)
 
 
 static gboolean
-create_maildir (const char *path, mode_t mode)
+create_maildir (const char *path, mode_t mode, GError **err)
 {
 	int i;
 	const gchar* subdirs[] = {"new", "cur", "tmp"};
@@ -75,8 +74,9 @@ create_maildir (const char *path, mode_t mode)
 		fullpath = fullpath_s (path, subdirs[i]);
 		rv = g_mkdir_with_parents (fullpath, (int)mode);
 		if (rv != 0) {
-			g_warning ("g_mkdir_with_parents failed: %s",
-				   strerror (errno));
+			g_set_error (err, 0, MU_FILE_ERROR_CANNOT_MKDIR,
+				     "g_mkdir_with_parents failed: %s",
+				     strerror (errno));
 			return FALSE;
 		}
 	}
@@ -85,7 +85,7 @@ create_maildir (const char *path, mode_t mode)
 }
 
 static gboolean
-create_noindex (const char *path)
+create_noindex (const char *path, GError **err)
 {	
 	/* create a noindex file if requested */
 	int fd;
@@ -97,8 +97,9 @@ create_noindex (const char *path)
 	fd = creat (noindexpath, 0644);
 
 	if (fd < 0 || close (fd) != 0) {
-		g_warning ("error in create_noindex: %s",
-			   strerror (errno));
+		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_CREATE,
+			     "error in create_noindex: %s",
+			     strerror (errno));
 		return FALSE;
 	}
 	
@@ -106,17 +107,17 @@ create_noindex (const char *path)
 }
 
 gboolean
-mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex)
+mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex, GError **err)
 {	
 	g_return_val_if_fail (path, FALSE);
 	
 	MU_WRITE_LOG ("%s (%s, %o, %s)", __FUNCTION__,
-		      path, mode, noindex ?"TRUE":"FALSE");
+		      path, mode, noindex ? "TRUE" : "FALSE");
 	
-	if (!create_maildir (path, mode))
+	if (!create_maildir (path, mode, err))
 		return FALSE;
 
-	if (noindex && !create_noindex (path))
+	if (noindex && !create_noindex (path, err))
 		return FALSE;
 	
 	return TRUE;
@@ -125,7 +126,7 @@ mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex)
 /* determine whether the source message is in 'new' or in 'cur';
  * we ignore messages in 'tmp' for obvious reasons */
 static gboolean
-check_subdir (const char *src, gboolean *in_cur)
+check_subdir (const char *src, gboolean *in_cur, GError **err)
 {
 	gchar *srcpath;
 
@@ -136,7 +137,8 @@ check_subdir (const char *src, gboolean *in_cur)
 	else if (g_str_has_suffix (srcpath, "cur"))
 		*in_cur = TRUE;
 	else {
-		g_warning ("%s", "Invalid source message");
+		g_set_error(err, 0, MU_ERROR_FILE_INVALID_SOURCE,
+			    "invalid source message '%s'", src);
 		return FALSE;
 	}
 	g_free (srcpath);
@@ -145,12 +147,12 @@ check_subdir (const char *src, gboolean *in_cur)
 }
 
 static gchar*
-get_target_fullpath (const char* src, const gchar *targetpath)
+get_target_fullpath (const char* src, const gchar *targetpath, GError **err)
 {
 	gchar *targetfullpath, *srcfile, *srcpath, *c;
 	gboolean in_cur;
 	
-	if (!check_subdir (src, &in_cur))
+	if (!check_subdir (src, &in_cur, err))
 		return NULL;
 	
 	/* note: make the filename *cough* unique by making the pathname
@@ -180,7 +182,7 @@ get_target_fullpath (const char* src, const gchar *targetpath)
 
 
 gboolean
-mu_maildir_link (const char* src, const char *targetpath)
+mu_maildir_link (const char* src, const char *targetpath, GError **err)
 {
 	gchar *targetfullpath;
 	int rv;
@@ -188,16 +190,16 @@ mu_maildir_link (const char* src, const char *targetpath)
 	g_return_val_if_fail (src, FALSE);
 	g_return_val_if_fail (targetpath, FALSE);
 	
-	targetfullpath = get_target_fullpath (src, targetpath);
+	targetfullpath = get_target_fullpath (src, targetpath, err);
 	if (!targetfullpath)
 		return FALSE;
 	
 	rv = symlink (src, targetfullpath);
 	
 	if (rv != 0) {
-		g_warning ("error creating link %s => %s: %s",
-			   targetfullpath, src,
-			   strerror (errno));
+		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_LINK,
+			     "error creating link %s => %s: %s",
+			     targetfullpath, src, strerror (errno));
 		g_free (targetfullpath);
 		return FALSE;
 	}
@@ -574,7 +576,7 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 
 
 static gboolean
-clear_links (const gchar* dirname, DIR *dir)
+clear_links (const gchar* dirname, DIR *dir, GError **err)
 {
 	struct dirent *entry;
 	gboolean rv;
@@ -602,12 +604,13 @@ clear_links (const gchar* dirname, DIR *dir)
 				
 		if (entry->d_type == DT_LNK) {
 			if (unlink (fullpath) != 0) {
-				g_warning ("error unlinking %s: %s",
-					   fullpath, strerror(errno));
+				/* don't use err */
+				g_warning  ("error unlinking %s: %s",
+					    fullpath, strerror(errno));
 				rv = FALSE;
 			}
 		} else /* DT_DIR, see check before*/
-			rv = mu_maildir_clear_links (fullpath);
+			rv = mu_maildir_clear_links (fullpath, err);
 	}
 	
 	return rv;
@@ -615,7 +618,7 @@ clear_links (const gchar* dirname, DIR *dir)
 
 
 gboolean
-mu_maildir_clear_links (const gchar* path)
+mu_maildir_clear_links (const gchar* path, GError **err)
 {
 	DIR *dir;
 	gboolean rv;
@@ -624,14 +627,13 @@ mu_maildir_clear_links (const gchar* path)
 	
 	dir = opendir (path);		
 	if (!dir) {
-		g_warning ("failed to open %s: %s", path,
-			   strerror(errno));
+		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_OPEN,
+			     "failed to open %s: %s", path,
+			     strerror(errno));
 		return FALSE;
 	}
 
-	g_debug ("remove symlinks from %s", path);
-
-	rv = clear_links (path, dir);
+	rv = clear_links (path, dir, err);
 	closedir (dir);
 
 	return rv;

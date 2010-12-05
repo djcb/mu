@@ -33,10 +33,18 @@ enum _MuError {
 	MU_ERROR_XAPIAN_MISSING_DATA,
 	/* (parsnng) error in the query */ 
 	MU_ERROR_QUERY,
-	/* file loading related error */
-	MU_ERROR_FILE,
 	/* gmime parsing related error */
 	MU_ERROR_GMIME,
+
+	/* File errors */
+	MU_ERROR_FILE_INVALID_SOURCE,
+	MU_ERROR_FILE_CANNOT_LINK,
+	MU_ERROR_FILE_CANNOT_OPEN,
+	MU_ERROR_FILE_CANNOT_CREATE,
+	MU_FILE_ERROR_CANNOT_MKDIR,
+	/* generic file-related error */
+	MU_ERROR_FILE,
+	
 	/* some other, internal error */
 	MU_ERROR_INTERNAL
 };

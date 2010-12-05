@@ -47,8 +47,14 @@ mu_cmd_mkdir (MuConfigOptions *opts)
 	
 	i = 1;
 	while (opts->params[i]) {
+		GError *err;
+		err = NULL;
 		if (!mu_maildir_mkdir (opts->params[i], opts->dirmode,
-					FALSE))
+				       FALSE, &err))
+			if (err && err->message) {
+				g_warning ("%s", err->message);
+				g_error_free (err);
+			}
 			return FALSE;
 		++i;
 	}
