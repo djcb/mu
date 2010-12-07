@@ -28,8 +28,8 @@ INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter -Wno-variadic-macros 
 
 bin_PROGRAMS=				\
 	mu
@@ -70,6 +70,8 @@ libmu_la_SOURCES=			\
 	mu-msg-fields.h			\
 	mu-msg-flags.c			\
 	mu-msg-flags.h			\
+	mu-msg-file.h			\
+	mu-msg-file.c			\
 	mu-msg-iter-priv.hh		\
 	mu-msg-iter.cc			\
 	mu-msg-iter.h			\
@@ -82,6 +84,8 @@ libmu_la_SOURCES=			\
 	mu-msg.c			\
 	mu-msg.h			\
 	mu-msg.h			\
+	mu-msg-file.c			\
+	mu-msg-file.h			\
 	mu-output-link.c		\
 	mu-output-link.h		\
 	mu-output-plain.c		\
