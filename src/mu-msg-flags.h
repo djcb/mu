@@ -128,8 +128,6 @@ char mu_msg_flag_char  (MuMsgFlags flag) G_GNUC_CONST;
 const char* mu_msg_flag_name (MuMsgFlags flag) G_GNUC_CONST;
 
 
-
-
 typedef void (*MuMsgFlagsForeachFunc)
 	(MuMsgFlags flag, gpointer user_data);
 
@@ -140,22 +138,6 @@ typedef void (*MuMsgFlagsForeachFunc)
  * @param user_data  user pointer passed to the callback
  */
 void mu_msg_flags_foreach (MuMsgFlagsForeachFunc func, gpointer user_data);
-
-
-
-/**
- * get the Maildir flags from a mailfile. The flags are as specified
- * in http://cr.yp.to/proto/maildir.html, plus MU_MSG_FLAG_NEW for
- * new messages, ie the ones that live in new/. The flags are
- * logically OR'ed. Note that the file does not have to exist; the
- * flags are based on the name only. 
- *
- * @param pathname of a mailfile; it does not have to refer to an
- * actual message
- * 
- * @return the flags, or MU_MSG_FILE_FLAG_UNKNOWN in case of error
- */
-MuMsgFlags mu_msg_flags_from_file (const char* pathname) G_GNUC_PURE;
 
 
 /**
