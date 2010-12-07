@@ -41,6 +41,7 @@
    - [X] normalize error output
 
 ** release 0.8 [100%]
+
    - [X] remove gio dependency
    - [X] fix macos/wordexp bug(?)
    - [X] fix rhel5 installation issue
