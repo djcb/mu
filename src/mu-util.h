@@ -181,16 +181,12 @@ gchar* mu_util_str_from_strv (const gchar **params)
  * log something in the log file; note, we use G_LOG_LEVEL_INFO
  * for such messages
  */
-#ifdef G_HAVE_GNUC_VARARGS
-#define MU_WRITE_LOG(format...)					     \
+#define MU_WRITE_LOG(...)					     \
 	G_STMT_START {						     \
 		g_log (G_LOG_DOMAIN,				     \
 		       G_LOG_LEVEL_INFO,			     \
-		       format);					     \
+		       __VA_ARGS__);					     \
 	} G_STMT_END
-#else
-#define MU_WRITE_LOG(x)
-#endif /*G_HAVE_GNUC_VARARGS*/
 
 G_END_DECLS
 
