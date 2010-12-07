@@ -175,7 +175,6 @@ else
 fi
 
 
-
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
@@ -184,6 +183,7 @@ toys/Makefile
 toys/mug/Makefile
 toys/mug/mug.desktop
 man/Makefile
+m4/Makefile
 contrib/Makefile
 ])
 AC_OUTPUT
