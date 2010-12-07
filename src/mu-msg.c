@@ -26,11 +26,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "mu-util.h"
-#include "mu-str.h"
-
 #include "mu-msg-priv.h" /* include before mu-msg.h */
 #include "mu-msg.h"
+
+#include "mu-util.h"
+#include "mu-str.h"
+#include "mu-msg-file.h"
+
 
 /* note, we do the gmime initialization here rather than in
  * mu-runtime, because this way we don't need mu-runtime for simple
@@ -395,7 +397,7 @@ mu_msg_get_flags (MuMsg *msg)
 	g_return_val_if_fail (msg, MU_MSG_FLAG_NONE);
 	
 	if (msg->_flags == MU_MSG_FLAG_NONE) {
-		msg->_flags = mu_msg_flags_from_file (mu_msg_get_path(msg));
+		msg->_flags = mu_msg_file_get_flags_from_path (mu_msg_get_path(msg));
 		msg->_flags |= get_content_flags (msg);
 	}
 	
