@@ -14,4 +14,12 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-EXTRA_DIST = $(wildcard *.m4)
+include $(top_srcdir)/gtest.mk
+
+EXTRA_DIST =  		\
+	libtool.m4	\
+	lt~obsolete.m4  \
+	ltoptions.m4  	\
+	ltsugar.m4  	\
+	ltversion.m4
+
