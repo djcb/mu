@@ -19,17 +19,11 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
+# libtoolize wants to put some stuff in here
+AC_CONFIG_MACRO_DIR([m4])
+
 # silent build
 AM_SILENT_RULES([yes])
-
-# we set the set the version of the Xapian database layout here; it
-# will become part of the db name, so we can automatically recreate the
-# database when we incompatible have changes.
-#
-# note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
-# versioning, as we hopefully don't have updates for each version;
-# also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], [Schema version of the database])
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
 
@@ -37,7 +31,9 @@ AS_IF([test x$prefix = xNONE],[
    prefix=/usr/local])
 AC_SUBST(prefix)
 
+
 AC_PROG_CC
+AC_PROG_CC_STDC
 AC_PROG_CXX
 AC_HEADER_STDC
 
@@ -127,6 +123,14 @@ AS_IF([test "x$XAPIAN" = "xno"],[
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
+# we set the set the version of the Xapian database layout here; it
+# will become part of the db name, so we can automatically recreate the
+# database when we incompatible have changes.
+#
+# note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
+# versioning, as we hopefully don't have updates for each version;
+# also, this has nothing to do with Xapian's software version
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], [Schema version of the database])
 
 
 # we test for gtk, which we need if we want to build 'mug'; for

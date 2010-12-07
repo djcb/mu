@@ -18,6 +18,8 @@ include $(top_srcdir)/gtest.mk
 
 SUBDIRS=man src contrib toys
 
+ACLOCAL_AMFLAGS=-I m4
+
 # so we can say 'make test'
 check: test cleanupnote
 
