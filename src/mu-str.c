@@ -299,6 +299,7 @@ mu_str_date_parse_hdwmy (const char* str)
 }
 
 
+
 char*
 mu_str_ascii_xapian_escape_in_place (char *query)
 {
@@ -334,3 +335,10 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 	return query;
 }
 
+char*
+mu_str_ascii_xapian_escape (const char *query)
+{
+	g_return_val_if_fail (query, NULL);
+
+	return mu_str_ascii_xapian_escape_in_place (g_strdup(query));
+}

@@ -441,15 +441,12 @@ each_contact_info (MuMsgContact *contact, MsgDoc *data)
 	}
 
 	/* don't normalize e-mail address, but do lowercase it */
-	if (contact->address && strlen (contact->address)) {
-		char *lower = g_utf8_strdown (contact->address, -1);
-
-		g_strdelimit (lower, "@.", '_'); /* FIXME */
-
+	if (contact->address && contact->address[0] != '\0') {
+		char *escaped =
+			mu_str_ascii_xapian_escape (contact->address);
 		data->_doc->add_term
-			(std::string (*pfxp + lower, 0,
-				      MU_STORE_MAX_TERM_LENGTH));
-		g_free (lower);
+			(std::string (*pfxp + escaped, 0, MU_STORE_MAX_TERM_LENGTH));
+		g_free (escaped);
 	}
 }
 
@@ -618,5 +615,3 @@ mu_store_foreach (MuStore *self,
 
 	return MU_OK;
 }
-
-

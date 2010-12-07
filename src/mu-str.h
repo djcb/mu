@@ -150,6 +150,7 @@ char* mu_str_normalize (const char *str, gboolean downcase)
  * optionally, downcase it. this happen by changing the string; if
  * that is not desired, use mu_str_normalize. Works for accented chars
  * in Unicode Blocks 'Latin-1 Supplement' and 'Latin Extended-A'
+ *
  * 
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
@@ -165,7 +166,7 @@ char* mu_str_normalize_in_place (char *str, gboolean downcase);
  * replace ':' with '_', if it's not following a xapian-prefix (such
  * as 'subject:', 't:' etc, as defined in mu-msg-fields.[ch]).
  * changing is done in-place (by changing the argument string). in
- * any, case, the string will be downcased.
+ * any case, the string will be downcased.
  *
  * works for ascii strings, like e-mail addresses and message-id.
  * 
@@ -174,6 +175,20 @@ char* mu_str_normalize_in_place (char *str, gboolean downcase);
  * @return the escaped string or NULL in case of error
  */
 char* mu_str_ascii_xapian_escape_in_place (char *query);
+
+/**
+ * escape the string for use with xapian matching. in practice, if the
+ * string contains an '@', replace '@', single-'.' with '_'. Also,
+ * replace ':' with '_', if it's not following a xapian-prefix (such
+ * as 'subject:', 't:' etc, as defined in mu-msg-fields.[ch]).
+ *
+ * works for ascii strings, like e-mail addresses and message-id.
+ * 
+ * @param query a query string
+ * 
+ * @return the escaped string (free with g_free) or NULL in case of error
+ */
+char* mu_str_ascii_xapian_escape (const char *query);
 
 /**
  * 
