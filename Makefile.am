@@ -16,7 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=man src contrib toys
+SUBDIRS=m4 man src contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 
