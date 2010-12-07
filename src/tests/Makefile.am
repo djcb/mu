@@ -72,9 +72,13 @@ TEST_PROGS += test-mu-store
 test_mu_store_SOURCES= test-mu-store.c dummy.cc
 test_mu_store_LDADD= libtestmucommon.la
 
+TEST_PROGS += test-mu-msg-file
+test_mu_msg_file_SOURCES= test-mu-msg-file.c
+test_mu_msg_file_LDADD=  libtestmucommon.la
 
-libtestmucommon_la_SOURCES=		\
-	test-mu-common.c		\
+
+libtestmucommon_la_SOURCES=				\
+	test-mu-common.c				\
 	test-mu-common.h
 libtestmucommon_la_LIBADD= ../libmu.la
 
