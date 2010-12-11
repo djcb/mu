@@ -109,7 +109,7 @@ mu_msg_file_get_flags_from_path (const char *path)
 				/* only support the "2," format */
 				if (cursor && cursor[0] == '2' && cursor[1] == ',') {
 						cursor += 2;	/* jump past 2, */
-						for (; *cursor; ++cursor)
+						for (; *cursor; ++cursor) {
 								switch (*cursor) {
 								case 'P':
 										flags |= MU_MSG_FLAG_PASSED;
@@ -130,6 +130,7 @@ mu_msg_file_get_flags_from_path (const char *path)
 										flags |= MU_MSG_FLAG_FLAGGED;
 										break;
 								}
+						}
 				}
 		}
 		g_free(info);
@@ -285,6 +286,3 @@ mu_msg_file_get_path_from_flags (const char *oldpath, MuMsgFlags newflags)
 		
 		return newpath;
 }
-
-
-		

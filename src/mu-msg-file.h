@@ -39,7 +39,6 @@ G_BEGIN_DECLS
  */
 MuMsgFlags mu_msg_file_get_flags_from_path (const char* pathname);
 
-
 /**
  * get the new pathname for a message, based on the old path and the
  * new flags. Note that setting/removing the MU_MSG_FLAG_NEW will
@@ -56,6 +55,7 @@ MuMsgFlags mu_msg_file_get_flags_from_path (const char* pathname);
  * error.
  */
 char* mu_msg_file_get_path_from_flags (const char *oldpath, MuMsgFlags newflags);
+
 
 G_END_DECLS
 
