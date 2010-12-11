@@ -27,7 +27,6 @@
 #include <unistd.h>
 #include <mu-msg.h>
 
-
 #include "mu-config.h"
 #include "mu-log.h"
 #include "mu-util.h"
@@ -36,44 +35,18 @@
 #define MU_BOOKMARKS_FILENAME "bookmarks"
 
 struct _MuRuntimeData {
-	gchar *_muhome;
-	gchar *_xapian_dir;
-	gchar *_bookmarks_file;
-	MuConfigOptions *_config;
+	gchar			*_muhome;
+	gchar			*_xapian_dir;
+	gchar			*_bookmarks_file;
+	MuConfigOptions		*_config;
 };
-typedef struct _MuRuntimeData MuRuntimeData;
+typedef struct _MuRuntimeData	 MuRuntimeData;
 
 /* static, global data for this singleton */
-static gboolean _initialized	   = FALSE;
-static MuRuntimeData *_data = NULL;
+static gboolean		 _initialized = FALSE;
+static MuRuntimeData	*_data	      = NULL;
 
 static void runtime_free (void);
-
-static gboolean
-init_system (void)
-{
-	/* without setlocale, non-ascii cmdline params (like search
-	 * terms) won't work */
-	setlocale (LC_ALL, "");
-
-	/* init the random number generator; this is not really *that*
-	 * random, but good enough for our humble needs... */
-	srandom ((unsigned)(getpid()*time(NULL)));
-	
-	/* on FreeBSD, it seems g_slice_new and friends lead to
-	 * segfaults. So we shut if off */
-#ifdef 	__FreeBSD__
-	if (!g_setenv ("G_SLICE", "always-malloc", TRUE)) {
-		g_critical ("cannot set G_SLICE");
-		return FALSE;
-	}
-#endif /*__FreeBSD__*/
-
-	g_type_init ();
-
-	return TRUE;
-}
-
 
 
 gboolean
@@ -83,7 +56,7 @@ mu_runtime_init (const char* muhome_arg)
 
 	g_return_val_if_fail (!_initialized, FALSE);
 
-	if (!init_system())
+	if (!mu_util_init_system())
 		return FALSE;
 	
 	if (muhome_arg)
@@ -121,7 +94,7 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 {
 	g_return_val_if_fail (!_initialized, FALSE);
 
-	if (!init_system())
+	if (!mu_util_init_system())
 		return FALSE;
 
 	_data	       = g_new0 (MuRuntimeData, 1);	
@@ -181,8 +154,6 @@ g_return_val_if_fail (_initialized, NULL);
 
 	return _data->_muhome;
 }
-
-
 
 const char*
 mu_runtime_xapian_dir (void)
