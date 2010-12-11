@@ -21,12 +21,14 @@
 #define __MU_UTIL_H__
 
 #include <glib.h>
+#include <dirent.h>
 
 G_BEGIN_DECLS
 
 /**
  * do system-specific initialization. should be called before anything
- * else. Initializes the locale and Gtype
+ * else. Initializes the locale and Gtype. Note: this function is
+ * called by mu_runtime_init.
  * 
  * @return TRUE if is succeeds, FALSE otherwise
  */
@@ -121,12 +123,50 @@ int mu_util_create_writeable_fd (const char* filename, const char* dir,
 gchar* mu_util_str_from_strv (const gchar **params)
         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
+/*
+ * for OSs with out support for direntry->d_type, like Solaris
+ */
+#ifndef DT_UNKNOWN
+enum {
+	DT_UNKNOWN = 0,
+# define DT_UNKNOWN     DT_UNKNOWN
+	DT_FIFO = 1,
+# define DT_FIFO        DT_FIFO
+	DT_CHR = 2,
+# define DT_CHR         DT_CHR
+	DT_DIR = 4,
+# define DT_DIR         DT_DIR
+	DT_BLK = 6,
+# define DT_BLK         DT_BLK
+	DT_REG = 8,
+# define DT_REG         DT_REG
+	DT_LNK = 10,
+# define DT_LNK         DT_LNK
+	DT_SOCK = 12,
+# define DT_SOCK        DT_SOCK
+	DT_WHT = 14
+# define DT_WHT         DT_WHT
+};
+#endif /*DT_UNKNOWN*/
+
+
+/**
+ * get the d_type (as in direntry->d_type) for the file at path, using
+ * lstat(3)
+ * 
+ * @param path full path
+ * 
+ * @return DT_REG, DT_DIR, DT_LNK, or DT_UNKNOWN (other values are not
+ * supported currently )
+ */
+unsigned char mu_util_get_dtype_with_lstat (const char *path);
+
+
 /**
  * 
  * don't repeat these catch blocks everywhere...
  * 
  */
-
 #define MU_XAPIAN_CATCH_BLOCK						\
 	catch (const Xapian::Error &xerr) {				\
                 g_critical ("%s: caught xapian exception '%s'",		\

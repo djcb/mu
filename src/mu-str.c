@@ -27,6 +27,17 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
+
+/* hopefully, this should get us a sane PATH_MAX */
+#include <limits.h>
+/* not all systems provide PATH_MAX in limits.h */
+#ifndef PATH_MAX
+#include <sys/param.h>
+#ifndef PATH_MAX
+#define PATH_MAX MAXPATHLEN
+#endif /*!PATH_MAX*/
+#endif /*PATH_MAX*/
 
 #include "mu-str.h"
 #include "mu-msg-flags.h"
@@ -341,4 +352,19 @@ mu_str_ascii_xapian_escape (const char *query)
 	g_return_val_if_fail (query, NULL);
 
 	return mu_str_ascii_xapian_escape_in_place (g_strdup(query));
+}
+
+
+/* note: this function is *not* re-entrant, it returns a static buffer */
+const char*
+mu_str_fullpath_s (const char* path, const char* name)
+{
+	static char buf[PATH_MAX + 1];
+	
+	g_return_val_if_fail (path, NULL);
+	
+	snprintf (buf, sizeof(buf), "%s%c%s", path, G_DIR_SEPARATOR,
+		  name ? name : "");
+	
+	return buf;
 }

@@ -209,6 +209,17 @@ char* mu_str_ascii_xapian_escape (const char *query);
 time_t mu_str_date_parse_hdwmy (const char* str);
 
 
+/**
+ * create a full path from a path + a filename. function is _not_
+ * reentrant.
+ * 
+ * @param path a path (!= NULL)
+ * @param name a name (may be NULL)
+ * 
+ * @return the path as a statically allocated buffer. don't free.
+ */
+const char* mu_str_fullpath_s (const char* path, const char* name);
+
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/

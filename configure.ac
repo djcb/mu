@@ -25,6 +25,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # silent build
 AM_SILENT_RULES([yes])
 
+
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
 
 AS_IF([test x$prefix = xNONE],[
@@ -38,24 +39,33 @@ AC_PROG_CXX
 AC_HEADER_STDC
 
 
-# currently, we don't support systems without d_type in their struct
-# dirent (Solaris 10); but we do support FSs for which d_type is always
-# DT_UNKNOWN (Like ReiserFS, XFS on Linux)
-#
-# note, we could work around this if there are many people for which
-# this breaks
-AC_STRUCT_DIRENT_D_TYPE
-AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],[
-   AC_MSG_ERROR([
-   *** We need the d_type member in struct dirent, but it seems
-   *** your system does not have it])
-   ])
-# support for d_ino in struct dirent is optional     
-AC_STRUCT_DIRENT_D_INO
+# we need some special tricks for filesystems that don't have d_type;
+# e.g. Solaris. See mu-maildir.c. Explicitly disabling it is for
+# testing purposes only
+AC_ARG_ENABLE([dirent-d-type],
+	AC_HELP_STRING([--disable-dirent-d-type],
+			[Don't use dirent->d_type, even if you have it]),
+	[], [AC_STRUCT_DIRENT_D_TYPE]
+)
+AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],
+	    [use_dirent_d_type="no"], [use_dirent_d_type="yes"])
+
+
+# support for d_ino (inode) in struct dirent is optional; if it's
+# available we can sort direntries by inode and access them in that
+# order; this is much faster on some file systems (such as extfs3).
+# Explicity disabling it is for testing purposes only.
+AC_ARG_ENABLE([dirent-d-ino],
+	AC_HELP_STRING([--disable-dirent-d-ino],
+			[Don't use dirent->d_ino, even if you have it]),
+	[], [AC_STRUCT_DIRENT_D_INO]
+)
+AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
+	    [use_dirent_d_ino="no"], [use_dirent_d_ino="yes"])
+
 
 # we need these
-AC_CHECK_FUNCS([memset realpath setlocale strerror])
-
+AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror])
 
 # require pkg-config
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
@@ -170,7 +180,7 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 
 if test "x$PMCCABE" = "xno"; then
    have_pmccabe="no"
-else
+lselse
    have_pmccabe="yes"
 fi
 
@@ -198,10 +208,15 @@ if test -e ~/.mu/xapian-0.6; then
    echo "remove the old <muhome>/xapian-0.6 directory to save some disk space"
 fi
 
+
 echo "Xapian version                       : $xapian_version"
 echo "Build unit tests (glib >= 2.16)      : $have_gtest"
 echo "Build 'mug' (requires GTK+)          : $have_gtk"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
+echo
+echo "Use direntry->d_ino                  : $use_dirent_d_ino" 
+echo "Use direntry->d_type                 : $use_dirent_d_type" 
+
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."

@@ -27,7 +27,7 @@
 #include <wordexp.h> /* for shell-style globbing */
 #include <stdlib.h>
 
-/* hopefully, the should get us a sane PATH_MAX */
+/* hopefully, this should get us a sane PATH_MAX */
 #include <limits.h>
 /* not all systems provide PATH_MAX in limits.h */
 #ifndef PATH_MAX
@@ -272,6 +272,30 @@ mu_util_create_writeable_fd (const char* filename, const char* dir,
 
 	g_free (fullpath);	
 	return fd;
+}
+
+unsigned char
+mu_util_get_dtype_with_lstat (const char *path)
+{
+	struct stat statbuf;
+	
+	g_return_val_if_fail (path, DT_UNKNOWN);
+	
+	if (lstat (path, &statbuf) != 0) {
+		g_warning ("stat failed on %s: %s",
+			   path, strerror(errno));
+		return DT_UNKNOWN;
+	}
+	
+	/* we only care about dirs, regular files and links */
+	if (S_ISREG (statbuf.st_mode))
+		return DT_REG;
+	else if (S_ISDIR (statbuf.st_mode))
+		return DT_DIR;
+	else if (S_ISLNK (statbuf.st_mode))
+		return DT_LNK;
+
+	return DT_UNKNOWN;
 }
 
 
