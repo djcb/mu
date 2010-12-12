@@ -144,6 +144,8 @@ get_flags_str_s (MuMsgFlags flags)
 {
 		int i;
 		static char flagstr[7]; 
+
+		i = 0;
 		
 		/* now, determine the flags to use */
 		if (flags & MU_MSG_FLAG_DRAFT)
