@@ -33,32 +33,32 @@
 static void
 test_mu_util_dir_expand_00 (void)
 {
-	gchar *got, *expected;
+		gchar *got, *expected;
 	
-	got = mu_util_dir_expand ("~/IProbablyDoNotExist");
-	expected = g_strdup_printf ("%s%cIProbablyDoNotExist",
-								getenv("HOME"), G_DIR_SEPARATOR);
+		got = mu_util_dir_expand ("~/IProbablyDoNotExist");
+		expected = g_strdup_printf ("%s%cIProbablyDoNotExist",
+									getenv("HOME"), G_DIR_SEPARATOR);
 	
-	g_assert_cmpstr (got,==,expected);
+		g_assert_cmpstr (got,==,expected);
 	
-	g_free (got);
-	g_free (expected);
+		g_free (got);
+		g_free (expected);
 	
 }
 
 static void
 test_mu_util_dir_expand_01 (void)
 {
-	gchar *got, *expected;
+		gchar *got, *expected;
 	
-	got = mu_util_dir_expand ("~/Desktop");
-	expected = g_strdup_printf ("%s%cDesktop",
-								getenv("HOME"), G_DIR_SEPARATOR);
+		got = mu_util_dir_expand ("~/Desktop");
+		expected = g_strdup_printf ("%s%cDesktop",
+									getenv("HOME"), G_DIR_SEPARATOR);
 	
-	g_assert_cmpstr (got,==,expected);
+		g_assert_cmpstr (got,==,expected);
 	
-	g_free (got);
-	g_free (expected);
+		g_free (got);
+		g_free (expected);
 	
 }
 
@@ -66,30 +66,30 @@ test_mu_util_dir_expand_01 (void)
 static void
 test_mu_util_dir_expand_02 (void)
 {
-	gchar *got, *expected, *tmp;
+		gchar *got, *expected, *tmp;
 	
-	tmp = g_strdup_printf ("~%s/Desktop", getenv("LOGNAME"));
-	got = mu_util_dir_expand (tmp);
-	expected = g_strdup_printf ("%s%cDesktop",
-				    getenv("HOME"), G_DIR_SEPARATOR);
+		tmp = g_strdup_printf ("~%s/Desktop", getenv("LOGNAME"));
+		got = mu_util_dir_expand (tmp);
+		expected = g_strdup_printf ("%s%cDesktop",
+									getenv("HOME"), G_DIR_SEPARATOR);
 	
-	g_assert_cmpstr (got,==,expected);
+		g_assert_cmpstr (got,==,expected);
 
-	g_free (tmp);
-	g_free (got);
-	g_free (expected);
+		g_free (tmp);
+		g_free (got);
+		g_free (expected);
 }
 
 
 static void
 test_mu_util_dir_expand_03 (void)
 {
-	gchar *got;
+		gchar *got;
 	
-	got = mu_util_dir_expand (".");	
-	g_assert_cmpstr (got,==,ABS_CURDIR);
+		got = mu_util_dir_expand (".");	
+		g_assert_cmpstr (got,==,ABS_CURDIR);
 
-	g_free (got);
+		g_free (got);
 }
 
 
@@ -98,118 +98,131 @@ test_mu_util_dir_expand_03 (void)
 static void
 test_mu_util_guess_maildir_01 (void)
 {
-	char *got;
-	const char *expected;
+		char *got;
+		const char *expected;
 
-	/* skip the test if there's no /tmp */
-	if (access ("/tmp", F_OK))
-		return;
+		/* skip the test if there's no /tmp */
+		if (access ("/tmp", F_OK))
+				return;
 	
-	g_setenv ("MAILDIR", "/tmp", TRUE);
+		g_setenv ("MAILDIR", "/tmp", TRUE);
 
-	got = mu_util_guess_maildir ();
-	expected = "/tmp";
+		got = mu_util_guess_maildir ();
+		expected = "/tmp";
 
-	g_assert_cmpstr (got,==,expected);
-	g_free (got);
+		g_assert_cmpstr (got,==,expected);
+		g_free (got);
 }
 
 
 static void
 test_mu_util_guess_maildir_02 (void)
 {
-	char *got, *mdir;
+		char *got, *mdir;
 	
-	g_unsetenv ("MAILDIR");
+		g_unsetenv ("MAILDIR");
 
- 	mdir = g_strdup_printf ("%s%cMaildir",
-				getenv("HOME"), G_DIR_SEPARATOR);
-	got = mu_util_guess_maildir ();
+		mdir = g_strdup_printf ("%s%cMaildir",
+								getenv("HOME"), G_DIR_SEPARATOR);
+		got = mu_util_guess_maildir ();
 
-	if (access (mdir, F_OK) == 0)
-		g_assert_cmpstr (got, ==, mdir);
-	else
-		g_assert_cmpstr (got, == , NULL);
+		if (access (mdir, F_OK) == 0)
+				g_assert_cmpstr (got, ==, mdir);
+		else
+				g_assert_cmpstr (got, == , NULL);
 	
-	g_free (got);
-	g_free (mdir);
+		g_free (got);
+		g_free (mdir);
 }
 
 
 static void
 test_mu_util_check_dir_01 (void)
 {
-	if (g_access ("/usr/bin", F_OK) == 0) {
-		g_assert_cmpuint (
-			mu_util_check_dir ("/usr/bin", TRUE, FALSE) == TRUE,
-			==,
-			g_access ("/usr/bin", R_OK) == 0);
-	}	
+		if (g_access ("/usr/bin", F_OK) == 0) {
+				g_assert_cmpuint (
+						mu_util_check_dir ("/usr/bin", TRUE, FALSE) == TRUE,
+						==,
+						g_access ("/usr/bin", R_OK) == 0);
+		}	
 }
 
 
 static void
 test_mu_util_check_dir_02 (void)
 {
-	if (g_access ("/tmp", F_OK) == 0) {
-		g_assert_cmpuint (
-			mu_util_check_dir ("/tmp", FALSE, TRUE) == TRUE,
-			==,
-			g_access ("/tmp", W_OK) == 0);
-	}	
+		if (g_access ("/tmp", F_OK) == 0) {
+				g_assert_cmpuint (
+						mu_util_check_dir ("/tmp", FALSE, TRUE) == TRUE,
+						==,
+						g_access ("/tmp", W_OK) == 0);
+		}	
 }
 
 
 static void
 test_mu_util_check_dir_03 (void)
 {
-	if (g_access (".", F_OK) == 0) {
-		g_assert_cmpuint (
-			mu_util_check_dir (".", TRUE, TRUE) == TRUE,
-			==,
-			g_access (".", W_OK | R_OK) == 0);
-	}	
+		if (g_access (".", F_OK) == 0) {
+				g_assert_cmpuint (
+						mu_util_check_dir (".", TRUE, TRUE) == TRUE,
+						==,
+						g_access (".", W_OK | R_OK) == 0);
+		}	
 }
 
 
 static void
 test_mu_util_check_dir_04 (void)
 {
-	/* not a dir, so it must be false */
-	g_assert_cmpuint (
-		mu_util_check_dir ("test-util.c", TRUE, TRUE),
-		==,
-		FALSE);	
+		/* not a dir, so it must be false */
+		g_assert_cmpuint (
+				mu_util_check_dir ("test-util.c", TRUE, TRUE),
+				==,
+				FALSE);	
 }
 
 
 static void
 test_mu_util_str_from_strv_01 (void)
 {	
-	const gchar *strv[] = { "aap", "noot", "mies", NULL };
-	gchar *str = mu_util_str_from_strv (strv);
-	g_assert_cmpstr (str, ==, "aap noot mies");
-	g_free (str);
+		const gchar *strv[] = { "aap", "noot", "mies", NULL };
+		gchar *str = mu_util_str_from_strv (strv);
+		g_assert_cmpstr (str, ==, "aap noot mies");
+		g_free (str);
 
 }
 
 static void
 test_mu_util_str_from_strv_02 (void)
 {	
-	const gchar *strv[] = { "test", NULL };
-	gchar *str = mu_util_str_from_strv (strv);
-	g_assert_cmpstr (str, ==, "test");
-	g_free (str);
+		const gchar *strv[] = { "test", NULL };
+		gchar *str = mu_util_str_from_strv (strv);
+		g_assert_cmpstr (str, ==, "test");
+		g_free (str);
 
 }
 
 static void
 test_mu_util_str_from_strv_03 (void)
 {	
-	const gchar *strv[] = { NULL };
-	gchar *str = mu_util_str_from_strv (strv);
-	g_assert_cmpstr (str, ==, "");
-	g_free (str);
+		const gchar *strv[] = { NULL };
+		gchar *str = mu_util_str_from_strv (strv);
+		g_assert_cmpstr (str, ==, "");
+		g_free (str);
+}
+
+
+static void
+test_mu_util_get_dtype_with_lstat (void)
+{
+		g_assert_cmpuint (
+				mu_util_get_dtype_with_lstat (MU_TESTMAILDIR), ==, DT_DIR);
+		g_assert_cmpuint (
+				mu_util_get_dtype_with_lstat (MU_TESTMAILDIR2), ==, DT_DIR);
+		g_assert_cmpuint (
+				mu_util_get_dtype_with_lstat (MU_TESTMAILDIR2 "Foo/cur/mail4"),
+				==, DT_REG);
 }
 
 
@@ -217,38 +230,41 @@ test_mu_util_str_from_strv_03 (void)
 int
 main (int argc, char *argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+		g_test_init (&argc, &argv, NULL);
 
-	/* mu_util_dir_expand */
-	g_test_add_func ("/mu-util/mu-util-dir-expand-00", test_mu_util_dir_expand_00);
-	g_test_add_func ("/mu-util/mu-util-dir-expand-01", test_mu_util_dir_expand_01);
-	g_test_add_func ("/mu-util/mu-util-dir-expand-02", test_mu_util_dir_expand_02);
-	g_test_add_func ("/mu-util/mu-util-dir-expand-03", test_mu_util_dir_expand_03);
+		/* mu_util_dir_expand */
+		g_test_add_func ("/mu-util/mu-util-dir-expand-00", test_mu_util_dir_expand_00);
+		g_test_add_func ("/mu-util/mu-util-dir-expand-01", test_mu_util_dir_expand_01);
+		g_test_add_func ("/mu-util/mu-util-dir-expand-02", test_mu_util_dir_expand_02);
+		g_test_add_func ("/mu-util/mu-util-dir-expand-03", test_mu_util_dir_expand_03);
 	
-	/* mu_util_guess_maildir */
-	g_test_add_func ("/mu-util/mu-util-guess-maildir-01",
-			 test_mu_util_guess_maildir_01);
-	g_test_add_func ("/mu-util/mu-util-guess-maildir-02",
-			 test_mu_util_guess_maildir_02);
+		/* mu_util_guess_maildir */
+		g_test_add_func ("/mu-util/mu-util-guess-maildir-01",
+						 test_mu_util_guess_maildir_01);
+		g_test_add_func ("/mu-util/mu-util-guess-maildir-02",
+						 test_mu_util_guess_maildir_02);
 
-	/* mu_util_check_dir */
-	g_test_add_func ("/mu-util/mu-util-check-dir-01", test_mu_util_check_dir_01);
-	g_test_add_func ("/mu-util/mu-util-check-dir-02", test_mu_util_check_dir_02);
-	g_test_add_func ("/mu-util/mu-util-check-dir-03", test_mu_util_check_dir_03);
-	g_test_add_func ("/mu-util/mu-util-check-dir-04", test_mu_util_check_dir_04);
+		/* mu_util_check_dir */
+		g_test_add_func ("/mu-util/mu-util-check-dir-01", test_mu_util_check_dir_01);
+		g_test_add_func ("/mu-util/mu-util-check-dir-02", test_mu_util_check_dir_02);
+		g_test_add_func ("/mu-util/mu-util-check-dir-03", test_mu_util_check_dir_03);
+		g_test_add_func ("/mu-util/mu-util-check-dir-04", test_mu_util_check_dir_04);
 
-	/* test_mu_util_str_from_strv */
-	g_test_add_func ("/mu-util/mu-util-str-from-strv-01",
-			 test_mu_util_str_from_strv_01);
-	g_test_add_func ("/mu-util/mu-util-str-from-strv-02",
-			 test_mu_util_str_from_strv_02);
-	g_test_add_func ("/mu-util/mu-util-str-from-strv-03",
-			 test_mu_util_str_from_strv_03);
-	
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_DEBUG|
-			   G_LOG_LEVEL_MESSAGE|
-			   G_LOG_LEVEL_INFO, (GLogFunc)black_hole, NULL);
+		/* test_mu_util_str_from_strv */
+		g_test_add_func ("/mu-util/mu-util-str-from-strv-01",
+						 test_mu_util_str_from_strv_01);
+		g_test_add_func ("/mu-util/mu-util-str-from-strv-02",
+						 test_mu_util_str_from_strv_02);
+		g_test_add_func ("/mu-util/mu-util-str-from-strv-03",
+						 test_mu_util_str_from_strv_03);
 
-	return g_test_run ();
+		g_test_add_func ("/mu-util/mu-util-get-dtype-with-lstat",
+						 test_mu_util_get_dtype_with_lstat);
+		
+		g_log_set_handler (NULL,
+						   G_LOG_LEVEL_DEBUG|
+						   G_LOG_LEVEL_MESSAGE|
+						   G_LOG_LEVEL_INFO, (GLogFunc)black_hole, NULL);
+
+		return g_test_run ();
 }
