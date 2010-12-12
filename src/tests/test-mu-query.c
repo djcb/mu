@@ -31,8 +31,6 @@
 #include "test-mu-common.h"
 #include "src/mu-query.h"
 
-
-
 static gchar*
 fill_database (void)
 {

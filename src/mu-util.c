@@ -282,8 +282,7 @@ mu_util_get_dtype_with_lstat (const char *path)
 	g_return_val_if_fail (path, DT_UNKNOWN);
 	
 	if (lstat (path, &statbuf) != 0) {
-		g_warning ("stat failed on %s: %s",
-			   path, strerror(errno));
+		g_warning ("stat failed on %s: %s", path, strerror(errno));
 		return DT_UNKNOWN;
 	}
 	
