@@ -26,8 +26,8 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 # autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
 
-# silent build; for all autotools setups, you can try to comment this
-# out.
+# silent build; for some older autotools setups, this does not work;
+# in that case, simply comment this out
 AM_SILENT_RULES([yes])
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
