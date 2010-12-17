@@ -14,17 +14,21 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
+# this is probably too strict
+# AC_PREREQ([2.6])
+
 AC_INIT([mu],[0.9.2],[http://code.google.com/p/mu0/issues/list])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
-# libtoolize wants to put some stuff in here
+# libtoolize wants to put some stuff in here; if you have an old
+# autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
 
-# silent build
+# silent build; for all autotools setups, you can try to comment this
+# out.
 AM_SILENT_RULES([yes])
-
 
 LT_INIT # don't use AC_PROG_LIBTOOL anymore
 
@@ -32,12 +36,10 @@ AS_IF([test x$prefix = xNONE],[
    prefix=/usr/local])
 AC_SUBST(prefix)
 
-
 AC_PROG_CC
 AC_PROG_CC_STDC
 AC_PROG_CXX
 AC_HEADER_STDC
-
 
 # we need some special tricks for filesystems that don't have d_type;
 # e.g. Solaris. See mu-maildir.c. Explicitly disabling it is for
@@ -76,13 +78,12 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
    *** to the full path to pkg-config.])
 ])
 
-
 # glib2?
 PKG_CHECK_MODULES(GLIB, glib-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
-
-
+glib_version="`pkg-config --modversion glib-2.0`"
+			  	       
 # gtest was introduced in glib 2.16
 PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.16, [have_gtest=yes],[have_gtest=no])
 AM_CONDITIONAL(HAVE_GTEST, test "x$have_gtest" = "xyes")
@@ -106,9 +107,11 @@ AS_IF([test "x$have_gmime_24" = "xno"],[
       *** If you compiled it yourself, you should ensure that the pkgconfig
       *** installation dir (e.g., /usr/local/lib/pkgconfig) is in your
       *** PKG_CONFIG_PATH.
-      ])
-    ])
- ])
+      ])],[
+         gmime_version="`pkg-config --modversion gmime-2.6`"
+    ])],[
+      gmime_version="`pkg-config --modversion gmime-2.4`"
+   ])
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
  
@@ -158,32 +161,33 @@ AS_IF([test "x$with_gtk3" != "xno"],[
   PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
-  have_gtk=gtk3
+  gtk_version="`pkg-config --modversion gtk+-3.0`"
 ])
 
 AS_IF([test "x$have_gtk3" != "xyes"],[
   PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
-  have_gtk=gtk2
+  gtk_version="`pkg-config --modversion gtk+-2.0`"	
 ])
 AM_CONDITIONAL(HAVE_GTK, [test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"])
 
-
+if test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"; then
+   have_gtk="yes"
+else
+   have_gtk="no"
+fi
+   
 # check for pmccabe
 AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
 AS_IF([test "x$PMCCABE" = "xno"],[
+   have_pmccabe="no"	    
    AC_MSG_WARN([
    *** Developers: you don't seem to have the 'pmccabe' tool installed.
    *** Please install it if you want to run the automated code checks])
-])
-
-if test "x$PMCCABE" = "xno"; then
-   have_pmccabe="no"
-lselse
+],[
    have_pmccabe="yes"
-fi
-
+])
 
 AC_CONFIG_FILES([
 Makefile
@@ -210,13 +214,20 @@ fi
 
 
 echo "Xapian version                       : $xapian_version"
+echo "GLib version                         : $glib_version" 
+echo "GMime version                        : $gmime_version"
+if test "x$have_gtk" != "xno"; then
+echo "GTK+ version                         : $gtk_version"
+fi
+
+echo
 echo "Build unit tests (glib >= 2.16)      : $have_gtest"
 echo "Build 'mug' (requires GTK+)          : $have_gtk"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
-echo "Use direntry->d_ino                  : $use_dirent_d_ino" 
-echo "Use direntry->d_type                 : $use_dirent_d_type" 
 
+echo "Have direntry->d_ino                 : $use_dirent_d_ino" 
+echo "Have direntry->d_type                : $use_dirent_d_type" 
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."

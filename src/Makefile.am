@@ -29,7 +29,7 @@ INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter -Wno-variadic-macros 
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 bin_PROGRAMS=				\
 	mu

@@ -60,7 +60,6 @@ gitcheck:
 	./configure ; \
 	make distcheck
 
-
 EXTRA_DIST=		\
 	TODO		\
 	HACKING		\
