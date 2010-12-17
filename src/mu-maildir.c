@@ -61,13 +61,13 @@ create_maildir (const char *path, mode_t mode, GError **err)
 	/* make sure it does not exist yet */
 	if (access (path, F_OK) == 0)
 		errno = EEXIST;
+
 	if (errno != ENOENT) {
-		g_warning ("%s", strerror (errno));
+		g_set_error (err, 0, MU_ERROR_FILE, "%s", strerror (errno));
 		return FALSE;
 	}
 	
 	for (i = 0; i != G_N_ELEMENTS(subdirs); ++i) {
-
 		const char *fullpath;
 		int rv;
 
