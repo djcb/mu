@@ -16,6 +16,8 @@
    - [ ] add version info to output of configure, mu.log
    - [ ] make 'make check' more useful for others
    - [ ] see whether the other (slower, more complete) str_normalize is worth it
+   - [ ] separate exit code for 'not found' vs other errors
+   - [ ] fix build for Solaris
 	 
 * Releases already done
 
