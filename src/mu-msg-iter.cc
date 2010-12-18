@@ -225,7 +225,8 @@ get_field_number (MuMsgIter *iter, MuMsgFieldId mfid)
 unsigned int
 mu_msg_iter_get_docid (MuMsgIter *iter)
 {
-	g_return_val_if_fail (!mu_msg_iter_is_done(iter), -1);	
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter),
+			      (unsigned int)-1);	
 	try {
 		return iter->_cursor.get_document().get_docid();
 

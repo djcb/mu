@@ -82,7 +82,7 @@ MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
  * 
  * @param iter a valid MuMsgIter iterator
  * 
- * @return the docid or 0 in case of error
+ * @return the docid or (unsigned int)-1 in case of error
  */
 unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 
