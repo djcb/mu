@@ -84,8 +84,9 @@ AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`pkg-config --modversion glib-2.0`"
 			  	       
-# gtest was introduced in glib 2.16
-PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.16, [have_gtest=yes],[have_gtest=no])
+# gtest was introduced in glib 2.16; but we're also using
+# g_test_log_set_fatal_handler, which was introduced in 2.22
+PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.22, [have_gtest=yes],[have_gtest=no])
 AM_CONDITIONAL(HAVE_GTEST, test "x$have_gtest" = "xyes")
 AM_CONDITIONAL(HAVE_GLIB216, test "x$have_gtest" = "xyes")
 AS_IF([test "x$have_gtest" = "xno"],[
@@ -221,7 +222,7 @@ echo "GTK+ version                         : $gtk_version"
 fi
 
 echo
-echo "Build unit tests (glib >= 2.16)      : $have_gtest"
+echo "Build unit tests (glib >= 2.22)      : $have_gtest"
 echo "Build 'mug' (requires GTK+)          : $have_gtk"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
