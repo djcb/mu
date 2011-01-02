@@ -14,9 +14,6 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-# this is probably too strict
-# AC_PREREQ([2.6])
-
 AC_INIT([mu],[0.9.2],[http://code.google.com/p/mu0/issues/list])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
@@ -26,11 +23,11 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 # autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
 
-# silent build; for some older autotools setups, this does not work;
-# in that case, simply comment this out
-AM_SILENT_RULES([yes])
+# silent build if we have a new enough automake
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-LT_INIT # don't use AC_PROG_LIBTOOL anymore
+# instead of AM_PROG_LIBTOOL
+LT_INIT([disable-shared])
 
 AS_IF([test x$prefix = xNONE],[
    prefix=/usr/local])
@@ -145,6 +142,9 @@ AC_SUBST(XAPIAN_LIBS)
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
 AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], [Schema version of the database])
+
+
+
 
 
 # we test for gtk, which we need if we want to build 'mug'; for
