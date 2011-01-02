@@ -32,8 +32,8 @@
 #include "mu-str.h"
 #include "mu-msg-flags.h"
 
-/* number of new messages after which we commit to the database */
-#define MU_STORE_TRX_SIZE 6666
+/* by default, use transactions of 30000 messages */
+#define MU_STORE_DEFAULT_TRX_SIZE 30000
 
 /* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
 #define MU_STORE_MAX_TERM_LENGTH 240
@@ -47,6 +47,7 @@ struct _MuStore {
 	bool   _in_transaction;
 	int    _processed;
 	size_t _trx_size;
+	guint  _batchsize;  /* batch size of a xapian transaction */ 
 };
 
 
@@ -115,7 +116,7 @@ check_version (MuStore *store)
 }
 
 MuStore*
-mu_store_new  (const char* xpath, GError **err)
+mu_store_new  (const char* xpath, guint batchsize, GError **err)
 {
 	MuStore *store (0);
 	
@@ -131,14 +132,15 @@ mu_store_new  (const char* xpath, GError **err)
 		}
 
 		/* keep count of processed docs */
-		store->_trx_size = MU_STORE_TRX_SIZE; 
 		store->_in_transaction = false;
-		store->_processed = 0;
+		store->_processed      = 0;
+		store->_trx_size       = batchsize ? batchsize : MU_STORE_DEFAULT_TRX_SIZE;
 		
 		add_synonyms (store);
 		
-		MU_WRITE_LOG ("%s: opened %s", __FUNCTION__, xpath);
-
+		MU_WRITE_LOG ("%s: opened %s (batch size: %u)",
+			      __FUNCTION__, xpath, store->_trx_size);
+		
 		return store;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err,MU_ERROR_XAPIAN);		

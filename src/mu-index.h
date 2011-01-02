@@ -51,7 +51,7 @@ typedef struct _MuIndexStats MuIndexStats;
  * 
  * @return a new MuIndex instance, or NULL in case of error
  */
-MuIndex* mu_index_new (const char* muhome, GError **err)
+MuIndex* mu_index_new (const char* muhome, guint batchsize, GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 

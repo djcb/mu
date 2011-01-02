@@ -41,14 +41,14 @@ struct _MuIndex {
 };
 
 MuIndex* 
-mu_index_new (const char *xpath, GError **err)
+mu_index_new (const char *xpath, guint xbatchsize, GError **err)
 {
 	MuIndex *index;
 
 	g_return_val_if_fail (xpath, NULL);
 	
 	index = g_new0 (MuIndex, 1);				
-	index->_xapian = mu_store_new (xpath, err);
+	index->_xapian = mu_store_new (xpath, xbatchsize, err);
 	
 	if (!index->_xapian) {
 		g_warning ("%s: failed to open xapian store (%s)",

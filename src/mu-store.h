@@ -36,12 +36,13 @@ typedef struct _MuStore MuStore;
  * create a new Xapian store, a place to store documents
  * 
  * @param path the path to the database
-  * @param err to receive error info or NULL. err->code can be found in
+ * @param batchsize size of batch before committing
+ * @param err to receive error info or NULL. err->code can be found in
  * mu-error.h
  * 
  * @return a new MuStore object, or NULL in case of error
  */
-MuStore*    mu_store_new     (const char *path, GError **err)
+MuStore*    mu_store_new     (const char *path, guint batchsize, GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 

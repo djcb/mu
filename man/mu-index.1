@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "November 2010" "User Manuals"
+.TH MU-INDEX 1 "January 2011" "User Manuals"
 
 .SH NAME 
 
@@ -10,11 +10,11 @@ mu index \- index e-mail messages stored in Maildirs
 
 .SH DESCRIPTION
 
-\fBmu index\fR is the \fBmu\fR sub-command for scanning the contents of
-Maildir directories and storing the results in a Xapian database which can
-then be searched using
+\fBmu index\fR is the \fBmu\fR command for scanning the contents of Maildir
+directories and storing the results in a Xapian database. The data can then be
+queried using
 .BR mu-find(1)
-\.
+\.	
 
 .B index
 understands Maildirs as defined by Daniel Bernstein for qmail(7). In addition,
@@ -34,17 +34,14 @@ with spam-messages.
 
 The first run of \fBmu index\fR may take a few minutes if you have a lot of
 mail (ten thousands of messages).  Fortunately, such a full scan needs to be
-done only once, after that it suffices to index the changes, which goes much
-faster. Also note that a substantial amount of the time goes to printing the
-progress information; if you turn that off (with \fB\-q\fR or
-\fB\-\-quiet\fR), it goes a lot faster. See the 'Note on performance' below
-for more information.
+done only once; after that it suffices to index the changes, which goes much
+faster. See the 'Note on performance' below for more information.
 
-The optional phase two of the indexing-process is the removal of messages from
-the database for which there is no longer a corresponding file in the
+The optional 'phase two' of the indexing-process is the removal of messages
+from the database for which there is no longer a corresponding file in the
 Maildir. If you do not want this, you can use \fB\-n\fR, \fB\-\-nocleanup\fR.
 
-When \fBmu index\fR catches on of the signals \fBSIGINT\fR, \fBSIGHUP\fR or
+When \fBmu index\fR catches one of the signals \fBSIGINT\fR, \fBSIGHUP\fR or
 \fBSIGTERM\fR (e.g,, when you press Ctrl-C during the indexing process), it
 tries to shutdown gracefully; it tries to save and commit data, and close the
 database etc. If it receives another signal (e.g,, when pressing Ctrl-C once
@@ -52,16 +49,14 @@ more), \fBmu index\fR will terminate immediately.
 
 .SH OPTIONS
 
-Note, some of the important options are described in the \fBmu(1)\fR man-page
-and not here, as they apply to multiple mu-commands.
+Note, some of the general options are described in the \fBmu(1)\fR man-page
+and not here, as they apply to multiple mu commands.
 
 .TP
 \fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
 starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
-\fBMAILDIR\fR environment variable is set to; if that is not set, it tries
-\fI~/Maildir\fR \. In either case, the path must be \fBabsolute\fR.
-
-Also please see the note on mixing sub-maildirs below.
+\fBMAILDIR\fR environment variable is set to; if it is not set, it tries
+\fI~/Maildir\fR. See the note on mixing sub-maildirs below.
 
 .TP
 \fB\-\-reindex\fR
@@ -83,22 +78,24 @@ messages (using \fB\-\-maildir\fR). For this reason, it is necessary to run
 format. \fBmu index\fR will issue a warning about this.
 
 .TP
-\fB\-\-autoupgrade\fR automatically use \fB\-y\fR, \fB\-\-empty\fR
+\fB\-\-autoupgrade\fR
+automatically use \fB\-y\fR, \fB\-\-empty\fR
 when \fBmu\fR notices that the database version is not up-to-date. This option
 is for use in cron scripts and the like, so they won't require any user
 interaction, even when mu introduces a new database version.
 
 .TP
+\fB\-\-xbatchsize\fR=\fI<batch size>\fR
+set the maximum number of messages to process in a single Xapian
+transaction. In practice, this option is only useful if you find that \fBmu\fR
+is running out of memory while indexing; in that case, you can set the batch
+size to (for example) 1000, which will reduce memory consumption, but also
+reduce performance.
 
 .B NOTE:
-It is not a good idea to run multiple instances of
-.B mu index
+It is generally not a good idea to run multiple instances of \fBmu index\fR
 concurrently. No data loss should occur, but one or more of the instances may
 experience errors due to database locks.
-
-Also note that, before indexing is completed, searches for messages may fail,
-even if they have already been indexed, as some of the esssential database
-information will only be written in batches during the indexing process.
 
 Furthermore, it is not recommended tot mix maildirs and sub-maildirs within
 the hierarchy in the same database; for example, it's better not to index both
@@ -179,6 +176,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR maildir(5)
-.BR mu(1)
-.BR mu-find(1)
+.BR maildir(5) mu(1) mu-find(1)

@@ -27,10 +27,28 @@
 
 G_BEGIN_DECLS
 
+enum _MuConfigCmd {
+	MU_CONFIG_CMD_INDEX,
+	MU_CONFIG_CMD_FIND,
+	MU_CONFIG_CMD_CLEANUP,
+	MU_CONFIG_CMD_MKDIR,
+	MU_CONFIG_CMD_VIEW,
+	MU_CONFIG_CMD_EXTRACT,
+	MU_CONFIG_CMD_NONE,
+	
+	MU_CONFIG_CMD_UNKNOWN
+};
+typedef enum _MuConfigCmd MuConfigCmd;
+
+
+
 /* struct with all configuration options for mu; it will be filled
  * from the config file, and/or command line arguments */
 
 struct _MuConfigOptions {
+
+	MuConfigCmd      cmd;           /* the command, or MU_CONFIG_CMD_NONE */
+	const char       *cmdstr;       /* cmd string, for user info */
 	
 	/* general options */
 	gboolean	 quiet;         /* don't give any output */
@@ -47,6 +65,9 @@ struct _MuConfigOptions {
 	gboolean         rebuild;       /* empty the database before indexing */
 	gboolean         autoupgrade;   /* automatically upgrade db
 					 * when needed */
+	int		 xbatchsize;    /* batchsize for xapian commits, or 0 for default
+					 * */
+	
 	/* options for querying */
 	gboolean         xquery;        /* give the Xapian query instead of
 					   search results */
