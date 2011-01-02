@@ -52,10 +52,10 @@ static void runtime_free (void);
 static gboolean
 mu_dir_is_readable_and_writable (const char* muhome)
 {
-	if (mu_util_check_dir(muhome, TRUE, TRUE))
+	if (mu_util_create_dir_maybe (muhome))
 		return TRUE;
-
-	g_warning ("'%s' is not a read/writable directory", muhome);
+	
+	g_warning ("cannot use '%s' as a mu homedir", muhome);
 	g_warning ("use --muhome= to set a different one");
 	
 	return FALSE;

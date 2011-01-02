@@ -1,4 +1,5 @@
-/* 
+/*
+**   
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -207,10 +208,10 @@ mu_util_create_dir_maybe (const gchar *path)
 	if (stat (path, &statbuf) == 0) {
 		if ((!S_ISDIR(statbuf.st_mode)) ||
 		    (access (path, W_OK|R_OK) != 0)) {
-			g_warning ("not a rw-directory: %s", path);
+			g_warning ("not a read-writable directory: %s", path);
 			return FALSE;
 		}
-	}		
+	}	
 		
 	if (g_mkdir_with_parents (path, 0700) != 0) {
 		g_warning ("failed to create %s: %s",
