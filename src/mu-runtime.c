@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+**
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -48,6 +49,19 @@ static MuRuntimeData	*_data	      = NULL;
 
 static void runtime_free (void);
 
+static gboolean
+mu_dir_is_readable_and_writable (const char* muhome)
+{
+	if (mu_util_check_dir(muhome, TRUE, TRUE))
+		return TRUE;
+
+	g_warning ("'%s' is not a read/writable directory", muhome);
+	g_warning ("use --muhome= to set a different one");
+	
+	return FALSE;
+}
+
+
 
 gboolean
 mu_runtime_init (const char* muhome_arg)
@@ -64,6 +78,11 @@ mu_runtime_init (const char* muhome_arg)
 	else
 		muhome = mu_util_guess_mu_homedir ();
 
+	if (!mu_dir_is_readable_and_writable (muhome)) {
+		runtime_free ();
+		return FALSE;
+	}
+	
 	if (!mu_log_init (muhome, TRUE, FALSE, FALSE)) {
 		g_free (muhome);
 		return FALSE;
@@ -101,6 +120,11 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 	_data->_config = g_new0 (MuConfigOptions, 1);
 	
 	if (!mu_config_init (_data->_config, pargc, pargv)) {
+		runtime_free ();
+		return FALSE;
+	 }
+	
+	if (!mu_dir_is_readable_and_writable (_data->_config->muhome)) {
 		runtime_free ();
 		return FALSE;
 	}
@@ -150,8 +174,8 @@ mu_runtime_uninit (void)
 const char*
 mu_runtime_mu_home_dir (void)
 {
-g_return_val_if_fail (_initialized, NULL);
-
+	g_return_val_if_fail (_initialized, NULL);
+  
 	return _data->_muhome;
 }
 

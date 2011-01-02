@@ -40,32 +40,6 @@ mu_cmd_equals (MuConfigOptions *config, const gchar *cmd)
 	return (strcmp (config->params[0], cmd) == 0);
 }
 
-
-static MuCmd 
-cmd_from_string (const char* cmd)
-{
-	int i;
-	typedef struct {
-		const gchar* _name;
-		MuCmd        _cmd;
-	} Cmd;
-
-	Cmd cmd_map[] = {
-		{ "index",   MU_CMD_INDEX },
-		{ "find",    MU_CMD_FIND },
-		{ "cleanup", MU_CMD_CLEANUP },
-		{ "mkdir",   MU_CMD_MKDIR },
-		{ "view",    MU_CMD_VIEW },
-		{ "extract", MU_CMD_EXTRACT }
-	};
-	
-	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
-		if (strcmp (cmd, cmd_map[i]._name) == 0)
-			return cmd_map[i]._cmd;
-
-	return MU_CMD_UNKNOWN;
-}
-
 static void
 show_usage (gboolean noerror)
 {
@@ -91,8 +65,6 @@ show_version (void)
 gboolean
 mu_cmd_execute (MuConfigOptions *opts)
 {
-	MuCmd cmd;
-	
 	if (opts->version) {
 		show_version ();
 		return TRUE;
@@ -104,19 +76,17 @@ mu_cmd_execute (MuConfigOptions *opts)
 		show_usage (TRUE);
 		return FALSE;
 	}
-	
-	cmd = cmd_from_string (opts->params[0]);
 
-	switch (cmd) {
+	switch (opts->cmd) {
 
-	case MU_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
-	case MU_CMD_EXTRACT:    return mu_cmd_extract (opts);
-	case MU_CMD_FIND:       return mu_cmd_find (opts);
-	case MU_CMD_INDEX:      return mu_cmd_index (opts);
-	case MU_CMD_MKDIR:      return mu_cmd_mkdir (opts);
-	case MU_CMD_VIEW:       return mu_cmd_view (opts);
+	case MU_CONFIG_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
+	case MU_CONFIG_CMD_EXTRACT:    return mu_cmd_extract (opts);
+	case MU_CONFIG_CMD_FIND:       return mu_cmd_find (opts);
+	case MU_CONFIG_CMD_INDEX:      return mu_cmd_index (opts);
+	case MU_CONFIG_CMD_MKDIR:      return mu_cmd_mkdir (opts);
+	case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
 		
-	case MU_CMD_UNKNOWN:
+	case MU_CONFIG_CMD_UNKNOWN:
 		show_usage (FALSE);
 		return FALSE;
 	default:

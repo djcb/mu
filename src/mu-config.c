@@ -81,6 +81,8 @@ set_group_index_defaults (MuConfigOptions * opts)
 				g_free(opts->maildir);
 				opts->maildir = exp;
 		}
+
+		opts->xbatchsize = 0;
 }
 
 static GOptionGroup*
@@ -99,6 +101,8 @@ config_options_group_index (MuConfigOptions * opts)
 				 NULL},
 				{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &opts->nocleanup,
 				 "don't clean up the database after indexing", NULL},
+				{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &opts->xbatchsize,
+				 "set a custom batchsize for committing to xapian or 0 for default", NULL},
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 
@@ -220,28 +224,88 @@ config_options_group_extract(MuConfigOptions *opts)
 		return og;
 }
 
+
+static MuConfigCmd 
+cmd_from_params (int *argcp, char ***argvp)
+{
+	int i;
+	const char *cmd;
+	typedef struct {
+		const gchar* _name;
+		MuConfigCmd   _cmd;
+	} Cmd;
+	
+	Cmd cmd_map[] = {
+		{ "index",   MU_CONFIG_CMD_INDEX },
+		{ "find",    MU_CONFIG_CMD_FIND },
+		{ "cleanup", MU_CONFIG_CMD_CLEANUP },
+		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
+		{ "view",    MU_CONFIG_CMD_VIEW },
+		{ "extract", MU_CONFIG_CMD_EXTRACT }
+	};
+
+	if (*argcp < 2)
+			return MU_CONFIG_CMD_UNKNOWN;
+	
+	cmd = (*argvp)[1]; /* commmand or option */
+	
+	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
+			if (strcmp (cmd, cmd_map[i]._name) == 0)
+					return cmd_map[i]._cmd;
+
+	/* if the first param starts with '-', there is no command, just some option
+	 * (like --version, --help etc.)*/
+	if (cmd[0] == '-')
+			return MU_CONFIG_CMD_NONE;
+	
+	return MU_CONFIG_CMD_UNKNOWN;
+}
+
+
 static gboolean
 parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 {
 		GError *err;
 		GOptionContext *context;
 		gboolean rv;
-
+		
+		opts->cmd = cmd_from_params (argcp, argvp);
+		if (opts->cmd == MU_CONFIG_CMD_UNKNOWN)
+				return FALSE;
+		
 		context = g_option_context_new("- mu general option");
-
 		g_option_context_set_main_group(context, config_options_group_mu(opts));
-		g_option_context_add_group(context, config_options_group_index(opts));
-		g_option_context_add_group(context, config_options_group_find(opts));
-		g_option_context_add_group(context, config_options_group_mkdir(opts));
-		g_option_context_add_group(context, config_options_group_extract(opts));
 
+		switch (opts->cmd) {
+		case MU_CONFIG_CMD_INDEX:
+				g_option_context_add_group(context, config_options_group_index(opts));
+				break;
+		case MU_CONFIG_CMD_FIND:
+				g_option_context_add_group(context, config_options_group_find(opts));
+				break;
+		case MU_CONFIG_CMD_MKDIR:
+				g_option_context_add_group(context, config_options_group_mkdir(opts));
+				break;
+		case MU_CONFIG_CMD_EXTRACT:
+				g_option_context_add_group(context, config_options_group_extract(opts));
+				break;
+		case MU_CONFIG_CMD_UNKNOWN:
+				
+		default:
+				break;
+		}
+		
 		err = NULL;
 		rv = g_option_context_parse(context, argcp, argvp, &err);
 		if (!rv) {
-				g_warning("error in options: %s\n", err->message);
+				/* use g_printerr here, as logging is not yet initialized */
+				if (opts->cmd != MU_CONFIG_CMD_NONE)
+						g_printerr ("error in options for command: %s\n", err->message);
+				else
+						g_printerr ("error in options: %s\n", err->message);
 				g_error_free(err);
 		}
-
+		
 		g_option_context_free(context);
 
 		/* fill in the defaults if user did not specify */
@@ -260,10 +324,10 @@ mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
 		memset(opts, 0, sizeof(MuConfigOptions));
 
 		/* defaults are set in parse_params */
-		if (argcp && argvp)
+		if (argcp && argvp) 
 				if (!parse_params(opts, argcp, argvp))
 						return FALSE;
-
+				
 		return TRUE;
 }
 
