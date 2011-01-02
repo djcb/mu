@@ -97,7 +97,12 @@ check_index_or_cleanup_params (MuConfigOptions *opts)
 			   opts->maildir ? opts->maildir : "<none>");
 		return FALSE;
 	}
-	
+
+	if (opts->xbatchsize < 0) {
+		g_warning ("the Xapian batch size must be non-negative");
+		return FALSE;
+	}
+		
 	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
 		g_warning ("not a valid Maildir: %s",
 			   opts->maildir ? opts->maildir : "<none>");
@@ -278,7 +283,8 @@ cmd_index_or_cleanup (MuConfigOptions *opts)
 		return FALSE;
 
 	err = NULL;
-	if (!(midx = mu_index_new (mu_runtime_xapian_dir(), &err))) {
+	if (!(midx = mu_index_new (mu_runtime_xapian_dir(), opts->xbatchsize,
+				   &err))) {
 		g_warning ("index/cleanup failed: %s",
 			   err->message);
 		g_error_free (err);
