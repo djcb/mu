@@ -27,7 +27,8 @@
 #include "mu-util.h"
 #include "mu-config.h"
 
-static void set_group_mu_defaults(MuConfigOptions * opts)
+static void
+set_group_mu_defaults (MuConfigOptions *opts)
 {
 		gchar *exp;
 
@@ -41,7 +42,8 @@ static void set_group_mu_defaults(MuConfigOptions * opts)
 		}
 }
 
-static GOptionGroup *config_options_group_mu(MuConfigOptions * opts)
+static GOptionGroup*
+config_options_group_mu (MuConfigOptions *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -66,7 +68,8 @@ static GOptionGroup *config_options_group_mu(MuConfigOptions * opts)
 		return og;
 }
 
-static void set_group_index_defaults(MuConfigOptions * opts)
+static void
+set_group_index_defaults (MuConfigOptions * opts)
 {
 		gchar *exp;
 
@@ -80,7 +83,8 @@ static void set_group_index_defaults(MuConfigOptions * opts)
 		}
 }
 
-static GOptionGroup *config_options_group_index(MuConfigOptions * opts)
+static GOptionGroup*
+config_options_group_index (MuConfigOptions * opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -106,7 +110,8 @@ static GOptionGroup *config_options_group_index(MuConfigOptions * opts)
 		return og;
 }
 
-static void set_group_find_defaults(MuConfigOptions * opts)
+static void
+set_group_find_defaults (MuConfigOptions *opts)
 {
 		/* note, when no fields are specified, we use
 		 * date-from-subject, and sort descending by date. If fields
@@ -133,7 +138,8 @@ static void set_group_find_defaults(MuConfigOptions * opts)
 				opts->summary_len = 0;
 }
 
-static GOptionGroup *config_options_group_find(MuConfigOptions * opts)
+static GOptionGroup*
+config_options_group_find (MuConfigOptions *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -164,7 +170,8 @@ static GOptionGroup *config_options_group_find(MuConfigOptions * opts)
 		return og;
 }
 
-static GOptionGroup *config_options_group_mkdir(MuConfigOptions * opts)
+static GOptionGroup *
+config_options_group_mkdir (MuConfigOptions *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -184,7 +191,8 @@ static GOptionGroup *config_options_group_mkdir(MuConfigOptions * opts)
 		return og;
 }
 
-static GOptionGroup *config_options_group_extract(MuConfigOptions * opts)
+static GOptionGroup*
+config_options_group_extract(MuConfigOptions *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -212,7 +220,8 @@ static GOptionGroup *config_options_group_extract(MuConfigOptions * opts)
 		return og;
 }
 
-static gboolean parse_params(MuConfigOptions * opts, int *argcp, char ***argvp)
+static gboolean
+parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 {
 		GError *err;
 		GOptionContext *context;
@@ -244,13 +253,13 @@ static gboolean parse_params(MuConfigOptions * opts, int *argcp, char ***argvp)
 		return rv;
 }
 
-gboolean mu_config_init(MuConfigOptions * opts, int *argcp, char ***argvp)
+gboolean
+mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
 {
 		g_return_val_if_fail(opts, FALSE);
 		memset(opts, 0, sizeof(MuConfigOptions));
 
 		/* defaults are set in parse_params */
-
 		if (argcp && argvp)
 				if (!parse_params(opts, argcp, argvp))
 						return FALSE;
@@ -258,7 +267,8 @@ gboolean mu_config_init(MuConfigOptions * opts, int *argcp, char ***argvp)
 		return TRUE;
 }
 
-void mu_config_uninit(MuConfigOptions * opts)
+void
+mu_config_uninit (MuConfigOptions *opts)
 {
 		g_return_if_fail(opts);
 		
