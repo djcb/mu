@@ -228,9 +228,8 @@ config_options_group_extract(MuConfig *opts)
 }
 
 
-gboolean  
-parse_cmd_from_params (MuConfig *opts,
-					   int *argcp, char ***argvp)
+static gboolean  
+parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 {
 		int i;
 		typedef struct {
@@ -272,15 +271,13 @@ parse_cmd_from_params (MuConfig *opts,
 static gboolean
 parse_params (MuConfig *opts, int *argcp, char ***argvp)
 {
-		GError *err;
+		GError *err = NULL;
 		GOptionContext *context;
 		gboolean rv;
 		
-		if (!parse_cmd_from_params (opts, argcp, argvp))
-				return FALSE;
-			
 		context = g_option_context_new("- mu general option");
-		g_option_context_set_main_group(context, config_options_group_mu(opts));
+		g_option_context_set_main_group(context,
+										config_options_group_mu(opts));
 
 		switch (opts->cmd) {
 		case MU_CONFIG_CMD_INDEX:
@@ -295,25 +292,16 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 		case MU_CONFIG_CMD_EXTRACT:
 				g_option_context_add_group(context, config_options_group_extract(opts));
 				break;
-		default:
-				break;
+		default: break;
 		}
 		
-		err = NULL;
 		rv = g_option_context_parse(context, argcp, argvp, &err);
 		g_option_context_free (context);
 		if (!rv) {
 				g_printerr ("mu: error in options: %s\n", err->message);
-				g_error_free(err);
+				g_error_free (err);
 				return FALSE;
 		}
-		
-		/* fill in the defaults if user did not specify */
-		set_group_mu_defaults(opts);
-		set_group_index_defaults(opts);
-		set_group_find_defaults(opts);
-		/* set_group_mkdir_defaults (opts); */
-
 		return TRUE;
 }
 
@@ -322,15 +310,22 @@ mu_config_new (int *argcp, char ***argvp)
 {
 		MuConfig *config;
 
+		g_return_val_if_fail (argcp && argvp, NULL);
+		
 		config = g_new0 (MuConfig, 1);
-
-		/* defaults are set in parse_params */
-		if (argcp && argvp) 
-				if (!parse_params(config, argcp, argvp)) {
-						mu_config_destroy (config);
-						return NULL;
-				}
-				
+			
+		if (!parse_cmd (config, argcp, argvp) ||
+			!parse_params(config, argcp, argvp)) {
+				mu_config_destroy (config);
+				return NULL;
+		}
+		
+		/* fill in the defaults if user did not specify */
+		set_group_mu_defaults(config);
+		set_group_index_defaults(config);
+		set_group_find_defaults(config);
+		/* set_group_mkdir_defaults (config); */
+		
 		return config;
 }
 
@@ -391,14 +386,12 @@ mu_config_execute (MuConfig *opts)
 		}
 
 		switch (opts->cmd) {
-
 		case MU_CONFIG_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
 		case MU_CONFIG_CMD_EXTRACT:    return mu_cmd_extract (opts);
 		case MU_CONFIG_CMD_FIND:       return mu_cmd_find (opts);
 		case MU_CONFIG_CMD_INDEX:      return mu_cmd_index (opts);
 		case MU_CONFIG_CMD_MKDIR:      return mu_cmd_mkdir (opts);
 		case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
-		
 		case MU_CONFIG_CMD_UNKNOWN:
 				g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
 				show_usage (FALSE);

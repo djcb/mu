@@ -229,15 +229,37 @@ db_is_ready (const char *xpath)
 	return TRUE;
 }
 
+static MuQuery*
+get_query_obj (void)
+{
+	GError *err;
+	const char* xpath;
+	MuQuery *mquery;
+	
+	xpath = mu_runtime_xapian_dir ();
+	if (!db_is_ready(xpath)) {
+		g_warning ("database '%s' is not ready", xpath);
+		return NULL;
+	}
+		
+	err = NULL;
+	mquery = mu_query_new (xpath, &err);
+	if (!mquery) {
+		g_warning ("error: %s", err->message);
+		g_error_free (err);
+		return NULL;
+	}
+
+	return mquery;
+}
+	
 
 MuExitCode
 mu_cmd_find (MuConfig *opts)
 {
-	GError *err;
 	MuQuery *xapian;
 	gboolean rv;
 	gchar *query;
-	const gchar *xpath;
 	size_t count;
 	
 	g_return_val_if_fail (opts, FALSE);
@@ -246,22 +268,14 @@ mu_cmd_find (MuConfig *opts)
 	if (!query_params_valid (opts))
 		return MU_EXITCODE_ERROR;
 	
-	xpath = mu_runtime_xapian_dir ();
-	if (!db_is_ready(xpath))
+	xapian = get_query_obj ();
+	if (!xapian)
 		return MU_EXITCODE_ERROR;
 	
 	/* first param is 'query', search params are after that */
 	query = get_query (opts);
 	if (!query) 
 		return MU_EXITCODE_ERROR;
-
-	err = NULL;
-	xapian = mu_query_new (xpath, &err);
-	if (!xapian) {
-		g_warning ("error: %s", err->message);
-		g_error_free (err);
-		return MU_EXITCODE_ERROR;
-	}
 
 	if (opts->xquery) 
 		rv = print_xapian_query (xapian, query);
@@ -273,9 +287,8 @@ mu_cmd_find (MuConfig *opts)
 
 	if (!rv)
 		return MU_EXITCODE_ERROR;
-	else if (count == 0)
-		return MU_EXITCODE_NO_MATCHES;
 	else
-		return MU_EXITCODE_OK;
+		return (count == 0) ?
+			MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
 }
 
