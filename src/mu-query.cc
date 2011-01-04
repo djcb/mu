@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 
 #include <stdexcept>
 #include <string>
-
 #include <cctype>
 #include <cstring>
 #include <stdlib.h>
@@ -36,7 +35,6 @@
 #include "mu-util.h"
 #include "mu-util-db.h"
 #include "mu-str.h"
-#include "mu-result.h"
 
 /*
  * custom parser for date ranges

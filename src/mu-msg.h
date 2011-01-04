@@ -22,11 +22,22 @@
 
 #include <mu-msg-flags.h>
 #include <mu-msg-fields.h>
-#include <mu-msg-status.h>
 #include <mu-msg-prio.h>
 #include <mu-util.h> /* for MuResult, MuError */
 
 G_BEGIN_DECLS
+
+/* what kind of message is this; use by the indexer */
+enum _MuMsgStatus {
+	MU_MSG_STATUS_NEW,	  /* message is new */
+	MU_MSG_STATUS_UPDATE,	  /* message is to be updated */
+	MU_MSG_STATUS_CLEANUP,	  /* message is to be cleaned up from db */
+	MU_MSG_STATUS_CLEANED_UP, /* message has been cleaned up from db */
+	MU_MSG_STATUS_EXISTS,	  /* message exists (will not be cleaned up) */
+	MU_MSG_STATUS_UPTODATE	  /* message is up-to-date */
+};
+typedef enum _MuMsgStatus MuMsgStatus;
+
 
 struct _MuMsg;
 typedef struct _MuMsg MuMsg;
