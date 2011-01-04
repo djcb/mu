@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,7 +29,7 @@
 #include "mu-util.h"
 
 static gboolean
-save_numbered_parts (MuMsg *msg, MuConfigOptions *opts)
+save_numbered_parts (MuMsg *msg, MuConfig *opts)
 {
 	gboolean rv;
 	char **parts, **cur;
@@ -131,7 +131,7 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 
 
 static gboolean
-save_parts (const char *path, MuConfigOptions *opts)
+save_parts (const char *path, MuConfig *opts)
 {	
 	MuMsg* msg;
 	gboolean rv;
@@ -179,7 +179,7 @@ each_part_show (MuMsgPart *part, gpointer user_data)
 
 
 static gboolean
-show_parts (const char* path, MuConfigOptions *opts)
+show_parts (const char* path, MuConfig *opts)
 {
 	MuMsg* msg;
 	GError *err;
@@ -202,7 +202,7 @@ show_parts (const char* path, MuConfigOptions *opts)
 }
 
 static gboolean
-check_params (MuConfigOptions *opts)
+check_params (MuConfig *opts)
 {
 	if (!opts->params[1]) {
 		g_warning ("usage: mu extract [options] <file>");
@@ -230,16 +230,17 @@ check_params (MuConfigOptions *opts)
 	return TRUE;
 }
 
-gboolean
-mu_cmd_extract (MuConfigOptions *opts)
+MuExitCode
+mu_cmd_extract (MuConfig *opts)
 {
-	gboolean rv;
+	int rv;
 	
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "extract"), FALSE);
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_EXTRACT,
+			      MU_EXITCODE_ERROR);
 
 	if (!check_params (opts))
-		return FALSE;
+		return MU_EXITCODE_ERROR;
 	
 	if (!opts->parts &&
 	    !opts->save_attachments &&
@@ -248,5 +249,5 @@ mu_cmd_extract (MuConfigOptions *opts)
 	else
 		rv = save_parts (opts->params[1], opts); /* save */
 	
-	return rv;
+	return rv ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
 }

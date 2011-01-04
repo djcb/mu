@@ -39,7 +39,7 @@ struct _MuRuntimeData {
 	gchar			*_muhome;
 	gchar			*_xapian_dir;
 	gchar			*_bookmarks_file;
-	MuConfigOptions		*_config;
+	MuConfig		*_config;
 };
 typedef struct _MuRuntimeData	 MuRuntimeData;
 
@@ -98,7 +98,7 @@ mu_runtime_init (const char* muhome_arg)
 
 
 static gboolean
-init_log (MuConfigOptions *opts)
+init_log (MuConfig *opts)
 {
 	if (opts->log_stderr)
 		return mu_log_init_with_fd (fileno(stderr), FALSE,
@@ -117,9 +117,8 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 		return FALSE;
 
 	_data	       = g_new0 (MuRuntimeData, 1);	
-	_data->_config = g_new0 (MuConfigOptions, 1);
-	
-	if (!mu_config_init (_data->_config, pargc, pargv)) {
+	_data->_config = mu_config_new (pargc, pargv);
+	if (!_data->_config) {
 		runtime_free ();
 		return FALSE;
 	 }
@@ -148,10 +147,7 @@ runtime_free (void)
 	g_free (_data->_xapian_dir);
 	g_free (_data->_muhome);
 
-	if (_data->_config) {
-		mu_config_uninit (_data->_config);
-		g_free (_data->_config);
-	}
+	mu_config_destroy (_data->_config);
 
 	mu_log_uninit();
 	
@@ -208,8 +204,8 @@ mu_runtime_bookmarks_file  (void)
 }
 
 
-MuConfigOptions*
-mu_runtime_config_options (void)
+MuConfig*
+mu_runtime_config (void)
 {
 	g_return_val_if_fail (_initialized, NULL);
 	

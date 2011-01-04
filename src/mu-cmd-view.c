@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,9 @@
 **
 */
 
+#if HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
 
 #include <unistd.h>
 #include <stdio.h>
@@ -28,7 +30,6 @@
 #include "mu-msg.h"
 #include "mu-str.h"
 #include "mu-cmd.h"
-
 #include "mu-util.h"
 
 
@@ -63,21 +64,22 @@ view_msg (MuMsg *msg, const gchar *fields, size_t summary_len)
 	return TRUE;
 }
 
-gboolean
-mu_cmd_view (MuConfigOptions *opts)
+MuExitCode
+mu_cmd_view (MuConfig *opts)
 {
-	gboolean rv;
-	int i;
+	int rv, i;
 	
-	g_return_val_if_fail (opts, FALSE);
-
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
+			      MU_EXITCODE_ERROR);
+	
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu view [options] <file> [<files>]");
-		return FALSE;
+		return MU_EXITCODE_ERROR;
 	}
 	
-	rv = TRUE;
+	rv = MU_EXITCODE_OK;
 	for (i = 1; opts->params[i] && rv; ++i) {
 
 		GError *err = NULL;
@@ -85,10 +87,12 @@ mu_cmd_view (MuConfigOptions *opts)
 		if (!msg) {
 			g_warning ("error: %s", err->message);
 			g_error_free (err);
-			return FALSE;
+			return MU_EXITCODE_ERROR;
 		}
 		
-		rv = view_msg (msg, NULL, opts->summary_len);
+		if (!view_msg (msg, NULL, opts->summary_len))
+			rv = MU_EXITCODE_ERROR;
+		
 		mu_msg_destroy (msg);
 	}
 	

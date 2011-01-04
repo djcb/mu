@@ -22,10 +22,8 @@
 
 #include <glib.h>
 #include <inttypes.h>
-
-#include <mu-result.h>
 #include <mu-msg.h>
-#include <mu-error.h>
+#include <mu-util.h> /* for MuResult, MuError */
 
 G_BEGIN_DECLS
 

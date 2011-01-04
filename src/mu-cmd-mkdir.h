@@ -23,6 +23,8 @@
 #include <glib.h>
 #include "mu-config.h"
 
+#error "foo"
+
 /**
  * execute the 'mkdir' command
  * 

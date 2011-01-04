@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
@@ -31,10 +31,6 @@
 #include "mu-index.h"
 #include "mu-msg-iter.h"
 #include "mu-str.h"
-
-/* #include "mu-util.h" */
-/* #include "mu-util-db.h" */
-/* #include "mu-cmd.h" */
 
 #include "mu-output-plain.h"
 

@@ -90,7 +90,7 @@ const char* mu_runtime_bookmarks_file  (void);
  * 
  * @return the configuration options
  */
-MuConfigOptions* mu_runtime_config_options (void);
+MuConfig* mu_runtime_config (void);
 
 G_END_DECLS
 

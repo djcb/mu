@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <mu-msg-iter.h>
-#include <mu-error.h>
+#include <mu-util.h> /* for MuResult, MuError */
 
 G_BEGIN_DECLS
 

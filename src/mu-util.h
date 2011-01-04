@@ -225,9 +225,61 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
 	G_STMT_START {						     \
 		g_log (G_LOG_DOMAIN,				     \
 		       G_LOG_LEVEL_INFO,			     \
-		       __VA_ARGS__);					     \
+		       __VA_ARGS__);				     \
 	} G_STMT_END
 
+
+enum _MuResult {
+	MU_OK,		/* all went ok */
+	MU_STOP,	/* user wants to stop */	
+	MU_ERROR	/* some other error occured */
+};
+typedef enum _MuResult MuResult;
+
+enum _MuExitCode {
+	MU_EXITCODE_OK	       = 0,
+	MU_EXITCODE_ERROR      = 1,
+	MU_EXITCODE_NO_MATCHES = 2
+};
+typedef enum _MuExitCode MuExitCode;
+
+enum _MuError {
+	/* general xapian related error */
+	MU_ERROR_XAPIAN,
+	/* xapian dir is not accessible */
+	MU_ERROR_XAPIAN_DIR,
+	/* database version is not uptodate (ie. not compatible with
+	 * the version that mu expects) */
+	MU_ERROR_XAPIAN_NOT_UPTODATE,
+	/* missing data for a document */
+	MU_ERROR_XAPIAN_MISSING_DATA,
+	/* (parsnng) error in the query */ 
+	MU_ERROR_QUERY,
+	/* gmime parsing related error */
+	MU_ERROR_GMIME,
+
+	/* File errors */
+	MU_ERROR_FILE_INVALID_SOURCE,
+	MU_ERROR_FILE_INVALID_NAME,
+	MU_ERROR_FILE_CANNOT_LINK,
+	MU_ERROR_FILE_CANNOT_OPEN,
+	MU_ERROR_FILE_CANNOT_READ,
+	MU_ERROR_FILE_CANNOT_CREATE,
+	MU_FILE_ERROR_CANNOT_MKDIR,
+	MU_FILE_ERROR_STAT_FAILED,
+	MU_FILE_ERROR_READDIR_FAILED,
+	/* generic file-related error */
+	MU_ERROR_FILE,
+	
+	/* some other, internal error */
+	MU_ERROR_INTERNAL
+};
+typedef enum _MuError MuError;
+
+
 G_END_DECLS
+
+
+
 
 #endif /*__MU_UTIL_H__*/

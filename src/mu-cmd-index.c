@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
@@ -78,7 +78,7 @@ install_sig_handler (void)
 
 
 static gboolean
-check_index_or_cleanup_params (MuConfigOptions *opts)
+check_index_or_cleanup_params (MuConfig *opts)
 {
 	/* param[0] == 'index' or 'cleanup', there should be no
 	 * param[1] */
@@ -157,7 +157,7 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 
 
 static gboolean
-database_version_check_and_update (MuConfigOptions *opts)
+database_version_check_and_update (MuConfig *opts)
 {
 	const gchar *xpath;
 
@@ -200,9 +200,8 @@ show_time (unsigned t, unsigned processed)
 }
 
 
-
-static gboolean
-cmd_cleanup (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
+static MuExitCode
+cmd_cleanup (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	     gboolean show_progress)
 {
 	MuResult rv;
@@ -221,13 +220,14 @@ cmd_cleanup (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 		show_time ((unsigned)(time(NULL)-t),stats->_processed);
 	}
 	
-	return (rv == MU_OK || rv == MU_STOP) ? TRUE: FALSE;
+	return (rv == MU_OK || rv == MU_STOP) ?
+		MU_EXITCODE_OK: MU_EXITCODE_ERROR;
 }
 
 
 
-static gboolean
-cmd_index (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
+static MuExitCode
+cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	   gboolean show_progress)
 {
 	MuResult rv;
@@ -257,16 +257,16 @@ cmd_index (MuIndex *midx, MuConfigOptions *opts, MuIndexStats *stats,
 			      "cleaned-up: %u",
 			      stats->_processed, stats->_updated,
 			      stats->_cleaned_up);
-		return TRUE;
+		return MU_EXITCODE_OK;
 	}
 	
-	return FALSE;
+	return MU_EXITCODE_ERROR;
 }
 
 
 
-static gboolean
-cmd_index_or_cleanup (MuConfigOptions *opts)
+static MuExitCode
+cmd_index_or_cleanup (MuConfig *opts)
 {
 	gboolean rv;
 	MuIndex *midx;
@@ -274,21 +274,16 @@ cmd_index_or_cleanup (MuConfigOptions *opts)
 	gboolean show_progress;
 	GError *err;
 	
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "index") ||
-			      mu_cmd_equals (opts, "cleanup"), FALSE);
-			  
 	if (!check_index_or_cleanup_params (opts) ||
 	    !database_version_check_and_update(opts))
-		return FALSE;
+		return MU_EXITCODE_ERROR;
 
 	err = NULL;
-	if (!(midx = mu_index_new (mu_runtime_xapian_dir(), opts->xbatchsize,
-				   &err))) {
-		g_warning ("index/cleanup failed: %s",
-			   err->message);
+	if (!(midx = mu_index_new (mu_runtime_xapian_dir(),
+				   opts->xbatchsize, &err))) {
+		g_warning ("index/cleanup failed: %s", err->message);
 		g_error_free (err);
-		return FALSE;
+		return MU_EXITCODE_ERROR;
 	} 
 
 	/* note, 'opts->quiet' already cause g_message output not to
@@ -298,34 +293,38 @@ cmd_index_or_cleanup (MuConfigOptions *opts)
 
 	mu_index_stats_clear (&stats);
 	install_sig_handler ();
-	
-	if (mu_cmd_equals (opts, "index"))
-		rv = cmd_index (midx, opts, &stats, show_progress);
-	else if (mu_cmd_equals (opts, "cleanup"))
-		rv = cmd_cleanup (midx, opts, &stats, show_progress);
-	else
+
+	switch (opts->cmd) {
+	case MU_CONFIG_CMD_INDEX:
+		rv = cmd_index (midx, opts, &stats, show_progress); break;
+	case MU_CONFIG_CMD_CLEANUP:
+	 	rv = cmd_cleanup (midx, opts, &stats, show_progress);  break;
+	default:
+		rv = MU_EXITCODE_ERROR;
 		g_assert_not_reached ();
+	}
 	
-	mu_index_destroy (midx);
-		
+	mu_index_destroy (midx);		
 	return rv;
 }
 
 
-gboolean
-mu_cmd_index (MuConfigOptions *opts)
+MuExitCode
+mu_cmd_index (MuConfig *opts)
 {
-	g_return_val_if_fail (opts && mu_cmd_equals (opts, "index"),
+	g_return_val_if_fail (opts, FALSE);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX,
 			      FALSE);
 	
 	return cmd_index_or_cleanup (opts);
 }
 
-gboolean
-mu_cmd_cleanup (MuConfigOptions *opts)
+MuExitCode
+mu_cmd_cleanup (MuConfig *opts)
 {
-	g_return_val_if_fail (opts && mu_cmd_equals (opts, "cleanup"),
-			      FALSE);
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd != MU_CONFIG_CMD_CLEANUP,
+			      MU_EXITCODE_ERROR);
 	
 	return cmd_index_or_cleanup (opts);
 }

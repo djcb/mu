@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 #ifndef __MU_MSG_STATUS_H__
 #define __MU_MSG_STATUS_H__
 
+G_BEGIN_DECLS
+
 /* what kind of message is this; use by the indexer */
 enum _MuMsgStatus {
 	MU_MSG_STATUS_NEW,	  /* message is new */
@@ -30,5 +32,7 @@ enum _MuMsgStatus {
 	MU_MSG_STATUS_UPTODATE	  /* message is up-to-date */
 };
 typedef enum _MuMsgStatus MuMsgStatus;
+
+G_END_DECLS
 
 #endif /*__MU_MSG_STATUS_H__*/

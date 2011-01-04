@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,8 +22,9 @@
 
 #include <stdlib.h>
 #include <glib.h>
+#include <mu-util.h> /* for MuResult */
 
-#include "mu-result.h" /* for MuResult */
+G_BEGIN_DECLS
 
 /* opaque structure */
 struct _MuIndex;
@@ -177,5 +178,7 @@ MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
  * @return TRUE if stats != NULL, FALSE otherwise
  */
 gboolean mu_index_stats_clear (MuIndexStats *stats);
+
+G_END_DECLS
 
 #endif /*__MU_INDEX_H__*/

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -26,9 +26,10 @@
 
 #include "mu-util.h"
 #include "mu-config.h"
+#include "mu-cmd.h"
 
 static void
-set_group_mu_defaults (MuConfigOptions *opts)
+set_group_mu_defaults (MuConfig *opts)
 {
 		gchar *exp;
 
@@ -43,7 +44,7 @@ set_group_mu_defaults (MuConfigOptions *opts)
 }
 
 static GOptionGroup*
-config_options_group_mu (MuConfigOptions *opts)
+config_options_group_mu (MuConfig *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -69,7 +70,7 @@ config_options_group_mu (MuConfigOptions *opts)
 }
 
 static void
-set_group_index_defaults (MuConfigOptions * opts)
+set_group_index_defaults (MuConfig * opts)
 {
 		gchar *exp;
 
@@ -86,7 +87,7 @@ set_group_index_defaults (MuConfigOptions * opts)
 }
 
 static GOptionGroup*
-config_options_group_index (MuConfigOptions * opts)
+config_options_group_index (MuConfig * opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -115,7 +116,7 @@ config_options_group_index (MuConfigOptions * opts)
 }
 
 static void
-set_group_find_defaults (MuConfigOptions *opts)
+set_group_find_defaults (MuConfig *opts)
 {
 		/* note, when no fields are specified, we use
 		 * date-from-subject, and sort descending by date. If fields
@@ -143,7 +144,7 @@ set_group_find_defaults (MuConfigOptions *opts)
 }
 
 static GOptionGroup*
-config_options_group_find (MuConfigOptions *opts)
+config_options_group_find (MuConfig *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -163,6 +164,8 @@ config_options_group_find (MuConfigOptions *opts)
 				 "output as symbolic links to a target maildir", NULL},
 				{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &opts->clearlinks,
 				 "clear old links before filling a linksdir", NULL},
+				/* {"output", 'o', 0, G_OPTION_ARG_STRING, &opts->output, */
+				/*  "output type ('plain'(*), 'links', 'xml', 'json', 'sexp')", NULL}, */
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 
@@ -175,7 +178,7 @@ config_options_group_find (MuConfigOptions *opts)
 }
 
 static GOptionGroup *
-config_options_group_mkdir (MuConfigOptions *opts)
+config_options_group_mkdir (MuConfig *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -196,7 +199,7 @@ config_options_group_mkdir (MuConfigOptions *opts)
 }
 
 static GOptionGroup*
-config_options_group_extract(MuConfigOptions *opts)
+config_options_group_extract(MuConfig *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
@@ -225,54 +228,57 @@ config_options_group_extract(MuConfigOptions *opts)
 }
 
 
-static MuConfigCmd 
-cmd_from_params (int *argcp, char ***argvp)
+gboolean  
+parse_cmd_from_params (MuConfig *opts,
+					   int *argcp, char ***argvp)
 {
-	int i;
-	const char *cmd;
-	typedef struct {
-		const gchar* _name;
-		MuConfigCmd   _cmd;
-	} Cmd;
-	
-	Cmd cmd_map[] = {
-		{ "index",   MU_CONFIG_CMD_INDEX },
-		{ "find",    MU_CONFIG_CMD_FIND },
-		{ "cleanup", MU_CONFIG_CMD_CLEANUP },
-		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
-		{ "view",    MU_CONFIG_CMD_VIEW },
-		{ "extract", MU_CONFIG_CMD_EXTRACT }
-	};
+		int i;
+		typedef struct {
+				const gchar*	_name;
+				MuConfigCmd		_cmd;
+		} Cmd;
+		
+		Cmd cmd_map[] = {
+				{ "index",   MU_CONFIG_CMD_INDEX },
+				{ "find",    MU_CONFIG_CMD_FIND },
+				{ "cleanup", MU_CONFIG_CMD_CLEANUP },
+				{ "mkdir",   MU_CONFIG_CMD_MKDIR },
+				{ "view",    MU_CONFIG_CMD_VIEW },
+				{ "extract", MU_CONFIG_CMD_EXTRACT }
+		};
+		
+		opts->cmd	 = MU_CONFIG_CMD_NONE;
+		opts->cmdstr = NULL;
+		
+		if (*argcp < 2) /* no command found at all */
+				return FALSE;
+		else if ((**argvp)[1] == '-') 
+				/* if the first param starts with '-', there is no
+				 * command, just some option (like --version, --help
+				 * etc.)*/
+				return TRUE;
 
-	if (*argcp < 2)
-			return MU_CONFIG_CMD_UNKNOWN;
-	
-	cmd = (*argvp)[1]; /* commmand or option */
-	
-	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
-			if (strcmp (cmd, cmd_map[i]._name) == 0)
-					return cmd_map[i]._cmd;
+		opts->cmd	 = MU_CONFIG_CMD_UNKNOWN;
+		opts->cmdstr = (*argvp)[1];
+		for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
+				if (strcmp (opts->cmdstr, cmd_map[i]._name) == 0)
+						opts->cmd = cmd_map[i]._cmd;
 
-	/* if the first param starts with '-', there is no command, just some option
-	 * (like --version, --help etc.)*/
-	if (cmd[0] == '-')
-			return MU_CONFIG_CMD_NONE;
-	
-	return MU_CONFIG_CMD_UNKNOWN;
+		return TRUE;
 }
 
 
+
 static gboolean
-parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
+parse_params (MuConfig *opts, int *argcp, char ***argvp)
 {
 		GError *err;
 		GOptionContext *context;
 		gboolean rv;
 		
-		opts->cmd = cmd_from_params (argcp, argvp);
-		if (opts->cmd == MU_CONFIG_CMD_UNKNOWN)
+		if (!parse_cmd_from_params (opts, argcp, argvp))
 				return FALSE;
-		
+			
 		context = g_option_context_new("- mu general option");
 		g_option_context_set_main_group(context, config_options_group_mu(opts));
 
@@ -289,57 +295,115 @@ parse_params (MuConfigOptions *opts, int *argcp, char ***argvp)
 		case MU_CONFIG_CMD_EXTRACT:
 				g_option_context_add_group(context, config_options_group_extract(opts));
 				break;
-		case MU_CONFIG_CMD_UNKNOWN:
-				
 		default:
 				break;
 		}
 		
 		err = NULL;
 		rv = g_option_context_parse(context, argcp, argvp, &err);
+		g_option_context_free (context);
 		if (!rv) {
-				/* use g_printerr here, as logging is not yet initialized */
-				if (opts->cmd != MU_CONFIG_CMD_NONE)
-						g_printerr ("error in options for command: %s\n", err->message);
-				else
-						g_printerr ("error in options: %s\n", err->message);
+				g_printerr ("mu: error in options: %s\n", err->message);
 				g_error_free(err);
+				return FALSE;
 		}
 		
-		g_option_context_free(context);
-
 		/* fill in the defaults if user did not specify */
 		set_group_mu_defaults(opts);
 		set_group_index_defaults(opts);
 		set_group_find_defaults(opts);
 		/* set_group_mkdir_defaults (opts); */
 
-		return rv;
-}
-
-gboolean
-mu_config_init (MuConfigOptions *opts, int *argcp, char ***argvp)
-{
-		g_return_val_if_fail(opts, FALSE);
-		memset(opts, 0, sizeof(MuConfigOptions));
-
-		/* defaults are set in parse_params */
-		if (argcp && argvp) 
-				if (!parse_params(opts, argcp, argvp))
-						return FALSE;
-				
 		return TRUE;
 }
 
-void
-mu_config_uninit (MuConfigOptions *opts)
+MuConfig*
+mu_config_new (int *argcp, char ***argvp)
 {
-		g_return_if_fail(opts);
+		MuConfig *config;
+
+		config = g_new0 (MuConfig, 1);
+
+		/* defaults are set in parse_params */
+		if (argcp && argvp) 
+				if (!parse_params(config, argcp, argvp)) {
+						mu_config_destroy (config);
+						return NULL;
+				}
+				
+		return config;
+}
+
+void
+mu_config_destroy (MuConfig *opts)
+{
+		if (!opts)
+				return;
 		
 		g_free(opts->muhome);
 		g_free(opts->maildir);
 		g_free(opts->linksdir);
 		g_free(opts->targetdir);
-		
 		g_strfreev(opts->params);
+		g_free (opts);
+}
+
+
+static void
+show_usage (gboolean noerror)
+{
+		const char* usage=
+				"usage: mu command [options] [parameters]\n"
+				"where command is one of index, find, view, mkdir, cleanup "
+				"or extract\n\n"
+				"see the mu, mu-<command> or mu-easy manpages for "
+				"more information\n";
+
+		if (noerror)
+				g_print ("%s", usage);
+		else
+				g_printerr ("%s", usage);
+}
+
+static void
+show_version (void)
+{
+		g_print ("mu (mail indexer/searcher) " VERSION "\n"
+				 "Copyright (C) 2008-2011 Dirk-Jan C. Binnema (GPLv3+)\n");
+}
+
+
+MuExitCode
+mu_config_execute (MuConfig *opts)
+{
+		g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+		
+		if (opts->version) {
+				show_version ();
+				return MU_EXITCODE_OK;
+		}
+	
+		if (!opts->params||!opts->params[0]) {/* no command? */
+				show_version ();
+				g_print ("\n");
+				show_usage (TRUE);
+				return MU_EXITCODE_ERROR;
+		}
+
+		switch (opts->cmd) {
+
+		case MU_CONFIG_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
+		case MU_CONFIG_CMD_EXTRACT:    return mu_cmd_extract (opts);
+		case MU_CONFIG_CMD_FIND:       return mu_cmd_find (opts);
+		case MU_CONFIG_CMD_INDEX:      return mu_cmd_index (opts);
+		case MU_CONFIG_CMD_MKDIR:      return mu_cmd_mkdir (opts);
+		case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
+		
+		case MU_CONFIG_CMD_UNKNOWN:
+				g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
+				show_usage (FALSE);
+				return MU_EXITCODE_ERROR;
+		default:
+				g_return_val_if_reached (MU_EXITCODE_ERROR);
+		}
 }

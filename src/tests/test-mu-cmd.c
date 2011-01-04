@@ -204,6 +204,8 @@ test_mu_extract_01 (void)
 								   G_DIR_SEPARATOR,
 								   G_DIR_SEPARATOR);
 
+		/* g_print ("[%s]", cmdline) */
+		
 		output = erroutput = NULL;
 		g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
 		g_assert_cmpstr (output,

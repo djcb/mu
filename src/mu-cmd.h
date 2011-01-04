@@ -22,50 +22,19 @@
 #define __MU_CMD_H__
 
 #include <glib.h>
-#include "mu-config.h"
+#include <mu-config.h>
 
 G_BEGIN_DECLS
-
-enum _MuCmd {
-	MU_CMD_INDEX,
-	MU_CMD_FIND,
-	MU_CMD_CLEANUP,
-	MU_CMD_MKDIR,
-	MU_CMD_VIEW,
-	MU_CMD_EXTRACT,
-	
-	MU_CMD_UNKNOWN
-};
-typedef enum _MuCmd MuCmd;
-
-
-/** 
- * check whether the MuConfigOptions are for command X
- * 
- * @param config the config options
- * @param cmd the command to check (ie., "mkdir" or "find")
- * 
- * @return TRUE if the options are for cmd, FALSE otherwise
- */
-gboolean mu_cmd_equals (MuConfigOptions *config, const gchar *cmd);
-
-/**
- * try to execute whatever is specified on the command line 
- * 
- * @param config a config structure with the command line params
- * 
- * @return TRUE if it succeeded, FALSE otherwise
- */
-gboolean mu_cmd_execute (MuConfigOptions *config);
 
 /**
  * execute the 'mkdir' command
  * 
  * @param opts configuration options
  * 
- * @return TRUE if the command succeeded, FALSE otherwise
+ * @return MU_EXITCODE_OK (0) if the command succeeded,
+ * MU_EXITCODE_ERROR otherwise
  */
-gboolean mu_cmd_mkdir (MuConfigOptions *opts);
+MuExitCode mu_cmd_mkdir (MuConfig *opts);
 
 
 /**
@@ -73,9 +42,10 @@ gboolean mu_cmd_mkdir (MuConfigOptions *opts);
  * 
  * @param opts configuration options
  * 
- * @return TRUE if the command succeeded, FALSE otherwise
+ * @return MU_EXITCODE_OK (0) if the command succeeded,
+ * MU_EXITCODE_ERROR otherwise
  */
-gboolean mu_cmd_view (MuConfigOptions *opts);
+MuExitCode mu_cmd_view (MuConfig *opts);
 
 
 /**
@@ -83,9 +53,10 @@ gboolean mu_cmd_view (MuConfigOptions *opts);
  * 
  * @param opts configuration options
  * 
- * @return TRUE if the command succeede, FALSE otherwise
+ * @return MU_EXITCODE_OK (0) if the command succeeded,
+ * MU_EXITCODE_ERROR otherwise
  */
-gboolean mu_cmd_index   (MuConfigOptions *opts);
+MuExitCode mu_cmd_index   (MuConfig *opts);
 
 
 /**
@@ -93,19 +64,21 @@ gboolean mu_cmd_index   (MuConfigOptions *opts);
  * 
  * @param opts configuration options
  * 
- * @return TRUE if the command succeede, FALSE otherwise
+ * @return MU_EXITCODE_OK (0) if the command succeeds,
+ * MU_EXITCODE_ERROR otherwise
  */
-gboolean mu_cmd_cleanup (MuConfigOptions *opts);
-
+MuExitCode mu_cmd_cleanup (MuConfig *opts);
 
 /**
  * execute the 'find' command
  * 
  * @param opts configuration options
  * 
- * @return TRUE if the command succeede, FALSE otherwise
+ * @return MU_EXITCODE_OK (0) if the command succeeds and
+ * >MU_EXITCODE_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
+ * succeeds but there no matches, MU_EXITCODE_ERROR for all other errors
  */
-gboolean mu_cmd_find (MuConfigOptions *opts);
+MuExitCode mu_cmd_find (MuConfig *opts);
 
 
 /**
@@ -113,9 +86,11 @@ gboolean mu_cmd_find (MuConfigOptions *opts);
  * 
  * @param opts configuration options
  * 
- * @return TRUE if the command succeede, FALSE otherwise
+ * @return MU_EXITCODE_OK (0) if the command succeeds,
+ * MU_EXITCODE_ERROR otherwise
  */
-gboolean mu_cmd_extract (MuConfigOptions *opts);
+MuExitCode mu_cmd_extract (MuConfig *opts);
+
 
 G_END_DECLS
 

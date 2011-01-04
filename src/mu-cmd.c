@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,9 @@
 **
 */
 
+#if HAVE_CONFIG_H
 #include <config.h>
+#endif /*HAVE_CONFIG_H*/
 
 #include <unistd.h>
 #include <stdio.h>
@@ -44,10 +46,11 @@ static void
 show_usage (gboolean noerror)
 {
 	const char* usage=
-		"usage: mu [options] command [parameters]\n"
+		"usage: mu command [options] [parameters]\n"
 		"where command is one of index, find, view, mkdir, cleanup "
 		"or extract\n\n"
-		"see the mu or mu-easy manpages for more information\n";
+		"see the mu, mu-<command> or mu-easy manpages for "
+		"more information\n";
 
 	if (noerror)
 		g_print ("%s", usage);
@@ -59,8 +62,10 @@ static void
 show_version (void)
 {
 	g_print ("mu (mail indexer/searcher) " VERSION "\n"
-		 "Copyright (C) 2008-2010 Dirk-Jan C. Binnema (GPLv3+)\n");
+		 "Copyright (C) 2008-2011 Dirk-Jan C. Binnema (GPLv3+)\n");
 }
+
+
 
 gboolean
 mu_cmd_execute (MuConfigOptions *opts)
@@ -87,6 +92,7 @@ mu_cmd_execute (MuConfigOptions *opts)
 	case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
 		
 	case MU_CONFIG_CMD_UNKNOWN:
+		g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
 		show_usage (FALSE);
 		return FALSE;
 	default:

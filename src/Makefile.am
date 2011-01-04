@@ -53,11 +53,9 @@ libmu_la_SOURCES=			\
 	mu-cmd-index.c			\
 	mu-cmd-mkdir.c			\
 	mu-cmd-view.c			\
-	mu-cmd.c			\
 	mu-cmd.h			\
 	mu-config.c			\
 	mu-config.h			\
-	mu-error.h			\
 	mu-index.c			\
 	mu-index.h			\
 	mu-log.c			\
@@ -86,13 +84,10 @@ libmu_la_SOURCES=			\
 	mu-msg.h			\
 	mu-msg-file.c			\
 	mu-msg-file.h			\
-	mu-output-link.c		\
-	mu-output-link.h		\
-	mu-output-plain.c		\
-	mu-output-plain.h		\
+	mu-output.c			\
+	mu-output.h			\
 	mu-query.cc			\
 	mu-query.h			\
-	mu-result.h			\
 	mu-runtime.c			\
 	mu-runtime.h			\
 	mu-store.cc			\

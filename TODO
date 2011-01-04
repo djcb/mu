@@ -1,21 +1,21 @@
 * Future release
 
-** release 0.10 [9%]
+** release 0.10 [0%]
 
    - [ ] mu stats
    - [ ] ansi-colors in output
    - [ ] config system (config file) (?)
    - [ ] detect mail threads (?)
-   - [ ] xml,json,sexp output
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
 
-** release 0.9.2
+** release 0.9.2 [20%]
 
+   - [ ] xml,json,sexp output
    - [ ] separate exit code for 'not found' vs other errors
    - [ ] fix build for Solaris
-   - [ ] clearer errors when /home/user does not exist
-   - [ ] fix -pedantic build
+   - [X] clearer errors when /home/user does not exist
+   - [X] fix -pedantic build
    - [ ] make commit batch size configure param
    - [ ] better 'usage' info
    - [ ] add version info to output of configure, mu.log

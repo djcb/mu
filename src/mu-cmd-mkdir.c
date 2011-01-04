@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,9 @@
 **
 */
 
+#if HAVE_CONFIG_H
 #include "config.h"
+#endif /*HAVE_CONFIG_H*/
 
 #include <unistd.h>
 #include <stdio.h>
@@ -27,22 +29,21 @@
 
 #include "mu-maildir.h"
 #include "mu-cmd.h"
-
 #include "mu-util.h"
 
-gboolean
-mu_cmd_mkdir (MuConfigOptions *opts)
+MuExitCode
+mu_cmd_mkdir (MuConfig *opts)
 {
 	int i;
 
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "mkdir"), FALSE);
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_MKDIR,
+			      MU_EXITCODE_ERROR);
 	
 	if (!opts->params[1]) {
-		g_warning (
-			"usage: mu mkdir [-u,--mode=<mode>] "
-			"<dir> [more dirs]");
-		return FALSE;
+		g_printerr ("usage: mu mkdir [-u,--mode=<mode>] "
+			    "<dir> [more dirs]");
+		return MU_EXITCODE_ERROR;
 	}
 	
 	i = 1;
@@ -52,12 +53,12 @@ mu_cmd_mkdir (MuConfigOptions *opts)
 		if (!mu_maildir_mkdir (opts->params[i], opts->dirmode,
 				       FALSE, &err))
 			if (err && err->message) {
-				g_warning ("%s", err->message);
+				g_printerr ("mu: %s", err->message);
 				g_error_free (err);
 			}
-			return FALSE;
+		return 1;
 		++i;
 	}
 
-	return TRUE;
+	return MU_EXITCODE_OK;
 }

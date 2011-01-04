@@ -23,9 +23,7 @@
 #include <glib.h>
 #include <time.h>
 #include <sys/types.h>          /* for mode_t */
-
-#include <mu-result.h>          /* for MuResult */
-#include <mu-error.h>
+#include <mu-util.h> /* for MuResult, MuError */
 
 G_BEGIN_DECLS
 

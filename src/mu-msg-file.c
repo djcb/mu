@@ -91,7 +91,7 @@ mu_msg_file_get_flags_from_path (const char *path)
 {
 		MuMsgFlags flags;
 		MsgType mtype;
-		char *info = NULL;
+		char *info = NULL, *cursor;
 
 		g_return_val_if_fail (path, MU_MSG_FLAG_NONE);
 		g_return_val_if_fail (!g_str_has_suffix(path, G_DIR_SEPARATOR_S),
@@ -99,42 +99,29 @@ mu_msg_file_get_flags_from_path (const char *path)
 
 		mtype = check_msg_type (path, &info);
 		if (mtype == MSG_TYPE_NEW) {	/* we ignore any new-msg flags */
-				g_free(info);
-				return MU_MSG_FLAG_NEW;
+				flags = MU_MSG_FLAG_NEW;
+				goto leave;
 		}
 
 		flags = MU_MSG_FLAG_NONE;
-		if (mtype == MSG_TYPE_CUR || mtype == MSG_TYPE_OTHER) {
-				char *cursor = info;
-				/* only support the "2," format */
-				if (cursor && cursor[0] == '2' && cursor[1] == ',') {
-						cursor += 2;	/* jump past 2, */
-						for (; *cursor; ++cursor) {
-								switch (*cursor) {
-								case 'P':
-										flags |= MU_MSG_FLAG_PASSED;
-										break;
-								case 'T':
-										flags |= MU_MSG_FLAG_TRASHED;
-										break;
-								case 'R':
-										flags |= MU_MSG_FLAG_REPLIED;
-										break;
-								case 'S':
-										flags |= MU_MSG_FLAG_SEEN;
-										break;
-								case 'D':
-										flags |= MU_MSG_FLAG_DRAFT;
-										break;
-								case 'F':
-										flags |= MU_MSG_FLAG_FLAGGED;
-										break;
-								}
-						}
+		if ((mtype != MSG_TYPE_CUR && mtype != MSG_TYPE_OTHER) ||
+			!(info && info[0] == '2' && info[1] == ','))
+				goto leave;
+		
+		for (cursor = info + 2; *cursor; ++cursor) {
+				switch (*cursor) {
+				case 'P': flags |= MU_MSG_FLAG_PASSED; break;
+				case 'T': flags |= MU_MSG_FLAG_TRASHED; break;
+				case 'R': flags |= MU_MSG_FLAG_REPLIED; break;
+				case 'S': flags |= MU_MSG_FLAG_SEEN; break;
+				case 'D': flags |= MU_MSG_FLAG_DRAFT; break;
+				case 'F': flags |= MU_MSG_FLAG_FLAGGED; break;
+				default:  break; /* ignore */
 				}
 		}
-		g_free(info);
 
+leave:
+		g_free(info);
 		return flags;
 }
 

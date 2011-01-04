@@ -20,17 +20,16 @@
 #ifndef __MU_MSG_H__
 #define __MU_MSG_H__
 
-#include "mu-msg-flags.h"
-#include "mu-msg-fields.h"
-#include "mu-msg-status.h"
-#include "mu-msg-prio.h"
-#include "mu-error.h"
+#include <mu-msg-flags.h>
+#include <mu-msg-fields.h>
+#include <mu-msg-status.h>
+#include <mu-msg-prio.h>
+#include <mu-util.h> /* for MuResult, MuError */
 
 G_BEGIN_DECLS
 
 struct _MuMsg;
 typedef struct _MuMsg MuMsg;
-
 
 
 /**

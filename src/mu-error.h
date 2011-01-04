@@ -21,37 +21,9 @@
 #ifndef __MU_ERROR_H__
 #define __MU_ERROR_H__
 
-enum _MuError {
-	/* general xapian related error */
-	MU_ERROR_XAPIAN,
-	/* xapian dir is not accessible */
-	MU_ERROR_XAPIAN_DIR,
-	/* database version is not uptodate (ie. not compatible with
-	 * the version that mu expects) */
-	MU_ERROR_XAPIAN_NOT_UPTODATE,
-	/* missing data for a document */
-	MU_ERROR_XAPIAN_MISSING_DATA,
-	/* (parsnng) error in the query */ 
-	MU_ERROR_QUERY,
-	/* gmime parsing related error */
-	MU_ERROR_GMIME,
+G_BEGIN_DECLS
 
-	/* File errors */
-	MU_ERROR_FILE_INVALID_SOURCE,
-	MU_ERROR_FILE_INVALID_NAME,
-	MU_ERROR_FILE_CANNOT_LINK,
-	MU_ERROR_FILE_CANNOT_OPEN,
-	MU_ERROR_FILE_CANNOT_READ,
-	MU_ERROR_FILE_CANNOT_CREATE,
-	MU_FILE_ERROR_CANNOT_MKDIR,
-	MU_FILE_ERROR_STAT_FAILED,
-	MU_FILE_ERROR_READDIR_FAILED,
-	/* generic file-related error */
-	MU_ERROR_FILE,
-	
-	/* some other, internal error */
-	MU_ERROR_INTERNAL
-};
-typedef enum _MuError MuError;
+
+G_END_DECLS
 
 #endif /*__MU_ERROR_H__*/

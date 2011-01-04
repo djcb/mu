@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
@@ -39,9 +39,7 @@
 #include "mu-util.h"
 #include "mu-util-db.h"
 #include "mu-cmd.h"
-#include "mu-output-plain.h"
-#include "mu-output-link.h"
-
+#include "mu-output.h"
 
 static void
 update_warning (void)
@@ -52,14 +50,11 @@ update_warning (void)
 }
 
 
-
 static gboolean
 print_xapian_query (MuQuery *xapian, const gchar *query)
 {
 	char *querystr;
 	GError *err;
-	
-	MU_WRITE_LOG ("query: '%s' (xquery)", query); 
 
 	err = NULL;
 	querystr = mu_query_as_string (xapian, query, &err);
@@ -95,55 +90,15 @@ sort_field_from_string (const char* fieldstr)
 }
 
 
-static size_t
-print_rows (MuMsgIter *iter, const char *fields, size_t summary_len)
-{
-	size_t count = 0;
-
-	if (mu_msg_iter_is_done (iter))
-		return 0;
-	
-	do {
-		if (mu_output_plain_row (iter, fields, summary_len))
-			++count;
-		
-	} while (mu_msg_iter_next (iter));
-	
-	return count;
-}
-
-
-static size_t
-make_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks)
-{
-	size_t count = 0;
-
-	if (!mu_output_link_create_dir (linksdir, clearlinks))
-		return 0;
-
-	if (mu_msg_iter_is_done (iter))
-		return 0;
-	
-	/* iterate over the found iters */
-	do {
-		/* ignore errors...*/
-		if (mu_output_link_row (iter, linksdir))
-			++count;
-
-	} while (mu_msg_iter_next (iter));
-		 
-	return count;
-}
-
-
 
 static gboolean
-run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
+run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
+	   size_t *count)
 {
 	GError *err;
 	MuMsgIter *iter;
 	MuMsgFieldId sortid;
-	size_t matches;
+	gboolean rv;
 	
 	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
@@ -162,23 +117,24 @@ run_query (MuQuery *xapian, const gchar *query, MuConfigOptions *opts)
 	}
 
 	if (opts->linksdir)
-		matches = make_links (iter, opts->linksdir,
-				      opts->clearlinks);
+		rv = mu_output_links (iter, opts->linksdir, opts->clearlinks,
+				      count);
 	else
-		matches = print_rows (iter, opts->fields,
-				      opts->summary_len);
+		rv = mu_output_plain (iter, opts->fields, opts->summary_len,
+				      count);
+
 	
-	if (matches == 0) 
+	if (count && *count == 0) 
 		g_warning ("no matches found");
 
 	mu_msg_iter_destroy (iter);
 
-	return matches > 0;
+	return rv;
 }
 
 
 static gboolean
-query_params_valid (MuConfigOptions *opts)
+query_params_valid (MuConfig *opts)
 {
 	const gchar *xpath;
 	
@@ -200,7 +156,7 @@ query_params_valid (MuConfigOptions *opts)
 }
 
 static gchar*
-resolve_bookmark (MuConfigOptions *opts)
+resolve_bookmark (MuConfig *opts)
 {
 	MuBookmarks *bm;
 	char* val;
@@ -226,7 +182,7 @@ resolve_bookmark (MuConfigOptions *opts)
 
 
 static gchar*
-get_query (MuConfigOptions *opts)
+get_query (MuConfig *opts)
 {
 	gchar *query, *bookmarkval;
 
@@ -274,46 +230,52 @@ db_is_ready (const char *xpath)
 }
 
 
-gboolean
-mu_cmd_find (MuConfigOptions *opts)
+MuExitCode
+mu_cmd_find (MuConfig *opts)
 {
 	GError *err;
 	MuQuery *xapian;
 	gboolean rv;
 	gchar *query;
 	const gchar *xpath;
+	size_t count;
 	
 	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (mu_cmd_equals (opts, "find"), FALSE);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND, FALSE);
 	
 	if (!query_params_valid (opts))
-		return FALSE;
-
+		return MU_EXITCODE_ERROR;
+	
 	xpath = mu_runtime_xapian_dir ();
 	if (!db_is_ready(xpath))
-		return FALSE;
+		return MU_EXITCODE_ERROR;
 	
 	/* first param is 'query', search params are after that */
 	query = get_query (opts);
 	if (!query) 
-		return FALSE;
+		return MU_EXITCODE_ERROR;
 
 	err = NULL;
 	xapian = mu_query_new (xpath, &err);
 	if (!xapian) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);
-		return FALSE;
+		return MU_EXITCODE_ERROR;
 	}
 
 	if (opts->xquery) 
 		rv = print_xapian_query (xapian, query);
 	else
-		rv = run_query (xapian, query, opts);
+		rv = run_query (xapian, query, opts, &count);
 
 	mu_query_destroy (xapian);
 	g_free (query);
-	
-	return rv;
+
+	if (!rv)
+		return MU_EXITCODE_ERROR;
+	else if (count == 0)
+		return MU_EXITCODE_NO_MATCHES;
+	else
+		return MU_EXITCODE_OK;
 }
 

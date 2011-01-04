@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,21 +18,20 @@
 */
 
 #include <glib.h>
+
 #include "mu-cmd.h"
 #include "mu-runtime.h"
 
 int
 main (int argc, char *argv[])
 {
-	gboolean rv;
+	int rv;
 	
 	if (!mu_runtime_init_from_cmdline (&argc, &argv))
 		return 1;
-	
-	rv = mu_cmd_execute (mu_runtime_config_options());
-
+	rv = mu_config_execute (mu_runtime_config());
 	mu_runtime_uninit ();
 	
-	return rv ? 0 : 1;
+	return rv;
 }
 

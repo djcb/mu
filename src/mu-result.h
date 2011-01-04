@@ -20,11 +20,9 @@
 #ifndef __MU_RESULT_H__
 #define __MU_RESULT_H__
 
-enum _MuResult {
-	MU_OK,		/* all went ok */
-	MU_STOP,	/* user wants to stop */	
-	MU_ERROR	/* some other error occured */
-};
-typedef enum _MuResult MuResult;
+G_BEGIN_DECLS
+
+
+G_END_DECLS
 
 #endif /*__MU_RESULT__*/

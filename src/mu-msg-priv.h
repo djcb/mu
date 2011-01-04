@@ -25,6 +25,8 @@
 
 #include "mu-msg.h"
 
+G_BEGIN_DECLS
+
 /* we put the the MuMsg definition in this separate -priv file, so we
  * can split the mu_msg implementations over separate files */
 
@@ -56,5 +58,7 @@ struct _MuMsg {
 	time_t		_timestamp;	
 	MuMsgPrio       _prio;
 };
+
+G_END_DECLS
 
 #endif /*__MU_MSG_PRIV_H__*/

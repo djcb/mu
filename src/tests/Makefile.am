@@ -37,19 +37,19 @@ noinst_PROGRAMS= $(TEST_PROGS)
 noinst_LTLIBRARIES=libtestmucommon.la
 
 TEST_PROGS += test-mu-util
-test_mu_util_SOURCES= test-mu-util.c
+test_mu_util_SOURCES= test-mu-util.c dummy.cc
 test_mu_util_LDADD=   libtestmucommon.la
 
 TEST_PROGS += test-mu-str
-test_mu_str_SOURCES= test-mu-str.c
+test_mu_str_SOURCES= test-mu-str.c dummy.cc
 test_mu_str_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-maildir
-test_mu_maildir_SOURCES= test-mu-maildir.c
+test_mu_maildir_SOURCES= test-mu-maildir.c dummy.cc
 test_mu_maildir_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-msg-fields
-test_mu_msg_fields_SOURCES= test-mu-msg-fields.c
+test_mu_msg_fields_SOURCES= test-mu-msg-fields.c dummy.cc
 test_mu_msg_fields_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-query
@@ -61,11 +61,11 @@ test_mu_cmd_SOURCES= test-mu-cmd.c dummy.cc
 test_mu_cmd_LDADD=    libtestmucommon.la
 
 TEST_PROGS += test-mu-msg
-test_mu_msg_SOURCES= test-mu-msg.c
+test_mu_msg_SOURCES= test-mu-msg.c dummy.cc
 test_mu_msg_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-runtime
-test_mu_runtime_SOURCES= test-mu-runtime.c
+test_mu_runtime_SOURCES= test-mu-runtime.c dummy.cc
 test_mu_runtime_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-store
@@ -73,9 +73,8 @@ test_mu_store_SOURCES= test-mu-store.c dummy.cc
 test_mu_store_LDADD= libtestmucommon.la
 
 TEST_PROGS += test-mu-msg-file
-test_mu_msg_file_SOURCES= test-mu-msg-file.c
+test_mu_msg_file_SOURCES= test-mu-msg-file.c dummy.cc
 test_mu_msg_file_LDADD=  libtestmucommon.la
-
 
 libtestmucommon_la_SOURCES=				\
 	test-mu-common.c				\
