@@ -33,7 +33,6 @@
 #include "mu-msg-iter-priv.hh"
 
 #include "mu-util.h"
-#include "mu-util-db.h"
 #include "mu-str.h"
 
 /*

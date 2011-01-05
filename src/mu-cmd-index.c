@@ -30,8 +30,6 @@
 #include <unistd.h>
 
 #include "mu-util.h"
-#include "mu-util-db.h"
-
 #include "mu-msg.h"
 #include "mu-index.h"
 #include "mu-runtime.h"

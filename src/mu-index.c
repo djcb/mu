@@ -33,7 +33,6 @@
 #include "mu-maildir.h"
 #include "mu-store.h"
 #include "mu-util.h"
-#include "mu-util-db.h"
 
 struct _MuIndex {
 	MuStore		*_xapian;
