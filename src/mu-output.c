@@ -321,7 +321,7 @@ mu_output_json (MuMsgIter *iter, size_t *count)
 		print_attr_json ("msgid", mu_msg_iter_get_msgid (iter),TRUE);
 		print_attr_json ("path", mu_msg_iter_get_path (iter),TRUE);
 		print_attr_json ("maildir", mu_msg_iter_get_maildir (iter),
-				 TRUE);
+				 FALSE);
 		g_print ("\t\t}");
 	}
 	g_print ("\t]\n}\n");
@@ -333,10 +333,55 @@ mu_output_json (MuMsgIter *iter, size_t *count)
 }
 
 
+static void
+print_attr_sexp (const char* elm, const char *str, gboolean nl)
+{
+	gchar *esc;
+	
+	if (!str || strlen(str) == 0)
+		return; /* empty: don't include */
+
+	esc = g_strescape (str, NULL);
+	g_print ("\t\t\t(:%s \"%s\")%s", elm, esc, nl ? "\n" : "");
+	g_free (esc);
+}
+
+
+
 gboolean
 mu_output_sexp (MuMsgIter *iter, size_t *count)
 {
-	g_print ("(%s)\n", __FUNCTION__);
+	MuMsgIter *myiter;
+	size_t mycount;
+	
+	g_return_val_if_fail (iter, FALSE);
+	
+	g_print ("(\n\t:messages\n");
+	
+	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
+	     mu_msg_iter_next (myiter), ++mycount) {
 
+		if (mycount != 0)
+			g_print ("\n");
+		
+		g_print ("\t\t(:message\n");
+		print_attr_sexp ("from", mu_msg_iter_get_from (iter),TRUE);
+		print_attr_sexp ("to", mu_msg_iter_get_to (iter),TRUE);
+		print_attr_sexp ("cc", mu_msg_iter_get_cc (iter),TRUE);
+		print_attr_sexp ("subject", mu_msg_iter_get_subject (iter),TRUE);
+		g_print ("\t\t\t(:date %u)\n",
+			 (unsigned) mu_msg_iter_get_date (iter));
+		g_print ("\t\t\t(:size %u)\n",
+			 (unsigned) mu_msg_iter_get_size (iter));
+		print_attr_sexp ("msgid", mu_msg_iter_get_msgid (iter),TRUE);
+		print_attr_sexp ("path", mu_msg_iter_get_path (iter),TRUE);
+		print_attr_sexp ("maildir", mu_msg_iter_get_maildir (iter),FALSE);
+		g_print (")");
+	}
+	g_print ("))\n");
+		
+	if (count)
+		*count = mycount;
+	
 	return TRUE;
 }
