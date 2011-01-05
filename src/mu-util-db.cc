@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,13 +21,12 @@
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
-#include <xapian.h>
-
 #include <cstring>
 #include <errno.h>
 
+#include <xapian.h>
+
 #include "mu-util.h"
-#include "mu-util-db.h"
 
 char*
 mu_util_db_version (const gchar *xpath)
@@ -88,8 +87,6 @@ mu_util_db_is_empty (const gchar* xpath)
 	
 	return FALSE;
 }
-
-
 
 gboolean
 mu_util_clear_database (const gchar *xpath)

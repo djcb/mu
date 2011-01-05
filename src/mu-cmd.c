@@ -27,6 +27,8 @@
 #include "mu-msg-part.h"
 #include "mu-cmd.h"
 #include "mu-util.h"
+#include "mu-str.h"
+#include "mu-maildir.h"
 
 static gboolean
 save_numbered_parts (MuMsg *msg, MuConfig *opts)
@@ -250,4 +252,101 @@ mu_cmd_extract (MuConfig *opts)
 		rv = save_parts (opts->params[1], opts); /* save */
 	
 	return rv ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
+}
+
+
+/* we ignore fields for now */
+static gboolean
+view_msg (MuMsg *msg, const gchar *fields, size_t summary_len)
+{
+	const char *field;
+	time_t date;
+
+	if ((field = mu_msg_get_from (msg)))
+		g_print ("From: %s\n", field);
+	
+	if ((field = mu_msg_get_to (msg)))
+		g_print ("To: %s\n", field);
+
+	if ((field = mu_msg_get_cc (msg)))
+		g_print ("Cc: %s\n", field);
+
+	if ((field = mu_msg_get_subject (msg)))
+		g_print ("Subject: %s\n", field);
+	
+	if ((date = mu_msg_get_date (msg)))
+		g_print ("Date: %s\n", mu_str_date_s ("%c", date));
+
+	if (summary_len > 0) {
+		field = mu_msg_get_summary (msg, summary_len);
+		g_print ("Summary: %s\n", field ? field : "<none>");
+	} else if ((field = mu_msg_get_body_text (msg))) 
+		g_print ("\n%s\n", field);
+
+	return TRUE;
+}
+
+MuExitCode
+mu_cmd_view (MuConfig *opts)
+{
+	int rv, i;
+	
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
+			      MU_EXITCODE_ERROR);
+	
+	/* note: params[0] will be 'view' */
+	if (!opts->params[0] || !opts->params[1]) {
+		g_warning ("usage: mu view [options] <file> [<files>]");
+		return MU_EXITCODE_ERROR;
+	}
+	
+	rv = MU_EXITCODE_OK;
+	for (i = 1; opts->params[i] && rv; ++i) {
+
+		GError *err = NULL;
+		MuMsg  *msg = mu_msg_new (opts->params[i], NULL, &err);
+		if (!msg) {
+			g_warning ("error: %s", err->message);
+			g_error_free (err);
+			return MU_EXITCODE_ERROR;
+		}
+		
+		if (!view_msg (msg, NULL, opts->summary_len))
+			rv = MU_EXITCODE_ERROR;
+		
+		mu_msg_destroy (msg);
+	}
+	
+	return rv;
+}
+
+
+MuExitCode
+mu_cmd_mkdir (MuConfig *opts)
+{
+	int i;
+
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_MKDIR,
+			      MU_EXITCODE_ERROR);
+	
+	if (!opts->params[1]) {
+		g_warning ("usage: mu mkdir [-u,--mode=<mode>] "
+			   "<dir> [more dirs]");
+		return MU_EXITCODE_ERROR;
+	}
+	
+	for (i = 1; opts->params[i]; ++i) {
+		GError *err = NULL;
+		if (!mu_maildir_mkdir (opts->params[i], opts->dirmode,
+				       FALSE, &err))
+			if (err && err->message) {
+				g_warning ("%s", err->message);
+				g_error_free (err);
+			}
+		return MU_EXITCODE_ERROR;
+	}
+
+	return MU_EXITCODE_OK;
 }

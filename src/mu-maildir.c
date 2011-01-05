@@ -75,7 +75,7 @@ create_maildir (const char *path, mode_t mode, GError **err)
 		fullpath = mu_str_fullpath_s (path, subdirs[i]);
 		rv = g_mkdir_with_parents (fullpath, (int)mode);
 		if (rv != 0) {
-			g_set_error (err, 0, MU_FILE_ERROR_CANNOT_MKDIR,
+			g_set_error (err, 0, MU_ERROR_FILE_CANNOT_MKDIR,
 				     "g_mkdir_with_parents failed: %s",
 				     strerror (errno));
 			return FALSE;

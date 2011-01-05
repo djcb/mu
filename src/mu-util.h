@@ -112,6 +112,51 @@ int mu_util_create_writeable_fd (const char* filename, const char* dir,
 				 gboolean overwrite)
     G_GNUC_WARN_UNUSED_RESULT;
 
+
+/**
+ * get the version of the xapian database (ie., the version of the
+ * 'schema' we are using). If this version != MU_XAPIAN_DB_VERSION,
+ * it's means we need to a full reindex.
+ * 
+ * @param xpath path to the xapian database
+ * 
+ * @return the version of the database as a newly allocated string
+ * (free with g_free); if there is no version yet, it will return NULL
+ */
+gchar* mu_util_db_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
+
+
+/**
+ * check whether the database is empty (contains 0 documents); in
+ * addition, a non-existing database is considered 'empty' too
+ * 
+ * @param xpath path to the xapian database
+ * 
+ * @return TRUE if the database is empty, FALSE otherwise
+ */
+gboolean mu_util_db_is_empty (const gchar *xpath);
+
+/**
+ * check if the 'schema' of the current database is up-to-date
+ * 
+ * @param xpath path to the xapian database
+ * 
+ * @return TRUE if it's up-to-date, FALSE otherwise
+ */
+gboolean mu_util_db_version_up_to_date (const gchar *xpath);
+
+/**
+ * clear the database, ie., remove all of the contents. This is a
+ * destructive operation, but the database can be restored be doing a
+ * full scan of the maildirs.
+ * 
+ * @param xpath path to the database
+ * 
+ * @return TRUE if the clearing succeeded, FALSE otherwise.
+ */
+gboolean mu_util_clear_database (const gchar *xpath);
+
+
 /**
  * convert a string array in to a string, with the elements separated
  * by ' '
@@ -265,9 +310,9 @@ enum _MuError {
 	MU_ERROR_FILE_CANNOT_OPEN,
 	MU_ERROR_FILE_CANNOT_READ,
 	MU_ERROR_FILE_CANNOT_CREATE,
-	MU_FILE_ERROR_CANNOT_MKDIR,
-	MU_FILE_ERROR_STAT_FAILED,
-	MU_FILE_ERROR_READDIR_FAILED,
+	MU_ERROR_FILE_CANNOT_MKDIR,
+	MU_ERROR_FILE_STAT_FAILED,
+	MU_ERROR_FILE_READDIR_FAILED,
 	/* generic file-related error */
 	MU_ERROR_FILE,
 	
@@ -276,10 +321,6 @@ enum _MuError {
 };
 typedef enum _MuError MuError;
 
-
 G_END_DECLS
-
-
-
 
 #endif /*__MU_UTIL_H__*/
