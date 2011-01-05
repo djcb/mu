@@ -229,19 +229,17 @@ mu_output_plain (MuMsgIter *iter, const char *fields, size_t summary_len,
 }
 
 static void
-print_attr (const char* elm, const char *str)
+print_attr_xml (const char* elm, const char *str)
 {
 	gchar *esc;
 	
 	if (!str || strlen(str) == 0)
 		return; /* empty: don't include */
 
-	esc = mu_str_escape_xml (str);
+	esc = g_markup_escape_text (str, -1);
 	g_print ("\t\t<%s>%s</%s>\n", elm, esc, elm);
 	g_free (esc);
 }
-
-
 
 gboolean
 mu_output_xml (MuMsgIter *iter, size_t *count)
@@ -257,17 +255,17 @@ mu_output_xml (MuMsgIter *iter, size_t *count)
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
 		g_print ("\t<message>\n");
-		print_attr ("from", mu_msg_iter_get_from (iter));
-		print_attr ("to", mu_msg_iter_get_to (iter));
-		print_attr ("cc", mu_msg_iter_get_cc (iter));
-		print_attr ("subject", mu_msg_iter_get_subject (iter));
+		print_attr_xml ("from", mu_msg_iter_get_from (iter));
+		print_attr_xml ("to", mu_msg_iter_get_to (iter));
+		print_attr_xml ("cc", mu_msg_iter_get_cc (iter));
+		print_attr_xml ("subject", mu_msg_iter_get_subject (iter));
 		g_print ("\t\t<date>%u</date>\n",
 			 (unsigned) mu_msg_iter_get_date (iter));
 		g_print ("\t\t<size>%u</size>\n",
 			 (unsigned) mu_msg_iter_get_size (iter));
-		print_attr ("msgid", mu_msg_iter_get_msgid (iter));
-		print_attr ("path", mu_msg_iter_get_path (iter));
-		print_attr ("maildir", mu_msg_iter_get_maildir (iter));
+		print_attr_xml ("msgid", mu_msg_iter_get_msgid (iter));
+		print_attr_xml ("path", mu_msg_iter_get_path (iter));
+		print_attr_xml ("maildir", mu_msg_iter_get_maildir (iter));
 		g_print ("\t</message>\n");
 	}
 
@@ -279,13 +277,58 @@ mu_output_xml (MuMsgIter *iter, size_t *count)
 	return TRUE;
 }
 
+
+static void
+print_attr_json (const char* elm, const char *str, gboolean comma)
+{
+	gchar *esc;
+	
+	if (!str || strlen(str) == 0)
+		return; /* empty: don't include */
+
+	esc = g_strescape (str, NULL);
+	g_print ("\t\t\t\"%s\":\"%s\"%s\n", elm, esc, comma ? "," : "");
+	g_free (esc);
+}
+
+
 gboolean
 mu_output_json (MuMsgIter *iter, size_t *count)
 {
-	g_print ("{\n");
-	g_print ("\t%s\n", __FUNCTION__);
-	g_print ("}\n");
+	MuMsgIter *myiter;
+	size_t mycount;
+	
+	g_return_val_if_fail (iter, FALSE);
+	
+	g_print ("{\n\t\"messages\":\n\t[\n");
+	
+	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
+	     mu_msg_iter_next (myiter), ++mycount) {
 
+		if (mycount != 0)
+			g_print (",\n");
+			
+		g_print ("\t\t{\n");
+		print_attr_json ("from", mu_msg_iter_get_from (iter), TRUE);
+		print_attr_json ("to", mu_msg_iter_get_to (iter),TRUE);
+		print_attr_json ("cc", mu_msg_iter_get_cc (iter),TRUE);
+		print_attr_json ("subject", mu_msg_iter_get_subject (iter),
+				 TRUE);
+		g_print ("\t\t\t\"date\":%u,\n",
+			 (unsigned) mu_msg_iter_get_date (iter));
+		g_print ("\t\t\t\"size\":%u,\n",
+			 (unsigned) mu_msg_iter_get_size (iter));
+		print_attr_json ("msgid", mu_msg_iter_get_msgid (iter),TRUE);
+		print_attr_json ("path", mu_msg_iter_get_path (iter),TRUE);
+		print_attr_json ("maildir", mu_msg_iter_get_maildir (iter),
+				 TRUE);
+		g_print ("\t\t}");
+	}
+	g_print ("\t]\n}\n");
+		
+	if (count)
+		*count = mycount;
+	
 	return TRUE;
 }
 
