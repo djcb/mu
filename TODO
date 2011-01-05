@@ -12,6 +12,8 @@
 ** release 0.9.2 [20%]
 
    - [ ] xml,json,sexp output
+   - [ ] check all strings are really UTF8
+   - [ ] fix size value
    - [ ] separate exit code for 'not found' vs other errors
    - [ ] fix build for Solaris
    - [X] clearer errors when /home/user does not exist

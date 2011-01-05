@@ -368,3 +368,12 @@ mu_str_fullpath_s (const char* path, const char* name)
 	
 	return buf;
 }
+
+char*
+mu_str_escape_xml (const gchar* str)
+{
+	if (!str)
+		return NULL;
+
+	return g_markup_escape_text (str, -1);
+}

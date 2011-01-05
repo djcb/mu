@@ -206,7 +206,6 @@ mu_output_plain (MuMsgIter *iter, const char *fields, size_t summary_len,
 		int len;
 		
 		for (myfields = fields, len = 0; *myfields; ++myfields) {
-
 			MuMsgFieldId mfid;
 			mfid =	mu_msg_field_id_from_shortcut (*myfields, FALSE);
 
@@ -229,15 +228,55 @@ mu_output_plain (MuMsgIter *iter, const char *fields, size_t summary_len,
 	return TRUE;
 }
 
+static void
+print_attr (const char* elm, const char *str)
+{
+	gchar *esc;
+	
+	if (!str || strlen(str) == 0)
+		return; /* empty: don't include */
+
+	esc = mu_str_escape_xml (str);
+	g_print ("\t\t<%s>%s</%s>\n", elm, esc, elm);
+	g_free (esc);
+}
+
+
 
 gboolean
 mu_output_xml (MuMsgIter *iter, size_t *count)
 {
-	g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-	g_print ("%s\n", __FUNCTION__);
-
-	return TRUE;
+	MuMsgIter *myiter;
+	size_t mycount;
 	
+	g_return_val_if_fail (iter, FALSE);
+
+	g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+	g_print ("<messages>\n");
+	
+	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
+	     mu_msg_iter_next (myiter), ++mycount) {
+		g_print ("\t<message>\n");
+		print_attr ("from", mu_msg_iter_get_from (iter));
+		print_attr ("to", mu_msg_iter_get_to (iter));
+		print_attr ("cc", mu_msg_iter_get_cc (iter));
+		print_attr ("subject", mu_msg_iter_get_subject (iter));
+		g_print ("\t\t<date>%u</date>\n",
+			 (unsigned) mu_msg_iter_get_date (iter));
+		g_print ("\t\t<size>%u</size>\n",
+			 (unsigned) mu_msg_iter_get_size (iter));
+		print_attr ("msgid", mu_msg_iter_get_msgid (iter));
+		print_attr ("path", mu_msg_iter_get_path (iter));
+		print_attr ("maildir", mu_msg_iter_get_maildir (iter));
+		g_print ("\t</message>\n");
+	}
+
+	g_print ("</messages>\n");
+		
+	if (count)
+		*count = mycount;
+	
+	return TRUE;
 }
 
 gboolean

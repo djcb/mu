@@ -109,8 +109,20 @@ const char*      mu_msg_iter_get_path          (MuMsgIter *iter);
 const char*      mu_msg_iter_get_maildir (MuMsgIter *iter);
 
 
+
 /**
- * get the size of the message
+ * get the msgid of the message
+ *  
+ * @param iter a valid MuMsgIter iterator
+ * 
+ * @return the msgid or NULL in case of error
+ */
+const char*      mu_msg_iter_get_msgid (MuMsgIter *iter);
+
+
+
+/**
+ * get the size of the message in Kb
  * 
  * @param iter a valid MuMsgIter iterator
  * 

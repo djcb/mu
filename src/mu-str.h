@@ -220,6 +220,17 @@ time_t mu_str_date_parse_hdwmy (const char* str);
  */
 const char* mu_str_fullpath_s (const char* path, const char* name);
 
+
+/** 
+ * escape string for inclusion in XML-data
+ * 
+ * @param str a str or NULL
+ * 
+ * @return the escaped version of the string; g_free when you're done
+ * with it.
+ */
+char* mu_str_escape_xml (const gchar* str);
+
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/

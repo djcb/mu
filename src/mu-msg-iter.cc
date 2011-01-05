@@ -186,7 +186,7 @@ mu_msg_iter_get_field (MuMsgIter *iter, MuMsgFieldId mfid)
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
 
 	try {
-		if (!iter->_str[mfid]) { 	/* cache the value */
+		if (!iter->_str[mfid]) { /* cache the value */
 			Xapian::Document doc (iter->_cursor.get_document());
 			iter->_str[mfid] =
 				g_strdup (doc.get_value(mfid).c_str());
@@ -246,6 +246,13 @@ mu_msg_iter_get_maildir (MuMsgIter *iter)
 {
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	return mu_msg_iter_get_field (iter, MU_MSG_FIELD_ID_MAILDIR);
+}
+
+const char*
+mu_msg_iter_get_msgid (MuMsgIter *iter)
+{
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+	return mu_msg_iter_get_field (iter, MU_MSG_FIELD_ID_MSGID);
 }
 
 
