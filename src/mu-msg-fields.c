@@ -127,7 +127,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_SIZE,
 		MU_MSG_FIELD_TYPE_BYTESIZE,
 		"size", 'z', 'Z', /* siZe */
-		FLAG_GMIME
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
 	},
 	
 	{ 

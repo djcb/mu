@@ -212,15 +212,6 @@ mu_msg_iter_get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(static_cast<gint64>(-1));
 }
 
-static long
-get_field_number (MuMsgIter *iter, MuMsgFieldId mfid)
-{
-	const char* str = mu_msg_iter_get_field(iter, mfid);
-	return str ? atol (str) : 0;
-}
-
-
-
 /* hmmm.... is it impossible to get a 0 docid, or just very improbable? */
 unsigned int
 mu_msg_iter_get_docid (MuMsgIter *iter)
@@ -292,8 +283,14 @@ size_t
 mu_msg_iter_get_size (MuMsgIter *iter)
 {
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), 0);
-	return static_cast<size_t>(get_field_number
-				   (iter, MU_MSG_FIELD_ID_SIZE));
+	
+	try {
+		return static_cast<size_t>(
+			Xapian::sortable_unserialise(
+				mu_msg_iter_get_field
+				(iter,MU_MSG_FIELD_ID_SIZE)));
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(0);
 } 
 
 

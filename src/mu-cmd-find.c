@@ -161,15 +161,9 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 		rv = mu_output_plain (iter, opts->fields, opts->summary_len,
 				      count);
 		break;
-	case FORMAT_XML:
-		rv = mu_output_xml (iter, count);
-		break;
-	case FORMAT_JSON:
-		rv = mu_output_json (iter, count);
-		break;
-	case FORMAT_SEXP:
-		rv = mu_output_sexp (iter, count);
-		break;		
+	case FORMAT_XML:  rv = mu_output_xml (iter, count); break;
+	case FORMAT_JSON: rv = mu_output_json (iter, count); break;
+	case FORMAT_SEXP: rv = mu_output_sexp (iter, count); break;		
 	default:
 		g_assert_not_reached ();
 		return FALSE;
