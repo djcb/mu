@@ -1,4 +1,4 @@
-.TH MU FIND 1 "November 2010" "User Manuals"
+.TH MU FIND 1 "January 2011" "User Manuals"
 
 .SH NAME 
 
@@ -12,9 +12,9 @@ database
 
 .SH DESCRIPTION
 
-\fBmu find\fR is the \fBmu\fR sub-command for searching e-mail message that
+\fBmu find\fR is the \fBmu\fR command for searching e-mail message that
 were stored earlier using
-\fBmu index(1)\bR.
+\fBmu index(1)\fR.
 
 .SH SEARCHING MAIL
 
@@ -25,7 +25,18 @@ search pattern. For example:
    $ mu find subject:snow from:john
 .fi
 
-would find all messages from John with 'snow' in the subject field.
+would find all messages from John with 'snow' in the subject field, something
+like:
+
+.nf
+  2009-03-05 17:57:33 EET Lucia  <lucia@example.com> running in the snow
+  2009-03-05 18:38:24 EET Marius <marius@foobar.com> Re: running in the snow
+.fi
+
+Note, this the default, plain-text output, which is the default, so you don't
+have to use \fB--format=plain\fR. For other types of output (such as symlinks,
+XML, JSON or s-expressions), see the discussion in the \fBOPTIONS\fR-section
+below about \fB--format\fR.
 
 The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are treated as
@@ -104,6 +115,7 @@ extra discusion.
 
 First, the message flags field describes certain properties of the message, as
 listed in the following table:
+
 .nf
 	d,draft         Draft Message
 	f,flagged       Flagged
@@ -162,16 +174,21 @@ at 23:59.
 
 To get all messages between (inclusive) the 5th of May 2009 and the 2nd of
 June 2010, you could use:
+
 .nf
   $ mu find date:20090505..20100602 
 .fi
+
 Characters like ':', '/', '-' and single '.' are ignored, so the following is
 equivalent but more readable:
+
 .nf
   $ mu find date:2009-05-05..2010-06-02 
 .fi
+
 Precision is up to the minute and 24-hour notation for times is used, so
 another example would be:
+
 .nf
   $ mu find date:2009-05-05/12:23..2010-06-02/17:18 
 .fi
@@ -193,6 +210,7 @@ examples will explain this:
 
 Using this notation, you can for example match messages between two and three
 weeks old:
+
 .nf
   $ mu find date:3w..2w 
 .fi
@@ -222,9 +240,11 @@ from), which will replace with the actual field in the output. Fields that are
 not known will be output as-is, allowing for some simple formatting.
 
 For example:
+
 .nf
   $ mu find subject:snow --fields "d f s"
 .fi
+
 would list the date, subject and sender of all messages with 'snow' in the
 their subject.
 
@@ -278,15 +298,33 @@ choice, but for dates it may be more useful to sort in the opposite direction.
 
 .TP
 \fB\-\-xquery\fR
-shows the Xapian query corresponding to your search terms. This is primarily
-meant for for debugging purposes.
 
 .TP
 \fB\-k\fR, \fB\-\-summary\-len\fR=\fI<len>\fR
-output a summary based on up to \fI\len\fR lines of the message. The default is
-.B 0
-, or no summary.
+output a summary based on up to \fI\len\fR lines of the message. The default
+is \fB0\fR: no summary at all.
 
+.TP
+\fB\-\-format\fR=\fIplain|links|xquery|xml|json|sexp\fR
+output results in the specified format.
+
+The default is \fBplain\fR, i.e normal output with one line per message.
+
+\fBlinks\fR outputs the results as a maildir with symbolic links to the found
+messages. This enables easy integration with mail-clients (see below for more
+information). See \fB\-\-linksdir\fR and \fB\-\-clearlinks\fR below.
+
+\fBxml\fR formats the search results as XML.
+
+\fBjson\fR formats the search results as JSON (\fIJavascript Object
+Notation\fR).
+
+\fBsexp\fR formats the search results as an s-expression as used in Lisp
+programming environments.
+
+\fBxquery\fR shows the Xapian query corresponding to your search terms. This
+is meant for for debugging purposes.
+ 
 .TP
 \fB\-\-linksdir\fR \fR=\fI<dir>\fR and \fB\-c\fR, \fB\-\-clearlinks\fR
 output the results as a maildir with symbolic links to the found
@@ -364,50 +402,68 @@ Find all messages with attachments:
 .TP
 
 \fBmutt\fR
+
 For \fBmutt\fR you can use the following in your \fImuttrc\fR; pressing the F8
 key will start a search, and F9 will take you to the results.
 
 .nf
 # mutt macros for mu
-macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search " \
+macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search " \\
 					"mu find"
-macro index <F9> "<change-folder-readonly>~/Maildir/search" \
-					"display mu find results"
+macro index <F9> "<change-folder-readonly>~/Maildir/search" \\
+					"mu find results"
 .fi
 
 
 .TP
 
 \fBWanderlust\fR
+
 If you use the Wanderlust e-mail client for \fBemacs\fR, the following
 definitions can be used; typing 'Q' will start a query.
 
 .nf
-;; mu integration for Wanderlust
-(defvar mu-wl-mu-program     "mu")
+(defvar mu-wl-mu-program     "/usr/local/bin/mu")
 (defvar mu-wl-search-folder  "search")
 
 (defun mu-wl-search ()
   "search for messages with `mu', and jump to the results"
-  (interactive)
-  (let* ((muexpr (read-string "Find messages matching: "))
+   (let* ((muexpr (read-string "Find messages matching: "))
 	  (sfldr  (concat elmo-maildir-folder-path "/"
 		    mu-wl-search-folder))
 	  (cmdline (concat mu-wl-mu-program " find "
-		      "--clearlinks --linksdir='" sfldr "' "
-		     muexpr)))
-    (= 0 (shell-command cmdline))))
+		      "--clearlinks --format=links --linksdir='" sfldr "' "
+		     muexpr))    
+	  (rv (shell-command cmdline)))
+    (cond
+      ((= rv 0)  (message "Query succeeded"))
+      ((= rv 2)  (message "No matches found"))
+      (t (message "Error running query")))
+  (= rv 0)))
 
 (defun mu-wl-search-and-goto ()
   "search and jump to the folder with the results"
   (interactive)
-  
-  (if (mu-wl-search)
+  (when (mu-wl-search)
     (wl-summary-goto-folder-subr
       (concat "." mu-wl-search-folder)
       'force-update nil nil t)
-    (message "Query failed")))
+    (wl-summary-sort-by-date)))
+
+;; querying both in summary and folder
+(define-key wl-summary-mode-map (kbd "Q") ;; => query
+  '(lambda()(interactive)(mu-wl-search-and-goto))) 
+(define-key wl-folder-mode-map (kbd "Q") ;; => query
+  '(lambda()(interactive)(mu-wl-search-and-goto))) 
+  
 .fi
+
+
+.SH RETURN VALUE
+	
+\fBmu\fR returns 0 for searches with at least one matching message, 2 for
+searches that do not match anything. In case of errors 1 or any number greater
+than 2 will be returned.
 
 .SH BUGS
 

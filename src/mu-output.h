@@ -52,6 +52,41 @@ gboolean mu_output_plain (MuMsgIter *iter, const char *fields,
 gboolean mu_output_links (MuMsgIter *iter, const char *linksdir,
 			  gboolean clearlinks, size_t *count);
 
+/**
+ * output the search results (MsgIter) as XML to standard
+ * output
+ * 
+ * @param iter iterator pointing to a message row
+ * @param count output param to receive the number of messages found, or NULL
+ * 
+ * @return TRUE if the printing succeeded, FALSE in case of error
+ */
+gboolean mu_output_xml (MuMsgIter *iter, size_t *count);
+
+/**
+ * output the search results (MsgIter) as JSON to standard
+ * output
+ * 
+ * @param iter iterator pointing to a message row
+ * @param count output param to receive the number of messages found, or NULL
+ * 
+ * @return TRUE if the printing succeeded, FALSE in case of error
+ */
+gboolean mu_output_json (MuMsgIter *iter, size_t *count);
+
+/**
+ * output the search results (MsgIter) as s-expressions to standard
+ * output
+ * 
+ * @param iter iterator pointing to a message row
+ * @param count output param to receive the number of messages found, or NULL
+ * 
+ * @return TRUE if the printing succeeded, FALSE in case of error
+ */
+gboolean mu_output_sexp (MuMsgIter *iter, size_t *count);
+
+
+
 G_END_DECLS
 
 #endif /*__MU_OUTPUT_H__*/

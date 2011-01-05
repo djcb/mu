@@ -37,9 +37,45 @@
 #include "mu-runtime.h"
 
 #include "mu-util.h"
-#include "mu-util-db.h"
 #include "mu-cmd.h"
 #include "mu-output.h"
+
+
+enum _OutputFormat {
+	FORMAT_JSON,
+	FORMAT_LINKS,
+	FORMAT_PLAIN,
+	FORMAT_SEXP,
+	FORMAT_XML,
+	FORMAT_XQUERY,
+
+	FORMAT_NONE
+};
+typedef enum _OutputFormat OutputFormat;
+
+static OutputFormat
+get_output_format (const char *formatstr)
+{
+	int i;
+	struct {
+		const char*	name;
+		OutputFormat	format;
+	} formats [] = {
+		{MU_CONFIG_FORMAT_JSON,		 FORMAT_JSON},
+		{MU_CONFIG_FORMAT_LINKS,	 FORMAT_LINKS},
+		{MU_CONFIG_FORMAT_PLAIN,	 FORMAT_PLAIN},
+		{MU_CONFIG_FORMAT_SEXP,		 FORMAT_SEXP},
+		{MU_CONFIG_FORMAT_XML,		 FORMAT_XML},
+		{MU_CONFIG_FORMAT_XQUERY,	 FORMAT_XQUERY}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(formats); i++)
+		if (strcmp (formats[i].name, formatstr) == 0)
+			return formats[i].format;
+
+	return FORMAT_NONE;
+}
+
 
 static void
 update_warning (void)
@@ -55,7 +91,7 @@ print_xapian_query (MuQuery *xapian, const gchar *query)
 {
 	char *querystr;
 	GError *err;
-
+	
 	err = NULL;
 	querystr = mu_query_as_string (xapian, query, &err);
 	if (!querystr) {
@@ -93,7 +129,7 @@ sort_field_from_string (const char* fieldstr)
 
 static gboolean
 run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
-	   size_t *count)
+	   OutputFormat format, size_t *count)
 {
 	GError *err;
 	MuMsgIter *iter;
@@ -116,14 +152,29 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 		return FALSE;
 	}
 
-	if (opts->linksdir)
+	switch (format) {
+	case FORMAT_LINKS:
 		rv = mu_output_links (iter, opts->linksdir, opts->clearlinks,
 				      count);
-	else
+		break;
+	case FORMAT_PLAIN: 
 		rv = mu_output_plain (iter, opts->fields, opts->summary_len,
 				      count);
-
-	
+		break;
+	case FORMAT_XML:
+		rv = mu_output_xml (iter, count);
+		break;
+	case FORMAT_JSON:
+		rv = mu_output_json (iter, count);
+		break;
+	case FORMAT_SEXP:
+		rv = mu_output_sexp (iter, count);
+		break;		
+	default:
+		g_assert_not_reached ();
+		return FALSE;
+	}
+		
 	if (count && *count == 0) 
 		g_warning ("no matches found");
 
@@ -136,6 +187,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 static gboolean
 query_params_valid (MuConfig *opts)
 {
+	OutputFormat format;
 	const gchar *xpath;
 	
 	if (opts->linksdir) 
@@ -144,6 +196,23 @@ query_params_valid (MuConfig *opts)
 			return FALSE;
 		}
 
+	format = get_output_format (opts->formatstr);
+	if (format == FORMAT_NONE) {
+		g_warning ("invalid output format %s",
+			   opts->formatstr ? opts->formatstr : "<none>");
+		return FALSE;
+	}
+
+	if (format == FORMAT_LINKS && !opts->linksdir) {
+		g_warning ("missing --linksdir argument");
+		return FALSE;
+	}
+
+	if (opts->linksdir && format != FORMAT_LINKS) {
+		g_warning ("--linksdir is only valid with --format=links");
+		return FALSE;
+	}
+	
 	xpath = mu_runtime_xapian_dir();
 	
 	if (mu_util_check_dir (xpath, TRUE, FALSE))
@@ -261,12 +330,15 @@ mu_cmd_find (MuConfig *opts)
 	gboolean rv;
 	gchar *query;
 	size_t count;
+	OutputFormat format;
 	
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND, FALSE);
 	
 	if (!query_params_valid (opts))
 		return MU_EXITCODE_ERROR;
+
+	format = get_output_format (opts->formatstr);
 	
 	xapian = get_query_obj ();
 	if (!xapian)
@@ -276,11 +348,11 @@ mu_cmd_find (MuConfig *opts)
 	query = get_query (opts);
 	if (!query) 
 		return MU_EXITCODE_ERROR;
-
-	if (opts->xquery) 
+	
+	if (format == FORMAT_XQUERY) 
 		rv = print_xapian_query (xapian, query);
 	else
-		rv = run_query (xapian, query, opts, &count);
+		rv = run_query (xapian, query, opts, format, &count);
 
 	mu_query_destroy (xapian);
 	g_free (query);
@@ -291,4 +363,3 @@ mu_cmd_find (MuConfig *opts)
 		return (count == 0) ?
 			MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
 }
-

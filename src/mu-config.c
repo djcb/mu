@@ -49,15 +49,15 @@ config_options_group_mu (MuConfig *opts)
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
 				{"debug", 'd', 0, G_OPTION_ARG_NONE, &opts->debug,
-				 "print debug output to standard error", NULL},
+				 "print debug output to standard error (false)", NULL},
 				{"quiet", 'q', 0, G_OPTION_ARG_NONE, &opts->quiet,
-				 "don't give any progress information", NULL},
+				 "don't give any progress information (false)", NULL},
 				{"version", 'v', 0, G_OPTION_ARG_NONE, &opts->version,
-				 "display version and copyright information", NULL},
+				 "display version and copyright information (false)", NULL},
 				{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &opts->muhome,
 				 "specify an alternative mu directory", NULL},
 				{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &opts->log_stderr,
-				 "log to standard error", NULL},
+				 "log to standard error (false)", NULL},
 				{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 				 &opts->params, "parameters", NULL},
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
@@ -94,16 +94,16 @@ config_options_group_index (MuConfig * opts)
 				{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
 				 "top of the maildir", NULL},
 				{"reindex", 0, 0, G_OPTION_ARG_NONE, &opts->reindex,
-				 "index even already indexed messages", NULL},
+				 "index even already indexed messages (false)", NULL},
 				{"rebuild", 0, 0, G_OPTION_ARG_NONE, &opts->rebuild,
-				 "rebuild the database from scratch", NULL},
+				 "rebuild the database from scratch (false)", NULL},
 				{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &opts->autoupgrade,
-				 "automatically upgrade the database with new mu versions",
+				 "auto-upgrade the database with new mu versions (false)",
 				 NULL},
 				{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &opts->nocleanup,
-				 "don't clean up the database after indexing", NULL},
+				 "don't clean up the database after indexing (false)", NULL},
 				{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &opts->xbatchsize,
-				 "set a custom batchsize for committing to xapian or 0 for default", NULL},
+				 "set transaction batchsize for xapian commits (0)", NULL},
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 
@@ -129,6 +129,9 @@ set_group_find_defaults (MuConfig *opts)
 				}
 		}
 
+		if (!opts->formatstr) /* by default, use plain output */
+				opts->formatstr = MU_CONFIG_FORMAT_PLAIN;
+		
 		if (opts->linksdir) {
 				gchar *old = opts->linksdir;
 				opts->linksdir = mu_util_dir_expand(opts->linksdir);
@@ -138,6 +141,7 @@ set_group_find_defaults (MuConfig *opts)
 						g_free(old);
 		}
 
+		
 		/* FIXME: some warning when summary_len < 0? */
 		if (opts->summary_len < 1)
 				opts->summary_len = 0;
@@ -148,8 +152,6 @@ config_options_group_find (MuConfig *opts)
 {
 		GOptionGroup *og;
 		GOptionEntry entries[] = {
-				{"xquery", 0, 0, G_OPTION_ARG_NONE, &opts->xquery,
-				 "print the Xapian query (for debugging)", NULL},
 				{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
 				 "fields to display in the output", NULL},
 				{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
@@ -159,13 +161,14 @@ config_options_group_find (MuConfig *opts)
 				{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,
 				 "sort in descending order (z -> a)", NULL},
 				{"summary-len", 'k', 0, G_OPTION_ARG_INT, &opts->summary_len,
-				 "max number of lines for summary", NULL},
+				 "max number of lines for summary (0)", NULL},
 				{"linksdir", 0, 0, G_OPTION_ARG_STRING, &opts->linksdir,
 				 "output as symbolic links to a target maildir", NULL},
 				{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &opts->clearlinks,
-				 "clear old links before filling a linksdir", NULL},
-				/* {"output", 'o', 0, G_OPTION_ARG_STRING, &opts->output, */
-				/*  "output type ('plain'(*), 'links', 'xml', 'json', 'sexp')", NULL}, */
+				 "clear old links before filling a linksdir (false)", NULL},
+				{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
+				 "output format ('plain'(*), 'links', 'xml',"
+				 "'json', 'sexp', 'xquery') (plain)", NULL},
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 
@@ -190,8 +193,7 @@ config_options_group_mkdir (MuConfig *opts)
 		/* set dirmode before, because '0000' is a valid mode */
 		opts->dirmode = 0755;
 
-		og = g_option_group_new("mkdir",
-								"options for the 'mkdir' command",
+		og = g_option_group_new("mkdir", "options for the 'mkdir' command",
 								"", NULL, NULL);
 		g_option_group_add_entries(og, entries);
 
@@ -205,15 +207,15 @@ config_options_group_extract(MuConfig *opts)
 		GOptionEntry entries[] = {
 				{"save-attachments", 'a', 0, G_OPTION_ARG_NONE,
 				 &opts->save_attachments,
-				 "save all attachments", NULL},
+				 "save all attachments (false)", NULL},
 				{"save-all", 0, 0, G_OPTION_ARG_NONE, &opts->save_all,
-				 "save all parts (incl. non-attachments)", NULL},
+				 "save all parts (incl. non-attachments) (false)", NULL},
 				{"parts", 0, 0, G_OPTION_ARG_STRING, &opts->parts,
 				 "save specific parts (comma-separated list)", NULL},
 				{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &opts->targetdir,
 				 "target directory for saving", NULL},
 				{"overwrite", 0, 0, G_OPTION_ARG_NONE, &opts->overwrite,
-				 "overwrite existing files", NULL},
+				 "overwrite existing files (false)", NULL},
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 

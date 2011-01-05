@@ -100,7 +100,6 @@ mu_output_links (MuMsgIter *iter, const char* linksdir,
 	
 	g_return_val_if_fail (iter, FALSE);
 	g_return_val_if_fail (linksdir, FALSE);	
-	g_return_val_if_fail (!mu_msg_iter_is_done (iter), FALSE);
 
 	/* note: we create the linksdir even if there are no search results */
 	if (!create_linksdir_maybe (linksdir, clearlinks))
@@ -230,3 +229,32 @@ mu_output_plain (MuMsgIter *iter, const char *fields, size_t summary_len,
 	return TRUE;
 }
 
+
+gboolean
+mu_output_xml (MuMsgIter *iter, size_t *count)
+{
+	g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+	g_print ("%s\n", __FUNCTION__);
+
+	return TRUE;
+	
+}
+
+gboolean
+mu_output_json (MuMsgIter *iter, size_t *count)
+{
+	g_print ("{\n");
+	g_print ("\t%s\n", __FUNCTION__);
+	g_print ("}\n");
+
+	return TRUE;
+}
+
+
+gboolean
+mu_output_sexp (MuMsgIter *iter, size_t *count)
+{
+	g_print ("(%s)\n", __FUNCTION__);
+
+	return TRUE;
+}

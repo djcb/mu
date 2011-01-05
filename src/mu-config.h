@@ -27,6 +27,13 @@
 
 G_BEGIN_DECLS
 
+#define MU_CONFIG_FORMAT_PLAIN	"plain"    /* plain text output */
+#define MU_CONFIG_FORMAT_LINKS	"links"    /* output as symlinks */
+#define MU_CONFIG_FORMAT_XML	"xml"      /* output xml */
+#define MU_CONFIG_FORMAT_JSON	"json"     /* output json */
+#define MU_CONFIG_FORMAT_SEXP	"sexp"     /* output sexps */
+#define MU_CONFIG_FORMAT_XQUERY "xquery"   /* output the xapian query */
+
 enum _MuConfigCmd {
 		MU_CONFIG_CMD_INDEX,
 		MU_CONFIG_CMD_FIND,
@@ -79,6 +86,9 @@ struct _MuConfig {
 		unsigned		 summary_len;	/* max # of lines of msg in summary */
 		char            *bookmark;		/* use bookmark */
 
+		char			*formatstr;     /* output type
+										 * (plain*,links,xml,json,sexp) */
+		
 		/* output to a maildir with symlinks */
 		char            *linksdir;		/* maildir to output symlinks */
 		gboolean		 clearlinks;	/* clear a linksdir before filling */
@@ -103,8 +113,8 @@ typedef struct _MuConfig MuConfig;
  * 
  * @param opts options 
  */
-MuConfig *mu_config_new (int *argcp, char ***argvp);
-
+MuConfig *mu_config_new (int *argcp, char ***argvp)
+       G_GNUC_WARN_UNUSED_RESULT;
 /**
  * free the MuOptionsConfig structure; the the muhome and maildir
  * members are heap-allocated, so must be freed.
