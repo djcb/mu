@@ -77,8 +77,8 @@ struct _MuConfig {
 										 * default */
 	
 		/* options for querying */
-		gboolean         xquery;        /* give the Xapian query
-										   instead of search
+		gboolean         xquery;        /* (obsolete) give the Xapian
+										   query instead of search
 										   results */
 		char			*fields;		/* fields to show in output */	
 		char	        *sortfield;		/* field to sort by (string) */

@@ -206,6 +206,11 @@ query_params_valid (MuConfig *opts)
 		return FALSE;
 	}
 
+	if (opts->xquery) {
+		g_warning ("--xquery is obsolete; use --format=xquery instead");
+		return FALSE;
+	}
+	
 	if (format == FORMAT_LINKS && !opts->linksdir) {
 		g_warning ("missing --linksdir argument");
 		return FALSE;

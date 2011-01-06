@@ -169,6 +169,9 @@ config_options_group_find (MuConfig *opts)
 				{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
 				 "output format ('plain'(*), 'links', 'xml',"
 				 "'json', 'sexp', 'xquery') (plain)", NULL},
+				{"xquery", 0, 0, G_OPTION_ARG_NONE, &opts->xquery,
+				 "obsolete, use --format=xquery instead", NULL},
+				
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 
