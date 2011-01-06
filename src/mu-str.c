@@ -411,3 +411,4 @@ mu_str_escape_c_literal (const gchar* str)
 
 	return g_string_free (tmp, FALSE);
 }
+

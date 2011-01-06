@@ -236,7 +236,7 @@ print_attr_xml (const char* elm, const char *str)
 	if (!str || strlen(str) == 0)
 		return; /* empty: don't include */
 
-	esc = g_markup_escape_text (str, -1);
+	esc = g_markup_escape_text (str, -1);	
 	g_print ("\t\t<%s>%s</%s>\n", elm, esc, elm);
 	g_free (esc);
 }
