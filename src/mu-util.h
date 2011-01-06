@@ -214,7 +214,7 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
  */
 #define MU_XAPIAN_CATCH_BLOCK						\
 	catch (const Xapian::Error &xerr) {				\
-                g_critical ("%s: caught xapian exception '%s'",		\
+                g_critical ("%s: xapian error '%s'",			\
 			__FUNCTION__, xerr.get_msg().c_str());		\
         } catch (...) {							\
                 g_critical ("%s: caught exception", __FUNCTION__);	\
@@ -223,7 +223,7 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
 #define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)				\
 	catch (const Xapian::Error &xerr) {				\
 		g_set_error ((GE),0,(E),				\
-			     "%s: caught xapian exception '%s'",	\
+			     "%s: xapian error '%s'",			\
 			__FUNCTION__, xerr.get_msg().c_str());		\
         } catch (...) {							\
 		g_set_error ((GE),0,(MU_ERROR_INTERNAL),		\
@@ -234,7 +234,7 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
 
 #define MU_XAPIAN_CATCH_BLOCK_RETURN(R)					\
 	catch (const Xapian::Error &xerr) {				\
-                g_critical ("%s: caught xapian exception '%s'",		\
+                g_critical ("%s: xapian error '%s'",			\
 			   __FUNCTION__, xerr.get_msg().c_str());	\
 		return (R);						\
         } catch (...) {							\
@@ -245,7 +245,7 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
 #define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)			\
 	catch (const Xapian::Error &xerr) {				\
 		g_set_error ((GE),0,(E),				\
-			     "%s: caught xapian exception '%s'",	\
+			     "%s: xapian error '%s'",			\
 			   __FUNCTION__, xerr.get_msg().c_str());	\
 		return (R);						\
         } catch (...) {							\
