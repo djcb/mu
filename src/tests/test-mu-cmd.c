@@ -98,8 +98,6 @@ search (const char* query, unsigned expected)
 		g_free (muhome);
 }
 
-
-
 /* index testdir2, and make sure it adds two documents */
 static void
 test_mu_index (void)
@@ -152,7 +150,6 @@ test_mu_find_02 (void)
 		search ("flag:encrypted", 0);
 		search ("flag:attach", 1);
 }
-
 
 
 /* some more tests */
@@ -333,6 +330,46 @@ test_mu_view_01 (void)
 }
 
 
+static void 
+test_mu_mkdir_01 (void)
+{
+        gchar *cmdline, *output,  *tmpdir;
+		gchar *dir;
+	
+		tmpdir = test_mu_common_get_random_tmpdir();
+		g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+		
+		cmdline = g_strdup_printf ("%s mkdir %s%ctest1 %s%ctest2",
+								   MU_PROGRAM,
+								   tmpdir, G_DIR_SEPARATOR,
+								   tmpdir, G_DIR_SEPARATOR);
+
+		output = NULL;
+		g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+		g_assert_cmpstr (output, ==, "");
+
+		dir = g_strdup_printf ("%s%ctest1%ccur", tmpdir, G_DIR_SEPARATOR,
+							   G_DIR_SEPARATOR);
+		g_assert (access (dir, F_OK) == 0);
+		g_free (dir);
+		
+		dir = g_strdup_printf ("%s%ctest2%ctmp", tmpdir, G_DIR_SEPARATOR,
+							   G_DIR_SEPARATOR);
+		g_assert (access (dir, F_OK) == 0);
+		g_free (dir);
+
+		dir = g_strdup_printf ("%s%ctest1%cnew", tmpdir, G_DIR_SEPARATOR,
+							   G_DIR_SEPARATOR);
+		g_assert (access (dir, F_OK) == 0);
+		g_free (dir);
+	
+		g_free (output);
+		g_free (tmpdir);
+		g_free (cmdline);
+}
+
+
+
 int
 main (int argc, char *argv[])
 {
@@ -348,6 +385,7 @@ main (int argc, char *argv[])
 		g_test_add_func ("/mu-cmd/test-mu-extract-02",  test_mu_extract_02);
 		g_test_add_func ("/mu-cmd/test-mu-extract-03",  test_mu_extract_03);
 		g_test_add_func ("/mu-cmd/test-mu-view-01",  test_mu_view_01);
+		g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 		
 		g_log_set_handler (NULL,
 						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
