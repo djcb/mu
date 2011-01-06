@@ -115,7 +115,7 @@ test_mu_index (void)
 		store = mu_store_new (xpath, 0, NULL);
 		g_assert (store);
 
-		g_assert_cmpuint (mu_store_count (store), ==, 4);	
+		g_assert_cmpuint (mu_store_count (store), ==, 5);	
 		mu_store_destroy (store);
 
 		g_free (muhome);
@@ -197,7 +197,7 @@ test_mu_extract_01 (void)
 {
         gchar *cmdline, *output, *erroutput;
 
-		cmdline = g_strdup_printf ("%s extract %s%cFoo%ccur%cmail4",
+		cmdline = g_strdup_printf ("%s extract %s%cFoo%ccur%cmail5",
 								   MU_PROGRAM,
 								   MU_TESTMAILDIR2,
 								   G_DIR_SEPARATOR,
@@ -248,7 +248,7 @@ test_mu_extract_02 (void)
 
 		g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 	
-		cmdline = g_strdup_printf ("%s extract -a --target-dir=%s %s%cFoo%ccur%cmail4",
+		cmdline = g_strdup_printf ("%s extract -a --target-dir=%s %s%cFoo%ccur%cmail5",
 								   MU_PROGRAM,
 								   tmpdir,
 								   MU_TESTMAILDIR2,
@@ -285,7 +285,7 @@ test_mu_extract_03 (void)
 		g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 		
 		cmdline = g_strdup_printf ("%s extract --parts 3 "
-								   "--target-dir=%s %s%cFoo%ccur%cmail4",
+								   "--target-dir=%s %s%cFoo%ccur%cmail5",
 								   MU_PROGRAM,
 								   tmpdir,
 								   MU_TESTMAILDIR2,
@@ -310,6 +310,27 @@ test_mu_extract_03 (void)
 }
 
 
+static void 
+test_mu_view_01 (void)
+{
+        gchar *cmdline, *output;
+		
+		cmdline = g_strdup_printf ("%s view %s%cbar%ccur%cmail4",
+								   MU_PROGRAM,
+								   MU_TESTMAILDIR2,
+								   G_DIR_SEPARATOR,
+								   G_DIR_SEPARATOR,
+								   G_DIR_SEPARATOR);
+		output = NULL;
+		g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+		g_assert_cmpstr  (output, !=, NULL);
+
+		/* not, this will break if/when decoding is fixed */
+		g_assert_cmpuint (strlen(output), ==, 370);
+		
+		g_free (output);
+		g_free (cmdline);
+}
 
 
 int
@@ -326,6 +347,7 @@ main (int argc, char *argv[])
 		g_test_add_func ("/mu-cmd/test-mu-extract-01",  test_mu_extract_01);
 		g_test_add_func ("/mu-cmd/test-mu-extract-02",  test_mu_extract_02);
 		g_test_add_func ("/mu-cmd/test-mu-extract-03",  test_mu_extract_03);
+		g_test_add_func ("/mu-cmd/test-mu-view-01",  test_mu_view_01);
 		
 		g_log_set_handler (NULL,
 						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,

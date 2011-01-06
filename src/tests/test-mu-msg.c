@@ -195,7 +195,7 @@ test_mu_msg_04 (void)
 	MuMsg *msg;
 
 	msg = mu_msg_new (MU_TESTMAILDIR2
-					  "Foo/cur/mail4", NULL, NULL);
+					  "Foo/cur/mail5", NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "George Custer <gac@example.com>");
