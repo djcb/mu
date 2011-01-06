@@ -221,6 +221,16 @@ time_t mu_str_date_parse_hdwmy (const char* str);
 const char* mu_str_fullpath_s (const char* path, const char* name);
 
 
+/** 
+ * escape a string like a string literal in C; ie. replace \ with \\,
+ * and " with \"
+ * 
+ * @param str a non-NULL str
+ * 
+ * @return the escaped string, newly allocated (free with g_free)
+ */
+char* mu_str_escape_c_literal (const gchar* str);
+
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/

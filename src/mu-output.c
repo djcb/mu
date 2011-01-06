@@ -285,8 +285,8 @@ print_attr_json (const char* elm, const char *str, gboolean comma)
 	
 	if (!str || strlen(str) == 0)
 		return; /* empty: don't include */
-
-	esc = g_strescape (str, NULL);
+	
+	esc = mu_str_escape_c_literal (str);
 	g_print ("\t\t\t\"%s\":\"%s\"%s\n", elm, esc, comma ? "," : "");
 	g_free (esc);
 }
@@ -341,7 +341,7 @@ print_attr_sexp (const char* elm, const char *str, gboolean nl)
 	if (!str || strlen(str) == 0)
 		return; /* empty: don't include */
 
-	esc = g_strescape (str, NULL);
+	esc = mu_str_escape_c_literal (str);
 	g_print ("\t\t\t(:%s \"%s\")%s", elm, esc, nl ? "\n" : "");
 	g_free (esc);
 }

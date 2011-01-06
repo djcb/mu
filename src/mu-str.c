@@ -368,3 +368,23 @@ mu_str_fullpath_s (const char* path, const char* name)
 	
 	return buf;
 }
+
+
+char*
+mu_str_escape_c_literal (const gchar* str)
+{
+	const char* cur;
+	GString *tmp;
+	
+	g_return_val_if_fail (str, NULL);
+	
+	tmp = g_string_sized_new (2 * strlen(str));
+	for (cur = str; *cur; ++cur)
+		switch (*cur) {
+		case '\\': tmp = g_string_append (tmp, "\\\\");
+		case '\"': tmp = g_string_append (tmp, "\\\""); 
+		default: tmp = g_string_append_c (tmp, *cur);
+		}
+
+	return g_string_free (tmp, FALSE);
+}
