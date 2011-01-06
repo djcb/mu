@@ -209,6 +209,25 @@ char* mu_str_ascii_xapian_escape (const char *query);
 time_t mu_str_date_parse_hdwmy (const char* str);
 
 
+
+/** 
+ * parse a byte size; a size is a number, with optionally a
+ * unit. Units recognized are K (1000) and M (1000*1000). Only the
+ * first letter is checked and the function is not case-sensitive, so
+ * 1000Kb, 3M will work equally well.  Note, for kB, MB etc., we then
+ * follow the SI standards, not 2^10 etc.
+ *
+ * practical sizes for email messages are in terms of Mb; even in
+ * extreme cases it should be under 100 Mb. Function return
+ * GUINT64_MAX if there a parsing error
+ * 
+ * @param str a string with a size, such a "100", "100Kb", "1Mb"
+ * 
+ * @return 
+ */
+guint64 mu_str_size_parse_kmg (const char* str);
+
+
 /**
  * create a full path from a path + a filename. function is _not_
  * reentrant.

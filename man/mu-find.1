@@ -106,6 +106,7 @@ search fields and their abbreviations:
 	prio,p          Message priority ('low', 'normal' or 'high')
 	flag,g		Message Flags
 	date,d          Date-Range
+	size,z          Message size
 .fi
 
 For clarity, this man-page uses the longer versions.
@@ -221,6 +222,15 @@ sent or received today, you could use:
 
 .nf
   $ mu find date:today..now 
+.fi
+
+The \fBsize\fR or \fBz\fR allows you to match \fIsize ranges\fR -- that is,
+match messages that have a byte-size within a certain range. Units (K (for
+1000) and  M (for 1000 * 1000) are supported). For example to get all messages
+between 10Kb and 2Mb (assuming SI units), you could use:
+
+.nf
+  $ mu find size:10K..2M
 .fi
 
 .SH OPTIONS

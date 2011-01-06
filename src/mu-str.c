@@ -309,6 +309,33 @@ mu_str_date_parse_hdwmy (const char* str)
        return delta <= now ? now - delta : never;  
 }
 
+guint64
+mu_str_size_parse_kmg (const char* str)
+{
+	guint64 num;
+	char *end;
+	
+	g_return_val_if_fail (str, G_MAXUINT64);
+	
+	num = strtol (str, &end, 10);
+	if (num <= 0)  
+		return G_MAXUINT64;
+	
+	if (!end || end[1] != '\0')
+		return G_MAXUINT64;
+	
+	switch (tolower(end[0])) {
+	case 'k': return num * 1000;               /* kilobyte */
+	case 'm': return num * 1000 * 1000;        /* megabyte */
+	/* case 'g': return num * 1000 * 1000 * 1000; /\* gigabyte *\/ */
+	default:
+		return G_MAXUINT64;
+	}
+
+}
+
+
+
 
 
 char*

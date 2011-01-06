@@ -130,12 +130,65 @@ private:
 };
 
 
+class MuSizeRangeProcessor : public Xapian::NumberValueRangeProcessor {
+public:
+	MuSizeRangeProcessor(Xapian::valueno v)
+	: Xapian::NumberValueRangeProcessor(v) {
+	}
+	
+	Xapian::valueno operator()(std::string &begin, std::string &end) {
+		
+		if (!clear_prefix (begin))
+			return Xapian::BAD_VALUENO;
+		
+		if (!substitute_size (begin) || !substitute_size (end))
+			return Xapian::BAD_VALUENO;
+
+		begin = Xapian::sortable_serialise(atol(begin.c_str()));
+		end = Xapian::sortable_serialise(atol(end.c_str()));
+		
+		return (Xapian::valueno)MU_MSG_FIELD_ID_SIZE;
+	}
+private:
+	bool clear_prefix (std::string& begin) {
+		
+		const std::string colon (":");
+		const std::string name (mu_msg_field_name
+					(MU_MSG_FIELD_ID_SIZE) + colon);
+		const std::string shortcut (
+			std::string(1, mu_msg_field_shortcut
+				    (MU_MSG_FIELD_ID_SIZE)) + colon);
+		
+		if (begin.find (name) == 0) {
+			begin.erase (0, name.length());
+			return true;
+		} else if (begin.find (shortcut) == 0) {
+			begin.erase (0, shortcut.length());
+			return true;
+		} else
+			return false;		
+	}
+	
+	bool substitute_size (std::string& size) {
+		gchar str[16];
+		guint64 num = mu_str_size_parse_kmg  (size.c_str());
+		if (num == G_MAXUINT64)
+			return false;
+		snprintf (str, sizeof(str), "%" G_GUINT64_FORMAT, num);
+		size = str;
+		return true;
+	}
+};
+
+
+
 static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
 struct _MuQuery {
 	Xapian::Database*		_db;
 	Xapian::QueryParser*		_qparser;
-	Xapian::ValueRangeProcessor*	_range_processor;
+	Xapian::ValueRangeProcessor*	_date_range_processor;
+	Xapian::ValueRangeProcessor*	_size_range_processor;
 };
 
 gboolean
@@ -151,9 +204,16 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 		mqx->_qparser->set_database (*mqx->_db);
 		mqx->_qparser->set_default_op (Xapian::Query::OP_AND);
 
-		mqx->_range_processor = new MuDateRangeProcessor ();
+		/* check for dates */
+		mqx->_date_range_processor = new MuDateRangeProcessor ();
 		mqx->_qparser->add_valuerangeprocessor
-			(mqx->_range_processor);
+			(mqx->_date_range_processor);
+
+		/* check for sizes */
+		mqx->_size_range_processor = new MuSizeRangeProcessor
+			(MU_MSG_FIELD_ID_SIZE);
+		mqx->_qparser->add_valuerangeprocessor
+			(mqx->_size_range_processor);
 		
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      (gpointer)mqx->_qparser);
@@ -178,7 +238,9 @@ uninit_mu_query (MuQuery *mqx)
 	try {
 		delete mqx->_db;
 		delete mqx->_qparser;
-		delete mqx->_range_processor;
+
+		delete mqx->_date_range_processor;
+		delete mqx->_size_range_processor;
 
 	} MU_XAPIAN_CATCH_BLOCK;
 }
