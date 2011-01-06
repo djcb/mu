@@ -301,9 +301,9 @@ mu_cmd_view (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 	
-	rv = MU_EXITCODE_OK;
-	for (i = 1; opts->params[i] && rv; ++i) {
-
+	;
+	for (i = 1, rv = MU_EXITCODE_OK;
+	     opts->params[i] && rv == MU_EXITCODE_OK; ++i) {
 		GError *err = NULL;
 		MuMsg  *msg = mu_msg_new (opts->params[i], NULL, &err);
 		if (!msg) {
@@ -311,13 +311,11 @@ mu_cmd_view (MuConfig *opts)
 			g_error_free (err);
 			return MU_EXITCODE_ERROR;
 		}
-		
 		if (!view_msg (msg, NULL, opts->summary_len))
 			rv = MU_EXITCODE_ERROR;
 		
 		mu_msg_destroy (msg);
 	}
-	
 	return rv;
 }
 
@@ -326,7 +324,7 @@ MuExitCode
 mu_cmd_mkdir (MuConfig *opts)
 {
 	int i;
-
+	
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_MKDIR,
 			      MU_EXITCODE_ERROR);
@@ -340,12 +338,13 @@ mu_cmd_mkdir (MuConfig *opts)
 	for (i = 1; opts->params[i]; ++i) {
 		GError *err = NULL;
 		if (!mu_maildir_mkdir (opts->params[i], opts->dirmode,
-				       FALSE, &err))
+				       FALSE, &err)) {
 			if (err && err->message) {
 				g_warning ("%s", err->message);
 				g_error_free (err);
 			}
-		return MU_EXITCODE_ERROR;
+			return MU_EXITCODE_ERROR;
+		}
 	}
 
 	return MU_EXITCODE_OK;
