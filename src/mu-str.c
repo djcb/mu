@@ -334,10 +334,6 @@ mu_str_size_parse_kmg (const char* str)
 
 }
 
-
-
-
-
 char*
 mu_str_ascii_xapian_escape_in_place (char *query)
 {
@@ -408,9 +404,9 @@ mu_str_escape_c_literal (const gchar* str)
 	tmp = g_string_sized_new (2 * strlen(str));
 	for (cur = str; *cur; ++cur)
 		switch (*cur) {
-		case '\\': tmp = g_string_append (tmp, "\\\\");
-		case '\"': tmp = g_string_append (tmp, "\\\""); 
-		default: tmp = g_string_append_c (tmp, *cur);
+		case '\\': tmp = g_string_append   (tmp, "\\\\"); break;
+		case '"':  tmp = g_string_append   (tmp, "\\\""); break;
+		default:   tmp = g_string_append_c (tmp, *cur);
 		}
 
 	return g_string_free (tmp, FALSE);

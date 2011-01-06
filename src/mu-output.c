@@ -342,7 +342,7 @@ print_attr_sexp (const char* elm, const char *str, gboolean nl)
 		return; /* empty: don't include */
 
 	esc = mu_str_escape_c_literal (str);
-	g_print ("\t\t\t(:%s \"%s\")%s", elm, esc, nl ? "\n" : "");
+	g_print ("    (:%s \"%s\")%s", elm, esc, nl ? "\n" : "");
 	g_free (esc);
 }
 
@@ -356,7 +356,7 @@ mu_output_sexp (MuMsgIter *iter, size_t *count)
 	
 	g_return_val_if_fail (iter, FALSE);
 	
-	g_print ("(\n\t:messages\n");
+	g_print ("(:messages\n");
 	
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
@@ -364,14 +364,14 @@ mu_output_sexp (MuMsgIter *iter, size_t *count)
 		if (mycount != 0)
 			g_print ("\n");
 		
-		g_print ("\t\t(:message\n");
+		g_print ("  (:message\n");
 		print_attr_sexp ("from", mu_msg_iter_get_from (iter),TRUE);
 		print_attr_sexp ("to", mu_msg_iter_get_to (iter),TRUE);
 		print_attr_sexp ("cc", mu_msg_iter_get_cc (iter),TRUE);
 		print_attr_sexp ("subject", mu_msg_iter_get_subject (iter),TRUE);
-		g_print ("\t\t\t(:date %u)\n",
+		g_print ("    (:date %u)\n",
 			 (unsigned) mu_msg_iter_get_date (iter));
-		g_print ("\t\t\t(:size %u)\n",
+		g_print ("    (:size %u)\n",
 			 (unsigned) mu_msg_iter_get_size (iter));
 		print_attr_sexp ("msgid", mu_msg_iter_get_msgid (iter),TRUE);
 		print_attr_sexp ("path", mu_msg_iter_get_path (iter),TRUE);
