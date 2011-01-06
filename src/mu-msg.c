@@ -22,9 +22,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
-#include <gmime/gmime.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#include <gmime/gmime.h>
 
 #include "mu-msg-priv.h" /* include before mu-msg.h */
 #include "mu-msg.h"
