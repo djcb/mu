@@ -126,6 +126,30 @@ sort_field_from_string (const char* fieldstr)
 }
 
 
+static gboolean
+run_query_format (MuMsgIter *iter, MuConfig *opts,
+		  OutputFormat format, size_t *count)
+{
+	switch (format) {
+
+	case FORMAT_LINKS:
+		return mu_output_links (iter, opts->linksdir, opts->clearlinks,
+					count);
+	case FORMAT_PLAIN: 
+		return mu_output_plain (iter, opts->fields, opts->summary_len,
+					count);
+	case FORMAT_XML:
+		return mu_output_xml (iter, count);
+	case FORMAT_JSON:
+		return mu_output_json (iter, count);
+	case FORMAT_SEXP:
+		return mu_output_sexp (iter, count);	
+	default:
+		g_assert_not_reached ();
+		return FALSE;
+	}
+}
+
 
 static gboolean
 run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
@@ -152,26 +176,11 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 		return FALSE;
 	}
 
-	switch (format) {
-	case FORMAT_LINKS:
-		rv = mu_output_links (iter, opts->linksdir, opts->clearlinks,
-				      count);
-		break;
-	case FORMAT_PLAIN: 
-		rv = mu_output_plain (iter, opts->fields, opts->summary_len,
-				      count);
-		break;
-	case FORMAT_XML:  rv = mu_output_xml (iter, count); break;
-	case FORMAT_JSON: rv = mu_output_json (iter, count); break;
-	case FORMAT_SEXP: rv = mu_output_sexp (iter, count); break;		
-	default:
-		g_assert_not_reached ();
-		return FALSE;
-	}
+	rv = run_query_format (iter, opts, format, count);
 		
-	if (count && *count == 0) 
+	if (rv && count && *count == 0) 
 		g_warning ("no matches found");
-
+	
 	mu_msg_iter_destroy (iter);
 
 	return rv;
