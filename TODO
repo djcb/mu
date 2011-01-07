@@ -3,21 +3,28 @@
 ** future release
 
    - [ ] mu stats
-   - [ ] size range searches
    - [ ] config system (config file) (?)
    - [ ] detect mail threads (?)
+   - [ ] don't make test mail files executable
+   - [ ] better 'usage' info
+   - [ ] add version info to output of configure, mu.log
+   - [ ] make 'make check' more useful for others
+   - [ ] follow symlinks when indexing
+
+** release 0.10
+
+   - [X] size range searches
    - [ ] completion for zsh
    - [ ] don't make test mail files executable
    - [ ] xml,json,sexp output
-   - [ ] check all strings are really UTF8
-   - [ ] fix size value
+   - [X] check all strings are really UTF8
+   - [X] fix size value
    - [X] separate exit code for 'not found' vs other errors
    - [ ] fix build for Solaris
    - [X] clearer errors when /home/user does not exist
    - [X] fix -pedantic build
    - [X] make commit batch size configurable param
    - [ ] better 'usage' info
-   - [ ] add version info to output of configure, mu.log
    - [ ] make 'make check' more useful for others
    - [ ] follow symlinks when indexing
    - [ ] see whether the other (slower, more complete) str_normalize is worth it
