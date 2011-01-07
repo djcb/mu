@@ -378,7 +378,7 @@ mu_output_sexp (MuMsgIter *iter, size_t *count)
 		print_attr_sexp ("maildir", mu_msg_iter_get_maildir (iter),FALSE);
 		g_print (")");
 	}
-	g_print ("))\n");
+	g_print (")\n");
 		
 	if (count)
 		*count = mycount;
