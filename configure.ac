@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -114,6 +114,14 @@ AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
  
 
+# webkit? needed for the fancy web widget
+PKG_CHECK_MODULES(WEBKIT,webkit-1.0,[have_webkit=yes],[have_webkit=no])
+AS_IF([test "x$have_webkit" = "xyes"],[
+	    webkit_version="`pkg-config --modversion webkit-1.0`"])
+AC_SUBST(WEBKIT_CFLAGS)
+AC_SUBST(WEBKIT_LIBS)
+AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
+
 
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
@@ -142,9 +150,6 @@ AC_SUBST(XAPIAN_LIBS)
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
 AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], [Schema version of the database])
-
-
-
 
 
 # we test for gtk, which we need if we want to build 'mug'; for
@@ -217,8 +222,13 @@ fi
 echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version" 
 echo "GMime version                        : $gmime_version"
+
 if test "x$have_gtk" != "xno"; then
 echo "GTK+ version                         : $gtk_version"
+fi
+
+if test "x$have_webkit" != "xno"; then
+echo "Webkit version                       : $webkit_version"
 fi
 
 echo
