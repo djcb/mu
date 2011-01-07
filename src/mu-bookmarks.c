@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -23,8 +23,8 @@
 #define MU_BOOKMARK_GROUP "mu"
 
 struct _MuBookmarks {
-	char *_bmpath;
-	GHashTable *_hash;
+	char		*_bmpath;
+	GHashTable	*_hash;
 };
 
 
@@ -73,7 +73,7 @@ create_hash_from_key_file (const gchar *bmpath)
 
 
 
-MuBookmarks *
+MuBookmarks*
 mu_bookmarks_new (const gchar *bmpath)
 {
 	MuBookmarks *bookmarks;
@@ -138,7 +138,7 @@ mu_bookmarks_foreach (MuBookmarks *bm, MuBookmarksForeachFunc func,
 	g_return_if_fail (bm);
 	g_return_if_fail (func);
 
-	bmdata._func = func;
+	bmdata._func	  = func;
 	bmdata._user_data = user_data;
 	
 	g_hash_table_foreach (bm->_hash, (GHFunc)each_bookmark, &bmdata);

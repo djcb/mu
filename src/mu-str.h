@@ -150,7 +150,6 @@ char* mu_str_normalize (const char *str, gboolean downcase)
  * optionally, downcase it. this happen by changing the string; if
  * that is not desired, use mu_str_normalize. Works for accented chars
  * in Unicode Blocks 'Latin-1 Supplement' and 'Latin Extended-A'
- *
  * 
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
@@ -188,7 +187,8 @@ char* mu_str_ascii_xapian_escape_in_place (char *query);
  * 
  * @return the escaped string (free with g_free) or NULL in case of error
  */
-char* mu_str_ascii_xapian_escape (const char *query);
+char* mu_str_ascii_xapian_escape (const char *query)
+        G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * 
@@ -227,7 +227,6 @@ time_t mu_str_date_parse_hdwmy (const char* str);
  */
 guint64 mu_str_size_parse_kmg (const char* str);
 
-
 /**
  * create a full path from a path + a filename. function is _not_
  * reentrant.
@@ -248,7 +247,8 @@ const char* mu_str_fullpath_s (const char* path, const char* name);
  * 
  * @return the escaped string, newly allocated (free with g_free)
  */
-char* mu_str_escape_c_literal (const gchar* str);
+char* mu_str_escape_c_literal (const gchar* str)
+        G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 **  
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include <config.h>
 #endif /*HAVE_CONFIG_H*/
 
@@ -35,10 +35,11 @@
 
 #include "mu-util.h"
 
+#define MU_MAX_LOG_FILE_SIZE 1000 * 1000 /* 1 MB (SI units) */
 #define MU_LOG_FILE "mu.log"
 
 struct _MuLog {
-	int _fd;      /* log file descriptor */
+	int _fd;           /* log file descriptor */
 
 	gboolean _own;     /* close _fd with log_destroy? */
 	gboolean _debug;   /* add debug-level stuff? */
@@ -48,8 +49,10 @@ struct _MuLog {
 };
 typedef struct _MuLog MuLog;
 
+/* we use globals, because logging is a global operation as it
+ * globally modifies the behaviour of g_warning and friends
+ */
 static MuLog* MU_LOG = NULL;
-
 static void log_write (const char* domain, GLogLevelFlags level, 
 		       const gchar *msg);
 
@@ -61,7 +64,7 @@ try_close (int fd)
 	
 	if (close (fd) < 0) 
 		g_printerr ("%s: close() of fd %d failed: %s\n",
-			    __FUNCTION__, fd, strerror(errno));
+				    __FUNCTION__, fd, strerror(errno));
 }
 
 static void
@@ -99,7 +102,7 @@ log_handler (const gchar* log_domain, GLogLevelFlags log_level,
 
 gboolean
 mu_log_init_with_fd (int fd, gboolean doclose,
-		     gboolean quiet, gboolean debug)
+			     gboolean quiet, gboolean debug)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
 	
@@ -145,7 +148,8 @@ log_file_backup_maybe (const char *logfile)
 		if (errno == ENOENT)
 			return TRUE; /* it did not exist yet, no problem */
 		else {
-			g_warning ("failed to stat(2) %s", logfile);
+			g_warning ("failed to stat(2) %s: %s",
+					   logfile, strerror(errno));
 			return FALSE;
 		}
 	}
@@ -207,6 +211,7 @@ mu_log_uninit (void)
 		try_close (MU_LOG->_fd);
 
 	g_free (MU_LOG);
+
 	MU_LOG = NULL;
 }
 
@@ -215,13 +220,13 @@ static const char*
 pfx (GLogLevelFlags level)
 {
 	switch (level) {
-	case G_LOG_LEVEL_WARNING:   return  "WARN";
-	case G_LOG_LEVEL_ERROR :    return  "ERR ";
-	case G_LOG_LEVEL_DEBUG:     return  "DBG ";
-	case G_LOG_LEVEL_CRITICAL : return  "CRIT";
-	case G_LOG_LEVEL_MESSAGE:   return  "MSG ";
-	case G_LOG_LEVEL_INFO :     return  "INFO";
-	default:                    return  "LOG "; 
+	case G_LOG_LEVEL_WARNING:  return  "WARN";
+	case G_LOG_LEVEL_ERROR :   return  "ERR ";
+	case G_LOG_LEVEL_DEBUG:	   return  "DBG ";
+	case G_LOG_LEVEL_CRITICAL: return  "CRIT";
+	case G_LOG_LEVEL_MESSAGE:  return  "MSG ";
+	case G_LOG_LEVEL_INFO :	   return  "INFO";
+	default:		   return  "LOG "; 
 	}
 }
 

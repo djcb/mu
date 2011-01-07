@@ -26,8 +26,6 @@
 
 G_BEGIN_DECLS
 
-#define MU_MAX_LOG_FILE_SIZE 1000 * 1000 /* 1 MB (SI units) */
-
 /**
  * write logging information to a log file
  * 
@@ -41,7 +39,8 @@ G_BEGIN_DECLS
  * @return TRUE if initialization succeeds, FALSE otherwise
  */
 gboolean mu_log_init  (const char* muhome, gboolean backup,
-		       gboolean quiet, gboolean debug);
+		       gboolean quiet, gboolean debug)
+	   G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * write logging information to a file descriptor
@@ -54,7 +53,7 @@ gboolean mu_log_init  (const char* muhome, gboolean backup,
  * @return TRUE if initialization succeeds, FALSE otherwise
  */
 gboolean mu_log_init_with_fd    (int fd, gboolean doclose, gboolean quiet,
-				 gboolean debug);
+				 gboolean debug) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * be absolutely silent, except for runtime errors, which will be
@@ -62,8 +61,7 @@ gboolean mu_log_init_with_fd    (int fd, gboolean doclose, gboolean quiet,
  *  
  * @return TRUE if initialization succeeds, FALSE otherwise
  */
-gboolean mu_log_init_silence    (void);
-
+gboolean mu_log_init_silence    (void) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * unitialize the logging system, and free all resources
