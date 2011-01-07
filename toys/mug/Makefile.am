@@ -23,7 +23,8 @@ SUBDIRS= .
 #SUBDIRS += tests
 #endif
 
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"'
+INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"' \
+         -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
