@@ -19,7 +19,7 @@ include $(top_srcdir)/gtest.mk
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
 
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"' \
+INCLUDES=-I${top_srcdir} -I${top_srcdir}/src $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"' \
          -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
 
 # don't use -Werror, as it might break on other compilers
