@@ -23,3 +23,8 @@ if HAVE_GTK
 SUBDIRS += mug
 endif
 
+# for mug2, we need webkit
+if HAVE_WEBKIT
+SUBDIRS += mug2
+endif
+

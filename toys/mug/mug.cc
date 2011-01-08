@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2011 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,7 +19,7 @@
 
 #if HAVE_CONFIG_H
 #include "config.h"
-#endif				/*HAVE_CONFIG */
+#endif /*HAVE_CONFIG*/
 
 #include <gtk/gtk.h>
 #include <string.h>		/* for memset */
@@ -53,7 +53,7 @@ about_mug (MugData * mugdata)
 	     GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
 	     "Mug version %s\n"
 	     "A graphical frontend to the 'mu' e-mail search engine\n\n"
-	     "(c) 2010 Dirk-Jan C. Binnema\n"
+	     "(c) 2010-2011 Dirk-Jan C. Binnema\n"
 	     "Released under the terms of the GPLv3+", VERSION);
 
 	gtk_dialog_run (GTK_DIALOG (about));
@@ -314,7 +314,6 @@ GtkWidget *
 mug_shell (MugData * mugdata)
 {
 	GtkWidget *vbox;
-	gchar *icon;
 
 	mugdata->win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title (GTK_WINDOW (mugdata->win), "Mug Mail Search");
@@ -335,10 +334,13 @@ mug_shell (MugData * mugdata)
 	gtk_window_set_default_size (GTK_WINDOW (mugdata->win), 700, 500);
 	gtk_window_set_resizable (GTK_WINDOW (mugdata->win), TRUE);
 
-	icon = g_strdup_printf ("%s%cmug.svg", ICONDIR, G_DIR_SEPARATOR);
-	gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
-	g_free (icon);
-
+	// {
+	// 	gchar *icon;
+	// 	icon = g_strdup_printf ("%s%cmug.svg", ICONDIR, G_DIR_SEPARATOR);
+	// 	gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
+	// 	g_free (icon);
+	// }
+	
 	return mugdata->win;
 }
 

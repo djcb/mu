@@ -2,7 +2,7 @@
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
-## t	he Free Software Foundation; either version 3 of the License, or
+## the Free Software Foundation; either version 3 of the License, or
 ## (at your option) any later version.
 ##
 ## This program is distributed in the hope that it will be useful,
@@ -19,12 +19,8 @@ include $(top_srcdir)/gtest.mk
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
 
-#if HAVE_GTEST
-#SUBDIRS += tests
-#endif
 
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"' \
-         -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
+INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"'
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -33,7 +29,7 @@ AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 
-bin_PROGRAMS=				\
+noinst_PROGRAMS=			\
 	mug
 
 # note, mug.cc is '.cc' only because libmu must explicitly
@@ -53,20 +49,5 @@ mug_LDADD=				\
 	${top_builddir}/src/libmu.la	\
 	${GTK_LIBS}
 
-icondir=				\
-	$(datarootdir)/icons
-
-icon_DATA=				\
-	mug.svg
-
-desktopdir=				\
-	$(datarootdir)/applications
-
-desktop_DATA=				\
-	mug.desktop
-
-EXTRA_DIST=				\
-	$(desktop_DATA)			\
-	$(icon_DATA)
 
 
