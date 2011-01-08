@@ -199,9 +199,10 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/tests/Makefile
+widgets/Makefile
 toys/Makefile
 toys/mug/Makefile
-toys/mug/mug.desktop
+toys/mug2/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile

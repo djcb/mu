@@ -16,7 +16,14 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=m4 man src contrib toys
+# only build widgets if we have webkit
+if HAVE_WEBKIT
+widgets=widgets
+else
+widgets=
+endif
+
+SUBDIRS=m4 man src $(widgets) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 

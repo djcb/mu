@@ -312,7 +312,6 @@ mu_query_new (const char* xpath, GError **err)
 			     "'%s' is not a readable xapian dir", xpath);
 		return NULL;
 	}
-
 		
 	if (!mu_util_db_version_up_to_date (xpath)) {
 		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UPTODATE,
