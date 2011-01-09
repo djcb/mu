@@ -24,7 +24,7 @@ SUBDIRS += mug
 endif
 
 # for mug2, we need webkit
-if HAVE_WEBKIT
+if BUILD_WIDGETS
 SUBDIRS += mug2
 endif
 

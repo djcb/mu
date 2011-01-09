@@ -17,7 +17,7 @@
 include $(top_srcdir)/gtest.mk
 
 # only build widgets if we have webkit
-if HAVE_WEBKIT
+if BUILD_WIDGETS
 widgets=widgets
 else
 widgets=
