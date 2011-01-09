@@ -18,7 +18,7 @@ include $(top_srcdir)/gtest.mk
 
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS)  $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"' \
+INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS)  $(WEBKIT_CFLAGS) $(GIO_CFLAGS) -DICONDIR='"$(icondir)"' \
          -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
 
 # don't use -Werror, as it might break on other compilers
@@ -31,6 +31,10 @@ noinst_LTLIBRARIES=			\
 	libmuwidgets.la
 
 libmuwidgets_la_SOURCES=		\
+	mu-widget-util.h		\
+	mu-widget-util.c		\
+	mu-msg-attach-view.c		\
+	mu-msg-attach-view.h		\
 	mu-msg-body-view.c		\
 	mu-msg-body-view.h		\
 	mu-msg-view.h			\
@@ -39,5 +43,6 @@ libmuwidgets_la_SOURCES=		\
 libmuwidgets_la_LIBADD=			\
 	${top_builddir}/src/libmu.la	\
 	${GTK_LIBS}			\
-	${WEBKIT_LIBS}
+	${WEBKIT_LIBS}			\
+	${GIO_LIBS}
 
