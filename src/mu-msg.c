@@ -65,7 +65,7 @@ mu_msg_gmime_uninit (void)
 }
 
 
-void 
+static void 
 mu_msg_destroy (MuMsg *msg)
 {
 	int i;
@@ -182,6 +182,25 @@ init_mime_msg (MuMsg *msg, GError **err)
 	return TRUE;
 }
 
+MuMsg*
+mu_msg_ref (MuMsg *msg)
+{
+	g_return_val_if_fail (msg, NULL);
+	++msg->_refcount;
+
+	return msg;
+}
+
+void
+mu_msg_unref (MuMsg *msg)
+{
+	g_return_if_fail (msg);
+	g_return_if_fail (msg->_refcount >= 1);
+	
+	if (--msg->_refcount == 0) 
+		mu_msg_destroy (msg);
+}
+
 
 MuMsg*   
 mu_msg_new (const char* filepath, const gchar* mdir, GError **err)
@@ -203,7 +222,8 @@ mu_msg_new (const char* filepath, const gchar* mdir, GError **err)
 		mu_msg_destroy (msg);
 		return NULL;
 	}
-	
+
+	msg->_refcount = 1;
 	return msg;
 }
 
@@ -829,3 +849,4 @@ mu_msg_get_field_numeric (MuMsg *msg, const MuMsgFieldId mfid)
 	default: g_return_val_if_reached (-1);
 	}
 }
+

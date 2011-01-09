@@ -35,25 +35,25 @@
 static gboolean
 check_contact_01 (MuMsgContact *contact, int *idx)
 {
-	switch (*idx) {
-	case 0:
-		g_assert_cmpstr (mu_msg_contact_name (contact),
-				 ==, "Mickey Mouse");
-		g_assert_cmpstr (mu_msg_contact_address (contact),
-				 ==, "anon@example.com");
-		break;
-	case 1:
-		g_assert_cmpstr (mu_msg_contact_name (contact),
-				 ==, "Donald Duck");
-		g_assert_cmpstr (mu_msg_contact_address (contact),
-				 ==, "gcc-help@gcc.gnu.org");
-		break;
-	default:
-		g_assert_not_reached ();
-	}
-	++(*idx);
+		switch (*idx) {
+		case 0:
+				g_assert_cmpstr (mu_msg_contact_name (contact),
+								 ==, "Mickey Mouse");
+				g_assert_cmpstr (mu_msg_contact_address (contact),
+								 ==, "anon@example.com");
+				break;
+		case 1:
+				g_assert_cmpstr (mu_msg_contact_name (contact),
+								 ==, "Donald Duck");
+				g_assert_cmpstr (mu_msg_contact_address (contact),
+								 ==, "gcc-help@gcc.gnu.org");
+				break;
+		default:
+				g_assert_not_reached ();
+		}
+		++(*idx);
 
-	return TRUE;
+		return TRUE;
 }
 
 
@@ -62,35 +62,35 @@ check_contact_01 (MuMsgContact *contact, int *idx)
 static void
 test_mu_msg_01 (void)
 {
-	MuMsg *msg;
-	gint i;
+		MuMsg *msg;
+		gint i;
 
-	msg = mu_msg_new (MU_TESTMAILDIR
-					  "cur/1220863042.12663_1.mindcrime!2,S",
-					  NULL, NULL);
+		msg = mu_msg_new (MU_TESTMAILDIR
+						  "cur/1220863042.12663_1.mindcrime!2,S",
+						  NULL, NULL);
 
-	g_assert_cmpstr (mu_msg_get_to(msg),
-			 ==, "Donald Duck <gcc-help@gcc.gnu.org>");
-	g_assert_cmpstr (mu_msg_get_subject(msg),
-			 ==, "gcc include search order");
-	g_assert_cmpstr (mu_msg_get_from(msg),
-			 ==, "Mickey Mouse <anon@example.com>");
-	g_assert_cmpstr (mu_msg_get_msgid(msg),
-			 ==, "3BE9E6535E3029448670913581E7A1A20D852173@"
-			 "emss35m06.us.lmco.com");
-	g_assert_cmpstr (mu_msg_get_header(msg, "Mailing-List"),
-			 ==, "contact gcc-help-help@gcc.gnu.org; run by ezmlm");
-	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'klub' */
-			  ==, MU_MSG_PRIO_NORMAL);
-	g_assert_cmpuint (mu_msg_get_date(msg), 
-			  ==, 1217530645);
+		g_assert_cmpstr (mu_msg_get_to(msg),
+						 ==, "Donald Duck <gcc-help@gcc.gnu.org>");
+		g_assert_cmpstr (mu_msg_get_subject(msg),
+						 ==, "gcc include search order");
+		g_assert_cmpstr (mu_msg_get_from(msg),
+						 ==, "Mickey Mouse <anon@example.com>");
+		g_assert_cmpstr (mu_msg_get_msgid(msg),
+						 ==, "3BE9E6535E3029448670913581E7A1A20D852173@"
+						 "emss35m06.us.lmco.com");
+		g_assert_cmpstr (mu_msg_get_header(msg, "Mailing-List"),
+						 ==, "contact gcc-help-help@gcc.gnu.org; run by ezmlm");
+		g_assert_cmpuint (mu_msg_get_prio(msg), /* 'klub' */
+						  ==, MU_MSG_PRIO_NORMAL);
+		g_assert_cmpuint (mu_msg_get_date(msg), 
+						  ==, 1217530645);
 
-	i = 0;
-	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)check_contact_01,
-				&i);
-	g_assert_cmpint (i,==,2);
+		i = 0;
+		mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)check_contact_01,
+								&i);
+		g_assert_cmpint (i,==,2);
 
-	mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 }
 
 
@@ -98,25 +98,25 @@ test_mu_msg_01 (void)
 static gboolean
 check_contact_02 (MuMsgContact *contact, int *idx)
 {
-	switch (*idx) {
-	case 0:
-		g_assert_cmpstr (mu_msg_contact_name (contact),
-				 ==, NULL);
-		g_assert_cmpstr (mu_msg_contact_address (contact),
-				 ==, "anon@example.com");
-		break;
-	case 1:
-		g_assert_cmpstr (mu_msg_contact_name (contact),
-				 ==, NULL);
-		g_assert_cmpstr (mu_msg_contact_address (contact),
-				 ==, "help-gnu-emacs@gnu.org");
-		break;
-	default:
-		g_assert_not_reached ();
-	}
-	++(*idx);
+		switch (*idx) {
+		case 0:
+				g_assert_cmpstr (mu_msg_contact_name (contact),
+								 ==, NULL);
+				g_assert_cmpstr (mu_msg_contact_address (contact),
+								 ==, "anon@example.com");
+				break;
+		case 1:
+				g_assert_cmpstr (mu_msg_contact_name (contact),
+								 ==, NULL);
+				g_assert_cmpstr (mu_msg_contact_address (contact),
+								 ==, "help-gnu-emacs@gnu.org");
+				break;
+		default:
+				g_assert_not_reached ();
+		}
+		++(*idx);
 	
-	return TRUE;
+		return TRUE;
 }
 
 
@@ -124,94 +124,94 @@ check_contact_02 (MuMsgContact *contact, int *idx)
 static void
 test_mu_msg_02 (void)
 {
-	MuMsg *msg;
-	int i;
+		MuMsg *msg;
+		int i;
 
-	msg = mu_msg_new (MU_TESTMAILDIR
-					  "cur/1220863087.12663_19.mindcrime!2,S",
-					  NULL, NULL);
+		msg = mu_msg_new (MU_TESTMAILDIR
+						  "cur/1220863087.12663_19.mindcrime!2,S",
+						  NULL, NULL);
 	
-	g_assert_cmpstr (mu_msg_get_to(msg),
-			 ==, "help-gnu-emacs@gnu.org");
-	g_assert_cmpstr (mu_msg_get_subject(msg),
-			 ==, "Re: Learning LISP; Scheme vs elisp.");
-	g_assert_cmpstr (mu_msg_get_from(msg),
-			 ==, "anon@example.com");
-	g_assert_cmpstr (mu_msg_get_msgid(msg),
-			 ==, "r6bpm5-6n6.ln1@news.ducksburg.com");
-	g_assert_cmpstr (mu_msg_get_header(msg, "Errors-To"),
-			 ==, "help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org");
-	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
-			  ==, MU_MSG_PRIO_LOW);
-	g_assert_cmpuint (mu_msg_get_date(msg), 
-			  ==, 1218051515);
+		g_assert_cmpstr (mu_msg_get_to(msg),
+						 ==, "help-gnu-emacs@gnu.org");
+		g_assert_cmpstr (mu_msg_get_subject(msg),
+						 ==, "Re: Learning LISP; Scheme vs elisp.");
+		g_assert_cmpstr (mu_msg_get_from(msg),
+						 ==, "anon@example.com");
+		g_assert_cmpstr (mu_msg_get_msgid(msg),
+						 ==, "r6bpm5-6n6.ln1@news.ducksburg.com");
+		g_assert_cmpstr (mu_msg_get_header(msg, "Errors-To"),
+						 ==, "help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org");
+		g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+						  ==, MU_MSG_PRIO_LOW);
+		g_assert_cmpuint (mu_msg_get_date(msg), 
+						  ==, 1218051515);
 	
-	i = 0;
-	mu_msg_contact_foreach (msg,
-				(MuMsgContactForeachFunc)check_contact_02,
-				&i);
-	g_assert_cmpint (i,==,2);
+		i = 0;
+		mu_msg_contact_foreach (msg,
+								(MuMsgContactForeachFunc)check_contact_02,
+								&i);
+		g_assert_cmpint (i,==,2);
 
-	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, MU_MSG_FLAG_SEEN);
+		g_assert_cmpuint (mu_msg_get_flags(msg),
+						  ==, MU_MSG_FLAG_SEEN);
 	
-	mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 }
 
 static void
 test_mu_msg_03 (void)
 {
-	MuMsg *msg;
+		MuMsg *msg;
 
-	msg = mu_msg_new (MU_TESTMAILDIR
-			  "cur/1283599333.1840_11.cthulhu!2,",
-					  NULL, NULL);
+		msg = mu_msg_new (MU_TESTMAILDIR
+						  "cur/1283599333.1840_11.cthulhu!2,",
+						  NULL, NULL);
 
-	g_assert_cmpstr (mu_msg_get_to(msg),
-			 ==, "Bilbo Baggins <bilbo@anotherexample.com>");
-	g_assert_cmpstr (mu_msg_get_subject(msg),
-			 ==, "Greetings from Lothlórien");
-	g_assert_cmpstr (mu_msg_get_from(msg),
-			 ==, "Frodo Baggins <frodo@example.com>");
-	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
-			  ==, MU_MSG_PRIO_NORMAL);
-	g_assert_cmpuint (mu_msg_get_date(msg),
-			  ==, 0);
-	g_assert_cmpstr (mu_msg_get_body_text(msg),
-			 ==,
-			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
+		g_assert_cmpstr (mu_msg_get_to(msg),
+						 ==, "Bilbo Baggins <bilbo@anotherexample.com>");
+		g_assert_cmpstr (mu_msg_get_subject(msg),
+						 ==, "Greetings from Lothlórien");
+		g_assert_cmpstr (mu_msg_get_from(msg),
+						 ==, "Frodo Baggins <frodo@example.com>");
+		g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+						  ==, MU_MSG_PRIO_NORMAL);
+		g_assert_cmpuint (mu_msg_get_date(msg),
+						  ==, 0);
+		g_assert_cmpstr (mu_msg_get_body_text(msg),
+						 ==,
+						 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
 
-	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, 0);
+		g_assert_cmpuint (mu_msg_get_flags(msg),
+						  ==, 0);
 
 	
-	mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 }
 
 
 static void
 test_mu_msg_04 (void)
 {
-	MuMsg *msg;
+		MuMsg *msg;
 
-	msg = mu_msg_new (MU_TESTMAILDIR2
-					  "Foo/cur/mail5", NULL, NULL);
+		msg = mu_msg_new (MU_TESTMAILDIR2
+						  "Foo/cur/mail5", NULL, NULL);
 
-	g_assert_cmpstr (mu_msg_get_to(msg),
-			 ==, "George Custer <gac@example.com>");
-	g_assert_cmpstr (mu_msg_get_subject(msg),
-			 ==, "pics for you");
-	g_assert_cmpstr (mu_msg_get_from(msg),
-			 ==, "Sitting Bull <sb@example.com>");
-	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
-			  ==, MU_MSG_PRIO_NORMAL);
-	g_assert_cmpuint (mu_msg_get_date(msg),
-			  ==, 0);
+		g_assert_cmpstr (mu_msg_get_to(msg),
+						 ==, "George Custer <gac@example.com>");
+		g_assert_cmpstr (mu_msg_get_subject(msg),
+						 ==, "pics for you");
+		g_assert_cmpstr (mu_msg_get_from(msg),
+						 ==, "Sitting Bull <sb@example.com>");
+		g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+						  ==, MU_MSG_PRIO_NORMAL);
+		g_assert_cmpuint (mu_msg_get_date(msg),
+						  ==, 0);
 
-	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, MU_MSG_FLAG_HAS_ATTACH);
+		g_assert_cmpuint (mu_msg_get_flags(msg),
+						  ==, MU_MSG_FLAG_HAS_ATTACH);
 	
-	mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 }
 
 

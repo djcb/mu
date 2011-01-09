@@ -145,7 +145,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 		return MU_ERROR;
 	} 
 	
-	mu_msg_destroy (msg);
+	mu_msg_unref (msg);
 	*updated = TRUE;
 
 	return MU_OK;	

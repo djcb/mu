@@ -267,7 +267,7 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 		MuMsg *msg = mu_msg_new (msgpath, NULL, NULL);
 		mu_msg_view_set_message (MU_MSG_VIEW(priv->_view), msg);
 		fill_header (priv, msg);
-		mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 	}
 
 	return TRUE;

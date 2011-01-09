@@ -49,6 +49,8 @@ enum _StringFields {
 typedef enum _StringFields StringFields;
 
 struct _MuMsg {
+	guint           _refcount;
+	
 	GMimeMessage    *_mime_msg;
 	MuMsgFlags	_flags;
 	

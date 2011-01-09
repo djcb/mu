@@ -224,7 +224,7 @@ test_mu_query_05 (void)
 	g_assert_cmpstr (mu_msg_get_summary(msg,5),==,
 			 "Let's write some fünkÿ text using umlauts. Foo.");
 	
-	mu_msg_destroy (msg);
+	mu_msg_unref (msg);
 	mu_msg_iter_destroy (iter);
 	mu_query_destroy (query);
 	g_free (xpath);

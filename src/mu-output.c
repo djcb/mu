@@ -184,7 +184,7 @@ print_summary (MuMsgIter *iter, size_t summary_len)
 	summ = mu_msg_get_summary (msg, summary_len);
 	g_print ("Summary: %s\n", summ ? summ : "<none>");
 	
-	mu_msg_destroy (msg);
+	mu_msg_unref (msg);
 }
 
 

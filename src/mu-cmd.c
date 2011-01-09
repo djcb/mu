@@ -166,7 +166,7 @@ save_parts (const char *path, MuConfig *opts)
 	else
 		g_assert_not_reached ();
 		
-	mu_msg_destroy (msg);
+	mu_msg_unref (msg);
 	
 	return rv;
 }
@@ -200,7 +200,7 @@ show_parts (const char* path, MuConfig *opts)
 
 	g_print ("MIME-parts in this message:\n");
 	mu_msg_msg_part_foreach (msg, each_part_show, NULL);
-	mu_msg_destroy (msg);
+	mu_msg_unref (msg);
 	
 	return TRUE;
 	
@@ -317,7 +317,7 @@ mu_cmd_view (MuConfig *opts)
 		if (!view_msg (msg, NULL, opts->summary_len))
 			rv = MU_EXITCODE_ERROR;
 		
-		mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 	}
 	return rv;
 }

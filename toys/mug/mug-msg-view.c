@@ -302,7 +302,7 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 	rv = set_text (self, mu_msg_get_body_text (msg));
 	fill_header (priv, msg);
 
-	mu_msg_destroy (msg);
+	mu_msg_unref (msg);
 
 	return rv;
 }
