@@ -219,6 +219,8 @@ config_options_group_extract(MuConfig *opts)
 				 "target directory for saving", NULL},
 				{"overwrite", 0, 0, G_OPTION_ARG_NONE, &opts->overwrite,
 				 "overwrite existing files (false)", NULL},
+				{"play", 0, 0, G_OPTION_ARG_NONE, &opts->play,
+				 "try to 'play' (open) the extracted parts", NULL},
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 

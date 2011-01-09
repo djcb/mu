@@ -122,6 +122,16 @@ AC_SUBST(WEBKIT_CFLAGS)
 AC_SUBST(WEBKIT_LIBS)
 AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 
+# gio is needed for some widget/ things
+PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
+AS_IF([test "x$have_gio" = "xyes"],[
+	    gio_version="`pkg-config --modversion gio-2.0`"])
+AC_SUBST(GIO_CFLAGS)
+AC_SUBST(GIO_LIBS)
+AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
+
+# should we build the widgets/ dir?
+AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
@@ -183,6 +193,13 @@ if test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"; then
 else
    have_gtk="no"
 fi
+
+# check for xdg-open
+AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
+AS_IF([test "x$XDGOPEN" != "x"],[
+   AC_DEFINE_UNQUOTED([XDGOPEN], ["$XDGOPEN"],[Path to xdg-open])],[
+   AC_MSG_WARN([xdg-open not found, mu cannot open attachments])])
+
    
 # check for pmccabe
 AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
@@ -228,7 +245,11 @@ if test "x$have_gtk" != "xno"; then
 echo "GTK+ version                         : $gtk_version"
 fi
 
-if test "x$have_webkit" != "xno"; then
+if test "x$have_gio" = "xyes"; then
+echo "GIO version                          : $gio_version"
+fi
+
+if test "x$have_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
 fi
 
@@ -236,6 +257,7 @@ echo
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
 echo "Build 'mug' (requires GTK+)          : $have_gtk"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
+echo "xdg-open                             : $XDGOPEN"
 echo
 
 echo "Have direntry->d_ino                 : $use_dirent_d_ino" 

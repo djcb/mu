@@ -1,6 +1,6 @@
 /*
 **   
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include <config.h>
 #endif /*HAVE_CONFIG_H*/
 
@@ -248,32 +248,58 @@ mu_util_str_from_strv (const gchar **params)
 }
 
 int
-mu_util_create_writeable_fd (const char* filename, const char* dir,
+mu_util_create_writeable_fd (const char* path, mode_t mode,
 			     gboolean overwrite)
 {
 	int fd;
-	char *fullpath;
 	
 	errno = 0; /* clear! */
-	g_return_val_if_fail (filename, -1);
-
-	fullpath = g_strdup_printf ("%s%s%s",
-				    dir ? dir : "",
-				    dir ? G_DIR_SEPARATOR_S : "",
-				    filename);
-
+	g_return_val_if_fail (path, -1);
+	
 	if (overwrite)
-		fd = open (fullpath, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+		fd = open (path, O_WRONLY|O_CREAT|O_TRUNC, mode);
 	else
-		fd = open (fullpath, O_WRONLY|O_CREAT, 0644);
+		fd = open (path, O_WRONLY|O_CREAT|O_EXCL, mode);
 
 	if (fd < 0)
-		g_debug ("%s: cannot open %s for writing: %s",
-			 __FUNCTION__, fullpath, strerror(errno));
-
-	g_free (fullpath);	
+		g_warning ("%s: cannot open %s for writing: %s",
+			   __FUNCTION__, path, strerror(errno));
+	
 	return fd;
 }
+
+gboolean
+mu_util_play (const char *path)
+{
+#ifndef XDGOPEN
+	g_warning ("opening files not supported (xdg-open missing)");
+	return FALSE;
+#else	
+	gboolean rv;
+	GError *err;
+	const gchar *argv[3];
+	
+	g_return_val_if_fail (path, FALSE);
+	g_return_val_if_fail (access (path, R_OK) == 0, FALSE);
+
+	argv[0] = XDGOPEN;
+	argv[1] = path;
+	argv[2] = NULL;
+	
+	err = NULL;
+	rv = g_spawn_async (NULL, (gchar**)&argv, NULL, 0,
+			    NULL, NULL, NULL, &err);
+	
+	if (!rv) {
+		g_warning ("failed to spawn xdg-open: %s",
+			   err->message ? err->message : "error");
+		g_error_free (err);
+	}
+
+	return rv;
+#endif /*XDGOPEN*/
+}
+
 
 unsigned char
 mu_util_get_dtype_with_lstat (const char *path)

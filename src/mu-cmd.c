@@ -52,7 +52,7 @@ save_numbered_parts (MuMsg *msg, MuConfig *opts)
 		}
 		
 		if  (!mu_msg_mime_part_save
-		     (msg, idx, opts->targetdir, opts->overwrite)) {
+		     (msg, idx, opts->targetdir, opts->overwrite, opts->play)) {
 			g_warning ("failed to save MIME-part %d", idx);
 			rv = FALSE;
 			break;
@@ -71,6 +71,7 @@ struct _SaveData {
 	guint			 saved_num;
 	const gchar*		 targetdir;
 	gboolean		 overwrite;
+	gboolean		 play;
 };
 typedef struct _SaveData	 SaveData;
 
@@ -97,7 +98,7 @@ save_part_if (MuMsgPart *part, SaveData *sd)
 		return;
 	
 	sd->result = mu_msg_mime_part_save (sd->msg, part->index,
-					    sd->targetdir, sd->overwrite);
+					    sd->targetdir, sd->overwrite, sd->play);
 	if (!sd->result) 
 		g_warning ("failed to save MIME-part %u", part->index);
 	else
@@ -107,7 +108,7 @@ save_part_if (MuMsgPart *part, SaveData *sd)
 
 static gboolean
 save_certain_parts (MuMsg *msg, gboolean attachments_only,
-		    const gchar *targetdir, gboolean overwrite)
+		    const gchar *targetdir, gboolean overwrite, gboolean play)
 {
 	SaveData sd;
 
@@ -117,6 +118,7 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 	sd.attachments_only = attachments_only;
 	sd.overwrite	    = overwrite;
 	sd.targetdir	    = targetdir;
+	sd.play             = play;
 	
 	mu_msg_msg_part_foreach (msg,
 				 (MuMsgPartForeachFunc)save_part_if,
@@ -155,10 +157,12 @@ save_parts (const char *path, MuConfig *opts)
 		rv = save_numbered_parts (msg, opts);	
 	else if (opts->save_attachments)  /* all attachments */
 		rv = save_certain_parts (msg, TRUE,
-					 opts->targetdir, opts->overwrite);
+					 opts->targetdir, opts->overwrite,
+					 opts->play);
 	else if (opts->save_all)  /* all parts */
 		rv = save_certain_parts (msg, FALSE,
-					 opts->targetdir, opts->overwrite);
+					 opts->targetdir, opts->overwrite,
+					 opts->play);
 	else
 		g_assert_not_reached ();
 		
@@ -196,7 +200,6 @@ show_parts (const char* path, MuConfig *opts)
 
 	g_print ("MIME-parts in this message:\n");
 	mu_msg_msg_part_foreach (msg, each_part_show, NULL);
-
 	mu_msg_destroy (msg);
 	
 	return TRUE;
@@ -206,7 +209,7 @@ show_parts (const char* path, MuConfig *opts)
 static gboolean
 check_params (MuConfig *opts)
 {
-	if (!opts->params[1]) {
+	if (!opts->params[1] || opts->params[2]) {
 		g_warning ("usage: mu extract [options] <file>");
 		return FALSE;
 	}

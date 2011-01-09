@@ -98,9 +98,10 @@ struct _MuConfig {
 		gboolean		*save_all;		/* extract all parts */
 		gboolean		*save_attachments;		/* extract all attachment parts */
 		gchar			*parts;			/* comma-sep'd list of parts
-										 * to save */
+										 * to save /  open */
 		char			*targetdir;		/* where to save the attachments */
 		gboolean		 overwrite;		/* should we overwrite same-named files */
+		gboolean         play;          /* after saving, try to play (open) the attmnt */ 
 };
 typedef struct _MuConfig MuConfig;
 

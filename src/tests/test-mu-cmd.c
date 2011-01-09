@@ -308,6 +308,51 @@ test_mu_extract_03 (void)
 
 
 static void 
+test_mu_extract_04 (void)
+{
+        gchar *cmdline, *output, *erroutput, *tmpdir;
+	
+		tmpdir = test_mu_common_get_random_tmpdir();
+
+		g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+	
+		cmdline = g_strdup_printf ("%s extract -a --target-dir=%s %s%cFoo%ccur%cmail5",
+								   MU_PROGRAM, tmpdir,
+								   MU_TESTMAILDIR2, G_DIR_SEPARATOR,
+								   G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+
+		g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
+		g_assert_cmpstr (output, ==, "");
+		g_assert_cmpstr (erroutput, ==, "");
+		g_free (erroutput);
+		g_free (output);
+		
+		/* now, it should fail, because we don't allow overwrites without --overwrite */
+		g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
+		g_assert_cmpstr (output, ==, "");
+		g_assert_cmpstr (erroutput, !=, "");
+		g_free (erroutput);
+		g_free (output);
+		
+		g_free (cmdline);
+		/* this should work now, because we have specified --overwrite */
+		cmdline = g_strdup_printf ("%s extract -a --overwrite "
+								   "--target-dir=%s %s%cFoo%ccur%cmail5",
+								   MU_PROGRAM, tmpdir, MU_TESTMAILDIR2, G_DIR_SEPARATOR,
+								   G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+		g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput, NULL, NULL));
+		g_assert_cmpstr (output, ==, "");
+		g_assert_cmpstr (erroutput, ==, "");
+		g_free (erroutput);
+		g_free (output);
+
+		g_free (tmpdir);
+		g_free (cmdline);
+}
+
+
+
+static void 
 test_mu_view_01 (void)
 {
         gchar *cmdline, *output;
@@ -384,11 +429,13 @@ main (int argc, char *argv[])
 		g_test_add_func ("/mu-cmd/test-mu-extract-01",  test_mu_extract_01);
 		g_test_add_func ("/mu-cmd/test-mu-extract-02",  test_mu_extract_02);
 		g_test_add_func ("/mu-cmd/test-mu-extract-03",  test_mu_extract_03);
+		g_test_add_func ("/mu-cmd/test-mu-extract-04",  test_mu_extract_04);
 		g_test_add_func ("/mu-cmd/test-mu-view-01",  test_mu_view_01);
 		g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 		
 		g_log_set_handler (NULL,
-						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+						   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|
+						   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 						   (GLogFunc)black_hole, NULL);
 
 		mu_msg_gmime_init ();

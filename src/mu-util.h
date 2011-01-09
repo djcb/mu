@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <dirent.h>
+#include <sys/stat.h> /* for mode_t */
 
 G_BEGIN_DECLS
 
@@ -100,17 +101,28 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
  * create a writeable file and return its file descriptor (which
  * you'll need to close(2) when done with it.)
  * 
- * @param filename the filename
- * @param dir the target directory, or NULL for the current
+ * @param path the full path of the file to create
+ * @param the mode to open (ie. 0644 or 0600 etc., see chmod(3)
  * @param overwrite should we allow for overwriting existing files?
  * 
- * @return a file descriptor, or -1 in case of error. If it's a fily
- * system error, 'errno' may have more info. use 'close()' when done
+ * @return a file descriptor, or -1 in case of error. If it's a file
+ * system error, 'errno' may contain more info. use 'close()' when done
  * with the file descriptor
  */
-int mu_util_create_writeable_fd (const char* filename, const char* dir,
+int mu_util_create_writeable_fd (const char* path, mode_t mode,
 				 gboolean overwrite)
     G_GNUC_WARN_UNUSED_RESULT;
+
+
+/** 
+ * try to 'play' (ie., open with it's associated program) a
+ * file. depends on xdg-open to do the actual opening
+ * 
+ * @param path full path of the file to open
+ * 
+ * @return TRUE if it succeeded, FALSE otherwise
+ */
+gboolean mu_util_play (const char *path);
 
 
 /**

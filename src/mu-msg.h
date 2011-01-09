@@ -27,18 +27,6 @@
 
 G_BEGIN_DECLS
 
-/* what kind of message is this; use by the indexer */
-enum _MuMsgStatus {
-	MU_MSG_STATUS_NEW,	  /* message is new */
-	MU_MSG_STATUS_UPDATE,	  /* message is to be updated */
-	MU_MSG_STATUS_CLEANUP,	  /* message is to be cleaned up from db */
-	MU_MSG_STATUS_CLEANED_UP, /* message has been cleaned up from db */
-	MU_MSG_STATUS_EXISTS,	  /* message exists (will not be cleaned up) */
-	MU_MSG_STATUS_UPTODATE	  /* message is up-to-date */
-};
-typedef enum _MuMsgStatus MuMsgStatus;
-
-
 struct _MuMsg;
 typedef struct _MuMsg MuMsg;
 
@@ -131,11 +119,13 @@ const char*     mu_msg_get_summary (MuMsg *msg, size_t max_lines);
  * @param wanted_idx index of the attachment you want to save
  * @param targetdir filesystem directory to save the attachment
  * @param overwrite existing files?
+ * @param try to 'play' (open) the saved mime-part after saving
  * 
  * @return TRUE if saving succeeded, FALSE otherwise
  */
 gboolean mu_msg_mime_part_save (MuMsg *msg, unsigned wanted_idx,
-				const char *targetdir, gboolean overwrite);
+				const char *targetdir, gboolean overwrite,
+				gboolean tryplay);
 
 /**
  * get the sender (From:) of this message

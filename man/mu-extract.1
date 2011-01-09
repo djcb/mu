@@ -1,4 +1,4 @@
-.TH MU EXTRACT 1 "October 2010" "User Manuals"
+.TH MU EXTRACT 1 "January 2011" "User Manuals"
 
 .SH NAME 
 
@@ -41,7 +41,14 @@ the current working directory.
 
 .TP
 \fB\-\-overwrite\fR
-overwrite existing files with the same name.
+overwrite existing files with the same name; by default overwriting is not
+allowed.
+
+.TP
+\fB\-\-play\fR
+Try to 'play' (open) the attachment with the corresponding
+application. Depends on the \fBxdg-open\fR utility.
+
 
 .SH BUGS
 Please report bugs if you find them:
@@ -54,4 +61,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu(1)
+.BR mu(1) xdg-open(1)
