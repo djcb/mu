@@ -73,13 +73,14 @@ mu_msg_msg_part_foreach (MuMsg *msg,
 		g_return_if_fail (GMIME_IS_OBJECT(msg->_mime_msg));
 
 		pdata._idx       = 0;
-		pdata._func	 = func;
+		pdata._func		 = func;
 		pdata._user_data = user_data;
 	
 		g_mime_message_foreach (msg->_mime_msg,
 								(GMimeObjectForeachFunc)part_foreach_cb,
 								&pdata);
 }
+
 
 
 struct _SavePartData {

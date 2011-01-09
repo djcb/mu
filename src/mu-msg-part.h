@@ -72,10 +72,11 @@ typedef struct _MuMsgPart MuMsgPart;
  * @return the file name
  */
 #define  mu_msg_part_content_type(pi) ((pi)->content_type)
- 
+
+
+
 
 typedef void (*MuMsgPartForeachFunc) (MuMsgPart *part, gpointer data);
-
 /**
  * call a function for each of the contacts in a message 
  *
