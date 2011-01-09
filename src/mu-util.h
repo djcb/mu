@@ -81,6 +81,16 @@ gboolean mu_util_create_dir_maybe (const gchar *path)
     G_GNUC_WARN_UNUSED_RESULT;
 
 
+/** 
+ * create a temporary dir (typically, in /tmp) with a unique name,
+ * such that files can be saved there.
+ * 
+ * @return the name of the new dir, or NULL in case of error. Free with g_free
+ */
+char* mu_util_create_tmpdir (void)
+	 	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
 /**
  * check whether path is a directory, and optionally, if it's readable
  * and/or writeable
@@ -178,7 +188,7 @@ gboolean mu_util_clear_database (const gchar *xpath);
  * @return a newly allocated string
  */
 gchar* mu_util_str_from_strv (const gchar **params)
-        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /*
  * for OSs with out support for direntry->d_type, like Solaris

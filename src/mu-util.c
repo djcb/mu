@@ -111,6 +111,27 @@ mu_util_dir_expand (const char *path)
 	return g_strdup (resolved);
 }
 
+
+char*
+mu_util_create_tmpdir (void)
+{
+	gchar *dirname;
+        dirname =  g_strdup_printf ("%s%cmu-%d%c%x", g_get_tmp_dir(),
+				    G_DIR_SEPARATOR,
+				    getuid(),
+				    G_DIR_SEPARATOR,
+				    (int)random()*getpid()*(int)time(NULL));
+
+	if (!mu_util_create_dir_maybe (dirname)) {
+		g_free (dirname);
+		return NULL;
+	}
+
+	return dirname;
+}
+
+
+
 gboolean
 mu_util_init_system (void)
 {
