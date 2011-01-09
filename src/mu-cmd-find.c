@@ -187,27 +187,16 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 }
 
 
+
 static gboolean
-query_params_valid (MuConfig *opts)
+format_params_valid (MuConfig *opts)
 {
 	OutputFormat format;
-	const gchar *xpath;
-	
-	if (opts->linksdir) 
-		if (opts->xquery) {
-			g_warning ("invalid option for --linksdir");
-			return FALSE;
-		}
-
+		
 	format = get_output_format (opts->formatstr);
 	if (format == FORMAT_NONE) {
 		g_warning ("invalid output format %s",
 			   opts->formatstr ? opts->formatstr : "<none>");
-		return FALSE;
-	}
-
-	if (opts->xquery) {
-		g_warning ("--xquery is obsolete; use --format=xquery instead");
 		return FALSE;
 	}
 	
@@ -218,6 +207,25 @@ query_params_valid (MuConfig *opts)
 
 	if (opts->linksdir && format != FORMAT_LINKS) {
 		g_warning ("--linksdir is only valid with --format=links");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+query_params_valid (MuConfig *opts)
+{
+	const gchar *xpath;
+	
+	if (opts->linksdir) 
+		if (opts->xquery) {
+			g_warning ("invalid option for --linksdir");
+			return FALSE;
+		}
+
+	if (opts->xquery) {
+		g_warning ("--xquery is obsolete; use --format=xquery instead");
 		return FALSE;
 	}
 	
@@ -343,7 +351,7 @@ mu_cmd_find (MuConfig *opts)
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND, FALSE);
 	
-	if (!query_params_valid (opts))
+	if (!query_params_valid (opts) || !format_params_valid(opts))
 		return MU_EXITCODE_ERROR;
 
 	format = get_output_format (opts->formatstr);
