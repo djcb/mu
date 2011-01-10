@@ -28,7 +28,39 @@
 #include "mu-msg-priv.h"
 #include "mu-msg-part.h"
 
+struct _FindPartData {
+		guint			 idx, wanted_idx;
+		GMimeObject		*part;
+};
+typedef struct _FindPartData FindPartData;
+
+
+static void
+find_part_cb (GMimeObject *parent, GMimeObject *part, FindPartData *fpdata)
+{
+		if (fpdata->part || fpdata->wanted_idx != fpdata->idx++)
+				return; /* not yet found */
+
+		fpdata->part = part;
+}
+
+static GMimeObject*
+find_part (MuMsg* msg, guint partidx)
+{
+		FindPartData fpdata;
+
+		fpdata.wanted_idx = partidx;
+		fpdata.idx = 0;
+		fpdata.part = NULL;
+		
+		g_mime_message_foreach (msg->_mime_msg,
+								(GMimeObjectForeachFunc)find_part_cb,
+								&fpdata);
+		return fpdata.part;
+}
+
 struct _PartData {
+		MuMsg					*_msg;
 		unsigned				_idx;
 		MuMsgPartForeachFunc	_func;
 		gpointer				_user_data;
@@ -47,6 +79,7 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 		pi.content_id  = (char*)g_mime_object_get_content_id (part);
 
 		ct = g_mime_object_get_content_type (part);
+
 		if (GMIME_IS_CONTENT_TYPE(ct)) {
 				pi.type	   = (char*)g_mime_content_type_get_media_type (ct);
 				pi.subtype = (char*)g_mime_content_type_get_media_subtype (ct);	
@@ -57,21 +90,19 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 				pi.file_name   = (char*)g_mime_part_get_filename (GMIME_PART(part));
 		}
 	
-		pdata->_func(&pi, pdata->_user_data);	
+		pdata->_func(pdata->_msg, &pi, pdata->_user_data);	
 }
 
-
-
 void
-mu_msg_msg_part_foreach (MuMsg *msg,
-						 MuMsgPartForeachFunc func,
-						 gpointer user_data)
+mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
+					 gpointer user_data)
 {
 		PartData pdata;
 	
 		g_return_if_fail (msg);
 		g_return_if_fail (GMIME_IS_OBJECT(msg->_mime_msg));
 
+		pdata._msg       = msg;
 		pdata._idx       = 0;
 		pdata._func		 = func;
 		pdata._user_data = user_data;
@@ -82,19 +113,6 @@ mu_msg_msg_part_foreach (MuMsg *msg,
 }
 
 
-
-struct _SavePartData {
-		guint        idx, wanted_idx;
-		const gchar* targetdir;
-		gboolean     overwrite;
-		gboolean     stream;
-		guint        cookie;
-		gboolean     result;
-		gboolean     play;
-};
-typedef struct _SavePartData SavePartData;
-
-
 static gboolean
 write_to_stream (GMimeObject *part, int fd)
 {
@@ -103,14 +121,14 @@ write_to_stream (GMimeObject *part, int fd)
 		gboolean rv;
 		
 		stream = g_mime_stream_fs_new (fd);
-		if (!stream) {
+		if (!GMIME_IS_STREAM(stream)) {
 				g_critical ("%s: failed to create stream",__FUNCTION__);
 				return FALSE;
 		}
 		g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream), FALSE);
 		
 		wrapper = g_mime_part_get_content_object (GMIME_PART(part));
-		if (!wrapper) {
+		if (!GMIME_IS_DATA_WRAPPER(wrapper)) {
 				g_critical ("%s: failed to create wrapper", __FUNCTION__);
 				g_object_unref (stream);
 				return FALSE;
@@ -129,102 +147,177 @@ write_to_stream (GMimeObject *part, int fd)
 }
 
 
-static gboolean
-save_part (GMimeObject *part, const char *filename,
-		   const char *targetdir, gboolean overwrite, gboolean tryplay)
+gboolean
+save_part (GMimeObject *part, const char *fullpath,
+		   gboolean overwrite, gboolean use_existing)
 {
 		int fd;
-		char *fullpath;
 		gboolean rv;
 		
-		fullpath = g_strdup_printf ("%s%s%s",
-									targetdir ? targetdir : "",
-									targetdir ? G_DIR_SEPARATOR_S : "",
-									filename);
+		/* don't try to overwrite when we already have it; useful when
+		 * you're sure it's not a different file with the same name */
+		if (use_existing && access (fullpath, F_OK) == 0)
+				return TRUE;
 		
+		/* ok, try to create the file */
 		fd = mu_util_create_writeable_fd (fullpath, 0600, overwrite);
-		if (fd == -1) {
-				g_free (fullpath);
+		if (fd == -1)
 				return FALSE;
-		}
-		
+				
 		rv = write_to_stream (part, fd);
 		if (close (fd) != 0)
 				g_warning ("%s: failed to close %s: %s", __FUNCTION__,
 						   fullpath, strerror(errno));
 		
-		if (rv && tryplay) {
-				rv = mu_util_play (fullpath);
-				if (!rv)
-						g_warning ("%s: failed to play %s", __FUNCTION__,
-								   fullpath);
+		return TRUE;
+}
+
+
+gchar*
+mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx)
+{
+		char *fname, *filepath;
+		GMimeObject* part;
+
+		part = find_part (msg, partidx);
+		if (!part) {
+				g_warning ("%s: cannot find part %u", __FUNCTION__, partidx);
+				return NULL;
 		}
 		
-		return rv;
+		/* the easy case: the part has a filename */
+		fname = (gchar*)g_mime_part_get_filename (GMIME_PART(part));
+		if (fname) /* security: don't include any directory components... */
+				fname = g_path_get_basename (fname);
+		else
+				fname =  g_strdup_printf ("%x-part-%u",
+										  g_str_hash (mu_msg_get_path (msg)),
+										  partidx);
+
+		filepath = g_build_path (G_DIR_SEPARATOR_S, targetdir ? targetdir : "",
+								 fname, NULL);
+		g_free (fname);
+
+		return filepath;
 }
 
-	
 
-static void
-part_foreach_save_cb (GMimeObject *parent, GMimeObject *part,
-					  SavePartData *spd)
+
+gchar*
+mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 {
-		const gchar* filename;
-	
-		/* did we find the right part yet? */
-		if (spd->result || spd->wanted_idx != spd->idx++)
-				return;
-	
-		if (!GMIME_IS_PART(part)) /* ie., multiparts are ignored */
-				return;
-	
-		filename = g_mime_part_get_filename (GMIME_PART(part));
-		if (filename) {
-				spd->result = save_part (part, filename,
-										 spd->targetdir,
-										 spd->overwrite,
-										 spd->play);				
-		} else { /* make up a filename */
-				gchar *my_filename;
-				my_filename = g_strdup_printf ("%x-part-%u",
-											   spd->cookie,
-											   spd->wanted_idx);
-				spd->result = save_part (part, my_filename,
-										 spd->targetdir,
-										 spd->overwrite,
-										 spd->play);
-				g_free (my_filename);
+		char *dirname, *filepath;
+		const char* path;
+		
+		g_return_val_if_fail (msg, NULL);
+		
+		path = mu_msg_get_path (msg);
+		if (!path)
+				return NULL;
+
+		/* g_compute_checksum_for_string may be better, but requires
+		 * rel. new glib (2.16) */
+        dirname = g_strdup_printf ("%s%c%x%c%u",
+								   mu_util_cache_dir(), G_DIR_SEPARATOR,
+								   g_str_hash (path), G_DIR_SEPARATOR,
+								   partid);
+		
+		if (!mu_util_create_dir_maybe (dirname, 0700)) {
+				g_free (dirname);
+				return NULL;
 		}
+
+		filepath = mu_msg_part_filepath (msg, dirname, partid);
+		g_free (dirname);
+		if (!filepath) 
+				g_warning ("%s: could not get filename", __FUNCTION__);
+	
+		return filepath;
 }
+
 
 gboolean
-mu_msg_mime_part_save (MuMsg *msg, unsigned wanted_idx,
-					   const char *targetdir, gboolean overwrite, gboolean play)
+mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
+				  gboolean overwrite, gboolean use_cached)
 {
-		SavePartData spd;
-		const char *msgid;
-	
+		GMimeObject *part;
+		
 		g_return_val_if_fail (msg, FALSE);
-	
-		spd.idx	       = 0;
-		spd.wanted_idx = wanted_idx;
-		spd.targetdir  = targetdir;
-		spd.overwrite  = overwrite;
-		spd.stream     = FALSE; /* not used yet */
-		spd.result     = FALSE;
-		spd.play       = play;
-	
-		/* get something fairly unique for building a filename;
-		 * normally based on the message id, but if that is not
-		 * available, a random number. basing it on the message id
-		 * gives makes it easy to distinguish the parts of different
-		 * messages */
-		msgid = mu_msg_get_msgid (msg);
-		spd.cookie = (guint)(msgid ? g_str_hash (msgid) : (guint)random());
-	
-		g_mime_message_foreach (msg->_mime_msg,
-								(GMimeObjectForeachFunc)part_foreach_save_cb,
-								&spd);
-		return spd.result;
+		g_return_val_if_fail (fullpath, FALSE);
+		g_return_val_if_fail (!overwrite||!use_cached, FALSE);
+		
+		part = find_part (msg, partidx);
+		if (!GMIME_IS_PART(part)) {
+				g_warning ("%s: cannot find part %u", __FUNCTION__, partidx);
+				return FALSE;
+		}
+				
+		if (!save_part (part, fullpath, overwrite, use_cached)) {
+				g_warning ("%s: failed to save '%s'", __FUNCTION__, fullpath);
+				return FALSE;
+		}
+
+		return TRUE;
 }
+
+
+
+
+typedef gboolean (*MatchFunc) (GMimeObject *part, gpointer data);
+
+struct _MatchData {
+	MatchFunc _matcher;
+	gpointer  _user_data;
+	gint      _idx, _found_idx;
+};
+typedef struct _MatchData MatchData;
+
+static void
+part_match_foreach_cb (GMimeObject *parent, GMimeObject *part, MatchData *mdata)
+{
+	if (mdata->_found_idx >= 0)
+		if (mdata->_matcher (part, mdata->_user_data))
+			mdata->_found_idx = mdata->_idx;
+	
+	++mdata->_idx;
+}
+
+static int
+msg_part_find_idx (GMimeMessage *msg, MatchFunc func, gpointer user_data)
+{
+	MatchData mdata;
+	
+	g_return_val_if_fail (msg, -1);
+	g_return_val_if_fail (GMIME_IS_MESSAGE(msg), -1);
+	
+	mdata._idx       = 0;
+	mdata._found_idx = -1;
+	mdata._matcher   = func;
+	mdata._user_data = user_data;
+	
+	g_mime_message_foreach (msg,
+							(GMimeObjectForeachFunc)part_match_foreach_cb,
+							&mdata);
+
+	return mdata._found_idx;
+}
+
+
+static gboolean
+match_content_id (GMimeObject *part, const char *sought_cid)
+{
+		return g_strcmp0 (g_mime_object_get_content_id (part),
+						  sought_cid) == 0;
+}
+
+int
+mu_msg_part_find_cid (MuMsg *msg, const char* content_id)
+{
+	g_return_val_if_fail (msg, -1L);
+	g_return_val_if_fail (content_id, -1);
+
+	return msg_part_find_idx (msg->_mime_msg, (MatchFunc)match_content_id,
+							  (gpointer)content_id);
+}
+
 

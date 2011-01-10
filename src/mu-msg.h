@@ -125,20 +125,7 @@ const char*     mu_msg_get_body_html       (MuMsg *msg);
  */
 const char*     mu_msg_get_summary (MuMsg *msg, size_t max_lines);
 
-/**
- * save a specific attachment to some targetdir 
- * 
- * @param msg a valid MuMsg instance
- * @param wanted_idx index of the attachment you want to save
- * @param targetdir filesystem directory to save the attachment
- * @param overwrite overwrite existing files?
- * @param play try to 'play' (open) the saved mime-part after saving
- * 
- * @return TRUE if saving succeeded, FALSE otherwise
- */
-gboolean mu_msg_mime_part_save (MuMsg *msg, unsigned wanted_idx,
-				const char *targetdir, gboolean overwrite,
-				gboolean play);
+
 
 /**
  * get the sender (From:) of this message
@@ -303,6 +290,7 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
  * @return the timestamp or 0 in case of error
  */
 time_t          mu_msg_get_timestamp       (MuMsg *msg);
+
 
 G_END_DECLS
 

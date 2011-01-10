@@ -74,11 +74,77 @@ typedef struct _MuMsgPart MuMsgPart;
 #define  mu_msg_part_content_type(pi) ((pi)->content_type)
 
 
-
-
-typedef void (*MuMsgPartForeachFunc) (MuMsgPart *part, gpointer data);
 /**
- * call a function for each of the contacts in a message 
+ * macro to get the content-id (cid) for this mime-part
+ * 
+ * @param pi a MuMsgPart instance
+ * 
+ * @return the file name
+ */
+#define  mu_msg_part_content_id(pi) ((pi)->content_id)
+
+
+
+/**
+ * save a specific attachment to some targetdir 
+ * 
+ * @param msg a valid MuMsg instance
+ * @gchar filepath the filepath to save
+ * @param partidx index of the attachment you want to save
+ * @param overwrite overwrite existing files?
+ * @param don't raise error when the file already exists
+ * 
+ * @return full path to the message part saved or NULL in case or error; free with g_free
+ */
+gboolean mu_msg_part_save (MuMsg *msg, const char *filepath, guint partidx,
+			   gboolean overwrite, gboolean use_cached);
+
+
+/** 
+ * get a filename for the saving the message part; try the filename
+ * specified for the message part if any, otherwise determine a unique
+ * name based on the partidx and the message path
+ * 
+ * @param msg a msg
+ * @param targetdir where to store the part
+ * @param partidx the part for which to determine a filename
+ * 
+ * @return a filepath (g_free when done with it) or NULL in case of error
+ */
+gchar* mu_msg_part_filepath (MuMsg *msg, const char* targetdir,
+			     guint partidx) G_GNUC_WARN_UNUSED_RESULT; 
+
+
+/** 
+ * get a full path name for saving the message part in the cache
+ * directory for this message; if needed, create the directory (but
+ * not the file)
+ * 
+ * @param msg a msg 
+ * @param partidx the part for which to determine a filename
+ * 
+ * @return a filepath (g_free when done with it) or NULL in case of error
+ */
+gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
+        G_GNUC_WARN_UNUSED_RESULT;
+
+
+/** 
+ * get the part inede for the message part with a certain content-id
+ * 
+ * @param msg a message
+ * @param content_id a content-id to search
+ * 
+ * @return the part index number of the found part, or -1 if it was not found
+ */
+int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
+
+
+
+typedef void (*MuMsgPartForeachFunc) (MuMsg *, MuMsgPart *, gpointer);
+
+/**
+ * call a function for each of the mime part in a message 
  *
  * @param msg a valid MuMsg* instance
  * @param func a callback function to call for each contact; when
@@ -86,9 +152,9 @@ typedef void (*MuMsgPartForeachFunc) (MuMsgPart *part, gpointer data);
  * @param user_data a user-provide pointer that will be passed to the callback
  * 
  */
-void mu_msg_msg_part_foreach (MuMsg *msg,
-			      MuMsgPartForeachFunc func,
-			      gpointer user_data);
+void mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
+			  gpointer user_data);
+
 
 
 #endif /*__MU_MSG_PART_H__*/
