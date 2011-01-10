@@ -77,19 +77,8 @@ gchar* mu_util_guess_mu_homedir (void)
  * @return TRUE if a read/writeable directory `path' exists after
  * leaving this function, FALSE otherwise
  */
-gboolean mu_util_create_dir_maybe (const gchar *path)
+gboolean mu_util_create_dir_maybe (const gchar *path, mode_t mode)
     G_GNUC_WARN_UNUSED_RESULT;
-
-
-/** 
- * create a temporary dir (typically, in /tmp) with a unique name,
- * such that files can be saved there.
- * 
- * @return the name of the new dir, or NULL in case of error. Free with g_free
- */
-char* mu_util_create_tmpdir (void)
-	 	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
 
 /**
  * check whether path is a directory, and optionally, if it's readable
@@ -105,6 +94,13 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
 			    gboolean writeable)
     G_GNUC_WARN_UNUSED_RESULT;
 
+
+/** 
+ * get our the cache directory, typically, /tmp/mu-<userid>/
+ *  
+ * @return the cache directory; don't free 
+ */
+const char* mu_util_cache_dir (void) G_GNUC_CONST;
 
 
 /**

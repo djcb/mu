@@ -174,7 +174,7 @@ mu_log_init  (const char* muhome,
 	g_return_val_if_fail (!MU_LOG, FALSE);	
 	g_return_val_if_fail (muhome, FALSE);
 
-	if (!mu_util_create_dir_maybe(muhome)) {
+	if (!mu_util_create_dir_maybe(muhome, 0700)) {
 		g_warning ("failed to init log in %s", muhome);
 		return FALSE;
 	}

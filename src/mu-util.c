@@ -122,7 +122,7 @@ mu_util_create_tmpdir (void)
 				    G_DIR_SEPARATOR,
 				    (int)random()*getpid()*(int)time(NULL));
 
-	if (!mu_util_create_dir_maybe (dirname)) {
+	if (!mu_util_create_dir_maybe (dirname, 0700)) {
 		g_free (dirname);
 		return NULL;
 	}
@@ -130,6 +130,18 @@ mu_util_create_tmpdir (void)
 	return dirname;
 }
 
+
+const char*
+mu_util_cache_dir (void)
+{
+	static char cachedir [PATH_MAX];
+	
+	snprintf (cachedir, sizeof(cachedir), "%s%cmu-%u",
+		  g_get_tmp_dir(), G_DIR_SEPARATOR,
+		  getuid());
+
+	return cachedir;
+}
 
 
 gboolean
@@ -219,7 +231,7 @@ mu_util_guess_mu_homedir (void)
 }
 
 gboolean
-mu_util_create_dir_maybe (const gchar *path)
+mu_util_create_dir_maybe (const gchar *path, mode_t mode)
 {
 	struct stat statbuf;
 	
@@ -234,7 +246,7 @@ mu_util_create_dir_maybe (const gchar *path)
 		}
 	}	
 		
-	if (g_mkdir_with_parents (path, 0700) != 0) {
+	if (g_mkdir_with_parents (path, mode) != 0) {
 		g_warning ("failed to create %s: %s",
 			   path, strerror(errno));
 		return FALSE;
@@ -288,6 +300,7 @@ mu_util_create_writeable_fd (const char* path, mode_t mode,
 	
 	return fd;
 }
+
 
 gboolean
 mu_util_play (const char *path)
