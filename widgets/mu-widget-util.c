@@ -22,22 +22,33 @@
 #include <gio/gio.h>
 #include "mu-widget-util.h"
 
-GdkPixbuf*
-mu_widget_util_get_icon_pixbuf_for_content_type (const char *ctype,
-						 size_t size)
+static const char*
+second_guess_content_type (const char *ctype)
+{
+	int i;
+	struct {
+		const char *orig, *subst;
+	} substtable [] = {
+		{"text", "text/plain"},
+		{"image/pjpeg", "image/jpeg" }	
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(substtable); ++i)
+		if (g_str_has_prefix (ctype, substtable[i].orig))
+			return substtable[i].subst;
+
+	return "application/octet-stream";
+}
+
+static GdkPixbuf*
+get_icon_pixbuf_for_content_type (const char *ctype, size_t size)
 {
 	GIcon *icon;
 	GdkPixbuf *pixbuf;
-
-	g_return_val_if_fail (ctype, NULL);
-	g_return_val_if_fail (size > 0, NULL);
 	
 	icon = g_content_type_get_icon (ctype);
 	pixbuf = NULL;
-	
-	/* if (g_strcmp0 (ctype, "image/pjpeg") == 0) */
-	/* 	ctype = "image/jpeg"; */
-	
+		
 	/* based on a snippet from http://www.gtkforums.com/about4721.html */
 	if (G_IS_THEMED_ICON(icon)) {
 		gchar const * const *names;
@@ -57,3 +68,23 @@ mu_widget_util_get_icon_pixbuf_for_content_type (const char *ctype,
 	
 	return pixbuf;
 }
+
+
+GdkPixbuf*
+mu_widget_util_get_icon_pixbuf_for_content_type (const char *ctype, size_t size)
+{
+	GdkPixbuf *pixbuf;
+
+	g_return_val_if_fail (ctype, NULL);
+	g_return_val_if_fail (size > 0, NULL);
+
+	pixbuf = get_icon_pixbuf_for_content_type (ctype, size);
+	if (!pixbuf) 
+		pixbuf = get_icon_pixbuf_for_content_type
+			(second_guess_content_type (ctype), size);	
+	
+	return pixbuf;
+}
+
+
+

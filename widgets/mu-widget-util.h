@@ -32,6 +32,8 @@
  * g_object_unref when the pixbuf is no longer needed.
  */
 GdkPixbuf* mu_widget_util_get_icon_pixbuf_for_content_type (const char *ctype,
-							    size_t size);
+							    size_t size)
+      G_GNUC_WARN_UNUSED_RESULT;
+
 
 #endif /*__MU_WIDGET_UTIL_H__*/
