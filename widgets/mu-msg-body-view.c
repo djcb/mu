@@ -18,8 +18,8 @@
 */
 #include <webkit/webkitwebview.h>
 #include "mu-msg-body-view.h"
+#include <mu-msg-part.h>
 
-/* include other impl specific header files */
 
 /* 'private'/'protected' functions */
 static void mu_msg_body_view_class_init (MuMsgBodyViewClass *klass);
@@ -35,6 +35,7 @@ enum {
 
 struct _MuMsgBodyViewPrivate {
 	WebKitWebSettings *_settings;
+	MuMsg             *_message;
 };
 #define MU_MSG_BODY_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                               MU_TYPE_MSG_BODY_VIEW, \
@@ -66,11 +67,72 @@ mu_msg_body_view_class_init (MuMsgBodyViewClass *klass)
 /* 	etc. */
 }
 
+
+
+static char*
+save_file_for_cid (MuMsg *msg, const char* cid)
+{
+	gint idx;
+	gchar *filepath;
+	gboolean rv;
+	
+	g_return_val_if_fail (msg, NULL);
+	g_return_val_if_fail (cid, NULL);
+
+	idx = mu_msg_part_find_cid (msg, cid);
+	if (idx < 0) {
+		g_warning ("%s: cannot find %s", __FUNCTION__, cid);
+		return NULL;
+	}
+
+	filepath = mu_msg_part_filepath_cache (msg, idx);
+	if (!filepath) {
+		g_warning ("%s: cannot create filepath", filepath);
+		return NULL;
+	}
+	
+	rv = mu_msg_part_save (msg, filepath, idx, FALSE, TRUE);
+	if (!rv) {
+		g_warning ("%s: failed to save %s", __FUNCTION__, filepath);
+		g_free (filepath);
+		filepath = NULL;
+	}
+
+	return filepath;
+}
+
+static void
+on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
+			      WebKitWebResource *resource, WebKitNetworkRequest *request,
+			      WebKitNetworkResponse *response, gpointer data)
+{
+	const char* uri;
+	MuMsg *msg;
+
+	msg = self->_priv->_message;
+	uri = webkit_network_request_get_uri (request);
+	
+	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
+		gchar *filepath;
+		filepath = save_file_for_cid (msg, uri + 4);
+		if (filepath) {
+			gchar *fileuri;
+			fileuri = g_strdup_printf ("file://%s", filepath);
+			webkit_network_request_set_uri (request, fileuri);
+			g_free (fileuri);
+			g_free (filepath);
+		}
+	}
+}
+
+
 static void
 mu_msg_body_view_init (MuMsgBodyView *obj)
 {
 	obj->_priv = MU_MSG_BODY_VIEW_GET_PRIVATE(obj);
 
+	obj->_priv->_message = NULL;
+	
 	obj->_priv->_settings = webkit_web_settings_new ();
 	g_object_set (G_OBJECT(obj->_priv->_settings),
 		      "enable-scripts", FALSE,
@@ -81,7 +143,9 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 	webkit_web_view_set_settings (WEBKIT_WEB_VIEW(obj),
 				      obj->_priv->_settings);
 	webkit_web_view_set_editable (WEBKIT_WEB_VIEW(obj), FALSE);
-	/* other settings */
+
+	g_signal_connect (obj, "resource-request-starting",
+			  G_CALLBACK (on_resource_request_starting), NULL);
 }
 
 static void
@@ -92,6 +156,9 @@ mu_msg_body_view_finalize (GObject *obj)
 	priv = MU_MSG_BODY_VIEW_GET_PRIVATE(obj);
 	if (priv && priv->_settings)
 		g_object_unref (priv->_settings);
+
+	if (priv->_message)
+		mu_msg_unref (priv->_message);
 	
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -104,7 +171,7 @@ mu_msg_body_view_new (void)
 
 
 void
-mu_msg_body_view_set_html (MuMsgBodyView *self, const char* html)
+set_html (MuMsgBodyView *self, const char* html)
 {
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
 
@@ -115,8 +182,8 @@ mu_msg_body_view_set_html (MuMsgBodyView *self, const char* html)
 				     "");
 }
 
-void
-mu_msg_body_view_set_text (MuMsgBodyView *self, const char* txt)
+static void
+set_text (MuMsgBodyView *self, const char* txt)
 {
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
 
@@ -125,4 +192,24 @@ mu_msg_body_view_set_text (MuMsgBodyView *self, const char* txt)
 				     "text/plain",
 				     "utf-8",
 				     "");
+}
+
+
+void
+mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
+{
+	const char* data;
+	
+	g_return_if_fail (self);
+
+	if (self->_priv->_message)
+		mu_msg_unref (self->_priv->_message);
+	
+	self->_priv->_message = msg ? mu_msg_ref (msg) : NULL;
+		
+	data = msg ? mu_msg_get_body_html (msg) : "";
+	if (data) 
+		set_html (self, data);
+	else
+		set_text (self, mu_msg_get_body_text (msg));
 }

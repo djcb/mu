@@ -129,7 +129,11 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 static void
 mu_msg_attach_view_finalize (GObject *obj)
 {
-	mu_msg_unref (MU_MSG_ATTACH_VIEW(obj)->_priv->_msg);
+	MuMsg *msg;
+
+	msg = MU_MSG_ATTACH_VIEW(obj)->_priv->_msg;
+	if (msg)
+		mu_msg_unref (msg);
 	
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -149,7 +153,7 @@ typedef struct _CBData CBData;
 
 
 static void
-each_part (MuMsgPart *part, CBData *cbdata)
+each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 {
 	GtkTreeIter treeiter;
 	GdkPixbuf *pixbuf;
@@ -180,7 +184,7 @@ each_part (MuMsgPart *part, CBData *cbdata)
 			    -1);
 	if (pixbuf)
 		g_object_unref (pixbuf);
-		
+	
 	++cbdata->count;
 }
 
@@ -206,7 +210,7 @@ mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg)
 	
 	cbdata.store = store;
 	cbdata.count = 0;
-	mu_msg_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &cbdata);
+	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &cbdata);
 	
 	return cbdata.count;
 }

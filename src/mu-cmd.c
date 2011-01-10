@@ -31,11 +31,38 @@
 #include "mu-maildir.h"
 
 static gboolean
+save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
+	   gboolean play)
+{
+	gchar *filepath;
+	
+	filepath = mu_msg_part_filepath (msg, targetdir, partidx);
+	if (!filepath) {
+		g_warning ("%s: failed to get filepath", __FUNCTION__);
+		return FALSE;
+	}
+		
+	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE)) {
+		g_warning ("%s: failed to save MIME-part %d at %s",
+			   __FUNCTION__, partidx, filepath);
+		g_free (filepath);
+		return FALSE;
+	}
+
+	if (play)
+		mu_util_play (filepath);
+
+	return TRUE;
+}
+
+
+
+static gboolean
 save_numbered_parts (MuMsg *msg, MuConfig *opts)
 {
 	gboolean rv;
 	char **parts, **cur;
-
+	
 	parts = g_strsplit (opts->parts, ",", 0);
 	
 	for (rv = TRUE, cur = parts; cur && *cur; ++cur) {
@@ -43,7 +70,7 @@ save_numbered_parts (MuMsg *msg, MuConfig *opts)
 		unsigned idx;
 		int i;
 		char *endptr;
-
+		
 		idx = (unsigned)(i = strtol (*cur, &endptr, 10));
 		if (i < 0 || *cur == endptr) {
 			g_warning ("invalid MIME-part index '%s'", *cur);
@@ -51,21 +78,19 @@ save_numbered_parts (MuMsg *msg, MuConfig *opts)
 			break;
 		}
 		
-		if  (!mu_msg_mime_part_save
-		     (msg, idx, opts->targetdir, opts->overwrite, opts->play)) {
-			g_warning ("failed to save MIME-part %d", idx);
-			rv = FALSE;
+		rv = save_part (msg, opts->targetdir, idx, opts->overwrite,
+				opts->play);
+		if (!rv) {
+ 			g_warning ("failed to save MIME-part %d", idx);
 			break;
-		}			
+		}
 	}
 
 	g_strfreev (parts);
-	
 	return rv;
 }
 
 struct _SaveData {
-	MuMsg			*msg;
 	gboolean		 attachments_only;
 	gboolean		 result;
 	guint			 saved_num;
@@ -77,7 +102,7 @@ typedef struct _SaveData	 SaveData;
 
 
 static void
-save_part_if (MuMsgPart *part, SaveData *sd)
+save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 {
 	/* something went wrong somewhere; stop */
 	if (!sd->result)
@@ -97,8 +122,8 @@ save_part_if (MuMsgPart *part, SaveData *sd)
 	    g_ascii_strcasecmp (part->type, "multipart") == 0)
 		return;
 	
-	sd->result = mu_msg_mime_part_save (sd->msg, part->index,
-					    sd->targetdir, sd->overwrite, sd->play);
+	sd->result = mu_msg_part_save (msg, sd->targetdir, part->index,
+				       sd->overwrite, sd->play);
 	if (!sd->result) 
 		g_warning ("failed to save MIME-part %u", part->index);
 	else
@@ -112,7 +137,6 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 {
 	SaveData sd;
 
-	sd.msg		    = msg;
 	sd.result	    = TRUE;
 	sd.saved_num        = 0;
 	sd.attachments_only = attachments_only;
@@ -120,9 +144,9 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 	sd.targetdir	    = targetdir;
 	sd.play             = play;
 	
-	mu_msg_msg_part_foreach (msg,
-				 (MuMsgPartForeachFunc)save_part_if,
-				 &sd);
+	mu_msg_part_foreach (msg,
+			     (MuMsgPartForeachFunc)save_part_if,
+			     &sd);
 	
 	if (sd.saved_num == 0) {
 		g_warning ("no %s extracted from this message",
@@ -173,7 +197,7 @@ save_parts (const char *path, MuConfig *opts)
 
 
 static void
-each_part_show (MuMsgPart *part, gpointer user_data)
+each_part_show (MuMsg *msg, MuMsgPart *part, gpointer user_data)
 {
 	g_print ("  %u %s %s/%s [%s]\n",
 		 part->index,
@@ -199,7 +223,7 @@ show_parts (const char* path, MuConfig *opts)
 	}
 
 	g_print ("MIME-parts in this message:\n");
-	mu_msg_msg_part_foreach (msg, each_part_show, NULL);
+	mu_msg_part_foreach (msg, each_part_show, NULL);
 	mu_msg_unref (msg);
 	
 	return TRUE;

@@ -20,7 +20,10 @@
 #include "mu-msg-view.h"
 #include "mu-msg-body-view.h"
 #include "mu-msg-attach-view.h"
-#include "mu-msg.h"
+#include "mu-msg-header-view.h"
+
+#include <mu-msg.h>
+#include <mu-msg-part.h>
 
 /* 'private'/'protected' functions */
 static void mu_msg_view_class_init (MuMsgViewClass *klass);
@@ -35,6 +38,7 @@ enum {
 };
 
 struct _MuMsgViewPrivate {
+	GtkWidget *_headers;
 	GtkWidget *_body;
 	GtkWidget *_attach, *_attacharea;
 };
@@ -71,41 +75,75 @@ mu_msg_view_class_init (MuMsgViewClass *klass)
 static void
 on_attach_activated (MuMsgView *self, guint partnum, MuMsg *msg)
 {
-	char *tmpdir;
-	
-	tmpdir = mu_util_create_tmpdir ();
-	if (!tmpdir)
-		return;
-	
-	mu_msg_mime_part_save (msg, partnum, tmpdir, FALSE, TRUE);
-	g_free (tmpdir);
+	gchar* filepath;
+
+	filepath = mu_msg_part_filepath_cache (msg, partnum);
+	if (filepath) {
+		mu_msg_part_save (msg, filepath, partnum, FALSE, TRUE);
+		mu_util_play (filepath);
+		g_free (filepath);
+	}
 }
 
 
-static void
-mu_msg_view_init (MuMsgView *obj)
+static GtkWidget*
+get_header_widget (MuMsgView *self)
+{
+	return self->_priv->_headers = mu_msg_header_view_new ();
+}
+
+
+static GtkWidget*
+get_body_widget (MuMsgView *self)
 {
 	GtkWidget *scrolledwin;
 	
-	obj->_priv = MU_MSG_VIEW_GET_PRIVATE(obj);
-	
-	obj->_priv->_body = mu_msg_body_view_new ();
+	self->_priv->_body = mu_msg_body_view_new ();
 	scrolledwin = gtk_scrolled_window_new (NULL, NULL);
 	gtk_container_add (GTK_CONTAINER(scrolledwin),
-			   obj->_priv->_body);
-	gtk_box_pack_start (GTK_BOX(obj), scrolledwin,
-			    TRUE, TRUE, 2);
+			   self->_priv->_body);
 
-	obj->_priv->_attacharea = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(obj->_priv->_attacharea),
-					GTK_POLICY_NEVER,
-					GTK_POLICY_AUTOMATIC);
-	obj->_priv->_attach = mu_msg_attach_view_new ();
-	gtk_container_add (GTK_CONTAINER(obj->_priv->_attacharea), obj->_priv->_attach);	
+	return scrolledwin;
+}
 
-	g_signal_connect (obj->_priv->_attach, "attach-activated",
+static GtkWidget*
+get_attach_widget (MuMsgView *self)
+{
+	/* GtkWidget *scrolledwin; */
+	
+	self->_priv->_attacharea = gtk_frame_new ("");
+	/* scrolledwin = gtk_scrolled_window_new (NULL, NULL); */
+	/* gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolledwin), */
+	/* 				GTK_POLICY_NEVER, */
+	/* 				GTK_POLICY_AUTOMATIC); */
+	
+	self->_priv->_attach = mu_msg_attach_view_new ();
+	gtk_container_add (GTK_CONTAINER(self->_priv->_attacharea),
+			   self->_priv->_attach);	
+	
+	g_signal_connect (self->_priv->_attach, "attach-activated",
 			  G_CALLBACK(on_attach_activated),
-			  obj);
+			  self);
+
+	return self->_priv->_attacharea;
+}
+
+static void
+mu_msg_view_init (MuMsgView *self)
+{
+	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
+		
+	gtk_box_pack_start (GTK_BOX(self), get_header_widget (self),
+			    FALSE, FALSE, 2);
+	
+	gtk_box_pack_start (GTK_BOX(self), get_attach_widget (self),
+			    FALSE, FALSE, 2);
+	
+	gtk_box_pack_start (GTK_BOX(self), get_body_widget (self),
+			    TRUE, TRUE, 2);
+	
+	
+	
 }
 
 static void
@@ -123,55 +161,31 @@ mu_msg_view_new (void)
 
 
 static void
-add_attachment_area_maybe (MuMsgView *self, MuMsg *msg)
+update_attachment_area (MuMsgView *self, MuMsg *msg)
 {
 	gint attach_num;
-	GList *children, *cur;
-	gboolean has_area;
-	
-	has_area = FALSE;
-	cur = children = gtk_container_get_children (GTK_CONTAINER(self));
-	while (cur) {
-		if (cur->data == self->_priv->_attacharea) {
-			has_area = TRUE;
-			break;
-		}
-		cur = g_list_next (cur);
-	}
-	g_list_free (children);
-	
+		
 	attach_num = 0;
 	if (msg)
 		attach_num = mu_msg_attach_view_set_message
 			(MU_MSG_ATTACH_VIEW(self->_priv->_attach), msg);
-	
-	if (attach_num < 1 && has_area) {
-		g_object_ref (self->_priv->_attacharea);
-		gtk_container_remove (GTK_CONTAINER(self),
-				      self->_priv->_attacharea);
-	} else if (attach_num >= 1 && !has_area) {
-		gtk_box_pack_start (GTK_BOX(self), self->_priv->_attacharea,
-				    FALSE, FALSE, 0);
+	if (attach_num > 0)
 		gtk_widget_show_all (self->_priv->_attacharea);
-	}
+	else
+		gtk_widget_hide_all (self->_priv->_attacharea);
 }
 
 
 void
 mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
-{
-	const char *data;
-	
+{	
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
+
+	mu_msg_header_view_set_message (MU_MSG_HEADER_VIEW(self->_priv->_headers),
+					msg);
+	mu_msg_body_view_set_message (MU_MSG_BODY_VIEW(self->_priv->_body),
+				      msg);
 	
-	data = msg ? mu_msg_get_body_html (msg) : "";
-	if (data) 
-		mu_msg_body_view_set_html (MU_MSG_BODY_VIEW(self->_priv->_body),
-					   data);
-	else
-		mu_msg_body_view_set_text (MU_MSG_BODY_VIEW(self->_priv->_body),
-					   mu_msg_get_body_text (msg));
-	
-	add_attachment_area_maybe (self, msg);
+	update_attachment_area (self, msg);
 }
 
