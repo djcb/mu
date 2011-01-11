@@ -17,6 +17,8 @@
 **
 */
 #include <webkit/webkitwebview.h>
+#include <webkit/webkitnetworkresponse.h>
+
 #include "mu-msg-body-view.h"
 #include <mu-msg-part.h>
 
@@ -101,6 +103,20 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	return filepath;
 }
 
+static WebKitNavigationResponse
+on_navigation_requested (MuMsgBodyView *self, WebKitWebFrame *frame,
+			 WebKitNetworkRequest *request, gpointer data)
+{
+	const char* uri;
+	
+	uri = webkit_network_request_get_uri (request);
+	
+	if (!mu_util_is_local_file(uri))
+		mu_util_play (uri, FALSE, TRUE);
+	
+	return WEBKIT_NAVIGATION_RESPONSE_IGNORE;
+}
+
 static void
 on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 			      WebKitWebResource *resource, WebKitNetworkRequest *request,
@@ -114,7 +130,7 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 	
 	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
 		gchar *filepath;
-		filepath = save_file_for_cid (msg, uri + 4);
+		filepath = save_file_for_cid (msg, uri);
 		if (filepath) {
 			gchar *fileuri;
 			fileuri = g_strdup_printf ("file://%s", filepath);
@@ -144,8 +160,14 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 				      obj->_priv->_settings);
 	webkit_web_view_set_editable (WEBKIT_WEB_VIEW(obj), FALSE);
 
+	/* to support cid: */
 	g_signal_connect (obj, "resource-request-starting",
 			  G_CALLBACK (on_resource_request_starting), NULL);
+
+	/* handle navigation requests */
+	g_signal_connect (obj, "navigation-requested",
+			  G_CALLBACK (on_navigation_requested), (void*)0x666);
+	
 }
 
 static void
