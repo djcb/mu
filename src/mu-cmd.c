@@ -41,7 +41,7 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 		g_warning ("%s: failed to get filepath", __FUNCTION__);
 		return FALSE;
 	}
-		
+	
 	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE)) {
 		g_warning ("%s: failed to save MIME-part %d at %s",
 			   __FUNCTION__, partidx, filepath);
@@ -50,7 +50,7 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 	}
 
 	if (play)
-		mu_util_play (filepath);
+		mu_util_play (filepath, TRUE, FALSE);
 
 	return TRUE;
 }
@@ -78,10 +78,10 @@ save_numbered_parts (MuMsg *msg, MuConfig *opts)
 			break;
 		}
 		
-		rv = save_part (msg, opts->targetdir, idx, opts->overwrite,
-				opts->play);
-		if (!rv) {
- 			g_warning ("failed to save MIME-part %d", idx);
+		if (!save_part (msg, opts->targetdir, idx, opts->overwrite,
+				opts->play)) {
+			g_warning ("failed to save MIME-part %d", idx);
+			rv = FALSE;
 			break;
 		}
 	}
@@ -101,34 +101,59 @@ struct _SaveData {
 typedef struct _SaveData	 SaveData;
 
 
-static void
-save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
+static gboolean
+ignore_part (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 {
 	/* something went wrong somewhere; stop */
 	if (!sd->result)
-		return;
+		return TRUE;
 	
-	/* filter out non-attachments if only want attachments. Note,
-	 * the attachment check may be a bit too strict */
-	if (sd->attachments_only) 
-		if (!part->disposition ||
-		    ((g_ascii_strcasecmp (part->disposition,
-					  "attachment") != 0) &&
-		     g_ascii_strcasecmp (part->disposition, "inline")))
-			return;
-
+	/* filter out non-attachments if only want attachments */
+	if (sd->attachments_only &&
+	    !mu_msg_part_looks_like_attachment (part, TRUE))
+		return TRUE;
+	
 	/* ignore multiparts */
-	if (part->type && 
+	if (part->type &&
 	    g_ascii_strcasecmp (part->type, "multipart") == 0)
+		return TRUE;
+
+	return FALSE;
+}
+
+
+static void
+save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
+{
+	gchar *filepath;
+	gboolean rv;
+	
+	if (ignore_part (msg, part, sd))
 		return;
+
+	rv	 = FALSE;
+	filepath = NULL;
 	
-	sd->result = mu_msg_part_save (msg, sd->targetdir, part->index,
-				       sd->overwrite, sd->play);
+	filepath = mu_msg_part_filepath (msg, sd->targetdir, part->index);
+	if (!filepath) 
+		goto leave;
+	
+	if (!mu_msg_part_save (msg, filepath, part->index,
+			       sd->overwrite, FALSE))
+		goto leave;
+	
+	if (sd->play &&  !mu_util_play (filepath, TRUE, FALSE))
+		goto leave;
+
+	rv = TRUE;
+	++sd->saved_num;
+
+leave:
 	if (!sd->result) 
-		g_warning ("failed to save MIME-part %u", part->index);
-	else
-		++sd->saved_num;
-	
+		g_warning ("failed to save/play MIME-part %u to %s",
+			   part->index, filepath ? filepath : "<none>");
+	sd->result = rv;
+	g_free (filepath);
 }
 
 static gboolean
