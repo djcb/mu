@@ -171,9 +171,7 @@ mu_str_display_contact_s (const char *str)
 	static gchar contact[255];
 	gchar *c, *c2;
 	
-	if (!str)
-		str = "";
-	
+	str = str ? str : "";
 	g_strlcpy (contact, str, sizeof(contact));
 
 	/* we check for '<', so we can strip out the address stuff in
@@ -182,7 +180,6 @@ mu_str_display_contact_s (const char *str)
 	 */
 	c = g_strstr_len (contact, -1, "<");
 	if (c != NULL) {
-		
 		for (c2 = contact; c2 < c && !(isalnum(*c2)); ++c2);
 		if (c2 != c) /* apparently, there was something,
 			      * so we can remove the <... part*/
@@ -194,6 +191,13 @@ mu_str_display_contact_s (const char *str)
 		if (*c2 == '"' || *c2 == '<' || *c2 == '>')
 			*c2 = ' ';
 
+	/* FIXME: this breaks cc10 */
+	
+	/* remove everything between '()' if it's after the 5th pos*/
+	/* c = g_strstr_len (contact, -1, "("); */
+	/* if (c && c - contact > 5) */
+	/* *c = '\0'; */
+			
 	g_strstrip (contact);
 
 	return contact;
