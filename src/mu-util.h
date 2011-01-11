@@ -120,15 +120,29 @@ int mu_util_create_writeable_fd (const char* path, mode_t mode,
     G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+
+/**
+ * check if file is local, ie. on the local file system. this means
+ * that it's either having a file URI, *or* that it's an existing file
+ * 
+ * @param path a path
+ * 
+ * @return TRUE if the file is local, FALSE otherwise
+ */
+gboolean mu_util_is_local_file (const char* path);
+
+/**
  * try to 'play' (ie., open with it's associated program) a
  * file. depends on xdg-open to do the actual opening
  * 
  * @param path full path of the file to open
+ * @param allow_local allow local files (ie. with file:// prefix or fs paths)
+ * @param allow_remote allow URIs (ie., http, mailto)
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-gboolean mu_util_play (const char *path);
+gboolean mu_util_play (const char *path,
+		       gboolean allow_local, gboolean allow_remote);
 
 
 /**

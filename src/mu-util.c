@@ -303,7 +303,23 @@ mu_util_create_writeable_fd (const char* path, mode_t mode,
 
 
 gboolean
-mu_util_play (const char *path)
+mu_util_is_local_file (const char* path)
+{
+	/* if it starts with file:// it's a local file (for the
+	 * purposes of this function -- if it's on a remote FS it's
+	 * still considered local) */
+	if (g_ascii_strncasecmp ("file://", path, strlen("file://")) == 0)
+		return TRUE;
+	
+	if (access (path, R_OK) == 0)
+		return TRUE;
+
+	return FALSE; 
+}
+
+
+gboolean
+mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote)
 {
 #ifndef XDGOPEN
 	g_warning ("opening files not supported (xdg-open missing)");
@@ -314,8 +330,10 @@ mu_util_play (const char *path)
 	const gchar *argv[3];
 	
 	g_return_val_if_fail (path, FALSE);
-	g_return_val_if_fail (access (path, R_OK) == 0, FALSE);
-
+	g_return_val_if_fail (mu_util_is_local_file (path) || allow_remote,
+			      FALSE);
+	g_return_val_if_fail (!mu_util_is_local_file (path) || allow_local,
+			      FALSE);
 	argv[0] = XDGOPEN;
 	argv[1] = path;
 	argv[2] = NULL;
