@@ -251,8 +251,6 @@ rollback_trx_if (MuStore *store, gboolean cond)
 	}
 }
 
-
-
 void
 mu_store_flush (MuStore *store)
 {
@@ -335,7 +333,7 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 		mu_str_normalize_in_place (val, TRUE);
 	if (mu_msg_field_xapian_escape (mfid))
 		mu_str_ascii_xapian_escape_in_place (val);
-	
+
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
@@ -402,8 +400,7 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 		if (mu_msg_field_is_numeric (mfid)) 
 			add_terms_values_number (*msgdoc->_doc, msgdoc->_msg,
 						 mfid);
-		else if (mu_msg_field_type (mfid) ==
-			 MU_MSG_FIELD_TYPE_STRING)
+		else if (mu_msg_field_type (mfid) == MU_MSG_FIELD_TYPE_STRING)
 			add_terms_values_string (*msgdoc->_doc,
 						 msgdoc->_msg,
 						 mfid);
