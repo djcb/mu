@@ -259,7 +259,7 @@ test_mu_extract_02 (void)
 	
 		att1 = g_strdup_printf ("%s%ccuster.jpg", tmpdir, G_DIR_SEPARATOR);
 		att2 = g_strdup_printf ("%s%csittingbull.jpg", tmpdir, G_DIR_SEPARATOR);
-	
+		
 		g_assert_cmpint (get_file_size(att1),==,15960);
 		g_assert_cmpint (get_file_size(att2),==,17674);
 	
