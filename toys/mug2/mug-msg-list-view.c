@@ -183,12 +183,12 @@ mug_msg_list_view_init (MugMsgListView * obj)
 
 	priv->_xpath = priv->_query = NULL;
 	priv->_store = gtk_list_store_new (MUG_N_COLS, G_TYPE_STRING,	/* date */
-					   G_TYPE_STRING,	/* folder */
-					   G_TYPE_STRING,	/* flagstr */
-					   G_TYPE_STRING,	/* from */
-					   G_TYPE_STRING,	/* to */
-					   G_TYPE_STRING,	/* subject */
-					   G_TYPE_STRING,	/* path */
+					   G_TYPE_STRING,/* folder */
+					   G_TYPE_STRING,/* flagstr */
+					   G_TYPE_STRING, /* from */
+					   G_TYPE_STRING,/* to */
+					   G_TYPE_STRING,/* subject */
+					   G_TYPE_STRING, /* path */
 					   G_TYPE_UINT,	/* prio */
 					   G_TYPE_UINT,	/* flags */
 					   G_TYPE_INT);	/* timeval */
