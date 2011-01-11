@@ -76,11 +76,11 @@ static void
 on_attach_activated (MuMsgView *self, guint partnum, MuMsg *msg)
 {
 	gchar* filepath;
-
+	
 	filepath = mu_msg_part_filepath_cache (msg, partnum);
 	if (filepath) {
 		mu_msg_part_save (msg, filepath, partnum, FALSE, TRUE);
-		mu_util_play (filepath);
+		mu_util_play (filepath, TRUE, FALSE);
 		g_free (filepath);
 	}
 }
