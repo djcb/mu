@@ -159,15 +159,14 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 	GdkPixbuf *pixbuf;
 	char ctype[128];
 	
-	/* not a real attachment */
-	if (!mu_msg_part_file_name(part))
+	if (!mu_msg_part_looks_like_attachment (part, FALSE))
 		return;
-
+	
 	if (!part->type || !part->subtype)
 		snprintf (ctype, sizeof(ctype), "%s", "application/octet-stream");
 	else
 		snprintf (ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
-
+	
 	pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type (ctype, 16);
 	if (!pixbuf) {
 		g_warning ("%s: could not get icon pixbuf for '%s'",
