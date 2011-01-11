@@ -39,9 +39,7 @@ struct _MuMsgPart {
 	/* the file name (if any) */
 	char             *file_name;
 
-	/* usually, "attachment" or "inline"; use
-	 * mu_msg_part_is_(attachment|inline)
-	 * to test */
+	/* usually, "attachment" or "inline" */
 	char             *disposition;
 	
 	/* size of the part; or 0 if unknown */
@@ -84,6 +82,16 @@ typedef struct _MuMsgPart MuMsgPart;
 #define  mu_msg_part_content_id(pi) ((pi)->content_id)
 
 
+/** 
+ * does this msg part look like an attachment?
+ * 
+ * @param part a message part
+ * @param include_inline consider 'inline' parts also as attachments
+ * 
+ * @return TRUE if it looks like an attachment, FALSE otherwise
+ */
+gboolean mu_msg_part_looks_like_attachment (MuMsgPart *part,
+					    gboolean include_inline);
 
 /**
  * save a specific attachment to some targetdir 

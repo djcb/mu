@@ -190,9 +190,9 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx)
 		if (fname) /* security: don't include any directory components... */
 				fname = g_path_get_basename (fname);
 		else
-				fname =  g_strdup_printf ("%x-part-%u",
-										  g_str_hash (mu_msg_get_path (msg)),
-										  partidx);
+				fname = g_strdup_printf ("%x-part-%u",
+										 g_str_hash (mu_msg_get_path (msg)),
+										 partidx);
 
 		filepath = g_build_path (G_DIR_SEPARATOR_S, targetdir ? targetdir : "",
 								 fname, NULL);
@@ -266,58 +266,82 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 typedef gboolean (*MatchFunc) (GMimeObject *part, gpointer data);
 
 struct _MatchData {
-	MatchFunc _matcher;
-	gpointer  _user_data;
-	gint      _idx, _found_idx;
+		MatchFunc _matcher;
+		gpointer  _user_data;
+		gint      _idx, _found_idx;
 };
 typedef struct _MatchData MatchData;
 
 static void
 part_match_foreach_cb (GMimeObject *parent, GMimeObject *part, MatchData *mdata)
 {
-	if (mdata->_found_idx >= 0)
-		if (mdata->_matcher (part, mdata->_user_data))
-			mdata->_found_idx = mdata->_idx;
+		if (mdata->_found_idx < 0)
+				if (mdata->_matcher (part, mdata->_user_data))
+						mdata->_found_idx = mdata->_idx;
 	
-	++mdata->_idx;
+		++mdata->_idx;
 }
 
 static int
 msg_part_find_idx (GMimeMessage *msg, MatchFunc func, gpointer user_data)
 {
-	MatchData mdata;
+		MatchData mdata;
 	
-	g_return_val_if_fail (msg, -1);
-	g_return_val_if_fail (GMIME_IS_MESSAGE(msg), -1);
+		g_return_val_if_fail (msg, -1);
+		g_return_val_if_fail (GMIME_IS_MESSAGE(msg), -1);
 	
-	mdata._idx       = 0;
-	mdata._found_idx = -1;
-	mdata._matcher   = func;
-	mdata._user_data = user_data;
+		mdata._idx       = 0;
+		mdata._found_idx = -1;
+		mdata._matcher   = func;
+		mdata._user_data = user_data;
 	
-	g_mime_message_foreach (msg,
-							(GMimeObjectForeachFunc)part_match_foreach_cb,
-							&mdata);
+		g_mime_message_foreach (msg,
+								(GMimeObjectForeachFunc)part_match_foreach_cb,
+								&mdata);
 
-	return mdata._found_idx;
+		return mdata._found_idx;
 }
 
 
 static gboolean
-match_content_id (GMimeObject *part, const char *sought_cid)
+match_content_id (GMimeObject *part, const char *cid)
 {
 		return g_strcmp0 (g_mime_object_get_content_id (part),
-						  sought_cid) == 0;
+						  cid) == 0 ? TRUE : FALSE;
 }
 
 int
-mu_msg_part_find_cid (MuMsg *msg, const char* content_id)
+mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 {
-	g_return_val_if_fail (msg, -1L);
-	g_return_val_if_fail (content_id, -1);
-
-	return msg_part_find_idx (msg->_mime_msg, (MatchFunc)match_content_id,
-							  (gpointer)content_id);
+		const char* cid;
+		
+		g_return_val_if_fail (msg, -1L);
+		g_return_val_if_fail (sought_cid, -1);
+		
+		cid = g_str_has_prefix (sought_cid, "cid:") ?
+				sought_cid + 4 : sought_cid; 
+		
+		return msg_part_find_idx (msg->_mime_msg, (MatchFunc)match_content_id,
+								  (gpointer)cid);
 }
 
 
+gboolean
+mu_msg_part_looks_like_attachment (MuMsgPart *part, gboolean include_inline)
+{
+		g_return_val_if_fail (part, FALSE);
+
+		if (!part->disposition)
+				return FALSE;
+
+		if (g_ascii_strcasecmp (part->disposition,
+								GMIME_DISPOSITION_ATTACHMENT) == 0)
+				return TRUE;
+
+		if (include_inline &&
+			g_ascii_strcasecmp (part->disposition,
+								GMIME_DISPOSITION_INLINE) == 0)
+				return TRUE;
+
+		return FALSE;
+}
