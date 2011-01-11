@@ -9,6 +9,8 @@
      symlinks, use --format=links
    - search output can include the message size using the 'z' shortcut
    - match message size ranges (i.e.. size:500k..2M)
+   - fix: honor the --overwrite (or lack thereof) parameter
+   - support folder names with special characters
 
 ** Release 0.9.1 <2010-12-05 Sun>
    
