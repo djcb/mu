@@ -24,8 +24,9 @@
 #include <gtk/gtk.h>
 #include <string.h>		/* for memset */
 
-#include "mu-util.h"
-#include "mu-runtime.h"
+#include <mu-util.h>
+#include <mu-runtime.h>
+#include <mu-index.h>
 
 #include "mug-msg-list-view.h"
 #include "mug-query-bar.h"
@@ -43,6 +44,43 @@ struct _MugData {
 	gchar *muhome;
 };
 typedef struct _MugData MugData;
+
+MuResult
+each_msg (MuIndexStats* stats, MugData *data)
+{
+	static int i  = 0;
+
+	if (++i % 100 == 0)
+		gtk_main_iteration ();
+	
+	return MU_OK;
+}
+	
+static void
+reindex (MugData *mugdata)
+{
+	MuIndex *midx;
+	GError *err;
+
+	err = NULL;
+	midx = mu_index_new (mu_runtime_xapian_dir(), 0, &err);
+	if (!midx) {
+		if (err && err->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK) {
+			g_warning ("database busy...");
+			return; /* db already busy.. */
+		}
+		g_warning ("failed to get index: %s", err ? err->message : "<none>");
+		g_error_free (err);
+		return;
+	}
+
+	mu_index_run (midx,
+		      mu_index_last_used_maildir(midx),
+		      FALSE, NULL, (MuIndexMsgCallback)each_msg, NULL, mugdata);
+
+	mu_index_destroy (midx);
+}
+
 
 static void
 about_mug (MugData * mugdata)
@@ -90,7 +128,7 @@ on_tool_button_clicked (GtkToolButton * btn, MugData * mugdata)
 					     (mugdata->mlist));
 		break;
 	case ACTION_REINDEX:
-		g_print ("Reindex!\n");
+		reindex (mugdata);
 		break;
 	case ACTION_ABOUT:
 		about_mug (mugdata);

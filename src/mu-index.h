@@ -46,7 +46,7 @@ typedef struct _MuIndexStats MuIndexStats;
  *
  * @param xpath path to the 'homedir'; the xapian directory will be
  * this homedir/xapian
- *
+ * @param batchsize for Xapian queries, or 0 for the default
  * @param err to receive error or NULL; there are only errors when this
  * function returns NULL. Possible errors: see mu-error.h
  * 
