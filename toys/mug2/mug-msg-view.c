@@ -119,11 +119,24 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 	else {
 		MuMsg *msg;
 
-		msg = mu_msg_new (msgpath, NULL, NULL);
-		mu_msg_view_set_message (MU_MSG_VIEW(priv->_view), msg);
-
-		if (msg)
-			mu_msg_unref (msg);
+		if (access (msgpath, R_OK) == 0) {
+			msg = mu_msg_new (msgpath, NULL, NULL);
+			mu_msg_view_set_message (MU_MSG_VIEW(priv->_view), msg);
+			if (msg)
+				mu_msg_unref (msg);
+		} else {
+			gchar *note;
+			note = 	g_strdup_printf (
+				"<h1>Note</h1><hr>"
+				"<p>Message <tt>%s</tt> does not seem to be present "
+				"on the file system."
+				"<p>Maybe you need to run <tt>mu index</tt>?"
+				"<p>Click <a href=\"cmd:index\">here</a> to start the index"
+				,
+				msgpath);
+			mu_msg_view_set_note (MU_MSG_VIEW (priv->_view), note);
+			g_free (note);
+		}		
 	}
 
 	return TRUE;

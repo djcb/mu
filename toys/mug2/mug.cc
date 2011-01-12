@@ -63,6 +63,7 @@ about_mug (MugData * mugdata)
 enum _ToolAction {
 	ACTION_PREV_MSG = 1,
 	ACTION_NEXT_MSG,
+	ACTION_REINDEX,
 	ACTION_DO_QUIT,
 	ACTION_ABOUT,
 	ACTION_SEPARATOR	/* pseudo action */
@@ -87,6 +88,9 @@ on_tool_button_clicked (GtkToolButton * btn, MugData * mugdata)
 	case ACTION_PREV_MSG:
 		mug_msg_list_view_move_prev (MUG_MSG_LIST_VIEW
 					     (mugdata->mlist));
+		break;
+	case ACTION_REINDEX:
+		g_print ("Reindex!\n");
 		break;
 	case ACTION_ABOUT:
 		about_mug (mugdata);
@@ -122,6 +126,8 @@ mug_toolbar (MugData * mugdata)
 	} tools[] = {
 		{GTK_STOCK_GO_UP, ACTION_PREV_MSG},
 		{GTK_STOCK_GO_DOWN, ACTION_NEXT_MSG},
+		{NULL, ACTION_SEPARATOR},
+		{GTK_STOCK_REFRESH, ACTION_REINDEX},
 		{NULL, ACTION_SEPARATOR},
 		{GTK_STOCK_ABOUT, ACTION_ABOUT},
 		{NULL, ACTION_SEPARATOR},
