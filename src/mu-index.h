@@ -65,6 +65,17 @@ void mu_index_destroy (MuIndex *index);
 
 
 /**
+ * get the maildir for the last run of indexing for the
+ * current database
+ * 
+ * @param index MuIndex object
+ * 
+ * @return the last used maildir, or NULL
+ */
+const char* mu_index_last_used_maildir (MuIndex *index);
+
+
+/**
  * callback function for mu_index_(run|stats|cleanup), for each message
  * 
  * @param stats pointer to structure to receive statistics data 

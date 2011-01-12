@@ -90,23 +90,32 @@ check_index_or_cleanup_params (MuConfig *opts)
 		return FALSE;
 	}
 	
-	if (!opts->maildir || !g_path_is_absolute (opts->maildir)) {
-		g_warning ("maildir path '%s' is not valid",
-			   opts->maildir ? opts->maildir : "<none>");
-		return FALSE;
-	}
-
 	if (opts->xbatchsize < 0) {
 		g_warning ("the Xapian batch size must be non-negative");
 		return FALSE;
 	}
 		
-	if (!mu_util_check_dir (opts->maildir, TRUE, FALSE)) {
-		g_warning ("not a valid Maildir: %s",
-			   opts->maildir ? opts->maildir : "<none>");
+	return TRUE;
+}
+
+static gboolean
+check_maildir (const char *maildir)
+{
+	if (!maildir) {
+		g_warning ("no maildir to work on");
 		return FALSE;
 	}
 	
+	if (!g_path_is_absolute (maildir)) {
+		g_warning ("maildir path '%s' is not absolute", maildir);
+		return FALSE;
+	}
+	
+	if (!mu_util_check_dir (maildir, TRUE, FALSE)) {
+		g_warning ("not a valid Maildir: %s", maildir);
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -161,7 +170,7 @@ database_version_check_and_update (MuConfig *opts)
 
 	xpath = mu_runtime_xapian_dir ();
 	
-	if (mu_util_db_is_empty (xpath))
+	if (mu_util_xapian_is_empty (xpath))
 		return TRUE;
 	
 	/* when rebuilding, we empty the database before doing
@@ -169,17 +178,17 @@ database_version_check_and_update (MuConfig *opts)
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
 		g_message ("clearing database %s", xpath);
-		return mu_util_clear_database (xpath);
+		return mu_util_xapian_clear (xpath);
 	}
 
-	if (mu_util_db_version_up_to_date (xpath))
+	if (!mu_util_xapian_needs_upgrade (xpath))
 		return TRUE; /* ok, nothing to do */
 	
 	/* ok, database is not up to date */
 	if (opts->autoupgrade) {
 		opts->reindex = TRUE;
 		g_message ("auto-upgrade: clearing old database first");
-		return mu_util_clear_database (xpath);
+		return mu_util_xapian_clear (xpath);
 	}
 
 	update_warning ();
@@ -195,6 +204,36 @@ show_time (unsigned t, unsigned processed)
 			   t, processed/t);
 	else
 		g_message ("elapsed: %u second(s)", t);
+}
+
+
+static gboolean
+update_maildir_path_maybe (MuIndex *idx, MuConfig *opts)
+{
+	gchar *exp;
+	
+	/* if 'maildir_guessed' is TRUE, we can override it later
+	 * with mu_index_last_used_maildir (in mu-cmd-index.c)
+	 */
+	while (!opts->maildir) {
+
+		const char *tmp;
+
+		/* try the last used one */
+		tmp = mu_index_last_used_maildir (idx);
+		if (tmp) 
+			opts->maildir = g_strdup (tmp);
+		else
+			opts->maildir = mu_util_guess_maildir ();
+	}		
+	
+	exp = mu_util_dir_expand(opts->maildir);
+	if (exp) {
+		g_free(opts->maildir);
+		opts->maildir = exp;
+	}
+
+	return check_maildir (opts->maildir);	
 }
 
 
@@ -261,6 +300,36 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	return MU_EXITCODE_ERROR;
 }
 
+static MuExitCode
+handle_index_error_and_free (GError *err)
+{
+	MuExitCode code;
+	
+	if (!err)
+		return MU_EXITCODE_ERROR;
+
+	switch (err->code) {
+
+	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
+		g_warning ("cannot get Xapian writelock");
+		g_warning ("maybe mu index is already running?");
+		code = MU_EXITCODE_DB_LOCKED;
+		break;
+
+	case MU_ERROR_XAPIAN_CORRUPTION:
+		g_warning ("xapian database seems to be corrupted");
+		g_warning ("try 'mu index --rebuild");
+		code = MU_EXITCODE_DB_CORRUPTED;
+		break;
+	default:
+		g_warning ("indexing error: %s",
+			   err->message ? err->message : "");
+		code = MU_EXITCODE_ERROR;
+	}
+
+	g_error_free (err);
+	return code;
+}
 
 
 static MuExitCode
@@ -274,16 +343,19 @@ cmd_index_or_cleanup (MuConfig *opts)
 	
 	if (!check_index_or_cleanup_params (opts) ||
 	    !database_version_check_and_update(opts))
-		return MU_EXITCODE_ERROR;
-
+		return MU_EXITCODE_ERROR;		
+	
 	err = NULL;
-	if (!(midx = mu_index_new (mu_runtime_xapian_dir(),
-				   opts->xbatchsize, &err))) {
-		g_warning ("index/cleanup failed: %s", err->message);
-		g_error_free (err);
-		return MU_EXITCODE_ERROR;
-	} 
+	if (!(midx = mu_index_new
+	      (mu_runtime_xapian_dir(), opts->xbatchsize, &err)))
+		return handle_index_error_and_free (err);
 
+	/* we determine the maildir path only here, as it may depend on
+         * mu_index_last_used_maildir
+         */
+	if (!update_maildir_path_maybe (midx, opts))
+		return MU_EXITCODE_ERROR;		
+	
 	/* note, 'opts->quiet' already cause g_message output not to
 	 * be shown; here, we make sure we only print progress info if
 	 * opts->quiet is false case and when stdout is a tty */

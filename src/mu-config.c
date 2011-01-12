@@ -72,17 +72,9 @@ config_options_group_mu (MuConfig *opts)
 static void
 set_group_index_defaults (MuConfig * opts)
 {
-		gchar *exp;
-
-		if (!opts->maildir)
-				opts->maildir = mu_util_guess_maildir();
-
-		exp = mu_util_dir_expand(opts->maildir);
-		if (exp) {
-				g_free(opts->maildir);
-				opts->maildir = exp;
-		}
-
+		/* note: opts->maildir is handled in mu-cmd, as we need to
+		 * have a MuIndex entry for mu_index_last_used_maildir ()
+		 */
 		opts->xbatchsize = 0;
 }
 
