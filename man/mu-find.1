@@ -470,10 +470,19 @@ definitions can be used; typing 'Q' will start a query.
 
 
 .SH RETURN VALUE
-	
-\fBmu\fR returns 0 for searches with at least one matching message, 2 for
-searches that do not match anything. In case of errors 1 or any number greater
-than 2 will be returned.
+
+\fBmu find\fR return 0 upon successful completion; if it the a search was
+performed, there needs to be a least one match. Anything else leads to a
+non-zero return value, for example: 
+
+.sh
+| code | meaning                        |
+|------+--------------------------------|
+|    0 | ok                             |
+|    1 | general error                  |
+|    2 | no matches (for 'mu find')     |
+|    4 | database is corrupted          |
+.si
 
 .SH BUGS
 

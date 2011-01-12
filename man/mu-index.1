@@ -165,6 +165,18 @@ without the need for any manual maintenance of log files.
 been specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If
 \fBMAILDIR\fR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
 
+.SH RETURN VALUE
+\fBmu index\fR return 0 upon successful completion, and any other number
+greater than 2 signals an error, for example:
+.sh
+| code | meaning                        |
+|------+--------------------------------|
+|    0 | ok                             |
+|    1 | general error                  |
+|    3 | could not obtain db write lock |
+|    4 | database is corrupted          |
+.si
+
 .SH BUGS
 
 Please report bugs if you find them:

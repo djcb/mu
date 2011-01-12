@@ -1,4 +1,4 @@
-.TH MU CLEANUP 1 "November 2010" "User Manuals"
+.TH MU CLEANUP 1 "January 2011" "User Manuals"
 
 .SH NAME 
 
@@ -17,6 +17,19 @@ be found, from the database. This is done automatically when running
 \fBmu cleanup\fR does not remove messages that are outside the currently
 specified Maildir, as long as they still exist. The command only takes global
 options, which are described in the \fBmu (1)\fR man page.
+
+.SH RETURN VALUE
+
+\fBmu cleanup\fR return 0 upon successful completion. Anything else leads to a
+non-zero return value, for example:
+
+.sh
+| code | meaning                        |
+|------+--------------------------------|
+|    0 | ok                             |
+|    1 | general error                  |
+|    4 | database is corrupted          |
+.si
 
 .SH BUGS
 
