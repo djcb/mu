@@ -35,9 +35,14 @@ enum {
 	LAST_SIGNAL
 };
 
+
 struct _MuMsgBodyViewPrivate {
 	WebKitWebSettings *_settings;
 	MuMsg             *_message;
+
+	/* 'mu_mode' means some internal mode where cmd: urls are
+	 * acceptable */
+	gboolean           _mu_mode;
 };
 #define MU_MSG_BODY_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                               MU_TYPE_MSG_BODY_VIEW, \
@@ -110,10 +115,16 @@ on_navigation_requested (MuMsgBodyView *self, WebKitWebFrame *frame,
 	const char* uri;
 	
 	uri = webkit_network_request_get_uri (request);
-	
+
+	if (g_ascii_strncasecmp (uri, "cmd:", 4) == 0)  {
+		if (self->_priv->_mu_mode) 
+			g_printerr ("execute: '%s'\n", uri + 4);
+		return WEBKIT_NAVIGATION_RESPONSE_IGNORE;
+	}
+		
 	if (!mu_util_is_local_file(uri))
 		mu_util_play (uri, FALSE, TRUE);
-	
+		
 	return WEBKIT_NAVIGATION_RESPONSE_IGNORE;
 }
 
@@ -127,6 +138,7 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 
 	msg = self->_priv->_message;
 	uri = webkit_network_request_get_uri (request);
+
 	
 	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
 		gchar *filepath;
@@ -148,6 +160,7 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 	obj->_priv = MU_MSG_BODY_VIEW_GET_PRIVATE(obj);
 
 	obj->_priv->_message = NULL;
+	obj->_priv->_mu_mode = FALSE;
 	
 	obj->_priv->_settings = webkit_web_settings_new ();
 	g_object_set (G_OBJECT(obj->_priv->_settings),
@@ -224,9 +237,11 @@ mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 	
 	g_return_if_fail (self);
 
-	if (self->_priv->_message)
+	if (self->_priv->_message) {
 		mu_msg_unref (self->_priv->_message);
-	
+		self->_priv->_message = NULL;
+	}
+		
 	self->_priv->_message = msg ? mu_msg_ref (msg) : NULL;
 		
 	data = msg ? mu_msg_get_body_html (msg) : "";
@@ -234,4 +249,23 @@ mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 		set_html (self, data);
 	else
 		set_text (self, mu_msg_get_body_text (msg));
+
+	self->_priv->_mu_mode = FALSE;
+}
+
+
+void
+mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html)
+{
+	g_return_if_fail (self);
+	g_return_if_fail (html);
+		
+	if (self->_priv->_message) {
+		mu_msg_unref (self->_priv->_message);
+		self->_priv->_message = NULL;
+	}		
+	set_html (self, html);
+
+	self->_priv->_mu_mode = TRUE;
+
 }

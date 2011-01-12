@@ -141,9 +141,6 @@ mu_msg_view_init (MuMsgView *self)
 	
 	gtk_box_pack_start (GTK_BOX(self), get_body_widget (self),
 			    TRUE, TRUE, 2);
-	
-	
-	
 }
 
 static void
@@ -169,6 +166,7 @@ update_attachment_area (MuMsgView *self, MuMsg *msg)
 	if (msg)
 		attach_num = mu_msg_attach_view_set_message
 			(MU_MSG_ATTACH_VIEW(self->_priv->_attach), msg);
+
 	if (attach_num > 0)
 		gtk_widget_show_all (self->_priv->_attacharea);
 	else
@@ -189,3 +187,15 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 	update_attachment_area (self, msg);
 }
 
+
+
+void
+mu_msg_view_set_note (MuMsgView *self, const char *html)
+{
+	g_return_if_fail (MU_IS_MSG_VIEW(self));
+	
+	mu_msg_header_view_set_message (MU_MSG_HEADER_VIEW(self->_priv->_headers),
+					NULL);
+	mu_msg_body_view_set_note (MU_MSG_BODY_VIEW(self->_priv->_body),
+				   html);
+}
