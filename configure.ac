@@ -26,8 +26,10 @@ AC_CONFIG_MACRO_DIR([m4])
 # silent build if we have a new enough automake
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# instead of AM_PROG_LIBTOOL
-LT_INIT([disable-shared])
+# for now, use AM_PROG_LIBTOOL, as we don't want to require
+# a too new setup for autotools/libtool
+AM_PROG_LIBTOOL
+#LT_INIT([disable-shared])
 
 AS_IF([test x$prefix = xNONE],[
    prefix=/usr/local])
@@ -159,8 +161,7 @@ AC_SUBST(XAPIAN_LIBS)
 # note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], [Schema version of the database])
-
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], ['Schema' version of the database])
 
 # we test for gtk, which we need if we want to build 'mug'; for
 # experiments it can try to build with gtk3, but since that is still
