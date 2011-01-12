@@ -23,16 +23,17 @@
 
 #include <cstring>
 #include <errno.h>
-
 #include <xapian.h>
 
 #include "mu-util.h"
 
+
 char*
-mu_util_db_version (const gchar *xpath)
+mu_util_xapian_get_metadata (const gchar *xpath, const gchar *key)
 {
 	g_return_val_if_fail (xpath, NULL);
-
+	g_return_val_if_fail (key, NULL);
+	
 	if (!access(xpath, F_OK) == 0) {
 		g_warning ("cannot access %s: %s", xpath, strerror(errno));
 		return NULL;
@@ -40,38 +41,70 @@ mu_util_db_version (const gchar *xpath)
 	
 	try {			
 		Xapian::Database db (xpath);
-		const std::string version
-			(db.get_metadata (MU_XAPIAN_VERSION_KEY));
-		
-		return version.empty() ? NULL : g_strdup (version.c_str());
+		const std::string val(db.get_metadata (key));	
+		return val.empty() ? NULL : g_strdup (val.c_str());
 		
 	} MU_XAPIAN_CATCH_BLOCK;
-
+	
 	return NULL;
 }
 
 
 gboolean
-mu_util_db_version_up_to_date (const gchar *xpath)
+mu_util_xapian_set_metadata (const gchar *xpath,
+			     const gchar *key, const gchar *val)
 {
-	gchar *version;
-	gboolean uptodate;
-
-	g_return_val_if_fail (xpath, FALSE);
-		
-	version = mu_util_db_version (xpath);
-	if (!version)
-		return FALSE;
+	g_return_val_if_fail (xpath, NULL);
+	g_return_val_if_fail (key, NULL);
+	g_return_val_if_fail (val, NULL);
 	
-	uptodate = (std::strcmp (version, MU_XAPIAN_DB_VERSION) == 0); 
+	if (!access(xpath, F_OK) == 0) {
+		g_warning ("cannot access %s: %s", xpath, strerror(errno));
+		return FALSE;
+	}
+	
+	try {			
+		Xapian::WritableDatabase db (xpath, Xapian::DB_OPEN);
+		db.set_metadata (key, val);
+		return TRUE;
+		
+	} MU_XAPIAN_CATCH_BLOCK;
+	
+	return FALSE;
+}
+
+
+char*
+mu_util_xapian_dbversion (const gchar *xpath)
+{
+	g_return_val_if_fail (xpath, NULL);
+
+	return mu_util_xapian_get_metadata (xpath, MU_STORE_VERSION_KEY);
+}
+
+gboolean
+mu_util_xapian_needs_upgrade (const gchar *xpath)
+{
+	char *version;
+	gboolean rv;
+	
+	g_return_val_if_fail (xpath, TRUE);
+
+	version = mu_util_xapian_dbversion (xpath);
+	
+	if (g_strcmp0 (version, MU_XAPIAN_DB_VERSION) == 0)
+		rv = FALSE;
+	else
+		rv = TRUE;
+
 	g_free (version);
 
-	return uptodate;
+	return rv;
 }
 
 
 gboolean
-mu_util_db_is_empty (const gchar* xpath)
+mu_util_xapian_is_empty (const gchar* xpath)
 {
 	g_return_val_if_fail (xpath, TRUE);
 	
@@ -89,7 +122,7 @@ mu_util_db_is_empty (const gchar* xpath)
 }
 
 gboolean
-mu_util_clear_database (const gchar *xpath)
+mu_util_xapian_clear (const gchar *xpath)
 {
 	g_return_val_if_fail (xpath, FALSE);
 	

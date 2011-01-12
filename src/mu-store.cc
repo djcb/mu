@@ -32,6 +32,7 @@
 #include "mu-str.h"
 #include "mu-msg-flags.h"
 
+
 /* by default, use transactions of 30000 messages */
 #define MU_STORE_DEFAULT_TRX_SIZE 30000
 
@@ -93,12 +94,13 @@ check_version (MuStore *store)
 {
 	/* FIXME clear up versioning semantics */
 	const gchar *version;
-
+	
 	version = mu_store_version (store); 
 
 	/* no version yet? it must be a new db then; we'll set the version */
 	if (!version)  {
-		if (!mu_store_set_version (store, MU_XAPIAN_DB_VERSION)) {
+		if (!mu_store_set_metadata (store, MU_STORE_VERSION_KEY,
+					    MU_XAPIAN_DB_VERSION)) {
 			g_warning ("failed to set database version");
 			return FALSE;
 		}
@@ -108,7 +110,8 @@ check_version (MuStore *store)
 	/* we have a version, but is it the right one? */
 	if (std::strcmp (version, MU_XAPIAN_DB_VERSION) != 0) {
 		g_warning ("expected db version %s, but got %s",
-			   MU_XAPIAN_DB_VERSION, version);
+			   MU_XAPIAN_DB_VERSION,
+			   version ? version : "<none>" );
 		return FALSE;
 	}
 	
@@ -124,8 +127,10 @@ mu_store_new  (const char* xpath, guint batchsize, GError **err)
 	
 	try {
 		store = g_new0(MuStore,1);
+
 		store->_db = new Xapian::WritableDatabase
 			(xpath,Xapian::DB_CREATE_OR_OPEN);
+		
 		if (!check_version (store)) {
 			mu_store_destroy (store);
 			return NULL;
@@ -191,34 +196,44 @@ const char*
 mu_store_version (MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
-
-	try {
-		std::string v;
-		v = store->_db->get_metadata (MU_XAPIAN_VERSION_KEY);
-
-		g_free (store->_version);
-		return store->_version =
-			v.empty() ? NULL : g_strdup (v.c_str());
 	
+	g_free (store->_version);
+	return store->_version =
+		mu_store_get_metadata (store, MU_STORE_VERSION_KEY);
+}
+
+gboolean
+mu_store_set_metadata (MuStore *store, const char *key, const char *val)
+{
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (key, FALSE);
+	g_return_val_if_fail (val, FALSE);
+		
+	try {
+		store->_db->set_metadata (key, val);
+		return TRUE;
+		
+	} MU_XAPIAN_CATCH_BLOCK;
+
+	return FALSE;
+}
+
+
+char*
+mu_store_get_metadata (MuStore *store, const char *key)
+{
+	g_return_val_if_fail (store, NULL);
+	g_return_val_if_fail (key, NULL);
+		
+	try {
+		const std::string val (store->_db->get_metadata (key));
+		return val.empty() ? NULL : g_strdup (val.c_str());
+
 	} MU_XAPIAN_CATCH_BLOCK;
 
 	return NULL;
 }
 
-gboolean
-mu_store_set_version (MuStore *store, const char* version)
-{
-	g_return_val_if_fail (store, FALSE);
-	g_return_val_if_fail (version, FALSE);
-	
-	try {
-		store->_db->set_metadata (MU_XAPIAN_VERSION_KEY, version);
-		return TRUE;
-		
-	} MU_XAPIAN_CATCH_BLOCK;
-
-		return FALSE;
-}
 
 
 static void
@@ -550,35 +565,30 @@ mu_store_contains_message (MuStore *store, const char* path)
 time_t
 mu_store_get_timestamp (MuStore *store, const char* msgpath)
 {
+	char *stampstr;
+	
 	g_return_val_if_fail (store, 0);
 	g_return_val_if_fail (msgpath, 0);
-	
-	try {
-		const std::string stamp (store->_db->get_metadata (msgpath));
-		if (stamp.empty())
-			return 0;
-	
-		return (time_t) g_ascii_strtoull (stamp.c_str(), NULL, 10);
-		
-	} MU_XAPIAN_CATCH_BLOCK_RETURN (0);
 
-	return 0;
+	stampstr = mu_store_get_metadata (store, msgpath);
+	if (!stampstr)
+		return (time_t)0;
+	else 	
+		return (time_t) g_ascii_strtoull (stampstr, NULL, 10);
 }
 
 
-void
+gboolean
 mu_store_set_timestamp (MuStore *store, const char* msgpath, 
 			time_t stamp)
 {
-	g_return_if_fail (store);
-	g_return_if_fail (msgpath);
+	char buf[21];
+	
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (msgpath, FALSE);
 
-	try {
-		char buf[21];
-		sprintf (buf, "%" G_GUINT64_FORMAT, (guint64)stamp);
-		store->_db->set_metadata (msgpath, buf);
-				
-	} MU_XAPIAN_CATCH_BLOCK;
+	sprintf (buf, "%" G_GUINT64_FORMAT, (guint64)stamp);
+	return mu_store_set_metadata (store, msgpath, buf);
 }
 
 

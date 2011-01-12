@@ -120,7 +120,6 @@ int mu_util_create_writeable_fd (const char* path, mode_t mode,
     G_GNUC_WARN_UNUSED_RESULT;
 
 
-
 /**
  * check if file is local, ie. on the local file system. this means
  * that it's either having a file URI, *or* that it's an existing file
@@ -146,7 +145,7 @@ gboolean mu_util_play (const char *path,
 
 
 /**
- * get the version of the xapian database (ie., the version of the
+" * get the version of the xapian database (ie., the version of the
  * 'schema' we are using). If this version != MU_XAPIAN_DB_VERSION,
  * it's means we need to a full reindex.
  * 
@@ -155,7 +154,11 @@ gboolean mu_util_play (const char *path,
  * @return the version of the database as a newly allocated string
  * (free with g_free); if there is no version yet, it will return NULL
  */
-gchar* mu_util_db_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
+gchar* mu_util_xapian_dbversion (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
+
+
+
+gboolean mu_util_xapian_needs_upgrade (const gchar *xpath);
 
 
 /**
@@ -166,16 +169,8 @@ gchar* mu_util_db_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
  * 
  * @return TRUE if the database is empty, FALSE otherwise
  */
-gboolean mu_util_db_is_empty (const gchar *xpath);
+gboolean mu_util_xapian_is_empty (const gchar *xpath);
 
-/**
- * check if the 'schema' of the current database is up-to-date
- * 
- * @param xpath path to the xapian database
- * 
- * @return TRUE if it's up-to-date, FALSE otherwise
- */
-gboolean mu_util_db_version_up_to_date (const gchar *xpath);
 
 /**
  * clear the database, ie., remove all of the contents. This is a
@@ -186,7 +181,7 @@ gboolean mu_util_db_version_up_to_date (const gchar *xpath);
  * 
  * @return TRUE if the clearing succeeded, FALSE otherwise.
  */
-gboolean mu_util_clear_database (const gchar *xpath);
+gboolean mu_util_xapian_clear (const gchar *xpath);
 
 
 /**
@@ -252,14 +247,21 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
                 g_critical ("%s: caught exception", __FUNCTION__);	\
         }
 
-#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)				\
-	catch (const Xapian::Error &xerr) {				\
-		g_set_error ((GE),0,(E),				\
-			     "%s: xapian error '%s'",			\
-			__FUNCTION__, xerr.get_msg().c_str());		\
-        } catch (...) {							\
-		g_set_error ((GE),0,(MU_ERROR_INTERNAL),		\
-			     "%s: caught exception", __FUNCTION__);	\
+#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)					\
+	catch (const Xapian::DatabaseLockError &xerr) {				\
+		g_set_error ((GE),0,MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,	\
+			     "%s: xapian error '%s'",				\
+			     __FUNCTION__, xerr.get_msg().c_str());		\
+	} catch (const Xapian::DatabaseCorruptError &xerr ) {			\
+		g_set_error ((GE),0,MU_ERROR_XAPIAN_CORRUPTION,			\
+			     "%s: xapian error '%s'",				\
+			     __FUNCTION__, xerr.get_msg().c_str());		\
+	} catch (const Xapian::Error &xerr) {					\
+		g_set_error ((GE),0,(E), "%s: xapian error '%s'",		\
+			     __FUNCTION__, xerr.get_msg().c_str());		\
+        } catch (...) {								\
+		g_set_error ((GE),0,(MU_ERROR_INTERNAL),			\
+			     "%s: caught exception", __FUNCTION__);		\
         }
 
 
@@ -286,13 +288,15 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
 		return (R);						\
         }
 
-
 /* the name of the (leaf) dir which has the xapian database */
 #define MU_XAPIAN_DIR_NAME    "xapian"
-#define MU_XAPIAN_VERSION_KEY "db_version"
 
 /* name of the bookmark file */
 #define MU_BOOKMARK_FILENAME "bookmarks"
+
+/* metdata key for the xapian 'schema' version */
+#define MU_STORE_VERSION_KEY "db_version"
+
 
 /**
  * log something in the log file; note, we use G_LOG_LEVEL_INFO
@@ -314,26 +318,24 @@ enum _MuResult {
 typedef enum _MuResult MuResult;
 
 enum _MuExitCode {
-	MU_EXITCODE_OK	       = 0,
-	MU_EXITCODE_ERROR      = 1,
-	MU_EXITCODE_NO_MATCHES = 2
+	MU_EXITCODE_OK	         = 0,
+	MU_EXITCODE_ERROR        = 1,
+	MU_EXITCODE_NO_MATCHES   = 2,
+	MU_EXITCODE_DB_LOCKED    = 3,
+	MU_EXITCODE_DB_CORRUPTED = 4
 };
 typedef enum _MuExitCode MuExitCode;
 
 enum _MuError {
-	/* general xapian related error */
-	MU_ERROR_XAPIAN,
-	/* xapian dir is not accessible */
-	MU_ERROR_XAPIAN_DIR,
-	/* database version is not uptodate (ie. not compatible with
-	 * the version that mu expects) */
-	MU_ERROR_XAPIAN_NOT_UPTODATE,
-	/* missing data for a document */
-	MU_ERROR_XAPIAN_MISSING_DATA,
-	/* (parsnng) error in the query */ 
-	MU_ERROR_QUERY,
-	/* gmime parsing related error */
-	MU_ERROR_GMIME,
+	MU_ERROR_XAPIAN,  /* general xapian related error */
+	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK, /* can't get write lock */
+	MU_ERROR_XAPIAN_CORRUPTION, /* database corruption */
+	MU_ERROR_XAPIAN_DIR, 	/* xapian dir is not accessible */
+	MU_ERROR_XAPIAN_NOT_UPTODATE, /* database version is not uptodate */
+	MU_ERROR_XAPIAN_MISSING_DATA, /* missing data for a document */
+	MU_ERROR_QUERY,	/* (parsing) error in the query */
+	
+	MU_ERROR_GMIME, /* gmime parsing related error */
 
 	/* File errors */
 	MU_ERROR_FILE_INVALID_SOURCE,

@@ -313,14 +313,14 @@ mu_query_new (const char* xpath, GError **err)
 		return NULL;
 	}
 		
-	if (!mu_util_db_version_up_to_date (xpath)) {
+	if (mu_util_xapian_needs_upgrade (xpath)) {
 		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UPTODATE,
 			     "%s is not up-to-date, needs a full update",
 			     xpath);
 		return NULL;
 	}
 
-	if (mu_util_db_is_empty (xpath)) 
+	if (mu_util_xapian_is_empty (xpath)) 
 		g_warning ("database %s is empty; nothing to do", xpath);
 	
 	mqx = g_new (MuQuery, 1);

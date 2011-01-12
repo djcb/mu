@@ -30,6 +30,7 @@ G_BEGIN_DECLS
 struct _MuStore;
 typedef struct _MuStore MuStore;
 
+
 /**
  * create a new Xapian store, a place to store documents
  * 
@@ -73,17 +74,6 @@ unsigned mu_store_count (MuStore *store);
  */
 const char* mu_store_version (MuStore *store);
 
-/**
- * set the version string for the database
- * 
- * @param store a valid MuStore
- * @param version the version string (non-NULL)
- *
- * @return TRUE if setting the version succeeded, FALSE otherwise  
- */
-gboolean  mu_store_set_version (MuStore *store,
-				const char* version);
-
 
 /**
  * try to flush/commit all outstanding work
@@ -100,7 +90,7 @@ void mu_store_flush (MuStore *store);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult	  mu_store_store   (MuStore *store, MuMsg *msg);
+MuResult mu_store_store   (MuStore *store, MuMsg *msg);
 
 
 /**
@@ -114,8 +104,8 @@ MuResult	  mu_store_store   (MuStore *store, MuMsg *msg);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult          mu_store_remove (MuStore *store,
-				   const char* msgpath);
+MuResult mu_store_remove (MuStore *store,
+			  const char* msgpath);
 
 
 /**
@@ -126,8 +116,8 @@ MuResult          mu_store_remove (MuStore *store,
  * 
  * @return 
  */
-gboolean          mu_store_contains_message (MuStore *store,
-					     const char* path);
+gboolean mu_store_contains_message (MuStore *store,
+				    const char* path);
 
 /**
  * store a timestamp for a directory
@@ -135,10 +125,11 @@ gboolean          mu_store_contains_message (MuStore *store,
  * @param store a valid store
  * @param msgpath path to a maildir
  * @param stamp a timestamp
+ *
+ * @return TRUE if setting the timestamp succeeded, FALSE otherwise
  */
-void              mu_store_set_timestamp (MuStore *store,
-					 const char* msgpath, 
-					 time_t stamp);
+gboolean mu_store_set_timestamp (MuStore *store, const char* msgpath, 
+				 time_t stamp);
 
 /**
  * get the timestamp for a directory
@@ -148,8 +139,12 @@ void              mu_store_set_timestamp (MuStore *store,
  * 
  * @return the timestamp, or 0 in case of error
  */
-time_t            mu_store_get_timestamp (MuStore *store,
-					 const char* msgpath);
+time_t mu_store_get_timestamp (MuStore *store,
+			       const char* msgpath);
+
+
+
+
 
 /**
  * call a function for each document in the database
@@ -166,6 +161,30 @@ typedef MuResult (*MuStoreForeachFunc) (const char* path,
 MuResult         mu_store_foreach (MuStore *self,
 				   MuStoreForeachFunc func,
 				   void *user_data);
+
+/**
+ * set metadata for this MuStore
+ * 
+ * @param store a store
+ * @param key metadata key
+ * @param val metadata value
+ * 
+ * @return TRUE if succeeded, FALSE otherwise
+ */
+gboolean mu_store_set_metadata (MuStore *store, const char *key, const char *val);
+
+/**
+ * get metadata for this MuStore
+ * 
+ * @param store a store
+ * @param key the metadata key
+ * 
+ * @return the value of the metadata (gfree when done with it), or
+ * NULL in case of error
+ */
+char* mu_store_get_metadata (MuStore *store, const char *key)
+	G_GNUC_WARN_UNUSED_RESULT;
+
 
 G_END_DECLS
 

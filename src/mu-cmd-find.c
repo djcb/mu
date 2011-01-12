@@ -78,7 +78,7 @@ get_output_format (const char *formatstr)
 
 
 static void
-update_warning (void)
+upgrade_warning (void)
 {
 	g_warning ("the database needs to be updated to version %s\n",
 		   MU_XAPIAN_DB_VERSION);
@@ -300,14 +300,14 @@ get_query (MuConfig *opts)
 static gboolean
 db_is_ready (const char *xpath)
 {	
-	if (mu_util_db_is_empty (xpath)) {
+	if (mu_util_xapian_is_empty (xpath)) {
 		g_warning ("database is empty; use 'mu index' to "
 			   "add messages");
 		return FALSE;
 	}
 		
-	if (!mu_util_db_version_up_to_date (xpath)) {
-		update_warning ();
+	if (mu_util_xapian_needs_upgrade (xpath)) {
+		upgrade_warning ();
 		return FALSE;
 	}
 
