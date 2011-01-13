@@ -61,8 +61,6 @@ mu_dir_is_readable_and_writable (const char* muhome)
 	return FALSE;
 }
 
-
-
 gboolean
 mu_runtime_init (const char* muhome_arg)
 {

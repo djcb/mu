@@ -29,7 +29,9 @@ main (int argc, char *argv[])
 	
 	if (!mu_runtime_init_from_cmdline (&argc, &argv))
 		return 1;
+
 	rv = mu_config_execute (mu_runtime_config());
+
 	mu_runtime_uninit ();
 	
 	return rv;
