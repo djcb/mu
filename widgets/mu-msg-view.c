@@ -92,6 +92,13 @@ get_header_widget (MuMsgView *self)
 	return self->_priv->_headers = mu_msg_header_view_new ();
 }
 
+static void
+on_body_action_requested (MuMsgBodyView *body, const char* action,
+			  MuMsgView *self)
+{
+	g_printerr ("received request: %s\n", action);
+}
+
 
 static GtkWidget*
 get_body_widget (MuMsgView *self)
@@ -103,6 +110,9 @@ get_body_widget (MuMsgView *self)
 	gtk_container_add (GTK_CONTAINER(scrolledwin),
 			   self->_priv->_body);
 
+	g_signal_connect (self->_priv->_body, "action-requested",
+			  G_CALLBACK(on_body_action_requested), self);
+	
 	return scrolledwin;
 }
 
