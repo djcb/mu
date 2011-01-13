@@ -249,15 +249,16 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		opts->cmdstr = NULL;
 		
 		if (*argcp < 2) /* no command found at all */
-				return FALSE;
+				return TRUE;
 		else if ((**argvp)[1] == '-') 
 				/* if the first param starts with '-', there is no
 				 * command, just some option (like --version, --help
 				 * etc.)*/
 				return TRUE;
-
+		
 		opts->cmd	 = MU_CONFIG_CMD_UNKNOWN;
 		opts->cmdstr = (*argvp)[1];
+
 		for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
 				if (strcmp (opts->cmdstr, cmd_map[i]._name) == 0)
 						opts->cmd = cmd_map[i]._cmd;
@@ -376,14 +377,14 @@ mu_config_execute (MuConfig *opts)
 				show_version ();
 				return MU_EXITCODE_OK;
 		}
-	
+		
 		if (!opts->params||!opts->params[0]) {/* no command? */
 				show_version ();
 				g_print ("\n");
 				show_usage (TRUE);
 				return MU_EXITCODE_ERROR;
 		}
-
+		
 		switch (opts->cmd) {
 		case MU_CONFIG_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
 		case MU_CONFIG_CMD_EXTRACT:    return mu_cmd_extract (opts);
