@@ -47,8 +47,7 @@ struct _MuMsgBodyView {
 
 struct _MuMsgBodyViewClass {
 	WebKitWebViewClass parent_class;
-	/* insert signal callback declarations, e.g. */
-	/* void (* my_event) (MuMsgBodyView* obj); */
+	void (* action_requested) (MuMsgBodyView* self, const char* action);
 };
 
 /* member functions */

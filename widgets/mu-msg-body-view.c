@@ -30,7 +30,7 @@ static void mu_msg_body_view_finalize   (GObject *obj);
 
 /* list my signals  */
 enum {
-	/* MY_SIGNAL_1, */
+	ACTION_REQUESTED,
 	/* MY_SIGNAL_2, */
 	LAST_SIGNAL
 };
@@ -50,8 +50,7 @@ struct _MuMsgBodyViewPrivate {
 /* globals */
 static WebKitWebViewClass *parent_class = NULL;
 
-/* uncomment the following if you have defined any signals */
-/* static guint signals[LAST_SIGNAL] = {0}; */
+static guint signals[LAST_SIGNAL] = {0};
 
 G_DEFINE_TYPE (MuMsgBodyView, mu_msg_body_view, WEBKIT_TYPE_WEB_VIEW);
 
@@ -66,12 +65,15 @@ mu_msg_body_view_class_init (MuMsgBodyViewClass *klass)
 
 	g_type_class_add_private (gobject_class, sizeof(MuMsgBodyViewPrivate));
 
-	/* signal definitions go here, e.g.: */
-/* 	signals[MY_SIGNAL_1] = */
-/* 		g_signal_new ("my_signal_1",....); */
-/* 	signals[MY_SIGNAL_2] = */
-/* 		g_signal_new ("my_signal_2",....); */
-/* 	etc. */
+	signals[ACTION_REQUESTED] =
+		g_signal_new ("action-requested",
+			      G_TYPE_FROM_CLASS (gobject_class),
+			      G_SIGNAL_RUN_FIRST,
+			      G_STRUCT_OFFSET (MuMsgBodyViewClass,
+					       action_requested),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 }
 
 
@@ -116,12 +118,23 @@ on_navigation_requested (MuMsgBodyView *self, WebKitWebFrame *frame,
 	
 	uri = webkit_network_request_get_uri (request);
 
+	/* if there are 'cmd:<action>" links in the body text of
+	 * mu-internal messages (ie., notification from mu, not real
+	 * e-mail messages), we emit the 'action requested'
+	 * signal. this allows e.g triggering a database refresh from
+	 * a <a href="cmd:refresh">Refresh</a> link
+	 */
 	if (g_ascii_strncasecmp (uri, "cmd:", 4) == 0)  {
-		if (self->_priv->_mu_mode) 
-			g_printerr ("execute: '%s'\n", uri + 4);
+		if (self->_priv->_mu_mode) {
+			g_signal_emit (G_OBJECT(self),
+				       signals[ACTION_REQUESTED], 0,
+				       uri + 4);
+		}
 		return WEBKIT_NAVIGATION_RESPONSE_IGNORE;
 	}
-		
+
+	/* don't try to play files on our local file system, this is not something
+	 * external content should do.*/
 	if (!mu_util_is_local_file(uri))
 		mu_util_play (uri, FALSE, TRUE);
 		
@@ -138,7 +151,6 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 
 	msg = self->_priv->_message;
 	uri = webkit_network_request_get_uri (request);
-
 	
 	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
 		gchar *filepath;
