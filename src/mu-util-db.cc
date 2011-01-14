@@ -140,3 +140,19 @@ mu_util_xapian_clear (const gchar *xpath)
 	return FALSE;
 }
 
+
+gboolean
+mu_util_xapian_is_locked (const gchar *xpath)
+{
+	g_return_val_if_fail (xpath, FALSE);
+
+	try {
+		Xapian::WritableDatabase db (xpath, Xapian::DB_OPEN);
+	} catch (const Xapian::DatabaseLockError& xer) {
+		return TRUE;
+	} catch (const Xapian::Error &xer) {
+		g_warning ("%s: error: %s", __FUNCTION__, xer.get_msg().c_str());
+	}
+	
+	return FALSE;
+}

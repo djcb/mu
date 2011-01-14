@@ -62,6 +62,9 @@ reindex (MugData *mugdata)
 	MuIndex *midx;
 	GError *err;
 
+	if (mu_util_xapian_is_locked (mu_runtime_xapian_dir()))
+		return;
+	
 	err = NULL;
 	midx = mu_index_new (mu_runtime_xapian_dir(), 0, &err);
 	if (!midx) {

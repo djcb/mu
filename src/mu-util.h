@@ -184,6 +184,16 @@ gboolean mu_util_xapian_is_empty (const gchar *xpath);
 gboolean mu_util_xapian_clear (const gchar *xpath);
 
 
+/** 
+ * check if the database is locked for writing
+ * 
+ * @param xpath path to a xapian database
+ * 
+ * @return TRUE if it is locked, FALSE otherwise (or in case of error)
+ */
+gboolean mu_util_xapian_is_locked (const gchar *xpath);
+
+
 /**
  * convert a string array in to a string, with the elements separated
  * by ' '
@@ -252,8 +262,12 @@ unsigned char mu_util_get_dtype_with_lstat (const char *path);
 		g_set_error ((GE),0,MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,	\
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
-	} catch (const Xapian::DatabaseCorruptError &xerr ) {			\
+	} catch (const Xapian::DatabaseCorruptError &xerr) {			\
 		g_set_error ((GE),0,MU_ERROR_XAPIAN_CORRUPTION,			\
+			     "%s: xapian error '%s'",				\
+			     __FUNCTION__, xerr.get_msg().c_str());		\
+	  } catch (const Xapian::DatabaseError &xerr) {				\
+		  g_set_error ((GE),0,MU_ERROR_XAPIAN,				\
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
 	} catch (const Xapian::Error &xerr) {					\
