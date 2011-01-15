@@ -35,6 +35,7 @@
 #include "mu-util.h"
 
 #define	MU_LAST_USED_MAILDIR_KEY "last_used_maildir"
+#define MU_MAILDIR_WALK_MAX_FILE_SIZE (64*1000*1000)
 
 struct _MuIndex {
 	MuStore		*_store;
@@ -174,28 +175,35 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 
 static MuResult
 on_run_maildir_msg (const char* fullpath, const char* mdir,
-		    time_t filestamp, MuIndexCallbackData *data)
+		    struct stat *statbuf, MuIndexCallbackData *data)
 {
 	MuResult result;
 	gboolean updated;
+
+	/* protect against too big messages */
+	if (G_UNLIKELY(statbuf->st_size > MU_MAILDIR_WALK_MAX_FILE_SIZE)) {
+		g_warning ("ignoring because bigger than %d bytes: %s",
+			   MU_MAILDIR_WALK_MAX_FILE_SIZE, fullpath);
+		return MU_OK; /* not an error */
+	}
 	
 	result = run_msg_callback_maybe (data);
 	if (result != MU_OK)
 		return result;
 	
-	/* see if we need to update/insert anything...*/
-	result = insert_or_update_maybe (fullpath, mdir, filestamp, data,
-					  &updated);
+	/* see if we need to update/insert anything...
+	 * use the ctime, so any status change will be visible (perms,
+	 * filename etc.)*/
+	result = insert_or_update_maybe (fullpath, mdir, statbuf->st_ctime,
+					 data, &updated);
 	
-	/* update statistics */
-	if (data && data->_stats) {
+	if (result == MU_OK && data && data->_stats) { 	/* update statistics */
 		++data->_stats->_processed;
-		if (data && data->_stats)  {
-			if (updated) 
-				++data->_stats->_updated;
-			else
-				++data->_stats->_uptodate;
-		}
+		updated ? ++data->_stats->_updated : ++data->_stats->_uptodate;
+		/* if (updated)  */
+		/* 	++data->_stats->_updated; */
+		/* else */
+		/* 	++data->_stats->_uptodate; */
 	}
 
 	return result;
@@ -328,11 +336,11 @@ mu_index_run (MuIndex *index, const char* path,
 
 static MuResult
 on_stats_maildir_file (const char *fullpath, const char* mdir,
-		       time_t timestamp, 
+		       struct stat *statbuf, 
 		       MuIndexCallbackData *cb_data)
 {
 	MuResult result;
-	
+		
 	if (cb_data && cb_data->_idx_msg_cb)
 		result = cb_data->_idx_msg_cb (cb_data->_stats, 
 					       cb_data->_user_data);

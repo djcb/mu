@@ -163,7 +163,7 @@ dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 
 
 static MuResult
-msg_cb (const char *fullpath, const char* mdir, gboolean enter,
+msg_cb (const char *fullpath, const char* mdir, struct stat *statinfo,
 	WalkData *data)
 {
 	++data->_file_count;

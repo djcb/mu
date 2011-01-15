@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2010-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -34,7 +34,6 @@
 #include "mu-maildir.h"
 #include "mu-str.h"
 
-#define MU_MAILDIR_WALK_MAX_FILE_SIZE (32*1000*1000)
 #define MU_MAILDIR_NOINDEX_FILE       ".noindex"
 
 /* On Linux (and some BSD), we have entry->d_type, but some file
@@ -235,17 +234,8 @@ process_file (const char* fullpath, const gchar* mdir,
 		return MU_ERROR;
 	}
 	
-	if (G_UNLIKELY(statbuf.st_size > MU_MAILDIR_WALK_MAX_FILE_SIZE)) {
-		g_warning ("ignoring because bigger than %d bytes: %s",
-			   MU_MAILDIR_WALK_MAX_FILE_SIZE, fullpath);
-		return MU_OK; /* not an error */
-	}
-	
-	/*
-	 * use the ctime, so any status change will be visible (perms,
-	 * filename etc.)
-	 */
-	result = (msg_cb)(fullpath, mdir, statbuf.st_ctime, data);
+
+	result = (msg_cb)(fullpath, mdir, &statbuf, data);
 	if (result == MU_STOP) 
 		g_debug ("callback said 'MU_STOP' for %s", fullpath);
 	else if (result == MU_ERROR)
@@ -511,10 +501,8 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 	g_return_val_if_fail (path && cb_msg, MU_ERROR);
 	g_return_val_if_fail (mu_util_check_dir(path, TRUE, FALSE), MU_ERROR);	
 	
-	/* skip the final slash from dirnames */
-	mypath = g_strdup (path);
-	
 	/* strip the final / or \ */
+	mypath = g_strdup (path);
 	if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
 		mypath[strlen(mypath)-1] = '\0';
 	

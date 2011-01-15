@@ -66,11 +66,11 @@ gboolean mu_maildir_link   (const char* src, const char *targetpath, GError **er
  * called for each message found, with fullpath containing the full
  * path to the message, mdir containing the maildir -- that is, when
  * indexing ~/Maildir, a message ~/Maildir/foo/bar/cur/msg would have
- * the maildir "foo/bar". Then, a timestamp of the last modification
- * time of this file, and a user_data pointer
+ * the maildir "foo/bar". Then, the information from 'stat' of this
+ * file (see stat(3)), and a user_data pointer
  */
 typedef MuResult (*MuMaildirWalkMsgCallback)
-(const char* fullpath, const char* mdir, time_t timestamp, void *user_data);
+(const char* fullpath, const char* mdir, struct stat *statinfo, void *user_data);
 
 /**
  * MuPathWalkDirCallback -- callback function for mu_path_walk_maildir; see the
