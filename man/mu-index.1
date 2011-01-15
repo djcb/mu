@@ -90,18 +90,22 @@ set the maximum number of messages to process in a single Xapian
 transaction. In practice, this option is only useful if you find that \fBmu\fR
 is running out of memory while indexing; in that case, you can set the batch
 size to (for example) 1000, which will reduce memory consumption, but also
-reduce performance.
+substantially reduce the indexing performance.
+
+.TP
+\fB\-\-max-msg-size\fR=\fI<max msg size>\fR
+set the maximum size (in bytes) for messages. The default maximum (currently
+at 50Mb) should be enough in most cases, but if you encounter warnings from
+\fBmu\fR about ignoring messsage because they are too big, you may want to
+increase this. Note that the reason for having a maximum size is that big
+message require big memory allocations, which may lead to problems.
 
 .B NOTE:
-It is generally not a good idea to run multiple instances of \fBmu index\fR
-concurrently. No data loss should occur, but one or more of the instances may
-experience errors due to database locks.
-
-Furthermore, it is not recommended tot mix maildirs and sub-maildirs within
-the hierarchy in the same database; for example, it's better not to index both
-with \fB\-\-maildir\fR=~/MyMaildir and \fB\-\-maildir\fR=~/MyMaildir/foo, as
-this may lead to unexpected results when searching with the the 'maildir:'
-search parameter (see below).
+It is not recommended tot mix maildirs and sub-maildirs within the hierarchy
+in the same database; for example, it's better not to index both with
+\fB\-\-maildir\fR=~/MyMaildir and \fB\-\-maildir\fR=~/MyMaildir/foo, as this
+may lead to unexpected results when searching with the the 'maildir:' search
+parameter (see below).
 
 .SS A note on performance
 As a non-scientific benchmark, a simple test on the authors machine (a

@@ -46,13 +46,12 @@ typedef struct _MuIndexStats MuIndexStats;
  *
  * @param xpath path to the 'homedir'; the xapian directory will be
  * this homedir/xapian
- * @param batchsize for Xapian queries, or 0 for the default
  * @param err to receive error or NULL; there are only errors when this
  * function returns NULL. Possible errors: see mu-error.h
  * 
  * @return a new MuIndex instance, or NULL in case of error
  */
-MuIndex* mu_index_new (const char* muhome, guint batchsize, GError **err)
+MuIndex* mu_index_new (const char* muhome, GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -62,6 +61,28 @@ MuIndex* mu_index_new (const char* muhome, guint batchsize, GError **err)
  * @param index a MuIndex instance, or NULL
  */
 void mu_index_destroy (MuIndex *index);
+
+
+/**
+ * change the maximum file size that mu-index considers from its
+ * default (MU_INDEX_MAX_FILE_SIZE). Note that the maximum size is a
+ * protection against mu (or the libraries it uses) allocating too
+ * much memory, which can lead to problems
+ * 
+ * @param index a mu index object
+ * @param max_size the maximum msg size, or 0 to reset to the default
+ */
+void mu_index_set_max_msg_size (MuIndex *index, guint max_size);
+
+
+/**
+ * change batch size for Xapian store transaction (see
+ * 'mu_store_set_batch_size')
+ * 
+ * @param index a mu index object
+ * @param max_size the batch size, or 0 to reset to the default
+ */
+void mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize);
 
 
 /**

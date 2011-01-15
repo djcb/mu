@@ -35,16 +35,17 @@
 #include "mu-util.h"
 
 #define	MU_LAST_USED_MAILDIR_KEY "last_used_maildir"
-#define MU_MAILDIR_WALK_MAX_FILE_SIZE (64*1000*1000)
+#define MU_INDEX_MAX_FILE_SIZE (50*1000*1000) /* 50 Mb */
 
 struct _MuIndex {
 	MuStore		*_store;
 	gboolean	 _needs_reindex;
 	gchar           *_last_used_maildir;
+	guint            _max_filesize;
 };
 
 MuIndex* 
-mu_index_new (const char *xpath, guint xbatchsize, GError **err)
+mu_index_new (const char *xpath, GError **err)
 {
 	MuIndex *index;
 
@@ -52,7 +53,7 @@ mu_index_new (const char *xpath, guint xbatchsize, GError **err)
 	
 	index = g_new0 (MuIndex, 1);				
 
-	index->_store = mu_store_new (xpath, xbatchsize, err);	
+	index->_store = mu_store_new (xpath, err);	
 	if (!index->_store) {
 		g_warning ("%s: failed to open xapian store (%s)",
 			   __FUNCTION__, xpath); 
@@ -60,6 +61,9 @@ mu_index_new (const char *xpath, guint xbatchsize, GError **err)
 		return NULL;
 	}
 
+	/* set the default max file size */
+	index->_max_filesize = MU_INDEX_MAX_FILE_SIZE;
+	
 	/* see we need to reindex the database; note, there is a small
 	 * race-condition here, between mu_index_new and
 	 * mu_index_run. Maybe do the check in mu_index_run
@@ -72,7 +76,6 @@ mu_index_new (const char *xpath, guint xbatchsize, GError **err)
 	
 	return index;
 }
-
 
 void 
 mu_index_destroy (MuIndex *index)
@@ -88,13 +91,14 @@ mu_index_destroy (MuIndex *index)
 
 
 struct _MuIndexCallbackData {
-	MuIndexMsgCallback		_idx_msg_cb;
-	MuIndexDirCallback		_idx_dir_cb;
-	MuStore*			_store;
-	void*				_user_data;
-	MuIndexStats*			_stats;
-	gboolean			_reindex;
-	time_t				_dirstamp;
+	MuIndexMsgCallback	_idx_msg_cb;
+	MuIndexDirCallback	_idx_dir_cb;
+	MuStore*		_store;
+	void*			_user_data;
+	MuIndexStats*		_stats;
+	gboolean		_reindex;
+	time_t			_dirstamp;
+	guint			_max_filesize;
 };
 typedef struct _MuIndexCallbackData	MuIndexCallbackData;
 
@@ -181,9 +185,9 @@ on_run_maildir_msg (const char* fullpath, const char* mdir,
 	gboolean updated;
 
 	/* protect against too big messages */
-	if (G_UNLIKELY(statbuf->st_size > MU_MAILDIR_WALK_MAX_FILE_SIZE)) {
-		g_warning ("ignoring because bigger than %d bytes: %s",
-			   MU_MAILDIR_WALK_MAX_FILE_SIZE, fullpath);
+	if (G_UNLIKELY(statbuf->st_size > data->_max_filesize)) {
+		g_warning ("ignoring because bigger than %u bytes: %s",
+			   data->_max_filesize, fullpath);
 		return MU_OK; /* not an error */
 	}
 	
@@ -200,10 +204,6 @@ on_run_maildir_msg (const char* fullpath, const char* mdir,
 	if (result == MU_OK && data && data->_stats) { 	/* update statistics */
 		++data->_stats->_processed;
 		updated ? ++data->_stats->_updated : ++data->_stats->_uptodate;
-		/* if (updated)  */
-		/* 	++data->_stats->_updated; */
-		/* else */
-		/* 	++data->_stats->_uptodate; */
 	}
 
 	return result;
@@ -260,7 +260,7 @@ check_path (const char* path)
 
 static void
 init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
-	      gboolean reindex, MuIndexStats *stats,
+	      gboolean reindex, guint max_filesize, MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb, 
 	      void *user_data)
 {
@@ -268,11 +268,12 @@ init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
 	cb_data->_idx_dir_cb    = dir_cb;
 	
 	cb_data->_user_data     = user_data;
-	cb_data->_store        = xapian;
+	cb_data->_store         = xapian;
 			         
 	cb_data->_reindex       = reindex;
 	cb_data->_dirstamp      = 0;	
-
+	cb_data->_max_filesize  = max_filesize;
+	
 	cb_data->_stats         = stats;
 	if (cb_data->_stats)
 		memset (cb_data->_stats, 0, sizeof(MuIndexStats));
@@ -298,6 +299,26 @@ mu_index_last_used_maildir (MuIndex *index)
 				       MU_LAST_USED_MAILDIR_KEY);
 }
 
+void
+mu_index_set_max_msg_size (MuIndex *index, guint max_size)
+{
+	g_return_if_fail (index);
+
+	if (max_size == 0)
+		index->_max_filesize = 	MU_INDEX_MAX_FILE_SIZE;
+	else
+		index->_max_filesize = max_size;
+}
+
+void
+mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
+{
+	g_return_if_fail (index);
+	mu_store_set_batch_size (index->_store, xbatchsize);
+}
+
+
+
 
 MuResult
 mu_index_run (MuIndex *index, const char* path,
@@ -319,7 +340,8 @@ mu_index_run (MuIndex *index, const char* path,
 		return MU_ERROR;
 	}
 	
-	init_cb_data (&cb_data, index->_store, reindex, stats,
+	init_cb_data (&cb_data, index->_store, reindex,
+		      index->_max_filesize, stats,
 		      msg_cb, dir_cb, user_data);
 
 	update_last_used_maildir (index, path);
@@ -400,15 +422,11 @@ typedef struct _CleanupData CleanupData;
 static MuResult
 foreach_doc_cb (const char* path, CleanupData *cudata)
 {
-	MuResult rv;
-	
 	if (access (path, R_OK) != 0) {
-		
-		g_debug ("not readable: %s; removing", path);
-		rv = mu_store_remove (cudata->_store, path);
-		if (rv != MU_OK)
-			return rv; /* something went wrong... bail out */	
-		
+		if (errno != EACCES)
+			g_warning ("cannot access %s: %s", path, strerror(errno));
+		if (!mu_store_remove (cudata->_store, path))
+			return MU_ERROR; /* something went wrong... bail out */
 		if (cudata->_stats)
 			++cudata->_stats->_cleaned_up;
 	}

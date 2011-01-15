@@ -41,7 +41,7 @@ typedef struct _MuStore MuStore;
  * 
  * @return a new MuStore object, or NULL in case of error
  */
-MuStore*    mu_store_new     (const char *path, guint batchsize, GError **err)
+MuStore*    mu_store_new     (const char *path,  GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -51,6 +51,20 @@ MuStore*    mu_store_new     (const char *path, guint batchsize, GError **err)
  * @param store a valid store, or NULL
  */
 void        mu_store_destroy (MuStore *store);
+
+
+
+/**
+ * set the Xapian batch size for this store. Normally, there's no need
+ * to use this function as the default is good enough; however, if you
+ * use mu in a very memory-constrained environment, you can set the
+ * batchsize to e.g. 1000 at the cost of significant slow-down.
+ * 
+ * @param store a valid store object
+ * @param batchsize the new batch size; or 0 to reset to
+ * the default batch size
+ */
+void  mu_store_set_batch_size (MuStore *store, guint batchsize);
 
 
 /**
@@ -104,8 +118,7 @@ MuResult mu_store_store   (MuStore *store, MuMsg *msg);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult mu_store_remove (MuStore *store,
-			  const char* msgpath);
+gboolean mu_store_remove (MuStore *store, const char* msgpath);
 
 
 /**
@@ -114,10 +127,9 @@ MuResult mu_store_remove (MuStore *store,
  * @param store a store
  * @param path the message path
  * 
- * @return 
+ * @return TRUE if the message exists, FALSE otherwise
  */
-gboolean mu_store_contains_message (MuStore *store,
-				    const char* path);
+gboolean mu_store_contains_message (MuStore *store,  const char* path);
 
 /**
  * store a timestamp for a directory

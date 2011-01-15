@@ -72,9 +72,10 @@ struct _MuConfig {
 		gboolean         rebuild;		/* empty the database before indexing */
 		gboolean         autoupgrade;   /* automatically upgrade db
 										 * when needed */
-		int				 xbatchsize;    /* batchsize for xapian
+		int              xbatchsize;    /* batchsize for xapian
 										 * commits, or 0 for
 										 * default */
+		int			     max_msg_size;  /* maximum size for message files */
 	
 		/* options for querying */
 		gboolean         xquery;        /* (obsolete) give the Xapian

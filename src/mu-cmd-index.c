@@ -94,7 +94,12 @@ check_index_or_cleanup_params (MuConfig *opts)
 		g_warning ("the Xapian batch size must be non-negative");
 		return FALSE;
 	}
-		
+
+	if (opts->max_msg_size < 0) {
+		g_warning ("the maximum message size must be non-negative");
+		return FALSE;
+	}
+	
 	return TRUE;
 }
 
@@ -346,10 +351,12 @@ cmd_index_or_cleanup (MuConfig *opts)
 		return MU_EXITCODE_ERROR;		
 	
 	err = NULL;
-	if (!(midx = mu_index_new
-	      (mu_runtime_xapian_dir(), opts->xbatchsize, &err)))
+	if (!(midx = mu_index_new (mu_runtime_xapian_dir(), &err)))
 		return handle_index_error_and_free (err);
-
+	
+	mu_index_set_max_msg_size (midx, opts->max_msg_size); 
+	mu_index_set_xbatch_size (midx, opts->xbatchsize);
+	
 	/* we determine the maildir path only here, as it may depend on
          * mu_index_last_used_maildir
          */

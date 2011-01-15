@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -119,7 +119,7 @@ check_version (MuStore *store)
 }
 
 MuStore*
-mu_store_new  (const char* xpath, guint batchsize, GError **err)
+mu_store_new  (const char* xpath, GError **err)
 {
 	MuStore *store (0);
 	
@@ -139,7 +139,7 @@ mu_store_new  (const char* xpath, guint batchsize, GError **err)
 		/* keep count of processed docs */
 		store->_in_transaction = false;
 		store->_processed      = 0;
-		store->_trx_size       = batchsize ? batchsize : MU_STORE_DEFAULT_TRX_SIZE;
+		store->_trx_size       = MU_STORE_DEFAULT_TRX_SIZE;
 		
 		add_synonyms (store);
 		
@@ -174,6 +174,18 @@ mu_store_destroy (MuStore *store)
 		g_free (store);
 
 	} MU_XAPIAN_CATCH_BLOCK;
+}
+
+
+void
+mu_store_set_batch_size (MuStore *store, guint batchsize)
+{
+	g_return_if_fail (store);
+	
+	if (batchsize == 0)
+		store->_trx_size = MU_STORE_DEFAULT_TRX_SIZE;
+	else
+		store->_trx_size = batchsize;
 }
 
 
@@ -521,11 +533,11 @@ mu_store_store (MuStore *store, MuMsg *msg)
 }
 
 
-MuResult
-mu_store_remove (MuStore *store, const char* msgpath)
+gboolean
+mu_store_remove (MuStore *store, const char *msgpath)
 {
-	g_return_val_if_fail (store, MU_ERROR);
-	g_return_val_if_fail (msgpath, MU_ERROR);
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (msgpath, FALSE);
 
 	try {
 		const std::string uid (get_message_uid (msgpath));
@@ -533,18 +545,15 @@ mu_store_remove (MuStore *store, const char* msgpath)
 		begin_trx_if (store, !store->_in_transaction);
 		
 		store->_db->delete_document (uid);
-		g_debug ("deleting %s", msgpath);
-		
 		++store->_processed;
 
 		/* do we need to commit now? */
 		bool commit_now = store->_processed % store->_trx_size == 0;
 		commit_trx_if (store, commit_now);
 
-		return MU_OK; 
+		return TRUE; 
 		
-	} MU_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
-	
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (FALSE);	
 }
 
 gboolean

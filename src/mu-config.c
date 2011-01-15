@@ -96,6 +96,8 @@ config_options_group_index (MuConfig * opts)
 				 "don't clean up the database after indexing (false)", NULL},
 				{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &opts->xbatchsize,
 				 "set transaction batchsize for xapian commits (0)", NULL},
+				{"max-msg-size", 0, 0, G_OPTION_ARG_INT, &opts->max_msg_size,
+				 "set the maximum size for message files", NULL},
 				{NULL, 0, 0, 0, NULL, NULL, NULL}
 		};
 
