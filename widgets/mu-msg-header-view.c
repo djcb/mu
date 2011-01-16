@@ -101,9 +101,6 @@ get_label (const gchar *txt, gboolean istitle)
 	} else {
 		gtk_label_set_selectable (GTK_LABEL (label), TRUE);
 		gtk_label_set_text (GTK_LABEL(label), txt ? txt : "");
-		/* gtk_label_set_line_wrap_mode (GTK_LABEL (label), PANGO_WRAP_WORD_CHAR); */
-		/* gtk_label_set_line_wrap (GTK_LABEL (label), TRUE); */
-		/* gtk_label_set_ellipsize (GTK_LABEL (label), TRUE); */
 		gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
 	}
 
@@ -127,9 +124,9 @@ add_row (GtkWidget *table, guint row, const char* fieldname, const char *value,
 		GTK_TABLE(table), al,
 		0, 1, row, row + 1, GTK_FILL, 0, 0, 0);
 
-	al = gtk_alignment_new (0.0, 0.0, 0.0, 0.0);
+	al = gtk_alignment_new (0.0, 1.0, 0.0, 0.0);
 
-	label = get_label (value, FALSE);	
+	label = get_label (value, FALSE);
 	gtk_container_add (GTK_CONTAINER (al), label);
 
 	gtk_table_attach (
@@ -167,7 +164,6 @@ get_table (MuMsg *msg)
 	return table;
 }
 
-
 void
 mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg)
 {
@@ -181,7 +177,7 @@ mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg)
 	if (msg) {
 		self->_priv->_table = get_table (msg);
 		gtk_box_pack_start (GTK_BOX(self), self->_priv->_table,
-				    TRUE, FALSE, 2);
+				    FALSE, FALSE, 2);
 		gtk_widget_show_all (self->_priv->_table);
 	}
 }

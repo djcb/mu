@@ -89,7 +89,18 @@ on_attach_activated (MuMsgView *self, guint partnum, MuMsg *msg)
 static GtkWidget*
 get_header_widget (MuMsgView *self)
 {
-	return self->_priv->_headers = mu_msg_header_view_new ();
+	GtkWidget *scrolledwin;
+
+	self->_priv->_headers = mu_msg_header_view_new ();
+	
+	scrolledwin = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (
+		GTK_SCROLLED_WINDOW(scrolledwin),
+		GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_add_with_viewport
+		(GTK_SCROLLED_WINDOW(scrolledwin), self->_priv->_headers);
+	
+	return scrolledwin;
 }
 
 static void
