@@ -18,6 +18,9 @@
 */
 #include <webkit/webkitwebview.h>
 #include <webkit/webkitnetworkresponse.h>
+#include <webkit/webkitwebnavigationaction.h>
+#include <webkit/webkitwebpolicydecision.h>
+
 
 #include "mu-msg-body-view.h"
 #include <mu-msg-part.h>
@@ -110,14 +113,29 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	return filepath;
 }
 
-static WebKitNavigationResponse
-on_navigation_requested (MuMsgBodyView *self, WebKitWebFrame *frame,
-			 WebKitNetworkRequest *request, gpointer data)
+
+static gboolean
+on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *frame,
+					 WebKitNetworkRequest *request,
+					 WebKitWebNavigationAction *nav_action,
+					 WebKitWebPolicyDecision *policy_decision,
+					 gpointer data)
 {
 	const char* uri;
+	WebKitWebNavigationReason reason;
 	
 	uri = webkit_network_request_get_uri (request);
+	reason = webkit_web_navigation_action_get_reason (nav_action);
 
+	/* if it wasn't a user click, do the navigation */
+	if (reason != WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
+		webkit_web_policy_decision_ignore (policy_decision);
+		return TRUE;
+	}
+	
+	/* we handle links clicked ourselves, no need for navigation */
+	webkit_web_policy_decision_ignore (policy_decision);
+	
 	/* if there are 'cmd:<action>" links in the body text of
 	 * mu-internal messages (ie., notification from mu, not real
 	 * e-mail messages), we emit the 'action requested'
@@ -130,16 +148,18 @@ on_navigation_requested (MuMsgBodyView *self, WebKitWebFrame *frame,
 				       signals[ACTION_REQUESTED], 0,
 				       uri + 4);
 		}
-		return WEBKIT_NAVIGATION_RESPONSE_IGNORE;
+		return TRUE;
 	}
-
+		
 	/* don't try to play files on our local file system, this is not something
 	 * external content should do.*/
 	if (!mu_util_is_local_file(uri))
 		mu_util_play (uri, FALSE, TRUE);
-		
-	return WEBKIT_NAVIGATION_RESPONSE_IGNORE;
+	
+	return TRUE;
 }
+
+
 
 static void
 on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
@@ -188,11 +208,9 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 	/* to support cid: */
 	g_signal_connect (obj, "resource-request-starting",
 			  G_CALLBACK (on_resource_request_starting), NULL);
-
 	/* handle navigation requests */
-	g_signal_connect (obj, "navigation-requested",
-			  G_CALLBACK (on_navigation_requested), (void*)0x666);
-	
+	g_signal_connect (obj, "navigation-policy-decision-requested",
+			  G_CALLBACK (on_navigation_policy_decision_requested), NULL);
 }
 
 static void

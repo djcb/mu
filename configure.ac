@@ -117,7 +117,7 @@ AC_SUBST(GMIME_LIBS)
  
 
 # webkit? needed for the fancy web widget
-PKG_CHECK_MODULES(WEBKIT,webkit-1.0,[have_webkit=yes],[have_webkit=no])
+PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
 AS_IF([test "x$have_webkit" = "xyes"],[
 	    webkit_version="`pkg-config --modversion webkit-1.0`"])
 AC_SUBST(WEBKIT_CFLAGS)
