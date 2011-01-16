@@ -67,6 +67,7 @@ create_maildir (const char *path, mode_t mode, GError **err)
 	}
 	
 	for (i = 0; i != G_N_ELEMENTS(subdirs); ++i) {
+
 		const char *fullpath;
 		int rv;
 
@@ -95,7 +96,9 @@ create_noindex (const char *path, GError **err)
 	noindexpath = mu_str_fullpath_s (path, MU_MAILDIR_NOINDEX_FILE);
 
 	fd = creat (noindexpath, 0644);
-
+	
+	/* note, if the 'close' failed, creation may still have
+	 * succeeded...*/
 	if (fd < 0 || close (fd) != 0) {
 		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_CREATE,
 			     "error in create_noindex: %s",
@@ -149,33 +152,26 @@ check_subdir (const char *src, gboolean *in_cur, GError **err)
 static gchar*
 get_target_fullpath (const char* src, const gchar *targetpath, GError **err)
 {
-	gchar *targetfullpath, *srcfile, *srcpath, *c;
+	gchar *targetfullpath, *srcfile;
 	gboolean in_cur;
 	
 	if (!check_subdir (src, &in_cur, err))
 		return NULL;
 	
-	/* note: make the filename *cough* unique by making the pathname
-	 * part of the file name. This helps if there are copies of a
-	 * message (which all have the same basename)*/
-	c = srcpath = g_path_get_dirname (src);
-	while (c && *c) {
-		if (*c == G_DIR_SEPARATOR)
-			*c = '_';
-		++c;
-	}
 	srcfile = g_path_get_basename (src);
 
-	/* create & test targetpath  */
-	targetfullpath = g_strdup_printf ("%s%c%s%c%s_%s",
+	/* create targetpath; note: make the filename cough* unique by
+	*including a hash * of the srcname in the targetname. This
+	*helps if there are * copies of a message (which all have the
+	*same basename)*/
+	targetfullpath = g_strdup_printf ("%s%c%s%c%u_%s",
 					  targetpath,
 					  G_DIR_SEPARATOR,
 					  in_cur ? "cur" : "new",
 					  G_DIR_SEPARATOR,
-					  srcpath,
+					  g_str_hash(src),
 					  srcfile);
 	g_free (srcfile);
-	g_free (srcpath);
 	
 	return targetfullpath;
 }
@@ -283,11 +279,10 @@ has_noindex_file (const char *path)
 
 	if (access (noindexpath, F_OK) == 0)
 		return TRUE;
-	
 	else if (G_UNLIKELY(errno != ENOENT))
 		g_warning ("error testing for noindex file %s: %s",
 			   noindexpath, strerror(errno));
-
+	
 	return FALSE;
 }
 
@@ -556,7 +551,8 @@ clear_links (const gchar* dirname, DIR *dir, GError **err)
 	}
 
 	if (errno != 0)
-		g_set_error (err, 0, MU_ERROR_FILE,"file error: %s", strerror(errno));
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "file error: %s", strerror(errno));
 	
 	return (rv == FALSE && errno == 0);
 }
