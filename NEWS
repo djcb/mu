@@ -13,6 +13,7 @@
    - support folder names with special characters
    - better check for already-running mu index
    - when --maildir= is not provided for mu index, default to the last one
+   - add --max-msg-size, to specify a new maximum message size
 
 ** Release 0.9.1 <2010-12-05 Sun>
    

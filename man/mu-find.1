@@ -418,7 +418,7 @@ key will start a search, and F9 will take you to the results.
 
 .nf
 # mutt macros for mu
-macro index <F8> "<shell-escape>mu find -c -l ~/Maildir/search " \\
+macro index <F8> "<shell-escape>mu find --clearlinks --format=links --linksdir=~/Maildir/search " \\
 					"mu find"
 macro index <F9> "<change-folder-readonly>~/Maildir/search" \\
 					"mu find results"

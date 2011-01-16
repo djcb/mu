@@ -7,12 +7,12 @@ mu easy \- a quick introduction to mu
 .SH DESCRIPTION
 
 \fBmu\fR is a set of tools for dealing with e-mail messages in Maildirs. There
-are many options, which are all described in the individual man pages for the
-various sub-commands. This man pages jumps over all the details and gives
-examples of the more common use cases. If the use cases described here do not
-precisely do what you want, please check the more extensive information in the
-man page about the sub-command you are using -- for example, the mu-index or
-mu-find man pages.
+are many options, which are all described in the man pages for the various
+sub-commands. This man pages jumps over all the details and gives examples of
+the more common use cases. If the use cases described here do not precisely do
+what you want, please check the more extensive information in the man page
+about the sub-command you are using -- for example, the mu-index or mu-find
+man pages.
 
 \fBNOTE\fR: the \fBindex\fR command (and therefore, the ones that depend on
 that, such as \fBfind\fR), require that you store your mail in the
@@ -136,7 +136,7 @@ Get all messages from Jim without an attachment:
   \fB$ mu find from:jim AND NOT flag:attach\fR 
 .fi
 
-Get all unread messages where the subject is about Ångström:
+Get all unread messages where the subject mentions Ångström:
 .nf
   \fB$ mu find flag:new subject:Ångström\fR 
 .fi
