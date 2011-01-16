@@ -1,0 +1,93 @@
+Questions & answers about mu.
+
+** Indexing
+
+   *Q*: I have some maildirs with spam and junk e-mail that I /don't/ want to
+   include in the indexing process. How can I tell =mu= to ignore those?
+     
+   *A*: Put a file called =.noindex= in the directory (maildir) you'd like
+   to ignore, and mu will not index that directory, nor any of its
+   sub-maildirs.
+
+   *Q*: =mu index= complains about some messages being too big; what can I do
+   about that?
+
+   *A*: since =0.9.2=, there is =--max-msg-size= where you can set the maximum
+   size (in bytes) of messages that =mu= should consider. In older versions,
+   you'd need to update =MU_MAILDIR_WALK_MAX_FILE_SIZE= in =mu-maildir.c= and
+   recompile.
+    
+** Searching
+   
+   *Q*: Do you have some examples of queries?
+ 
+   *A*: sure, see the =mu-easy= man page (=man mu-easy=), or see below.
+
+   *Q*: I have some folders with spaces in their names; how can I match those?
+   
+   *A*: You'll have to quote the folder name; and from the command line that
+   means you'll have to escape those quotes; for example:
+
+#+begin_example
+         $ mu find maildir:"\"Sent Items\""
+#+end_example
+
+   Note that matching maildirs with 'special' characters like dots, '@' was
+   problematic in some older =mu=-versions, but should work well with the
+   =0.9.2= and beyond.
+   
+   *Q*: I'd like to get the result of a query as a list of the message files. Is
+   that possible?
+    
+   *A*: Yes; using the =l= (small letter L) in the format, you can do something
+   like:
+#+begin_example
+         $ mu find --fields=l athens
+#+end_example
+
+   to get the file names (paths) of all messages about Athens. Of course, you
+   can use that for further processing. For example, to get list of e-mail files
+   sorted by their length in lines:
+
+#+begin_example
+        $ mu find --fields=l athens | xargs wc -l | sort -n 
+ #+end_example
+
+** Showing the results
+
+   *Q*: Can I get the output in some other format that lines of plain text? Say,
+   in XML?
+   
+   *A*: Starting with version 0.9.2, there is (experimental) support for output
+    in XML, JSON and s-expressions. Use =--format=xml=-argument (or
+    =--format=sexp=, =--format=json= ) to =mu find= for this. Note that this is
+    still experimental, and the exact formats have not been fixed yet. 
+   
+   *Q*: Can I integrate =mu find= with my e-mail client? 
+
+   *A*: Yes, at least for some mail clients like =mutt= and =Wanderlust= (for
+   emacs) you can do that. For this, =mu= uses a special trick where the
+   results of a search are put in a special temporary maildir with symbolic
+   links to the found messages, and the visiting this temporary maildir with
+   the mail client. The =mu-find= man page has some examples on how to
+   integrate this with mail clients.
+   
+   *Q*: Is there some GUI for =mu=?
+
+   *A*: A GUI is being developed, but it will take some time to be
+    ready. However, as of version 0.9.1, in the =toys/=-directory of the =mu=
+    source package you'll find =mug= and =mug2=, which show-case parts of the
+    future GUI. =mug2= is the more feature-rich one, and requires a fairly
+    recent GTK+/Glib and Webkit, while =mug= only requires GTK+. If you have the
+    required packages, =mug=/=mug2= will automatically be built; however, =make
+    install= will *not* install them. You'll need to run them from their
+    directory. [[http://www.djcbsoftware.nl/code/mu/mug-full.png][Screenshot]].
+
+
+
+
+
+
+
+** Example queries
+
