@@ -393,8 +393,13 @@ update_model (GtkListStore * store, const char *xpath, const char *query,
 	}
 
 	for (count = 0; !mu_msg_iter_is_done (iter);
-	     mu_msg_iter_next (iter), ++count)
+	     mu_msg_iter_next (iter), ++count) {
+
 		add_row (store, iter);
+
+		if (count % 50 == 0)
+			gtk_main_iteration ();
+	}
 
 	mu_msg_iter_destroy (iter);
 
