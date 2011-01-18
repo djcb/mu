@@ -185,6 +185,13 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 	}
 }
 
+static gboolean
+on_button_press_event (MuMsgBodyView *self, GdkEventButton *event, gpointer data)
+{
+	/* ignore all but the first (typically, left) mouse button */
+	return (event->button > 1) ? TRUE : FALSE;	
+}
+
 
 static void
 mu_msg_body_view_init (MuMsgBodyView *obj)
@@ -211,6 +218,9 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 	/* handle navigation requests */
 	g_signal_connect (obj, "navigation-policy-decision-requested",
 			  G_CALLBACK (on_navigation_policy_decision_requested), NULL);
+	/* ignore right-button clicks */
+	g_signal_connect (obj, "button-press-event",
+			  G_CALLBACK(on_button_press_event), NULL);
 }
 
 static void
