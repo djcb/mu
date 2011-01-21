@@ -37,6 +37,7 @@ typedef struct _MuMsgBodyView      MuMsgBodyView;
 typedef struct _MuMsgBodyViewClass MuMsgBodyViewClass;
 typedef struct _MuMsgBodyViewPrivate         MuMsgBodyViewPrivate;
 
+
 struct _MuMsgBodyView {
 	 WebKitWebView parent;
 	/* insert public members, if any */
@@ -47,6 +48,8 @@ struct _MuMsgBodyView {
 
 struct _MuMsgBodyViewClass {
 	WebKitWebViewClass parent_class;
+
+	/* supported actions: "reindex", "view-source" */
 	void (* action_requested) (MuMsgBodyView* self, const char* action);
 };
 

@@ -177,7 +177,7 @@ mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg)
 	if (msg) {
 		self->_priv->_table = get_table (msg);
 		gtk_box_pack_start (GTK_BOX(self), self->_priv->_table,
-				    FALSE, FALSE, 2);
+				    TRUE, TRUE, 0);
 		gtk_widget_show_all (self->_priv->_table);
 	}
 }

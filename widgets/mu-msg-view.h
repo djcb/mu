@@ -60,6 +60,8 @@ GtkWidget*   mu_msg_view_new         (void);
 
 void mu_msg_view_set_message (MuMsgView *self, MuMsg *msg);
 void mu_msg_view_set_note (MuMsgView *self, const char *html);
+typedef enum _MuMsgViewDisplayType MuMsgViewDisplayType;
+
 
 G_END_DECLS
 

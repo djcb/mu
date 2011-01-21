@@ -98,6 +98,77 @@ item_activated (MuMsgAttachView *self, GtkTreePath *tpath)
 		       partnum, self->_priv->_msg);
 }
 
+static void
+accumulate_parts (MuMsgAttachView *self, GtkTreePath *path, GSList **lst)
+{
+	GtkTreeIter iter;
+	GtkTreeModel *model;
+
+	/* don't unref */
+	model = gtk_icon_view_get_model (GTK_ICON_VIEW(self));
+
+	if (gtk_tree_model_get_iter (model, &iter, path)) {
+		gchar *filepath;
+		gint idx;
+		gtk_tree_model_get (model, &iter, PARTNUM_COL, &idx, -1);		
+		filepath = mu_msg_part_filepath_cache (self->_priv->_msg, idx);
+		if (filepath) {
+			if (mu_msg_part_save (self->_priv->_msg, filepath,
+					      idx, FALSE, TRUE)) {
+				GFile *file;
+				file = g_file_new_for_path (filepath);
+				*lst = g_slist_prepend (*lst, g_file_get_uri(file));
+				g_object_unref (file);
+				g_free (filepath);
+			}
+		}
+	}
+}
+
+
+
+static void
+on_drag_data_get (MuMsgAttachView *self, GdkDragContext *drag_context,
+		  GtkSelectionData *data, guint info, guint time, gpointer user_data)
+{
+	GSList *lst, *cur;
+	char **uris;
+	int i;
+	
+	lst = NULL;
+	gtk_icon_view_selected_foreach (GTK_ICON_VIEW(self),
+					(GtkIconViewForeachFunc)accumulate_parts,
+					&lst);
+	
+	uris = g_new(char*, g_slist_length(lst) + 1);
+	
+	/* now, create file uris for all of these ... */
+	for (cur = lst, i = 0; cur; cur = g_slist_next(lst)) {
+		uris[i] = (gchar*)cur->data;	
+		g_warning ("%s", (gchar*)cur->data);
+	}
+	uris[i] = NULL;
+
+	gtk_selection_data_set_uris (data, uris);
+
+	g_strfreev (uris);
+	g_slist_foreach (lst, (GFunc)g_free, NULL);
+	g_slist_free (lst);
+}	
+
+static void
+init_drag_and_drop (MuMsgAttachView *self)
+{
+	GtkTargetEntry target;
+	target.target = "text/uri-list";
+	target.flags  = GTK_TARGET_OTHER_APP;
+	target.info   = 0;
+	
+	gtk_icon_view_enable_model_drag_source (GTK_ICON_VIEW(self),
+						GDK_BUTTON1_MASK,
+						&target, 1, GDK_ACTION_COPY);
+	g_signal_connect (self, "drag-data-get", G_CALLBACK(on_drag_data_get), self);
+}
 
 static void
 mu_msg_attach_view_init (MuMsgAttachView *obj)
@@ -120,6 +191,9 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 	gtk_icon_view_set_item_padding (GTK_ICON_VIEW(obj), 0);
 	gtk_icon_view_set_item_orientation (GTK_ICON_VIEW(obj),
 					    GTK_ORIENTATION_HORIZONTAL);
+	gtk_icon_view_set_selection_mode (GTK_ICON_VIEW(obj),
+					  GTK_SELECTION_MULTIPLE);
+	init_drag_and_drop (obj);
 	
 	g_signal_connect (G_OBJECT(obj), "item-activated",
 			  G_CALLBACK(item_activated), NULL);
@@ -163,9 +237,11 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 		return;
 	
 	if (!part->type || !part->subtype)
-		snprintf (ctype, sizeof(ctype), "%s", "application/octet-stream");
+		snprintf (ctype, sizeof(ctype), "%s",
+			  "application/octet-stream");
 	else
-		snprintf (ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
+		snprintf (ctype, sizeof(ctype), "%s/%s",
+			  part->type, part->subtype);
 	
 	pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type (ctype, 16);
 	if (!pixbuf) {
@@ -203,7 +279,6 @@ mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg)
 	
 	if (!msg)
 		return 0;
-
 	
 	self->_priv->_msg = mu_msg_ref (msg);
 	

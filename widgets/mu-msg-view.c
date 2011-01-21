@@ -18,9 +18,9 @@
 */
 
 #include "mu-msg-view.h"
-#include "mu-msg-body-view.h"
-#include "mu-msg-attach-view.h"
-#include "mu-msg-header-view.h"
+
+#include "mu-msg-normal-view.h"
+#include "mu-msg-source-view.h"
 
 #include <mu-msg.h>
 #include <mu-msg-part.h>
@@ -38,9 +38,15 @@ enum {
 };
 
 struct _MuMsgViewPrivate {
-	GtkWidget *_headers;
-	GtkWidget *_body;
-	GtkWidget *_attach, *_attacharea;
+
+	/* 'normal' view */
+	GtkWidget *_normal_view, *_source_view;
+
+	/* TRUE if we're in view-source mode, FALSE otherwise */
+	gboolean _view_source;
+
+	/* the message */
+	MuMsg *_msg;
 };
 #define MU_MSG_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                          MU_TYPE_MSG_VIEW, \
@@ -73,100 +79,120 @@ mu_msg_view_class_init (MuMsgViewClass *klass)
 }
 
 static void
-on_attach_activated (MuMsgView *self, guint partnum, MuMsg *msg)
+each_child_remove (GtkWidget *child, MuMsgView *self)
 {
-	gchar* filepath;
+	gtk_container_remove (GTK_CONTAINER(self), child);
+}
 	
-	filepath = mu_msg_part_filepath_cache (msg, partnum);
-	if (filepath) {
-		mu_msg_part_save (msg, filepath, partnum, FALSE, TRUE);
-		mu_util_play (filepath, TRUE, FALSE);
-		g_free (filepath);
+
+static void
+clear_widgets (MuMsgView *self)
+{
+	/* remove the old children */
+	gtk_container_foreach (GTK_CONTAINER(self),
+			       (GtkCallback)each_child_remove,
+			       self);
+
+	self->_priv->_normal_view = NULL;
+	self->_priv->_source_view = NULL;
+}
+
+static void
+on_body_action_requested (GtkWidget *w, const char* action,
+			  MuMsgView *self)
+{
+	if (g_strcmp0 (action, "view-source") == 0) {
+
+		self->_priv->_view_source = TRUE;
+		if (self->_priv->_msg)
+			mu_msg_ref (self->_priv->_msg);
+		mu_msg_view_set_message (self, self->_priv->_msg);
+
+	} else if (g_strcmp0 (action, "view-message") == 0) {
+
+		self->_priv->_view_source = FALSE;
+		if (self->_priv->_msg)
+			mu_msg_ref (self->_priv->_msg);	
+		mu_msg_view_set_message (self, self->_priv->_msg);
 	}
 }
 
 
-static GtkWidget*
-get_header_widget (MuMsgView *self)
-{
-	GtkWidget *scrolledwin;
 
-	self->_priv->_headers = mu_msg_header_view_new ();
+static GtkWidget*
+get_source_view (MuMsgView *self, MuMsg *msg)
+{
+	if (!self->_priv->_source_view) {
+		self->_priv->_source_view = mu_msg_source_view_new ();
+		g_signal_connect (self->_priv->_source_view,
+				  "action-requested",
+				  G_CALLBACK(on_body_action_requested),
+				  self);
+	}
+	
+	mu_msg_source_view_set_message
+		(MU_MSG_SOURCE_VIEW (self->_priv->_source_view), msg);
+
+	gtk_widget_show_all (self->_priv->_source_view);
+	
+	return self->_priv->_source_view;
+}
+
+static GtkWidget*
+get_normal_view (MuMsgView *self, MuMsg *msg)
+{	
+	GtkWidget *scrolledwin;
+	
+	if (!self->_priv->_normal_view)  {
+		self->_priv->_normal_view = mu_msg_normal_view_new ();
+		g_signal_connect (self->_priv->_normal_view,
+				  "action-requested",
+				  G_CALLBACK(on_body_action_requested),
+				  self);
+	}
+	
+	mu_msg_normal_view_set_message
+		(MU_MSG_NORMAL_VIEW(self->_priv->_normal_view), msg);
+	
+	gtk_widget_show (self->_priv->_normal_view);
 	
 	scrolledwin = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (
 		GTK_SCROLLED_WINDOW(scrolledwin),
 		GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+
 	gtk_scrolled_window_add_with_viewport
-		(GTK_SCROLLED_WINDOW(scrolledwin), self->_priv->_headers);
+		(GTK_SCROLLED_WINDOW(scrolledwin),
+		 self->_priv->_normal_view);
+		
+	gtk_widget_show_all (scrolledwin);
 	
 	return scrolledwin;
 }
 
-static void
-on_body_action_requested (MuMsgBodyView *body, const char* action,
-			  MuMsgView *self)
-{
-	g_printerr ("received request: %s\n", action);
-}
-
-
-static GtkWidget*
-get_body_widget (MuMsgView *self)
-{
-	GtkWidget *scrolledwin;
-	
-	self->_priv->_body = mu_msg_body_view_new ();
-	scrolledwin = gtk_scrolled_window_new (NULL, NULL);
-	gtk_container_add (GTK_CONTAINER(scrolledwin),
-			   self->_priv->_body);
-
-	g_signal_connect (self->_priv->_body, "action-requested",
-			  G_CALLBACK(on_body_action_requested), self);
-	
-	return scrolledwin;
-}
-
-static GtkWidget*
-get_attach_widget (MuMsgView *self)
-{
-	/* GtkWidget *scrolledwin; */
-	
-	self->_priv->_attacharea = gtk_frame_new ("");
-	/* scrolledwin = gtk_scrolled_window_new (NULL, NULL); */
-	/* gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolledwin), */
-	/* 				GTK_POLICY_NEVER, */
-	/* 				GTK_POLICY_AUTOMATIC); */
-	
-	self->_priv->_attach = mu_msg_attach_view_new ();
-	gtk_container_add (GTK_CONTAINER(self->_priv->_attacharea),
-			   self->_priv->_attach);	
-	
-	g_signal_connect (self->_priv->_attach, "attach-activated",
-			  G_CALLBACK(on_attach_activated),
-			  self);
-
-	return self->_priv->_attacharea;
-}
 
 static void
 mu_msg_view_init (MuMsgView *self)
 {
-	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
-		
-	gtk_box_pack_start (GTK_BOX(self), get_header_widget (self),
-			    FALSE, FALSE, 2);
+ 	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
+
 	
-	gtk_box_pack_start (GTK_BOX(self), get_attach_widget (self),
-			    FALSE, FALSE, 2);
+	self->_priv->_normal_view = NULL;
+	self->_priv->_source_view = NULL;
 	
-	gtk_box_pack_start (GTK_BOX(self), get_body_widget (self),
-			    TRUE, TRUE, 2);
+	self->_priv->_view_source = FALSE;
 }
 
 static void
 mu_msg_view_finalize (GObject *obj)
 {
+	MuMsgViewPrivate *priv;
+
+	priv = MU_MSG_VIEW_GET_PRIVATE(obj);
+	
+	if (priv->_msg)
+		mu_msg_unref (priv->_msg);
+	
 /* 	free/unref instance resources here */
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -178,45 +204,34 @@ mu_msg_view_new (void)
 }
 
 
-static void
-update_attachment_area (MuMsgView *self, MuMsg *msg)
-{
-	gint attach_num;
-		
-	attach_num = 0;
-	if (msg)
-		attach_num = mu_msg_attach_view_set_message
-			(MU_MSG_ATTACH_VIEW(self->_priv->_attach), msg);
-
-	if (attach_num > 0)
-		gtk_widget_show_all (self->_priv->_attacharea);
-	else
-		gtk_widget_hide_all (self->_priv->_attacharea);
-}
-
 
 void
 mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 {	
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
-
-	mu_msg_header_view_set_message (MU_MSG_HEADER_VIEW(self->_priv->_headers),
-					msg);
-	mu_msg_body_view_set_message (MU_MSG_BODY_VIEW(self->_priv->_body),
-				      msg);
 	
-	update_attachment_area (self, msg);
-}
+	if (self->_priv->_msg) 
+		mu_msg_unref (self->_priv->_msg);
 
+	self->_priv->_msg = msg ? mu_msg_ref (msg) : NULL;
+
+	clear_widgets (self);
+	
+	if (!self->_priv->_view_source)
+		gtk_box_pack_start (GTK_BOX(self),
+				    get_normal_view (self, msg),
+				    TRUE, TRUE, 0);
+	else
+		gtk_box_pack_start (GTK_BOX(self),
+				    get_source_view (self, msg),
+				    TRUE, TRUE, 0);
+}
 
 
 void
 mu_msg_view_set_note (MuMsgView *self, const char *html)
 {
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
-	
-	mu_msg_header_view_set_message (MU_MSG_HEADER_VIEW(self->_priv->_headers),
-					NULL);
-	mu_msg_body_view_set_note (MU_MSG_BODY_VIEW(self->_priv->_body),
-				   html);
+	/* FIXME */
 }
+

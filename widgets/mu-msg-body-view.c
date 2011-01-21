@@ -41,11 +41,8 @@ enum {
 
 struct _MuMsgBodyViewPrivate {
 	WebKitWebSettings *_settings;
-	MuMsg             *_message;
-
-	/* 'mu_mode' means some internal mode where cmd: urls are
-	 * acceptable */
-	gboolean           _mu_mode;
+	MuMsg             *_msg;
+	gboolean          _internal_msg;
 };
 #define MU_MSG_BODY_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                               MU_TYPE_MSG_BODY_VIEW, \
@@ -126,15 +123,15 @@ on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *fr
 	
 	uri = webkit_network_request_get_uri (request);
 	reason = webkit_web_navigation_action_get_reason (nav_action);
-
-	/* if it wasn't a user click, do the navigation */
+	
+	/* if it wasn't a user click, don't the navigation */
 	if (reason != WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
 		webkit_web_policy_decision_ignore (policy_decision);
 		return TRUE;
 	}
 	
 	/* we handle links clicked ourselves, no need for navigation */
-	webkit_web_policy_decision_ignore (policy_decision);
+	webkit_web_policy_decision_use (policy_decision);
 	
 	/* if there are 'cmd:<action>" links in the body text of
 	 * mu-internal messages (ie., notification from mu, not real
@@ -143,7 +140,7 @@ on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *fr
 	 * a <a href="cmd:refresh">Refresh</a> link
 	 */
 	if (g_ascii_strncasecmp (uri, "cmd:", 4) == 0)  {
-		if (self->_priv->_mu_mode) {
+		if (self->_priv->_internal_msg) {
 			g_signal_emit (G_OBJECT(self),
 				       signals[ACTION_REQUESTED], 0,
 				       uri + 4);
@@ -169,8 +166,10 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 	const char* uri;
 	MuMsg *msg;
 
-	msg = self->_priv->_message;
+	msg = self->_priv->_msg;
 	uri = webkit_network_request_get_uri (request);
+
+	/* g_warning ("%s: %s", __FUNCTION__, uri); */
 	
 	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
 		gchar *filepath;
@@ -185,10 +184,52 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 	}
 }
 
+
+static void
+on_menu_item_activate (GtkMenuItem *item, MuMsgBodyView *self)
+{
+	g_signal_emit (G_OBJECT(self),
+		       signals[ACTION_REQUESTED], 0,
+		       g_object_get_data (G_OBJECT(item), "action"));	
+}
+
+static void
+popup_menu (MuMsgBodyView *self, guint button, guint32 activate_time)
+{
+	GtkWidget *menu;
+	int i;
+	struct {
+		const char* title;
+		const char* action;
+	} actions[] = {
+		{ "View source...", "view-source" }
+	};
+
+	menu = gtk_menu_new ();
+	
+	for (i = 0; i != G_N_ELEMENTS(actions); ++i) {
+		GtkWidget *item;
+		item = gtk_menu_item_new_with_label(actions[i].title);
+		g_object_set_data (G_OBJECT(item), "action", (gpointer)actions[i].action);
+		g_signal_connect (item, "activate", G_CALLBACK(on_menu_item_activate),
+				  self);
+		gtk_menu_attach (GTK_MENU(menu), item, 0, 1, i, i+1);
+		gtk_widget_show (item);
+	}
+	gtk_menu_popup (GTK_MENU(menu), NULL, NULL, NULL, NULL, 0, 0);
+}
+
+
 static gboolean
 on_button_press_event (MuMsgBodyView *self, GdkEventButton *event, gpointer data)
 {
-	/* ignore all but the first (typically, left) mouse button */
+    /* ignore all but the first (typically, left) mouse button */
+	switch (event->button) {
+	case 1: return FALSE; /* propagate, let widget handle it */
+	case 3: popup_menu (self, event->button, event->time);
+	default: return TRUE; /* ignore */
+	}
+	
 	return (event->button > 1) ? TRUE : FALSE;	
 }
 
@@ -198,8 +239,8 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 {
 	obj->_priv = MU_MSG_BODY_VIEW_GET_PRIVATE(obj);
 
-	obj->_priv->_message = NULL;
-	obj->_priv->_mu_mode = FALSE;
+	obj->_priv->_msg = NULL;
+	obj->_priv->_internal_msg = FALSE;
 	
 	obj->_priv->_settings = webkit_web_settings_new ();
 	g_object_set (G_OBJECT(obj->_priv->_settings),
@@ -218,7 +259,7 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 	/* handle navigation requests */
 	g_signal_connect (obj, "navigation-policy-decision-requested",
 			  G_CALLBACK (on_navigation_policy_decision_requested), NULL);
-	/* ignore right-button clicks */
+	/* handle right-button clicks */
 	g_signal_connect (obj, "button-press-event",
 			  G_CALLBACK(on_button_press_event), NULL);
 }
@@ -232,8 +273,8 @@ mu_msg_body_view_finalize (GObject *obj)
 	if (priv && priv->_settings)
 		g_object_unref (priv->_settings);
 
-	if (priv->_message)
-		mu_msg_unref (priv->_message);
+	if (priv->_msg)
+		mu_msg_unref (priv->_msg);
 	
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -269,7 +310,6 @@ set_text (MuMsgBodyView *self, const char* txt)
 				     "");
 }
 
-
 void
 mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 {
@@ -277,22 +317,25 @@ mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 	
 	g_return_if_fail (self);
 
-	if (self->_priv->_message) {
-		mu_msg_unref (self->_priv->_message);
-		self->_priv->_message = NULL;
-	}
-		
-	self->_priv->_message = msg ? mu_msg_ref (msg) : NULL;
-		
+	/* ref this one before unreffing priv->_msg, it may be the
+	 * same...*/
+	if (msg)
+		msg = mu_msg_ref (msg);
+	
+	if (self->_priv->_msg) {
+		mu_msg_unref (self->_priv->_msg);
+		self->_priv->_msg = NULL;
+	}	
+	self->_priv->_msg = msg;
+
 	data = msg ? mu_msg_get_body_html (msg) : "";
 	if (data) 
 		set_html (self, data);
 	else
 		set_text (self, mu_msg_get_body_text (msg));
 
-	self->_priv->_mu_mode = FALSE;
+	self->_priv->_internal_msg = FALSE;
 }
-
 
 void
 mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html)
@@ -300,12 +343,11 @@ mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html)
 	g_return_if_fail (self);
 	g_return_if_fail (html);
 		
-	if (self->_priv->_message) {
-		mu_msg_unref (self->_priv->_message);
-		self->_priv->_message = NULL;
+	if (self->_priv->_msg) {
+		mu_msg_unref (self->_priv->_msg);
+		self->_priv->_msg = NULL;
 	}		
 	set_html (self, html);
 
-	self->_priv->_mu_mode = TRUE;
-
+	self->_priv->_internal_msg = TRUE;
 }
