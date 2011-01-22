@@ -20,7 +20,10 @@
 #include "mu-msg-view.h"
 
 #include "mu-msg-normal-view.h"
+#include "mu-msg-body-view.h"
 #include "mu-msg-source-view.h"
+
+#include <webkit/webkitwebview.h>
 
 #include <mu-msg.h>
 #include <mu-msg-part.h>
@@ -40,8 +43,8 @@ enum {
 struct _MuMsgViewPrivate {
 
 	/* 'normal' view */
-	GtkWidget *_normal_view, *_source_view;
-
+	GtkWidget *_normal_view, *_source_view, *_internal_view;
+	
 	/* TRUE if we're in view-source mode, FALSE otherwise */
 	gboolean _view_source;
 
@@ -93,13 +96,14 @@ clear_widgets (MuMsgView *self)
 			       (GtkCallback)each_child_remove,
 			       self);
 
-	self->_priv->_normal_view = NULL;
-	self->_priv->_source_view = NULL;
+	self->_priv->_normal_view   = NULL;
+	self->_priv->_source_view   = NULL;
+	self->_priv->_internal_view = NULL;
 }
 
 static void
-on_body_action_requested (GtkWidget *w, const char* action,
-			  MuMsgView *self)
+on_action_requested (GtkWidget *w, const char* action,
+				 MuMsgView *self)
 {
 	if (g_strcmp0 (action, "view-source") == 0) {
 
@@ -114,7 +118,12 @@ on_body_action_requested (GtkWidget *w, const char* action,
 		if (self->_priv->_msg)
 			mu_msg_ref (self->_priv->_msg);	
 		mu_msg_view_set_message (self, self->_priv->_msg);
-	}
+
+	} else if (g_strcmp0 (action, "reindex") == 0) {
+		g_warning ("reindex");
+	} else {
+		g_warning ("unknown action '%s'", action);
+	}	
 }
 
 
@@ -126,7 +135,7 @@ get_source_view (MuMsgView *self, MuMsg *msg)
 		self->_priv->_source_view = mu_msg_source_view_new ();
 		g_signal_connect (self->_priv->_source_view,
 				  "action-requested",
-				  G_CALLBACK(on_body_action_requested),
+				  G_CALLBACK(on_action_requested),
 				  self);
 	}
 	
@@ -147,7 +156,7 @@ get_normal_view (MuMsgView *self, MuMsg *msg)
 		self->_priv->_normal_view = mu_msg_normal_view_new ();
 		g_signal_connect (self->_priv->_normal_view,
 				  "action-requested",
-				  G_CALLBACK(on_body_action_requested),
+				  G_CALLBACK(on_action_requested),
 				  self);
 	}
 	
@@ -165,10 +174,30 @@ get_normal_view (MuMsgView *self, MuMsg *msg)
 		(GTK_SCROLLED_WINDOW(scrolledwin),
 		 self->_priv->_normal_view);
 		
-	gtk_widget_show_all (scrolledwin);
+	gtk_widget_show (scrolledwin);
 	
 	return scrolledwin;
 }
+
+
+static GtkWidget*
+get_internal_view (MuMsgView *self, const char *html)
+{
+	if (!self->_priv->_internal_view)  {
+		self->_priv->_internal_view = mu_msg_body_view_new();
+		g_signal_connect (self->_priv->_internal_view,
+				  "action-requested",
+				  G_CALLBACK(on_action_requested),
+				  self);
+	}
+	mu_msg_body_view_set_note (MU_MSG_BODY_VIEW(self->_priv->_internal_view),
+				   html);
+				   	
+	gtk_widget_show (self->_priv->_internal_view);
+	
+	return self->_priv->_internal_view;
+}
+
 
 
 static void
@@ -229,9 +258,14 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 
 
 void
-mu_msg_view_set_note (MuMsgView *self, const char *html)
+mu_msg_view_set_note (MuMsgView *self, const gchar* html)
 {
-	g_return_if_fail (MU_IS_MSG_VIEW(self));
-	/* FIXME */
-}
 
+	g_return_if_fail (MU_IS_MSG_VIEW(self));
+
+	clear_widgets (self);
+	
+	gtk_box_pack_start (GTK_BOX(self),
+			    get_internal_view (self, html),
+			    TRUE, TRUE, 0);
+}
