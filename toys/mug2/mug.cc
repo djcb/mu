@@ -223,7 +223,6 @@ on_query_changed (MugQueryBar * bar, const char *query, MugData * mugdata)
 	int count;
 
 	/* clear the old message */
-	//mug_msg_view_set_text (MUG_MSG_VIEW(mugdata->msgview), NULL);
 	mug_msg_view_set_msg (MUG_MSG_VIEW (mugdata->msgview), NULL);
 
 	count = mug_msg_list_view_query (MUG_MSG_LIST_VIEW (mugdata->mlist),
@@ -250,7 +249,6 @@ on_query_changed (MugQueryBar * bar, const char *query, MugData * mugdata)
 static void
 on_msg_selected (MugMsgListView * mlist, const char *mpath, MugData * mugdata)
 {
-	// g_warning ("msg selected: %s", mpath);
 	mug_msg_view_set_msg (MUG_MSG_VIEW (mugdata->msgview), mpath);
 }
 

@@ -130,9 +130,7 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 				"<h1>Note</h1><hr>"
 				"<p>Message <tt>%s</tt> does not seem to be present "
 				"on the file system."
-				"<p>Maybe you need to run <tt>mu index</tt>?"
-				"<p>Click <a href=\"cmd:index\">here</a> to start the index"
-				,
+				"<p>Maybe you need to run <tt>mu index</tt>?",
 				msgpath);
 			mu_msg_view_set_note (MU_MSG_VIEW (priv->_view), note);
 			g_free (note);

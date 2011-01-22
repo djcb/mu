@@ -226,7 +226,11 @@ on_button_press_event (MuMsgBodyView *self, GdkEventButton *event, gpointer data
     /* ignore all but the first (typically, left) mouse button */
 	switch (event->button) {
 	case 1: return FALSE; /* propagate, let widget handle it */
-	case 3: popup_menu (self, event->button, event->time);
+	case 3:
+		/* no popup menus for internal messages */
+		if (!self->_priv->_internal_msg)
+			popup_menu (self, event->button, event->time);
+		break;
 	default: return TRUE; /* ignore */
 	}
 	
