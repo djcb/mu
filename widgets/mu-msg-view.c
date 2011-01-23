@@ -84,21 +84,25 @@ mu_msg_view_class_init (MuMsgViewClass *klass)
 static void
 each_child_remove (GtkWidget *child, MuMsgView *self)
 {
+	/* g_object_ref (child); /\* save the children *\/ */	
 	gtk_container_remove (GTK_CONTAINER(self), child);
 }
 	
 
 static void
-clear_widgets (MuMsgView *self)
+remove_widgets (MuMsgView *self)
 {
+	/* FIXME: keep the widgets around for re-use */
+
 	/* remove the old children */
 	gtk_container_foreach (GTK_CONTAINER(self),
 			       (GtkCallback)each_child_remove,
 			       self);
-
+	
 	self->_priv->_normal_view   = NULL;
 	self->_priv->_source_view   = NULL;
 	self->_priv->_internal_view = NULL;
+
 }
 
 static void
@@ -149,31 +153,35 @@ get_source_view (MuMsgView *self, MuMsg *msg)
 
 static GtkWidget*
 get_normal_view (MuMsgView *self, MuMsg *msg)
-{	
+{
 	GtkWidget *scrolledwin;
 	
-	if (!self->_priv->_normal_view)  {
-		self->_priv->_normal_view = mu_msg_normal_view_new ();
-		g_signal_connect (self->_priv->_normal_view,
-				  "action-requested",
-				  G_CALLBACK(on_action_requested),
-				  self);
+	if (self->_priv->_normal_view) {
+		mu_msg_normal_view_set_message
+			(MU_MSG_NORMAL_VIEW(self->_priv->_normal_view), msg);
+		return gtk_widget_get_parent (self->_priv->_normal_view);
 	}
+		
+	self->_priv->_normal_view = mu_msg_normal_view_new ();
 	
 	mu_msg_normal_view_set_message
 		(MU_MSG_NORMAL_VIEW(self->_priv->_normal_view), msg);
 	
-	gtk_widget_show (self->_priv->_normal_view);
-	
+	g_signal_connect (self->_priv->_normal_view,
+			  "action-requested",
+			  G_CALLBACK(on_action_requested),
+			  self);		
+
 	scrolledwin = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (
 		GTK_SCROLLED_WINDOW(scrolledwin),
 		GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
-
+	
 	gtk_scrolled_window_add_with_viewport
 		(GTK_SCROLLED_WINDOW(scrolledwin),
 		 self->_priv->_normal_view);
-		
+	
+	gtk_widget_show (self->_priv->_normal_view);
 	gtk_widget_show (scrolledwin);
 	
 	return scrolledwin;
@@ -204,10 +212,10 @@ static void
 mu_msg_view_init (MuMsgView *self)
 {
  	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
-
 	
-	self->_priv->_normal_view = NULL;
-	self->_priv->_source_view = NULL;
+	self->_priv->_normal_view   = NULL;
+	self->_priv->_source_view   = NULL;
+	self->_priv->_internal_view = NULL;
 	
 	self->_priv->_view_source = FALSE;
 }
@@ -244,7 +252,7 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 
 	self->_priv->_msg = msg ? mu_msg_ref (msg) : NULL;
 
-	clear_widgets (self);
+	remove_widgets (self);
 	
 	if (!self->_priv->_view_source)
 		gtk_box_pack_start (GTK_BOX(self),
@@ -263,7 +271,7 @@ mu_msg_view_set_note (MuMsgView *self, const gchar* html)
 
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
 
-	clear_widgets (self);
+	remove_widgets (self);
 	
 	gtk_box_pack_start (GTK_BOX(self),
 			    get_internal_view (self, html),
