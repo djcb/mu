@@ -129,6 +129,11 @@ mu_msg_source_view_init (MuMsgSourceView *self)
 
 	self->_priv->_view = gtk_text_view_new ();
 
+	gtk_text_view_set_editable (GTK_TEXT_VIEW(self->_priv->_view),
+				    FALSE);
+	gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW(self->_priv->_view),
+				     GTK_WRAP_NONE);
+	
 	/* handle right-button clicks */
 	g_signal_connect (self->_priv->_view, "button-press-event",
 			  G_CALLBACK(on_button_press_event), self);
