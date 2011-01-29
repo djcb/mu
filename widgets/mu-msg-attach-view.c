@@ -189,8 +189,11 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 	gtk_icon_view_set_margin (GTK_ICON_VIEW(obj), 0);
 	gtk_icon_view_set_spacing (GTK_ICON_VIEW(obj), 0);
 	gtk_icon_view_set_item_padding (GTK_ICON_VIEW(obj), 0);
-	gtk_icon_view_set_item_orientation (GTK_ICON_VIEW(obj),
-					    GTK_ORIENTATION_HORIZONTAL);
+
+	/* note: only since GTK+ 2.22 */
+	/* gtk_icon_view_set_item_orientation (GTK_ICON_VIEW(obj), */
+	/* 				    GTK_ORIENTATION_HORIZONTAL); */
+	
 	gtk_icon_view_set_selection_mode (GTK_ICON_VIEW(obj),
 					  GTK_SELECTION_MULTIPLE);
 	init_drag_and_drop (obj);

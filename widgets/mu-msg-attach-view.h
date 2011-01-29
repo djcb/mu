@@ -59,7 +59,7 @@ GType        mu_msg_attach_view_get_type    (void) G_GNUC_CONST;
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
 GtkWidget*   mu_msg_attach_view_new         (void);
 
-
+/* returns # of attachments */
 int  mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg);
 
 G_END_DECLS
