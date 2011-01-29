@@ -119,8 +119,8 @@ accumulate_parts (MuMsgAttachView *self, GtkTreePath *path, GSList **lst)
 				file = g_file_new_for_path (filepath);
 				*lst = g_slist_prepend (*lst, g_file_get_uri(file));
 				g_object_unref (file);
-				g_free (filepath);
 			}
+			g_free (filepath);
 		}
 	}
 }
@@ -141,34 +141,16 @@ on_drag_data_get (MuMsgAttachView *self, GdkDragContext *drag_context,
 					&lst);
 	
 	uris = g_new(char*, g_slist_length(lst) + 1);
-	
-	/* now, create file uris for all of these ... */
-	for (cur = lst, i = 0; cur; cur = g_slist_next(lst)) {
-		uris[i] = (gchar*)cur->data;	
-		g_warning ("%s", (gchar*)cur->data);
-	}
-	uris[i] = NULL;
+	for (cur = lst, i = 0; cur; cur = g_slist_next(cur))
+	 	uris[i++] = (gchar*)cur->data;
 
+	uris[i] = NULL;
 	gtk_selection_data_set_uris (data, uris);
 
-	g_strfreev (uris);
+	g_free (uris);
 	g_slist_foreach (lst, (GFunc)g_free, NULL);
 	g_slist_free (lst);
 }	
-
-static void
-init_drag_and_drop (MuMsgAttachView *self)
-{
-	GtkTargetEntry target;
-	target.target = "text/uri-list";
-	target.flags  = GTK_TARGET_OTHER_APP;
-	target.info   = 0;
-	
-	gtk_icon_view_enable_model_drag_source (GTK_ICON_VIEW(self),
-						GDK_BUTTON1_MASK,
-						&target, 1, GDK_ACTION_COPY);
-	g_signal_connect (self, "drag-data-get", G_CALLBACK(on_drag_data_get), self);
-}
 
 static void
 mu_msg_attach_view_init (MuMsgAttachView *obj)
@@ -193,13 +175,18 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 	/* note: only since GTK+ 2.22 */
 	/* gtk_icon_view_set_item_orientation (GTK_ICON_VIEW(obj), */
 	/* 				    GTK_ORIENTATION_HORIZONTAL); */
+
+	g_signal_connect (G_OBJECT(obj), "item-activated",
+			  G_CALLBACK(item_activated), NULL);
 	
 	gtk_icon_view_set_selection_mode (GTK_ICON_VIEW(obj),
 					  GTK_SELECTION_MULTIPLE);
-	init_drag_and_drop (obj);
-	
-	g_signal_connect (G_OBJECT(obj), "item-activated",
-			  G_CALLBACK(item_activated), NULL);
+	/* drag & drop */
+	gtk_icon_view_enable_model_drag_source (GTK_ICON_VIEW(obj), 0, NULL, 0,
+						GDK_ACTION_COPY);
+	gtk_drag_source_add_uri_targets(GTK_WIDGET(obj));
+	g_signal_connect (obj, "drag-data-get", G_CALLBACK(on_drag_data_get), NULL);	
+
 }	
 
 
