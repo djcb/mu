@@ -131,7 +131,7 @@ on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *fr
 	}
 	
 	/* we handle links clicked ourselves, no need for navigation */
-	webkit_web_policy_decision_use (policy_decision);
+	webkit_web_policy_decision_ignore (policy_decision);
 	
 	/* if there are 'cmd:<action>" links in the body text of
 	 * mu-internal messages (ie., notification from mu, not real
