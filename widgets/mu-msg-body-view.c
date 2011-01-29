@@ -306,7 +306,7 @@ static void
 set_text (MuMsgBodyView *self, const char* txt)
 {
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
-
+	
 	webkit_web_view_load_string (WEBKIT_WEB_VIEW(self),
 				     txt ? txt : "",
 				     "text/plain",

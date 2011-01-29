@@ -767,8 +767,8 @@ get_body (MuMsg *msg, gboolean want_html)
 			   "for message %s",
 			   want_html ? "html" : "text",
 			   mu_msg_get_path(msg));
-
-	return str;	
+		
+	return str;
 }
 
 const char*
