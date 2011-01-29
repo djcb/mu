@@ -253,6 +253,9 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 	self->_priv->_msg = msg ? mu_msg_ref (msg) : NULL;
 
 	remove_widgets (self);
+
+	if (!msg)
+		return;
 	
 	if (!self->_priv->_view_source)
 		gtk_box_pack_start (GTK_BOX(self),
