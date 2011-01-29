@@ -163,37 +163,35 @@ AC_SUBST(XAPIAN_LIBS)
 # also, this has nothing to do with Xapian's software version
 AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.0"], ['Schema' version of the database])
 
+AC_ARG_WITH([gui],
+   [AS_HELP_STRING([--with-gui=gtk2|gtk3|none])],
+   [gui=$withval],[gui=auto])
+
+AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" -a "x$gui" != "xauto"],
+      AC_MSG_ERROR([the argument for --with-gui= must be either gtk2|gtk3|auto|none ($gui)]))
+      
 # we test for gtk, which we need if we want to build 'mug'; for
 # experiments it can try to build with gtk3, but since that is still
 # under development, you need to explicitly enable this with '--with-gtk3'
 #
-have_gtk=no
-AC_ARG_WITH([gtk3],
-   [AS_HELP_STRING([--with-gtk3],
-   [enable support for gtk3])],
-   [],
-   [with_gtk3=no])
-   
-AS_IF([test "x$with_gtk3" != "xno"],[
-  PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
+AS_IF([test "x$gui" = "xgtk3"],[
+  PKG_CHECK_MODULES(GTK,gtk+-3.0)
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
   gtk_version="`pkg-config --modversion gtk+-3.0`"
 ])
 
-AS_IF([test "x$have_gtk3" != "xyes"],[
-  PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
+AS_IF([test "x$gui" != "xnone" -a "x$gui" != "xgtk3"],[
+  PKG_CHECK_MODULES(GTK,gtk+-2.0x,[have_gtk2=yes],[have_gtk2=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
   gtk_version="`pkg-config --modversion gtk+-2.0`"	
 ])
-AM_CONDITIONAL(HAVE_GTK, [test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"])
+AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "auto"],
+   AC_MSG_ERROR([GTK+ 2.x not found]))
 
-if test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"; then
-   have_gtk="yes"
-else
-   have_gtk="no"
-fi
+AM_CONDITIONAL(HAVE_GTK,[test "x$gui" != "xnone"])
+AS_IF([test "x$gui" != "xnone"],[have_gtk=yes],[have_gtk=no])
 
 # check for xdg-open
 AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
