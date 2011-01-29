@@ -164,6 +164,27 @@ mu_str_summarize (const char* str, size_t max_lines)
 	return summary;
 }
 
+
+static void
+cleanup_contact (char *contact)
+{
+	char *c, *c2;
+	
+	/* replace "'<> with space */
+	for (c2 = contact; *c2; ++c2)
+		if (*c2 == '"' || *c2 == '\'' || *c2 == '<' || *c2 == '>')
+			*c2 = ' ';
+
+	/* remove everything between '()' if it's after the 5th pos;
+	 * good to cleanup corporate contact address spam... */
+	c = g_strstr_len (contact, -1, "(");
+	if (c && c - contact > 5)
+	*c = '\0';
+			
+	g_strstrip (contact);
+}
+
+
 /* this is still somewhat simplistic... */
 const char*
 mu_str_display_contact_s (const char *str)
@@ -185,22 +206,9 @@ mu_str_display_contact_s (const char *str)
 			      * so we can remove the <... part*/
 			*c = '\0';
 	}
-	
-	/* replace "'<> with space */
-	for (c2 = contact; *c2; ++c2)
-		if (*c2 == '"' || *c2 == '\'' || *c2 == '<' || *c2 == '>')
-			*c2 = ' ';
-	
-	/* FIXME: this breaks cc10 */
-	
-	/* remove everything between '()' if it's after the 5th pos;
-	 * good to cleanup corporate contact address spam... */
-	c = g_strstr_len (contact, -1, "(");
-	if (c && c - contact > 5)
-	*c = '\0';
-			
-	g_strstrip (contact);
 
+	cleanup_contact (contact);
+	
 	return contact;
 }
 
