@@ -10,10 +10,11 @@
    - search output can include the message size using the 'z' shortcut
    - match message size ranges (i.e.. size:500k..2M)
    - fix: honor the --overwrite (or lack thereof) parameter
-   - support folder names with special characters
+   - support folder names with special characters (@, ' ', '.' and so on)
    - better check for already-running mu index
    - when --maildir= is not provided for mu index, default to the last one
    - add --max-msg-size, to specify a new maximum message size
+   - move the 'mug' UI to toys/mug; no longer installable
 
 ** Release 0.9.1 <2010-12-05 Sun>
    

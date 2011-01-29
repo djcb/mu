@@ -12,14 +12,16 @@
    - [ ] follow symlinks when indexing
    - [ ] completion for zsh
    - [ ] see whether the other (slower, more complete) str_normalize is worth it
+   - [ ] follow symlinks when indexing
+   - [ ] better 'usage' info
 
-** release 0.9.2 [71%]
+** release 0.9.2 [100%]
 
    - [X] size range searches
    - [X] xml,json,sexp output (experimental)
    - [X] check all strings are really UTF8
-   - [ ] add drag & drop support for attachments
-   - [ ] add drop & drop support for body images
+   - [X] add drag & drop support for attachments
+   - [X] add drop & drop support for body images
    - [X] fix size value
    - [X] fix matching strange folder names
    - [X] separate exit code for 'not found' vs other errors
@@ -27,8 +29,6 @@
    - [X] clearer errors when /home/user does not exist
    - [X] fix -pedantic build (somewhat)
    - [X] make commit batch size configurable param
-   - [ ] better 'usage' info
-   - [ ] follow symlinks when indexing
 	 
 * Releases already done
 
