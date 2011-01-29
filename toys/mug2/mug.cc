@@ -379,11 +379,13 @@ mug_shell (MugData * mugdata)
 	gtk_window_set_default_size (GTK_WINDOW (mugdata->win), 700, 500);
 	gtk_window_set_resizable (GTK_WINDOW (mugdata->win), TRUE);
 
-	// {
-	// 	gchar *icon;
-	// 	icon = g_strdup_printf ("%s%cmug.svg", ICONDIR, G_DIR_SEPARATOR);
-	// 	gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
-	// 	g_free (icon);
+	{
+		gchar *icon;
+		icon = g_strdup_printf ("%s%cmug.svg",
+					MUG2DIR, G_DIR_SEPARATOR);
+		gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
+		g_free (icon);
+	}
 	
 	return mugdata->win;
 }

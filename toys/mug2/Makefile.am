@@ -20,7 +20,7 @@ include $(top_srcdir)/gtest.mk
 SUBDIRS= .
 
 INCLUDES=-I${top_srcdir} -I${top_srcdir}/src $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"' \
-         -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
+	 -DMUG2DIR='"$(abs_srcdir)"' -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -49,5 +49,6 @@ mug2_LDADD=					\
 	${top_builddir}/widgets/libmuwidgets.la	\
 	${GTK_LIBS}
 
-
+EXTRA_DIST=					\
+	mug.svg
 
