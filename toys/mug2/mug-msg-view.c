@@ -20,6 +20,7 @@
 #include "config.h"
 #endif /*HAVE_CONFIG*/
 
+#include <unistd.h>
 #include <widgets/mu-msg-view.h>
 
 #include "mug-msg-view.h"
