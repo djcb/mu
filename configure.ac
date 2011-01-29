@@ -116,25 +116,6 @@ AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
  
 
-# webkit? needed for the fancy web widget
-PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
-AS_IF([test "x$have_webkit" = "xyes"],[
-	    webkit_version="`pkg-config --modversion webkit-1.0`"])
-AC_SUBST(WEBKIT_CFLAGS)
-AC_SUBST(WEBKIT_LIBS)
-AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
-
-# gio is needed for some widget/ things
-PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
-AS_IF([test "x$have_gio" = "xyes"],[
-	    gio_version="`pkg-config --modversion gio-2.0`"])
-AC_SUBST(GIO_CFLAGS)
-AC_SUBST(GIO_LIBS)
-AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
-
-# should we build the widgets/ dir?
-AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
-
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
 AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
@@ -170,35 +151,61 @@ AC_ARG_WITH([gui],
 AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" -a "x$gui" != "xauto"],
       AC_MSG_ERROR([the argument for --with-gui= must be either gtk2|gtk3|auto|none ($gui)]))
       
-# we test for gtk, which we need if we want to build 'mug'; for
-# experiments it can try to build with gtk3, but since that is still
-# under development, you need to explicitly enable this with '--with-gtk3'
-#
+# check for gtk3
 AS_IF([test "x$gui" = "xgtk3"],[
-  PKG_CHECK_MODULES(GTK,gtk+-3.0)
+  PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
   gtk_version="`pkg-config --modversion gtk+-3.0`"
 ])
+AS_IF([test "x$gui"="gtk3" -a "x$have_gtk3" = "xno"],
+   AC_MSG_ERROR([GTK+ 3.x not found]))
 
-AS_IF([test "x$gui" != "xnone" -a "x$gui" != "xgtk3"],[
-  PKG_CHECK_MODULES(GTK,gtk+-2.0x,[have_gtk2=yes],[have_gtk2=no])
+# check for gtk2 if we did not find gtk3 already
+# (gtk3 is only sought if asked for it explicitly)
+AS_IF([test "x$gui" != "xnone" -a "x$have_gtk3" != "xyes"],[
+  PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
   gtk_version="`pkg-config --modversion gtk+-2.0`"	
 ])
+# only an error if we explicitly asked for it
 AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "auto"],
    AC_MSG_ERROR([GTK+ 2.x not found]))
 
-AM_CONDITIONAL(HAVE_GTK,[test "x$gui" != "xnone"])
-AS_IF([test "x$gui" != "xnone"],[have_gtk=yes],[have_gtk=no])
+AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ])
+AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[gui=yes],[gui=no])
+
+# webkit? needed for the fancy web widget
+AS_IF([test "x$gui" = "xyes"],[
+  PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
+  AS_IF([test "x$have_webkit" = "xyes"],[
+	    webkit_version="`pkg-config --modversion webkit-1.0`"])
+  AC_SUBST(WEBKIT_CFLAGS)
+  AC_SUBST(WEBKIT_LIBS)
+])
+AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
+
+# gio is needed for some widget/ things
+AS_IF([test "x$gui"="xyes"],[
+PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
+AS_IF([test "x$have_gio" = "xyes"],[
+	    gio_version="`pkg-config --modversion gio-2.0`"])
+AC_SUBST(GIO_CFLAGS)
+AC_SUBST(GIO_LIBS)
+])
+AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
+
+# should we build the widgets/ dir?
+AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 # check for xdg-open
-AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
-AS_IF([test "x$XDGOPEN" != "x"],[
-   AC_DEFINE_UNQUOTED([XDGOPEN], ["$XDGOPEN"],[Path to xdg-open])],[
-   AC_MSG_WARN([xdg-open not found, mu cannot open attachments])])
-
+AS_IF([test "x$gui"="xyes"],[
+  AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
+  AS_IF([test "x$XDGOPEN" != "x"],[
+    AC_DEFINE_UNQUOTED([XDGOPEN], ["$XDGOPEN"],[Path to xdg-open])],[
+    AC_MSG_WARN([xdg-open not found, mu cannot open attachments])])
+])
    
 # check for pmccabe
 AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
@@ -240,7 +247,7 @@ echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version" 
 echo "GMime version                        : $gmime_version"
 
-if test "x$have_gtk" != "xno"; then
+if test "x$gui" = "xyes"; then
 echo "GTK+ version                         : $gtk_version"
 fi
 
