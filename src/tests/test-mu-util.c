@@ -64,24 +64,6 @@ test_mu_util_dir_expand_01 (void)
 
 
 static void
-test_mu_util_dir_expand_02 (void)
-{
-		gchar *got, *expected, *tmp;
-	
-		tmp = g_strdup_printf ("~%s/Desktop", getenv("LOGNAME"));
-		got = mu_util_dir_expand (tmp);
-		expected = g_strdup_printf ("%s%cDesktop",
-									getenv("HOME"), G_DIR_SEPARATOR);
-	
-		g_assert_cmpstr (got,==,expected);
-
-		g_free (tmp);
-		g_free (got);
-		g_free (expected);
-}
-
-
-static void
 test_mu_util_dir_expand_03 (void)
 {
 		gchar *got;
@@ -235,7 +217,6 @@ main (int argc, char *argv[])
 		/* mu_util_dir_expand */
 		g_test_add_func ("/mu-util/mu-util-dir-expand-00", test_mu_util_dir_expand_00);
 		g_test_add_func ("/mu-util/mu-util-dir-expand-01", test_mu_util_dir_expand_01);
-		g_test_add_func ("/mu-util/mu-util-dir-expand-02", test_mu_util_dir_expand_02);
 		g_test_add_func ("/mu-util/mu-util-dir-expand-03", test_mu_util_dir_expand_03);
 	
 		/* mu_util_guess_maildir */
