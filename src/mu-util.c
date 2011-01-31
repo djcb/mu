@@ -219,9 +219,9 @@ mu_util_guess_mu_homedir (void)
 {
 	const char* home;
 
-	home = g_getenv ("HOME");
-	if (!home)
-		home = g_get_home_dir ();
+	/* g_get_home_dir use /etc/passwd, not $HOME; this is better,
+	 * as HOME may be wrong when using 'sudo' etc.*/
+	home = g_get_home_dir ();
 
 	if (!home)
 		MU_WRITE_LOG ("failed to determine homedir");
