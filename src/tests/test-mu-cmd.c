@@ -363,6 +363,7 @@ static void
 test_mu_view_01 (void)
 {
         gchar *cmdline, *output, *tmpdir;
+		int len;
 		
 		tmpdir = test_mu_common_get_random_tmpdir();
 		g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
@@ -378,9 +379,19 @@ test_mu_view_01 (void)
 		g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
 		g_assert_cmpstr  (output, !=, NULL);
 
-		/* not, this will break if/when decoding is fixed */
-		g_assert_cmpuint (strlen(output), ==, 370);
-		
+		/*
+		 * note: there are two possibilities here; older versions of GMime will produce:
+		 *    From: "=?iso-8859-1?Q? =F6tzi ?=" <oetzi@web.de>
+		 * while newer ones return something like:
+		 *    From:  ?tzi  <oetzi@web.de>
+		 *
+		 * both are 'okay' from mu's perspective; it'd be even better
+		 * to have some #ifdefs for the GMime versions, but this
+		 * should work for now
+		 */
+		len = strlen(output);
+		g_assert (len == 370 || len == 358);
+				
 		g_free (output);
 		g_free (cmdline);
 		g_free (tmpdir);
