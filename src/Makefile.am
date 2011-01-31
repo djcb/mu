@@ -19,7 +19,7 @@ include $(top_srcdir)/gtest.mk
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
 
-if HAVE_GTEST
+if BUILD_TESTS
 SUBDIRS += tests
 endif
 
