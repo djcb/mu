@@ -188,7 +188,7 @@ save_parts (const char *path, MuConfig *opts)
 	MuMsg* msg;
 	gboolean rv;
 	GError *err;
-
+	
 	err = NULL;
 	msg = mu_msg_new (path, NULL, &err);
 	if (!msg) {
@@ -261,12 +261,6 @@ check_params (MuConfig *opts)
 		g_warning ("usage: mu extract [options] <file>");
 		return FALSE;
 	}
-
-	if (!mu_util_check_dir(opts->targetdir, FALSE, TRUE)) {
-		g_warning ("target '%s' is not a writable directory",
-			   opts->targetdir);
-		return FALSE;
-	}
 	
 	if (opts->save_attachments && opts->save_all) {
 		g_warning ("only one of --save-attachments and"
@@ -299,8 +293,14 @@ mu_cmd_extract (MuConfig *opts)
 	    !opts->save_attachments &&
 	    !opts->save_all)  /* show, don't save */
 		rv = show_parts (opts->params[1], opts);
-	else
-		rv = save_parts (opts->params[1], opts); /* save */
-	
+	else {
+		rv = mu_util_check_dir(opts->targetdir, FALSE, TRUE);
+		if (!rv)
+			g_warning ("target '%s' is not a writable directory",
+				   opts->targetdir);
+		else
+			rv = save_parts (opts->params[1], opts); /* save */
+	}
+		
 	return rv ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
 }
