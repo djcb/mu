@@ -75,10 +75,11 @@ up-to-date. Or you could trigger it when new mails have arrived.
 <p>After building the database, it's easy to search for messages. For example:
 <ul>
   <li>
-    <i>get all mails about birds <b>and</b> bees</i> (and similar words)<pre>
-    $ mu find bird bee</pre>
+    <i>get all mails about birds <b>and</b> bees</i> somewhere in the message
+    or headers: <pre>
+    $ mu find birds bees</pre>
   if you want to find message with either one of those, you can do:<pre>
-    $ mu find 'bird OR bee'</pre>
+    $ mu find 'birds OR bees'</pre>
   </li>
   <li>
     <i>get all Smith's mails with 'capybara' in the subject line</i><pre>
@@ -124,19 +125,24 @@ your mails must be stored in a set of <a
 href="http://www.qmail.org/qmail-manual-html/man5/maildir.html" >maildirs</a>
 
 <h2><a name="mug" >mug</a><a href="mug-full.png"><img src="mug-thumb.png"
-align="right" border="0"></a></h2>
-Starting with version 0.9, there is now a
-simple UI called <tt>mug</tt>. It started as a little experiment, but it seems
-to be useful enough to include. Usage should be straigthforward.
-
-<p>The longer-term goal is to have a bit more complete graphical
-user-interface; for the time being, <tt>mug</tt> seems to work fine.
-
-<p>If you have defined bookmarks, mug will show them in the toolbar on the left
-side of the <tt>mug</tt>-window, as can be seen in the screenshot.
+align="right" border="0"></a></h2> Starting with version 0.9.2, there is
+now <b>two</b> toy UIs for <tt>mu</tt>, called <tt>mug</tt>
+and <tt>mug2</tt>. The latter has more features, but also adds some
+dependencies if you want it - both <tt>mug</tt>/<tt>mug2</tt> are
+optional. The longer-term goal is to have a bit more complete graphical
+user-interface. Currently, the UIs are not installed, you need to run them
+from their build directory. If you have defined bookmarks, the are shown in
+the toolbar on the left side of the window, as can be seen in the screenshot.
 
 <h2><a name="news" >news</a></h2>
 <ul>
+  <li>[2011-02-02] <strong>mu version 0.9.2</strong> released, with a few new
+  features, such as size-based matching (e.g,. <tt>size:2k..2m</tt> to match
+  message between 2kB and 2MB), (experimental) output in XML/JSON/s-expression
+  format, updated toy-UI ('mug' and 'mug2'), support for Solaris and
+  Gentoo. For a complete list of the user-visible changes and some of the
+  changes in command-line parameters, see
+  <a href="http://gitorious.org/mu/mu-ng/blobs/master/NEWS">NEWS</a>.
   <li>[2010-12-05] <strong>mu version 0.9.1</strong> released; fixes a couple
   of issues users found with a missing icon, the unit-tests.
   <li>[2010-12-04] <strong>mu version 0.9</strong> released. Compared to the

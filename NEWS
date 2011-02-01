@@ -2,11 +2,13 @@
 
 ** Release 0.9.2 (not yet released)
 
-   - better support for Solaris builds
-   - output searches as plain text, XML, JSON or s-expressions using 
-     --format=plain|xml|json|sexp
+   - stricter checking of options; and options must now *follow* the sub-command
+     (if any); so, something like: 'mu index --maildir=/foo/bar'
+   - output searches as plain text (default), XML, JSON or s-expressions using 
+     --format=plain|xml|json|sexp. For example: 'mu find foobar
+     --output=json'. These format options  are experimental (except for 'plain')
    - the --xquery option should now be used as --format=xquery, for output
-     symlinks, use --format=links
+     symlinks, use --format=links. This is a change in the options.
    - search output can include the message size using the 'z' shortcut
    - match message size ranges (i.e.. size:500k..2M)
    - fix: honor the --overwrite (or lack thereof) parameter
@@ -15,6 +17,7 @@
    - when --maildir= is not provided for mu index, default to the last one
    - add --max-msg-size, to specify a new maximum message size
    - move the 'mug' UI to toys/mug; no longer installable
+   - better support for Solaris builds, Gentoo.
 
 ** Release 0.9.1 <2010-12-05 Sun>
    
