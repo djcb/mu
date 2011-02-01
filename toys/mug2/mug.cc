@@ -301,9 +301,7 @@ mug_querybar (void)
 static GtkWidget *
 mug_query_area (MugData * mugdata)
 {
-	GtkWidget *queryarea;
-	GtkWidget *paned;
-	GtkWidget *scrolled;
+	GtkWidget *queryarea, *paned, *scrolled;
 
 	queryarea = gtk_vbox_new (FALSE, 2);
 	paned = gtk_vpaned_new ();
