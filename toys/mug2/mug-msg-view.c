@@ -140,3 +140,15 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 
 	return TRUE;
 }
+
+
+void
+mug_msg_view_set_note (MugMsgView * self, const char* html)
+{
+	MugMsgViewPrivate *priv;
+	g_return_if_fail (MUG_IS_MSG_VIEW (self));
+	
+	priv = MUG_MSG_VIEW_GET_PRIVATE (self);
+
+	mu_msg_view_set_note (MU_MSG_VIEW (priv->_view), html);
+}

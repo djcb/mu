@@ -318,8 +318,10 @@ mug_query_area (MugData * mugdata)
 	gtk_paned_add1 (GTK_PANED (paned), scrolled);
 
 	mugdata->msgview = mug_msg_view_new ();
-
-	mug_msg_view_set_msg (MUG_MSG_VIEW (mugdata->msgview), NULL);
+	mug_msg_view_set_note (MUG_MSG_VIEW(mugdata->msgview),
+			       "<h1>Welcome to <i>mug</i>!</h1><hr>"
+			       "<tt>mug</tt> is an experimental UI for <tt>mu</tt>, which will "
+			       "slowly evolve into something useful.<br><br>Enjoy the ride.");
 	g_signal_connect (G_OBJECT (mugdata->mlist), "msg-selected",
 			  G_CALLBACK (on_msg_selected), mugdata);
 	g_signal_connect (G_OBJECT (mugdata->mlist), "error-occured",
