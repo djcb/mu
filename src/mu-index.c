@@ -424,7 +424,7 @@ foreach_doc_cb (const char* path, CleanupData *cudata)
 {
 	if (access (path, R_OK) != 0) {
 		if (errno != EACCES)
-			g_warning ("cannot access %s: %s", path, strerror(errno));
+			g_debug ("cannot access %s: %s", path, strerror(errno));
 		if (!mu_store_remove (cudata->_store, path))
 			return MU_ERROR; /* something went wrong... bail out */
 		if (cudata->_stats)
