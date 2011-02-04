@@ -575,6 +575,7 @@ time_t
 mu_store_get_timestamp (MuStore *store, const char* msgpath)
 {
 	char *stampstr;
+	time_t rv;
 	
 	g_return_val_if_fail (store, 0);
 	g_return_val_if_fail (msgpath, 0);
@@ -582,10 +583,11 @@ mu_store_get_timestamp (MuStore *store, const char* msgpath)
 	stampstr = mu_store_get_metadata (store, msgpath);
 	if (!stampstr)
 		return (time_t)0;
-	else 	
-		return (time_t) g_ascii_strtoull (stampstr, NULL, 10);
-}
 
+	rv = (time_t) g_ascii_strtoull (stampstr, NULL, 10);
+	g_free (stampstr);
+	return rv;
+}
 
 gboolean
 mu_store_set_timestamp (MuStore *store, const char* msgpath, 
