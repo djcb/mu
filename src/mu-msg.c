@@ -664,7 +664,7 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 
 
 static gchar*
-stream_to_string (GMimeStream *stream, size_t buflen, gboolean convert_utf8)
+stream_to_string (GMimeStream *stream, size_t buflen)
 {
 	char *buffer;
 	ssize_t bytes;
@@ -687,7 +687,7 @@ stream_to_string (GMimeStream *stream, size_t buflen, gboolean convert_utf8)
 
 
 static gchar*
-part_to_string (GMimePart *part, gboolean convert_utf8, gboolean *err)
+part_to_string (GMimePart *part, gboolean *err)
 {
 	GMimeDataWrapper *wrapper;
 	GMimeStream *stream = NULL;
@@ -716,12 +716,11 @@ part_to_string (GMimePart *part, gboolean convert_utf8, gboolean *err)
 		goto cleanup;
 	}
 	
-	buffer = stream_to_string (stream, (size_t)buflen, convert_utf8);
+	buffer = stream_to_string (stream, (size_t)buflen);
 	
 	/* convert_to_utf8 will free the old 'buffer' if needed */
-	if (convert_utf8) 
-		buffer = convert_to_utf8 (part, buffer);
-
+	buffer = convert_to_utf8 (part, buffer);
+	
 	*err = FALSE;
 	
 cleanup:				
@@ -751,13 +750,11 @@ get_body (MuMsg *msg, gboolean want_html)
 				&data);
 	if (want_html)
 		str = data._html_part ?
-			part_to_string (GMIME_PART(data._html_part),
-					FALSE, &err) :
+			part_to_string (GMIME_PART(data._html_part), &err) :
 			NULL; 
 	else
 		str = data._txt_part ?
-			part_to_string (GMIME_PART(data._txt_part),
-					TRUE, &err) :
+			part_to_string (GMIME_PART(data._txt_part), &err) :
 			NULL;
 
 	/* note, str may be NULL (no body), but that's not necessarily
