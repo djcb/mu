@@ -76,8 +76,6 @@ mu_msg_body_view_class_init (MuMsgBodyViewClass *klass)
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
 }
 
-
-
 static char*
 save_file_for_cid (MuMsg *msg, const char* cid)
 {
