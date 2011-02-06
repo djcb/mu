@@ -409,10 +409,12 @@ main (int argc, char *argv[])
 
 	memset (&mugdata, 0, sizeof (MugData));
 	if (!g_option_context_parse (octx, &argc, &argv, NULL)) {
+		g_option_context_free (octx);
 		g_printerr ("mug: error in options\n");
 		return 1;
 	}
 
+	g_option_context_free (octx);
 	mu_runtime_init (mugdata.muhome);
 
 	mugshell = mug_shell (&mugdata);
