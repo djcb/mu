@@ -144,7 +144,8 @@ runtime_free (void)
 {
 	g_free (_data->_xapian_dir);
 	g_free (_data->_muhome);
-
+	g_free (_data->_bookmarks_file);
+	
 	mu_config_destroy (_data->_config);
 
 	mu_log_uninit();
