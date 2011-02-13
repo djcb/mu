@@ -1,5 +1,9 @@
 * NEWS (user visible changes)
 
+** Release 0.9.3 <2011-02-13 Sun>
+   
+   - don't warn about missing files with --quiet
+   
 ** Release 0.9.2 <2011-02-02 Wed>
 
    - stricter checking of options; and options must now *follow* the sub-command
