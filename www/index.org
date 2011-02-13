@@ -19,8 +19,8 @@
   
 ** News
 
-   - 2011-02-13: Updated the web page with pages for [[file:mug.org][mug]] (the experimental UI)
-     and the [[file:cheatsheet.org][mu cheatsheet]].
+   - 2011-02-13: *mu 0.9.3*; fixes a bunch of minor issues in 0.9.2; updated the
+     web page with pages for [[file:mug.org][mug]] (the experimental UI) and the [[file:cheatsheet.org][mu cheatsheet]].
      
    - 2011-02-02: *mu 0.9.2* released, which adds support for matching on message
      size, and various new output format. See [[http://gitorious.org/mu/mu-ng/blobs/master/NEWS][NEWS]] for all the user-visible
