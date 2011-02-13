@@ -1,0 +1,39 @@
+#+title: Mug
+#+html:<a href="index.html"><img src="mu-small.png" border="0" align="right"/></a>
+#+style: <link rel="stylesheet" type="text/css" href="mu.css">
+
+
+* Mug
+/Mug/ is a toy/demo user-interface for =mu=. It is not installable, you'll need
+to run it from its source directory.
+
+Mug comes in two flavors:
+	- =mug= (in toys/mug), old simple UI, only adding dependency to GTK+
+	- =mug2= (in toys/mug2), the new UI, which requires GTK+, Webkit and a
+          recent GLib.
+
+The plan for =mug= is to be a testing ground for the widget-code which will
+slowly evolve into a full-featured UI.
+
+#+html:<a href="mug-full.png"><img src="mug-thumb.png" border="0" align="center"/></a>
+
+=mug2= supports:
+  - HTML email
+  - attachments (including in-place opening, drag & drop to desktop)
+  - bookmarks (see the =mu-bookmarks= man page, the UI will load these in the
+    left pane)
+  - view source
+ 
+#+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
+#+begin_html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-578531-1");
+pageTracker._trackPageview();
+</script>
+#+end_html
+
+

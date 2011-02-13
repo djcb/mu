@@ -1,0 +1,76 @@
+#+title: Mu
+#+style: <link rel="stylesheet" type="text/css" href="mu.css">
+#+html:<img src="mu.jpg" align="right" margin="10px"/>
+
+* Welcome to mu!
+
+  Given the /enormous/ amounts of e-mail many people gather, and the importance
+  of e-mail message in our work-flows, it's essential to quickly deal with all
+  that mail - in particular, to instantly find that one important e-mail you
+  need right now.
+  
+  *mu* is a tool for dealing with e-mail messages stored in the
+  [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format. *mu* main purpose is to help you to quickly find the messages
+  you need; in addition, it allows you to quickly to view messages, extract
+  attachments, create new maildirs, ... See the [[file:cheatsheet.org][mu cheatsheet]] for some examples.
+  
+  Searching works by first indexing your messages into a [[http://xapian.org/][Xapian]]-database. After
+  that, you can quickly find message using a powerful query language.
+  
+** News
+
+   - 2011-02-13: Updated the web page with pages for [[file:mug.org][mug]] (the experimental UI)
+     and the [[file:cheatsheet.org][mu cheatsheet]].
+     
+   - 2011-02-02: *mu 0.9.2* released, which adds support for matching on message
+     size, and various new output format. See [[http://gitorious.org/mu/mu-ng/blobs/master/NEWS][NEWS]] for all the user-visible
+     changes, also from older releases.
+
+   - [[file:old-news.org][Old news]]
+     
+** Features
+
+   - fast indexing for Maildir, Maildir+ and Maildir-on-VFAT
+   - search for messages based on the sender, receiver, size, priority, words in
+     the message body, attachments, date range, certain flags (signed,
+     encrypted, new, replied, ...)
+   - known to work on Linux (Ubuntu/Fedora/Debian/GenToo), FreeBSD, MacOS,
+     Solaris, ...
+   - fully documented (man pages)
+   - can be integrated with e-mail clients; documentation has examples for [[http://www.mutt.org/][mutt]]
+     and [[http://www.emacswiki.org/emacs/WanderLust][Wanderlust]].
+   - output in plain text, xml, json, s-expressions (experimental)
+   - extract message parts, attachments, open them using their default
+     application
+     
+   In addition, there is a toy UI for *mu* called [[file:mug.org][mug]]; the plan is to slowly
+   evolve this into a full-featured UI.
+   
+** Development & download 
+
+   Some Linux-distributions already provide pre-built mu packages; if not, or if
+   you want the latest release, you can [[http://code.google.com/p/mu0/downloads/list][download mu source packages]] from Google
+   Code. In case you find a bug, or have a feature requests, please use the
+   [[http://code.google.com/p/mu0/issues/list][issue tracker]].
+  
+   If you'd like to work with the mu source code, you can find it [[http://gitorious.org/mu/mu-ng][in Gitorious]],
+   and see the notes on [[http://gitorious.org/mu/mu-ng/blobs/master/HACKING][HACKING]] the mu source code.
+ 
+   There's also a [[http://groups.google.com/group/mu-discuss][mailing list]].
+   
+** License & Copyright
+
+   *mu* was designed and implemented by Dirk-Jan C. Binnema, and is Free
+   Software, licensed under the GNU GPLv3
+   
+#+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
+#+begin_html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-578531-1");
+pageTracker._trackPageview();
+</script>
+#+end_html

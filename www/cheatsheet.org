@@ -1,0 +1,81 @@
+#+style: <link rel="stylesheet" type="text/css" href="mu.css"/>
+#+html:<a href="index.html"><img src="mu.png" border="0" align="right"/></a>
+#+title: Mu Cheatsheet
+
+* Mu Cheatsheet
+
+Here are some tips for using =mu=. If you want to know more, please refer to the
+=mu= man pages. For a quick warm-up, there's the =mu-easy= man-page.
+
+** Indexing your mail
+
+  You can index your mail with:
+#+begin_src sh
+   $ mu index
+#+end_src
+
+  If =mu= did not guess the right Maildir, you can set it explicitly:
+#+begin_src sh
+   $ mu index --maildir=~/MyMaildir
+#+end_src
+  
+  If you want to exclude certain directories from being indexed (for example,
+  directories with spam-messages), put a file called =.noindex= in the directory
+  to exlude, and it will be ignored when indexing (including its children)
+
+** Finding messages
+
+   After you have indexed your messages, you can search them. Here are some
+   examples.
+
+*** messages about Helsinki
+
+#+begin_src sh
+   $ mu find Helsinki
+#+end_src
+
+*** messages to Jack with subject jellyfish containing the word tumbleweed
+
+#+begin_src sh
+   $ mu find to:Jack subject:jellyfish tumbleweed
+#+end_src
+
+*** messages between 2 kilobytes and a 2Mb, written in December 2009 with an attachment from Bill
+
+#+begin_src sh
+   $ mu find size:2k..2m date:20091201..20093112 flag:attach from:bill
+#+end_src
+ 
+** Further processing of matched messages
+
+  If you need to process the results of your queries with some other program,
+  you can return the results as a list of absolute paths to the messages found:
+
+  For example, to get the number of lines in all your messages mentioning
+  /banana/, you could use something like:
+
+#+begin_src sh
+   $ mu find --fields="'l'" banana | xargs wc -l
+#+end_src
+
+  Note that we use ='l'=, so the returned message paths will be quoted. This is
+  useful if you have maildirs with spaces in their names.
+    
+  For further processing, also the ~--format=(xml|json|sexp)~ may be
+  interesting.
+   
+** Integration with mail clients
+
+  See the example in the =mu-find= man page.
+
+#+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
+#+begin_html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-578531-1");
+pageTracker._trackPageview();
+</script>
+#+end_html

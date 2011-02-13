@@ -1,0 +1,24 @@
+/* stylesheet for mu website */
+
+body {
+        background:#ffffff;
+        margin: 50px;
+        padding: 10px;
+	font-family: arial, Helvetica, 'Bitstream Vera Sans', 'Luxi Sans', Verdana,
+                     Sans-Serif;
+	font-size: 12px;
+}
+
+.content {
+   margin:30px;
+   background: #5fb6de;
+}
+
+
+a.menu         {font-weight: bold}
+a.menu:link    {color: #ffffff; text-decoration: none;  }
+a.menu:active  {color: #ff0000; text-decoration: none; }
+a.menu:visited {color: #ffffff; text-decoration: none; }
+a.menu:hover   {color: #ff0000; text-decoration: underline; }
+
+.mine          {color: #ffffff; font-weight: bold}
