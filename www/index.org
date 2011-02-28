@@ -10,12 +10,12 @@
   need right now.
   
   *mu* is a tool for dealing with e-mail messages stored in the
-  [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format. *mu* main purpose is to help you to quickly find the messages
-  you need; in addition, it allows you to quickly to view messages, extract
+  [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format. *mu*'s main purpose is to help you to quickly find the
+  messages you need; in addition, it allows you to view messages, extract
   attachments, create new maildirs, ... See the [[file:cheatsheet.org][mu cheatsheet]] for some examples.
   
-  Searching works by first indexing your messages into a [[http://xapian.org/][Xapian]]-database. After
-  that, you can quickly find message using a powerful query language.
+  Searching works by first indexing your messages into a [[http://xapian.org/][Xapian]]-database, which
+  can then be queried using a custom query language.
   
 ** News
 
@@ -31,9 +31,9 @@
 ** Features
 
    - fast indexing for Maildir, Maildir+ and Maildir-on-VFAT
-   - search for messages based on the sender, receiver, size, priority, words in
-     the message body, attachments, date range, certain flags (signed,
-     encrypted, new, replied, ...)
+   - search for messages based on the sender, receiver, message subject, size,
+     priority, words in the message body, attachments, date range, flags
+     (signed, encrypted, new, replied, ...), message-id, maildir
    - known to work on Linux (Ubuntu/Fedora/Debian/GenToo), FreeBSD, MacOS,
      Solaris, ...
    - fully documented (man pages)
@@ -48,13 +48,13 @@
    
 ** Development & download 
 
-   Some Linux-distributions already provide pre-built mu packages; if not, or if
-   you want the latest release, you can [[http://code.google.com/p/mu0/downloads/list][download mu source packages]] from Google
-   Code. In case you find a bug, or have a feature requests, please use the
-   [[http://code.google.com/p/mu0/issues/list][issue tracker]].
+   Some Linux-distributions already provide pre-built mu packages; if there's no
+   packagage for your distribution, or if you want the latest release, you can
+   [[http://code.google.com/p/mu0/downloads/list][download mu source packages]] from Google Code. In case you find a bug, or have
+   a feature requests, please use the [[http://code.google.com/p/mu0/issues/list][issue tracker]].
   
-   If you'd like to work with the mu source code, you can find it [[http://gitorious.org/mu/mu-ng][in Gitorious]],
-   and see the notes on [[http://gitorious.org/mu/mu-ng/blobs/master/HACKING][HACKING]] the mu source code.
+   If you'd like to work with the mu source code, you can find it [[http://gitorious.org/mu/mu-ng][in Gitorious]];
+   also, see the notes on [[http://gitorious.org/mu/mu-ng/blobs/master/HACKING][HACKING]] the mu source code.
  
    There's also a [[http://groups.google.com/group/mu-discuss][mailing list]].
    
