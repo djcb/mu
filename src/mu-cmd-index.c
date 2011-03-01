@@ -351,7 +351,9 @@ cmd_index_or_cleanup (MuConfig *opts)
 		return MU_EXITCODE_ERROR;		
 	
 	err = NULL;
-	if (!(midx = mu_index_new (mu_runtime_xapian_dir(), &err)))
+	if (!(midx = mu_index_new (mu_runtime_xapian_dir(),
+				   mu_runtime_contacts_cache_file(),
+				   &err)))
 		return handle_index_error_and_free (err);
 	
 	mu_index_set_max_msg_size (midx, opts->max_msg_size); 

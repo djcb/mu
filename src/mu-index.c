@@ -45,7 +45,7 @@ struct _MuIndex {
 };
 
 MuIndex* 
-mu_index_new (const char *xpath, GError **err)
+mu_index_new (const char *xpath, const char* contacts_cache, GError **err)
 {
 	MuIndex *index;
 
@@ -53,7 +53,7 @@ mu_index_new (const char *xpath, GError **err)
 	
 	index = g_new0 (MuIndex, 1);				
 
-	index->_store = mu_store_new (xpath, err);	
+	index->_store = mu_store_new (xpath, contacts_cache, err);	
 	if (!index->_store) {
 		g_warning ("%s: failed to open xapian store (%s)",
 			   __FUNCTION__, xpath); 

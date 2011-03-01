@@ -46,12 +46,14 @@ typedef struct _MuIndexStats MuIndexStats;
  *
  * @param xpath path to the 'homedir'; the xapian directory will be
  * this homedir/xapian
+ * @param contacts_cache file to store the cache of contacts, or NULL
  * @param err to receive error or NULL; there are only errors when this
  * function returns NULL. Possible errors: see mu-error.h
  * 
  * @return a new MuIndex instance, or NULL in case of error
  */
-MuIndex* mu_index_new (const char* muhome, GError **err)
+MuIndex* mu_index_new (const char* muhome, const char* contacts_cache,
+		       GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 

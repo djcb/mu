@@ -31,7 +31,7 @@
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-msg-flags.h"
-
+#include "mu-contacts.h"
 
 /* by default, use transactions of 30000 messages */
 #define MU_STORE_DEFAULT_TRX_SIZE 30000
@@ -42,6 +42,9 @@
 struct _MuStore {
 	Xapian::WritableDatabase *_db;
 
+	/* contacts object to cache all the contact information */
+	MuContacts *_contacts;
+	
 	char *_version;
 	
 	/* transaction handling */
@@ -119,12 +122,12 @@ check_version (MuStore *store)
 }
 
 MuStore*
-mu_store_new  (const char* xpath, GError **err)
+mu_store_new (const char* xpath, const char *contacts_cache,
+	      GError **err)
 {
 	MuStore *store (0);
 	
 	g_return_val_if_fail (xpath, NULL);
-	
 	try {
 		store = g_new0(MuStore,1);
 
@@ -134,6 +137,12 @@ mu_store_new  (const char* xpath, GError **err)
 		if (!check_version (store)) {
 			mu_store_destroy (store);
 			return NULL;
+		}
+
+		if (contacts_cache) {
+			store->_contacts = mu_contacts_new (contacts_cache);
+			if (!store->_contacts) /* don't bail-out for this */
+				g_warning ("failed to init contacts cache");
 		}
 
 		/* keep count of processed docs */
@@ -169,6 +178,8 @@ mu_store_destroy (MuStore *store)
 		MU_WRITE_LOG ("closing xapian database with %d documents",
 			      (int)store->_db->get_doccount());
 
+		mu_contacts_destroy (store->_contacts);
+		
 		g_free (store->_version);
 		delete store->_db;
 		g_free (store);
@@ -403,6 +414,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 struct _MsgDoc {
 	Xapian::Document	*_doc;
 	MuMsg			*_msg;
+	MuStore                 *_store;
 };
 typedef struct _MsgDoc		 MsgDoc;
 
@@ -438,10 +450,9 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 
 
 static void
-each_contact_info (MuMsgContact *contact, MsgDoc *data)
+each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 {
 	const std::string *pfxp;
-
 	static const std::string to_pfx (1,
 		mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO));
 	static const std::string from_pfx (1,
@@ -454,13 +465,12 @@ each_contact_info (MuMsgContact *contact, MsgDoc *data)
 	case MU_MSG_CONTACT_TYPE_TO:   pfxp  = &to_pfx; break;
 	case MU_MSG_CONTACT_TYPE_FROM: pfxp  = &from_pfx; break;
 	case MU_MSG_CONTACT_TYPE_CC:   pfxp  = &cc_pfx; break;
-	default: return;
-		/* other types (like bcc) are ignored */
+	default: return; /* other types (like bcc) are ignored */
 	}
 	
 	if (contact->name && strlen(contact->name) > 0) {
 		Xapian::TermGenerator termgen;
-		termgen.set_document (*data->_doc);
+		termgen.set_document (*msgdoc->_doc);
 		char *norm = mu_str_normalize (contact->name, TRUE);
 		termgen.index_text_without_positions (norm, 1, *pfxp);
 		g_free (norm);
@@ -468,11 +478,16 @@ each_contact_info (MuMsgContact *contact, MsgDoc *data)
 
 	/* don't normalize e-mail address, but do lowercase it */
 	if (contact->address && contact->address[0] != '\0') {
-		char *escaped =
-			mu_str_ascii_xapian_escape (contact->address);
-		data->_doc->add_term
+		char *escaped = mu_str_ascii_xapian_escape (contact->address);
+		msgdoc->_doc->add_term
 			(std::string (*pfxp + escaped, 0, MU_STORE_MAX_TERM_LENGTH));
 		g_free (escaped);
+
+		/* store it also in our contacts cache */
+		if (msgdoc->_store->_contacts)
+			mu_contacts_add (msgdoc->_store->_contacts,
+					 contact->name, contact->address,
+					 mu_msg_get_date(msgdoc->_msg));
 	}
 }
 
@@ -502,9 +517,9 @@ mu_store_store (MuStore *store, MuMsg *msg)
 	try {
 		Xapian::Document newdoc;
 		Xapian::docid id;
-		MsgDoc msgdoc = { &newdoc, msg };
+		MsgDoc msgdoc = { &newdoc, msg, store };
 		const std::string uid(get_message_uid(msg));
-
+		
 		begin_trx_if (store, !store->_in_transaction);
 		/* we must add a unique term, so we can replace
 		 * matching documents */

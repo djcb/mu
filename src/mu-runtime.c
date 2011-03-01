@@ -32,14 +32,23 @@
 #include "mu-log.h"
 #include "mu-util.h"
 
-#define MU_XAPIAN_DIRNAME     "xapian"
-#define MU_BOOKMARKS_FILENAME "bookmarks"
+enum {
+	MU_RUNTIME_STR_MU_HOMEPATH,
+	MU_RUNTIME_STR_XAPIAN_PATH,
+	MU_RUNTIME_STR_BOOKMARKS_PATH,
+	MU_RUNTIME_STR_CACHE_PATH,
+	MU_RUNTIME_STR_CONTACTS_PATH,
+	MU_RUNTIME_STR_NUM
+};
+	
+#define MU_XAPIAN_DIRNAME	"xapian"
+#define MU_BOOKMARKS_FILENAME	"bookmarks"
+#define MU_CACHE_DIRNAME        "cache"
+#define MU_CONTACTS_FILENAME	"contacts"
 
 struct _MuRuntimeData {
-	gchar			*_muhome;
-	gchar			*_xapian_dir;
-	gchar			*_bookmarks_file;
-	MuConfig		*_config;
+	gchar            *_str[MU_RUNTIME_STR_NUM];
+	MuConfig	 *_config;
 };
 typedef struct _MuRuntimeData	 MuRuntimeData;
 
@@ -50,7 +59,7 @@ static MuRuntimeData	*_data	      = NULL;
 static void runtime_free (void);
 
 static gboolean
-mu_dir_is_readable_and_writable (const char* muhome)
+mu_dir_is_readable_and_writable (const char *muhome)
 {
 	if (mu_util_create_dir_maybe (muhome, 0700))
 		return TRUE;
@@ -60,6 +69,39 @@ mu_dir_is_readable_and_writable (const char* muhome)
 	
 	return FALSE;
 }
+
+static gboolean
+init_paths (const char* muhome, MuRuntimeData *data)
+{
+	data->_str [MU_RUNTIME_STR_XAPIAN_PATH] =
+		g_strdup_printf ("%s%c%s", muhome,
+				 G_DIR_SEPARATOR,
+				 MU_XAPIAN_DIRNAME);
+	
+	data->_str [MU_RUNTIME_STR_BOOKMARKS_PATH] =
+		g_strdup_printf ("%s%c%s", muhome,
+				 G_DIR_SEPARATOR,
+				 MU_BOOKMARKS_FILENAME);
+
+	data->_str [MU_RUNTIME_STR_CACHE_PATH] =
+		g_strdup_printf ("%s%c%s", muhome,
+				 G_DIR_SEPARATOR,
+				 MU_CACHE_DIRNAME);
+	
+	if (!mu_util_create_dir_maybe
+	    (_data->_str[MU_RUNTIME_STR_CACHE_PATH], 0700)) {
+		g_warning ("failed to create cache dir");
+		return FALSE;
+	}
+	
+	data->_str [MU_RUNTIME_STR_CONTACTS_PATH] =
+		g_strdup_printf ("%s%c%s",
+				 data->_str[MU_RUNTIME_STR_CACHE_PATH],
+				 G_DIR_SEPARATOR,
+				 MU_CONTACTS_FILENAME);
+	return TRUE;
+}
+
 
 gboolean
 mu_runtime_init (const char* muhome_arg)
@@ -87,8 +129,9 @@ mu_runtime_init (const char* muhome_arg)
 	}
 	
 	_data = g_new0 (MuRuntimeData, 1);
- 	_data->_muhome = muhome;
-
+ 	_data->_str[MU_RUNTIME_STR_MU_HOMEPATH] = muhome;
+	init_paths (muhome, _data);
+	
 	mu_msg_gmime_init ();
 	
 	return _initialized = TRUE;
@@ -131,8 +174,10 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 		return FALSE;
 	}
 	
-	_data->_muhome = g_strdup (_data->_config->muhome);
-
+	_data->_str[MU_RUNTIME_STR_MU_HOMEPATH] =
+		g_strdup (_data->_config->muhome);
+	init_paths (_data->_str[MU_RUNTIME_STR_MU_HOMEPATH], _data);
+	
 	mu_msg_gmime_init ();
 	
 	return _initialized = TRUE;
@@ -142,9 +187,10 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 static void
 runtime_free (void)
 {
-	g_free (_data->_xapian_dir);
-	g_free (_data->_muhome);
-	g_free (_data->_bookmarks_file);
+	int i;
+
+	for (i = 0; i != MU_RUNTIME_STR_NUM; ++i)
+		g_free (_data->_str[i]);
 	
 	mu_config_destroy (_data->_config);
 
@@ -158,8 +204,7 @@ mu_runtime_uninit (void)
 {
 	g_return_if_fail (_initialized);
 
-	mu_msg_gmime_uninit ();
-	
+	mu_msg_gmime_uninit ();	
 	runtime_free ();
 
 	_initialized = FALSE;
@@ -170,43 +215,37 @@ const char*
 mu_runtime_mu_home_dir (void)
 {
 	g_return_val_if_fail (_initialized, NULL);
-  
-	return _data->_muhome;
+	return _data->_str[MU_RUNTIME_STR_MU_HOMEPATH];
 }
+
 
 const char*
 mu_runtime_xapian_dir (void)
 {
 	g_return_val_if_fail (_initialized, NULL);
-
-	if (!_data->_xapian_dir)
-		_data->_xapian_dir = g_strdup_printf ("%s%c%s",
-						      _data->_muhome,
-						      G_DIR_SEPARATOR,
-						      MU_XAPIAN_DIRNAME);
-	return _data->_xapian_dir;
+	return _data->_str[MU_RUNTIME_STR_XAPIAN_PATH];
 }
 
 const char*
 mu_runtime_bookmarks_file  (void)
 {
 	g_return_val_if_fail (_initialized, NULL);
-
-	if (!_data->_bookmarks_file)
-		_data->_bookmarks_file = 
-			g_strdup_printf ("%s%c%s",
-					 _data->_muhome,
-					 G_DIR_SEPARATOR,
-					 MU_BOOKMARKS_FILENAME);
-	
-	return _data->_bookmarks_file;
+	return _data->_str[MU_RUNTIME_STR_BOOKMARKS_PATH];
 }
+
+
+const char*
+mu_runtime_contacts_cache_file  (void)
+{
+	g_return_val_if_fail (_initialized, NULL);
+	return _data->_str[MU_RUNTIME_STR_CONTACTS_PATH];
+}
+
 
 
 MuConfig*
 mu_runtime_config (void)
 {
-	g_return_val_if_fail (_initialized, NULL);
-	
+	g_return_val_if_fail (_initialized, NULL);	
 	return _data->_config;
 }
