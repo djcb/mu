@@ -1,0 +1,242 @@
+/*
+** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**
+** This program is free software; you can redistribute it and/or modify it
+** under the terms of the GNU General Public License as published by the
+** Free Software Foundation; either version 3, or (at your option) any
+** later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software Foundation,
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
+*/
+
+#include <unistd.h>
+#include <errno.h>
+
+#include "mu-contacts.h"
+#include "mu-util.h"
+
+#define MU_CONTACTS_NAME_KEY		"name"
+#define MU_CONTACTS_TIMESTAMP_KEY	"timestamp"
+
+struct _ContactInfo {
+	gchar *_name;
+	time_t _tstamp;
+};
+typedef struct _ContactInfo ContactInfo;
+
+static void contact_info_destroy (ContactInfo *cinfo);
+static ContactInfo *contact_info_new (const char *name, time_t tstamp);
+
+struct _MuContacts {
+        GKeyFile      *_ccache;
+	gchar         *_ccachefile;
+	GHashTable    *_hash;
+	gboolean       _dirty;
+};
+
+
+static gboolean
+unserialize_cache (MuContacts *self)
+{
+	GError *err;
+	gchar **groups;
+	gsize i, len;
+
+	/* if there is no file yet, don't try to open; otherwise return FALSE */
+	if (access(self->_ccachefile, F_OK) != 0) 
+		return errno == ENOENT ? TRUE : FALSE;
+				
+	err = NULL;
+	/* try to unserialize the cache */
+	if (!g_key_file_load_from_file (self->_ccache, self->_ccachefile,
+					G_KEY_FILE_KEEP_COMMENTS, &err)) {
+		/* not necessarily an error, so not bailing out */
+		g_warning ("could not load keyfile %s: %s",
+			   self->_ccachefile, err->message);
+		g_error_free (err);
+		return FALSE;
+	}
+
+	groups = g_key_file_get_groups (self->_ccache, &len);
+	for (i = 0; i  != len; ++i) {
+		ContactInfo *cinfo;
+		cinfo = contact_info_new (
+			g_key_file_get_string (self->_ccache, groups[i],
+					       MU_CONTACTS_NAME_KEY, NULL),
+			g_key_file_get_uint64 (self->_ccache, groups[i],
+					       MU_CONTACTS_TIMESTAMP_KEY, NULL));
+		/* note, we're using the groups[i], so don't free with g_strfreev */
+		g_hash_table_insert (self->_hash, groups[i], cinfo);
+	}
+
+	g_free (groups);
+	return TRUE;
+}
+
+
+MuContacts*
+mu_contacts_new (const gchar *ccachefile)
+{
+	MuContacts *contacts;
+	
+	g_return_val_if_fail (ccachefile, NULL);
+	contacts = g_new0 (MuContacts, 1);
+	
+	contacts->_ccachefile = g_strdup (ccachefile);
+	contacts->_ccache     = g_key_file_new ();
+	if (!contacts->_ccache) {
+		mu_contacts_destroy (contacts);
+		return NULL;
+	}
+	
+	contacts->_hash = g_hash_table_new_full
+		(g_str_hash, g_str_equal,
+		 g_free, (GDestroyNotify)contact_info_destroy);
+
+	unserialize_cache (contacts);
+	MU_WRITE_LOG("unserialized contacts cache %s", ccachefile);
+
+	contacts->_dirty = FALSE;
+	return contacts;
+}
+
+
+gboolean
+mu_contacts_add (MuContacts *self, const char* name, const char *email,
+		 time_t tstamp)
+{
+	ContactInfo *cinfo;
+	
+	g_return_val_if_fail (self, FALSE);
+	g_return_val_if_fail (email, FALSE);
+
+	/* add the info, if either there is no info for this email
+	 * yet, *OR* the new one is more recent and does not have an
+	 * empty name */	
+	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, email);
+	if (!cinfo ||
+	    (cinfo->_tstamp < tstamp && name && name[0] != '\0')) {
+		g_hash_table_insert (self->_hash, g_strdup(email),
+				     contact_info_new (name, tstamp));
+		return self->_dirty = TRUE;
+	}
+	
+	return FALSE;
+}
+
+struct _EachContactData {
+	MuContactsForeachFunc	 _func;
+	gpointer		 _user_data;
+};
+typedef struct _EachContactData	 EachContactData;
+
+static void
+each_contact (const char* email, ContactInfo *ci, EachContactData *ecdata)
+{
+	ecdata->_func (email, ci->_name, ecdata->_user_data);
+}
+
+void
+mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
+		     gpointer user_data)
+{
+	EachContactData ecdata;
+
+	g_return_if_fail (self);
+	g_return_if_fail (func);
+	
+	ecdata._func	  = func;
+	ecdata._user_data = user_data;
+	
+	g_hash_table_foreach (self->_hash, (GHFunc) each_contact, &ecdata);
+}
+	
+
+static void
+each_keyval (const char *email, ContactInfo *cinfo, MuContacts *self)
+{
+	if (cinfo->_name)
+		g_key_file_set_string (self->_ccache, email, "name",
+				       cinfo->_name);
+	
+	g_key_file_set_uint64 (self->_ccache, email, "timestamp",
+			       (guint64)cinfo->_tstamp);
+}
+
+static gboolean
+serialize_cache (MuContacts *self)
+{
+	gchar *data;
+	gsize len;
+	gboolean rv;
+
+	g_hash_table_foreach (self->_hash, (GHFunc) each_keyval, self);
+
+	/* Note: err arg is unused */
+	data = g_key_file_to_data (self->_ccache, &len, NULL);
+	if (len) {
+		GError *err;
+		err = NULL;
+		rv = g_file_set_contents (self->_ccachefile, data, len, &err);
+		if (!rv) {
+			g_warning ("failed to serialize cache to %s: %s",
+				   self->_ccachefile, err->message);
+			g_error_free (err);
+		}
+		g_free (data);
+	}
+
+	return rv;
+}
+
+void
+mu_contacts_destroy (MuContacts *self)
+{
+	if (!self)
+		return;
+	
+	if (self->_ccache && self->_dirty) {
+		serialize_cache (self);
+		g_key_file_free (self->_ccache);
+		MU_WRITE_LOG("serialized contacts cache %s",
+			     self->_ccachefile);
+	}
+
+	g_free (self->_ccachefile);
+	
+	if (self->_hash)
+		g_hash_table_destroy (self->_hash);
+	
+	g_free (self);	
+}
+
+
+static ContactInfo *
+contact_info_new (const char *name, time_t tstamp)
+{
+	ContactInfo *cinfo;
+
+	cinfo	       = g_slice_new (ContactInfo);
+	cinfo->_name   = name ? g_strdup (name) : NULL;
+	cinfo->_tstamp = tstamp;
+
+	return cinfo;
+}
+
+static void
+contact_info_destroy (ContactInfo *cinfo)
+{
+	if (cinfo) {
+		g_free (cinfo->_name);
+		g_slice_free (ContactInfo, cinfo);
+	}			
+}
+	
