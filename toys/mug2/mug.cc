@@ -66,7 +66,9 @@ reindex (MugData *mugdata)
 		return;
 	
 	err = NULL;
-	midx = mu_index_new (mu_runtime_xapian_dir(), &err);
+	midx = mu_index_new (mu_runtime_xapian_dir(),
+			     mu_runtime_contacts_cache_file(),
+			     &err);
 	if (!midx) {
 		if (err && err->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK) {
 			g_warning ("database busy...");
