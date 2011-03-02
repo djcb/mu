@@ -29,7 +29,8 @@
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-maildir.h"
-
+#include "mu-contacts.h"
+#include "mu-runtime.h"
 
 /* we ignore fields for now */
 static gboolean
@@ -128,3 +129,37 @@ mu_cmd_mkdir (MuConfig *opts)
 
 	return MU_EXITCODE_OK;
 }
+
+
+static void
+each_contact (const char *email, const char *name, gpointer data)
+{
+	g_print ("%s %s\n", email, name ? name : "");
+}
+
+MuExitCode
+mu_cmd_cfind (MuConfig *opts)
+{
+	MuContacts *contacts;
+	
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_CFIND,
+			      MU_EXITCODE_ERROR);
+	
+	/* if (!opts->params[1]) { */
+	/* 	g_warning ("usage: mu cfind [ptrn] "); */
+	/* 	return MU_EXITCODE_ERROR; */
+	/* } */
+
+	contacts = mu_contacts_new (mu_runtime_contacts_cache_file());
+	if (!contacts) {
+		g_warning ("could not retrieve contacts");
+		return MU_EXITCODE_ERROR;
+	}
+	
+	mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact, NULL);
+	mu_contacts_destroy (contacts);
+	
+	return MU_OK;
+}
+

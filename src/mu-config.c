@@ -244,7 +244,8 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 				{ "cleanup", MU_CONFIG_CMD_CLEANUP },
 				{ "mkdir",   MU_CONFIG_CMD_MKDIR },
 				{ "view",    MU_CONFIG_CMD_VIEW },
-				{ "extract", MU_CONFIG_CMD_EXTRACT }
+				{ "extract", MU_CONFIG_CMD_EXTRACT },
+				{ "cfind",   MU_CONFIG_CMD_CFIND },
 		};
 		
 		opts->cmd	 = MU_CONFIG_CMD_NONE;
@@ -394,6 +395,7 @@ mu_config_execute (MuConfig *opts)
 		case MU_CONFIG_CMD_INDEX:      return mu_cmd_index (opts);
 		case MU_CONFIG_CMD_MKDIR:      return mu_cmd_mkdir (opts);
 		case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
+		case MU_CONFIG_CMD_CFIND:      return mu_cmd_cfind (opts);
 		case MU_CONFIG_CMD_UNKNOWN:
 				g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
 				show_usage (FALSE);

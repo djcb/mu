@@ -63,7 +63,7 @@ gboolean mu_contacts_add (MuContacts *contacts, const char* name, const char *em
 void mu_contacts_destroy (MuContacts *contacts);
 
 
-typedef void (*MuContactsForeachFunc) (const char *email, const char *mail,
+typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
 				       gpointer user_data);
 
 /** 
