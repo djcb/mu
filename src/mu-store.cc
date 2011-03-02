@@ -449,26 +449,40 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 }
 
 
+static const std::string*
+xapian_pfx (MuMsgContact *contact)
+{
+	static const std::string to_pfx
+		(1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO));
+	static const std::string from_pfx
+		(1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_FROM));
+	static const std::string cc_pfx
+		(1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_CC));
+	
+	/* use ptr to string to prevent copy... */
+	switch (contact->type) {
+	case MU_MSG_CONTACT_TYPE_TO:
+		return &to_pfx; 
+	case MU_MSG_CONTACT_TYPE_FROM:
+		return &from_pfx;
+	case MU_MSG_CONTACT_TYPE_CC:
+		return &cc_pfx;
+	default: /* dont;t support other type (e.g, bcc) */
+		return 0; 
+	}
+}
+
+
+
 static void
 each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 {
-	const std::string *pfxp;
-	static const std::string to_pfx (1,
-		mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO));
-	static const std::string from_pfx (1,
-		mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_FROM));
-	static const std::string cc_pfx (1,
-		mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_CC));
 
-	/* use ptr to string to prevent copy... */
-	switch (contact->type) {
-	case MU_MSG_CONTACT_TYPE_TO:   pfxp  = &to_pfx; break;
-	case MU_MSG_CONTACT_TYPE_FROM: pfxp  = &from_pfx; break;
-	case MU_MSG_CONTACT_TYPE_CC:   pfxp  = &cc_pfx; break;
-	default: return; /* other types (like bcc) are ignored */
-	}
+	const std::string *pfxp (xapian_pfx(contact));
+	if (!pfxp)
+		return; /* unsupported contact type */
 	
-	if (contact->name && strlen(contact->name) > 0) {
+	if (contact->name && contact->name[0] != '\0') {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (*msgdoc->_doc);
 		char *norm = mu_str_normalize (contact->name, TRUE);

@@ -336,28 +336,46 @@ handle_index_error_and_free (GError *err)
 	return code;
 }
 
+static MuIndex*
+init_mu_index (MuConfig *opts, MuExitCode *code)
+{
+	MuIndex *midx;
+	GError *err;
+	
+	if (!check_index_or_cleanup_params (opts) ||
+	    !database_version_check_and_update(opts)) {
+		*code = MU_EXITCODE_ERROR;
+		return NULL;
+	}
+	
+	err = NULL;
+	midx = mu_index_new (mu_runtime_xapian_dir(),
+			     mu_runtime_contacts_cache_file(),
+			     &err);
+	if (!midx) {
+		*code = handle_index_error_and_free (err);
+		return NULL;
+	}
+	
+	mu_index_set_max_msg_size (midx, opts->max_msg_size); 
+	mu_index_set_xbatch_size (midx, opts->xbatchsize);
+	
+	return midx;
+}
+
 
 static MuExitCode
 cmd_index_or_cleanup (MuConfig *opts)
 {
-	gboolean rv;
 	MuIndex *midx;
 	MuIndexStats stats;
-	gboolean show_progress;
-	GError *err;
-	
-	if (!check_index_or_cleanup_params (opts) ||
-	    !database_version_check_and_update(opts))
-		return MU_EXITCODE_ERROR;		
-	
-	err = NULL;
-	if (!(midx = mu_index_new (mu_runtime_xapian_dir(),
-				   mu_runtime_contacts_cache_file(),
-				   &err)))
-		return handle_index_error_and_free (err);
-	
-	mu_index_set_max_msg_size (midx, opts->max_msg_size); 
-	mu_index_set_xbatch_size (midx, opts->xbatchsize);
+	gboolean rv, show_progress;
+	MuExitCode code;
+
+	/* create, and do error handling if needed */
+	midx = init_mu_index (opts, &code);
+	if (!midx)
+		return code;
 	
 	/* we determine the maildir path only here, as it may depend on
          * mu_index_last_used_maildir
