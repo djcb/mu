@@ -496,7 +496,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		msgdoc->_doc->add_term
 			(std::string (*pfxp + escaped, 0, MU_STORE_MAX_TERM_LENGTH));
 		g_free (escaped);
-
+		
 		/* store it also in our contacts cache */
 		if (msgdoc->_store->_contacts)
 			mu_contacts_add (msgdoc->_store->_contacts,

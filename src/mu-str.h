@@ -223,7 +223,7 @@ time_t mu_str_date_parse_hdwmy (const char* str);
  * 
  * @param str a string with a size, such a "100", "100Kb", "1Mb"
  * 
- * @return 
+ * @return the corresponding time_t value (as a guint64)
  */
 guint64 mu_str_size_parse_kmg (const char* str);
 
@@ -249,6 +249,17 @@ const char* mu_str_fullpath_s (const char* path, const char* name);
  */
 char* mu_str_escape_c_literal (const gchar* str)
         G_GNUC_WARN_UNUSED_RESULT;
+
+
+/** 
+ * macro to check whether the string is empty, ie. if it's NULL or
+ * it's length is 0
+ * 
+ * @param S a string
+ * 
+ * @return TRUE if the string is empty, FALSE otherwise
+ */
+#define mu_str_is_empty(S) ((!(S)||!(S)[0])?TRUE:FALSE)
 
 G_END_DECLS
 

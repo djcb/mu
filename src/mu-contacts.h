@@ -62,19 +62,29 @@ gboolean mu_contacts_add (MuContacts *contacts, const char* name, const char *em
  */
 void mu_contacts_destroy (MuContacts *contacts);
 
-
-typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
+/** 
+ * call called for mu_contacts_foreach; returns the e-mail address,
+ * name (which may be NULL) and the timestamp for the address
+ *
+ */
+typedef void (*MuContactsForeachFunc) (const char *email, const char *name, time_t tstamp,
 				       gpointer user_data);
 
 /** 
- * call a function for each contact
+ * call a function for either each contact, or each contact satisfying
+ * a regular expression,
  * 
  * @param contacts contacts object 
  * @param func callback function to be called for each
  * @param user_data user data to pass to the callback
+ * @param pattern a regular expression which matches either the e-mail
+ * or name, to filter out contacts, or NULL to not do any filtering.
+ * 
+ * @return TRUE if the function succeeded, or FALSE if the provide
+ * regular expression was invalid (and not NULL)
  */
-void mu_contacts_foreach (MuContacts *contacts, MuContactsForeachFunc func,
-			  gpointer user_data);
+gboolean mu_contacts_foreach (MuContacts *contacts, MuContactsForeachFunc func,
+			      gpointer user_data, const char* pattern);
 
 G_END_DECLS
 

@@ -22,6 +22,7 @@
 
 #include "mu-contacts.h"
 #include "mu-util.h"
+#include "mu-str.h"
 
 #define MU_CONTACTS_NAME_KEY		"name"
 #define MU_CONTACTS_TIMESTAMP_KEY	"timestamp"
@@ -123,7 +124,7 @@ mu_contacts_add (MuContacts *self, const char* name, const char *email,
 	 * empty name */	
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, email);
 	if (!cinfo ||
-	    (cinfo->_tstamp < tstamp && name && name[0] != '\0')) {
+	    (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
 		g_hash_table_insert (self->_hash, g_strdup(email),
 				     contact_info_new (name, tstamp));
 		return self->_dirty = TRUE;
@@ -135,30 +136,65 @@ mu_contacts_add (MuContacts *self, const char* name, const char *email,
 struct _EachContactData {
 	MuContactsForeachFunc	 _func;
 	gpointer		 _user_data;
+	GRegex			*_rx;
 };
 typedef struct _EachContactData	 EachContactData;
 
-static void
+static void /* email will never be NULL, but ci->_name may be */
 each_contact (const char* email, ContactInfo *ci, EachContactData *ecdata)
 {
-	ecdata->_func (email, ci->_name, ecdata->_user_data);
+	/* ignore this contact if we have a regexp, and it matches
+	* neither email nor name (if we have a name) */
+	while (ecdata->_rx) { /* note, only once */
+		if (g_regex_match (ecdata->_rx, email, 0, NULL))
+			break; /* email matches? continue! */
+		if (!ci->_name)
+			return; /* email did not match, no name? ignore this one */
+		if (g_regex_match (ecdata->_rx,ci->_name, 0, NULL))
+			break; /* name matches? continue! */
+		return; /* nothing matched, ignore this one */
+	}
+	
+	ecdata->_func (email, ci->_name, ci->_tstamp, ecdata->_user_data);
 }
 
-void
+gboolean
 mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
-		     gpointer user_data)
+		     gpointer user_data, const char *pattern)
 {
 	EachContactData ecdata;
 
-	g_return_if_fail (self);
-	g_return_if_fail (func);
+	g_return_val_if_fail (self, FALSE);
+	g_return_val_if_fail (func, FALSE);
 	
+	if (pattern) {
+		GError *err;
+		err = NULL;
+		ecdata._rx = g_regex_new
+			(pattern, G_REGEX_CASELESS|G_REGEX_EXTENDED|G_REGEX_OPTIMIZE,
+			 0, &err);
+		if (!ecdata._rx) {
+			g_warning ("error in regexp '%s': %s", pattern, err->message);
+			g_error_free (err);
+			return FALSE;
+		}
+	} else
+		ecdata._rx = NULL;
+			
 	ecdata._func	  = func;
 	ecdata._user_data = user_data;
 	
 	g_hash_table_foreach (self->_hash, (GHFunc) each_contact, &ecdata);
-}
+
+	if (ecdata._rx)
+		g_regex_unref (ecdata._rx);
 	
+	return TRUE;
+}
+
+
+
+
 
 static void
 each_keyval (const char *email, ContactInfo *cinfo, MuContacts *self)

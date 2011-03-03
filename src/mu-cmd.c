@@ -132,10 +132,13 @@ mu_cmd_mkdir (MuConfig *opts)
 
 
 static void
-each_contact (const char *email, const char *name, gpointer data)
+each_contact (const char *email, const char *name, time_t tstamp, gpointer data)
 {
-	g_print ("%s %s\n", email, name ? name : "");
+	g_print ("%u: %s %s\n", (unsigned)tstamp, email, name ? name : "");
 }
+
+
+
 
 MuExitCode
 mu_cmd_cfind (MuConfig *opts)
@@ -157,7 +160,8 @@ mu_cmd_cfind (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 	
-	mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact, NULL);
+	mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact, NULL,
+			     opts->params[1]);
 	mu_contacts_destroy (contacts);
 	
 	return MU_OK;
