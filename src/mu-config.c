@@ -162,7 +162,7 @@ config_options_group_find (MuConfig *opts)
 				 "clear old links before filling a linksdir (false)", NULL},
 				{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
 				 "output format ('plain'(*), 'links', 'xml',"
-				 "'json', 'sexp', 'xquery') (plain)", NULL},
+				 "'json', 'sexp', 'xquery')", NULL},
 				{"xquery", 0, 0, G_OPTION_ARG_NONE, &opts->xquery,
 				 "obsolete, use --format=xquery instead", NULL},
 				
@@ -196,6 +196,35 @@ config_options_group_mkdir (MuConfig *opts)
 
 		return og;
 }
+
+
+static void
+set_group_cfind_defaults (MuConfig *opts)
+{
+		if (!opts->formatstr) /* by default, use plain output */
+				opts->formatstr = MU_CONFIG_FORMAT_PLAIN;
+}
+
+
+static GOptionGroup *
+config_options_group_cfind (MuConfig *opts)
+{
+		GOptionGroup *og;
+		GOptionEntry entries[] = {
+				{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
+				 "output format ('plain'(*), 'mutt', 'wanderlust',"
+				 "'org-contact', 'csv')", NULL},
+				{NULL, 0, 0, 0, NULL, NULL, NULL}
+		};
+		
+		og = g_option_group_new("cfind", "options for the 'cfind' command",
+								"", NULL, NULL);
+		g_option_group_add_entries(og, entries);
+
+		return og;
+}
+
+
 
 static GOptionGroup*
 config_options_group_extract(MuConfig *opts)
@@ -281,7 +310,6 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 		context = g_option_context_new("- mu general option");
 		g_option_context_set_main_group(context,
 										config_options_group_mu(opts));
-
 		switch (opts->cmd) {
 		case MU_CONFIG_CMD_INDEX:
 				g_option_context_add_group(context, config_options_group_index(opts));
@@ -294,6 +322,9 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 				break;
 		case MU_CONFIG_CMD_EXTRACT:
 				g_option_context_add_group(context, config_options_group_extract(opts));
+				break;
+		case MU_CONFIG_CMD_CFIND:
+				g_option_context_add_group(context, config_options_group_cfind(opts));
 				break;
 		default: break;
 		}
@@ -324,9 +355,10 @@ mu_config_new (int *argcp, char ***argvp)
 		}
 		
 		/* fill in the defaults if user did not specify */
-		set_group_mu_defaults(config);
-		set_group_index_defaults(config);
-		set_group_find_defaults(config);
+		set_group_mu_defaults (config);
+		set_group_index_defaults (config);
+		set_group_find_defaults (config);
+		set_group_cfind_defaults (config);
 		/* set_group_mkdir_defaults (config); */
 		
 		return config;
@@ -338,11 +370,11 @@ mu_config_destroy (MuConfig *opts)
 		if (!opts)
 				return;
 		
-		g_free(opts->muhome);
-		g_free(opts->maildir);
-		g_free(opts->linksdir);
-		g_free(opts->targetdir);
-		g_strfreev(opts->params);
+		g_free (opts->muhome);
+		g_free (opts->maildir);
+		g_free (opts->linksdir);
+		g_free (opts->targetdir);
+		g_strfreev (opts->params);
 		g_free (opts);
 }
 

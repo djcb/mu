@@ -1,0 +1,74 @@
+.TH MU CFIND 1 "March 2011" "User Manuals"
+
+.SH NAME 
+
+mu cfind \- find contacts in the
+.B mu
+database and/or export
+
+.SH SYNOPSIS
+
+.B mu cfind [options] [<pattern>]
+
+.SH DESCRIPTION
+
+\fBmu cfind\fR is the \fBmu\fR command for finding contacts (i.e., people who
+were either the sender or receiver of mail).
+
+.SH SEARCHING CONTACTS
+
+When you index your messages (see \fBmu index\fR), \fBmu\fR creates a list of
+all unique e-mail addresses found, and the accompanying name. In case the same
+e-mail address is used with different names, the most recent one is used.
+
+\fBmu cfind\fR starts a search for contacts that match a \fIregular
+expression\fR. For example:
+
+.nf
+   $ mu cfind '@gmail\.com'
+.fi
+
+would find all contacts with a gmail-address, while
+
+.nf
+   $ mu cfind Mary
+.fi
+
+would find all contact with Mary in either name or e-mail address.
+
+.SH OPTIONS
+
+.TP
+\fB\-\-format\fR=
+set the file access mode for the new maildir(s) as in \fBchmod(1)\fR.
+
+
+.SH RETURN VALUE
+
+\fBmu find\fR return 0 upon successful completion; if it the a search was
+performed, there needs to be a least one match. Anything else leads to a
+non-zero return value, for example: 
+
+.sh
+| code | meaning                        |
+|------+--------------------------------|
+|    0 | ok                             |
+|    1 | general error                  |
+|    2 | no matches (for 'mu cfind')    |
+.si
+
+.SH BUGS
+
+Please report bugs if you find them:
+.BR http://code.google.com/p/mu0/issues/list
+If you have specific messages which are not matched correctly, please attach
+them (appropriately censored of course).
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR mu(1)
+.BR mu-index(1)

@@ -131,10 +131,62 @@ mu_cmd_mkdir (MuConfig *opts)
 }
 
 
-static void
-each_contact (const char *email, const char *name, time_t tstamp, gpointer data)
+enum _OutputFormat {
+	FORMAT_PLAIN,
+	FORMAT_MUTT,
+	FORMAT_WL,
+	FORMAT_CSV,
+	FORMAT_ORG_CONTACT,
+
+	FORMAT_NONE
+};
+typedef enum _OutputFormat OutputFormat;
+
+static OutputFormat
+get_output_format (const char *formatstr)
 {
-	g_print ("%u: %s %s\n", (unsigned)tstamp, email, name ? name : "");
+	int i;
+	struct {
+		const char*	name;
+		OutputFormat	format;
+	} formats [] = {
+		{MU_CONFIG_FORMAT_PLAIN,	 FORMAT_PLAIN},
+		{MU_CONFIG_FORMAT_MUTT,		 FORMAT_MUTT},
+		{MU_CONFIG_FORMAT_WL,		 FORMAT_WL},
+		{MU_CONFIG_FORMAT_CSV,	         FORMAT_CSV},
+		{MU_CONFIG_FORMAT_ORG_CONTACT,	 FORMAT_ORG_CONTACT}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(formats); i++)
+		if (g_strcmp0 (formats[i].name, formatstr) == 0)
+			return formats[i].format;
+
+	return FORMAT_NONE;
+}
+
+
+
+static void
+each_contact (const char *email, const char *name, time_t tstamp,
+	      OutputFormat format)
+{
+	switch (format) {
+	case FORMAT_MUTT:
+		if (name)
+			g_print ("alias %s <%s>\n", name, email);
+		break;
+	case FORMAT_WL:
+		if (name)
+			g_print ("%s \"%s\"\n", email, name);
+		break;
+	case FORMAT_ORG_CONTACT:
+		if (name)
+			g_print ("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
+				 name, email);
+		break;
+	default:
+		g_print ("%u: %s %s\n", (unsigned)tstamp, email, name ? name : "");
+	}
 }
 
 
@@ -143,14 +195,23 @@ each_contact (const char *email, const char *name, time_t tstamp, gpointer data)
 MuExitCode
 mu_cmd_cfind (MuConfig *opts)
 {
+	OutputFormat format;
 	MuContacts *contacts;
 	
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_CFIND,
 			      MU_EXITCODE_ERROR);
+
+	format = get_output_format (opts->formatstr);
+	if (format == FORMAT_NONE) {
+		g_warning ("invalid output format %s",
+			   opts->formatstr ? opts->formatstr : "<none>");
+		return FALSE;
+	}
+	
 	
 	/* if (!opts->params[1]) { */
-	/* 	g_warning ("usage: mu cfind [ptrn] "); */
+	/* 	g_warning ("usage: mu cfind [OPTIONS] [<ptrn>]"); */
 	/* 	return MU_EXITCODE_ERROR; */
 	/* } */
 
@@ -160,8 +221,8 @@ mu_cmd_cfind (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 	
-	mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact, NULL,
-			     opts->params[1]);
+	mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact,
+			     GINT_TO_POINTER(format), opts->params[1]);
 	mu_contacts_destroy (contacts);
 	
 	return MU_OK;
