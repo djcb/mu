@@ -35,14 +35,11 @@ G_BEGIN_DECLS
 #define MU_CONFIG_FORMAT_XQUERY "xquery"   /* output the xapian query */
 
 /* for cfind */
-#define MU_CONFIG_FORMAT_MUTT	"mutt"     /* output in mutt alias style */
-#define MU_CONFIG_FORMAT_WL     "wl"       /* output in Wanderlust
-											* address-book style */
-#define MU_CONFIG_FORMAT_CSV    "csv"      /* output in
-											* comma-separated
-											* values */
-#define MU_CONFIG_FORMAT_ORG_CONTACT "org-contact" /* org-contact
-													* format */
+#define MU_CONFIG_FORMAT_MUTT	"mutt"     /* mutt alias style */
+#define MU_CONFIG_FORMAT_WL     "wl"       /* Wanderlust address-book */
+#define MU_CONFIG_FORMAT_CSV    "csv"      /* comma-sep'd values */
+#define MU_CONFIG_FORMAT_ORG_CONTACT "org-contact" /* org-contact */
+#define MU_CONFIG_FORMAT_BBDB   "bbdb"     /* BBDB */
 
 enum _MuConfigCmd {
 		MU_CONFIG_CMD_INDEX,
