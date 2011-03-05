@@ -64,7 +64,47 @@ get_output_format (const char *formatstr)
 	return FORMAT_NONE;
 }
 
+static void
+print_header (OutputFormat format)
+{
+	switch (format) {
+	case FORMAT_BBDB:
+		g_print (";; -*-coding: utf-8-emacs;-*-\n"			 
+			 ";;; file-version: 6\n");
+		break;
+	default:
+		break;
+	}
+}
 
+static gchar*
+guess_last_name (const char *name)
+{
+	const gchar *lastsp;
+
+	if (!name)
+		return g_strdup ("");
+	
+	lastsp = g_strrstr (name, " ");
+	
+	return g_strdup (lastsp ? lastsp + 1 : "");
+}
+
+static gchar*
+guess_first_name (const char *name)
+{
+	const gchar *lastsp;
+
+	if (!name)
+		return g_strdup ("");
+	
+	lastsp = g_strrstr (name, " ");
+
+	if (lastsp)
+		return g_strndup (name, lastsp - name);
+	else
+		return g_strdup (name);
+}
 
 static void
 each_contact (const char *email, const char *name, time_t tstamp,
@@ -84,8 +124,25 @@ each_contact (const char *email, const char *name, time_t tstamp,
 			g_print ("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
 				 name, email);
 		break;
-	case FORMAT_BBDB: /* FIXME */
+	case FORMAT_BBDB: {
+		char *fname, *lname, *now, *timestamp;
+
+		fname	  = guess_first_name (name);
+		lname	  = guess_last_name (name);
+		now	  = mu_str_date ("%Y-%m-%d", time(NULL));
+		timestamp = mu_str_date ("%Y-%m-%d", tstamp);
+			
+		g_print ("[\"%s\" \"%s\" nil nil nil nil (\"%s\") "
+			 "((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
+			 fname, lname, email, now, timestamp);
+
+		g_free (fname);
+		g_free (lname);
+		g_free (now);
+		g_free (timestamp);
+
 		break;
+	}
 
 	case FORMAT_CSV: /* FIXME */
 		break;
@@ -126,10 +183,11 @@ mu_cmd_cfind (MuConfig *opts)
 		g_warning ("could not retrieve contacts");
 		return MU_EXITCODE_ERROR;
 	}
-	
+
+	print_header (format);
 	rv = mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact,
 				  GINT_TO_POINTER(format), opts->params[1], &num);
-	
+
 	mu_contacts_destroy (contacts);
 
 	if (rv) 
