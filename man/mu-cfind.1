@@ -12,14 +12,17 @@ database and/or export
 
 .SH DESCRIPTION
 
-\fBmu cfind\fR is the \fBmu\fR command for finding contacts (i.e., people who
-were either the sender or receiver of mail).
+\fBmu cfind\fR is the \fBmu\fR command for finding \fIcontacts\fR (name and
+e-mail address of people who were either the sender or receiver of
+mail). There are different output formats for the contacts to enable importing
+them into other tools.
 
 .SH SEARCHING CONTACTS
 
 When you index your messages (see \fBmu index\fR), \fBmu\fR creates a list of
-all unique e-mail addresses found, and the accompanying name. In case the same
-e-mail address is used with different names, the most recent one is used.
+unique e-mail addresses found, and the accompanying name. In case the same
+e-mail address is used with different names, the most recent non-empty name is
+used.
 
 \fBmu cfind\fR starts a search for contacts that match a \fIregular
 expression\fR. For example:
@@ -36,18 +39,33 @@ would find all contacts with a gmail-address, while
 
 would find all contact with Mary in either name or e-mail address.
 
+If you do not specify any search expression, \fBmu cfind\fR will return the
+full list of contacts.
+
+The regular expressions are Perl-compatible (as per the PCRE-library).
+
 .SH OPTIONS
 
 .TP
-\fB\-\-format\fR=
-set the file access mode for the new maildir(s) as in \fBchmod(1)\fR.
+\fB\-\-format\fR=\fIplain|mutt|wl|org-contact|bbdb|csv\fR
+set the output format to the given value. The following are available:
 
+.nf
+| --format=   | description                   |
+|-------------+-------------------------------|
+| plain       | default, simple list          |
+| mutt        | mutt alias-format             |
+| wl          | wanderlust addressbook format |
+| org-contact | org-mode org-contact format   |
+| bbdb        | BBDB format                   |
+| csv         | comma-separated values        |
+.fi
 
 .SH RETURN VALUE
 
-\fBmu find\fR return 0 upon successful completion; if it the a search was
+\fBmu cfind\fR returns 0 upon successful completion; if it the a search was
 performed, there needs to be a least one match. Anything else leads to a
-non-zero return value, for example: 
+non-zero return value, for example:
 
 .sh
 | code | meaning                        |
@@ -70,5 +88,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu(1)
-.BR mu-index(1)
+.BR mu(1) mu-index(1) mu-find(1)
