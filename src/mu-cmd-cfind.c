@@ -101,6 +101,8 @@ mu_cmd_cfind (MuConfig *opts)
 {
 	OutputFormat format;
 	MuContacts *contacts;
+	gboolean rv;
+	size_t num;
 	
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_CFIND,
@@ -112,11 +114,12 @@ mu_cmd_cfind (MuConfig *opts)
 			   opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
-	
-	/* if (!opts->params[1]) { */
-	/* 	g_warning ("usage: mu cfind [OPTIONS] [<ptrn>]"); */
-	/* 	return MU_EXITCODE_ERROR; */
-	/* } */
+
+	/* only one pattern allowed */
+	if (opts->params[1] && opts->params[2]) {
+		g_warning ("usage: mu cfind [OPTIONS] [<ptrn>]");
+		return MU_EXITCODE_ERROR;
+	}
 
 	contacts = mu_contacts_new (mu_runtime_contacts_cache_file());
 	if (!contacts) {
@@ -124,10 +127,14 @@ mu_cmd_cfind (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 	
-	mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact,
-			     GINT_TO_POINTER(format), opts->params[1]);
-	mu_contacts_destroy (contacts);
+	rv = mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact,
+				  GINT_TO_POINTER(format), opts->params[1], &num);
 	
-	return MU_OK;
+	mu_contacts_destroy (contacts);
+
+	if (rv) 
+		return (num == 0) ? MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
+	else
+		return MU_EXITCODE_ERROR;
 }
 

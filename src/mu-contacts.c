@@ -137,6 +137,7 @@ struct _EachContactData {
 	MuContactsForeachFunc	 _func;
 	gpointer		 _user_data;
 	GRegex			*_rx;
+	size_t                   _num;
 };
 typedef struct _EachContactData	 EachContactData;
 
@@ -156,11 +157,12 @@ each_contact (const char* email, ContactInfo *ci, EachContactData *ecdata)
 	}
 	
 	ecdata->_func (email, ci->_name, ci->_tstamp, ecdata->_user_data);
+	++ecdata->_num;
 }
 
 gboolean
 mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
-		     gpointer user_data, const char *pattern)
+		     gpointer user_data, const char *pattern, size_t *num)
 {
 	EachContactData ecdata;
 
@@ -183,11 +185,15 @@ mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 			
 	ecdata._func	  = func;
 	ecdata._user_data = user_data;
+	ecdata._num       = 0;
 	
 	g_hash_table_foreach (self->_hash, (GHFunc) each_contact, &ecdata);
 
 	if (ecdata._rx)
 		g_regex_unref (ecdata._rx);
+	
+	if (num)
+		*num = ecdata._num;
 	
 	return TRUE;
 }

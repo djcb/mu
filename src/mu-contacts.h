@@ -79,12 +79,13 @@ typedef void (*MuContactsForeachFunc) (const char *email, const char *name, time
  * @param user_data user data to pass to the callback
  * @param pattern a regular expression which matches either the e-mail
  * or name, to filter out contacts, or NULL to not do any filtering.
+ * @param num receives the number of contacts found, or NULL
  * 
  * @return TRUE if the function succeeded, or FALSE if the provide
  * regular expression was invalid (and not NULL)
  */
 gboolean mu_contacts_foreach (MuContacts *contacts, MuContactsForeachFunc func,
-			      gpointer user_data, const char* pattern);
+			      gpointer user_data, const char* pattern, size_t *num);
 
 G_END_DECLS
 
