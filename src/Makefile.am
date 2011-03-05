@@ -48,6 +48,7 @@ mu_LDADD=				\
 libmu_la_SOURCES=			\
 	mu-bookmarks.c			\
 	mu-bookmarks.h			\
+	mu-cmd-cfind.c			\
 	mu-cmd-extract.c		\
 	mu-cmd-find.c			\
 	mu-cmd-index.c			\
