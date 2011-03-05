@@ -78,7 +78,8 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
 ])
 
 # glib2?
-PKG_CHECK_MODULES(GLIB, glib-2.0)
+# we need 2.14 at least, because we use GRegex
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.14)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`pkg-config --modversion glib-2.0`"
