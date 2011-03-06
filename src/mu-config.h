@@ -35,7 +35,8 @@ G_BEGIN_DECLS
 #define MU_CONFIG_FORMAT_XQUERY "xquery"   /* output the xapian query */
 
 /* for cfind */
-#define MU_CONFIG_FORMAT_MUTT	"mutt"     /* mutt alias style */
+#define MU_CONFIG_FORMAT_MUTT_ALIAS	"mutt-alias"  /* mutt alias style */
+#define MU_CONFIG_FORMAT_MUTT_AB	"mutt-ab"     /* mutt ext addr book */
 #define MU_CONFIG_FORMAT_WL     "wl"       /* Wanderlust address-book */
 #define MU_CONFIG_FORMAT_CSV    "csv"      /* comma-sep'd values */
 #define MU_CONFIG_FORMAT_ORG_CONTACT "org-contact" /* org-contact */

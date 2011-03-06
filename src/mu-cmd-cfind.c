@@ -31,7 +31,8 @@
 
 enum _OutputFormat {
 	FORMAT_PLAIN,
-	FORMAT_MUTT,
+	FORMAT_MUTT_ALIAS,
+	FORMAT_MUTT_AB, /* mutt external address book */
 	FORMAT_WL,
 	FORMAT_BBDB,
 	FORMAT_CSV,
@@ -50,7 +51,8 @@ get_output_format (const char *formatstr)
 		OutputFormat	format;
 	} formats [] = {
 		{MU_CONFIG_FORMAT_PLAIN,	 FORMAT_PLAIN},
-		{MU_CONFIG_FORMAT_MUTT,		 FORMAT_MUTT},
+		{MU_CONFIG_FORMAT_MUTT_ALIAS,    FORMAT_MUTT_ALIAS},
+		{MU_CONFIG_FORMAT_MUTT_AB,       FORMAT_MUTT_AB},
 		{MU_CONFIG_FORMAT_WL,		 FORMAT_WL},
 		{MU_CONFIG_FORMAT_BBDB,		 FORMAT_BBDB},
 		{MU_CONFIG_FORMAT_CSV,	         FORMAT_CSV},
@@ -101,7 +103,7 @@ each_contact_bbdb (const char *email, const char *name, time_t tstamp)
 
 
 static void
-each_contact_mutt (const char *email, const char *name)
+each_contact_mutt_alias (const char *email, const char *name)
 {
 	if (name) {
 		gchar *nick;
@@ -113,6 +115,7 @@ each_contact_mutt (const char *email, const char *name)
 		g_free (nick);
 	}
 }
+
 
 static void
 each_contact_wl (const char *email, const char *name)
@@ -141,12 +144,15 @@ each_contact (const char *email, const char *name, time_t tstamp,
 	      OutputFormat format)
 {
 	switch (format) {
-	case FORMAT_MUTT: each_contact_mutt (email, name); break;
+	case FORMAT_MUTT_ALIAS: each_contact_mutt_alias (email, name); break;
+	case FORMAT_MUTT_AB:
+		g_print ("%s\t%s\t\n", email, name ? name : ""); break;
 	case FORMAT_WL: each_contact_wl (email, name); break;
 	case FORMAT_ORG_CONTACT: each_contact_org_contact (email, name); break;
 	case FORMAT_BBDB: each_contact_bbdb (email, name, tstamp); break;
 	
-        case FORMAT_CSV: /* FIXME */
+        case FORMAT_CSV:
+		g_print ("%s,%s\n", name ? name : "", email);
 		break;
 	default:
                 g_print ("%s%s%s\n", name ? name : "", name ? " " : "", email);

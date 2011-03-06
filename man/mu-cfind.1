@@ -51,14 +51,15 @@ The regular expressions are Perl-compatible (as per the PCRE-library).
 set the output format to the given value. The following are available:
 
 .nf
-| --format=   | description                   |
-|-------------+-------------------------------|
-| plain       | default, simple list          |
-| mutt        | mutt alias-format             |
-| wl          | wanderlust addressbook format |
-| org-contact | org-mode org-contact format   |
-| bbdb        | BBDB format                   |
-| csv         | comma-separated values        |
+| --format=   | description                       |
+|-------------+-----------------------------------|
+| plain       | default, simple list              |
+| mutt-alias  | mutt alias-format                 |
+| mutt-ab     | mutt external address book format |
+| wl          | wanderlust addressbook format     |
+| org-contact | org-mode org-contact format       |
+| bbdb        | BBDB format                       |
+| csv         | comma-separated values            |
 .fi
 
 .SH RETURN VALUE
@@ -74,6 +75,19 @@ non-zero return value, for example:
 |    1 | general error                  |
 |    2 | no matches (for 'mu cfind')    |
 .si
+
+.SH INTEGRATION WITH MUTT
+
+You can use \fBmu cfind\fR as an external address book server for
+\fBmutt\fR. For this to work add the following to your \fImuttrc\fR:
+
+.sh
+set query_command = "mu cfind --format=mutt-ab '%s'"
+.si
+
+Now, in mutt, you can easily search for e-mail address using the
+\fBquery\fR-command, which is by default accessible by pressing \fBQ\fR.
+
 
 .SH BUGS
 
