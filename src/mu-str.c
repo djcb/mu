@@ -425,3 +425,95 @@ mu_str_escape_c_literal (const gchar* str)
 	return g_string_free (tmp, FALSE);
 }
 
+
+gchar*
+mu_str_guess_last_name (const char *name)
+{
+	const gchar *lastsp;
+
+	if (!name)
+		return g_strdup ("");
+	
+	lastsp = g_strrstr (name, " ");
+	
+	return g_strdup (lastsp ? lastsp + 1 : "");
+}
+
+
+gchar*
+mu_str_guess_first_name (const char *name)
+{
+	const gchar *lastsp;
+
+	if (!name)
+		return g_strdup ("");
+	
+	lastsp = g_strrstr (name, " ");
+
+	if (lastsp)
+		return g_strndup (name, lastsp - name);
+	else
+		return g_strdup (name);
+}
+
+static gchar*
+cleanup_str (const char* str)
+{
+	gchar *s;
+	const gchar *cur;
+	unsigned i;
+
+	if (mu_str_is_empty(str))
+		return g_strdup ("");
+	
+	s = g_new0 (char, strlen(str) + 1);
+	
+	for (cur = str, i = 0; *cur; ++cur) {
+		if (ispunct(*cur) || isspace(*cur))
+			continue;
+		else
+			s[i++] = *cur;
+	}
+
+	return s;
+}
+
+
+gchar*
+mu_str_guess_nick (const char* name)
+{
+	gchar *fname, *lname, *nick;
+	gchar initial[7];
+	
+	fname	  = mu_str_guess_first_name (name);
+	lname	  = mu_str_guess_last_name (name);
+	
+	/* if there's no last name, use first name as the nick */
+	if (mu_str_is_empty(fname) || mu_str_is_empty(lname)) {
+		g_free (lname);
+		nick = fname;
+		goto leave;
+	}
+	
+	memset (initial, 0, sizeof(initial));
+	/* couldn't we get an initial for the last name? */
+	if (g_unichar_to_utf8 (g_utf8_get_char (lname), initial) == 0) {
+		g_free (lname);
+		nick = fname;
+		goto leave;
+	}
+
+	nick = g_strdup_printf ("%s%s", fname, initial);
+	g_free (fname);
+	
+leave:
+	{
+		gchar *tmp;
+		tmp = cleanup_str (nick);
+		g_free (nick);
+		nick = tmp;
+	}
+	
+	return nick;
+}
+

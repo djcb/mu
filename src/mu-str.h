@@ -261,6 +261,48 @@ char* mu_str_escape_c_literal (const gchar* str)
  */
 #define mu_str_is_empty(S) ((!(S)||!(S)[0])?TRUE:FALSE)
 
+
+
+/** 
+ * guess some nick name for the given name; if we can determine an
+ * first name, last name, the nick will be first name + the first char
+ * of the last name. otherwise, it's just the first name. clearly,
+ * this is just a rough guess for setting an initial value for nicks.
+ * 
+ * @param name a name
+ * 
+ * @return the guessed nick, as a newly allocated string (free with g_free)
+ */
+gchar* mu_str_guess_nick (const char* name)
+        G_GNUC_WARN_UNUSED_RESULT;
+
+
+/** 
+ * guess the first name for the given name; clearly,
+ * this is just a rough guess for setting an initial value.
+ * 
+ * @param name a name
+ * 
+ * @return the first name, as a newly allocated string (free with
+ * g_free)
+ */
+gchar* mu_str_guess_first_name (const char* name)
+        G_GNUC_WARN_UNUSED_RESULT;
+
+
+
+/** 
+ * guess the last name for the given name; clearly,
+ * this is just a rough guess for setting an initial value.
+ * 
+ * @param name a name
+ * 
+ * @return the last name, as a newly allocated string (free with
+ * g_free)
+ */
+gchar* mu_str_guess_last_name (const char* name)
+        G_GNUC_WARN_UNUSED_RESULT;
+
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/
