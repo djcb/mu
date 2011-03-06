@@ -41,8 +41,9 @@ tags:
 # which is a sign that it needs some refactoring. requires the pmccabe
 # tool. If all is fine, it outputs nothing
 cc10:
-	@$(PMCCABE) `find -name '*.c' -o -name '*.cc'` \
-	| grep -v mu-str-normalize.c \
+	@$(PMCCABE) `find -name '*.c' -o -name '*.cc'`		\
+	| grep -v mu-str-normalize.c				\
+	| grep -v tests						\
 	| sort -nr | awk '($$1 > 10)'
 
 # this warns about functions that are over 33 non-comment lines long, which is a
@@ -50,8 +51,9 @@ cc10:
 # all is fine, it outputs nothing
 # note, mu_msg_str_normalize is excempted from this rule.
 line33:
-	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'` \
-	 | grep -v mu-str-normalize.c \
+	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'`	\
+	 | grep -v mu-str-normalize.c				\
+	 | grep -v tests					\
          | awk '($$5 > 33)'
 
 # get all todo/fixme messages
