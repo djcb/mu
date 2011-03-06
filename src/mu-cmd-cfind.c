@@ -77,74 +77,76 @@ print_header (OutputFormat format)
 	}
 }
 
-static gchar*
-guess_last_name (const char *name)
-{
-	const gchar *lastsp;
 
-	if (!name)
-		return g_strdup ("");
-	
-	lastsp = g_strrstr (name, " ");
-	
-	return g_strdup (lastsp ? lastsp + 1 : "");
+
+static void
+each_contact_bbdb (const char *email, const char *name, time_t tstamp)
+{
+	char *fname, *lname, *now, *timestamp;
+
+	fname	  = mu_str_guess_first_name (name);
+	lname	  = mu_str_guess_last_name (name);
+	now	  = mu_str_date ("%Y-%m-%d", time(NULL));
+	timestamp = mu_str_date ("%Y-%m-%d", tstamp);
+			
+	g_print ("[\"%s\" \"%s\" nil nil nil nil (\"%s\") "
+		 "((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
+		 fname, lname, email, now, timestamp);
+
+	g_free (now);
+	g_free (timestamp);
+	g_free (fname);
+	g_free (lname);	
 }
 
-static gchar*
-guess_first_name (const char *name)
+
+static void
+each_contact_mutt (const char *email, const char *name)
 {
-	const gchar *lastsp;
+	if (name) {
+		gchar *nick;
 
-	if (!name)
-		return g_strdup ("");
-	
-	lastsp = g_strrstr (name, " ");
-
-	if (lastsp)
-		return g_strndup (name, lastsp - name);
-	else
-		return g_strdup (name);
+		nick = mu_str_guess_nick (name);
+		
+		g_print ("alias %s %s <%s>\n", nick, name, email);
+		
+		g_free (nick);
+	}
 }
+
+static void
+each_contact_wl (const char *email, const char *name)
+{
+	if (name) {
+		gchar *nick;
+		nick = mu_str_guess_nick (name);		
+		g_print ("%s \"%s\" \"%s\"\n", email, nick, name);
+		
+		g_free (nick);
+	}
+}
+
+
+static void
+each_contact_org_contact (const char *email, const char *name)
+{
+	if (name)
+		g_print ("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
+			 name, email);
+}
+
 
 static void
 each_contact (const char *email, const char *name, time_t tstamp,
 	      OutputFormat format)
 {
 	switch (format) {
-	case FORMAT_MUTT:
-		if (name)
-			g_print ("alias %s <%s>\n", name, email);
-		break;
-	case FORMAT_WL:
-		if (name)
-			g_print ("%s \"%s\"\n", email, name);
-		break;
-	case FORMAT_ORG_CONTACT:
-		if (name)
-			g_print ("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
-				 name, email);
-		break;
-	case FORMAT_BBDB: {
-		char *fname, *lname, *now, *timestamp;
-
-		fname	  = guess_first_name (name);
-		lname	  = guess_last_name (name);
-		now	  = mu_str_date ("%Y-%m-%d", time(NULL));
-		timestamp = mu_str_date ("%Y-%m-%d", tstamp);
-			
-		g_print ("[\"%s\" \"%s\" nil nil nil nil (\"%s\") "
-			 "((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
-			 fname, lname, email, now, timestamp);
-
-		g_free (fname);
-		g_free (lname);
-		g_free (now);
-		g_free (timestamp);
-
-		break;
-	}
-
-	case FORMAT_CSV: /* FIXME */
+	case FORMAT_MUTT: each_contact_mutt (email, name); break;
+	case FORMAT_WL: each_contact_wl (email, name); break;
+	case FORMAT_ORG_CONTACT: each_contact_org_contact (email, name); break;
+	case FORMAT_BBDB: each_contact_bbdb (email, name, tstamp); break;
+	
+        case FORMAT_CSV: /* FIXME */
 		break;
 	default:
                 g_print ("%s%s%s\n", name ? name : "", name ? " " : "", email);
@@ -152,14 +154,37 @@ each_contact (const char *email, const char *name, time_t tstamp,
 }
 
 
+static MuExitCode
+run_cmd_cfind (const char* pattern, OutputFormat format)
+{
+	gboolean rv;
+	MuContacts *contacts;
+	size_t num;
+	
+	contacts = mu_contacts_new (mu_runtime_contacts_cache_file());
+	if (!contacts) {
+		g_warning ("could not retrieve contacts");
+		return MU_EXITCODE_ERROR;
+	}
+
+	print_header (format);
+	rv = mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact,
+				  GINT_TO_POINTER(format), pattern, &num);
+	
+	mu_contacts_destroy (contacts);
+
+	if (rv) 
+		return (num == 0) ? MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
+	else
+		return MU_EXITCODE_ERROR;
+
+	
+}
 
 MuExitCode
 mu_cmd_cfind (MuConfig *opts)
 {
 	OutputFormat format;
-	MuContacts *contacts;
-	gboolean rv;
-	size_t num;
 	
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_CFIND,
@@ -178,21 +203,6 @@ mu_cmd_cfind (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 
-	contacts = mu_contacts_new (mu_runtime_contacts_cache_file());
-	if (!contacts) {
-		g_warning ("could not retrieve contacts");
-		return MU_EXITCODE_ERROR;
-	}
-
-	print_header (format);
-	rv = mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact,
-				  GINT_TO_POINTER(format), opts->params[1], &num);
-
-	mu_contacts_destroy (contacts);
-
-	if (rv) 
-		return (num == 0) ? MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
-	else
-		return MU_EXITCODE_ERROR;
+	return run_cmd_cfind (opts->params[1], format);
 }
 
