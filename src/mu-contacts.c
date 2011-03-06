@@ -34,7 +34,7 @@ struct _ContactInfo {
 typedef struct _ContactInfo ContactInfo;
 
 static void contact_info_destroy (ContactInfo *cinfo);
-static ContactInfo *contact_info_new (const char *name, time_t tstamp);
+static ContactInfo *contact_info_new (char *name, time_t tstamp);
 
 struct _MuContacts {
         GKeyFile      *_ccache;
@@ -69,7 +69,8 @@ unserialize_cache (MuContacts *self)
 	groups = g_key_file_get_groups (self->_ccache, &len);
 	for (i = 0; i  != len; ++i) {
 		ContactInfo *cinfo;
-		cinfo = contact_info_new (
+		cinfo = contact_info_new (/* note, contact_info_new will *own* the string param,
+					   * and take care of freeing it */
 			g_key_file_get_string (self->_ccache, groups[i],
 					       MU_CONTACTS_NAME_KEY, NULL),
 			g_key_file_get_uint64 (self->_ccache, groups[i],
@@ -125,8 +126,9 @@ mu_contacts_add (MuContacts *self, const char* name, const char *email,
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, email);
 	if (!cinfo ||
 	    (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
-		g_hash_table_insert (self->_hash, g_strdup(email),
-				     contact_info_new (name, tstamp));
+		ContactInfo *ci; /* note ci will take care of freeing the first param */
+		ci = contact_info_new (name ? g_strdup(name) : NULL, tstamp);
+		g_hash_table_insert (self->_hash, g_strdup(email), ci);
 		return self->_dirty = TRUE;
 	}
 	
@@ -247,10 +249,12 @@ mu_contacts_destroy (MuContacts *self)
 	
 	if (self->_ccache && self->_dirty) {
 		serialize_cache (self);
-		g_key_file_free (self->_ccache);
 		MU_WRITE_LOG("serialized contacts cache %s",
 			     self->_ccachefile);
 	}
+
+	if (self->_ccache)
+		g_key_file_free (self->_ccache);
 
 	g_free (self->_ccachefile);
 	
@@ -261,13 +265,15 @@ mu_contacts_destroy (MuContacts *self)
 }
 
 
+/* note, we will *own* the name we get */
 static ContactInfo *
-contact_info_new (const char *name, time_t tstamp)
+contact_info_new (char *name, time_t tstamp)
 {
 	ContactInfo *cinfo;
-
+	
 	cinfo	       = g_slice_new (ContactInfo);
-	cinfo->_name   = name ? g_strdup (name) : NULL;
+	/* removing leading, trailing whitespace from names */
+	cinfo->_name   = name ? g_strstrip(name) : NULL;
 	cinfo->_tstamp = tstamp;
 
 	return cinfo;
