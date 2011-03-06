@@ -299,6 +299,36 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 }
 
 
+static void
+add_context_group (GOptionContext *context, MuConfig *opts)
+{
+		GOptionGroup *group;
+
+		group = NULL;
+		
+		switch (opts->cmd) {
+		case MU_CONFIG_CMD_INDEX:
+				group = config_options_group_index (opts);
+				break;
+		case MU_CONFIG_CMD_FIND:
+				group = config_options_group_find (opts);
+				break;
+		case MU_CONFIG_CMD_MKDIR:
+				group = config_options_group_mkdir (opts);
+				break;
+		case MU_CONFIG_CMD_EXTRACT:
+				group = config_options_group_extract (opts);
+				break;
+		case MU_CONFIG_CMD_CFIND:
+				group = config_options_group_cfind (opts);
+				break;
+		default: break;
+		}
+
+		if (group)
+				g_option_context_add_group(context, group);
+}
+
 
 static gboolean
 parse_params (MuConfig *opts, int *argcp, char ***argvp)
@@ -310,24 +340,8 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 		context = g_option_context_new("- mu general option");
 		g_option_context_set_main_group(context,
 										config_options_group_mu(opts));
-		switch (opts->cmd) {
-		case MU_CONFIG_CMD_INDEX:
-				g_option_context_add_group(context, config_options_group_index(opts));
-				break;
-		case MU_CONFIG_CMD_FIND:
-				g_option_context_add_group(context, config_options_group_find(opts));
-				break;
-		case MU_CONFIG_CMD_MKDIR:
-				g_option_context_add_group(context, config_options_group_mkdir(opts));
-				break;
-		case MU_CONFIG_CMD_EXTRACT:
-				g_option_context_add_group(context, config_options_group_extract(opts));
-				break;
-		case MU_CONFIG_CMD_CFIND:
-				g_option_context_add_group(context, config_options_group_cfind(opts));
-				break;
-		default: break;
-		}
+
+		add_context_group (context, opts);
 		
 		rv = g_option_context_parse(context, argcp, argvp, &err);
 		g_option_context_free (context);
@@ -336,8 +350,8 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 				g_error_free (err);
 				return FALSE;
 		}
-		return TRUE;
-}
+		return TRUE;}
+				
 
 MuConfig*
 mu_config_new (int *argcp, char ***argvp)
