@@ -20,11 +20,17 @@
 #include <webkit/webkitnetworkresponse.h>
 #include <webkit/webkitwebnavigationaction.h>
 #include <webkit/webkitwebpolicydecision.h>
-
-
 #include "mu-msg-body-view.h"
 #include <mu-msg-part.h>
 
+enum _ViewMode {
+	VIEW_MODE_MSG,
+	VIEW_MODE_SOURCE,
+	VIEW_MODE_NOTE,
+
+	VIEW_MODE_NONE
+};
+typedef enum _ViewMode ViewMode;
 
 /* 'private'/'protected' functions */
 static void mu_msg_body_view_class_init (MuMsgBodyViewClass *klass);
@@ -42,7 +48,7 @@ enum {
 struct _MuMsgBodyViewPrivate {
 	WebKitWebSettings *_settings;
 	MuMsg             *_msg;
-	gboolean          _internal_msg;
+	ViewMode          _view_mode;
 };
 #define MU_MSG_BODY_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                               MU_TYPE_MSG_BODY_VIEW, \
@@ -138,7 +144,7 @@ on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *fr
 	 * a <a href="cmd:refresh">Refresh</a> link
 	 */
 	if (g_ascii_strncasecmp (uri, "cmd:", 4) == 0)  {
-		if (self->_priv->_internal_msg) {
+		if (self->_priv->_view_mode == VIEW_MODE_NOTE) {
 			g_signal_emit (G_OBJECT(self),
 				       signals[ACTION_REQUESTED], 0,
 				       uri + 4);
@@ -199,14 +205,20 @@ popup_menu (MuMsgBodyView *self, guint button, guint32 activate_time)
 	struct {
 		const char* title;
 		const char* action;
+		ViewMode mode;
 	} actions[] = {
-		{ "View source...", "view-source" }
+		{ "View source...", "view-source", VIEW_MODE_MSG },
+		{ "View message...", "view-message", VIEW_MODE_SOURCE },
 	};
-
+	
 	menu = gtk_menu_new ();
 	
 	for (i = 0; i != G_N_ELEMENTS(actions); ++i) {
 		GtkWidget *item;
+
+		if (self->_priv->_view_mode != actions[i].mode)
+			continue;
+		
 		item = gtk_menu_item_new_with_label(actions[i].title);
 		g_object_set_data (G_OBJECT(item), "action", (gpointer)actions[i].action);
 		g_signal_connect (item, "activate", G_CALLBACK(on_menu_item_activate),
@@ -225,8 +237,8 @@ on_button_press_event (MuMsgBodyView *self, GdkEventButton *event, gpointer data
 	switch (event->button) {
 	case 1: return FALSE; /* propagate, let widget handle it */
 	case 3:
-		/* no popup menus for internal messages */
-		if (!self->_priv->_internal_msg)
+		/* no popup menus for notes */
+		if (self->_priv->_view_mode != VIEW_MODE_NOTE)
 			popup_menu (self, event->button, event->time);
 		break;
 	default: return TRUE; /* ignore */
@@ -242,7 +254,7 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 	obj->_priv = MU_MSG_BODY_VIEW_GET_PRIVATE(obj);
 
 	obj->_priv->_msg = NULL;
-	obj->_priv->_internal_msg = FALSE;
+	obj->_priv->_view_mode = VIEW_MODE_NONE;
 	
 	obj->_priv->_settings = webkit_web_settings_new ();
 	g_object_set (G_OBJECT(obj->_priv->_settings),
@@ -336,8 +348,31 @@ mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 	else
 		set_text (self, mu_msg_get_body_text (msg));
 
-	self->_priv->_internal_msg = FALSE;
+	self->_priv->_view_mode = VIEW_MODE_MSG;
 }
+
+
+void
+mu_msg_body_view_set_message_source (MuMsgBodyView *self, MuMsg *msg)
+{
+	const gchar *path;
+	gchar *data;
+
+	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
+	g_return_if_fail (msg);
+	
+	path = msg ? mu_msg_get_path (msg) : NULL;
+	
+	if (path && g_file_get_contents (path, &data, NULL, NULL)) {
+		set_text (self, data);
+		g_free (data);
+	} else
+		set_text (self, "");
+
+	self->_priv->_view_mode = VIEW_MODE_SOURCE;
+}
+
+
 
 void
 mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html)
@@ -351,5 +386,5 @@ mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html)
 	}		
 	set_html (self, html);
 
-	self->_priv->_internal_msg = TRUE;
+	self->_priv->_view_mode = VIEW_MODE_NOTE;
 }

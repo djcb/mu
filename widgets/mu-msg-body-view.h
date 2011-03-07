@@ -62,6 +62,7 @@ GtkWidget*    mu_msg_body_view_new         (void);
 
 void mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg);
 void mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html);
+void mu_msg_body_view_set_message_source (MuMsgBodyView *self, MuMsg *msg);
 
 G_END_DECLS
 

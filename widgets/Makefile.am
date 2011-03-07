@@ -39,10 +39,6 @@ libmuwidgets_la_SOURCES=		\
 	mu-msg-body-view.h		\
 	mu-msg-header-view.c		\
 	mu-msg-header-view.h		\
-	mu-msg-normal-view.h		\
-	mu-msg-normal-view.c		\
-	mu-msg-source-view.h		\
-	mu-msg-source-view.c		\
 	mu-msg-view.h			\
 	mu-msg-view.c
 

@@ -18,15 +18,10 @@
 */
 
 #include "mu-msg-view.h"
-
-#include "mu-msg-normal-view.h"
 #include "mu-msg-body-view.h"
-#include "mu-msg-source-view.h"
-
-#include <webkit/webkitwebview.h>
-
-#include <mu-msg.h>
-#include <mu-msg-part.h>
+#include "mu-msg-header-view.h"
+#include "mu-msg-attach-view.h"
+#include "mu-msg-part.h"
 
 /* 'private'/'protected' functions */
 static void mu_msg_view_class_init (MuMsgViewClass *klass);
@@ -41,14 +36,7 @@ enum {
 };
 
 struct _MuMsgViewPrivate {
-
-	/* 'normal' view */
-	GtkWidget *_normal_view, *_source_view, *_internal_view;
-	
-	/* TRUE if we're in view-source mode, FALSE otherwise */
-	gboolean _view_source;
-
-	/* the message */
+	GtkWidget *_headers, *_attach, *_attachexpander, *_body;
 	MuMsg *_msg;
 };
 #define MU_MSG_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
@@ -81,48 +69,19 @@ mu_msg_view_class_init (MuMsgViewClass *klass)
 /* 	etc. */
 }
 
-static void
-each_child_remove (GtkWidget *child, MuMsgView *self)
-{
-	/* g_object_ref (child); /\* save the children *\/ */	
-	gtk_container_remove (GTK_CONTAINER(self), child);
-}
-	
 
 static void
-remove_widgets (MuMsgView *self)
-{
-	/* FIXME: keep the widgets around for re-use */
-
-	/* remove the old children */
-	gtk_container_foreach (GTK_CONTAINER(self),
-			       (GtkCallback)each_child_remove,
-			       self);
-	
-	self->_priv->_normal_view   = NULL;
-	self->_priv->_source_view   = NULL;
-	self->_priv->_internal_view = NULL;
-
-}
-
-static void
-on_action_requested (GtkWidget *w, const char* action,
-				 MuMsgView *self)
+on_body_action_requested (GtkWidget *w, const char* action,
+			  MuMsgView *self)
 {
 	if (g_strcmp0 (action, "view-source") == 0) {
-
-		self->_priv->_view_source = TRUE;
 		if (self->_priv->_msg)
-			mu_msg_ref (self->_priv->_msg);
-		mu_msg_view_set_message (self, self->_priv->_msg);
+			mu_msg_view_set_message_source (self, self->_priv->_msg);
 
 	} else if (g_strcmp0 (action, "view-message") == 0) {
-
-		self->_priv->_view_source = FALSE;
 		if (self->_priv->_msg)
-			mu_msg_ref (self->_priv->_msg);	
-		mu_msg_view_set_message (self, self->_priv->_msg);
-
+			mu_msg_view_set_message (self, self->_priv->_msg);
+		
 	} else if (g_strcmp0 (action, "reindex") == 0) {
 		g_warning ("reindex");
 	} else {
@@ -130,106 +89,53 @@ on_action_requested (GtkWidget *w, const char* action,
 	}	
 }
 
-
-
-static GtkWidget*
-get_source_view (MuMsgView *self, MuMsg *msg)
+static void
+on_attach_activated (GtkWidget *w, guint partnum, MuMsg *msg)
 {
-	if (!self->_priv->_source_view) {
-		self->_priv->_source_view = mu_msg_source_view_new ();
-		g_signal_connect (self->_priv->_source_view,
-				  "action-requested",
-				  G_CALLBACK(on_action_requested),
-				  self);
+	gchar *filepath;
+        
+	filepath = mu_msg_part_filepath_cache (msg, partnum);
+	if (filepath) {
+		mu_msg_part_save (msg, filepath, partnum, FALSE, TRUE);
+		mu_util_play (filepath, TRUE, FALSE);
+		g_free (filepath);
 	}
-	
-	mu_msg_source_view_set_message
-		(MU_MSG_SOURCE_VIEW (self->_priv->_source_view), msg);
-
-	gtk_widget_show_all (self->_priv->_source_view);
-	
-	return self->_priv->_source_view;
 }
-
-static GtkWidget*
-get_normal_view (MuMsgView *self, MuMsg *msg)
-{
-	GtkWidget *scrolledwin;
-	
-	if (self->_priv->_normal_view) {
-		mu_msg_normal_view_set_message
-			(MU_MSG_NORMAL_VIEW(self->_priv->_normal_view), msg);
-		return gtk_widget_get_parent (self->_priv->_normal_view);
-	}
-		
-	self->_priv->_normal_view = mu_msg_normal_view_new ();
-	
-	mu_msg_normal_view_set_message
-		(MU_MSG_NORMAL_VIEW(self->_priv->_normal_view), msg);
-	
-	g_signal_connect (self->_priv->_normal_view,
-			  "action-requested",
-			  G_CALLBACK(on_action_requested),
-			  self);		
-
-	scrolledwin = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_policy (
-		GTK_SCROLLED_WINDOW(scrolledwin),
-		GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
-	
-	gtk_scrolled_window_add_with_viewport
-		(GTK_SCROLLED_WINDOW(scrolledwin),
-		 self->_priv->_normal_view);
-	
-	gtk_widget_show (self->_priv->_normal_view);
-	gtk_widget_show (scrolledwin);
-	
-	return scrolledwin;
-}
-
-
-static GtkWidget*
-get_internal_view (MuMsgView *self, const char *html)
-{
-	if (!self->_priv->_internal_view)  {
-		self->_priv->_internal_view = mu_msg_body_view_new();
-		g_signal_connect (self->_priv->_internal_view,
-				  "action-requested",
-				  G_CALLBACK(on_action_requested),
-				  self);
-	}
-	mu_msg_body_view_set_note (MU_MSG_BODY_VIEW(self->_priv->_internal_view),
-				   html);
-				   	
-	gtk_widget_show (self->_priv->_internal_view);
-	
-	return self->_priv->_internal_view;
-}
-
 
 
 static void
 mu_msg_view_init (MuMsgView *self)
 {
- 	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
+	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
 	
-	self->_priv->_normal_view   = NULL;
-	self->_priv->_source_view   = NULL;
-	self->_priv->_internal_view = NULL;
+	self->_priv->_headers = mu_msg_header_view_new ();
+
+	self->_priv->_attach  = mu_msg_attach_view_new ();
+	self->_priv->_attachexpander =  gtk_expander_new_with_mnemonic
+		("_Attachments");
+	gtk_container_add (GTK_CONTAINER(self->_priv->_attachexpander),
+			   self->_priv->_attach);	
+	g_signal_connect (self->_priv->_attach, "attach-activated",
+			  G_CALLBACK(on_attach_activated),
+			  self);
 	
-	self->_priv->_view_source = FALSE;
+	self->_priv->_body    = mu_msg_body_view_new ();
+	g_signal_connect (self->_priv->_body,
+			  "action-requested",
+			  G_CALLBACK(on_body_action_requested),
+			  self);
+	
+	gtk_box_pack_start (GTK_BOX(self), self->_priv->_headers,
+			    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(self), self->_priv->_attachexpander,
+			    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(self), self->_priv->_body,
+			    TRUE, TRUE, 2);
 }
 
 static void
 mu_msg_view_finalize (GObject *obj)
 {
-	MuMsgViewPrivate *priv;
-
-	priv = MU_MSG_VIEW_GET_PRIVATE(obj);
-	
-	if (priv->_msg)
-		mu_msg_unref (priv->_msg);
-	
 /* 	free/unref instance resources here */
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -241,9 +147,63 @@ mu_msg_view_new (void)
 }
 
 
+struct _ChildData {
+	GtkWidget *child;
+	gboolean show;
+};
+typedef struct _ChildData ChildData;
+
+static void
+each_child_visibility (GtkWidget *child, ChildData *cdata)
+{
+	if (child == cdata->child)
+		gtk_widget_set_visible (child, cdata->show);
+}
+
+static void
+set_visibility (MuMsgView *self, GtkWidget *w, gboolean show)
+{
+	ChildData cdata;
+
+	cdata.child = w;
+	cdata.show  = show;
+	
+	gtk_container_foreach (GTK_CONTAINER(self),
+			       (GtkCallback)each_child_visibility,
+			       &cdata);
+}
+
+
 
 void
 mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
+{
+	gint attachnum;
+	
+	g_return_if_fail (MU_IS_MSG_VIEW(self));
+	
+	if (self->_priv->_msg) 
+		mu_msg_unref (self->_priv->_msg);
+
+	self->_priv->_msg = msg ? mu_msg_ref (msg) : NULL;
+
+	mu_msg_header_view_set_message (MU_MSG_HEADER_VIEW(self->_priv->_headers),
+					msg);
+	attachnum = mu_msg_attach_view_set_message (MU_MSG_ATTACH_VIEW(self->_priv->_attach),
+						    msg);
+	
+	mu_msg_body_view_set_message (MU_MSG_BODY_VIEW(self->_priv->_body),
+				      msg);
+	
+	set_visibility (self, self->_priv->_headers, TRUE);
+	set_visibility (self, self->_priv->_attachexpander, attachnum > 0);
+	set_visibility (self, self->_priv->_body, TRUE);
+}
+
+
+
+void
+mu_msg_view_set_message_source (MuMsgView *self, MuMsg *msg)
 {	
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
 	
@@ -252,31 +212,26 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 
 	self->_priv->_msg = msg ? mu_msg_ref (msg) : NULL;
 
-	remove_widgets (self);
-
-	if (!msg)
-		return;
+	mu_msg_body_view_set_message_source (MU_MSG_BODY_VIEW(self->_priv->_body),
+					     msg);
 	
-	if (!self->_priv->_view_source)
-		gtk_box_pack_start (GTK_BOX(self),
-				    get_normal_view (self, msg),
-				    TRUE, TRUE, 0);
-	else
-		gtk_box_pack_start (GTK_BOX(self),
-				    get_source_view (self, msg),
-				    TRUE, TRUE, 0);
+	set_visibility (self, self->_priv->_headers, FALSE);
+	set_visibility (self, self->_priv->_attachexpander, FALSE);
+	set_visibility (self, self->_priv->_body, TRUE);
 }
+
 
 
 void
 mu_msg_view_set_note (MuMsgView *self, const gchar* html)
 {
-
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
-
-	remove_widgets (self);
 	
-	gtk_box_pack_start (GTK_BOX(self),
-			    get_internal_view (self, html),
-			    TRUE, TRUE, 0);
+	set_visibility (self, self->_priv->_headers, FALSE);
+	set_visibility (self, self->_priv->_attachexpander, FALSE);
+	set_visibility (self, self->_priv->_body, TRUE);
+
+	mu_msg_body_view_set_note (MU_MSG_BODY_VIEW(self->_priv->_body),
+				   html);
 }
+
