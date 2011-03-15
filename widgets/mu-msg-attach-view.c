@@ -55,6 +55,23 @@ static guint signals[LAST_SIGNAL] = {0};
 
 G_DEFINE_TYPE (MuMsgAttachView, mu_msg_attach_view, GTK_TYPE_ICON_VIEW);
 
+
+static void
+set_message (MuMsgAttachView *self, MuMsg *msg)
+{
+	if (self->_priv->_msg == msg)
+		return; /* nothing to todo */
+	
+	if (self->_priv->_msg)  {
+		mu_msg_unref (self->_priv->_msg);
+		self->_priv->_msg = NULL;
+	}
+
+	if (msg)
+		self->_priv->_msg = mu_msg_ref (msg);
+}
+
+
 static void
 mu_msg_attach_view_class_init (MuMsgAttachViewClass *klass)
 {
@@ -193,12 +210,8 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 static void
 mu_msg_attach_view_finalize (GObject *obj)
 {
-	MuMsg *msg;
+	set_message (MU_MSG_ATTACH_VIEW(obj), NULL);	
 
-	msg = MU_MSG_ATTACH_VIEW(obj)->_priv->_msg;
-	if (msg)
-		mu_msg_unref (msg);
-	
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
 
@@ -264,13 +277,11 @@ mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg)
 	store = GTK_LIST_STORE (gtk_icon_view_get_model (GTK_ICON_VIEW(self)));
 	gtk_list_store_clear (store);
 
-	if (self->_priv->_msg)
-		mu_msg_unref (self->_priv->_msg);
+	set_message (self, msg);
 	
 	if (!msg)
 		return 0;
-	
-	self->_priv->_msg = mu_msg_ref (msg);
+
 	
 	cbdata.store = store;
 	cbdata.count = 0;

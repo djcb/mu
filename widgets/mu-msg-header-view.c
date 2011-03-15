@@ -46,6 +46,7 @@ static GtkVBoxClass *parent_class = NULL;
 
 G_DEFINE_TYPE (MuMsgHeaderView, mu_msg_header_view, GTK_TYPE_VBOX);
 
+
 static void
 mu_msg_header_view_class_init (MuMsgHeaderViewClass *klass)
 {
@@ -75,7 +76,6 @@ mu_msg_header_view_init (MuMsgHeaderView *obj)
 static void
 mu_msg_header_view_finalize (GObject *obj)
 {
-/* 	free/unref instance resources here */
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
 
@@ -168,7 +168,7 @@ void
 mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg)
 {
 	g_return_if_fail (MU_IS_MSG_HEADER_VIEW(self));
-
+	
 	if (self->_priv->_table) {
 		gtk_container_remove (GTK_CONTAINER(self), self->_priv->_table);
 		self->_priv->_table = NULL;

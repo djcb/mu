@@ -186,6 +186,7 @@ MuMsg*
 mu_msg_ref (MuMsg *msg)
 {
 	g_return_val_if_fail (msg, NULL);
+
 	++msg->_refcount;
 
 	return msg;
@@ -210,20 +211,20 @@ mu_msg_new (const char* filepath, const gchar* mdir, GError **err)
 	g_return_val_if_fail (filepath, NULL);	
 	g_return_val_if_fail (_gmime_initialized, NULL);
 	
-	msg = g_slice_new0 (MuMsg);	
-	msg->_prio      = MU_MSG_PRIO_NONE;
-	
+	msg	       = g_slice_new0 (MuMsg);	
+	msg->_prio     = MU_MSG_PRIO_NONE;
+	msg->_refcount = 1;
+
 	if (!init_file_metadata(msg, filepath, mdir, err)) {
-		mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 		return NULL;
 	}
 	
 	if (!init_mime_msg(msg, err)) {
-		mu_msg_destroy (msg);
+		mu_msg_unref (msg);
 		return NULL;
 	}
-
-	msg->_refcount = 1;
+	
 	return msg;
 }
 

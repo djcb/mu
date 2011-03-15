@@ -61,6 +61,21 @@ static guint signals[LAST_SIGNAL] = {0};
 G_DEFINE_TYPE (MuMsgBodyView, mu_msg_body_view, WEBKIT_TYPE_WEB_VIEW);
 
 static void
+set_message (MuMsgBodyView *self, MuMsg *msg)
+{
+	if (self->_priv->_msg == msg)
+		return; /* nothing to todo */
+	
+	if (self->_priv->_msg)  {
+		mu_msg_unref (self->_priv->_msg);
+		self->_priv->_msg = NULL;
+	}
+
+	if (msg)
+		self->_priv->_msg = mu_msg_ref (msg);
+}
+
+static void
 mu_msg_body_view_class_init (MuMsgBodyViewClass *klass)
 {
 	GObjectClass *gobject_class;
@@ -287,8 +302,7 @@ mu_msg_body_view_finalize (GObject *obj)
 	if (priv && priv->_settings)
 		g_object_unref (priv->_settings);
 
-	if (priv->_msg)
-		mu_msg_unref (priv->_msg);
+	set_message (MU_MSG_BODY_VIEW(obj), NULL);
 	
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -331,16 +345,7 @@ mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 	
 	g_return_if_fail (self);
 
-	/* ref this one before unreffing priv->_msg, it may be the
-	 * same...*/
-	if (msg)
-		msg = mu_msg_ref (msg);
-	
-	if (self->_priv->_msg) {
-		mu_msg_unref (self->_priv->_msg);
-		self->_priv->_msg = NULL;
-	}	
-	self->_priv->_msg = msg;
+	set_message (self, msg);
 
 	data = msg ? mu_msg_get_body_html (msg) : "";
 	if (data) 
@@ -360,6 +365,8 @@ mu_msg_body_view_set_message_source (MuMsgBodyView *self, MuMsg *msg)
 
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
 	g_return_if_fail (msg);
+
+	set_message (self, NULL);
 	
 	path = msg ? mu_msg_get_path (msg) : NULL;
 	
@@ -380,10 +387,8 @@ mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html)
 	g_return_if_fail (self);
 	g_return_if_fail (html);
 		
-	if (self->_priv->_msg) {
-		mu_msg_unref (self->_priv->_msg);
-		self->_priv->_msg = NULL;
-	}		
+	set_message (self, NULL);
+	
 	set_html (self, html);
 
 	self->_priv->_view_mode = VIEW_MODE_NOTE;
