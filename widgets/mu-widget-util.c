@@ -87,4 +87,3 @@ mu_widget_util_get_icon_pixbuf_for_content_type (const char *ctype, size_t size)
 }
 
 
-
