@@ -398,7 +398,7 @@ show_usage (gboolean noerror)
 {
 		const char* usage=
 				"usage: mu command [options] [parameters]\n"
-				"where command is one of index, find, view, mkdir, cleanup "
+				"where command is one of index, find, cfind, view, mkdir, cleanup "
 				"or extract\n\n"
 				"see the mu, mu-<command> or mu-easy manpages for "
 				"more information\n";
