@@ -62,12 +62,13 @@ reindex (MugData *mugdata)
 	MuIndex *midx;
 	GError *err;
 
-	if (mu_util_xapian_is_locked (mu_runtime_xapian_dir()))
+	if (mu_util_xapian_is_locked
+	    (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)))
 		return;
 	
 	err = NULL;
-	midx = mu_index_new (mu_runtime_xapian_dir(),
-			     mu_runtime_contacts_cache_file(),
+	midx = mu_index_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			     mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
 			     &err);
 	if (!midx) {
 		if (err && err->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK) {
@@ -201,7 +202,8 @@ on_shortcut_clicked (GtkWidget * w, const gchar * query, MugData * mdata)
 static GtkWidget *
 mug_shortcuts_bar (MugData * data)
 {
-	data->shortcuts = mug_shortcuts_new (mu_runtime_bookmarks_file ());
+	data->shortcuts = mug_shortcuts_new
+		(mu_runtime_path(MU_RUNTIME_PATH_BOOKMARKS));
 
 	g_signal_connect (G_OBJECT (data->shortcuts), "clicked",
 			  G_CALLBACK (on_shortcut_clicked), data);
@@ -308,7 +310,8 @@ mug_query_area (MugData * mugdata)
 	queryarea = gtk_vbox_new (FALSE, 2);
 	paned = gtk_vpaned_new ();
 
-	mugdata->mlist = mug_msg_list_view_new (mu_runtime_xapian_dir ());
+	mugdata->mlist = mug_msg_list_view_new
+		(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB));
 	scrolled = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled),
 					GTK_POLICY_AUTOMATIC,

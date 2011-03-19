@@ -229,7 +229,7 @@ query_params_valid (MuConfig *opts)
 		return FALSE;
 	}
 	
-	xpath = mu_runtime_xapian_dir();
+	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
 	
 	if (mu_util_check_dir (xpath, TRUE, FALSE))
 		return TRUE;
@@ -247,7 +247,7 @@ resolve_bookmark (MuConfig *opts)
 	char* val;
 	const gchar *bmfile;
 	
-	bmfile = mu_runtime_bookmarks_file();
+	bmfile = mu_runtime_path (MU_RUNTIME_PATH_BOOKMARKS);
 	bm = mu_bookmarks_new (bmfile);
 	if (!bm) {
 		g_warning ("failed to open bookmarks file '%s'", bmfile);
@@ -321,7 +321,7 @@ get_query_obj (void)
 	const char* xpath;
 	MuQuery *mquery;
 	
-	xpath = mu_runtime_xapian_dir ();
+	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
 	if (!db_is_ready(xpath)) {
 		g_warning ("database '%s' is not ready", xpath);
 		return NULL;

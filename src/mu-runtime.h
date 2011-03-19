@@ -55,6 +55,28 @@ gboolean mu_runtime_init_from_cmdline (int *pargc, char ***pargv);
  */
 void mu_runtime_uninit (void);
 
+
+enum _MuRuntimePath {
+	MU_RUNTIME_PATH_MUHOME,     /* mu home path */
+	MU_RUNTIME_PATH_XAPIANDB,   /* mu xapian db path */
+	MU_RUNTIME_PATH_BOOKMARKS,  /* mu bookmarks file path */
+	MU_RUNTIME_PATH_CACHE,      /* mu cache path */
+	MU_RUNTIME_PATH_LOG,        /* mu path for log files */
+	MU_RUNTIME_PATH_CONTACTS,   /* mu path to the contacts cache */
+
+	MU_RUNTIME_PATH_NUM
+};
+typedef enum _MuRuntimePath MuRuntimePath;
+
+/**
+ * get a file system path to some 'special' file or directory
+ * 
+ * @return ma string which should be not be modified/freed, or NULL in
+ * case of error.
+ */
+const char* mu_runtime_path   (MuRuntimePath path);
+
+
 /**
  * get the mu home directory (typically, ~/.mu); this can only be
  * called after mu_runtime_init and before mu_runtime_uninit

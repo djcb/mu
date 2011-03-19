@@ -173,7 +173,7 @@ database_version_check_and_update (MuConfig *opts)
 {
 	const gchar *xpath;
 
-	xpath = mu_runtime_xapian_dir ();
+	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
 	
 	if (mu_util_xapian_is_empty (xpath))
 		return TRUE;
@@ -249,7 +249,8 @@ cmd_cleanup (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	MuResult rv;
 	time_t t;
 	
-	g_message ("cleaning up messages [%s]", mu_runtime_xapian_dir());
+	g_message ("cleaning up messages [%s]",
+		   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
 	
 	t = time (NULL);
 	rv = mu_index_cleanup (midx, stats,
@@ -276,7 +277,7 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	time_t t;
 	
 	g_message ("indexing messages under %s [%s]", opts->maildir,
-		   mu_runtime_xapian_dir());
+		   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
 	
 	t = time (NULL);
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
@@ -349,8 +350,8 @@ init_mu_index (MuConfig *opts, MuExitCode *code)
 	}
 	
 	err = NULL;
-	midx = mu_index_new (mu_runtime_xapian_dir(),
-			     mu_runtime_contacts_cache_file(),
+	midx = mu_index_new (mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB),
+			     mu_runtime_path (MU_RUNTIME_PATH_CONTACTS),
 			     &err);
 	if (!midx) {
 		*code = handle_index_error_and_free (err);

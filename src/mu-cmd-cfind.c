@@ -167,7 +167,7 @@ run_cmd_cfind (const char* pattern, OutputFormat format)
 	MuContacts *contacts;
 	size_t num;
 	
-	contacts = mu_contacts_new (mu_runtime_contacts_cache_file());
+	contacts = mu_contacts_new (mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
 	if (!contacts) {
 		g_warning ("could not retrieve contacts");
 		return MU_EXITCODE_ERROR;

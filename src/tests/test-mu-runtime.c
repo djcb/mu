@@ -64,9 +64,9 @@ test_mu_runtime_data (void)
 
 	g_assert (mu_runtime_init (homedir) == TRUE);	
 	
-	g_assert_cmpstr (homedir, ==, mu_runtime_mu_home_dir ());
-	g_assert_cmpstr (xdir, ==, mu_runtime_xapian_dir ());
-	g_assert_cmpstr (bmfile, ==, mu_runtime_bookmarks_file ());
+	g_assert_cmpstr (homedir, ==, mu_runtime_path (MU_RUNTIME_PATH_MUHOME));
+	g_assert_cmpstr (xdir, ==, mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
+	g_assert_cmpstr (bmfile, ==, mu_runtime_path (MU_RUNTIME_PATH_BOOKMARKS));
 
 	mu_runtime_uninit ();
 
@@ -94,3 +94,5 @@ main (int argc, char *argv[])
 	
 	return g_test_run ();
 }
+
+

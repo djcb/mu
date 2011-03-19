@@ -31,23 +31,16 @@
 #include "mu-config.h"
 #include "mu-log.h"
 #include "mu-util.h"
-
-enum {
-	MU_RUNTIME_STR_MU_HOMEPATH,
-	MU_RUNTIME_STR_XAPIAN_PATH,
-	MU_RUNTIME_STR_BOOKMARKS_PATH,
-	MU_RUNTIME_STR_CACHE_PATH,
-	MU_RUNTIME_STR_CONTACTS_PATH,
-	MU_RUNTIME_STR_NUM
-};
 	
 #define MU_XAPIAN_DIRNAME	"xapian"
 #define MU_BOOKMARKS_FILENAME	"bookmarks"
 #define MU_CACHE_DIRNAME        "cache"
 #define MU_CONTACTS_FILENAME	"contacts"
+#define MU_LOG_DIRNAME		"log"
+
 
 struct _MuRuntimeData {
-	gchar            *_str[MU_RUNTIME_STR_NUM];
+	gchar            *_str[MU_RUNTIME_PATH_NUM];
 	MuConfig	 *_config;
 };
 typedef struct _MuRuntimeData	 MuRuntimeData;
@@ -56,7 +49,8 @@ typedef struct _MuRuntimeData	 MuRuntimeData;
 static gboolean		 _initialized = FALSE;
 static MuRuntimeData	*_data	      = NULL;
 
-static void runtime_free (void);
+static void     runtime_free (void);
+static gboolean init_paths (const char* muhome, MuRuntimeData *data);
 
 static gboolean
 mu_dir_is_readable_and_writable (const char *muhome)
@@ -68,38 +62,6 @@ mu_dir_is_readable_and_writable (const char *muhome)
 	g_warning ("use --muhome= to set a different one");
 	
 	return FALSE;
-}
-
-static gboolean
-init_paths (const char* muhome, MuRuntimeData *data)
-{
-	data->_str [MU_RUNTIME_STR_XAPIAN_PATH] =
-		g_strdup_printf ("%s%c%s", muhome,
-				 G_DIR_SEPARATOR,
-				 MU_XAPIAN_DIRNAME);
-	
-	data->_str [MU_RUNTIME_STR_BOOKMARKS_PATH] =
-		g_strdup_printf ("%s%c%s", muhome,
-				 G_DIR_SEPARATOR,
-				 MU_BOOKMARKS_FILENAME);
-
-	data->_str [MU_RUNTIME_STR_CACHE_PATH] =
-		g_strdup_printf ("%s%c%s", muhome,
-				 G_DIR_SEPARATOR,
-				 MU_CACHE_DIRNAME);
-	
-	if (!mu_util_create_dir_maybe
-	    (_data->_str[MU_RUNTIME_STR_CACHE_PATH], 0700)) {
-		g_warning ("failed to create cache dir");
-		return FALSE;
-	}
-	
-	data->_str [MU_RUNTIME_STR_CONTACTS_PATH] =
-		g_strdup_printf ("%s%c%s",
-				 data->_str[MU_RUNTIME_STR_CACHE_PATH],
-				 G_DIR_SEPARATOR,
-				 MU_CONTACTS_FILENAME);
-	return TRUE;
 }
 
 
@@ -129,7 +91,7 @@ mu_runtime_init (const char* muhome_arg)
 	}
 	
 	_data = g_new0 (MuRuntimeData, 1);
- 	_data->_str[MU_RUNTIME_STR_MU_HOMEPATH] = muhome;
+ 	_data->_str[MU_RUNTIME_PATH_MUHOME] = muhome;
 	init_paths (muhome, _data);
 	
 	mu_msg_gmime_init ();
@@ -174,9 +136,9 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 		return FALSE;
 	}
 	
-	_data->_str[MU_RUNTIME_STR_MU_HOMEPATH] =
+	_data->_str[MU_RUNTIME_PATH_MUHOME] =
 		g_strdup (_data->_config->muhome);
-	init_paths (_data->_str[MU_RUNTIME_STR_MU_HOMEPATH], _data);
+	init_paths (_data->_str[MU_RUNTIME_PATH_MUHOME], _data);
 	
 	mu_msg_gmime_init ();
 	
@@ -189,7 +151,7 @@ runtime_free (void)
 {
 	int i;
 
-	for (i = 0; i != MU_RUNTIME_STR_NUM; ++i)
+	for (i = 0; i != MU_RUNTIME_PATH_NUM; ++i)
 		g_free (_data->_str[i]);
 	
 	mu_config_destroy (_data->_config);
@@ -211,37 +173,64 @@ mu_runtime_uninit (void)
 }
 	
 
-const char*
-mu_runtime_mu_home_dir (void)
+static gboolean
+create_dirs_maybe (MuRuntimeData *data)
 {
-	g_return_val_if_fail (_initialized, NULL);
-	return _data->_str[MU_RUNTIME_STR_MU_HOMEPATH];
+	if (!mu_util_create_dir_maybe
+	    (data->_str[MU_RUNTIME_PATH_CACHE], 0700)) {
+		g_warning ("failed to create cache dir");
+		return FALSE;
+	}
+
+	if (!mu_util_create_dir_maybe
+	    (data->_str[MU_RUNTIME_PATH_LOG], 0700)) {
+		g_warning ("failed to create log dir");
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
+
+
+static gboolean
+init_paths (const char* muhome, MuRuntimeData *data)
+{
+	data->_str [MU_RUNTIME_PATH_XAPIANDB] =
+		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
+				 MU_XAPIAN_DIRNAME);
+	
+	data->_str [MU_RUNTIME_PATH_BOOKMARKS] =
+		g_strdup_printf ("%s%c%s", muhome,G_DIR_SEPARATOR,
+				 MU_BOOKMARKS_FILENAME);
+
+	data->_str [MU_RUNTIME_PATH_CACHE] =
+		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
+				 MU_CACHE_DIRNAME);
+	
+	data->_str [MU_RUNTIME_PATH_CONTACTS] =
+		g_strdup_printf ("%s%c%s", data->_str[MU_RUNTIME_PATH_CACHE],
+				 G_DIR_SEPARATOR, MU_CONTACTS_FILENAME);
+
+	data->_str [MU_RUNTIME_PATH_LOG] =
+		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
+				 MU_LOG_DIRNAME);
+
+	if (!create_dirs_maybe (data))
+		return FALSE;
+
+	return TRUE;
 }
 
 
 const char*
-mu_runtime_xapian_dir (void)
+mu_runtime_path (MuRuntimePath path)
 {
 	g_return_val_if_fail (_initialized, NULL);
-	return _data->_str[MU_RUNTIME_STR_XAPIAN_PATH];
+	g_return_val_if_fail (path < MU_RUNTIME_PATH_NUM, NULL);
+	
+	return _data->_str[path];
 }
-
-const char*
-mu_runtime_bookmarks_file  (void)
-{
-	g_return_val_if_fail (_initialized, NULL);
-	return _data->_str[MU_RUNTIME_STR_BOOKMARKS_PATH];
-}
-
-
-const char*
-mu_runtime_contacts_cache_file  (void)
-{
-	g_return_val_if_fail (_initialized, NULL);
-	return _data->_str[MU_RUNTIME_STR_CONTACTS_PATH];
-}
-
-
 
 MuConfig*
 mu_runtime_config (void)
