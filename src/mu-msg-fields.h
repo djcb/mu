@@ -41,6 +41,7 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_TO,
 	MU_MSG_FIELD_ID_MSGID,
 	MU_MSG_FIELD_ID_TIMESTAMP,
+
 	MU_MSG_FIELD_ID_NUM,
 
 	/* fake fields */

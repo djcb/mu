@@ -87,6 +87,20 @@ MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
 unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 
 
+
+/** 
+ * get the index for this iterator (ie. somewhere between [0..n-1],
+ * with being the number of matches, and increasing 1 for each
+ * iter_next)
+ * 
+ * @param iter a valid MuMsgIter 
+ * 
+ * @return the index or (unsigned int)-1 in case of error
+
+ */
+unsigned int      mu_msg_iter_get_index        (MuMsgIter *iter);
+
+
 /**
  * get the full path of the message file
  * 

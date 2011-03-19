@@ -31,8 +31,7 @@ struct _MuMsgIter {
 	Xapian::Enquire		       *_enq;
 	Xapian::MSet                   _matches;
 	Xapian::MSet::const_iterator   _cursor;
-	size_t                         _batchsize;
-	size_t		               _offset;
+	size_t                         _batchsize, _offset;
 	char*                          _str[MU_MSG_FIELD_ID_NUM];
 	bool                           _is_null; 
 };
@@ -211,6 +210,16 @@ mu_msg_iter_get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(static_cast<gint64>(-1));
 }
+
+
+unsigned int
+mu_msg_iter_get_index (MuMsgIter *iter)
+{
+	g_return_val_if_fail (iter, (unsigned int)-1);
+
+	return iter->_offset;
+}
+
 
 /* hmmm.... is it impossible to get a 0 docid, or just very improbable? */
 unsigned int
