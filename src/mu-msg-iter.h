@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <mu-msg.h>
+#include <mu-msg-data.h>
 
 G_BEGIN_DECLS
 
@@ -76,7 +77,23 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
  */
 MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-   
+
+
+/** 
+ * get a structure with information about this iter; this struct is
+ * newly allocated, can be used to keep an in-memory record of a
+ * message
+ * 
+ * @param iter a valid msg iterator
+ * 
+ * @return a newly allocate MuMsgData struct (free with
+ * mu_msg_data_destroy), or NULL in case of error
+ */
+MuMsgData* mu_msg_iter_get_msgdata (MuMsgIter *iter)
+        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+
 /**
  * get the document id for the current message
  * 
@@ -117,8 +134,7 @@ const char*      mu_msg_iter_get_path          (MuMsgIter *iter);
  *   "/foo/bar"
  * 
  * @param iter a valid MuMsgIter iterator
- * 
- * @return the path, or NULL in case of error
+ *  * @return the path, or NULL in case of error
  */
 const char*      mu_msg_iter_get_maildir (MuMsgIter *iter);
 
