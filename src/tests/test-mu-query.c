@@ -210,6 +210,7 @@ test_mu_query_05 (void)
 	MuMsgIter *iter;
 	MuMsg *msg;
 	gchar *xpath;
+	GError *err;
 	
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
@@ -217,8 +218,14 @@ test_mu_query_05 (void)
 	query = mu_query_new (xpath, NULL);
 	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
 			     FALSE, 1, NULL);
-	msg = mu_msg_iter_get_msg (iter, NULL);
-		
+	err = NULL;
+	msg = mu_msg_iter_get_msg (iter, &err);
+	if (!msg) {
+		g_warning ("error getting message: %s", err->message);
+		g_error_free (err);
+		g_assert_not_reached ();
+	}
+	
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
 			 "Greetings from Lothlórien");
 	g_assert_cmpstr (mu_msg_get_summary(msg,5),==,

@@ -191,12 +191,22 @@ struct _MuQuery {
 	Xapian::ValueRangeProcessor*	_size_range_processor;
 };
 
-gboolean
+static void
+uninit_mu_query (MuQuery *mqx)
+{
+	try {
+		delete mqx->_db;
+		delete mqx->_qparser;
+
+		delete mqx->_date_range_processor;
+		delete mqx->_size_range_processor;
+
+	} MU_XAPIAN_CATCH_BLOCK;
+}
+
+static gboolean
 init_mu_query (MuQuery *mqx, const char* dbpath)
 {
-	mqx->_db      = 0;
-	mqx->_qparser = 0;
-	
 	try {
 		mqx->_db      = new Xapian::Database(dbpath);
 		mqx->_qparser = new Xapian::QueryParser;
@@ -222,29 +232,11 @@ init_mu_query (MuQuery *mqx, const char* dbpath)
 
 	} MU_XAPIAN_CATCH_BLOCK;
 
-	try {
-		delete mqx->_db;
-		delete mqx->_qparser;
-
-	} MU_XAPIAN_CATCH_BLOCK;
+	// things went wrong, cleanup resources
+	uninit_mu_query (mqx);
 	
 	return FALSE;
 }
-
-	
-static void
-uninit_mu_query (MuQuery *mqx)
-{
-	try {
-		delete mqx->_db;
-		delete mqx->_qparser;
-
-		delete mqx->_date_range_processor;
-		delete mqx->_size_range_processor;
-
-	} MU_XAPIAN_CATCH_BLOCK;
-}
-
 
 static bool
 set_query (MuQuery *mqx, Xapian::Query& q, const char* searchexpr,
@@ -323,7 +315,7 @@ mu_query_new (const char* xpath, GError **err)
 	if (mu_util_xapian_is_empty (xpath)) 
 		g_warning ("database %s is empty; nothing to do", xpath);
 	
-	mqx = g_new (MuQuery, 1);
+	mqx = g_new0 (MuQuery, 1);
 
 	if (!init_mu_query (mqx, xpath)) {
 		g_set_error (err, 0, MU_ERROR_INTERNAL,
