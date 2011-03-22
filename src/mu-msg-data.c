@@ -17,7 +17,9 @@
 **
 */
 
+#include <string.h> /* for memcpy */
 #include "mu-msg-data.h"
+
 
 MuMsgData*
 mu_msg_data_new (void)
