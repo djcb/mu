@@ -259,7 +259,7 @@ char* mu_str_escape_c_literal (const gchar* str)
  * 
  * @return TRUE if the string is empty, FALSE otherwise
  */
-#define mu_str_is_empty(S) ((!(S)||!(S)[0])?TRUE:FALSE)
+#define mu_str_is_empty(S) ((!(S)||!(*S))?TRUE:FALSE)
 
 
 
