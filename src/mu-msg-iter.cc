@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,24 @@
 #include "mu-msg-iter-priv.hh"
 
 struct _MuMsgIter {
-	Xapian::Enquire		       *_enq;
+
+	_MuMsgIter (const Xapian::Enquire &enq, size_t batchsize):
+		_enq(enq), _batchsize(batchsize), _offset(0) {
+
+		_matches = _enq.get_mset (0, _batchsize);
+		_cursor	 = _matches.begin();
+		_is_null = _matches.empty();
+
+		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i)
+			_str[i] = NULL;
+	}
+
+	~_MuMsgIter () {
+		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) 
+			g_free (_str[i]);
+	}
+	
+	const Xapian::Enquire          _enq;
 	Xapian::MSet                   _matches;
 	Xapian::MSet::const_iterator   _cursor;
 	size_t                         _batchsize, _offset;
@@ -41,25 +58,9 @@ struct _MuMsgIter {
 MuMsgIter*
 mu_msg_iter_new (const Xapian::Enquire& enq, size_t batchsize)
 {
-	MuMsgIter *iter;
-
 	try {
-		iter = new MuMsgIter;
-		memset (iter->_str, 0, sizeof(iter->_str));
-
-		iter->_enq       = new Xapian::Enquire(enq);
-		iter->_matches   = iter->_enq->get_mset (0, batchsize);
-		if (!iter->_matches.empty()) {
-			iter->_cursor    = iter->_matches.begin();
-			iter->_is_null   = false;
-		} else
-			iter->_is_null = true;
+		return new MuMsgIter (enq, batchsize);
 		
-		iter->_batchsize = batchsize; 
-		iter->_offset    = 0;
-		
-		return iter;
-
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
@@ -67,16 +68,7 @@ mu_msg_iter_new (const Xapian::Enquire& enq, size_t batchsize)
 void
 mu_msg_iter_destroy (MuMsgIter *iter)
 {
-	if (iter) {
-		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) 
-			g_free (iter->_str[i]); 
-		
-		try {
-			delete iter->_enq;
-			delete iter;
-			
-		} MU_XAPIAN_CATCH_BLOCK;
-	}
+	try { delete iter; } MU_XAPIAN_CATCH_BLOCK;
 }
 
 
@@ -122,8 +114,7 @@ message_is_readable (MuMsgIter *iter)
 static MuMsgIter*
 get_next_batch (MuMsgIter *iter)
 {	
-	iter->_matches = iter->_enq->get_mset (iter->_offset,
-					       iter->_batchsize);
+	iter->_matches = iter->_enq.get_mset (iter->_offset, iter->_batchsize);
 	if (iter->_matches.empty()) {
 		iter->_cursor = iter->_matches.end();
 		iter->_is_null = true;

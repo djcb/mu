@@ -132,8 +132,8 @@ private:
 
 class MuSizeRangeProcessor : public Xapian::NumberValueRangeProcessor {
 public:
-	MuSizeRangeProcessor(Xapian::valueno v)
-	: Xapian::NumberValueRangeProcessor(v) {
+	MuSizeRangeProcessor():
+		Xapian::NumberValueRangeProcessor(MU_MSG_FIELD_ID_SIZE) {
 	}
 	
 	Xapian::valueno operator()(std::string &begin, std::string &end) {
@@ -185,64 +185,30 @@ private:
 static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
 struct _MuQuery {
-	Xapian::Database*		_db;
-	Xapian::QueryParser*		_qparser;
-	Xapian::ValueRangeProcessor*	_date_range_processor;
-	Xapian::ValueRangeProcessor*	_size_range_processor;
-};
-
-static void
-uninit_mu_query (MuQuery *mqx)
-{
-	try {
-		delete mqx->_db;
-		delete mqx->_qparser;
-
-		delete mqx->_date_range_processor;
-		delete mqx->_size_range_processor;
-
-	} MU_XAPIAN_CATCH_BLOCK;
-}
-
-static gboolean
-init_mu_query (MuQuery *mqx, const char* dbpath)
-{
-	try {
-		mqx->_db      = new Xapian::Database(dbpath);
-		mqx->_qparser = new Xapian::QueryParser;
+	_MuQuery (const char* dbpath):
+		_db (Xapian::Database(dbpath)) {
 		
-		mqx->_qparser->set_database (*mqx->_db);
-		mqx->_qparser->set_default_op (Xapian::Query::OP_AND);
+		_qparser.set_database (_db);
+		_qparser.set_default_op (Xapian::Query::OP_AND);
 
-		/* check for dates */
-		mqx->_date_range_processor = new MuDateRangeProcessor ();
-		mqx->_qparser->add_valuerangeprocessor
-			(mqx->_date_range_processor);
-
-		/* check for sizes */
-		mqx->_size_range_processor = new MuSizeRangeProcessor
-			(MU_MSG_FIELD_ID_SIZE);
-		mqx->_qparser->add_valuerangeprocessor
-			(mqx->_size_range_processor);
+		_qparser.add_valuerangeprocessor (&_date_range_processor);
+		_qparser.add_valuerangeprocessor (&_size_range_processor);
 		
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
-				      (gpointer)mqx->_qparser);
+				      &_qparser);
+	}
 		
-		return TRUE;
-
-	} MU_XAPIAN_CATCH_BLOCK;
-
-	// things went wrong, cleanup resources
-	uninit_mu_query (mqx);
-	
-	return FALSE;
-}
+	Xapian::Database	_db;
+	Xapian::QueryParser	_qparser;
+	MuDateRangeProcessor	_date_range_processor;
+	MuSizeRangeProcessor	_size_range_processor;
+};
 
 static bool
 set_query (MuQuery *mqx, Xapian::Query& q, const char* searchexpr,
 	   GError **err)  {
 	try {
-		q = mqx->_qparser->parse_query
+		q = mqx->_qparser.parse_query
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
@@ -295,10 +261,8 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 MuQuery*
 mu_query_new (const char* xpath, GError **err)
 {
-	MuQuery *mqx;
-	
 	g_return_val_if_fail (xpath, NULL);
-
+	
 	if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
 		g_set_error (err, 0, MU_ERROR_XAPIAN_DIR,
 			     "'%s' is not a readable xapian dir", xpath);
@@ -314,28 +278,21 @@ mu_query_new (const char* xpath, GError **err)
 
 	if (mu_util_xapian_is_empty (xpath)) 
 		g_warning ("database %s is empty; nothing to do", xpath);
-	
-	mqx = g_new0 (MuQuery, 1);
 
-	if (!init_mu_query (mqx, xpath)) {
-		g_set_error (err, 0, MU_ERROR_INTERNAL,
-			     "failed to initialize the Xapian query object");
-		g_free (mqx);
-		return NULL;
-	}
-	
-	return mqx;
+	try {
+
+		return new MuQuery (xpath);
+
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL); 
+
+	return 0;
 }
 
 
 void
 mu_query_destroy (MuQuery *self)
 {
-	if (!self)
-		return;
-	
-	uninit_mu_query (self);
-	g_free (self);
+	try { delete self; } MU_XAPIAN_CATCH_BLOCK;
 }
 
 
@@ -380,10 +337,10 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		}
 		g_free (preprocessed);
 		
-		Xapian::Enquire enq (*self->_db);
+		Xapian::Enquire enq (self->_db);
 
 		if (batchsize == 0)
-			batchsize = self->_db->get_doccount();
+			batchsize = self->_db.get_doccount();
 
 		if (sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
@@ -397,7 +354,7 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 }
 
 char*
-mu_query_as_string  (MuQuery *self, const char *searchexpr, GError **err) 
+mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err) 
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);
