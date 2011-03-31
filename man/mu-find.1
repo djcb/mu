@@ -1,4 +1,4 @@
-.TH MU FIND 1 "January 2011" "User Manuals"
+.TH MU FIND 1 "March 2011" "User Manuals"
 
 .SH NAME 
 
@@ -124,6 +124,7 @@ listed in the following table:
 	p,passed        Passed ('Handled')
 	r,replied       Replied
 	s,seen          Seen
+	u,unread        Unread (shorthand for 'new or not seen')
 	t,thrashed      Marked for deletion
 	a,attach        Has attachment
 	z,signed        Signed message
@@ -400,11 +401,12 @@ Find all messages in the 'Archive' folder from Fred:
   $ mu find from:fred maildir:/Archive
 .fi
 
-Find all messages with attachments:
+Find all unread messages with attachments:
 
 .nf
-  $ mu find flag:attach
+  $ mu find flag:unread flag:attach
 .fi
+
 
 
 .SS Integrating mu find with mail clients

@@ -40,14 +40,15 @@ static void test_mu_msg_file_get_flags_from_path(void)
 		MuMsgFlags flags;
 	} paths[] = {
 		{
-		"/home/foo/Maildir/test/cur/123456:2,FR",
-			    MU_MSG_FLAG_REPLIED | MU_MSG_FLAG_FLAGGED}, {
-		"/home/foo/Maildir/test/new/123456", MU_MSG_FLAG_NEW}, {
+		"/home/foo/Maildir/test/cur/123456:2,FSR",
+			    MU_MSG_FLAG_REPLIED | MU_MSG_FLAG_SEEN | MU_MSG_FLAG_FLAGGED}, {
+		"/home/foo/Maildir/test/new/123456",
+		            MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD}, {
 		"/home/foo/Maildir/test/new/123456:2,FR",
-			    MU_MSG_FLAG_NEW}, {
+			    MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD}, {
 		"/home/foo/Maildir/test/cur/123456:2,DTP",
 			    MU_MSG_FLAG_DRAFT | MU_MSG_FLAG_TRASHED |
-			    MU_MSG_FLAG_PASSED}, {
+			    MU_MSG_FLAG_PASSED | MU_MSG_FLAG_UNREAD }, {
 		"/home/foo/Maildir/test/cur/123456:2,S",
 			    MU_MSG_FLAG_SEEN}
 	};

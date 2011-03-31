@@ -99,7 +99,8 @@ mu_msg_file_get_flags_from_path (const char *path)
 
 		mtype = check_msg_type (path, &info);
 		if (mtype == MSG_TYPE_NEW) {	/* we ignore any new-msg flags */
-				flags = MU_MSG_FLAG_NEW;
+				/* note NEW implies UNREAD */
+				flags = MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD;
 				goto leave;
 		}
 
@@ -120,6 +121,10 @@ mu_msg_file_get_flags_from_path (const char *path)
 				}
 		}
 
+		/* the UNREAD pseudo flag => NEW OR NOT SEEN */
+		if (!(flags & MU_MSG_FLAG_SEEN))
+				flags |= MU_MSG_FLAG_UNREAD;
+		
 leave:
 		g_free(info);
 		return flags;
@@ -147,7 +152,7 @@ get_flags_str_s (MuMsgFlags flags)
 				flagstr[i++] = 'S';
 		if (flags & MU_MSG_FLAG_TRASHED)
 				flagstr[i++] = 'T';
-
+		
 		flagstr[i] = '\0';
 
 		return flagstr;

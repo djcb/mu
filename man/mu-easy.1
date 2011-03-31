@@ -1,4 +1,4 @@
-.TH MU-EASY 1 "November 2010" "User Manuals"
+.TH MU-EASY 1 "March 2010" "User Manuals"
 
 .SH NAME 
 
@@ -42,7 +42,8 @@ When \fBmu\fR sees such a file, it will excluded this directory and its
 sub-directories.
 
 .SH SEARCHING YOUR E-MAIL
-After you have indexed your mail, you can search it. Normally, the search
+
+After you have indexed your mail,you can search it. Normally, the search
 results are to standard output, but the output can also be in the form of
 Maildir with symbolic links to the found messages. This enables integration
 with e-mail clients; see the \fBmu-find\fR man page for details, the syntax of
@@ -138,11 +139,11 @@ Get all messages from Jim without an attachment:
 
 Get all unread messages where the subject mentions Ångström:
 .nf
-  \fB$ mu find flag:new subject:Ångström\fR 
+  \fB$ mu find flag:unread subject:Ångström\fR 
 .fi
 which is equivalent to:
 .nf
-  \fB$ mu find flag:new subject:angstrom\fR 
+  \fB$ mu find flag:unread subject:angstrom\fR 
 .fi
 because does mu is case-insensitive and accent-insensitive.
 

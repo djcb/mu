@@ -309,30 +309,24 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg,
 
 
 static void
-add_terms_values_number (Xapian::Document& doc, MuMsg *msg, 
-			 MuMsgFieldId mfid)
+add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 {
 	const std::string pfx (1, mu_msg_field_xapian_prefix(mfid));
 	gint64 num = mu_msg_get_field_numeric (msg, mfid);
+
 	const std::string numstr (Xapian::sortable_serialise((double)num));
-	
 	doc.add_value ((Xapian::valueno)mfid, numstr);
 	
 	if (mfid == MU_MSG_FIELD_ID_FLAGS) {
-		const char* flags, *cur;
-		cur = flags = mu_msg_flags_str_s ((MuMsgFlags)num);
-		while (cur && *cur) {
-			char kar = tolower (*cur);
-			doc.add_term  (pfx + kar);
-			++cur;
-		}
+		for (const char *cur = mu_msg_flags_str_s ((MuMsgFlags)num);
+		     cur && *cur; ++cur)
+			doc.add_term  (pfx + (char)tolower (*cur));
 
 	} else if (mfid == MU_MSG_FIELD_ID_PRIO) {
 		doc.add_term (pfx + std::string(1,
 			      mu_msg_prio_char((MuMsgPrio)num)));
-
-	} else 
-		doc.add_term  (pfx + numstr);
+	} //else
+	// 	doc.add_term  (pfx + numstr);
 }
 
 static void

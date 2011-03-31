@@ -37,6 +37,7 @@ static const MuMsgFlags ALL_FLAGS[] = {
 	/* r */ MU_MSG_FLAG_REPLIED,
 	/* s */ MU_MSG_FLAG_SEEN,
 	/* t */ MU_MSG_FLAG_TRASHED,
+	/* u */ MU_MSG_FLAG_UNREAD,
 	/* x */ MU_MSG_FLAG_ENCRYPTED,
 	/* z */ MU_MSG_FLAG_SIGNED
 };
@@ -53,7 +54,10 @@ mu_msg_flag_from_char (char k)
 	case 't': return MU_MSG_FLAG_TRASHED;
 	case 'd': return MU_MSG_FLAG_DRAFT;
 	case 'f': return MU_MSG_FLAG_FLAGGED;
-
+		
+	/* NEW OR NOT SEEN */
+	case 'u': return MU_MSG_FLAG_UNREAD;
+		
 	case 'z': return MU_MSG_FLAG_SIGNED;
 	case 'x': return MU_MSG_FLAG_ENCRYPTED;
 	case 'a': return MU_MSG_FLAG_HAS_ATTACH;
@@ -75,6 +79,9 @@ mu_msg_flag_name (MuMsgFlags flag)
 	case MU_MSG_FLAG_TRASHED:	return "trashed";
 	case MU_MSG_FLAG_DRAFT:		return "draft";
 	case MU_MSG_FLAG_FLAGGED:	return "flagged";
+
+	/* ie., NEW or NOT SEEN */
+	case MU_MSG_FLAG_UNREAD:	return "unread";
 		
 	case MU_MSG_FLAG_SIGNED:	return "signed";
 	case MU_MSG_FLAG_ENCRYPTED:	return "encrypted";
@@ -96,6 +103,9 @@ mu_msg_flag_char (MuMsgFlags flag)
 	case MU_MSG_FLAG_TRASHED:	return 't';
 	case MU_MSG_FLAG_DRAFT:		return 'd';
 	case MU_MSG_FLAG_FLAGGED:	return 'f';
+
+	/* NEW OR NOT SEEN */
+	case MU_MSG_FLAG_UNREAD:        return 'u';
 		
 	case MU_MSG_FLAG_SIGNED:	return 'z';
 	case MU_MSG_FLAG_ENCRYPTED:	return 'x';

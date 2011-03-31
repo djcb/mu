@@ -182,7 +182,7 @@ test_mu_msg_03 (void)
 						 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
 
 		g_assert_cmpuint (mu_msg_get_flags(msg),
-						  ==, 0);
+						  ==, MU_MSG_FLAG_UNREAD);
 
 	
 		mu_msg_unref (msg);
