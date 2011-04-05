@@ -1,4 +1,4 @@
-.TH MU-EASY 1 "March 2010" "User Manuals"
+.TH MU-EASY 1 "April 2011" "User Manuals"
 
 .SH NAME 
 
@@ -8,8 +8,8 @@ mu easy \- a quick introduction to mu
 
 \fBmu\fR is a set of tools for dealing with e-mail messages in Maildirs. There
 are many options, which are all described in the man pages for the various
-sub-commands. This man pages jumps over all the details and gives examples of
-the more common use cases. If the use cases described here do not precisely do
+sub-commands. This man pages jumps over all of the details and gives examples
+of some common use cases. If the use cases described here do not precisely do
 what you want, please check the more extensive information in the man page
 about the sub-command you are using -- for example, the mu-index or mu-find
 man pages.
@@ -20,6 +20,7 @@ Maildir-format. If you don't do so, you can still use the other commands, but
 you won't be able to index/search your mail.
 
 .SH INDEXING YOUR E-MAIL
+
 Before you can search e-mails, you'll first need to index them:
 
 .nf
@@ -31,24 +32,24 @@ the speed of your computer, hard drive etc. Usually, indexing should be able to
 reach a speed of a few hundred messages per second.
 
 \fBmu index\fR guesses the top-level Maildir to do its job; if it guesses
-wrong, you can use the \fI--maildir\fR option to specify the top-level
+wrongly, you can use the \fI--maildir\fR option to specify the top-level
 directory that should be processed. See the \fBmu-index\fR man page for more
-detail.
+details.
 
 Normally, \fBmu index\fR visits all the directories under the top-level
 Maildir; however, you can exclude certain directories (say, the 'trash'
 or 'spam' folders) by creating a file called \fI.noindex\fR in the directory.
-When \fBmu\fR sees such a file, it will excluded this directory and its
-sub-directories.
+When \fBmu\fR sees such a file, it will exclude this directory and its
+sub-directories from indexing.
 
 .SH SEARCHING YOUR E-MAIL
 
-After you have indexed your mail,you can search it. Normally, the search
-results are to standard output, but the output can also be in the form of
-Maildir with symbolic links to the found messages. This enables integration
-with e-mail clients; see the \fBmu-find\fR man page for details, the syntax of
-the search parameters and so on. Here, we just give some examples for common
-cases.
+After you have indexed your mail, you can start searching it. By default, the
+search results are printed on standard output. Alternatively, the output can
+take the form of Maildir with symbolic links to the found messages. This
+enables integration with e-mail clients; see the \fBmu-find\fR man page for
+details, the syntax of the search parameters and so on. Here, we just give
+some examples for common cases.
 
 First, let's search for all messages sent to Julius Caesar regarding fruit:
 
@@ -63,8 +64,8 @@ This should return something like:
 .fi
 
 This means there is a message to 'julius' with 'fruit' somewhere in the
-message. In this case, it's a message from John Milton. Note that the display
-of the date depends on your system locale.
+message. In this case, it's a message from John Milton. Note that the date
+format depends on your the language/locale you are using.
 
 How do we know that the message was sent to Julius Caesar? Well, it's not
 visible from the results above, because the default fields that are shown are
@@ -165,9 +166,10 @@ Get all message we got in the last two weeks about emacs:
 
 .SH DISPLAYING MESSAGES
 
-We might also want to display complete messages. This can be done using \fBmu
-view\fR command. Note that this command does not use the database; you simply
-provide the path to a message.
+We might also want to display the complete messages instead of the header
+information. This can be done using \fBmu view\fR command. Note that this
+command does not use the database; you simply provide it the path to a
+message.
 
 Therefore, if you want to display some message from a search query, you'll
 need its path. To get the path (think \fBl\fRocation) for our first example we
@@ -196,6 +198,31 @@ We can now display this message:
      Brought Death into the World, and all our woe,
      [...]
 .fi
+
+.SH FINDING CONTACTS
+
+While \fBmu find\fR searches for messages, there is also \fBmu cfind\fR to
+find \fIcontacts\fR, that is, names + addresses. Without any search
+expression, \fBmu cfind\fR lists all of your contacts.
+
+.nf
+  \fB$ mu cfind julius\fR 
+.fi
+
+will find all contacts with 'julius' in either name or e-mail address. Note
+that \fBmu cfind\fR accepts a regular expression.
+
+\fBmu cfind\fR also supports a \fI--format=\fR-parameter, which sets the
+output to some specific format, so the results can be imported into another
+program. For example, to export your contact information to a \fBmutt\fR
+address book file, you can use something like:
+
+.nf
+  \fB$ mu cfind --format=mutt-alias > ~/mutt-aliases \fR 
+.fi
+
+Then, you can use them in \fBmutt\fR if you add something like \fBsource
+~/mutt-aliases\fR to your \fImuttrc\fR.
 
 .SH AUTHOR
 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>

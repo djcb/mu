@@ -1,4 +1,4 @@
-.TH MU EXTRACT 1 "February 2011" "User Manuals"
+.TH MU EXTRACT 1 "April 2011" "User Manuals"
 
 .SH NAME 
 
@@ -14,10 +14,12 @@ mu extract\- display and save message parts (attachments)
 attachments) from mail messages. It works on message files, and does not
 require the message to be indexed.
 
-For attachments, the file name specified in the mail message is used (if
-any). If there is no name, or when saving other mime-parts, a name is used
-derived from the message-id of the message. Without any options, \fBmu
-extract\fR simply outputs the list of MIME-parts in the message.
+For attachments, the file name used for saving is the name of the attachment
+in the message. If there is no such name, or when saving other mime-parts, a
+name derived from the message-id of the message.
+
+Without any options, \fBmu extract\fR simply outputs the list of MIME-parts in
+the message.
 
 .SH OPTIONS
 
@@ -46,14 +48,13 @@ overwrite existing files with the same name; by default overwriting is not
 allowed.
 
 .TP
-\fB\-\-play\fR
-Try to 'play' (open) the attachment with the corresponding
-application. Depends on the \fBxdg-open\fR utility.
-
+\fB\-\-play\fR Try to 'play' (open) the attachment with the default
+application for the particular file type. Depends on the \fBxdg-open\fR
+utility.
 
 .SH BUGS
-Please report bugs if you find them:
 
+Please report bugs if you find them:
 .BR http://code.google.com/p/mu0/issues/list
 
 .SH AUTHOR

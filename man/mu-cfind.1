@@ -1,10 +1,9 @@
-.TH MU CFIND 1 "March 2011" "User Manuals"
+.TH MU CFIND 1 "April 2011" "User Manuals"
 
 .SH NAME 
 
-mu cfind \- find contacts in the
-.B mu
-database and/or export
+mu cfind \- find contacts in the \fBmu\fR database and export them for use in
+other programs.
 
 .SH SYNOPSIS
 
@@ -14,8 +13,8 @@ database and/or export
 
 \fBmu cfind\fR is the \fBmu\fR command for finding \fIcontacts\fR (name and
 e-mail address of people who were either the sender or receiver of
-mail). There are different output formats for the contacts to enable importing
-them into other tools.
+mail). There are different output formats available, for importing the
+contacts into various tools.
 
 .SH SEARCHING CONTACTS
 
@@ -47,7 +46,7 @@ The regular expressions are Perl-compatible (as per the PCRE-library).
 .SH OPTIONS
 
 .TP
-\fB\-\-format\fR=\fIplain|mutt|wl|org-contact|bbdb|csv\fR
+\fB\-\-format\fR=\fIplain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv\fR
 set the output format to the given value. The following are available:
 
 .nf
@@ -91,10 +90,8 @@ Now, in mutt, you can easily search for e-mail address using the
 
 .SH BUGS
 
-Please report bugs if you find them:
-.BR http://code.google.com/p/mu0/issues/list
-If you have specific messages which are not matched correctly, please attach
-them (appropriately censored of course).
+Please report bugs if you find them at
+\fBhttp://code.google.com/p/mu0/issues/list\fR.
 
 .SH AUTHOR
 
@@ -102,4 +99,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu(1) mu-index(1) mu-find(1)
+.BR mu(1) mu-index(1) mu-find(1) pcrepattern(3)

@@ -1,8 +1,8 @@
-.TH MU 1 "November 2010" "User Manuals"
+.TH MU 1 "April 2011" "User Manuals"
 
 .SH NAME 
 
-mu \- a set of tools to deal with Maildirs; in particular to index and search
+mu \- a set of tools to deal with Maildirs, in particular to index and search
 e-mail messages.
 
 .SH SYNOPSIS
@@ -21,18 +21,22 @@ e-mail messages.
 
 .B mu extract [options] <file> [<parts>]
 
+.B mu cfind [options] [<expr>]
+
+
 .SH DESCRIPTION
 
 \fBmu\fR is a set of tools for dealing with Maildirs and the e-mail messages
 in them.
 
 \fBmu\fRs main function is to enable searching of e-mail messages. It does so
-by scanning a Maildir directory tree and analyzing the e-mail messages found
-('indexing'). The results of this analysis are stored in a database, which can
-then be queried.
+by periodically scanning a Maildir directory tree and analyzing the e-mail
+messages found ('indexing'). The results of this analysis are stored in a
+database, which can then be queried.
 
 In addition to indexing and searching, \fBmu\fR also offers functionality for
-viewing messages, extracting attachments and creating maildirs.
+viewing messages, extracting attachments and creating maildirs, and searching
+and exporting contact information.
 
 \fBmu\fR can be used from the command line or can be integrated with various
 e-mail clients.
@@ -65,6 +69,15 @@ for finding messages in your database, using certain search
 parameters. See
 .BR mu-find(1)
 \.
+
+
+.TP
+\fBcfind\fR
+for finding contacts (names + e-mail addresses) matching a certain expression,
+and exporting the results in various formats for use in other programs.
+.BR mu-cfind(1)
+\.
+
 
 .TP
 \fBview\fR
@@ -146,5 +159,5 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu-index(1) mu-cleanup(1) mu-find(1) mu-mkdir(1) mu-view(1)
-.BR mu-extract(1) mu-easy(1) mu-bookmarks(5)
+.BR mu-index(1) mu-cleanup(1) mu-find(1) mu-cfind(1) mu-mkdir(1) mu-view(1)
+.BR mu-extract(1) mu-easy(1) mu-bookmarks(5) 
