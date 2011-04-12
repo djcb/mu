@@ -431,8 +431,43 @@ macro index <F9> "<change-folder-readonly>~/Maildir/search" \\
 
 \fBWanderlust\fR
 
-If you use the Wanderlust e-mail client for \fBemacs\fR, the following
-definitions can be used; typing 'Q' will start a query.
+\fBSam B\fR suggested the following on the \fBmu\fR-mailing list. First add
+the following to your Wanderlust configuraiton file:
+
+.nf
+(require 'elmo-search)
+(elmo-search-register-engine
+    'mu 'local-file
+    :prog "/usr/local/bin/mu" ;; or wherever you've installed it
+    :args '("find" pattern "--fields" "l") :charset 'utf-8)
+
+(setq elmo-search-default-engine 'mu)
+;; for when you type "g" in folder or summary.
+(setq wl-default-spec "[")
+.fi
+
+Now, you can search using the \fBg\fR key binding; you can also create
+permanent virtual folders when the messages matching some expression by adding
+something like the following to your \fIfolders\fR file.
+
+.nf
+VFolders {
+  [date:today..now]!mu  "Today"
+
+  [size:1m..100m]!mu    "Big"
+
+  [flag:unread]!mu      "Unread"
+}
+.fi
+
+After restarting Wanderlust, the virtual folders should appear.
+
+
+\fBWanderlust (old)\fR
+
+Another way to intergrate \fBmu\fR and \fBwanderlust\fR is shown below; the
+aforementioned method is recommended, but if that does not work for some
+reason, the below can be an alternative.
 
 .nf
 (defvar mu-wl-mu-program     "/usr/local/bin/mu")
