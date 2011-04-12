@@ -1,9 +1,11 @@
 * NEWS (user visible changes)
 
-** Release 0.9.4 
+** Release 0.9.4 <2011-04-12 Tue>
 
    - add the 'cfind' command, to search/export contact information
    - add 'flag:unread' as a synonym for 'flag:new OR NOT flag:unseen'  
+   - updated documentation
+
 
 ** Release 0.9.3 <2011-02-13 Sun>
    
