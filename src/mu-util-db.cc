@@ -54,9 +54,9 @@ gboolean
 mu_util_xapian_set_metadata (const gchar *xpath,
 			     const gchar *key, const gchar *val)
 {
-	g_return_val_if_fail (xpath, NULL);
-	g_return_val_if_fail (key, NULL);
-	g_return_val_if_fail (val, NULL);
+	g_return_val_if_fail (xpath, FALSE);
+	g_return_val_if_fail (key, FALSE);
+	g_return_val_if_fail (val, FALSE);
 	
 	if (!access(xpath, F_OK) == 0) {
 		g_warning ("cannot access %s: %s", xpath, strerror(errno));

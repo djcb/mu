@@ -302,7 +302,7 @@ empty_or_display_contact (const gchar * str)
 }
 
 static MugError
-mu_result_to_mug_error (MuResult r)
+mu_result_to_mug_error (MuError r)
 {
 	switch (r) {
 	case MU_ERROR_XAPIAN_DIR:
