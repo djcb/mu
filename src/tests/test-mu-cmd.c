@@ -388,9 +388,12 @@ test_mu_view_01 (void)
 		 * both are 'okay' from mu's perspective; it'd be even better
 		 * to have some #ifdefs for the GMime versions, but this
 		 * should work for now
+		 *
+		 * Added 350 as 'okay', which comes with gmime 2.4.24 (ubuntu 10.04)
 		 */
 		len = strlen(output);
-		g_assert (len == 370 || len == 358);
+		/* g_print ("\n[%s] (%d)\n", output, len); */
+		g_assert (len == 370 || len == 358 || len == 350);
 				
 		g_free (output);
 		g_free (cmdline);
