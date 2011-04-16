@@ -174,10 +174,10 @@ AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "auto"],
    AC_MSG_ERROR([GTK+ 2.x not found]))
 
 AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ])
-AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[gui=yes],[gui=no])
+AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],[buildgui=no])
 
 # webkit? needed for the fancy web widget
-AS_IF([test "x$gui" = "xyes"],[
+AS_IF([test "x$buildgui" = "xyes"],[
   PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
   AS_IF([test "x$have_webkit" = "xyes"],[
 	    webkit_version="`pkg-config --modversion webkit-1.0`"])
@@ -187,7 +187,7 @@ AS_IF([test "x$gui" = "xyes"],[
 AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 
 # gio is needed for some widget/ things
-AS_IF([test "x$gui"="xyes"],[
+AS_IF([test "x$buildgui"="xyes"],[
 PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
 AS_IF([test "x$have_gio" = "xyes"],[
 	    gio_version="`pkg-config --modversion gio-2.0`"])
@@ -200,7 +200,7 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 # check for xdg-open
-AS_IF([test "x$gui"="xyes"],[
+AS_IF([test "x$buildgui"="xyes"],[
   AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
   AS_IF([test "x$XDGOPEN" != "x"],[
     AC_DEFINE_UNQUOTED([XDGOPEN], ["$XDGOPEN"],[Path to xdg-open])],[
@@ -247,7 +247,7 @@ echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version" 
 echo "GMime version                        : $gmime_version"
 
-if test "x$gui" = "xyes"; then
+if test "x$buildgui" = "xyes"; then
 echo "GTK+ version                         : $gtk_version"
 fi
 
@@ -261,13 +261,24 @@ fi
 
 echo
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
-echo "Build 'mug' (requires GTK+)          : $have_gtk"
+echo "Build 'mug' toy-ui (requires GTK+)   : $buildgui"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo "xdg-open                             : $XDGOPEN"
 echo
 
 echo "Have direntry->d_ino                 : $use_dirent_d_ino" 
 echo "Have direntry->d_type                : $use_dirent_d_type" 
+echo "-----------------------------"
+echo
+
+if test "x$buildgui" = "xyes"; then
+echo "The demo UIs are in toys/mug and toys/mug2"
+     if test "x$gui" = "xgtk3"; then
+     	echo "Note that mug2 will *not* work with gtk+3, because it depends"
+    	echo "on libraries that use gtk+2, and the two can't be in one process"
+     fi
+fi
+
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
