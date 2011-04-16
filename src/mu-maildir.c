@@ -230,7 +230,6 @@ process_file (const char* fullpath, const gchar* mdir,
 		return MU_ERROR;
 	}
 	
-
 	result = (msg_cb)(fullpath, mdir, &statbuf, data);
 	if (result == MU_STOP) 
 		g_debug ("callback said 'MU_STOP' for %s", fullpath);
@@ -250,22 +249,31 @@ G_GNUC_CONST static gboolean
 is_maildir_new_or_cur (const char *path)
 {
 	size_t len;
-	const char *sfx;
 
+	g_return_val_if_fail (path, FALSE);
+	
 	/* path is the full path; it cannot possibly be shorter
 	 * than 4 for a maildir (/cur or /new) */
-	if (!path||(len = strlen(path)) < 4)
+	len = strlen (path);
+	if (G_UNLIKELY(len < 4))
 		return FALSE;
 	
-	sfx = &path[len - 4];
+	/* optimization; one further idea would be cast the 4 bytes to an integer
+	 * and compare that -- need to think about alignment, endianness */
+	
+	if (path[len - 4] == G_DIR_SEPARATOR &&	
+	    path[len - 3] == 'c' &&
+	    path[len - 2] == 'u' &&
+	    path[len - 1] == 'r')
+		return TRUE;
 
-	if (sfx[0] != G_DIR_SEPARATOR) /* small optimization */
-		return FALSE;
-	else if (sfx[1] != 'c' && sfx[1] != 'n')
-		return FALSE; /* optimization */
-	else
-		return (strcmp (sfx + 1, "cur") == 0 || 
-			strcmp (sfx + 1, "new") == 0);
+	if (path[len - 4] == G_DIR_SEPARATOR &&	
+	    path[len - 3] == 'n' &&
+	    path[len - 2] == 'e' &&
+	    path[len - 1] == 'w')
+		return TRUE;
+
+	return FALSE;
 }
 
 /* check if there is a noindex file (MU_WALK_NOINDEX_FILE) in this dir; */
@@ -295,19 +303,20 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 	/* if it's not a dir and not a file, ignore it.
 	 * note, this means also symlinks (DT_LNK) are ignored,
 	 * maybe make this optional */
-	if (d_type != DT_REG && d_type != DT_DIR)
+	if (G_UNLIKELY(d_type != DT_REG && d_type != DT_DIR))
 		return TRUE;
-
+	
 	name = entry->d_name;
 	
-	if (name[0] != '.')
+	/* ignore '.' and '..' dirs, as well as .notmuch and
+	 * .nnmaildir */
+	if (G_LIKELY(name[0] != '.'))
 		return FALSE;
-
+	
 	/* ignore . and .. */
-	if (name[1] == '\0' ||
-	    (name[1] == '.' && name[2] == '\0'))
+	if (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))
 		return TRUE;
-
+	
 	/* ignore .notmuch, .nnmaildir */
 	if ((name[1] == 'n') && /* optimization */
 	    (strcmp (name, ".notmuch") == 0 ||
@@ -341,7 +350,7 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 	unsigned char d_type;
 	
 	/* we have to copy the buffer from fullpath_s, because it
-	 * returns a static buffer */
+	 * returns a static buffer, and we maybe called reentrantly */
 	fp = mu_str_fullpath_s (path, entry->d_name);
 	fullpath = g_newa (char, strlen(fp) + 1);
 	strcpy (fullpath, fp);
@@ -416,20 +425,20 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 		     MuMaildirWalkDirCallback dir_cb, void *data)
 {
 	MuResult result;
-	GList *lst, *c;
+	GSList *lst, *c;
 	struct dirent *entry;
 	
 	lst = NULL;
 	while ((entry = readdir (dir)))
-		lst = g_list_prepend (lst, dirent_copy(entry));
+		lst = g_slist_prepend (lst, dirent_copy(entry));
 	
 	/* we sort by inode; this makes things much faster on
 	 * extfs2,3 */
 #if HAVE_STRUCT_DIRENT_D_INO		
-	c = lst = g_list_sort (lst, (GCompareFunc)dirent_cmp);
+	c = lst = g_slist_sort (lst, (GCompareFunc)dirent_cmp);
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/	
 
-	for (c = lst, result = MU_OK; c && result == MU_OK; c = c->next) {
+	for (c = lst, result = MU_OK; c && result == MU_OK; c = g_slist_next(c)) {
 		result = process_dir_entry (path, mdir,
 					    (struct dirent*)c->data, 
 					    msg_cb, dir_cb, data);
@@ -438,8 +447,8 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 			break;
 	}
 
-	g_list_foreach (lst, (GFunc)dirent_destroy, NULL);
-	g_list_free (lst);
+	g_slist_foreach (lst, (GFunc)dirent_destroy, NULL);
+	g_slist_free (lst);
 	
 	return result;
 }
