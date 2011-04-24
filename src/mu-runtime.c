@@ -201,7 +201,7 @@ init_paths (const char* muhome, MuRuntimeData *data)
 				 MU_XAPIAN_DIRNAME);
 	
 	data->_str [MU_RUNTIME_PATH_BOOKMARKS] =
-		g_strdup_printf ("%s%c%s", muhome,G_DIR_SEPARATOR,
+		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
 				 MU_BOOKMARKS_FILENAME);
 
 	data->_str [MU_RUNTIME_PATH_CACHE] =

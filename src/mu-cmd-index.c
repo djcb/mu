@@ -107,7 +107,7 @@ static gboolean
 check_maildir (const char *maildir)
 {
 	if (!maildir) {
-		g_warning ("no maildir to work on");
+		g_warning ("no maildir to work on; use --maildir= to set it explicitly");
 		return FALSE;
 	}
 	
@@ -220,7 +220,7 @@ update_maildir_path_maybe (MuIndex *idx, MuConfig *opts)
 	/* if 'maildir_guessed' is TRUE, we can override it later
 	 * with mu_index_last_used_maildir (in mu-cmd-index.c)
 	 */
-	while (!opts->maildir) {
+	if (!opts->maildir) {
 
 		const char *tmp;
 
@@ -230,13 +230,15 @@ update_maildir_path_maybe (MuIndex *idx, MuConfig *opts)
 			opts->maildir = g_strdup (tmp);
 		else
 			opts->maildir = mu_util_guess_maildir ();
-	}		
-	
-	exp = mu_util_dir_expand(opts->maildir);
-	if (exp) {
-		g_free(opts->maildir);
-		opts->maildir = exp;
 	}
+	
+	if (opts->maildir) {
+		exp = mu_util_dir_expand(opts->maildir);
+		if (exp) {
+			g_free(opts->maildir);
+			opts->maildir = exp;
+		}
+	}		
 
 	return check_maildir (opts->maildir);	
 }

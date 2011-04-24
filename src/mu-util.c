@@ -98,7 +98,7 @@ mu_util_dir_expand (const char *path)
 	/* don't try realpath if the dir does not exist */
 	if (access (dir, F_OK) != 0)
 		return dir;
-
+	
 	/* now resolve any symlinks, .. etc. */
 	if (realpath (dir, resolved) == NULL) {
 		g_debug ("%s: could not get realpath for '%s': %s",
