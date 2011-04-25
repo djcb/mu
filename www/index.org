@@ -4,7 +4,7 @@
 
 * Welcome to mu!
 
-  Given the /enormous/ amounts of e-mail many people gather, and the importance
+  Given the /enormous/ amounts of e-mail many people gather and the importance
   of e-mail message in our work-flows, it's essential to quickly deal with all
   that mail - in particular, to instantly find that one important e-mail you
   need right now.
@@ -19,6 +19,9 @@
   
 ** News
    
+   - 2011-04-25 *mu-0.9.5* a small, but important, bugfix in maildir-detection,
+     some small optimizations.
+
    - 2011-04-12: *mu 0.9.4* released - adds the =cfind= command, to find
      contacts (name + e-mail); add =flag:unread= which is a synonym for
      =flag:new OR NOT flag:seen=. Updates to the documentation and some internal
@@ -38,7 +41,7 @@
    - fast indexing for Maildir, Maildir+ and Maildir-on-VFAT
    - search for messages based on the sender, receiver, message subject, size,
      priority, words in the message body, attachments, date range, flags
-     (signed, encrypted, new, replied, ...), message-id, maildir
+     (signed, encrypted, new, replied, unread, ...), message-id, maildir
    - known to work on Linux (Ubuntu/Fedora/Debian/GenToo), FreeBSD, MacOS,
      Solaris, ...
    - fully documented (man pages)

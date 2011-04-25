@@ -1,5 +1,10 @@
 * NEWS (user visible changes)
 
+** Release 0.9.5 <2011-04-25 Mon>
+
+   - bug fix for infinite loop in Maildir detection
+   - minor fixes in tests, small optimizations
+
 ** Release 0.9.4 <2011-04-12 Tue>
 
    - add the 'cfind' command, to search/export contact information
