@@ -20,6 +20,10 @@
 #ifndef __MU_MSG_DATA_CACHE_H__
 #define __MU_MSG_DATA_CACHE_H__
 
+/* MuMsgDataCache stores MuMsgData objects which are basically
+ * serialized MuMsgIters; putting them in a datastructure allows us to
+ * work on them, e.g., for message threading */
+
 #include <mu-msg-data.h>
 
 G_BEGIN_DECLS
@@ -27,6 +31,13 @@ G_BEGIN_DECLS
 struct _MuMsgDataCache;
 typedef struct _MuMsgDataCache MuMsgDataCache;
 
+/** 
+ * create a new MuMsgDataCache instance
+ * 
+ * @param max_size maximum size of the cache
+ * 
+ * @return 
+ */
 MuMsgDataCache *mu_msg_data_cache_new (guint32 max_size)
 	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 void mu_msg_data_cache_destroy		(MuMsgDataCache *self);

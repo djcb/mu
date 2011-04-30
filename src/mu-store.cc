@@ -500,7 +500,8 @@ get_message_uid (const char* path)
 		buf[0]=pfx;
 	}
 
-	strcpy (buf + 1, path);
+	std::strcpy (buf + 1, path);
+
 	return buf;
 }
 
@@ -612,6 +613,7 @@ mu_store_get_timestamp (MuStore *store, const char* msgpath)
 
 	rv = (time_t) g_ascii_strtoull (stampstr, NULL, 10);
 	g_free (stampstr);
+
 	return rv;
 }
 

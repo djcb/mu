@@ -19,7 +19,6 @@
 
 #include "mu-msg-data-cache.h"
 
-
 /* we cannot use GPtrArray, because we require the index to be stable... */
 struct _MuMsgDataCache {
 	MuMsgData	**_data;
