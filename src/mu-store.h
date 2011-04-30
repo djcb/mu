@@ -100,11 +100,16 @@ void mu_store_flush (MuStore *store);
  * store an email message in the XapianStore
  * 
  * @param store a valid store
- * @param msg a valid message
+ * @param msg a valid message 
+ * @param replace whether or not we should try to replace the same
+ * message if it already exists; that is usually desirable, but when
+ * we're sure already that the document does not exist (e.g, in case
+ * of a initial fill or rebuild of the database), we can set 'replace'
+ * to FALSE for a couple% performance gain
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult mu_store_store   (MuStore *store, MuMsg *msg);
+MuResult mu_store_store   (MuStore *store, MuMsg *msg, gboolean replace);
 
 
 /**

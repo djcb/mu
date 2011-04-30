@@ -47,7 +47,7 @@ struct _MuStore {
 	_MuStore (const char *xpath, const char *contacts_cache) :
 		_db (xpath, Xapian::DB_CREATE_OR_OPEN), _in_transaction(0),
 		_processed (0), _trx_size(MU_STORE_DEFAULT_TRX_SIZE), _contacts (0),
-		_version (0){
+		_version (0) {
 	
 		if (!check_version (this)) 
 			throw std::runtime_error
@@ -84,7 +84,7 @@ struct _MuStore {
 	int    _processed;
 	size_t _trx_size;
 	guint  _batchsize;  /* batch size of a xapian transaction */
-
+	
 	/* contacts object to cache all the contact information */
 	MuContacts *_contacts;
 	
@@ -456,7 +456,6 @@ xapian_pfx (MuMsgContact *contact)
 }
 
 
-
 static void
 each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 {
@@ -488,25 +487,33 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	}
 }
 
-
-/* get a unique id for this message */
-static std::string
+/* get a unique id for this message; note, this function returns a
+ * static buffer -- not reentrant */
+static const char*
 get_message_uid (const char* path)
 {
-	static const std::string pathprefix 
-		(1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_PATH));
+	char pfx = 0;
+	static char buf[PATH_MAX + 10];
+	
+	if (G_UNLIKELY(!pfx)) {
+		pfx = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_PATH);
+		buf[0]=pfx;
+	}
 
-	return pathprefix + path;
+	strcpy (buf + 1, path);
+	return buf;
 }
 
-static const std::string
+/* get a unique id for this message; note, this function returns a
+ * static buffer -- not reentrant */
+static const char*
 get_message_uid (MuMsg *msg)
 {
-	return get_message_uid (mu_msg_get_path(msg));
+ 	return get_message_uid (mu_msg_get_path(msg));
 }
 
 MuResult
-mu_store_store (MuStore *store, MuMsg *msg)
+mu_store_store (MuStore *store, MuMsg *msg, gboolean replace)
 {	
 	g_return_val_if_fail (store, MU_ERROR);
 	g_return_val_if_fail (msg, MU_ERROR);
@@ -529,8 +536,15 @@ mu_store_store (MuStore *store, MuMsg *msg)
 			 (MuMsgContactForeachFunc)each_contact_info,
 			 &msgdoc);
 			
-		/* we replace all existing documents for this file */
-		id = store->_db.replace_document (uid, newdoc);
+		/* add_document is slightly
+		   faster, we can use it when
+		 * we know the document does not exist yet, eg., in
+		 * case of a rebuild */
+		if (replace) /* we replace all existing documents for this file */
+			id = store->_db.replace_document (uid, newdoc);
+		else
+			id = store->_db.add_document (newdoc);
+
 		++store->_processed;
 		commit_trx_if (store,
 			       store->_processed % store->_trx_size == 0);

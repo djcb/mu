@@ -149,7 +149,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 	}
 	
 	/* we got a valid id; scan the message contents as well */
-	if (G_UNLIKELY((mu_store_store (data->_store, msg) != MU_OK))) {
+	if (G_UNLIKELY((mu_store_store (data->_store, msg, TRUE) != MU_OK))) {
 		g_warning ("%s: storing content %s failed", __FUNCTION__, 
 			   fullpath);
 		return MU_ERROR;
