@@ -136,9 +136,11 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 	gint64 val;
 
 	switch (mu_msg_field_type(mfid)) {
-	case MU_MSG_FIELD_TYPE_STRING:
-		return mu_msg_iter_get_field (iter, mfid);
-
+	case MU_MSG_FIELD_TYPE_STRING: {
+		const gchar *str;
+		str = mu_msg_iter_get_field (iter, mfid);
+		return str ? str : "";
+	}		
 	case MU_MSG_FIELD_TYPE_INT:
 	
 		if (mfid == MU_MSG_FIELD_ID_PRIO) {
