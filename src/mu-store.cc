@@ -69,6 +69,8 @@ struct _MuStore {
 		try {
 			mu_contacts_destroy (_contacts);
 			mu_store_flush (this);
+
+			g_free (_version);
 			
 			MU_WRITE_LOG ("closing xapian database with %d documents",
 				      (int)_db.get_doccount());
