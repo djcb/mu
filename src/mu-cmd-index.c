@@ -134,16 +134,24 @@ index_msg_silent_cb  (MuIndexStats* stats, void *user_data)
 static void
 print_stats (MuIndexStats* stats, gboolean clear)
 {
-	char *kars="-\\|/";
+	const char *kars="-\\|/";
 	char output[120];
 	
 	static int i = 0;
 	static unsigned len = 0;
 
-	if (clear)
-		while (len --> 0) /* note the --> operator :-) */
-			g_print ("\b");
-	
+	if (clear) {
+		/* optimization, this function showed up in profiles */
+		static const char *backspace =
+			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
+			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
+			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
+			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
+		//backspace[len] = '\0';
+		fputs (backspace, stdout);
+		//backspace[len] = '\b';
+	}
+		
 	len = (unsigned) snprintf (output, sizeof(output),
 				   "%c processing mail; processed: %u; "
 				   "updated/new: %u, cleaned-up: %u",
@@ -151,7 +159,7 @@ print_stats (MuIndexStats* stats, gboolean clear)
 				   (unsigned)stats->_processed,
 				   (unsigned)stats->_updated,
 				   (unsigned)stats->_cleaned_up);
-        g_print ("%s", output);
+	fputs (output, stdout);
 }
 
 
