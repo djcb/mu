@@ -158,6 +158,13 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"timestamp", 'x', 0,
 		FLAG_GMIME 
+	},
+
+	{ 
+		MU_MSG_FIELD_ID_REFS,
+		MU_MSG_FIELD_TYPE_STRING,
+		"refs", 'r', 'R',
+		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	}
 };
 

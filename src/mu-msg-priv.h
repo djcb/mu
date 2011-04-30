@@ -43,6 +43,8 @@ enum _StringFields {
 	MDIR_FIELD,        /* the maildir */
 	
 	FLAGS_FIELD_STR,   /* message flags */
+
+	REFS_FIELD,        /* msg references, as a comma-sep'd string */
 	
 	FIELD_NUM
 };
@@ -59,6 +61,8 @@ struct _MuMsg {
 	size_t		_size;
 	time_t		_timestamp;	
 	MuMsgPrio       _prio;
+
+	GSList          *_refs; /* msgids of message we refer to */
 };
 
 G_END_DECLS

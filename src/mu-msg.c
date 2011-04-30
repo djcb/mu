@@ -80,6 +80,9 @@ mu_msg_destroy (MuMsg *msg)
 		
 	for (i = 0; i != FIELD_NUM; ++i)
 		g_free (msg->_fields[i]);
+
+	g_slist_foreach (msg->_refs, (GFunc)g_free, NULL);
+	g_slist_free (msg->_refs);
 	
 	g_slice_free (MuMsg, msg);
 }
@@ -214,7 +217,8 @@ mu_msg_new (const char* filepath, const gchar* mdir, GError **err)
 	msg	       = g_slice_new0 (MuMsg);	
 	msg->_prio     = MU_MSG_PRIO_NONE;
 	msg->_refcount = 1;
-
+	msg->_refs     = NULL;
+	
 	if (!init_file_metadata(msg, filepath, mdir, err)) {
 		mu_msg_unref (msg);
 		return NULL;
@@ -814,6 +818,92 @@ mu_msg_get_summary (MuMsg *msg, size_t max_lines)
 }
 
 
+static GSList*
+get_msgids_from_header (MuMsg *msg, const char* header)
+{
+	GSList *msgids;
+	const char *str;
+
+	msgids = NULL;
+	str = g_mime_object_get_header (GMIME_OBJECT(msg->_mime_msg),
+					header);
+	
+	/* get stuff from the 'references' header */
+	if (str) {
+		const GMimeReferences *cur;
+		GMimeReferences *mime_refs;
+		mime_refs = g_mime_references_decode (str);
+		for (cur = mime_refs; cur; cur = g_mime_references_get_next(cur)) {
+			const char* msgid;
+			msgid = g_mime_references_get_message_id (cur);
+			if (msgid)
+				msgids = g_slist_prepend (msgids, g_strdup (msgid));
+		}
+		g_mime_references_free (mime_refs);
+	}
+
+	return g_slist_reverse (msgids);
+}
+
+const char*
+mu_msg_get_references_str (MuMsg *msg)
+{
+	const GSList *refs;
+	gchar *refsstr;
+
+	g_return_val_if_fail (msg, NULL);
+	
+	if (msg->_fields[REFS_FIELD])
+		return msg->_fields[REFS_FIELD];
+
+	refsstr = NULL;
+	refs = mu_msg_get_references (msg);
+	if (refs) {
+		const GSList *cur;
+		for (cur = refs; cur; cur = g_slist_next(cur)) {
+			char *tmp;
+			tmp = g_strdup_printf ("%s%s%s",
+					       refsstr ? refsstr : "",
+					       refsstr ? "," : "",
+					       g_strdup((gchar*)cur->data));
+			g_free (refsstr);
+			refsstr = tmp;
+		}
+	}			
+	
+	return msg->_fields[REFS_FIELD] = refsstr;
+}
+
+
+const GSList*
+mu_msg_get_references (MuMsg *msg)
+{
+	GSList *refs, *inreply;
+	
+	g_return_val_if_fail (msg, NULL);
+
+	if (msg->_refs)
+		return msg->_refs;
+
+	refs = get_msgids_from_header (msg, "References");
+	
+	/* now, add in-reply-to:, we only take the first one if there
+	 * are more */
+	inreply = get_msgids_from_header (msg, "In-reply-to");
+	if (inreply) {
+		refs = g_slist_prepend (refs, g_strdup ((gchar*)inreply->data));
+		g_slist_foreach (inreply, (GFunc)g_free, NULL);
+		g_slist_free (inreply);
+	}
+				 
+	/* put in proper order */
+	msg->_refs = g_slist_reverse (refs);
+
+	return msg->_refs;
+}
+
+
+
 const char*
 mu_msg_get_field_string (MuMsg *msg, MuMsgFieldId mfid)
 {
@@ -829,6 +919,7 @@ mu_msg_get_field_string (MuMsg *msg, MuMsgFieldId mfid)
 	case MU_MSG_FIELD_ID_TO:         return mu_msg_get_to (msg);
 	case MU_MSG_FIELD_ID_MSGID:      return mu_msg_get_msgid (msg);
 	case MU_MSG_FIELD_ID_MAILDIR:    return mu_msg_get_maildir (msg);
+	case MU_MSG_FIELD_ID_REFS:       return mu_msg_get_references_str (msg);
 	default:
 		g_return_val_if_reached (NULL);
 	}

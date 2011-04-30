@@ -292,6 +292,28 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
 time_t          mu_msg_get_timestamp       (MuMsg *msg);
 
 
+/** 
+ * get a list of message ids this message refers to -- this is based
+ * on the References: and In-reply-to: headers.
+ * 
+ * @param msg a valid MuMsg instance
+ * 
+ * @return a list of message id, with the most immediate parent as the
+ * last element. Don't modify/free this list.
+ */
+const GSList *mu_msg_get_references (MuMsg *msg);
+
+
+/** 
+ * get the list of references as a comma-separated string
+ * 
+ * @param msg a valid MuMsg
+ * 
+ * @return a comma-separated string with the references or NULL if
+ * there are none. Don't modify/free
+ */
+const char* mu_msg_get_references_str (MuMsg *msg);
+
 G_END_DECLS
 
 #endif /*__MU_MSG_H__*/
