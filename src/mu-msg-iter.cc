@@ -287,6 +287,13 @@ mu_msg_iter_get_cc (MuMsgIter *iter)
 	return get_field (iter, MU_MSG_FIELD_ID_CC);
 }
 
+const char*
+mu_msg_iter_get_bcc (MuMsgIter *iter)
+{
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+	return get_field (iter, MU_MSG_FIELD_ID_BCC);
+}
+
 
 const char*
 mu_msg_iter_get_subject (MuMsgIter *iter)

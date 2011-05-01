@@ -59,6 +59,14 @@ typedef struct _MuMsgField MuMsgField;
  * misinterpreted by the query-preprocesser which turns queries into
  * lowercase */
 static const MuMsgField FIELD_DATA[] = {
+
+	{  
+		MU_MSG_FIELD_ID_BCC,
+		MU_MSG_FIELD_TYPE_STRING,
+		"bcc" , 'h', 'H',  /* 'hidden */
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
+	},
+	
 	{  
 		MU_MSG_FIELD_ID_BODY_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,

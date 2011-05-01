@@ -467,7 +467,9 @@ xapian_pfx (MuMsgContact *contact)
 		return prefix(MU_MSG_FIELD_ID_FROM);
 	case MU_MSG_CONTACT_TYPE_CC:
 		return prefix(MU_MSG_FIELD_ID_CC);
-	default: /* dont;t support other type (e.g, bcc) */
+	case MU_MSG_CONTACT_TYPE_BCC:
+		return prefix(MU_MSG_FIELD_ID_BCC);
+	default: 
 		g_warning ("unsupported contact type %u",
 			   (unsigned)contact->type);
 		return empty;

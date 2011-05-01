@@ -1,10 +1,8 @@
-.TH MU FIND 1 "April 2011" "User Manuals"
+.TH MU FIND 1 "May 2011" "User Manuals"
 
 .SH NAME 
 
-mu find \- find e-mail messages in the
-.B mu
-database
+mu find \- find e-mail messages in the \fBmu\fR database.
 
 .SH SYNOPSIS
 
@@ -97,10 +95,11 @@ can abbreviate \fBsubject:\fR to just \fBs:\fR. Here is the full table of the
 search fields and their abbreviations:
 
 .nf
-	cc,c            CC (Carbon-Copy) recipient
+	cc,c            Cc (carbon-copy) recipient(s)
+	bcc,h		Bcc (blind-carbon-copy) recipient(s)
 	from,f          Message sender
 	subject,s       Message subject
-	to,t            To: recipient
+	to,t            To: recipient(s)
 	maildir,m       Maildir	
 	msgid,i         Message-ID
 	prio,p          Message priority ('low', 'normal' or 'high')
@@ -264,7 +263,8 @@ search parameters; the complete list:
 
 .nf
 	t	\fBt\fRo: recipient
-	c	\fBc\fRc: (Carbon-Copy) recipient
+	c	\fBc\fRc: (carbon-copy) recipient
+	h	Bcc: (blind carbon-copy, \fBh\fRidden) recipient
 	d	Sent \fBd\fRate of the message
 	f	Message sender (\fBf\fRrom:)
 	g	Message flags (fla\fBg\fRs)
@@ -288,14 +288,15 @@ specifies the field to sort the search results by, and the direction. The
 following fields are supported:
 
 .nf
-	cc,c            CC (Carbon-Copy) recipient
+	cc,c            Cc (carbon-copy) recipient(s)
+	bcc,h           Bcc (blind-carbon-copy) recipient(s)
 	date,d          message sent date
 	from,f          message sender
 	maildir,m       maildir
 	msgid,i         message id
 	prio,p          message priority
 	subject,s       message subject
-	to,t            To:-recipient
+	to,t            To:-recipient(s)
 .fi
 
 Thus, for example, to sort messages by date, you could specify:

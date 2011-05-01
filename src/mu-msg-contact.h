@@ -26,9 +26,9 @@
 G_BEGIN_DECLS
 
 enum _MuMsgContactType {  /* Reply-To:? */
-	MU_MSG_CONTACT_TYPE_TO = 0,
-	MU_MSG_CONTACT_TYPE_FROM,
-	MU_MSG_CONTACT_TYPE_CC,
+	MU_MSG_CONTACT_TYPE_TO    = 0,
+	MU_MSG_CONTACT_TYPE_FROM,  
+	MU_MSG_CONTACT_TYPE_CC,   
 	MU_MSG_CONTACT_TYPE_BCC,
 	
 	MU_MSG_CONTACT_TYPE_NUM
@@ -39,10 +39,10 @@ typedef guint MuMsgContactType;
 	((MCT) < MU_MSG_CONTACT_TYPE_NUM)
 
 struct _MuMsgContact {
-	const char		*name;	/* Foo Bar */
-	const char		*address;	/* foo@bar.cuux */
-	MuMsgContactType	 type;	/*MU_MSG_CONTACT_TYPE_{ TO,
-					 * CC, BCC, FROM}*/  
+	const char		*name;	    /* Foo Bar */
+	const char		*address;   /* foo@bar.cuux */
+	MuMsgContactType	 type;	    /* MU_MSG_CONTACT_TYPE_{ TO,
+					     * CC, BCC, FROM} */  
 };
 typedef struct _MuMsgContact	 MuMsgContact;
 
@@ -59,7 +59,8 @@ typedef struct _MuMsgContact	 MuMsgContact;
  * needed.
  */
 MuMsgContact *mu_msg_contact_new (const char *name, const char *address,
-				  MuMsgContactType type);
+				  MuMsgContactType type)
+				  G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a MuMsgConcact object

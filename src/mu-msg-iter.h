@@ -205,13 +205,24 @@ const char*      mu_msg_iter_get_to            (MuMsgIter *iter);
 
 
 /**
- * get the message recipient (Cc:) of the message
+ * get the 'carbon-copy' recipient(s) (Cc:) of the message
  * 
  * @param iter a valid MuMsgIter iterator
  * 
  * @return the Cc-recipient(s), or NULL in case of error
  */
 const char*      mu_msg_iter_get_cc            (MuMsgIter *iter);
+
+
+/**
+ * get the 'blind carbon-copy' message recipient(s) (Bcc:) of the
+ * message
+ * 
+ * @param iter a valid MuMsgIter iterator
+ * 
+ * @return the Bcc-recipient(s), or NULL in case of error
+ */
+const char*      mu_msg_iter_get_bcc            (MuMsgIter *iter);
 
 /**
  * get the subject of the message

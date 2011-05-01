@@ -160,6 +160,19 @@ const char*     mu_msg_get_to	   (MuMsg *msg);
  */
 const char*     mu_msg_get_cc	     (MuMsg *msg);
 
+
+/**
+ * get the blind carbon-copy recipients (Bcc:) of this message; this
+ * field usually only appears in outgoing messages
+ *
+ * @param msg a valid MuMsg* instance
+ * 
+ * @return the Bcc: recipients of this Message or NULL in case of
+ * error or if there are no such recipients. the returned string
+ * should *not* be modified or freed.
+ */
+const char*     mu_msg_get_bcc	     (MuMsg *msg);
+
 /**
  * get the file system path of this message
  *

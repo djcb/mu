@@ -35,52 +35,54 @@ MuMsgContact *
 mu_msg_contact_new (const char *name, const char *address,
 		    MuMsgContactType type)
 {
-	MuMsgContact *contact;
+	MuMsgContact *self;
 	
 	g_return_val_if_fail (name, NULL);
 	g_return_val_if_fail (address, NULL);
 	g_return_val_if_fail (!mu_msg_contact_type_is_valid(type),
 			      NULL);
 
-	contact = g_slice_new (MuMsgContact);
+	self = g_slice_new (MuMsgContact);
 
-	contact->name	 = g_strdup(name);
-	contact->address = g_strdup(address);
-	contact->type    = type;
+	self->name	 = g_strdup(name);
+	self->address = g_strdup(address);
+	self->type    = type;
 
-	return contact;	
+	return self;	
 }
 
 
 void
-mu_msg_contact_destroy (MuMsgContact *contacts)
+mu_msg_contact_destroy (MuMsgContact *self)
 {
-	if (contacts) {
-		g_free ((gchar*)contacts->name);
-		g_free ((gchar*)contacts->address);
-		g_slice_free (MuMsgContact, contacts);
-	}
+
+	if (!self)
+		return;
+
+	g_free ((void*)self->name);
+	g_free ((void*)self->address);
+	g_slice_free (MuMsgContact, self);
 }
 	
 
 static gboolean
-fill_contact (MuMsgContact *contact, InternetAddress *addr,
+fill_contact (MuMsgContact *self, InternetAddress *addr,
 	      MuMsgContactType ctype)
 {
 	if (!addr)
 		return FALSE;
 	
-	contact->name = internet_address_get_name (addr);
-	contact->type = ctype;  
+	self->name = internet_address_get_name (addr);
+	self->type = ctype;  
 	
 	/* we only support internet mailbox addresses; if we don't
 	 * check, g_mime hits an assert
 	 */
-	if (INTERNET_ADDRESS_IS_MAILBOX(addr)) {
-		contact->address = internet_address_mailbox_get_addr
+	if (INTERNET_ADDRESS_IS_MAILBOX(addr))
+		self->address = internet_address_mailbox_get_addr
 			(INTERNET_ADDRESS_MAILBOX(addr));
-	} else
-		contact->address  = NULL;
+	else
+		self->address  = NULL;
 	
 	return TRUE;
 }
@@ -110,8 +112,6 @@ address_list_foreach (InternetAddressList *addrlist,
 		if (!(func)(&contact, user_data))
 			break;
 	}
-
-	return;
 }
 
 
@@ -128,6 +128,7 @@ get_contacts_from (MuMsg *msg, MuMsgContactForeachFunc func,
 	 * splitting in names and addresses for us */
 	lst = internet_address_list_parse_string (
 		g_mime_message_get_sender (msg->_mime_msg));
+
 	if (lst) {
 		address_list_foreach (lst, MU_MSG_CONTACT_TYPE_FROM,
 				      func, user_data);

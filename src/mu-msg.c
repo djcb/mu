@@ -292,7 +292,7 @@ get_recipient (MuMsg *msg, GMimeRecipientType rtype, StringFields field)
 		 * internet_address_list_to_string? */
 		recep = (char*)internet_address_list_to_string (receps,
 								TRUE);
-		if (recep && recep[0]=='\0')
+		if (mu_str_is_empty(recep))
 			g_free (recep);
 		else 
 			msg->_fields[field] = recep;
@@ -314,6 +314,13 @@ mu_msg_get_cc (MuMsg *msg)
 {
 	g_return_val_if_fail (msg, NULL);
 	return get_recipient (msg, GMIME_RECIPIENT_TYPE_CC, CC_FIELD);
+}
+
+const char*
+mu_msg_get_bcc (MuMsg *msg)
+{
+	g_return_val_if_fail (msg, NULL);
+	return get_recipient (msg, GMIME_RECIPIENT_TYPE_BCC, BCC_FIELD);
 }
 
 
@@ -643,7 +650,14 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 {
 	GMimeContentType *ctype;
 	const char* charset;
-		
+	char *cur;
+	
+	/* optimization: if the buffer is plain ascii, no conversion
+	 * is done... */
+	for (cur = buffer; *cur && *cur < 0x80; ++cur);
+	if (*cur == '\0')
+		return buffer;
+	
 	ctype = g_mime_object_get_content_type (GMIME_OBJECT(part));
 	g_return_val_if_fail (GMIME_IS_CONTENT_TYPE(ctype), NULL);
 	
@@ -910,6 +924,7 @@ mu_msg_get_field_string (MuMsg *msg, MuMsgFieldId mfid)
 	g_return_val_if_fail (msg, NULL);
 
 	switch (mfid) {
+	case MU_MSG_FIELD_ID_BCC:        return mu_msg_get_bcc (msg);
 	case MU_MSG_FIELD_ID_BODY_TEXT:  return mu_msg_get_body_text (msg);
 	case MU_MSG_FIELD_ID_BODY_HTML:  return mu_msg_get_body_html (msg);
 	case MU_MSG_FIELD_ID_CC:         return mu_msg_get_cc (msg);

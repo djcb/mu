@@ -38,6 +38,7 @@ enum _StringFields {
 
 	TO_FIELD,          /* To: */
 	CC_FIELD,	   /* Cc: */
+	BCC_FIELD,	   /* Bcc: */
 	
 	PATH_FIELD,        /* full path */
 	MDIR_FIELD,        /* the maildir */
