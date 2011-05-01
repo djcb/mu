@@ -67,13 +67,14 @@ struct _MuStore {
 
 	~_MuStore () {
 		try {
-			mu_contacts_destroy (_contacts);
-			mu_store_flush (this);
 
 			g_free (_version);
+			mu_contacts_destroy (_contacts);
+			mu_store_flush (this);
 			
 			MU_WRITE_LOG ("closing xapian database with %d documents",
 				      (int)_db.get_doccount());
+
 		} MU_XAPIAN_CATCH_BLOCK;
 	}
 	
@@ -92,23 +93,41 @@ struct _MuStore {
 };
 
 
+/* we cache these prefix strings, so we don't have to allocate the all
+ * the time; this should save 10-20 string allocs per message */
+G_GNUC_CONST static const std::string&
+prefix (MuMsgFieldId mfid)
+{
+	static std::string fields[MU_MSG_FIELD_ID_NUM];
+	static bool initialized = false;
+	
+	if (G_UNLIKELY(!initialized)) {
+		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i)
+			fields[i] = std::string (1, mu_msg_field_xapian_prefix
+						 ((MuMsgFieldId)i));
+		initialized = true;
+	}
+
+	return fields[mfid];
+}
+
+
+
 static void
 add_synonym_for_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
 {
-	std::string pfx (1, mu_msg_field_xapian_prefix
-			 (MU_MSG_FIELD_ID_FLAGS));
+	const std::string pfx(prefix(MU_MSG_FIELD_ID_FLAGS));
 
 	db->clear_synonyms (pfx + mu_msg_flag_name (flag));
-	db->add_synonym (pfx + mu_msg_flag_name (flag),
-			 pfx + (std::string(1, mu_msg_flag_char (flag))));
+	db->add_synonym (pfx + mu_msg_flag_name (flag), pfx +
+			 (std::string(1, mu_msg_flag_char (flag))));
 }
 
 
 static void
 add_synonym_for_prio (MuMsgPrio prio, Xapian::WritableDatabase *db)
 {
-	std::string pfx (1, mu_msg_field_xapian_prefix
-			 (MU_MSG_FIELD_ID_PRIO));
+	const std::string pfx (prefix(MU_MSG_FIELD_ID_PRIO));
 	
 	std::string s1 (pfx + mu_msg_prio_name (prio));
 	std::string s2 (pfx + (std::string(1, mu_msg_prio_char (prio))));
@@ -313,7 +332,6 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg,
 static void
 add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 {
-	const std::string pfx (1, mu_msg_field_xapian_prefix(mfid));
 	gint64 num = mu_msg_get_field_numeric (msg, mfid);
 
 	const std::string numstr (Xapian::sortable_serialise((double)num));
@@ -322,10 +340,10 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 	if (mfid == MU_MSG_FIELD_ID_FLAGS) {
 		for (const char *cur = mu_msg_flags_str_s ((MuMsgFlags)num);
 		     cur && *cur; ++cur)
-			doc.add_term  (pfx + (char)tolower (*cur));
+			doc.add_term  (prefix(mfid) + (char)tolower (*cur));
 
 	} else if (mfid == MU_MSG_FIELD_ID_PRIO) {
-		doc.add_term (pfx + std::string(1,
+		doc.add_term (prefix(mfid) + std::string(1,
 			      mu_msg_prio_char((MuMsgPrio)num)));
 	} //else
 	// 	doc.add_term  (pfx + numstr);
@@ -337,14 +355,16 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 {
 	const char *orig;
 	char *val;
-		
-	orig = mu_msg_get_field_string (msg, mfid);
-	if (!orig)
-		return;
-	val = g_strdup (orig);
-		
-	const std::string prefix (1, mu_msg_field_xapian_prefix(mfid));
+	size_t len;
+	
+	if (!(orig = mu_msg_get_field_string (msg, mfid)))
+		return; /* nothing to do */
 
+	/* try stack-allocation, it's much faster*/
+	len = strlen (orig);
+	val = (char*)(G_LIKELY(len < 1024)?g_alloca(len+1):g_malloc(len+1));
+	strcpy (val, orig);
+	
 	/* the value is what we'll display; the unchanged original */
 	if (mu_msg_field_xapian_value(mfid)) 			 
 		doc.add_value ((Xapian::valueno)mfid, val);
@@ -358,13 +378,15 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
-		termgen.index_text_without_positions (val, 1, prefix);
+		termgen.index_text_without_positions (val, 1, prefix(mfid));
 	}
 	
 	if (mu_msg_field_xapian_term(mfid))
-		doc.add_term (prefix + std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
-	
-	g_free (val);
+		doc.add_term (prefix(mfid) +
+			      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
+
+	if (!(G_LIKELY(len < 1024)))
+		g_free (val);
 }
 
 static void
@@ -389,8 +411,8 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	
 	norm = mu_str_normalize (str, TRUE);
 	termgen.index_text_without_positions
-		(norm, 1,
-		 std::string(1, mu_msg_field_xapian_prefix(mfid)));
+		(norm, 1, prefix(mfid));
+
 	g_free (norm);
 }
 
@@ -432,26 +454,23 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 }
 
 
-static const std::string*
+static const std::string&
 xapian_pfx (MuMsgContact *contact)
 {
-	static const std::string to_pfx
-		(1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO));
-	static const std::string from_pfx
-		(1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_FROM));
-	static const std::string cc_pfx
-		(1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_CC));
+	static const std::string empty;
 	
 	/* use ptr to string to prevent copy... */
 	switch (contact->type) {
 	case MU_MSG_CONTACT_TYPE_TO:
-		return &to_pfx; 
+		return prefix(MU_MSG_FIELD_ID_TO);
 	case MU_MSG_CONTACT_TYPE_FROM:
-		return &from_pfx;
+		return prefix(MU_MSG_FIELD_ID_FROM);
 	case MU_MSG_CONTACT_TYPE_CC:
-		return &cc_pfx;
+		return prefix(MU_MSG_FIELD_ID_CC);
 	default: /* dont;t support other type (e.g, bcc) */
-		return 0; 
+		g_warning ("unsupported contact type %u",
+			   (unsigned)contact->type);
+		return empty;
 	}
 }
 
@@ -459,24 +478,23 @@ xapian_pfx (MuMsgContact *contact)
 static void
 each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 {
-
-	const std::string *pfxp (xapian_pfx(contact));
-	if (!pfxp)
+	const std::string pfx (xapian_pfx(contact));
+	if (pfx.empty())
 		return; /* unsupported contact type */
 	
 	if (!mu_str_is_empty(contact->name)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (*msgdoc->_doc);
 		char *norm = mu_str_normalize (contact->name, TRUE);
-		termgen.index_text_without_positions (norm, 1, *pfxp);
+		termgen.index_text_without_positions (norm, 1, pfx);
 		g_free (norm);
 	}
 
 	/* don't normalize e-mail address, but do lowercase it */
-	if (contact->address && contact->address[0] != '\0') {
+	if (!mu_str_is_empty(contact->address)) {
 		char *escaped = mu_str_ascii_xapian_escape (contact->address);
 		msgdoc->_doc->add_term
-			(std::string (*pfxp + escaped, 0, MU_STORE_MAX_TERM_LENGTH));
+			(std::string  (pfx + escaped, 0, MU_STORE_MAX_TERM_LENGTH));
 		g_free (escaped);
 		
 		/* store it also in our contacts cache */
