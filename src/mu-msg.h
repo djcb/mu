@@ -292,7 +292,7 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
 time_t          mu_msg_get_timestamp       (MuMsg *msg);
 
 
-/** 
+/**
  * get a list of message ids this message refers to -- this is based
  * on the References: and In-reply-to: headers.
  * 
@@ -304,7 +304,7 @@ time_t          mu_msg_get_timestamp       (MuMsg *msg);
 const GSList *mu_msg_get_references (MuMsg *msg);
 
 
-/** 
+/**
  * get the list of references as a comma-separated string
  * 
  * @param msg a valid MuMsg

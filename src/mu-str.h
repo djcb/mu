@@ -303,6 +303,7 @@ gchar* mu_str_guess_first_name (const char* name)
 gchar* mu_str_guess_last_name (const char* name)
         G_GNUC_WARN_UNUSED_RESULT;
 
+
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/
