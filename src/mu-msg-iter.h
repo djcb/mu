@@ -26,6 +26,14 @@
 
 G_BEGIN_DECLS
 
+
+/**
+ * MuMsgIter is a structure to iterate over the results of a
+ * query. You can iterate only in one-direction, and you can do it
+ * only once.
+ * 
+ */
+
 struct _MuMsgIter;
 typedef struct _MuMsgIter MuMsgIter;
 
@@ -61,12 +69,11 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
 
 
 /**
- * get the corresponding MuMsg for this iter; this requires the
- * corresponding message file to be present at the expected place in
- * the maildir in the file system. Note, it's faster to use the
- * database fields (the various mu_msg_iter_get_... functions), so
- * MuMsg should use only when information is needed that is not
- * provided from the iter).
+ * get the corresponding MuMsg for this iter; this requires the actual
+ * message file to be present at the expected place in the maildir in
+ * the file system. Note, it's faster to use the database fields (the
+ * various mu_msg_iter_get_... functions), so MuMsg should use only
+ * when information is needed that is not provided from the iter).
  * 
  * @param iter a valid MuMsgIter instance 
  * @param err which receives error info or NULL. err is only filled
@@ -79,7 +86,7 @@ MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+/**
  * get a structure with information about this iter; this struct is
  * newly allocated, can be used to keep an in-memory record of a
  * message
@@ -105,7 +112,7 @@ unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 
 
 
-/** 
+/**
  * get the index for this iterator (ie. somewhere between [0..n-1],
  * with being the number of matches, and increasing 1 for each
  * iter_next)

@@ -145,9 +145,9 @@ mu_msg_iter_next (MuMsgIter *iter)
 		    * because of the database not being fully up to
 		    * date. in that case, we ignore the message. it
 		    * might be nice to auto-delete these messages from
-		    * the db, but that would might screw up the
-		    * search; also, we only have read-only access to
-		    * the db here */
+		    * the db, but that might screw up the search;
+		    * also, we only have read-only access to the db
+		    * here */
 		if (!message_is_readable (iter))
 			return mu_msg_iter_next (iter);
 		
