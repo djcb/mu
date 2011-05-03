@@ -380,11 +380,19 @@ test_mu_view_01 (void)
 		g_assert_cmpstr  (output, !=, NULL);
 
 		/*
-		 * note: there are two possibilities here; older versions of GMime will produce:
+		 * note: there are two possibilities here; older versions of
+		 * GMime will produce:
+		 *
 		 *    From: "=?iso-8859-1?Q? =F6tzi ?=" <oetzi@web.de>
+		 *    
 		 * while newer ones return something like:
+		 *
 		 *    From:  ?tzi  <oetzi@web.de>
 		 *
+		 * or even 
+		 *
+		 *    From:  \xc3\xb6tzi  <oetzi@web.de>
+		 *    
 		 * both are 'okay' from mu's perspective; it'd be even better
 		 * to have some #ifdefs for the GMime versions, but this
 		 * should work for now
@@ -393,7 +401,7 @@ test_mu_view_01 (void)
 		 */
 		len = strlen(output);
 		/* g_print ("\n[%s] (%d)\n", output, len); */
-		g_assert (len == 370 || len == 358 || len == 350);
+		g_assert (len == 370 || len == 358 || len == 350 || len == 349);
 				
 		g_free (output);
 		g_free (cmdline);
