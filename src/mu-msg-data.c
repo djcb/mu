@@ -24,7 +24,6 @@
 MuMsgData*
 mu_msg_data_new (void)
 {
-	/* TODO: check if this is much slower than g_slice_new */
 	return g_slice_new0 (MuMsgData);
 }
 
@@ -41,12 +40,13 @@ mu_msg_data_copy (MuMsgData *mdata)
 	/* shallow copy */
 	memcpy (copy, mdata, sizeof(MuMsgData));
 
-	/* now, deep copy ptr data */
+	/* now, deep-copy ptr data */
 	copy->cc      = g_strdup (mdata->cc);
 	copy->from    = g_strdup (mdata->from);
 	copy->maildir = g_strdup (mdata->maildir);
 	copy->msgid   = g_strdup (mdata->msgid);
 	copy->path    = g_strdup (mdata->path);
+	copy->refs    = g_strdup (mdata->refs);
 	copy->subject = g_strdup (mdata->subject);
 	copy->to      = g_strdup (mdata->to);
 
@@ -64,6 +64,7 @@ mu_msg_data_destroy (MuMsgData *mdata)
 	g_free (mdata->maildir);
 	g_free (mdata->msgid);
 	g_free (mdata->path);
+	g_free (mdata->refs);
 	g_free (mdata->subject);
 	g_free (mdata->to);
 

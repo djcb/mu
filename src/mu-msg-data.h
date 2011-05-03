@@ -29,12 +29,12 @@ G_BEGIN_DECLS
 
 /* data structure for saving the data in a MuMsgIter */
 struct _MuMsgData {
-
 	char		*cc;
 	char		*from;
 	char		*maildir;
 	char		*msgid;
 	char		*path;
+	char            *refs;
 	char		*subject;
 	char		*to;
 	
@@ -71,7 +71,6 @@ void mu_msg_data_destroy (MuMsgData *mdata);
  * @return a copy, or NULL (free with mu_msg_data_destroy)
  */
 MuMsgData* mu_msg_data_copy (MuMsgData *mdata);
-
 
 G_END_DECLS
 
