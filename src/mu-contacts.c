@@ -73,8 +73,8 @@ unserialize_cache (MuContacts *self)
 					   * and take care of freeing it */
 			g_key_file_get_string (self->_ccache, groups[i],
 					       MU_CONTACTS_NAME_KEY, NULL),
-			g_key_file_get_uint64 (self->_ccache, groups[i],
-					       MU_CONTACTS_TIMESTAMP_KEY, NULL));
+			(time_t)g_key_file_get_integer (self->_ccache, groups[i],
+							MU_CONTACTS_TIMESTAMP_KEY, NULL));
 		/* note, we're using the groups[i], so don't free with g_strfreev */
 		g_hash_table_insert (self->_hash, groups[i], cinfo);
 	}
@@ -125,7 +125,7 @@ mu_contacts_add (MuContacts *self, const char* name, const char *email,
 	 * empty name */	
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, email);
 	if (!cinfo ||
-	    (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
+	    (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {	
 		ContactInfo *ci; /* note ci will take care of freeing the first param */
 		ci = contact_info_new (name ? g_strdup(name) : NULL, tstamp);
 		g_hash_table_insert (self->_hash, g_strdup(email), ci);
@@ -210,9 +210,9 @@ each_keyval (const char *email, ContactInfo *cinfo, MuContacts *self)
 	if (cinfo->_name)
 		g_key_file_set_string (self->_ccache, email, "name",
 				       cinfo->_name);
-	
-	g_key_file_set_uint64 (self->_ccache, email, "timestamp",
-			       (guint64)cinfo->_tstamp);
+
+	g_key_file_set_integer (self->_ccache, email, "timestamp",
+				(int)cinfo->_tstamp);
 }
 
 static gboolean
@@ -282,9 +282,10 @@ contact_info_new (char *name, time_t tstamp)
 static void
 contact_info_destroy (ContactInfo *cinfo)
 {
-	if (cinfo) {
-		g_free (cinfo->_name);
-		g_slice_free (ContactInfo, cinfo);
-	}			
+	if (!cinfo)
+		return;
+	
+	g_free (cinfo->_name);
+	g_slice_free (ContactInfo, cinfo);
 }
 	
