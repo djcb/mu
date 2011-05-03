@@ -35,14 +35,19 @@ struct _MuMsgIter {
 		_matches = _enq.get_mset (0, _batchsize);
 		_cursor	 = _matches.begin();
 		_is_null = _matches.empty();
-
-		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i)
-			_str[i] = NULL;
+		clear_fields (false);
 	}
 
 	~_MuMsgIter () {
-		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) 
-			g_free (_str[i]);
+		clear_fields (true);
+	}
+
+	void clear_fields (bool dofree) {
+		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) {
+			if (dofree)
+				g_free(_str[i]);
+			_str[i] = NULL;
+		}
 	}
 	
 	const Xapian::Enquire          _enq;
@@ -50,7 +55,9 @@ struct _MuMsgIter {
 	Xapian::MSet::const_iterator   _cursor;
 	size_t                         _batchsize, _offset;
 	char*                          _str[MU_MSG_FIELD_ID_NUM];
-	bool                           _is_null; 
+	bool                           _is_null;
+	
+	
 };
 
 
@@ -142,19 +149,18 @@ mu_msg_iter_next (MuMsgIter *iter)
 			return FALSE; /* no more matches */
 		
 		/* the message may not be readable / existing, e.g.,
-		    * because of the database not being fully up to
-		    * date. in that case, we ignore the message. it
-		    * might be nice to auto-delete these messages from
-		    * the db, but that might screw up the search;
-		    * also, we only have read-only access to the db
-		    * here */
+		 * because of the database not being fully up to
+		 * date. in that case, we ignore the message. it
+		 * might be nice to auto-delete these messages from
+		 * the db, but that might screw up the search;
+		 * also, we only have read-only access to the db
+		 * here */
+		/* TODO: only mark it as such, let clients handle
+		 * it */
 		if (!message_is_readable (iter))
 			return mu_msg_iter_next (iter);
 		
-		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) {
-			g_free (iter->_str[i]); 
-			iter->_str[i] = NULL;
-		}
+		iter->clear_fields (true);
 
 		return TRUE;
 		
@@ -205,7 +211,6 @@ get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 		return 0;
 	
 	try {
-
 		return static_cast<gint64>(Xapian::sortable_unserialise(str));
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(static_cast<gint64>(-1));
@@ -296,6 +301,13 @@ mu_msg_iter_get_bcc (MuMsgIter *iter)
 
 
 const char*
+mu_msg_iter_get_refs (MuMsgIter *iter)
+{
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+	return get_field (iter, MU_MSG_FIELD_ID_REFS);
+}
+
+const char*
 mu_msg_iter_get_subject (MuMsgIter *iter)
 {
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
@@ -351,8 +363,9 @@ MuMsgData*
 mu_msg_iter_get_msgdata (MuMsgIter *iter)
 {
 	MuMsgData *mdata;
-	g_return_val_if_fail (!mu_msg_iter_is_done(iter),
-			      NULL);
+
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+	
 	mdata = mu_msg_data_new ();
 
 	try {
@@ -361,6 +374,7 @@ mu_msg_iter_get_msgdata (MuMsgIter *iter)
 		mdata->maildir = get_field_copy (iter, MU_MSG_FIELD_ID_MAILDIR);
 		mdata->msgid   = get_field_copy (iter, MU_MSG_FIELD_ID_MSGID);
 		mdata->path    = get_field_copy (iter, MU_MSG_FIELD_ID_PATH);
+		mdata->refs    = get_field_copy (iter, MU_MSG_FIELD_ID_REFS);
 		mdata->subject = get_field_copy (iter, MU_MSG_FIELD_ID_SUBJECT);
 		mdata->to      = get_field_copy (iter, MU_MSG_FIELD_ID_TO);
 		
@@ -373,7 +387,10 @@ mu_msg_iter_get_msgdata (MuMsgIter *iter)
 		mdata->prio    = static_cast<MuMsgPrio>(get_field_numeric
 							(iter, MU_MSG_FIELD_ID_PRIO));
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+		return mdata;
 		
-	return mdata;
+	} MU_XAPIAN_CATCH_BLOCK;
+	
+	mu_msg_data_destroy (mdata); 	/* something bad happended */
+	return NULL;
 }

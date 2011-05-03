@@ -253,6 +253,18 @@ MuMsgFlags       mu_msg_iter_get_flags         (MuMsgIter *iter);
 MuMsgPrio    mu_msg_iter_get_prio      (MuMsgIter *iter);
 
 
+
+/**
+ * get the references (References: and Reply-To:) as a comma-separated
+ * string, with the last one pointing at the parent
+ * 
+ * @param iter a valid MuMsgIter iterator
+ * 
+ * @return the message references, or NULL in case of error or if
+ * there is none
+ */
+const char* mu_msg_iter_get_refs (MuMsgIter *iter);
+
 /**
  * get some message field
  * 
