@@ -92,7 +92,6 @@ AS_IF([test "x$have_gtest" = "xno"],[
      AC_MSG_WARN([You need GLIB version >= 2.22 to build the tests])
 ])
 
-
 # gmime 2.4 or 2.6? mu has only been tested with gmime-2.4, but Fedora
 # 14 ships with gmime 2.5.x, which registers itself (pkgconfig) as 2.6
 # it is reported mu works fine with this new gmime as well, so we support
