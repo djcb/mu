@@ -175,10 +175,11 @@ mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 		GError *err;
 		err = NULL;
 		ecdata._rx = g_regex_new
-			(pattern, G_REGEX_CASELESS|G_REGEX_EXTENDED|G_REGEX_OPTIMIZE,
+			(pattern, G_REGEX_CASELESS|G_REGEX_OPTIMIZE,
 			 0, &err);
 		if (!ecdata._rx) {
-			g_warning ("error in regexp '%s': %s", pattern, err->message);
+			g_warning ("error in regexp '%s': %s",
+				   pattern, err->message);
 			g_error_free (err);
 			return FALSE;
 		}
