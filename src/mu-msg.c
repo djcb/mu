@@ -608,8 +608,8 @@ get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 }	
 
 
-/* turn \0-terminated buf into ascii (which is a utf8 subset);
- *   convert any non-ascii into '.'
+/* turn \0-terminated buf into ascii (which is a utf8 subset); convert
+ *   any non-ascii into '.'
  */
 static void
 asciify (char *buf)
@@ -650,11 +650,11 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 {
 	GMimeContentType *ctype;
 	const char* charset;
-	char *cur;
+	unsigned char *cur;
 	
 	/* optimization: if the buffer is plain ascii, no conversion
 	 * is done... */
-	for (cur = buffer; *cur && *cur < 0x80; ++cur);
+	for (cur = (unsigned char*)buffer; *cur && *cur < 0x80; ++cur);
 	if (*cur == '\0')
 		return buffer;
 	
@@ -674,9 +674,9 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 		}
 	}
 
-	/* hmmm.... no charset at all, or conversion failed; ugly hack:
-	 *  replace all non-ascii chars with '.' instead... TODO: come up
-	 * with something better */
+	/* hmmm.... no charset at all, or conversion failed; ugly
+	 *  hack: replace all non-ascii chars with '.'
+	 *  instead... TODO: come up with something better */
 	asciify (buffer);
 	return buffer;
 }
