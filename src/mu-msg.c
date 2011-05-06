@@ -32,7 +32,7 @@
 
 #include "mu-util.h"
 #include "mu-str.h"
-#include "mu-msg-file.h"
+#include "mu-maildir.h"
 
 
 /* note, we do the gmime initialization here rather than in
@@ -430,7 +430,8 @@ mu_msg_get_flags (MuMsg *msg)
 	g_return_val_if_fail (msg, MU_MSG_FLAG_NONE);
 	
 	if (msg->_flags == MU_MSG_FLAG_NONE) {
-		msg->_flags = mu_msg_file_get_flags_from_path (mu_msg_get_path(msg));
+		msg->_flags = mu_maildir_get_flags_from_path
+			(mu_msg_get_path(msg));
 		msg->_flags |= get_content_flags (msg);
 	}
 	

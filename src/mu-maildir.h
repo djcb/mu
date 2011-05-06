@@ -24,6 +24,8 @@
 #include <time.h>
 #include <sys/types.h>          /* for mode_t */
 #include <mu-util.h> 
+#include <mu-msg-flags.h>
+
 
 G_BEGIN_DECLS
 
@@ -116,6 +118,40 @@ MuResult mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
  * @return TRUE if it worked, FALSE in case of error
  */
 gboolean mu_maildir_clear_links (const gchar* dir, GError **err);
+
+
+/**
+ * get the Maildir flags from the full path of a mailfile. The flags
+ * are as specified in http://cr.yp.to/proto/maildir.html, plus
+ * MU_MSG_FLAG_NEW for new messages, ie the ones that live in
+ * new/. The flags are logically OR'ed. Note that the file does not
+ * have to exist; the flags are based on the path only.
+ *
+ * @param pathname of a mailfile; it does not have to refer to an
+ * actual message
+ * 
+ * @return the flags, or MU_MSG_FILE_FLAG_UNKNOWN in case of error
+ */
+MuMsgFlags mu_maildir_get_flags_from_path (const char* pathname);
+
+/**
+ * get the new pathname for a message, based on the old path and the
+ * new flags. Note that setting/removing the MU_MSG_FLAG_NEW will
+ * change the directory in which a message lives. The flags are as
+ * specified in http://cr.yp.to/proto/maildir.html, plus
+ * MU_MSG_FLAG_NEW for new messages, ie the ones that live in
+ * new/. The flags are logically OR'ed. Note that the file does not
+ * have to exist; the flags are based on the path only.
+ * 
+ * @param oldpath the old (current) full path to the message
+ * (including the filename) *
+ * @param newflags the new flags for this message
+ * 
+ * @return a new path name; use g_free when done with. NULL in case of
+ * error.
+ */
+char* mu_maildir_get_path_from_flags (const char *oldpath,
+				       MuMsgFlags newflags);
 
 G_END_DECLS
 

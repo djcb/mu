@@ -74,8 +74,6 @@ libmu_la_SOURCES=			\
 	mu-msg-fields.h			\
 	mu-msg-flags.c			\
 	mu-msg-flags.h			\
-	mu-msg-file.h			\
-	mu-msg-file.c			\
 	mu-msg-iter-priv.hh		\
 	mu-msg-iter.cc			\
 	mu-msg-iter.h			\
@@ -87,8 +85,6 @@ libmu_la_SOURCES=			\
 	mu-msg.c			\
 	mu-msg.h			\
 	mu-msg.h			\
-	mu-msg-file.c			\
-	mu-msg-file.h			\
 	mu-output.c			\
 	mu-output.h			\
 	mu-query.cc			\
@@ -103,6 +99,11 @@ libmu_la_SOURCES=			\
 	mu-util-db.cc			\
 	mu-util.c			\
 	mu-util.h
+
+
+#	mu-msg-file.h			\
+#	mu-msg-file.c			\
+#
 
 libmu_la_LIBADD=			\
 	$(XAPIAN_LIBS)			\

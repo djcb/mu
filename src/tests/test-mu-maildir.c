@@ -227,6 +227,69 @@ test_mu_maildir_walk_02 (void)
 	g_free (tmpdir);
 }
 
+
+
+static void
+test_mu_maildir_get_flags_from_path (void)
+{
+	int i;
+	struct {
+		const char *path;
+		MuMsgFlags flags;
+	} paths[] = {
+		{
+		"/home/foo/Maildir/test/cur/123456:2,FSR",
+		MU_MSG_FLAG_REPLIED | MU_MSG_FLAG_SEEN | MU_MSG_FLAG_FLAGGED}, {
+		"/home/foo/Maildir/test/new/123456",
+		            MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD}, {
+		"/home/foo/Maildir/test/new/123456:2,FR",
+			    MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD}, {
+		"/home/foo/Maildir/test/cur/123456:2,DTP",
+			    MU_MSG_FLAG_DRAFT | MU_MSG_FLAG_TRASHED |
+			    MU_MSG_FLAG_PASSED | MU_MSG_FLAG_UNREAD }, {
+		"/home/foo/Maildir/test/cur/123456:2,S",
+			    MU_MSG_FLAG_SEEN}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		MuMsgFlags flags;
+		flags = mu_maildir_get_flags_from_path(paths[i].path);
+		g_assert_cmpuint(flags, ==, paths[i].flags);
+	}
+}
+
+static void
+test_mu_maildir_get_path_from_flags (void)
+{
+	int i;
+
+	struct {
+		const char *oldpath;
+		MuMsgFlags flags;
+		const char *newpath;
+	} paths[] = {
+		{
+		"/home/foo/Maildir/test/cur/123456:2,FR",
+			    MU_MSG_FLAG_REPLIED,
+			    "/home/foo/Maildir/test/cur/123456:2,R"}, {
+		"/home/foo/Maildir/test/cur/123456:2,FR",
+			    MU_MSG_FLAG_NEW,
+			    "/home/foo/Maildir/test/new/123456"}, {
+		"/home/foo/Maildir/test/new/123456:2,FR",
+			    MU_MSG_FLAG_SEEN | MU_MSG_FLAG_REPLIED,
+			    "/home/foo/Maildir/test/cur/123456:2,RS"}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		gchar *str;
+		str = mu_maildir_get_path_from_flags(paths[i].oldpath,
+						      paths[i].flags);
+		g_assert_cmpstr(str, ==, paths[i].newpath);
+		g_free(str);
+	}
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -245,6 +308,13 @@ main (int argc, char *argv[])
 			 test_mu_maildir_walk_01);
 	g_test_add_func ("/mu-maildir/mu-maildir-walk-02",
 			 test_mu_maildir_walk_02);
+
+	/* get/set flags */
+	g_test_add_func("/mu-maildir/mu-maildir-get-path-from-flags",
+			test_mu_maildir_get_path_from_flags);
+	g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
+			test_mu_maildir_get_flags_from_path);
+
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,

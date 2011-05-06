@@ -29,9 +29,10 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-msg-file.h"
+#include "src/mu-maildir.h"
 
-static void test_mu_msg_file_get_flags_from_path(void)
+static void
+test_mu_maildir_get_flags_from_path(void)
 {
 	int i;
 
@@ -55,12 +56,12 @@ static void test_mu_msg_file_get_flags_from_path(void)
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
 		MuMsgFlags flags;
-		flags = mu_msg_file_get_flags_from_path(paths[i].path);
+		flags = mu_maildir_get_flags_from_path(paths[i].path);
 		g_assert_cmpuint(flags, ==, paths[i].flags);
 	}
 }
 
-static void test_mu_msg_file_get_path_from_flags(void)
+static void test_mu_maildir_get_path_from_flags(void)
 {
 	int i;
 
@@ -83,7 +84,7 @@ static void test_mu_msg_file_get_path_from_flags(void)
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
 		gchar *str;
-		str = mu_msg_file_get_path_from_flags(paths[i].oldpath,
+		str = mu_maildir_get_path_from_flags(paths[i].oldpath,
 						      paths[i].flags);
 		g_assert_cmpstr(str, ==, paths[i].newpath);
 		g_free(str);
@@ -95,9 +96,9 @@ int main(int argc, char *argv[])
 	g_test_init(&argc, &argv, NULL);
 
 	g_test_add_func("/mu-msg-file/mu-msg-file-get-path-from-flags",
-			test_mu_msg_file_get_path_from_flags);
+			test_mu_maildir_get_path_from_flags);
 	g_test_add_func("/mu-msg-file/mu-msg-file-get-flags-from-path",
-			test_mu_msg_file_get_flags_from_path);
+			test_mu_maildir_get_flags_from_path);
 
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
