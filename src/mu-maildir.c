@@ -286,7 +286,8 @@ is_maildir_new_or_cur (const char *path)
 	return FALSE;
 }
 
-/* check if there is a noindex file (MU_WALK_NOINDEX_FILE) in this dir; */
+/* check if there is a noindex file (MU_MAILDIR_NOINDEX_FILE) in this
+ * dir; */
 static gboolean
 has_noindex_file (const char *path)
 {
@@ -320,6 +321,8 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 	
 	/* ignore '.' and '..' dirs, as well as .notmuch and
 	 * .nnmaildir */
+
+	/* does not start with '.', so don't ignore */
 	if (G_LIKELY(name[0] != '.'))
 		return FALSE;
 	
@@ -331,6 +334,11 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 	if ((name[1] == 'n') && /* optimization */
 	    (strcmp (name, ".notmuch") == 0 ||
 	     strcmp (name, ".nnmaildir") == 0)) 
+		return TRUE;
+
+	/* ignore '.#evolution */
+	if ((name[1] == '#') &&
+	    (strcmp (name, ".#evolution")))
 		return TRUE;
 	
 	return FALSE;
@@ -604,11 +612,7 @@ mu_maildir_clear_links (const gchar* path, GError **err)
  * is this a 'new' msg or a 'cur' msg?; if new, we return
  * (in info) a ptr to the info part 
  */
-enum _MsgType {
-	MSG_TYPE_CUR,
-	MSG_TYPE_NEW,
-	MSG_TYPE_OTHER
-};
+enum _MsgType { MSG_TYPE_CUR, MSG_TYPE_NEW, MSG_TYPE_OTHER };
 typedef enum _MsgType MsgType;
 
 static MsgType
@@ -700,7 +704,7 @@ leave:
 	return flags;
 }
 
-
+/* note: returns static string, non-reentrant */
 static const char*
 get_flags_str_s (MuMsgFlags flags)
 {
@@ -730,8 +734,8 @@ get_flags_str_s (MuMsgFlags flags)
 
 
 /*
- * take an exising message path, and return a new path, based on whether it should be in
- * 'new' or 'cur'; ie.
+ * take an exising message path, and return a new path, based on
+ * whether it should be in 'new' or 'cur'; ie.
  *
  * /home/user/Maildir/foo/bar/cur/abc:2,F  and flags == MU_MSG_FLAG_NEW
  *     => /home/user/Maildir/foo/bar/new
@@ -832,8 +836,7 @@ mu_maildir_get_path_from_flags (const char *oldpath, MuMsgFlags newflags)
 	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */
 	g_return_val_if_fail (newflags & MU_MSG_FLAG_NEW ?
 			      newflags == MU_MSG_FLAG_NEW : TRUE, NULL);
-		
-
+	
 	newname = get_new_file_name (oldpath, newflags);
 	if (!newname)
 		return NULL;
