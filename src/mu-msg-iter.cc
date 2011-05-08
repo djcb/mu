@@ -95,7 +95,7 @@ mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
 		return NULL;
 	}
 
-	msg = mu_msg_new (path, NULL, err);
+	msg = mu_msg_new_from_file (path, NULL, err);
 	if (!msg) 
 		return NULL;
 

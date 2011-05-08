@@ -250,13 +250,11 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-04", test_mu_query_04);
 	g_test_add_func ("/mu-query/test-mu-query-05", test_mu_query_05);
 	
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)black_hole, NULL);
+	/* g_log_set_handler (NULL, */
+	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
+	/* 		   (GLogFunc)black_hole, NULL); */
 
-	mu_msg_gmime_init ();
 	rv = g_test_run ();
-	mu_msg_gmime_uninit ();
 	
 	return rv;
 }

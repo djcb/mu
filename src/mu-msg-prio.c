@@ -42,6 +42,11 @@ mu_msg_prio_from_char (char k)
 char
 mu_msg_prio_char (MuMsgPrio prio)
 {
+	if (!(prio == 'l' || prio == 'n' || prio == 'h')) {
+		g_warning ("prio: %c", (char)prio);
+	}
+		
+	
 	g_return_val_if_fail (prio == 'l' || prio == 'n' || prio == 'h',
 			      0);
 	return (char)prio;

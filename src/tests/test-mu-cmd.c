@@ -472,9 +472,7 @@ main (int argc, char *argv[])
 						   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 						   (GLogFunc)black_hole, NULL);
 
-		mu_msg_gmime_init ();
 		rv = g_test_run ();
-		mu_msg_gmime_uninit();
 
 		return rv;
 }

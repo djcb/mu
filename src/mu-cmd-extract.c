@@ -190,7 +190,7 @@ save_parts (const char *path, MuConfig *opts)
 	GError *err;
 	
 	err = NULL;
-	msg = mu_msg_new (path, NULL, &err);
+	msg = mu_msg_new_from_file (path, NULL, &err);
 	if (!msg) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);
@@ -239,7 +239,7 @@ show_parts (const char* path, MuConfig *opts)
 	GError *err;
 
 	err = NULL;
-	msg = mu_msg_new (path, NULL, &err);
+	msg = mu_msg_new_from_file (path, NULL, &err);
 	if (!msg) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);

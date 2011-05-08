@@ -292,7 +292,7 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 		return TRUE;
 	}
 
-	msg = mu_msg_new (msgpath, NULL, NULL);
+	msg = mu_msg_new_from_file (msgpath, NULL, NULL);
 	if (!msg) {
 		empty_message (self);
 		set_text (self, "Message not found; " "please run 'mu index'");

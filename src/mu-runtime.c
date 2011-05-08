@@ -93,9 +93,7 @@ mu_runtime_init (const char* muhome_arg)
 	_data = g_new0 (MuRuntimeData, 1);
  	_data->_str[MU_RUNTIME_PATH_MUHOME] = muhome;
 	init_paths (muhome, _data);
-	
-	mu_msg_gmime_init ();
-	
+
 	return _initialized = TRUE;
 }
 
@@ -140,8 +138,6 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 		g_strdup (_data->_config->muhome);
 	init_paths (_data->_str[MU_RUNTIME_PATH_MUHOME], _data);
 	
-	mu_msg_gmime_init ();
-	
 	return _initialized = TRUE;
 }
 
@@ -166,7 +162,6 @@ mu_runtime_uninit (void)
 {
 	g_return_if_fail (_initialized);
 
-	mu_msg_gmime_uninit ();	
 	runtime_free ();
 
 	_initialized = FALSE;

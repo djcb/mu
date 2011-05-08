@@ -141,7 +141,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 		return MU_OK; /* nothing to do for this one */
 			
 	err = NULL;
-	msg = mu_msg_new (fullpath, mdir, &err);
+	msg = mu_msg_new_from_file (fullpath, mdir, &err);
 	if ((G_UNLIKELY(!msg))) {
 		g_warning ("%s: failed to create mu_msg for %s",
 			   __FUNCTION__, fullpath);

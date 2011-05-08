@@ -44,6 +44,7 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_MSGID,
 	MU_MSG_FIELD_ID_TIMESTAMP,
 	MU_MSG_FIELD_ID_REFS,
+	MU_MSG_FIELD_ID_SUMMARY,
 	
 	MU_MSG_FIELD_ID_NUM,
 
@@ -127,6 +128,16 @@ char  mu_msg_field_xapian_prefix (MuMsgFieldId id) G_GNUC_PURE;
  */
 MuMsgFieldType mu_msg_field_type (MuMsgFieldId id) G_GNUC_PURE;
 
+
+/**
+ * is the field a string?
+ * 
+ * @param id a MuMsgFieldId
+ * 
+ * @return TRUE if the field a string, FALSE otherwise
+ */
+#define mu_msg_field_is_string(MFID)\
+	(mu_msg_field_type((MFID))==MU_MSG_FIELD_TYPE_STRING?TRUE:FALSE)
 
 /**
  * is the field numeric (has type MU_MSG_FIELD_TYPE_(BYTESIZE|TIME_T|INT))?
@@ -235,8 +246,6 @@ MuMsgFieldId mu_msg_field_id_from_name (const char* str,
  */
 MuMsgFieldId  mu_msg_field_id_from_shortcut (char kar,
 					     gboolean err) G_GNUC_PURE;
-
-
 G_END_DECLS
 
 #endif /*__MU_MSG_FIELDS_H__*/

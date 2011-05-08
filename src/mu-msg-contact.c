@@ -127,7 +127,7 @@ get_contacts_from (MuMsg *msg, MuMsgContactForeachFunc func,
 	 * internet_address_parse_string has the nice side-effect of
 	 * splitting in names and addresses for us */
 	lst = internet_address_list_parse_string (
-		g_mime_message_get_sender (msg->_mime_msg));
+		g_mime_message_get_sender (msg->_file->_mime_msg));
 
 	if (lst) {
 		address_list_foreach (lst, MU_MSG_CONTACT_TYPE_FROM,
@@ -159,7 +159,7 @@ mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 	/* get to, cc, bcc */
 	for (i = 0; i != G_N_ELEMENTS(ctypes); ++i) {
 		InternetAddressList *addrlist;
-		addrlist = g_mime_message_get_recipients (msg->_mime_msg,
+		addrlist = g_mime_message_get_recipients (msg->_file->_mime_msg,
 							  ctypes[i]._gmime_type);
 		address_list_foreach (addrlist, ctypes[i]._type, func, user_data);
 	}

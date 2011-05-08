@@ -20,5 +20,49 @@
 #ifndef __MU_MSG_FILE_H__
 #define __MU_MSG_FILE_H__
 
+struct _MuMsgFile;
+typedef struct _MuMsgFile MuMsgFile;
+
+/** 
+ * create a new message from a file
+ * 
+ * @param path full path to the message
+ * @param mdir
+ * @param err error to receive (when function returns NULL), or NULL
+ * 
+ * @return a new MuMsg, or NULL in case of error
+ */
+MuMsgFile *mu_msg_file_new (const char *path, const char* mdir, GError **err);
+
+
+/** 
+ * destroy a MuMsgFile object
+ *
+ * @param self object to destroy, or NULL
+ */
+void mu_msg_file_destroy (MuMsgFile *self);
+
+
+/** 
+ * get a string value for this message
+ * 
+ * @param self a valid MuMsgFile
+ * @param msfid the message field id to get (must be string-based one)
+ * 
+ * @return a const string, or NULL
+ */
+const char* mu_msg_file_get_str_field (MuMsgFile *self,
+				       MuMsgFieldId msfid);
+
+/** 
+ * get a numeric value for this message -- the return value should be
+ * cast into the actual type, e.g., time_t, MuMsgPrio etc.
+ * 
+ * @param self a valid MuMsgFile
+ * @param msfid the message field id to get (must be string-based one)
+ * 
+ * @return the numeric value, or -1
+ */
+gint64 mu_msg_file_get_num_field (MuMsgFile *self, MuMsgFieldId msfid);
 
 #endif /*__MU_MSG_FILE_H__*/

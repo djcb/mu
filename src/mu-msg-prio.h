@@ -31,7 +31,7 @@ enum _MuMsgPrio {
 };
 typedef enum _MuMsgPrio MuMsgPrio;
 
-static const MuMsgPrio MU_MSG_PRIO_NONE = (MuMsgPrio)-1;
+static const MuMsgPrio MU_MSG_PRIO_NONE = (MuMsgPrio)0;
 
 
 /**

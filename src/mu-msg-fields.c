@@ -29,13 +29,20 @@
  * must be in the value (at least when using MuMsgIter)
  */
 enum _FieldFlags { 
-	FLAG_GMIME	      = 1 << 0,	/* field retrieved through gmime */
-	FLAG_XAPIAN_INDEX     = 1 << 1,	/* field is indexed in xapian */
-	FLAG_XAPIAN_TERM      = 1 << 2,	/* field stored as term in xapian */
-	FLAG_XAPIAN_VALUE     = 1 << 3,	/* field stored as value in xapian */
-	FLAG_XAPIAN_CONTACT   = 1 << 4,	/* field contains an e-mail-addr */
-	FLAG_XAPIAN_ESCAPE    = 1 << 5, /* field needs escaping for xapian */
-	FLAG_NORMALIZE	      = 1 << 6  /* field needs fix for case/accents */
+	FLAG_GMIME	      = 1 << 0,	/* field retrieved through
+					 * gmime */
+	FLAG_XAPIAN_INDEX     = 1 << 1,	/* field is indexed in
+					 * xapian */
+	FLAG_XAPIAN_TERM      = 1 << 2,	/* field stored as term in
+					 * xapian */
+	FLAG_XAPIAN_VALUE     = 1 << 3,	/* field stored as value in
+					 * xapian */
+	FLAG_XAPIAN_CONTACT   = 1 << 4,	/* field contains one or more
+					 * e-mail-addresses */
+	FLAG_XAPIAN_ESCAPE    = 1 << 5, /* field needs escaping for
+					 * xapian */
+	FLAG_NORMALIZE	      = 1 << 6  /* field needs flattening for
+					 * case/accents */
 
 };
 typedef enum _FieldFlags	FieldFlags;
@@ -173,6 +180,13 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"refs", 'r', 'R',
 		FLAG_GMIME | FLAG_XAPIAN_VALUE
+	},
+
+	{ 
+		MU_MSG_FIELD_ID_SUMMARY,
+		MU_MSG_FIELD_TYPE_STRING,
+		NULL, 0, 0,
+		FLAG_GMIME
 	}
 };
 

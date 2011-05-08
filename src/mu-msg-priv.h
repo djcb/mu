@@ -24,46 +24,32 @@
 #include <stdlib.h>
 
 #include "mu-msg.h"
+#include "mu-msg-file.h"
 
 G_BEGIN_DECLS
 
 /* we put the the MuMsg definition in this separate -priv file, so we
  * can split the mu_msg implementations over separate files */
 
-enum _StringFields {
+struct _MuMsgFile {
+	GMimeMessage *_mime_msg;
 
-	HTML_FIELD  = 0,   /* body as HTML */
-	TEXT_FIELD,        /* body as plain text */
-	SUMMARY_FIELD,     /* body summary */
+	/* we waste a few bytes here for none-string fields... */
+	gchar *_str_cache[MU_MSG_FIELD_ID_NUM];
 
-	TO_FIELD,          /* To: */
-	CC_FIELD,	   /* Cc: */
-	BCC_FIELD,	   /* Bcc: */
+	GSList *_refs;
 	
-	PATH_FIELD,        /* full path */
-	MDIR_FIELD,        /* the maildir */
-	
-	FLAGS_FIELD_STR,   /* message flags */
+	time_t	_timestamp;
+	size_t	_size;
 
-	REFS_FIELD,        /* msg references, as a comma-sep'd string */
-	
-	FIELD_NUM
+	MuMsgFlags	_flags;
+	MuMsgPrio	_prio;
 };
-typedef enum _StringFields StringFields;
+
 
 struct _MuMsg {
-	guint           _refcount;
-	
-	GMimeMessage    *_mime_msg;
-	MuMsgFlags	_flags;
-	
-	char*           _fields[FIELD_NUM];
-
-	size_t		_size;
-	time_t		_timestamp;	
-	MuMsgPrio       _prio;
-
-	GSList          *_refs; /* msgids of message we refer to */
+	guint		 _refcount;
+	MuMsgFile	*_file;
 };
 
 G_END_DECLS

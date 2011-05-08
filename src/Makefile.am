@@ -72,6 +72,8 @@ libmu_la_SOURCES=			\
 	mu-msg-data-cache.h		\
 	mu-msg-fields.c			\
 	mu-msg-fields.h			\
+	mu-msg-file.c			\
+	mu-msg-file.h			\
 	mu-msg-flags.c			\
 	mu-msg-flags.h			\
 	mu-msg-iter-priv.hh		\
@@ -100,10 +102,6 @@ libmu_la_SOURCES=			\
 	mu-util.c			\
 	mu-util.h
 
-
-#	mu-msg-file.h			\
-#	mu-msg-file.c			\
-#
 
 libmu_la_LIBADD=			\
 	$(XAPIAN_LIBS)			\

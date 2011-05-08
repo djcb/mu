@@ -53,7 +53,7 @@ find_part (MuMsg* msg, guint partidx)
 		fpdata.idx = 0;
 		fpdata.part = NULL;
 		
-		g_mime_message_foreach (msg->_mime_msg,
+		g_mime_message_foreach (msg->_file->_mime_msg,
 								(GMimeObjectForeachFunc)find_part_cb,
 								&fpdata);
 		return fpdata.part;
@@ -100,14 +100,14 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 		PartData pdata;
 	
 		g_return_if_fail (msg);
-		g_return_if_fail (GMIME_IS_OBJECT(msg->_mime_msg));
+		g_return_if_fail (GMIME_IS_OBJECT(msg->_file->_mime_msg));
 
 		pdata._msg       = msg;
 		pdata._idx       = 0;
 		pdata._func		 = func;
 		pdata._user_data = user_data;
 	
-		g_mime_message_foreach (msg->_mime_msg,
+		g_mime_message_foreach (msg->_file->_mime_msg,
 								(GMimeObjectForeachFunc)part_foreach_cb,
 								&pdata);
 }
@@ -321,7 +321,8 @@ mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 		cid = g_str_has_prefix (sought_cid, "cid:") ?
 				sought_cid + 4 : sought_cid; 
 		
-		return msg_part_find_idx (msg->_mime_msg, (MatchFunc)match_content_id,
+		return msg_part_find_idx (msg->_file->_mime_msg,
+								  (MatchFunc)match_content_id,
 								  (gpointer)cid);
 }
 

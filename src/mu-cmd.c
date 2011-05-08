@@ -82,7 +82,7 @@ mu_cmd_view (MuConfig *opts)
 	for (i = 1, rv = MU_EXITCODE_OK;
 	     opts->params[i] && rv == MU_EXITCODE_OK; ++i) {
 		GError *err = NULL;
-		MuMsg  *msg = mu_msg_new (opts->params[i], NULL, &err);
+		MuMsg  *msg = mu_msg_new_from_file (opts->params[i], NULL, &err);
 		if (!msg) {
 			g_warning ("error: %s", err->message);
 			g_error_free (err);
