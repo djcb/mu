@@ -212,6 +212,7 @@ set_query (MuQuery *mqx, Xapian::Query& q, const char* searchexpr,
 			(searchexpr,
 			 Xapian::QueryParser::FLAG_BOOLEAN          |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
+			 Xapian::QueryParser::FLAG_WILDCARD	    |
 			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
 			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
 
