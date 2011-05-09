@@ -33,10 +33,9 @@
 #include "mu-maildir.h"
 #include "mu-msg-priv.h"
 
-static gboolean init_file_metadata (MuMsgFile *self, const char* path, const char *mdir,
-				    GError **err);
+static gboolean init_file_metadata (MuMsgFile *self, const char* path,
+				    const char *mdir, GError **err);
 static gboolean init_mime_msg (MuMsgFile *msg, GError **err);
-
 
 #define CACHE(MFID) (self->_str_cache[(MFID)])
 #define SET_CACHE(MFID,V)(self->_str_cache[(MFID)]=(V))
@@ -50,6 +49,9 @@ mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 	g_return_val_if_fail (filepath, NULL);	
 	self = g_slice_new0 (MuMsgFile);	
 	
+	for (i = 0; i != MU_MSG_FIELD_ID_NUM; ++i)
+		SET_CACHE(i,NULL);
+	
 	if (!init_file_metadata (self, filepath, mdir, err)) {
 		mu_msg_file_destroy (self);
 		return NULL;
@@ -59,9 +61,6 @@ mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 		mu_msg_file_destroy (self);
 		return NULL;
 	}
-
-	for (i = 0; i != MU_MSG_FIELD_ID_NUM; ++i)
-		SET_CACHE(i,NULL);
 	
 	return self;
 }

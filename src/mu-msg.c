@@ -125,7 +125,7 @@ mu_msg_get_path  (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_PATH);
+									  MU_MSG_FIELD_ID_PATH);
 }
 
 
@@ -134,7 +134,7 @@ mu_msg_get_subject  (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_SUBJECT);
+									  MU_MSG_FIELD_ID_SUBJECT);
 }
 
 const char*    
@@ -142,7 +142,7 @@ mu_msg_get_msgid  (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_MSGID);
+									  MU_MSG_FIELD_ID_MSGID);
 }
 
 const char*    
@@ -150,7 +150,7 @@ mu_msg_get_maildir (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_MAILDIR);
+									  MU_MSG_FIELD_ID_MAILDIR);
 }
 
 
@@ -159,7 +159,7 @@ mu_msg_get_from (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_FROM);
+									  MU_MSG_FIELD_ID_FROM);
 }
 
 
@@ -168,7 +168,7 @@ mu_msg_get_to (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_TO);
+									  MU_MSG_FIELD_ID_TO);
 }
 
 const char*    
@@ -176,7 +176,7 @@ mu_msg_get_cc (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_CC);
+									  MU_MSG_FIELD_ID_CC);
 }
 
 
@@ -185,7 +185,7 @@ mu_msg_get_bcc (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return mu_msg_file_get_str_field (self->_file,
-					  MU_MSG_FIELD_ID_BCC);
+									  MU_MSG_FIELD_ID_BCC);
 }
 
 
@@ -194,7 +194,7 @@ mu_msg_get_date (MuMsg *self)
 {
 	g_return_val_if_fail (self, (time_t)-1);
 	return (time_t)mu_msg_file_get_num_field (self->_file,
-						  MU_MSG_FIELD_ID_DATE);
+											  MU_MSG_FIELD_ID_DATE);
 }
 
 
@@ -204,7 +204,7 @@ mu_msg_get_flags (MuMsg *self)
 {
 	g_return_val_if_fail (self, MU_MSG_FLAG_NONE);
 	return (MuMsgFlags)mu_msg_file_get_num_field (self->_file,
-						      MU_MSG_FIELD_ID_FLAGS);
+												  MU_MSG_FIELD_ID_FLAGS);
 }
 
 size_t
@@ -212,7 +212,7 @@ mu_msg_get_size (MuMsg *self)
 {
 	g_return_val_if_fail (self, 0);
 	return (size_t)mu_msg_file_get_num_field (self->_file,
-						  MU_MSG_FIELD_ID_SIZE);
+											  MU_MSG_FIELD_ID_SIZE);
 }
 
 
@@ -221,7 +221,7 @@ mu_msg_get_prio (MuMsg *self)
 {
 	g_return_val_if_fail (self, (time_t)-1);
 	return (MuMsgPrio)mu_msg_file_get_num_field (self->_file,
-						     MU_MSG_FIELD_ID_PRIO);
+												 MU_MSG_FIELD_ID_PRIO);
 }
 
 
