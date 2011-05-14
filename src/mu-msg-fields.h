@@ -27,24 +27,27 @@ G_BEGIN_DECLS
 /* don't change the order, add new types at the end, as these numbers
  * are used in the database */
 enum _MuMsgFieldId {
-	
+
+	/* first all the string-based ones */
 	MU_MSG_FIELD_ID_BCC         = 0,
- 	MU_MSG_FIELD_ID_BODY_TEXT,
 	MU_MSG_FIELD_ID_BODY_HTML,
+	MU_MSG_FIELD_ID_BODY_TEXT,
 	MU_MSG_FIELD_ID_CC,
-	MU_MSG_FIELD_ID_DATE,
-	MU_MSG_FIELD_ID_FLAGS,
 	MU_MSG_FIELD_ID_FROM,
+	MU_MSG_FIELD_ID_MAILDIR,
+	MU_MSG_FIELD_ID_MSGID,
 	MU_MSG_FIELD_ID_PATH,
-	MU_MSG_FIELD_ID_MAILDIR, 
-	MU_MSG_FIELD_ID_PRIO,
-	MU_MSG_FIELD_ID_SIZE,
+	MU_MSG_FIELD_ID_REFS,
 	MU_MSG_FIELD_ID_SUBJECT,
 	MU_MSG_FIELD_ID_TO,
-	MU_MSG_FIELD_ID_MSGID,
+	/* MU_MSG_STRING_FIELD_ID_NUM, see below */
+
+	/* then the numerical ones */
+	MU_MSG_FIELD_ID_DATE,
+	MU_MSG_FIELD_ID_FLAGS,
+	MU_MSG_FIELD_ID_PRIO,
+	MU_MSG_FIELD_ID_SIZE,
 	MU_MSG_FIELD_ID_TIMESTAMP,
-	MU_MSG_FIELD_ID_REFS,
-	MU_MSG_FIELD_ID_SUMMARY,
 	
 	MU_MSG_FIELD_ID_NUM,
 
@@ -57,6 +60,8 @@ typedef enum _MuMsgFieldId MuMsgFieldId;
 
 /* some specials... */
 static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
+#define MU_MSG_STRING_FIELD_ID_NUM (MU_MSG_FIELD_ID_TO + 1)
+
 
 #define mu_msg_field_id_is_valid(MFID) \
 	((MFID) < MU_MSG_FIELD_ID_NUM)
@@ -147,6 +152,16 @@ MuMsgFieldType mu_msg_field_type (MuMsgFieldId id) G_GNUC_PURE;
  * @return TRUE if the field is numeric, FALSE otherwise
  */
 gboolean mu_msg_field_is_numeric (MuMsgFieldId id) G_GNUC_PURE;
+
+
+/**
+ * whether the field value should be cached (in MuMsg) -- we cache
+ * values so we can use the MuMsg without needing to keep the
+ * underlying data source (the GMimeMessage or the database ptr) alive
+ * in practice, the fields we *don't* cache are the message body
+ * (html, txt), because they take too much memory
+ */
+gboolean mu_msg_field_is_cacheable (MuMsgFieldId id) G_GNUC_PURE;
 
 
 /**
