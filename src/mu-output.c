@@ -169,7 +169,7 @@ static void
 print_summary (MuMsgIter *iter, size_t summary_len)
 {
 	GError *err;
-	const char *summ;
+	/* const char *summ; */
 	MuMsg *msg;
 
 	if (summary_len == 0)
@@ -183,8 +183,9 @@ print_summary (MuMsgIter *iter, size_t summary_len)
 		return;
 	}
 
-	summ = mu_msg_get_summary (msg, summary_len);
-	g_print ("Summary: %s\n", summ ? summ : "<none>");
+	/* TODO: summary again */
+	/* summ = mu_msg_get_summary (msg, summary_len); */
+	/* g_print ("Summary: %s\n", summ ? summ : "<none>"); */
 	
 	mu_msg_unref (msg);
 }

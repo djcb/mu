@@ -54,10 +54,12 @@ view_msg (MuMsg *msg, const gchar *fields, size_t summary_len)
 	if ((date = mu_msg_get_date (msg)))
 		g_print ("Date: %s\n", mu_str_date_s ("%c", date));
 
-	if (summary_len > 0) {
-		field = mu_msg_get_summary (msg, summary_len);
-		g_print ("Summary: %s\n", field ? field : "<none>");
-	} else if ((field = mu_msg_get_body_text (msg))) 
+	/* TODO: reimplement the summary stuff... */
+	/* if (summary_len > 0) { */
+	/* 	field = mu_msg_get_summary (msg, summary_len); */
+	/* 	g_print ("Summary: %s\n", field ? field : "<none>"); */
+	/* } else */
+	 if ((field = mu_msg_get_body_text (msg)))  
 		g_print ("\n%s\n", field);
 
 	return TRUE;
