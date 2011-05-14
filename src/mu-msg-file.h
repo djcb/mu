@@ -32,8 +32,8 @@ typedef struct _MuMsgFile MuMsgFile;
  * 
  * @return a new MuMsg, or NULL in case of error
  */
-MuMsgFile *mu_msg_file_new (const char *path, const char* mdir, GError **err);
-
+MuMsgFile *mu_msg_file_new (const char *path,
+			    const char* mdir, GError **err);
 
 /** 
  * destroy a MuMsgFile object
@@ -47,12 +47,16 @@ void mu_msg_file_destroy (MuMsgFile *self);
  * get a string value for this message
  * 
  * @param self a valid MuMsgFile
- * @param msfid the message field id to get (must be string-based one)
+ * @param msfid the message field id to get (must be string-based one) *
+ * @param do_free receives TRUE or FALSE, conveying if this string
+ * should be freed (TRUE) or not by caller. In case 'FALSE', this
+ * function should be treated as if it were return a const char*
  * 
  * @return a const string, or NULL
  */
-const char* mu_msg_file_get_str_field (MuMsgFile *self,
-				       MuMsgFieldId msfid);
+char* mu_msg_file_get_str_field (MuMsgFile *self,
+				 MuMsgFieldId msfid,
+				 gboolean *do_free);
 
 /** 
  * get a numeric value for this message -- the return value should be
@@ -64,5 +68,6 @@ const char* mu_msg_file_get_str_field (MuMsgFile *self,
  * @return the numeric value, or -1
  */
 gint64 mu_msg_file_get_num_field (MuMsgFile *self, MuMsgFieldId msfid);
+
 
 #endif /*__MU_MSG_FILE_H__*/

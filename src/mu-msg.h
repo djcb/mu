@@ -70,6 +70,15 @@ void mu_msg_unref (MuMsg *msg);
 
 
 /**
+ * cache the values from the backend (file or db), so we don't the
+ * backend anymore
+ * 
+ * @param self a message
+ */
+void mu_msg_cache_values (MuMsg *self);
+
+
+/**
  * get the plain text body of this message
  *
  * @param msg a valid MuMsg* instance
@@ -90,25 +99,6 @@ const char*     mu_msg_get_body_text       (MuMsg *msg);
  * such body. the returned string should *not* be modified or freed.
  */
 const char*     mu_msg_get_body_html       (MuMsg *msg);
-
-
-/**
- * get a summary of the body of this message; a summary takes up to
- * the first @max_lines from the message, and replaces newlines
- * etc. with single whitespace characters. This only works if there's
- * a text-body for the message
- *
- * @param msg a valid MuMsg* instance
- * @param max_lines the max number of lines to summarize
- * 
- * @return the summary of the message or NULL in case of error or if
- * there is no such body. the returned string should *not* be modified
- * or freed. When called multiple times, the function will always
- * return the same summary, regardless of a different max_lines value.
- */
-const char*     mu_msg_get_summary (MuMsg *msg, size_t max_lines);
-
-
 
 /**
  * get the sender (From:) of this message

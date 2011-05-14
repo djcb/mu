@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,31 +25,27 @@
 
 #include "mu-msg.h"
 #include "mu-msg-file.h"
+#include "mu-msg-cache.h"
 
 G_BEGIN_DECLS
 
-/* we put the the MuMsg definition in this separate -priv file, so we
- * can split the mu_msg implementations over separate files */
 
 struct _MuMsgFile {
-	GMimeMessage *_mime_msg;
-
-	/* we waste a few bytes here for none-string fields... */
-	gchar *_str_cache[MU_MSG_FIELD_ID_NUM];
-
-	GSList *_refs;
-	
-	time_t	_timestamp;
-	size_t	_size;
-
-	MuMsgFlags	_flags;
-	MuMsgPrio	_prio;
+	GMimeMessage	*_mime_msg;
+	time_t		 _timestamp;
+	size_t		 _size;
+	char		 _path [PATH_MAX + 1];
+	char		 _maildir [PATH_MAX + 1];
 };
 
 
+/* we put the the MuMsg definition in this separate -priv file, so we
+ * can split the mu_msg implementations over separate files */
 struct _MuMsg {
+
 	guint		 _refcount;
 	MuMsgFile	*_file;
+	MuMsgCache      *_cache;
 };
 
 G_END_DECLS

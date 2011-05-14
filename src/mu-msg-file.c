@@ -17,7 +17,6 @@
 **
 */
 
-
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,6 +25,16 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+/* hopefully, the should get us a sane PATH_MAX */
+#include <limits.h>
+/* not all systems provide PATH_MAX in limits.h */
+#ifndef PATH_MAX
+#include <sys/param.h>
+#ifndef PATH_MAX
+#define PATH_MAX MAXPATHLEN
+#endif 	/*!PATH_MAX */
+#endif 	/*PATH_MAX */
+
 #include <gmime/gmime.h>
 
 #include "mu-util.h"
@@ -33,31 +42,26 @@
 #include "mu-maildir.h"
 #include "mu-msg-priv.h"
 
+
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
 				    const char *mdir, GError **err);
-static gboolean init_mime_msg (MuMsgFile *msg, GError **err);
-
-#define CACHE(MFID) (self->_str_cache[(MFID)])
-#define SET_CACHE(MFID,V)(self->_str_cache[(MFID)]=(V))
+static gboolean init_mime_msg (MuMsgFile *msg, const char *path, GError **err);
 
 MuMsgFile*   
 mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 {
-	int i;
 	MuMsgFile *self;
-		
+
 	g_return_val_if_fail (filepath, NULL);	
+
 	self = g_slice_new0 (MuMsgFile);	
-	
-	for (i = 0; i != MU_MSG_FIELD_ID_NUM; ++i)
-		SET_CACHE(i,NULL);
 	
 	if (!init_file_metadata (self, filepath, mdir, err)) {
 		mu_msg_file_destroy (self);
 		return NULL;
 	}
 	
-	if (!init_mime_msg (self, err)) {
+	if (!init_mime_msg (self, filepath, err)) {
 		mu_msg_file_destroy (self);
 		return NULL;
 	}
@@ -69,13 +73,8 @@ mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 void
 mu_msg_file_destroy (MuMsgFile *self)
 {
-	int i;
-	
 	if (!self)
 		return;
-
-	for (i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) 
-		g_free (self->_str_cache[i]);
 
 	if (self->_mime_msg)
 		g_object_unref (self->_mime_msg);
@@ -110,13 +109,11 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 		return FALSE;
 	}
 	
-	self->_timestamp            = statbuf.st_mtime;
-	/* size_t should be enough for message size... */
+	self->_timestamp = statbuf.st_mtime;
+	self->_size	 = (size_t)statbuf.st_size;
 
-	self->_size = (size_t)statbuf.st_size; 
-
-	SET_CACHE(MU_MSG_FIELD_ID_PATH, g_strdup(path));
-	SET_CACHE(MU_MSG_FIELD_ID_MAILDIR, mdir ? g_strdup(mdir): NULL);
+	strncpy (self->_path, path, PATH_MAX);
+	strncpy (self->_maildir, mdir ? mdir : "", PATH_MAX); 
 	
 	return TRUE;
 }
@@ -124,17 +121,16 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 
 
 static GMimeStream*
-get_mime_stream (MuMsgFile *self, GError **err)
+get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 {
 	FILE *file;
 	GMimeStream *stream;
 	
-	file = fopen (self->_str_cache [MU_MSG_FIELD_ID_PATH], "r");
+	file = fopen (path, "r");
 	if (!file) {
 		g_set_error (err, 0, MU_ERROR_FILE,
 			     "cannot open %s: %s",
-			     self->_str_cache [MU_MSG_FIELD_ID_PATH],
-			     strerror (errno));
+			     path, strerror (errno));
 		return NULL;
 	}
 	
@@ -142,7 +138,7 @@ get_mime_stream (MuMsgFile *self, GError **err)
 	if (!stream) {
 		g_set_error (err, 0, MU_ERROR_GMIME,
 			     "cannot create mime stream for %s",
-			     self->_str_cache [MU_MSG_FIELD_ID_PATH]);
+			     path);
 		fclose (file);
 		return NULL;
 	}
@@ -151,12 +147,12 @@ get_mime_stream (MuMsgFile *self, GError **err)
 }
 
 static gboolean
-init_mime_msg (MuMsgFile *self, GError **err)
+init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 {
 	GMimeStream *stream;
 	GMimeParser *parser;
 	
-	stream = get_mime_stream (self, err);
+	stream = get_mime_stream (self, path, err);
 	if (!stream)
 		return FALSE;
 	
@@ -164,8 +160,8 @@ init_mime_msg (MuMsgFile *self, GError **err)
 	g_object_unref (stream);
 	if (!parser) {
 		g_set_error (err, 0, MU_ERROR_GMIME,
-			     "cannot create mime parser for %s",
-			     self->_str_cache [MU_MSG_FIELD_ID_PATH]);
+			     "%s: cannot create mime parser for %s",
+			     __FUNCTION__, path);
 		return FALSE;
 	}
 	
@@ -173,8 +169,8 @@ init_mime_msg (MuMsgFile *self, GError **err)
 	g_object_unref (parser);
 	if (!self->_mime_msg) {
 		g_set_error (err, 0, MU_ERROR_GMIME,
-			     "cannot construct mime message for %s",
-			     self->_str_cache [MU_MSG_FIELD_ID_PATH]);
+			     "%s: cannot construct mime message for %s",
+			     __FUNCTION__, path);
 		return FALSE;
 	}
 
@@ -182,26 +178,12 @@ init_mime_msg (MuMsgFile *self, GError **err)
 }
 
 
-static const char*
+static char*
 get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 {
-	const char *val;
 	char *recep;
 	InternetAddressList *receps;
-
-	switch (rtype) {
-	case GMIME_RECIPIENT_TYPE_TO:
-		val = CACHE(MU_MSG_FIELD_ID_TO);
-		if (val) return val; else break;
-	case GMIME_RECIPIENT_TYPE_CC:
-		val = CACHE(MU_MSG_FIELD_ID_CC);
-		if (val) return val; else break;
-	case GMIME_RECIPIENT_TYPE_BCC:
-		val = CACHE(MU_MSG_FIELD_ID_BCC);
-		if (val) return val; else break;
-	default: g_return_val_if_reached (NULL);
-	}
-
+	
 	receps = g_mime_message_get_recipients (self->_mime_msg, rtype);
 	recep = (char*)internet_address_list_to_string (receps, TRUE);
 	
@@ -210,19 +192,7 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 		return NULL;
 	}
 
-	switch (rtype) {
-
-	case GMIME_RECIPIENT_TYPE_TO:
-		return SET_CACHE (MU_MSG_FIELD_ID_TO, recep);
-
-	case GMIME_RECIPIENT_TYPE_CC:
-		return SET_CACHE (MU_MSG_FIELD_ID_CC, recep);
-
-	case GMIME_RECIPIENT_TYPE_BCC:
-		return SET_CACHE (MU_MSG_FIELD_ID_BCC, recep);
-
-	default: g_return_val_if_reached (NULL);
-	}	
+	return recep;
 }
 
 
@@ -317,15 +287,14 @@ get_content_flags (MuMsgFile *self)
 static MuMsgFlags
 get_flags (MuMsgFile *self)
 {
+	MuMsgFlags flags;
+	
 	g_return_val_if_fail (self, MU_MSG_FLAG_NONE);
+
+	flags = mu_maildir_get_flags_from_path (self->_path);
+	flags |= get_content_flags (self);
 	
-	if (self->_flags == MU_MSG_FLAG_NONE) {
-		self->_flags = mu_maildir_get_flags_from_path
-			(CACHE(MU_MSG_FIELD_ID_PATH));
-		self->_flags |= get_content_flags (self);
-	}
-	
-	return self->_flags;
+	return flags;
 }
 
 
@@ -377,8 +346,8 @@ parse_prio_str (const char* priostr)
 {
 	int i;
 	struct {
-		const char*   _str;
-		MuMsgPrio _prio;
+		const char*	_str;
+		MuMsgPrio	_prio;
 	} str_prio[] = {
 		{ "high",	MU_MSG_PRIO_HIGH },
 		{ "1",		MU_MSG_PRIO_HIGH },
@@ -405,21 +374,19 @@ parse_prio_str (const char* priostr)
 static MuMsgPrio
 get_prio (MuMsgFile *self)
 {
+	MuMsgPrio prio;
 	char* priostr;
 
-	g_return_val_if_fail (self, 0);
-
-	if (self->_prio != MU_MSG_PRIO_NONE)
-		return self->_prio;
+	g_return_val_if_fail (self, MU_MSG_PRIO_NONE);
 
 	priostr = get_prio_header_field (self);
 	if (!priostr)
 		return MU_MSG_PRIO_NORMAL;
 	
-	self->_prio = parse_prio_str (priostr);
+	prio = parse_prio_str (priostr);
 	g_free (priostr);
 
-	return self->_prio;
+	return prio;
 }
 
 
@@ -663,54 +630,8 @@ get_body (MuMsgFile *self, gboolean want_html)
 	if (err) 
 		g_warning ("error occured while retrieving %s body" 
 			   "for message %s",
-			   want_html ? "html" : "text",
-			   (CACHE(MU_MSG_FIELD_ID_PATH)));		
+			   want_html ? "html" : "text", self->_path);
 	return str;
-}
-
-static const char*
-get_body_html (MuMsgFile *self)
-{
-	g_return_val_if_fail (self, NULL);
-	
-	if (CACHE(MU_MSG_FIELD_ID_BODY_HTML))
-		return CACHE(MU_MSG_FIELD_ID_BODY_HTML);
-	else
-		return SET_CACHE(MU_MSG_FIELD_ID_BODY_HTML,
-				 get_body (self, TRUE));
-}
-
-
-static const char*
-get_body_text (MuMsgFile *self)
-{
-	g_return_val_if_fail (self, NULL);
-	
-	if (CACHE(MU_MSG_FIELD_ID_BODY_TEXT))
-		return CACHE(MU_MSG_FIELD_ID_BODY_TEXT);
-	else
-		return SET_CACHE(MU_MSG_FIELD_ID_BODY_TEXT,
-				 get_body (self, FALSE));
-}
-
-static const char*
-get_summary (MuMsgFile *self, size_t max_lines)
-{
-	const char *body;
-	
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (max_lines > 0, NULL);
-
-	if (CACHE(MU_MSG_FIELD_ID_SUMMARY))
-		return CACHE(MU_MSG_FIELD_ID_SUMMARY);
-	
-	/* nope; calculate it */
-	body = get_body_text (self);
-	if (!body)
-		return NULL; /* there was no text body */
-	
-	return SET_CACHE(MU_MSG_FIELD_ID_SUMMARY,
-			 mu_str_summarize (body, max_lines));
 }
 
 
@@ -743,15 +664,12 @@ get_msgids_from_header (MuMsgFile *self, const char* header)
 
 
 
-static const GSList*
+static GSList*
 get_references (MuMsgFile *self)
 {
 	GSList *refs, *inreply;
 	
 	g_return_val_if_fail (self, NULL);
-
-	if (self->_refs)
-		return self->_refs;
 
 	refs = get_msgids_from_header (self, "References");
 	
@@ -765,21 +683,16 @@ get_references (MuMsgFile *self)
 	}
 				 
 	/* put in proper order */
-	self->_refs = g_slist_reverse (refs);
-
-	return self->_refs;
+	return g_slist_reverse (refs);
 }
 
-static const char*
+static char*
 get_references_str (MuMsgFile *self)
 {
-	const GSList *refs;
+	GSList *refs;
 	gchar *refsstr;
 
 	g_return_val_if_fail (self, NULL);
-
-	if (CACHE(MU_MSG_FIELD_ID_REFS))
-		return CACHE(MU_MSG_FIELD_ID_REFS);
 
 	refsstr = NULL;
 	refs = get_references (self);
@@ -790,59 +703,68 @@ get_references_str (MuMsgFile *self)
 			tmp = g_strdup_printf ("%s%s%s",
 					       refsstr ? refsstr : "",
 					       refsstr ? "," : "",
-					       g_strdup((gchar*)cur->data));
+					       (gchar*)cur->data);
 			g_free (refsstr);
 			refsstr = tmp;
 		}
 	}			
 
-	return SET_CACHE(MU_MSG_FIELD_ID_REFS, refsstr);
+	g_slist_foreach (refs, (GFunc)g_free, NULL);
+	g_slist_free (refs);
+	
+	return refsstr;
 }
 
 
-
-
-const char*
-mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid)
+char*
+mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
+
+	*do_free = FALSE; /* default */
 	
 	switch (mfid) {
 
 	case MU_MSG_FIELD_ID_BCC:
+		*do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_BCC);
 
-	case MU_MSG_FIELD_ID_BODY_TEXT:  return get_body_text (self);
-	case MU_MSG_FIELD_ID_BODY_HTML:  return get_body_html (self);
+	case MU_MSG_FIELD_ID_BODY_TEXT:
+		*do_free = TRUE;
+		return get_body (self, FALSE);
+
+	case MU_MSG_FIELD_ID_BODY_HTML:
+		*do_free = TRUE;
+		return get_body (self, TRUE);
 
 	case MU_MSG_FIELD_ID_CC:
+		*do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_CC);
 
 	case MU_MSG_FIELD_ID_FROM:
-		return g_mime_message_get_sender (self->_mime_msg);
+		return (char*)g_mime_message_get_sender (self->_mime_msg);
 		
 	case MU_MSG_FIELD_ID_PATH:
-		return CACHE(MU_MSG_FIELD_ID_PATH);
+		return self->_path;
 		
 	case MU_MSG_FIELD_ID_SUBJECT:
-		return g_mime_message_get_subject (self->_mime_msg);
+		return (char*)g_mime_message_get_subject (self->_mime_msg);
 
 	case MU_MSG_FIELD_ID_TO:
+		*do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_TO);
 
 	case MU_MSG_FIELD_ID_MSGID:
-		return  g_mime_message_get_message_id (self->_mime_msg);
+		return (char*)g_mime_message_get_message_id (self->_mime_msg);
 
 	case MU_MSG_FIELD_ID_MAILDIR:
-		return CACHE(MU_MSG_FIELD_ID_MAILDIR);
+		return self->_maildir;
 		
 	case MU_MSG_FIELD_ID_REFS:
+		*do_free = TRUE;
 		return get_references_str (self);
-
-	case MU_MSG_FIELD_ID_SUMMARY:
-		return get_summary (self, 5);
-		
+	
 	default:
 		g_return_val_if_reached (NULL);
 	}
@@ -874,5 +796,4 @@ mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 	default: g_return_val_if_reached (-1);
 	}
 }
-
 
