@@ -27,7 +27,6 @@
 #include <stdexcept>
 
 #include "mu-msg.h"
-#include "mu-msg-contact.h"
 #include "mu-store.h"
 #include "mu-util.h"
 #include "mu-str.h"

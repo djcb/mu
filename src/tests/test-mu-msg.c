@@ -30,7 +30,6 @@
 
 #include "test-mu-common.h"
 #include "src/mu-msg.h"
-#include "src/mu-msg-contact.h"
 
 static gboolean
 check_contact_01 (MuMsgContact *contact, int *idx)
