@@ -30,6 +30,7 @@
 
 #include "test-mu-common.h"
 #include "src/mu-query.h"
+#include "src/mu-str.h"
 
 static gchar*
 fill_database (void)
@@ -211,6 +212,7 @@ test_mu_query_05 (void)
 	MuMsg *msg;
 	gchar *xpath;
 	GError *err;
+	gchar *summ;
 	
 	xpath = fill_database ();
 	g_assert (xpath != NULL);
@@ -229,8 +231,10 @@ test_mu_query_05 (void)
 	g_assert_cmpstr (mu_msg_get_subject(msg),==, 
 			 "Greetings from Lothlórien");
 	/* TODO: fix this again */
-	/* g_assert_cmpstr (mu_msg_get_summary(msg,5),==, */
-	/* 		 "Let's write some fünkÿ text using umlauts. Foo."); */
+
+	summ = mu_str_summarize (mu_msg_get_body_text(msg), 5);
+	g_assert_cmpstr (summ,==, "Let's write some fünkÿ text using umlauts. Foo.");
+	g_free (summ);
 	
 	mu_msg_unref (msg);
 	mu_msg_iter_destroy (iter);
