@@ -37,7 +37,7 @@ private:
 
 
 MuMsgDb*
-mu_msg_db_new (XapianDocument *doc, GError **err)
+mu_msg_db_new (const XapianDocument *doc, GError **err)
 {
 	g_return_val_if_fail (doc, NULL);
 	

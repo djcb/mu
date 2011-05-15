@@ -1,4 +1,4 @@
-/* 
+/*
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 #include <mu-msg-flags.h>
 #include <mu-msg-fields.h>
 #include <mu-msg-prio.h>
-#include <mu-util.h> /* for MuResult, MuError */
+#include <mu-util.h> /* for MuResult, MuError and XapianDocument */
 
 G_BEGIN_DECLS
 
@@ -47,6 +47,22 @@ typedef struct _MuMsg MuMsg;
  */
 MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
 			     GError **err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+/**
+ * create a new MuMsg* instance based on a Xapian::Document
+ *
+ * @param doc a ptr to a Xapian::Document (but cast to XapianDocument,
+ * because this is C not C++)
+ * @param err receive error information, or NULL. There
+ * will only be err info if the function returns NULL
+ * 
+ * @return a new MuMsg instance or NULL in case of error; call
+ * mu_msg_unref when done with this message
+ */
+MuMsg *mu_msg_new_from_db (const XapianDocument* doc, GError **err)
+                        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
 
 
 /**

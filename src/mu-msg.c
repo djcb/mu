@@ -61,6 +61,20 @@ gmime_uninit (void)
 		_gmime_initialized = FALSE;
 }
 
+
+static MuMsg*
+msg_new (void)
+{
+		MuMsg *self;
+
+		self = g_slice_new0 (MuMsg);
+
+		self->_refcount = 1;
+		self->_cache = mu_msg_cache_new ();
+ 
+		return self;
+}
+
 MuMsg*
 mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 {
@@ -78,12 +92,28 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 		if (!msgfile) 
 				return NULL;
 	
-		self = g_slice_new0 (MuMsg);
-		
+		self = msg_new ();
 		self->_file	= msgfile;
-		self->_refcount = 1;
-		self->_cache = mu_msg_cache_new ();
 		
+		return self;
+}
+
+
+MuMsg*
+mu_msg_new_from_db (const XapianDocument* doc, GError **err)
+{
+		MuMsg *self;
+		MuMsgDb *msgdb;
+		
+		g_return_val_if_fail (doc, NULL);
+				
+		msgdb = mu_msg_db_new (doc, err);
+		if (!msgdb)
+				return NULL;
+
+		self = msg_new ();
+		self->_db	= msgdb;
+			
 		return self;
 }
 
@@ -95,6 +125,8 @@ mu_msg_destroy (MuMsg *self)
 				return;
 
 		mu_msg_file_destroy (self->_file);
+		mu_msg_db_destroy (self->_db);
+
 		mu_msg_cache_destroy (self->_cache);
 		
 		g_slice_free (MuMsg, self);

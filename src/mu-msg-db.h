@@ -21,13 +21,12 @@
 #define __MU_MSG_DB_H__
 
 #include <glib.h>
+#include <mu-util.h> /* for XapianDocument */
 
 G_BEGIN_DECLS
 
 struct _MuMsgDb;
 typedef struct _MuMsgDb MuMsgDb;
-
-typedef gpointer XapianDocument;
 
 /**
  * create a new MuMsgDb instance 
@@ -40,7 +39,7 @@ typedef gpointer XapianDocument;
  * @return a new MuMsgDb instance (free with mu_msg_db_destroy), or
  * NULL in case of error.
  */
-MuMsgDb* mu_msg_db_new (XapianDocument *doc, GError **err);
+MuMsgDb* mu_msg_db_new (const XapianDocument *doc, GError **err);
 
 
 /**

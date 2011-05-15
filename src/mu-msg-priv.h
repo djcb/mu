@@ -25,6 +25,7 @@
 
 #include "mu-msg.h"
 #include "mu-msg-file.h"
+#include "mu-msg-db.h"
 #include "mu-msg-cache.h"
 
 G_BEGIN_DECLS
@@ -34,7 +35,7 @@ struct _MuMsgFile {
 	GMimeMessage	*_mime_msg;
 	time_t		 _timestamp;
 	size_t		 _size;
-	char		 _path [PATH_MAX + 1];
+	char		 _path    [PATH_MAX + 1];
 	char		 _maildir [PATH_MAX + 1];
 };
 
@@ -44,7 +45,11 @@ struct _MuMsgFile {
 struct _MuMsg {
 
 	guint		 _refcount;
+
+	/* our two backend */
 	MuMsgFile	*_file;
+	MuMsgDb         *_db;
+	
 	MuMsgCache      *_cache;
 };
 

@@ -244,6 +244,11 @@ enum {
 unsigned char mu_util_get_dtype_with_lstat (const char *path);
 
 
+/*
+ * we need this when using Xapian::Document* from C
+ */
+typedef gpointer XapianDocument;
+
 /**
  * 
  * don't repeat these catch blocks everywhere...
