@@ -32,7 +32,7 @@ typedef struct _MuMsg MuMsg;
 
 /**
  * create a new MuMsg* instance which parses a message and provides
- * read access to its properties; call mu_msg_destroy when done with it.
+ * read access to its properties; call mu_msg_unref when done with it.
  *
  * @param path full path to an email message file
  * @param mdir the maildir for this message; ie, if the path is

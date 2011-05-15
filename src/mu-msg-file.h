@@ -23,7 +23,7 @@
 struct _MuMsgFile;
 typedef struct _MuMsgFile MuMsgFile;
 
-/** 
+/**
  * create a new message from a file
  * 
  * @param path full path to the message
@@ -35,7 +35,7 @@ typedef struct _MuMsgFile MuMsgFile;
 MuMsgFile *mu_msg_file_new (const char *path,
 			    const char* mdir, GError **err);
 
-/** 
+/**
  * destroy a MuMsgFile object
  *
  * @param self object to destroy, or NULL
@@ -43,14 +43,16 @@ MuMsgFile *mu_msg_file_new (const char *path,
 void mu_msg_file_destroy (MuMsgFile *self);
 
 
-/** 
+/**
  * get a string value for this message
  * 
  * @param self a valid MuMsgFile
  * @param msfid the message field id to get (must be string-based one) *
  * @param do_free receives TRUE or FALSE, conveying if this string
- * should be freed (TRUE) or not by caller. In case 'FALSE', this
- * function should be treated as if it were return a const char*
+ * should be owned & freed (TRUE) or not by caller. In case 'FALSE',
+ * this function should be treated as if it were returning a const
+ * char*, and note that in that case the string is only valid as long
+ * as the MuMsgFile is alive, ie. before mu_msg_file_destroy
  * 
  * @return a const string, or NULL
  */
@@ -58,7 +60,7 @@ char* mu_msg_file_get_str_field (MuMsgFile *self,
 				 MuMsgFieldId msfid,
 				 gboolean *do_free);
 
-/** 
+/**
  * get a numeric value for this message -- the return value should be
  * cast into the actual type, e.g., time_t, MuMsgPrio etc.
  * 
