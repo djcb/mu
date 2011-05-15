@@ -70,6 +70,8 @@ libmu_la_SOURCES=			\
 	mu-msg-data.h			\
 	mu-msg-data-cache.c		\
 	mu-msg-data-cache.h		\
+	mu-msg-db.c			\
+	mu-msg-db.h			\
 	mu-msg-fields.c			\
 	mu-msg-fields.h			\
 	mu-msg-file.c			\
