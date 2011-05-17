@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 
 #include <glib.h>
 #include <mu-msg.h>
-#include <mu-msg-data.h>
 
 G_BEGIN_DECLS
 
@@ -83,20 +82,6 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
  * mu_msg_gmime_destroy when the instance is no longer needed
  */
 MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
-        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-
-/**
- * get a structure with information about this iter; this struct is
- * newly allocated, can be used to keep an in-memory record of a
- * message
- * 
- * @param iter a valid msg iterator
- * 
- * @return a newly allocate MuMsgData struct (free with
- * mu_msg_data_destroy), or NULL in case of error
- */
-MuMsgData* mu_msg_iter_get_msgdata (MuMsgIter *iter)
         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
