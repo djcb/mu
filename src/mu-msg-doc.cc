@@ -25,10 +25,10 @@
 
 #include "mu-util.h"
 #include "mu-msg-fields.h"
-#include "mu-msg-db.h"
+#include "mu-msg-doc.h"
 
-struct _MuMsgDb {
-	_MuMsgDb (const Xapian::Document& doc) : _doc (doc) {}
+struct _MuMsgDoc {
+	_MuMsgDoc (const Xapian::Document& doc) : _doc (doc) {}
 	const Xapian::Document doc() const { return _doc; }
 private:	
 	const Xapian::Document& _doc; 
@@ -36,14 +36,13 @@ private:
 };
 
 
-MuMsgDb*
-mu_msg_db_new (const XapianDocument *doc, GError **err)
+MuMsgDoc*
+mu_msg_doc_new (const XapianDocument *doc, GError **err)
 {
 	g_return_val_if_fail (doc, NULL);
 	
 	try {
-		MuMsgDb *db = new MuMsgDb ((const Xapian::Document&)*doc);
-		return db;
+		return new MuMsgDoc ((const Xapian::Document&)*doc);
 			
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, NULL);
 
@@ -51,7 +50,7 @@ mu_msg_db_new (const XapianDocument *doc, GError **err)
 }
 
 void
-mu_msg_db_destroy (MuMsgDb *self)
+mu_msg_doc_destroy (MuMsgDoc *self)
 {
 	try {
 		delete self;
@@ -61,7 +60,7 @@ mu_msg_db_destroy (MuMsgDb *self)
 
 
 gchar*
-mu_msg_db_get_str_field (MuMsgDb *self, MuMsgFieldId mfid, gboolean *do_free)
+mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid, gboolean *do_free)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
@@ -78,7 +77,7 @@ mu_msg_db_get_str_field (MuMsgDb *self, MuMsgFieldId mfid, gboolean *do_free)
 
 
 gint64
-mu_msg_db_get_num_field (MuMsgDb *self, MuMsgFieldId mfid)
+mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, -1);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), -1);
