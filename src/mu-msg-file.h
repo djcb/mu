@@ -33,7 +33,8 @@ typedef struct _MuMsgFile MuMsgFile;
  * @return a new MuMsg, or NULL in case of error
  */
 MuMsgFile *mu_msg_file_new (const char *path,
-			    const char* mdir, GError **err);
+			    const char* mdir, GError **err)
+                            G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a MuMsgFile object
@@ -58,7 +59,8 @@ void mu_msg_file_destroy (MuMsgFile *self);
  */
 char* mu_msg_file_get_str_field (MuMsgFile *self,
 				 MuMsgFieldId msfid,
-				 gboolean *do_free);
+				 gboolean *do_free)
+	                         G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a numeric value for this message -- the return value should be
