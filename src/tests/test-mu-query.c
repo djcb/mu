@@ -187,10 +187,10 @@ test_mu_query_04 (void)
 		{ "f:bilbo", 0},
  		{ "baggins", 1},
 		{ "prio:high", 1},
-		{ "prio:normal", 3},
+		{ "prio:normal", 4},
 		{ "prio:h", 1},
 		{ "prio:l", 7},
-		{ "not prio:l", 4}
+		{ "not prio:l", 5},
 	};
 	
 	xpath = fill_database ();
@@ -243,6 +243,33 @@ test_mu_query_05 (void)
 }
 
 
+
+static void
+test_mu_query_06 (void)
+{
+	gchar *xpath;
+	int i;
+	
+	QResults queries[] = {
+		{ "f:mü", 1},
+		{ "s:motörhead", 1},
+		{ "s:MotorHeäD", 1},
+		{ "queensryche", 1},
+		{ "Queensrÿche", 1},
+	};
+	
+	xpath = fill_database ();
+	g_assert (xpath != NULL);
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+	g_free (xpath);
+
+}
+
+
+
 int
 main (int argc, char *argv[])
 {
@@ -254,6 +281,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03);
 	g_test_add_func ("/mu-query/test-mu-query-04", test_mu_query_04);
 	g_test_add_func ("/mu-query/test-mu-query-05", test_mu_query_05);
+	g_test_add_func ("/mu-query/test-mu-query-06", test_mu_query_06);
 	
 	/* g_log_set_handler (NULL, */
 	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
