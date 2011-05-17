@@ -158,7 +158,7 @@ mu_util_init_system (void)
 		g_critical ("cannot set G_SLICE");
 		return FALSE;
 	}
-	MU_LOG_FILE("setting G_SLICE to always-malloc");
+	MU_WRITE_LOG("setting G_SLICE to always-malloc");
 #endif /*__FreeBSD__*/
 
 	g_type_init ();
