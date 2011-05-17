@@ -66,12 +66,8 @@ libmu_la_SOURCES=			\
 	mu-maildir.h			\
 	mu-msg-cache.c			\
 	mu-msg-cache.h			\
-	mu-msg-data.c			\
-	mu-msg-data.h			\
-	mu-msg-data-cache.c		\
-	mu-msg-data-cache.h		\
-	mu-msg-db.c			\
-	mu-msg-db.h			\
+	mu-msg-doc.c			\
+	mu-msg-doc.h			\
 	mu-msg-fields.c			\
 	mu-msg-fields.h			\
 	mu-msg-file.c			\
