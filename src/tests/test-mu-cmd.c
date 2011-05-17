@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -400,7 +400,7 @@ test_mu_view_01 (void)
 		 * Added 350 as 'okay', which comes with gmime 2.4.24 (ubuntu 10.04)
 		 */
 		len = strlen(output);
-		g_print ("\n[%s] (%d)\n", output, len);
+		/* g_print ("\n[%s] (%d)\n", output, len); */
 		g_assert (len == 370 || len == 358 || len == 350 || len == 349);
 				
 		g_free (output);
