@@ -22,7 +22,6 @@
 
 #include "mu-msg-cache.h"
 
-
 struct _MuMsgCache {
 
 	/* all string properties */
@@ -92,17 +91,13 @@ mu_msg_cache_destroy (MuMsgCache *self)
 	
 
 
-void
-cache_set_str (MuMsgCache *self, MuMsgFieldId mfid, char *str, gboolean alloc)
+const char*
+mu_msg_cache_set_str (MuMsgCache *self, MuMsgFieldId mfid, char *str,
+		      gboolean do_free)
 {
-	g_return_if_fail (self);
-	g_return_if_fail (mu_msg_field_is_string(mfid));
+	g_return_val_if_fail (self, NULL);
+	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
 
-	/* g_warning ("set_str: '%s'=>'%s'; alloc'd: %s; cached: %s", */
-	/* 	   mu_msg_field_name(mfid), str ? str : "", */
-	/* 	   is_allocated(mfid) ? "yes" : "no", */
-	/* 	   is_cached(mfid) ? "yes" : "no"); */
-	
 	/* maybe there was an old, allocated value there already? */
 	if (is_allocated(self, mfid)) 
 		g_free (self->_str[mfid]);
@@ -110,28 +105,14 @@ cache_set_str (MuMsgCache *self, MuMsgFieldId mfid, char *str, gboolean alloc)
 	self->_str[mfid] = str;
 	set_cached (self, mfid);
 
-	if (alloc)
+	if (do_free)
 		set_allocated (self, mfid);
 	else
 		reset_allocated (self, mfid);
+
+	return str;
 }
 
-	
-
-void
-mu_msg_cache_set_str (MuMsgCache *self, MuMsgFieldId mfid,
-		      const char *str)
-{
-	cache_set_str (self, mfid, (char*)str, FALSE);
-}
-
-
-void
-mu_msg_cache_set_str_alloc (MuMsgCache *self, MuMsgFieldId mfid,
-			    char *str)
-{
-	cache_set_str (self, mfid, str, TRUE);
-}
 
 const char*
 mu_msg_cache_str (MuMsgCache *cache, MuMsgFieldId mfid)
@@ -139,12 +120,15 @@ mu_msg_cache_str (MuMsgCache *cache, MuMsgFieldId mfid)
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
 	return cache->_str[mfid];	
 }
+ 
 
 
-void
-mu_msg_cache_set_num (MuMsgCache *self, MuMsgFieldId mfid, guint64 val)
+
+gint64
+mu_msg_cache_set_num (MuMsgCache *self, MuMsgFieldId mfid, gint64 val)
 {
-	g_return_if_fail(mu_msg_field_is_numeric(mfid));
+	g_return_val_if_fail(self, -1);
+	g_return_val_if_fail(mu_msg_field_is_numeric(mfid), -1);
 
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_DATE:
@@ -162,10 +146,13 @@ mu_msg_cache_set_num (MuMsgCache *self, MuMsgFieldId mfid, guint64 val)
 	case MU_MSG_FIELD_ID_SIZE:
 		self->_size = (size_t)val;
 		break;
-	default: g_return_if_reached();
+	default:
+		g_return_val_if_reached(-1);
+		return -1;
 	}
 
-	set_cached (self, mfid);	
+	set_cached (self, mfid);
+	return val;
 }
 
 

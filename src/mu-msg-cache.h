@@ -64,22 +64,13 @@ void mu_msg_cache_destroy (MuMsgCache *self);
  * @param self a cache struc 
  * @param mfid the MessageFieldId
  * @param str the string value to set
- */
-void mu_msg_cache_set_str (MuMsgCache *self, MuMsgFieldId mfid,
-			   const char *str);
-
-
-
-/**
- * add a string value to the cache; the cache takes ownership, and
- * will free it when done with it.
+ * @param do_free whether the cache should free this value (i.e, take ownership)
  * 
- * @param self a cache struc 
- * @param mfid the MessageFieldId
- * @param str the string value to set
+ * @return the cached value (this is for nesting function calls) 
  */
-void mu_msg_cache_set_str_alloc (MuMsgCache *self, MuMsgFieldId mfid,
-				 char *str);
+const char* mu_msg_cache_set_str (MuMsgCache *self, MuMsgFieldId mfid,
+				  char *str, gboolean do_free);
+
 
 /**
  * get a string value from the cache
@@ -99,8 +90,11 @@ const char* mu_msg_cache_str (MuMsgCache *cache, MuMsgFieldId mfid);
  * @param self a MuMsgCache ptr
  * @param mfid the MessageFieldId for a numeric value
  * @param val the value
+ * 
+ * @return the cached value (this is for nesting function calls) 
+ * 
  */
-void mu_msg_cache_set_num (MuMsgCache *self, MuMsgFieldId mfid, guint64 val);
+gint64 mu_msg_cache_set_num (MuMsgCache *self, MuMsgFieldId mfid, gint64 val);
 
 
 /**
