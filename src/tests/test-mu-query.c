@@ -253,6 +253,8 @@ test_mu_query_06 (void)
 	QResults queries[] = {
 		{ "f:mü", 1},
 		{ "s:motörhead", 1},
+		{ "t:Helmut", 1},
+		{ "t:Kröger", 1}, 
 		{ "s:MotorHeäD", 1},
 		{ "queensryche", 1},
 		{ "Queensrÿche", 1},
@@ -267,7 +269,6 @@ test_mu_query_06 (void)
 	g_free (xpath);
 
 }
-
 
 
 int
