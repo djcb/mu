@@ -25,7 +25,7 @@
 
 #include "mu-msg.h"
 #include "mu-msg-file.h"
-#include "mu-msg-db.h"
+#include "mu-msg-doc.h"
 #include "mu-msg-cache.h"
 
 G_BEGIN_DECLS
@@ -47,8 +47,8 @@ struct _MuMsg {
 	guint		 _refcount;
 
 	/* our two backend */
-	MuMsgFile	*_file;
-	MuMsgDb         *_db;
+	MuMsgFile	*_file; /* based on GMime, ie. a file on disc */
+	MuMsgDoc        *_doc;  /* based on Xapian::Document */
 	
 	MuMsgCache      *_cache;
 };

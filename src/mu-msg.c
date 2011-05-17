@@ -100,19 +100,19 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 
 
 MuMsg*
-mu_msg_new_from_db (const XapianDocument* doc, GError **err)
+mu_msg_new_from_doc (const XapianDocument* doc, GError **err)
 {
 		MuMsg *self;
-		MuMsgDb *msgdb;
+		MuMsgDoc *msgdoc;
 		
 		g_return_val_if_fail (doc, NULL);
 				
-		msgdb = mu_msg_db_new (doc, err);
-		if (!msgdb)
+		msgdoc = mu_msg_doc_new (doc, err);
+		if (!msgdoc)
 				return NULL;
 
 		self = msg_new ();
-		self->_db	= msgdb;
+		self->_doc	= msgdoc;
 			
 		return self;
 }
@@ -125,7 +125,7 @@ mu_msg_destroy (MuMsg *self)
 				return;
 
 		mu_msg_file_destroy (self->_file);
-		mu_msg_db_destroy (self->_db);
+		mu_msg_doc_destroy (self->_doc);
 
 		mu_msg_cache_destroy (self->_cache);
 		
@@ -154,32 +154,69 @@ mu_msg_unref (MuMsg *self)
 }
 
 
+/* use this instead of mu_msg_get_path so we don't get into infinite
+ * regress...*/
+static const char*
+get_path (MuMsg *self)
+{
+		const char *path;
+		char *val;
+		gboolean do_free;
+		
+		/* try to get the path from the cache */
+		path = mu_msg_cache_str (self->_cache, MU_MSG_FIELD_ID_PATH);
+		if (path)
+				return path;
+
+		/* nothing found yet? try the doc in case we are using that
+		 * backend */
+		val = NULL;
+		if (self->_doc)
+				val = mu_msg_doc_get_str_field (self->_doc,
+											   MU_MSG_FIELD_ID_PATH,
+											   &do_free);
+		
+		/* not in the cache yet? try to get it from the file backend,
+		 * in case we are using that */
+		if (!val && self->_file)
+				val = mu_msg_file_get_str_field (self->_file,
+												 MU_MSG_FIELD_ID_PATH,
+												 &do_free);
+		
+		/* this cannot happen unless there are bugs in mu */
+		if (!val) {
+				g_warning ("%s: cannot find path", __FUNCTION__);
+				return NULL;
+		}
+
+		/* we found something */
+		return mu_msg_cache_set_str (self->_cache,
+									 MU_MSG_FIELD_ID_PATH, val,
+									 do_free);
+}
+
 
 /* for some data, we need to read the message file from disk */
 static MuMsgFile*
 get_msg_file (MuMsg *self)
 {
-		MuMsgFile *file;
+		MuMsgFile *mfile;
 		const char *path;
 		GError *err;
-		
-		path = mu_msg_cache_str (self->_cache, MU_MSG_FIELD_ID_PATH);
-		if (!path) {
-				g_warning ("%s: cannot find path info", __FUNCTION__);
-				return NULL;
-		}
 
+		if (!(path = get_path (self)))
+				return NULL;
+		
 		err = NULL;
-		file = mu_msg_file_new (path, NULL, &err);
-		if (!file) {
+		mfile = mu_msg_file_new (path, NULL, &err);
+		if (!mfile) {
 				g_warning ("%s: failed to create MuMsgFile: %s",
-						   __FUNCTION__,
-						   err->message ? err->message : "?");
+						   __FUNCTION__, err->message ? err->message : "?");
 				g_error_free (err);
 				return NULL;
 		}
 		
-		return file;
+		return mfile;
 }
 
 
@@ -189,30 +226,30 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 {
 		gboolean do_free;
 		char *val;
-		
+
+		/* first we try the cache */
 		if (mu_msg_cache_cached (self->_cache, mfid))
 				return mu_msg_cache_str (self->_cache, mfid);
-		
-		/* if we don't have a file object yet, we need to create from
-		 * the file on disk */
-		if (!self->_file) {
-				self->_file = get_msg_file (self);
-				if (!self->_file) {
-						g_warning ("failed to open message file");
+
+		/* if it's not in the cache but it is a value retrievable from
+		 * the doc backend, use that */
+		val = NULL;
+		if (self->_doc && mu_msg_field_xapian_value (mfid))
+		 		val = mu_msg_doc_get_str_field (self->_doc, mfid, &do_free);
+		else {
+				/* if we don't have a file object yet, we need to
+				 * create it from the file on disk */
+				if (!self->_file)
+						self->_file = get_msg_file (self);
+				if (!self->_file && !(self->_file = get_msg_file (self)))
 						return NULL;
-				}
+				val = mu_msg_file_get_str_field (self->_file, mfid, &do_free);
 		}
 		
 		/* if we get a string that needs freeing, we tell the cache to
 		 * mark the string as such, so it will be freed when the cache
 		 * is freed (or when the value is overwritten) */
-		val = mu_msg_file_get_str_field (self->_file, mfid, &do_free);
-		if (do_free)
-				mu_msg_cache_set_str_alloc (self->_cache, mfid, val);
-		else
-				mu_msg_cache_set_str (self->_cache, mfid, val);
-
-		return val;
+		return mu_msg_cache_set_str (self->_cache, mfid, val, do_free);
 }
 
 
@@ -235,11 +272,8 @@ get_num_field (MuMsg *self, MuMsgFieldId mfid)
 		}
 
 		val = mu_msg_file_get_num_field (self->_file, mfid);
-		mu_msg_cache_set_num (self->_cache, mfid, val);
-		
-		return val;
+		return mu_msg_cache_set_num (self->_cache, mfid, val);
 }
-
 
 
 const char*    
@@ -322,7 +356,7 @@ mu_msg_get_flags (MuMsg *self)
 size_t
 mu_msg_get_size (MuMsg *self)
 {
-		g_return_val_if_fail (self, 0);
+		g_return_val_if_fail (self, (size_t)-1);
 		return (size_t)get_num_field (self, MU_MSG_FIELD_ID_SIZE);
 }
 
@@ -330,7 +364,7 @@ mu_msg_get_size (MuMsg *self)
 MuMsgPrio
 mu_msg_get_prio (MuMsg *self)
 {
-		g_return_val_if_fail (self, (time_t)-1);
+		g_return_val_if_fail (self, MU_MSG_PRIO_NORMAL);
 		return (MuMsgPrio)get_num_field (self, MU_MSG_FIELD_ID_PRIO);
 }
 
@@ -409,8 +443,8 @@ mu_msg_contact_new (const char *name, const char *address,
 
 		self = g_slice_new (MuMsgContact);
 
-		self->name	 = g_strdup(name);
-		self->address = g_strdup(address);
+		self->name	  = g_strdup (name);
+		self->address = g_strdup (address);
 		self->type    = type;
 
 		return self;	
