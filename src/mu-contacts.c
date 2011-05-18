@@ -45,7 +45,7 @@ struct _MuContacts {
 
 
 static gboolean
-unserialize_cache (MuContacts *self)
+deserialize_cache (MuContacts *self)
 {
 	GError *err;
 	gchar **groups;
@@ -69,12 +69,16 @@ unserialize_cache (MuContacts *self)
 	groups = g_key_file_get_groups (self->_ccache, &len);
 	for (i = 0; i  != len; ++i) {
 		ContactInfo *cinfo;
-		cinfo = contact_info_new (/* note, contact_info_new will *own* the string param,
-					   * and take care of freeing it */
+		cinfo = contact_info_new (/* note, contact_info_new
+					   * will *own* the string
+					   * param, and take care of
+					   * freeing it */
 			g_key_file_get_string (self->_ccache, groups[i],
 					       MU_CONTACTS_NAME_KEY, NULL),
 			(time_t)g_key_file_get_integer (self->_ccache, groups[i],
-							MU_CONTACTS_TIMESTAMP_KEY, NULL));
+							MU_CONTACTS_TIMESTAMP_KEY,
+							NULL));
+		
 		/* note, we're using the groups[i], so don't free with g_strfreev */
 		g_hash_table_insert (self->_hash, groups[i], cinfo);
 	}
@@ -103,7 +107,7 @@ mu_contacts_new (const gchar *ccachefile)
 		(g_str_hash, g_str_equal,
 		 g_free, (GDestroyNotify)contact_info_destroy);
 
-	unserialize_cache (contacts);
+	deserialize_cache (contacts);
 	MU_WRITE_LOG("unserialized contacts cache %s", ccachefile);
 
 	contacts->_dirty = FALSE;
@@ -126,7 +130,8 @@ mu_contacts_add (MuContacts *self, const char* name, const char *email,
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, email);
 	if (!cinfo ||
 	    (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {	
-		ContactInfo *ci; /* note ci will take care of freeing the first param */
+		ContactInfo *ci; /* note ci will take care of freeing
+				  * the first param */
 		ci = contact_info_new (name ? g_strdup(name) : NULL, tstamp);
 		g_hash_table_insert (self->_hash, g_strdup(email), ci);
 		return self->_dirty = TRUE;
@@ -144,20 +149,20 @@ struct _EachContactData {
 typedef struct _EachContactData	 EachContactData;
 
 static void /* email will never be NULL, but ci->_name may be */
-each_contact (const char* email, ContactInfo *ci, EachContactData *ecdata)
+each_contact (const char *email, ContactInfo *ci, EachContactData *ecdata)
 {
 	/* ignore this contact if we have a regexp, and it matches
-	* neither email nor name (if we have a name) */
+	 * neither email nor name (if we have a name) */
 	while (ecdata->_rx) { /* note, only once */
 		if (g_regex_match (ecdata->_rx, email, 0, NULL))
 			break; /* email matches? continue! */
 		if (!ci->_name)
 			return; /* email did not match, no name? ignore this one */
-		if (g_regex_match (ecdata->_rx,ci->_name, 0, NULL))
+		if (g_regex_match (ecdata->_rx, ci->_name, 0, NULL))
 			break; /* name matches? continue! */
 		return; /* nothing matched, ignore this one */
 	}
-	
+
 	ecdata->_func (email, ci->_name, ci->_tstamp, ecdata->_user_data);
 	++ecdata->_num;
 }
@@ -190,7 +195,7 @@ mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 	ecdata._user_data = user_data;
 	ecdata._num       = 0;
 	
-	g_hash_table_foreach (self->_hash, (GHFunc) each_contact, &ecdata);
+	g_hash_table_foreach (self->_hash, (GHFunc)each_contact, &ecdata);
 
 	if (ecdata._rx)
 		g_regex_unref (ecdata._rx);
@@ -202,12 +207,15 @@ mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 }
 
 
-
-
-
 static void
 each_keyval (const char *email, ContactInfo *cinfo, MuContacts *self)
 {
+	/* TODO: we use 'email' as key here; however, this fails for
+	 * technically valid e-mail addresses containing '='
+	 * ('smith=cool@domain.com') or '[]' (jones@[192.168.255.2]),
+	 * because GKeyFile does not like '=' or '[]' in its group
+	 * names. Maybe use a hash as the key, and 'email' as a
+	 * value */
 	if (cinfo->_name)
 		g_key_file_set_string (self->_ccache, email, "name",
 				       cinfo->_name);
