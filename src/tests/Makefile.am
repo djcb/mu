@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by the
@@ -55,6 +55,10 @@ test_mu_msg_fields_LDADD=  libtestmucommon.la
 TEST_PROGS += test-mu-query
 test_mu_query_SOURCES= test-mu-query.c dummy.cc
 test_mu_query_LDADD=    libtestmucommon.la
+
+TEST_PROGS += test-mu-contacts
+test_mu_contacts_SOURCES= test-mu-contacts.c dummy.cc
+test_mu_contacts_LDADD=    libtestmucommon.la
 
 TEST_PROGS += test-mu-cmd
 test_mu_cmd_SOURCES= test-mu-cmd.c dummy.cc
