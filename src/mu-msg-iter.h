@@ -36,6 +36,20 @@ G_BEGIN_DECLS
 struct _MuMsgIter;
 typedef struct _MuMsgIter MuMsgIter;
 
+
+/**
+ * create a new MuMsgIter -- basically, an iterator over the search
+ * results
+ * 
+ * @param enq a Xapian::Enquire* cast to XapianEnquire* (because this
+ * is C, not C++),providing access to search results
+ * @param batchsize how many results to retrieve at once
+ * 
+ * @return a new MuMsgIter, or NULL in case of error
+ */
+MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
+			    size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
+
 /**
  * get the next message (which you got from
  * e.g. mu_query_run)

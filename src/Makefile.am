@@ -74,7 +74,6 @@ libmu_la_SOURCES=			\
 	mu-msg-file.h			\
 	mu-msg-flags.c			\
 	mu-msg-flags.h			\
-	mu-msg-iter-priv.hh		\
 	mu-msg-iter.cc			\
 	mu-msg-iter.h			\
 	mu-msg-part.c			\

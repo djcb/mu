@@ -26,8 +26,6 @@
 #include "mu-util.h"
 #include  "mu-msg.h"
 #include "mu-msg-iter.h"
-#include "mu-msg-iter-priv.hh"
-
 
 static gboolean update_msg (MuMsgIter *iter);
 
@@ -62,10 +60,12 @@ struct _MuMsgIter {
 
 
 MuMsgIter*
-mu_msg_iter_new (const Xapian::Enquire& enq, size_t batchsize)
+mu_msg_iter_new (XapianEnquire *enq, size_t batchsize)
 {
+	g_return_val_if_fail (enq, NULL);
+	
 	try {
-		return new MuMsgIter (enq, batchsize);
+		return new MuMsgIter ((const Xapian::Enquire&)*enq, batchsize);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

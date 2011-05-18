@@ -95,7 +95,7 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
     G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+/**
  * get our the cache directory, typically, /tmp/mu-<userid>/
  *  
  * @return the cache directory; don't free 
@@ -244,10 +244,17 @@ enum {
 unsigned char mu_util_get_dtype_with_lstat (const char *path);
 
 
-/*
+/**
  * we need this when using Xapian::Document* from C
+ * 
  */
 typedef gpointer XapianDocument;
+
+/**
+ * we need this when using Xapian::Enquire* from C
+ * 
+ */
+typedef gpointer XapianEnquire;
 
 /**
  * 

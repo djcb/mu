@@ -30,7 +30,6 @@
 #include "mu-msg-fields.h"
 
 #include "mu-msg-iter.h"
-#include "mu-msg-iter-priv.hh"
 
 #include "mu-util.h"
 #include "mu-str.h"
@@ -349,7 +348,7 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		enq.set_query(query);
 		enq.set_cutoff(0,0);
 		
-		return mu_msg_iter_new (enq, batchsize);
+		return mu_msg_iter_new ((XapianEnquire*)&enq, batchsize);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
