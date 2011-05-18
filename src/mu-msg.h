@@ -60,8 +60,8 @@ MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
  * @return a new MuMsg instance or NULL in case of error; call
  * mu_msg_unref when done with this message
  */
-MuMsg *mu_msg_new_from_db (const XapianDocument* doc, GError **err)
-                        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+MuMsg *mu_msg_new_from_doc (const XapianDocument* doc, GError **err)
+                                    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 

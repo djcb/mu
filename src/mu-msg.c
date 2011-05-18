@@ -33,33 +33,6 @@
 #include "mu-util.h"
 #include "mu-str.h"
 
-/* note, we do the gmime initialization here rather than in
- * mu-runtime, because this way we don't need mu-runtime for simple
- * cases -- such as our unit tests */
-static gboolean _gmime_initialized = FALSE;
-
-static void
-gmime_init (void)
-{
-		g_return_if_fail (!_gmime_initialized);
-
-#ifdef GMIME_ENABLE_RFC2047_WORKAROUNDS
-		g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
-#else
-		g_mime_init(0);
-#endif /* GMIME_ENABLE_RFC2047_WORKAROUNDS */
-
-		_gmime_initialized = TRUE;
-}
-
-static void
-gmime_uninit (void)
-{
-		g_return_if_fail (_gmime_initialized);
-
-		g_mime_shutdown();
-		_gmime_initialized = FALSE;
-}
 
 
 static MuMsg*
@@ -82,11 +55,6 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 		MuMsgFile *msgfile;
 	
 		g_return_val_if_fail (path, NULL);
-	
-		if (G_UNLIKELY(!_gmime_initialized)) {
-				gmime_init ();
-				g_atexit (gmime_uninit);
-		}
 		
 		msgfile = mu_msg_file_new (path, mdir, err);
 		if (!msgfile) 
@@ -260,18 +228,22 @@ get_num_field (MuMsg *self, MuMsgFieldId mfid)
 		 
 		if (mu_msg_cache_cached (self->_cache, mfid))
 				return mu_msg_cache_num (self->_cache, mfid);
-		 
-		/* if we don't have a file object yet, we need to create from
-		 * the file on disk */
-		if (!self->_file) {
-				self->_file = get_msg_file (self);
-				if (!self->_file) {
-						g_warning ("failed to open message file");
+		
+		/* if it's not in the cache but it is a value retrievable from
+		 * the doc backend, use that */
+		val = -1;
+		if (self->_doc && mu_msg_field_xapian_value (mfid))
+		 		val = mu_msg_doc_get_num_field (self->_doc, mfid);
+		else {
+				/* if we don't have a file object yet, we need to
+				 * create it from the file on disk */
+				if (!self->_file)
+						self->_file = get_msg_file (self);
+				if (!self->_file && !(self->_file = get_msg_file (self)))
 						return -1;
-				}
+				val = mu_msg_file_get_num_field (self->_file, mfid);
 		}
 
-		val = mu_msg_file_get_num_field (self->_file, mfid);
 		return mu_msg_cache_set_num (self->_cache, mfid, val);
 }
 
