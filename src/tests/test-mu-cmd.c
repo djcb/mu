@@ -1,5 +1,5 @@
 /* 
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -407,6 +407,8 @@ test_mu_view_01 (void)
 		g_free (cmdline);
 		g_free (tmpdir);
 }
+
+
 
 
 static void 

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -215,6 +215,31 @@ test_mu_msg_04 (void)
 }
 
 
+static void
+test_mu_msg_05 (void)
+{
+		MuMsg *msg;
+
+		msg = mu_msg_new (MU_TESTMAILDIR
+						  "cur/1305664394.2171_402.cthulhu!2,",
+						  NULL, NULL);
+
+		g_assert_cmpstr (mu_msg_get_to(msg),
+						 ==, "Helmut Kröger <hk@testmu.xxx>");
+		g_assert_cmpstr (mu_msg_get_subject(msg),
+						 ==, "Motörhead");
+		g_assert_cmpstr (mu_msg_get_from(msg),
+						 ==, "Mü <testmu@testmu.xx>");
+		g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+						  ==, MU_MSG_PRIO_NORMAL);
+		g_assert_cmpuint (mu_msg_get_date(msg),
+						  ==, 0);
+	
+		mu_msg_unref (msg);
+}
+
+
+
 
 /* static gboolean */
 /* ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg, */
@@ -222,6 +247,9 @@ test_mu_msg_04 (void)
 /* { */
 /* 	return FALSE; /\* don't abort *\/ */
 /* } */
+
+
+
 
 
 
@@ -240,7 +268,9 @@ main (int argc, char *argv[])
 						 test_mu_msg_03);
 		g_test_add_func ("/mu-msg/mu-msg-04",
 						 test_mu_msg_04);
-		
+		g_test_add_func ("/mu-msg/mu-msg-05",
+						 test_mu_msg_05);
+			
 		g_log_set_handler (NULL,
 						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 						   (GLogFunc)black_hole, NULL);
