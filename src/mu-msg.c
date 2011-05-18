@@ -284,18 +284,21 @@ get_recipient (MuMsg *msg, GMimeRecipientType rtype, StringFields field)
 		/* can only be set once */
 		if (!msg->_fields[field]) {
 
-				char *recep;
-				InternetAddressList *receps;
-				receps = g_mime_message_get_recipients (msg->_mime_msg,
+				char *recip;
+				InternetAddressList *recips;
+				recips = g_mime_message_get_recipients (msg->_mime_msg,
 														rtype);
 				/* FIXME: is there an internal leak in
 				 * internet_address_list_to_string? */
-				recep = (char*)internet_address_list_to_string (receps,
-																TRUE);
-				if (mu_str_is_empty(recep))
-						g_free (recep);
+
+				/* FALSE --> don't encode */
+				recip = (char*)internet_address_list_to_string (recips,
+																FALSE);
+				
+				if (mu_str_is_empty(recip))
+						g_free (recip);
 				else 
-						msg->_fields[field] = recep;
+						msg->_fields[field] = recip;
 		}
 
 		return msg->_fields[field];
