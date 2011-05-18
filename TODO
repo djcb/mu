@@ -11,12 +11,12 @@
    - [ ] follow symlinks when indexing
    - [ ] better 'usage' info
 
-
+     
 * Releases already done
 
 ** release 0.9.5 [100%]
    
-
+   
 ** release 0.9.4 [100%] 
 
    - [X] add 'mu cfind' to find contacts
