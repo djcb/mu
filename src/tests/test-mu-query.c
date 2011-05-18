@@ -221,7 +221,7 @@ test_mu_query_05 (void)
 	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
 			     FALSE, 1, NULL);
 	err = NULL;
-	msg = mu_msg_iter_get_msg (iter, &err);
+	msg = mu_msg_iter_get_msg (iter, &err); /* don't unref */
 	if (!msg) {
 		g_warning ("error getting message: %s", err->message);
 		g_error_free (err);
@@ -236,13 +236,10 @@ test_mu_query_05 (void)
 	g_assert_cmpstr (summ,==, "Let's write some fünkÿ text using umlauts. Foo.");
 	g_free (summ);
 	
-	mu_msg_unref (msg);
 	mu_msg_iter_destroy (iter);
 	mu_query_destroy (query);
 	g_free (xpath);
 }
-
-
 
 static void
 test_mu_query_06 (void)

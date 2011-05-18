@@ -350,30 +350,30 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 }
 
 static void
-add_row (GtkListStore * store, MuMsgIter * iter)
+add_row (GtkListStore * store, MuMsg *msg)
 {
 	GtkTreeIter treeiter;
 	const gchar *datestr, *flagstr;
 	gchar *from, *to;
 	time_t timeval;
 
-	timeval = mu_msg_iter_get_date (iter);
+	timeval = mu_msg_get_date (msg);
 	datestr = timeval == 0 ? "-" : mu_str_display_date_s (timeval);
-	from = empty_or_display_contact (mu_msg_iter_get_from (iter));
-	to = empty_or_display_contact (mu_msg_iter_get_to (iter));
-	flagstr = mu_msg_flags_str_s (mu_msg_iter_get_flags (iter));
+	from = empty_or_display_contact (mu_msg_get_from (msg));
+	to = empty_or_display_contact (mu_msg_get_to (msg));
+	flagstr = mu_msg_flags_str_s (mu_msg_get_flags (msg));
 
 	gtk_list_store_append (store, &treeiter);
 	gtk_list_store_set (store, &treeiter,
 			    MUG_COL_DATESTR, datestr,
-			    MUG_COL_MAILDIR, mu_msg_iter_get_maildir (iter),
+			    MUG_COL_MAILDIR, mu_msg_get_maildir (msg),
 			    MUG_COL_FLAGSSTR, flagstr,
 			    MUG_COL_FROM, from,
 			    MUG_COL_TO, to,
-			    MUG_COL_SUBJECT, mu_msg_iter_get_subject (iter),
-			    MUG_COL_PATH, mu_msg_iter_get_path (iter),
-			    MUG_COL_PRIO, mu_msg_iter_get_prio (iter),
-			    MUG_COL_FLAGS, mu_msg_iter_get_flags (iter),
+			    MUG_COL_SUBJECT, mu_msg_get_subject (msg),
+			    MUG_COL_PATH, mu_msg_get_path (msg),
+			    MUG_COL_PRIO, mu_msg_get_prio (msg),
+			    MUG_COL_FLAGS, mu_msg_get_flags (msg),
 			    MUG_COL_TIME, timeval, -1);
 	g_free (from);
 	g_free (to);
@@ -394,11 +394,9 @@ update_model (GtkListStore * store, const char *xpath, const char *query,
 
 	for (count = 0; !mu_msg_iter_is_done (iter);
 	     mu_msg_iter_next (iter), ++count) {
-
-		add_row (store, iter);
-
-		if (count % 50 == 0)
-			gtk_main_iteration ();
+		MuMsg *msg;
+		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		add_row (store, msg);
 	}
 
 	mu_msg_iter_destroy (iter);

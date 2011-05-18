@@ -108,10 +108,15 @@ mu_output_links (MuMsgIter *iter, const char* linksdir,
 	for (myiter = iter, errseen = FALSE, mycount = 0;
 	     !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
-		
+
+		MuMsg *msg;
 		const char* path;
-		
-		path = mu_msg_iter_get_field (myiter, MU_MSG_FIELD_ID_PATH);
+	
+		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		if (!msg)
+			return FALSE;
+
+		path = mu_msg_get_field_string (msg, MU_MSG_FIELD_ID_PATH);
 		if (!path)
 			return FALSE;
 		
@@ -134,30 +139,36 @@ static const gchar*
 display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 {
 	gint64 val;
+	MuMsg *msg;
+	
+	msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+	if (!msg)
+		return FALSE;
 
+	
 	switch (mu_msg_field_type(mfid)) {
 	case MU_MSG_FIELD_TYPE_STRING: {
 		const gchar *str;
-		str = mu_msg_iter_get_field (iter, mfid);
+		str = mu_msg_get_field_string (msg, mfid);
 		return str ? str : "";
 	}		
 	case MU_MSG_FIELD_TYPE_INT:
 	
 		if (mfid == MU_MSG_FIELD_ID_PRIO) {
-			val = mu_msg_iter_get_field_numeric (iter, mfid);
+			val = mu_msg_get_field_numeric (msg, mfid);
 			return mu_msg_prio_name ((MuMsgPrio)val);
  		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
-			val = mu_msg_iter_get_field_numeric (iter, mfid);
+			val = mu_msg_get_field_numeric (msg, mfid);
 			return mu_str_flags_s ((MuMsgFlags)val);
 		} else  /* as string */
-			return mu_msg_iter_get_field (iter, mfid); 
+			return mu_msg_get_field_string (msg, mfid); 
 
 	case MU_MSG_FIELD_TYPE_TIME_T: 
-		val = mu_msg_iter_get_field_numeric (iter, mfid);
+		val = mu_msg_get_field_numeric (msg, mfid);
 		return mu_str_date_s ("%c", (time_t)val);
 
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
-		val = mu_msg_iter_get_field_numeric (iter, mfid);
+		val = mu_msg_get_field_numeric (msg, mfid);
 		return mu_str_size_s ((unsigned)val);
 	default:
 		g_return_val_if_reached (NULL);
@@ -176,7 +187,7 @@ print_summary (MuMsgIter *iter, size_t summary_len)
 		return; /* nothing to do */
 	
 	err = NULL;
-	msg = mu_msg_iter_get_msg (iter, &err);
+	msg = mu_msg_iter_get_msg (iter, &err); /* don't unref */
 	if (!msg) {
 		g_warning ("error get message: %s", err->message);
 		g_error_free (err);
@@ -186,8 +197,6 @@ print_summary (MuMsgIter *iter, size_t summary_len)
 	summ = mu_str_summarize (mu_msg_get_body_text(msg), summary_len);
 	g_print ("Summary: %s\n", summ ? summ : "<none>");
 	g_free (summ);
-	
-	mu_msg_unref (msg);
 }
 
 
@@ -236,7 +245,7 @@ print_attr_xml (const char* elm, const char *str)
 {
 	gchar *esc;
 	
-	if (!str || strlen(str) == 0)
+	if (mu_str_is_empty(str))
 		return; /* empty: don't include */
 
 	esc = g_markup_escape_text (str, -1);	
@@ -257,18 +266,25 @@ mu_output_xml (MuMsgIter *iter, size_t *count)
 	
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
+
+		MuMsg *msg;
+		
+		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		if (!msg)
+			return FALSE;
+
 		g_print ("\t<message>\n");
-		print_attr_xml ("from", mu_msg_iter_get_from (iter));
-		print_attr_xml ("to", mu_msg_iter_get_to (iter));
-		print_attr_xml ("cc", mu_msg_iter_get_cc (iter));
-		print_attr_xml ("subject", mu_msg_iter_get_subject (iter));
+		print_attr_xml ("from", mu_msg_get_from (msg));
+		print_attr_xml ("to", mu_msg_get_to (msg));
+		print_attr_xml ("cc", mu_msg_get_cc (msg));
+		print_attr_xml ("subject", mu_msg_get_subject (msg));
 		g_print ("\t\t<date>%u</date>\n",
-			 (unsigned) mu_msg_iter_get_date (iter));
+			 (unsigned) mu_msg_get_date (msg));
 		g_print ("\t\t<size>%u</size>\n",
-			 (unsigned) mu_msg_iter_get_size (iter));
-		print_attr_xml ("msgid", mu_msg_iter_get_msgid (iter));
-		print_attr_xml ("path", mu_msg_iter_get_path (iter));
-		print_attr_xml ("maildir", mu_msg_iter_get_maildir (iter));
+			 (unsigned) mu_msg_get_size (msg));
+		print_attr_xml ("msgid", mu_msg_get_msgid (msg));
+		print_attr_xml ("path", mu_msg_get_path (msg));
+		print_attr_xml ("maildir", mu_msg_get_maildir (msg));
 		g_print ("\t</message>\n");
 	}
 
@@ -308,22 +324,28 @@ mu_output_json (MuMsgIter *iter, size_t *count)
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
 
+		MuMsg *msg;
+		
 		if (mycount != 0)
 			g_print (",\n");
-			
+
+		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		if (!msg)
+			return FALSE;
+		
 		g_print ("\t\t{\n");
-		print_attr_json ("from", mu_msg_iter_get_from (iter), TRUE);
-		print_attr_json ("to", mu_msg_iter_get_to (iter),TRUE);
-		print_attr_json ("cc", mu_msg_iter_get_cc (iter),TRUE);
-		print_attr_json ("subject", mu_msg_iter_get_subject (iter),
+		print_attr_json ("from", mu_msg_get_from (msg), TRUE);
+		print_attr_json ("to", mu_msg_get_to (msg),TRUE);
+		print_attr_json ("cc", mu_msg_get_cc (msg),TRUE);
+		print_attr_json ("subject", mu_msg_get_subject (msg),
 				 TRUE);
 		g_print ("\t\t\t\"date\":%u,\n",
-			 (unsigned) mu_msg_iter_get_date (iter));
+			 (unsigned) mu_msg_get_date (msg));
 		g_print ("\t\t\t\"size\":%u,\n",
-			 (unsigned) mu_msg_iter_get_size (iter));
-		print_attr_json ("msgid", mu_msg_iter_get_msgid (iter),TRUE);
-		print_attr_json ("path", mu_msg_iter_get_path (iter),TRUE);
-		print_attr_json ("maildir", mu_msg_iter_get_maildir (iter),
+			 (unsigned) mu_msg_get_size (msg));
+		print_attr_json ("msgid", mu_msg_get_msgid (msg),TRUE);
+		print_attr_json ("path", mu_msg_get_path (msg),TRUE);
+		print_attr_json ("maildir", mu_msg_get_maildir (msg),
 				 FALSE);
 		g_print ("\t\t}");
 	}
@@ -364,21 +386,27 @@ mu_output_sexp (MuMsgIter *iter, size_t *count)
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
 
+		MuMsg *msg;
+		
 		if (mycount != 0)
 			g_print ("\n");
+
+		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		if (!msg)
+			return FALSE;
 		
 		g_print ("  (:message\n");
-		print_attr_sexp ("from", mu_msg_iter_get_from (iter),TRUE);
-		print_attr_sexp ("to", mu_msg_iter_get_to (iter),TRUE);
-		print_attr_sexp ("cc", mu_msg_iter_get_cc (iter),TRUE);
-		print_attr_sexp ("subject", mu_msg_iter_get_subject (iter),TRUE);
+		print_attr_sexp ("from", mu_msg_get_from (msg),TRUE);
+		print_attr_sexp ("to", mu_msg_get_to (msg),TRUE);
+		print_attr_sexp ("cc", mu_msg_get_cc (msg),TRUE);
+		print_attr_sexp ("subject", mu_msg_get_subject (msg),TRUE);
 		g_print ("    (:date %u)\n",
-			 (unsigned) mu_msg_iter_get_date (iter));
+			 (unsigned) mu_msg_get_date (msg));
 		g_print ("    (:size %u)\n",
-			 (unsigned) mu_msg_iter_get_size (iter));
-		print_attr_sexp ("msgid", mu_msg_iter_get_msgid (iter),TRUE);
-		print_attr_sexp ("path", mu_msg_iter_get_path (iter),TRUE);
-		print_attr_sexp ("maildir", mu_msg_iter_get_maildir (iter),FALSE);
+			 (unsigned) mu_msg_get_size (msg));
+		print_attr_sexp ("msgid", mu_msg_get_msgid (msg),TRUE);
+		print_attr_sexp ("path", mu_msg_get_path (msg),TRUE);
+		print_attr_sexp ("maildir", mu_msg_get_maildir (msg),FALSE);
 		g_print (")");
 	}
 	g_print (")\n");
