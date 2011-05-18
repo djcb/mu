@@ -181,18 +181,20 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 static char*
 get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 {
-	char *recep;
-	InternetAddressList *receps;
+	char *recip;
+	InternetAddressList *recips;
 	
-	receps = g_mime_message_get_recipients (self->_mime_msg, rtype);
-	recep = (char*)internet_address_list_to_string (receps, TRUE);
+	recips = g_mime_message_get_recipients (self->_mime_msg, rtype);
+
+	/* FALSE --> don't encode */
+	recip = (char*)internet_address_list_to_string (recips, FALSE);
 	
-	if (mu_str_is_empty(recep)) {
-		g_free (recep);
+	if (mu_str_is_empty(recip)) {
+		g_free (recip);
 		return NULL;
 	}
 
-	return recep;
+	return recip;
 }
 
 

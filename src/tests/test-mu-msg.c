@@ -219,7 +219,7 @@ test_mu_msg_05 (void)
 {
 		MuMsg *msg;
 
-		msg = mu_msg_new (MU_TESTMAILDIR
+		msg = mu_msg_new_from_file (MU_TESTMAILDIR
 						  "cur/1305664394.2171_402.cthulhu!2,",
 						  NULL, NULL);
 
