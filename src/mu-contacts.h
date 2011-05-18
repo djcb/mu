@@ -28,7 +28,6 @@ G_BEGIN_DECLS
 struct _MuContacts;
 typedef struct _MuContacts MuContacts;
 
-
 /** 
  * create a new MuContacts object; use mu_contacts_destroy when you no longer need it
  * 
@@ -52,7 +51,8 @@ MuContacts* mu_contacts_new (const gchar* ccachefile)
  * 
  * @return TRUE if succeeded, FALSE otherwise
  */
-gboolean mu_contacts_add (MuContacts *contacts, const char* name, const char *email,
+gboolean mu_contacts_add (MuContacts *contacts, const char* name,
+			  const char *email,
 			  time_t tstamp);
 
 /** 
@@ -67,8 +67,8 @@ void mu_contacts_destroy (MuContacts *contacts);
  * name (which may be NULL) and the timestamp for the address
  *
  */
-typedef void (*MuContactsForeachFunc) (const char *email, const char *name, time_t tstamp,
-				       gpointer user_data);
+typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
+				       time_t tstamp, gpointer user_data);
 
 /** 
  * call a function for either each contact, or each contact satisfying
