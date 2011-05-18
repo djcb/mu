@@ -1,5 +1,6 @@
 * NEWS (user visible changes)
 
+
 ** Release 0.9.5 <2011-04-25 Mon>
 
    - bug fix for infinite loop in Maildir detection
