@@ -24,40 +24,39 @@
 #include <xapian.h>
 
 #include "mu-util.h"
+#include  "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-msg-iter-priv.hh"
+
+
+static gboolean update_msg (MuMsgIter *iter);
 
 struct _MuMsgIter {
 
 	_MuMsgIter (const Xapian::Enquire &enq, size_t batchsize):
-		_enq(enq), _batchsize(batchsize), _offset(0) {
+		_enq(enq), _batchsize(batchsize), _offset(0), _msg(0) {
 
 		_matches = _enq.get_mset (0, _batchsize);
 		_cursor	 = _matches.begin();
 		_is_null = _matches.empty();
-		clear_fields (false);
+
+		if (!_matches.empty())
+			update_msg (this);
 	}
 
 	~_MuMsgIter () {
-		clear_fields (true);
-	}
-
-	void clear_fields (bool dofree) {
-		for (int i = 0; i != MU_MSG_FIELD_ID_NUM; ++i) {
-			if (dofree)
-				g_free(_str[i]);
-			_str[i] = NULL;
-		}
+		if (_msg)
+			mu_msg_unref (_msg);
 	}
 	
 	const Xapian::Enquire          _enq;
 	Xapian::MSet                   _matches;
 	Xapian::MSet::const_iterator   _cursor;
 	size_t                         _batchsize, _offset;
-	char*                          _str[MU_MSG_FIELD_ID_NUM];
 	bool                           _is_null;
-	
-	
+
+	Xapian::Document _doc;
+	MuMsg *_msg;
 };
 
 
@@ -82,24 +81,11 @@ mu_msg_iter_destroy (MuMsgIter *iter)
 MuMsg*
 mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
 {
-	const char *path;
-	MuMsg *msg;
-	
 	g_return_val_if_fail (iter, NULL);
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+	g_return_val_if_fail (iter->_msg, NULL);
 	
-	path = mu_msg_iter_get_path (iter);
-	if (!path) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_MISSING_DATA,
-			     "no path for message");
-		return NULL;
-	}
-
-	msg = mu_msg_new_from_file (path, NULL, err);
-	if (!msg) 
-		return NULL;
-
-	return msg;
+	return mu_msg_ref (iter->_msg);
 }
 
 
@@ -133,6 +119,30 @@ get_next_batch (MuMsgIter *iter)
 	return iter;
 }
 
+
+static gboolean
+update_msg (MuMsgIter *iter)
+{
+	GError *err;
+	
+	/* get a new MuMsg based on the current doc */
+	if (iter->_msg) 
+		mu_msg_unref (iter->_msg);
+	
+	iter->_doc = iter->_cursor.get_document();
+	err = NULL;
+	iter->_msg = mu_msg_new_from_doc ((XapianDocument*)&iter->_doc, &err);
+	if (!iter->_msg) {
+		g_warning ("%s: failed to create MuMsg: %s",
+			   __FUNCTION__, err->message ? err->message : "?");
+		g_error_free (err);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
 gboolean
 mu_msg_iter_next (MuMsgIter *iter)
 {
@@ -159,10 +169,9 @@ mu_msg_iter_next (MuMsgIter *iter)
 		 * it */
 		if (!message_is_readable (iter))
 			return mu_msg_iter_next (iter);
-		
-		iter->clear_fields (true);
-
-		return TRUE;
+	
+		/* try to get a new MuMsg based on the current doc */
+		return update_msg (iter);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
@@ -178,15 +187,7 @@ mu_msg_iter_is_done (MuMsgIter *iter)
 static const gchar*
 get_field (MuMsgIter *iter, MuMsgFieldId mfid)
 {
-	if (!iter->_str[mfid]) { /* cache the value */
-		try {
-			const std::string s
-				(iter->_cursor.get_document().get_value(mfid));
-			iter->_str[mfid] = s.empty() ? NULL : g_strdup (s.c_str());
-			
-		} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
-	}
-	return iter->_str[mfid];
+	return mu_msg_get_field_string (iter->_msg, mfid);
 }
 
 const gchar*
@@ -204,16 +205,7 @@ mu_msg_iter_get_field (MuMsgIter *iter, MuMsgFieldId mfid)
 static gint64
 get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 {
-	const char* str;
-
-	str = get_field (iter, mfid);
-	if (!str)
-		return 0;
-	
-	try {
-		return static_cast<gint64>(Xapian::sortable_unserialise(str));
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(static_cast<gint64>(-1));
+	return mu_msg_get_field_numeric (iter->_msg, mfid);
 }
 
 

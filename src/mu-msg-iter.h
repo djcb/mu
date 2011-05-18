@@ -78,8 +78,8 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
  * @param err which receives error info or NULL. err is only filled
  * when the function returns NULL
  * 
- * @return a MuMsgGMime instance, or NULL in case of error. Use
- * mu_msg_gmime_destroy when the instance is no longer needed
+ * @return a MuMsg instance, or NULL in case of error. Use
+ * mu_msg_unref when the instance is no longer needed
  */
 MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
