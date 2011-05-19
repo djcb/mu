@@ -241,33 +241,6 @@ test_mu_msg_05 (void)
 }
 
 
-static void
-test_mu_msg_05 (void)
-{
-		MuMsg *msg;
-
-		msg = mu_msg_new (MU_TESTMAILDIR
-						  "cur/1305664394.2171_402.cthulhu!2,",
-						  NULL, NULL);
-
-		g_assert_cmpstr (mu_msg_get_to(msg),
-						 ==, "Helmut Kröger <hk@testmu.xxx>");
-		g_assert_cmpstr (mu_msg_get_subject(msg),
-						 ==, "Motörhead");
-		g_assert_cmpstr (mu_msg_get_from(msg),
-						 ==, "Mü <testmu@testmu.xx>");
-		g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
-						  ==, MU_MSG_PRIO_NORMAL);
-		g_assert_cmpuint (mu_msg_get_date(msg),
-						  ==, 0);
-	
-		mu_msg_unref (msg);
-}
-
-
-
-
-
 /* static gboolean */
 /* ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg, */
 /* 	      gpointer user_data) */
@@ -276,14 +249,9 @@ test_mu_msg_05 (void)
 /* } */
 
 
-
-
-
-
 int
 main (int argc, char *argv[])
 {
-<<<<<<< HEAD
 	int rv;
 	g_test_init (&argc, &argv, NULL);
 
@@ -305,32 +273,5 @@ main (int argc, char *argv[])
 
 	rv = g_test_run ();
 
-	return rv;
-=======
-		int rv;
-		g_test_init (&argc, &argv, NULL);
-
-		/* mu_msg_str_date */
-		g_test_add_func ("/mu-msg/mu-msg-01",
-						 test_mu_msg_01);
-		g_test_add_func ("/mu-msg/mu-msg-02",
-						 test_mu_msg_02);
-		g_test_add_func ("/mu-msg/mu-msg-03",
-						 test_mu_msg_03);
-		g_test_add_func ("/mu-msg/mu-msg-04",
-						 test_mu_msg_04);
-		g_test_add_func ("/mu-msg/mu-msg-05",
-						 test_mu_msg_05);
-			
-		g_log_set_handler (NULL,
-						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-						   (GLogFunc)black_hole, NULL);
-
-		mu_msg_gmime_init ();
-		rv = g_test_run ();
-		mu_msg_gmime_uninit ();
-		
-		return rv;
->>>>>>> f6ff982e921b60b7afcba19dd85f01d576057f42
-		
+	return rv;		
 }
