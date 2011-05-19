@@ -484,13 +484,7 @@ main (int argc, char *argv[])
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|
 			   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
-<<<<<<< HEAD
 	rv = g_test_run ();
-=======
-
-	rv = g_test_run ();
-
->>>>>>> f6ff982e921b60b7afcba19dd85f01d576057f42
 
 	return rv;
 }
