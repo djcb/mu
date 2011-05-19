@@ -828,3 +828,14 @@ mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 	}
 }
 
+
+
+const char*
+mu_msg_file_get_header (MuMsgFile *self, const char *header)
+{
+	g_return_val_if_fail (self, NULL);
+	g_return_val_if_fail (header, NULL);
+	
+	return g_mime_object_get_header
+		(GMIME_OBJECT(self->_mime_msg), header);
+}

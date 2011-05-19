@@ -48,6 +48,19 @@ void mu_msg_file_destroy (MuMsgFile *self);
 
 
 /**
+ * get a specific header
+ * 
+ * @param self a MuMsgFile instance
+ * @param header a header (e.g. 'X-Mailer' or 'List-Id')
+ * 
+ * @return the value of the header or NULL if not found. Note, only
+ * valid as long as this MuMsgFile is valid -- before
+ * mu_msg_file_destroy
+ */
+const char* mu_msg_file_get_header (MuMsgFile *self, const char *header);
+
+
+/**
  * get a string value for this message
  * 
  * @param self a valid MuMsgFile

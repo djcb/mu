@@ -299,6 +299,19 @@ time_t          mu_msg_get_timestamp       (MuMsg *msg);
 
 
 /**
+ * get a specific header from the message. This value will _not_ be
+ * cached
+ * 
+ * @param self a MuMsg instance
+ * @param header a specific header (like 'X-Mailer' or 'Organization')
+ * 
+ * @return a header string which is valid as long as this MuMsg is
+ */
+const char* mu_msg_get_header (MuMsg *self, const char *header);
+
+
+
+/**
  * get the list of references as a comma-separated string
  * 
  * @param msg a valid MuMsg
