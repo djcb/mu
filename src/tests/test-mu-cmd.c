@@ -484,7 +484,6 @@ main (int argc, char *argv[])
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|
 			   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
-
 	rv = g_test_run ();
 
 	return rv;
