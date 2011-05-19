@@ -307,6 +307,33 @@ has_noindex_file (const char *path)
 
 
 static gboolean
+is_dotdir_to_ignore (const char* dir)
+{
+	int i;
+	const char* ignore[] = {
+		".notmuch",
+		".nnmaildir",
+		".#evolution"
+	}; /* when adding names, check the optimization below */
+	
+	if (dir[0] != '.')
+		return FALSE; /* not a dotdir */
+
+	if (dir[1] == '\0' || (dir[1] == '.' && dir[2] == '\0'))
+		return TRUE; /* ignore '.' and '..' */
+
+	/* optimization: special dirs have 'n' or '#' in pos 1 */
+	if (dir[1] != 'n' && dir[1] != '#')
+		return FALSE; /* not special: don't ignore */
+
+	for (i = 0; i != G_N_ELEMENTS(ignore); ++i)
+		if (strcmp(dir, ignore[i]) == 0)
+			return TRUE;
+
+	return FALSE; /* don't ignore */
+}
+
+static gboolean
 ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 {
 	const char *name;
@@ -322,25 +349,7 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 	/* ignore '.' and '..' dirs, as well as .notmuch and
 	 * .nnmaildir */
 
-	/* does not start with '.', so don't ignore */
-	if (G_LIKELY(name[0] != '.'))
-		return FALSE;
-	
-	/* ignore . and .. */
-	if (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))
-		return TRUE;
-	
-	/* ignore .notmuch, .nnmaildir */
-	if ((name[1] == 'n') && /* optimization */
-	    (strcmp (name, ".notmuch") == 0 ||
-	     strcmp (name, ".nnmaildir") == 0)) 
-		return TRUE;
-
-	/* ignore '.#evolution */
-	if ((name[1] == '#') && (strcmp (name, ".#evolution")))
-		return TRUE;
-	
-	return FALSE;
+	return is_dotdir_to_ignore (entry->d_name);
 }
 
 
