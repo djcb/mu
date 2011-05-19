@@ -16,5 +16,13 @@
 
 include $(top_srcdir)/gtest.mk
 
+INCLUDES=$(GMIME_CFLAGS) $(GLIB_CFLAGS)
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic
+
+noinst_PROGRAMS=gmime-test
+gmime_test_SOURCES=gmime-test.c
+gmime_test_LDADD=$(GMIME_LIBS) $(GLIB_LIBS)
+
+
 EXTRA_DIST=			\
 	mu-completion.zsh

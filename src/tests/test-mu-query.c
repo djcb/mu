@@ -268,6 +268,34 @@ test_mu_query_06 (void)
 }
 
 
+
+static void
+test_mu_query_06 (void)
+{
+	gchar *xpath;
+	int i;
+	
+	QResults queries[] = {
+		{ "f:mü", 1},
+		{ "s:motörhead", 1},
+		{ "t:Helmut", 1},
+		{ "t:Kröger", 1}, 
+		{ "s:MotorHeäD", 1},
+		{ "queensryche", 1},
+		{ "Queensrÿche", 1},
+	};
+	
+	xpath = fill_database ();
+	g_assert (xpath != NULL);
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+	g_free (xpath);
+
+}
+
+
 int
 main (int argc, char *argv[])
 {

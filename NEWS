@@ -1,6 +1,11 @@
 * NEWS (user visible changes)
-
-
+ 
+** Release 0.9.6 < not yet >
+   
+   - FreeBSD build fix
+   - fix matching for mu cfind to be as expected
+   -
+ 
 ** Release 0.9.5 <2011-04-25 Mon>
 
    - bug fix for infinite loop in Maildir detection
@@ -102,6 +107,4 @@
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
-# End:
-
-
+# End 
