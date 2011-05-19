@@ -1,4 +1,5 @@
-/*
+/* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+**
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -39,14 +40,16 @@ typedef struct _MuMsg MuMsg;
  * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
  * pass NULL for this parameter, in which case some maildir-specific
  * information is not available.
- * @param err receive error information (MU_ERROR_FILE or MU_ERROR_GMIME), or NULL. There
- * will only be err info if the function returns NULL
+ * @param err receive error information (MU_ERROR_FILE or
+ * MU_ERROR_GMIME), or NULL. There will only be err info if the
+ * function returns NULL
  * 
  * @return a new MuMsg instance or NULL in case of error; call
  * mu_msg_unref when done with this message
  */
 MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
-			     GError **err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+			     GError **err)
+                             G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -293,17 +296,6 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
  */
 time_t          mu_msg_get_timestamp       (MuMsg *msg);
 
-
-/**
- * get a list of message ids this message refers to -- this is based
- * on the References: and In-reply-to: headers.
- * 
- * @param msg a valid MuMsg instance
- * 
- * @return a list of message id, with the most immediate parent as the
- * last element. Don't modify/free this list.
- */
-const GSList *mu_msg_get_references (MuMsg *msg);
 
 
 /**

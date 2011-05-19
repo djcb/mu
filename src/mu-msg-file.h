@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -42,6 +44,7 @@ MuMsgFile *mu_msg_file_new (const char *path,
  * @param self object to destroy, or NULL
  */
 void mu_msg_file_destroy (MuMsgFile *self);
+
 
 
 /**

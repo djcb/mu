@@ -1,4 +1,5 @@
-/*
+/* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+**
 ** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -56,15 +57,15 @@ static gboolean _gmime_initialized = FALSE;
 static void
 gmime_init (void)
 {
-		g_return_if_fail (!_gmime_initialized);
-
+	g_return_if_fail (!_gmime_initialized);
+	
 #ifdef GMIME_ENABLE_RFC2047_WORKAROUNDS
-		g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
+	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
 #else
-		g_mime_init(0);
+	g_mime_init(0);
 #endif /* GMIME_ENABLE_RFC2047_WORKAROUNDS */
 
-		_gmime_initialized = TRUE;
+	_gmime_initialized = TRUE;
 }
 
 static void
@@ -113,7 +114,7 @@ mu_msg_file_destroy (MuMsgFile *self)
 
 	if (self->_mime_msg)
 		g_object_unref (self->_mime_msg);
-
+	
 	g_slice_free (MuMsgFile, self);
 }
 
@@ -698,7 +699,6 @@ get_msgids_from_header (MuMsgFile *self, const char* header)
 
 	return g_slist_reverse (msgids);
 }
-
 
 
 static GSList*
