@@ -1,0 +1,172 @@
+/*
+** Copyright (C) 2011 djcb <djcb@cthulhu>
+**
+** This program is free software; you can redistribute it and/or modify it
+** under the terms of the GNU General Public License as published by the
+** Free Software Foundation; either version 3, or (at your option) any
+** later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software Foundation,
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
+*/
+
+
+
+/* gmime-test; compile with:
+       gcc -o gmime-test gmime-test.c -Wall -O0 -ggdb3 \
+           `pkg-config --cflags --libs gmime-2.4`
+ */
+
+#include <gmime/gmime.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
+gchar*
+get_recip (GMimeMessage *msg, GMimeRecipientType rtype)
+{
+	char *recep;
+        InternetAddressList *receps;
+        
+        receps = g_mime_message_get_recipients (msg, rtype);
+        recep = (char*)internet_address_list_to_string (receps, FALSE);
+  
+        if (!recep || !*recep) {
+                g_free (recep);
+                return NULL;
+        }
+
+        return recep;
+}
+
+
+static gboolean
+test_message (GMimeMessage *msg)
+{
+	gchar *val;
+	const gchar *str;
+	
+	g_print ("From   : %s\n", g_mime_message_get_sender (msg));
+
+	val = get_recip (msg, GMIME_RECIPIENT_TYPE_TO);
+	g_print ("To     : %s\n", val ? val : "<none>" );
+	g_free (val);
+
+	val = get_recip (msg, GMIME_RECIPIENT_TYPE_CC);
+	g_print ("Cc     : %s\n", val ? val : "<none>" );
+	g_free (val);
+
+	val = get_recip (msg, GMIME_RECIPIENT_TYPE_BCC);
+	g_print ("Bcc    : %s\n", val ? val : "<none>" );
+	g_free (val);
+
+	str = g_mime_message_get_subject (msg);
+	g_print ("Subject: %s\n", str ? str : "<none>");
+	
+	str = g_mime_message_get_message_id (msg);
+	g_print ("Msg-id : %s\n", str ? str : "<none>");
+	
+	return TRUE;
+}
+
+
+
+static gboolean
+test_stream (GMimeStream *stream)
+{
+	GMimeParser *parser;
+	GMimeMessage *msg;
+	gboolean rv;
+
+	parser = NULL;
+	msg    = NULL;
+	
+	parser = g_mime_parser_new_with_stream (stream);
+	if (!parser) {
+		g_warning ("failed to create parser");
+		rv = FALSE;
+		goto leave;
+	}
+
+	msg = g_mime_parser_construct_message (parser);
+	if (!msg) {
+		g_warning ("failed to construct message");
+		rv = FALSE;
+		goto leave;
+	}
+
+	rv = test_message (msg);
+	
+leave:
+	if (parser)
+		g_object_unref (parser);
+	else
+		g_object_unref (stream);
+	
+	if (msg)
+		g_object_unref (msg);
+
+	return rv;
+}
+
+
+static gboolean
+test_file (const char *path)
+{
+	FILE *file;
+	GMimeStream *stream;
+	gboolean rv;
+
+	stream = NULL;
+	file   = NULL;
+	
+	file = fopen (path, "r");
+	if (!file) {
+		g_warning ("cannot open file '%s': %s", path,
+			   strerror(errno));
+		rv = FALSE;
+		goto leave;
+	}
+
+	stream = g_mime_stream_file_new (file);
+	if (!stream) {
+		g_warning ("cannot open stream for '%s'", path);
+		rv = FALSE;
+		goto leave;
+	}
+
+	rv = test_stream (stream);  /* test-stream will unref it */
+	
+leave:
+	if (file)
+		fclose (file);
+	
+	return rv;
+}
+	
+
+int
+main (int argc, char *argv[])
+{
+	gboolean rv;
+	
+	if (argc != 2) {
+		g_printerr ("usage: %s <msg-file>\n", argv[0]);
+		return 1;
+	}
+
+	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
+
+	rv = test_file (argv[1]);
+	
+	g_mime_shutdown ();
+
+	return rv ? 0 : 1;
+}
