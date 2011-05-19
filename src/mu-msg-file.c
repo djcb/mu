@@ -763,20 +763,16 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free
 	
 	switch (mfid) {
 
-	case MU_MSG_FIELD_ID_BCC:
-		*do_free = TRUE;
+	case MU_MSG_FIELD_ID_BCC: *do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_BCC);
 
-	case MU_MSG_FIELD_ID_BODY_TEXT:
-		*do_free = TRUE;
+	case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE;
 		return get_body (self, FALSE);
 
-	case MU_MSG_FIELD_ID_BODY_HTML:
-		*do_free = TRUE;
+	case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE;
 		return get_body (self, TRUE);
 
-	case MU_MSG_FIELD_ID_CC:
-		*do_free = TRUE;
+	case MU_MSG_FIELD_ID_CC: *do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_CC);
 
 	case MU_MSG_FIELD_ID_FROM:
@@ -788,8 +784,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free
 	case MU_MSG_FIELD_ID_SUBJECT:
 		return (char*)g_mime_message_get_subject (self->_mime_msg);
 
-	case MU_MSG_FIELD_ID_TO:
-		*do_free = TRUE;
+	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_TO);
 
 	case MU_MSG_FIELD_ID_MSGID:
@@ -798,8 +793,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free
 	case MU_MSG_FIELD_ID_MAILDIR:
 		return self->_maildir;
 		
-	case MU_MSG_FIELD_ID_REFS:
-		*do_free = TRUE;
+	case MU_MSG_FIELD_ID_REFS: *do_free = TRUE;
 		return get_references_str (self);
 	
 	default:

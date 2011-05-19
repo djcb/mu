@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /* 
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -55,7 +57,7 @@ mu_msg_flag_from_char (char k)
 	case 'd': return MU_MSG_FLAG_DRAFT;
 	case 'f': return MU_MSG_FLAG_FLAGGED;
 		
-	/* NEW OR NOT SEEN */
+		/* NEW OR NOT SEEN */
 	case 'u': return MU_MSG_FLAG_UNREAD;
 		
 	case 'z': return MU_MSG_FLAG_SIGNED;
@@ -67,11 +69,28 @@ mu_msg_flag_from_char (char k)
 	}
 }
 
+MuMsgFlags
+mu_msg_flag_from_file_char (char k)
+{
+	switch (g_ascii_tolower(k)) {
+	case 'n': return MU_MSG_FLAG_NEW;		
+	case 'p': return MU_MSG_FLAG_PASSED;
+	case 'r': return MU_MSG_FLAG_REPLIED;
+	case 's': return MU_MSG_FLAG_SEEN;
+	case 't': return MU_MSG_FLAG_TRASHED;
+	case 'd': return MU_MSG_FLAG_DRAFT;
+	case 'f': return MU_MSG_FLAG_FLAGGED;
+	default: return 0;
+	}
+}
+
 
 const char*
 mu_msg_flag_name (MuMsgFlags flag)
-{	
+{
 	switch (flag) {
+		
+	/* real maildir flags */
 	case MU_MSG_FLAG_NEW:		return "new";
 	case MU_MSG_FLAG_PASSED:	return "passed";
 	case MU_MSG_FLAG_REPLIED:	return "replied";
@@ -80,7 +99,7 @@ mu_msg_flag_name (MuMsgFlags flag)
 	case MU_MSG_FLAG_DRAFT:		return "draft";
 	case MU_MSG_FLAG_FLAGGED:	return "flagged";
 
-	/* ie., NEW or NOT SEEN */
+		/* ie., NEW or NOT SEEN */
 	case MU_MSG_FLAG_UNREAD:	return "unread";
 		
 	case MU_MSG_FLAG_SIGNED:	return "signed";
@@ -104,7 +123,7 @@ mu_msg_flag_char (MuMsgFlags flag)
 	case MU_MSG_FLAG_DRAFT:		return 'd';
 	case MU_MSG_FLAG_FLAGGED:	return 'f';
 
-	/* NEW OR NOT SEEN */
+		/* NEW OR NOT SEEN */
 	case MU_MSG_FLAG_UNREAD:        return 'u';
 		
 	case MU_MSG_FLAG_SIGNED:	return 'z';

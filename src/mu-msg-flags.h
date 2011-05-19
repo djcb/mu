@@ -95,6 +95,23 @@ MuMsgFlags mu_msg_flags_from_str  (const char* str) G_GNUC_PURE;
  */
 MuMsgFlags  mu_msg_flags_from_char (char c) G_GNUC_CONST;
 
+
+/**
+ * convert the char-per-flag description into a MuMsgFlags value. The
+ * difference is that with 'mu_msg_flags_from_char' is that this
+ * function only cares about the chars that are part of the
+ * Maildir-standard (ie., in files), and that is ignores unknown chars
+ * (returns 0), rather than printing warnings
+ * 
+ * @param c a character
+ * 
+ * @return a MuMSgFlags value, or 0 if the char is not known as a
+ * maildir char
+ */
+MuMsgFlags mu_msg_flag_from_file_char (char k) G_GNUC_CONST;
+
+
+
 /**
  * get a string for a given set of flags, OR'ed in 
  * @param flags; one character per flag:

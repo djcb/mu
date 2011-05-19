@@ -325,28 +325,25 @@ mu_output_json (MuMsgIter *iter, size_t *count)
 	     mu_msg_iter_next (myiter), ++mycount) {
 
 		MuMsg *msg;
+
+		if (!(msg = mu_msg_iter_get_msg (iter, NULL)))
+			return FALSE;
 		
 		if (mycount != 0)
 			g_print (",\n");
-
-		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
-		if (!msg)
-			return FALSE;
-		
+				
 		g_print ("\t\t{\n");
 		print_attr_json ("from", mu_msg_get_from (msg), TRUE);
 		print_attr_json ("to", mu_msg_get_to (msg),TRUE);
 		print_attr_json ("cc", mu_msg_get_cc (msg),TRUE);
-		print_attr_json ("subject", mu_msg_get_subject (msg),
-				 TRUE);
+		print_attr_json ("subject", mu_msg_get_subject (msg), TRUE);
 		g_print ("\t\t\t\"date\":%u,\n",
 			 (unsigned) mu_msg_get_date (msg));
 		g_print ("\t\t\t\"size\":%u,\n",
 			 (unsigned) mu_msg_get_size (msg));
 		print_attr_json ("msgid", mu_msg_get_msgid (msg),TRUE);
 		print_attr_json ("path", mu_msg_get_path (msg),TRUE);
-		print_attr_json ("maildir", mu_msg_get_maildir (msg),
-				 FALSE);
+		print_attr_json ("maildir", mu_msg_get_maildir (msg), FALSE);
 		g_print ("\t\t}");
 	}
 	g_print ("\t]\n}\n");
@@ -387,23 +384,19 @@ mu_output_sexp (MuMsgIter *iter, size_t *count)
 	     mu_msg_iter_next (myiter), ++mycount) {
 
 		MuMsg *msg;
+		if (!(msg = mu_msg_iter_get_msg (iter, NULL))) /* don't unref */
+			return FALSE;
 		
 		if (mycount != 0)
 			g_print ("\n");
-
-		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
-		if (!msg)
-			return FALSE;
 		
 		g_print ("  (:message\n");
 		print_attr_sexp ("from", mu_msg_get_from (msg),TRUE);
 		print_attr_sexp ("to", mu_msg_get_to (msg),TRUE);
 		print_attr_sexp ("cc", mu_msg_get_cc (msg),TRUE);
 		print_attr_sexp ("subject", mu_msg_get_subject (msg),TRUE);
-		g_print ("    (:date %u)\n",
-			 (unsigned) mu_msg_get_date (msg));
-		g_print ("    (:size %u)\n",
-			 (unsigned) mu_msg_get_size (msg));
+		g_print ("    (:date %u)\n", (unsigned) mu_msg_get_date (msg));
+		g_print ("    (:size %u)\n", (unsigned) mu_msg_get_size (msg));
 		print_attr_sexp ("msgid", mu_msg_get_msgid (msg),TRUE);
 		print_attr_sexp ("path", mu_msg_get_path (msg),TRUE);
 		print_attr_sexp ("maildir", mu_msg_get_maildir (msg),FALSE);

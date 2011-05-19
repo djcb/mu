@@ -337,8 +337,7 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 		return TRUE;
 
 	/* ignore '.#evolution */
-	if ((name[1] == '#') &&
-	    (strcmp (name, ".#evolution")))
+	if ((name[1] == '#') && (strcmp (name, ".#evolution")))
 		return TRUE;
 	
 	return FALSE;
@@ -683,22 +682,12 @@ mu_maildir_get_flags_from_path (const char *path)
 	    !(info && info[0] == '2' && info[1] == ','))
 		goto leave;
 		
-	for (cursor = info + 2; *cursor; ++cursor) {
-		switch (*cursor) {
-		case 'P': flags |= MU_MSG_FLAG_PASSED; break;
-		case 'T': flags |= MU_MSG_FLAG_TRASHED; break;
-		case 'R': flags |= MU_MSG_FLAG_REPLIED; break;
-		case 'S': flags |= MU_MSG_FLAG_SEEN; break;
-		case 'D': flags |= MU_MSG_FLAG_DRAFT; break;
-		case 'F': flags |= MU_MSG_FLAG_FLAGGED; break;
-		default:  break; /* ignore */
-		}
-	}
+	for (cursor = info + 2; *cursor; ++cursor)
+		flags |= mu_msg_flag_from_file_char (*cursor);
 
 	/* the UNREAD pseudo flag => NEW OR NOT SEEN */
 	if (!(flags & MU_MSG_FLAG_SEEN))
-		flags |= MU_MSG_FLAG_UNREAD;
-		
+		flags |= MU_MSG_FLAG_UNREAD;		
 leave:
 	g_free(info);
 	return flags;
