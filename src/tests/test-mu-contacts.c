@@ -171,7 +171,7 @@ main (int argc, char *argv[])
 	int rv;
 	
 	g_test_init (&argc, &argv, NULL);	
-	g_test_add_func ("/mu-contact/test-mu-contacts-01", test_mu_contacts_01);
+	g_test_add_func ("/mu-contacts/test-mu-contacts-01", test_mu_contacts_01);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,

@@ -64,6 +64,11 @@ TEST_PROGS += test-mu-cmd
 test_mu_cmd_SOURCES= test-mu-cmd.c dummy.cc
 test_mu_cmd_LDADD=    libtestmucommon.la
 
+TEST_PROGS += test-mu-cmd-cfind
+test_mu_cmd_cfind_SOURCES= test-mu-cmd-cfind.c dummy.cc
+test_mu_cmd_cfind_LDADD= libtestmucommon.la
+
+
 TEST_PROGS += test-mu-msg
 test_mu_msg_SOURCES= test-mu-msg.c dummy.cc
 test_mu_msg_LDADD=  libtestmucommon.la
