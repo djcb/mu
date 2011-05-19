@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+** 
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -24,37 +25,37 @@
 #include <xapian.h>
 
 #include "mu-util.h"
-#include  "mu-msg.h"
+#include "mu-msg.h"
 #include "mu-msg-iter.h"
 
 static gboolean update_msg (MuMsgIter *iter);
 
 struct _MuMsgIter {
 
-	_MuMsgIter (const Xapian::Enquire &enq, size_t batchsize):
-		_enq(enq), _batchsize(batchsize), _offset(0), _msg(0) {
+		_MuMsgIter (const Xapian::Enquire &enq, size_t batchsize):
+			_enq(enq), _batchsize(batchsize), _offset(0), _msg(0) {
+			
+			_matches = _enq.get_mset (0, _batchsize);
+			_cursor	 = _matches.begin();
+			_is_null = _matches.empty();
+			
+			if (!_matches.empty())
+				update_msg (this);
+		}
 
-		_matches = _enq.get_mset (0, _batchsize);
-		_cursor	 = _matches.begin();
-		_is_null = _matches.empty();
-
-		if (!_matches.empty())
-			update_msg (this);
-	}
-
-	~_MuMsgIter () {
-		if (_msg)
-			mu_msg_unref (_msg);
-	}
+		~_MuMsgIter () {
+			if (_msg)
+				mu_msg_unref (_msg);
+		}
 	
-	const Xapian::Enquire          _enq;
-	Xapian::MSet                   _matches;
-	Xapian::MSet::const_iterator   _cursor;
-	size_t                         _batchsize, _offset;
-	bool                           _is_null;
+		const Xapian::Enquire          _enq;
+		Xapian::MSet                   _matches;
+		Xapian::MSet::const_iterator   _cursor;
+		size_t                         _batchsize, _offset;
+		bool                           _is_null;
 
-	Xapian::Document _doc;
-	MuMsg *_msg;
+		Xapian::Document _doc;
+		MuMsg *_msg;
 };
 
 
@@ -115,7 +116,7 @@ get_next_batch (MuMsgIter *iter)
 		iter->_cursor = iter->_matches.begin();
 		iter->_is_null = false;
 	}
-		
+	
 	return iter;
 }
 
@@ -147,7 +148,7 @@ gboolean
 mu_msg_iter_next (MuMsgIter *iter)
 {
 	g_return_val_if_fail (iter, FALSE);
-
+	
 	if (mu_msg_iter_is_done(iter))
 		return FALSE;
 	
@@ -169,7 +170,7 @@ mu_msg_iter_next (MuMsgIter *iter)
 		 * it */
 		if (!message_is_readable (iter))
 			return mu_msg_iter_next (iter);
-	
+		
 		/* try to get a new MuMsg based on the current doc */
 		return update_msg (iter);
 		
@@ -195,7 +196,7 @@ mu_msg_iter_get_field (MuMsgIter *iter, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
-
+	
 	return get_field (iter, mfid);
 }
 
