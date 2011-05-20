@@ -106,9 +106,9 @@ private:
 			char k = date[i];
 			if (std::isdigit(k))
 				cleanup += date[i];
-			else if (k != ':' && k != '-' && k != '/' && k != '.' &&
-				 k != ',')
-				throw std::runtime_error ("error in date str");
+			// else if (k != ':' && k != '-' && k != '/' && k != '.' &&
+			// 	 k != ',' && k != '_')
+			// 	throw std::runtime_error ("error in date str");
 		}
 		date = cleanup;
 	}
@@ -239,22 +239,39 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 			(1, mu_msg_field_xapian_prefix (mfid));
 		const std::string shortcut
 			(1, mu_msg_field_shortcut (mfid));
-
-		if (mfid == MU_MSG_FIELD_ID_FLAGS || mfid == MU_MSG_FIELD_ID_PRIO) {
+		
+		if (mu_msg_field_uses_boolean_prefix (mfid)) {
+		 	qparser->add_boolean_prefix
+		 		(mu_msg_field_name(mfid), pfx);
+		 	qparser->add_boolean_prefix (shortcut, pfx);
+		} else {
 			qparser->add_prefix
 				(mu_msg_field_name(mfid), pfx);
-			qparser->add_prefix (shortcut, pfx);
-		} else if (mfid == MU_MSG_FIELD_ID_MAILDIR ||
-		      mfid == MU_MSG_FIELD_ID_MSGID) {
-			qparser->add_boolean_prefix
-				(mu_msg_field_name(mfid), pfx);
-			qparser->add_boolean_prefix (shortcut, pfx);
-		} else {
-			qparser->add_boolean_prefix
-				(mu_msg_field_name(mfid), pfx);
-			qparser->add_boolean_prefix (shortcut, pfx);
-			qparser->add_prefix ("", pfx);
+		 	qparser->add_prefix (shortcut, pfx);
 		}
+		
+		if (!mu_msg_field_needs_prefix(mfid)) 
+			qparser->add_prefix ("", pfx);
+
+			
+		// if (mfid == MU_MSG_FIELD_ID_FLAGS || mfid == MU_MSG_FIELD_ID_PRIO) {
+		// 	qparser->add_prefix
+		// 		(mu_msg_field_name(mfid), pfx);
+		// 	qparser->add_prefix (shortcut, pfx);
+
+		// } else if (mfid == MU_MSG_FIELD_ID_MAILDIR ||
+		// 	   mfid == MU_MSG_FIELD_ID_MSGID) {
+		// 	qparser->add_boolean_prefix
+		// 		(mu_msg_field_name(mfid), pfx);
+		// 	qparser->add_boolean_prefix (shortcut, pfx);
+
+		// } else {
+		// 	qparser->add_boolean_prefix
+		// 		(mu_msg_field_name(mfid), pfx);
+		// 	qparser->add_boolean_prefix (shortcut, pfx);
+
+		// 	qparser->add_prefix ("", pfx);
+		// }
 	} MU_XAPIAN_CATCH_BLOCK;
 }
 

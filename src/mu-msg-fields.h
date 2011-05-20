@@ -195,6 +195,33 @@ gboolean mu_msg_field_xapian_value (MuMsgFieldId id) G_GNUC_PURE;
 
 
 /**
+ * whether we should use add_boolean_prefix (see Xapian documentation)
+ * for this field in queries. Used in mu-query.cc
+ * 
+ * @param id a MuMsgFieldId
+ * 
+ * @return TRUE if this field wants add_boolean_prefix, FALSE
+ * otherwise
+ */
+gboolean mu_msg_field_uses_boolean_prefix (MuMsgFieldId id) G_GNUC_PURE;
+
+
+
+/**
+ * wether this fields needs a prefix in queries -- ie,
+ * 'msgid:<some-message-id>' will only match with the explicit prefix,
+ * while 'subject:foo' will also match as just 'foo'. Used in
+ * mu-query.cc
+ * 
+ * @param id a MuMsgFieldId
+ * 
+ * @return TRUE if this field only matches with a prefix, FALSE
+ * otherwise
+ */
+gboolean mu_msg_field_needs_prefix (MuMsgFieldId id) G_GNUC_PURE;
+
+
+/**
  * should this field be escaped for xapian? in practice, should
  * word-breaking chars be replaced with '_'?
  * 
