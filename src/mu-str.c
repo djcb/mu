@@ -325,19 +325,20 @@ mu_str_date_parse_hdwmy (const char* str)
 guint64
 mu_str_size_parse_kmg (const char* str)
 {
-	guint64 num;
+	gint64 num;
 	char *end;
 	
 	g_return_val_if_fail (str, G_MAXUINT64);
 	
 	num = strtol (str, &end, 10);
-	if (num <= 0)  
+	if (num < 0)  
 		return G_MAXUINT64;
 	
 	if (!end || end[1] != '\0')
 		return G_MAXUINT64;
 	
 	switch (tolower(end[0])) {
+	case 'b': return num;                      /* bytes */	
 	case 'k': return num * 1000;               /* kilobyte */
 	case 'm': return num * 1000 * 1000;        /* megabyte */
 	/* case 'g': return num * 1000 * 1000 * 1000; /\* gigabyte *\/ */
@@ -360,7 +361,7 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 	replace_dot = (g_strstr_len(query, -1, "@") != NULL);
 	
 	for (cur = query; *cur; ++cur) {
-		if (*cur == '@') 
+		if (*cur == '@' || *cur == '-') 
 			*cur = '_';
 
 		else if (replace_dot && *cur == '.') {
