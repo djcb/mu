@@ -164,6 +164,17 @@ Get all message we got in the last two weeks about emacs:
   \fB$ mu find date:2w..now emacs\fR
 .fi
 
+Another powerful feature (since 0.9.6) are wildcard searches, where you can
+search for the last \fIn\fR characters in a word. For example, you can search
+for:
+.nf
+  \fB$ mu find 'subject:soc*'\fR
+.fi
+and get mails about soccer, Socrates, society, and so on. Note, it's important
+to quote the search query, otherwise the shell will interpret
+the '*'.
+
+
 .SH DISPLAYING MESSAGES
 
 We might also want to display the complete messages instead of the header

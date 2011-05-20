@@ -60,7 +60,22 @@ uppercase and lowercase, nor the accented or unaccented versions of
 characters. All match. In general, \fBmu\fR tries to be 'eager' in matching,
 as filtering out unwanted results is usually preferrable over non matching
 messages.
-     
+
+A wildcard search is a search where a \fB*\fR matches the last \fIn\R
+character(s) in some string. The string must always start with one or more
+characters before the wildcards. Since version 0.9.6, \fBmu\fR also supports
+wildcard searches for all fields except maildirs and paths. So, to get all
+mails with a subject containing a word starting with \fBcom\fR, you can use:
+
+.nf
+  $ mu find 'subject:com*'
+.fi
+
+and get mails about computers, comments, compilation and so on. Note, when
+running from the command-line it's import to put the query in quotes,
+otherwise the shell would interpret the '*'.
+
+
 In older versions of mu, queries were logged in \fI<mu-home>/mu.log\fR;
 however, since version 0.9, mu no longer does this.
      
@@ -180,8 +195,8 @@ June 2010, you could use:
   $ mu find date:20090505..20100602 
 .fi
 
-Characters like ':', '/', '-' and single '.' are ignored, so the following is
-equivalent but more readable:
+Non-numeric characters are ignored, so the following is equivalent but more
+readable:
 
 .nf
   $ mu find date:2009-05-05..2010-06-02 
@@ -225,9 +240,10 @@ sent or received today, you could use:
 .fi
 
 The \fBsize\fR or \fBz\fR allows you to match \fIsize ranges\fR -- that is,
-match messages that have a byte-size within a certain range. Units (K (for
-1000) and  M (for 1000 * 1000) are supported). For example to get all messages
-between 10Kb and 2Mb (assuming SI units), you could use:
+match messages that have a byte-size within a certain range. Units (B (for
+bytes), K (for 1000 bytes) and M (for 1000 * 1000 bytes) are supported). For
+example, to get all messages between 10Kb and 2Mb (assuming SI units), you
+could use:
 
 .nf
   $ mu find size:10K..2M
@@ -514,14 +530,14 @@ reason, the below can be an alternative.
 performed, there needs to be a least one match. Anything else leads to a
 non-zero return value, for example:
 
-.sh
+.nf
 | code | meaning                        |
 |------+--------------------------------|
 |    0 | ok                             |
 |    1 | general error                  |
 |    2 | no matches (for 'mu find')     |
 |    4 | database is corrupted          |
-.si
+.fi
 
 .SH BUGS
 

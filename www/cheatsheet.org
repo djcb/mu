@@ -46,6 +46,15 @@ Here are some tips for using =mu=. If you want to know more, please refer to the
    $ mu find size:2k..2m date:20091201..20093112 flag:attach from:bill
 #+end_src
  
+*** unread messages about soccer or socrates or ...
+
+#+begin_src sh
+   $ mu find 'subject:soc*' flag:unread
+#+end_src
+
+
+    
+
 ** Further processing of matched messages
 
   If you need to process the results of your queries with some other program,

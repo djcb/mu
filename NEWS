@@ -4,7 +4,7 @@
    
    - FreeBSD build fix
    - fix matching for mu cfind to be as expected
-   -
+   - wildcard searches for all fields (except for path/maildir)
  
 ** Release 0.9.5 <2011-04-25 Mon>
 
@@ -101,7 +101,7 @@
    - A test suite with a growing number of unit tests
 
 
-**  Release 0.6 <2010-01-23 Sat> 
+** Release 0.6 <2010-01-23 Sat> 
     - First new release of mu since 2008
     - No longer depends on sqlite
 
