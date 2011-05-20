@@ -80,8 +80,12 @@ test_mu_cfind_plain (void)
 static void
 test_mu_cfind_bbdb (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput;
-	
+	gchar *muhome, *cmdline, *output, *erroutput, *expected;
+	gchar today[12];
+	const char* frm;
+	struct tm *tmtoday;
+	time_t now;
+
 	muhome = fill_contacts_cache ();
 	g_assert (muhome != NULL);
 
@@ -92,23 +96,30 @@ test_mu_cfind_bbdb (void)
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-	g_assert_cmpstr (output,
-			 ==,
-			 ";; -*-coding: utf-8-emacs;-*-\n"
-			 ";;; file-version: 6\n"
-			 
-			 "[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "
-			 "((creation-date . \"2011-05-19\") "
-			 "(time-stamp . \"1970-01-01\")) nil]\n"
+	
+	frm =   ";; -*-coding: utf-8-emacs;-*-\n"
+		";;; file-version: 6\n"
+		"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "
+		"((creation-date . \"%s\") "
+		"(time-stamp . \"1970-01-01\")) nil]\n"
+		"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "
+		"((creation-date . \"%s\") "
+		"(time-stamp . \"1970-01-01\")) nil]\n";
 
-			 "[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "
-			 "((creation-date . \"2011-05-19\") "
-			 "(time-stamp . \"1970-01-01\")) nil]\n");
+	now = time(NULL);
+	tmtoday = localtime(&now);
+	strftime(today,sizeof(today),"%Y-%m-%d", tmtoday);
+	expected = g_strdup_printf (frm, today, today);	
+	
+	/* g_print ("\n%s\n", output); */
+	
+	g_assert_cmpstr (output, ==, expected);
 
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
+	g_free (expected);
 }
 
 
