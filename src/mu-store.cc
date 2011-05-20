@@ -565,6 +565,9 @@ mu_store_store (MuStore *store, MuMsg *msg, gboolean replace)
 		else
 			id = store->_db.add_document (newdoc);
 
+		/* DEBUG */
+		//g_print ("\n[%s]\n", newdoc.serialise().c_str());
+		
 		++store->_processed;
 		commit_trx_if (store,
 			       store->_processed % store->_trx_size == 0);
