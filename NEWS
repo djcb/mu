@@ -5,6 +5,8 @@
    - FreeBSD build fix
    - fix matching for mu cfind to be as expected
    - wildcard searches for all fields (except for path/maildir)
+   - search for attachment file names (with 'a:'/'attach:') -- also works with
+     wildcards
  
 ** Release 0.9.5 <2011-04-25 Mon>
 
