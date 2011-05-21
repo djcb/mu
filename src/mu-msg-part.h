@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -101,14 +103,15 @@ gboolean mu_msg_part_looks_like_attachment (MuMsgPart *part,
  * @param partidx index of the attachment you want to save
  * @param overwrite overwrite existing files?
  * @param don't raise error when the file already exists
+ * @param err receives error information (when function returns NULL)
  * 
  * @return full path to the message part saved or NULL in case or error; free with g_free
  */
 gboolean mu_msg_part_save (MuMsg *msg, const char *filepath, guint partidx,
-			   gboolean overwrite, gboolean use_cached);
+			   gboolean overwrite, gboolean use_cached, GError **err);
 
 
-/** 
+/**
  * get a filename for the saving the message part; try the filename
  * specified for the message part if any, otherwise determine a unique
  * name based on the partidx and the message path
@@ -123,7 +126,7 @@ gchar* mu_msg_part_filepath (MuMsg *msg, const char* targetdir,
 			     guint partidx) G_GNUC_WARN_UNUSED_RESULT; 
 
 
-/** 
+/**
  * get a full path name for saving the message part in the cache
  * directory for this message; if needed, create the directory (but
  * not the file)
@@ -137,8 +140,8 @@ gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
         G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
- * get the part inede for the message part with a certain content-id
+/**
+ * get the part index for the message part with a certain content-id
  * 
  * @param msg a message
  * @param content_id a content-id to search
@@ -147,10 +150,19 @@ gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
  */
 int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
 
+/**
+ * get the (first) part index for the message part with a certain
+ * filename
+ * 
+ * @param msg a message
+ * @param sought_filename filename to look for
+ * 
+ * @return the part index number of the found part, or -1 if it was not found
+ */
+int mu_msg_part_find_file (MuMsg *msg, const char* sought_filename);
 
 
-typedef void (*MuMsgPartForeachFunc) (MuMsg *, MuMsgPart *, gpointer);
-
+typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
 /**
  * call a function for each of the mime part in a message 
  *

@@ -33,17 +33,21 @@ static gboolean
 save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 	   gboolean play)
 {
+	GError *err;
 	gchar *filepath;
 	
 	filepath = mu_msg_part_filepath (msg, targetdir, partidx);
 	if (!filepath) {
-		g_warning ("%s: failed to get filepath", __FUNCTION__);
+		g_warning ("failed to get filepath");
 		return FALSE;
 	}
-	
-	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE)) {
-		g_warning ("%s: failed to save MIME-part %d at %s",
-			   __FUNCTION__, partidx, filepath);
+
+	err = NULL;
+	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE, &err)) {
+		g_warning ("failed to save MIME-part: %s",
+			   err&&err->message ? err->message : "error");
+		if (err)
+			g_error_free (err);
 		g_free (filepath);
 		return FALSE;
 	}
@@ -51,6 +55,7 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 	if (play)
 		mu_util_play (filepath, TRUE, FALSE);
 
+	g_free (filepath);	
 	return TRUE;
 }
 
@@ -89,6 +94,26 @@ save_numbered_parts (MuMsg *msg, MuConfig *opts)
 	return rv;
 }
 
+static gboolean
+save_part_with_filename (MuMsg *msg, const char *filename, MuConfig *opts)
+{
+	int idx;
+
+	idx = mu_msg_part_find_file (msg, filename);
+	if (idx == -1) {
+		g_warning ("file '%s' not found in this message", filename);
+		return FALSE;
+	}
+		
+	if (!save_part (msg, opts->targetdir, idx, opts->overwrite,
+			opts->play)) 
+		return FALSE;
+	
+	return TRUE;
+}
+
+
+
 struct _SaveData {
 	gboolean		 attachments_only;
 	gboolean		 result;
@@ -126,6 +151,7 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 {
 	gchar *filepath;
 	gboolean rv;
+	GError *err;
 	
 	if (ignore_part (msg, part, sd))
 		return;
@@ -136,10 +162,16 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 	filepath = mu_msg_part_filepath (msg, sd->targetdir, part->index);
 	if (!filepath) 
 		goto leave;
-	
+
+	err = NULL;
 	if (!mu_msg_part_save (msg, filepath, part->index,
-			       sd->overwrite, FALSE))
+			       sd->overwrite, FALSE, &err)) {
+		g_warning ("failed to save MIME-part: %s",
+			   err&&err->message ? err->message : "error");
+		if (err)
+			g_error_free (err);
 		goto leave;
+	}
 	
 	if (sd->play &&  !mu_util_play (filepath, TRUE, FALSE))
 		goto leave;
@@ -183,7 +215,7 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 
 
 static gboolean
-save_parts (const char *path, MuConfig *opts)
+save_parts (const char *path, const char *filename, MuConfig *opts)
 {	
 	MuMsg* msg;
 	gboolean rv;
@@ -202,7 +234,9 @@ save_parts (const char *path, MuConfig *opts)
 	
 	/* should we save some explicit parts? */
 	if (opts->parts)
-		rv = save_numbered_parts (msg, opts);	
+		rv = save_numbered_parts (msg, opts);
+	else if (filename)
+		rv = save_part_with_filename (msg, filename, opts);
 	else if (opts->save_attachments)  /* all attachments */
 		rv = save_certain_parts (msg, TRUE,
 					 opts->targetdir, opts->overwrite,
@@ -257,8 +291,14 @@ show_parts (const char* path, MuConfig *opts)
 static gboolean
 check_params (MuConfig *opts)
 {
-	if (!opts->params[1] || opts->params[2]) {
-		g_warning ("usage: mu extract [options] <file>");
+	if (!opts->params[1] || (opts->params[2] && opts->params[3])) {
+		g_warning ("usage: mu extract [options] <file> [<filename>]");
+		return FALSE;
+	}
+
+	if (opts->params[2] && (opts->save_attachments || opts->save_all)) {
+		g_warning ("--save-attachments --save-all is allowed don't accept "
+			   "a filename");
 		return FALSE;
 	}
 	
@@ -289,7 +329,8 @@ mu_cmd_extract (MuConfig *opts)
 	if (!check_params (opts))
 		return MU_EXITCODE_ERROR;
 	
-	if (!opts->parts &&
+	if (!opts->params[2] &&
+	    !opts->parts &&
 	    !opts->save_attachments &&
 	    !opts->save_all)  /* show, don't save */
 		rv = show_parts (opts->params[1], opts);
@@ -299,7 +340,9 @@ mu_cmd_extract (MuConfig *opts)
 			g_warning ("target '%s' is not a writable directory",
 				   opts->targetdir);
 		else
-			rv = save_parts (opts->params[1], opts); /* save */
+			rv = save_parts (opts->params[1],
+					 opts->params[2],
+					 opts); /* save */
 	}
 		
 	return rv ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
