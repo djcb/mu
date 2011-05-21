@@ -364,9 +364,12 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 		if (*cur == '@' || *cur == '-') 
 			*cur = '_';
 
-		else if (replace_dot && *cur == '.') {
-			if (cur[1] == '.')  /* don't replace '..' */
+		else if (*cur == '.') {
+			/* don't replace a final cur */
+			if (cur[1] == '.' || cur[1]== ' ' || cur[1]=='\t')  
 				cur += 2;
+			else if (cur[1] == '\0')
+				++cur;			
 			else
 				*cur = '_';
 		} else if (*cur == ':') {
