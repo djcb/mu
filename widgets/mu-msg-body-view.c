@@ -103,6 +103,7 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	gint idx;
 	gchar *filepath;
 	gboolean rv;
+	GError *err;
 	
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (cid, NULL);
@@ -118,10 +119,14 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 		g_warning ("%s: cannot create filepath", filepath);
 		return NULL;
 	}
-	
-	rv = mu_msg_part_save (msg, filepath, idx, FALSE, TRUE);
+
+	err = NULL;
+	rv = mu_msg_part_save (msg, filepath, idx, FALSE, TRUE, &err);
 	if (!rv) {
-		g_warning ("%s: failed to save %s", __FUNCTION__, filepath);
+		g_warning ("%s: failed to save %s: %s", __FUNCTION__, filepath,
+			   err&&err->message?err->message:"error");
+		if (err)
+			g_error_free (err);
 		g_free (filepath);
 		filepath = NULL;
 	}

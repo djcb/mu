@@ -127,16 +127,17 @@ accumulate_parts (MuMsgAttachView *self, GtkTreePath *path, GSList **lst)
 	if (gtk_tree_model_get_iter (model, &iter, path)) {
 		gchar *filepath;
 		gint idx;
-		gtk_tree_model_get (model, &iter, PARTNUM_COL, &idx, -1);		
+		gtk_tree_model_get (model, &iter, PARTNUM_COL, &idx, -1);
 		filepath = mu_msg_part_filepath_cache (self->_priv->_msg, idx);
 		if (filepath) {
 			if (mu_msg_part_save (self->_priv->_msg, filepath,
-					      idx, FALSE, TRUE)) {
+					      idx, FALSE, TRUE, NULL)) {
 				GFile *file;
 				file = g_file_new_for_path (filepath);
 				*lst = g_slist_prepend (*lst, g_file_get_uri(file));
 				g_object_unref (file);
-			}
+			} else
+				g_warning ("error saving msg part");
 			g_free (filepath);
 		}
 	}
