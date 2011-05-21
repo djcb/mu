@@ -267,25 +267,6 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 		if (!mu_msg_field_needs_prefix(mfid)) 
 			qparser->add_prefix ("", pfx);
 
-			
-		// if (mfid == MU_MSG_FIELD_ID_FLAGS || mfid == MU_MSG_FIELD_ID_PRIO) {
-		// 	qparser->add_prefix
-		// 		(mu_msg_field_name(mfid), pfx);
-		// 	qparser->add_prefix (shortcut, pfx);
-
-		// } else if (mfid == MU_MSG_FIELD_ID_MAILDIR ||
-		// 	   mfid == MU_MSG_FIELD_ID_MSGID) {
-		// 	qparser->add_boolean_prefix
-		// 		(mu_msg_field_name(mfid), pfx);
-		// 	qparser->add_boolean_prefix (shortcut, pfx);
-
-		// } else {
-		// 	qparser->add_boolean_prefix
-		// 		(mu_msg_field_name(mfid), pfx);
-		// 	qparser->add_boolean_prefix (shortcut, pfx);
-
-		// 	qparser->add_prefix ("", pfx);
-		// }
 	} MU_XAPIAN_CATCH_BLOCK;
 }
 

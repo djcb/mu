@@ -27,6 +27,7 @@
 #include <stdexcept>
 
 #include "mu-msg.h"
+#include "mu-msg-part.h"
 #include "mu-store.h"
 #include "mu-util.h"
 #include "mu-str.h"
@@ -388,6 +389,41 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 		g_free (val);
 }
 
+struct PartData {
+	PartData (Xapian::Document& doc, MuMsgFieldId mfid):
+		_doc (doc), _mfid(mfid) {}
+	Xapian::Document _doc;
+	MuMsgFieldId _mfid;
+};
+
+static void
+each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
+{
+	if (mu_msg_part_looks_like_attachment (part, TRUE) &&
+	    (part->file_name)) {
+
+		char val[MU_STORE_MAX_TERM_LENGTH + 1];
+		strncpy (val, part->file_name, sizeof(val));
+
+		/* now, let's create a terms... */
+		mu_str_normalize_in_place (val, TRUE);
+		mu_str_ascii_xapian_escape_in_place (val);
+		
+		pdata->_doc.add_term (prefix(pdata->_mfid) +
+			      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
+	}
+}
+
+
+static void
+add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
+		       MuMsgFieldId mfid)
+{
+	PartData pdata (doc, mfid);	
+	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &pdata);
+}	
+
+
 static void
 add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 		       MuMsgFieldId mfid)
@@ -438,6 +474,9 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 		break;
 	case MU_MSG_FIELD_ID_BODY_TEXT:
 		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid);
+		break;
+	case MU_MSG_FIELD_ID_ATTACH:
+		add_terms_values_attach (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
 	default:	
 		if (mu_msg_field_is_numeric (mfid)) 
