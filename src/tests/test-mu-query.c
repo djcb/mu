@@ -311,11 +311,12 @@ test_mu_query_dates (void)
 	
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
-		/* { "date:20080804..20080731", 5}, */
+		{ "date:20080804..20080731", 5},
 		{ "date:2008-07/31..2008@08:04", 5},
 		{ "date:2008-0731..20080804 s:gcc", 1},
 		{ "date:2008-08-11-08-03..now", 1},
-		{ "date:2008-08-11-08-05..now", 0}
+		{ "date:2008-08-11-08-03..today", 1},
+		{ "date:2008-08-11-08-05..now", 0},
 	};
 	
 	xpath = fill_database ();
@@ -339,7 +340,7 @@ test_mu_query_sizes (void)
 	QResults queries[] = {
 		{ "size:0b..2m", 12},
 		{ "size:2k..4k", 2},
-		/* { "size:2m..0b", 12}, */
+		{ "size:2m..0b", 12}
 	};
 	
 	xpath = fill_database ();
@@ -373,10 +374,10 @@ main (int argc, char *argv[])
 			 test_mu_query_accented_chars_02);
 	g_test_add_func ("/mu-query/test-mu-query-wildcards",
 			 test_mu_query_wildcards);
+	g_test_add_func ("/mu-query/test-mu-query-sizes",
+			 test_mu_query_sizes);
 	g_test_add_func ("/mu-query/test-mu-query-dates",
 			 test_mu_query_dates);
-	g_test_add_func ("/mu-query/test-mu-query-sizes",
-			 test_mu_query_sizes); 
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
