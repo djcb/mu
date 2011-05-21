@@ -34,15 +34,16 @@
 #include "src/mu-query.h"
 #include "src/mu-str.h"
 
+
 static gchar*
-fill_database (void)
+fill_database (const char *testdir)
 {
 	gchar *cmdline, *tmpdir, *xpath;
 	
 	tmpdir = test_mu_common_get_random_tmpdir();
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
-				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR);
+				   MU_PROGRAM, tmpdir, testdir);
 
 	/* g_printerr ("\n%s\n", cmdline); */
 	
@@ -50,7 +51,8 @@ fill_database (void)
 					     NULL, NULL));
 	g_free (cmdline);
 
-	xpath= g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR, "xapian");
+	xpath= g_strdup_printf ("%s%c%s", tmpdir,
+				G_DIR_SEPARATOR, "xapian");
 	g_free (tmpdir);
 	
 	return xpath;
@@ -118,7 +120,7 @@ test_mu_query_01 (void)
 	};
 
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
@@ -134,7 +136,7 @@ test_mu_query_02 (void)
 	const char* q;
 	gchar *xpath;
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath);
 	
 	q = "i:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com";
@@ -170,7 +172,7 @@ test_mu_query_03 (void)
 		{ "t:help-gnu-emacs", 0},
 	};
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
@@ -203,7 +205,7 @@ test_mu_query_04 (void)
 		{ "not prio:l", 5},
 	};
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
@@ -224,7 +226,7 @@ test_mu_query_accented_chars_01 (void)
 	GError *err;
 	gchar *summ;
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 
 	query = mu_query_new (xpath, NULL);
@@ -267,7 +269,7 @@ test_mu_query_accented_chars_02 (void)
 		{ "Queensrÿche", 1},
 	};
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
@@ -292,7 +294,7 @@ test_mu_query_wildcards (void)
 		{ "Queen*", 1},
 	};
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
@@ -321,7 +323,7 @@ test_mu_query_dates (void)
 		{ "date:2008-08-11-08-05..now", 0},
 	};
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
@@ -345,7 +347,7 @@ test_mu_query_sizes (void)
 		{ "size:2m..0b", 12}
 	};
 	
-	xpath = fill_database ();
+	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 	
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
@@ -356,6 +358,31 @@ test_mu_query_sizes (void)
 	
 }
 
+
+static void
+test_mu_query_attach (void)
+{
+	gchar *xpath;
+	int i;
+	
+	QResults queries[] = {
+		{ "a:sittingbull.jpg", 1},
+		{ "'attach:sitting*'", 1},
+		{ "attach:custer", 0},
+		{ "attach:custer.jpg", 1}
+	};
+	
+	xpath = fill_database (MU_TESTMAILDIR2);
+	g_assert (xpath != NULL);
+
+	/* g_print ("(%s)\n", xpath); */
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+
+	g_free (xpath);	
+}
 
 
 
@@ -380,7 +407,9 @@ main (int argc, char *argv[])
 			 test_mu_query_sizes);
 	g_test_add_func ("/mu-query/test-mu-query-dates",
 			 test_mu_query_dates);
-	
+	g_test_add_func ("/mu-query/test-mu-query-attach",
+			 test_mu_query_attach);
+
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
