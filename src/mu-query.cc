@@ -45,7 +45,7 @@ public:
 
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
-
+		
 		substitute_date (begin);
 		substitute_date (end);
 
@@ -58,8 +58,8 @@ public:
 		// have to complete begin, end 'for real', as the
 		// begin date is completed to the begin of the
 		// interval, and the to the end of the interval
-		// ie. begin: 2008  -> 200801010000
-		//     end:   2008  -> 200812312359
+		// ie. begin: 2008 -> 200801010000 end: 2008 ->
+		// 200812312359
 		if (complete_date12(begin,true) >
 		    complete_date12(end, false))			
 			std::swap (begin, end);
