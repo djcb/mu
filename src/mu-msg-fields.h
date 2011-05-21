@@ -29,7 +29,8 @@ G_BEGIN_DECLS
 enum _MuMsgFieldId {
 
 	/* first all the string-based ones */
-	MU_MSG_FIELD_ID_BCC         = 0,
+	MU_MSG_FIELD_ID_ATTACH	    = 0,
+	MU_MSG_FIELD_ID_BCC,
 	MU_MSG_FIELD_ID_BODY_HTML,
 	MU_MSG_FIELD_ID_BODY_TEXT,
 	MU_MSG_FIELD_ID_CC,
