@@ -24,6 +24,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 struct _MuMsgPart {
 
 	/* index of this message */
@@ -175,6 +177,6 @@ typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
 void mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 			  gpointer user_data);
 
-
+G_END_DECLS
 
 #endif /*__MU_MSG_PART_H__*/
