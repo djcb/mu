@@ -1,3 +1,4 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
 **   
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -284,21 +285,13 @@ int
 mu_util_create_writeable_fd (const char* path, mode_t mode,
 			     gboolean overwrite)
 {
-	int fd;
-	
 	errno = 0; /* clear! */
 	g_return_val_if_fail (path, -1);
 	
 	if (overwrite)
-		fd = open (path, O_WRONLY|O_CREAT|O_TRUNC, mode);
+		return open (path, O_WRONLY|O_CREAT|O_TRUNC, mode);
 	else
-		fd = open (path, O_WRONLY|O_CREAT|O_EXCL, mode);
-
-	if (fd < 0)
-		g_warning ("%s: cannot open %s for writing: %s",
-			   __FUNCTION__, path, strerror(errno));
-	
-	return fd;
+		return open (path, O_WRONLY|O_CREAT|O_EXCL, mode);
 }
 
 
