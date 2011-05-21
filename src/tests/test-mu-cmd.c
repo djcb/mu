@@ -320,7 +320,7 @@ test_mu_extract_03 (void)
 
 
 static void 
-test_mu_extract_04 (void)
+test_mu_extract_overwrite (void)
 {
         gchar *cmdline, *output, *erroutput, *tmpdir;
 	
@@ -367,6 +367,37 @@ test_mu_extract_04 (void)
 	g_free (tmpdir);
 	g_free (cmdline);
 }
+
+
+static void 
+test_mu_extract_by_name (void)
+{
+        gchar *cmdline, *output, *erroutput, *tmpdir, *path;
+	
+	tmpdir = test_mu_common_get_random_tmpdir();
+
+	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+	
+	cmdline = g_strdup_printf ("%s extract --muhome=%s "
+				   "--target-dir=%s %s%cFoo%ccur%cmail5 sittingbull.jpg",
+				   MU_PROGRAM, tmpdir, tmpdir,
+				   MU_TESTMAILDIR2, G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
+					     NULL, NULL));
+	g_assert_cmpstr (output, ==, "");
+	g_assert_cmpstr (erroutput, ==, "");
+	path = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
+				"sittingbull.jpg");
+	g_assert (access (path, F_OK) == 0);
+
+	g_free (erroutput);
+	g_free (output);
+
+	g_free (tmpdir);
+	g_free (cmdline);
+}
+
 
 
 
@@ -473,10 +504,15 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-find-02", test_mu_find_02);
 	g_test_add_func ("/mu-cmd/test-mu-find-03", test_mu_find_03);
 	g_test_add_func ("/mu-cmd/test-mu-find-04", test_mu_find_04);
+	
 	g_test_add_func ("/mu-cmd/test-mu-extract-01", test_mu_extract_01);
 	g_test_add_func ("/mu-cmd/test-mu-extract-02", test_mu_extract_02);
 	g_test_add_func ("/mu-cmd/test-mu-extract-03", test_mu_extract_03);
-	g_test_add_func ("/mu-cmd/test-mu-extract-04", test_mu_extract_04);
+	g_test_add_func ("/mu-cmd/test-mu-extract-overwrite",
+			 test_mu_extract_overwrite);
+	g_test_add_func ("/mu-cmd/test-mu-extract-by-name",
+			 test_mu_extract_by_name);
+
 	g_test_add_func ("/mu-cmd/test-mu-view-01",  test_mu_view_01);
 	g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 	
