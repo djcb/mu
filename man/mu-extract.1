@@ -7,6 +7,7 @@ mu extract\- display and save message parts (attachments)
 .SH SYNOPSIS
 
 .B mu extract [options] <file> [<parts-to-save>]
+.B mu extract [options] <file> <filename>
 
 .SH DESCRIPTION
 
@@ -17,6 +18,9 @@ require the message to be indexed.
 For attachments, the file name used for saving is the name of the attachment
 in the message. If there is no such name, or when saving other mime-parts, a
 name derived from the message-id of the message.
+
+If you specify a filename as the second argument, an attempt will be made to
+find a extract the particular (first) MIME-part with that filename.
 
 Without any options, \fBmu extract\fR simply outputs the list of MIME-parts in
 the message.
