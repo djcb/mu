@@ -451,6 +451,36 @@ test_mu_view_01 (void)
 }
 
 
+static void 
+test_mu_view_attach (void)
+{
+        gchar *cmdline, *output, *tmpdir;
+	int len;
+		
+	tmpdir = test_mu_common_get_random_tmpdir();
+	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+
+	cmdline = g_strdup_printf ("%s view --muhome=%s %s%cFoo%ccur%cmail5",
+				   MU_PROGRAM,
+				   tmpdir,
+				   MU_TESTMAILDIR2,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR,
+				   G_DIR_SEPARATOR);
+	output = NULL;
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert_cmpstr  (output, !=, NULL);
+	
+	len = strlen(output);
+	/* g_print ("\n[%s] (%d)\n", output, len); */
+	g_assert (len == 170);
+				
+	g_free (output);
+	g_free (cmdline);
+	g_free (tmpdir);
+}
+
+
 
 
 static void 
@@ -514,6 +544,9 @@ main (int argc, char *argv[])
 			 test_mu_extract_by_name);
 
 	g_test_add_func ("/mu-cmd/test-mu-view-01",  test_mu_view_01);
+	g_test_add_func ("/mu-cmd/test-mu-view-attach",  test_mu_view_attach);
+
+	
 	g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 	
 	g_log_set_handler (NULL,

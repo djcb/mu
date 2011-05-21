@@ -32,11 +32,44 @@
 #include "mu-contacts.h"
 #include "mu-runtime.h"
 
+
+static void
+each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
+{
+	if (mu_msg_part_looks_like_attachment (part, TRUE) &&
+	    (part->file_name)) {
+
+		char *tmp = *attach;
+
+		*attach = g_strdup_printf ("%s%s'%s'",
+					   *attach ? *attach : "",
+					   *attach ? ", " : "",
+					   part->file_name);
+		g_free (tmp);
+	}
+}
+
+/* return comma-sep'd list of attachments */
+gchar *
+get_attach_str (MuMsg *msg)
+{
+	gchar *attach;
+
+	attach = NULL;
+	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &attach);
+
+	return attach;
+}	
+
+
+
+
 /* we ignore fields for now */
 static gboolean
 view_msg (MuMsg *msg, const gchar *fields, size_t summary_len)
 {
 	const char *field;
+	gchar *attachs;
 	time_t date;
 
 	if ((field = mu_msg_get_from (msg)))
@@ -54,6 +87,11 @@ view_msg (MuMsg *msg, const gchar *fields, size_t summary_len)
 	if ((date = mu_msg_get_date (msg)))
 		g_print ("Date: %s\n", mu_str_date_s ("%c", date));
 
+	if ((attachs = get_attach_str (msg))) {
+		g_print ("Attachment(s): %s\n", attachs);
+		g_free (attachs);
+	}
+	
 	if (!(field = mu_msg_get_body_text (msg)))
 		return TRUE; /* no body -- nothing more to do */
 	
