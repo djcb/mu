@@ -45,6 +45,11 @@ public:
 
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
+
+		// now and begin should only appear at the end, so
+		// correct them...
+		if (begin == "today" || begin == "now")
+			std::swap (begin, end);
 		
 		substitute_date (begin);
 		substitute_date (end);
