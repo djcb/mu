@@ -44,7 +44,7 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 		g_warning ("failed to get filepath");
 		return FALSE;
 	}
-
+	
 	err = NULL;
 	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE, &err)) {
 		g_warning ("failed to save MIME-part: %s",
@@ -150,6 +150,8 @@ save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
 		rv &= save_part (msg, opts->targetdir,
 				 GPOINTER_TO_UINT(cur->data),
 				 opts->overwrite, opts->play);
+	g_slist_free (lst);
+	
 	return rv;
 }
 
