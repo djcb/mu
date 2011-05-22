@@ -159,7 +159,14 @@ gboolean mu_util_play (const char *path,
 gchar* mu_util_xapian_dbversion (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
 
 
-
+/**
+ * check whether the database needs to be upgraded, e.g., when it was
+ * created with a different version of mu
+ * 
+ * @param xpath path to the database dir
+ * 
+ * @return TRUE if the database needs upgrading, FALSE otherwise
+ */
 gboolean mu_util_xapian_needs_upgrade (const gchar *xpath);
 
 
@@ -322,7 +329,7 @@ typedef gpointer XapianEnquire;
 /* name of the bookmark file */
 #define MU_BOOKMARK_FILENAME "bookmarks"
 
-/* metdata key for the xapian 'schema' version */
+/* metadata key for the xapian 'schema' version */
 #define MU_STORE_VERSION_KEY "db_version"
 
 

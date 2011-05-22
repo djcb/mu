@@ -1,3 +1,5 @@
+/* -*-mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8-*- */
+
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -28,8 +30,8 @@
 #include "mu-util.h"
 
 
-char*
-mu_util_xapian_get_metadata (const gchar *xpath, const gchar *key)
+static char*
+xapian_get_metadata (const gchar *xpath, const gchar *key)
 {
 	g_return_val_if_fail (xpath, NULL);
 	g_return_val_if_fail (key, NULL);
@@ -49,37 +51,12 @@ mu_util_xapian_get_metadata (const gchar *xpath, const gchar *key)
 	return NULL;
 }
 
-
-gboolean
-mu_util_xapian_set_metadata (const gchar *xpath,
-			     const gchar *key, const gchar *val)
-{
-	g_return_val_if_fail (xpath, FALSE);
-	g_return_val_if_fail (key, FALSE);
-	g_return_val_if_fail (val, FALSE);
-	
-	if (!access(xpath, F_OK) == 0) {
-		g_warning ("cannot access %s: %s", xpath, strerror(errno));
-		return FALSE;
-	}
-	
-	try {			
-		Xapian::WritableDatabase db (xpath, Xapian::DB_OPEN);
-		db.set_metadata (key, val);
-		return TRUE;
-		
-	} MU_XAPIAN_CATCH_BLOCK;
-	
-	return FALSE;
-}
-
-
 char*
 mu_util_xapian_dbversion (const gchar *xpath)
 {
 	g_return_val_if_fail (xpath, NULL);
 
-	return mu_util_xapian_get_metadata (xpath, MU_STORE_VERSION_KEY);
+	return xapian_get_metadata (xpath, MU_STORE_VERSION_KEY);
 }
 
 gboolean
@@ -151,7 +128,8 @@ mu_util_xapian_is_locked (const gchar *xpath)
 	} catch (const Xapian::DatabaseLockError& xer) {
 		return TRUE;
 	} catch (const Xapian::Error &xer) {
-		g_warning ("%s: error: %s", __FUNCTION__, xer.get_msg().c_str());
+		g_warning ("%s: error: %s", __FUNCTION__,
+			   xer.get_msg().c_str());
 	}
 	
 	return FALSE;

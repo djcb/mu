@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2010-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -50,7 +52,7 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
 }
 
 /* return comma-sep'd list of attachments */
-gchar *
+static gchar *
 get_attach_str (MuMsg *msg)
 {
 	gchar *attach;
