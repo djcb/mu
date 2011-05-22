@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /* 
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -23,8 +25,8 @@
 #include <time.h>
 #include <sys/types.h>
 
-#include "mu-msg.h"
-#include "mu-msg-flags.h"
+#include <mu-msg.h>
+#include <mu-msg-flags.h>
 
 G_BEGIN_DECLS
 
@@ -210,7 +212,7 @@ time_t mu_str_date_parse_hdwmy (const char* str);
 
 
 
-/** 
+/**
  * parse a byte size; a size is a number, with optionally a
  * unit. Units recognized are K (1000) and M (1000*1000). Only the
  * first letter is checked and the function is not case-sensitive, so
@@ -239,7 +241,7 @@ guint64 mu_str_size_parse_kmg (const char* str);
 const char* mu_str_fullpath_s (const char* path, const char* name);
 
 
-/** 
+/**
  * escape a string like a string literal in C; ie. replace \ with \\,
  * and " with \"
  * 
@@ -251,7 +253,7 @@ char* mu_str_escape_c_literal (const gchar* str)
         G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+/**
  * macro to check whether the string is empty, ie. if it's NULL or
  * it's length is 0
  * 
@@ -263,7 +265,7 @@ char* mu_str_escape_c_literal (const gchar* str)
 
 
 
-/** 
+/**
  * guess some nick name for the given name; if we can determine an
  * first name, last name, the nick will be first name + the first char
  * of the last name. otherwise, it's just the first name. clearly,
@@ -277,7 +279,7 @@ gchar* mu_str_guess_nick (const char* name)
         G_GNUC_WARN_UNUSED_RESULT;
 
 
-/** 
+/**
  * guess the first name for the given name; clearly,
  * this is just a rough guess for setting an initial value.
  * 
@@ -291,7 +293,7 @@ gchar* mu_str_guess_first_name (const char* name)
 
 
 
-/** 
+/**
  * guess the last name for the given name; clearly,
  * this is just a rough guess for setting an initial value.
  * 

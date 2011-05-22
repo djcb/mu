@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -184,7 +186,7 @@ gboolean mu_util_xapian_is_empty (const gchar *xpath);
 gboolean mu_util_xapian_clear (const gchar *xpath);
 
 
-/** 
+/**
  * check if the database is locked for writing
  * 
  * @param xpath path to a xapian database
