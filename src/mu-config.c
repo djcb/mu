@@ -263,7 +263,7 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 	int i;
 	typedef struct {
 		const gchar*	_name;
-		MuConfigCmd		_cmd;
+		MuConfigCmd	_cmd;
 	} Cmd;
 		
 	Cmd cmd_map[] = {
@@ -287,7 +287,7 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		 * etc.)*/
 		return TRUE;
 		
-	opts->cmd	 = MU_CONFIG_CMD_UNKNOWN;
+	opts->cmd    = MU_CONFIG_CMD_UNKNOWN;
 	opts->cmdstr = (*argvp)[1];
 
 	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 

@@ -39,7 +39,7 @@ G_BEGIN_DECLS
 
 /* output formats for 'mu cfind' */
 #define MU_CONFIG_FORMAT_MUTT_ALIAS	"mutt-alias"  /* mutt alias style */
-#define MU_CONFIG_FORMAT_MUTT_AB	"mutt-ab"     /* mutt ext addr book */
+#define MU_CONFIG_FORMAT_MUTT_AB	"mutt-ab"     /* mutt ext abook */
 #define MU_CONFIG_FORMAT_WL		"wl"          /* Wanderlust abook */
 #define MU_CONFIG_FORMAT_CSV		"csv"         /* comma-sep'd values */
 #define MU_CONFIG_FORMAT_ORG_CONTACT	"org-contact" /* org-contact */
@@ -68,7 +68,7 @@ struct _MuConfig {
 	MuConfigCmd	cmd;           /* the command, or
 					 * MU_CONFIG_CMD_NONE */
 	const char	*cmdstr;       /* cmd string, for user
-					 * info */
+					* info */
 	
 	/* general options */
 	gboolean	quiet;		/* don't give any output */
@@ -97,7 +97,7 @@ struct _MuConfig {
 	unsigned	 summary_len;	/* max # of lines of msg in summary */
 	char            *bookmark;	/* use bookmark */
 	char		*formatstr;     /* output type
-					 * (plain*,links,xml,json,sexp) */
+					 * (plain,links,xml,json,sexp) */
 		
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */
@@ -111,7 +111,7 @@ struct _MuConfig {
 					 * to save /  open */
 	char		*targetdir;	/* where to save the attachments */
 	gboolean	 overwrite;	/* should we overwrite same-named files */
-	gboolean         play;          /* after saving, try to play
+	gboolean         play;          /* after saving, try to 'play'
 					 * (open) the attmnt using xdgopen */ 
 };
 typedef struct _MuConfig MuConfig;
