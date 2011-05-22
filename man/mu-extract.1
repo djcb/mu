@@ -1,4 +1,4 @@
-.TH MU EXTRACT 1 "April 2011" "User Manuals"
+.TH MU EXTRACT 1 "May 2011" "User Manuals"
 
 .SH NAME 
 
@@ -6,8 +6,8 @@ mu extract\- display and save message parts (attachments)
 
 .SH SYNOPSIS
 
-.B mu extract [options] <file> [<parts-to-save>]
-.B mu extract [options] <file> <filename>
+.B mu extract [options] <file>
+.B mu extract [options] <file> <pattern>
 
 .SH DESCRIPTION
 
@@ -16,11 +16,12 @@ attachments) from mail messages. It works on message files, and does not
 require the message to be indexed.
 
 For attachments, the file name used for saving is the name of the attachment
-in the message. If there is no such name, or when saving other mime-parts, a
-name derived from the message-id of the message.
+in the message. If there is no such name, or when saving other MIME-parts, a
+name is derived from the message-id of the message.
 
-If you specify a filename as the second argument, an attempt will be made to
-find a extract the particular (first) MIME-part with that filename.
+If you specify a pattern (a case-insensitive regular expression)as the second
+argument, all attachments with filenames matching that pattern will be
+extracted.
 
 Without any options, \fBmu extract\fR simply outputs the list of MIME-parts in
 the message.
@@ -55,6 +56,24 @@ allowed.
 \fB\-\-play\fR Try to 'play' (open) the attachment with the default
 application for the particular file type. Depends on the \fBxdg-open\fR
 utility.
+
+.SH EXAMPLES
+
+To display information about all the MIME-parts in a message file:
+.nf
+   $ mu extract msgfile
+.fi
+
+To extract MIME-part 3 and 4 from this message, overwriting existing files
+with the same name:
+.nf
+   $ mu extract --parts=3,4 --overwrite msgfile
+.fi
+
+To extract all files ending in '.jpg' (case-insensitive):
+.nf
+   $ mu extract msgfile '.*\.jpg'
+.fi
 
 .SH BUGS
 

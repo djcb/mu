@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2010-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -22,6 +24,7 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "mu-msg.h"
 #include "mu-msg-part.h"
@@ -94,22 +97,60 @@ save_numbered_parts (MuMsg *msg, MuConfig *opts)
 	return rv;
 }
 
-static gboolean
-save_part_with_filename (MuMsg *msg, const char *filename, MuConfig *opts)
+static GRegex*
+anchored_regex (const char* pattern)
 {
-	int idx;
+	GRegex *rx;
+	GError *err;
+	gchar *anchored;
 
-	idx = mu_msg_part_find_file (msg, filename);
-	if (idx == -1) {
-		g_warning ("file '%s' not found in this message", filename);
-		return FALSE;
+	
+	anchored = g_strdup_printf
+		("%s%s%s",
+		 pattern[0] == '^' ? "" : "^",
+		 pattern,
+		 pattern[strlen(pattern)-1] == '$' ? "" : "$");
+
+	err = NULL;
+	rx = g_regex_new (anchored, G_REGEX_CASELESS|G_REGEX_OPTIMIZE, 0,
+			  &err);
+	g_free (anchored);
+
+	if (!rx) {
+		g_warning ("error in regular expression '%s': %s",
+			   pattern, err->message);
+		g_error_free (err);
+		return NULL;
 	}
-		
-	if (!save_part (msg, opts->targetdir, idx, opts->overwrite,
-			opts->play)) 
+	
+	return rx;
+}
+
+
+static gboolean
+save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
+{
+	GSList *lst, *cur;
+	GRegex *rx;
+	gboolean rv;
+
+	/* 'anchor' the pattern with '^...$' if not already */
+	rx = anchored_regex (pattern);
+	if (!rx)
 		return FALSE;
 	
-	return TRUE;
+	lst = mu_msg_part_find_files (msg, rx);
+	g_regex_unref (rx);
+	if (!lst) {
+		g_warning ("no matching attachments found");
+		return FALSE;
+	}
+
+	for (cur = lst, rv = TRUE; cur; cur = g_slist_next (cur))
+		rv &= save_part (msg, opts->targetdir,
+				 GPOINTER_TO_UINT(cur->data),
+				 opts->overwrite, opts->play);
+	return rv;
 }
 
 
@@ -180,9 +221,6 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 	++sd->saved_num;
 
 leave:
-	if (!sd->result) 
-		g_warning ("failed to save/play MIME-part %u to %s",
-			   part->index, filepath ? filepath : "<none>");
 	sd->result = rv;
 	g_free (filepath);
 }
@@ -292,12 +330,13 @@ static gboolean
 check_params (MuConfig *opts)
 {
 	if (!opts->params[1] || (opts->params[2] && opts->params[3])) {
-		g_warning ("usage: mu extract [options] <file> [<filename>]");
-		return FALSE;
+		g_warning ("usage: mu extract [options] <file> [<pattern>]");
+		return MU_EXITCODE_ERROR;
 	}
 
+	
 	if (opts->params[2] && (opts->save_attachments || opts->save_all)) {
-		g_warning ("--save-attachments --save-all is allowed don't accept "
+		g_warning ("--save-attachments --save-all don't accept "
 			   "a filename");
 		return FALSE;
 	}
@@ -325,15 +364,13 @@ mu_cmd_extract (MuConfig *opts)
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_EXTRACT,
 			      MU_EXITCODE_ERROR);
-
+	
 	if (!check_params (opts))
 		return MU_EXITCODE_ERROR;
 	
-	if (!opts->params[2] &&
-	    !opts->parts &&
-	    !opts->save_attachments &&
-	    !opts->save_all)  /* show, don't save */
-		rv = show_parts (opts->params[1], opts);
+	if (!opts->params[2] && !opts->parts &&
+	    !opts->save_attachments && !opts->save_all) 
+		rv = show_parts (opts->params[1], opts); /* show, don't save */
 	else {
 		rv = mu_util_check_dir(opts->targetdir, FALSE, TRUE);
 		if (!rv)

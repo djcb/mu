@@ -62,12 +62,12 @@ find_part (MuMsg* msg, guint partidx)
 }
 
 struct _PartData {
-	MuMsg					*_msg;
-	unsigned				_idx;
+	MuMsg			*_msg;
+	unsigned		_idx;
 	MuMsgPartForeachFunc	_func;
-	gpointer				_user_data;
+	gpointer		_user_data;
 };
-typedef struct _PartData		PartData;
+typedef struct _PartData PartData;
 
 
 static void
@@ -106,7 +106,7 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 
 	pdata._msg       = msg;
 	pdata._idx       = 0;
-	pdata._func		 = func;
+	pdata._func	 = func;
 	pdata._user_data = user_data;
 	
 	g_mime_message_foreach (msg->_file->_mime_msg,
@@ -320,7 +320,7 @@ mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 {
 	const char* cid;
 		
-	g_return_val_if_fail (msg, -1L);
+	g_return_val_if_fail (msg, -1);
 	g_return_val_if_fail (sought_cid, -1);
 		
 	cid = g_str_has_prefix (sought_cid, "cid:") ?
@@ -331,32 +331,50 @@ mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 				  (gpointer)cid);
 }
 
+struct _MatchData2 {
+	GSList       *_lst;
+	const GRegex *_rx;
+	guint         _idx;
+};
+typedef struct _MatchData2 MatchData2;
 
-static gboolean
-match_filename (GMimeObject *part, const char *sought_filename)
+
+static void
+match_filename_rx (GMimeObject *parent, GMimeObject *part, MatchData2 *mdata)
 {
 	const char *fname;
-
+	
 	if (!GMIME_IS_PART(part))
-		return FALSE;
+		goto leave;
 	
 	fname = g_mime_part_get_filename (GMIME_PART(part));
 	if (!fname)
-		return FALSE;
+		goto leave;
 	
-	return g_strcmp0 (fname, sought_filename) == 0 ? TRUE : FALSE;
+	if (g_regex_match (mdata->_rx, fname, 0, NULL))
+		mdata->_lst = g_slist_prepend (mdata->_lst,
+					       GUINT_TO_POINTER(mdata->_idx));
+leave:
+	++mdata->_idx;
 }
 
 
-int
-mu_msg_part_find_file (MuMsg *msg, const char* sought_filename)
+GSList*
+mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern)
 {
-	g_return_val_if_fail (msg, -1);
-	g_return_val_if_fail (sought_filename, -1);
-		
-	return msg_part_find_idx (msg->_file->_mime_msg,
-				  (MatchFunc)match_filename,
-				  (gpointer)sought_filename);
+	MatchData2 mdata;
+	
+	g_return_val_if_fail (msg, NULL);
+	g_return_val_if_fail (pattern, NULL);
+
+	mdata._lst = NULL;
+	mdata._rx  = pattern;
+	mdata._idx = 0;
+	
+	g_mime_message_foreach (msg->_file->_mime_msg,
+				(GMimeObjectForeachFunc)match_filename_rx,
+				&mdata);
+	return mdata._lst;
 }
 
 

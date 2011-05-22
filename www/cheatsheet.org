@@ -28,7 +28,7 @@ Here are some tips for using =mu=. If you want to know more, please refer to the
    After you have indexed your messages, you can search them. Here are some
    examples.
 
-*** messages about Helsinki
+*** messages about Helsinki (in message body, subject, sender, ...)
 
 #+begin_src sh
    $ mu find Helsinki
@@ -52,8 +52,28 @@ Here are some tips for using =mu=. If you want to know more, please refer to the
    $ mu find 'subject:soc*' flag:unread
 #+end_src
 
+** Retrieving attachments from messages
+   
 
-    
+   You can retrieve attachments from messages using =mu extract=, which takes a
+   message file as an argument. Without any other arguments, it displays the
+   MIME-parts of the message. You can then get specific attachments:
+
+#+begin_src sh
+   $ mu extract --parts=3,4 my-msg-file
+#+end_src
+
+   will get you parts 3 and 4. You can also extract files based on their name:
+
+#+begin_src sh
+   $ mu extract my-msg-file '.*\.jpg'
+#+end_src
+
+   The second argument is a case-insensitive regular expression, and the command
+   will extract any files matching the pattern -- in the example, all
+   =.jpg=-files.
+   
+
 
 ** Further processing of matched messages
 
@@ -75,7 +95,7 @@ Here are some tips for using =mu=. If you want to know more, please refer to the
    
 ** Integration with mail clients
 
-  See the example in the =mu-find= man page.
+  The =mu-find= man page contains examples for =mutt= and =wanderlust=.
 
 #+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
 #+begin_html

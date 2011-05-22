@@ -153,15 +153,16 @@ gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
 
 /**
- * get the (first) part index for the message part with a certain
- * filename
- * 
+ * retrieve a list of indices for mime-parts with filenames matching a regex
+ *  
  * @param msg a message
- * @param sought_filename filename to look for
+ * @param a regular expression to match the filename with
  * 
- * @return the part index number of the found part, or -1 if it was not found
+ * @return a list with indices for the files matching the pattern; the
+ * indices are the GPOINTER_TO_UNIT(lst->data) of the list. The must
+ * be freed with g_slist_free
  */
-int mu_msg_part_find_file (MuMsg *msg, const char* sought_filename);
+GSList* mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern);
 
 
 typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
