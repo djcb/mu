@@ -368,23 +368,28 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 	
 	for (cur = query; *cur; ++cur) {
 		*cur = tolower(*cur);
-		
-		if (*cur == '@' || *cur == '-') 
-			*cur = '_';
-		else if (*cur == '.') {
+
+		switch (*cur) {
+		case '@':
+		case '-':
+			*cur = '_'; break;
+		case '.': {
 			/* don't replace a final cur */
 			if (cur[1]== ' ' || cur[1]=='\t' || cur[1] == '\0' ||
 			    cur[1]== '.')  
 				++cur;			
 			else
 				*cur = '_';
-		} else if (*cur == ':') {
+			break;
+		}
+		case ':':
 			/* if there's a registered xapian prefix before the
 			 * ':', don't touch it. Otherwise replace ':' with
 			 * a space'... ugh yuck ugly...
 			 */			 
 			if (!is_xapian_prefix (query, cur))
 				*cur = '_';
+			break;
 		}
 	}
 	
