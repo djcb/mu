@@ -218,17 +218,6 @@ query_params_valid (MuConfig *opts)
 {
 	const gchar *xpath;
 	
-	if (opts->linksdir) 
-		if (opts->xquery) {
-			g_warning ("invalid option for --linksdir");
-			return FALSE;
-		}
-
-	if (opts->xquery) {
-		g_warning ("--xquery is obsolete; use --format=xquery instead");
-		return FALSE;
-	}
-	
 	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
 	
 	if (mu_util_check_dir (xpath, TRUE, FALSE))

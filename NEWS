@@ -7,6 +7,7 @@
    - wildcard searches for all fields (except for path/maildir)
    - search for attachment file names (with 'a:'/'attach:') -- also works with
      wildcards
+   - remove --xquery completely; use --output=xquery instead
  
 ** Release 0.9.5 <2011-04-25 Mon>
 

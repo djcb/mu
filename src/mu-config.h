@@ -91,9 +91,6 @@ struct _MuConfig {
 	int		max_msg_size;   /* maximum size for message files */
 	
 	/* options for querying  */
-	gboolean         xquery;        /* (obsolete) give the Xapian
-					   query instead of search
-					   results */
 	char		*fields;	/* fields to show in output */	
 	char	        *sortfield;	/* field to sort by (string) */
 	gboolean	 descending;	/* sort descending? */

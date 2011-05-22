@@ -85,7 +85,7 @@ check_index_or_cleanup_params (MuConfig *opts)
 		return FALSE;
 	}
 		
-	if (opts->linksdir || opts->xquery) {
+	if (opts->linksdir) {
 		g_warning ("invalid option(s) for command");
 		return FALSE;
 	}
