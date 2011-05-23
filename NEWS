@@ -2,9 +2,9 @@
  
 ** Release 0.9.6 < not yet >
    
-   - FreeBSD build fix
+   - FreeBSD build fix 
    - fix matching for mu cfind to be as expected
-   - wildcard searches for all fields (except for path/maildir)
+   - wildcard searches ('*') for fields (except for path/maildir) 
    - search for attachment file names (with 'a:'/'attach:') -- also works with
      wildcards
    - remove --xquery completely; use --output=xquery instead
@@ -110,4 +110,4 @@
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
-# End 
+# End:

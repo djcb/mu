@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -51,6 +53,7 @@ create_linksdir_maybe (const char *linksdir, gboolean clearlinks)
 	} else if (clearlinks)
 		if (!mu_maildir_clear_links (linksdir, &err))
 			goto fail;
+
 	return TRUE;
 	
 fail:
@@ -79,7 +82,8 @@ link_message (const char *src, const char *destdir)
 	err = NULL;
 	if (!mu_maildir_link (src, destdir, &err)) {
 		if (err) {
-			g_warning ("%s", err->message ? err->message : "unknown error");
+			g_warning ("%s", err->message ?
+				   err->message : "unknown error");
 			g_error_free (err);
 		}
 		return FALSE;	

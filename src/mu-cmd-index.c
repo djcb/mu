@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -107,7 +109,8 @@ static gboolean
 check_maildir (const char *maildir)
 {
 	if (!maildir) {
-		g_warning ("no maildir to work on; use --maildir= to set it explicitly");
+		g_warning ("no maildir to work on; "
+			   "use --maildir= to set it explicitly");
 		return FALSE;
 	}
 	

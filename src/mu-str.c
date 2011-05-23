@@ -253,9 +253,9 @@ each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
 	}
 }
 
-/* colon is a position inside q pointing at a ':' character. function
- * determines whether the prefix is a registered prefix (like
- * 'subject' or 'from' or 's') */
+/* 'colon' points at a position inside q pointing at a ':'
+ * character. function determines whether the prefix is a registered
+ * prefix (like 'subject' or 'from' or 's') */
 static gboolean
 is_xapian_prefix (const char *q, const char *colon)
 {
@@ -312,9 +312,9 @@ mu_str_date_parse_hdwmy (const char* str)
 		delta = num * 24 * 60 * 60; break;
 	case 'w': /* week */
 		delta = num * 7 * 24 * 60 * 60; break;
-	case 'm':
+	case 'm': /* month */
 		delta = num * 30 * 24 * 60 * 60; break;
-	case 'y':
+	case 'y': /* year */
 		delta = num * 365 * 24 * 60 * 60; break; 
 	default:
 		return never;

@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -23,10 +25,10 @@
 #include <gmime/gmime.h>
 #include <stdlib.h>
 
-#include "mu-msg.h"
-#include "mu-msg-file.h"
-#include "mu-msg-doc.h"
-#include "mu-msg-cache.h"
+#include <mu-msg.h>
+#include <mu-msg-file.h>
+#include <mu-msg-doc.h>
+#include <mu-msg-cache.h>
 
 G_BEGIN_DECLS
 

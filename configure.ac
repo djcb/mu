@@ -14,14 +14,14 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.9.6],[http://code.google.com/p/mu0/issues/list])
+AC_INIT([mu],[0.9.6],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
-AM_INIT_AUTOMAKE([dist-bzip2])
-
 # libtoolize wants to put some stuff in here; if you have an old
 # autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
+AM_INIT_AUTOMAKE([dist-bzip2])
+
 
 # silent build if we have a new enough automake
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -36,9 +36,15 @@ AS_IF([test x$prefix = xNONE],[
 AC_SUBST(prefix)
 
 AC_PROG_CC
+AC_PROG_CC_C_O
 AC_PROG_CC_STDC
+AC_PROG_INSTALL
 AC_PROG_CXX
 AC_HEADER_STDC
+
+# use the 64-bit versions
+AC_SYS_LARGEFILE
+
 
 # we need some special tricks for filesystems that don't have d_type;
 # e.g. Solaris. See mu-maildir.c. Explicitly disabling it is for
