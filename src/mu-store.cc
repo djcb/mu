@@ -69,7 +69,6 @@ struct _MuStore {
 
 	~_MuStore () {
 		try {
-
 			g_free (_version);
 			mu_contacts_destroy (_contacts);
 			mu_store_flush (this);
@@ -536,13 +535,14 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	if (!mu_str_is_empty(contact->address)) {
 		char *escaped = mu_str_ascii_xapian_escape (contact->address);
 		msgdoc->_doc->add_term
-			(std::string  (pfx + escaped, 0, MU_STORE_MAX_TERM_LENGTH));
+			(std::string  (pfx + escaped, 0,
+				       MU_STORE_MAX_TERM_LENGTH));
 		g_free (escaped);
 		
 		/* store it also in our contacts cache */
 		if (msgdoc->_store->_contacts)
 			mu_contacts_add (msgdoc->_store->_contacts,
-					 contact->name, contact->address,
+					 contact->address, contact->name, 
 					 mu_msg_get_date(msgdoc->_msg));
 	}
 }

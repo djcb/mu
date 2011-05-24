@@ -1,3 +1,5 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -35,7 +37,7 @@ typedef struct _MuContacts MuContacts;
  * 
  * @return a new MuContacts* if succeeded, NULL otherwise
  */
-MuContacts* mu_contacts_new (const gchar* ccachefile)
+MuContacts* mu_contacts_new (const gchar *ccachefile)
           G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -45,15 +47,14 @@ MuContacts* mu_contacts_new (const gchar* ccachefile)
  * higher and has a non-empty name
  * 
  * @param contacts a contacts object
+ * @param email e-mail address of the contact (not NULL)
  * @param name name of the contact (or NULL)
- * @param email e-mail address of the contact
  * @param tstamp timestamp for this address
  * 
  * @return TRUE if succeeded, FALSE otherwise
  */
-gboolean mu_contacts_add (MuContacts *contacts, const char* name,
-			  const char *email,
-			  time_t tstamp);
+gboolean mu_contacts_add (MuContacts *contacts, const char *email,
+			  const char* name, time_t tstamp);
 
 /**
  * destroy the Contacts object
