@@ -367,6 +367,7 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 	replace_dot = (g_strstr_len(query, -1, "@") != NULL);
 	
 	for (cur = query; *cur; ++cur) {
+
 		*cur = tolower(*cur);
 
 		switch (*cur) {
@@ -375,9 +376,10 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 			*cur = '_'; break;
 		case '.': {
 			/* don't replace a final cur */
-			if (cur[1]== ' ' || cur[1]=='\t' || cur[1] == '\0' ||
-			    cur[1]== '.')  
-				++cur;			
+			if (cur[1]== ' ' || cur[1]=='\t' || cur[1]== '.')  
+				++cur;
+			else if (cur[1] == '\0')
+				break;
 			else
 				*cur = '_';
 			break;
