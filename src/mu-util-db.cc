@@ -99,16 +99,30 @@ mu_util_xapian_is_empty (const gchar* xpath)
 }
 
 gboolean
-mu_util_xapian_clear (const gchar *xpath)
+mu_util_xapian_clear (const gchar *xpath,
+		      const char  *ccache)
 {
 	g_return_val_if_fail (xpath, FALSE);
+	g_return_val_if_fail (ccache, FALSE);
 	
 	try {
+		int rv;
+		
+		/* clear the database */
 		Xapian::WritableDatabase db
 			(xpath, Xapian::DB_CREATE_OR_OVERWRITE);
 		db.flush ();
-		
 		MU_WRITE_LOG ("emptied database %s", xpath);
+
+		/* clear the contacts cache; this is not totally
+		 * fail-safe, as some other process may still have it
+		 * open... */
+		rv = unlink (ccache);
+		if (rv != 0 && errno != ENOENT) {
+			g_warning ("failed to remove contacts-cache: %s",
+				   strerror(errno));
+			return FALSE;
+		}
 		
 		return TRUE;
 		

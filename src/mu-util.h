@@ -184,13 +184,15 @@ gboolean mu_util_xapian_is_empty (const gchar *xpath);
 /**
  * clear the database, ie., remove all of the contents. This is a
  * destructive operation, but the database can be restored be doing a
- * full scan of the maildirs.
+ * full scan of the maildirs. Also, clear the contacts cache file
  * 
  * @param xpath path to the database
+ * @param ccache path to the contacts cache file
  * 
  * @return TRUE if the clearing succeeded, FALSE otherwise.
  */
-gboolean mu_util_xapian_clear (const gchar *xpath);
+gboolean mu_util_xapian_clear (const gchar *xpath,
+			       const gchar *ccache);
 
 
 /**
