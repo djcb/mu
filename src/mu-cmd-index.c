@@ -129,7 +129,7 @@ check_maildir (const char *maildir)
 
 
 static MuResult
-index_msg_silent_cb  (MuIndexStats* stats, void *user_data)
+index_msg_silent_cb (MuIndexStats* stats, void *user_data)
 {
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
@@ -145,24 +145,25 @@ print_stats (MuIndexStats* stats, gboolean clear)
 
 	if (clear) {
 		/* optimization, this function showed up in profiles */
-		static const char *backspace =
+		static char *backspace =
 			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
 			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
 			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
 			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
-		//backspace[len] = '\0';
+		backspace[len] = '\0';
 		fputs (backspace, stdout);
-		//backspace[len] = '\b';
+		backspace[len] = '\b';
 	}
 		
-	len = (unsigned) snprintf (output, sizeof(output),
-				   "%c processing mail; processed: %u; "
-				   "updated/new: %u, cleaned-up: %u",
-				   (unsigned)kars[++i % 4],
-				   (unsigned)stats->_processed,
-				   (unsigned)stats->_updated,
-				   (unsigned)stats->_cleaned_up);
+	len = (unsigned)snprintf (output, sizeof(output),
+				  "%c processing mail; processed: %u; "
+				  "updated/new: %u, cleaned-up: %u",
+				  (unsigned)kars[++i % 4],
+				  (unsigned)stats->_processed,
+				  (unsigned)stats->_updated,
+				  (unsigned)stats->_cleaned_up);
 	fputs (output, stdout);
+	fflush (stdout);
 }
 
 
@@ -182,9 +183,10 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 static gboolean
 database_version_check_and_update (MuConfig *opts)
 {
-	const gchar *xpath;
+	const gchar *xpath, *ccache;
 
 	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
+	ccache = mu_runtime_path (MU_RUNTIME_PATH_CONTACTS);
 	
 	if (mu_util_xapian_is_empty (xpath))
 		return TRUE;
@@ -193,8 +195,9 @@ database_version_check_and_update (MuConfig *opts)
 	 * anything */
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
-		g_message ("clearing database %s", xpath);
-		return mu_util_xapian_clear (xpath);
+		g_message ("clearing database [%s]", xpath);
+		g_message ("clearing contacts-cache [%s]", ccache);
+		return mu_util_xapian_clear (xpath, ccache);
 	}
 
 	if (!mu_util_xapian_needs_upgrade (xpath))
@@ -203,8 +206,8 @@ database_version_check_and_update (MuConfig *opts)
 	/* ok, database is not up to date */
 	if (opts->autoupgrade) {
 		opts->reindex = TRUE;
-		g_message ("auto-upgrade: clearing old database first");
-		return mu_util_xapian_clear (xpath);
+		g_message ("auto-upgrade: clearing old database and cache");
+		return mu_util_xapian_clear (xpath, ccache);
 	}
 
 	update_warning ();
@@ -296,7 +299,7 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
 			   show_progress ? index_msg_cb:index_msg_silent_cb,
 			   NULL, NULL);
-
+	
 	if (!opts->quiet) {
 		print_stats (stats, TRUE);
 		g_print ("\n");
