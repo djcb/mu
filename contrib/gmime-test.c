@@ -1,5 +1,7 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
-** Copyright (C) 2011 djcb <djcb@cthulhu>
+** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@cthulhu>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,8 +18,6 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-
-
 
 /* gmime-test; compile with:
        gcc -o gmime-test gmime-test.c -Wall -O0 -ggdb3 \

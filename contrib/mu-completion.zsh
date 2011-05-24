@@ -1,6 +1,6 @@
 #compdef mu
 
-## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ _mu_commands() {
   mu_commands=(
     'index:scan your maildirs and import their metadata in the database'
     'find:search for messages in the database'
+    'cfind:search for contacts (name + email) in the database'
     'cleanup:remove references to deleted messages from the database'
     'extract:list message-parts (attachments) and extract them to files'
     'mkdir:create maildirs'
@@ -39,8 +40,18 @@ _mu_common_options=(
 )
 
 _mu_db_options=(
-    '--muhome[use some non-default location for the mu database]:directory:_files'    
+    '--muhome[use some non-default location for the mu database]:directory:_files'
 )
+
+_mu_find_options=(
+    '--fields[fields to display in the output]'
+    '--sortfield[field to sort the output by]'
+    '--descending[sort in descending order]'
+    '--summary-len[length of the summary for a message]'
+    '--bookmark[use a named bookmark]'
+    '--output[set the kind of output for the query]'
+)
+
 
 
 _mu_view() {
@@ -53,7 +64,9 @@ _mu_extract() {
 
 _mu_find() {
     _arguments -s : \
-        $_mu_common_options
+        $_mu_common_options \
+	$_mu_db_options \
+	$_mu_find_options
 }
 
 _mu_index() {
