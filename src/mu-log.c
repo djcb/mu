@@ -111,7 +111,6 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 
         MU_LOG->_fd		    = fd;
 	MU_LOG->_quiet		    = quiet;
-	MU_LOG->_newline_before_msg = FALSE;
 	MU_LOG->_debug		    = debug;
         MU_LOG->_own		    = doclose; /* if we now own the fd, close it
 				    * in _destroy */
