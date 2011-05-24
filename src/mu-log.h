@@ -70,6 +70,7 @@ gboolean mu_log_init_silence    (void) G_GNUC_WARN_UNUSED_RESULT;
  */
 void mu_log_uninit             (void);
 
+
 G_END_DECLS
 
 #endif /*__MU_LOG_H__*/

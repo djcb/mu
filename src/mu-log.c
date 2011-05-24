@@ -90,7 +90,6 @@ mu_log_init_silence (void)
 	return TRUE;
 }
 
-
 static void
 log_handler (const gchar* log_domain, GLogLevelFlags log_level,
 	     const gchar* msg)
@@ -104,18 +103,19 @@ log_handler (const gchar* log_domain, GLogLevelFlags log_level,
 
 gboolean
 mu_log_init_with_fd (int fd, gboolean doclose,
-			     gboolean quiet, gboolean debug)
+		     gboolean quiet, gboolean debug)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
 	
         MU_LOG = g_new(MuLog, 1);
 
-        MU_LOG->_fd     = fd;
-	MU_LOG->_quiet  = quiet;
-	MU_LOG->_debug  = debug;
-        MU_LOG->_own    = doclose; /* if we now own the fd, close it
+        MU_LOG->_fd		    = fd;
+	MU_LOG->_quiet		    = quiet;
+	MU_LOG->_newline_before_msg = FALSE;
+	MU_LOG->_debug		    = debug;
+        MU_LOG->_own		    = doclose; /* if we now own the fd, close it
 				    * in _destroy */
-	MU_LOG->_old_log_func =
+	MU_LOG->_old_log_func	    = 
 		g_log_set_default_handler ((GLogFunc)log_handler, NULL);
 	
 	return TRUE;
@@ -257,15 +257,21 @@ log_write (const char* domain, GLogLevelFlags level,
 	if (len < 0)
 		fprintf (stderr, "%s: failed to write to log: %s\n",
 			 __FUNCTION__,  strerror(errno));
-
-	if (!(MU_LOG->_quiet) && (level & G_LOG_LEVEL_MESSAGE))
-		g_print ("mu: %s\n", msg);
 	
+	if (!(MU_LOG->_quiet) && (level & G_LOG_LEVEL_MESSAGE)) {
+		fputs ("mu: ", stdout);
+		fputs (msg,    stdout);
+		fputs ("\n",   stdout);
+		fflush (stdout);
+	}
+		
 	/* for serious errors, log them to stderr as well */
-	if (level & G_LOG_LEVEL_ERROR)
-		g_printerr ("mu: %s\n", msg);
-	else if (level & G_LOG_LEVEL_CRITICAL)
-		g_printerr ("mu: %s\n", msg);
-	else if (level & G_LOG_LEVEL_WARNING)
-		g_printerr ("mu: %s\n", msg);
+	if (level & G_LOG_LEVEL_ERROR ||
+	    level & G_LOG_LEVEL_CRITICAL ||
+	    level & G_LOG_LEVEL_WARNING) {
+		fputs ("mu: ", stderr);
+		fputs (msg,    stderr);
+		fputs ("\n",   stderr);
+		fflush (stderr);
+	}
 }
