@@ -51,10 +51,34 @@ Here are some tips for using =mu=. If you want to know more, please refer to the
 #+begin_src sh
    $ mu find 'subject:soc*' flag:unread
 #+end_src
+    
+** Find contacts
+   
+   Contacts (names + email addresses) are cached separately, and can be
+   searched with =mu cfind= (after your messages have been indexed):
+
+*** all contacts with 'john' in either name or e-mail address   
+#+begin_src sh
+   $ mu cfind john
+#+end_src
+    
+    =mu cfind= takes a regular expression for matching.
+   
+    You can export the contact information to a number of formats for use in
+    e-mail clients. For examples:
+
+*** export /all/ your contacts to the =mutt= addressbook format
+
+#+begin_src sh
+   $ mu cfind --format=mutt-alias
+#+end_src
+
+    Other formats are: =plain=, =mutt-ab=, =wl= (Wanderlust), =org-contact=,
+    =bbdb= and =csv= (comma-separated values).
+ 
 
 ** Retrieving attachments from messages
    
-
    You can retrieve attachments from messages using =mu extract=, which takes a
    message file as an argument. Without any other arguments, it displays the
    MIME-parts of the message. You can then get specific attachments:
@@ -69,9 +93,12 @@ Here are some tips for using =mu=. If you want to know more, please refer to the
    $ mu extract my-msg-file '.*\.jpg'
 #+end_src
 
-   The second argument is a case-insensitive regular expression, and the command
-   will extract any files matching the pattern -- in the example, all
-   =.jpg=-files.
+   The second argument is a case-insensitive regular expression, and the
+   command will extract any files matching the pattern -- in the example, all
+   =.jpg=-files. 
+
+   Do not confuse the '.*' regular expression in =mu extract= (and =mu cfind=
+   with the '*' wildcard in =mu find=.
    
 
 

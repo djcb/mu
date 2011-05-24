@@ -4,10 +4,14 @@
    
    - FreeBSD build fix 
    - fix matching for mu cfind to be as expected
+   - fix mu-contacts for broken names/emails
+   - clear the contacts-cache too when doing a --rebuild
    - wildcard searches ('*') for fields (except for path/maildir) 
    - search for attachment file names (with 'a:'/'attach:') -- also works with
      wildcards
    - remove --xquery completely; use --output=xquery instead
+   - fix progress info in 'mu index'
+   - update documentation, add more examples
  
 ** Release 0.9.5 <2011-04-25 Mon>
 

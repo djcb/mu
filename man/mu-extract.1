@@ -19,9 +19,10 @@ For attachments, the file name used for saving is the name of the attachment
 in the message. If there is no such name, or when saving other MIME-parts, a
 name is derived from the message-id of the message.
 
-If you specify a pattern (a case-insensitive regular expression)as the second
+If you specify a pattern (a case-insensitive regular expression) as the second
 argument, all attachments with filenames matching that pattern will be
-extracted.
+extracted. The regular expressions are Perl-compatible (as per the
+PCRE-library).
 
 Without any options, \fBmu extract\fR simply outputs the list of MIME-parts in
 the message.

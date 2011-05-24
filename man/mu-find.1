@@ -73,8 +73,9 @@ mails with a subject containing a word starting with \fBcom\fR, you can use:
 
 and get mails about computers, comments, compilation and so on. Note, when
 running from the command-line it's import to put the query in quotes,
-otherwise the shell would interpret the '*'.
-
+otherwise the shell would interpret the '*'. It is important to remember that
+the '*' invokes the wildcard search only when used as the rightmost character
+of a search term. Furthermore, it is \fBnot\fR a regular expression. 
 
 In older versions of mu, queries were logged in \fI<mu-home>/mu.log\fR;
 however, since version 0.9, mu no longer does this.
