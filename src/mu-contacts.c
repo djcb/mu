@@ -394,7 +394,8 @@ clear_str (char* str)
 		g_strstrip (str);
 }
 
-/* note, we will *own* the name we get */
+/* note, we will *own* the name, email we get, and we'll free them in
+ * the end... */
 static ContactInfo *
 contact_info_new (char *email, char *name, time_t tstamp)
 {
@@ -405,14 +406,13 @@ contact_info_new (char *email, char *name, time_t tstamp)
 	
 	cinfo	       = g_slice_new (ContactInfo);
 
+	/* we need to clear the strings from control chars because
+	 * they could screw up the keyfile */
 	clear_str (email);
 	clear_str (name);
 		
-	/* we need to clear the strings from control chars because
-	 * they could screw up the keyfile */
-	cinfo->_email  = g_strdup (email);
-	cinfo->_name   = name ? g_strdup (name) : NULL;
-
+	cinfo->_email  = email;
+	cinfo->_name   = name;
 	cinfo->_tstamp = tstamp;
 
 	return cinfo;
