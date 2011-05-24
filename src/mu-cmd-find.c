@@ -180,8 +180,8 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 
 	rv = run_query_format (iter, opts, format, count);
 		
-	if (rv && count && *count == 0) 
-		g_warning ("no matches found");
+	if (rv && count && *count == 0)
+		g_warning ("no matching messages found");
 	
 	mu_msg_iter_destroy (iter);
 

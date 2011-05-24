@@ -174,15 +174,18 @@ run_cmd_cfind (const char* pattern, OutputFormat format)
 	}
 
 	print_header (format);
-	rv = mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact,
+	rv = mu_contacts_foreach (contacts,
+				  (MuContactsForeachFunc)each_contact,
 				  GINT_TO_POINTER(format), pattern, &num);
 	
 	mu_contacts_destroy (contacts);
 
-	if (rv) 
-		return (num == 0) ? MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
-	else
-		return MU_EXITCODE_ERROR;
+	if (num == 0) {
+		g_warning ("no matching contacts found");
+		return MU_EXITCODE_NO_MATCHES;
+	}
+
+	return rv ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
 
 	
 }
