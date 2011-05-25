@@ -138,7 +138,7 @@ run_query_format (MuMsgIter *iter, MuConfig *opts,
 		return mu_output_links (iter, opts->linksdir, opts->clearlinks,
 					count);
 	case FORMAT_PLAIN: 
-		return mu_output_plain (iter, opts->fields, opts->summary_len,
+		return mu_output_plain (iter, opts->fields, opts->summary,
 					count);
 	case FORMAT_XML:
 		return mu_output_xml (iter, count);
