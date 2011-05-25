@@ -404,7 +404,7 @@ contact_info_new (char *email, char *name, time_t tstamp)
 	/* email should not be NULL, name can */
 	g_return_val_if_fail (email, NULL);
 	
-	cinfo	       = g_slice_new (ContactInfo);
+	cinfo = g_slice_new (ContactInfo);
 
 	/* we need to clear the strings from control chars because
 	 * they could screw up the keyfile */

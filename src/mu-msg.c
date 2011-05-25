@@ -358,26 +358,12 @@ mu_msg_get_prio (MuMsg *self)
 	return (MuMsgPrio)get_num_field (self, MU_MSG_FIELD_ID_PRIO);
 }
 
-
-/* const char*      */
-/* mu_msg_get_header (MuMsg *msg, const char* header) */
-/* { */
-/* 	g_return_val_if_fail (self, NULL); */
-/* 	g_return_val_if_fail (header, NULL); */
-
-/* 	return g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),  */
-/* 					 header); */
-/* } */
-
-
 time_t
 mu_msg_get_timestamp (MuMsg *self)
 {
 	g_return_val_if_fail (self, (time_t)-1);
 	return (MuMsgPrio)get_num_field (self, MU_MSG_FIELD_ID_TIMESTAMP);
 }
-
-
 
 
 const char*
