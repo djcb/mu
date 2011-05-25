@@ -474,8 +474,8 @@ test_mu_view_attach (void)
 	g_assert_cmpstr  (output, !=, NULL);
 	
 	len = strlen(output);
-	/* g_print ("\n[%s] (%d)\n", output, len); */
-	g_assert (len == 170);
+	/* g_print ("\n[%s] (%d)\n", output, len);*/
+	g_assert (len == 170 || len == 168);
 				
 	g_free (output);
 	g_free (cmdline);
