@@ -105,6 +105,27 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
 const char* mu_util_cache_dir (void) G_GNUC_CONST;
 
 
+enum _MuColor {
+	MU_COLOR_RED         = 0,
+	MU_COLOR_GREEN,
+	MU_COLOR_YELLOW,
+	MU_COLOR_BLUE,
+	MU_COLOR_MAGENTA,
+	MU_COLOR_CYAN
+};
+typedef enum _MuColor MuColor;
+
+
+/**
+ * print string to stdout in a certain color if the output is to a
+ * sufficiently capable tty; otherwise, just print the string. Color
+ * will *only* be printed if stdout actually is a tty.
+ *  
+ * @param col a MuColor
+ * @param str a string, or NULL
+ */
+void mu_util_color_print (MuColor col, const char *str);
+
 /**
  * create a writeable file and return its file descriptor (which
  * you'll need to close(2) when done with it.)
