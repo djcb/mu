@@ -521,6 +521,7 @@ mu_str_guess_nick (const char* name)
 
 	nick = g_strdup_printf ("%s%s", fname, initial);
 	g_free (fname);
+	g_free (lname);
 	
 leave:
 	{
