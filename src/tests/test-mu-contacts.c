@@ -159,6 +159,8 @@ test_mu_contacts_01 (void)
 	
 	g_slist_foreach (clist, (GFunc)contact_destroy, NULL);
 	g_slist_free (clist);
+
+	mu_contacts_destroy (contacts);
 	
 	g_free (contactsfile);
 	g_free (muhome);

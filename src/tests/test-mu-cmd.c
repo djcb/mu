@@ -379,7 +379,8 @@ test_mu_extract_by_name (void)
 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 	
 	cmdline = g_strdup_printf ("%s extract --muhome=%s "
-				   "--target-dir=%s %s%cFoo%ccur%cmail5 sittingbull.jpg",
+				   "--target-dir=%s %s%cFoo%ccur%cmail5 "
+				   "sittingbull.jpg",
 				   MU_PROGRAM, tmpdir, tmpdir,
 				   MU_TESTMAILDIR2, G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR, G_DIR_SEPARATOR);
@@ -390,6 +391,7 @@ test_mu_extract_by_name (void)
 	path = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
 				"sittingbull.jpg");
 	g_assert (access (path, F_OK) == 0);
+	g_free (path);
 
 	g_free (erroutput);
 	g_free (output);
