@@ -181,15 +181,13 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 
 
 static void
-print_summary (MuMsgIter *iter, size_t summary_len)
+print_summary (MuMsgIter *iter)
 {
 	GError *err;
 	char *summ;
 	MuMsg *msg;
-
-	if (summary_len == 0)
-		return; /* nothing to do */
-	
+	const guint SUMMARY_LEN = 5; /* summary based on first 5
+				      * lines */	
 	err = NULL;
 	msg = mu_msg_iter_get_msg (iter, &err); /* don't unref */
 	if (!msg) {
@@ -198,7 +196,7 @@ print_summary (MuMsgIter *iter, size_t summary_len)
 		return;
 	}
 
-	summ = mu_str_summarize (mu_msg_get_body_text(msg), summary_len);
+	summ = mu_str_summarize (mu_msg_get_body_text(msg), SUMMARY_LEN);
 	g_print ("Summary: %s\n", summ ? summ : "<none>");
 	g_free (summ);
 }
@@ -206,7 +204,7 @@ print_summary (MuMsgIter *iter, size_t summary_len)
 
 
 gboolean
-mu_output_plain (MuMsgIter *iter, const char *fields, size_t summary_len,
+mu_output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 		 size_t *count)
 {
 	MuMsgIter *myiter;
@@ -234,7 +232,8 @@ mu_output_plain (MuMsgIter *iter, const char *fields, size_t summary_len,
 		}
 		
 		g_print (len > 0 ? "\n" : "");
-		print_summary (myiter, summary_len); /* may be empty */
+		if (summary)
+			print_summary (myiter);
 		
 	}
 
