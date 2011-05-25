@@ -29,6 +29,9 @@
 
 G_BEGIN_DECLS
 
+/* env var; if non-empty, color are enabled for some commands */
+#define MU_COLORS "MU_COLORS"
+
 /* output formats for 'mu find' */
 #define MU_CONFIG_FORMAT_PLAIN	"plain"    /* plain text output */
 #define MU_CONFIG_FORMAT_LINKS	"links"    /* output as symlinks */
@@ -77,6 +80,7 @@ struct _MuConfig {
 	gboolean	version;	/* request mu version */
 	gboolean	log_stderr;	/* log to stderr (not logfile) */
 	gchar**	        params;		/* parameters (for querying) */
+	gboolean        color;          /* use ansi-colors in some output */
 	
 	/* options for indexing */
 	char	        *maildir;	/* where the mails are */
@@ -90,11 +94,11 @@ struct _MuConfig {
 					 * default */
 	int		max_msg_size;   /* maximum size for message files */
 	
-	/* options for querying  */
+	/* options for querying  (and view-> 'summary') */
 	char		*fields;	/* fields to show in output */	
 	char	        *sortfield;	/* field to sort by (string) */
 	gboolean	 descending;	/* sort descending? */
-	unsigned	 summary_len;	/* max # of lines of msg in summary */
+	gboolean	 summary;	/* include a summary? */
 	char            *bookmark;	/* use bookmark */
 	char		*formatstr;     /* output type
 					 * (plain,links,xml,json,sexp) */

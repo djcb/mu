@@ -1,5 +1,4 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -43,6 +42,9 @@ set_group_mu_defaults (MuConfig *opts)
 		g_free(opts->muhome);
 		opts->muhome = exp;
 	}
+
+	if (g_getenv (MU_COLORS) != NULL)
+		opts->color = TRUE;
 }
 
 static GOptionGroup*
@@ -60,6 +62,9 @@ config_options_group_mu (MuConfig *opts)
 		 "specify an alternative mu directory", NULL},
 		{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &opts->log_stderr,
 		 "log to standard error (false)", NULL},
+		{"color", 0, 0, G_OPTION_ARG_NONE, &opts->color,
+		 "use ANSI-colors in some output (false)", NULL},
+		
 		{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &opts->params, "parameters", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
@@ -136,11 +141,6 @@ set_group_find_defaults (MuConfig *opts)
 		else
 			g_free(old);
 	}
-
-		
-	/* FIXME: some warning when summary_len < 0? */
-	if (opts->summary_len < 1)
-		opts->summary_len = 0;
 }
 
 static GOptionGroup*
@@ -156,8 +156,8 @@ config_options_group_find (MuConfig *opts)
 		 "use a bookmarked query", NULL},
 		{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,
 		 "sort in descending order (z -> a)", NULL},
-		{"summary-len", 'k', 0, G_OPTION_ARG_INT, &opts->summary_len,
-		 "max number of lines for summary (0)", NULL},
+		{"summary", 'k', 0, G_OPTION_ARG_NONE, &opts->summary,
+		 "include a short summary of the message (false)", NULL},
 		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &opts->linksdir,
 		 "output as symbolic links to a target maildir", NULL},
 		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &opts->clearlinks,
@@ -224,9 +224,27 @@ config_options_group_cfind (MuConfig *opts)
 }
 
 
+static GOptionGroup *
+config_options_group_view (MuConfig *opts)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"summary", 0, 0, G_OPTION_ARG_NONE, &opts->summary,
+		 "only show a short summary of the message (false)", NULL},
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
+	};
+		
+	og = g_option_group_new("cfind", "options for the 'cfind' command",
+				"", NULL, NULL);
+	g_option_group_add_entries(og, entries);
+
+	return og;
+}
+
+
 
 static GOptionGroup*
-config_options_group_extract(MuConfig *opts)
+config_options_group_extract (MuConfig *opts)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
@@ -320,6 +338,9 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 		break;
 	case MU_CONFIG_CMD_CFIND:
 		group = config_options_group_cfind (opts);
+		break;
+	case MU_CONFIG_CMD_VIEW:
+		group = config_options_group_view (opts);
 		break;
 	default: break;
 	}
