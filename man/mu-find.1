@@ -112,14 +112,14 @@ search fields and their abbreviations:
 
 .nf
 	cc,c            Cc (carbon-copy) recipient(s)
-	bcc,h		Bcc (blind-carbon-copy) recipient(s)
+	bcc,h           Bcc (blind-carbon-copy) recipient(s)
 	from,f          Message sender
 	subject,s       Message subject
 	to,t            To: recipient(s)
 	maildir,m       Maildir	
 	msgid,i         Message-ID
 	prio,p          Message priority ('low', 'normal' or 'high')
-	flag,g		Message Flags
+	flag,g          Message Flags
 	date,d          Date-Range
 	size,z          Message size
 	attach,a        Attachment filename
@@ -291,7 +291,7 @@ search parameters; the complete list:
 	s	Message \fBs\fRubject
 	i	Message-\fBi\fRd
 	m	\fBm\fRaildir
-	r       \fBr\fReferences (message ids In-reply-to, References as comma-separated list)
+	r	\fBr\fReferences (message ids In-reply-to, References as comma-separated list)
 .fi
 
 
@@ -328,9 +328,8 @@ descending order (e.g., from lowest to highest). This is usually a good
 choice, but for dates it may be more useful to sort in the opposite direction.
 
 .TP
-\fB\-k\fR, \fB\-\-summary\-len\fR=\fI<len>\fR
-output a summary based on up to \fI\len\fR lines of the message. The default
-is \fB0\fR: no summary at all.
+\fB\-\-summary\fR
+output a summary based upon the first lines of the message.
 
 .TP
 \fB\-\-format\fR=\fIplain|links|xquery|xml|json|sexp\fR

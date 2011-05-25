@@ -1,9 +1,9 @@
-.TH MU 1 "April 2011" "User Manuals"
+.TH MU 1 "May 2011" "User Manuals"
 
 .SH NAME 
 
-mu \- a set of tools to deal with Maildirs, in particular to index and search
-e-mail messages.
+mu \- a set of tools to deal with Maildirs and message files, in particular to
+index and search e-mail messages.
 
 .SH SYNOPSIS
 
@@ -19,9 +19,9 @@ e-mail messages.
 
 .B mu mkdir [options] <dir> [<dirs>]
 
-.B mu extract [options] <file> [<parts>]
+.B mu extract [options] <file> [<parts>] [<regexp>]
 
-.B mu cfind [options] [<expr>]
+.B mu cfind [options] [<regexp>]
 
 
 .SH DESCRIPTION
@@ -78,7 +78,6 @@ and exporting the results in various formats for use in other programs.
 .BR mu-cfind(1)
 \.
 
-
 .TP
 \fBview\fR
 for displaying e-mail messages. See
@@ -97,8 +96,20 @@ for extract MIME-parts (such as attachments) from messages. See
 .BR mu-extract(1)
 \.
 
+.SH COLORS
 
-.SH COMMANDS
+Some \fBmu\fR sub-commands support colorized output. By default, this is
+disabled, but you can use the \fI--color\fR/ option to enable it. Even that,
+colors will only shown when output goes to a sufficiently capable terminal
+(this roughly mirrors the \fI--color=auto\fR of the GNU-version of the
+\fBls\fR-command).
+
+Instead of the \fI--color\fR/, you can also set the \fBMU_COLORS\fR environment
+variable to non-empty to enable colors.
+
+Currently. only \fBmu view\fR and \fBmu cfind\fB support colors.
+
+.SH DATABASE AND FILE
 
 Commands \fBmu index\fR, \fBfind\fR and \fBcleanup\fR work with the database,
 while the other ones work on invidual mail files. Hence, running \fview\fR,
@@ -159,5 +170,12 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu-index(1) mu-cleanup(1) mu-find(1) mu-cfind(1) mu-mkdir(1) mu-view(1)
-.BR mu-extract(1) mu-easy(1) mu-bookmarks(5) 
+.BR mu-index(1)
+.BR mu-cleanup(1)
+.BR mu-find(1)
+.BR mu-cfind(1)
+.BR mu-mkdir(1)
+.BR mu-view(1)
+.BR mu-extract(1)
+.BR mu-easy(1)
+.BR mu-bookmarks(5) 

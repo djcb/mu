@@ -1,4 +1,4 @@
-.TH MU CLEANUP 1 "April 2011" "User Manuals"
+.TH MU CLEANUP 1 "May 2011" "User Manuals"
 
 .SH NAME 
 
@@ -13,7 +13,7 @@ mu cleanup \- clean up the mu database
 \fBcleanup\fR removes messages from the database for which no corresponding
 file can be found in the file system. This is done automatically when running
 \fBmu index\fR (unless \fB\-\-nocleanup\fR was specified), but \fBmu cleanup\fR
-can be used to do the cleanup explicitely.
+can be used to do the cleanup explicitly.
 
 \fBmu cleanup\fR does not remove messages that are outside the currently
 specified Maildir, as long as they still exist. The command only takes global
@@ -24,13 +24,13 @@ options, which are described in the \fBmu (1)\fR man page.
 \fBmu cleanup\fR return 0 upon successful completion. Anything else leads to a
 non-zero return value, for example:
 
-.sh
+.nf
 | code | meaning                        |
 |------+--------------------------------|
 |    0 | ok                             |
 |    1 | general error                  |
 |    4 | database is corrupted          |
-.si
+.fi
 
 .SH BUGS
 
@@ -43,4 +43,6 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR maildir(5) mu-index(1) mu(1)
+.BR maildir(5)
+.BR mu-index(1)
+.BR mu(1)

@@ -101,12 +101,12 @@ In other words, display messages that are either sent to Julius Caesar
   2008-07-31T21:57:25 EEST John Milton <jm@example.com> Fere libenter homines id quod volunt credunt
 .fi
 
-What if we want to see some of the body of the message?  You can list (parts
-of) the message contents by using the --summary-len=\fIn\fR option, which
-will 'summarize' the first \fIn\fR lines of the message:
+What if we want to see some of the body of the message?  You can get
+a 'summary' of the first lines of the message using the \fI--summary\fR
+option, which will 'summarize' the first \fIn\fR lines of the message:
 
 .nf
-  \fB$ mu find --summary-len=4 napoleon m:/archive\fR 
+  \fB$ mu find --summary napoleon m:/archive\fR 
 .fi
 
 .nf
@@ -154,7 +154,7 @@ a Swedish rock band):
   \fB$ mu find date:20020301..20030831 flag:new nightingale\fR
 .fi
 
-Get all message we got today:
+Get all messages received today:
 .nf
   \fB$ mu find date:today..now\fR
 .fi
@@ -247,4 +247,10 @@ Then, you can use them in \fBmutt\fR if you add something like \fBsource
 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
-mu(1) mu-index(1) mu-cleanup(1) mu-find(1) mu-mkdir(1) mu-view(1) mu-extract(1)
+.BR mu(1)
+.BR mu-index(1)
+.BR mu-cleanup(1)
+.BR mu-find(1)
+.BR mu-mkdir(1)
+.BR mu-view(1)
+.BR mu-extract(1)

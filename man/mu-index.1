@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "January 2011" "User Manuals"
+.TH MU-INDEX 1 "May 2011" "User Manuals"
 
 .SH NAME 
 
@@ -22,8 +22,9 @@ it understands recursive Maildirs (Maildirs within Maildirs), Maildir++. It
 can also deal with VFAT-based Maildirs which use '!' as the seperators instead
 of ':' as used by \fITinymail\fR/\fIModest\fR and some other e-mail programs.
 
-E-mail messages which are not stored in something resembling a maildir leaf
-directory (\fIcur\fR and \fInew\fR) are ignored.
+E-mail messages which are not stored in something resembling a maildir
+leaf-directory (\fIcur\fR and \fInew\fR) are ignored, as are the cache
+directories for \fInotmuch\fR and \fIgnus\fR.
 
 Symlinks are not followed.
 
@@ -172,14 +173,15 @@ been specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If
 .SH RETURN VALUE
 \fBmu index\fR return 0 upon successful completion, and any other number
 greater than 2 signals an error, for example:
-.sh
+
+.nf
 | code | meaning                        |
 |------+--------------------------------|
 |    0 | ok                             |
 |    1 | general error                  |
 |    3 | could not obtain db write lock |
 |    4 | database is corrupted          |
-.si
+.fi
 
 .SH BUGS
 
@@ -192,4 +194,6 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR maildir(5) mu(1) mu-find(1)
+.BR maildir(5)
+.BR mu(1)
+.BR mu-find(1)

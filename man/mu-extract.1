@@ -2,7 +2,8 @@
 
 .SH NAME 
 
-mu extract\- display and save message parts (attachments)
+mu extract\- display and save message parts (attachments), and open them with
+other tools.
 
 .SH SYNOPSIS
 
@@ -13,11 +14,12 @@ mu extract\- display and save message parts (attachments)
 
 \fBmu extact\fR is the \fBmu\fR sub-command for extracting MIME-parts (e.g.,
 attachments) from mail messages. It works on message files, and does not
-require the message to be indexed.
+require the message to be indexed in the database.
 
-For attachments, the file name used for saving is the name of the attachment
-in the message. If there is no such name, or when saving other MIME-parts, a
-name is derived from the message-id of the message.
+For attachments, the file name used when saving it, is the name of the
+attachment in the message. If there is no such name, or when saving
+non-attachment MIME-parts, a name is derived from the message-id of the
+message.
 
 If you specify a pattern (a case-insensitive regular expression) as the second
 argument, all attachments with filenames matching that pattern will be
@@ -74,6 +76,12 @@ with the same name:
 To extract all files ending in '.jpg' (case-insensitive):
 .nf
    $ mu extract msgfile '.*\.jpg'
+.fi
+
+To extract an mp3-file, and play it in the the default mp3-playing application
+(requires \fIxdg-open\fR): 
+.nf
+   $ mu extract --play msgfile 'whoopsididitagain.mp3'
 .fi
 
 .SH BUGS

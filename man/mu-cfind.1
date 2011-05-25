@@ -12,14 +12,14 @@ other programs.
 .SH DESCRIPTION
 
 \fBmu cfind\fR is the \fBmu\fR command for finding \fIcontacts\fR (name and
-e-mail address of people who were either the sender or receiver of
-mail). There are different output formats available, for importing the
-contacts into various tools.
+e-mail address of people who were either sender or receiver of mail). There
+are different output formats available, for importing the contacts into
+other programs.
 
 .SH SEARCHING CONTACTS
 
 When you index your messages (see \fBmu index\fR), \fBmu\fR creates a list of
-unique e-mail addresses found, and the accompanying name. In case the same
+unique e-mail addresses found and the accompanying name. In case the same
 e-mail address is used with different names, the most recent non-empty name is
 used.
 
@@ -47,7 +47,7 @@ The regular expressions are Perl-compatible (as per the PCRE-library).
 
 .TP
 \fB\-\-format\fR=\fIplain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv\fR
-set the output format to the given value. The following are available:
+sets the output format to the given value. The following are available:
 
 .nf
 | --format=   | description                       |
@@ -63,9 +63,9 @@ set the output format to the given value. The following are available:
 
 .SH RETURN VALUE
 
-\fBmu cfind\fR returns 0 upon successful completion; if it the a search was
-performed, there needs to be a least one match. Anything else leads to a
-non-zero return value, for example:
+\fBmu cfind\fR returns 0 upon successful completion -- that is, at least one
+contact was found. Anything else leads to a non-zero return value, for
+example:
 
 .sh
 | code | meaning                        |
@@ -78,14 +78,14 @@ non-zero return value, for example:
 .SH INTEGRATION WITH MUTT
 
 You can use \fBmu cfind\fR as an external address book server for
-\fBmutt\fR. For this to work add the following to your \fImuttrc\fR:
+\fBmutt\fR. For this to work, add the following to your \fImuttrc\fR:
 
 .sh
 set query_command = "mu cfind --format=mutt-ab '%s'"
 .si
 
 Now, in mutt, you can easily search for e-mail address using the
-\fBquery\fR-command, which is by default accessible by pressing \fBQ\fR.
+\fBquery\fR-command, which is (by default) accessible by pressing \fBQ\fR.
 
 
 .SH BUGS
@@ -99,4 +99,7 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu(1) mu-index(1) mu-find(1) pcrepattern(3)
+.BR mu(1)
+.BR mu-index(1)
+.BR mu-find(1)
+.BR pcrepattern(3)
