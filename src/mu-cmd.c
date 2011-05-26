@@ -71,16 +71,14 @@ print_field (const char* field, const char *val, gboolean color)
 	if (!val)
 		return;
 
-	if (color) {
-		mu_util_color_print (MU_COLOR_MAGENTA, field);
-		mu_util_color_print (MU_COLOR_BLUE, val);
-	} else {
-		fputs (field, stdout);
-		fputs (val, stdout);
-	}	
-	fputs ("\n", stdout);
+	g_print ("%s%s%s: %s%s%s\n",
+		 color ? MU_COLOR_MAGENTA : "",
+		 field,
+		 color ? MU_COLOR_DEFAULT : "",
+		 color ? MU_COLOR_GREEN : "",
+		 val ? val : "",
+		 color ? MU_COLOR_DEFAULT : "");
 }
-
 
 
 /* we ignore fields for now */
@@ -93,18 +91,18 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 	time_t date;
 	const int SUMMARY_LEN = 5;
 
-	print_field ("From: ", mu_msg_get_from (msg), color);
-	print_field ("To: ",   mu_msg_get_to (msg), color);
-	print_field ("Cc: ",   mu_msg_get_cc (msg), color);
-	print_field ("Bcc: ",  mu_msg_get_bcc (msg), color);
-	print_field ("Subject: ",  mu_msg_get_subject (msg), color);
+	print_field ("From", mu_msg_get_from (msg), color);
+	print_field ("To",   mu_msg_get_to (msg), color);
+	print_field ("Cc",   mu_msg_get_cc (msg), color);
+	print_field ("Bcc",  mu_msg_get_bcc (msg), color);
+	print_field ("Subject",  mu_msg_get_subject (msg), color);
 	
 	if ((date = mu_msg_get_date (msg))) 
-		print_field ("Date: ", mu_str_date_s ("%c", date),
+		print_field ("Date", mu_str_date_s ("%c", date),
 			     color);
 
 	if ((attachs = get_attach_str (msg))) {
-		print_field ("Attachments: ", attachs, color);
+		print_field ("Attachments", attachs, color);
 		g_free (attachs);
 	}
 	
@@ -114,7 +112,7 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 	if (summary) {
 		gchar *summ;
 		summ = mu_str_summarize (field, SUMMARY_LEN);
-		print_field ("Summary: ", summ, color);
+		print_field ("Summary", summ, color);
 		g_free (summ);
 	} else
 		g_print ("\n%s\n", field);
