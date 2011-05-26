@@ -47,10 +47,11 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 	
 	err = NULL;
 	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE, &err)) {
-		g_warning ("failed to save MIME-part: %s",
-			   err&&err->message ? err->message : "error");
-		if (err)
+		if (err) {
+			g_warning ("failed to save MIME-part: %s",
+				   err->message);
 			g_error_free (err);
+		}
 		g_free (filepath);
 		return FALSE;
 	}
@@ -118,7 +119,7 @@ anchored_regex (const char* pattern)
 
 	if (!rx) {
 		g_warning ("error in regular expression '%s': %s",
-			   pattern, err->message);
+			   pattern, err->message ? err->message : "error");
 		g_error_free (err);
 		return NULL;
 	}
@@ -264,8 +265,10 @@ save_parts (const char *path, const char *filename, MuConfig *opts)
 	err = NULL;
 	msg = mu_msg_new_from_file (path, NULL, &err);
 	if (!msg) {
-		g_warning ("error: %s", err->message);
-		g_error_free (err);
+		if (err) {
+			g_warning ("error: %s", err->message);
+			g_error_free (err);
+		}
 		return FALSE;
 	}
 		
@@ -295,14 +298,27 @@ save_parts (const char *path, const char *filename, MuConfig *opts)
 
 
 static void
-each_part_show (MuMsg *msg, MuMsgPart *part, gpointer user_data)
+each_part_show (MuMsg *msg, MuMsgPart *part, gboolean color)
 {
-	g_print ("  %u %s %s/%s [%s]\n",
+	g_print ("  %u %s%s%s %s%s/%s%s [%s%s%s]\n",
 		 part->index,
+
+		 /* filename */
+		 color && part->file_name ? MU_COLOR_GREEN : "",
 		 part->file_name ? part->file_name : "<none>",
+		 color ? MU_COLOR_DEFAULT : "",
+
+		 /* content type */
+		 color ? MU_COLOR_BLUE : "",
 		 part->type ? part->type : "",
 		 part->subtype ? part->subtype : "",
-		 part->disposition ? part->disposition : "<none>");
+		 color ? MU_COLOR_DEFAULT : "",
+
+		 /* disposition */
+		 color && part->disposition ? MU_COLOR_MAGENTA : "",
+		 part->disposition ? part->disposition : "<none>",
+		 color ? MU_COLOR_DEFAULT : ""
+		);
 }
 
 
@@ -315,43 +331,48 @@ show_parts (const char* path, MuConfig *opts)
 	err = NULL;
 	msg = mu_msg_new_from_file (path, NULL, &err);
 	if (!msg) {
-		g_warning ("error: %s", err->message);
-		g_error_free (err);
+		if (err) {
+			g_warning ("error: %s", err->message);
+			g_error_free (err);
+		}
 		return FALSE;
 	}
 
 	g_print ("MIME-parts in this message:\n");
-	mu_msg_part_foreach (msg, each_part_show, NULL);
+
+	mu_msg_part_foreach
+		(msg,(MuMsgPartForeachFunc)each_part_show,
+		 GUINT_TO_POINTER(opts->color));
+
 	mu_msg_unref (msg);
 	
 	return TRUE;
 	
 }
 
+
 static gboolean
 check_params (MuConfig *opts)
 {
-	if (!opts->params[1] || (opts->params[2] && opts->params[3])) {
-		g_warning ("usage: mu extract [options] <file> [<pattern>]");
-		return MU_EXITCODE_ERROR;
-	}
+	guint param_num;
 
+	param_num = mu_config_param_num(opts);
 	
-	if (opts->params[2] && (opts->save_attachments || opts->save_all)) {
-		g_warning ("--save-attachments --save-all don't accept "
-			   "a filename");
+	if (param_num < 2) {
+		g_warning ("usage: mu extract [options] <file> [<pattern>]");
 		return FALSE;
 	}
+	
+	if (opts->save_attachments || opts->save_all)
+		if (opts->parts || param_num == 3) {
+			g_warning ("--save-attachments --save-all don't accept "
+				   "a filename pattern or --parts");
+			return FALSE;
+		}
 	
 	if (opts->save_attachments && opts->save_all) {
 		g_warning ("only one of --save-attachments and"
 			   " --save-all is allowed");
-		return FALSE;
-	}
-	
-	if ((opts->save_attachments || opts->save_all) && opts->parts) {
-		g_warning ("with --save-attachments/--save-all, " 
-			   "parts should not be specified");
 		return FALSE;
 	}
 
