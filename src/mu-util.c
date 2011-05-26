@@ -145,43 +145,6 @@ mu_util_cache_dir (void)
 }
 
 
-void
-mu_util_color_print (MuColor col, const char *str)
-{
-	const char *pfx;
-	const char *reset = "\x1b[0m";
-
-	static int is_tty = -1;
-
-	if (!str)
-		return;
-	
-	if (is_tty == -1)
-		is_tty = isatty(fileno(stdout)) ? 1 : 0;
-	
-	switch (col) {
-	case MU_COLOR_RED	: pfx = "\x1b[31m"; break;
-	case MU_COLOR_GREEN	: pfx = "\x1b[32m"; break;
-	case MU_COLOR_YELLOW	: pfx = "\x1b[33m"; break;
-	case MU_COLOR_BLUE	: pfx = "\x1b[34m"; break;
-	case MU_COLOR_MAGENTA	: pfx = "\x1b[35m"; break;
-	case MU_COLOR_CYAN	: pfx = "\x1b[36m"; break;
-		
-	default:
-		g_critical ("invalid color %u", (unsigned)col);
-		return;
-	}
-
-	if (is_tty)
-		fputs (pfx, stdout);
-
-	fputs (str, stdout);
-
-	if (is_tty)
-		fputs (reset, stdout);
-}
-
-
 gboolean
 mu_util_init_system (void)
 {

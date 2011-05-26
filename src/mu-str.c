@@ -533,4 +533,3 @@ leave:
 	
 	return nick;
 }
-
