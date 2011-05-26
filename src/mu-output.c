@@ -139,7 +139,48 @@ mu_output_links (MuMsgIter *iter, const char* linksdir,
 }
 
 
-static const gchar*
+
+static void
+ansi_color (MuMsgFieldId mfid)
+{
+	const char* ansi;
+	
+	switch (mfid) {
+
+	case MU_MSG_FIELD_ID_FROM:
+		ansi = MU_COLOR_CYAN; break;
+
+	case MU_MSG_FIELD_ID_TO:
+	case MU_MSG_FIELD_ID_CC:
+	case MU_MSG_FIELD_ID_BCC:
+		ansi = MU_COLOR_BLUE; break;
+
+	case MU_MSG_FIELD_ID_SUBJECT:
+		ansi = MU_COLOR_GREEN; break;
+		
+	case MU_MSG_FIELD_ID_DATE:
+		ansi = MU_COLOR_MAGENTA; break;
+
+	default:
+		if (mu_msg_field_type(mfid) == MU_MSG_FIELD_TYPE_STRING)
+			ansi = MU_COLOR_YELLOW;
+		else
+			ansi = MU_COLOR_RED;
+	}
+
+	fputs (ansi, stdout);
+}
+
+
+static void
+ansi_reset (MuMsgFieldId mfid)
+{
+	fputs (MU_COLOR_DEFAULT, stdout);
+	
+}
+
+
+static const char*
 display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 {
 	gint64 val;
@@ -147,8 +188,7 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 	
 	msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
 	if (!msg)
-		return FALSE;
-
+		return NULL;
 	
 	switch (mu_msg_field_type(mfid)) {
 	case MU_MSG_FIELD_TYPE_STRING: {
@@ -165,8 +205,8 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 			val = mu_msg_get_field_numeric (msg, mfid);
 			return mu_str_flags_s ((MuMsgFlags)val);
 		} else  /* as string */
-			return mu_msg_get_field_string (msg, mfid); 
-
+			return mu_msg_get_field_string (msg, mfid);
+		
 	case MU_MSG_FIELD_TYPE_TIME_T: 
 		val = mu_msg_get_field_numeric (msg, mfid);
 		return mu_str_date_s ("%c", (time_t)val);
@@ -205,7 +245,7 @@ print_summary (MuMsgIter *iter)
 
 gboolean
 mu_output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
-		 size_t *count)
+		 gboolean color, size_t *count)
 {
 	MuMsgIter *myiter;
 	size_t mycount;
@@ -222,13 +262,15 @@ mu_output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 		for (myfields = fields, len = 0; *myfields; ++myfields) {
 			MuMsgFieldId mfid;
 			mfid =	mu_msg_field_id_from_shortcut (*myfields, FALSE);
-
 			if (mfid == MU_MSG_FIELD_ID_NONE ||
 			    (!mu_msg_field_xapian_value (mfid) &&
 			     !mu_msg_field_xapian_contact (mfid)))
 				len += printf ("%c", *myfields);
-			else
-				len += printf ("%s", display_field(myiter, mfid));
+			else {
+				if (color) ansi_color (mfid);
+				len += fputs (display_field (myiter, mfid), stdout);
+				if (color) ansi_reset (mfid);
+			}
 		}
 		
 		g_print (len > 0 ? "\n" : "");
