@@ -150,6 +150,18 @@ void mu_config_destroy (MuConfig *opts);
  */
 MuExitCode mu_config_execute (MuConfig *opts);
 
+
+/**
+ * count the number of non-option parameters
+ * 
+ * @param conf a MuConfig instance
+ * 
+ * @return the number of non-option parameters, or 0 in case of error
+ */
+guint mu_config_param_num (MuConfig *conf);
+
+
+
 G_END_DECLS
 
 #endif /*__MU_CONFIG_H__*/

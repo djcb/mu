@@ -24,6 +24,8 @@
 
 #include <glib.h>
 #include <string.h>		/* memset */
+#include <unistd.h>
+#include <stdio.h>
 
 #include "mu-util.h"
 #include "mu-config.h"
@@ -43,8 +45,16 @@ set_group_mu_defaults (MuConfig *opts)
 		opts->muhome = exp;
 	}
 
+
+	/* check for the MU_COLORS env var; but in any case don't use
+	 * colors unless we're writing to a tty */
+	
 	if (g_getenv (MU_COLORS) != NULL)
 		opts->color = TRUE;
+	
+	if (!isatty(fileno(stdout)))
+		opts->color = FALSE;
+
 }
 
 static GOptionGroup*
@@ -363,7 +373,7 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 
 	add_context_group (context, opts);
 		
-	rv = g_option_context_parse(context, argcp, argvp, &err);
+	rv = g_option_context_parse (context, argcp, argvp, &err);
 	g_option_context_free (context);
 	if (!rv) {
 		g_printerr ("mu: error in options: %s\n", err->message);
@@ -469,4 +479,16 @@ mu_config_execute (MuConfig *opts)
 	default:
 		g_return_val_if_reached (MU_EXITCODE_ERROR);
 	}
+}
+
+guint
+mu_config_param_num (MuConfig *conf)
+{
+	guint u;
+	
+	g_return_val_if_fail (conf, 0);
+	
+	for (u = 0; conf->params[u]; ++u);
+
+	return u;
 }
