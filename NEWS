@@ -13,10 +13,11 @@
    - fix progress info in 'mu index'
    - display the references for a message using the 'r' character (mu find)
    - remove --summary-len/-k, instead use --summary for mu view and mu find, and
-   - support colorized output for some sub-commands (view and cfind). Disabled
-     by default, use --color to enable, or set env MU_COLORS to non-empty
+   - support colorized output for some sub-commands (view, cfind and
+     extract). Disabled by default, use --color to enable, or set env
+     MU_COLORS to non-empty
    - update documentation, add more examples
- 
+     
 ** Release 0.9.5 <2011-04-25 Mon>
 
    - bug fix for infinite loop in Maildir detection

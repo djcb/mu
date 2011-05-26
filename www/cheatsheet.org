@@ -55,8 +55,7 @@
 #+end_src
     
 
-
-** Find contacts
+** Finding contacts
    
    Contacts (names + email addresses) are cached separately, and can be
    searched with =mu cfind= (after your messages have been indexed):
@@ -104,7 +103,19 @@
    Do not confuse the '.*' regular expression in =mu extract= (and =mu cfind=
    with the '*' wildcard in =mu find=.
 
+** Getting more colorful output
 
+   Some of the =mu= commands, such as =mu find=, =mu cfind= and =mu view=
+   support colorized output. By default this is turned off, but you can enable
+   it with =--color=, or setting the =MU_COLORS= environment variable to
+   non-empty.
+
+#+begin_src sh
+   $ mu find --color capibara
+#+end_src
+   
+   (since =mu= version 0.9.6)
+   
 ** Further processing of matched messages
 
   If you need to process the results of your queries with some other program,
@@ -120,8 +131,14 @@
   Note that we use ='l'=, so the returned message paths will be quoted. This is
   useful if you have maildirs with spaces in their names.
     
-  For further processing, also the ~--format=(xml|json|sexp)~ may be
-  interesting.
+  For further processing, also the ~--format=(xml|json|sexp)~ can be useful. For
+  example,
+
+#+begin_src sh
+   $ mu find --format=xml pancake
+#+end_src
+
+  will give you a list of pancake-related messages in XML-format.
    
 ** Integration with mail clients
 
