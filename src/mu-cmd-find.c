@@ -139,7 +139,7 @@ run_query_format (MuMsgIter *iter, MuConfig *opts,
 					count);
 	case FORMAT_PLAIN: 
 		return mu_output_plain (iter, opts->fields, opts->summary,
-					count);
+					opts->color, count);
 	case FORMAT_XML:
 		return mu_output_xml (iter, count);
 	case FORMAT_JSON:
