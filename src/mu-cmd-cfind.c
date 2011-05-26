@@ -142,21 +142,16 @@ each_contact_org_contact (const char *email, const char *name)
 static void
 print_plain (const char *email, const char *name, gboolean color)
 {
-	if (name) {
-		if (color)
-			mu_util_color_print (MU_COLOR_MAGENTA, name);
-		else
-			fputs (name, stdout);
-		
-		fputs (" ", stdout);
-	}
+	if (name)
+		g_print ("%s%s%s ",
+			 color ? MU_COLOR_MAGENTA : "",
+			 name,
+			 color ? MU_COLOR_DEFAULT : "");
 
-	if (color)
-		mu_util_color_print (MU_COLOR_GREEN, email);
-	else
-		fputs (email, stdout);
-
-	fputs ("\n", stdout);
+	g_print ("%s%s%s\n",
+		 color ? MU_COLOR_GREEN : "",
+		 email,
+		 color ? MU_COLOR_DEFAULT : "");
 }
 
 struct _ECData {
