@@ -134,6 +134,28 @@ index_msg_silent_cb (MuIndexStats* stats, void *user_data)
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
 
+
+static void
+backspace (unsigned u)
+{
+	static gboolean init = FALSE;
+	static char backspace[80];
+	
+	if (G_UNLIKELY(!init)) {
+		/* fill with backspaces */
+		int i;
+		for (i = 0; i != sizeof(backspace); ++i)
+			backspace[i] = '\b';
+		init = TRUE;
+	}
+	
+	backspace[MIN(u,sizeof(backspace))] = '\0';
+	fputs (backspace, stdout);
+	backspace[u] = '\b';
+}
+
+
+
 static void
 print_stats (MuIndexStats* stats, gboolean clear)
 {
@@ -143,18 +165,9 @@ print_stats (MuIndexStats* stats, gboolean clear)
 	static int i = 0;
 	static unsigned len = 0;
 
-	if (clear) {
-		/* optimization, this function showed up in profiles */
-		static char *backspace =
-			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-			"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
-		backspace[len] = '\0';
-		fputs (backspace, stdout);
-		backspace[len] = '\b';
-	}
-		
+	if (clear) 
+		backspace (len);
+
 	len = (unsigned)snprintf (output, sizeof(output),
 				  "%c processing mail; processed: %u; "
 				  "updated/new: %u, cleaned-up: %u",
