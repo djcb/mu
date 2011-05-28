@@ -343,7 +343,7 @@ mu_str_size_parse_kmg (const char* str)
 	case 'b': return num;                      /* bytes */	
 	case 'k': return num * 1000;               /* kilobyte */
 	case 'm': return num * 1000 * 1000;        /* megabyte */
-		/* case 'g': return num * 1000 * 1000 * 1000; /\* gigabyte *\/ */
+	/* case 'g': return num * 1000 * 1000 * 1000; /\* gigabyte *\/ */
 	default:
 		return G_MAXUINT64;
 	}

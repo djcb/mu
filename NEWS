@@ -1,6 +1,6 @@
 * NEWS (user visible changes)
  
-** Release 0.9.6 < not yet >
+** Release 0.9.6 <2011-05-28 Sat>
    
    - FreeBSD build fix 
    - fix matching for mu cfind to be as expected
@@ -16,7 +16,7 @@
    - support colorized output for some sub-commands (view, cfind and
      extract). Disabled by default, use --color to enable, or set env
      MU_COLORS to non-empty
-   - update documentation, add more examples
+   - update documentation, added more examples
      
 ** Release 0.9.5 <2011-04-25 Mon>
 
