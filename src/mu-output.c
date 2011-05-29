@@ -141,9 +141,12 @@ mu_output_links (MuMsgIter *iter, const char* linksdir,
 
 
 static void
-ansi_color (MuMsgFieldId mfid)
+ansi_color_maybe (MuMsgFieldId mfid, gboolean color)
 {
 	const char* ansi;
+
+	if (!color)
+		return; /* nothing to do */
 	
 	switch (mfid) {
 
@@ -173,11 +176,16 @@ ansi_color (MuMsgFieldId mfid)
 
 
 static void
-ansi_reset (MuMsgFieldId mfid)
+ansi_reset_maybe (MuMsgFieldId mfid, gboolean color)
 {
+	if (!color)
+		return; /* nothing to do */
+	
 	fputs (MU_COLOR_DEFAULT, stdout);
 	
 }
+
+
 
 
 static const char*
@@ -267,9 +275,9 @@ mu_output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 			     !mu_msg_field_xapian_contact (mfid)))
 				len += printf ("%c", *myfields);
 			else {
-				if (color) ansi_color (mfid);
+				ansi_color_maybe (mfid, color);
 				len += fputs (display_field (myiter, mfid), stdout);
-				if (color) ansi_reset (mfid);
+				ansi_reset_maybe (mfid, color);
 			}
 		}
 		
