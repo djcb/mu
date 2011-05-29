@@ -115,7 +115,7 @@ test_mu_index (void)
 	store = mu_store_new (xpath, NULL, NULL);
 	g_assert (store);
 
-	g_assert_cmpuint (mu_store_count (store), ==, 5);	
+	g_assert_cmpuint (mu_store_count (store), ==, 6);	
 	mu_store_destroy (store);
 
 	g_free (muhome);
