@@ -21,9 +21,9 @@
    
    - 2011-05-28: *mu-0.9.6* (bèta). A lot of internal changes, but also quite
      some new features, for example:
-     - wild-card searching for most fields: =mu find 'car*'=
-     - search for message with certain attachments with 'attach:/a:': =mu find
-       'attach:resume*'=
+     - wild-card searching for most fields: mu find 'car*'
+     - search for message with certain attachments with 'attach:/a:': mu find
+       'attach:resume*'
      - color for =mu find=, =mu cfind=, =mu extract= and =mu view= 
      Everything is documented in the man-pages, and there are examples in the [[file:mu-cheatsheet.org][mu
      cheatsheet]].
