@@ -370,3 +370,79 @@ mu_util_get_dtype_with_lstat (const char *path)
 }
 
 
+
+gboolean
+mu_util_fputs_encoded (const char *str, FILE *stream)
+{
+	char *conv;
+	GError *err;
+	int rv;
+	
+	g_return_val_if_fail (str, FALSE);
+	g_return_val_if_fail (stream, FALSE);
+		
+	err = NULL;
+	conv = g_locale_from_utf8 (str, -1, NULL, NULL, &err);
+	if (err) {
+		g_printerr ("conversion failed: %s", err->message);
+		g_error_free (err);
+		return FALSE;
+	}
+
+	rv = fputs (conv, stream);
+	g_free (conv);
+	
+	if (rv == EOF) { /* note, apparently, does not set errno */
+		g_printerr ("fputs failed");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+static gboolean
+print_args (FILE *stream, const char *frm, va_list args)
+{
+	gchar *str;
+	gboolean rv;
+	
+	str = g_strdup_vprintf (frm, args);
+
+	rv = mu_util_fputs_encoded (str, stream);
+
+	g_free (str);
+
+	return rv;
+}
+
+
+gboolean
+mu_util_print_encoded (const char *frm, ...)
+{
+	va_list args;
+	gboolean rv;
+
+	g_return_val_if_fail (frm, FALSE);
+	
+	va_start (args, frm);
+	rv = print_args (stdout, frm, args);
+	va_end (args);
+
+	return rv;
+}
+
+gboolean
+mu_util_printerr_encoded (const char *frm, ...)
+{
+	va_list args;
+	gboolean rv;
+
+	g_return_val_if_fail (frm, FALSE);
+	
+	va_start (args, frm);
+	rv = print_args (stderr, frm, args);
+	va_end (args);
+
+	return rv;
+}

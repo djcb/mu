@@ -23,6 +23,7 @@
 #define __MU_UTIL_H__
 
 #include <glib.h>
+#include <stdio.h>
 #include <dirent.h>
 #include <sys/stat.h> /* for mode_t */
 
@@ -132,6 +133,40 @@ int mu_util_create_writeable_fd (const char* path, mode_t mode,
  * @return TRUE if the file is local, FALSE otherwise
  */
 gboolean mu_util_is_local_file (const char* path);
+
+
+/**
+ * write a string (assumed to be in utf8-format) to a stream,
+ * converted to the current locale
+ * 
+ * @param str a string
+ * @param stream a stream
+ * 
+ * @return TRUE if printing worked, FALSE otherwise
+ */
+gboolean mu_util_fputs_encoded (const char *str, FILE *stream);
+
+/**
+ * print a formatted string (assumed to be in utf8-format) to stdout,
+ * converted to the current locale
+ * 
+ * @param a standard printf() format string, followed by a parameter list
+ * 
+ * @return TRUE if printing worked, FALSE otherwise
+ */
+gboolean mu_util_print_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
+
+/**
+ * print a formatted string (assumed to be in utf8-format) to stderr,
+ * converted to the current locale
+ * 
+ * @param a standard printf() format string, followed by a parameter list
+ * 
+ * @return TRUE if printing worked, FALSE otherwise
+ */
+gboolean mu_util_printerr_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
+
+
 
 /**
  * try to 'play' (ie., open with it's associated program) a
