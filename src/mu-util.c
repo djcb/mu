@@ -375,22 +375,28 @@ gboolean
 mu_util_fputs_encoded (const char *str, FILE *stream)
 {
 	char *conv;
-	GError *err;
+	const char *dummy;
 	int rv;
 	
 	g_return_val_if_fail (str, FALSE);
 	g_return_val_if_fail (stream, FALSE);
-		
-	err = NULL;
-	conv = g_locale_from_utf8 (str, -1, NULL, NULL, &err);
-	if (err) {
-		g_printerr ("conversion failed: %s", err->message);
-		g_error_free (err);
-		return FALSE;
-	}
 
-	rv = fputs (conv, stream);
-	g_free (conv);
+	/* g_get_charset return TRUE when the locale is UTF8 */
+	if (g_get_charset(&dummy)) 
+		rv = fputs (str, stream);
+	else { /* charset is _not_ utf8, so we actually have to
+		* convert it..*/
+		GError *err;
+		err = NULL;
+		conv = g_locale_from_utf8 (str, -1, NULL, NULL, &err);
+		if (err) {
+			g_printerr ("conversion failed: %s", err->message);
+			g_error_free (err);
+			return FALSE;
+		}
+		rv = fputs (conv, stream);
+		g_free (conv);
+	}
 	
 	if (rv == EOF) { /* note, apparently, does not set errno */
 		g_printerr ("fputs failed");
