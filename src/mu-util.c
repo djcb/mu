@@ -51,6 +51,8 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
+#include <langinfo.h>
+
 static char*
 do_wordexp (const char *path)
 {
@@ -117,7 +119,9 @@ char*
 mu_util_create_tmpdir (void)
 {
 	gchar *dirname;
-        dirname =  g_strdup_printf ("%s%cmu-%d%c%x", g_get_tmp_dir(),
+	
+        dirname =  g_strdup_printf ("%s%cmu-%d%c%x",
+				    g_get_tmp_dir(),
 				    G_DIR_SEPARATOR,
 				    getuid(),
 				    G_DIR_SEPARATOR,
@@ -151,7 +155,7 @@ mu_util_init_system (void)
 	/* without setlocale, non-ascii cmdline params (like search
 	 * terms) won't work */
 	setlocale (LC_ALL, "");
-
+	
 	/* on FreeBSD, it seems g_slice_new and friends lead to
 	 * segfaults. So we shut if off */
 #ifdef 	__FreeBSD__
@@ -370,27 +374,45 @@ mu_util_get_dtype_with_lstat (const char *path)
 }
 
 
+gboolean
+mu_util_locale_is_utf8 (void)
+{
+	const gchar *dummy;
+	static int is_utf8 = -1;
+	
+	if (G_UNLIKELY(is_utf8 == -1)) 
+	    	is_utf8 = g_get_charset(&dummy) ? 1 : 0;
+	
+	return is_utf8 ? TRUE : FALSE;
+}
 
 gboolean
 mu_util_fputs_encoded (const char *str, FILE *stream)
 {
 	char *conv;
-	const char *dummy;
 	int rv;
 	
 	g_return_val_if_fail (str, FALSE);
 	g_return_val_if_fail (stream, FALSE);
-
+	
 	/* g_get_charset return TRUE when the locale is UTF8 */
-	if (g_get_charset(&dummy)) 
+	if (mu_util_locale_is_utf8()) 
 		rv = fputs (str, stream);
 	else { /* charset is _not_ utf8, so we actually have to
 		* convert it..*/
 		GError *err;
+		unsigned bytes;
 		err = NULL;
-		conv = g_locale_from_utf8 (str, -1, NULL, NULL, &err);
+	
+		conv = g_locale_from_utf8 (str, -1, &bytes, NULL, &err);
 		if (err) {
-			g_printerr ("conversion failed: %s", err->message);
+			/* conversion failed; this happens because is
+			 * some cases GMime may gives us non-UTF-8
+			 * string from e.g. wrongly encoded
+			 * message-subjects; if so, we escape the
+			 * string */
+			g_free (conv);
+			conv = g_strescape (str, NULL);
 			g_error_free (err);
 			return FALSE;
 		}
