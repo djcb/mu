@@ -50,13 +50,34 @@ mu_str_date_s (const char* frm, time_t t)
 {
 	struct tm *tmbuf;
 	static char buf[128];
-
+	static int is_utf8 = -1;
+	
+	if (G_UNLIKELY(is_utf8 == -1))
+		is_utf8 = mu_util_locale_is_utf8 () ? 1 : 0; 
+	
 	g_return_val_if_fail (frm, NULL);
 	
 	tmbuf = localtime(&t);
 	
 	strftime (buf, sizeof(buf), frm, tmbuf);
 
+	if (!is_utf8) {
+		/* charset is _not_ utf8, so we need to convert it, so
+		 * the date could contain locale-specific characters*/
+		gchar *conv;
+		GError *err;
+		err = NULL;
+		conv = g_locale_to_utf8 (buf, -1, NULL, NULL, &err);
+		if (err) {
+			g_warning ("conversion failed: %s", err->message);
+			g_error_free (err);
+			strcpy (buf, "<error>");
+		} else
+			strncpy (buf, conv, sizeof(buf));
+		
+		g_free (conv);
+	}
+	
 	return buf;
 }
 

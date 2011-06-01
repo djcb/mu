@@ -161,6 +161,7 @@ char* mu_str_normalize (const char *str, gboolean downcase)
  */
 char* mu_str_normalize_in_place (char *str, gboolean downcase);
 
+
 /**
  * escape the string for use with xapian matching. in practice, if the
  * string contains an '@', replace '@', single-'.' with '_'. Also,
