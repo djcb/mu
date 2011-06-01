@@ -276,7 +276,8 @@ mu_output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 				len += printf ("%c", *myfields);
 			else {
 				ansi_color_maybe (mfid, color);
-				len += fputs (display_field (myiter, mfid), stdout);
+				len += mu_util_fputs_encoded
+					(display_field (myiter, mfid), stdout);
 				ansi_reset_maybe (mfid, color);
 			}
 		}
