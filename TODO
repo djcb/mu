@@ -2,23 +2,23 @@
 
    - [ ] mu stats
    - [ ] config system (config file) (?)
-   - [ ] detect mail threads (?)
    - [ ] don't make test mail files executable
    - [ ] add version info to output of configure, mu.log
    - [ ] make 'make check' more useful for others
    - [ ] completion for zsh
-   - [ ] see whether the other (slower, more complete) str_normalize is worth it
    - [ ] follow symlinks when indexing
    - [ ] better 'usage' info
-
-     
-* Releases already done
-
-** release 0.9.6 [100%]
+   - [ ] generalize mu_str_normalize for all unicode
+   - [ ] mail threads
+   - [ ] check wmy (date) for begin-end
+      
   
+* Releases already done (see NEWS for features)
+  
+** release 0.9.6 [100%]
+   
 ** release 0.9.5 [100%]
-   
-   
+      
 ** release 0.9.4 [100%] 
 
    - [X] add 'mu cfind' to find contacts
