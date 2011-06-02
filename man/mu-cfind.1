@@ -87,6 +87,11 @@ set query_command = "mu cfind --format=mutt-ab '%s'"
 Now, in mutt, you can easily search for e-mail address using the
 \fBquery\fR-command, which is (by default) accessible by pressing \fBQ\fR.
 
+.SH ENCODING
+
+\fBmu cfind\fR output is encoded according to the current locale except for
+\fI--format=bbdb\fR. This is hard-coded to UTF-8, and as such specified in the
+output-file, so emacs/bbdb can handle it correctly without guessing.
 
 .SH BUGS
 

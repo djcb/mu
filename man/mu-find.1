@@ -537,6 +537,14 @@ non-zero return value, for example:
 |    4 | database is corrupted          |
 .fi
 
+
+.SH ENCODING
+
+\fBmu find\fR output is encoded according the locale for \fI--format=plain\fR
+(the default), and UTF-8 for all other formats (\fIjson\fR, \fIsexp\fR,
+\fIxml\fR).
+
+
 .SH BUGS
 
 Please report bugs if you find them:

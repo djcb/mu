@@ -112,7 +112,21 @@ support colors.
 
 .SH ENCODING
 
-\fBmu\fR's output is \fIalways\fR in UTF-8 format.
+\fBmu\fR's output is in the current locale, with the exceptions of the output
+specifically meant for output to UTF8-encoded files. In practice, this means
+that the output of commands \fBindex\fR, \fBcleanup\fR, \fBview\fR,
+\fBextract\fR is always encoded according to the current locale.
+
+The same is true for \fBfind\fR and \fBcfind\fR, with some exceptions, where
+the output is always UTF-8, regardless of the locale.
+
+For \fBcfind\fR the exception is \fI--format=bbdb\fR. This is hard-coded to
+UTF-8, and as such specified in the output-file, so emacs/bbdb can handle it
+correctly without guessing.
+
+For \fBfind\fR the output is encoded according the locale for
+\fI--format=plain\fR (the default), and UTF-8 for all other formats
+(\fIjson\fR, \fIsexp\fR, \fIxml\fR).
 
 .SH DATABASE AND FILE
 
