@@ -167,8 +167,8 @@ char* mu_str_normalize_in_place (char *str, gboolean downcase);
  * string contains an '@', replace '@', single-'.' with '_'. Also,
  * replace ':' with '_', if it's not following a xapian-prefix (such
  * as 'subject:', 't:' etc, as defined in mu-msg-fields.[ch]).
- * changing is done in-place (by changing the argument string). in
- * any case, the string will be downcased.
+ * changing is done in-place (by changing the argument string). in any
+ * case, the string will be downcased.
  *
  * works for ascii strings, like e-mail addresses and message-id.
  * 
