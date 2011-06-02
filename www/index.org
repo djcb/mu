@@ -18,14 +18,18 @@
   can then be queried using a custom query language.
   
 ** News
-   
+
+   - 2011-06-02: after quite a bit of testing, *0.9.6* has been promoted to be
+     the next release -- forget about the 'bèta'. Development continues for
+     the next release.
+
    - 2011-05-28: *mu-0.9.6* (bèta). A lot of internal changes, but also quite
      some new features, for example:
      - wild-card searching for most fields: mu find 'car*'
      - search for message with certain attachments with 'attach:/a:': mu find
        'attach:resume*'
      - color for =mu find=, =mu cfind=, =mu extract= and =mu view= 
-     Everything is documented in the man-pages, and there are examples in the [[file:mu-cheatsheet.org][mu
+     Everything is documented in the man-pages, and there are examples in the [[file:cheatsheet.org][mu
      cheatsheet]].
 
    - 2011-04-25: *mu-0.9.5* a small, but important, bugfix in maildir-detection,
