@@ -84,8 +84,6 @@ libmu_la_SOURCES=			\
 	mu-msg.c			\
 	mu-msg.h			\
 	mu-msg.h			\
-	mu-output.c			\
-	mu-output.h			\
 	mu-query.cc			\
 	mu-query.h			\
 	mu-runtime.c			\
