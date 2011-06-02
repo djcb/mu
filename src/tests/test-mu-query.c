@@ -65,7 +65,7 @@ run_and_count_matches (const char *xpath, const char *query)
 {
 	MuQuery  *mquery;
 	MuMsgIter *iter;
-	guint count;
+	guint count1, count2;
 	
 	mquery = mu_query_new (xpath, NULL);
 	g_assert (query);
@@ -85,12 +85,20 @@ run_and_count_matches (const char *xpath, const char *query)
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
-	for (count = 0; !mu_msg_iter_is_done(iter);
-	     mu_msg_iter_next(iter), ++count);
+	/* run query twice, to test mu_msg_iter_reset */
+	for (count1 = 0; !mu_msg_iter_is_done(iter);
+	     mu_msg_iter_next(iter), ++count1);
+
+	g_assert(mu_msg_iter_reset (iter));
+	
+	for (count2 = 0; !mu_msg_iter_is_done(iter);
+	     mu_msg_iter_next(iter), ++count2);
 	
 	mu_msg_iter_destroy (iter);
+
+	g_assert_cmpuint (count1, ==, count2);
 	
-	return count;
+	return count1;
 }
 
 

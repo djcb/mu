@@ -62,6 +62,16 @@ MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
 gboolean         mu_msg_iter_next              (MuMsgIter *iter);
 
 
+
+/**
+ * reset the iterator to the beginning
+ * 
+ * @param iter a valid MuMsgIter iterator
+ * 
+ * @return TRUE if it succeeded, FALSE otherwise
+ */
+gboolean mu_msg_iter_reset (MuMsgIter *iter);
+
 /**
  * does this iterator point past the end of the list?
  * 

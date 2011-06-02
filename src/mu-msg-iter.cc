@@ -125,6 +125,21 @@ update_msg (MuMsgIter *iter)
 
 
 gboolean
+mu_msg_iter_reset (MuMsgIter *iter)
+{
+	g_return_val_if_fail (iter, FALSE);
+
+	try {
+		iter->_cursor = iter->_matches.begin();
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (FALSE);
+
+	return TRUE;
+}
+
+
+
+gboolean
 mu_msg_iter_next (MuMsgIter *iter)
 {
 	g_return_val_if_fail (iter, FALSE);
