@@ -31,29 +31,27 @@
 static gboolean update_msg (MuMsgIter *iter);
 
 struct _MuMsgIter {
-
-		_MuMsgIter (const Xapian::Enquire &enq, size_t maxnum):
-			_enq(enq), _maxnum(maxnum), _offset(0), _msg(0) {
-			
-			_matches = _enq.get_mset (0, _maxnum);
-			_cursor	 = _matches.begin();
-
-			if (!_matches.empty())
-				update_msg (this);
-		}
-
-		~_MuMsgIter () {
-			if (_msg)
-				mu_msg_unref (_msg);
-		}
+	_MuMsgIter (const Xapian::Enquire &enq, size_t maxnum):
+		_enq(enq), _msg(0) {
+		
+		_matches = _enq.get_mset (0, maxnum);
+		_cursor	 = _matches.begin();
+		
+		if (!_matches.empty())
+			update_msg (this);
+	}
 	
-		const Xapian::Enquire          _enq;
-		Xapian::MSet                   _matches;
-		Xapian::MSet::const_iterator   _cursor;
-		size_t                         _maxnum, _offset;
-
-		Xapian::Document _doc;
-		MuMsg *_msg;
+	~_MuMsgIter () {
+		if (_msg)
+			mu_msg_unref (_msg);
+	}
+	
+	const Xapian::Enquire          _enq;
+	Xapian::MSet                   _matches;
+	Xapian::MSet::const_iterator   _cursor;
+	
+	Xapian::Document _doc;
+	MuMsg *_msg;
 };
 
 
@@ -136,7 +134,6 @@ mu_msg_iter_next (MuMsgIter *iter)
 	
 	try {
 		++iter->_cursor;
-		++iter->_offset;
 
 		if (mu_msg_iter_is_done(iter))
 			return FALSE; /* no more matches */
@@ -187,9 +184,6 @@ mu_msg_iter_get_field (MuMsgIter *iter, MuMsgFieldId mfid)
 	return get_field (iter, mfid);
 }
 
-
-
-
 static gint64
 get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 {
@@ -205,16 +199,6 @@ mu_msg_iter_get_field_numeric (MuMsgIter *iter, MuMsgFieldId mfid)
 	
 	return get_field_numeric (iter, mfid);
 }
-
-
-unsigned int
-mu_msg_iter_get_index (MuMsgIter *iter)
-{
-	g_return_val_if_fail (iter, (unsigned int)-1);
-
-	return iter->_offset;
-}
-
 
 /* hmmm.... is it impossible to get a 0 docid, or just very improbable? */
 unsigned int
