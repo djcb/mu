@@ -335,7 +335,7 @@ mu_query_preprocess (const char *query)
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr,
 	      MuMsgFieldId sortfieldid, gboolean ascending,
-	      size_t batchsize, GError **err)  
+	      GError **err)  
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);	
@@ -345,7 +345,7 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 	try {
 		Xapian::Query query;
 		char *preprocessed;	
-
+		
 		preprocessed = mu_query_preprocess (searchexpr);
 
 		if (!set_query(self, query, preprocessed, err)) {
@@ -356,16 +356,14 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		
 		Xapian::Enquire enq (self->_db);
 
-		if (batchsize == 0)
-			batchsize = self->_db.get_doccount();
-
 		if (sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
 					       ascending ? true : false);
 		enq.set_query(query);
 		enq.set_cutoff(0,0);
 		
-		return mu_msg_iter_new ((XapianEnquire*)&enq, batchsize);
+		return mu_msg_iter_new ((XapianEnquire*)&enq,
+					self->_db.get_doccount());
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

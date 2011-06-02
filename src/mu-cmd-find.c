@@ -181,7 +181,8 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 
 	err  = NULL;
 	iter = mu_query_run (xapian, query, sortid,
-			     opts->descending ? FALSE : TRUE, 0, &err);
+			     opts->descending ? FALSE : TRUE,
+			     &err);
 	if (!iter) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);

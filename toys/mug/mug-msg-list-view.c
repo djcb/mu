@@ -335,7 +335,7 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	}
 
 	iter =
-	    mu_query_run (xapian, query, MU_MSG_FIELD_ID_DATE, TRUE, 0, &err);
+	    mu_query_run (xapian, query, MU_MSG_FIELD_ID_DATE, TRUE, &err);
 	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("Error: %s", err->message);
@@ -403,6 +403,7 @@ update_model (GtkListStore * store, const char *xpath, const char *query,
 
 	return count;
 }
+
 
 int
 mug_msg_list_view_query (MugMsgListView * self, const char *query)
