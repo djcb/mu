@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+/* -*- mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 ** 
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -32,13 +32,12 @@ static gboolean update_msg (MuMsgIter *iter);
 
 struct _MuMsgIter {
 
-		_MuMsgIter (const Xapian::Enquire &enq, size_t batchsize):
-			_enq(enq), _batchsize(batchsize), _offset(0), _msg(0) {
+		_MuMsgIter (const Xapian::Enquire &enq, size_t maxnum):
+			_enq(enq), _maxnum(maxnum), _offset(0), _msg(0) {
 			
-			_matches = _enq.get_mset (0, _batchsize);
+			_matches = _enq.get_mset (0, _maxnum);
 			_cursor	 = _matches.begin();
-			_is_null = _matches.empty();
-			
+
 			if (!_matches.empty())
 				update_msg (this);
 		}
@@ -51,8 +50,7 @@ struct _MuMsgIter {
 		const Xapian::Enquire          _enq;
 		Xapian::MSet                   _matches;
 		Xapian::MSet::const_iterator   _cursor;
-		size_t                         _batchsize, _offset;
-		bool                           _is_null;
+		size_t                         _maxnum, _offset;
 
 		Xapian::Document _doc;
 		MuMsg *_msg;
@@ -61,12 +59,12 @@ struct _MuMsgIter {
 
 
 MuMsgIter*
-mu_msg_iter_new (XapianEnquire *enq, size_t batchsize)
+mu_msg_iter_new (XapianEnquire *enq, size_t maxnum)
 {
 	g_return_val_if_fail (enq, NULL);
 	
 	try {
-		return new MuMsgIter ((const Xapian::Enquire&)*enq, batchsize);
+		return new MuMsgIter ((const Xapian::Enquire&)*enq, maxnum);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
@@ -104,22 +102,6 @@ message_is_readable (MuMsgIter *iter)
 
 	return TRUE;
 }
-		
-static MuMsgIter*
-get_next_batch (MuMsgIter *iter)
-{	
-	iter->_matches = iter->_enq.get_mset (iter->_offset, iter->_batchsize);
-	if (iter->_matches.empty()) {
-		iter->_cursor = iter->_matches.end();
-		iter->_is_null = true;
-	} else {
-		iter->_cursor = iter->_matches.begin();
-		iter->_is_null = false;
-	}
-	
-	return iter;
-}
-
 
 static gboolean
 update_msg (MuMsgIter *iter)
@@ -153,10 +135,10 @@ mu_msg_iter_next (MuMsgIter *iter)
 		return FALSE;
 	
 	try {
+		++iter->_cursor;
 		++iter->_offset;
-		if (++iter->_cursor == iter->_matches.end())
-			iter = get_next_batch (iter);
-		if (iter->_cursor == iter->_matches.end())
+
+		if (mu_msg_iter_is_done(iter))
 			return FALSE; /* no more matches */
 		
 		/* the message may not be readable / existing, e.g.,
@@ -181,7 +163,12 @@ mu_msg_iter_next (MuMsgIter *iter)
 gboolean
 mu_msg_iter_is_done (MuMsgIter *iter)
 {
-	return iter ? iter->_is_null : TRUE;
+	g_return_val_if_fail (iter, TRUE);
+
+	try {
+		return iter->_cursor == iter->_matches.end() ? TRUE : FALSE;
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (TRUE);
 }
 
 
