@@ -64,20 +64,26 @@ get_attach_str (MuMsg *msg)
 	return attach;
 }	
 
+#define color_maybe(C)	do{ if (color) fputs ((C),stdout);}while(0)
 
 static void
 print_field (const char* field, const char *val, gboolean color)
 {
 	if (!val)
 		return;
+	
+	color_maybe (MU_COLOR_MAGENTA);
+	mu_util_fputs_encoded (field, stdout);
+	color_maybe (MU_COLOR_DEFAULT);
+	fputs (": ", stdout);
+	
+	if (val) {
+		color_maybe (MU_COLOR_GREEN);
+		mu_util_fputs_encoded (val, stdout);
+	}
 
-	g_print ("%s%s%s: %s%s%s\n",
-		 color ? MU_COLOR_MAGENTA : "",
-		 field,
-		 color ? MU_COLOR_DEFAULT : "",
-		 color ? MU_COLOR_GREEN : "",
-		 val ? val : "",
-		 color ? MU_COLOR_DEFAULT : "");
+	color_maybe (MU_COLOR_DEFAULT);
+	fputs ("\n", stdout);
 }
 
 
@@ -114,9 +120,12 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 		summ = mu_str_summarize (field, SUMMARY_LEN);
 		print_field ("Summary", summ, color);
 		g_free (summ);
-	} else
-		g_print ("\n%s\n", field);
-
+	} else {
+		color_maybe (MU_COLOR_YELLOW);
+		mu_util_print_encoded ("\n%s\n", field);
+		color_maybe (MU_COLOR_DEFAULT);
+	}
+		
 	return TRUE;
 }
 
