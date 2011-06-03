@@ -28,6 +28,10 @@
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 
+/* just a guess... */
+#define MAX_FETCH_SIZE 10000
+
+
 static gboolean update_msg (MuMsgIter *iter);
 
 struct _MuMsgIter {
@@ -36,6 +40,11 @@ struct _MuMsgIter {
 		
 		_matches = _enq.get_mset (0, maxnum);
 		_cursor	 = _matches.begin();
+
+		/* this seems to make search slightly faster, some
+		 * non-scientific testing suggests. 5-10% or so */ 
+		if (_matches.size() <= MAX_FETCH_SIZE)
+			_matches.fetch ();
 		
 		if (!_matches.empty())
 			update_msg (this);
