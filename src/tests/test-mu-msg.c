@@ -1,5 +1,4 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -218,7 +217,7 @@ test_mu_msg_04 (void)
 
 
 static void
-test_mu_msg_05 (void)
+test_mu_msg_umlaut (void)
 {
 	MuMsg *msg;
 
@@ -266,11 +265,37 @@ test_mu_msg_tags (void)
 	g_assert_cmpstr ((char*)tags->data,==,"paradise");
 	g_assert_cmpstr ((char*)tags->next->data,==,"lost");
 	g_assert (tags->next->next == NULL);
+
+		
+	mu_msg_unref (msg);
+}
+	
+
+static void
+test_mu_msg_comp_unix_programmer (void)
+{
+	MuMsg *msg;
+
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
+				    "bar/cur/181736.eml", NULL, NULL); 
+
+	g_assert_cmpstr (mu_msg_get_to(msg),
+	 		 ==, NULL);
+	g_assert_cmpstr (mu_msg_get_subject(msg),
+			 ==, "Re: Are writes \"atomic\" to readers of the file?");
+	g_assert_cmpstr (mu_msg_get_from(msg),			 
+			 ==, "Jimbo Foobarcuux <jimbo@slp53.sl.home>");
+	g_assert_cmpstr (mu_msg_get_msgid(msg),			 
+			 ==, "oktdp.42997$Te.22361@news.usenetserver.com");
+	
+	//"jimbo@slp53.sl.home (Jimbo Foobarcuux)";
+	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+			  ==, MU_MSG_PRIO_NORMAL);
+	g_assert_cmpuint (mu_msg_get_date(msg),
+			  ==, 1299603860);
 	
 	mu_msg_unref (msg);
 }
-
-
 
 /* static gboolean */
 /* ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg, */
@@ -299,6 +324,10 @@ main (int argc, char *argv[])
 			 test_mu_msg_05);
 	g_test_add_func ("/mu-msg/mu-msg-tags",
 			 test_mu_msg_tags);
+	g_test_add_func ("/mu-msg/mu-msg-umlaut",
+			 test_mu_msg_umlaut);
+	g_test_add_func ("/mu-msg/mu-msg-comp-unix-programmer",
+			 test_mu_msg_comp_unix_programmer);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,

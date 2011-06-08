@@ -1,0 +1,42 @@
+Path: uutiset.elisa.fi!feeder2.news.elisa.fi!feeder.erje.net!newsfeed.kamp.net!newsfeed0.kamp.net!nx02.iad01.newshosting.com!newshosting.com!post01.iad!not-for-mail
+X-newsreader: xrn 9.03-beta-14-64bit
+Sender: jimbo@lews (Jimbo Foobarcuux)
+From: jimbo@slp53.sl.home (Jimbo Foobarcuux)
+Reply-To: slp53@pacbell.net
+Subject: Re: Are writes "atomic" to readers of the file?
+Newsgroups: comp.unix.programmer
+References: <e9065dac-13c1-4103-9e31-6974ca232a89@t15g2000prt.googlegroups.com> <87hbblwelr.fsf@sapphire.mobileactivedefense.com> <pql248-4va.ln1@wilbur.25thandClement.com> <ikns6r$li3$1@Iltempo.Update.UU.SE> <8762s0jreh.fsf@sapphire.mobileactivedefense.com> <ikqqp1$jv0$1@Iltempo.Update.UU.SE> <87hbbjc5jt.fsf@sapphire.mobileactivedefense.com> <ikr0na$lru$1@Iltempo.Update.UU.SE> <tO8cp.1228$GE6.370@news.usenetserver.com> <ikr6ks$nlf$1@Iltempo.Update.UU.SE> <8ioh48-8mu.ln1@leafnode-msgid.gclare.org.uk>
+Organization: UseNetServer - www.usenetserver.com
+X-Complaints-To: abuse@usenetserver.com
+Message-ID: <oktdp.42997$Te.22361@news.usenetserver.com>
+Date: 08 Mar 2011 17:04:20 GMT
+Lines: 27
+Xref: uutiset.elisa.fi comp.unix.programmer:181736
+
+John Denver <jd@clare.See-My-Signature.invalid> writes:
+>Eric the Red wrote:
+>
+>>> There _IS_ a requirement that all reads and writes to regular files
+>>> be atomic.   There is also an ordering guarantee.   Any implementation
+>>> that doesn't provide both atomicity and ordering guarantees is broken.
+>>
+>> But where is it specified?
+>
+>The place where it is stated most explicitly is in XSH7 2.9.7
+>Thread Interactions with Regular File Operations:
+>
+>    All of the following functions shall be atomic with respect to each
+>    other in the effects specified in POSIX.1-2008 when they operate on
+>    regular files or symbolic links:
+>
+>    [List of functions that includes read() and write()]
+>
+>    If two threads each call one of these functions, each call shall
+>    either see all of the specified effects of the other call, or none
+>    of them.
+>
+
+And, for the purposes of this paragraph, the two threads need not be
+part of the same process.
+
+jimbo
