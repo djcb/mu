@@ -662,8 +662,11 @@ get_body (MuMsgFile *self, gboolean want_html)
 }
 
 
+/* get them in the order parent->grandparent->..., i.e. in opposite
+ * from what's in the header
+ */
 static GSList*
-get_msgids_from_header (MuMsgFile *self, const char* header)
+get_msgids_reverted (MuMsgFile *self, const gchar *header)
 {
 	GSList *msgids;
 	const char *str;
@@ -686,7 +689,7 @@ get_msgids_from_header (MuMsgFile *self, const char* header)
 		g_mime_references_free (mime_refs);
 	}
 
-	return g_slist_reverse (msgids);
+	return msgids;
 }
 
 
@@ -697,11 +700,11 @@ get_references (MuMsgFile *self)
 	
 	g_return_val_if_fail (self, NULL);
 
-	refs = get_msgids_from_header (self, "References");
+	refs = get_msgids_reverted (self, "References");
 	
 	/* now, add in-reply-to:, we only take the first one if there
 	 * are more */
-	inreply = get_msgids_from_header (self, "In-reply-to");
+	inreply = get_msgids_reverted (self, "In-reply-to");
 	if (inreply) {
 		refs = g_slist_prepend (refs, g_strdup ((gchar*)inreply->data));
 		g_slist_foreach (inreply, (GFunc)g_free, NULL);

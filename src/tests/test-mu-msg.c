@@ -288,6 +288,19 @@ test_mu_msg_comp_unix_programmer (void)
 	g_assert_cmpstr (mu_msg_get_msgid(msg),			 
 			 ==, "oktdp.42997$Te.22361@news.usenetserver.com");
 	
+	g_assert_cmpstr (mu_msg_get_references_str(msg), ==,
+			 "e9065dac-13c1-4103-9e31-6974ca232a89@t15g2000prt.googlegroups.com,"
+			 "87hbblwelr.fsf@sapphire.mobileactivedefense.com,"
+			 "pql248-4va.ln1@wilbur.25thandClement.com,"
+			 "ikns6r$li3$1@Iltempo.Update.UU.SE,"
+			 "8762s0jreh.fsf@sapphire.mobileactivedefense.com,"
+			 "ikqqp1$jv0$1@Iltempo.Update.UU.SE,"
+			 "87hbbjc5jt.fsf@sapphire.mobileactivedefense.com,"
+			 "ikr0na$lru$1@Iltempo.Update.UU.SE,"
+			 "tO8cp.1228$GE6.370@news.usenetserver.com,"
+			 "ikr6ks$nlf$1@Iltempo.Update.UU.SE,"
+			 "8ioh48-8mu.ln1@leafnode-msgid.gclare.org.uk");
+	
 	//"jimbo@slp53.sl.home (Jimbo Foobarcuux)";
 	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
 			  ==, MU_MSG_PRIO_NORMAL);
