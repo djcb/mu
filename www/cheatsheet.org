@@ -5,38 +5,37 @@
 * Mu Cheatsheet
 
   Here are some tips for using =mu=. If you want to know more, please refer to the
-  =mu= man pages. For a quick warm-up, there's the =mu-easy= man-page.
+  =mu= man pages. For a quick warm-up, there's also the =mu-easy= man-page.
 
 ** Indexing your mail
+#+html:<pre> $ mu index</pre>
+  
+If =mu= did not guess the right Maildir, you can set it explicitly:
 
-  You can index your mail with:
-#+html:<code> $ mu index</code>
-
-  If =mu= did not guess the right Maildir, you can set it explicitly:
-#+html:<code> $ mu index --maildir=~/MyMaildir</code>
+#+html:<pre> $ mu index --maildir=~/MyMaildir</pre>
 
 *** Excluding directories from indexing  
-  If you want to exclude certain directories from being indexed (for example,
-  directories with spam-messages), put a file called =.noindex= in the directory
-  to exlude, and it will be ignored when indexing (including its children)
-  
 
+    If you want to exclude certain directories from being indexed (for example,
+    directories with spam-messages), put a file called =.noindex= in the directory
+    to exlude, and it will be ignored when indexing (including its children)
+  
 ** Finding messages
 
    After you have indexed your messages, you can search them. Here are some
-   examples.
+   example.
 
 *** messages about Helsinki (in message body, subject, sender, ...)
-#+html:<code> $ mu find Helsinki</code>
+#+html:<pre> $ mu find Helsinki</pre>
 
 *** messages to Jack with subject jellyfish containing the word tumbleweed
-#+html:<code> $ mu find to:Jack subject:jellyfish tumbleweed</code>
+#+html:<pre> $ mu find to:Jack subject:jellyfish tumbleweed</pre>
 
 *** messages between 2 kilobytes and a 2Mb, written in December 2009 with an attachment from Bill
-#+example $ mu find size:2k..2m date:20091201..20093112 flag:attach from:bill
+#+html: $ mu find size:2k..2m date:20091201..20093112 flag:attach from:bill
  
 *** unread messages about soccer or socrates or ...
-#+html:<code>  $ mu find 'subject:soc*' flag:unread</code>
+#+html:<pre>  $ mu find 'subject:soc*' flag:unread</pre>
 
 ** Finding contacts
    
@@ -44,15 +43,15 @@
    searched with =mu cfind= (after your messages have been indexed):
 
 *** all contacts with 'john' in either name or e-mail address   
-#+html:<code> $ mu cfind john</code>
+#+html:<pre> $ mu cfind john</pre>
 
     =mu cfind= takes a regular expression for matching.
    
     You can export the contact information to a number of formats for use in
-    e-mail clients. For examples:
+    e-mail clients. For example:
 
 *** export /all/ your contacts to the =mutt= addressbook format
-#+html:<code> $ mu cfind --format=mutt-alias</code>
+#+html:<pre> $ mu cfind --format=mutt-alias</pre>
 
     Other formats are: =plain=, =mutt-ab=, =wl= (Wanderlust), =org-contact=,
     =bbdb= and =csv= (comma-separated values).
@@ -63,18 +62,19 @@
    You can retrieve attachments from messages using =mu extract=, which takes a
    message file as an argument. Without any other arguments, it displays the
    MIME-parts of the message. You can then get specific attachments:
-#+html:<code> $ mu extract --parts=3,4 my-msg-file</code>
+
+#+html:<pre> $ mu extract --parts=3,4 my-msg-file</pre>
 
    will get you parts 3 and 4. You can also extract files based on their name:
 
-#+html:<code> $ mu extract my-msg-file '.*\.jpg'</code>
+#+html:<pre> $ mu extract my-msg-file '.*\.jpg'</pre>
 
-   The second argument is a case-insensitive regular expression, and the
-   command will extract any files matching the pattern -- in the example, all
-   =.jpg=-files. 
+   The second argument is a case-insensitive regular expression, and the command
+   will extract any files matching the pattern -- in the example, all
+   =.jpg=-files.
 
-   Do not confuse the '.*' regular expression in =mu extract= (and =mu cfind=
-   with the '*' wildcard in =mu find=.
+   Do not confuse the '.*' /regular expression/ in =mu extract= (and =mu cfind=)
+   with the '*' /wildcard/ in =mu find=.
 
 ** Getting more colorful output
 
@@ -83,7 +83,7 @@
    it with =--color=, or setting the =MU_COLORS= environment variable to
    non-empty.
 
-#+html:<code> $ mu find --color capibara</code>
+#+html:<pre> $ mu find --color capibara</pre>
    
    (since =mu= version 0.9.6)
    
@@ -95,7 +95,7 @@
   For example, to get the number of lines in all your messages mentioning
   /banana/, you could use something like:
 
-#+html:<code> $ mu find --fields="'l'" banana | xargs wc -l</code>
+#+html:<pre> $ mu find --fields="'l'" banana | xargs wc -l</pre>
 
   Note that we use ='l'=, so the returned message paths will be quoted. This is
   useful if you have maildirs with spaces in their names.
@@ -103,13 +103,23 @@
   For further processing, also the ~--format=(xml|json|sexp)~ can be useful. For
   example,
 
-#+html:<code> $ mu find --format=xml pancake</code>
+#+html:<pre> $ mu find --format=xml pancake</pre>
 
   will give you a list of pancake-related messages in XML-format.
    
 ** Integration with mail clients
 
   The =mu-find= man page contains examples for =mutt= and =wanderlust=.
+
+** Viewing messages
+
+   You can view message contents with =mu view=; it does not use the database
+   and simply takes a message file as it's argument:
+
+#+html:<pre> $ mu view ~/Maildir/inbox/cur/message24</pre>
+   
+   You can also use =--color= to get colorized output, and =--summary= to get a
+   summary of the message contents instead of the whole thing.
 
 #+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
 #+begin_html
