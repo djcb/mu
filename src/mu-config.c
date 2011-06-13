@@ -241,10 +241,12 @@ config_options_group_view (MuConfig *opts)
 	GOptionEntry entries[] = {
 		{"summary", 0, 0, G_OPTION_ARG_NONE, &opts->summary,
 		 "only show a short summary of the message (false)", NULL},
+		{"separate", 0, 0, G_OPTION_ARG_NONE, &opts->separate,
+		 "separate messages with ascii-0x07 (form-feed)", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 		
-	og = g_option_group_new("cfind", "options for the 'cfind' command",
+	og = g_option_group_new("view", "options for the 'view' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 

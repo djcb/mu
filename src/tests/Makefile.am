@@ -115,6 +115,7 @@ EXTRA_DIST=							\
 	testdir2/bar/cur/mail2					\
 	testdir2/bar/cur/mail3					\
 	testdir2/bar/cur/mail4					\
+	testdir2/bar/cur/mail5					\
 	testdir2/Foo/cur/mail5					\
 	testdir2/Foo/cur/arto.eml
 

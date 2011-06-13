@@ -35,6 +35,8 @@
 #include "mu-contacts.h"
 #include "mu-runtime.h"
 
+#define VIEW_SEPARATOR '\f' /* form-feed */
+
 
 static void
 each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
@@ -129,6 +131,34 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 	return TRUE;
 }
 
+
+static MuExitCode
+handle_msg (const char *fname, MuConfig *opts)
+{
+	GError *err;
+	MuMsg *msg;
+	MuExitCode rv;
+	
+	err = NULL;
+	msg = mu_msg_new_from_file (fname, NULL, &err);
+
+	if (!msg) {
+		g_warning ("error: %s", err->message);
+		g_error_free (err);
+		return MU_EXITCODE_ERROR;
+	}
+
+	if (view_msg (msg, NULL, opts->summary, opts->color))
+		rv = MU_EXITCODE_OK;
+	else
+		rv = MU_EXITCODE_ERROR;
+	
+	mu_msg_unref (msg);
+
+	return rv;
+}
+
+
 MuExitCode
 mu_cmd_view (MuConfig *opts)
 {
@@ -144,21 +174,16 @@ mu_cmd_view (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 	
-	;
-	for (i = 1, rv = MU_EXITCODE_OK;
-	     opts->params[i] && rv == MU_EXITCODE_OK; ++i) {
-		GError *err = NULL;
-		MuMsg  *msg = mu_msg_new_from_file (opts->params[i], NULL, &err);
-		if (!msg) {
-			g_warning ("error: %s", err->message);
-			g_error_free (err);
-			return MU_EXITCODE_ERROR;
-		}
-		if (!view_msg (msg, NULL, opts->summary, opts->color))
-			rv = MU_EXITCODE_ERROR;
-		
-		mu_msg_unref (msg);
+	for (i = 1; opts->params[i]; ++i) {
+
+		rv = handle_msg (opts->params[i], opts);
+		if (rv != MU_EXITCODE_OK)
+			break;
+		/* add a separator between two messages? */
+		if (opts->params[i+1] && opts->separate)
+			g_print ("%c", VIEW_SEPARATOR);
 	}
+	
 	return rv;
 }
 

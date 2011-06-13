@@ -102,7 +102,12 @@ struct _MuConfig {
 	char            *bookmark;	/* use bookmark */
 	char		*formatstr;     /* output type
 					 * (plain,links,xml,json,sexp) */
-		
+
+	/* options for view */
+	gboolean         separate;      /* add separator between
+					 * multiple messages in mu
+					 * view */
+	
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */
 	gboolean	 clearlinks;	/* clear a linksdir before filling */
