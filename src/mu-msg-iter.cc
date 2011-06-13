@@ -27,6 +27,8 @@
 #include "mu-util.h"
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
+#include "mu-msg-threader.h"
+
 
 /* just a guess... */
 #define MAX_FETCH_SIZE 10000
@@ -36,7 +38,7 @@ static gboolean update_msg (MuMsgIter *iter);
 
 struct _MuMsgIter {
 	_MuMsgIter (const Xapian::Enquire &enq, size_t maxnum):
-		_enq(enq), _msg(0) {
+		_enq(enq), _msg(0), _threader(0) {
 		
 		_matches = _enq.get_mset (0, maxnum);
 		_cursor	 = _matches.begin();
@@ -46,21 +48,27 @@ struct _MuMsgIter {
 		if (_matches.size() <= MAX_FETCH_SIZE)
 			_matches.fetch ();
 		
-		if (!_matches.empty())
+		if (!_matches.empty()) {
 			update_msg (this);
+			_threader = mu_msg_threader_new ();
+			mu_msg_threader_calculate (_threader, this);
+		}
 	}
 	
 	~_MuMsgIter () {
 		if (_msg)
 			mu_msg_unref (_msg);
+
+		mu_msg_threader_destroy (_threader);
 	}
 	
-	const Xapian::Enquire          _enq;
-	Xapian::MSet                   _matches;
-	Xapian::MSet::const_iterator   _cursor;
+	const Xapian::Enquire		_enq;
+	Xapian::MSet			_matches;
+	Xapian::MSet::const_iterator	_cursor;
+	Xapian::Document		_doc;
 	
-	Xapian::Document _doc;
-	MuMsg *_msg;
+	MuMsg		*_msg;
+	MuMsgThreader   *_threader;
 };
 
 
@@ -82,8 +90,7 @@ mu_msg_iter_destroy (MuMsgIter *iter)
 {
 	try { delete iter; } MU_XAPIAN_CATCH_BLOCK;
 }
-
-
+	
 MuMsg*
 mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
 {

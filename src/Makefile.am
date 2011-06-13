@@ -81,6 +81,8 @@ libmu_la_SOURCES=			\
 	mu-msg-prio.c			\
 	mu-msg-prio.h			\
 	mu-msg-priv.h			\
+	mu-msg-threader.c		\
+	mu-msg-threader.h		\
 	mu-msg.c			\
 	mu-msg.h			\
 	mu-msg.h			\
