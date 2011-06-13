@@ -322,7 +322,8 @@ const char* mu_msg_get_header (MuMsg *self, const char *header);
 
 
 /**
- * get the list of references
+ * get the list of references, with the direct parent as the final
+ * one; this final one is typically the 'In-reply-to' field
  * 
  * @param msg a valid MuMsg
  * 
@@ -330,13 +331,13 @@ const char* mu_msg_get_header (MuMsg *self, const char *header);
  */
 const GSList* mu_msg_get_references (MuMsg *msg);
 
+
 /**
- * get the list of tags
+ * get the list of tags (ie., X-Label)
  * 
  * @param msg a valid MuMsg
  * 
  * @return a list with the tags for this msg. Don't modify/free
-
  */
 const GSList* mu_msg_get_tags (MuMsg *self);
 
