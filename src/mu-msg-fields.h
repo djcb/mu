@@ -38,11 +38,13 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_MAILDIR,
 	MU_MSG_FIELD_ID_MSGID,
 	MU_MSG_FIELD_ID_PATH,
-	MU_MSG_FIELD_ID_REFS,
 	MU_MSG_FIELD_ID_SUBJECT,
 	MU_MSG_FIELD_ID_TO,
 	/* MU_MSG_STRING_FIELD_ID_NUM, see below */
 
+	/* string list items... */
+	MU_MSG_FIELD_ID_REFS,
+	
 	/* then the numerical ones */
 	MU_MSG_FIELD_ID_DATE,
 	MU_MSG_FIELD_ID_FLAGS,
@@ -57,12 +59,11 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_NUM_WITH_PSEUDO /* number including these fake
 					 * fields */ 
 };
-typedef enum _MuMsgFieldId MuMsgFieldId;
+typedef guint8 MuMsgFieldId;
 
 /* some specials... */
 static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
 #define MU_MSG_STRING_FIELD_ID_NUM (MU_MSG_FIELD_ID_TO + 1)
-
 
 #define mu_msg_field_id_is_valid(MFID) \
 	((MFID) < MU_MSG_FIELD_ID_NUM)
@@ -70,14 +71,15 @@ static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
 /* don't change the order, add new types at the end (before _NUM)*/
 enum _MuMsgFieldType {
 	MU_MSG_FIELD_TYPE_STRING,
-
+	MU_MSG_FIELD_TYPE_STRING_LIST,
+	
 	MU_MSG_FIELD_TYPE_BYTESIZE, 
 	MU_MSG_FIELD_TYPE_TIME_T,
 	MU_MSG_FIELD_TYPE_INT,
 
 	MU_MSG_FIELD_TYPE_NUM
 };
-typedef enum _MuMsgFieldType MuMsgFieldType;
+typedef guint8 MuMsgFieldType;
 static const MuMsgFieldType MU_MSG_FIELD_TYPE_NONE = (MuMsgFieldType)-1;
 
 typedef void (*MuMsgFieldForEachFunc) (MuMsgFieldId id,
@@ -144,6 +146,18 @@ MuMsgFieldType mu_msg_field_type (MuMsgFieldId id) G_GNUC_PURE;
  */
 #define mu_msg_field_is_string(MFID)\
 	(mu_msg_field_type((MFID))==MU_MSG_FIELD_TYPE_STRING?TRUE:FALSE)
+
+
+
+/**
+ * is the field a string-list?
+ * 
+ * @param id a MuMsgFieldId
+ * 
+ * @return TRUE if the field a string-list, FALSE otherwise
+ */
+#define mu_msg_field_is_string_list(MFID)\
+	(mu_msg_field_type((MFID))==MU_MSG_FIELD_TYPE_STRING_LIST?TRUE:FALSE)
 
 /**
  * is the field numeric (has type MU_MSG_FIELD_TYPE_(BYTESIZE|TIME_T|INT))?
