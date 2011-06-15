@@ -371,6 +371,65 @@ mu_str_size_parse_kmg (const char* str)
 
 }
 
+
+
+char*
+mu_str_from_list (const GSList *lst, char sepa)
+{
+	const GSList *cur;
+	char *str;
+
+	g_return_val_if_fail (sepa, NULL);
+	
+	for (cur = lst, str = NULL; cur; cur = g_slist_next(cur)) {
+
+		char *tmp;
+		char sep[2] = { '\0', '\0' };
+		sep[0] = cur->next ? sepa : '\0';
+
+		tmp = g_strdup_printf ("%s%s%s",
+				       str ? str : "",
+				       (gchar*)cur->data,
+				       sep);
+		g_free (str);
+		str = tmp;
+	}
+	
+	return str;
+}
+
+GSList*
+mu_str_to_list (const char *str, char sepa)
+{
+	GSList *lst;
+	gchar **strs, **cur;
+	char sep[] = { '\0', '\0' };
+	
+	g_return_val_if_fail (sepa, NULL);
+	
+	if (!str)
+		return NULL;
+
+	sep[0] = sepa;
+	strs = g_strsplit (str, sep, -1);
+
+	for (cur = strs, lst = NULL; cur && *cur; ++cur)
+		lst = g_slist_prepend (lst, g_strdup(*cur));
+		
+	lst = g_slist_reverse (lst);
+	g_strfreev (strs);
+
+	return lst;
+}
+
+void
+mu_str_free_list (GSList *lst)
+{
+	g_slist_foreach (lst, (GFunc)g_free, NULL);
+	g_slist_free (lst);	
+}
+
+
 /*
  * Xapian treats various characters such as '@', '-', ':' and '.'
  * specially; function below is an ugly hack to make it DWIM in most

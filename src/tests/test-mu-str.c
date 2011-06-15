@@ -256,6 +256,89 @@ test_mu_str_date_parse_hdwmy (void)
 
 
 static void
+assert_cmplst (GSList *lst, const char *items[])
+{
+	int i;
+
+	if (!lst) 
+		g_assert (!items);
+	
+	for (i = 0; lst; lst = g_slist_next(lst), ++i) 
+		g_assert_cmpstr ((char*)lst->data,==,items[i]);
+
+	g_assert (items[i] == NULL);
+}
+
+
+static GSList*
+create_list (const char *items[])
+{
+	GSList *lst;
+
+	lst = NULL;
+	while (items && *items) {
+		lst = g_slist_prepend (lst, g_strdup(*items));
+		++items;
+	}
+
+	return g_slist_reverse (lst);
+	
+}
+
+static void
+test_mu_str_from_list (void)
+{
+	{
+		const char *strs[] = {"aap", "noot", "mies", NULL};
+		GSList *lst = create_list (strs);
+		gchar  *str = mu_str_from_list (lst, ',');
+		g_assert_cmpstr ("aap,noot,mies", ==, str);
+		mu_str_free_list (lst);
+		g_free (str);
+	}
+
+	{
+		const char *strs[] = {"aap", "no,ot", "mies", NULL};
+		GSList *lst = create_list (strs);
+		gchar  *str = mu_str_from_list (lst, ',');
+		g_assert_cmpstr ("aap,no,ot,mies", ==, str);
+		mu_str_free_list (lst);
+		g_free (str);
+	}
+
+	{
+		const char *strs[] = {NULL};
+		GSList *lst = create_list (strs);
+		gchar  *str = mu_str_from_list (lst,'@');
+		g_assert_cmpstr (NULL, ==, str);
+		mu_str_free_list (lst);
+		g_free (str);
+	}
+	
+
+}
+
+
+static void
+test_mu_str_to_list (void)
+{
+	{
+		const char *items[]= {"foo", "bar", "cuux", NULL};
+		GSList *lst = mu_str_to_list ("foo@bar@cuux",'@');
+		assert_cmplst (lst, items);
+		mu_str_free_list (lst);
+	}
+
+	{
+		GSList *lst = mu_str_to_list (NULL,'x');
+		g_assert (lst == NULL);
+		mu_str_free_list (lst);
+	}
+}
+
+
+
+static void
 test_mu_str_guess_first_name (void)
 {
 	int i;
@@ -365,7 +448,11 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-display_contact",
 			 test_mu_str_display_contact);			 
 	
-
+	g_test_add_func ("/mu-str/mu-str-from-list",
+			 test_mu_str_from_list);
+	g_test_add_func ("/mu-str/mu-str-to-list",
+			 test_mu_str_to_list);
+	
 	g_test_add_func ("/mu-str/mu-str_date_parse_hdwmy",
 			 test_mu_str_date_parse_hdwmy);
 

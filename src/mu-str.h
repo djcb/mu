@@ -265,6 +265,34 @@ char* mu_str_escape_c_literal (const gchar* str)
 #define mu_str_is_empty(S) ((!(S)||!(*S))?TRUE:FALSE)
 
 
+/**
+ * convert a GSList of strings to a #sepa-separated list
+ * 
+ * @param lst a GSList
+ * @param the separator character
+ * 
+ * @return a newly allocated string
+ */
+char* mu_str_from_list (const GSList *lst, char sepa);
+
+
+/**
+ * convert a #sepa-separated list of strings in to a GSList
+ * 
+ * @param str a #sepa-separated list of strings
+ * @param the separator character
+ *
+ * @return a newly allocated GSList (free with mu_str_free_list)
+ */
+GSList* mu_str_to_list (const char *str, char sepa);
+
+
+/**
+ * free a GSList consisting of allocated strings
+ * 
+ * @param lst a GSList
+ */
+void mu_str_free_list (GSList *lst);
 
 /**
  * guess some nick name for the given name; if we can determine an
