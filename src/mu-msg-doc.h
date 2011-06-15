@@ -69,6 +69,23 @@ gchar* mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid, gboolean *do
           G_GNUC_WARN_UNUSED_RESULT;
 
 /**
+ * get a string-list parameter from the msgdoc
+ * 
+ * @param self a MuMsgDoc instance
+ * @param mfid a MuMsgFieldId for a string-list field
+ * @param do_free receives either TRUE or FALSE, where TRUE means that
+ * the caller owns the string, and has to free it (mu_str_free_list) when done
+ * with it; FALSE means that the MuMsgDoc owns the list, and it is
+ * only valid as long as the MuMsgDoc is valid (ie., before
+ * mu_msg_doc_destroy).
+ * 
+ * @return a list for the given field (see do_free), or NULL in case of error
+ */
+GSList* mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid,
+				       gboolean *do_free) G_GNUC_WARN_UNUSED_RESULT;
+
+
+/**
  * 
  * get a numeric parameter from the msgdoc
  * 

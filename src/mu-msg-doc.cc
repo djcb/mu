@@ -26,6 +26,7 @@
 #include "mu-util.h"
 #include "mu-msg-fields.h"
 #include "mu-msg-doc.h"
+#include "mu-str.h"
 
 struct _MuMsgDoc {
 	_MuMsgDoc (const Xapian::Document& doc) : _doc (doc) {}
@@ -74,6 +75,27 @@ mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid, gboolean *do_free)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
+
+
+GSList*
+mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid,
+			       gboolean *do_free)
+{
+	g_return_val_if_fail (self, NULL);
+	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
+	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
+	
+	*do_free = TRUE;
+	
+	try {
+		/* return a comma-separated string as a GSList */
+		const std::string s (self->doc().get_value(mfid));
+		return s.empty() ? NULL : mu_str_to_list(s.c_str(),',');
+		
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+}
+
+
 
 
 gint64

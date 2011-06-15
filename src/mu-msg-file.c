@@ -428,17 +428,6 @@ get_prio (MuMsgFile *self)
 }
 
 
-/* static const char*      */
-/* get_header (MuMsgFile *self, const char* header) */
-/* { */
-/* 	g_return_val_if_fail (msg, NULL); */
-/* 	g_return_val_if_fail (header, NULL); */
-
-/* 	return g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),  */
-/* 					 header); */
-/* } */
-
-
 struct _GetBodyData {
 	GMimeObject *_txt_part, *_html_part;
 	gboolean _want_html;
@@ -701,7 +690,7 @@ get_msgids_from_header (MuMsgFile *self, const char* header)
 }
 
 
-static GSList*
+GSList*
 get_references (MuMsgFile *self)
 {
 	GSList *refs, *inreply;
@@ -723,34 +712,6 @@ get_references (MuMsgFile *self)
 	return g_slist_reverse (refs);
 }
 
-static char*
-get_references_str (MuMsgFile *self)
-{
-	GSList *refs;
-	gchar *refsstr;
-
-	g_return_val_if_fail (self, NULL);
-
-	refsstr = NULL;
-	refs = get_references (self);
-	if (refs) {
-		const GSList *cur;
-		for (cur = refs; cur; cur = g_slist_next(cur)) {
-			char *tmp;
-			tmp = g_strdup_printf ("%s%s%s",
-					       refsstr ? refsstr : "",
-					       refsstr ? "," : "",
-					       (gchar*)cur->data);
-			g_free (refsstr);
-			refsstr = tmp;
-		}
-	}			
-
-	g_slist_foreach (refs, (GFunc)g_free, NULL);
-	g_slist_free (refs);
-	
-	return refsstr;
-}
 
 
 char*
@@ -793,13 +754,35 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free
 	case MU_MSG_FIELD_ID_MAILDIR:
 		return self->_maildir;
 		
-	case MU_MSG_FIELD_ID_REFS: *do_free = TRUE;
-		return get_references_str (self);
-	
 	default:
 		g_return_val_if_reached (NULL);
 	}
 }
+
+
+
+
+GSList*
+mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId mfid,
+				gboolean *do_free)
+{
+	g_return_val_if_fail (self, NULL);
+	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
+	
+	switch (mfid) {
+		
+	case MU_MSG_FIELD_ID_REFS:
+		*do_free = TRUE;
+		return get_references (self);
+		
+	default:
+		g_return_val_if_reached (NULL);
+	}
+}
+
+
+
+
 
 gint64
 mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
