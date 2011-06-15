@@ -97,12 +97,13 @@ upgrade_warning (void)
 
 
 static gboolean
-print_xapian_query (MuQuery *xapian, const gchar *query)
+print_xapian_query (MuQuery *xapian, const gchar *query, size_t *count)
 {
 	char *querystr;
 	GError *err;
 	
-	err = NULL;
+	err    = NULL;
+	
 	querystr = mu_query_as_string (xapian, query, &err);
 	if (!querystr) {
 		g_warning ("error: %s", err->message);
@@ -113,6 +114,7 @@ print_xapian_query (MuQuery *xapian, const gchar *query)
 	g_print ("%s\n", querystr);
 	g_free (querystr);
 
+	*count = 1;
 	return TRUE;
 }
 
@@ -770,7 +772,7 @@ mu_cmd_find (MuConfig *opts)
 	MuQuery *xapian;
 	gboolean rv;
 	gchar *query;
-	size_t count;
+	size_t count = 0;
 	OutputFormat format;
 	
 	g_return_val_if_fail (opts, FALSE);
@@ -780,18 +782,14 @@ mu_cmd_find (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 
 	format = get_output_format (opts->formatstr);
-	
 	xapian = get_query_obj ();
-	if (!xapian)
+	query  = get_query (opts);
+
+	if (!xapian ||!query)
 		return MU_EXITCODE_ERROR;
 	
-	/* first param is 'query', search params are after that */
-	query = get_query (opts);
-	if (!query) 
-		return MU_EXITCODE_ERROR;
-	
-	if (format == FORMAT_XQUERY) 
-		rv = print_xapian_query (xapian, query);
+	if (format == FORMAT_XQUERY)
+		rv = print_xapian_query (xapian, query, &count);
 	else
 		rv = run_query (xapian, query, opts, format, &count);
 
@@ -800,7 +798,6 @@ mu_cmd_find (MuConfig *opts)
 
 	if (!rv)
 		return MU_EXITCODE_ERROR;
-	else
-		return (count == 0) ?
-			MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
+
+	return count == 0 ? MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
 }
