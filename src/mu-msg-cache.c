@@ -17,15 +17,17 @@
 **
 */
 
-#include <mu-msg-flags.h>
-#include <mu-msg-prio.h>
-
+#include "mu-msg-flags.h"
+#include "mu-msg-prio.h"
 #include "mu-msg-cache.h"
+#include "mu-str.h"
 
 struct _MuMsgCache {
 
 	/* all string properties */
 	char *_str[MU_MSG_STRING_FIELD_ID_NUM];
+
+	GSList         *_refs;
 	
 	time_t		_timestamp, _date;
 	size_t		_size;
@@ -122,6 +124,49 @@ mu_msg_cache_str (MuMsgCache *cache, MuMsgFieldId mfid)
 }
  
 
+
+const GSList*
+mu_msg_cache_set_str_list (MuMsgCache *self, MuMsgFieldId mfid,
+			   GSList *lst, gboolean do_free)
+{
+	g_return_val_if_fail(self, NULL);
+	g_return_val_if_fail(mu_msg_field_is_string_list(mfid), NULL);
+		
+	switch (mfid) {
+	case MU_MSG_FIELD_ID_REFS:
+		if (is_allocated(self, mfid))
+			mu_str_free_list (self->_refs);
+		self->_refs = lst;
+		break;
+	default:
+		g_return_val_if_reached(NULL);
+		return NULL;
+	}
+	
+	set_cached (self, mfid);
+
+	if (do_free)
+		set_allocated (self, mfid);
+	else
+		reset_allocated (self, mfid);
+	
+	return lst;
+}
+
+
+const GSList*
+mu_msg_cache_str_list (MuMsgCache *self, MuMsgFieldId mfid)
+{
+	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
+
+	switch (mfid) {
+	case MU_MSG_FIELD_ID_REFS:
+		return self->_refs;
+	default:
+		g_return_val_if_reached(NULL);
+		return NULL;
+	}
+}
 
 
 gint64

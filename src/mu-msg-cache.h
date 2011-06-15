@@ -85,6 +85,30 @@ const char* mu_msg_cache_str (MuMsgCache *cache, MuMsgFieldId mfid);
 
 
 /**
+ * cache a string-list value
+ * 
+ * @param self a mumsgcache
+ * @param mfid the MessageFieldId for a string-list value
+ * @param lst the list
+ * @param do_free whether the cache should free this value (i.e, take ownership)
+ * 
+ * @return 
+ */
+const GSList* mu_msg_cache_set_str_list (MuMsgCache *self, MuMsgFieldId mfid,
+					 GSList *lst, gboolean do_free);
+
+/**
+ * get a string-list value from the cache
+ * 
+ * @param cache a MuMsgCache
+ * @param mfid the MessageFieldId for string-list value
+ * 
+ * @return a list, which should not be modified
+ */
+const GSList* mu_msg_cache_str_list (MuMsgCache *cache, MuMsgFieldId mfid);
+
+
+/**
  * add a numeric value to the cache
  * 
  * @param self a MuMsgCache ptr
