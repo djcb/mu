@@ -134,6 +134,7 @@ mu_msg_cache_set_str_list (MuMsgCache *self, MuMsgFieldId mfid,
 		
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_REFS:
+	case MU_MSG_FIELD_ID_TAGS:
 		if (is_allocated(self, mfid))
 			mu_str_free_list (self->_refs);
 		self->_refs = lst;
