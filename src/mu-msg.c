@@ -426,6 +426,14 @@ mu_msg_get_references (MuMsg *self)
 }
 
 
+const GSList*
+mu_msg_get_tags (MuMsg *self)
+{
+	g_return_val_if_fail (self, NULL);
+	return get_str_list_field (self, MU_MSG_FIELD_ID_TAGS);
+}
+
+
 const char*
 mu_msg_get_field_string (MuMsg *self, MuMsgFieldId mfid)
 {

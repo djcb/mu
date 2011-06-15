@@ -714,6 +714,18 @@ get_references (MuMsgFile *self)
 
 
 
+static GSList*
+get_tags (MuMsgFile *self)
+{
+	GMimeObject *obj;
+	
+	obj = GMIME_OBJECT(self->_mime_msg);
+
+	return mu_str_to_list (g_mime_object_get_header
+			       (obj, "X-Label"), ',');	
+}
+
+
 char*
 mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free)
 {
@@ -774,14 +786,13 @@ mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId mfid,
 	case MU_MSG_FIELD_ID_REFS:
 		*do_free = TRUE;
 		return get_references (self);
-		
+	case MU_MSG_FIELD_ID_TAGS:
+		*do_free = TRUE;
+		return get_tags (self);
 	default:
 		g_return_val_if_reached (NULL);
 	}
 }
-
-
-
 
 
 gint64

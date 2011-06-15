@@ -322,14 +322,23 @@ const char* mu_msg_get_header (MuMsg *self, const char *header);
 
 
 /**
- * get the list of references as a comma-separated string
+ * get the list of references
  * 
  * @param msg a valid MuMsg
  * 
- * @return a comma-separated string with the references or NULL if
- * there are none. Don't modify/free
+ * @return a list with the references for this msg. Don't modify/free
  */
-const char* mu_msg_get_references_str (MuMsg *msg);
+const GSList* mu_msg_get_references (MuMsg *msg);
+
+/**
+ * get the list of tags
+ * 
+ * @param msg a valid MuMsg
+ * 
+ * @return a list with the tags for this msg. Don't modify/free
+
+ */
+const GSList* mu_msg_get_tags (MuMsg *self);
 
 
 enum _MuMsgContactType {  /* Reply-To:? */

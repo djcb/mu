@@ -44,6 +44,7 @@ enum _MuMsgFieldId {
 
 	/* string list items... */
 	MU_MSG_FIELD_ID_REFS,
+	MU_MSG_FIELD_ID_TAGS,
 	
 	/* then the numerical ones */
 	MU_MSG_FIELD_ID_DATE,

@@ -62,9 +62,9 @@ struct _MuMsgField {
 	MuMsgFieldId    _id;		/* the id of the field */
 	MuMsgFieldType  _type;		/* the type of the field */
 	const char     *_name;		/* the name of the field */
-	const char     _shortcut;	/* the shortcut for use in
+	const char      _shortcut;	/* the shortcut for use in
 					 * --fields and sorting */
-	const char     _xprefix;	/* the Xapian-prefix  */ 
+	const char      _xprefix;	/* the Xapian-prefix  */ 
 	FieldFlags      _flags;		/* the flags that tells us
 					 * what to do */
 };
@@ -195,17 +195,26 @@ static const MuMsgField FIELD_DATA[] = {
 	{ 
 		MU_MSG_FIELD_ID_TIMESTAMP,
 		MU_MSG_FIELD_TYPE_TIME_T,
-		"timestamp", 'x', 0,
+		"timestamp", 0, 0,
 		FLAG_GMIME 
 	},
 
 	{ 
 		MU_MSG_FIELD_ID_REFS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
-		"refs", 'r', 'R',
+		NULL, 'r', 'R',
 		FLAG_GMIME | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY
+	},
+
+	{ 
+		MU_MSG_FIELD_ID_TAGS,
+		MU_MSG_FIELD_TYPE_STRING_LIST,
+		"tag", 'x', 'X',
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
+		FLAG_XAPIAN_PREFIX_ONLY
 	}
+	
 };
 
 /* the MsgField data in an array, indexed by the MsgFieldId;
