@@ -189,6 +189,42 @@ get_msg_file (MuMsg *self)
 }
 
 
+static const GSList*
+get_str_list_field (MuMsg *self, MuMsgFieldId mfid)
+{
+	gboolean do_free;
+	GSList *val;
+
+	/* first we try the cache */
+	if (mu_msg_cache_cached (self->_cache, mfid))
+		return mu_msg_cache_str_list (self->_cache, mfid);
+
+	/* if it's not in the cache but it is a value retrievable from
+	 * the doc backend, use that */
+	val = NULL;
+	if (self->_doc && mu_msg_field_xapian_value (mfid))
+		val = mu_msg_doc_get_str_list_field (self->_doc,
+						     mfid, &do_free);
+	else {
+		/* if we don't have a file object yet, we need to
+		 * create it from the file on disk */
+		if (!self->_file)
+			self->_file = get_msg_file (self);
+		if (!self->_file && !(self->_file = get_msg_file (self)))
+			return NULL;
+		val = mu_msg_file_get_str_list_field (self->_file, mfid,
+						      &do_free);
+	}
+		
+	/* if we get a string that needs freeing, we tell the cache to
+	 * mark the string as such, so it will be freed when the cache
+	 * is freed (or when the value is overwritten) */
+	return mu_msg_cache_set_str_list (self->_cache, mfid, val,
+					  do_free);
+}
+
+
+
 
 static const char*
 get_str_field (MuMsg *self, MuMsgFieldId mfid)
@@ -382,11 +418,11 @@ mu_msg_get_body_text (MuMsg *self)
 }
 
 
-const char*
-mu_msg_get_references_str (MuMsg *self)
+const GSList*
+mu_msg_get_references (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
-	return get_str_field (self, MU_MSG_FIELD_ID_REFS);
+	return get_str_list_field (self, MU_MSG_FIELD_ID_REFS);
 }
 
 
@@ -396,6 +432,16 @@ mu_msg_get_field_string (MuMsg *self, MuMsgFieldId mfid)
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, mfid);
 }
+
+
+const GSList*
+mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid)
+{
+	g_return_val_if_fail (self, NULL);
+	return get_str_list_field (self, mfid);
+}
+
+
 
 gint64
 mu_msg_get_field_numeric (MuMsg *self, MuMsgFieldId mfid)

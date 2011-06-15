@@ -265,6 +265,16 @@ const char*  mu_msg_get_field_string  (MuMsg *msg, MuMsgFieldId mfid);
 
 
 /**
+ * get some field value as string-list
+ * 
+ * @param msg a valid MuMsg instance
+ * @param field the field to retrieve; it must be a string-list-typed field
+ * 
+ * @return a list that should not be freed
+ */
+const GSList* mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid);
+
+/**
  * get some field value as string
  * 
  * @param msg a valid MuMsg instance
