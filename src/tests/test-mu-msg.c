@@ -241,6 +241,37 @@ test_mu_msg_05 (void)
 }
 
 
+static void
+test_mu_msg_tags (void)
+{
+	MuMsg *msg;
+	const GSList *tags;
+	
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
+				    "/bar/cur/mail1",
+				    NULL, NULL);
+
+	g_assert_cmpstr (mu_msg_get_to(msg),
+			 ==, "Julius Caesar <jc@example.com>");
+	g_assert_cmpstr (mu_msg_get_subject(msg),
+			 ==, "Fere libenter homines id quod volunt credunt");
+	g_assert_cmpstr (mu_msg_get_from(msg),
+			 ==, "John Milton <jm@example.com>");
+	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
+			  ==, MU_MSG_PRIO_HIGH);
+	g_assert_cmpuint (mu_msg_get_date(msg),
+			  ==, 1217530645);
+
+	tags = mu_msg_get_tags (msg);
+	g_assert_cmpstr ((char*)tags->data,==,"paradise");
+	g_assert_cmpstr ((char*)tags->next->data,==,"lost");
+	g_assert (tags->next->next == NULL);
+	
+	mu_msg_unref (msg);
+}
+
+
+
 /* static gboolean */
 /* ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg, */
 /* 	      gpointer user_data) */
@@ -266,7 +297,9 @@ main (int argc, char *argv[])
 			 test_mu_msg_04);
 	g_test_add_func ("/mu-msg/mu-msg-05",
 			 test_mu_msg_05);
-			
+	g_test_add_func ("/mu-msg/mu-msg-tags",
+			 test_mu_msg_tags);
+	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
