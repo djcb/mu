@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
 
-AC_INIT([mu],[0.9.6],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.7],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -147,7 +147,7 @@ AC_SUBST(XAPIAN_LIBS)
 # note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.6"], ['Schema' version of the database])
+AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.7"], ['Schema' version of the database])
 
 AC_ARG_WITH([gui],
    [AS_HELP_STRING([--with-gui=gtk2|gtk3|none])],
