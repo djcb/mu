@@ -381,17 +381,25 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 			       MuMsgFieldId mfid)
 {
 	const GSList *lst;
-	gchar *str;
-	
+
 	lst = mu_msg_get_field_string_list (msg, mfid);
-	if (!lst)
-		return; /* nothing to do */
 	
-	str = mu_str_from_list (lst, ',');
-	if (!str)
-		return; /* nothing to do */
-	
-	add_terms_values_str (doc, str, mfid);
+	if (lst && mu_msg_field_xapian_value (mfid)) {
+		gchar *str;
+		str = mu_str_from_list (lst, ',');
+		if (str)
+			doc.add_value ((Xapian::valueno)mfid, str);
+		g_free (str);
+	}
+
+	if (lst && mu_msg_field_xapian_term (mfid)) {
+		while (lst) {
+			doc.add_term (prefix(mfid) +
+				      std::string((char*)lst->data, 0,
+						  MU_STORE_MAX_TERM_LENGTH));
+			lst = g_slist_next ((GSList*)lst);
+		}
+	}
 }
 
 	
