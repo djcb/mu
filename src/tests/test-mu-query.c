@@ -385,6 +385,34 @@ test_mu_query_attach (void)
 }
 
 
+static void
+test_mu_query_tags (void)
+{
+	gchar *xpath;
+	int i;
+	
+	QResults queries[] = {
+		{ "x:paradise", 1},
+		{ "tag:lost", 1},
+		{ "tag:lost tag:paradise", 1},
+		{ "tag:lost tag:horizon", 0},
+		{ "tag:lost OR tag:horizon", 1},
+		{ "x:paradise,lost", 0},
+	};
+	
+	xpath = fill_database (MU_TESTMAILDIR2);
+	g_assert (xpath != NULL);
+
+	/* g_print ("(%s)\n", xpath); */
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+
+	g_free (xpath);	
+}
+
+
 
 
 int
@@ -409,7 +437,9 @@ main (int argc, char *argv[])
 			 test_mu_query_dates);
 	g_test_add_func ("/mu-query/test-mu-query-attach",
 			 test_mu_query_attach);
-
+	g_test_add_func ("/mu-query/test-mu-query-tags",
+			 test_mu_query_tags);
+	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
