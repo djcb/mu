@@ -1,5 +1,4 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
 ** Copyright (C) 2010-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -97,8 +96,10 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 	const char *field;
 	gchar *attachs;
 	time_t date;
+	const GSList *lst;
 	const int SUMMARY_LEN = 5;
 
+	
 	print_field ("From", mu_msg_get_from (msg), color);
 	print_field ("To",   mu_msg_get_to (msg), color);
 	print_field ("Cc",   mu_msg_get_cc (msg), color);
@@ -109,6 +110,13 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 		print_field ("Date", mu_str_date_s ("%c", date),
 			     color);
 
+	if ((lst = mu_msg_get_tags (msg))) {
+		gchar *tags;
+		tags = mu_str_from_list (lst,',');
+		print_field ("Tags", tags, color);
+		g_free (tags);
+	}
+	
 	if ((attachs = get_attach_str (msg))) {
 		print_field ("Attachments", attachs, color);
 		g_free (attachs);
