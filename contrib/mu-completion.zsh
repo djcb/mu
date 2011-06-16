@@ -35,7 +35,7 @@ _mu_commands() {
 _mu_common_options=(
     '--debug[output information useful for debugging mu]'
     '--quiet[do not give any non-critical information]'
-    '--no-color[do not use any colors in the output]'
+    '--color[use colors in some of the output]'
     '--version[display mu version and copyright information]'
     '--log-stderr[log to standard error]'
 )
