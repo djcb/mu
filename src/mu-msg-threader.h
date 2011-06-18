@@ -28,12 +28,7 @@
 
 G_BEGIN_DECLS
 
-struct _MuMsgThreader;
-typedef struct _MuMsgThreader MuMsgThreader;
-
-MuMsgThreader *mu_msg_threader_new (void);
-void mu_msg_threader_destroy (MuMsgThreader *self);
-gboolean mu_msg_threader_calculate (MuMsgThreader *self, MuMsgIter *iter);
+GHashTable *mu_msg_threader_calculate (MuMsgIter *iter);
 
 G_END_DECLS
 
