@@ -33,13 +33,14 @@ typedef struct _MuMsgDoc MuMsgDoc;
  * 
  * @param doc a Xapian::Document* (you'll need to cast the
  * Xapian::Document* to XapianDocument*, because only C (not C++) is
- * allowed in this header file.
+ * allowed in this header file. MuMsgDoc takes _ownership_ of this pointer;
+ * don't touch it afterwards
  * @param err receives error info, or NULL
  * 
  * @return a new MuMsgDoc instance (free with mu_msg_doc_destroy), or
  * NULL in case of error.
  */
-MuMsgDoc* mu_msg_doc_new (const XapianDocument *doc, GError **err)
+MuMsgDoc* mu_msg_doc_new (XapianDocument *doc, GError **err)
 	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
@@ -65,7 +66,8 @@ void mu_msg_doc_destroy (MuMsgDoc *self);
  * 
  * @return a string for the given field (see do_free), or NULL in case of error
  */
-gchar* mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid, gboolean *do_free)
+gchar* mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid,
+				 gboolean *do_free)
           G_GNUC_WARN_UNUSED_RESULT;
 
 /**

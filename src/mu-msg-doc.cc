@@ -29,21 +29,22 @@
 #include "mu-str.h"
 
 struct _MuMsgDoc {
-	_MuMsgDoc (const Xapian::Document& doc) : _doc (doc) {}
-	const Xapian::Document doc() const { return _doc; }
+	_MuMsgDoc (Xapian::Document *doc) : _doc (doc) {}
+	~_MuMsgDoc () { delete _doc; }
+	const Xapian::Document doc() const { return *_doc; }
 private:	
-	const Xapian::Document& _doc; 
+	Xapian::Document *_doc; 
 	
 };
 
 
 MuMsgDoc*
-mu_msg_doc_new (const XapianDocument *doc, GError **err)
+mu_msg_doc_new (XapianDocument *doc, GError **err)
 {
 	g_return_val_if_fail (doc, NULL);
 	
 	try {
-		return new MuMsgDoc ((const Xapian::Document&)*doc);
+		return new MuMsgDoc ((Xapian::Document*)doc);
 			
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, NULL);
 
@@ -61,7 +62,8 @@ mu_msg_doc_destroy (MuMsgDoc *self)
 
 
 gchar*
-mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid, gboolean *do_free)
+mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid,
+			  gboolean *do_free)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
@@ -72,7 +74,7 @@ mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid, gboolean *do_free)
 	try {
 		const std::string s (self->doc().get_value(mfid));
 		return s.empty() ? NULL : g_strdup (s.c_str());
-
+		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
@@ -94,8 +96,6 @@ mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid,
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
-
-
 
 
 gint64
