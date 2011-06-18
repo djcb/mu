@@ -551,6 +551,26 @@ print_summary (MuMsgIter *iter)
 }
 
 
+static void
+indent (MuMsgIter *iter)
+{
+	const char* threadpath;
+	int i;
+	
+	threadpath = mu_msg_iter_get_thread_path (iter);
+	if (!threadpath)
+		return;
+	
+	fputs (threadpath, stdout);
+	
+	/* count the colons... */
+	for (i = 0; *threadpath; ++threadpath)
+		i += (*threadpath == ':') ? 1 : 0;
+
+	/* indent */
+	while (i --> -1)
+		fputs ("  ", stdout);
+}
 
 static gboolean
 output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
@@ -567,6 +587,8 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 		
 		const char* myfields;
 		int len;
+
+		indent (myiter);
 		
 		for (myfields = fields, len = 0; *myfields; ++myfields) {
 			MuMsgFieldId mfid;
