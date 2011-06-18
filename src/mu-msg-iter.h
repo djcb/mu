@@ -117,6 +117,9 @@ MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
 unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 
 
+
+const char* mu_msg_iter_get_thread_path (MuMsgIter *iter);
+
 /**
  * get some message field
  * 
