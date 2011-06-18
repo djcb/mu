@@ -692,12 +692,40 @@ get_msgids_reverted (MuMsgFile *self, const gchar *header)
 	return msgids;
 }
 
+static GSList*
+remove_dups (GSList *refs)
+{
+	GHashTable *hash;
+	GSList *cur, *oldcur;
+	
+	hash = g_hash_table_new (g_str_hash, g_str_equal);
+
+	for (oldcur = NULL, cur = refs; cur; cur = g_slist_next (cur)) {
+		/* already seen? note, the first one cannot be a dup,
+		 * so oldcur won't be NULL, and refs stays valid */
+		if (g_hash_table_lookup (hash, (gchar*)cur->data)) {
+			oldcur->next = cur->next;
+			cur->next = NULL;
+			g_slist_free (cur);
+			cur = oldcur;
+			continue;
+		}
+		g_hash_table_insert (hash, (gchar*)cur->data,
+				     GUINT_TO_POINTER(TRUE));
+		oldcur = cur;
+	}
+
+	g_hash_table_destroy (hash);
+
+	return refs;
+}
+
 
 GSList*
 get_references (MuMsgFile *self)
 {
 	GSList *refs, *inreply;
-	
+
 	g_return_val_if_fail (self, NULL);
 
 	refs = get_msgids_reverted (self, "References");
@@ -710,7 +738,9 @@ get_references (MuMsgFile *self)
 		g_slist_foreach (inreply, (GFunc)g_free, NULL);
 		g_slist_free (inreply);
 	}
-				 
+
+	refs = remove_dups (refs);
+	
 	/* put in proper order */
 	return g_slist_reverse (refs);
 }
