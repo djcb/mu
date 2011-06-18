@@ -31,6 +31,7 @@
 
 #include "test-mu-common.h"
 #include "src/mu-msg.h"
+#include "src/mu-str.h"
 
 static gboolean
 check_contact_01 (MuMsgContact *contact, int *idx)
@@ -275,7 +276,8 @@ static void
 test_mu_msg_comp_unix_programmer (void)
 {
 	MuMsg *msg;
-
+	char *refs;
+	
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
 				    "bar/cur/181736.eml", NULL, NULL); 
 
@@ -287,8 +289,9 @@ test_mu_msg_comp_unix_programmer (void)
 			 ==, "Jimbo Foobarcuux <jimbo@slp53.sl.home>");
 	g_assert_cmpstr (mu_msg_get_msgid(msg),			 
 			 ==, "oktdp.42997$Te.22361@news.usenetserver.com");
-	
-	g_assert_cmpstr (mu_msg_get_references_str(msg), ==,
+
+	refs = mu_str_from_list (mu_msg_get_references(msg), ',');
+	g_assert_cmpstr (refs, ==,
 			 "e9065dac-13c1-4103-9e31-6974ca232a89@t15g2000prt.googlegroups.com,"
 			 "87hbblwelr.fsf@sapphire.mobileactivedefense.com,"
 			 "pql248-4va.ln1@wilbur.25thandClement.com,"
@@ -300,6 +303,7 @@ test_mu_msg_comp_unix_programmer (void)
 			 "tO8cp.1228$GE6.370@news.usenetserver.com,"
 			 "ikr6ks$nlf$1@Iltempo.Update.UU.SE,"
 			 "8ioh48-8mu.ln1@leafnode-msgid.gclare.org.uk");
+	g_free (refs);
 	
 	//"jimbo@slp53.sl.home (Jimbo Foobarcuux)";
 	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
@@ -333,8 +337,6 @@ main (int argc, char *argv[])
 			 test_mu_msg_03);
 	g_test_add_func ("/mu-msg/mu-msg-04",
 			 test_mu_msg_04);
-	g_test_add_func ("/mu-msg/mu-msg-05",
-			 test_mu_msg_05);
 	g_test_add_func ("/mu-msg/mu-msg-tags",
 			 test_mu_msg_tags);
 	g_test_add_func ("/mu-msg/mu-msg-umlaut",

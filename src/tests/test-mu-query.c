@@ -58,6 +58,27 @@ fill_database (const char *testdir)
 	return xpath;
 }
 
+static void
+assert_no_dups (MuMsgIter *iter)
+{
+	GHashTable *hash;
+
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+				      (GDestroyNotify)g_free, NULL);
+
+	mu_msg_iter_reset (iter);
+	while (!mu_msg_iter_is_done(iter)) {
+		MuMsg *msg = mu_msg_iter_get_msg (iter, NULL);
+		/* make sure there are no duplicates */
+		g_assert (!g_hash_table_lookup (hash, mu_msg_get_path (msg)));
+		g_hash_table_insert (hash, g_strdup (mu_msg_get_path(msg)),
+				     GUINT_TO_POINTER(TRUE));
+		mu_msg_iter_next (iter);
+	}
+	mu_msg_iter_reset (iter);
+	g_hash_table_destroy (hash);
+}
+
 
 /* note: this also *moves the iter* */
 static guint
@@ -66,6 +87,7 @@ run_and_count_matches (const char *xpath, const char *query)
 	MuQuery  *mquery;
 	MuMsgIter *iter;
 	guint count1, count2;
+	GHashTable *hash;
 	
 	mquery = mu_query_new (xpath, NULL);
 	g_assert (query);
@@ -85,11 +107,18 @@ run_and_count_matches (const char *xpath, const char *query)
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+				      (GDestroyNotify)g_free, NULL);
+
+	assert_no_dups (iter);
+	
 	/* run query twice, to test mu_msg_iter_reset */
-	for (count1 = 0; !mu_msg_iter_is_done(iter);
+	for (count1 = 0; !mu_msg_iter_is_done(iter); 
 	     mu_msg_iter_next(iter), ++count1);
 
-	g_assert(mu_msg_iter_reset (iter));
+	mu_msg_iter_reset (iter);
+	
+	assert_no_dups (iter);
 	
 	for (count2 = 0; !mu_msg_iter_is_done(iter);
 	     mu_msg_iter_next(iter), ++count2);
@@ -448,9 +477,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-tags",
 			 test_mu_query_tags);
 	
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)black_hole, NULL);
+	/* g_log_set_handler (NULL, */
+	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
+	/* 		   (GLogFunc)black_hole, NULL); */
 
 	rv = g_test_run ();
 	
