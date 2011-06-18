@@ -294,6 +294,19 @@ GSList* mu_str_to_list (const char *str, char sepa);
  */
 void mu_str_free_list (GSList *lst);
 
+
+
+/**
+ * strip the subject of Re:, Fwd: etc.
+ * 
+ * @param str a subject string
+ * 
+ * @return a new string -- this is pointing somewhere inside the @str;
+ * no copy is made, don't free
+ */
+const gchar* mu_str_subject_normalize (const gchar* str);
+
+
 /**
  * guess some nick name for the given name; if we can determine an
  * first name, last name, the nick will be first name + the first char

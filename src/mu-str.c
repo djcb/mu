@@ -429,6 +429,21 @@ mu_str_free_list (GSList *lst)
 	g_slist_free (lst);	
 }
 
+const gchar*
+mu_str_subject_normalize (const gchar* str)
+{
+	gchar *last_colon;
+	g_return_val_if_fail (str, NULL);
+
+	/* FIXME: improve this */
+	last_colon = g_strrstr (str, ":");
+	if (!last_colon)
+		return str;
+	else
+		return g_strchug (last_colon + 1);
+}
+
+
 
 /*
  * Xapian treats various characters such as '@', '-', ':' and '.'
