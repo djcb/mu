@@ -62,14 +62,14 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 		return NULL;
 	
 	self = msg_new ();
-	self->_file	= msgfile;
+	self->_file = msgfile;
 		
 	return self;
 }
 
 
 MuMsg*
-mu_msg_new_from_doc (const XapianDocument* doc, GError **err)
+mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 {
 	MuMsg *self;
 	MuMsgDoc *msgdoc;
@@ -81,7 +81,7 @@ mu_msg_new_from_doc (const XapianDocument* doc, GError **err)
 		return NULL;
 
 	self = msg_new ();
-	self->_doc	= msgdoc;
+	self->_doc = msgdoc;
 			
 	return self;
 }
@@ -241,7 +241,7 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 	val = NULL;
 	if (self->_doc && mu_msg_field_xapian_value (mfid))
 		val = mu_msg_doc_get_str_field (self->_doc, mfid, &do_free);
-	else {
+	else if (mu_msg_field_gmime (mfid)) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
 		if (!self->_file)
@@ -249,6 +249,9 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 		if (!self->_file && !(self->_file = get_msg_file (self)))
 			return NULL;
 		val = mu_msg_file_get_str_field (self->_file, mfid, &do_free);
+	} else {
+		g_warning ("%s: cannot retrieve field", __FUNCTION__);
+		return NULL;
 	}
 		
 	/* if we get a string that needs freeing, we tell the cache to

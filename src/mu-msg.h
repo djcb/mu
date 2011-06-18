@@ -56,14 +56,15 @@ MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
  * create a new MuMsg* instance based on a Xapian::Document
  *
  * @param doc a ptr to a Xapian::Document (but cast to XapianDocument,
- * because this is C not C++)
+ * because this is C not C++). MuMsg takes _ownership_ of this pointer;
+ * don't touch it afterwards
  * @param err receive error information, or NULL. There
  * will only be err info if the function returns NULL
  * 
  * @return a new MuMsg instance or NULL in case of error; call
  * mu_msg_unref when done with this message
  */
-MuMsg *mu_msg_new_from_doc (const XapianDocument* doc, GError **err)
+MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
                                     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -323,13 +324,18 @@ const char* mu_msg_get_header (MuMsg *self, const char *header);
 
 /**
  * get the list of references, with the direct parent as the final
- * one; this final one is typically the 'In-reply-to' field
+ * one; this final one is typically the 'In-reply-to' field. Note, any
+ * reference (message-id) will appear at most once, duplicates are
+ * filtered out.
  * 
  * @param msg a valid MuMsg
  * 
  * @return a list with the references for this msg. Don't modify/free
  */
 const GSList* mu_msg_get_references (MuMsg *msg);
+
+
+
 
 
 /**
