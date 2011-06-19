@@ -44,11 +44,12 @@ typedef struct _MuMsgIter MuMsgIter;
  * @param enq a Xapian::Enquire* cast to XapianEnquire* (because this
  * is C, not C++),providing access to search results
  * @param batchsize how many results to retrieve at once
+ * @param threads whether to calculate threads
  * 
  * @return a new MuMsgIter, or NULL in case of error
  */
 MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
-			    size_t batchsize) G_GNUC_WARN_UNUSED_RESULT;
+			    size_t batchsize, gboolean threads) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the next message (which you got from
@@ -117,7 +118,23 @@ MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
 unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 
 
+/**
+ * calculate the message threads
+ * 
+ * @param iter a valid MuMsgIter iterator 
+ * 
+ * @return TRUE if it worked, FALSE otherwsie.
+ */
+gboolean mu_msg_iter_calculate_threads (MuMsgIter *iter);
 
+
+/**
+ * get a sortable string describing the path of a thread
+ * 
+ * @param iter a valid MuMsgIter iterator 
+ * 
+ * @return a thread path
+ */
 const char* mu_msg_iter_get_thread_path (MuMsgIter *iter);
 
 /**

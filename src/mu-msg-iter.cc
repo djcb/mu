@@ -51,14 +51,14 @@ private:
 
 
 struct _MuMsgIter {
-	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum):
+	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum, gboolean threads):
 		_enq(enq), _msg(0), _threadhash (0) {
 		
 		_matches = _enq.get_mset (0, maxnum);
 
-		if (!_matches.empty()) { 
+		if (threads && !_matches.empty()) { 
 			_matches.fetch();
-			_threadhash = mu_msg_threader_calculate (this);
+			_threadhash = mu_msg_threader_calculate (this, _matches.size());
 			ThreadKeyMaker keymaker(_threadhash);
 			enq.set_sort_by_key (&keymaker, false);
 			_matches = _enq.get_mset (0, maxnum);
@@ -76,7 +76,8 @@ struct _MuMsgIter {
 		if (_msg)
 			mu_msg_unref (_msg);
 
-		g_hash_table_destroy (_threadhash);
+		if (_threadhash)
+			g_hash_table_destroy (_threadhash);
 	}
 	
 	const Xapian::Enquire		_enq;
@@ -90,12 +91,12 @@ struct _MuMsgIter {
 
 
 MuMsgIter*
-mu_msg_iter_new (XapianEnquire *enq, size_t maxnum)
+mu_msg_iter_new (XapianEnquire *enq, size_t maxnum, gboolean threads)
 {
 	g_return_val_if_fail (enq, NULL);
 	
 	try {
-		return new MuMsgIter ((Xapian::Enquire&)*enq, maxnum);
+		return new MuMsgIter ((Xapian::Enquire&)*enq, maxnum, threads);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
