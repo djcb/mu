@@ -1,3 +1,4 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -50,7 +51,7 @@ enum {
 
 typedef struct _MugMsgListViewPrivate MugMsgListViewPrivate;
 struct _MugMsgListViewPrivate {
-	GtkListStore *_store;
+	GtkTreeStore *_store;
 	char *_xpath;
 	char *_query;
 };
@@ -182,7 +183,7 @@ mug_msg_list_view_init (MugMsgListView * obj)
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE (obj);
 
 	priv->_xpath = priv->_query = NULL;
-	priv->_store = gtk_list_store_new (MUG_N_COLS, G_TYPE_STRING,	/* date */
+	priv->_store = gtk_tree_store_new (MUG_N_COLS, G_TYPE_STRING,	/* date */
 					   G_TYPE_STRING,/* folder */
 					   G_TYPE_STRING,/* flagstr */
 					   G_TYPE_STRING, /* from */
@@ -192,7 +193,7 @@ mug_msg_list_view_init (MugMsgListView * obj)
 					   G_TYPE_UINT,	/* prio */
 					   G_TYPE_UINT,	/* flags */
 					   G_TYPE_INT);	/* timeval */
-
+	
 	tview = GTK_TREE_VIEW (obj);
 	gtk_tree_view_set_model (tview, GTK_TREE_MODEL (priv->_store));
 	gtk_tree_view_set_headers_clickable (GTK_TREE_VIEW (obj), TRUE);
@@ -334,8 +335,8 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 		return NULL;
 	}
 
-	iter =
-	    mu_query_run (xapian, query, MU_MSG_FIELD_ID_DATE, TRUE, &err);
+	iter = mu_query_run (xapian, query, FALSE, MU_MSG_FIELD_ID_DATE,
+			     TRUE, &err);
 	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("Error: %s", err->message);
@@ -350,7 +351,7 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 }
 
 static void
-add_row (GtkListStore * store, MuMsg *msg)
+add_row (GtkTreeStore * store, MuMsg *msg, const char *path)
 {
 	GtkTreeIter treeiter;
 	const gchar *datestr, *flagstr;
@@ -363,8 +364,15 @@ add_row (GtkListStore * store, MuMsg *msg)
 	to = empty_or_display_contact (mu_msg_get_to (msg));
 	flagstr = mu_msg_flags_str_s (mu_msg_get_flags (msg));
 
-	gtk_list_store_append (store, &treeiter);
-	gtk_list_store_set (store, &treeiter,
+	if (path) {
+		GtkTreeIter myiter;
+		if (!gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL(store),
+							  &myiter, path))
+			g_warning ("%s: cannot get iter for %s", __FUNCTION__, path);
+	}
+	
+	gtk_tree_store_append (store, &treeiter, NULL);
+	gtk_tree_store_set (store, &treeiter,
 			    MUG_COL_DATESTR, datestr,
 			    MUG_COL_MAILDIR, mu_msg_get_maildir (msg),
 			    MUG_COL_FLAGSSTR, flagstr,
@@ -380,7 +388,7 @@ add_row (GtkListStore * store, MuMsg *msg)
 }
 
 static int
-update_model (GtkListStore * store, const char *xpath, const char *query,
+update_model (GtkTreeStore *store, const char *xpath, const char *query,
 	      MugMsgListView * self)
 {
 	MuMsgIter *iter;
@@ -395,8 +403,10 @@ update_model (GtkListStore * store, const char *xpath, const char *query,
 	for (count = 0; !mu_msg_iter_is_done (iter);
 	     mu_msg_iter_next (iter), ++count) {
 		MuMsg *msg;
+		const char *path;
 		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
-		add_row (store, msg);
+		path = mu_msg_iter_get_thread_path (iter);
+		add_row (store, msg, path);
 	}
 
 	mu_msg_iter_destroy (iter);
@@ -413,7 +423,7 @@ mug_msg_list_view_query (MugMsgListView * self, const char *query)
 	g_return_val_if_fail (MUG_IS_MSG_LIST_VIEW (self), FALSE);
 
 	priv = MUG_MSG_LIST_VIEW_GET_PRIVATE (self);
-	gtk_list_store_clear (priv->_store);
+	gtk_tree_store_clear (priv->_store);
 
 	g_free (priv->_query);
 	priv->_query = query ? g_strdup (query) : NULL;

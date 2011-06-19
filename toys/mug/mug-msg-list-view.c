@@ -1,3 +1,4 @@
+/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -334,8 +335,8 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 		return NULL;
 	}
 
-	iter =
-	    mu_query_run (xapian, query, MU_MSG_FIELD_ID_DATE, TRUE, &err);
+	iter = mu_query_run (xapian, query, FALSE, MU_MSG_FIELD_ID_DATE,
+			     TRUE, &err);
 	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("Error: %s", err->message);
