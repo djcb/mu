@@ -102,7 +102,7 @@ run_and_count_matches (const char *xpath, const char *query)
 	/* 	g_free (xs); */
 	/* } */
 	
-	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE,
+	iter = mu_query_run (mquery, query, FALSE, MU_MSG_FIELD_ID_NONE,
 			     FALSE, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
@@ -267,7 +267,7 @@ test_mu_query_accented_chars_01 (void)
 	g_assert (xpath != NULL);
 
 	query = mu_query_new (xpath, NULL);
-	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
+	iter = mu_query_run (query, "fünkÿ", FALSE, MU_MSG_FIELD_ID_NONE,
 			     FALSE, NULL);
 	err = NULL;
 	msg = mu_msg_iter_get_msg (iter, &err); /* don't unref */
