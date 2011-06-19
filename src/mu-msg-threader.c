@@ -21,17 +21,46 @@
 #include "mu-msg-threader.h"
 #include "mu-str.h"
 
+
+/* msg threading implementation based on JWZ's algorithm, as described in:
+ *    http://www.jwz.org/doc/threading.html
+ *
+ * the implementation follows the terminology from that doc, so should
+ * be understandable from that... I did change things a bit though
+ *
+ * the end result of the threading operation is a hashtable which maps
+ * docids (ie., Xapian documents == messages) to 'thread paths'; a
+ * thread path is a string denoting the 2-dimensional place of a
+ * message in a list of messages,
+ *
+ * Msg1                        => 00000
+ * Msg2                        => 00001
+ *   Msg3 (child of Msg2)      => 00001:00000
+ *   Msg4 (child of Msg2)      => 00001:00001
+ *     Msg5 (child of Msg4)    => 00001:00001:00000
+ * Msg6                        => 00002
+ *   
+ * the padding-0's are added to make them easy to sort using strcmp
+ * 
+ */
+
+/* Container data structure, as seen in the JWZ-doc; one differences
+ * is that I use GSLists for the children, rather than 'next'
+ * pointers
+ *
+ * the _state is for pruning; when traversing the tree, i mark
+ * containers with NUKE or SPLICE, and then do it afterwards; that
+ * way, I don't have to change the very list I am iterating over...
+ *
+ * */
 enum _ContainerState { NUKE, SPLICE, OKAY };
 typedef enum _ContainerState ContainerState;
 
 struct _Container {
-
 	MuMsg			*_msg;
 	unsigned int		_docid;
-	
 	struct _Container	*_parent;
 	GSList			*_children;
-
 	ContainerState		_state;
 };
 typedef struct _Container	 Container;
@@ -39,8 +68,6 @@ typedef struct _Container	 Container;
 static Container *container_new       (MuMsg *msg, unsigned docid);
 static void       container_destroy   (Container *c);
 static void       container_dump (Container *c);
-
-
 /* breath-first recursive traversal */
 typedef gboolean (*ContainerTraverseFunc) (Container *c, guint level,
 					   gpointer user_data);
@@ -48,24 +75,26 @@ static gboolean  container_traverse  (Container *c,
 				      guint level,
 				      ContainerTraverseFunc func,
 				      gpointer user_data);
-static void container_add_child (Container *c, Container *child);
+static gboolean container_add_child (Container *c, Container *child);
 static void container_promote_child (Container *c, Container *child);
 static void container_remove_child (Container *c, Container *child);
+
+
+
 
 
 /* step 1 */ static GHashTable* create_containers (MuMsgIter *iter);
 /* step 2 */ static GSList *find_root_set (GHashTable *ids);
 static void prune_empty_containers (GSList *root_set);
 /* static void group_root_set_by_subject (GSList *root_set); */
-static void dump (GSList *root_set);
-GHashTable* create_doc_id_thread_path_hash (GSList *root_set);
+GHashTable* create_doc_id_thread_path_hash (GSList *root_set, size_t match_num);
 
 /* msg threading algorithm, based on JWZ's algorithm,
  * http://www.jwz.org/doc/threading.html */
 GHashTable*
-mu_msg_threader_calculate (MuMsgIter *iter)
+mu_msg_threader_calculate (MuMsgIter *iter, size_t matchnum)
 {
-	GHashTable *id_table;
+	GHashTable *id_table, *thread_ids;
 	GSList *root_set;
 
 	g_return_val_if_fail (iter, FALSE);
@@ -76,28 +105,29 @@ mu_msg_threader_calculate (MuMsgIter *iter)
 	/* step 2 */
 	root_set = find_root_set (id_table);
 	
-	/* step 3: skip until the end */
+	/* step 3: skip until the end; we still need to containers */
 
 	/* step 4: prune empty containers */
 	prune_empty_containers (root_set);
 
 	/* recalculate root set */
+	g_slist_free (root_set);
 	root_set = find_root_set (id_table);
-
-	g_printerr ("ROOT SET\n");
-	dump (root_set);
-	g_printerr ("===\n");
-
 	
 	/* step 5: group root set by subject */
 //	group_root_set_by_subject (root_set);
 
+	/* sort */
+	
+	
 	mu_msg_iter_reset (iter); /* go all the way back */
-
+	
+	/* finally, deliver the docid => thread-path hash */
+	thread_ids =  create_doc_id_thread_path_hash (root_set, matchnum);
 	g_hash_table_destroy (id_table); /* step 3*/
 
-	/* finally, deliver the docid => thread-path hash */
-	return create_doc_id_thread_path_hash (root_set);
+	g_slist_free (root_set);
+	return thread_ids;
 }
 
 static gboolean
@@ -114,23 +144,8 @@ already_referenced (Container *c1, Container *c2)
 	notfound = container_traverse ((Container*)c1, 0,
 				       (ContainerTraverseFunc)check_exists,
 				       c2);
-	if (!notfound)
-		g_warning ("*** c2 found already!!");
 
 	return notfound ? FALSE : TRUE;
-}
-
-
-static void
-set_parent_child (Container *parent, Container *child)
-{
-	if (already_referenced(child, parent))
-		return;
-
-	container_add_child (parent, child);
-	
-	g_print ("%s: %p <--- %p\n", __FUNCTION__,
-		    (gpointer)parent, (gpointer)child);
 }
 
 
@@ -140,15 +155,13 @@ static Container*
 find_or_create (GHashTable *id_table, const char* msgid, unsigned docid)
 {
 	Container *c;
+
 	c = g_hash_table_lookup (id_table, msgid);
 	
 	if (!c) {
 		c = container_new (NULL, docid);
 		g_hash_table_insert (id_table, (gpointer)msgid, c);
-		g_warning ("registered: %s", msgid);
-
-	} else
-		g_warning ("already found: %s", msgid);
+	}
 
 	return c;
 }
@@ -173,7 +186,7 @@ handle_references (GHashTable *id_table, Container *c)
 		c1 = find_or_create (id_table, (gchar*)cur->data, 0);
 		c2 = find_or_create (id_table, (gchar*)cur->next->data, 0);
 		
-		set_parent_child (c1, c2);
+		container_add_child (c1, c2);
 	}
 	
 	/* now cur points to the final ref, which refers to our own
@@ -181,7 +194,7 @@ handle_references (GHashTable *id_table, Container *c)
 	if (cur) {
 		Container *parent;
 		parent = find_or_create (id_table, (gchar*)cur->data, 0);
-		set_parent_child (parent, c);
+		container_add_child (parent, c);
 	}
 }
 
@@ -213,7 +226,7 @@ create_containers (MuMsgIter *iter)
 		if (!msgid) {
 			const char* path;
 			path = mu_msg_get_path(msg);
-			g_warning ("msg without msgid %s", path);
+			/* g_warning ("msg without msgid %s", path); */
 			msgid = path; /* fake it... */
 		}
 		
@@ -260,8 +273,6 @@ static void
 do_pruning (GSList *containers)
 {
 	GSList *cur;
-
-	g_warning ("%s", __FUNCTION__);
 	
 	/* now, do stuff to our children... */
 	for (cur = containers; cur; cur = g_slist_next(cur)) {
@@ -270,14 +281,16 @@ do_pruning (GSList *containers)
 		child = (Container *)cur->data;
 				
 		if (child->_state == SPLICE) {
-			g_printerr ("SPLICE %p\n", (void*)child);
+			/* g_printerr ("SPLICE %p\n", (void*)child); */
 			container_promote_child (child->_parent, child);
-			container_remove_child (child->_parent, child);
+			//container_remove_child (child->_parent, child);
 
 		} else if (child->_state == NUKE) {
-			g_printerr ("NUKE %p\n", (void*)child);
+			/* g_printerr ("NUKE %p\n", (void*)child); */
 			container_remove_child (child->_parent, child);
  		}
+
+		child->_state = OKAY;
 	}
 }
 
@@ -287,27 +300,25 @@ static void
 prune_empty_nonroot (GSList *containers)
 {
 	GSList *cur;
-
-	g_warning ("%s (%d container(s))",
-		   __FUNCTION__, g_slist_length(containers));
 	
 	for (cur = containers; cur; cur = g_slist_next (cur)) {
 
 		Container *container;
-		g_warning ("cur: %p->%p", (void*)cur, (void*)cur->data);
-		
+			
 		container = (Container*)cur->data;
 
 		if (container->_children) {
 			prune_empty_nonroot (container->_children); /* recurse! */
 			do_pruning (container->_children);
 		}
+
+		/* don't touch containers with messages */
+		if (container->_msg)
+			continue; 
 		
-		/* A. If it is an empty container with no children, nuke it. */
-		if (!container->_msg && !container->_children) {
-			g_printerr ("setting %p to NUKE\n", (void*)container);
+		/* A. If it is an msg-less container with no children, nuke it. */
+		if (!container->_children) 
 			container->_state = NUKE;
-		}
 		
 		/* B. If the Container has no Message, but does have
 		 * children, remove this container but promote its
@@ -317,12 +328,9 @@ prune_empty_nonroot (GSList *containers)
 		 * Do not promote the children if doing so would
 		 * promote them to the root set -- unless there is
 		 * only one child, in which case, do. */
-		else if (!container->_msg && container->_children &&
-			 (container->_parent ||
-			  g_slist_length(container->_children) == 1)) {
-			g_printerr ("setting %p to SPLICE\n", (void*)container);
-			container->_state = SPLICE;
-		}
+		else if ((container->_parent ||
+			  g_slist_length(container->_children) == 1))
+			container->_state = SPLICE;	
 	}
 }
 
@@ -403,40 +411,54 @@ group_root_set_by_subject (GSList *root_set)
 #endif
 
 struct _ThreadInfo {
-	const char *parent_path, *prev_path;
 	GHashTable *hash;
-	unsigned seq, prev_level;
+	GQueue *idqueue;
+	unsigned prev_level;
 };
 typedef struct _ThreadInfo ThreadInfo;
+
+static void
+accumulate_path (int seq, char **threadpath)
+{
+	if (*threadpath) {
+		char *path;
+		path = g_strdup_printf ("%s:%05d", *threadpath, seq);
+		g_free (*threadpath);
+		*threadpath = path;
+	} else 
+		*threadpath = g_strdup_printf ("%05d", seq);
+}
 
 /* let's make a GtkTreePath compatible thread path */
 static gboolean
 add_thread_path (Container *c, guint level, ThreadInfo *ti)
 {
 	gchar *threadpath;
+	unsigned i;
+	
+	if (level > ti->prev_level) {
+		for (i = ti->prev_level; i != level; ++i)
+			g_queue_push_tail (ti->idqueue, GUINT_TO_POINTER(0));
+	} else if (level <= ti->prev_level) {
+		int oldseq;
 		
-	if (level == 0) 
-		threadpath = g_strdup_printf ("%05d", ti->seq++);
-	else {
-		/* see if we're the first on this level; if so, reset
-		 * the sequence to 0 */
-		if (ti->prev_level != level) {
-			ti->seq = 0;
-			ti->parent_path = ti->prev_path;
-		}
-		
-		threadpath = g_strdup_printf ("%s:%05d",
-					      ti->parent_path,
-					      ti->seq++);
+		/* level == ti->prev_level, the for-loop is void */
+		for (i = level; i != ti->prev_level; ++i)
+			(void)g_queue_pop_tail (ti->idqueue);
+
+		oldseq = GPOINTER_TO_UINT(g_queue_pop_tail(ti->idqueue));
+		g_queue_push_tail (ti->idqueue,GUINT_TO_POINTER(1 + oldseq));
 	}
 	
-	g_printerr ("[%s (%u)]\n", threadpath, level);
-	if (c->_docid)
+	threadpath = NULL;
+	g_queue_foreach (ti->idqueue, (GFunc)accumulate_path, &threadpath);
+	if (c->_docid) /* don't put empty (pseudo) in the hash */
 		g_hash_table_insert (ti->hash, GUINT_TO_POINTER(c->_docid),
 			     threadpath);
-
+	else
+		g_free (threadpath);
+	
 	ti->prev_level = level;
-	ti->prev_path  = threadpath;
 
 	return TRUE;
 }
@@ -444,7 +466,7 @@ add_thread_path (Container *c, guint level, ThreadInfo *ti)
 
 
 GHashTable*
-create_doc_id_thread_path_hash (GSList *root_set)
+create_doc_id_thread_path_hash (GSList *root_set, size_t matchnum)
 {
 	ThreadInfo ti;
 	GSList *cur;
@@ -454,44 +476,20 @@ create_doc_id_thread_path_hash (GSList *root_set)
 	ti.hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
 					 NULL,
 					 (GDestroyNotify)g_free);
-	ti.parent_path = ti.prev_path = "";
-	ti.prev_level = ti.seq = 0;
+
+	ti.idqueue    = g_queue_new ();
+	g_queue_push_tail (ti.idqueue, GUINT_TO_POINTER(0));
+
+	ti.prev_level = 0;
 	
 	for (i = 0, cur = root_set; cur; cur = g_slist_next (cur)) 
 		container_traverse ((Container*)cur->data, 0,
 				    (ContainerTraverseFunc)add_thread_path,
 				    &ti);
 
+	g_queue_free (ti.idqueue);
 	return ti.hash;
 }
-
-
-
-
-
-static void
-dump_container (Container *c, guint indent, gpointer p)
-{
-	while (indent--) 
-		fputs ("  ", stdout);
-
-	container_dump (c);
-}
-
-
-static void
-dump (GSList *root_set)
-{
-	GSList *cur;
-	int i;
-	
-	for (i = 0, cur = root_set ; cur ; cur = g_slist_next (cur)) {
-		container_traverse ((Container*)cur->data, 0,
-				    (ContainerTraverseFunc)dump_container,
-				    NULL);
-	}
-}
-
 
 
 static Container*
@@ -518,7 +516,10 @@ container_destroy (Container *c)
 	if (c->_msg)
 		mu_msg_unref (c->_msg);
 
-	//g_slice_free (Container, c);
+	/* free the list, not the children */
+	g_slist_free (c->_children);
+	
+	g_slice_free (Container, c);
 }
 
 
@@ -546,20 +547,20 @@ container_traverse (Container *c, guint level, ContainerTraverseFunc func,
 }
 
 
-static void
-container_add_child (Container *c, Container *child)
+static gboolean
+container_add_child (Container *parent, Container *child)
 {
-	g_return_if_fail (c != child);
-	g_return_if_fail (child);
+	g_return_val_if_fail (parent != child, FALSE);
+	g_return_val_if_fail (child, FALSE);
 
-	if (g_slist_find (c->_children, child)) {
-		g_warning ("%s: %p not adding dup child %p", __FUNCTION__,
-			   (void*)c, (void*)child);
-		return;
-	}
-	
-	child->_parent = c;
-	c->_children = g_slist_prepend (c->_children, child);
+	if (already_referenced(child, parent) ||
+	    already_referenced(parent, child))
+		return FALSE;
+	    
+	child->_parent	  = parent;
+	parent->_children = g_slist_prepend (parent->_children,
+					     child);
+	return TRUE;
 }
 
 
@@ -571,13 +572,13 @@ container_promote_child (Container *c, Container *child)
 	g_return_if_fail (c != child);
 	g_return_if_fail (child);
 	
-	for (iter = child->_children; iter; iter = g_slist_next(iter)) {
+	for (iter = child->_children; iter; iter = g_slist_next(iter)) 
 		/* reparent grandchildren */
 		((Container*)iter->data)->_parent = c;		
-		c->_children = g_slist_concat (c->_children,
-					       child->_children);
-		child->_children = NULL;
-	}
+
+	c->_children = g_slist_concat (c->_children,
+				       child->_children);
+	child->_children = NULL;
 }
 
 
@@ -587,12 +588,11 @@ container_remove_child (Container *c, Container *child)
 	g_return_if_fail (c != child);
 	g_return_if_fail (child);
 
-	c->_children =
-		g_slist_remove (c->_children, child);
+	c->_children = g_slist_remove (c->_children, child);
 }
 
 
-static void
+G_GNUC_UNUSED static void
 container_dump (Container *c)
 {
 	const char* state;

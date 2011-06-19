@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-GHashTable *mu_msg_threader_calculate (MuMsgIter *iter);
+GHashTable *mu_msg_threader_calculate (MuMsgIter *iter, size_t matches);
 
 G_END_DECLS
 
