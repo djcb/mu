@@ -162,6 +162,8 @@ config_options_group_find (MuConfig *opts)
 		 "fields to display in the output", NULL},
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
 		 "field to sort on", NULL},
+		{"threads", 't', 0, G_OPTION_ARG_NONE, &opts->threads,
+		 "show message threads", NULL},
 		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &opts->bookmark,
 		 "use a bookmarked query", NULL},
 		{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,

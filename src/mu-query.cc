@@ -333,7 +333,7 @@ mu_query_preprocess (const char *query)
 
 
 MuMsgIter*
-mu_query_run (MuQuery *self, const char* searchexpr,
+mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 	      MuMsgFieldId sortfieldid, gboolean ascending,
 	      GError **err)  
 {
@@ -363,7 +363,7 @@ mu_query_run (MuQuery *self, const char* searchexpr,
 		enq.set_cutoff(0,0);
 		
 		return mu_msg_iter_new ((XapianEnquire*)&enq,
-					self->_db.get_doccount());
+					self->_db.get_doccount(), threads);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

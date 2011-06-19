@@ -94,10 +94,11 @@ struct _MuConfig {
 					 * default */
 	int		max_msg_size;   /* maximum size for message files */
 	
-	/* options for querying  (and view-> 'summary') */
+	/* options for querying 'find' (and view-> 'summary') */
 	char		*fields;	/* fields to show in output */	
 	char	        *sortfield;	/* field to sort by (string) */
 	gboolean	 descending;	/* sort descending? */
+	gboolean	 threads;       /* show message threads */
 	gboolean	 summary;	/* include a summary? */
 	char            *bookmark;	/* use bookmark */
 	char		*formatstr;     /* output type
