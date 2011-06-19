@@ -60,8 +60,8 @@ static gboolean output_sexp (MuMsgIter *iter, size_t *count);
 static gboolean output_json (MuMsgIter *iter, size_t *count);
 static gboolean output_xml (MuMsgIter *iter, size_t *count);
 static gboolean output_plain (MuMsgIter *iter, const char *fields,
-				      gboolean summary,gboolean color,
-				      size_t *count);
+			      gboolean summary,gboolean threads,
+			      gboolean color, size_t *count);
 
 static OutputFormat
 get_output_format (const char *formatstr)
@@ -146,10 +146,10 @@ run_query_format (MuMsgIter *iter, MuConfig *opts,
 
 	case FORMAT_LINKS:
 		return output_links (iter, opts->linksdir, opts->clearlinks,
-					count);
+				     count);
 	case FORMAT_PLAIN: 
 		return output_plain (iter, opts->fields, opts->summary,
-					opts->color, count);
+				     opts->threads, opts->color, count);
 	case FORMAT_XML:
 		return output_xml (iter, count);
 	case FORMAT_JSON:
@@ -180,7 +180,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 	}
 
 	err  = NULL;
-	iter = mu_query_run (xapian, query, sortid,
+	iter = mu_query_run (xapian, query, opts->threads, sortid, 
 			     opts->descending ? FALSE : TRUE,
 			     &err);
 	if (!iter) {
@@ -561,20 +561,20 @@ indent (MuMsgIter *iter)
 	if (!threadpath)
 		return;
 	
-	fputs (threadpath, stdout);
+	/* fputs (threadpath, stdout); */
 	
 	/* count the colons... */
 	for (i = 0; *threadpath; ++threadpath)
 		i += (*threadpath == ':') ? 1 : 0;
 
 	/* indent */
-	while (i --> -1)
-		fputs ("  ", stdout);
+	while (i --> 0)
+		fputs ("    ", stdout);
 }
 
 static gboolean
 output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
-	      gboolean color, size_t *count)
+	      gboolean threads, gboolean color, size_t *count)
 {
 	MuMsgIter *myiter;
 	size_t mycount;
@@ -588,7 +588,8 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 		const char* myfields;
 		int len;
 
-		indent (myiter);
+		if (threads)
+			indent (myiter);
 		
 		for (myfields = fields, len = 0; *myfields; ++myfields) {
 			MuMsgFieldId mfid;
@@ -805,7 +806,7 @@ mu_cmd_find (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 
 	format = get_output_format (opts->formatstr);
-	xapian = get_query_obj ();
+	xapian = get_query_obj();
 	query  = get_query (opts);
 
 	if (!xapian ||!query)
