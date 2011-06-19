@@ -572,6 +572,39 @@ indent (MuMsgIter *iter)
 		fputs ("    ", stdout);
 }
 
+
+
+static size_t
+output_plain_fields (MuMsgIter *iter, const char *fields, gboolean color,
+		     gboolean threads)
+{
+	const char* myfields;
+	size_t len;
+			
+	if (threads)
+		indent (iter);
+		
+	for (myfields = fields, len = 0; *myfields; ++myfields) {
+
+		MuMsgFieldId mfid;
+		mfid =	mu_msg_field_id_from_shortcut (*myfields, FALSE);
+
+		if (mfid == MU_MSG_FIELD_ID_NONE ||
+		    (!mu_msg_field_xapian_value (mfid) &&
+		     !mu_msg_field_xapian_contact (mfid)))
+			len += printf ("%c", *myfields);
+
+		else {
+			ansi_color_maybe (mfid, color);
+				len += mu_util_fputs_encoded
+					(display_field (iter, mfid), stdout);
+				ansi_reset_maybe (mfid, color);
+		}
+	}
+
+	return len;
+}
+
 static gboolean
 output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 	      gboolean threads, gboolean color, size_t *count)
@@ -585,26 +618,9 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
 		
-		const char* myfields;
-		int len;
+		size_t len;
 
-		if (threads)
-			indent (myiter);
-		
-		for (myfields = fields, len = 0; *myfields; ++myfields) {
-			MuMsgFieldId mfid;
-			mfid =	mu_msg_field_id_from_shortcut (*myfields, FALSE);
-			if (mfid == MU_MSG_FIELD_ID_NONE ||
-			    (!mu_msg_field_xapian_value (mfid) &&
-			     !mu_msg_field_xapian_contact (mfid)))
-				len += printf ("%c", *myfields);
-			else {
-				ansi_color_maybe (mfid, color);
-				len += mu_util_fputs_encoded
-					(display_field (myiter, mfid), stdout);
-				ansi_reset_maybe (mfid, color);
-			}
-		}
+		len = output_plain_fields (iter, fields, color, threads);
 		
 		g_print (len > 0 ? "\n" : "");
 		if (summary)

@@ -88,17 +88,37 @@ print_field (const char* field, const char *val, gboolean color)
 }
 
 
+static void
+body_or_summary (MuMsg *msg, gboolean summary, gboolean color)
+{
+	const char* field;
+	const int SUMMARY_LEN = 5;
+	
+	field = mu_msg_get_body_text (msg);
+	if (!field)
+		return; /* no body -- nothing more to do */
+	
+	if (summary) {
+		gchar *summ;
+		summ = mu_str_summarize (field, SUMMARY_LEN);
+		print_field ("Summary", summ, color);
+		g_free (summ);
+	} else {
+		color_maybe (MU_COLOR_YELLOW);
+		mu_util_print_encoded ("\n%s\n", field);
+		color_maybe (MU_COLOR_DEFAULT);
+	}
+}
+
+
 /* we ignore fields for now */
 static gboolean
 view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 	  gboolean color)
 {
-	const char *field;
 	gchar *attachs;
 	time_t date;
 	const GSList *lst;
-	const int SUMMARY_LEN = 5;
-
 	
 	print_field ("From", mu_msg_get_from (msg), color);
 	print_field ("To",   mu_msg_get_to (msg), color);
@@ -121,21 +141,9 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 		print_field ("Attachments", attachs, color);
 		g_free (attachs);
 	}
-	
-	if (!(field = mu_msg_get_body_text (msg)))
-		return TRUE; /* no body -- nothing more to do */
-	
-	if (summary) {
-		gchar *summ;
-		summ = mu_str_summarize (field, SUMMARY_LEN);
-		print_field ("Summary", summ, color);
-		g_free (summ);
-	} else {
-		color_maybe (MU_COLOR_YELLOW);
-		mu_util_print_encoded ("\n%s\n", field);
-		color_maybe (MU_COLOR_DEFAULT);
-	}
-		
+
+	body_or_summary (msg, summary, color);
+
 	return TRUE;
 }
 
