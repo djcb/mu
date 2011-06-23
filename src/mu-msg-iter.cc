@@ -39,11 +39,11 @@ class ThreadKeyMaker: public Xapian::KeyMaker {
 public:
 	ThreadKeyMaker (GHashTable *threadinfo): _threadinfo(threadinfo) {}
 	virtual std::string operator()(const Xapian::Document &doc) const  {
-		const char *key;
-		key = (const char*)g_hash_table_lookup
+		MuMsgIterThreadInfo *ti;
+		ti = (MuMsgIterThreadInfo*)g_hash_table_lookup
 			(_threadinfo,
 			 GUINT_TO_POINTER(doc.get_docid()));		
-		return std::string (key ? key : "");
+		return std::string (ti && ti->threadpath ? ti->threadpath : "");
 	}
 private:
 	GHashTable *_threadinfo;	
@@ -58,7 +58,8 @@ struct _MuMsgIter {
 
 		if (threads && !_matches.empty()) { 
 			_matches.fetch();
-			_threadhash = mu_msg_threader_calculate (this, _matches.size());
+			_threadhash = mu_msg_threader_calculate
+				(this, _matches.size());
 			ThreadKeyMaker keymaker(_threadhash);
 			enq.set_sort_by_key (&keymaker, false);
 			_matches = _enq.get_mset (0, maxnum);
@@ -221,19 +222,26 @@ mu_msg_iter_get_docid (MuMsgIter *iter)
 }
 
 
-const char*
-mu_msg_iter_get_thread_path (MuMsgIter *iter)
+const MuMsgIterThreadInfo*
+mu_msg_iter_get_thread_info (MuMsgIter *iter)
 {
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 	g_return_val_if_fail (iter->_threadhash, NULL);
 
 	try {
+		const MuMsgIterThreadInfo *ti;
 		unsigned int docid;
+		
 		docid = mu_msg_iter_get_docid (iter);
+		ti    = (const MuMsgIterThreadInfo*)g_hash_table_lookup
+			(iter->_threadhash,
+			 GUINT_TO_POINTER(docid));
+
+		if (!ti)
+			g_printerr ("no ti for %u\n", docid);
 		
-		return  (const char*)g_hash_table_lookup
-			(iter->_threadhash, GUINT_TO_POINTER(docid));
-		
+		return ti;
+				
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
 

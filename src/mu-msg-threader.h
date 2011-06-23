@@ -28,7 +28,25 @@
 
 G_BEGIN_DECLS
 
+/**
+ * takes an iter and the total number of matches, and from this
+ * generates a hash-table with information about the thread structure
+ * of these matches.
+ *
+ * the algorithm to find this structure is based on JWZ's
+ * message-threading algorithm, as descrbed in:
+ *     http://www.jwz.org/doc/threading.html
+ *
+ * the returned hashtable maps the Xapian docid of iter (msg) to a ptr
+ * to a MuMsgIterThreadInfo structure (see mu-msg-iter.h)
+ *
+ * @param iter an iter; note this function will mu_msgi_iter_reset this iterator
+ * @param matches the number of matches in the set
+ * 
+ * @return a hashtable; free with g_hash_table_destroy when done with it
+ */	
 GHashTable *mu_msg_threader_calculate (MuMsgIter *iter, size_t matches);
+
 
 G_END_DECLS
 

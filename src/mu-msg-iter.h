@@ -128,14 +128,28 @@ unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 gboolean mu_msg_iter_calculate_threads (MuMsgIter *iter);
 
 
+enum _MuMsgIterThreadProp {
+	MU_MSG_ITER_THREAD_PROP_ROOT           = 1 << 0,
+	MU_MSG_ITER_THREAD_PROP_FIRST_CHILD    = 1 << 1,
+	MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT   = 1 << 2,
+	MU_MSG_ITER_THREAD_PROP_DUP            = 1 << 3
+};
+typedef guint8 MuMsgIterThreadProp;
+
+struct _MuMsgIterThreadInfo {
+	gchar *threadpath;
+	MuMsgIterThreadProp prop;
+};
+typedef struct _MuMsgIterThreadInfo MuMsgIterThreadInfo;
+
 /**
- * get a sortable string describing the path of a thread
+ * get a the MuMsgThreaderInfo struct for this message
  * 
  * @param iter a valid MuMsgIter iterator 
  * 
- * @return a thread path
+ * @return an info struct
  */
-const char* mu_msg_iter_get_thread_path (MuMsgIter *iter);
+const MuMsgIterThreadInfo* mu_msg_iter_get_thread_info (MuMsgIter *iter);
 
 /**
  * get some message field

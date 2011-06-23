@@ -39,8 +39,10 @@
 #include "mu-bookmarks.h"
 #include "mu-runtime.h"
 
+
 #include "mu-util.h"
 #include "mu-cmd.h"
+#include "mu-msg-threader.h"
 
 enum _OutputFormat {
 	FORMAT_JSON,
@@ -552,24 +554,52 @@ print_summary (MuMsgIter *iter)
 
 
 static void
-indent (MuMsgIter *iter)
+thread_indent (MuMsgIter *iter, gboolean color)
 {
+	const MuMsgIterThreadInfo *ti;
 	const char* threadpath;
 	int i;
+	gboolean is_root, first_child, empty_parent, is_dup;
 	
-	threadpath = mu_msg_iter_get_thread_path (iter);
-	if (!threadpath)
+	
+	ti = mu_msg_iter_get_thread_info (iter);
+	if (!ti) {
+		g_warning ("cannot get thread-info for %s",
+			   mu_msg_get_subject(mu_msg_iter_get_msg(iter, NULL)));
 		return;
-	
+	}
+		
+	threadpath = ti->threadpath;
 	/* fputs (threadpath, stdout); */
+	/* fputs ("  ", stdout); */
+
+	is_root      = ti->prop & MU_MSG_ITER_THREAD_PROP_ROOT;
+	first_child  = ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD;
+	empty_parent = ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT;
+	is_dup       = ti->prop & MU_MSG_ITER_THREAD_PROP_DUP;
 	
 	/* count the colons... */
 	for (i = 0; *threadpath; ++threadpath)
 		i += (*threadpath == ':') ? 1 : 0;
-
+	
 	/* indent */
 	while (i --> 0)
-		fputs ("    ", stdout);
+		fputs ("  ", stdout);
+
+		if (color)
+		fputs (MU_COLOR_YELLOW, stdout);
+
+	if (!is_root) {
+		if (is_dup)
+			fputs ("==>", stdout);
+		else if (first_child)
+			fputs (empty_parent ? "*-> " : "`-> ", stdout);
+		else
+			fputs ("|-> ", stdout);
+	}
+	
+	if (color)
+		fputs (MU_COLOR_DEFAULT, stdout);
 }
 
 
@@ -582,7 +612,7 @@ output_plain_fields (MuMsgIter *iter, const char *fields, gboolean color,
 	size_t len;
 			
 	if (threads)
-		indent (iter);
+		thread_indent (iter, color);
 		
 	for (myfields = fields, len = 0; *myfields; ++myfields) {
 
