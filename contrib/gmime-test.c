@@ -72,6 +72,31 @@ test_message (GMimeMessage *msg)
 	
 	str = g_mime_message_get_message_id (msg);
 	g_print ("Msg-id : %s\n", str ? str : "<none>");
+
+	{
+		str = g_mime_object_get_header (GMIME_OBJECT(msg),
+						"References");
+		/* get stuff from the 'references' header */
+		if (str) {
+			const GMimeReferences *cur;
+			GMimeReferences *mime_refs;
+
+			g_print ("Refs   : ");
+			
+			mime_refs = g_mime_references_decode (str);
+			for (cur = mime_refs; cur;
+			     cur = g_mime_references_get_next(cur)) {
+
+				const char* msgid;
+				msgid = g_mime_references_get_message_id (cur);
+				g_print ("%s%s",
+					 cur == mime_refs ? "" : ",",
+					 msgid ? msgid : "<huh?>");
+			}
+			g_print ("\n");
+			g_mime_references_free (mime_refs);
+		}	
+	}
 	
 	return TRUE;
 }
