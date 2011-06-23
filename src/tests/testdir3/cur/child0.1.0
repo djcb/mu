@@ -1,0 +1,9 @@
+From: testfrom@example.com 
+To: testto@example.com
+Subject: Re: child 0.1.0
+Message-Id: <child0.1.0@msg.id>
+References: <root0@msg.id> <child0.1@msg.id>
+In-Reply-To: <child0.1@msg.id>
+Date: Tue, 21 Jun 2011 11:22 +0000
+
+abc

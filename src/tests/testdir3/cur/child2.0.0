@@ -1,0 +1,12 @@
+From: testfrom@example.com 
+To: testto@example.com
+Subject: Re: child 2.0.0
+Message-Id: <child2.0.0@msg.id>
+References: <root2@msg.id>  <nonexistant@msg.id>
+In-Reply-To: <nonexistant@msg.id>
+Date: Tue, 21 Jun 2011 15:02 +0000
+
+abc
+
+note, there's no message for 'nonexistant@msg.id', so this msg should
+be promoted to level 2.0

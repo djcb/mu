@@ -1,0 +1,9 @@
+From: testfrom@example.com 
+To: testto@example.com
+Subject: Re: child 3.0.0.0 
+Message-Id: <child3.0.0.0.0@msg.id>
+References: <non-exist-01@msg.id> <non-exist-02@msg.id> <non-exist-03@msg.id> <non-exist-04@msg.id>
+1n-Reply-To: <non-exist-04@msg.id>
+Date: Wed, 22 Jun 2011 16:33 +0000
+
+abc

@@ -22,6 +22,7 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	-I ${top_srcdir} -I ${top_srcdir}/src			\
 	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir/\"		\
 	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2/\"		\
+	-DMU_TESTMAILDIR3=\"${abs_srcdir}/testdir3/\"		\
 	-DMU_PROGRAM=\"${abs_top_builddir}/src/mu\"		\
 	-DABS_CURDIR=\"${abs_builddir}\"			\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
@@ -80,6 +81,11 @@ test_mu_runtime_LDADD=  libtestmucommon.la
 TEST_PROGS += test-mu-store
 test_mu_store_SOURCES= test-mu-store.c dummy.cc
 test_mu_store_LDADD= libtestmucommon.la
+
+TEST_PROGS += test-mu-threads
+test_mu_threads_SOURCES= test-mu-threads.c dummy.cc
+test_mu_threads_LDADD= libtestmucommon.la
+
 
 # TEST_PROGS += test-mu-msg-file
 # test_mu_msg_file_SOURCES= test-mu-msg-file.c dummy.cc

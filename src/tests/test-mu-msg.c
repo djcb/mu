@@ -242,6 +242,33 @@ test_mu_msg_umlaut (void)
 
 
 static void
+test_mu_msg_references (void)
+{
+	MuMsg *msg;
+	const GSList *refs;
+	
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR
+				    "cur/1305664394.2171_402.cthulhu!2,",
+				    NULL, NULL);
+	refs = mu_msg_get_references(msg);
+
+	g_assert_cmpuint (g_slist_length ((GSList*)refs), ==, 4);
+	
+	g_assert_cmpstr ((char*)refs->data,==, "non-exist-01@msg.id");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "non-exist-02@msg.id");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "non-exist-03@msg.id");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "non-exist-04@msg.id");
+	refs = g_slist_next (refs);
+	
+	mu_msg_unref (msg);
+}
+
+	
+
+static void
 test_mu_msg_tags (void)
 {
 	MuMsg *msg;
@@ -280,7 +307,6 @@ test_mu_msg_comp_unix_programmer (void)
 	
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
 				    "bar/cur/181736.eml", NULL, NULL); 
-
 	g_assert_cmpstr (mu_msg_get_to(msg),
 	 		 ==, NULL);
 	g_assert_cmpstr (mu_msg_get_subject(msg),
@@ -339,6 +365,8 @@ main (int argc, char *argv[])
 			 test_mu_msg_04);
 	g_test_add_func ("/mu-msg/mu-msg-tags",
 			 test_mu_msg_tags);
+	g_test_add_func ("/mu-msg/mu-msg-references",
+			 test_mu_msg_references);
 	g_test_add_func ("/mu-msg/mu-msg-umlaut",
 			 test_mu_msg_umlaut);
 	g_test_add_func ("/mu-msg/mu-msg-comp-unix-programmer",
