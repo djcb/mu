@@ -21,7 +21,7 @@
 #include "mug-msg-list-view.h"
 #include "mu-query.h"
 #include "mu-str.h"
-/* include other impl specific header files */
+#include "mu-msg-threader.h"
 
 /* 'private'/'protected' functions */
 static void mug_msg_list_view_class_init (MugMsgListViewClass * klass);
@@ -403,10 +403,10 @@ update_model (GtkTreeStore *store, const char *xpath, const char *query,
 	for (count = 0; !mu_msg_iter_is_done (iter);
 	     mu_msg_iter_next (iter), ++count) {
 		MuMsg *msg;
-		const char *path;
+		/* const MuMsgIterThreadInfo *ti; */
 		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
-		path = mu_msg_iter_get_thread_path (iter);
-		add_row (store, msg, path);
+		/* ti = mu_msg_iter_get_thread_info (iter); */
+		add_row (store, msg, NULL);
 	}
 
 	mu_msg_iter_destroy (iter);
