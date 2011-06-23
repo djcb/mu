@@ -1,4 +1,4 @@
-.TH MU FIND 1 "May 2011" "User Manuals"
+.TH MU FIND 1 "June 2011" "User Manuals"
 
 .SH NAME 
 
@@ -382,6 +382,18 @@ index\fR.
 use a bookmarked search query. Using this option, a query from your bookmark
 file will be prepended to other search queries. See mu-bookmarks(1) for the
 details of the bookmarks file.
+
+.T
+\fB\-t\fR, \fB\-\-threads\fR
+show messages in 'threaded' format -- that is, with indentation and arrows
+showing the conversation threads list of messages.
+
+The depth of the conversation for a certain message is reflected in its
+indentation, and the message are prefixed with certain kind of arrows:
+\fB`->\fR is for the \fIfirst child\fR of a certain message, \fB|->\fR is for
+other children of a message. \fB-*>\fR is for messages whose parent is missing
+in the matches, and finally \fB==>\fR is for duplicate messages (messages with
+the same message-id as their parent).
 
 .SS Example queries
 
