@@ -251,7 +251,7 @@ MuMsgFlags     mu_msg_get_flags      (MuMsg *msg);
  * 
  * @return the filesize 
  */
-size_t          mu_msg_get_size       (MuMsg *msg);
+size_t mu_msg_get_size (MuMsg *msg);
 
 
 /**
