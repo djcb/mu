@@ -554,14 +554,13 @@ print_summary (MuMsgIter *iter)
 
 
 static void
-thread_indent (MuMsgIter *iter, gboolean color)
+thread_indent (MuMsgIter *iter)
 {
 	const MuMsgIterThreadInfo *ti;
 	const char* threadpath;
 	int i;
 	gboolean is_root, first_child, empty_parent, is_dup;
-	
-	
+		
 	ti = mu_msg_iter_get_thread_info (iter);
 	if (!ti) {
 		g_warning ("cannot get thread-info for %s",
@@ -578,24 +577,18 @@ thread_indent (MuMsgIter *iter, gboolean color)
 	empty_parent = ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT;
 	is_dup       = ti->prop & MU_MSG_ITER_THREAD_PROP_DUP;
 	
-	/* count the colons... */
+	/* FIXME: count the colons... */
 	for (i = 0; *threadpath; ++threadpath)
 		i += (*threadpath == ':') ? 1 : 0;
 	
 	/* indent */
 	while (i --> 0)
 		fputs ("  ", stdout);
-
-		if (color)
-		fputs (MU_COLOR_YELLOW, stdout);
-
+	
 	if (!is_root) {
 		fputs (first_child ? "`" : "|", stdout);
 		fputs (empty_parent ? "*> " : is_dup ? "=> " : "-> ", stdout);
 	}
-			
-	if (color)
-		fputs (MU_COLOR_DEFAULT, stdout);
 }
 
 
@@ -606,9 +599,12 @@ output_plain_fields (MuMsgIter *iter, const char *fields, gboolean color,
 {
 	const char* myfields;
 	size_t len;
-			
+
+	/* we reuse the color (whatever that may be)
+	 * for message-priority for threads, too */
+	ansi_color_maybe (MU_MSG_FIELD_ID_PRIO, color);
 	if (threads)
-		thread_indent (iter, color);
+		thread_indent (iter);
 		
 	for (myfields = fields, len = 0; *myfields; ++myfields) {
 
