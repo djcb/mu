@@ -156,26 +156,38 @@ find_or_create (GHashTable *id_table, const char* msgid, unsigned docid)
 	Container *c;
 	
 	c = g_hash_table_lookup (id_table, msgid);	
+
+	/* case 1: there is no container for this msgid yet; create
+	 * it */
 	if (!c) {
 		c = container_new (NULL, docid);
 		g_hash_table_insert (id_table, (gpointer)msgid, c);
-		if (docid != 0)
-			g_print ("*1 %s => %u\n", msgid, docid);
-	} else if (c->_docid == 0) {
-		c->_docid = docid;
-		g_print ("*2 %s => %u\n", msgid, docid);
-	} else if (docid != 0) { /* duplicate message-id */
-		/* Container *c2; */
-		/* char *fake_msgid; */
-		/* g_print ("duplicate message-id %s\n", msgid); /\* FIXME: leak *\/ */
-		/* c2 = container_new (NULL, docid); */
-		/* c2->_parent = c; /\* make it a child of the other one...*\/ */
-		/* c2->_dup = TRUE; */
-		/* fake_msgid = g_strdup_printf ("%s_%u", msgid, docid); */
-		/* g_hash_table_insert (id_table, fake_msgid, c2); */
-		/* g_print ("*3 %s => %u\n", fake_msgid, docid); */
+		return c;
 	}
-		
+
+	/* case 2: the container exists, but it did not have a docid
+	 * yet (e.g., it was create for the messages refered to in
+	 * References:, and now we found the actual messages */
+	else if (c->_docid == 0) {
+		c->_docid = docid;
+		return c;
+	}
+	
+	/* case 3: the container exists, and has a docid already --
+	 * this means that we are seeing *another message* with a
+	 * message-id we already saw... create this message, and mark
+	 * it as a duplicate, and a child of the one we saw before */
+	else if (docid != 0) {
+		Container *c2;
+		c2 = container_new (NULL, docid);
+		c2->_dup = TRUE;
+		container_add_child (c, c2);
+		g_hash_table_insert (id_table, /* FIXME: memleak */
+				     g_strdup_printf ("%s_%u", msgid, docid),
+				     c2);
+		return c2;
+	}
+	
 	return c;
 }
 
@@ -416,9 +428,6 @@ thread_info_new (gchar *threadpath, gboolean root,
 	ti->prop |= first_child  ? MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  : 0;
 	ti->prop |= empty_parent ? MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT : 0;
 	ti->prop |= is_dup       ? MU_MSG_ITER_THREAD_PROP_DUP : 0;
-
-	if (is_dup)
-		g_print ("dup: %s\n", threadpath);
 	
 	return ti;
 }
