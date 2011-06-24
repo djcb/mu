@@ -103,16 +103,12 @@ mu_msg_threader_calculate (MuMsgIter *iter, size_t matchnum)
 	 * root-container */
 	root = find_root (id_table);
 	/* step 3: skip until the end; we still need to containers */
-	//container_dump_tree (root);
 	
 	/* step 4: prune empty containers */
 	prune_empty_containers (root);
-
+	
 	/* recalculate root set */
 	sort_by_date (root);
-
-	//container_dump_tree (root);
-
 	
 	/* step 5: group root set by subject */
 	//group_root_set_by_subject (root_set);
@@ -154,6 +150,8 @@ static Container*
 find_or_create (GHashTable *id_table, const char* msgid, unsigned docid)
 {
 	Container *c;
+
+	g_return_val_if_fail (msgid, NULL);
 	
 	c = g_hash_table_lookup (id_table, msgid);	
 
@@ -161,7 +159,7 @@ find_or_create (GHashTable *id_table, const char* msgid, unsigned docid)
 	 * it */
 	if (!c) {
 		c = container_new (NULL, docid);
-		g_hash_table_insert (id_table, (gpointer)msgid, c);
+		g_hash_table_insert (id_table, g_strdup(msgid), c);
 		return c;
 	}
 
@@ -182,8 +180,8 @@ find_or_create (GHashTable *id_table, const char* msgid, unsigned docid)
 		c2 = container_new (NULL, docid);
 		c2->_dup = TRUE;
 		container_add_child (c, c2);
-		g_hash_table_insert (id_table, /* FIXME: memleak */
-				     g_strdup_printf ("%s_%u", msgid, docid),
+		g_hash_table_insert (id_table,
+				     g_strdup_printf ("!!%s", msgid),
 				     c2);
 		return c2;
 	}
@@ -229,8 +227,10 @@ create_containers (MuMsgIter *iter)
 	GHashTable *id_table;
 	id_table = g_hash_table_new_full (g_str_hash,
 					  g_str_equal,
-					  NULL, /* we don't copy msgid */
+					  (GDestroyNotify)g_free, /* we copy msgid */
 					  (GDestroyNotify)container_destroy);
+	/* FIXME: copying should not be needed... we only copy because
+	 * duplicate messages need an allocated, fake-msgid */
 	
 	for (mu_msg_iter_reset (iter); !mu_msg_iter_is_done (iter);
 	     mu_msg_iter_next (iter)) {
@@ -299,22 +299,23 @@ static void
 prune_empty_containers (Container *container)
 {
 	GSList *cur;
-	
-	for (cur = container->_children; cur; cur = g_slist_next (cur)) {
+
+	cur = container->_children;
+	while (cur) {
 		
 		Container *c;
 		c = (Container*)cur->data;
-		
+
 		prune_empty_containers (c); /* recurse! */
-				
+		
 		/* don't touch containers with messages */
-		if (c->_msg)
-			continue; 
+		if (c->_msg) 
+			goto next; 
 	
 		/* A. If it is an msg-less container with no children, nuke it. */
-		if (!c->_children) {
+		if (!c->_children && c->_parent) {
 			container_remove_child (c->_parent, c);
-			continue;
+			goto next;
 		}		
 		/* B. If the Container has no Message, but does have
 		 * children, remove this container but promote its
@@ -327,9 +328,15 @@ prune_empty_containers (Container *container)
 		 */
 		if (container_is_root(container) &&
 		    g_slist_length(c->_children) != 1)
-			continue;
+			goto next;
 
 		container_splice_child (container, c);
+		/* reiterate over the children; they may have changed */
+		cur = container->_children;
+		continue;
+		
+	next:
+		cur = g_slist_next (cur);
 	}
 }
 
