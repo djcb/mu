@@ -386,14 +386,26 @@ details of the bookmarks file.
 .T
 \fB\-t\fR, \fB\-\-threads\fR
 show messages in 'threaded' format -- that is, with indentation and arrows
-showing the conversation threads list of messages.
+showing the conversation threads in the list of matching messages.
 
-The depth of the conversation for a certain message is reflected in its
-indentation, and the message are prefixed with certain kind of arrows:
-\fB`->\fR is for the \fIfirst child\fR of a certain message, \fB|->\fR is for
-other children of a message. \fB-*>\fR is for messages whose parent is missing
-in the matches, and finally \fB==>\fR is for duplicate messages (messages with
-the same message-id as their parent).
+Messages in the threaded list are indented based on the depth in the
+discussion, and are prefix with a kind of arrow with thread-related
+information about the message, as in the following table:
+
+.nf
+|             | normal | orphan | duplicate |
+|-------------+--------+--------+-----------|
+| first child | `->    | `*>    | `=>       |
+| other       | |->    | |*>    | |=>       |
+.fi
+
+Here, the an 'orphan' is a message without a parent message (in the list of
+matches), and a duplicate is a message whose message-id was already seen
+before. 
+
+The algorithm used for determining the threads is based on Jamie Zawinksy's
+description:
+.BR http://www.jwz.org/doc/threading.html
 
 .SS Example queries
 
