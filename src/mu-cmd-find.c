@@ -590,14 +590,10 @@ thread_indent (MuMsgIter *iter, gboolean color)
 		fputs (MU_COLOR_YELLOW, stdout);
 
 	if (!is_root) {
-		if (is_dup)
-			fputs ("==>", stdout);
-		else if (first_child)
-			fputs (empty_parent ? "*-> " : "`-> ", stdout);
-		else
-			fputs ("|-> ", stdout);
+		fputs (first_child ? "`" : "|", stdout);
+		fputs (empty_parent ? "*> " : is_dup ? "=> " : "-> ", stdout);
 	}
-	
+			
 	if (color)
 		fputs (MU_COLOR_DEFAULT, stdout);
 }
