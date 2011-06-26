@@ -43,7 +43,7 @@ fill_database (const char *testdir)
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, testdir);
-	/* g_print ("%s\n", cmdline); */
+	g_print ("%s\n", cmdline); 
 	
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
