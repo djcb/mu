@@ -147,7 +147,6 @@ mu_msg_threader_calculate (MuMsgIter *iter, size_t matchnum)
 
 	/* sort */
 	mu_msg_iter_reset (iter); /* go all the way back */
-
 	
 	/* finally, deliver the docid => thread-path hash */
 	thread_ids =  create_doc_id_thread_path_hash (root_set,
@@ -183,7 +182,8 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 	const char* msgid;
 
 	g_return_val_if_fail (msg, NULL);
-
+	g_return_val_if_fail (docid != 0, NULL);
+	
 	msgid = mu_msg_get_msgid (msg);
 	if (!msgid)
 		msgid = mu_msg_get_path (msg); /* fake it */
@@ -194,6 +194,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 	 * Store this message in the Container's message slot. */
 	if (c && !c->msg) {
 		c->msg = mu_msg_ref (msg);
+		c->docid = docid;
 		return c;
 		
 	} else if (!c) { /* Else: Create a new Container object holding
@@ -273,10 +274,10 @@ handle_references (GHashTable *id_table, Container *c)
 	   use this new one. Find this Container in the parent's
 	   children list, and unlink it.
 	   
-	   Note that this could cause this message to now have no parent, if it
-	   has no references field, but some message referred to it as the
-	   non-first element of its references. (Which would have been some kind
-	   of lie...) 
+	   Note that this could cause this message to now have no
+	   parent, if it has no references field, but some message
+	   referred to it as the non-first element of its
+	   references. (Which would have been some kind of lie...)
 	   
 	   Note that at all times, the various ``parent'' and ``child'' fields
 	   must be kept inter-consistent. */
@@ -458,7 +459,6 @@ group_root_set_by_subject (GSList *root_set)
 
 #endif
 
-
 G_GNUC_UNUSED static gint
 cmp_dates (Container *c1, Container *c2)
 {
@@ -619,11 +619,16 @@ static Container*
 container_new (MuMsg *msg, guint docid, const char *msgid)
 {
 	Container *c;
-	c = g_slice_new0 (Container);
 
+	g_return_val_if_fail (!msg || docid != 0, NULL);
+	
+	c = g_slice_new0 (Container);
+	
 	if (msg)
 		c->msg = mu_msg_ref (msg);
 
+
+	
 	c->docid = docid;
 	c->msgid = msgid;
 	
@@ -690,6 +695,9 @@ container_remove_child (Container *c, Container *child)
 	g_return_if_fail (child);
 	g_return_if_fail (!child->child);
 	g_return_if_fail (c != child);
+
+	/* g_print ("%s: %s <-- %s\n", __FUNCTION__, c->msgid, */
+	/* 	 child->msgid); */
 	
 	for (prev = NULL, cur = c->child; cur; cur = cur->next) {
 		
@@ -758,6 +766,9 @@ container_splice (Container *parent, Container *child)
 	g_return_if_fail (parent);
 	g_return_if_fail (child);
 	g_return_if_fail (parent != child);
+
+	/* g_print ("%s: %s <-- %s\n", __FUNCTION__, parent->msgid, */
+	/* 	 child->msgid); */
 	
 	container_add_child (parent, child->child);
 	child->child = NULL;
@@ -807,8 +818,8 @@ dump_container (Container *c)
 	
 	subject =  (c->msg) ? mu_msg_get_subject (c->msg) : "<none>";
 	
-	g_print ("[%s][%s m:%p p:%p]\n",c->msgid, subject, (void*)c,
-		 (void*)c->parent);
+	g_print ("[%s][%s m:%p p:%p docid:%u]\n",c->msgid, subject, (void*)c,
+		 (void*)c->parent, c->docid);
 
 	return TRUE;
 }
