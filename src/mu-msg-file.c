@@ -662,89 +662,49 @@ get_body (MuMsgFile *self, gboolean want_html)
 }
 
 
-/* get them in the order parent->grandparent->..., i.e. in opposite
- * from what's in the header
- */
+
+gboolean
+contains (GSList *lst, const char *str)
+{
+	for (; lst; lst = g_slist_next(lst))
+		if (g_strcmp0 ((char*)lst->data, str) == 0)
+			return TRUE;
+	return FALSE;
+}
+
+
 static GSList*
-get_msgids_reverted (MuMsgFile *self, const gchar *header)
+get_references  (MuMsgFile *self)
 {
 	GSList *msgids;
 	const char *str;
-
-	msgids = NULL;
-	str = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
-					header);
+	unsigned u;
+	const char *headers[] = { "References", "In-reply-to", NULL };
 	
-	/* get stuff from the 'references' header */
-	if (str) {
+	for (msgids = NULL, u = 0; headers[u]; ++u) {
+
 		const GMimeReferences *cur;
 		GMimeReferences *mime_refs;
+		
+		str = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
+						headers[u]);
+		if (!str)
+			continue;
+		
 		mime_refs = g_mime_references_decode (str);
 		for (cur = mime_refs; cur; cur = g_mime_references_get_next(cur)) {
 			const char* msgid;
 			msgid = g_mime_references_get_message_id (cur);
-			if (msgid)
+			/* don't include duplicates */
+			if (msgid && !contains (msgids, msgid))
 				msgids = g_slist_prepend (msgids, g_strdup (msgid));
 		}
+
 		g_mime_references_free (mime_refs);
 	}
-
-	return msgids;
-}
-
-static GSList*
-remove_dups (GSList *refs)
-{
-	GHashTable *hash;
-	GSList *cur, *oldcur;
 	
-	hash = g_hash_table_new (g_str_hash, g_str_equal);
-
-	for (oldcur = NULL, cur = refs; cur; cur = g_slist_next (cur)) {
-		/* already seen? note, the first one cannot be a dup,
-		 * so oldcur won't be NULL, and refs stays valid */
-		if (g_hash_table_lookup (hash, (gchar*)cur->data)) {
-			oldcur->next = cur->next;
-			cur->next = NULL;
-			g_slist_free (cur);
-			cur = oldcur;
-			continue;
-		}
-		g_hash_table_insert (hash, (gchar*)cur->data,
-				     GUINT_TO_POINTER(TRUE));
-		oldcur = cur;
-	}
-
-	g_hash_table_destroy (hash);
-
-	return refs;
+	return g_slist_reverse (msgids);
 }
-
-
-GSList*
-get_references (MuMsgFile *self)
-{
-	GSList *refs, *inreply;
-
-	g_return_val_if_fail (self, NULL);
-
-	refs = get_msgids_reverted (self, "References");
-	
-	/* now, add in-reply-to:, we only take the first one if there
-	 * are more */
-	inreply = get_msgids_reverted (self, "In-reply-to");
-	if (inreply) {
-		refs = g_slist_prepend (refs, g_strdup ((gchar*)inreply->data));
-		g_slist_foreach (inreply, (GFunc)g_free, NULL);
-		g_slist_free (inreply);
-	}
-
-	refs = remove_dups (refs);
-	
-	/* put in proper order */
-	return g_slist_reverse (refs);
-}
-
 
 
 static GSList*
