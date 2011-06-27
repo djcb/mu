@@ -323,7 +323,7 @@ mu_str_date_parse_hdwmy (const char* str)
 	if (num <= 0 || num > 9999)  
 		return never;
 
-	if (!end || end[1] != '\0')
+	if (end == NULL || *end != '\0')
 		return never;
        
 	switch (end[0]) {
