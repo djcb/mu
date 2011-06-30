@@ -19,9 +19,8 @@
 **
 */
 
-
-#ifndef __MU_MSG_THREADER_H__
-#define __MU_MSG_THREADER_H__
+#ifndef __MU_THREADER_H__
+#define __MU_THREADER_H__
 
 #include <glib.h>
 #include <mu-msg-iter.h>
@@ -45,9 +44,9 @@ G_BEGIN_DECLS
  * 
  * @return a hashtable; free with g_hash_table_destroy when done with it
  */	
-GHashTable *mu_msg_threader_calculate (MuMsgIter *iter, size_t matches);
+GHashTable *mu_threader_calculate (MuMsgIter *iter, size_t matches);
 
 
 G_END_DECLS
 
-#endif /*__MU_MSG_THREADER_H__*/
+#endif /*__MU_THREADER_H__*/
