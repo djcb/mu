@@ -76,6 +76,7 @@ find_last (Container *c)
 }
 
 
+#if 0
 static gboolean
 check_dup (Container *c, GHashTable *hash)
 {
@@ -103,7 +104,7 @@ assert_no_duplicates (Container *c)
 			
 	g_hash_table_destroy (hash);
 }
-
+#endif
 
 
 Container*

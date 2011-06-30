@@ -97,7 +97,7 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum)
 }
 
 
-
+#if 0
 
 static void
 check_dup (const char *msgid, Container *c, GHashTable *hash)
@@ -124,7 +124,7 @@ assert_no_duplicates (GHashTable *ids)
 	g_hash_table_destroy (hash);
 }
 
-
+#endif
 
 
 
@@ -142,7 +142,7 @@ find_or_create_referred (GHashTable *id_table, const char *msgid,
 	if (!c) {
 		c = container_new (NULL, 0, msgid);
 		g_hash_table_insert (id_table, (gpointer)msgid, c);
-		assert_no_duplicates (id_table);
+		/* assert_no_duplicates (id_table); */
 	}
 
 	
@@ -187,7 +187,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 			c = container_append_children (c, c2);
 			g_hash_table_insert (id_table,
 					     (gpointer)mu_msg_get_path (msg), c2);
-			assert_no_duplicates (id_table);
+			/* assert_no_duplicates (id_table); */
 
 			return NULL; /* don't process this message further */
 		}
@@ -196,7 +196,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 		    Message-ID in id_table. */
 		c = container_new (msg, docid, msgid);
 		g_hash_table_insert (id_table, (gpointer)msgid, c);
-		assert_no_duplicates (id_table);
+		/* assert_no_duplicates (id_table); */
 				
 		return c;
 	}
