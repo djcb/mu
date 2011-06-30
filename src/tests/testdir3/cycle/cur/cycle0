@@ -1,0 +1,7 @@
+From: foo@example.com 
+To: bar@example.com
+Subject: cycle0 
+Message-Id: <cycle0@msg.id>
+Date: Tue, 21 Jun 2011 11:00 +0000
+
+def

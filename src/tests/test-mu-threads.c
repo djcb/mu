@@ -43,7 +43,7 @@ fill_database (const char *testdir)
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, testdir);
-	g_print ("%s\n", cmdline); 
+	/* g_print ("%s\n", cmdline);  */
 	
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
@@ -65,15 +65,13 @@ run_and_get_iter (const char *xpath, const char *query)
 	mquery = mu_query_new (xpath, NULL);
 	g_assert (query);
 	
-	iter = mu_query_run (mquery, query, TRUE, MU_MSG_FIELD_ID_NONE,
+	iter = mu_query_run (mquery, query, TRUE, MU_MSG_FIELD_ID_DATE,
 			     FALSE, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 	
 	return iter;
 }
-
-
 
 
 static void
@@ -124,13 +122,18 @@ test_mu_threads_01 (void)
 		g_assert(ti);
 		
 		msg = mu_msg_iter_get_msg (iter, NULL);
+		/* g_print ("%s %s %s\n", ti->threadpath, */
+		/* 	 mu_msg_get_msgid(msg), */
+		/* 	 mu_msg_get_path (msg) */
+		/* 	); */
 		
 		g_assert (u < G_N_ELEMENTS(items));
-		
-		g_assert_cmpstr (ti->threadpath,==,items[u].threadpath);
-		g_assert_cmpstr (mu_msg_get_msgid(msg),==,items[u].msgid);
-		g_assert_cmpstr (mu_msg_get_subject(msg),==,items[u++].subject);
 
+		g_assert_cmpstr (ti->threadpath,==,items[u].threadpath);
+		g_assert_cmpstr (mu_msg_get_subject(msg),==,items[u].subject);
+		g_assert_cmpstr (mu_msg_get_msgid(msg),==,items[u].msgid);
+		
+		++u;
 		mu_msg_iter_next (iter);
 	}
 	g_assert (u == G_N_ELEMENTS(items));
@@ -138,6 +141,65 @@ test_mu_threads_01 (void)
 	g_free (xpath);
 	mu_msg_iter_destroy (iter);
 }
+
+
+static void
+test_mu_threads_rogue (void)
+{
+	gchar *xpath;
+	MuMsgIter *iter;	
+	unsigned u;
+	
+	struct {
+		const char* threadpath;
+		const char *msgid;
+		const char* subject;
+	}   items [] = {
+		{"0",     "cycle0@msg.id",  "cycle0"},
+		{"0:0",   "cycle0.0@msg.id", "cycle0.0"},
+		{"0:0:0", "cycle0.0.0@msg.id", "cycle0.0.0"}
+	};
+	
+	xpath = fill_database (MU_TESTMAILDIR3);
+	g_assert (xpath != NULL);
+	
+	iter = run_and_get_iter (xpath, "def");
+	g_assert (iter);
+	g_assert (!mu_msg_iter_is_done(iter));
+
+	u = 0;
+	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items)) {
+		MuMsg *msg;
+		const MuMsgIterThreadInfo *ti;
+		
+		ti = mu_msg_iter_get_thread_info (iter);
+		if (!ti)
+			g_print ("%s: thread info not found\n",
+				 mu_msg_get_msgid(mu_msg_iter_get_msg (iter, NULL)));
+
+		g_assert(ti);
+		
+		msg = mu_msg_iter_get_msg (iter, NULL);
+		/* g_print ("%s %s %s\n", ti->threadpath, */
+		/* 	 mu_msg_get_msgid(msg), */
+		/* 	 mu_msg_get_path (msg) */
+		/* 	); */
+		
+		g_assert (u < G_N_ELEMENTS(items));
+
+		g_assert_cmpstr (ti->threadpath,==,items[u].threadpath);
+		g_assert_cmpstr (mu_msg_get_subject(msg),==,items[u].subject);
+		g_assert_cmpstr (mu_msg_get_msgid(msg),==,items[u].msgid);
+		
+		++u;
+		mu_msg_iter_next (iter);
+	}
+	g_assert (u == G_N_ELEMENTS(items));
+	
+	g_free (xpath);
+	mu_msg_iter_destroy (iter);
+}
+
 
 
 int
@@ -148,6 +210,8 @@ main (int argc, char *argv[])
 	g_test_init (&argc, &argv, NULL);	
 
 	g_test_add_func ("/mu-query/test-mu-threads-01", test_mu_threads_01);
+	g_test_add_func ("/mu-query/test-mu-threads-rogue", test_mu_threads_rogue);
+
 	
 	/* g_log_set_handler (NULL, */
 	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */

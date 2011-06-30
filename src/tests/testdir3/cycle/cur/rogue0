@@ -1,0 +1,8 @@
+From: foo@example.com 
+To: bar@example.com
+Subject: rogue0 
+Message-Id: <rogue0@msg.id>
+References: <cycle0.0@msg.id> <cycle0@msg.id> 
+Date: Tue, 21 Jun 2011 15:00 +0000
+
+def

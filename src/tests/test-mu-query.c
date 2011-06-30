@@ -237,9 +237,9 @@ test_mu_query_04 (void)
  		{ "baggins", 1},
 		{ "prio:h", 1},
 		{ "prio:high", 1},
-		{ "prio:normal", 4},
+		{ "prio:normal", 5},
 		{ "prio:l", 7},
-		{ "not prio:l", 5},
+		{ "not prio:l", 6},
 	};
 	
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -379,9 +379,9 @@ test_mu_query_sizes (void)
 	int i;
 	
 	QResults queries[] = {
-		{ "size:0b..2m", 12},
+		{ "size:0b..2m", 13},
 		{ "size:2k..4k", 2},
-		{ "size:2m..0b", 12}
+		{ "size:2m..0b", 13}
 	};
 	
 	xpath = fill_database (MU_TESTMAILDIR);

@@ -117,12 +117,43 @@ EXTRA_DIST=							\
 	testdir/cur/1220863060.12663_3.mindcrime!2,S		\
 	testdir/cur/1283599333.1840_11.cthulhu!2,		\
 	testdir/cur/1305664394.2171_402.cthulhu!2,		\
+	testdir/cur/1252168370_3.14675.cthulhu!2,S		\
 	testdir2/bar/cur/mail1					\
 	testdir2/bar/cur/mail2					\
 	testdir2/bar/cur/mail3					\
 	testdir2/bar/cur/mail4					\
 	testdir2/bar/cur/mail5					\
-	testdir2/Foo/cur/mail5					\
 	testdir2/bar/cur/181736.eml				\
-	testdir2/Foo/cur/arto.eml
+	testdir2/bar/tmp/.noindex				\
+	testdir2/bar/new/.noindex				\
+	testdir2/Foo/cur/mail5					\
+	testdir2/Foo/cur/arto.eml				\
+	testdir2/Foo/tmp/.noindex				\
+	testdir2/Foo/new/.noindex				\
+	testdir3/tree						\
+	testdir3/tree/new					\
+	testdir3/tree/new/.noindex				\
+	testdir3/tree/cur					\
+	testdir3/tree/cur/child0.1				\
+	testdir3/tree/cur/root1					\
+	testdir3/tree/cur/child3.0.0.0.0			\
+	testdir3/tree/cur/child0.0				\
+	testdir3/tree/cur/child4.1				\
+	testdir3/tree/cur/child4.0				\
+	testdir3/tree/cur/root2					\
+	testdir3/tree/cur/child0.1.0				\
+	testdir3/tree/cur/child2.0.0				\
+	testdir3/tree/cur/root0					\
+	testdir3/tree/tmp					\
+	testdir3/tree/tmp/.noindex				\
+	testdir3/cycle						\
+	testdir3/cycle/new					\
+	testdir3/cycle/new/.noindex				\
+	testdir3/cycle/cur					\
+	testdir3/cycle/cur/rogue0				\
+	testdir3/cycle/cur/cycle0				\
+	testdir3/cycle/cur/cycle0.0.0				\
+	testdir3/cycle/cur/cycle0.0				\
+	testdir3/cycle/tmp					\
+	testdir3/cycle/tmp/.noindex
 

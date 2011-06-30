@@ -266,7 +266,38 @@ test_mu_msg_references (void)
 	mu_msg_unref (msg);
 }
 
+
+
+static void
+test_mu_msg_references_dups (void)
+{
+	MuMsg *msg;
+	const GSList *refs;
 	
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR
+				    "cur/1252168370_3.14675.cthulhu!2,S",
+				    NULL, NULL);
+	refs = mu_msg_get_references(msg);
+
+	/* make sure duplicate msg-ids are filtered out */
+	
+	g_assert_cmpuint (g_slist_length ((GSList*)refs), ==, 6);
+	
+	g_assert_cmpstr ((char*)refs->data,==, "439C1136.90504@euler.org");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "4399DD94.5070309@euler.org");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "20051209233303.GA13812@gauss.org");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "439B41ED.2080402@euler.org");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "439A1E03.3090604@euler.org");
+	refs = g_slist_next (refs);
+	g_assert_cmpstr ((char*)refs->data,==, "20051211184308.GB13513@gauss.org");
+	refs = g_slist_next (refs);
+	
+	mu_msg_unref (msg);
+}	
 
 static void
 test_mu_msg_tags (void)
@@ -367,6 +398,8 @@ main (int argc, char *argv[])
 			 test_mu_msg_tags);
 	g_test_add_func ("/mu-msg/mu-msg-references",
 			 test_mu_msg_references);
+	g_test_add_func ("/mu-msg/mu-msg-references_dups",
+			 test_mu_msg_references_dups);
 	g_test_add_func ("/mu-msg/mu-msg-umlaut",
 			 test_mu_msg_umlaut);
 	g_test_add_func ("/mu-msg/mu-msg-comp-unix-programmer",
