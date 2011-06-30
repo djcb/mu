@@ -663,7 +663,7 @@ get_body (MuMsgFile *self, gboolean want_html)
 
 
 
-gboolean
+static gboolean
 contains (GSList *lst, const char *str)
 {
 	for (; lst; lst = g_slist_next(lst))

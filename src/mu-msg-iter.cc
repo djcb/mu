@@ -29,8 +29,7 @@
 #include "mu-util.h"
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
-#include "mu-msg-threader.h"
-
+#include "mu-threader.h"
 
 /* just a guess... */
 #define MAX_FETCH_SIZE 10000
@@ -58,7 +57,7 @@ struct _MuMsgIter {
 
 		if (threads && !_matches.empty()) { 
 			_matches.fetch();
-			_threadhash = mu_msg_threader_calculate
+			_threadhash = mu_threader_calculate
 				(this, _matches.size());
 			ThreadKeyMaker keymaker(_threadhash);
 			enq.set_sort_by_key (&keymaker, false);

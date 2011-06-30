@@ -21,7 +21,7 @@
 #include "mug-msg-list-view.h"
 #include "mu-query.h"
 #include "mu-str.h"
-#include "mu-msg-threader.h"
+#include "mu-threader.h"
 
 /* 'private'/'protected' functions */
 static void mug_msg_list_view_class_init (MugMsgListViewClass * klass);

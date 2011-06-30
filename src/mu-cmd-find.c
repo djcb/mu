@@ -42,7 +42,7 @@
 
 #include "mu-util.h"
 #include "mu-cmd.h"
-#include "mu-msg-threader.h"
+#include "mu-threader.h"
 
 enum _OutputFormat {
 	FORMAT_JSON,
