@@ -310,23 +310,23 @@ is_xapian_prefix (const char *q, const char *colon)
 }
 
 time_t
-mu_str_date_parse_hdwmy (const char* str)
+mu_str_date_parse_hdwmy (const char *nptr)
 {
 	long int num;
-	char *end;
+	char *endptr;
 	time_t now, delta;
 	time_t never = (time_t)-1;
        
-	g_return_val_if_fail (str, never);
+	g_return_val_if_fail (nptr, never);
        
-	num = strtol  (str, &end, 10);
+	num = strtol  (nptr, &endptr, 10);
 	if (num <= 0 || num > 9999)  
 		return never;
 
-	if (end == NULL || *end != '\0')
+	if (endptr == NULL || *endptr == '\0')
 		return never;
        
-	switch (end[0]) {
+	switch (endptr[0]) {
 	case 'h': /* hour */    
 		delta = num * 60 * 60; break;
 	case 'd': /* day */
