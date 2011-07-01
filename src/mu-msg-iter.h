@@ -143,7 +143,8 @@ struct _MuMsgIterThreadInfo {
 typedef struct _MuMsgIterThreadInfo MuMsgIterThreadInfo;
 
 /**
- * get a the MuMsgThreaderInfo struct for this message
+ * get a the MuMsgThreaderInfo struct for this message; this only
+ * works when you created the mu-msg-iter with threading enabled
  * 
  * @param iter a valid MuMsgIter iterator 
  * 

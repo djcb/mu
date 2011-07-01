@@ -21,7 +21,7 @@
 #include <string.h> /* for memset */
 
 #include "mu-threader.h"
-#include "mu-threader-utils.h"
+#include "mu-container.h"
 #include "mu-str.h"
 
 /* msg threading implementation based on JWZ's algorithm, as described in:
@@ -50,12 +50,12 @@
 
 
 /* step 1 */ static GHashTable* create_containers (MuMsgIter *iter);
-/* step 2 */ static Container *find_root_set (GHashTable *ids);
-static Container* prune_empty_containers (Container *root);
+/* step 2 */ static MuContainer *find_root_set (GHashTable *ids);
+static MuContainer* prune_empty_containers (MuContainer *root);
 /* static void group_root_set_by_subject (GSList *root_set); */
-GHashTable* create_doc_id_thread_path_hash (Container *root, size_t match_num);
+GHashTable* create_doc_id_thread_path_hash (MuContainer *root, size_t match_num);
 
-static gint cmp_dates (Container *c1, Container *c2);
+static gint cmp_dates (MuContainer *c1, MuContainer *c2);
 
 /* msg threading algorithm, based on JWZ's algorithm,
  * http://www.jwz.org/doc/threading.html */
@@ -63,7 +63,7 @@ GHashTable*
 mu_threader_calculate (MuMsgIter *iter, size_t matchnum)
 {
 	GHashTable *id_table, *thread_ids;
-	Container *root_set;
+	MuContainer *root_set;
 
 	g_return_val_if_fail (iter, FALSE);
 
@@ -79,7 +79,7 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum)
 	root_set = prune_empty_containers (root_set);
 	
 	/* sort root set */
-	root_set = container_sort (root_set, (GCompareDataFunc)cmp_dates,
+	root_set = mu_container_sort (root_set, (GCompareDataFunc)cmp_dates,
 				      NULL, FALSE);
 		
 	/* step 5: group root set by subject */
@@ -89,8 +89,9 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum)
 	mu_msg_iter_reset (iter); /* go all the way back */
 	
 	/* finally, deliver the docid => thread-path hash */
-	thread_ids = create_doc_id_thread_path_hash (root_set,
-						     matchnum);
+	thread_ids = mu_container_thread_info_hash_new (root_set,
+							matchnum);
+	
 	g_hash_table_destroy (id_table); /* step 3*/
 
 	return thread_ids;
@@ -100,11 +101,11 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum)
 #if 0
 
 static void
-check_dup (const char *msgid, Container *c, GHashTable *hash)
+check_dup (const char *msgid, MuContainer *c, GHashTable *hash)
 {
 	if (g_hash_table_lookup (hash, c)) {
 		g_warning ("ALREADY!!");
-		container_dump (c, FALSE);
+		mu_container_dump (c, FALSE);
 		g_assert (0);
 	} else
 		g_hash_table_insert (hash, c, GUINT_TO_POINTER(TRUE));
@@ -129,18 +130,18 @@ assert_no_duplicates (GHashTable *ids)
 
 
 /* a referred message is a message that is refered by some other message */
-static Container*
+static MuContainer*
 find_or_create_referred (GHashTable *id_table, const char *msgid,
 			 gboolean *created)
 {
-	Container *c;
+	MuContainer *c;
 
 	g_return_val_if_fail (msgid, NULL);
 
 	c = g_hash_table_lookup (id_table, msgid);	
 	*created = !c;
 	if (!c) {
-		c = container_new (NULL, 0, msgid);
+		c = mu_container_new (NULL, 0, msgid);
 		g_hash_table_insert (id_table, (gpointer)msgid, c);
 		/* assert_no_duplicates (id_table); */
 	}
@@ -151,10 +152,10 @@ find_or_create_referred (GHashTable *id_table, const char *msgid,
 
 /* find a container for the given msgid; if it does not exist yet,
  * create a new one, and register it */
-static Container*
+static MuContainer*
 find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 {
-	Container *c;
+	MuContainer *c;
 	const char* msgid;
 
 	g_return_val_if_fail (msg, NULL);
@@ -166,8 +167,8 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 	
 	c = g_hash_table_lookup (id_table, msgid);	
 	
-	/* If id_table contains an empty Container for this ID: * *
-	 * Store this message in the Container's message slot. */
+	/* If id_table contains an empty MuContainer for this ID: * *
+	 * Store this message in the MuContainer's message slot. */
 	if (c) {
 		if (!c->msg) {
 			c->msg = mu_msg_ref (msg);
@@ -181,20 +182,20 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 			 * message-id we already saw... create this message,
 			 * and mark it as a duplicate, and a child of the one
 			 * we saw before; use its path as a fake message-id*/
-			Container *c2;
-			c2 = container_new (msg, docid, "<dup>");
-			c2->flags = CONTAINER_FLAG_DUP;
-			c = container_append_children (c, c2);
+			MuContainer *c2;
+			c2 = mu_container_new (msg, docid, "<dup>");
+			c2->flags = MU_CONTAINER_FLAG_DUP;
+			c = mu_container_append_children (c, c2);
 			g_hash_table_insert (id_table,
 					     (gpointer)mu_msg_get_path (msg), c2);
 			/* assert_no_duplicates (id_table); */
 
 			return NULL; /* don't process this message further */
 		}
-	} else { /* Else: Create a new Container object holding
-		    this message; Index the Container by
+	} else { /* Else: Create a new MuContainer object holding
+		    this message; Index the MuContainer by
 		    Message-ID in id_table. */
-		c = container_new (msg, docid, msgid);
+		c = mu_container_new (msg, docid, msgid);
 		g_hash_table_insert (id_table, (gpointer)msgid, c);
 		/* assert_no_duplicates (id_table); */
 				
@@ -203,7 +204,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 }
 
 static gboolean
-child_elligible (Container *parent, Container *child, gboolean created)
+child_elligible (MuContainer *parent, MuContainer *child, gboolean created)
 {	
 	if (!parent || !child)
 		return FALSE;
@@ -211,9 +212,9 @@ child_elligible (Container *parent, Container *child, gboolean created)
 		return FALSE;
 	/* if (created) */
 	/* 	return TRUE; */
-	if (container_reachable (parent, child))
+	if (mu_container_reachable (parent, child))
 		return FALSE;
-	if (container_reachable (child, parent))
+	if (mu_container_reachable (child, parent))
 		return FALSE;
 
 	return TRUE;
@@ -222,10 +223,10 @@ child_elligible (Container *parent, Container *child, gboolean created)
 
 
 static void /* 1B */
-handle_references (GHashTable *id_table, Container *c)
+handle_references (GHashTable *id_table, MuContainer *c)
 {
 	const GSList *refs, *cur;
-	Container *parent;
+	MuContainer *parent;
 	gboolean created;
 	
 	refs = mu_msg_get_references (c->msg);
@@ -234,7 +235,7 @@ handle_references (GHashTable *id_table, Container *c)
 	
 	/* For each element in the message's References field:
 
-	   Find a Container object for the given Message-ID: If
+	   Find a MuContainer object for the given Message-ID: If
 	   there's one in id_table use that; Otherwise, make (and
 	   index) one with a null Message. */
 		
@@ -242,11 +243,11 @@ handle_references (GHashTable *id_table, Container *c)
 	created = FALSE;
 	for (parent = NULL, cur = refs; cur; cur = g_slist_next (cur)) {
 
-		Container *child;
+		MuContainer *child;
 		child = find_or_create_referred (id_table, (gchar*)cur->data,
 						 &created);
 		
-		/*Link the References field's Containers together in
+		/*Link the References field's MuContainers together in
 		 * the order implied by the References header.
 
 		 If they are already linked, don't change the existing
@@ -258,7 +259,7 @@ handle_references (GHashTable *id_table, Container *c)
 		 as a child of the other, don't add the link. */
 
 		if (child_elligible (parent, child, created))
-			parent = container_append_children (parent, child);	
+			parent = mu_container_append_children (parent, child);	
 
 		parent = child;
 	}
@@ -271,7 +272,7 @@ handle_references (GHashTable *id_table, Container *c)
 	   References field, and presumed a parent based on the other
 	   entries in that field. Now that we have the actual message,
 	   we can be more definitive, so throw away the old parent and
-	   use this new one. Find this Container in the parent's
+	   use this new one. Find this MuContainer in the parent's
 	   children list, and unlink it.
 	   
 	   Note that this could cause this message to now have no
@@ -285,7 +286,7 @@ handle_references (GHashTable *id_table, Container *c)
            /* optimization: if the the message was newly added, it's by
 	    * definition not reachable yet */
 	if (child_elligible (parent, c, created))
-		parent = container_append_children (parent, c);
+		parent = mu_container_append_children (parent, c);
 }
 
 
@@ -298,12 +299,12 @@ create_containers (MuMsgIter *iter)
 	id_table = g_hash_table_new_full (g_str_hash,
 					  g_str_equal,
 					  NULL,
-					  (GDestroyNotify)container_destroy);
+					  (GDestroyNotify)mu_container_destroy);
 	
 	for (mu_msg_iter_reset (iter); !mu_msg_iter_is_done (iter);
 	     mu_msg_iter_next (iter)) {
 		
-		Container *c;
+		MuContainer *c;
 		MuMsg *msg;
 		unsigned docid;
 		
@@ -324,7 +325,7 @@ create_containers (MuMsgIter *iter)
 
 
 static void
-filter_root_set (const gchar *msgid, Container *c, Container **root_set)
+filter_root_set (const gchar *msgid, MuContainer *c, MuContainer **root_set)
 {
 	if (c->parent)
 		return; 
@@ -333,16 +334,16 @@ filter_root_set (const gchar *msgid, Container *c, Container **root_set)
 		*root_set = c;
 		return;
 	} else
-		*root_set = container_append_siblings (*root_set, c);
+		*root_set = mu_container_append_siblings (*root_set, c);
 }
 
 
 /* 2.  Walk over the elements of id_table, and gather a list of the
-   Container objects that have no parents, but do have children */
-static Container*
+   MuContainer objects that have no parents, but do have children */
+static MuContainer*
 find_root_set (GHashTable *ids)
 {
-	Container *root_set;
+	MuContainer *root_set;
 
 	root_set = NULL;
 	g_hash_table_foreach (ids, (GHFunc)filter_root_set, &root_set);
@@ -352,15 +353,15 @@ find_root_set (GHashTable *ids)
 
 
 static gboolean
-prune_maybe (Container *c)
+prune_maybe (MuContainer *c)
 {
-	Container *cur;
+	MuContainer *cur;
 	
 	for (cur = c->child; cur; cur = cur->next) {
-		if (cur->flags & CONTAINER_FLAG_DELETE) 
-			c = container_remove_child (c, cur);
-		else if (cur->flags & CONTAINER_FLAG_SPLICE) 
-			c = container_splice_children (c, cur);
+		if (cur->flags & MU_CONTAINER_FLAG_DELETE) 
+			c = mu_container_remove_child (c, cur);
+		else if (cur->flags & MU_CONTAINER_FLAG_SPLICE) 
+			c = mu_container_splice_children (c, cur);
 	}
 	
 	/* don't touch containers with messages */
@@ -370,11 +371,11 @@ prune_maybe (Container *c)
 	/* A. If it is an msg-less container with no children, mark it
 	 * for deletion. */
 	if (!c->child) {
-		c->flags |= CONTAINER_FLAG_DELETE;
+		c->flags |= MU_CONTAINER_FLAG_DELETE;
 		return TRUE;
 	}
 	
-	/* B. If the Container has no Message, but does have
+	/* B. If the MuContainer has no Message, but does have
 	 * children, remove this container but promote its
 	 * children to this level (that is, splice them in to
 	 * the current child list.)
@@ -386,31 +387,30 @@ prune_maybe (Container *c)
 	if (c->child->next) /* ie., > 1 child */
 		return TRUE;
 	
-	c->flags |= CONTAINER_FLAG_SPLICE;
+	c->flags |= MU_CONTAINER_FLAG_SPLICE;
 	
 	return TRUE;
 }
 
 
-
-static Container*
-prune_empty_containers (Container *root_set)
+static MuContainer*
+prune_empty_containers (MuContainer *root_set)
 {
-	Container *cur;
+	MuContainer *cur;
 
-	container_foreach (root_set, (ContainerForeachFunc)prune_maybe, NULL);
+	mu_container_foreach (root_set, (MuContainerForeachFunc)prune_maybe, NULL);
 	
 	/* and prune the root_set itself... */
 	for (cur = root_set; cur; cur = cur->next) {
 		
-		if (cur->flags & CONTAINER_FLAG_DELETE) 
-			root_set = container_remove_sibling (root_set, cur);
+		if (cur->flags & MU_CONTAINER_FLAG_DELETE) 
+			root_set = mu_container_remove_sibling (root_set, cur);
 
-		else if (cur->flags & CONTAINER_FLAG_SPLICE) {
-			Container *newchild;
+		else if (cur->flags & MU_CONTAINER_FLAG_SPLICE) {
+			MuContainer *newchild;
 			newchild = cur->child;
 			cur->child = NULL;
-			root_set = container_append_siblings (root_set, newchild);
+			root_set = mu_container_append_siblings (root_set, newchild);
 		}
 	}
 
@@ -418,7 +418,7 @@ prune_empty_containers (Container *root_set)
 }
 
 G_GNUC_UNUSED static gint
-cmp_dates (Container *c1, Container *c2)
+cmp_dates (MuContainer *c1, MuContainer *c2)
 {
 	MuMsg *m1, *m2;
 	
@@ -434,111 +434,5 @@ cmp_dates (Container *c1, Container *c2)
 }
 
 
-
-
-
-static MuMsgIterThreadInfo*
-thread_info_new (gchar *threadpath, gboolean root,
-		 gboolean child, gboolean empty_parent, gboolean is_dup)
-{
-	MuMsgIterThreadInfo *ti;
-	
-	ti		     = g_slice_new (MuMsgIterThreadInfo);
-	ti->threadpath	     = threadpath;
-
-	ti->prop  = 0;
-	ti->prop |= root         ? MU_MSG_ITER_THREAD_PROP_ROOT : 0;
-	ti->prop |= child        ? MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  : 0;
-	ti->prop |= empty_parent ? MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT : 0;
-	ti->prop |= is_dup       ? MU_MSG_ITER_THREAD_PROP_DUP : 0;
-	
-	return ti;
-}
-
-static void
-thread_info_destroy (MuMsgIterThreadInfo *ti)
-{
-	if (ti) {
-		g_free (ti->threadpath);
-		g_slice_free (MuMsgIterThreadInfo, ti);
-	}
-}
-
-
-struct _ThreadInfo {
-	GHashTable		*hash;
-	const char*		 format;
-};
-typedef struct _ThreadInfo	 ThreadInfo;
-
-
-static void
-add_to_thread_info_hash (GHashTable *thread_info_hash, Container *c,
-			 char *threadpath)
-{
-	gboolean is_root, first_child, empty_parent, is_dup;
-	
-	/* 'root' means we're a child of the dummy root-container */
-	is_root = (c->parent == NULL);
-	
-	first_child  = is_root ? FALSE : (c->parent->child == c);
-	empty_parent = is_root ? FALSE : (!c->parent->msg); 
-	is_dup	     = c->flags &	CONTAINER_FLAG_DUP;
-	
-	g_hash_table_insert (thread_info_hash,
-			     GUINT_TO_POINTER(c->docid),
-			     thread_info_new (threadpath,
-					      is_root,
-					      first_child,
-					      empty_parent,
-					      is_dup));
-}
-
-/* device a format string that is the minimum size to fit up to
- * matchnum matches -- returns static memory */
-const char*
-thread_segment_format_string (size_t matchnum)
-{
-	unsigned digitnum;
-	static char frmt[16];
-	
-	/* get the number of digits needed in a hex-representation of
-	 * matchnum */
-	digitnum = (unsigned) (ceil (log(matchnum)/log(16)));
-	snprintf (frmt, sizeof(frmt),"%%0%ux", digitnum);
-	
-	return frmt;
-}
-
-static gboolean
-add_thread_info (Container *c, ThreadInfo *ti, Path *path)
-{	
-	gchar *pathstr;
-
-	pathstr = path_to_string (path, ti->format);	
-	add_to_thread_info_hash (ti->hash, c, pathstr);
-
-	return TRUE;
-}
-
-
-GHashTable*
-create_doc_id_thread_path_hash (Container *root_set, size_t matchnum)
-{
-	ThreadInfo ti;
-	
-	/* create hash docid => thread-info */
-	ti.hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-					 NULL,
-					 (GDestroyNotify)thread_info_destroy);
-
-	ti.format     = thread_segment_format_string (matchnum);
-	
-	container_path_foreach (root_set,
-				(ContainerPathForeachFunc)add_thread_info,
-				&ti);
-
-	return ti.hash;
-}
 
 
