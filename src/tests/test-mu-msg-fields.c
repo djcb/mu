@@ -122,8 +122,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-msg-fields/mu-msg-field-flags",
 			 test_mu_msg_field_flags);
 
-
-	
 	/* FIXME: add tests for mu_msg_str_flags; but note the
 	 * function simply calls mu_msg_field_str */
 		

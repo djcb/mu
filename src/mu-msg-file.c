@@ -720,7 +720,8 @@ get_tags (MuMsgFile *self)
 
 
 char*
-mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free)
+mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
+			   gboolean *do_free)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
