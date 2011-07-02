@@ -50,16 +50,20 @@ private:
 
 
 struct _MuMsgIter {
-	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum, gboolean threads):
+	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum,
+		    gboolean threads, MuMsgFieldId sortfield):
 		_enq(enq), _msg(0), _threadhash (0) {
 		
 		_matches = _enq.get_mset (0, maxnum);
 
 		if (threads && !_matches.empty()) { 
+
 			_matches.fetch();
 			_threadhash = mu_threader_calculate
-				(this, _matches.size());
+				(this, _matches.size(), sortfield);
+
 			ThreadKeyMaker keymaker(_threadhash);
+
 			enq.set_sort_by_key (&keymaker, false);
 			_matches = _enq.get_mset (0, maxnum);
 		}
@@ -91,12 +95,20 @@ struct _MuMsgIter {
 
 
 MuMsgIter*
-mu_msg_iter_new (XapianEnquire *enq, size_t maxnum, gboolean threads)
+mu_msg_iter_new (XapianEnquire *enq, size_t maxnum, gboolean threads,
+		 MuMsgFieldId sortfield)
 {
 	g_return_val_if_fail (enq, NULL);
+	/* sortfield should be set to .._NONE when we're not threading */
+	g_return_val_if_fail (threads || sortfield == MU_MSG_FIELD_ID_NONE,
+			      NULL);
+	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfield) ||
+			      sortfield == MU_MSG_FIELD_ID_NONE,
+			      FALSE);
 	
 	try {
-		return new MuMsgIter ((Xapian::Enquire&)*enq, maxnum, threads);
+		return new MuMsgIter ((Xapian::Enquire&)*enq, maxnum, threads,
+				      sortfield);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

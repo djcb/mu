@@ -59,26 +59,32 @@ typedef enum _FieldFlags	FieldFlags;
  * this struct describes the fields of an e-mail
  /*/
 struct _MuMsgField {
-	MuMsgFieldId    _id;		/* the id of the field */
-	MuMsgFieldType  _type;		/* the type of the field */
-	const char     *_name;		/* the name of the field */
-	const char      _shortcut;	/* the shortcut for use in
-					 * --fields and sorting */
-	const char      _xprefix;	/* the Xapian-prefix  */ 
-	FieldFlags      _flags;		/* the flags that tells us
-					 * what to do */
+	MuMsgFieldId      _id;	     /* the id of the field */
+	MuMsgFieldType    _type;     /* the type of the field */
+	const char       *_name;     /* the name of the field */
+	const char        _shortcut; /* the shortcut for use in
+				      * --fields and sorting */
+	const char        _xprefix;  /* the Xapian-prefix  */ 
+	GCompareDataFunc  _cmpfunc;  /* sort function */     
+	FieldFlags        _flags;    /* the flags that tells us
+				      * what to do */
+
+
 };
 typedef struct _MuMsgField MuMsgField;
+
+static int cmp_num (int a, int b);
+static int cmp_str (const char* s1, const char* s2);
 
 /* the name and shortcut fields must be lower case, or they might be
  * misinterpreted by the query-preprocesser which turns queries into
  * lowercase */
 static const MuMsgField FIELD_DATA[] = {
-	
 	{  
 		MU_MSG_FIELD_ID_ATTACH,
 		MU_MSG_FIELD_TYPE_STRING,
-		"attach" , 'a', 'A',  
+		"attach" , 'a', 'A',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_NORMALIZE |
 		FLAG_DONT_CACHE
 	},
@@ -87,6 +93,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_BCC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"bcc" , 'h', 'H',  /* 'hidden */
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT |
 		FLAG_XAPIAN_VALUE
 	},
@@ -95,6 +102,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_BODY_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"body", 'b', 'B',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE |
 		FLAG_DONT_CACHE 
 	},
@@ -103,6 +111,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_BODY_HTML,
 		MU_MSG_FIELD_TYPE_STRING,
 		"bodyhtml", 'h', 0,
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_DONT_CACHE 
 	},
 	
@@ -110,6 +119,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_CC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"cc", 'c', 'C',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
 	
@@ -117,6 +127,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_DATE, 
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"date", 'd', 'D',
+		(GCompareDataFunc)cmp_num,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY
 	},
@@ -125,6 +136,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_FLAGS, 
 		MU_MSG_FIELD_TYPE_INT,
 		"flag", 'g', 'G',  /* flaGs */
+		(GCompareDataFunc)cmp_num,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY
 	},
@@ -133,6 +145,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_FROM,
 		MU_MSG_FIELD_TYPE_STRING,
 		"from", 'f', 'F',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
 
@@ -140,6 +153,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_PATH, 
 		MU_MSG_FIELD_TYPE_STRING,
 		"path", 'l', 'L',   /* 'l' for location */
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_BOOLEAN  | FLAG_XAPIAN_PREFIX_ONLY
 	},
@@ -148,6 +162,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_MAILDIR, 
 		MU_MSG_FIELD_TYPE_STRING,
 		"maildir", 'm', 'M',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE |
 		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY
@@ -156,7 +171,8 @@ static const MuMsgField FIELD_DATA[] = {
 	{ 
 		MU_MSG_FIELD_ID_PRIO,
 		MU_MSG_FIELD_TYPE_INT,
-		"prio", 'p', 'P',  
+		"prio", 'p', 'P',
+		(GCompareDataFunc)cmp_num,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY 
 	},
@@ -165,6 +181,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_SIZE,
 		MU_MSG_FIELD_TYPE_BYTESIZE,
 		"size", 'z', 'Z', /* siZe */
+		(GCompareDataFunc)cmp_num,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY
 	},
@@ -173,6 +190,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_SUBJECT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"subject", 's', 'S',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE |
 		FLAG_NORMALIZE
 	},
@@ -181,6 +199,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_TO,
 		MU_MSG_FIELD_TYPE_STRING,
 		"to", 't', 'T',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
 	
@@ -188,6 +207,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_MSGID,
 		MU_MSG_FIELD_TYPE_STRING,
 		"msgid", 'i', 'I',  /* 'i' for Id */
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
 	},
@@ -196,6 +216,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_TIMESTAMP,
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"timestamp", 0, 0,
+		(GCompareDataFunc)cmp_num,
 		FLAG_GMIME 
 	},
 
@@ -203,6 +224,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_REFS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		NULL, 'r', 'R',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY
 	},
@@ -211,6 +233,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_TAGS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		"tag", 'x', 'X',
+		(GCompareDataFunc)cmp_str,
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY
 	}
@@ -378,6 +401,15 @@ mu_msg_field_name (MuMsgFieldId id)
 	return mu_msg_field(id)->_name;
 }
 
+
+GCompareDataFunc
+mu_msg_field_cmp_func (MuMsgFieldId id)
+{
+	g_return_val_if_fail (mu_msg_field_id_is_valid(id),NULL);
+	return mu_msg_field(id)->_cmpfunc;
+}
+
+
 char
 mu_msg_field_shortcut (MuMsgFieldId id)
 {	
@@ -403,3 +435,24 @@ mu_msg_field_type (MuMsgFieldId id)
 			      MU_MSG_FIELD_TYPE_NONE);
 	return mu_msg_field(id)->_type;
 }
+
+static int
+cmp_num (int a, int b)
+{
+	return a - b;
+}
+
+
+static int
+cmp_str (const char* s1, const char *s2)
+{
+	if (s1 == s2)
+		return 0;
+	else if (!s1)
+		return -1;
+	else if (!s2)
+		return 1;
+	
+	return g_utf8_collate (s1, s2);
+}
+

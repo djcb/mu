@@ -356,14 +356,18 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 		
 		Xapian::Enquire enq (self->_db);
 
-		if (sortfieldid != MU_MSG_FIELD_ID_NONE)
+		/* note, when our result will be *threaded*, we sort
+		 * there, and don't let Xapian do any sorting */
+		if (!threads && sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
 					       ascending ? true : false);
 		enq.set_query(query);
 		enq.set_cutoff(0,0);
 		
-		return mu_msg_iter_new ((XapianEnquire*)&enq,
-					self->_db.get_doccount(), threads);
+		return mu_msg_iter_new (
+			(XapianEnquire*)&enq,
+			self->_db.get_doccount(), threads,
+			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

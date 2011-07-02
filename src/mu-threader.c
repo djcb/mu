@@ -55,18 +55,19 @@ static MuContainer* prune_empty_containers (MuContainer *root);
 /* static void group_root_set_by_subject (GSList *root_set); */
 GHashTable* create_doc_id_thread_path_hash (MuContainer *root, size_t match_num);
 
-static gint cmp_dates (MuContainer *c1, MuContainer *c2);
-
 /* msg threading algorithm, based on JWZ's algorithm,
  * http://www.jwz.org/doc/threading.html */
 GHashTable*
-mu_threader_calculate (MuMsgIter *iter, size_t matchnum)
+mu_threader_calculate (MuMsgIter *iter, size_t matchnum, MuMsgFieldId sortfield)
 {
 	GHashTable *id_table, *thread_ids;
 	MuContainer *root_set;
 
 	g_return_val_if_fail (iter, FALSE);
-
+	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfield) ||
+			      sortfield == MU_MSG_FIELD_ID_NONE,
+			      FALSE);
+	
 	/* step 1 */
 	id_table = create_containers (iter);
 	
@@ -79,8 +80,9 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum)
 	root_set = prune_empty_containers (root_set);
 	
 	/* sort root set */
-	root_set = mu_container_sort (root_set, (GCompareDataFunc)cmp_dates,
-				      NULL, FALSE);
+	if (sortfield != MU_MSG_FIELD_ID_NONE)
+		root_set = mu_container_sort (root_set, sortfield,
+					      NULL, FALSE);
 		
 	/* step 5: group root set by subject */
 	//group_root_set_by_subject (root_set);
@@ -416,23 +418,4 @@ prune_empty_containers (MuContainer *root_set)
 
 	return root_set;
 }
-
-G_GNUC_UNUSED static gint
-cmp_dates (MuContainer *c1, MuContainer *c2)
-{
-	MuMsg *m1, *m2;
-	
-	m1 = c1->msg;
-	m2 = c2->msg;
-
-	if (!m1)
-		return m2 ?  1 : 0;
-	if (!m2)
-		return m1 ?  0 : 1;
-	
-	return mu_msg_get_date (m1) - mu_msg_get_date (m2);
-}
-
-
-
 

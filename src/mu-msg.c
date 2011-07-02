@@ -597,3 +597,26 @@ mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 	}
 }
 
+
+int
+mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
+{
+	GCompareDataFunc func;
+	
+	g_return_val_if_fail (m1, 0);
+	g_return_val_if_fail (m2, 0);
+	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), 0);
+	
+	func = mu_msg_field_cmp_func (mfid);
+
+	if (mu_msg_field_is_string (mfid)) 
+		return func (get_str_field (m1, mfid),
+			     get_str_field (m2, mfid), NULL);
+	/* TODO: special-case 64-bit nums */
+	else if (mu_msg_field_is_numeric (mfid)) 
+		return func (GUINT_TO_POINTER((guint)get_num_field(m1, mfid)),
+			     GUINT_TO_POINTER((guint)get_num_field(m2, mfid)),
+			     NULL);
+	
+	return 0; /* TODO: handle lists */
+}

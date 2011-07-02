@@ -45,11 +45,15 @@ typedef struct _MuMsgIter MuMsgIter;
  * is C, not C++),providing access to search results
  * @param batchsize how many results to retrieve at once
  * @param threads whether to calculate threads
+ * @param sorting field when using threads; note, when 'threads' is
+ * FALSE, this should be MU_MSG_FIELD_ID_NONE
  * 
  * @return a new MuMsgIter, or NULL in case of error
  */
 MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
-			    size_t batchsize, gboolean threads) G_GNUC_WARN_UNUSED_RESULT;
+			    size_t batchsize,
+			    gboolean threads,
+			    MuMsgFieldId threadsortfield) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the next message (which you got from

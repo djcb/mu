@@ -171,14 +171,15 @@ typedef int (*MuContainerCmpFunc) (MuContainer *c1, MuContainer *c2,
  * container is empty, the first non-empty 'leftmost' child is used.
  * 
  * @param c a container
- * @param func a sorting function
+ * @param mfid the field to sort by
  * @param user_data a user pointer to pass to the sorting function
  * @param invert if TRUE, invert the sorting order
  * 
  * @return a sorted container
  */
-MuContainer *mu_container_sort (MuContainer *c, GCompareDataFunc func,
-			    gpointer user_data, gboolean invert);
+MuContainer* mu_container_sort (MuContainer *c, MuMsgFieldId mfid,
+				gpointer user_data, gboolean invert);
+
 
 /**
  * create a hashtable with maps document-ids to information about them,

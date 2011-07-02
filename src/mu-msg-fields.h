@@ -250,13 +250,26 @@ gboolean mu_msg_field_xapian_escape (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * should this field be normalized? ie. should it be downcased and
- * accents removed?
+ * accents removed when storing as Xapian term?
  * 
  * @param field a MuMsgField
  * 
  * @return TRUE if the field is normalized, FALSE otherwise
  */
 gboolean mu_msg_field_normalize (MuMsgFieldId id) G_GNUC_PURE;
+
+
+
+/**
+ * get the comparison function for this field, ie. the one that can be
+ * use for sorting them
+ * 
+ * @param field a MuMsgField
+ * 
+ * @return the comparison function (or NULL in case of error )
+ */
+GCompareDataFunc mu_msg_field_cmp_func (MuMsgFieldId id) G_GNUC_PURE;
+
 
 /**
  * should this field be stored as contact information? This means that

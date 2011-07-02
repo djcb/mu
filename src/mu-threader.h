@@ -40,11 +40,14 @@ G_BEGIN_DECLS
  * to a MuMsgIterThreadInfo structure (see mu-msg-iter.h)
  *
  * @param iter an iter; note this function will mu_msgi_iter_reset this iterator
- * @param matches the number of matches in the set
+ * @param matches the number of matches in the set *
+ * @param sortfield the field to sort results by, or
+ * MU_MSG_FIELD_ID_NONE if no sorting should be performed
  * 
  * @return a hashtable; free with g_hash_table_destroy when done with it
  */	
-GHashTable *mu_threader_calculate (MuMsgIter *iter, size_t matches);
+GHashTable *mu_threader_calculate (MuMsgIter *iter, size_t matches,
+				   MuMsgFieldId sortfield);
 
 
 G_END_DECLS

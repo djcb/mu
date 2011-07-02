@@ -348,6 +348,19 @@ const GSList* mu_msg_get_references (MuMsg *msg);
 const GSList* mu_msg_get_tags (MuMsg *self);
 
 
+/**
+ * compare two messages for sorting
+ * 
+ * @param m1 a message
+ * @param m2 another message
+ * @param mfid the message to use for the comparison
+ * 
+ * @return negative if m1 is smaller, positive if m1 is smaller, 0 if
+ * they are equal
+ */
+int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
+
+
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO    = 0,
 	MU_MSG_CONTACT_TYPE_FROM,  
