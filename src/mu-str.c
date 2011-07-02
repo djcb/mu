@@ -439,8 +439,13 @@ mu_str_subject_normalize (const gchar* str)
 	last_colon = g_strrstr (str, ":");
 	if (!last_colon)
 		return str;
-	else
-		return g_strchug (last_colon + 1);
+	else {
+		gchar *str;
+		str = last_colon + 1;
+		while (*str == ' ')
+			++str;
+		return str;
+	}
 }
 
 

@@ -412,6 +412,28 @@ test_mu_str_guess_nick (void)
 
 
 
+static void
+test_mu_str_subject_normalize (void)
+{
+	int i;
+		
+	struct {
+		char *src, *exp;
+	} tests[] = {
+		{ "test123", "test123" },
+		{ "Re:test123", "test123" },
+		{ "Re: Fwd: test123", "test123" },
+		{ "Re[3]: Fwd: test123", "test123" },
+		{ "operation: mindcrime", "mindcrime" }, /*...*/
+		{ "", "" }
+	};
+				
+	for (i = 0; i != G_N_ELEMENTS(tests); ++i)
+		g_assert_cmpstr (mu_str_subject_normalize (tests[i].src), ==,
+				 tests[i].exp);
+}
+
+
 
 
 
@@ -453,16 +475,20 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-to-list",
 			 test_mu_str_to_list);
 	
-	g_test_add_func ("/mu-str/mu-str_date_parse_hdwmy",
+	g_test_add_func ("/mu-str/mu_str_date_parse_hdwmy",
 			 test_mu_str_date_parse_hdwmy);
 
-	g_test_add_func ("/mu-str/mu-str_guess_first_name",
+	g_test_add_func ("/mu-str/mu_str_guess_first_name",
 			 test_mu_str_guess_first_name);
-	g_test_add_func ("/mu-str/mu-str_guess_last_name",
+	g_test_add_func ("/mu-str/mu_str_guess_last_name",
 			 test_mu_str_guess_last_name);
-	g_test_add_func ("/mu-str/mu-str_guess_nick",
+	g_test_add_func ("/mu-str/mu_str_guess_nick",
 			 test_mu_str_guess_nick);
-	
+
+	g_test_add_func ("/mu-str/mu_str_subject_normalize",
+			 test_mu_str_subject_normalize);
+
+
 	/* FIXME: add tests for mu_str_flags; but note the
 	 * function simply calls mu_msg_field_str */
 		
