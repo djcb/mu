@@ -435,7 +435,6 @@ mu_str_subject_normalize (const gchar* str)
 	gchar *last_colon;
 	g_return_val_if_fail (str, NULL);
 
-	/* FIXME: improve this */
 	last_colon = g_strrstr (str, ":");
 	if (!last_colon)
 		return str;

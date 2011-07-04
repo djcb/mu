@@ -204,6 +204,15 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 # should we build the widgets/ dir?
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
+
+# check for guile
+AC_PATH_PROG(GUILE, [guile-config], [], [$PATH])
+  AS_IF([test "x$GUILE" != "x"],
+  [GUILE_CFLAGS=`$GUILE compile`; GUILE_LIBS=`$GUILE link`])
+AM_CONDITIONAL(HAVE_GUILE, [test "$xGUILE" != "x"])
+AC_SUBST(GUILE_LIBS)
+AC_SUBST(GUILE_CFLAGS)
+
 # check for xdg-open
 AS_IF([test "x$buildgui"="xyes"],[
   AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
@@ -228,9 +237,11 @@ Makefile
 src/Makefile
 src/tests/Makefile
 widgets/Makefile
+libmuguile/Makefile
 toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile
+toys/muile/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile
@@ -262,6 +273,10 @@ fi
 
 if test "x$have_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
+fi
+
+if test "x$GUILE" != "x"; then
+echo "Guile version                        : `$GUILE --version 2>&1`"
 fi
 
 echo
