@@ -51,7 +51,7 @@ enum _OutputFormat {
 	FORMAT_SEXP,
 	FORMAT_XML,
 	FORMAT_XQUERY,
-
+	
 	FORMAT_NONE
 };
 typedef enum _OutputFormat OutputFormat;
@@ -141,8 +141,8 @@ sort_field_from_string (const char* fieldstr)
 
 
 static gboolean
-run_query_format (MuMsgIter *iter, MuConfig *opts,
-		  OutputFormat format, size_t *count)
+output_query_results (MuMsgIter *iter, MuConfig *opts,
+		     OutputFormat format, size_t *count)
 {
 	switch (format) {
 
@@ -165,14 +165,12 @@ run_query_format (MuMsgIter *iter, MuConfig *opts,
 }
 
 
-static gboolean
-run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
-	   OutputFormat format, size_t *count)
+static MuMsgIter*
+run_query (MuQuery *xapian, const gchar *query, MuConfig *opts, size_t *count)
 {
 	GError *err;
 	MuMsgIter *iter;
 	MuMsgFieldId sortid;
-	gboolean rv;
 	
 	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
@@ -188,10 +186,25 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 	if (!iter) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);
-		return FALSE;
+		return NULL;
 	}
 
-	rv = run_query_format (iter, opts, format, count);
+	return iter;
+}
+	
+
+static gboolean
+process_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
+	       OutputFormat format, size_t *count)
+{
+	MuMsgIter *iter;
+	gboolean rv;
+	
+	iter = run_query (xapian, query, opts, count);
+	if (!iter)
+		return FALSE;
+		
+	rv = output_query_results (iter, opts, format, count);
 		
 	if (rv && count && *count == 0)
 		g_warning ("no matching messages found");
@@ -487,8 +500,6 @@ ansi_reset_maybe (MuMsgFieldId mfid, gboolean color)
 	fputs (MU_COLOR_DEFAULT, stdout);
 	
 }
-
-
 
 
 static const char*
@@ -842,7 +853,7 @@ mu_cmd_find (MuConfig *opts)
 	
 	if (!query_params_valid (opts) || !format_params_valid(opts))
 		return MU_EXITCODE_ERROR;
-
+	
 	format = get_output_format (opts->formatstr);
 	xapian = get_query_obj();
 	query  = get_query (opts);
@@ -853,7 +864,7 @@ mu_cmd_find (MuConfig *opts)
 	if (format == FORMAT_XQUERY)
 		rv = print_xapian_query (xapian, query, &count);
 	else
-		rv = run_query (xapian, query, opts, format, &count);
+		rv = process_query (xapian, query, opts, format, &count);
 
 	mu_query_destroy (xapian);
 	g_free (query);
