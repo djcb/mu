@@ -92,7 +92,7 @@ mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid,
 	try {
 		/* return a comma-separated string as a GSList */
 		const std::string s (self->doc().get_value(mfid));
-		return s.empty() ? NULL : mu_str_to_list(s.c_str(),',');
+		return s.empty() ? NULL : mu_str_to_list(s.c_str(),',',TRUE);
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

@@ -394,9 +394,26 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 
 	if (lst && mu_msg_field_xapian_term (mfid)) {
 		while (lst) {
+			size_t len;
+			char *val;
+			/* try stack-allocation, it's much faster*/
+			len = strlen ((char*)lst->data);
+			if (G_LIKELY(len < 1024)) 
+				val =  (char*)g_alloca(len+1);
+			else
+				val  = (char*)g_malloc(len+1);
+
+			strcpy (val, (char*)lst->data);
+
+			if (mu_msg_field_normalize (mfid))
+				mu_str_normalize_in_place (val, TRUE);
+			
 			doc.add_term (prefix(mfid) +
-				      std::string((char*)lst->data, 0,
-						  MU_STORE_MAX_TERM_LENGTH));
+				      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
+
+			if (!(G_LIKELY(len < 1024)))
+				g_free (val);
+
 			lst = g_slist_next ((GSList*)lst);
 		}
 	}
