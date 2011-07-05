@@ -45,7 +45,7 @@ fill_database (const char *testdir)
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, testdir);
 
-	/* g_printerr ("\n%s\n", cmdline); */
+	/* g_printerr ("\n%s\n", cmdline);  */
 	
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
@@ -450,8 +450,6 @@ test_mu_query_tags (void)
 }
 
 
-
-
 int
 main (int argc, char *argv[])
 {
@@ -477,9 +475,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-tags",
 			 test_mu_query_tags);
 	
-	/* g_log_set_handler (NULL, */
-	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
-	/* 		   (GLogFunc)black_hole, NULL); */
+	g_log_set_handler (NULL,
+			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
 	

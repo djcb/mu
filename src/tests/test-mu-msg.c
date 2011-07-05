@@ -321,8 +321,8 @@ test_mu_msg_tags (void)
 			  ==, 1217530645);
 
 	tags = mu_msg_get_tags (msg);
-	g_assert_cmpstr ((char*)tags->data,==,"paradise");
-	g_assert_cmpstr ((char*)tags->next->data,==,"lost");
+	g_assert_cmpstr ((char*)tags->data,==,"Paradise");
+	g_assert_cmpstr ((char*)tags->next->data,==,"losT");
 	g_assert (tags->next->next == NULL);
 		
 	mu_msg_unref (msg);
