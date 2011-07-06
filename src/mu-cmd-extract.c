@@ -296,8 +296,6 @@ save_parts (const char *path, const char *filename, MuConfig *opts)
 	return rv;
 }
 
-
-
 #define color_maybe(C)	do{ if (color) fputs ((C),stdout);}while(0)
 
 static void

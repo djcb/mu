@@ -177,8 +177,8 @@ config_options_group_find (MuConfig *opts)
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
 		 "output format ('plain'(*), 'links', 'xml',"
 		 "'json', 'sexp', 'xquery')", NULL},
-		/* {"exec", 'e', 0, G_OPTION_ARG_STRING, &opts->exec, */
-		/*  "execute command on each match message", NULL}, */
+		{"exec", 'e', 0, G_OPTION_ARG_STRING, &opts->exec,
+		 "execute command on each match message", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
