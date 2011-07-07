@@ -196,7 +196,7 @@ mu_cmd_view (MuConfig *opts)
 		if (rv != MU_EXITCODE_OK)
 			break;
 		/* add a separator between two messages? */
-		if (opts->params[i+1] && opts->separate)
+		if (opts->separate)
 			g_print ("%c", VIEW_SEPARATOR);
 	}
 	
