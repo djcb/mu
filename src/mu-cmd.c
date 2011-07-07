@@ -34,7 +34,7 @@
 #include "mu-contacts.h"
 #include "mu-runtime.h"
 
-#define VIEW_SEPARATOR '\f' /* form-feed */
+#define VIEW_TERMINATOR '\f' /* form-feed */
 
 
 static void
@@ -196,8 +196,8 @@ mu_cmd_view (MuConfig *opts)
 		if (rv != MU_EXITCODE_OK)
 			break;
 		/* add a separator between two messages? */
-		if (opts->separate)
-			g_print ("%c", VIEW_SEPARATOR);
+		if (opts->terminator)
+			g_print ("%c", VIEW_TERMINATOR);
 	}
 	
 	return rv;

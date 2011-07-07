@@ -108,9 +108,9 @@ struct _MuConfig {
 					 * messages */
 	
 	/* options for view */
-	gboolean         separate;      /* add separator between
-					 * multiple messages in mu
-					 * view */
+	gboolean         terminator;      /* add separator \f between
+					   * multiple messages in mu
+					   * view */
 	
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */
