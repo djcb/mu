@@ -87,7 +87,6 @@ run_and_count_matches (const char *xpath, const char *query)
 	MuQuery  *mquery;
 	MuMsgIter *iter;
 	guint count1, count2;
-	GHashTable *hash;
 	
 	mquery = mu_query_new (xpath, NULL);
 	g_assert (query);
@@ -106,9 +105,6 @@ run_and_count_matches (const char *xpath, const char *query)
 			     FALSE, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
-
-	hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-				      (GDestroyNotify)g_free, NULL);
 
 	assert_no_dups (iter);
 	
@@ -414,7 +410,7 @@ test_mu_query_attach (void)
 
 	/* g_print ("(%s)\n", xpath); */
 	
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
 				  ==, queries[i].count);
 
@@ -450,6 +446,36 @@ test_mu_query_tags (void)
 }
 
 
+static void
+test_mu_query_tags_02 (void)
+{
+	gchar *xpath;
+	int i;
+	
+	QResults queries[] = {
+		{ "x:paradise", 1},
+		{ "tag:@NextActions", 1},
+		{ "x:queensrÿche", 1},
+		{ "tag:lost OR tag:operation:mindcrime", 2},
+	};
+	
+	xpath = fill_database (MU_TESTMAILDIR2);
+	g_assert (xpath != NULL);
+
+	/* g_print ("(%s)\n", xpath); */
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+		/* g_print ("%s\n", queries[i].query); */
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+	}
+
+	g_free (xpath);	
+}
+
+
+
+
 int
 main (int argc, char *argv[])
 {
@@ -474,6 +500,8 @@ main (int argc, char *argv[])
 			 test_mu_query_attach);
 	g_test_add_func ("/mu-query/test-mu-query-tags",
 			 test_mu_query_tags);
+	g_test_add_func ("/mu-query/test-mu-query-tags_02",
+			 test_mu_query_tags_02);
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
