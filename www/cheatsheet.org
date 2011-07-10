@@ -32,11 +32,16 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
 #+html:<pre> $ mu find to:Jack subject:jellyfish tumbleweed</pre>
 
 *** messages between 2 kilobytes and a 2Mb, written in December 2009 with an attachment from Bill
-#+html: $ mu find size:2k..2m date:20091201..20093112 flag:attach from:bill
- 
-*** unread messages about soccer or socrates or ...
-#+html:<pre>  $ mu find 'subject:soc*' flag:unread</pre>
+#+html:<pre> $ mu find size:2k..2m date:20091201..20093112 flag:attach from:bill</pre>
 
+*** signed messages about apples *OR* oranges
+#+html:<pre>  $ mu find flag:signed apples OR oranges</pre>
+
+*** unread messages about things starting with 'soc' (soccer, society, socrates, ...)
+#+html:<pre>  $ mu find 'subject:soc*' flag:unread</pre>
+    
+    (search using the '*' wildcard is available since mu 0.9.6)
+    
 ** Finding contacts
    
    Contacts (names + email addresses) are cached separately, and can be
@@ -87,6 +92,20 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
    
    (since =mu= version 0.9.6)
    
+** Integration with mail clients
+
+  The =mu-find= man page contains examples for =mutt= and =wanderlust=.
+
+** Viewing messages
+
+   You can view message contents with =mu view=; it does not use the database
+   and simply takes a message file as it's argument:
+
+#+html:<pre> $ mu view ~/Maildir/inbox/cur/message24</pre>
+   
+   You can also use =--color= to get colorized output, and =--summary= to get a
+   summary of the message contents instead of the whole thing.
+
 ** Further processing of matched messages
 
   If you need to process the results of your queries with some other program,
@@ -106,20 +125,8 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
 #+html:<pre> $ mu find --format=xml pancake</pre>
 
   will give you a list of pancake-related messages in XML-format.
-   
-** Integration with mail clients
 
-  The =mu-find= man page contains examples for =mutt= and =wanderlust=.
 
-** Viewing messages
-
-   You can view message contents with =mu view=; it does not use the database
-   and simply takes a message file as it's argument:
-
-#+html:<pre> $ mu view ~/Maildir/inbox/cur/message24</pre>
-   
-   You can also use =--color= to get colorized output, and =--summary= to get a
-   summary of the message contents instead of the whole thing.
 
 #+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
 #+begin_html

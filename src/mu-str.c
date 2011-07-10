@@ -399,7 +399,7 @@ mu_str_from_list (const GSList *lst, char sepa)
 }
 
 GSList*
-mu_str_to_list (const char *str, char sepa)
+mu_str_to_list (const char *str, char sepa, gboolean strip)
 {
 	GSList *lst;
 	gchar **strs, **cur;
@@ -413,8 +413,14 @@ mu_str_to_list (const char *str, char sepa)
 	sep[0] = sepa;
 	strs = g_strsplit (str, sep, -1);
 
-	for (cur = strs, lst = NULL; cur && *cur; ++cur)
-		lst = g_slist_prepend (lst, g_strdup(*cur));
+	for (cur = strs, lst = NULL; cur && *cur; ++cur) {
+		char *elm;
+		elm = g_strdup(*cur);
+		if (strip)
+			elm = g_strstrip (elm);
+		
+		lst = g_slist_prepend (lst, elm);
+	}
 		
 	lst = g_slist_reverse (lst);
 	g_strfreev (strs);

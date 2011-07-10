@@ -103,11 +103,14 @@ struct _MuConfig {
 	char            *bookmark;	/* use bookmark */
 	char		*formatstr;     /* output type
 					 * (plain,links,xml,json,sexp) */
-
+	char		*exec;		/* command to execute on the
+					 * files for the matched
+					 * messages */
+	
 	/* options for view */
-	gboolean         separate;      /* add separator between
-					 * multiple messages in mu
-					 * view */
+	gboolean         terminator;      /* add separator \f between
+					   * multiple messages in mu
+					   * view */
 	
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */

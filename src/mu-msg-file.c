@@ -715,7 +715,7 @@ get_tags (MuMsgFile *self)
 	obj = GMIME_OBJECT(self->_mime_msg);
 
 	return mu_str_to_list (g_mime_object_get_header
-			       (obj, "X-Label"), ',');	
+			       (obj, "X-Label"), ',', TRUE);	
 }
 
 

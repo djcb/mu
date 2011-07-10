@@ -374,34 +374,6 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 		doc.add_term (prefix(mfid) +
 			      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
 }
-
-
-static void
-add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
-			       MuMsgFieldId mfid)
-{
-	const GSList *lst;
-
-	lst = mu_msg_get_field_string_list (msg, mfid);
-	
-	if (lst && mu_msg_field_xapian_value (mfid)) {
-		gchar *str;
-		str = mu_str_from_list (lst, ',');
-		if (str)
-			doc.add_value ((Xapian::valueno)mfid, str);
-		g_free (str);
-	}
-
-	if (lst && mu_msg_field_xapian_term (mfid)) {
-		while (lst) {
-			doc.add_term (prefix(mfid) +
-				      std::string((char*)lst->data, 0,
-						  MU_STORE_MAX_TERM_LENGTH));
-			lst = g_slist_next ((GSList*)lst);
-		}
-	}
-}
-
 	
 
 static void
@@ -425,6 +397,47 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	if (!(G_LIKELY(len < 1024)))
 		g_free (val);
 }
+
+
+
+static void
+add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
+			       MuMsgFieldId mfid)
+{
+	const GSList *lst;
+
+	lst = mu_msg_get_field_string_list (msg, mfid);
+	
+	if (lst && mu_msg_field_xapian_value (mfid)) {
+		gchar *str;
+		str = mu_str_from_list (lst, ',');
+		if (str)
+			doc.add_value ((Xapian::valueno)mfid, str);
+		g_free (str);
+	}
+
+	if (lst && mu_msg_field_xapian_term (mfid)) {
+		while (lst) {
+			size_t len;
+			char *val;
+			/* try stack-allocation, it's much faster*/
+			len = strlen ((char*)lst->data);
+			if (G_LIKELY(len < 1024)) 
+				val =  (char*)g_alloca(len+1);
+			else
+				val  = (char*)g_malloc(len+1);
+			strcpy (val, (char*)lst->data);
+			
+			add_terms_values_str (doc, val, mfid);
+			
+			if (!(G_LIKELY(len < 1024)))
+				g_free (val);
+
+			lst = g_slist_next ((GSList*)lst);
+		}
+	}
+}
+
 
 struct PartData {
 	PartData (Xapian::Document& doc, MuMsgFieldId mfid):

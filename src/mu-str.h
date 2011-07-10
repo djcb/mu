@@ -277,14 +277,15 @@ char* mu_str_from_list (const GSList *lst, char sepa);
 
 
 /**
- * convert a #sepa-separated list of strings in to a GSList
+ * convert a #se0pa-separated list of strings in to a GSList
  * 
  * @param str a #sepa-separated list of strings
  * @param the separator character
+ * @param remove leading/trailing whitespace from the string
  *
  * @return a newly allocated GSList (free with mu_str_free_list)
  */
-GSList* mu_str_to_list (const char *str, char sepa);
+GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
 
 
 /**

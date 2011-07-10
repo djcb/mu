@@ -149,6 +149,10 @@ AC_SUBST(XAPIAN_LIBS)
 # also, this has nothing to do with Xapian's software version
 AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.7"], ['Schema' version of the database])
 
+
+#
+# we need gtk (2 or 3) for some of the graphical tools
+#
 AC_ARG_WITH([gui],
    [AS_HELP_STRING([--with-gui=gtk2|gtk3|none])],
    [gui=$withval],[gui=auto])
@@ -175,7 +179,7 @@ AS_IF([test "x$gui" != "xnone" -a "x$have_gtk3" != "xyes"],[
   gtk_version="`pkg-config --modversion gtk+-2.0`"	
 ])
 # only an error if we explicitly asked for it
-AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "auto"],
+AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "xauto"],
    AC_MSG_ERROR([GTK+ 2.x not found]))
 
 AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ])

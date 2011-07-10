@@ -124,6 +124,7 @@ EXTRA_DIST=							\
 	testdir2/bar/cur/mail4					\
 	testdir2/bar/cur/mail5					\
 	testdir2/bar/cur/181736.eml				\
+	testdir2/bar/cur/mail6					\
 	testdir2/bar/tmp/.noindex				\
 	testdir2/bar/new/.noindex				\
 	testdir2/Foo/cur/mail5					\

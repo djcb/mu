@@ -323,18 +323,30 @@ static void
 test_mu_str_to_list (void)
 {
 	{
-		const char *items[]= {"foo", "bar", "cuux", NULL};
-		GSList *lst = mu_str_to_list ("foo@bar@cuux",'@');
+		const char *items[]= {"foo", "bar ", "cuux", NULL};
+		GSList *lst = mu_str_to_list ("foo@bar @cuux",'@', FALSE);
 		assert_cmplst (lst, items);
 		mu_str_free_list (lst);
 	}
 
 	{
-		GSList *lst = mu_str_to_list (NULL,'x');
+		GSList *lst = mu_str_to_list (NULL,'x',FALSE);
 		g_assert (lst == NULL);
 		mu_str_free_list (lst);
 	}
 }
+
+static void
+test_mu_str_to_list_strip (void)
+{
+	{
+		const char *items[]= {"foo", "bar", "cuux", NULL};
+		GSList *lst = mu_str_to_list ("foo@bar @cuux",'@', TRUE);
+		assert_cmplst (lst, items);
+		mu_str_free_list (lst);
+	}
+}
+
 
 
 
@@ -474,6 +486,8 @@ main (int argc, char *argv[])
 			 test_mu_str_from_list);
 	g_test_add_func ("/mu-str/mu-str-to-list",
 			 test_mu_str_to_list);
+	g_test_add_func ("/mu-str/mu-str-to-list-strip",
+			 test_mu_str_to_list_strip);
 	
 	g_test_add_func ("/mu-str/mu_str_date_parse_hdwmy",
 			 test_mu_str_date_parse_hdwmy);
