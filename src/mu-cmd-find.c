@@ -215,6 +215,38 @@ process_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 }
 
 
+static gboolean
+exec_cmd (const char *path, const char *cmd)
+{
+	gint status;
+	GError *err;
+	char *cmdline, *escpath;
+	gboolean rv;
+	
+	if (access (path, R_OK) != 0) {
+		g_warning ("cannot read %s: %s", path, strerror(errno));
+		return FALSE;
+	}
+
+	escpath = g_strescape (path, NULL);
+	
+	cmdline = g_strdup_printf ("%s %s", cmd, escpath);
+	err = NULL;
+	rv = g_spawn_command_line_sync (cmdline, NULL, NULL,
+					&status, &err);
+	g_free (cmdline);
+	g_free (escpath);
+
+	if (!rv) {
+		g_warning ("command returned %d on %s: %s\n",
+			   status, path, err->message);
+		g_error_free (err);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 static gboolean
 exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
@@ -223,34 +255,14 @@ exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 	MuMsgIter *iter;
 	gboolean rv;
 	
-	iter = run_query (xapian, query, opts, count);
-	if (!iter)
+	if (!(iter = run_query (xapian, query, opts, count)))
 		return FALSE;
 
-	rv = TRUE;
-	while (!mu_msg_iter_is_done (iter)) {
-		const char* path;
-		path = mu_msg_get_path (mu_msg_iter_get_msg (iter, NULL));
-		if (access (path, R_OK) == 0) {
-			gint status;
-			GError *err;
-			char *cmd;
-			cmd = g_strdup_printf ("%s %s", opts->exec, path);	
-			err = NULL; /* FIXME: stdout/stderr */
-			rv = g_spawn_command_line_sync (cmd, NULL, NULL, &status,
-							&err);
-			g_free (cmd);
-			if (!rv) {
-				g_warning ("command returned %d on %s: %s\n",
-					   status, path, err->message);
-				g_error_free (err);
-				break;
-			}
-		} else
-			g_warning ("cannot execute command on %s: %s",
-				   path, strerror(errno));
-
-		mu_msg_iter_next (iter);
+	for (rv = TRUE, *count = 0; !mu_msg_iter_is_done (iter); mu_msg_iter_next(iter)) {
+		rv = exec_cmd (mu_msg_get_path (mu_msg_iter_get_msg (iter, NULL)),
+			       opts->exec);
+		if (rv)
+			++*count;
 	}
 		
 	if (rv && count && *count == 0)

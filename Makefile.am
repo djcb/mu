@@ -53,6 +53,7 @@ cc10:
 line33:
 	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'`	\
 	 | grep -v mu-str-normalize.c				\
+	 | grep -v config_options_group_find			\
 	 | grep -v tests					\
          | awk '($$5 > 33)'
 

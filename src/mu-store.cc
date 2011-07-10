@@ -374,6 +374,30 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 		doc.add_term (prefix(mfid) +
 			      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
 }
+	
+
+static void
+add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
+			 MuMsgFieldId mfid)
+{
+	const char *orig;
+	char *val;
+	size_t len;
+	
+	if (!(orig = mu_msg_get_field_string (msg, mfid)))
+		return; /* nothing to do */
+
+	/* try stack-allocation, it's much faster*/
+	len = strlen (orig);
+	val = (char*)(G_LIKELY(len < 1024)?g_alloca(len+1):g_malloc(len+1));
+	strcpy (val, orig);
+
+	add_terms_values_str (doc, val, mfid);
+
+	if (!(G_LIKELY(len < 1024)))
+		g_free (val);
+}
+
 
 
 static void
@@ -402,18 +426,10 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 				val =  (char*)g_alloca(len+1);
 			else
 				val  = (char*)g_malloc(len+1);
-
 			strcpy (val, (char*)lst->data);
-
-			if (mu_msg_field_normalize (mfid))
-				mu_str_normalize_in_place (val, TRUE);
-
-			if (mu_msg_field_xapian_escape (mfid))
-				mu_str_ascii_xapian_escape_in_place (val);
 			
-			doc.add_term (prefix(mfid) +
-				      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
-
+			add_terms_values_str (doc, val, mfid);
+			
 			if (!(G_LIKELY(len < 1024)))
 				g_free (val);
 
@@ -422,29 +438,6 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 	}
 }
 
-	
-
-static void
-add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
-			 MuMsgFieldId mfid)
-{
-	const char *orig;
-	char *val;
-	size_t len;
-	
-	if (!(orig = mu_msg_get_field_string (msg, mfid)))
-		return; /* nothing to do */
-
-	/* try stack-allocation, it's much faster*/
-	len = strlen (orig);
-	val = (char*)(G_LIKELY(len < 1024)?g_alloca(len+1):g_malloc(len+1));
-	strcpy (val, orig);
-
-	add_terms_values_str (doc, val, mfid);
-
-	if (!(G_LIKELY(len < 1024)))
-		g_free (val);
-}
 
 struct PartData {
 	PartData (Xapian::Document& doc, MuMsgFieldId mfid):
