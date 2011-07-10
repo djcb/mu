@@ -115,7 +115,7 @@ test_mu_index (void)
 	store = mu_store_new (xpath, NULL, NULL);
 	g_assert (store);
 
-	g_assert_cmpuint (mu_store_count (store), ==, 8);	
+	g_assert_cmpuint (mu_store_count (store), ==, 9);	
 	mu_store_destroy (store);
 
 	g_free (muhome);
@@ -498,7 +498,7 @@ test_mu_view_multi_separate (void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 		
-	cmdline = g_strdup_printf ("%s view --separate  --muhome=%s "
+	cmdline = g_strdup_printf ("%s view --terminate --muhome=%s "
 				   "%s%cbar%ccur%cmail5 "
 				   "%s%cbar%ccur%cmail5",
 				   MU_PROGRAM,
@@ -517,8 +517,7 @@ test_mu_view_multi_separate (void)
 
 	len = strlen(output);
 	/* g_print ("\n[%s](%u)\n", output, len); */
-	g_assert_cmpuint (len,==,165);
-
+	g_assert_cmpuint (len,==,166);
 	
 	g_free (output);
 	g_free (cmdline);

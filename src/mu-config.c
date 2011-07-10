@@ -245,7 +245,7 @@ config_options_group_view (MuConfig *opts)
 	GOptionEntry entries[] = {
 		{"summary", 0, 0, G_OPTION_ARG_NONE, &opts->summary,
 		 "only show a short summary of the message (false)", NULL},
-		{"terminator", 0, 0, G_OPTION_ARG_NONE, &opts->terminator,
+		{"terminate", 0, 0, G_OPTION_ARG_NONE, &opts->terminator,
 		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
