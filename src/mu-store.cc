@@ -407,6 +407,9 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 
 			if (mu_msg_field_normalize (mfid))
 				mu_str_normalize_in_place (val, TRUE);
+
+			if (mu_msg_field_xapian_escape (mfid))
+				mu_str_ascii_xapian_escape_in_place (val);
 			
 			doc.add_term (prefix(mfid) +
 				      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
