@@ -1,4 +1,4 @@
-.TH MU FIND 1 "June 2011" "User Manuals"
+.TH MU FIND 1 "July 2011" "User Manuals"
 
 .SH NAME 
 
@@ -375,6 +375,20 @@ inserts a \fI.noindex\fR file, to exclude the directory from \fBmu
 index\fR.
 
 .TP
+\fB\-\-exec\fR=\fI<command>\fR
+the \fB\-\-exec\fR command causes the \fIcommand\fR to be executed on each
+matched message; for example, to see the raw text of all messages
+matching 'milkshake', you could use:
+.nf
+  $ mu find milkshake --exec='less'
+.fi
+which is roughly equivalent to:
+.nf
+  $ mu find milkshake --fields="l" | xargs less
+.fi
+
+
+.TP
 \fB\-b\fR, \fB\-\-bookmark\fR=\fI<bookmark>\fR
 use a bookmarked search query. Using this option, a query from your bookmark
 file will be prepended to other search queries. See mu-bookmarks(1) for the
@@ -446,7 +460,6 @@ Find all unread messages with attachments:
 .nf
   $ mu find flag:unread flag:attach
 .fi
-
 
 
 .SS Integrating mu find with mail clients
