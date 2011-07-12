@@ -209,13 +209,25 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 
-# check for guile
+
+
+# check for guile & guile-snarf
 AC_PATH_PROG(GUILE, [guile-config], [], [$PATH])
-  AS_IF([test "x$GUILE" != "x"],
+AS_IF([test "x$GUILE" != "x"],
   [GUILE_CFLAGS=`$GUILE compile`; GUILE_LIBS=`$GUILE link`])
-AM_CONDITIONAL(HAVE_GUILE, [test "$xGUILE" != "x"])
 AC_SUBST(GUILE_LIBS)
 AC_SUBST(GUILE_CFLAGS)
+
+AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
+AS_IF([test "x$GUILE_SNARF" != "x"],[
+    AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])],[
+    AC_MSG_WARN([cannot find guile-snarf])])
+
+AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE" != "x" -a "x$GUILE_SNARF != "x])
+
+
+
+
 
 # check for xdg-open
 AS_IF([test "x$buildgui"="xyes"],[

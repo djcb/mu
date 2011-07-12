@@ -26,6 +26,11 @@ INCLUDES=-I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
+XFILES=					\
+	mu-msg-guile.x
+
+BUILT_SOURCES=$(XFILES)
+
 noinst_LTLIBRARIES=			\
 	libmuguile.la
 
@@ -36,3 +41,14 @@ libmuguile_la_LIBADD=			\
 	${top_builddir}/src/libmu.la	\
 	${GUILE_LIBS}
 
+
+snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS)
+SUFFIXES = .x
+.c.x:
+	$(GUILE_SNARF) -o $@ $< $(snarfcppopts)
+
+## Add -MG to make the .x magic work with auto-dep code.
+MKDEP = $(CC) -M -MG $(snarfcppopts)
+
+
+DISTCLEANFILES=$(XFILES)
