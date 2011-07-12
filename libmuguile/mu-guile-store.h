@@ -17,24 +17,23 @@
 **
 */
 
-#include <mu-runtime.h>
-
-#include <libguile.h>
-#include <libmuguile/mu-guile-msg.h>
-#include <libmuguile/mu-guile-store.h>
+#ifndef __MU_GUILE_STORE_H__
+#define __MU_GUILE_STORE_H__
 
 
-int
-main (int argc, char *argv[])
-{
-	mu_runtime_init ("/home/djcb/.mu");
-		
-	scm_with_guile (&mu_guile_msg_init, NULL);
-	scm_with_guile (&mu_guile_store_init, NULL);
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+/** 
+ * initialize mu:store functions
+ * 
+ */	
+void *mu_guile_store_init (void *data);
+
 	
-	scm_shell (argc, argv);
-
-	mu_runtime_uninit ();
-	
-	return 0;
+#ifdef __cplusplus
 }
+#endif /*__cplusplus*/
+	
+#endif /*__MU_GUILE_STORE_H__*/

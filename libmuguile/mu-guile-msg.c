@@ -17,8 +17,11 @@
 **
 */
 
-#include <libguile.h>
 #include <mu-msg.h>
+#include <mu-query.h>
+#include <mu-runtime.h>
+
+#include "mu-guile-msg.h"
 
 struct _MuMsgWrapper {
 	MuMsg *_msg;
@@ -28,21 +31,33 @@ typedef struct _MuMsgWrapper MuMsgWrapper;
 
 static long MSG_TAG;
 
-
-static SCM
-msg_make_from_file (SCM path)
+SCM
+mu_guile_msg_to_scm (MuMsg *msg)
 {
-	const char* msgpath;
 	MuMsgWrapper *msgwrap;
-		
-	msgpath = scm_to_utf8_string (path);
 
+	g_return_val_if_fail (msg, SCM_UNDEFINED);
+	
 	msgwrap = scm_gc_malloc (sizeof (MuMsgWrapper), "msg");
-	msgwrap->_msg = mu_msg_new_from_file (msgpath, NULL, NULL);
+	msgwrap->_msg = msg;
 	msgwrap->_unrefme = FALSE;
 	
 	SCM_RETURN_NEWSMOB (MSG_TAG, msgwrap);
 }
+
+
+
+SCM_DEFINE (msg_make_from_file, "mu:msg:make-from-file", 1, 0, 0,
+	    (SCM PATH),
+	    "Create a message object based on the message in PATH.\n")
+#define FUNC_NAME s_msg_make_from_file
+{
+	MuMsg *msg;
+	
+	msg = mu_msg_new_from_file (scm_to_utf8_string (PATH), NULL, NULL);
+	return msg ? SCM_UNDEFINED : mu_guile_msg_to_scm (msg);
+}
+#undef FUNC_NAME
 
 
 static SCM
@@ -67,39 +82,50 @@ msg_num_field (SCM msg_smob, MuMsgFieldId mfid)
 }
 
 
-static SCM
-msg_date (SCM msg_smob)
+SCM_DEFINE (msg_date, "mu:msg:date", 1, 0, 0,
+	    (SCM MSG),
+	    "Get the date (time in seconds since epoch) for MSG.\n")
+#define FUNC_NAME s_msg_date
 {
 	return scm_from_unsigned_integer
-		(msg_num_field (msg_smob, MU_MSG_FIELD_ID_DATE));	
+		(msg_num_field (MSG, MU_MSG_FIELD_ID_DATE));	
 }
+#undef FUNC_NAME
 
-static SCM
-msg_size (SCM msg_smob)
+
+
+SCM_DEFINE (msg_size, "mu:msg:size", 1, 0, 0,
+	    (SCM MSG),
+	    "Get the size in bytes for MSG.\n")
+#define FUNC_NAME s_msg_size
 {
 	return scm_from_unsigned_integer
-		(msg_num_field (msg_smob, MU_MSG_FIELD_ID_SIZE));	
+		(msg_num_field (MSG, MU_MSG_FIELD_ID_SIZE));	
 }
+#undef FUNC_NAME
 
 
-static SCM
-msg_prio (SCM msg_smob)
+
+SCM_DEFINE (msg_prio, "mu:msg:priority", 1, 0, 0,
+	    (SCM MSG),
+	    "Get the priority of MSG (low, normal or high).\n")
+#define FUNC_NAME s_msg_prio
 {
 	MuMsgPrio prio;
 	MuMsgWrapper *msgwrap;
-	msgwrap = (MuMsgWrapper*) SCM_CDR(msg_smob);
+	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 
 	prio = mu_msg_get_prio (msgwrap->_msg);
 
 	switch (prio) {
-	case MU_MSG_PRIO_LOW: return scm_from_utf8_symbol ("low");
-	case MU_MSG_PRIO_NORMAL: return scm_from_utf8_symbol ("normal");
-	case MU_MSG_PRIO_HIGH: return scm_from_utf8_symbol ("high");
+	case MU_MSG_PRIO_LOW:    return scm_from_utf8_symbol("low");
+	case MU_MSG_PRIO_NORMAL: return scm_from_utf8_symbol("normal");
+	case MU_MSG_PRIO_HIGH:   return scm_from_utf8_symbol("high");
 	default:
 		g_return_val_if_reached (SCM_UNDEFINED);
 	}	
 }
-
+#undef FUNC_NAME
 
 struct _FlagData {
 	MuMsgFlags flags;
@@ -118,13 +144,18 @@ check_flag (MuMsgFlags flag, FlagData *fdata)
 	}	
 }
 
-static SCM
-msg_flags (SCM msg_smob)
+
+SCM_DEFINE (msg_flags, "mu:msg:flags", 1, 0, 0,
+	    (SCM MSG),
+	    "Get the flags for MSG (one or or more of new, passed, replied, "
+	    "seen, trashed, draft, flagged, unread, signed, encrypted, "
+	    "has-attach).\n")
+#define FUNC_NAME s_msg_flags
 {
 	MuMsgWrapper *msgwrap;
 	FlagData fdata;
 
-	msgwrap = (MuMsgWrapper*) SCM_CDR(msg_smob);
+	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 	
 	fdata.flags = mu_msg_get_flags (msgwrap->_msg);
 	fdata.lst = SCM_EOL;
@@ -133,20 +164,25 @@ msg_flags (SCM msg_smob)
 
 	return fdata.lst;
 }
+#undef FUNC_NAME
 
 
-static SCM
-msg_subject (SCM msg_smob)
+SCM_DEFINE (msg_subject, "mu:msg:subject", 1, 0, 0,
+	    (SCM MSG), "Get the subject of MSG.\n")
+#define FUNC_NAME s_msg_subject
 {
-	return msg_str_field (msg_smob, MU_MSG_FIELD_ID_SUBJECT);
+	return msg_str_field (MSG, MU_MSG_FIELD_ID_SUBJECT);
 }
+#undef FUNC_NAME
 
-static SCM
-msg_from (SCM msg_smob)
+
+SCM_DEFINE (msg_from, "mu:msg:from", 1, 0, 0,
+	    (SCM MSG), "Get the sender of MSG.\n")
+#define FUNC_NAME s_msg_from
 {
-	return msg_str_field (msg_smob, MU_MSG_FIELD_ID_FROM);
+	return msg_str_field (MSG, MU_MSG_FIELD_ID_FROM);
 }
-
+#undef FUNC_NAME
 
 struct _EachContactData {
 	SCM lst;
@@ -160,13 +196,14 @@ contacts_to_list (MuMsgContact *contact, EachContactData *ecdata)
 	if (mu_msg_contact_type (contact) == ecdata->ctype) {
 		SCM item;
 		const char *addr, *name;
+
 		addr = mu_msg_contact_address(contact);
 		name = mu_msg_contact_name(contact);
 		
 		item = scm_list_1
 			(scm_list_2 (
-				name ? scm_from_utf8_string(name) : SCM_UNDEFINED,
-				addr ? scm_from_utf8_string(addr) : SCM_UNDEFINED));
+				name ? scm_from_utf8_string(name) : SCM_UNSPECIFIED,
+				addr ? scm_from_utf8_string(addr) : SCM_UNSPECIFIED));
 
 		ecdata->lst = scm_append_x (scm_list_2(ecdata->lst, item));	
 	}
@@ -197,57 +234,73 @@ contact_list_field (SCM msg_smob, MuMsgFieldId mfid)
 }
 
 
-
-static SCM
-msg_to (SCM msg_smob)
+SCM_DEFINE (msg_to, "mu:msg:to", 1, 0, 0,
+	    (SCM MSG), "Get the list of To:-recipients of MSG.\n")
+#define FUNC_NAME s_msg_to
 {
-	return contact_list_field (msg_smob, MU_MSG_FIELD_ID_TO);
+	return contact_list_field (MSG, MU_MSG_FIELD_ID_TO);
 }
+#undef FUNC_NAME
 
+	    
 
-static SCM
-msg_cc (SCM msg_smob)
+SCM_DEFINE (msg_cc, "mu:msg:cc", 1, 0, 0,
+	    (SCM MSG), "Get the list of Cc:-recipients of MSG.\n")
+#define FUNC_NAME s_msg_cc
 {
-	return contact_list_field (msg_smob, MU_MSG_FIELD_ID_CC);
+	return contact_list_field (MSG, MU_MSG_FIELD_ID_CC);
 }
+#undef FUNC_NAME
 
 
-static SCM
-msg_bcc (SCM msg_smob)
+SCM_DEFINE (msg_bcc, "mu:msg:bcc", 1, 0, 0,
+	    (SCM MSG), "Get the list of Bcc:-recipients of MSG.\n")
+#define FUNC_NAME s_msg_bcc
 {
-	return contact_list_field (msg_smob, MU_MSG_FIELD_ID_BCC);
+	return contact_list_field (MSG, MU_MSG_FIELD_ID_BCC);
 }
+#undef FUNC_NAME
 
-static SCM
-msg_path (SCM msg_smob)
+
+SCM_DEFINE (msg_path, "mu:msg:path", 1, 0, 0,
+	    (SCM MSG), "Get the filesystem path for MSG.\n")
+#define FUNC_NAME s_msg_path
 {
-	return msg_str_field (msg_smob, MU_MSG_FIELD_ID_PATH);
+	return msg_str_field (MSG, MU_MSG_FIELD_ID_PATH);
 }
+#undef FUNC_NAME
 
 
-static SCM
-msg_maildir (SCM msg_smob)
+SCM_DEFINE (msg_maildir, "mu:msg:maildir", 1, 0, 0,
+	    (SCM MSG), "Get the maildir where MSG lives.\n")
+#define FUNC_NAME s_msg_maildir
 {
-	return msg_str_field (msg_smob, MU_MSG_FIELD_ID_MAILDIR);
+	return msg_str_field (MSG, MU_MSG_FIELD_ID_MAILDIR);
 }
+#undef FUNC_NAME
 
-static SCM
-msg_msgid (SCM msg_smob)
+
+
+SCM_DEFINE (msg_msgid, "mu:msg:message-id", 1, 0, 0,
+	    (SCM MSG), "Get the MSG's message-id.\n")
+#define FUNC_NAME s_msg_msgid
 {
-	return msg_str_field (msg_smob, MU_MSG_FIELD_ID_MSGID);
+	return msg_str_field (MSG, MU_MSG_FIELD_ID_MSGID);
 }
+#undef FUNC_NAME
 
 
-
-static SCM
-msg_body (SCM msg_smob, SCM html_smob)
+SCM_DEFINE (msg_body, "mu:msg:body", 1, 1, 0,
+		    (SCM MSG, SCM HTML), "Get the MSG's body. If HTML is #t, "
+		    "prefer the html-version, otherwise prefer plain text.\n")
+#define FUNC_NAME s_msg_body
 {
 	MuMsgWrapper *msgwrap;
 	gboolean html;
 	const char *val;
 	
-	msgwrap = (MuMsgWrapper*) SCM_CDR(msg_smob);
-	html = SCM_UNBNDP(html_smob) ? FALSE : html_smob == SCM_BOOL_T;
+	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
+	html = SCM_UNBNDP(HTML) ? FALSE : HTML == SCM_BOOL_T;
 	
 	if (html)
 		val = mu_msg_get_body_html(msgwrap->_msg);
@@ -256,21 +309,24 @@ msg_body (SCM msg_smob, SCM html_smob)
 		
 	return val ? scm_from_utf8_string (val) : SCM_UNDEFINED;
 }
+#undef FUNC_NAME
 
 
-static SCM
-msg_header (SCM msg_smob, SCM header_smob)
+SCM_DEFINE (msg_header, "mu:msg:header", 1, 1, 0,
+		    (SCM MSG, SCM HEADER), "Get an arbitary HEADER from MSG.\n")
+#define FUNC_NAME s_msg_header
 {
 	MuMsgWrapper *msgwrap;
 	const char *header;
 	const char *val;
 	
-	msgwrap = (MuMsgWrapper*) SCM_CDR(msg_smob);
-	header  =  scm_to_utf8_string (header_smob);
+	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
+	header  =  scm_to_utf8_string (HEADER);
 	val     =  mu_msg_get_header(msgwrap->_msg, header);
 	
 	return val ? scm_from_utf8_string(val) : SCM_UNDEFINED;
 }
+#undef FUNC_NAME
 
 static SCM
 msg_string_list_field (SCM msg_smob, MuMsgFieldId mfid)
@@ -292,22 +348,28 @@ msg_string_list_field (SCM msg_smob, MuMsgFieldId mfid)
 	return scmlst;
 }
 
-static SCM
-msg_tags (SCM msg_smob)
+
+SCM_DEFINE (msg_tags, "mu:msg:tags", 1, 1, 0,
+		    (SCM MSG), "Get the list of tags (contents of the "
+		    "X-Label:-header) for MSG.\n")
+#define FUNC_NAME s_msg_tags
 {
-	return msg_string_list_field (msg_smob, MU_MSG_FIELD_ID_TAGS);
+	return msg_string_list_field (MSG, MU_MSG_FIELD_ID_TAGS);
 }
+#undef FUNC_NAME
 
 
-static SCM
-msg_references (SCM msg_smob)
+
+SCM_DEFINE (msg_refs, "mu:msg:references", 1, 1, 0,
+	    (SCM MSG), "Get the list of referenced message-ids "
+	    "(contents of the References: and Reply-To: headers).\n")
+#define FUNC_NAME s_msg_refs
 {
-	return msg_string_list_field (msg_smob, MU_MSG_FIELD_ID_REFS);
+	return msg_string_list_field (MSG, MU_MSG_FIELD_ID_REFS);
 }
+#undef FUNC_NAME
 
-
-
-
+	    
 static SCM
 msg_mark (SCM msg_smob)
 {
@@ -374,9 +436,8 @@ define_symbols (void)
 }
 
 
-
 void*
-mu_msg_guile_register (void *data)
+mu_guile_msg_init (void *data)
 {
 	MSG_TAG = scm_make_smob_type ("msg", sizeof(MuMsgWrapper));
 		
@@ -386,33 +447,8 @@ mu_msg_guile_register (void *data)
 
 	define_symbols ();
 	
-	scm_c_define_gsubr ("make-msg-from-file", 1, 0, 0,
-			    &msg_make_from_file);
-	
-	scm_c_define_gsubr ("from",        1, 0, 0, &msg_from);
+#include "mu-guile-msg.x"
 
-	scm_c_define_gsubr ("subject",	   1, 0, 0, &msg_subject);
-	scm_c_define_gsubr ("path",	   1, 0, 0, &msg_path);
-	scm_c_define_gsubr ("maildir",	   1, 0, 0, &msg_maildir);
-	scm_c_define_gsubr ("message-id",  1, 0, 0, &msg_msgid);
-
-	scm_c_define_gsubr ("date",	   1, 0, 0, &msg_date);
-	scm_c_define_gsubr ("size",	   1, 0, 0, &msg_size);
-	
-	scm_c_define_gsubr ("body",        1, 1, 0, &msg_body);
-	scm_c_define_gsubr ("header",      2, 0, 0, &msg_header);
-
-	/* lists */
-	scm_c_define_gsubr ("tags",        1, 0, 0, &msg_tags);
-	scm_c_define_gsubr ("references",  1, 0, 0, &msg_references);
-	scm_c_define_gsubr ("to",	   1, 0, 0, &msg_to);
-	scm_c_define_gsubr ("cc",	   1, 0, 0, &msg_cc);
-	scm_c_define_gsubr ("bcc",	   1, 0, 0, &msg_bcc);
-
-	scm_c_define_gsubr ("priority",	   1, 0, 0, &msg_prio);
-	scm_c_define_gsubr ("flags",	   1, 0, 0, &msg_flags);
-
-	
 	return NULL;
 }
 

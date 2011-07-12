@@ -17,24 +17,36 @@
 **
 */
 
-#include <mu-runtime.h>
+#ifndef __MU_GUILE_MSG_H__
+#define __MU_GUILE_MSG_H__
 
 #include <libguile.h>
-#include <libmuguile/mu-guile-msg.h>
-#include <libmuguile/mu-guile-store.h>
+#include <mu-msg.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+/** 
+ * register MuMsg-related functions/smobs with guile; use with
+ * scm_with_guile
+ * 
+ */
+void *mu_guile_msg_init (void *data);
 
 
-int
-main (int argc, char *argv[])
-{
-	mu_runtime_init ("/home/djcb/.mu");
-		
-	scm_with_guile (&mu_guile_msg_init, NULL);
-	scm_with_guile (&mu_guile_store_init, NULL);
+/** 
+ * create an SCM for the MuMsg*
+ * 
+ * @param msg a MuMsg instance
+ * 
+ * @return an SCM for the msg
+ */	
+SCM  mu_guile_msg_to_scm (MuMsg *msg);
 	
-	scm_shell (argc, argv);
-
-	mu_runtime_uninit ();
-	
-	return 0;
+#ifdef __cplusplus
 }
+#endif /*__cplusplus*/
+
+
+#endif /*__MU_GUILE_MSG_H__*/

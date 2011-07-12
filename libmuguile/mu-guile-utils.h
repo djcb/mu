@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011  <djcb@djcbsoftware.nl>
+** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,21 +17,31 @@
 **
 */
 
-#ifndef __MU_MSG_GUILE_H__
-#define __MU_MSG_GUILE_H__
+#ifndef __MU_GUILE_UTILS_H__
+#define __MU_GUILE_UTILS_H__
 
+#include <libguile.h>
+
+
+#ifdef __cplusplus
 extern "C" {
+#endif /*__cplusplus*/
 
 /** 
- * register MuMsg-related functions/smobs with guile; use with
- * scm_with_guile
  * 
- * @param data 
  * 
- * @return 
+ * @param func_name 
+ * @param status 
+ * @param fmt 
+ * @param args 
  */
-void* mu_msg_guile_register (void *data);
+void mu_guile_utils_error (const char *func_name, int status,
+			   const char *fmt, SCM args);
 
+#ifdef __cplusplus
 }
+#endif /*__cplusplus*/
 
-#endif /*__MU_MSG_GUILE_H__*/
+
+#endif /*__MU_GUILE_UTILS_H__*/
+

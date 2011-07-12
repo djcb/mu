@@ -26,23 +26,30 @@ INCLUDES=-I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
-XFILES=					\
-	mu-msg-guile.x
-
-BUILT_SOURCES=$(XFILES)
 
 noinst_LTLIBRARIES=			\
 	libmuguile.la
 
 libmuguile_la_SOURCES=			\
-	mu-msg-guile.c
+	mu-guile-msg.c			\
+	mu-guile-msg.h			\
+	mu-guile-store.c		\
+	mu-guile-store.h		\
+	mu-guile-utils.c		\
+	mu-guile-utils.h
 
 libmuguile_la_LIBADD=			\
 	${top_builddir}/src/libmu.la	\
 	${GUILE_LIBS}
 
+XFILES=					\
+	mu-guile-msg.x			\
+	mu-guile-store.x
 
-snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS)
+BUILT_SOURCES=$(XFILES) $(DOCFILES)
+
+
+snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS) $(INCLUDES)
 SUFFIXES = .x
 .c.x:
 	$(GUILE_SNARF) -o $@ $< $(snarfcppopts)

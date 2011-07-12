@@ -17,24 +17,14 @@
 **
 */
 
-#include <mu-runtime.h>
+#include "mu-guile-utils.h"
 
-#include <libguile.h>
-#include <libmuguile/mu-guile-msg.h>
-#include <libmuguile/mu-guile-store.h>
-
-
-int
-main (int argc, char *argv[])
+void
+mu_guile_utils_error (const char *func_name, int status,
+		      const char *fmt, SCM args)
 {
-	mu_runtime_init ("/home/djcb/.mu");
-		
-	scm_with_guile (&mu_guile_msg_init, NULL);
-	scm_with_guile (&mu_guile_store_init, NULL);
-	
-	scm_shell (argc, argv);
-
-	mu_runtime_uninit ();
-	
-	return 0;
+	scm_error_scm (scm_from_locale_symbol ("MuError"),
+		       scm_from_utf8_string (func_name ? func_name : "<nameless>"),
+		       scm_from_utf8_string (fmt), args,
+		       scm_list_1 (scm_from_int (status)));
 }
