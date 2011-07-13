@@ -75,6 +75,9 @@ print_header (OutputFormat format)
 		g_print (";; -*-coding: utf-8-emacs;-*-\n"			 
 			 ";;; file-version: 6\n");
 		break;
+	case FORMAT_MUTT_AB:
+		g_print ("Matching address in the mu database:\n");
+		break;
 	default:
 		break;
 	}
@@ -164,7 +167,8 @@ typedef struct _ECData ECData;
 
 
 static void
-each_contact (const char *email, const char *name, time_t tstamp, ECData *ecdata)
+each_contact (const char *email, const char *name, time_t tstamp,
+	      ECData *ecdata)
 {
 	switch (ecdata->format) {
 	case FORMAT_MUTT_ALIAS: each_contact_mutt_alias (email, name); break;
