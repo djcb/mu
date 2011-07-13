@@ -23,7 +23,7 @@
 
 #include "mu-guile-msg.h"
 #include "mu-guile-store.h"
-#include "mu-guile-utils.h"
+#include "mu-guile-common.h"
 
 static MuQuery*
 get_query (void)
@@ -62,37 +62,39 @@ get_query_iter (MuQuery *query, const char* expr)
 }
 
 
-SCM_DEFINE (store_for_each, "mu:store:foreach", 2, 0, 0,
-	    (SCM EXPR, SCM FUNC),
-	    "Call FUNC for each message matching EXPR.\n")
+SCM_DEFINE (store_for_each, "mu:store:query-foreach", 1, 1, 0,
+	    (SCM FUNC, SCM EXPR),
+	    "Call FUNC for each message in the store, or, if EXPR is specified, "
+	    "for each message matching EXPR.\n")
 #define FUNC_NAME s_msg_make_from_file
 {
 	MuQuery *query;
 	MuMsgIter *iter;
-	//guint count;
+	int count;
+	const char* expr;
 
 	query = get_query ();
 	if (!query)
 		return SCM_UNSPECIFIED;
-
-	iter = get_query_iter (query, scm_to_utf8_string(EXPR));
+	
+	expr = SCM_UNBNDP(EXPR) ? NULL : scm_to_utf8_string(EXPR);
+	
+	iter = get_query_iter (query, expr);
 	if (!iter)
 		return SCM_UNSPECIFIED;
-	
-	while (!mu_msg_iter_is_done(iter)) {
+
+	for (count = 0; !mu_msg_iter_is_done(iter); mu_msg_iter_next (iter)) {
 
 		SCM msgsmob;
-		
 		msgsmob = mu_guile_msg_to_scm (mu_msg_iter_get_msg (iter, NULL));
 
 		scm_call_1 (FUNC, msgsmob);
-		
-		mu_msg_iter_next (iter);
+		++count;
 	}
 	
 	mu_query_destroy (query);
 
-	return SCM_UNSPECIFIED;
+	return scm_from_int (count);
 }
 #undef FUNC_NAME
 

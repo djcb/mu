@@ -17,14 +17,31 @@
 **
 */
 
-#include "mu-guile-utils.h"
+#ifndef __MU_GUILE_UTILS_H__
+#define __MU_GUILE_UTILS_H__
 
-void
-mu_guile_utils_error (const char *func_name, int status,
-		      const char *fmt, SCM args)
-{
-	scm_error_scm (scm_from_locale_symbol ("MuError"),
-		       scm_from_utf8_string (func_name ? func_name : "<nameless>"),
-		       scm_from_utf8_string (fmt), args,
-		       scm_list_1 (scm_from_int (status)));
+#include <libguile.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+/** 
+ * 
+ * 
+ * @param func_name 
+ * @param status 
+ * @param fmt 
+ * @param args 
+ */
+void mu_guile_error (const char *func_name, int status,
+		     const char *fmt, SCM args);
+
+#ifdef __cplusplus
 }
+#endif /*__cplusplus*/
+
+
+#endif /*__MU_GUILE_UTILS_H__*/
+

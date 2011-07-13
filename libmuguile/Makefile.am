@@ -35,8 +35,8 @@ libmuguile_la_SOURCES=			\
 	mu-guile-msg.h			\
 	mu-guile-store.c		\
 	mu-guile-store.h		\
-	mu-guile-utils.c		\
-	mu-guile-utils.h
+	mu-guile-common.c		\
+	mu-guile-common.h
 
 libmuguile_la_LIBADD=			\
 	${top_builddir}/src/libmu.la	\
