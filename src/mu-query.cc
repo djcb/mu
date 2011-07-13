@@ -222,28 +222,35 @@ struct _MuQuery {
 	MuSizeRangeProcessor	_size_range_processor;
 };
 
-static bool
-set_query (MuQuery *mqx, Xapian::Query& q, const char* searchexpr,
-	   GError **err)  {
+static const Xapian::Query
+get_query (MuQuery *mqx, const char* searchexpr, GError **err)
+{
+	Xapian::Query query;
+	char *preprocessed;	
+		
+	preprocessed = mu_query_preprocess (searchexpr);
+
 	try {
-		q = mqx->_qparser.parse_query
-			(searchexpr,
+		query = mqx->_qparser.parse_query
+			(preprocessed,
 			 Xapian::QueryParser::FLAG_BOOLEAN          |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_WILDCARD	    |
 			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
 			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
-
-		return true;
+		g_free (preprocessed);
+		return query;
 		
-	} MU_XAPIAN_CATCH_BLOCK;
-	
-	/* some error occured */
-	g_set_error (err, 0, MU_ERROR_QUERY, "parse error in query '%s'",
-		     searchexpr);
-	
-	return false;
+	} catch (...) {
+		/* some error occured */
+		g_set_error (err, 0, MU_ERROR_QUERY, "parse error in query '%s'",
+			     searchexpr);
+		g_free (preprocessed);
+		throw;
+	}
 }
+
+
 
 static void
 add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
@@ -343,17 +350,7 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			      sortfieldid == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
-		Xapian::Query query;
-		char *preprocessed;	
-		
-		preprocessed = mu_query_preprocess (searchexpr);
-
-		if (!set_query(self, query, preprocessed, err)) {
-			g_free (preprocessed);
-			return NULL;
-		}
-		g_free (preprocessed);
-		
+		Xapian::Query query (get_query (self, searchexpr, err));		
 		Xapian::Enquire enq (self->_db);
 
 		/* note, when our result will be *threaded*, we sort
@@ -379,17 +376,7 @@ mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err)
 	g_return_val_if_fail (searchexpr, NULL);
 		
 	try {
-		Xapian::Query query;
-		char *preprocessed;
-		
-		preprocessed = mu_query_preprocess (searchexpr);
-		
-		if (!set_query(self, query, preprocessed, err)) {
-			g_free (preprocessed);
-			return NULL;
-		}
-		g_free (preprocessed);
-
+		Xapian::Query query (get_query(self, searchexpr, err)); 
 		return g_strdup(query.get_description().c_str());
 		
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
