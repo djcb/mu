@@ -583,8 +583,9 @@ mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 		{GMIME_RECIPIENT_TYPE_BCC, MU_MSG_CONTACT_TYPE_BCC},
 	};
 
-	g_return_if_fail (func && msg);
-
+	g_return_if_fail (msg && msg->_file);
+	g_return_if_fail (func);
+	
 	/* first, get the from address(es) */
 	get_contacts_from (msg, func, user_data);
 
