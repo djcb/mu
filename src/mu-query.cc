@@ -350,7 +350,6 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			      sortfieldid == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
-		Xapian::Query query (get_query (self, searchexpr, err));		
 		Xapian::Enquire enq (self->_db);
 
 		/* note, when our result will be *threaded*, we sort
@@ -358,7 +357,13 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 		if (!threads && sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
 					       ascending ? true : false);
-		enq.set_query(query);
+
+		if (!mu_str_is_empty(searchexpr)) /* NULL or "" */
+			enq.set_query(get_query (self, searchexpr, err));
+		else
+			enq.set_query(Xapian::Query::MatchAll);
+
+
 		enq.set_cutoff(0,0);
 		
 		return mu_msg_iter_new (

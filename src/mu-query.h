@@ -68,7 +68,7 @@ char* mu_query_version (MuQuery *store)
  * manpage, or http://xapian.org/docs/queryparser.html
  * 
  * @param self a valid MuQuery instance
- * @param expr the search expression
+ * @param expr the search expression or "" to match all messages
  * @param threads calculate message-threads
  * @param sortfield the field id to sort by or MU_MSG_FIELD_ID_NONE if
  * sorting is not desired
