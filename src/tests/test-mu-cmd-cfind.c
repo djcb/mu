@@ -191,6 +191,7 @@ test_mu_cfind_mutt_ab (void)
 					     NULL, NULL));
 	g_assert_cmpstr (output,
 			 ==,
+			 "Matching addresses in the mu database:\n"
 			 "hk@testmu.xxx\tHelmut Kröger\t\n"	
 			 "testmu@testmu.xx\tMü\t\n");
 	g_free (cmdline);

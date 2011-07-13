@@ -76,7 +76,7 @@ print_header (OutputFormat format)
 			 ";;; file-version: 6\n");
 		break;
 	case FORMAT_MUTT_AB:
-		g_print ("Matching address in the mu database:\n");
+		g_print ("Matching addresses in the mu database:\n");
 		break;
 	default:
 		break;
