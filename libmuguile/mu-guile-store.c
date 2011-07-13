@@ -62,11 +62,11 @@ get_query_iter (MuQuery *query, const char* expr)
 }
 
 
-SCM_DEFINE (store_for_each, "mu:store:query-foreach", 1, 1, 0,
+SCM_DEFINE (store_foreach, "mu:store:foreach", 1, 1, 0,
 	    (SCM FUNC, SCM EXPR),
 	    "Call FUNC for each message in the store, or, if EXPR is specified, "
 	    "for each message matching EXPR.\n")
-#define FUNC_NAME s_msg_make_from_file
+#define FUNC_NAME s_store_foreach
 {
 	MuQuery *query;
 	MuMsgIter *iter;
@@ -86,7 +86,10 @@ SCM_DEFINE (store_for_each, "mu:store:query-foreach", 1, 1, 0,
 	for (count = 0; !mu_msg_iter_is_done(iter); mu_msg_iter_next (iter)) {
 
 		SCM msgsmob;
-		msgsmob = mu_guile_msg_to_scm (mu_msg_iter_get_msg (iter, NULL));
+		MuMsg *msg;
+
+		msg = mu_msg_iter_get_msg (iter, NULL);
+		msgsmob = mu_guile_msg_to_scm (mu_msg_ref (msg));
 
 		scm_call_1 (FUNC, msgsmob);
 		++count;
