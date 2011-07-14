@@ -99,7 +99,6 @@ GSList* mu_msg_file_get_str_list_field (MuMsgFile *self,
 
 
 
-
 /**
  * get a numeric value for this message -- the return value should be
  * cast into the actual type, e.g., time_t, MuMsgPrio etc.

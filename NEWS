@@ -1,4 +1,16 @@
 * NEWS (user visible changes)
+
+ * Release 0.9.7 <>
+   
+   - enable threading (using -t/--threads) with mu find
+   - don't enforce UTF-8 output, use locale (fixes issue #11)
+   - add mail threading (sorta fixes issue #13)
+   - add header line to --format=mutt-ab (mu cfind), (fixes issue #42)
+   - terminate mu view results with a form-feed marker (use --terminate) (fixes
+     issue #41)
+   - search X-Label: tags (fixes issue #40)
+   - added toys/muile, the mu guile shells, which allows for message stats etc.
+ 
  
 ** Release 0.9.6 <2011-05-28 Sat>
    

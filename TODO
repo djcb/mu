@@ -1,24 +1,35 @@
 * Future release
 
-   - [ ] mu stats
+
    - [ ] config system (config file) (?)
    - [ ] don't make test mail files executable
-   - [ ] add version info to output of configure, mu.log
    - [ ] make 'make check' more useful for others
    - [ ] completion for zsh
    - [ ] follow symlinks when indexing
    - [ ] better 'usage' info
    - [ ] generalize mu_str_normalize for all unicode
-   - [ ] mail threads
    - [ ] check wmy (date) for begin-end
-      
-  
+   - [ ] tagging rw
+
+** release 0.9.7 [100%]
+
+   - [X] mu stats
+   - [X] tagging (ro, based on X-Label)
+   - [X] mail threads
+   - [X] guile interface
+   - [X] add version info to output of configure, mu.log
+   - [X] use system locale in output
+ 
 * Releases already done (see NEWS for features)
   
 ** release 0.9.6 [100%]
-   
+  
+   (see NEWS)
+ 
 ** release 0.9.5 [100%]
       
+   (see NEWS)
+
 ** release 0.9.4 [100%] 
 
    - [X] add 'mu cfind' to find contacts
@@ -37,7 +48,7 @@
    - [X] xml,json,sexp output (experimental)
    - [X] check all strings are really UTF8
    - [X] add drag & drop support for attachments
-   - [X] add drop & drop support for body images
+   - [X] add drag & drop support for body images
    - [X] fix size value
    - [X] fix matching strange folder names
    - [X] separate exit code for 'not found' vs other errors
