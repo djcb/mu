@@ -89,7 +89,7 @@ SCM_DEFINE (store_foreach, "mu:store:foreach", 1, 1, 0,
 		MuMsg *msg;
 
 		msg = mu_msg_iter_get_msg (iter, NULL);
-		msgsmob = mu_guile_msg_to_scm (mu_msg_ref (msg));
+		msgsmob = mu_guile_msg_to_scm (mu_msg_ref(msg));
 
 		scm_call_1 (FUNC, msgsmob);
 		++count;

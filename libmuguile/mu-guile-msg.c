@@ -24,7 +24,7 @@
 #include "mu-guile-msg.h"
 
 struct _MuMsgWrapper {
-	MuMsg *_msg;
+	MuMsg   *_msg;
 	gboolean _unrefme;
 };
 typedef struct _MuMsgWrapper MuMsgWrapper;
