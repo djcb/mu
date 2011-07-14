@@ -16,19 +16,17 @@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
 ;; some guile/scheme functions to get various statistics of my mu
 ;; message store.
 
 ;; note, this is a rather inefficient way to calculate the number; for
 ;; demonstration purposes only
-(define (mu:stats:count EXPR)
+(define* (mu:stats:count #:optional (EXPR ""))
   "Count the total number of messages. If the optional EXPR is
 provided, only count the messages that match it.\n"
   (mu:store:foreach (lambda(msg) #f) EXPR))
 
-
-(define (mu:stats:average FUNC EXPR)
+(define* (mu:stats:average FUNC #:optional (EXPR ""))
   "Count the average of the result of applying FUNC on all
 messages. If the optional EXPR is provided, only consider the messages
 that match it.\n"
@@ -37,14 +35,12 @@ that match it.\n"
 	       (lambda(msg) (set! sum (+ sum (FUNC msg)))) EXPR)))
     (if (= n 0) 0 (exact->inexact (/ sum n)))))
 
-
-(define (mu:stats:average-size EXPR)
+(define* (mu:stats:average-size #:optional (EXPR ""))
   "Calculate the average message size. If the optional EXPR is
 provided, only consider the messages that match it.\n"
   (mu:stats:average (lambda(msg) (mu:msg:size msg)) EXPR))
 
-
-(define (mu:stats:average-recipient-number EXPR)
+(define* (mu:stats:average-recipient-number #:optional (EXPR ""))
   "Calculate the average number of recipients (To: + CC: + Bcc:). If
 the optional EXPR is provided, only consider the messages that match
 it.\n"
@@ -53,42 +49,94 @@ it.\n"
 			(length (mu:msg:cc msg))
 			(length (mu:msg:bcc msg)))) EXPR))
 
-(define (mu:stats:frequency FUNC EXPR)
-  "FUNC is a function that takes a Msg and returns some number between
-0 and <MAX. If the optional EXPR is provided, only consider messages
-that match it.\n"
+(define* (mu:stats:frequency FUNC #:optional (EXPR ""))
+  "FUNC is a function that takes a Msg, and returns the frequency of
+the different values this function returns. If FUNC returns a list,
+update the frequency table for each element of this list. If the
+optional EXPR is provided, only consider messages that match it.\n"
   (let ((table '()))
     (mu:store:foreach
       (lambda(msg)
-	(let* ((val (FUNC msg)) (freq (assoc-ref table val)))
-	  (set! table (assoc-set! table val
-			(+ 1 (if (eq? freq #f) 0 freq)))))) "")
-    (sort table (lambda(a b) (< (car a) (car b))))))
+	;; note, if val is not already a list, turn it into a list
+	;; then, take frequency for each element in the list
+	(let* ((val (FUNC msg)) (vals (if (list? val) val (list val))))
+	  (for-each
+	    (lambda (val)
+	      (let ((freq (assoc-ref table val)))
+		(set! table (assoc-set! table val
+			      (+ 1 (if (eq? freq #f) 0 freq)))))) vals))) EXPR)
+    (sort table
+      (lambda(a b)
+	(if (string? a)
+	  (string<? (car a) (car b)
+	  (< (car a) (car b))))))))
 
-(define (mu:stats:per-weekday EXPR)
+(define* (mu:stats:per-weekday #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (weekday . frequency).\n"
   (mu:stats:frequency
     (lambda (msg) (tm:wday (localtime (mu:msg:date msg)))) EXPR))
 
-(define (mu:stats:per-month EXPR)
+(define* (mu:stats:per-month #:optional (EXPR ""))
   "Count the total number of messages for each month (0-11 for
 Jan..Dec). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (month . frequency).\n"
   (mu:stats:frequency
     (lambda (msg) (tm:mon (localtime (mu:msg:date msg)))) EXPR))
 
-(define (mu:stats:per-hour EXPR)
+(define* (mu:stats:per-hour #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (weekday . frequency).\n"
   (mu:stats:frequency
     (lambda (msg) (tm:hour (localtime (mu:msg:date msg)))) EXPR))
 	   
-(define (mu:stats:per-year EXPR)
+(define* (mu:stats:per-year #:optional (EXPR ""))
   "Count the total number of messages for each year since 1970. If the
 optional EXPR is provided, only count the messages that match it. The
 result is a list of pairs (year . frequency).\n"
   (mu:stats:frequency
     (lambda (msg) (+ 1900 (tm:year (localtime (mu:msg:date msg))))) EXPR))
+
+(define* (mu:stats:top-n FUNC N #:optional (EXPR ""))
+  "Get the Top-N frequency of the result of FUNC applied on each
+message. If the optional EXPR is provided, only consider the messages
+that match it."
+  (let* ((freq (mu:stats:frequency FUNC EXPR))
+	  (top (sort freq (lambda (a b) (> (cdr a) (cdr b))))))
+    (list-head top (min (length top) N))))
+
+(define* (mu:stats:top-n-to N #:optional (EXPR ""))
+  "Get the Top-N To:-recipients. If the optional EXPR is provided, only
+consider the messages that match it."
+  (mu:stats:top-n
+    (lambda (msg) (mu:msg:to msg)) N EXPR))
+
+(define* (mu:stats:top-n-from N #:optional (EXPR ""))
+  "Get the Top-N senders (From:). If the optional EXPR is provided,
+only consider the messages that match it."
+  (mu:stats:top-n
+    (lambda (msg) (mu:msg:from msg)) N EXPR))
+
+(define* (mu:stats:top-n-subject N #:optional (EXPR ""))
+  "Get the Top-N subjects. If the optional EXPR is provided,
+only consider the messages that match it."
+  (mu:stats:top-n
+    (lambda (msg) (mu:msg:subject msg)) N EXPR))
+
+(define* (mu:stats:table pairs)
+  "display a list of PAIRS in a table-like fashion"
+  (let ((maxlen 0))
+    (for-each ;; find the widest in the first col
+      (lambda (pair)
+	(set! maxlen (max maxlen (string-length
+				   (format #f "~s " (car pair)))))) pairs)
+    (for-each
+      (lambda (pair)
+	(display (car pair))
+	(display (format #f "~v_" (- maxlen (string-length (car pair)))))
+	(display (cdr pair))
+	(newline)) pairs)))
+    
+	
