@@ -21,11 +21,9 @@
 #define __MU_GUILE_UTILS_H__
 
 #include <libguile.h>
+#include <glib.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /*__cplusplus*/
+G_BEGIN_DECLS
 
 /** 
  * 
@@ -38,10 +36,16 @@ extern "C" {
 void mu_guile_error (const char *func_name, int status,
 		     const char *fmt, SCM args);
 
-#ifdef __cplusplus
-}
-#endif /*__cplusplus*/
 
+/** 
+ * display a GError as a Guile error
+ * 
+ * @param func_name function name
+ * @param err Gerror
+ */
+void mu_guile_g_error (const char *func_name, GError *err);
+	
+G_END_DECLS
 
 #endif /*__MU_GUILE_UTILS_H__*/
 

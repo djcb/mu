@@ -28,3 +28,14 @@ mu_guile_error (const char *func_name, int status,
 		       scm_from_utf8_string (fmt), args,
 		       scm_list_1 (scm_from_int (status)));
 }
+
+
+
+void
+mu_guile_g_error (const char *func_name, GError *err)
+{	
+	scm_error_scm (scm_from_locale_symbol ("MuError"),
+		       scm_from_utf8_string (func_name),
+		       scm_from_utf8_string (err->message),
+		       SCM_UNDEFINED, SCM_UNDEFINED);
+}
