@@ -390,7 +390,7 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 	/* try stack-allocation, it's much faster*/
 	len = strlen (orig);
 	val = (char*)(G_LIKELY(len < 1024)?g_alloca(len+1):g_malloc(len+1));
-	strcpy (val, orig);
+	strncpy (val, orig, len);
 
 	add_terms_values_str (doc, val, mfid);
 
@@ -426,7 +426,7 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 				val =  (char*)g_alloca(len+1);
 			else
 				val  = (char*)g_malloc(len+1);
-			strcpy (val, (char*)lst->data);
+			strncpy (val, (char*)lst->data, len);
 			
 			add_terms_values_str (doc, val, mfid);
 			
