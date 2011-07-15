@@ -65,78 +65,96 @@ optional EXPR is provided, only consider messages that match it.\n"
 	      (let ((freq (assoc-ref table val)))
 		(set! table (assoc-set! table val
 			      (+ 1 (if (eq? freq #f) 0 freq)))))) vals))) EXPR)
-    (sort table
-      (lambda(a b)
-	(if (string? a)
-	  (string<? (car a) (car b)
-	  (< (car a) (car b))))))))
-
+    table))
+ 
+    
 (define* (mu:stats:per-weekday #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (weekday . frequency).\n"
-  (mu:stats:frequency
-    (lambda (msg) (tm:wday (localtime (mu:msg:date msg)))) EXPR))
+  (let* ((stats (mu:stats:frequency
+		  (lambda (msg) (tm:wday (localtime (mu:msg:date msg)))) EXPR)))
+    (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of weekday
 
 (define* (mu:stats:per-month #:optional (EXPR ""))
   "Count the total number of messages for each month (0-11 for
 Jan..Dec). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (month . frequency).\n"
-  (mu:stats:frequency
-    (lambda (msg) (tm:mon (localtime (mu:msg:date msg)))) EXPR))
+  (let* ((stats (mu:stats:frequency
+		  (lambda (msg) (tm:mon (localtime (mu:msg:date msg)))) EXPR)))
+    (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of month
 
 (define* (mu:stats:per-hour #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (weekday . frequency).\n"
-  (mu:stats:frequency
-    (lambda (msg) (tm:hour (localtime (mu:msg:date msg)))) EXPR))
+  (let* ((stats (mu:stats:frequency
+		  (lambda (msg) (tm:hour (localtime (mu:msg:date msg)))) EXPR)))
+    (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of hour
+
 	   
 (define* (mu:stats:per-year #:optional (EXPR ""))
   "Count the total number of messages for each year since 1970. If the
 optional EXPR is provided, only count the messages that match it. The
 result is a list of pairs (year . frequency).\n"
-  (mu:stats:frequency
-    (lambda (msg) (+ 1900 (tm:year (localtime (mu:msg:date msg))))) EXPR))
+  (let* ((stats (mu:stats:frequency
+		  (lambda (msg) (+ 1900 (tm:year (localtime (mu:msg:date msg)))))
+		  EXPR)))
+    (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of year
+
 
 (define* (mu:stats:top-n FUNC N #:optional (EXPR ""))
   "Get the Top-N frequency of the result of FUNC applied on each
 message. If the optional EXPR is provided, only consider the messages
 that match it."
   (let* ((freq (mu:stats:frequency FUNC EXPR))
-	  (top (sort freq (lambda (a b) (> (cdr a) (cdr b))))))
-    (list-head top (min (length top) N))))
+	  (top (sort freq (lambda (a b) (< (cdr b) (cdr a) )))))
+    (list-head top (min (length freq) N))))
 
-(define* (mu:stats:top-n-to N #:optional (EXPR ""))
-  "Get the Top-N To:-recipients. If the optional EXPR is provided, only
-consider the messages that match it."
+(define* (mu:stats:top-n-to #:optional (N 10) (EXPR ""))
+  "Get the Top-N To:-recipients. If the optional N is not provided,
+use 10. If the optional EXPR is provided, only consider the messages
+that match it."
   (mu:stats:top-n
     (lambda (msg) (mu:msg:to msg)) N EXPR))
 
-(define* (mu:stats:top-n-from N #:optional (EXPR ""))
-  "Get the Top-N senders (From:). If the optional EXPR is provided,
-only consider the messages that match it."
+(define* (mu:stats:top-n-from #:optional (N 10) (EXPR ""))
+  "Get the Top-N senders (From:). If the optional N is not provided,
+use 10. If the optional EXPR is provided, only consider the messages
+that match it."
   (mu:stats:top-n
     (lambda (msg) (mu:msg:from msg)) N EXPR))
 
-(define* (mu:stats:top-n-subject N #:optional (EXPR ""))
-  "Get the Top-N subjects. If the optional EXPR is provided,
-only consider the messages that match it."
+(define* (mu:stats:top-n-subject #:optional (N 10) (EXPR ""))
+  "Get the Top-N subjects. If the optional N is not provided,
+use 10. If the optional EXPR is provided, only consider the messages
+that match it."
   (mu:stats:top-n
     (lambda (msg) (mu:msg:subject msg)) N EXPR))
 
-(define* (mu:stats:table pairs)
+(define (mu:stats:table pairs)
   "display a list of PAIRS in a table-like fashion"
   (let ((maxlen 0))
     (for-each ;; find the widest in the first col
       (lambda (pair)
-	(set! maxlen (max maxlen (string-length
-				   (format #f "~s " (car pair)))))) pairs)
+	(set! maxlen
+	  (max maxlen (string-length (format #f "~s " (car pair)))))) pairs)
     (for-each
       (lambda (pair)
-	(display (car pair))
-	(display (format #f "~v_" (- maxlen (string-length (car pair)))))
-	(display (cdr pair))
-	(newline)) pairs)))
+	(let ((first (format #f "~s" (car pair)))
+	       (second (format #f "~s" (cdr pair))))
+	  (display (format #f "~A~v_~A\n"  
+		     first (- maxlen (string-length first)) second))))
+      pairs)))
     
-	
+(define (mu:stats:plot pairs)
+  "plot a table using gnuplot"
+  ;; create a tmpfile with the data... 
+  (let* ((datafile (tmpnam))
+	  (output (open datafile (logior O_CREAT O_WRONLY) #O0644)))
+    (for-each
+      (lambda (pair) (display (format #f "~A ~A\n" (car pair) (cdr pair)) output))
+      pairs)
+    (close-output-port output)
+    ;; now, display it.
+    (system (format #f "gnuplot -p -e 'plot \"~A\" w boxes fs pattern 2'" datafile))))
