@@ -34,7 +34,7 @@ get_query (void)
 	err = NULL;
 	query = mu_query_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), &err);
 	if (err) {
-		g_warning ("error creating query: %s", err->message);
+		mu_guile_g_error ("<internal>", err);
 		g_error_free (err);
 		return NULL;
 	}
@@ -53,7 +53,7 @@ get_query_iter (MuQuery *query, const char* expr)
 	iter = mu_query_run (query, expr,
 			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, &err);
 	if (err) {
-		g_warning ("error running query: %s", err->message);
+		mu_guile_g_error ("<internal>", err);
 		g_error_free (err);
 		return NULL;
 	}
@@ -73,6 +73,10 @@ SCM_DEFINE (store_foreach, "mu:store:foreach", 1, 1, 0,
 	int count;
 	const char* expr;
 
+	SCM_ASSERT (scm_procedure_p (FUNC), FUNC, SCM_ARG1, FUNC_NAME);
+	SCM_ASSERT (scm_is_string (EXPR) || EXPR == SCM_UNSPECIFIED,
+		    EXPR, SCM_ARG2, FUNC_NAME);
+	
 	query = get_query ();
 	if (!query)
 		return SCM_UNSPECIFIED;
@@ -87,11 +91,19 @@ SCM_DEFINE (store_foreach, "mu:store:foreach", 1, 1, 0,
 
 		SCM msgsmob;
 		MuMsg *msg;
+		GError *err;
 
-		msg = mu_msg_iter_get_msg (iter, NULL);
+		err = NULL;
+		msg = mu_msg_iter_get_msg (iter, &err);
+		if (err) {
+			mu_guile_g_error (FUNC_NAME, err);
+			g_error_free (err);
+			continue;
+		}
+
 		msgsmob = mu_guile_msg_to_scm (mu_msg_ref(msg));
-
 		scm_call_1 (FUNC, msgsmob);
+
 		++count;
 	}
 	
