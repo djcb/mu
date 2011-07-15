@@ -384,7 +384,8 @@ mu_str_from_list (const GSList *lst, char sepa)
 	for (cur = lst, str = NULL; cur; cur = g_slist_next(cur)) {
 
 		char *tmp;
-		char sep[2] = { '\0', '\0' };
+		/* two extra dummy '\0' so -Wstack-protector won't complain */
+		char sep[4] = { '\0', '\0', '\0', '\0' }; 
 		sep[0] = cur->next ? sepa : '\0';
 
 		tmp = g_strdup_printf ("%s%s%s",
@@ -403,7 +404,8 @@ mu_str_to_list (const char *str, char sepa, gboolean strip)
 {
 	GSList *lst;
 	gchar **strs, **cur;
-	char sep[] = { '\0', '\0' };
+	/* two extra dummy '\0' so -Wstack-protector won't complain */
+	char sep[4] = { '\0', '\0', '\0', '\0' }; 
 	
 	g_return_val_if_fail (sepa, NULL);
 	
