@@ -1,8 +1,8 @@
-## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 3 of the License, or
+## t	he Free Software Foundation; either version 3 of the License, or
 ## (at your option) any later version.
 ##
 ## This program is distributed in the hope that it will be useful,
@@ -16,19 +16,20 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=
+# enforce compiling this dir first before decending into tests/
+INCLUDES=-I${top_srcdir} -I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
-# build if there is some gtk available
-if HAVE_GTK
-SUBDIRS += mug
-endif
+# don't use -Werror, as it might break on other compilers
+# use -Wno-unused-parameters, because some callbacks may not
+# really need all the params they get
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
-# for mug2, we need webkit
-if BUILD_WIDGETS
-SUBDIRS += mug2
-endif
+noinst_PROGRAMS=				\
+	muile
 
-# for muile, we need guile
-if HAVE_GUILE
-SUBDIRS += muile
-endif
+muile_SOURCES=					\
+	muile.cc
+
+muile_LDFLAGS=					\
+	${top_builddir}/libmuguile/libmuguile.la

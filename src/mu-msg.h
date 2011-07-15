@@ -77,7 +77,7 @@ MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
  * @return the message with its reference count increased, or NULL in
  * case of error.
  */
-MuMsg * mu_msg_ref (MuMsg *msg);
+MuMsg *mu_msg_ref (MuMsg *msg);
 
 /**
  * decrease the reference count for this message. if the reference
@@ -305,7 +305,7 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
  * 
  * @return the timestamp or 0 in case of error
  */
-time_t          mu_msg_get_timestamp       (MuMsg *msg);
+time_t     mu_msg_get_timestamp       (MuMsg *msg);
 
 
 
@@ -333,10 +333,6 @@ const char* mu_msg_get_header (MuMsg *self, const char *header);
  * @return a list with the references for this msg. Don't modify/free
  */
 const GSList* mu_msg_get_references (MuMsg *msg);
-
-
-
-
 
 /**
  * get the list of tags (ie., X-Label)

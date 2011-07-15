@@ -79,45 +79,6 @@ const char* mu_runtime_path   (MuRuntimePath path);
 
 
 /**
- * get the mu home directory (typically, ~/.mu); this can only be
- * called after mu_runtime_init and before mu_runtime_uninit
- * 
- * @return mu home directory as a string which should be not be
- * modified, or NULL in case of error.
- */
-const char* mu_runtime_mu_home_dir     (void);
-
-/**
- * get the xapian directory (typically, ~/.mu/xapian/); this can only
- * be called after mu_runtime_init and before mu_runtime_uninit
- * 
- * @return the xapian directory as a string which should be not be
- * modified, or NULL in case of error.
- */
-const char* mu_runtime_xapian_dir      (void);
-
-
-/**
- * get the mu bookmarks file (typically, ~/.mu/bookmarks); this can
- * only be called after mu_runtime_init and before mu_runtime_uninit
- * 
- * @return the bookmarks file as a string which should be not be
- * modified, or NULL in case of error.
- */
-const char* mu_runtime_bookmarks_file  (void);
-
-/**
- * get the mu contacts cache file name (typically,
- * ~/.mu/contacts.cache); this can only be called after
- * mu_runtime_init and before mu_runtime_uninit
- * 
- * @return the contacts cache file name as a string which should be not be
- * modified, or NULL in case of error.
- */
-const char* mu_runtime_contacts_cache_file  (void);
-
-
-/**
  * get the mu configuration options (ie., the parsed command line
  * parameters)
  * 

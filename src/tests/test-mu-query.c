@@ -150,6 +150,7 @@ test_mu_query_01 (void)
 		{ "foo:pepernoot",      0 },
 		{ "funky",              1 },
 		{ "fünkÿ",              1 },
+		{ "",                   13 }
 	};
 
 	
