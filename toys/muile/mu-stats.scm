@@ -132,7 +132,7 @@ that match it."
   (mu:stats:top-n
     (lambda (msg) (mu:msg:subject msg)) N EXPR))
 
-(define (mu:stats:table pairs)
+(define* (mu:stats:table pairs #:optional (port (current-output-port)))
   "display a list of PAIRS in a table-like fashion"
   (let ((maxlen 0))
     (for-each ;; find the widest in the first col
@@ -144,17 +144,12 @@ that match it."
 	(let ((first (format #f "~s" (car pair)))
 	       (second (format #f "~s" (cdr pair))))
 	  (display (format #f "~A~v_~A\n"  
-		     first (- maxlen (string-length first)) second))))
+		     first (- maxlen (string-length first)) second) port)))
       pairs)))
-    
-(define (mu:stats:plot pairs)
-  "plot a table using gnuplot"
-  ;; create a tmpfile with the data... 
+
+(define (mu:stats:export pairs)
+  "export pairs to a temporary file, return its name"
   (let* ((datafile (tmpnam))
 	  (output (open datafile (logior O_CREAT O_WRONLY) #O0644)))
-    (for-each
-      (lambda (pair) (display (format #f "~A ~A\n" (car pair) (cdr pair)) output))
-      pairs)
-    (close-output-port output)
-    ;; now, display it.
-    (system (format #f "gnuplot -p -e 'plot \"~A\" w boxes fs pattern 2'" datafile))))
+    (mu:stats:table pairs output)
+    datafile))
