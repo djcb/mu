@@ -345,30 +345,28 @@ mu_str_date_parse_hdwmy (const char *nptr)
 	return delta <= now ? now - delta : never;  
 }
 
-guint64
-mu_str_size_parse_kmg (const char* str)
+gint64
+mu_str_size_parse_bkm (const char* str)
 {
 	gint64 num;
-	char *end;
-	
-	g_return_val_if_fail (str, G_MAXUINT64);
-	
-	num = strtol (str, &end, 10);
-	if (num < 0)  
-		return G_MAXUINT64;
-	
-	if (!end || end[1] != '\0')
-		return G_MAXUINT64;
-	
-	switch (tolower(end[0])) {
-	case 'b': return num;                      /* bytes */	
-	case 'k': return num * 1000;               /* kilobyte */
-	case 'm': return num * 1000 * 1000;        /* megabyte */
-	/* case 'g': return num * 1000 * 1000 * 1000; /\* gigabyte *\/ */
-	default:
-		return G_MAXUINT64;
-	}
+	const char *cur;
 
+	g_return_val_if_fail (str, -1);
+
+	if (!isdigit(str[0]))
+		return -1;
+	
+	num = atoi(str);
+	for (++str; isdigit(*str); ++str);
+	
+	switch (tolower(*str)) {
+	case '\0':
+	case 'b' : return num;                      /* bytes */
+	case 'k':  return num * 1000;               /* kilobyte */
+	case 'm':  return num * 1000 * 1000;        /* megabyte */
+	default:
+		return -1;
+	}
 }
 
 

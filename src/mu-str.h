@@ -215,10 +215,11 @@ time_t mu_str_date_parse_hdwmy (const char* str);
 
 /**
  * parse a byte size; a size is a number, with optionally a
- * unit. Units recognized are K (1000) and M (1000*1000). Only the
- * first letter is checked and the function is not case-sensitive, so
- * 1000Kb, 3M will work equally well.  Note, for kB, MB etc., we then
- * follow the SI standards, not 2^10 etc.
+ * unit. Units recognized are b/B (bytes) k/K (1000) and m/M
+ * (1000*1000). Only the first letter is checked and the function is
+ * not case-sensitive, so 1000Kb, 3M will work equally well.  Note,
+ * for kB, MB etc., we then follow the SI standards, not 2^10 etc. The
+ * 'b' may be omitted.
  *
  * practical sizes for email messages are in terms of Mb; even in
  * extreme cases it should be under 100 Mb. Function return
@@ -226,9 +227,9 @@ time_t mu_str_date_parse_hdwmy (const char* str);
  * 
  * @param str a string with a size, such a "100", "100Kb", "1Mb"
  * 
- * @return the corresponding time_t value (as a guint64)
+ * @return the corresponding size in bytes, or -1 in case of error
  */
-guint64 mu_str_size_parse_kmg (const char* str);
+gint64 mu_str_size_parse_bkm (const char* str);
 
 /**
  * create a full path from a path + a filename. function is _not_

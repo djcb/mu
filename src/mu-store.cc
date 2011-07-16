@@ -314,7 +314,7 @@ static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg,
 		       MuMsgFieldId mfid)
 {
-	char datebuf[13]; /* YYYYMMDDHHMMSS */
+	char datebuf[13]; /* YYYYMMDDHHMM\0 */
 	static const std::string pfx (1, mu_msg_field_xapian_prefix(mfid));
 	gint64 num = mu_msg_get_field_numeric (msg, mfid);
 	

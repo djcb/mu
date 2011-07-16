@@ -45,32 +45,18 @@ public:
 
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
-
-		// now and begin should only appear at the end, so
-		// correct them...
-		if (begin == "today" || begin == "now")
-			std::swap (begin, end);
 		
-		substitute_date (begin);
-		substitute_date (end);
+		substitute_date (begin, true);
+		substitute_date (end, false);
 
 		normalize_date (begin);
 		normalize_date (end);
-
-		// note, we'll have to compare the *completed*
-		// versions of begin and end to if the were specified
-		// in the opposite order; however, if that is true, we
-		// have to complete begin, end 'for real', as the
-		// begin date is completed to the begin of the
-		// interval, and the to the end of the interval
-		// ie. begin: 2008 -> 200801010000 end: 2008 ->
-		// 200812312359
-		if (complete_date12(begin,true) >
-		    complete_date12(end, false))			
-			std::swap (begin, end);
 		
-		begin = complete_date12(begin,true);
+		begin = complete_date12(begin, true);
 		end =	complete_date12(end, false);
+
+		if (begin > end) 
+			throw Xapian::QueryParserError ("end time is before begin");
 		
 		return (Xapian::valueno)MU_MSG_PSEUDO_FIELD_ID_DATESTR;
 	}
@@ -93,13 +79,15 @@ private:
 		} else
 			return false;		
 	}
+
 	
-	void substitute_date (std::string& date) {
+	void substitute_date (std::string& date, bool is_begin) {
 		char datebuf[13];
 		time_t now = time(NULL);
 		
 		if (date == "today") {
-			strftime(datebuf, sizeof(datebuf), "%Y%m%d0000",
+			strftime(datebuf, sizeof(datebuf),
+				 is_begin ? "%Y%m%d0000" : "%Y%m%d2359",
 				 localtime(&now));
 			date = datebuf;
 		} else if (date == "now") {
@@ -189,9 +177,9 @@ private:
 	
 	bool substitute_size (std::string& size) {
 		gchar str[16];
-		guint64 num = mu_str_size_parse_kmg  (size.c_str());
-		if (num == G_MAXUINT64)
-			return false;
+		gint64 num = mu_str_size_parse_bkm(size.c_str());
+		if (num < 0)
+			throw Xapian::QueryParserError ("invalid size");
 		snprintf (str, sizeof(str), "%" G_GUINT64_FORMAT, num);
 		size = str;
 		return true;
@@ -243,8 +231,8 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 		
 	} catch (...) {
 		/* some error occured */
-		g_set_error (err, 0, MU_ERROR_QUERY, "parse error in query '%s'",
-			     searchexpr);
+		g_set_error (err, 0, MU_ERROR_QUERY,
+			     "parse error in query");
 		g_free (preprocessed);
 		throw;
 	}
