@@ -146,9 +146,9 @@ SCM_DEFINE (msg_prio, "mu:msg:priority", 1, 0, 0,
 	prio = mu_msg_get_prio (msgwrap->_msg);
 
 	switch (prio) {
-	case MU_MSG_PRIO_LOW:    return scm_from_utf8_symbol("low");
-	case MU_MSG_PRIO_NORMAL: return scm_from_utf8_symbol("normal");
-	case MU_MSG_PRIO_HIGH:   return scm_from_utf8_symbol("high");
+	case MU_MSG_PRIO_LOW:    return scm_from_locale_symbol("low");
+	case MU_MSG_PRIO_NORMAL: return scm_from_locale_symbol("normal");
+	case MU_MSG_PRIO_HIGH:   return scm_from_locale_symbol("high");
 	default:
 		g_return_val_if_reached (SCM_UNDEFINED);
 	}	
@@ -167,7 +167,7 @@ check_flag (MuMsgFlags flag, FlagData *fdata)
 {
 	if (fdata->flags & flag) {
 		SCM item;
-		item = scm_list_1 (scm_from_utf8_symbol(mu_msg_flag_name(flag)));
+		item = scm_list_1 (scm_from_locale_symbol(mu_msg_flag_name(flag)));
 		fdata->lst = scm_append_x (scm_list_2(fdata->lst, item));
 	}	
 }

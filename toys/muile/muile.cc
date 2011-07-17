@@ -16,6 +16,9 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /*HAVE_CONFIG_H*/
 
 #include <mu-runtime.h>
 
@@ -27,7 +30,13 @@
 int
 main (int argc, char *argv[])
 {
-	mu_runtime_init ("/home/djcb/.mu");
+	
+#ifdef HAVE_PRE2_GUILE	
+	g_warning ("Note: muile will not function correctly unless you have a "
+		   "UTF-8 locale.");
+#endif /* HAVE_PRE2_GUILE */
+		
+	mu_runtime_init (mu_util_guess_mu_homedir());
 		
 	scm_with_guile (&mu_guile_msg_init, NULL);
 	scm_with_guile (&mu_guile_store_init, NULL);

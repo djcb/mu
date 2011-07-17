@@ -16,6 +16,9 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /*HAVE_CONFIG_H*/
 
 #include "mu-guile-common.h"
 
@@ -39,3 +42,25 @@ mu_guile_g_error (const char *func_name, GError *err)
 		       scm_from_utf8_string (err->message),
 		       SCM_UNDEFINED, SCM_UNDEFINED);
 }
+
+
+
+/*
+ * backward compat for pre-2.x guile - note, this will fail miserably
+ * if you don't use a UTF8 locale 
+ */ 
+#if HAVE_PRE2_GUILE
+
+SCM
+scm_from_utf8_string (const char* str)
+{
+	return scm_from_locale_string (str);
+}
+
+char*
+scm_to_utf8_string (SCM scm)
+{
+	return scm_to_locale_string (scm);
+}
+
+#endif /*HAVE_PRE2_GUILE*/

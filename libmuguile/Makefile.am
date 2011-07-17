@@ -18,7 +18,7 @@ include $(top_srcdir)/gtest.mk
 
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
-INCLUDES=-I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
+INCLUDES=-I${top_srcdir} -I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not

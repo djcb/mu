@@ -209,12 +209,10 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 
-
-
 # check for guile & guile-snarf
-AC_PATH_PROG(GUILE, [guile-config], [], [$PATH])
-AS_IF([test "x$GUILE" != "x"],
-  [GUILE_CFLAGS=`$GUILE compile`; GUILE_LIBS=`$GUILE link`])
+AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [/usr/bin])
+AS_IF([test "x$GUILE_CONFIG" != "x"],
+  [GUILE_CFLAGS=`$GUILE_CONFIG compile`; GUILE_LIBS=`$GUILE_CONFIG link`])
 AC_SUBST(GUILE_LIBS)
 AC_SUBST(GUILE_CFLAGS)
 
@@ -223,12 +221,21 @@ AS_IF([test "x$GUILE_SNARF" != "x"],[
     AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])],[
     AC_MSG_WARN([cannot find guile-snarf])])
 
-AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE" != "x" -a "x$GUILE_SNARF != "x])
+AS_IF([test "x$GUILE_CONFIG" != "x"],
+ [GUILE_VERSION="`$GUILE_CONFIG --version 2>&1 | sed 's/.*version //'`";
+  GUILE_MAJOR_VERSION="`echo "$GUILE_VERSION" | sed 's/\..*//'`"])
 
+AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
+    [AC_DEFINE_UNQUOTED([HAVE_PRE2_GUILE],[1],[have pre-2.x guile])])
 
+# for now, we require guile 2.x
+AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE_CONFIG" != "x" -a "x$GUILE_SNARF" != "x" \
+			   -a "x$GUILE_MAJOR_VERSION" != "0" \
+			   -a "x$GUILE_MAJOR_VERSION" != "1"])	 
 
-
-
+AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
+      [AC_MSG_WARN([Only guile >= 2.x is supported])])
+      
 # check for xdg-open
 AS_IF([test "x$buildgui"="xyes"],[
   AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
@@ -242,11 +249,9 @@ AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
 AS_IF([test "x$PMCCABE" = "xno"],[
    have_pmccabe="no"	    
    AC_MSG_WARN([
-   *** Developers: you don't seem to have the 'pmccabe' tool installed.
+   *** Developers: you do not seem to have the pmccabe tool installed.
    *** Please install it if you want to run the automated code checks])
-],[
-   have_pmccabe="yes"
-])
+],[have_pmccabe="yes"])
 
 AC_CONFIG_FILES([
 Makefile
@@ -291,8 +296,8 @@ if test "x$have_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
 fi
 
-if test "x$GUILE" != "x"; then
-echo "Guile version                        : `$GUILE --version 2>&1`"
+if test "x$HAVE_GUILE" != "x"; then
+echo "Guile version                        : $GUILE_VERSION"
 fi
 
 echo

@@ -7,7 +7,9 @@
 
   `guile'[1] is an interpreter/library for the Scheme programming language[2],
   specifically meant for extending other programs. It is, in fact, the
-  official GNU language for doing so.
+  official GNU language for doing so. 'muile' requires guile 2.x to get the full
+  support; older versions will not support e.g. the 'mu-stats.scm' things
+  discussed below.
 
   The combination of mu + guile is called `muile', and allows you to write
   little Scheme-programs to query the mu-database, or inspect individual
