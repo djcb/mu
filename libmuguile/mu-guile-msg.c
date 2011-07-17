@@ -77,25 +77,20 @@ SCM_DEFINE (msg_make_from_file, "mu:msg:make-from-file", 1, 0, 0,
 
 
 static SCM
+scm_from_string_or_null (const char *str)
+{
+	return str ? scm_from_utf8_string (str) : SCM_UNSPECIFIED;
+}
+		
+
+static SCM
 msg_str_field (SCM msg_smob, MuMsgFieldId mfid)
 {
-	const char *val, *endptr;
-	
 	MuMsgWrapper *msgwrap;
 	msgwrap = (MuMsgWrapper*) SCM_CDR(msg_smob);
 
-	val = mu_msg_get_field_string(msgwrap->_msg, mfid);
-
-	if (val && !g_utf8_validate (val, -1, &endptr)) {
-		//return scm_from_utf8_string("<invalid>");
-		gchar *part;
-		SCM scm;
-		part = g_strndup (val, (endptr-val));
-		scm = scm_from_utf8_string(part);
-		g_free (part);
-		return scm;
-	} else
-		return val ? scm_from_utf8_string(val) : SCM_UNSPECIFIED;
+	return scm_from_string_or_null (
+		mu_msg_get_field_string(msgwrap->_msg, mfid));
 }
 
 static gint64
@@ -240,9 +235,8 @@ contacts_to_list (MuMsgContact *contact, EachContactData *ecdata)
 		
 		item = scm_list_1
 			(scm_list_2 (
-				name ? scm_from_utf8_string(name) : SCM_UNSPECIFIED,
-				addr ? scm_from_utf8_string(addr) : SCM_UNSPECIFIED));
-
+				scm_from_string_or_null(name),
+				scm_from_string_or_null(addr)));
 		ecdata->lst = scm_append_x (scm_list_2(ecdata->lst, item));	
 	}
 }
@@ -357,7 +351,7 @@ SCM_DEFINE (msg_body, "mu:msg:body", 1, 1, 0,
 	else
 		val = mu_msg_get_body_text(msgwrap->_msg);
 		
-	return val ? scm_from_utf8_string (val) : SCM_UNSPECIFIED;
+	return scm_from_string_or_null (val);
 }
 #undef FUNC_NAME
 
@@ -377,7 +371,7 @@ SCM_DEFINE (msg_header, "mu:msg:header", 1, 1, 0,
 	header  =  scm_to_utf8_string (HEADER);
 	val     =  mu_msg_get_header(msgwrap->_msg, header);
 	
-	return val ? scm_from_utf8_string(val) : SCM_UNDEFINED;
+	return val ? scm_from_string_or_null(val) : SCM_UNDEFINED;
 }
 #undef FUNC_NAME
 
@@ -394,7 +388,8 @@ msg_string_list_field (SCM msg_smob, MuMsgFieldId mfid)
 	for (scmlst = SCM_EOL; lst;
 	     lst = g_slist_next(lst)) {	
 		SCM item;
-		item = scm_list_1 (scm_from_utf8_string((const char*)lst->data));
+		item = scm_list_1
+			(scm_from_string_or_null((const char*)lst->data));
 		scmlst = scm_append_x (scm_list_2(scmlst, item));
 	}
 

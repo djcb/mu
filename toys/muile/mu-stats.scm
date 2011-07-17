@@ -24,14 +24,14 @@
 (define* (mu:stats:count #:optional (EXPR ""))
   "Count the total number of messages. If the optional EXPR is
 provided, only count the messages that match it.\n"
-  (mu:store:foreach (lambda(msg) #f) EXPR))
+  (mu:store:for-each (lambda(msg) #f) EXPR))
 
 (define* (mu:stats:average FUNC #:optional (EXPR ""))
   "Count the average of the result of applying FUNC on all
 messages. If the optional EXPR is provided, only consider the messages
 that match it.\n"
   (let* ((sum 0)
-	  (n (mu:store:foreach
+	  (n (mu:store:for-each
 	       (lambda(msg) (set! sum (+ sum (FUNC msg)))) EXPR)))
     (if (= n 0) 0 (exact->inexact (/ sum n)))))
 
@@ -50,12 +50,12 @@ it.\n"
 			(length (mu:msg:bcc msg)))) EXPR))
 
 (define* (mu:stats:frequency FUNC #:optional (EXPR ""))
-  "FUNC is a function that takes a Msg, and returns the frequency of
+  "FUNC is a function that takes a mMsg, and returns the frequency of
 the different values this function returns. If FUNC returns a list,
 update the frequency table for each element of this list. If the
 optional EXPR is provided, only consider messages that match it.\n"
   (let ((table '()))
-    (mu:store:foreach
+    (mu:store:for-each
       (lambda(msg)
 	;; note, if val is not already a list, turn it into a list
 	;; then, take frequency for each element in the list
@@ -148,7 +148,8 @@ that match it."
       pairs)))
 
 (define (mu:stats:export pairs)
-  "export pairs to a temporary file, return its name"
+  "Export PAIRS to a temporary file, return its name. The data can
+then be used in, e.g., R and gnuplot."
   (let* ((datafile (tmpnam))
 	  (output (open datafile (logior O_CREAT O_WRONLY) #O0644)))
     (mu:stats:table pairs output)

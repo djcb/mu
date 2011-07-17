@@ -61,15 +61,119 @@
      (activate-readline)
 
    in your ~/.guile configuration.  
+
+** What about searching messages in the database?
+
+   That's easy, too - it does require a little more scheme knowledge. For
+   searching messages there is the mu:store:for-each function, which takes two
+   arguments; the first argument is a function that will be called for each
+   message found. The optional second argument is the search expression (following 
+   'mu find' syntax); if don't provide the argument, all messages match.
+
+   So how does this work in practice? Let's see I want to see the subject and
+   sender for messages about milk:
+
+   ,----
+   | (mu:store:foreach (lambda(msg) (format #t "~s ~s\n" (mu:msg:from msg) (mu:msg:subject msg))) "milk")
+   `----
+
+   or slightly more readable:
+
+   ,----
+   | (mu:store:foreach 
+   |   (lambda(msg) 
+   |     (format #t "~s ~s\n" (mu:msg:from msg) (mu:msg:subject msg))) 
+   |   "milk")
+   `----
+
+   As you can see, I provide an anonymous ('lambda') function which will be
+   called for each message matching 'milk'. Admittedly, this requires a bit of
+   Scheme-knowledge... but this time is good as any to learn this nice
+   language.
+
    
 ** Can I do some statistics on my messages?
 
-   Yes you can. It's pretty easy in guile. See the mu:stats functions.
-      
+   Yes you can. In fact, it's pretty easy. If you load (in the muile/ directory)
+   the file 'mu-stats.scm':
+
+   ,----
+   | (load "mu-stats.scm)
+   `----
+
+   you'll get a bunch of functions (with names starting with 'mu:stats') to make
+   this very easy. Let's see, suppose I want to see how many messages I get per
+   weekday:
+
+   ,----
+   | scheme@(guile-user)> (mu:stats:per-weekday)
+   | $1 = ((0 . 2255) (1 . 2788) (2 . 2868) (3 . 2599) (4 . 2629) (5 . 2287) (6 . 1851))
+   `----
+   
+   Note, Sunday=0, Monday=1 and so on. Apparently, I get/send most of e-mail on
+   Tuesdays, and least on Saturday.  
+
+   And note that mu:stats:per-weekdays takes an optional search expression
+   argument, to limit the results to messages matching that, e.g., to only
+   consider messages related to emacs during this year:
+
+   ,----
+   | scheme@(guile-user)> (mu:stats:per-weekday "emacs date:2011..now")
+   | $8 = ((0 . 54) (1 . 22) (2 . 46) (3 . 47) (4 . 39) (5 . 54) (6 . 50))
+   `----
+
+   There's also 'mu:stats:per-month', 'mu:stats:per-year', 'mu:stats:per-hour'.
+   I learnt that during 3-4am I sent/receive only about a third of what I sent
+   during 11-12pm.
+
+** What about getting the top-10 people in the To:-field? 
+
+   Easy.
+
+   ,----
+   |  scheme@(guile-user)> (mu:stats:top-n-to)
+   |  $1 = ((("Abc" "myself@example.com") . 4465) (("Def" "somebodyelse@example.com") . 2114)  
+   |     (and so on)
+   `----
+
+   I've changed the names a bit to protect the innocent, but what the function
+   does is return a list of pairs of 
+
+       (<name> <email>) . <frequency>
+
+   descending in order of frequency. Note, 'mu:stats:top-n-to' takes two
+   optional arguments - first the 'n' in top-n (default is 10), and seconds as
+   search expression to limit the messages considered.
+
+   There are also the functions 'mu:stats:top-n-subject' and
+   'mu:stats:top-n-from' which do the same, mutatis mutandis, and it's quite
+   easy to add your own (see the mu-stats.scm for examples)
+   
+** What about showing the results in a table?
+
+   Even easier. Try:
+
+   ,----
+   | (mu:stats:table (mu:stats:top-n-to))
+   `----
+  
+   or
+
+   ,----
+   | (mu:stats:table (mu:stats:per-weekday))
+   `----
+
+   You can also export the table:
+   
+   ,----
+   | (mu:stats:export (mu:stats:per-weekday))
+   `----
+
+   which will create a temporary file with the results, for further processing
+   in e.g. 'R' or 'gnuplot'.
 
 
-
-[1] http://www.gnu.org/s/guile/
+[1] http://www.gnu.org/s/guile/ 
 [2] http://en.wikipedia.org/wiki/Scheme_(programming_language)
 
 # Local Variables:

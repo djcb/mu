@@ -34,7 +34,7 @@ get_query (void)
 	err = NULL;
 	query = mu_query_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), &err);
 	if (err) {
-		mu_guile_g_error ("<internal>", err);
+		mu_guile_g_error ("<internal error>", err);
 		g_error_free (err);
 		return NULL;
 	}
@@ -53,7 +53,7 @@ get_query_iter (MuQuery *query, const char* expr)
 	iter = mu_query_run (query, expr,
 			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, &err);
 	if (err) {
-		mu_guile_g_error ("<internal>", err);
+		mu_guile_g_error ("<internal error>", err);
 		g_error_free (err);
 		return NULL;
 	}
@@ -62,7 +62,7 @@ get_query_iter (MuQuery *query, const char* expr)
 }
 
 
-SCM_DEFINE (store_foreach, "mu:store:foreach", 1, 1, 0,
+SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
 	    (SCM FUNC, SCM EXPR),
 	    "Call FUNC for each message in the store, or, if EXPR is specified, "
 	    "for each message matching EXPR.\n")
