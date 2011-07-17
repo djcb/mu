@@ -224,7 +224,12 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 
 	/* FALSE --> don't encode */
 	recip = (char*)internet_address_list_to_string (recips, FALSE);
-	
+
+	if (recip && !g_utf8_validate (recip, -1, NULL)) {
+		g_debug ("invalid recipient in %s\n", self->_path);
+		mu_str_asciify_in_place (recip); /* ugly... */
+	}
+		
 	if (mu_str_is_empty(recip)) {
 		g_free (recip);
 		return NULL;
@@ -484,41 +489,6 @@ get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 }	
 
 
-/* turn \0-terminated buf into ascii (which is a utf8 subset); convert
- *   any non-ascii into '.'
- */
-static void
-asciify (char *buf)
-{
-	char *c;
-	for (c = buf; c && *c; ++c)
-		if (!isascii(*c))
-			c[0] = '.';
-}
-
-
-
-static gchar*
-text_to_utf8 (const char* buffer, const char *charset)
-{
-	GError *err;
-	gchar * utf8;
-
-	err = NULL;
-	utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
-					charset, (gchar*)".", 
-					NULL, NULL, &err);
-	if (!utf8) {
-		MU_WRITE_LOG ("%s: conversion failed from %s: %s",
-			      __FUNCTION__, charset,
-			      err ? err->message : "");
-		if (err)
-			g_error_free (err);
-	}
-	
-	return utf8;
-}
-
 
 /* NOTE: buffer will be *freed* or returned unchanged */
 static char*
@@ -543,7 +513,7 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	
 	/* of course, the charset specified may be incorrect... */
 	if (charset) {
-		char *utf8 = text_to_utf8 (buffer, charset);
+		char *utf8 = mu_str_convert_to_utf8 (buffer, charset);
 		if (utf8) {
 			g_free (buffer);
 			return utf8;
@@ -551,9 +521,8 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	}
 
 	/* hmmm.... no charset at all, or conversion failed; ugly
-	 *  hack: replace all non-ascii chars with '.'
-	 *  instead... TODO: come up with something better */
-	asciify (buffer);
+	 *  hack: replace all non-ascii chars with '.' */
+	mu_str_asciify_in_place (buffer);
 	return buffer;
 }
 
@@ -719,6 +688,28 @@ get_tags (MuMsgFile *self)
 }
 
 
+/* wrongly encoded messages my cause GMime to return invalid
+ * UTF8... we double check, and ensure our output is always correct
+ * utf8 */
+gchar *
+maybe_cleanup (const char* str, const char *path, gboolean *do_free)
+{
+	if (!str || G_LIKELY(g_utf8_validate(str, -1, NULL)))
+		return (char*)str;
+
+	g_debug ("invalid utf8 in %s", path);
+	
+	if (*do_free)
+		return mu_str_asciify_in_place ((char*)str);
+	else {
+		gchar *ascii;
+		ascii = mu_str_asciify_in_place(g_strdup (str));
+		*do_free = TRUE;
+		return ascii;
+	}
+}
+
+
 char*
 mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 			   gboolean *do_free)
@@ -742,14 +733,18 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 	case MU_MSG_FIELD_ID_CC: *do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_CC);
 
-	case MU_MSG_FIELD_ID_FROM:
-		return (char*)g_mime_message_get_sender (self->_mime_msg);
-		
+	case MU_MSG_FIELD_ID_FROM: 
+		return (char*)maybe_cleanup
+			(g_mime_message_get_sender (self->_mime_msg),
+			 self->_path, do_free);
+
 	case MU_MSG_FIELD_ID_PATH:
 		return self->_path;
 		
 	case MU_MSG_FIELD_ID_SUBJECT:
-		return (char*)g_mime_message_get_subject (self->_mime_msg);
+		return (char*)maybe_cleanup
+			(g_mime_message_get_subject (self->_mime_msg),
+			 self->_path, do_free);
 
 	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_TO);

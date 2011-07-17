@@ -349,7 +349,6 @@ gint64
 mu_str_size_parse_bkm (const char* str)
 {
 	gint64 num;
-	const char *cur;
 
 	g_return_val_if_fail (str, -1);
 
@@ -545,6 +544,46 @@ mu_str_escape_c_literal (const gchar* str)
 
 	return g_string_free (tmp, FALSE);
 }
+
+
+
+/* turn \0-terminated buf into ascii (which is a utf8 subset); convert
+ *   any non-ascii into '.'
+ */
+char*
+mu_str_asciify_in_place (char *buf)
+{
+	char *c;
+	for (c = buf; c && *c; ++c)
+		if (!isascii(*c))
+			c[0] = '.';
+
+	return buf;
+}
+
+gchar*
+mu_str_convert_to_utf8 (const char* buffer, const char *charset)
+{
+	GError *err;
+	gchar * utf8;
+
+	g_return_val_if_fail (buffer, NULL);
+	g_return_val_if_fail (charset, NULL );
+	
+	err = NULL;
+	utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
+					charset, NULL, 
+					NULL, NULL, &err);
+	if (!utf8) {
+		g_debug ("%s: conversion failed from %s: %s",
+			 __FUNCTION__, charset, err ? err->message : "");
+		if (err)
+			g_error_free (err);
+	}
+	
+	return utf8;
+}
+
 
 
 gchar*

@@ -255,6 +255,31 @@ char* mu_str_escape_c_literal (const gchar* str)
         G_GNUC_WARN_UNUSED_RESULT;
 
 
+
+/**
+ * turn a string into plain ascii by replacing each non-ascii
+ * character with a dot ('.'). replacement is done in-place.
+ * 
+ * @param buf a buffer to asciify
+ * 
+ * @return the buf ptr (as to allow for function composition)
+ */
+char* mu_str_asciify_in_place (char *buf);
+
+
+/**
+ * convert a string in a certain charset into utf8
+ * 
+ * @param buffer a buffer to convert
+ * @param charset source character set.
+ * 
+ * @return a UTF8 string (which you need to g_free when done with it),
+ * or NULL in case of error
+ */
+gchar* mu_str_convert_to_utf8 (const char* buffer, const char *charset);
+
+
+
 /**
  * macro to check whether the string is empty, ie. if it's NULL or
  * it's length is 0
