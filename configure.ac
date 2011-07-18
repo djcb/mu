@@ -214,13 +214,13 @@ AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "
 
 ###############################################################################
 # check for guile & guile-snarf
-AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [/usr/bin])
+AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [$PATH])
 AS_IF([test "x$GUILE_CONFIG" != "x"],
   [GUILE_CFLAGS=`$GUILE_CONFIG compile`; GUILE_LIBS=`$GUILE_CONFIG link`])
 AC_SUBST(GUILE_LIBS)
 AC_SUBST(GUILE_CFLAGS)
 
-AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [/usr/bin])
+AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
 AS_IF([test "x$GUILE_SNARF" != "x"],[
     AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])],[
     AC_MSG_WARN([cannot find guile-snarf])])
