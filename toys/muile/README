@@ -19,8 +19,8 @@
 
    The git-version and the future 0.9.7 version of mu will automatically build
    muile if you have guile. I've been using guile 2.x from git, but installing
-   the 'guile-1.8-dev' package (Ubuntu/Debian) should do the trick (I did not
-   test with 1.8 though).
+   the 'guile-1.8-dev' package (Ubuntu/Debian) should do the trick. (I only did
+   very minimal testing with guile 1.8 though).
 
    Then, configure mu. The configure output should tell you about whether guile
    was found (and where). If it's found, build mu, and toys/muile should be
@@ -100,7 +100,7 @@
    the file 'mu-stats.scm':
 
    ,----
-   | (load "mu-stats.scm)
+   | (load "mu-stats.scm")
    `----
 
    you'll get a bunch of functions (with names starting with 'mu:stats') to make

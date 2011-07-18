@@ -210,7 +210,7 @@ AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "
 
 
 # check for guile & guile-snarf
-AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [/usr/bin])
+AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [$PATH])
 AS_IF([test "x$GUILE_CONFIG" != "x"],
   [GUILE_CFLAGS=`$GUILE_CONFIG compile`; GUILE_LIBS=`$GUILE_CONFIG link`])
 AC_SUBST(GUILE_LIBS)
@@ -234,7 +234,9 @@ AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE_CONFIG" != "x" -a "x$GUILE_SNARF" != "x
 			   -a "x$GUILE_MAJOR_VERSION" != "1"])	 
 
 AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
-      [AC_MSG_WARN([Only guile >= 2.x is supported])])
+      [AC_MSG_WARN([Only guile >= 2.x is supported]);
+       guile_too_old="yes"])
+
       
 # check for xdg-open
 AS_IF([test "x$buildgui"="xyes"],[
@@ -296,7 +298,9 @@ if test "x$have_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
 fi
 
-if test "x$HAVE_GUILE" != "x"; then
+if test "x$guile_too_old" = "xyes"; then
+echo "Guile version                        : $GUILE_VERSION (unsupported)"
+else
 echo "Guile version                        : $GUILE_VERSION"
 fi
 

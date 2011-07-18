@@ -19,8 +19,11 @@
 ;; some guile/scheme functions to get various statistics of my mu
 ;; message store.
 
+(use-modules (ice-9 optargs)) ;; for guile 1.x compatibility
+
+
 ;; note, this is a rather inefficient way to calculate the number; for
-;; demonstration purposes only
+;; demonstration purposes only...
 (define* (mu:stats:count #:optional (EXPR ""))
   "Count the total number of messages. If the optional EXPR is
 provided, only count the messages that match it.\n"
