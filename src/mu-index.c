@@ -105,11 +105,10 @@ struct _MuIndexCallbackData {
 typedef struct _MuIndexCallbackData	MuIndexCallbackData;
 
 
-/* checks to determine if we need to (re)index this message
- * note: just check timestamps is not good enough because
- * message may be moved from other dirs (e.g. from 'new' to
- * 'cur') and the time stamps won't change.
- * */
+/* checks to determine if we need to (re)index this message note:
+ * simply checking timestamps is not good enough because message may
+ * be moved from other dirs (e.g. from 'new' to 'cur') and the time
+ * stamps won't change. */
 static inline gboolean
 needs_index (MuIndexCallbackData *data, const char *fullpath,
 	     time_t filestamp)

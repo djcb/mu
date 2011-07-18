@@ -318,21 +318,22 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 		g_print ("\n");
 		show_time ((unsigned)(time(NULL)-t),stats->_processed);
 	}
+
+	if (rv == MU_OK || rv == MU_STOP)
+		MU_WRITE_LOG ("index: processed: %u; updated/new: %u",
+			      stats->_processed, stats->_updated);
 	
 	if (rv == MU_OK && !opts->nocleanup) {
 		mu_index_stats_clear (stats);
 		rv = cmd_cleanup (midx, opts, stats, show_progress);
+		if (rv == MU_OK) {
+			MU_WRITE_LOG ("cleanup: processed: %u; cleaned-up: %u",
+			      stats->_processed, stats->_cleaned_up);
+			return MU_EXITCODE_OK;
+		}
 	}
 	
-	if (rv == MU_OK || rv == MU_STOP) {
-		MU_WRITE_LOG ("processed: %u; updated/new: %u, "
-			      "cleaned-up: %u",
-			      stats->_processed, stats->_updated,
-			      stats->_cleaned_up);
-		return MU_EXITCODE_OK;
-	}
-	
-	return MU_EXITCODE_ERROR;
+	return (rv==MU_OK||rv==MU_STOP) ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
 }
 
 static MuExitCode
