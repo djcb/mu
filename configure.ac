@@ -157,8 +157,10 @@ AC_ARG_WITH([gui],
    [AS_HELP_STRING([--with-gui=gtk2|gtk3|none])],
    [gui=$withval],[gui=auto])
 
-AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" -a "x$gui" != "xauto"],
-      AC_MSG_ERROR([the argument for --with-gui= must be either gtk2|gtk3|auto|none ($gui)]))
+AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" \
+	    -a "x$gui" != "xauto"],
+      AC_MSG_ERROR([the argument for --with-gui= must be either \
+      			gtk2|gtk3|auto|none ($gui)]))
       
 # check for gtk3
 AS_IF([test "x$gui" = "xgtk3"],[
@@ -183,7 +185,8 @@ AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "xauto"],
    AC_MSG_ERROR([GTK+ 2.x not found]))
 
 AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ])
-AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],[buildgui=no])
+AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],
+	    [buildgui=no])
 
 # webkit? needed for the fancy web widget
 AS_IF([test "x$buildgui" = "xyes"],[
@@ -209,14 +212,15 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 
+###############################################################################
 # check for guile & guile-snarf
-AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [$PATH])
+AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [/usr/bin])
 AS_IF([test "x$GUILE_CONFIG" != "x"],
   [GUILE_CFLAGS=`$GUILE_CONFIG compile`; GUILE_LIBS=`$GUILE_CONFIG link`])
 AC_SUBST(GUILE_LIBS)
 AC_SUBST(GUILE_CFLAGS)
 
-AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
+AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [/usr/bin])
 AS_IF([test "x$GUILE_SNARF" != "x"],[
     AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])],[
     AC_MSG_WARN([cannot find guile-snarf])])
@@ -229,15 +233,17 @@ AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
     [AC_DEFINE_UNQUOTED([HAVE_PRE2_GUILE],[1],[have pre-2.x guile])])
 
 # for now, we require guile 2.x
-AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE_CONFIG" != "x" -a "x$GUILE_SNARF" != "x" \
-			   -a "x$GUILE_MAJOR_VERSION" != "0" \
-			   -a "x$GUILE_MAJOR_VERSION" != "1"])	 
+AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE_CONFIG" != "x" \
+                           -a "x$GUILE_SNARF" != "x" \
+			   -a "x$GUILE_MAJOR_VERSION" != "0"])	 
 
 AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
       [AC_MSG_WARN([Only guile >= 2.x is supported]);
        guile_too_old="yes"])
+###############################################################################
 
-      
+
+       
 # check for xdg-open
 AS_IF([test "x$buildgui"="xyes"],[
   AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
@@ -298,9 +304,7 @@ if test "x$have_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
 fi
 
-if test "x$guile_too_old" = "xyes"; then
-echo "Guile version                        : $GUILE_VERSION (unsupported)"
-else
+if test "x$GUILE_CONFIG" != "x"; then
 echo "Guile version                        : $GUILE_VERSION"
 fi
 
@@ -324,7 +328,15 @@ echo "The demo UIs are in toys/mug and toys/mug2"
      fi
 fi
 
+if test "x$GUILE_MAJOR_VERSION" = "x1"; then
+   echo
+   echo "NOTE: If you have troubles with linking the guile-related stuff, it"
+   echo "might help to move .la-files out of the way"
+   echo
+   echo "See e.g: http://blog.flameeyes.eu/2008/04/14/what-about-those-la-files"
+fi
 
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
 echo "use 'make V=1' to show the detailed output during the build"
+

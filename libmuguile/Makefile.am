@@ -46,11 +46,10 @@ XFILES=					\
 	mu-guile-msg.x			\
 	mu-guile-store.x
 
-BUILT_SOURCES=$(XFILES) $(DOCFILES)
-
+BUILT_SOURCES=$(XFILES)
 
 snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS) $(INCLUDES)
-SUFFIXES = .x
+SUFFIXES = .x .doc
 .c.x:
 	$(GUILE_SNARF) -o $@ $< $(snarfcppopts)
 
