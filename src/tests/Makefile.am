@@ -86,6 +86,10 @@ TEST_PROGS += test-mu-threads
 test_mu_threads_SOURCES= test-mu-threads.c dummy.cc
 test_mu_threads_LDADD= libtestmucommon.la
 
+TEST_PROGS += test-mu-date
+test_mu_date_SOURCES= test-mu-date.c dummy.cc
+test_mu_date_LDADD=  libtestmucommon.la
+
 
 # TEST_PROGS += test-mu-msg-file
 # test_mu_msg_file_SOURCES= test-mu-msg-file.c dummy.cc

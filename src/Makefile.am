@@ -60,6 +60,8 @@ libmu_la_SOURCES=			\
 	mu-contacts.h			\
 	mu-container.c			\
 	mu-container.h			\
+	mu-date.c			\
+	mu-date.h			\
 	mu-index.c			\
 	mu-index.h			\
 	mu-log.c			\
