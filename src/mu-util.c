@@ -84,6 +84,7 @@ do_wordexp (const char *path)
 }
 
 
+
 /* note, the g_debugs are commented out because this function may be
  * called before the log handler is installed. */
 char*

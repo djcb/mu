@@ -142,6 +142,7 @@ gboolean mu_util_is_local_file (const char* path);
  */
 gboolean mu_util_locale_is_utf8 (void) G_GNUC_CONST;
 
+
 /**
  * write a string (assumed to be in utf8-format) to a stream,
  * converted to the current locale
