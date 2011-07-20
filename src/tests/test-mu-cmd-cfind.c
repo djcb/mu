@@ -85,10 +85,13 @@ test_mu_cfind_bbdb (void)
 	const char* frm;
 	struct tm *tmtoday;
 	time_t now;
-
+	const char *old_tz;
+	
 	muhome = fill_contacts_cache ();
 	g_assert (muhome != NULL);
-
+	
+	old_tz = set_tz ("Europe/Helsinki");
+	
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=bbdb "
 				   "'testmu\\.xxx?'",
 				   MU_PROGRAM, muhome);
@@ -120,6 +123,8 @@ test_mu_cfind_bbdb (void)
 	g_free (output);
 	g_free (erroutput);
 	g_free (expected);
+
+	set_tz (old_tz);
 }
 
 

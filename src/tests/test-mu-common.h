@@ -33,6 +33,8 @@ char* test_mu_common_get_random_tmpdir (void);
 
 void black_hole (void);
 
+const char* set_tz (const char* tz);
+
 G_END_DECLS
 
 #endif /*__TEST_MU_COMMON_H__*/

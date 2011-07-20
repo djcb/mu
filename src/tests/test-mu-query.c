@@ -338,21 +338,6 @@ test_mu_query_wildcards (void)
 }
 
 
-static const char*
-set_tz (const char* tz)
-{
-	static const char* oldtz;
-
-	oldtz = getenv ("TZ");
-	if (tz)
-		setenv ("TZ", tz, 1);
-	else
-		unsetenv ("TZ");
-
-	tzset ();
-	return oldtz;
-}
-
 
 static void
 test_mu_query_dates_helsinki (void)

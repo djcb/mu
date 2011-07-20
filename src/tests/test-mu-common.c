@@ -41,6 +41,23 @@ test_mu_common_get_random_tmpdir (void)
 }
 
 
+const char*
+set_tz (const char* tz)
+{
+	static const char* oldtz;
+
+	oldtz = getenv ("TZ");
+	if (tz)
+		setenv ("TZ", tz, 1);
+	else
+		unsetenv ("TZ");
+
+	tzset ();
+	return oldtz;
+}
+
+
+
 void
 black_hole (void)
 {
