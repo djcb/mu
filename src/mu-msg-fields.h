@@ -54,11 +54,6 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_TIMESTAMP,
 	
 	MU_MSG_FIELD_ID_NUM,
-
-	/* fake fields */
-	MU_MSG_PSEUDO_FIELD_ID_DATESTR,  /* used in to store datestr in db */
-	MU_MSG_FIELD_ID_NUM_WITH_PSEUDO /* number including these fake
-					 * fields */ 
 };
 typedef guint8 MuMsgFieldId;
 
