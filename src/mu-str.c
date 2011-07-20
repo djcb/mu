@@ -45,63 +45,6 @@
 #include "mu-msg-flags.h"
 #include "mu-msg-fields.h"
 
-const char* 
-mu_str_date_s (const char* frm, time_t t)
-{
-	struct tm *tmbuf;
-	static char buf[128];
-	static int is_utf8 = -1;
-	
-	if (G_UNLIKELY(is_utf8 == -1))
-		is_utf8 = mu_util_locale_is_utf8 () ? 1 : 0; 
-	
-	g_return_val_if_fail (frm, NULL);
-	
-	tmbuf = localtime(&t);
-	
-	strftime (buf, sizeof(buf), frm, tmbuf);
-
-	if (!is_utf8) {
-		/* charset is _not_ utf8, so we need to convert it, so
-		 * the date could contain locale-specific characters*/
-		gchar *conv;
-		GError *err;
-		err = NULL;
-		conv = g_locale_to_utf8 (buf, -1, NULL, NULL, &err);
-		if (err) {
-			g_warning ("conversion failed: %s", err->message);
-			g_error_free (err);
-			strcpy (buf, "<error>");
-		} else
-			strncpy (buf, conv, sizeof(buf));
-		
-		g_free (conv);
-	}
-	
-	return buf;
-}
-
-char* 
-mu_str_date (const char *frm, time_t t)
-{
-	return g_strdup (mu_str_date_s(frm, t));
-}
-
-
-
-const char* 
-mu_str_display_date_s (time_t t)
-{
-	time_t now;
-	static const time_t SECS_IN_DAY = 24 * 60 * 60;
-	
-	now = time (NULL);
-
-	if (ABS(now - t) > SECS_IN_DAY)
-		return mu_str_date_s ("%x", t);
-	else
-		return mu_str_date_s ("%X", t);
-}
 
 const char*
 mu_str_size_s  (size_t s)
@@ -309,41 +252,6 @@ is_xapian_prefix (const char *q, const char *colon)
 	return FALSE;
 }
 
-time_t
-mu_str_date_parse_hdwmy (const char *nptr)
-{
-	long int num;
-	char *endptr;
-	time_t now, delta;
-	time_t never = (time_t)-1;
-       
-	g_return_val_if_fail (nptr, never);
-       
-	num = strtol  (nptr, &endptr, 10);
-	if (num <= 0 || num > 9999)  
-		return never;
-
-	if (endptr == NULL || *endptr == '\0')
-		return never;
-       
-	switch (endptr[0]) {
-	case 'h': /* hour */    
-		delta = num * 60 * 60; break;
-	case 'd': /* day */
-		delta = num * 24 * 60 * 60; break;
-	case 'w': /* week */
-		delta = num * 7 * 24 * 60 * 60; break;
-	case 'm': /* month */
-		delta = num * 30 * 24 * 60 * 60; break;
-	case 'y': /* year */
-		delta = num * 365 * 24 * 60 * 60; break; 
-	default:
-		return never;
-	}
-
-	now = time(NULL);
-	return delta <= now ? now - delta : never;  
-}
 
 gint64
 mu_str_size_parse_bkm (const char* str)

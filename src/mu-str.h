@@ -30,38 +30,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * get a string for a given time_t
- * 
- * mu_str_date_s returns a ptr to a static buffer,
- * while mu_str_date returns dynamically allocated
- * memory that must be freed after use.
- *
- * @param frm the format of the string (in strftime(3) format) 
- * @param t the time as time_t
- * 
- * @return a string representation of the time; see above for what to
- * do with it. Lenght is max. 128 bytes, inc. the ending \0.  if the
- * format is too long, the value will be truncated. in practice this
- * should not happen.
- */
-const char* mu_str_date_s (const char* frm, time_t t) G_GNUC_CONST;
-char*       mu_str_date   (const char* frm, time_t t) G_GNUC_WARN_UNUSED_RESULT;
-
-
-/**
- * get a display string for a given time_t; if the given is less than
- * 24h from the current time, we display the time, otherwise the date,
- * using the preferred date/time for the current locale
- * 
- * mu_str_display_date_s returns a ptr to a static buffer,
- *
- * @param t the time as time_t
- * 
- * @return a string representation of the time/date
- */
-const char* mu_str_display_date_s (time_t t);
-
 
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
@@ -192,24 +160,6 @@ char* mu_str_ascii_xapian_escape_in_place (char *query);
  */
 char* mu_str_ascii_xapian_escape (const char *query)
         G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * 
- * parse strings like 1h, 3w, 2m to mean '1 hour before now', '3 weeks
- * before now' and '2 * 30 days before now'
- * 
- * the format is <n>(h|d|w|m|y), where <n> is an integer > 0, and
- * h=hour, d=day, w=week, m=30 days, year=365 days. function returns
- * *now* minus this value as time_t (UTC)
- *
- * if the number cannot be parsed, return (time_t)-1
- * 
- * @param str a str
- * 
- * @return the time_t of the point in time indicated by 'now' minus
- * the value, or (time_t)-1 otherwise
- */
-time_t mu_str_date_parse_hdwmy (const char* str);
 
 
 
