@@ -21,6 +21,7 @@
 #include "mug-msg-list-view.h"
 #include "mu-query.h"
 #include "mu-str.h"
+#include "mu-date.h"
 #include "mu-threader.h"
 
 /* 'private'/'protected' functions */
@@ -360,7 +361,7 @@ add_row (GtkTreeStore * store, MuMsg *msg, GtkTreeIter *treeiter)
 	time_t timeval;
 
 	timeval = mu_msg_get_date (msg);
-	datestr = timeval == 0 ? "-" : mu_str_display_date_s (timeval);
+	datestr = timeval == 0 ? "-" : mu_date_display_s (timeval);
 	from = empty_or_display_contact (mu_msg_get_from (msg));
 	to = empty_or_display_contact (mu_msg_get_to (msg));
 	flagstr = mu_msg_flags_str_s (mu_msg_get_flags (msg));

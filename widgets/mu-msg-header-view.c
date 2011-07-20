@@ -18,7 +18,9 @@
 */
 
 #include "mu-msg-header-view.h"
+
 #include <mu-str.h>
+#include <mu-date.h>
 
 /* 'private'/'protected' functions */
 static void mu_msg_header_view_class_init (MuMsgHeaderViewClass *klass);
@@ -155,7 +157,7 @@ get_table (MuMsg *msg)
 		++row;
 	if (add_row (table, row, "Subject", mu_msg_get_subject (msg), TRUE))
 		++row;
-	if (add_row (table, row, "Date", mu_str_date_s
+	if (add_row (table, row, "Date", mu_date_str_s
 			  ("%c", mu_msg_get_date (msg)),TRUE))
 		++row;
 

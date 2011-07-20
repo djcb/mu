@@ -21,7 +21,7 @@
 #include "mug-msg-list-view.h"
 #include "mu-query.h"
 #include "mu-str.h"
-/* include other impl specific header files */
+#include "mu-date.h"
 
 /* 'private'/'protected' functions */
 static void mug_msg_list_view_class_init (MugMsgListViewClass * klass);
@@ -359,7 +359,7 @@ add_row (GtkListStore * store, MuMsg *msg)
 	time_t timeval;
 
 	timeval = mu_msg_get_date (msg);
-	datestr = timeval == 0 ? "-" : mu_str_display_date_s (timeval);
+	datestr = timeval == 0 ? "-" : mu_date_display_s (timeval);
 	from = empty_or_display_contact (mu_msg_get_from (msg));
 	to = empty_or_display_contact (mu_msg_get_to (msg));
 	flagstr = mu_msg_flags_str_s (mu_msg_get_flags (msg));

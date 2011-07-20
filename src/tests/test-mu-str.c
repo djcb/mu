@@ -34,31 +34,6 @@
 #include "src/mu-str.h"
 #include "src/mu-msg-prio.h"
 
-static void
-test_mu_str_date_01 (void)
-{
-	struct tm *tmbuf;
-	char buf[64];
-	gchar *tmp;
-	time_t some_time;
-		
-	some_time = 1234567890;
-	tmbuf = localtime (&some_time);
-	strftime (buf, 64, "%x", tmbuf);
-
-	/*  $ date -ud@1234567890; Fri Feb 13 23:31:30 UTC 2009 */
-	g_assert_cmpstr (mu_str_date_s ("%x", some_time), ==, buf);
-
-	/* date -ud@987654321 Thu Apr 19 04:25:21 UTC 2001 */
-	some_time = 987654321;
-	tmbuf = localtime (&some_time);
-	strftime (buf, 64, "%c", tmbuf);
-	tmp = mu_str_date ("%c", some_time);
-	
-	g_assert_cmpstr (tmp, ==, buf);
-	g_free (tmp);
-		
-}
 
 
 static void
@@ -221,37 +196,6 @@ test_mu_str_display_contact (void)
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) 
 		g_assert_cmpstr (mu_str_display_contact_s (words[i].word), ==, 
 				 words[i].disp);
-}
-
-
-
-static void
-test_mu_str_date_parse_hdwmy (void)
-{
-	time_t diff;
-
-	diff = time(NULL) - mu_str_date_parse_hdwmy ("3h");
-	g_assert (diff > 0);
-	g_assert_cmpuint (3 * 60 * 60 - diff, <=, 1);
-
-	diff = time(NULL) - mu_str_date_parse_hdwmy ("5y");
-	g_assert (diff > 0);
-	g_assert_cmpuint (5 * 365 * 24 * 60 * 60 - diff, <=, 1);
-	
-	diff = time(NULL) - mu_str_date_parse_hdwmy ("3m");
-	g_assert (diff > 0);
-	g_assert_cmpuint (3 * 30 * 24 * 60 * 60 - diff, <=, 1);
-
-	diff = time(NULL) - mu_str_date_parse_hdwmy ("21d");
-	g_assert (diff > 0);
-	g_assert_cmpuint (21 * 24 * 60 * 60 - diff, <=, 1);
-	
-	diff = time(NULL) - mu_str_date_parse_hdwmy ("2w");
-	g_assert (diff > 0);
-	g_assert_cmpuint (2 * 7 * 24 * 60 * 60 - diff, <=, 1);
-	
-	
-	g_assert_cmpint (mu_str_date_parse_hdwmy("-1y"),==, (time_t)-1);  
 }
 
 
@@ -454,9 +398,6 @@ main (int argc, char *argv[])
 {
 	g_test_init (&argc, &argv, NULL);
 
-	/* mu_str_date */
-	g_test_add_func ("/mu-str/mu-str-date",
-			 test_mu_str_date_01);
 
 	/* mu_str_size */
 	g_test_add_func ("/mu-str/mu-str-size-01",
@@ -489,9 +430,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-to-list-strip",
 			 test_mu_str_to_list_strip);
 	
-	g_test_add_func ("/mu-str/mu_str_date_parse_hdwmy",
-			 test_mu_str_date_parse_hdwmy);
-
 	g_test_add_func ("/mu-str/mu_str_guess_first_name",
 			 test_mu_str_guess_first_name);
 	g_test_add_func ("/mu-str/mu_str_guess_last_name",

@@ -481,7 +481,7 @@ test_mu_view_multi (void)
 
 	len = strlen(output);
 	/* g_print ("\n[%s](%u)\n", output, len); */
-	g_assert_cmpuint (len,==,164);
+	g_assert_cmpuint (len,==,162);
 	
 	g_free (output);
 	g_free (cmdline);
@@ -517,7 +517,7 @@ test_mu_view_multi_separate (void)
 
 	len = strlen(output);
 	/* g_print ("\n[%s](%u)\n", output, len); */
-	g_assert_cmpuint (len,==,166);
+	g_assert_cmpuint (len,==,164);
 	
 	g_free (output);
 	g_free (cmdline);

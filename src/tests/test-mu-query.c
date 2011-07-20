@@ -45,7 +45,7 @@ fill_database (const char *testdir)
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, testdir);
 
-	/* g_printerr ("\n%s\n", cmdline);  */
+	/* g_printerr ("\n%s\n", cmdline); */
 	
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
@@ -338,24 +338,43 @@ test_mu_query_wildcards (void)
 }
 
 
+static const char*
+set_tz (const char* tz)
+{
+	static const char* oldtz;
+
+	oldtz = getenv ("TZ");
+	if (tz)
+		setenv ("TZ", tz, 1);
+	else
+		unsetenv ("TZ");
+
+	tzset ();
+	return oldtz;
+}
+
 
 static void
-test_mu_query_dates (void)
+test_mu_query_dates_helsinki (void)
 {
 	gchar *xpath;
 	int i;
+	const char *old_tz;
+
 	
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		/* { "date:20080804..20080731", 5}, */
-		{ "date:2008-07/31..2008@08:04", 5},
-		{ "date:2008-0731..20080804 s:gcc", 1},
-		{ "date:2008-08-11-08-03..now", 1},
-		{ "date:2008-08-11-08-03..today", 1},
+		{ "date:20080731..20080804", 5},
+		{ "date:20080731..20080804 s:gcc", 1},
+		{ "date:200808110803..now", 1},
+		{ "date:200808110803..today", 1},
 		/* { "date:now..2008-08-11-08-03", 1}, */
 		/* { "date:today..2008-08-11-08-03", 1}, */
-		{ "date:2008-08-11-08-05..now", 0},
+		{ "date:200808110801..now", 1},
 	};
+
+	old_tz = set_tz ("Europe/Helsinki");
 	
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
@@ -365,8 +384,77 @@ test_mu_query_dates (void)
 				  ==, queries[i].count);
 
 	g_free (xpath);
+	set_tz (old_tz);
 	
 }
+
+static void
+test_mu_query_dates_sydney (void)
+{
+	gchar *xpath;
+	int i;
+	const char *old_tz;
+
+	
+	QResults queries[] = {
+		{ "date:20080731..20080804", 5},
+		/* { "date:20080804..20080731", 5}, */
+		{ "date:20080731..20080804", 5},
+		{ "date:20080731..20080804 s:gcc", 1},
+		{ "date:200808110803..now", 1},
+		{ "date:200808110803..today", 1},
+		/* { "date:now..2008-08-11-08-03", 1}, */
+		/* { "date:today..2008-08-11-08-03", 1}, */
+		{ "date:200808110801..now", 1},
+	};
+
+	old_tz = set_tz ("Australia/Sydney");
+	
+	xpath = fill_database (MU_TESTMAILDIR);
+	g_assert (xpath != NULL);
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+
+	g_free (xpath);
+	set_tz (old_tz);
+	
+}
+
+static void
+test_mu_query_dates_la (void)
+{
+	gchar *xpath;
+	int i;
+	const char *old_tz;
+	
+	QResults queries[] = {
+		{ "date:20080731..20080804", 5},
+		/* { "date:20080804..20080731", 5}, */
+		{ "date:20080731..20080804", 5},
+		{ "date:20080731..20080804 s:gcc", 1},
+		{ "date:200808110803..now", 0},
+		{ "date:200808110803..today", 0},
+		/* { "date:now..2008-08-11-08-03", 1}, */
+		/* { "date:today..2008-08-11-08-03", 1}, */
+		{ "date:200808110801..now", 0}, /* does not match in LA */
+ 	};
+	
+	old_tz = set_tz ("America/Los_Angeles");
+	
+	xpath = fill_database (MU_TESTMAILDIR);
+	g_assert (xpath != NULL);
+	
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) 
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+
+	g_free (xpath);
+	set_tz (old_tz);
+}
+
+
 
 
 static void
@@ -483,6 +571,7 @@ main (int argc, char *argv[])
 	int rv;
 	
 	g_test_init (&argc, &argv, NULL);	
+	
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02); 
 	g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03);
@@ -495,8 +584,14 @@ main (int argc, char *argv[])
 			 test_mu_query_wildcards);
 	g_test_add_func ("/mu-query/test-mu-query-sizes",
 			 test_mu_query_sizes);
-	g_test_add_func ("/mu-query/test-mu-query-dates",
-			 test_mu_query_dates);
+
+	g_test_add_func ("/mu-query/test-mu-query-dates-helsinki",
+			 test_mu_query_dates_helsinki); /* finland */
+	g_test_add_func ("/mu-query/test-mu-query-dates-sydney",
+			 test_mu_query_dates_sydney);
+	g_test_add_func ("/mu-query/test-mu-query-dates-la",
+			 test_mu_query_dates_la);
+
 	g_test_add_func ("/mu-query/test-mu-query-attach",
 			 test_mu_query_attach);
 	g_test_add_func ("/mu-query/test-mu-query-tags",
