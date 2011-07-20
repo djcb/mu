@@ -32,6 +32,7 @@
 #include "mu-store.h"
 #include "mu-util.h"
 #include "mu-str.h"
+#include "mu-date.h"
 #include "mu-msg-flags.h"
 #include "mu-contacts.h"
 
@@ -311,21 +312,16 @@ mu_store_flush (MuStore *store)
 
 
 static void
-add_terms_values_date (Xapian::Document& doc, MuMsg *msg,
-		       MuMsgFieldId mfid)
+add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 {
-	char datebuf[13]; /* YYYYMMDDHHMM\0 */
-	static const std::string pfx (1, mu_msg_field_xapian_prefix(mfid));
-	gint64 num = mu_msg_get_field_numeric (msg, mfid);
+	time_t t;
+	const char *datestr;
 	
-	if (G_UNLIKELY(strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
-				localtime((const time_t*)&num)) == 0))
-		g_return_if_reached();
-	
-	const std::string numstr (Xapian::sortable_serialise((double)num));
-	doc.add_value ((Xapian::valueno)mfid, numstr);
-	doc.add_value ((Xapian::valueno)MU_MSG_PSEUDO_FIELD_ID_DATESTR,
-		       datebuf);
+	t = (time_t)mu_msg_get_field_numeric (msg, mfid);
+	if (t != 0) { 
+		datestr = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
+		doc.add_value ((Xapian::valueno)mfid, datestr);
+	}
 }
 
 
