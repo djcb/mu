@@ -733,13 +733,12 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 	case MU_MSG_FIELD_ID_CC: *do_free = TRUE;
 		return get_recipient (self, GMIME_RECIPIENT_TYPE_CC);
 
-	case MU_MSG_FIELD_ID_FROM: 
+	case MU_MSG_FIELD_ID_FROM:
 		return (char*)maybe_cleanup
 			(g_mime_message_get_sender (self->_mime_msg),
 			 self->_path, do_free);
 
-	case MU_MSG_FIELD_ID_PATH:
-		return self->_path;
+	case MU_MSG_FIELD_ID_PATH: return self->_path;
 		
 	case MU_MSG_FIELD_ID_SUBJECT:
 		return (char*)maybe_cleanup
@@ -752,15 +751,11 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 	case MU_MSG_FIELD_ID_MSGID:
 		return (char*)g_mime_message_get_message_id (self->_mime_msg);
 
-	case MU_MSG_FIELD_ID_MAILDIR:
-		return self->_maildir;
+	case MU_MSG_FIELD_ID_MAILDIR: return self->_maildir;
 		
-	default:
-		g_return_val_if_reached (NULL);
+	default: g_return_val_if_reached (NULL);
 	}
 }
-
-
 
 
 GSList*
