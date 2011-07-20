@@ -33,34 +33,45 @@
 
 #include "mu-util.h"
 #include "mu-str.h"
+#include "mu-date.h"
 
 /*
  * custom parser for date ranges
  */
-class MuDateRangeProcessor : public Xapian::ValueRangeProcessor {
+class MuDateRangeProcessor : public Xapian::StringValueRangeProcessor {
 public:
-	MuDateRangeProcessor() {}
+	MuDateRangeProcessor():
+		Xapian::StringValueRangeProcessor(
+			(Xapian::valueno)MU_MSG_FIELD_ID_DATE) {}
 
 	Xapian::valueno operator()(std::string &begin, std::string &end) {
 
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
-		
-		substitute_date (begin, true);
-		substitute_date (end, false);
 
-		normalize_date (begin);
-		normalize_date (end);
-		
-		begin = complete_date12(begin, true);
-		end =	complete_date12(end, false);
-
+		 begin = to_sortable (begin, true);
+		 end   = to_sortable (end, false);
+		 
 		if (begin > end) 
 			throw Xapian::QueryParserError ("end time is before begin");
 		
-		return (Xapian::valueno)MU_MSG_PSEUDO_FIELD_ID_DATESTR;
+		return (Xapian::valueno)MU_MSG_FIELD_ID_DATE;
 	}
 private:
+	std::string to_sortable (std::string& s, bool is_begin) {
+
+		const char* str;
+		time_t t;
+		
+		str = mu_date_interpret_s (s.c_str(), is_begin ? TRUE: FALSE);
+		str = mu_date_complete_s (str, is_begin ? TRUE: FALSE);
+		t = mu_date_str_to_time_t (str, TRUE /*local*/);
+		str = mu_date_time_t_to_str (t, FALSE /*UTC*/);
+		
+		return s = std::string(str);
+	}
+
+
 	bool clear_prefix (std::string& begin) {
 		
 		const std::string colon (":");
@@ -78,56 +89,6 @@ private:
 			return true;
 		} else
 			return false;		
-	}
-
-	
-	void substitute_date (std::string& date, bool is_begin) {
-		char datebuf[13];
-		time_t now = time(NULL);
-		
-		if (date == "today") {
-			strftime(datebuf, sizeof(datebuf),
-				 is_begin ? "%Y%m%d0000" : "%Y%m%d2359",
-				 localtime(&now));
-			date = datebuf;
-		} else if (date == "now") {
-			strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
-				 localtime(&now));
-			date = datebuf;
-		} else {
-			time_t t;
-			t = mu_str_date_parse_hdwmy (date.c_str());
-			if (t != (time_t)-1) {
-				strftime(datebuf, sizeof(datebuf), "%Y%m%d%H%M",
-					 localtime(&t));
-				date = datebuf;
-			}
-		}		
-	}
-		
-	void normalize_date (std::string& date) {
-		std::string cleanup;
-		for (unsigned i = 0; i != date.length(); ++i) {
-			char k = date[i];
-			if (std::isdigit(k))
-				cleanup += date[i];
-		}
-		date = cleanup;
-	}
-	
-	std::string complete_date12 (const std::string date, bool is_begin) const {
-
-		std::string compdate;
-		const std::string bsuffix ("00000101000000");
-		const std::string esuffix ("99991231235959");
-		const size_t size = 12;
-		
-		if (is_begin)
-			compdate = std::string (date + bsuffix.substr (date.length()));
-		else
-			compdate = std::string (date + esuffix.substr (date.length()));
-
-		return compdate.substr (0, size);
 	}
 };
 
