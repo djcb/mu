@@ -30,6 +30,7 @@
 #include "mu-cmd.h"
 #include "mu-util.h"
 #include "mu-str.h"
+#include "mu-date.h"
 #include "mu-maildir.h"
 #include "mu-contacts.h"
 #include "mu-runtime.h"
@@ -127,7 +128,7 @@ view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
 	print_field ("Subject",  mu_msg_get_subject (msg), color);
 	
 	if ((date = mu_msg_get_date (msg))) 
-		print_field ("Date", mu_str_date_s ("%c", date),
+		print_field ("Date", mu_date_str_s ("%c", date),
 			     color);
 
 	if ((lst = mu_msg_get_tags (msg))) {

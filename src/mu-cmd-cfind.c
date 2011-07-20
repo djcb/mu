@@ -27,6 +27,7 @@
 #include "mu-cmd.h"
 #include "mu-util.h"
 #include "mu-str.h"
+#include "mu-date.h"
 #include "mu-contacts.h"
 #include "mu-runtime.h"
 
@@ -92,8 +93,8 @@ each_contact_bbdb (const char *email, const char *name, time_t tstamp)
 
 	fname	  = mu_str_guess_first_name (name);
 	lname	  = mu_str_guess_last_name (name);
-	now	  = mu_str_date ("%Y-%m-%d", time(NULL));
-	timestamp = mu_str_date ("%Y-%m-%d", tstamp);
+	now	  = mu_date_str ("%Y-%m-%d", time(NULL));
+	timestamp = mu_date_str ("%Y-%m-%d", tstamp);
 			
 	g_print ("[\"%s\" \"%s\" nil nil nil nil (\"%s\") "
 		 "((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
@@ -113,7 +114,6 @@ each_contact_mutt_alias (const char *email, const char *name)
 		gchar *nick;
 
 		nick = mu_str_guess_nick (name);
-
 		mu_util_print_encoded ("alias %s %s <%s>\n",
 				       nick, name, email);
 		

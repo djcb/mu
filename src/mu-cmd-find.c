@@ -32,6 +32,7 @@
 
 #include "mu-msg.h"
 #include "mu-str.h"
+#include "mu-date.h"
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-query.h"
@@ -591,7 +592,7 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 		
 	case MU_MSG_FIELD_TYPE_TIME_T: 
 		val = mu_msg_get_field_numeric (msg, mfid);
-		return mu_str_date_s ("%c", (time_t)val);
+		return mu_date_str_s ("%c", (time_t)val);
 
 	case MU_MSG_FIELD_TYPE_BYTESIZE: 
 		val = mu_msg_get_field_numeric (msg, mfid);
