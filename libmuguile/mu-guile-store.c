@@ -62,6 +62,26 @@ get_query_iter (MuQuery *query, const char* expr)
 }
 
 
+static void
+call_func (SCM FUNC, MuMsgIter *iter, const char* func_name)
+{
+	SCM msgsmob;
+	MuMsg *msg;
+	GError *err;
+	
+	err = NULL;
+	msg = mu_msg_iter_get_msg (iter, &err);
+	if (err) {
+		mu_guile_g_error (func_name, err);
+		g_error_free (err);
+		return;
+	}
+	
+	msgsmob = mu_guile_msg_to_scm (mu_msg_ref(msg));
+	scm_call_1 (FUNC, msgsmob);
+}
+
+
 SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
 	    (SCM FUNC, SCM EXPR),
 	    "Call FUNC for each message in the store, or, if EXPR is specified, "
@@ -88,22 +108,7 @@ SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
 		return SCM_UNSPECIFIED;
 
 	for (count = 0; !mu_msg_iter_is_done(iter); mu_msg_iter_next (iter)) {
-
-		SCM msgsmob;
-		MuMsg *msg;
-		GError *err;
-
-		err = NULL;
-		msg = mu_msg_iter_get_msg (iter, &err);
-		if (err) {
-			mu_guile_g_error (FUNC_NAME, err);
-			g_error_free (err);
-			continue;
-		}
-
-		msgsmob = mu_guile_msg_to_scm (mu_msg_ref(msg));
-		scm_call_1 (FUNC, msgsmob);
-
+		call_func (FUNC, iter, FUNC_NAME);
 		++count;
 	}
 	
