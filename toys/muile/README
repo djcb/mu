@@ -2,8 +2,8 @@
 
 ** What is muile?
 
-  `muile' is a little experiment/toy using the equally mu guile bindings, to be
-  found in libmuguile/ in the top-level source directory.
+  `muile' is a little experiment/toy using the equally experimental mu guile
+  bindings, to be found in libmuguile/ in the top-level source directory.
 
   `guile'[1] is an interpreter/library for the Scheme programming language[2],
   specifically meant for extending other programs. It is, in fact, the
@@ -14,7 +14,7 @@
   The combination of mu + guile is called `muile', and allows you to write
   little Scheme-programs to query the mu-database, or inspect individual
   messages. It is still in an experimental stage, but useful already.
-
+  
 ** How do I get it?
 
    The git-version and the future 0.9.7 version of mu will automatically build
@@ -187,4 +187,5 @@
 
 
 
-
+   
+   
