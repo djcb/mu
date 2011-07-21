@@ -266,14 +266,14 @@ test_mu_cfind_csv (void)
 }
 
 
-
-
 int
 main (int argc, char *argv[])
 {
 	int rv;
 	g_test_init (&argc, &argv, NULL);
 
+	setenv ("LC_ALL", "en_US.utf8", 1);
+	
 	g_test_add_func ("/mu-cmd-cfind/test-mu-cfind-plain", test_mu_cfind_plain);
 	g_test_add_func ("/mu-cmd-cfind/test-mu-cfind-bbdb",  test_mu_cfind_bbdb);
 	g_test_add_func ("/mu-cmd-cfind/test-mu-cfind-wl",  test_mu_cfind_wl);

@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <locale.h>
 
 #include "test-mu-common.h"
 #include "src/mu-query.h"
@@ -556,7 +557,7 @@ main (int argc, char *argv[])
 	int rv;
 	
 	g_test_init (&argc, &argv, NULL);	
-	
+			
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02); 
 	g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03);
