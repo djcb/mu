@@ -259,7 +259,8 @@ exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 	if (!(iter = run_query (xapian, query, opts, count)))
 		return FALSE;
 
-	for (rv = TRUE, *count = 0; !mu_msg_iter_is_done (iter); mu_msg_iter_next(iter)) {
+	for (rv = TRUE, *count = 0; !mu_msg_iter_is_done (iter);
+	     mu_msg_iter_next(iter)) {
 		rv = exec_cmd (mu_msg_get_path (mu_msg_iter_get_msg (iter, NULL)),
 			       opts->exec);
 		if (rv)
