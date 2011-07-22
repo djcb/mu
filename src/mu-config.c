@@ -386,7 +386,8 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 		g_error_free (err);
 		return FALSE;
 	}
-	return TRUE;}
+	return TRUE;
+}
 				
 
 MuConfig*
