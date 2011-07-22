@@ -10,7 +10,7 @@
      issue #41)
    - search X-Label: tags (fixes issue #40)
    - added toys/muile, the mu guile shells, which allows for message stats etc.
- 
+   - fix date handling (timezones)
  
 ** Release 0.9.6 <2011-05-28 Sat>
    

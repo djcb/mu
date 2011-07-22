@@ -64,6 +64,15 @@
 
    in your ~/.guile configuration.  
 
+** does this tool have some parameters?
+
+   Yes, there is --muhome to set a non-default place for the message database
+   (see the documentation on --muhome in the mu-find manpage).
+
+   And there is --msg=<path> where you specify some particular message file;
+   it will be available as 'mu:current' in the guile (muile) environment.
+
+
 ** What about searching messages in the database?
 
    That's easy, too - it does require a little more scheme knowledge. For

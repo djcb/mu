@@ -234,7 +234,7 @@ weeks old:
   $ mu find date:3w..2w 
 .fi
 
-Finally, there are some special keywords for dates, namely 'now', meaning the
+There are some special keywords for dates, namely 'now', meaning the
 prsent moment and 'today' for the beginning of today. So to get all messages
 sent or received today, you could use:
 
@@ -251,6 +251,13 @@ could use:
 .nf
   $ mu find size:10K..2M
 .fi
+
+Finally, you can match \fIall\fR messages using "":
+
+.nf
+  $ mu find ""
+.fi
+
 
 .SH OPTIONS
 
