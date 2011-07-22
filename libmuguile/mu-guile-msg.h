@@ -27,15 +27,28 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-/** 
+typedef void* MuGuileFunc (void*);
+	
+/**
  * register MuMsg-related functions/smobs with guile; use with
  * scm_with_guile
- * 
+ *
+ * @param data
  */
 void *mu_guile_msg_init (void *data);
 
 
-/** 
+/**
+ * set 'mu:msg:current in the guile env
+ * 
+ * @param path path to a message
+ * 
+ * @return TRUE if it worked, FALSE otherwise
+ */	
+gboolean mu_guile_msg_load_current (const char *path);
+	
+	
+/**
  * create an SCM for the MuMsg*
  * 
  * @param msg a MuMsg instance

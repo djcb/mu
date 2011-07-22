@@ -488,11 +488,39 @@ define_symbols (void)
 }
 
 
+gboolean
+mu_guile_msg_load_current (const char *path)
+{
+	MuMsg *msg;
+	GError *err;
+	SCM msgsmob;
+	
+	err = NULL;
+	msg = mu_msg_new_from_file (path, NULL, &err);
+
+	if (!msg) {
+		g_printerr ("error creating message for '%s'", path);
+		if (err) {
+			g_printerr (": %s", err->message);
+			g_error_free (err);
+		}
+		g_printerr ("\n");
+		return FALSE;
+	}
+	
+	msgsmob = mu_guile_msg_to_scm (msg);
+	scm_c_define ("mu:current", msgsmob); 
+
+	return TRUE;
+}
+
+
 void*
 mu_guile_msg_init (void *data)
 {
+	
 	MSG_TAG = scm_make_smob_type ("msg", sizeof(MuMsgWrapper));
-		
+	
 	scm_set_smob_mark  (MSG_TAG, msg_mark);
 	scm_set_smob_free  (MSG_TAG, msg_free);
 	scm_set_smob_print (MSG_TAG, msg_print);	
