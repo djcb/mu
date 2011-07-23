@@ -28,13 +28,13 @@ INCLUDES=-I${top_srcdir} -I${top_srcdir}/src $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DIC
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
-noinst_PROGRAMS=					\
+noinst_PROGRAMS=				\
 	mug2
 
 # note, mug.cc is '.cc' only because libmu must explicitly
 # be linked as c++, not c.
 mug2_SOURCES=					\
-	mug.cc					\
+	mug.c					\
 	mug-msg-list-view.c			\
 	mug-msg-list-view.h			\
 	mug-msg-view.h				\
@@ -42,7 +42,19 @@ mug2_SOURCES=					\
 	mug-query-bar.h				\
 	mug-query-bar.c				\
 	mug-shortcuts.c				\
-	mug-shortcuts.h
+	mug-shortcuts.h				\
+	dummy.cc
+
+# we need to use dummy.cc to enforce c++ linking...
+BUILT_SOURCES=					\
+	dummy.cc
+
+dummy.cc:
+	touch dummy.cc
+
+DISTCLEANFILES=					\
+	$(BUILT_SOURCES)
+
 
 mug2_LDADD=					\
 	${top_builddir}/src/libmu.la		\

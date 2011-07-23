@@ -35,7 +35,7 @@ noinst_PROGRAMS=			\
 # note, mug.cc is '.cc' only because libmu must explicitly
 # be linked as c++, not c.
 mug_SOURCES=				\
-	mug.cc				\
+	mug.c				\
 	mug-msg-list-view.c		\
 	mug-msg-list-view.h		\
 	mug-msg-view.h			\
@@ -43,7 +43,19 @@ mug_SOURCES=				\
 	mug-query-bar.h			\
 	mug-query-bar.c			\
 	mug-shortcuts.c			\
-	mug-shortcuts.h
+	mug-shortcuts.h			\
+	dummy.cc
+
+# we need to use dummy.cc to enforce c++ linking...
+BUILT_SOURCES=						\
+	dummy.cc
+
+dummy.cc:
+	touch dummy.cc
+
+DISTCLEANFILES=						\
+	$(BUILT_SOURCES)
+
 
 mug_LDADD=				\
 	${top_builddir}/src/libmu.la	\
