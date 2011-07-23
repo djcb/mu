@@ -420,7 +420,7 @@ main (int argc, char *argv[])
 	}
 
 	g_option_context_free (octx);
-	mu_runtime_init (mugdata.muhome);
+	mu_runtime_init (mugdata.muhome, "mug2");
 
 	mugshell = mug_shell (&mugdata);
 	g_signal_connect (G_OBJECT (mugshell), "destroy",

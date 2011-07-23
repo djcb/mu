@@ -97,7 +97,8 @@ main (int argc, char *argv[])
 		goto error;
 	}
 		
-	if (!mu_runtime_init (opts->muhome /* NULL is okay */)) {
+	if (!mu_runtime_init (opts->muhome /* NULL is okay */,
+			      "muile")) {
 		usage ();
 		goto error;
 	}

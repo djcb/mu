@@ -369,7 +369,7 @@ main (int argc, char *argv[])
 		return 1;
 	}
 
-	mu_runtime_init (mugdata.muhome);
+	mu_runtime_init (mugdata.muhome, "mug");
 
 	mugshell = mug_shell (&mugdata);
 	g_signal_connect (G_OBJECT (mugshell), "destroy",

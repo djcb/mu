@@ -38,10 +38,10 @@ test_mu_runtime_init (void)
 
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (tmpdir);
-	g_assert (mu_runtime_init (tmpdir) == TRUE);	
+	g_assert (mu_runtime_init (tmpdir, "test-mu-runtime") == TRUE);	
 	mu_runtime_uninit ();
 
-	g_assert (mu_runtime_init (tmpdir) == TRUE);	
+	g_assert (mu_runtime_init (tmpdir, "test-mu-runtime") == TRUE);	
 	mu_runtime_uninit ();
 
 	g_free (tmpdir);	
@@ -62,7 +62,7 @@ test_mu_runtime_data (void)
 	bmfile = g_strdup_printf ("%s%c%s", homedir, 
 				   G_DIR_SEPARATOR, "bookmarks");
 
-	g_assert (mu_runtime_init (homedir) == TRUE);	
+	g_assert (mu_runtime_init (homedir, "test-mu-runtime") == TRUE);	
 	
 	g_assert_cmpstr (homedir, ==, mu_runtime_path (MU_RUNTIME_PATH_MUHOME));
 	g_assert_cmpstr (xdir, ==, mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
