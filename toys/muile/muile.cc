@@ -43,7 +43,7 @@ muile_config_new (int *argcp, char ***argvp)
 		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &opts->muhome,
 		 "specify an alternative mu directory", NULL},
 		{"msg", 0, 0, G_OPTION_ARG_FILENAME, &opts->msgpath,
-		 "specify path to a message to load as (mu:msg:current)", NULL},
+		 "specify path to a message to load as mu:current-msg)", NULL},
 		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}/* sentinel */
 	};
 

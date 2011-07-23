@@ -70,8 +70,17 @@
    (see the documentation on --muhome in the mu-find manpage).
 
    And there is --msg=<path> where you specify some particular message file;
-   it will be available as 'mu:current' in the guile (muile) environment.
+   it will be available as 'mu:current-msg' in the guile (muile) environment. For
+   example:
 
+   ,----
+   | ./muile --msg=~/Maildir/inbox/cur/1311310172_1234:2,S 
+   |  [...]
+   | scheme@(guile-user)> mu:current-msg
+   | $1 = #<msg /home/djcb/Maildir/inbox/cur/1311310172_1234:2,S>
+   | scheme@(guile-user)> (mu:msg:size mu:current-msg)
+   | $2 = 7206
+   `----
 
 ** What about searching messages in the database?
 

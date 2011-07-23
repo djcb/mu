@@ -509,7 +509,7 @@ mu_guile_msg_load_current (const char *path)
 	}
 	
 	msgsmob = mu_guile_msg_to_scm (msg);
-	scm_c_define ("mu:current", msgsmob); 
+	scm_c_define ("mu:current-msg", msgsmob); 
 
 	return TRUE;
 }
