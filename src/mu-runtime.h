@@ -29,11 +29,13 @@ G_BEGIN_DECLS
  * initialize the mu runtime system; initializes logging and other
  * systems. To uninitialize, use mu_runtime_uninit
  * 
- * @param muhome path where to find the mu home directory (typicaly, ~/.mu)
+ * @param muhome path where to find the mu home directory (typicaly, ~/.mu) 
+ * @param name of the main program, ie. 'mu', 'mug' or
+ * 'procmule'. this influences the name of the e.g. the logfile
  * 
  * @return TRUE if succeeded, FALSE in case of error
  */
-gboolean mu_runtime_init              (const char* muhome);
+gboolean mu_runtime_init (const char *muhome, const char *name);
 
 
 /**
@@ -44,10 +46,13 @@ gboolean mu_runtime_init              (const char* muhome);
  * 
  * @param ptr to the param count (typically, argc)
  * @param ptr to the params (typically, argv)
+ * @param name of the main program, ie. 'mu', 'mug' or
+ * 'procmule'. this influences the name of the e.g. the logfile
  * 
  * @return TRUE if succeeded, FALSE in case of error
  */
-gboolean mu_runtime_init_from_cmdline (int *pargc, char ***pargv);
+gboolean mu_runtime_init_from_cmdline (int *pargc, char ***pargv,
+				       const char *name);
 
 
 /**

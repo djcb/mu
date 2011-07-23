@@ -165,23 +165,14 @@ log_file_backup_maybe (const char *logfile)
 
 
 gboolean
-mu_log_init  (const char* muhome,
-	      gboolean backup, gboolean quiet, gboolean debug)
+mu_log_init (const char* logfile, gboolean backup,
+	     gboolean quiet, gboolean debug)
 {
 	int fd;
-	gchar *logfile;
 	
 	/* only init once... */
 	g_return_val_if_fail (!MU_LOG, FALSE);	
-	g_return_val_if_fail (muhome, FALSE);
-
-	if (!mu_util_create_dir_maybe(muhome, 0700)) {
-		g_warning ("failed to init log in %s", muhome);
-		return FALSE;
-	}
-	
-	logfile = g_strdup_printf ("%s%c%s", muhome,
-				   G_DIR_SEPARATOR, MU_LOG_FILE);
+	g_return_val_if_fail (logfile, FALSE);
 
 	if (backup && !log_file_backup_maybe(logfile)) {
 		g_warning ("failed to backup log file");
@@ -192,7 +183,6 @@ mu_log_init  (const char* muhome,
 	if (fd < 0) 
 		g_warning ("%s: open() of '%s' failed: %s",  __FUNCTION__,
 			   logfile, strerror(errno));
-	g_free (logfile);
 	
 	if (fd < 0 || !mu_log_init_with_fd (fd, FALSE, quiet, debug)) {
 		try_close (fd);

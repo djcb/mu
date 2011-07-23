@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+/* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -42,6 +42,7 @@
 struct _MuRuntimeData {
 	gchar            *_str[MU_RUNTIME_PATH_NUM];
 	MuConfig	 *_config;
+	gchar            *_name; /* e.g., 'mu', 'mug' */
 };
 typedef struct _MuRuntimeData	 MuRuntimeData;
 
@@ -49,8 +50,10 @@ typedef struct _MuRuntimeData	 MuRuntimeData;
 static gboolean		 _initialized = FALSE;
 static MuRuntimeData	*_data	      = NULL;
 
-static void     runtime_free (void);
-static gboolean init_paths (const char* muhome, MuRuntimeData *data);
+static void        runtime_free (void);
+static gboolean    init_paths (const char* muhome, MuRuntimeData *data);
+static const char* runtime_path (MuRuntimePath path);
+
 
 static gboolean
 mu_dir_is_readable_and_writable (const char *muhome)
@@ -64,14 +67,38 @@ mu_dir_is_readable_and_writable (const char *muhome)
 	return FALSE;
 }
 
+static gboolean
+init_log (const char *muhome, const char *name,
+	  gboolean log_stderr, gboolean quiet, gboolean debug)
+{
+	gboolean rv;
+	char *logpath;
+	
+	if (log_stderr)
+		return mu_log_init_with_fd (fileno(stderr), FALSE,
+					    quiet, debug);
+
+	logpath = g_strdup_printf ("%s%c%s%c%s.log",
+				   muhome, G_DIR_SEPARATOR,
+				   MU_LOG_DIRNAME, G_DIR_SEPARATOR,
+				   name);
+	rv = mu_log_init (logpath, TRUE, quiet, debug);
+	g_free (logpath);
+
+	return rv;
+}
+
+
+
 
 gboolean
-mu_runtime_init (const char* muhome_arg)
+mu_runtime_init (const char* muhome_arg, const char *name)
 {
 	gchar *muhome;
 
 	g_return_val_if_fail (!_initialized, FALSE);
-
+	g_return_val_if_fail (name, FALSE);
+	
 	if (!mu_util_init_system())
 		return FALSE;
 	
@@ -85,35 +112,28 @@ mu_runtime_init (const char* muhome_arg)
 		return FALSE;
 	}
 	
-	if (!mu_log_init (muhome, TRUE, FALSE, FALSE)) {
+	_data = g_new0 (MuRuntimeData, 1);
+ 	_data->_str[MU_RUNTIME_PATH_MUHOME] = muhome;
+	init_paths (muhome, _data);
+	_data->_name = g_strdup (name);
+
+	if (!init_log (muhome, name, FALSE, FALSE, FALSE)) {
+		runtime_free ();
 		g_free (muhome);
 		return FALSE;
 	}
 	
-	_data = g_new0 (MuRuntimeData, 1);
- 	_data->_str[MU_RUNTIME_PATH_MUHOME] = muhome;
-	init_paths (muhome, _data);
-
 	return _initialized = TRUE;
 }
 
 
-static gboolean
-init_log (MuConfig *opts)
-{
-	if (opts->log_stderr)
-		return mu_log_init_with_fd (fileno(stderr), FALSE,
-					  opts->quiet, opts->debug);
-	else 
-		return mu_log_init (opts->muhome, TRUE, opts->quiet,
-				    opts->debug);
-}
 
 gboolean
-mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
+mu_runtime_init_from_cmdline (int *pargc, char ***pargv, const char *name)
 {
-	g_return_val_if_fail (!_initialized, FALSE);
-
+	g_return_val_if_fail (!_initialized, FALSE);	
+	g_return_val_if_fail (name, FALSE);
+	
 	if (!mu_util_init_system())
 		return FALSE;
 
@@ -129,14 +149,18 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv)
 		return FALSE;
 	}
 
-	if (!init_log (_data->_config)) {
-		runtime_free ();
-		return FALSE;
-	}
-	
+	_data->_name = g_strdup (name);
 	_data->_str[MU_RUNTIME_PATH_MUHOME] =
 		g_strdup (_data->_config->muhome);
 	init_paths (_data->_str[MU_RUNTIME_PATH_MUHOME], _data);
+	
+	if (!init_log (runtime_path(MU_RUNTIME_PATH_MUHOME), name,
+		       _data->_config->log_stderr,
+		       _data->_config->quiet,
+		       _data->_config->debug)) {
+		runtime_free ();
+		return FALSE;
+	}
 	
 	return _initialized = TRUE;
 }
@@ -149,6 +173,8 @@ runtime_free (void)
 
 	for (i = 0; i != MU_RUNTIME_PATH_NUM; ++i)
 		g_free (_data->_str[i]);
+	
+	g_free (_data->_name);
 	
 	mu_config_destroy (_data->_config);
 
@@ -208,14 +234,22 @@ init_paths (const char* muhome, MuRuntimeData *data)
 				 G_DIR_SEPARATOR, MU_CONTACTS_FILENAME);
 
 	data->_str [MU_RUNTIME_PATH_LOG] =
-		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
-				 MU_LOG_DIRNAME);
-
+		g_strdup_printf ("%s%c%s", muhome, 
+				 G_DIR_SEPARATOR, MU_LOG_DIRNAME);
+	
 	if (!create_dirs_maybe (data))
 		return FALSE;
-
+	
 	return TRUE;
 }
+
+/* so we can called when _initialized is FALSE still */
+static const char*
+runtime_path (MuRuntimePath path)
+{	
+	return _data->_str[path];
+}
+
 
 
 const char*
@@ -224,7 +258,7 @@ mu_runtime_path (MuRuntimePath path)
 	g_return_val_if_fail (_initialized, NULL);
 	g_return_val_if_fail (path < MU_RUNTIME_PATH_NUM, NULL);
 	
-	return _data->_str[path];
+	return runtime_path (path);
 }
 
 MuConfig*
