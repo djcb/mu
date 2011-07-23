@@ -32,3 +32,12 @@ endif
 if HAVE_GUILE
 SUBDIRS += muile
 endif
+
+# for procmule, we need guile and gio
+if HAVE_GUILE
+if HAVE_GIO
+SUBDIRS += procmule
+endif
+endif
+
+
