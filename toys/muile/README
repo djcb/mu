@@ -85,13 +85,13 @@
    sender for messages about milk:
 
    ,----
-   | (mu:store:foreach (lambda(msg) (format #t "~s ~s\n" (mu:msg:from msg) (mu:msg:subject msg))) "milk")
+   | (mu:store:for-each (lambda(msg) (format #t "~s ~s\n" (mu:msg:from msg) (mu:msg:subject msg))) "milk")
    `----
 
    or slightly more readable:
 
    ,----
-   | (mu:store:foreach 
+   | (mu:store:for-each 
    |   (lambda(msg) 
    |     (format #t "~s ~s\n" (mu:msg:from msg) (mu:msg:subject msg))) 
    |   "milk")
