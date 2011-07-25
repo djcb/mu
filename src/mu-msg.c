@@ -669,3 +669,147 @@ mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
 	
 	return 0; /* TODO: handle lists */
 }
+
+
+
+
+enum _MaildirType {
+	MAILDIR_TYPE_CUR,
+	MAILDIR_TYPE_NEW,
+	MAILDIR_TYPE_OTHER
+};
+typedef enum _MaildirType MaildirType;
+
+static MaildirType
+get_maildir_type (const char *path)
+{
+	MaildirType mtype;
+	gchar *dirname;
+	
+	dirname = g_path_get_dirname (path);
+	/* g_path_get_dirname does not specify if the name includes
+	 * the closing '/'... if it does, remove it */
+	if (dirname[strlen(dirname) - 1 ] == G_DIR_SEPARATOR)
+		dirname[strlen(dirname) - 1] = '\0'; 
+
+	if (g_str_has_suffix (dirname, "cur"))
+		mtype = MAILDIR_TYPE_CUR;
+	else if (g_str_has_suffix (dirname, "new"))
+		mtype = MAILDIR_TYPE_CUR;
+	else
+		mtype = MAILDIR_TYPE_OTHER;
+
+	g_free (dirname);
+
+	return mtype;
+}
+
+
+char*
+get_new_fullpath (const char *oldpath, const char *targetmdir,
+		  MaildirType mtype)
+{
+	char *filename, *newfullpath;
+	const char* mdirsub;
+	
+	filename = g_path_get_basename (oldpath);
+	
+	if (mtype == MAILDIR_TYPE_CUR)
+		mdirsub = "cur";
+	else if (mtype == MAILDIR_TYPE_NEW)
+		mdirsub = "new";
+	else {
+		g_free (filename);
+		g_return_val_if_reached (NULL);
+		return NULL;
+	}
+
+	newfullpath = g_strdup_printf ("%s%c%s%c%s",
+				       targetmdir,
+				       G_DIR_SEPARATOR,
+				       mdirsub,
+				       G_DIR_SEPARATOR,
+				       filename);
+	g_free (filename);
+	return newfullpath;
+	
+}
+
+
+static gboolean
+msg_move (const char* oldpath, const char *newfullpath, GError **err)
+{
+	if (access (oldpath, R_OK) != 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "cannot read %s",
+			     oldpath);
+		return FALSE;
+	}
+
+
+	if (access (newfullpath, F_OK) == 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "%s already exists",
+			     newfullpath);
+		return FALSE;
+	}
+	
+	if (rename (oldpath, newfullpath) != 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "error moving %s to %s",
+			     oldpath, newfullpath);
+		return FALSE;
+	}
+
+	/* double check -- is the target really there? */
+	if (access (newfullpath, F_OK) != 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "can't find target (%s)",
+			     newfullpath);
+		return FALSE;
+	}
+	
+	if (access (oldpath, F_OK) == 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "source is still there (%s)",
+			     oldpath);
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
+/*
+ * move a msg to another maildir, trying to maintain 'integrity',
+ * ie. msg in 'new/' will go to new/, one in cur/ goes to cur/. be
+ * super-paranoid here...
+ */
+gboolean
+mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir, GError **err)
+{
+	const char *oldpath;
+	MaildirType mtype;
+	char *newfullpath;
+	
+	g_return_val_if_fail (self, FALSE);
+	g_return_val_if_fail (targetmdir, FALSE);
+	g_return_val_if_fail (g_path_is_absolute(targetmdir), FALSE);
+	g_return_val_if_fail (mu_util_check_dir (targetmdir, TRUE, TRUE), FALSE);
+
+	oldpath = mu_msg_get_path (self);
+	
+	mtype = get_maildir_type (oldpath);
+	g_return_val_if_fail (mtype==MAILDIR_TYPE_CUR||mtype==MAILDIR_TYPE_NEW,
+			  FALSE);	
+	
+	newfullpath = get_new_fullpath (oldpath, targetmdir, mtype);
+	g_return_val_if_fail (newfullpath, FALSE);
+
+	if (!msg_move (oldpath, newfullpath, err))
+		goto error;
+	
+	/* update our path to new one... */
+	mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
+			      TRUE);
+	return TRUE;
+	
+error:
+	g_free (newfullpath);
+	return FALSE;
+
+}
