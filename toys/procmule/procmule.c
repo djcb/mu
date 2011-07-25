@@ -23,6 +23,7 @@
 #include <libguile.h>
 #include <libmuguile/mu-guile-msg.h>
 #include <libmuguile/mu-guile-store.h>
+#include <libmuguile/mu-guile-misc.h>
 
 #include "mu-runtime.h"
 #include "mu-util.h"
@@ -77,6 +78,7 @@ on_dir_change (GFileMonitor *mon, GFile *file, GFile *other_file,
 		
 		scm_with_guile (&mu_guile_msg_init, NULL);
 		scm_with_guile (&mu_guile_store_init, NULL);
+		scm_with_guile (&mu_guile_misc_init, NULL);
 		
 		if (!(gboolean)scm_with_guile
 		    ((MuGuileFunc*)&mu_guile_msg_load_current, path)) {
@@ -157,11 +159,24 @@ struct _PMConfig {
 typedef struct _PMConfig PMConfig;
 
 
+static void
+expand_paths (PMConfig *opts)
+{	
+	char **cur;
+	
+	for (cur = opts->watchdirs; cur && *cur; ++cur)
+		*cur = mu_util_dir_expand (*cur);
+	
+	if (opts->muhome)
+		opts->muhome = mu_util_dir_expand (opts->muhome);
+}
+
+
 static PMConfig *
 pm_config_new (int *argcp, char ***argvp)
 {
 	GOptionContext *octx;
-	char **cur;
+
 	PMConfig *opts = g_new0 (PMConfig, 1);
 	GOptionEntry entries[] = {
 		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &opts->muhome,
@@ -184,11 +199,7 @@ pm_config_new (int *argcp, char ***argvp)
 		goto error;
 	} 
 
-	for (cur = opts->watchdirs; cur && *cur; ++cur)
-		*cur = mu_util_dir_expand (*cur);
-	
-	if (opts->muhome)
-		opts->muhome = mu_util_dir_expand (opts->muhome);	
+	expand_paths (opts);
 	
 	g_option_context_free (octx);
 	return opts;
@@ -221,13 +232,40 @@ usage (void)
 }
 
 
+static gboolean
+watch_dirs (char **watchdirs)
+{
+	ChildData *child_data;
+	GSList *watchlist;
+	GMainLoop *loop;
+
+	child_data = child_data_new
+		(mu_runtime_path(MU_RUNTIME_PATH_MUHOME));
+	
+	watchlist = create_watchlist (watchdirs, child_data);
+	if (!watchlist)
+		goto error;
+	
+	loop = g_main_loop_new (NULL, TRUE);
+
+	g_main_loop_run (loop);
+	g_main_loop_unref (loop);
+
+	destroy_watchlist (watchlist);
+
+	return TRUE;
+	
+error:
+	child_data_destroy (child_data);
+	return FALSE;
+	
+}
+
+
 int
 main (int argc, char *argv[])
 {
 	PMConfig *opts;
-	GSList *watchlist;
-	GMainLoop *loop;
-	ChildData *child_data;
 	
 	g_type_init ();
 	g_thread_init (NULL);
@@ -243,28 +281,15 @@ main (int argc, char *argv[])
 		goto error;
 	}
 		
-	if (!mu_runtime_init (opts->muhome /* NULL is okay */,
-			      "procmule")) {
+	if (!mu_runtime_init (opts->muhome, "procmule")) {
 		usage ();
 		goto error;
 	}
 
-	child_data = child_data_new
-		(mu_runtime_path(MU_RUNTIME_PATH_MUHOME));
-
-	watchlist = create_watchlist (opts->watchdirs, child_data);
-	if (!watchlist)
-		goto error;
-	
-	loop = g_main_loop_new (NULL, TRUE);
-	g_main_loop_run (loop);
-
-	g_main_loop_unref (loop);
-
-	destroy_watchlist (watchlist);
+	watch_dirs (opts->watchdirs);  /* do it! */
 	mu_runtime_uninit ();
+
 	pm_config_destroy (opts);
-	child_data_destroy (child_data);
 	
 	return 0;
 
