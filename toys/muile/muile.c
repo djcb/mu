@@ -26,6 +26,7 @@
 #include <libguile.h>
 #include <libmuguile/mu-guile-msg.h>
 #include <libmuguile/mu-guile-store.h>
+#include <libmuguile/mu-guile-misc.h>
 
 struct _MuileConfig {
 	const char *muhome;
@@ -105,6 +106,7 @@ main (int argc, char *argv[])
 
 	scm_with_guile (&mu_guile_msg_init, NULL);
 	scm_with_guile (&mu_guile_store_init, NULL);
+	scm_with_guile (&mu_guile_misc_init, NULL);
 	
 	if (opts->msgpath) {
 		if (!(gboolean)scm_with_guile
