@@ -21,6 +21,9 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include "mu-guile-common.h"
+#include "mu-guile-store.h"
+#include "mu-guile-msg.h"
+#include "mu-guile-log.h"
 
 void
 mu_guile_error (const char *func_name, int status,
@@ -43,6 +46,15 @@ mu_guile_g_error (const char *func_name, GError *err)
 		       SCM_UNDEFINED, SCM_UNDEFINED);
 }
 
+
+
+void
+mu_guile_init (void)
+{
+	scm_with_guile (&mu_guile_msg_init, NULL);
+	scm_with_guile (&mu_guile_store_init, NULL);
+	scm_with_guile (&mu_guile_log_init, NULL);
+}
 
 
 /*

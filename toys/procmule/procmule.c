@@ -19,11 +19,8 @@
 
 #include <glib.h>
 #include <gio/gio.h>
-
-#include <libguile.h>
+#include <libmuguile/mu-guile-common.h>
 #include <libmuguile/mu-guile-msg.h>
-#include <libmuguile/mu-guile-store.h>
-#include <libmuguile/mu-guile-misc.h>
 
 #include "mu-runtime.h"
 #include "mu-util.h"
@@ -75,11 +72,9 @@ on_dir_change (GFileMonitor *mon, GFile *file, GFile *other_file,
 		return;
 
 	if (fork() == 0) { /* run guile in child */
-		
-		scm_with_guile (&mu_guile_msg_init, NULL);
-		scm_with_guile (&mu_guile_store_init, NULL);
-		scm_with_guile (&mu_guile_misc_init, NULL);
-		
+
+		mu_guile_init (); /* initialize mu guile modules */
+				
 		if (!(gboolean)scm_with_guile
 		    ((MuGuileFunc*)&mu_guile_msg_load_current, path)) {
 			g_warning ("failed to set message in guile env");

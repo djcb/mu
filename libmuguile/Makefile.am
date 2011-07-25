@@ -36,8 +36,8 @@ libmuguile_la_SOURCES=			\
 	mu-guile-msg.h			\
 	mu-guile-store.c		\
 	mu-guile-store.h		\
-	mu-guile-misc.c			\
-	mu-guile-misc.h			\
+	mu-guile-log.c			\
+	mu-guile-log.h			\
 	mu-guile-common.c		\
 	mu-guile-common.h
 
@@ -48,7 +48,7 @@ libmuguile_la_LIBADD=			\
 XFILES=					\
 	mu-guile-msg.x			\
 	mu-guile-store.x		\
-	mu-guile-misc.x
+	mu-guile-log.x
 
 BUILT_SOURCES=$(XFILES)
 
