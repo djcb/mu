@@ -25,7 +25,7 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-/** 
+/**
  * initialize mu:store functions
  * 
  */	

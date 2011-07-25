@@ -117,7 +117,7 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 	init_paths (muhome, _data);
 	_data->_name = g_strdup (name);
 
-	if (!init_log (muhome, name, FALSE, FALSE, FALSE)) {
+	if (!init_log (muhome, name, FALSE, TRUE, FALSE)) {
 		runtime_free ();
 		g_free (muhome);
 		return FALSE;

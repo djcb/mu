@@ -41,7 +41,7 @@ G_BEGIN_DECLS
  * 
  * @return TRUE if initialization succeeds, FALSE otherwise
  */
-gboolean mu_log_init  (const char *logfile, gboolean backup,
+gboolean mu_log_init (const char *logfile, gboolean backup,
 		       gboolean quiet, gboolean debug)
 	   G_GNUC_WARN_UNUSED_RESULT;
 
