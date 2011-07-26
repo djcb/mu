@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef __MU_GUILE_UTILS_H__
-#define __MU_GUILE_UTILS_H__
+#ifndef __MU_GUILE_COMMON_H__
+#define __MU_GUILE_COMMON_H__
 
 #include <libguile.h>
 
@@ -30,8 +30,8 @@
 
 G_BEGIN_DECLS
 
-/** 
- * 
+/**
+ * output an error 
  * 
  * @param func_name 
  * @param status 
@@ -42,13 +42,21 @@ void mu_guile_error (const char *func_name, int status,
 		     const char *fmt, SCM args);
 
 
-/** 
+/**
  * display a GError as a Guile error
  * 
  * @param func_name function name
  * @param err Gerror
  */
 void mu_guile_g_error (const char *func_name, GError *err);
+
+
+/**
+ * initialize the mu guile modules
+ * 
+ */
+void mu_guile_init (void);
+
 
 /* compatibility functions for old guile */
 #if HAVE_PRE2_GUILE
@@ -58,5 +66,5 @@ char* scm_to_utf8_string (SCM scm);
 
 G_END_DECLS
 
-#endif /*__MU_GUILE_UTILS_H__*/
+#endif /*__MU_GUILE_COMMON_H__*/
 

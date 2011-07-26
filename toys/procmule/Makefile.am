@@ -1,8 +1,8 @@
-## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 3 of the License, or
+## t	he Free Software Foundation; either version 3 of the License, or
 ## (at your option) any later version.
 ##
 ## This program is distributed in the hope that it will be useful,
@@ -16,11 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-# enforce compiling this dir first before decending into tests/
-SUBDIRS= .
-
-
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"'
+INCLUDES=-I${top_srcdir} -I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -28,22 +24,11 @@ INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"'
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
+noinst_PROGRAMS=					\
+	procmule
 
-noinst_PROGRAMS=			\
-	mug
-
-# note, mug.cc is '.cc' only because libmu must explicitly
-# be linked as c++, not c.
-mug_SOURCES=				\
-	mug.c				\
-	mug-msg-list-view.c		\
-	mug-msg-list-view.h		\
-	mug-msg-view.h			\
-	mug-msg-view.c			\
-	mug-query-bar.h			\
-	mug-query-bar.c			\
-	mug-shortcuts.c			\
-	mug-shortcuts.h			\
+procmule_SOURCES=					\
+	procmule.c					\
 	dummy.cc
 
 # we need to use dummy.cc to enforce c++ linking...
@@ -53,13 +38,12 @@ BUILT_SOURCES=						\
 dummy.cc:
 	touch dummy.cc
 
+# is this needed?
 DISTCLEANFILES=						\
 	$(BUILT_SOURCES)
 
-
-mug_LDADD=				\
-	${top_builddir}/src/libmu.la	\
-	${GTK_LIBS}
-
-
+procmule_LDFLAGS=					\
+	${top_builddir}/libmuguile/libmuguile.la	\
+	${top_builddir}/src/libmu.la			\
+	${GIO_LIBS}
 

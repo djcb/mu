@@ -29,7 +29,20 @@ noinst_PROGRAMS=				\
 	muile
 
 muile_SOURCES=					\
-	muile.cc
+	muile.c					\
+	dummy.cc
+
+# we need to use dummy.cc to enforce c++ linking...
+BUILT_SOURCES=						\
+	dummy.cc
+
+dummy.cc:
+	touch dummy.cc
+
+DISTCLEANFILES=						\
+	$(BUILT_SOURCES)
+
+
 
 muile_LDFLAGS=					\
 	${top_builddir}/libmuguile/libmuguile.la

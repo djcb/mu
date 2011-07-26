@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef __MU_GUILE_STORE_H__
-#define __MU_GUILE_STORE_H__
+#ifndef __MU_GUILE_LOG_H__
+#define __MU_GUILE_LOG_H__
 
 
 #ifdef __cplusplus
@@ -26,14 +26,14 @@ extern "C" {
 #endif /*__cplusplus*/
 
 /**
- * initialize mu:store functions
+ * initialize mu logging functions
  * 
  */	
-void *mu_guile_store_init (void *data);
+void *mu_guile_log_init (void *data);
 
 	
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 	
-#endif /*__MU_GUILE_STORE_H__*/
+#endif /*__MU_GUILE_LOG_H__*/

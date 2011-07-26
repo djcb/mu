@@ -24,8 +24,9 @@
 #include <gtk/gtk.h>
 #include <string.h>		/* for memset */
 
-#include "mu-util.h"
-#include "mu-runtime.h"
+#include <mu-util.h>
+#include <mu-runtime.h>
+#include <mu-index.h>
 
 #include "mug-msg-list-view.h"
 #include "mug-query-bar.h"
@@ -43,6 +44,49 @@ struct _MugData {
 	gchar *muhome;
 };
 typedef struct _MugData MugData;
+
+MuResult
+each_msg (MuIndexStats* stats, MugData *data)
+{
+	static int i  = 0;
+
+	if (++i % 100 == 0)
+		gtk_main_iteration ();
+	
+	return MU_OK;
+}
+	
+static void
+reindex (MugData *mugdata)
+{
+	MuIndex *midx;
+	GError *err;
+
+	if (mu_util_xapian_is_locked
+	    (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)))
+		return;
+	
+	err = NULL;
+	midx = mu_index_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			     mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
+			     &err);
+	if (!midx) {
+		if (err && err->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK) {
+			g_warning ("database busy...");
+			return; /* db already busy.. */
+		}
+		g_warning ("failed to get index: %s", err ? err->message : "<none>");
+		g_error_free (err);
+		return;
+	}
+
+	mu_index_run (midx,
+		      mu_index_last_used_maildir(midx),
+		      FALSE, NULL, (MuIndexMsgCallback)each_msg, NULL, mugdata);
+
+	mu_index_destroy (midx);
+}
+
 
 static void
 about_mug (MugData * mugdata)
@@ -63,6 +107,7 @@ about_mug (MugData * mugdata)
 enum _ToolAction {
 	ACTION_PREV_MSG = 1,
 	ACTION_NEXT_MSG,
+	ACTION_REINDEX,
 	ACTION_DO_QUIT,
 	ACTION_ABOUT,
 	ACTION_SEPARATOR	/* pseudo action */
@@ -87,6 +132,9 @@ on_tool_button_clicked (GtkToolButton * btn, MugData * mugdata)
 	case ACTION_PREV_MSG:
 		mug_msg_list_view_move_prev (MUG_MSG_LIST_VIEW
 					     (mugdata->mlist));
+		break;
+	case ACTION_REINDEX:
+		reindex (mugdata);
 		break;
 	case ACTION_ABOUT:
 		about_mug (mugdata);
@@ -122,6 +170,8 @@ mug_toolbar (MugData * mugdata)
 	} tools[] = {
 		{GTK_STOCK_GO_UP, ACTION_PREV_MSG},
 		{GTK_STOCK_GO_DOWN, ACTION_NEXT_MSG},
+		{NULL, ACTION_SEPARATOR},
+		{GTK_STOCK_REFRESH, ACTION_REINDEX},
 		{NULL, ACTION_SEPARATOR},
 		{GTK_STOCK_ABOUT, ACTION_ABOUT},
 		{NULL, ACTION_SEPARATOR},
@@ -177,7 +227,6 @@ on_query_changed (MugQueryBar * bar, const char *query, MugData * mugdata)
 	int count;
 
 	/* clear the old message */
-	//mug_msg_view_set_text (MUG_MSG_VIEW(mugdata->msgview), NULL);
 	mug_msg_view_set_msg (MUG_MSG_VIEW (mugdata->msgview), NULL);
 
 	count = mug_msg_list_view_query (MUG_MSG_LIST_VIEW (mugdata->mlist),
@@ -204,7 +253,6 @@ on_query_changed (MugQueryBar * bar, const char *query, MugData * mugdata)
 static void
 on_msg_selected (MugMsgListView * mlist, const char *mpath, MugData * mugdata)
 {
-	// g_warning ("msg selected: %s", mpath);
 	mug_msg_view_set_msg (MUG_MSG_VIEW (mugdata->msgview), mpath);
 }
 
@@ -257,9 +305,7 @@ mug_querybar (void)
 static GtkWidget *
 mug_query_area (MugData * mugdata)
 {
-	GtkWidget *queryarea;
-	GtkWidget *paned;
-	GtkWidget *scrolled;
+	GtkWidget *queryarea, *paned, *scrolled;
 
 	queryarea = gtk_vbox_new (FALSE, 2);
 	paned = gtk_vpaned_new ();
@@ -275,8 +321,10 @@ mug_query_area (MugData * mugdata)
 	gtk_paned_add1 (GTK_PANED (paned), scrolled);
 
 	mugdata->msgview = mug_msg_view_new ();
-
-	mug_msg_view_set_msg (MUG_MSG_VIEW (mugdata->msgview), NULL);
+	mug_msg_view_set_note (MUG_MSG_VIEW(mugdata->msgview),
+			       "<h1>Welcome to <i>mug</i>!</h1><hr>"
+			       "<tt>mug</tt> is an experimental UI for <tt>mu</tt>, which will "
+			       "slowly evolve into something useful.<br><br>Enjoy the ride.");
 	g_signal_connect (G_OBJECT (mugdata->mlist), "msg-selected",
 			  G_CALLBACK (on_msg_selected), mugdata);
 	g_signal_connect (G_OBJECT (mugdata->mlist), "error-occured",
@@ -336,12 +384,13 @@ mug_shell (MugData * mugdata)
 	gtk_window_set_default_size (GTK_WINDOW (mugdata->win), 700, 500);
 	gtk_window_set_resizable (GTK_WINDOW (mugdata->win), TRUE);
 
-	// {
-	// 	gchar *icon;
-	// 	icon = g_strdup_printf ("%s%cmug.svg", ICONDIR, G_DIR_SEPARATOR);
-	// 	gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
-	// 	g_free (icon);
-	// }
+	{
+		gchar *icon;
+		icon = g_strdup_printf ("%s%cmug.svg",
+					MUG2DIR, G_DIR_SEPARATOR);
+		gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
+		g_free (icon);
+	}
 	
 	return mugdata->win;
 }
@@ -365,11 +414,13 @@ main (int argc, char *argv[])
 
 	memset (&mugdata, 0, sizeof (MugData));
 	if (!g_option_context_parse (octx, &argc, &argv, NULL)) {
+		g_option_context_free (octx);
 		g_printerr ("mug: error in options\n");
 		return 1;
 	}
 
-	mu_runtime_init (mugdata.muhome);
+	g_option_context_free (octx);
+	mu_runtime_init (mugdata.muhome, "mug2");
 
 	mugshell = mug_shell (&mugdata);
 	g_signal_connect (G_OBJECT (mugshell), "destroy",

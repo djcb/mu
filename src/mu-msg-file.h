@@ -106,9 +106,9 @@ GSList* mu_msg_file_get_str_list_field (MuMsgFile *self,
  * @param self a valid MuMsgFile
  * @param msfid the message field id to get (must be string-based one)
  * 
- * @return the numeric value, or -1
+ * @return the numeric value, or -1 in case of error
  */
-gint64 mu_msg_file_get_num_field (MuMsgFile *self, MuMsgFieldId msfid);
+gint64 mu_msg_file_get_num_field (MuMsgFile *self, MuMsgFieldId mfid);
 
 
 #endif /*__MU_MSG_FILE_H__*/

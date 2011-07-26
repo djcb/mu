@@ -23,9 +23,8 @@
 #include <mu-runtime.h>
 #include <glib-object.h>
 
-#include <libguile.h>
+#include <libmuguile/mu-guile-common.h>
 #include <libmuguile/mu-guile-msg.h>
-#include <libmuguile/mu-guile-store.h>
 
 struct _MuileConfig {
 	const char *muhome;
@@ -97,13 +96,13 @@ main (int argc, char *argv[])
 		goto error;
 	}
 		
-	if (!mu_runtime_init (opts->muhome /* NULL is okay */)) {
+	if (!mu_runtime_init (opts->muhome /* NULL is okay */,
+			      "muile")) {
 		usage ();
 		goto error;
 	}
 
-	scm_with_guile (&mu_guile_msg_init, NULL);
-	scm_with_guile (&mu_guile_store_init, NULL);
+	mu_guile_init (); /* initialize mu guile modules */
 	
 	if (opts->msgpath) {
 		if (!(gboolean)scm_with_guile

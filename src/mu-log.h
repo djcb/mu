@@ -31,7 +31,8 @@ G_BEGIN_DECLS
 /**
  * write logging information to a log file
  * 
- * @param muhome the mu home directory
+ * @param full path to the log file (does not have to exist yet, but
+ * it's directory must)
  * @param backup if TRUE and size of log file > MU_MAX_LOG_FILE_SIZE, move
  * the log file to <log file>.old and start a new one. The .old file will overwrite
  * existing files of that name
@@ -40,7 +41,7 @@ G_BEGIN_DECLS
  * 
  * @return TRUE if initialization succeeds, FALSE otherwise
  */
-gboolean mu_log_init  (const char* muhome, gboolean backup,
+gboolean mu_log_init (const char *logfile, gboolean backup,
 		       gboolean quiet, gboolean debug)
 	   G_GNUC_WARN_UNUSED_RESULT;
 

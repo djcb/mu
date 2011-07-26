@@ -271,6 +271,7 @@ toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile
 toys/muile/Makefile
+toys/procmule/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile

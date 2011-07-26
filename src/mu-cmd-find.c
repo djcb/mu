@@ -853,7 +853,8 @@ print_attr_sexp (const char* elm, const char *str, gboolean nl)
 		return; /* empty: don't include */
 
 	esc = mu_str_escape_c_literal (str);
-	g_print ("    (:%s \"%s\")%s", elm, esc, nl ? "\n" : "");
+	
+	g_print ("    :%s \"%s\"%s", elm, esc, nl ? "\n" : "");
 	g_free (esc);
 }
 
@@ -864,35 +865,43 @@ output_sexp (MuMsgIter *iter, size_t *count)
 {
 	MuMsgIter *myiter;
 	size_t mycount;
-	
-	g_return_val_if_fail (iter, FALSE);
-	
-	g_print ("(:messages\n");
+		g_return_val_if_fail (iter, FALSE);
+
 	
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
 
+		unsigned date, date_high, date_low;
+		
 		MuMsg *msg;
 		if (!(msg = mu_msg_iter_get_msg (iter, NULL))) /* don't unref */
 			return FALSE;
 		
 		if (mycount != 0)
 			g_print ("\n");
+
+		/* emacs likes it's date in a particular way... */
+		date = (unsigned) mu_msg_get_date (msg);
+		date_high = date >> 16;
+		date_low  = date & 0xffff;
 		
-		g_print ("  (:message\n");
+		g_print ("(%u\n", (unsigned)mycount);
 		print_attr_sexp ("from", mu_msg_get_from (msg),TRUE);
 		print_attr_sexp ("to", mu_msg_get_to (msg),TRUE);
 		print_attr_sexp ("cc", mu_msg_get_cc (msg),TRUE);
 		print_attr_sexp ("subject", mu_msg_get_subject (msg),TRUE);
-		g_print ("    (:date %u)\n", (unsigned) mu_msg_get_date (msg));
-		g_print ("    (:size %u)\n", (unsigned) mu_msg_get_size (msg));
+		g_print ("    :date %u\n", date);
+		g_print ("    :date-high %u\n", date_high);
+		g_print ("    :date-low %u\n", date_low);
+		g_print ("    :size %u\n", (unsigned) mu_msg_get_size (msg));
 		print_attr_sexp ("msgid", mu_msg_get_msgid (msg),TRUE);
 		print_attr_sexp ("path", mu_msg_get_path (msg),TRUE);
 		print_attr_sexp ("maildir", mu_msg_get_maildir (msg),FALSE);
-		g_print (")");
+		g_print (")\n;;eom");
 	}
-	g_print (")\n");
-		
+
+	fputs ("\n", stdout);
+	
 	if (count)
 		*count = mycount;
 	

@@ -76,6 +76,41 @@ SCM_DEFINE (msg_make_from_file, "mu:msg:make-from-file", 1, 0, 0,
 #undef FUNC_NAME
 
 
+SCM_DEFINE (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
+	    (SCM MSG, SCM TARGETMDIR),
+	    "Move message to another maildir TARGETMDIR. Note that this the "
+	    "base-level Maildir, ie. /home/user/Maildir/archive, and must"
+	    " _not_ include the 'cur' or 'new' part. mu_msg_move_to_maildir "
+	    "will make sure that the copy is from new/ to new/ and cur/ to "
+	    "cur/. Also note that the target maildir must be on the same "
+	    "filesystem. Returns #t if it worked, #f otherwise.\n")
+#define FUNC_NAME s_msg_move
+{
+	GError *err;
+	MuMsgWrapper *msgwrap;
+	gboolean rv;
+	
+	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);	
+	SCM_ASSERT (scm_is_string (TARGETMDIR), TARGETMDIR, SCM_ARG2, FUNC_NAME);
+
+	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
+
+	err = NULL;
+	rv = mu_msg_move_to_maildir (msgwrap->_msg,
+				     scm_to_utf8_string (TARGETMDIR), &err);
+	if (!rv && err) {
+		mu_guile_g_error (FUNC_NAME, err);
+		g_error_free (err);
+	}
+
+	return rv ? SCM_BOOL_T : SCM_BOOL_F;
+}
+#undef FUNC_NAME
+
+
+
+
+
 static SCM
 scm_from_string_or_null (const char *str)
 {
@@ -146,9 +181,9 @@ SCM_DEFINE (msg_prio, "mu:msg:priority", 1, 0, 0,
 	prio = mu_msg_get_prio (msgwrap->_msg);
 
 	switch (prio) {
-	case MU_MSG_PRIO_LOW:    return scm_from_locale_symbol("low");
-	case MU_MSG_PRIO_NORMAL: return scm_from_locale_symbol("normal");
-	case MU_MSG_PRIO_HIGH:   return scm_from_locale_symbol("high");
+	case MU_MSG_PRIO_LOW:    return scm_from_locale_symbol("mu:low");
+	case MU_MSG_PRIO_NORMAL: return scm_from_locale_symbol("mu:normal");
+	case MU_MSG_PRIO_HIGH:   return scm_from_locale_symbol("mu:high");
 	default:
 		g_return_val_if_reached (SCM_UNDEFINED);
 	}	
@@ -167,7 +202,12 @@ check_flag (MuMsgFlags flag, FlagData *fdata)
 {
 	if (fdata->flags & flag) {
 		SCM item;
-		item = scm_list_1 (scm_from_locale_symbol(mu_msg_flag_name(flag)));
+		char *flagsym;
+
+		flagsym = g_strconcat ("mu:", mu_msg_flag_name(flag), NULL);
+		item = scm_list_1 (scm_from_locale_symbol(flagsym));
+		g_free (flagsym);
+		
 		fdata->lst = scm_append_x (scm_list_2(fdata->lst, item));
 	}	
 }
@@ -469,22 +509,22 @@ static void
 define_symbols (void)
 {
 	/* message priority */
-	scm_c_define ("high",		scm_from_int(MU_MSG_PRIO_HIGH));
-	scm_c_define ("low",		scm_from_int(MU_MSG_PRIO_LOW));
-	scm_c_define ("normal",		scm_from_int(MU_MSG_PRIO_NORMAL));
+	scm_c_define ("mu:high",	scm_from_int(MU_MSG_PRIO_HIGH));
+	scm_c_define ("mu:low",		scm_from_int(MU_MSG_PRIO_LOW));
+	scm_c_define ("mu:normal",	scm_from_int(MU_MSG_PRIO_NORMAL));
 
 	/* message flags */
-	scm_c_define ("new",		scm_from_int(MU_MSG_FLAG_NEW));
-	scm_c_define ("passed",		scm_from_int(MU_MSG_FLAG_PASSED));
-	scm_c_define ("replied",	scm_from_int(MU_MSG_FLAG_REPLIED));
-	scm_c_define ("seen",		scm_from_int(MU_MSG_FLAG_SEEN));
-	scm_c_define ("trashed",	scm_from_int(MU_MSG_FLAG_TRASHED));
-	scm_c_define ("draft",		scm_from_int(MU_MSG_FLAG_DRAFT));
-	scm_c_define ("flagged",	scm_from_int(MU_MSG_FLAG_FLAGGED));
-	scm_c_define ("unread",		scm_from_int(MU_MSG_FLAG_UNREAD));
-	scm_c_define ("signed",		scm_from_int(MU_MSG_FLAG_SIGNED));
-	scm_c_define ("encrypted",	scm_from_int(MU_MSG_FLAG_ENCRYPTED));
-	scm_c_define ("has-attach",	scm_from_int(MU_MSG_FLAG_HAS_ATTACH));
+	scm_c_define ("mu:new",		scm_from_int(MU_MSG_FLAG_NEW));
+	scm_c_define ("mu:passed",	scm_from_int(MU_MSG_FLAG_PASSED));
+	scm_c_define ("mu:replied",	scm_from_int(MU_MSG_FLAG_REPLIED));
+	scm_c_define ("mu:seen",	scm_from_int(MU_MSG_FLAG_SEEN));
+	scm_c_define ("mu:trashed",	scm_from_int(MU_MSG_FLAG_TRASHED));
+	scm_c_define ("mu:draft",	scm_from_int(MU_MSG_FLAG_DRAFT));
+	scm_c_define ("mu:flagged",	scm_from_int(MU_MSG_FLAG_FLAGGED));
+	scm_c_define ("mu:unread",	scm_from_int(MU_MSG_FLAG_UNREAD));
+	scm_c_define ("mu:signed",	scm_from_int(MU_MSG_FLAG_SIGNED));
+	scm_c_define ("mu:encrypted",	scm_from_int(MU_MSG_FLAG_ENCRYPTED));
+	scm_c_define ("mu:has-attach",	scm_from_int(MU_MSG_FLAG_HAS_ATTACH));
 }
 
 

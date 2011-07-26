@@ -357,6 +357,28 @@ const GSList* mu_msg_get_tags (MuMsg *self);
 int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
 
 
+
+/**
+ * move a message to another maildir; the function returns the full
+ * path to the new message, and changes the msg to now point to the
+ * new maildir
+ * 
+ * @param msg a message with an existing file system path in an actual
+ * maildir
+ * @param targetmdir the target maildir; note that this the base-level
+ * Maildir, ie. /home/user/Maildir/archive, and must _not_ include the
+ * 'cur' or 'new' part. mu_msg_move_to_maildir will make sure that the
+ * copy is from new/ to new/ and cur/ to cur/. Also note that the target
+ * maildir must be on the same filesystem. *
+ * @param err (may be NULL) may contain error information; note if the
+ * function return FALSE, err is not set for all error condition
+ * (ie. not for parameter errors)
+ * @return TRUE if it worked, FALSE otherwise
+ */
+gboolean mu_msg_move_to_maildir (MuMsg *msg, const char* targetmdir,
+				 GError **err);
+
+
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO    = 0,
 	MU_MSG_CONTACT_TYPE_FROM,  

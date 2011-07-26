@@ -1,0 +1,32 @@
+* README
+  
+  The toy here is called 'procmule', which tries to offer procmail[1]-like
+  functionality from mu, with the procmailrc configuration language replaced
+  with guile and the mu-guile-bindings.
+
+  Of course, I'm not arrogant enough to claim that I can replace a time-tested,
+  classical Unix tool so easily. On the other hand, I'm gluing existing tools
+  together.
+
+  Now, the big difference with procmail is that procmail is an MDA - a mail
+  delivery agent. In practice, it typically reads a new e-mail message from
+  standard input (it's called from the local mail daemon), and then decides what
+  to do with it.
+
+  In contrast, procmule watches a directory (or series of directories) for
+  changes - as soon as a new message appears in one of these directories,
+  procmule evaluates a Guile/Scheme program (typically, ~/.mu/procmule.scm) with
+  the message available as 'mu:current-msg'.
+
+
+
+
+[1] http://www.procmail.org/
+
+# Local Variables:
+# mode: org; org-startup-folded: nil
+# End:
+
+
+
+
