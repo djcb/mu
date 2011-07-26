@@ -8,7 +8,9 @@
   `guile'[1] is an interpreter/library for the Scheme programming language[2],
   specifically meant for extending other programs. It is, in fact, the
   official GNU language for doing so. 'muile' requires guile 2.x to get the full
-  support; older versions will not support e.g. the 'mu-stats.scm' things
+  support. 
+
+older versions will not support e.g. the 'mu-stats.scm' things
   discussed below.
 
   The combination of mu + guile is called `muile', and allows you to write
@@ -53,14 +55,17 @@
    | scheme@(guile-user)> (mu:msg:subject msg)
    | $1 = "See me in bikini :-)"
    | scheme@(guile-user)> (mu:msg:flags msg)
-   | $2 = (attach unread)
+   | $2 = (mu:attach mu:unread)
    `----
    
    and so on. Note, it's probably easiest to explore the various mu: methods
-   using autocompletion; to enable that make sure you have 
+   using autocompletion; to enable that make sure you have
 
-     (use-modules (ice-9 readline))
-     (activate-readline)
+   
+   ,----
+   | (use-modules (ice-9 readline))
+   | (activate-readline)
+   `----
 
    in your ~/.guile configuration.  
 
