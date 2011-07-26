@@ -449,7 +449,7 @@ show_usage (gboolean noerror)
 static void
 show_version (void)
 {
-	g_print ("mu (mail indexer/searcher) " VERSION "\n"
+	g_print ("mu (mail indexer/searcher) version " VERSION "\n"
 		 "Copyright (C) 2008-2011 Dirk-Jan C. Binnema (GPLv3+)\n");
 }
 

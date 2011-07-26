@@ -105,22 +105,22 @@ mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 	g_return_val_if_fail (self, -1);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), -1);
 	g_return_val_if_fail (mu_msg_field_is_numeric(mfid), -1);
-
+	
 	/* date is a special case, because we store dates as
 	 * strings */	
 	try {
 		const std::string s (self->doc().get_value(mfid));
 		if (s.empty())
-			return -1;
+			return 0;
 		else if (mfid == MU_MSG_FIELD_ID_DATE) {
 			time_t t;
 			t = mu_date_str_to_time_t (s.c_str(), FALSE/*utc*/);
 			return static_cast<gint64>(t);
-		} else
+		} else {
 			return static_cast<gint64>(Xapian::sortable_unserialise(s));
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);
-	
+		}
+		
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);	
 }
 
 
