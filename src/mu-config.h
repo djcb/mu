@@ -32,23 +32,36 @@ G_BEGIN_DECLS
 /* env var; if non-empty, color are enabled for some commands */
 #define MU_COLORS "MU_COLORS"
 
-/* output formats for 'mu find' */
-#define MU_CONFIG_FORMAT_PLAIN	"plain"    /* plain text output */
-#define MU_CONFIG_FORMAT_LINKS	"links"    /* output as symlinks */
-#define MU_CONFIG_FORMAT_XML	"xml"      /* output xml */
-#define MU_CONFIG_FORMAT_JSON	"json"     /* output json */
-#define MU_CONFIG_FORMAT_SEXP	"sexp"     /* output sexps */
-#define MU_CONFIG_FORMAT_XQUERY "xquery"   /* output the xapian query */
 
-/* output formats for 'mu cfind' */
-#define MU_CONFIG_FORMAT_MUTT_ALIAS	"mutt-alias"  /* mutt alias style */
-#define MU_CONFIG_FORMAT_MUTT_AB	"mutt-ab"     /* mutt ext abook */
-#define MU_CONFIG_FORMAT_WL		"wl"          /* Wanderlust abook */
-#define MU_CONFIG_FORMAT_CSV		"csv"         /* comma-sep'd values */
-#define MU_CONFIG_FORMAT_ORG_CONTACT	"org-contact" /* org-contact */
-#define MU_CONFIG_FORMAT_BBDB		"bbdb"        /* BBDB */
+enum _MuConfigFormat {
+	MU_CONFIG_FORMAT_UNKNOWN = 0,
+
+	/* for cfind, find, view */
+	MU_CONFIG_FORMAT_PLAIN,		/* plain output */
+	
+	/* for cfind */
+	MU_CONFIG_FORMAT_MUTT_ALIAS,	/* mutt alias style */
+	MU_CONFIG_FORMAT_MUTT_AB,	/* mutt ext abook */
+	MU_CONFIG_FORMAT_WL,		/* Wanderlust abook */
+	MU_CONFIG_FORMAT_CSV,		/* comma-sep'd values */
+	MU_CONFIG_FORMAT_ORG_CONTACT,	/* org-contact */
+	MU_CONFIG_FORMAT_BBDB,		/* BBDB */
+
+	/* for find, view */
+	MU_CONFIG_FORMAT_SEXP,		/* output sexps */
+
+	/* for find */
+	MU_CONFIG_FORMAT_LINKS,		/* output as symlinks */
+	MU_CONFIG_FORMAT_XML,		/* output xml */
+	MU_CONFIG_FORMAT_JSON,		/* output json */
+	MU_CONFIG_FORMAT_XQUERY,	/* output the xapian query */
+};
+typedef enum _MuConfigFormat MuConfigFormat;
+
 
 enum _MuConfigCmd {
+	MU_CONFIG_CMD_UNKNOWN = 0,
+	
 	MU_CONFIG_CMD_INDEX,
 	MU_CONFIG_CMD_FIND,
 	MU_CONFIG_CMD_CLEANUP,
@@ -57,8 +70,6 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_EXTRACT,
 	MU_CONFIG_CMD_CFIND,
 	MU_CONFIG_CMD_NONE,
-	
-	MU_CONFIG_CMD_UNKNOWN
 };
 typedef enum _MuConfigCmd MuConfigCmd;
 
@@ -101,8 +112,11 @@ struct _MuConfig {
 	gboolean	 threads;       /* show message threads */
 	gboolean	 summary;	/* include a summary? */
 	char            *bookmark;	/* use bookmark */
-	char		*formatstr;     /* output type
-					 * (plain,links,xml,json,sexp) */
+	char		*formatstr;     /* output type for find
+					 * (plain,links,xml,json,sexp)
+					 * and view (plain, sexp) and cfind
+					 */
+	MuConfigFormat   format;        /* the decoded formatstr */
 	char		*exec;		/* command to execute on the
 					 * files for the matched
 					 * messages */

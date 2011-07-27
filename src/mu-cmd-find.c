@@ -45,17 +45,6 @@
 #include "mu-cmd.h"
 #include "mu-threader.h"
 
-enum _OutputFormat {
-	FORMAT_JSON,
-	FORMAT_LINKS,
-	FORMAT_PLAIN,
-	FORMAT_SEXP,
-	FORMAT_XML,
-	FORMAT_XQUERY,
-	
-	FORMAT_NONE
-};
-typedef enum _OutputFormat OutputFormat;
 
 static gboolean output_links (MuMsgIter *iter, const char* linksdir,
 				      gboolean clearlinks, size_t *count);
@@ -65,30 +54,6 @@ static gboolean output_xml (MuMsgIter *iter, size_t *count);
 static gboolean output_plain (MuMsgIter *iter, const char *fields,
 			      gboolean summary,gboolean threads,
 			      gboolean color, size_t *count);
-
-static OutputFormat
-get_output_format (const char *formatstr)
-{
-	int i;
-	struct {
-		const char*	name;
-		OutputFormat	format;
-	} formats [] = {
-		{MU_CONFIG_FORMAT_JSON,		 FORMAT_JSON},
-		{MU_CONFIG_FORMAT_LINKS,	 FORMAT_LINKS},
-		{MU_CONFIG_FORMAT_PLAIN,	 FORMAT_PLAIN},
-		{MU_CONFIG_FORMAT_SEXP,		 FORMAT_SEXP},
-		{MU_CONFIG_FORMAT_XML,		 FORMAT_XML},
-		{MU_CONFIG_FORMAT_XQUERY,	 FORMAT_XQUERY}
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(formats); i++)
-		if (strcmp (formats[i].name, formatstr) == 0)
-			return formats[i].format;
-
-	return FORMAT_NONE;
-}
-
 
 static void
 upgrade_warning (void)
@@ -142,22 +107,20 @@ sort_field_from_string (const char* fieldstr)
 
 
 static gboolean
-output_query_results (MuMsgIter *iter, MuConfig *opts,
-		     OutputFormat format, size_t *count)
+output_query_results (MuMsgIter *iter, MuConfig *opts, size_t *count)
 {
-	switch (format) {
-
-	case FORMAT_LINKS:
+	switch (opts->format) {
+	case MU_CONFIG_FORMAT_LINKS:
 		return output_links (iter, opts->linksdir, opts->clearlinks,
 				     count);
-	case FORMAT_PLAIN: 
+	case MU_CONFIG_FORMAT_PLAIN: 
 		return output_plain (iter, opts->fields, opts->summary,
 				     opts->threads, opts->color, count);
-	case FORMAT_XML:
+	case MU_CONFIG_FORMAT_XML:
 		return output_xml (iter, count);
-	case FORMAT_JSON:
+	case MU_CONFIG_FORMAT_JSON:
 		return output_json (iter, count);
-	case FORMAT_SEXP:
+	case MU_CONFIG_FORMAT_SEXP:
 		return output_sexp (iter, count);	
 	default:
 		g_assert_not_reached ();
@@ -196,7 +159,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts, size_t *count)
 
 static gboolean
 process_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
-	       OutputFormat format, size_t *count)
+	       size_t *count)
 {
 	MuMsgIter *iter;
 	gboolean rv;
@@ -205,7 +168,7 @@ process_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 	if (!iter)
 		return FALSE;
 		
-	rv = output_query_results (iter, opts, format, count);
+	rv = output_query_results (iter, opts, count);
 		
 	if (rv && count && *count == 0)
 		g_warning ("no matching messages found");
@@ -277,25 +240,29 @@ exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 
 
 
-
 static gboolean
 format_params_valid (MuConfig *opts)
 {
-	OutputFormat format;
-		
-	format = get_output_format (opts->formatstr);
-	if (format == FORMAT_NONE) {
+	switch (opts->format) {
+	case MU_CONFIG_FORMAT_PLAIN:
+	case MU_CONFIG_FORMAT_SEXP:
+	case MU_CONFIG_FORMAT_LINKS:
+	case MU_CONFIG_FORMAT_XML:
+	case MU_CONFIG_FORMAT_JSON:
+	case MU_CONFIG_FORMAT_XQUERY:
+		break;
+	default:
 		g_warning ("invalid output format %s",
 			   opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
 	
-	if (format == FORMAT_LINKS && !opts->linksdir) {
+	if (opts->format == MU_CONFIG_FORMAT_LINKS && !opts->linksdir) {
 		g_warning ("missing --linksdir argument");
 		return FALSE;
 	}
 
-	if (opts->linksdir && format != FORMAT_LINKS) {
+	if (opts->linksdir && opts->format != MU_CONFIG_FORMAT_LINKS) {
 		g_warning ("--linksdir is only valid with --format=links");
 		return FALSE;
 	}
@@ -858,7 +825,19 @@ print_attr_sexp (const char* elm, const char *str, gboolean nl)
 	g_free (esc);
 }
 
+static void
+output_sexp_date (time_t t)
+{
+	unsigned date_high, date_low;
 
+	/* emacs likes it's date in a particular way... */
+	date_high = t >> 16;
+	date_low  = t & 0xffff;
+
+	g_print ("    :date %u\n", (unsigned)t);
+	g_print ("    :date-high %u\n", date_high);
+	g_print ("    :date-low %u\n", date_low);
+}
 
 static gboolean
 output_sexp (MuMsgIter *iter, size_t *count)
@@ -866,12 +845,9 @@ output_sexp (MuMsgIter *iter, size_t *count)
 	MuMsgIter *myiter;
 	size_t mycount;
 		g_return_val_if_fail (iter, FALSE);
-
 	
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter), ++mycount) {
-
-		unsigned date, date_high, date_low;
 		
 		MuMsg *msg;
 		if (!(msg = mu_msg_iter_get_msg (iter, NULL))) /* don't unref */
@@ -879,20 +855,13 @@ output_sexp (MuMsgIter *iter, size_t *count)
 		
 		if (mycount != 0)
 			g_print ("\n");
-
-		/* emacs likes it's date in a particular way... */
-		date = (unsigned) mu_msg_get_date (msg);
-		date_high = date >> 16;
-		date_low  = date & 0xffff;
 		
 		g_print ("(%u\n", (unsigned)mycount);
 		print_attr_sexp ("from", mu_msg_get_from (msg),TRUE);
 		print_attr_sexp ("to", mu_msg_get_to (msg),TRUE);
 		print_attr_sexp ("cc", mu_msg_get_cc (msg),TRUE);
 		print_attr_sexp ("subject", mu_msg_get_subject (msg),TRUE);
-		g_print ("    :date %u\n", date);
-		g_print ("    :date-high %u\n", date_high);
-		g_print ("    :date-low %u\n", date_low);
+		output_sexp_date (mu_msg_get_date (msg));
 		g_print ("    :size %u\n", (unsigned) mu_msg_get_size (msg));
 		print_attr_sexp ("msgid", mu_msg_get_msgid (msg),TRUE);
 		print_attr_sexp ("path", mu_msg_get_path (msg),TRUE);
@@ -917,7 +886,6 @@ mu_cmd_find (MuConfig *opts)
 	gboolean rv;
 	gchar *query;
 	size_t count = 0;
-	OutputFormat format;
 	
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND, FALSE);
@@ -925,19 +893,18 @@ mu_cmd_find (MuConfig *opts)
 	if (!query_params_valid (opts) || !format_params_valid(opts))
 		return MU_EXITCODE_ERROR;
 	
-	format = get_output_format (opts->formatstr);
 	xapian = get_query_obj();
 	query  = get_query (opts);
 
 	if (!xapian ||!query)
 		return MU_EXITCODE_ERROR;
 	
-	if (format == FORMAT_XQUERY)
+	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
 		rv = print_xapian_query (xapian, query, &count);
 	else if (opts->exec)
 		rv = exec_cmd_on_query (xapian, query, opts, &count);
 	else
-		rv = process_query (xapian, query, opts, format, &count);
+		rv = process_query (xapian, query, opts, &count);
 
 	mu_query_destroy (xapian);
 	g_free (query);

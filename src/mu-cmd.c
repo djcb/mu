@@ -164,7 +164,7 @@ handle_msg (const char *fname, MuConfig *opts)
 		g_error_free (err);
 		return MU_EXITCODE_ERROR;
 	}
-
+	
 	if (view_msg (msg, NULL, opts->summary, opts->color))
 		rv = MU_EXITCODE_OK;
 	else
@@ -173,6 +173,29 @@ handle_msg (const char *fname, MuConfig *opts)
 	mu_msg_unref (msg);
 
 	return rv;
+}
+
+static gboolean
+view_params_valid (MuConfig *opts)
+{
+	/* note: params[0] will be 'view' */
+	if (!opts->params[0] || !opts->params[1]) {
+		g_warning ("usage: mu view [options] <file> [<files>]");
+		return FALSE;
+	}
+
+
+	switch (opts->format) {
+	case MU_CONFIG_FORMAT_PLAIN:
+	case MU_CONFIG_FORMAT_SEXP:
+		break;
+	default:
+		g_warning ("invalid output format %s",
+			   opts->formatstr ? opts->formatstr : "<none>");
+		return FALSE;
+	}
+	
+	return TRUE;
 }
 
 
@@ -184,12 +207,9 @@ mu_cmd_view (MuConfig *opts)
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
 			      MU_EXITCODE_ERROR);
-	
-	/* note: params[0] will be 'view' */
-	if (!opts->params[0] || !opts->params[1]) {
-		g_warning ("usage: mu view [options] <file> [<files>]");
+
+	if (!view_params_valid(opts))
 		return MU_EXITCODE_ERROR;
-	}
 	
 	for (i = 1; opts->params[i]; ++i) {
 

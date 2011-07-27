@@ -31,6 +31,41 @@
 #include "mu-config.h"
 #include "mu-cmd.h"
 
+
+
+static MuConfigFormat
+get_output_format (const char *formatstr)
+{
+	int i;
+	struct {
+		const char*	name;
+		MuConfigFormat	format;
+	} formats [] = {
+		{"mutt-alias",  MU_CONFIG_FORMAT_MUTT_ALIAS},
+		{"mutt-ab",	MU_CONFIG_FORMAT_MUTT_AB},
+		{"wl",		MU_CONFIG_FORMAT_WL},
+		{"csv",		MU_CONFIG_FORMAT_CSV},
+		{"org-contact", MU_CONFIG_FORMAT_ORG_CONTACT},
+		{"bbdb",	MU_CONFIG_FORMAT_BBDB},
+		{"json",	MU_CONFIG_FORMAT_JSON,},
+		{"links",	MU_CONFIG_FORMAT_LINKS},
+		{"plain",	MU_CONFIG_FORMAT_PLAIN},
+		{"sexp",	MU_CONFIG_FORMAT_SEXP},
+		{"xml",		MU_CONFIG_FORMAT_XML},
+		{"xquery",	MU_CONFIG_FORMAT_XQUERY}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(formats); i++)
+		if (strcmp (formats[i].name, formatstr) == 0)
+			return formats[i].format;
+
+	return MU_CONFIG_FORMAT_UNKNOWN;
+}
+
+
+
+
+
 static void
 set_group_mu_defaults (MuConfig *opts)
 {
@@ -141,7 +176,10 @@ set_group_find_defaults (MuConfig *opts)
 	}
 
 	if (!opts->formatstr) /* by default, use plain output */
-		opts->formatstr = MU_CONFIG_FORMAT_PLAIN;
+		opts->format = MU_CONFIG_FORMAT_PLAIN;
+	else
+		opts->format =
+			get_output_format (opts->formatstr);
 		
 	if (opts->linksdir) {
 		gchar *old = opts->linksdir;
@@ -215,7 +253,10 @@ static void
 set_group_cfind_defaults (MuConfig *opts)
 {
 	if (!opts->formatstr) /* by default, use plain output */
-		opts->formatstr = MU_CONFIG_FORMAT_PLAIN;
+		opts->format = MU_CONFIG_FORMAT_PLAIN;
+	else
+		opts->format  = get_output_format (opts->formatstr);
+
 }
 
 
@@ -238,6 +279,15 @@ config_options_group_cfind (MuConfig *opts)
 }
 
 
+static void
+set_group_view_defaults (MuConfig *opts)
+{
+	if (!opts->formatstr) /* by default, use plain output */
+		opts->format = MU_CONFIG_FORMAT_PLAIN;
+	else
+		opts->format  = get_output_format (opts->formatstr);
+}
+
 static GOptionGroup *
 config_options_group_view (MuConfig *opts)
 {
@@ -247,6 +297,8 @@ config_options_group_view (MuConfig *opts)
 		 "only show a short summary of the message (false)", NULL},
 		{"terminate", 0, 0, G_OPTION_ARG_NONE, &opts->terminator,
 		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
+		{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
+		 "output format ('plain'(*), 'sexp')", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 		
@@ -410,6 +462,7 @@ mu_config_new (int *argcp, char ***argvp)
 	set_group_index_defaults (config);
 	set_group_find_defaults (config);
 	set_group_cfind_defaults (config);
+	set_group_view_defaults (config);
 	/* set_group_mkdir_defaults (config); */
 		
 	return config;
