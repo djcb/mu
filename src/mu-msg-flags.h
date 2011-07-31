@@ -60,7 +60,6 @@ enum _MuMsgFlags {
 	 * means (NEW or not SEEN) */
 	MU_MSG_FLAG_UNREAD      = 1 << 7,
 	
-	
 	/* these we get from the contents */
 	
 	/* "Z"->signed message */

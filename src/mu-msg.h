@@ -359,6 +359,21 @@ int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
 
 
 /**
+ * convert the msg to a Lisp symbolic expression (for further processing in
+ * e.g. emacs)
+ * 
+ * @param msg a valid message
+ * @param dbonly if TRUE, only include message fields which can be
+ * obtained from the database (this is much faster if the MuMsg is
+ * database-backed, so no file needs to be opened)
+ * 
+ * @return a string with the sexp (free with g_free) or NULL in case of error
+ */
+char* mu_msg_to_sexp (MuMsg *msg, gboolean dbonly);
+
+
+
+/**
  * move a message to another maildir; the function returns the full
  * path to the new message, and changes the msg to now point to the
  * new maildir
@@ -463,7 +478,8 @@ typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
 					      gpointer user_data);
 
 /**
- * call a function for each of the contacts in a message 
+ * call a function for each of the contacts in a message; the order is:
+ * from to cc bcc (of each there are zero or more)
  *
  * @param msg a valid MuMsgGMime* instance
  * @param func a callback function to call for each contact; when

@@ -172,7 +172,9 @@ set_group_find_defaults (MuConfig *opts)
 		if (!opts->sortfield) {
 			opts->sortfield = "d";
 			opts->descending = TRUE;
-		}
+		} else
+			opts->descending = FALSE;
+		
 	}
 
 	if (!opts->formatstr) /* by default, use plain output */
