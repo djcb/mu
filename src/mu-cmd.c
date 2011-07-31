@@ -38,6 +38,14 @@
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
 
+static gboolean
+view_msg_sexp (MuMsg *msg)
+{
+	fputs (mu_msg_to_sexp (msg, FALSE), stdout);
+	return TRUE;
+}
+
+
 static void
 each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
 {
@@ -114,7 +122,7 @@ body_or_summary (MuMsg *msg, gboolean summary, gboolean color)
 
 /* we ignore fields for now */
 static gboolean
-view_msg (MuMsg *msg, const gchar *fields, gboolean summary,
+view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 	  gboolean color)
 {
 	gchar *attachs;
@@ -164,11 +172,18 @@ handle_msg (const char *fname, MuConfig *opts)
 		g_error_free (err);
 		return MU_EXITCODE_ERROR;
 	}
-	
-	if (view_msg (msg, NULL, opts->summary, opts->color))
-		rv = MU_EXITCODE_OK;
-	else
+
+	switch (opts->format) {
+	case MU_CONFIG_FORMAT_PLAIN:
+		rv = view_msg_plain (msg, NULL, opts->summary, opts->color);
+		break;
+	case MU_CONFIG_FORMAT_SEXP:
+		rv = view_msg_sexp (msg);
+		break;
+	default:
+		g_critical ("bug: should not be reached");
 		rv = MU_EXITCODE_ERROR;
+	}
 	
 	mu_msg_unref (msg);
 

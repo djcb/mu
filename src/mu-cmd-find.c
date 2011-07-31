@@ -709,6 +709,38 @@ print_attr_xml (const char* elm, const char *str)
 	g_free (esc);
 }
 
+
+
+static gboolean
+output_sexp (MuMsgIter *iter, size_t *count)
+{
+	MuMsgIter *myiter;
+	size_t mycount;
+	
+	g_return_val_if_fail (iter, FALSE);
+	
+	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
+	     mu_msg_iter_next (myiter), ++mycount) {
+
+		MuMsg *msg;
+		char *sexp;
+		
+		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		if (!msg)
+			return FALSE;
+
+		sexp = mu_msg_to_sexp (msg, TRUE);
+		fputs (sexp, stdout);
+		g_free (sexp);
+	}
+
+			
+	if (count)
+		*count = mycount;
+	
+	return TRUE;
+}
+
 static gboolean
 output_xml (MuMsgIter *iter, size_t *count)
 {
@@ -761,7 +793,7 @@ print_attr_json (const char* elm, const char *str, gboolean comma)
 	if (!str || strlen(str) == 0)
 		return; /* empty: don't include */
 	
-	esc = mu_str_escape_c_literal (str);
+	esc = mu_str_escape_c_literal (str, FALSE);
 	g_print ("\t\t\t\"%s\":\"%s\"%s\n", elm, esc, comma ? "," : "");
 	g_free (esc);
 }
@@ -793,6 +825,7 @@ output_json (MuMsgIter *iter, size_t *count)
 		print_attr_json ("to", mu_msg_get_to (msg),TRUE);
 		print_attr_json ("cc", mu_msg_get_cc (msg),TRUE);
 		print_attr_json ("subject", mu_msg_get_subject (msg), TRUE);
+		/* emacs likes it's date in a particular way... */		
 		g_print ("\t\t\t\"date\":%u,\n",
 			 (unsigned) mu_msg_get_date (msg));
 		g_print ("\t\t\t\"size\":%u,\n",
@@ -809,74 +842,6 @@ output_json (MuMsgIter *iter, size_t *count)
 	
 	return TRUE;
 }
-
-
-static void
-print_attr_sexp (const char* elm, const char *str, gboolean nl)
-{
-	gchar *esc;
-	
-	if (!str || strlen(str) == 0)
-		return; /* empty: don't include */
-
-	esc = mu_str_escape_c_literal (str);
-	
-	g_print ("    :%s \"%s\"%s", elm, esc, nl ? "\n" : "");
-	g_free (esc);
-}
-
-static void
-output_sexp_date (time_t t)
-{
-	unsigned date_high, date_low;
-
-	/* emacs likes it's date in a particular way... */
-	date_high = t >> 16;
-	date_low  = t & 0xffff;
-
-	g_print ("    :date %u\n", (unsigned)t);
-	g_print ("    :date-high %u\n", date_high);
-	g_print ("    :date-low %u\n", date_low);
-}
-
-static gboolean
-output_sexp (MuMsgIter *iter, size_t *count)
-{
-	MuMsgIter *myiter;
-	size_t mycount;
-		g_return_val_if_fail (iter, FALSE);
-	
-	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
-	     mu_msg_iter_next (myiter), ++mycount) {
-		
-		MuMsg *msg;
-		if (!(msg = mu_msg_iter_get_msg (iter, NULL))) /* don't unref */
-			return FALSE;
-		
-		if (mycount != 0)
-			g_print ("\n");
-		
-		g_print ("(%u\n", (unsigned)mycount);
-		print_attr_sexp ("from", mu_msg_get_from (msg),TRUE);
-		print_attr_sexp ("to", mu_msg_get_to (msg),TRUE);
-		print_attr_sexp ("cc", mu_msg_get_cc (msg),TRUE);
-		print_attr_sexp ("subject", mu_msg_get_subject (msg),TRUE);
-		output_sexp_date (mu_msg_get_date (msg));
-		g_print ("    :size %u\n", (unsigned) mu_msg_get_size (msg));
-		print_attr_sexp ("msgid", mu_msg_get_msgid (msg),TRUE);
-		print_attr_sexp ("path", mu_msg_get_path (msg),TRUE);
-		print_attr_sexp ("maildir", mu_msg_get_maildir (msg),FALSE);
-		g_print (")\n;;eom");
-	}
-
-	fputs ("\n", stdout);
-	
-	if (count)
-		*count = mycount;
-	
-	return TRUE;
-}
-
 
 
 MuExitCode
