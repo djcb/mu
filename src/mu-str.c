@@ -435,7 +435,7 @@ mu_str_fullpath_s (const char* path, const char* name)
 
 
 char*
-mu_str_escape_c_literal (const gchar* str)
+mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
 {
 	const char* cur;
 	GString *tmp;
@@ -443,6 +443,10 @@ mu_str_escape_c_literal (const gchar* str)
 	g_return_val_if_fail (str, NULL);
 	
 	tmp = g_string_sized_new (2 * strlen(str));
+
+	if (in_quotes)
+		g_string_append_c (tmp, '"');
+	
 	for (cur = str; *cur; ++cur)
 		switch (*cur) {
 		case '\\': tmp = g_string_append   (tmp, "\\\\"); break;
@@ -450,6 +454,9 @@ mu_str_escape_c_literal (const gchar* str)
 		default:   tmp = g_string_append_c (tmp, *cur);
 		}
 
+	if (in_quotes)
+		g_string_append_c (tmp, '"');
+	
 	return g_string_free (tmp, FALSE);
 }
 
