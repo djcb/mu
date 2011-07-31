@@ -18,6 +18,21 @@
   can then be queried using a custom query language.
   
 ** News
+   :PROPERTIES:
+   :ID:       27775509-4d58-4d60-b0e9-651dce225f0c
+   :END:
+
+   - 2011-07-31: mu *0.9.7-pre* is now available with a number of interesting
+     new features and fixes, many based on user suggestions. =mu= now supports
+     /mail threading/ based on the [[http://www.jwz.org/doc/threading.html][JWZ-algorithm]]; output is now automatically
+     converted to the user-locale; =mu view= can output separators between
+     messages for easier processing, support for X-Label-tags, and last but not
+     least, =mu= now has bindings for the [[http://www.gnu.org/s/guile/][Guile]] (Scheme) programming language -
+     there is a new toy (=toys/muile=) that allows you to inspect messages and
+     do all kinds of statistics - see the [[https://gitorious.org/mu/mu/blobs/master/toys/muile/README][README]] for more information.
+
+     Note, the repository name has changed, it's now at: https://gitorious.org/mu/mu.
+    
 
    - 2011-06-02: after quite a bit of testing, *0.9.6* has been promoted to be
      the next release -- forget about the 'bèta'. Development continues for
@@ -44,7 +59,7 @@
      web page with pages for [[file:mug.org][mug]] (the experimental UI) and the [[file:cheatsheet.org][mu cheatsheet]].
      
    - 2011-02-02: *mu 0.9.2* released, which adds support for matching on message
-     size, and various new output format. See [[http://gitorious.org/mu/mu-ng/blobs/master/NEWS][NEWS]] for all the user-visible
+     size, and various new output format. See [[http://gitorious.org/mu/mu/blobs/master/NEWS][NEWS]] for all the user-visible
      changes, also from older releases.
 
    - [[file:old-news.org][Old news]]
@@ -67,15 +82,18 @@
    In addition, there is a toy UI for *mu* called [[file:mug.org][mug]]; the plan is to slowly
    evolve this into a full-featured UI.
    
-** Development & download 
+** Development & download
+   :PROPERTIES:
+   :ID:       19324381-696d-4c7e-aff2-528174780fd5
+   :END: 
 
    Some Linux-distributions already provide pre-built mu packages; if there's no
    packagage for your distribution, or if you want the latest release, you can
    [[http://code.google.com/p/mu0/downloads/list][download mu source packages]] from Google Code. In case you find a bug, or have
    a feature requests, please use the [[http://code.google.com/p/mu0/issues/list][issue tracker]].
   
-   If you'd like to work with the mu source code, you can find it [[http://gitorious.org/mu/mu-ng][in Gitorious]];
-   also, see the notes on [[http://gitorious.org/mu/mu-ng/blobs/master/HACKING][HACKING]] the mu source code.
+   If you'd like to work with the mu source code, you can find it [[http://gitorious.org/mu/mu][in Gitorious]];
+   also, see the notes on [[http://gitorious.org/mu/mu/blobs/master/HACKING][HACKING]] the mu source code.
  
    There's also a [[http://groups.google.com/group/mu-discuss][mailing list]].
    

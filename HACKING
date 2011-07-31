@@ -103,8 +103,8 @@
 
    Anyhow, to compile straight from git:
 
-   $ git clone git://gitorious.org/mu/mu-ng.git
-   $ cd mu-ng
+   $ git clone git://gitorious.org/mu/mu.git
+   $ cd mu
    $ autoreconf -i 
    $ ./configure
    $ make
