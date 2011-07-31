@@ -71,7 +71,7 @@ fixme:
 # check whether we can run make distcheck from the repo version
 gitcheck:
 	cd `mktemp -d`; \
-	git clone git://gitorious.org/mu/mu-ng.git ; \
+	git clone git://gitorious.org/mu/mu.git ; \
 	cd mu-ng ; \
 	autoreconf -i ;\
 	./configure ; \
