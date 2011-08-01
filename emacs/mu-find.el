@@ -200,7 +200,7 @@ the mu find output")
 		   'mu-subject-face)))))
 	 mu-find-fields " "))))
     (setq hdr (mu-find-set-props-for-flags hdr (plist-get msg :flags)))
-    (propertize hdr 'path (plist-get msg :path))))
+    (propertize hdr 'path (plist-get msg :path) 'front-sticky t)))
 
 (defun mu-find-set-props-for-flags (hdr flags)
   "set text properties/faces based on flags"
@@ -221,37 +221,34 @@ the mu find output")
 
 (defvar mu-find-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "q" 'mu-find-quit)
+    (define-key map "q" 'mu-quit-buffer)
     (define-key map "s" 'mu-find-change-sort)
     (define-key map "g" 'mu-find-refresh)
+
+    ;; marking/unmarking
     (define-key map "m" 'mu-find-mark-for-move)
-    (define-key map "d" 'mu-find-mark-for-deletion)
+    (define-key map "d" 'mu-find-mark-for-trash)
+    (define-key map "D" 'mu-find-mark-for-deletion)
     (define-key map "u" 'mu-find-unmark)
-    (define-key map "r" 'mu-find-reply)
-    (define-key map "f" 'mu-find-forward)
-    
-    (define-key map (kbd "RET") 'mu-find-message-display)
+
+    ;; message composition
+    (define-key map "r" 'mu-reply)
+    (define-key map "f" 'mu-forward)
+    (define-key map (kbd "RET") 'mu-find-view)
     map)
   "Keymap for \"mu-find\" buffers.")
 (fset 'mu-find-mode-map mu-find-mode-map)
 
-
-(defun mu-find-message-display ()
+(defun mu-find-view ()
   "display the message at the current line"
   (interactive)
-  (let ((path (mu-find-get-path)))
+  (let ((path (mu-get-path)))
     (when path (mu-view path))))
-
-(defun mu-find-quit ()
-  "kill this headers buffer"
-  (interactive)
-  (when (equalp major-mode 'mu-find-mode)
-    (kill-buffer)))
 
 (defun mu-find-next  ()
   "go to the next line; t if it worked, nil otherwise"
   (interactive)
-  (if (or (/= 0 (forward-line 1)) (not (mu-find-get-path)))    
+  (if (or (/= 0 (forward-line 1)) (not (mu-get-path)))    
     (progn (message "No message after this one") nil)
     t))
 
@@ -303,22 +300,30 @@ the mu find output")
 
 (defun mu-find-mark (what)
  "mark the current msg for 'trash, 'move, 'none"
-  (when (mu-find-get-path)
+  (when (mu-get-path)
     (move-beginning-of-line 1)
     (let ((inhibit-read-only t) (overwrite-mode nil))
-      (if (get-text-property (point) 'action)
-	(message "Message is already marked")
+      (if (and (not (eq what 'none)) (get-text-property (point) 'action))
+	(message "Message at pooint is already marked")
 	(progn
-	    (delete-char 1)
-	    (case what
-	      ('trash (insert-and-inherit (mu-str (propertize "d" 'action what))))
-	      ('move  (insert-and-inherit (mu-str (propertize "m" 'action what))))
-	      ('none  (insert-and-inherit " ")))
+	  (delete-char 1)
+	  (case what
+	    ('trash (insert-and-inherit
+		      (mu-str (propertize "d" 'action what))))
+	    ('delete (insert-and-inherit
+		      (mu-str (propertize "D" 'action what))))
+	    ('move  (insert-and-inherit
+		      (mu-str (propertize "m" 'action what))))
+	    ('none  (insert-and-inherit " ")))
 	  (forward-line))))))
   
-(defun mu-find-mark-for-deletion ()
+(defun mu-find-mark-for-trash ()
   (interactive)
   (mu-find-mark 'trash))
+
+(defun mu-find-mark-for-deletion ()
+  (interactive)
+  (mu-find-mark 'delete))
 
 (defun mu-find-mark-for-move ()
   (interactive)
@@ -333,33 +338,6 @@ the mu find output")
   (interactive)
   (and (call-interactively 'mu-find-change-sort-order)
     (call-interactively 'mu-find-change-sort-direction)))
-
-(defun mu-find-inspect ()
-  "inspect this message in a Scheme environment"
-  (interactive)
-  (let ((path (mu-find-get-path)))
-    (when path (mu-inspect path))))
-
-(defun mu-find-get-path ()
-  "get the path of the message at point"
-  (let ((path (get-text-property (point) 'path)))
-    (unless path (message "No message at this line"))
-    path))
-
-(defun mu-find-reply ()
-  "reply to the message at point"
-  (interactive)
-  (let ((path (mu-find-get-path)))
-    (when path
-      (mu-message-reply (mu-find-get-path)))))
-
-(defun mu-find-forward ()
-  "forward the message at point"
-  (interactive)
-  (let ((path (mu-find-get-path)))
-    (when path
-      (mu-message-forward (mu-find-get-path)))))
-
 
 (provide 'mu-find)
   

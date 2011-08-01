@@ -92,5 +92,60 @@ etc.)"
 
 (setq mu-own-address-regexp "djcb\\|diggler\\|bulkmeel")
 
-	
+(defun mu-ask-key (prompt)
+  "Get a char from user, only accepting characters marked with [x] in prompt,
+e.g. 'Reply to [a]ll or [s]ender only; returns the character chosen"
+  (let ((match 0) (kars '()))
+    (while match
+      (setq match (string-match "\\[\\(.\\)\\]" prompt match))
+      (when match
+	(setq kars (cons (match-string 1 prompt) kars))
+	(setq match (+ 1 match))))
+    (let ((kar)
+	   (prompt (replace-regexp-in-string 
+		     "\\[\\(.\\)\\]"
+		     (lambda(s) (propertize (substring s 1 -1) 'face 'highlight))
+		     prompt)))
+      (while (not kar)
+	(setq kar (read-char-exclusive prompt))
+	(unless (member (string kar) kars)
+	  (setq kar nil)))
+      kar)))
+
+
+;; both in mu-find.el and mu-view.el we have the path as a text property; in the
+;; latter case we could have use a buffer-local variable, but using a
+;; text-property makes this function work for both
+(defun mu-get-path ()
+  "get the path (a string) of the message at point or nil if it
+is not found; this works both for the header list and when
+viewing a message"
+  (let ((path (get-text-property (point) 'path)))
+    (unless path (message "No message at point"))
+    path))
+
+(defun mu-reply ()
+  "reply to the message at point"
+  (interactive)
+  (let ((path (mu-get-path)))
+    (when path (mu-message-reply path))))
+
+(defun mu-forward ()
+  "forward the message at point"
+  (interactive)
+  (let ((path (mu-find-get-path)))
+    (when path (mu-message-forward path))))
+
+;; todo: check for unhandled marks
+(defun mu-quit-buffer ()
+  "kill this find or view buffer"
+  (interactive)
+  (if (or (equalp major-mode 'mu-find-mode)
+	  (equalp major-mode 'mu-view-mode))
+    (kill-buffer)))
+
+
+
+
+
 (provide 'mu-common)

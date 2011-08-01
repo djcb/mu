@@ -27,8 +27,9 @@
 ;; forwarding
 
 ;;; Code:
+(require 'mu-common)
 
-(defvar mu-message-citation-prefix " > "
+(defvar mu-message-citation-prefix "> "
   "string to prefix cited message parts with")
 
 (defvar mu-message-reply-prefix "Re:"
@@ -37,9 +38,12 @@
 (defvar mu-message-forward-prefix "Fwd:"
   "string to prefix the subject of forwarded messages with")
 
-
 (defun mu-message-user-agent ()
-  (format "mu %s; emacs %s" (mu-binary-version) emacs-version))7
+  (format "mu %s; emacs %s" (mu-binary-version) emacs-version))
+
+
+
+
 
 (defun mu-message-attribution (msg)
   "get an attribution line for a quoted message"
@@ -57,28 +61,41 @@
 	    "")))
     (replace-regexp-in-string "^" " > " body)))
 
+(defun mu-message-recipients-remove (email lst)
+  "remove the recipient with EMAIL from the recipient list (of
+form '( (\"A\" . \"a@example.com\") (\"B\" . \"B@example.com\"))"
+  (remove-if (lambda (c) (string= email (downcase (cdr c))) lst)))
+
+(defun mu-message-recipients-to-string (lst)
+  "convert a recipient list (of form '( (\"A\"
+. \"a@example.com\") (\"B\" . \"B@example.com\") into a string
+useful for from/to headers"
+  (mapconcat
+    (lambda (recip)
+      (let ((name (car recip) (email (cdr recip))))
+	(format "%s <%s>" (or name "") email))) lst ","))
+
 
 (defun mu-message-hidden-header (hdr val)
   "return user-invisible header to the message (HDR: VAL\n)"
   (propertize (format "%s: %s\n" hdr val) 'invisible t))
 
-
-(defun mu-message-reply-or-forward (path &optional forward)
+(defun mu-message-reply-or-forward (path &optional forward reply-all)
   "create a reply to the message at PATH; if FORWARD is non-nil,
 create a forwarded message. After creation, switch to the message editor"
   (let* ((cmd (concat mu-binary " view --format=sexp " path))
 	  (str (shell-command-to-string cmd))
-	  (msglst (read-from-string str))
-	  (msg (car msglst))
-	  (buf (get-buffer-create (generate-new-buffer-name "*mu-draft*"))))
+	  (msg (car (read-from-string str)))
+	  (buf (get-buffer-create
+		 (generate-new-buffer-name "*mu-draft*"))))
     (with-current-buffer buf
       (insert
 	(format "From: %s <%s>\n" user-full-name user-mail-address)
 	(mu-message-hidden-header "User-agent" (mu-message-user-agent)))
 
-      (when mail-reply-to
+      (when (boundp 'mail-reply-to)
 	(insert (format "Reply-To: %s\n" mail-reply-to)))
-
+      
       (if forward
 	(insert
 	  "To:\n"
@@ -92,7 +109,7 @@ create a forwarded message. After creation, switch to the message editor"
 	(mu-message-attribution msg)
 	(mu-message-cite msg))
       
-      (when mail-signature (insert mail-signature))
+      ;;      (when mail-signature (insert mail-signature))
       
       (message-mode)
 
@@ -106,9 +123,12 @@ create a forwarded message. After creation, switch to the message editor"
 (defun mu-message-reply (path)
   "create a reply to the message at PATH; After creation, switch
 to the message editor"
+  (mu-ask-key "Reply to [s]ender only or to [a]ll?")
   (mu-message-reply-or-forward path))
 
 (defun mu-message-forward (path)
   "create a forward-message to the message at PATH; After
 creation, switch to the message editor"
   (mu-message-reply-or-forward path t))
+
+(provide 'mu-message)

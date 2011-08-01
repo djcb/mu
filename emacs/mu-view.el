@@ -107,10 +107,24 @@
       (when buf (kill-buffer buf))
       (get-buffer-create mu-view-buffer-name)
       (with-current-buffer mu-view-buffer-name
-	(let ((inhibit-read-only t)) (insert str))
+	(let ((inhibit-read-only t))
+	  ;; note, we set the path as a text-property
+	  (insert (propertize str 'path path)))
 	(switch-to-buffer mu-view-buffer-name)
 	(mu-view-mode)
 	(goto-char (point-min))))))
+
+(defvar mu-view-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "q" 'mu-view-quit-buffer)
+    (define-key map "s" 'mu-find)
+    (define-key map "f" 'mu-forward)
+    (define-key map "r" 'mu-reply)
+    (define-key map "n" 'mu-view-next)
+    (define-key map "p" 'mu-view-prev)  
+    map)
+  "Keymap for \"mu-view\" buffers.")
+(fset 'mu-view-mode-map mu-view-mode-map)
 
 (defun mu-view-mode ()
   "major mode for viewing an e-mail message"
@@ -120,34 +134,22 @@
   (setq major-mode 'mu-view-mode mode-name "*mu-view*")
   (setq truncate-lines t buffer-read-only t))
 
-(defvar mu-view-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "q" 'mu-view-quit)
-    (define-key map "s" 'mu-find)
-    (define-key map "n" 'mu-view-next)
-    (define-key map "p" 'mu-view-prev)  
-    map)
-  "Keymap for \"mu-view\" buffers.")
-(fset 'mu-view-mode-map mu-view-mode-map)
-
-(defun mu-view-quit ()
-  "kill this headers buffer"
-  (interactive)
-  (when (equalp major-mode 'mu-view-mode)
-    (kill-buffer)
-    (if (get-buffer mu-find-buffer-name)
-      (switch-to-buffer mu-find-buffer-name))))
-
 (defun mu-view-next ()
   (interactive)
   (with-current-buffer mu-find-buffer-name
     (when (mu-find-next)
-      (mu-view (mu-find-get-path)))))
+      (mu-view (mu-get-path)))))
 
 (defun mu-view-prev ()
   (interactive)
   (with-current-buffer mu-find-buffer-name
     (when (mu-find-prev)
-      (mu-view (mu-find-get-path)))))
+      (mu-view (mu-get-path)))))
+
+(defun mu-view-quit-buffer ()
+  "quit this buffer and return to the find buffer"
+  (interactive)
+  (mu-quit-buffer)
+  (switch-to-buffer mu-find-buffer-name))
 
 (provide 'mu-view)
