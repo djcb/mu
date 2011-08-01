@@ -355,13 +355,14 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 	} Cmd;
 		
 	Cmd cmd_map[] = {
-		{ "index",   MU_CONFIG_CMD_INDEX },
-		{ "find",    MU_CONFIG_CMD_FIND },
-		{ "cleanup", MU_CONFIG_CMD_CLEANUP },
-		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
-		{ "view",    MU_CONFIG_CMD_VIEW },
-		{ "extract", MU_CONFIG_CMD_EXTRACT },
 		{ "cfind",   MU_CONFIG_CMD_CFIND },
+		{ "cleanup", MU_CONFIG_CMD_CLEANUP },
+		{ "extract", MU_CONFIG_CMD_EXTRACT },
+		{ "find",    MU_CONFIG_CMD_FIND },
+		{ "index",   MU_CONFIG_CMD_INDEX },
+		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
+		{ "mv",      MU_CONFIG_CMD_MV },
+		{ "view",    MU_CONFIG_CMD_VIEW },
 	};
 		
 	opts->cmd	 = MU_CONFIG_CMD_NONE;
@@ -405,6 +406,9 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 		break;
 	case MU_CONFIG_CMD_EXTRACT:
 		group = config_options_group_extract (opts);
+		break;
+	case MU_CONFIG_CMD_MV: /* no options for this one yet */
+		/* group = config_options_group_mv (opts); */
 		break;
 	case MU_CONFIG_CMD_CFIND:
 		group = config_options_group_cfind (opts);
@@ -527,13 +531,14 @@ mu_config_execute (MuConfig *opts)
 	}
 		
 	switch (opts->cmd) {
+	case MU_CONFIG_CMD_CFIND:      return mu_cmd_cfind (opts);
 	case MU_CONFIG_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
 	case MU_CONFIG_CMD_EXTRACT:    return mu_cmd_extract (opts);
 	case MU_CONFIG_CMD_FIND:       return mu_cmd_find (opts);
 	case MU_CONFIG_CMD_INDEX:      return mu_cmd_index (opts);
 	case MU_CONFIG_CMD_MKDIR:      return mu_cmd_mkdir (opts);
+	case MU_CONFIG_CMD_MV:         return mu_cmd_mv (opts);
 	case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
-	case MU_CONFIG_CMD_CFIND:      return mu_cmd_cfind (opts);
 	case MU_CONFIG_CMD_UNKNOWN:
 		g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
 		show_usage (FALSE);

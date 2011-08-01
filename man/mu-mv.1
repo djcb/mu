@@ -1,0 +1,75 @@
+.TH MU MV 1 "August 2011" "User Manuals"
+
+.SH NAME 
+
+mu mv\-  move a message file to a Maildir 
+
+.SH SYNOPSIS
+
+.B mu mv <source-path> <target-maildir>
+
+.SH DESCRIPTION
+
+\fBmu mv\fR is the \fBmu\fR sub-command for moving mail files to new
+directories. It does \fBnot\fR use the mu database. The command is
+deliberately limited and tries hard to maintain the Maildir-integrity and to
+minimize chance of accidents
+
+The \fIsource-path\fR must be a full, absolute path to the message you want to
+move, while the \fItarget-maildir\fR is the path to the maildir, but
+\fBwithout\fR the 'cur' or 'new' part - that part will be constructed from the
+source message, so that message that live in 'new' will also be in 'new' in
+the target, and the same for 'cur'. If needed, consult the \fBmaildir(5)\fR
+documentation for details about 'cur' and 'new'.
+
+As a special case, when \fI/dev/null\fR is specified as the target directory,
+the mail file will be unlinked (deleted).
+
+Note, unlike the UNIX \fImv\fR command, \fImu mv\fR takes precisely two
+parameters. It's recommended not to use wildcards on the shell, the result may
+be unexpected.
+
+.SH EXAMPLE
+
+To move a message \fI/home/jimbo/Maildir/scuba/cur/123123123:2,S\fR to
+\fI/home/jimbo/Maildir/archive\fR, you can use:
+
+.nf
+   mu mv /home/jimbo/Maildir/scuba/cur/123123123:2,S /home/jimbo/Maildir/archive
+.fi
+
+This will move the message to the new path:
+\fI/home/jimbo/Maildir/archive/cur/123123123:2,S\fR.
+
+To remove a message \fI/home/fred/Maildir/trash/cur/123123123:2,S\fR, you
+could do:
+
+.nf
+   mu mv /home/fred/Maildir/trash/cur/123123123:2,S /dev/null
+.fi
+
+Obviously, you could also simply use \fBrm\fR in this case.
+
+.SH LIMITATIONS
+
+Both source-path and target-directory must be on the same disk partition,
+except when the target-directory is \fI/dev/null\fR.
+
+.SH OPTIONS
+
+\fBmu mv\fR takes no options.
+
+.SH BUGS
+
+Please report bugs if you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR maildir(5)
+.BR mu(1)
+.BR chmod(1)

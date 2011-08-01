@@ -774,6 +774,67 @@ msg_move (const char* oldpath, const char *newfullpath, GError **err)
 	return TRUE;
 }
 
+
+/*
+ * move a msg to another maildir, trying to maintain 'integrity',
+ * ie. msg in 'new/' will go to new/, one in cur/ goes to cur/. be
+ * super-paranoid here...
+ */
+gchar*
+mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
+			     GError **err)
+{
+	MaildirType mtype;
+	char *newfullpath;
+	gboolean rv;
+	
+	g_return_val_if_fail (oldpath, FALSE);
+	g_return_val_if_fail (targetmdir, FALSE);
+
+	if (!g_path_is_absolute(oldpath)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "source is not an absolute path: '%s'", oldpath);
+		return FALSE;
+	}
+
+	mtype = get_maildir_type (oldpath);
+	if (mtype != MAILDIR_TYPE_CUR && mtype != MAILDIR_TYPE_NEW) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "source is not in a 'cur' or 'new' maildir: '%s'",
+			     oldpath);
+		return FALSE;
+	}
+	
+	if (!g_path_is_absolute(targetmdir)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "target is not an absolute path: '%s'", targetmdir);
+		return FALSE;
+	}
+
+	if (!mu_util_check_dir (targetmdir, TRUE, TRUE)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "target is not a read-writable dir: '%s'", targetmdir);
+		return FALSE;
+	}
+	
+	newfullpath = get_new_fullpath (oldpath, targetmdir, mtype);
+	if (!newfullpath) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "failed to determine target full path");
+		return FALSE;
+	}
+	
+	rv = msg_move (oldpath, newfullpath, err);
+
+	if (!rv) {
+		g_free (newfullpath);
+		return NULL;
+	}
+	
+	return newfullpath;
+}
+
+
 /*
  * move a msg to another maildir, trying to maintain 'integrity',
  * ie. msg in 'new/' will go to new/, one in cur/ goes to cur/. be
@@ -782,36 +843,19 @@ msg_move (const char* oldpath, const char *newfullpath, GError **err)
 gboolean
 mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir, GError **err)
 {
-	const char *oldpath;
-	MaildirType mtype;
 	char *newfullpath;
 	
 	g_return_val_if_fail (self, FALSE);
 	g_return_val_if_fail (targetmdir, FALSE);
-	g_return_val_if_fail (g_path_is_absolute(targetmdir), FALSE);
-	g_return_val_if_fail (mu_util_check_dir (targetmdir, TRUE, TRUE), FALSE);
 
-	oldpath = mu_msg_get_path (self);
-	
-	mtype = get_maildir_type (oldpath);
-	g_return_val_if_fail (mtype==MAILDIR_TYPE_CUR||mtype==MAILDIR_TYPE_NEW,
-			  FALSE);	
-	
-	newfullpath = get_new_fullpath (oldpath, targetmdir, mtype);
-	g_return_val_if_fail (newfullpath, FALSE);
-
-	if (!msg_move (oldpath, newfullpath, err))
-		goto error;
-	
-	/* update our path to new one... */
-	mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
-			      TRUE);
-	return TRUE;
-	
-error:
-	g_free (newfullpath);
-	return FALSE;
-
+	newfullpath = mu_msg_file_move_to_maildir (mu_msg_get_path (self),
+					  targetmdir, err);
+	if (newfullpath) /* update our path to new one... */
+		mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
+				      TRUE); /* the cache will free the string */
+		
+	return newfullpath ? TRUE : FALSE;
 }
+
 
 

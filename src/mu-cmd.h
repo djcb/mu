@@ -95,6 +95,19 @@ MuExitCode mu_cmd_extract (MuConfig *opts);
 
 
 /**
+ * execute the 'mv' command
+ * 
+ * @param opts configuration options
+ * 
+ * @return MU_EXITCODE_OK (0) if the command succeeds,
+ * MU_EXITCODE_ERROR otherwise
+ */
+MuExitCode mu_cmd_mv (MuConfig *opts);
+
+
+
+
+/**
  * execute the cfind command
  * 
  * @param opts configuration options

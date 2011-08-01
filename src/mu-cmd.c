@@ -273,3 +273,41 @@ mu_cmd_mkdir (MuConfig *opts)
 	return MU_EXITCODE_OK;
 }
 
+
+
+MuExitCode
+mu_cmd_mv (MuConfig *opts)
+{
+	GError *err;
+	gchar *fullpath;
+
+	
+	if (!opts->params[1] || !opts->params[2]) {
+		g_warning ("usage: mu mv <sourcefile> <targetmaildir>");
+		return MU_EXITCODE_ERROR;
+	}
+
+	err = NULL;
+
+	/* special case: /dev/null */
+	if (strcmp (opts->params[2], "/dev/null") == 0) {
+		if (unlink (opts->params[1]) != 0) {
+			g_warning ("unlink failed: %s", strerror (errno));
+			return MU_EXITCODE_ERROR;
+		} else
+			return MU_EXITCODE_OK;
+	}
+	
+	
+	fullpath = mu_msg_file_move_to_maildir (opts->params[1], opts->params[2],
+						&err);
+	if (!fullpath) {
+		if (err) {
+			g_warning ("move failed: %s", err->message);
+			g_error_free (err);
+		}
+		return MU_EXITCODE_ERROR;	
+	}
+	
+	return MU_EXITCODE_OK;
+}

@@ -69,6 +69,8 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_VIEW,
 	MU_CONFIG_CMD_EXTRACT,
 	MU_CONFIG_CMD_CFIND,
+	MU_CONFIG_CMD_MV,
+	
 	MU_CONFIG_CMD_NONE,
 };
 typedef enum _MuConfigCmd MuConfigCmd;
