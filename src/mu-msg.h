@@ -388,17 +388,16 @@ char* mu_msg_to_sexp (MuMsg *msg, gboolean dbonly);
  * 'cur' or 'new' part. mu_msg_move_to_maildir will make sure that the
  * copy is from new/ to new/ and cur/ to cur/. Also note that the target
  * maildir must be on the same filesystem. *
+ * @param flags to set for the target (influences the filename)
  * @param err (may be NULL) may contain error information; note if the
  * function return FALSE, err is not set for all error condition
  * (ie. not for parameter errors)
  * @return TRUE if it worked, FALSE otherwise (mu_msg_move_to_maildir) or the full path name of the target file (g_free) for mu_msg_file_move_to_maildir
  */
 gboolean mu_msg_move_to_maildir (MuMsg *msg, const char* targetmdir,
-				 GError **err);
+				 MuMsgFlags flags, GError **err);
 char* mu_msg_file_move_to_maildir (const char *msgpath, const char* targetmdir,
-				   GError **err);
-
-
+				   MuMsgFlags flags, GError **err);
 
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO    = 0,

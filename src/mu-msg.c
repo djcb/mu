@@ -34,7 +34,7 @@
 #include "mu-util.h"
 #include "mu-str.h"
 
-
+#include "mu-maildir.h"
 
 static MuMsg*
 msg_new (void)
@@ -707,7 +707,7 @@ get_maildir_type (const char *path)
 
 char*
 get_new_fullpath (const char *oldpath, const char *targetmdir,
-		  MaildirType mtype)
+		  MaildirType mtype, MuMsgFlags flags)
 {
 	char *filename, *newfullpath;
 	const char* mdirsub;
@@ -731,8 +731,18 @@ get_new_fullpath (const char *oldpath, const char *targetmdir,
 				       G_DIR_SEPARATOR,
 				       filename);
 	g_free (filename);
+
+	/* if flags != MU_MSG_FLAG_UNKNOWN, we update the filename for
+	 * the new flags; in case the NEW flag is set/unset, this can
+	 * also influence the dir */
+	if (flags != MU_MSG_FLAG_NONE) {
+		gchar *tmp;
+		tmp = mu_maildir_get_path_from_flags (newfullpath, flags);
+		newfullpath = tmp;
+		g_free (tmp);
+	}
+
 	return newfullpath;
-	
 }
 
 
@@ -782,7 +792,7 @@ msg_move (const char* oldpath, const char *newfullpath, GError **err)
  */
 gchar*
 mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
-			     GError **err)
+			     MuMsgFlags flags, GError **err)
 {
 	MaildirType mtype;
 	char *newfullpath;
@@ -816,8 +826,8 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
 			     "target is not a read-writable dir: '%s'", targetmdir);
 		return FALSE;
 	}
-	
-	newfullpath = get_new_fullpath (oldpath, targetmdir, mtype);
+
+	newfullpath = get_new_fullpath (oldpath, targetmdir, mtype, flags);
 	if (!newfullpath) {
 		g_set_error (err, 0, MU_ERROR_FILE,
 			     "failed to determine target full path");
@@ -841,7 +851,8 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
  * super-paranoid here...
  */
 gboolean
-mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir, GError **err)
+mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir,
+			MuMsgFlags flags, GError **err)
 {
 	char *newfullpath;
 	
@@ -849,7 +860,7 @@ mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir, GError **err)
 	g_return_val_if_fail (targetmdir, FALSE);
 
 	newfullpath = mu_msg_file_move_to_maildir (mu_msg_get_path (self),
-					  targetmdir, err);
+						   targetmdir, flags, err);
 	if (newfullpath) /* update our path to new one... */
 		mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
 				      TRUE); /* the cache will free the string */
