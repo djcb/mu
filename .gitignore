@@ -5,3 +5,9 @@ mug2
 *html
 
 /contrib/gmime-test
+/toys/muile/muile
+/toys/muile/dummy.cc
+/libmuguile/mu-guile-log.x
+/libmuguile/mu-guile-msg.x
+/libmuguile/mu-guile-store.x
+/emacs/TODO
