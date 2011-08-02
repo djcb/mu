@@ -20,6 +20,7 @@
 
 #include "mu-str.h"
 #include "mu-msg.h"
+#include "mu-maildir.h"
 
 static void
 append_sexp_attr (GString *gstr, const char* elm, const char *str)
@@ -182,6 +183,8 @@ mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 	
 	append_sexp_attr (gstr, "msgid", mu_msg_get_msgid (msg));
 	append_sexp_attr (gstr, "path",	   mu_msg_get_path (msg));
+	
+	
 	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
 
 	g_string_append_printf (gstr, "\t:priority %s\n",

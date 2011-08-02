@@ -123,7 +123,7 @@ mu_msg_flag_char (MuMsgFlags flag)
 	case MU_MSG_FLAG_DRAFT:		return 'd';
 	case MU_MSG_FLAG_FLAGGED:	return 'f';
 
-		/* NEW OR NOT SEEN */
+	/* NEW OR NOT SEEN */
 	case MU_MSG_FLAG_UNREAD:        return 'u';
 		
 	case MU_MSG_FLAG_SIGNED:	return 'z';

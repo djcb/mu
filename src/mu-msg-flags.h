@@ -77,7 +77,7 @@ typedef enum _MuMsgFlags MuMsgFlags;
  * characters
  * D=draft,F=flagged,N=new,P=passed,R=replied,S=seen,T=trashed
  * a=has-attachment,s=signed, x=encrypted if any other characters are
- * seen, MU_MSG_FLAG_UNKNOWN is returned.
+ * seen, MU_MSG_FLAG_NONE is returned.
  * 
  * @param str a string
  * 
