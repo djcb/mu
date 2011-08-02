@@ -38,6 +38,7 @@
 #include "mu-contacts.h"
 #include "mu-runtime.h"
 #include "mu-msg-flags.h"
+#include "mu-store.h"
 
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
@@ -301,6 +302,52 @@ mv_check_params (MuConfig *opts, MuMsgFlags *flags)
 }
 
 
+static gboolean
+update_db_after_mv (MuConfig *opts, const char *src, const char* target)
+{
+	MuStore *store;
+	GError *err;
+	gboolean rv1, rv2;
+
+	err = NULL;
+	store = mu_store_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			      mu_runtime_path(MU_RUNTIME_PATH_CONTACTS), &err);
+	
+	if (!store) {
+		if (err) {
+			g_warning ("store error: %s", err->message);
+			g_error_free (err);
+		} else
+			g_warning ("failed to create store object");
+
+		return FALSE;
+	}
+
+	if (!(rv1 = mu_store_remove (store, src)))
+		g_warning ("failed to remove message from store");
+	
+	if (!(rv2 = mu_store_store_path (store, target)))
+		g_warning ("failed to store target message");
+	
+	mu_store_destroy (store);
+	
+	return rv1 && rv2;
+}
+
+static MuExitCode
+mv_remove (const char *path, MuConfig *opts)
+{
+	if (unlink (path) != 0) {
+		g_warning ("unlink failed: %s", strerror (errno));
+		return MU_EXITCODE_ERROR;
+	}
+
+	if (!opts->updatedb || update_db_after_mv (opts, path, NULL))
+		return MU_EXITCODE_OK;
+	else
+		return MU_EXITCODE_DB_UPDATE_ERROR;
+}
+
 
 MuExitCode
 mu_cmd_mv (MuConfig *opts)
@@ -308,21 +355,17 @@ mu_cmd_mv (MuConfig *opts)
 	GError *err;
 	gchar *fullpath;
 	MuMsgFlags flags;
-
+	MuExitCode rv;
+	
 	if (!mv_check_params (opts, &flags))
 		return MU_EXITCODE_ERROR;
 	
 	err = NULL;
 
 	/* special case: /dev/null */
-	if (g_strcmp0 (opts->params[2], "/dev/null") == 0) {
-		if (unlink (opts->params[1]) != 0) {
-			g_warning ("unlink failed: %s", strerror (errno));
-			return MU_EXITCODE_ERROR;
-		} else
-			return MU_EXITCODE_OK;
-	}
-		
+	if (g_strcmp0 (opts->params[2], "/dev/null") == 0)
+		return mv_remove (opts->params[1], opts);
+
 	fullpath = mu_msg_file_move_to_maildir (opts->params[1], opts->params[2],
 						flags, &err);
 	if (!fullpath) {
@@ -330,8 +373,19 @@ mu_cmd_mv (MuConfig *opts)
 			g_warning ("move failed: %s", err->message);
 			g_error_free (err);
 		}
-		return MU_EXITCODE_ERROR;	
-	}
+		return MU_EXITCODE_ERROR;
+
+	} else if (opts->printtarget)       /* if the move worked, print the */
+		g_print ("%s\n", fullpath); /* target (if user set
+				             * --printtarget) */
+
+	/* now, when --updatedb db was given, try to update it */
+	if (!opts->updatedb || update_db_after_mv (opts, opts->params[1], fullpath))
+		rv = MU_EXITCODE_OK;
+	else
+		rv = MU_EXITCODE_DB_UPDATE_ERROR;
 	
-	return MU_EXITCODE_OK;
+	g_free (fullpath);
+
+	return rv;
 }

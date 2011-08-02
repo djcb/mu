@@ -319,6 +319,11 @@ config_options_group_mv (MuConfig *opts)
 	GOptionEntry entries[] = {
 		{"flags", 0, 0, G_OPTION_ARG_STRING, &opts->flagstr,
 		 "flags to set for the target (DFNPRST)", NULL},
+		{"updatedb", 0, 0, G_OPTION_ARG_NONE, &opts->updatedb,
+		 "whether to update the database after the move", NULL},
+		{"printtarget", 0, 0, G_OPTION_ARG_NONE, &opts->updatedb,
+		 "whether to print the target path upon succesful completion",
+		 NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 		

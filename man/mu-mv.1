@@ -6,7 +6,7 @@ mu mv\-  move a message file to a Maildir
 
 .SH SYNOPSIS
 
-.B mu mv <source-path> <target-maildir>
+.B mu mv [--flags=<flags>] [--updatedb] [--printtarget] <source-path> <target-maildir>
 
 .SH DESCRIPTION
 
@@ -29,6 +29,29 @@ Note, unlike the UNIX \fImv\fR command, \fImu mv\fR takes precisely two
 parameters. It's recommended not to use wildcards on the shell, the result may
 be unexpected.
 
+.SH OPTIONS
+
+.TP
+\fB\-\-flags\fR=\fI<flags>\fR
+using the this option, you can change the file flags of the target file. If
+you change the 'N' (new) flag, this will also change the exact target
+directory ('new' vs 'cur').
+
+The flags is a sequence of characters from the set D (draft), F (flagged) ,N
+(new), P (passed), R (replied), S (seen) and T (trashed). Note, the
+flags-parameter is case-sensitive.
+
+.TP
+\fB\-\-updatedb\fR
+update the Xapian database after the move. You can use the general
+\fB\-\-muhome=\fR option to specify the database if it does not live at the
+default place.
+
+.TP
+\fB\-\-printtarget\fR
+return the target path on standard output upon succesful completion of the
+move (with or without a succesful database update)
+
 .SH EXAMPLE
 
 To move a message \fI/home/jimbo/Maildir/scuba/cur/123123123:2,S\fR to
@@ -50,14 +73,37 @@ could do:
 
 Obviously, you could also simply use \fBrm\fR in this case.
 
+To mark a message as no longer new and 'Seen', and update the database
+afterwards, you could do:
+
+.nf
+   mu --flags=S mv /home/roger/Maildir/inbox/new/123123123:2, /home/roger/Maildir/inbox/
+.fi
+
+
+
 .SH LIMITATIONS
 
 Both source-path and target-directory must be on the same disk partition,
 except when the target-directory is \fI/dev/null\fR.
 
-.SH OPTIONS
 
-\fBmu mv\fR takes no options.
+.SH RETURN VALUE
+
+\fBmu mv\fR returns 0 upon success; in general, the following error codes are
+returned:
+
+.nf
+| code | meaning                           |
+|------+-----------------------------------|
+|    0 | ok                                |
+|    1 | general error                     |
+|    4 | database is corrupted             |
+|    5 | some other database update error  |
+.fi
+
+Note that if you get a database error rather than a general error, this means
+that moving the file succeeded, but that the database update afterwards failed.
 
 .SH BUGS
 

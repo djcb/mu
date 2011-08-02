@@ -622,11 +622,11 @@ get_message_uid (MuMsg *msg)
  	return get_message_uid (mu_msg_get_path(msg));
 }
 
-MuResult
+gboolean
 mu_store_store (MuStore *store, MuMsg *msg, gboolean replace)
 {	
-	g_return_val_if_fail (store, MU_ERROR);
-	g_return_val_if_fail (msg, MU_ERROR);
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (msg, FALSE);
 
 	try {
 		Xapian::Document newdoc;
@@ -654,21 +654,52 @@ mu_store_store (MuStore *store, MuMsg *msg, gboolean replace)
 			id = store->_db.replace_document (uid, newdoc);
 		else
 			id = store->_db.add_document (newdoc);
-
-		/* DEBUG */
-		//g_print ("\n[%s]\n", newdoc.serialise().c_str());
 		
 		++store->_processed;
 		commit_trx_if (store,
 			       store->_processed % store->_trx_size == 0);
 
-		return MU_OK;
+		return TRUE;
 
 	} MU_XAPIAN_CATCH_BLOCK;
 
 	rollback_trx_if (store, store->_in_transaction);
 
-	return MU_ERROR;
+	return FALSE;
+}
+
+
+gboolean
+mu_store_store_path (MuStore *store, const char *path)
+{
+	MuMsg *msg;
+	GError *err;
+	gboolean rv;
+
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (path, FALSE);
+		
+	err = NULL;
+	msg = mu_msg_new_from_file (path, NULL, &err);
+
+	if (!msg) {
+		if (err) {
+			g_warning ("failed to create message %s to store: %s",
+				   path, err->message);
+			g_error_free (err);
+		} else
+			g_warning ("failed to create message %s to store", path);
+
+		return FALSE;	
+	}
+
+	rv = mu_store_store (store, msg, TRUE);
+	if (!rv)
+		g_warning ("failed to store %s", path);
+
+	mu_msg_unref (msg);
+		
+	return rv;
 }
 
 

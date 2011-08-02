@@ -126,6 +126,11 @@ struct _MuConfig {
 	/* options for mv */
 	char            *flagstr;        /* message flags to set for
 					  * the target */
+	gboolean	updatedb;        /* should the database be updated after
+					  * moving? */
+	gboolean	printtarget;      /* should be print the
+					   * target file path on
+					   * stdout */
 	
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between

@@ -399,11 +399,12 @@ enum _MuResult {
 typedef enum _MuResult MuResult;
 
 enum _MuExitCode {
-	MU_EXITCODE_OK	         = 0,
-	MU_EXITCODE_ERROR        = 1,
-	MU_EXITCODE_NO_MATCHES   = 2,
-	MU_EXITCODE_DB_LOCKED    = 3,
-	MU_EXITCODE_DB_CORRUPTED = 4
+	MU_EXITCODE_OK	            = 0,
+	MU_EXITCODE_ERROR           = 1,
+	MU_EXITCODE_NO_MATCHES      = 2,
+	MU_EXITCODE_DB_LOCKED       = 3,
+	MU_EXITCODE_DB_CORRUPTED    = 4,
+	MU_EXITCODE_DB_UPDATE_ERROR = 5
 };
 typedef enum _MuExitCode MuExitCode;
 
@@ -411,7 +412,7 @@ enum _MuError {
 	MU_ERROR_XAPIAN,  /* general xapian related error */
 	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK, /* can't get write lock */
 	MU_ERROR_XAPIAN_CORRUPTION, /* database corruption */
-	MU_ERROR_XAPIAN_DIR, 	/* xapian dir is not accessible */
+	MU_ERROR_XAPIAN_DIR, 	   /* xapian dir is not accessible */
 	MU_ERROR_XAPIAN_NOT_UPTODATE, /* database version is not uptodate */
 	MU_ERROR_XAPIAN_MISSING_DATA, /* missing data for a document */
 	MU_ERROR_QUERY,	/* (parsing) error in the query */

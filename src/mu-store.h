@@ -109,8 +109,18 @@ void mu_store_flush (MuStore *store);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-MuResult mu_store_store   (MuStore *store, MuMsg *msg, gboolean replace);
+gboolean mu_store_store   (MuStore *store, MuMsg *msg, gboolean replace);
 
+
+/**
+ * store an email message in the XapianStore; similar to mu_store_store, but instead takes a path as parameter instead of a MuMsg*
+ * 
+ * @param store a valid store
+ * @param path full filesystem path to a valid message 
+ * 
+ * @return TRUE if it succeeded, FALSE otherwise
+ */
+gboolean mu_store_store_path (MuStore *store, const char *path);
 
 /**
  * remove a message from the database
