@@ -38,19 +38,22 @@
 (define-key mu-find-mode-map "o" 'mu-find-change-sort)
 (define-key mu-find-mode-map "g" 'mu-find-refresh)
 (define-key mu-find-mode-map "m" 'mu-find-mark-for-move)
-(define-key mu-find-mode-map "d" 'mu-find-mark-for-thrash)
+(define-key mu-find-mode-map "d" 'mu-find-mark-for-trash)
 (define-key mu-find-mode-map "D" 'mu-find-mark-for-deletion)
 (define-key mu-find-mode-map "u" 'mu-find-unmark)
+(define-key mu-find-mode-map "U" 'mu-unmark-all)
 (define-key mu-find-mode-map "r" 'mu-reply)
-(define-key mu-view-mode-map "f" 'mu-forward)
+(define-key mu-find-mode-map "f" 'mu-forward)
+(define-key mu-find-mode-map "x" 'mu-execute)
 
-(define-key mu-view-mode-map "q" 'mu-view-quit-buffer)
+
+(define-key mu-view-mode-map "q" 'mu-quit-buffer)
 (define-key mu-view-mode-map "f" 'mu-view-find)
 (define-key mu-view-mode-map "n" 'mu-view-next)
 (define-key mu-view-mode-map "p" 'mu-view-prev)
 (define-key mu-view-mode-map "r" 'mu-reply)
 (define-key mu-view-mode-map "f" 'mu-forward)
-  
+(define-key mu-view-mode-map "x" 'mu-execute)
 
 (provide 'mu)
   

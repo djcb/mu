@@ -114,7 +114,7 @@ function returns the resulting name"
 
 (defvar mu-view-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "q" 'mu-view-quit-buffer)
+    (define-key map "q" 'mu-quit-buffer)
     (define-key map "s" 'mu-find)
     (define-key map "f" 'mu-forward)
     (define-key map "r" 'mu-reply)
@@ -143,11 +143,5 @@ function returns the resulting name"
   (with-current-buffer mu-find-buffer-name
     (when (mu-find-prev)
       (mu-view (mu-get-path)))))
-
-(defun mu-view-quit-buffer ()
-  "quit this buffer and return to the find buffer"
-  (interactive)
-  (mu-quit-buffer)
-  (switch-to-buffer mu-find-buffer-name))
 
 (provide 'mu-view)

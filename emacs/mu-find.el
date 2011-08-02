@@ -315,11 +315,11 @@ the mu find output")
 	  (delete-char 1)
 	  (case what
 	    ('trash (insert-and-inherit
-		      (mu-str (propertize "d" 'action what))))
+		      (mu-str (propertize "d" 'action what 'target "/foo/bar"))))
 	    ('delete (insert-and-inherit
-		      (mu-str (propertize "D" 'action what))))
+		      (mu-str (propertize "D" 'action what 'target "/foo/bar"))))
 	    ('move  (insert-and-inherit
-		      (mu-str (propertize "m" 'action what))))
+		      (mu-str (propertize "m" 'action what 'target "/foo/bar"))))
 	    ('none  (insert-and-inherit " ")))
 	  (forward-line))))))
   

@@ -46,7 +46,7 @@
   (format "On %s, %s wrote:\n"
     (format-time-string mu-date-format-long (plist-get msg :date))
     (cdr (car (plist-get msg :from)))))
-  
+
 (defun mu-message-cite (msg)
   "cite an existing message"
   (let ((body
@@ -120,14 +120,10 @@ create a forwarded message. After creation, switch to the message editor"
   "create a reply to the message at point; After creation, switch
 to the message editor"
   (let ((path (mu-get-path)))
-    (when path
-      (let ())
+    (when path      
+      (mu-ask-key "Reply to [s]ender only or to [a]ll?")
+      (mu-message-reply-or-forward path))))
     
-  
-  
-  (mu-ask-key "Reply to [s]ender only or to [a]ll?")
-  (mu-message-reply-or-forward path))
-
 (defun mu-message-forward (path)
   "create a forward-message to the message at PATH; After
 creation, switch to the message editor"
