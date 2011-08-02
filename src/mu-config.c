@@ -312,6 +312,24 @@ config_options_group_view (MuConfig *opts)
 }
 
 
+static GOptionGroup *
+config_options_group_mv (MuConfig *opts)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"flags", 0, 0, G_OPTION_ARG_STRING, &opts->flagstr,
+		 "flags to set for the target (DFNPRST)", NULL},
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
+	};
+		
+	og = g_option_group_new ("mv", "options for the 'mv' command",
+				"", NULL, NULL);
+	g_option_group_add_entries(og, entries);
+
+	return og;
+}
+
+
 
 static GOptionGroup*
 config_options_group_extract (MuConfig *opts)
@@ -407,8 +425,8 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 	case MU_CONFIG_CMD_EXTRACT:
 		group = config_options_group_extract (opts);
 		break;
-	case MU_CONFIG_CMD_MV: /* no options for this one yet */
-		/* group = config_options_group_mv (opts); */
+	case MU_CONFIG_CMD_MV:
+		group = config_options_group_mv (opts);
 		break;
 	case MU_CONFIG_CMD_CFIND:
 		group = config_options_group_cfind (opts);

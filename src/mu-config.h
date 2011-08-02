@@ -122,6 +122,10 @@ struct _MuConfig {
 	char		*exec;		/* command to execute on the
 					 * files for the matched
 					 * messages */
+
+	/* options for mv */
+	char            *flagstr;        /* message flags to set for
+					  * the target */
 	
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between

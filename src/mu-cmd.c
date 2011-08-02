@@ -24,6 +24,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include "mu-msg.h"
 #include "mu-msg-part.h"
@@ -34,6 +37,7 @@
 #include "mu-maildir.h"
 #include "mu-contacts.h"
 #include "mu-runtime.h"
+#include "mu-msg-flags.h"
 
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
@@ -274,33 +278,53 @@ mu_cmd_mkdir (MuConfig *opts)
 }
 
 
+static gboolean
+mv_check_params (MuConfig *opts, MuMsgFlags *flags)
+{
+	if (!opts->params[1] || !opts->params[2]) {
+		g_warning ("usage: mu mv [--flags=<flags>] <sourcefile> "
+			   "<targetmaildir>");
+		return FALSE;
+	}
+
+	if (!opts->flagstr)
+		*flags = MU_MSG_FLAG_NONE;
+	else {
+		*flags = mu_msg_flags_from_str (opts->flagstr);
+		if (*flags == MU_MSG_FLAG_NONE) {
+			g_warning ("error in flags");
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+
 
 MuExitCode
 mu_cmd_mv (MuConfig *opts)
 {
 	GError *err;
 	gchar *fullpath;
+	MuMsgFlags flags;
 
-	
-	if (!opts->params[1] || !opts->params[2]) {
-		g_warning ("usage: mu mv <sourcefile> <targetmaildir>");
+	if (!mv_check_params (opts, &flags))
 		return MU_EXITCODE_ERROR;
-	}
-
+	
 	err = NULL;
 
 	/* special case: /dev/null */
-	if (strcmp (opts->params[2], "/dev/null") == 0) {
+	if (g_strcmp0 (opts->params[2], "/dev/null") == 0) {
 		if (unlink (opts->params[1]) != 0) {
 			g_warning ("unlink failed: %s", strerror (errno));
 			return MU_EXITCODE_ERROR;
 		} else
 			return MU_EXITCODE_OK;
 	}
-	
-	
+		
 	fullpath = mu_msg_file_move_to_maildir (opts->params[1], opts->params[2],
-						&err);
+						flags, &err);
 	if (!fullpath) {
 		if (err) {
 			g_warning ("move failed: %s", err->message);
