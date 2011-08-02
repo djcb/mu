@@ -41,10 +41,6 @@
 (defun mu-message-user-agent ()
   (format "mu %s; emacs %s" (mu-binary-version) emacs-version))
 
-
-
-
-
 (defun mu-message-attribution (msg)
   "get an attribution line for a quoted message"
   (format "On %s, %s wrote:\n"
@@ -120,9 +116,15 @@ create a forwarded message. After creation, switch to the message editor"
     (switch-to-buffer buf))))
 
 
-(defun mu-message-reply (path)
-  "create a reply to the message at PATH; After creation, switch
+(defun mu-message-reply ()
+  "create a reply to the message at point; After creation, switch
 to the message editor"
+  (let ((path (mu-get-path)))
+    (when path
+      (let ())
+    
+  
+  
   (mu-ask-key "Reply to [s]ender only or to [a]ll?")
   (mu-message-reply-or-forward path))
 

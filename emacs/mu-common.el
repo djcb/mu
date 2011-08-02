@@ -56,6 +56,8 @@ notation) for the mail view and in replied/forwarded message quotations")
 (defface mu-size-face    '((t (:foreground "#889f7f"))) "") 
 (defface mu-body-face    '((t (:foreground "#dcdccc"))) "") 
 (defface mu-flag-face    '((t (:foreground "#dc56cc"))) "") 
+(defface mu-flag-face    '((t (:foreground "#7f6677"))) "") 
+
 
 (defface mu-unread-face    '((t (:bold t))) "") 
 (defface mu-face         '((t (:foreground "Gray" :italic t))) "")
@@ -90,6 +92,13 @@ etc.)"
      (:subject       .  40)))
 (setq mu-find-date-format "%x %X")
 
+(setq mu-header-fields
+  '( :from
+     :to
+     :subject
+     :date
+     :path))
+
 (setq mu-own-address-regexp "djcb\\|diggler\\|bulkmeel")
 
 (defun mu-ask-key (prompt)
@@ -104,7 +113,8 @@ e.g. 'Reply to [a]ll or [s]ender only; returns the character chosen"
     (let ((kar)
 	   (prompt (replace-regexp-in-string 
 		     "\\[\\(.\\)\\]"
-		     (lambda(s) (propertize (substring s 1 -1) 'face 'highlight))
+		     (lambda(s)
+		       (concat "[" (propertize (substring s 1 -1) 'face 'highlight) "]"))
 		     prompt)))
       (while (not kar)
 	(setq kar (read-char-exclusive prompt))
@@ -124,17 +134,39 @@ viewing a message"
     (unless path (message "No message at point"))
     path))
 
-(defun mu-reply ()
-  "reply to the message at point"
-  (interactive)
-  (let ((path (mu-get-path)))
-    (when path (mu-message-reply path))))
 
-(defun mu-forward ()
-  "forward the message at point"
-  (interactive)
-  (let ((path (mu-find-get-path)))
-    (when path (mu-message-forward path))))
+;;  The message sexp looks something like:
+;; (
+;; 	:from (("Donald Duck" . "donald@example.com"))
+;; 	:to (("Mickey Mouse" . "mickey@example.com"))
+;; 	:subject "Wicked stuff"
+;; 	:date (20023 26572 0)
+;; 	:size 15165
+;; 	:msgid "foobar32423847ef23@pluto.net"
+;; 	:path "/home/mickey/Maildir/inbox/cur/1312254065_3.32282.pluto,4cd5bd4e9:2,"
+;; 	:priority high
+;; 	:flags (new unread)
+;; 	:body-txt " <message body>"
+;; )
+(defun mu-get-message (path)
+  "use 'mu view --format=sexp' to get the message at PATH in the
+form of an s-expression; parse this s-expression and return the
+Lisp data as a plist.  Returns nil in case of error"
+  (if (not (file-readable-p path))
+    (progn (message "Message is not readable") nil)
+    (let* ((cmd (concat mu-binary " view --format=sexp " path))
+	    (str (shell-command-to-string cmd))
+	    (msglst (read-from-string str)))
+      (if (msglst)
+	(car msglist)
+	(progn (message "Failed to parse message") nil)))))
+
+
+(defun mu-move-to-updated-path (path newflags)
+  "move msg to an updated path based on newflags"
+  ;; TODO  
+  )
+
 
 ;; todo: check for unhandled marks
 (defun mu-quit-buffer ()

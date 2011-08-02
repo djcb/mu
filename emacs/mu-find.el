@@ -66,6 +66,7 @@ the mu find output")
 	  (setq mu-buf (substring mu-buf (match-end 0)))
 	  (setq eom (string-match mu-eom mu-buf)))))))
 
+
 (defun mu-find-process-sentinel (proc msg)
   "Check the mu-find process upon completion"
   (let ((status (process-status proc))
@@ -89,7 +90,12 @@ the mu find output")
 		  (save-excursion
 		    (goto-char (point-max))
 		    (insert (mu-str text)))))))))
-    
+
+
+;; Note, the 'mu find --format=sexp' sexp is almost the same as the ones that
+;; 'mu view --format=sexp' produces (see mu-get-message), with the difference
+;; that former may give more than one result, and that mu-find output comes from
+;; the database rather than file, and does _not_ contain the message body
 (defun mu-find (expr)
   "search in the mu database"
   (interactive "s[mu] match expr: ")

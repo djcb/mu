@@ -33,17 +33,11 @@
   '( :from
      :to
      :subject
-     :date)
+     :date
+     :path)
   "list of header fields to display in the message view")
 
 (defconst mu-view-buffer-name " *mu-view*")
-
-(defun mu-view-get (path)
-  "display the email message at PATH"
-  (let* ((cmd (concat mu-binary " view --format=sexp " path))
-	  (str (shell-command-to-string cmd))
-	  (msglst (read-from-string str)))
-    (when msglst (car msglst))))
 
 (defun mu-view-header (field val val-face)
   "get a header string (like 'Subject: foo')"
@@ -68,12 +62,12 @@
 	(with-temp-buffer
 	  (insert (plist-get msg :body-html))
 	  (html2text)
-	  (buffer-string))'face face))
+	  (buffer-string)) 'face face))
     (t "")))
     
 (defun mu-view-message (path)
   "display the email message at PATH"
-  (let ((msg (mu-view-get path)))
+  (let ((msg (mu-get-message path)))
     (when msg
       (concat
 	(mapconcat
@@ -89,6 +83,8 @@
 		(mu-view-header-contact "Bcc" (plist-get msg :bcc) 'mu-to-face))
 	      (:subject
 		(mu-view-header "Subject" (plist-get msg :subject) 'mu-subject-face))
+	      (:path
+		(mu-view-header "Path" (plist-get msg :path) 'mu-path-face))
 	      (:date
 		(mu-view-header "Date"
 		  (format-time-string mu-date-format-long
@@ -99,7 +95,9 @@
       ))))
 
 (defun mu-view (path)
-  "display message at PATH in a new buffer"
+  "display message at PATH in a new buffer; note that the action
+of viewing a message may cause it to be moved/renamed; this
+function returns the resulting name"
   (interactive)
   (let ((str (mu-view-message path))
 	 (buf (get-buffer mu-view-buffer-name))) 
