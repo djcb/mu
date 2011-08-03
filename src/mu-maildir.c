@@ -246,8 +246,8 @@ process_file (const char* fullpath, const gchar* mdir,
 	if (result == MU_STOP) 
 		g_debug ("callback said 'MU_STOP' for %s", fullpath);
 	else if (result == MU_ERROR)
-		g_warning ("%s: failed %d in callback (%s)",  
-			   __FUNCTION__, result, fullpath);
+		g_warning ("%s: error in callback (%s)",  
+			   __FUNCTION__, fullpath);
 
 	return result;
 }

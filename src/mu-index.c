@@ -150,7 +150,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 	}
 	
 	/* we got a valid id; scan the message contents as well */
-	if (G_UNLIKELY((mu_store_store (data->_store, msg, TRUE) != MU_OK))) {
+	if (G_UNLIKELY((!mu_store_store_msg (data->_store, msg, TRUE)))) {
 		g_warning ("%s: storing content %s failed", __FUNCTION__, 
 			   fullpath);
 		return MU_ERROR;
@@ -426,7 +426,7 @@ foreach_doc_cb (const char* path, CleanupData *cudata)
 	if (access (path, R_OK) != 0) {
 		if (errno != EACCES)
 			g_debug ("cannot access %s: %s", path, strerror(errno));
-		if (!mu_store_remove (cudata->_store, path))
+		if (!mu_store_remove_path (cudata->_store, path))
 			return MU_ERROR; /* something went wrong... bail out */
 		if (cudata->_stats)
 			++cudata->_stats->_cleaned_up;

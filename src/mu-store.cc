@@ -623,7 +623,7 @@ get_message_uid (MuMsg *msg)
 }
 
 gboolean
-mu_store_store (MuStore *store, MuMsg *msg, gboolean replace)
+mu_store_store_msg (MuStore *store, MuMsg *msg, gboolean replace)
 {	
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (msg, FALSE);
@@ -693,7 +693,7 @@ mu_store_store_path (MuStore *store, const char *path)
 		return FALSE;	
 	}
 
-	rv = mu_store_store (store, msg, TRUE);
+	rv = mu_store_store_msg (store, msg, TRUE);
 	if (!rv)
 		g_warning ("failed to store %s", path);
 
@@ -704,7 +704,7 @@ mu_store_store_path (MuStore *store, const char *path)
 
 
 gboolean
-mu_store_remove (MuStore *store, const char *msgpath)
+mu_store_remove_path (MuStore *store, const char *msgpath)
 {
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (msgpath, FALSE);

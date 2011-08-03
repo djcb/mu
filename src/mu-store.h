@@ -109,7 +109,7 @@ void mu_store_flush (MuStore *store);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-gboolean mu_store_store   (MuStore *store, MuMsg *msg, gboolean replace);
+gboolean mu_store_store_msg   (MuStore *store, MuMsg *msg, gboolean replace);
 
 
 /**
@@ -133,7 +133,7 @@ gboolean mu_store_store_path (MuStore *store, const char *path);
  * 
  * @return TRUE if it succeeded, FALSE otherwise
  */
-gboolean mu_store_remove (MuStore *store, const char* msgpath);
+gboolean mu_store_remove_path (MuStore *store, const char* msgpath);
 
 
 /**

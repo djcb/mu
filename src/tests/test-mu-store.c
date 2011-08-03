@@ -80,7 +80,7 @@ test_mu_store_version (void)
 
 
 static void
-test_mu_store_store_and_count (void)
+test_mu_store_store_msg_and_count (void)
 {	
 		MuMsg *msg;
 		MuStore *store;
@@ -97,7 +97,7 @@ test_mu_store_store_and_count (void)
 		/* add one */
 		msg = mu_msg_new_from_file (MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,", NULL, NULL);		
 		g_assert (msg);
-		g_assert_cmpuint (mu_store_store (store, msg, TRUE), ==, MU_OK);
+		g_assert_cmpuint (mu_store_store_msg (store, msg, TRUE), ==, TRUE);
 		g_assert_cmpuint (1,==,mu_store_count (store));
 		g_assert_cmpuint (TRUE,==,mu_store_contains_message
 						  (store, MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,"));
@@ -106,7 +106,7 @@ test_mu_store_store_and_count (void)
 		/* add another one */
 		msg = mu_msg_new_from_file (MU_TESTMAILDIR2 "bar/cur/mail3", NULL, NULL);
 		g_assert (msg);
-		g_assert_cmpuint (mu_store_store (store, msg, TRUE), ==, MU_OK);
+		g_assert_cmpuint (mu_store_store_msg (store, msg, TRUE), ==, TRUE);
 		g_assert_cmpuint (2,==,mu_store_count (store));
 		g_assert_cmpuint (TRUE,==,mu_store_contains_message (store, MU_TESTMAILDIR2 "bar/cur/mail3"));	
 		mu_msg_unref (msg);
@@ -114,7 +114,7 @@ test_mu_store_store_and_count (void)
 		/* try to add the first one again. count should be 2 still */
 		msg = mu_msg_new_from_file (MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,", NULL, NULL);
 		g_assert (msg);
-		g_assert_cmpuint (mu_store_store (store, msg, TRUE), ==, MU_OK);
+		g_assert_cmpuint (mu_store_store_msg (store, msg, TRUE), ==, TRUE);
 		g_assert_cmpuint (2,==,mu_store_count (store));
 		
 		mu_msg_unref (msg);
@@ -124,7 +124,7 @@ test_mu_store_store_and_count (void)
 
 
 static void
-test_mu_store_store_remove_and_count (void)
+test_mu_store_store_msg_remove_and_count (void)
 {	
 		MuMsg *msg;
 		MuStore *store;
@@ -144,12 +144,12 @@ test_mu_store_store_remove_and_count (void)
 		msg = mu_msg_new_from_file (MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,",
 						  NULL, &err);
 		g_assert (msg);
-		g_assert_cmpuint (mu_store_store (store, msg, TRUE), ==, MU_OK);
+		g_assert_cmpuint (mu_store_store_msg (store, msg, TRUE), ==, MU_OK);
 		g_assert_cmpuint (1,==,mu_store_count (store));
 		mu_msg_unref (msg);
 
 		/* remove one */
-		mu_store_remove (store, MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,");
+		mu_store_remove_path (store, MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,");
 		g_assert_cmpuint (0,==,mu_store_count (store));
 		g_assert_cmpuint (FALSE,==,mu_store_contains_message
 						  (store, MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,"));
@@ -169,9 +169,9 @@ main (int argc, char *argv[])
 		g_test_add_func ("/mu-store/mu-store-version",
 						 test_mu_store_version);
 		g_test_add_func ("/mu-store/mu-store-store-and-count",
-						 test_mu_store_store_and_count);
+						 test_mu_store_store_msg_and_count);
 		g_test_add_func ("/mu-store/mu-store-store-remove-and-count",
-						 test_mu_store_store_remove_and_count);	
+						 test_mu_store_store_msg_remove_and_count);	
 		g_log_set_handler (NULL,
 						   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 						   (GLogFunc)black_hole, NULL);
