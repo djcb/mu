@@ -70,12 +70,12 @@
    - search for messages based on the sender, receiver, message subject, size,
      priority, words in the message body, attachments, date range, flags
      (signed, encrypted, new, replied, unread, ...), message-id, maildir
-   - known to work on Linux (Ubuntu/Fedora/Debian/GenToo), FreeBSD, MacOS,
+   - known to work on Linux (Ubuntu/Fedora/Debian/Gentoo), FreeBSD, MacOS,
      Solaris, ...
    - fully documented (man pages)
    - can be integrated with e-mail clients; documentation has examples for [[http://www.mutt.org/][mutt]]
      and [[http://www.emacswiki.org/emacs/WanderLust][Wanderlust]].
-   - output in plain text, xml, json, s-expressions (experimental)
+   - output in plain text, xml, s-expressions (experimental)
    - extract message parts, attachments, open them using their default
      application
      

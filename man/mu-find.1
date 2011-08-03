@@ -33,7 +33,7 @@ like:
 
 Note, this the default, plain-text output, which is the default, so you don't
 have to use \fB--format=plain\fR. For other types of output (such as symlinks,
-XML, JSON or s-expressions), see the discussion in the \fBOPTIONS\fR-section
+XML or s-expressions), see the discussion in the \fBOPTIONS\fR-section
 below about \fB--format\fR.
 
 The search pattern is taken as a command-line parameter. If the search
@@ -339,7 +339,15 @@ choice, but for dates it may be more useful to sort in the opposite direction.
 output a summary based upon the first lines of the message.
 
 .TP
-\fB\-\-format\fR=\fIplain|links|xquery|xml|json|sexp\fR
+\fB\-\-include\-unreadable\fR
+normally, \fBmu find\fR does not include messages that are unreadable,
+typically do not have corresponding disk file, i.e., messages that live only
+in the databases. With this option even such messages are included. Note, for
+\fB\-\-format=\fRlinks, unreadable message are ignore even when this option is
+set.
+
+.TP
+\fB\-\-format\fR=\fIplain|links|xquery|xml|sexp\fR
 output results in the specified format.
 
 The default is \fBplain\fR, i.e normal output with one line per message.
@@ -349,9 +357,6 @@ messages. This enables easy integration with mail-clients (see below for more
 information). See \fB\-\-linksdir\fR and \fB\-\-clearlinks\fR below.
 
 \fBxml\fR formats the search results as XML.
-
-\fBjson\fR formats the search results as JSON (\fIJavascript Object
-Notation\fR).
 
 \fBsexp\fR formats the search results as an s-expression as used in Lisp
 programming environments.
@@ -585,7 +590,7 @@ non-zero return value, for example:
 .SH ENCODING
 
 \fBmu find\fR output is encoded according the locale for \fI--format=plain\fR
-(the default), and UTF-8 for all other formats (\fIjson\fR, \fIsexp\fR,
+(the default), and UTF-8 for all other formats (\fIsexp\fR,
 \fIxml\fR).
 
 

@@ -6,7 +6,7 @@ mu mv\-  move a message file to a Maildir
 
 .SH SYNOPSIS
 
-.B mu mv [--flags=<flags>] [--updatedb] [--printtarget] <source-path> <target-maildir>
+.B mu mv [--flags=<flags>] [--printtarget] <source-path> <target-maildir>
 
 .SH DESCRIPTION
 
@@ -29,6 +29,10 @@ Note, unlike the UNIX \fImv\fR command, \fImu mv\fR takes precisely two
 parameters. It's recommended not to use wildcards on the shell, the result may
 be unexpected.
 
+Also note, \fBmu mv\fR only updates the file system; it does \fBnot\fR update
+the database. To update the database, there is \fBmu index(1)\fR or \fBmu add\fR
+and \fBmu remove\fR.
+
 .SH OPTIONS
 
 .TP
@@ -40,12 +44,6 @@ directory ('new' vs 'cur').
 The flags is a sequence of characters from the set D (draft), F (flagged) ,N
 (new), P (passed), R (replied), S (seen) and T (trashed). Note, the
 flags-parameter is case-sensitive.
-
-.TP
-\fB\-\-updatedb\fR
-update the Xapian database after the move. You can use the general
-\fB\-\-muhome=\fR option to specify the database if it does not live at the
-default place.
 
 .TP
 \fB\-\-printtarget\fR
@@ -118,4 +116,7 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .BR maildir(5)
 .BR mu(1)
+.BR mu-index(1)
+.BR mu-add(1)
+.BR mu-remove(1)
 .BR chmod(1)

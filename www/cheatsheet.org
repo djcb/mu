@@ -124,7 +124,7 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
   Note that we use ='l'=, so the returned message paths will be quoted. This is
   useful if you have maildirs with spaces in their names.
     
-  For further processing, also the ~--format=(xml|json|sexp)~ can be useful. For
+  For further processing, also the ~--format=(xml|sexp)~ can be useful. For
   example,
 
 #+html:<pre> $ mu find --format=xml pancake</pre>
