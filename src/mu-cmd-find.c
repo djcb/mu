@@ -47,13 +47,15 @@
 
 
 static gboolean output_links (MuMsgIter *iter, const char* linksdir,
-				      gboolean clearlinks, size_t *count);
-static gboolean output_sexp (MuMsgIter *iter, size_t *count);
-static gboolean output_json (MuMsgIter *iter, size_t *count);
-static gboolean output_xml (MuMsgIter *iter, size_t *count);
+			      gboolean clearlinks,size_t *count);
+static gboolean output_sexp (MuMsgIter *iter, gboolean include_unreadable,
+			     size_t *count);
+static gboolean output_xml (MuMsgIter *iter,gboolean include_unreadable,
+			    size_t *count);
 static gboolean output_plain (MuMsgIter *iter, const char *fields,
 			      gboolean summary,gboolean threads,
-			      gboolean color, size_t *count);
+			      gboolean color,  gboolean include_unreadable,
+			      size_t *count);
 
 static void
 upgrade_warning (void)
@@ -62,7 +64,7 @@ upgrade_warning (void)
 		   MU_XAPIAN_DB_VERSION);
 	g_message ("please run 'mu index --rebuild' (see the man page)");
 }
-
+ 
 
 static gboolean
 print_xapian_query (MuQuery *xapian, const gchar *query, size_t *count)
@@ -115,13 +117,13 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, size_t *count)
 				     count);
 	case MU_CONFIG_FORMAT_PLAIN: 
 		return output_plain (iter, opts->fields, opts->summary,
-				     opts->threads, opts->color, count);
+				     opts->threads, opts->color,
+				     opts->include_unreadable,
+				     count);
 	case MU_CONFIG_FORMAT_XML:
-		return output_xml (iter, count);
-	case MU_CONFIG_FORMAT_JSON:
-		return output_json (iter, count);
+		return output_xml (iter, opts->include_unreadable, count);
 	case MU_CONFIG_FORMAT_SEXP:
-		return output_sexp (iter, count);	
+		return output_sexp (iter, opts->include_unreadable, count);	
 	default:
 		g_assert_not_reached ();
 		return FALSE;
@@ -248,7 +250,6 @@ format_params_valid (MuConfig *opts)
 	case MU_CONFIG_FORMAT_SEXP:
 	case MU_CONFIG_FORMAT_LINKS:
 	case MU_CONFIG_FORMAT_XML:
-	case MU_CONFIG_FORMAT_JSON:
 	case MU_CONFIG_FORMAT_XQUERY:
 		break;
 	default:
@@ -456,7 +457,7 @@ output_links (MuMsgIter *iter, const char* linksdir,
 	
 	for (myiter = iter, errseen = FALSE, mycount = 0;
 	     !mu_msg_iter_is_done (myiter);
-	     mu_msg_iter_next (myiter), ++mycount) {
+	     mu_msg_iter_next (myiter)) {
 
 		MuMsg *msg;
 		const char* path;
@@ -464,13 +465,15 @@ output_links (MuMsgIter *iter, const char* linksdir,
 		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
 		if (!msg)
 			return FALSE;
-
-		path = mu_msg_get_field_string (msg, MU_MSG_FIELD_ID_PATH);
-		if (!path)
-			return FALSE;
+		
+		path = mu_msg_get_path (msg);
+		if (!access (path, R_OK)) /* only link to readable */
+			continue;
 		
 		if (!link_message (path, linksdir))
 			errseen = TRUE;
+		else
+			++mycount;
 	}
 
 	if (errseen) 
@@ -532,15 +535,10 @@ ansi_reset_maybe (MuMsgFieldId mfid, gboolean color)
 
 
 static const char*
-display_field (MuMsgIter *iter, MuMsgFieldId mfid)
+display_field (MuMsg *msg, MuMsgFieldId mfid)
 {
 	gint64 val;
-	MuMsg *msg;
-	
-	msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
-	if (!msg)
-		return NULL;
-	
+		
 	switch (mu_msg_field_type(mfid)) {
 	case MU_MSG_FIELD_TYPE_STRING: {
 		const gchar *str;
@@ -572,20 +570,14 @@ display_field (MuMsgIter *iter, MuMsgFieldId mfid)
 
 
 static void
-print_summary (MuMsgIter *iter)
+print_summary (MuMsg *msg)
 {
 	GError *err;
 	char *summ;
-	MuMsg *msg;
+
 	const guint SUMMARY_LEN = 5; /* summary based on first 5
 				      * lines */	
 	err = NULL;
-	msg = mu_msg_iter_get_msg (iter, &err); /* don't unref */
-	if (!msg) {
-		g_warning ("error get message: %s", err->message);
-		g_error_free (err);
-		return;
-	}
 
 	summ = mu_str_summarize (mu_msg_get_body_text(msg), SUMMARY_LEN);
 	g_print ("Summary: %s\n", summ ? summ : "<none>");
@@ -634,18 +626,12 @@ thread_indent (MuMsgIter *iter)
 
 
 static size_t
-output_plain_fields (MuMsgIter *iter, const char *fields, gboolean color,
-		     gboolean threads)
+output_plain_fields (MuMsg *msg, const char *fields,
+		     gboolean color, gboolean threads)
 {
 	const char* myfields;
 	size_t len;
-
-	/* we reuse the color (whatever that may be)
-	 * for message-priority for threads, too */
-	ansi_color_maybe (MU_MSG_FIELD_ID_PRIO, color);
-	if (threads)
-		thread_indent (iter);
-		
+	
 	for (myfields = fields, len = 0; *myfields; ++myfields) {
 
 		MuMsgFieldId mfid;
@@ -659,7 +645,7 @@ output_plain_fields (MuMsgIter *iter, const char *fields, gboolean color,
 		else {
 			ansi_color_maybe (mfid, color);
 				len += mu_util_fputs_encoded
-					(display_field (iter, mfid), stdout);
+					(display_field (msg, mfid), stdout);
 				ansi_reset_maybe (mfid, color);
 		}
 	}
@@ -669,7 +655,8 @@ output_plain_fields (MuMsgIter *iter, const char *fields, gboolean color,
 
 static gboolean
 output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
-	      gboolean threads, gboolean color, size_t *count)
+	      gboolean threads, gboolean color, gboolean include_unreadable,
+	      size_t *count)
 {
 	MuMsgIter *myiter;
 	size_t mycount;
@@ -678,16 +665,35 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 	g_return_val_if_fail (fields, FALSE);
 	
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
-	     mu_msg_iter_next (myiter), ++mycount) {
-		
-		size_t len;
+	     mu_msg_iter_next (myiter)) {
 
-		len = output_plain_fields (iter, fields, color, threads);
+		size_t len;
+		MuMsg *msg;
+		
+		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		if (!msg) {
+			g_warning ("can't get message");
+			continue;
+		}
+		
+		/* only return messages if they're actually
+		 * readable (ie, live also outside the database) */
+		if (!include_unreadable && !mu_msg_is_readable (msg))
+			continue;
+
+		/* we reuse the color (whatever that may be)
+		 * for message-priority for threads, too */
+		ansi_color_maybe (MU_MSG_FIELD_ID_PRIO, color);
+		if (threads)
+			thread_indent (iter);
+		
+		len = output_plain_fields (msg, fields, color, threads);
 		
 		g_print (len > 0 ? "\n" : "");
 		if (summary)
-			print_summary (myiter);
-		
+			print_summary (msg);
+
+		++mycount;
 	}
 
 	if (count)
@@ -712,7 +718,7 @@ print_attr_xml (const char* elm, const char *str)
 
 
 static gboolean
-output_sexp (MuMsgIter *iter, size_t *count)
+output_sexp (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 {
 	MuMsgIter *myiter;
 	size_t mycount;
@@ -720,7 +726,7 @@ output_sexp (MuMsgIter *iter, size_t *count)
 	g_return_val_if_fail (iter, FALSE);
 	
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
-	     mu_msg_iter_next (myiter), ++mycount) {
+	     mu_msg_iter_next (myiter)) {
 
 		MuMsg *msg;
 		char *sexp;
@@ -728,10 +734,17 @@ output_sexp (MuMsgIter *iter, size_t *count)
 		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
 		if (!msg)
 			return FALSE;
-
+		
+		/* only return messages if they're actually
+		 * readable (ie, live also outside the database) */
+		if (!include_unreadable && !mu_msg_is_readable (msg))
+			continue;
+					
 		sexp = mu_msg_to_sexp (msg, TRUE);
 		fputs (sexp, stdout);
 		g_free (sexp);
+
+		++mycount;
 	}
 
 			
@@ -742,7 +755,7 @@ output_sexp (MuMsgIter *iter, size_t *count)
 }
 
 static gboolean
-output_xml (MuMsgIter *iter, size_t *count)
+output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 {
 	MuMsgIter *myiter;
 	size_t mycount;
@@ -753,14 +766,19 @@ output_xml (MuMsgIter *iter, size_t *count)
 	g_print ("<messages>\n");
 	
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
-	     mu_msg_iter_next (myiter), ++mycount) {
+	     mu_msg_iter_next (myiter)) {
 
 		MuMsg *msg;
 		
 		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
 		if (!msg)
 			return FALSE;
-
+		
+		/* only return messages if they're actually
+		 * readable (ie, live also outside the database) */
+		if (!include_unreadable && !mu_msg_is_readable (msg))
+			continue;
+		
 		g_print ("\t<message>\n");
 		print_attr_xml ("from", mu_msg_get_from (msg));
 		print_attr_xml ("to", mu_msg_get_to (msg));
@@ -774,68 +792,11 @@ output_xml (MuMsgIter *iter, size_t *count)
 		print_attr_xml ("path", mu_msg_get_path (msg));
 		print_attr_xml ("maildir", mu_msg_get_maildir (msg));
 		g_print ("\t</message>\n");
+
+		++mycount;
 	}
 
 	g_print ("</messages>\n");
-		
-	if (count)
-		*count = mycount;
-	
-	return TRUE;
-}
-
-
-static void
-print_attr_json (const char* elm, const char *str, gboolean comma)
-{
-	gchar *esc;
-	
-	if (!str || strlen(str) == 0)
-		return; /* empty: don't include */
-	
-	esc = mu_str_escape_c_literal (str, FALSE);
-	g_print ("\t\t\t\"%s\":\"%s\"%s\n", elm, esc, comma ? "," : "");
-	g_free (esc);
-}
-
-
-static gboolean
-output_json (MuMsgIter *iter, size_t *count)
-{
-	MuMsgIter *myiter;
-	size_t mycount;
-	
-	g_return_val_if_fail (iter, FALSE);
-	
-	g_print ("{\n\t\"messages\":\n\t[\n");
-	
-	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
-	     mu_msg_iter_next (myiter), ++mycount) {
-
-		MuMsg *msg;
-
-		if (!(msg = mu_msg_iter_get_msg (iter, NULL)))
-			return FALSE;
-		
-		if (mycount != 0)
-			g_print (",\n");
-				
-		g_print ("\t\t{\n");
-		print_attr_json ("from", mu_msg_get_from (msg), TRUE);
-		print_attr_json ("to", mu_msg_get_to (msg),TRUE);
-		print_attr_json ("cc", mu_msg_get_cc (msg),TRUE);
-		print_attr_json ("subject", mu_msg_get_subject (msg), TRUE);
-		/* emacs likes it's date in a particular way... */		
-		g_print ("\t\t\t\"date\":%u,\n",
-			 (unsigned) mu_msg_get_date (msg));
-		g_print ("\t\t\t\"size\":%u,\n",
-			 (unsigned) mu_msg_get_size (msg));
-		print_attr_json ("msgid", mu_msg_get_msgid (msg),TRUE);
-		print_attr_json ("path", mu_msg_get_path (msg),TRUE);
-		print_attr_json ("maildir", mu_msg_get_maildir (msg), FALSE);
-		g_print ("\t\t}");
-	}
-	g_print ("\t]\n}\n");
 		
 	if (count)
 		*count = mycount;
