@@ -671,6 +671,17 @@ mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
 }
 
 
+gboolean
+mu_msg_is_readable (MuMsg *self)
+{
+	g_return_val_if_fail (self, FALSE);
+	
+	return (access (get_str_field (self, MU_MSG_FIELD_ID_PATH), R_OK)
+		== 0) ? TRUE : FALSE;
+}
+
+
+
 
 
 enum _MaildirType {

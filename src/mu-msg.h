@@ -359,6 +359,16 @@ int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
 
 
 /**
+ * check whether there there's a readable file behind this message 
+ * 
+ * @param self a MuMsg*
+ * 
+ * @return TRUE if the message file is readable, FALSE otherwise
+ */
+gboolean mu_msg_is_readable (MuMsg *self);
+
+
+/**
  * convert the msg to a Lisp symbolic expression (for further processing in
  * e.g. emacs)
  * 
