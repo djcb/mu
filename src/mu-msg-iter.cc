@@ -92,11 +92,9 @@ struct _MuMsgIter {
 	GHashTable      *_threadhash;
 };
 
-
-
 MuMsgIter*
-mu_msg_iter_new (XapianEnquire *enq, size_t maxnum, gboolean threads,
-		 MuMsgFieldId sortfield)
+mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
+		 gboolean threads, MuMsgFieldId sortfield)
 {
 	g_return_val_if_fail (enq, NULL);
 	/* sortfield should be set to .._NONE when we're not threading */
@@ -117,64 +115,65 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum, gboolean threads,
 void
 mu_msg_iter_destroy (MuMsgIter *iter)
 {
-	try { delete iter; } MU_XAPIAN_CATCH_BLOCK;
+       try { delete iter; } MU_XAPIAN_CATCH_BLOCK;
 }
-	
+       
 MuMsg*
 mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
 {
-	Xapian::Document *docp;
-	
-	g_return_val_if_fail (iter, NULL);
-	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
-	
-	/* get a new MuMsg based on the current doc */
-	if (iter->_msg) {
-		mu_msg_unref (iter->_msg);
-		iter->_msg = NULL;
-	}
+       Xapian::Document *docp;
+       
+       g_return_val_if_fail (iter, NULL);
+       g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+       
+       /* get a new MuMsg based on the current doc */
+       if (iter->_msg) {
+               mu_msg_unref (iter->_msg);
+               iter->_msg = NULL;
+       }
 
-	docp = new Xapian::Document(iter->_cursor.get_document());
-	iter->_msg = mu_msg_new_from_doc ((XapianDocument*)docp, err);
-	if (!iter->_msg) {
-		g_warning ("%s: failed to create MuMsg",__FUNCTION__);
-		return NULL;
-	}
+       docp = new Xapian::Document(iter->_cursor.get_document());
+       iter->_msg = mu_msg_new_from_doc ((XapianDocument*)docp, err);
+       if (!iter->_msg) {
+               g_warning ("%s: failed to create MuMsg",__FUNCTION__);
+               return NULL;
+       }
 
-	return iter->_msg;
+       return iter->_msg;
 }
 
 gboolean
 mu_msg_iter_reset (MuMsgIter *iter)
 {
-	g_return_val_if_fail (iter, FALSE);
+       g_return_val_if_fail (iter, FALSE);
 
-	try {
-		iter->_cursor = iter->_matches.begin();
-		
-	} MU_XAPIAN_CATCH_BLOCK_RETURN (FALSE);
+       try {
+               iter->_cursor = iter->_matches.begin();
+               
+       } MU_XAPIAN_CATCH_BLOCK_RETURN (FALSE);
 
-	return TRUE;
+       return TRUE;
 }
-
 
 
 gboolean
 mu_msg_iter_next (MuMsgIter *iter)
 {
-	g_return_val_if_fail (iter, FALSE);
-	
-	if (mu_msg_iter_is_done(iter))
-		return FALSE;
-	
-	try {
-		++iter->_cursor;
-		return iter->_cursor == iter->_matches.end() ? FALSE:TRUE;
-		/* try to get a new MuMsg based on the current doc */
-		//return update_msg (iter);
-		
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
+       g_return_val_if_fail (iter, FALSE);
+       
+       if (mu_msg_iter_is_done(iter))
+               return FALSE;
+       
+       try {
+               ++iter->_cursor;
+               return iter->_cursor == iter->_matches.end() ? FALSE:TRUE;
+               /* try to get a new MuMsg based on the current doc */
+               //return update_msg (iter);
+               
+       } MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
+
+
 
 
 gboolean
