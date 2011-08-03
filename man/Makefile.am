@@ -27,5 +27,7 @@ dist_man_MANS =		\
 	mu-mkdir.1	\
 	mu-view.1	\
 	mu-mv.1		\
+	mu-add.1	\
+	mu-remove.1	\
 	mu.1		\
 	mug.1
