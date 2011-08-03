@@ -72,8 +72,6 @@ the mu find output")
 	(setq eom (string-match mu-eom mu-buf))))))
 
 
-
-
 (defun mu-headers-process-sentinel (proc msg)
   "Check the mu-headers process upon completion"
   (let ((status (process-status proc))
@@ -99,8 +97,8 @@ the mu find output")
 
 ;; Note, the 'mu find --format=sexp' sexp is almost the same as the ones that
 ;; 'mu view --format=sexp' produces (see mu-get-message), with the difference
-;; that former may give more than one result, and that mu-headers output comes from
-;; the database rather than file, and does _not_ contain the message body
+;; that former may give more than one result, and that mu-headers output comes
+;; from the database rather than file, and does _not_ contain the message body
 (defun mu-headers (expr)
   "search in the mu database"
   (interactive "s[mu] messages to find: ")
@@ -118,13 +116,16 @@ the mu find output")
 		  "--quiet"
 		  expr)))
     (switch-to-buffer buf)
+    (setq
+      mu-buf "" ;; if the last query went wrong... 
+      mu-headers-expression expr
+      mu-headers-process proc)
+            
     (set-process-filter   proc 'mu-headers-process-filter)
-    (set-process-sentinel proc 'mu-headers-process-sentinel)
-    (setq mu-headers-process proc)
-    (set (make-local-variable 'mu-headers-expression) expr)
+    (set-process-sentinel proc 'mu-headers-process-sentinel)    
     (mu-headers-mode)))
 
-(defun mu-headers-display-contact (lst width face)
+(defun mu-headers-field-contact (lst width face)
   "display a list of contacts, truncated for fitting in WIDTH"
   (if lst
     (let* ((len (length lst))
@@ -139,17 +140,17 @@ the mu find output")
     (make-string width ?\s)))
 
 
-(defun mu-headers-display-from-or-to (fromlst tolst width from-face to-face)
+(defun mu-headers-field-from-or-to (fromlst tolst width from-face to-face)
   "return a propertized string for FROM unless TO matches
   mu-own-address, in which case it returns TO, prefixed with To:"
   (if (and fromlst tolst)
     (let ((fromaddr (cdr(car fromlst))))
       (if (and fromaddr (string-match mu-own-address fromaddr))
-	(concat (mu-str "To ") (mu-headers-display-contact tolst (- width 3) to-face))
-	(mu-headers-display-contact fromlst width from-face)))
+	(concat (mu-str "To ") (mu-headers-field-contact tolst (- width 3) to-face))
+	(mu-headers-field-contact fromlst width from-face)))
     (make-string width ?\s)))
 
-(defun mu-headers-display-size (size width face)
+(defun mu-headers-field-size (size width face)
   "return a string for SIZE of WIDTH with FACE"
   (let* ((str
 	   (cond
@@ -158,12 +159,12 @@ the mu find output")
 	     ((< size 1000) (format "%d" size)))))
     (propertize  (truncate-string-to-width str width 0 ?\s) 'face face)))
 
-(defun mu-headers-display-str (str width face)
+(defun mu-headers-field-str (str width face)
   "print a STR, at WIDTH (truncate or ' '-pad) with FACE"
   (let ((str (if str str "")))
     (propertize (truncate-string-to-width str width 0 ?\s t) 'face face)))
 
-(defun mu-headers-display-flags (flags width face)
+(defun mu-headers-field-flags (flags width face)
   (let ((str
 	  (mapconcat
 	    (lambda(flag)
@@ -177,45 +178,35 @@ the mu find output")
 		  ((string= flagname "signed")    "s")))) flags "")))
     (propertize  (truncate-string-to-width str width 0 ?\s) 'face face)))
 
-(defun mu-headers-header (msg)
-  "convert a message s-expression into a header for display"
-  (let
-    ((hdr
-       (concat "  "
-	 (mapconcat
-	   (lambda (fieldinfo)
-	     (let ((field (car fieldinfo)) (width (cdr fieldinfo)))
-	       (case field  
-		 (:date
-		   (mu-headers-display-str (format-time-string mu-date-format-short
-					     (plist-get msg :date)) width 'mu-date-face))	  
-		 (:from
-		   (mu-headers-display-contact (plist-get msg :from) width 'mu-from-face))
-		 (:to
-		   (mu-headers-display-contact (plist-get msg :to) width 'mu-to-face))
-		 (:cc
-		   (mu-headers-display-contact (plist-get msg :cc) width 'mu-cc-face))	    
-		 (:bcc
-		   (mu-headers-display-contact (plist-get msg :bcc) width 'mu-bcc-face))
-		 (:flags
-		   (mu-headers-display-flags (plist-get msg :flags) width 'mu-flag-face))
-		 (:size
-		   (mu-headers-display-size (plist-get msg :size) width 'mu-size-face))
-		 (:from-or-to
-		   (mu-headers-display-from-or-to (plist-get msg :from)
-		     (plist-get msg :to) width 'mu-from-face 'mu-to-face))
-		 (:subject
-		   (mu-headers-display-str (plist-get msg :subject) width
-		     'mu-subject-face)))))
-	   mu-headers-fields " "))))
-    (setq hdr (mu-headers-set-props-for-flags hdr (plist-get msg :flags)))
-    (propertize hdr 'path (plist-get msg :path) 'front-sticky t)))
+(defun mu-headers-field (msg fieldinfo)
+  "determine a field based on FIELDINFO in the header for MSG"
+  (let* ((field (car fieldinfo))
+	  (width (cdr fieldinfo))
+	  (val (plist-get msg field)) ;; note: header-field maps msg-field in
+	  (str (case field            ;; most cases..
+		 (:date (mu-headers-field-str (format-time-string mu-date-format-short
+						val) width 'mu-date-face))	  
+		 (:from    (mu-headers-field-contact val width 'mu-from-face))
+		 (:to      (mu-headers-field-contact val width 'mu-to-face))
+		 (:cc      (mu-headers-field-contact val width 'mu-cc-face))	    
+		 (:bcc     (mu-headers-field-contact val width 'mu-bcc-face))
+		 (:flags   (mu-headers-field-flags val width 'mu-flag-face))
+		 (:size    (mu-headers-field-size val width 'mu-size-face))
+		 (:subject (mu-headers-field-str val width 'mu-subject-face))
+		 (:from-or-to ;; this one is special
+		   (mu-headers-field-from-or-to (plist-get msg :from)
+		     (plist-get msg :to) width 'mu-from-face 'mu-to-face)))))
+    str))
 
-(defun mu-headers-set-props-for-flags (hdr flags)
-  "set text properties/faces based on flags"
-  (if (memq 'unread flags)
-    (add-text-properties 0 (- (length hdr) 1) '(face (:weight bold)) hdr))
-    hdr)
+(defun mu-headers-header (msg)
+  "convert a message s-expression into a header for display, and
+set text property 'path"
+  (let ((fields (mapconcat
+		  (lambda (fieldinfo)
+		    (mu-headers-field msg fieldinfo)) mu-headers-fields " ")))	  
+    (propertize (concat "  " fields) 'front-sticky t
+      'path (plist-get msg :path))))
+
 
 (defun mu-headers-mode ()
   "major mode for displaying search results"
@@ -235,13 +226,13 @@ the mu find output")
     (define-key map "q" 'mu-quit-buffer)
     (define-key map "s" 'mu-headers-change-sort)
     (define-key map "g" 'mu-headers-refresh)
-
+    
     ;; marking/unmarking/executing
     (define-key map "m" 'mu-headers-mark-for-move)
     (define-key map "d" 'mu-headers-mark-for-trash)
     (define-key map "D" 'mu-headers-mark-for-deletion)
     (define-key map "u" 'mu-headers-unmark)
-    (define-key map "x" 'mu-headers-mark-execute)
+    (define-key map "x" 'mu-headers-marked-execute)
     
     ;; message composition
     (define-key map "r" 'mu-reply)
@@ -272,12 +263,13 @@ the mu find output")
     t))
 
 (defun mu-headers-refresh ()
-  "re-run the query for the current search expression"
-  (interactive) 
-  (unless (and mu-headers-process
-	    (eq (process-status mu-headers-process) 'run))
-    (when mu-headers-expression
-      (mu-headers mu-headers-expression))))
+  "re-run the query for the current search expression, but only
+if the search process is not already running"
+  (interactive)
+  (message  "REFRESH %s" mu-headers-expression)
+  (if (and mu-headers-process (eq (process-status mu-headers-process) 'run))
+    (message "Can't refresh while running")
+    (when mu-headers-expression (mu-headers mu-headers-expression))))
 
 ;; create a new query based on the old one, but with a changed sort order
 
@@ -325,7 +317,6 @@ the mu find output")
 ;; 'D'->delete, 'm'->'move'). 'u' (unmark) removes this mark, 'U' removes
 ;; all-marks. 'x'->mu-headers-execute removes all marks
 
-
 (defun mu-headers-mark (what)
  "mark the current msg for 'trash, 'move, 'none; return t if it
 worked, nil otherwise"
@@ -344,7 +335,6 @@ worked, nil otherwise"
 	    ('move  (insert-and-inherit
 		      (mu-str (propertize "m" 'action what 'target "/foo/bar"))))
 	    ('none  (insert-and-inherit " ")))
-	  (forward-line)
 	  t)))))
 
 
@@ -372,7 +362,7 @@ three:
 	      (setq lst (cons (list 'move path target) lst)))))))
     lst))
 
-(defun mu-headers-marks-execute ()
+(defun mu-headers-marked-execute ()
   "execute marked actions on messages in the current buffer"
   (interactive)
   (let* ((markedcount (mu-headers-count-marked))
@@ -389,7 +379,28 @@ three:
       (if (and (< 0 deletenum)
 	    (yes-or-no-p (format "Do you want to permanently delete %d message(s)?"
 			   deletenum)))
-	(message "Deleting message(s)")))))
+	(let ((failed (mu-headers-executed-marked 'delete)))
+	  (if (/= 0 failed)
+	    (message "Failed to delete %d of %d message(s)" failed deletenum)
+	    (message "%d message(s) deleted" deletenum)
+	    (mu-headers-refresh)))))))
+	  
+
+(defun mu-headers-executed-marked (execute-action)
+  "handle marked headers for action; return the number of failed
+actions"
+  (let ((failed 0))
+    (mu-headers-foreach-marked
+      (lambda (cell)
+	(let ((action (nth 0 cell)) (src (nth 1 cell)) (target (nth 2 cell)))
+	  (when (eq action execute-action)
+	    (unless
+	      (case action
+		('delete (mu-message-delete src))
+		(t (message "Unsupported action")))
+	      (setq failed (+ 1 failed)))))))
+    failed)) 
+ 
 
 (defun mu-headers-foreach-marked (func)
   "call FUNC for each marked message in BUFFER; the argument
@@ -417,7 +428,7 @@ to FUNC is a list, either: with 'action', 'source' ,
 marked-delete) which are the number of messages marked for each
 of those in the current buffer"
   (let ((result (make-vector 3 0)))
-    (mu-foreach-marked
+    (mu-headers-foreach-marked
       (lambda (cell)
 	(case (car cell)
 	  ('move   (aset result 0  (+ 1 (aref result 0))))
@@ -429,12 +440,12 @@ of those in the current buffer"
   "unmark all messages in the current buffer"
   (interactive)
   (let ((marked 0))
-    (mu-foreach-marked
+    (mu-headers-foreach-marked
       (lambda(cell) (setq marked (+ 1 marked))))
     (if (= 0 marked)
       (message "No messages are marked")
       (when (y-or-n-p (format "Unmark %d message(s)?" marked))
-	(mu-foreach-marked
+	(mu-headers-foreach-marked
 	  (lambda(cell)
 	    (let ((inhibit-read-only t))
 	      (delete-char 1)
@@ -443,23 +454,27 @@ of those in the current buffer"
 (defun mu-headers-mark-for-trash ()
   (interactive)
   (when (mu-headers-mark 'trash)
-    (message "Message marked for trashing")))
+    (message "Message marked for trashing")
+    (forward-line)))
 
 (defun mu-headers-mark-for-deletion ()
   (interactive)
   (when (mu-headers-mark 'delete)
-    (message "Message marked for deletion")))
+    (message "Message marked for deletion")
+    (forward-line)))
 
 (defun mu-headers-mark-for-move ()
   (interactive)
   (when (mu-headers-mark 'move)
-    (message "Message marked for moving")))
+    (message "Message marked for moving")
+    (forward-line)))
 
 (defun mu-headers-unmark ()
   (interactive)
   (when (mu-headers-mark 'none)
-    (message "Message unmarked")))
-    
+    (message "Message unmarked")
+    (forward-line)))
+   
 
 (provide 'mu-headers)
   

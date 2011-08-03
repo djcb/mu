@@ -24,8 +24,8 @@
 ;;; Commentary:
 
 ;;; Code:
-(require 'mu-find)
 (require 'mu-view)
+(require 'mu-headers)
 (require 'mu-message)
 
 (define-key mu-headers-mode-map "q" 'mu-quit-buffer)
@@ -44,7 +44,7 @@
 (define-key mu-headers-mode-map "U" 'mu-headers-unmark-all)
 (define-key mu-headers-mode-map "r" 'mu-headers-reply)
 (define-key mu-headers-mode-map "f" 'mu-headers-forward)
-(define-key mu-headers-mode-map "x" 'mu-headers-execute)
+(define-key mu-headers-mode-map "x" 'mu-headers-marked-execute)
 
 
 (define-key mu-view-mode-map "q" 'mu-quit-buffer)
@@ -61,7 +61,7 @@
 (define-key mu-view-mode-map "U" 'mu-view-unmark-all)
 (define-key mu-view-mode-map "r" 'mu-view-reply)
 (define-key mu-view-mode-map "f" 'mu-view-forward)
-(define-key mu-view-mode-map "x" 'mu-view-execute)
+(define-key mu-view-mode-map "x" 'mu-view-marked-execute)
 
 
 (provide 'mu)

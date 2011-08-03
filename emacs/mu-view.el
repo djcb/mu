@@ -141,7 +141,7 @@ buffer."
     (define-key map "D" 'mu-view-mark-for-deletion)
     (define-key map "m" 'mu-view-mark-for-move)
     (define-key map "u" 'mu-view-unmark)
-    (define-key map "x" 'mu-view-marks-execute)
+    (define-key map "x" 'mu-view-marked-execute)
     
     map)
   "Keymap for \"mu-view\" buffers.")
@@ -187,29 +187,33 @@ also `with-temp-buffer'."
   "mark for thrashing"
   (interactive)
   (with-current-headers-buffer
-    (mu-headers-mark 'trash)))
+    (when (mu-headers-mark 'trash)
+      (mu-view-next))))
 
 (defun mu-view-mark-for-deletion ()
   "mark for deletion"
   (interactive)
   (with-current-headers-buffer
-    (mu-headers-mark 'delete)))
+    (when (mu-headers-mark 'delete)
+      (mu-view-next))))
 
 (defun mu-view-mark-for-move ()
   "mark for moving"
   (interactive)
     (with-current-headers-buffer
-      (mu-headers-mark 'move)))
+      (when (mu-headers-mark 'move)
+	(mu-view-next))))
 
 (defun mu-view-unmark ()
   "unmark this message"
   (interactive)
   (with-current-headers-buffer
-    (mu-headers-mark 'none)))
+    (when (mu-headers-mark 'none)
+      (mu-view-next))))
 
 ;; we don't allow executing marks from the view buffer, to protect user from
 ;; accidentally deleting stuff...
-(defun mu-view-marks-execute ()
+(defun mu-view-marked-execute ()
   "give user a warning"
   (interactive)
   (message "Please go back to the headers list to execute your marks"))
