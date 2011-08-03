@@ -1,7 +1,7 @@
 VERSION=$(shell git describe --tags --dirty)
 EMACS=emacs
 PREFIX=/usr/local
-ELS=mu.el mu-common.el mu-view.el mu-find.el 
+ELS=mu.el mu-common.el mu-view.el mu-headers.el
 ELCS=$(ELS:.el=.elc)
 
 .PHONY=install

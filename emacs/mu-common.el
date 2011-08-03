@@ -53,19 +53,16 @@ notation) for the mail view and in replied/forwarded message quotations")
 (defface mu-body-face    '((t (:foreground "#8cd0d3"))) "") 
 (defface mu-header-face  '((t (:foreground "#7f9f7f"))) "") 
 (defface mu-size-face    '((t (:foreground "#889f7f"))) "") 
-(defface mu-body-face    '((t (:foreground "#dcdccc"))) "") 
 (defface mu-flag-face    '((t (:foreground "#dc56cc"))) "") 
-(defface mu-flag-face    '((t (:foreground "#7f6677"))) "") 
-
+(defface mu-path-face    '((t (:foreground "#dc56cc"))) "") 
 
 (defface mu-unread-face    '((t (:bold t))) "") 
 (defface mu-face         '((t (:foreground "Gray" :italic t))) "")
 
 (defvar mu-own-address "djcb" "regexp matching my own address")
 
-
 ;;; internal stuff
-(defvar mu-parent-buf nil "the parent buffer for a
+(defvar mu-parent-buffer nil "the parent buffer for a
 buffer (buffer-local), i.e., the buffer we'll return to when this
 buffer is killed")
 
@@ -89,14 +86,14 @@ buffer is killed")
 etc.)"
   (propertize str 'face 'mu-face 'intangible t))
 
-(setq mu-find-fields
+(setq mu-headers-fields
   '(
      (:date          .  20)
      (:flags         .   4)
      (:from-or-to    .  22)
      (:size          .   8)
      (:subject       .  40)))
-(setq mu-find-date-format "%x %X")
+(setq mu-headers-date-format "%x %X")
 
 (setq mu-header-fields
   '( :from
@@ -175,103 +172,17 @@ Lisp data as a plist.  Returns nil in case of error"
 
 (defun mu-quit-buffer ()
   "kill this buffer, and switch to it's parentbuf if it is alive"
-  (interactive)
-  (let ((parentbuf (mu-parent-buf)))
+  (interactive)  
+  (let ((parentbuf mu-parent-buffer))
     (kill-buffer)
-    (when (buffer-live-p parentbuf)
+    (when (and parentbuf (buffer-live-p parentbuf))
       (switch-to-buffer parentbuf))))
 
-(defun mu-get-marked ()
-  "get all marked messages as a list; each element is a cell;
-with 'action', 'source' , 'target'). ie one of three:
-  ('delete <path>)
-  ('trash  <path> <target>)
-  ('move   <path> <target>)"  
-  (let ((lst))
-    (with-current-buffer mu-find-buffer-name
-      (save-excursion
-	(goto-char (point-min))
-	(while (re-search-forward "^." nil t)
-	  (let* ((char0  (match-string 0))
-		  (action (get-text-property 0 'action char0))
-		  (path   (get-text-property 0 'path   char0))
-		  (target (get-text-property 0 'target char0)))
-	    (cond
-	      ((eq action 'trash)
-		(setq lst (cons (list 'trash path target) lst)))
-	      ((eq action 'delete)
-		(setq lst (cons (list 'delete path) lst)))
-	      ((eq action 'move)
-		(setq lst (cons (list 'move path target) lst))))))))
-      lst))
-
-(defun mu-execute ()
-  "execute marked actions on messages"
-  (interactive)
-  (let* ((markedcount (mu-count-marked))
-	  (movenum (nth 0 markedcount)) (trashnum (nth 1 markedcount))
-	  (deletenum (nth 2 markedcount)))
-    (if (= 0 (apply '+ markedcount))
-      (message "No messages are marked")
-      (if (and (< 0 movenum)
-	    (y-or-n-p (format "Do you want to move %d message(s)?" movenum)))
-	(message "Moving message(s)"))      
-      (if (and (< 0  trashnum)
-	    (y-or-n-p (format "Do you want to move %d message(s) to trash?" trashnum)))
-	(message "Trashing message(s)"))
-      (if (and (< 0 deletenum)
-	    (yes-or-no-p (format "Do you want to permanently delete %d message(s)?"
-			   deletenum)))
-	(message "Deleting message(s)"))
-      (mu-find-refresh))))
-
-
-(defun mu-foreach-marked (func)
-  "call FUNC for each marked message; the argument to FUNC is a list, either:
-with 'action', 'source' , 'target'). ie one of three:
-  ('delete <path>)
-  ('trash  <path> <target>)
-  ('move   <path> <target>)"  
-  (with-current-buffer mu-find-buffer-name
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^." nil t)
-	(move-beginning-of-line 1)
-	(let* ((char0  (match-string 0))
-		(action (get-text-property 0 'action char0))
-		(path   (get-text-property 0 'path   char0))
-		(target (get-text-property 0 'target char0)))
-	  (cond
-	    ((eq action 'trash)  (funcall func (list 'trash path target)))
-	    ((eq action 'delete) (funcall func (list 'delete path)))
-	    ((eq action 'move)   (funcall func (list 'move path target)))))
-	(move-end-of-line 1)))))
-
-(defun mu-count-marked ()
-  "return a vector with three items (marked-move marked-trash
-marked-delete) which are the number of messages marked for each
-of those"
-  (let ((result (make-vector 3 0)))
-    (mu-foreach-marked
-      (lambda (cell)
-	(case (car cell)
-	  ('move   (aset result 0  (+ 1 (aref result 0))))
-	  ('trash  (aset result 1  (+ 1 (aref result 1))))
-	  ('delete (aset result 2  (+ 1 (aref result 2)))))))
-    (append result nil))) ;; convert to list
-
-(defun mu-unmark-all ()
-  "unmark all messages"
-  (interactive)
-  (let ((marked 0))
-    (mu-foreach-marked (lambda(cell) (setq marked (+ 1 marked))))
-    (if (= 0 marked)
-      (message "No messages are marked")
-      (when (y-or-n-p (format "Unmark %d message(s)?" marked))
-	(mu-foreach-marked
-	  (lambda(cell)
-	    (let ((inhibit-read-only t))
-	      (delete-char 1)
-	      (insert-and-inherit " "))))))))
+(defun mu-get-new-buffer (bufname)
+  "return a new buffer BUFNAME; if such already exists, kill the
+old one first"
+  (when (get-buffer bufname)
+    (kill-buffer bufname))
+  (get-buffer-create bufname))
 
 (provide 'mu-common)
