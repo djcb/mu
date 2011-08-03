@@ -203,8 +203,7 @@ view_params_valid (MuConfig *opts)
 		g_warning ("usage: mu view [options] <file> [<files>]");
 		return FALSE;
 	}
-
-
+	
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
 	case MU_CONFIG_FORMAT_SEXP:
@@ -302,70 +301,26 @@ mv_check_params (MuConfig *opts, MuMsgFlags *flags)
 }
 
 
-static gboolean
-update_db_after_mv (MuConfig *opts, const char *src, const char* target)
-{
-	MuStore *store;
-	GError *err;
-	gboolean rv1, rv2;
-
-	err = NULL;
-	store = mu_store_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-			      mu_runtime_path(MU_RUNTIME_PATH_CONTACTS), &err);
-	
-	if (!store) {
-		if (err) {
-			g_warning ("store error: %s", err->message);
-			g_error_free (err);
-		} else
-			g_warning ("failed to create store object");
-
-		return FALSE;
-	}
-
-	if (!(rv1 = mu_store_remove (store, src)))
-		g_warning ("failed to remove message from store");
-	
-	if (!(rv2 = mu_store_store_path (store, target)))
-		g_warning ("failed to store target message");
-	
-	mu_store_destroy (store);
-	
-	return rv1 && rv2;
-}
-
-static MuExitCode
-mv_remove (const char *path, MuConfig *opts)
-{
-	if (unlink (path) != 0) {
-		g_warning ("unlink failed: %s", strerror (errno));
-		return MU_EXITCODE_ERROR;
-	}
-
-	if (!opts->updatedb || update_db_after_mv (opts, path, NULL))
-		return MU_EXITCODE_OK;
-	else
-		return MU_EXITCODE_DB_UPDATE_ERROR;
-}
-
-
 MuExitCode
 mu_cmd_mv (MuConfig *opts)
 {
 	GError *err;
 	gchar *fullpath;
 	MuMsgFlags flags;
-	MuExitCode rv;
 	
 	if (!mv_check_params (opts, &flags))
 		return MU_EXITCODE_ERROR;
-	
-	err = NULL;
 
 	/* special case: /dev/null */
-	if (g_strcmp0 (opts->params[2], "/dev/null") == 0)
-		return mv_remove (opts->params[1], opts);
+	if (g_strcmp0 (opts->params[2], "/dev/null") == 0) {
+		if (unlink (opts->params[1]) != 0) {
+			g_warning ("unlink failed: %s", strerror (errno));
+			return MU_EXITCODE_ERROR;
+		} else
+			return MU_EXITCODE_OK;
+	}
 
+	err = NULL;
 	fullpath = mu_msg_file_move_to_maildir (opts->params[1], opts->params[2],
 						flags, &err);
 	if (!fullpath) {
@@ -378,14 +333,115 @@ mu_cmd_mv (MuConfig *opts)
 	} else if (opts->printtarget)       /* if the move worked, print the */
 		g_print ("%s\n", fullpath); /* target (if user set
 				             * --printtarget) */
-
-	/* now, when --updatedb db was given, try to update it */
-	if (!opts->updatedb || update_db_after_mv (opts, opts->params[1], fullpath))
-		rv = MU_EXITCODE_OK;
-	else
-		rv = MU_EXITCODE_DB_UPDATE_ERROR;
 	
 	g_free (fullpath);
 
-	return rv;
+	return MU_EXITCODE_OK;
 }
+
+
+static gboolean
+check_file_okay (const char *path, gboolean cmd_add)
+{
+ 	if (!g_path_is_absolute (path)) {
+		g_warning ("path is not absolute: %s", path);
+		return FALSE;
+	}
+	
+	if (cmd_add && access (path, R_OK) != 0) {
+		g_warning ("path is not readable: %s: %s",
+			   path, strerror (errno));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+	
+
+static MuExitCode
+add_or_remove (MuConfig *opts, gboolean cmd_add)
+{
+	MuStore *store;
+	GError *err;
+	gboolean allok;
+	int i;
+	
+	err = NULL;
+	store = mu_store_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			      mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
+			      &err);
+	if (!store) {
+		if (err) {
+			g_warning ("store error: %s", err->message);
+			g_error_free (err);
+		} else
+			g_warning ("failed to create store object");
+		
+		return MU_EXITCODE_ERROR;
+	}
+
+
+	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
+		
+		const char* src;
+
+		src = opts->params[i];
+
+		if (!check_file_okay (src, cmd_add)) {
+			allok = FALSE;
+			continue;
+		}
+				
+		if (cmd_add) {
+			if (!mu_store_store_path (store, src)) {
+				allok = FALSE;
+				g_warning ("failed to store %s", src);
+			}
+		} else { /* remove */
+			if (!mu_store_remove_path (store, src)) {
+				allok = FALSE;
+				g_warning ("failed to remove %s", src);
+			}
+		}
+	}
+	
+	mu_store_destroy (store);
+	
+	return allok ? MU_EXITCODE_OK : MU_EXITCODE_DB_UPDATE_ERROR;
+}
+
+
+
+MuExitCode
+mu_cmd_add (MuConfig *opts)
+{
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
+			      MU_EXITCODE_ERROR);
+
+	/* note: params[0] will be 'add' */
+	if (!opts->params[0] || !opts->params[1]) {
+		g_warning ("usage: mu add <file> [<files>]");
+		return MU_EXITCODE_ERROR;
+	}
+
+	return add_or_remove (opts, TRUE);
+}
+
+
+MuExitCode
+mu_cmd_remove (MuConfig *opts)
+{	
+	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
+			      MU_EXITCODE_ERROR);
+
+	/* note: params[0] will be 'add' */
+	if (!opts->params[0] || !opts->params[1]) {
+		g_warning ("usage: mu remove <file> [<files>]");
+		return MU_EXITCODE_ERROR;
+	}
+
+	return add_or_remove (opts, TRUE);
+}
+

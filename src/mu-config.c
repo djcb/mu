@@ -47,7 +47,6 @@ get_output_format (const char *formatstr)
 		{"csv",		MU_CONFIG_FORMAT_CSV},
 		{"org-contact", MU_CONFIG_FORMAT_ORG_CONTACT},
 		{"bbdb",	MU_CONFIG_FORMAT_BBDB},
-		{"json",	MU_CONFIG_FORMAT_JSON,},
 		{"links",	MU_CONFIG_FORMAT_LINKS},
 		{"plain",	MU_CONFIG_FORMAT_PLAIN},
 		{"sexp",	MU_CONFIG_FORMAT_SEXP},
@@ -216,9 +215,12 @@ config_options_group_find (MuConfig *opts)
 		 "clear old links before filling a linksdir (false)", NULL},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
 		 "output format ('plain'(*), 'links', 'xml',"
-		 "'json', 'sexp', 'xquery')", NULL},
+		 "'sexp', 'xquery')", NULL},
 		{"exec", 'e', 0, G_OPTION_ARG_STRING, &opts->exec,
 		 "execute command on each match message", NULL},
+		{"include-unreable", 0, 0, G_OPTION_ARG_NONE,
+		 &opts->include_unreadable,
+		 "don't ignore messages without a disk file (false)", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -319,9 +321,7 @@ config_options_group_mv (MuConfig *opts)
 	GOptionEntry entries[] = {
 		{"flags", 0, 0, G_OPTION_ARG_STRING, &opts->flagstr,
 		 "flags to set for the target (DFNPRST)", NULL},
-		{"updatedb", 0, 0, G_OPTION_ARG_NONE, &opts->updatedb,
-		 "whether to update the database after the move", NULL},
-		{"printtarget", 0, 0, G_OPTION_ARG_NONE, &opts->updatedb,
+		{"printtarget", 0, 0, G_OPTION_ARG_NONE, &opts->printtarget,
 		 "whether to print the target path upon succesful completion",
 		 NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}

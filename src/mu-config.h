@@ -48,12 +48,11 @@ enum _MuConfigFormat {
 	MU_CONFIG_FORMAT_BBDB,		/* BBDB */
 
 	/* for find, view */
-	MU_CONFIG_FORMAT_SEXP,		/* output sexps */
+	MU_CONFIG_FORMAT_SEXP,		/* output sexps (emacs) */
 
 	/* for find */
 	MU_CONFIG_FORMAT_LINKS,		/* output as symlinks */
 	MU_CONFIG_FORMAT_XML,		/* output xml */
-	MU_CONFIG_FORMAT_JSON,		/* output json */
 	MU_CONFIG_FORMAT_XQUERY,	/* output the xapian query */
 };
 typedef enum _MuConfigFormat MuConfigFormat;
@@ -70,6 +69,8 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_EXTRACT,
 	MU_CONFIG_CMD_CFIND,
 	MU_CONFIG_CMD_MV,
+	MU_CONFIG_CMD_ADD,
+	MU_CONFIG_CMD_REMOVE,
 	
 	MU_CONFIG_CMD_NONE,
 };
@@ -122,12 +123,11 @@ struct _MuConfig {
 	char		*exec;		/* command to execute on the
 					 * files for the matched
 					 * messages */
-
+	gboolean        include_unreadable; /* don't ignore messages
+					     * without a disk file */
 	/* options for mv */
 	char            *flagstr;        /* message flags to set for
 					  * the target */
-	gboolean	updatedb;        /* should the database be updated after
-					  * moving? */
 	gboolean	printtarget;      /* should be print the
 					   * target file path on
 					   * stdout */

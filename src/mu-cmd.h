@@ -118,6 +118,26 @@ MuExitCode mu_cmd_mv (MuConfig *opts);
 MuExitCode mu_cmd_cfind (MuConfig *opts);
 
 
+/**
+ * execute the add command
+ * 
+ * @param opts configuration options
+ * 
+ * @return MU_EXITCODE_OK (0) if the command succeeds,
+ * MU_EXITCODE_ERROR otherwise
+ */
+MuExitCode mu_cmd_add (MuConfig *opts);
+
+/**
+ * execute the remove command
+ * 
+ * @param opts configuration options
+ * 
+ * @return MU_EXITCODE_OK (0) if the command succeeds,
+ * MU_EXITCODE_ERROR otherwise
+ */
+MuExitCode mu_cmd_remove (MuConfig *opts);
+
 G_END_DECLS
 
 #endif /*__MU_CMD_H__*/
