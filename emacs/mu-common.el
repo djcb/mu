@@ -104,6 +104,41 @@ etc.)"
 
 (setq mu-own-address-regexp "djcb\\|diggler\\|bulkmeel")
 
+(defvar mu-maildir nil "our maildir")
+(defvar mu-folder nil "our list of special folders for jumping,
+moving")
+
+
+(defvar mu-maildir nil "location of your maildir, typically ~/Maildir")
+(defvar mu-inbox-folder  nil  "location of your inbox folder")
+(defvar mu-outbox-folder nil "location of your outbox folder")
+(defvar mu-sent-folder   nil "location of your sent folder")
+(defvar mu-trash-folder  nil "location of your trash-folder folder")
+
+(setq
+  mu-maildir "/home/djcb/Maildir"
+  mu-inbox-folder  "/inbox"
+  mu-outbox-folder "/outbox"
+  mu-sent-folder   "/sent"
+  mu-trash-folder  "/trash")
+
+(defvar mu-quick-folders nil)
+
+(setq mu-quick-folders
+  '("/archive" "/bulkarchive" "/todo"))
+
+(defun mu-ask-folder (prompt)
+  "ask user with PROMPT for a folder name, return the full path
+the folder"
+  (interactive)
+  (let*
+    ((showfolders
+       (delete-dups
+  	 (append (list mu-inbox-folder mu-sent-folder) mu-quick-folders)))
+      (chosen (ido-completing-read prompt showfolders)))
+    (concat mu-maildir chosen)))
+     
+
 (defun mu-ask-key (prompt)
   "Get a char from user, only accepting characters marked with [x] in prompt,
 e.g. 'Reply to [a]ll or [s]ender only; returns the character chosen"
@@ -165,11 +200,6 @@ Lisp data as a plist.  Returns nil in case of error"
 	(progn (message "Failed to parse message") nil)))))
 
 
-(defun mu-move-to-updated-path (path newflags)
-  "move msg to an updated path based on newflags"
-  ;; TODO  
-  )
-
 (defun mu-quit-buffer ()
   "kill this buffer, and switch to it's parentbuf if it is alive"
   (interactive)  
@@ -184,5 +214,10 @@ old one first"
   (when (get-buffer bufname)
     (kill-buffer bufname))
   (get-buffer-create bufname))
+
+(defun mu-log (frm &rest args)
+  (with-current-buffer (get-buffer-create "*mu-log*")
+    (insert (apply 'format (concat frm "\n") args))))
+
 
 (provide 'mu-common)

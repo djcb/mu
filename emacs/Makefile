@@ -14,7 +14,7 @@ BATCH=$(EMACS) -batch -q -no-site-file -eval \
 
 all: $(ELCS)
 
-docs: mu.info
+docs: mu.infogg
 
 install_lisp:
 	mkdir -p $(DESTDIR)/$(PREFIX)/share/emacs/site-lisp

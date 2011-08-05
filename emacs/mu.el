@@ -44,7 +44,7 @@
 (define-key mu-headers-mode-map "U" 'mu-headers-unmark-all)
 (define-key mu-headers-mode-map "r" 'mu-headers-reply)
 (define-key mu-headers-mode-map "f" 'mu-headers-forward)
-(define-key mu-headers-mode-map "x" 'mu-headers-marked-execute)
+(define-key mu-headers-mode-map "x" 'mu-headers-marks-execute)
 
 
 (define-key mu-view-mode-map "q" 'mu-quit-buffer)

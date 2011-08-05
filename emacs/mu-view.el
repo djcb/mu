@@ -110,20 +110,16 @@ buffer."
   (let ((str (mu-view-message path))
 	 (buf (mu-get-new-buffer mu-view-buffer-name)))
     (when str
-      (with-current-buffer buf	
-    
-	(let ((inhibit-read-only t))
-	  ;; note, we set the path as a text-property
-	  (insert (propertize str 'path path))))
-      
       (switch-to-buffer buf)
-      (mu-view-mode)
-
-      ;; these are buffer-local
-      (setq mu-parent-buffer parentbuf)
-      (setq mu-view-headers-buffer parentbuf)
-
-      (goto-char (point-min)))))
+      (insert str))
+    (mu-view-mode)
+     
+    (setq ;; these are buffer-local
+	mu-parent-buffer parentbuf
+	mu-view-headers-buffer parentbuf
+	mu-path path)
+      
+      (goto-char (point-min))))
 
 (defvar mu-view-mode-map
   (let ((map (make-sparse-keymap)))
@@ -152,8 +148,11 @@ buffer."
   (interactive)
   (kill-all-local-variables)
   (use-local-map mu-view-mode-map)
-  (make-variable-buffer-local 'mu-parent-buffer)
-  (make-variable-buffer-local 'mu-headers-buffer)
+
+  (make-local-variable 'mu-parent-buffer)
+  (make-local-variable 'mu-headers-buffer)
+  (make-local-variable 'mu-path)
+    
   (setq major-mode 'mu-view-mode mode-name "*mu-view*")
   (setq truncate-lines t buffer-read-only t))
 
@@ -174,14 +173,14 @@ also `with-temp-buffer'."
   (interactive)
   (with-current-headers-buffer
     (when (mu-headers-next)
-      (mu-view (mu-get-path) (current-buffer)))))
+      (mu-view (mu-headers-get-path) (current-buffer)))))
 
 (defun mu-view-prev ()
   "move to the previous message"
   (interactive)
   (with-current-headers-buffer
     (when (mu-headers-prev)
-      (mu-view (mu-get-path) (current-buffer)))))
+      (mu-view (mu-headers-get-path) (current-buffer)))))
 
 (defun mu-view-mark-for-trash ()
   "mark for thrashing"

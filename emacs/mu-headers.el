@@ -32,6 +32,35 @@
 ;;; one line descriptions of an e-mail message), based on the output of 'mu
 ;;; find'.
 
+;; data is stored like the following: for each header-line, we take the (point)
+;; at beginning-of-line (bol) and use that as the key in the mu-headers-hash
+;; hash, which does
+;;
+;;    point-of-bol -> path
+;;
+;; then, marks are stored in a seperate hash 'mu-headers-marks-hash, using
+;;
+;;   point-of-bol -> (src . target)
+;;
+;;  and note both 'delete' (target=/dev/null), trash (target=trash-folder), and
+;;  move can be expressed by that
+;;
+;; after the marks have been 'executed', the lines will be marked a *invisible*
+;; instead of deleting them; that way, the 'point-of-bol' stays valid.
+
+(defvar mu-headers-hash nil "internal: buffer-local hash table
+which maps bol->path")
+(defvar mu-headers-marks-hash nil "internal: buffer-local hash table
+which maps bol->(src . target) for marked lines")
+  
+(defun mu-headers-set-path (path)
+  "map the bol of the current header to a path"
+  (puthash (line-beginning-position 1) path mu-headers-hash))
+  
+(defun mu-headers-get-path ()
+  "get the path for the header at point"
+  (gethash (line-beginning-position 1) mu-headers-hash))
+
 (defvar mu-headers-fields
   '( (:date          .  25)
      (:from-or-to    .  22)
@@ -55,7 +84,7 @@ the mu find output")
 (defvar mu-headers-expression nil
   "search expression for the current find buffer")
 
-(defvar mu-buf "" "buffer for results data")
+(defvar mu-buf "" "internal: buffer for results data")
 (defun mu-headers-process-filter (proc str)
   "process-filter for the 'mu find --format=sexp output; it
   accumulates the strings into valid sexps by checking of the
@@ -63,10 +92,11 @@ the mu find output")
   (save-excursion
     (setq mu-buf (concat mu-buf str))
     (let ((eom (string-match mu-eom mu-buf)))
-      (while (numberp eom)
+       (while (numberp eom)
 	(let* ((msg (car (read-from-string (substring mu-buf 0 eom))))
 		(inhibit-read-only t))
-	    (goto-char (point-max))
+	  (goto-char (point-max))
+	  (mu-headers-set-path (plist-get msg :path))
 	  (save-match-data (insert (mu-headers-header msg) ?\n)))
 	(setq mu-buf (substring mu-buf (match-end 0)))
 	(setq eom (string-match mu-eom mu-buf))))))
@@ -116,14 +146,18 @@ the mu find output")
 		  "--quiet"
 		  expr)))
     (switch-to-buffer buf)
+    (mu-headers-mode)
+    
     (setq
       mu-buf "" ;; if the last query went wrong... 
       mu-headers-expression expr
-      mu-headers-process proc)
-            
+      mu-headers-process proc
+
+      mu-headers-hash       (make-hash-table :size 256 :rehash-size 2)
+      mu-headers-marks-hash (make-hash-table :size 16  :rehash-size 2))
+    
     (set-process-filter   proc 'mu-headers-process-filter)
-    (set-process-sentinel proc 'mu-headers-process-sentinel)    
-    (mu-headers-mode)))
+    (set-process-sentinel proc 'mu-headers-process-sentinel)))
 
 (defun mu-headers-field-contact (lst width face)
   "display a list of contacts, truncated for fitting in WIDTH"
@@ -201,11 +235,10 @@ the mu find output")
 (defun mu-headers-header (msg)
   "convert a message s-expression into a header for display, and
 set text property 'path"
-  (let ((fields (mapconcat
-		  (lambda (fieldinfo)
-		    (mu-headers-field msg fieldinfo)) mu-headers-fields " ")))	  
-    (propertize (concat "  " fields) 'front-sticky t
-      'path (plist-get msg :path))))
+  (concat "  "
+    (mapconcat
+      (lambda (fieldinfo)
+	(mu-headers-field msg fieldinfo)) mu-headers-fields " ")))
 
 
 (defun mu-headers-mode ()
@@ -213,11 +246,17 @@ set text property 'path"
   (interactive)
   (kill-all-local-variables)
   (use-local-map mu-headers-mode-map)
-  (make-variable-buffer-local 'mu-parent-buffer)
-  (make-variable-buffer-local 'mu-headers-expression)
-  (make-variable-buffer-local 'mu-headers-process) 
+
+  (make-local-variable 'mu-buf)
+  (make-local-variable 'mu-parent-buffer)
+  (make-local-variable 'mu-headers-expression)
+  (make-local-variable 'mu-headers-process)
+  (make-local-variable 'mu-headers-hash)
+  (make-local-variable 'mu-headers-marks-hash)
+
   (setq
     major-mode 'mu-headers-mode mode-name "*headers*"
+    mu-buf ""
     truncate-lines t buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
@@ -245,13 +284,13 @@ set text property 'path"
 (defun mu-headers-view ()
   "display the message at the current line"
   (interactive)
-  (let ((path (mu-get-path)))
+  (let ((path (mu-headers-get-path)))
     (when path (mu-view path (current-buffer)))))
 
 (defun mu-headers-next  ()
   "go to the next line; t if it worked, nil otherwise"
   (interactive)
-  (if (or (/= 0 (forward-line 1)) (not (mu-get-path)))    
+  (if (or (/= 0 (forward-line 1)) (not (mu-headers-get-path)))    
     (progn (message "No message after this one") nil)
     t))
 
@@ -310,171 +349,76 @@ if the search process is not already running"
   (and (call-interactively 'mu-headers-change-sort-order)
     (call-interactively 'mu-headers-change-sort-direction)))
 
+(defun mu-headers-add-marked (src dst)
+  (let ((bol (line-beginning-position 1)))
+    (if (gethash bol mu-headers-marks-hash)
+      (progn (message "Message is already marked") nil)
+      (progn (puthash bol (cons src dst) mu-headers-marks-hash) t))))
 
-;; message are 'marked' for moving, deletion etc. by have a special propertized
-;; character at the start of the line; this propertized character holds an
-;; 'action property, which tells what to do with this one (e.g.,'d'-> trash,
-;; 'D'->delete, 'm'->'move'). 'u' (unmark) removes this mark, 'U' removes
-;; all-marks. 'x'->mu-headers-execute removes all marks
-
-(defun mu-headers-mark (what)
- "mark the current msg for 'trash, 'move, 'none; return t if it
-worked, nil otherwise"
-  (when (mu-get-path)
-    (move-beginning-of-line 1)
-    (let ((inhibit-read-only t) (overwrite-mode nil))
-      (if (and (not (eq what 'none)) (get-text-property (point) 'action))
-	(progn (message "Message at point is already marked") nil)
-	(progn
-	  (delete-char 1)
-	  (case what
-	    ('trash (insert-and-inherit
-		      (mu-str (propertize "d" 'action what 'target "/foo/bar"))))
-	    ('delete (insert-and-inherit
-		      (mu-str (propertize "D" 'action what 'target "/foo/bar"))))
-	    ('move  (insert-and-inherit
-		      (mu-str (propertize "m" 'action what 'target "/foo/bar"))))
-	    ('none  (insert-and-inherit " ")))
-	  t)))))
+(defun mu-headers-remove-marked ()
+  (let ((bol (line-beginning-position 1)))
+    (if (not (gethash bol mu-headers-marks-hash))
+      (progn (message "Message is not marked") nil)
+      (progn (remhash bol mu-headers-marks-hash) t))))
 
 
-(defun mu-headers-get-marked ()
-  "get all marked messages in the current buffer as a list; each
-element is a cell; with 'action', 'source' , 'target'). ie one of
-three:
-  ('delete <path>)
-  ('trash  <path> <target>)
-  ('move   <path> <target>)"  
-  (let ((lst))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^." nil t)
-	(let* ((char0  (match-string 0))
-		(action (get-text-property 0 'action char0))
-		(path   (get-text-property 0 'path   char0))
-		(target (get-text-property 0 'target char0)))
-	  (cond
-	    ((eq action 'trash)
-	      (setq lst (cons (list 'trash path target) lst)))
-	    ((eq action 'delete)
-	      (setq lst (cons (list 'delete path) lst)))
-	    ((eq action 'move)
-	      (setq lst (cons (list 'move path target) lst)))))))
-    lst))
+(defun mu-headers-set-marker (kar)
+  "set the marker at the beginning of this line"
+  (beginning-of-line 1)
+  (let ((inhibit-read-only t))
+    (delete-char 2)
+    (insert (if kar kar " ") " ")))
 
-(defun mu-headers-marked-execute ()
-  "execute marked actions on messages in the current buffer"
+(defun mu-headers-mark (action)
+  "mark the current msg for something: move, delete, trash, unmark"
+  (let ((target) (src (mu-headers-get-path)))
+    (when (and src
+	    (case action
+	      (move
+		(when (mu-headers-add-marked src (mu-ask-folder "Target maildir: "))
+		  (mu-headers-set-marker ?m)))
+	      (trash
+		(when (mu-headers-add-marked src mu-trash-folder)
+		  (mu-headers-set-marker ?d)))
+	      (delete
+		(when (mu-headers-add-marked src "/dev/null")
+		  (mu-headers-set-marker ?D)))
+	      (unmark
+		(when (mu-headers-remove-marked src "dummy")
+		  (mu-headers-set-marker nil)))
+	      (unmark-all
+		(when (y-or-n-p (format "Sure you want to remove all (%d) marks? "
+				  (hash-table-count mu-headers-marks-hash)))
+		  (save-excursion
+		    (maphash (lambda (k v) (goto-char k) (mu-headers-mark 'unmark))
+		      mu-headers-marks-hash)))
+		(t (message "Unsupported mark type"))))))))
+
+(defun mu-headers-marks-execute ()
+  "execute the actions for all marked messages"
   (interactive)
-  (let* ((markedcount (mu-headers-count-marked))
-	  (movenum (nth 0 markedcount)) (trashnum (nth 1 markedcount))
-	  (deletenum (nth 2 markedcount)))
-    (if (= 0 (apply '+ markedcount))
-      (message "No messages are marked")
-      (if (and (< 0 movenum)
-	    (y-or-n-p (format "Do you want to move %d message(s)?" movenum)))
-	(message "Moving message(s)"))      
-      (if (and (< 0  trashnum)
-	    (y-or-n-p (format "Do you want to move %d message(s) to trash?" trashnum)))
-	(message "Trashing message(s)"))
-      (if (and (< 0 deletenum)
-	    (yes-or-no-p (format "Do you want to permanently delete %d message(s)?"
-			   deletenum)))
-	(let ((failed (mu-headers-executed-marked 'delete)))
-	  (if (/= 0 failed)
-	    (message "Failed to delete %d of %d message(s)" failed deletenum)
-	    (message "%d message(s) deleted" deletenum)
-	    (mu-headers-refresh)))))))
-	  
+  (let ((n-marked (hash-table-count mu-headers-marks-hash)))
+    (if (= 0 n-marked)
+      (message "No marked messages")
+      (when (y-or-n-p
+	      (format "Execute actions for %d marked message(s)? " n-marked))
+	(save-excursion
+	  (maphash
+	    (lambda(bol v)
+	      (let ((src (car v)) (target (cdr v)) (inhibit-read-only t))
+		(when (mu-message-move src target)  
+		  (goto-char bol)
+		  (mu-headers-remove-marked)
+		  (put-text-property bol (line-beginning-position 2)
+		    'face 'invisible)))) ;; when it succeedes, hide msg..)
+	    mu-headers-marks-hash))))))
+  
+(defun mu-headers-mark-for-move () (interactive) (mu-headers-mark 'move))
+(defun mu-headers-mark-for-trash () (interactive) (mu-headers-mark 'trash))
+(defun mu-headers-mark-for-delete () (interactive) (mu-headers-mark 'delete))
+(defun mu-headers-unmark () (interactive) (mu-headers-mark 'unmark))
+(defun mu-headers-unmark-all () (interactive) (mu-headers-mark 'unmark-all))
 
-(defun mu-headers-executed-marked (execute-action)
-  "handle marked headers for action; return the number of failed
-actions"
-  (let ((failed 0))
-    (mu-headers-foreach-marked
-      (lambda (cell)
-	(let ((action (nth 0 cell)) (src (nth 1 cell)) (target (nth 2 cell)))
-	  (when (eq action execute-action)
-	    (unless
-	      (case action
-		('delete (mu-message-delete src))
-		(t (message "Unsupported action")))
-	      (setq failed (+ 1 failed)))))))
-    failed)) 
- 
-
-(defun mu-headers-foreach-marked (func)
-  "call FUNC for each marked message in BUFFER; the argument
-to FUNC is a list, either: with 'action', 'source' ,
-'target'). ie one of three:
-  ('delete <path>)
-  ('trash  <path> <target>)
-  ('move   <path> <target>)"  
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward "^." nil t)
-      (move-beginning-of-line 1)
-      (let* ((char0  (match-string 0))
-	      (action (get-text-property 0 'action char0))
-	      (path   (get-text-property 0 'path   char0))
-	      (target (get-text-property 0 'target char0)))
-	(cond
-	  ((eq action 'trash)  (funcall func (list 'trash path target)))
-	  ((eq action 'delete) (funcall func (list 'delete path)))
-	  ((eq action 'move)   (funcall func (list 'move path target)))))
-      (move-end-of-line 1))))
-
-(defun mu-headers-count-marked ()
-  "return a vector with three items (marked-move marked-trash
-marked-delete) which are the number of messages marked for each
-of those in the current buffer"
-  (let ((result (make-vector 3 0)))
-    (mu-headers-foreach-marked
-      (lambda (cell)
-	(case (car cell)
-	  ('move   (aset result 0  (+ 1 (aref result 0))))
-	  ('trash  (aset result 1  (+ 1 (aref result 1))))
-	  ('delete (aset result 2  (+ 1 (aref result 2)))))))
-    (append result nil))) ;; convert to list
-
-(defun mu-headers-unmark-all ()
-  "unmark all messages in the current buffer"
-  (interactive)
-  (let ((marked 0))
-    (mu-headers-foreach-marked
-      (lambda(cell) (setq marked (+ 1 marked))))
-    (if (= 0 marked)
-      (message "No messages are marked")
-      (when (y-or-n-p (format "Unmark %d message(s)?" marked))
-	(mu-headers-foreach-marked
-	  (lambda(cell)
-	    (let ((inhibit-read-only t))
-	      (delete-char 1)
-	      (insert-and-inherit " "))))))))
-
-(defun mu-headers-mark-for-trash ()
-  (interactive)
-  (when (mu-headers-mark 'trash)
-    (message "Message marked for trashing")
-    (forward-line)))
-
-(defun mu-headers-mark-for-deletion ()
-  (interactive)
-  (when (mu-headers-mark 'delete)
-    (message "Message marked for deletion")
-    (forward-line)))
-
-(defun mu-headers-mark-for-move ()
-  (interactive)
-  (when (mu-headers-mark 'move)
-    (message "Message marked for moving")
-    (forward-line)))
-
-(defun mu-headers-unmark ()
-  (interactive)
-  (when (mu-headers-mark 'none)
-    (message "Message unmarked")
-    (forward-line)))
-   
 
 (provide 'mu-headers)
   

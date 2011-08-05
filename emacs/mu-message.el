@@ -129,14 +129,33 @@ to the message editor"
 creation, switch to the message editor"
   (mu-message-reply-or-forward path t))
 
-(defun mu-message-delete (path)
-  "delete message at PATH using 'mu mv'; return t if succeeded, nil otherwise"
-  (let
-    ((rv (call-process mu-binary nil nil nil "mv" path "/dev/null")))
-    (setq okay (and (numberp rv) (= rv 0)))
-    (message (if okay "Message has been deleted" "Message deletion failed"))
+(defun mu-message-move (src targetdir)
+  "move message at PATH using 'mu mv'; if targetdir is
+'/dev/null', move immediately. Return t if succeeded, nil
+otherwise"
+  (let* ((cmd (concat
+		mu-binary " mv --printtarget "
+		(shell-quote-argument src) " "
+		(shell-quote-argument targetdir)))
+	  (fulltarget (shell-command-to-string cmd)))
+    (mu-log cmd)
+    
+    (mu-log
+      (if fulltarget (concat "Message has been moved to " fulltarget)
+	"Message moving failed"))
     ;; now, if saving worked, anynchronously try to update the database
-    (start-process " *mu-remove*" nil mu-binary "remove" path)
-    okay)) ;; note, we don't check the result of the db output
+    (when fulltarget
+      (start-process " *mu-remove*" nil mu-binary "remove" src)
+      (unless (string= targetdir "/dev/null")
+	(start-process " *mu-add*" nil mu-binary "add" fulltarget)))))
+
+;; note, we don't check the result of the db output
+
+
+
+
+
+
+
 
 (provide 'mu-message)
