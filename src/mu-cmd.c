@@ -316,8 +316,11 @@ mu_cmd_mv (MuConfig *opts)
 		if (unlink (opts->params[1]) != 0) {
 			g_warning ("unlink failed: %s", strerror (errno));
 			return MU_EXITCODE_ERROR;
-		} else
+		} else {
+			if (opts->printtarget)                 /* if the move worked, print */
+				g_print ("%s\n", "/dev/null"); /* /dev/null */
 			return MU_EXITCODE_OK;
+		}
 	}
 
 	err = NULL;
@@ -329,17 +332,19 @@ mu_cmd_mv (MuConfig *opts)
 			g_error_free (err);
 		}
 		return MU_EXITCODE_ERROR;
-
-	} else if (opts->printtarget)       /* if the move worked, print the */
-		g_print ("%s\n", fullpath); /* target (if user set
-				             * --printtarget) */
+		
+	} else {
+		if (opts->printtarget)       
+			g_print ("%s\n", fullpath); 
+		return MU_EXITCODE_OK;
+	}
 	
 	g_free (fullpath);
-
+	
 	return MU_EXITCODE_OK;
-}
-
-
+	}
+	
+	
 static gboolean
 check_file_okay (const char *path, gboolean cmd_add)
 {
