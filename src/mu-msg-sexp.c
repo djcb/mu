@@ -20,6 +20,7 @@
 
 #include "mu-str.h"
 #include "mu-msg.h"
+#include "mu-msg-part.h"
 #include "mu-maildir.h"
 
 static void
@@ -158,6 +159,40 @@ append_sexp_flags (GString *gstr, MuMsg *msg)
 	if (fdata.flagstr) 
 		g_string_append_printf (gstr, "\t:flags (%s)\n",
 					fdata.flagstr);
+	g_free (fdata.flagstr);
+}
+
+static void
+each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
+{
+	const char *fname;
+	
+	fname = mu_msg_part_file_name (part);
+	if (fname) {
+		char *esc;
+		esc   = mu_str_escape_c_literal (fname, TRUE);
+		*parts = g_strdup_printf ("%s(%d %s \"%s/%s\")",
+					  *parts ? *parts : "",
+					  part->index,
+					  esc,
+					  part->type ? part->type : "application",
+					  part->subtype ? part->subtype : "octet-stream");
+	}
+}
+
+
+static void
+append_sexp_attachments (GString *gstr, MuMsg *msg)
+{
+	char *parts;
+
+	parts = NULL;
+	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &parts);
+
+	if (parts)
+		g_string_append_printf (gstr, "\t:attachments (%s)\n", parts);
+
+	g_free (parts);
 }
 
 
@@ -184,7 +219,7 @@ mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 	append_sexp_attr (gstr, "msgid", mu_msg_get_msgid (msg));
 	append_sexp_attr (gstr, "path",	   mu_msg_get_path (msg));
 	
-	
+		
 	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
 
 	g_string_append_printf (gstr, "\t:priority %s\n",
@@ -193,6 +228,8 @@ mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 	append_sexp_flags (gstr, msg);
 	
 	if (!dbonly) {
+		append_sexp_attachments (gstr, msg);
+			
 		append_sexp_attr (gstr, "body-txt",
 				  mu_msg_get_body_text(msg));
 		append_sexp_attr (gstr, "body-html",
