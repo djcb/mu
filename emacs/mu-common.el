@@ -116,7 +116,7 @@ moving")
 (defvar mu-trash-folder  nil "location of your trash-folder folder")
 
 (setq
-  mu-maildir "/home/djcb/Maildir"
+  mu-maildir       "/home/djcb/Maildir"
   mu-inbox-folder  "/inbox"
   mu-outbox-folder "/outbox"
   mu-sent-folder   "/sent"
@@ -127,17 +127,17 @@ moving")
 (setq mu-quick-folders
   '("/archive" "/bulkarchive" "/todo"))
 
-(defun mu-ask-folder (prompt)
-  "ask user with PROMPT for a folder name, return the full path
-the folder"
+(defun mu-ask-maildir (prompt &optional fullpath)
+  "ask user with PROMPT for a maildir name, if fullpath is
+non-nill, return the fulpath (ie, mu-maildir prepended to the
+maildir"
   (interactive)
   (let*
     ((showfolders
        (delete-dups
   	 (append (list mu-inbox-folder mu-sent-folder) mu-quick-folders)))
       (chosen (ido-completing-read prompt showfolders)))
-    (concat mu-maildir chosen)))
-     
+    (concat (if fullpath mu-maildir "") chosen)))
 
 (defun mu-ask-key (prompt)
   "Get a char from user, only accepting characters marked with [x] in prompt,
@@ -217,7 +217,11 @@ old one first"
 
 (defun mu-log (frm &rest args)
   (with-current-buffer (get-buffer-create "*mu-log*")
-    (insert (apply 'format (concat frm "\n") args))))
+    (goto-char (point-max))
+    (insert (apply 'format
+	      (concat
+		(format-time-string "%x %X " (current-time))
+		frm "\n") args))))
 
 
 (provide 'mu-common)

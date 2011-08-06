@@ -15,7 +15,7 @@
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theq
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
@@ -34,6 +34,7 @@
      :to
      :subject
      :date
+     :attachments
      :path)
   "list of header fields to display in the message view")
 
@@ -54,6 +55,25 @@ from which this buffer was invoked (buffer local)")
 			      (propertize (or (car c) (cdr c) "?") 'face face))
 		   lst ",")))
       (concat header val "\n"))))
+
+
+(defun mu-view-header-contact (field lst face)
+  (when lst
+    (let* ((header (concat (propertize field 'face 'mu-header-face) ": "))
+	    (val (mapconcat (lambda(c)
+			      (propertize (or (car c) (cdr c) "?") 'face face))
+		   lst ", ")))
+      (concat header val "\n"))))
+
+(defun mu-view-header-attachments (field lst face)
+  (when lst
+    (let* ((header (concat (propertize field 'face 'mu-header-face) ": "))
+	    (val (mapconcat
+		   (lambda(att)
+		     (let ((idx (nth 0 att)) (fname (nth 1 att)) (ctype (nth 2 att)))
+		       (propertize fname 'face face)))
+		   lst ", ")))
+	    (concat header val "\n"))))
 
 (defun mu-view-body (msg face)
   "view the body; try text first, if that does not work, try html"
@@ -90,7 +110,11 @@ from which this buffer was invoked (buffer local)")
 	      (:date
 		(mu-view-header "Date"
 		  (format-time-string mu-date-format-long
-		    (plist-get msg :date)) 'mu-date-face))))
+		    (plist-get msg :date)) 'mu-date-face))
+	      (:attachments
+		(mu-view-header-attachments "Attachments" (plist-get msg :attachments)
+		  'mu-path-face)
+		)))
 	  mu-view-header-fields "")
 	"\n"
 	(mu-view-body msg 'mu-body-face)
@@ -131,12 +155,12 @@ buffer."
     ;; navigation between messages
     (define-key map "n" 'mu-view-next)
     (define-key map "p" 'mu-view-prev)
-
+    
     ;; marking/unmarking
-    (define-key map "d" 'mu-view-mark-for-trash)
-    (define-key map "D" 'mu-view-mark-for-deletion)
-    (define-key map "m" 'mu-view-mark-for-move)
-    (define-key map "u" 'mu-view-unmark)
+    (define-key map "d" '(lambda (mu-view-mark 'trash)))
+    (define-key map "D" '(lambda (mu-view-mark 'delete)))
+    (define-key map "m" '(lambda (mu-view-mark 'move)))
+    (define-key map "u" '(lambda (mu-view-mark 'unmark)))
     (define-key map "x" 'mu-view-marked-execute)
     
     map)
@@ -182,33 +206,10 @@ also `with-temp-buffer'."
     (when (mu-headers-prev)
       (mu-view (mu-headers-get-path) (current-buffer)))))
 
-(defun mu-view-mark-for-trash ()
-  "mark for thrashing"
+(defun mu-view-mark (mark)
+  "mark for MARK"
   (interactive)
-  (with-current-headers-buffer
-    (when (mu-headers-mark 'trash)
-      (mu-view-next))))
-
-(defun mu-view-mark-for-deletion ()
-  "mark for deletion"
-  (interactive)
-  (with-current-headers-buffer
-    (when (mu-headers-mark 'delete)
-      (mu-view-next))))
-
-(defun mu-view-mark-for-move ()
-  "mark for moving"
-  (interactive)
-    (with-current-headers-buffer
-      (when (mu-headers-mark 'move)
-	(mu-view-next))))
-
-(defun mu-view-unmark ()
-  "unmark this message"
-  (interactive)
-  (with-current-headers-buffer
-    (when (mu-headers-mark 'none)
-      (mu-view-next))))
+  (with-current-headers-buffer (mu-headers-mark mark)))
 
 ;; we don't allow executing marks from the view buffer, to protect user from
 ;; accidentally deleting stuff...

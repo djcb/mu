@@ -89,51 +89,54 @@ the mu find output")
   "process-filter for the 'mu find --format=sexp output; it
   accumulates the strings into valid sexps by checking of the
   ';;eom' end-of-msg marker, and then evaluating them"
-  (save-excursion
-    (setq mu-buf (concat mu-buf str))
-    (let ((eom (string-match mu-eom mu-buf)))
-       (while (numberp eom)
-	(let* ((msg (car (read-from-string (substring mu-buf 0 eom))))
-		(inhibit-read-only t))
-	  (goto-char (point-max))
-	  (mu-headers-set-path (plist-get msg :path))
-	  (save-match-data (insert (mu-headers-header msg) ?\n)))
-	(setq mu-buf (substring mu-buf (match-end 0)))
-	(setq eom (string-match mu-eom mu-buf))))))
-
-
+  (when (buffer-live-p (process-buffer proc))
+    (with-current-buffer (process-buffer proc) 
+      (save-excursion
+	(setq mu-buf (concat mu-buf str))
+	(let ((eom (string-match mu-eom mu-buf)))
+	  (while (numberp eom)
+	    (let* ((msg (car (read-from-string (substring mu-buf 0 eom))))
+		    (inhibit-read-only t))
+	      (goto-char (point-max))
+	      (mu-headers-set-path (plist-get msg :path))
+	      (save-match-data (insert (mu-headers-header msg) ?\n)))
+	    (setq mu-buf (substring mu-buf (match-end 0)))
+	    (setq eom (string-match mu-eom mu-buf))))))))
+  
 (defun mu-headers-process-sentinel (proc msg)
   "Check the mu-headers process upon completion"
-  (let ((status (process-status proc))
-	 (exit-status (process-exit-status proc)))
-    (if (memq status '(exit signal))
-      (let ((inhibit-read-only t)
-	     (text
-	       (cond
-		 ((eq status 'signal)
-		   "Search process killed (results incomplete)")
-		 ((eq status 'exit)
+  (when (buffer-live-p (process-buffer proc))
+    (with-current-buffer (process-buffer proc)
+      (let ((status (process-status proc))
+	     (exit-status (process-exit-status proc)))
+	(if (memq status '(exit signal))
+	  (let ((inhibit-read-only t)
+		 (text
 		   (cond
-		     ((= 0 exit-status) "End of search results")
-		     ((= 2 exit-status) "No matches found")
-		     ((= 4 exit-status) "Database problem; try running 'mu index'")
-		     (t (format "Some error occured; mu-headers returned %d"
-			  exit-status))))
-		 (t "Unknown status")))) ;; shouldn't happen
-	(save-excursion
-	  (goto-char (point-max))
-	  (insert (mu-str text)))))))
-
+		     ((eq status 'signal)
+		       "Search process killed (results incomplete)")
+		     ((eq status 'exit)
+		       (cond
+			 ((= 0 exit-status) "End of search results")
+			 ((= 2 exit-status) "No matches found")
+			 ((= 4 exit-status) "Database problem; try running 'mu index'")
+			 (t (format "Some error occured; mu-headers returned %d"
+			      exit-status))))
+		     (t "Unknown status")))) ;; shouldn't happen
+	    (save-excursion
+	      (goto-char (point-max))
+	      (insert (mu-str text)))))))))
+  
 
 ;; Note, the 'mu find --format=sexp' sexp is almost the same as the ones that
 ;; 'mu view --format=sexp' produces (see mu-get-message), with the difference
 ;; that former may give more than one result, and that mu-headers output comes
 ;; from the database rather than file, and does _not_ contain the message body
-(defun mu-headers (expr)
+(defun mu-headers-search (expr)
   "search in the mu database"
-  (interactive "s[mu] messages to find: ")
+  (interactive "s[mu] search for: ")
   (let* ((buf (mu-get-new-buffer mu-headers-buffer-name))
-	  (dummy-arg "--fields=\"dummy\"") ;; ignored
+	  (dummy-arg "--fields=\"dummy\"") ;; ignored	  
 	  (proc (start-process mu-headers-buffer-name buf
 		  mu-binary
 		  "find"
@@ -145,6 +148,7 @@ the mu find output")
 		  "--format=sexp"
 		  "--quiet"
 		  expr)))
+    (mu-log "search: '%s'" expr)
     (switch-to-buffer buf)
     (mu-headers-mode)
     
@@ -262,17 +266,25 @@ set text property 'path"
 
 (defvar mu-headers-mode-map
   (let ((map (make-sparse-keymap)))
+    
+    (define-key map "s" 'mu-headers-search)
     (define-key map "q" 'mu-quit-buffer)
     (define-key map "s" 'mu-headers-change-sort)
     (define-key map "g" 'mu-headers-refresh)
+
+    ;; navigation
+    (define-key map "n" 'mu-headers-next)
+    (define-key map "p" 'mu-headers-previous)
+    (define-key map "j" 'mu-headers-jump-to-maildir)
     
     ;; marking/unmarking/executing
     (define-key map "m" 'mu-headers-mark-for-move)
     (define-key map "d" 'mu-headers-mark-for-trash)
     (define-key map "D" 'mu-headers-mark-for-deletion)
     (define-key map "u" 'mu-headers-unmark)
+    (define-key map "U" 'mu-headers-unmark-all)
     (define-key map "x" 'mu-headers-marked-execute)
-    
+
     ;; message composition
     (define-key map "r" 'mu-reply)
     (define-key map "f" 'mu-forward)
@@ -300,6 +312,12 @@ set text property 'path"
   (if (/= 0 (forward-line -1))
     (progn (message "No message before this one") nil)
     t))
+
+(defun mu-headers-jump-to-maildir ()
+  "show the messages in one of the standard folders"
+  (interactive)
+  (let ((fld (mu-ask-maildir "Jump to maildir: ")))
+    (mu-headers-search (concat "maildir:" fld))))
 
 (defun mu-headers-refresh ()
   "re-run the query for the current search expression, but only
@@ -349,7 +367,7 @@ if the search process is not already running"
   (and (call-interactively 'mu-headers-change-sort-order)
     (call-interactively 'mu-headers-change-sort-direction)))
 
-(defun mu-headers-add-marked (src dst)
+(defun mu-headers-add-marked (src &optional dst)
   (let ((bol (line-beginning-position 1)))
     (if (gethash bol mu-headers-marks-hash)
       (progn (message "Message is already marked") nil)
@@ -361,7 +379,6 @@ if the search process is not already running"
       (progn (message "Message is not marked") nil)
       (progn (remhash bol mu-headers-marks-hash) t))))
 
-
 (defun mu-headers-set-marker (kar)
   "set the marker at the beginning of this line"
   (beginning-of-line 1)
@@ -372,28 +389,31 @@ if the search process is not already running"
 (defun mu-headers-mark (action)
   "mark the current msg for something: move, delete, trash, unmark"
   (let ((target) (src (mu-headers-get-path)))
-    (when (and src
-	    (case action
-	      (move
-		(when (mu-headers-add-marked src (mu-ask-folder "Target maildir: "))
-		  (mu-headers-set-marker ?m)))
-	      (trash
-		(when (mu-headers-add-marked src mu-trash-folder)
-		  (mu-headers-set-marker ?d)))
-	      (delete
-		(when (mu-headers-add-marked src "/dev/null")
-		  (mu-headers-set-marker ?D)))
-	      (unmark
-		(when (mu-headers-remove-marked src "dummy")
-		  (mu-headers-set-marker nil)))
-	      (unmark-all
-		(when (y-or-n-p (format "Sure you want to remove all (%d) marks? "
-				  (hash-table-count mu-headers-marks-hash)))
-		  (save-excursion
-		    (maphash (lambda (k v) (goto-char k) (mu-headers-mark 'unmark))
-		      mu-headers-marks-hash)))
-		(t (message "Unsupported mark type"))))))))
-
+    (when src
+      (case action
+	(move
+	  (when (mu-headers-add-marked src
+		  (mu-ask-maildir "Target maildir: " t))
+	    (mu-headers-set-marker ?m)))
+	(trash
+	  (when (mu-headers-add-marked src
+		  (concat mu-maildir mu-trash-folder))
+	    (mu-headers-set-marker ?d)))
+	(delete
+	  (when (mu-headers-add-marked src "/dev/null")
+	    (mu-headers-set-marker ?D)))
+	(unmark
+	  (when (mu-headers-remove-marked)
+	    (mu-headers-set-marker nil)))
+	(unmark-all
+	  (when (y-or-n-p (format "Sure you want to remove all (%d) marks? "
+			    (hash-table-count mu-headers-marks-hash)))
+	    (save-excursion
+	      (maphash (lambda (k v) (goto-char k) (mu-headers-mark 'unmark))
+		mu-headers-marks-hash)))
+	  (t (message "Unsupported mark type"))))
+      (move-beginning-of-line 2))))
+    
 (defun mu-headers-marks-execute ()
   "execute the actions for all marked messages"
   (interactive)
@@ -409,15 +429,35 @@ if the search process is not already running"
 		(when (mu-message-move src target)  
 		  (goto-char bol)
 		  (mu-headers-remove-marked)
-		  (put-text-property bol (line-beginning-position 2)
-		    'face 'invisible)))) ;; when it succeedes, hide msg..)
-	    mu-headers-marks-hash))))))
-  
+		  (put-text-property (line-beginning-position 1)
+		    (line-beginning-position 2)
+		    'invisible t)))) ;; when it succeedes, hide msg..)
+	    mu-headers-marks-hash))
+	(message "Done")
+))))
+
 (defun mu-headers-mark-for-move () (interactive) (mu-headers-mark 'move))
 (defun mu-headers-mark-for-trash () (interactive) (mu-headers-mark 'trash))
 (defun mu-headers-mark-for-delete () (interactive) (mu-headers-mark 'delete))
+(defun mu-headers-mark-for-deletion () (interactive) (mu-headers-mark 'delete))
 (defun mu-headers-unmark () (interactive) (mu-headers-mark 'unmark))
 (defun mu-headers-unmark-all () (interactive) (mu-headers-mark 'unmark-all))
+
+(defun mu-headers-reply ()
+  "Reply to the message at point"
+  (interactive)
+  (let ((path (mu-headers-get-path)))
+    (if path
+      (mu-message-reply path)
+      (message "No message at point"))))
+
+(defun mu-headers-forward ()
+  "Reply to the message at point"
+  (interactive)
+  (let ((path (mu-headers-get-path)))
+    (if path
+      (mu-message-forward path)
+      (message "No message at point"))))
 
 
 (provide 'mu-headers)

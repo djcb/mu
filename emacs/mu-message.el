@@ -57,77 +57,84 @@
 	    "")))
     (replace-regexp-in-string "^" " > " body)))
 
-(defun mu-message-recipients-remove (email lst)
+(defun mu-message-recipients-remove (lst email-to-remove)
   "remove the recipient with EMAIL from the recipient list (of
 form '( (\"A\" . \"a@example.com\") (\"B\" . \"B@example.com\"))"
-  (remove-if (lambda (c) (string= email (downcase (cdr c))) lst)))
+  (remove-if (lambda (name-email)
+	       (string= email-to-remove (downcase (cdr name-email))))
+    lst))
 
 (defun mu-message-recipients-to-string (lst)
   "convert a recipient list (of form '( (\"A\"
 . \"a@example.com\") (\"B\" . \"B@example.com\") into a string
 useful for from/to headers"
+  (message "recips: %S" lst)
   (mapconcat
     (lambda (recip)
-      (let ((name (car recip) (email (cdr recip))))
-	(format "%s <%s>" (or name "") email))) lst ","))
-
+      (let ((name (car recip)) (email (cdr recip)))
+	(format "%s <%s>" (or name "") email))) lst ", "))
 
 (defun mu-message-hidden-header (hdr val)
   "return user-invisible header to the message (HDR: VAL\n)"
   (propertize (format "%s: %s\n" hdr val) 'invisible t))
 
-(defun mu-message-reply-or-forward (path &optional forward reply-all)
-  "create a reply to the message at PATH; if FORWARD is non-nil,
-create a forwarded message. After creation, switch to the message editor"
+(defun mu-message-reply (path)
+  "create a reply to the message at PATH. After creation, switch
+to the message editor"
+  (let* ((cmd (concat mu-binary " view --format=sexp " path))
+	  (str (shell-command-to-string cmd))
+	  (msg (car (read-from-string str)))
+	  (buf (get-buffer-create
+		 (generate-new-buffer-name "*mu-draft*")))
+	  (to-lst (mu-message-recipients-remove
+		    (append (plist-get msg :from) (plist-get msg :to))
+		    user-mail-address))
+	  (cc-lst (mu-message-recipients-remove (plist-get msg :cc)
+		    user-mail-address)))
+    
+    (with-current-buffer buf
+      (insert
+	(format "From: %s <%s>\n" user-full-name user-mail-address)
+	(mu-message-hidden-header "User-agent" (mu-message-user-agent))
+	(if (boundp 'mail-reply-to) (insert (format "Reply-To: %s\n"
+					      mail-reply-to)) "")
+	(format "To: %s\n" (if to-lst (mu-message-recipients-to-string to-lst) ""))
+	(if cc-lst
+	  (format "Cc: %s\n" (mu-message-recipients-to-string cc-lst)))
+	"Subject: " mu-message-reply-prefix (plist-get msg :subject) "\n"
+	"--text follows this line--\n\n"
+	  
+	(mu-message-attribution msg)
+	(mu-message-cite msg)))
+    
+    (switch-to-buffer buf)
+    (message-mode)
+    (message-goto-body)))
+
+
+(defun mu-message-forward (path)
+  "create a forward to the message at PATH. After creation, switch
+to the message editor"
   (let* ((cmd (concat mu-binary " view --format=sexp " path))
 	  (str (shell-command-to-string cmd))
 	  (msg (car (read-from-string str)))
 	  (buf (get-buffer-create
 		 (generate-new-buffer-name "*mu-draft*"))))
+	  
     (with-current-buffer buf
       (insert
 	(format "From: %s <%s>\n" user-full-name user-mail-address)
-	(mu-message-hidden-header "User-agent" (mu-message-user-agent)))
-
-      (when (boundp 'mail-reply-to)
-	(insert (format "Reply-To: %s\n" mail-reply-to)))
-      
-      (if forward
-	(insert
-	  "To:\n"
-	  "Subject: " mu-message-forward-prefix (plist-get msg :subject) "\n")
-	(insert 
-	  "To: " (car (car (plist-get msg :from))) "\n"
-	  "Subject: " mu-message-reply-prefix (plist-get msg :subject) "\n"))
-
-      (insert
+	(mu-message-hidden-header "User-agent" (mu-message-user-agent))
+	"To: \n" 
+	"Subject: " mu-message-forward-prefix (plist-get msg :subject) "\n"
 	"--text follows this line--\n\n"
+	  
 	(mu-message-attribution msg)
-	(mu-message-cite msg))
-      
-      ;;      (when mail-signature (insert mail-signature))
-      
-      (message-mode)
-
-      (if forward
-	(message-goto-to)
-	(message-goto-body))
-
-    (switch-to-buffer buf))))
-
-
-(defun mu-message-reply ()
-  "create a reply to the message at point; After creation, switch
-to the message editor"
-  (let ((path (mu-get-path)))
-    (when path      
-      (mu-ask-key "Reply to [s]ender only or to [a]ll?")
-      (mu-message-reply-or-forward path))))
+	(mu-message-cite msg)))
     
-(defun mu-message-forward (path)
-  "create a forward-message to the message at PATH; After
-creation, switch to the message editor"
-  (mu-message-reply-or-forward path t))
+    (switch-to-buffer buf)
+    (message-mode)
+    (message-goto-to)))
 
 (defun mu-message-move (src targetdir)
   "move message at PATH using 'mu mv'; if targetdir is
@@ -145,17 +152,14 @@ otherwise"
 	"Message moving failed"))
     ;; now, if saving worked, anynchronously try to update the database
     (when fulltarget
+      (mu-log "Removing from database: %s" src)
       (start-process " *mu-remove*" nil mu-binary "remove" src)
-      (unless (string= targetdir "/dev/null")
-	(start-process " *mu-add*" nil mu-binary "add" fulltarget)))))
+      
+      (if (string= targetdir "/dev/null")
+	t
+	(mu-log "Adding to database: %s" fulltarget)
+	(start-process " *mu-add*" nil mu-binary "add" fulltarget) t))))
 
 ;; note, we don't check the result of the db output
-
-
-
-
-
-
-
 
 (provide 'mu-message)
