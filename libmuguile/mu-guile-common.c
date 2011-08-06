@@ -35,8 +35,6 @@ mu_guile_error (const char *func_name, int status,
 		       scm_list_1 (scm_from_int (status)));
 }
 
-
-
 void
 mu_guile_g_error (const char *func_name, GError *err)
 {	

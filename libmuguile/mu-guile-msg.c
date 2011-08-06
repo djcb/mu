@@ -89,6 +89,7 @@ SCM_DEFINE (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
 	GError *err;
 	MuMsgWrapper *msgwrap;
 	gboolean rv;
+	MuMsgFlags flags;
 	
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);	
 	SCM_ASSERT (scm_is_string (TARGETMDIR), TARGETMDIR, SCM_ARG2, FUNC_NAME);
@@ -96,8 +97,10 @@ SCM_DEFINE (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 
 	err = NULL;
+	flags = mu_msg_get_flags    (msgwrap->_msg);
 	rv = mu_msg_move_to_maildir (msgwrap->_msg,
-				     scm_to_utf8_string (TARGETMDIR), &err);
+				     scm_to_utf8_string (TARGETMDIR), flags,
+				     &err);
 	if (!rv && err) {
 		mu_guile_g_error (FUNC_NAME, err);
 		g_error_free (err);
