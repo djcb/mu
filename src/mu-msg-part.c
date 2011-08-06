@@ -102,6 +102,7 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 	PartData pdata;
 	
 	g_return_if_fail (msg);
+	g_return_if_fail (msg->_file);
 	g_return_if_fail (GMIME_IS_OBJECT(msg->_file->_mime_msg));
 
 	pdata._msg       = msg;

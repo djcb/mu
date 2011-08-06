@@ -66,15 +66,6 @@ typedef struct _MuMsgPart MuMsgPart;
  */
 #define mu_msg_part_file_name(pi)    ((pi)->file_name)
 
-/**
- * macro to get the file name for this mime-part
- * 
- * @param pi a MuMsgPart instance
- * 
- * @return the file name
- */
-#define  mu_msg_part_content_type(pi) ((pi)->content_type)
-
 
 /**
  * macro to get the content-id (cid) for this mime-part
@@ -159,7 +150,7 @@ int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
  * @param a regular expression to match the filename with
  * 
  * @return a list with indices for the files matching the pattern; the
- * indices are the GPOINTER_TO_UINT(lst->data) of the list. The must
+ * indices are the GPOINTER_TO_UINT(lst->data) of the list. They must
  * be freed with g_slist_free
  */
 GSList* mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern);
