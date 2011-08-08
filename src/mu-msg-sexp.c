@@ -24,6 +24,28 @@
 #include "mu-maildir.h"
 
 static void
+append_sexp_attr_list (GString *gstr, const char* elm, const GSList *lst)
+{
+	const GSList *cur;
+	
+	if (!lst)
+		return; /* empty list, don't include */
+	
+	g_string_append_printf (gstr, "\t:%s ( ", elm);
+
+	for (cur = lst; cur; cur = g_slist_next(cur)) {
+		char *str;
+		str = mu_str_escape_c_literal
+			((const gchar*)cur->data, TRUE);
+		g_string_append_printf (gstr, "%s ", str);
+		g_free (str);
+	}
+
+	g_string_append (gstr, ")\n");	
+}
+
+
+static void
 append_sexp_attr (GString *gstr, const char* elm, const char *str)
 {
 	gchar *esc;
@@ -171,12 +193,13 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 	if (fname) {
 		char *esc;
 		esc   = mu_str_escape_c_literal (fname, TRUE);
-		*parts = g_strdup_printf ("%s(%d %s \"%s/%s\")",
-					  *parts ? *parts : "",
-					  part->index,
-					  esc,
-					  part->type ? part->type : "application",
-					  part->subtype ? part->subtype : "octet-stream");
+		*parts = g_strdup_printf
+			("%s(%d %s \"%s/%s\")",
+			 *parts ? *parts : "",
+			 part->index,
+			 esc,
+			 part->type ? part->type : "application",
+			 part->subtype ? part->subtype : "octet-stream");
 	}
 }
 
@@ -215,13 +238,12 @@ mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 				(unsigned)(t & 0xffff));
 	g_string_append_printf (gstr, "\t:size %u\n",
 				(unsigned) mu_msg_get_size (msg));
-	
-	append_sexp_attr (gstr, "msgid", mu_msg_get_msgid (msg));
-	append_sexp_attr (gstr, "path",	   mu_msg_get_path (msg));
-	
-		
-	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
 
+	
+	append_sexp_attr (gstr, "message-id", mu_msg_get_msgid (msg));
+	append_sexp_attr (gstr, "path",	 mu_msg_get_path (msg));
+	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
+	
 	g_string_append_printf (gstr, "\t:priority %s\n",
 				mu_msg_prio_name(mu_msg_get_prio(msg)));
 	
@@ -229,7 +251,13 @@ mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 	
 	if (!dbonly) {
 		append_sexp_attachments (gstr, msg);
-			
+
+		append_sexp_attr (gstr, "reply-to",
+				  mu_msg_get_header (msg, "Reply-To"));
+		append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
+		append_sexp_attr (gstr, "in-reply-to",
+				  mu_msg_get_header (msg, "In-Reply-To"));
+	
 		append_sexp_attr (gstr, "body-txt",
 				  mu_msg_get_body_text(msg));
 		append_sexp_attr (gstr, "body-html",
