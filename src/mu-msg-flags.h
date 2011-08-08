@@ -56,17 +56,21 @@ enum _MuMsgFlags {
 	/* "F"->flagged message */
 	MU_MSG_FLAG_FLAGGED	= 1 << 6,
 
+	/* NOTE: the only flag characters actually seen in Maildir
+	 * files are: PRSTDF
+	 */
+	
 	/* "U"->unread message; it's a pseudo/convenience flag that
 	 * means (NEW or not SEEN) */
 	MU_MSG_FLAG_UNREAD      = 1 << 7,
 	
 	/* these we get from the contents */
 	
-	/* "Z"->signed message */
+	/* "z"->signed message */
 	MU_MSG_FLAG_SIGNED      = 1 << 8,
-	/* "X"->encrypted message */
+	/* "x"->encrypted message */
 	MU_MSG_FLAG_ENCRYPTED   = 1 << 9,
-	/* "A"->message has attachment */
+	/* "a"->message has attachment */
 	MU_MSG_FLAG_HAS_ATTACH  = 1 << 10
 };
 typedef enum _MuMsgFlags MuMsgFlags;

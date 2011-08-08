@@ -317,7 +317,8 @@ mu_cmd_mv (MuConfig *opts)
 			g_warning ("unlink failed: %s", strerror (errno));
 			return MU_EXITCODE_ERROR;
 		} else {
-			if (opts->printtarget)                 /* if the move worked, print */
+			if (opts->printtarget)
+				/* if the move worked, print */
 				g_print ("%s\n", "/dev/null"); /* /dev/null */
 			return MU_EXITCODE_OK;
 		}

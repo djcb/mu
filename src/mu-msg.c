@@ -844,6 +844,8 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
 			     "failed to determine target full path");
 		return FALSE;
 	}
+
+	/* TODO: check for oldpath == newfullpath */
 	
 	rv = msg_move (oldpath, newfullpath, err);
 
