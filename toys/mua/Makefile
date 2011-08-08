@@ -1,7 +1,6 @@
-VERSION=$(shell git describe --tags --dirty)
 EMACS=emacs
 PREFIX=/usr/local
-ELS=mu.el mu-common.el mu-view.el mu-headers.el
+ELS=mua.el mua-common.el mua-view.el mua-hdrs.el mua-msg.el
 ELCS=$(ELS:.el=.elc)
 
 .PHONY=install
@@ -14,7 +13,7 @@ BATCH=$(EMACS) -batch -q -no-site-file -eval \
 
 all: $(ELCS)
 
-docs: mu.infogg
+docs: mua.info
 
 install_lisp:
 	mkdir -p $(DESTDIR)/$(PREFIX)/share/emacs/site-lisp
@@ -28,4 +27,4 @@ install_docs: docs
 install: install_lisp install_docs
 
 clean:
-	rm -fr mu.info $(ELCS) 
+	rm -fr mua.info $(ELCS)
