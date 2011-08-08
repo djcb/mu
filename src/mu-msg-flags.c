@@ -72,14 +72,14 @@ mu_msg_flag_from_char (char k)
 MuMsgFlags
 mu_msg_flag_from_file_char (char k)
 {
-	switch (g_ascii_tolower(k)) {
-	case 'n': return MU_MSG_FLAG_NEW;		
-	case 'p': return MU_MSG_FLAG_PASSED;
-	case 'r': return MU_MSG_FLAG_REPLIED;
-	case 's': return MU_MSG_FLAG_SEEN;
-	case 't': return MU_MSG_FLAG_TRASHED;
-	case 'd': return MU_MSG_FLAG_DRAFT;
-	case 'f': return MU_MSG_FLAG_FLAGGED;
+	switch (k) {
+	case 'D': return MU_MSG_FLAG_DRAFT;
+	case 'F': return MU_MSG_FLAG_FLAGGED;
+	case 'N': return MU_MSG_FLAG_NEW;
+	case 'P': return MU_MSG_FLAG_PASSED;
+	case 'R': return MU_MSG_FLAG_REPLIED;
+	case 'S': return MU_MSG_FLAG_SEEN;
+	case 'T': return MU_MSG_FLAG_TRASHED;
 	default: return 0;
 	}
 }
@@ -115,6 +115,7 @@ char
 mu_msg_flag_char (MuMsgFlags flag)
 {
 	switch (flag) {
+		
 	case MU_MSG_FLAG_NEW:		return 'n';
 	case MU_MSG_FLAG_PASSED:	return 'p';
 	case MU_MSG_FLAG_REPLIED:	return 'r';
