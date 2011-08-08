@@ -1,0 +1,28 @@
+* TODO
+  
+  [ ] message un-new in find/view
+  [ ] set 'Replied' flag on source when message is replied
+  [ ] update database after changes (CHECK)
+  [ ] save message to draft, sent items
+  [ ] attachment handling (open, play) in view
+
+  [ ] abstract away mu/binary, shell-command-to-string
+  [ ] make flag handling a bit more lispy
+
+  [ ] threads support
+  [ ] expandable recipients list in view
+  [ ] additive font props in mu find
+  [ ] fix headers/view interaction
+  
+  [ ] region commands
+  [ ] menu
+  [ ] mua-dashboard
+ 
+
+# Local Variables:
+# mode: org; org-startup-folded: nil
+# End:
+
+
+
+
