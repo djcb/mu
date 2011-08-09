@@ -128,7 +128,7 @@ mu_util_create_tmpdir (void)
 				    G_DIR_SEPARATOR,
 				    (int)random()*getpid()*(int)time(NULL));
 
-	if (!mu_util_create_dir_maybe (dirname, 0700)) {
+	if (!mu_util_create_dir_maybe (dirname, 0700, FALSE)) {
 		g_free (dirname);
 		return NULL;
 	}
@@ -237,7 +237,7 @@ mu_util_guess_mu_homedir (void)
 }
 
 gboolean
-mu_util_create_dir_maybe (const gchar *path, mode_t mode)
+mu_util_create_dir_maybe (const gchar *path, mode_t mode, gboolean nowarn)
 {
 	struct stat statbuf;
 	
@@ -247,14 +247,17 @@ mu_util_create_dir_maybe (const gchar *path, mode_t mode)
 	if (stat (path, &statbuf) == 0) {
 		if ((!S_ISDIR(statbuf.st_mode)) ||
 		    (access (path, W_OK|R_OK) != 0)) {
-			g_warning ("not a read-writable directory: %s", path);
+			if (!nowarn)
+				g_warning ("not a read-writable"
+					   "directory: %s", path);
 			return FALSE;
 		}
 	}	
 		
 	if (g_mkdir_with_parents (path, mode) != 0) {
-		g_warning ("failed to create %s: %s",
-			   path, strerror(errno));
+		if (!nowarn)
+			g_warning ("failed to create %s: %s",
+				   path, strerror(errno));
 		return FALSE;
 	}
 

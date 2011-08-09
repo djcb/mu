@@ -75,12 +75,14 @@ gchar* mu_util_guess_mu_homedir (void)
  * if path exists, check that's a read/writeable dir; otherwise try to
  * create it (with perms 0700)
  * 
- * @param path path to the dir 
+ * @param path path to the dir
+ * @param mode to set for the dir (as per chmod(1))
+ * @param nowarn, if TRUE, don't write warnings (if any) to stderr
  * 
  * @return TRUE if a read/writeable directory `path' exists after
  * leaving this function, FALSE otherwise
  */
-gboolean mu_util_create_dir_maybe (const gchar *path, mode_t mode)
+gboolean mu_util_create_dir_maybe (const gchar *path, mode_t mode, gboolean nowarn)
     G_GNUC_WARN_UNUSED_RESULT;
 
 /**
@@ -407,6 +409,7 @@ enum _MuExitCode {
 	MU_EXITCODE_DB_UPDATE_ERROR = 5
 };
 typedef enum _MuExitCode MuExitCode;
+
 
 enum _MuError {
 	MU_ERROR_XAPIAN,  /* general xapian related error */
