@@ -162,12 +162,12 @@ view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 }
 
 
-static MuExitCode
-handle_msg (const char *fname, MuConfig *opts)
+static gboolean
+handle_msg (const char *fname, MuConfig *opts, MuExitCode *code)
 {
 	GError *err;
 	MuMsg *msg;
-	MuExitCode rv;
+	gboolean rv;
 	
 	err = NULL;
 	msg = mu_msg_new_from_file (fname, NULL, &err);
@@ -175,7 +175,8 @@ handle_msg (const char *fname, MuConfig *opts)
 	if (!msg) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);
-		return MU_EXITCODE_ERROR;
+		*code = MU_EXITCODE_ERROR;
+		return FALSE;
 	}
 
 	switch (opts->format) {
@@ -187,7 +188,8 @@ handle_msg (const char *fname, MuConfig *opts)
 		break;
 	default:
 		g_critical ("bug: should not be reached");
-		rv = MU_EXITCODE_ERROR;
+		*code = MU_EXITCODE_ERROR;
+		rv = FALSE;
 	}
 	
 	mu_msg_unref (msg);
@@ -221,7 +223,9 @@ view_params_valid (MuConfig *opts)
 MuExitCode
 mu_cmd_view (MuConfig *opts)
 {
-	int rv, i;
+	int i;
+	gboolean rv;
+	MuExitCode code;
 	
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
@@ -230,17 +234,17 @@ mu_cmd_view (MuConfig *opts)
 	if (!view_params_valid(opts))
 		return MU_EXITCODE_ERROR;
 	
-	for (i = 1; opts->params[i]; ++i) {
+	for (i = 1, code = MU_EXITCODE_OK; opts->params[i]; ++i) {
 
-		rv = handle_msg (opts->params[i], opts);
-		if (rv != MU_EXITCODE_OK)
+		rv = handle_msg (opts->params[i], opts, &code);
+		if (!rv)
 			break;
 		/* add a separator between two messages? */
 		if (opts->terminator)
 			g_print ("%c", VIEW_TERMINATOR);
 	}
 	
-	return rv;
+	return code;
 }
 
 
@@ -343,7 +347,7 @@ mu_cmd_mv (MuConfig *opts)
 	g_free (fullpath);
 	
 	return MU_EXITCODE_OK;
-	}
+}
 	
 	
 static gboolean
@@ -364,7 +368,7 @@ check_file_okay (const char *path, gboolean cmd_add)
 }
 	
 
-static MuExitCode
+static gboolean
 add_or_remove (MuConfig *opts, gboolean cmd_add)
 {
 	MuStore *store;
