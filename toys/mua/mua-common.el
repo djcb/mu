@@ -72,9 +72,9 @@ old one first"
       (switch-to-buffer parentbuf))))
 
 (defun mua/ask-maildir (prompt &optional fullpath)
-  "ask user with PROMPT for a maildir name, if fullpath is
+  "Ask user with PROMPT for a maildir name, if fullpath is
 non-nill, return the fulpath (ie, mu-maildir prepended to the
-maildir"
+maildir."
   (interactive)
   (let* ((showfolders
 	   (delete-dups
@@ -89,11 +89,14 @@ where <exit-code> is the exit code of the program, or 1 if the
 process was killed. <str> contains whatever the command wrote on
 standard output/error, or nil if there was none or in case of
 error. Basically, `mua/mu-run' is like `shell-command-to-string',
-but with better possibilities for error handling"
+but with better possibilities for error handling. The --muhome=
+parameter is added automatically if `mua/mu-home' is non-nil."
   (let* ((rv)
+	  (args (append args (when mua/mu-home
+			       (list (concat "--muhome=" mua/mu-home)))))
 	  (str (with-output-to-string
 		 (with-current-buffer standard-output ;; but we also get stderr...
-		   (setq rv (apply 'call-process mua/mu-binary nil t nil			      
+		   (setq rv (apply 'call-process mua/mu-binary nil t nil		  
 			      args))))))
     `(,(if (numberp rv) rv 1) . ,str)))
     	  
@@ -105,18 +108,71 @@ to get it"
       (match-string 1 (cdr rv))
       (mua/warn "Failed to get version string"))))
 
-(defun mua/mu-mv (src target &optional flags))
+(defun mua/mu-mv (src target &optional flags)
+  "Move a message at PATH to TARGET using 'mu mv'.  SRC must be
+the full, absolute path to a message file, while TARGET must
+be a maildir - that is, the part _without_ cur/ or new/. 'mu mv'
+will calculate the target directory and the exact file name.
 
-(defun mua/mu-add (src target &optional flags))
+Optionally, you can specify the FLAGS for the new file; this must
+be a list consisting of one or more of DFNPRST, mean
+resp. Deleted, Flagged, New, Passed Replied, Seen and Trash, as
+defined in [1]. See `mua/maildir-string-to-flags' and
+`mua/maildir-flags-to-string'.
 
+Function returns the target filename if the move succeeds, or
+/dev/null if TARGETDIR was /dev/null; in other cases, it returns
+`nil'.
+
+\[1\]  http://cr.yp.to/proto/maildir.html." 
+  (let ((flagstr
+	  (and flags (mua/maildir-flags-to-string flags))))
+    (if (not (file-readable-p path))
+      (mua/warn "Path is note a readable file")
+      (let ((rv (if flagstr
+		  (mua/run "mv" "--printtarget" path target)
+		  (mua/run "mv" "--printtarget"
+		    (concat "--flags=" flagstr) path target))))
+	(if (/= 0 (car rv))
+	  (mua/warn "Moving message file failed: %s"
+	    (if (car rv) (car rv) "error"))
+	  (car rv))))))
+
+
+(defun mua/mu-get-flags (path)
+  "Get the flags for the message at PATH, which does not have to exist.
+The flags are returned as a list consisting of one or more of
+DFNPRST, mean resp. Deleted, Flagged, New, Passed Replied, Seen
+and Trash, as defined in [1]. See `mua/maildir-string-to-flags'
+and `mua/maildir-flags-to-string'.
+\[1\]  http://cr.yp.to/proto/maildir.html." 
+  (when (string-match ",\\(\[A-Z\]*\\)$" path)
+    (mua/maildir-string-to-flags (match-string 1 path))))
+
+
+
+;; TODO: make this async, but somehow serialize database access
+(defun mua/mu-add (path)
+  "Add message file at PATH to the mu database (using the 'mu
+add') command. Return t if it succeed or nil in case of error."
+  (if (not (file-readable-p path))
+    (mua/warn "Path is note a readable file")
+    (let ((rv (mua/mu-run "add" path)))
+      (if (=/ (car rv) 0)
+	(mua/warn "mu add failed (%d): %s"
+	  code (if (cdr rv) (cdr rv) "error"))
+	t))))
+
+;; TODO: make this async, but somehow serialize database access
 (defun mua/mu-remove (path)
-  "Remove message at PATH from the database"
-  
-
-  )
-
-(defun mua/mu-mv (src target &optional flags))
-
+  "Remove message with PATH from the mu database (using the 'mu
+remove') command. PATH does not have to exist. Return t if it
+succeed or nil in case of error."
+  (let ((rv (mua/mu-run "remove" path)))
+    (when (=/ (car rv) 0)
+      (mua/warn "mu remove failed (%d): %s"
+	code (if (cdr rv) (cdr rv) "error"))
+      t)))
 
 (defun mua/mu-view-sexp (path)
   "Return a string with an s-expression representing the message
@@ -131,5 +187,49 @@ that function converts the string into a Lisp object (plist)"
 	(mua/warn "mu view failed (%d): %s"
 	  code (if str str "error"))))))
 
+(defun mua/maildir-flags-to-string (flags)
+  "Convert a list of flags into a string as seen in Maildir
+message files; flags are symbols draft, flagged, new, passed,
+replied, seen, trashed and the string is the concatenation of the
+uppercased first letters of these flags, as per [1]. Other flags
+than the ones listed here are ignored.
 
+Also see `mua/maildir-string-to-flags'.
+
+\[1\]: http://cr.yp.to/proto/maildir.html"
+  (when flags
+    (let ((kar
+	    (case (car flags)
+	      ('draft    ?D)
+	      ('flagged  ?F)
+	      ('new      ?N)
+	      ('passed   ?P)
+	      ('replied  ?R)
+	      ('seen     ?S)
+	      ('trashed  ?T))))
+      (concat (and kar (string kar))
+	(mua/maildir-flags-to-string (cdr flags))))))
+
+(defun mua/maildir-string-to-flags (str)
+  "Convert a string with message flags as seen in Maildir
+messages into a list of flags in; flags are symbols draft,
+flagged, new, passed, replied, seen, trashed and the string is
+the concatenation of the uppercased first letters of these flags,
+as per [1]. Other letters than the ones listed here are ignored.
+Also see `mua/maildir-flags-to-string'.
+
+\[1\]: http://cr.yp.to/proto/maildir.html"
+  (when (/= 0 (length str))
+    (let ((flag
+	    (case (string-to-char str)
+	      (?D   'draft)
+	      (?F   'flagged)
+	      (?N   'new)
+	      (?P   'passed)
+	      (?R   'replied)
+	      (?S   'seen)
+	      (?T   'trashed))))
+      (append (when flag (list flag)) 
+	(mua/maildir-string-to-flags (substring str 1))))))
+  
 (provide 'mua-common)

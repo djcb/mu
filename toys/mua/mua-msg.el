@@ -78,7 +78,7 @@ text, using `html2text'."
 		     (insert body)
 		     (html2text)
 		     (buffer-string)))))
-    body)) 
+    body))
 
 (defun mua/msg-field (msg field)
   "Get a field from this message, or nil. The fields are the
@@ -92,9 +92,6 @@ or if not available, :body-html converted to text)."
     (t (plist-get msg field))))
 
 
-;; TODO: add better error-reporting to mua/msg-move, and make flag handling a
-;; bit more lispy
-
 (defun mua/msg-move (src targetdir &optional flags)
   "Move message at SRC to TARGETDIR using 'mu mv'; SRC must be
 the full, absolute path to a message file, while TARGETDIR must
@@ -102,9 +99,10 @@ be a maildir - that is, the part _without_ cur/ or new/. 'mu mv'
 will calculate the target directory and the exact file name.
 
 Optionally, you can specify the FLAGS for the new file; this must
-be a string consisting of one or more of DFNPRST, mean
+be a list consisting of one or more of DFNPRST, mean
 resp. Deleted, Flagged, New, Passed Replied, Seen and Trash, as
-defined in [1].
+defined in [1]. See `mua/maildir-string-to-flags' and
+`mua/maildir-flags-to-string'.
 
 If TARGETDIR is '/dev/null', remove SRC. After the file system
 move, the database will be updated as well, using the 'mu add'
@@ -115,32 +113,12 @@ Function returns the target filename if the move succeeds, or
 `nil'.
 
 \[1\]  http://cr.yp.to/proto/maildir.html."
-
-;; require the flags to be kosher
-  (when (and flags (let ((case-fold-search nil))
-		     (string-match "[^DFNPRST]" flags))) (error Illegal flags))
-  
-  (let* ((cmd (concat
-		mua/mu-binary " mv --printtarget "
-		(when flags (concat "--flags=" flags " "))
-		(shell-quote-argument src) " "
-		(shell-quote-argument targetdir)))
-	  (fulltarget (shell-command-to-string cmd)))
-    (mua/log cmd)
-    (mua/log
-      (if fulltarget (concat "Message has been moved to " fulltarget)
-	"Message moving failed"))
-    ;; now, if saving worked, anynchronously try to update the database
-    (when fulltarget ;; note, we don't check the result of the db output
-      
-      (mua/log "Removing from database: %s" src)
-      (start-process " *mu-remove*" nil mua/mu-binary "remove" src)
-      
+  (let ((fulltarget (mua/mu-mv str target flags)))
+    (when fulltarget
+      (mua/mu-remove src)
       (unless (string= targetdir "/dev/null")
-	(mua/log "Adding to database: %s" fulltarget)
-	(start-process " *mu-add*" nil mua/mu-binary "add" fulltarget) t)
-      )
-
+	mua/mu-add fulltarget))
+    
     fulltarget))
 
 
@@ -170,18 +148,21 @@ version of mua and emacs."
   line (with the %s's replaced with the date of MSG and the name
   or e-mail address of its sender (or 'someone' if nothing
   else)), followed of the quoted body of MSG, constructed by by
-  prepending `mua/msg-citation-prefix' to each line."
-  (let ((from (mua/msg-field msg :from)))
-    (concat
-      (format "On %s, %s wrote:"
-	(format-time-string "%c" (mua/msg-field msg :date))
-	(if (and from (car from)) ;; a list ((<name> . <email>))
-	  (or (caar from) (cdar from) "someone")
-	  "someone"))
-      "\n\n"
-      (replace-regexp-in-string "^" " > "
-	(mua/msg-body-txt-or-html msg)))))
-  
+  prepending `mua/msg-citation-prefix' to each line. If there is
+  no body in MSG, return nil."
+  (let* ((from (mua/msg-field msg :from))
+	 (body (mua/msg-body-txt-or-html msg)))
+    (when body
+      (concat
+	(format "On %s, %s wrote:"
+	  (format-time-string "%c" (mua/msg-field msg :date))
+	  (if (and from (car from)) ;; a list ((<name> . <email>))
+	    (or (caar from) (cdar from) "someone")
+	    "someone"))
+	"\n\n"
+	(replace-regexp-in-string "^" " > " body)))))
+
+
 (defun mua/msg-recipients-remove (lst email-to-remove)
   "Remove the recipient with EMAIL from the recipient list (of
 form '( (\"A\" . \"a@example.com\") (\"B\" . \"B@example.com\"))."
@@ -390,7 +371,7 @@ with non-mua-generated messages")
   "Create a Maildir-compatible[1], unique file name for a draft
 message.
  [1]: see http://cr.yp.to/proto/maildir.html"
-  (format "%s-%x-%x.%s:2,D" ;; 'D': rarely used, but hey, it's available
+  (format "%s-%s-%x.%s:2,D" ;; 'D': rarely used, but hey, it's available
     mua/msg-file-prefix
     (format-time-string "%Y%m%d" (current-time))
     (emacs-pid)
@@ -422,7 +403,6 @@ using Gnus' `message-mode'."
     (rename-buffer mua/msg-draft-name t)
     (message-mode)
     (message-goto-body)))
-
 
 
 (defun mua/msg-is-mua-message ()

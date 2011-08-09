@@ -456,7 +456,8 @@ pseudo-markings."
   "Reply to message at point."
   (interactive)
   (let* ((path (mua/hdrs-get-path))
-	  (msg (when path (mua/msg-from-path path))))
+	  (str (when path (mua/mu-view-sexp path)))
+	  (msg (and str (mua/msg-from-string str))))
     (if msg
       (mua/msg-compose (mua/msg-create-reply msg
 			 (yes-or-no-p "Reply to all? ")))
