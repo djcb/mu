@@ -91,13 +91,13 @@ mu_msg_flag_name (MuMsgFlags flag)
 	switch (flag) {
 		
 	/* real maildir flags */
+	case MU_MSG_FLAG_DRAFT:		return "draft";
+	case MU_MSG_FLAG_FLAGGED:	return "flagged";
 	case MU_MSG_FLAG_NEW:		return "new";
 	case MU_MSG_FLAG_PASSED:	return "passed";
 	case MU_MSG_FLAG_REPLIED:	return "replied";
 	case MU_MSG_FLAG_SEEN:		return "seen";
 	case MU_MSG_FLAG_TRASHED:	return "trashed";
-	case MU_MSG_FLAG_DRAFT:		return "draft";
-	case MU_MSG_FLAG_FLAGGED:	return "flagged";
 
 		/* ie., NEW or NOT SEEN */
 	case MU_MSG_FLAG_UNREAD:	return "unread";
