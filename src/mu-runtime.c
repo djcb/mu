@@ -56,18 +56,6 @@ static const char* runtime_path (MuRuntimePath path);
 
 
 static gboolean
-mu_dir_is_readable_and_writable (const char *muhome)
-{
-	if (mu_util_create_dir_maybe (muhome, 0700))
-		return TRUE;
-	
-	g_warning ("cannot use '%s' as a mu homedir", muhome);
-	g_warning ("use --muhome= to set a different one");
-	
-	return FALSE;
-}
-
-static gboolean
 init_log (const char *muhome, const char *name,
 	  gboolean log_stderr, gboolean quiet, gboolean debug)
 {
@@ -107,7 +95,9 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 	else
 		muhome = mu_util_guess_mu_homedir ();
 
-	if (!mu_dir_is_readable_and_writable (muhome)) {
+	if (!mu_util_create_dir_maybe (muhome, 0700, TRUE)) {
+		g_printerr ("mu: invalid mu homedir specified;"
+			    " use --muhome=<dir>\n");
 		runtime_free ();
 		return FALSE;
 	}
@@ -143,8 +133,10 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv, const char *name)
 		runtime_free ();
 		return FALSE;
 	 }
-	
-	if (!mu_dir_is_readable_and_writable (_data->_config->muhome)) {
+
+	if (!mu_util_create_dir_maybe (_data->_config->muhome, 0700, TRUE)) {
+		g_printerr ("mu: invalid mu homedir specified;"
+			    " use --muhome=<dir>\n");
 		runtime_free ();
 		return FALSE;
 	}
@@ -198,13 +190,13 @@ static gboolean
 create_dirs_maybe (MuRuntimeData *data)
 {
 	if (!mu_util_create_dir_maybe
-	    (data->_str[MU_RUNTIME_PATH_CACHE], 0700)) {
+	    (data->_str[MU_RUNTIME_PATH_CACHE], 0700, TRUE)) {
 		g_warning ("failed to create cache dir");
 		return FALSE;
 	}
 
 	if (!mu_util_create_dir_maybe
-	    (data->_str[MU_RUNTIME_PATH_LOG], 0700)) {
+	    (data->_str[MU_RUNTIME_PATH_LOG], 0700, TRUE)) {
 		g_warning ("failed to create log dir");
 		return FALSE;
 	}

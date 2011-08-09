@@ -232,7 +232,7 @@ mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 				   g_str_hash (path), G_DIR_SEPARATOR,
 				   partid);
 		
-	if (!mu_util_create_dir_maybe (dirname, 0700)) {
+	if (!mu_util_create_dir_maybe (dirname, 0700, FALSE)) {
 		g_free (dirname);
 		return NULL;
 	}
