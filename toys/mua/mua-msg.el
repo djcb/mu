@@ -67,21 +67,6 @@ database -- at least not in a usable way."
     (error "Failed to parse message")))
 
 
-(defun mua/msg-from-path (path)
-  "Get the an s-expression (plist) describing the e-mail message
-at path, or nil if it failed. This functions uses 'mu view' to
-obtain the s-expression. For the format, see `mua/msg-from-string'"
-  (if (not (file-readable-p path))
-    (progn 
-      (mua/warn "Message is not readable")
-      (mua/log  "not readable: %s" path))
-    (condition-case nil
-      (progn (let* ((cmd (concat mua/mu-binary " view --format=sexp " path))
-		     (str (shell-command-to-string cmd)))
-	       (mua/msg-from-string str)))
-      (error "Failed to read/parse message %s" path))))
-
-
 (defun mua/msg-body-txt-or-html (msg)
   "Get :body-txt, or if not available, :body-html converted to
 text, using `html2text'."

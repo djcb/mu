@@ -83,12 +83,53 @@ maildir"
 	  (chosen (ido-completing-read prompt showfolders)))
     (concat (if fullpath mua/maildir "") chosen)))
 
+(defun mua/mu-run (&rest args)
+  "Run 'mu' synchronously with ARGS as command-line argument;,
+where <exit-code> is the exit code of the program, or 1 if the
+process was killed. <str> contains whatever the command wrote on
+standard output/error, or nil if there was none or in case of
+error. Basically, `mua/mu-run' is like `shell-command-to-string',
+but with better possibilities for error handling"
+  (let* ((rv)
+	  (str (with-output-to-string
+		 (with-current-buffer standard-output ;; but we also get stderr...
+		   (setq rv (apply 'call-process mua/mu-binary nil t nil			      
+			      args))))))
+    `(,(if (numberp rv) rv 1) . ,str)))
+    	  
 (defun mua/mu-binary-version ()
-  "Get the version of the mu binary."
-  (let ((cmd (concat mua/mu-binary
-	       " --version | head -1 | sed 's/.*version //'")))
-    (substring (shell-command-to-string cmd) 0 -1)))
+  "Get the version string of the mu binary, or nil if we failed
+to get it"
+  (let ((rv (mua/mu-run "--version")))
+    (if (and (= (car rv) 0) (string-match "version \\(.*\\)$" (cdr rv)))
+      (match-string 1 (cdr rv))
+      (mua/warn "Failed to get version string"))))
 
+(defun mua/mu-mv (src target &optional flags))
+
+(defun mua/mu-add (src target &optional flags))
+
+(defun mua/mu-remove (path)
+  "Remove message at PATH from the database"
+  
+
+  )
+
+(defun mua/mu-mv (src target &optional flags))
+
+
+(defun mua/mu-view-sexp (path)
+  "Return a string with an s-expression representing the message
+at PATH; the format is described in `mua/msg-from-string', and
+that function converts the string into a Lisp object (plist)"
+  (if (not (file-readable-p path))
+    (mua/warn "Path is note a readable file")
+    (let* ((rv (mua/mu-run "view" "--format=sexp" path))
+	    (code (car rv)) (str (cdr rv)))
+      (if (= code 0)
+	str
+	(mua/warn "mu view failed (%d): %s"
+	  code (if str str "error"))))))
 
 
 (provide 'mua-common)

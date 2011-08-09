@@ -66,9 +66,6 @@ quitted, it switches back to its parent buffer")
 (setq mua/working-folders
   '("/archive" "/bulkarchive" "/todo"))
 
-
-
-
 (setq mua/header-fields
   '( (:date          .  25)
      (:flags         .   6)

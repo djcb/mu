@@ -53,18 +53,16 @@ we quit from this view. Also, if PARENTBUF is a find buffer (ie.,
 has mu-headers-mode as its major mode), this allows various
 commands (navigation, marking etc.) to be applied to this
 buffer."
-  (let* ((msg (mua/msg-from-path path))
-	  (buf (get-buffer-create mua/view-buffer-name))
-	  (str (mua/view-message msg)))
-    (when (and msg str)
-      
-      (switch-to-buffer buf)
+  (let* ((sexp (mua/mu-view-sexp path))
+	  (msg (and sexp (mua/msg-from-string sexp))))
+    (when msg
+      (switch-to-buffer (get-buffer-create mua/view-buffer-name))
       (let ((inhibit-read-only t))
 	(erase-buffer)
-	(insert str))
+	(insert (mua/view-message msg)))
 	
       (mua/view-mode)
-     
+	
       (setq ;; these are buffer-local
 	mua/hdrs-buffer headersbuf
 	mua/parent-buffer headersbuf)
