@@ -38,7 +38,7 @@
   "buffer name for mua/view buffers")
 
 (defvar mua/view-headers
-  '(:from :to :cc :subject :flags :date :attachments)
+  '(:from :to :cc :subject :flags :date :maildir :attachments)
  "fields to display in the message view")
 
 (defvar mua/hdrs-buffer nil
@@ -66,7 +66,19 @@ buffer."
       (setq ;; these are buffer-local
 	mua/hdrs-buffer headersbuf
 	mua/parent-buffer headersbuf)
-      (goto-char (point-min)))))
+      (goto-char (point-min))
+      (mua/view-mark-as-read path))))
+
+(defun mua/view-mark-as-read (path)
+  "Mark the currently viewed as read if it is not so already. In
+  Maildir terms, this means moving the message from \"new/\" to
+  \"cur/\" (if it's not yet there), and setting the \"S\" flag."
+  (let ((flags (mua/maildir-flags-from-path path)))
+    (unless (member 'seen flags) ;; do we need to do something?
+      (let ((newflags (delq 'new (cons 'seen flags)))
+	     (newpath (mua/maildir-from-path path t)))
+	(unless (mua/msg-move path newpath newflags)
+	  (mua/warn "Failed to mark message as read"))))))
 
 (defun mua/view-message (msg)
   "construct a display string for the message"
@@ -82,6 +94,7 @@ buffer."
 	       (:bcc		(mua/view-contacts msg field))
 	       (:date		(mua/view-date  msg))
 	       (:flags		(mua/view-flags msg))
+	       (:maildir	(mua/view-header msg "Maildir" :maildir))
 	       (:size		(mua/view-size  msg))
 	       (:attachments    (mua/view-attachments msg))
 	       (t               (error "Unsupported field: %S" field))))

@@ -59,7 +59,7 @@ old one first"
   (get-buffer-create bufname))
 
 (defun mua/message (frm &rest args)
-  "print a mua message at point"
+  "print a message at point"
   (let ((str (apply 'format frm args)) (inhibit-read-only t))
     (insert (propertize str 'face 'italic))))
 
@@ -94,10 +94,12 @@ parameter is added automatically if `mua/mu-home' is non-nil."
   (let* ((rv)
 	  (args (append args (when mua/mu-home
 			       (list (concat "--muhome=" mua/mu-home)))))
+	  (cmdstr (concat mua/mu-binary " " (mapconcat 'identity args " ")))
 	  (str (with-output-to-string
 		 (with-current-buffer standard-output ;; but we also get stderr...
 		   (setq rv (apply 'call-process mua/mu-binary nil t nil		  
 			      args))))))
+    (mua/log cmdstr)
     `(,(if (numberp rv) rv 1) . ,str)))
     	  
 (defun mua/mu-binary-version ()
@@ -127,19 +129,18 @@ Function returns the target filename if the move succeeds, or
 \[1\]  http://cr.yp.to/proto/maildir.html." 
   (let ((flagstr
 	  (and flags (mua/maildir-flags-to-string flags))))
-    (if (not (file-readable-p path))
-      (mua/warn "Path is note a readable file")
-      (let ((rv (if flagstr
-		  (mua/run "mv" "--printtarget" path target)
-		  (mua/run "mv" "--printtarget"
-		    (concat "--flags=" flagstr) path target))))
-	(if (/= 0 (car rv))
-	  (mua/warn "Moving message file failed: %s"
-	    (if (car rv) (car rv) "error"))
-	  (car rv))))))
-
-
-(defun mua/mu-get-flags (path)
+    (if (not (file-readable-p src))
+      (mua/warn "Source is not a readable file")
+      (let* ((rv (if flagstr
+		  (mua/mu-run "mv" "--printtarget"
+		    (concat "--flags=" flagstr) src target)
+		  (mua/mu-run "mv" "--printtarget" src target)))
+	      (code (car rv)) (output (cdr rv)))
+	(if (/= 0 code)
+	  (mua/warn "Moving message file failed: %s" (if output output "error"))
+	  output))))) ;; the full target path
+	  
+(defun mua/maildir-flags-from-path (path)
   "Get the flags for the message at PATH, which does not have to exist.
 The flags are returned as a list consisting of one or more of
 DFNPRST, mean resp. Deleted, Flagged, New, Passed Replied, Seen
@@ -150,29 +151,28 @@ and `mua/maildir-flags-to-string'.
     (mua/maildir-string-to-flags (match-string 1 path))))
 
 
-
 ;; TODO: make this async, but somehow serialize database access
 (defun mua/mu-add (path)
   "Add message file at PATH to the mu database (using the 'mu
 add') command. Return t if it succeed or nil in case of error."
   (if (not (file-readable-p path))
-    (mua/warn "Path is note a readable file")
-    (let ((rv (mua/mu-run "add" path)))
-      (if (=/ (car rv) 0)
-	(mua/warn "mu add failed (%d): %s"
-	  code (if (cdr rv) (cdr rv) "error"))
-	t))))
+    (mua/warn "Path is not a readable file: %s" path)
+    (let* ((rv (mua/mu-run "add" path))
+	    (code (car rv)) (output (cdr rv)))
+      (if (/= code 0)
+	(mua/warn "mu add failed (%d): %s" code (if output output "error")
+	t)))))
 
 ;; TODO: make this async, but somehow serialize database access
 (defun mua/mu-remove (path)
   "Remove message with PATH from the mu database (using the 'mu
 remove') command. PATH does not have to exist. Return t if it
 succeed or nil in case of error."
-  (let ((rv (mua/mu-run "remove" path)))
-    (when (=/ (car rv) 0)
-      (mua/warn "mu remove failed (%d): %s"
-	code (if (cdr rv) (cdr rv) "error"))
-      t)))
+  (let* ((rv (mua/mu-run "remove" path))
+	  (code (car rv)) (output (cdr rv)))
+    (if (/= code 0)
+      (mua/warn "mu remove failed (%d): %s" code (if output output "error")
+	t))))
 
 (defun mua/mu-view-sexp (path)
   "Return a string with an s-expression representing the message
@@ -187,6 +187,26 @@ that function converts the string into a Lisp object (plist)"
 	(mua/warn "mu view failed (%d): %s"
 	  code (if str str "error"))))))
 
+(defun mua/maildir-from-path (path &optional dont-strip-prefix)
+  "Get the maildir from path; in this context, 'maildir' is the
+part between the `mua/maildir' and the /cur or /new; so
+e.g. \"/home/user/Maildir/foo/bar/cur/12345:2,S\" would have
+\"/foo/bar\" as its maildir. If DONT-STRIP-PREFIX is non-nil,
+function will instead _not_ remove the `mua/maildir' from the
+front - so in that case, the example would return
+\"/home/user/Maildir/foo/bar/\". If the maildir cannot be
+determined, return `nil'."
+  (when (and (string-match "^\\(.*\\)/\\(cur\\|new\\)/\[^/\]*$" path))
+    (let ((mdir (match-string 1 path)))	 
+      (when (and (< (length mua/maildir) (length mdir))
+	      (string= (substring mdir 0 (length mua/maildir)) mua/maildir))
+	(if dont-strip-prefix
+	  mdir
+	  (substring mdir (length mua/maildir)))))))
+
+;; TODO: ensure flag string have the chars in ASCII-order (as per maildir spec)
+;; TODO: filter-out duplicate flags
+
 (defun mua/maildir-flags-to-string (flags)
   "Convert a list of flags into a string as seen in Maildir
 message files; flags are symbols draft, flagged, new, passed,
@@ -199,10 +219,9 @@ Also see `mua/maildir-string-to-flags'.
 \[1\]: http://cr.yp.to/proto/maildir.html"
   (when flags
     (let ((kar
-	    (case (car flags)
-	      ('draft    ?D)
+	    (case (car flags) 
+	      ('draft    ?D) 
 	      ('flagged  ?F)
-	      ('new      ?N)
 	      ('passed   ?P)
 	      ('replied  ?R)
 	      ('seen     ?S)
@@ -224,7 +243,6 @@ Also see `mua/maildir-flags-to-string'.
 	    (case (string-to-char str)
 	      (?D   'draft)
 	      (?F   'flagged)
-	      (?N   'new)
 	      (?P   'passed)
 	      (?R   'replied)
 	      (?S   'seen)

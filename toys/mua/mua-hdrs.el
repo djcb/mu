@@ -307,18 +307,14 @@ fitting in WIDTH"
   (interactive) ;; TODO: check if next line has path, if not, don't go there
   (if (or (/= 0 (forward-line 1)) (not (mua/hdrs-get-path)))
     (mua/warn "No message after this one")
-    (progn
-      (mua/log "At: %d [%S]" (point) (mua/hdrs-get-path)) t)))
-
+    t))
 
 (defun mua/hdrs-prev  ()
   "go to the previous line; t if it worked, nil otherwise"
   (interactive)
   (if (or (/= 0 (forward-line -1)) (not (mua/hdrs-get-path)))
     (mua/warn "No message before this one")
-    (progn
-      (mua/log "At: %d [%S]" (point) (mua/hdrs-get-path)) t)))
-
+    t))
 
 (defun mua/hdrs-view ()
   (interactive)

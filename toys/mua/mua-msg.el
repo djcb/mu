@@ -38,9 +38,10 @@
 (require 'mua-common)
 
 (defun mua/msg-from-string (str)
-  "Get the plist describing an email message, from a string
-contain a message sexp; a message sexp looks something like: The
-message sexp looks something like:
+  "Get the plist describing an email message, from STR containing
+a message sexp.
+
+ a message sexp looks something like:
  \(
   :from ((\"Donald Duck\" . \"donald@example.com\"))
   :to ((\"Mickey Mouse\" . \"mickey@example.com\"))
@@ -50,6 +51,7 @@ message sexp looks something like:
   :references (\"200208121222.g7CCMdb80690@msg.id\")
   :in-reply-to \"200208121222.g7CCMdb80690@msg.id\"
   :message-id \"foobar32423847ef23@pluto.net\"
+  :maildir: \"/archive\"
   :path \"/home/mickey/Maildir/inbox/cur/1312254065_3.32282.pluto,4cd5bd4e9:2,\"
   :priority high
   :flags (new unread)
@@ -88,7 +90,11 @@ as described in `mua/msg-from-string'
 There is also the special field :body (which is either :body-txt,
 or if not available, :body-html converted to text)."
   (case field
-    (:body (mua/msg-body-txt-or-html msg))
+    (:body
+      (mua/msg-body-txt-or-html msg))
+    (:maildir ;; messages gotten from mu-view don't have their maildir set...
+      (or (plist-get msg :maildir)
+	(mua/maildir-from-path (mua/msg-field msg :path))))
     (t (plist-get msg field))))
 
 
@@ -113,13 +119,13 @@ Function returns the target filename if the move succeeds, or
 `nil'.
 
 \[1\]  http://cr.yp.to/proto/maildir.html."
-  (let ((fulltarget (mua/mu-mv str target flags)))
-    (when fulltarget
+  (let ((fulltarget (mua/mu-mv src targetdir flags)))
+    (if fulltarget
       (mua/mu-remove src)
       (unless (string= targetdir "/dev/null")
-	mua/mu-add fulltarget))
-    
-    fulltarget))
+	(mua/mu-add fulltarget))
+      fulltarget)
+    (mua/warn "Moving message failed")))
 
 
 ;; functions for composing new messages (forward, reply and new)
@@ -416,33 +422,37 @@ messages (mua is not the only user of `message-mode' after all)"
 ;; we simply check if file starts with `mu-msg-file-prefix'    
 
 (defun mua/msg-save-to-sent ()
-  "function that moves the current message to the sent folder"
-  (if (mua/msg-is-mua-message)
+  "Move the message in this buffer to the sent folder. This is
+meant to be called from message mode's `message-sent-hook'."
+  (if (mua/msg-is-mua-message) ;; only if we are mua
     (unless mua/sent-folder (error "mua/sent-folder not set"))
-    
-    (let ((sent-msg ;; note, the "" parameter remove the D 'Draft'-flag
- 	    (mua/msg-move (buffer-file-name) mua/sent-folder "")))
-      (if (sent-msg) ;; change our buffer file-name
+    (let* ;; TODO: remove duplicate flags
+      ((newflags ;; remove Draft; maybe set 'Seen' as well?
+	 (delq 'draft (mua/maildir-flags-from-path (buffer-file-name))))
+	(sent-msg
+	  (mua/msg-move (buffer-file-name) mua/sent-folder newflagstr)))
+      (if sent-msg ;; change our buffer file-name
 	(set-visited-file-name sent-msg t t)
 	(mua/warn "Failed to save message to the Sent-folder")))))
-     
-;; (defun mua/msg-set-replied-flag ()
-;;   "find the message we replied to, and set its 'Replied' flag."
-;;   (if (mua/msg-is-mua-message)
 
-;;     (let ((msgid (mail-header-parse-addresses
-;; 		   (message-field-value "In-Reply-To")))
-;; 	   (path (and msgid (shell-command-to-string
-;; 			      (concat mua/mu-binary
-;; 				" find msgid:" msgid " --exec=echo | head -1")))))
-;;       (if path
-;;         (mu-mv)
-	   
+
+(defun mua/msg-set-replied-flag ()
+  "Find the message we replied to, and set its 'Replied'
+flag. This is meant to be called from message mode's
+`message-sent-hook'."
+  (if (mua/msg-is-mua-message) ;; only if we are mua
+    (let ((msgid (mail-header-parse-addresses
+		   (message-field-value "In-Reply-To")))
+	   (path (and msgid (mua/mu-run
+			      "find"  (concat "msgid:" msgid) "--exec=echo"))))
+      (if path
+	(let ((newflags (cons 'replied (mua/maildir-flags-from-path path))))
+	  (mua/msg-move path (mua/maildir-from-path path t) newflags))))))
       
 	    
-    
-;; add-hook
-;; add-hook
+;; hook our functions up with sending of the message
+(add-hook 'message-sent-hook 'mua/msg-save-to-sent)
+(add-hook 'message-sent-hook 'mua/msg-set-replied-flag)
 
 
 (provide 'mua-msg)
