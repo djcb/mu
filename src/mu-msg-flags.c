@@ -26,39 +26,38 @@
 #include "mu-msg-flags.h"
 
 
-/* put these in alpha-order, so output strings are ordered thusly
- * note, these should be in lower-case, otherwise Xapian gets
- * confused...
+/* put these in alpha-order, so output strings are ordered correctly
+ * (that's the way the Maildir spec teaches us)
  */
 static const MuMsgFlags ALL_FLAGS[] = {
-	/* a */ MU_MSG_FLAG_HAS_ATTACH,	
-	/* d */ MU_MSG_FLAG_DRAFT,
-	/* f */ MU_MSG_FLAG_FLAGGED,
-	/* n */ MU_MSG_FLAG_NEW,
-	/* p */ MU_MSG_FLAG_PASSED,
-	/* r */ MU_MSG_FLAG_REPLIED,
-	/* s */ MU_MSG_FLAG_SEEN,
-	/* t */ MU_MSG_FLAG_TRASHED,
-	/* u */ MU_MSG_FLAG_UNREAD,
-	/* x */ MU_MSG_FLAG_ENCRYPTED,
-	/* z */ MU_MSG_FLAG_SIGNED
+	/* a */ MU_MSG_FLAG_HAS_ATTACH, /* non-maildir flag */
+	/* D */ MU_MSG_FLAG_DRAFT,
+	/* F */ MU_MSG_FLAG_FLAGGED,
+	/* N */ MU_MSG_FLAG_NEW,         
+	/* P */ MU_MSG_FLAG_PASSED,
+	/* R */ MU_MSG_FLAG_REPLIED,
+	/* S */ MU_MSG_FLAG_SEEN,
+	/* T */ MU_MSG_FLAG_TRASHED,
+	/* U */ MU_MSG_FLAG_UNREAD,    /* pseudo flag */
+	/* x */ MU_MSG_FLAG_ENCRYPTED, /* non-maildir flag */
+	/* z */ MU_MSG_FLAG_SIGNED     /* non-maildir flag */
 };
 
 
 MuMsgFlags
 mu_msg_flag_from_char (char k)
 {
-	switch (g_ascii_tolower(k)) {
-	case 'n': return MU_MSG_FLAG_NEW;		
-	case 'p': return MU_MSG_FLAG_PASSED;
-	case 'r': return MU_MSG_FLAG_REPLIED;
-	case 's': return MU_MSG_FLAG_SEEN;
-	case 't': return MU_MSG_FLAG_TRASHED;
-	case 'd': return MU_MSG_FLAG_DRAFT;
-	case 'f': return MU_MSG_FLAG_FLAGGED;
+	switch (k) {
+	case 'N': return MU_MSG_FLAG_NEW;		
+	case 'P': return MU_MSG_FLAG_PASSED;
+	case 'R': return MU_MSG_FLAG_REPLIED;
+	case 'S': return MU_MSG_FLAG_SEEN;
+	case 'T': return MU_MSG_FLAG_TRASHED;
+	case 'D': return MU_MSG_FLAG_DRAFT;
+	case 'F': return MU_MSG_FLAG_FLAGGED;
 		
-		/* NEW OR NOT SEEN */
-	case 'u': return MU_MSG_FLAG_UNREAD;
+	/* NEW OR NOT SEEN */
+	case 'U': return MU_MSG_FLAG_UNREAD;
 		
 	case 'z': return MU_MSG_FLAG_SIGNED;
 	case 'x': return MU_MSG_FLAG_ENCRYPTED;
@@ -75,7 +74,6 @@ mu_msg_flag_from_file_char (char k)
 	switch (k) {
 	case 'D': return MU_MSG_FLAG_DRAFT;
 	case 'F': return MU_MSG_FLAG_FLAGGED;
-	case 'N': return MU_MSG_FLAG_NEW;
 	case 'P': return MU_MSG_FLAG_PASSED;
 	case 'R': return MU_MSG_FLAG_REPLIED;
 	case 'S': return MU_MSG_FLAG_SEEN;
@@ -114,18 +112,20 @@ mu_msg_flag_name (MuMsgFlags flag)
 char
 mu_msg_flag_char (MuMsgFlags flag)
 {
+	g_return_val_if_fail (flag != MU_MSG_FLAG_NONE, 0);
+	
 	switch (flag) {
 		
-	case MU_MSG_FLAG_NEW:		return 'n';
-	case MU_MSG_FLAG_PASSED:	return 'p';
-	case MU_MSG_FLAG_REPLIED:	return 'r';
-	case MU_MSG_FLAG_SEEN:		return 's';
-	case MU_MSG_FLAG_TRASHED:	return 't';
-	case MU_MSG_FLAG_DRAFT:		return 'd';
-	case MU_MSG_FLAG_FLAGGED:	return 'f';
+	case MU_MSG_FLAG_NEW:		return 'N';
+	case MU_MSG_FLAG_PASSED:	return 'P';
+	case MU_MSG_FLAG_REPLIED:	return 'R';
+	case MU_MSG_FLAG_SEEN:		return 'S';
+	case MU_MSG_FLAG_TRASHED:	return 'T';
+	case MU_MSG_FLAG_DRAFT:		return 'D';
+	case MU_MSG_FLAG_FLAGGED:	return 'F';
 
 	/* NEW OR NOT SEEN */
-	case MU_MSG_FLAG_UNREAD:        return 'u';
+	case MU_MSG_FLAG_UNREAD:        return 'U';
 		
 	case MU_MSG_FLAG_SIGNED:	return 'z';
 	case MU_MSG_FLAG_ENCRYPTED:	return 'x';
@@ -162,7 +162,7 @@ mu_msg_flags_from_str (const char* str)
 	
 	for (flags = MU_MSG_FLAG_NONE; str && *str; ++str) {
 		MuMsgFlags flag;
-		if ((flag = mu_msg_flag_char (*str)) == 0) {
+		if ((flag = mu_msg_flag_from_char (*str)) == 0) {
 			flags = 0;
 			break;
 		}
@@ -183,4 +183,6 @@ mu_msg_flags_foreach (MuMsgFlagsForeachFunc func, gpointer user_data)
 	for (i = 0; i != G_N_ELEMENTS(ALL_FLAGS); ++i)
 		func (ALL_FLAGS[i], user_data);
 }
+
+
 

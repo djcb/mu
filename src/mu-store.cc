@@ -179,7 +179,8 @@ check_version (MuStore *store)
 }
 
 MuStore*
-mu_store_new (const char* xpath, const char *contacts_cache,
+mu_store_new (const char* xpath,
+	      const char *contacts_cache,
 	      GError **err)
 {
 	g_return_val_if_fail (xpath, NULL);
@@ -645,7 +646,7 @@ mu_store_store_msg (MuStore *store, MuMsg *msg, gboolean replace)
 			(msg,
 			 (MuMsgContactForeachFunc)each_contact_info,
 			 &msgdoc);
-			
+		
 		/* add_document is slightly
 		   faster, we can use it when
 		 * we know the document does not exist yet, eg., in

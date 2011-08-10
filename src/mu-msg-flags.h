@@ -71,21 +71,22 @@ enum _MuMsgFlags {
 	/* "x"->encrypted message */
 	MU_MSG_FLAG_ENCRYPTED   = 1 << 9,
 	/* "a"->message has attachment */
-	MU_MSG_FLAG_HAS_ATTACH  = 1 << 10
+	MU_MSG_FLAG_HAS_ATTACH  = 1 << 10,
 };
 typedef enum _MuMsgFlags MuMsgFlags;
+
+#define MU_MSG_FLAG_INVALID (-1)
 
 
 /**
  * convert the char-per-flag description into a MuMsgFlags value; the
- * characters
- * D=draft,F=flagged,N=new,P=passed,R=replied,S=seen,T=trashed
- * a=has-attachment,s=signed, x=encrypted if any other characters are
- * seen, MU_MSG_FLAG_NONE is returned.
+ * characters D=draft, F=flagged, N=new, P=passed, R=replied, S=seen,
+ * T=trashed a=has-attachment, s=signed, x=encrypted are accepted; if
+ * any other characters are seen, MU_MSG_FLAG_INVALID is returned.
  * 
  * @param str a string
  * 
- * @return a MuMSgFlags value, or MU_MSG_FLAG_UNKNOWN in case of error
+ * @return a MuMSgFlags value, or MU_MSG_FLAG_INVALID in case of error
  */
 MuMsgFlags mu_msg_flags_from_str  (const char* str) G_GNUC_PURE;
 

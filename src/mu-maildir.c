@@ -830,7 +830,7 @@ char*
 mu_maildir_get_path_from_flags (const char *oldpath, MuMsgFlags newflags)
 {
 	char *newname, *newdir, *newpath;
-		
+	
 	g_return_val_if_fail (oldpath, NULL);
 	g_return_val_if_fail (newflags != MU_MSG_FLAG_NONE, NULL);
 	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */

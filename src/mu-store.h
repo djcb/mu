@@ -41,16 +41,15 @@ typedef struct _MuStore MuStore;
  * 
  * @return a new MuStore object, or NULL in case of error
  */
-MuStore*    mu_store_new     (const char *xpath, const char *ccachepath,
-			      GError **err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
+MuStore*  mu_store_new  (const char *xpath, const char *ccachepath,
+			 GError **err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy the MuStore object and free resources
  * 
  * @param store a valid store, or NULL
  */
-void        mu_store_destroy (MuStore *store);
+void mu_store_destroy (MuStore *store);
 
 
 
