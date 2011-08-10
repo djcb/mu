@@ -386,6 +386,8 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
 		{ "mv",      MU_CONFIG_CMD_MV },
 		{ "view",    MU_CONFIG_CMD_VIEW },
+		{ "add",     MU_CONFIG_CMD_ADD },
+		{ "remove",  MU_CONFIG_CMD_REMOVE },
 	};
 		
 	opts->cmd	 = MU_CONFIG_CMD_NONE;
@@ -562,6 +564,9 @@ mu_config_execute (MuConfig *opts)
 	case MU_CONFIG_CMD_MKDIR:      return mu_cmd_mkdir (opts);
 	case MU_CONFIG_CMD_MV:         return mu_cmd_mv (opts);
 	case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
+	case MU_CONFIG_CMD_ADD:        return mu_cmd_add (opts);
+	case MU_CONFIG_CMD_REMOVE:     return mu_cmd_remove (opts);
+		
 	case MU_CONFIG_CMD_UNKNOWN:
 		g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
 		show_usage (FALSE);

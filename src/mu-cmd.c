@@ -305,6 +305,22 @@ mv_check_params (MuConfig *opts, MuMsgFlags *flags)
 }
 
 
+static MuExitCode
+cmd_mv_dev_null (MuConfig *opts)
+{
+	if (unlink (opts->params[1]) != 0) {
+		g_warning ("unlink failed: %s", strerror (errno));
+		return MU_EXITCODE_ERROR;
+	}
+	
+	if (opts->printtarget)
+		g_print ("%s\n", "/dev/null"); /* /dev/null */
+
+	return MU_EXITCODE_OK;
+}
+
+
+
 MuExitCode
 mu_cmd_mv (MuConfig *opts)
 {
@@ -316,17 +332,8 @@ mu_cmd_mv (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 
 	/* special case: /dev/null */
-	if (g_strcmp0 (opts->params[2], "/dev/null") == 0) {
-		if (unlink (opts->params[1]) != 0) {
-			g_warning ("unlink failed: %s", strerror (errno));
-			return MU_EXITCODE_ERROR;
-		} else {
-			if (opts->printtarget)
-				/* if the move worked, print */
-				g_print ("%s\n", "/dev/null"); /* /dev/null */
-			return MU_EXITCODE_OK;
-		}
-	}
+	if (g_strcmp0 (opts->params[2], "/dev/null") == 0)
+		return cmd_mv_dev_null (opts);
 
 	err = NULL;
 	fullpath = mu_msg_file_move_to_maildir (opts->params[1], opts->params[2],
@@ -368,14 +375,12 @@ check_file_okay (const char *path, gboolean cmd_add)
 }
 	
 
-static gboolean
-add_or_remove (MuConfig *opts, gboolean cmd_add)
+static MuStore*
+get_store (void)
 {
 	MuStore *store;
 	GError *err;
-	gboolean allok;
-	int i;
-	
+
 	err = NULL;
 	store = mu_store_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 			      mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
@@ -386,38 +391,10 @@ add_or_remove (MuConfig *opts, gboolean cmd_add)
 			g_error_free (err);
 		} else
 			g_warning ("failed to create store object");
-		
-		return MU_EXITCODE_ERROR;
 	}
 
-
-	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
-		
-		const char* src;
-
-		src = opts->params[i];
-
-		if (!check_file_okay (src, cmd_add)) {
-			allok = FALSE;
-			continue;
-		}
-				
-		if (cmd_add) {
-			if (!mu_store_store_path (store, src)) {
-				allok = FALSE;
-				g_warning ("failed to store %s", src);
-			}
-		} else { /* remove */
-			if (!mu_store_remove_path (store, src)) {
-				allok = FALSE;
-				g_warning ("failed to remove %s", src);
-			}
-		}
-	}
+	return store;
 	
-	mu_store_destroy (store);
-	
-	return allok ? MU_EXITCODE_OK : MU_EXITCODE_DB_UPDATE_ERROR;
 }
 
 
@@ -425,6 +402,10 @@ add_or_remove (MuConfig *opts, gboolean cmd_add)
 MuExitCode
 mu_cmd_add (MuConfig *opts)
 {
+	MuStore *store;
+	gboolean allok;
+	int i;
+	
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
 			      MU_EXITCODE_ERROR);
@@ -435,13 +416,39 @@ mu_cmd_add (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 
-	return add_or_remove (opts, TRUE);
+	store = get_store ();
+	if (!store)
+		return MU_EXITCODE_ERROR;
+		
+	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
+		
+		const char* src;
+		src = opts->params[i];
+
+		if (!check_file_okay (src, TRUE)) {
+			allok = FALSE;
+			continue;
+		}
+				
+		if (!mu_store_store_path (store, src)) {
+			allok = FALSE;
+			g_warning ("failed to store %s", src);
+		}
+	}
+	
+	mu_store_destroy (store);
+
+	return allok ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
 }
 
 
 MuExitCode
 mu_cmd_remove (MuConfig *opts)
-{	
+{
+	MuStore *store;
+	gboolean allok;
+	int i;
+	
 	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
 			      MU_EXITCODE_ERROR);
@@ -452,6 +459,31 @@ mu_cmd_remove (MuConfig *opts)
 		return MU_EXITCODE_ERROR;
 	}
 
-	return add_or_remove (opts, TRUE);
+	store = get_store ();
+	if (!store)
+		return MU_EXITCODE_ERROR;
+		
+	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
+		
+		const char* src;
+		src = opts->params[i];
+
+		if (!check_file_okay (src, FALSE)) {
+			allok = FALSE;
+			continue;
+		}
+				
+		if (!mu_store_remove_path (store, src)) {
+			allok = FALSE;
+			g_warning ("failed to remove %s", src);
+		}
+	}
+	
+	mu_store_destroy (store);
+
+	return allok ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
 }
+
+
+
 
