@@ -680,10 +680,6 @@ mu_msg_is_readable (MuMsg *self)
 		== 0) ? TRUE : FALSE;
 }
 
-
-
-
-
 enum _MaildirType {
 	MAILDIR_TYPE_CUR,
 	MAILDIR_TYPE_NEW,
@@ -796,6 +792,44 @@ msg_move (const char* oldpath, const char *newfullpath, GError **err)
 }
 
 
+static gboolean
+check_source_file (const char *src, MaildirType *mtype, GError **err)
+{
+	if (!g_path_is_absolute(src)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "source is not an absolute path: '%s'", src);
+		return FALSE;
+	}
+
+	*mtype = get_maildir_type (src);
+	if (mtype != MAILDIR_TYPE_CUR && *mtype != MAILDIR_TYPE_NEW) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "source is not in a maildir: '%s'", src);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+check_target_dir (const char* targetmdir, GError **err)
+{		
+	if (!g_path_is_absolute(targetmdir)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "target is not an absolute path: '%s'", targetmdir);
+		return FALSE;
+	}
+	
+	if (!mu_util_check_dir (targetmdir, TRUE, TRUE)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "target is not a read-writable dir: '%s'", targetmdir);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
 /*
  * move a msg to another maildir, trying to maintain 'integrity',
  * ie. msg in 'new/' will go to new/, one in cur/ goes to cur/. be
@@ -811,33 +845,13 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
 	
 	g_return_val_if_fail (oldpath, FALSE);
 	g_return_val_if_fail (targetmdir, FALSE);
-
-	if (!g_path_is_absolute(oldpath)) {
-		g_set_error (err, 0, MU_ERROR_FILE,
-			     "source is not an absolute path: '%s'", oldpath);
-		return FALSE;
-	}
-
-	mtype = get_maildir_type (oldpath);
-	if (mtype != MAILDIR_TYPE_CUR && mtype != MAILDIR_TYPE_NEW) {
-		g_set_error (err, 0, MU_ERROR_FILE,
-			     "source is not in a 'cur' or 'new' maildir: '%s'",
-			     oldpath);
-		return FALSE;
-	}
 	
-	if (!g_path_is_absolute(targetmdir)) {
-		g_set_error (err, 0, MU_ERROR_FILE,
-			     "target is not an absolute path: '%s'", targetmdir);
+	if (!check_source_file (oldpath, &mtype, err))
 		return FALSE;
-	}
-
-	if (!mu_util_check_dir (targetmdir, TRUE, TRUE)) {
-		g_set_error (err, 0, MU_ERROR_FILE,
-			     "target is not a read-writable dir: '%s'", targetmdir);
+	
+	if (!check_target_dir (targetmdir, err))
 		return FALSE;
-	}
-
+		
 	newfullpath = get_new_fullpath (oldpath, targetmdir, mtype, flags);
 	if (!newfullpath) {
 		g_set_error (err, 0, MU_ERROR_FILE,
@@ -846,9 +860,7 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
 	}
 
 	/* TODO: check for oldpath == newfullpath */
-	
 	rv = msg_move (oldpath, newfullpath, err);
-
 	if (!rv) {
 		g_free (newfullpath);
 		return NULL;

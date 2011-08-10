@@ -455,8 +455,7 @@ output_links (MuMsgIter *iter, const char* linksdir,
 	if (!create_linksdir_maybe (linksdir, clearlinks))
 		return FALSE;
 	
-	for (myiter = iter, errseen = FALSE, mycount = 0;
-	     !mu_msg_iter_is_done (myiter);
+	for (myiter = iter, errseen = FALSE, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
 
 		MuMsg *msg;
@@ -477,8 +476,7 @@ output_links (MuMsgIter *iter, const char* linksdir,
 	}
 
 	if (errseen) 
-		g_warning ("error linking some of the messages; maybe the "
-			   "database needs to be updated");
+		g_warning ("error linking some of the messages");
 
 	if (count)
 		*count = mycount;
@@ -754,6 +752,25 @@ output_sexp (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 	return TRUE;
 }
 
+
+static void
+output_xml_msg (MuMsg *msg)
+{
+	g_print ("\t<message>\n");
+	print_attr_xml ("from", mu_msg_get_from (msg));
+	print_attr_xml ("to", mu_msg_get_to (msg));
+	print_attr_xml ("cc", mu_msg_get_cc (msg));
+	print_attr_xml ("subject", mu_msg_get_subject (msg));
+	g_print ("\t\t<date>%u</date>\n",
+		 (unsigned)mu_msg_get_date (msg));
+	g_print ("\t\t<size>%u</size>\n", mu_msg_get_size (msg));
+	print_attr_xml ("msgid", mu_msg_get_msgid (msg));
+	print_attr_xml ("path", mu_msg_get_path (msg));
+	print_attr_xml ("maildir", mu_msg_get_maildir (msg));
+	g_print ("\t</message>\n");
+}
+
+
 static gboolean
 output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 {
@@ -768,8 +785,7 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
 
-		MuMsg *msg;
-		
+		MuMsg *msg;	
 		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
 		if (!msg)
 			return FALSE;
@@ -778,24 +794,11 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 		 * readable (ie, live also outside the database) */
 		if (!include_unreadable && !mu_msg_is_readable (msg))
 			continue;
-		
-		g_print ("\t<message>\n");
-		print_attr_xml ("from", mu_msg_get_from (msg));
-		print_attr_xml ("to", mu_msg_get_to (msg));
-		print_attr_xml ("cc", mu_msg_get_cc (msg));
-		print_attr_xml ("subject", mu_msg_get_subject (msg));
-		g_print ("\t\t<date>%u</date>\n",
-			 (unsigned) mu_msg_get_date (msg));
-		g_print ("\t\t<size>%u</size>\n",
-			 (unsigned) mu_msg_get_size (msg));
-		print_attr_xml ("msgid", mu_msg_get_msgid (msg));
-		print_attr_xml ("path", mu_msg_get_path (msg));
-		print_attr_xml ("maildir", mu_msg_get_maildir (msg));
-		g_print ("\t</message>\n");
 
+		output_xml_msg (msg);
+		
 		++mycount;
 	}
-
 	g_print ("</messages>\n");
 		
 	if (count)

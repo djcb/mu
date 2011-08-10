@@ -91,45 +91,38 @@ static gboolean
 each_contact (MuMsgContact *c, ContactData *cdata)
 {
 	char *pair;
-	
-	pair = get_name_addr_pair (c);
-	
+
 	if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_FROM) {
 		if (!cdata->from)
 			g_string_append (cdata->gstr, "\t:from (");
-		g_string_append (cdata->gstr, pair);
 		cdata->from = TRUE;
-	}
-
-	if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_TO) {
+		
+	} else if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_TO) {
 		if (!cdata->to)
-			g_string_append_printf (cdata->gstr,"%s\t:to (",
-						cdata->from ? ")\n" : "");
-		g_string_append (cdata->gstr, pair);
+			g_string_append_printf 	(cdata->gstr,"%s\t:to (",
+						 cdata->from ? ")\n" : "");
 		cdata->to = TRUE;
-	}
-	
-	if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_CC) {
+
+	} else if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_CC) {
 		if (!cdata->cc)
 			g_string_append_printf (cdata->gstr,"%s\t:cc (",
 						cdata->from||cdata->to ?
 						")\n" : "");
-		g_string_append (cdata->gstr, pair);
 		cdata->cc = TRUE;
-	}
 
-	if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_BCC) {
+	} else if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_BCC) {
 		if (!cdata->bcc)
 			g_string_append_printf
 				(cdata->gstr, "%s\t:bcc (",
-				 cdata->from||cdata->to||cdata->cc ?
-				 ")\n" : "");
-		g_string_append (cdata->gstr, pair);
+				 cdata->from||cdata->to||cdata->cc ? ")\n":"");
 		cdata->bcc = TRUE;
-	}
+	} else
+		g_return_val_if_reached (FALSE);
 
+	pair = get_name_addr_pair (c);
+	g_string_append (cdata->gstr, pair);
 	g_free (pair);
-	
+		
 	return TRUE;
 }
 
@@ -219,6 +212,23 @@ append_sexp_attachments (GString *gstr, MuMsg *msg)
 }
 
 
+static void
+append_sexp_message_file_attr (GString *gstr, MuMsg *msg)
+{
+	append_sexp_attachments (gstr, msg);
+	
+	append_sexp_attr (gstr, "reply-to",
+				  mu_msg_get_header (msg, "Reply-To"));
+	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
+	append_sexp_attr (gstr, "in-reply-to",
+			  mu_msg_get_header (msg, "In-Reply-To"));
+	
+	append_sexp_attr (gstr, "body-txt",
+				  mu_msg_get_body_text(msg));
+	append_sexp_attr (gstr, "body-html",
+			  mu_msg_get_body_html(msg));
+}
+
 char*
 mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 {
@@ -233,13 +243,12 @@ mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 			  "subject", mu_msg_get_subject (msg));
 	
 	t = mu_msg_get_date (msg);
-	g_string_append_printf (gstr,
+	/* weird time format for emacs 29-bit ints...*/
+	g_string_append_printf (gstr, 
 				"\t:date (%u %u 0)\n", (unsigned)(t >> 16),
 				(unsigned)(t & 0xffff));
 	g_string_append_printf (gstr, "\t:size %u\n",
 				(unsigned) mu_msg_get_size (msg));
-
-	
 	append_sexp_attr (gstr, "message-id", mu_msg_get_msgid (msg));
 	append_sexp_attr (gstr, "path",	 mu_msg_get_path (msg));
 	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
@@ -249,20 +258,10 @@ mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
 	
 	append_sexp_flags (gstr, msg);
 	
-	if (!dbonly) {
-		append_sexp_attachments (gstr, msg);
-
-		append_sexp_attr (gstr, "reply-to",
-				  mu_msg_get_header (msg, "Reply-To"));
-		append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
-		append_sexp_attr (gstr, "in-reply-to",
-				  mu_msg_get_header (msg, "In-Reply-To"));
-	
-		append_sexp_attr (gstr, "body-txt",
-				  mu_msg_get_body_text(msg));
-		append_sexp_attr (gstr, "body-html",
-				  mu_msg_get_body_html(msg));
-	}
+	/* file attr things can only be gotten from the file (ie., mu
+	 * view), not from the database (mu find) */
+	if (!dbonly)
+		append_sexp_message_file_attr (gstr, msg);
 	
 	g_string_append (gstr, ")\n;;eom\n");	
 
