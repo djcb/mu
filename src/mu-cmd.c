@@ -314,7 +314,7 @@ cmd_mv_dev_null (MuConfig *opts)
 	}
 	
 	if (opts->printtarget)
-		g_print ("%s\n", "/dev/null"); /* /dev/null */
+		g_print ("/dev/null\n"); /* /dev/null */
 
 	return MU_EXITCODE_OK;
 }
@@ -365,7 +365,7 @@ check_file_okay (const char *path, gboolean cmd_add)
 		return FALSE;
 	}
 	
-	if (cmd_add && access (path, R_OK) != 0) {
+	if (cmd_add && access(path, R_OK) != 0) {
 		g_warning ("path is not readable: %s: %s",
 			   path, strerror (errno));
 		return FALSE;

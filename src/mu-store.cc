@@ -121,7 +121,7 @@ add_synonym_for_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
 
 	db->clear_synonyms (pfx + mu_msg_flag_name (flag));
 	db->add_synonym (pfx + mu_msg_flag_name (flag), pfx +
-			 (std::string(1, mu_msg_flag_char (flag))));
+			 (std::string(1, tolower(mu_msg_flag_char (flag)))));
 }
 
 

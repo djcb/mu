@@ -406,7 +406,9 @@ enum _MuExitCode {
 	MU_EXITCODE_NO_MATCHES      = 2,
 	MU_EXITCODE_DB_LOCKED       = 3,
 	MU_EXITCODE_DB_CORRUPTED    = 4,
-	MU_EXITCODE_DB_UPDATE_ERROR = 5
+	MU_EXITCODE_DB_UPDATE_ERROR = 5,
+
+	MU_EXITCODE_FILE_ERROR      = 6
 };
 typedef enum _MuExitCode MuExitCode;
 
@@ -432,6 +434,7 @@ enum _MuError {
 	MU_ERROR_FILE_CANNOT_MKDIR,
 	MU_ERROR_FILE_STAT_FAILED,
 	MU_ERROR_FILE_READDIR_FAILED,
+	
 	/* generic file-related error */
 	MU_ERROR_FILE,
 	

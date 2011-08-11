@@ -698,11 +698,11 @@ get_maildir_type (const char *path)
 	 * the closing '/'... if it does, remove it */
 	if (dirname[strlen(dirname) - 1 ] == G_DIR_SEPARATOR)
 		dirname[strlen(dirname) - 1] = '\0'; 
-
+	
 	if (g_str_has_suffix (dirname, "cur"))
 		mtype = MAILDIR_TYPE_CUR;
 	else if (g_str_has_suffix (dirname, "new"))
-		mtype = MAILDIR_TYPE_CUR;
+		mtype = MAILDIR_TYPE_NEW;
 	else
 		mtype = MAILDIR_TYPE_OTHER;
 
@@ -739,9 +739,8 @@ get_new_fullpath (const char *oldpath, const char *targetmdir,
 				       filename);
 	g_free (filename);
 
-	/* if flags != MU_MSG_FLAG_UNKNOWN, we update the filename for
-	 * the new flags; in case the NEW flag is set/unset, this can
-	 * also influence the dir */
+	/* we update the filename for the new flags; in case the NEW
+	 * flag is set/unset, this can also influence the dir */
 	if (flags != MU_MSG_FLAG_NONE) {
 		gchar *tmp;
 		tmp = mu_maildir_get_path_from_flags (newfullpath, flags);
@@ -802,7 +801,7 @@ check_source_file (const char *src, MaildirType *mtype, GError **err)
 	}
 
 	*mtype = get_maildir_type (src);
-	if (mtype != MAILDIR_TYPE_CUR && *mtype != MAILDIR_TYPE_NEW) {
+	if (*mtype != MAILDIR_TYPE_CUR && *mtype != MAILDIR_TYPE_NEW) {
 		g_set_error (err, 0, MU_ERROR_FILE,
 			     "source is not in a maildir: '%s'", src);
 		return FALSE;
@@ -859,7 +858,12 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
 		return FALSE;
 	}
 
-	/* TODO: check for oldpath == newfullpath */
+	if (g_strcmp0 (oldpath, newfullpath)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "target equals source");
+		return FALSE;
+	}
+
 	rv = msg_move (oldpath, newfullpath, err);
 	if (!rv) {
 		g_free (newfullpath);
