@@ -99,7 +99,7 @@ parameter is added automatically if `mua/mu-home' is non-nil."
 		 (with-current-buffer standard-output ;; but we also get stderr...
 		   (setq rv (apply 'call-process mua/mu-binary nil t nil		  
 			      args))))))
-    (mua/log cmdstr)
+    (mua/log "%s => %S" cmdstr rv)
     `(,(if (numberp rv) rv 1) . ,str)))
     	  
 (defun mua/mu-binary-version ()
@@ -130,7 +130,7 @@ Function returns the target filename if the move succeeds, or
   (let ((flagstr
 	  (and flags (mua/maildir-flags-to-string flags))))
     (if (not (file-readable-p src))
-      (mua/warn "Source is not a readable file")
+      (mua/warn "Cannot move unreadable file %s" src)
       (let* ((rv (if flagstr
 		  (mua/mu-run "mv" "--printtarget"
 		    (concat "--flags=" flagstr) src target)
@@ -138,7 +138,7 @@ Function returns the target filename if the move succeeds, or
 	      (code (car rv)) (output (cdr rv)))
 	(if (/= 0 code)
 	  (mua/warn "Moving message file failed: %s" (if output output "error"))
-	  output))))) ;; the full target path
+	  (substring output 0 -1)))))) ;; the full target path, minus the \n
 	  
 (defun mua/maildir-flags-from-path (path)
   "Get the flags for the message at PATH, which does not have to exist.
@@ -156,12 +156,12 @@ and `mua/maildir-flags-to-string'.
   "Add message file at PATH to the mu database (using the 'mu
 add') command. Return t if it succeed or nil in case of error."
   (if (not (file-readable-p path))
-    (mua/warn "Path is not a readable file: %s" path)
+    (mua/warn "Cannot add unreadable file: %s" path)
     (let* ((rv (mua/mu-run "add" path))
 	    (code (car rv)) (output (cdr rv)))
       (if (/= code 0)
 	(mua/warn "mu add failed (%d): %s" code (if output output "error")
-	t)))))
+	  t)))))
 
 ;; TODO: make this async, but somehow serialize database access
 (defun mua/mu-remove (path)
@@ -179,7 +179,7 @@ succeed or nil in case of error."
 at PATH; the format is described in `mua/msg-from-string', and
 that function converts the string into a Lisp object (plist)"
   (if (not (file-readable-p path))
-    (mua/warn "Path is note a readable file")
+    (mua/warn "Cannot view unreadable file %s" path)
     (let* ((rv (mua/mu-run "view" "--format=sexp" path))
 	    (code (car rv)) (str (cdr rv)))
       (if (= code 0)

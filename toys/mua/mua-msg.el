@@ -121,11 +121,12 @@ Function returns the target filename if the move succeeds, or
 \[1\]  http://cr.yp.to/proto/maildir.html."
   (let ((fulltarget (mua/mu-mv src targetdir flags)))
     (if fulltarget
-      (mua/mu-remove src)
-      (unless (string= targetdir "/dev/null")
-	(mua/mu-add fulltarget))
-      fulltarget)
-    (mua/warn "Moving message failed")))
+      (progn
+	(mua/mu-remove src)	
+	(unless (string= targetdir "/dev/null")
+	  (mua/mu-add fulltarget))
+	fulltarget)
+      (mua/warn "Moving message %s=>%s %S failed" src targetdir flags))))
 
 
 ;; functions for composing new messages (forward, reply and new)
