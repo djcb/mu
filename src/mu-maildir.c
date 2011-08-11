@@ -799,13 +799,15 @@ get_new_file_name (const char *oldpath, MuMsgFlags flags)
 		
 	/* the normal separator is ':', but on e.g. vfat, '!' is seen
 	 * as well */
-	newname		= g_path_get_basename (oldpath);
+	newname	= g_path_get_basename (oldpath);
 	if (!newname) {
 		g_warning ("invalid path: '%s'", oldpath);
 		return NULL;
 	}
 
-	if (!(sep = g_strrstr (newname, ":")) &&
+	sep = ":";
+	if (!(flags & MU_MSG_FLAG_NEW) &&
+	    !(sep = g_strrstr (newname, ":")) &&
 	    !(sep = g_strrstr (newname, "!"))) {
 		g_warning ("not a valid msg file name: '%s'", oldpath);
 		g_free (newname);
@@ -848,6 +850,7 @@ mu_maildir_get_path_from_flags (const char *oldpath, MuMsgFlags newflags)
 	}
 				
 	newpath = g_strdup_printf ("%s%c%s", newdir, G_DIR_SEPARATOR, newname);
+
 	g_free (newname);
 	g_free (newdir);
 		
