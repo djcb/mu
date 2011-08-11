@@ -808,7 +808,7 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 }
 
 
-MuExitCode
+MuError
 mu_cmd_find (MuConfig *opts)
 {
 	MuQuery *xapian;
@@ -816,17 +816,18 @@ mu_cmd_find (MuConfig *opts)
 	gchar *query;
 	size_t count = 0;
 	
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND, FALSE);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND,
+			      MU_ERROR_INTERNAL);
 	
 	if (!query_params_valid (opts) || !format_params_valid(opts))
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	
 	xapian = get_query_obj();
 	query  = get_query (opts);
 
 	if (!xapian ||!query)
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_INTERNAL;
 	
 	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
 		rv = print_xapian_query (xapian, query, &count);
@@ -839,7 +840,7 @@ mu_cmd_find (MuConfig *opts)
 	g_free (query);
 
 	if (!rv)
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR;
 
-	return count == 0 ? MU_EXITCODE_NO_MATCHES : MU_EXITCODE_OK;
+	return count == 0 ? MU_ERROR_NO_MATCHES : MU_OK;
 }

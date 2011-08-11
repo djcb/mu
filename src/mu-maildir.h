@@ -71,7 +71,7 @@ gboolean mu_maildir_link   (const char* src, const char *targetpath, GError **er
  * the maildir "foo/bar". Then, the information from 'stat' of this
  * file (see stat(3)), and a user_data pointer
  */
-typedef MuResult (*MuMaildirWalkMsgCallback)
+typedef MuError (*MuMaildirWalkMsgCallback)
 (const char* fullpath, const char* mdir, struct stat *statinfo, void *user_data);
 
 /**
@@ -79,7 +79,7 @@ typedef MuResult (*MuMaildirWalkMsgCallback)
  * documentation there. It will be called each time a dir is entered or left,
  * with 'enter' being TRUE upon entering, FALSE otherwise 
  */
-typedef MuResult (*MuMaildirWalkDirCallback)
+typedef MuError (*MuMaildirWalkDirCallback)
      (const char* fullpath, gboolean enter, void *user_data);
 
 /**
@@ -106,8 +106,8 @@ typedef MuResult (*MuMaildirWalkDirCallback)
  * MU_STOP if we want to stop, or MU_ERROR in
  * case of error
  */
-MuResult mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
-			  MuMaildirWalkDirCallback cb_dir, void *data);
+MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
+			 MuMaildirWalkDirCallback cb_dir, void *data);
 /**
  * recursively delete all the symbolic links in a directory tree
  * 

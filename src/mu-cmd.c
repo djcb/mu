@@ -163,7 +163,7 @@ view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 
 
 static gboolean
-handle_msg (const char *fname, MuConfig *opts, MuExitCode *code)
+handle_msg (const char *fname, MuConfig *opts, MuError *code)
 {
 	GError *err;
 	MuMsg *msg;
@@ -175,7 +175,7 @@ handle_msg (const char *fname, MuConfig *opts, MuExitCode *code)
 	if (!msg) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);
-		*code = MU_EXITCODE_ERROR;
+		*code = MU_ERROR;
 		return FALSE;
 	}
 
@@ -188,7 +188,7 @@ handle_msg (const char *fname, MuConfig *opts, MuExitCode *code)
 		break;
 	default:
 		g_critical ("bug: should not be reached");
-		*code = MU_EXITCODE_ERROR;
+		*code = MU_ERROR_INTERNAL;
 		rv = FALSE;
 	}
 	
@@ -220,21 +220,21 @@ view_params_valid (MuConfig *opts)
 }
 
 
-MuExitCode
+MuError
 mu_cmd_view (MuConfig *opts)
 {
 	int i;
 	gboolean rv;
-	MuExitCode code;
+	MuError code;
 	
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
-			      MU_EXITCODE_ERROR);
+			      MU_ERROR_INTERNAL);
 
 	if (!view_params_valid(opts))
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	
-	for (i = 1, code = MU_EXITCODE_OK; opts->params[i]; ++i) {
+	for (i = 1, code = MU_OK; opts->params[i]; ++i) {
 
 		rv = handle_msg (opts->params[i], opts, &code);
 		if (!rv)
@@ -248,19 +248,19 @@ mu_cmd_view (MuConfig *opts)
 }
 
 
-MuExitCode
+MuError
 mu_cmd_mkdir (MuConfig *opts)
 {
 	int i;
 	
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_MKDIR,
-			      MU_EXITCODE_ERROR);
+			      MU_ERROR_INTERNAL);
 	
 	if (!opts->params[1]) {
 		g_warning ("usage: mu mkdir [-u,--mode=<mode>] "
 			   "<dir> [more dirs]");
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	}
 	
 	for (i = 1; opts->params[i]; ++i) {
@@ -274,11 +274,11 @@ mu_cmd_mkdir (MuConfig *opts)
 				g_warning ("%s", err->message);
 				g_error_free (err);
 			}
-			return MU_EXITCODE_ERROR;
+			return MU_ERROR;
 		}
 	}
 
-	return MU_EXITCODE_OK;
+	return MU_OK;
 }
 
 
@@ -291,37 +291,33 @@ mv_check_params (MuConfig *opts, MuMsgFlags *flags)
 		return FALSE;
 	}
 
+	/* FIXME: check for invalid flags */
 	if (!opts->flagstr)
-		*flags = MU_MSG_FLAG_NONE;
-	else {
+		*flags = MU_MSG_FLAG_INVALID; /* ie., ignore flags */
+	else
 		*flags = mu_msg_flags_from_str (opts->flagstr);
-		if (*flags == MU_MSG_FLAG_NONE) {
-			g_warning ("error in flags");
-			return FALSE;
-		}
-	}
-
+	
 	return TRUE;
 }
 
 
-static MuExitCode
+static MuError
 cmd_mv_dev_null (MuConfig *opts)
 {
 	if (unlink (opts->params[1]) != 0) {
 		g_warning ("unlink failed: %s", strerror (errno));
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_FILE;
 	}
 	
 	if (opts->printtarget)
 		g_print ("/dev/null\n"); /* /dev/null */
 
-	return MU_EXITCODE_OK;
+	return MU_OK;
 }
 
 
 
-MuExitCode
+MuError
 mu_cmd_mv (MuConfig *opts)
 {
 	GError *err;
@@ -329,31 +325,35 @@ mu_cmd_mv (MuConfig *opts)
 	MuMsgFlags flags;
 	
 	if (!mv_check_params (opts, &flags))
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 
 	/* special case: /dev/null */
 	if (g_strcmp0 (opts->params[2], "/dev/null") == 0)
 		return cmd_mv_dev_null (opts);
 
 	err = NULL;
-	fullpath = mu_msg_file_move_to_maildir (opts->params[1], opts->params[2],
+	fullpath = mu_msg_file_move_to_maildir (opts->params[1],
+						opts->params[2],
 						flags, &err);
 	if (!fullpath) {
 		if (err) {
+			MuError code;
+			code = err->code;
 			g_warning ("move failed: %s", err->message);
 			g_error_free (err);
+			return code;
 		}
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_FILE;
 		
 	} else {
 		if (opts->printtarget)       
 			g_print ("%s\n", fullpath); 
-		return MU_EXITCODE_OK;
+		return MU_OK;
 	}
 	
 	g_free (fullpath);
 	
-	return MU_EXITCODE_OK;
+	return MU_OK;
 }
 	
 	
@@ -399,26 +399,26 @@ get_store (void)
 
 
 
-MuExitCode
+MuError
 mu_cmd_add (MuConfig *opts)
 {
 	MuStore *store;
 	gboolean allok;
 	int i;
 	
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
-			      MU_EXITCODE_ERROR);
+			      MU_ERROR_INTERNAL);
 
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu add <file> [<files>]");
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	}
 
 	store = get_store ();
 	if (!store)
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_INTERNAL;
 		
 	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
 		
@@ -438,30 +438,30 @@ mu_cmd_add (MuConfig *opts)
 	
 	mu_store_destroy (store);
 
-	return allok ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
+	return allok ? MU_OK : MU_ERROR;
 }
 
 
-MuExitCode
+MuError
 mu_cmd_remove (MuConfig *opts)
 {
 	MuStore *store;
 	gboolean allok;
 	int i;
 	
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
-			      MU_EXITCODE_ERROR);
+			      MU_ERROR_INTERNAL);
 
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu remove <file> [<files>]");
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	}
 
 	store = get_store ();
 	if (!store)
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_INTERNAL;
 		
 	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
 		
@@ -481,9 +481,5 @@ mu_cmd_remove (MuConfig *opts)
 	
 	mu_store_destroy (store);
 
-	return allok ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
+	return allok ? MU_OK : MU_ERROR;
 }
-
-
-
-

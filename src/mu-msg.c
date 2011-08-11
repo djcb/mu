@@ -711,7 +711,6 @@ get_maildir_type (const char *path)
 	return mtype;
 }
 
-
 char*
 get_new_fullpath (const char *oldpath, const char *targetmdir,
 		  MaildirType mtype, MuMsgFlags flags)
@@ -744,8 +743,9 @@ get_new_fullpath (const char *oldpath, const char *targetmdir,
 	if (flags != MU_MSG_FLAG_NONE) {
 		gchar *tmp;
 		tmp = mu_maildir_get_path_from_flags (newfullpath, flags);
+		g_free (newfullpath);
 		newfullpath = tmp;
-		g_free (tmp);
+		
 	}
 
 	return newfullpath;
@@ -858,7 +858,7 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
 		return FALSE;
 	}
 
-	if (g_strcmp0 (oldpath, newfullpath)) {
+	if (g_strcmp0 (oldpath, newfullpath) == 0) {
 		g_set_error (err, 0, MU_ERROR_FILE,
 			     "target equals source");
 		return FALSE;

@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <inttypes.h>
 #include <mu-msg.h>
-#include <mu-util.h> /* for MuResult, MuError */
+#include <mu-util.h> /* for MuError, MuError */
 
 G_BEGIN_DECLS
 
@@ -182,9 +182,9 @@ time_t mu_store_get_timestamp (MuStore *store,
  * @return MU_OK if all went well, MU_STOP if the foreach was interrupted,
  * MU_ERROR in case of error
  */
-typedef MuResult (*MuStoreForeachFunc) (const char* path,
+typedef MuError (*MuStoreForeachFunc) (const char* path,
 					      void *user_data);
-MuResult         mu_store_foreach (MuStore *self,
+MuError         mu_store_foreach (MuStore *self,
 				   MuStoreForeachFunc func,
 				   void *user_data);
 

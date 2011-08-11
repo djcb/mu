@@ -197,7 +197,7 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 		
 	} catch (...) {
 		/* some error occured */
-		g_set_error (err, 0, MU_ERROR_QUERY,
+		g_set_error (err, 0, MU_ERROR_XAPIAN_QUERY,
 			     "parse error in query");
 		g_free (preprocessed);
 		throw;
@@ -242,13 +242,13 @@ mu_query_new (const char* xpath, GError **err)
 	g_return_val_if_fail (xpath, NULL);
 	
 	if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_DIR,
+		g_set_error (err, 0, MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE,
 			     "'%s' is not a readable xapian dir", xpath);
 		return NULL;
 	}
 		
 	if (mu_util_xapian_needs_upgrade (xpath)) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UPTODATE,
+		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
 			     "%s is not up-to-date, needs a full update",
 			     xpath);
 		return NULL;

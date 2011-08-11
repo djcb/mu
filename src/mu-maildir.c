@@ -217,15 +217,16 @@ mu_maildir_link (const char* src, const char *targetpath, GError **err)
 }
 
 
-static MuResult process_dir (const char* path, const gchar *mdir,
-			     MuMaildirWalkMsgCallback msg_cb, 
-			     MuMaildirWalkDirCallback dir_cb, void *data);
+static MuError
+process_dir (const char* path, const gchar *mdir,
+	     MuMaildirWalkMsgCallback msg_cb, 
+	     MuMaildirWalkDirCallback dir_cb, void *data);
 
-static MuResult 
+static MuError 
 process_file (const char* fullpath, const gchar* mdir,
 	      MuMaildirWalkMsgCallback msg_cb, void *data)
 {
-	MuResult result;
+	MuError result;
 	struct stat statbuf;
 	
 	if (!msg_cb)
@@ -367,7 +368,7 @@ get_mdir_for_path (const gchar *old_mdir, const gchar *dir)
 }
 
 
-static MuResult
+static MuError
 process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 		   MuMaildirWalkMsgCallback cb_msg,
 		   MuMaildirWalkDirCallback cb_dir, 
@@ -398,7 +399,7 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 		
 	case DT_DIR: {
 		char *my_mdir;
-		MuResult rv;
+		MuError rv;
 
 		my_mdir = get_mdir_for_path (mdir, entry->d_name);
 		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, data);
@@ -447,12 +448,12 @@ dirent_cmp (struct dirent *d1, struct dirent *d2)
 }
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/
 
-static MuResult
+static MuError
 process_dir_entries (DIR *dir, const char* path, const char* mdir,
 		     MuMaildirWalkMsgCallback msg_cb,
 		     MuMaildirWalkDirCallback dir_cb, void *data)
 {
-	MuResult result;
+	MuError result;
 	GSList *lst, *c;
 	struct dirent *entry;
 	
@@ -482,12 +483,12 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 }
 
 
-static MuResult
+static MuError
 process_dir (const char* path, const char* mdir,
 	     MuMaildirWalkMsgCallback msg_cb, 
 	     MuMaildirWalkDirCallback dir_cb, void *data)
 {
-	MuResult result;
+	MuError result;
 	DIR* dir;
 	
 	/* if it has a noindex file, we ignore this dir */
@@ -504,7 +505,7 @@ process_dir (const char* path, const char* mdir,
 	}
 	
 	if (dir_cb) {
-		MuResult rv;
+		MuError rv;
 		rv = dir_cb (path, TRUE, data);
 		if (rv != MU_OK) {
 			closedir (dir);
@@ -523,11 +524,11 @@ process_dir (const char* path, const char* mdir,
 }
 
 
-MuResult
+MuError
 mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
 		 MuMaildirWalkDirCallback cb_dir, void *data)
 {
-	MuResult rv;
+	MuError rv;
 	char *mypath;
 	
 	g_return_val_if_fail (path && cb_msg, MU_ERROR);
@@ -760,8 +761,8 @@ get_new_dir_name (const char* oldpath, MuMsgFlags flags)
 		
 	g_return_val_if_fail (oldpath, NULL);
 	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */
-	g_return_val_if_fail (flags & MU_MSG_FLAG_NEW ?
-			      flags == MU_MSG_FLAG_NEW : TRUE, NULL);
+	/* g_return_val_if_fail (flags & MU_MSG_FLAG_NEW ? */
+	/* 		      flags == MU_MSG_FLAG_NEW : TRUE, NULL); */
 		
 	newpath = g_path_get_dirname (oldpath);
 	if (g_str_has_suffix (newpath, cur4) || g_str_has_suffix (newpath, new4))
@@ -792,11 +793,12 @@ static char*
 get_new_file_name (const char *oldpath, MuMsgFlags flags)
 {
 	gchar *newname, *sep;
-		
+	gchar sepa;
+	
 	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */
-	g_return_val_if_fail (flags & MU_MSG_FLAG_NEW ?
-			      flags == MU_MSG_FLAG_NEW : TRUE, NULL);
-		
+	/* g_return_val_if_fail (flags & MU_MSG_FLAG_NEW ? */
+	/* 		      flags == MU_MSG_FLAG_NEW : TRUE, NULL); */
+	
 	/* the normal separator is ':', but on e.g. vfat, '!' is seen
 	 * as well */
 	newname	= g_path_get_basename (oldpath);
@@ -805,26 +807,27 @@ get_new_file_name (const char *oldpath, MuMsgFlags flags)
 		return NULL;
 	}
 
-	sep = ":";
-	if (!(flags & MU_MSG_FLAG_NEW) &&
-	    !(sep = g_strrstr (newname, ":")) &&
-	    !(sep = g_strrstr (newname, "!"))) {
-		g_warning ("not a valid msg file name: '%s'", oldpath);
-		g_free (newname);
-		return NULL;
+	/* 'INVALID' means: "don't change flags" */
+	if (flags == (unsigned)MU_MSG_FLAG_INVALID)
+		return newname;
+		
+	/* the filename may or may not end in "[:!]2,..." */
+	sepa = ':'; /* FIXME: this will break on vfat, but we don't
+		     * want to generate '!' files on non-VFAT */
+	if ((sep = g_strrstr (newname, ":")) ||
+	    (sep = g_strrstr (newname, "!"))) {
+		sepa = *sep;
+		*sep = '\0';
 	}
-
-	if (flags & MU_MSG_FLAG_NEW)
-		sep[0] = '\0'; /* remove all, including ':' or '!' */
-	else {
+	
+	{
 		gchar *tmp;
-		sep[1] = '\0'; /* remove flags, but keep ':' or '!' */
-		sep[flags & MU_MSG_FLAG_NEW ? 0 : 1] = '\0';
-		tmp = newname;
-		newname = g_strdup_printf ("%s2,%s", newname, get_flags_str_s (flags));
-		g_free (tmp);
+		tmp = g_strdup_printf ("%s%c2,%s", newname, sepa,
+				       get_flags_str_s (flags));
+		g_free (newname);
+		newname = tmp;
 	}
-
+	
 	return newname;
 }
 
@@ -836,8 +839,8 @@ mu_maildir_get_path_from_flags (const char *oldpath, MuMsgFlags newflags)
 	g_return_val_if_fail (oldpath, NULL);
 	g_return_val_if_fail (newflags != MU_MSG_FLAG_NONE, NULL);
 	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */
-	g_return_val_if_fail (newflags & MU_MSG_FLAG_NEW ?
-			      newflags == MU_MSG_FLAG_NEW : TRUE, NULL);
+	/* g_return_val_if_fail (newflags & MU_MSG_FLAG_NEW ? */
+	/* 		      newflags == MU_MSG_FLAG_NEW : TRUE, NULL); */
 	
 	newname = get_new_file_name (oldpath, newflags);
 	if (!newname)

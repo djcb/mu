@@ -381,17 +381,17 @@ check_params (MuConfig *opts)
 	return TRUE;
 }
 
-MuExitCode
+MuError
 mu_cmd_extract (MuConfig *opts)
 {
 	int rv;
 	
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_EXTRACT,
-			      MU_EXITCODE_ERROR);
+			      MU_ERROR_INTERNAL);
 	
 	if (!check_params (opts))
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	
 	if (!opts->params[2] && !opts->parts &&
 	    !opts->save_attachments && !opts->save_all) 
@@ -407,5 +407,5 @@ mu_cmd_extract (MuConfig *opts)
 					 opts); /* save */
 	}
 		
-	return rv ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
+	return rv ? MU_OK : MU_ERROR;
 }

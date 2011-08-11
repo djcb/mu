@@ -129,7 +129,7 @@ needs_index (MuIndexCallbackData *data, const char *fullpath,
 }
 
 
-static MuResult
+static MuError
 insert_or_update_maybe (const char* fullpath, const char* mdir,
 			time_t filestamp, MuIndexCallbackData *data,
 			gboolean *updated)
@@ -162,10 +162,10 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 	return MU_OK;	
 }
 
-static MuResult
+static MuError
 run_msg_callback_maybe (MuIndexCallbackData *data)
 {
-	MuResult result;
+	MuError result;
 
 	if (!data || !data->_idx_msg_cb)
 		return MU_OK;
@@ -178,11 +178,11 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 }
 
 
-static MuResult
+static MuError
 on_run_maildir_msg (const char* fullpath, const char* mdir,
 		    struct stat *statbuf, MuIndexCallbackData *data)
 {
-	MuResult result;
+	MuError result;
 	gboolean updated;
 
 	/* protect against too big messages */
@@ -211,7 +211,7 @@ on_run_maildir_msg (const char* fullpath, const char* mdir,
 }
 
 
-static MuResult
+static MuError
 on_run_maildir_dir (const char* fullpath, gboolean enter, 
 		    MuIndexCallbackData *data)
 {
@@ -321,14 +321,14 @@ mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
 
 
 
-MuResult
+MuError
 mu_index_run (MuIndex *index, const char* path,
 	      gboolean reindex, MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb, 
 	      void *user_data)
 {
 	MuIndexCallbackData cb_data;
-	MuResult rv;
+	MuError rv;
 	
 	g_return_val_if_fail (index && index->_store, MU_ERROR);
 	g_return_val_if_fail (msg_cb, MU_ERROR);
@@ -357,12 +357,12 @@ mu_index_run (MuIndex *index, const char* path,
 	return rv;
 }
 
-static MuResult
+static MuError
 on_stats_maildir_file (const char *fullpath, const char* mdir,
 		       struct stat *statbuf, 
 		       MuIndexCallbackData *cb_data)
 {
-	MuResult result;
+	MuError result;
 		
 	if (cb_data && cb_data->_idx_msg_cb)
 		result = cb_data->_idx_msg_cb (cb_data->_stats, 
@@ -380,7 +380,7 @@ on_stats_maildir_file (const char *fullpath, const char* mdir,
 }
 
 
-MuResult
+MuError
 mu_index_stats (MuIndex *index, const char* path,
 		MuIndexStats *stats, MuIndexMsgCallback cb_msg,
 		MuIndexDirCallback cb_dir, void *user_data)
@@ -420,7 +420,7 @@ struct _CleanupData {
 typedef struct _CleanupData CleanupData;
 
 
-static MuResult
+static MuError
 foreach_doc_cb (const char* path, CleanupData *cudata)
 {
 	if (access (path, R_OK) != 0) {
@@ -442,12 +442,12 @@ foreach_doc_cb (const char* path, CleanupData *cudata)
 }
 
 
-MuResult
+MuError
 mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 		  MuIndexCleanupDeleteCallback cb,
 		  void *user_data)
 {
-	MuResult rv;
+	MuError rv;
 	CleanupData cudata;
 	
 	g_return_val_if_fail (index, MU_ERROR);
@@ -459,8 +459,8 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 	cudata._user_data = user_data;
 	
 	rv = mu_store_foreach (index->_store,
-				      (MuStoreForeachFunc)foreach_doc_cb,
-				      &cudata);
+			       (MuStoreForeachFunc)foreach_doc_cb,
+			       &cudata);
 	mu_store_flush (index->_store);
 
 	return rv;

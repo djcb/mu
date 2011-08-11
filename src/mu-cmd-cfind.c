@@ -165,7 +165,7 @@ each_contact (const char *email, const char *name, time_t tstamp,
 }
 
 
-static MuExitCode
+static MuError
 run_cmd_cfind (const char* pattern, MuConfigFormat format,
 	       gboolean color)
 {
@@ -177,24 +177,21 @@ run_cmd_cfind (const char* pattern, MuConfigFormat format,
 	contacts = mu_contacts_new (mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
 	if (!contacts) {
 		g_warning ("could not retrieve contacts");
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_CONTACTS_CANNOT_RETRIEVE;
 	}
 
 	print_header (format);
 	rv = mu_contacts_foreach (contacts,
 				  (MuContactsForeachFunc)each_contact,
 				  &ecdata, pattern, &num);
-	
 	mu_contacts_destroy (contacts);
 
 	if (num == 0) {
 		g_warning ("no matching contacts found");
-		return MU_EXITCODE_NO_MATCHES;
+		return MU_ERROR_NO_MATCHES;
 	}
 
-	return rv ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
-
-	
+	return rv ? MU_OK : MU_ERROR_CONTACTS;
 }
 
 static gboolean
@@ -225,15 +222,15 @@ cfind_params_valid (MuConfig *opts)
 }
 
 
-MuExitCode
+MuError
 mu_cmd_cfind (MuConfig *opts)
 {
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_CFIND,
-			      MU_EXITCODE_ERROR);
+			      MU_ERROR_INTERNAL);
 
 	if (!cfind_params_valid (opts))
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 
 	return run_cmd_cfind (opts->params[1], opts->format, opts->color);
 }

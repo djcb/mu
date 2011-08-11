@@ -1,4 +1,5 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+
 /*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -538,21 +539,21 @@ show_version (void)
 }
 
 
-MuExitCode
+MuError
 mu_config_execute (MuConfig *opts)
 {
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 		
 	if (opts->version) {
 		show_version ();
-		return MU_EXITCODE_OK;
+		return MU_OK;
 	}
 		
 	if (!opts->params||!opts->params[0]) {/* no command? */
 		show_version ();
 		g_print ("\n");
 		show_usage (TRUE);
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	}
 		
 	switch (opts->cmd) {
@@ -570,9 +571,9 @@ mu_config_execute (MuConfig *opts)
 	case MU_CONFIG_CMD_UNKNOWN:
 		g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
 		show_usage (FALSE);
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_IN_PARAMETERS;
 	default:
-		g_return_val_if_reached (MU_EXITCODE_ERROR);
+		g_return_val_if_reached (MU_ERROR_INTERNAL);
 	}
 }
 

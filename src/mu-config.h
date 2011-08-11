@@ -179,10 +179,10 @@ void mu_config_destroy (MuConfig *opts);
  * @param opts the commands/options
  * 
  * @return a value denoting the success/failure of the execution;
- * MU_CONFIG_RETVAL_OK (0) for success, non-zero for a failure. This
- * is to used for the exit code of the process
+ * MU_ERROR_NONE (0) for success, non-zero for a failure. This is to used for
+ * the exit code of the process
  */
-MuExitCode mu_config_execute (MuConfig *opts);
+MuError mu_config_execute (MuConfig *opts);
 
 
 /**

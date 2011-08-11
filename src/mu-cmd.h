@@ -36,7 +36,7 @@ G_BEGIN_DECLS
  * @return MU_EXITCODE_OK (0) if the command succeeded,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_mkdir (MuConfig *opts);
+MuError mu_cmd_mkdir (MuConfig *opts);
 
 
 /**
@@ -47,7 +47,7 @@ MuExitCode mu_cmd_mkdir (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeded,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_view (MuConfig *opts);
+MuError mu_cmd_view (MuConfig *opts);
 
 
 /**
@@ -58,7 +58,7 @@ MuExitCode mu_cmd_view (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeded,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_index   (MuConfig *opts);
+MuError mu_cmd_index   (MuConfig *opts);
 
 
 /**
@@ -69,7 +69,7 @@ MuExitCode mu_cmd_index   (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeds,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_cleanup (MuConfig *opts);
+MuError mu_cmd_cleanup (MuConfig *opts);
 
 /**
  * execute the 'find' command
@@ -80,7 +80,7 @@ MuExitCode mu_cmd_cleanup (MuConfig *opts);
  * >MU_EXITCODE_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
  * succeeds but there no matches, MU_EXITCODE_ERROR for all other errors
  */
-MuExitCode mu_cmd_find (MuConfig *opts);
+MuError mu_cmd_find (MuConfig *opts);
 
 
 /**
@@ -91,7 +91,7 @@ MuExitCode mu_cmd_find (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeds,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_extract (MuConfig *opts);
+MuError mu_cmd_extract (MuConfig *opts);
 
 
 /**
@@ -102,7 +102,7 @@ MuExitCode mu_cmd_extract (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeds,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_mv (MuConfig *opts);
+MuError mu_cmd_mv (MuConfig *opts);
 
 
 
@@ -115,7 +115,7 @@ MuExitCode mu_cmd_mv (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeds,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_cfind (MuConfig *opts);
+MuError mu_cmd_cfind (MuConfig *opts);
 
 
 /**
@@ -126,7 +126,7 @@ MuExitCode mu_cmd_cfind (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeds,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_add (MuConfig *opts);
+MuError mu_cmd_add (MuConfig *opts);
 
 /**
  * execute the remove command
@@ -136,7 +136,7 @@ MuExitCode mu_cmd_add (MuConfig *opts);
  * @return MU_EXITCODE_OK (0) if the command succeeds,
  * MU_EXITCODE_ERROR otherwise
  */
-MuExitCode mu_cmd_remove (MuConfig *opts);
+MuError mu_cmd_remove (MuConfig *opts);
 
 G_END_DECLS
 

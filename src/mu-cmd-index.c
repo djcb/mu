@@ -128,7 +128,7 @@ check_maildir (const char *maildir)
 }
 
 
-static MuResult
+static MuError
 index_msg_silent_cb (MuIndexStats* stats, void *user_data)
 {
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
@@ -180,7 +180,7 @@ print_stats (MuIndexStats* stats, gboolean clear)
 }
 
 
-static MuResult
+static MuError
 index_msg_cb  (MuIndexStats* stats, void *user_data)
 {
 	if (stats->_processed % 25)
@@ -271,11 +271,11 @@ update_maildir_path_maybe (MuIndex *idx, MuConfig *opts)
 }
 
 
-static MuExitCode
+static MuError
 cmd_cleanup (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	     gboolean show_progress)
 {
-	MuResult rv;
+	MuError rv;
 	time_t t;
 	
 	g_message ("cleaning up messages [%s]",
@@ -292,17 +292,16 @@ cmd_cleanup (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 		show_time ((unsigned)(time(NULL)-t),stats->_processed);
 	}
 	
-	return (rv == MU_OK || rv == MU_STOP) ?
-		MU_EXITCODE_OK: MU_EXITCODE_ERROR;
+	return (rv == MU_OK || rv == MU_STOP) ? MU_OK: MU_ERROR;
 }
 
 
 
-static MuExitCode
+static MuError
 cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	   gboolean show_progress)
 {
-	MuResult rv;
+	MuError rv;
 	time_t t;
 	
 	g_message ("indexing messages under %s [%s]", opts->maildir,
@@ -329,38 +328,38 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 		if (rv == MU_OK) {
 			MU_WRITE_LOG ("cleanup: processed: %u; cleaned-up: %u",
 			      stats->_processed, stats->_cleaned_up);
-			return MU_EXITCODE_OK;
+			return MU_OK;
 		}
 	}
 	
-	return (rv==MU_OK||rv==MU_STOP) ? MU_EXITCODE_OK : MU_EXITCODE_ERROR;
+	return (rv==MU_OK||rv==MU_STOP) ? MU_OK : MU_ERROR;
 }
 
-static MuExitCode
+static MuError
 handle_index_error_and_free (GError *err)
 {
-	MuExitCode code;
+	MuError code;
 	
 	if (!err)
-		return MU_EXITCODE_ERROR;
+		return MU_ERROR_INTERNAL;
 
 	switch (err->code) {
 
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
 		g_warning ("cannot get Xapian writelock");
 		g_warning ("maybe mu index is already running?");
-		code = MU_EXITCODE_DB_LOCKED;
+		code = MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK;
 		break;
 
 	case MU_ERROR_XAPIAN_CORRUPTION:
 		g_warning ("xapian database seems to be corrupted");
 		g_warning ("try 'mu index --rebuild");
-		code = MU_EXITCODE_DB_CORRUPTED;
+		code = MU_ERROR_XAPIAN_CORRUPTION;
 		break;
 	default:
 		g_warning ("indexing error: %s",
 			   err->message ? err->message : "");
-		code = MU_EXITCODE_ERROR;
+		code = MU_ERROR;
 	}
 
 	g_error_free (err);
@@ -368,14 +367,18 @@ handle_index_error_and_free (GError *err)
 }
 
 static MuIndex*
-init_mu_index (MuConfig *opts, MuExitCode *code)
+init_mu_index (MuConfig *opts, MuError *code)
 {
 	MuIndex *midx;
 	GError *err;
 	
-	if (!check_index_or_cleanup_params (opts) ||
-	    !database_version_check_and_update(opts)) {
-		*code = MU_EXITCODE_ERROR;
+	if (!check_index_or_cleanup_params (opts)) {
+		*code = MU_ERROR_IN_PARAMETERS;
+		return NULL;
+	}
+
+	if (!database_version_check_and_update(opts)) {
+		*code = MU_ERROR_XAPIAN_NOT_UP_TO_DATE;
 		return NULL;
 	}
 	
@@ -395,13 +398,13 @@ init_mu_index (MuConfig *opts, MuExitCode *code)
 }
 
 
-static MuExitCode
+static MuError
 cmd_index_or_cleanup (MuConfig *opts)
 {
 	MuIndex *midx;
 	MuIndexStats stats;
 	gboolean rv, show_progress;
-	MuExitCode code;
+	MuError code;
 
 	/* create, and do error handling if needed */
 	midx = init_mu_index (opts, &code);
@@ -412,7 +415,7 @@ cmd_index_or_cleanup (MuConfig *opts)
          * mu_index_last_used_maildir
          */
 	if (!update_maildir_path_maybe (midx, opts))
-		return MU_EXITCODE_ERROR;		
+		return MU_ERROR_FILE;
 	
 	/* note, 'opts->quiet' already cause g_message output not to
 	 * be shown; here, we make sure we only print progress info if
@@ -428,7 +431,7 @@ cmd_index_or_cleanup (MuConfig *opts)
 	case MU_CONFIG_CMD_CLEANUP:
 	 	rv = cmd_cleanup (midx, opts, &stats, show_progress);  break;
 	default:
-		rv = MU_EXITCODE_ERROR;
+		rv = MU_ERROR_INTERNAL;
 		g_assert_not_reached ();
 	}
 	
@@ -437,7 +440,7 @@ cmd_index_or_cleanup (MuConfig *opts)
 }
 
 
-MuExitCode
+MuError
 mu_cmd_index (MuConfig *opts)
 {
 	g_return_val_if_fail (opts, FALSE);
@@ -447,12 +450,12 @@ mu_cmd_index (MuConfig *opts)
 	return cmd_index_or_cleanup (opts);
 }
 
-MuExitCode
+MuError
 mu_cmd_cleanup (MuConfig *opts)
 {
-	g_return_val_if_fail (opts, MU_EXITCODE_ERROR);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd != MU_CONFIG_CMD_CLEANUP,
-			      MU_EXITCODE_ERROR);
+			      MU_ERROR_INTERNAL);
 	
 	return cmd_index_or_cleanup (opts);
 }

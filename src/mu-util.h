@@ -393,53 +393,57 @@ typedef gpointer XapianEnquire;
 	} G_STMT_END
 
 
-enum _MuResult {
-	MU_OK,		/* all went ok */
-	MU_STOP,	/* user wants to stop */	
-	MU_ERROR	/* some other error occured */
-};
-typedef enum _MuResult MuResult;
-
-enum _MuExitCode {
-	MU_EXITCODE_OK	            = 0,
-	MU_EXITCODE_ERROR           = 1,
-	MU_EXITCODE_NO_MATCHES      = 2,
-	MU_EXITCODE_DB_LOCKED       = 3,
-	MU_EXITCODE_DB_CORRUPTED    = 4,
-	MU_EXITCODE_DB_UPDATE_ERROR = 5,
-
-	MU_EXITCODE_FILE_ERROR      = 6
-};
-typedef enum _MuExitCode MuExitCode;
-
-
 enum _MuError {
-	MU_ERROR_XAPIAN,  /* general xapian related error */
-	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK, /* can't get write lock */
-	MU_ERROR_XAPIAN_CORRUPTION, /* database corruption */
-	MU_ERROR_XAPIAN_DIR, 	   /* xapian dir is not accessible */
-	MU_ERROR_XAPIAN_NOT_UPTODATE, /* database version is not uptodate */
-	MU_ERROR_XAPIAN_MISSING_DATA, /* missing data for a document */
-	MU_ERROR_QUERY,	/* (parsing) error in the query */
+	/* no error at all! */
+        MU_OK                                 = 0,
 	
-	MU_ERROR_GMIME, /* gmime parsing related error */
+	/* generic error */
+	MU_ERROR                              = 1,
+	MU_ERROR_IN_PARAMETERS                = 2,
+	MU_ERROR_INTERNAL                     = 3,	
+	MU_ERROR_NO_MATCHES                   = 4,
+		
+	/* general xapian related error */
+	MU_ERROR_XAPIAN                       = 11,
 
+	/* (parsing) error in the query */
+	MU_ERROR_XAPIAN_QUERY                 = 13,
+	/* xapian dir is not accessible */
+	MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE    = 14,
+	/* database version is not up-to-date */
+	MU_ERROR_XAPIAN_NOT_UP_TO_DATE        = 15,
+	/* missing data for a document */
+	MU_ERROR_XAPIAN_MISSING_DATA          = 16,
+	/* database corruption */
+	MU_ERROR_XAPIAN_CORRUPTION            = 17,
+	/* can't get write lock */
+	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK  = 18,
+
+	/* GMime related errors */
+	
+	/* gmime parsing related error */
+	MU_ERROR_GMIME                        = 30,
+
+	/* contacts related errors */
+	MU_ERROR_CONTACTS                     = 50,
+	MU_ERROR_CONTACTS_CANNOT_RETRIEVE     = 51,
+	
+	
 	/* File errors */
-	MU_ERROR_FILE_INVALID_SOURCE,
-	MU_ERROR_FILE_INVALID_NAME,
-	MU_ERROR_FILE_CANNOT_LINK,
-	MU_ERROR_FILE_CANNOT_OPEN,
-	MU_ERROR_FILE_CANNOT_READ,
-	MU_ERROR_FILE_CANNOT_CREATE,
-	MU_ERROR_FILE_CANNOT_MKDIR,
-	MU_ERROR_FILE_STAT_FAILED,
-	MU_ERROR_FILE_READDIR_FAILED,
-	
 	/* generic file-related error */
-	MU_ERROR_FILE,
-	
-	/* some other, internal error */
-	MU_ERROR_INTERNAL
+	MU_ERROR_FILE                         = 70,
+	MU_ERROR_FILE_INVALID_NAME            = 71,
+	MU_ERROR_FILE_CANNOT_LINK             = 72,
+	MU_ERROR_FILE_CANNOT_OPEN             = 73,
+	MU_ERROR_FILE_CANNOT_READ             = 74,
+	MU_ERROR_FILE_CANNOT_CREATE           = 75,
+	MU_ERROR_FILE_CANNOT_MKDIR            = 76,
+	MU_ERROR_FILE_STAT_FAILED             = 77,
+	MU_ERROR_FILE_READDIR_FAILED          = 78,
+	MU_ERROR_FILE_INVALID_SOURCE          = 79,
+
+	/* not really an error, used in callbacks */
+	MU_STOP                               = 99,
 };
 typedef enum _MuError MuError;
 

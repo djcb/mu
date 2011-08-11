@@ -109,7 +109,7 @@ const char* mu_index_last_used_maildir (MuIndex *index);
  * @return  MU_OK to continue, MU_STOP to stop, or MU_ERROR in
  * case of some error.
  */
-typedef MuResult (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data); 
+typedef MuError (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data); 
 
 
 /**
@@ -122,7 +122,7 @@ typedef MuResult (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data);
  * @return  MU_OK to contiue, MU_STOP to stopd or MU_ERROR in
  * case of some error.
  */
-typedef MuResult (*MuIndexDirCallback) (const char* path, gboolean enter, 
+typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter, 
 					void *user_data);
 
 /**
@@ -144,9 +144,9 @@ typedef MuResult (*MuIndexDirCallback) (const char* path, gboolean enter,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuResult mu_index_run (MuIndex *index, const char* path, gboolean force, 
-		       MuIndexStats *stats, MuIndexMsgCallback msg_cb,
-		       MuIndexDirCallback dir_cb, void *user_data);
+MuError mu_index_run (MuIndex *index, const char* path, gboolean force, 
+		      MuIndexStats *stats, MuIndexMsgCallback msg_cb,
+		      MuIndexDirCallback dir_cb, void *user_data);
 
 /**
  * gather some statistics about the Maildir; this is usually much faster
@@ -168,22 +168,20 @@ MuResult mu_index_run (MuIndex *index, const char* path, gboolean force,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuResult mu_index_stats (MuIndex *index, const char* path, MuIndexStats *stats,
-			 MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
-			 void *user_data);
+MuError mu_index_stats (MuIndex *index, const char* path, MuIndexStats *stats,
+			MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
+			void *user_data);
 
 
 
 /**
- * callback function to determine if a message should be delete from
- * the database; if it returs MU_OK it will be delete, if returns
- * MU_IGNORE, the message will be ignored. In other cases, stop the callback
+ * callback function called for each message
  * 
  * @param MuIndexCleanupCallback 
  * 
- * @return 
+ * @return a MuResult
  */
-typedef MuResult (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
+typedef MuError (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
 						  void *user_data); 
 
 /**
@@ -202,9 +200,9 @@ typedef MuResult (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuResult mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
-			   MuIndexCleanupDeleteCallback cb,
-			   void *user_data);
+MuError mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
+			  MuIndexCleanupDeleteCallback cb,
+			  void *user_data);
 
 /**
  * clear the stats structure

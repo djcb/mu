@@ -775,7 +775,7 @@ mu_store_set_timestamp (MuStore *store, const char* msgpath,
 }
 
 
-MuResult
+MuError
 mu_store_foreach (MuStore *self, 
 		  MuStoreForeachFunc func, void *user_data)  
 {
@@ -796,7 +796,7 @@ mu_store_foreach (MuStore *self,
 		     iter != matches.end(); ++iter) {
 			Xapian::Document doc (iter.get_document());
 			const std::string path(doc.get_value(MU_MSG_FIELD_ID_PATH));
-			MuResult res = func (path.c_str(), user_data);
+			MuError res = func (path.c_str(), user_data);
 			if (res != MU_OK)
 				return res;
 		}
