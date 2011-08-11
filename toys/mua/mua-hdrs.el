@@ -71,7 +71,6 @@ the mu find output")
 		(save-match-data (mua/hdrs-append-message msg))
 		(setq mua/buf (substring mua/buf (match-end 0)))
 		(setq eom (string-match mua/eom mua/buf))))))))))
-  
 
 (defun mua/hdrs-proc-sentinel (proc msg)
   "Check the process upon completion"
@@ -83,20 +82,14 @@ the mu find output")
 	      (case status
 		('signal "Search process killed (results incomplete)")
 		('exit
-		  (case exit-status
-		    (0 "End of search results")
-		    (1 "mu find error")
-		    (2 "No matches found")
-		    (4 "Database problem; try running 'mu index'")
-		    (t (format "Some error occured; mu find returned %d"
-			 exit-status)))))))
-	(with-current-buffer procbuf
-	  (save-excursion
-	    (goto-char (point-max))
-	    (mua/message msg)))
-	
-	(unless (= exit-status 0)
-	  (mua/log "mu find exit with %d" exit-status))))))
+		  (if (= 0 exit-status)
+		    "End of search results"
+		    (mua/mu-error exit-status))))))
+		  
+	      (with-current-buffer procbuf
+		(save-excursion
+		  (goto-char (point-max))
+		  (mua/message msg)))))))
 
 (defun mua/hdrs-search-execute (expr buf)
   "search in the mu database; output the results in buffer BUF"
@@ -107,8 +100,8 @@ the mu find output")
       (add-to-list args (concat "--sortfield=" mua/hdrs-sortfield)))
     (when mua/hdrs-sort-descending
 	(add-to-list args "--descending"))
-      (mua/log "Searching for %s with %S" expr args)
-
+    (mua/log (concat mua/mu-binary " find " expr
+	       (mapconcat 'identity args " ")))
     ;; now, do it!
     (let ((proc (apply 'start-process "*mua-headers*" buf mua/mu-binary args)))
       (setq
@@ -138,7 +131,6 @@ the mu find output")
       mua/last-expression expr
       mua/hdrs-hash       (make-hash-table :size 256 :rehash-size 2)
       mua/hdrs-marks-hash (make-hash-table :size 16  :rehash-size 2))
-    (mua/log "searching for %S" expr)
     (mua/hdrs-search-execute expr buf)))
 
 
@@ -155,7 +147,7 @@ the mu find output")
   (make-local-variable 'mua/hdrs-marks-hash)
 
   (setq
-    major-mode 'mu-headers-mode mode-name "*headers*"
+    major-mode 'mua/mua-hdrs-mode mode-name "*mua-headers*"
     truncate-lines t buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
@@ -295,7 +287,6 @@ fitting in WIDTH"
     (define-key map "r" 'mua/hdrs-reply)
     (define-key map "f" 'mua/hdrs-forward)
     (define-key map "c" 'mua/hdrs-compose)
-
     
     (define-key map (kbd "RET") 'mua/hdrs-view)
     map)
@@ -436,10 +427,16 @@ pseudo-markings."
 	(save-excursion
 	  (maphash
 	    (lambda(bol v)
-	      (let ((src (car v)) (target (cdr v)) (inhibit-read-only t))
-		(when (mua/msg-move src target)  
+	      (let* ((src (car v)) (target (cdr v)) (inhibit-read-only t)
+		     (newpath (mua/msg-move src target)))
+		(when newpath
+		  ;; remember the updated path -- for now not too useful
+		  ;; as we're hiding the header, but...
+		  (mua/hdrs-set-path newpath) 
 		  (goto-char bol)
 		  (mua/hdrs-remove-marked)
+		  (mua/warn "[%d %d]" (line-beginning-position 1)
+		    (line-beginning-position 2))
 		  (put-text-property (line-beginning-position 1)
 		    (line-beginning-position 2)
 		    'invisible t)))) ;; when it succeedes, hide msg..)
@@ -455,8 +452,7 @@ pseudo-markings."
 	  (str (when path (mua/mu-view-sexp path)))
 	  (msg (and str (mua/msg-from-string str))))
     (if msg
-      (mua/msg-compose (mua/msg-create-reply msg
-			 (yes-or-no-p "Reply to all? ")))
+      (mua/msg-reply msg)	  
       (mua/warn "No message at point"))))
       
 (defun mua/hdrs-forward ()
@@ -465,13 +461,13 @@ pseudo-markings."
   (let* ((path (mua/hdrs-get-path))
 	  (msg (when path (mua/msg-from-path path))))
     (if msg
-      (mua/msg-compose (mua/msg-create-forward msg))
+      (mua/msg-forward msg)
       (mua/warn "No message at point"))))
 
 (defun mua/hdrs-compose ()
-  "Create a new messge."
+  "Create a new message."
   (interactive)
-  (mua/msg-compose (mua/msg-create-new)))
+  (mua/msg-compose-new))
 
 
 (provide 'mua-hdrs)

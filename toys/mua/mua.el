@@ -31,6 +31,8 @@
 (eval-when-compile (require 'cl))
 
 (require 'mua-common)
+(require 'mua-mu)
+(require 'mua-msg)
 (require 'mua-hdrs)
 (require 'mua-view)
 
@@ -64,7 +66,7 @@ quitted, it switches back to its parent buffer")
 (defvar mua/working-folders nil)
 
 (setq mua/working-folders
-  '("/archive" "/bulkarchive" "/todo"))
+  '("/bulk" "/archive" "/bulkarchive" "/todo"))
 
 (setq mua/header-fields
   '( (:date          .  25)
@@ -85,7 +87,7 @@ quitted, it switches back to its parent buffer")
     
     (define-key map "s" 'mua/hdrs-search)
     (define-key map "q" 'mua/quit-buffer)
-    (define-key map "o" 'mu-headers-change-sort)
+    (define-key map "o" 'mua/hdrs-change-sort)
     (define-key map "g" 'mua/hdrs-refresh)
     
     ;; navigation
@@ -115,6 +117,59 @@ quitted, it switches back to its parent buffer")
     map))
 (fset 'mua/hdrs-mode-map mua/hdrs-mode-map)
 
+(defconst mua/buffer-name "*mua*"
+  "Name of the top-level mua buffer")
+
+(defun mua()
+  "Start mua, the mu e-mail client with an impressive dashboard."
+  (interactive)
+  (let ((buf (mua/new-buffer mua/buffer-name)))
+    (with-current-buffer buf
+      (insert (propertize "mua" 'face 'highlight)
+	(propertize " version: " 'face 'mua/header-title-face)
+	(propertize (mua/mu-binary-version) 'face 'mua/header-face)
+	(propertize " maildir: " 'face 'mua/header-title-face)
+	(propertize  mua/maildir 'face 'mua/header-face)
+	"\n\n\n"
+	(propertize "* quick jump folders" 'face 'mua/header-title-face)
+	" (use " (propertize "j" 'face 'highlight) ")\n"
+	"  " (mapconcat 'identity
+	       (append (list mua/inbox-folder mua/sent-folder mua/drafts-folder)
+		 mua/working-folders) " ") "\n\n"
+
+	(propertize "* search" 'face 'mua/header-title-face)
+	" (use " (propertize "s" 'face 'highlight) ")\n\n"
+	
+	(propertize "* compose a new message" 'face 'mua/header-title-face)
+	" (use " (propertize "c" 'face 'highlight) ")\n\n"
+	))
+    (switch-to-buffer buf)
+    (mua/mua-mode)))
+
+
+(defvar mua/mua-mode-map
+  (let ((map (make-sparse-keymap)))
+    
+    (define-key map "s" 'mua/hdrs-search)
+    (define-key map "q" 'mua/quit-buffer)
+    (define-key map "j" 'mua/hdrs-jump-to-maildir)
+    (define-key map "c" 'mua/hdrs-compose)
+    
+    map)
+  "Keymap for *mua-headers* buffers.")
+(fset 'mua/mua-mode-map mua/mua-mode-map)
+
+(defun mua/mua-mode ()
+  "Major mode for the mua dashboard screen."
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map mua/mua-mode-map)  
+  (make-local-variable 'mua/buf)
+
+  (setq
+    major-mode 'mua/mua-mode mode-name "*mua*"
+    truncate-lines t buffer-read-only t
+    overwrite-mode 'overwrite-mode-binary))
 
 
 (provide 'mua)

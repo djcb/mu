@@ -309,11 +309,11 @@ static MugError
 mu_result_to_mug_error (MuError r)
 {
 	switch (r) {
-	case MU_ERROR_XAPIAN_DIR:
+	case MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE:
 		return MUG_ERROR_XAPIAN_DIR;
-	case MU_ERROR_XAPIAN_NOT_UPTODATE:
+	case MU_ERROR_XAPIAN_NOT_UP_TO_DATE:
 		return MUG_ERROR_XAPIAN_NOT_UPTODATE;
-	case MU_ERROR_QUERY:
+	case MU_ERROR_XAPIAN_QUERY:
 		return MUG_ERROR_QUERY;
 	default:
 		return MUG_ERROR_OTHER;

@@ -45,7 +45,7 @@ struct _MugData {
 };
 typedef struct _MugData MugData;
 
-MuResult
+static MuError
 each_msg (MuIndexStats* stats, MugData *data)
 {
 	static int i  = 0;

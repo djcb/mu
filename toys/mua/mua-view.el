@@ -75,9 +75,15 @@ buffer."
   \"cur/\" (if it's not yet there), and setting the \"S\" flag."
   (let ((flags (mua/maildir-flags-from-path path)))
     (unless (member 'seen flags) ;; do we need to do something?
-      (let ((newflags (delq 'new (cons 'seen flags)))
-	     (newpath (mua/maildir-from-path path t)))
-	(unless (mua/msg-move path newpath newflags)
+      (let* ((newflags (delq 'new (cons 'seen flags)))
+	      (target  (mua/maildir-from-path path t))
+	      (newpath (mua/msg-move path target flags)))
+	;; now, attempt to update our parent header list...
+	(if newpath
+	  (mua/with-hdrs-buffer
+	    (if (string= (mua/hdrs-get-path) path) ;; doublecheck we have the right one
+	      (mua/hdrs-set-path newpath)
+	      (mua/warn "Headers buffer not point at correct message")))
 	  (mua/warn "Failed to mark message as read"))))))
 
 (defun mua/view-message (msg)

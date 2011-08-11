@@ -106,7 +106,7 @@ will calculate the target directory and the exact file name.
 
 Optionally, you can specify the FLAGS for the new file; this must
 be a list consisting of one or more of DFNPRST, mean
-resp. Deleted, Flagged, New, Passed Replied, Seen and Trash, as
+resp. Deleted, Flagged, New, Passed Replied, Seen and g, as
 defined in [1]. See `mua/maildir-string-to-flags' and
 `mua/maildir-flags-to-string'.
 
@@ -120,13 +120,11 @@ Function returns the target filename if the move succeeds, or
 
 \[1\]  http://cr.yp.to/proto/maildir.html."
   (let ((fulltarget (mua/mu-mv src targetdir flags)))
-    (if fulltarget
-      (progn
-	(mua/mu-remove src)	
-	(unless (string= targetdir "/dev/null")
-	  (mua/mu-add fulltarget))
-	fulltarget)
-      (mua/warn "Moving message %s=>%s %S failed" src targetdir flags))))
+    (when fulltarget
+      (mua/mu-remove-async src)	
+      (unless (string= targetdir "/dev/null")
+	(mua/mu-add-async fulltarget)))
+      fulltarget))
 
 
 ;; functions for composing new messages (forward, reply and new)
@@ -192,15 +190,13 @@ B <b@example.com>, c@example.com\."
 
 (defun mua/msg-hidden-header (hdr val)
   "Return user-invisible header to the message (HDR: VAL\n)."
-  (format "%s: %s\n" hdr val))
-  ;;(propertize (format "%s: %s\n" hdr val) 'invisible t))
+  ;;  (format "%s: %s\n" hdr val))
+  (propertize (format "%s: %s\n" hdr val) 'invisible t))
 
 (defun mua/msg-header (hdr val)
   "Return a header line of the form HDR: VAL\n. If VAL is nil,
 return nil."
   (when val (format "%s: %s\n" hdr val)))
-  ;;(propertize (format "%s: %s\n" hdr val) 'invisible t))
-  
 
 (defun mua/msg-references-create (msg)
   "Construct the value of the References: header based on MSG as
@@ -257,7 +253,7 @@ this function is either nil or a string to be used for the Cc:
 field."
   (let ((cc-lst (mua/msg-field msg :cc)))
     (when (and reply-all cc-lst) 
-      (mu-message-recipients-to-string
+      (mua/msg-recipients-to-string
 	(mua/msg-recipients-remove cc-lst
 	  user-mail-address)))))
 
@@ -269,7 +265,6 @@ is nil, function returns nil."
     (if user-full-name
       (format "%s <%s>" user-full-name user-mail-address)
       (format "%s" user-mail-address))))
-
 
 (defun mua/msg-create-reply (msg reply-all)
   "Create a draft message as a reply to MSG; if REPLY-ALL is
@@ -287,7 +282,7 @@ A reply message has fields:
   In-Reply-To: - message-id of MSG
   User-Agent   - see  `mua/msg-user-agent'
 
-Then follows `mua-msg-separator' (for `message-mode' to separate
+Then follows `mua/msg-separator' (for `message-mode' to separate
 body from headers)
 
 And finally, the cited body of MSG, as per `mua/msg-cite-original'."
@@ -335,10 +330,8 @@ And finally, the cited body of MSG, as per `mua/msg-cite-original'."
 	 (mua/msg-header "Reply-To" mail-reply-to))
       
       (mua/msg-header "To" "")
-
       (mua/msg-hidden-header "User-agent"  (mua/msg-user-agent))
       (mua/msg-hidden-header "References"  (mua/msg-references-for-reply msg))
-
        (mua/msg-header"Subject"
 	 (concat mua/msg-forward-prefix (mua/msg-field msg :subject)))
       
@@ -361,7 +354,7 @@ then, the following fields, normally hidden from user:
 Then follows `mua-msg-separator' (for `message-mode' to separate
 body from headers)."
   (concat    
-    (mua/msg-header "From" (or (mua/msg-from-for-new) ""))
+    (mua/msg-header "From" (or (mua/msg-from-create) ""))
     (when (boundp 'mail-reply-to)
       (mua/msg-header "Reply-To" mail-reply-to))
     
@@ -411,6 +404,31 @@ using Gnus' `message-mode'."
     (message-mode)
     (message-goto-body)))
 
+(defun mua/msg-reply (msg)
+  "Create a draft reply to MSG, and swith to an edit buffer with
+the draft message."
+  (let* ((recipnum (+ (length (mua/msg-field msg :to))
+		    (length (mua/msg-field msg :cc))))
+	  (replyall (when (> recipnum 1) 
+		      (yes-or-no-p (format "Reply to all ~%d recipients? "
+				     (+ recipnum))))))
+	                      ;; exact num depends on some more things
+    (when (mua/msg-compose (mua/msg-create-reply msg replyall))
+      (message-goto-body))))
+
+(defun mua/msg-forward (msg)
+  "Create a draft forward for MSG, and swith to an edit buffer with
+the draft message."
+  (when (mua/msg-compose (mua/msg-create-forward msg))
+    (message-goto-to)))
+
+(defun mua/msg-compose-new ()
+  "Create a draft message, and swith to an edit buffer with the
+draft message."
+  (when (mua/msg-compose (mua/msg-create-new))
+    (message-goto-to)))
+
+
 
 (defun mua/msg-is-mua-message ()
   "Check whether the current buffer refers a mua-message based on
@@ -431,7 +449,9 @@ meant to be called from message mode's `message-sent-hook'."
       ((newflags ;; remove Draft; maybe set 'Seen' as well?
 	 (delq 'draft (mua/maildir-flags-from-path (buffer-file-name))))
 	(sent-msg
-	  (mua/msg-move (buffer-file-name) mua/sent-folder newflagstr)))
+	  (mua/msg-move (buffer-file-name)
+	    (concat mua/maildir mua/sent-folder) ;; mua-sent-folder is only eg. "/sent"
+	    (mua/maildir-flags-to-string newflags))))
       (if sent-msg ;; change our buffer file-name
 	(set-visited-file-name sent-msg t t)
 	(mua/warn "Failed to save message to the Sent-folder")))))
@@ -444,7 +464,7 @@ flag. This is meant to be called from message mode's
   (if (mua/msg-is-mua-message) ;; only if we are mua
     (let ((msgid (mail-header-parse-addresses
 		   (message-field-value "In-Reply-To")))
-	   (path (and msgid (mua/mu-run
+	   (path (and msgid (mua/mu-run ;; TODO: check we only get one msgid back
 			      "find"  (concat "msgid:" msgid) "--exec=echo"))))
       (if path
 	(let ((newflags (cons 'replied (mua/maildir-flags-from-path path))))

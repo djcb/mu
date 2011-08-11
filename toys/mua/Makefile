@@ -5,6 +5,9 @@ ELCS=$(ELS:.el=.elc)
 
 .PHONY=install
 
+top_srcdir=/home/djcb/src/mu/
+
+
 BATCH=$(EMACS) -batch -q -no-site-file -eval \
   "(setq load-path (cons (expand-file-name \".\") load-path))"
 
@@ -12,6 +15,14 @@ BATCH=$(EMACS) -batch -q -no-site-file -eval \
 	$(BATCH) --eval '(byte-compile-file "$<")'
 
 all: $(ELCS)
+
+BUILT_SOURCES=mu-errors.el
+
+mu-errors.el: ${top_srcdir}/src/mu-util.h
+	@cat ${top_srcdir}/src/mu-util.h \
+
+
+
 
 docs: mua.info
 
