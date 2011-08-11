@@ -63,6 +63,7 @@ append_sexp_attr (GString *gstr, const char* elm, const char *str)
 struct _ContactData {
 	gboolean from, to, cc, bcc;
 	GString *gstr;
+	MuMsgContactType prev_ctype;
 }; 
 typedef struct _ContactData ContactData;
 
@@ -87,38 +88,50 @@ get_name_addr_pair (MuMsgContact *c)
 }
 
 
+
 static gboolean
 each_contact (MuMsgContact *c, ContactData *cdata)
 {
 	char *pair;
+	MuMsgContactType ctype;
 
-	if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_FROM) {
+	ctype = mu_msg_contact_type (c);	
+
+	if (cdata->prev_ctype != ctype && cdata->prev_ctype != (unsigned)-1)
+		g_string_append (cdata->gstr, ")\n");
+
+	switch (ctype) {
+	
+	case MU_MSG_CONTACT_TYPE_FROM:
 		if (!cdata->from)
 			g_string_append (cdata->gstr, "\t:from (");
 		cdata->from = TRUE;
+		break;
 		
-	} else if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_TO) {
+	case MU_MSG_CONTACT_TYPE_TO:
 		if (!cdata->to)
-			g_string_append_printf 	(cdata->gstr,"%s\t:to (",
-						 cdata->from ? ")\n" : "");
+			g_string_append_printf 	(cdata->gstr,"\t:to (");
 		cdata->to = TRUE;
+		break;
 
-	} else if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_CC) {
+	case MU_MSG_CONTACT_TYPE_CC:
 		if (!cdata->cc)
-			g_string_append_printf (cdata->gstr,"%s\t:cc (",
-						cdata->from||cdata->to ?
-						")\n" : "");
+			g_string_append_printf (cdata->gstr,"\t:cc (");
 		cdata->cc = TRUE;
+		break;
 
-	} else if (mu_msg_contact_type (c) == MU_MSG_CONTACT_TYPE_BCC) {
+	case MU_MSG_CONTACT_TYPE_BCC:
 		if (!cdata->bcc)
-			g_string_append_printf
-				(cdata->gstr, "%s\t:bcc (",
-				 cdata->from||cdata->to||cdata->cc ? ")\n":"");
+			g_string_append_printf (cdata->gstr, "\t:bcc (");
 		cdata->bcc = TRUE;
-	} else
-		g_return_val_if_reached (FALSE);
+		break;
+		
+	default: g_return_val_if_reached (FALSE);
+	}
 
+	
+	cdata->prev_ctype = ctype;
+	
 	pair = get_name_addr_pair (c);
 	g_string_append (cdata->gstr, pair);
 	g_free (pair);
@@ -130,7 +143,8 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 static void
 append_sexp_contacts (GString *gstr, MuMsg *msg)
 {
-	ContactData cdata = { FALSE, FALSE, FALSE, FALSE, gstr};
+	ContactData cdata = { FALSE, FALSE, FALSE, FALSE, gstr,
+			      (unsigned)-1};
 	
 	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact,
 				&cdata);
