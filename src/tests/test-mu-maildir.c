@@ -147,7 +147,7 @@ typedef struct {
 	int _dir_left;
 } WalkData;
 
-static MuResult
+static MuError
 dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 {
 	if (enter) 
@@ -162,7 +162,7 @@ dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 }
 
 
-static MuResult
+static MuError
 msg_cb (const char *fullpath, const char* mdir, struct stat *statinfo,
 	WalkData *data)
 {
@@ -176,7 +176,7 @@ test_mu_maildir_walk_01 (void)
 {
 	char *tmpdir;
 	WalkData data;
-	MuResult rv;
+	MuError rv;
 	
 	tmpdir = copy_test_data ();
 	memset (&data, 0, sizeof(WalkData));
@@ -202,7 +202,7 @@ test_mu_maildir_walk_02 (void)
 {
 	char *tmpdir, *cmd;
 	WalkData data;
-	MuResult rv;
+	MuError rv;
 	
 	tmpdir = copy_test_data ();
 	memset (&data, 0, sizeof(WalkData));
@@ -269,15 +269,28 @@ test_mu_maildir_get_path_from_flags (void)
 		const char *newpath;
 	} paths[] = {
 		{
-		"/home/foo/Maildir/test/cur/123456:2,FR",
-			    MU_MSG_FLAG_REPLIED,
-			    "/home/foo/Maildir/test/cur/123456:2,R"}, {
-		"/home/foo/Maildir/test/cur/123456:2,FR",
-			    MU_MSG_FLAG_NEW,
-			    "/home/foo/Maildir/test/new/123456"}, {
-		"/home/foo/Maildir/test/new/123456:2,FR",
-			    MU_MSG_FLAG_SEEN | MU_MSG_FLAG_REPLIED,
-			    "/home/foo/Maildir/test/cur/123456:2,RS"}
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			MU_MSG_FLAG_REPLIED,
+			"/home/foo/Maildir/test/cur/123456:2,R"
+		}, {
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			MU_MSG_FLAG_NEW,
+			"/home/foo/Maildir/test/new/123456:2,"
+		}, {
+			"/home/foo/Maildir/test/new/123456:2,FR",
+			MU_MSG_FLAG_SEEN | MU_MSG_FLAG_REPLIED,
+			"/home/foo/Maildir/test/cur/123456:2,RS"
+		}, {
+			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
+			MU_MSG_FLAG_SEEN | MU_MSG_FLAG_FLAGGED | MU_MSG_FLAG_PASSED,
+			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"	
+		},
+
+		{
+			"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
+			MU_MSG_FLAG_SEEN,
+			"/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"
+		}
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
@@ -314,7 +327,6 @@ main (int argc, char *argv[])
 			test_mu_maildir_get_path_from_flags);
 	g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
 			test_mu_maildir_get_flags_from_path);
-
 	
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
