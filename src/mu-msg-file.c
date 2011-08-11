@@ -272,29 +272,29 @@ part_looks_like_attachment (GMimeObject *part)
 					  
 
 static void
-msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuMsgFlags *flags)
+msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuFlags *flags)
 {
-	if (*flags & MU_MSG_FLAG_HAS_ATTACH)
+	if (*flags & MU_FLAG_HAS_ATTACH)
 		return;
 	
 	if (!GMIME_IS_PART(part))
 		return;
 	
 	if (part_looks_like_attachment(part))
-		*flags |= MU_MSG_FLAG_HAS_ATTACH;
+		*flags |= MU_FLAG_HAS_ATTACH;
 }
 
 
 
-static MuMsgFlags
+static MuFlags
 get_content_flags (MuMsgFile *self)
 {
 	GMimeContentType *ctype;
-	MuMsgFlags flags;
+	MuFlags flags;
 	GMimeObject *part;
 
 	if (!GMIME_IS_MESSAGE(self->_mime_msg))
-		return MU_MSG_FLAG_NONE;
+		return MU_FLAG_NONE;
 
 	flags = 0;
 	g_mime_message_foreach (self->_mime_msg,
@@ -315,10 +315,10 @@ get_content_flags (MuMsgFile *self)
 		if (ctype) {
 			if (g_mime_content_type_is_type
 			    (ctype,"*", "signed")) 
-				flags |= MU_MSG_FLAG_SIGNED;
+				flags |= MU_FLAG_SIGNED;
 			if (g_mime_content_type_is_type
 			    (ctype,"*", "encrypted")) 
-				flags |= MU_MSG_FLAG_ENCRYPTED;
+				flags |= MU_FLAG_ENCRYPTED;
 		}
 	} else
 		g_warning ("no top level mime part found");
@@ -327,12 +327,12 @@ get_content_flags (MuMsgFile *self)
 }
 
 
-static MuMsgFlags
+static MuFlags
 get_flags (MuMsgFile *self)
 {
-	MuMsgFlags flags;
+	MuFlags flags;
 	
-	g_return_val_if_fail (self, MU_MSG_FLAG_NONE);
+	g_return_val_if_fail (self, MU_FLAG_NONE);
 
 	flags = mu_maildir_get_flags_from_path (self->_path);
 	flags |= get_content_flags (self);

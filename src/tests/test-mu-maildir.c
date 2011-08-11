@@ -235,24 +235,24 @@ test_mu_maildir_get_flags_from_path (void)
 	int i;
 	struct {
 		const char *path;
-		MuMsgFlags flags;
+		MuFlags flags;
 	} paths[] = {
 		{
 		"/home/foo/Maildir/test/cur/123456:2,FSR",
-		MU_MSG_FLAG_REPLIED | MU_MSG_FLAG_SEEN | MU_MSG_FLAG_FLAGGED}, {
+		MU_FLAG_REPLIED | MU_FLAG_SEEN | MU_FLAG_FLAGGED}, {
 		"/home/foo/Maildir/test/new/123456",
-		            MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD}, {
+		            MU_FLAG_NEW | MU_FLAG_UNREAD}, {
 		"/home/foo/Maildir/test/new/123456:2,FR",
-			    MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD}, {
+			    MU_FLAG_NEW | MU_FLAG_UNREAD}, {
 		"/home/foo/Maildir/test/cur/123456:2,DTP",
-			    MU_MSG_FLAG_DRAFT | MU_MSG_FLAG_TRASHED |
-			    MU_MSG_FLAG_PASSED | MU_MSG_FLAG_UNREAD }, {
+			    MU_FLAG_DRAFT | MU_FLAG_TRASHED |
+			    MU_FLAG_PASSED | MU_FLAG_UNREAD }, {
 		"/home/foo/Maildir/test/cur/123456:2,S",
-			    MU_MSG_FLAG_SEEN}
+			    MU_FLAG_SEEN}
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		MuMsgFlags flags;
+		MuFlags flags;	
 		flags = mu_maildir_get_flags_from_path(paths[i].path);
 		g_assert_cmpuint(flags, ==, paths[i].flags);
 	}
@@ -265,30 +265,28 @@ test_mu_maildir_get_path_from_flags (void)
 
 	struct {
 		const char *oldpath;
-		MuMsgFlags flags;
+		MuFlags flags;
 		const char *newpath;
 	} paths[] = {
 		{
 			"/home/foo/Maildir/test/cur/123456:2,FR",
-			MU_MSG_FLAG_REPLIED,
+			MU_FLAG_REPLIED,
 			"/home/foo/Maildir/test/cur/123456:2,R"
 		}, {
 			"/home/foo/Maildir/test/cur/123456:2,FR",
-			MU_MSG_FLAG_NEW,
+			MU_FLAG_NEW,
 			"/home/foo/Maildir/test/new/123456:2,"
 		}, {
 			"/home/foo/Maildir/test/new/123456:2,FR",
-			MU_MSG_FLAG_SEEN | MU_MSG_FLAG_REPLIED,
+			MU_FLAG_SEEN | MU_FLAG_REPLIED,
 			"/home/foo/Maildir/test/cur/123456:2,RS"
 		}, {
 			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-			MU_MSG_FLAG_SEEN | MU_MSG_FLAG_FLAGGED | MU_MSG_FLAG_PASSED,
+			MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED,
 			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"	
-		},
-
-		{
+		}, {
 			"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
-			MU_MSG_FLAG_SEEN,
+			MU_FLAG_SEEN,
 			"/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"
 		}
 	};

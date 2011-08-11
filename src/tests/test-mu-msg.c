@@ -155,7 +155,7 @@ test_mu_msg_02 (void)
 	g_assert_cmpint (i,==,2);
 
 	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, MU_MSG_FLAG_SEEN);
+			  ==, MU_FLAG_SEEN);
 	
 	mu_msg_unref (msg);
 }
@@ -184,7 +184,7 @@ test_mu_msg_03 (void)
 			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
 
 	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, MU_MSG_FLAG_UNREAD);
+			  ==, MU_FLAG_UNREAD);
 
 	
 	mu_msg_unref (msg);
@@ -211,7 +211,7 @@ test_mu_msg_04 (void)
 			  ==, 0);
 
 	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, MU_MSG_FLAG_HAS_ATTACH);
+			  ==, MU_FLAG_HAS_ATTACH);
 	
 	mu_msg_unref (msg);
 }

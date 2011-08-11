@@ -37,7 +37,7 @@
 #include "mu-maildir.h"
 #include "mu-contacts.h"
 #include "mu-runtime.h"
-#include "mu-msg-flags.h"
+#include "mu-flags.h"
 #include "mu-store.h"
 
 #define VIEW_TERMINATOR '\f' /* form-feed */
@@ -283,7 +283,7 @@ mu_cmd_mkdir (MuConfig *opts)
 
 
 static gboolean
-mv_check_params (MuConfig *opts, MuMsgFlags *flags)
+mv_check_params (MuConfig *opts, MuFlags *flags)
 {
 	if (!opts->params[1] || !opts->params[2]) {
 		g_warning ("usage: mu mv [--flags=<flags>] <sourcefile> "
@@ -293,9 +293,9 @@ mv_check_params (MuConfig *opts, MuMsgFlags *flags)
 
 	/* FIXME: check for invalid flags */
 	if (!opts->flagstr)
-		*flags = MU_MSG_FLAG_INVALID; /* ie., ignore flags */
+		*flags = MU_FLAG_INVALID; /* ie., ignore flags */
 	else
-		*flags = mu_msg_flags_from_str (opts->flagstr);
+		*flags = mu_flags_from_str (opts->flagstr, MU_FLAG_TYPE_ANY);
 	
 	return TRUE;
 }
@@ -322,7 +322,7 @@ mu_cmd_mv (MuConfig *opts)
 {
 	GError *err;
 	gchar *fullpath;
-	MuMsgFlags flags;
+	MuFlags flags;
 	
 	if (!mv_check_params (opts, &flags))
 		return MU_ERROR_IN_PARAMETERS;

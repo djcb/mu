@@ -26,7 +26,7 @@
 #include <sys/types.h>
 
 #include <mu-msg.h>
-#include <mu-msg-flags.h>
+#include <mu-flags.h>
 
 G_BEGIN_DECLS
 
@@ -84,8 +84,8 @@ char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
  * @return a string representation of the flags; see above
  * for what to do with it
  */
-const char* mu_str_flags_s  (MuMsgFlags flags) G_GNUC_CONST;
-char*       mu_str_flags    (MuMsgFlags flags)
+const char* mu_str_flags_s  (MuFlags flags) G_GNUC_CONST;
+char*       mu_str_flags    (MuFlags flags)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**

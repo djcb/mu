@@ -375,11 +375,11 @@ mu_msg_get_date (MuMsg *self)
 
 
 
-MuMsgFlags
+MuFlags
 mu_msg_get_flags (MuMsg *self)
 {
-	g_return_val_if_fail (self, MU_MSG_FLAG_NONE);
-	return (MuMsgFlags)get_num_field (self, MU_MSG_FIELD_ID_FLAGS);
+	g_return_val_if_fail (self, MU_FLAG_NONE);
+	return (MuFlags)get_num_field (self, MU_MSG_FIELD_ID_FLAGS);
 }
 
 size_t
@@ -713,7 +713,7 @@ get_maildir_type (const char *path)
 
 char*
 get_new_fullpath (const char *oldpath, const char *targetmdir,
-		  MaildirType mtype, MuMsgFlags flags)
+		  MaildirType mtype, MuFlags flags)
 {
 	char *filename, *newfullpath;
 	const char* mdirsub;
@@ -740,12 +740,11 @@ get_new_fullpath (const char *oldpath, const char *targetmdir,
 
 	/* we update the filename for the new flags; in case the NEW
 	 * flag is set/unset, this can also influence the dir */
-	if (flags != MU_MSG_FLAG_NONE) {
+	if (flags != MU_FLAG_NONE) {
 		gchar *tmp;
 		tmp = mu_maildir_get_path_from_flags (newfullpath, flags);
 		g_free (newfullpath);
 		newfullpath = tmp;
-		
 	}
 
 	return newfullpath;
@@ -836,7 +835,7 @@ check_target_dir (const char* targetmdir, GError **err)
  */
 gchar*
 mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
-			     MuMsgFlags flags, GError **err)
+			     MuFlags flags, GError **err)
 {
 	MaildirType mtype;
 	char *newfullpath;
@@ -881,7 +880,7 @@ mu_msg_file_move_to_maildir (const char* oldpath, const char* targetmdir,
  */
 gboolean
 mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir,
-			MuMsgFlags flags, GError **err)
+			MuFlags flags, GError **err)
 {
 	char *newfullpath;
 	

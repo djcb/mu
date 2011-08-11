@@ -42,7 +42,6 @@
 #endif /*PATH_MAX*/
 
 #include "mu-str.h"
-#include "mu-msg-flags.h"
 #include "mu-msg-fields.h"
 
 
@@ -78,13 +77,13 @@ mu_str_size (size_t s)
 }
 
 const char*
-mu_str_flags_s  (MuMsgFlags flags)
+mu_str_flags_s  (MuFlags flags)
 {
-	return mu_msg_flags_str_s (flags);
+	return mu_flags_to_str_s (flags, MU_FLAG_TYPE_ANY);
 }
 
 char*
-mu_str_flags  (MuMsgFlags flags)
+mu_str_flags  (MuFlags flags)
 {
 	return g_strdup (mu_str_flags_s(flags));
 }
@@ -456,8 +455,7 @@ mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
 
 	if (in_quotes)
 		g_string_append_c (tmp, '"');
-	
-	return g_string_free (tmp, FALSE);
+return g_string_free (tmp, FALSE);
 }
 
 

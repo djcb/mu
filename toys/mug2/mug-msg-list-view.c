@@ -125,15 +125,15 @@ static void
 treecell_func (GtkTreeViewColumn * tree_column, GtkCellRenderer * renderer,
 	       GtkTreeModel * tree_model, GtkTreeIter * iter, gpointer data)
 {
-	MuMsgFlags flags;
+	MuFlags flags;
 	MuMsgPrio prio;
 
 	gtk_tree_model_get (tree_model, iter,
 			    MUG_COL_FLAGS, &flags, MUG_COL_PRIO, &prio, -1);
 
 	g_object_set (G_OBJECT (renderer),
-		      "weight", (flags & MU_MSG_FLAG_NEW) ? 800 : 400,
-		      "weight", (flags & MU_MSG_FLAG_SEEN) ? 400 : 800,
+		      "weight", (flags & MU_FLAG_NEW) ? 800 : 400,
+		      "weight", (flags & MU_FLAG_SEEN) ? 400 : 800,
 		      "foreground", prio == MU_MSG_PRIO_HIGH ? "red" : NULL,
 		      NULL);
 }
@@ -364,7 +364,7 @@ add_row (GtkTreeStore * store, MuMsg *msg, GtkTreeIter *treeiter)
 	datestr = timeval == 0 ? "-" : mu_date_display_s (timeval);
 	from = empty_or_display_contact (mu_msg_get_from (msg));
 	to = empty_or_display_contact (mu_msg_get_to (msg));
-	flagstr = mu_msg_flags_str_s (mu_msg_get_flags (msg));
+	flagstr = mu_flags_to_str_s (mu_msg_get_flags (msg), MU_FLAG_TYPE_ANY);
 	
  	/* if (0) { */
 	/* 	GtkTreeIter myiter; */

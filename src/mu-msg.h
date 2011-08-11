@@ -21,7 +21,7 @@
 #ifndef __MU_MSG_H__
 #define __MU_MSG_H__
 
-#include <mu-msg-flags.h>
+#include <mu-flags.h>
 #include <mu-msg-fields.h>
 #include <mu-msg-prio.h>
 #include <mu-util.h> /* for MuResult, MuError and XapianDocument */
@@ -241,7 +241,7 @@ time_t          mu_msg_get_date            (MuMsg *msg);
  * @return the fileflags as logically OR'd #Mu MsgFlags or 0 if
  * there are none.
  */
-MuMsgFlags     mu_msg_get_flags      (MuMsg *msg);
+MuFlags     mu_msg_get_flags      (MuMsg *msg);
 
 
 /**
@@ -405,9 +405,9 @@ char* mu_msg_to_sexp (MuMsg *msg, gboolean dbonly);
  * @return TRUE if it worked, FALSE otherwise (mu_msg_move_to_maildir) or the full path name of the target file (g_free) for mu_msg_file_move_to_maildir
  */
 gboolean mu_msg_move_to_maildir (MuMsg *msg, const char* targetmdir,
-				 MuMsgFlags flags, GError **err);
+				 MuFlags flags, GError **err);
 char* mu_msg_file_move_to_maildir (const char *msgpath, const char* targetmdir,
-				   MuMsgFlags flags, GError **err);
+				   MuFlags flags, GError **err);
 
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO    = 0,

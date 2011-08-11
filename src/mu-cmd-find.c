@@ -550,7 +550,7 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 			return mu_msg_prio_name ((MuMsgPrio)val);
  		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
 			val = mu_msg_get_field_numeric (msg, mfid);
-			return mu_str_flags_s ((MuMsgFlags)val);
+			return mu_str_flags_s ((MuFlags)val);
 		} else  /* as string */
 			return mu_msg_get_field_string (msg, mfid);
 		

@@ -24,7 +24,7 @@
 #include <time.h>
 #include <sys/types.h>          /* for mode_t */
 #include <mu-util.h> 
-#include <mu-msg-flags.h>
+#include <mu-flags.h>
 
 
 G_BEGIN_DECLS
@@ -132,7 +132,7 @@ gboolean mu_maildir_clear_links (const gchar* dir, GError **err);
  * 
  * @return the flags, or MU_MSG_FILE_FLAG_UNKNOWN in case of error
  */
-MuMsgFlags mu_maildir_get_flags_from_path (const char* pathname);
+MuFlags mu_maildir_get_flags_from_path (const char* pathname);
 
 /**
  * get the new pathname for a message, based on the old path and the
@@ -151,7 +151,7 @@ MuMsgFlags mu_maildir_get_flags_from_path (const char* pathname);
  * error.
  */
 char* mu_maildir_get_path_from_flags (const char *oldpath,
-				       MuMsgFlags newflags);
+				       MuFlags newflags);
 
 G_END_DECLS
 

@@ -155,22 +155,22 @@ append_sexp_contacts (GString *gstr, MuMsg *msg)
 
 struct _FlagData {
 	char *flagstr;
-	MuMsgFlags msgflags;
+	MuFlags msgflags;
 };
 typedef struct _FlagData FlagData;
 
 static void
-each_flag (MuMsgFlags flag, FlagData *fdata)
+each_flag (MuFlags flag, FlagData *fdata)
 {
 	if (!(flag & fdata->msgflags))
 		return;
 
 	if (!fdata->flagstr)
-		fdata->flagstr = g_strdup (mu_msg_flag_name(flag));
+		fdata->flagstr = g_strdup (mu_flag_name(flag));
 	else {
 		gchar *tmp;
 		tmp = g_strconcat (fdata->flagstr, " ",
-				   mu_msg_flag_name(flag), NULL);
+				   mu_flag_name(flag), NULL);
 		g_free (fdata->flagstr);
 		fdata->flagstr = tmp;
 	}
@@ -184,7 +184,7 @@ append_sexp_flags (GString *gstr, MuMsg *msg)
 	fdata.msgflags = mu_msg_get_flags (msg);
 	fdata.flagstr  = NULL;
 	
-	mu_msg_flags_foreach ((MuMsgFlagsForeachFunc)each_flag, &fdata);
+	mu_flags_foreach ((MuFlagsForeachFunc)each_flag, &fdata);
 	if (fdata.flagstr) 
 		g_string_append_printf (gstr, "\t:flags (%s)\n",
 					fdata.flagstr);

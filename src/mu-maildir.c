@@ -671,35 +671,34 @@ check_msg_type (const char *path, char **info)
 }
 
 
-MuMsgFlags
+MuFlags
 mu_maildir_get_flags_from_path (const char *path)
 {
-	MuMsgFlags flags;
+	MuFlags flags;
 	MsgType mtype;
-	char *info = NULL, *cursor;
+	char *info = NULL;
 
-	g_return_val_if_fail (path, MU_MSG_FLAG_NONE);
+	g_return_val_if_fail (path, MU_FLAG_NONE);
 	g_return_val_if_fail (!g_str_has_suffix(path, G_DIR_SEPARATOR_S),
-			      MU_MSG_FLAG_NONE);
+			      MU_FLAG_NONE);
 
 	mtype = check_msg_type (path, &info);
 	if (mtype == MSG_TYPE_NEW) {	/* we ignore any new-msg flags */
 		/* note NEW implies UNREAD */
-		flags = MU_MSG_FLAG_NEW | MU_MSG_FLAG_UNREAD;
+		flags = MU_FLAG_NEW | MU_FLAG_UNREAD;
 		goto leave;
 	}
 
-	flags = MU_MSG_FLAG_NONE;
+	flags = MU_FLAG_NONE;
 	if ((mtype != MSG_TYPE_CUR && mtype != MSG_TYPE_OTHER) ||
 	    !(info && info[0] == '2' && info[1] == ','))
 		goto leave;
-		
-	for (cursor = info + 2; *cursor; ++cursor)
-		flags |= mu_msg_flag_from_file_char (*cursor);
+
+	flags |= mu_flags_from_str (info + 2, MU_FLAG_TYPE_MAILFILE);
 
 	/* the UNREAD pseudo flag => NEW OR NOT SEEN */
-	if (!(flags & MU_MSG_FLAG_SEEN))
-		flags |= MU_MSG_FLAG_UNREAD;		
+	if (!(flags & MU_FLAG_SEEN))
+		flags |= MU_FLAG_UNREAD;		
 leave:
 	g_free(info);
 	return flags;
@@ -707,7 +706,7 @@ leave:
 
 /* note: returns static string, non-reentrant */
 static const char*
-get_flags_str_s (MuMsgFlags flags)
+get_flags_str_s (MuFlags flags)
 {
 	int i;
 	static char flagstr[7]; 
@@ -715,17 +714,17 @@ get_flags_str_s (MuMsgFlags flags)
 	i = 0;
 		
 	/* now, determine the flags to use */
-	if (flags & MU_MSG_FLAG_DRAFT)
+	if (flags & MU_FLAG_DRAFT)
 		flagstr[i++] = 'D';
-	if (flags & MU_MSG_FLAG_FLAGGED)
+	if (flags & MU_FLAG_FLAGGED)
 		flagstr[i++] = 'F';
-	if (flags & MU_MSG_FLAG_PASSED)
+	if (flags & MU_FLAG_PASSED)
 		flagstr[i++] = 'P';
-	if (flags & MU_MSG_FLAG_REPLIED)
+	if (flags & MU_FLAG_REPLIED)
 		flagstr[i++] = 'R';
-	if (flags & MU_MSG_FLAG_SEEN)
+	if (flags & MU_FLAG_SEEN)
 		flagstr[i++] = 'S';
-	if (flags & MU_MSG_FLAG_TRASHED)
+	if (flags & MU_FLAG_TRASHED)
 		flagstr[i++] = 'T';
 		
 	flagstr[i] = '\0';
@@ -738,17 +737,17 @@ get_flags_str_s (MuMsgFlags flags)
  * take an exising message path, and return a new path, based on
  * whether it should be in 'new' or 'cur'; ie.
  *
- * /home/user/Maildir/foo/bar/cur/abc:2,F  and flags == MU_MSG_FLAG_NEW
+ * /home/user/Maildir/foo/bar/cur/abc:2,F  and flags == MU_FLAG_NEW
  *     => /home/user/Maildir/foo/bar/new
  * and 
- * /home/user/Maildir/foo/bar/new/abc  and flags == MU_MSG_FLAG_REPLIED
+ * /home/user/Maildir/foo/bar/new/abc  and flags == MU_FLAG_REPLIED
  *    => /home/user/Maildir/foo/bar/cur
  *
- * so only difference is whether MuMsgFlags matches MU_MSG_FLAG_NEW is set or not
+ * so only difference is whether MuFlags matches MU_FLAG_NEW is set or not
  * 
  */
 static char*
-get_new_dir_name (const char* oldpath, MuMsgFlags flags)
+get_new_dir_name (const char* oldpath, MuFlags flags)
 {
 	char *newpath, *dirpart;
 		
@@ -760,9 +759,9 @@ get_new_dir_name (const char* oldpath, MuMsgFlags flags)
 	const char* new5 = G_DIR_SEPARATOR_S "new" G_DIR_SEPARATOR_S;
 		
 	g_return_val_if_fail (oldpath, NULL);
-	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */
-	/* g_return_val_if_fail (flags & MU_MSG_FLAG_NEW ? */
-	/* 		      flags == MU_MSG_FLAG_NEW : TRUE, NULL); */
+	/* if MU_FLAG_NEW is set, it must be the only flag */
+	/* g_return_val_if_fail (flags & MU_FLAG_NEW ? */
+	/* 		      flags == MU_FLAG_NEW : TRUE, NULL); */
 		
 	newpath = g_path_get_dirname (oldpath);
 	if (g_str_has_suffix (newpath, cur4) || g_str_has_suffix (newpath, new4))
@@ -776,7 +775,7 @@ get_new_dir_name (const char* oldpath, MuMsgFlags flags)
 	}
 
 	/* now, copy the desired dir part behind this */
-	if (flags & MU_MSG_FLAG_NEW) 
+	if (flags & MU_FLAG_NEW) 
 		memcpy (dirpart, new4, strlen(new4) + 1);
 	else
 		memcpy (dirpart, cur4, strlen(cur4) + 1);
@@ -786,18 +785,18 @@ get_new_dir_name (const char* oldpath, MuMsgFlags flags)
 
 /*
  * get a new filename for the message, based on the new flags; if the
- * message has MU_MSG_FLAG_NEW, it will loose its flags
+ * message has MU_FLAG_NEW, it will loose its flags
  *
  */ 
 static char*
-get_new_file_name (const char *oldpath, MuMsgFlags flags)
+get_new_file_name (const char *oldpath, MuFlags flags)
 {
 	gchar *newname, *sep;
 	gchar sepa;
 	
-	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */
-	/* g_return_val_if_fail (flags & MU_MSG_FLAG_NEW ? */
-	/* 		      flags == MU_MSG_FLAG_NEW : TRUE, NULL); */
+	/* if MU_FLAG_NEW is set, it must be the only flag */
+	/* g_return_val_if_fail (flags & MU_FLAG_NEW ? */
+	/* 		      flags == MU_FLAG_NEW : TRUE, NULL); */
 	
 	/* the normal separator is ':', but on e.g. vfat, '!' is seen
 	 * as well */
@@ -808,7 +807,7 @@ get_new_file_name (const char *oldpath, MuMsgFlags flags)
 	}
 
 	/* 'INVALID' means: "don't change flags" */
-	if (flags == (unsigned)MU_MSG_FLAG_INVALID)
+	if (flags == (unsigned)MU_FLAG_INVALID)
 		return newname;
 		
 	/* the filename may or may not end in "[:!]2,..." */
@@ -832,15 +831,14 @@ get_new_file_name (const char *oldpath, MuMsgFlags flags)
 }
 
 char*
-mu_maildir_get_path_from_flags (const char *oldpath, MuMsgFlags newflags)
+mu_maildir_get_path_from_flags (const char *oldpath, MuFlags newflags)
 {
 	char *newname, *newdir, *newpath;
 	
 	g_return_val_if_fail (oldpath, NULL);
-	g_return_val_if_fail (newflags != MU_MSG_FLAG_NONE, NULL);
-	/* if MU_MSG_FLAG_NEW is set, it must be the only flag */
-	/* g_return_val_if_fail (newflags & MU_MSG_FLAG_NEW ? */
-	/* 		      newflags == MU_MSG_FLAG_NEW : TRUE, NULL); */
+	/* if MU_FLAG_NEW is set, it must be the only flag */
+	/* g_return_val_if_fail (newflags & MU_FLAG_NEW ? */
+	/* 		      newflags == MU_FLAG_NEW : TRUE, NULL); */
 	
 	newname = get_new_file_name (oldpath, newflags);
 	if (!newname)

@@ -89,7 +89,7 @@ SCM_DEFINE (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
 	GError *err;
 	MuMsgWrapper *msgwrap;
 	gboolean rv;
-	MuMsgFlags flags;
+	MuFlags flags;
 	
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);	
 	SCM_ASSERT (scm_is_string (TARGETMDIR), TARGETMDIR, SCM_ARG2, FUNC_NAME);
@@ -194,20 +194,20 @@ SCM_DEFINE (msg_prio, "mu:msg:priority", 1, 0, 0,
 #undef FUNC_NAME
 
 struct _FlagData {
-	MuMsgFlags flags;
+	MuFlags flags;
 	SCM lst;
 };
 typedef struct _FlagData FlagData;
 
 
 static void
-check_flag (MuMsgFlags flag, FlagData *fdata)
+check_flag (MuFlags flag, FlagData *fdata)
 {
 	if (fdata->flags & flag) {
 		SCM item;
 		char *flagsym;
 
-		flagsym = g_strconcat ("mu:", mu_msg_flag_name(flag), NULL);
+		flagsym = g_strconcat ("mu:", mu_flag_name(flag), NULL);
 		item = scm_list_1 (scm_from_locale_symbol(flagsym));
 		g_free (flagsym);
 		
@@ -231,7 +231,7 @@ SCM_DEFINE (msg_flags, "mu:msg:flags", 1, 0, 0,
 	
 	fdata.flags = mu_msg_get_flags (msgwrap->_msg);
 	fdata.lst = SCM_EOL;
-	mu_msg_flags_foreach ((MuMsgFlagsForeachFunc)check_flag,
+	mu_flags_foreach ((MuFlagsForeachFunc)check_flag,
 			      &fdata);
 
 	return fdata.lst;
@@ -517,17 +517,17 @@ define_symbols (void)
 	scm_c_define ("mu:normal",	scm_from_int(MU_MSG_PRIO_NORMAL));
 
 	/* message flags */
-	scm_c_define ("mu:new",		scm_from_int(MU_MSG_FLAG_NEW));
-	scm_c_define ("mu:passed",	scm_from_int(MU_MSG_FLAG_PASSED));
-	scm_c_define ("mu:replied",	scm_from_int(MU_MSG_FLAG_REPLIED));
-	scm_c_define ("mu:seen",	scm_from_int(MU_MSG_FLAG_SEEN));
-	scm_c_define ("mu:trashed",	scm_from_int(MU_MSG_FLAG_TRASHED));
-	scm_c_define ("mu:draft",	scm_from_int(MU_MSG_FLAG_DRAFT));
-	scm_c_define ("mu:flagged",	scm_from_int(MU_MSG_FLAG_FLAGGED));
-	scm_c_define ("mu:unread",	scm_from_int(MU_MSG_FLAG_UNREAD));
-	scm_c_define ("mu:signed",	scm_from_int(MU_MSG_FLAG_SIGNED));
-	scm_c_define ("mu:encrypted",	scm_from_int(MU_MSG_FLAG_ENCRYPTED));
-	scm_c_define ("mu:has-attach",	scm_from_int(MU_MSG_FLAG_HAS_ATTACH));
+	scm_c_define ("mu:new",		scm_from_int(MU_FLAG_NEW));
+	scm_c_define ("mu:passed",	scm_from_int(MU_FLAG_PASSED));
+	scm_c_define ("mu:replied",	scm_from_int(MU_FLAG_REPLIED));
+	scm_c_define ("mu:seen",	scm_from_int(MU_FLAG_SEEN));
+	scm_c_define ("mu:trashed",	scm_from_int(MU_FLAG_TRASHED));
+	scm_c_define ("mu:draft",	scm_from_int(MU_FLAG_DRAFT));
+	scm_c_define ("mu:flagged",	scm_from_int(MU_FLAG_FLAGGED));
+	scm_c_define ("mu:unread",	scm_from_int(MU_FLAG_UNREAD));
+	scm_c_define ("mu:signed",	scm_from_int(MU_FLAG_SIGNED));
+	scm_c_define ("mu:encrypted",	scm_from_int(MU_FLAG_ENCRYPTED));
+	scm_c_define ("mu:has-attach",	scm_from_int(MU_FLAG_HAS_ATTACH));
 }
 
 

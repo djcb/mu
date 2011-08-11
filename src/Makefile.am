@@ -62,6 +62,8 @@ libmu_la_SOURCES=			\
 	mu-container.h			\
 	mu-date.c			\
 	mu-date.h			\
+	mu-flags.h			\
+	mu-flags.c			\
 	mu-index.c			\
 	mu-index.h			\
 	mu-log.c			\
@@ -76,8 +78,6 @@ libmu_la_SOURCES=			\
 	mu-msg-fields.h			\
 	mu-msg-file.c			\
 	mu-msg-file.h			\
-	mu-msg-flags.c			\
-	mu-msg-flags.h			\
 	mu-msg-iter.cc			\
 	mu-msg-iter.h			\
 	mu-msg-part.c			\

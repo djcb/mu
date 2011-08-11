@@ -33,7 +33,7 @@
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-date.h"
-#include "mu-msg-flags.h"
+#include "mu-flags.h"
 #include "mu-contacts.h"
 
 /* by default, use transactions of 30000 messages */
@@ -115,13 +115,13 @@ prefix (MuMsgFieldId mfid)
 
 
 static void
-add_synonym_for_flag (MuMsgFlags flag, Xapian::WritableDatabase *db)
+add_synonym_for_flag (MuFlags flag, Xapian::WritableDatabase *db)
 {
 	const std::string pfx(prefix(MU_MSG_FIELD_ID_FLAGS));
 
-	db->clear_synonyms (pfx + mu_msg_flag_name (flag));
-	db->add_synonym (pfx + mu_msg_flag_name (flag), pfx +
-			 (std::string(1, tolower(mu_msg_flag_char (flag)))));
+	db->clear_synonyms (pfx + mu_flag_name (flag));
+	db->add_synonym (pfx + mu_flag_name (flag), pfx +
+			 (std::string(1, tolower(mu_flag_char (flag)))));
 }
 
 
@@ -143,7 +143,7 @@ add_synonym_for_prio (MuMsgPrio prio, Xapian::WritableDatabase *db)
 static void
 add_synonyms (MuStore *store)
 {
-	mu_msg_flags_foreach ((MuMsgFlagsForeachFunc)add_synonym_for_flag,
+	mu_flags_foreach ((MuFlagsForeachFunc)add_synonym_for_flag,
 			      &store->_db);
 	mu_msg_prio_foreach ((MuMsgPrioForeachFunc)add_synonym_for_prio,
 			     &store->_db);
@@ -335,7 +335,9 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 	doc.add_value ((Xapian::valueno)mfid, numstr);
 	
 	if (mfid == MU_MSG_FIELD_ID_FLAGS) {
-		for (const char *cur = mu_msg_flags_str_s ((MuMsgFlags)num);
+		for (const char *cur =
+			     mu_flags_to_str_s ((MuFlags)num,
+						(MuFlagType)MU_FLAG_TYPE_ANY); 
 		     cur && *cur; ++cur)
 			doc.add_term  (prefix(mfid) + (char)tolower (*cur));
 
@@ -478,7 +480,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	const char *str;
 	char *norm;
 	
-	if (mu_msg_get_flags(msg) & MU_MSG_FLAG_ENCRYPTED)
+	if (mu_msg_get_flags(msg) & MU_FLAG_ENCRYPTED)
 		return; /* ignore encrypted bodies */
 
 	str = mu_msg_get_body_text (msg);

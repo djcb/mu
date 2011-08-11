@@ -17,7 +17,7 @@
 **
 */
 
-#include "mu-msg-flags.h"
+#include "mu-flags.h"
 #include "mu-msg-prio.h"
 #include "mu-msg-cache.h"
 #include "mu-str.h"
@@ -31,7 +31,7 @@ struct _MuMsgCache {
 	
 	time_t		_timestamp, _date;
 	size_t		_size;
-	MuMsgFlags	_flags;
+	MuFlags	_flags;
 	MuMsgPrio	_prio;
 
 	/* <private> */
@@ -61,7 +61,7 @@ cache_clear (MuMsgCache *self)
 	
 	self->_timestamp = (time_t)-1;
 	self->_size      = (size_t)-1;
-	self->_flags     = MU_MSG_FLAG_NONE;
+	self->_flags     = MU_FLAG_NONE;
 	self->_prio	 = MU_MSG_PRIO_NONE;
 	self->_date	 = (time_t)-1;
 
@@ -205,7 +205,7 @@ mu_msg_cache_set_num (MuMsgCache *self, MuMsgFieldId mfid, gint64 val)
 		self->_prio = (MuMsgPrio)val;
 		break;
 	case MU_MSG_FIELD_ID_FLAGS:
-		self->_flags = (MuMsgFlags)val;
+		self->_flags = (MuFlags)val;
 		break;
 	case MU_MSG_FIELD_ID_SIZE:
 		self->_size = (size_t)val;
