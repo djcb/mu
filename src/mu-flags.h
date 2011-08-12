@@ -36,10 +36,9 @@ enum _MuFlags {
 	MU_FLAG_TRASHED		= 1 << 5,
 	
 	MU_FLAG_NEW		= 1 << 6,
-	MU_FLAG_UNREAD		= 1 << 7,
-	MU_FLAG_SIGNED		= 1 << 8,
-	MU_FLAG_ENCRYPTED	= 1 << 9,
-	MU_FLAG_HAS_ATTACH	= 1 << 10,
+	MU_FLAG_SIGNED		= 1 << 7,
+	MU_FLAG_ENCRYPTED	= 1 << 8,
+	MU_FLAG_HAS_ATTACH	= 1 << 9
 };
 typedef enum _MuFlags MuFlags;
 
@@ -48,8 +47,7 @@ typedef enum _MuFlags MuFlags;
 enum _MuFlagType {
 	MU_FLAG_TYPE_MAILFILE    = 1 << 0,
 	MU_FLAG_TYPE_MAILDIR     = 1 << 1,
-	MU_FLAG_TYPE_PSEUDO      = 1 << 2,
-	MU_FLAG_TYPE_CONTENT     = 1 << 3,
+	MU_FLAG_TYPE_CONTENT     = 1 << 2
 };
 typedef enum _MuFlagType MuFlagType;
 
