@@ -87,7 +87,14 @@ get_name_addr_pair (MuMsgContact *c)
 	return pair;
 }
 
+static void
+add_prefix_maybe (GString *gstr, gboolean *field, const char *prefix)
+{
+	if (!*field)
+		g_string_append (gstr, prefix);
 
+	*field = TRUE;
+}
 
 static gboolean
 each_contact (MuMsgContact *c, ContactData *cdata)
@@ -96,39 +103,30 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 	MuMsgContactType ctype;
 
 	ctype = mu_msg_contact_type (c);	
-
+	
 	if (cdata->prev_ctype != ctype && cdata->prev_ctype != (unsigned)-1)
 		g_string_append (cdata->gstr, ")\n");
 
 	switch (ctype) {
 	
 	case MU_MSG_CONTACT_TYPE_FROM:
-		if (!cdata->from)
-			g_string_append (cdata->gstr, "\t:from (");
-		cdata->from = TRUE;
+		add_prefix_maybe (cdata->gstr, &cdata->from, "\t:from (");
 		break;
 		
 	case MU_MSG_CONTACT_TYPE_TO:
-		if (!cdata->to)
-			g_string_append_printf 	(cdata->gstr,"\t:to (");
-		cdata->to = TRUE;
+		add_prefix_maybe (cdata->gstr, &cdata->to, "\t:to (");
 		break;
 
 	case MU_MSG_CONTACT_TYPE_CC:
-		if (!cdata->cc)
-			g_string_append_printf (cdata->gstr,"\t:cc (");
-		cdata->cc = TRUE;
+		add_prefix_maybe (cdata->gstr, &cdata->cc, "\t:cc (");
 		break;
 
 	case MU_MSG_CONTACT_TYPE_BCC:
-		if (!cdata->bcc)
-			g_string_append_printf (cdata->gstr, "\t:bcc (");
-		cdata->bcc = TRUE;
+		add_prefix_maybe (cdata->gstr, &cdata->bcc, "\t:bcc (");
 		break;
 		
 	default: g_return_val_if_reached (FALSE);
 	}
-
 	
 	cdata->prev_ctype = ctype;
 	
