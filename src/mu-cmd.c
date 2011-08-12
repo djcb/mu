@@ -286,8 +286,8 @@ static gboolean
 mv_check_params (MuConfig *opts, MuFlags *flags)
 {
 	if (!opts->params[1] || !opts->params[2]) {
-		g_warning ("usage: mu mv [--flags=<flags>] <sourcefile> "
-			   "<targetmaildir>");
+		g_warning ("usage: mu mv [--flags=<flags>] <mailfile> "
+			   "<maildir>");
 		return FALSE;
 	}
 
@@ -295,8 +295,9 @@ mv_check_params (MuConfig *opts, MuFlags *flags)
 	if (!opts->flagstr)
 		*flags = MU_FLAG_INVALID; /* ie., ignore flags */
 	else
-		*flags = mu_flags_from_str (opts->flagstr, MU_FLAG_TYPE_ANY);
-	
+		*flags = mu_flags_from_str (opts->flagstr,
+					    MU_FLAG_TYPE_MAILDIR |
+					    MU_FLAG_TYPE_MAILFILE);
 	return TRUE;
 }
 
@@ -316,7 +317,6 @@ cmd_mv_dev_null (MuConfig *opts)
 }
 
 
-
 MuError
 mu_cmd_mv (MuConfig *opts)
 {
@@ -332,9 +332,9 @@ mu_cmd_mv (MuConfig *opts)
 		return cmd_mv_dev_null (opts);
 
 	err = NULL;
-	fullpath = mu_msg_file_move_to_maildir (opts->params[1],
-						opts->params[2],
-						flags, &err);
+	fullpath = mu_maildir_move_message (opts->params[1],
+					    opts->params[2],
+					    flags, &err);
 	if (!fullpath) {
 		if (err) {
 			MuError code;
