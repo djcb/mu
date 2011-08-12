@@ -151,7 +151,7 @@ static MuError
 dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 {
 	if (enter) 
-		++data->_dir_entered;
+	 	++data->_dir_entered;
 	else
 		++data->_dir_left;
 
@@ -238,17 +238,27 @@ test_mu_maildir_get_flags_from_path (void)
 		MuFlags flags;
 	} paths[] = {
 		{
-		"/home/foo/Maildir/test/cur/123456:2,FSR",
-		MU_FLAG_REPLIED | MU_FLAG_SEEN | MU_FLAG_FLAGGED}, {
-		"/home/foo/Maildir/test/new/123456",
-		            MU_FLAG_NEW | MU_FLAG_UNREAD}, {
-		"/home/foo/Maildir/test/new/123456:2,FR",
-			    MU_FLAG_NEW | MU_FLAG_UNREAD}, {
-		"/home/foo/Maildir/test/cur/123456:2,DTP",
-			    MU_FLAG_DRAFT | MU_FLAG_TRASHED |
-			    MU_FLAG_PASSED | MU_FLAG_UNREAD }, {
-		"/home/foo/Maildir/test/cur/123456:2,S",
-			    MU_FLAG_SEEN}
+			"/home/foo/Maildir/test/cur/123456:2,FSR",
+			MU_FLAG_REPLIED | MU_FLAG_SEEN | MU_FLAG_FLAGGED
+		},
+		{
+			"/home/foo/Maildir/test/new/123456",
+			MU_FLAG_NEW
+		},
+		{
+			/* NOTE: when in new/, the :2,.. stuff is ignored */
+			"/home/foo/Maildir/test/new/123456:2,FR",
+			MU_FLAG_NEW
+		},
+		{
+			"/home/foo/Maildir/test/cur/123456:2,DTP",
+			MU_FLAG_DRAFT | MU_FLAG_TRASHED |
+			MU_FLAG_PASSED
+		},
+		{
+			"/home/foo/Maildir/test/cur/123456:2,S",
+			MU_FLAG_SEEN
+		}
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
@@ -259,7 +269,7 @@ test_mu_maildir_get_flags_from_path (void)
 }
 
 static void
-test_mu_maildir_get_path_from_flags (void)
+test_mu_maildir_get_new_path_01 (void)
 {
 	int i;
 
@@ -275,7 +285,7 @@ test_mu_maildir_get_path_from_flags (void)
 		}, {
 			"/home/foo/Maildir/test/cur/123456:2,FR",
 			MU_FLAG_NEW,
-			"/home/foo/Maildir/test/new/123456:2,"
+			"/home/foo/Maildir/test/new/123456"
 		}, {
 			"/home/foo/Maildir/test/new/123456:2,FR",
 			MU_FLAG_SEEN | MU_FLAG_REPLIED,
@@ -293,8 +303,51 @@ test_mu_maildir_get_path_from_flags (void)
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
 		gchar *str;
-		str = mu_maildir_get_path_from_flags(paths[i].oldpath,
-						      paths[i].flags);
+		str = mu_maildir_get_new_path(paths[i].oldpath, NULL,
+					      paths[i].flags);
+		g_assert_cmpstr(str, ==, paths[i].newpath);
+		g_free(str);
+	}
+}
+
+
+static void
+test_mu_maildir_get_new_path_02 (void)
+{
+	int i;
+
+	struct {
+		const char *oldpath;
+		MuFlags flags;
+		const char *targetdir;
+		const char *newpath;
+	} paths[] = {
+		{
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			MU_FLAG_REPLIED, "/home/foo/Maildir/blabla",
+			"/home/foo/Maildir/blabla/cur/123456:2,R"
+		}, {
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			MU_FLAG_NEW, "/home/bar/Maildir/coffee",
+			"/home/bar/Maildir/coffee/new/123456"
+		}, {
+			"/home/foo/Maildir/test/new/123456",
+			MU_FLAG_SEEN | MU_FLAG_REPLIED,
+			"/home/cuux/Maildir/tea",
+			"/home/cuux/Maildir/tea/cur/123456:2,RS"
+		}, {
+			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
+			MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED,
+			"/home/boy/Maildir/stuff",
+			"/home/boy/Maildir/stuff/cur/1313038887_0.697:2,FPS"
+		}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		gchar *str;
+		str = mu_maildir_get_new_path(paths[i].oldpath,
+					      paths[i].targetdir,
+					      paths[i].flags);
 		g_assert_cmpstr(str, ==, paths[i].newpath);
 		g_free(str);
 	}
@@ -321,8 +374,10 @@ main (int argc, char *argv[])
 			 test_mu_maildir_walk_02);
 
 	/* get/set flags */
-	g_test_add_func("/mu-maildir/mu-maildir-get-path-from-flags",
-			test_mu_maildir_get_path_from_flags);
+	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01",
+			test_mu_maildir_get_new_path_01);
+	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02",
+			test_mu_maildir_get_new_path_02);
 	g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
 			test_mu_maildir_get_flags_from_path);
 	
