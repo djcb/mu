@@ -136,22 +136,49 @@ MuFlags mu_maildir_get_flags_from_path (const char* pathname);
 
 /**
  * get the new pathname for a message, based on the old path and the
- * new flags. Note that setting/removing the MU_MSG_FLAG_NEW will
- * change the directory in which a message lives. The flags are as
- * specified in http://cr.yp.to/proto/maildir.html, plus
- * MU_MSG_FLAG_NEW for new messages, ie the ones that live in
- * new/. The flags are logically OR'ed. Note that the file does not
- * have to exist; the flags are based on the path only.
+ * new flags and (optionally) a new maildir. Note that
+ * setting/removing the MU_FLAG_NEW will change the directory in which
+ * a message lives. The flags are as specified in
+ * http://cr.yp.to/proto/maildir.html, plus MU_FLAG_NEW for new
+ * messages, ie the ones that live in new/. The flags are logically
+ * OR'ed. Note that the file does not have to exist; the flags are
+ * based on the path only.
+ *
  * 
  * @param oldpath the old (current) full path to the message
- * (including the filename) *
- * @param newflags the new flags for this message
+ * (including the filename)
+ * @param new_mdir the new maildir for this message, or NULL to keep
+ * it in the current one. The maildir is the absolute file system
+ * path, without the 'cur' or 'new'
+ * @param new_flags the new flags for this message
  * 
  * @return a new path name; use g_free when done with. NULL in case of
  * error.
  */
-char* mu_maildir_get_path_from_flags (const char *oldpath,
-				       MuFlags newflags);
+char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
+			       MuFlags new_flags);
+
+/**
+ * move a message file to another maildir; the function returns the full
+ * path to the new message.
+ *
+ * @param msgpath an absolute file system path to an existing message in an
+ * actual maildir
+ * @param targetmdir the target maildir; note that this the base-level
+ * Maildir, ie. /home/user/Maildir/archive, and must _not_ include the
+ * 'cur' or 'new' part. Note that the target maildir must be on the
+ * same filesystem. If you specify NULL for targetmdir, only the flags
+ * of the message are affected; note that this may still involve a
+ * moved to another directory (say, from new/ to cur/)
+ * @param flags to set for the target (influences the filename, path)
+ * @param err (may be NULL) may contain error information; note if the
+ * function return FALSE, err is not set for all error condition
+ * (ie. not for parameter errors)
+ * @return return the full path name of the target file (g_free) if
+ * the move succeeded, NULL otherwise
+ */
+gchar* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
+				MuFlags newflags, GError **err);
 
 G_END_DECLS
 

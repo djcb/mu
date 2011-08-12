@@ -168,7 +168,6 @@ test_mu_msg_03 (void)
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
 				    "cur/1283599333.1840_11.cthulhu!2,",
 				    NULL, NULL);
-
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "Bilbo Baggins <bilbo@anotherexample.com>");
 	g_assert_cmpstr (mu_msg_get_subject(msg),
@@ -182,11 +181,9 @@ test_mu_msg_03 (void)
 	g_assert_cmpstr (mu_msg_get_body_text(msg),
 			 ==,
 			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
-
 	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, MU_FLAG_UNREAD);
-
-	
+			  ==, MU_FLAG_NONE);
+		
 	mu_msg_unref (msg);
 }
 

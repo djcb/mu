@@ -381,33 +381,28 @@ gboolean mu_msg_is_readable (MuMsg *self);
  */
 char* mu_msg_to_sexp (MuMsg *msg, gboolean dbonly);
 
-
-
 /**
- * move a message to another maildir; the function returns the full
- * path to the new message, and changes the msg to now point to the
- * new maildir. mu_msg_file_move_to_maildir, but takes a msgpath as it
- * argument
+ * move a message to another maildir
  * 
  * @param msg a message with an existing file system path in an actual
  * maildir
- * @param msgpath an absolute file system path to an existing message in an
- * actual maildir
  * @param targetmdir the target maildir; note that this the base-level
  * Maildir, ie. /home/user/Maildir/archive, and must _not_ include the
  * 'cur' or 'new' part. mu_msg_move_to_maildir will make sure that the
- * copy is from new/ to new/ and cur/ to cur/. Also note that the target
- * maildir must be on the same filesystem. *
- * @param flags to set for the target (influences the filename)
+ * copy is from new/ to new/ and cur/ to cur/. Also note that the
+ * target maildir must be on the same filesystem. If you specify NULL
+ * for targetmdir, only the flags of the message are affected; note
+ * that this may still involve a moved to another directory (say, from
+ * new/ to cur/)
+ * @param flags to set for the target (influences the filename, path)
  * @param err (may be NULL) may contain error information; note if the
  * function return FALSE, err is not set for all error condition
  * (ie. not for parameter errors)
- * @return TRUE if it worked, FALSE otherwise (mu_msg_move_to_maildir) or the full path name of the target file (g_free) for mu_msg_file_move_to_maildir
+ * @return TRUE if it worked, FALSE otherwise 
  */
 gboolean mu_msg_move_to_maildir (MuMsg *msg, const char* targetmdir,
 				 MuFlags flags, GError **err);
-char* mu_msg_file_move_to_maildir (const char *msgpath, const char* targetmdir,
-				   MuFlags flags, GError **err);
+
 
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO    = 0,

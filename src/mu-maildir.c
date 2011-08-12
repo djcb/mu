@@ -618,20 +618,11 @@ mu_maildir_clear_links (const gchar* path, GError **err)
 	return rv;
 }
 
-
-/*
- * is this a 'new' msg or a 'cur' msg?; if new, we return
- * (in info) a ptr to the info part 
- */
-enum _MsgType { MSG_TYPE_CUR, MSG_TYPE_NEW, MSG_TYPE_OTHER };
-typedef enum _MsgType MsgType;
-
-static MsgType
-check_msg_type (const char *path, char **info)
+MuFlags
+mu_maildir_get_flags_from_path (const char *path)
 {
-	char *dir, *file;
-	MsgType mtype;
-		
+	g_return_val_if_fail (path, MU_FLAG_INVALID);
+	
 	/* try to find the info part */
 	/* note that we can use either the ':' or '!' as separator;
 	 * the former is the official, but as it does not work on e.g. VFAT
@@ -640,96 +631,43 @@ check_msg_type (const char *path, char **info)
 	 * documentation at http://docs.python.org/lib/mailbox-maildir.html
 	 * mentions the '!' as well as a 'popular choice'
 	 */
-
-	*info = NULL;
-	dir = g_path_get_dirname(path);
-	file = g_path_get_basename(path);
+	
+	/* we check the dir -- */
+	if (strstr (path, G_DIR_SEPARATOR_S "new" G_DIR_SEPARATOR_S)) {
 		
-	if (!(*info = strrchr(file, ':')))
-		*info = strrchr(file, '!');	/* Tinymail */
-	if (*info)
-		++(*info);	/* skip the ':' or '!' */
+		char *dir, *dir2;
+		MuFlags flags;
+		
+		dir  = g_path_get_dirname (path);
+		dir2 = g_path_get_basename (dir);
+		
+		if (g_strcmp0 (dir2, "new") == 0)
+			flags = MU_FLAG_NEW;
+		
+		g_free (dir);
+		g_free (dir2);
 
-	if (g_str_has_suffix(dir, G_DIR_SEPARATOR_S "cur")) {
-		if (!*info)
-			g_debug("'cur' file, but no info part: %s", path);
-		mtype = MSG_TYPE_CUR;
-	} else if (g_str_has_suffix(dir, G_DIR_SEPARATOR_S "new")) {
-		if (*info)
-			g_debug("'new' file, ignoring info part: %s", path);
-		mtype = MSG_TYPE_NEW;
-	} else
-		mtype = MSG_TYPE_OTHER;	/* file has been added explicitly as
-					   a single message */
-	if (*info)
-		*info = g_strdup(*info);
-
-	g_free(dir);
-	g_free(file);
-
-	return mtype;
-}
-
-
-MuFlags
-mu_maildir_get_flags_from_path (const char *path)
-{
-	MuFlags flags;
-	MsgType mtype;
-	char *info = NULL;
-
-	g_return_val_if_fail (path, MU_FLAG_NONE);
-	g_return_val_if_fail (!g_str_has_suffix(path, G_DIR_SEPARATOR_S),
-			      MU_FLAG_NONE);
-
-	mtype = check_msg_type (path, &info);
-	if (mtype == MSG_TYPE_NEW) {	/* we ignore any new-msg flags */
-		/* note NEW implies UNREAD */
-		flags = MU_FLAG_NEW | MU_FLAG_UNREAD;
-		goto leave;
+		/* NOTE: new/ message should not have :2,-stuff, as
+		 * per http://cr.yp.to/proto/maildir.html. If they, do
+		 * we ignore it
+		 */
+		if (flags == MU_FLAG_NEW)
+			return flags;
 	}
 
-	flags = MU_FLAG_NONE;
-	if ((mtype != MSG_TYPE_CUR && mtype != MSG_TYPE_OTHER) ||
-	    !(info && info[0] == '2' && info[1] == ','))
-		goto leave;
+	/*  get the file flags */
+	{
+		char *info;
 
-	flags |= mu_flags_from_str (info + 2, MU_FLAG_TYPE_MAILFILE);
-
-	/* the UNREAD pseudo flag => NEW OR NOT SEEN */
-	if (!(flags & MU_FLAG_SEEN))
-		flags |= MU_FLAG_UNREAD;		
-leave:
-	g_free(info);
-	return flags;
-}
-
-/* note: returns static string, non-reentrant */
-static const char*
-get_flags_str_s (MuFlags flags)
-{
-	int i;
-	static char flagstr[7]; 
-
-	i = 0;
-		
-	/* now, determine the flags to use */
-	if (flags & MU_FLAG_DRAFT)
-		flagstr[i++] = 'D';
-	if (flags & MU_FLAG_FLAGGED)
-		flagstr[i++] = 'F';
-	if (flags & MU_FLAG_PASSED)
-		flagstr[i++] = 'P';
-	if (flags & MU_FLAG_REPLIED)
-		flagstr[i++] = 'R';
-	if (flags & MU_FLAG_SEEN)
-		flagstr[i++] = 'S';
-	if (flags & MU_FLAG_TRASHED)
-		flagstr[i++] = 'T';
-		
-	flagstr[i] = '\0';
-
-	return flagstr;
+		info = strrchr (path, '2');
+		if (!info || info == path ||
+		    (info[-1] != ':' && info[-1] != '!') ||
+		    (info[1] != ','))
+			return MU_FLAG_NONE;
+		else 
+			return mu_flags_from_str (&info[2],
+						  MU_FLAG_TYPE_MAILFILE);
+	}
 }
 
 
@@ -746,114 +684,163 @@ get_flags_str_s (MuFlags flags)
  * so only difference is whether MuFlags matches MU_FLAG_NEW is set or not
  * 
  */
-static char*
-get_new_dir_name (const char* oldpath, MuFlags flags)
-{
-	char *newpath, *dirpart;
-		
-	/* g_path_get_dirname is not explicit about whether it ends in
-	 * a dir-separator (\ or /), so we need to check both */
-	const char* cur4 = G_DIR_SEPARATOR_S "cur";
-	const char* cur5 = G_DIR_SEPARATOR_S "cur" G_DIR_SEPARATOR_S;
-	const char* new4 = G_DIR_SEPARATOR_S "new";
-	const char* new5 = G_DIR_SEPARATOR_S "new" G_DIR_SEPARATOR_S;
-		
-	g_return_val_if_fail (oldpath, NULL);
-	/* if MU_FLAG_NEW is set, it must be the only flag */
-	/* g_return_val_if_fail (flags & MU_FLAG_NEW ? */
-	/* 		      flags == MU_FLAG_NEW : TRUE, NULL); */
-		
-	newpath = g_path_get_dirname (oldpath);
-	if (g_str_has_suffix (newpath, cur4) || g_str_has_suffix (newpath, new4))
-		dirpart = &newpath[strlen(newpath) - strlen(cur4)];
-	else if (g_str_has_suffix (newpath, cur5) || g_str_has_suffix (newpath, new5))
-		dirpart = &newpath[strlen(newpath) - strlen(cur5)];
+static gchar*
+get_new_path (const char *mdir, const char *mfile, MuFlags flags)
+{	
+	if (flags & MU_FLAG_NEW)
+		return g_strdup_printf ("%s%cnew%c%s",
+					mdir, G_DIR_SEPARATOR, G_DIR_SEPARATOR,
+					mfile);
 	else {
-		g_warning ("invalid maildir path: %s", oldpath);
-		g_free (newpath);
-		return NULL;
-	}
-
-	/* now, copy the desired dir part behind this */
-	if (flags & MU_FLAG_NEW) 
-		memcpy (dirpart, new4, strlen(new4) + 1);
-	else
-		memcpy (dirpart, cur4, strlen(cur4) + 1);
+		const char *flagstr;
+		flagstr = mu_flags_to_str_s (flags, MU_FLAG_TYPE_MAILFILE);
 		
-	return newpath;
+		return g_strdup_printf ("%s%ccur%c%s:2,%s",
+					mdir, G_DIR_SEPARATOR, G_DIR_SEPARATOR,
+					mfile, flagstr);
+	}
 }
 
-/*
- * get a new filename for the message, based on the new flags; if the
- * message has MU_FLAG_NEW, it will loose its flags
- *
- */ 
-static char*
-get_new_file_name (const char *oldpath, MuFlags flags)
-{
-	gchar *newname, *sep;
-	gchar sepa;
-	
-	/* if MU_FLAG_NEW is set, it must be the only flag */
-	/* g_return_val_if_fail (flags & MU_FLAG_NEW ? */
-	/* 		      flags == MU_FLAG_NEW : TRUE, NULL); */
-	
-	/* the normal separator is ':', but on e.g. vfat, '!' is seen
-	 * as well */
-	newname	= g_path_get_basename (oldpath);
-	if (!newname) {
-		g_warning ("invalid path: '%s'", oldpath);
-		return NULL;
-	}
-
-	/* 'INVALID' means: "don't change flags" */
-	if (flags == (unsigned)MU_FLAG_INVALID)
-		return newname;
-		
-	/* the filename may or may not end in "[:!]2,..." */
-	sepa = ':'; /* FIXME: this will break on vfat, but we don't
-		     * want to generate '!' files on non-VFAT */
-	if ((sep = g_strrstr (newname, ":")) ||
-	    (sep = g_strrstr (newname, "!"))) {
-		sepa = *sep;
-		*sep = '\0';
-	}
-	
-	{
-		gchar *tmp;
-		tmp = g_strdup_printf ("%s%c2,%s", newname, sepa,
-				       get_flags_str_s (flags));
-		g_free (newname);
-		newname = tmp;
-	}
-	
-	return newname;
-}
 
 char*
-mu_maildir_get_path_from_flags (const char *oldpath, MuFlags newflags)
+mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
+			 MuFlags newflags)
 {
-	char *newname, *newdir, *newpath;
-	
+	char *mfile, *mdir, *newpath, *cur;
+
 	g_return_val_if_fail (oldpath, NULL);
-	/* if MU_FLAG_NEW is set, it must be the only flag */
-	/* g_return_val_if_fail (newflags & MU_FLAG_NEW ? */
-	/* 		      newflags == MU_FLAG_NEW : TRUE, NULL); */
+
+	mfile = newpath = NULL;
 	
-	newname = get_new_file_name (oldpath, newflags);
-	if (!newname)
-		return NULL;
-
-	newdir = get_new_dir_name (oldpath, newflags);
-	if (!newdir) {
-		g_free (newname);
-		return NULL;
+	/* determine the maildir */
+	mdir = g_path_get_dirname (oldpath);
+	if (!g_str_has_suffix (mdir, "cur") && !g_str_has_suffix (mdir, "new")) {
+		g_warning ("%s: not a valid maildir path: %s",
+			   __FUNCTION__, oldpath);
+		goto leave;
 	}
-				
-	newpath = g_strdup_printf ("%s%c%s", newdir, G_DIR_SEPARATOR, newname);
 
-	g_free (newname);
-	g_free (newdir);
-		
+	/* remove the 'cur' or 'new' */
+	mdir[strlen(mdir) - 4] = '\0';
+	
+	/* determine the name of the mailfile, stripped of its flags */
+	mfile = g_path_get_basename (oldpath);
+	for (cur = &mfile[strlen(mfile)-1]; cur > mfile; --cur) {
+		if ((*cur == ':' || *cur == '!') &&
+		    (cur[1] == '2' && cur[2] == ',')) {
+			cur[0] = '\0'; /* strip the flags */
+			break;
+		}
+	}	
+
+	newpath = get_new_path (new_mdir ? new_mdir : mdir,
+				mfile, newflags);
+
+leave:  g_free (mfile);
+	g_free (mdir);
+
 	return newpath;
 }
+
+static gboolean
+msg_move_check_pre (const gchar *src, const gchar *dst, GError **err)
+{
+	if (!g_path_is_absolute(src)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "source is not an absolute path: '%s'", src);
+		return FALSE;
+	}
+	
+	if (!g_path_is_absolute(dst)) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "target is not an absolute path: '%s'", dst);
+		return FALSE;
+	}
+
+	if (access (src, R_OK) != 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "cannot read %s",
+			     src);
+		return FALSE;
+	}
+	
+	if (access (dst, F_OK) == 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "%s already exists",
+			     dst);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+msg_move_check_post (const char *src, const char *dst, GError **err)
+{
+	/* double check -- is the target really there? */
+	if (access (dst, F_OK) != 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "can't find target (%s)",
+			     dst);
+		return FALSE;
+	}
+	
+	if (access (src, F_OK) == 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "source is still there (%s)",
+			     src);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+static gboolean
+msg_move (const char* src, const char *dst, GError **err)
+{
+	if (!msg_move_check_pre (src, dst, err))
+		return FALSE;
+		
+	if (rename (src, dst) != 0) {
+		g_set_error (err, 0, MU_ERROR_FILE, "error moving %s to %s",
+			     src, dst);
+		return FALSE;
+	}
+
+	if (!msg_move_check_post (src, dst, err))
+		return FALSE;
+		
+	return TRUE;
+}
+
+gchar*
+mu_maildir_move_message (const char* oldpath, const char* targetmdir,
+			 MuFlags newflags, GError **err)
+{
+	char *newfullpath;
+	gboolean rv;
+	
+	g_return_val_if_fail (oldpath, FALSE);
+	
+	newfullpath = mu_maildir_get_new_path (oldpath, targetmdir,
+					       newflags);
+	if (!newfullpath) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "failed to determine target full path");
+		return FALSE;
+	}
+
+	if (g_strcmp0 (oldpath, newfullpath) == 0) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "target equals source");
+		return FALSE;
+	}
+
+	rv = msg_move (oldpath, newfullpath, err);
+	if (!rv) {
+		g_free (newfullpath);
+		return NULL;
+	}
+	
+	return newfullpath;
+}
+
+
+
