@@ -435,8 +435,6 @@ pseudo-markings."
 		  (mua/hdrs-set-path newpath) 
 		  (goto-char bol)
 		  (mua/hdrs-remove-marked)
-		  (mua/warn "[%d %d]" (line-beginning-position 1)
-		    (line-beginning-position 2))
 		  (put-text-property (line-beginning-position 1)
 		    (line-beginning-position 2)
 		    'invisible t)))) ;; when it succeedes, hide msg..)
