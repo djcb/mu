@@ -178,6 +178,44 @@ lists the various command line options, while \fB\-\-help\-index\fR,
 \fB\-\-help\-find\fR and \fB\-\-help\-all\fR list only the options for
 respectively the specified command or for all commands.
 
+.SH ERROR CODES
+
+The various mu subcommands typically exit with 0 (zero) upon success, and
+non-zero when some error occured. The table lists the various error codes.
+
+.nf
+exit code |  error 
+----------+-------------------------------------------
+     1	  |  MU_ERROR			      
+     2	  |  MU_ERROR_IN_PARAMETERS		      
+     3	  |  MU_ERROR_INTERNAL		      
+     4	  |  MU_ERROR_NO_MATCHES		      
+	  |   
+     11	  |  MU_ERROR_XAPIAN			      
+	  |   
+     13	  |  MU_ERROR_XAPIAN_QUERY		      
+     14	  |  MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE	   
+     15	  |  MU_ERROR_XAPIAN_NOT_UP_TO_DATE	      
+     16	  |  MU_ERROR_XAPIAN_MISSING_DATA	      
+     17	  |  MU_ERROR_XAPIAN_CORRUPTION	      
+     18	  |  MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK  
+     30	  |  MU_ERROR_GMIME			      
+	  |   
+     50	  |  MU_ERROR_CONTACTS		      
+     51	  |  MU_ERROR_CONTACTS_CANNOT_RETRIEVE	   
+	  |   
+     70	  |  MU_ERROR_FILE			      
+     71	  |  MU_ERROR_FILE_INVALID_NAME	      
+     72	  |  MU_ERROR_FILE_CANNOT_LINK	      
+     73	  |  MU_ERROR_FILE_CANNOT_OPEN	      
+     74	  |  MU_ERROR_FILE_CANNOT_READ	      
+     75	  |  MU_ERROR_FILE_CANNOT_CREATE	      
+     76	  |  MU_ERROR_FILE_CANNOT_MKDIR	      
+     77	  |  MU_ERROR_FILE_STAT_FAILED	      
+     78	  |  MU_ERROR_FILE_READDIR_FAILED	      
+     79	  |  MU_ERROR_FILE_INVALID_SOURCE	      
+.fi
+
 .SH BUGS
 
 Please report bugs if you find them:

@@ -6,7 +6,7 @@ mu mv\-  move a message file to a Maildir
 
 .SH SYNOPSIS
 
-.B mu mv [--flags=<flags>] [--printtarget] <source-path> <target-maildir>
+.B mu mv [--flags=<flags>] [--printtarget] <source-path> [<target-maildir>]
 
 .SH DESCRIPTION
 
@@ -25,9 +25,9 @@ documentation for details about 'cur' and 'new'.
 As a special case, when \fI/dev/null\fR is specified as the target directory,
 the mail file will be unlinked (deleted).
 
-Note, unlike the UNIX \fImv\fR command, \fImu mv\fR takes precisely two
-parameters. It's recommended not to use wildcards on the shell, the result may
-be unexpected.
+Note, unlike the UNIX \fImv\fR command, \fImu mv\fR takes precisely one source
+message parameter. It's recommended not to use wildcards on the shell, as the
+result may be unexpected.
 
 Also note, \fBmu mv\fR only updates the file system; it does \fBnot\fR update
 the database. To update the database, there is \fBmu index(1)\fR or \fBmu add\fR
@@ -43,7 +43,8 @@ directory ('new' vs 'cur').
 
 The flags is a sequence of characters from the set D (draft), F (flagged), N
 (new), P (passed), R (replied), S (seen) and T (trashed). Note, the
-flags-parameter is case-sensitive.
+flags-parameter is case-sensitive. Any other characters will be silently
+ignored.
 
 .TP
 \fB\-\-printtarget\fR
@@ -75,9 +76,15 @@ To mark a message as no longer new and 'Seen', and update the database
 afterwards, you could do:
 
 .nf
-   mu --flags=S mv /home/roger/Maildir/inbox/new/123123123:2, /home/roger/Maildir/inbox/
+   mu --flags=S mv /home/roger/Maildir/inbox/new/123123123 /home/roger/Maildir/inbox/
 .fi
 
+In this case, as we are not moving the message to a diffent maildir, we can
+leave off the maildir-argument; so the following is equivalent:
+
+.nf
+   mu --flags=S mv /home/roger/Maildir/inbox/new/123123123 
+.fi
 
 
 .SH LIMITATIONS
@@ -88,19 +95,8 @@ except when the target-directory is \fI/dev/null\fR.
 
 .SH RETURN VALUE
 
-\fBmu mv\fR returns 0 upon success; in general, the following error codes are
-returned:
-
-.nf
-| code | meaning                           |
-|------+-----------------------------------|
-|    0 | ok                                |
-|    1 | general error                     |
-|    6 | file error                        |
-.fi
-
-Note that if you get a database error rather than a general error, this means
-that moving the file succeeded, but that the database update afterwards failed.
+\fBmu mv\fR returns 0 upon success, and some other value when an error
+occurs. See \fBmu(1)\fR for a list.
 
 .SH BUGS
 

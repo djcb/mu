@@ -141,7 +141,6 @@ listed in the following table:
 	p,passed        Passed ('Handled')
 	r,replied       Replied
 	s,seen          Seen
-	u,unread        Unread (shorthand for 'new or not seen')
 	t,thrashed      Marked for deletion
 	a,attach        Has attachment
 	z,signed        Signed message
@@ -470,7 +469,7 @@ Find all messages in the 'Archive' folder from Fred:
 Find all unread messages with attachments:
 
 .nf
-  $ mu find flag:unread flag:attach
+  $ mu find flag:attach NOT flag:seen
 .fi
 
 
@@ -521,7 +520,7 @@ VFolders {
 
   [size:1m..100m]!mu    "Big"
 
-  [flag:unread]!mu      "Unread"
+  [NOT flag:seen]!mu      "Unread"
 }
 .fi
 

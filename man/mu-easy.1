@@ -138,20 +138,20 @@ Get all messages from Jim without an attachment:
   \fB$ mu find from:jim AND NOT flag:attach\fR 
 .fi
 
-Get all unread messages where the subject mentions Ångström:
+Get all unseen messages where the subject mentions Ångström:
 .nf
-  \fB$ mu find flag:unread subject:Ångström\fR 
+  \fB$ mu find subject:Ångström NOT flag:seen\fR 
 .fi
 which is equivalent to:
 .nf
-  \fB$ mu find flag:unread subject:angstrom\fR 
+  \fB$ mu find subject:angstrom NOT flag:seen\fR 
 .fi
 because does mu is case-insensitive and accent-insensitive.
 
-Get all unread messages between March 2002 and August 2003 about some bird (or
+Get all unseen messages between March 2002 and August 2003 about some bird (or
 a Swedish rock band):
 .nf
-  \fB$ mu find date:20020301..20030831 flag:new nightingale\fR
+  \fB$ mu find date:20020301..20030831 nightingale NOT flag:seen\fR
 .fi
 
 Get all messages received today:
