@@ -325,6 +325,34 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 	}
 }
 
+/* TODO: we could pre-calculate the add_term values for FLAGS */
+
+
+/* pre-calculate; optimization */
+G_GNUC_CONST static const std::string&
+prio_val (MuMsgPrio prio)
+{
+	static const std::string pfx (prefix(MU_MSG_FIELD_ID_PRIO));	
+
+	static const std::string lowstr
+		(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_LOW)));
+	static const std::string normalstr
+		(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_NORMAL)));
+	static const std::string highstr
+		(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_HIGH)));
+
+
+	switch (prio) {
+	case MU_MSG_PRIO_LOW:    return lowstr;
+	case MU_MSG_PRIO_NORMAL: return normalstr;
+	case MU_MSG_PRIO_HIGH:   return highstr;
+	default:
+		g_return_val_if_reached (normalstr);
+		return normalstr;
+	}
+}
+
+
 
 static void
 add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
@@ -341,10 +369,8 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 		     cur && *cur; ++cur)
 			doc.add_term  (prefix(mfid) + (char)tolower (*cur));
 
-	} else if (mfid == MU_MSG_FIELD_ID_PRIO) {
-		doc.add_term (prefix(mfid) + std::string(1,
-			      mu_msg_prio_char((MuMsgPrio)num)));
-	} 
+	} else if (mfid == MU_MSG_FIELD_ID_PRIO)
+		doc.add_term (prio_val((MuMsgPrio)num));
 }
 
 

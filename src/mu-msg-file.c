@@ -332,10 +332,15 @@ get_flags (MuMsgFile *self)
 {
 	MuFlags flags;
 	
-	g_return_val_if_fail (self, MU_FLAG_NONE);
+	g_return_val_if_fail (self, MU_FLAG_INVALID);
 
 	flags = mu_maildir_get_flags_from_path (self->_path);
 	flags |= get_content_flags (self);
+
+	/* pseudo-flag --> unread means either NEW or NOT SEEN, just
+	 * for searching convenience */
+	if ((flags & MU_FLAG_NEW) || (!(flags & MU_FLAG_SEEN)))
+		flags |= MU_FLAG_UNREAD;
 	
 	return flags;
 }

@@ -38,8 +38,8 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
 *** signed messages about apples *OR* oranges
 #+html:<pre>  $ mu find flag:signed apples OR oranges</pre>
 
-*** unseen messages about things starting with 'soc' (soccer, society, socrates, ...)
-#+html:<pre>  $ mu find 'subject:soc*' NOT flag:seen</pre>
+*** unread messages about things starting with 'soc' (soccer, society, socrates, ...)
+#+html:<pre>  $ mu find 'subject:soc*' flag:unread</pre>
    
     Note, the '*' only works at the /end/ of a search term.
     (searching using the '*' wildcard is available since mu 0.9.6)

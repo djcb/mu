@@ -469,7 +469,7 @@ Find all messages in the 'Archive' folder from Fred:
 Find all unread messages with attachments:
 
 .nf
-  $ mu find flag:attach NOT flag:seen
+  $ mu find flag:attach flag:unread
 .fi
 
 
@@ -520,7 +520,7 @@ VFolders {
 
   [size:1m..100m]!mu    "Big"
 
-  [NOT flag:seen]!mu      "Unread"
+  [flag:unread]!mu      "Unread"
 }
 .fi
 

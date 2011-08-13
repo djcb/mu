@@ -524,10 +524,13 @@ define_symbols (void)
 	scm_c_define ("mu:trashed",	scm_from_int(MU_FLAG_TRASHED));
 	scm_c_define ("mu:draft",	scm_from_int(MU_FLAG_DRAFT));
 	scm_c_define ("mu:flagged",	scm_from_int(MU_FLAG_FLAGGED));
-	scm_c_define ("mu:unread",	scm_from_int(MU_FLAG_UNREAD));
+
 	scm_c_define ("mu:signed",	scm_from_int(MU_FLAG_SIGNED));
 	scm_c_define ("mu:encrypted",	scm_from_int(MU_FLAG_ENCRYPTED));
 	scm_c_define ("mu:has-attach",	scm_from_int(MU_FLAG_HAS_ATTACH));
+
+	scm_c_define ("mu:unread",	scm_from_int(MU_FLAG_UNREAD));
+
 }
 
 

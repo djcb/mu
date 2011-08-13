@@ -27,18 +27,31 @@ G_BEGIN_DECLS
 
 enum _MuFlags {
 	MU_FLAG_NONE            = 0,
-	
+
+	/* next 6 are seen in the file-info part of maildir message
+	 * file names, ie., in a name like "1234345346:2,<fileinfo>",
+	 * <fileinfo> consists of zero or more of the following
+	 * characters (in ascii order) */ 
 	MU_FLAG_DRAFT		= 1 << 0,
 	MU_FLAG_FLAGGED		= 1 << 1,   
 	MU_FLAG_PASSED		= 1 << 2,
 	MU_FLAG_REPLIED		= 1 << 3,
 	MU_FLAG_SEEN		= 1 << 4,
 	MU_FLAG_TRASHED		= 1 << 5,
-	
-	MU_FLAG_NEW		= 1 << 6,
+
+	/* decides on cur/ or new/ in the maildir */
+	MU_FLAG_NEW		= 1 << 6,  
+
+	/* content flags -- not visible in the filename, but used for
+	 * searching */
 	MU_FLAG_SIGNED		= 1 << 7,
 	MU_FLAG_ENCRYPTED	= 1 << 8,
-	MU_FLAG_HAS_ATTACH	= 1 << 9
+	MU_FLAG_HAS_ATTACH	= 1 << 9,
+
+	/* pseudo-flag, only for queries, so we can search for
+	 * flag:unread, which is equivalent to 'flag:new OR NOT
+	 * flag:seen' */
+	MU_FLAG_UNREAD          = 1 << 10
 };
 typedef enum _MuFlags MuFlags;
 
@@ -47,7 +60,8 @@ typedef enum _MuFlags MuFlags;
 enum _MuFlagType {
 	MU_FLAG_TYPE_MAILFILE    = 1 << 0,
 	MU_FLAG_TYPE_MAILDIR     = 1 << 1,
-	MU_FLAG_TYPE_CONTENT     = 1 << 2
+	MU_FLAG_TYPE_CONTENT     = 1 << 2,
+	MU_FLAG_TYPE_PSEUDO      = 1 << 3
 };
 typedef enum _MuFlagType MuFlagType;
 
@@ -62,7 +76,7 @@ typedef enum _MuFlagType MuFlagType;
  * 
  * @return the flag type or MU_FLAG_TYPE_INVALID in case of error
  */
-MuFlagType mu_flag_type (MuFlags flag);
+MuFlagType mu_flag_type (MuFlags flag) G_GNUC_CONST;
 
 
 /**
@@ -72,7 +86,7 @@ MuFlagType mu_flag_type (MuFlags flag);
  * 
  * @return the character, or 0 in case of error
  */
-char mu_flag_char (MuFlags flag);
+char mu_flag_char (MuFlags flag) G_GNUC_CONST;
 
 
 /**
@@ -82,7 +96,7 @@ char mu_flag_char (MuFlags flag);
  * 
  * @return the name (don't free) as string or NULL in case of error
  */
-const char* mu_flag_name (MuFlags flag);
+const char* mu_flag_name (MuFlags flag) G_GNUC_CONST;
 
 
 /**

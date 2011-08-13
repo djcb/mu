@@ -42,7 +42,9 @@ static const FlagInfo FLAG_INFO[] = {
 
 	{ MU_FLAG_SIGNED,     's', "signed",    MU_FLAG_TYPE_CONTENT  },
 	{ MU_FLAG_ENCRYPTED,  'x', "encrypted", MU_FLAG_TYPE_CONTENT  },
-	{ MU_FLAG_HAS_ATTACH, 'a', "attach",    MU_FLAG_TYPE_CONTENT  }
+	{ MU_FLAG_HAS_ATTACH, 'a', "attach",    MU_FLAG_TYPE_CONTENT  },
+
+	{ MU_FLAG_UNREAD,     'u', "unread",    MU_FLAG_TYPE_PSEUDO  }
 };
 
 /* does not use FLAG_INFO, optimized */
@@ -53,9 +55,12 @@ mu_flag_type (MuFlags flag)
 		return MU_FLAG_TYPE_MAILFILE;
 	if (flag == MU_FLAG_NEW)
 		return MU_FLAG_TYPE_MAILDIR;
+	if (flag == MU_FLAG_UNREAD)
+		return MU_FLAG_TYPE_PSEUDO;
 	if (flag >= MU_FLAG_SIGNED && flag <= MU_FLAG_HAS_ATTACH)
 		return MU_FLAG_TYPE_CONTENT;
 
+	g_return_val_if_reached (MU_FLAG_TYPE_INVALID);
 	return MU_FLAG_TYPE_INVALID;
 }
 
@@ -78,9 +83,10 @@ mu_flag_char (MuFlags flag)
 	case MU_FLAG_SIGNED:		return	's';
 	case MU_FLAG_ENCRYPTED:		return	'x';
 	case MU_FLAG_HAS_ATTACH:	return	'a';
-		
+
+	case MU_FLAG_UNREAD:		return	'u';
+
 	default:
-		g_message ("unsupported flag %u", flag);
 		g_return_val_if_reached (0);
 		return 0;
 	}
@@ -105,9 +111,10 @@ mu_flag_from_char (char kar)
 	case 's': return MU_FLAG_SIGNED;	
 	case 'x': return MU_FLAG_ENCRYPTED;	
 	case 'a': return MU_FLAG_HAS_ATTACH;	
-	
+
+	case 'u': return MU_FLAG_UNREAD;	
+		
 	default:
-		g_message ("unsupported char %c", kar);
 		g_return_val_if_reached (MU_FLAG_INVALID);
 		return MU_FLAG_INVALID;
 	}
@@ -132,6 +139,9 @@ mu_flag_name (MuFlags flag)
 	case  MU_FLAG_SIGNED:		return	"signed";   
 	case  MU_FLAG_ENCRYPTED:	return  "encrypted";
 	case  MU_FLAG_HAS_ATTACH:	return	"attach";
+
+	case MU_FLAG_UNREAD:		return  "unread";	
+		
 	default:
 		g_return_val_if_reached (NULL);
 		return NULL;
