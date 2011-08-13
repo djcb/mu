@@ -327,6 +327,52 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 
 /* TODO: we could pre-calculate the add_term values for FLAGS */
 
+/* pre-calculate; optimization */
+G_GNUC_CONST static const std::string&
+flag_val (char flagchar)
+{
+	static const std::string pfx (prefix(MU_MSG_FIELD_ID_PRIO));	
+	
+	static const std::string draftstr (pfx + mu_flag_char(MU_FLAG_DRAFT));
+	static const std::string flaggedstr (pfx + mu_flag_char(MU_FLAG_FLAGGED));
+	static const std::string passedstr (pfx + mu_flag_char(MU_FLAG_PASSED));
+	static const std::string repliedstr (pfx + mu_flag_char(MU_FLAG_REPLIED));
+	static const std::string seenstr (pfx + mu_flag_char(MU_FLAG_SEEN));
+	static const std::string trashedstr (pfx + mu_flag_char(MU_FLAG_TRASHED));
+
+	static const std::string newstr (pfx + mu_flag_char(MU_FLAG_NEW));
+	
+	static const std::string signedstr (pfx + mu_flag_char(MU_FLAG_SIGNED));
+	static const std::string encryptedstr (pfx + mu_flag_char(MU_FLAG_ENCRYPTED));
+	static const std::string has_attachstr(pfx + mu_flag_char(MU_FLAG_HAS_ATTACH));
+
+	static const std::string unreadstr (pfx + mu_flag_char(MU_FLAG_UNREAD));
+
+	switch (flagchar) {
+		
+	case 'D': return draftstr;		
+	case 'F': return flaggedstr;	
+	case 'P': return passedstr;
+	case 'R': return repliedstr;	
+	case 'S': return seenstr;		
+	case 'T': return trashedstr;	
+
+	case 'N': return newstr;		
+		
+	case 's': return signedstr;	
+	case 'x': return encryptedstr;	
+	case 'a': return has_attachstr;	
+
+	case 'u': return unreadstr;	
+		
+	default:
+		g_return_val_if_reached (flaggedstr);
+		return flaggedstr;
+	}
+}
+
+	
+
 
 /* pre-calculate; optimization */
 G_GNUC_CONST static const std::string&
@@ -363,12 +409,14 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 	doc.add_value ((Xapian::valueno)mfid, numstr);
 	
 	if (mfid == MU_MSG_FIELD_ID_FLAGS) {
-		for (const char *cur =
-			     mu_flags_to_str_s ((MuFlags)num,
-						(MuFlagType)MU_FLAG_TYPE_ANY); 
-		     cur && *cur; ++cur)
-			doc.add_term  (prefix(mfid) + (char)tolower (*cur));
-
+		const char *cur = mu_flags_to_str_s
+			((MuFlags)num,(MuFlagType)MU_FLAG_TYPE_ANY);
+		g_return_if_fail (cur);
+		while (*cur) {
+			doc.add_term (flag_val(*cur));
+			++cur;
+		}
+		
 	} else if (mfid == MU_MSG_FIELD_ID_PRIO)
 		doc.add_term (prio_val((MuMsgPrio)num));
 }
