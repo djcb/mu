@@ -441,7 +441,8 @@ enum _MuError {
 	MU_ERROR_FILE_STAT_FAILED             = 77,
 	MU_ERROR_FILE_READDIR_FAILED          = 78,
 	MU_ERROR_FILE_INVALID_SOURCE          = 79,
-
+	MU_ERROR_FILE_TARGET_EQUALS_SOURCE    = 80,
+	
 	/* not really an error, used in callbacks */
 	MU_STOP                               = 99,
 };

@@ -828,7 +828,7 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 	}
 
 	if (g_strcmp0 (oldpath, newfullpath) == 0) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, 0, MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
 			     "target equals source");
 		return FALSE;
 	}
