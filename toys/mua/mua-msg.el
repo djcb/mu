@@ -94,38 +94,9 @@ or if not available, :body-html converted to text)."
       (mua/msg-body-txt-or-html msg))
     (:maildir ;; messages gotten from mu-view don't have their maildir set...
       (or (plist-get msg :maildir)
-	(mua/maildir-from-path (mua/msg-field msg :path))))
+	(mua/msg-file-maildir-from-path (mua/msg-field msg :path))))
     (t (plist-get msg field))))
-
-
-(defun mua/msg-move (src targetdir &optional flags)
-  "Move message at SRC to TARGETDIR using 'mu mv'; SRC must be
-the full, absolute path to a message file, while TARGETDIR must
-be a maildir - that is, the part _without_ cur/ or new/. 'mu mv'
-will calculate the target directory and the exact file name.
-
-Optionally, you can specify the FLAGS for the new file; this must
-be a list consisting of one or more of DFNPRST, mean
-resp. Deleted, Flagged, New, Passed Replied, Seen and g, as
-defined in [1]. See `mua/maildir-string-to-flags' and
-`mua/maildir-flags-to-string'.
-
-If TARGETDIR is '/dev/null', remove SRC. After the file system
-move, the database will be updated as well, using the 'mu add'
-and 'mu remove' commands.
-
-Function returns the target filename if the move succeeds, or
-/dev/null if TARGETDIR was /dev/null; in other cases, it returns
-`nil'.
-
-\[1\]  http://cr.yp.to/proto/maildir.html."
-  (let ((fulltarget (mua/mu-mv src targetdir flags)))
-    (when fulltarget
-      (mua/mu-remove-async src)	
-      (unless (string= targetdir "/dev/null")
-	(mua/mu-add-async fulltarget)))
-      fulltarget))
-
+    
 
 ;; functions for composing new messages (forward, reply and new)
 
@@ -378,10 +349,13 @@ message.
     (random t)
     (replace-regexp-in-string "[:/]" "_" (system-name))))
 
+(defvar mua/msg-reply-uid nil   "UID of the message this is a reply to.")
+(defvar mua/msg-forward-uid nil "UID of the message being forwarded.")
 
 (defun mua/msg-compose (str)
   "Create a new draft message in the drafts folder with STR as
-its contents, and open this message file for editing
+its contents, and open this message file for editing. Optionally
+specify PARENT-UID, 
 
 The name of the draft folder is constructed from the concatenation of
  `mua/maildir' and `mua/drafts-folder' (therefore, these must be set).
@@ -399,14 +373,15 @@ using Gnus' `message-mode'."
   (let ((draftfile (concat mua/maildir "/" mua/drafts-folder "/cur/"
 		     (mua/msg-draft-file-name))))
     (with-temp-file draftfile (insert str))
-    (find-file draftfile)
-    (rename-buffer mua/msg-draft-name t)
+    (find-file draftfile)  (rename-buffer mua/msg-draft-name t)
     (message-mode)
+    (make-local-variable 'mua/msg-forward-uid)
+    
     (message-goto-body)))
 
-(defun mua/msg-reply (msg)
+(defun mua/msg-reply (msg &optional reply-uid)
   "Create a draft reply to MSG, and swith to an edit buffer with
-the draft message."
+the draft message. PARENT-UID refers to the UID of the message wer"
   (let* ((recipnum (+ (length (mua/msg-field msg :to))
 		    (length (mua/msg-field msg :cc))))
 	  (replyall (when (> recipnum 1) 
@@ -414,12 +389,14 @@ the draft message."
 				     (+ recipnum))))))
 	                      ;; exact num depends on some more things
     (when (mua/msg-compose (mua/msg-create-reply msg replyall))
+      (when reply-uid (setq mua/msg-reply-uid reply-uid))
       (message-goto-body))))
 
-(defun mua/msg-forward (msg)
+(defun mua/msg-forward (msg &optional forward-uid)
   "Create a draft forward for MSG, and swith to an edit buffer with
 the draft message."
   (when (mua/msg-compose (mua/msg-create-forward msg))
+    (when forward-uid (setq mua/msg-forward-uid forward-uid))
     (message-goto-to)))
 
 (defun mua/msg-compose-new ()
@@ -430,16 +407,6 @@ draft message."
 
 
 
-(defun mua/msg-is-mua-message ()
-  "Check whether the current buffer refers a mua-message based on
-the buffer file name; this is used in hooks we install on
-message-mode to ensure we only do things with mua-generated
-messages (mua is not the only user of `message-mode' after all)"
-  (let* ((fname (buffer-file-name)) 
-	  (match (and fname (string-match mua/msg-file-prefix fname))))
-    (and (numberp match) (= 0 match))))       
-;; we simply check if file starts with `mu-msg-file-prefix'    
-
 (defun mua/msg-save-to-sent ()
   "Move the message in this buffer to the sent folder. This is
 meant to be called from message mode's `message-sent-hook'."
@@ -447,33 +414,43 @@ meant to be called from message mode's `message-sent-hook'."
     (unless mua/sent-folder (error "mua/sent-folder not set"))
     (let* ;; TODO: remove duplicate flags
       ((newflags ;; remove Draft; maybe set 'Seen' as well?
-	 (delq 'draft (mua/maildir-flags-from-path (buffer-file-name))))
-	(sent-msg
-	  (mua/msg-move (buffer-file-name)
-	    (concat mua/maildir mua/sent-folder) ;; mua-sent-folder is only eg. "/sent"
-	    (mua/maildir-flags-to-string newflags))))
-      (if sent-msg ;; change our buffer file-name
-	(set-visited-file-name sent-msg t t)
-	(mua/warn "Failed to save message to the Sent-folder")))))
+	 (delq 'draft (mua/msg-file-flags-from-path (buffer-file-name))))
+	;; so, we register path => uid, then we move uid, then check the name
+	;; uid is referring to
+	(uid (mua/msg-file-register (buffer-file-name)))
+	(if (mua/msg-move uid
+		(concat mua/maildir mua/sent-folder) 
+		(mua/msg-file-flags-to-string newflags))
+	  (set-visited-file-name (mua/msg-file-get-path uid) t t)
+	  (mua/warn "Failed to save message to the Sent-folder"))))))
 
 
-(defun mua/msg-set-replied-flag ()
-  "Find the message we replied to, and set its 'Replied'
-flag. This is meant to be called from message mode's
+(defun mua/msg-set-replied-or-passed-flag ()
+  "Set the 'replied' flag on messages we replied to, and the
+'passed' flag on message we have forwarded. This uses
+`mua/msg-reply-uid' and `mua/msg-forward-uid', repectively.
+
+NOTE: This does not handle the case yet of message which are
+edited from drafts. That case could be solved by searching for
+the In-Reply-To message-id for replies.
+
+This is meant to be called from message mode's
 `message-sent-hook'."
-  (if (mua/msg-is-mua-message) ;; only if we are mua
-    (let ((msgid (mail-header-parse-addresses
-		   (message-field-value "In-Reply-To")))
-	   (path (and msgid (mua/mu-run ;; TODO: check we only get one msgid back
-			      "find"  (concat "msgid:" msgid) "--exec=echo"))))
-      (if path
-	(let ((newflags (cons 'replied (mua/maildir-flags-from-path path))))
-	  (mua/msg-move path (mua/maildir-from-path path t) newflags))))))
+  ;; handle the replied-to message
+  (when mua/msg-reply-uid
+    (let* ((oldflags (mua/msg-file-flags-from-path (mua/msg-file-get-path uid)))
+	    (newflags (cons 'replied oldflags)))
+      (mua/msg-file-move uid nil newflags)))  
+  ;; handle the forwarded message
+  (when mua/msg-forward-uid
+    (let* ((oldflags (mua/msg-file-flags-from-path (mua/msg-file-get-path uid)))
+	    (newflags (cons 'passed oldflags)))
+      (mua/msg-file-move uid nil newflags)))) 
       
-	    
+  
 ;; hook our functions up with sending of the message
 (add-hook 'message-sent-hook 'mua/msg-save-to-sent)
-(add-hook 'message-sent-hook 'mua/msg-set-replied-flag)
+(add-hook 'message-sent-hook 'mua/msg-set-replied-or-passed-flag)
 
 
 (provide 'mua-msg)

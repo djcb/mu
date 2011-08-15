@@ -38,53 +38,49 @@
   "buffer name for mua/view buffers")
 
 (defvar mua/view-headers
-  '(:from :to :cc :subject :flags :date :maildir :attachments)
- "fields to display in the message view")
+  '(:from :to :cc :subject :flags :date :maildir :path  :attachments)
+ "Fields to display in the message view buffer.")
 
 (defvar mua/hdrs-buffer nil
-  "headers buffer for the view")
+  "Headers buffer for the view in this buffer.")
 
-(defun mua/view (path headersbuf)
-  "display message at PATH in a new buffer; note that the action
-of viewing a message may cause it to be moved/renamed; this
-function returns the resulting name. PARENTBUF refers to the
+(defvar mua/view-uid nil
+  "The UID for the message being viewed in this buffer.")
+
+
+(defun mua/view (uid headersbuf)
+  "display message identified by UID in a new buffer. Note that
+the action of viewing a message may cause it to be moved/renamed;
+this function returns the resulting name. PARENTBUF refers to the
 buffer who invoked this view; this allows us to return there when
 we quit from this view. Also, if PARENTBUF is a find buffer (ie.,
 has mu-headers-mode as its major mode), this allows various
 commands (navigation, marking etc.) to be applied to this
-buffer."
-  (let* ((sexp (mua/mu-view-sexp path))
-	  (msg (and sexp (mua/msg-from-string sexp))))
-    (when msg
-      (switch-to-buffer (get-buffer-create mua/view-buffer-name))
-      (let ((inhibit-read-only t))
-	(erase-buffer)
-	(insert (mua/view-message msg)))
-	
-      (mua/view-mode)
-	
-      (setq ;; these are buffer-local
-	mua/hdrs-buffer headersbuf
-	mua/parent-buffer headersbuf)
-      (goto-char (point-min))
-      (mua/view-mark-as-read path))))
+buffer.
 
-(defun mua/view-mark-as-read (path)
-  "Mark the currently viewed as read if it is not so already. In
-  Maildir terms, this means moving the message from \"new/\" to
-  \"cur/\" (if it's not yet there), and setting the \"S\" flag."
-  (let ((flags (mua/maildir-flags-from-path path)))
-    (unless (member 'seen flags) ;; do we need to do something?
-      (let* ((newflags (delq 'new (cons 'seen flags)))
-	      (target  (mua/maildir-from-path path t))
-	      (newpath (mua/msg-move path target flags)))
-	;; now, attempt to update our parent header list...
-	(if newpath
-	  (mua/with-hdrs-buffer
-	    (if (string= (mua/hdrs-get-path) path) ;; doublecheck we have the right one
-	      (mua/hdrs-set-path newpath)
-	      (mua/warn "Headers buffer not point at correct message")))
-	  (mua/warn "Failed to mark message as read"))))))
+For the reasoning to use UID here instead of just the path, see
+`mua/msg-file-map'.
+"
+  (let* ((path (mua/msg-file-get-path uid))
+	  (sexp (and path (mua/mu-view-sexp path)))
+	  (msg (and sexp (mua/msg-from-string sexp))))
+    (if (not msg)
+      (mua/warn "Cannot view message %S %S" uid path)
+      (progn
+	(switch-to-buffer (get-buffer-create mua/view-buffer-name))
+	(let ((inhibit-read-only t))
+	  (erase-buffer)
+	  (insert (mua/view-message msg)))
+	
+	(mua/view-mode)
+	
+	(setq ;; these are buffer-local
+	  mua/view-uid uid
+	  mua/hdrs-buffer headersbuf
+	  mua/parent-buffer headersbuf)
+	
+	(goto-char (point-min))
+	(mua/msg-file-mark-as-read uid)))))
 
 (defun mua/view-message (msg)
   "construct a display string for the message"
@@ -155,8 +151,7 @@ buffer."
   ""
   "" ;; todo
 )
-
-   
+  
 
 (defvar mua/view-mode-map
   (let ((map (make-sparse-keymap)))
@@ -172,10 +167,10 @@ buffer."
     (define-key map "p" 'mua/view-prev)
     
     ;; marking/unmarking
-    (define-key map "d" '(lambda (mua/view-mark 'trash)))
-    (define-key map "D" '(lambda (mua/view-mark 'delete)))
-    (define-key map "m" '(lambda (mua/view-mark 'move)))
-    (define-key map "u" '(lambda (mua/view-mark 'unmark)))
+    (define-key map "d" '(lambda() (mua/view-mark 'trash)))
+    (define-key map "D" '(lambda() (mua/view-mark 'delete)))
+    (define-key map "m" '(lambda() (mua/view-mark 'move)))
+    (define-key map "u" '(lambda() (mua/view-mark 'unmark)))
     (define-key map "x" 'mua/view-marked-execute)    
     map)
   "Keymap for \"*mua-view*\" buffers.")
@@ -189,7 +184,7 @@ buffer."
   
   (make-local-variable 'mua/parent-buffer)
   (make-local-variable 'mua/hdrs-buffer)
-  (make-local-variable 'mua/path)
+  (make-local-variable 'mua/view-uid)
   
   (setq major-mode 'mua/view-mode mode-name "*mu-view*")
   (setq truncate-lines t buffer-read-only t))
@@ -207,6 +202,25 @@ etc. persist."
 	 (progn ,@body)
 	 (set-buffer oldbuf))
        (mua/warn "hdrs buffer is dead"))))
+
+
+(defun mua/view-mark (action)
+  "Set/unset marks for the current message."
+  (interactive)
+  (mua/with-hdrs-buffer (mua/hdrs-mark action)))
+
+(defun mua/view-marked-execute ()
+  "Warn user that marks cannot be executed from here (for his/her
+own safety)."
+  (interactive)
+  (mua/warn "You cannot execute marks from here"))
+
+
+(defun mua/view-search()
+  "Start a new search."
+  (interactive)
+  (mua/with-hdrs-buffer
+    (call-interactively 'mua/hdrs-search)))
 
 (defun mua/view-next ()
   "move to the next message; note, this will replace the current

@@ -44,7 +44,7 @@ parameter is added automatically if `mua/mu-home' is non-nil."
 	  (cmdstr (concat mua/mu-binary " " (mapconcat 'identity args " ")))
 	  (str (with-output-to-string
 		 (with-current-buffer standard-output ;; but we also get stderr...
-		   (setq rv (apply 'call-process mua/mu-binary nil t nil		  
+		   (setq rv (apply 'call-process mua/mu-binary nil t nil	  
 			      args))))))
     (when (and (numberp rv) (/= 0 rv))
       (mua/log "mua error: %s" (mua/mu-error rv)))
@@ -59,35 +59,52 @@ to get it"
       (match-string 1 (cdr rv))
       (mua/warn "Failed to get version string"))))
 
-(defun mua/mu-mv (src target &optional flags)
+(defun mua/mu-mv (src target flags)
   "Move a message at PATH to TARGET using 'mu mv'.  SRC must be
-the full, absolute path to a message file, while TARGET must
-be a maildir - that is, the part _without_ cur/ or new/. 'mu mv'
-will calculate the target directory and the exact file name.
+the full, absolute path to a message file, while TARGET must be a
+maildir - that is, the part _without_ cur/ or new/. FLAGS sets
+the flags of the message.
 
-Optionally, you can specify the FLAGS for the new file; this must
-be a list consisting of one or more of DFNPRST, mean
-resp. Deleted, Flagged, New, Passed Replied, Seen and Trash, as
-defined in [1]. See `mua/maildir-string-to-flags' and
-`mua/maildir-flags-to-string'.
+TARGET can be nil, in which case only the flags are
+changed (which on the file-system level still implies a rename or
+even a move if directory if the 'new' flags is added or
+removed). FLAGS can also be nil, in which they are not changed.
+If both TARGET and FLAGS are nil, nothing happens.
+
+'mu mv' will calculate the full path to target directory and file
+based on SRC, TARGET and FLAGS.
+
+FLAGS must be either nil or a list consisting of one or more of
+DFNPRST, mean resp. Deleted, Flagged, New, Passed Replied, Seen
+and Trash, as defined in [1]. See `mua/msg-file-string-to-flags'
+and `mua/msg-file-flags-to-string'.
 
 Function returns the target filename if the move succeeds, or
 /dev/null if TARGETDIR was /dev/null; in other cases, it returns
 `nil'.
 
-\[1\]  http://cr.yp.to/proto/maildir.html." 
-  (let ((flagstr
-	  (and flags (mua/maildir-flags-to-string flags))))
-    (if (not (file-readable-p src))
-      (mua/warn "Cannot move unreadable file %s" src)
-      (let* ((rv (if flagstr
-		  (mua/mu-run "mv" "--printtarget"
-		    (concat "--flags=" flagstr) src target)
-		  (mua/mu-run "mv" "--printtarget" src target)))
+\[1\]  http://cr.yp.to/proto/maildir.html."
+
+  ;; precondition
+  (unless (or target flags) (error "Either target or flags must
+  be provided."))
+  
+  (if (not (file-readable-p src))
+    (mua/warn "Cannot move unreadable file %s" src)
+    (let ((argl '("mv" "--printtarget")))
+      (when flags (add-to-list 'argl (concat "--flags=" 
+				       (mua/msg-file-flags-to-string flags)) t))
+      (add-to-list 'argl src t)
+      (when target (add-to-list 'argl target t))
+      (let* ((rv  (apply 'mua/mu-run argl))
 	      (code (car rv)) (output (cdr rv)))
-	(if (/= 0 code)
+	;; we ignore the error where the target file already exists, as it is
+	;; likely due to the database not being fully up-to-date and/or sync'ed
+	;; with what we have on the screen
+	(if (not (member code `(0 ,mu-error-file-target-equals-source)))
 	  (mua/warn "Moving message file failed: %s" (if output output "error"))
 	  (substring output 0 -1)))))) ;; the full target path, minus the \n
+
 
 (defun mua/mu-view-sexp (path)
   "Return a string with an s-expression representing the message
@@ -198,36 +215,38 @@ them."
 (defconst mu-error-file-stat-failed  77)
 (defconst mu-error-file-readdir-failed	78)
 (defconst mu-error-file-invalid-source	79)
+(defconst mu-error-file-target-equals-source 80)
 
 
 (defun mua/mu-error (err)
   "Convert an exit code from mu into a string."
-  (case err
-    (mu-error					"General error")
-    (mu-error-in-parameters			"Error in parameters")
-    (mu-error-internal				"Internal error")
-    (mu-error-no-matches			"No matches")
-    (mu-error-xapian				"Xapian error")
-    (mu-error-xapian-query			"Error in query")
-    (mu-error-xapian-dir-not-accessible		"Database dir is not accessible")
-    (mu-error-xapian-not-up-to-date		"Database is not up-to-date")
-    (mu-error-xapian-missing-data		"Missing data")
-    (mu-error-xapian-corruption			"Database seems to be corrupted")
-    (mu-error-xapian-cannot-get-writelock	"Database is locked")
-    (mu-error-gmime				"GMime-related error")
-    (mu-error-contacts				"Contacts-related error")
-    (mu-error-contacts-cannot-retrieve		"Failed to retrieve contacts-cache")
-    (mu-error-file				"File error")
-    (mu-error-file-invalid-name			"Invalid file name")
-    (mu-error-file-cannot-link			"Failed to link file")
-    (mu-error-file-cannot-open			"Cannot open file")
-    (mu-error-file-cannot-read			"Cannot read file")
-    (mu-error-file-cannot-create		"Cannot create file")
-    (mu-error-file-cannot-mkdir			"mu-mkdir failed")
-    (mu-error-file-stat-failed			"stat(2) failed")
-    (mu-error-file-readdir-failed		"readdir failed")
-    (mu-error-file-invalid-source		"Invalid source file")
-    (t "Unknown error")))
+  (cond 
+    ((eql err mu-error)					"General error")
+    ((eql err mu-error-in-parameters)			"Error in parameters")
+    ((eql err mu-error-internal)			"Internal error")
+    ((eql err mu-error-no-matches)			"No matches")
+    ((eql err mu-error-xapian)				"Xapian error")
+    ((eql err mu-error-xapian-query)			"Error in query")
+    ((eql err mu-error-xapian-dir-not-accessible)	"Database dir not accessible")
+    ((eql err mu-error-xapian-not-up-to-date)		"Database is not up-to-date")
+    ((eql err mu-error-xapian-missing-data)		"Missing data")
+    ((eql err mu-error-xapian-corruption)		"Database seems to be corrupted")
+    ((eql err mu-error-xapian-cannot-get-writelock)	"Database is locked")
+    ((eql err mu-error-gmime)				"GMime-related error")
+    ((eql err mu-error-contacts)			"Contacts-related error")
+    ((eql err mu-error-contacts-cannot-retrieve)	"Failed to retrieve contacts")
+    ((eql err mu-error-file)				"File error")
+    ((eql err mu-error-file-invalid-name)		"Invalid file name")
+    ((eql err mu-error-file-cannot-link)		"Failed to link file")
+    ((eql err mu-error-file-cannot-open)		"Cannot open file")
+    ((eql err mu-error-file-cannot-read)		"Cannot read file")
+    ((eql err mu-error-file-cannot-create)		"Cannot create file")
+    ((eql err mu-error-file-cannot-mkdir)		"mu-mkdir failed")
+    ((eql err mu-error-file-stat-failed)		"stat(2) failed")
+    ((eql err mu-error-file-readdir-failed)		"readdir failed")
+    ((eql err mu-error-file-invalid-source)		"Invalid source file")
+    ((eql err mu-error-file-target-equals-source)	"Source is same as target")
+    (t (format						"Unknown error (%d)" err))))
 
 
 (provide 'mua-mu)

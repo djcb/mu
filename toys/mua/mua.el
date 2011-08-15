@@ -35,6 +35,8 @@
 (require 'mua-msg)
 (require 'mua-hdrs)
 (require 'mua-view)
+(require 'mua-msg-file)
+
 
 (defvar mua/mu-home nil "location of the mu homedir, or nil for
 the default")
@@ -80,6 +82,7 @@ quitted, it switches back to its parent buffer")
 (defface mua/header-face	'((t (:foreground "#dfaf8f"))) "") 
 (defface mua/contacts-face	'((t (:foreground "#7f9f7f"))) "") 
 (defface mua/body-face		'((t (:foreground "#8cd0d3"))) "") 
+
 
 
 (setq mua/hdrs-mode-map
@@ -145,7 +148,6 @@ quitted, it switches back to its parent buffer")
 	))
     (switch-to-buffer buf)
     (mua/mua-mode)))
-
 
 (defvar mua/mua-mode-map
   (let ((map (make-sparse-keymap)))

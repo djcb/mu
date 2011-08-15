@@ -51,15 +51,15 @@
 (defvar mua/hdrs-hash nil "the bol->path hash")
 (defvar mua/hdrs-marks-hash nil "the hash for marked messages")
 
-(defconst mua/eom "\n;;eom\n" "marker for the end of message in
-the mu find output")
+(defconst mua/eom "\n;;eom\n" "*internal* Marker for the end of message in
+the mu find output.")
 (defconst mua/hdrs-buffer-name "*mua-headers*"
-  "name of the mua headers buffer")
+  "*internal* Name of the mua headers buffer.")
 
 (defun mua/hdrs-proc-filter (proc str)
-  "process-filter for the 'mu find --format=sexp output; it
+  "A process-filter for the 'mu find --format=sexp output; it
   accumulates the strings into valid sexps by checking of the
-  ';;eom' end-of-msg marker, and then evaluating them"
+  ';;eom' end-of-msg marker, and then evaluating them."
   (let ((procbuf (process-buffer proc)))
     (when (buffer-live-p procbuf)
       (with-current-buffer procbuf
@@ -73,7 +73,7 @@ the mu find output")
 		(setq eom (string-match mua/eom mua/buf))))))))))
 
 (defun mua/hdrs-proc-sentinel (proc msg)
-  "Check the process upon completion"
+  "Check the process upon completion."
   (let ((procbuf (process-buffer proc))
 	 (status (process-status proc))
 	 (exit-status (process-exit-status proc)))
@@ -89,7 +89,7 @@ the mu find output")
 	      (with-current-buffer procbuf
 		(save-excursion
 		  (goto-char (point-max))
-		  (mua/message msg)))))))
+		  (mua/message "%s" msg)))))))
 
 (defun mua/hdrs-search-execute (expr buf)
   "search in the mu database; output the results in buffer BUF"
@@ -100,8 +100,7 @@ the mu find output")
       (add-to-list args (concat "--sortfield=" mua/hdrs-sortfield)))
     (when mua/hdrs-sort-descending
 	(add-to-list args "--descending"))
-    (mua/log (concat mua/mu-binary " find " expr
-	       (mapconcat 'identity args " ")))
+    (mua/log (concat mua/mu-binary " " (mapconcat 'identity args " ")))
     ;; now, do it!
     (let ((proc (apply 'start-process "*mua-headers*" buf mua/mu-binary args)))
       (setq
@@ -147,7 +146,7 @@ the mu find output")
   (make-local-variable 'mua/hdrs-marks-hash)
 
   (setq
-    major-mode 'mua/mua-hdrs-mode mode-name "*mua-headers*"
+    major-mode 'mua/mua/hdrs-mode mode-name "*mua-headers*"
     truncate-lines t buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
@@ -185,12 +184,21 @@ the mu find output")
 ;;
 
 (defun mua/hdrs-set-path (path)
-  "map the bol of the current header to a path"
-  (puthash (line-beginning-position 1) path mua/hdrs-hash))
-  
-(defun mua/hdrs-get-path ()
-  "get the path for the header at point"
+  "Map the bol of the current header to an entry in
+`mua/msg-file-map', and return the uid"
+  (let ((uid (mua/msg-file-register path)))
+    (puthash (line-beginning-position 1) uid mua/hdrs-hash)
+    uid))
+
+(defun mua/hdrs-get-uid ()
+  "Get the uid for the message header at point."
   (gethash (line-beginning-position 1) mua/hdrs-hash))
+
+(defun mua/hdrs-get-path ()
+  "Get the current path for the header at point."
+  (let ((uid (mua/hdrs-get-uid)))
+    (mua/msg-file-get-path uid)))
+
 
 (defun mua/hdrs-append-message (msg)
   "append a message line to the buffer and register the message"
@@ -309,9 +317,9 @@ fitting in WIDTH"
 
 (defun mua/hdrs-view ()
   (interactive)
-  (let ((path (mua/hdrs-get-path)))
-    (if path
-      (mua/view path (current-buffer))
+  (let ((uid (mua/hdrs-get-uid)))
+    (if uid
+      (mua/view uid (current-buffer))
       (mua/warn "No message at point"))))
 
 (defun mua/hdrs-jump-to-maildir ()
@@ -365,12 +373,12 @@ if the search process is not already running"
 
 ;;; functions for marking
 
-(defun mua/hdrs-add-marked (src &optional dst)
+(defun mua/hdrs-add-marked (uid &optional dst)
   "Add the message at point to the markings hash"
   (let ((bol (line-beginning-position 1)))
     (if (gethash bol mua/hdrs-marks-hash)
       (mua/warn "Message is already marked")
-      (progn (puthash bol (cons src dst) mua/hdrs-marks-hash) t))))
+      (progn (puthash bol (cons uid dst) mua/hdrs-marks-hash) t))))
 
 (defun mua/hdrs-remove-marked ()
   "Remove the message at point from the markings hash"
@@ -390,19 +398,19 @@ if the search process is not already running"
   "Mark the message at point with one of the symbols: move,
 delete, trash, unmark, unmark-all; the latter two are
 pseudo-markings."
-  (let ((target) (src (mua/hdrs-get-path)))
-    (when src
+  (let ((uid (mua/hdrs-get-uid)))
+    (when uid
       (case action
 	(move
-	  (when (mua/hdrs-add-marked src
+	  (when (mua/hdrs-add-marked uid
 		  (mua/ask-maildir "Target maildir: " t)) ;; t->return fullpath
 	    (mua/hdrs-set-marker ?m)))
 	(trash
-	  (when (mua/hdrs-add-marked src
+	  (when (mua/hdrs-add-marked uid
 		  (concat mua/maildir mua/trash-folder))
 	    (mua/hdrs-set-marker ?d)))
 	(delete
-	  (when (mua/hdrs-add-marked src "/dev/null")
+	  (when (mua/hdrs-add-marked uid "/dev/null")
 	    (mua/hdrs-set-marker ?D)))
 	(unmark
 	  (when (mua/hdrs-remove-marked)
@@ -427,12 +435,10 @@ pseudo-markings."
 	(save-excursion
 	  (maphash
 	    (lambda(bol v)
-	      (let* ((src (car v)) (target (cdr v)) (inhibit-read-only t)
-		     (newpath (mua/msg-move src target)))
-		(when newpath
+	      (let* ((uid (car v)) (target (cdr v)) (inhibit-read-only t))
+		(when (mua/msg-file-move-uid uid target)
 		  ;; remember the updated path -- for now not too useful
 		  ;; as we're hiding the header, but...
-		  (mua/hdrs-set-path newpath) 
 		  (goto-char bol)
 		  (mua/hdrs-remove-marked)
 		  (put-text-property (line-beginning-position 1)
@@ -446,20 +452,23 @@ pseudo-markings."
 (defun mua/hdrs-reply ()
   "Reply to message at point."
   (interactive)
-  (let* ((path (mua/hdrs-get-path))
+  (let* ((uid (mua/hdrs-get-uid))
+	  (path (mua/hdrs-get-path))
 	  (str (when path (mua/mu-view-sexp path)))
 	  (msg (and str (mua/msg-from-string str))))
     (if msg
-      (mua/msg-reply msg)	  
+      (mua/msg-reply msg uid)	  
       (mua/warn "No message at point"))))
-      
-(defun mua/hdrs-forward ()
+
+(defun mua/hdrs-for ()
   "Forward the message at point."
   (interactive)
-  (let* ((path (mua/hdrs-get-path))
-	  (msg (when path (mua/msg-from-path path))))
+  (let* ((uid (mua/hdrs-get-uid))
+	  (path (mua/hdrs-get-path))
+	  (str (when path (mua/mu-view-sexp path)))
+	  (msg (and str (mua/msg-from-string str))))
     (if msg
-      (mua/msg-forward msg)
+      (mua/msg-reply msg uid)	  
       (mua/warn "No message at point"))))
 
 (defun mua/hdrs-compose ()
