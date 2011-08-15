@@ -339,7 +339,7 @@ get_flags (MuMsgFile *self)
 
 	/* pseudo-flag --> unread means either NEW or NOT SEEN, just
 	 * for searching convenience */
-	if ((flags & MU_FLAG_NEW) || (!(flags & MU_FLAG_SEEN)))
+	if ((flags & MU_FLAG_NEW) || !(flags & MU_FLAG_SEEN))
 		flags |= MU_FLAG_UNREAD;
 	
 	return flags;

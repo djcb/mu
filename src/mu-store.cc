@@ -331,22 +331,21 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 G_GNUC_CONST static const std::string&
 flag_val (char flagchar)
 {
-	static const std::string pfx (prefix(MU_MSG_FIELD_ID_PRIO));	
-	
-	static const std::string draftstr (pfx + mu_flag_char(MU_FLAG_DRAFT));
-	static const std::string flaggedstr (pfx + mu_flag_char(MU_FLAG_FLAGGED));
-	static const std::string passedstr (pfx + mu_flag_char(MU_FLAG_PASSED));
-	static const std::string repliedstr (pfx + mu_flag_char(MU_FLAG_REPLIED));
-	static const std::string seenstr (pfx + mu_flag_char(MU_FLAG_SEEN));
-	static const std::string trashedstr (pfx + mu_flag_char(MU_FLAG_TRASHED));
-
-	static const std::string newstr (pfx + mu_flag_char(MU_FLAG_NEW));
-	
-	static const std::string signedstr (pfx + mu_flag_char(MU_FLAG_SIGNED));
-	static const std::string encryptedstr (pfx + mu_flag_char(MU_FLAG_ENCRYPTED));
-	static const std::string has_attachstr(pfx + mu_flag_char(MU_FLAG_HAS_ATTACH));
-
-	static const std::string unreadstr (pfx + mu_flag_char(MU_FLAG_UNREAD));
+	static const std::string
+		pfx (prefix(MU_MSG_FIELD_ID_FLAGS)),
+		/* xapian wants lowercase */
+		draftstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_DRAFT))),
+		flaggedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_FLAGGED))),
+		passedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_PASSED))),
+		repliedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_REPLIED))),
+		seenstr		(pfx + (char)tolower(mu_flag_char(MU_FLAG_SEEN))),
+		trashedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_TRASHED))),
+		newstr		(pfx + (char)tolower(mu_flag_char(MU_FLAG_NEW))),
+		
+		signedstr	(pfx + mu_flag_char(MU_FLAG_SIGNED)),
+		encryptedstr	(pfx + mu_flag_char(MU_FLAG_ENCRYPTED)),
+		has_attachstr	(pfx + mu_flag_char(MU_FLAG_HAS_ATTACH)),
+		unreadstr	(pfx + mu_flag_char(MU_FLAG_UNREAD));
 
 	switch (flagchar) {
 		
@@ -380,13 +379,10 @@ prio_val (MuMsgPrio prio)
 {
 	static const std::string pfx (prefix(MU_MSG_FIELD_ID_PRIO));	
 
-	static const std::string lowstr
-		(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_LOW)));
-	static const std::string normalstr
-		(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_NORMAL)));
-	static const std::string highstr
-		(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_HIGH)));
-
+	static const std::string
+		lowstr (pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_LOW))), 
+		normalstr (pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_NORMAL))),
+		highstr (pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_HIGH)));
 
 	switch (prio) {
 	case MU_MSG_PRIO_LOW:    return lowstr;
