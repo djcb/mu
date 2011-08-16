@@ -100,7 +100,7 @@ SCM_DEFINE (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
 	flags = mu_msg_get_flags    (msgwrap->_msg);
 	rv = mu_msg_move_to_maildir (msgwrap->_msg,
 				     scm_to_utf8_string (TARGETMDIR), flags,
-				     &err);
+				     FALSE, &err);
 	if (!rv && err) {
 		mu_guile_g_error (FUNC_NAME, err);
 		g_error_free (err);
