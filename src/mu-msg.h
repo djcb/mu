@@ -395,13 +395,16 @@ char* mu_msg_to_sexp (MuMsg *msg, gboolean dbonly);
  * that this may still involve a moved to another directory (say, from
  * new/ to cur/)
  * @param flags to set for the target (influences the filename, path)
+ * @param silently ignore the src=target case (return TRUE)
  * @param err (may be NULL) may contain error information; note if the
  * function return FALSE, err is not set for all error condition
- * (ie. not for parameter errors)
+ * (ie. not for parameter error
+ * 
  * @return TRUE if it worked, FALSE otherwise 
  */
 gboolean mu_msg_move_to_maildir (MuMsg *msg, const char* targetmdir,
-				 MuFlags flags, GError **err);
+				 MuFlags flags, gboolean ignore_dups,
+				 GError **err);
 
 
 enum _MuMsgContactType {  /* Reply-To:? */

@@ -687,14 +687,15 @@ mu_msg_is_readable (MuMsg *self)
  */
 gboolean
 mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir,
-			MuFlags flags, GError **err)
+			MuFlags flags, gboolean ignore_dups, GError **err)
 {
 	char *newfullpath;
 	
 	g_return_val_if_fail (self, FALSE);
 
 	newfullpath = mu_maildir_move_message (mu_msg_get_path (self),
-					       targetmdir, flags, err);
+					       targetmdir, flags,
+					       ignore_dups, err);
 	if (newfullpath) /* update our path to new one... */
 		mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
 				      TRUE); /* the cache will free the string */
