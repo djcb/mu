@@ -53,8 +53,8 @@
   "*internal* The mu-find process.")
 (defvar mua/hdrs-hash nil
   "*internal* The bol->uid hash.")
-(defvar mua/hdrs-marks-hash nil
-  "*internal* The hash for marked messages.")
+
+
 
 (defconst mua/eom "\n;;eom\n"
   "*internal* Marker for the end of message in the mu find
@@ -191,8 +191,8 @@
 
 (defun mua/hdrs-set-path (path)
   "Map the bol of the current header to an entry in
-`mua/msg-file-map', and return the uid"
-  (let ((uid (mua/msg-file-register path)))
+`mua/msg-map', and return the uid."
+  (let ((uid (mua/msg-map-add path)))
     (puthash (line-beginning-position 1) uid mua/hdrs-hash)
     uid))
 
@@ -202,9 +202,7 @@
 
 (defun mua/hdrs-get-path ()
   "Get the current path for the header at point."
-  (let ((uid (mua/hdrs-get-uid)))
-    (mua/msg-file-get-path uid)))
-
+  (mua/msg-map-get-path (mua/hdrs-get-uid)))
 
 (defun mua/hdrs-append-message (msg)
   "append a message line to the buffer and register the message"
@@ -370,7 +368,7 @@ if the search process is not already running"
      
 
 (defun mua/hdrs-change-sort ()
-  "Change thee sort field and direction."
+  "Change thee sort field and dirtrection."
   (interactive)
   (and (call-interactively 'mua/hdrs-change-sort-order)
     (call-interactively 'mua/hdrs-change-sort-direction)))
@@ -379,48 +377,89 @@ if the search process is not already running"
 
 ;;; functions for marking
 
-(defun mua/hdrs-add-marked (uid &optional dst)
-  "Add the message at point to the markings hash"
-  (let ((bol (line-beginning-position 1)))
-    (if (gethash bol mua/hdrs-marks-hash)
-      (mua/warn "Message is already marked")
-      (progn (puthash bol (cons uid dst) mua/hdrs-marks-hash) t))))
+(defvar mua/hdrs-marks-hash nil
+  "*internal* The hash for marked messages. The hash maps
+   bol (beginning-of-line) to a 3-tuple: [UID TARGET FLAGS], where UID is the
+   the UID of the message file (see `mua/msg-map'), TARGET is the
+   target maildir (ie., \"/inbox\", but can also be nil (for 'delete);
+   and finally FLAGS is the flags to set when the message is moved.")
 
-(defun mua/hdrs-remove-marked ()
-  "Remove the message at point from the markings hash"
-  (let ((bol (line-beginning-position 1)))
-    (if (not (gethash bol mua/hdrs-marks-hash))
-      (mua/warn "Message is not marked")
-      (progn (remhash bol mua/hdrs-marks-hash) t))))
+(defun mua/hdrs-set-mark-ui (bol action)
+  "Display (or undisplay) the mark for BOL for action ACTION."
+  (unless (member action '(delete trash move unmark))
+    (error "Invalid action %S" action))
+  (save-excursion    
+    (let ((inhibit-read-only t))
+      (delete-char 2)
+      (insert
+	(case action
+	  (delete "d ")
+	  (trash  "D ")
+	  (move   "m ")
+	  (unmark "  "))))))
 
-(defun mua/hdrs-set-marker (kar)
-  "Set the marker at the beginning of this line."
-  (beginning-of-line 1)
-  (let ((inhibit-read-only t))
-    (delete-char 2)
-    (insert (if kar (format "%c " kar) "  "))))
-	
+(defun mua/hdrs-set-mark (bol uid &optional target flags)
+  "Add a mark to `mua/hdrs-marks-hash', with BOL being the beginning of the line
+of the marked message and (optionally) TARGET the target for the trash or move,
+and FLAGS the flags to set for the message, either as a string or as a list (see
+`mua/msg-move' for a discussion of the format)."
+  (if (gethash bol mua/hdrs-marks-hash)
+    (mua/warn "Message is already marked")
+    (let ((tuple `[,uid ,target ,flags]))
+      (puthash bol tuple mua/hdrs-marks-hash) ;; add to the hash...
+      (mua/hdrs-set-mark-ui bol action))))
+
+(defun mua/hdrs-remove-mark (bol)
+  "Remove the mark for the message at BOL from the markings
+hash. BOL must be the point at the beginning of the line."
+  (if (not (gethash bol mua/hdrs-marks-hash))
+    (mua/warn "Message is not marked")
+    (progn
+      (remhash bol mua/hdrs-marks-hash)       ;; remove from the hash...
+      (mua/hdrs-set-mark-ui bol 'unmark))))
+     
+(defun mua/hdrs-marks-execute ()
+  "Execute the corresponding actions for all marked messages in
+`mua/hdrs-marks-hash'."
+  (interactive)
+  (let ((n-marked (hash-table-count mua/hdrs-marks-hash)))
+    (if (= 0 n-marked)
+      (mua/warn "No marked messages")
+      (when (y-or-n-p
+	      (format "Execute actions for %d marked message(s)? " n-marked))
+	(save-excursion
+	  (maphash
+	    (lambda(bol tuple)
+	      (let* ((uid (aref tuple 0)) (target (aref tuple 1))
+		      (flags (aref tuple 2)) (inhibit-read-only t))
+		(when (mua/msg-move uid target flags)
+		  ;; remember the updated path -- for now not too useful
+		  ;; as we're hiding the header, but...
+		  (save-excursion 
+		    (mua/hdrs-remove-mark bol)
+		    (goto-char bol)
+		    ;; when it succeedes, hide msg..)
+		    (put-text-property (line-beginning-position 1)
+		      (line-beginning-position 2) 'invisible t)))))
+	      mua/hdrs-marks-hash))))))
+
 (defun mua/hdrs-mark (action)
-  "Mark the message at point with one of the symbols: move,
-delete, trash, unmark, unmark-all; the latter two are
-pseudo-markings."
-  (let ((uid (mua/hdrs-get-uid)))
+  "Mark the message at point BOL (the beginning of the line) with
+one of the symbols: move, delete, trash, unmark, unmark-all; the
+latter two are pseudo-markings."
+  (let* ((bol (line-beginning-position 1)) (uid (mua/hdrs-get-uid)))
     (when uid
       (case action
 	(move
-	  (when (mua/hdrs-add-marked uid
-		  (mua/ask-maildir "Target maildir: " t)) ;; t->return fullpath
-	    (mua/hdrs-set-marker ?m)))
+	  (mua/hdrs-set-mark bol uid (mua/ask-maildir "Target maildir: " t)))
 	(trash
-	  (when (mua/hdrs-add-marked uid
-		  (concat mua/maildir mua/trash-folder))
-	    (mua/hdrs-set-marker ?d)))
+	  (if (member 'trashed (mua/msg-flags-from-path (mua/hdrs-get-path)))
+	    (mua/warn "Message is already trashed")
+	    (mua/hdrs-set-mark bol uid (concat mua/maildir mua/trash-folder) "+T")))
 	(delete
-	  (when (mua/hdrs-add-marked uid "/dev/null")
-	    (mua/hdrs-set-marker ?D)))
+	  (mua/hdrs-set-mark bol action uid "/dev/null"))
 	(unmark
-	  (when (mua/hdrs-remove-marked)
-	    (mua/hdrs-set-marker nil)))
+	  (mua/hdrs-remove-mark bol))
 	(unmark-all
 	  (when (y-or-n-p (format "Sure you want to remove all (%d) marks? "
 			    (hash-table-count mua/hdrs-marks-hash)))
@@ -430,28 +469,6 @@ pseudo-markings."
 	(t (error "Unsupported mark type")))
       (move-beginning-of-line 2))))
     
-(defun mua/hdrs-marks-execute ()
-  "execute the actions for all marked messages"
-  (interactive)
-  (let ((n-marked (hash-table-count mua/hdrs-marks-hash)))
-    (if (= 0 n-marked)
-      (mua/warn "No marked messages")
-      (when (y-or-n-p
-	      (format "Execute actions for %d marked message(s)? " n-marked))
-	(save-excursion
-	  (maphash
-	    (lambda(bol v)
-	      (let* ((uid (car v)) (target (cdr v)) (inhibit-read-only t))
-		(when (mua/msg-file-move-uid uid target)
-		  ;; remember the updated path -- for now not too useful
-		  ;; as we're hiding the header, but...
-		  (goto-char bol)
-		  (mua/hdrs-remove-marked)
-		  (put-text-property (line-beginning-position 1)
-		    (line-beginning-position 2)
-		    'invisible t)))) ;; when it succeedes, hide msg..)
-	    mua/hdrs-marks-hash))))))
-
 
 
 ;; functions for creating new message -- reply, forward, and new

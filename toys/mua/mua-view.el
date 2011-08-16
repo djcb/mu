@@ -59,9 +59,9 @@ commands (navigation, marking etc.) to be applied to this
 buffer.
 
 For the reasoning to use UID here instead of just the path, see
-`mua/msg-file-map'.
+`mua/msg-map'.
 "
-  (let* ((path (mua/msg-file-get-path uid))
+  (let* ((path (mua/msg-map-get-path uid))
 	  (sexp (and path (mua/mu-view-sexp path)))
 	  (msg (and sexp (mua/msg-from-string sexp))))
     (if (not msg)
@@ -78,9 +78,11 @@ For the reasoning to use UID here instead of just the path, see
 	  mua/view-uid uid
 	  mua/hdrs-buffer headersbuf
 	  mua/parent-buffer headersbuf)
-	
-	(goto-char (point-min))
-	(mua/msg-file-mark-as-read uid)))))
+	;; mark as read
+	(unless (mua/msg-move uid nil "+S-N" t)
+	  (mua/warn "Failed to mark message as read"))))))
+
+
 
 (defun mua/view-message (msg)
   "construct a display string for the message"

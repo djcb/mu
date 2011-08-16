@@ -59,52 +59,6 @@ to get it"
       (match-string 1 (cdr rv))
       (mua/warn "Failed to get version string"))))
 
-(defun mua/mu-mv (src target flags)
-  "Move a message at PATH to TARGET using 'mu mv'.  SRC must be
-the full, absolute path to a message file, while TARGET must be a
-maildir - that is, the part _without_ cur/ or new/. FLAGS sets
-the flags of the message.
-
-TARGET can be nil, in which case only the flags are
-changed (which on the file-system level still implies a rename or
-even a move if directory if the 'new' flags is added or
-removed). FLAGS can also be nil, in which they are not changed.
-If both TARGET and FLAGS are nil, nothing happens.
-
-'mu mv' will calculate the full path to target directory and file
-based on SRC, TARGET and FLAGS.
-
-FLAGS must be either nil or a list consisting of one or more of
-DFNPRST, mean resp. Deleted, Flagged, New, Passed Replied, Seen
-and Trash, as defined in [1]. See `mua/msg-file-string-to-flags'
-and `mua/msg-file-flags-to-string'.
-
-Function returns the target filename if the move succeeds, or
-/dev/null if TARGETDIR was /dev/null; in other cases, it returns
-`nil'.
-
-\[1\]  http://cr.yp.to/proto/maildir.html."
-
-  ;; precondition
-  (unless (or target flags) (error "Either target or flags must
-  be provided."))
-  
-  (if (not (file-readable-p src))
-    (mua/warn "Cannot move unreadable file %s" src)
-    (let ((argl '("mv" "--printtarget")))
-      (when flags (add-to-list 'argl (concat "--flags=" 
-				       (mua/msg-file-flags-to-string flags)) t))
-      (add-to-list 'argl src t)
-      (when target (add-to-list 'argl target t))
-      (let* ((rv  (apply 'mua/mu-run argl))
-	      (code (car rv)) (output (cdr rv)))
-	;; we ignore the error where the target file already exists, as it is
-	;; likely due to the database not being fully up-to-date and/or sync'ed
-	;; with what we have on the screen
-	(if (not (member code `(0 ,mu-error-file-target-equals-source)))
-	  (mua/warn "Moving message file failed: %s" (if output output "error"))
-	  (substring output 0 -1)))))) ;; the full target path, minus the \n
-
 
 (defun mua/mu-view-sexp (path)
   "Return a string with an s-expression representing the message

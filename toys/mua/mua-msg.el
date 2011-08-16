@@ -94,7 +94,7 @@ or if not available, :body-html converted to text)."
       (mua/msg-body-txt-or-html msg))
     (:maildir ;; messages gotten from mu-view don't have their maildir set...
       (or (plist-get msg :maildir)
-	(mua/msg-file-maildir-from-path (mua/msg-field msg :path))))
+	(mua/msg-maildir-from-path (mua/msg-field msg :path))))
     (t (plist-get msg field))))
     
 
@@ -334,7 +334,7 @@ body from headers)."
     (mua/msg-header "Subject" "")
     mua/msg-separator))
 
-(defconst mua/msg-file-prefix "mua" "prefix for mua-generated
+(defconst mua/msg-prefix "mua" "prefix for mua-generated
 mail files; we use this to ensure that our hooks don't mess
 with non-mua-generated messages")
 
@@ -343,7 +343,7 @@ with non-mua-generated messages")
 message.
  [1]: see http://cr.yp.to/proto/maildir.html"
   (format "%s-%s-%x.%s:2,D" ;; 'D': rarely used, but hey, it's available
-    mua/msg-file-prefix
+    mua/msg-prefix
     (format-time-string "%Y%m%d" (current-time))
     (emacs-pid)
     (random t)
@@ -414,14 +414,14 @@ meant to be called from message mode's `message-sent-hook'."
     (unless mua/sent-folder (error "mua/sent-folder not set"))
     (let* ;; TODO: remove duplicate flags
       ((newflags ;; remove Draft; maybe set 'Seen' as well?
-	 (delq 'draft (mua/msg-file-flags-from-path (buffer-file-name))))
+	 (delq 'draft (mua/msg-flags-from-path (buffer-file-name))))
 	;; so, we register path => uid, then we move uid, then check the name
 	;; uid is referring to
-	(uid (mua/msg-file-register (buffer-file-name)))
+	(uid (mua/msg-register (buffer-file-name)))
 	(if (mua/msg-move uid
 		(concat mua/maildir mua/sent-folder) 
-		(mua/msg-file-flags-to-string newflags))
-	  (set-visited-file-name (mua/msg-file-get-path uid) t t)
+		(mua/msg-flags-to-string newflags))
+	  (set-visited-file-name (mua/msg-get-path uid) t t)
 	  (mua/warn "Failed to save message to the Sent-folder"))))))
 
 
@@ -438,16 +438,15 @@ This is meant to be called from message mode's
 `message-sent-hook'."
   ;; handle the replied-to message
   (when mua/msg-reply-uid
-    (let* ((oldflags (mua/msg-file-flags-from-path (mua/msg-file-get-path uid)))
-	    (newflags (cons 'replied oldflags)))
-      (mua/msg-file-move uid nil newflags)))  
+    (unless (mua/msg-move mua/msg-reply-uid nil "+R")
+      (mua/warn "Failed to marked parent message as 'Replied'")))
+
   ;; handle the forwarded message
   (when mua/msg-forward-uid
-    (let* ((oldflags (mua/msg-file-flags-from-path (mua/msg-file-get-path uid)))
-	    (newflags (cons 'passed oldflags)))
-      (mua/msg-file-move uid nil newflags)))) 
-      
-  
+    (unless (mua/msg-move mua/msg-forward-uid nil "+P")
+      (mua/warn "Failed to marked parent message as 'Passed'"))))
+
+
 ;; hook our functions up with sending of the message
 (add-hook 'message-sent-hook 'mua/msg-save-to-sent)
 (add-hook 'message-sent-hook 'mua/msg-set-replied-or-passed-flag)
