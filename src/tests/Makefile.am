@@ -90,6 +90,10 @@ TEST_PROGS += test-mu-date
 test_mu_date_SOURCES= test-mu-date.c dummy.cc
 test_mu_date_LDADD=  libtestmucommon.la
 
+TEST_PROGS += test-mu-flags
+test_mu_flags_SOURCES= test-mu-flags.c dummy.cc
+test_mu_flags_LDADD=  libtestmucommon.la
+
 
 # TEST_PROGS += test-mu-msg-file
 # test_mu_msg_file_SOURCES= test-mu-msg-file.c dummy.cc

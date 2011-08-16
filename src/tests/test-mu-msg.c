@@ -97,6 +97,9 @@ test_mu_msg_01 (void)
 
 
 
+
+
+
 static gboolean
 check_contact_02 (MuMsgContact *contact, int *idx)
 {
