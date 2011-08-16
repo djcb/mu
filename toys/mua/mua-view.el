@@ -167,10 +167,10 @@ For the reasoning to use UID here instead of just the path, see
     (define-key map "p" 'mua/view-prev)
     
     ;; marking/unmarking
-    (define-key map "d" '(lambda() (mua/view-mark 'trash)))
-    (define-key map "D" '(lambda() (mua/view-mark 'delete)))
-    (define-key map "m" '(lambda() (mua/view-mark 'move)))
-    (define-key map "u" '(lambda() (mua/view-mark 'unmark)))
+    (define-key map "d" '(lambda()(interactive)(mua/view-mark 'trash)))
+    (define-key map "D" '(lambda()(interactive)(mua/view-mark 'delete)))
+    (define-key map "m" '(lambda()(interactive)(mua/view-mark 'move)))
+    (define-key map "u" '(lambda()(interactive)(mua/view-mark 'unmark)))
     (define-key map "x" 'mua/view-marked-execute)    
     map)
   "Keymap for \"*mua-view*\" buffers.")

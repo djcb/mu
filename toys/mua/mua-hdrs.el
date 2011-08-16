@@ -45,14 +45,20 @@
 
 
 ;; internal stuff
-(defvar mua/buf "" "buffer for results data")
-(defvar mua/last-expression "the last search expression")
-(defvar mua/hdrs-process "the mu-find process")
-(defvar mua/hdrs-hash nil "the bol->path hash")
-(defvar mua/hdrs-marks-hash nil "the hash for marked messages")
+(defvar mua/buf ""
+  "*internal* Buffer for results data.")
+(defvar mua/last-expression nil
+  "*internal* The most recent search expression.")
+(defvar mua/hdrs-process nil
+  "*internal* The mu-find process.")
+(defvar mua/hdrs-hash nil
+  "*internal* The bol->uid hash.")
+(defvar mua/hdrs-marks-hash nil
+  "*internal* The hash for marked messages.")
 
-(defconst mua/eom "\n;;eom\n" "*internal* Marker for the end of message in
-the mu find output.")
+(defconst mua/eom "\n;;eom\n"
+  "*internal* Marker for the end of message in the mu find
+  output.")
 (defconst mua/hdrs-buffer-name "*mua-headers*"
   "*internal* Name of the mua headers buffer.")
 
