@@ -143,32 +143,52 @@ test_mu_threads_01 (void)
 }
 
 
+struct _tinfo {
+	const char* threadpath;
+	const char *msgid;
+	const char* subject;
+};
+typedef struct _tinfo tinfo;
+
 static void
 test_mu_threads_rogue (void)
 {
 	gchar *xpath;
 	MuMsgIter *iter;	
 	unsigned u;
-	
-	struct {
-		const char* threadpath;
-		const char *msgid;
-		const char* subject;
-	}   items [] = {
+	tinfo *items;
+
+	tinfo items1 [] = {
 		{"0",     "cycle0@msg.id",  "cycle0"},
 		{"0:0",   "cycle0.0@msg.id", "cycle0.0"},
-		{"0:0:0", "cycle0.0.0@msg.id", "cycle0.0.0"}
+		{"0:0:0", "cycle0.0.0@msg.id", "cycle0.0.0"},
+		{"0:1",    "rogue0@msg.id", "rogue0"},
 	};
-	
+
+	tinfo items2 [] = {
+		{"0",   "cycle0.0@msg.id", "cycle0.0"},
+		{"0:0",     "cycle0@msg.id",  "cycle0"},
+		{"0:0:0",  "rogue0@msg.id", "rogue0" },
+		{"0:1", "cycle0.0.0@msg.id", "cycle0.0.0"}
+	};
+
 	xpath = fill_database (MU_TESTMAILDIR3);
 	g_assert (xpath != NULL);
-	
+
 	iter = run_and_get_iter (xpath, "def");
 	g_assert (iter);
 	g_assert (!mu_msg_iter_is_done(iter));
+	
+	/* due to the random order in files can be indexed, there are two possible ways 
+	 * for the threads to be built-up; both are okay */
+	if (g_strcmp0 (mu_msg_get_msgid(mu_msg_iter_get_msg (iter, NULL)), 
+		       "cycle0@msg.id") == 0)
+		items = items1;
+	else
+		items = items2;
 
 	u = 0;
-	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items)) {
+	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items1)) {
 		MuMsg *msg;
 		const MuMsgIterThreadInfo *ti;
 		
@@ -185,16 +205,16 @@ test_mu_threads_rogue (void)
 		/* 	 mu_msg_get_path (msg) */
 		/* 	); */
 		
-		g_assert (u < G_N_ELEMENTS(items));
+		g_assert (u < G_N_ELEMENTS(items1));
 
-		g_assert_cmpstr (ti->threadpath,==,items[u].threadpath);
-		g_assert_cmpstr (mu_msg_get_subject(msg),==,items[u].subject);
-		g_assert_cmpstr (mu_msg_get_msgid(msg),==,items[u].msgid);
+		g_assert_cmpstr (ti->threadpath,==,(items)[u].threadpath);
+		g_assert_cmpstr (mu_msg_get_subject(msg),==,(items)[u].subject);
+		g_assert_cmpstr (mu_msg_get_msgid(msg),==,(items)[u].msgid);
 		
 		++u;
 		mu_msg_iter_next (iter);
 	}
-	g_assert (u == G_N_ELEMENTS(items));
+	g_assert (u == G_N_ELEMENTS(items1));
 	
 	g_free (xpath);
 	mu_msg_iter_destroy (iter);
@@ -211,7 +231,6 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/mu-query/test-mu-threads-01", test_mu_threads_01);
 	g_test_add_func ("/mu-query/test-mu-threads-rogue", test_mu_threads_rogue);
-
 	
 	/* g_log_set_handler (NULL, */
 	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
