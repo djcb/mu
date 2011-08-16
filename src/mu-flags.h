@@ -122,6 +122,26 @@ const char* mu_flags_to_str_s (MuFlags flags, MuFlagType types);
 MuFlags mu_flags_from_str (const char *str, MuFlagType types);
 
 
+
+/**
+ * Update #oldflags with the flags in #str, where #str consists of the
+ * the normal flag characters, but prefixed with either '+' or '-',
+ * which means resp. "add this flag" or "remove this flag" from
+ * oldflags.  So, e.g. "-N+S" would unset the NEW flag and set the
+ * SEEN flag, without affecting other flags.
+ * 
+ * @param str the string representation
+ * @param old flags to update
+ * @param types the flag types to accept (other will be ignored)
+ * 
+ * @return 
+ */
+MuFlags mu_flags_from_str_delta (const char *str, MuFlags oldflags,
+				 MuFlagType types);
+
+
+
+
 typedef void (*MuFlagsForeachFunc) (MuFlags flag, gpointer user_data);
 
 /**

@@ -128,10 +128,11 @@ struct _MuConfig {
 	/* options for mv */
 	char            *flagstr;        /* message flags to set for
 					  * the target */
-	gboolean	printtarget;      /* should be print the
-					   * target file path on
-					   * stdout */
-	
+	gboolean	print_target;    /* should be print the
+					  * target file path on
+					  * stdout */
+	gboolean        ignore_dups;      /* silently ignore the
+					   * src=target case */
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between
 					   * multiple messages in mu

@@ -285,19 +285,31 @@ mu_cmd_mkdir (MuConfig *opts)
 static gboolean
 mv_check_params (MuConfig *opts, MuFlags *flags)
 {
-	if (!opts->params[1] || !opts->params[2]) {
+	if (!opts->params[1]) {
 		g_warning ("usage: mu mv [--flags=<flags>] <mailfile> "
-			   "<maildir>");
+			   "[<maildir>]");
 		return FALSE;
 	}
 
 	/* FIXME: check for invalid flags */
 	if (!opts->flagstr)
 		*flags = MU_FLAG_INVALID; /* ie., ignore flags */
-	else
-		*flags = mu_flags_from_str (opts->flagstr,
-					    MU_FLAG_TYPE_MAILDIR |
-					    MU_FLAG_TYPE_MAILFILE);
+	else {
+		/* if there's a '+' or '-' sign in the string, it must
+		 * be a flag-delta */
+		if (strstr (opts->flagstr, "+") || strstr (opts->flagstr, "-")) {
+			MuFlags oldflags;
+			oldflags = mu_maildir_get_flags_from_path (opts->params[1]);
+			*flags = mu_flags_from_str_delta (opts->flagstr,
+							  oldflags,
+							  MU_FLAG_TYPE_MAILDIR|
+							  MU_FLAG_TYPE_MAILFILE);
+		} else
+			*flags = mu_flags_from_str (opts->flagstr,
+						    MU_FLAG_TYPE_MAILDIR |
+						    MU_FLAG_TYPE_MAILFILE);
+	}
+	
 	return TRUE;
 }
 
@@ -310,7 +322,7 @@ cmd_mv_dev_null (MuConfig *opts)
 		return MU_ERROR_FILE;
 	}
 	
-	if (opts->printtarget)
+	if (opts->print_target)
 		g_print ("/dev/null\n"); /* /dev/null */
 
 	return MU_OK;
@@ -334,7 +346,8 @@ mu_cmd_mv (MuConfig *opts)
 	err = NULL;
 	fullpath = mu_maildir_move_message (opts->params[1],
 					    opts->params[2],
-					    flags, &err);
+					    flags, opts->ignore_dups,
+					    &err);
 	if (!fullpath) {
 		if (err) {
 			MuError code;
@@ -346,7 +359,7 @@ mu_cmd_mv (MuConfig *opts)
 		return MU_ERROR_FILE;
 		
 	} else {
-		if (opts->printtarget)       
+		if (opts->print_target)       
 			g_print ("%s\n", fullpath); 
 		return MU_OK;
 	}

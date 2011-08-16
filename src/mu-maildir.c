@@ -812,10 +812,12 @@ msg_move (const char* src, const char *dst, GError **err)
 
 gchar*
 mu_maildir_move_message (const char* oldpath, const char* targetmdir,
-			 MuFlags newflags, GError **err)
+			 MuFlags newflags, gboolean ignore_dups,
+			 GError **err)
 {
 	char *newfullpath;
 	gboolean rv;
+	gboolean src_is_target;
 	
 	g_return_val_if_fail (oldpath, FALSE);
 	
@@ -827,16 +829,21 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 		return FALSE;
 	}
 
-	if (g_strcmp0 (oldpath, newfullpath) == 0) {
+
+	src_is_target = (g_strcmp0 (oldpath, newfullpath) == 0);
+	
+	if (!ignore_dups && src_is_target) {
 		g_set_error (err, 0, MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
 			     "target equals source");
 		return FALSE;
 	}
 
-	rv = msg_move (oldpath, newfullpath, err);
-	if (!rv) {
-		g_free (newfullpath);
-		return NULL;
+	if (!src_is_target) {
+		rv = msg_move (oldpath, newfullpath, err);
+		if (!rv) {
+			g_free (newfullpath);
+			return NULL;
+		}
 	}
 	
 	return newfullpath;

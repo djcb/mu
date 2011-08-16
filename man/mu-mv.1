@@ -46,10 +46,20 @@ The flags is a sequence of characters from the set D (draft), F (flagged), N
 flags-parameter is case-sensitive. Any other characters will be silently
 ignored.
 
+The \fB\-\-flags\fR also has a second, 'delta', syntax. In this syntax, each
+of the flag characters is prefixed with either '+' or '-', which means that
+the corresponding flag will be added or removed. Using this syntax, you can
+change individual flags, without changing all of them.
+
 .TP
-\fB\-\-printtarget\fR
+\fB\-\-print-target\fR
 return the target path on standard output upon succesful completion of the
-move (with or without a succesful database update)
+move (with or without a succesful database update).
+
+.TP
+\fB\-\-ignore-dups\fR
+silently ignore the case where the source file is the same as the target.
+
 
 .SH EXAMPLE
 
@@ -76,22 +86,29 @@ To mark a message as no longer new and 'Seen', and update the database
 afterwards, you could do:
 
 .nf
-   mu --flags=S mv /home/roger/Maildir/inbox/new/123123123 /home/roger/Maildir/inbox/
+   mu mv /home/roger/Maildir/inbox/new/123123123 /home/roger/Maildir/inbox/ --flags=S
 .fi
 
 In this case, as we are not moving the message to a diffent maildir, we can
 leave off the maildir-argument; so the following is equivalent:
 
 .nf
-   mu --flags=S mv /home/roger/Maildir/inbox/new/123123123 
+   mu mv /home/roger/Maildir/inbox/new/123123123  --flags=S
 .fi
 
+Finally, using the 'delta'-syntax, you can set the 'seen'-flag
+and 'replied'-flag while removing the 'new' flag with:
+
+.nf
+   mu mv /home/billy/Maildir/inbox/new/12aa34343 --flags=+S+R-N 
+.fi
+which would give us a new file:
+\fI/home/billy/Maildir/inbox/cur/12aa34343:2,SR\fR
 
 .SH LIMITATIONS
 
 Both source-path and target-directory must be on the same disk partition,
 except when the target-directory is \fI/dev/null\fR.
-
 
 .SH RETURN VALUE
 

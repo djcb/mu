@@ -171,14 +171,17 @@ char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
  * of the message are affected; note that this may still involve a
  * moved to another directory (say, from new/ to cur/)
  * @param flags to set for the target (influences the filename, path)
+ * @param ignore_dups whether to silent ignore the src=target case (and return TRUE)
  * @param err (may be NULL) may contain error information; note if the
  * function return FALSE, err is not set for all error condition
  * (ie. not for parameter errors)
+ * 
  * @return return the full path name of the target file (g_free) if
  * the move succeeded, NULL otherwise
  */
 gchar* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
-				MuFlags newflags, GError **err);
+				MuFlags newflags, gboolean ignore_dups,
+				GError **err);
 
 G_END_DECLS
 

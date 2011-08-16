@@ -322,7 +322,10 @@ config_options_group_mv (MuConfig *opts)
 	GOptionEntry entries[] = {
 		{"flags", 0, 0, G_OPTION_ARG_STRING, &opts->flagstr,
 		 "flags to set for the target (DFNPRST)", NULL},
-		{"printtarget", 0, 0, G_OPTION_ARG_NONE, &opts->printtarget,
+		{"ignore-dups", 0, 0, G_OPTION_ARG_NONE, &opts->ignore_dups,
+		 "whether to silently ignore the source = target case",
+		 NULL},
+		{"print-target", 0, 0, G_OPTION_ARG_NONE, &opts->print_target,
 		 "whether to print the target path upon succesful completion",
 		 NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}

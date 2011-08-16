@@ -60,7 +60,6 @@ mu_flag_type (MuFlags flag)
 	if (flag >= MU_FLAG_SIGNED && flag <= MU_FLAG_HAS_ATTACH)
 		return MU_FLAG_TYPE_CONTENT;
 
-	g_return_val_if_reached (MU_FLAG_TYPE_INVALID);
 	return MU_FLAG_TYPE_INVALID;
 }
 
@@ -87,7 +86,6 @@ mu_flag_char (MuFlags flag)
 	case MU_FLAG_UNREAD:		return	'u';
 
 	default:
-		g_return_val_if_reached (0);
 		return 0;
 	}
 }
@@ -115,11 +113,9 @@ mu_flag_from_char (char kar)
 	case 'u': return MU_FLAG_UNREAD;	
 		
 	default:
-		g_return_val_if_reached (MU_FLAG_INVALID);
 		return MU_FLAG_INVALID;
 	}
 }
-
 
 
 /* does not use FLAG_INFO, optimized */
@@ -143,7 +139,6 @@ mu_flag_name (MuFlags flag)
 	case MU_FLAG_UNREAD:		return  "unread";	
 		
 	default:
-		g_return_val_if_reached (NULL);
 		return NULL;
 	}
 }
@@ -160,7 +155,7 @@ mu_flags_to_str_s (MuFlags flags, MuFlagType types)
 		    types & FLAG_INFO[u].flag_type)
 			str[v++] = FLAG_INFO[u].kar;
 	str[v] = '\0';
-
+	
 	return str;
 }
 
@@ -198,4 +193,40 @@ mu_flags_foreach (MuFlagsForeachFunc func, gpointer user_data)
 	for (u = 0; u != G_N_ELEMENTS(FLAG_INFO); ++u)
 		func (FLAG_INFO[u].flag, user_data);
 }
+
+
+MuFlags
+mu_flags_from_str_delta (const char *str, MuFlags oldflags,
+			 MuFlagType types)
+{
+	const char *cur;
+	MuFlags newflags;
+		
+	g_return_val_if_fail (str, MU_FLAG_INVALID);
+
+	for (cur = str, newflags = oldflags; *cur; ++cur) {
+
+		MuFlags f;
+		if (*cur == '+' || *cur == '-') {
+			f = mu_flag_from_char (cur[1]);
+			if (f == 0)
+				goto error;
+			if (*cur == '+')
+				newflags  |= f;
+			else
+				newflags  &= ~f;
+			++cur;		
+			continue;
+		}
+
+		goto error;
+	}
+	
+	return newflags;
+error:
+	g_warning ("invalid flag string");
+	return MU_FLAG_INVALID;
+	
+}
+
 
