@@ -101,20 +101,20 @@ AS_IF([test "x$have_gtest" = "xno"],[
 # 14 ships with gmime 2.5.x, which registers itself (pkgconfig) as 2.6
 # it is reported mu works fine with this new gmime as well, so we support
 # both; based on patch by GooseYArd
-PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime_24=yes],[have_gmime_24=no])
-AS_IF([test "x$have_gmime_24" = "xno"],[
-   PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
-   AS_IF([test "x$have_gmime_26" = "xno"],[   
+PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
+AS_IF([test "x$have_gmime_26" = "xno"],[
+   PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime_24=yes],[have_gmime_24=no])
+   AS_IF([test "x$have_gmime_24" = "xno"],[   
       AC_MSG_ERROR([
-      *** neither gmime-2.4 nor gmime-2.6 could not be found; please install it
+      *** neither gmime-2.4 nor gmime-2.6 could be found; please install it
       *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'
       *** If you compiled it yourself, you should ensure that the pkgconfig
       *** installation dir (e.g., /usr/local/lib/pkgconfig) is in your
       *** PKG_CONFIG_PATH.
       ])],[
-         gmime_version="`pkg-config --modversion gmime-2.6`"
+         gmime_version="`pkg-config --modversion gmime-2.4`"
     ])],[
-      gmime_version="`pkg-config --modversion gmime-2.4`"
+      gmime_version="`pkg-config --modversion gmime-2.6`"
    ])
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
