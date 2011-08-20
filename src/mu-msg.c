@@ -35,6 +35,35 @@
 #include "mu-str.h"
 
 
+/* note, we do the gmime initialization here rather than in
+ * mu-runtime, because this way we don't need mu-runtime for simple
+ * cases -- such as our unit tests */
+static gboolean _gmime_initialized = FALSE;
+
+static void
+gmime_init (void)
+{
+	g_return_if_fail (!_gmime_initialized);
+	
+#ifdef GMIME_ENABLE_RFC2047_WORKAROUNDS
+	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
+#else
+	g_mime_init(0);
+#endif /* GMIME_ENABLE_RFC2047_WORKAROUNDS */
+
+	_gmime_initialized = TRUE;
+}
+
+static void
+gmime_uninit (void)
+{
+		g_return_if_fail (_gmime_initialized);
+
+		g_mime_shutdown();
+		_gmime_initialized = FALSE;
+}
+
+
 
 static MuMsg*
 msg_new (void)
@@ -56,6 +85,11 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 	MuMsgFile *msgfile;
 	
 	g_return_val_if_fail (path, NULL);
+
+	if (G_UNLIKELY(!_gmime_initialized)) {
+		gmime_init ();
+		g_atexit (gmime_uninit);
+	}
 		
 	msgfile = mu_msg_file_new (path, mdir, err);
 	if (!msgfile) 
@@ -75,7 +109,12 @@ mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 	MuMsgDoc *msgdoc;
 		
 	g_return_val_if_fail (doc, NULL);
-				
+
+	if (G_UNLIKELY(!_gmime_initialized)) {
+		gmime_init ();
+		g_atexit (gmime_uninit);
+	}
+
 	msgdoc = mu_msg_doc_new (doc, err);
 	if (!msgdoc)
 		return NULL;
