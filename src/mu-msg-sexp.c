@@ -20,6 +20,7 @@
 
 #include "mu-str.h"
 #include "mu-msg.h"
+#include "mu-msg-iter.h"
 #include "mu-msg-part.h"
 #include "mu-maildir.h"
 
@@ -69,7 +70,7 @@ typedef struct _ContactData ContactData;
 
 static gchar*
 get_name_addr_pair (MuMsgContact *c)
-{
+{	
 	gchar *name, *addr, *pair;
 
 	name = (char*)mu_msg_contact_name(c);
@@ -90,6 +91,7 @@ get_name_addr_pair (MuMsgContact *c)
 static void
 add_prefix_maybe (GString *gstr, gboolean *field, const char *prefix)
 {
+	/* if there's nothing in the field yet, add the prefix */
 	if (!*field)
 		g_string_append (gstr, prefix);
 
@@ -101,9 +103,11 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 {
 	char *pair;
 	MuMsgContactType ctype;
-
-	ctype = mu_msg_contact_type (c);	
 	
+	ctype = mu_msg_contact_type (c);
+
+	/* if the current type is not the previous type, close the
+	 * previous first */
 	if (cdata->prev_ctype != ctype && cdata->prev_ctype != (unsigned)-1)
 		g_string_append (cdata->gstr, ")\n");
 
@@ -241,16 +245,34 @@ append_sexp_message_file_attr (GString *gstr, MuMsg *msg)
 			  mu_msg_get_body_html(msg));
 }
 
+static void
+append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
+{
+	g_string_append_printf
+		(gstr, "\t:thread (:path \"%s\" :root %s :first-child %s "
+		 ":empty-parent %s :duplicate %s)\n",
+		 ti->threadpath,
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_ROOT ? "t" : "nil",
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD ? "t" : "nil",
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT ? "t" : "nil",
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_DUP ? "t" : "nil");
+}
+
+
 char*
-mu_msg_to_sexp (MuMsg *msg, gboolean dbonly)
+mu_msg_to_sexp (MuMsg *msg, const MuMsgIterThreadInfo *ti, gboolean dbonly)
 {
 	GString *gstr;
 	time_t t;
-	
+
 	gstr = g_string_sized_new (dbonly ? 1024 : 8192);	
 	g_string_append (gstr, "(\n");
-
-	append_sexp_contacts (gstr, msg);	
+	
+	append_sexp_contacts (gstr, msg);
+	
+	if (ti)
+		append_sexp_thread_info (gstr, ti);
+	
 	append_sexp_attr (gstr,
 			  "subject", mu_msg_get_subject (msg));
 	
