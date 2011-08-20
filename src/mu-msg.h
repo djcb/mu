@@ -368,18 +368,23 @@ int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
 gboolean mu_msg_is_readable (MuMsg *self);
 
 
+struct _MuMsgIterThreadInfo;
+
+
 /**
  * convert the msg to a Lisp symbolic expression (for further processing in
  * e.g. emacs)
  * 
  * @param msg a valid message
+ * @param ti thread info for the current message, or NULL
  * @param dbonly if TRUE, only include message fields which can be
  * obtained from the database (this is much faster if the MuMsg is
  * database-backed, so no file needs to be opened)
  * 
  * @return a string with the sexp (free with g_free) or NULL in case of error
  */
-char* mu_msg_to_sexp (MuMsg *msg, gboolean dbonly);
+char* mu_msg_to_sexp (MuMsg *msg, const struct _MuMsgIterThreadInfo *ti,
+		      gboolean dbonly);
 
 /**
  * move a message to another maildir

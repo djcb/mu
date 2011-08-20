@@ -36,11 +36,47 @@
 
 #include "mu-maildir.h"
 
+/* note, we do the gmime initialization here rather than in
+ * mu-runtime, because this way we don't need mu-runtime for simple
+ * cases -- such as our unit tests. Also note that we need gmime init
+ * even for the doc backend, as we use the address parsing functions
+ * also there. */
+static gboolean _gmime_initialized = FALSE;
+
+static void
+gmime_init (void)
+{
+	g_return_if_fail (!_gmime_initialized);
+	
+#ifdef GMIME_ENABLE_RFC2047_WORKAROUNDS
+	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
+#else
+	g_mime_init(0);
+#endif /* GMIME_ENABLE_RFC2047_WORKAROUNDS */
+	
+	_gmime_initialized = TRUE;
+}
+
+static void
+gmime_uninit (void)
+{
+	g_return_if_fail (_gmime_initialized);
+	
+	g_mime_shutdown();
+	_gmime_initialized = FALSE;
+}
+
+
 static MuMsg*
 msg_new (void)
 {
 	MuMsg *self;
-
+	
+	if (G_UNLIKELY(!_gmime_initialized)) {
+		gmime_init ();
+		g_atexit (gmime_uninit);
+	}
+	
 	self = g_slice_new0 (MuMsg);
 
 	self->_refcount = 1;
@@ -546,7 +582,7 @@ addresses_foreach (const char* addrs, MuMsgContactType ctype,
 		   MuMsgContactForeachFunc func, gpointer user_data)
 {
 	InternetAddressList *addrlist;
-
+	
 	if (!addrs)
 		return;
 	
