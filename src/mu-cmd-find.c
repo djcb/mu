@@ -48,8 +48,8 @@
 
 static gboolean output_links (MuMsgIter *iter, const char* linksdir,
 			      gboolean clearlinks,size_t *count);
-static gboolean output_sexp (MuMsgIter *iter, gboolean include_unreadable,
-			     size_t *count);
+static gboolean output_sexp (MuMsgIter *iter, gboolean threads,
+			     gboolean include_unreadable, size_t *count);
 static gboolean output_xml (MuMsgIter *iter,gboolean include_unreadable,
 			    size_t *count);
 static gboolean output_plain (MuMsgIter *iter, const char *fields,
@@ -123,7 +123,8 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, size_t *count)
 	case MU_CONFIG_FORMAT_XML:
 		return output_xml (iter, opts->include_unreadable, count);
 	case MU_CONFIG_FORMAT_SEXP:
-		return output_sexp (iter, opts->include_unreadable, count);	
+		return output_sexp (iter, opts->threads,
+				    opts->include_unreadable, count);	
 	default:
 		g_assert_not_reached ();
 		return FALSE;
@@ -716,7 +717,8 @@ print_attr_xml (const char* elm, const char *str)
 
 
 static gboolean
-output_sexp (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
+output_sexp (MuMsgIter *iter, gboolean threads,
+	     gboolean include_unreadable, size_t *count)
 {
 	MuMsgIter *myiter;
 	size_t mycount;
@@ -728,6 +730,7 @@ output_sexp (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 
 		MuMsg *msg;
 		char *sexp;
+		const MuMsgIterThreadInfo *ti;
 		
 		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
 		if (!msg)
@@ -737,8 +740,10 @@ output_sexp (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 		 * readable (ie, live also outside the database) */
 		if (!include_unreadable && !mu_msg_is_readable (msg))
 			continue;
-					
-		sexp = mu_msg_to_sexp (msg, TRUE);
+
+		ti = threads ? mu_msg_iter_get_thread_info (iter) : NULL;
+		
+		sexp = mu_msg_to_sexp (msg, ti, TRUE);
 		fputs (sexp, stdout);
 		g_free (sexp);
 

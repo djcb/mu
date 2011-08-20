@@ -46,7 +46,7 @@
 static gboolean
 view_msg_sexp (MuMsg *msg)
 {
-	fputs (mu_msg_to_sexp (msg, FALSE), stdout);
+	fputs (mu_msg_to_sexp (msg, NULL, FALSE), stdout);
 	return TRUE;
 }
 
