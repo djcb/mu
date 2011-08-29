@@ -52,6 +52,7 @@ libmu_la_SOURCES=			\
 	mu-cmd-extract.c		\
 	mu-cmd-find.c			\
 	mu-cmd-index.c			\
+	mu-cmd-server.c			\
 	mu-cmd.c			\
 	mu-cmd.h			\
 	mu-config.c			\
@@ -95,12 +96,14 @@ libmu_la_SOURCES=			\
 	mu-runtime.h			\
 	mu-store.cc			\
 	mu-store.h			\
+	mu-store-read.cc		\
+	mu-store-write.cc		\
+	mu-store-priv.hh		\
 	mu-str-normalize.c		\
 	mu-str.c			\
 	mu-str.h			\
 	mu-threader.c			\
 	mu-threader.h			\
-	mu-util-db.cc			\
 	mu-util.c			\
 	mu-util.h
 
@@ -108,4 +111,5 @@ libmu_la_SOURCES=			\
 libmu_la_LIBADD=			\
 	$(XAPIAN_LIBS)			\
 	$(GMIME_LIBS)			\
-	$(GLIB_LIBS)
+	$(GLIB_LIBS)			\
+	$(READLINE_LIBS)
