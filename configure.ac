@@ -4,15 +4,15 @@
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 3 of the License, or
 ## (at your option) any later version.
-##  
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-##  
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software Foundation,
-## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
+## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_INIT([mu],[0.9.8pre],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
@@ -88,7 +88,7 @@ PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.14)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`pkg-config --modversion glib-2.0`"
-			  	       
+
 # gtest was introduced in glib 2.16; but we're also using
 # g_test_log_set_fatal_handler, which was introduced in 2.22
 PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.22, [have_gtest=yes],[have_gtest=no])
@@ -104,7 +104,7 @@ AS_IF([test "x$have_gtest" = "xno"],[
 PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
 AS_IF([test "x$have_gmime_26" = "xno"],[
    PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime_24=yes],[have_gmime_24=no])
-   AS_IF([test "x$have_gmime_24" = "xno"],[   
+   AS_IF([test "x$have_gmime_24" = "xno"],[
       AC_MSG_ERROR([
       *** neither gmime-2.4 nor gmime-2.6 could be found; please install it
       *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'
@@ -118,7 +118,7 @@ AS_IF([test "x$have_gmime_26" = "xno"],[
    ])
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
- 
+
 
 # xapian?
 AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
@@ -132,10 +132,10 @@ AS_IF([test "x$XAPIAN" = "xno"],[
    ])
 ],[
    XAPIAN_CXXFLAGS=`$XAPIAN --cxxflags`
-   XAPIAN_LIBS=`$XAPIAN --libs`		
+   XAPIAN_LIBS=`$XAPIAN --libs`
    have_xapian="yes"
    xapian_version="`xapian-config --version`"
-])   
+])
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
@@ -160,7 +160,7 @@ AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" \
 	    -a "x$gui" != "xauto"],
       AC_MSG_ERROR([the argument for --with-gui= must be either \
       			gtk2|gtk3|auto|none ($gui)]))
-      
+
 # check for gtk3
 AS_IF([test "x$gui" = "xgtk3"],[
   PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
@@ -177,7 +177,7 @@ AS_IF([test "x$gui" != "xnone" -a "x$have_gtk3" != "xyes"],[
   PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
-  gtk_version="`pkg-config --modversion gtk+-2.0`"	
+  gtk_version="`pkg-config --modversion gtk+-2.0`"
 ])
 # only an error if we explicitly asked for it
 AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "xauto"],
@@ -211,6 +211,18 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 
+
+###############################################################################
+# use readline (for 'mu server') if it's available
+AC_CHECK_LIB([readline], [main],
+              [AC_SUBST([READLINE_LIBS], ["-lreadline"])
+               AC_DEFINE([HAVE_LIBREADLINE], [1],
+                         [Whether we have readline])])
+###############################################################################
+
+
+
+
 ###############################################################################
 # check for guile & guile-snarf
 AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [$PATH])
@@ -234,7 +246,7 @@ AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
 # for now, we require guile 2.x
 AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE_CONFIG" != "x" \
                            -a "x$GUILE_SNARF" != "x" \
-			   -a "x$GUILE_MAJOR_VERSION" != "0"])	 
+			   -a "x$GUILE_MAJOR_VERSION" != "0"])
 
 AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
       [AC_MSG_WARN([Only guile >= 2.x is supported]);
@@ -242,7 +254,7 @@ AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
 ###############################################################################
 
 
-       
+
 # check for xdg-open
 AS_IF([test "x$buildgui"="xyes"],[
   AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
@@ -250,11 +262,11 @@ AS_IF([test "x$buildgui"="xyes"],[
     AC_DEFINE_UNQUOTED([XDGOPEN], ["$XDGOPEN"],[Path to xdg-open])],[
     AC_MSG_WARN([xdg-open not found, mu cannot open attachments])])
 ])
-   
+
 # check for pmccabe
 AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
 AS_IF([test "x$PMCCABE" = "xno"],[
-   have_pmccabe="no"	    
+   have_pmccabe="no"
    AC_MSG_WARN([
    *** Developers: you do not seem to have the pmccabe tool installed.
    *** Please install it if you want to run the automated code checks])
@@ -278,7 +290,7 @@ contrib/Makefile
 ])
 AC_OUTPUT
 
-echo 
+echo
 echo "mu configuration is complete."
 echo "-----------------------------"
 
@@ -290,7 +302,7 @@ fi
 
 
 echo "Xapian version                       : $xapian_version"
-echo "GLib version                         : $glib_version" 
+echo "GLib version                         : $glib_version"
 echo "GMime version                        : $gmime_version"
 
 if test "x$buildgui" = "xyes"; then
@@ -316,8 +328,8 @@ echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo "xdg-open                             : $XDGOPEN"
 echo
 
-echo "Have direntry->d_ino                 : $use_dirent_d_ino" 
-echo "Have direntry->d_type                : $use_dirent_d_type" 
+echo "Have direntry->d_ino                 : $use_dirent_d_ino"
+echo "Have direntry->d_type                : $use_dirent_d_type"
 echo "-----------------------------"
 echo
 
