@@ -372,16 +372,34 @@ config_options_group_extract (MuConfig *opts)
 }
 
 
+static GOptionGroup*
+config_options_group_server (MuConfig * opts)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
+		 "top of the maildir", NULL},
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
+	};
+
+	og = g_option_group_new("server",
+				"options for the 'server' command",
+				"", NULL, NULL);
+	g_option_group_add_entries(og, entries);
+
+	return og;
+}
+
+
+
 static gboolean  
 parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 {
 	int i;
-	typedef struct {
+	struct {
 		const gchar*	_name;
 		MuConfigCmd	_cmd;
-	} Cmd;
-		
-	Cmd cmd_map[] = {
+	} cmd_map[] = {
 		{ "cfind",   MU_CONFIG_CMD_CFIND },
 		{ "cleanup", MU_CONFIG_CMD_CLEANUP },
 		{ "extract", MU_CONFIG_CMD_EXTRACT },
@@ -392,6 +410,7 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		{ "view",    MU_CONFIG_CMD_VIEW },
 		{ "add",     MU_CONFIG_CMD_ADD },
 		{ "remove",  MU_CONFIG_CMD_REMOVE },
+		{ "server",  MU_CONFIG_CMD_SERVER }
 	};
 		
 	opts->cmd	 = MU_CONFIG_CMD_NONE;
@@ -420,31 +439,27 @@ static void
 add_context_group (GOptionContext *context, MuConfig *opts)
 {
 	GOptionGroup *group;
-
+	
 	group = NULL;
 		
 	switch (opts->cmd) {
 	case MU_CONFIG_CMD_INDEX:
-		group = config_options_group_index (opts);
-		break;
+		group = config_options_group_index (opts);	break;
 	case MU_CONFIG_CMD_FIND:
-		group = config_options_group_find (opts);
-		break;
+		group = config_options_group_find (opts);	break;
 	case MU_CONFIG_CMD_MKDIR:
-		group = config_options_group_mkdir (opts);
-		break;
+		group = config_options_group_mkdir (opts);	break;
 	case MU_CONFIG_CMD_EXTRACT:
-		group = config_options_group_extract (opts);
-		break;
+		group = config_options_group_extract (opts);	break;
 	case MU_CONFIG_CMD_MV:
-		group = config_options_group_mv (opts);
-		break;
+		group = config_options_group_mv (opts);		break;
 	case MU_CONFIG_CMD_CFIND:
-		group = config_options_group_cfind (opts);
-		break;
+		group = config_options_group_cfind (opts);	break;
 	case MU_CONFIG_CMD_VIEW:
-		group = config_options_group_view (opts);
-		break;
+		group = config_options_group_view (opts);	break;
+	case MU_CONFIG_CMD_SERVER:
+		group = config_options_group_server (opts);	break;
+		
 	default: break;
 	}
 
@@ -523,8 +538,8 @@ show_usage (gboolean noerror)
 {
 	const char* usage=
 		"usage: mu command [options] [parameters]\n"
-		"where command is one of index, find, cfind, view, mkdir, cleanup "
-		"or extract\n\n"
+		"where command is one of index, find, cfind, view, mkdir, cleanup, "
+		"extract, mv, add, remove or server\n\n"
 		"see the mu, mu-<command> or mu-easy manpages for "
 		"more information\n";
 
@@ -554,7 +569,6 @@ mu_config_execute (MuConfig *opts)
 		
 	if (!opts->params||!opts->params[0]) {/* no command? */
 		show_version ();
-		g_print ("\n");
 		show_usage (TRUE);
 		return MU_ERROR_IN_PARAMETERS;
 	}
@@ -570,9 +584,8 @@ mu_config_execute (MuConfig *opts)
 	case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
 	case MU_CONFIG_CMD_ADD:        return mu_cmd_add (opts);
 	case MU_CONFIG_CMD_REMOVE:     return mu_cmd_remove (opts);
-		
+	case MU_CONFIG_CMD_SERVER:     return mu_cmd_server (opts);
 	case MU_CONFIG_CMD_UNKNOWN:
-		g_printerr ("mu: unknown command '%s'\n\n", opts->cmdstr);
 		show_usage (FALSE);
 		return MU_ERROR_IN_PARAMETERS;
 	default:

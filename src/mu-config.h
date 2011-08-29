@@ -71,7 +71,8 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_MV,
 	MU_CONFIG_CMD_ADD,
 	MU_CONFIG_CMD_REMOVE,
-	
+	MU_CONFIG_CMD_SERVER,
+
 	MU_CONFIG_CMD_NONE,
 };
 typedef enum _MuConfigCmd MuConfigCmd;
