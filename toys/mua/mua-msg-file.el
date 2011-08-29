@@ -170,9 +170,8 @@ determined, return `nil'."
 (defun mua/msg-flags-to-string (flags)
   "Remove duplicates and sort the output of `mua/msg-flags-to-string-1'."
   (concat
-    (sort 
-      (remove-duplicates
-	(append (mua/msg-flags-to-string-1 flags) nil)) '>)))
+    (sort (remove-duplicates
+	     (append (mua/msg-flags-to-string-1 flags) nil)) '>)))
 
 (defun mua/msg-flags-to-string-1 (flags)
   "Convert a list of flags into a string as seen in Maildir
@@ -185,14 +184,17 @@ Also see `mua/msg-string-to-flags'.
 
 \[1\]: http://cr.yp.to/proto/maildir.html"
   (when flags
-    (let ((kar
-	    (case (car flags) 
-	      ('draft    ?D) 
-	      ('flagged  ?F)
-	      ('passed   ?P)
-	      ('replied  ?R)
-	      ('seen     ?S)
-	      ('trashed  ?T))))
+    (let ((kar (case (car flags) 
+		 ('draft     ?D) 
+		 ('flagged   ?F)
+		 ('new       ?N)
+		 ('passed    ?P)
+		 ('replied   ?R)
+		 ('seen      ?S)
+		 ('trashed   ?T)
+		 ('encrypted ?x)
+		 ('signed    ?s)
+		 ('unread    ?u))))
       (concat (and kar (string kar))
 	(mua/msg-flags-to-string-1 (cdr flags))))))
 

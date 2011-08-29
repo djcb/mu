@@ -42,45 +42,46 @@
  "Fields to display in the message view buffer.")
 
 (defvar mua/hdrs-buffer nil
-  "Headers buffer for the view in this buffer.")
+  "*internal* Headers buffer for the view in this buffer.")
 
 (defvar mua/view-uid nil
-  "The UID for the message being viewed in this buffer.")
+  "*internal* The UID for the message being viewed in this buffer.")
 
 
-(defun mua/view (uid headersbuf)
-  "display message identified by UID in a new buffer. Note that
-the action of viewing a message may cause it to be moved/renamed;
-this function returns the resulting name. PARENTBUF refers to the
-buffer who invoked this view; this allows us to return there when
-we quit from this view. Also, if PARENTBUF is a find buffer (ie.,
-has mu-headers-mode as its major mode), this allows various
-commands (navigation, marking etc.) to be applied to this
-buffer.
+(defun mua/view (uid hdrsbuf)
+  "Display the message identified by UID in a new buffer, and mark
+is as no longer unread, -- note that the action of viewing a
+message may cause it to be moved/renamed; this function returns the
+resulting name. PARENTBUF refers to the buffer who invoked this
+view; this allows us to return there when we quit from this
+view. Also, if PARENTBUF is a find buffer (ie., has mu-headers-mode
+as its major mode), this allows various commands (navigation,
+marking etc.) to be applied to this buffer.
 
 For the reasoning to use UID here instead of just the path, see
-`mua/msg-map'.
-"
-  (let* ((path (mua/msg-map-get-path uid))
-	  (sexp (and path (mua/mu-view-sexp path)))
-	  (msg (and sexp (mua/msg-from-string sexp))))
-    (if (not msg)
-      (mua/warn "Cannot view message %S %S" uid path)
-      (progn
-	(switch-to-buffer (get-buffer-create mua/view-buffer-name))
-	(let ((inhibit-read-only t))
-	  (erase-buffer)
-	  (insert (mua/view-message msg)))
-	
+`mua/msg-map'."
+  (condition-case err
+    (let* ((path (mua/msg-map-get-path uid))
+	    (sexp (mua/mu-view-sexp path))
+	    (msg (and sexp (mua/msg-from-string sexp))))
+      (unless (buffer-live-p hdrsbuf) (error "Headers buffer is dead"))
+      (unless msg (error "Cannot view message %S" path))
+      (let ((buf (get-buffer-create mua/view-buffer-name))
+	     (inhibit-read-only t))
+	;; fill buffer with the message
+	(erase-buffer)
+	(insert (mua/view-message msg))
 	(mua/view-mode)
+	(goto-char (point-min))
 	
 	(setq ;; these are buffer-local
 	  mua/view-uid uid
-	  mua/hdrs-buffer headersbuf
-	  mua/parent-buffer headersbuf)
-	;; mark as read
-	(unless (mua/msg-move uid nil "+S-N" t)
-	  (mua/warn "Failed to mark message as read"))))))
+	  mua/hdrs-buffer hdrsbuf
+	  mua/parent-buffer hdrsbuf)
+	
+	(unless (mua/msg-move uid nil "+S-N" t) ;; mark as read
+	  (error "Failed to mark message as read"))))
+    (debug (error))));; (mua/warn "error: %s" (error-message-string err)))))
 
 
 
@@ -228,7 +229,7 @@ own safety)."
   "move to the next message; note, this will replace the current
 buffer"
   (interactive)
-  (mua/with-hdrs-buffer
+  (with-current-buffer mua/hdrs-buffer
     (when (mua/hdrs-next) (mua/hdrs-view))))
 
 (defun mua/view-prev ()

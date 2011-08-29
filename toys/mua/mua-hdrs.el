@@ -24,6 +24,10 @@
 
 ;;; Commentary:
 
+;; In this file are function related to creating the list of one-line
+;; descriptions of emails, aka 'headers' (not to be confused with headers like
+;; 'To:' or 'Subject:')
+
 ;; mu
 
 ;;; Code:
@@ -34,29 +38,26 @@
 (require 'mua-msg)
 
 ;; note: these next two are *not* buffer-local, so they persist during a session
-(defvar mua/hdrs-sortfield nil "field to sort headers by")
-(defvar mua/hdrs-sort-descending nil "whether to sort in descending order")
+(defvar mua/hdrs-sortfield nil
+  "*internal* Field to sort headers by")
+(defvar mua/hdrs-sort-descending nil
+  "*internal Whether to sort in descending order")
 
-(defvar mua/header-fields
+(defvar mua/hdrs-fields
   '( (:date          .  25)
      (:from-or-to    .  22)
      (:subject       .  40))
-  "a list of fields and their widths")
-
+  "A list of header fields and their character widths")
 
 ;; internal stuff
 (defvar mua/buf ""
   "*internal* Buffer for results data.")
 (defvar mua/last-expression nil
   "*internal* The most recent search expression.")
-(defvar mua/hdrs-process nil
+(defvar mua/hdrs-proc nil
   "*internal* The mu-find process.")
-(defvar mua/hdrs-hash nil
-  "*internal* The bol->uid hash.")
 
-
-
-(defconst mua/eom "\n;;eom\n"
+(defconst mua/eom-mark "\n;;eom\n"
   "*internal* Marker for the end of message in the mu find
   output.")
 (defconst mua/hdrs-buffer-name "*mua-headers*"
@@ -66,20 +67,24 @@
   "A process-filter for the 'mu find --format=sexp output; it
   accumulates the strings into valid sexps by checking of the
   ';;eom' end-of-msg marker, and then evaluating them."
-  (let ((procbuf (process-buffer proc)))
-    (when (buffer-live-p procbuf)
-      (with-current-buffer procbuf
-	(save-excursion
-	  (setq mua/buf (concat mua/buf str))
-	  (let ((eom (string-match mua/eom mua/buf)))
-	    (while (numberp eom)
-	      (let* ((msg (mua/msg-from-string(substring mua/buf 0 eom))))
-		(save-match-data (mua/hdrs-append-message msg))
-		(setq mua/buf (substring mua/buf (match-end 0)))
-		(setq eom (string-match mua/eom mua/buf))))))))))
-
+  (setq mua/buf (concat mua/buf str)) ;; update our buffer
+  (let ((buf (process-buffer proc)))  ;; check the buffer
+    (unless (buffer-live-p buf)
+      (error "No live buffer for process filter"))
+    (while ;; for-each-sex
+      ;; Process the sexp in `mua/buf', and remove it if it worked and return
+      ;; t. If no complete sexp is found, return nil."
+      (let ((eom (string-match mua/eom-mark mua/buf))
+	     (after-eom (match-end 0)) (inhibit-read-only t))
+	(when (numberp eom) ;; was the marker found?
+	  (with-current-buffer buf
+	    (mua/hdrs-append-message (mua/msg-from-string
+				       (substring mua/buf 0 eom))))
+	  (setq mua/buf (substring mua/buf after-eom)) t)))))
+          
+  
 (defun mua/hdrs-proc-sentinel (proc msg)
-  "Check the process upon completion."
+  "Sentinel funtion for the mu-find process -- ie., will be called upon its ."
   (let ((procbuf (process-buffer proc))
 	 (status (process-status proc))
 	 (exit-status (process-exit-status proc)))
@@ -90,93 +95,86 @@
 		('exit
 		  (if (= 0 exit-status)
 		    "End of search results"
-		    (mua/mu-error exit-status))))))
-		  
+		    (mua/mu-error exit-status))))))	  
 	      (with-current-buffer procbuf
 		(save-excursion
 		  (goto-char (point-max))
 		  (mua/message "%s" msg)))))))
 
-(defun mua/hdrs-search-execute (expr buf)
-  "search in the mu database; output the results in buffer BUF"
-  (let ((args `("find" "--format=sexp" ,expr)))
-    (when mua/mu-home
-      (add-to-list args (concat "--muhome=" mua/mu-home)))
-    (when mua/hdrs-sortfield
-      (add-to-list args (concat "--sortfield=" mua/hdrs-sortfield)))
-    (when mua/hdrs-sort-descending
-	(add-to-list args "--descending"))
-    (mua/log (concat mua/mu-binary " " (mapconcat 'identity args " ")))
-    ;; now, do it!
-    (let ((proc (apply 'start-process "*mua-headers*" buf mua/mu-binary args)))
-      (setq
-	mua/buf ""
-	mua/hdrs-process proc)
-      (set-process-filter   proc 'mua/hdrs-proc-filter)
-      (set-process-sentinel proc 'mua/hdrs-proc-sentinel))))
+(defun mua/hdrs-search-execute (expr)
+  "Search in the mu database, and output the results in the current
+buffer."
+  (let* ((argl
+	   (remove-if 'not
+	     (list "find" "--format=sexp" "--threads"
+	       (when mua/mu-home (concat "--muhome=" mua/mu-home))
+	       (when mua/hdrs-sortfield
+		 (concat "--sortfield=" mua/hdrs-sortfield))
+	       (when mua/hdrs-sort-descending "--descending")
+	       expr)))
+	  (mua/buf "") 
+	  ;; start the process
+	  (proc (apply 'start-process
+		  mua/hdrs-buffer-name (current-buffer) mua/mu-binary argl)))
+    (setq mua/hdrs-proc proc)
+    (set-process-filter   proc 'mua/hdrs-proc-filter)
+    (set-process-sentinel proc 'mua/hdrs-proc-sentinel)
+    (mua/log (concat mua/mu-binary " " (mapconcat 'identity argl " ")))))
 
 ;; Note, the 'mu find --format=sexp' sexp is almost the same as the ones that
 ;; 'mu view --format=sexp' produces (see mu-get-message), with the difference
 ;; that former may give more than one result, and that mu-headers output comes
 ;; from the database rather than file, and does _not_ contain the message body
 (defun mua/hdrs-search (expr)
-  "search in the mu database"
+  "Search in the mu database for EXPR, and switch to the output
+buffer for the results."
   (interactive "s[mu] search for: ")
-  (setq debug-on-error t)
-
-  ;; kill running process if needed
-  (when (and mua/hdrs-process
-	  (eq (process-status mua/hdrs-process) 'run))
-    (kill-process mua/hdrs-process))
-  
+  ;; kill a running process if needed
+  (when (and mua/hdrs-proc (eq (process-status mua/hdrs-proc) 'run))
+    (kill-process mua/hdrs-proc))
   (let ((buf (mua/new-buffer mua/hdrs-buffer-name)))
     (switch-to-buffer buf)
     (mua/hdrs-mode)
-    (setq
-      mua/last-expression expr
-      mua/hdrs-hash       (make-hash-table :size 256 :rehash-size 2)
-      mua/hdrs-marks-hash (make-hash-table :size 16  :rehash-size 2))
-    (mua/hdrs-search-execute expr buf)))
+    (mua/hdrs-search-execute expr)))
 
 
 (defun mua/hdrs-mode ()
-  "major mode for displaying mua search results"
+  "Major mode for displaying mua search results."
   (interactive)
   (kill-all-local-variables)
   (use-local-map mua/hdrs-mode-map)
   
   (make-local-variable 'mua/buf)
   (make-local-variable 'mua/last-expression)
-  (make-local-variable 'mua/hdrs-process)
+  (make-local-variable 'mua/hdrs-proc)
   (make-local-variable 'mua/hdrs-hash)
   (make-local-variable 'mua/hdrs-marks-hash)
 
   (setq
+    mua/last-expression expr
+    mua/hdrs-marks-hash (make-hash-table :size 16  :rehash-size 2)
     major-mode 'mua/mua/hdrs-mode mode-name "*mua-headers*"
-    truncate-lines t buffer-read-only t
+    truncate-lines t
+    buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
 (defun mua/hdrs-line (msg)
-  "return line describing a message (ie., a header line)"
-  (let
-    ((hdr
-       (mapconcat
-	 (lambda(fieldpair)
-	   (let ((field (car fieldpair)) (width (cdr fieldpair)))
-	     (case field
-	       (:subject (mua/hdrs-header   msg :subject width))
-	       (:to      (mua/hdrs-contact  msg field width))
-	       (:from    (mua/hdrs-contact  msg field width))
-	       ;;(:from-or-to (mua/msg-header-header-from-or-to msg width 'mua/header-face))
-	       (:cc      (mua/hdrs-contact  msg field width))
-	       (:bcc     (mua/hdrs-contact  msg field width))
-	       (:date    (mua/hdrs-date     msg width))
-	       (:flags   (mua/hdrs-flags    msg width))
-	       (:size    (mua/hdrs-size     msg width))
-	       (t        (error "Unsupported field: %S" field))
-	       )))
-	 mua/header-fields " ")))
-    hdr))
+  "Return line describing a message (ie., a header line)."
+  (mapconcat
+    (lambda(fieldpair)
+      (let ((field (car fieldpair)) (width (cdr fieldpair)))
+	(case field
+	  (:subject (mua/hdrs-header   msg :subject width))
+	  (:to      (mua/hdrs-contact  msg field width))
+	  (:from    (mua/hdrs-contact  msg field width))
+	  ;;(:from-or-to (mua/msg-header-header-from-or-to msg width 'mua/header-face))
+	  (:cc      (mua/hdrs-contact  msg field width))
+	  (:bcc     (mua/hdrs-contact  msg field width))
+	  (:date    (mua/hdrs-date     msg width))
+	  (:flags   (mua/hdrs-flags    msg width))
+	  (:size    (mua/hdrs-size     msg width))
+	  (t        (error "Unsupported field: %S" field)))))
+    mua/header-fields " "))
 
 ;;
 ;; Note: we maintain a hash table to remember what message-path corresponds to a
@@ -188,37 +186,33 @@
 ;;
 ;;    point-of-bol -> path
 ;;
-
-(defun mua/hdrs-set-path (path)
-  "Map the bol of the current header to an entry in
-`mua/msg-map', and return the uid."
-  (let ((uid (mua/msg-map-add path)))
-    (puthash (line-beginning-position 1) uid mua/hdrs-hash)
-    uid))
-
 (defun mua/hdrs-get-uid ()
   "Get the uid for the message header at point."
-  (gethash (line-beginning-position 1) mua/hdrs-hash))
+  (get-text-property (point) 'uid))
 
 (defun mua/hdrs-get-path ()
   "Get the current path for the header at point."
   (mua/msg-map-get-path (mua/hdrs-get-uid)))
 
 (defun mua/hdrs-append-message (msg)
-  "append a message line to the buffer and register the message"
-  (let ((line (mua/hdrs-line msg)) (inhibit-read-only t))
+  "Append a one-line description of MSG to the buffer, and register
+it with `mua/msg-map-add' to `mua/msg-map'; add the uid for this
+message as a text-property `uid'."
+  (let* ((uid (mua/msg-map-add (mua/msg-field msg :path)))
+	  (line (propertize (concat "  " (mua/hdrs-line msg) "\n") 'uid uid))
+	  (inhibit-read-only t))
     (save-excursion
       (goto-char (point-max))
-      (mua/hdrs-set-path (mua/msg-field msg :path))
-      (insert "  " line "\n"))))
+      (insert line))))
 
 
+
 ;; Now follow a bunch of function to turn some message field in a
 ;; string for display
 
 (defun mua/hdrs-header (msg field width)
-  "get a string at WIDTH (truncate or ' '-pad) for display as a
-header"
+  "Get a string at WIDTH (truncate or ' '-pad) for display as a
+header."
   (let* ((str (mua/msg-field msg field)) (str (if str str "")))
     (propertize (truncate-string-to-width str width 0 ?\s t)
       'face 'mua/header-face)))
@@ -250,24 +244,15 @@ fitting in WIDTH"
 
 
 (defun mua/hdrs-date (msg width)
-  "return a string for the date of MSG of WIDTH"
+  "Return a string for the date of MSG of WIDTH."
   (let* ((date (mua/msg-field msg :date)))
     (if date
       (propertize  (truncate-string-to-width (format-time-string "%x %X" date)
 		     width 0 ?\s) 'face 'mua/date-face))))
 
 (defun mua/hdrs-flags (msg width)
-  (let* ((flags (mua/msg-field msg :flags))
-	  (flagstr
-	    (mapconcat
-	      (lambda(flag)
-		(case flag
-		  ('unread    "U")
-		  ('seen      "S")
-		  ('replied   "R")
-		  ('attach    "a")
-		  ('encrypted "x")
-		  ('signed    "s"))) flags "")))
+  "Return a string describing the flags of MSG at WIDTH."
+  (let ((flagstr (mua/msg-flags-to-string (mua/msg-field msg :flags))))
     (propertize  (truncate-string-to-width flagstr width 0 ?\s)
       'face 'mua/header-face)))
 
@@ -312,12 +297,14 @@ fitting in WIDTH"
     (mua/warn "No message after this one")
     t))
 
-(defun mua/hdrs-prev  ()
-  "go to the previous line; t if it worked, nil otherwise"
-  (interactive)
-  (if (or (/= 0 (forward-line -1)) (not (mua/hdrs-get-path)))
-    (mua/warn "No message before this one")
-    t))
+(defun mua/hdrs-prev ()  
+  "Go to the previous line; t if it worked, nil otherwise."
+  (when (buffer-live-p mua/hdrs-buffer)
+    (with-current-buffer mua/hdrs-buffer
+      (if (or (/= 0 (forward-line -1)) (not (mua/hdrs-get-uid)))
+	(mua/warn "No message before this one")))
+    (when mua/view-uid ;; are we in view buffer?
+      (mua/view (mua/hdrs-get-uid) mua/hdrs-buffer))))
 
 (defun mua/hdrs-view ()
   (interactive)
@@ -336,7 +323,8 @@ fitting in WIDTH"
   "Re-run the query for the current search expression, but only
 if the search process is not already running"
   (interactive)
-  (when mua/last-expression (mua/hdrs-search mua/last-expression)))
+  (when mua/last-expression
+    (mua/hdrs-search mua/last-expression)))
 
 
 ;;; functions for sorting
@@ -483,7 +471,7 @@ latter two are pseudo-markings."
       (mua/msg-reply msg uid)	  
       (mua/warn "No message at point"))))
 
-(defun mua/hdrs-for ()
+(defun mua/hdrs-for-reply ()
   "Forward the message at point."
   (interactive)
   (let* ((uid (mua/hdrs-get-uid))
