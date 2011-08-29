@@ -156,19 +156,23 @@ mu_util_init_system (void)
 	/* without setlocale, non-ascii cmdline params (like search
 	 * terms) won't work */
 	setlocale (LC_ALL, "");
+
+        /* on FreeBSD, it seems g_slice_new and friends lead to
+         * segfaults. Same for MacOS. We cannot easily debug what is
+         * going on there (no access to such a system), so all we can
+         * do is add a lame fallback -> we let g_slice_* use normal
+         * malloc
+         */
+#ifndef __linux__
+        if (!g_setenv ("G_SLICE", "always-malloc", TRUE)) {
+                g_critical ("cannot set G_SLICE");
+                return FALSE;
+        }
+        /* g_debug ("setting G_SLICE to always-malloc"); */
+#endif /*!__linux__*/
 	
-	/* on FreeBSD, it seems g_slice_new and friends lead to
-	 * segfaults. So we shut if off */
-#ifdef 	__FreeBSD__
-	if (!g_setenv ("G_SLICE", "always-malloc", TRUE)) {
-		g_critical ("cannot set G_SLICE");
-		return FALSE;
-	}
-	MU_WRITE_LOG("setting G_SLICE to always-malloc");
-#endif /*__FreeBSD__*/
-
 	g_type_init ();
-
+	
 	return TRUE;
 }
 
