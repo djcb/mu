@@ -34,10 +34,10 @@ get_recip (GMimeMessage *msg, GMimeRecipientType rtype)
 {
 	char *recep;
         InternetAddressList *receps;
-        
+
         receps = g_mime_message_get_recipients (msg, rtype);
         recep = (char*)internet_address_list_to_string (receps, FALSE);
-  
+
         if (!recep || !*recep) {
                 g_free (recep);
                 return NULL;
@@ -53,16 +53,16 @@ get_refs_str (GMimeMessage *msg)
 	const GMimeReferences *cur;
 	GMimeReferences *mime_refs;
 	gchar *rv;
-	
+
 	str = g_mime_object_get_header (GMIME_OBJECT(msg),
 					"References");
 	if (!str)
 		return NULL;
-		
+
 	mime_refs = g_mime_references_decode (str);
 	for (rv = NULL, cur = mime_refs; cur;
 	     cur = g_mime_references_get_next(cur)) {
-			
+
 		const char* msgid;
 		msgid = g_mime_references_get_message_id (cur);
 		rv = g_strdup_printf ("%s%s%s",
@@ -80,7 +80,7 @@ test_message (GMimeMessage *msg)
 {
 	gchar *val;
 	const gchar *str;
-		
+
 	g_print ("From   : %s\n", g_mime_message_get_sender (msg));
 
 	val = get_recip (msg, GMIME_RECIPIENT_TYPE_TO);
@@ -97,7 +97,7 @@ test_message (GMimeMessage *msg)
 
 	str = g_mime_message_get_subject (msg);
 	g_print ("Subject: %s\n", str ? str : "<none>");
-	
+
 	str = g_mime_message_get_message_id (msg);
 	g_print ("Msg-id : %s\n", str ? str : "<none>");
 
@@ -107,8 +107,8 @@ test_message (GMimeMessage *msg)
 		g_print ("Refs   : %s\n", refsstr ? refsstr : "<none>");
 		g_free (refsstr);
 	}
-	 
-	
+
+
 	return TRUE;
 }
 
@@ -123,7 +123,7 @@ test_stream (GMimeStream *stream)
 
 	parser = NULL;
 	msg    = NULL;
-	
+
 	parser = g_mime_parser_new_with_stream (stream);
 	if (!parser) {
 		g_warning ("failed to create parser");
@@ -139,13 +139,13 @@ test_stream (GMimeStream *stream)
 	}
 
 	rv = test_message (msg);
-	
+
 leave:
 	if (parser)
 		g_object_unref (parser);
 	else
 		g_object_unref (stream);
-	
+
 	if (msg)
 		g_object_unref (msg);
 
@@ -162,7 +162,7 @@ test_file (const char *path)
 
 	stream = NULL;
 	file   = NULL;
-	
+
 	file = fopen (path, "r");
 	if (!file) {
 		g_warning ("cannot open file '%s': %s", path,
@@ -179,20 +179,20 @@ test_file (const char *path)
 	}
 
 	rv = test_stream (stream);  /* test-stream will unref it */
-	
+
 leave:
 	if (file)
 		fclose (file);
-	
+
 	return rv;
 }
-	
+
 
 int
 main (int argc, char *argv[])
 {
 	gboolean rv;
-	
+
 	if (argc != 2) {
 		g_printerr ("usage: %s <msg-file>\n", argv[0]);
 		return 1;
@@ -201,7 +201,7 @@ main (int argc, char *argv[])
 	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
 
 	rv = test_file (argv[1]);
-	
+
 	g_mime_shutdown ();
 
 	return rv ? 0 : 1;
