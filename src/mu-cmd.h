@@ -33,8 +33,8 @@ G_BEGIN_DECLS
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeded,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeded,
+ * some error code otherwise
  */
 MuError mu_cmd_mkdir (MuConfig *opts);
 
@@ -44,30 +44,32 @@ MuError mu_cmd_mkdir (MuConfig *opts);
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeded,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeded,
+ * some error code otherwise
  */
 MuError mu_cmd_view (MuConfig *opts);
 
 
 /**
  * execute the 'index' command
- * 
+ *
+ * @param store store object to use
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeded,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeded,
+ * some error code otherwise
  */
 MuError mu_cmd_index   (MuConfig *opts);
 
 
 /**
  * execute the 'cleanup' command
- * 
+ *
+ * @param store store object to use
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeds,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
  */
 MuError mu_cmd_cleanup (MuConfig *opts);
 
@@ -76,9 +78,9 @@ MuError mu_cmd_cleanup (MuConfig *opts);
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeds and
- * >MU_EXITCODE_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
- * succeeds but there no matches, MU_EXITCODE_ERROR for all other errors
+ * @return MU_OK (0) if the command succeeds and
+ * >MU_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
+ * succeeds but there no matches, some error code for all other errors
  */
 MuError mu_cmd_find (MuConfig *opts);
 
@@ -88,8 +90,8 @@ MuError mu_cmd_find (MuConfig *opts);
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeds,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
  */
 MuError mu_cmd_extract (MuConfig *opts);
 
@@ -99,21 +101,18 @@ MuError mu_cmd_extract (MuConfig *opts);
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeds,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
  */
 MuError mu_cmd_mv (MuConfig *opts);
-
-
-
 
 /**
  * execute the cfind command
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeds,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
  */
 MuError mu_cmd_cfind (MuConfig *opts);
 
@@ -123,8 +122,8 @@ MuError mu_cmd_cfind (MuConfig *opts);
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeds,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
  */
 MuError mu_cmd_add (MuConfig *opts);
 
@@ -133,10 +132,22 @@ MuError mu_cmd_add (MuConfig *opts);
  * 
  * @param opts configuration options
  * 
- * @return MU_EXITCODE_OK (0) if the command succeeds,
- * MU_EXITCODE_ERROR otherwise
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
  */
 MuError mu_cmd_remove (MuConfig *opts);
+
+
+/**
+ * execute the server command
+ * 
+ * @param opts configuration options
+ * 
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
+ */
+MuError mu_cmd_server (MuConfig *opts);
+
 
 G_END_DECLS
 

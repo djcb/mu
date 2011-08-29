@@ -21,8 +21,9 @@
 #define __MU_QUERY_H__
 
 #include <glib.h>
+#include <mu-store.h>
 #include <mu-msg-iter.h>
-#include <mu-util.h> /* for MuResult, MuError */
+#include <mu-util.h>
 
 G_BEGIN_DECLS
 
@@ -44,6 +45,25 @@ typedef struct _MuQuery MuQuery;
  */
 MuQuery  *mu_query_new  (const char* path, GError **err)
       G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+/**
+ * create a new MuQuery instance using an existing MuStore
+ * 
+ * @param store a valid MuStore object
+ * @param err receives error information (if there is any); if
+ * function returns non-NULL, err will _not_be set. err can be NULL
+ * possble errors (err->code) are MU_ERROR_XAPIAN_DIR and 
+ * MU_ERROR_XAPIAN_NOT_UPTODATE
+ * 
+ * @return a new MuQuery instance, or NULL in case of error.
+ * when the instance is no longer needed, use mu_query_destroy
+ * to free it
+ */
+MuQuery  *mu_query_new_from_store  (MuStore *store, GError **err)
+      G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
 
 /**
  * destroy the MuQuery instance

@@ -6,16 +6,16 @@
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 3 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #include <string.h>
@@ -47,13 +47,13 @@ static void
 gmime_init (void)
 {
 	g_return_if_fail (!_gmime_initialized);
-	
+
 #ifdef GMIME_ENABLE_RFC2047_WORKAROUNDS
 	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
 #else
 	g_mime_init(0);
 #endif /* GMIME_ENABLE_RFC2047_WORKAROUNDS */
-	
+
 	_gmime_initialized = TRUE;
 }
 
@@ -61,7 +61,7 @@ static void
 gmime_uninit (void)
 {
 	g_return_if_fail (_gmime_initialized);
-	
+
 	g_mime_shutdown();
 	_gmime_initialized = FALSE;
 }
@@ -71,17 +71,12 @@ static MuMsg*
 msg_new (void)
 {
 	MuMsg *self;
-	
-	if (G_UNLIKELY(!_gmime_initialized)) {
-		gmime_init ();
-		g_atexit (gmime_uninit);
-	}
-	
+
 	self = g_slice_new0 (MuMsg);
 
 	self->_refcount = 1;
 	self->_cache = mu_msg_cache_new ();
- 
+
 	return self;
 }
 
@@ -90,16 +85,21 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 {
 	MuMsg *self;
 	MuMsgFile *msgfile;
-	
+
 	g_return_val_if_fail (path, NULL);
-		
+
+	if (G_UNLIKELY(!_gmime_initialized)) {
+		gmime_init ();
+		g_atexit (gmime_uninit);
+	}
+
 	msgfile = mu_msg_file_new (path, mdir, err);
-	if (!msgfile) 
+	if (!msgfile)
 		return NULL;
-	
+
 	self = msg_new ();
 	self->_file = msgfile;
-		
+
 	return self;
 }
 
@@ -109,21 +109,26 @@ mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 {
 	MuMsg *self;
 	MuMsgDoc *msgdoc;
-		
+
 	g_return_val_if_fail (doc, NULL);
-				
+
+	if (G_UNLIKELY(!_gmime_initialized)) {
+		gmime_init ();
+		g_atexit (gmime_uninit);
+	}
+
 	msgdoc = mu_msg_doc_new (doc, err);
 	if (!msgdoc)
 		return NULL;
 
 	self = msg_new ();
 	self->_doc = msgdoc;
-			
+
 	return self;
 }
 
 
-static void 
+static void
 mu_msg_destroy (MuMsg *self)
 {
 	if (!self)
@@ -133,7 +138,7 @@ mu_msg_destroy (MuMsg *self)
 	mu_msg_doc_destroy (self->_doc);
 
 	mu_msg_cache_destroy (self->_cache);
-		
+
 	g_slice_free (MuMsg, self);
 }
 
@@ -144,7 +149,7 @@ mu_msg_ref (MuMsg *self)
 	g_return_val_if_fail (self, NULL);
 
 	++self->_refcount;
-	
+
 	return self;
 }
 
@@ -153,8 +158,8 @@ mu_msg_unref (MuMsg *self)
 {
 	g_return_if_fail (self);
 	g_return_if_fail (self->_refcount >= 1);
-	
-	if (--self->_refcount == 0) 
+
+	if (--self->_refcount == 0)
 		mu_msg_destroy (self);
 }
 
@@ -167,7 +172,7 @@ get_path (MuMsg *self)
 	const char *path;
 	char *val;
 	gboolean do_free;
-		
+
 	/* try to get the path from the cache */
 	path = mu_msg_cache_str (self->_cache, MU_MSG_FIELD_ID_PATH);
 	if (path)
@@ -180,14 +185,14 @@ get_path (MuMsg *self)
 		val = mu_msg_doc_get_str_field (self->_doc,
 						MU_MSG_FIELD_ID_PATH,
 						&do_free);
-		
+
 	/* not in the cache yet? try to get it from the file backend,
 	 * in case we are using that */
 	if (!val && self->_file)
 		val = mu_msg_file_get_str_field (self->_file,
 						 MU_MSG_FIELD_ID_PATH,
 						 &do_free);
-		
+
 	/* this cannot happen unless there are bugs in mu */
 	if (!val) {
 		g_warning ("%s: cannot find path", __FUNCTION__);
@@ -211,7 +216,7 @@ get_msg_file (MuMsg *self)
 
 	if (!(path = get_path (self)))
 		return NULL;
-		
+
 	err = NULL;
 	mfile = mu_msg_file_new (path, NULL, &err);
 	if (!mfile) {
@@ -220,7 +225,7 @@ get_msg_file (MuMsg *self)
 		g_error_free (err);
 		return NULL;
 	}
-		
+
 	return mfile;
 }
 
@@ -251,7 +256,7 @@ get_str_list_field (MuMsg *self, MuMsgFieldId mfid)
 		val = mu_msg_file_get_str_list_field (self->_file, mfid,
 						      &do_free);
 	}
-		
+
 	/* if we get a string that needs freeing, we tell the cache to
 	 * mark the string as such, so it will be freed when the cache
 	 * is freed (or when the value is overwritten) */
@@ -289,7 +294,7 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 		g_warning ("%s: cannot retrieve field", __FUNCTION__);
 		return NULL;
 	}
-		
+
 	/* if we get a string that needs freeing, we tell the cache to
 	 * mark the string as such, so it will be freed when the cache
 	 * is freed (or when the value is overwritten) */
@@ -301,10 +306,10 @@ static gint64
 get_num_field (MuMsg *self, MuMsgFieldId mfid)
 {
 	guint64 val;
-		 
+
 	if (mu_msg_cache_cached (self->_cache, mfid))
 		return mu_msg_cache_num (self->_cache, mfid);
-		
+
 	/* if it's not in the cache but it is a value retrievable from
 	 * the doc backend, use that */
 	val = -1;
@@ -341,7 +346,7 @@ mu_msg_get_header (MuMsg *self, const char *header)
 }
 
 
-const char*    
+const char*
 mu_msg_get_path (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
@@ -349,21 +354,21 @@ mu_msg_get_path (MuMsg *self)
 }
 
 
-const char*    
+const char*
 mu_msg_get_subject  (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_SUBJECT);
 }
 
-const char*    
+const char*
 mu_msg_get_msgid  (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_MSGID);
 }
 
-const char*    
+const char*
 mu_msg_get_maildir (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
@@ -371,7 +376,7 @@ mu_msg_get_maildir (MuMsg *self)
 }
 
 
-const char*    
+const char*
 mu_msg_get_from (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
@@ -379,14 +384,14 @@ mu_msg_get_from (MuMsg *self)
 }
 
 
-const char*    
+const char*
 mu_msg_get_to (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_TO);
 }
 
-const char*    
+const char*
 mu_msg_get_cc (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
@@ -394,7 +399,7 @@ mu_msg_get_cc (MuMsg *self)
 }
 
 
-const char*    
+const char*
 mu_msg_get_bcc (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
@@ -504,7 +509,7 @@ mu_msg_contact_new (const char *name, const char *address,
 		    MuMsgContactType type)
 {
 	MuMsgContact *self;
-	
+
 	g_return_val_if_fail (name, NULL);
 	g_return_val_if_fail (address, NULL);
 	g_return_val_if_fail (!mu_msg_contact_type_is_valid(type),
@@ -516,7 +521,7 @@ mu_msg_contact_new (const char *name, const char *address,
 	self->address = g_strdup (address);
 	self->type    = type;
 
-	return self;	
+	return self;
 }
 
 
@@ -531,7 +536,7 @@ mu_msg_contact_destroy (MuMsgContact *self)
 	g_free ((void*)self->address);
 	g_slice_free (MuMsgContact, self);
 }
-	
+
 
 static gboolean
 fill_contact (MuMsgContact *self, InternetAddress *addr,
@@ -539,10 +544,10 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 {
 	if (!addr)
 		return FALSE;
-	
+
 	self->name = internet_address_get_name (addr);
-	self->type = ctype;  
-	
+	self->type = ctype;
+
 	/* we only support internet mailbox addresses; if we don't
 	 * check, g_mime hits an assert
 	 */
@@ -551,7 +556,7 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 			(INTERNET_ADDRESS_MAILBOX(addr));
 	else
 		self->address  = NULL;
-	
+
 	return TRUE;
 }
 
@@ -561,16 +566,16 @@ address_list_foreach (InternetAddressList *addrlist, MuMsgContactType ctype,
 		      MuMsgContactForeachFunc func, gpointer user_data)
 {
 	int i;
-		
+
 	for (i = 0; addrlist && i != internet_address_list_length(addrlist);
 	     ++i) {
-		
+
 		MuMsgContact contact;
 		if (!fill_contact(&contact,
 				  internet_address_list_get_address (addrlist, i),
 				  ctype))
 			continue;
-		
+
 		if (!(func)(&contact, user_data))
 			break;
 	}
@@ -582,10 +587,10 @@ addresses_foreach (const char* addrs, MuMsgContactType ctype,
 		   MuMsgContactForeachFunc func, gpointer user_data)
 {
 	InternetAddressList *addrlist;
-	
+
 	if (!addrs)
 		return;
-	
+
 	addrlist = internet_address_list_parse_string (addrs);
 	if (addrlist) {
 		address_list_foreach (addrlist, ctype, func, user_data);
@@ -595,11 +600,11 @@ addresses_foreach (const char* addrs, MuMsgContactType ctype,
 
 
 void
-msg_contact_foreach_file (MuMsg *msg, MuMsgContactForeachFunc func, 
+msg_contact_foreach_file (MuMsg *msg, MuMsgContactForeachFunc func,
 			gpointer user_data)
 {
-	int i;		
-	struct { 
+	int i;
+	struct {
 		GMimeRecipientType     _gmime_type;
 		MuMsgContactType       _type;
 	} ctypes[] = {
@@ -611,7 +616,7 @@ msg_contact_foreach_file (MuMsg *msg, MuMsgContactForeachFunc func,
 	/* sender */
 	addresses_foreach (g_mime_message_get_sender (msg->_file->_mime_msg),
 			   MU_MSG_CONTACT_TYPE_FROM, func, user_data);
-	
+
 	/* get to, cc, bcc */
 	for (i = 0; i != G_N_ELEMENTS(ctypes); ++i) {
 		InternetAddressList *addrlist;
@@ -623,7 +628,7 @@ msg_contact_foreach_file (MuMsg *msg, MuMsgContactForeachFunc func,
 
 
 static void
-msg_contact_foreach_doc (MuMsg *msg, MuMsgContactForeachFunc func, 
+msg_contact_foreach_doc (MuMsg *msg, MuMsgContactForeachFunc func,
 			 gpointer user_data)
 {
 	addresses_foreach (mu_msg_get_from (msg),
@@ -638,7 +643,7 @@ msg_contact_foreach_doc (MuMsg *msg, MuMsgContactForeachFunc func,
 
 
 void
-mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func, 
+mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 			gpointer user_data)
 {
 	g_return_if_fail (msg);
@@ -663,7 +668,7 @@ cmp_str (const char* s1, const char *s2)
 		return -1;
 	else if (!s2)
 		return 1;
-	
+
 	return g_utf8_collate (s1, s2);
 }
 
@@ -677,7 +682,7 @@ cmp_subject (const char* s1, const char *s2)
 		return -1;
 	else if (!s2)
 		return 1;
-	
+
 	return g_utf8_collate (
 		mu_str_subject_normalize (s1),
 		mu_str_subject_normalize (s2));
@@ -690,19 +695,19 @@ mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
 	g_return_val_if_fail (m1, 0);
 	g_return_val_if_fail (m2, 0);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), 0);
-	
-	if (mfid == MU_MSG_FIELD_ID_SUBJECT) 
+
+	if (mfid == MU_MSG_FIELD_ID_SUBJECT)
 		return cmp_subject (get_str_field (m1, mfid),
 				    get_str_field (m2, mfid));
-	
-	if (mu_msg_field_is_string (mfid)) 
+
+	if (mu_msg_field_is_string (mfid))
 		return cmp_str (get_str_field (m1, mfid),
 				get_str_field (m2, mfid));
 
 	/* TODO: note, we cast (potentially > MAXINT to int) */
-	if (mu_msg_field_is_numeric (mfid)) 
+	if (mu_msg_field_is_numeric (mfid))
 		return get_num_field(m1, mfid) - get_num_field(m2, mfid);
-	
+
 	return 0; /* TODO: handle lists */
 }
 
@@ -711,7 +716,7 @@ gboolean
 mu_msg_is_readable (MuMsg *self)
 {
 	g_return_val_if_fail (self, FALSE);
-	
+
 	return (access (get_str_field (self, MU_MSG_FIELD_ID_PATH), R_OK)
 		== 0) ? TRUE : FALSE;
 }
@@ -726,7 +731,7 @@ mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir,
 			MuFlags flags, gboolean ignore_dups, GError **err)
 {
 	char *newfullpath;
-	
+
 	g_return_val_if_fail (self, FALSE);
 
 	newfullpath = mu_maildir_move_message (mu_msg_get_path (self),
@@ -735,7 +740,7 @@ mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir,
 	if (newfullpath) /* update our path to new one... */
 		mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
 				      TRUE); /* the cache will free the string */
-		
+
 	return newfullpath ? TRUE : FALSE;
 }
 

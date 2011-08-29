@@ -1,20 +1,20 @@
-/* 
+/*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 3 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #include <stdexcept>
@@ -48,16 +48,16 @@ public:
 
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
-		
-		
-		
+
+
+
 		 begin = to_sortable (begin, true);
 		 end   = to_sortable (end, false);
-		 
-		if (begin > end) 
+
+		if (begin > end)
 			throw Xapian::QueryParserError
 				("end time is before begin");
-		
+
 		return (Xapian::valueno)MU_MSG_FIELD_ID_DATE;
 	}
 private:
@@ -65,18 +65,18 @@ private:
 
 		const char* str;
 		time_t t;
-		
+
 		str = mu_date_interpret_s (s.c_str(), is_begin ? TRUE: FALSE);
 		str = mu_date_complete_s (str, is_begin ? TRUE: FALSE);
 		t   = mu_date_str_to_time_t (str, TRUE /*local*/);
 		str = mu_date_time_t_to_str (t, FALSE /*UTC*/);
-		
+
 		return s = std::string(str);
 	}
 
 
 	bool clear_prefix (std::string& begin) {
-		
+
 		const std::string colon (":");
 		const std::string name (mu_msg_field_name
 					(MU_MSG_FIELD_ID_DATE) + colon);
@@ -91,10 +91,10 @@ private:
 			begin.erase (0, shortcut.length());
 			return true;
 		} else
-			return false;		
+			return false;
 	}
 
-	
+
 };
 
 
@@ -103,12 +103,12 @@ public:
 	MuSizeRangeProcessor():
 		Xapian::NumberValueRangeProcessor(MU_MSG_FIELD_ID_SIZE) {
 	}
-	
+
 	Xapian::valueno operator()(std::string &begin, std::string &end) {
-		
+
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
-		
+
 		if (!substitute_size (begin) || !substitute_size (end))
 			return Xapian::BAD_VALUENO;
 
@@ -118,19 +118,19 @@ public:
 
 		begin = Xapian::sortable_serialise (atol(begin.c_str()));
 		end = Xapian::sortable_serialise (atol(end.c_str()));
-			
+
 		return (Xapian::valueno)MU_MSG_FIELD_ID_SIZE;
 	}
 private:
 	bool clear_prefix (std::string& begin) {
-		
+
 		const std::string colon (":");
 		const std::string name (mu_msg_field_name
 					(MU_MSG_FIELD_ID_SIZE) + colon);
 		const std::string shortcut (
 			std::string(1, mu_msg_field_shortcut
 				    (MU_MSG_FIELD_ID_SIZE)) + colon);
-		
+
 		if (begin.find (name) == 0) {
 			begin.erase (0, name.length());
 			return true;
@@ -138,9 +138,9 @@ private:
 			begin.erase (0, shortcut.length());
 			return true;
 		} else
-			return false;		
+			return false;
 	}
-	
+
 	bool substitute_size (std::string& size) {
 		gchar str[16];
 		gint64 num = mu_str_size_parse_bkm(size.c_str());
@@ -157,19 +157,27 @@ private:
 static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
 struct _MuQuery {
-	_MuQuery (const char* dbpath):
-		_db (Xapian::Database(dbpath)) {
-		
+	_MuQuery (const char* dbpath) {
+		init ((Xapian::Database(dbpath)));
+	}
+
+	_MuQuery (Xapian::Database* db) {
+		init (*db);
+	}
+
+	void init (Xapian::Database db) {
+
+		_db = db;
 		_qparser.set_database (_db);
 		_qparser.set_default_op (Xapian::Query::OP_AND);
 
 		_qparser.add_valuerangeprocessor (&_date_range_processor);
 		_qparser.add_valuerangeprocessor (&_size_range_processor);
-		
+
 		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
 				      &_qparser);
 	}
-		
+
 	Xapian::Database	_db;
 	Xapian::QueryParser	_qparser;
 	MuDateRangeProcessor	_date_range_processor;
@@ -180,8 +188,8 @@ static const Xapian::Query
 get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 {
 	Xapian::Query query;
-	char *preprocessed;	
-		
+	char *preprocessed;
+
 	preprocessed = mu_query_preprocess (searchexpr);
 
 	try {
@@ -194,7 +202,7 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
 		g_free (preprocessed);
 		return query;
-		
+
 	} catch (...) {
 		/* some error occured */
 		g_set_error (err, 0, MU_ERROR_XAPIAN_QUERY,
@@ -213,13 +221,13 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 	    !mu_msg_field_xapian_term(mfid) &&
 	    !mu_msg_field_xapian_contact(mfid))
 		return;
-	
+
 	try {
 		const std::string  pfx
 			(1, mu_msg_field_xapian_prefix (mfid));
 		const std::string shortcut
 			(1, mu_msg_field_shortcut (mfid));
-		
+
 		if (mu_msg_field_uses_boolean_prefix (mfid)) {
 		 	qparser->add_boolean_prefix
 		 		(mu_msg_field_name(mfid), pfx);
@@ -229,8 +237,8 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 				(mu_msg_field_name(mfid), pfx);
 		 	qparser->add_prefix (shortcut, pfx);
 		}
-		
-		if (!mu_msg_field_needs_prefix(mfid)) 
+
+		if (!mu_msg_field_needs_prefix(mfid))
 			qparser->add_prefix ("", pfx);
 
 	} MU_XAPIAN_CATCH_BLOCK;
@@ -240,31 +248,56 @@ MuQuery*
 mu_query_new (const char* xpath, GError **err)
 {
 	g_return_val_if_fail (xpath, NULL);
-	
+
 	if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
 		g_set_error (err, 0, MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE,
 			     "'%s' is not a readable xapian dir", xpath);
 		return NULL;
 	}
-		
-	if (mu_util_xapian_needs_upgrade (xpath)) {
+
+	if (mu_store_database_needs_upgrade (xpath)) {
 		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
 			     "%s is not up-to-date, needs a full update",
 			     xpath);
 		return NULL;
 	}
 
-	if (mu_util_xapian_is_empty (xpath)) 
+	if (mu_store_database_is_empty (xpath))
 		g_warning ("database %s is empty; nothing to do", xpath);
 
 	try {
 
 		return new MuQuery (xpath);
 
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL); 
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL);
 
 	return 0;
 }
+
+
+MuQuery*
+mu_query_new_from_store (MuStore *store, GError **err)
+{
+	g_return_val_if_fail (store, NULL);
+
+	try {
+		XapianDatabase *db;
+
+		db = mu_store_get_read_only_database(store);
+
+		return new MuQuery (reinterpret_cast<Xapian::Database*>(db));
+
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL);
+
+	return 0;
+}
+
+
+MuQuery  *mu_query_new_from_store  (MuStore *store, GError **err)
+      G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+
 
 
 void
@@ -282,13 +315,13 @@ mu_query_preprocess (const char *query)
 
 	g_return_val_if_fail (query, NULL);
 	my_query = g_strdup (query);
-	
+
 	/* remove accents and turn to lower-case */
 	mu_str_normalize_in_place (my_query, TRUE);
 	/* escape '@', single '_' and ':' if it's not following a
 	 * xapian-pfx with '_' */
 	mu_str_ascii_xapian_escape_in_place (my_query);
-		
+
 	return my_query;
 }
 
@@ -296,10 +329,10 @@ mu_query_preprocess (const char *query)
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 	      MuMsgFieldId sortfieldid, gboolean ascending,
-	      GError **err)  
+	      GError **err)
 {
 	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (searchexpr, NULL);	
+	g_return_val_if_fail (searchexpr, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfieldid) ||
 			      sortfieldid == MU_MSG_FIELD_ID_NONE,
 			      NULL);
@@ -319,25 +352,25 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 
 
 		enq.set_cutoff(0,0);
-		
+
 		return mu_msg_iter_new (
 			(XapianEnquire*)&enq,
 			self->_db.get_doccount(), threads,
 			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE);
-		
+
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
 char*
-mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err) 
+mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);
-		
+
 	try {
-		Xapian::Query query (get_query(self, searchexpr, err)); 
+		Xapian::Query query (get_query(self, searchexpr, err));
 		return g_strdup(query.get_description().c_str());
-		
+
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 

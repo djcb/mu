@@ -297,7 +297,7 @@ mu_msg_to_sexp (MuMsg *msg, const MuMsgIterThreadInfo *ti, gboolean dbonly)
 	if (!dbonly)
 		append_sexp_message_file_attr (gstr, msg);
 	
-	g_string_append (gstr, ")\n;;eom\n");	
+	g_string_append (gstr, ")\n;;eox\n");	
 
 	return g_string_free (gstr, FALSE);
 }

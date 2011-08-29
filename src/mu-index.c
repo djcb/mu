@@ -1,22 +1,22 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
-/* 
+/*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 1** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 3 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #ifdef HAVE_CONFIG_H
@@ -46,40 +46,40 @@ struct _MuIndex {
 	guint            _max_filesize;
 };
 
-MuIndex* 
+MuIndex*
 mu_index_new (const char *xpath, const char* contacts_cache, GError **err)
 {
 	MuIndex *index;
 
 	g_return_val_if_fail (xpath, NULL);
-	
-	index = g_new0 (MuIndex, 1);				
 
-	index->_store = mu_store_new (xpath, contacts_cache, err);	
+	index = g_new0 (MuIndex, 1);
+
+	index->_store = mu_store_new_writable (xpath, contacts_cache, err);
 	if (!index->_store) {
 		g_warning ("%s: failed to open xapian store (%s)",
-			   __FUNCTION__, xpath); 
+			   __FUNCTION__, xpath);
 		g_free (index);
 		return NULL;
 	}
 
 	/* set the default max file size */
 	index->_max_filesize = MU_INDEX_MAX_FILE_SIZE;
-	
+
 	/* see we need to reindex the database; note, there is a small
 	 * race-condition here, between mu_index_new and
 	 * mu_index_run. Maybe do the check in mu_index_run
 	 * instead? */
-	if (mu_util_xapian_is_empty (xpath))
+	if (mu_store_database_is_empty (xpath))
 		index->_needs_reindex = FALSE;
 	else
 		index->_needs_reindex =
-			mu_util_xapian_needs_upgrade (xpath);
-	
+			mu_store_database_needs_upgrade (xpath);
+
 	return index;
 }
 
-void 
+void
 mu_index_destroy (MuIndex *index)
 {
 	if (!index)
@@ -116,7 +116,7 @@ needs_index (MuIndexCallbackData *data, const char *fullpath,
 	/* unconditionally reindex */
 	if (data->_reindex)
 		return TRUE;
-	
+
 	/* it's not in the database yet */
 	if (!mu_store_contains_message (data->_store, fullpath))
 		return TRUE;
@@ -133,14 +133,14 @@ static MuError
 insert_or_update_maybe (const char* fullpath, const char* mdir,
 			time_t filestamp, MuIndexCallbackData *data,
 			gboolean *updated)
-{ 
+{
 	MuMsg *msg;
 	GError *err;
-	
+
 	*updated = FALSE;
 	if (!needs_index (data, fullpath, filestamp))
 		return MU_OK; /* nothing to do for this one */
-			
+
 	err = NULL;
 	msg = mu_msg_new_from_file (fullpath, mdir, &err);
 	if ((G_UNLIKELY(!msg))) {
@@ -148,18 +148,18 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 			   __FUNCTION__, fullpath);
 		return MU_ERROR;
 	}
-	
+
 	/* we got a valid id; scan the message contents as well */
 	if (G_UNLIKELY((!mu_store_store_msg (data->_store, msg, TRUE)))) {
-		g_warning ("%s: storing content %s failed", __FUNCTION__, 
+		g_warning ("%s: storing content %s failed", __FUNCTION__,
 			   fullpath);
 		return MU_ERROR;
-	} 
-	
+	}
+
 	mu_msg_unref (msg);
 	*updated = TRUE;
 
-	return MU_OK;	
+	return MU_OK;
 }
 
 static MuError
@@ -169,9 +169,9 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 
 	if (!data || !data->_idx_msg_cb)
 		return MU_OK;
-	
+
 	result = data->_idx_msg_cb (data->_stats, data->_user_data);
-	if G_UNLIKELY((result != MU_OK && result != MU_STOP))
+	if (G_UNLIKELY(result != MU_OK && result != MU_STOP))
 		g_warning ("error in callback");
 
 	return result;
@@ -191,17 +191,17 @@ on_run_maildir_msg (const char* fullpath, const char* mdir,
 			   data->_max_filesize, fullpath);
 		return MU_OK; /* not an error */
 	}
-	
+
 	result = run_msg_callback_maybe (data);
 	if (result != MU_OK)
 		return result;
-	
+
 	/* see if we need to update/insert anything...
 	 * use the ctime, so any status change will be visible (perms,
 	 * filename etc.)*/
 	result = insert_or_update_maybe (fullpath, mdir, statbuf->st_ctime,
 					 data, &updated);
-	
+
 	if (result == MU_OK && data && data->_stats) { 	/* update statistics */
 		++data->_stats->_processed;
 		updated ? ++data->_stats->_updated : ++data->_stats->_uptodate;
@@ -212,7 +212,7 @@ on_run_maildir_msg (const char* fullpath, const char* mdir,
 
 
 static MuError
-on_run_maildir_dir (const char* fullpath, gboolean enter, 
+on_run_maildir_dir (const char* fullpath, gboolean enter,
 		    MuIndexCallbackData *data)
 {
 	/* xapian stores a per-dir timestamp; we use this timestamp
@@ -231,9 +231,9 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 		g_debug ("leaving %s (ts=%u)",
 			 fullpath, (unsigned)data->_dirstamp);
 	}
-	
+
 	if (data->_idx_dir_cb)
-		return data->_idx_dir_cb (fullpath, enter, 
+		return data->_idx_dir_cb (fullpath, enter,
 					  data->_user_data);
 
 	return MU_OK;
@@ -249,37 +249,37 @@ check_path (const char* path)
 			   __FUNCTION__, path);
 		return FALSE;
 	}
-	
+
 	if (access (path, R_OK) != 0) {
-		g_warning ("%s: cannot open '%s': %s", 
+		g_warning ("%s: cannot open '%s': %s",
 			   __FUNCTION__, path, strerror (errno));
 		return FALSE;
 	}
-	
+
 	return TRUE;
 }
 
 static void
 init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
 	      gboolean reindex, guint max_filesize, MuIndexStats *stats,
-	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb, 
+	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 	      void *user_data)
 {
 	cb_data->_idx_msg_cb    = msg_cb;
 	cb_data->_idx_dir_cb    = dir_cb;
-	
+
 	cb_data->_user_data     = user_data;
 	cb_data->_store         = xapian;
-			         
+
 	cb_data->_reindex       = reindex;
-	cb_data->_dirstamp      = 0;	
+	cb_data->_dirstamp      = 0;
 	cb_data->_max_filesize  = max_filesize;
-	
+
 	cb_data->_stats         = stats;
 	if (cb_data->_stats)
 		memset (cb_data->_stats, 0, sizeof(MuIndexStats));
 }
-	      
+
 static void
 update_last_used_maildir (MuIndex *index, const char *path)
 {
@@ -294,7 +294,7 @@ mu_index_last_used_maildir (MuIndex *index)
 {
 	g_return_val_if_fail (index, NULL);
 	g_free (index->_last_used_maildir);
-	
+
 	return index->_last_used_maildir =
 		mu_store_get_metadata (index->_store,
 				       MU_LAST_USED_MAILDIR_KEY);
@@ -324,48 +324,48 @@ mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
 MuError
 mu_index_run (MuIndex *index, const char* path,
 	      gboolean reindex, MuIndexStats *stats,
-	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb, 
+	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 	      void *user_data)
 {
 	MuIndexCallbackData cb_data;
 	MuError rv;
-	
+
 	g_return_val_if_fail (index && index->_store, MU_ERROR);
 	g_return_val_if_fail (msg_cb, MU_ERROR);
-	
+
 	if (!check_path (path))
 		return MU_ERROR;
-	
+
 	if (!reindex && index->_needs_reindex) {
 		g_warning ("database not up-to-date; needs full reindex");
 		return MU_ERROR;
 	}
-	
+
 	init_cb_data (&cb_data, index->_store, reindex,
 		      index->_max_filesize, stats,
 		      msg_cb, dir_cb, user_data);
 
 	update_last_used_maildir (index, path);
-	
+
 	rv = mu_maildir_walk (path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
 			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
 			      &cb_data);
-	
+
 	mu_store_flush (index->_store);
-	
+
 	return rv;
 }
 
 static MuError
 on_stats_maildir_file (const char *fullpath, const char* mdir,
-		       struct stat *statbuf, 
+		       struct stat *statbuf,
 		       MuIndexCallbackData *cb_data)
 {
 	MuError result;
-		
+
 	if (cb_data && cb_data->_idx_msg_cb)
-		result = cb_data->_idx_msg_cb (cb_data->_stats, 
+		result = cb_data->_idx_msg_cb (cb_data->_stats,
 					       cb_data->_user_data);
 	else
 		result = MU_OK;
@@ -374,7 +374,7 @@ on_stats_maildir_file (const char *fullpath, const char* mdir,
 		if (cb_data->_stats)
 			++cb_data->_stats->_processed;
 		return MU_OK;
-	} 
+	}
 
 	return result; /* MU_STOP or MU_OK */
 }
@@ -386,16 +386,16 @@ mu_index_stats (MuIndex *index, const char* path,
 		MuIndexDirCallback cb_dir, void *user_data)
 {
 	MuIndexCallbackData cb_data;
-	
+
 	g_return_val_if_fail (index, MU_ERROR);
 	g_return_val_if_fail (cb_msg, MU_ERROR);
-	
+
 	if (!check_path (path))
 		return MU_ERROR;
 
 	if (stats)
 		memset (stats, 0, sizeof(MuIndexStats));
-	
+
 	cb_data._idx_msg_cb        = cb_msg;
 	cb_data._idx_dir_cb        = cb_dir;
 
@@ -403,19 +403,18 @@ mu_index_stats (MuIndex *index, const char* path,
 	cb_data._user_data = user_data;
 
 	cb_data._dirstamp  = 0;
-	
+
 	return mu_maildir_walk (path,
 				(MuMaildirWalkMsgCallback)on_stats_maildir_file,
 				NULL,&cb_data);
 }
-
 
 struct _CleanupData {
 	MuStore *_store;
 	MuIndexStats  *_stats;
 	MuIndexCleanupDeleteCallback _cb;
 	void *_user_data;
-	
+
 };
 typedef struct _CleanupData CleanupData;
 
@@ -434,7 +433,7 @@ foreach_doc_cb (const char* path, CleanupData *cudata)
 
 	if (cudata->_stats)
 		++cudata->_stats->_processed;
-	
+
 	if (!cudata->_cb)
 		return MU_OK;
 
@@ -449,15 +448,15 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 {
 	MuError rv;
 	CleanupData cudata;
-	
+
 	g_return_val_if_fail (index, MU_ERROR);
 	g_return_val_if_fail (cb, MU_ERROR);
-	
+
 	cudata._store	  = index->_store;
 	cudata._stats	  = stats;
 	cudata._cb	  = cb;
 	cudata._user_data = user_data;
-	
+
 	rv = mu_store_foreach (index->_store,
 			       (MuStoreForeachFunc)foreach_doc_cb,
 			       &cudata);

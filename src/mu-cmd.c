@@ -46,7 +46,12 @@
 static gboolean
 view_msg_sexp (MuMsg *msg)
 {
-	fputs (mu_msg_to_sexp (msg, NULL, FALSE), stdout);
+	char *sexp;
+
+	sexp = mu_msg_to_sexp (msg, NULL, FALSE);
+	fputs (sexp, stdout);
+	g_free (sexp);
+
 	return TRUE;
 }
 
@@ -77,7 +82,7 @@ get_attach_str (MuMsg *msg)
 	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &attach);
 
 	return attach;
-}	
+}
 
 #define color_maybe(C)	do{ if (color) fputs ((C),stdout);}while(0)
 
@@ -86,12 +91,12 @@ print_field (const char* field, const char *val, gboolean color)
 {
 	if (!val)
 		return;
-	
+
 	color_maybe (MU_COLOR_MAGENTA);
 	mu_util_fputs_encoded (field, stdout);
 	color_maybe (MU_COLOR_DEFAULT);
 	fputs (": ", stdout);
-	
+
 	if (val) {
 		color_maybe (MU_COLOR_GREEN);
 		mu_util_fputs_encoded (val, stdout);
@@ -107,11 +112,11 @@ body_or_summary (MuMsg *msg, gboolean summary, gboolean color)
 {
 	const char* field;
 	const int SUMMARY_LEN = 5;
-	
+
 	field = mu_msg_get_body_text (msg);
 	if (!field)
 		return; /* no body -- nothing more to do */
-	
+
 	if (summary) {
 		gchar *summ;
 		summ = mu_str_summarize (field, SUMMARY_LEN);
@@ -133,14 +138,14 @@ view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 	gchar *attachs;
 	time_t date;
 	const GSList *lst;
-	
+
 	print_field ("From", mu_msg_get_from (msg), color);
 	print_field ("To",   mu_msg_get_to (msg), color);
 	print_field ("Cc",   mu_msg_get_cc (msg), color);
 	print_field ("Bcc",  mu_msg_get_bcc (msg), color);
 	print_field ("Subject",  mu_msg_get_subject (msg), color);
-	
-	if ((date = mu_msg_get_date (msg))) 
+
+	if ((date = mu_msg_get_date (msg)))
 		print_field ("Date", mu_date_str_s ("%c", date),
 			     color);
 
@@ -150,7 +155,7 @@ view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 		print_field ("Tags", tags, color);
 		g_free (tags);
 	}
-	
+
 	if ((attachs = get_attach_str (msg))) {
 		print_field ("Attachments", attachs, color);
 		g_free (attachs);
@@ -168,13 +173,15 @@ handle_msg (const char *fname, MuConfig *opts, MuError *code)
 	GError *err;
 	MuMsg *msg;
 	gboolean rv;
-	
+
 	err = NULL;
 	msg = mu_msg_new_from_file (fname, NULL, &err);
 
 	if (!msg) {
-		g_warning ("error: %s", err->message);
-		g_error_free (err);
+		if (err && err->message) {
+			g_warning ("%s", err->message);
+			g_error_free (err);
+		}
 		*code = MU_ERROR;
 		return FALSE;
 	}
@@ -191,7 +198,7 @@ handle_msg (const char *fname, MuConfig *opts, MuError *code)
 		*code = MU_ERROR_INTERNAL;
 		rv = FALSE;
 	}
-	
+
 	mu_msg_unref (msg);
 
 	return rv;
@@ -205,7 +212,7 @@ view_params_valid (MuConfig *opts)
 		g_warning ("usage: mu view [options] <file> [<files>]");
 		return FALSE;
 	}
-	
+
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
 	case MU_CONFIG_FORMAT_SEXP:
@@ -215,7 +222,7 @@ view_params_valid (MuConfig *opts)
 			   opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
-	
+
 	return TRUE;
 }
 
@@ -226,14 +233,14 @@ mu_cmd_view (MuConfig *opts)
 	int i;
 	gboolean rv;
 	MuError code;
-	
+
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
 			      MU_ERROR_INTERNAL);
 
 	if (!view_params_valid(opts))
 		return MU_ERROR_IN_PARAMETERS;
-	
+
 	for (i = 1, code = MU_OK; opts->params[i]; ++i) {
 
 		rv = handle_msg (opts->params[i], opts, &code);
@@ -243,7 +250,7 @@ mu_cmd_view (MuConfig *opts)
 		if (opts->terminator)
 			g_print ("%c", VIEW_TERMINATOR);
 	}
-	
+
 	return code;
 }
 
@@ -252,17 +259,17 @@ MuError
 mu_cmd_mkdir (MuConfig *opts)
 {
 	int i;
-	
+
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_MKDIR,
 			      MU_ERROR_INTERNAL);
-	
+
 	if (!opts->params[1]) {
 		g_warning ("usage: mu mkdir [-u,--mode=<mode>] "
 			   "<dir> [more dirs]");
 		return MU_ERROR_IN_PARAMETERS;
 	}
-	
+
 	for (i = 1; opts->params[i]; ++i) {
 
 		GError *err;
@@ -309,7 +316,7 @@ mv_check_params (MuConfig *opts, MuFlags *flags)
 						    MU_FLAG_TYPE_MAILDIR |
 						    MU_FLAG_TYPE_MAILFILE);
 	}
-	
+
 	return TRUE;
 }
 
@@ -321,7 +328,7 @@ cmd_mv_dev_null (MuConfig *opts)
 		g_warning ("unlink failed: %s", strerror (errno));
 		return MU_ERROR_FILE;
 	}
-	
+
 	if (opts->print_target)
 		g_print ("/dev/null\n"); /* /dev/null */
 
@@ -335,7 +342,7 @@ mu_cmd_mv (MuConfig *opts)
 	GError *err;
 	gchar *fullpath;
 	MuFlags flags;
-	
+
 	if (!mv_check_params (opts, &flags))
 		return MU_ERROR_IN_PARAMETERS;
 
@@ -357,19 +364,19 @@ mu_cmd_mv (MuConfig *opts)
 			return code;
 		}
 		return MU_ERROR_FILE;
-		
+
 	} else {
-		if (opts->print_target)       
-			g_print ("%s\n", fullpath); 
+		if (opts->print_target)
+			g_print ("%s\n", fullpath);
 		return MU_OK;
 	}
-	
+
 	g_free (fullpath);
-	
+
 	return MU_OK;
 }
-	
-	
+
+
 static gboolean
 check_file_okay (const char *path, gboolean cmd_add)
 {
@@ -377,7 +384,7 @@ check_file_okay (const char *path, gboolean cmd_add)
 		g_warning ("path is not absolute: %s", path);
 		return FALSE;
 	}
-	
+
 	if (cmd_add && access(path, R_OK) != 0) {
 		g_warning ("path is not readable: %s: %s",
 			   path, strerror (errno));
@@ -386,7 +393,7 @@ check_file_okay (const char *path, gboolean cmd_add)
 
 	return TRUE;
 }
-	
+
 
 static MuStore*
 get_store (void)
@@ -395,9 +402,10 @@ get_store (void)
 	GError *err;
 
 	err = NULL;
-	store = mu_store_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-			      mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
-			      &err);
+	store = mu_store_new_writable
+		(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+		 mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
+		 &err);
 	if (!store) {
 		if (err) {
 			g_warning ("store error: %s", err->message);
@@ -407,9 +415,7 @@ get_store (void)
 	}
 
 	return store;
-	
 }
-
 
 
 MuError
@@ -418,7 +424,7 @@ mu_cmd_add (MuConfig *opts)
 	MuStore *store;
 	gboolean allok;
 	int i;
-	
+
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
 			      MU_ERROR_INTERNAL);
@@ -432,9 +438,9 @@ mu_cmd_add (MuConfig *opts)
 	store = get_store ();
 	if (!store)
 		return MU_ERROR_INTERNAL;
-		
+
 	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
-		
+
 		const char* src;
 		src = opts->params[i];
 
@@ -442,13 +448,13 @@ mu_cmd_add (MuConfig *opts)
 			allok = FALSE;
 			continue;
 		}
-				
+
 		if (!mu_store_store_path (store, src)) {
 			allok = FALSE;
 			g_warning ("failed to store %s", src);
 		}
 	}
-	
+
 	mu_store_destroy (store);
 
 	return allok ? MU_OK : MU_ERROR;
@@ -461,7 +467,7 @@ mu_cmd_remove (MuConfig *opts)
 	MuStore *store;
 	gboolean allok;
 	int i;
-	
+
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
 			      MU_ERROR_INTERNAL);
@@ -475,9 +481,9 @@ mu_cmd_remove (MuConfig *opts)
 	store = get_store ();
 	if (!store)
 		return MU_ERROR_INTERNAL;
-		
+
 	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
-		
+
 		const char* src;
 		src = opts->params[i];
 
@@ -485,14 +491,17 @@ mu_cmd_remove (MuConfig *opts)
 			allok = FALSE;
 			continue;
 		}
-				
+
 		if (!mu_store_remove_path (store, src)) {
 			allok = FALSE;
 			g_warning ("failed to remove %s", src);
 		}
 	}
-	
+
 	mu_store_destroy (store);
 
 	return allok ? MU_OK : MU_ERROR;
 }
+
+
+
