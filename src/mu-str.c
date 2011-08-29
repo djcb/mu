@@ -334,6 +334,70 @@ mu_str_to_list (const char *str, char sepa, gboolean strip)
 	return lst;
 }
 
+
+static gchar*
+eat_esc_string (char **strlst)
+{
+	char *str;
+	gboolean quoted;
+	GString *gstr;
+	
+	str  = g_strchug (*strlst);
+	gstr = g_string_sized_new (strlen(str));
+	
+	for (quoted = FALSE; *str; ++str) {
+		
+		if (*str == '"') {
+			quoted = !quoted;
+			continue;
+		} else if (quoted)
+			gstr = g_string_append_c (gstr, *str);
+		else if (*str == '\\') {
+			if (str[1] != ' ' && str[1] != '"' && str[1] != '\\')
+				goto err; /* invalid escaping */
+			g_string_append_c (gstr, *(str++));
+			continue;
+		} else if (*str == ' ') {
+			++str;
+			goto leave;
+		} else 
+			g_string_append_c (gstr, *str);
+	}
+leave:
+	*strlst = str;
+	return g_string_free (gstr, FALSE);
+err:
+	g_warning ("error in string");
+	*strlst = NULL;
+	return g_string_free (gstr, TRUE);
+}
+
+
+GSList*
+mu_str_esc_to_list (const char *strings)
+{
+	GSList *lst;
+	char *str, *mystrings, *freeme;
+	
+	g_return_val_if_fail (strings, NULL);
+
+	freeme = mystrings = g_strdup (strings);
+	mystrings = g_strdup(g_strchug(mystrings));
+	lst	  = NULL;
+	
+	do {
+		str = eat_esc_string (&mystrings);
+		if (str)
+			lst = g_slist_prepend (lst, str);
+	} while (mystrings && *mystrings);
+
+	g_free (freeme);
+	return g_slist_reverse (lst);
+}
+
+
+
+
 void
 mu_str_free_list (GSList *lst)
 {
@@ -455,7 +519,8 @@ mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
 
 	if (in_quotes)
 		g_string_append_c (tmp, '"');
-return g_string_free (tmp, FALSE);
+
+	return g_string_free (tmp, FALSE);
 }
 
 

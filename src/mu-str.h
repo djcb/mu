@@ -254,7 +254,7 @@ char* mu_str_from_list (const GSList *lst, char sepa);
 
 
 /**
- * convert a #se0pa-separated list of strings in to a GSList
+ * convert a #sepa-separated list of strings in to a GSList
  * 
  * @param str a #sepa-separated list of strings
  * @param the separator character
@@ -263,6 +263,19 @@ char* mu_str_from_list (const GSList *lst, char sepa);
  * @return a newly allocated GSList (free with mu_str_free_list)
  */
 GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
+
+
+/**
+ * convert a string (with possible escaping) to a list. list items are
+ * separated by one or more spaces. list items can be quoted (using
+ * '"'), and '"', ' ' and '\' use their special meaning when prefixed
+ * with \.
+ * 
+ * @param str a string
+ * 
+ * @return a list of elements or NULL in case of error
+ */
+GSList* mu_str_esc_to_list (const char *str);
 
 
 /**
