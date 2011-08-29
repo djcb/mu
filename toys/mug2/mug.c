@@ -25,6 +25,7 @@
 #include <string.h>		/* for memset */
 
 #include <mu-util.h>
+#include <mu-store.h>
 #include <mu-runtime.h>
 #include <mu-index.h>
 
@@ -52,20 +53,20 @@ each_msg (MuIndexStats* stats, MugData *data)
 
 	if (++i % 100 == 0)
 		gtk_main_iteration ();
-	
+
 	return MU_OK;
 }
-	
+
 static void
 reindex (MugData *mugdata)
 {
 	MuIndex *midx;
 	GError *err;
 
-	if (mu_util_xapian_is_locked
+	if (mu_store_database_is_locked
 	    (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)))
 		return;
-	
+
 	err = NULL;
 	midx = mu_index_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 			     mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
@@ -149,7 +150,7 @@ get_connected_tool_button (const char* stock_id, ToolAction action,
 			   MugData *mugdata)
 {
 	GtkToolItem *btn;
-	
+
 	btn = gtk_tool_button_new_from_stock (stock_id);
 	g_object_set_data (G_OBJECT (btn), "action",
 			   GUINT_TO_POINTER (action));
@@ -189,7 +190,7 @@ mug_toolbar (MugData * mugdata)
 					    (tools[i].stock_id, tools[i].action,
 					     mugdata), i);
 	}
-	
+
 	return toolbar;
 }
 
@@ -391,7 +392,7 @@ mug_shell (MugData * mugdata)
 		gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
 		g_free (icon);
 	}
-	
+
 	return mugdata->win;
 }
 
