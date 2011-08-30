@@ -255,6 +255,18 @@ typedef gpointer XapianDocument;
 typedef gpointer XapianEnquire;
 
 
+/* print a warning for a GError, and free it */
+#define MU_HANDLE_G_ERROR(GE)							\
+	do {									\
+		if (!(GE))							\
+			g_warning ("%s:%u: an error occured in %s",		\
+				   __FILE__, __LINE__, __FUNCTION__);		\
+		else {								\
+			g_warning ("error %u: %s", (GE)->code, (GE)->message);  \
+			g_error_free ((GE));					\
+		}								\
+	} while (0)
+
 
 
 /**
