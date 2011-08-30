@@ -83,10 +83,10 @@ set_group_mu_defaults (MuConfig *opts)
 
 	/* check for the MU_COLORS env var; but in any case don't use
 	 * colors unless we're writing to a tty */
-	
+
 	if (g_getenv (MU_COLORS) != NULL)
 		opts->color = TRUE;
-	
+
 	if (!isatty(fileno(stdout)))
 		opts->color = FALSE;
 
@@ -109,7 +109,7 @@ config_options_group_mu (MuConfig *opts)
 		 "log to standard error (false)", NULL},
 		{"color", 0, 0, G_OPTION_ARG_NONE, &opts->color,
 		 "use ANSI-colors in some output (false)", NULL},
-		
+
 		{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &opts->params, "parameters", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
@@ -174,7 +174,7 @@ set_group_find_defaults (MuConfig *opts)
 			opts->descending = TRUE;
 		} else
 			opts->descending = FALSE;
-		
+
 	}
 
 	if (!opts->formatstr) /* by default, use plain output */
@@ -182,7 +182,7 @@ set_group_find_defaults (MuConfig *opts)
 	else
 		opts->format =
 			get_output_format (opts->formatstr);
-		
+
 	if (opts->linksdir) {
 		gchar *old = opts->linksdir;
 		opts->linksdir = mu_util_dir_expand(opts->linksdir);
@@ -275,7 +275,7 @@ config_options_group_cfind (MuConfig *opts)
 		 "'org-contact', 'csv')", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
-		
+
 	og = g_option_group_new("cfind", "options for the 'cfind' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
@@ -306,7 +306,7 @@ config_options_group_view (MuConfig *opts)
 		 "output format ('plain'(*), 'sexp')", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
-		
+
 	og = g_option_group_new("view", "options for the 'view' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
@@ -330,7 +330,7 @@ config_options_group_mv (MuConfig *opts)
 		 NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
-		
+
 	og = g_option_group_new ("mv", "options for the 'mv' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
@@ -392,7 +392,7 @@ config_options_group_server (MuConfig * opts)
 
 
 
-static gboolean  
+static gboolean
 parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 {
 	int i;
@@ -412,22 +412,22 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		{ "remove",  MU_CONFIG_CMD_REMOVE },
 		{ "server",  MU_CONFIG_CMD_SERVER }
 	};
-		
+
 	opts->cmd	 = MU_CONFIG_CMD_NONE;
 	opts->cmdstr = NULL;
-		
+
 	if (*argcp < 2) /* no command found at all */
 		return TRUE;
-	else if ((**argvp)[1] == '-') 
+	else if ((**argvp)[1] == '-')
 		/* if the first param starts with '-', there is no
 		 * command, just some option (like --version, --help
 		 * etc.)*/
 		return TRUE;
-		
+
 	opts->cmd    = MU_CONFIG_CMD_UNKNOWN;
 	opts->cmdstr = (*argvp)[1];
 
-	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i) 
+	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i)
 		if (strcmp (opts->cmdstr, cmd_map[i]._name) == 0)
 			opts->cmd = cmd_map[i]._cmd;
 
@@ -439,9 +439,9 @@ static void
 add_context_group (GOptionContext *context, MuConfig *opts)
 {
 	GOptionGroup *group;
-	
+
 	group = NULL;
-		
+
 	switch (opts->cmd) {
 	case MU_CONFIG_CMD_INDEX:
 		group = config_options_group_index (opts);	break;
@@ -459,7 +459,7 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 		group = config_options_group_view (opts);	break;
 	case MU_CONFIG_CMD_SERVER:
 		group = config_options_group_server (opts);	break;
-		
+
 	default: break;
 	}
 
@@ -474,13 +474,13 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 	GError *err = NULL;
 	GOptionContext *context;
 	gboolean rv;
-		
+
 	context = g_option_context_new("- mu general option");
 	g_option_context_set_main_group(context,
 					config_options_group_mu(opts));
 
 	add_context_group (context, opts);
-		
+
 	rv = g_option_context_parse (context, argcp, argvp, &err);
 	g_option_context_free (context);
 	if (!rv) {
@@ -490,7 +490,7 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 	}
 	return TRUE;
 }
-				
+
 
 MuConfig*
 mu_config_new (int *argcp, char ***argvp)
@@ -498,15 +498,15 @@ mu_config_new (int *argcp, char ***argvp)
 	MuConfig *config;
 
 	g_return_val_if_fail (argcp && argvp, NULL);
-		
+
 	config = g_new0 (MuConfig, 1);
-			
+
 	if (!parse_cmd (config, argcp, argvp) ||
 	    !parse_params(config, argcp, argvp)) {
 		mu_config_destroy (config);
 		return NULL;
 	}
-		
+
 	/* fill in the defaults if user did not specify */
 	set_group_mu_defaults (config);
 	set_group_index_defaults (config);
@@ -514,7 +514,7 @@ mu_config_new (int *argcp, char ***argvp)
 	set_group_cfind_defaults (config);
 	set_group_view_defaults (config);
 	/* set_group_mkdir_defaults (config); */
-		
+
 	return config;
 }
 
@@ -523,7 +523,7 @@ mu_config_destroy (MuConfig *opts)
 {
 	if (!opts)
 		return;
-		
+
 	g_free (opts->muhome);
 	g_free (opts->maildir);
 	g_free (opts->linksdir);
@@ -533,73 +533,13 @@ mu_config_destroy (MuConfig *opts)
 }
 
 
-static void
-show_usage (gboolean noerror)
-{
-	const char* usage=
-		"usage: mu command [options] [parameters]\n"
-		"where command is one of index, find, cfind, view, mkdir, cleanup, "
-		"extract, mv, add, remove or server\n\n"
-		"see the mu, mu-<command> or mu-easy manpages for "
-		"more information\n";
-
-	if (noerror)
-		g_print ("%s", usage);
-	else
-		g_printerr ("%s", usage);
-}
-
-static void
-show_version (void)
-{
-	g_print ("mu (mail indexer/searcher) version " VERSION "\n"
-		 "Copyright (C) 2008-2011 Dirk-Jan C. Binnema (GPLv3+)\n");
-}
-
-
-MuError
-mu_config_execute (MuConfig *opts)
-{
-	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
-		
-	if (opts->version) {
-		show_version ();
-		return MU_OK;
-	}
-		
-	if (!opts->params||!opts->params[0]) {/* no command? */
-		show_version ();
-		show_usage (TRUE);
-		return MU_ERROR_IN_PARAMETERS;
-	}
-		
-	switch (opts->cmd) {
-	case MU_CONFIG_CMD_CFIND:      return mu_cmd_cfind (opts);
-	case MU_CONFIG_CMD_CLEANUP:    return mu_cmd_cleanup (opts);
-	case MU_CONFIG_CMD_EXTRACT:    return mu_cmd_extract (opts);
-	case MU_CONFIG_CMD_FIND:       return mu_cmd_find (opts);
-	case MU_CONFIG_CMD_INDEX:      return mu_cmd_index (opts);
-	case MU_CONFIG_CMD_MKDIR:      return mu_cmd_mkdir (opts);
-	case MU_CONFIG_CMD_MV:         return mu_cmd_mv (opts);
-	case MU_CONFIG_CMD_VIEW:       return mu_cmd_view (opts);
-	case MU_CONFIG_CMD_ADD:        return mu_cmd_add (opts);
-	case MU_CONFIG_CMD_REMOVE:     return mu_cmd_remove (opts);
-	case MU_CONFIG_CMD_SERVER:     return mu_cmd_server (opts);
-	case MU_CONFIG_CMD_UNKNOWN:
-		show_usage (FALSE);
-		return MU_ERROR_IN_PARAMETERS;
-	default:
-		g_return_val_if_reached (MU_ERROR_INTERNAL);
-	}
-}
-
 guint
 mu_config_param_num (MuConfig *conf)
 {
 	guint u;
-	
+
 	g_return_val_if_fail (conf, 0);
-	
+
 	for (u = 0; conf->params[u]; ++u);
 
 	return u;
