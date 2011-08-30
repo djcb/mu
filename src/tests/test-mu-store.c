@@ -51,7 +51,7 @@ test_mu_store_new_destroy (void)
 	g_assert_cmpuint (0,==,mu_store_count (store));
 
 	mu_store_flush (store);
-	mu_store_destroy (store);
+	mu_store_unref (store);
 
 	g_free (tmpdir);
 }
@@ -70,17 +70,17 @@ test_mu_store_version (void)
 	err = NULL;
 	store = mu_store_new_writable (tmpdir, NULL, &err);
 	g_assert (store);
-	mu_store_destroy (store);
+	mu_store_unref (store);
 	store = mu_store_new_read_only (tmpdir, &err);
 	g_assert (store);
 
 	g_assert (err == NULL);
 
 	g_assert_cmpuint (0,==,mu_store_count (store));
-	g_assert_cmpstr (MU_XAPIAN_DB_VERSION,==,
+	g_assert_cmpstr (MU_STORE_SCHEMA_VERSION,==,
 			 mu_store_version(store));
 
-	mu_store_destroy (store);
+	mu_store_unref (store);
 	g_free (tmpdir);
 }
 
@@ -133,7 +133,7 @@ test_mu_store_store_msg_and_count (void)
 
 	mu_msg_unref (msg);
 
-	mu_store_destroy (store);
+	mu_store_unref (store);
 }
 
 
@@ -171,7 +171,7 @@ test_mu_store_store_msg_remove_and_count (void)
 			  (store,
 			   MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,"));
 
-	mu_store_destroy (store);
+	mu_store_unref (store);
 }
 
 

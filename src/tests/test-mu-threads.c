@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
-/* 
+/*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -15,8 +15,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #ifdef HAVE_CONFIG_H
@@ -38,20 +38,20 @@ static gchar*
 fill_database (const char *testdir)
 {
 	gchar *cmdline, *tmpdir, *xpath;
-	
+
 	tmpdir = test_mu_common_get_random_tmpdir();
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, testdir);
 	/* g_print ("%s\n", cmdline);  */
-	
+
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
 	g_free (cmdline);
 	xpath= g_strdup_printf ("%s%c%s", tmpdir,
 				G_DIR_SEPARATOR, "xapian");
 	g_free (tmpdir);
-	
+
 	return xpath;
 }
 
@@ -60,16 +60,21 @@ static MuMsgIter*
 run_and_get_iter (const char *xpath, const char *query)
 {
 	MuQuery  *mquery;
+	MuStore *store;
 	MuMsgIter *iter;
-		
-	mquery = mu_query_new (xpath, NULL);
+
+	store = mu_store_new_read_only (xpath, NULL);
+	g_assert (store);
+
+	mquery = mu_query_new (store, NULL);
+	mu_store_unref (store);
 	g_assert (query);
-	
+
 	iter = mu_query_run (mquery, query, TRUE, MU_MSG_FIELD_ID_DATE,
 			     FALSE, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
-	
+
 	return iter;
 }
 
@@ -78,9 +83,9 @@ static void
 test_mu_threads_01 (void)
 {
 	gchar *xpath;
-	MuMsgIter *iter;	
+	MuMsgIter *iter;
 	unsigned u;
-	
+
 	struct {
 		const char* threadpath;
 		const char *msgid;
@@ -99,12 +104,12 @@ test_mu_threads_01 (void)
 
 		/* two children of absent root 4.0 */
 		{"4:0", "child4.0@msg.id", "Re: child 4.0"},
-		{"4:1", "child4.1@msg.id", "Re: child 4.1"}	
+		{"4:1", "child4.1@msg.id", "Re: child 4.1"}
 	};
-	
+
 	xpath = fill_database (MU_TESTMAILDIR3);
 	g_assert (xpath != NULL);
-	
+
 	iter = run_and_get_iter (xpath, "abc");
 	g_assert (iter);
 	g_assert (!mu_msg_iter_is_done(iter));
@@ -113,31 +118,31 @@ test_mu_threads_01 (void)
 	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items)) {
 		MuMsg *msg;
 		const MuMsgIterThreadInfo *ti;
-		
+
 		ti = mu_msg_iter_get_thread_info (iter);
 		if (!ti)
-			g_print ("%s: thread info not found\n",
-				 mu_msg_get_msgid(mu_msg_iter_get_msg (iter, NULL)));
-
+			g_print ("%s: thread info not found for %u\n",
+				 __FUNCTION__, (unsigned)mu_msg_iter_get_docid(iter));
 		g_assert(ti);
-		
-		msg = mu_msg_iter_get_msg (iter, NULL);
+
+		msg = mu_msg_iter_get_msg_floating (iter);
+		g_assert (msg);
 		/* g_print ("%s %s %s\n", ti->threadpath, */
 		/* 	 mu_msg_get_msgid(msg), */
 		/* 	 mu_msg_get_path (msg) */
 		/* 	); */
-		
+
 		g_assert (u < G_N_ELEMENTS(items));
 
 		g_assert_cmpstr (ti->threadpath,==,items[u].threadpath);
 		g_assert_cmpstr (mu_msg_get_subject(msg),==,items[u].subject);
 		g_assert_cmpstr (mu_msg_get_msgid(msg),==,items[u].msgid);
-		
+
 		++u;
 		mu_msg_iter_next (iter);
 	}
 	g_assert (u == G_N_ELEMENTS(items));
-	
+
 	g_free (xpath);
 	mu_msg_iter_destroy (iter);
 }
@@ -154,7 +159,7 @@ static void
 test_mu_threads_rogue (void)
 {
 	gchar *xpath;
-	MuMsgIter *iter;	
+	MuMsgIter *iter;
 	unsigned u;
 	tinfo *items;
 
@@ -178,10 +183,10 @@ test_mu_threads_rogue (void)
 	iter = run_and_get_iter (xpath, "def");
 	g_assert (iter);
 	g_assert (!mu_msg_iter_is_done(iter));
-	
-	/* due to the random order in files can be indexed, there are two possible ways 
+
+	/* due to the random order in files can be indexed, there are two possible ways
 	 * for the threads to be built-up; both are okay */
-	if (g_strcmp0 (mu_msg_get_msgid(mu_msg_iter_get_msg (iter, NULL)), 
+	if (g_strcmp0 (mu_msg_get_msgid(mu_msg_iter_get_msg_floating (iter)),
 		       "cycle0@msg.id") == 0)
 		items = items1;
 	else
@@ -191,31 +196,30 @@ test_mu_threads_rogue (void)
 	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items1)) {
 		MuMsg *msg;
 		const MuMsgIterThreadInfo *ti;
-		
+
 		ti = mu_msg_iter_get_thread_info (iter);
 		if (!ti)
 			g_print ("%s: thread info not found\n",
-				 mu_msg_get_msgid(mu_msg_iter_get_msg (iter, NULL)));
-
+				 mu_msg_get_msgid(mu_msg_iter_get_msg_floating (iter)));
 		g_assert(ti);
-		
-		msg = mu_msg_iter_get_msg (iter, NULL);
+
+		msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
 		/* g_print ("%s %s %s\n", ti->threadpath, */
 		/* 	 mu_msg_get_msgid(msg), */
 		/* 	 mu_msg_get_path (msg) */
 		/* 	); */
-		
+
 		g_assert (u < G_N_ELEMENTS(items1));
 
 		g_assert_cmpstr (ti->threadpath,==,(items)[u].threadpath);
 		g_assert_cmpstr (mu_msg_get_subject(msg),==,(items)[u].subject);
 		g_assert_cmpstr (mu_msg_get_msgid(msg),==,(items)[u].msgid);
-		
+
 		++u;
 		mu_msg_iter_next (iter);
 	}
 	g_assert (u == G_N_ELEMENTS(items1));
-	
+
 	g_free (xpath);
 	mu_msg_iter_destroy (iter);
 }
@@ -226,18 +230,18 @@ int
 main (int argc, char *argv[])
 {
 	int rv;
-	
-	g_test_init (&argc, &argv, NULL);	
+
+	g_test_init (&argc, &argv, NULL);
 
 	g_test_add_func ("/mu-query/test-mu-threads-01", test_mu_threads_01);
 	g_test_add_func ("/mu-query/test-mu-threads-rogue", test_mu_threads_rogue);
-	
-	/* g_log_set_handler (NULL, */
-	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
-	/* 		   (GLogFunc)black_hole, NULL); */
+
+	g_log_set_handler (NULL,
+			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
-	
+
 	return rv;
 }
 

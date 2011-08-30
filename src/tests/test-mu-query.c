@@ -34,7 +34,7 @@
 #include "test-mu-common.h"
 #include "src/mu-query.h"
 #include "src/mu-str.h"
-
+#include "src/mu-store.h"
 
 static gchar*
 fill_database (const char *testdir)
@@ -69,7 +69,8 @@ assert_no_dups (MuMsgIter *iter)
 
 	mu_msg_iter_reset (iter);
 	while (!mu_msg_iter_is_done(iter)) {
-		MuMsg *msg = mu_msg_iter_get_msg (iter, NULL);
+		MuMsg *msg;
+		msg = mu_msg_iter_get_msg_floating (iter);
 		/* make sure there are no duplicates */
 		g_assert (!g_hash_table_lookup (hash, mu_msg_get_path (msg)));
 		g_hash_table_insert (hash, g_strdup (mu_msg_get_path(msg)),
@@ -87,10 +88,16 @@ run_and_count_matches (const char *xpath, const char *query)
 {
 	MuQuery  *mquery;
 	MuMsgIter *iter;
+	MuStore *store;
 	guint count1, count2;
 
-	mquery = mu_query_new (xpath, NULL);
+	store = mu_store_new_read_only (xpath, NULL);
+	g_assert (store);
+
+	mquery = mu_query_new (store, NULL);
 	g_assert (query);
+
+	mu_store_unref (store);
 
 	/* g_printerr ("\n=>'%s'\n", query); */
 
@@ -257,6 +264,7 @@ test_mu_query_accented_chars_01 (void)
 	MuQuery *query;
 	MuMsgIter *iter;
 	MuMsg *msg;
+	MuStore *store;
 	gchar *xpath;
 	GError *err;
 	gchar *summ;
@@ -264,11 +272,16 @@ test_mu_query_accented_chars_01 (void)
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 
-	query = mu_query_new (xpath, NULL);
+	store = mu_store_new_read_only (xpath, NULL);
+	g_assert (store);
+
+	query = mu_query_new (store, NULL);
+	mu_store_unref (store);
+
 	iter = mu_query_run (query, "fünkÿ", FALSE, MU_MSG_FIELD_ID_NONE,
 			     FALSE, NULL);
 	err = NULL;
-	msg = mu_msg_iter_get_msg (iter, &err); /* don't unref */
+	msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
 	if (!msg) {
 		g_warning ("error getting message: %s", err->message);
 		g_error_free (err);
@@ -585,9 +598,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-tags_02",
 			 test_mu_query_tags_02);
 
-	/* g_log_set_handler (NULL, */
-	/* 		   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION, */
-	/* 		   (GLogFunc)black_hole, NULL); */
+	g_log_set_handler (NULL,
+			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
 
