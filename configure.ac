@@ -139,14 +139,14 @@ AS_IF([test "x$XAPIAN" = "xno"],[
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
-# we set the set the version of the Xapian database layout here; it
-# will become part of the db name, so we can automatically recreate the
-# database when we incompatible have changes.
+# we set the set the version of the MuStore (Xapian database) layout
+# here; it will become part of the db name, so we can automatically
+# recreate the database when we incompatible have changes.
 #
-# note that MU_XAPIAN_DB_VERSION does not necessarily follow MU
+# note that MU_STORE_SCHEMA_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_XAPIAN_DB_VERSION,["9.7"], ['Schema' version of the database])
+AC_DEFINE(MU_STORE_SCHEMA_VERSION,["9.8"], ['Schema' version of the database])
 
 
 #
