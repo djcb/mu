@@ -101,7 +101,7 @@ get_connected_tool_button (const char* stock_id, ToolAction action,
 			   MugData *mugdata)
 {
 	GtkToolItem *btn;
-	
+
 	btn = gtk_tool_button_new_from_stock (stock_id);
 	g_object_set_data (G_OBJECT (btn), "action",
 			   GUINT_TO_POINTER (action));
@@ -139,7 +139,7 @@ mug_toolbar (MugData * mugdata)
 					    (tools[i].stock_id, tools[i].action,
 					     mugdata), i);
 	}
-	
+
 	return toolbar;
 }
 
@@ -342,7 +342,7 @@ mug_shell (MugData * mugdata)
 	// 	gtk_window_set_icon_from_file (GTK_WINDOW (mugdata->win), icon, NULL);
 	// 	g_free (icon);
 	// }
-	
+
 	return mugdata->win;
 }
 

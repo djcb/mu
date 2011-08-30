@@ -61,6 +61,7 @@ static void
 reindex (MugData *mugdata)
 {
 	MuIndex *midx;
+	MuStore *store;
 	GError *err;
 
 	if (mu_store_database_is_locked
@@ -68,9 +69,10 @@ reindex (MugData *mugdata)
 		return;
 
 	err = NULL;
-	midx = mu_index_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-			     mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
-			     &err);
+	store = mu_store_new_writable (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+				       mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
+				       &err);
+	midx = store ? mu_index_new (store, &err) : NULL;
 	if (!midx) {
 		if (err && err->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK) {
 			g_warning ("database busy...");
@@ -86,6 +88,7 @@ reindex (MugData *mugdata)
 		      FALSE, NULL, (MuIndexMsgCallback)each_msg, NULL, mugdata);
 
 	mu_index_destroy (midx);
+	mu_store_unref (store);
 }
 
 

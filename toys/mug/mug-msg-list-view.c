@@ -323,10 +323,14 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	GError *err;
 	MuQuery *xapian;
 	MuMsgIter *iter;
+	MuStore *store;
 
 	err = NULL;
-	xapian = mu_query_new (xpath, &err);
-	if (!xapian) {
+
+	if (! (store = mu_store_new_read_only (xpath, &err)) ||
+	    ! (xapian = mu_query_new (store, &err))) {
+		if (store)
+			mu_store_unref (store);
 		g_warning ("Error: %s", err->message);
 		g_signal_emit (G_OBJECT (self),
 			       signals[MUG_ERROR_OCCURED], 0,
@@ -334,6 +338,7 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 		g_error_free (err);
 		return NULL;
 	}
+	mu_store_unref (store);
 
 	iter = mu_query_run (xapian, query, FALSE, MU_MSG_FIELD_ID_DATE,
 			     TRUE, &err);
@@ -394,11 +399,8 @@ update_model (GtkListStore * store, const char *xpath, const char *query,
 	}
 
 	for (count = 0; !mu_msg_iter_is_done (iter);
-	     mu_msg_iter_next (iter), ++count) {
-		MuMsg *msg;
-		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
-		add_row (store, msg);
-	}
+	     mu_msg_iter_next (iter), ++count)
+		add_row (store, mu_msg_iter_get_msg_floating(iter)); /* don't unref */
 
 	mu_msg_iter_destroy (iter);
 
