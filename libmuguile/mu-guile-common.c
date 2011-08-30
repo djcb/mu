@@ -27,7 +27,7 @@
 
 void
 mu_guile_error (const char *func_name, int status,
-		      const char *fmt, SCM args)
+		const char *fmt, SCM args)
 {
 	scm_error_scm (scm_from_locale_symbol ("MuError"),
 		       scm_from_utf8_string (func_name ? func_name : "<nameless>"),
@@ -37,13 +37,12 @@ mu_guile_error (const char *func_name, int status,
 
 void
 mu_guile_g_error (const char *func_name, GError *err)
-{	
+{
 	scm_error_scm (scm_from_locale_symbol ("MuError"),
 		       scm_from_utf8_string (func_name),
-		       scm_from_utf8_string (err->message),
+		       scm_from_utf8_string (err ? err->message : "error"),
 		       SCM_UNDEFINED, SCM_UNDEFINED);
 }
-
 
 
 void
@@ -57,8 +56,8 @@ mu_guile_init (void)
 
 /*
  * backward compat for pre-2.x guile - note, this will fail miserably
- * if you don't use a UTF8 locale 
- */ 
+ * if you don't use a UTF8 locale
+ */
 #if HAVE_PRE2_GUILE
 
 SCM

@@ -29,13 +29,21 @@ static MuQuery*
 get_query (void)
 {
 	MuQuery *query;
+	MuStore *store;
 	GError *err;
-	
+
 	err = NULL;
-	query = mu_query_new (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), &err);
-	if (err) {
+	store = mu_store_new_read_only (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+					&err);
+	query = store ? mu_query_new (store, &err) : NULL;
+
+	if (store)
+		mu_store_unref (store);
+
+	if (!query) {
 		mu_guile_g_error ("<internal error>", err);
-		g_error_free (err);
+		if (err)
+			g_error_free (err);
 		return NULL;
 	}
 
@@ -48,8 +56,8 @@ get_query_iter (MuQuery *query, const char* expr)
 {
 	MuMsgIter *iter;
 	GError *err;
-	
-	err = NULL;		
+
+	err = NULL;
 	iter = mu_query_run (query, expr,
 			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, &err);
 	if (err) {
@@ -57,7 +65,7 @@ get_query_iter (MuQuery *query, const char* expr)
 		g_error_free (err);
 		return NULL;
 	}
-	
+
 	return iter;
 }
 
@@ -67,16 +75,9 @@ call_func (SCM FUNC, MuMsgIter *iter, const char* func_name)
 {
 	SCM msgsmob;
 	MuMsg *msg;
-	GError *err;
-	
-	err = NULL;
-	msg = mu_msg_iter_get_msg (iter, &err);
-	if (err) {
-		mu_guile_g_error (func_name, err);
-		g_error_free (err);
-		return;
-	}
-	
+
+	msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
+
 	msgsmob = mu_guile_msg_to_scm (mu_msg_ref(msg));
 	scm_call_1 (FUNC, msgsmob);
 }
@@ -96,13 +97,13 @@ SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
 	SCM_ASSERT (scm_procedure_p (FUNC), FUNC, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_is_string (EXPR) || EXPR == SCM_UNSPECIFIED,
 		    EXPR, SCM_ARG2, FUNC_NAME);
-	
+
 	query = get_query ();
 	if (!query)
 		return SCM_UNSPECIFIED;
-	
+
 	expr = SCM_UNBNDP(EXPR) ? NULL : scm_to_utf8_string(EXPR);
-	
+
 	iter = get_query_iter (query, expr);
 	if (!iter)
 		return SCM_UNSPECIFIED;
@@ -111,7 +112,7 @@ SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
 		call_func (FUNC, iter, FUNC_NAME);
 		++count;
 	}
-	
+
 	mu_query_destroy (query);
 
 	return scm_from_int (count);
@@ -121,7 +122,7 @@ SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
 
 void*
 mu_guile_store_init (void *data)
-{	
+{
 #include "mu-guile-store.x"
 
 	return NULL;
