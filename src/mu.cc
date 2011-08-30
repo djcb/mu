@@ -28,14 +28,14 @@ int
 main (int argc, char *argv[])
 {
 	int rv;
-	
+
 	if (!mu_runtime_init_from_cmdline (&argc, &argv, "mu"))
 		return 1;
 
-	rv = mu_config_execute (mu_runtime_config());
+	rv = mu_cmd_execute (mu_runtime_config());
 
 	mu_runtime_uninit ();
-	
+
 	return rv;
 }
 
