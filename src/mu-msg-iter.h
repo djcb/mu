@@ -30,7 +30,7 @@ G_BEGIN_DECLS
  * MuMsgIter is a structure to iterate over the results of a
  * query. You can iterate only in one-direction, and you can do it
  * only once.
- * 
+ *
  */
 
 struct _MuMsgIter;
@@ -40,14 +40,14 @@ typedef struct _MuMsgIter MuMsgIter;
 /**
  * create a new MuMsgIter -- basically, an iterator over the search
  * results
- * 
+ *
  * @param enq a Xapian::Enquire* cast to XapianEnquire* (because this
  * is C, not C++),providing access to search results
  * @param batchsize how many results to retrieve at once
  * @param threads whether to calculate threads
  * @param sorting field when using threads; note, when 'threads' is
  * FALSE, this should be MU_MSG_FIELD_ID_NONE
- * 
+ *
  * @return a new MuMsgIter, or NULL in case of error
  */
 MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
@@ -58,9 +58,9 @@ MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
 /**
  * get the next message (which you got from
  * e.g. mu_query_run)
- * 
+ *
  * @param iter a valid MuMsgIter iterator
- * 
+ *
  * @return TRUE if it succeeded, FALSE otherwise (e.g., because there
  * are no more messages in the query result)
  */
@@ -70,18 +70,18 @@ gboolean         mu_msg_iter_next              (MuMsgIter *iter);
 
 /**
  * reset the iterator to the beginning
- * 
+ *
  * @param iter a valid MuMsgIter iterator
- * 
+ *
  * @return TRUE if it succeeded, FALSE otherwise
  */
 gboolean mu_msg_iter_reset (MuMsgIter *iter);
 
 /**
  * does this iterator point past the end of the list?
- * 
+ *
  * @param iter a valid MuMsgIter iterator
- * 
+ *
  * @return TRUE if the iter points past end of the list, FALSE
  * otherwise
  */
@@ -90,7 +90,7 @@ gboolean         mu_msg_iter_is_done (MuMsgIter *iter);
 
 /**
  * destroy the sequence of messages; ie. /all/ of them
- * 
+ *
  * @param msg a valid MuMsgIter message or NULL
  */
 void		 mu_msg_iter_destroy           (MuMsgIter *iter);
@@ -99,24 +99,22 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
 /**
  * get the corresponding MuMsg for this iter; this instance is owned
  * by MuMsgIter, and becomes invalid after either mu_msg_iter_destroy
- * or mu_msg_iter_next. _do not_ unref it.
- * 
- * @param iter a valid MuMsgIter instance 
- * @param err which receives error info or NULL. err is only filled
- * when the function returns NULL
- * 
+ * or mu_msg_iter_next. _do not_ unref it; it's a floating reference.
+ *
+ * @param iter a valid MuMsgIter instance*
+ *
  * @return a MuMsg instance, or NULL in case of error
  */
-MuMsg* mu_msg_iter_get_msg (MuMsgIter *iter, GError **err)
+MuMsg* mu_msg_iter_get_msg_floating (MuMsgIter *iter)
           G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 
 /**
  * get the document id for the current message
- * 
+ *
  * @param iter a valid MuMsgIter iterator
- * 
+ *
  * @return the docid or (unsigned int)-1 in case of error
  */
 unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
@@ -124,9 +122,9 @@ unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
 
 /**
  * calculate the message threads
- * 
- * @param iter a valid MuMsgIter iterator 
- * 
+ *
+ * @param iter a valid MuMsgIter iterator
+ *
  * @return TRUE if it worked, FALSE otherwsie.
  */
 gboolean mu_msg_iter_calculate_threads (MuMsgIter *iter);
@@ -149,34 +147,16 @@ typedef struct _MuMsgIterThreadInfo MuMsgIterThreadInfo;
 /**
  * get a the MuMsgThreaderInfo struct for this message; this only
  * works when you created the mu-msg-iter with threading enabled
- * 
- * @param iter a valid MuMsgIter iterator 
- * 
+ *
+ * @param iter a valid MuMsgIter iterator
+ *
  * @return an info struct
  */
 const MuMsgIterThreadInfo* mu_msg_iter_get_thread_info (MuMsgIter *iter);
 
-/**
- * get some message field
- * 
- * @param iter a valid MuMsgIter iterator
- * @param field the string field to retrieve
- * 
- * @return the field value, or NULL
- */
-const gchar*     mu_msg_iter_get_field         (MuMsgIter *iter, 
-						MuMsgFieldId mfid);
+/* FIXME */
+const char* mu_msg_iter_get_path (MuMsgIter *iter);
 
-/**
- * get some numeric message field
- * 
- * @param iter a valid MuMsgIter iterator
- * @param field the numeric field to retrieve
- * 
- * @return the field value, or -1 in case of error
- */
-gint64           mu_msg_iter_get_field_numeric     (MuMsgIter *iter, 
-						    MuMsgFieldId mfid);
 G_END_DECLS
 
 #endif /*__MU_MSG_ITER_H__*/
