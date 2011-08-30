@@ -43,7 +43,7 @@ static void
 update_warning (void)
 {
 	g_warning ("note: the database needs to be upgraded to version %s",
-		   MU_XAPIAN_DB_VERSION);
+		   MU_STORE_SCHEMA_VERSION);
 	g_warning ("please run 'mu index --rebuild' (see the manpage)");
 }
 
@@ -195,33 +195,28 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 
 
 static gboolean
-database_version_check_and_update (MuConfig *opts)
+database_version_check_and_update (MuStore *store, MuConfig *opts)
 {
-	const gchar *xpath, *ccache;
-
-	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
-	ccache = mu_runtime_path (MU_RUNTIME_PATH_CONTACTS);
-
-	if (mu_store_database_is_empty (xpath))
+	if (mu_store_count (store) == 0)
 		return TRUE;
 
 	/* when rebuilding, we empty the database before doing
 	 * anything */
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
-		g_message ("clearing database [%s]", xpath);
-		g_message ("clearing contacts-cache [%s]", ccache);
-		return mu_store_database_clear (xpath, ccache);
+		g_message ("clearing database");
+		g_message ("clearing contacts-cache");
+		return mu_store_clear (store);
 	}
 
-	if (!mu_store_database_needs_upgrade (xpath))
+	if (!mu_store_needs_upgrade (store))
 		return TRUE; /* ok, nothing to do */
 
 	/* ok, database is not up to date */
 	if (opts->autoupgrade) {
 		opts->reindex = TRUE;
 		g_message ("auto-upgrade: clearing old database and cache");
-		return mu_store_database_clear (xpath, ccache);
+		return mu_store_clear (store);
 	}
 
 	update_warning ();
@@ -368,7 +363,7 @@ handle_index_error_and_free (GError *err)
 }
 
 static MuIndex*
-init_mu_index (MuConfig *opts, MuError *code)
+init_mu_index (MuStore *store, MuConfig *opts, MuError *code)
 {
 	MuIndex *midx;
 	GError *err;
@@ -378,15 +373,13 @@ init_mu_index (MuConfig *opts, MuError *code)
 		return NULL;
 	}
 
-	if (!database_version_check_and_update(opts)) {
+	if (!database_version_check_and_update(store, opts)) {
 		*code = MU_ERROR_XAPIAN_NOT_UP_TO_DATE;
 		return NULL;
 	}
 
 	err = NULL;
-	midx = mu_index_new (mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB),
-			     mu_runtime_path (MU_RUNTIME_PATH_CONTACTS),
-			     &err);
+	midx = mu_index_new (store, &err);
 	if (!midx) {
 		*code = handle_index_error_and_free (err);
 		return NULL;
@@ -400,7 +393,7 @@ init_mu_index (MuConfig *opts, MuError *code)
 
 
 static MuError
-cmd_index_or_cleanup (MuConfig *opts)
+cmd_index_or_cleanup (MuStore *store, MuConfig *opts)
 {
 	MuIndex *midx;
 	MuIndexStats stats;
@@ -408,7 +401,7 @@ cmd_index_or_cleanup (MuConfig *opts)
 	MuError code;
 
 	/* create, and do error handling if needed */
-	midx = init_mu_index (opts, &code);
+	midx = init_mu_index (store, opts, &code);
 	if (!midx)
 		return code;
 
@@ -442,23 +435,23 @@ cmd_index_or_cleanup (MuConfig *opts)
 
 
 MuError
-mu_cmd_index (MuConfig *opts)
+mu_cmd_index (MuStore *store, MuConfig *opts)
 {
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX,
 			      FALSE);
 
-	return cmd_index_or_cleanup (opts);
+	return cmd_index_or_cleanup (store, opts);
 }
 
 MuError
-mu_cmd_cleanup (MuConfig *opts)
+mu_cmd_cleanup (MuStore *store, MuConfig *opts)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd != MU_CONFIG_CMD_CLEANUP,
 			      MU_ERROR_INTERNAL);
 
-	return cmd_index_or_cleanup (opts);
+	return cmd_index_or_cleanup (store, opts);
 }
 
 

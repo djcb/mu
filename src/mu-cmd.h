@@ -25,14 +25,15 @@
 
 #include <glib.h>
 #include <mu-config.h>
+#include <mu-store.h>
 
 G_BEGIN_DECLS
 
 /**
  * execute the 'mkdir' command
- * 
+ *
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeded,
  * some error code otherwise
  */
@@ -41,9 +42,9 @@ MuError mu_cmd_mkdir (MuConfig *opts);
 
 /**
  * execute the 'view' command
- * 
+ *
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeded,
  * some error code otherwise
  */
@@ -55,11 +56,11 @@ MuError mu_cmd_view (MuConfig *opts);
  *
  * @param store store object to use
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeded,
  * some error code otherwise
  */
-MuError mu_cmd_index   (MuConfig *opts);
+MuError mu_cmd_index   (MuStore *store, MuConfig *opts);
 
 
 /**
@@ -67,29 +68,30 @@ MuError mu_cmd_index   (MuConfig *opts);
  *
  * @param store store object to use
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_cleanup (MuConfig *opts);
+MuError mu_cmd_cleanup (MuStore *store, MuConfig *opts);
 
 /**
  * execute the 'find' command
- * 
+ *
+ * @param store store object to use
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds and
  * >MU_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
  * succeeds but there no matches, some error code for all other errors
  */
-MuError mu_cmd_find (MuConfig *opts);
+MuError mu_cmd_find (MuStore *store, MuConfig *opts);
 
 
 /**
  * execute the 'extract' command
- * 
+ *
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
@@ -98,9 +100,9 @@ MuError mu_cmd_extract (MuConfig *opts);
 
 /**
  * execute the 'mv' command
- * 
+ *
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
@@ -108,9 +110,9 @@ MuError mu_cmd_mv (MuConfig *opts);
 
 /**
  * execute the cfind command
- * 
+ *
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
@@ -119,35 +121,46 @@ MuError mu_cmd_cfind (MuConfig *opts);
 
 /**
  * execute the add command
- * 
+ *
+ * @param store store object to use
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_add (MuConfig *opts);
+MuError mu_cmd_add (MuStore *store, MuConfig *opts);
 
 /**
  * execute the remove command
- * 
+ *
+ * @param store store object to use
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_remove (MuConfig *opts);
+MuError mu_cmd_remove (MuStore *store, MuConfig *opts);
 
 
 /**
  * execute the server command
- * 
+ * @param store store object to use
  * @param opts configuration options
- * 
+ *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_server (MuConfig *opts);
+MuError mu_cmd_server (MuStore *store, MuConfig *opts);
 
+
+/**
+ * execute some mu command, based on 'opts'
+ *
+ * @param opts configuration option
+ *
+ * @return MU_OK if all went wall, some error code otherwise
+ */
+MuError mu_cmd_execute (MuConfig *opts);
 
 G_END_DECLS
 

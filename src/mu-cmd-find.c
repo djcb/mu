@@ -61,7 +61,7 @@ static void
 upgrade_warning (void)
 {
 	g_warning ("the database needs to be updated to version %s\n",
-		   MU_XAPIAN_DB_VERSION);
+		   MU_STORE_SCHEMA_VERSION);
 	g_message ("please run 'mu index --rebuild' (see the man page)");
 }
 
@@ -227,8 +227,20 @@ exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 
 	for (rv = TRUE, *count = 0; !mu_msg_iter_is_done (iter);
 	     mu_msg_iter_next(iter)) {
-		rv = exec_cmd (mu_msg_get_path (mu_msg_iter_get_msg (iter, NULL)),
-			       opts->exec);
+		const char *path;
+		MuMsg *msg;
+
+		msg = mu_msg_iter_get_msg_floating (iter);
+		if (!msg)
+			continue;
+
+		path = mu_msg_get_path (msg);
+		if (!msg) {
+			g_warning ("cannot get path for msg");
+			continue;
+		}
+
+		rv = exec_cmd (path, opts->exec);
 		if (rv)
 			++*count;
 	}
@@ -346,15 +358,15 @@ get_query (MuConfig *opts)
 }
 
 static gboolean
-db_is_ready (const char *xpath)
+db_is_ready (MuStore *store)
 {
-	if (mu_store_database_is_empty (xpath)) {
+	if (mu_store_count (store) == 0) {
 		g_warning ("database is empty; use 'mu index' to "
 			   "add messages");
 		return FALSE;
 	}
 
-	if (mu_store_database_needs_upgrade (xpath)) {
+	if (mu_store_needs_upgrade (store)) {
 		upgrade_warning ();
 		return FALSE;
 	}
@@ -363,20 +375,18 @@ db_is_ready (const char *xpath)
 }
 
 static MuQuery*
-get_query_obj (void)
+get_query_obj (MuStore *store)
 {
 	GError *err;
-	const char* xpath;
 	MuQuery *mquery;
 
-	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
-	if (!db_is_ready(xpath)) {
-		g_warning ("database '%s' is not ready", xpath);
+	if (!db_is_ready(store)) {
+		g_warning ("database is not ready");
 		return NULL;
 	}
 
 	err = NULL;
-	mquery = mu_query_new (xpath, &err);
+	mquery = mu_query_new (store, &err);
 	if (!mquery) {
 		g_warning ("error: %s", err->message);
 		g_error_free (err);
@@ -445,8 +455,7 @@ static gboolean
 output_links (MuMsgIter *iter, const char* linksdir,
 	      gboolean clearlinks, size_t *count)
 {
-	size_t mycount;
-	gboolean errseen;
+	size_t okcount, errcount;
 	MuMsgIter *myiter;
 
 	g_return_val_if_fail (iter, FALSE);
@@ -456,31 +465,26 @@ output_links (MuMsgIter *iter, const char* linksdir,
 	if (!create_linksdir_maybe (linksdir, clearlinks))
 		return FALSE;
 
-	for (myiter = iter, errseen = FALSE, mycount = 0; !mu_msg_iter_is_done (myiter);
+	for (myiter = iter, errcount = okcount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
 
-		MuMsg *msg;
 		const char* path;
+		MuMsg *msg;
 
-		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		msg = mu_msg_iter_get_msg_floating (iter);
 		if (!msg)
-			return FALSE;
-
-		path = mu_msg_get_path (msg);
-		if (!access (path, R_OK)) /* only link to readable */
 			continue;
 
-		if (!link_message (path, linksdir))
-			errseen = TRUE;
-		else
-			++mycount;
+		path = mu_msg_get_path (msg);
+		if (access (path, R_OK) == 0)  /* only link to readable */
+			link_message (path, linksdir) ? ++okcount : ++errcount;
 	}
 
-	if (errseen)
+	if (errcount > 0)
 		g_warning ("error linking some of the messages");
 
 	if (count)
-		*count = mycount;
+		*count = okcount;
 
 	return TRUE;
 }
@@ -594,8 +598,8 @@ thread_indent (MuMsgIter *iter)
 
 	ti = mu_msg_iter_get_thread_info (iter);
 	if (!ti) {
-		g_warning ("cannot get thread-info for %s",
-			   mu_msg_get_subject(mu_msg_iter_get_msg(iter, NULL)));
+		g_warning ("cannot get thread-info for message %u",
+			   mu_msg_iter_get_docid (iter));
 		return;
 	}
 
@@ -665,15 +669,12 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
-
 		size_t len;
 		MuMsg *msg;
 
-		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
-		if (!msg) {
-			g_warning ("can't get message");
+		msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
+		if (!msg)
 			continue;
-		}
 
 		/* only return messages if they're actually
 		 * readable (ie, live also outside the database) */
@@ -732,7 +733,7 @@ output_sexp (MuMsgIter *iter, gboolean threads,
 		char *sexp;
 		const MuMsgIterThreadInfo *ti;
 
-		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+		msg = mu_msg_iter_get_msg_floating (iter);
 		if (!msg)
 			return FALSE;
 
@@ -790,8 +791,11 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
 
+		GError *err;
 		MuMsg *msg;
-		msg = mu_msg_iter_get_msg (iter, NULL); /* don't unref */
+
+		err = NULL;
+		msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
 		if (!msg)
 			return FALSE;
 
@@ -801,7 +805,6 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 			continue;
 
 		output_xml_msg (msg);
-
 		++mycount;
 	}
 	g_print ("</messages>\n");
@@ -814,7 +817,7 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 
 
 MuError
-mu_cmd_find (MuConfig *opts)
+mu_cmd_find (MuStore *store, MuConfig *opts)
 {
 	MuQuery *xapian;
 	gboolean rv;
@@ -828,7 +831,7 @@ mu_cmd_find (MuConfig *opts)
 	if (!query_params_valid (opts) || !format_params_valid(opts))
 		return MU_ERROR_IN_PARAMETERS;
 
-	xapian = get_query_obj();
+	xapian = get_query_obj(store);
 	query  = get_query (opts);
 
 	if (!xapian ||!query)

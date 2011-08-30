@@ -395,36 +395,15 @@ check_file_okay (const char *path, gboolean cmd_add)
 }
 
 
-static MuStore*
-get_store (void)
-{
-	MuStore *store;
-	GError *err;
-
-	err = NULL;
-	store = mu_store_new_writable
-		(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-		 mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
-		 &err);
-	if (!store) {
-		if (err) {
-			g_warning ("store error: %s", err->message);
-			g_error_free (err);
-		} else
-			g_warning ("failed to create store object");
-	}
-
-	return store;
-}
 
 
 MuError
-mu_cmd_add (MuConfig *opts)
+mu_cmd_add (MuStore *store, MuConfig *opts)
 {
-	MuStore *store;
 	gboolean allok;
 	int i;
 
+	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
 			      MU_ERROR_INTERNAL);
@@ -434,10 +413,6 @@ mu_cmd_add (MuConfig *opts)
 		g_warning ("usage: mu add <file> [<files>]");
 		return MU_ERROR_IN_PARAMETERS;
 	}
-
-	store = get_store ();
-	if (!store)
-		return MU_ERROR_INTERNAL;
 
 	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
 
@@ -455,16 +430,13 @@ mu_cmd_add (MuConfig *opts)
 		}
 	}
 
-	mu_store_destroy (store);
-
 	return allok ? MU_OK : MU_ERROR;
 }
 
 
 MuError
-mu_cmd_remove (MuConfig *opts)
+mu_cmd_remove (MuStore *store, MuConfig *opts)
 {
-	MuStore *store;
 	gboolean allok;
 	int i;
 
@@ -477,10 +449,6 @@ mu_cmd_remove (MuConfig *opts)
 		g_warning ("usage: mu remove <file> [<files>]");
 		return MU_ERROR_IN_PARAMETERS;
 	}
-
-	store = get_store ();
-	if (!store)
-		return MU_ERROR_INTERNAL;
 
 	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
 
@@ -498,10 +466,107 @@ mu_cmd_remove (MuConfig *opts)
 		}
 	}
 
-	mu_store_destroy (store);
-
 	return allok ? MU_OK : MU_ERROR;
 }
 
 
+static void
+show_usage (gboolean noerror)
+{
+	const char* usage=
+		"usage: mu command [options] [parameters]\n"
+		"where command is one of index, find, cfind, view, mkdir, cleanup, "
+		"extract, mv, add, remove or server\n\n"
+		"see the mu, mu-<command> or mu-easy manpages for "
+		"more information\n";
 
+	if (noerror)
+		g_print ("%s", usage);
+	else
+		g_printerr ("%s", usage);
+}
+
+static void
+show_version (void)
+{
+	g_print ("mu (mail indexer/searcher) version " VERSION "\n"
+		 "Copyright (C) 2008-2011 Dirk-Jan C. Binnema (GPLv3+)\n");
+}
+
+typedef MuError (*store_func) (MuStore *, MuConfig *);
+
+MuError
+with_store (store_func func, MuConfig *opts, gboolean read_only)
+{
+	MuStore *store;
+	GError *err;
+
+	err = NULL;
+
+	if (read_only)
+		store = mu_store_new_read_only
+			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			 &err);
+	else
+		store = mu_store_new_writable
+			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			 mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
+			 &err);
+	if (!store) {
+		if (err) {
+			g_warning ("store error: %s", err->message);
+			g_error_free (err);
+		}
+		return MU_ERROR_XAPIAN;
+
+	} else {
+		MuError merr;
+
+		merr = func (store, opts);
+		mu_store_unref (store);
+
+		return merr;
+	}
+}
+
+
+MuError
+mu_cmd_execute (MuConfig *opts)
+{
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
+
+	if (opts->version) {
+		show_version ();
+		return MU_OK;
+	}
+
+	if (!opts->params||!opts->params[0]) {/* no command? */
+		show_version ();
+		show_usage (TRUE);
+		return MU_ERROR_IN_PARAMETERS;
+	}
+
+	switch (opts->cmd) {
+	case MU_CONFIG_CMD_CFIND:   return mu_cmd_cfind (opts);
+	case MU_CONFIG_CMD_MKDIR:   return mu_cmd_mkdir (opts);
+	case MU_CONFIG_CMD_MV:	    return mu_cmd_mv (opts);
+	case MU_CONFIG_CMD_VIEW:    return mu_cmd_view (opts);
+	case MU_CONFIG_CMD_EXTRACT: return mu_cmd_extract (opts);
+
+	case MU_CONFIG_CMD_CLEANUP:
+		return with_store (mu_cmd_cleanup, opts, FALSE);
+	case MU_CONFIG_CMD_FIND:
+		return with_store (mu_cmd_find, opts, TRUE);
+	case MU_CONFIG_CMD_INDEX:
+		return with_store (mu_cmd_index, opts, FALSE);
+	case MU_CONFIG_CMD_ADD:
+		return with_store (mu_cmd_add, opts, FALSE);
+	case MU_CONFIG_CMD_REMOVE:
+		return with_store (mu_cmd_remove, opts, FALSE);
+	case MU_CONFIG_CMD_SERVER:
+		return with_store (mu_cmd_server, opts, FALSE);
+	default:
+		show_usage (FALSE);
+		return MU_ERROR_IN_PARAMETERS;
+	}
+}

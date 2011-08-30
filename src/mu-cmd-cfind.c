@@ -36,7 +36,7 @@ print_header (MuConfigFormat format)
 {
 	switch (format) {
 	case MU_CONFIG_FORMAT_BBDB:
-		g_print (";; -*-coding: utf-8-emacs;-*-\n"			 
+		g_print (";; -*-coding: utf-8-emacs;-*-\n"
 			 ";;; file-version: 6\n");
 		break;
 	case MU_CONFIG_FORMAT_MUTT_AB:
@@ -56,7 +56,7 @@ each_contact_bbdb (const char *email, const char *name, time_t tstamp)
 	lname	  = mu_str_guess_last_name (name);
 	now	  = mu_date_str ("%Y-%m-%d", time(NULL));
 	timestamp = mu_date_str ("%Y-%m-%d", tstamp);
-			
+
 	g_print ("[\"%s\" \"%s\" nil nil nil nil (\"%s\") "
 		 "((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
 		 fname, lname, email, now, timestamp);
@@ -64,7 +64,7 @@ each_contact_bbdb (const char *email, const char *name, time_t tstamp)
 	g_free (now);
 	g_free (timestamp);
 	g_free (fname);
-	g_free (lname);	
+	g_free (lname);
 }
 
 
@@ -78,7 +78,7 @@ each_contact_mutt_alias (const char *email, const char *name)
 
 	nick = mu_str_guess_nick (name);
 	mu_util_print_encoded ("alias %s %s <%s>\n",
-			       nick, name, email);	
+			       nick, name, email);
 	g_free (nick);
 
 }
@@ -155,7 +155,7 @@ each_contact (const char *email, const char *name, time_t tstamp,
 		break;
 	case MU_CONFIG_FORMAT_BBDB:
 		each_contact_bbdb (email, name, tstamp);
-		break;	
+		break;
         case MU_CONFIG_FORMAT_CSV:
 		mu_util_print_encoded ("%s,%s\n", name ? name : "", email);
 		break;
@@ -173,7 +173,7 @@ run_cmd_cfind (const char* pattern, MuConfigFormat format,
 	MuContacts *contacts;
 	size_t num;
 	ECData ecdata = {format, color};
-	
+
 	contacts = mu_contacts_new (mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
 	if (!contacts) {
 		g_warning ("could not retrieve contacts");
