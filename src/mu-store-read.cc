@@ -40,6 +40,51 @@
 #include "mu-contacts.h"
 
 
+bool
+_MuStore::check_version ()
+{
+	const gchar *version;
+	version = mu_store_version (this);
+
+	/* no version yet? it must be a new db then; we'll set the version */
+	if (!version)  {
+		if (!mu_store_set_metadata (this, MU_STORE_VERSION_KEY,
+					    MU_STORE_SCHEMA_VERSION)) {
+			g_warning ("failed to set database version");
+			return FALSE;
+		}
+			return TRUE; /* ok, done. */
+	}
+
+	/* we have a version, but is it the right one? */
+	return mu_store_needs_upgrade (this) ? FALSE : TRUE;
+}
+
+
+
+/* get a unique id for this message; note, this function returns a
+ * static buffer -- not reentrant */
+const char*
+_MuStore::get_message_uid (const char* path) {
+	char pfx = 0;
+	static char buf[PATH_MAX + 10];
+	if (G_UNLIKELY(!pfx)) {
+		pfx = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_PATH);
+			buf[0]=pfx;
+	}
+	std::strcpy (buf + 1, path);
+	return buf;
+}
+
+/* get a unique id for this message; note, this function returns a
+ * static buffer -- not reentrant */
+const char*
+_MuStore::get_message_uid (MuMsg *msg) {
+	return get_message_uid (mu_msg_get_path(msg));
+}
+
+
+
 MuStore*
 mu_store_new_read_only (const char* xpath, GError **err)
 {
@@ -48,11 +93,27 @@ mu_store_new_read_only (const char* xpath, GError **err)
 	try {
 		return  new _MuStore (xpath, NULL, true);
 
+	} catch (const MuStoreError& merr) {
+
+		g_set_error (err, 0, merr.mu_error(), "%s",
+			     merr.what().c_str());
+
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err,MU_ERROR_XAPIAN);
 
 	return NULL;
 }
 
+
+gboolean
+mu_store_is_read_only (MuStore *store)
+{
+	g_return_val_if_fail (store, FALSE);
+
+	try {
+		return store->is_read_only() ? TRUE : FALSE;
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
+}
 
 
 unsigned
@@ -63,9 +124,7 @@ mu_store_count (MuStore *store)
 	try {
 		return store->db_read_only()->get_doccount();
 
-	} MU_XAPIAN_CATCH_BLOCK;
-
-	return 0;
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(0);
 }
 
 
@@ -76,6 +135,16 @@ mu_store_version (MuStore *store)
 	return store->version ();
 }
 
+
+gboolean
+mu_store_needs_upgrade (MuStore *store)
+{
+	g_return_val_if_fail (store, TRUE);
+
+	return  (g_strcmp0 (mu_store_version (store),
+			    MU_STORE_SCHEMA_VERSION)  == 0) ? FALSE : TRUE;
+
+}
 
 
 char*
@@ -88,9 +157,7 @@ mu_store_get_metadata (MuStore *store, const char *key)
 		const std::string val (store->db_read_only()->get_metadata (key));
 		return val.empty() ? NULL : g_strdup (val.c_str());
 
-	} MU_XAPIAN_CATCH_BLOCK;
-
-	return NULL;
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
 
@@ -170,3 +237,5 @@ mu_store_foreach (MuStore *self,
 
 	return MU_OK;
 }
+
+

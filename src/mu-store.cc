@@ -43,11 +43,28 @@
 #include "mu-contacts.h"
 
 
-void
-mu_store_destroy (MuStore *store)
+
+MuStore*
+mu_store_ref (MuStore *store)
 {
-	try { delete store; } MU_XAPIAN_CATCH_BLOCK;
+	g_return_val_if_fail (store, NULL);
+	store->ref();
+	return store;
 }
+
+MuStore*
+mu_store_unref (MuStore *store)
+{
+	g_return_val_if_fail (store, NULL);
+
+	if (store->unref() == 0) {
+		try { delete store; } MU_XAPIAN_CATCH_BLOCK;
+	}
+
+	return NULL;
+}
+
+
 
 
 static char*
@@ -79,76 +96,7 @@ mu_store_database_version (const gchar *xpath)
 	return xapian_get_metadata (xpath, MU_STORE_VERSION_KEY);
 }
 
-gboolean
-mu_store_database_needs_upgrade (const gchar *xpath)
-{
-	char *version;
-	gboolean rv;
 
-	g_return_val_if_fail (xpath, TRUE);
-
-	version = mu_store_database_version (xpath);
-
-	if (g_strcmp0 (version, MU_XAPIAN_DB_VERSION) == 0)
-		rv = FALSE;
-	else
-		rv = TRUE;
-
-	g_free (version);
-
-	return rv;
-}
-
-
-gboolean
-mu_store_database_is_empty (const gchar* xpath)
-{
-	g_return_val_if_fail (xpath, TRUE);
-
-	/* it's 'empty' (non-existant) */
-	if (access(xpath, F_OK) != 0 && errno == ENOENT)
-		return TRUE;
-
-	try {
-		Xapian::Database db (xpath);
-		return db.get_doccount() == 0 ? TRUE : FALSE;
-
-	} MU_XAPIAN_CATCH_BLOCK;
-
-	return FALSE;
-}
-
-gboolean
-mu_store_database_clear (const gchar *xpath, const char  *ccache)
-{
-	g_return_val_if_fail (xpath, FALSE);
-	g_return_val_if_fail (ccache, FALSE);
-
-	try {
-		int rv;
-
-		/* clear the database */
-		Xapian::WritableDatabase db
-			(xpath, Xapian::DB_CREATE_OR_OVERWRITE);
-		db.flush ();
-		MU_WRITE_LOG ("emptied database %s", xpath);
-
-		/* clear the contacts cache; this is not totally
-		 * fail-safe, as some other process may still have it
-		 * open... */
-		rv = unlink (ccache);
-		if (rv != 0 && errno != ENOENT) {
-			g_warning ("failed to remove contacts-cache: %s",
-				   strerror(errno));
-			return FALSE;
-		}
-
-		return TRUE;
-
-	} MU_XAPIAN_CATCH_BLOCK;
-
-	return FALSE;
-}
 
 
 gboolean

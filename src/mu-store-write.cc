@@ -39,6 +39,51 @@
 #include "mu-flags.h"
 #include "mu-contacts.h"
 
+void
+_MuStore::begin_transaction ()
+{
+	try {
+		db_writable()->begin_transaction();
+			set_in_transaction (true);
+	} MU_XAPIAN_CATCH_BLOCK;
+}
+
+
+void
+_MuStore::commit_transaction () {
+	try {
+		set_in_transaction (false);
+		db_writable()->commit_transaction();
+	} MU_XAPIAN_CATCH_BLOCK;
+}
+
+void
+_MuStore::rollback_transaction () {
+	try {
+		set_in_transaction (false);
+		db_writable()->cancel_transaction();
+	} MU_XAPIAN_CATCH_BLOCK;
+}
+
+
+
+/* close the old database, and write an empty one on top of it */
+void
+_MuStore::clear ()
+{
+	if (is_read_only())
+		throw std::runtime_error ("database is read-only");
+
+	// clear the database
+	db_writable()->close ();
+	delete _db;
+	_db = new Xapian::WritableDatabase
+		(path(), Xapian::DB_CREATE_OR_OVERWRITE);
+
+		// clear the contacts cache
+	if (_contacts)
+		mu_contacts_clear (_contacts);
+}
 
 
 /* we cache these prefix strings, so we don't have to allocate the all
@@ -110,6 +155,10 @@ mu_store_new_writable (const char* xpath, const char *contacts_cache,
 
 		return store;
 
+	} catch (const MuStoreError& merr) {
+		g_set_error (err, 0, merr.mu_error(),
+			     "%s", merr.what().c_str());
+
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err,MU_ERROR_XAPIAN);
 
 	return NULL;
@@ -139,6 +188,19 @@ mu_store_set_metadata (MuStore *store, const char *key, const char *val)
 	} MU_XAPIAN_CATCH_BLOCK;
 
 	return FALSE;
+}
+
+
+gboolean
+mu_store_clear (MuStore *store)
+{
+	g_return_val_if_fail (store, FALSE);
+
+	try {
+		store->clear();
+		return TRUE;
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
 
 

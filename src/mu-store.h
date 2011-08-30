@@ -38,7 +38,8 @@ typedef struct _MuStore MuStore;
  * @param ccachepath path where to cache the contacts information, or NULL
  * @param err to receive error info or NULL. err->code is MuError value
  *
- * @return a new MuStore object, or NULL in case of error
+ * @return a new MuStore object with ref count == 1, or NULL in case
+ * of error; free with mu_store_unref
  */
 MuStore*  mu_store_new_writable  (const char *xpath, const char *ccachepath,
 				  GError **err)
@@ -51,18 +52,32 @@ MuStore*  mu_store_new_writable  (const char *xpath, const char *ccachepath,
  * @param path the path to the database
  * @param err to receive error info or NULL. err->code is MuError value
  *
- * @return a new MuStore object, or NULL in case of error
+ * @return a new MuStore object with ref count == 1, or NULL in case
+ * of error; free with mu_store_unref
  */
 MuStore* mu_store_new_read_only (const char* xpath, GError **err)
                    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
+
 /**
- * destroy the MuStore object and free resources
+ * increase the reference count for this store with 1
  *
- * @param store a valid store, or NULL
+ * @param store a valid store object
+ *
+ * @return the same store with increased ref count, or NULL in case of
+ * error
  */
-void mu_store_destroy (MuStore *store);
+MuStore* mu_store_ref (MuStore *store);
+
+/**
+ * decrease the reference count for this store with 1
+ *
+ * @param store a valid store object
+ *
+ * @return NULL
+ */
+MuStore* mu_store_unref (MuStore *store);
 
 
 /**
@@ -114,6 +129,9 @@ XapianDatabase* mu_store_get_read_only_database (MuStore *store);
  * the default batch size
  */
 void  mu_store_set_batch_size (MuStore *store, guint batchsize);
+
+
+
 
 
 /**
@@ -221,7 +239,15 @@ time_t mu_store_get_timestamp (MuStore *store,
 			       const char* msgpath);
 
 
-
+/**
+ * check whether this store is read-only
+ *
+ * @param store a store
+ *
+ * @return TRUE if the store is read-only, FALSE otherwise (and in
+ * case of error)
+ */
+gboolean mu_store_is_read_only (MuStore *store);
 
 
 /**
@@ -263,10 +289,9 @@ char* mu_store_get_metadata (MuStore *store, const char *key)
 	G_GNUC_WARN_UNUSED_RESULT;
 
 
-
 /**
 " * get the version of the xapian database (ie., the version of the
- * 'schema' we are using). If this version != MU_XAPIAN_DB_VERSION,
+ * 'schema' we are using). If this version != MU_STORE_SCHEMA_VERSION,
  * it's means we need to a full reindex.
  *
  * @param xpath path to the xapian database
@@ -281,35 +306,24 @@ gchar* mu_store_database_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
  * check whether the database needs to be upgraded, e.g., when it was
  * created with a different version of mu
  *
- * @param xpath path to the database dir
+ * @param store a MuStore instance
  *
  * @return TRUE if the database needs upgrading, FALSE otherwise
  */
-gboolean mu_store_database_needs_upgrade (const gchar *xpath);
+gboolean mu_store_needs_upgrade (MuStore *store);
 
 
-/**
- * check whether the database is empty (contains 0 documents); in
- * addition, a non-existing database is considered 'empty' too
- *
- * @param xpath path to the xapian database
- *
- * @return TRUE if the database is empty, FALSE otherwise
- */
-gboolean mu_store_database_is_empty (const gchar *xpath);
 
 /**
  * clear the database, ie., remove all of the contents. This is a
  * destructive operation, but the database can be restored be doing a
  * full scan of the maildirs. Also, clear the contacts cache file
  *
- * @param xpath path to the database
- * @param ccache path to the contacts cache file
+ * @param store a MuStore object
  *
  * @return TRUE if the clearing succeeded, FALSE otherwise.
  */
-gboolean mu_store_database_clear (const gchar *xpath,
-				  const gchar *ccache);
+gboolean mu_store_clear (MuStore *store);
 
 
 /**
