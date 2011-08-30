@@ -157,18 +157,12 @@ private:
 static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
 struct _MuQuery {
-	_MuQuery (const char* dbpath) {
-		init ((Xapian::Database(dbpath)));
-	}
+public:
+	_MuQuery (MuStore *store): _db(0), _store(mu_store_ref(store)) {
 
-	_MuQuery (Xapian::Database* db) {
-		init (*db);
-	}
-
-	void init (Xapian::Database db) {
-
-		_db = db;
-		_qparser.set_database (_db);
+		_db = reinterpret_cast<Xapian::Database*>
+			(mu_store_get_read_only_database (store));
+		_qparser.set_database (db());
 		_qparser.set_default_op (Xapian::Query::OP_AND);
 
 		_qparser.add_valuerangeprocessor (&_date_range_processor);
@@ -178,10 +172,18 @@ struct _MuQuery {
 				      &_qparser);
 	}
 
-	Xapian::Database	_db;
+	~_MuQuery () { mu_store_unref (_store); }
+
+	Xapian::Database& db() const { return *_db; }
+	Xapian::QueryParser& query_parser () { return _qparser; }
+
+private:
 	Xapian::QueryParser	_qparser;
 	MuDateRangeProcessor	_date_range_processor;
 	MuSizeRangeProcessor	_size_range_processor;
+
+	Xapian::Database	*_db;
+	MuStore *_store;
 };
 
 static const Xapian::Query
@@ -193,7 +195,7 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 	preprocessed = mu_query_preprocess (searchexpr);
 
 	try {
-		query = mqx->_qparser.parse_query
+		query = mqx->query_parser().parse_query
 			(preprocessed,
 			 Xapian::QueryParser::FLAG_BOOLEAN          |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
@@ -245,59 +247,34 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 }
 
 MuQuery*
-mu_query_new (const char* xpath, GError **err)
-{
-	g_return_val_if_fail (xpath, NULL);
-
-	if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE,
-			     "'%s' is not a readable xapian dir", xpath);
-		return NULL;
-	}
-
-	if (mu_store_database_needs_upgrade (xpath)) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
-			     "%s is not up-to-date, needs a full update",
-			     xpath);
-		return NULL;
-	}
-
-	if (mu_store_database_is_empty (xpath))
-		g_warning ("database %s is empty; nothing to do", xpath);
-
-	try {
-
-		return new MuQuery (xpath);
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL);
-
-	return 0;
-}
-
-
-MuQuery*
-mu_query_new_from_store (MuStore *store, GError **err)
+mu_query_new (MuStore *store, GError **err)
 {
 	g_return_val_if_fail (store, NULL);
 
+	// if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
+	// 	g_set_error (err, 0, MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE,
+	// 		     "'%s' is not a readable xapian dir", xpath);
+	// 	return NULL;
+	// }
+
+	// if (mu_store_database_needs_upgrade (xpath)) {
+	// 	g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
+	// 		     "%s is not up-to-date, needs a full update",
+	// 		     xpath);
+	// 	return NULL;
+	// }
+
+	if (mu_store_count (store) == 0)
+		g_warning ("database is empty; nothing to do");
+
 	try {
-		XapianDatabase *db;
 
-		db = mu_store_get_read_only_database(store);
-
-		return new MuQuery (reinterpret_cast<Xapian::Database*>(db));
+		return new MuQuery (store);
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL);
 
 	return 0;
 }
-
-
-MuQuery  *mu_query_new_from_store  (MuStore *store, GError **err)
-      G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-
-
 
 
 void
@@ -337,7 +314,7 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			      sortfieldid == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
-		Xapian::Enquire enq (self->_db);
+		Xapian::Enquire enq (self->db());
 
 		/* note, when our result will be *threaded*, we sort
 		 * there, and don't let Xapian do any sorting */
@@ -355,7 +332,7 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 
 		return mu_msg_iter_new (
 			(XapianEnquire*)&enq,
-			self->_db.get_doccount(), threads,
+			self->db().get_doccount(), threads,
 			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE);
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
