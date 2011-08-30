@@ -47,34 +47,27 @@ struct _MuIndex {
 };
 
 MuIndex*
-mu_index_new (const char *xpath, const char* contacts_cache, GError **err)
+mu_index_new (MuStore *store, GError **err)
 {
 	MuIndex *index;
 
-	g_return_val_if_fail (xpath, NULL);
+	g_return_val_if_fail (store, NULL);
+	g_return_val_if_fail (!mu_store_is_read_only(store), NULL);
 
 	index = g_new0 (MuIndex, 1);
 
-	index->_store = mu_store_new_writable (xpath, contacts_cache, err);
-	if (!index->_store) {
-		g_warning ("%s: failed to open xapian store (%s)",
-			   __FUNCTION__, xpath);
-		g_free (index);
-		return NULL;
-	}
+	index->_store = mu_store_ref (store);
 
 	/* set the default max file size */
 	index->_max_filesize = MU_INDEX_MAX_FILE_SIZE;
 
-	/* see we need to reindex the database; note, there is a small
-	 * race-condition here, between mu_index_new and
-	 * mu_index_run. Maybe do the check in mu_index_run
-	 * instead? */
-	if (mu_store_database_is_empty (xpath))
+	if (mu_store_count (store) == 0)
 		index->_needs_reindex = FALSE;
-	else
-		index->_needs_reindex =
-			mu_store_database_needs_upgrade (xpath);
+
+	/* FIXME */
+	/* else */
+	/* 	index->_needs_reindex = */
+	/* 		mu_store_database_needs_upgrade (xpath); */
 
 	return index;
 }
@@ -86,8 +79,7 @@ mu_index_destroy (MuIndex *index)
 		return;
 
 	g_free (index->_last_used_maildir);
-	mu_store_destroy (index->_store);
-
+	mu_store_unref (index->_store);
 	g_free (index);
 }
 
