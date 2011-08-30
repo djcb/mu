@@ -43,7 +43,7 @@ static ContactInfo *contact_info_new (char *email, char *name,
 
 struct _MuContacts {
         GKeyFile      *_ccache;
-	gchar         *_ccachefile;
+	gchar         *_path;
 
 	GHashTable    *_hash;
 	gboolean       _dirty;
@@ -61,15 +61,15 @@ encode_email_address (const char *addr)
 {
 	static char enc[254 + 1]; /* max size for an e-mail addr */
 	char *cur;
-	
+
 	if (!addr)
 		return FALSE;
-	
+
 	/* make sure chars are with {' ' .. '~'}, and not '[' ']' */
 	for (cur = strncpy(enc, addr, sizeof(enc)); *cur != '\0'; ++cur)
 		if (!isalnum(*cur))
 			*cur = 'A' +  (*cur % ('Z' - 'A'));
-			
+
 	return enc;
 }
 
@@ -81,7 +81,7 @@ load_key_file (const char *path)
 	gboolean file_exists;
 
 	err	    = NULL;
-	
+
 	/* of course this is racy, but it's only for giving more
 	 * meaningful errors to users */
 	file_exists = TRUE;
@@ -92,10 +92,10 @@ load_key_file (const char *path)
 		}
 		file_exists = FALSE;
 	}
-			
+
 	err = NULL;
 	keyfile = g_key_file_new ();
-	
+
 	if (file_exists && !g_key_file_load_from_file
 	    (keyfile, path, G_KEY_FILE_KEEP_COMMENTS, &err)) {
 		g_warning ("could not load keyfile %s: %s", path, err->message);
@@ -122,7 +122,7 @@ get_values (GKeyFile *kfile, const gchar *group,
 			g_error_free (err);
 		return FALSE;
 	}
-	
+
 	*tstamp = (time_t)g_key_file_get_integer (kfile, group, TSTAMP_KEY, &err);
 	if (err) {
 		g_warning ("cannot get timestamp for %s: %s",
@@ -153,14 +153,14 @@ deserialize_cache (MuContacts *self)
 		if (!get_values (self->_ccache, groups[i],
 				 &email, &name, &tstamp))
 			continue; /* ignore this one... */
-		
+
 		cinfo = contact_info_new (email, name, tstamp);
-	
+
 		/* note, we're using the groups[i], so don't free with g_strfreev */
 		g_hash_table_insert (self->_hash, groups[i],
 				     cinfo);
 	}
-	
+
 	g_free (groups);
 	return TRUE;
 }
@@ -171,7 +171,7 @@ set_comment (GKeyFile *kfile)
 	GError *err;
 	const char *comment =
 		" automatically generated -- do not edit";
-	
+
 	err = NULL;
 	if (!g_key_file_set_comment (kfile, NULL, NULL, comment, &err)) {
 		g_warning ("could not write comment to keyfile: %s",
@@ -185,51 +185,65 @@ set_comment (GKeyFile *kfile)
 
 
 MuContacts*
-mu_contacts_new (const gchar *ccachefile)
+mu_contacts_new (const gchar *path)
 {
 	MuContacts *self;
-	
-	g_return_val_if_fail (ccachefile, NULL);
-	self = g_new0 (MuContacts, 1);
-	
-	self->_ccachefile = g_strdup (ccachefile);
-	self->_ccache     = load_key_file (ccachefile);
-	if (!self->_ccache || !set_comment (self->_ccache)) {
-		mu_contacts_destroy (self);
-		return NULL;
-	}
 
-	
+	g_return_val_if_fail (path, NULL);
+	self = g_new0 (MuContacts, 1);
+
+	self->_path = g_strdup (path);
 	self->_hash = g_hash_table_new_full
 		(g_str_hash, g_str_equal, g_free,
 		 (GDestroyNotify)contact_info_destroy);
 
+	self->_ccache  = load_key_file (path);
+	if (!self->_ccache || !set_comment (self->_ccache)) {
+		mu_contacts_destroy (self);
+		return NULL;
+	}
 	deserialize_cache (self);
-	self->_dirty = FALSE;
 	MU_WRITE_LOG("deserialized contacts from cache %s",
-		     ccachefile);
-		
+		     path);
+
+	self->_dirty = FALSE;
 	return self;
 }
 
 
+void
+mu_contacts_clear (MuContacts *self)
+{
+	g_return_if_fail (self);
+
+	if (self->_ccache)
+		g_key_file_free (self->_ccache);
+
+	g_hash_table_remove_all (self->_hash);
+
+	self->_ccache = g_key_file_new ();
+	self->_dirty = FALSE;
+}
+
+
+
 gboolean
-mu_contacts_add (MuContacts *self, const char *email, const char* name, 
+mu_contacts_add (MuContacts *self, const char *email, const char* name,
 		 time_t tstamp)
 {
 	ContactInfo *cinfo;
 	const char* group;
-	
+
 	g_return_val_if_fail (self, FALSE);
 	g_return_val_if_fail (email, FALSE);
-	
+
 	/* add the info, if either there is no info for this email
 	 * yet, *OR* the new one is more recent and does not have an
 	 * empty name */
 	group = encode_email_address (email);
 
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, group);
-	if (!cinfo || (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {	
+	if (!cinfo || (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
 		ContactInfo *ci;
 		ci = contact_info_new (g_strdup(email),
 				       name ? g_strdup(name) : NULL,
@@ -239,7 +253,7 @@ mu_contacts_add (MuContacts *self, const char *email, const char* name,
 
 		return self->_dirty = TRUE;
 	}
-	
+
 	return FALSE;
 }
 
@@ -256,7 +270,7 @@ each_contact (const char *group, ContactInfo *ci, EachContactData *ecdata)
 {
 	if (!ci->_email)
 		g_warning ("missing email: %u", (unsigned)ci->_tstamp);
-	
+
 	/* ignore this contact if we have a regexp, and it matches
 	 * neither email nor name (if we have a name) */
 	while (ecdata->_rx) { /* note, only once */
@@ -268,7 +282,7 @@ each_contact (const char *group, ContactInfo *ci, EachContactData *ecdata)
 			break; /* name matches? continue! */
 		return; /* nothing matched, ignore this one */
 	}
-	
+
 	ecdata->_func (ci->_email, ci->_name,
 		       ci->_tstamp, ecdata->_user_data);
 	++ecdata->_num;
@@ -282,7 +296,7 @@ mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 
 	g_return_val_if_fail (self, FALSE);
 	g_return_val_if_fail (func, FALSE);
-	
+
 	if (pattern) {
 		GError *err;
 		err = NULL;
@@ -297,21 +311,21 @@ mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 		}
 	} else
 		ecdata._rx = NULL;
-			
+
 	ecdata._func	  = func;
 	ecdata._user_data = user_data;
 	ecdata._num       = 0;
-	
+
 	g_hash_table_foreach (self->_hash,
 			      (GHFunc)each_contact,
 			      &ecdata);
 
 	if (ecdata._rx)
 		g_regex_unref (ecdata._rx);
-	
+
 	if (num)
 		*num = ecdata._num;
-	
+
 	return TRUE;
 }
 
@@ -323,7 +337,7 @@ each_keyval (const char *group, ContactInfo *cinfo, MuContacts *self)
 	if (cinfo->_name)
 		g_key_file_set_value (self->_ccache, group, NAME_KEY,
 				       cinfo->_name);
-	
+
 	g_key_file_set_value (self->_ccache, group, EMAIL_KEY,
 			       cinfo->_email);
 	g_key_file_set_integer (self->_ccache, group, TSTAMP_KEY,
@@ -344,10 +358,10 @@ serialize_cache (MuContacts *self)
 	if (len) {
 		GError *err;
 		err = NULL;
-		rv = g_file_set_contents (self->_ccachefile, data, len, &err);
+		rv = g_file_set_contents (self->_path, data, len, &err);
 		if (!rv) {
 			g_warning ("failed to serialize cache to %s: %s",
-				   self->_ccachefile, err->message);
+				   self->_path, err->message);
 			g_error_free (err);
 		}
 		g_free (data);
@@ -361,23 +375,24 @@ mu_contacts_destroy (MuContacts *self)
 {
 	if (!self)
 		return;
-	
+
 	if (self->_ccache && self->_dirty) {
 		serialize_cache (self);
 		MU_WRITE_LOG("serialized contacts cache %s",
-			     self->_ccachefile);
+			     self->_path);
 	}
 
 	if (self->_ccache)
 		g_key_file_free (self->_ccache);
 
-	g_free (self->_ccachefile);
-	
+	g_free (self->_path);
+
 	if (self->_hash)
 		g_hash_table_destroy (self->_hash);
-	
-	g_free (self);	
+
+	g_free (self);
 }
+
 
 
 static void
@@ -389,7 +404,7 @@ clear_str (char* str)
 			*str = '_';
 		++str;
 	}
-	
+
 	if (str)
 		g_strstrip (str);
 }
@@ -403,14 +418,14 @@ contact_info_new (char *email, char *name, time_t tstamp)
 
 	/* email should not be NULL, name can */
 	g_return_val_if_fail (email, NULL);
-	
+
 	cinfo = g_slice_new (ContactInfo);
 
 	/* we need to clear the strings from control chars because
 	 * they could screw up the keyfile */
 	clear_str (email);
 	clear_str (name);
-		
+
 	cinfo->_email  = email;
 	cinfo->_name   = name;
 	cinfo->_tstamp = tstamp;
@@ -429,4 +444,4 @@ contact_info_destroy (ContactInfo *cinfo)
 
 	g_slice_free (ContactInfo, cinfo);
 }
-	
+

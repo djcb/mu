@@ -32,9 +32,9 @@ typedef struct _MuContacts MuContacts;
 
 /**
  * create a new MuContacts object; use mu_contacts_destroy when you no longer need it
- * 
+ *
  * @param ccachefile full path to the file with cached list of contacts
- * 
+ *
  * @return a new MuContacts* if succeeded, NULL otherwise
  */
 MuContacts* mu_contacts_new (const gchar *ccachefile)
@@ -45,23 +45,45 @@ MuContacts* mu_contacts_new (const gchar *ccachefile)
  * add a contacts; if there's a contact with this e-mail address
  * already, it will not updated unless the timestamp of this one is
  * higher and has a non-empty name
- * 
+ *
  * @param contacts a contacts object
  * @param email e-mail address of the contact (not NULL)
  * @param name name of the contact (or NULL)
  * @param tstamp timestamp for this address
- * 
+ *
  * @return TRUE if succeeded, FALSE otherwise
  */
-gboolean mu_contacts_add (MuContacts *contacts, const char *email,
+gboolean mu_contacts_add (MuContacts *self, const char *email,
 			  const char* name, time_t tstamp);
 
 /**
  * destroy the Contacts object
- * 
+ *
  * @param contacts a contacts object
  */
-void mu_contacts_destroy (MuContacts *contacts);
+void mu_contacts_destroy (MuContacts *self);
+
+
+
+/**
+ * clear all contacts from the cache
+ *
+ * @param self a MuContacts instance
+ */
+void mu_contacts_clear (MuContacts *self);
+
+
+/**
+ * get the path for the contacts cache file
+ *
+ * @param contacts a contacts object
+ *
+ * @return the path as a constant string (don't free), or NULL in case
+ * of error
+ */
+const gchar* mu_contacts_get_path (MuContacts *self);
+
+
 
 /**
  * call called for mu_contacts_foreach; returns the e-mail address,
@@ -74,18 +96,18 @@ typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
 /**
  * call a function for either each contact, or each contact satisfying
  * a regular expression,
- * 
- * @param contacts contacts object 
+ *
+ * @param contacts contacts object
  * @param func callback function to be called for each
  * @param user_data user data to pass to the callback
  * @param pattern a regular expression which matches either the e-mail
  * or name, to filter out contacts, or NULL to not do any filtering.
  * @param num receives the number of contacts found, or NULL
- * 
+ *
  * @return TRUE if the function succeeded, or FALSE if the provide
  * regular expression was invalid (and not NULL)
  */
-gboolean mu_contacts_foreach (MuContacts *contacts, MuContactsForeachFunc func,
+gboolean mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 			      gpointer user_data, const char* pattern, size_t *num);
 
 G_END_DECLS
