@@ -1,22 +1,22 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
-/* 
+/*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 3 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -46,7 +46,7 @@ struct _MuLog {
 	gboolean _own;     /* close _fd with log_destroy? */
 	gboolean _debug;   /* add debug-level stuff? */
 	gboolean _quiet;   /* don't write non-error to stdout/stderr */
-	
+
 	GLogFunc _old_log_func;
 };
 typedef struct _MuLog MuLog;
@@ -55,7 +55,7 @@ typedef struct _MuLog MuLog;
  * globally modifies the behaviour of g_warning and friends
  */
 static MuLog* MU_LOG = NULL;
-static void log_write (const char* domain, GLogLevelFlags level, 
+static void log_write (const char* domain, GLogLevelFlags level,
 		       const gchar *msg);
 
 static void
@@ -63,8 +63,8 @@ try_close (int fd)
 {
 	if (fd < 0)
 		return;
-	
-	if (close (fd) < 0) 
+
+	if (close (fd) < 0)
 		g_printerr ("%s: close() of fd %d failed: %s\n",
 				    __FUNCTION__, fd, strerror(errno));
 }
@@ -79,11 +79,11 @@ gboolean
 mu_log_init_silence (void)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
-	
+
         MU_LOG	     = g_new(MuLog, 1);
         MU_LOG->_fd  = -1;
 	MU_LOG->_own = FALSE;	/* nobody owns silence */
-	
+
 	MU_LOG->_old_log_func =
 		g_log_set_default_handler ((GLogFunc)silence, NULL);
 
@@ -106,7 +106,7 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 		     gboolean quiet, gboolean debug)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
-	
+
         MU_LOG = g_new(MuLog, 1);
 
         MU_LOG->_fd		    = fd;
@@ -114,9 +114,9 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 	MU_LOG->_debug		    = debug;
         MU_LOG->_own		    = doclose; /* if we now own the fd, close it
 				    * in _destroy */
-	MU_LOG->_old_log_func	    = 
+	MU_LOG->_old_log_func	    =
 		g_log_set_default_handler ((GLogFunc)log_handler, NULL);
-	
+
 	return TRUE;
 }
 
@@ -125,11 +125,11 @@ move_log_file (const char *logfile)
 {
 	gchar *logfile_old;
 	int rv;
-	
+
 	logfile_old = g_strdup_printf ("%s.old", logfile);
 	rv = rename (logfile, logfile_old);
 	g_free (logfile_old);
-	
+
 	if (rv != 0) {
 		g_warning ("failed to move %s to %s.old: %s",
 			   logfile, logfile, strerror(rv));
@@ -144,7 +144,7 @@ static gboolean
 log_file_backup_maybe (const char *logfile)
 {
 	struct stat statbuf;
-	
+
 	if (stat (logfile, &statbuf) != 0) {
 		if (errno == ENOENT)
 			return TRUE; /* it did not exist yet, no problem */
@@ -169,30 +169,30 @@ mu_log_init (const char* logfile, gboolean backup,
 	     gboolean quiet, gboolean debug)
 {
 	int fd;
-	
+
 	/* only init once... */
-	g_return_val_if_fail (!MU_LOG, FALSE);	
+	g_return_val_if_fail (!MU_LOG, FALSE);
 	g_return_val_if_fail (logfile, FALSE);
 
 	if (backup && !log_file_backup_maybe(logfile)) {
 		g_warning ("failed to backup log file");
 		return FALSE;
 	}
-	
+
 	fd = open (logfile, O_WRONLY|O_CREAT|O_APPEND, 00600);
-	if (fd < 0) 
+	if (fd < 0)
 		g_warning ("%s: open() of '%s' failed: %s",  __FUNCTION__,
 			   logfile, strerror(errno));
-	
+
 	if (fd < 0 || !mu_log_init_with_fd (fd, FALSE, quiet, debug)) {
 		try_close (fd);
 		return FALSE;
 	}
-	
+
 	return TRUE;
 }
 
-void 
+void
 mu_log_uninit (void)
 {
 	if (!MU_LOG)
@@ -217,43 +217,45 @@ pfx (GLogLevelFlags level)
 	case G_LOG_LEVEL_CRITICAL: return  "CRIT";
 	case G_LOG_LEVEL_MESSAGE:  return  "MSG ";
 	case G_LOG_LEVEL_INFO :	   return  "INFO";
-	default:		   return  "LOG "; 
+	default:		   return  "LOG ";
 	}
 }
 
 static void
-log_write (const char* domain, GLogLevelFlags level, 
+log_write (const char* domain, GLogLevelFlags level,
 	   const gchar *msg)
 {
 	time_t now;
 	ssize_t len;
-	
+
 	/* log lines will be truncated at 255 chars */
 	char buf [512], timebuf [32];
+
+	g_return_if_fail (MU_LOG);
 
 	/* get the time/date string */
 	now = time(NULL);
 	strftime (timebuf, sizeof(timebuf), "%F %T", localtime(&now));
-		
+
 	/* now put it all together */
-	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf, 
+	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf,
 			pfx(level), msg);
-	/* if the buffer is full, add a newline */ 
+	/* if the buffer is full, add a newline */
 	if (len == sizeof(buf))
 		buf[sizeof(buf)-2] = '\n';
-	
+
 	len = write (MU_LOG->_fd, buf, (size_t)len);
 	if (len < 0)
 		fprintf (stderr, "%s: failed to write to log: %s\n",
 			 __FUNCTION__,  strerror(errno));
-	
+
 	if (!(MU_LOG->_quiet) && (level & G_LOG_LEVEL_MESSAGE)) {
 		fputs ("mu: ", stdout);
 		fputs (msg,    stdout);
 		fputs ("\n",   stdout);
 		fflush (stdout);
 	}
-		
+
 	/* for serious errors, log them to stderr as well */
 	if (level & G_LOG_LEVEL_ERROR ||
 	    level & G_LOG_LEVEL_CRITICAL ||
