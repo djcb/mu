@@ -46,51 +46,6 @@ struct _MugData {
 };
 typedef struct _MugData MugData;
 
-static MuError
-each_msg (MuIndexStats* stats, MugData *data)
-{
-	static int i  = 0;
-
-	if (++i % 100 == 0)
-		gtk_main_iteration ();
-
-	return MU_OK;
-}
-
-static void
-reindex (MugData *mugdata)
-{
-	MuIndex *midx;
-	MuStore *store;
-	GError *err;
-
-	if (mu_store_database_is_locked
-	    (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)))
-		return;
-
-	err = NULL;
-	store = mu_store_new_writable (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-				       mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
-				       &err);
-	midx = store ? mu_index_new (store, &err) : NULL;
-	if (!midx) {
-		if (err && err->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK) {
-			g_warning ("database busy...");
-			return; /* db already busy.. */
-		}
-		g_warning ("failed to get index: %s", err ? err->message : "<none>");
-		g_error_free (err);
-		return;
-	}
-
-	mu_index_run (midx,
-		      mu_index_last_used_maildir(midx),
-		      FALSE, NULL, (MuIndexMsgCallback)each_msg, NULL, mugdata);
-
-	mu_index_destroy (midx);
-	mu_store_unref (store);
-}
-
 
 static void
 about_mug (MugData * mugdata)
@@ -136,9 +91,6 @@ on_tool_button_clicked (GtkToolButton * btn, MugData * mugdata)
 	case ACTION_PREV_MSG:
 		mug_msg_list_view_move_prev (MUG_MSG_LIST_VIEW
 					     (mugdata->mlist));
-		break;
-	case ACTION_REINDEX:
-		reindex (mugdata);
 		break;
 	case ACTION_ABOUT:
 		about_mug (mugdata);
