@@ -24,18 +24,55 @@
 #include "mu-cmd.h"
 #include "mu-runtime.h"
 
+static void
+handle_error (GError *err)
+{
+	const char *advise;
+
+	if (!err)
+		return; /* nothing to do */
+
+	advise = NULL;
+
+	switch (err->code) {
+
+	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
+		advise = "maybe mu is already running?";
+		break;
+
+	case MU_ERROR_XAPIAN_CORRUPTION:
+	case MU_ERROR_XAPIAN_NOT_UP_TO_DATE:
+		advise = "please try 'mu index --rebuild'";
+		break;
+	case MU_ERROR_XAPIAN_IS_EMPTY:
+		advise = "please try 'mu index'";
+		break;
+	default:
+		break; /* nothing to do */
+	}
+
+	g_warning ("%s", err->message);
+	if (advise)
+		g_message ("%s", advise);
+}
+
+
 int
 main (int argc, char *argv[])
 {
-	int rv;
+	GError *err;
+	MuError rv;
 
 	if (!mu_runtime_init_from_cmdline (&argc, &argv, "mu"))
 		return 1;
 
-	rv = mu_cmd_execute (mu_runtime_config());
+	err = NULL;
+	rv = mu_cmd_execute (mu_runtime_config(), &err);
+
+	handle_error (err);
+	g_clear_error (&err);
 
 	mu_runtime_uninit ();
-
 	return rv;
 }
 
