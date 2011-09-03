@@ -39,13 +39,6 @@
 
 static gboolean MU_CAUGHT_SIGNAL;
 
-static void
-update_warning (void)
-{
-	g_warning ("note: the database needs to be upgraded to version %s",
-		   MU_STORE_SCHEMA_VERSION);
-	g_warning ("please run 'mu index --rebuild' (see the manpage)");
-}
 
 static void
 sig_handler (int sig)
@@ -79,27 +72,24 @@ install_sig_handler (void)
 
 
 static gboolean
-check_index_or_cleanup_params (MuConfig *opts)
+check_params (MuConfig *opts, GError **err)
 {
-	/* param[0] == 'index' or 'cleanup', there should be no
-	 * param[1] */
+	/* param[0] == 'index'  there should be no param[1] */
 	if (opts->params[1]) {
-		g_warning ("usage: mu %s [options]", opts->params[0]);
-		return FALSE;
-	}
-
-	if (opts->linksdir) {
-		g_warning ("invalid option(s) for command");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+				     "unexpected parameter");
 		return FALSE;
 	}
 
 	if (opts->xbatchsize < 0) {
-		g_warning ("the Xapian batch size must be non-negative");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+				     "the batch size must be non-negative");
 		return FALSE;
 	}
 
 	if (opts->max_msg_size < 0) {
-		g_warning ("the maximum message size must be non-negative");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+				     "the maximum message size must be non-negative");
 		return FALSE;
 	}
 
@@ -107,21 +97,24 @@ check_index_or_cleanup_params (MuConfig *opts)
 }
 
 static gboolean
-check_maildir (const char *maildir)
+check_maildir (const char *maildir, GError **err)
 {
 	if (!maildir) {
-		g_warning ("no maildir to work on; "
-			   "use --maildir= to set it explicitly");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "no maildir to work on; use --maildir=");
 		return FALSE;
 	}
 
 	if (!g_path_is_absolute (maildir)) {
-		g_warning ("maildir path '%s' is not absolute", maildir);
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "maildir path '%s' is not absolute",
+			     maildir);
 		return FALSE;
 	}
 
 	if (!mu_util_check_dir (maildir, TRUE, FALSE)) {
-		g_warning ("not a valid Maildir: %s", maildir);
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "not a valid Maildir: %s", maildir);
 		return FALSE;
 	}
 
@@ -195,18 +188,19 @@ index_msg_cb  (MuIndexStats* stats, void *user_data)
 
 
 static gboolean
-database_version_check_and_update (MuStore *store, MuConfig *opts)
+database_version_check_and_update (MuStore *store, MuConfig *opts,
+				   GError **err)
 {
-	if (mu_store_count (store) == 0)
+	if (mu_store_count (store, err) == 0)
 		return TRUE;
 
 	/* when rebuilding, we empty the database before doing
 	 * anything */
 	if (opts->rebuild) {
 		opts->reindex = TRUE;
-		g_message ("clearing database");
-		g_message ("clearing contacts-cache");
-		return mu_store_clear (store);
+		g_debug ("clearing database");
+		g_debug ("clearing contacts-cache");
+		return mu_store_clear (store, err);
 	}
 
 	if (!mu_store_needs_upgrade (store))
@@ -215,11 +209,10 @@ database_version_check_and_update (MuStore *store, MuConfig *opts)
 	/* ok, database is not up to date */
 	if (opts->autoupgrade) {
 		opts->reindex = TRUE;
-		g_message ("auto-upgrade: clearing old database and cache");
-		return mu_store_clear (store);
+		g_debug ("auto-upgrade: clearing old database and cache");
+		return mu_store_clear (store, err);
 	}
 
-	update_warning ();
 	return FALSE;
 }
 
@@ -235,41 +228,10 @@ show_time (unsigned t, unsigned processed)
 }
 
 
-static gboolean
-update_maildir_path_maybe (MuIndex *idx, MuConfig *opts)
-{
-	gchar *exp;
-
-	/* if 'maildir_guessed' is TRUE, we can override it later
-	 * with mu_index_last_used_maildir (in mu-cmd-index.c)
-	 */
-	if (!opts->maildir) {
-
-		const char *tmp;
-
-		/* try the last used one */
-		tmp = mu_index_last_used_maildir (idx);
-		if (tmp)
-			opts->maildir = g_strdup (tmp);
-		else
-			opts->maildir = mu_util_guess_maildir ();
-	}
-
-	if (opts->maildir) {
-		exp = mu_util_dir_expand(opts->maildir);
-		if (exp) {
-			g_free(opts->maildir);
-			opts->maildir = exp;
-		}
-	}
-
-	return check_maildir (opts->maildir);
-}
-
 
 static MuError
-cmd_cleanup (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
-	     gboolean show_progress)
+cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
+		 gboolean show_progress, GError **err)
 {
 	MuError rv;
 	time_t t;
@@ -277,25 +239,26 @@ cmd_cleanup (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	g_message ("cleaning up messages [%s]",
 		   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
 
+	mu_index_stats_clear (stats);
+
 	t = time (NULL);
 	rv = mu_index_cleanup (midx, stats,
 			       show_progress ? index_msg_cb : index_msg_silent_cb,
-			       NULL);
-
+			       NULL, err);
 	if (!opts->quiet) {
 		print_stats (stats, TRUE);
 		g_print ("\n");
 		show_time ((unsigned)(time(NULL)-t),stats->_processed);
 	}
 
-	return (rv == MU_OK || rv == MU_STOP) ? MU_OK: MU_ERROR;
+	return (rv == MU_OK || rv == MU_STOP) ? MU_OK: MU_G_ERROR_CODE(err);
 }
 
 
 
 static MuError
 cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
-	   gboolean show_progress)
+	   gboolean show_progress, GError **err)
 {
 	MuError rv;
 	time_t t;
@@ -318,72 +281,37 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 		MU_WRITE_LOG ("index: processed: %u; updated/new: %u",
 			      stats->_processed, stats->_updated);
 
-	if (rv == MU_OK && !opts->nocleanup) {
-		mu_index_stats_clear (stats);
-		rv = cmd_cleanup (midx, opts, stats, show_progress);
-		if (rv == MU_OK) {
-			MU_WRITE_LOG ("cleanup: processed: %u; cleaned-up: %u",
-			      stats->_processed, stats->_cleaned_up);
-			return MU_OK;
-		}
-	}
+	if (rv == MU_OK && !opts->nocleanup)
+		rv = cleanup_missing (midx, opts, stats, show_progress, err);
 
-	return (rv==MU_OK||rv==MU_STOP) ? MU_OK : MU_ERROR;
+	if (rv == MU_STOP)
+		rv = MU_OK;
+
+	if (rv != MU_OK && !err)
+		g_set_error (err, 0, rv, "error while indexing");
+
+	return rv;
 }
 
-static MuError
-handle_index_error_and_free (GError *err)
-{
-	MuError code;
-
-	if (!err)
-		return MU_ERROR_INTERNAL;
-
-	switch (err->code) {
-
-	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
-		g_warning ("cannot get Xapian writelock");
-		g_warning ("maybe mu index is already running?");
-		code = MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK;
-		break;
-
-	case MU_ERROR_XAPIAN_CORRUPTION:
-		g_warning ("xapian database seems to be corrupted");
-		g_warning ("try 'mu index --rebuild");
-		code = MU_ERROR_XAPIAN_CORRUPTION;
-		break;
-	default:
-		g_warning ("indexing error: %s",
-			   err->message ? err->message : "");
-		code = MU_ERROR;
-	}
-
-	g_error_free (err);
-	return code;
-}
 
 static MuIndex*
-init_mu_index (MuStore *store, MuConfig *opts, MuError *code)
+init_mu_index (MuStore *store, MuConfig *opts, GError **err)
 {
 	MuIndex *midx;
-	GError *err;
 
-	if (!check_index_or_cleanup_params (opts)) {
-		*code = MU_ERROR_IN_PARAMETERS;
+	if (!check_params (opts, err))
 		return NULL;
-	}
 
-	if (!database_version_check_and_update(store, opts)) {
-		*code = MU_ERROR_XAPIAN_NOT_UP_TO_DATE;
+	if (!database_version_check_and_update(store, opts, err))
 		return NULL;
-	}
 
-	err = NULL;
-	midx = mu_index_new (store, &err);
-	if (!midx) {
-		*code = handle_index_error_and_free (err);
+
+	if (!check_maildir (opts->maildir, err))
 		return NULL;
-	}
+
+	midx = mu_index_new (store, err);
+	if (!midx)
+		return NULL;
 
 	mu_index_set_max_msg_size (midx, opts->max_msg_size);
 	mu_index_set_xbatch_size (midx, opts->xbatchsize);
@@ -392,24 +320,21 @@ init_mu_index (MuStore *store, MuConfig *opts, MuError *code)
 }
 
 
-static MuError
-cmd_index_or_cleanup (MuStore *store, MuConfig *opts)
+MuError
+mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 {
 	MuIndex *midx;
 	MuIndexStats stats;
 	gboolean rv, show_progress;
-	MuError code;
+
+	g_return_val_if_fail (opts, FALSE);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX,
+			      FALSE);
 
 	/* create, and do error handling if needed */
-	midx = init_mu_index (store, opts, &code);
+	midx = init_mu_index (store, opts, err);
 	if (!midx)
-		return code;
-
-	/* we determine the maildir path only here, as it may depend on
-         * mu_index_last_used_maildir
-         */
-	if (!update_maildir_path_maybe (midx, opts))
-		return MU_ERROR_FILE;
+		return MU_G_ERROR_CODE(err);
 
 	/* note, 'opts->quiet' already cause g_message output not to
 	 * be shown; here, we make sure we only print progress info if
@@ -419,41 +344,9 @@ cmd_index_or_cleanup (MuStore *store, MuConfig *opts)
 	mu_index_stats_clear (&stats);
 	install_sig_handler ();
 
-	switch (opts->cmd) {
-	case MU_CONFIG_CMD_INDEX:
-		rv = cmd_index (midx, opts, &stats, show_progress); break;
-	case MU_CONFIG_CMD_CLEANUP:
-	 	rv = cmd_cleanup (midx, opts, &stats, show_progress);  break;
-	default:
-		rv = MU_ERROR_INTERNAL;
-		g_assert_not_reached ();
-	}
-
+	rv = cmd_index (midx, opts, &stats, show_progress, err);
 	mu_index_destroy (midx);
+
 	return rv;
 }
-
-
-MuError
-mu_cmd_index (MuStore *store, MuConfig *opts)
-{
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX,
-			      FALSE);
-
-	return cmd_index_or_cleanup (store, opts);
-}
-
-MuError
-mu_cmd_cleanup (MuStore *store, MuConfig *opts)
-{
-	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail (opts->cmd != MU_CONFIG_CMD_CLEANUP,
-			      MU_ERROR_INTERNAL);
-
-	return cmd_index_or_cleanup (store, opts);
-}
-
-
-
 

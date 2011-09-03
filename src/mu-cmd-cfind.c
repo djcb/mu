@@ -167,7 +167,7 @@ each_contact (const char *email, const char *name, time_t tstamp,
 
 static MuError
 run_cmd_cfind (const char* pattern, MuConfigFormat format,
-	       gboolean color)
+	       gboolean color, GError **err)
 {
 	gboolean rv;
 	MuContacts *contacts;
@@ -176,7 +176,8 @@ run_cmd_cfind (const char* pattern, MuConfigFormat format,
 
 	contacts = mu_contacts_new (mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
 	if (!contacts) {
-		g_warning ("could not retrieve contacts");
+		g_set_error (err, 0, MU_ERROR_CONTACTS_CANNOT_RETRIEVE,
+				     "could not retrieve contacts");
 		return MU_ERROR_CONTACTS_CANNOT_RETRIEVE;
 	}
 
@@ -223,15 +224,19 @@ cfind_params_valid (MuConfig *opts)
 
 
 MuError
-mu_cmd_cfind (MuConfig *opts)
+mu_cmd_cfind (MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_CFIND,
 			      MU_ERROR_INTERNAL);
 
-	if (!cfind_params_valid (opts))
+	if (!cfind_params_valid (opts)) {
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "invalid parameters");
 		return MU_ERROR_IN_PARAMETERS;
+	}
 
-	return run_cmd_cfind (opts->params[1], opts->format, opts->color);
+	return run_cmd_cfind (opts->params[1], opts->format, opts->color,
+			      err);
 }
 

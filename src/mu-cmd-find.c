@@ -47,50 +47,34 @@
 
 
 static gboolean output_links (MuMsgIter *iter, const char* linksdir,
-			      gboolean clearlinks,size_t *count);
+			      gboolean clearlinks, GError **err);
 static gboolean output_sexp (MuMsgIter *iter, gboolean threads,
-			     gboolean include_unreadable, size_t *count);
+			     gboolean include_unreadable, GError **err);
 static gboolean output_xml (MuMsgIter *iter,gboolean include_unreadable,
-			    size_t *count);
+			    GError **err);
 static gboolean output_plain (MuMsgIter *iter, const char *fields,
 			      gboolean summary,gboolean threads,
 			      gboolean color,  gboolean include_unreadable,
-			      size_t *count);
-
-static void
-upgrade_warning (void)
-{
-	g_warning ("the database needs to be updated to version %s\n",
-		   MU_STORE_SCHEMA_VERSION);
-	g_message ("please run 'mu index --rebuild' (see the man page)");
-}
-
+			      GError **err);
 
 static gboolean
-print_xapian_query (MuQuery *xapian, const gchar *query, size_t *count)
+print_xapian_query (MuQuery *xapian, const gchar *query, GError **err)
 {
 	char *querystr;
-	GError *err;
 
-	err    = NULL;
-
-	querystr = mu_query_as_string (xapian, query, &err);
-	if (!querystr) {
-		g_warning ("error: %s", err->message);
-		g_error_free (err);
+	querystr = mu_query_as_string (xapian, query, err);
+	if (!querystr)
 		return FALSE;
-	}
 
 	g_print ("%s\n", querystr);
 	g_free (querystr);
 
-	*count = 1;
 	return TRUE;
 }
 
-/* returns NULL if there is an error */
+/* returns MU_MSG_FIELD_ID_NONE if there is an error */
 static MuMsgFieldId
-sort_field_from_string (const char* fieldstr)
+sort_field_from_string (const char* fieldstr, GError **err)
 {
 	MuMsgFieldId mfid;
 
@@ -102,29 +86,27 @@ sort_field_from_string (const char* fieldstr)
 		mfid = mu_msg_field_id_from_shortcut(fieldstr[0],
 						     FALSE);
 	if (mfid == MU_MSG_FIELD_ID_NONE)
-		g_warning ("not a valid sort field: '%s'\n",
-			   fieldstr);
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "not a valid sort field: '%s'\n", fieldstr);
 	return mfid;
 }
 
 
 static gboolean
-output_query_results (MuMsgIter *iter, MuConfig *opts, size_t *count)
+output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 {
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_LINKS:
-		return output_links (iter, opts->linksdir, opts->clearlinks,
-				     count);
+		return output_links (iter, opts->linksdir, opts->clearlinks, err);
 	case MU_CONFIG_FORMAT_PLAIN:
 		return output_plain (iter, opts->fields, opts->summary,
 				     opts->threads, opts->color,
-				     opts->include_unreadable,
-				     count);
+				     opts->include_unreadable, err);
 	case MU_CONFIG_FORMAT_XML:
-		return output_xml (iter, opts->include_unreadable, count);
+		return output_xml (iter, opts->include_unreadable, err);
 	case MU_CONFIG_FORMAT_SEXP:
 		return output_sexp (iter, opts->threads,
-				    opts->include_unreadable, count);
+				    opts->include_unreadable, err);
 	default:
 		g_assert_not_reached ();
 		return FALSE;
@@ -133,49 +115,36 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, size_t *count)
 
 
 static MuMsgIter*
-run_query (MuQuery *xapian, const gchar *query, MuConfig *opts, size_t *count)
+run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
+	   GError **err)
 {
-	GError *err;
 	MuMsgIter *iter;
 	MuMsgFieldId sortid;
 
 	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
-		sortid = sort_field_from_string (opts->sortfield);
+		sortid = sort_field_from_string (opts->sortfield, err);
 		if (sortid == MU_MSG_FIELD_ID_NONE) /* error occured? */
 			return FALSE;
 	}
 
-	err  = NULL;
 	iter = mu_query_run (xapian, query, opts->threads, sortid,
-			     opts->descending ? FALSE : TRUE,
-			     &err);
-	if (!iter) {
-		g_warning ("error: %s", err->message);
-		g_error_free (err);
-		return NULL;
-	}
-
+			     opts->descending ? FALSE : TRUE, err);
 	return iter;
 }
 
 
 static gboolean
-process_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
-	       size_t *count)
+process_query (MuQuery *xapian, const gchar *query, MuConfig *opts, GError **err)
 {
 	MuMsgIter *iter;
 	gboolean rv;
 
-	iter = run_query (xapian, query, opts, count);
+	iter = run_query (xapian, query, opts, err);
 	if (!iter)
 		return FALSE;
 
-	rv = output_query_results (iter, opts, count);
-
-	if (rv && count && *count == 0)
-		g_warning ("no matching messages found");
-
+	rv = output_query_results (iter, opts, err);
 	mu_msg_iter_destroy (iter);
 
 	return rv;
@@ -183,15 +152,15 @@ process_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 
 
 static gboolean
-exec_cmd (const char *path, const char *cmd)
+exec_cmd (const char *path, const char *cmd, GError **err)
 {
 	gint status;
-	GError *err;
 	char *cmdline, *escpath;
 	gboolean rv;
 
 	if (access (path, R_OK) != 0) {
-		g_warning ("cannot read %s: %s", path, strerror(errno));
+		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_READ,
+			     "cannot read %s: %s", path, strerror(errno));
 		return FALSE;
 	}
 
@@ -200,32 +169,26 @@ exec_cmd (const char *path, const char *cmd)
 	cmdline = g_strdup_printf ("%s %s", cmd, escpath);
 	err = NULL;
 	rv = g_spawn_command_line_sync (cmdline, NULL, NULL,
-					&status, &err);
+					&status, err);
 	g_free (cmdline);
 	g_free (escpath);
 
-	if (!rv) {
-		g_warning ("command returned %d on %s: %s\n",
-			   status, path, err->message);
-		g_error_free (err);
-		return FALSE;
-	}
-
-	return TRUE;
+	return rv;
 }
 
 
 static gboolean
 exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
-		   size_t *count)
+		   GError **err)
 {
 	MuMsgIter *iter;
 	gboolean rv;
+	size_t count;
 
-	if (!(iter = run_query (xapian, query, opts, count)))
+	if (!(iter = run_query (xapian, query, opts, err)))
 		return FALSE;
 
-	for (rv = TRUE, *count = 0; !mu_msg_iter_is_done (iter);
+	for (rv = TRUE, count = 0; !mu_msg_iter_is_done (iter);
 	     mu_msg_iter_next(iter)) {
 		const char *path;
 		MuMsg *msg;
@@ -240,23 +203,25 @@ exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 			continue;
 		}
 
-		rv = exec_cmd (path, opts->exec);
+		rv = exec_cmd (path, opts->exec, err);
 		if (rv)
-			++*count;
+			++count;
 	}
 
-	if (rv && count && *count == 0)
-		g_warning ("no matching messages found");
+	if (count == 0) {
+		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+			     "no matches for search expression");
+		return FALSE;
+	}
 
 	mu_msg_iter_destroy (iter);
-
 	return rv;
 }
 
 
 
 static gboolean
-format_params_valid (MuConfig *opts)
+format_params_valid (MuConfig *opts, GError **err)
 {
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
@@ -266,18 +231,21 @@ format_params_valid (MuConfig *opts)
 	case MU_CONFIG_FORMAT_XQUERY:
 		break;
 	default:
-		g_warning ("invalid output format %s",
-			   opts->formatstr ? opts->formatstr : "<none>");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "invalid output format %s",
+			     opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
 
 	if (opts->format == MU_CONFIG_FORMAT_LINKS && !opts->linksdir) {
-		g_warning ("missing --linksdir argument");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "missing --linksdir argument");
 		return FALSE;
 	}
 
 	if (opts->linksdir && opts->format != MU_CONFIG_FORMAT_LINKS) {
-		g_warning ("--linksdir is only valid with --format=links");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "--linksdir is only valid with --format=links");
 		return FALSE;
 	}
 
@@ -285,7 +253,7 @@ format_params_valid (MuConfig *opts)
 }
 
 static gboolean
-query_params_valid (MuConfig *opts)
+query_params_valid (MuConfig *opts, GError **err)
 {
 	const gchar *xpath;
 
@@ -294,14 +262,13 @@ query_params_valid (MuConfig *opts)
 	if (mu_util_check_dir (xpath, TRUE, FALSE))
 		return TRUE;
 
-	g_warning ("'%s' is not a readable Xapian directory\n", xpath);
-	g_message ("did you run 'mu index'?");
-
+	g_set_error (err, 0, MU_ERROR_FILE_CANNOT_READ,
+		     "'%s' is not a readable Xapian directory", xpath);
 	return FALSE;
 }
 
 static gchar*
-resolve_bookmark (MuConfig *opts)
+resolve_bookmark (MuConfig *opts, GError **err)
 {
 	MuBookmarks *bm;
 	char* val;
@@ -310,36 +277,38 @@ resolve_bookmark (MuConfig *opts)
 	bmfile = mu_runtime_path (MU_RUNTIME_PATH_BOOKMARKS);
 	bm = mu_bookmarks_new (bmfile);
 	if (!bm) {
-		g_warning ("failed to open bookmarks file '%s'", bmfile);
+		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_OPEN,
+			     "failed to open bookmarks file '%s'", bmfile);
 		return FALSE;
 	}
 
 	val = (gchar*)mu_bookmarks_lookup (bm, opts->bookmark);
 	if (!val)
-		g_warning ("bookmark '%s' not found", opts->bookmark);
+		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+			     "bookmark '%s' not found", opts->bookmark);
 	else
 		val = g_strdup (val);
 
 	mu_bookmarks_destroy (bm);
-
 	return val;
 }
 
 
 static gchar*
-get_query (MuConfig *opts)
+get_query (MuConfig *opts, GError **err)
 {
 	gchar *query, *bookmarkval;
 
 	/* params[0] is 'find', actual search params start with [1] */
 	if (!opts->bookmark && !opts->params[1]) {
-		g_warning ("usage: mu find [options] search-expression");
-		return FALSE;
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "error in parameters");
+		return NULL;
 	}
 
 	bookmarkval = NULL;
 	if (opts->bookmark) {
-		bookmarkval = resolve_bookmark (opts);
+		bookmarkval = resolve_bookmark (opts, err);
 		if (!bookmarkval)
 			return NULL;
 	}
@@ -357,41 +326,33 @@ get_query (MuConfig *opts)
 	return query;
 }
 
-static gboolean
-db_is_ready (MuStore *store)
+
+static MuQuery*
+get_query_obj (MuStore *store, GError **err)
 {
-	if (mu_store_count (store) == 0) {
-		g_warning ("database is empty; use 'mu index' to "
-			   "add messages");
-		return FALSE;
+	MuQuery *mquery;
+	unsigned count;
+
+	count = mu_store_count (store, err);
+
+	if (count == (unsigned)-1)
+		return NULL;
+
+	if (count == 0) {
+		g_set_error (err, 0, MU_ERROR_XAPIAN_IS_EMPTY,
+			     "the database is empty");
+		return NULL;
 	}
 
 	if (mu_store_needs_upgrade (store)) {
-		upgrade_warning ();
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static MuQuery*
-get_query_obj (MuStore *store)
-{
-	GError *err;
-	MuQuery *mquery;
-
-	if (!db_is_ready(store)) {
-		g_warning ("database is not ready");
+		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
+			     "the database is not up-to-date");
 		return NULL;
 	}
 
-	err = NULL;
-	mquery = mu_query_new (store, &err);
-	if (!mquery) {
-		g_warning ("error: %s", err->message);
-		g_error_free (err);
+	mquery = mu_query_new (store, err);
+	if (!mquery)
 		return NULL;
-	}
 
 	return mquery;
 }
@@ -452,10 +413,10 @@ link_message (const char *src, const char *destdir)
 
 
 static gboolean
-output_links (MuMsgIter *iter, const char* linksdir,
-	      gboolean clearlinks, size_t *count)
+output_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks,
+	      GError **err)
 {
-	size_t okcount, errcount;
+	size_t count, errcount;
 	MuMsgIter *myiter;
 
 	g_return_val_if_fail (iter, FALSE);
@@ -465,7 +426,7 @@ output_links (MuMsgIter *iter, const char* linksdir,
 	if (!create_linksdir_maybe (linksdir, clearlinks))
 		return FALSE;
 
-	for (myiter = iter, errcount = okcount = 0; !mu_msg_iter_is_done (myiter);
+	for (myiter = iter, count = errcount = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
 
 		const char* path;
@@ -477,14 +438,22 @@ output_links (MuMsgIter *iter, const char* linksdir,
 
 		path = mu_msg_get_path (msg);
 		if (access (path, R_OK) == 0)  /* only link to readable */
-			link_message (path, linksdir) ? ++okcount : ++errcount;
+			link_message (path, linksdir) ? ++count : ++errcount;
 	}
 
-	if (errcount > 0)
-		g_warning ("error linking some of the messages");
+	if (errcount > 0) {
+		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_LINK,
+			     "error linking %u message(s)", errcount);
+		return FALSE;
+	}
 
-	if (count)
-		*count = okcount;
+	if (count) {
+		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+			     "no existing matches for search expression");
+		return FALSE;
+	}
+
+
 
 	return TRUE;
 }
@@ -628,14 +597,14 @@ thread_indent (MuMsgIter *iter)
 
 
 
-static size_t
+static void
 output_plain_fields (MuMsg *msg, const char *fields,
 		     gboolean color, gboolean threads)
 {
 	const char* myfields;
-	size_t len;
+	int nonempty;
 
-	for (myfields = fields, len = 0; *myfields; ++myfields) {
+	for (myfields = fields, nonempty = 0; *myfields; ++myfields) {
 
 		MuMsgFieldId mfid;
 		mfid =	mu_msg_field_id_from_shortcut (*myfields, FALSE);
@@ -643,35 +612,35 @@ output_plain_fields (MuMsg *msg, const char *fields,
 		if (mfid == MU_MSG_FIELD_ID_NONE ||
 		    (!mu_msg_field_xapian_value (mfid) &&
 		     !mu_msg_field_xapian_contact (mfid)))
-			len += printf ("%c", *myfields);
+			nonempty += printf ("%c", *myfields);
 
 		else {
 			ansi_color_maybe (mfid, color);
-				len += mu_util_fputs_encoded
+				nonempty += mu_util_fputs_encoded
 					(display_field (msg, mfid), stdout);
 				ansi_reset_maybe (mfid, color);
 		}
 	}
 
-	return len;
+	if (nonempty)
+		fputs ("\n", stdout);
 }
 
 static gboolean
 output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 	      gboolean threads, gboolean color, gboolean include_unreadable,
-	      size_t *count)
+	      GError **err)
 {
 	MuMsgIter *myiter;
-	size_t mycount;
+	size_t count;
 
 	g_return_val_if_fail (iter, FALSE);
 	g_return_val_if_fail (fields, FALSE);
 
-	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
+	for (myiter = iter, count = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
-		size_t len;
-		MuMsg *msg;
 
+		MuMsg *msg;
 		msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
 		if (!msg)
 			continue;
@@ -687,17 +656,19 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 		if (threads)
 			thread_indent (iter);
 
-		len = output_plain_fields (msg, fields, color, threads);
+		output_plain_fields (msg, fields, color, threads);
 
-		g_print (len > 0 ? "\n" : "");
 		if (summary)
 			print_summary (msg);
 
-		++mycount;
+		++count;
 	}
 
-	if (count)
-		*count = mycount;
+	if (count == 0) {
+		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+			     "no existing matches for search expression");
+		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -719,14 +690,14 @@ print_attr_xml (const char* elm, const char *str)
 
 static gboolean
 output_sexp (MuMsgIter *iter, gboolean threads,
-	     gboolean include_unreadable, size_t *count)
+	     gboolean include_unreadable, GError **err)
 {
 	MuMsgIter *myiter;
-	size_t mycount;
+	size_t count;
 
 	g_return_val_if_fail (iter, FALSE);
 
-	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
+	for (myiter = iter, count = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
 
 		MuMsg *msg;
@@ -748,12 +719,14 @@ output_sexp (MuMsgIter *iter, gboolean threads,
 		fputs (sexp, stdout);
 		g_free (sexp);
 
-		++mycount;
+		++count;
 	}
 
-
-	if (count)
-		*count = mycount;
+	if (count == 0) {
+		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+			     "no existing matches for search expression");
+		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -778,17 +751,17 @@ output_xml_msg (MuMsg *msg)
 
 
 static gboolean
-output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
+output_xml (MuMsgIter *iter, gboolean include_unreadable, GError **err)
 {
 	MuMsgIter *myiter;
-	size_t mycount;
+	size_t count;
 
 	g_return_val_if_fail (iter, FALSE);
 
 	g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
 	g_print ("<messages>\n");
 
-	for (myiter = iter, mycount = 0; !mu_msg_iter_is_done (myiter);
+	for (myiter = iter, count = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
 
 		GError *err;
@@ -805,50 +778,78 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, size_t *count)
 			continue;
 
 		output_xml_msg (msg);
-		++mycount;
+		++count;
 	}
 	g_print ("</messages>\n");
 
-	if (count)
-		*count = mycount;
+	if (count == 0) {
+		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+			     "no existing matches for search expression");
+		return FALSE;
+	}
 
 	return TRUE;
 }
 
+static gboolean
+execute_find (MuStore *store, MuConfig *opts, GError **err)
+{
+	char *query_str;
+	MuQuery *oracle;
+	gboolean rv;
+
+	oracle = get_query_obj(store, err);
+	if (!oracle)
+		return FALSE;
+
+	query_str = get_query (opts, err);
+	if (!query_str) {
+		mu_query_destroy (oracle);
+		return FALSE;
+	}
+
+	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
+		rv = print_xapian_query (oracle, query_str, err);
+	else if (opts->exec)
+		rv = exec_cmd_on_query (oracle, query_str, opts, err);
+	else
+		rv = process_query (oracle, query_str, opts, err);
+
+	mu_query_destroy (oracle);
+	g_free (query_str);
+
+	return rv;
+}
+
+static void
+show_usage (void)
+{
+	const char *usage_str =
+		"usage: mu find [options] <search expression>\n";
+	g_message ("%s", usage_str);
+}
+
+
+
+
 
 MuError
-mu_cmd_find (MuStore *store, MuConfig *opts)
+mu_cmd_find (MuStore *store, MuConfig *opts, GError **err)
 {
-	MuQuery *xapian;
-	gboolean rv;
-	gchar *query;
-	size_t count = 0;
-
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND,
 			      MU_ERROR_INTERNAL);
 
-	if (!query_params_valid (opts) || !format_params_valid(opts))
-		return MU_ERROR_IN_PARAMETERS;
+	if (!query_params_valid (opts, err) || !format_params_valid(opts, err)) {
 
-	xapian = get_query_obj(store);
-	query  = get_query (opts);
+		if (MU_G_ERROR_CODE(err) == MU_ERROR_IN_PARAMETERS)
+			show_usage ();
 
-	if (!xapian ||!query)
-		return MU_ERROR_INTERNAL;
+		return MU_G_ERROR_CODE (err);
+	}
 
-	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
-		rv = print_xapian_query (xapian, query, &count);
-	else if (opts->exec)
-		rv = exec_cmd_on_query (xapian, query, opts, &count);
+	if (!execute_find (store, opts, err))
+		return MU_G_ERROR_CODE(err);
 	else
-		rv = process_query (xapian, query, opts, &count);
-
-	mu_query_destroy (xapian);
-	g_free (query);
-
-	if (!rv)
-		return MU_ERROR;
-
-	return count == 0 ? MU_ERROR_NO_MATCHES : MU_OK;
+		return MU_OK;
 }
