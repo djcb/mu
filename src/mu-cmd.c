@@ -168,23 +168,15 @@ view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 
 
 static gboolean
-handle_msg (const char *fname, MuConfig *opts, MuError *code)
+handle_msg (const char *fname, MuConfig *opts, GError **err)
 {
-	GError *err;
 	MuMsg *msg;
 	gboolean rv;
 
 	err = NULL;
-	msg = mu_msg_new_from_file (fname, NULL, &err);
-
-	if (!msg) {
-		if (err && err->message) {
-			g_warning ("%s", err->message);
-			g_error_free (err);
-		}
-		*code = MU_ERROR;
+	msg = mu_msg_new_from_file (fname, NULL, err);
+	if (!msg)
 		return FALSE;
-	}
 
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
@@ -195,7 +187,6 @@ handle_msg (const char *fname, MuConfig *opts, MuError *code)
 		break;
 	default:
 		g_critical ("bug: should not be reached");
-		*code = MU_ERROR_INTERNAL;
 		rv = FALSE;
 	}
 
@@ -205,11 +196,12 @@ handle_msg (const char *fname, MuConfig *opts, MuError *code)
 }
 
 static gboolean
-view_params_valid (MuConfig *opts)
+view_params_valid (MuConfig *opts, GError **err)
 {
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_warning ("usage: mu view [options] <file> [<files>]");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+				     "error in parameters");
 		return FALSE;
 	}
 
@@ -218,8 +210,8 @@ view_params_valid (MuConfig *opts)
 	case MU_CONFIG_FORMAT_SEXP:
 		break;
 	default:
-		g_warning ("invalid output format %s",
-			   opts->formatstr ? opts->formatstr : "<none>");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+				     "invalid output format");
 		return FALSE;
 	}
 
@@ -228,35 +220,40 @@ view_params_valid (MuConfig *opts)
 
 
 MuError
-mu_cmd_view (MuConfig *opts)
+mu_cmd_view (MuConfig *opts, GError **err)
 {
 	int i;
 	gboolean rv;
-	MuError code;
 
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
 			      MU_ERROR_INTERNAL);
 
-	if (!view_params_valid(opts))
-		return MU_ERROR_IN_PARAMETERS;
+	rv = view_params_valid(opts, err);
+	if (!rv)
+		goto leave;
 
-	for (i = 1, code = MU_OK; opts->params[i]; ++i) {
+	for (i = 1; opts->params[i]; ++i) {
 
-		rv = handle_msg (opts->params[i], opts, &code);
+		rv = handle_msg (opts->params[i], opts, err);
 		if (!rv)
 			break;
+
 		/* add a separator between two messages? */
 		if (opts->terminator)
 			g_print ("%c", VIEW_TERMINATOR);
 	}
 
-	return code;
+leave:
+	if (!rv)
+		return err && *err ? (*err)->code : MU_ERROR;
+
+	return MU_OK;
 }
 
 
 MuError
-mu_cmd_mkdir (MuConfig *opts)
+mu_cmd_mkdir (MuConfig *opts, GError **err)
 {
 	int i;
 
@@ -265,36 +262,27 @@ mu_cmd_mkdir (MuConfig *opts)
 			      MU_ERROR_INTERNAL);
 
 	if (!opts->params[1]) {
-		g_warning ("usage: mu mkdir [-u,--mode=<mode>] "
-			   "<dir> [more dirs]");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "missing directory parameter");
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
-	for (i = 1; opts->params[i]; ++i) {
-
-		GError *err;
-		err = NULL;
-
+	for (i = 1; opts->params[i]; ++i)
 		if (!mu_maildir_mkdir (opts->params[i], opts->dirmode,
-				       FALSE, &err)) {
-			if (err && err->message) {
-				g_warning ("%s", err->message);
-				g_error_free (err);
-			}
-			return MU_ERROR;
-		}
-	}
+				       FALSE, err))
+			return err && *err ? (*err)->code :
+				MU_ERROR_FILE_CANNOT_MKDIR;
 
 	return MU_OK;
 }
 
 
 static gboolean
-mv_check_params (MuConfig *opts, MuFlags *flags)
+mv_check_params (MuConfig *opts, MuFlags *flags, GError **err)
 {
 	if (!opts->params[1]) {
-		g_warning ("usage: mu mv [--flags=<flags>] <mailfile> "
-			   "[<maildir>]");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "missing source mailfile");
 		return FALSE;
 	}
 
@@ -337,35 +325,28 @@ cmd_mv_dev_null (MuConfig *opts)
 
 
 MuError
-mu_cmd_mv (MuConfig *opts)
+mu_cmd_mv (MuConfig *opts, GError **err)
 {
-	GError *err;
 	gchar *fullpath;
 	MuFlags flags;
 
-	if (!mv_check_params (opts, &flags))
-		return MU_ERROR_IN_PARAMETERS;
+	if (!mv_check_params (opts, &flags, err)) {
+		if (MU_G_ERROR_CODE(err) == MU_ERROR_IN_PARAMETERS)
+			g_message ("usage: mu mv [--flags=<flags>] <mailfile> "
+				   "[<maildir>]");
+		return MU_G_ERROR_CODE(err);
+	}
 
 	/* special case: /dev/null */
 	if (g_strcmp0 (opts->params[2], "/dev/null") == 0)
 		return cmd_mv_dev_null (opts);
 
 	err = NULL;
-	fullpath = mu_maildir_move_message (opts->params[1],
-					    opts->params[2],
-					    flags, opts->ignore_dups,
-					    &err);
-	if (!fullpath) {
-		if (err) {
-			MuError code;
-			code = err->code;
-			g_warning ("move failed: %s", err->message);
-			g_error_free (err);
-			return code;
-		}
-		return MU_ERROR_FILE;
-
-	} else {
+	fullpath = mu_maildir_move_message (opts->params[1], opts->params[2],
+					    flags, opts->ignore_dups, err);
+	if (!fullpath)
+		return MU_G_ERROR_CODE(err);
+	else {
 		if (opts->print_target)
 			g_print ("%s\n", fullpath);
 		return MU_OK;
@@ -394,11 +375,17 @@ check_file_okay (const char *path, gboolean cmd_add)
 	return TRUE;
 }
 
+gboolean
+check_add_params (MuConfig *opts, GError **err)
+{
+
+	return TRUE;
+}
 
 
 
 MuError
-mu_cmd_add (MuStore *store, MuConfig *opts)
+mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 {
 	gboolean allok;
 	int i;
@@ -410,7 +397,9 @@ mu_cmd_add (MuStore *store, MuConfig *opts)
 
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_warning ("usage: mu add <file> [<files>]");
+		g_message ("usage: mu add <file> [<files>]");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "missing source and/or target");
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
@@ -419,23 +408,25 @@ mu_cmd_add (MuStore *store, MuConfig *opts)
 		const char* src;
 		src = opts->params[i];
 
-		if (!check_file_okay (src, TRUE)) {
+		if (!check_file_okay (src, TRUE) ||
+		    !mu_store_store_path (store, src)) {
+			MU_WRITE_LOG ("failed to add %s", src);
 			allok = FALSE;
-			continue;
-		}
-
-		if (!mu_store_store_path (store, src)) {
-			allok = FALSE;
-			g_warning ("failed to store %s", src);
 		}
 	}
 
-	return allok ? MU_OK : MU_ERROR;
+	if (!allok) {
+		g_set_error (err, 0, MU_ERROR_XAPIAN_STORE_FAILED,
+			     "store failed for some message(s)");
+		return MU_ERROR_XAPIAN_STORE_FAILED;
+	}
+
+	return MU_OK;
 }
 
 
 MuError
-mu_cmd_remove (MuStore *store, MuConfig *opts)
+mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 {
 	gboolean allok;
 	int i;
@@ -447,6 +438,8 @@ mu_cmd_remove (MuStore *store, MuConfig *opts)
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu remove <file> [<files>]");
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+				     "missing source and/or target");
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
@@ -455,35 +448,31 @@ mu_cmd_remove (MuStore *store, MuConfig *opts)
 		const char* src;
 		src = opts->params[i];
 
-		if (!check_file_okay (src, FALSE)) {
+		if (!check_file_okay (src, FALSE) ||
+		    !mu_store_remove_path (store, src)) {
 			allok = FALSE;
-			continue;
-		}
-
-		if (!mu_store_remove_path (store, src)) {
-			allok = FALSE;
-			g_warning ("failed to remove %s", src);
+			MU_WRITE_LOG ("failed to remove %s", src);
 		}
 	}
 
-	return allok ? MU_OK : MU_ERROR;
+	if (!allok) {
+		g_set_error (err, 0, MU_ERROR_XAPIAN_STORE_FAILED,
+			     "remove failed for some message(s)");
+		return MU_ERROR_XAPIAN_REMOVE_FAILED;
+	}
+
+	return MU_OK;
 }
 
 
 static void
-show_usage (gboolean noerror)
+show_usage (void)
 {
-	const char* usage=
-		"usage: mu command [options] [parameters]\n"
-		"where command is one of index, find, cfind, view, mkdir, cleanup, "
-		"extract, mv, add, remove or server\n\n"
-		"see the mu, mu-<command> or mu-easy manpages for "
-		"more information\n";
-
-	if (noerror)
-		g_print ("%s", usage);
-	else
-		g_printerr ("%s", usage);
+	g_message ("usage: mu command [options] [parameters]");
+	g_message ("where command is one of index, find, cfind, view, mkdir, cleanup, "
+		   "extract, mv, add, remove or server");
+	g_message ("see the mu, mu-<command> or mu-easy manpages for "
+		   "more information");
 }
 
 static void
@@ -493,45 +482,48 @@ show_version (void)
 		 "Copyright (C) 2008-2011 Dirk-Jan C. Binnema (GPLv3+)\n");
 }
 
-typedef MuError (*store_func) (MuStore *, MuConfig *);
+typedef MuError (*store_func) (MuStore *, MuConfig *, GError **err);
 
 MuError
-with_store (store_func func, MuConfig *opts, gboolean read_only)
+with_store (store_func func, MuConfig *opts, gboolean read_only,
+	    GError **err)
 {
 	MuStore *store;
-	GError *err;
-
-	err = NULL;
 
 	if (read_only)
 		store = mu_store_new_read_only
 			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-			 &err);
+			 err);
 	else
 		store = mu_store_new_writable
 			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 			 mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
-			 &err);
-	if (!store) {
-		if (err) {
-			g_warning ("store error: %s", err->message);
-			g_error_free (err);
-		}
-		return MU_ERROR_XAPIAN;
-
-	} else {
+			 opts->rebuild, err);
+	if (!store)
+		return MU_G_ERROR_CODE(err);
+	else {
 		MuError merr;
-
-		merr = func (store, opts);
+		merr = func (store, opts, err);
 		mu_store_unref (store);
-
 		return merr;
 	}
 }
 
 
+gboolean
+check_params (MuConfig *opts, GError **err)
+{
+	if (!opts->params||!opts->params[0]) {/* no command? */
+		show_usage ();
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS, "error in parameters");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 MuError
-mu_cmd_execute (MuConfig *opts)
+mu_cmd_execute (MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 
@@ -540,33 +532,30 @@ mu_cmd_execute (MuConfig *opts)
 		return MU_OK;
 	}
 
-	if (!opts->params||!opts->params[0]) {/* no command? */
-		show_version ();
-		show_usage (TRUE);
-		return MU_ERROR_IN_PARAMETERS;
-	}
+	if (!check_params(opts, err))
+		return MU_G_ERROR_CODE(err);
 
 	switch (opts->cmd) {
-	case MU_CONFIG_CMD_CFIND:   return mu_cmd_cfind (opts);
-	case MU_CONFIG_CMD_MKDIR:   return mu_cmd_mkdir (opts);
-	case MU_CONFIG_CMD_MV:	    return mu_cmd_mv (opts);
-	case MU_CONFIG_CMD_VIEW:    return mu_cmd_view (opts);
-	case MU_CONFIG_CMD_EXTRACT: return mu_cmd_extract (opts);
+	case MU_CONFIG_CMD_CFIND:   return mu_cmd_cfind (opts, err);
+	case MU_CONFIG_CMD_MKDIR:   return mu_cmd_mkdir (opts, err);
+	case MU_CONFIG_CMD_MV:	    return mu_cmd_mv (opts, err);
+	case MU_CONFIG_CMD_VIEW:    return mu_cmd_view (opts, err);
+	case MU_CONFIG_CMD_EXTRACT: return mu_cmd_extract (opts, err);
 
-	case MU_CONFIG_CMD_CLEANUP:
-		return with_store (mu_cmd_cleanup, opts, FALSE);
 	case MU_CONFIG_CMD_FIND:
-		return with_store (mu_cmd_find, opts, TRUE);
+		return with_store (mu_cmd_find, opts, TRUE, err);
 	case MU_CONFIG_CMD_INDEX:
-		return with_store (mu_cmd_index, opts, FALSE);
+		return with_store (mu_cmd_index, opts, FALSE, err);
 	case MU_CONFIG_CMD_ADD:
-		return with_store (mu_cmd_add, opts, FALSE);
+		return with_store (mu_cmd_add, opts, FALSE, err);
 	case MU_CONFIG_CMD_REMOVE:
-		return with_store (mu_cmd_remove, opts, FALSE);
+		return with_store (mu_cmd_remove, opts, FALSE, err);
 	case MU_CONFIG_CMD_SERVER:
-		return with_store (mu_cmd_server, opts, FALSE);
+		return with_store (mu_cmd_server, opts, FALSE, err);
 	default:
-		show_usage (FALSE);
+		show_usage ();
+		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			     "unknown command '%s'", opts->cmdstr);
 		return MU_ERROR_IN_PARAMETERS;
 	}
 }

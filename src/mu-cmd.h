@@ -33,22 +33,24 @@ G_BEGIN_DECLS
  * execute the 'mkdir' command
  *
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeded,
  * some error code otherwise
  */
-MuError mu_cmd_mkdir (MuConfig *opts);
+MuError mu_cmd_mkdir (MuConfig *opts, GError **err);
 
 
 /**
  * execute the 'view' command
  *
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeded,
  * some error code otherwise
  */
-MuError mu_cmd_view (MuConfig *opts);
+MuError mu_cmd_view (MuConfig *opts, GError **err);
 
 
 /**
@@ -56,67 +58,61 @@ MuError mu_cmd_view (MuConfig *opts);
  *
  * @param store store object to use
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeded,
  * some error code otherwise
  */
-MuError mu_cmd_index   (MuStore *store, MuConfig *opts);
+MuError mu_cmd_index   (MuStore *store, MuConfig *opt, GError **err);
 
-
-/**
- * execute the 'cleanup' command
- *
- * @param store store object to use
- * @param opts configuration options
- *
- * @return MU_OK (0) if the command succeeds,
- * some error code otherwise
- */
-MuError mu_cmd_cleanup (MuStore *store, MuConfig *opts);
 
 /**
  * execute the 'find' command
  *
  * @param store store object to use
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeds and
  * >MU_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
  * succeeds but there no matches, some error code for all other errors
  */
-MuError mu_cmd_find (MuStore *store, MuConfig *opts);
+MuError mu_cmd_find (MuStore *store, MuConfig *opts, GError **err);
 
 
 /**
  * execute the 'extract' command
  *
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_extract (MuConfig *opts);
+MuError mu_cmd_extract (MuConfig *opts, GError **err);
 
 
 /**
  * execute the 'mv' command
  *
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_mv (MuConfig *opts);
+MuError mu_cmd_mv (MuConfig *opts, GError **err);
 
 /**
  * execute the cfind command
  *
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_cfind (MuConfig *opts);
+MuError mu_cmd_cfind (MuConfig *opts, GError **err);
 
 
 /**
@@ -124,43 +120,45 @@ MuError mu_cmd_cfind (MuConfig *opts);
  *
  * @param store store object to use
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_add (MuStore *store, MuConfig *opts);
+MuError mu_cmd_add (MuStore *store, MuConfig *opts, GError **err);
 
 /**
  * execute the remove command
  *
  * @param store store object to use
  * @param opts configuration options
+ * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_remove (MuStore *store, MuConfig *opts);
+MuError mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err);
 
 
 /**
  * execute the server command
  * @param store store object to use
  * @param opts configuration options
- *
+  *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_server (MuStore *store, MuConfig *opts);
-
+MuError mu_cmd_server (MuStore *store, MuConfig *opts,GError**/*unused*/);
 
 /**
  * execute some mu command, based on 'opts'
  *
  * @param opts configuration option
+ * @param err receives error information, or NULL
  *
  * @return MU_OK if all went wall, some error code otherwise
  */
-MuError mu_cmd_execute (MuConfig *opts);
+MuError mu_cmd_execute (MuConfig *opts, GError **err);
 
 G_END_DECLS
 
