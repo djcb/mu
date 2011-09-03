@@ -39,29 +39,6 @@
 #include "mu-flags.h"
 #include "mu-contacts.h"
 
-
-bool
-_MuStore::check_version ()
-{
-	const gchar *version;
-	version = mu_store_version (this);
-
-	/* no version yet? it must be a new db then; we'll set the version */
-	if (!version)  {
-		if (!mu_store_set_metadata (this, MU_STORE_VERSION_KEY,
-					    MU_STORE_SCHEMA_VERSION)) {
-			g_warning ("failed to set database version");
-			return FALSE;
-		}
-			return TRUE; /* ok, done. */
-	}
-
-	/* we have a version, but is it the right one? */
-	return mu_store_needs_upgrade (this) ? FALSE : TRUE;
-}
-
-
-
 /* get a unique id for this message; note, this function returns a
  * static buffer -- not reentrant */
 const char*
@@ -91,14 +68,13 @@ mu_store_new_read_only (const char* xpath, GError **err)
 	g_return_val_if_fail (xpath, NULL);
 
 	try {
-		return  new _MuStore (xpath, NULL, true);
+		return new _MuStore (xpath);
 
 	} catch (const MuStoreError& merr) {
-
 		g_set_error (err, 0, merr.mu_error(), "%s",
 			     merr.what().c_str());
 
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err,MU_ERROR_XAPIAN);
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err, MU_ERROR_XAPIAN);
 
 	return NULL;
 }
@@ -113,18 +89,20 @@ mu_store_is_read_only (MuStore *store)
 		return store->is_read_only() ? TRUE : FALSE;
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
+
 }
 
 
 unsigned
-mu_store_count (MuStore *store)
+mu_store_count (MuStore *store, GError **err)
 {
-	g_return_val_if_fail (store, 0);
+	g_return_val_if_fail (store, (unsigned)-1);
 
 	try {
 		return store->db_read_only()->get_doccount();
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(0);
+ 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN,
+					       (unsigned)-1);
 }
 
 
@@ -148,7 +126,7 @@ mu_store_needs_upgrade (MuStore *store)
 
 
 char*
-mu_store_get_metadata (MuStore *store, const char *key)
+mu_store_get_metadata (MuStore *store, const char *key, GError **err)
 {
 	g_return_val_if_fail (store, NULL);
 	g_return_val_if_fail (key, NULL);
@@ -157,7 +135,7 @@ mu_store_get_metadata (MuStore *store, const char *key)
 		const std::string val (store->db_read_only()->get_metadata (key));
 		return val.empty() ? NULL : g_strdup (val.c_str());
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, NULL);
 }
 
 
@@ -171,7 +149,7 @@ mu_store_get_read_only_database (MuStore *store)
 
 
 gboolean
-mu_store_contains_message (MuStore *store, const char* path)
+mu_store_contains_message (MuStore *store, const char* path, GError **err)
 {
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (path, FALSE);
@@ -180,13 +158,14 @@ mu_store_contains_message (MuStore *store, const char* path)
 		const std::string uid (store->get_message_uid(path));
 		return store->db_read_only()->term_exists (uid) ? TRUE: FALSE;
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN (FALSE);
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, FALSE);
+
 }
 
 
 
 time_t
-mu_store_get_timestamp (MuStore *store, const char* msgpath)
+mu_store_get_timestamp (MuStore *store, const char* msgpath, GError **err)
 {
 	char *stampstr;
 	time_t rv;
@@ -194,7 +173,7 @@ mu_store_get_timestamp (MuStore *store, const char* msgpath)
 	g_return_val_if_fail (store, 0);
 	g_return_val_if_fail (msgpath, 0);
 
-	stampstr = mu_store_get_metadata (store, msgpath);
+	stampstr = mu_store_get_metadata (store, msgpath, err);
 	if (!stampstr)
 		return (time_t)0;
 
@@ -208,7 +187,7 @@ mu_store_get_timestamp (MuStore *store, const char* msgpath)
 
 MuError
 mu_store_foreach (MuStore *self,
-		  MuStoreForeachFunc func, void *user_data)
+		  MuStoreForeachFunc func, void *user_data, GError **err)
 {
 	g_return_val_if_fail (self, MU_ERROR);
 	g_return_val_if_fail (func, MU_ERROR);
@@ -233,7 +212,8 @@ mu_store_foreach (MuStore *self,
 				return res;
 		}
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN (MU_ERROR);
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN,
+					       MU_ERROR_XAPIAN);
 
 	return MU_OK;
 }

@@ -66,26 +66,6 @@ _MuStore::rollback_transaction () {
 }
 
 
-
-/* close the old database, and write an empty one on top of it */
-void
-_MuStore::clear ()
-{
-	if (is_read_only())
-		throw std::runtime_error ("database is read-only");
-
-	// clear the database
-	db_writable()->close ();
-	delete _db;
-	_db = new Xapian::WritableDatabase
-		(path(), Xapian::DB_CREATE_OR_OVERWRITE);
-
-		// clear the contacts cache
-	if (_contacts)
-		mu_contacts_clear (_contacts);
-}
-
-
 /* we cache these prefix strings, so we don't have to allocate the all
  * the time; this should save 10-20 string allocs per message */
 G_GNUC_CONST static const std::string&
@@ -143,25 +123,21 @@ add_synonyms (MuStore *store)
 
 MuStore*
 mu_store_new_writable (const char* xpath, const char *contacts_cache,
-		       GError **err)
+		       gboolean rebuild, GError **err)
 {
 	g_return_val_if_fail (xpath, NULL);
 
 	try {
-		MuStore *store;
+		try {
+			MuStore *store;
+			store = new _MuStore (xpath, contacts_cache,
+					      rebuild ? true : false);
+			add_synonyms (store);
+			return store;
 
-		store = new _MuStore (xpath, contacts_cache, false);
-		add_synonyms (store);
+		} MU_STORE_CATCH_BLOCK_RETURN(err,NULL);
 
-		return store;
-
-	} catch (const MuStoreError& merr) {
-		g_set_error (err, 0, merr.mu_error(),
-			     "%s", merr.what().c_str());
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err,MU_ERROR_XAPIAN);
-
-	return NULL;
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err,MU_ERROR_XAPIAN, NULL);
 }
 
 
@@ -175,30 +151,35 @@ mu_store_set_batch_size (MuStore *store, guint batchsize)
 
 
 gboolean
-mu_store_set_metadata (MuStore *store, const char *key, const char *val)
+mu_store_set_metadata (MuStore *store, const char *key, const char *val,
+		       GError **err)
 {
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (key, FALSE);
 	g_return_val_if_fail (val, FALSE);
 
 	try {
-		store->db_writable()->set_metadata (key, val);
-		return TRUE;
+		try {
+			store->db_writable()->set_metadata (key, val);
+			return TRUE;
+		} MU_STORE_CATCH_BLOCK_RETURN(err, FALSE);
 
-	} MU_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, FALSE);
 
-	return FALSE;
 }
 
 
 gboolean
-mu_store_clear (MuStore *store)
+mu_store_clear (MuStore *store, GError **err)
 {
 	g_return_val_if_fail (store, FALSE);
 
 	try {
-		store->clear();
-		return TRUE;
+		try {
+			store->clear();
+			return TRUE;
+
+		} MU_STORE_CATCH_BLOCK_RETURN(err, FALSE);
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
@@ -347,7 +328,7 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 
 	if (mu_msg_field_xapian_term(mfid))
 		doc.add_term (prefix(mfid) +
-			      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
+			      std::string(val, 0, _MuStore::MAX_TERM_LENGTH));
 }
 
 
@@ -427,15 +408,16 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	if (mu_msg_part_looks_like_attachment (part, TRUE) &&
 	    (part->file_name)) {
 
-		char val[MU_STORE_MAX_TERM_LENGTH + 1];
+		char val[MuStore::MAX_TERM_LENGTH + 1];
 		strncpy (val, part->file_name, sizeof(val));
 
 		/* now, let's create a terms... */
 		mu_str_normalize_in_place (val, TRUE);
 		mu_str_ascii_xapian_escape_in_place (val);
 
-		pdata->_doc.add_term (prefix(pdata->_mfid) +
-			      std::string(val, 0, MU_STORE_MAX_TERM_LENGTH));
+		pdata->_doc.add_term
+			(prefix(pdata->_mfid) +
+			 std::string(val, 0, MuStore::MAX_TERM_LENGTH));
 	}
 }
 
@@ -563,8 +545,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	if (!mu_str_is_empty(contact->address)) {
 		char *escaped = mu_str_ascii_xapian_escape (contact->address);
 		msgdoc->_doc->add_term
-			(std::string  (pfx + escaped, 0,
-				       MU_STORE_MAX_TERM_LENGTH));
+			(std::string  (pfx + escaped, 0, MuStore::MAX_TERM_LENGTH));
 		g_free (escaped);
 
 		/* store it also in our contacts cache */
@@ -625,6 +606,7 @@ mu_store_store_msg (MuStore *store, MuMsg *msg, gboolean replace)
 }
 
 
+/* FIXME: use GError */
 gboolean
 mu_store_store_path (MuStore *store, const char *path)
 {
@@ -688,7 +670,7 @@ mu_store_remove_path (MuStore *store, const char *msgpath)
 
 gboolean
 mu_store_set_timestamp (MuStore *store, const char* msgpath,
-			time_t stamp)
+			time_t stamp, GError **err)
 {
 	char buf[21];
 
@@ -696,7 +678,7 @@ mu_store_set_timestamp (MuStore *store, const char* msgpath,
 	g_return_val_if_fail (msgpath, FALSE);
 
 	sprintf (buf, "%" G_GUINT64_FORMAT, (guint64)stamp);
-	return mu_store_set_metadata (store, msgpath, buf);
+	return mu_store_set_metadata (store, msgpath, buf, err);
 }
 
 

@@ -47,32 +47,20 @@ private:
 
 
 struct _MuStore {
+public:
+	/* create a read-write MuStore */
+	_MuStore (const char *path, const char *contacts_path, bool rebuild) {
 
-/* by default, use transactions of 30000 messages */
-#define MU_STORE_DEFAULT_BATCH_SIZE 30000
-	/* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
-#define MU_STORE_MAX_TERM_LENGTH 240
+		init (path, contacts_path, rebuild, false);
 
-	_MuStore (const char *path, const char *contacts_path, bool read_only):
-		_in_transaction (false), _processed (0),
-		_batch_size(MU_STORE_DEFAULT_BATCH_SIZE),
-		_contacts(0), _path (0), _version(0),
-		_db(0), _read_only(read_only), _ref_count (1) {
-
-		if (!check_path ())
-			throw MuStoreError (MU_ERROR_FILE, "invalid_path");
-
-		_path = g_strdup (path);
-
-		if (read_only)
-			_db = new Xapian::Database (path);
+		if (rebuild)
+			_db = new Xapian::WritableDatabase
+				(path, Xapian::DB_CREATE_OR_OVERWRITE);
 		else
 			_db = new Xapian::WritableDatabase
 				(path, Xapian::DB_CREATE_OR_OPEN);
 
-		if (!check_version ())
-			throw MuStoreError (MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
-					    ("xapian db version check failed"));
+		check_set_version ();
 
 		if (contacts_path) {
 			_contacts = mu_contacts_new (contacts_path);
@@ -80,8 +68,50 @@ struct _MuStore {
 				throw MuStoreError (MU_ERROR_FILE,
 					    ("failed to init contacts cache"));
 		}
-		MU_WRITE_LOG ("%s: opened %s (batch size: %u)",
+
+		MU_WRITE_LOG ("%s: opened %s (batch size: %u) for read-write",
 			      __FUNCTION__, this->path(), batch_size());
+	}
+
+	/* create a read-only MuStore */
+	_MuStore (const char *path) {
+
+		init (path, NULL, false, false);
+
+		_db = new Xapian::Database (path);
+		if (mu_store_needs_upgrade(this))
+			throw MuStoreError (MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
+					    ("store needs an upgrade"));
+
+		MU_WRITE_LOG ("%s: opened %s read-only", __FUNCTION__, this->path());
+	}
+
+	void init (const char *path, const char *contacts_path,
+		   bool rebuild, bool read_only) {
+
+		_batch_size	= DEFAULT_BATCH_SIZE;
+		_contacts       = 0;
+		_in_transaction = false;
+		_path           = path;
+		_processed	= 0;
+		_read_only      = read_only;
+		_ref_count      = 1;
+		_version        = NULL;
+	}
+
+	void check_set_version () {
+		/* check version...*/
+		gchar *version;
+		version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
+		if (!version)
+			mu_store_set_metadata (this, MU_STORE_VERSION_KEY,
+					       MU_STORE_SCHEMA_VERSION, NULL);
+		else if (g_strcmp0 (version, MU_STORE_SCHEMA_VERSION) != 0) {
+			g_free (version);
+			throw MuStoreError (MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
+					    ("store needs an upgrade"));
+		} else
+			g_free (version);
 	}
 
 	~_MuStore () {
@@ -90,14 +120,12 @@ struct _MuStore {
 				g_warning ("ref count != 0");
 
 			g_free (_version);
-			g_free (_path);
 
 			mu_contacts_destroy (_contacts);
-
 			if (!_read_only)
 				mu_store_flush (this);
 
-			MU_WRITE_LOG ("closing xapian database with %d documents",
+			MU_WRITE_LOG ("closing xapian database with %d document(s)",
 				      (int)db_read_only()->get_doccount());
 			delete _db;
 
@@ -105,7 +133,20 @@ struct _MuStore {
 	}
 
 	/* close the old database, and write an empty one on top of it */
-	void clear();
+	void clear () {
+		if (is_read_only())
+			throw std::runtime_error ("database is read-only");
+
+		// clear the database
+		db_writable()->close ();
+		delete _db;
+		_db = new Xapian::WritableDatabase
+			(path(), Xapian::DB_CREATE_OR_OVERWRITE);
+
+		// clear the contacts cache
+		if (_contacts)
+			mu_contacts_clear (_contacts);
+	}
 
 	/* get a unique id for this message; note, this function returns a
 	 * static buffer -- not reentrant */
@@ -116,9 +157,15 @@ struct _MuStore {
 
 	const char* version ()  {
 		g_free (_version);
-		return _version =
-			mu_store_get_metadata (this, MU_STORE_VERSION_KEY);
+		return _version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY,
+							 NULL);
 	}
+
+	void set_version (const char *version)  {
+		mu_store_set_metadata (this, MU_STORE_VERSION_KEY, version, NULL);
+	}
+
+	static unsigned max_term_length() { return MAX_TERM_LENGTH; }
 
 	void begin_transaction ();
 	void commit_transaction ();
@@ -132,12 +179,12 @@ struct _MuStore {
 
 	Xapian::Database* db_read_only() const { return _db; }
 
-	const char* path () const { return _path; }
+	const char* path () const { return _path.c_str(); }
 	bool is_read_only () const { return _read_only; }
 
 	size_t batch_size () const { return _batch_size;}
 	size_t set_batch_size (size_t n)  {
-		return _batch_size = ( n == 0) ? MU_STORE_DEFAULT_BATCH_SIZE : n;
+		return _batch_size = ( n == 0) ? DEFAULT_BATCH_SIZE : n;
 	}
 
 	bool   in_transaction () const { return _in_transaction; }
@@ -151,13 +198,12 @@ struct _MuStore {
 	guint  ref   () { return ++_ref_count; }
 	guint  unref () { return --_ref_count; }
 
+	/* by default, use transactions of 30000 messages */
+	static const unsigned DEFAULT_BATCH_SIZE = 30000;
+	/* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
+	static const unsigned MAX_TERM_LENGTH = 240;
+
 private:
-
-	bool check_version ();
-	bool check_path () {
-		return true; // FIXME
-	}
-
 	/* transaction handling */
 	bool   _in_transaction;
 	int    _processed;
@@ -166,8 +212,8 @@ private:
 	/* contacts object to cache all the contact information */
 	MuContacts *_contacts;
 
-	char *_path;
-	mutable char *_version;
+	std::string _path;
+	gchar *_version;
 
 	Xapian::Database *_db;
 	bool _read_only;

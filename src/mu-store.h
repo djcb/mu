@@ -42,7 +42,7 @@ typedef struct _MuStore MuStore;
  * of error; free with mu_store_unref
  */
 MuStore*  mu_store_new_writable  (const char *xpath, const char *ccachepath,
-				  GError **err)
+				  gboolean rebuild, GError **err)
                  G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -117,7 +117,6 @@ typedef gpointer XapianDatabase;
 XapianDatabase* mu_store_get_read_only_database (MuStore *store);
 
 
-
 /**
  * set the Xapian batch size for this store. Normally, there's no need
  * to use this function as the default is good enough; however, if you
@@ -132,17 +131,16 @@ void  mu_store_set_batch_size (MuStore *store, guint batchsize);
 
 
 
-
-
 /**
  * get the numbers of documents in the database
  *
  * @param index a valid MuStore instance
+ * @param err to receive error info or NULL. err->code is MuError value
  *
- * @return the number of documents in the database; 0 in case of error
- * or an empty database
+ * @return the number of documents in the database; (unsigned)-1 in
+ * case of error
  */
-unsigned mu_store_count (MuStore *store);
+unsigned mu_store_count (MuStore *store, GError **err);
 
 /**
  * get a version string for the database; it's a const string, which
@@ -210,10 +208,12 @@ gboolean mu_store_remove_path (MuStore *store, const char* msgpath);
  *
  * @param store a store
  * @param path the message path
+ * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return TRUE if the message exists, FALSE otherwise
  */
-gboolean mu_store_contains_message (MuStore *store,  const char* path);
+gboolean mu_store_contains_message (MuStore *store,  const char* path,
+				    GError **err);
 
 /**
  * store a timestamp for a directory
@@ -221,22 +221,24 @@ gboolean mu_store_contains_message (MuStore *store,  const char* path);
  * @param store a valid store
  * @param msgpath path to a maildir
  * @param stamp a timestamp
+ * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return TRUE if setting the timestamp succeeded, FALSE otherwise
  */
 gboolean mu_store_set_timestamp (MuStore *store, const char* msgpath,
-				 time_t stamp);
+				 time_t stamp, GError **err);
 
 /**
  * get the timestamp for a directory
  *
  * @param store a valid store
  * @param msgpath path to a maildir
+ * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return the timestamp, or 0 in case of error
  */
-time_t mu_store_get_timestamp (MuStore *store,
-			       const char* msgpath);
+time_t mu_store_get_timestamp (MuStore *store, const char* msgpath,
+			       GError **err);
 
 
 /**
@@ -256,6 +258,7 @@ gboolean mu_store_is_read_only (MuStore *store);
  * @param self a valid store
  * @param func a callback function to to call for each document
  * @param user_data a user pointer passed to the callback function
+ * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return MU_OK if all went well, MU_STOP if the foreach was interrupted,
  * MU_ERROR in case of error
@@ -263,7 +266,7 @@ gboolean mu_store_is_read_only (MuStore *store);
 typedef MuError (*MuStoreForeachFunc) (const char* path,
 					      void *user_data);
 MuError  mu_store_foreach (MuStore *self, MuStoreForeachFunc func,
-			   void *user_data);
+			   void *user_data, GError **err);
 
 /**
  * set metadata for this MuStore
@@ -271,21 +274,24 @@ MuError  mu_store_foreach (MuStore *self, MuStoreForeachFunc func,
  * @param store a store
  * @param key metadata key
  * @param val metadata value
+ * @param err to receive error info or NULL. err->code is the MuError value
  *
  * @return TRUE if succeeded, FALSE otherwise
  */
-gboolean mu_store_set_metadata (MuStore *store, const char *key, const char *val);
+gboolean mu_store_set_metadata (MuStore *store, const char *key, const char *val,
+				GError **err);
 
 /**
  * get metadata for this MuStore
  *
  * @param store a store
  * @param key the metadata key
+ * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return the value of the metadata (gfree when done with it), or
  * NULL in case of error
  */
-char* mu_store_get_metadata (MuStore *store, const char *key)
+char* mu_store_get_metadata (MuStore *store, const char *key, GError **err)
 	G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -312,18 +318,17 @@ gchar* mu_store_database_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
  */
 gboolean mu_store_needs_upgrade (MuStore *store);
 
-
-
 /**
  * clear the database, ie., remove all of the contents. This is a
  * destructive operation, but the database can be restored be doing a
  * full scan of the maildirs. Also, clear the contacts cache file
  *
  * @param store a MuStore object
+ * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return TRUE if the clearing succeeded, FALSE otherwise.
  */
-gboolean mu_store_clear (MuStore *store);
+gboolean mu_store_clear (MuStore *store, GError **err);
 
 
 /**
