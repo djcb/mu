@@ -274,8 +274,17 @@ typedef gpointer XapianEnquire;
  * don't repeat these catch blocks everywhere...
  *
  */
+
+#define MU_STORE_CATCH_BLOCK_RETURN(GE,R)				\
+          catch (const MuStoreError& merr) {				\
+		g_set_error ((GE), 0, merr.mu_error(), "%s",		\
+			     merr.what().c_str());			\
+		return (R);						\
+	  }								\
+
+
 #define MU_XAPIAN_CATCH_BLOCK						\
-	catch (const Xapian::Error &xerr) {				\
+	 catch (const Xapian::Error &xerr) {				\
                 g_critical ("%s: xapian error '%s'",			\
 			__FUNCTION__, xerr.get_msg().c_str());		\
         } catch (...) {							\
@@ -283,7 +292,7 @@ typedef gpointer XapianEnquire;
         }
 
 #define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)					\
-	catch (const Xapian::DatabaseLockError &xerr) {				\
+	  catch (const Xapian::DatabaseLockError &xerr) {			\
 		g_set_error ((GE),0,MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,	\
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
@@ -291,7 +300,7 @@ typedef gpointer XapianEnquire;
 		g_set_error ((GE),0,MU_ERROR_XAPIAN_CORRUPTION,			\
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
-	  } catch (const Xapian::DatabaseError &xerr) {				\
+	} catch (const Xapian::DatabaseError &xerr) {				\
 		  g_set_error ((GE),0,MU_ERROR_XAPIAN,				\
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
@@ -304,9 +313,8 @@ typedef gpointer XapianEnquire;
         }
 
 
-
 #define MU_XAPIAN_CATCH_BLOCK_RETURN(R)					\
-	catch (const Xapian::Error &xerr) {				\
+	  catch (const Xapian::Error &xerr) {				\
                 g_critical ("%s: xapian error '%s'",			\
 			   __FUNCTION__, xerr.get_msg().c_str());	\
 		return (R);						\
@@ -316,7 +324,7 @@ typedef gpointer XapianEnquire;
         }
 
 #define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)			\
-	catch (const Xapian::Error &xerr) {				\
+	  catch (const Xapian::Error &xerr) {				\
 		g_set_error ((GE),0,(E),				\
 			     "%s: xapian error '%s'",			\
 			   __FUNCTION__, xerr.get_msg().c_str());	\
@@ -349,6 +357,10 @@ typedef gpointer XapianEnquire;
 	} G_STMT_END
 
 
+
+#define MU_G_ERROR_CODE(GE) ((GE)&&(*(GE))?(*(GE))->code:MU_ERROR)
+
+
 enum _MuError {
 	/* no error at all! */
         MU_OK                                 = 0,
@@ -374,6 +386,13 @@ enum _MuError {
 	MU_ERROR_XAPIAN_CORRUPTION            = 17,
 	/* can't get write lock */
 	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK  = 18,
+	/* database is empty */
+	MU_ERROR_XAPIAN_IS_EMPTY              = 19,
+	/* could not write */
+	MU_ERROR_XAPIAN_STORE_FAILED	      = 20,
+	/* could not remove */
+	MU_ERROR_XAPIAN_REMOVE_FAILED	      = 21,
+
 
 	/* GMime related errors */
 
@@ -398,6 +417,7 @@ enum _MuError {
 	MU_ERROR_FILE_READDIR_FAILED          = 78,
 	MU_ERROR_FILE_INVALID_SOURCE          = 79,
 	MU_ERROR_FILE_TARGET_EQUALS_SOURCE    = 80,
+	MU_ERROR_FILE_CANNOT_WRITE            = 81,
 
 	/* not really an error, used in callbacks */
 	MU_STOP                               = 99,
