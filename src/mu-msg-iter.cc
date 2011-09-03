@@ -53,7 +53,7 @@ struct _MuMsgIter {
 public:
 	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum,
 		    gboolean threads, MuMsgFieldId sortfield):
-		_enq(enq), _thread_hash (0), _msg(0) {
+		   _enq(enq), _thread_hash (0), _msg(0) {
 
 		_matches = _enq.get_mset (0, maxnum);
 
@@ -80,10 +80,11 @@ public:
 	~_MuMsgIter () {
 		if (_thread_hash)
 			g_hash_table_destroy (_thread_hash);
+
 		set_msg (NULL);
 	}
 
-	const Xapian::Enquire& enquire() { return _enq; }
+	const Xapian::Enquire& enquire() const { return _enq; }
 	Xapian::MSet& matches() { return _matches; }
 
 	Xapian::MSet::const_iterator cursor () const { return _cursor; }
@@ -98,6 +99,7 @@ public:
 			mu_msg_unref (_msg);
 		return _msg = msg;
 	}
+
 private:
 	const Xapian::Enquire		_enq;
 	Xapian::MSet			_matches;
@@ -146,7 +148,7 @@ mu_msg_iter_get_msg_floating (MuMsgIter *iter)
 		docp = new Xapian::Document(iter->cursor().get_document());
 
 		err = NULL;
-		msg = iter->set_msg (mu_msg_new_from_doc ((XapianDocument*)docp, &err));
+		msg = iter->set_msg (mu_msg_new_from_doc((XapianDocument*)docp, &err));
 		if (!msg)
 			MU_HANDLE_G_ERROR(err);
 

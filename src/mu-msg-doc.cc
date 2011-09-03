@@ -30,12 +30,12 @@
 #include "mu-date.h"
 
 struct _MuMsgDoc {
-	_MuMsgDoc (Xapian::Document *doc) : _doc (doc) {}
-	~_MuMsgDoc () { delete _doc; }
+
+	_MuMsgDoc (Xapian::Document *doc): _doc (doc) { }
+	~_MuMsgDoc () {	delete _doc; }
 	const Xapian::Document doc() const { return *_doc; }
-private:	
-	Xapian::Document *_doc; 
-	
+private:
+	Xapian::Document *_doc;
 };
 
 
@@ -43,10 +43,10 @@ MuMsgDoc*
 mu_msg_doc_new (XapianDocument *doc, GError **err)
 {
 	g_return_val_if_fail (doc, NULL);
-	
+
 	try {
 		return new MuMsgDoc ((Xapian::Document*)doc);
-			
+
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, NULL);
 
 	return FALSE;
@@ -57,7 +57,7 @@ mu_msg_doc_destroy (MuMsgDoc *self)
 {
 	try {
 		delete self;
-		
+
 	} MU_XAPIAN_CATCH_BLOCK;
 }
 
@@ -71,11 +71,11 @@ mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid,
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
 
 	*do_free = TRUE;
-	
+
 	try {
 		const std::string s (self->doc().get_value(mfid));
 		return s.empty() ? NULL : g_strdup (s.c_str());
-		
+
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
@@ -87,14 +87,14 @@ mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid,
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
 	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
-	
+
 	*do_free = TRUE;
-	
+
 	try {
 		/* return a comma-separated string as a GSList */
 		const std::string s (self->doc().get_value(mfid));
 		return s.empty() ? NULL : mu_str_to_list(s.c_str(),',',TRUE);
-		
+
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
 
@@ -105,9 +105,9 @@ mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 	g_return_val_if_fail (self, -1);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), -1);
 	g_return_val_if_fail (mu_msg_field_is_numeric(mfid), -1);
-	
+
 	/* date is a special case, because we store dates as
-	 * strings */	
+	 * strings */
 	try {
 		const std::string s (self->doc().get_value(mfid));
 		if (s.empty())
@@ -119,8 +119,8 @@ mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 		} else {
 			return static_cast<gint64>(Xapian::sortable_unserialise(s));
 		}
-		
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);	
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);
 }
 
 
