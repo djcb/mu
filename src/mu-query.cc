@@ -49,8 +49,6 @@ public:
 		if (!clear_prefix (begin))
 			return Xapian::BAD_VALUENO;
 
-
-
 		 begin = to_sortable (begin, true);
 		 end   = to_sortable (end, false);
 
@@ -158,10 +156,8 @@ static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
 
 struct _MuQuery {
 public:
-	_MuQuery (MuStore *store): _db(0), _store(mu_store_ref(store)) {
+	_MuQuery (MuStore *store): _store(mu_store_ref(store)) {
 
-		_db = reinterpret_cast<Xapian::Database*>
-			(mu_store_get_read_only_database (store));
 		_qparser.set_database (db());
 		_qparser.set_default_op (Xapian::Query::OP_AND);
 
@@ -174,7 +170,14 @@ public:
 
 	~_MuQuery () { mu_store_unref (_store); }
 
-	Xapian::Database& db() const { return *_db; }
+	Xapian::Database& db() const {
+		Xapian::Database* db;
+		db = reinterpret_cast<Xapian::Database*>
+			(mu_store_get_read_only_database (_store));
+		if (!db)
+			throw std::runtime_error ("no database");
+		return *db;
+	}
 	Xapian::QueryParser& query_parser () { return _qparser; }
 
 private:
@@ -182,7 +185,6 @@ private:
 	MuDateRangeProcessor	_date_range_processor;
 	MuSizeRangeProcessor	_size_range_processor;
 
-	Xapian::Database	*_db;
 	MuStore *_store;
 };
 
@@ -251,28 +253,17 @@ mu_query_new (MuStore *store, GError **err)
 {
 	g_return_val_if_fail (store, NULL);
 
-	// if (!mu_util_check_dir (xpath, TRUE, FALSE)) {
-	// 	g_set_error (err, 0, MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE,
-	// 		     "'%s' is not a readable xapian dir", xpath);
-	// 	return NULL;
-	// }
-
-	// if (mu_store_database_needs_upgrade (xpath)) {
-	// 	g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
-	// 		     "%s is not up-to-date, needs a full update",
-	// 		     xpath);
-	// 	return NULL;
-	// }
-
-	if (mu_store_count (store) == 0)
-		g_warning ("database is empty; nothing to do");
+	if (mu_store_count (store, err) == 0) {
+		g_set_error (err, 0, MU_ERROR_XAPIAN_IS_EMPTY,
+			     "database is empty");
+		return 0;
+	}
 
 	try {
-
 		return new MuQuery (store);
 
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL);
-
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err,
+						MU_ERROR_XAPIAN, NULL);
 	return 0;
 }
 
@@ -326,7 +317,6 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			enq.set_query(get_query (self, searchexpr, err));
 		else
 			enq.set_query(Xapian::Query::MatchAll);
-
 
 		enq.set_cutoff(0,0);
 
