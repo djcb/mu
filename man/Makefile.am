@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 include $(top_srcdir)/gtest.mk
 
 dist_man_MANS =		\
-	mu-cleanup.1	\
 	mu-bookmarks.5	\
 	mu-cfind.1	\
 	mu-easy.1	\
@@ -29,5 +28,6 @@ dist_man_MANS =		\
 	mu-mv.1		\
 	mu-add.1	\
 	mu-remove.1	\
+	mu-server.1	\
 	mu.1		\
 	mug.1

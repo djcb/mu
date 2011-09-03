@@ -80,7 +80,6 @@ set_group_mu_defaults (MuConfig *opts)
 		opts->muhome = exp;
 	}
 
-
 	/* check for the MU_COLORS env var; but in any case don't use
 	 * colors unless we're writing to a tty */
 
@@ -124,10 +123,8 @@ config_options_group_mu (MuConfig *opts)
 static void
 set_group_index_defaults (MuConfig * opts)
 {
-	/* note: opts->maildir is handled in mu-cmd, as we need to
-	 * have a MuIndex entry for mu_index_last_used_maildir ()
-	 */
-	opts->xbatchsize = 0;
+	if (!opts->maildir)
+		opts->maildir = mu_util_guess_maildir ();
 }
 
 static GOptionGroup*
@@ -401,7 +398,6 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		MuConfigCmd	_cmd;
 	} cmd_map[] = {
 		{ "cfind",   MU_CONFIG_CMD_CFIND },
-		{ "cleanup", MU_CONFIG_CMD_CLEANUP },
 		{ "extract", MU_CONFIG_CMD_EXTRACT },
 		{ "find",    MU_CONFIG_CMD_FIND },
 		{ "index",   MU_CONFIG_CMD_INDEX },
@@ -440,8 +436,6 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 {
 	GOptionGroup *group;
 
-	group = NULL;
-
 	switch (opts->cmd) {
 	case MU_CONFIG_CMD_INDEX:
 		group = config_options_group_index (opts);	break;
@@ -458,13 +452,12 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 	case MU_CONFIG_CMD_VIEW:
 		group = config_options_group_view (opts);	break;
 	case MU_CONFIG_CMD_SERVER:
-		group = config_options_group_server (opts);	break;
-
-	default: break;
+		group = config_options_group_server (opts); 	break;
+	default:
+		return; /* no group to add */
 	}
 
-	if (group)
-		g_option_context_add_group(context, group);
+	g_option_context_add_group(context, group);
 }
 
 
@@ -528,6 +521,7 @@ mu_config_destroy (MuConfig *opts)
 	g_free (opts->maildir);
 	g_free (opts->linksdir);
 	g_free (opts->targetdir);
+
 	g_strfreev (opts->params);
 	g_free (opts);
 }
@@ -539,7 +533,6 @@ mu_config_param_num (MuConfig *conf)
 	guint u;
 
 	g_return_val_if_fail (conf, 0);
-
 	for (u = 0; conf->params[u]; ++u);
 
 	return u;

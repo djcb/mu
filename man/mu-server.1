@@ -1,0 +1,42 @@
+.TH MU SERVER 1 "September 2011" "User Manuals"
+
+.SH NAME
+
+mu server\-  start a mu process which accepts commands
+
+.SH SYNOPSIS
+
+.B mu server
+
+.SH DESCRIPTION
+
+\fBmu server\fR is the \fBmu\fR sub-command for starting a mu server process
+which accepts various commands (see below).  \fBmu server\fR is specifically
+designed for communication with the emacs-text editor, and as such, the output
+is in the form of s-expressions.
+
+\fBmu server\fR could be use as a very rudimentary interactive shell, but we
+would recommend the `muile' instead, which is much more powerful and suitable
+for humans.
+
+.SH OPTIONS
+
+.SH RETURN VALUE
+
+\fBmu server\fR returns 0 upon success, and some other value when an error
+occurs. See \fBmu(1)\fR for a list.
+
+.SH BUGS
+
+Please report bugs if you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+.BR mu(1)
+.BR mu-index(1)
+.BR mu-add(1)
+.BR mu-remove(1)
