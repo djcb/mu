@@ -88,17 +88,6 @@ void mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize);
 
 
 /**
- * get the maildir for the last run of indexing for the
- * current database
- *
- * @param index MuIndex object
- *
- * @return the last used maildir, or NULL
- */
-const char* mu_index_last_used_maildir (MuIndex *index);
-
-
-/**
  * callback function for mu_index_(run|stats|cleanup), for each message
  *
  * @param stats pointer to structure to receive statistics data
@@ -193,6 +182,7 @@ typedef MuError (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
  * @mu_index_stats_clear before calling this function
  * @param cb a callback function which will be called for every msg;
  * @param user_data a user pointer that will be passed to the callback function
+ * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return MU_OK if the stats gathering was completed succesfully,
  * MU_STOP if the user stopped or MU_ERROR in
@@ -200,7 +190,7 @@ typedef MuError (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
  */
 MuError mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 			  MuIndexCleanupDeleteCallback cb,
-			  void *user_data);
+			  void *user_data, GError **err);
 
 /**
  * clear the stats structure

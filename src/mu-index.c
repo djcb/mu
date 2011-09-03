@@ -42,7 +42,6 @@
 struct _MuIndex {
 	MuStore		*_store;
 	gboolean	 _needs_reindex;
-	gchar           *_last_used_maildir;
 	guint            _max_filesize;
 };
 
@@ -50,6 +49,7 @@ MuIndex*
 mu_index_new (MuStore *store, GError **err)
 {
 	MuIndex *index;
+	unsigned count;
 
 	g_return_val_if_fail (store, NULL);
 	g_return_val_if_fail (!mu_store_is_read_only(store), NULL);
@@ -61,7 +61,10 @@ mu_index_new (MuStore *store, GError **err)
 	/* set the default max file size */
 	index->_max_filesize = MU_INDEX_MAX_FILE_SIZE;
 
-	if (mu_store_count (store) == 0)
+	count = mu_store_count (store, err);
+	if (count == (unsigned)-1)
+		return NULL;
+	else if (count  == 0)
 		index->_needs_reindex = FALSE;
 
 	/* FIXME */
@@ -78,7 +81,6 @@ mu_index_destroy (MuIndex *index)
 	if (!index)
 		return;
 
-	g_free (index->_last_used_maildir);
 	mu_store_unref (index->_store);
 	g_free (index);
 }
@@ -109,8 +111,8 @@ needs_index (MuIndexCallbackData *data, const char *fullpath,
 	if (data->_reindex)
 		return TRUE;
 
-	/* it's not in the database yet */
-	if (!mu_store_contains_message (data->_store, fullpath))
+	/* it's not in the database yet (FIXME: GError)*/
+	if (!mu_store_contains_message (data->_store, fullpath, NULL))
 		return TRUE;
 
 	/* it's there, but it's not up to date */
@@ -207,19 +209,23 @@ static MuError
 on_run_maildir_dir (const char* fullpath, gboolean enter,
 		    MuIndexCallbackData *data)
 {
+	GError *err;
+	err = NULL;
+
 	/* xapian stores a per-dir timestamp; we use this timestamp
 	 *  to determine whether a message is up-to-data
 	 */
 	if (enter) {
 		data->_dirstamp =
-			mu_store_get_timestamp (data->_store,
-						       fullpath);
+			mu_store_get_timestamp (data->_store, fullpath, &err);
 		g_debug ("entering %s (ts==%u)",
 			 fullpath, (unsigned)data->_dirstamp);
 	} else {
-		time_t now = time (NULL);
+		time_t now;
+		now = time (NULL);
+
 		mu_store_set_timestamp (data->_store, fullpath,
-					       now);
+					now, &err);
 		g_debug ("leaving %s (ts=%u)",
 			 fullpath, (unsigned)data->_dirstamp);
 	}
@@ -227,6 +233,11 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 	if (data->_idx_dir_cb)
 		return data->_idx_dir_cb (fullpath, enter,
 					  data->_user_data);
+
+	if (err) {
+		MU_WRITE_LOG ("%s: %s", __FUNCTION__, err->message);
+		g_clear_error(&err);
+	}
 
 	return MU_OK;
 }
@@ -272,25 +283,6 @@ init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
 		memset (cb_data->_stats, 0, sizeof(MuIndexStats));
 }
 
-static void
-update_last_used_maildir (MuIndex *index, const char *path)
-{
-	if (!mu_store_set_metadata (index->_store,
-				    MU_LAST_USED_MAILDIR_KEY,
-				    path))
-		g_warning ("%s: failed to set metadata", __FUNCTION__);
-}
-
-const char*
-mu_index_last_used_maildir (MuIndex *index)
-{
-	g_return_val_if_fail (index, NULL);
-	g_free (index->_last_used_maildir);
-
-	return index->_last_used_maildir =
-		mu_store_get_metadata (index->_store,
-				       MU_LAST_USED_MAILDIR_KEY);
-}
 
 void
 mu_index_set_max_msg_size (MuIndex *index, guint max_size)
@@ -336,8 +328,6 @@ mu_index_run (MuIndex *index, const char* path,
 	init_cb_data (&cb_data, index->_store, reindex,
 		      index->_max_filesize, stats,
 		      msg_cb, dir_cb, user_data);
-
-	update_last_used_maildir (index, path);
 
 	rv = mu_maildir_walk (path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
@@ -436,7 +426,7 @@ foreach_doc_cb (const char* path, CleanupData *cudata)
 MuError
 mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 		  MuIndexCleanupDeleteCallback cb,
-		  void *user_data)
+		  void *user_data, GError **err)
 {
 	MuError rv;
 	CleanupData cudata;
@@ -451,7 +441,8 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 
 	rv = mu_store_foreach (index->_store,
 			       (MuStoreForeachFunc)foreach_doc_cb,
-			       &cudata);
+			       &cudata, err);
+
 	mu_store_flush (index->_store);
 
 	return rv;
