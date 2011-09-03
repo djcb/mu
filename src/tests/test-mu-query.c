@@ -46,7 +46,8 @@ fill_database (const char *testdir)
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, testdir);
 
-	/* g_printerr ("\n%s\n", cmdline); */
+	if (g_test_verbose())
+		g_printerr ("\n%s\n", cmdline);
 
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
@@ -99,15 +100,14 @@ run_and_count_matches (const char *xpath, const char *query)
 
 	mu_store_unref (store);
 
-	/* g_printerr ("\n=>'%s'\n", query); */
-
-	/* { /\* debug *\/ */
-	/* 	char *xs; */
-	/* 	g_print ("query : '%s'\n", query); */
-	/* 	xs = mu_query_as_string (mquery, query, NULL); */
-	/* 	g_print ("xquery: '%s'\n", xs); */
-	/* 	g_free (xs); */
-	/* } */
+	if (g_test_verbose()) {
+		char *xs;
+		g_printerr ("\n=>'%s'\n", query);
+		g_print ("query : '%s'\n", query);
+		xs = mu_query_as_string (mquery, query, NULL);
+		g_print ("xquery: '%s'\n", xs);
+		g_free (xs);
+	}
 
 	iter = mu_query_run (mquery, query, FALSE, MU_MSG_FIELD_ID_NONE,
 			     FALSE, NULL);
@@ -160,7 +160,6 @@ test_mu_query_01 (void)
 		{ "fünkÿ",              1 },
 		{ "",                   13 }
 	};
-
 
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
@@ -394,7 +393,6 @@ test_mu_query_dates_sydney (void)
 	int i;
 	const char *old_tz;
 
-
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		/* { "date:20080804..20080731", 5}, */
@@ -598,9 +596,10 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-tags_02",
 			 test_mu_query_tags_02);
 
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)black_hole, NULL);
+	if (!g_test_verbose())
+	    g_log_set_handler (NULL,
+			       G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			       (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
 
