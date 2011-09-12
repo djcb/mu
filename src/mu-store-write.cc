@@ -557,11 +557,12 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 }
 
 
-gboolean
-mu_store_store_msg (MuStore *store, MuMsg *msg, gboolean replace)
+unsigned
+mu_store_add_msg (MuStore *store, MuMsg *msg, gboolean replace,
+		  GError **err)
 {
-	g_return_val_if_fail (store, FALSE);
-	g_return_val_if_fail (msg, FALSE);
+	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
+	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
 
 	try {
 		Xapian::Document newdoc;
@@ -595,49 +596,35 @@ mu_store_store_msg (MuStore *store, MuMsg *msg, gboolean replace)
 		if (store->inc_processed() % store->batch_size() == 0)
 			store->commit_transaction();
 
-		return TRUE;
+		return id;
 
-	} MU_XAPIAN_CATCH_BLOCK;
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
 
 	if (store->in_transaction())
 		store->rollback_transaction();
 
-	return FALSE;
+	return MU_STORE_INVALID_DOCID;
 }
 
 
-/* FIXME: use GError */
-gboolean
-mu_store_store_path (MuStore *store, const char *path)
+unsigned
+mu_store_add_path (MuStore *store, const char *path, GError **err)
 {
 	MuMsg *msg;
-	GError *err;
-	gboolean rv;
+	unsigned docid;
 
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (path, FALSE);
 
 	err = NULL;
-	msg = mu_msg_new_from_file (path, NULL, &err);
+	msg = mu_msg_new_from_file (path, NULL, err);
+	if (!msg)
+		return MU_STORE_INVALID_DOCID;
 
-	if (!msg) {
-		if (err) {
-			g_warning ("failed to create message %s to store: %s",
-				   path, err->message);
-			g_error_free (err);
-		} else
-			g_warning ("failed to create message %s to store", path);
-
-		return FALSE;
-	}
-
-	rv = mu_store_store_msg (store, msg, TRUE);
-	if (!rv)
-		g_warning ("failed to store %s", path);
-
+	docid = mu_store_add_msg (store, msg, TRUE, err);
 	mu_msg_unref (msg);
 
-	return rv;
+	return docid;
 }
 
 
