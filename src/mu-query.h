@@ -87,6 +87,9 @@ MuMsgIter* mu_query_run (MuQuery *self, const char* expr, gboolean threads,
 			 GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
+
+
+
 /**
  * get a string representation of the Xapian search query
  *
