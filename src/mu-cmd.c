@@ -48,7 +48,7 @@ view_msg_sexp (MuMsg *msg)
 {
 	char *sexp;
 
-	sexp = mu_msg_to_sexp (msg, NULL, FALSE);
+	sexp = mu_msg_to_sexp (msg, 0, NULL, FALSE);
 	fputs (sexp, stdout);
 	g_free (sexp);
 
@@ -409,7 +409,7 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 		src = opts->params[i];
 
 		if (!check_file_okay (src, TRUE) ||
-		    !mu_store_store_path (store, src)) {
+		    mu_store_add_path (store, src, err) == MU_STORE_INVALID_DOCID) {
 			MU_WRITE_LOG ("failed to add %s", src);
 			allok = FALSE;
 		}

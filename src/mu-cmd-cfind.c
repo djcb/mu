@@ -172,7 +172,10 @@ run_cmd_cfind (const char* pattern, MuConfigFormat format,
 	gboolean rv;
 	MuContacts *contacts;
 	size_t num;
-	ECData ecdata = {format, color};
+	ECData ecdata;
+
+	ecdata.format = format;
+	ecdata.color  = color;
 
 	contacts = mu_contacts_new (mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
 	if (!contacts) {

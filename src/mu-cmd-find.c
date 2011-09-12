@@ -544,13 +544,10 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 static void
 print_summary (MuMsg *msg)
 {
-	GError *err;
 	char *summ;
 
 	const guint SUMMARY_LEN = 5; /* summary based on first 5
 				      * lines */
-	err = NULL;
-
 	summ = mu_str_summarize (mu_msg_get_body_text(msg), SUMMARY_LEN);
 	g_print ("Summary: %s\n", summ ? summ : "<none>");
 	g_free (summ);
@@ -713,9 +710,11 @@ output_sexp (MuMsgIter *iter, gboolean threads,
 		if (!include_unreadable && !mu_msg_is_readable (msg))
 			continue;
 
-		ti = threads ? mu_msg_iter_get_thread_info (iter) : NULL;
+		ti   = threads ? mu_msg_iter_get_thread_info (iter) : NULL;
+		sexp = mu_msg_to_sexp (msg,
+				       mu_msg_iter_get_docid (iter),
+				       ti, TRUE);
 
-		sexp = mu_msg_to_sexp (msg, ti, TRUE);
 		fputs (sexp, stdout);
 		g_free (sexp);
 
@@ -763,11 +762,7 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, GError **err)
 
 	for (myiter = iter, count = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
-
-		GError *err;
 		MuMsg *msg;
-
-		err = NULL;
 		msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
 		if (!msg)
 			return FALSE;

@@ -39,7 +39,6 @@
 
 static gboolean MU_CAUGHT_SIGNAL;
 
-
 static void
 sig_handler (int sig)
 {
