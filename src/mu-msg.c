@@ -737,9 +737,21 @@ mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir,
 	newfullpath = mu_maildir_move_message (mu_msg_get_path (self),
 					       targetmdir, flags,
 					       ignore_dups, err);
-	if (newfullpath) /* update our path to new one... */
+
+	/* update the message path and the flags; they may have
+	 * changed */
+	if (newfullpath) {
 		mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
 				      TRUE); /* the cache will free the string */
+
+		/* the contentflags haven't changed, so make sure they persist */
+		flags |= mu_msg_get_flags (self) &
+			(MU_FLAG_HAS_ATTACH|MU_FLAG_ENCRYPTED|MU_FLAG_SIGNED);
+		/* update the pseudo-flag as well */
+		if (!(flags & MU_FLAG_NEW) || (flags & MU_FLAG_SEEN))
+			flags &= ~MU_FLAG_UNREAD;
+		mu_msg_cache_set_num (self->_cache, MU_MSG_FIELD_ID_FLAGS, flags);
+	}
 
 	return newfullpath ? TRUE : FALSE;
 }

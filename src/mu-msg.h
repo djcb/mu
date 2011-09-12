@@ -376,6 +376,7 @@ struct _MuMsgIterThreadInfo;
  * e.g. emacs)
  *
  * @param msg a valid message
+ * @param docid the docid for this message, or 0
  * @param ti thread info for the current message, or NULL
  * @param dbonly if TRUE, only include message fields which can be
  * obtained from the database (this is much faster if the MuMsg is
@@ -383,11 +384,13 @@ struct _MuMsgIterThreadInfo;
  *
  * @return a string with the sexp (free with g_free) or NULL in case of error
  */
-char* mu_msg_to_sexp (MuMsg *msg, const struct _MuMsgIterThreadInfo *ti,
+char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
+		      const struct _MuMsgIterThreadInfo *ti,
 		      gboolean dbonly);
 
 /**
- * move a message to another maildir
+ * move a message to another maildir; note that this does _not_ update
+ * the database
  *
  * @param msg a message with an existing file system path in an actual
  * maildir
@@ -397,7 +400,7 @@ char* mu_msg_to_sexp (MuMsg *msg, const struct _MuMsgIterThreadInfo *ti,
  * copy is from new/ to new/ and cur/ to cur/. Also note that the
  * target maildir must be on the same filesystem. If you specify NULL
  * for targetmdir, only the flags of the message are affected; note
- * that this may still involve a moved to another directory (say, from
+ * that this may still involve a move to another directory (say, from
  * new/ to cur/)
  * @param flags to set for the target (influences the filename, path)
  * @param silently ignore the src=target case (return TRUE)
