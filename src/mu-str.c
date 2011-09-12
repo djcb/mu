@@ -1,22 +1,22 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
-/* 
+/*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 3 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 
@@ -66,11 +66,11 @@ mu_str_size_s  (size_t s)
 		g_snprintf(buf, sizeof(buf), "%.1f kB", (double)s/(1000));
 #endif /*HAVE_GLIB216*/
 
-	
+
 	return buf;
 }
 
-char* 
+char*
 mu_str_size (size_t s)
 {
 	return g_strdup (mu_str_size_s(s));
@@ -98,7 +98,7 @@ mu_str_summarize (const char* str, size_t max_lines)
 
 	g_return_val_if_fail (str, NULL);
 	g_return_val_if_fail (max_lines > 0, NULL);
-	
+
 	/* len for summary <= original len */
 	summary = g_new (gchar, strlen(str) + 1);
 
@@ -134,7 +134,7 @@ static void
 cleanup_contact (char *contact)
 {
 	char *c, *c2;
-	
+
 	/* replace "'<> with space */
 	for (c2 = contact; *c2; ++c2)
 		if (*c2 == '"' || *c2 == '\'' || *c2 == '<' || *c2 == '>')
@@ -145,7 +145,7 @@ cleanup_contact (char *contact)
 	c = g_strstr_len (contact, -1, "(");
 	if (c && c - contact > 5)
 		*c = '\0';
-			
+
 	g_strstrip (contact);
 }
 
@@ -156,7 +156,7 @@ mu_str_display_contact_s (const char *str)
 {
 	static gchar contact[255];
 	gchar *c, *c2;
-	
+
 	str = str ? str : "";
 	g_strlcpy (contact, str, sizeof(contact));
 
@@ -173,7 +173,7 @@ mu_str_display_contact_s (const char *str)
 	}
 
 	cleanup_contact (contact);
-	
+
 	return contact;
 }
 
@@ -201,7 +201,7 @@ each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
 
 	if (!cpfx || cpfx->match)
 		return;
-	
+
 	field_shortcut = mu_msg_field_shortcut (mfid);
 	if (field_shortcut == cpfx->pfx[0] && cpfx->pfx[1] == ':') {
 		cpfx->match = TRUE;
@@ -223,10 +223,10 @@ static gboolean
 is_xapian_prefix (const char *q, const char *colon)
 {
 	const char *cur;
-	
+
 	if (colon == q)
 		return FALSE; /* : at beginning, not a prefix */
-	
+
 	/* track back from colon until a boundary or beginning of the
 	 * str */
 	for (cur = colon - 1; cur >= q; --cur) {
@@ -239,15 +239,15 @@ is_xapian_prefix (const char *q, const char *colon)
 			cpfx.pfx   = cur;
 			cpfx.len   = (colon - cur);
 			cpfx.match = FALSE;
-			
+
 			mu_msg_field_foreach ((MuMsgFieldForEachFunc)
 					      each_check_prefix,
 					      &cpfx);
-			
+
 			return (cpfx.match);
 		}
 	}
-	
+
 	return FALSE;
 }
 
@@ -261,10 +261,10 @@ mu_str_size_parse_bkm (const char* str)
 
 	if (!isdigit(str[0]))
 		return -1;
-	
+
 	num = atoi(str);
 	for (++str; isdigit(*str); ++str);
-	
+
 	switch (tolower(*str)) {
 	case '\0':
 	case 'b' : return num;                      /* bytes */
@@ -284,12 +284,12 @@ mu_str_from_list (const GSList *lst, char sepa)
 	char *str;
 
 	g_return_val_if_fail (sepa, NULL);
-	
+
 	for (cur = lst, str = NULL; cur; cur = g_slist_next(cur)) {
 
 		char *tmp;
 		/* two extra dummy '\0' so -Wstack-protector won't complain */
-		char sep[4] = { '\0', '\0', '\0', '\0' }; 
+		char sep[4] = { '\0', '\0', '\0', '\0' };
 		sep[0] = cur->next ? sepa : '\0';
 
 		tmp = g_strdup_printf ("%s%s%s",
@@ -299,7 +299,7 @@ mu_str_from_list (const GSList *lst, char sepa)
 		g_free (str);
 		str = tmp;
 	}
-	
+
 	return str;
 }
 
@@ -309,10 +309,10 @@ mu_str_to_list (const char *str, char sepa, gboolean strip)
 	GSList *lst;
 	gchar **strs, **cur;
 	/* two extra dummy '\0' so -Wstack-protector won't complain */
-	char sep[4] = { '\0', '\0', '\0', '\0' }; 
-	
+	char sep[4] = { '\0', '\0', '\0', '\0' };
+
 	g_return_val_if_fail (sepa, NULL);
-	
+
 	if (!str)
 		return NULL;
 
@@ -324,10 +324,10 @@ mu_str_to_list (const char *str, char sepa, gboolean strip)
 		elm = g_strdup(*cur);
 		if (strip)
 			elm = g_strstrip (elm);
-		
+
 		lst = g_slist_prepend (lst, elm);
 	}
-		
+
 	lst = g_slist_reverse (lst);
 	g_strfreev (strs);
 
@@ -341,12 +341,12 @@ eat_esc_string (char **strlst)
 	char *str;
 	gboolean quoted;
 	GString *gstr;
-	
+
 	str  = g_strchug (*strlst);
 	gstr = g_string_sized_new (strlen(str));
-	
+
 	for (quoted = FALSE; *str; ++str) {
-		
+
 		if (*str == '"') {
 			quoted = !quoted;
 			continue;
@@ -360,7 +360,7 @@ eat_esc_string (char **strlst)
 		} else if (*str == ' ') {
 			++str;
 			goto leave;
-		} else 
+		} else
 			g_string_append_c (gstr, *str);
 	}
 leave:
@@ -377,15 +377,17 @@ GSList*
 mu_str_esc_to_list (const char *strings)
 {
 	GSList *lst;
-	char *str, *mystrings, *freeme;
-	
+	char *mystrings, *freeme;
+	const char* cur;
+
 	g_return_val_if_fail (strings, NULL);
 
-	freeme = mystrings = g_strdup (strings);
-	mystrings = g_strdup(g_strchug(mystrings));
-	lst	  = NULL;
-	
+	for (cur = strings; *cur && (*cur == ' ' || *cur == '\t'); ++cur);
+	freeme = mystrings = g_strdup (cur);
+
+	lst = NULL;
 	do {
+		gchar *str;
 		str = eat_esc_string (&mystrings);
 		if (str)
 			lst = g_slist_prepend (lst, str);
@@ -402,7 +404,7 @@ void
 mu_str_free_list (GSList *lst)
 {
 	g_slist_foreach (lst, (GFunc)g_free, NULL);
-	g_slist_free (lst);	
+	g_slist_free (lst);
 }
 
 const gchar*
@@ -433,14 +435,9 @@ char*
 mu_str_ascii_xapian_escape_in_place (char *query)
 {
 	gchar *cur;
-	gboolean replace_dot;
-		
+
 	g_return_val_if_fail (query, NULL);
 
-	/* only replace the '.' if the string looks like an e-mail
-	 * address or msg-id */
-	replace_dot = (g_strstr_len(query, -1, "@") != NULL);
-	
 	for (cur = query; *cur; ++cur) {
 
 		*cur = tolower(*cur);
@@ -451,7 +448,7 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 			*cur = '_'; break;
 		case '.': {
 			/* don't replace a final cur */
-			if (cur[1]== ' ' || cur[1]=='\t' || cur[1]== '.')  
+			if (cur[1]== ' ' || cur[1]=='\t' || cur[1]== '.')
 				++cur;
 			else if (cur[1] == '\0')
 				break;
@@ -463,13 +460,13 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 			/* if there's a registered xapian prefix before the
 			 * ':', don't touch it. Otherwise replace ':' with
 			 * a space'... ugh yuck ugly...
-			 */			 
+			 */
 			if (!is_xapian_prefix (query, cur))
 				*cur = '_';
 			break;
 		}
 	}
-	
+
 	return query;
 }
 
@@ -487,12 +484,12 @@ const char*
 mu_str_fullpath_s (const char* path, const char* name)
 {
 	static char buf[PATH_MAX + 1];
-	
+
 	g_return_val_if_fail (path, NULL);
-	
+
 	snprintf (buf, sizeof(buf), "%s%c%s", path, G_DIR_SEPARATOR,
 		  name ? name : "");
-	
+
 	return buf;
 }
 
@@ -502,14 +499,14 @@ mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
 {
 	const char* cur;
 	GString *tmp;
-	
+
 	g_return_val_if_fail (str, NULL);
-	
+
 	tmp = g_string_sized_new (2 * strlen(str));
 
 	if (in_quotes)
 		g_string_append_c (tmp, '"');
-	
+
 	for (cur = str; *cur; ++cur)
 		switch (*cur) {
 		case '\\': tmp = g_string_append   (tmp, "\\\\"); break;
@@ -547,10 +544,10 @@ mu_str_convert_to_utf8 (const char* buffer, const char *charset)
 
 	g_return_val_if_fail (buffer, NULL);
 	g_return_val_if_fail (charset, NULL );
-	
+
 	err = NULL;
 	utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
-					charset, NULL, 
+					charset, NULL,
 					NULL, NULL, &err);
 	if (!utf8) {
 		g_debug ("%s: conversion failed from %s: %s",
@@ -558,7 +555,7 @@ mu_str_convert_to_utf8 (const char* buffer, const char *charset)
 		if (err)
 			g_error_free (err);
 	}
-	
+
 	return utf8;
 }
 
@@ -571,9 +568,9 @@ mu_str_guess_last_name (const char *name)
 
 	if (!name)
 		return g_strdup ("");
-	
+
 	lastsp = g_strrstr (name, " ");
-	
+
 	return g_strdup (lastsp ? lastsp + 1 : "");
 }
 
@@ -585,7 +582,7 @@ mu_str_guess_first_name (const char *name)
 
 	if (!name)
 		return g_strdup ("");
-	
+
 	lastsp = g_strrstr (name, " ");
 
 	if (lastsp)
@@ -603,9 +600,9 @@ cleanup_str (const char* str)
 
 	if (mu_str_is_empty(str))
 		return g_strdup ("");
-	
+
 	s = g_new0 (char, strlen(str) + 1);
-	
+
 	for (cur = str, i = 0; *cur; ++cur) {
 		if (ispunct(*cur) || isspace(*cur))
 			continue;
@@ -622,17 +619,17 @@ mu_str_guess_nick (const char* name)
 {
 	gchar *fname, *lname, *nick;
 	gchar initial[7];
-	
+
 	fname	  = mu_str_guess_first_name (name);
 	lname	  = mu_str_guess_last_name (name);
-	
+
 	/* if there's no last name, use first name as the nick */
 	if (mu_str_is_empty(fname) || mu_str_is_empty(lname)) {
 		g_free (lname);
 		nick = fname;
 		goto leave;
 	}
-	
+
 	memset (initial, 0, sizeof(initial));
 	/* couldn't we get an initial for the last name? */
 	if (g_unichar_to_utf8 (g_utf8_get_char (lname), initial) == 0) {
@@ -644,7 +641,7 @@ mu_str_guess_nick (const char* name)
 	nick = g_strdup_printf ("%s%s", fname, initial);
 	g_free (fname);
 	g_free (lname);
-	
+
 leave:
 	{
 		gchar *tmp;
@@ -652,6 +649,6 @@ leave:
 		g_free (nick);
 		nick = tmp;
 	}
-	
+
 	return nick;
 }

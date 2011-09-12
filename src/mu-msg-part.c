@@ -54,7 +54,7 @@ find_part (MuMsg* msg, guint partidx)
 	fpdata.wanted_idx = partidx;
 	fpdata.idx = 0;
 	fpdata.part = NULL;
-		
+
 	g_mime_message_foreach (msg->_file->_mime_msg,
 				(GMimeObjectForeachFunc)find_part_cb,
 				&fpdata);
@@ -84,15 +84,15 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 
 	if (GMIME_IS_CONTENT_TYPE(ct)) {
 		pi.type	   = (char*)g_mime_content_type_get_media_type (ct);
-		pi.subtype = (char*)g_mime_content_type_get_media_subtype (ct);	
+		pi.subtype = (char*)g_mime_content_type_get_media_subtype (ct);
 	}
 
 	if (GMIME_IS_PART(part)) {
 		pi.disposition = (char*)g_mime_object_get_disposition (part);
 		pi.file_name   = (char*)g_mime_part_get_filename (GMIME_PART(part));
 	}
-	
-	pdata->_func(pdata->_msg, &pi, pdata->_user_data);	
+
+	pdata->_func(pdata->_msg, &pi, pdata->_user_data);
 }
 
 void
@@ -100,16 +100,27 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 		     gpointer user_data)
 {
 	PartData pdata;
-	
+
 	g_return_if_fail (msg);
-	g_return_if_fail (msg->_file);
+
+	/* if we don't have a file yet, we need to open it now... */
+	if (!msg->_file) {
+		GError *err;
+		err = NULL;
+		msg->_file = mu_msg_file_new (mu_msg_get_path(msg), NULL,
+					      &err);
+		if (!msg->_file) {
+			MU_HANDLE_G_ERROR(err); /* will free it */
+			return;
+		}
+	}
 	g_return_if_fail (GMIME_IS_OBJECT(msg->_file->_mime_msg));
 
 	pdata._msg       = msg;
 	pdata._idx       = 0;
 	pdata._func	 = func;
 	pdata._user_data = user_data;
-	
+
 	g_mime_message_foreach (msg->_file->_mime_msg,
 				(GMimeObjectForeachFunc)part_foreach_cb,
 				&pdata);
@@ -117,35 +128,38 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 
 
 static gboolean
-write_to_stream (GMimeObject *part, int fd)
+write_to_stream (GMimeObject *part, int fd, GError **err)
 {
 	GMimeStream *stream;
 	GMimeDataWrapper *wrapper;
 	gboolean rv;
-		
+
 	stream = g_mime_stream_fs_new (fd);
 	if (!GMIME_IS_STREAM(stream)) {
-		g_critical ("%s: failed to create stream",__FUNCTION__);
+		g_set_error (err, 0, MU_ERROR_GMIME,
+			     "failed to create stream");
 		return FALSE;
 	}
 	g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream), FALSE);
-		
+
 	wrapper = g_mime_part_get_content_object (GMIME_PART(part));
 	if (!GMIME_IS_DATA_WRAPPER(wrapper)) {
-		g_critical ("%s: failed to create wrapper", __FUNCTION__);
+		g_set_error (err, 0, MU_ERROR_GMIME,
+			     "failed to create wrapper");
 		g_object_unref (stream);
 		return FALSE;
 	}
 	g_object_ref (part); /* FIXME: otherwise, the unrefs below
 			      * give errors...*/
-		
+
 	rv = g_mime_data_wrapper_write_to_stream (wrapper, stream);
 	if (!rv)
-		g_critical ("%s: failed to write to stream", __FUNCTION__);
-		
+		g_set_error (err, 0, MU_ERROR_GMIME,
+			     "failed to write to stream");
+
 	g_object_unref (wrapper);
 	g_object_unref (stream);
-		
+
 	return rv;
 }
 
@@ -156,12 +170,12 @@ save_part (GMimeObject *part, const char *fullpath,
 {
 	int fd;
 	gboolean rv;
-		
+
 	/* don't try to overwrite when we already have it; useful when
 	 * you're sure it's not a different file with the same name */
 	if (use_existing && access (fullpath, F_OK) == 0)
 		return TRUE;
-		
+
 	/* ok, try to create the file */
 	fd = mu_util_create_writeable_fd (fullpath, 0600, overwrite);
 	if (fd == -1) {
@@ -169,17 +183,17 @@ save_part (GMimeObject *part, const char *fullpath,
 			     "could not open '%s' for writing: %s",
 			     fullpath, errno ? strerror(errno) : "error");
 		return FALSE;
-	}		
+	}
 
-	rv = write_to_stream (part, fd);
-	if (close (fd) != 0) {
+	rv = write_to_stream (part, fd, err);
+	if (close (fd) != 0 && !err) { /* don't write on top of old err */
 		g_set_error (err, 0, MU_ERROR_FILE,
 			     "could not close '%s': %s",
 			     fullpath, errno ? strerror(errno) : "error");
 		return FALSE;
 	}
 
-	return TRUE;
+	return rv;
 }
 
 
@@ -194,7 +208,7 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx)
 		g_warning ("%s: cannot find part %u", __FUNCTION__, partidx);
 		return NULL;
 	}
-		
+
 	/* the easy case: the part has a filename */
 	fname = (gchar*)g_mime_part_get_filename (GMIME_PART(part));
 	if (fname) /* security: don't include any directory components... */
@@ -218,9 +232,9 @@ mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 {
 	char *dirname, *filepath;
 	const char* path;
-		
+
 	g_return_val_if_fail (msg, NULL);
-		
+
 	path = mu_msg_get_path (msg);
 	if (!path)
 		return NULL;
@@ -231,7 +245,7 @@ mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 				   mu_util_cache_dir(), G_DIR_SEPARATOR,
 				   g_str_hash (path), G_DIR_SEPARATOR,
 				   partid);
-		
+
 	if (!mu_util_create_dir_maybe (dirname, 0700, FALSE)) {
 		g_free (dirname);
 		return NULL;
@@ -239,9 +253,9 @@ mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 
 	filepath = mu_msg_part_filepath (msg, dirname, partid);
 	g_free (dirname);
-	if (!filepath) 
+	if (!filepath)
 		g_warning ("%s: could not get filename", __FUNCTION__);
-	
+
 	return filepath;
 }
 
@@ -251,18 +265,18 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 		  gboolean overwrite, gboolean use_cached, GError **err)
 {
 	GMimeObject *part;
-		
+
 	g_return_val_if_fail (msg, FALSE);
 	g_return_val_if_fail (fullpath, FALSE);
 	g_return_val_if_fail (!overwrite||!use_cached, FALSE);
-		
+
 	part = find_part (msg, partidx);
 	if (!GMIME_IS_PART(part)) {
 		g_set_error (err, 0, MU_ERROR_GMIME,
 			     "cannot find part %u", partidx);
 		return FALSE;
 	}
-				
+
 	if (!save_part (part, fullpath, overwrite, use_cached, err))
 		return FALSE;
 
@@ -284,7 +298,7 @@ part_match_foreach_cb (GMimeObject *parent, GMimeObject *part, MatchData *mdata)
 	if (mdata->_found_idx < 0)
 		if (mdata->_matcher (part, mdata->_user_data))
 			mdata->_found_idx = mdata->_idx;
-	
+
 	++mdata->_idx;
 }
 
@@ -292,15 +306,15 @@ static int
 msg_part_find_idx (GMimeMessage *msg, MatchFunc func, gpointer user_data)
 {
 	MatchData mdata;
-	
+
 	g_return_val_if_fail (msg, -1);
 	g_return_val_if_fail (GMIME_IS_MESSAGE(msg), -1);
-	
+
 	mdata._idx       = 0;
 	mdata._found_idx = -1;
 	mdata._matcher   = func;
 	mdata._user_data = user_data;
-	
+
 	g_mime_message_foreach (msg,
 				(GMimeObjectForeachFunc)part_match_foreach_cb,
 				&mdata);
@@ -320,13 +334,13 @@ int
 mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 {
 	const char* cid;
-		
+
 	g_return_val_if_fail (msg, -1);
 	g_return_val_if_fail (sought_cid, -1);
-		
+
 	cid = g_str_has_prefix (sought_cid, "cid:") ?
-		sought_cid + 4 : sought_cid; 
-		
+		sought_cid + 4 : sought_cid;
+
 	return msg_part_find_idx (msg->_file->_mime_msg,
 				  (MatchFunc)match_content_id,
 				  (gpointer)cid);
@@ -344,14 +358,14 @@ static void
 match_filename_rx (GMimeObject *parent, GMimeObject *part, MatchData2 *mdata)
 {
 	const char *fname;
-	
+
 	if (!GMIME_IS_PART(part))
 		goto leave;
-	
+
 	fname = g_mime_part_get_filename (GMIME_PART(part));
 	if (!fname)
 		goto leave;
-	
+
 	if (g_regex_match (mdata->_rx, fname, 0, NULL))
 		mdata->_lst = g_slist_prepend (mdata->_lst,
 					       GUINT_TO_POINTER(mdata->_idx));
@@ -364,14 +378,14 @@ GSList*
 mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern)
 {
 	MatchData2 mdata;
-	
+
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (pattern, NULL);
 
 	mdata._lst = NULL;
 	mdata._rx  = pattern;
 	mdata._idx = 0;
-	
+
 	g_mime_message_foreach (msg->_file->_mime_msg,
 				(GMimeObjectForeachFunc)match_filename_rx,
 				&mdata);

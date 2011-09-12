@@ -85,7 +85,7 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum, MuMsgFieldId sortfield)
 					      NULL, FALSE);
 
 	/* step 5: group root set by subject */
-	//group_root_set_by_subject (root_set);
+	/* group_root_set_by_subject (root_set); */
 
 	/* sort */
 	mu_msg_iter_reset (iter); /* go all the way back */

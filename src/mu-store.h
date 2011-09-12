@@ -161,6 +161,8 @@ const char* mu_store_version (MuStore *store);
  */
 void mu_store_flush (MuStore *store);
 
+#define MU_STORE_INVALID_DOCID 0
+
 /**
  * store an email message in the XapianStore
  *
@@ -172,10 +174,11 @@ void mu_store_flush (MuStore *store);
  * of a initial fill or rebuild of the database), we can set 'replace'
  * to FALSE for a couple% performance gain
  *
- * @return TRUE if it succeeded, FALSE otherwise
+ * @return the docid of the stored message, or 0
+ * (MU_STORE_INVALID_DOCID) in case of error
  */
-gboolean mu_store_store_msg   (MuStore *store, MuMsg *msg, gboolean replace);
-
+unsigned mu_store_add_msg   (MuStore *store, MuMsg *msg, gboolean replace,
+			     GError **err);
 
 /**
  * store an email message in the XapianStore; similar to
@@ -185,12 +188,13 @@ gboolean mu_store_store_msg   (MuStore *store, MuMsg *msg, gboolean replace);
  * @param store a valid store
  * @param path full filesystem path to a valid message
  *
- * @return TRUE if it succeeded, FALSE otherwise
+ * @return the docid of the stored message, or 0
+ * (MU_STORE_INVALID_DOCID) in case of error
  */
-gboolean mu_store_store_path (MuStore *store, const char *path);
+unsigned mu_store_add_path (MuStore *store, const char *path, GError **err);
 
 /**
- * remove a message from the database
+ * remove a message from the database based on its path
  *
  * @param store a valid store
  * @param msgpath path of the message (note, this is only used to
@@ -339,6 +343,22 @@ gboolean mu_store_clear (MuStore *store, GError **err);
  * @return TRUE if it is locked, FALSE otherwise (or in case of error)
  */
 gboolean mu_store_database_is_locked (const gchar *xpath);
+
+
+
+/**
+ * get a specific message, based on its Xapian docid
+ *
+ * @param self a valid MuQuery instance
+ * @param docid the Xapian docid for the wanted message
+ * @param err receives error information, or NULL
+ *
+ * @return a MuMsg instance (use mu_msg_unref when done with it), or
+ * NULL in case of error
+ */
+MuMsg* mu_store_get_msg (MuStore *self, unsigned docid, GError **err);
+
+
 
 G_END_DECLS
 

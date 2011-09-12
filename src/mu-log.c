@@ -235,7 +235,8 @@ log_write (const char* domain, GLogLevelFlags level,
 
 	/* get the time/date string */
 	now = time(NULL);
-	strftime (timebuf, sizeof(timebuf), "%F %T", localtime(&now));
+	strftime (timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S",
+		  localtime(&now));
 
 	/* now put it all together */
 	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf,

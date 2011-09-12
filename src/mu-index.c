@@ -137,26 +137,29 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 
 	err = NULL;
 	msg = mu_msg_new_from_file (fullpath, mdir, &err);
-	if ((G_UNLIKELY(!msg))) {
-		g_warning ("%s: failed to create mu_msg for %s",
-			   __FUNCTION__, fullpath);
-		return MU_ERROR;
-	}
+	if ((G_UNLIKELY(!msg)))
+		goto errexit;
 
 	/* we got a valid id; scan the message contents as well */
-	if (G_UNLIKELY((!mu_store_store_msg (data->_store, msg, TRUE)))) {
-		g_warning ("%s: storing content %s failed", __FUNCTION__,
-			   fullpath);
-		return MU_ERROR;
-	}
+	if (G_UNLIKELY((!mu_store_add_msg (data->_store, msg, TRUE, &err))))
+		goto errexit;
 
 	mu_msg_unref (msg);
 	*updated = TRUE;
-
 	return MU_OK;
+
+errexit:
+	{
+		MuError me;
+		me = err ? err->code : MU_ERROR;
+		g_clear_error (&err);
+		if (msg)
+			mu_msg_unref (msg);
+		return me;
+	}
 }
 
-static MuError
+	static MuError
 run_msg_callback_maybe (MuIndexCallbackData *data)
 {
 	MuError result;

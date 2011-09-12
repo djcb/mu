@@ -42,9 +42,7 @@ get_query (void)
 
 	if (!query) {
 		mu_guile_g_error ("<internal error>", err);
-		if (err)
-			g_error_free (err);
-		return NULL;
+		g_clear_error (&err);
 	}
 
 	return query;
@@ -60,10 +58,9 @@ get_query_iter (MuQuery *query, const char* expr)
 	err = NULL;
 	iter = mu_query_run (query, expr,
 			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, &err);
-	if (err) {
+	if (!iter) {
 		mu_guile_g_error ("<internal error>", err);
-		g_error_free (err);
-		return NULL;
+		g_clear_error (&err);
 	}
 
 	return iter;
@@ -80,6 +77,7 @@ call_func (SCM FUNC, MuMsgIter *iter, const char* func_name)
 
 	msgsmob = mu_guile_msg_to_scm (mu_msg_ref(msg));
 	scm_call_1 (FUNC, msgsmob);
+
 }
 
 

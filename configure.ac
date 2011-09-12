@@ -272,7 +272,7 @@ AS_IF([test "x$PMCCABE" = "xno"],[
    *** Please install it if you want to run the automated code checks])
 ],[have_pmccabe="yes"])
 
-#toys/procmule/Makefile
+
 
 AC_CONFIG_FILES([
 Makefile
@@ -284,6 +284,7 @@ toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile
 toys/muile/Makefile
+toys/procmule/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile

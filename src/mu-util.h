@@ -418,9 +418,10 @@ enum _MuError {
 	MU_ERROR_FILE_INVALID_SOURCE          = 79,
 	MU_ERROR_FILE_TARGET_EQUALS_SOURCE    = 80,
 	MU_ERROR_FILE_CANNOT_WRITE            = 81,
+	MU_ERROR_FILE_CANNOT_UNLINK           = 82,
 
 	/* not really an error, used in callbacks */
-	MU_STOP                               = 99,
+	MU_STOP                               = 99
 };
 typedef enum _MuError MuError;
 

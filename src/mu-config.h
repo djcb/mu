@@ -53,7 +53,7 @@ enum _MuConfigFormat {
 	/* for find */
 	MU_CONFIG_FORMAT_LINKS,		/* output as symlinks */
 	MU_CONFIG_FORMAT_XML,		/* output xml */
-	MU_CONFIG_FORMAT_XQUERY,	/* output the xapian query */
+	MU_CONFIG_FORMAT_XQUERY		/* output the xapian query */
 };
 typedef enum _MuConfigFormat MuConfigFormat;
 
@@ -72,7 +72,7 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_REMOVE,
 	MU_CONFIG_CMD_SERVER,
 
-	MU_CONFIG_CMD_NONE,
+	MU_CONFIG_CMD_NONE
 };
 typedef enum _MuConfigCmd MuConfigCmd;
 

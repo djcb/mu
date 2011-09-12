@@ -29,7 +29,7 @@
  * path data structure, to determine the thread paths mentioned above;
  * the path is filled as we're traversing the tree of MuContainers
  * (messages)
- */ 
+ */
 struct _Path {
 	int *_data;
 	guint _len;
@@ -47,14 +47,14 @@ mu_container_new (MuMsg *msg, guint docid, const char *msgid)
 	MuContainer *c;
 
 	g_return_val_if_fail (!msg || docid != 0, NULL);
-	
+
 	c = g_slice_new0 (MuContainer);
 	if (msg)
 		c->msg = mu_msg_ref (msg);
-	
+
 	c->docid = docid;
 	c->msgid = msgid;
-	
+
 	return c;
 }
 
@@ -82,7 +82,7 @@ set_parent (MuContainer *c, MuContainer *parent)
 
 static MuContainer*
 find_last (MuContainer *c)
-{	
+{
 	while (c && c->next)
 		c = c->next;
 
@@ -111,11 +111,11 @@ assert_no_duplicates (MuContainer *c)
 	GHashTable *hash;
 
 	hash = g_hash_table_new (g_direct_hash, g_direct_equal);
-	
+
 	mu_container_foreach (c,
 			   (MuContainerForeachFunc)check_dup,
 			   hash);
-			
+
 	g_hash_table_destroy (hash);
 }
 #endif
@@ -125,18 +125,18 @@ MuContainer*
 mu_container_append_siblings (MuContainer *c, MuContainer *sibling)
 {
 	g_assert (c);
-	
+
 	g_return_val_if_fail (c, NULL);
 	g_return_val_if_fail (sibling, NULL);
 	g_return_val_if_fail (c != sibling, NULL);
 
 	/* assert_no_duplicates (c); */
-	
+
 	set_parent (sibling, c->parent);
 	(find_last(c))->next = sibling;
 
 	/* assert_no_duplicates (c); */
-	
+
 	return c;
 }
 
@@ -144,25 +144,25 @@ MuContainer*
 mu_container_remove_sibling (MuContainer *c, MuContainer *sibling)
 {
 	MuContainer *cur, *prev;
-	
+
 	g_return_val_if_fail (c, NULL);
 	g_return_val_if_fail (sibling, NULL);
-			
+
 	for (prev = NULL, cur = c; cur; cur = cur->next) {
-		
+
 		if (cur == sibling) {
 			if (!prev)
 				c = cur->next;
-			else 
+			else
 				prev->next = cur->next;
 			break;
 		}
-		prev = cur;			
+		prev = cur;
 	}
 
 	return c;
 }
-	
+
 MuContainer*
 mu_container_append_children (MuContainer *c, MuContainer *child)
 {
@@ -171,7 +171,7 @@ mu_container_append_children (MuContainer *c, MuContainer *child)
 	g_return_val_if_fail (c != child, NULL);
 
 	/* assert_no_duplicates (c); */
-	
+
 	set_parent (child, c);
 	if (!c->child)
 		c->child = child;
@@ -179,7 +179,7 @@ mu_container_append_children (MuContainer *c, MuContainer *child)
 		c->child = mu_container_append_siblings (c->child, child);
 
 	/* assert_no_duplicates (c->child); */
-	
+
 	return c;
 }
 
@@ -210,7 +210,7 @@ mu_container_path_foreach_real (MuContainer *c, guint level, Path *path,
 
 	path_inc (path, level);
 	func (c, user_data, path);
-	
+
 	/* children */
 	mu_container_path_foreach_real (c->child, level + 1, path, func, user_data);
 
@@ -223,9 +223,9 @@ mu_container_path_foreach (MuContainer *c, MuContainerPathForeachFunc func,
 			gpointer user_data)
 {
 	Path *path;
-		
+
 	path = path_new (100);
-	
+
 	mu_container_path_foreach_real (c, 0, path, func, user_data);
 
 	path_destroy (path);
@@ -237,17 +237,17 @@ mu_container_foreach (MuContainer *c, MuContainerForeachFunc func,
 		      gpointer user_data)
 {
 	g_return_val_if_fail (func, FALSE);
-	
+
 	if (!c)
 		return TRUE;
-	
+
 	if (!mu_container_foreach (c->child, func, user_data))
 		return FALSE; /* recurse into children */
-	
-	/* recurse into siblings */		
+
+	/* recurse into siblings */
 	if (!mu_container_foreach (c->next, func, user_data))
 		return FALSE;
-	
+
 	return func (c, user_data);
 }
 
@@ -275,9 +275,9 @@ mu_container_to_list (MuContainer *c)
 {
 	GSList *lst;
 
-	for (lst = NULL; c; c = c->next) 
+	for (lst = NULL; c; c = c->next)
 		lst = g_slist_prepend (lst, c);
-	
+
 	return lst;
 }
 
@@ -294,7 +294,7 @@ mu_container_from_list (GSList *lst)
 		cur->next = lst ? (MuContainer*)lst->data : NULL;
 		cur=cur->next;
 	}
-	
+
 	return c;
 }
 
@@ -312,7 +312,7 @@ sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
 	MuContainer *a1, *b1;
 
 	/* use the first non-empty 'left child' message if this one
-	 * is */ 
+	 * is */
 	for (a1 = a; a1->msg == NULL && a1->child != NULL; a1 = a1->child);
 	for (b1 = b; b1->msg == NULL && b1->child != NULL; b1 = b1->child);
 
@@ -322,11 +322,11 @@ sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
 		return 1;
 	else if (!b1->msg)
 		return -1;
-	
+
 	if (data->invert)
 		return mu_msg_cmp (b1->msg, a1->msg, data->mfid);
 	else
-		return mu_msg_cmp (a1->msg, b1->msg, data->mfid);	
+		return mu_msg_cmp (a1->msg, b1->msg, data->mfid);
 }
 
 static MuContainer*
@@ -334,22 +334,22 @@ mu_container_sort_real (MuContainer *c, SortFuncData *sfdata)
 {
 	GSList *lst;
 	MuContainer *cur;
-			
+
 	if (!c)
 		return NULL;
 
-	for (cur = c; cur; cur = cur->next) 
+	for (cur = c; cur; cur = cur->next)
 		if (cur->child)
 			cur->child = mu_container_sort_real (cur->child, sfdata);
-		
+
 	/* sort siblings */
 	lst = mu_container_to_list (c);
 	lst = g_slist_sort_with_data(lst,
 				     (GCompareDataFunc)sort_func_wrapper,
-				     sfdata); 
+				     sfdata);
 	c = mu_container_from_list (lst);
 	g_slist_free (lst);
-	
+
 	return c;
 }
 
@@ -358,14 +358,18 @@ MuContainer*
 mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gpointer user_data,
 		   gboolean invert)
 {
-		
-	SortFuncData sfdata = { mfid, invert, user_data };
+
+	SortFuncData sfdata;
+
+	sfdata.mfid	 = mfid;
+	sfdata.invert	 = invert;
+	sfdata.user_data = user_data;
 
 	g_return_val_if_fail (c, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
-		
+
 	return mu_container_sort_real (c, &sfdata);
-}	
+}
 
 
 static gboolean
@@ -384,7 +388,7 @@ mu_container_reachable (MuContainer *haystack, MuContainer *needle)
 	if (!mu_container_foreach
 	    (haystack, (MuContainerForeachFunc)unequal, needle))
 		return TRUE;
-	
+
 	return FALSE;
 }
 
@@ -393,14 +397,14 @@ static gboolean
 dump_container (MuContainer *c)
 {
 	const gchar* subject;
-	
+
 	if (!c) {
 		g_print ("<empty>\n");
 		return TRUE;
 	}
-	
+
 	subject =  (c->msg) ? mu_msg_get_subject (c->msg) : "<none>";
-	
+
 	g_print ("[%s][%s m:%p p:%p docid:%u %s]\n",c->msgid, subject, (void*)c,
 		 (void*)c->parent, c->docid,
 		 c->msg ? mu_msg_get_path (c->msg) : "");
@@ -429,10 +433,10 @@ path_new (guint initial)
 	Path *p;
 
 	p = g_slice_new0 (Path);
-	
+
 	p->_data = g_new0 (int, initial);
 	p->_len  = initial;
-	
+
 	return p;
 }
 
@@ -441,7 +445,7 @@ path_destroy (Path *p)
 {
 	if (!p)
 		return;
-	
+
 	g_free (p->_data);
 	g_slice_free (Path, p);
 }
@@ -454,7 +458,7 @@ path_inc (Path *p, guint index)
 		memset (&p->_data[p->_len], 0, p->_len);
 		p->_len *= 2;
 	}
-	
+
 	++p->_data[index];
 	p->_data[index + 1] = 0;
 }
@@ -468,13 +472,13 @@ path_to_string (Path *p, const char* frmt)
 
 	if (!p->_data)
 		return NULL;
-	
+
 	for (u = 0, str = NULL; p->_data[u] != 0; ++u) {
 
 		char segm[16];
 		snprintf (segm, sizeof(segm), frmt, p->_data[u] - 1);
-		
-		if (!str) 
+
+		if (!str)
 			str = g_strdup (segm);
 		else {
 			gchar *tmp;
@@ -483,7 +487,7 @@ path_to_string (Path *p, const char* frmt)
 			str = tmp;
 		}
 	}
-	
+
 	return str;
 }
 
@@ -493,7 +497,7 @@ thread_info_new (gchar *threadpath, gboolean root, gboolean child,
 		 gboolean empty_parent, gboolean is_dup)
 {
 	MuMsgIterThreadInfo *ti;
-	
+
 	ti		     = g_slice_new (MuMsgIterThreadInfo);
 	ti->threadpath	     = threadpath;
 
@@ -502,7 +506,7 @@ thread_info_new (gchar *threadpath, gboolean root, gboolean child,
 	ti->prop |= child        ? MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  : 0;
 	ti->prop |= empty_parent ? MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT : 0;
 	ti->prop |= is_dup       ? MU_MSG_ITER_THREAD_PROP_DUP : 0;
-	
+
 	return ti;
 }
 
@@ -528,14 +532,14 @@ add_to_thread_info_hash (GHashTable *thread_info_hash, MuContainer *c,
 			 char *threadpath)
 {
 	gboolean is_root, first_child, empty_parent, is_dup;
-	
+
 	/* 'root' means we're a child of the dummy root-container */
 	is_root = (c->parent == NULL);
-	
+
 	first_child  = is_root ? FALSE : (c->parent->child == c);
-	empty_parent = is_root ? FALSE : (!c->parent->msg); 
+	empty_parent = is_root ? FALSE : (!c->parent->msg);
 	is_dup	     = c->flags &	MU_CONTAINER_FLAG_DUP;
-	
+
 	g_hash_table_insert (thread_info_hash,
 			     GUINT_TO_POINTER(c->docid),
 			     thread_info_new (threadpath,
@@ -552,21 +556,21 @@ thread_segment_format_string (size_t matchnum)
 {
 	unsigned digitnum;
 	static char frmt[16];
-	
+
 	/* get the number of digits needed in a hex-representation of
 	 * matchnum */
 	digitnum = (unsigned) (ceil (log(matchnum)/log(16)));
 	snprintf (frmt, sizeof(frmt),"%%0%ux", digitnum);
-	
+
 	return frmt;
 }
 
 static gboolean
 add_thread_info (MuContainer *c, ThreadInfo *ti, Path *path)
-{	
+{
 	gchar *pathstr;
 
-	pathstr = path_to_string (path, ti->format);	
+	pathstr = path_to_string (path, ti->format);
 	add_to_thread_info_hash (ti->hash, c, pathstr);
 
 	return TRUE;
@@ -580,14 +584,14 @@ mu_container_thread_info_hash_new (MuContainer *root_set, size_t matchnum)
 
 	g_return_val_if_fail (root_set, NULL);
 	g_return_val_if_fail (matchnum > 0, NULL);
-	
+
 	/* create hash docid => thread-info */
 	ti.hash = g_hash_table_new_full (g_direct_hash, g_direct_equal,
 					 NULL,
 					 (GDestroyNotify)thread_info_destroy);
 
 	ti.format     = thread_segment_format_string (matchnum);
-	
+
 	mu_container_path_foreach (root_set,
 				(MuContainerPathForeachFunc)add_thread_info,
 				&ti);
