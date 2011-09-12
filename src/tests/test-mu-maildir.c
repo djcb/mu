@@ -1,4 +1,4 @@
-/* 
+/*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -13,8 +13,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #ifdef HAVE_CONFIG_H
@@ -37,17 +37,17 @@ test_mu_maildir_mkmdir_01 (void)
 	int i;
 	gchar *tmpdir, *mdir, *tmp;
 	const gchar *subs[] = {"tmp", "cur", "new"};
-	
+
 	tmpdir = test_mu_common_get_random_tmpdir ();
 	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
 				  "cuux");
-	
+
 	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, FALSE, NULL),
 			  ==, TRUE);
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
-		
+
 		dir = g_strdup_printf ("%s%c%s", mdir, G_DIR_SEPARATOR,
 				       subs[i]);
 		g_assert_cmpuint (g_access (dir, R_OK), ==, 0);
@@ -57,11 +57,11 @@ test_mu_maildir_mkmdir_01 (void)
 
 	tmp = g_strdup_printf ("%s%c%s", mdir, G_DIR_SEPARATOR, ".noindex");
 	g_assert_cmpuint (g_access (tmp, F_OK), !=, 0);
-	
+
 	g_free (tmp);
 	g_free (tmpdir);
 	g_free (mdir);
-	
+
 }
 
 
@@ -71,17 +71,17 @@ test_mu_maildir_mkmdir_02 (void)
 	int i;
 	gchar *tmpdir, *mdir, *tmp;
 	const gchar *subs[] = {"tmp", "cur", "new"};
-	
+
 	tmpdir = test_mu_common_get_random_tmpdir ();
 	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
 				  "cuux");
-	
+
 	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, TRUE, NULL),
 			  ==, TRUE);
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
-		
+
 		dir = g_strdup_printf ("%s%c%s", mdir, G_DIR_SEPARATOR,
 				       subs[i]);
 		g_assert_cmpuint (g_access (dir, R_OK), ==, 0);
@@ -89,13 +89,13 @@ test_mu_maildir_mkmdir_02 (void)
 		g_assert_cmpuint (g_access (dir, W_OK), ==, 0);
 		g_free (dir);
 	}
-	
+
 	tmp = g_strdup_printf ("%s%c%s", mdir, G_DIR_SEPARATOR, ".noindex");
 	g_assert_cmpuint (g_access (tmp, F_OK), ==, 0);
-	
+
 	g_free (tmp);
 	g_free (tmpdir);
-	g_free (mdir);	
+	g_free (mdir);
 }
 
 
@@ -109,25 +109,25 @@ ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg
 
 static void
 test_mu_maildir_mkmdir_03 (void)
-{	
+{
 	/* this must fail */
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
 
 	g_assert_cmpuint (mu_maildir_mkdir (NULL, 0755, TRUE, NULL),
 					    ==, FALSE);
 }
-		
+
 
 static gchar*
 copy_test_data (void)
 {
 	gchar *dir, *cmd;
-	
+
 	dir = test_mu_common_get_random_tmpdir();
 	cmd = g_strdup_printf ("mkdir %s", dir);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
-	
+
 	cmd = g_strdup_printf ("cp -R %s %s", MU_TESTMAILDIR, dir);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
@@ -136,7 +136,7 @@ copy_test_data (void)
 	cmd = g_strdup_printf ("chmod -R 700 %s", dir);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
-	
+
 	return dir;
 }
 
@@ -150,7 +150,7 @@ typedef struct {
 static MuError
 dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 {
-	if (enter) 
+	if (enter)
 	 	++data->_dir_entered;
 	else
 		++data->_dir_left;
@@ -177,19 +177,19 @@ test_mu_maildir_walk_01 (void)
 	char *tmpdir;
 	WalkData data;
 	MuError rv;
-	
+
 	tmpdir = copy_test_data ();
 	memset (&data, 0, sizeof(WalkData));
 
 	/* g_print ("tmpdir: %s\n", tmpdir); */
-	
+
 	rv = mu_maildir_walk (tmpdir,
-			      (MuMaildirWalkMsgCallback)msg_cb, 
+			      (MuMaildirWalkMsgCallback)msg_cb,
 			      (MuMaildirWalkDirCallback)dir_cb,
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 13); 
+	g_assert_cmpuint (data._file_count, ==, 13);
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
 
@@ -203,19 +203,19 @@ test_mu_maildir_walk_02 (void)
 	char *tmpdir, *cmd;
 	WalkData data;
 	MuError rv;
-	
+
 	tmpdir = copy_test_data ();
 	memset (&data, 0, sizeof(WalkData));
-	
-	/* mark the 'new' dir with '.noindex', to ignore it */ 
+
+	/* mark the 'new' dir with '.noindex', to ignore it */
 	cmd = g_strdup_printf ("touch %s%ctestdir%cnew%c.noindex", tmpdir,
 			       G_DIR_SEPARATOR, G_DIR_SEPARATOR,
 			       G_DIR_SEPARATOR);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
-		
+
 	rv = mu_maildir_walk (tmpdir,
-			      (MuMaildirWalkMsgCallback)msg_cb, 
+			      (MuMaildirWalkMsgCallback)msg_cb,
 			      (MuMaildirWalkDirCallback)dir_cb,
 			      &data);
 
@@ -262,7 +262,7 @@ test_mu_maildir_get_flags_from_path (void)
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		MuFlags flags;	
+		MuFlags flags;
 		flags = mu_maildir_get_flags_from_path(paths[i].path);
 		g_assert_cmpuint(flags, ==, paths[i].flags);
 	}
@@ -293,7 +293,7 @@ test_mu_maildir_get_new_path_01 (void)
 		}, {
 			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
 			MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED,
-			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"	
+			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"
 		}, {
 			"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
 			MU_FLAG_SEEN,
@@ -354,6 +354,31 @@ test_mu_maildir_get_new_path_02 (void)
 }
 
 
+
+static void
+test_mu_maildir_get_maildir_from_path (void)
+{
+	unsigned u;
+
+	struct {
+		const char *path, *exp;
+	} cases[] = {
+		{"/home/foo/Maildir/test/cur/123456:2,FR",
+		 "/home/foo/Maildir/test"},
+		{"/home/foo/Maildir/lala/new/1313038887_0.697:2,",
+		 "/home/foo/Maildir/lala"}
+	};
+
+
+	for (u = 0; u != G_N_ELEMENTS(cases); ++u) {
+		gchar *mdir;
+		mdir = mu_maildir_get_maildir_from_path (cases[u].path);
+		g_assert_cmpstr(mdir,==,cases[u].exp);
+		g_free (mdir);
+	}
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -380,10 +405,14 @@ main (int argc, char *argv[])
 			test_mu_maildir_get_new_path_02);
 	g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
 			test_mu_maildir_get_flags_from_path);
-	
+
+
+	g_test_add_func("/mu-maildir/mu-maildir-get-maildir-from-path",
+			test_mu_maildir_get_maildir_from_path);
+
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
-	
+
 	return g_test_run ();
 }

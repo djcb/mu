@@ -1,4 +1,4 @@
-/* 
+/*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -13,8 +13,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #ifndef __MU_MAILDIR_H__
@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <time.h>
 #include <sys/types.h>          /* for mode_t */
-#include <mu-util.h> 
+#include <mu-util.h>
 #include <mu-flags.h>
 
 
@@ -33,15 +33,15 @@ G_BEGIN_DECLS
  * create a new maildir. Note, if the function fails 'halfway', it
  * will *not* try to remove the parts the were created. it *will*
  * create any parent dirs that are not yet existant.
- * 
- * 
+ *
+ *
  * @param path the path (missing components will be created, as in 'mkdir -p')
  * @param mode the file mode (e.g., 0755)
  * @param noindex add a .noindex file to the maildir, so it will be excluded
  * from indexing by 'mu index'
  * @param err if function returns FALSE, err may contain extra
  * information. if err is NULL, does nothing
- * 
+ *
  * @return TRUE if creation succeeded, FALSE otherwise
  */
 gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex,
@@ -50,15 +50,15 @@ gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex,
 
 /**
  * create a symbolic link to a mail message
- * 
+ *
  * @param src the full path to the source message
  * @param targetpath the path to the target maildir; ie., *not*
  * MyMaildir/cur, but just MyMaildir/. The function will figure out
- * the correct subdir then. 
+ * the correct subdir then.
  * @param err if function returns FALSE, err may contain extra
  * information. if err is NULL, does nothing
- * 
- * @return 
+ *
+ * @return
  */
 gboolean mu_maildir_link   (const char* src, const char *targetpath, GError **err);
 
@@ -77,7 +77,7 @@ typedef MuError (*MuMaildirWalkMsgCallback)
 /**
  * MuPathWalkDirCallback -- callback function for mu_path_walk_maildir; see the
  * documentation there. It will be called each time a dir is entered or left,
- * with 'enter' being TRUE upon entering, FALSE otherwise 
+ * with 'enter' being TRUE upon entering, FALSE otherwise
  */
 typedef MuError (*MuMaildirWalkDirCallback)
      (const char* fullpath, gboolean enter, void *user_data);
@@ -96,25 +96,25 @@ typedef MuError (*MuMaildirWalkDirCallback)
  * mu_walk_maildir stops if the callbacks return something different
  * from MU_OK. For example, it can return MU_STOP to stop the scan, or
  * some error.
- * 
+ *
  * @param path the maildir path to scan
  * @param cb_msg the callback function called for each msg
  * @param cb_dir the callback function called for each dir
  * @param data user data pointer
- * 
- * @return a scanner result; MU_OK if everything went ok, 
+ *
+ * @return a scanner result; MU_OK if everything went ok,
  * MU_STOP if we want to stop, or MU_ERROR in
  * case of error
  */
-MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg, 
+MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 			 MuMaildirWalkDirCallback cb_dir, void *data);
 /**
  * recursively delete all the symbolic links in a directory tree
- * 
+ *
  * @param dir top dir
  * @param err if function returns FALSE, err may contain extra
  * information. if err is NULL, does nothing
- * 
+ *
  * @return TRUE if it worked, FALSE in case of error
  */
 gboolean mu_maildir_clear_links (const gchar* dir, GError **err);
@@ -129,7 +129,7 @@ gboolean mu_maildir_clear_links (const gchar* dir, GError **err);
  *
  * @param pathname of a mailfile; it does not have to refer to an
  * actual message
- * 
+ *
  * @return the flags, or MU_MSG_FILE_FLAG_UNKNOWN in case of error
  */
 MuFlags mu_maildir_get_flags_from_path (const char* pathname);
@@ -144,19 +144,30 @@ MuFlags mu_maildir_get_flags_from_path (const char* pathname);
  * OR'ed. Note that the file does not have to exist; the flags are
  * based on the path only.
  *
- * 
+ *
  * @param oldpath the old (current) full path to the message
  * (including the filename)
  * @param new_mdir the new maildir for this message, or NULL to keep
  * it in the current one. The maildir is the absolute file system
  * path, without the 'cur' or 'new'
  * @param new_flags the new flags for this message
- * 
+ *
  * @return a new path name; use g_free when done with. NULL in case of
  * error.
  */
 char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 			       MuFlags new_flags);
+
+/**
+ * get the maildir for a certain message path, ie, the path *before*
+ * cur/ or new/
+ *
+ * @param path path for some message
+ *
+ * @return the maildir (free with g_free), or NULL in case of error
+ */
+char* mu_maildir_get_maildir_from_path (const char* path);
+
 
 /**
  * move a message file to another maildir; the function returns the full
@@ -175,7 +186,7 @@ char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
  * @param err (may be NULL) may contain error information; note if the
  * function return FALSE, err is not set for all error condition
  * (ie. not for parameter errors)
- * 
+ *
  * @return return the full path name of the target file (g_free) if
  * the move succeeded, NULL otherwise
  */
