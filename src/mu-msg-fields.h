@@ -45,15 +45,15 @@ enum _MuMsgFieldId {
 	/* string list items... */
 	MU_MSG_FIELD_ID_REFS,
 	MU_MSG_FIELD_ID_TAGS,
-	
+
 	/* then the numerical ones */
 	MU_MSG_FIELD_ID_DATE,
 	MU_MSG_FIELD_ID_FLAGS,
 	MU_MSG_FIELD_ID_PRIO,
 	MU_MSG_FIELD_ID_SIZE,
 	MU_MSG_FIELD_ID_TIMESTAMP,
-	
-	MU_MSG_FIELD_ID_NUM,
+
+	MU_MSG_FIELD_ID_NUM
 };
 typedef guint8 MuMsgFieldId;
 
@@ -68,8 +68,8 @@ static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
 enum _MuMsgFieldType {
 	MU_MSG_FIELD_TYPE_STRING,
 	MU_MSG_FIELD_TYPE_STRING_LIST,
-	
-	MU_MSG_FIELD_TYPE_BYTESIZE, 
+
+	MU_MSG_FIELD_TYPE_BYTESIZE,
 	MU_MSG_FIELD_TYPE_TIME_T,
 	MU_MSG_FIELD_TYPE_INT,
 
@@ -83,7 +83,7 @@ typedef void (*MuMsgFieldForEachFunc) (MuMsgFieldId id,
 
 /**
  * iterator over all possible message fields
- * 
+ *
  * @param func a function called for each field
  * @param data a user data pointer passed the callback function
  */
@@ -93,9 +93,9 @@ void mu_msg_field_foreach (MuMsgFieldForEachFunc func, gconstpointer data);
 /**
  * get the name of the field -- this a name that can be use in queries,
  * ie. 'subject:foo', with 'subject' being the name
- * 
+ *
  * @param id a MuMsgFieldId
- *  
+ *
  * @return the name of the field as a constant string, or
  * NULL if the field is unknown
  */
@@ -104,9 +104,9 @@ const char*  mu_msg_field_name (MuMsgFieldId id) G_GNUC_PURE;
 /**
  * get the shortcut of the field -- this a shortcut that can be use in
  * queries, ie. 's:foo', with 's' meaning 'subject' being the name
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return the shortcut character, or 0 if the field is unknown
  */
 char mu_msg_field_shortcut (MuMsgFieldId id) G_GNUC_PURE;
@@ -114,9 +114,9 @@ char mu_msg_field_shortcut (MuMsgFieldId id) G_GNUC_PURE;
 /**
  * get the xapian prefix of the field -- that is, the prefix used in
  * the Xapian database to identify the field
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return the xapian prefix char or 0 if the field is unknown
  */
 char  mu_msg_field_xapian_prefix (MuMsgFieldId id) G_GNUC_PURE;
@@ -124,9 +124,9 @@ char  mu_msg_field_xapian_prefix (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * get the type of the field (string, size, time etc.)
- * 
+ *
  * @param field a MuMsgField
- * 
+ *
  * @return the type of the field (a #MuMsgFieldType), or
  * MU_MSG_FIELD_TYPE_NONE if it is not found
  */
@@ -135,9 +135,9 @@ MuMsgFieldType mu_msg_field_type (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * is the field a string?
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if the field a string, FALSE otherwise
  */
 #define mu_msg_field_is_string(MFID)\
@@ -147,9 +147,9 @@ MuMsgFieldType mu_msg_field_type (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * is the field a string-list?
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if the field a string-list, FALSE otherwise
  */
 #define mu_msg_field_is_string_list(MFID)\
@@ -157,9 +157,9 @@ MuMsgFieldType mu_msg_field_type (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * is the field numeric (has type MU_MSG_FIELD_TYPE_(BYTESIZE|TIME_T|INT))?
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if the field is numeric, FALSE otherwise
  */
 gboolean mu_msg_field_is_numeric (MuMsgFieldId id) G_GNUC_PURE;
@@ -179,27 +179,27 @@ gboolean mu_msg_field_is_cacheable (MuMsgFieldId id) G_GNUC_PURE;
  * is the field Xapian-indexable? That is, should this field be
  * indexed in the in the Xapian database, so we can use the all the
  * phrasing, stemming etc. magic
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if the field is Xapian-enabled, FALSE otherwise
  */
 gboolean mu_msg_field_xapian_index (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * should this field be stored as a xapian term?
- * 
- * @param id a MuMsgFieldId 
- * 
+ *
+ * @param id a MuMsgFieldId
+ *
  * @return TRUE if the field is Xapian-enabled, FALSE otherwise
  */
 gboolean mu_msg_field_xapian_term (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * should this field be stored as a xapian value?
- * 
+ *
  * @param field a MuMsgField
- * 
+ *
  * @return TRUE if the field is Xapian-enabled, FALSE otherwise
  */
 gboolean mu_msg_field_xapian_value (MuMsgFieldId id) G_GNUC_PURE;
@@ -208,9 +208,9 @@ gboolean mu_msg_field_xapian_value (MuMsgFieldId id) G_GNUC_PURE;
 /**
  * whether we should use add_boolean_prefix (see Xapian documentation)
  * for this field in queries. Used in mu-query.cc
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if this field wants add_boolean_prefix, FALSE
  * otherwise
  */
@@ -223,9 +223,9 @@ gboolean mu_msg_field_uses_boolean_prefix (MuMsgFieldId id) G_GNUC_PURE;
  * 'msgid:<some-message-id>' will only match with the explicit prefix,
  * while 'subject:foo' will also match as just 'foo'. Used in
  * mu-query.cc
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if this field only matches with a prefix, FALSE
  * otherwise
  */
@@ -235,9 +235,9 @@ gboolean mu_msg_field_needs_prefix (MuMsgFieldId id) G_GNUC_PURE;
 /**
  * should this field be escaped for xapian? in practice, should
  * word-breaking chars be replaced with '_'?
- * 
+ *
  * @param field a MuMsgField
- * 
+ *
  * @return TRUE if the field is Xapian-escaped, FALSE otherwise
  */
 gboolean mu_msg_field_xapian_escape (MuMsgFieldId id) G_GNUC_PURE;
@@ -246,9 +246,9 @@ gboolean mu_msg_field_xapian_escape (MuMsgFieldId id) G_GNUC_PURE;
 /**
  * should this field be normalized? ie. should it be downcased and
  * accents removed when storing as Xapian term?
- * 
+ *
  * @param field a MuMsgField
- * 
+ *
  * @return TRUE if the field is normalized, FALSE otherwise
  */
 gboolean mu_msg_field_normalize (MuMsgFieldId id) G_GNUC_PURE;
@@ -257,9 +257,9 @@ gboolean mu_msg_field_normalize (MuMsgFieldId id) G_GNUC_PURE;
 /**
  * should this field be stored as contact information? This means that
  * e-mail address will be stored as terms, and names will be indexed
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if the field should be stored as contact information,
  * FALSE otherwise
  */
@@ -268,9 +268,9 @@ gboolean mu_msg_field_xapian_contact (MuMsgFieldId id) G_GNUC_PURE;
 /**
  * is the field gmime-enabled? That is, can be field be retrieved
  * using GMime?
- * 
+ *
  * @param id a MuMsgFieldId
- * 
+ *
  * @return TRUE if the field is Gmime-enabled, FALSE otherwise
  */
 gboolean mu_msg_field_gmime (MuMsgFieldId id) G_GNUC_PURE;
@@ -278,11 +278,11 @@ gboolean mu_msg_field_gmime (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * get the corresponding MuMsgField for a name (as in mu_msg_field_name)
- * 
+ *
  * @param str a name
  * @param err, if TRUE, when the shortcut is not found, will issue a
  * g_critical warning
- * 
+ *
  * @return a MuMsgField, or NULL if it could not be found
  */
 MuMsgFieldId mu_msg_field_id_from_name (const char* str,
@@ -291,11 +291,11 @@ MuMsgFieldId mu_msg_field_id_from_name (const char* str,
 
 /**
  * get the corresponding MuMsgField for a shortcut (as in mu_msg_field_shortcut)
- * 
+ *
  * @param kar a shortcut character
  * @param err, if TRUE, when the shortcut is not found, will issue a
  * g_critical warning
- * 
+ *
  * @return a MuMsgField, or NULL if it could not be found
  */
 MuMsgFieldId  mu_msg_field_id_from_shortcut (char kar,
