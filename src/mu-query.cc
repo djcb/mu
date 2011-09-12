@@ -263,7 +263,7 @@ mu_query_new (MuStore *store, GError **err)
 		return new MuQuery (store);
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err,
-						MU_ERROR_XAPIAN, NULL);
+						MU_ERROR_XAPIAN, 0);
 	return 0;
 }
 
@@ -325,8 +325,10 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			self->db().get_doccount(), threads,
 			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE);
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }
+
+
 
 char*
 mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err)
