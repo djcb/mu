@@ -141,7 +141,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 		goto errexit;
 
 	/* we got a valid id; scan the message contents as well */
-	if (G_UNLIKELY((!mu_store_add_msg (data->_store, msg, TRUE, &err))))
+	if (G_UNLIKELY((!mu_store_add_msg (data->_store, msg, &err))))
 		goto errexit;
 
 	mu_msg_unref (msg);
@@ -435,7 +435,6 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 	CleanupData cudata;
 
 	g_return_val_if_fail (index, MU_ERROR);
-	g_return_val_if_fail (cb, MU_ERROR);
 
 	cudata._store	  = index->_store;
 	cudata._stats	  = stats;
