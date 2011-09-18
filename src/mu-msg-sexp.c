@@ -263,12 +263,12 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 
 char*
 mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
-		gboolean headers)
+		gboolean header)
 {
 	GString *gstr;
 	time_t t;
 
-	gstr = g_string_sized_new (headers ? 1024 : 8192);
+	gstr = g_string_sized_new (header ? 1024 : 8192);
 	g_string_append (gstr, "(\n");
 
 	if (docid != 0)
@@ -279,8 +279,7 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	if (ti)
 		append_sexp_thread_info (gstr, ti);
 
-	append_sexp_attr (gstr,
-			  "subject", mu_msg_get_subject (msg));
+	append_sexp_attr (gstr, "subject", mu_msg_get_subject (msg));
 
 	t = mu_msg_get_date (msg);
 	/* weird time format for emacs 29-bit ints...*/
@@ -302,14 +301,8 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	 *
 	 * file attr things can only be gotten from the file (ie., mu
 	 * view), not from the database (mu find).  */
-	if (!headers)
+	if (!header)
 		append_sexp_message_file_attr (gstr, msg);
-
-	/* we register whether this a db-only msg or not; this is
-	 * useful in the UI to know whether this should be considered
-	 * merely a header or a full message */
-	g_string_append_printf (gstr, "\t:msgtype %s\n",
-				headers ? "header" : "view");
 
 	g_string_append (gstr, ")\n");
 

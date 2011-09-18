@@ -286,8 +286,8 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 
 	if (u == 0)
 		return server_error (NULL, MU_ERROR_NO_MATCHES, "No matches");
-	else
-		return MU_OK;
+
+	return MU_OK;
 }
 
 static MuError
@@ -379,8 +379,7 @@ move_or_flag (MuStore *store, GSList *lst, gboolean is_move, GError **err)
 	GSList *flagitem;
 	const char *mdir;
 
-	docid = get_docid ((const char*)lst->data);
-	if (docid == 0)
+	if ((docid = get_docid ((const char*)lst->data)) == 0)
 		return server_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid");
 
@@ -396,7 +395,6 @@ move_or_flag (MuStore *store, GSList *lst, gboolean is_move, GError **err)
 		flagitem = g_slist_nth (lst, 1);
 	}
 
-
 	flags = get_flags (mu_msg_get_path(msg),
 			   flagitem ? (const gchar*)flagitem->data : NULL);
 	if (flags == MU_FLAG_INVALID) {
@@ -406,7 +404,6 @@ move_or_flag (MuStore *store, GSList *lst, gboolean is_move, GError **err)
 	}
 
 	merr = do_move (store, docid, msg, mdir, flags, is_move, err);
-
 	mu_msg_unref (msg);
 
 	return merr;
@@ -420,6 +417,8 @@ cmd_move (MuStore *store, GSList *lst, GError **err)
 		return server_error
 			(NULL, MU_ERROR_IN_PARAMETERS,
 			 "usage: flag <docid> <maildir> [<flags>]");
+
+
 
 	return move_or_flag (store, lst, TRUE, err);
 
@@ -580,12 +579,12 @@ cmd_index (MuStore *store, GSList *lst, GError **err)
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: index <maildir>");
 
-	maildir = (const char*)lst->data;
 	index = mu_index_new (store, err);
 	if (!index)
 		return server_error (err, MU_ERROR, "failed to create index");
 
 	mu_index_stats_clear (&stats);
+	maildir = (const char*)lst->data;
 	rv = mu_index_run (index, maildir, FALSE, &stats, index_msg_cb, NULL, NULL);
 
 	if (rv != MU_OK && rv != MU_STOP) {
@@ -595,10 +594,9 @@ cmd_index (MuStore *store, GSList *lst, GError **err)
 
 	mu_index_stats_clear (&stats2);
 	rv = mu_index_cleanup (index, &stats2, NULL, NULL, err);
-	if (rv != MU_OK && rv != MU_STOP) {
-		mu_index_destroy (index);
+	mu_index_destroy (index);
+	if (rv != MU_OK && rv != MU_STOP)
 		return server_error (err, rv, "cleanup failed");
-	}
 
 	info = g_strdup_printf ("(:info index :status complete "
 				":processed %u :updated %u :cleaned-up %u)",
