@@ -39,27 +39,32 @@
 #include "mu-flags.h"
 #include "mu-contacts.h"
 
-/* get a unique id for this message; note, this function returns a
- * static buffer -- not reentrant */
+
+// note: not re-entrant
 const char*
-_MuStore::get_message_uid (const char* path) {
-	char pfx = 0;
-	static char buf[PATH_MAX + 10];
-	if (G_UNLIKELY(!pfx)) {
-		pfx = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_PATH);
-			buf[0]=pfx;
+_MuStore::get_uid_term (const char* path)
+{
+	// combination of DJB, BKDR hash functions to get a 64 bit
+	// value
+
+	unsigned djbhash, bkdrhash, bkdrseed;
+	unsigned u;
+	static char hex[18];
+
+	djbhash  = 5381;
+	bkdrhash = 0;
+	bkdrseed = 1313;
+
+
+	for(u = 0; path[u]; ++u) {
+		djbhash  = ((djbhash << 5) + djbhash) + path[u];
+		bkdrhash = bkdrhash * bkdrseed + path[u];
 	}
-	std::strcpy (buf + 1, path);
-	return buf;
-}
 
-/* get a unique id for this message; note, this function returns a
- * static buffer -- not reentrant */
-const char*
-_MuStore::get_message_uid (MuMsg *msg) {
-	return get_message_uid (mu_msg_get_path(msg));
-}
+	sprintf (hex, MU_STORE_UID_PREFIX "%08x%08x", djbhash, bkdrhash);
 
+	return hex;
+}
 
 
 MuStore*
@@ -155,11 +160,35 @@ mu_store_contains_message (MuStore *store, const char* path, GError **err)
 	g_return_val_if_fail (path, FALSE);
 
 	try {
-		const std::string uid (store->get_message_uid(path));
+		const std::string uid (store->get_uid_term (path));
 		return store->db_read_only()->term_exists (uid) ? TRUE: FALSE;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, FALSE);
 
+}
+
+
+unsigned
+mu_store_get_docid_for_path (MuStore *store, const char* path, GError **err)
+{
+	g_return_val_if_fail (store, FALSE);
+	g_return_val_if_fail (path, FALSE);
+
+	try {
+		Xapian::Query query (store->get_uid_term (path)); // uid is a term
+		Xapian::Enquire enq (*store->db_read_only());
+
+		enq.set_query (query);
+
+		Xapian::MSet mset (enq.get_mset (0,1));
+		if (mset.empty())
+			throw MuStoreError (MU_ERROR_NO_MATCHES,
+					    "message not found");
+
+		return *mset.begin();
+
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN,
+					       MU_STORE_INVALID_DOCID);
 }
 
 

@@ -557,41 +557,37 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 }
 
 
+Xapian::Document
+doc_from_message (MuStore *store, MuMsg *msg)
+{
+	Xapian::Document doc;
+	MsgDoc docinfo = {&doc, msg, store};
+
+	mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_terms_values, &docinfo);
+	/* also store the contact-info as separate terms */
+	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact_info,
+				&docinfo);
+	return doc;
+}
+
+
 unsigned
-mu_store_add_msg (MuStore *store, MuMsg *msg, gboolean replace,
-		  GError **err)
+mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
 {
 	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
 	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
 
 	try {
-		Xapian::Document newdoc;
 		Xapian::docid id;
-		MsgDoc msgdoc = { &newdoc, msg, store };
-		const std::string uid(store->get_message_uid(msg));
+		Xapian::Document doc (doc_from_message(store, msg));
+		const std::string uid (store->get_uid_term(mu_msg_get_path(msg)));
 
 		if (!store->in_transaction())
 			store->begin_transaction();
 
-		/* we must add a unique term, so we can replace
-		 * matching documents */
-		newdoc.add_term (uid);
-		mu_msg_field_foreach
-			((MuMsgFieldForEachFunc)add_terms_values, &msgdoc);
-		/* also store the contact-info as separate terms */
-		mu_msg_contact_foreach
-			(msg,
-			 (MuMsgContactForeachFunc)each_contact_info,
-			 &msgdoc);
-
-		/* add_document is slightly
-		   faster, we can use it when
-		 * we know the document does not exist yet, eg., in
-		 * case of a rebuild */
-		if (replace) /* we replace all existing documents for this file */
-			id = store->db_writable()->replace_document (uid, newdoc);
-		else
-			id = store->db_writable()->add_document (newdoc);
+		/* note, this will replace any other messages for this path */
+		doc.add_term (uid);
+		id = store->db_writable()->replace_document (uid, doc);
 
 		if (store->inc_processed() % store->batch_size() == 0)
 			store->commit_transaction();
@@ -608,6 +604,36 @@ mu_store_add_msg (MuStore *store, MuMsg *msg, gboolean replace,
 
 
 unsigned
+mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
+{
+	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
+	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
+	g_return_val_if_fail (docid != 0, MU_STORE_INVALID_DOCID);
+
+	try {
+		Xapian::Document doc (doc_from_message(store, msg));
+
+		if (!store->in_transaction())
+			store->begin_transaction();
+
+		store->db_writable()->replace_document (docid, doc);
+
+		if (store->inc_processed() % store->batch_size() == 0)
+			store->commit_transaction();
+
+		return docid;
+
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
+
+	if (store->in_transaction())
+		store->rollback_transaction();
+
+	return MU_STORE_INVALID_DOCID;
+}
+
+
+
+unsigned
 mu_store_add_path (MuStore *store, const char *path, GError **err)
 {
 	MuMsg *msg;
@@ -621,7 +647,7 @@ mu_store_add_path (MuStore *store, const char *path, GError **err)
 	if (!msg)
 		return MU_STORE_INVALID_DOCID;
 
-	docid = mu_store_add_msg (store, msg, TRUE, err);
+	docid = mu_store_add_msg (store, msg, err);
 	mu_msg_unref (msg);
 
 	return docid;
@@ -644,9 +670,7 @@ mu_store_remove_path (MuStore *store, const char *msgpath)
 	g_return_val_if_fail (msgpath, FALSE);
 
 	try {
-		const std::string uid (store->get_message_uid (msgpath));
-
-		store->db_writable()->delete_document (uid);
+		store->db_writable()->delete_document (store->get_uid_term (msgpath));
 		store->inc_processed();
 
 		return TRUE;

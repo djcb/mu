@@ -150,8 +150,7 @@ public:
 
 	/* get a unique id for this message; note, this function returns a
 	 * static buffer -- not reentrant */
-	const char* get_message_uid (const char* path);
-	const char* get_message_uid (MuMsg *msg);
+	const char *get_uid_term (const char *path);
 
 	MuContacts* contacts() { return _contacts; }
 
@@ -196,7 +195,11 @@ public:
 
 	/* MuStore is ref-counted */
 	guint  ref   () { return ++_ref_count; }
-	guint  unref () { return --_ref_count; }
+	guint  unref () {
+		if (_ref_count < 1)
+			g_critical ("ref count error");
+		return --_ref_count;
+	}
 
 	/* by default, use transactions of 30000 messages */
 	static const unsigned DEFAULT_BATCH_SIZE = 30000;
@@ -220,6 +223,11 @@ private:
 
 	guint _ref_count;
 };
+
+
+/* Xapian DB prefix for the UID value */
+#define MU_STORE_UID_PREFIX "Q"
+
 
 
 #endif /*__MU_STORE_PRIV_HH__*/
