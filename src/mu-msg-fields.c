@@ -30,7 +30,7 @@
  * addresses - searching uses terms, but to display some field, it
  * must be in the value (at least when using MuMsgIter)
  */
-enum _FieldFlags { 
+enum _FieldFlags {
 	FLAG_GMIME	         = 1 << 0, /* field retrieved through
 					    * gmime */
 	FLAG_XAPIAN_INDEX        = 1 << 1, /* field is indexed in
@@ -64,7 +64,7 @@ struct _MuMsgField {
 	const char       *_name;     /* the name of the field */
 	const char        _shortcut; /* the shortcut for use in
 				      * --fields and sorting */
-	const char        _xprefix;  /* the Xapian-prefix  */ 
+	const char        _xprefix;  /* the Xapian-prefix  */
 	FieldFlags        _flags;    /* the flags that tells us
 				      * what to do */
 
@@ -76,7 +76,7 @@ typedef struct _MuMsgField MuMsgField;
  * misinterpreted by the query-preprocesser which turns queries into
  * lowercase */
 static const MuMsgField FIELD_DATA[] = {
-	{  
+	{
 		MU_MSG_FIELD_ID_ATTACH,
 		MU_MSG_FIELD_TYPE_STRING,
 		"attach" , 'a', 'A',
@@ -84,137 +84,138 @@ static const MuMsgField FIELD_DATA[] = {
 		FLAG_DONT_CACHE
 	},
 
-	{  
+	{
 		MU_MSG_FIELD_ID_BCC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"bcc" , 'h', 'H',  /* 'hidden */
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT |
 		FLAG_XAPIAN_VALUE
 	},
-	
-	{  
+
+	{
 		MU_MSG_FIELD_ID_BODY_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"body", 'b', 'B',
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE |
-		FLAG_DONT_CACHE 
+		FLAG_DONT_CACHE
 	},
-	
-	{ 
+
+	{
 		MU_MSG_FIELD_ID_BODY_HTML,
 		MU_MSG_FIELD_TYPE_STRING,
 		"bodyhtml", 'h', 0,
-		FLAG_GMIME | FLAG_DONT_CACHE 
+		FLAG_GMIME | FLAG_DONT_CACHE
 	},
-	
-	{ 
+
+	{
 		MU_MSG_FIELD_ID_CC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"cc", 'c', 'C',
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
-	
-	{ 
-		MU_MSG_FIELD_ID_DATE, 
+
+	{
+		MU_MSG_FIELD_ID_DATE,
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"date", 'd', 'D',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY
 	},
-	
-	{ 
-		MU_MSG_FIELD_ID_FLAGS, 
+
+	{
+		MU_MSG_FIELD_ID_FLAGS,
 		MU_MSG_FIELD_TYPE_INT,
 		"flag", 'g', 'G',  /* flaGs */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY
 	},
 
-	{ 
+	{
 		MU_MSG_FIELD_ID_FROM,
 		MU_MSG_FIELD_TYPE_STRING,
 		"from", 'f', 'F',
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
 
-	{   
-		MU_MSG_FIELD_ID_PATH, 
+	{
+		MU_MSG_FIELD_ID_PATH,
 		MU_MSG_FIELD_TYPE_STRING,
 		"path", 'l', 'L',   /* 'l' for location */
 		FLAG_GMIME | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_BOOLEAN  | FLAG_XAPIAN_PREFIX_ONLY
 	},
 
-	{   
-		MU_MSG_FIELD_ID_MAILDIR, 
+	{
+		MU_MSG_FIELD_ID_MAILDIR,
 		MU_MSG_FIELD_TYPE_STRING,
 		"maildir", 'm', 'M',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE |
 		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY
 	},
-	
-	{ 
+
+	{
 		MU_MSG_FIELD_ID_PRIO,
 		MU_MSG_FIELD_TYPE_INT,
 		"prio", 'p', 'P',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_PREFIX_ONLY 
+		FLAG_XAPIAN_PREFIX_ONLY
 	},
 
-	{ 
+	{
 		MU_MSG_FIELD_ID_SIZE,
 		MU_MSG_FIELD_TYPE_BYTESIZE,
 		"size", 'z', 'Z', /* siZe */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_PREFIX_ONLY
 	},
-	
-	{ 
+
+	{
 		MU_MSG_FIELD_ID_SUBJECT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"subject", 's', 'S',
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE |
 		FLAG_NORMALIZE
 	},
-	
-	{ 
+
+	{
 		MU_MSG_FIELD_ID_TO,
 		MU_MSG_FIELD_TYPE_STRING,
 		"to", 't', 'T',
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
 	},
-	
-	{ 
+
+	{
 		MU_MSG_FIELD_ID_MSGID,
 		MU_MSG_FIELD_TYPE_STRING,
 		"msgid", 'i', 'I',  /* 'i' for Id */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
 	},
-	
-	{ 
+
+	{
 		MU_MSG_FIELD_ID_TIMESTAMP,
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"timestamp", 0, 0,
-		FLAG_GMIME 
+		FLAG_GMIME
 	},
 
-	{ 
+	{
 		MU_MSG_FIELD_ID_REFS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		NULL, 'r', 'R',
 		FLAG_GMIME | FLAG_XAPIAN_VALUE | FLAG_XAPIAN_PREFIX_ONLY
 	},
 
-	{ 
+	{
 		MU_MSG_FIELD_ID_TAGS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		"tag", 'x', 'X',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_PREFIX_ONLY |
-		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE 
+		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE
 	}
-	
+
+	/* note, mu-store also use the 'Q' internal prefix for its uids */
 };
 
 /* the MsgField data in an array, indexed by the MsgFieldId;
@@ -227,7 +228,7 @@ static const MuMsgField* mu_msg_field (MuMsgFieldId id)
 
 	/* initialize the array, but only once... */
 	if (G_UNLIKELY(!_initialized)) {
-		int i; 
+		int i;
 		for (i = 0; i != G_N_ELEMENTS(FIELD_DATA); ++i)
 			_msg_field_data[FIELD_DATA[i]._id] =
 				(MuMsgField*)&FIELD_DATA[i];
@@ -253,7 +254,7 @@ mu_msg_field_id_from_name (const char* str, gboolean err)
 	int i;
 
 	g_return_val_if_fail (str, MU_MSG_FIELD_ID_NONE);
-	
+
 	for (i = 0; i != G_N_ELEMENTS(FIELD_DATA); ++i)
 		if (g_strcmp0(str, FIELD_DATA[i]._name) == 0)
 			return FIELD_DATA[i]._id;
@@ -361,17 +362,17 @@ gboolean
 mu_msg_field_is_numeric (MuMsgFieldId mfid)
 {
 	MuMsgFieldType type;
-	
+
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid),FALSE);
 
 	type = mu_msg_field_type (mfid);
-	
+
 	return  type == MU_MSG_FIELD_TYPE_BYTESIZE ||
 		type == MU_MSG_FIELD_TYPE_TIME_T ||
 		type == MU_MSG_FIELD_TYPE_INT;
 }
 
-const char*    
+const char*
 mu_msg_field_name (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),NULL);
@@ -381,7 +382,7 @@ mu_msg_field_name (MuMsgFieldId id)
 
 char
 mu_msg_field_shortcut (MuMsgFieldId id)
-{	
+{
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),0);
 	return mu_msg_field(id)->_shortcut;
 }
@@ -397,7 +398,7 @@ mu_msg_field_xapian_prefix (MuMsgFieldId id)
 
 
 
-MuMsgFieldType 
+MuMsgFieldType
 mu_msg_field_type (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),
