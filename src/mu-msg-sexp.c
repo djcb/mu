@@ -311,7 +311,7 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	g_string_append_printf (gstr, "\t:msgtype %s\n",
 				headers ? "header" : "view");
 
-	g_string_append (gstr, ")\n;;eox\n");
+	g_string_append (gstr, ")\n");
 
 	return g_string_free (gstr, FALSE);
 }
