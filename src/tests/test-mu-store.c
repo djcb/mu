@@ -105,7 +105,7 @@ test_mu_store_store_msg_and_count (void)
 		MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,",
 		NULL, NULL);
 	g_assert (msg);
-	g_assert_cmpuint (mu_store_add_msg (store, msg, TRUE, NULL), ==, TRUE);
+	g_assert_cmpuint (mu_store_add_msg (store, msg, NULL), ==, TRUE);
 	g_assert_cmpuint (1,==,mu_store_count (store, NULL));
 	g_assert_cmpuint (TRUE,==,mu_store_contains_message
 			  (store,
@@ -116,7 +116,7 @@ test_mu_store_store_msg_and_count (void)
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
 				    "bar/cur/mail3", NULL, NULL);
 	g_assert (msg);
-	g_assert_cmpuint (mu_store_add_msg (store, msg, TRUE, NULL), ==, TRUE);
+	g_assert_cmpuint (mu_store_add_msg (store, msg, NULL), ==, TRUE);
 	g_assert_cmpuint (2,==,mu_store_count (store, NULL));
 	g_assert_cmpuint (TRUE,==,
 			  mu_store_contains_message (store, MU_TESTMAILDIR2
@@ -128,7 +128,7 @@ test_mu_store_store_msg_and_count (void)
 		(MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,",
 		 NULL, NULL);
 	g_assert (msg);
-	g_assert_cmpuint (mu_store_add_msg (store, msg, TRUE, NULL), ==, TRUE);
+	g_assert_cmpuint (mu_store_add_msg (store, msg, NULL), ==, TRUE);
 	g_assert_cmpuint (2,==,mu_store_count (store, NULL));
 
 	mu_msg_unref (msg);
@@ -159,7 +159,7 @@ test_mu_store_store_msg_remove_and_count (void)
 		MU_TESTMAILDIR "cur/1283599333.1840_11.cthulhu!2,",
 		NULL, &err);
 	g_assert (msg);
-	g_assert_cmpuint (mu_store_add_msg (store, msg, TRUE, NULL), ==, TRUE);
+	g_assert_cmpuint (mu_store_add_msg (store, msg, NULL), ==, TRUE);
 	g_assert_cmpuint (1,==,mu_store_count (store, NULL));
 	mu_msg_unref (msg);
 
