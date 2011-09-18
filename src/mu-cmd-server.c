@@ -46,30 +46,46 @@
 #include "mu-str.h"
 #include "mu-cmd.h"
 #include "mu-maildir.h"
+#include "mu-query.h"
+#include "mu-index.h"
 
-#define EOX "\n;;eox\n"
 
+/* we include \376 (0xfe) and \377, (0xff) because it cannot occur as
+ * part of the other output, as 0xfe, 0xff are not valid UTF-8
+ */
+/* #define BOX ";;box\376\n" /\* just before the sexp starts *\/ */
+/* #define EOX ";;eox\377\n"   /\* after the sexp has ended *\/ */
+
+#define BOX "\376"
 
 static void
-print_expr (const char* str)
+send_expr (const char* str)
 {
+	char *hdr;
+
+	hdr = g_strdup_printf (BOX "%u" BOX, strlen(str));
+	fputs (hdr, stdout);
 	fputs (str, stdout);
-	fputs (EOX, stdout);
+	g_free (hdr);
 }
 
 
-static gboolean
-server_error (MuError err, const char* str)
+static MuError
+server_error (GError **err, MuError merr, const char* str)
 {
 	gchar *errexp;
+	gboolean has_err;
 
+	has_err = err && *err;
 	errexp = g_strdup_printf ("(:error %u :error-message \"%s\") ",
-				  err, str);
-	print_expr (errexp);
+				  has_err ? (unsigned)(*err)->code : merr,
+				  has_err ? (*err)->message : str);
+	send_expr (errexp);
 	g_free (errexp);
 
-	return FALSE;
+	return has_err ? (unsigned)(*err)->code : merr;
 }
+
 
 
 #define MU_PROMPT ";; mu> "
@@ -85,7 +101,7 @@ my_readline (const char *prompt)
 
 	gstr = g_string_sized_new (512);
 
-	g_print ("%s", prompt);
+	fputs (prompt, stdout);
 
 	do {
 		kar = fgetc (stdin);
@@ -105,11 +121,14 @@ enum _Cmd {
 	CMD_HELP,
 	CMD_QUIT,
 	CMD_REMOVE,
+	CMD_COMPOSE,
 	CMD_MOVE,
 	CMD_MKDIR,
 	CMD_FLAG,
 	CMD_VIEW,
 	CMD_VERSION,
+	CMD_INDEX,
+
 	CMD_IGNORE
 };
 typedef enum _Cmd Cmd;
@@ -129,8 +148,10 @@ cmd_from_string (const char *str)
 		{ CMD_MOVE,	"move"},
 		{ CMD_MKDIR,	"mkdir"},
 		{ CMD_VIEW,	"view"},
+		{ CMD_COMPOSE,	"compose"},
 		{ CMD_VERSION,	"version"},
-		{ CMD_FLAG,     "flag"}
+		{ CMD_FLAG,     "flag"},
+		{ CMD_INDEX,    "index"}
 	};
 
 	for (u = 0; u != G_N_ELEMENTS(commands); ++u)
@@ -220,58 +241,64 @@ check_param_num (GSList *lst, unsigned min, unsigned max)
 static MuError
 cmd_version (GSList *lst, GError **err)
 {
-	if (lst) {
-		g_set_error (err, 0,MU_ERROR_IN_PARAMETERS,
+	if (!check_param_num (lst, 0, 0))
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: version");
-		return MU_ERROR;
-	}
 
-	print_expr ("(:version \"" VERSION "\")\n");
+	send_expr ("(:info version :version \"" VERSION "\")");
 	return MU_OK;
 }
 
 
-static MuConfig*
-get_opts (MuConfigCmd cmd)
-{
-	static MuConfig opts;
-
-	memset (&opts, 0, sizeof(opts));
-	opts.cmd = cmd;
-	opts.format = MU_CONFIG_FORMAT_SEXP;
-
-	return &opts;
-}
-
 static MuError
-cmd_find (MuStore *store, GSList *lst, GError **err)
+cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 {
-	MuError mer;
-	MuConfig *opts;
-	const gchar *params[3] = { NULL, NULL, NULL };
+	MuMsgIter *iter;
+	unsigned u;
 
 	if (!check_param_num (lst, 1, 1))
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: find <searchexpr>");
 
-	opts = get_opts (MU_CONFIG_CMD_FIND);
-	params[1] = (const char*)lst->data;
-	opts->params = (char**)params;
+	iter = mu_query_run (query, (const char*)lst->data, FALSE,
+			     MU_MSG_FIELD_ID_NONE, TRUE, err);
+	if (!iter)
+		return server_error (err, MU_ERROR_INTERNAL,
+				     "couldn't get iterator");
 
-	mer = mu_cmd_find (store, opts, err);
+	u = 0;
+	while (!mu_msg_iter_is_done (iter)) {
+		MuMsg *msg;
+		msg = mu_msg_iter_get_msg_floating (iter);
+		if (mu_msg_is_readable (msg)) {
+			char *sexp;
+			sexp = mu_msg_to_sexp (msg,
+					       mu_msg_iter_get_docid (iter),
+					       NULL, TRUE);
+			send_expr (sexp);
+			g_free (sexp);
+			++u;
+		}
+		mu_msg_iter_next (iter);
+	}
 
-	return mer;
+	mu_msg_iter_destroy (iter);
+
+	if (u == 0)
+		return server_error (NULL, MU_ERROR_NO_MATCHES, "No matches");
+	else
+		return MU_OK;
 }
 
 static MuError
 cmd_mkdir (GSList *lst, GError **err)
 {
 	if (!check_param_num (lst, 1, 1))
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: mkdir <maildir>");
 
 	if (!mu_maildir_mkdir ((const char*)lst->data, 0755, FALSE, err))
-		return server_error (MU_G_ERROR_CODE (err),
+		return server_error (err, MU_G_ERROR_CODE (err),
 				     "failed to create maildir");
 	return MU_OK;
 }
@@ -295,7 +322,7 @@ static MuFlags
 get_flags (const char *path, const char *flagstr)
 {
 	if (!flagstr)
-		return MU_FLAG_INVALID; /* ie., ignore flags */
+		return MU_FLAG_NONE; /* ie., ignore flags */
 	else {
 		/* if there's a '+' or '-' sign in the string, it must
 		 * be a flag-delta */
@@ -313,43 +340,29 @@ get_flags (const char *path, const char *flagstr)
 }
 
 static MuError
-do_move (MuStore *store, unsigned docid, MuMsg *msg, const char* targetdir,
-	 MuFlags flags, GError **err)
+do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
+	 MuFlags flags, gboolean is_move, GError **err)
 {
-	gchar *pathstr;
+	gchar *sexp, *str;
+	unsigned rv;
 
-	/* NOTE: we remove the message at its old path, then add the
-	 * message at its new path. Instead, we could update the path
-	 * and flag parameter in the database */
+	if (!mu_msg_move_to_maildir (msg, maildir, flags, TRUE, err))
+		return MU_G_ERROR_CODE (err);
 
-	if (!mu_store_remove_path (store, mu_msg_get_path(msg))) {
-		mu_msg_unref (msg);
-		return server_error (MU_ERROR_XAPIAN_REMOVE_FAILED,
-				     "failed to remove from database");
-	}
+	/* note, after mu_msg_move_to_maildir, path will be the *new*
+	 * path, and flags and maildir fields will be updated as
+	 * wel */
+	rv = mu_store_update_msg (store, docid, msg, err);
+	if (rv == MU_STORE_INVALID_DOCID)
+		return server_error (err, MU_ERROR_XAPIAN, "failed to update message");
 
-	if (!mu_msg_move_to_maildir (msg, targetdir, flags, FALSE, err)) {
-		mu_msg_unref (msg);
-		return server_error (MU_G_ERROR_CODE (err),
-				     "failed to move message");
-	}
+	sexp = mu_msg_to_sexp (msg, docid, NULL, TRUE);
+	str  = g_strdup_printf ("(:update %s :move %s)", sexp, is_move ? "t" : "nil");
 
-	/* note, after mu_msg_move_to_maildir, path will be the *new* path */
-	if (!mu_store_add_path (store, mu_msg_get_path(msg), err)) {
-		mu_msg_unref (msg);
-		return server_error (MU_G_ERROR_CODE (err),
-				     "failed to add to database");
-	}
+	send_expr (str);
 
-	pathstr = mu_str_escape_c_literal (mu_msg_get_path (msg), TRUE);
-	g_print ("(:update move :docid %u :path %s :flags %s)%s",
-		 docid, pathstr,
-		 mu_flags_to_str_s (mu_msg_get_flags (msg), MU_FLAG_TYPE_ANY),
-		 EOX);
-	g_free (pathstr);
-
-	mu_msg_unref (msg);
-	fputs (EOX, stdout);
+	g_free (sexp);
+	g_free (str);
 
 	return MU_OK;
 }
@@ -363,24 +376,36 @@ move_or_flag (MuStore *store, GSList *lst, gboolean is_move, GError **err)
 	unsigned docid;
 	MuMsg *msg;
 	MuFlags flags;
+	GSList *flagitem;
+	const char *mdir;
 
 	docid = get_docid ((const char*)lst->data);
 	if (docid == 0)
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid");
 
 	msg = mu_store_get_msg (store, docid, err);
 	if (!msg)
-		return server_error (MU_G_ERROR_CODE (err),
-				     "failed to get message");
+		return server_error (err, MU_ERROR, "failed to get message");
 
-	/* note, if there is no flags arg, this works still */
+	if (is_move) {
+		mdir     = (const char*)g_slist_nth (lst, 1)->data;
+		flagitem = g_slist_nth (lst, 2);
+	} else { /* flag */
+		mdir     = mu_msg_get_maildir (msg);
+		flagitem = g_slist_nth (lst, 1);
+	}
+
+
 	flags = get_flags (mu_msg_get_path(msg),
-			   (const gchar*)g_slist_nth(lst, is_move ? 3 : 2)->data);
+			   flagitem ? (const gchar*)flagitem->data : NULL);
+	if (flags == MU_FLAG_INVALID) {
+		mu_msg_unref (msg);
+		return server_error (err, MU_ERROR_IN_PARAMETERS,
+				     "invalid flags");
+	}
 
-	merr = do_move (store, docid, msg,
-			is_move ? (const gchar*)g_slist_nth(lst, 2)->data : NULL,
-			flags, err);
+	merr = do_move (store, docid, msg, mdir, flags, is_move, err);
 
 	mu_msg_unref (msg);
 
@@ -392,17 +417,19 @@ static MuError
 cmd_move (MuStore *store, GSList *lst, GError **err)
 {
 	if (!check_param_num (lst, 2, 3))
-		return server_error (MU_ERROR_IN_PARAMETERS,
-				     "usage: move <docid> <targetdir> [<flags>]");
+		return server_error
+			(NULL, MU_ERROR_IN_PARAMETERS,
+			 "usage: flag <docid> <maildir> [<flags>]");
 
 	return move_or_flag (store, lst, TRUE, err);
+
 }
 
 static MuError
 cmd_flag (MuStore *store, GSList *lst, GError **err)
 {
 	if (!check_param_num (lst, 2, 2))
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: flag <docid> <flags>");
 
 	return move_or_flag (store, lst, FALSE, err);
@@ -416,30 +443,34 @@ cmd_remove (MuStore *store, GSList *lst, GError **err)
 {
 	unsigned docid;
 	const char *path;
+	char *str;
 
 	if (!check_param_num (lst, 1, 1))
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: remove <docid>");
 
 	docid = get_docid ((const char*)lst->data);
 	if (docid == 0)
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid");
 
 	path = get_path_from_docid (store, docid, err);
 	if (!path)
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (err, MU_ERROR_IN_PARAMETERS,
 				     "no valid doc for docid");
 
 	if (unlink (path) != 0)
-		return server_error (MU_ERROR_FILE_CANNOT_UNLINK,
+		return server_error (err, MU_ERROR_FILE_CANNOT_UNLINK,
 				     strerror (errno));
 
 	if (!mu_store_remove_path (store, path))
-		return server_error (MU_ERROR_XAPIAN_REMOVE_FAILED,
+		return server_error (NULL, MU_ERROR_XAPIAN_REMOVE_FAILED,
 				     "failed to remove from database");
 
-	g_print ("(:update remove :docid %u)%s", docid, EOX);
+	str = g_strdup_printf ("(:remove %u)", docid);
+	send_expr (str);
+	g_free (str);
+
 	return MU_OK;
 }
 
@@ -450,33 +481,133 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 {
 	MuMsg *msg;
 	unsigned docid;
-	char *sexp;
+	char *sexp, *str;
 
 	if (!check_param_num (args, 1, 1))
-		return server_error (MU_ERROR_IN_PARAMETERS,
-				     "view <docid>");
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "message <docid> <view|reply|forward>");
 
 	docid = get_docid ((const char*)args->data);
 	if (docid == 0)
-		return server_error (MU_ERROR_IN_PARAMETERS,
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid");
 
 	msg = mu_store_get_msg (store, docid, err);
 	if (!msg)
-		return server_error (MU_G_ERROR_CODE (err),
+		return server_error (err, MU_ERROR,
 				     "failed to get message");
 
 	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE);
 	mu_msg_unref (msg);
 
-	/* FIXME: this breaks for the case where the message has the
-	 * EOX marker in its body... */
-	fputs (sexp, stdout);
+	str = g_strdup_printf ("(:view %s)", sexp);
+	send_expr (str);
+
 	g_free (sexp);
+	g_free (str);
 
 	return MU_OK;
 }
 
+
+
+static MuError
+cmd_compose (MuStore *store, GSList *args, GError **err)
+{
+	MuMsg *msg;
+	unsigned docid;
+	char *sexp, *str;
+	const char* action;
+
+	if ((!check_param_num (args, 2, 2)))
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "compose <reply|forward> <docid>");
+
+	action = (const char*)args->data;
+	if (strcmp (action, "reply") != 0 && strcmp(action, "forward") != 0)
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "compose <reply|forward> <docid>");
+
+	docid = get_docid ((const char*)g_slist_nth(args, 1)->data);
+	if (docid == 0)
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "invalid docid");
+
+	msg = mu_store_get_msg (store, docid, err);
+	if (!msg)
+		return server_error (err, MU_ERROR,"failed to get message");
+
+	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE);
+	mu_msg_unref (msg);
+
+	str = g_strdup_printf ("(:compose %s :action %s)", sexp, action);
+	send_expr (str);
+
+	g_free (sexp);
+	g_free (str);
+
+	return MU_OK;
+}
+
+static MuError
+index_msg_cb (MuIndexStats *stats, void *user_data)
+{
+	char *info;
+
+	if (stats->_processed % 500)
+		return MU_OK;
+
+	info = g_strdup_printf ("(:info index :status running "
+				":processed %u :updated %u)",
+				stats->_processed, stats->_updated);
+	send_expr (info);
+	g_free (info);
+
+	return MU_OK;
+}
+
+
+static MuError
+cmd_index (MuStore *store, GSList *lst, GError **err)
+{
+	MuIndex *index;
+	const char *maildir;
+	MuIndexStats stats, stats2;
+	MuError rv;
+	char *info;
+
+	if (!check_param_num (lst, 1, 1))
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "usage: index <maildir>");
+
+	maildir = (const char*)lst->data;
+	index = mu_index_new (store, err);
+	if (!index)
+		return server_error (err, MU_ERROR, "failed to create index");
+
+	mu_index_stats_clear (&stats);
+	rv = mu_index_run (index, maildir, FALSE, &stats, index_msg_cb, NULL, NULL);
+
+	if (rv != MU_OK && rv != MU_STOP) {
+		mu_index_destroy (index);
+		return server_error (NULL, rv, "indexing failed");
+	}
+
+	mu_index_stats_clear (&stats2);
+	rv = mu_index_cleanup (index, &stats2, NULL, NULL, err);
+	if (rv != MU_OK && rv != MU_STOP) {
+		mu_index_destroy (index);
+		return server_error (err, rv, "cleanup failed");
+	}
+
+	info = g_strdup_printf ("(:info index :status complete "
+				":processed %u :updated %u :cleaned-up %u)",
+				stats._processed, stats._updated, stats2._cleaned_up);
+	send_expr (info);
+	g_free (info);
+
+	return MU_OK;
+}
 
 
 static MuError
@@ -488,13 +619,16 @@ cmd_quit (GSList *lst, GError **err)
 		return FALSE;
 	}
 
-	print_expr (";; quiting");
+	send_expr (";; quiting");
 	return MU_OK;
 }
 
 
+
+
 static gboolean
-handle_command (MuConfigCmd cmd, MuStore *store, GSList *args, GError **err)
+handle_command (MuConfigCmd cmd, MuStore *store, MuQuery *query,
+		GSList *args, GError **err)
 {
 	MuError rv;
 
@@ -504,9 +638,11 @@ handle_command (MuConfigCmd cmd, MuStore *store, GSList *args, GError **err)
 	case CMD_MOVE:		rv = cmd_move (store, args, err); break;
 	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
 	case CMD_MKDIR:		rv = cmd_mkdir (args, err); break;
-	case CMD_FIND:		rv = cmd_find (store, args, err); break;
+	case CMD_FIND:		rv = cmd_find (store, query, args, err); break;
 	case CMD_VIEW:		rv = cmd_view (store, args, err); break;
+	case CMD_COMPOSE:	rv = cmd_compose (store, args, err); break;
 	case CMD_FLAG:		rv = cmd_flag (store, args, err); break;
+	case CMD_INDEX:		rv = cmd_index (store, args, err); break;
 
 	case CMD_IGNORE: return TRUE;
 	default:
@@ -520,28 +656,33 @@ handle_command (MuConfigCmd cmd, MuStore *store, GSList *args, GError **err)
 
 
 MuError
-mu_cmd_server (MuStore *store, MuConfig *opts, GError **err/*unused*/)
+mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 {
+	MuQuery *query;
+
 	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
 
-	g_print (";; welcome to mu\n");
-	g_print (";; type your commands, and press Enter to execute them\n");
+	fputs (";; welcome to mu\n", stdout);
+	fputs (";; type your commands, and press Enter to execute them\n", stdout);
+
+	query = mu_query_new (store, err);
+	if (!query)
+		return MU_G_ERROR_CODE (err);
 
 	while (1) {
 		char *line;
 		Cmd cmd;
 		GSList *args;
-		GError *err;
+		GError *my_err;
 
 		line = my_readline (MU_PROMPT);
 		cmd  = parse_line (line, &args);
 		g_free (line);
 
-		err = NULL;
-		if (!handle_command (cmd, store, args, &err)) {
-			server_error (err ? err->code    : MU_ERROR_INTERNAL,
-				      err ? err->message : "internal error");
-			g_clear_error (&err);
+		my_err = NULL;
+		if (!handle_command (cmd, store, query, args, &my_err)) {
+			server_error (&my_err, MU_ERROR_INTERNAL, "internal error");
+			g_clear_error (&my_err);
 		}
 
 		mu_str_free_list (args);
@@ -549,6 +690,8 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err/*unused*/)
 		if (cmd == CMD_QUIT)
 			break;
 	}
+
+	mu_query_destroy (query);
 
 	return MU_OK;
 }
