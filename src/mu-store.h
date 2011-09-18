@@ -168,17 +168,28 @@ void mu_store_flush (MuStore *store);
  *
  * @param store a valid store
  * @param msg a valid message
- * @param replace whether or not we should try to replace the same
- * message if it already exists; that is usually desirable, but when
- * we're sure already that the document does not exist (e.g, in case
- * of a initial fill or rebuild of the database), we can set 'replace'
- * to FALSE for a couple% performance gain
+ * @param err receives error information, if any, or NULL
  *
  * @return the docid of the stored message, or 0
  * (MU_STORE_INVALID_DOCID) in case of error
  */
-unsigned mu_store_add_msg   (MuStore *store, MuMsg *msg, gboolean replace,
-			     GError **err);
+unsigned mu_store_add_msg   (MuStore *store, MuMsg *msg, GError **err);
+
+
+/**
+ * update an email message in the XapianStore
+ *
+ * @param store a valid store
+ * @param the docid for the message
+ * @param msg a valid message
+ * @param err receives error information, if any, or NULL
+ *
+ * @return the docid of the stored message, or 0
+ * (MU_STORE_INVALID_DOCID) in case of error
+ */
+unsigned mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg,
+			      GError **err);
+
 
 /**
  * store an email message in the XapianStore; similar to
@@ -218,6 +229,19 @@ gboolean mu_store_remove_path (MuStore *store, const char* msgpath);
  */
 gboolean mu_store_contains_message (MuStore *store,  const char* path,
 				    GError **err);
+
+
+
+/**
+ * get the docid for message at path
+ *
+ * @param store a store
+ * @param path the message path
+ * @param err to receive error info or NULL. err->code is MuError value
+ *
+ * @return the docid if the message was found, MU_STORE_INVALID_DOCID (0) otherwise
+ * */
+unsigned mu_store_get_docid_for_path (MuStore *store, const char* path, GError **err);
 
 /**
  * store a timestamp for a directory

@@ -57,6 +57,7 @@ mu_store_unref (MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
 
+
 	if (store->unref() == 0) {
 		try { delete store; } MU_XAPIAN_CATCH_BLOCK;
 	}
