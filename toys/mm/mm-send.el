@@ -327,10 +327,16 @@ using Gnus' `message-mode'."
   (unless mm/drafts-folder (error "mm/drafts-folder not set"))
 
   ;; write our draft message to the the drafts folder
-  (let ((draftfile (concat mm/maildir "/" mm/drafts-folder "/cur/"
+  (let ((draftfile (concat mm/maildir mm/drafts-folder "/cur/"
 		     (mm/msg-draft-file-name))))
     (with-temp-file draftfile (insert str))
-    (find-file draftfile)  (rename-buffer mm/msg-draft-name t)
+    (find-file draftfile)
+    (rename-buffer mm/msg-draft-name t)
+
+    ;; save our file immediately, add add it to the db; thus, we can retrieve
+    ;; the new docid from `mm/path-docid-map'.
+    (write-file draftfile)
+    (mm/proc-add draftfile)
 
     (message-mode)
 
@@ -376,28 +382,20 @@ edit buffer with the draft message"
 	;; exact num depends on some more things
 	(when (mm/msg-compose (mm/msg-create-reply msg replyall) parent-docid 'reply)
 	  (message-goto-body))))))
-
 
 
 (defun mm/msg-save-to-sent ()
   "Move the message in this buffer to the sent folder. This is
  meant to be called from message mode's `message-sent-hook'."
+  (unless mm/sent-folder (error "mm/sent-folder not set"))
   (when (mm/msg-is-mm-message) ;; only if we are mm
-    (unless mm/sent-folder (error "mm/sent-folder not set"))
-    ;; we don't know the draft message is already in the database...
-    ;;
-    ;;     ;; TODO: remove duplicate flags
-    ;;     ((newflags ;; remove Draft; maybe set 'Seen' as well?
-    ;; 	 (delq 'draft (mm/msg-flags-from-path (buffer-file-name))))
-    ;; 	;; so, we register path => uid, then we move uid, then check the name
-    ;; 	;; uid is referring to
-    ;; 	(uid (mm/msg-register (buffer-file-name)))
-    ;; 	(if (mm/msg-move uid
-    ;; 		(concat mm/maildir mm/sent-folder)
-    ;; 		(mm/msg-flags-to-string newflags))
-    ;; 	  (set-visited-file-name (mm/msg-get-path uid) t t)
-    ;; 	  (error "Failed to save message to the Sent-folder"))))))
-))
+    (let ((docid (gethash (buffer-file-name)  mm/path-docid-map)))
+      (unless docid (error "unknown message"))
+      ;; ok, all seems well, well move the message to the sent-folder
+      (mm/proc-move-msg docid mm/sent-folder)
+      ;; mark the buffer as read-only, as its pointing at a non-existing file
+      ;; now...
+      (setq buffer-read-only t))))
 
 (defun mm/send-set-parent-flag ()
   "Set the 'replied' flag on messages we replied to, and the
@@ -415,7 +413,7 @@ This is meant to be called from message mode's
 
 
 ;; hook our functions up with sending of the message
-;;(add-hook 'message-sent-hook 'mm/msg-save-to-sent)
+(add-hook 'message-sent-hook 'mm/msg-save-to-sent)
 (add-hook 'message-sent-hook 'mm/send-set-parent-flag)
 
 

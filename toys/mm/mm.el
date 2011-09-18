@@ -67,7 +67,8 @@ PATH, you can specifiy the full path."
   :group 'mm
   :safe 'stringp)
 
-
+(defvar mm/debug nil
+  "When set to non-nil, log debug information to the *mm-log* buffer.")
 
 ;; Folders
 
@@ -211,7 +212,7 @@ be sure it no longer matches)."
   (let ((map (make-sparse-keymap)))
 
     (define-key map "I" 'mm/jump-to-inbox)
-    (define-key map "S" 'mm/search-today)
+    (define-key map "T" 'mm/search-today)
     (define-key map "W" 'mm/search-last-7-days)
     (define-key map "U" 'mm/search-unread)
 
@@ -266,7 +267,7 @@ be sure it no longer matches)."
 	 "    * " (propertize "c" 'face 'highlight) "ompose a new message\n"
 	 "\n"
 	 "    * " (propertize "r" 'face 'highlight) "etrieve new mail\n"
-	 "    * " (propertize "u" 'face 'highlight) "update the message database\n"
+	 "    * " (propertize "u" 'face 'highlight) "pdate the message database\n"
 	 "\n"
 	 "    * " (propertize "q" 'face 'highlight) "uit mm\n")
 
@@ -295,7 +296,7 @@ be sure it no longer matches)."
 (defun mm/search-last-7-days ()
   "List messages received in the last 7 days."
   (interactive)
-  (mm/hdrs-search "flag:7d..now"))
+  (mm/hdrs-search "date:7d..now"))
 
 (defun mm/retrieve-mail ()
   "Get new mail."

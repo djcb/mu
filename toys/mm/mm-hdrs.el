@@ -30,7 +30,7 @@
 
 ;; mm
 
-;;; Code:
+;; Code:
 
 (eval-when-compile (require 'cl))
 
@@ -451,7 +451,6 @@ point."
   (interactive)
   )
 
-;; TODO warn if marks exist
 (defun mm/rerun-search ()
   "Rerun the search for the last search expression; if none exists,
 do a new search."
@@ -513,7 +512,8 @@ return the new docid. Otherwise, return nil."
   "Mark message at point for moving to the trash
 folder (`mm/trash-folder')."
   (interactive)
-  (unless mm/trash-folder (error "`mm/trash-folder' is not set"))
+  (unless mm/trash-folder
+    (error "`mm/trash-folder' is not set"))
   (mm/hdrs-mark 'trash)
   (mm/next-header))
 

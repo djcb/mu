@@ -72,9 +72,14 @@ for the format of <msg-plist>.")
   "*internal* A function called for each (:info type ....) sexp
 received from the server process.")
 
-
 (defvar mm/buf nil
   "*internal* Buffer for results data.")
+
+(defvar mm/path-docid-map
+  (make-hash-table :size 32 :rehash-size 2 :weakness nil)
+  "*internal* hash we use to keep a path=>docid mapping for message
+we added ourselves (ie., draft messages), so we can e.g. move them
+to the sent folder using their docid")
 
 (defun mm/proc-info-handler (info)
   "Handler function for (:info ...) sexps received from the server
@@ -82,6 +87,11 @@ process."
   (let ((type (plist-get info :info)))
     (cond
       ;; (:info :version "3.1")
+      ((eq type 'add)
+	;; update our path=>docid map; we use this when composing messages to
+	;; add draft messages to the db, so when we're sending them, we can move
+	;; to the sent folder using the `mm/proc-move'.
+	(puthash (plist-get info :path) (plist-get-info :docid) mm/path-docid-map))
       ((eq type 'version) (setq mm/mu-version (plist-get info :version)))
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
@@ -198,7 +208,8 @@ updated as well, with all processed sexp data removed."
     (while sexp
       (mm/proc-log "%S" sexp)
       (cond
-	((eq (plist-get sexp :msgtype) 'header)
+	;; a header plist can be recognized by the existence of a :date field
+	((plist-get sexp :date)
 	  (funcall mm/proc-header-func sexp))
 	((plist-get sexp :view)
 	  (funcall mm/proc-view-func (plist-get sexp :view)))
@@ -243,10 +254,11 @@ terminates."
 
 (defun mm/proc-log (frm &rest args)
   "Write something in the *mm-log* buffer - mainly useful for debugging."
-  (with-current-buffer (get-buffer-create mm/proc-log-buffer-name)
-    (goto-char (point-max))
-    (insert (apply 'format (concat (format-time-string "%Y-%m-%d %T "
-				     (current-time)) frm "\n") args))))
+  (when mm/debug
+    (with-current-buffer (get-buffer-create mm/proc-log-buffer-name)
+      (goto-char (point-max))
+      (insert (apply 'format (concat (format-time-string "%Y-%m-%d %T "
+				     (current-time)) frm "\n") args)))))
 
 (defun mm/proc-send-command (frm &rest args)
   "Send as command to the mu server process; start the process if needed."
@@ -302,8 +314,7 @@ or (:error ) sexp, which are handled my `mm/proc-update-func' and
       (fullpath (concat mm/maildir targetmdir)))
     (unless (and (file-directory-p fullpath) (file-writable-p fullpath))
       (error "Not a writable directory: %s" fullpath))
-    (mm/proc-send-command "move %d %s %s" docid targetmdir flagstr)))
-
+    (mm/proc-send-command "move %d \"%s\" \"%s\"" docid targetmdir flagstr)))
 
 (defun mm/proc-flag-msg (docid flags)
   "Set FLAGS for the message identified by DOCID."
@@ -311,8 +322,13 @@ or (:error ) sexp, which are handled my `mm/proc-update-func' and
     (mm/proc-send-command "flag %d %s" docid flagstr)))
 
 (defun mm/proc-index (maildir)
-  "Update the message database."
-  (mm/proc-send-command "index %s" maildir))
+  "Update the message database for MAILDIR."
+  (mm/proc-send-command "index \"%s\"" maildir))
+
+(defun mm/proc-add (path)
+  "Add the message at PATH to the database; if this works, we will
+receive (:info :path <path> :docid <docid>)."
+  (mm/proc-send-command "add \"%s\"" path))
 
 (defun mm/proc-view-msg (docid)
   "Get one particular message based on its DOCID. The result will
