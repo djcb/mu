@@ -35,32 +35,63 @@
 (defvar mm/mu-proc nil
   "*internal* The mu-server process")
 
-(defvar mm/proc-header-func nil
-  "*internal* A function called for each message returned from the
-server process; the function is passed a msg plist as argument. See
-`mm/proc-eval-server-output' for the format.")
-
 (defvar mm/proc-error-func nil
   "*internal* A function called for each error returned from the
 server process; the function is passed an error plist as
-argument. See `mm/proc-eval-server-output' for the format.")
+argument. See `mm/proc-filter' for the format.")
 
 (defvar mm/proc-update-func nil
-  "*internal* A function called for each update sexp returned from
-the server process; the function is passed an update plist as
-argument. See `mm/proc-eval-server-output' for the format.")
+  "*internal* A function called for each :update sexp returned from
+the server process; the function is passed a msg sexp as
+argument. See `mm/proc-filter' for the format.")
 
-(defvar mm/proc-message-func nil
-  "*internal* A function called for each message sexp returned from
-the server process. This is designed for viewing a message. See
-`mm/proc-eval-server-output' for the format.")
+(defvar mm/proc-remove-func nil
+  "*internal* A function called for each :remove sexp returned from
+the server process, when some message has been deleted. The
+function is passed the docid of the removed message.")
+
+(defvar mm/proc-view-func nil
+  "*internal* A function called for each single message sexp
+returned from the server process. The function is passed a message
+sexp as argument. See `mm/proc-filter' for the
+format.")
+
+(defvar mm/proc-header-func nil
+  "*internal* A function called for each message returned from the
+server process; the function is passed a msg plist as argument. See
+`mm/proc-filter' for the format.")
+
+(defvar mm/proc-compose-func nil
+  "*internal* A function called for each message returned from the
+server process that is used as basis for composing a new
+message (ie., either a reply or a forward); the function is passed
+msg and a symbol (either reply or forward). See `mm/proc-filter'
+for the format of <msg-plist>.")
+
+(defvar mm/proc-info-func nil
+  "*internal* A function called for each (:info type ....) sexp
+received from the server process.")
 
 
-(defconst mm/eox-mark "\n;;eox\n"
-  "*internal* Marker for the end of a sexp")
-
-(defvar mm/buf ""
+(defvar mm/buf nil
   "*internal* Buffer for results data.")
+
+(defun mm/proc-info-handler (info)
+  "Handler function for (:info ...) sexps received from the server
+process."
+  (let ((type (plist-get info :info)))
+    (cond
+      ;; (:info :version "3.1")
+      ((eq type 'version) (setq mm/mu-version (plist-get info :version)))
+      ((eq type 'index)
+	(if (eq (plist-get info :status) 'running)
+	  (message (format "Indexing... processed %d, updated %d"
+		     (plist-get info :processed) (plist-get info :updated)))
+	  (message
+	    (format "Indexing completed; processed %d, updated %d, cleaned-up %d"
+	      (plist-get info :processed) (plist-get info :updated)
+	      (plist-get info :cleaned-up))))))))
+
 
 (defun mm/start-proc ()
   "Start the mu server process."
@@ -71,8 +102,11 @@ the server process. This is designed for viewing a message. See
 	  (args '("server"))
 	  (args (append args (when mm/mu-home
 			       (list (concat "--muhome=" mm/mu-home))))))
+    (setq mm/buf "")
     (setq mm/mu-proc (apply 'start-process "*mu-server*" "*mu-server*"
 		       mm/mu-binary args))
+    ;; register a function for (:info ...) sexps
+    (setq mm/proc-info-func 'mm/proc-info-handler)
     (when mm/mu-proc
       (set-process-filter mm/mu-proc 'mm/proc-filter)
       (set-process-sentinel mm/mu-proc 'mm/proc-sentinel))))
@@ -82,66 +116,44 @@ the server process. This is designed for viewing a message. See
   (when (mm/proc-is-running)
     (let ((delete-exited-processes t))
       (kill-process mm/mu-proc)
-      (setq mm/mu-proc nil))))
+      (setq
+	mm/mu-proc nil
+	mm/buf nil))))
 
 (defun mm/proc-is-running ()
   (and mm/mu-proc (eq (process-status mm/mu-proc) 'run)))
 
+(defun mm/proc-eat-sexp-from-buf ()
+  "'Eat' the next s-expression from `mm/buf'. `mm/buf gets its
+  contents from the mu-servers in the following form:
+       \376<len-of-sexp>\376<sexp>
+Function returns this sexp, or nil if there was none. `mm/buf' is
+updated as well, with all processed sexp data removed."
+  (let* ((b (string-match "\376\\([0-9]+\\)\376" mm/buf))
+	  (sexp-len
+	    (when b (string-to-number (match-string 1 mm/buf)))))
+    ;; does mm/buf contain the full sexp?
+    (when (and b (>= (length mm/buf) (+ sexp-len (match-end 0))))
+      ;; clear-up start
+      (setq mm/buf (substring mm/buf (match-end 0)))
+      (let ((objcons (read-from-string mm/buf)))
+	(setq mm/buf (substring mm/buf sexp-len))
+	(car objcons)))))
+
 
 (defun mm/proc-filter (proc str)
   "A process-filter for the 'mu server' output; it accumulates the
-  strings into valid sexps by checking of the ';;eox' end-of-msg
-  marker, and then evaluating them."
-  (setq mm/buf (concat mm/buf str)) ;; update our buffer
-  (let ((eox (string-match mm/eox-mark mm/buf)))
-    (while eox
-      ;; Process the sexp in `mm/buf', and remove it if it worked and return
-      ;; t. If no complete sexp is found, return nil."
-      (let ( (after-eox (match-end 0))
-	     (sexp (mm/proc-eval-server-output (substring mm/buf 0 eox))))
-	;; the sexp we get can either be a message or an error
-	(message "[%S]" sexp)
-	(cond
-	  ((plist-get sexp :error)  (funcall mm/proc-error-func sexp))
-	  ;; if it has :docid, it's a message; if it's dbonly prop is `t', it's
-	  ;; a header, otherwise it's a message (for viewing)
-	  ((eq (plist-get sexp :msgtype) 'header)
-	    (funcall mm/proc-header-func sexp))
-	  ((eq (plist-get sexp :msgtype) 'view)
-	    (funcall mm/proc-message-func sexp))
-	  ((plist-get sexp :update) (funcall mm/proc-update-func sexp))
-	  (t (message "%S" sexp)))
-	;;(t (error "Unexpected data from server"))))
-	(setq mm/buf (substring mm/buf after-eox)))
-      (setq eox (string-match mm/eox-mark mm/buf)))))
+  strings into valid sexps by checking of the ';;eox' end-of-sexp
+  marker, and then evaluating them.
 
-(defun mm/proc-sentinel (proc msg)
-  "Function that will be called when the mu-server process
-terminates."
-  (let ((status (process-status proc)) (code (process-exit-status proc)))
-    (setq mm/mu-proc nil)
-    (setq mm/buf "") ;; clear any half-received sexps
-    (cond
-      ((eq status 'signal)
-	(message (format "mu server process received signal %d" code)))
-      ((eq status 'exit)
-	(cond
-	  ((eq code 11) (message "Database is locked by another process"))
-	  (t (message (format "mu server process ended with exit code %d" code)))))
-      (t
-	(message "something bad happened to the mu server process")))))
+  The server output is as follows:
 
-(defun mm/proc-eval-server-output (str)
-  "Evaluate a blob of server output; the output describe either a
-message, a database update or an error.
+   1. an error
+      (:error 2 :error-message \"unknown command\")
+      ;; eox
+   => this will be passed to `mm/proc-error-func'.
 
-An error sexp looks something like:
-
-  (:error 2 :error-message \"unknown command\")
-;; eox
-
-a message sexp looks something like:
-
+   2. a message sexp looks something like:
  \(
   :docid 1585
   :from ((\"Donald Duck\" . \"donald@example.com\"))
@@ -160,34 +172,96 @@ a message sexp looks something like:
   :body-txt \" <message body>\"
 \)
 ;; eox
+   => this will be passed to `mm/proc-header-func'.
 
-a database update looks like:
-\(:update 1585 :path \"/home/user/Maildir/foo/cur/12323213:,R\")
-  when a message has been moved to a new location, or
-\(:update 1585 :path \"/dev/null\")
-  when it has been removed.
+  3. a view looks like:
+  (:view <msg-sexp>)
+  => the <msg-sexp> (see 2.) will be passed to `mm/proc-view-func'.
 
-other fields are :cc, :bcc, :body-html
+  4. a database update looks like:
+  (:update <msg-sexp> :move <nil-or-t>)
 
-When the s-expression comes from the database ('mu find'), the
-fields :attachments, :body-txt, :body-html, :references, :in-reply-to
-are missing (because that information is not stored in the
-database).
+   => the <msg-sexp> (see 2.) will be passed to
+   `mm/proc-update-func', :move tells us whether this is a move to
+   another maildir, or merely a flag change.
 
-On the other hand, if the information comes from the message file,
-there won't be a :docid field."
-  (condition-case nil
-    (car (read-from-string str));; read-from-string returns a cons
-    (error "Failed to parse sexp [%S]" str)))
+  5. a remove looks like:
+  (:remove <docid>)
+  => the docid will be passed to `mm/proc-remove-func'
+
+  6. a compose looks like:
+  (:compose <msg-sexp> :action <reply|forward>) => the <msg-sexp>
+  and either 'reply or 'forward will be passed
+  `mm/proc-compose-func'."
+  (setq mm/buf (concat mm/buf str)) ;; update our buffer
+  (let ((sexp (mm/proc-eat-sexp-from-buf)))
+    (while sexp
+      (mm/proc-log "%S" sexp)
+      (cond
+	((eq (plist-get sexp :msgtype) 'header)
+	  (funcall mm/proc-header-func sexp))
+	((plist-get sexp :view)
+	  (funcall mm/proc-view-func (plist-get sexp :view)))
+	((plist-get sexp :update)
+	  (funcall mm/proc-update-func
+	    (plist-get sexp :update) (plist-get sexp :move)))
+	((plist-get sexp :remove)
+	  (funcall mm/proc-remove-func (plist-get sexp :remove)))
+	((plist-get sexp :compose)
+	  (funcall mm/proc-compose-func
+	    (plist-get sexp :compose)
+	    (plist-get sexp :action)))
+	((plist-get sexp :info)
+	  (funcall mm/proc-info-func sexp))
+	((plist-get sexp :error)
+	  (funcall mm/proc-error-func sexp))
+	(t (message "Unexpected data from server [%S]" sexp)))
+      (setq sexp (mm/proc-eat-sexp-from-buf)))))
+
+
+(defun mm/proc-sentinel (proc msg)
+  "Function that will be called when the mu-server process
+terminates."
+  (let ((status (process-status proc)) (code (process-exit-status proc)))
+    (setq mm/mu-proc nil)
+    (setq mm/buf "") ;; clear any half-received sexps
+    (cond
+      ((eq status 'signal)
+	(cond
+	  ((eq code 9) (message "the mu server process has been stopped"))
+	  (t (message (format "mu server process received signal %d" code)))))
+      ((eq status 'exit)
+	(cond
+	  ((eq code 11) (message "Database is locked by another process"))
+	  (t (message (format "mu server process ended with exit code %d" code)))))
+      (t
+	(message "something bad happened to the mu server process")))))
+
+
+(defconst mm/proc-log-buffer-name "*mm-log*"
+  "*internal* Name of the logging buffer.")
+
+(defun mm/proc-log (frm &rest args)
+  "Write something in the *mm-log* buffer - mainly useful for debugging."
+  (with-current-buffer (get-buffer-create mm/proc-log-buffer-name)
+    (goto-char (point-max))
+    (insert (apply 'format (concat (format-time-string "%Y-%m-%d %T "
+				     (current-time)) frm "\n") args))))
+
+(defun mm/proc-send-command (frm &rest args)
+  "Send as command to the mu server process; start the process if needed."
+  (unless (mm/proc-is-running)
+    (mm/start-proc))
+  (let ((cmd (apply 'format frm args)))
+    (mm/proc-log cmd)
+    (process-send-string mm/mu-proc (concat cmd "\n"))))
 
 
 (defun mm/proc-remove-msg (docid)
   "Remove message identified by DOCID. The results are reporter
 through either (:update ... ) or (:error ) sexp, which are handled
 my `mm/proc-update-func' and `mm/proc-error-func', respectively."
-  (unless (mm/proc-is-running) (mm/start-proc))
-  (when mm/mu-proc
-    (process-send-string mm/mu-proc (format "remove %d\n" docid))))
+  (mm/proc-send-command "remove %d" docid))
 
 
 (defun mm/proc-find (expr)
@@ -196,17 +270,16 @@ function is called, depending on the kind of result. The variables
 `mm/proc-header-func' and `mm/proc-error-func' contain the function
 that will be called for, resp., a message (header row) or an
 error."
-  (unless (mm/proc-is-running) (mm/start-proc))
-  (when mm/mu-proc
-    (process-send-string mm/mu-proc (format "find %s\n" expr))))
+  (mm/proc-send-command "find \"%s\"" expr))
 
 
-(defun mm/proc-move-msg (docid targetdir flags)
-  "Move message identified by DOCID to TARGETDIR, setting FLAGS in
-the process.
+(defun mm/proc-move-msg (docid targetmdir &optional flags)
+  "Move message identified by DOCID to TARGETMDIR, optionally
+setting FLAGS in the process.
 
 TARGETDIR must be a maildir, that is, the part _without_ cur/ or
-new/.
+new/ or the root-maildir-prefix. E.g. \"/archive\". This directory
+must already exist.
 
 The FLAGS parameter can have the following forms:
   1. a list of flags such as '(passed replied seen)
@@ -225,32 +298,38 @@ The results are reported through either (:update ... )
 or (:error ) sexp, which are handled my `mm/proc-update-func' and
 `mm/proc-error-func', respectively."
   (let
-    ((flagstr (if (stringp flags) flags (mm/flags-to-string flags))))
-    (unless (and (file-directory-p targetdir) (file-writable-p targetdir))
-      (error "Not a writable directory: %s" targetdir))
-
-    (unless (mm/proc-is-running) (mm/start-proc))
-    (when mm/mu-proc
-      (process-send-string mm/mu-proc
-	(format "move %d %s %s\n" docid targetdir flagstr)))))
+    ((flagstr (if (stringp flags) flags (mm/flags-to-string flags)))
+      (fullpath (concat mm/maildir targetmdir)))
+    (unless (and (file-directory-p fullpath) (file-writable-p fullpath))
+      (error "Not a writable directory: %s" fullpath))
+    (mm/proc-send-command "move %d %s %s" docid targetmdir flagstr)))
 
 
 (defun mm/proc-flag-msg (docid flags)
   "Set FLAGS for the message identified by DOCID."
   (let ((flagstr (if (stringp flags) flags (mm/flags-to-string flags))))
-    (unless (mm/proc-is-running) (mm/start-proc))
-    (when mm/mu-proc
-      (process-send-string mm/mu-proc
-	(format "flag %d %s\n" docid flagstr)))))
+    (mm/proc-send-command "flag %d %s" docid flagstr)))
 
+(defun mm/proc-index (maildir)
+  "Update the message database."
+  (mm/proc-send-command "index %s" maildir))
 
 (defun mm/proc-view-msg (docid)
   "Get one particular message based on its DOCID. The result will
 be delivered to the function registered as `mm/proc-message-func'."
-  (unless (mm/proc-is-running) (mm/start-proc))
-  (when mm/mu-proc
-    (process-send-string mm/mu-proc
-      (format "view %d\n" docid))))
+  (mm/proc-send-command "view %d" docid))
+
+(defun mm/proc-compose-msg (docid reply-or-forward)
+  "Start composing a message as either a forward or reply to
+message with DOCID. REPLY-OR-FORWARD is either 'reply or 'forward.
+
+The result will be delivered to the function registered as
+`mm/proc-compose-func'."
+  (let ((action (cond
+		  ((eq reply-or-forward 'forward) "forward")
+		  ((eq reply-or-forward 'reply) "reply")
+		  (t (error "symbol must be eiter 'reply or 'forward")))))
+    (mm/proc-send-command "compose %s %d" action docid)))
 
 
 (provide 'mm-proc)

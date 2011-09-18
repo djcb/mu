@@ -30,56 +30,6 @@
 (require 'ido)
 
 
-(defun mm/eval-msg-string (str)
-  "Get the plist describing an email message, from STR containing
-a message sexp.
-
- a message sexp looks something like:
- \(
-  :from ((\"Donald Duck\" . \"donald@example.com\"))
-  :to ((\"Mickey Mouse\" . \"mickey@example.com\"))
-  :subject \"Wicked stuff\"
-  :date (20023 26572 0)
-  :size 15165
-  :references (\"200208121222.g7CCMdb80690@msg.id\")
-  :in-reply-to \"200208121222.g7CCMdb80690@msg.id\"
-  :message-id \"foobar32423847ef23@pluto.net\"
-  :maildir: \"/archive\"
-  :path \"/home/mickey/Maildir/inbox/cur/1312254065_3.32282.pluto,4cd5bd4e9:2,\"
-  :priority high
-  :flags (new unread)
-  :attachments ((2 \"hello.jpg\" \"image/jpeg\") (3 \"laah.mp3\" \"audio/mp3\"))
-  :body-txt \" <message body>\"
-\)
-other fields are :cc, :bcc, :body-html
-
-When the s-expression comes from the database ('mu find'), the
-fields :attachments, :body-txt, :body-html, :references, :in-reply-to
-are missing (because that information is not stored in the
-database -- at least not in a usable way."
-  (condition-case nil
-    (car (read-from-string str));; read-from-string returns a cons
-    (error "Failed to parse message")))
-
-
-(defun mm/msg-field (msg field)
-  "Get a field from this message, or nil. The fields are the
-fields of the message, which are the various items of the plist
-as described in `mm/eval-msg-string'
-
-There is also the special field :body (which is either :body-txt,
-or if not available, :body-html converted to text)."
-  (case field
-    (:body
-      (let* ((body (mm/msg-field msg :body-txt))
-	      (body (or body (with-temp-buffer
-			       (mm/msg-field msg :body-html)
-			       (html2text)
-			       (buffer-string)))))))
-    (t (plist-get msg field))))
-
-
-
 
 
 
@@ -203,176 +153,29 @@ nil.
 	(mm/db-update-execute)
 	t))))
 
-;;; some functions for *asyncronously* updating the database
-
-(defvar mm/db-update-proc  nil
-  "*internal* Process for async db updates.")
-(defvar mm/db-update-name "*mm-db-update*"
-  "*internal* name of the db-update process")
-(defvar mm/db-add-paths     nil
-  "*internal* List of message paths to add to the database.")
-(defvar mm/db-remove-paths  nil
-  "*internal* List of message paths to remove from the database.")
-
-
-(defun mm/db-update-proc-sentinel (proc msg)
-  "Check the database update process upon completion."
-  (let ((procbuf (process-buffer proc))
-	 (status (process-status proc))
-	 (exit-status (process-exit-status proc)))
-    (when (and (buffer-live-p procbuf) (memq status '(exit signal)))
-      (case status
-	('signal (mm/log "Process killed"))
-	('exit
-	  (case exit-status
-	    (mm/log "Result: %s" (mm/error-string exit-status))))))
-    ;; try to update again, maybe there are some new updates
-    (mm/db-update-execute)))
-
-
-(defun mm/db-update-execute ()
-  "Update the database; remove paths in `mm/db-remove-paths',
-and add paths in `mm/db-add-paths'. Updating is ansynchronous."
-
-  ;; when it's already running, do nothing
-  (unless (and mm/db-update-proc (eq (process-status mm/db-update-proc) 'run))
-    (when mm/db-remove-paths
-      (let ((remove-paths (copy-list mm/db-remove-paths)))
-	(mm/log (concat mm/mu-binary " remove "
-		  (mapconcat 'identity remove-paths " ")))
-	(setq mm/db-remove-paths nil) ;; clear the old list
-	(setq mm/db-update-proc
-	  (apply 'start-process mm/db-update-name mm/db-update-name mm/mu-binary
-	    "remove" remove-paths))
-	(set-process-sentinel mm/db-update-proc 'mm/db-update-proc-sentinel)))))
-
-  ;; when it's already running, do nothing
-  (unless (and mm/db-update-proc (eq (process-status mm/db-update-proc) 'run))
-    (when mm/db-add-paths
-      (let ((add-paths (copy-list mm/db-add-paths)))
-	(mm/log (concat mm/mu-binary " add " (mapconcat 'identity add-paths " ")))
-	(setq mm/db-add-paths nil) ;; clear the old list
-	(setq mm/db-update-proc
-	  (apply 'start-process mm/db-update-name mm/db-update-name mm/mu-binary
-	    "add" add-paths))
-	(set-process-sentinel mm/db-update-proc 'mm/db-update-proc-sentinel))))
-
-(defun mm/db-add-async (path-or-paths)
-  "Asynchronously add msg at PATH-OR-PATHS to
-database. PATH-OR-PATHS is either a single path or a list of them."
-  (setq mm/db-add-paths
-    (append mm/db-add-paths
-      (if (listp path-or-paths) path-or-paths `(,path-or-paths)))))
-;;  (mm/db-update-execute))
-
-(defun mm/db-remove-async (path-or-paths)
-  "Asynchronously remove msg at PATH-OR-PATHS from
-database. PATH-OR-PATHS is either a single path or a list of
-them."
-  (setq mm/db-remove-paths
-    (append mm/db-remove-paths
-      (if (listp path-or-paths) path-or-paths `(,path-or-paths)))))
-;;  (mm/db-update-execute))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-
-
-
-;;; error codes / names ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; generated with:
-;; cat mu-util.h | sed 's/\([A-Z_]\+\).*=\(.*\),/(defconst \L\1 \2)/' < "$<" \
-;;     	| sed 's/_/-/g' > mu-errors.el
-(defconst mm/err				1)
-(defconst mm/err-in-parameters			2)
-(defconst mm/err-internal			3)
-(defconst mm/err-no-matches			4)
-(defconst mm/err-xapian				11)
-(defconst mm/err-xapian-query			13)
-(defconst mm/err-xapian-dir-not-accessible	14)
-(defconst mm/err-xapian-not-up-to-date		15)
-(defconst mm/err-xapian-missing-data		16)
-(defconst mm/err-xapian-corruption		17)
-(defconst mm/err-xapian-cannot-get-writelock	18)
-(defconst mm/err-gmime				30)
-(defconst mm/err-contacts			50)
-(defconst mm/err-contacts-cannot-retrieve	51)
-(defconst mm/err-file				70)
-(defconst mm/err-file-invalid-name		71)
-(defconst mm/err-file-cannot-link		72)
-(defconst mm/err-file-cannot-open		73)
-(defconst mm/err-file-cannot-read		74)
-(defconst mm/err-file-cannot-create		75)
-(defconst mm/err-file-cannot-mkdir		76)
-(defconst mm/err-file-stat-failed		77)
-(defconst mm/err-file-readdir-failed		78)
-(defconst mm/err-file-invalid-source		79)
-(defconst mm/err-file-target-equals-source	80)
-
-;; TODO: use 'case' instead...
-(defun mm/error-string (err)
-  "Convert an exit code from mu into a string."
-  (cond
-    ((eql err mm/err)				"General error")
-    ((eql err mm/err-in-parameters)		"Error in parameters")
-    ((eql err mm/err-internal)			"Internal error")
-    ((eql err mm/err-no-matches)		"No matches")
-    ((eql err mm/err-xapian)			"Xapian error")
-    ((eql err mm/err-xapian-query)		"Error in query")
-    ((eql err mm/err-xapian-dir-not-accessible)	"Database dir not accessible")
-    ((eql err mm/err-xapian-not-up-to-date)	"Database is not up-to-date")
-    ((eql err mm/err-xapian-missing-data)	"Missing data")
-    ((eql err mm/err-xapian-corruption)		"Database seems to be corrupted")
-    ((eql err mm/err-xapian-cannot-get-writelock)"Database is locked")
-    ((eql err mm/err-gmime)			"GMime-related error")
-    ((eql err mm/err-contacts)			"Contacts-related error")
-    ((eql err mm/err-contacts-cannot-retrieve)	"Failed to retrieve contacts")
-    ((eql err mm/err-file)			"File error")
-    ((eql err mm/err-file-invalid-name)		"Invalid file name")
-    ((eql err mm/err-file-cannot-link)		"Failed to link file")
-    ((eql err mm/err-file-cannot-open)		"Cannot open file")
-    ((eql err mm/err-file-cannot-read)		"Cannot read file")
-    ((eql err mm/err-file-cannot-create)	"Cannot create file")
-    ((eql err mm/err-file-cannot-mkdir)		"mu-mkdir failed")
-    ((eql err mm/err-file-stat-failed)		"stat(2) failed")
-    ((eql err mm/err-file-readdir-failed)	"readdir failed")
-    ((eql err mm/err-file-invalid-source)	"Invalid source file")
-    ((eql err mm/err-file-target-equals-source)	"Source is same as target")
-    (t (format					"Unknown error (%d)" err))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 
 
 
 ;;; other helper function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun mm/mu-run (&rest args)
-  "Run 'mu' synchronously with ARGS as command-line argument;,
-where <exit-code> is the exit code of the program, or 1 if the
-process was killed. <str> contains whatever the command wrote on
-standard output/error, or nil if there was none or in case of
-error. `mm/mu-run' is like `shell-command-to-string', but with
-better possibilities for error handling. The --muhome= parameter is
-added automatically if `mm/mu-home' is non-nil."
-  (let* ((rv)
-	  (allargs (remove-if 'not
-		     (append args (when mm/mu-home (concat "--muhome=" mm/mu-home)))))
-	  (cmdstr (concat mm/mu-binary " " (mapconcat 'identity allargs " ")))
-	  (str (with-output-to-string
-		 (with-current-buffer standard-output ;; but we also get stderr...
-		   (setq rv (apply 'call-process mm/mu-binary nil t nil
-			      args))))))
-    (mm/log "%s %s => %S" mm/mu-binary (mapconcat 'identity args " ") rv)
-    (when (and (numberp rv) (/= 0 rv))
-      (error (mm/error-string rv)))
-    `(,(if (numberp rv) rv 1) . ,str)))
+;; TODO: make this recursive
+(defun mm/get-sub-maildirs (maildir)
+  "Get all readable sub-maildirs under MAILDIR."
+  (let ((maildirs (remove-if
+		    (lambda (dentry)
+		      (let ((path (concat maildir "/" dentry)))
+			(or
+			  (string= dentry ".")
+			  (string= dentry "..")
+			  (not (file-directory-p path))
+			  (not (file-readable-p path))
+			  (file-exists-p (concat path "/.noindex")))))
+		    (directory-files maildir))))
+    (map 'list (lambda (dir) (concat "/" dir)) maildirs)))
 
 
-(defun mm/ask-maildir (prompt &optional fullpath)
+(defun mm/ask-maildir (prompt)
   "Ask user with PROMPT for a maildir name, if fullpath is
 non-nill, return the fulpath (i.e., `mm/maildir' prepended to the
 chosen folder)."
@@ -381,11 +184,7 @@ chosen folder)."
     `mm/sent-folder' must be set"))
   (unless mm/maildir (error "`mm/maildir' must be set"))
   (interactive)
-  (let* ((showfolders
-	   (append (list mm/inbox-folder mm/drafts-folder mm/sent-folder)
-	     mm/working-folders))
-	  (chosen (ido-completing-read prompt showfolders)))
-    (concat (if fullpath mm/maildir "") chosen)))
+  (ido-completing-read prompt (mm/get-sub-maildirs mm/maildir)))
 
 
 (defun mm/new-buffer (bufname)
@@ -398,15 +197,6 @@ old one first."
   (get-buffer-create bufname))
 
 
-(defconst mm/log-buffer-name "*mm-log*"
-  "*internal* Name of the logging buffer.")
-
-(defun mm/log (frm &rest args)
-  "Write something in the *mm-log* buffer - mainly useful for debugging."
-  (with-current-buffer (get-buffer-create mm/log-buffer-name)
-    (goto-char (point-max))
-    (insert (apply 'format (concat (format-time-string "%x %X " (current-time))
-			     frm "\n") args))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

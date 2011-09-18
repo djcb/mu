@@ -28,7 +28,7 @@
 ;; descriptions of emails, aka 'headers' (not to be confused with headers like
 ;; 'To:' or 'Subject:')
 
-;; mu
+;; mm
 
 ;;; Code:
 
@@ -53,7 +53,7 @@
   "*internal Whether to sort in descending order")
 
 
-(defconst mm/hdrs-buffer-name "*headers*"
+(defconst mm/hdrs-buffer-name "*mm-headers*"
   "*internal* Name of the buffer for message headers.")
 
 (defvar mm/hdrs-buffer nil
@@ -63,62 +63,101 @@
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results."
   (interactive "s[mu] search for: ")
-  ;; make sure we get a brand new buffer
-  (setq mm/hdrs-buffer (mm/new-buffer mm/hdrs-buffer-name))
+  (let ((buf (get-buffer-create mm/hdrs-buffer-name))
+	  (inhibit-read-only t))
+    (with-current-buffer buf
+      (erase-buffer)
+      (mm/hdrs-mode)
+      (setq mm/msg-map nil mm/mm/marks-map nil)
+      (mm/msg-map-init)
+      (setq
+	mode-name expr
+	mm/last-expr expr
+	mm/hdrs-buffer buf)))
   (switch-to-buffer mm/hdrs-buffer)
-  (mm/hdrs-mode)
-  (setq mm/last-expr expr)
-  (mm/msg-map-init)
-  (let ((inhibit-read-only t)) (erase-buffer)) ;; FIXME -- why is this needed?!
-
-  ;; all set -- now execute the search
   (mm/proc-find expr))
 
-(defun mm/hdrs-message-handler (msg)
-  (message "Received message %d (%s)"
-    (plist-get msg :docid)
-    (plist-get msg :subject)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; handler functions
+;;
+;; next are a bunch of handler functions; those will be called from mm-proc in
+;; response to output from the server process
+
+
+(defun mm/hdrs-view-handler (msg)
+  "Handler function for displaying a message."
+  (mm/view msg mm/hdrs-buffer))
 
 (defun mm/hdrs-error-handler (err)
-  (message "Error %d: %s"
-    (plist-get err :error)
-    (plist-get err :error-message)))
+  "Handler function for showing an error."
+  (let ((errcode (plist-get err :error))
+	 (errmsg (plist-get err :error-message)))
+    (case errcode
+      (4 (message "No matches for this search query."))
+      (t  (message (format "Error %d: %s" errcode errmsg))))))
 
-(defun mm/hdrs-update-handler (update)
-  "Update handler, will be called when we get '(:update ... )' from
-the mu server process. This function will update the current list
-of headers."
-  (message "We received a database update: %S" update)
-  (let* ((type (plist-get update :update))  (docid (plist-get update :docid))
-	  (marker (mm/msg-map-get-marker docid)))
-    (unless docid (error "Invalid update %S" update))
-    (unless marker (error "Message %d not found" docid))
+(defun mm/hdrs-update-handler (msg is-move)
+  "Update handler, will be called when a message has been updated
+in the database. This function will update the current list of
+headers."
+  (when (buffer-live-p mm/hdrs-buffer)
     (with-current-buffer mm/hdrs-buffer
+      (let* ((docid (plist-get msg :docid))
+	      (marker (mm/msg-map-get-marker docid)))
+	(unless docid (error "Invalid update %S" update))
+	(unless marker (error "Message %d not found" docid))
+	      (save-excursion
+		(goto-char (marker-position marker))
+	;; sanity check
+		(unless (eq docid (get-text-property (point) 'docid))
+	  (error "Unexpected docid"))
+		;; if it's marked, unmark it now
+		(when (mm/hdrs-docid-is-marked docid)
+	  (mm/hdrs-mark 'unmark))
+		(let ((inhibit-read-only t) (bol (line-beginning-position))
+		       (eol (line-beginning-position 2)))
+		  ;; hide the old line (removing it causes some problems)
+		  (put-text-property bol eol 'invisible t)
+		  ;; now, if this update was about *moving* a message, we don't show it
+		  ;; anymore (of course, we cannot be sure if the message really no
+		  ;; longer matches the query, but this seem a good heuristic.
+		  ;; if it was only a flag-change, show the message with its updated flags.
+		  (unless is-move
+		    (mm/hdrs-header-handler msg bol))))))))
+
+(defun mm/hdrs-remove-handler (docid)
+  "Remove handler, will be called when a message has been removed
+from the database. This function will hide the remove message in
+the current list of headers."
+  (with-current-buffer mm/hdrs-buffer
+    (let ((marker (mm/msg-map-get-marker docid)))
+      (unless marker (error "Message %d not found" docid))
       (save-excursion
 	(goto-char (marker-position marker))
 	;; sanity check
 	(unless (eq docid (get-text-property (point) 'docid))
 	  (error "Unexpected docid"))
-	(mm/hdrs-mark 'unmark)
+	;; if it's marked, unmark it now
+	(when (mm/hdrs-docid-is-marked docid)
+	  (mm/hdrs-mark 'unmark))
 	(let ((inhibit-read-only t) (bol (line-beginning-position))
 	       (eol (line-beginning-position 2)))
-	  (case type
-	    (remove  (put-text-property bol eol 'invisible t))
-	    (move    (put-text-property bol eol 'face 'mm/moved-face))
-	    (t       (error "Invalid update %S" update))))))))
+	  ;; hide the message
+	  (set-text-properties bol eol '(invisible t)))))))
 
-
-(defun mm/hdrs-header-handler (msg)
-  "Function to insert a line for a message. This will be called by
+(defun mm/hdrs-header-handler (msg &optional point)
+  "Function to add a line for a message. This will be called by
 `mm/proc-find'. Function expects to be in the output buffer
-already."
-  (let* ((docid (mm/msg-field msg :docid))
+already. Normally, msg is appended to the end of the buffer, but if
+POINT is given, message is insert at POINT."
+  (let* ((docid (plist-get msg :docid))
 	  (line (propertize (concat "  " (mm/hdrs-line msg) "\n")
 		  'docid docid)))
     ;; add message to the docid=>path map, see `mm/msg-map'.
     (with-current-buffer mm/hdrs-buffer
       (save-excursion
-	(goto-char (point-max))
+	;; append to end, or insert at POINT if that was provided
+	(goto-char (if point point (point-max)))
 	(mm/msg-map-add msg (point-marker))
 	(let ((inhibit-read-only t))
 	  (insert line))))))
@@ -126,11 +165,11 @@ already."
 (defun mm/hdrs-line (msg)
   "Get the one-line description of MSG (as per `mm/hdrs-raw-line'), and
 apply text-properties based on the message flags."
-  (let ((line (mm/hdrs-raw-line msg))
-	 (flags (plist-get msg :flags)))
+  (let ((line (mm/hdrs-raw-line msg)) (flags (plist-get msg :flags)))
     (cond
-      ((member 'unread flags) (propertize line 'face 'mm/unread-face))
-      (t                      (propertize line 'face 'mm/header-face)))))
+      ((member 'trashed flags) (propertize line 'face 'mm/trashed-face))
+      ((member 'unread flags)  (propertize line 'face 'mm/unread-face))
+      (t                       (propertize line 'face 'mm/header-face)))))
 
 (defun mm/hdrs-raw-line (msg)
   "Create a one line description of MSG in this buffer at
@@ -189,9 +228,9 @@ point. Line does not include a newline or any text-properties."
     (define-key map "x" 'mm/execute-marks)
 
     ;; message composition
-    ;; (define-key map "r" 'mua/hdrs-reply)
-    ;; (define-key map "f" 'mua/hdrs-forward)
-    ;; (define-key map "c" 'mua/hdrs-compose)
+    (define-key map "r" 'mm/compose-reply)
+    (define-key map "f" 'mm/compose-forward)
+    (define-key map "c" 'mm/compose-new)
 
     (define-key map (kbd "RET") 'mm/view-message)
     map)
@@ -205,7 +244,6 @@ point. Line does not include a newline or any text-properties."
   (kill-all-local-variables)
   (use-local-map mm/hdrs-mode-map)
 
-  (make-local-variable 'mm/buf)
   (make-local-variable 'mm/last-expr)
   (make-local-variable 'mm/hdrs-proc)
   (make-local-variable 'mm/marks-map)
@@ -215,7 +253,10 @@ point. Line does not include a newline or any text-properties."
   (setq mm/proc-error-func   'mm/hdrs-error-handler)
   (setq mm/proc-update-func  'mm/hdrs-update-handler)
   (setq mm/proc-header-func  'mm/hdrs-header-handler)
-  (setq mm/proc-message-func 'mm/hdrs-message-handler)
+  (setq mm/proc-view-func    'mm/hdrs-view-handler)
+  (setq mm/proc-remove-func  'mm/hdrs-remove-handler)
+  ;; this last one is defined in mm-send.el
+  (setq mm/proc-compose-func 'mm/send-compose-handler)
 
   (setq
     mm/marks-map (make-hash-table :size 16  :rehash-size 2)
@@ -317,9 +358,6 @@ The following marks are available, and the corresponding props:
 	(delete-char 2)
 	(insert (propertize (concat markkar " ") 'docid docid))))))
 
-
-
-
 (defun mm/hdrs-marks-execute ()
   "Execute the actions for all marked messages in this
 buffer.
@@ -332,31 +370,21 @@ we need to rerun the search, but we don't want to do that
 automatically, as it may be too slow and/or break the users
 flow. Therefore, we hide the message, which in practice seems to
 work well."
-  (unless (/= 0 (hash-table-count mm/marks-map))
-    (error "Nothing is marked"))
-  (maphash
-    (lambda (docid val)
-      (let* ((marker (nth 0 val)) (mark (nth 1 val)) (target (nth 2 val))
-	     (ok (case mark
-		   (move
-		     (mm/proc-move-msg docid target))
-		   (trash
-		     (unless mm/maildir "`mm/maildir' not set")
-		     (unless mm/trash-folder "`mm/trash-folder' not set")
-		     (mm/proc-move-msg docid (concat mm/maildir "/" mm/trash-folder) "+T"))
-		   (delete
-		     (mm/proc-remove-msg docid)))))
-	;; (when ok
-	;;   (save-excursion
-	;;     (goto-char (marker-position marker))
-	;;     (mm/hdrs-mark 'unmark)
-	;;     ;; hide the line
-	;;     (let ((inhibit-read-only t))
-	;;       (put-text-property (line-beginning-position) (line-beginning-position 2)
-	;; 	'invisible t))))))
-	))
-    mm/marks-map))
-
+  (if (= 0 (hash-table-count mm/marks-map))
+    (message "Nothing is marked")
+    (maphash
+      (lambda (docid val)
+	(let*
+	  ((marker (nth 0 val)) (mark (nth 1 val)) (target (nth 2 val))
+	    (ok (case mark
+		  (move
+		    (mm/proc-move-msg docid target))
+		  (trash
+		    (unless mm/trash-folder "`mm/trash-folder' not set")
+		    (mm/proc-move-msg docid mm/trash-folder "+T"))
+		  (delete
+		    (mm/proc-remove-msg docid)))))))
+      mm/marks-map)) )
 
 (defun mm/hdrs-unmark-all ()
   "Unmark all marked messages."
@@ -370,13 +398,22 @@ work well."
     mm/marks-map))
 
 (defun mm/hdrs-view ()
-  "View message at point"
+  "View message at point."
   (let ((docid (get-text-property (point) 'docid)))
     (unless docid (error "No message at point."))
     (mm/proc-view-msg docid)))
 
+(defun mm/hdrs-compose (reply-or-forward)
+  "Compose either a reply or a forward based on the message at
+point."
+  (let ((docid (get-text-property (point) 'docid)))
+    (unless docid (error "No message at point."))
+    (mm/proc-compose-msg docid reply-or-forward)))
 
 
+(defun mm/hdrs-docid-is-marked (docid)
+  "Is the given docid marked?"
+  (when (gethash docid mm/marks-map) t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -384,19 +421,29 @@ work well."
 
 
 ;;; interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mm/ignore-marks ()
+  (let*
+    ((num
+       (hash-table-count mm/marks-map))
+      (unmark (or (= 0 num)
+		(y-or-n-p
+		  (format "Sure you want to unmark %d message(s)?" num)))))
+    (message nil)
+    unmark))
 
-;; TODO warn if marks exist
 (defun mm/search ()
   "Start a new mu search."
   (interactive)
-  (call-interactively 'mm/hdrs-search))
+  (when (mm/ignore-marks)
+    (call-interactively 'mm/hdrs-search)))
 
-;; TODO warn if marks exist
-;; TODO: return to previous buffer
 (defun mm/quit-buffer ()
   "Quit the current buffer."
   (interactive)
-  (kill-buffer (current-buffer)))
+  (when (mm/ignore-marks)
+    (mm/kill-proc) ;; hmmm...
+    (kill-buffer)
+    (mm)))
 
 ;; TODO implement
 (defun mm/change-sort ()
@@ -409,9 +456,10 @@ work well."
   "Rerun the search for the last search expression; if none exists,
 do a new search."
   (interactive)
-  (if mm/last-expr
-    (mm/hdrs-search mm/last-expr)
-    (mm/search)))
+   (when (mm/ignore-marks)
+    (if mm/last-expr
+      (mm/hdrs-search mm/last-expr)
+      (mm/search))))
 
 (defun mm/view-message ()
   "View the message at point."
@@ -419,16 +467,28 @@ do a new search."
   (mm/hdrs-view))
 
 (defun mm/next-header ()
-  "Move point to the next header."
+  "Move point to the next message header. If this succeeds, return
+the new docid. Otherwise, return nil."
   (interactive)
-  (when (or (/= 0 (forward-line 1)) (not (get-text-property (point) 'docid)))
-    (error "No header after this one")))
+  (if (= 0 (forward-line 1))
+    (let ((docid (get-text-property (point) 'docid)))
+      (if docid
+	docid
+	(mm/next-header))) ;; skip non-headers
+    (progn (message "No next message available") nil)))
+
 
 (defun mm/prev-header ()
-  "Move point to the previous header."
+  "Move point to the previous message header. If this succeeds,
+return the new docid. Otherwise, return nil."
   (interactive)
-  (when (or (/= 0 (forward-line -1)) (not (get-text-property (point) 'docid)))
-    (error "No header before this one")))
+  (if (= 0 (forward-line -1))
+    (let ((docid (get-text-property (point) 'docid)))
+      (if docid
+	docid
+	(mm/prev-header))) ;; skip non-headers
+    (progn (message "No previous message available") nil)))
+
 
 (defun mm/jump-to-maildir ()
   "Show the messages in one of the standard folders."
@@ -436,14 +496,16 @@ do a new search."
   (let ((fld (mm/ask-maildir "Jump to maildir: ")))
     (mm/hdrs-search (concat "maildir:" fld))))
 
+
 (defun mm/mark-for-move ()
   "Mark message at point for moving to a maildir."
   (interactive)
-  (let ((target (mm/ask-maildir "Target maildir for move: ")))
-    (when (or (file-directory-p target)
+  (let* ((target (mm/ask-maildir "Target maildir for move: "))
+	  (fulltarget (concat mm/maildir target)))
+    (when (or (file-directory-p fulltarget)
 	    (and (yes-or-no-p
-		   (format "%s does not exist. Create now?" target))
-	      (mm/proc-mkdir target)))
+		   (format "%s does not exist. Create now?" fulltarget))
+	      (mm/proc-mkdir fulltarget)))
       (mm/hdrs-mark 'move target)
       (mm/next-header))))
 
@@ -470,24 +532,34 @@ folder (`mm/trash-folder')."
 (defun mm/unmark-all ()
   "Unmark all messages."
   (interactive)
-  (unless (/= 0 (hash-table-count mm/marks-map))
-    (error "Nothing is marked"))
-  (when (y-or-n-p (format "Sure you want to unmark %d message(s)?"
-		    (hash-table-count mm/marks-map)))
-    (mm/hdrs-unmark-all)))
+  (if (= 0 (hash-table-count mm/marks-map))
+    (message "Nothing is marked")
+    (when (mm/ignore-marks)
+      (mm/hdrs-unmark-all))))
 
 (defun mm/execute-marks ()
   "Execute the actions for the marked messages."
   (interactive)
-  (unless (/= 0 (hash-table-count mm/marks-map))
-      (error "Nothing is marked"))
-  (when (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
-		    (hash-table-count mm/marks-map)))
-    (mm/hdrs-marks-execute)))
+  (if (= 0 (hash-table-count mm/marks-map))
+    (message "Nothing is marked")
+    (when (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
+		      (hash-table-count mm/marks-map)))
+      (mm/hdrs-marks-execute)
+      (message nil))))
+
+(defun mm/compose-reply ()
+  "Start composing a reply to the current message."
+  (interactive)
+  (mm/hdrs-compose 'reply))
+
+
+(defun mm/compose-forward ()
+  "Start composing a forward to the current message."
+  (interactive)
+  (mm/hdrs-compose 'forward))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 (provide 'mm-hdrs)
 
