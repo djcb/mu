@@ -117,17 +117,18 @@ my_readline (const char *prompt)
 }
 
 enum _Cmd {
+	CMD_ADD,
+	CMD_COMPOSE,
 	CMD_FIND,
+	CMD_FLAG,
 	CMD_HELP,
+	CMD_INDEX,
+	CMD_MKDIR,
+	CMD_MOVE,
 	CMD_QUIT,
 	CMD_REMOVE,
-	CMD_COMPOSE,
-	CMD_MOVE,
-	CMD_MKDIR,
-	CMD_FLAG,
-	CMD_VIEW,
 	CMD_VERSION,
-	CMD_INDEX,
+	CMD_VIEW,
 
 	CMD_IGNORE
 };
@@ -142,16 +143,17 @@ cmd_from_string (const char *str)
 		Cmd		 cmd;
 		const char	*name;
 	} commands[] = {
+		{ CMD_ADD,      "add"},
+		{ CMD_COMPOSE,	"compose"},
 		{ CMD_FIND,	"find" },
+		{ CMD_FLAG,     "flag"},
+		{ CMD_INDEX,    "index"},
+		{ CMD_MKDIR,	"mkdir"},
+		{ CMD_MOVE,	"move"},
 		{ CMD_QUIT,	"quit"},
 		{ CMD_REMOVE,	"remove" },
-		{ CMD_MOVE,	"move"},
-		{ CMD_MKDIR,	"mkdir"},
-		{ CMD_VIEW,	"view"},
-		{ CMD_COMPOSE,	"compose"},
 		{ CMD_VERSION,	"version"},
-		{ CMD_FLAG,     "flag"},
-		{ CMD_INDEX,    "index"}
+		{ CMD_VIEW,	"view"}
 	};
 
 	for (u = 0; u != G_N_ELEMENTS(commands); ++u)
@@ -416,7 +418,7 @@ cmd_move (MuStore *store, GSList *lst, GError **err)
 	if (!check_param_num (lst, 2, 3))
 		return server_error
 			(NULL, MU_ERROR_IN_PARAMETERS,
-			 "usage: flag <docid> <maildir> [<flags>]");
+			 "usage: move <docid> <maildir> [<flags>]");
 
 
 
@@ -565,6 +567,36 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
 	return MU_OK;
 }
 
+static MuError
+cmd_add (MuStore *store, GSList *lst, GError **err)
+{
+	unsigned docid;
+	const char *path;
+	gchar *str, *escpath;
+
+	if (!check_param_num (lst, 1, 1))
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "usage: add <path>");
+
+	path = (const char*)lst->data;
+
+	docid = mu_store_add_path (store, path, err);
+	if (docid == MU_STORE_INVALID_DOCID)
+		return server_error (err, MU_ERROR_XAPIAN, "failed to add path");
+
+	escpath = mu_str_escape_c_literal (path, TRUE);
+	str = g_strdup_printf ("(:info add :path %s :docid %u)",
+			       escpath, docid);
+	send_expr (str);
+
+	g_free (str);
+	g_free (escpath);
+
+	return MU_OK;
+}
+
+
+
 
 static MuError
 cmd_index (MuStore *store, GSList *lst, GError **err)
@@ -625,22 +657,23 @@ cmd_quit (GSList *lst, GError **err)
 
 
 static gboolean
-handle_command (MuConfigCmd cmd, MuStore *store, MuQuery *query,
-		GSList *args, GError **err)
+handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
+		GError **err)
 {
 	MuError rv;
 
 	switch (cmd) {
-	case CMD_VERSION:	rv = cmd_version (args, err); break;
-	case CMD_QUIT:		rv = cmd_quit (args, err); break;
-	case CMD_MOVE:		rv = cmd_move (store, args, err); break;
-	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
-	case CMD_MKDIR:		rv = cmd_mkdir (args, err); break;
-	case CMD_FIND:		rv = cmd_find (store, query, args, err); break;
-	case CMD_VIEW:		rv = cmd_view (store, args, err); break;
+	case CMD_ADD:		rv = cmd_add (store, args, err); break;
 	case CMD_COMPOSE:	rv = cmd_compose (store, args, err); break;
+	case CMD_FIND:		rv = cmd_find (store, query, args, err); break;
 	case CMD_FLAG:		rv = cmd_flag (store, args, err); break;
 	case CMD_INDEX:		rv = cmd_index (store, args, err); break;
+	case CMD_MKDIR:		rv = cmd_mkdir (args, err); break;
+	case CMD_MOVE:		rv = cmd_move (store, args, err); break;
+	case CMD_QUIT:		rv = cmd_quit (args, err); break;
+	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
+	case CMD_VERSION:	rv = cmd_version (args, err); break;
+	case CMD_VIEW:		rv = cmd_view (store, args, err); break;
 
 	case CMD_IGNORE: return TRUE;
 	default:
