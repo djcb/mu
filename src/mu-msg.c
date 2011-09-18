@@ -77,6 +77,9 @@ msg_new (void)
 	self->_refcount = 1;
 	self->_cache = mu_msg_cache_new ();
 
+	self->_file = NULL;
+	self->_doc  = NULL;
+
 	return self;
 }
 
@@ -135,7 +138,7 @@ mu_msg_destroy (MuMsg *self)
 		return;
 
 	mu_msg_file_destroy (self->_file);
-	mu_msg_doc_destroy (self->_doc);
+	mu_msg_doc_destroy  (self->_doc);
 
 	mu_msg_cache_destroy (self->_cache);
 
@@ -721,28 +724,74 @@ mu_msg_is_readable (MuMsg *self)
 		== 0) ? TRUE : FALSE;
 }
 
+
+
+/* we need do to determine the
+ *   /home/foo/Maildir/bar
+ * from the /bar
+ * that we got
+ */
+char*
+get_target_mdir (MuMsg *msg, const char *maildir)
+{
+	char *rootmaildir, *rv;
+
+	rootmaildir = mu_maildir_get_maildir_from_path (mu_msg_get_path(msg));
+	if (!rootmaildir)
+		return NULL;
+
+	if (!g_str_has_suffix (rootmaildir, mu_msg_get_maildir(msg))) {
+		g_warning ("path is %s, but maildir is %s",
+			   mu_msg_get_path (msg), mu_msg_get_maildir(msg));
+		g_free (rootmaildir);
+		return NULL;
+	}
+
+	rootmaildir[strlen(rootmaildir) - strlen (mu_msg_get_maildir(msg))] = '\0';
+
+	rv = g_strconcat (rootmaildir, maildir, NULL);
+	g_free (rootmaildir);
+
+	return rv;
+}
+
+
+
+
 /*
  * move a msg to another maildir, trying to maintain 'integrity',
  * ie. msg in 'new/' will go to new/, one in cur/ goes to cur/. be
  * super-paranoid here...
  */
 gboolean
-mu_msg_move_to_maildir (MuMsg *self, const char* targetmdir,
+mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 			MuFlags flags, gboolean ignore_dups, GError **err)
 {
 	char *newfullpath;
+	char *targetmdir;
 
 	g_return_val_if_fail (self, FALSE);
+	g_return_val_if_fail (maildir, FALSE);     /* i.e. "/inbox" */
+
+	targetmdir = get_target_mdir (self, maildir);
+	if (!targetmdir) {
+		g_set_error (err, 0, MU_ERROR, "could not determine target maildir");
+		return FALSE;
+	}
 
 	newfullpath = mu_maildir_move_message (mu_msg_get_path (self),
 					       targetmdir, flags,
 					       ignore_dups, err);
+	g_free (targetmdir);
 
 	/* update the message path and the flags; they may have
 	 * changed */
 	if (newfullpath) {
 		mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_PATH, newfullpath,
 				      TRUE); /* the cache will free the string */
+		mu_msg_cache_set_str (self->_cache, MU_MSG_FIELD_ID_MAILDIR,
+				      g_strdup(maildir), TRUE);
+		/* the cache will free the string */
 
 		/* the contentflags haven't changed, so make sure they persist */
 		flags |= mu_msg_get_flags (self) &

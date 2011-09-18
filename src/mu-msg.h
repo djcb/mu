@@ -394,14 +394,8 @@ char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
  *
  * @param msg a message with an existing file system path in an actual
  * maildir
- * @param targetmdir the target maildir; note that this the base-level
- * Maildir, ie. /home/user/Maildir/archive, and must _not_ include the
- * 'cur' or 'new' part. mu_msg_move_to_maildir will make sure that the
- * copy is from new/ to new/ and cur/ to cur/. Also note that the
- * target maildir must be on the same filesystem. If you specify NULL
- * for targetmdir, only the flags of the message are affected; note
- * that this may still involve a move to another directory (say, from
- * new/ to cur/)
+ * @param maildir the subdir where the message should go, relative to
+ * rootmaildir. e.g. "/archive"
  * @param flags to set for the target (influences the filename, path)
  * @param silently ignore the src=target case (return TRUE)
  * @param err (may be NULL) may contain error information; note if the
@@ -410,7 +404,7 @@ char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
  *
  * @return TRUE if it worked, FALSE otherwise
  */
-gboolean mu_msg_move_to_maildir (MuMsg *msg, const char* targetmdir,
+gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
 				 MuFlags flags, gboolean ignore_dups,
 				 GError **err);
 
