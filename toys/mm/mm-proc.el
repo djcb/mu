@@ -76,7 +76,7 @@ received from the server process.")
   "*internal* Buffer for results data.")
 
 (defvar mm/path-docid-map
-  (make-hash-table :size 32 :rehash-size 2 :weakness nil)
+  (make-hash-table :size 32 :rehash-size 2 :test 'equal :weakness nil)
   "*internal* hash we use to keep a path=>docid mapping for message
 we added ourselves (ie., draft messages), so we can e.g. move them
 to the sent folder using their docid")
@@ -91,7 +91,7 @@ process."
 	;; update our path=>docid map; we use this when composing messages to
 	;; add draft messages to the db, so when we're sending them, we can move
 	;; to the sent folder using the `mm/proc-move'.
-	(puthash (plist-get info :path) (plist-get-info :docid) mm/path-docid-map))
+	(puthash (plist-get info :path) (plist-get info :docid) mm/path-docid-map))
       ((eq type 'version) (setq mm/mu-version (plist-get info :version)))
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
@@ -100,7 +100,8 @@ process."
 	  (message
 	    (format "Indexing completed; processed %d, updated %d, cleaned-up %d"
 	      (plist-get info :processed) (plist-get info :updated)
-	      (plist-get info :cleaned-up))))))))
+	      (plist-get info :cleaned-up)))))
+      ((plist-get info :message) (message "%s" (plist-get info :message))))))
 
 
 (defun mm/start-proc ()
@@ -314,6 +315,7 @@ or (:error ) sexp, which are handled my `mm/proc-update-func' and
       (fullpath (concat mm/maildir targetmdir)))
     (unless (and (file-directory-p fullpath) (file-writable-p fullpath))
       (error "Not a writable directory: %s" fullpath))
+    ;; note, we send the maildir, *not* the full path
     (mm/proc-send-command "move %d \"%s\" \"%s\"" docid targetmdir flagstr)))
 
 (defun mm/proc-flag-msg (docid flags)
@@ -325,10 +327,19 @@ or (:error ) sexp, which are handled my `mm/proc-update-func' and
   "Update the message database for MAILDIR."
   (mm/proc-send-command "index \"%s\"" maildir))
 
-(defun mm/proc-add (path)
-  "Add the message at PATH to the database; if this works, we will
-receive (:info :path <path> :docid <docid>)."
-  (mm/proc-send-command "add \"%s\"" path))
+(defun mm/proc-add (path maildir)
+  "Add the message at PATH to the database, with MAILDIR
+set to e.g. '/drafts'; if this works, we will receive (:info :path
+<path> :docid <docid>)."
+  (mm/proc-send-command "add \"%s\" \"%s\"" path maildir))
+
+(defun mm/proc-save (docid partidx path)
+  "Save attachment PARTIDX from message with DOCID to PATH."
+  (mm/proc-send-command "save %d %d \"%s\"" docid partidx path))
+
+(defun mm/proc-open (docid partidx)
+  "Open attachment PARTIDX from message with DOCID."
+  (mm/proc-send-command "open %d %d" docid partidx))
 
 (defun mm/proc-view-msg (docid)
   "Get one particular message based on its DOCID. The result will

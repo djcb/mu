@@ -304,6 +304,8 @@ message.
 (defvar mm/send-reply-docid nil   "Docid of the message this is a reply to.")
 (defvar mm/send-forward-docid nil "Docid of the message being forwarded.")
 
+(defvar mm/mm-msg nil "Whether the current message is an mm msg.")
+
 (defun mm/msg-compose (str &optional parent-docid reply-or-forward)
   "Create a new draft message in the drafts folder with STR as
 its contents, and open this message file for editing.
@@ -336,12 +338,15 @@ using Gnus' `message-mode'."
     ;; save our file immediately, add add it to the db; thus, we can retrieve
     ;; the new docid from `mm/path-docid-map'.
     (write-file draftfile)
-    (mm/proc-add draftfile)
+    (mm/proc-add draftfile mm/drafts-folder)
 
     (message-mode)
 
     (make-local-variable 'mm/send-reply-docid)
     (make-local-variable 'mm/send-forward-docid)
+    (make-local-variable 'mm/mm-msg)
+
+    (setq mm/mm-msg t)
 
     (if (eq reply-or-forward 'reply)
       (setq mm/send-reply-docid   parent-docid)
@@ -388,13 +393,17 @@ edit buffer with the draft message"
   "Move the message in this buffer to the sent folder. This is
  meant to be called from message mode's `message-sent-hook'."
   (unless mm/sent-folder (error "mm/sent-folder not set"))
-  (when (mm/msg-is-mm-message) ;; only if we are mm
+  (when mm/mm-msg ;; only if we are mm
     (let ((docid (gethash (buffer-file-name)  mm/path-docid-map)))
-      (unless docid (error "unknown message"))
+      (unless docid (error "unknown message (%S)" (buffer-file-name)))
       ;; ok, all seems well, well move the message to the sent-folder
-      (mm/proc-move-msg docid mm/sent-folder)
+      (mm/proc-move-msg docid mm/sent-folder "-T-D+S")
+      ;; we can remove the value from the hash now, if we can establish there
+      ;; are not other compose buffers using this very same docid...
+
       ;; mark the buffer as read-only, as its pointing at a non-existing file
       ;; now...
+      (message "Message has been sent")
       (setq buffer-read-only t))))
 
 (defun mm/send-set-parent-flag ()

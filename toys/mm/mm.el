@@ -67,8 +67,15 @@ PATH, you can specifiy the full path."
   :group 'mm
   :safe 'stringp)
 
+(defcustom mm/attachment-dir (expand-file-name "~/")
+  "Default directory for saving attachments."
+  :type 'string
+  :group 'mm
+  :safe 'stringp)
+
 (defvar mm/debug nil
   "When set to non-nil, log debug information to the *mm-log* buffer.")
+
 
 ;; Folders
 
@@ -191,8 +198,6 @@ be sure it no longer matches)."
   '((t :inherit font-lock-doc-face))
   "Face for the header value (such as \"Re: Hello!\" in the message view)."
   :group 'mm/faces)
-
-
 
 
 

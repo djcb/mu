@@ -77,7 +77,7 @@ marking if it still had that."
 			(sizestr (when size (format "%d bytes"))))
 		  (if sizestr (mm/view-header "Size" sizestr))))
 
-	      (:attachments "") ;; TODO
+	      (:attachments (mm/view-attachments msg))
 	      (t               (error "Unsupported field: %S" field))))
 	  mm/view-headers "")
 	"\n"
@@ -129,6 +129,27 @@ or if not available, :body-html converted to text)."
 	contacts)
       "")))
 
+(defvar mm/attach-map nil
+  "*internal* Hash which maps a number to a (part-id name mime-type).")
+
+
+(defun mm/view-attachments (msg)
+  "Display attachment information; the field looks like something like:
+   	:attachments ((4 \"statement Bray Eile.doc\" \"application/msword\"))."
+  (let ((atts (plist-get msg :attachments)))
+    (when atts
+      (setq mm/attach-map
+	(make-hash-table :size 32 :rehash-size 2 :weakness nil))
+      (let* ((id 0)
+	      (vals
+		(mapconcat
+		  (lambda (att)
+		    (incf id)
+		    (puthash id att mm/attach-map)
+		    (format "[%d]%s" id (nth 1 att)))
+		  atts ", ")))
+	(mm/view-header (format "Attachments(%d):" id) vals)))))
+
 
 (defvar mm/view-mode-map
   (let ((map (make-sparse-keymap)))
@@ -145,15 +166,18 @@ or if not available, :body-html converted to text)."
     (define-key map "n" 'mm/view-next)
     (define-key map "p" 'mm/view-prev)
 
+    ;; attachments
+    (define-key map "e" 'mm/view-extract-attachment)
+    (define-key map "o" 'mm/view-open-attachment)
+
     ;; marking/unmarking
     (define-key map "d" 'mm/view-mark-for-trash)
     (define-key map "D" 'mm/view-mark-for-delete)
     (define-key map "m" 'mm/view-mark-for-move)
 
-    ;; next two only warn user
+    ;; next 3 only warn user
     (define-key map "u" 'mm/view-unmark)
     (define-key map "U" 'mm/view-unmark)
-
     (define-key map "x" 'mm/view-marked-execute)
     map)
   "Keymap for \"*mm-view*\" buffers.")
@@ -215,6 +239,34 @@ Seen; if the message is not New/Unread, do nothing."
   (with-current-buffer mm/hdrs-buffer
     (when (mm/prev-header)
       (mm/hdrs-view))))
+
+
+(defun mm/view-extract-attachment (attnum)
+  "Extract the attachment with ATTNUM"
+  (unless mm/attachment-dir (error "`mm/attachment-dir' is not set"))
+  (when (zerop (hash-table-count mm/attach-map))
+    (error "No attachments for this message"))
+  (interactive "nAttachment to extract:")
+  (let* ((att  (gethash attnum mm/attach-map))
+	  (path (when att (concat mm/attachment-dir "/" (nth 1 att))))
+	  (retry t))
+    (unless att (error "Not a valid attachment number"))
+    (while retry
+      (setq path (expand-file-name (read-string "Save as " path)))
+      (setq retry
+	(and (file-exists-p path)
+	  (not (y-or-n-p (concat "Overwrite " path "?"))))))
+    (mm/proc-save (plist-get mm/current-msg :docid) (car att) path)))
+
+(defun mm/view-open-attachment (attnum)
+  "Extract the attachment with ATTNUM"
+  (when (zerop (hash-table-count mm/attach-map))
+    (error "No attachments for this message"))
+  (interactive "nAttachment to open:")
+  (let* ((att  (gethash attnum mm/attach-map)))
+    (unless att (error "Not a valid attachment number"))
+    (mm/proc-open (plist-get mm/current-msg :docid) (car att))))
+
 
 (defun mm/view-mark-for-trash ()
   "Mark the viewed message to be moved to the trash folder."
