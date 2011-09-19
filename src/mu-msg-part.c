@@ -95,6 +95,33 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 	pdata->_func(pdata->_msg, &pi, pdata->_user_data);
 }
 
+static gboolean
+load_msg_file_maybe (MuMsg *msg)
+{
+	GError *err;
+
+	if (msg->_file)
+		return TRUE;
+
+	err = NULL;
+	msg->_file = mu_msg_file_new (mu_msg_get_path(msg), NULL,
+				      &err);
+	if (!msg->_file) {
+		MU_HANDLE_G_ERROR(err); /* will free it */
+		return FALSE;
+	}
+
+	if (!msg->_file->_mime_msg) {
+		mu_msg_file_destroy (msg->_file);
+		msg->_file = NULL;
+		g_warning ("failed to create mime-msg");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
 void
 mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 		     gpointer user_data)
@@ -103,18 +130,8 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 
 	g_return_if_fail (msg);
 
-	/* if we don't have a file yet, we need to open it now... */
-	if (!msg->_file) {
-		GError *err;
-		err = NULL;
-		msg->_file = mu_msg_file_new (mu_msg_get_path(msg), NULL,
-					      &err);
-		if (!msg->_file) {
-			MU_HANDLE_G_ERROR(err); /* will free it */
-			return;
-		}
-	}
-	g_return_if_fail (GMIME_IS_OBJECT(msg->_file->_mime_msg));
+	if (!load_msg_file_maybe (msg))
+		return;
 
 	pdata._msg       = msg;
 	pdata._idx       = 0;
@@ -203,6 +220,9 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx)
 	char *fname, *filepath;
 	GMimeObject* part;
 
+	if (!load_msg_file_maybe (msg))
+		return NULL;
+
 	part = find_part (msg, partidx);
 	if (!part) {
 		g_warning ("%s: cannot find part %u", __FUNCTION__, partidx);
@@ -234,6 +254,9 @@ mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 	const char* path;
 
 	g_return_val_if_fail (msg, NULL);
+
+	if (!load_msg_file_maybe (msg))
+		return NULL;
 
 	path = mu_msg_get_path (msg);
 	if (!path)
@@ -269,6 +292,9 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 	g_return_val_if_fail (msg, FALSE);
 	g_return_val_if_fail (fullpath, FALSE);
 	g_return_val_if_fail (!overwrite||!use_cached, FALSE);
+
+	if (!load_msg_file_maybe (msg))
+		return FALSE;
 
 	part = find_part (msg, partidx);
 	if (!GMIME_IS_PART(part)) {
@@ -338,6 +364,9 @@ mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 	g_return_val_if_fail (msg, -1);
 	g_return_val_if_fail (sought_cid, -1);
 
+	if (!load_msg_file_maybe (msg))
+		return -1;
+
 	cid = g_str_has_prefix (sought_cid, "cid:") ?
 		sought_cid + 4 : sought_cid;
 
@@ -381,6 +410,9 @@ mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern)
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (pattern, NULL);
+
+	if (!load_msg_file_maybe (msg))
+		return NULL;
 
 	mdata._lst = NULL;
 	mdata._rx  = pattern;

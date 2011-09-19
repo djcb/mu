@@ -48,6 +48,7 @@
 #include "mu-maildir.h"
 #include "mu-query.h"
 #include "mu-index.h"
+#include "mu-msg-part.h"
 
 
 /* we include \376 (0xfe) and \377, (0xff) because it cannot occur as
@@ -125,8 +126,10 @@ enum _Cmd {
 	CMD_INDEX,
 	CMD_MKDIR,
 	CMD_MOVE,
+	CMD_OPEN,
 	CMD_QUIT,
 	CMD_REMOVE,
+	CMD_SAVE,
 	CMD_VERSION,
 	CMD_VIEW,
 
@@ -150,8 +153,10 @@ cmd_from_string (const char *str)
 		{ CMD_INDEX,    "index"},
 		{ CMD_MKDIR,	"mkdir"},
 		{ CMD_MOVE,	"move"},
+		{ CMD_OPEN,     "open" },
 		{ CMD_QUIT,	"quit"},
 		{ CMD_REMOVE,	"remove" },
+		{ CMD_SAVE,     "save"},
 		{ CMD_VERSION,	"version"},
 		{ CMD_VIEW,	"view"}
 	};
@@ -420,10 +425,7 @@ cmd_move (MuStore *store, GSList *lst, GError **err)
 			(NULL, MU_ERROR_IN_PARAMETERS,
 			 "usage: move <docid> <maildir> [<flags>]");
 
-
-
 	return move_or_flag (store, lst, TRUE, err);
-
 }
 
 static MuError
@@ -473,6 +475,90 @@ cmd_remove (MuStore *store, GSList *lst, GError **err)
 	g_free (str);
 
 	return MU_OK;
+}
+
+
+
+
+static MuError
+save_or_open (MuStore *store, GSList *args, gboolean is_save, GError **err)
+{
+	MuMsg *msg;
+	unsigned docid, partindex;
+	char* targetpath;
+	gboolean rv;
+
+	docid = get_docid ((const char*)args->data);
+	msg = mu_store_get_msg (store, docid, err);
+	if (!msg)
+		return server_error (err, MU_ERROR, "failed to get message");
+
+	partindex = atoi((const char*)g_slist_nth (args, 1)->data);
+
+	if (is_save)
+		targetpath = g_strdup ((const char*)g_slist_nth (args, 2)->data);
+	else
+		targetpath = mu_msg_part_filepath_cache (msg, partindex);
+
+	if (!targetpath) {
+		mu_msg_unref (msg);
+		return server_error (err, MU_ERROR_FILE,
+				     "failed to determine target path");
+	}
+
+	rv = mu_msg_part_save (msg, targetpath, partindex,
+			       is_save ? TRUE  : FALSE,
+			       is_save ? FALSE : TRUE, err);
+	mu_msg_unref (msg);
+
+	if (rv && !is_save)
+		mu_util_play (targetpath, TRUE, FALSE);
+
+	if (rv) {
+		gchar *info, *path;
+		path = mu_str_escape_c_literal (targetpath, FALSE);
+		info = g_strdup_printf ("(:info %s :message \"%s %s\")",
+					is_save ? "save" : "open",
+					is_save ? "Saved" : "Opened",
+					path);
+		send_expr (info);
+		g_free (path);
+		g_free (info);
+	}
+
+	g_free (targetpath);
+
+	if (!rv)
+		return server_error (err, MU_ERROR_FILE,
+				    "failed to save attachment");
+
+	return MU_OK;
+}
+
+
+
+static MuError
+cmd_save (MuStore *store, GSList *args, GError **err)
+{
+	if (!check_param_num (args, 3, 3))
+		return server_error
+			(NULL, MU_ERROR_IN_PARAMETERS,
+			 "save <docid> <partindex> <targetpath>");
+
+	return save_or_open (store, args, TRUE, err);
+}
+
+
+static MuError
+cmd_open (MuStore *store, GSList *args, GError **err)
+{
+
+	if (!check_param_num (args, 2, 2))
+		return server_error
+			(NULL, MU_ERROR_IN_PARAMETERS,
+			 "open <docid> <partindex>");
+
+	return save_or_open (store, args, FALSE, err);
 }
 
 
@@ -571,16 +657,17 @@ static MuError
 cmd_add (MuStore *store, GSList *lst, GError **err)
 {
 	unsigned docid;
-	const char *path;
+	const char *path, *maildir;
 	gchar *str, *escpath;
 
-	if (!check_param_num (lst, 1, 1))
+	if (!check_param_num (lst, 2, 2))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: add <path>");
+				     "usage: add <path> <maildir>");
 
-	path = (const char*)lst->data;
+	path    = (const char*)lst->data;
+	maildir = (const char*)g_slist_nth (lst, 1)->data;
 
-	docid = mu_store_add_path (store, path, err);
+	docid = mu_store_add_path (store, path, maildir, err);
 	if (docid == MU_STORE_INVALID_DOCID)
 		return server_error (err, MU_ERROR_XAPIAN, "failed to add path");
 
@@ -670,8 +757,10 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 	case CMD_INDEX:		rv = cmd_index (store, args, err); break;
 	case CMD_MKDIR:		rv = cmd_mkdir (args, err); break;
 	case CMD_MOVE:		rv = cmd_move (store, args, err); break;
+	case CMD_OPEN:		rv = cmd_open (store, args, err); break;
 	case CMD_QUIT:		rv = cmd_quit (args, err); break;
 	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
+	case CMD_SAVE:		rv = cmd_save  (store, args, err); break;
 	case CMD_VERSION:	rv = cmd_version (args, err); break;
 	case CMD_VIEW:		rv = cmd_view (store, args, err); break;
 
