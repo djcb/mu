@@ -24,9 +24,8 @@ INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/src -I${top_srcdir}/libmuguile ${
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
-
+AM_CFLAGS=-Wall -Wextra  -Wno-unused-parameter -Wdeclaration-after-statement -Wno-missing-braces \
+	  -Wno-missing-field-initializers
 
 noinst_LTLIBRARIES=			\
 	libmuguile.la
