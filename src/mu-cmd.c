@@ -409,7 +409,8 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 		src = opts->params[i];
 
 		if (!check_file_okay (src, TRUE) ||
-		    mu_store_add_path (store, src, err) == MU_STORE_INVALID_DOCID) {
+		    mu_store_add_path (store, src, NULL, err) ==
+		    MU_STORE_INVALID_DOCID) {
 			MU_WRITE_LOG ("failed to add %s", src);
 			allok = FALSE;
 		}
