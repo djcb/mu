@@ -732,23 +732,30 @@ mu_msg_is_readable (MuMsg *self)
  * that we got
  */
 char*
-get_target_mdir (MuMsg *msg, const char *maildir)
+get_target_mdir (MuMsg *msg, const char *maildir, GError **err)
 {
 	char *rootmaildir, *rv;
+
+	if (!mu_msg_get_maildir(msg)) {
+		g_set_error (err, 0, MU_ERROR_GMIME,
+			     "message misses maildir "
+			     "field, so cannot be moved");
+		return NULL;
+	}
 
 	rootmaildir = mu_maildir_get_maildir_from_path (mu_msg_get_path(msg));
 	if (!rootmaildir)
 		return NULL;
 
 	if (!g_str_has_suffix (rootmaildir, mu_msg_get_maildir(msg))) {
-		g_warning ("path is %s, but maildir is %s",
-			   mu_msg_get_path (msg), mu_msg_get_maildir(msg));
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "path is %s, but maildir is %s",
+			     mu_msg_get_path(msg), mu_msg_get_maildir(msg));
 		g_free (rootmaildir);
 		return NULL;
 	}
 
 	rootmaildir[strlen(rootmaildir) - strlen (mu_msg_get_maildir(msg))] = '\0';
-
 	rv = g_strconcat (rootmaildir, maildir, NULL);
 	g_free (rootmaildir);
 
@@ -773,11 +780,9 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 	g_return_val_if_fail (self, FALSE);
 	g_return_val_if_fail (maildir, FALSE);     /* i.e. "/inbox" */
 
-	targetmdir = get_target_mdir (self, maildir);
-	if (!targetmdir) {
-		g_set_error (err, 0, MU_ERROR, "could not determine target maildir");
+	targetmdir = get_target_mdir (self, maildir, err);
+	if (!targetmdir)
 		return FALSE;
-	}
 
 	newfullpath = mu_maildir_move_message (mu_msg_get_path (self),
 					       targetmdir, flags,
