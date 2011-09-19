@@ -634,7 +634,8 @@ mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 
 
 unsigned
-mu_store_add_path (MuStore *store, const char *path, GError **err)
+mu_store_add_path (MuStore *store, const char *path, const char *maildir,
+		   GError **err)
 {
 	MuMsg *msg;
 	unsigned docid;
@@ -643,7 +644,7 @@ mu_store_add_path (MuStore *store, const char *path, GError **err)
 	g_return_val_if_fail (path, FALSE);
 
 	err = NULL;
-	msg = mu_msg_new_from_file (path, NULL, err);
+	msg = mu_msg_new_from_file (path, maildir, err);
 	if (!msg)
 		return MU_STORE_INVALID_DOCID;
 

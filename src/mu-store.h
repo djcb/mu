@@ -198,11 +198,15 @@ unsigned mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg,
  *
  * @param store a valid store
  * @param path full filesystem path to a valid message
+ * @param maildir set the maildir (e.g. "/drafts") for this message, or NULL
+ *    note that you cannot mu_msg_move_msg_to_maildir unless maildir is set.
+ * @param err receives error information, if any, or NULL
  *
  * @return the docid of the stored message, or 0
  * (MU_STORE_INVALID_DOCID) in case of error
  */
-unsigned mu_store_add_path (MuStore *store, const char *path, GError **err);
+unsigned mu_store_add_path (MuStore *store, const char *path,
+			    const char* maildir, GError **err);
 
 /**
  * remove a message from the database based on its path
