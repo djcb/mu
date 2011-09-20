@@ -786,7 +786,7 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 	fputs (";; type your commands, and press Enter to execute them\n", stdout);
 
 	query = mu_query_new (store, err);
-	if (!query)
+	if (!query) {
 		return MU_G_ERROR_CODE (err);
 
 	while (1) {
@@ -800,10 +800,8 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 		g_free (line);
 
 		my_err = NULL;
-		if (!handle_command (cmd, store, query, args, &my_err)) {
-			server_error (&my_err, MU_ERROR_INTERNAL, "internal error");
+		if (!handle_command (cmd, store, query, args, &my_err))
 			g_clear_error (&my_err);
-		}
 
 		mu_str_free_list (args);
 
