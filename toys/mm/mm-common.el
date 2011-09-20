@@ -96,65 +96,6 @@ Also see `mu/flags-to-string'.
 
 
 
-;;; moving message files, changing flags ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun mm/move-msg (uid &optional targetdir flags ignore-already)
-  "Move message identified by UID to TARGETDIR using 'mu mv', and
-update the database with the new situation. TARGETDIR must be a
-maildir - that is, the part _without_ cur/ or new/. 'mu mv' will
-calculate the target directory and the exact file name. See
-`mm/msg-map' for a discussion about UID.
-
-After the file system move (rename) has been done, 'mu remove'
-and/or 'mu add' are invoked asynchronously to update the database
-with the changes.
-
-Optionally, you can specify the FLAGS for the new file. The FLAGS
-parameter can have the following forms:
-  1. a list of flags such as '(passed replied seen)
-  2. a string containing the one-char versions of the flags, e.g. \"PRS\"
-  3. a delta-string specifying the changes with +/- and the one-char flags,
-     e.g. \"+S-N\" to set Seen and remove New.
-
-The flags are any of `deleted', `flagged', `new', `passed', `replied' `seen' or
-`trashed', or the corresponding \"DFNPRST\" as defined in [1]. See
-`mm/string-to-flags' and `mm/flags-to-string'.
-
-If TARGETDIR is '/dev/null', remove SRC. After the file system
-move, the database will be updated as well, using the 'mu add'
-and 'mu remove' commands.
-
-If IGNORE-ALREADY is non-nil, don't consider it an error when the target file is
-the same as the source file.
-
-Function returns t the move succeeds, in other cases, it returns
-nil.
-
-\[1\]  URL `http://cr.yp.to/proto/maildir.html'."
-  (let* ((src (mm/msg-map-get-path uid)))
-    (unless src (error "Source path not registered for %S" uid))
-    (unless (or targetdir src) (error "Either targetdir or flags required"))
-    (unless (file-readable-p src) (error "Source is unreadable (%S)" src))
-    (let* ((flagstr (if (stringp flags) flags (mm/flags-to-string flags)))
-	    (argl  (remove-if 'not  ;; build up the arg list
-		     (list "mv" "--print-target" "--ignore-dups"
-		       (when flagstr (concat "--flags=" flagstr))
-		       src targetdir)))
-	    ;; execute it, and get the results
-	    (rv (apply 'mm/mu-run argl))
-	    (code (car rv)) (output (cdr rv)))
-      (unless (= 0 code) (error "Moving message failed: %S" output))
-	;; success!
-      (let ((targetpath (substring output 0 -1)))
-	(when (and targetpath (not (string= src targetpath)))
-	  (mm/msg-map-update uid targetpath) ;; update the UID-map
-	  (mm/db-remove-async src) 	  ;; remove the src from the db
-	  (unless (string= targetdir "/dev/null")
-	    (mm/db-add-async targetpath))) ;; add the target to the db
-	(mm/db-update-execute)
-	t))))
-
-
-
 
 
 

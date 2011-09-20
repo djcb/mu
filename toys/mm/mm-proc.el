@@ -207,7 +207,7 @@ updated as well, with all processed sexp data removed."
   (setq mm/buf (concat mm/buf str)) ;; update our buffer
   (let ((sexp (mm/proc-eat-sexp-from-buf)))
     (while sexp
-      (mm/proc-log "%S" sexp)
+      (mm/proc-log "<- %S" sexp)
       (cond
 	;; a header plist can be recognized by the existence of a :date field
 	((plist-get sexp :date)
@@ -244,7 +244,10 @@ terminates."
 	  (t (message (format "mu server process received signal %d" code)))))
       ((eq status 'exit)
 	(cond
-	  ((eq code 11) (message "Database is locked by another process"))
+	  ((eq code 11)
+	    (message "Database is locked by another process"))
+	  ((eq code 19)
+	    (message "Database is empty; try indexing some messages"))
 	  (t (message (format "mu server process ended with exit code %d" code)))))
       (t
 	(message "something bad happened to the mu server process")))))
@@ -266,7 +269,7 @@ terminates."
   (unless (mm/proc-is-running)
     (mm/start-proc))
   (let ((cmd (apply 'format frm args)))
-    (mm/proc-log cmd)
+    (mm/proc-log (concat "-> " cmd))
     (process-send-string mm/mu-proc (concat cmd "\n"))))
 
 

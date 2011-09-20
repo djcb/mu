@@ -225,7 +225,6 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
 	 (concat mm/msg-reply-prefix (plist-get msg :subject)))
 
        mm/msg-separator
-
        (mm/msg-cite-original msg)))
 
 ;; TODO: attachments
@@ -247,7 +246,7 @@ body from headers)
 
 And finally, the cited body of MSG, as per `mm/msg-cite-original'."
     (concat
-      (mm/msg-header "From" (or (mm/msg-from-for-new) ""))
+      (mm/msg-header "From" (or (mm/msg-from-create) ""))
        (when (boundp 'mail-reply-to)
 	 (mm/msg-header "Reply-To" mail-reply-to))
 
@@ -404,7 +403,9 @@ edit buffer with the draft message"
       ;; mark the buffer as read-only, as its pointing at a non-existing file
       ;; now...
       (message "Message has been sent")
-      (setq buffer-read-only t))))
+      (setq buffer-read-only t)
+
+      )))
 
 (defun mm/send-set-parent-flag ()
   "Set the 'replied' flag on messages we replied to, and the

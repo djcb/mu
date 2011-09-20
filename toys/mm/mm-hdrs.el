@@ -37,12 +37,6 @@
 (require 'mm-common)
 (require 'mm-proc)
 
-(defvar mm/header-fields
-  '( (:date          .  25)
-     (:from-or-to    .  22)
-     (:subject       .  40))
-  "A list of header fields and their character widths.")
-
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mm/last-expr nil
@@ -68,9 +62,9 @@ buffer for the results."
     (with-current-buffer buf
       (erase-buffer)
       (mm/hdrs-mode)
-      (setq mm/msg-map nil mm/mm/marks-map nil)
-      (mm/msg-map-init)
       (setq
+	mm/mm/marks-map nil
+	mm/msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
 	mode-name expr
 	mm/last-expr expr
 	mm/hdrs-buffer buf)))
@@ -103,103 +97,71 @@ headers."
   (when (buffer-live-p mm/hdrs-buffer)
     (with-current-buffer mm/hdrs-buffer
       (let* ((docid (plist-get msg :docid))
-	      (marker (mm/msg-map-get-marker docid)))
+	      (marker (gethash docid mm/msg-map)))
 	(unless docid (error "Invalid update %S" update))
-	(unless marker (error "Message %d not found" docid))
-	      (save-excursion
-		(goto-char (marker-position marker))
-	;; sanity check
-		(unless (eq docid (get-text-property (point) 'docid))
-	  (error "Unexpected docid"))
-		;; if it's marked, unmark it now
-		(when (mm/hdrs-docid-is-marked docid)
-	  (mm/hdrs-mark 'unmark))
-		(let ((inhibit-read-only t) (bol (line-beginning-position))
-		       (eol (line-beginning-position 2)))
-		  ;; hide the old line (removing it causes some problems)
-		  (put-text-property bol eol 'invisible t)
-		  ;; now, if this update was about *moving* a message, we don't show it
-		  ;; anymore (of course, we cannot be sure if the message really no
-		  ;; longer matches the query, but this seem a good heuristic.
-		  ;; if it was only a flag-change, show the message with its updated flags.
-		  (unless is-move
-		    (mm/hdrs-header-handler msg bol))))))))
+	(when marker ;; is the message present in this list?
+	  (save-excursion
+	    (goto-char (marker-position marker))
+	    ;; sanity check
+	    (unless (eq docid (mm/hdrs-get-docid)) (error "Unexpected docid"))
+	    ;; if it's marked, unmark it now
+	    (when (mm/hdrs-docid-is-marked docid)
+	      (mm/hdrs-mark 'unmark))
+	    (mm/hdrs-remove-header docid)
+	    ;; now, if this update was about *moving* a message, we don't show it
+	    ;; anymore (of course, we cannot be sure if the message really no
+	    ;; longer matches the query, but this seem a good heuristic.
+	    ;; if it was only a flag-change, show the message with its updated flags.
+	    (unless is-move
+	      (mm/hdrs-header-handler msg (beginning-of-line)))))))))
 
 (defun mm/hdrs-remove-handler (docid)
   "Remove handler, will be called when a message has been removed
 from the database. This function will hide the remove message in
 the current list of headers."
   (with-current-buffer mm/hdrs-buffer
-    (let ((marker (mm/msg-map-get-marker docid)))
+    (let ((marker (gethash docid mm/msg-map)))
       (unless marker (error "Message %d not found" docid))
-      (save-excursion
-	(goto-char (marker-position marker))
-	;; sanity check
-	(unless (eq docid (get-text-property (point) 'docid))
-	  (error "Unexpected docid"))
-	;; if it's marked, unmark it now
-	(when (mm/hdrs-docid-is-marked docid)
-	  (mm/hdrs-mark 'unmark))
-	(let ((inhibit-read-only t) (bol (line-beginning-position))
-	       (eol (line-beginning-position 2)))
-	  ;; hide the message
-	  (set-text-properties bol eol '(invisible t)))))))
+      (mm/hdrs-remove-header docid))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun mm/hdrs-header-handler (msg &optional point)
-  "Function to add a line for a message. This will be called by
-`mm/proc-find'. Function expects to be in the output buffer
-already. Normally, msg is appended to the end of the buffer, but if
-POINT is given, message is insert at POINT."
-  (let* ((docid (plist-get msg :docid))
-	  (line (propertize (concat "  " (mm/hdrs-line msg) "\n")
-		  'docid docid)))
-    ;; add message to the docid=>path map, see `mm/msg-map'.
-    (with-current-buffer mm/hdrs-buffer
-      (save-excursion
-	;; append to end, or insert at POINT if that was provided
-	(goto-char (if point point (point-max)))
-	(mm/msg-map-add msg (point-marker))
-	(let ((inhibit-read-only t))
-	  (insert line))))))
-
-(defun mm/hdrs-line (msg)
-  "Get the one-line description of MSG (as per `mm/hdrs-raw-line'), and
-apply text-properties based on the message flags."
-  (let ((line (mm/hdrs-raw-line msg)) (flags (plist-get msg :flags)))
-    (cond
-      ((member 'trashed flags) (propertize line 'face 'mm/trashed-face))
-      ((member 'unread flags)  (propertize line 'face 'mm/unread-face))
-      (t                       (propertize line 'face 'mm/header-face)))))
-
-(defun mm/hdrs-raw-line (msg)
   "Create a one line description of MSG in this buffer at
 point. Line does not include a newline or any text-properties."
-  (mapconcat
-    (lambda (f-w)
-      (let* ((field (car f-w)) (width (cdr f-w))
-	      (val (plist-get msg field))
-	      (str
-		(case field
-		  (:subject val)
-		  ((:to :from :cc :bcc)
-		    (mapconcat
-		      (lambda (ct)
-			(let ((name (car ct)) (email (cdr ct)))
-			  (or name email "?"))) val ", "))
-		  (:date  (format-time-string "%x %X" val))
-		  (:flags (mm/flags-to-string val))
-		  (:size
-		    (cond
-		      ((>= val 1000000) (format "%2.1fM" (/ val 1000000.0)))
-		      ((and (>= val 1000) (< val 1000000))
-			(format "%2.1fK" (/ val 1000.0)))
-		      ((< val 1000) (format "%d" val))))
-		  (t (error "Unsupported header field (%S)" field)))))
-	(when str (truncate-string-to-width str width 0 ?\s t))))
-    mm/header-fields " "))
+  (let* ((line (mapconcat
+		(lambda (f-w)
+		  (let* ((field (car f-w)) (width (cdr f-w))
+			  (val (plist-get msg field))
+			  (str
+			    (case field
+			      (:subject val)
+			      ((:to :from :cc :bcc)
+				(mapconcat
+				  (lambda (ct)
+				    (let ((name (car ct)) (email (cdr ct)))
+				      (or name email "?"))) val ", "))
+			      (:date  (format-time-string "%x %X" val))
+			      (:flags (mm/flags-to-string val))
+			      (:size
+				(cond
+				  ((>= val 1000000) (format "%2.1fM" (/ val 1000000.0)))
+				  ((and (>= val 1000) (< val 1000000))
+				    (format "%2.1fK" (/ val 1000.0)))
+				  ((< val 1000) (format "%d" val))))
+			      (t (error "Unsupported header field (%S)" field)))))
+		    (when str
+		      (if (not width)
+			str
+			(truncate-string-to-width str width 0 ?\s t)))))
+		  mm/header-fields " "))
+	  (flags (plist-get msg :flags))
+	  (line	(cond
+		  ((member 'trashed flags) (propertize line 'face 'mm/trashed-face))
+		  ((member 'unread flags)  (propertize line 'face 'mm/unread-face))
+	      (t                       (propertize line 'face 'mm/header-face)))))
+    (mm/hdrs-add-header line (plist-get msg :docid) point)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 
 
@@ -268,7 +230,9 @@ point. Line does not include a newline or any text-properties."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;;; the message map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; headers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mm/msg-map nil
   "*internal* A map (hashtable) which maps a database (Xapian)
 docid (which uniquely identifies a message to a marker.  where
@@ -278,31 +242,54 @@ Using this map, we can update message headers which are currently
 on the screen, when we receive (:update ) notices from the mu
 server.")
 
-(defun mm/msg-map-add (msg marker)
-  "Update `mm/msg-map' with MSG, and MARKER pointing to the buffer
-  position for the message header."
-  (let ((docid (plist-get msg :docid)))
-    (unless docid (error "Invalid message"))
-    (puthash docid marker mm/msg-map)))
+(defun mm/hdrs-add-header (str docid point)
+  "Add header STR with DOCID to the buffer. If POINT is not
+provided, put it at the end of the buffer."
+  (unless docid (error "Invalid message"))
+  (when (buffer-live-p mm/hdrs-buffer)
+    (with-current-buffer mm/hdrs-buffer
+      (let ((inhibit-read-only t)
+	     (bol (line-beginning-position))
+	     (eol (line-beginning-position 2))
+	     (point (if point point (point-max))))
+	(save-excursion
+	  (goto-char point)
+	  ;; Update `mm/msg-map' with MSG, and MARKER pointing to the buffer
+	  ;; position for the message header."
+	  (puthash docid (point-marker) mm/msg-map)
+	  (insert "  " (propertize str 'docid docid) "\n"))))))
 
-(defun mm/msg-map-get-marker (docid)
-  "Get the marker for the message identified by DOCID."
-  (gethash docid mm/msg-map))
+(defun mm/hdrs-remove-header (docid)
+  "Add header STR with DOCID to the buffer. If POINT is not
+provided, put it at the end of the buffer."
+  (unless docid (error "No docid found"))
+  (let ((marker (gethash docid mm/msg-map)))
+    (unless marker (error "Unregistered message"))
+    (remhash docid mm/msg-map)
+    (with-current-buffer mm/hdrs-buffer
+      (save-excursion
+	(goto-char (marker-position marker))
+	(let ((inhibit-read-only t))
+	  (delete-region (line-beginning-position) (line-beginning-position 2)))))))
 
-(defun mm/msg-map-init()
-  "(Re)initialize the msg map for use -- re-create the hash table,
-and reset the last-uid to 0."
-  (setq mm/msg-map
-    (make-hash-table :size 256 :rehash-size 2 :weakness nil)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mm/hdrs-mark-header (docid mark)
+  "(Visually) mark the header for DOCID with character MARK."
+  (let ((marker (gethash docid mm/msg-map)))
+    (unless marker (error "Unregistered message"))
+    (with-current-buffer mm/hdrs-buffer
+      (save-excursion
+	(let ((inhibit-read-only t))
+	  (goto-char (marker-position marker))
+	  (move-beginning-of-line 1)
+	  (delete-char 2)
+	  (insert mark " "))))))
 
-
-
-
+(defun mm/hdrs-get-docid ()
+  "Get the docid for the message at point, or nil if there is none"
+  (with-current-buffer mm/hdrs-buffer
+    (when (> (- (line-end-position) (line-beginning-position)) 2)
+      (get-text-property (+ 2 (line-beginning-position)) 'docid))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
 
 
 ;;; marks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -330,7 +317,7 @@ The following marks are available, and the corresponding props:
    `trash'    n         move the message to `mm/trash-folder'
    `delete'   n         remove the message
    `unmark'   n         unmark this message"
-  (let* ((docid (get-text-property (point) 'docid))
+  (let* ((docid (mm/hdrs-get-docid))
 	  (markkar
 	    (case mark     ;; the visual mark
 	      ('move    "m")
@@ -340,51 +327,39 @@ The following marks are available, and the corresponding props:
 	      (t (error "Invalid mark %S" mark)))))
     (unless docid (error "No message on this line"))
     (save-excursion
-      (move-beginning-of-line 1)
-
-      ;; is there anything to mark/unmark?
-      (when (and (looking-at "  ") (eql mark 'unmark))
-	(error "Not marked"))
-      (when (not (or (looking-at "  ") (eql mark 'unmark)))
-	(error "Already marked"))
-
+      (when (mm/hdrs-mark-header docid markkar))
       ;; update the hash
       (if (eql mark 'unmark)
 	(remhash docid mm/marks-map)
-	(puthash docid (list (point-marker) mark target) mm/marks-map))
+	(puthash docid (list (point-marker) mark target) mm/marks-map)))))
 
-      ;; now, update the visual mark..;
-      (let ((inhibit-read-only t))
-	(delete-char 2)
-	(insert (propertize (concat markkar " ") 'docid docid))))))
 
 (defun mm/hdrs-marks-execute ()
   "Execute the actions for all marked messages in this
-buffer.
-
-After the actions have been executed succesfully, the affected
-messages are *hidden* from the current header list. Since the
-headers are the result of a search, we cannot be certain that the
-messages no longer matches the current one - to get that certainty,
-we need to rerun the search, but we don't want to do that
-automatically, as it may be too slow and/or break the users
+buffer. After the actions have been executed succesfully, the
+affected messages are *hidden* from the current header list. Since
+the headers are the result of a search, we cannot be certain that
+the messages no longer matches the current one - to get that
+certainty, we need to rerun the search, but we don't want to do
+that automatically, as it may be too slow and/or break the users
 flow. Therefore, we hide the message, which in practice seems to
 work well."
   (if (= 0 (hash-table-count mm/marks-map))
     (message "Nothing is marked")
     (maphash
       (lambda (docid val)
-	(let*
-	  ((marker (nth 0 val)) (mark (nth 1 val)) (target (nth 2 val))
-	    (ok (case mark
-		  (move
-		    (mm/proc-move-msg docid target))
-		  (trash
-		    (unless mm/trash-folder "`mm/trash-folder' not set")
-		    (mm/proc-move-msg docid mm/trash-folder "+T"))
-		  (delete
-		    (mm/proc-remove-msg docid)))))))
-      mm/marks-map)) )
+	(let ((marker (nth 0 val)) (mark (nth 1 val)) (target (nth 2 val)))
+	  (case mark
+	    (move
+	      (mm/proc-move-msg docid target))
+	    (trash
+	      (unless mm/trash-folder
+		(error "`mm/trash-folder' not set"))
+	      (mm/proc-move-msg docid mm/trash-folder "+T"))
+	    (delete
+	      (mm/proc-remove-msg docid)))))
+	  mm/marks-map)
+    (mm/hdrs-unmark-all)))
 
 (defun mm/hdrs-unmark-all ()
   "Unmark all marked messages."
@@ -399,14 +374,14 @@ work well."
 
 (defun mm/hdrs-view ()
   "View message at point."
-  (let ((docid (get-text-property (point) 'docid)))
+  (let ((docid (mm/hdrs-get-docid)))
     (unless docid (error "No message at point."))
     (mm/proc-view-msg docid)))
 
 (defun mm/hdrs-compose (reply-or-forward)
   "Compose either a reply or a forward based on the message at
 point."
-  (let ((docid (get-text-property (point) 'docid)))
+  (let ((docid (mm/hdrs-get-docid)))
     (unless docid (error "No message at point."))
     (mm/proc-compose-msg docid reply-or-forward)))
 
@@ -469,24 +444,19 @@ do a new search."
   "Move point to the next message header. If this succeeds, return
 the new docid. Otherwise, return nil."
   (interactive)
-  (if (= 0 (forward-line 1))
-    (let ((docid (get-text-property (point) 'docid)))
-      (if docid
-	docid
-	(mm/next-header))) ;; skip non-headers
-    (progn (message "No next message available") nil)))
-
+  (with-current-buffer mm/hdrs-buffer
+    (if (= 0 (forward-line 1))
+      (let ((docid (mm/hdrs-get-docid)))
+	(if docid docid (mm/next-header)))))) ;; skip non-headers
 
 (defun mm/prev-header ()
   "Move point to the previous message header. If this succeeds,
 return the new docid. Otherwise, return nil."
   (interactive)
-  (if (= 0 (forward-line -1))
-    (let ((docid (get-text-property (point) 'docid)))
-      (if docid
-	docid
-	(mm/prev-header))) ;; skip non-headers
-    (progn (message "No previous message available") nil)))
+  (with-current-buffer mm/hdrs-buffer
+    (if (= 0 (forward-line -1))
+      (let ((docid (mm/hdrs-get-docid)))
+	(if docid docid (mm/prev-header)))))) ;; skip non-headers
 
 
 (defun mm/jump-to-maildir ()
@@ -499,64 +469,71 @@ return the new docid. Otherwise, return nil."
 (defun mm/mark-for-move ()
   "Mark message at point for moving to a maildir."
   (interactive)
-  (let* ((target (mm/ask-maildir "Target maildir for move: "))
-	  (fulltarget (concat mm/maildir target)))
-    (when (or (file-directory-p fulltarget)
-	    (and (yes-or-no-p
-		   (format "%s does not exist. Create now?" fulltarget))
-	      (mm/proc-mkdir fulltarget)))
+  (with-current-buffer mm/hdrs-buffer
+    (let* ((target (mm/ask-maildir "Target maildir for move: "))
+	    (fulltarget (concat mm/maildir target)))
+      (when (or (file-directory-p fulltarget)
+	      (and (yes-or-no-p
+		     (format "%s does not exist. Create now?" fulltarget))
+		(mm/proc-mkdir fulltarget)))
       (mm/hdrs-mark 'move target)
-      (mm/next-header))))
+	(mm/next-header)))))
 
 (defun mm/mark-for-trash ()
   "Mark message at point for moving to the trash
 folder (`mm/trash-folder')."
   (interactive)
-  (unless mm/trash-folder
-    (error "`mm/trash-folder' is not set"))
-  (mm/hdrs-mark 'trash)
-  (mm/next-header))
+    (unless mm/trash-folder
+      (error "`mm/trash-folder' is not set"))
+    (with-current-buffer mm/hdrs-buffer
+      (mm/hdrs-mark 'trash)
+      (mm/next-header)))
 
 (defun mm/mark-for-delete ()
   "Mark message at point for direct deletion."
   (interactive)
-  (mm/hdrs-mark 'delete)
-  (mm/next-header))
+  (with-current-buffer mm/hdrs-buffer
+    (mm/hdrs-mark 'delete)
+    (mm/next-header)))
 
 (defun mm/unmark ()
   "Unmark message at point."
   (interactive)
-  (mm/hdrs-mark 'unmark)
-  (mm/next-header))
+  (with-current-buffer mm/hdrs-buffer
+    (mm/hdrs-mark 'unmark)
+    (mm/next-header)))
 
 (defun mm/unmark-all ()
   "Unmark all messages."
   (interactive)
-  (if (= 0 (hash-table-count mm/marks-map))
-    (message "Nothing is marked")
-    (when (mm/ignore-marks)
-      (mm/hdrs-unmark-all))))
+  (with-current-buffer mm/hdrs-buffer
+    (if (= 0 (hash-table-count mm/marks-map))
+      (message "Nothing is marked")
+      (when (mm/ignore-marks)
+	(mm/hdrs-unmark-all)))))
 
 (defun mm/execute-marks ()
   "Execute the actions for the marked messages."
   (interactive)
-  (if (= 0 (hash-table-count mm/marks-map))
-    (message "Nothing is marked")
-    (when (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
-		      (hash-table-count mm/marks-map)))
-      (mm/hdrs-marks-execute)
-      (message nil))))
+  (with-current-buffer mm/hdrs-buffer
+    (if (= 0 (hash-table-count mm/marks-map))
+      (message "Nothing is marked")
+      (when (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
+			(hash-table-count mm/marks-map)))
+	(mm/hdrs-marks-execute)
+	(message nil)))))
 
 (defun mm/compose-reply ()
   "Start composing a reply to the current message."
   (interactive)
-  (mm/hdrs-compose 'reply))
-
+  (with-current-buffer mm/hdrs-buffer
+    (mm/hdrs-compose 'reply)))
 
 (defun mm/compose-forward ()
   "Start composing a forward to the current message."
   (interactive)
-  (mm/hdrs-compose 'forward))
+  (with-current-buffer mm/hdrs-buffer
+    (mm/hdrs-compose 'forward)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

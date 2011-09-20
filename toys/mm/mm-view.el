@@ -82,14 +82,19 @@ marking if it still had that."
 	  mm/view-headers "")
 	"\n"
 	(mm/view-body msg))
+
+      ;; initialize view-mode
       (mm/view-mode)
-      (setq
+      (setq ;; these are buffer-local
 	mode-name (format "%s" mm/view-buffer-name (plist-get msg :docid))
-	;; these are buffer-local
 	mm/current-msg msg
-	mm/hdrs-buffer hdrsbuf)
+	mm/hdrs-buffer hdrsbuf
+	mm/link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
+
       (switch-to-buffer buf)
-      (goto-char (point-min)))))
+      (goto-char (point-min))
+      (mm/view-beautify)
+      (mm/view-mark-as-read-maybe))))
 
 
 (defun mm/view-body (msg)
@@ -146,7 +151,9 @@ or if not available, :body-html converted to text)."
 		  (lambda (att)
 		    (incf id)
 		    (puthash id att mm/attach-map)
-		    (format "[%d]%s" id (nth 1 att)))
+		    (concat
+		      (propertize (nth 1 att) 'face 'mm/view-link-face)
+		      (propertize (format "[%d]" id) 'face 'mm/view-attach-number-face)))
 		  atts ", ")))
 	(mm/view-header (format "Attachments(%d):" id) vals)))))
 
@@ -158,13 +165,15 @@ or if not available, :body-html converted to text)."
     (define-key map "s" 'mm/search)
     (define-key map "j" 'mm/jump-to-maildir)
 
-    ;; (define-key map "f" 'mua/view-forward)
-    ;; (define-key map "r" 'mua/view-reply)
-    ;; (define-key map "c" 'mua/view-compose)
+    (define-key map "g" 'mm/view-go-to-url)
+
+    (define-key map "f" 'mm/compose-forward)
+    (define-key map "r" 'mm/compose-reply)
+    (define-key map "c" 'mm/compose-new)
 
     ;; navigation between messages
-    (define-key map "n" 'mm/view-next)
-    (define-key map "p" 'mm/view-prev)
+    (define-key map "n" 'mm/view-next-header)
+    (define-key map "p" 'mm/view-prev-header)
 
     ;; attachments
     (define-key map "e" 'mm/view-extract-attachment)
@@ -192,6 +201,7 @@ or if not available, :body-html converted to text)."
 
   (make-local-variable 'mm/hdrs-buffer)
   (make-local-variable 'mm/current-msg)
+  (make-local-variable 'mm/link-map)
 
   (setq major-mode 'mm/view-mode mode-name mm/view-buffer-name)
   (setq truncate-lines t buffer-read-only t))
@@ -214,32 +224,77 @@ Seen; if the message is not New/Unread, do nothing."
 	;; if so, mark it as non-new and read
 	(mm/proc-flag-msg docid "+S-u-N")))))
 
+
+(defvar mm/link-map nil
+  "*internal* A map of some number->url so we can jump to url by number.")
+
+(defun mm/view-beautify ()
+  "Improve the message view a bit, by making URLs clickable,
+removing '^M' etc."
+  (let ((num 0))
+  (save-excursion
+    (goto-char (point-min))
+
+    ;; remove the stupid CRs
+    (while (search-forward "" nil t)
+      (replace-match "" nil t))
+
+    ;; give the footer a different color...
+    (let ((p (search-forward "\n-- \n" nil t)))
+      (when p
+	(add-text-properties p (point-max) '(face mm/view-footer-face))))
+        
+    ;; this is fairly simplistic...
+    (goto-char (point-min))
+    (while (re-search-forward "\\(https?://.*\\)\\b" nil t)
+      (let ((subst (propertize (match-string-no-properties 0)
+		     'face 'mm/view-link-face)))
+	(incf num)
+	(puthash num (match-string-no-properties 0) mm/link-map)
+	(replace-match (concat subst
+			 (propertize (format "[%d]" num)
+			   'face 'mm/view-url-number-face))))))))
+
+
 ;; Interactive functions
 
 (defun mm/view-quit-buffer ()
   "Quit the message view and return to the headers."
   (interactive)
-  (mm/view-mark-as-read-maybe)
   (let ((inhibit-read-only t))
     (kill-buffer)
     (switch-to-buffer mm/hdrs-buffer)))
 
-(defun mm/view-next ()
-  "View the next message."
-  (interactive)
-  (mm/view-mark-as-read-maybe)
-  (with-current-buffer mm/hdrs-buffer
-    (when (mm/next-header)
-      (mm/hdrs-view))))
 
-(defun mm/view-prev ()
-  "View the previous message."
+(defun mm/view-next-header ()
+  "View the next header."
   (interactive)
-  (mm/view-mark-as-read-maybe)
-  (with-current-buffer mm/hdrs-buffer
-    (when (mm/prev-header)
-      (mm/hdrs-view))))
+  (when (mm/next-header)
+    (mm/view-message)))
 
+(defun mm/view-prev-header ()
+  "View the previous header."
+  (interactive)
+  (when (mm/prev-header)
+    (mm/view-message)))
+
+(defun mm/view-mark-for-move ()
+  "Mark the current message for moving."
+  (interactive)
+  (when (mm/mark-for-move)
+    (mm/view-message)))
+
+(defun mm/view-mark-for-trash ()
+  "Mark the current message for moving to the trash folder."
+  (interactive)
+  (when (mm/mark-for-trash)
+    (mm/view-message)))
+
+(defun mm/view-mark-for-delete ()
+  "Mark the current message for deletion."
+  (interactive)
+  (when (mm/mark-for-delete)
+    (mm/view-message)))
 
 (defun mm/view-extract-attachment (attnum)
   "Extract the attachment with ATTNUM"
@@ -268,27 +323,6 @@ Seen; if the message is not New/Unread, do nothing."
     (mm/proc-open (plist-get mm/current-msg :docid) (car att))))
 
 
-(defun mm/view-mark-for-trash ()
-  "Mark the viewed message to be moved to the trash folder."
-  (interactive)
-  (with-current-buffer mm/hdrs-buffer
-    (when (mm/mark-for-trash)
-      (mm/hdrs-view))))
-
-(defun mm/view-mark-for-delete ()
-  "Mark the viewed message to be deleted."
-  (interactive)
-  (with-current-buffer mm/hdrs-buffer
-    (when (mm/mark-for-trash)
-      (mm/hdrs-view))))
-
-(defun mm/view-mark-for-move ()
-  "Mark the viewed message to be moved to some folder."
-  (interactive)
-  (with-current-buffer mm/hdrs-buffer
-    (when (mm/mark-for-move)
-      (mm/view-next))))
-
 (defun mm/view-unmark ()
   "Warn user that unmarking only works in the header list."
   (interactive)
@@ -300,6 +334,13 @@ Seen; if the message is not New/Unread, do nothing."
 list."
   (interactive)
   (message "Execution needs to be done in the header list view"))
+
+(defun mm/view-go-to-url (num)
+  "Go to a numbered url."
+  (interactive "nGo to url with number: ")
+  (let ((url (gethash num mm/link-map)))
+    (unless url (error "Invalid number for URL"))
+    (browse-url url)))
 
 
 (provide 'mm-view)

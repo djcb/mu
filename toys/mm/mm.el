@@ -85,41 +85,53 @@ PATH, you can specifiy the full path."
 
 
 (defcustom mm/inbox-folder nil
-  "Your Inbox folder, relative to `mm/maildir'."
-  :type 'string
-  :safe 'stringp
-  :group 'mm/folders)
-
-(defcustom mm/outbox-folder nil
-  "Your Outbox folder, relative to `mm/maildir'."
+  "Your Inbox folder, relative to `mm/maildir', e.g. \"/Inbox\"."
   :type 'string
   :safe 'stringp
   :group 'mm/folders)
 
 (defcustom mm/sent-folder nil
-  "Your folder for sent messages, relative to `mm/maildir'."
+  "Your folder for sent messages, relative to `mm/maildir',
+  e.g. \"/Sent Items\"."
   :type 'string
   :safe 'stringp
   :group 'mm/folders)
 
 (defcustom mm/draft-folder nil
-  "Your folder for draft messages, relative to `mm/maildir'."
+  "Your folder for draft messages, relative to `mm/maildir',
+  e.g. \"/drafts\""
   :type 'string
   :safe 'stringp
   :group 'mm/folders)
 
 (defcustom mm/trash-folder nil
-  "Your folder for trashed messages, relative to `mm/maildir'."
+  "Your folder for trashed messages, relative to `mm/maildir',
+  e.g. \"/trash\"."
   :type 'string
   :safe 'stringp
   :group 'mm/folders)
 
 
+
+;; the headers view
+(defgroup mm/headers nil
+  "Settings for the headers view."
+  :group 'mm)
+
+(defcustom mm/header-fields
+    '( (:date          .  25)
+       (:flags         .   6)
+       (:from          .  22)
+       (:subject       .  40))
+  "A list of header fields to show in the headers buffer, and their
+  respective widths in characters. A width of `nil' means
+  'unrestricted', and this is best reserved fo the rightmost (last)
+  field.")
+
+;; the message view
 (defgroup mm/view nil
   "Settings for the message view."
   :group 'mm)
-
-;; the message view
 
 (defcustom mm/view-headers
   '(:from :to :cc :subject :flags :date :maildir :path :attachments)
@@ -199,7 +211,25 @@ be sure it no longer matches)."
   "Face for the header value (such as \"Re: Hello!\" in the message view)."
   :group 'mm/faces)
 
+(defface mm/view-link-face
+  '((t :inherit font-lock-type-face :underline t))
+  "Face for showing URLs and attachments in the message view."
+  :group 'mm/faces)
 
+(defface mm/view-url-number-face
+  '((t :inherit font-lock-reference-face :bold t))
+  "Face for the number tags for URLs."
+  :group 'mm/faces)
+
+(defface mm/view-attach-number-face
+  '((t :inherit font-lock-builtin-face :bold t))
+  "Face for the number tags for attachments."
+  :group 'mm/faces)
+
+(defface mm/view-footer-face
+  '((t :inherit font-lock-comment-face))
+  "Face for message footers (signatures)."
+  :group 'mm/faces)
 
 
 
