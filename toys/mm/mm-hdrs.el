@@ -97,23 +97,30 @@ headers."
   (when (buffer-live-p mm/hdrs-buffer)
     (with-current-buffer mm/hdrs-buffer
       (let* ((docid (plist-get msg :docid))
-	      (marker (gethash docid mm/msg-map)))
+	      (marker (gethash docid mm/msg-map))
+	      (point (when marker (marker-position marker))))
 	(unless docid (error "Invalid update %S" update))
-	(when marker ;; is the message present in this list?
+	(when point ;; is the message present in this list?
 	  (save-excursion
-	    (goto-char (marker-position marker))
+	    (goto-char point)
 	    ;; sanity check
-	    (unless (eq docid (mm/hdrs-get-docid)) (error "Unexpected docid"))
+	    (unless (eq docid (mm/hdrs-get-docid))
+	      (error "Unexpected docid: %S <=> %S" docid (mm/hdrs-get-docid)))
+
 	    ;; if it's marked, unmark it now
 	    (when (mm/hdrs-docid-is-marked docid)
 	      (mm/hdrs-mark 'unmark))
-	    (mm/hdrs-remove-header docid)
+
+	    ;; first, remove the old one (otherwise, we'd have to headers with
+	    ;; the same docid...
+	    (mm/hdrs-remove-header docid point)
+
 	    ;; now, if this update was about *moving* a message, we don't show it
 	    ;; anymore (of course, we cannot be sure if the message really no
 	    ;; longer matches the query, but this seem a good heuristic.
 	    ;; if it was only a flag-change, show the message with its updated flags.
-	    (unless is-move
-	      (mm/hdrs-header-handler msg (beginning-of-line)))))))))
+	    (when (not is-move)
+	      (mm/hdrs-header-handler msg point))))))))
 
 (defun mm/hdrs-remove-handler (docid)
   "Remove handler, will be called when a message has been removed
@@ -122,7 +129,7 @@ the current list of headers."
   (with-current-buffer mm/hdrs-buffer
     (let ((marker (gethash docid mm/msg-map)))
       (unless marker (error "Message %d not found" docid))
-      (mm/hdrs-remove-header docid))))
+      (mm/hdrs-remove-header docid (marker-position marker)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -181,6 +188,8 @@ point. Line does not include a newline or any text-properties."
     (define-key map "p" 'mm/prev-header)
     (define-key map "j" 'mm/jump-to-maildir)
 
+
+    
     ;; marking/unmarking/executing
     (define-key map "m" 'mm/mark-for-move)
     (define-key map "d" 'mm/mark-for-trash)
@@ -189,6 +198,10 @@ point. Line does not include a newline or any text-properties."
     (define-key map "U" 'mm/unmark-all)
     (define-key map "x" 'mm/execute-marks)
 
+    (define-key map " " 'mm/select)
+    (define-key map "*" 'mm/select)
+    
+    
     ;; message composition
     (define-key map "r" 'mm/compose-reply)
     (define-key map "f" 'mm/compose-forward)
@@ -256,39 +269,39 @@ provided, put it at the end of the buffer."
 	  (goto-char point)
 	  ;; Update `mm/msg-map' with MSG, and MARKER pointing to the buffer
 	  ;; position for the message header."
-	  (puthash docid (point-marker) mm/msg-map)
-	  (insert "  " (propertize str 'docid docid) "\n"))))))
+	  (puthash docid (copy-marker point) mm/msg-map)
+	  (insert (propertize (concat "  " str "\n")  'docid docid)))))))
 
-(defun mm/hdrs-remove-header (docid)
-  "Add header STR with DOCID to the buffer. If POINT is not
-provided, put it at the end of the buffer."
-  (unless docid (error "No docid found"))
-  (let ((marker (gethash docid mm/msg-map)))
-    (unless marker (error "Unregistered message"))
-    (remhash docid mm/msg-map)
-    (with-current-buffer mm/hdrs-buffer
-      (save-excursion
-	(goto-char (marker-position marker))
-	(let ((inhibit-read-only t))
-	  (delete-region (line-beginning-position) (line-beginning-position 2)))))))
+(defun mm/hdrs-remove-header (docid point)
+  "Remove header with DOCID at POINT."
+  (with-current-buffer mm/hdrs-buffer
+    (save-excursion
+      (goto-char point)
+      ;; sanity check
+      (unless (eq docid (mm/hdrs-get-docid)) (error "Unexpected docid"))
+      (let ((inhibit-read-only t))
+	(delete-region (line-beginning-position) (line-beginning-position 2)))
+       (remhash docid mm/msg-map))))
 
 (defun mm/hdrs-mark-header (docid mark)
   "(Visually) mark the header for DOCID with character MARK."
   (let ((marker (gethash docid mm/msg-map)))
-    (unless marker (error "Unregistered message"))
-    (with-current-buffer mm/hdrs-buffer
-      (save-excursion
-	(let ((inhibit-read-only t))
-	  (goto-char (marker-position marker))
-	  (move-beginning-of-line 1)
-	  (delete-char 2)
-	  (insert mark " "))))))
-
+    ;; (unless marker (error "Unregistered message"))
+    (when marker
+      (with-current-buffer mm/hdrs-buffer
+	(save-excursion
+	  (let ((inhibit-read-only t) (pos (marker-position marker)))
+	    (goto-char pos)
+	    (delete-char 2)
+	    (insert mark " ")
+	    (put-text-property pos
+	      (line-beginning-position 2) 'docid docid)))))))
+  
+	  
 (defun mm/hdrs-get-docid ()
   "Get the docid for the message at point, or nil if there is none"
   (with-current-buffer mm/hdrs-buffer
-    (when (> (- (line-end-position) (line-beginning-position)) 2)
-      (get-text-property (+ 2 (line-beginning-position)) 'docid))))
+      (get-text-property (point) 'docid)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -323,14 +336,16 @@ The following marks are available, and the corresponding props:
 	      ('move    "m")
 	      ('trash   "d")
 	      ('delete  "D")
+	      ('select  "*")
 	      ('unmark  " ")
 	      (t (error "Invalid mark %S" mark)))))
     (unless docid (error "No message on this line"))
     (save-excursion
       (when (mm/hdrs-mark-header docid markkar))
-      ;; update the hash
-      (if (eql mark 'unmark)
-	(remhash docid mm/marks-map)
+      ;; update the hash -- remove everything current, and if add the new stuff,
+      ;; unless we're unmarking
+      (remhash docid mm/marks-map)
+      (unless (eql mark 'unmark)
 	(puthash docid (list (point-marker) mark target) mm/marks-map)))))
 
 
@@ -445,9 +460,10 @@ do a new search."
 the new docid. Otherwise, return nil."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
-    (if (= 0 (forward-line 1))
-      (let ((docid (mm/hdrs-get-docid)))
-	(if docid docid (mm/next-header)))))) ;; skip non-headers
+    (let ((old (line-number-at-pos)))      
+      (if (= 0 (forward-line 1))
+	(let ((docid (mm/hdrs-get-docid)))
+	  (if docid docid (mm/next-header)))))))
 
 (defun mm/prev-header ()
   "Move point to the previous message header. If this succeeds,
@@ -464,6 +480,27 @@ return the new docid. Otherwise, return nil."
   (interactive)
   (let ((fld (mm/ask-maildir "Jump to maildir: ")))
     (mm/hdrs-search (concat "maildir:" fld))))
+
+
+;; (defun mm/select ()
+;;   "Select the current messsage."
+;;   (interactive)
+;;   (with-current-buffer mm/hdrs-buffer
+;;     (mm/hdrs-mark 'select)
+;;     (mm/next-header)))
+
+;; (defun mm/mark-selected (marktype)
+;;   "If any headers have been selected, set the mark for all of them;
+;; otherwise, return nil."
+;;   (let ((selected) (target))
+;;     (maphash
+;;       (lambda (docid val)
+;; 	(when (eq (car val) 'select)
+;; 	  (setq selected t)
+;; 	  (case marktype
+	    
+;;       mm/marks-map
+
 
 
 (defun mm/mark-for-move ()

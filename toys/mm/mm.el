@@ -257,7 +257,7 @@ be sure it no longer matches)."
     (define-key map "c" 'mm/compose-new)
 
     (define-key map "r" 'mm/retrieve-mail)
-    (define-key map "u" 'mm/update-database)
+    (define-key map "u" 'mm/retrieve-mail-update-db)
 
     map)
   "Keymap for the *mm* buffer.")
@@ -301,8 +301,7 @@ be sure it no longer matches)."
 	 "\n"
 	 "    * " (propertize "c" 'face 'highlight) "ompose a new message\n"
 	 "\n"
-	 "    * " (propertize "r" 'face 'highlight) "etrieve new mail\n"
-	 "    * " (propertize "u" 'face 'highlight) "pdate the message database\n"
+	 "    * " (propertize "u" 'face 'highlight) "pdate email\n"
 	 "\n"
 	 "    * " (propertize "q" 'face 'highlight) "uit mm\n")
 
@@ -333,21 +332,10 @@ be sure it no longer matches)."
   (interactive)
   (mm/hdrs-search "date:7d..now"))
 
-(defun mm/retrieve-mail ()
-  "Get new mail."
+(defun mm/retrieve-mail-update-db ()
+  "Get new mail and update the database."
   (interactive)
-  (unless mm/get-mail-command
-    (error "`mm/get-mail-command' is not set"))
-  (when (y-or-n-p "Sure you want to retrieve new mail?")
-    (shell-command mm/get-mail-command)))
-
-(defun mm/update-database ()
-  "Update the database (ie., 'mu index')."
-  (interactive)
-  (unless mm/maildir (error "`mm/maildir' not set"))
-  (when (y-or-n-p "Sure you want to update the database?")
-    (mm/proc-index mm/maildir)))
-
+  (mm/proc-retrieve-mail-update-db))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

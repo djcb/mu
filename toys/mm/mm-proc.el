@@ -110,6 +110,8 @@ process."
   (unless (file-executable-p mm/mu-binary)
     (error (format "%S is not executable" mm/mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
+	  (coding-system-for-read 'utf-8)
+	  (coding-system-for-write 'no-conversion)
 	  (args '("server"))
 	  (args (append args (when mm/mu-home
 			       (list (concat "--muhome=" mm/mu-home))))))
@@ -214,17 +216,27 @@ updated as well, with all processed sexp data removed."
 	  (funcall mm/proc-header-func sexp))
 	((plist-get sexp :view)
 	  (funcall mm/proc-view-func (plist-get sexp :view)))
+
+	;; something got moved/flags changed
 	((plist-get sexp :update)
 	  (funcall mm/proc-update-func
 	    (plist-get sexp :update) (plist-get sexp :move)))
+
+	;; a message got removed
 	((plist-get sexp :remove)
 	  (funcall mm/proc-remove-func (plist-get sexp :remove)))
+
+	;; start composing a new message
 	((plist-get sexp :compose)
 	  (funcall mm/proc-compose-func
 	    (plist-get sexp :compose)
 	    (plist-get sexp :action)))
+
+	;; get some info
 	((plist-get sexp :info)
 	  (funcall mm/proc-info-func sexp))
+
+	;; receive an error
 	((plist-get sexp :error)
 	  (funcall mm/proc-error-func sexp))
 	(t (message "Unexpected data from server [%S]" sexp)))
@@ -360,6 +372,36 @@ The result will be delivered to the function registered as
 		  ((eq reply-or-forward 'reply) "reply")
 		  (t (error "symbol must be eiter 'reply or 'forward")))))
     (mm/proc-send-command "compose %s %d" action docid)))
+
+
+
+(defun mm/proc-retrieve-mail-update-db ()
+  "Try to retrieve mail (using the user-provided shell command),
+and update the database afterwards."
+  (when mm/get-mail-command
+    (let ((buf (get-buffer-create "*mm-retrieve*"))
+	   (cmd mm/get-mail-command))
+      (message "Retrieving mail...")
+      (let ((proc (start-process "*mm-retrieve*" buf "sh" "-c" cmd)))
+	(set-process-sentinel proc 'mm/proc-retrieve-mail-sentinel)))))
+
+
+(defun mm/proc-retrieve-mail-sentinel (proc msg)
+  "Function that will be called when the mail retrieval process
+terminates."
+  (let ((status (process-status proc)) (code (process-exit-status proc)))
+    (cond
+      ((eq status 'signal)
+	(cond
+	  ((eq code 9) (message "the mail retrieval process has been stopped"))
+	  (t (message (format "mu server process received signal %d" code)))))
+      ((eq status 'exit)
+	(if (eq code 0) ;; all went well, it seems
+	  (progn
+	    (message "Updating the database...")
+	    (mm/proc-index mm/maildir))
+	  (progn
+	    (message "Received code %d from mail retrieval process" code)))))))
 
 
 (provide 'mm-proc)

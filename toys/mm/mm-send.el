@@ -252,7 +252,7 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
 
       (mm/msg-header "To" "")
       (mm/msg-hidden-header "User-agent"  (mm/msg-user-agent))
-      (mm/msg-hidden-header "References"  (mm/msg-references-for-reply msg))
+      (mm/msg-hidden-header "References"  (mm/msg-references-create msg))
        (mm/msg-header"Subject"
 	 (concat mm/msg-forward-prefix (plist-get msg :subject)))
 
@@ -292,12 +292,11 @@ with non-mm-generated messages")
   "Create a Maildir-compatible[1], unique file name for a draft
 message.
  [1]: see http://cr.yp.to/proto/maildir.html"
-  (format "%s-%s-%x.%s:2,D" ;; 'D': rarely used, but hey, it's available
-    mm/msg-prefix
+  (format "%s-%x%x:2,D" ;; 'D': rarely used, but hey, it's available
     (format-time-string "%Y%m%d" (current-time))
     (emacs-pid)
-    (random t)
-    (replace-regexp-in-string "[:/]" "_" (system-name))))
+    (random t)))
+;;;    (replace-regexp-in-string "[:/]" "_" (system-name))))
 
 
 (defvar mm/send-reply-docid nil   "Docid of the message this is a reply to.")
@@ -344,7 +343,11 @@ using Gnus' `message-mode'."
     (make-local-variable 'mm/send-reply-docid)
     (make-local-variable 'mm/send-forward-docid)
     (make-local-variable 'mm/mm-msg)
-
+    
+    ;; hook our functions up with sending of the message
+    (add-hook 'message-sent-hook 'mm/msg-save-to-sent nil t)
+    (add-hook 'message-sent-hook 'mm/send-set-parent-flag nil t)
+    
     (setq mm/mm-msg t)
 
     (if (eq reply-or-forward 'reply)
@@ -403,9 +406,8 @@ edit buffer with the draft message"
       ;; mark the buffer as read-only, as its pointing at a non-existing file
       ;; now...
       (message "Message has been sent")
-      (setq buffer-read-only t)
+      (setq buffer-read-only t))))
 
-      )))
 
 (defun mm/send-set-parent-flag ()
   "Set the 'replied' flag on messages we replied to, and the
@@ -420,11 +422,6 @@ This is meant to be called from message mode's
   ;; handle the replied-to message
   (when mm/send-reply-docid (mm/proc-flag-msg mm/send-reply-docid "+R"))
   (when mm/send-forward-docid (mm/proc-flag-msg mm/send-forward-docid "+P")))
-
-
-;; hook our functions up with sending of the message
-(add-hook 'message-sent-hook 'mm/msg-save-to-sent)
-(add-hook 'message-sent-hook 'mm/send-set-parent-flag)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

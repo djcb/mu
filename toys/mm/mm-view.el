@@ -34,6 +34,7 @@
 (eval-when-compile (require 'cl))
 (require 'mm-common)
 (require 'html2text)
+(require 'filladapt)
 
 (defconst mm/view-buffer-name "*mm-view*"
   "*internal* Name for the message view buffer")
@@ -45,10 +46,11 @@
 (defvar mm/current-msg nil
   "*internal* The plist describing the current message.")
 
-(defun mm/view (msg hdrsbuf)
+(defun mm/view (msg hdrsbuf &optional update)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
-the the message view affects HDRSBUF, as does marking etc.
+the the message view affects HDRSBUF, as does marking etc. If
+UPDATE is non-nil, the current message will be (visually) updated.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
@@ -86,15 +88,17 @@ marking if it still had that."
       ;; initialize view-mode
       (mm/view-mode)
       (setq ;; these are buffer-local
-	mode-name (format "%s" mm/view-buffer-name (plist-get msg :docid))
+	mode-name (format "%s %d" mm/view-buffer-name (plist-get msg :docid))
 	mm/current-msg msg
 	mm/hdrs-buffer hdrsbuf
 	mm/link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
-
+      
       (switch-to-buffer buf)
       (goto-char (point-min))
       (mm/view-beautify)
-      (mm/view-mark-as-read-maybe))))
+
+      (unless update
+	(mm/view-mark-as-read-maybe)))))
 
 
 (defun mm/view-body (msg)
@@ -184,6 +188,9 @@ or if not available, :body-html converted to text)."
     (define-key map "D" 'mm/view-mark-for-delete)
     (define-key map "m" 'mm/view-mark-for-move)
 
+    ;; misc
+    (define-key map "w" 'mm/view-toggle-wrap-lines)
+
     ;; next 3 only warn user
     (define-key map "u" 'mm/view-unmark)
     (define-key map "U" 'mm/view-unmark)
@@ -202,6 +209,7 @@ or if not available, :body-html converted to text)."
   (make-local-variable 'mm/hdrs-buffer)
   (make-local-variable 'mm/current-msg)
   (make-local-variable 'mm/link-map)
+  (make-local-variable 'mm/wrap-lines)
 
   (setq major-mode 'mm/view-mode mode-name mm/view-buffer-name)
   (setq truncate-lines t buffer-read-only t))
@@ -233,20 +241,21 @@ Seen; if the message is not New/Unread, do nothing."
 removing '^M' etc."
   (let ((num 0))
   (save-excursion
-    (goto-char (point-min))
 
     ;; remove the stupid CRs
-    (while (search-forward "" nil t)
+    (goto-char (point-min))
+    (while (search-forward "\\| " nil t)
       (replace-match "" nil t))
 
     ;; give the footer a different color...
+    (goto-char (point-min))
     (let ((p (search-forward "\n-- \n" nil t)))
       (when p
 	(add-text-properties p (point-max) '(face mm/view-footer-face))))
-        
+
     ;; this is fairly simplistic...
     (goto-char (point-min))
-    (while (re-search-forward "\\(https?://.*\\)\\b" nil t)
+    (while (re-search-forward "\\(https?://.*\\)\\>" nil t)
       (let ((subst (propertize (match-string-no-properties 0)
 		     'face 'mm/view-link-face)))
 	(incf num)
@@ -254,9 +263,29 @@ removing '^M' etc."
 	(replace-match (concat subst
 			 (propertize (format "[%d]" num)
 			   'face 'mm/view-url-number-face))))))))
+    
 
+(defvar mm/wrap-lines nil
+  "*internal* Whether to wrap lines or not (variable controlled by
+  `mm/view-toggle-wrap-lines').")
 
+
 ;; Interactive functions
+
+(defun mm/view-toggle-wrap-lines ()
+  "Toggle line wrap in the message body."
+  (interactive)
+  (save-excursion
+    (if mm/wrap-lines
+      (progn
+	(setq mm/wrap-lines nil)
+	(mm/view mm/current-msg mm/hdrs-buffer t)) ;; back to normal
+      (let ((inhibit-read-only t))
+	(setq mm/wrap-lines t)
+	(goto-char (point-min))
+	(when (search-forward "\n\n") ;; search for the message body
+	  (fill-region (point) (point-max)))))))
+
 
 (defun mm/view-quit-buffer ()
   "Quit the message view and return to the headers."
@@ -264,7 +293,6 @@ removing '^M' etc."
   (let ((inhibit-read-only t))
     (kill-buffer)
     (switch-to-buffer mm/hdrs-buffer)))
-
 
 (defun mm/view-next-header ()
   "View the next header."
