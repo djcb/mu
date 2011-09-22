@@ -268,7 +268,7 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 				     "usage: find <searchexpr>");
 
 	iter = mu_query_run (query, (const char*)lst->data, FALSE,
-			     MU_MSG_FIELD_ID_NONE, TRUE, err);
+			     MU_MSG_FIELD_ID_DATE, TRUE, err);
 	if (!iter)
 		return server_error (err, MU_ERROR_INTERNAL,
 				     "couldn't get iterator");
@@ -786,7 +786,7 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 	fputs (";; type your commands, and press Enter to execute them\n", stdout);
 
 	query = mu_query_new (store, err);
-	if (!query) {
+	if (!query)
 		return MU_G_ERROR_CODE (err);
 
 	while (1) {
