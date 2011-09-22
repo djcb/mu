@@ -111,7 +111,7 @@ struct _MuConfig {
 	/* options for querying 'find' (and view-> 'summary') */
 	char		*fields;	/* fields to show in output */
 	char	        *sortfield;	/* field to sort by (string) */
-	gboolean	 descending;	/* sort descending (z->a)? */
+	gboolean	 reverse;	/* sort in revers order (z->a) */
 	gboolean	 threads;       /* show message threads */
 	gboolean	 summary;	/* include a summary? */
 	char            *bookmark;	/* use bookmark */

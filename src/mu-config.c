@@ -166,12 +166,8 @@ set_group_find_defaults (MuConfig *opts)
 	 * *are* specified, we sort in ascending order. */
 	if (!opts->fields) {
 		opts->fields = "d f s";
-		if (!opts->sortfield) {
+		if (!opts->sortfield)
 			opts->sortfield = "d";
-			opts->descending = TRUE;
-		} else
-			opts->descending = FALSE;
-
 	}
 
 	if (!opts->formatstr) /* by default, use plain output */
@@ -203,8 +199,8 @@ config_options_group_find (MuConfig *opts)
 		 "show message threads", NULL},
 		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &opts->bookmark,
 		 "use a bookmarked query", NULL},
-		{"descending", 'z', 0, G_OPTION_ARG_NONE, &opts->descending,
-		 "sort in descending order (z -> a)", NULL},
+		{"reverse", 'z', 0, G_OPTION_ARG_NONE, &opts->reverse,
+		 "sort in reverse (descending) order (z -> a)", NULL},
 		{"summary", 'k', 0, G_OPTION_ARG_NONE, &opts->summary,
 		 "include a short summary of the message (false)", NULL},
 		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &opts->linksdir,

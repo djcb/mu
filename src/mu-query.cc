@@ -296,7 +296,7 @@ mu_query_preprocess (const char *query)
 
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
-	      MuMsgFieldId sortfieldid, gboolean ascending,
+	      MuMsgFieldId sortfieldid, gboolean reverse,
 	      GError **err)
 {
 	g_return_val_if_fail (self, NULL);
@@ -311,8 +311,7 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 		 * there, and don't let Xapian do any sorting */
 		if (!threads && sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
-					       ascending ? true : false);
-
+					       reverse ? true : false);
 		if (!mu_str_is_empty(searchexpr)) /* NULL or "" */
 			enq.set_query(get_query (self, searchexpr, err));
 		else

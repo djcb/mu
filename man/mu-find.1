@@ -1,6 +1,6 @@
 .TH MU FIND 1 "July 2011" "User Manuals"
 
-.SH NAME 
+.SH NAME
 
 mu find \- find e-mail messages in the \fBmu\fR database.
 
@@ -75,11 +75,11 @@ and get mails about computers, comments, compilation and so on. Note, when
 running from the command-line it's import to put the query in quotes,
 otherwise the shell would interpret the '*'. It is important to remember that
 the '*' invokes the wildcard search only when used as the rightmost character
-of a search term. Furthermore, it is \fBnot\fR a regular expression. 
+of a search term. Furthermore, it is \fBnot\fR a regular expression.
 
 In older versions of mu, queries were logged in \fI<mu-home>/mu.log\fR;
 however, since version 0.9, mu no longer does this.
-     
+
 The basic way to search a message is to type some words matching it, as you
 would do in an internet search engine. For example,
 
@@ -116,14 +116,14 @@ search fields and their abbreviations:
 	from,f          Message sender
 	subject,s       Message subject
 	to,t            To: recipient(s)
-	maildir,m       Maildir	
+	maildir,m       Maildir
 	msgid,i         Message-ID
 	prio,p          Message priority ('low', 'normal' or 'high')
 	flag,g          Message Flags
 	date,d          Date-Range
 	size,z          Message size
 	attach,a        Attachment filename
-	tag,x           Tag for the message (contents of the \fIX-Label\fR field) 
+	tag,x           Tag for the message (contents of the \fIX-Label\fR field)
 .fi
 
 For clarity, this man-page uses the longer versions.
@@ -176,10 +176,10 @@ Note the starting '/'. If you want to match mails in the 'root' maildir, you
 can do with a single '/':
 
 .nf
-  $ mu find maildir:/ 
+  $ mu find maildir:/
 .fi
 
-(and of course you can use the \fBm:\fR shortcut instead of \fBmaildir:\fR) 
+(and of course you can use the \fBm:\fR shortcut instead of \fBmaildir:\fR)
 
 The \fBdate:\fR (or \fBd:\fR) search parameter is 'special' in the fact that
 it takes a range of dates. For now, these dates are in ISO 8601 format
@@ -194,21 +194,21 @@ To get all messages between (inclusive) the 5th of May 2009 and the 2nd of
 June 2010, you could use:
 
 .nf
-  $ mu find date:20090505..20100602 
+  $ mu find date:20090505..20100602
 .fi
 
 Non-numeric characters are ignored, so the following is equivalent but more
 readable:
 
 .nf
-  $ mu find date:2009-05-05..2010-06-02 
+  $ mu find date:2009-05-05..2010-06-02
 .fi
 
 Precision is up to the minute and 24-hour notation for times is used, so
 another example would be:
 
 .nf
-  $ mu find date:2009-05-05/12:23..2010-06-02/17:18 
+  $ mu find date:2009-05-05/12:23..2010-06-02/17:18
 .fi
 
 An important point here is that the date matches are against local the local
@@ -230,7 +230,7 @@ Using this notation, you can for example match messages between two and three
 weeks old:
 
 .nf
-  $ mu find date:3w..2w 
+  $ mu find date:3w..2w
 .fi
 
 There are some special keywords for dates, namely 'now', meaning the
@@ -238,7 +238,7 @@ prsent moment and 'today' for the beginning of today. So to get all messages
 sent or received today, you could use:
 
 .nf
-  $ mu find date:today..now 
+  $ mu find date:today..now
 .fi
 
 The \fBsize\fR or \fBz\fR allows you to match \fIsize ranges\fR -- that is,
@@ -265,7 +265,7 @@ and not here, as they apply to multiple mu-commands.
 
 The \fBfind\fR-command has various options that influence the way \fBmu\fR
 displays the results. If you don't specify anything, the defaults are
-\fI\-\-fields="d f s"\fR, \fI\-\-sortfield=date\fR and \fI\-\-descending\fR.
+\fI\-\-fields="d f s"\fR, \fI\-\-sortfield=date\fR and \fI\-\-reverse\fR.
 
 .TP
 \fB\-f\fR, \fB\-\-fields\fR=\fI<fields>\fR
@@ -293,8 +293,8 @@ search parameters; the complete list:
 	d	Sent \fBd\fRate of the message
 	f	Message sender (\fBf\fRrom:)
 	g	Message flags (fla\fBg\fRs)
-	l	Full path to the message (\fBl\fRocation)       
-	p	Message \fBp\fRriority (high, normal, low) 
+	l	Full path to the message (\fBl\fRocation)
+	p	Message \fBp\fRriority (high, normal, low)
 	s	Message \fBs\fRubject
 	i	Message-\fBi\fRd
 	m	\fBm\fRaildir
@@ -307,8 +307,9 @@ have 'asz' as its corresponding output string, while an encrypted new message
 would have 'nx'.
 
 .TP
-\fB\-s\fR, \fB\-\-sortfield\fR \fR=\fI<field>\fR and \fB\-z\fR, \fB\-\-descending\fR
-specifies the field to sort the search results by, and the direction. The
+\fB\-s\fR, \fB\-\-sortfield\fR \fR=\fI<field>\fR and \fB\-z\fR,
+\fB\-\-reverse\fR specifies the field to sort the search results by, and the
+direction (i.e., 'reverse' means that the sort should be reverted - Z-A). The
 following fields are supported:
 
 .nf
@@ -326,11 +327,11 @@ following fields are supported:
 Thus, for example, to sort messages by date, you could specify:
 
 .nf
-  $ mu find fahrrad --fields "d f s" --sortfield=date --descending
+  $ mu find fahrrad --fields "d f s" --sortfield=date --reverse
 .fi
 
-Note, if you specify a sortfield, by default, messages are sorted in
-descending order (e.g., from lowest to highest). This is usually a good
+Note, if you specify a sortfield, by default, messages are sorted in reverse
+(descending) order (e.g., from lowest to highest). This is usually a good
 choice, but for dates it may be more useful to sort in the opposite direction.
 
 .TP
@@ -362,7 +363,7 @@ programming environments.
 
 \fBxquery\fR shows the Xapian query corresponding to your search terms. This
 is meant for for debugging purposes.
- 
+
 .TP
 \fB\-\-linksdir\fR \fR=\fI<dir>\fR and \fB\-c\fR, \fB\-\-clearlinks\fR
 output the results as a maildir with symbolic links to the found
@@ -423,7 +424,7 @@ information about the message, as in the following table:
 
 Here, the an 'orphan' is a message without a parent message (in the list of
 matches), and a duplicate is a message whose message-id was already seen
-before. 
+before.
 
 The algorithm used for determining the threads is based on Jamie Zawinksy's
 description:
@@ -544,7 +545,7 @@ reason, the below can be an alternative.
 		    mu-wl-search-folder))
 	  (cmdline (concat mu-wl-mu-program " find "
 		      "--clearlinks --format=links --linksdir='" sfldr "' "
-		     muexpr))    
+		     muexpr))
 	  (rv (shell-command cmdline)))
     (cond
       ((= rv 0)  (message "Query succeeded"))
@@ -563,10 +564,10 @@ reason, the below can be an alternative.
 
 ;; querying both in summary and folder
 (define-key wl-summary-mode-map (kbd "Q") ;; => query
-  '(lambda()(interactive)(mu-wl-search-and-goto))) 
+  '(lambda()(interactive)(mu-wl-search-and-goto)))
 (define-key wl-folder-mode-map (kbd "Q") ;; => query
-  '(lambda()(interactive)(mu-wl-search-and-goto))) 
-  
+  '(lambda()(interactive)(mu-wl-search-and-goto)))
+
 .fi
 
 

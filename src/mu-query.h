@@ -73,8 +73,8 @@ char* mu_query_version (MuQuery *store)
  * @param threads calculate message-threads
  * @param sortfield the field id to sort by or MU_MSG_FIELD_ID_NONE if
  * sorting is not desired
- * @param ascending if TRUE sort in ascending (A-Z) order, otherwise,
- * sort in descending (Z-A) order
+ * @param reverse if TRUE, sort in descending (Z-A) order, otherwise,
+ * sort in descending (A-Z) order
  * @param err receives error information (if there is any); if
  * function returns non-NULL, err will _not_be set. err can be NULL
  * possible error (err->code) is MU_ERROR_QUERY,
