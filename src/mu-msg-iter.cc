@@ -52,7 +52,7 @@ private:
 struct _MuMsgIter {
 public:
 	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum,
-		    gboolean threads, MuMsgFieldId sortfield):
+		    gboolean threads, MuMsgFieldId sortfield, bool revert):
 		   _enq(enq), _thread_hash (0), _msg(0) {
 
 		_matches = _enq.get_mset (0, maxnum);
@@ -61,7 +61,8 @@ public:
 
 			_matches.fetch();
 			_thread_hash = mu_threader_calculate
-				(this, _matches.size(), sortfield);
+				(this, _matches.size(), sortfield,
+				 revert ? TRUE: FALSE);
 
 			ThreadKeyMaker keymaker(_thread_hash);
 
@@ -111,7 +112,7 @@ private:
 
 MuMsgIter*
 mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
-		 gboolean threads, MuMsgFieldId sortfield)
+		 gboolean threads, MuMsgFieldId sortfield, gboolean revert)
 {
 	g_return_val_if_fail (enq, NULL);
 	/* sortfield should be set to .._NONE when we're not threading */
@@ -122,7 +123,7 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 			      FALSE);
 	try {
 		return new MuMsgIter ((Xapian::Enquire&)*enq, maxnum, threads,
-				      sortfield);
+				      sortfield, revert ? true : false);
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

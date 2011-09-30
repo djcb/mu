@@ -47,13 +47,14 @@ typedef struct _MuMsgIter MuMsgIter;
  * @param threads whether to calculate threads
  * @param sorting field when using threads; note, when 'threads' is
  * FALSE, this should be MU_MSG_FIELD_ID_NONE
+ * @param if TRUE, revert the sorting order
  *
  * @return a new MuMsgIter, or NULL in case of error
  */
 MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
-			    size_t batchsize,
-			    gboolean threads,
-			    MuMsgFieldId threadsortfield) G_GNUC_WARN_UNUSED_RESULT;
+			    size_t batchsize, gboolean threads,
+			    MuMsgFieldId threadsortfield,
+			    gboolean revert) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the next message (which you got from
