@@ -445,6 +445,7 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 		switch (*cur) {
 		case '@':
 		case '-':
+		case '/':
 			*cur = '_'; break;
 		case '.': {
 			/* don't replace a final cur */
