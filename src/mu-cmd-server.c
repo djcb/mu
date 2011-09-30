@@ -27,6 +27,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #ifdef HAVE_LIBREADLINE
 #include <readline/readline.h>
@@ -60,29 +61,34 @@
 #define BOX "\376"
 
 static void
-send_expr (const char* str)
+send_expr (const char* frm, ...)
 {
 	char *hdr;
+	va_list ap;
+	char pfx[16];
 
-	hdr = g_strdup_printf (BOX "%u" BOX, strlen(str));
+	va_start (ap, frm);
+
+	hdr = g_strdup_vprintf (frm, ap);
+	snprintf (pfx,  sizeof(pfx), BOX "%u" BOX, strlen(hdr));
+
+	fputs (pfx, stdout);
 	fputs (hdr, stdout);
-	fputs (str, stdout);
+
 	g_free (hdr);
+	va_end (ap);
 }
 
 
 static MuError
 server_error (GError **err, MuError merr, const char* str)
 {
-	gchar *errexp;
 	gboolean has_err;
 
 	has_err = err && *err;
-	errexp = g_strdup_printf ("(:error %u :error-message \"%s\") ",
-				  has_err ? (unsigned)(*err)->code : merr,
-				  has_err ? (*err)->message : str);
-	send_expr (errexp);
-	g_free (errexp);
+	send_expr ("(:error %u :error-message \"%s\") ",
+		   has_err ? (unsigned)(*err)->code : merr,
+		   has_err ? (*err)->message : str);
 
 	return has_err ? (unsigned)(*err)->code : merr;
 }
@@ -130,7 +136,7 @@ enum _Cmd {
 	CMD_QUIT,
 	CMD_REMOVE,
 	CMD_SAVE,
-	CMD_VERSION,
+	CMD_INFO,
 	CMD_VIEW,
 
 	CMD_IGNORE
@@ -157,7 +163,7 @@ cmd_from_string (const char *str)
 		{ CMD_QUIT,	"quit"},
 		{ CMD_REMOVE,	"remove" },
 		{ CMD_SAVE,     "save"},
-		{ CMD_VERSION,	"version"},
+		{ CMD_INFO,	"info"},
 		{ CMD_VIEW,	"view"}
 	};
 
@@ -246,13 +252,15 @@ check_param_num (GSList *lst, unsigned min, unsigned max)
 
 
 static MuError
-cmd_version (GSList *lst, GError **err)
+cmd_info (MuStore *store, GSList *lst, GError **err)
 {
 	if (!check_param_num (lst, 0, 0))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: version");
 
-	send_expr ("(:info version :version \"" VERSION "\")");
+	send_expr ("(:info version :version \"" VERSION "\" :doccount %u)",
+		   mu_store_count (store, err));
+
 	return MU_OK;
 }
 
@@ -267,7 +275,7 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: find <searchexpr>");
 
-	iter = mu_query_run (query, (const char*)lst->data, FALSE,
+	iter = mu_query_run (query, (const char*)lst->data, TRUE,
 			     MU_MSG_FIELD_ID_DATE, TRUE, err);
 	if (!iter)
 		return server_error (err, MU_ERROR_INTERNAL,
@@ -350,7 +358,7 @@ static MuError
 do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	 MuFlags flags, gboolean is_move, GError **err)
 {
-	gchar *sexp, *str;
+	gchar *sexp;
 	unsigned rv;
 
 	if (!mu_msg_move_to_maildir (msg, maildir, flags, TRUE, err))
@@ -364,12 +372,9 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 		return server_error (err, MU_ERROR_XAPIAN, "failed to update message");
 
 	sexp = mu_msg_to_sexp (msg, docid, NULL, TRUE);
-	str  = g_strdup_printf ("(:update %s :move %s)", sexp, is_move ? "t" : "nil");
-
-	send_expr (str);
+	send_expr ("(:update %s :move %s)", sexp, is_move ? "t" : "nil");
 
 	g_free (sexp);
-	g_free (str);
 
 	return MU_OK;
 }
@@ -446,7 +451,6 @@ cmd_remove (MuStore *store, GSList *lst, GError **err)
 {
 	unsigned docid;
 	const char *path;
-	char *str;
 
 	if (!check_param_num (lst, 1, 1))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
@@ -470,9 +474,7 @@ cmd_remove (MuStore *store, GSList *lst, GError **err)
 		return server_error (NULL, MU_ERROR_XAPIAN_REMOVE_FAILED,
 				     "failed to remove from database");
 
-	str = g_strdup_printf ("(:remove %u)", docid);
-	send_expr (str);
-	g_free (str);
+	send_expr ("(:remove %u)", docid);
 
 	return MU_OK;
 }
@@ -515,15 +517,13 @@ save_or_open (MuStore *store, GSList *args, gboolean is_save, GError **err)
 		mu_util_play (targetpath, TRUE, FALSE);
 
 	if (rv) {
-		gchar *info, *path;
+		gchar *path;
 		path = mu_str_escape_c_literal (targetpath, FALSE);
-		info = g_strdup_printf ("(:info %s :message \"%s %s\")",
-					is_save ? "save" : "open",
-					is_save ? "Saved" : "Opened",
-					path);
-		send_expr (info);
+		send_expr ("(:info %s :message \"%s %s\")",
+			   is_save ? "save" : "open",
+			   is_save ? "Saved" : "Opened",
+			   path);
 		g_free (path);
-		g_free (info);
 	}
 
 	g_free (targetpath);
@@ -603,7 +603,7 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 {
 	MuMsg *msg;
 	unsigned docid;
-	char *sexp, *str;
+	char *sexp;
 	const char* action;
 
 	if ((!check_param_num (args, 2, 2)))
@@ -611,9 +611,10 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 				     "compose <reply|forward> <docid>");
 
 	action = (const char*)args->data;
-	if (strcmp (action, "reply") != 0 && strcmp(action, "forward") != 0)
+	if (strcmp (action, "reply") != 0 && strcmp(action, "forward") != 0
+	    && strcmp (action, "draft") != 0)
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "compose <reply|forward> <docid>");
+				     "compose <reply|forward|draft> <docid>");
 
 	docid = get_docid ((const char*)g_slist_nth(args, 1)->data);
 	if (docid == 0)
@@ -627,11 +628,9 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE);
 	mu_msg_unref (msg);
 
-	str = g_strdup_printf ("(:compose %s :action %s)", sexp, action);
-	send_expr (str);
+	send_expr ("(:compose %s :action %s)", sexp, action);
 
 	g_free (sexp);
-	g_free (str);
 
 	return MU_OK;
 }
@@ -639,16 +638,12 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 static MuError
 index_msg_cb (MuIndexStats *stats, void *user_data)
 {
-	char *info;
-
 	if (stats->_processed % 500)
 		return MU_OK;
 
-	info = g_strdup_printf ("(:info index :status running "
-				":processed %u :updated %u)",
-				stats->_processed, stats->_updated);
-	send_expr (info);
-	g_free (info);
+	send_expr ("(:info index :status running "
+		   ":processed %u :updated %u)",
+		   stats->_processed, stats->_updated);
 
 	return MU_OK;
 }
@@ -658,7 +653,7 @@ cmd_add (MuStore *store, GSList *lst, GError **err)
 {
 	unsigned docid;
 	const char *path, *maildir;
-	gchar *str, *escpath;
+	gchar *escpath;
 
 	if (!check_param_num (lst, 2, 2))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
@@ -672,11 +667,7 @@ cmd_add (MuStore *store, GSList *lst, GError **err)
 		return server_error (err, MU_ERROR_XAPIAN, "failed to add path");
 
 	escpath = mu_str_escape_c_literal (path, TRUE);
-	str = g_strdup_printf ("(:info add :path %s :docid %u)",
-			       escpath, docid);
-	send_expr (str);
-
-	g_free (str);
+	send_expr ("(:info add :path %s :docid %u)", escpath, docid);
 	g_free (escpath);
 
 	return MU_OK;
@@ -692,7 +683,6 @@ cmd_index (MuStore *store, GSList *lst, GError **err)
 	const char *maildir;
 	MuIndexStats stats, stats2;
 	MuError rv;
-	char *info;
 
 	if (!check_param_num (lst, 1, 1))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
@@ -717,11 +707,9 @@ cmd_index (MuStore *store, GSList *lst, GError **err)
 	if (rv != MU_OK && rv != MU_STOP)
 		return server_error (err, rv, "cleanup failed");
 
-	info = g_strdup_printf ("(:info index :status complete "
-				":processed %u :updated %u :cleaned-up %u)",
-				stats._processed, stats._updated, stats2._cleaned_up);
-	send_expr (info);
-	g_free (info);
+	send_expr ("(:info index :status complete "
+		   ":processed %u :updated %u :cleaned-up %u)",
+		   stats._processed, stats._updated, stats2._cleaned_up);
 
 	return MU_OK;
 }
@@ -739,8 +727,6 @@ cmd_quit (GSList *lst, GError **err)
 	send_expr (";; quiting");
 	return MU_OK;
 }
-
-
 
 
 static gboolean
@@ -761,7 +747,7 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 	case CMD_QUIT:		rv = cmd_quit (args, err); break;
 	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
 	case CMD_SAVE:		rv = cmd_save  (store, args, err); break;
-	case CMD_VERSION:	rv = cmd_version (args, err); break;
+	case CMD_INFO:		rv = cmd_info (store, args, err); break;
 	case CMD_VIEW:		rv = cmd_view (store, args, err); break;
 
 	case CMD_IGNORE: return TRUE;
