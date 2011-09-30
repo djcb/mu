@@ -72,6 +72,7 @@ for the format of <msg-plist>.")
   "*internal* A function called for each (:info type ....) sexp
 received from the server process.")
 
+
 (defvar mm/buf nil
   "*internal* Buffer for results data.")
 
@@ -92,7 +93,10 @@ process."
 	;; add draft messages to the db, so when we're sending them, we can move
 	;; to the sent folder using the `mm/proc-move'.
 	(puthash (plist-get info :path) (plist-get info :docid) mm/path-docid-map))
-      ((eq type 'version) (setq mm/mu-version (plist-get info :version)))
+      ((eq type 'version)
+	(setq
+	  mm/version  (plist-get info :version)
+	  mm/doccount (plist-get-info :doccount)))
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
 	  (message (format "Indexing... processed %d, updated %d"
@@ -104,11 +108,16 @@ process."
       ((plist-get info :message) (message "%s" (plist-get info :message))))))
 
 
+(defconst mm/server-name "*mm-server"
+  "*internal* Name of the server process, buffer.")
+
+
+
 (defun mm/start-proc ()
   "Start the mu server process."
   ;; TODO: add version check
   (unless (file-executable-p mm/mu-binary)
-    (error (format "%S is not executable" mm/mu-binary)))
+    (error (format "%S not found" mm/mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
 	  (coding-system-for-read 'utf-8)
 	  (coding-system-for-write 'no-conversion)
@@ -116,7 +125,7 @@ process."
 	  (args (append args (when mm/mu-home
 			       (list (concat "--muhome=" mm/mu-home))))))
     (setq mm/buf "")
-    (setq mm/mu-proc (apply 'start-process "*mu-server*" "*mu-server*"
+    (setq mm/mu-proc (apply 'start-process mm/server-name mm/server-name
 		       mm/mu-binary args))
     ;; register a function for (:info ...) sexps
     (setq mm/proc-info-func 'mm/proc-info-handler)
@@ -126,9 +135,10 @@ process."
 
 (defun mm/kill-proc ()
   "Kill the mu server process."
-  (when (mm/proc-is-running)
-    (let ((delete-exited-processes t))
-      (kill-process mm/mu-proc)
+  (let (buf (get-buffer mm/server-name))
+    (when buf
+      (let ((delete-exited-processes t))
+	(kill-buffer buf))
       (setq
 	mm/mu-proc nil
 	mm/buf nil))))
@@ -142,16 +152,17 @@ process."
        \376<len-of-sexp>\376<sexp>
 Function returns this sexp, or nil if there was none. `mm/buf' is
 updated as well, with all processed sexp data removed."
-  (let* ((b (string-match "\376\\([0-9]+\\)\376" mm/buf))
-	  (sexp-len
-	    (when b (string-to-number (match-string 1 mm/buf)))))
-    ;; does mm/buf contain the full sexp?
-    (when (and b (>= (length mm/buf) (+ sexp-len (match-end 0))))
-      ;; clear-up start
-      (setq mm/buf (substring mm/buf (match-end 0)))
-      (let ((objcons (read-from-string mm/buf)))
-	(setq mm/buf (substring mm/buf sexp-len))
-	(car objcons)))))
+  (when mm/buf
+    (let* ((b (string-match "\376\\([0-9]+\\)\376" mm/buf))
+	    (sexp-len
+	      (when b (string-to-number (match-string 1 mm/buf)))))
+      ;; does mm/buf contain the full sexp?
+      (when (and b (>= (length mm/buf) (+ sexp-len (match-end 0))))
+	;; clear-up start
+	(setq mm/buf (substring mm/buf (match-end 0)))
+	(let ((objcons (read-from-string mm/buf)))
+	  (setq mm/buf (substring mm/buf sexp-len))
+	  (car objcons))))))
 
 
 (defun mm/proc-filter (proc str)
@@ -252,7 +263,8 @@ terminates."
     (cond
       ((eq status 'signal)
 	(cond
-	  ((eq code 9) (message "the mu server process has been stopped"))
+	  ((eq code 9) (message nil))
+	    ;;(message "the mu server process has been stopped"))
 	  (t (message (format "mu server process received signal %d" code)))))
       ((eq status 'exit)
 	(cond
@@ -361,18 +373,14 @@ set to e.g. '/drafts'; if this works, we will receive (:info :path
 be delivered to the function registered as `mm/proc-message-func'."
   (mm/proc-send-command "view %d" docid))
 
-(defun mm/proc-compose-msg (docid reply-or-forward)
-  "Start composing a message as either a forward or reply to
-message with DOCID. REPLY-OR-FORWARD is either 'reply or 'forward.
-
+(defun mm/proc-compose-msg (docid compose-type)
+  "Start composing a message with DOCID and COMPOSE-TYPE (a symbol,
+  either `forward', `reply' or `draft'.
 The result will be delivered to the function registered as
 `mm/proc-compose-func'."
-  (let ((action (cond
-		  ((eq reply-or-forward 'forward) "forward")
-		  ((eq reply-or-forward 'reply) "reply")
-		  (t (error "symbol must be eiter 'reply or 'forward")))))
-    (mm/proc-send-command "compose %s %d" action docid)))
-
+  (unless (member compose-type '(forward reply draft))
+    (error "Unsupported compose-type"))
+  (mm/proc-send-command "compose %s %d" (symbol-name compose-type) docid))
 
 
 (defun mm/proc-retrieve-mail-update-db ()

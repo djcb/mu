@@ -34,6 +34,11 @@
 (require 'mm-common)
 (require 'mm-proc)
 
+
+;; TODO: get this version through to Makefile magic
+(defconst mm/version "0.9.8pre"
+  "*internal* my version")
+
 ;; Customization
 
 (defgroup mm nil
@@ -72,6 +77,8 @@ PATH, you can specifiy the full path."
   :type 'string
   :group 'mm
   :safe 'stringp)
+
+
 
 (defvar mm/debug nil
   "When set to non-nil, log debug information to the *mm-log* buffer.")
@@ -112,11 +119,11 @@ PATH, you can specifiy the full path."
   :group 'mm/folders)
 
 
-
 ;; the headers view
 (defgroup mm/headers nil
   "Settings for the headers view."
   :group 'mm)
+
 
 (defcustom mm/header-fields
     '( (:date          .  25)
@@ -127,6 +134,10 @@ PATH, you can specifiy the full path."
   respective widths in characters. A width of `nil' means
   'unrestricted', and this is best reserved fo the rightmost (last)
   field.")
+
+(defcustom mm/hdrs-on-top t
+  "If non-nil, display headers above the message view; otherwise, display the headers on the left of the message view"
+  )
 
 ;; the message view
 (defgroup mm/view nil
@@ -250,6 +261,7 @@ be sure it no longer matches)."
     (define-key map "T" 'mm/search-today)
     (define-key map "W" 'mm/search-last-7-days)
     (define-key map "U" 'mm/search-unread)
+    (define-key map "D" 'mm/search-drafts)
 
     (define-key map "s" 'mm/search)
     (define-key map "q" 'mm/quit-mm)
@@ -278,21 +290,24 @@ be sure it no longer matches)."
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
+
 (defun mm()
-  "Start mm."
+  "Start mm; should not be called directly, instead, use `mm'"
   (interactive)
   (let ((buf (get-buffer-create mm/mm-buffer-name))
 	 (inhibit-read-only t))
-     (with-current-buffer buf
+    (with-current-buffer buf
        (erase-buffer)
        (insert
 	"* "
-	 (propertize "mm - mail for emacs\n" 'face 'mm/title-face)
-	 "\n"
+	 (propertize "mm - mail for emacs version " 'face 'mm/title-face)
+	 (propertize  mm/version 'face 'mm/view-header-value-face)
+	 "\n\n"
 	 "  Watcha wanna do?\n\n"
 	 "    * Show me some messages:\n"
 	 "      - In your " (propertize "I" 'face 'highlight) "nbox\n"
 	 "      - " (propertize "U" 'face 'highlight) "nread messages\n"
+	 "      - " (propertize "D" 'face 'highlight) "raft messages\n"
 	 "      - Received " (propertize "T" 'face 'highlight) "oday\n"
 	 "      - Received this " (propertize "W" 'face 'highlight) "eek\n"
 	 "\n"
@@ -310,12 +325,29 @@ be sure it no longer matches)."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; window management
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interactive functions
 
 (defun mm/jump-to-inbox ()
   "Jump to your Inbox folder (as specified in `mm/inbox-folder')."
   (interactive)
   (mm/hdrs-search (concat "maildir:" mm/inbox-folder)))
+
+(defun mm/search-drafts ()
+  "Jump to your Drafts folder (as specified in `mm/draft-folder')."
+  (interactive)
+  (mm/hdrs-search (concat "maildir:" mm/drafts-folder  " OR ;; flag:draft")))
 
 (defun mm/search-unread ()
   "List all your unread messages."
@@ -338,7 +370,6 @@ be sure it no longer matches)."
   (mm/proc-retrieve-mail-update-db))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 (defun mm/quit-mm()

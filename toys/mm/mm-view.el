@@ -54,7 +54,8 @@ UPDATE is non-nil, the current message will be (visually) updated.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let ((buf (get-buffer-create mm/view-buffer-name)) (inhibit-read-only t))
+  (let ((buf (get-buffer-create mm/view-buffer-name))
+	 (inhibit-read-only t))
     (with-current-buffer buf
       (erase-buffer)
       (insert
@@ -88,11 +89,13 @@ marking if it still had that."
       ;; initialize view-mode
       (mm/view-mode)
       (setq ;; these are buffer-local
-	mode-name (format "%s %d" mm/view-buffer-name (plist-get msg :docid))
+	mode-name (if (plist-get msg :subject)
+		    (truncate-string-to-width (plist-get msg :subject) 16 0 nil t)
+		    "No subject")
 	mm/current-msg msg
 	mm/hdrs-buffer hdrsbuf
 	mm/link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
-      
+
       (switch-to-buffer buf)
       (goto-char (point-min))
       (mm/view-beautify)
@@ -174,6 +177,15 @@ or if not available, :body-html converted to text)."
     (define-key map "f" 'mm/compose-forward)
     (define-key map "r" 'mm/compose-reply)
     (define-key map "c" 'mm/compose-new)
+    (define-key map "e" 'mm/edit-draft)
+
+    ;; intra-message navigation
+    (define-key map (kbd "SPC") 'scroll-up)
+    (define-key map (kbd "<home>")
+      '(lambda () (interactive) (goto-char (point-min))))
+    (define-key map (kbd "<end>")
+      '(lambda () (interactive) (goto-char (point-max))))
+
 
     ;; navigation between messages
     (define-key map "n" 'mm/view-next-header)
@@ -185,19 +197,35 @@ or if not available, :body-html converted to text)."
 
     ;; marking/unmarking
     (define-key map "d" 'mm/view-mark-for-trash)
+    (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
+
     (define-key map "D" 'mm/view-mark-for-delete)
+    (define-key map (kbd "<delete>") 'mm/view-mark-for-delete)
+
     (define-key map "m" 'mm/view-mark-for-move)
 
     ;; misc
     (define-key map "w" 'mm/view-toggle-wrap-lines)
+    (define-key map "h" 'mm/view-toggle-hide-quoted)
+    (define-key map "g" 'mm/view-refresh)
 
-    ;; next 3 only warn user
+
+    ;; next 3 only warn user when attempt in the message view
     (define-key map "u" 'mm/view-unmark)
     (define-key map "U" 'mm/view-unmark)
     (define-key map "x" 'mm/view-marked-execute)
     map)
   "Keymap for \"*mm-view*\" buffers.")
 (fset 'mm/view-mode-map mm/view-mode-map)
+
+
+(defvar mm/wrap-lines nil
+  "*internal* Whether to wrap lines or not (variable controlled by
+  `mm/view-toggle-wrap-lines').")
+
+(defvar mm/hide-cited nil
+  "*internal* Whether to hide cited lines or not (the variable can
+  be changed with `mm/view-toggle-hide-cited').")
 
 
 (defun mm/view-mode ()
@@ -209,11 +237,12 @@ or if not available, :body-html converted to text)."
   (make-local-variable 'mm/hdrs-buffer)
   (make-local-variable 'mm/current-msg)
   (make-local-variable 'mm/link-map)
+
   (make-local-variable 'mm/wrap-lines)
+  (make-local-variable 'mm/hide-cited)
 
   (setq major-mode 'mm/view-mode mode-name mm/view-buffer-name)
   (setq truncate-lines t buffer-read-only t))
-
 
 ;;;;;;
 
@@ -229,7 +258,6 @@ Seen; if the message is not New/Unread, do nothing."
 	   (docid (plist-get mm/current-msg :docid)))
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
-	;; if so, mark it as non-new and read
 	(mm/proc-flag-msg docid "+S-u-N")))))
 
 
@@ -263,11 +291,7 @@ removing '^M' etc."
 	(replace-match (concat subst
 			 (propertize (format "[%d]" num)
 			   'face 'mm/view-url-number-face))))))))
-    
 
-(defvar mm/wrap-lines nil
-  "*internal* Whether to wrap lines or not (variable controlled by
-  `mm/view-toggle-wrap-lines').")
 
 
 ;; Interactive functions
@@ -275,16 +299,35 @@ removing '^M' etc."
 (defun mm/view-toggle-wrap-lines ()
   "Toggle line wrap in the message body."
   (interactive)
-  (save-excursion
-    (if mm/wrap-lines
-      (progn
-	(setq mm/wrap-lines nil)
-	(mm/view mm/current-msg mm/hdrs-buffer t)) ;; back to normal
+  (if mm/wrap-lines
+    (progn
+      (setq mm/wrap-lines nil)
+      (mm/view-refresh)) ;; back to normal
+    (save-excursion
       (let ((inhibit-read-only t))
 	(setq mm/wrap-lines t)
 	(goto-char (point-min))
 	(when (search-forward "\n\n") ;; search for the message body
 	  (fill-region (point) (point-max)))))))
+
+(defun mm/view-toggle-hide-cited ()
+  "Toggle hiding of cited lines in the message body."
+  (interactive)
+  (if mm/hide-cited
+    (progn
+      (setq mm/hide-cited nil)
+      (mm/view-refresh))
+    (save-excursion
+      (let ((inhibit-read-only t))
+	(goto-char (point-min))
+	(flush-lines "^[:blank:]*>")
+	(setq mm/hide-cited t)))))
+
+
+(defun mm/view-refresh ()
+  "Redisplay the current message."
+  (interactive)
+  (mm/view mm/current-msg mm/hdrs-buffer t))
 
 
 (defun mm/view-quit-buffer ()

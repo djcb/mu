@@ -116,6 +116,7 @@ Also see `mu/flags-to-string'.
     (map 'list (lambda (dir) (concat "/" dir)) maildirs)))
 
 
+
 (defun mm/ask-maildir (prompt)
   "Ask user with PROMPT for a maildir name, if fullpath is
 non-nill, return the fulpath (i.e., `mm/maildir' prepended to the

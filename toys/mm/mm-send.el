@@ -42,9 +42,6 @@
 (defconst mm/msg-draft-name "*mm-draft*"
   "Name for draft messages.")
 
-(defconst mm/msg-separator "--text follows this line--\n\n"
-  "separator between headers and body, needed for `message-mode'")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; FIXME
@@ -67,8 +64,6 @@ or if not available, :body-html converted to text)."
       (html2text)
       (buffer-string))
     "No body found"))
-
-
 
 (defun mm/msg-cite-original (msg)
   "Cite the body text of MSG, with a \"On %s, %s wrote:\"
@@ -188,6 +183,9 @@ nil, function returns nil."
       (format "%s <%s>" user-full-name user-mail-address)
       (format "%s" user-mail-address))))
 
+(defconst mm/reply-docid-header "Reply-docid"
+  "*internal* The reply-to-docid header.")
+
 (defun mm/msg-create-reply (msg reply-all)
   "Create a draft message as a reply to MSG; if REPLY-ALL is
 non-nil, reply to all recipients.
@@ -204,7 +202,7 @@ A reply message has fields:
   In-Reply-To: - message-id of MSG
   User-Agent   - see  `mm/msg-user-agent'
 
-Then follows `mm/msg-separator' (for `message-mode' to separate
+Then follows `mail-header-separator' (for `message-mode' to separate
 body from headers)
 
 And finally, the cited body of MSG, as per `mm/msg-cite-original'."
@@ -217,15 +215,20 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
        (mm/msg-header "Cc" (mm/msg-cc-create msg reply-all))
 
        (mm/msg-hidden-header "User-agent"  (mm/msg-user-agent))
+       (mm/msg-hidden-header mm/reply-docid-header  (plist-get msg :docid))
        (mm/msg-hidden-header "References"  (mm/msg-references-create msg))
 
        (mm/msg-hidden-header "In-reply-to" (plist-get msg :message-id))
 
-       (mm/msg-header"Subject"
+       (mm/msg-header "Subject"
 	 (concat mm/msg-reply-prefix (plist-get msg :subject)))
 
-       mm/msg-separator
+       (propertize mail-header-separator 'read-only t 'intangible t) '"\n"
        (mm/msg-cite-original msg)))
+
+
+(defconst mm/forward-docid-header "Forward-docid"
+  "*internal* The reply-to-docid header.")
 
 ;; TODO: attachments
 (defun mm/msg-create-forward (msg)
@@ -241,7 +244,7 @@ then, the following fields, normally hidden from user:
   References:  - see `mm/msg-references-create'
   User-Agent   - see  `mm/msg-user-agent'
 
-Then follows `mm/msg-separator' (for `message-mode' to separate
+Then follows `mail-header-separator' (for `message-mode' to separate
 body from headers)
 
 And finally, the cited body of MSG, as per `mm/msg-cite-original'."
@@ -253,10 +256,12 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
       (mm/msg-header "To" "")
       (mm/msg-hidden-header "User-agent"  (mm/msg-user-agent))
       (mm/msg-hidden-header "References"  (mm/msg-references-create msg))
-       (mm/msg-header"Subject"
+      (mm/msg-hidden-header mm/forward-docid-header  (plist-get msg :docid))
+
+      (mm/msg-header"Subject"
 	 (concat mm/msg-forward-prefix (plist-get msg :subject)))
 
-      mm/msg-separator
+      (propertize mail-header-separator 'read-only t 'intangible t) "\n"
 
       (mm/msg-cite-original msg)))
 
@@ -272,7 +277,7 @@ then, the following fields, normally hidden from user:
   Reply-To:    - if `mail-reply-to' has been set
   User-Agent   - see  `mm/msg-user-agent'
 
-Then follows `mm/msg-separator' (for `message-mode' to separate
+Then follows `mail-header-separator' (for `message-mode' to separate
 body from headers)."
   (concat
     (mm/msg-header "From" (or (mm/msg-from-create) ""))
@@ -282,7 +287,7 @@ body from headers)."
     (mm/msg-header "To" "")
     (mm/msg-hidden-header "User-agent"  (mm/msg-user-agent))
     (mm/msg-header "Subject" "")
-    mm/msg-separator))
+    (propertize mail-header-separator 'read-only t 'intangible t) "\n"))
 
 (defconst mm/msg-prefix "mm" "prefix for mm-generated
 mail files; we use this to ensure that our hooks don't mess
@@ -297,12 +302,6 @@ message.
     (emacs-pid)
     (random t)))
 ;;;    (replace-regexp-in-string "[:/]" "_" (system-name))))
-
-
-(defvar mm/send-reply-docid nil   "Docid of the message this is a reply to.")
-(defvar mm/send-forward-docid nil "Docid of the message being forwarded.")
-
-(defvar mm/mm-msg nil "Whether the current message is an mm msg.")
 
 (defun mm/msg-compose (str &optional parent-docid reply-or-forward)
   "Create a new draft message in the drafts folder with STR as
@@ -337,58 +336,62 @@ using Gnus' `message-mode'."
     ;; the new docid from `mm/path-docid-map'.
     (write-file draftfile)
     (mm/proc-add draftfile mm/drafts-folder)
-
     (message-mode)
 
-    (make-local-variable 'mm/send-reply-docid)
-    (make-local-variable 'mm/send-forward-docid)
-    (make-local-variable 'mm/mm-msg)
+    (make-local-variable 'write-file-functions)
     
+    ;; update the db when the file is saved...]
+    (add-to-list 'write-file-functions
+      (lambda() (mm/proc-add (buffer-file-name) mm/drafts-folder)))
+
     ;; hook our functions up with sending of the message
     (add-hook 'message-sent-hook 'mm/msg-save-to-sent nil t)
     (add-hook 'message-sent-hook 'mm/send-set-parent-flag nil t)
-    
-    (setq mm/mm-msg t)
 
-    (if (eq reply-or-forward 'reply)
-      (setq mm/send-reply-docid   parent-docid)
-      (setq mm/send-forward-docid parent-docid))
+    (let ((message-hidden-headers
+	    `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
+	       ,(concat mm/reply-docid-header ":")
+	       ,(concat mm/forward-docid-header ":")
+	       "^User-agent:")))
+      (message-hide-headers))
 
     (message-goto-body)))
 
 
-(defun mm/send-compose-handler (msg reply-or-forward)
+(defun mm/send-compose-handler (msg compose-type)
   "This function is registered as the compose handler in
 `mm/proc-compose-func', and will be called when a new message is to
 be composed, based on some existing one. MSG is a message sexp,
-while REPLY-OR-FORWARD is a symbol, either 'reply or 'forward.
+while COMPOSE-TYPE is a symbol, either 'reply or 'forward.
 
 In case of 'forward, create a draft forward for MSG, and switch to
 an edit buffer with the draft message.
 
 In case of 'reply, create a draft reply to MSG, and swith to an
 edit buffer with the draft message"
-
-  (unless (member reply-or-forward '(reply forward))
-    (error "unexpected type in compose handler"))
-  (let ((parent-docid (plist-get msg :docid)))
-
-    (if (eq reply-or-forward 'forward)
-
-      ;; forward
-      (when (mm/msg-compose (mm/msg-create-forward msg) parent-docid 'forward)
-	(message-goto-to))
-
-      ;; reply
+  (cond
+    ((eq compose-type 'forward) ;; forward
+      (when (mm/msg-compose (mm/msg-create-forward msg)
+	      (plist-get msg :docid) 'forward)
+	(message-goto-to)))
+    ((eq compose-type 'reply) ;; reply
       (let* ((recipnum (+ (length (plist-get msg :to))
-			 (length (plist-get msg :cc))))
+			   (length (plist-get msg :cc))))
 	      (replyall (when (> recipnum 1)
 			  (yes-or-no-p
-			    (format "Reply to all ~%d recipients (y) or only the sender (n)? "
+			    (format "Reply to all ~%d recipients? "
 			      (+ recipnum))))))
 	;; exact num depends on some more things
-	(when (mm/msg-compose (mm/msg-create-reply msg replyall) parent-docid 'reply)
-	  (message-goto-body))))))
+	  (when (mm/msg-compose (mm/msg-create-reply msg replyall)
+		  (plist-get msg :docid) 'reply)
+	    (message-goto-body))))
+    ((eq compose-type 'draft)
+      (unless (member 'draft (plist-get msg :flags))
+	(error "Cannot edit a non-draft message"))
+      (mm/edit-draft (plist-get msg :docid) (plist-get msg :path)))
+
+    (t (error "unexpected type %S in compose handler" compose-type))))
+
 
 
 (defun mm/msg-save-to-sent ()
@@ -413,15 +416,46 @@ edit buffer with the draft message"
   "Set the 'replied' flag on messages we replied to, and the
 'passed' flag on message we have forwarded.
 
-NOTE: This does not handle the case yet of message which are
-edited from drafts. That case could be solved by searching for
-the In-Reply-To message-id for replies.
+We do this by checking for our special header, either
+`mm/reply-docid-header' or `mm/forward-docid-header'. Doing it this
+way ensure that we know the parent-docid even when re-editing
+drafts (alternatively, we could try to the 'parent' message
+using "In-reply-to"/"References", but since that is not necessarily
+accurate, doing it the way we do, is better.
+
+TODO: remove this header again, before really sending.
 
 This is meant to be called from message mode's
 `message-sent-hook'."
   ;; handle the replied-to message
-  (when mm/send-reply-docid (mm/proc-flag-msg mm/send-reply-docid "+R"))
-  (when mm/send-forward-docid (mm/proc-flag-msg mm/send-forward-docid "+P")))
+  (save-excursion
+    (goto-char (point-min))
+    (let ((eoh (when (search-forward mail-header-separator nil t)
+		 (point))) (reply-docid) (forward-docid))
+      (when eoh ;; end-of-headers
+	(goto-char (point-min))
+	(if (re-search-forward
+	      (concat "^" mm/reply-docid-header ":[:blank:]*\\([0-9]+\\)") eoh t)
+	  (setq reply-docid (string-to-int (match-string 1)))
+	  (when (re-search-forward
+		(concat "^" mm/forward-docid-header ":[:blank:]*\\([0-9]+\\)") eoh t)
+	    (setq forward-docid (string-to-int (match-string 1))))))
+
+      (when reply-docid   (mm/proc-flag-msg reply-docid "+R"))
+      (when forward-docid (mm/proc-flag-msg forward-docid "+P")))))
+
+(defun mm/edit-draft (docid path)
+  "Edit a draft message."
+
+  (unless (file-readable-p path) (error "Cannot read %s" path))
+  (find-file path)
+  (message-mode)
+
+  ;; hook our functions up with sending of the message
+  (add-hook 'message-sent-hook 'mm/msg-save-to-sent nil t)
+  (add-hook 'message-sent-hook 'mm/send-set-parent-flag nil t)
+
+  (message-goto-body))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
