@@ -58,7 +58,8 @@ GHashTable* create_doc_id_thread_path_hash (MuContainer *root, size_t match_num)
 /* msg threading algorithm, based on JWZ's algorithm,
  * http://www.jwz.org/doc/threading.html */
 GHashTable*
-mu_threader_calculate (MuMsgIter *iter, size_t matchnum, MuMsgFieldId sortfield)
+mu_threader_calculate (MuMsgIter *iter, size_t matchnum,
+		       MuMsgFieldId sortfield, gboolean revert)
 {
 	GHashTable *id_table, *thread_ids;
 	MuContainer *root_set;
@@ -81,8 +82,8 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum, MuMsgFieldId sortfield)
 
 	/* sort root set */
 	if (sortfield != MU_MSG_FIELD_ID_NONE)
-		root_set = mu_container_sort (root_set, sortfield,
-					      NULL, FALSE);
+		root_set = mu_container_sort (root_set, sortfield, revert,
+					      NULL);
 
 	/* step 5: group root set by subject */
 	/* group_root_set_by_subject (root_set); */

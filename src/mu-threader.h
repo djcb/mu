@@ -43,11 +43,12 @@ G_BEGIN_DECLS
  * @param matches the number of matches in the set *
  * @param sortfield the field to sort results by, or
  * MU_MSG_FIELD_ID_NONE if no sorting should be performed
- * 
+ * @param revert if TRUE, if revert the sorting order
+ *
  * @return a hashtable; free with g_hash_table_destroy when done with it
- */	
+ */
 GHashTable *mu_threader_calculate (MuMsgIter *iter, size_t matches,
-				   MuMsgFieldId sortfield);
+				   MuMsgFieldId sortfield, gboolean revert);
 
 
 G_END_DECLS
