@@ -308,5 +308,3 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 
 	return g_string_free (gstr, FALSE);
 }
-
-
