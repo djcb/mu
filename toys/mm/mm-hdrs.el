@@ -430,10 +430,18 @@ work well."
 (defun mm/hdrs-compose (compose-type)
   "Compose either a reply/forward based on the message at point. or
 start editing it. COMPOSE-TYPE is either `reply', `forward' or
-`draft'."
-  (let ((docid (mm/hdrs-get-docid)))
-    (unless docid (error "No message at point."))
-    (mm/proc-compose-msg docid compose-type)))
+`edit'."
+  (if (eq compose-type 'new)
+    (mm/send-compose-handler 'new)
+    (let ((docid (mm/hdrs-get-docid)))
+      (when (and (not docid) (not ))
+	(error "No message at point."))
+      (cond
+	((member compose-type '(reply forward))
+	  (mm/proc-compose compose-type docid))
+	((eq compose-type 'edit)
+	  (mm/proc-compose 'edit docid))
+	(t (error "invalid compose type %S" compose-type))))))
 
 
 (defun mm/hdrs-docid-is-marked (docid)
@@ -609,14 +617,21 @@ folder (`mm/trash-folder')."
   (with-current-buffer mm/hdrs-buffer
     (mm/hdrs-compose 'forward)))
 
+(defun mm/compose-new ()
+  "Compose a new, empty message."
+  (interactive)
+  (mm/hdrs-compose 'new))
+
 (defun mm/edit-draft ()
   "Start editing the existing draft message at point."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
-    (mm/hdrs-compose 'draft)))
+    (mm/hdrs-compose 'edit)))
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mm-hdrs)
-

@@ -207,9 +207,9 @@ or if not available, :body-html converted to text)."
     ;; misc
     (define-key map "w" 'mm/view-toggle-wrap-lines)
     (define-key map "h" 'mm/view-toggle-hide-quoted)
-    (define-key map "g" 'mm/view-refresh)
 
-
+    (define-key map "R" 'mm/view-refresh)
+    
     ;; next 3 only warn user when attempt in the message view
     (define-key map "u" 'mm/view-unmark)
     (define-key map "U" 'mm/view-unmark)
@@ -258,7 +258,7 @@ Seen; if the message is not New/Unread, do nothing."
 	   (docid (plist-get mm/current-msg :docid)))
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
-	(mm/proc-flag-msg docid "+S-u-N")))))
+	(mm/proc-flag docid "+S-u-N")))))
 
 
 (defvar mm/link-map nil
@@ -272,7 +272,7 @@ removing '^M' etc."
 
     ;; remove the stupid CRs
     (goto-char (point-min))
-    (while (search-forward "\\| " nil t)
+    (while (re-search-forward "\\| " nil t)
       (replace-match "" nil t))
 
     ;; give the footer a different color...

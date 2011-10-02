@@ -240,8 +240,8 @@ updated as well, with all processed sexp data removed."
 	;; start composing a new message
 	((plist-get sexp :compose)
 	  (funcall mm/proc-compose-func
-	    (plist-get sexp :compose)
-	    (plist-get sexp :action)))
+	    (plist-get sexp :compose-type)
+	    (plist-get sexp :compose)))
 
 	;; get some info
 	((plist-get sexp :info)
@@ -345,10 +345,10 @@ or (:error ) sexp, which are handled my `mm/proc-update-func' and
     ;; note, we send the maildir, *not* the full path
     (mm/proc-send-command "move %d \"%s\" \"%s\"" docid targetmdir flagstr)))
 
-(defun mm/proc-flag-msg (docid flags)
-  "Set FLAGS for the message identified by DOCID."
+(defun mm/proc-flag (docid-or-msgid flags)
+  "Set FLAGS for the message identified by either DOCID-OR-MSGID."
   (let ((flagstr (if (stringp flags) flags (mm/flags-to-string flags))))
-    (mm/proc-send-command "flag %d %s" docid flagstr)))
+    (mm/proc-send-command "flag %S %s" docid-or-msgid flagstr)))
 
 (defun mm/proc-index (maildir)
   "Update the message database for MAILDIR."
@@ -373,43 +373,35 @@ set to e.g. '/drafts'; if this works, we will receive (:info :path
 be delivered to the function registered as `mm/proc-message-func'."
   (mm/proc-send-command "view %d" docid))
 
-(defun mm/proc-compose-msg (docid compose-type)
+(defun mm/proc-compose (compose-type docid)
   "Start composing a message with DOCID and COMPOSE-TYPE (a symbol,
-  either `forward', `reply' or `draft'.
+  either `forward', `reply' or `edit'.
 The result will be delivered to the function registered as
 `mm/proc-compose-func'."
-  (unless (member compose-type '(forward reply draft))
+  (unless (member compose-type '(forward reply edit))
     (error "Unsupported compose-type"))
   (mm/proc-send-command "compose %s %d" (symbol-name compose-type) docid))
 
 
+(defconst mm/update-buffer-name "*update*"
+  "*internal* Name of the buffer to download mail")
+
 (defun mm/proc-retrieve-mail-update-db ()
   "Try to retrieve mail (using the user-provided shell command),
 and update the database afterwards."
-  (when mm/get-mail-command
-    (let ((buf (get-buffer-create "*mm-retrieve*"))
-	   (cmd mm/get-mail-command))
-      (message "Retrieving mail...")
-      (let ((proc (start-process "*mm-retrieve*" buf "sh" "-c" cmd)))
-	(set-process-sentinel proc 'mm/proc-retrieve-mail-sentinel)))))
-
-
-(defun mm/proc-retrieve-mail-sentinel (proc msg)
-  "Function that will be called when the mail retrieval process
-terminates."
-  (let ((status (process-status proc)) (code (process-exit-status proc)))
-    (cond
-      ((eq status 'signal)
-	(cond
-	  ((eq code 9) (message "the mail retrieval process has been stopped"))
-	  (t (message (format "mu server process received signal %d" code)))))
-      ((eq status 'exit)
-	(if (eq code 0) ;; all went well, it seems
-	  (progn
-	    (message "Updating the database...")
-	    (mm/proc-index mm/maildir))
-	  (progn
-	    (message "Received code %d from mail retrieval process" code)))))))
+  (unless mm/get-mail-command
+    (error "`mm/get-mail-command' is not defined"))
+  (let ((buf (get-buffer-create  mm/update-buffer-name)))
+    (split-window-vertically -8)
+    (switch-to-buffer-other-window buf)
+    (with-current-buffer buf
+      (erase-buffer))
+    (message "Retrieving mail...")
+    (call-process mm/get-mail-command nil buf t)
+    (message "Updating the database...")
+    (mm/proc-index mm/maildir)
+    (with-current-buffer buf
+      (kill-buffer-and-window))))
 
 
 (provide 'mm-proc)

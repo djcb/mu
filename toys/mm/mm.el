@@ -347,7 +347,7 @@ be sure it no longer matches)."
 (defun mm/search-drafts ()
   "Jump to your Drafts folder (as specified in `mm/draft-folder')."
   (interactive)
-  (mm/hdrs-search (concat "maildir:" mm/drafts-folder  " OR ;; flag:draft")))
+  (mm/hdrs-search (concat "maildir:" mm/drafts-folder  " OR flag:draft")))
 
 (defun mm/search-unread ()
   "List all your unread messages."
