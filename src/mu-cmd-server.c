@@ -68,14 +68,20 @@ send_expr (const char* frm, ...)
 	char *hdr;
 	va_list ap;
 	char pfx[16];
+	int rv;
 
 	va_start (ap, frm);
 
 	hdr = g_strdup_vprintf (frm, ap);
 	snprintf (pfx, sizeof(pfx), BOX "%u" BOX, strlen(hdr));
 
-	fputs (pfx, stdout);
-	fputs (hdr, stdout);
+	rv = write (fileno(stdout), pfx, strlen (pfx));
+	if (rv < 0)
+		MU_WRITE_LOG ("error writing output: %s", strerror(errno));
+
+	rv = write (fileno(stdout), hdr, strlen (hdr));
+	if (rv < 0)
+		MU_WRITE_LOG ("error writing output: %s", strerror(errno));
 
 	g_free (hdr);
 	va_end (ap);
