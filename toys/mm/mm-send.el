@@ -378,6 +378,7 @@ using Gnus' `message-mode'."
       (setq buffer-read-only t)))
 
 
+
 (defun mm/send-set-parent-flag ()
   "Set the 'replied' flag on messages we replied to, and the
 'passed' flag on message we have forwarded.
@@ -406,13 +407,15 @@ This is meant to be called from message mode's
 	  (let ((refs))
 	    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
 	      (push (match-string 0) refs))
-	    (setq forwarded-from (last refs))
-	    (message "refs: %S, forwarded-from %S" refs forwarded-from)))))
+	    (setq forwarded-from (last refs))))))
 
-    (when in-reply-to
-      (mm/proc-flag in-reply-to "+R"))
-    (when forwarded-from
-      (mm/proc-flag forwarded-from "+P"))))
+    ;; remove the <>
+    (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
+      (mm/proc-flag (match-string 1 in-reply-to) "+R"))
+    (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
+      (mm/proc-flag (match-string 1 forwarded-from) "+P"))))
+
+
 
 
 (provide 'mm-send)
