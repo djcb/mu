@@ -184,8 +184,6 @@ if provided, or at the end of the buffer otherwise."
     (define-key map "p" 'mm/prev-header)
     (define-key map "j" 'mm/jump-to-maildir)
 
-
-
     ;; marking/unmarking/executing
     (define-key map "m" 'mm/mark-for-move)
 
@@ -296,7 +294,7 @@ provided, put it at the end of the buffer."
 	  (let ((inhibit-read-only t) (pos (marker-position marker)))
 	    (goto-char pos)
 	    (delete-char 2)
-	    (insert mark " ")
+	    (insert (propertize mark 'face 'mm/hdrs-marks-face) " ")
 	    (put-text-property pos
 	      (line-beginning-position 2) 'docid docid)
 	    ;; update the msg-map, ie., move it back to the start of the line
@@ -478,11 +476,11 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
     (kill-buffer)
     (mm)))
 
-;; TODO implement
-(defun mm/change-sort ()
-  "Change the sorting field and/or direction."
-  (interactive)
-  )
+;;;;  TODO implement
+;; (defun mm/change-sort ()
+;;   "Change the sorting field and/or direction."
+;;   (interactive)
+;;  )
 
 (defun mm/rerun-search ()
   "Rerun the search for the last search expression; if none exists,
@@ -522,29 +520,6 @@ return the new docid. Otherwise, return nil."
   (interactive)
   (let ((fld (mm/ask-maildir "Jump to maildir: ")))
     (mm/hdrs-search (concat "maildir:" fld))))
-
-
-;; (defun mm/select ()
-;;   "Select the current messsage."
-;;   (interactive)
-;;   (with-current-buffer mm/hdrs-buffer
-;;     (mm/hdrs-mark 'select)
-;;     (mm/next-header)))
-
-;; (defun mm/mark-selected (marktype)
-;;   "If any headers have been selected, set the mark for all of them;
-;; otherwise, return nil."
-;;   (let ((selected) (target))
-;;     (maphash
-;;       (lambda (docid val)
-;; 	(when (eq (car val) 'select)
-;; 	  (setq selected t)
-;; 	  (case marktype
-
-;;       mm/marks-map
-
-
-
 
 
 

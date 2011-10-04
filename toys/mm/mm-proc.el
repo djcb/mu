@@ -121,6 +121,7 @@ process."
   (let* ((process-connection-type nil) ;; use a pipe
 	  (coding-system-for-read 'utf-8)
 	  (coding-system-for-write 'no-conversion)
+	  (process-adaptive-read-buffering t)
 	  (args '("server"))
 	  (args (append args (when mm/mu-home
 			       (list (concat "--muhome=" mm/mu-home))))))

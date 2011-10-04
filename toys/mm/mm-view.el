@@ -173,7 +173,6 @@ or if not available, :body-html converted to text)."
     (define-key map "j" 'mm/jump-to-maildir)
 
     (define-key map "g" 'mm/view-go-to-url)
-
     (define-key map "f" 'mm/compose-forward)
     (define-key map "r" 'mm/compose-reply)
     (define-key map "c" 'mm/compose-new)
@@ -185,6 +184,10 @@ or if not available, :body-html converted to text)."
       '(lambda () (interactive) (goto-char (point-min))))
     (define-key map (kbd "<end>")
       '(lambda () (interactive) (goto-char (point-max))))
+    (define-key map (kbd "RET")
+      '(lambda () (interactive) (scroll-up 1)))
+    (define-key map (kbd "<backspace>")
+      '(lambda () (interactive) (scroll-up -1)))
 
 
     ;; navigation between messages
@@ -206,7 +209,7 @@ or if not available, :body-html converted to text)."
 
     ;; misc
     (define-key map "w" 'mm/view-toggle-wrap-lines)
-    (define-key map "h" 'mm/view-toggle-hide-quoted)
+    (define-key map "h" 'mm/view-toggle-hide-cited)
 
     (define-key map "R" 'mm/view-refresh)
     
@@ -272,7 +275,7 @@ removing '^M' etc."
 
     ;; remove the stupid CRs
     (goto-char (point-min))
-    (while (re-search-forward "\\| " nil t)
+    (while (re-search-forward "[ ]" nil t)
       (replace-match "" nil t))
 
     ;; give the footer a different color...

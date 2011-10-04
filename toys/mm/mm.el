@@ -233,13 +233,18 @@ be sure it no longer matches)."
   :group 'mm/faces)
 
 (defface mm/view-attach-number-face
-  '((t :inherit font-lock-builtin-face :bold t))
+  '((t :inherit font-lock-variable-name-face :bold t))
   "Face for the number tags for attachments."
   :group 'mm/faces)
 
 (defface mm/view-footer-face
   '((t :inherit font-lock-comment-face))
   "Face for message footers (signatures)."
+  :group 'mm/faces)
+
+(defface mm/hdrs-marks-face
+  '((t :inherit font-lock-preprocessor-face))
+  "Face for the mark in the headers list."
   :group 'mm/faces)
 
 
