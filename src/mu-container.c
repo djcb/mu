@@ -90,8 +90,7 @@ find_last (MuContainer *c)
 }
 
 
-#if 0
-static gboolean
+G_GNUC_UNUSED static gboolean
 check_dup (MuContainer *c, GHashTable *hash)
 {
 	if (g_hash_table_lookup (hash, c)) {
@@ -118,7 +117,6 @@ assert_no_duplicates (MuContainer *c)
 
 	g_hash_table_destroy (hash);
 }
-#endif
 
 
 MuContainer*
@@ -598,5 +596,3 @@ mu_container_thread_info_hash_new (MuContainer *root_set, size_t matchnum)
 
 	return ti.hash;
 }
-
-

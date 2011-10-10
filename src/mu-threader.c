@@ -100,10 +100,7 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum,
 	return thread_ids;
 }
 
-
-#if 0
-
-static void
+G_GNUC_UNUSED static void
 check_dup (const char *msgid, MuContainer *c, GHashTable *hash)
 {
 	if (g_hash_table_lookup (hash, c)) {
@@ -114,21 +111,19 @@ check_dup (const char *msgid, MuContainer *c, GHashTable *hash)
 		g_hash_table_insert (hash, c, GUINT_TO_POINTER(TRUE));
 }
 
-static void
+
+G_GNUC_UNUSED static void
 assert_no_duplicates (GHashTable *ids)
 {
 	GHashTable *hash;
 
 	hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-	g_hash_table_foreach (ids,
-			      (GHFunc)check_dup,
-			      hash);
+	g_hash_table_foreach (ids, (GHFunc)check_dup, hash);
 
 	g_hash_table_destroy (hash);
 }
 
-#endif
 
 
 
@@ -189,10 +184,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 			c2 = mu_container_new (msg, docid, "<dup>");
 			c2->flags = MU_CONTAINER_FLAG_DUP;
 			c = mu_container_append_children (c, c2);
-			g_hash_table_insert (id_table,
-					     (gpointer)mu_msg_get_path (msg), c2);
-			/* assert_no_duplicates (id_table); */
-
+			/* don't add it to the id_table */
 			return NULL; /* don't process this message further */
 		}
 	} else { /* Else: Create a new MuContainer object holding
@@ -367,6 +359,8 @@ prune_maybe (MuContainer *c)
 			c = mu_container_splice_children (c, cur);
 	}
 
+	g_return_val_if_fail (c, FALSE);
+
 	/* don't touch containers with messages */
 	if (c->msg)
 		return TRUE;
@@ -419,4 +413,3 @@ prune_empty_containers (MuContainer *root_set)
 
 	return root_set;
 }
-
