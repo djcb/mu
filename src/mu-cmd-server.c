@@ -52,6 +52,32 @@
 #include "mu-msg-part.h"
 
 
+static gboolean MU_CAUGHT_SIGNAL;
+
+static void
+sig_handler (int sig)
+{
+        MU_CAUGHT_SIGNAL = TRUE;
+}
+
+static void
+install_sig_handler (void)
+{
+        struct sigaction action;
+        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM };
+
+        MU_CAUGHT_SIGNAL = FALSE;
+
+        action.sa_handler = sig_handler;
+        sigemptyset(&action.sa_mask);
+        action.sa_flags = SA_RESETHAND;
+
+        for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
+                if (sigaction (sigs[i], &action, NULL) != 0)
+                        g_critical ("set sigaction for %d failed: %s",
+				    sigs[i], strerror (errno));;
+}
+
 /* we include \376 (0xfe) and \377, (0xff) because it cannot occur as
  * part of the other output, as 0xfe, 0xff are not valid UTF-8
  */
@@ -301,7 +327,7 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 				     "couldn't get iterator");
 
 	u = 0;
-	while (!mu_msg_iter_is_done (iter)) {
+	while (!mu_msg_iter_is_done (iter) && !MU_CAUGHT_SIGNAL) {
 		MuMsg *msg;
 		msg = mu_msg_iter_get_msg_floating (iter);
 		if (mu_msg_is_readable (msg)) {
@@ -351,7 +377,7 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 			     MU_MSG_FIELD_ID_NONE, FALSE, err);
 	g_free (querystr);
 	docid = MU_STORE_INVALID_DOCID;
-	if (!iter)
+	if (!iter || mu_msg_iter_is_done (iter))
 		if (err && *err == NULL)
 			g_set_error (err, 0, MU_ERROR_NO_MATCHES,
 				     "could not find message %s", str);
@@ -659,7 +685,7 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE);
 	mu_msg_unref (msg);
 
-	send_expr ("(:view %s)", sexp);
+	send_expr ("(:view %s)\n", sexp);
 
 	g_free (sexp);
 
@@ -709,6 +735,9 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 static MuError
 index_msg_cb (MuIndexStats *stats, void *user_data)
 {
+	if (MU_CAUGHT_SIGNAL)
+		return MU_STOP;
+
 	if (stats->_processed % 500)
 		return MU_OK;
 
@@ -780,6 +809,8 @@ cmd_index (MuStore *store, GSList *lst, GError **err)
 	if (rv != MU_OK && rv != MU_STOP)
 		return server_error (err, rv, "cleanup failed");
 
+	mu_store_flush (store);
+
 	send_expr ("(:info index :status complete "
 		   ":processed %u :updated %u :cleaned-up %u)",
 		   stats._processed, stats._updated, stats2._cleaned_up);
@@ -841,6 +872,8 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 
 	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
 
+	install_sig_handler ();
+
 	fputs (";; welcome to mu\n", stdout);
 	fputs (";; type your commands, and press Enter to execute them\n", stdout);
 
@@ -848,7 +881,7 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 	if (!query)
 		return MU_G_ERROR_CODE (err);
 
-	while (1) {
+	while (!MU_CAUGHT_SIGNAL) {
 		char *line;
 		Cmd cmd;
 		GSList *args;
@@ -864,8 +897,10 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 
 		mu_str_free_list (args);
 
-		if (cmd == CMD_QUIT)
+		if (cmd == CMD_QUIT) {
+			mu_store_flush (store);
 			break;
+		}
 	}
 
 	mu_query_destroy (query);
