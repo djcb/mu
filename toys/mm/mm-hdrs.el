@@ -432,7 +432,7 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
   (if (eq compose-type 'new)
     (mm/send-compose-handler 'new)
     (let ((docid (mm/hdrs-get-docid)))
-      (when (and (not docid) (not ))
+      (unless docid
 	(error "No message at point."))
       (cond
 	((member compose-type '(reply forward))

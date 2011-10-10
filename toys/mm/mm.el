@@ -273,7 +273,7 @@ be sure it no longer matches)."
     (define-key map "j" 'mm/jump-to-maildir)
     (define-key map "c" 'mm/compose-new)
 
-    (define-key map "r" 'mm/retrieve-mail)
+    (define-key map "m" 'mm/toggle-mail-sending-mode)
     (define-key map "u" 'mm/retrieve-mail-update-db)
 
     map)
@@ -307,6 +307,10 @@ be sure it no longer matches)."
 	"* "
 	 (propertize "mm - mail for emacs version " 'face 'mm/title-face)
 	 (propertize  mm/version 'face 'mm/view-header-value-face)
+	 " (send: "
+	 (propertize (if smtpmail-queue-mail "queued" "direct")
+	   'face 'mm/view-header-key-face)
+	 ")"
 	 "\n\n"
 	 "  Watcha wanna do?\n\n"
 	 "    * Show me some messages:\n"
@@ -321,7 +325,10 @@ be sure it no longer matches)."
 	 "\n"
 	 "    * " (propertize "c" 'face 'highlight) "ompose a new message\n"
 	 "\n"
+	 "\n"
+
 	 "    * " (propertize "u" 'face 'highlight) "pdate email\n"
+	 "    * toggle " (propertize "m" 'face 'highlight) "ail sending mode "
 	 "\n"
 	 "    * " (propertize "q" 'face 'highlight) "uit mm\n")
 
@@ -374,6 +381,14 @@ be sure it no longer matches)."
   (interactive)
   (mm/proc-retrieve-mail-update-db))
 
+(defun mm/toggle-mail-sending-mode ()
+  "Toggle sending mail mode, either queued or direct."
+  (interactive)
+  (setq smtpmail-queue-mail (not smtpmail-queue-mail))
+  (mm))
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -384,6 +399,5 @@ be sure it no longer matches)."
     (message nil)
     (mm/kill-proc)
     (kill-buffer)))
-
 
 (provide 'mm)

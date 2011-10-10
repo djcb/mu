@@ -119,9 +119,6 @@ process."
   (unless (file-executable-p mm/mu-binary)
     (error (format "%S not found" mm/mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
-	  (coding-system-for-read 'utf-8)
-	  (coding-system-for-write 'no-conversion)
-	  (process-adaptive-read-buffering t)
 	  (args '("server"))
 	  (args (append args (when mm/mu-home
 			       (list (concat "--muhome=" mm/mu-home))))))
@@ -131,6 +128,7 @@ process."
     ;; register a function for (:info ...) sexps
     (setq mm/proc-info-func 'mm/proc-info-handler)
     (when mm/mu-proc
+      (set-process-coding-system mm/mu-proc 'utf-8-unix 'utf-8-unix)
       (set-process-filter mm/mu-proc 'mm/proc-filter)
       (set-process-sentinel mm/mu-proc 'mm/proc-sentinel))))
 
@@ -139,7 +137,10 @@ process."
   (let (buf (get-buffer mm/server-name))
     (when buf
       (let ((delete-exited-processes t))
-	(kill-buffer buf))
+	;; send SIGINT (C-c) to process, so it can exit gracefully
+	(signal-process (get-buffer-process buf) 'SIGINT)
+	;; the mu server signal handler will make it quit after 'quit'
+	(mm/proc-send-command "quit"))
       (setq
 	mm/mu-proc nil
 	mm/buf nil))))
@@ -218,6 +219,7 @@ updated as well, with all processed sexp data removed."
   (:compose <msg-sexp> :action <reply|forward>) => the <msg-sexp>
   and either 'reply or 'forward will be passed
   `mm/proc-compose-func'."
+  (mm/proc-log "* Received %d byte(s)" (length str))
   (setq mm/buf (concat mm/buf str)) ;; update our buffer
   (let ((sexp (mm/proc-eat-sexp-from-buf)))
     (while sexp
@@ -295,7 +297,8 @@ terminates."
     (mm/start-proc))
   (let ((cmd (apply 'format frm args)))
     (mm/proc-log (concat "-> " cmd))
-    (process-send-string mm/mu-proc (concat cmd "\n"))))
+    (process-send-string mm/mu-proc (concat cmd "\n"))
+    (accept-process-output mm/mu-proc 0.5)))
 
 
 (defun mm/proc-remove-msg (docid)

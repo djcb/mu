@@ -272,18 +272,15 @@ Seen; if the message is not New/Unread, do nothing."
 removing '^M' etc."
   (let ((num 0))
   (save-excursion
-
     ;; remove the stupid CRs
     (goto-char (point-min))
     (while (re-search-forward "[ ]" nil t)
       (replace-match "" nil t))
-
     ;; give the footer a different color...
     (goto-char (point-min))
     (let ((p (search-forward "\n-- \n" nil t)))
       (when p
 	(add-text-properties p (point-max) '(face mm/view-footer-face))))
-
     ;; this is fairly simplistic...
     (goto-char (point-min))
     (while (re-search-forward "\\(https?://.*\\)\\>" nil t)
@@ -294,6 +291,28 @@ removing '^M' etc."
 	(replace-match (concat subst
 			 (propertize (format "[%d]" num)
 			   'face 'mm/view-url-number-face))))))))
+
+
+
+
+;;;; raw view
+;; (defun mm/view-raw-mode ()
+;;   "Major mode for viewing of raw e-mail message."
+;;   (interactive)
+;;   (kill-all-local-variables)
+;;   (use-local-map mm/view-raw-mode-map)
+
+;;   (setq major-mode 'mm/view-raw-mode
+;;     mode-name mm/view-raw-buffer-name)
+;;   (setq truncate-lines t buffer-read-only t))
+
+
+
+
+
+
+
+
 
 
 

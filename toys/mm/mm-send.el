@@ -25,7 +25,7 @@
 ;;; Commentary:
 
 ;; In this file, various functions to compose/send messages, piggybacking on
-;; gnus
+;; gnus' message mode
 
 ;; mm
 
@@ -223,6 +223,8 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
 	(concat mm/msg-reply-prefix (plist-get msg :subject)))
 
       (propertize mail-header-separator 'read-only t 'intangible t) '"\n"
+
+      "\n\n"
       (mm/msg-cite-original msg))))
 
 ;; TODO: attachments
@@ -255,6 +257,7 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
 	 (concat mm/msg-forward-prefix (plist-get msg :subject)))
       (propertize mail-header-separator 'read-only t 'intangible t) "\n"
 
+      "\n\n"
       (mm/msg-cite-original msg)))
 
 (defun mm/msg-create-new ()
@@ -339,7 +342,7 @@ using Gnus' `message-mode'."
 
     (unless (file-readable-p draft)
       (error "Cannot read %s" path))
-
+    
     (find-file draft)
     (message-mode)
 
@@ -358,7 +361,9 @@ using Gnus' `message-mode'."
 	       "^User-agent:")))
       (message-hide-headers))
 
-    (message-goto-body)))
+    (if (eq compose-type 'new)
+      (message-goto-to)
+      (message-goto-body))))
 
 
 (defun mm/msg-save-to-sent ()
@@ -414,8 +419,5 @@ This is meant to be called from message mode's
       (mm/proc-flag (match-string 1 in-reply-to) "+R"))
     (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
       (mm/proc-flag (match-string 1 forwarded-from) "+P"))))
-
-
-
 
 (provide 'mm-send)
