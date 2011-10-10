@@ -175,7 +175,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"subject", 's', 'S',
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_TERM | FLAG_NORMALIZE
+		FLAG_XAPIAN_TERM | FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE
 	},
 
 	{
@@ -405,4 +405,3 @@ mu_msg_field_type (MuMsgFieldId id)
 			      MU_MSG_FIELD_TYPE_NONE);
 	return mu_msg_field(id)->_type;
 }
-
