@@ -187,7 +187,7 @@ public:
 	}
 
 	bool   in_transaction () const { return _in_transaction; }
-	bool   set_in_transaction (bool in_tx) { return _in_transaction = in_tx; }
+	bool   in_transaction (bool in_tx) { return _in_transaction = in_tx; }
 
 	int    processed () const { return _processed; }
 	int    set_processed (int n) { return _processed = n;}

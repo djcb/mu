@@ -44,7 +44,7 @@ _MuStore::begin_transaction ()
 {
 	try {
 		db_writable()->begin_transaction();
-			set_in_transaction (true);
+			in_transaction (true);
 	} MU_XAPIAN_CATCH_BLOCK;
 }
 
@@ -52,7 +52,7 @@ _MuStore::begin_transaction ()
 void
 _MuStore::commit_transaction () {
 	try {
-		set_in_transaction (false);
+		in_transaction (false);
 		db_writable()->commit_transaction();
 	} MU_XAPIAN_CATCH_BLOCK;
 }
@@ -60,7 +60,7 @@ _MuStore::commit_transaction () {
 void
 _MuStore::rollback_transaction () {
 	try {
-		set_in_transaction (false);
+		in_transaction (false);
 		db_writable()->cancel_transaction();
 	} MU_XAPIAN_CATCH_BLOCK;
 }
@@ -558,7 +558,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 
 
 Xapian::Document
-doc_from_message (MuStore *store, MuMsg *msg)
+new_doc_from_message (MuStore *store, MuMsg *msg)
 {
 	Xapian::Document doc;
 	MsgDoc docinfo = {&doc, msg, store};
@@ -579,7 +579,7 @@ mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
 
 	try {
 		Xapian::docid id;
-		Xapian::Document doc (doc_from_message(store, msg));
+		Xapian::Document doc (new_doc_from_message(store, msg));
 		const std::string uid (store->get_uid_term(mu_msg_get_path(msg)));
 
 		if (!store->in_transaction())
@@ -588,6 +588,9 @@ mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
 		/* note, this will replace any other messages for this path */
 		doc.add_term (uid);
 		id = store->db_writable()->replace_document (uid, doc);
+
+		MU_WRITE_LOG ("add %s (%s)",
+			      mu_msg_get_path (msg), uid.c_str());
 
 		if (store->inc_processed() % store->batch_size() == 0)
 			store->commit_transaction();
@@ -611,12 +614,17 @@ mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 	g_return_val_if_fail (docid != 0, MU_STORE_INVALID_DOCID);
 
 	try {
-		Xapian::Document doc (doc_from_message(store, msg));
+		Xapian::Document doc (new_doc_from_message(store, msg));
 
 		if (!store->in_transaction())
 			store->begin_transaction();
 
 		store->db_writable()->replace_document (docid, doc);
+
+		MU_WRITE_LOG ("update %s (%s) %u",
+			      mu_msg_get_path (msg),
+			      store->get_uid_term(mu_msg_get_path(msg)),
+			      docid);
 
 		if (store->inc_processed() % store->batch_size() == 0)
 			store->commit_transaction();
@@ -692,5 +700,3 @@ mu_store_set_timestamp (MuStore *store, const char* msgpath,
 	sprintf (buf, "%" G_GUINT64_FORMAT, (guint64)stamp);
 	return mu_store_set_metadata (store, msgpath, buf, err);
 }
-
-

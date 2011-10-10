@@ -49,7 +49,7 @@ _MuStore::get_uid_term (const char* path)
 
 	unsigned djbhash, bkdrhash, bkdrseed;
 	unsigned u;
-	static char hex[18];
+	static char hex[10];
 
 	djbhash  = 5381;
 	bkdrhash = 0;
@@ -61,7 +61,9 @@ _MuStore::get_uid_term (const char* path)
 		bkdrhash = bkdrhash * bkdrseed + path[u];
 	}
 
-	sprintf (hex, MU_STORE_UID_PREFIX "%08x%08x", djbhash, bkdrhash);
+	snprintf (hex, sizeof(hex),
+		  MU_STORE_UID_PREFIX "%04x%04x",
+		  djbhash, bkdrhash);
 
 	return hex;
 }
@@ -262,5 +264,3 @@ mu_store_get_msg (MuStore *self, unsigned docid, GError **err)
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }
-
-
