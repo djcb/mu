@@ -668,6 +668,7 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 	unsigned docid;
 	char *sexp;
 
+
 	if (!check_param_num (args, 1, 1))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "message <docid> <view|reply|forward>");
@@ -686,6 +687,22 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 	mu_msg_unref (msg);
 
 	send_expr ("(:view %s)\n", sexp);
+
+
+	/* ugly, ugly... emacs reads/processes the data from the
+	 * server in up-to 4096 byte blobs (see read_process_output in
+	 * the emacs source code), and for longer messages, it may
+	 * only start processing (showing) the message after more data
+	 * comes, instead of immediately. As a work-around for this,
+	 * here, we just send some 'filler data' as to 'flush the
+	 * pipe', so to speak. hopefully, one day I can come up with a
+	 * more elegant way to do this...*/
+	if (strlen (sexp) > 4000) {
+		int i;
+		const char* filler = ";;                             \n";
+		for (i = 0; i != 8; ++i)
+			write (fileno(stdout), filler, strlen (filler));
+	}
 
 	g_free (sexp);
 
