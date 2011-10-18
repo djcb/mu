@@ -164,61 +164,106 @@ or if not available, :body-html converted to text)."
 		  atts ", ")))
 	(mm/view-header (format "Attachments(%d):" id) vals)))))
 
-
-(defvar mm/view-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "q" 'mm/view-quit-buffer)
-
-    (define-key map "s" 'mm/search)
-    (define-key map "j" 'mm/jump-to-maildir)
-
-    (define-key map "g" 'mm/view-go-to-url)
-    (define-key map "f" 'mm/compose-forward)
-    (define-key map "r" 'mm/compose-reply)
-    (define-key map "c" 'mm/compose-new)
-    (define-key map "e" 'mm/edit-draft)
-
-    ;; intra-message navigation
-    (define-key map (kbd "SPC") 'scroll-up)
-    (define-key map (kbd "<home>")
-      '(lambda () (interactive) (goto-char (point-min))))
-    (define-key map (kbd "<end>")
-      '(lambda () (interactive) (goto-char (point-max))))
-    (define-key map (kbd "RET")
-      '(lambda () (interactive) (scroll-up 1)))
-    (define-key map (kbd "<backspace>")
-      '(lambda () (interactive) (scroll-up -1)))
-
-
-    ;; navigation between messages
-    (define-key map "n" 'mm/view-next-header)
-    (define-key map "p" 'mm/view-prev-header)
-
-    ;; attachments
-    (define-key map "e" 'mm/view-extract-attachment)
-    (define-key map "o" 'mm/view-open-attachment)
-
-    ;; marking/unmarking
-    (define-key map "d" 'mm/view-mark-for-trash)
-    (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
-
-    (define-key map "D" 'mm/view-mark-for-delete)
-    (define-key map (kbd "<delete>") 'mm/view-mark-for-delete)
-
-    (define-key map "m" 'mm/view-mark-for-move)
-
-    ;; misc
-    (define-key map "w" 'mm/view-toggle-wrap-lines)
-    (define-key map "h" 'mm/view-toggle-hide-cited)
-
-    (define-key map "R" 'mm/view-refresh)
-    
-    ;; next 3 only warn user when attempt in the message view
-    (define-key map "u" 'mm/view-unmark)
-    (define-key map "U" 'mm/view-unmark)
-    (define-key map "x" 'mm/view-marked-execute)
-    map)
+(setq mm/view-mode-map nil)
+(defvar mm/view-mode-map nil
   "Keymap for \"*mm-view*\" buffers.")
+(unless mm/view-mode-map
+  (setq mm/view-mode-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map "q" 'mm/view-quit-buffer)
+
+      (define-key map "s" 'mm/search)
+      (define-key map "j" 'mm/jump-to-maildir)
+      
+      (define-key map "g" 'mm/view-go-to-url)
+      (define-key map "f" 'mm/compose-forward)
+      (define-key map "r" 'mm/compose-reply)
+      (define-key map "c" 'mm/compose-new)
+      (define-key map "e" 'mm/edit-draft)
+      
+      ;; intra-message navigation
+      (define-key map (kbd "SPC") 'scroll-up)
+      (define-key map (kbd "<home>")
+	'(lambda () (interactive) (goto-char (point-min))))
+      (define-key map (kbd "<end>")
+	'(lambda () (interactive) (goto-char (point-max))))
+      (define-key map (kbd "RET")
+	'(lambda () (interactive) (scroll-up 1)))
+      (define-key map (kbd "<backspace>")
+	'(lambda () (interactive) (scroll-up -1)))
+
+
+      ;; navigation between messages
+      (define-key map "n" 'mm/view-next-header)
+      (define-key map "p" 'mm/view-prev-header)
+      
+      ;; attachments
+      (define-key map "e" 'mm/view-extract-attachment)
+      (define-key map "o" 'mm/view-open-attachment)
+      
+      ;; marking/unmarking
+      (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
+      (define-key map "d" 'mm/view-mark-for-trash)
+      
+      (define-key map (kbd "<delete>") 'mm/view-mark-for-delete)
+      (define-key map "D" 'mm/view-mark-for-delete)
+
+      (define-key map "m" 'mm/view-mark-for-move)
+      
+      ;; misc
+      (define-key map "w" 'mm/view-toggle-wrap-lines)
+      (define-key map "h" 'mm/view-toggle-hide-cited)
+      
+      (define-key map "R" 'mm/view-refresh)
+    
+      ;; next 3 only warn user when attempt in the message view
+      (define-key map "u" 'mm/view-unmark)
+      (define-key map "U" 'mm/view-unmark)
+      (define-key map "x" 'mm/view-marked-execute)
+
+      ;; menu
+      (define-key map [menu-bar] (make-sparse-keymap))
+      (let ((menumap (make-sparse-keymap "View")))
+	(define-key map [menu-bar headers] (cons "View" menumap))
+	
+	(define-key menumap [quit-buffer] '("Quit" . mm/quit-buffer))
+
+	(define-key menumap [sepa0] '("--"))
+	(define-key menumap [wrap-lines]
+	  '("Toggle wrap lines" . mm/view-toggle-wrap-lines))
+	(define-key menumap [hide-cited]
+	  '("Toggle hide cited" . mm/view-toggle-hide-cited))
+
+	(define-key menumap [sepa8] '("--"))
+	(define-key menumap [open-att]
+	  '("Open attachment" . mm/view-open-attachment))
+	(define-key menumap [extract-att]
+	  '("Extract attachment" . mm/view-extract-attachment))
+	(define-key menumap [goto-url]
+	  '("Visit URL" . mm/view-go-to-url))
+	
+	(define-key menumap [sepa1] '("--"))
+	(define-key menumap [mark-delete]
+	  '("Mark for deletion" . mm/view-mark-for-delete))
+	(define-key menumap [mark-trash]
+	  '("Mark for trash" .  mm/view-mark-for-trash))
+	(define-key menumap [mark-move]
+	  '("Mark for move" . mm/view-mark-for-move))
+
+	(define-key menumap [sepa2] '("--"))
+	(define-key menumap [compose-new]  '("Compose new" . mm/compose-new))
+	(define-key menumap [forward]  '("Forward" . mm/compose-forward))
+	(define-key menumap [reply]  '("Reply" . mm/compose-reply))
+	(define-key menumap [sepa3] '("--"))
+
+	(define-key menumap [search]  '("Search" . mm/search))
+	(define-key menumap [jump]  '("Jump to maildir" . mm/jump-to-maildir))
+
+	(define-key menumap [sepa4] '("--"))
+	(define-key menumap [next]  '("Next" . mm/view-next-header))
+	(define-key menumap [previous]  '("Previous" . mm/view-prev-header)))
+      map)))
+  
 (fset 'mm/view-mode-map mm/view-mode-map)
 
 
@@ -293,8 +338,6 @@ removing '^M' etc."
 			   'face 'mm/view-url-number-face))))))))
 
 
-
-
 ;;;; raw view
 ;; (defun mm/view-raw-mode ()
 ;;   "Major mode for viewing of raw e-mail message."
@@ -305,14 +348,6 @@ removing '^M' etc."
 ;;   (setq major-mode 'mm/view-raw-mode
 ;;     mode-name mm/view-raw-buffer-name)
 ;;   (setq truncate-lines t buffer-read-only t))
-
-
-
-
-
-
-
-
 
 
 

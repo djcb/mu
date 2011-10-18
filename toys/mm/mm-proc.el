@@ -112,7 +112,6 @@ process."
   "*internal* Name of the server process, buffer.")
 
 
-
 (defun mm/start-proc ()
   "Start the mu server process."
   ;; TODO: add version check
@@ -297,9 +296,7 @@ terminates."
     (mm/start-proc))
   (let ((cmd (apply 'format frm args)))
     (mm/proc-log (concat "-> " cmd))
-    (process-send-string mm/mu-proc (concat cmd "\n"))
-    (accept-process-output mm/mu-proc 0.5)))
-
+    (process-send-string mm/mu-proc (concat cmd "\n"))))
 
 (defun mm/proc-remove-msg (docid)
   "Remove message identified by DOCID. The results are reporter

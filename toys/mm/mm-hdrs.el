@@ -170,48 +170,82 @@ if provided, or at the end of the buffer otherwise."
 
 
 
+
 ;;; hdrs-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mm/hdrs-mode-map
-  (let ((map (make-sparse-keymap)))
-
-    (define-key map "s" 'mm/search)
-    (define-key map "q" 'mm/quit-buffer)
-    (define-key map "o" 'mm/change-sort)
-    (define-key map "g" 'mm/rerun-search)
-
-    ;; navigation
-    (define-key map "n" 'mm/next-header)
-    (define-key map "p" 'mm/prev-header)
-    (define-key map "j" 'mm/jump-to-maildir)
-
-    ;; marking/unmarking/executing
-    (define-key map "m" 'mm/mark-for-move)
-
-    (define-key map "d" 'mm/mark-for-trash)
-    (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
-
-    (define-key map "D" 'mm/mark-for-delete)
-    (define-key map (kbd "<delete>") 'mm/mark-for-delete)
-
-    (define-key map "u" 'mm/unmark)
-    (define-key map "U" 'mm/unmark-all)
-    (define-key map "x" 'mm/execute-marks)
-
-    (define-key map " " 'mm/select)
-    (define-key map "*" 'mm/select)
-
-
-    ;; message composition
-    (define-key map "r" 'mm/compose-reply)
-    (define-key map "f" 'mm/compose-forward)
-    (define-key map "c" 'mm/compose-new)
-    (define-key map "e" 'mm/edit-draft)
-
-
-    (define-key map (kbd "RET") 'mm/view-message)
-    map)
+(setq mm/hdrs-mode-map nil)
+(defvar mm/hdrs-mode-map nil
   "Keymap for *mm-headers* buffers.")
+(unless mm/hdrs-mode-map
+  (setq mm/hdrs-mode-map
+    (let ((map (make-sparse-keymap)))
+
+      (define-key map "s" 'mm/search)
+      (define-key map "q" 'mm/quit-buffer)
+;;      (define-key map "o" 'mm/change-sort)
+      (define-key map "g" 'mm/rerun-search)
+      
+      ;; navigation
+      (define-key map "n" 'mm/next-header)
+      (define-key map "p" 'mm/prev-header)
+      (define-key map "j" 'mm/jump-to-maildir)
+      
+      ;; marking/unmarking/executing
+      (define-key map "m" 'mm/mark-for-move)
+
+      (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
+      (define-key map "d" 'mm/mark-for-trash)
+  
+      (define-key map (kbd "<delete>") 'mm/mark-for-delete)
+      (define-key map "D" 'mm/mark-for-delete)
+          
+      (define-key map "u" 'mm/unmark)
+      (define-key map "U" 'mm/unmark-all)
+      (define-key map "x" 'mm/execute-marks)
+      
+      ;; message composition
+      (define-key map "r" 'mm/compose-reply)
+      (define-key map "f" 'mm/compose-forward)
+      (define-key map "c" 'mm/compose-new)
+      (define-key map "e" 'mm/edit-draft)
+
+      (define-key map (kbd "RET") 'mm/view-message)
+
+      ;; menu
+      (define-key map [menu-bar] (make-sparse-keymap))
+      (let ((menumap (make-sparse-keymap "Headers")))
+	(define-key map [menu-bar headers] (cons "Headers" menumap))
+
+	(define-key menumap [quit-buffer] '("Quit" . mm/quit-buffer))
+	(define-key menumap [sepa0] '("--"))
+
+	(define-key menumap [execute-marks]  '("Execute marks" . mm/execute-marks))
+	(define-key menumap [unmark-all]  '("Unmark all" . mm/unmark-all))
+	(define-key menumap [unmark]      '("Unmark" . mm/unmark))
+	(define-key menumap [mark-delete]  '("Mark for deletion" . mm/mark-for-delete))
+	(define-key menumap [mark-trash]   '("Mark for trash" .  mm/mark-for-trash))
+	(define-key menumap [mark-move]  '("Mark for move" . mm/mark-for-move))
+	(define-key menumap [sepa1] '("--"))
+
+	(define-key menumap [compose-new]  '("Compose new" . mm/compose-new))
+	(define-key menumap [forward]  '("Forward" . mm/compose-forward))
+	(define-key menumap [reply]  '("Reply" . mm/compose-reply))
+	(define-key menumap [sepa2] '("--"))
+
+	(define-key menumap [refresh]  '("Refresh" . mm/rerun-search))
+	(define-key menumap [search]  '("Search" . mm/search))
+	(define-key menumap [jump]  '("Jump to maildir" . mm/jump-to-maildir))
+	(define-key menumap [sepa3] '("--"))
+	
+	(define-key menumap [view]  '("View" . mm/view-message))
+	(define-key menumap [next]  '("Next" . mm/next-header))
+	(define-key menumap [previous]  '("Previous" . mm/prev-header))
+	(define-key menumap [sepa4] '("--")))
+      
+	;;(define-key menumap [draft]  '("Edit draft" . mm/compose-new))
+      map)))
+
 (fset 'mm/hdrs-mode-map mm/hdrs-mode-map)
+
 
 (defun mm/hdrs-mode ()
   "Major mode for displaying mua search results."
@@ -502,8 +536,7 @@ the new docid. Otherwise, return nil."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
     (when (= 0 (forward-line 1))
-      (let ((docid (mm/hdrs-get-docid)))
-	(if docid docid (mm/next-header))))))
+      (or (mm/hdrs-get-docid) (mm/next-header))))) ;; skip non-headers
 
 (defun mm/prev-header ()
   "Move point to the previous message header. If this succeeds,
@@ -511,8 +544,7 @@ return the new docid. Otherwise, return nil."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
     (when (= 0 (forward-line -1))
-      (let ((docid (mm/hdrs-get-docid)))
-	(if docid docid (mm/prev-header)))))) ;; skip non-headers
+      (or (mm/hdrs-get-docid) (mm/prev-header))))) ;; skip non-headers
 
 
 (defun mm/jump-to-maildir ()
@@ -520,7 +552,6 @@ return the new docid. Otherwise, return nil."
   (interactive)
   (let ((fld (mm/ask-maildir "Jump to maildir: ")))
     (mm/hdrs-search (concat "maildir:" fld))))
-
 
 
 (defun mm/mark-for-move ()
