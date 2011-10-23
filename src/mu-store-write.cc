@@ -88,7 +88,7 @@ prefix (MuMsgFieldId mfid)
 static void
 add_synonym_for_flag (MuFlags flag, Xapian::WritableDatabase *db)
 {
-	const std::string pfx(prefix(MU_MSG_FIELD_ID_FLAGS));
+	static const std::string pfx(prefix(MU_MSG_FIELD_ID_FLAGS));
 
 	db->clear_synonyms (pfx + mu_flag_name (flag));
 	db->add_synonym (pfx + mu_flag_name (flag), pfx +
@@ -99,7 +99,7 @@ add_synonym_for_flag (MuFlags flag, Xapian::WritableDatabase *db)
 static void
 add_synonym_for_prio (MuMsgPrio prio, Xapian::WritableDatabase *db)
 {
-	const std::string pfx (prefix(MU_MSG_FIELD_ID_PRIO));
+	static const std::string pfx (prefix(MU_MSG_FIELD_ID_PRIO));
 
 	std::string s1 (pfx + mu_msg_prio_name (prio));
 	std::string s2 (pfx + (std::string(1, mu_msg_prio_char (prio))));
@@ -567,6 +567,7 @@ new_doc_from_message (MuStore *store, MuMsg *msg)
 	/* also store the contact-info as separate terms */
 	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact_info,
 				&docinfo);
+
 	return doc;
 }
 
@@ -580,17 +581,18 @@ mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
 	try {
 		Xapian::docid id;
 		Xapian::Document doc (new_doc_from_message(store, msg));
-		const std::string uid (store->get_uid_term(mu_msg_get_path(msg)));
+		const std::string term (store->get_uid_term
+					(mu_msg_get_path(msg)));
 
 		if (!store->in_transaction())
 			store->begin_transaction();
 
-		/* note, this will replace any other messages for this path */
-		doc.add_term (uid);
-		id = store->db_writable()->replace_document (uid, doc);
+		doc.add_term (term);
 
-		MU_WRITE_LOG ("add %s (%s)",
-			      mu_msg_get_path (msg), uid.c_str());
+		MU_WRITE_LOG ("adding: %s", term.c_str());
+
+		/* note, this will replace any other messages for this path */
+		id = store->db_writable()->replace_document (term, doc);
 
 		if (store->inc_processed() % store->batch_size() == 0)
 			store->commit_transaction();
@@ -619,12 +621,12 @@ mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 		if (!store->in_transaction())
 			store->begin_transaction();
 
-		store->db_writable()->replace_document (docid, doc);
 
-		MU_WRITE_LOG ("update %s (%s) %u",
-			      mu_msg_get_path (msg),
-			      store->get_uid_term(mu_msg_get_path(msg)),
-			      docid);
+		const std::string term
+			(store->get_uid_term(mu_msg_get_path(msg)));
+		doc.add_term (term);
+
+		store->db_writable()->replace_document (docid, doc);
 
 		if (store->inc_processed() % store->batch_size() == 0)
 			store->commit_transaction();
@@ -679,7 +681,10 @@ mu_store_remove_path (MuStore *store, const char *msgpath)
 	g_return_val_if_fail (msgpath, FALSE);
 
 	try {
-		store->db_writable()->delete_document (store->get_uid_term (msgpath));
+		const std::string term
+			(store->get_uid_term(msgpath));
+
+		store->db_writable()->delete_document (term);
 		store->inc_processed();
 
 		return TRUE;

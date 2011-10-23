@@ -542,7 +542,7 @@ test_mu_query_tags_02 (void)
 		{ "x:paradise", 1},
 		{ "tag:@NextActions", 1},
 		{ "x:queensrÿche", 1},
-		{ "tag:lost OR tag:operation:mindcrime", 2},
+		{ "tag:lost OR tag:operation*", 2},
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR2);
@@ -605,4 +605,3 @@ main (int argc, char *argv[])
 
 	return rv;
 }
-

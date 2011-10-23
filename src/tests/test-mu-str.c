@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
-/* 
+/*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -15,8 +15,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -41,7 +41,7 @@ test_mu_str_size_01 (void)
 {
 	struct lconv *lc;
 	char *tmp2;
-	
+
 	lc = localeconv();
 
 	tmp2 = g_strdup_printf ("0%s0 kB", lc->decimal_point);
@@ -57,18 +57,18 @@ test_mu_str_size_01 (void)
 	g_free (tmp2);
 }
 
-	
+
 
 static void
 test_mu_str_size_02 (void)
 {
 	struct lconv *lc;
 	char *tmp1, *tmp2;
-	
+
 	lc = localeconv();
-	
+
 	tmp2 = g_strdup_printf ("1%s0 MB", lc->decimal_point);
-	tmp1 = mu_str_size (999999); 
+	tmp1 = mu_str_size (999999);
 	g_assert_cmpstr (tmp1, !=, tmp2);
 
 	g_free (tmp1);
@@ -101,7 +101,7 @@ test_mu_str_prio_02 (void)
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
 	g_assert_cmpstr (mu_msg_prio_name(666), ==, NULL);
 }
-	
+
 
 
 static void
@@ -112,14 +112,14 @@ test_mu_str_normalize_01 (void)
 		const char*	word;
 		const char*	norm;
 	} words [] = {
-		{ "dantès", "dantes"}, 
+		{ "dantès", "dantes"},
 		{ "foo", "foo" },
 		{ "Föö", "foo" },
 		{ "číslo", "cislo" },
 		{ "hÆvý mëÐal ümláõt", "haevy medal umlaot"}
 	};
 
-	
+
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *str;
 		str = mu_str_normalize (words[i].word, TRUE);
@@ -137,14 +137,14 @@ test_mu_str_normalize_02 (void)
 		const char*	word;
 		const char*	norm;
 	} words [] = {
-		{ "DantèS", "DanteS"}, 
+		{ "DantèS", "DanteS"},
 		{ "foo", "foo" },
 		{ "Föö", "Foo" },
 		{ "číslO", "cislO" },
 		{ "hÆvý mëÐal ümláõt", "hAevy meDal umlaot"}
 	};
 
-	
+
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *str;
 		str = mu_str_normalize (words[i].word, FALSE);
@@ -162,14 +162,14 @@ test_mu_str_ascii_xapian_escape (void)
 		const char*	word;
 		const char*	esc;
 	} words [] = {
-		{ "aap@noot.mies", "aap_noot_mies"}, 
+		{ "aap@noot.mies", "aap_noot_mies"},
 		{ "Foo..Bar", "foo..bar" },
 		{ "Foo.Bar", "foo_bar" },
 		{ "Foo. Bar", "foo. bar" },
 		{ "subject:test@foo", "subject:test_foo" },
-		{ "xxx:test@bar", "xxx_test_bar" },
+		{ "xxx:test@bar", "xxx test_bar" },
 	};
-		
+
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *a = g_strdup (words[i].word);
 		mu_str_ascii_xapian_escape_in_place (a);
@@ -187,14 +187,14 @@ test_mu_str_display_contact (void)
 		const char*	word;
 		const char*	disp;
 	} words [] = {
-		{ "\"Foo Bar\" <aap@noot.mies>", "Foo Bar"}, 
+		{ "\"Foo Bar\" <aap@noot.mies>", "Foo Bar"},
 		{ "Foo Bar <aap@noot.mies>", "Foo Bar" },
 		{ "<aap@noot.mies>", "aap@noot.mies" },
 		{ "foo@bar.nl", "foo@bar.nl" }
 	};
-		
-	for (i = 0; i != G_N_ELEMENTS(words); ++i) 
-		g_assert_cmpstr (mu_str_display_contact_s (words[i].word), ==, 
+
+	for (i = 0; i != G_N_ELEMENTS(words); ++i)
+		g_assert_cmpstr (mu_str_display_contact_s (words[i].word), ==,
 				 words[i].disp);
 }
 
@@ -204,10 +204,10 @@ assert_cmplst (GSList *lst, const char *items[])
 {
 	int i;
 
-	if (!lst) 
+	if (!lst)
 		g_assert (!items);
-	
-	for (i = 0; lst; lst = g_slist_next(lst), ++i) 
+
+	for (i = 0; lst; lst = g_slist_next(lst), ++i)
 		g_assert_cmpstr ((char*)lst->data,==,items[i]);
 
 	g_assert (items[i] == NULL);
@@ -226,7 +226,7 @@ create_list (const char *items[])
 	}
 
 	return g_slist_reverse (lst);
-	
+
 }
 
 static void
@@ -258,7 +258,7 @@ test_mu_str_from_list (void)
 		mu_str_free_list (lst);
 		g_free (str);
 	}
-	
+
 
 }
 
@@ -298,7 +298,7 @@ static void
 test_mu_str_guess_first_name (void)
 {
 	int i;
-		
+
 	struct {
 		char *src, *exp;
 	} tests[] = {
@@ -307,7 +307,7 @@ test_mu_str_guess_first_name (void)
 		{ "Ivanhoe", "Ivanhoe" },
 		{ "", "" }
 	};
-		
+
 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) {
 		gchar *s;
 
@@ -322,7 +322,7 @@ static void
 test_mu_str_guess_last_name (void)
 {
 	int i;
-		
+
 	struct {
 		char *src, *exp;
 	} tests[] = {
@@ -331,7 +331,7 @@ test_mu_str_guess_last_name (void)
 		{ "Ivanhoe", "" },
 		{ "", "" }
 	};
-				
+
 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) {
 		gchar *s;
 
@@ -347,7 +347,7 @@ static void
 test_mu_str_guess_nick (void)
 {
 	int i;
-		
+
 	struct {
 		char *src, *exp;
 	} tests[] = {
@@ -356,7 +356,7 @@ test_mu_str_guess_nick (void)
 		{ "Ivanhoe", "Ivanhoe" },
 		{ "", "" }
 	};
-				
+
 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) {
 		gchar *s;
 
@@ -372,7 +372,7 @@ static void
 test_mu_str_subject_normalize (void)
 {
 	int i;
-		
+
 	struct {
 		char *src, *exp;
 	} tests[] = {
@@ -383,7 +383,7 @@ test_mu_str_subject_normalize (void)
 		{ "operation: mindcrime", "mindcrime" }, /*...*/
 		{ "", "" }
 	};
-				
+
 	for (i = 0; i != G_N_ELEMENTS(tests); ++i)
 		g_assert_cmpstr (mu_str_subject_normalize (tests[i].src), ==,
 				 tests[i].exp);
@@ -421,15 +421,15 @@ main (int argc, char *argv[])
 			 test_mu_str_ascii_xapian_escape);
 
 	g_test_add_func ("/mu-str/mu-str-display_contact",
-			 test_mu_str_display_contact);			 
-	
+			 test_mu_str_display_contact);
+
 	g_test_add_func ("/mu-str/mu-str-from-list",
 			 test_mu_str_from_list);
 	g_test_add_func ("/mu-str/mu-str-to-list",
 			 test_mu_str_to_list);
 	g_test_add_func ("/mu-str/mu-str-to-list-strip",
 			 test_mu_str_to_list_strip);
-	
+
 	g_test_add_func ("/mu-str/mu_str_guess_first_name",
 			 test_mu_str_guess_first_name);
 	g_test_add_func ("/mu-str/mu_str_guess_last_name",
@@ -443,10 +443,10 @@ main (int argc, char *argv[])
 
 	/* FIXME: add tests for mu_str_flags; but note the
 	 * function simply calls mu_msg_field_str */
-		
+
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
-	
+
 	return g_test_run ();
 }

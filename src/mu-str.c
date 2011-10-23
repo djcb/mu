@@ -463,7 +463,7 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 			 * a space'... ugh yuck ugly...
 			 */
 			if (!is_xapian_prefix (query, cur))
-				*cur = '_';
+				*cur = ' ';
 			break;
 		}
 	}

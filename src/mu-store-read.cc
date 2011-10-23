@@ -49,12 +49,11 @@ _MuStore::get_uid_term (const char* path)
 
 	unsigned djbhash, bkdrhash, bkdrseed;
 	unsigned u;
-	static char hex[10];
+	static char hex[18];
 
 	djbhash  = 5381;
 	bkdrhash = 0;
 	bkdrseed = 1313;
-
 
 	for(u = 0; path[u]; ++u) {
 		djbhash  = ((djbhash << 5) + djbhash) + path[u];
@@ -62,7 +61,7 @@ _MuStore::get_uid_term (const char* path)
 	}
 
 	snprintf (hex, sizeof(hex),
-		  MU_STORE_UID_PREFIX "%04x%04x",
+		  MU_STORE_UID_PREFIX "%08x%08x",
 		  djbhash, bkdrhash);
 
 	return hex;
@@ -162,8 +161,12 @@ mu_store_contains_message (MuStore *store, const char* path, GError **err)
 	g_return_val_if_fail (path, FALSE);
 
 	try {
-		const std::string uid (store->get_uid_term (path));
-		return store->db_read_only()->term_exists (uid) ? TRUE: FALSE;
+		const std::string term (store->get_uid_term(path));
+
+		MU_WRITE_LOG ("term exists? '%s': %s", term.c_str(),
+			      store->db_read_only()->term_exists (term) ? "yes" : "no");
+
+		return store->db_read_only()->term_exists (term) ? TRUE: FALSE;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, FALSE);
 
@@ -177,7 +180,8 @@ mu_store_get_docid_for_path (MuStore *store, const char* path, GError **err)
 	g_return_val_if_fail (path, FALSE);
 
 	try {
-		Xapian::Query query (store->get_uid_term (path)); // uid is a term
+		const std::string term (store->get_uid_term(path));
+		Xapian::Query query (term);
 		Xapian::Enquire enq (*store->db_read_only());
 
 		enq.set_query (query);
