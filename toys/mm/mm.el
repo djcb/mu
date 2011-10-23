@@ -198,8 +198,14 @@ be sure it no longer matches)."
   :group 'mm/faces)
 
 (defface mm/trashed-face
-  '((t :inherit font-lock-comment-face :strike-though t))
+  '((t :inherit font-lock-comment-face :strike-through t))
   "Face for an message header in the trash folder."
+  :group 'mm/faces)
+
+(defface mm/draft-face
+  '((t :inherit font-lock-string-face))
+  "Face for a draft message header (i.e., a message with the draft
+flag set)."
   :group 'mm/faces)
 
 (defface mm/header-face

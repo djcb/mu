@@ -31,7 +31,6 @@
 
 
 
-
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -59,6 +58,7 @@ Also see `mm/flags-to-string'.
 		 ('replied   ?R)
 		 ('seen      ?S)
 		 ('trashed   ?T)
+		 ('attach    ?a)
 		 ('encrypted ?x)
 		 ('signed    ?s)
 		 ('unread    ?u))))

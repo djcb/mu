@@ -143,7 +143,7 @@ if provided, or at the end of the buffer otherwise."
 				  (lambda (ct)
 				    (let ((name (car ct)) (email (cdr ct)))
 				      (or name email "?"))) val ", "))
-			      (:date  (format-time-string "%x %X" val))
+			      (:date (format-time-string "%x %X" val))
 			      (:flags (mm/flags-to-string val))
 			      (:size
 				(cond
@@ -151,7 +151,8 @@ if provided, or at the end of the buffer otherwise."
 				  ((and (>= val 1000) (< val 1000000))
 				    (format "%2.1fK" (/ val 1000.0)))
 				  ((< val 1000) (format "%d" val))))
-			      (t (error "Unsupported header field (%S)" field)))))
+			      (t
+				(error "Unsupported header field (%S)" field)))))
 		    (when str
 		      (if (not width)
 			str
@@ -159,13 +160,17 @@ if provided, or at the end of the buffer otherwise."
 		  mm/header-fields " "))
 	  (flags (plist-get msg :flags))
 	  (line	(cond
-		  ((member 'trashed flags) (propertize line 'face 'mm/trashed-face))
-		  ((member 'unread flags)  (propertize line 'face 'mm/unread-face))
-	      (t                       (propertize line 'face 'mm/header-face)))))
-    (mm/hdrs-add-header line (plist-get msg :docid)
+		  ((member 'draft flags)
+		    (propertize line 'face 'mm/draft-face 'draft t))
+		  ((member 'trashed flags)
+		    (propertize line 'face 'mm/trashed-face))
+		  ((member 'unread flags)
+		    (propertize line 'face 'mm/unread-face))
+		  (t ;; else
+		    (propertize line 'face 'mm/header-face)))))
+    (mm/hdrs-add-header line (plist-get msg :docid) 
       (if point point (point-max)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 
@@ -291,8 +296,7 @@ on the screen, when we receive (:update ) notices from the mu
 server.")
 
 (defun mm/hdrs-add-header (str docid point)
-  "Add header STR with DOCID to the buffer. If POINT is not
-provided, put it at the end of the buffer."
+  "Add header STR with DOCID to the buffer at POINT."
   (unless docid (error "Invalid message"))
   (when (buffer-live-p mm/hdrs-buffer)
     (with-current-buffer mm/hdrs-buffer
@@ -465,13 +469,19 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
 `edit'."
   (if (eq compose-type 'new)
     (mm/send-compose-handler 'new)
-    (let ((docid (mm/hdrs-get-docid)))
+    (let ((docid (mm/hdrs-get-docid))
+	   ;; note, the first two chars of the line (the mark margin) does *not*
+	   ;; have the 'draft property; thus, we check one char before the end of
+	   ;; the current line instead
+	   (is-draft (get-text-property (- (line-end-position) 1) 'draft)))
       (unless docid
 	(error "No message at point."))
       (cond
 	((member compose-type '(reply forward))
 	  (mm/proc-compose compose-type docid))
 	((eq compose-type 'edit)
+	  (unless is-draft
+	    (error "Cannot edit a non-draft message"))
 	  (mm/proc-compose 'edit docid))
 	(t (error "invalid compose type %S" compose-type))))))
 
@@ -633,9 +643,6 @@ folder (`mm/trash-folder')."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
     (mm/hdrs-compose 'edit)))
-
-
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
