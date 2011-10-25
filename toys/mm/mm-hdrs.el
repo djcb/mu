@@ -168,8 +168,24 @@ if provided, or at the end of the buffer otherwise."
 		    (propertize line 'face 'mm/unread-face))
 		  (t ;; else
 		    (propertize line 'face 'mm/header-face)))))
-    (mm/hdrs-add-header line (plist-get msg :docid) 
+    (mm/hdrs-add-header line (plist-get msg :docid)
       (if point point (point-max)))))
+
+
+(defun mm/hdrs-found-handler (count)
+  "Create a one line description of the number of headers found
+after the end of the search results."
+  (with-current-buffer mm/hdrs-buffer
+    (save-excursion
+      (goto-char (point-max))
+      (let ((inhibit-read-only t))
+	(insert (propertize
+		  (case count
+		    (0 "No matching messages found")
+		    (1 "Found 1 message")
+		    (otherwise (format "Found %d messages" count)))
+		  'face 'mm/system-face 'intangible t))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -188,25 +204,25 @@ if provided, or at the end of the buffer otherwise."
       (define-key map "q" 'mm/quit-buffer)
 ;;      (define-key map "o" 'mm/change-sort)
       (define-key map "g" 'mm/rerun-search)
-      
+
       ;; navigation
       (define-key map "n" 'mm/next-header)
       (define-key map "p" 'mm/prev-header)
       (define-key map "j" 'mm/jump-to-maildir)
-      
+
       ;; marking/unmarking/executing
       (define-key map "m" 'mm/mark-for-move)
 
       (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
       (define-key map "d" 'mm/mark-for-trash)
-  
+
       (define-key map (kbd "<delete>") 'mm/mark-for-delete)
       (define-key map "D" 'mm/mark-for-delete)
-          
+
       (define-key map "u" 'mm/unmark)
       (define-key map "U" 'mm/unmark-all)
       (define-key map "x" 'mm/execute-marks)
-      
+
       ;; message composition
       (define-key map "r" 'mm/compose-reply)
       (define-key map "f" 'mm/compose-forward)
@@ -240,12 +256,12 @@ if provided, or at the end of the buffer otherwise."
 	(define-key menumap [search]  '("Search" . mm/search))
 	(define-key menumap [jump]  '("Jump to maildir" . mm/jump-to-maildir))
 	(define-key menumap [sepa3] '("--"))
-	
+
 	(define-key menumap [view]  '("View" . mm/view-message))
 	(define-key menumap [next]  '("Next" . mm/next-header))
 	(define-key menumap [previous]  '("Previous" . mm/prev-header))
 	(define-key menumap [sepa4] '("--")))
-      
+
 	;;(define-key menumap [draft]  '("Edit draft" . mm/compose-new))
       map)))
 
@@ -268,6 +284,7 @@ if provided, or at the end of the buffer otherwise."
   (setq mm/proc-error-func   'mm/hdrs-error-handler)
   (setq mm/proc-update-func  'mm/hdrs-update-handler)
   (setq mm/proc-header-func  'mm/hdrs-header-handler)
+  (setq mm/proc-found-func   'mm/hdrs-found-handler)
   (setq mm/proc-view-func    'mm/hdrs-view-handler)
   (setq mm/proc-remove-func  'mm/hdrs-remove-handler)
   ;; this last one is defined in mm-send.el

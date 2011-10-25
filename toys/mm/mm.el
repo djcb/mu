@@ -254,6 +254,13 @@ flag set)."
   :group 'mm/faces)
 
 
+(defface mm/system-face
+  '((t :inherit font-lock-comment-face :slant italic))
+  "Face for system message (such as the footers for message
+headers)."
+  :group 'mm/faces)
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal variables / constant

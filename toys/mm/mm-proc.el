@@ -61,6 +61,12 @@ format.")
 server process; the function is passed a msg plist as argument. See
 `mm/proc-filter' for the format.")
 
+(defvar mm/proc-found-func nil
+  "*internal* A function called for when we received a :found sexp
+after the headers have returns, to report on the number of
+matches. See `mm/proc-filter' for the format.")
+
+
 (defvar mm/proc-compose-func nil
   "*internal* A function called for each message returned from the
 server process that is used as basis for composing a new
@@ -178,7 +184,7 @@ updated as well, with all processed sexp data removed."
       ;; eox
    => this will be passed to `mm/proc-error-func'.
 
-   2. a message sexp looks something like:
+   2a. a message sexp looks something like:
  \(
   :docid 1585
   :from ((\"Donald Duck\" . \"donald@example.com\"))
@@ -198,6 +204,11 @@ updated as well, with all processed sexp data removed."
 \)
 ;; eox
    => this will be passed to `mm/proc-header-func'.
+
+  2b. After the list of message sexps has been returned (see 2a.),
+  we'll receive a sexp that looks like
+  (:found <n>) with n the number of messages found. The <n> will be
+  passed to `mm/proc-found-func'.
 
   3. a view looks like:
   (:view <msg-sexp>)
@@ -227,6 +238,12 @@ updated as well, with all processed sexp data removed."
 	;; a header plist can be recognized by the existence of a :date field
 	((plist-get sexp :date)
 	  (funcall mm/proc-header-func sexp))
+
+	;; the found sexp, we receive after gett all the headers
+	((plist-get sexp :found)
+	  (funcall mm/proc-found-func (plist-get sexp :found)))
+
+	;; viewin a specific message
 	((plist-get sexp :view)
 	  (funcall mm/proc-view-func (plist-get sexp :view)))
 
