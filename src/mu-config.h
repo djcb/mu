@@ -67,7 +67,6 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_VIEW,
 	MU_CONFIG_CMD_EXTRACT,
 	MU_CONFIG_CMD_CFIND,
-	MU_CONFIG_CMD_MV,
 	MU_CONFIG_CMD_ADD,
 	MU_CONFIG_CMD_REMOVE,
 	MU_CONFIG_CMD_SERVER,
@@ -125,14 +124,7 @@ struct _MuConfig {
 					 * messages */
 	gboolean        include_unreadable; /* don't ignore messages
 					     * without a disk file */
-	/* options for mv */
-	char            *flagstr;        /* message flags to set for
-					  * the target */
-	gboolean	print_target;    /* should be print the
-					  * target file path on
-					  * stdout */
-	gboolean        ignore_dups;      /* silently ignore the
-					   * src=target case */
+
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between
 					   * multiple messages in mu

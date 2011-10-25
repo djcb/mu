@@ -308,30 +308,6 @@ config_options_group_view (MuConfig *opts)
 }
 
 
-static GOptionGroup *
-config_options_group_mv (MuConfig *opts)
-{
-	GOptionGroup *og;
-	GOptionEntry entries[] = {
-		{"flags", 0, 0, G_OPTION_ARG_STRING, &opts->flagstr,
-		 "flags to set for the target (DFNPRST)", NULL},
-		{"ignore-dups", 0, 0, G_OPTION_ARG_NONE, &opts->ignore_dups,
-		 "whether to silently ignore the source = target case",
-		 NULL},
-		{"print-target", 0, 0, G_OPTION_ARG_NONE, &opts->print_target,
-		 "whether to print the target path upon succesful completion",
-		 NULL},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
-	};
-
-	og = g_option_group_new ("mv", "options for the 'mv' command",
-				"", NULL, NULL);
-	g_option_group_add_entries(og, entries);
-
-	return og;
-}
-
-
 
 static GOptionGroup*
 config_options_group_extract (MuConfig *opts)
@@ -398,7 +374,6 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		{ "find",    MU_CONFIG_CMD_FIND },
 		{ "index",   MU_CONFIG_CMD_INDEX },
 		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
-		{ "mv",      MU_CONFIG_CMD_MV },
 		{ "view",    MU_CONFIG_CMD_VIEW },
 		{ "add",     MU_CONFIG_CMD_ADD },
 		{ "remove",  MU_CONFIG_CMD_REMOVE },
@@ -441,8 +416,6 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 		group = config_options_group_mkdir (opts);	break;
 	case MU_CONFIG_CMD_EXTRACT:
 		group = config_options_group_extract (opts);	break;
-	case MU_CONFIG_CMD_MV:
-		group = config_options_group_mv (opts);		break;
 	case MU_CONFIG_CMD_CFIND:
 		group = config_options_group_cfind (opts);	break;
 	case MU_CONFIG_CMD_VIEW:

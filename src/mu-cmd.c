@@ -277,86 +277,6 @@ mu_cmd_mkdir (MuConfig *opts, GError **err)
 }
 
 
-static gboolean
-mv_check_params (MuConfig *opts, MuFlags *flags, GError **err)
-{
-	if (!opts->params[1]) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
-			     "missing source mailfile");
-		return FALSE;
-	}
-
-	/* FIXME: check for invalid flags */
-	if (!opts->flagstr)
-		*flags = MU_FLAG_INVALID; /* ie., ignore flags */
-	else {
-		/* if there's a '+' or '-' sign in the string, it must
-		 * be a flag-delta */
-		if (strstr (opts->flagstr, "+") || strstr (opts->flagstr, "-")) {
-			MuFlags oldflags;
-			oldflags = mu_maildir_get_flags_from_path (opts->params[1]);
-			*flags = mu_flags_from_str_delta (opts->flagstr,
-							  oldflags,
-							  MU_FLAG_TYPE_MAILDIR|
-							  MU_FLAG_TYPE_MAILFILE);
-		} else
-			*flags = mu_flags_from_str (opts->flagstr,
-						    MU_FLAG_TYPE_MAILDIR |
-						    MU_FLAG_TYPE_MAILFILE);
-	}
-
-	return TRUE;
-}
-
-
-static MuError
-cmd_mv_dev_null (MuConfig *opts)
-{
-	if (unlink (opts->params[1]) != 0) {
-		g_warning ("unlink failed: %s", strerror (errno));
-		return MU_ERROR_FILE;
-	}
-
-	if (opts->print_target)
-		g_print ("/dev/null\n"); /* /dev/null */
-
-	return MU_OK;
-}
-
-
-MuError
-mu_cmd_mv (MuConfig *opts, GError **err)
-{
-	gchar *fullpath;
-	MuFlags flags;
-
-	if (!mv_check_params (opts, &flags, err)) {
-		if (MU_G_ERROR_CODE(err) == MU_ERROR_IN_PARAMETERS)
-			g_message ("usage: mu mv [--flags=<flags>] <mailfile> "
-				   "[<maildir>]");
-		return MU_G_ERROR_CODE(err);
-	}
-
-	/* special case: /dev/null */
-	if (g_strcmp0 (opts->params[2], "/dev/null") == 0)
-		return cmd_mv_dev_null (opts);
-
-	err = NULL;
-	fullpath = mu_maildir_move_message (opts->params[1], opts->params[2],
-					    flags, opts->ignore_dups, err);
-	if (!fullpath)
-		return MU_G_ERROR_CODE(err);
-	else {
-		if (opts->print_target)
-			g_print ("%s\n", fullpath);
-		return MU_OK;
-	}
-
-	g_free (fullpath);
-
-	return MU_OK;
-}
-
 
 static gboolean
 check_file_okay (const char *path, gboolean cmd_add)
@@ -471,7 +391,7 @@ show_usage (void)
 {
 	g_message ("usage: mu command [options] [parameters]");
 	g_message ("where command is one of index, find, cfind, view, mkdir, cleanup, "
-		   "extract, mv, add, remove or server");
+		   "extract, add, remove or server");
 	g_message ("see the mu, mu-<command> or mu-easy manpages for "
 		   "more information");
 }
@@ -539,7 +459,6 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	switch (opts->cmd) {
 	case MU_CONFIG_CMD_CFIND:   return mu_cmd_cfind (opts, err);
 	case MU_CONFIG_CMD_MKDIR:   return mu_cmd_mkdir (opts, err);
-	case MU_CONFIG_CMD_MV:	    return mu_cmd_mv (opts, err);
 	case MU_CONFIG_CMD_VIEW:    return mu_cmd_view (opts, err);
 	case MU_CONFIG_CMD_EXTRACT: return mu_cmd_extract (opts, err);
 
