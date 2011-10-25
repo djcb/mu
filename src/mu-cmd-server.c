@@ -78,11 +78,6 @@ install_sig_handler (void)
 				    sigs[i], strerror (errno));;
 }
 
-/* we include \376 (0xfe) and \377, (0xff) because it cannot occur as
- * part of the other output, as 0xfe, 0xff are not valid UTF-8
- */
-/* #define BOX ";;box\376\n" /\* just before the sexp starts *\/ */
-/* #define EOX ";;eox\377\n"   /\* after the sexp has ended *\/ */
 
 #define BOX "\376"
 
@@ -109,8 +104,30 @@ send_expr (const char* frm, ...)
 	if (rv < 0)
 		MU_WRITE_LOG ("error writing output: %s", strerror(errno));
 
+	{
+		MU_WRITE_LOG ("--\n%s\n--", hdr);
+	}
+
+
 	g_free (hdr);
 	va_end (ap);
+}
+
+
+/* ugly, ugly... emacs reads/processes the data from the server in
+ * up-to 4096 byte blobs (see read_process_output in the emacs source
+ * code), and for longer messages / more headers, it may only start
+ * processing (showing) the message after more data comes, instead of
+ * immediately. As a work-around for this, here, we just send some
+ * 'filler data' as to 'flush the pipe', so to speak. hopefully, one
+ * day I can come up with a more elegant way to do this...*/
+static void
+send_filler_data (unsigned len)
+{
+	unsigned u;
+	const char* filler = ";;                             \n";
+	for (u = 0; u != len/8; ++u)
+		write (fileno(stdout), filler, strlen (filler));
 }
 
 
@@ -310,6 +327,8 @@ cmd_info (MuStore *store, GSList *lst, GError **err)
 }
 
 
+
+
 static MuError
 cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 {
@@ -344,8 +363,10 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 
 	mu_msg_iter_destroy (iter);
 
-	if (u == 0)
-		return server_error (NULL, MU_ERROR_NO_MATCHES, "No matches");
+	/* return the number of results found */
+	send_expr ("(:found %u)", u);
+
+	send_filler_data (2048);
 
 	return MU_OK;
 }
@@ -697,12 +718,8 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 	 * here, we just send some 'filler data' as to 'flush the
 	 * pipe', so to speak. hopefully, one day I can come up with a
 	 * more elegant way to do this...*/
-	if (strlen (sexp) > 4000) {
-		int i;
-		const char* filler = ";;                             \n";
-		for (i = 0; i != 8; ++i)
-			write (fileno(stdout), filler, strlen (filler));
-	}
+	if (strlen (sexp) > 4000)
+		send_filler_data (256);
 
 	g_free (sexp);
 
