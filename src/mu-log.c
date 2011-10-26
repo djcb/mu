@@ -228,8 +228,8 @@ log_write (const char* domain, GLogLevelFlags level,
 	time_t now;
 	ssize_t len;
 
-	/* log lines will be truncated at 255 chars */
-	char buf [512], timebuf [32];
+	/* log lines will be truncated at 768 chars */
+	char buf [768], timebuf [22];
 
 	g_return_if_fail (MU_LOG);
 
@@ -241,9 +241,6 @@ log_write (const char* domain, GLogLevelFlags level,
 	/* now put it all together */
 	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf,
 			pfx(level), msg);
-	/* if the buffer is full, add a newline */
-	if (len == sizeof(buf))
-		buf[sizeof(buf)-2] = '\n';
 
 	if (write (MU_LOG->_fd, buf, (size_t)len) < 0)
 		fprintf (stderr, "%s: failed to write to log: %s\n",
@@ -253,7 +250,6 @@ log_write (const char* domain, GLogLevelFlags level,
 		fputs ("mu: ", stdout);
 		fputs (msg,    stdout);
 		fputs ("\n",   stdout);
-		fflush (stdout);
 	}
 
 	/* for serious errors, log them to stderr as well */
@@ -263,6 +259,5 @@ log_write (const char* domain, GLogLevelFlags level,
 		fputs ("mu: ", stderr);
 		fputs (msg,    stderr);
 		fputs ("\n",   stderr);
-		fflush (stderr);
 	}
 }
