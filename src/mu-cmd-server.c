@@ -29,6 +29,8 @@
 #include <errno.h>
 #include <stdarg.h>
 
+#include <glib/gprintf.h>
+
 #ifdef HAVE_LIBREADLINE
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -86,48 +88,25 @@ static void  send_expr (const char* frm, ...) G_GNUC_PRINTF(1, 2);
 static void
 send_expr (const char* frm, ...)
 {
-	char *hdr;
+	char *expr;
 	va_list ap;
-	char pfx[16];
-	int rv;
+	char hdr[16];
+	size_t exprlen, hdrlen;
 
 	va_start (ap, frm);
 
-	hdr = g_strdup_vprintf (frm, ap);
-	snprintf (pfx, sizeof(pfx), BOX "%u" BOX, strlen(hdr));
+	expr    = NULL;
+	exprlen = g_vasprintf (&expr, frm, ap);
+	hdrlen  = snprintf (hdr, sizeof(hdr), BOX "%u" BOX, exprlen);
 
-	rv = write (fileno(stdout), pfx, strlen (pfx));
-	if (rv < 0)
+	if (write (fileno(stdout), hdr, hdrlen) < 0)
 		MU_WRITE_LOG ("error writing output: %s", strerror(errno));
 
-	rv = write (fileno(stdout), hdr, strlen (hdr));
-	if (rv < 0)
+	if (write (fileno(stdout), expr, exprlen) < 0)
 		MU_WRITE_LOG ("error writing output: %s", strerror(errno));
 
-	{
-		MU_WRITE_LOG ("--\n%s\n--", hdr);
-	}
-
-
-	g_free (hdr);
+	g_free (expr);
 	va_end (ap);
-}
-
-
-/* ugly, ugly... emacs reads/processes the data from the server in
- * up-to 4096 byte blobs (see read_process_output in the emacs source
- * code), and for longer messages / more headers, it may only start
- * processing (showing) the message after more data comes, instead of
- * immediately. As a work-around for this, here, we just send some
- * 'filler data' as to 'flush the pipe', so to speak. hopefully, one
- * day I can come up with a more elegant way to do this...*/
-static void
-send_filler_data (unsigned len)
-{
-	unsigned u;
-	const char* filler = ";;                             \n";
-	for (u = 0; u != len/8; ++u)
-		write (fileno(stdout), filler, strlen (filler));
 }
 
 
@@ -364,9 +343,7 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 	mu_msg_iter_destroy (iter);
 
 	/* return the number of results found */
-	send_expr ("(:found %u)", u);
-
-	send_filler_data (2048);
+	send_expr ("(:found %u)\n", u);
 
 	return MU_OK;
 }
@@ -708,18 +685,6 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 	mu_msg_unref (msg);
 
 	send_expr ("(:view %s)\n", sexp);
-
-
-	/* ugly, ugly... emacs reads/processes the data from the
-	 * server in up-to 4096 byte blobs (see read_process_output in
-	 * the emacs source code), and for longer messages, it may
-	 * only start processing (showing) the message after more data
-	 * comes, instead of immediately. As a work-around for this,
-	 * here, we just send some 'filler data' as to 'flush the
-	 * pipe', so to speak. hopefully, one day I can come up with a
-	 * more elegant way to do this...*/
-	if (strlen (sexp) > 4000)
-		send_filler_data (256);
 
 	g_free (sexp);
 
