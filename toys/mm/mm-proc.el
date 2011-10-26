@@ -133,7 +133,7 @@ process."
     ;; register a function for (:info ...) sexps
     (setq mm/proc-info-func 'mm/proc-info-handler)
     (when mm/mu-proc
-      (set-process-coding-system mm/mu-proc 'utf-8-unix 'utf-8-unix)
+      (set-process-coding-system mm/mu-proc 'binary 'utf-8-unix)
       (set-process-filter mm/mu-proc 'mm/proc-filter)
       (set-process-sentinel mm/mu-proc 'mm/proc-sentinel))))
 
@@ -163,11 +163,16 @@ updated as well, with all processed sexp data removed."
     (let* ((b (string-match "\376\\([0-9]+\\)\376" mm/buf))
 	    (sexp-len
 	      (when b (string-to-number (match-string 1 mm/buf)))))
+
       ;; does mm/buf contain the full sexp?
       (when (and b (>= (length mm/buf) (+ sexp-len (match-end 0))))
 	;; clear-up start
 	(setq mm/buf (substring mm/buf (match-end 0)))
-	(let ((objcons (read-from-string mm/buf)))
+	;; note: we read the input in binary mode -- here, we take the part that
+	;; is the sexp, and convert that to utf-8, before we interpret it.
+	(let ((objcons
+		(read-from-string
+		   (decode-coding-string (substring mm/buf 0 sexp-len) 'utf-8))))
 	  (setq mm/buf (substring mm/buf sexp-len))
 	  (car objcons))))))
 

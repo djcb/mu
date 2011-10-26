@@ -182,8 +182,11 @@ after the end of the search results."
 	(insert (propertize
 		  (case count
 		    (0 "No matching messages found")
-		    (1 "Found 1 message")
-		    (otherwise (format "Found %d messages" count)))
+		    ;; note, don't show the number so we don't have to update it
+		    ;; when we delete messsages...
+		    (otherwise "End of search results"))
+		    ;; (1 "Found 1 message")
+		    ;; (otherwise (format "Found %d messages" count)))
 		  'face 'mm/system-face 'intangible t))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
