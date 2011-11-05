@@ -213,8 +213,9 @@ or if not available, :body-html converted to text)."
       (define-key map (kbd "<delete>") 'mm/view-mark-for-delete)
       (define-key map "D" 'mm/view-mark-for-delete)
       (define-key map "a" 'mm/mark-for-move-quick)
+
       (define-key map "m" 'mm/view-mark-for-move)
-      
+
       ;; misc
       (define-key map "w" 'mm/view-toggle-wrap-lines)
       (define-key map "h" 'mm/view-toggle-hide-cited)
@@ -395,9 +396,9 @@ removing '^M' etc."
 (defun mm/view-quit-buffer ()
   "Quit the message view and return to the headers."
   (interactive)
-  (let ((inhibit-read-only t))
-    (kill-buffer)
-    (switch-to-buffer mm/hdrs-buffer)))
+  (if (buffer-live-p mm/hdrs-buffer)
+    (switch-to-buffer mm/hdrs-buffer)
+    (kill-buffer)))
 
 (defun mm/view-next-header ()
   "View the next header."

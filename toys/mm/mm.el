@@ -116,17 +116,16 @@ PATH, you can specifiy the full path."
   :group 'mm/folders)
 
 
-(defcustom mm/move-quick-targets nil
-  "A list of targets quickly moving messages towards (i.e.,
-  archiving or refiling). The list contains elements of the form
- (foldername . shortcut), where FOLDERNAME is a maildir (such as
+(defcustom mm/maildir-shortcuts nil
+  "A list of maildir shortcuts to enable quickly going to the
+ particular for, or quickly moving messages towards them (i.e.,
+ archiving or refiling). The list contains elements of the form
+ (maildir . shortcut), where MAILDIR is a maildir (such as
 \"/archive/\"), and shortcut a single shortcut character. With
 this, in the header buffer and view buffer you can execute
-`mm/mark-for-move-quick' (or 'a', by default) followed by the designated
-character for the target folder, and the message at point (or all
-the messages in the region) will be marked for moving to the target
-folder.")
-
+`mm/mark-for-move-quick' (or 'm', by default) or
+`mm/jump-to-maildir-quick' (or 'j', by default), followed by the
+designated shortcut character for the maildir.")
 
 ;; the headers view
 (defgroup mm/headers nil
@@ -444,17 +443,31 @@ in which case it will be equal to `:to'.)")
     (map 'list (lambda (dir) (concat "/" dir)) maildirs)))
 
 
-
 (defun mm/ask-maildir (prompt)
-  "Ask user with PROMPT for a maildir name, if fullpath is
-non-nill, return the fulpath (i.e., `mm/maildir' prepended to the
-chosen folder)."
-  (unless (and mm/inbox-folder mm/drafts-folder mm/sent-folder)
-    (error "`mm/inbox-folder', `mm/drafts-folder' and
-    `mm/sent-folder' must be set"))
-  (unless mm/maildir (error "`mm/maildir' must be set"))
-  (interactive)
-  (ido-completing-read prompt (mm/get-sub-maildirs mm/maildir)))
+  "Ask the user for a shortcut as defined in
+`mm/maildir-shortcuts', then return the corresponding folder
+name. If the special shortcut 'o' (for _o_ther) is used, or if
+`mm/maildir-shortcuts is not defined, let user choose from all
+maildirs under `mm/maildir."
+  (unless mm/maildir (error "`mm/maildir' is not defined"))
+  (if (not mm/maildir-shortcuts)
+    (ido-completing-read prompt (mm/get-sub-maildirs mm/maildir))
+    (let* ((mlist (append mm/maildir-shortcuts '(("ther" . ?o)))) 
+	    (fnames
+	      (mapconcat
+		(lambda (item)
+		  (message "%S" item)
+		  (concat
+		    "["
+		    (propertize (make-string 1 (cdr item)) 'face 'mm/view-link-face)
+		    "]"
+		    (car item)))
+		mlist ", "))
+	    (kar (read-char (concat prompt fnames))))
+      (if  (= kar ?o) ;; user chose 'other'?
+	(ido-completing-read prompt (mm/get-sub-maildirs mm/maildir))
+	(car-safe
+	  (find-if (lambda (item) (= kar (cdr item))) mm/maildir-shortcuts))))))
 
 
 (defun mm/new-buffer (bufname)
@@ -527,6 +540,5 @@ Also see `mu/flags-to-string'.
       (append (when flag (list flag))
 	(mm/string-to-flags-1 (substring str 1))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 (provide 'mm)

@@ -208,18 +208,20 @@ after the end of the search results."
       ;; navigation
       (define-key map "n" 'mm/next-header)
       (define-key map "p" 'mm/prev-header)
-      (define-key map "j" 'mm/jump-to-maildir)
+
 
       ;; marking/unmarking/executing
-      (define-key map "m" 'mm/mark-for-move)
+      
 
       (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
       (define-key map "d" 'mm/mark-for-trash)
 
       (define-key map (kbd "<delete>") 'mm/mark-for-delete)
       (define-key map "D" 'mm/mark-for-delete)
-      (define-key map "a" 'mm/mark-for-move-quick)
 
+      (define-key map "j" 'mm/jump-to-maildir)
+      (define-key map "m" 'mm/mark-for-move)
+      
       (define-key map "u" 'mm/unmark)
       (define-key map "U" 'mm/unmark-all)
       (define-key map "x" 'mm/execute-marks)
@@ -573,7 +575,10 @@ the new docid. Otherwise, return nil."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
     (when (= 0 (forward-line 1))
-      (or (mm/hdrs-get-docid) (mm/next-header))))) ;; skip non-headers
+      (or (mm/hdrs-get-docid) (mm/next-header)) ;; skip non-headers
+      ;; trick to move point, even if this function is called when this window
+      ;; is not visible
+      (set-window-point (get-buffer-window mm/hdrs-buffer) (point)))))
 
 (defun mm/prev-header ()
   "Move point to the previous message header. If this succeeds,
@@ -581,11 +586,15 @@ return the new docid. Otherwise, return nil."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
     (when (= 0 (forward-line -1))
-      (or (mm/hdrs-get-docid) (mm/prev-header))))) ;; skip non-headers
+      (or (mm/hdrs-get-docid) (mm/prev-header)) ;; skip non-headers
+      ;; trick to move point, even if this function is called when this window
+      ;; is not visible
+      (set-window-point (get-buffer-window mm/hdrs-buffer) (point)))))
 
 
 (defun mm/jump-to-maildir ()
-  "Show the messages in one of the standard folders."
+  "Show the messages in maildir TARGET. If TARGET is not provided,
+ask user for it."
   (interactive)
   (let ((fld (mm/ask-maildir "Jump to maildir: ")))
     (mm/hdrs-search (concat "maildir:" fld))))
@@ -596,7 +605,7 @@ return the new docid. Otherwise, return nil."
 not provided, function asks for it."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
-    (let* ((target (or target (mm/ask-maildir "Target maildir for move: ")))
+    (let* ((target (or target (mm/ask-maildir "Move message to: ")))
 	    (fulltarget (concat mm/maildir target)))
       (when (or (file-directory-p fulltarget)
 	      (and (yes-or-no-p
@@ -604,30 +613,6 @@ not provided, function asks for it."
 		(mm/proc-mkdir fulltarget)))
       (mm/hdrs-mark 'move target)
 	(mm/next-header)))))
-
-
-(defun mm/mark-for-move-quick ()
-  "Mark message at point (or all messages in region) for moving to
-a folder; see `mm/move-quick-targets'."
-  (interactive)
-  (unless mm/move-quick-targets
-    (error "`mm/move-quick-targets' has not been defined"))
-  (let* ((fnames
-	   (mapconcat
-	     (lambda (item)
-	       (concat
-		 "["
-		 (propertize (make-string 1 (cdr item)) 'face 'mm/view-link-face)
-		 "]"
-		 (car item)))
-	     mm/move-quick-targets ", "))
-	  (kar (read-char (concat "Move to: " fnames)))
-	  (targetitem
-	    (find-if (lambda (item) (= kar (cdr item))) mm/move-quick-targets))
-	  (target (and targetitem (car targetitem))))
-    ;; if the target is not found, we simply exit
-    (when target
-      (mm/mark-for-move target))))
 
 
 (defun mm/mark-for-trash ()
