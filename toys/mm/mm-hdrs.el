@@ -34,9 +34,7 @@
 
 (eval-when-compile (require 'cl))
 
-(require 'mm-common)
 (require 'mm-proc)
-
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mm/last-expr nil
@@ -194,7 +192,6 @@ after the end of the search results."
 
 
 
-
 ;;; hdrs-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq mm/hdrs-mode-map nil)
 (defvar mm/hdrs-mode-map nil
@@ -221,6 +218,7 @@ after the end of the search results."
 
       (define-key map (kbd "<delete>") 'mm/mark-for-delete)
       (define-key map "D" 'mm/mark-for-delete)
+      (define-key map "a" 'mm/mark-for-move-quick)
 
       (define-key map "u" 'mm/unmark)
       (define-key map "U" 'mm/unmark-all)
@@ -299,13 +297,22 @@ after the end of the search results."
     mode-name "*mm-headers*"
     truncate-lines t
     buffer-read-only t
-    overwrite-mode 'overwrite-mode-binary))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    overwrite-mode 'overwrite-mode-binary)
 
-
-
-
-;;; headers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   (setq header-line-format
+     (cons "*  "
+       (map 'list
+	 (lambda (item) ;; FIXME
+	   (let ((field (cdr (assoc (car item) mm/header-names)))
+		  (width (cdr item)))
+	     (concat
+	       (propertize
+		 (if width
+		   (truncate-string-to-width field width 0 ?\s t)
+		   field)
+		 'face 'mm/title-face) " ")))
+	 mm/header-fields))))
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mm/msg-map nil
   "*internal* A map (hashtable) which maps a database (Xapian)
 docid (which uniquely identifies a message to a marker.  where
@@ -584,11 +591,12 @@ return the new docid. Otherwise, return nil."
     (mm/hdrs-search (concat "maildir:" fld))))
 
 
-(defun mm/mark-for-move ()
-  "Mark message at point for moving to a maildir."
+(defun mm/mark-for-move (&optional target)
+  "Mark message at point for moving to maildir TARGET. If target is
+not provided, function asks for it."
   (interactive)
   (with-current-buffer mm/hdrs-buffer
-    (let* ((target (mm/ask-maildir "Target maildir for move: "))
+    (let* ((target (or target (mm/ask-maildir "Target maildir for move: ")))
 	    (fulltarget (concat mm/maildir target)))
       (when (or (file-directory-p fulltarget)
 	      (and (yes-or-no-p
@@ -596,6 +604,31 @@ return the new docid. Otherwise, return nil."
 		(mm/proc-mkdir fulltarget)))
       (mm/hdrs-mark 'move target)
 	(mm/next-header)))))
+
+
+(defun mm/mark-for-move-quick ()
+  "Mark message at point (or all messages in region) for moving to
+a folder; see `mm/move-quick-targets'."
+  (interactive)
+  (unless mm/move-quick-targets
+    (error "`mm/move-quick-targets' has not been defined"))
+  (let* ((fnames
+	   (mapconcat
+	     (lambda (item)
+	       (concat
+		 "["
+		 (propertize (make-string 1 (cdr item)) 'face 'mm/view-link-face)
+		 "]"
+		 (car item)))
+	     mm/move-quick-targets ", "))
+	  (kar (read-char (concat "Move to: " fnames)))
+	  (targetitem
+	    (find-if (lambda (item) (= kar (cdr item))) mm/move-quick-targets))
+	  (target (and targetitem (car targetitem))))
+    ;; if the target is not found, we simply exit
+    (when target
+      (mm/mark-for-move target))))
+
 
 (defun mm/mark-for-trash ()
   "Mark message at point for moving to the trash

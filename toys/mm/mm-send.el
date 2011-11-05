@@ -148,8 +148,10 @@ The result is either nil or a string which can be used for the To:-field."
     (if reply-all
       (progn ;; reply-all
 	(setq to-lst ;; append Reply-To:, or if not set, From: if set
-	  (if reply-to (cons `(nil . ,reply-to) to-lst)
-	    (if from (append to-lst from)
+	  (if reply-to
+	    (cons `(nil . ,reply-to) to-lst)
+	    (if from
+	      (append to-lst from)
 	      to-lst)))
 
 	;; and remove myself from To:
@@ -169,8 +171,7 @@ is either nil or a string to be used for the Cc: field."
   (let ((cc-lst (plist-get msg :cc)))
     (when (and reply-all cc-lst)
       (mm/msg-recipients-to-string
-	(mm/msg-recipients-remove cc-lst
-	  user-mail-address)))))
+	(mm/msg-recipients-remove cc-lst user-mail-address)))))
 
 (defun mm/msg-from-create ()
   "Construct a value for the From:-field of the reply to MSG,
@@ -288,18 +289,22 @@ body from headers)."
 already exist, and optionally fill it with STR. Function also adds
 the new message to the database. When the draft message is added to
 the database, `mm/path-docid-map' will be updated, so that we can
-use the new docid. Return the full path to the new message."
-  (let ((draft
-	  (concat mm/maildir mm/drafts-folder "/cur/"
-	    (format "%s-%x%x:2,D" ;; 'D': rarely used, but hey, it's available
-	      (format-time-string "%Y%m%d" (current-time))
-	      (emacs-pid)
-	      (random t)))) ;; TODO: include hostname
-	 (str (case compose-type
-		(reply   (mm/msg-create-reply msg))
-		(forward (mm/msg-create-forward msg))
-		(new     (mm/msg-create-new))
-		(t (error "unsupported compose-type %S" compose-type)))))
+use the new docid. Returns the full path to the new message."
+  (let* ((hostname
+	   (downcase 
+	     (save-match-data
+	       (substring system-name
+		 (string-match "^[^.]+" system-name) (match-end 0)))))
+	  (draft
+	    (concat mm/maildir mm/drafts-folder "/cur/"
+	      (format "%s-%x%x.%s:2,D" ;; 'D': rarely used, but hey, it's available
+		(format-time-string "%Y%m%d" (current-time))
+		(emacs-pid) (random t) hostname)))
+	  (str (case compose-type
+		 (reply   (mm/msg-create-reply msg))
+		 (forward (mm/msg-create-forward msg))
+		 (new     (mm/msg-create-new))
+		 (t (error "unsupported compose-type %S" compose-type)))))
     (when str
       (with-temp-file draft
 	(insert str)

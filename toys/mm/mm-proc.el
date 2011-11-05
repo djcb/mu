@@ -27,8 +27,6 @@
 ;;; Code:
 (eval-when-compile (require 'cl))
 
-(require 'mm-common)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
 
@@ -139,16 +137,18 @@ process."
 
 (defun mm/kill-proc ()
   "Kill the mu server process."
-  (let (buf (get-buffer mm/server-name))
-    (when buf
+  (let* ((buf (get-buffer mm/server-name))
+	  (proc (and buf (get-buffer-process buf)))) 
+    (when proc
       (let ((delete-exited-processes t))
-	;; send SIGINT (C-c) to process, so it can exit gracefully
-	(signal-process (get-buffer-process buf) 'SIGINT)
 	;; the mu server signal handler will make it quit after 'quit'
 	(mm/proc-send-command "quit"))
-      (setq
-	mm/mu-proc nil
-	mm/buf nil))))
+	;; try sending SIGINT (C-c) to process, so it can exit gracefully
+      (ignore-errors 
+	(signal-process proc 'SIGINT))))
+  (setq
+    mm/mu-proc nil
+    mm/buf nil))
 
 (defun mm/proc-is-running ()
   (and mm/mu-proc (eq (process-status mm/mu-proc) 'run)))
@@ -160,10 +160,10 @@ process."
 Function returns this sexp, or nil if there was none. `mm/buf' is
 updated as well, with all processed sexp data removed."
   (when mm/buf
+    ;; TODO: maybe try a non-regexp solution?
     (let* ((b (string-match "\376\\([0-9]+\\)\376" mm/buf))
 	    (sexp-len
 	      (when b (string-to-number (match-string 1 mm/buf)))))
-
       ;; does mm/buf contain the full sexp?
       (when (and b (>= (length mm/buf) (+ sexp-len (match-end 0))))
 	;; clear-up start
@@ -171,10 +171,13 @@ updated as well, with all processed sexp data removed."
 	;; note: we read the input in binary mode -- here, we take the part that
 	;; is the sexp, and convert that to utf-8, before we interpret it.
 	(let ((objcons
-		(read-from-string
-		   (decode-coding-string (substring mm/buf 0 sexp-len) 'utf-8))))
-	  (setq mm/buf (substring mm/buf sexp-len))
-	  (car objcons))))))
+		(ignore-errors ;; note: this may fail if we killed the process
+			       ;; in the middle
+		  (read-from-string
+		    (decode-coding-string (substring mm/buf 0 sexp-len) 'utf-8)))))
+	  (when objcons
+	    (setq mm/buf (substring mm/buf sexp-len))
+	    (car objcons)))))))
 
 
 (defun mm/proc-filter (proc str)
@@ -292,6 +295,8 @@ terminates."
 	  (t (message (format "mu server process received signal %d" code)))))
       ((eq status 'exit)
 	(cond
+	  ((eq code 0)
+	    (message nil)) ;; don't do anything	  
 	  ((eq code 11)
 	    (message "Database is locked by another process"))
 	  ((eq code 19)

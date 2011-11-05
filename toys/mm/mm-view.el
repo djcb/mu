@@ -32,7 +32,6 @@
 
 ;;; Code:
 (eval-when-compile (require 'cl))
-(require 'mm-common)
 (require 'html2text)
 (require 'filladapt)
 
@@ -61,28 +60,34 @@ marking if it still had that."
       (insert
 	(mapconcat
 	  (lambda (field)
-	    (case field
-	      (:subject	(mm/view-header  "Subject" (plist-get msg :subject)))
-	      (:path	(mm/view-header  "Path"    (plist-get msg :path)))
-	      (:to	(mm/view-contacts msg field))
-	      (:from	(mm/view-contacts msg field))
-	      (:cc	(mm/view-contacts msg field))
-	      (:bcc	(mm/view-contacts msg field))
-	      (:date
-		(let* ((date (plist-get msg :date))
-			(datestr (when date (format-time-string "%c" date))))
-		  (if datestr (mm/view-header "Date" datestr) "")))
+	    (let ((fieldname (cdr (assoc field mm/header-names)))
+		   (fieldval (plist-get msg field)))
+	      (case field
+		
+		(:subject  (mm/view-header fieldname fieldval))
+		(:path	   (mm/view-header fieldname fieldval))
+		(:maildir  (mm/view-header fieldname fieldval))
+		(:flags	   (mm/view-header fieldname (format "%S" fieldval))) 
+		
+		;; contact fields
+		(:to	   (mm/view-contacts msg field))
+		(:from	   (mm/view-contacts msg field))
+		(:cc	   (mm/view-contacts msg field))
+		(:bcc	   (mm/view-contacts msg field))
 
-	      (:flags	"") ;; TODO
-	      (:maildir	(mm/view-header  "Maildir" (plist-get msg :maildir)))
-	      (:size	(mm/view-size  msg)
-		(let* ((size (plist-get msg :size))
-			(sizestr (when size (format "%d bytes"))))
-		  (if sizestr (mm/view-header "Size" sizestr))))
-
-	      (:attachments (mm/view-attachments msg))
-	      (t               (error "Unsupported field: %S" field))))
-	  mm/view-headers "")
+		;; date
+		(:date
+		  (let ((datestr
+			  (when fieldval (format-time-string "%c" fieldval))))
+		    (if datestr (mm/view-header fieldname datestr) "")))
+		;; size
+		(:size	(mm/view-size  msg)
+		  (let ((sizestr (when size (format "%d bytes"))))
+		    (if sizestr (mm/view-header fieldname sizestr))))
+		;; attachments
+		(:attachments (mm/view-attachments msg))
+		(t               (error "Unsupported field: %S" field)))))
+	    mm/view-fields "")
 	"\n"
 	(mm/view-body msg))
 
@@ -91,7 +96,7 @@ marking if it still had that."
       (setq ;; these are buffer-local
 	mode-name (if (plist-get msg :subject)
 		    (truncate-string-to-width (plist-get msg :subject) 16 0 nil t)
-		    "No subject")
+		    (propertize "No subject" 'face 'mm/system-face))
 	mm/current-msg msg
 	mm/hdrs-buffer hdrsbuf
 	mm/link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
@@ -116,7 +121,7 @@ or if not available, :body-html converted to text)."
 
 
 (defun mm/view-header (key val)
-  "Show header FIELD for MSG with KEY. ie. <KEY>: value-of-FIELD\n."
+  "Show header FIELD for MSG with KEY. ie. <KEY>: value-of-FIELD."
   (if val
     (concat
       (propertize key 'face 'mm/view-header-key-face) ": "
@@ -125,20 +130,20 @@ or if not available, :body-html converted to text)."
 
 
 (defun mm/view-contacts (msg field)
-  (unless (member field '(:to :from :bcc :cc)) (error "Wrong type"))
+  "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
   (let* ((lst (plist-get msg field))
+	  (fieldname (cdr (assoc field mm/header-names)))
 	  (contacts
-	    (when lst
+	    (and lst
 	      (mapconcat
 		(lambda(c)
 		  (let ((name (car c)) (email (cdr c)))
 		    (if name
 		      (format "%s <%s>" name email)
 		      (format "%s" email)))) lst ", "))))
+    (message "%S %S" field fieldname)
     (if contacts
-      (mm/view-header
-	(case field (:to "To") (:from "From") (:bcc "Bcc") (:cc "Cc"))
-	contacts)
+      (mm/view-header fieldname contacts)
       "")))
 
 (defvar mm/attach-map nil
@@ -207,7 +212,7 @@ or if not available, :body-html converted to text)."
       
       (define-key map (kbd "<delete>") 'mm/view-mark-for-delete)
       (define-key map "D" 'mm/view-mark-for-delete)
-
+      (define-key map "a" 'mm/mark-for-move-quick)
       (define-key map "m" 'mm/view-mark-for-move)
       
       ;; misc
@@ -249,7 +254,7 @@ or if not available, :body-html converted to text)."
 	  '("Mark for trash" .  mm/view-mark-for-trash))
 	(define-key menumap [mark-move]
 	  '("Mark for move" . mm/view-mark-for-move))
-
+	
 	(define-key menumap [sepa2] '("--"))
 	(define-key menumap [compose-new]  '("Compose new" . mm/compose-new))
 	(define-key menumap [forward]  '("Forward" . mm/compose-forward))
