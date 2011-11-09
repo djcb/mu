@@ -16,28 +16,20 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=mm
+SUBDIRS=
 
-# build if there is some gtk available
-if HAVE_GTK
-SUBDIRS += mug
-endif
+BUILT_SOURCES=mm-version.el
 
-# for mug2, we need webkit
-if BUILD_WIDGETS
-SUBDIRS += mug2
-endif
+mm-version.el:
+	@echo -e ";; auto-generated\n\
+(defconst mm/mu-version \"$(VERSION)\" \"Required mu binary version.\")\n\
+(provide 'mm-version)\n" >$@
 
-# for muile, we need guile
-if HAVE_GUILE
-SUBDIRS += muile
-endif
-
-# for procmule, we need guile and gio
-if HAVE_GUILE
-if HAVE_GIO
-SUBDIRS += procmule
-endif
-endif
-
+EXTRA_DIST=			\
+	mm.el			\
+	mm-hdrs.el		\
+	mm-view.el		\
+	mm-proc.el		\
+	mm-send.el		\
+	mm-version.el
 
