@@ -103,12 +103,13 @@ or if not available, :body-html converted to text)."
 . \"a@example.com\") (\"B\" . \"B@example.com\") (nil
 . \"c@example.com\")) into a string of form \"A <@aexample.com>, B
 <b@example.com>, c@example.com\."
-  (mapconcat
-    (lambda (recip)
-      (let ((name (car recip)) (email (cdr recip)))
-	(if name
-	  (format "%s <%s>" name email)
-	  (format "%s" email)))) lst ", "))
+  (when lst
+    (mapconcat
+      (lambda (recip)
+	(let ((name (car recip)) (email (cdr recip)))
+	  (if name
+	    (format "%s <%s>" name email)
+	    (format "%s" email)))) lst ", ")))
 
 
 (defun mm/msg-header (hdr val)
@@ -132,14 +133,14 @@ return nil."
 
 (defun mm/msg-to-create (msg)
   "Construct the To: header for a reply-message based on some
-message MSG. This the the Reply-To address of MSG if it exist, or
+message MSG. This takes the Reply-To address of MSG if it exist, or
 the From:-address otherwise. The result is either nil or a string
-which can be used for the To:-field."
-  (let ((to-lst (plist-get msg :to))
-	 (reply-to (plist-get msg :reply-to))
-	 (from (plist-get msg :from)))
-    (setq to-lst (or reply-to from))
-    (mm/msg-recipients-to-string to-lst)))
+which can be used for the To:-field. Note, when it's present,
+Reply-To contains a string of one or more addresses,
+comma-separated."
+  (or
+    (plist-get msg :reply-to)
+    (mm/msg-recipients-to-string (plist-get msg :from))))
 
 
 (defun mm/msg-cc-create (msg reply-all)
@@ -275,7 +276,7 @@ the new message to the database. When the draft message is added to
 the database, `mm/path-docid-map' will be updated, so that we can
 use the new docid. Returns the full path to the new message."
   (let* ((hostname
-	   (downcase 
+	   (downcase
 	     (save-match-data
 	       (substring system-name
 		 (string-match "^[^.]+" system-name) (match-end 0)))))
@@ -331,7 +332,7 @@ using Gnus' `message-mode'."
 
     (unless (file-readable-p draft)
       (error "Cannot read %s" path))
-    
+
     (find-file draft)
     (message-mode)
 

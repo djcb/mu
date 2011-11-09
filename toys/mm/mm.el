@@ -472,9 +472,9 @@ maildirs under `mm/maildir."
 	    (kar (read-char (concat prompt fnames))))
       (if (= kar ?o) ;; user chose 'other'?
 	(ido-completing-read prompt (mm/get-sub-maildirs mm/maildir))
-	(unless (car-safe
-		  (find-if (lambda (item) (= kar (cdr item))) mm/maildir-shortcuts))
-	  (error "Invalid shortcut"))))))
+	(or
+	  (car-safe (find-if (lambda (item) (= kar (cdr item))) mm/maildir-shortcuts))
+	  (error "Invalid shortcut '%c'" kar))))))
   
 
 (defun mm/new-buffer (bufname)
