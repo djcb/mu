@@ -126,6 +126,15 @@ the current list of headers."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mm/hdrs-contact-str (contacts)
+  "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
+into a string."
+  (mapconcat
+    (lambda (ct)
+      (let ((name (car ct)) (email (cdr ct)))
+	(or name email "?"))) contacts ", "))
+
+
 (defun mm/hdrs-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
@@ -135,13 +144,18 @@ if provided, or at the end of the buffer otherwise."
 			  (val (plist-get msg field))
 			  (str
 			    (case field
-			      (:subject val)
-			      ((:to :from :cc :bcc)
-				(mapconcat
-				  (lambda (ct)
-				    (let ((name (car ct)) (email (cdr ct)))
-				      (or name email "?"))) val ", "))
-			      (:date (format-time-string "%x %X" val))
+			      ((:subject :maildir :path) val)
+			      ((:to :from :cc :bcc) (mm/hdrs-contact-str val))
+			      ;; if we (ie. `user-mail-address' is the 'From', show 'To', otherwise
+			      ;; show From
+			      (:from-or-to
+			      	(let* ((from-lst (plist-get msg :from))
+					(from (and from-lst (cdar from-lst))))
+			      	  (if (and from (string-match mm/user-mail-address-regexp from))
+			      	    (concat (propertize "To " 'face 'mm/system-face)
+				      (mm/hdrs-contact-str (plist-get msg :to)))
+				    (mm/hdrs-contact-str from-lst))))			      
+			      (:date (format-time-string mm/headers-date-format val))
 			      (:flags (mm/flags-to-string val))
 			      (:size
 				(cond
@@ -155,7 +169,7 @@ if provided, or at the end of the buffer otherwise."
 		      (if (not width)
 			str
 			(truncate-string-to-width str width 0 ?\s t)))))
-		  mm/header-fields " "))
+		  mm/headers-fields " "))
 	  (flags (plist-get msg :flags))
 	  (line	(cond
 		  ((member 'draft flags)
@@ -239,7 +253,7 @@ after the end of the search results."
       (let ((menumap (make-sparse-keymap "Headers")))
 	(define-key map [menu-bar headers] (cons "Headers" menumap))
 
-	(define-key menumap [quit-buffer] '("Quit" . mm/quit-buffer))
+	(define-key menumap [quit-buffer] '("Quit view" . mm/quit-buffer))
 	(define-key menumap [sepa0] '("--"))
 
 	(define-key menumap [execute-marks]  '("Execute marks" . mm/execute-marks))
@@ -313,7 +327,7 @@ after the end of the search results."
 		   (truncate-string-to-width field width 0 ?\s t)
 		   field)
 		 'face 'mm/title-face) " ")))
-	 mm/header-fields))))
+	 mm/headers-fields))))
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mm/msg-map nil
   "*internal* A map (hashtable) which maps a database (Xapian)

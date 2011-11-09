@@ -78,7 +78,8 @@ or if not available, :body-html converted to text)."
 		   (with-temp-buffer
 		     (plist-get msg :body-html)
 		     (html2text)
-		     (buffer-string)))))
+		     (buffer-string))))
+	  (body (and body (replace-regexp-in-string "[\r\240]" " " body))))
     (when body
       (concat
 	(format "On %s, %s wrote:"
@@ -129,49 +130,32 @@ return nil."
 	(lambda (msgid) (format "<%s>" msgid))
 	refs ","))))
 
-(defun mm/msg-to-create (msg reply-all)
+(defun mm/msg-to-create (msg)
   "Construct the To: header for a reply-message based on some
-message MSG. If REPLY-ALL is nil, this the the Reply-To addresss of
-MSG if it exist, or the From:-address othewise.  If reply-all is
-non-nil, the To: is what was in the old To: with either the
-Reply-To: or From: appended, and then the
-receiver (i.e. `user-mail-address') removed.
-
-So:
-  reply-all nil: Reply-To: or From: of MSG
-  reply-all t  : Reply-To: or From: of MSG + To: of MSG - `user-mail-address'
-
-The result is either nil or a string which can be used for the To:-field."
+message MSG. This the the Reply-To address of MSG if it exist, or
+the From:-address otherwise. The result is either nil or a string
+which can be used for the To:-field."
   (let ((to-lst (plist-get msg :to))
 	 (reply-to (plist-get msg :reply-to))
 	 (from (plist-get msg :from)))
-    (if reply-all
-      (progn ;; reply-all
-	(setq to-lst ;; append Reply-To:, or if not set, From: if set
-	  (if reply-to
-	    (cons `(nil . ,reply-to) to-lst)
-	    (if from
-	      (append to-lst from)
-	      to-lst)))
-
-	;; and remove myself from To:
-	(setq to-lst (mm/msg-recipients-remove to-lst user-mail-address))
-	(mm/msg-recipients-to-string to-lst))
-
-      ;; reply single
-      (progn
-	(or reply-to (mm/msg-recipients-to-string from))))))
+    (setq to-lst (or reply-to from))
+    (mm/msg-recipients-to-string to-lst)))
 
 
 (defun mm/msg-cc-create (msg reply-all)
   "Get the list of Cc-addresses for the reply to MSG. If REPLY-ALL
-is nil this is simply empty, otherwise it is the same list as the
-one in MSG, minus `user-mail-address'. The result of this function
-is either nil or a string to be used for the Cc: field."
-  (let ((cc-lst (plist-get msg :cc)))
-    (when (and reply-all cc-lst)
-      (mm/msg-recipients-to-string
-	(mm/msg-recipients-remove cc-lst user-mail-address)))))
+is nil this is simply empty, otherwise it is the old CC-list
+together with the old TO-list, minus `user-mail-address'. The
+result of this function is either nil or a string to be used for
+the Cc: field."
+  (let ((cc-lst (plist-get msg :cc))
+	 (to-lst (plist-get msg :to)))
+    (when reply-all
+      (setq cc-lst (append cc-lst to-lst)))
+    ;; remove myself from cc
+    (setq cc-lst (mm/msg-recipients-remove cc-lst user-mail-address))
+    (mm/msg-recipients-to-string cc-lst)))
+
 
 (defun mm/msg-from-create ()
   "Construct a value for the From:-field of the reply to MSG,
@@ -212,7 +196,7 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
       (when (boundp 'mail-reply-to)
 	(mm/msg-header "Reply-To" mail-reply-to))
 
-      (mm/msg-header "To" (or (mm/msg-to-create msg reply-all) ""))
+      (mm/msg-header "To" (or (mm/msg-to-create msg) ""))
       (mm/msg-header "Cc" (mm/msg-cc-create msg reply-all))
 
       (mm/msg-header "User-agent"  (mm/msg-user-agent))

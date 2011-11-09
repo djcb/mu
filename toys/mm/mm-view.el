@@ -75,10 +75,19 @@ marking if it still had that."
 		(:cc	   (mm/view-contacts msg field))
 		(:bcc	   (mm/view-contacts msg field))
 
+		;; if we (`user-mail-address' are the From, show To, otherwise,
+		;; show From
+		(:from-or-to
+		  (let* ((from (plist-get msg :from))
+			  (from (and from (cdar from))))
+		    (if (and from (string-match mm/user-mail-address-regexp from))
+		      (mm/view-contacts msg :to)
+		      (mm/view-contacts msg :from))))
+	       
 		;; date
 		(:date
 		  (let ((datestr
-			  (when fieldval (format-time-string "%c" fieldval))))
+			  (when fieldval (format-time-string mm/view-date-format fieldval))))
 		    (if datestr (mm/view-header fieldname datestr) "")))
 		;; size
 		(:size	(mm/view-size  msg)
@@ -141,7 +150,6 @@ or if not available, :body-html converted to text)."
 		    (if name
 		      (format "%s <%s>" name email)
 		      (format "%s" email)))) lst ", "))))
-    (message "%S %S" field fieldname)
     (if contacts
       (mm/view-header fieldname contacts)
       "")))
@@ -232,7 +240,7 @@ or if not available, :body-html converted to text)."
       (let ((menumap (make-sparse-keymap "View")))
 	(define-key map [menu-bar headers] (cons "View" menumap))
 	
-	(define-key menumap [quit-buffer] '("Quit" . mm/quit-buffer))
+	(define-key menumap [quit-buffer] '("Quit view" . mm/quit-buffer))
 
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
@@ -433,7 +441,7 @@ removing '^M' etc."
 (defun mm/view-extract-attachment (attnum)
   "Extract the attachment with ATTNUM"
   (unless mm/attachment-dir (error "`mm/attachment-dir' is not set"))
-  (when (zerop (hash-table-count mm/attach-map))
+  (when (or (null mm/attach-map) (zerop (hash-table-count mm/attach-map)))
     (error "No attachments for this message"))
   (interactive "nAttachment to extract:")
   (let* ((att  (gethash attnum mm/attach-map))
@@ -455,7 +463,6 @@ removing '^M' etc."
   (let* ((att  (gethash attnum mm/attach-map)))
     (unless att (error "Not a valid attachment number"))
     (mm/proc-open (plist-get mm/current-msg :docid) (car att))))
-
 
 (defun mm/view-unmark ()
   "Warn user that unmarking only works in the header list."
