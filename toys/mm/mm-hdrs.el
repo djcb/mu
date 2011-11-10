@@ -440,8 +440,20 @@ The following marks are available, and the corresponding props:
       ;; update the hash -- remove everything current, and if add the new stuff,
       ;; unless we're unmarking
       (remhash docid mm/marks-map)
+      ;; remove possible overlays
+      (remove-overlays (point) (line-end-position))
+
+      ;; now, let's set a mark (unless we were unmarking)
       (unless (eql mark 'unmark)
-	(puthash docid (list (point-marker) mark target) mm/marks-map)))))
+	(puthash docid (list (point-marker) mark target) mm/marks-map)
+	;; when we have a target (ie., when moving), show the target folder in
+	;; an overlay
+	(when target
+	  (let* ((targetstr (propertize (concat "-> " target " ")
+			      'face 'mm/system-face))
+		  (start (+ 2 (point))) ;; +2 for the marker fringe
+		  (overlay (make-overlay start (+ start (length targetstr)))))
+	    (overlay-put overlay 'display targetstr)))))))
 
 
 (defun mm/hdrs-mark (mark &optional target)
@@ -562,12 +574,6 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
     (mm/kill-proc) ;; hmmm...
     (kill-buffer)
     (mm)))
-
-;;;;  TODO implement
-;; (defun mm/change-sort ()
-;;   "Change the sorting field and/or direction."
-;;   (interactive)
-;;  )
 
 (defun mm/rerun-search ()
   "Rerun the search for the last search expression; if none exists,
