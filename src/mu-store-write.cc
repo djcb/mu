@@ -405,19 +405,32 @@ struct PartData {
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 {
+	static const std::string
+		att (prefix(MU_MSG_FIELD_ID_ATTACH)),
+		mime (prefix(MU_MSG_FIELD_ID_ATTACH_MIME_TYPE));
+
 	if (mu_msg_part_looks_like_attachment (part, TRUE) &&
 	    (part->file_name)) {
 
 		char val[MuStore::MAX_TERM_LENGTH + 1];
 		strncpy (val, part->file_name, sizeof(val));
 
-		/* now, let's create a terms... */
+		/* now, let's create a term... */
 		mu_str_normalize_in_place (val, TRUE);
 		mu_str_ascii_xapian_escape_in_place (val);
 
 		pdata->_doc.add_term
-			(prefix(pdata->_mfid) +
-			 std::string(val, 0, MuStore::MAX_TERM_LENGTH));
+			(att + std::string(val, 0, MuStore::MAX_TERM_LENGTH));
+
+		/* save the mime type */
+		if (part->type) {
+			gchar *str;
+			str = g_strdup_printf ("%s/%s", part->type, part->subtype);
+			pdata->_doc.add_term
+				(mime + std::string(str, 0, MuStore::MAX_TERM_LENGTH));
+			g_free (str);
+		} else
+			pdata->_doc.add_term (mime + "application/octet-stream");
 	}
 }
 
@@ -482,9 +495,12 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 	case MU_MSG_FIELD_ID_BODY_TEXT:
 		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
-	case MU_MSG_FIELD_ID_ATTACH:
+	case MU_MSG_FIELD_ID_ATTACH: /* also takes care of MU_MSG_FIELD_ID_ATTACH_MIME */
 		add_terms_values_attach (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
+	case MU_MSG_FIELD_ID_ATTACH_MIME_TYPE:
+	case MU_MSG_FIELD_ID_UID:
+		break; /* already taken care of elsewhere */
 	default:
 		if (mu_msg_field_is_numeric (mfid))
 			add_terms_values_number (*msgdoc->_doc, msgdoc->_msg,

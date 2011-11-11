@@ -34,24 +34,31 @@ enum _FieldFlags {
 	FLAG_GMIME	         = 1 << 0, /* field retrieved through
 					    * gmime */
 	FLAG_XAPIAN_INDEX        = 1 << 1, /* field is indexed in
-			          	    * xapian */
+			          	    * xapian (i.e., the text
+			          	    * is processed */
 	FLAG_XAPIAN_TERM         = 1 << 2, /* field stored as term in
-			          	    * xapian */
+			          	    * xapian (so it can be searched) */
 	FLAG_XAPIAN_VALUE        = 1 << 3, /* field stored as value in
-			          	    * xapian */
+			          	    * xapian (so the literal
+			          	    * value can be
+			          	    * retrieved) */
 	FLAG_XAPIAN_CONTACT      = 1 << 4, /* field contains one or more
 					    * e-mail-addresses */
 	FLAG_XAPIAN_ESCAPE       = 1 << 5, /* field needs escaping for
-					    * xapian */
+					    * xapian (so the xapian
+					    * query does not get
+					    * confused) */
 	FLAG_XAPIAN_BOOLEAN      = 1 << 6, /* use 'add_boolean_prefix'
 					    * for Xapian queries */
 	FLAG_XAPIAN_PREFIX_ONLY  = 1 << 7, /* whether this fields
 					    * matches only when the
 					    * prefix is explicitly
-					    * included */
+					    * included in the search
+					    * query -- e.g., the text
+					    * body */
 	FLAG_NORMALIZE	         = 1 << 8, /* field needs flattening for
 					    * case/accents */
-	FLAG_DONT_CACHE          = 1 << 9  /* don't cache this field in
+	FLAG_DONT_CACHE          = 1 << 9, /* don't cache this field in
 					    * the MuMsg cache */
 };
 typedef enum _FieldFlags	FieldFlags;
@@ -81,8 +88,14 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_ATTACH,
 		MU_MSG_FIELD_TYPE_STRING,
 		"attach" , 'a', 'A',
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_NORMALIZE |
-		FLAG_DONT_CACHE
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_NORMALIZE | FLAG_DONT_CACHE
+	},
+
+	{
+		MU_MSG_FIELD_ID_ATTACH_MIME_TYPE,
+		MU_MSG_FIELD_TYPE_STRING,
+		"attmime" , 'y', 'Y',
+		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE
 	},
 
 	{
@@ -213,6 +226,13 @@ static const MuMsgField FIELD_DATA[] = {
 		"tag", 'x', 'X',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_PREFIX_ONLY |
 		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE
+	},
+
+	{	/* special, internal field, to get a unique key */
+		MU_MSG_FIELD_ID_UID,
+		MU_MSG_FIELD_TYPE_STRING,
+		"uid", 0, 'U',
+		FLAG_XAPIAN_TERM
 	}
 
 	/* note, mu-store also use the 'Q' internal prefix for its uids */

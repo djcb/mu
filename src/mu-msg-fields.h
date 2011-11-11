@@ -29,7 +29,9 @@ G_BEGIN_DECLS
 enum _MuMsgFieldId {
 
 	/* first all the string-based ones */
-	MU_MSG_FIELD_ID_ATTACH	    = 0,
+	MU_MSG_FIELD_ID_ATTACH	            = 0,
+	MU_MSG_FIELD_ID_ATTACH_MIME_TYPE, /* mime-type */
+
 	MU_MSG_FIELD_ID_BCC,
 	MU_MSG_FIELD_ID_BODY_HTML,
 	MU_MSG_FIELD_ID_BODY_TEXT,
@@ -40,6 +42,9 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_PATH,
 	MU_MSG_FIELD_ID_SUBJECT,
 	MU_MSG_FIELD_ID_TO,
+
+	MU_MSG_FIELD_ID_UID, /* special, generated from path */
+
 	/* MU_MSG_STRING_FIELD_ID_NUM, see below */
 
 	/* string list items... */
@@ -59,7 +64,7 @@ typedef guint8 MuMsgFieldId;
 
 /* some specials... */
 static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
-#define MU_MSG_STRING_FIELD_ID_NUM (MU_MSG_FIELD_ID_TO + 1)
+#define MU_MSG_STRING_FIELD_ID_NUM (MU_MSG_FIELD_ID_UID + 1)
 
 #define mu_msg_field_id_is_valid(MFID) \
 	((MFID) < MU_MSG_FIELD_ID_NUM)

@@ -1,6 +1,6 @@
-.TH MU-EASY 1 "August 2011" "User Manuals"
+.TH MU-EASY 1 "November 2011" "User Manuals"
 
-.SH NAME 
+.SH NAME
 
 mu easy \- a quick introduction to mu
 
@@ -24,7 +24,7 @@ you won't be able to index/search your mail.
 Before you can search e-mails, you'll first need to index them:
 
 .nf
-  \fB$ mu index\fR 
+  \fB$ mu index\fR
 .fi
 
 The process can take a few minutes, depending on the amount of mail you have,
@@ -54,7 +54,7 @@ some examples for common cases.
 First, let's search for all messages sent to Julius Caesar regarding fruit:
 
 .nf
-\fB$ mu find t:julius fruit\fR 
+\fB$ mu find t:julius fruit\fR
 .fi
 
 This should return something like:
@@ -73,7 +73,7 @@ date/sender/subject. However, we can change this using the \fI--fields\fR
 parameter (see the \fBmu-find\fR man page for the details):
 
 .nf
-  \fB$ mu find --fields="t s" t:julius fruit\fR 
+  \fB$ mu find --fields="t s" t:julius fruit\fR
 .fi
 
 In other words, display the 'To:'-field (t) and the subject (s). This should
@@ -90,7 +90,7 @@ is, it displays messages that match all the parameters. However, we can use
 logical OR as well:
 
 .nf
-  \fB$ mu find t:julius OR f:socrates\fR 
+  \fB$ mu find t:julius OR f:socrates\fR
 .fi
 
 In other words, display messages that are either sent to Julius Caesar
@@ -106,7 +106,7 @@ a 'summary' of the first lines of the message using the \fI--summary\fR
 option, which will 'summarize' the first \fIn\fR lines of the message:
 
 .nf
-  \fB$ mu find --summary napoleon m:/archive\fR 
+  \fB$ mu find --summary napoleon m:/archive\fR
 .fi
 
 .nf
@@ -130,21 +130,21 @@ version 0.9 or later.
 
 Get all important messages which are signed:
 .nf
-  \fB$ mu find flag:signed prio:high \fR 
+  \fB$ mu find flag:signed prio:high \fR
 .fi
 
 Get all messages from Jim without an attachment:
 .nf
-  \fB$ mu find from:jim AND NOT flag:attach\fR 
+  \fB$ mu find from:jim AND NOT flag:attach\fR
 .fi
 
 Get all unread messages where the subject mentions Ångström:
 .nf
-  \fB$ mu find subject:Ångström flag:unread\fR 
+  \fB$ mu find subject:Ångström flag:unread\fR
 .fi
 which is equivalent to:
 .nf
-  \fB$ mu find subject:angstrom flag:unread\fR 
+  \fB$ mu find subject:angstrom flag:unread\fR
 .fi
 because does mu is case-insensitive and accent-insensitive.
 
@@ -159,7 +159,7 @@ Get all messages received today:
   \fB$ mu find date:today..now\fR
 .fi
 
-Get all message we got in the last two weeks about emacs:
+Get all messages we got in the last two weeks about emacs:
 .nf
   \fB$ mu find date:2w..now emacs\fR
 .fi
@@ -182,6 +182,25 @@ filename, for example:
 .fi
 will get you all message with an attachment starting with 'pic'.
 
+If you want to find attachments with a certain MIME-type, you can use the
+following:
+
+Get all messages with PDF attachments:
+.nf
+  \fB$ mu find attmime:application/pdf\fR
+.fi
+
+or even:
+
+Get all messages with image attachments:
+.nf
+  \fB$ mu find 'attmime:image/*'\fR
+.fi
+
+Note that (1) the '*' wildcard can only be used as the rightmost thing in a
+search query, and (2) that you need to quote the search term, because
+otherwise your shell will interpret the '*' (expanding it to all files in the
+current directory -- probably not what you want).
 
 .SH DISPLAYING MESSAGES
 
@@ -195,14 +214,14 @@ need its path. To get the path (think \fBl\fRocation) for our first example we
 can use:
 
 .nf
-  \fB$ mu find --fields="l" t:julius fruit\fR 
+  \fB$ mu find --fields="l" t:julius fruit\fR
 .fi
 
 And we'll get someting like:
 .nf
   /home/someuser/Maildir/archive/cur/1266188485_0.6850.cthulhu:2,
 .fi
-We can now display this message: 
+We can now display this message:
 
 .nf
   \fB$ mu view /home/someuser/Maildir/archive/cur/1266188485_0.6850.cthulhu:2,\fR
@@ -225,7 +244,7 @@ find \fIcontacts\fR, that is, names + addresses. Without any search
 expression, \fBmu cfind\fR lists all of your contacts.
 
 .nf
-  \fB$ mu cfind julius\fR 
+  \fB$ mu cfind julius\fR
 .fi
 
 will find all contacts with 'julius' in either name or e-mail address. Note
@@ -237,7 +256,7 @@ program. For example, to export your contact information to a \fBmutt\fR
 address book file, you can use something like:
 
 .nf
-  \fB$ mu cfind --format=mutt-alias > ~/mutt-aliases \fR 
+  \fB$ mu cfind --format=mutt-alias > ~/mutt-aliases \fR
 .fi
 
 Then, you can use them in \fBmutt\fR if you add something like \fBsource

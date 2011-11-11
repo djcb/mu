@@ -3,6 +3,8 @@
 ** Release 0.9.8 <>
 
    - '--descending' has  been renamed into '--reverse'
+   - search for attachment MIME-type using 'attmime:' or 'y:'
+   - experimental emacs-based mail client
 
  * Release 0.9.7 <>
 

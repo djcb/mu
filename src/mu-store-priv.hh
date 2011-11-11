@@ -225,9 +225,4 @@ private:
 };
 
 
-/* Xapian DB prefix for the UID value */
-#define MU_STORE_UID_PREFIX "Q"
-
-
-
 #endif /*__MU_STORE_PRIV_HH__*/

@@ -50,6 +50,8 @@ _MuStore::get_uid_term (const char* path)
 	unsigned djbhash, bkdrhash, bkdrseed;
 	unsigned u;
 	static char hex[18];
+	static const char uid_prefix =
+		mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID);
 
 	djbhash  = 5381;
 	bkdrhash = 0;
@@ -60,9 +62,8 @@ _MuStore::get_uid_term (const char* path)
 		bkdrhash = bkdrhash * bkdrseed + path[u];
 	}
 
-	snprintf (hex, sizeof(hex),
-		  MU_STORE_UID_PREFIX "%08x%08x",
-		  djbhash, bkdrhash);
+	snprintf (hex, sizeof(hex), "%c%08x%08x",
+		  uid_prefix, djbhash, bkdrhash);
 
 	return hex;
 }

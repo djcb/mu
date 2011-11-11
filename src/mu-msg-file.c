@@ -594,7 +594,7 @@ get_body (MuMsgFile *self, gboolean want_html)
 	/* note, str may be NULL (no body), but that's not necessarily
 	 * an error; we only warn when an actual error occured */
 	if (err)
-		g_warning ("error occured while retrieving %s body"
+		g_warning ("error occured while retrieving %s body "
 			   "for message %s",
 			   want_html ? "html" : "text", self->_path);
 	return str;
