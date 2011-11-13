@@ -139,6 +139,8 @@ EXTRA_DIST=							\
 	testdir2/Foo/cur/arto.eml				\
 	testdir2/Foo/tmp/.noindex				\
 	testdir2/Foo/new/.noindex				\
+	testdir2/wom bat/cur/atomic				\
+	testdir2/wom bat/cur/rfc822				\
 	testdir3/tree						\
 	testdir3/tree/new					\
 	testdir3/tree/new/.noindex				\
@@ -165,4 +167,3 @@ EXTRA_DIST=							\
 	testdir3/cycle/cur/cycle0.0				\
 	testdir3/cycle/tmp					\
 	testdir3/cycle/tmp/.noindex
-

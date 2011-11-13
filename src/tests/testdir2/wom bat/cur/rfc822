@@ -1,0 +1,44 @@
+Return-Path: <foo@example.com>
+Subject: Fwd: rfc822 
+From: foobar <foo@example.com>
+To: martin
+Content-Type: multipart/mixed; boundary="=-XHhVx/BCC6tJB87HLPqF"
+Message-Id: <1077300332.871.27.camel@example.com>
+Mime-Version: 1.0
+X-Mailer: Ximian Evolution 1.4.5
+Date: Fri, 20 Feb 2004 19:05:33 +0100
+
+--=-XHhVx/BCC6tJB87HLPqF
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+Hello world, forwarding some RFC822 message
+
+--=-XHhVx/BCC6tJB87HLPqF
+Content-Disposition: inline
+Content-Type: message/rfc822
+
+Return-Path: <cuux@example.com>
+Message-ID: <9A01B19D0D605D478E8B72E1367C66340141B9C5@example.com>
+From: frob@example.com 
+To: foo@example.com
+Subject: hopjesvla
+Date: Sat, 13 Dec 2003 19:35:56 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
+
+The ship drew on and had safely passed the strait, which some volcanic shock
+has made between the Calasareigne and Jaros islands; had doubled Pomegue, and
+approached the harbor under topsails, jib, and spanker, but so slowly and
+sedately that the idlers, with that instinct which is the forerunner of evil,
+asked one another what misfortune could have happened on board. However, those
+experienced in navigation saw plainly that if any accident had occurred, it was
+not to the vessel herself, for she bore down with all the evidence of being
+skilfully handled, the anchor a-cockbill, the jib-boom guys already eased off,
+and standing by the side of the pilot, who was steering the Pharaon towards the
+narrow entrance of the inner port, was a young man, who, with activity and
+vigilant eye, watched every motion of the ship, and repeated each direction of
+the pilot.
+
+--=-XHhVx/BCC6tJB87HLPqF--

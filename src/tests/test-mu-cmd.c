@@ -47,6 +47,8 @@ fill_database (void)
 				   " --quiet",
 				   MU_PROGRAM,
 				   tmpdir, MU_TESTMAILDIR2);
+	if (g_test_verbose())
+		g_print ("%s\n", cmdline);
 
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
@@ -82,7 +84,8 @@ search (const char* query, unsigned expected)
 	cmdline = g_strdup_printf ("%s find --muhome=%s %s",
 				   MU_PROGRAM, muhome, query);
 
-	/* g_printerr ("%s\n", cmdline); */
+	if (g_test_verbose())
+		g_printerr ("%s\n", cmdline);
 
 	g_assert (g_spawn_command_line_sync (cmdline,
 					     &output, &erroutput,
@@ -115,7 +118,7 @@ test_mu_index (void)
 	store = mu_store_new_read_only (xpath, NULL);
 	g_assert (store);
 
-	g_assert_cmpuint (mu_store_count (store, NULL), ==, 9);
+	g_assert_cmpuint (mu_store_count (store, NULL), ==, 10);
 	mu_store_unref (store);
 
 	g_free (muhome);
@@ -190,6 +193,17 @@ test_mu_find_04 (void)
 	g_free (cmdline);
 	g_free (muhome);
 }
+
+
+/* some more tests */
+static void
+test_mu_find_05 (void)
+{
+	/* ensure that maldirs with spaces in their names work... */
+	search ("subject:atoms", 1);
+	search ("\"maildir:/wom bat\" subject:atoms", 1);
+}
+
 
 
 static void
@@ -612,6 +626,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-find-02", test_mu_find_02);
 	g_test_add_func ("/mu-cmd/test-mu-find-03", test_mu_find_03);
 	g_test_add_func ("/mu-cmd/test-mu-find-04", test_mu_find_04);
+	g_test_add_func ("/mu-cmd/test-mu-find-05", test_mu_find_05);
 
 	g_test_add_func ("/mu-cmd/test-mu-extract-01", test_mu_extract_01);
 	g_test_add_func ("/mu-cmd/test-mu-extract-02", test_mu_extract_02);
@@ -637,4 +652,3 @@ main (int argc, char *argv[])
 
 	return rv;
 }
-
