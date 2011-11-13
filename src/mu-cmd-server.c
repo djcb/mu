@@ -881,6 +881,7 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 		return MU_G_ERROR_CODE (err);
 
 	while (!MU_CAUGHT_SIGNAL) {
+
 		char *line;
 		Cmd cmd;
 		GSList *args;

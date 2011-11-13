@@ -342,5 +342,3 @@ mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }
-
-

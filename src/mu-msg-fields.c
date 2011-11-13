@@ -88,14 +88,15 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_ATTACH,
 		MU_MSG_FIELD_TYPE_STRING,
 		"attach" , 'a', 'A',
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_NORMALIZE | FLAG_DONT_CACHE
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_NORMALIZE |
+		FLAG_DONT_CACHE | FLAG_XAPIAN_PREFIX_ONLY
 	},
 
 	{
 		MU_MSG_FIELD_ID_ATTACH_MIME_TYPE,
 		MU_MSG_FIELD_TYPE_STRING,
 		"attmime" , 'y', 'Y',
-		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE
+		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
 	},
 
 	{
@@ -188,7 +189,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"subject", 's', 'S',
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_TERM | FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE
+		FLAG_XAPIAN_TERM | FLAG_NORMALIZE
 	},
 
 	{
@@ -232,7 +233,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_UID,
 		MU_MSG_FIELD_TYPE_STRING,
 		"uid", 0, 'U',
-		FLAG_XAPIAN_TERM
+		FLAG_XAPIAN_TERM | FLAG_XAPIAN_PREFIX_ONLY
 	}
 
 	/* note, mu-store also use the 'Q' internal prefix for its uids */
@@ -343,7 +344,8 @@ gboolean
 mu_msg_field_needs_prefix (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_XAPIAN_PREFIX_ONLY?TRUE:FALSE;
+	return mu_msg_field(id)->_flags &
+		FLAG_XAPIAN_PREFIX_ONLY ? TRUE: FALSE;
 }
 
 
