@@ -435,6 +435,7 @@ char*
 mu_str_ascii_xapian_escape_in_place (char *query)
 {
 	gchar *cur;
+	const char escchar = '_';
 
 	g_return_val_if_fail (query, NULL);
 
@@ -446,15 +447,14 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 		case '@':
 		case '-':
 		case '/':
-			*cur = '_'; break;
 		case '.': {
-			/* don't replace a final cur */
+			/* don't replace a final special char */
 			if (cur[1]== ' ' || cur[1]=='\t' || cur[1]== '.')
 				++cur;
 			else if (cur[1] == '\0')
 				break;
 			else
-				*cur = '_';
+				*cur = escchar;
 			break;
 		}
 		case ':':
