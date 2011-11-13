@@ -342,7 +342,7 @@ removing '^M' etc."
 	(add-text-properties p (point-max) '(face mm/view-footer-face))))
     ;; this is fairly simplistic...
     (goto-char (point-min))
-    (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!]*\\)\\>" nil t)
+    (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!~,]*\\)\\>" nil t)
       (let ((subst (propertize (match-string-no-properties 0)
 		     'face 'mm/view-link-face)))
 	(incf num)

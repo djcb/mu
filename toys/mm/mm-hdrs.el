@@ -138,38 +138,39 @@ into a string."
 (defun mm/hdrs-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (let* ((line (mapconcat
-		(lambda (f-w)
-		  (let* ((field (car f-w)) (width (cdr f-w))
-			  (val (plist-get msg field))
-			  (str
-			    (case field
-			      ((:subject :maildir :path) val)
-			      ((:to :from :cc :bcc) (mm/hdrs-contact-str val))
-			      ;; if we (ie. `user-mail-address' is the 'From', show 'To', otherwise
-			      ;; show From
-			      (:from-or-to
-			      	(let* ((from-lst (plist-get msg :from))
-					(from (and from-lst (cdar from-lst))))
-			      	  (if (and from (string-match mm/user-mail-address-regexp from))
-			      	    (concat (propertize "To " 'face 'mm/system-face)
-				      (mm/hdrs-contact-str (plist-get msg :to)))
-				    (mm/hdrs-contact-str from-lst))))			      
-			      (:date (format-time-string mm/headers-date-format val))
-			      (:flags (mm/flags-to-string val))
-			      (:size
-				(cond
-				  ((>= val 1000000) (format "%2.1fM" (/ val 1000000.0)))
-				  ((and (>= val 1000) (< val 1000000))
-				    (format "%2.1fK" (/ val 1000.0)))
-				  ((< val 1000) (format "%d" val))))
-			      (t
-				(error "Unsupported header field (%S)" field)))))
-		    (when str
-		      (if (not width)
-			str
-			(truncate-string-to-width str width 0 ?\s t)))))
-		  mm/headers-fields " "))
+  (let* ((line
+	   (mapconcat
+	     (lambda (f-w)
+	       (let* ((field (car f-w)) (width (cdr f-w))
+		       (val (plist-get msg field))
+		       (str
+			 (case field
+			   ((:subject :maildir :path) val)
+			   ((:to :from :cc :bcc) (mm/hdrs-contact-str val))
+			   ;; if we (ie. `user-mail-address' is the 'From', show 'To', otherwise
+			   ;; show From
+			   (:from-or-to
+			     (let* ((from-lst (plist-get msg :from))
+				     (from (and from-lst (cdar from-lst))))
+			       (if (and from (string-match mm/user-mail-address-regexp from))
+				 (concat "To "
+				   (mm/hdrs-contact-str (plist-get msg :to)))
+				 (mm/hdrs-contact-str from-lst))))			      
+			   (:date (format-time-string mm/headers-date-format val))
+			   (:flags (mm/flags-to-string val))
+			   (:size
+			     (cond
+			       ((>= val 1000000) (format "%2.1fM" (/ val 1000000.0)))
+			       ((and (>= val 1000) (< val 1000000))
+				 (format "%2.1fK" (/ val 1000.0)))
+			       ((< val 1000) (format "%d" val))))
+			   (t
+			     (error "Unsupported header field (%S)" field)))))
+		 (when str
+		   (if (not width)
+		     str
+		     (truncate-string-to-width str width 0 ?\s t)))))
+	     mm/headers-fields " "))
 	  (flags (plist-get msg :flags))
 	  (line	(cond
 		  ((member 'draft flags)
@@ -451,7 +452,7 @@ The following marks are available, and the corresponding props:
 	(when target
 	  (let* ((targetstr (propertize (concat "-> " target " ")
 			      'face 'mm/system-face))
-		  (start (+ 2 (point))) ;; +2 for the marker fringe
+		  (start (+ 2 (line-beginning-position))) ;; +2 for the marker fringe
 		  (overlay (make-overlay start (+ start (length targetstr)))))
 	    (overlay-put overlay 'display targetstr)))))))
 

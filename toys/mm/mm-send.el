@@ -360,18 +360,26 @@ using Gnus' `message-mode'."
   "Move the message in this buffer to the sent folder. This is
  meant to be called from message mode's `message-sent-hook'."
   (unless mm/sent-folder (error "mm/sent-folder not set"))
-  (let ((docid (gethash (buffer-file-name)  mm/path-docid-map)))
+  (save-excursion
+    (goto-char (point-min))
+    ;; remove the --text follows this line-- separator
+    (if (search-forward-regexp (concat "^" mail-header-separator "\n"))
+      (replace-match "")
+      (error "cannot find mail-header-separator"))
+
+    (save-buffer)
+    (let ((docid (gethash (buffer-file-name) mm/path-docid-map)))
       (unless docid (error "unknown message (%S)" (buffer-file-name)))
       ;; ok, all seems well, well move the message to the sent-folder
       (mm/proc-move-msg docid mm/sent-folder "-T-D+S")
       ;; we can remove the value from the hash now, if we can establish there
       ;; are not other compose buffers using this very same docid...
-
+      
       ;; mark the buffer as read-only, as its pointing at a non-existing file
-      ;; now...
-      (message "Message has been sent")
-      (setq buffer-read-only t)))
-
+    ;; now...
+      (kill-buffer-and-window)
+      (message "Message has been sent"))))
+    
 
 
 (defun mm/send-set-parent-flag ()
@@ -403,7 +411,6 @@ This is meant to be called from message mode's
 	    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
 	      (push (match-string 0) refs))
 	    (setq forwarded-from (car-safe (last refs)))))))
-
     ;; remove the <>
     (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
       (mm/proc-flag (match-string 1 in-reply-to) "+R"))
