@@ -204,35 +204,46 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 }
 
 
-
 static gboolean
-part_looks_like_attachment (GMimeObject *part)
+looks_like_attachment (GMimeObject *part)
 {
-	GMimeContentDisposition *disp;
 	const char *str;
+	GMimeContentDisposition *disp;
+	GMimeContentType *ct;
 
-	disp  = g_mime_object_get_content_disposition (part);
+	disp = g_mime_object_get_content_disposition (GMIME_OBJECT(part));
 	if (!GMIME_IS_CONTENT_DISPOSITION(disp))
-		return FALSE; /* no content disp? prob not
-			       * an attachment. */
+		return FALSE;
 
 	str = g_mime_content_disposition_get_disposition (disp);
-
-	/* ok, it says it's an attachment, so it probably is... */
 	if (!str)
+		return FALSE;
+
+	ct = g_mime_object_get_content_type (part);
+	if (!ct)
+		return FALSE; /* ignore this part... */
+
+	/* note, some mailers use ATTACHMENT, INLINE instead of their
+	 * more common lower-case counterparts */
+	if (g_ascii_strcasecmp(str, GMIME_DISPOSITION_ATTACHMENT) == 0)
 		return TRUE;
-	if (strcmp (str, GMIME_DISPOSITION_ATTACHMENT) == 0)
-		return TRUE;
-	else if (strcmp (str, GMIME_DISPOSITION_INLINE) == 0) {
-		/* inline-images are also considered attachments... */
-		GMimeContentType *ct;
-		ct = g_mime_object_get_content_type (part);
-		if (ct)
-			return g_mime_content_type_is_type
-				(ct, "image", "*");
+
+	if (g_ascii_strcasecmp(str, GMIME_DISPOSITION_INLINE) == 0) {
+		/* some inline parts are also considered attachments... */
+		int i;
+		const char* att_types[][2] = {
+			{"image", "*"},
+			{"application", "*"},
+			{"message", "*"}};
+
+		for (i = 0; i != G_N_ELEMENTS (att_types); ++i)
+			if (g_mime_content_type_is_type (ct,
+							 att_types[i][0],
+							 att_types[i][1]))
+				return TRUE; /* looks like an attachment */
 	}
 
-	return FALSE;
+	return FALSE; /* does not look like an attachment */
 }
 
 
@@ -245,7 +256,7 @@ msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuFlags *flags)
 	if (!GMIME_IS_PART(part))
 		return;
 
-	if (part_looks_like_attachment(part))
+	if (!(*flags & MU_FLAG_HAS_ATTACH) && looks_like_attachment(part))
 		*flags |= MU_FLAG_HAS_ATTACH;
 }
 
@@ -410,25 +421,6 @@ struct _GetBodyData {
 typedef struct _GetBodyData GetBodyData;
 
 
-static gboolean
-looks_like_attachment (GMimeObject *part)
-{
-	const char *str;
-	GMimeContentDisposition *disp;
-
-	disp = g_mime_object_get_content_disposition (GMIME_OBJECT(part));
-	if (!GMIME_IS_CONTENT_DISPOSITION(disp))
-		return FALSE;
-
-	str = g_mime_content_disposition_get_disposition (disp);
-	if (!str)
-		return FALSE;
-
-	if (strcmp(str,GMIME_DISPOSITION_INLINE) == 0)
-		return FALSE; /* inline, so it's not an attachment */
-
-	return TRUE; /* looks like an attachment */
-}
 
 static void
 get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
