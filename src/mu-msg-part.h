@@ -33,9 +33,9 @@ struct _MuMsgPart {
 
 	/* cid */
 	char             *content_id;
-	
+
 	/* content-type: type/subtype, ie. text/plain */
-	char             *type;    
+	char             *type;
 	char             *subtype;
 	/* full content-type, e.g. image/jpeg  */
 	/* char             *content_type; */
@@ -45,12 +45,12 @@ struct _MuMsgPart {
 
 	/* usually, "attachment" or "inline" */
 	char             *disposition;
-	
-	/* size of the part; or 0 if unknown */
-	size_t		 *size;	
+
+	/* size of the part; or <= 0 if unknown */
+	size_t		 size;
 
 	gpointer         data; /* opaque data */
-	
+
 	/* if TRUE, mu_msg_part_destroy will free the member vars
 	 * as well*/
 	gboolean          own_members;
@@ -59,9 +59,9 @@ typedef struct _MuMsgPart MuMsgPart;
 
 /**
  * macro to get the file name for this mime-part
- * 
+ *
  * @param pi a MuMsgPart instance
- * 
+ *
  * @return the file name
  */
 #define mu_msg_part_file_name(pi)    ((pi)->file_name)
@@ -69,9 +69,9 @@ typedef struct _MuMsgPart MuMsgPart;
 
 /**
  * macro to get the content-id (cid) for this mime-part
- * 
+ *
  * @param pi a MuMsgPart instance
- * 
+ *
  * @return the file name
  */
 #define  mu_msg_part_content_id(pi) ((pi)->content_id)
@@ -79,25 +79,25 @@ typedef struct _MuMsgPart MuMsgPart;
 
 /**
  * does this msg part look like an attachment?
- * 
+ *
  * @param part a message part
  * @param include_inline consider 'inline' parts also as attachments
- * 
+ *
  * @return TRUE if it looks like an attachment, FALSE otherwise
  */
 gboolean mu_msg_part_looks_like_attachment (MuMsgPart *part,
 					    gboolean include_inline);
 
 /**
- * save a specific attachment to some targetdir 
- * 
+ * save a specific attachment to some targetdir
+ *
  * @param msg a valid MuMsg instance
  * @gchar filepath the filepath to save
  * @param partidx index of the attachment you want to save
  * @param overwrite overwrite existing files?
  * @param don't raise error when the file already exists
  * @param err receives error information (when function returns NULL)
- * 
+ *
  * @return full path to the message part saved or NULL in case or error; free with g_free
  */
 gboolean mu_msg_part_save (MuMsg *msg, const char *filepath, guint partidx,
@@ -108,25 +108,25 @@ gboolean mu_msg_part_save (MuMsg *msg, const char *filepath, guint partidx,
  * get a filename for the saving the message part; try the filename
  * specified for the message part if any, otherwise determine a unique
  * name based on the partidx and the message path
- * 
+ *
  * @param msg a msg
  * @param targetdir where to store the part
  * @param partidx the part for which to determine a filename
- * 
+ *
  * @return a filepath (g_free when done with it) or NULL in case of error
  */
 gchar* mu_msg_part_filepath (MuMsg *msg, const char* targetdir,
-			     guint partidx) G_GNUC_WARN_UNUSED_RESULT; 
+			     guint partidx) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
  * get a full path name for saving the message part in the cache
  * directory for this message; if needed, create the directory (but
  * not the file)
- * 
- * @param msg a msg 
+ *
+ * @param msg a msg
  * @param partidx the part for which to determine a filename
- * 
+ *
  * @return a filepath (g_free when done with it) or NULL in case of error
  */
 gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
@@ -135,20 +135,20 @@ gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 
 /**
  * get the part index for the message part with a certain content-id
- * 
+ *
  * @param msg a message
  * @param content_id a content-id to search
- * 
+ *
  * @return the part index number of the found part, or -1 if it was not found
  */
 int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
 
 /**
  * retrieve a list of indices for mime-parts with filenames matching a regex
- *  
+ *
  * @param msg a message
  * @param a regular expression to match the filename with
- * 
+ *
  * @return a list with indices for the files matching the pattern; the
  * indices are the GPOINTER_TO_UINT(lst->data) of the list. They must
  * be freed with g_slist_free
@@ -158,13 +158,13 @@ GSList* mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern);
 
 typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
 /**
- * call a function for each of the mime part in a message 
+ * call a function for each of the mime part in a message
  *
  * @param msg a valid MuMsg* instance
  * @param func a callback function to call for each contact; when
  * the callback does not return TRUE, it won't be called again
  * @param user_data a user-provide pointer that will be passed to the callback
- * 
+ *
  */
 void mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 			  gpointer user_data);

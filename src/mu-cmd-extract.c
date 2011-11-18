@@ -319,6 +319,14 @@ each_part_show (MuMsg *msg, MuMsgPart *part, gboolean color)
 	color_maybe (MU_COLOR_MAGENTA);
 	mu_util_print_encoded (
 		"[%s]",	part->disposition ? part->disposition : "<none>");
+
+
+	/* size */
+	if (part->size > 0) {
+		color_maybe (MU_COLOR_CYAN);
+		g_print (" (%s)", mu_str_size_s (part->size));
+	}
+
 	color_maybe (MU_COLOR_DEFAULT);
 	fputs ("\n", stdout);
 }

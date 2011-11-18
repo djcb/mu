@@ -70,6 +70,27 @@ struct _PartData {
 typedef struct _PartData PartData;
 
 
+static ssize_t
+get_part_size (GMimePart *part)
+{
+	GMimeDataWrapper *wrapper;
+	GMimeStream *stream;
+
+	wrapper = g_mime_part_get_content_object (part);
+	if (!wrapper)
+		return -1;
+
+	stream = g_mime_data_wrapper_get_stream (wrapper);
+	if (!stream)
+		return -1;
+
+	/* NOTE: it seems we shouldn't unref stream/wrapper */
+
+	return g_mime_stream_length (stream);
+}
+
+
+
 static void
 part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 {
@@ -90,6 +111,7 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 	if (GMIME_IS_PART(part)) {
 		pi.disposition = (char*)g_mime_object_get_disposition (part);
 		pi.file_name   = (char*)g_mime_part_get_filename (GMIME_PART(part));
+		pi.size        = get_part_size (GMIME_PART(part));
 	}
 
 	pdata->_func(pdata->_msg, &pi, pdata->_user_data);
