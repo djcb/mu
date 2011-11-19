@@ -74,7 +74,7 @@ PATH, you can specifiy the full path."
   :group 'mm
   :safe 'stringp)
 
-(defvar mm/user-mail-address-regexp "$^" 
+(defvar mm/user-mail-address-regexp "$^"
   "Regular expression matching the user's mail address(es). This is
 used to distinguish ourselves from others, e.g. when replying and
 in :from-or-to headers. By default, match nothing.")
@@ -459,7 +459,7 @@ maildirs under `mm/maildir."
   (unless mm/maildir (error "`mm/maildir' is not defined"))
   (if (not mm/maildir-shortcuts)
     (ido-completing-read prompt (mm/get-sub-maildirs mm/maildir))
-    (let* ((mlist (append mm/maildir-shortcuts '(("ther" . ?o)))) 
+    (let* ((mlist (append mm/maildir-shortcuts '(("ther" . ?o))))
 	    (fnames
 	      (mapconcat
 		(lambda (item)
@@ -475,7 +475,7 @@ maildirs under `mm/maildir."
 	(or
 	  (car-safe (find-if (lambda (item) (= kar (cdr item))) mm/maildir-shortcuts))
 	  (error "Invalid shortcut '%c'" kar))))))
-  
+
 
 (defun mm/new-buffer (bufname)
   "Return a new buffer BUFNAME; if such already exists, kill the
@@ -546,6 +546,17 @@ Also see `mu/flags-to-string'.
 	      (?T   'trashed))))
       (append (when flag (list flag))
 	(mm/string-to-flags-1 (substring str 1))))))
+
+
+(defun mm/display-size (size)
+  "Get a string representation of SIZE (in bytes)."
+  (cond
+    ((>= size 1000000) (format "%2.1fM" (/ size 1000000.0)))
+    ((and (>= size 1000) (< size 1000000))
+      (format "%2.1fK" (/ size 1000.0)))
+    ((< size 1000) (format "%d" size))
+    (t "<unknown>")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mm)

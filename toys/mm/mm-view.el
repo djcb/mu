@@ -63,12 +63,12 @@ marking if it still had that."
 	    (let ((fieldname (cdr (assoc field mm/header-names)))
 		   (fieldval (plist-get msg field)))
 	      (case field
-		
+
 		(:subject  (mm/view-header fieldname fieldval))
 		(:path	   (mm/view-header fieldname fieldval))
 		(:maildir  (mm/view-header fieldname fieldval))
-		(:flags	   (mm/view-header fieldname (format "%S" fieldval))) 
-		
+		(:flags	   (mm/view-header fieldname (format "%S" fieldval)))
+
 		;; contact fields
 		(:to	   (mm/view-contacts msg field))
 		(:from	   (mm/view-contacts msg field))
@@ -83,7 +83,7 @@ marking if it still had that."
 		    (if (and from (string-match mm/user-mail-address-regexp from))
 		      (mm/view-contacts msg :to)
 		      (mm/view-contacts msg :from))))
-	       
+
 		;; date
 		(:date
 		  (let ((datestr
@@ -129,12 +129,15 @@ or if not available, :body-html converted to text)."
     "No body found"))
 
 
-(defun mm/view-header (key val)
+(defun mm/view-header (key val &optional dont-propertize-val)
   "Show header FIELD for MSG with KEY. ie. <KEY>: value-of-FIELD."
   (if val
     (concat
       (propertize key 'face 'mm/view-header-key-face) ": "
-      (propertize val 'face 'mm/view-header-value-face) "\n")
+      (if dont-propertize-val
+	val
+        (propertize val 'face 'mm/view-header-value-face))
+      "\n")
     ""))
 
 
@@ -160,7 +163,8 @@ or if not available, :body-html converted to text)."
 
 (defun mm/view-attachments (msg)
   "Display attachment information; the field looks like something like:
-   	:attachments ((4 \"statement Bray Eile.doc\" \"application/msword\"))."
+   	:attachments ((:index 4 :name \"test123.doc\"
+                       :mime-type \"application/msword\" :size 1234))."
   (let ((atts (plist-get msg :attachments)))
     (when atts
       (setq mm/attach-map
@@ -169,13 +173,23 @@ or if not available, :body-html converted to text)."
 	      (vals
 		(mapconcat
 		  (lambda (att)
-		    (incf id)
-		    (puthash id att mm/attach-map)
-		    (concat
-		      (propertize (nth 1 att) 'face 'mm/view-link-face)
-		      (propertize (format "[%d]" id) 'face 'mm/view-attach-number-face)))
-		  atts ", ")))
-	(mm/view-header (format "Attachments(%d):" id) vals)))))
+		    (let ( (index (plist-get att :index))
+			   (name (plist-get att :name))
+			   (mime-type (plist-get att :mime-type))
+			   (size (plist-get att :size)))
+		      (incf id)
+		      (puthash id att mm/attach-map)
+		      (concat
+			(propertize (format "[%d]" id) 'face 'mm/view-attach-number-face)
+			(propertize name 'face 'mm/view-link-face)
+			(if size
+			  (concat
+			    "(" (propertize (mm/display-size size) 'face 'mm/view-header-key-face)
+			    ")")
+			  "")
+			)))
+		    atts ", ")))
+		(mm/view-header (format "Attachments(%d)" id) vals t)))))
 
 (setq mm/view-mode-map nil)
 (defvar mm/view-mode-map nil
@@ -187,13 +201,13 @@ or if not available, :body-html converted to text)."
 
       (define-key map "s" 'mm/search)
       (define-key map "j" 'mm/jump-to-maildir)
-      
+
       (define-key map "g" 'mm/view-go-to-url)
       (define-key map "f" 'mm/compose-forward)
       (define-key map "r" 'mm/compose-reply)
       (define-key map "c" 'mm/compose-new)
       (define-key map "e" 'mm/edit-draft)
-      
+
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
       (define-key map (kbd "<home>")
@@ -209,15 +223,15 @@ or if not available, :body-html converted to text)."
       ;; navigation between messages
       (define-key map "n" 'mm/view-next-header)
       (define-key map "p" 'mm/view-prev-header)
-      
+
       ;; attachments
       (define-key map "e" 'mm/view-extract-attachment)
       (define-key map "o" 'mm/view-open-attachment)
-      
+
       ;; marking/unmarking
       (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
       (define-key map "d" 'mm/view-mark-for-trash)
-      
+
       (define-key map (kbd "<delete>") 'mm/view-mark-for-delete)
       (define-key map "D" 'mm/view-mark-for-delete)
       (define-key map "a" 'mm/mark-for-move-quick)
@@ -227,9 +241,9 @@ or if not available, :body-html converted to text)."
       ;; misc
       (define-key map "w" 'mm/view-toggle-wrap-lines)
       (define-key map "h" 'mm/view-toggle-hide-cited)
-      
+
       (define-key map "R" 'mm/view-refresh)
-    
+
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mm/view-unmark)
       (define-key map "U" 'mm/view-unmark)
@@ -239,7 +253,7 @@ or if not available, :body-html converted to text)."
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "View")))
 	(define-key map [menu-bar headers] (cons "View" menumap))
-	
+
 	(define-key menumap [quit-buffer] '("Quit view" . mm/quit-buffer))
 
 	(define-key menumap [sepa0] '("--"))
@@ -255,7 +269,7 @@ or if not available, :body-html converted to text)."
 	  '("Extract attachment" . mm/view-extract-attachment))
 	(define-key menumap [goto-url]
 	  '("Visit URL" . mm/view-go-to-url))
-	
+
 	(define-key menumap [sepa1] '("--"))
 	(define-key menumap [mark-delete]
 	  '("Mark for deletion" . mm/view-mark-for-delete))
@@ -263,7 +277,7 @@ or if not available, :body-html converted to text)."
 	  '("Mark for trash" .  mm/view-mark-for-trash))
 	(define-key menumap [mark-move]
 	  '("Mark for move" . mm/view-mark-for-move))
-	
+
 	(define-key menumap [sepa2] '("--"))
 	(define-key menumap [compose-new]  '("Compose new" . mm/compose-new))
 	(define-key menumap [forward]  '("Forward" . mm/compose-forward))
@@ -277,7 +291,7 @@ or if not available, :body-html converted to text)."
 	(define-key menumap [next]  '("Next" . mm/view-next-header))
 	(define-key menumap [previous]  '("Previous" . mm/view-prev-header)))
       map)))
-  
+
 (fset 'mm/view-mode-map mm/view-mode-map)
 
 
@@ -460,9 +474,10 @@ removing '^M' etc."
   (when (zerop (hash-table-count mm/attach-map))
     (error "No attachments for this message"))
   (interactive "nAttachment to open:")
-  (let* ((att  (gethash attnum mm/attach-map)))
-    (unless att (error "Not a valid attachment number"))
-    (mm/proc-open (plist-get mm/current-msg :docid) (car att))))
+  (let* ((att (gethash attnum mm/attach-map))
+	  (id (and att (plist-get att :index))))
+    (unless id (error "Not a valid attachment number"))
+    (mm/proc-open (plist-get mm/current-msg :docid) id)))
 
 (defun mm/view-unmark ()
   "Warn user that unmarking only works in the header list."
