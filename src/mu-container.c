@@ -356,7 +356,6 @@ MuContainer*
 mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean revert,
 		   gpointer user_data)
 {
-
 	SortFuncData sfdata;
 
 	sfdata.mfid	 = mfid;
@@ -489,21 +488,37 @@ path_to_string (Path *p, const char* frmt)
 	return str;
 }
 
+static unsigned
+count_colons (const char *str)
+{
+	unsigned num;
+
+	num = 0;
+	while (str++ && *str)
+		if (*str == ':')
+			++num;
+
+	return num;
+}
+
+
 
 static MuMsgIterThreadInfo*
 thread_info_new (gchar *threadpath, gboolean root, gboolean child,
-		 gboolean empty_parent, gboolean is_dup)
+		 gboolean empty_parent, gboolean has_child, gboolean is_dup)
 {
 	MuMsgIterThreadInfo *ti;
 
 	ti		     = g_slice_new (MuMsgIterThreadInfo);
 	ti->threadpath	     = threadpath;
+	ti->level            = count_colons (threadpath); /* hacky... */
 
 	ti->prop  = 0;
-	ti->prop |= root         ? MU_MSG_ITER_THREAD_PROP_ROOT : 0;
+	ti->prop |= root         ? MU_MSG_ITER_THREAD_PROP_ROOT         : 0;
 	ti->prop |= child        ? MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  : 0;
 	ti->prop |= empty_parent ? MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT : 0;
-	ti->prop |= is_dup       ? MU_MSG_ITER_THREAD_PROP_DUP : 0;
+	ti->prop |= is_dup       ? MU_MSG_ITER_THREAD_PROP_DUP          : 0;
+	ti->prop |= has_child    ? MU_MSG_ITER_THREAD_PROP_HAS_CHILD    : 0;
 
 	return ti;
 }
@@ -529,14 +544,15 @@ static void
 add_to_thread_info_hash (GHashTable *thread_info_hash, MuContainer *c,
 			 char *threadpath)
 {
-	gboolean is_root, first_child, empty_parent, is_dup;
+	gboolean is_root, first_child, empty_parent, is_dup, has_child;
 
 	/* 'root' means we're a child of the dummy root-container */
 	is_root = (c->parent == NULL);
 
 	first_child  = is_root ? FALSE : (c->parent->child == c);
 	empty_parent = is_root ? FALSE : (!c->parent->msg);
-	is_dup	     = c->flags &	MU_CONTAINER_FLAG_DUP;
+	is_dup	     = c->flags & MU_CONTAINER_FLAG_DUP;
+	has_child    = c->child ? TRUE : FALSE;
 
 	g_hash_table_insert (thread_info_hash,
 			     GUINT_TO_POINTER(c->docid),
@@ -544,6 +560,7 @@ add_to_thread_info_hash (GHashTable *thread_info_hash, MuContainer *c,
 					      is_root,
 					      first_child,
 					      empty_parent,
+					      has_child,
 					      is_dup));
 }
 

@@ -332,7 +332,8 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 			char *sexp;
 			sexp = mu_msg_to_sexp (msg,
 					       mu_msg_iter_get_docid (iter),
-					       NULL, TRUE);
+					       mu_msg_iter_get_thread_info (iter),
+					       TRUE);
 			send_expr ("%s", sexp);
 			g_free (sexp);
 			++u;

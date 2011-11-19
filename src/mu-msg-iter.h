@@ -135,12 +135,16 @@ enum _MuMsgIterThreadProp {
 	MU_MSG_ITER_THREAD_PROP_ROOT           = 1 << 0,
 	MU_MSG_ITER_THREAD_PROP_FIRST_CHILD    = 1 << 1,
 	MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT   = 1 << 2,
-	MU_MSG_ITER_THREAD_PROP_DUP            = 1 << 3
+	MU_MSG_ITER_THREAD_PROP_DUP            = 1 << 3,
+	MU_MSG_ITER_THREAD_PROP_HAS_CHILD      = 1 << 4
 };
 typedef guint8 MuMsgIterThreadProp;
 
 struct _MuMsgIterThreadInfo {
-	gchar *threadpath;
+	gchar *threadpath; /* a string decribing the thread-path in
+			    * such a way that we can sort by this
+			    * string to get the right order. */
+	guint level;       /* thread-depth -- [0...] */
 	MuMsgIterThreadProp prop;
 };
 typedef struct _MuMsgIterThreadInfo MuMsgIterThreadInfo;

@@ -196,6 +196,7 @@ append_sexp_flags (GString *gstr, MuMsg *msg)
 	g_free (fdata.flagstr);
 }
 
+
 static void
 each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 {
@@ -206,12 +207,13 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 		char *esc;
 		esc   = mu_str_escape_c_literal (fname, TRUE);
 		*parts = g_strdup_printf
-			("%s(%d %s \"%s/%s\")",
+			("%s(:index %d :name %s :mime-type \"%s/%s\" :size %d)",
 			 *parts ? *parts : "",
 			 part->index,
 			 esc,
 			 part->type ? part->type : "application",
-			 part->subtype ? part->subtype : "octet-stream");
+			 part->subtype ? part->subtype : "octet-stream",
+			 part->size);
 	}
 }
 
@@ -251,13 +253,26 @@ static void
 append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 {
 	g_string_append_printf
-		(gstr, "\t:thread (:path \"%s\" :root %s :first-child %s "
-		 ":empty-parent %s :duplicate %s)\n",
+		(gstr, "\t:thread (:path \"%s\":level %u%s%s%s%s)\n",
 		 ti->threadpath,
-		 ti->prop & MU_MSG_ITER_THREAD_PROP_ROOT ? "t" : "nil",
-		 ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD ? "t" : "nil",
-		 ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT ? "t" : "nil",
-		 ti->prop & MU_MSG_ITER_THREAD_PROP_DUP ? "t" : "nil");
+		 ti->level,
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  ?
+		 " :first-child t" : "",
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT ?
+		 " :empty-parent t" : "",
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_DUP          ?
+		 " :duplicate t" : "",
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_HAS_CHILD    ?
+		 " :has-child t" : "");
+
+	/* g_string_append_printf */
+	/* 	(gstr, "\t:thread (:path \"%s\" :level %u :root %s :first-child %s " */
+	/* 	 ":empty-parent %s :duplicate %s)\n", */
+	/* 	 ti->threadpath, ti->level, */
+	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_ROOT ? "t" : "nil", */
+	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD ? "t" : "nil", */
+	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT ? "t" : "nil", */
+	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_DUP ? "t" : "nil"); */
 }
 
 
