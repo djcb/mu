@@ -134,18 +134,40 @@ into a string."
       (let ((name (car ct)) (email (cdr ct)))
 	(or name email "?"))) contacts ", "))
 
+(defun mm/thread-prefix (thread)
+  "Calculate the thread prefix based on thread info THREAD."
+  (if thread
+    (let ( (level        (plist-get thread :level))
+	   (first-child  (plist-get thread :first-child))
+	   (has-child    (plist-get thread :has-child))
+	   (duplicate    (plist-get thread :duplicate))
+	   (empty-parent (plist-get thread :empty-parent)))
+      (concat
+	(make-string (* (if empty-parent 0 2) level) ?\s)
+	(cond
+	  (has-child    "+ ")
+	  (empty-parent "- ")
+	  (first-child  "\\ ")
+	  (duplicate    "= ")
+	  (t            "| "))))))
+	;; FIXME: when updating an header line, we don't know the thread
+	;; stuff
 
 (defun mm/hdrs-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (let* ((line
+  (let* ( (docid (plist-get msg :docid))
+	  (thread-info
+	    (or (plist-get msg :thread) (gethash docid mm/thread-info-map)))
+	  (line
 	   (mapconcat
 	     (lambda (f-w)
 	       (let* ((field (car f-w)) (width (cdr f-w))
 		       (val (plist-get msg field))
 		       (str
 			 (case field
-			   ((:subject :maildir :path) val)
+			   (:subject  (concat (mm/thread-prefix thread-info) val))
+			   ((:maildir :path) val)
 			   ((:to :from :cc :bcc) (mm/hdrs-contact-str val))
 			   ;; if we (ie. `user-mail-address' is the 'From', show 'To', otherwise
 			   ;; show From
@@ -155,17 +177,11 @@ if provided, or at the end of the buffer otherwise."
 			       (if (and from (string-match mm/user-mail-address-regexp from))
 				 (concat "To "
 				   (mm/hdrs-contact-str (plist-get msg :to)))
-				 (mm/hdrs-contact-str from-lst))))			      
+				 (mm/hdrs-contact-str from-lst))))
 			   (:date (format-time-string mm/headers-date-format val))
 			   (:flags (mm/flags-to-string val))
-			   (:size
-			     (cond
-			       ((>= val 1000000) (format "%2.1fM" (/ val 1000000.0)))
-			       ((and (>= val 1000) (< val 1000000))
-				 (format "%2.1fK" (/ val 1000.0)))
-			       ((< val 1000) (format "%d" val))))
-			   (t
-			     (error "Unsupported header field (%S)" field)))))
+			   (:size (mm/display-size val))
+			   (t (error "Unsupported header field (%S)" field)))))
 		 (when str
 		   (if (not width)
 		     str
@@ -181,6 +197,10 @@ if provided, or at the end of the buffer otherwise."
 		    (propertize line 'face 'mm/unread-face))
 		  (t ;; else
 		    (propertize line 'face 'mm/header-face)))))
+    
+    ;; store the thread info, so we can use it when updating the message
+    (when thread-info
+      (puthash docid thread-info mm/thread-info-map))
     (mm/hdrs-add-header line (plist-get msg :docid)
       (if point point (point-max)))))
 
@@ -226,8 +246,6 @@ after the end of the search results."
 
 
       ;; marking/unmarking/executing
-      
-
       (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
       (define-key map "d" 'mm/mark-for-trash)
 
@@ -236,7 +254,7 @@ after the end of the search results."
 
       (define-key map "j" 'mm/jump-to-maildir)
       (define-key map "m" 'mm/mark-for-move)
-      
+
       (define-key map "u" 'mm/unmark)
       (define-key map "U" 'mm/unmark-all)
       (define-key map "x" 'mm/execute-marks)
@@ -297,6 +315,7 @@ after the end of the search results."
   (make-local-variable 'mm/hdrs-proc)
   (make-local-variable 'mm/marks-map)
   (make-local-variable 'mm/msg-map)
+  (make-local-variable 'mm/thread-info-map)
 
   ;; we register our handler functions for the mm-proc (mu server) output
   (setq mm/proc-error-func   'mm/hdrs-error-handler)
@@ -309,7 +328,8 @@ after the end of the search results."
   (setq mm/proc-compose-func 'mm/send-compose-handler)
 
   (setq
-    mm/marks-map (make-hash-table :size 16  :rehash-size 2)
+    mm/marks-map (make-hash-table :size 16   :rehash-size 2)
+    mm/thread-info-map (make-hash-table :size 512  :rehash-size 2)
     major-mode 'mm/hdrs-mode
     mode-name "*mm-headers*"
     truncate-lines t
@@ -399,6 +419,19 @@ server.")
 	(message "%s => %s" k v))
       mm/msg-map)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;; threadinfo-map  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mm/thread-info-map nil
+  "Map (hash) of docid->threadinfo; when filling the list of
+  messages, we fill a map of thread info, such that when a header
+  changes (e.g., it's read-flag gets set) through some (:update
+  ...) message, we can restore the thread-info (this is needed
+  since :update messages do not include thread info).")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 
 ;;; marks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
