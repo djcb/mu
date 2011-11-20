@@ -38,6 +38,9 @@
 (defconst mm/view-buffer-name "*mm-view*"
   "*internal* Name for the message view buffer")
 
+(defconst mm/view-raw-buffer-name "*mm-view-raw*"
+  "*internal* Name for the raw message view buffer")
+
 ;; some buffer-local variables
 (defvar mm/hdrs-buffer nil
   "*internal* Headers buffer connected to this view.")
@@ -191,7 +194,7 @@ or if not available, :body-html converted to text)."
 		    atts ", ")))
 		(mm/view-header (format "Attachments(%d)" id) vals t)))))
 
-(setq mm/view-mode-map nil)
+
 (defvar mm/view-mode-map nil
   "Keymap for \"*mm-view*\" buffers.")
 (unless mm/view-mode-map
@@ -207,6 +210,8 @@ or if not available, :body-html converted to text)."
       (define-key map "r" 'mm/compose-reply)
       (define-key map "c" 'mm/compose-new)
       (define-key map "e" 'mm/edit-draft)
+
+      (define-key map "." 'mm/view-raw)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -254,7 +259,7 @@ or if not available, :body-html converted to text)."
       (let ((menumap (make-sparse-keymap "View")))
 	(define-key map [menu-bar headers] (cons "View" menumap))
 
-	(define-key menumap [quit-buffer] '("Quit view" . mm/quit-buffer))
+	(define-key menumap [quit-buffer] '("Quit view" . mm/view-quit-buffer))
 
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
@@ -366,16 +371,71 @@ removing '^M' etc."
 			   'face 'mm/view-url-number-face))))))))
 
 
-;;;; raw view
-;; (defun mm/view-raw-mode ()
-;;   "Major mode for viewing of raw e-mail message."
-;;   (interactive)
-;;   (kill-all-local-variables)
-;;   (use-local-map mm/view-raw-mode-map)
 
-;;   (setq major-mode 'mm/view-raw-mode
-;;     mode-name mm/view-raw-buffer-name)
-;;   (setq truncate-lines t buffer-read-only t))
+
+
+;; raw mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun mm/view-raw-mode ()
+  "Major mode for viewing of raw e-mail message."
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map mm/view-raw-mode-map)
+
+  (setq major-mode 'mm/view-raw-mode
+    mode-name mm/view-raw-buffer-name)
+  (setq truncate-lines t buffer-read-only t))
+
+
+(defvar mm/view-raw-mode-map nil
+  "Keymap for \"*mm-view-raw*\" buffers.")
+
+(unless mm/view-raw-mode-map
+  (setq mm/view-raw-mode-map
+    (let ((map (make-sparse-keymap)))
+
+      (define-key map "q" 'kill-buffer)
+      (define-key map "." 'kill-buffer)
+      
+      ;; intra-message navigation
+      (define-key map (kbd "SPC") 'scroll-up)
+      (define-key map (kbd "<home>")
+	'(lambda () (interactive) (goto-char (point-min))))
+      (define-key map (kbd "<end>")
+	'(lambda () (interactive) (goto-char (point-max))))
+      (define-key map (kbd "RET")
+	'(lambda () (interactive) (scroll-up 1)))
+      (define-key map (kbd "<backspace>")
+	'(lambda () (interactive) (scroll-up -1)))
+
+      ;; menu
+      (define-key map [menu-bar] (make-sparse-keymap))
+      (let ((menumap (make-sparse-keymap "Raw view")))
+	(define-key map [menu-bar headers] (cons "Raw view" menumap))
+
+	(define-key menumap [quit-buffer] '("Quit" . kill-buffer))
+      map))))
+
+(fset 'mm/view-raw-mode-map mm/view-raw-mode-map)
+
+
+(defun mm/view-raw-message (msg)
+  "Display the raw contents of message MSG in a new buffer."
+  (let ((buf (get-buffer-create mm/view-raw-buffer-name))
+	 (inhibit-read-only t)
+	 (file (plist-get msg :path)))
+    (unless (and file (file-readable-p file))
+      (error "Not a readable file: %S" file))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert-file file)
+      ;; initialize view-mode
+      (mm/view-raw-mode)
+      (switch-to-buffer buf)
+      (goto-char (point-min)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 
 
@@ -497,6 +557,13 @@ list."
   (let ((url (gethash num mm/link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
+
+(defun mm/view-raw ()
+  "Show the the raw text of the current message."
+  (interactive)
+  (unless mm/current-msg
+    (error "No current message"))
+  (mm/view-raw-message mm/current-msg))
 
 
 (provide 'mm-view)

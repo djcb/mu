@@ -103,6 +103,17 @@ headers."
 	  ;; first, remove the old one (otherwise, we'd have to headers with
 	  ;; the same docid...
 	  (mm/hdrs-remove-handler docid)
+
+	  ;; if we we're actually viewing this message (in mm/view mode), we
+	  ;; update the `mm/current-msg' there as well; that way, the flags can
+	  ;; be updated, as well as the path (which is useful for viewing the
+	  ;; raw message)
+	  (let ((viewbuf (get-buffer mm/view-buffer-name)))
+	    (when (and viewbuf (buffer-live-p viewbuf))
+	      (with-current-buffer viewbuf
+		(when (eq docid (plist-get mm/current-msg :docid))
+		  (setq mm/current-msg msg)))))
+
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
 	  ;; longer matches the query, but this seem a good heuristic.
@@ -124,7 +135,7 @@ the current list of headers."
 	(error "At point %d, expected docid %d, but got %d" pos docid docid-at-pos))
       (mm/hdrs-remove-header docid pos))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+w;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mm/hdrs-contact-str (contacts)
   "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
@@ -197,7 +208,7 @@ if provided, or at the end of the buffer otherwise."
 		    (propertize line 'face 'mm/unread-face))
 		  (t ;; else
 		    (propertize line 'face 'mm/header-face)))))
-    
+
     ;; store the thread info, so we can use it when updating the message
     (when thread-info
       (puthash docid thread-info mm/thread-info-map))
