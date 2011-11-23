@@ -84,19 +84,13 @@ typedef struct _MuMsgField MuMsgField;
  * misinterpreted by the query-preprocesser which turns queries into
  * lowercase */
 static const MuMsgField FIELD_DATA[] = {
-	{
-		MU_MSG_FIELD_ID_ATTACH,
-		MU_MSG_FIELD_TYPE_STRING,
-		"attach" , 'a', 'A',
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_NORMALIZE |
-		FLAG_DONT_CACHE | FLAG_XAPIAN_PREFIX_ONLY
-	},
 
 	{
-		MU_MSG_FIELD_ID_ATTACH_MIME_TYPE,
+		MU_MSG_FIELD_ID_ATTACH_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,
-		"attmime" , 'y', 'Y',
-		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
+		"attach", 'a', 'A',
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE |
+		FLAG_DONT_CACHE
 	},
 
 	{
@@ -138,6 +132,15 @@ static const MuMsgField FIELD_DATA[] = {
 	},
 
 	{
+		MU_MSG_FIELD_ID_FILE,
+		MU_MSG_FIELD_TYPE_STRING,
+		"file" , 'j', 'J',
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_NORMALIZE |
+		FLAG_DONT_CACHE | FLAG_XAPIAN_PREFIX_ONLY
+	},
+
+
+	{
 		MU_MSG_FIELD_ID_FLAGS,
 		MU_MSG_FIELD_TYPE_INT,
 		"flag", 'g', 'G',  /* flaGs */
@@ -165,7 +168,16 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"maildir", 'm', 'M',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY |
+		FLAG_XAPIAN_BOOLEAN
+	},
+
+
+	{
+		MU_MSG_FIELD_ID_MIME,
+		MU_MSG_FIELD_TYPE_STRING,
+		"mime" , 'y', 'Y',
+		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
 	},
 
 	{
