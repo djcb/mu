@@ -486,9 +486,7 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *lst, gboolean is_move,
 
 	if ((docid = get_docid (query, (const char*)lst->data, err)) == 0)
 		return server_error (err, MU_ERROR_IN_PARAMETERS,
-				     "invalid docid '%s'",
-				     (const char*)lst->data);
-
+				     "invalid docid '%s'", (char*)lst->data);
 	msg = mu_store_get_msg (store, docid, err);
 	if (!msg)
 		return server_error (err, MU_ERROR, "failed to get message");
@@ -502,11 +500,10 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *lst, gboolean is_move,
 	}
 
 	flags = get_flags (mu_msg_get_path(msg),
-			   flagitem ? (const gchar*)flagitem->data : NULL);
+			   flagitem ? (gchar*)flagitem->data : NULL);
 	if (flags == MU_FLAG_INVALID) {
 		mu_msg_unref (msg);
-		return server_error (err, MU_ERROR_IN_PARAMETERS,
-				     "invalid flags");
+		return server_error (err, MU_ERROR_IN_PARAMETERS, "invalid flags");
 	}
 
 	merr = do_move (store, docid, msg, mdir, flags, is_move, err);
@@ -575,13 +572,69 @@ cmd_remove (MuStore *store, GSList *lst, GError **err)
 
 
 
+static MuError
+save_part (MuMsg *msg, const char* targetpath, unsigned partindex, GError **err)
+{
+	gboolean rv;
+	gchar *path;
+
+	rv = mu_msg_part_save (msg, targetpath, partindex,
+			       TRUE/*overwrite*/, FALSE/*use cache*/, err);
+	if (!rv)
+		return server_error (err, MU_ERROR_FILE,
+				     "failed to save to target path");
+
+	path = mu_str_escape_c_literal (targetpath, FALSE);
+	send_expr ("(:info save :message \"%s has been saved\")",
+		   path);
+	g_free (path);
+
+	return MU_OK;
+}
+
+
+static gboolean
+open_part (MuMsg *msg, unsigned partindex, GError **err)
+{
+	char *targetpath;
+	gboolean rv;
+
+	targetpath = mu_msg_part_filepath_cache (msg, partindex);
+
+	rv = mu_msg_part_save (msg, targetpath, partindex,
+			       FALSE/*overwrite*/, TRUE/*use cache*/, err);
+	if (!rv) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "failed to save to '%s'", targetpath);
+		g_free (targetpath);
+		return FALSE;
+	}
+
+	rv = mu_util_play (targetpath, TRUE/*allow local*/,
+			   FALSE/*allow remote*/);
+	if (!rv)
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "failed to open '%s'", targetpath);
+	else {
+		gchar *path;
+		path = mu_str_escape_c_literal (targetpath, FALSE);
+		send_expr ("(:info open :message \"%s has been opened\")",
+			   path);
+		g_free (path);
+	}
+
+	g_free (targetpath);
+
+	return rv;
+}
+
+
 
 static MuError
 save_or_open (MuStore *store, GSList *args, gboolean is_save, GError **err)
 {
 	MuMsg *msg;
 	unsigned docid, partindex;
-	char* targetpath;
 	gboolean rv;
 
 	docid = get_docid (NULL, (const char*)args->data, err);
@@ -595,40 +648,18 @@ save_or_open (MuStore *store, GSList *args, gboolean is_save, GError **err)
 
 	partindex = atoi((const char*)g_slist_nth (args, 1)->data);
 
-	if (is_save)
-		targetpath = g_strdup ((const char*)g_slist_nth (args, 2)->data);
-	else
-		targetpath = mu_msg_part_filepath_cache (msg, partindex);
+	if (is_save) {
+		const char *targetpath;
+		targetpath = ((const char*)g_slist_nth (args, 2)->data);
+		rv = save_part (msg, targetpath, partindex, err);
+	} else
+		rv = open_part (msg, partindex, err);
 
-	if (!targetpath) {
-		mu_msg_unref (msg);
-		return server_error (err, MU_ERROR_FILE,
-				     "failed to determine target path");
-	}
-
-	rv = mu_msg_part_save (msg, targetpath, partindex,
-			       is_save ? TRUE  : FALSE,
-			       is_save ? FALSE : TRUE, err);
 	mu_msg_unref (msg);
-
-	if (rv && !is_save)
-		mu_util_play (targetpath, TRUE, FALSE);
-
-	if (rv) {
-		gchar *path;
-		path = mu_str_escape_c_literal (targetpath, FALSE);
-		send_expr ("(:info %s :message \"%s %s\")",
-			   is_save ? "save" : "open",
-			   is_save ? "Saved" : "Opened",
-			   path);
-		g_free (path);
-	}
-
-	g_free (targetpath);
 
 	if (!rv)
 		return server_error (err, MU_ERROR_FILE,
-				    "failed to save attachment");
+				     "failed to save to target path");
 
 	return MU_OK;
 }
