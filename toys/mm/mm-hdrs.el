@@ -135,7 +135,7 @@ the current list of headers."
 	(error "At point %d, expected docid %d, but got %d" pos docid docid-at-pos))
       (mm/hdrs-remove-header docid pos))))
 
-w;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mm/hdrs-contact-str (contacts)
   "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
