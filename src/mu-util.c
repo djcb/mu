@@ -284,7 +284,7 @@ mu_util_str_from_strv (const gchar **params)
 
 	for (i = 0; params[i]; ++i) {
 
-		if (i>0)
+		if (i > 0)
 			g_string_append_c (str, ' ');
 
 		g_string_append (str, params[i]);
@@ -292,6 +292,11 @@ mu_util_str_from_strv (const gchar **params)
 
 	return g_string_free (str, FALSE);
 }
+
+
+
+
+
 
 int
 mu_util_create_writeable_fd (const char* path, mode_t mode,
@@ -482,5 +487,3 @@ mu_util_printerr_encoded (const char *frm, ...)
 
 	return rv;
 }
-
-

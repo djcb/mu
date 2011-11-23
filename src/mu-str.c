@@ -432,7 +432,7 @@ mu_str_subject_normalize (const gchar* str)
  * specially; function below is an ugly hack to make it DWIM in most
  * cases...*/
 char*
-mu_str_ascii_xapian_escape_in_place (char *query)
+mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space)
 {
 	gchar *cur;
 	const char escchar = '_';
@@ -444,10 +444,14 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 		*cur = tolower(*cur);
 
 		switch (*cur) {
+		case ' ':
+			if (!esc_space)
+				break;
 		case '@':
 		case '-':
 		case '/':
-		case '.': {
+		case '.':
+		{
 			/* don't replace a final special char */
 			if (cur[1]== ' ' || cur[1]=='\t' || cur[1]== '.')
 				++cur;
@@ -472,11 +476,11 @@ mu_str_ascii_xapian_escape_in_place (char *query)
 }
 
 char*
-mu_str_ascii_xapian_escape (const char *query)
+mu_str_ascii_xapian_escape (const char *query, gboolean esc_space)
 {
 	g_return_val_if_fail (query, NULL);
 
-	return mu_str_ascii_xapian_escape_in_place (g_strdup(query));
+	return mu_str_ascii_xapian_escape_in_place (g_strdup(query), esc_space);
 }
 
 

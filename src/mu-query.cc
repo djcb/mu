@@ -203,7 +203,8 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
 			 Xapian::QueryParser::FLAG_WILDCARD	    |
 			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
-			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE);
+			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE
+			 );
 		g_free (preprocessed);
 		return query;
 
@@ -275,22 +276,32 @@ mu_query_destroy (MuQuery *self)
 }
 
 
-/* preprocess a query to make them a bit more permissive */
+/* preprocess a query to make them a bit more promiscuous */
 char*
 mu_query_preprocess (const char *query)
 {
-	gchar *my_query;
+	GSList *parts, *cur;
+	gchar *myquery;
 
 	g_return_val_if_fail (query, NULL);
-	my_query = g_strdup (query);
 
-	/* remove accents and turn to lower-case */
-	mu_str_normalize_in_place (my_query, TRUE);
-	/* escape '@', single '_' and ':' if it's not following a
-	 * xapian-pfx with '_' */
-	mu_str_ascii_xapian_escape_in_place (my_query);
+	/* convert the query to a list of query terms, and escape them
+	 * separately */
+	parts = mu_str_esc_to_list (query);
 
-	return my_query;
+	for (cur = parts; cur; cur = g_slist_next(cur)) {
+		/* remove accents and turn to lower-case */
+		cur->data = mu_str_normalize_in_place ((gchar*)cur->data, TRUE);
+		/* escape '@', single '_' and ':' if it's not following a
+		 * xapian-pfx with '_' */
+		cur->data = mu_str_ascii_xapian_escape_in_place
+			((gchar*)cur->data, TRUE /*escape spaces too*/);
+	}
+
+	myquery = mu_str_from_list (parts, ' ');
+	mu_str_free_list (parts);
+
+	return myquery;
 }
 
 
