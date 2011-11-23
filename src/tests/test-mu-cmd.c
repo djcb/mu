@@ -118,7 +118,7 @@ test_mu_index (void)
 	store = mu_store_new_read_only (xpath, NULL);
 	g_assert (store);
 
-	g_assert_cmpuint (mu_store_count (store, NULL), ==, 10);
+	g_assert_cmpuint (mu_store_count (store, NULL), ==, 11);
 	mu_store_unref (store);
 
 	g_free (muhome);
@@ -231,9 +231,9 @@ test_mu_extract_01 (void)
 			 ==,
 			 "MIME-parts in this message:\n"
 			 "  0 <none> multipart/mixed [<none>]\n"
-			 "  1 <none> text/plain [<none>]\n"
-			 "  2 sittingbull.jpg image/jpeg [inline]\n"
-			 "  3 custer.jpg image/jpeg [inline]\n");
+			 "  1 <none> text/plain [<none>] (0.0 kB)\n"
+			 "  2 sittingbull.jpg image/jpeg [inline] (23.9 kB)\n"
+			 "  3 custer.jpg image/jpeg [inline] (21.6 kB)\n");
 
 	/* we expect zero lines of error output */
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);

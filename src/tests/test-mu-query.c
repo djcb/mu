@@ -485,10 +485,10 @@ test_mu_query_attach (void)
 	int i;
 
 	QResults queries[] = {
-		{ "a:sittingbull.jpg", 1},
-		{ "'attach:sitting*'", 1},
-		{ "attach:custer", 0},
-		{ "attach:custer.jpg", 1}
+		{ "j:sittingbull.jpg", 1},
+		{ "'file:sitting*'", 1},
+		{ "file:custer", 0},
+		{ "file:custer.jpg", 1}
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR2);

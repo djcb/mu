@@ -1,4 +1,4 @@
-/* 
+/*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -13,8 +13,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -34,32 +34,32 @@ static void
 test_mu_util_dir_expand_00 (void)
 {
 		gchar *got, *expected;
-	
+
 		got = mu_util_dir_expand ("~/IProbablyDoNotExist");
 		expected = g_strdup_printf ("%s%cIProbablyDoNotExist",
 									getenv("HOME"), G_DIR_SEPARATOR);
-	
+
 		g_assert_cmpstr (got,==,expected);
-	
+
 		g_free (got);
 		g_free (expected);
-	
+
 }
 
 static void
 test_mu_util_dir_expand_01 (void)
 {
 		gchar *got, *expected;
-	
+
 		got = mu_util_dir_expand ("~/Desktop");
 		expected = g_strdup_printf ("%s%cDesktop",
 									getenv("HOME"), G_DIR_SEPARATOR);
-	
+
 		g_assert_cmpstr (got,==,expected);
-	
+
 		g_free (got);
 		g_free (expected);
-	
+
 }
 
 
@@ -67,8 +67,8 @@ static void
 test_mu_util_dir_expand_03 (void)
 {
 		gchar *got;
-	
-		got = mu_util_dir_expand (".");	
+
+		got = mu_util_dir_expand (".");
 		g_assert_cmpstr (got,==,ABS_CURDIR);
 
 		g_free (got);
@@ -86,7 +86,7 @@ test_mu_util_guess_maildir_01 (void)
 		/* skip the test if there's no /tmp */
 		if (access ("/tmp", F_OK))
 				return;
-	
+
 		g_setenv ("MAILDIR", "/tmp", TRUE);
 
 		got = mu_util_guess_maildir ();
@@ -101,7 +101,7 @@ static void
 test_mu_util_guess_maildir_02 (void)
 {
 		char *got, *mdir;
-	
+
 		g_unsetenv ("MAILDIR");
 
 		mdir = g_strdup_printf ("%s%cMaildir",
@@ -112,7 +112,7 @@ test_mu_util_guess_maildir_02 (void)
 				g_assert_cmpstr (got, ==, mdir);
 		else
 				g_assert_cmpstr (got, == , NULL);
-	
+
 		g_free (got);
 		g_free (mdir);
 }
@@ -126,7 +126,7 @@ test_mu_util_check_dir_01 (void)
 						mu_util_check_dir ("/usr/bin", TRUE, FALSE) == TRUE,
 						==,
 						g_access ("/usr/bin", R_OK) == 0);
-		}	
+		}
 }
 
 
@@ -138,7 +138,7 @@ test_mu_util_check_dir_02 (void)
 						mu_util_check_dir ("/tmp", FALSE, TRUE) == TRUE,
 						==,
 						g_access ("/tmp", W_OK) == 0);
-		}	
+		}
 }
 
 
@@ -150,7 +150,7 @@ test_mu_util_check_dir_03 (void)
 						mu_util_check_dir (".", TRUE, TRUE) == TRUE,
 						==,
 						g_access (".", W_OK | R_OK) == 0);
-		}	
+		}
 }
 
 
@@ -161,13 +161,13 @@ test_mu_util_check_dir_04 (void)
 		g_assert_cmpuint (
 				mu_util_check_dir ("test-util.c", TRUE, TRUE),
 				==,
-				FALSE);	
+				FALSE);
 }
 
 
 static void
 test_mu_util_str_from_strv_01 (void)
-{	
+{
 		const gchar *strv[] = { "aap", "noot", "mies", NULL };
 		gchar *str = mu_util_str_from_strv (strv);
 		g_assert_cmpstr (str, ==, "aap noot mies");
@@ -177,7 +177,7 @@ test_mu_util_str_from_strv_01 (void)
 
 static void
 test_mu_util_str_from_strv_02 (void)
-{	
+{
 		const gchar *strv[] = { "test", NULL };
 		gchar *str = mu_util_str_from_strv (strv);
 		g_assert_cmpstr (str, ==, "test");
@@ -187,7 +187,7 @@ test_mu_util_str_from_strv_02 (void)
 
 static void
 test_mu_util_str_from_strv_03 (void)
-{	
+{
 		const gchar *strv[] = { NULL };
 		gchar *str = mu_util_str_from_strv (strv);
 		g_assert_cmpstr (str, ==, "");
@@ -218,7 +218,7 @@ main (int argc, char *argv[])
 		g_test_add_func ("/mu-util/mu-util-dir-expand-00", test_mu_util_dir_expand_00);
 		g_test_add_func ("/mu-util/mu-util-dir-expand-01", test_mu_util_dir_expand_01);
 		g_test_add_func ("/mu-util/mu-util-dir-expand-03", test_mu_util_dir_expand_03);
-	
+
 		/* mu_util_guess_maildir */
 		g_test_add_func ("/mu-util/mu-util-guess-maildir-01",
 						 test_mu_util_guess_maildir_01);
@@ -241,7 +241,7 @@ main (int argc, char *argv[])
 
 		g_test_add_func ("/mu-util/mu-util-get-dtype-with-lstat",
 						 test_mu_util_get_dtype_with_lstat);
-		
+
 		g_log_set_handler (NULL,
 						   G_LOG_LEVEL_DEBUG|
 						   G_LOG_LEVEL_MESSAGE|
@@ -249,4 +249,3 @@ main (int argc, char *argv[])
 
 		return g_test_run ();
 }
-

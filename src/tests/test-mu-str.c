@@ -172,7 +172,7 @@ test_mu_str_ascii_xapian_escape (void)
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *a = g_strdup (words[i].word);
-		mu_str_ascii_xapian_escape_in_place (a);
+		mu_str_ascii_xapian_escape_in_place (a, FALSE);
 		g_assert_cmpstr (a, ==, words[i].esc);
 		g_free (a);
 	}
