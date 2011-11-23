@@ -512,8 +512,8 @@ stream_to_string (GMimeStream *stream, size_t buflen)
 }
 
 
-static gchar*
-part_to_string (GMimePart *part, gboolean *err)
+gchar*
+mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 {
 	GMimeDataWrapper *wrapper;
 	GMimeStream *stream = NULL;
@@ -557,39 +557,53 @@ cleanup:
 }
 
 
-static char*
-get_body (MuMsgFile *self, gboolean want_html)
+GMimePart*
+mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html)
 {
 	GetBodyData data;
-	char *str;
-	gboolean err;
 
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
+	g_return_val_if_fail (GMIME_IS_MESSAGE(msg), NULL);
 
 	memset (&data, 0, sizeof(GetBodyData));
 	data._want_html = want_html;
 
-	err = FALSE;
-	g_mime_message_foreach (self->_mime_msg,
+	g_mime_message_foreach (msg,
 				(GMimeObjectForeachFunc)get_body_cb,
 				&data);
 	if (want_html)
-		str = data._html_part ?
-			part_to_string (GMIME_PART(data._html_part), &err) :
-			NULL;
+		return (GMimePart*)data._html_part;
 	else
-		str = data._txt_part ?
-			part_to_string (GMIME_PART(data._txt_part), &err) :
-			NULL;
+		return (GMimePart*)data._txt_part;
+}
 
-	/* note, str may be NULL (no body), but that's not necessarily
-	 * an error; we only warn when an actual error occured */
-	if (err)
-		g_warning ("error occured while retrieving %s body "
-			   "for message %s",
-			   want_html ? "html" : "text", self->_path);
-	return str;
+
+
+static char*
+get_body (MuMsgFile *self, gboolean want_html)
+{
+	GMimePart *part;
+
+	g_return_val_if_fail (self, NULL);
+	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
+
+	part = mu_msg_mime_get_body_part (self->_mime_msg, want_html);
+	if (GMIME_IS_PART(part)) {
+		gboolean err;
+		gchar *str;
+
+		err = FALSE;
+		str = mu_msg_mime_part_to_string (part, &err);
+
+		/* note, str may be NULL (no body), but that's not necessarily
+		 * an error; we only warn when an actual error occured */
+		if (err)
+			g_warning ("error occured while retrieving %s body "
+				   "for message %s",
+				   want_html ? "html" : "text", self->_path);
+		return str;
+	}
+
+	return NULL;
 }
 
 
@@ -672,6 +686,18 @@ maybe_cleanup (const char* str, const char *path, gboolean *do_free)
 }
 
 
+G_GNUC_CONST static GMimeRecipientType
+recipient_type (MuMsgFieldId mfid)
+{
+	switch (mfid) {
+	case MU_MSG_FIELD_ID_BCC: return GMIME_RECIPIENT_TYPE_BCC;
+	case MU_MSG_FIELD_ID_CC: return GMIME_RECIPIENT_TYPE_CC;
+	case MU_MSG_FIELD_ID_TO: return GMIME_RECIPIENT_TYPE_TO;
+	default: g_return_val_if_reached (-1);
+	}
+}
+
+
 char*
 mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 			   gboolean *do_free)
@@ -683,17 +709,18 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 
 	switch (mfid) {
 
-	case MU_MSG_FIELD_ID_BCC: *do_free = TRUE;
-		return get_recipient (self, GMIME_RECIPIENT_TYPE_BCC);
+	case MU_MSG_FIELD_ID_ATTACH_TEXT: *do_free = TRUE;
+		return NULL; /* FIXME */
 
-	case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE;
-		return get_body (self, FALSE);
+	case MU_MSG_FIELD_ID_BCC:
+	case MU_MSG_FIELD_ID_CC:
+	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
+		return get_recipient (self, recipient_type(mfid));
 
+	case MU_MSG_FIELD_ID_BODY_TEXT:
 	case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE;
-		return get_body (self, TRUE);
-
-	case MU_MSG_FIELD_ID_CC: *do_free = TRUE;
-		return get_recipient (self, GMIME_RECIPIENT_TYPE_CC);
+		return get_body
+			(self, mfid == MU_MSG_FIELD_ID_BODY_HTML ? TRUE : FALSE);
 
 	case MU_MSG_FIELD_ID_FROM:
 		return (char*)maybe_cleanup
@@ -706,9 +733,6 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 		return (char*)maybe_cleanup
 			(g_mime_message_get_subject (self->_mime_msg),
 			 self->_path, do_free);
-
-	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
-		return get_recipient (self, GMIME_RECIPIENT_TYPE_TO);
 
 	case MU_MSG_FIELD_ID_MSGID:
 		return (char*)g_mime_message_get_message_id (self->_mime_msg);

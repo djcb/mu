@@ -51,6 +51,9 @@ struct _MuMsgPart {
 
 	gpointer         data; /* opaque data */
 
+	gboolean         is_body; /* TRUE if this is probably the
+				   * message body*/
+
 	/* if TRUE, mu_msg_part_destroy will free the member vars
 	 * as well*/
 	gboolean          own_members;
@@ -75,6 +78,17 @@ typedef struct _MuMsgPart MuMsgPart;
  * @return the file name
  */
 #define  mu_msg_part_content_id(pi) ((pi)->content_id)
+
+
+/**
+ * convert a MuMsgPart to a string
+ *
+ * @param part a MuMsgPart
+ * @param err will receive TRUE if there was an error, FALSE otherwise
+ *
+ * @return utf8 string for this MIME part, to be freed by caller
+ */
+char* mu_msg_part_to_string (MuMsgPart *part, gboolean *err);
 
 
 /**

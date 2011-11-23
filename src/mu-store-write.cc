@@ -66,7 +66,7 @@ _MuStore::rollback_transaction () {
 }
 
 
-/* we cache these prefix strings, so we don't have to allocate the all
+/* we cache these prefix strings, so we don't have to allocate them all
  * the time; this should save 10-20 string allocs per message */
 G_GNUC_CONST static const std::string&
 prefix (MuMsgFieldId mfid)
@@ -162,6 +162,7 @@ mu_store_set_metadata (MuStore *store, const char *key, const char *val,
 		try {
 			store->db_writable()->set_metadata (key, val);
 			return TRUE;
+
 		} MU_STORE_CATCH_BLOCK_RETURN(err, FALSE);
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, FALSE);
@@ -211,8 +212,6 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 		doc.add_value ((Xapian::valueno)mfid, datestr);
 	}
 }
-
-/* TODO: we could pre-calculate the add_term values for FLAGS */
 
 /* pre-calculate; optimization */
 G_GNUC_CONST static const std::string&
@@ -310,7 +309,8 @@ static void
 add_terms_values_str (Xapian::Document& doc, char *val,
 		      MuMsgFieldId mfid)
 {
-	/* the value is what we'll display; the unchanged original */
+	/* the value is what we display in search results; the
+	 * unchanged original */
 	if (mu_msg_field_xapian_value(mfid))
 		doc.add_value ((Xapian::valueno)mfid, val);
 
@@ -318,7 +318,8 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 	if (mu_msg_field_normalize (mfid))
 		mu_str_normalize_in_place (val, TRUE);
 	if (mu_msg_field_xapian_escape (mfid))
-		mu_str_ascii_xapian_escape_in_place (val);
+		mu_str_ascii_xapian_escape_in_place (val,
+						     TRUE /*esc_space*/);
 
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
@@ -402,36 +403,86 @@ struct PartData {
 	MuMsgFieldId _mfid;
 };
 
+
+static gboolean
+index_text_part (MuMsgPart *part, PartData *pdata)
+{
+	unsigned u;
+	gboolean txt_type, err;
+	char *txt, *norm;
+	Xapian::TermGenerator termgen;
+
+	/* check wether it's a type we need to store */
+	struct { const char* type; const char *subtype; } txt_types[] = {
+		{ "text",    "plain"},
+		{ "message", "rfc822"},
+	};
+
+	txt_type = FALSE;
+	for (u = 0; u != G_N_ELEMENTS(txt_types) && !txt_type; ++u) {
+		if ((strcasecmp (part->type,    txt_types[u].type) == 0) &&
+		    ((strcasecmp (part->subtype, txt_types[u].subtype) == 0) ||
+		     (strcmp (txt_types[u].subtype, "*") == 0)))
+			txt_type = TRUE;
+	}
+
+	if (!txt_type)
+		return FALSE; /* not a supported text type */
+
+	txt = mu_msg_part_to_string (part, &err);
+	if (!txt || err)
+		return FALSE;
+
+	termgen.set_document(pdata->_doc);
+
+	norm = mu_str_normalize (txt, TRUE);
+	termgen.index_text_without_positions
+		(norm, 1, prefix(MU_MSG_FIELD_ID_ATTACH_TEXT));
+
+	g_free (norm);
+	g_free (txt);
+
+	return TRUE;
+}
+
+
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 {
 	static const std::string
-		att (prefix(MU_MSG_FIELD_ID_ATTACH)),
-		mime (prefix(MU_MSG_FIELD_ID_ATTACH_MIME_TYPE));
+		file (prefix(MU_MSG_FIELD_ID_FILE)),
+		mime (prefix(MU_MSG_FIELD_ID_MIME));
 
-	if (mu_msg_part_looks_like_attachment (part, TRUE) &&
-	    (part->file_name)) {
+	/* save the mime type of any part */
+	if (part->type) {
+		/* note, we use '_' instead of '/' to separate
+		 * type/subtype -- Xapian doesn't treat '/' as
+		 * desired, so we use '_' and pre-process queries; see
+		 * mu_query_preprocess */
+		char ctype[MuStore::MAX_TERM_LENGTH + 1];
+		snprintf (ctype, sizeof(ctype), "%s_%s",
+			  part->type, part->subtype);
+		pdata->_doc.add_term
+			(mime + std::string(ctype, 0, MuStore::MAX_TERM_LENGTH));
+	}
 
+	/* save the name of anything that has a filename */
+	if (part->file_name) {
 		char val[MuStore::MAX_TERM_LENGTH + 1];
 		strncpy (val, part->file_name, sizeof(val));
 
 		/* now, let's create a term... */
 		mu_str_normalize_in_place (val, TRUE);
-		mu_str_ascii_xapian_escape_in_place (val);
+		mu_str_ascii_xapian_escape_in_place (val, TRUE /*esc space*/);
 
 		pdata->_doc.add_term
-			(att + std::string(val, 0, MuStore::MAX_TERM_LENGTH));
-
-		/* save the mime type */
-		if (part->type) {
-			gchar *str;
-			str = g_strdup_printf ("%s/%s", part->type, part->subtype);
-			pdata->_doc.add_term
-				(mime + std::string(str, 0, MuStore::MAX_TERM_LENGTH));
-			g_free (str);
-		} else
-			pdata->_doc.add_term (mime + "application/octet-stream");
+			(file + std::string(val, 0, MuStore::MAX_TERM_LENGTH));
 	}
+
+	/* now, for non-body parts with some MIME-types, index the
+	 * content as well */
+	if (!part->is_body)
+		index_text_part (part, pdata);
 }
 
 
@@ -465,8 +516,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	termgen.set_document(doc);
 
 	norm = mu_str_normalize (str, TRUE);
-	termgen.index_text_without_positions
-		(norm, 1, prefix(mfid));
+	termgen.index_text_without_positions (norm, 1, prefix(mfid));
 
 	g_free (norm);
 }
@@ -477,6 +527,24 @@ struct _MsgDoc {
 	MuStore                 *_store;
 };
 typedef struct _MsgDoc		 MsgDoc;
+
+
+static void
+add_terms_values_default  (MuMsgFieldId mfid, MsgDoc* msgdoc)
+{
+	if (mu_msg_field_is_numeric (mfid))
+		add_terms_values_number
+			(*msgdoc->_doc, msgdoc->_msg, mfid);
+	else if (mu_msg_field_is_string (mfid))
+		add_terms_values_string
+			(*msgdoc->_doc, msgdoc->_msg, mfid);
+	else if (mu_msg_field_is_string_list(mfid))
+		add_terms_values_string_list
+			(*msgdoc->_doc, msgdoc->_msg, mfid);
+	else
+		g_return_if_reached ();
+
+}
 
 static void
 add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
@@ -495,26 +563,19 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 	case MU_MSG_FIELD_ID_BODY_TEXT:
 		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
-	case MU_MSG_FIELD_ID_ATTACH: /* also takes care of MU_MSG_FIELD_ID_ATTACH_MIME */
+
+	/* note: add_terms_values_attach handles these three msgfields */
+	case MU_MSG_FIELD_ID_FILE:
 		add_terms_values_attach (*msgdoc->_doc, msgdoc->_msg, mfid);
+	case MU_MSG_FIELD_ID_MIME:
+	case MU_MSG_FIELD_ID_ATTACH_TEXT:
 		break;
-	case MU_MSG_FIELD_ID_ATTACH_MIME_TYPE:
+	///////////////////////////////////////////
+
 	case MU_MSG_FIELD_ID_UID:
 		break; /* already taken care of elsewhere */
 	default:
-		if (mu_msg_field_is_numeric (mfid))
-			add_terms_values_number (*msgdoc->_doc, msgdoc->_msg,
-						 mfid);
-		else if (mu_msg_field_is_string (mfid))
-			add_terms_values_string (*msgdoc->_doc,
-						 msgdoc->_msg,
-						 mfid);
-		else if (mu_msg_field_is_string_list(mfid))
-			add_terms_values_string_list (*msgdoc->_doc,
-						      msgdoc->_msg,
-						      mfid);
-		else
-			g_return_if_reached ();
+		return add_terms_values_default (mfid, msgdoc);
 	}
 }
 
@@ -559,7 +620,11 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 
 	/* don't normalize e-mail address, but do lowercase it */
 	if (!mu_str_is_empty(contact->address)) {
-		char *escaped = mu_str_ascii_xapian_escape (contact->address);
+
+		char *escaped;
+
+		escaped = mu_str_ascii_xapian_escape (contact->address,
+						      FALSE /*dont esc space*/);
 		msgdoc->_doc->add_term
 			(std::string  (pfx + escaped, 0, MuStore::MAX_TERM_LENGTH));
 		g_free (escaped);

@@ -66,8 +66,28 @@ struct _PartData {
 	unsigned		_idx;
 	MuMsgPartForeachFunc	_func;
 	gpointer		_user_data;
+	GMimePart               *_body_part;
 };
 typedef struct _PartData PartData;
+
+
+
+char*
+mu_msg_part_to_string (MuMsgPart *part, gboolean *err)
+{
+	char *txt;
+
+	g_return_val_if_fail (part && part->data, NULL);
+
+	if (GMIME_IS_PART(part->data))
+		txt = mu_msg_mime_part_to_string (GMIME_PART(part->data),
+						  err);
+	else
+		txt = NULL;
+
+	return txt;
+}
+
 
 
 static ssize_t
@@ -100,6 +120,10 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 	memset (&pi, 0, sizeof pi);
 	pi.index       = pdata->_idx++;
 	pi.content_id  = (char*)g_mime_object_get_content_id (part);
+	pi.data        = (gpointer)part;
+
+	/* check if this is the body part */
+	pi.is_body     = ((void*)pdata->_body_part == (void*)part);
 
 	ct = g_mime_object_get_content_type (part);
 
@@ -112,10 +136,12 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
 		pi.disposition = (char*)g_mime_object_get_disposition (part);
 		pi.file_name   = (char*)g_mime_part_get_filename (GMIME_PART(part));
 		pi.size        = get_part_size (GMIME_PART(part));
-	}
+	} else
+		return; /* only deal with GMimePart */
 
 	pdata->_func(pdata->_msg, &pi, pdata->_user_data);
 }
+
 
 static gboolean
 load_msg_file_maybe (MuMsg *msg)
@@ -149,14 +175,18 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 		     gpointer user_data)
 {
 	PartData pdata;
+	GMimeMessage *mime_msg;
 
-	g_return_if_fail (msg);
+	g_return_if_fail (msg && msg->_file && msg->_file->_mime_msg);
 
 	if (!load_msg_file_maybe (msg))
 		return;
 
+	mime_msg = msg->_file->_mime_msg;
+
 	pdata._msg       = msg;
 	pdata._idx       = 0;
+	pdata._body_part = mu_msg_mime_get_body_part (mime_msg, FALSE);
 	pdata._func	 = func;
 	pdata._user_data = user_data;
 
@@ -266,6 +296,7 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx)
 
 	return filepath;
 }
+
 
 
 
