@@ -50,7 +50,14 @@
 
 (defcustom mm/mu-binary "mu"
   "Name of the mu-binary to use; if it cannot be found in your
-PATH, you can specifiy the full path."
+PATH, you can specify the full path."
+  :type 'file
+  :group 'mm
+  :safe 'stringp)
+
+(defcustom mm/muile-binary "muile"
+  "Name of the muile-binary to use; if it cannot be found in your
+PATH, you can specify the full path."
   :type 'file
   :group 'mm
   :safe 'stringp)

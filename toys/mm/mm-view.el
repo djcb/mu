@@ -34,6 +34,7 @@
 (eval-when-compile (require 'cl))
 (require 'html2text)
 (require 'filladapt)
+(require 'comint)
 
 (defconst mm/view-buffer-name "*mm-view*"
   "*internal* Name for the message view buffer")
@@ -212,6 +213,8 @@ or if not available, :body-html converted to text)."
       (define-key map "e" 'mm/edit-draft)
 
       (define-key map "." 'mm/view-raw)
+      (define-key map "|" 'mm/view-pipe)
+      (define-key map "I" 'mm/inspect-message)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -266,6 +269,12 @@ or if not available, :body-html converted to text)."
 	  '("Toggle wrap lines" . mm/view-toggle-wrap-lines))
 	(define-key menumap [hide-cited]
 	  '("Toggle hide cited" . mm/view-toggle-hide-cited))
+	(define-key menumap [view-raw]
+	  '("View raw message" . mm/view-raw))
+	(define-key menumap [pipe]
+	  '("Pipe through shell" . mm/view-pipe))
+	(define-key menumap [inspect]
+	  '("Inspect with guile" . mm/inspect-message))
 
 	(define-key menumap [sepa8] '("--"))
 	(define-key menumap [open-att]
@@ -370,11 +379,12 @@ removing '^M' etc."
 			 (propertize (format "[%d]" num)
 			   'face 'mm/view-url-number-face))))))))
 
-
-
-
 
 ;; raw mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; some buffer-local variables
+(defvar mm/view-buffer nil
+  "*internal* View buffer connected to this raw view.")
 
 (defun mm/view-raw-mode ()
   "Major mode for viewing of raw e-mail message."
@@ -382,10 +392,11 @@ removing '^M' etc."
   (kill-all-local-variables)
   (use-local-map mm/view-raw-mode-map)
 
+  (make-local-variable 'mm/view-buffer)
+
   (setq major-mode 'mm/view-raw-mode
     mode-name mm/view-raw-buffer-name)
   (setq truncate-lines t buffer-read-only t))
-
 
 (defvar mm/view-raw-mode-map nil
   "Keymap for \"*mm-view-raw*\" buffers.")
@@ -394,9 +405,9 @@ removing '^M' etc."
   (setq mm/view-raw-mode-map
     (let ((map (make-sparse-keymap)))
 
-      (define-key map "q" 'kill-buffer)
-      (define-key map "." 'kill-buffer)
-      
+      (define-key map "q" 'mm/view-raw-quit-buffer)
+      (define-key map "." 'mm/view-raw-quit-buffer)
+
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
       (define-key map (kbd "<home>")
@@ -412,14 +423,14 @@ removing '^M' etc."
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "Raw view")))
 	(define-key map [menu-bar headers] (cons "Raw view" menumap))
-
-	(define-key menumap [quit-buffer] '("Quit" . kill-buffer))
+	(define-key menumap [quit-buffer] '("Quit" .
+					     mm/view-raw-quit-buffer))
       map))))
 
 (fset 'mm/view-raw-mode-map mm/view-raw-mode-map)
 
 
-(defun mm/view-raw-message (msg)
+(defun mm/view-raw-message (msg view-buffer)
   "Display the raw contents of message MSG in a new buffer."
   (let ((buf (get-buffer-create mm/view-raw-buffer-name))
 	 (inhibit-read-only t)
@@ -431,8 +442,33 @@ removing '^M' etc."
       (insert-file file)
       ;; initialize view-mode
       (mm/view-raw-mode)
+      (setq mm/view-buffer view-buffer)
       (switch-to-buffer buf)
       (goto-char (point-min)))))
+
+
+(defun mm/view-shell-command-on-raw-message (msg view-buffer cmd)
+  "Process the raw message with shell command CMD."
+  (let ((buf (get-buffer-create mm/view-raw-buffer-name))
+	 (inhibit-read-only t)
+	 (file (plist-get msg :path)))
+    (unless (and file (file-readable-p file))
+      (error "Not a readable file: %S" file))
+    (with-current-buffer buf
+      (erase-buffer)
+      (process-file-shell-command cmd file buf)
+      (mm/view-raw-mode)
+      (setq mm/view-buffer view-buffer)
+      (switch-to-buffer buf)
+      (goto-char (point-min)))))
+
+
+(defun mm/view-raw-quit-buffer ()
+  "Quit the raw view and return to the message."
+  (interactive)
+  (if (buffer-live-p mm/view-buffer)
+    (switch-to-buffer mm/view-buffer)
+    (kill-buffer)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -563,7 +599,39 @@ list."
   (interactive)
   (unless mm/current-msg
     (error "No current message"))
-  (mm/view-raw-message mm/current-msg))
+  (mm/view-raw-message mm/current-msg (current-buffer)))
 
+(defun mm/view-pipe (cmd)
+  "Pipe the message through shell command CMD, and display the
+results."
+  (interactive "sShell command: ")
+  (unless mm/current-msg
+    (error "No current message"))
+  (mm/view-shell-command-on-raw-message mm/current-msg (current-buffer) cmd))
+
+(defconst mm/muile-buffer-name "*muile*"
+  "Name of the buffer to execute muile.")
+
+(defconst mm/muile-process-name "*muile*"
+  "Name of the muile process.")
+
+
+;; note, implementation is very basic/primitive; we probably need comint to do
+;; something like geiser does (http://www.nongnu.org/geiser/). Desirable
+;; features: a) the output is not editable b) tab-completions work
+(defun mm/inspect-message ()
+  "Inspect the current message in the Guile/Muile shell."
+  (interactive)
+  (unless mm/muile-binary (error "`mm/muile-binary' is not defined"))
+  (unless (or (file-executable-p mm/muile-binary)
+	    (executable-find mm/muile-binary))
+    (error "%S not found" mm/muile-binary))
+  (unless mm/current-msg
+    (error "No current message"))
+  (get-buffer-create mm/muile-buffer-name)
+  (start-process mm/muile-buffer-name mm/muile-process-name
+    mm/muile-binary "--msg" (plist-get mm/current-msg :path))
+  (switch-to-buffer mm/muile-buffer-name)
+  (shell-mode))
 
 (provide 'mm-view)
