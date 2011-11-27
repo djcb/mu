@@ -49,7 +49,9 @@ enum _FieldFlags {
 					    * query does not get
 					    * confused) */
 	FLAG_XAPIAN_BOOLEAN      = 1 << 6, /* use 'add_boolean_prefix'
-					    * for Xapian queries */
+					    * for Xapian queries;
+					    * wildcards do NOT WORK
+					    * for such fields */
 	FLAG_XAPIAN_PREFIX_ONLY  = 1 << 7, /* whether this fields
 					    * matches only when the
 					    * prefix is explicitly
@@ -168,8 +170,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"maildir", 'm', 'M',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY |
-		FLAG_XAPIAN_BOOLEAN
+		FLAG_NORMALIZE | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
 	},
 
 
