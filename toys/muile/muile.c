@@ -57,10 +57,10 @@ muile_config_new (int *argcp, char ***argvp)
 
 	if (opts->msgpath)
 		opts->msgpath = mu_util_dir_expand (opts->msgpath);
-	
+
 	g_option_context_free (octx);
 
-	return opts;	
+	return opts;
 }
 
 static void
@@ -74,7 +74,7 @@ muile_config_destroy (MuileConfig *conf)
 static void
 usage (void)
 {
-	g_print ("usage: muile [--muhome=<dir>] [msgfile]\n");	
+	g_print ("usage: muile [--muhome <dir>] [--msg <msgfile>]\n");
 }
 
 
@@ -84,9 +84,9 @@ main (int argc, char *argv[])
 	MuileConfig *opts;
 
 	g_type_init ();
-	
-#ifdef HAVE_PRE2_GUILE	
-	g_warning ("Note: muile will not function correctly unless you have a "
+
+#ifdef HAVE_PRE2_GUILE
+	g_warning ("Note: muile will not function properly unless you are using a"
 		   "UTF-8 locale.");
 #endif /* HAVE_PRE2_GUILE */
 
@@ -95,7 +95,7 @@ main (int argc, char *argv[])
 		usage ();
 		goto error;
 	}
-		
+
 	if (!mu_runtime_init (opts->muhome /* NULL is okay */,
 			      "muile")) {
 		usage ();
@@ -103,23 +103,23 @@ main (int argc, char *argv[])
 	}
 
 	mu_guile_init (); /* initialize mu guile modules */
-	
+
 	if (opts->msgpath) {
 		if (!(gboolean)scm_with_guile
 		    ((MuGuileFunc*)&mu_guile_msg_load_current, opts->msgpath))
 			goto error;
 	}
 
-	
+
 	scm_shell (argc, argv);
 
 	mu_runtime_uninit ();
 	muile_config_destroy (opts);
-	
+
 	return 0;
 
 error:
 	muile_config_destroy (opts);
 	return 1;
-	
+
 }
