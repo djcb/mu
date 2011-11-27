@@ -90,7 +90,11 @@ search (const char* query, unsigned expected)
 	g_assert (g_spawn_command_line_sync (cmdline,
 					     &output, &erroutput,
 					     NULL, NULL));
+	if (g_test_verbose())
+		g_print ("\nOutput:\n%s", output);
+
 	g_assert_cmpuint (newlines_in_output(output),==,expected);
+
 
 	/* we expect zero lines of error output if there is a match;
 	 * otherwise there should be one line 'No matches found' */
@@ -118,7 +122,7 @@ test_mu_index (void)
 	store = mu_store_new_read_only (xpath, NULL);
 	g_assert (store);
 
-	g_assert_cmpuint (mu_store_count (store, NULL), ==, 11);
+	g_assert_cmpuint (mu_store_count (store, NULL), ==, 12);
 	mu_store_unref (store);
 
 	g_free (muhome);
@@ -126,7 +130,15 @@ test_mu_index (void)
 }
 
 
-/* index testdir2, and make sure it adds two documents */
+static void
+test_mu_find_empty_query (void)
+{
+	search ("\"\"", 12);
+}
+
+
+
+
 static void
 test_mu_find_01 (void)
 {
@@ -155,6 +167,36 @@ test_mu_find_02 (void)
 	search ("flag:encrypted", 0);
 	search ("flag:attach", 1);
 }
+
+
+
+static void
+test_mu_find_file (void)
+{
+	search ("file:sittingbull.jpg", 1);
+	search ("file:custer.jpg", 1);
+	search ("file:custer.*", 1);
+	search ("j:sit*", 1);
+}
+
+
+static void
+test_mu_find_mime (void)
+{
+	search ("mime:image/jpeg", 1);
+	search ("mime:text/plain", 12);
+	search ("y:text*", 12);
+	search ("y:image*", 1);
+	search ("mime:message/rfc822", 2);
+}
+
+
+static void
+test_mu_find_text_in_rfc822 (void)
+{
+
+}
+
 
 
 /* some more tests */
@@ -197,12 +239,28 @@ test_mu_find_04 (void)
 
 /* some more tests */
 static void
-test_mu_find_05 (void)
+test_mu_find_maildir_special (void)
 {
 	/* ensure that maldirs with spaces in their names work... */
-	search ("subject:atoms", 1);
 	search ("\"maildir:/wom bat\" subject:atoms", 1);
+	search ("\"maildir:/wOm_bàT\"", 3);
+	search ("\"maildir:/wOm*\"", 3);
+	search ("\"maildir:/wOm *\"", 3);
+	search ("\"maildir:wom bat\"", 0);
+	search ("\"maildir:/wombat\"", 0);
+	search ("subject:atoms", 1);
 }
+
+
+/* static void */
+/* test_mu_find_mime_types (void) */
+/* { */
+/* 	/\* ensure that maldirs with spaces in their names work... *\/ */
+/* 	search ("\"maildir:/wom bat\" subject:atoms", 1); */
+/* 	search ("\"maildir:/wOm_bàT\"", 3); */
+/* 	search ("subject:atoms", 1); */
+/* } */
+
 
 
 
@@ -622,11 +680,21 @@ main (int argc, char *argv[])
 	setenv ("LC_ALL", "en_US.utf8", 1);
 
 	g_test_add_func ("/mu-cmd/test-mu-index", test_mu_index);
+
+	g_test_add_func ("/mu-cmd/test-mu-find-empty-query",
+			 test_mu_find_empty_query);
 	g_test_add_func ("/mu-cmd/test-mu-find-01", test_mu_find_01);
 	g_test_add_func ("/mu-cmd/test-mu-find-02", test_mu_find_02);
+
+	g_test_add_func ("/mu-cmd/test-mu-find-file", test_mu_find_file);
+	g_test_add_func ("/mu-cmd/test-mu-find-mime", test_mu_find_mime);
+	g_test_add_func ("/mu-cmd/test-mu-find-text-in-rfc822",
+			 test_mu_find_text_in_rfc822);
+
 	g_test_add_func ("/mu-cmd/test-mu-find-03", test_mu_find_03);
 	g_test_add_func ("/mu-cmd/test-mu-find-04", test_mu_find_04);
-	g_test_add_func ("/mu-cmd/test-mu-find-05", test_mu_find_05);
+	g_test_add_func ("/mu-cmd/test-mu-find-maildir-special",
+			 test_mu_find_maildir_special);
 
 	g_test_add_func ("/mu-cmd/test-mu-extract-01", test_mu_extract_01);
 	g_test_add_func ("/mu-cmd/test-mu-extract-02", test_mu_extract_02);
