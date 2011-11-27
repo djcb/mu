@@ -323,7 +323,8 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 		if (!threads && sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
 					       revert ? true : false);
-		if (!mu_str_is_empty(searchexpr)) /* NULL or "" */
+		if (!mu_str_is_empty(searchexpr) &&
+		    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
 			enq.set_query(get_query (self, searchexpr, err));
 		else
 			enq.set_query(Xapian::Query::MatchAll);
