@@ -294,10 +294,6 @@ mu_util_str_from_strv (const gchar **params)
 }
 
 
-
-
-
-
 int
 mu_util_create_writeable_fd (const char* path, mode_t mode,
 			     gboolean overwrite)

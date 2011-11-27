@@ -4,12 +4,12 @@
 
    - '--descending' has  been renamed into '--reverse'
    - search for attachment MIME-type using 'mime:' or 'y:'
-   - search for text in text-attacments using 'attach:' or 'a:'
+   - search for text in text-attachments using 'attach:' or 'a:'
    - searching for attachment file names now uses 'file:' (it was 'attach:',
      but has a different meaning now, see above)
    - experimental emacs-based mail client
 
- * Release 0.9.7 <>
+** Release 0.9.7 <>
 
    - don't enforce UTF-8 output, use locale (fixes issue #11)
    - add mail threading to mu-find (using -t/--threads) (sorta fixes issue #13)
@@ -48,7 +48,6 @@
    - add the 'cfind' command, to search/export contact information
    - add 'flag:unread' as a synonym for 'flag:new OR NOT flag:unseen'
    - updated documentation
-
 
 ** Release 0.9.3 <2011-02-13 Sun>
 
