@@ -140,7 +140,8 @@ EXTRA_DIST=							\
 	testdir2/Foo/tmp/.noindex				\
 	testdir2/Foo/new/.noindex				\
 	testdir2/wom bat/cur/atomic				\
-	testdir2/wom bat/cur/rfc822				\
+	testdir2/wom bat/cur/rfc822.1				\
+	testdir2/wom bat/cur/rfc822.2				\
 	testdir3/tree						\
 	testdir3/tree/new					\
 	testdir3/tree/new/.noindex				\
