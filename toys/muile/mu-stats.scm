@@ -20,6 +20,7 @@
 ;; message store.
 
 (use-modules (ice-9 optargs)) ;; for guile 1.x compatibility
+(use-modules (ice-9 popen))   ;; for interfacing with gnuplot
 
 
 ;; note, this is a rather inefficient way to calculate the number; for
@@ -69,8 +70,8 @@ optional EXPR is provided, only consider messages that match it.\n"
 		(set! table (assoc-set! table val
 			      (+ 1 (if (eq? freq #f) 0 freq)))))) vals))) EXPR)
     table))
- 
-    
+
+
 (define* (mu:stats:per-weekday #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
@@ -79,13 +80,61 @@ that match it. The result is a list of pairs (weekday . frequency).\n"
 		  (lambda (msg) (tm:wday (localtime (mu:msg:date msg)))) EXPR)))
     (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of weekday
 
+(define* (mu:plot:per-weekday #:optional (EXPR ""))
+  (let* ((datafile (mu:stats:export (mu:stats:per-weekday EXPR)))
+	  (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
+    ;; note, we cannot use the weekday "%a" support in gnuplot because
+    ;; demands the field to be a date field ('set xdata time' etc.)
+    ;; for that to work, but we cannot use that since gnuplot does not
+    ;; support weekdays ('%w') as a date field in its input
+    (display (string-append
+	       "reset\n"
+	       "set xtics (\"Sun\" 0, \"Mon\" 1, \"Tue\" 2, \"Wed\" 3,"
+	                  "\"Thu\" 4, \"Fri\" 5, \"Sat\" 6);\n"
+	       "set xlabel \"Weekday\"\n"
+	       "set ylabel \"# of messages\"\n"
+	       "set boxwidth 0.9\n") gnuplot)
+    (display (string-append "plot \"" datafile "\" using 1:2 with boxes fs solid\n")
+      gnuplot)
+    (close-pipe gnuplot)))
+
+
 (define* (mu:stats:per-month #:optional (EXPR ""))
-  "Count the total number of messages for each month (0-11 for
+  "Count the total number of messages for each month (1-12 for
 Jan..Dec). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (month . frequency).\n"
   (let* ((stats (mu:stats:frequency
-		  (lambda (msg) (tm:mon (localtime (mu:msg:date msg)))) EXPR)))
-    (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of month
+		  (lambda (msg) ;; note the 1+
+		    (1+ (tm:mon (localtime (mu:msg:date msg))))) EXPR)))
+    (sort stats
+      (lambda(a b)
+	(< (car a) (car b)))))) ;; in order ofmonth
+
+
+;; (define* (mu:plot:per-month #:optional (EXPR ""))
+;;   (let* ((data
+;; 	   (map ;; add 1 to the month numbers, since gnuplot counts
+;; 		;; months from 1, not 0
+;; 	     (lambda (cell)
+;; 	       (cons (1+ (car cell)) (cdr cell)))
+;; 	   (mu:stats:per-month EXPR)))
+;; 	  (datafile (mu:stats:export data))
+;; 	  (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
+;;     ;; note, we cannot use the weekday "%a" support in gnuplot because
+;;     ;; demands the field to be a date field ('set xdata time' etc.)
+;;     ;; for that to work, but we cannot use that since gnuplot does not
+;;     ;; support weekdays ('%w') as a date field in its input
+;;     (display (string-append
+;; 	       "reset\n"
+;; 	       "set xtics (\"Sun\" 0, \"Mon\" 1, \"Tue\" 2, \"Wed\" 3,"
+;; 	                  "\"Thu\" 4, \"Fri\" 5, \"Sat\" 6);\n"
+;; 	       "set xlabel \"Weekday\"\n"
+;; 	       "set ylabel \"# of messages\"\n"
+;; 	       "set boxwidth 0.9\n") gnuplot)
+;;     (display (string-append "plot \"" datafile "\" using 1:2 with boxes fs solid\n")
+;;       gnuplot)
+;;     (close-pipe gnuplot)))
+
 
 (define* (mu:stats:per-hour #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
@@ -95,7 +144,7 @@ that match it. The result is a list of pairs (weekday . frequency).\n"
 		  (lambda (msg) (tm:hour (localtime (mu:msg:date msg)))) EXPR)))
     (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of hour
 
-	   
+
 (define* (mu:stats:per-year #:optional (EXPR ""))
   "Count the total number of messages for each year since 1970. If the
 optional EXPR is provided, only count the messages that match it. The
@@ -136,7 +185,7 @@ that match it."
     (lambda (msg) (mu:msg:subject msg)) N EXPR))
 
 (define* (mu:stats:table pairs #:optional (port (current-output-port)))
-  "display a list of PAIRS in a table-like fashion"
+  "Display a list of PAIRS in a table-like fashion."
   (let ((maxlen 0))
     (for-each ;; find the widest in the first col
       (lambda (pair)
@@ -146,9 +195,18 @@ that match it."
       (lambda (pair)
 	(let ((first (format #f "~s" (car pair)))
 	       (second (format #f "~s" (cdr pair))))
-	  (display (format #f "~A~v_~A\n"  
+	  (display (format #f "~A~v_~A\n"
 		     first (- maxlen (string-length first)) second) port)))
       pairs)))
+
+;; (define* (mu:stats:histogram pairs #:optional (port (current-output-port)))
+;;   "Display a histogram of the list of cons pairs; the car of each pair
+;; is used for the x-asxis, while the cdr represents the y value."
+;;   (let ((pairs ;; pairs may be unsorted, so let's sort first
+;; 	  (sort (pairs) (lambda(x1 x2) (< x1 x2)))))
+
+
+
 
 (define (mu:stats:export pairs)
   "Export PAIRS to a temporary file, return its name. The data can
@@ -156,4 +214,5 @@ then be used in, e.g., R and gnuplot."
   (let* ((datafile (tmpnam))
 	  (output (open datafile (logior O_CREAT O_WRONLY) #O0644)))
     (mu:stats:table pairs output)
+    (close output)
     datafile))
