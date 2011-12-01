@@ -194,9 +194,12 @@ test_mu_find_mime (void)
 static void
 test_mu_find_text_in_rfc822 (void)
 {
-
+	search ("embed:dancing", 1);
+	search ("e:curious", 1);
+	search ("embed:with", 2);
+	search ("e:karjala", 0);
+	search ("embed:navigation", 1);
 }
-
 
 
 /* some more tests */
@@ -687,7 +690,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-find-02", test_mu_find_02);
 
 	g_test_add_func ("/mu-cmd/test-mu-find-file", test_mu_find_file);
+
 	g_test_add_func ("/mu-cmd/test-mu-find-mime", test_mu_find_mime);
+
 	g_test_add_func ("/mu-cmd/test-mu-find-text-in-rfc822",
 			 test_mu_find_text_in_rfc822);
 
