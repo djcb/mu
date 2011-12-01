@@ -27,15 +27,14 @@ GTAGS
 *.lo
 *.o
 *.la
-
+*.x
+*.go
+*.gz
+*.bz2
+\#*
 
 
 /contrib/gmime-test
-/toys/muile/muile
-/toys/muile/dummy.cc
-/libmuguile/mu-guile-log.x
-/libmuguile/mu-guile-msg.x
-/libmuguile/mu-guile-store.x
 /emacs/TODO
 test-mu-cmd
 test-mu-cmd-cfind
@@ -52,3 +51,4 @@ test-mu-str
 test-mu-threads
 test-mu-util
 src/mu
+mm-version.el
