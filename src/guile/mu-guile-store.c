@@ -23,7 +23,7 @@
 
 #include "mu-guile-msg.h"
 #include "mu-guile-store.h"
-#include "mu-guile-common.h"
+#include "mu-guile-util.h"
 
 static MuQuery*
 get_query (void)
@@ -41,7 +41,7 @@ get_query (void)
 		mu_store_unref (store);
 
 	if (!query) {
-		mu_guile_g_error ("<internal error>", err);
+		mu_guile_util_g_error ("<internal error>", err);
 		g_clear_error (&err);
 	}
 
@@ -59,7 +59,7 @@ get_query_iter (MuQuery *query, const char* expr)
 	iter = mu_query_run (query, expr,
 			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, &err);
 	if (!iter) {
-		mu_guile_g_error ("<internal error>", err);
+		mu_guile_util_g_error ("<internal error>", err);
 		g_clear_error (&err);
 	}
 
@@ -81,7 +81,7 @@ call_func (SCM FUNC, MuMsgIter *iter, const char* func_name)
 }
 
 
-SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
+SCM_DEFINE_PUBLIC (store_foreach, "mu:store:for-each", 1, 1, 0,
 	    (SCM FUNC, SCM EXPR),
 	    "Call FUNC for each message in the store, or, if EXPR is specified, "
 	    "for each message matching EXPR.\n")
@@ -93,7 +93,7 @@ SCM_DEFINE (store_foreach, "mu:store:for-each", 1, 1, 0,
 	const char* expr;
 
 	SCM_ASSERT (scm_procedure_p (FUNC), FUNC, SCM_ARG1, FUNC_NAME);
-	SCM_ASSERT (scm_is_string (EXPR) || EXPR == SCM_UNSPECIFIED,
+	SCM_ASSERT (scm_is_string (EXPR) || EXPR == SCM_UNDEFINED,
 		    EXPR, SCM_ARG2, FUNC_NAME);
 
 	query = get_query ();
@@ -125,5 +125,3 @@ mu_guile_store_init (void *data)
 
 	return NULL;
 }
-
-

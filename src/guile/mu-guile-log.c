@@ -17,7 +17,7 @@
 **
 */
 
-#include "mu-guile-common.h"
+#include "mu-guile-util.h"
 #include "mu-guile-log.h"
 
 enum _LogType {
@@ -33,17 +33,17 @@ write_log (LogType logtype, SCM FRM, SCM ARGS)
 #define FUNC_NAME __FUNCTION__
 {
 	SCM str;
-	
+
 	SCM_ASSERT (scm_is_string(FRM), FRM, SCM_ARG1, "<write_log>");
 	SCM_VALIDATE_REST_ARGUMENT(ARGS);
-	
+
 	str = scm_simple_format (SCM_BOOL_F, FRM, ARGS);
-	
+
 	if (scm_is_string (str)) {
 
 		gchar *output;
 		output = scm_to_utf8_string (str);
-		
+
 		switch (logtype) {
 		case LOG_INFO:     g_message ("%s", output); break;
 		case LOG_WARNING:  g_warning ("%s", output); break;
@@ -57,7 +57,7 @@ write_log (LogType logtype, SCM FRM, SCM ARGS)
 }
 
 
-SCM_DEFINE (log_info, "mu:log:info", 1, 0, 1,  (SCM FRM, SCM ARGS),
+SCM_DEFINE_PUBLIC (log_info, "mu:log:info", 1, 0, 1,  (SCM FRM, SCM ARGS),
 	    "log some message using a list of ARGS applied to FRM "
 	    "(in 'simple-format' notation).\n")
 #define FUNC_NAME s_info
@@ -66,7 +66,7 @@ SCM_DEFINE (log_info, "mu:log:info", 1, 0, 1,  (SCM FRM, SCM ARGS),
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (log_warning, "mu:log:warning", 1, 0, 1,  (SCM FRM, SCM ARGS),
+SCM_DEFINE_PUBLIC (log_warning, "mu:log:warning", 1, 0, 1,  (SCM FRM, SCM ARGS),
 	    "log some warning using a list of ARGS applied to FRM (in 'simple-format' "
 	    "notation).\n")
 #define FUNC_NAME s_warning
@@ -75,7 +75,7 @@ SCM_DEFINE (log_warning, "mu:log:warning", 1, 0, 1,  (SCM FRM, SCM ARGS),
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (log_critical, "mu:log:critical", 1, 0, 1,  (SCM FRM, SCM ARGS),
+SCM_DEFINE_PUBLIC (log_critical, "mu:log:critical", 1, 0, 1,  (SCM FRM, SCM ARGS),
 	    "log some critical message using a list of ARGS applied to FRM "
 	    "(in 'simple-format' notation).\n")
 #define FUNC_NAME s_critical
@@ -87,10 +87,8 @@ SCM_DEFINE (log_critical, "mu:log:critical", 1, 0, 1,  (SCM FRM, SCM ARGS),
 
 void*
 mu_guile_log_init (void *data)
-{	
+{
 #include "mu-guile-log.x"
 
 	return NULL;
 }
-
-

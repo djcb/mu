@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef __MU_GUILE_COMMON_H__
-#define __MU_GUILE_COMMON_H__
+#ifndef __MU_GUILE_UTIL_H__
+#define __MU_GUILE_UTIL_H__
 
 #include <libguile.h>
 
@@ -30,41 +30,44 @@
 
 G_BEGIN_DECLS
 
-/**
- * output an error 
- * 
- * @param func_name 
- * @param status 
- * @param fmt 
- * @param args 
- */
-void mu_guile_error (const char *func_name, int status,
-		     const char *fmt, SCM args);
 
+/**
+ * start a guile shell with the mu modules loaded. function does not return
+ *
+ * @param argcp pointer to argc
+ * @param argvp pointer to argv
+ *
+ * @return FALSE in case of error, otherwise, the function will not return
+ */
+gboolean mu_guile_util_run (int *argcp, char **argvp[]);
+
+
+/**
+ * output an error
+ *
+ * @param func_name
+ * @param status
+ * @param fmt
+ * @param args
+ */
+SCM mu_guile_util_error (const char *func_name, int status,
+			  const char *fmt, SCM args);
 
 /**
  * display a GError as a Guile error
- * 
+ *
  * @param func_name function name
  * @param err Gerror
  */
-void mu_guile_g_error (const char *func_name, GError *err);
+SCM mu_guile_util_g_error (const char *func_name, GError *err);
 
 
-/**
- * initialize the mu guile modules
- * 
- */
-void mu_guile_init (void);
-
-
-/* compatibility functions for old guile */
+/* compatibility functions for guile 1.8 */
 #if HAVE_PRE2_GUILE
 SCM   scm_from_utf8_string (const char* str);
-char* scm_to_utf8_string (SCM scm);
+char* scm_to_utf8_string   (SCM scm);
 #endif /*HAVE_PRE2_GUILE*/
 
 G_END_DECLS
 
-#endif /*__MU_GUILE_COMMON_H__*/
-
+#endif /*__MU_GUILE_UTIL_H__*/

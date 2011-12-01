@@ -22,7 +22,7 @@
 #include <mu-runtime.h>
 
 #include "mu-guile-msg.h"
-#include "mu-guile-common.h"
+#include "mu-guile-util.h"
 
 struct _MuMsgWrapper {
 	MuMsg   *_msg;
@@ -38,7 +38,6 @@ mu_guile_scm_is_msg (SCM scm)
 	return SCM_NIMP(scm) && (long)SCM_CAR(scm) == MSG_TAG;
 }
 
-
 SCM
 mu_guile_msg_to_scm (MuMsg *msg)
 {
@@ -53,7 +52,7 @@ mu_guile_msg_to_scm (MuMsg *msg)
 	SCM_RETURN_NEWSMOB (MSG_TAG, msgwrap);
 }
 
-SCM_DEFINE (msg_make_from_file, "mu:msg:make-from-file", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_make_from_file, "mu:msg:make-from-file", 1, 0, 0,
 	    (SCM PATH),
 	    "Create a message object based on the message in PATH.\n")
 #define FUNC_NAME s_msg_make_from_file
@@ -67,7 +66,7 @@ SCM_DEFINE (msg_make_from_file, "mu:msg:make-from-file", 1, 0, 0,
 	msg = mu_msg_new_from_file (scm_to_utf8_string (PATH), NULL, &err);
 
 	if (err) {
-		mu_guile_g_error (FUNC_NAME, err);
+		mu_guile_util_g_error (FUNC_NAME, err);
 		g_error_free (err);
 	}
 
@@ -76,7 +75,7 @@ SCM_DEFINE (msg_make_from_file, "mu:msg:make-from-file", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
+SCM_DEFINE_PUBLIC (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
 	    (SCM MSG, SCM TARGETMDIR),
 	    "Move message to another maildir TARGETMDIR. Note that this the "
 	    "base-level Maildir, ie. /home/user/Maildir/archive, and must"
@@ -102,7 +101,7 @@ SCM_DEFINE (msg_move, "mu:msg:move-to-maildir", 2, 0, 0,
 				     scm_to_utf8_string (TARGETMDIR), flags,
 				     FALSE, &err);
 	if (!rv && err) {
-		mu_guile_g_error (FUNC_NAME, err);
+		mu_guile_util_g_error (FUNC_NAME, err);
 		g_error_free (err);
 	}
 
@@ -141,7 +140,7 @@ msg_num_field (SCM msg_smob, MuMsgFieldId mfid)
 }
 
 
-SCM_DEFINE (msg_date, "mu:msg:date", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_date, "mu:msg:date", 1, 0, 0,
 	    (SCM MSG),
 	    "Get the date (time in seconds since epoch) for MSG.\n")
 #define FUNC_NAME s_msg_date
@@ -155,7 +154,7 @@ SCM_DEFINE (msg_date, "mu:msg:date", 1, 0, 0,
 
 
 
-SCM_DEFINE (msg_size, "mu:msg:size", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_size, "mu:msg:size", 1, 0, 0,
 	    (SCM MSG),
 	    "Get the size in bytes for MSG.\n")
 #define FUNC_NAME s_msg_size
@@ -169,7 +168,7 @@ SCM_DEFINE (msg_size, "mu:msg:size", 1, 0, 0,
 
 
 
-SCM_DEFINE (msg_prio, "mu:msg:priority", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_prio, "mu:msg:priority", 1, 0, 0,
 	    (SCM MSG),
 	    "Get the priority of MSG (low, normal or high).\n")
 #define FUNC_NAME s_msg_prio
@@ -216,7 +215,7 @@ check_flag (MuFlags flag, FlagData *fdata)
 }
 
 
-SCM_DEFINE (msg_flags, "mu:msg:flags", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_flags, "mu:msg:flags", 1, 0, 0,
 	    (SCM MSG),
 	    "Get the flags for MSG (one or or more of new, passed, replied, "
 	    "seen, trashed, draft, flagged, unread, signed, encrypted, "
@@ -239,7 +238,7 @@ SCM_DEFINE (msg_flags, "mu:msg:flags", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_subject, "mu:msg:subject", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_subject, "mu:msg:subject", 1, 0, 0,
 	    (SCM MSG), "Get the subject of MSG.\n")
 #define FUNC_NAME s_msg_subject
 {
@@ -250,7 +249,7 @@ SCM_DEFINE (msg_subject, "mu:msg:subject", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_from, "mu:msg:from", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_from, "mu:msg:from", 1, 0, 0,
 	    (SCM MSG), "Get the sender of MSG.\n")
 #define FUNC_NAME s_msg_from
 {
@@ -309,7 +308,7 @@ contact_list_field (SCM msg_smob, MuMsgFieldId mfid)
 }
 
 
-SCM_DEFINE (msg_to, "mu:msg:to", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_to, "mu:msg:to", 1, 0, 0,
 	    (SCM MSG), "Get the list of To:-recipients of MSG.\n")
 #define FUNC_NAME s_msg_to
 {
@@ -321,7 +320,7 @@ SCM_DEFINE (msg_to, "mu:msg:to", 1, 0, 0,
 
 
 
-SCM_DEFINE (msg_cc, "mu:msg:cc", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_cc, "mu:msg:cc", 1, 0, 0,
 	    (SCM MSG), "Get the list of Cc:-recipients of MSG.\n")
 #define FUNC_NAME s_msg_cc
 {
@@ -332,7 +331,7 @@ SCM_DEFINE (msg_cc, "mu:msg:cc", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_bcc, "mu:msg:bcc", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_bcc, "mu:msg:bcc", 1, 0, 0,
 	    (SCM MSG), "Get the list of Bcc:-recipients of MSG.\n")
 #define FUNC_NAME s_msg_bcc
 {
@@ -343,7 +342,7 @@ SCM_DEFINE (msg_bcc, "mu:msg:bcc", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_path, "mu:msg:path", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_path, "mu:msg:path", 1, 0, 0,
 	    (SCM MSG), "Get the filesystem path for MSG.\n")
 #define FUNC_NAME s_msg_path
 {
@@ -354,7 +353,7 @@ SCM_DEFINE (msg_path, "mu:msg:path", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_maildir, "mu:msg:maildir", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_maildir, "mu:msg:maildir", 1, 0, 0,
 	    (SCM MSG), "Get the maildir where MSG lives.\n")
 #define FUNC_NAME s_msg_maildir
 {
@@ -366,7 +365,7 @@ SCM_DEFINE (msg_maildir, "mu:msg:maildir", 1, 0, 0,
 
 
 
-SCM_DEFINE (msg_msgid, "mu:msg:message-id", 1, 0, 0,
+SCM_DEFINE_PUBLIC (msg_msgid, "mu:msg:message-id", 1, 0, 0,
 	    (SCM MSG), "Get the MSG's message-id.\n")
 #define FUNC_NAME s_msg_msgid
 {
@@ -375,7 +374,7 @@ SCM_DEFINE (msg_msgid, "mu:msg:message-id", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_body, "mu:msg:body", 1, 1, 0,
+SCM_DEFINE_PUBLIC (msg_body, "mu:msg:body", 1, 1, 0,
 		    (SCM MSG, SCM HTML), "Get the MSG's body. If HTML is #t, "
 		    "prefer the html-version, otherwise prefer plain text.\n")
 #define FUNC_NAME s_msg_body
@@ -399,7 +398,7 @@ SCM_DEFINE (msg_body, "mu:msg:body", 1, 1, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (msg_header, "mu:msg:header", 1, 1, 0,
+SCM_DEFINE_PUBLIC (msg_header, "mu:msg:header", 1, 1, 0,
 		    (SCM MSG, SCM HEADER), "Get an arbitary HEADER from MSG.\n")
 #define FUNC_NAME s_msg_header
 {
@@ -408,7 +407,8 @@ SCM_DEFINE (msg_header, "mu:msg:header", 1, 1, 0,
 	const char *val;
 
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
-	SCM_ASSERT (scm_is_string (HEADER), HEADER, SCM_ARG2, FUNC_NAME);
+	SCM_ASSERT (scm_is_string (HEADER)||HEADER==SCM_UNDEFINED,
+		    HEADER, SCM_ARG2, FUNC_NAME);
 
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 	header  =  scm_to_utf8_string (HEADER);
@@ -440,7 +440,7 @@ msg_string_list_field (SCM msg_smob, MuMsgFieldId mfid)
 }
 
 
-SCM_DEFINE (msg_tags, "mu:msg:tags", 1, 1, 0,
+SCM_DEFINE_PUBLIC (msg_tags, "mu:msg:tags", 1, 0, 0,
 		    (SCM MSG), "Get the list of tags (contents of the "
 		    "X-Label:-header) for MSG.\n")
 #define FUNC_NAME s_msg_tags
@@ -453,7 +453,7 @@ SCM_DEFINE (msg_tags, "mu:msg:tags", 1, 1, 0,
 
 
 
-SCM_DEFINE (msg_refs, "mu:msg:references", 1, 1, 0,
+SCM_DEFINE_PUBLIC (msg_refs, "mu:msg:references", 1, 0, 0,
 	    (SCM MSG), "Get the list of referenced message-ids "
 	    "(contents of the References: and Reply-To: headers).\n")
 #define FUNC_NAME s_msg_refs
@@ -564,7 +564,6 @@ mu_guile_msg_load_current (const char *path)
 void*
 mu_guile_msg_init (void *data)
 {
-
 	MSG_TAG = scm_make_smob_type ("msg", sizeof(MuMsgWrapper));
 
 	scm_set_smob_mark  (MSG_TAG, msg_mark);
@@ -577,5 +576,3 @@ mu_guile_msg_init (void *data)
 
 	return NULL;
 }
-
-

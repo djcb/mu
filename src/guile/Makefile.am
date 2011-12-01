@@ -2,7 +2,7 @@
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
-## t	he Free Software Foundation; either version 3 of the License, or
+## the Free Software Foundation; either version 3 of the License, or
 ## (at your option) any later version.
 ##
 ## This program is distributed in the hope that it will be useful,
@@ -16,38 +16,50 @@
 
 include $(top_srcdir)/gtest.mk
 
+# don't use -Werror, as it might break on other compilers
+# use -Wno-unused-parameters, because some callbacks may not
+# really need all the params they get
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+
 # note, we need top_builddir for snarfing with 'make distcheck' (ie.,
 # with separate builddir)
-SUBDIRS= .
-INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/src -I${top_srcdir}/libmuguile ${GUILE_CFLAGS} ${GLIB_CFLAGS}
+SUBDIRS= . mu
+INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra  -Wno-unused-parameter -Wdeclaration-after-statement -Wno-missing-braces \
-	  -Wno-missing-field-initializers
 
-noinst_LTLIBRARIES=			\
-	libmuguile.la
+lib_LTLIBRARIES=			\
+	libguile-mu.la
 
-libmuguile_la_SOURCES=			\
+libguile_mu_la_SOURCES=			\
+	mu-guile.c			\
+	mu-guile.h			\
 	mu-guile-msg.c			\
 	mu-guile-msg.h			\
 	mu-guile-store.c		\
 	mu-guile-store.h		\
 	mu-guile-log.c			\
 	mu-guile-log.h			\
-	mu-guile-common.c		\
-	mu-guile-common.h
+	mu-guile-util.c			\
+	mu-guile-util.h
 
-libmuguile_la_LIBADD=			\
+libguile_mu_la_LIBADD=			\
 	${top_builddir}/src/libmu.la	\
 	${GUILE_LIBS}
 
 XFILES=					\
 	mu-guile-msg.x			\
 	mu-guile-store.x		\
-	mu-guile-log.x
+	mu-guile-log.x			\
+	mu-guile.x
+
+moduledir=$(GUILE_SITEDIR)
+
+module_DATA=				\
+	mu.scm
 
 BUILT_SOURCES=$(XFILES)
 
@@ -59,5 +71,7 @@ SUFFIXES = .x .doc
 ## Add -MG to make the .x magic work with auto-dep code.
 MKDEP = $(CC) -M -MG $(snarfcppopts)
 
-
 DISTCLEANFILES=$(XFILES)
+
+EXTRA_DIST=				\
+	mu.scm

@@ -16,14 +16,13 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=mm
+moduledir=$(GUILE_SITEDIR)/mu
 
-# build if there is some gtk available
-if HAVE_GTK
-SUBDIRS += mug
-endif
+module_DATA=		\
+	msg.scm		\
+	log.scm		\
+	store.scm	\
+	stats.scm
 
-# for mug2, we need webkit
-if BUILD_WIDGETS
-SUBDIRS += mug2
-endif
+EXTRA_DIST=		\
+	README
