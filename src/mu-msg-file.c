@@ -709,7 +709,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 
 	switch (mfid) {
 
-	case MU_MSG_FIELD_ID_ATTACH_TEXT: *do_free = TRUE;
+	case MU_MSG_FIELD_ID_EMBEDDED_TEXT: *do_free = TRUE;
 		return NULL; /* FIXME */
 
 	case MU_MSG_FIELD_ID_BCC:

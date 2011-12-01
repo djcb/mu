@@ -71,21 +71,45 @@ struct _PartData {
 typedef struct _PartData PartData;
 
 
-
 char*
-mu_msg_part_to_string (MuMsgPart *part, gboolean *err)
+mu_msg_part_get_text (MuMsgPart *self, gboolean *err)
 {
-	char *txt;
+	GMimeObject *mobj;
 
-	g_return_val_if_fail (part && part->data, NULL);
+	g_return_val_if_fail (self && self->data, NULL);
 
-	if (GMIME_IS_PART(part->data))
-		txt = mu_msg_mime_part_to_string (GMIME_PART(part->data),
-						  err);
-	else
-		txt = NULL;
+	mobj = (GMimeObject*)self->data;
 
-	return txt;
+	if (GMIME_IS_PART(mobj))
+		return mu_msg_mime_part_to_string ((GMimePart*)mobj, err);
+	else if (GMIME_IS_MESSAGE(mobj)) {
+		/* when it's an (embedded) message, the text is just
+		 * of the message metadata, so we can index it.
+		 */
+		GString *data;
+		GMimeMessage *msg;
+		InternetAddressList *addresses;
+		gchar *adrs;
+
+		msg = (GMimeMessage*)mobj;
+		data = g_string_sized_new (512); /* just a guess */
+
+		g_string_append (data, g_mime_message_get_sender(msg));
+		g_string_append_c (data, '\n');
+		g_string_append (data, g_mime_message_get_subject(msg));
+		g_string_append_c (data, '\n');
+
+		addresses = g_mime_message_get_all_recipients (msg);
+		adrs = internet_address_list_to_string (addresses, FALSE);
+		g_object_unref(G_OBJECT(addresses));
+
+		g_string_append (data, adrs);
+		g_free (adrs);
+
+		return g_string_free (data, FALSE);
+	} else
+
+	return NULL;
 }
 
 
@@ -110,34 +134,46 @@ get_part_size (GMimePart *part)
 }
 
 
-
 static void
-part_foreach_cb (GMimeObject *parent, GMimeObject *part, PartData *pdata)
+part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 {
 	GMimeContentType *ct;
 	MuMsgPart pi;
 
 	memset (&pi, 0, sizeof pi);
 	pi.index       = pdata->_idx++;
-	pi.content_id  = (char*)g_mime_object_get_content_id (part);
-	pi.data        = (gpointer)part;
+	pi.content_id  = (char*)g_mime_object_get_content_id (mobj);
+	pi.data        = (gpointer)mobj;
 
 	/* check if this is the body part */
-	pi.is_body     = ((void*)pdata->_body_part == (void*)part);
+	pi.is_body     = ((void*)pdata->_body_part == (void*)mobj);
 
-	ct = g_mime_object_get_content_type (part);
+	ct = g_mime_object_get_content_type (mobj);
 
 	if (GMIME_IS_CONTENT_TYPE(ct)) {
 		pi.type	   = (char*)g_mime_content_type_get_media_type (ct);
 		pi.subtype = (char*)g_mime_content_type_get_media_subtype (ct);
+
+		/* g_print ("==> [%s: %s / %s ]\n", pi.type, pi.subtype, */
+		/* 	 G_OBJECT_TYPE_NAME(mobj)); */
 	}
 
-	if (GMIME_IS_PART(part)) {
-		pi.disposition = (char*)g_mime_object_get_disposition (part);
-		pi.file_name   = (char*)g_mime_part_get_filename (GMIME_PART(part));
-		pi.size        = get_part_size (GMIME_PART(part));
-	} else
-		return; /* only deal with GMimePart */
+	if (GMIME_IS_PART(mobj)) {
+		GMimePart *part;
+		part = (GMimePart*)mobj;
+		pi.disposition = (char*)g_mime_object_get_disposition (mobj);
+		pi.file_name   = (char*)g_mime_part_get_filename (part);
+		pi.size        = get_part_size (part);
+		pi.is_leaf     = TRUE;
+
+	} else if (GMIME_IS_MESSAGE_PART(mobj)) {
+		GMimeMessage *mmsg;
+		mmsg = g_mime_message_part_get_message ((GMimeMessagePart*)mobj);
+		if (mmsg)
+			g_mime_message_foreach /* recurse */
+				(mmsg, (GMimeObjectForeachFunc)part_foreach_cb,
+				 pdata);
+	}
 
 	pdata->_func(pdata->_msg, &pi, pdata->_user_data);
 }
@@ -177,7 +213,7 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
 	PartData pdata;
 	GMimeMessage *mime_msg;
 
-	g_return_if_fail (msg && msg->_file && msg->_file->_mime_msg);
+	g_return_if_fail (msg);
 
 	if (!load_msg_file_maybe (msg))
 		return;

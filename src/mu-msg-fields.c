@@ -88,14 +88,6 @@ typedef struct _MuMsgField MuMsgField;
 static const MuMsgField FIELD_DATA[] = {
 
 	{
-		MU_MSG_FIELD_ID_ATTACH_TEXT,
-		MU_MSG_FIELD_TYPE_STRING,
-		"attach", 'a', 'A',
-		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE |
-		FLAG_DONT_CACHE
-	},
-
-	{
 		MU_MSG_FIELD_ID_BCC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"bcc" , 'h', 'H',  /* 'hidden */
@@ -131,6 +123,14 @@ static const MuMsgField FIELD_DATA[] = {
 		"date", 'd', 'D',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
 		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY
+	},
+
+	{
+		MU_MSG_FIELD_ID_EMBEDDED_TEXT,
+		MU_MSG_FIELD_TYPE_STRING,
+		"embed", 'e', 'E',
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE |
+		FLAG_DONT_CACHE
 	},
 
 	{

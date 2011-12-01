@@ -53,6 +53,8 @@ struct _MuMsgPart {
 
 	gboolean         is_body; /* TRUE if this is probably the
 				   * message body*/
+	gboolean	 is_leaf; /* if the body is a leaf part (MIME
+				   * Part), not eg. a multipart/ */
 
 	/* if TRUE, mu_msg_part_destroy will free the member vars
 	 * as well*/
@@ -81,14 +83,14 @@ typedef struct _MuMsgPart MuMsgPart;
 
 
 /**
- * convert a MuMsgPart to a string
+ * get the text in the MuMsgPart (ie. in its GMimePart)
  *
  * @param part a MuMsgPart
  * @param err will receive TRUE if there was an error, FALSE otherwise
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
-char* mu_msg_part_to_string (MuMsgPart *part, gboolean *err);
+char* mu_msg_part_get_text (MuMsgPart *part, gboolean *err);
 
 
 /**

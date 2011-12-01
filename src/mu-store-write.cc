@@ -403,41 +403,43 @@ struct PartData {
 	MuMsgFieldId _mfid;
 };
 
+static gboolean
+is_textual (MuMsgPart *part)
+{
+	/* all text parts except text/html */
+	if ((strcasecmp (part->type, "text") == 0) &&
+	    (strcasecmp (part->subtype, "html") != 0))
+		return TRUE;
+
+	/* message/rfc822 */
+	if ((strcasecmp (part->type, "message") == 0) &&
+	    (strcasecmp (part->subtype, "rfc822") == 0))
+		return TRUE;
+
+	return FALSE;
+}
+
 
 static gboolean
 index_text_part (MuMsgPart *part, PartData *pdata)
 {
-	unsigned u;
-	gboolean txt_type, err;
+	gboolean err;
 	char *txt, *norm;
 	Xapian::TermGenerator termgen;
 
-	/* check wether it's a type we need to store */
-	struct { const char* type; const char *subtype; } txt_types[] = {
-		{ "text",    "plain"},
-		{ "message", "rfc822"},
-	};
+	if (!is_textual (part))
+		return FALSE;
 
-	txt_type = FALSE;
-	for (u = 0; u != G_N_ELEMENTS(txt_types) && !txt_type; ++u) {
-		if ((strcasecmp (part->type,    txt_types[u].type) == 0) &&
-		    ((strcasecmp (part->subtype, txt_types[u].subtype) == 0) ||
-		     (strcmp (txt_types[u].subtype, "*") == 0)))
-			txt_type = TRUE;
-	}
-
-	if (!txt_type)
-		return FALSE; /* not a supported text type */
-
-	txt = mu_msg_part_to_string (part, &err);
+	txt = mu_msg_part_get_text (part, &err);
 	if (!txt || err)
 		return FALSE;
 
 	termgen.set_document(pdata->_doc);
 
 	norm = mu_str_normalize (txt, TRUE);
+
 	termgen.index_text_without_positions
-		(norm, 1, prefix(MU_MSG_FIELD_ID_ATTACH_TEXT));
+		(norm, 1, prefix(MU_MSG_FIELD_ID_EMBEDDED_TEXT));
 
 	g_free (norm);
 	g_free (txt);
@@ -462,6 +464,8 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 		char ctype[MuStore::MAX_TERM_LENGTH + 1];
 		snprintf (ctype, sizeof(ctype), "%s_%s",
 			  part->type, part->subtype);
+		// g_print ("store: %s\n", ctype);
+
 		pdata->_doc.add_term
 			(mime + std::string(ctype, 0, MuStore::MAX_TERM_LENGTH));
 	}
@@ -564,11 +568,13 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
 
-	/* note: add_terms_values_attach handles these three msgfields */
+	/* note: add_terms_values_attach handles _FILE, _MIME and
+	 * _ATTACH_TEXT msgfields */
 	case MU_MSG_FIELD_ID_FILE:
 		add_terms_values_attach (*msgdoc->_doc, msgdoc->_msg, mfid);
+		break;
 	case MU_MSG_FIELD_ID_MIME:
-	case MU_MSG_FIELD_ID_ATTACH_TEXT:
+	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
 		break;
 	///////////////////////////////////////////
 
