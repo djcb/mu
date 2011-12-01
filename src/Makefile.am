@@ -16,8 +16,13 @@
 
 include $(top_srcdir)/gtest.mk
 
-# enforce compiling this dir first before decending into tests/
+# enforce compiling guile (optionally) first,then this dir first
+# before decending into tests/
 SUBDIRS= .
+
+if HAVE_GUILE
+SUBDIRS += guile
+endif
 
 if BUILD_TESTS
 SUBDIRS += tests
@@ -106,6 +111,7 @@ libmu_la_SOURCES=			\
 	mu-threader.h			\
 	mu-util.c			\
 	mu-util.h
+
 
 
 libmu_la_LIBADD=			\

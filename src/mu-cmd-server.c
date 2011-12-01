@@ -299,7 +299,10 @@ cmd_info (MuStore *store, GSList *lst, GError **err)
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: version");
 
-	send_expr ("(:info version :version \"" VERSION "\" :doccount %u)",
+	send_expr ("(:info version "
+		    ":version \"" VERSION "\" "
+		    ":doccount %u "
+		   ")",
 		   mu_store_count (store, err));
 
 	return MU_OK;
