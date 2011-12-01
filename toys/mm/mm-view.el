@@ -470,6 +470,36 @@ removing '^M' etc."
     (switch-to-buffer mm/view-buffer)
     (kill-buffer)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; functions for org-contacts
+
+(defun mm/org-contacts-from (name-or-email)
+  "Get a message field if we are in view mode; NAME-OR-EMAIL should
+be either 'name or 'email to get the corresponding field. If the
+field is not found, \"\" is returned. Use this with org-contact
+with a template like:
+
+  (\"c\" \"Contacts\" entry (file \"~/Org/contacts.org\")
+          \"* %(mm/org-contacts-from 'name)
+  :PROPERTIES:
+  :EMAIL: %(mm/org-contacts-from 'email)
+  :END:\")))
+
+See the `org-contacts' documentation for more details."
+  (with-current-buffer mm/view-buffer-name ;; hackish...
+    (unless (eq major-mode 'mm/view-mode)
+      (error "Not in mm/view mode."))
+    (unless mm/current-msg
+      (error "No current message."))
+    (let ((from (car-safe (plist-get mm/current-msg :from))))
+      (cond
+	((not from) "") ;; nothing found
+	((eq name-or-email 'name)
+	  (or (car-safe from) ""))
+	((eq name-or-email 'email)
+	  (or (cdr-safe from) ""))
+	(t (error "Not supported: %S" name-or-email))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 

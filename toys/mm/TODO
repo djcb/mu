@@ -1,0 +1,62 @@
+* TODO
+
+** Bugs
+
+*** forward should take the attachments from the original
+*** database locks
+
+
+** Features i
+
+*** mark thread
+*** version check at startup
+*** documentation
+*** customizable bookmarks
+
+
+** Features ii
+
+*** bounce support
+*** sorting
+*** recursive ask-maildir
+*** display unread info at startup
+*** tool bars
+*** make links clickable
+*** colorize cited parts in view
+*** refiling-by-pattern
+*** window management
+*** inspect message (muile)
+*** message statistics
+*** include exchange handling / org integration
+*** integrate with org-contacts, bbdb
+
+
+
+* DONE
+** don't put updated messages at the end
+** mark region
+** editing drafts
+** combine download / re-index
+** toggleable message line wrapping in view
+** threading problems
+** missing? message
+** double messages (different docids though)
+** sometimes commands are not executed immediately
+** menus
+** flag information for content flags (encrypted, signed, has-attach)
+** use top bar
+** add footer to search results
+** q while adding headers
+** handle start/stopping server
+** hostname in draftname
+** make quick folders work for both jump and move
+** synchronize headers / view buffer point
+** make date format customizable
+** add :from-or-to
+** fix to:/cc: etc.
+** give info about target for move
+** --maildir=~/Maildir does not work anymore
+** message threading
+** view raw message
+** Sent Items
+** raw-mode / quit
