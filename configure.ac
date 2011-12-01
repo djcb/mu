@@ -226,10 +226,15 @@ AC_CHECK_LIB([readline], [main],
 ###############################################################################
 # check for guile & guile-snarf
 AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [$PATH])
+AC_PATH_PROG(GUILE, [guile], [], [$PATH])
 AS_IF([test "x$GUILE_CONFIG" != "x"],
-  [GUILE_CFLAGS=`$GUILE_CONFIG compile`; GUILE_LIBS=`$GUILE_CONFIG link`])
+  [GUILE_CFLAGS=`$GUILE_CONFIG compile`;
+   GUILE_LIBS=`$GUILE_CONFIG link`;
+   GUILE_SITEDIR=`$GUILE -c '(write (%site-dir)) (newline)'`
+   AC_DEFINE_UNQUOTED([HAVE_GUILE],1,[Whether we have guile])])
 AC_SUBST(GUILE_LIBS)
 AC_SUBST(GUILE_CFLAGS)
+AC_SUBST(GUILE_SITEDIR)
 
 AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
 AS_IF([test "x$GUILE_SNARF" != "x"],[
@@ -277,14 +282,13 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+src/guile/Makefile
+src/guile/mu/Makefile
 src/tests/Makefile
 widgets/Makefile
-libmuguile/Makefile
 toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile
-toys/muile/Makefile
-toys/procmule/Makefile
 toys/mm/Makefile
 man/Makefile
 m4/Makefile
@@ -354,4 +358,3 @@ fi
 echo
 echo "type 'make' to build mu, or 'make check' to run the unit tests."
 echo "use 'make V=1' to show the detailed output during the build"
-
