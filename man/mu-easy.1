@@ -1,4 +1,4 @@
-.TH MU-EASY 1 "November 2011" "User Manuals"
+.TH MU-EASY 1 "December 2011" "User Manuals"
 
 .SH NAME
 
@@ -178,24 +178,25 @@ You can also search for messages with a certain attachment using their
 filename, for example:
 
 .nf
-  \fB$ mu find 'pic*'\fR
+  \fB$ mu find 'file:pic*'\fR
 .fi
-will get you all message with an attachment starting with 'pic'.
+will get you all messages with an attachment starting with 'pic'.
 
 If you want to find attachments with a certain MIME-type, you can use the
 following:
 
 Get all messages with PDF attachments:
 .nf
-  \fB$ mu find attmime:application/pdf\fR
+  \fB$ mu find mime:application/pdf\fR
 .fi
 
 or even:
 
 Get all messages with image attachments:
 .nf
-  \fB$ mu find 'attmime:image/*'\fR
+  \fB$ mu find 'mime:image/*'\fR
 .fi
+
 
 Note that (1) the '*' wildcard can only be used as the rightmost thing in a
 search query, and (2) that you need to quote the search term, because

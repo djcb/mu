@@ -4,9 +4,8 @@
 
    - '--descending' has  been renamed into '--reverse'
    - search for attachment MIME-type using 'mime:' or 'y:'
-   - search for text in text-attachments using 'attach:' or 'a:'
-   - searching for attachment file names now uses 'file:' (it was 'attach:',
-     but has a different meaning now, see above)
+   - search for text in text-attachments using 'embed:' or 'e:'
+   - searching for attachment file names now uses 'file:' (was: 'attach:')
    - experimental emacs-based mail client
 
 ** Release 0.9.7 <>

@@ -1,4 +1,4 @@
-.TH MU FIND 1 "November 2011" "User Manuals"
+.TH MU FIND 1 "December 2011" "User Manuals"
 
 .SH NAME
 
@@ -122,7 +122,7 @@ search fields and their abbreviations:
 	flag,g          Message Flags
 	date,d          Date-Range
 	size,z          Message size
-	attach,a        Attached message
+	embed,e         Search inside embedded text parts (messages, attachments)
 	file,j          Attachment filename
 	mime,y          MIME-type of one or more message parts
 	tag,x           Tag for the message (contents of the \fIX-Label\fR field)
@@ -479,13 +479,13 @@ Find all unread messages with attachments:
 Find all messages with PDF-attachments:
 
 .nf
-  $ mu find attmime:application/pdf
+  $ mu find mime:application/pdf
 .fi
 
 Find all messages with attached images:
 
 .nf
-  $ mu find 'attmime:image/*'
+  $ mu find 'mime:image/*'
 .fi
 
 Note[1]: the argument needs to be quoted, or the shell will interpret the '*'
