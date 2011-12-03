@@ -1,3 +1,4 @@
+
 * TODO
 
 ** Bugs
@@ -5,17 +6,16 @@
 *** forward should take the attachments from the original
 *** database locks
 
-
 ** Features i
 
-*** mark thread
 *** version check at startup
 *** documentation
-*** customizable bookmarks
+*** emacs install
 
 
 ** Features ii
 
+*** mark thread
 *** bounce support
 *** sorting
 *** recursive ask-maildir
@@ -29,7 +29,6 @@
 *** message statistics
 *** include exchange handling / org integration
 *** integrate with org-contacts, bbdb
-
 
 
 * DONE
@@ -60,3 +59,9 @@
 ** view raw message
 ** Sent Items
 ** raw-mode / quit
+
+# Local Variables:
+# mode: org; org-startup-folded: nil
+# End:
+** customizable bookmarks
+** fix queued sending

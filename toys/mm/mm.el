@@ -86,7 +86,6 @@ PATH, you can specify the full path."
 used to distinguish ourselves from others, e.g. when replying and
 in :from-or-to headers. By default, match nothing.")
 
-
 (defvar mm/date-format-long "%c"
   "Date format to use in the message view, in the format of
   `format-time-string'.")
@@ -94,18 +93,29 @@ in :from-or-to headers. By default, match nothing.")
 (defvar mm/debug nil
   "When set to non-nil, log debug information to the *mm-log* buffer.")
 
+(defvar mm/bookmarks
+  '( ("flag:unread AND NOT flag:trashed" "Unread messages"    ?u)
+     ("date:today..now"                  "Today's messages"   ?t)
+     ("date:7d..now"                     "Last 7 days"        ?w)
+     ("mime:image/*"                     "Messages With Pics" ?p))
+  "A list of pre-defined queries; these will show up in the main
+screen. Each of the list elements is a three-element list of the
+form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
+query, DESCRIPTION is a short description of the query (this will
+show up in the UI), and KEY is a shortcut key for the query.")
+
+
 ;; Folders
 
 (defgroup mm/folders nil
   "Special folders for mm."
   :group 'mm)
 
-
-(defcustom mm/inbox-folder nil
-  "Your Inbox folder, relative to `mm/maildir', e.g. \"/Inbox\"."
-  :type 'string
-  :safe 'stringp
-  :group 'mm/folders)
+;; (defcustom mm/inbox-folder nil
+;;   "Your Inbox folder, relative to `mm/maildir', e.g. \"/Inbox\"."
+;;   :type 'string
+;;   :safe 'stringp
+;;   :group 'mm/folders)
 
 (defcustom mm/sent-folder nil
   "Your folder for sent messages, relative to `mm/maildir',
@@ -265,6 +275,11 @@ flag set)."
   "Face for showing URLs and attachments in the message view."
   :group 'mm/faces)
 
+(defface mm/highlight-face
+  '((t :inherit font-lock-pseudo-keyword-face :bold t))
+  "Face for highlighting things."
+  :group 'mm/faces)
+
 (defface mm/view-url-number-face
   '((t :inherit font-lock-reference-face :bold t))
   "Face for the number tags for URLs."
@@ -319,18 +334,14 @@ in which case it will be equal to `:to'.)")
 (defvar mm/mm-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "I" 'mm/jump-to-inbox)
-    (define-key map "T" 'mm/search-today)
-    (define-key map "W" 'mm/search-last-7-days)
-    (define-key map "U" 'mm/search-unread)
-    (define-key map "D" 'mm/search-drafts)
-
+    (define-key map "b" 'mm/search-bookmark)
     (define-key map "s" 'mm/search)
     (define-key map "q" 'mm/quit-mm)
     (define-key map "j" 'mm/jump-to-maildir)
     (define-key map "c" 'mm/compose-new)
 
     (define-key map "m" 'mm/toggle-mail-sending-mode)
+    (define-key map "f" 'smtpmail-send-queued-mail)
     (define-key map "u" 'mm/retrieve-mail-update-db)
 
     map)
@@ -347,12 +358,20 @@ in which case it will be equal to `:to'.)")
   (setq
     mm/marks-map (make-hash-table :size 16  :rehash-size 2)
     major-mode 'mm/mm-mode
-    mode-name "*mm*"
+    mode-name "mm: main view"
     truncate-lines t
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
+(defun mm/action-str (str)
+  "Highlight the first occurence of [..] in STR."
+  (if (string-match "\\[\\(\\w+\\)\\]" str)
+    (let* ((key (match-string 1 str))
+	  (keystr (propertize key 'face 'mm/highlight-face)))
+      (replace-match keystr nil t str 1))
+    str))
 
+   
 (defun mm()
   "Start mm; should not be called directly, instead, use `mm'"
   (interactive)
@@ -362,58 +381,41 @@ in which case it will be equal to `:to'.)")
        (erase-buffer)
        (insert
 	"* "
-	 (propertize "mm - mail for emacs version " 'face 'mm/title-face)
-	 (propertize  mm/mu-version 'face 'mm/view-header-value-face)
-	 " (send: "
-	 (propertize (if smtpmail-queue-mail "queued" "direct")
-	   'face 'mm/view-header-key-face)
-	 ")"
+	 (propertize "mm - mu mail for emacs version " 'face 'mm/title-face)
+	 (propertize  mm/mu-version 'face 'mm/view-header-key-face)
 	 "\n\n"
-	 "  Watcha wanna do?\n\n"
-	 "      - " (propertize "j" 'face 'highlight) "ump to some maildir\n"
-	 "      - " (propertize "s" 'face 'highlight) "earch for a specific message\n"
-	 "      - " (propertize "c" 'face 'highlight) "ompose a new message\n"
+	 (propertize "  Basics\n\n" 'face 'mm/title-face)
+	 (mm/action-str "\t* [j]ump to some maildir\n")
+	 (mm/action-str "\t* enter a [s]earch query\n")
+	 (mm/action-str "\t* [c]ompose a new message\n")
 	 "\n"
-	 "\n"
+	 (propertize "  Bookmarks\n\n" 'face 'mm/title-face)
+	 (mapconcat
+	   (lambda (bm)
+	     (let* ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
+	       (mm/action-str
+		 (concat "\t* [b" (make-string 1 key) "] " title))))
+	   mm/bookmarks "\n")
 
-	 "    * " (propertize "u" 'face 'highlight) "pdate email\n"
-	 "    * toggle " (propertize "m" 'face 'highlight) "ail sending mode "
 	 "\n"
-	 "    * " (propertize "q" 'face 'highlight) "uit mm\n")
+	 (propertize "  Misc\n\n" 'face 'mm/title-face)
+	 (mm/action-str "\t* [u]pdate email & database\n")
+	 (mm/action-str "\t* toggle [m]ail sending mode ")
+	 "(" (propertize (if smtpmail-queue-mail "queued" "direct")
+	       'face 'mm/view-header-key-face) ")\n"
+	 (mm/action-str "\t* [f]lush queued mail\n")
+	 "\n"
+	 (mm/action-str "\t* [q]uit mm\n"))
       (mm/mm-mode)
       (switch-to-buffer buf))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; interactive functions
 
-(defun mm/jump-to-inbox ()
-  "Jump to your Inbox folder (as specified in `mm/inbox-folder')."
-  (interactive)
-  (mm/hdrs-search (concat "maildir:" mm/inbox-folder)))
 
-(defun mm/search-drafts ()
-  "Jump to your Drafts folder (as specified in `mm/draft-folder')."
-  (interactive)
-  (mm/hdrs-search (concat "maildir:" mm/drafts-folder  " OR flag:draft")))
 
-(defun mm/search-unread ()
-  "List all your unread messages."
-  (interactive)
-  (mm/hdrs-search "flag:unread AND NOT flag:trashed"))
 
-(defun mm/search-today ()
-  "List messages received today."
-  (interactive)
-  (mm/hdrs-search "date:today..now"))
-
-(defun mm/search-last-7-days ()
-  "List messages received in the last 7 days."
-  (interactive)
-  (mm/hdrs-search "date:7d..now"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interactive functions
 
 (defun mm/retrieve-mail-update-db ()
   "Get new mail and update the database."
@@ -424,8 +426,11 @@ in which case it will be equal to `:to'.)")
   "Toggle sending mail mode, either queued or direct."
   (interactive)
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
+  (message
+    (if smtpmail-queue-mail
+      "Outgoing mail will now be queued"
+      "Outgoing mail will now be sent directly"))
   (mm))
-
 
 
 
@@ -458,7 +463,7 @@ in which case it will be equal to `:to'.)")
 
 
 (defun mm/ask-maildir (prompt)
-  "Ask the user for a shortcut as defined in
+  "Ask the user for a shortcut (using PROMPT) as defined in
 `mm/maildir-shortcuts', then return the corresponding folder
 name. If the special shortcut 'o' (for _o_ther) is used, or if
 `mm/maildir-shortcuts is not defined, let user choose from all
@@ -482,6 +487,26 @@ maildirs under `mm/maildir."
 	(or
 	  (car-safe (find-if (lambda (item) (= kar (cdr item))) mm/maildir-shortcuts))
 	  (error "Invalid shortcut '%c'" kar))))))
+
+
+
+(defun mm/ask-bookmark (prompt)
+  "Ask the user for a bookmark (using PROMPT) as defined in
+`mm/bookmarks', then return the corresponding query."
+  (unless mm/bookmarks (error "`mm/bookmarks' is not defined"))
+  (let* ((bmarks
+	   (mapconcat
+	     (lambda (bm)
+	       (let ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
+		 (concat
+		   "[" (propertize (make-string 1 key) 'face 'mm/view-link-face) "]"
+		   title))) mm/bookmarks ", "))
+	  (kar (read-char (concat prompt bmarks)))
+	  (chosen-bm
+	    (find-if (lambda (bm) (= kar (nth 2 bm))) mm/bookmarks)))
+    (unless chosen-bm (error "Invalid shortcut '%c'" kar))
+    (nth 0 chosen-bm)))
+
 
 
 (defun mm/new-buffer (bufname)

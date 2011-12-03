@@ -247,6 +247,8 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mm/search)
+      (define-key map "b" 'mm/search-bookmark)
+      
       (define-key map "q" 'mm/quit-buffer)
 ;;      (define-key map "o" 'mm/change-sort)
       (define-key map "g" 'mm/rerun-search)
@@ -342,7 +344,7 @@ after the end of the search results."
     mm/marks-map (make-hash-table :size 16   :rehash-size 2)
     mm/thread-info-map (make-hash-table :size 512  :rehash-size 2)
     major-mode 'mm/hdrs-mode
-    mode-name "*mm-headers*"
+    mode-name "mm: message headers"
     truncate-lines t
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary)
@@ -612,6 +614,14 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
   (when (mm/ignore-marks)
     (call-interactively 'mm/hdrs-search)))
 
+(defun mm/search-bookmark ()
+  "Search using some bookmarked query."
+  (interactive)
+  (let ((query (mm/ask-bookmark "Bookmark: ")))
+    (when query
+      (mm/hdrs-search query))))
+ 
+
 (defun mm/quit-buffer ()
   "Quit the current buffer."
   (interactive)
@@ -662,7 +672,8 @@ return the new docid. Otherwise, return nil."
 ask user for it."
   (interactive)
   (let ((fld (mm/ask-maildir "Jump to maildir: ")))
-    (mm/hdrs-search (concat "maildir:" fld))))
+    (when fld
+      (mm/hdrs-search (concat "maildir:" fld)))))
 
 
 (defun mm/mark-for-move (&optional target)

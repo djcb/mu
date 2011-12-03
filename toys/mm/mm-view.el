@@ -204,6 +204,7 @@ or if not available, :body-html converted to text)."
       (define-key map "q" 'mm/view-quit-buffer)
 
       (define-key map "s" 'mm/search)
+      (define-key map "b" 'mm/search-bookmark)
       (define-key map "j" 'mm/jump-to-maildir)
 
       (define-key map "g" 'mm/view-go-to-url)
@@ -395,7 +396,7 @@ removing '^M' etc."
   (make-local-variable 'mm/view-buffer)
 
   (setq major-mode 'mm/view-raw-mode
-    mode-name mm/view-raw-buffer-name)
+    mode-name "mm: raw view")
   (setq truncate-lines t buffer-read-only t))
 
 (defvar mm/view-raw-mode-map nil
