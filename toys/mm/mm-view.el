@@ -371,7 +371,8 @@ removing '^M' etc."
 	(add-text-properties p (point-max) '(face mm/view-footer-face))))
     ;; this is fairly simplistic...
     (goto-char (point-min))
-    (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!~,:]*\\)\\>" nil t)
+    (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!~,:]*\\)\\>"
+	     nil t)
       (let ((subst (propertize (match-string-no-properties 0)
 		     'face 'mm/view-link-face)))
 	(incf num)
@@ -580,13 +581,15 @@ See the `org-contacts' documentation for more details."
     (mm/view-message)))
 
 (defun mm/view-extract-attachment (attnum)
-  "Extract the attachment with ATTNUM"
+  "Extract the attachment with ATTNUM."
   (unless mm/attachment-dir (error "`mm/attachment-dir' is not set"))
   (when (or (null mm/attach-map) (zerop (hash-table-count mm/attach-map)))
     (error "No attachments for this message"))
   (interactive "nAttachment to extract:")
   (let* ((att  (gethash attnum mm/attach-map))
-	  (path (when att (concat mm/attachment-dir "/" (nth 1 att))))
+	  (path (and att (concat mm/attachment-dir
+			   "/"  (plist-get att :name))))
+	  (id (and att (plist-get att :index)))
 	  (retry t))
     (unless att (error "Not a valid attachment number"))
     (while retry
@@ -594,11 +597,11 @@ See the `org-contacts' documentation for more details."
       (setq retry
 	(and (file-exists-p path)
 	  (not (y-or-n-p (concat "Overwrite " path "?"))))))
-    (mm/proc-save (plist-get mm/current-msg :docid) (car att) path)))
+    (mm/proc-save (plist-get mm/current-msg :docid) id path)))
 
 (defun mm/view-open-attachment (attnum)
   "Extract the attachment with ATTNUM"
-  (when (zerop (hash-table-count mm/attach-map))
+  (unless mm/attach-map
     (error "No attachments for this message"))
   (interactive "nAttachment to open:")
   (let* ((att (gethash attnum mm/attach-map))
