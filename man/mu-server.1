@@ -1,42 +1,38 @@
-.TH MU SERVER 1 "September 2011" "User Manuals"
+.TH MU-SERVER 1 "December 2011" "User Manuals"
 
 .SH NAME
 
-mu server\-  start a mu process which accepts commands
-
-.SH SYNOPSIS
-
-.B mu server
+mu server \- the mu backend for the mm e-mail cleint
 
 .SH DESCRIPTION
 
-\fBmu server\fR is the \fBmu\fR sub-command for starting a mu server process
-which accepts various commands (see below).  \fBmu server\fR is specifically
-designed for communication with the emacs-text editor, and as such, the output
-is in the form of s-expressions.
+\fBmu server\fR starts a simple shell in which can manipulate the mu
+database. The output of the commands is terms of symbolic expressions
+(s-exps). \fBmu server\fR is not meant for use by humans; instead, it is
+designed specifically for the \fBmm\fR e-mail client.
 
-\fBmu server\fR could be use as a very rudimentary interactive shell, but we
-would recommend the `muile' instead, which is much more powerful and suitable
-for humans.
+.SH OUTPUT FORMAT
 
-.SH OPTIONS
+\fBmu server\fR accepts a number of commands, and delivers its results in
+the form:
 
-.SH RETURN VALUE
+ \\376<length>\\376s-expr
 
-\fBmu server\fR returns 0 upon success, and some other value when an error
-occurs. See \fBmu(1)\fR for a list.
+\\367 (that is, the character with ascii value 254, \\376 in octac notation),
+followed by the length of the s-expression, followed by another \\376,
+followed by the actual s-expression.
 
-.SH BUGS
+By prefixing the expression with length, it can be processed more
+efficiently. The \\376 (254) was choses since it is a value that will never
+occur in valid UTF-8 (in which the s-expressions are encoded).
 
-Please report bugs if you find them:
-.BR http://code.google.com/p/mu0/issues/list
+.SH COMMAND AND RESPONSE
+
+
+
 
 .SH AUTHOR
-
 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 .BR mu(1)
-.BR mu-index(1)
-.BR mu-add(1)
-.BR mu-remove(1)
