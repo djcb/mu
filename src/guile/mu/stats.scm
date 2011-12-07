@@ -19,9 +19,32 @@
 ;; some guile/scheme functions to get various statistics of my mu
 ;; message store.
 
-(use-modules (ice-9 optargs)) ;; for guile 1.x compatibility
-(use-modules (ice-9 popen))   ;; for interfacing with gnuplot
+(use-modules (ice-9 optargs) (ice-9 popen))
 
+(define-module (mu stats)
+  :use-module (mu log)
+  :use-module (mu store)
+  :use-module (mu msg)
+  :export
+  (
+    mu:stats:count
+    mu:stats:average
+    mu:stats:average-size
+    mu:stats:average-recipient-number
+    mu:stats:frequency
+    mu:stats:per-weekday
+    mu:plot:per-weekday
+    mu:stats:per-month
+    mu:plot:per-month
+    mu:stats:per-hour
+    mu:stats:per-year
+    mu:stats:top-n
+    mu:stats:top-n-to
+    mu:stats:top-n-from
+    mu:stats:top-n-subject
+    mu:stats:table
+    mu:stats:histogram
+    mu:stats:export))
 
 ;; note, this is a rather inefficient way to calculate the number; for
 ;; demonstration purposes only...
