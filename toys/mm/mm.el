@@ -30,6 +30,7 @@
 
 (require 'mm-hdrs)
 (require 'mm-view)
+(require 'mm-main)
 (require 'mm-send)
 (require 'mm-proc)
 
@@ -50,13 +51,6 @@
 
 (defcustom mm/mu-binary "mu"
   "Name of the mu-binary to use; if it cannot be found in your
-PATH, you can specify the full path."
-  :type 'file
-  :group 'mm
-  :safe 'stringp)
-
-(defcustom mm/muile-binary "muile"
-  "Name of the muile-binary to use; if it cannot be found in your
 PATH, you can specify the full path."
   :type 'file
   :group 'mm
@@ -90,14 +84,21 @@ in :from-or-to headers. By default, match nothing.")
   "Date format to use in the message view, in the format of
   `format-time-string'.")
 
+(defvar mm/search-results-limit 500
+  "Maximum number of search results (or -1 for unlimited). Since
+limiting search results speeds up searches significantly, it's
+useful to limit this. Note, to ignore the limit, use a prefix
+argument (C-u) before invoking the search.")
+
+
 (defvar mm/debug nil
   "When set to non-nil, log debug information to the *mm-log* buffer.")
 
 (defvar mm/bookmarks
-  '( ("flag:unread AND NOT flag:trashed" "Unread messages"    ?u)
-     ("date:today..now"                  "Today's messages"   ?t)
-     ("date:7d..now"                     "Last 7 days"        ?w)
-     ("mime:image/*"                     "Messages With Pics" ?p))
+  '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
+     ("date:today..now"                  "Today's messages"     ?t)
+     ("date:7d..now"                     "Last 7 days"          ?w)
+     ("mime:image/*"                     "Messages with images" ?p))
   "A list of pre-defined queries; these will show up in the main
 screen. Each of the list elements is a three-element list of the
 form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
@@ -329,122 +330,9 @@ view). Most fields should be self-explanatory. A special one is
 `:from-or-to', which is equal to `:from' unless `:from' matches ,
 in which case it will be equal to `:to'.)")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; mm mode + keybindings
-(defvar mm/mm-mode-map
-  (let ((map (make-sparse-keymap)))
-
-    (define-key map "b" 'mm/search-bookmark)
-    (define-key map "s" 'mm/search)
-    (define-key map "q" 'mm/quit-mm)
-    (define-key map "j" 'mm/jump-to-maildir)
-    (define-key map "c" 'mm/compose-new)
-
-    (define-key map "m" 'mm/toggle-mail-sending-mode)
-    (define-key map "f" 'smtpmail-send-queued-mail)
-    (define-key map "u" 'mm/retrieve-mail-update-db)
-
-    map)
-  "Keymap for the *mm* buffer.")
-(fset 'mm/mm-mode-map mm/mm-mode-map)
-
-(defun mm/mm-mode ()
-  "Major mode for the mm main screen."
-  (interactive)
-
-  (kill-all-local-variables)
-  (use-local-map mm/mm-mode-map)
-
-  (setq
-    mm/marks-map (make-hash-table :size 16  :rehash-size 2)
-    major-mode 'mm/mm-mode
-    mode-name "mm: main view"
-    truncate-lines t
-    buffer-read-only t
-    overwrite-mode 'overwrite-mode-binary))
-
-(defun mm/action-str (str)
-  "Highlight the first occurence of [..] in STR."
-  (if (string-match "\\[\\(\\w+\\)\\]" str)
-    (let* ((key (match-string 1 str))
-	  (keystr (propertize key 'face 'mm/highlight-face)))
-      (replace-match keystr nil t str 1))
-    str))
-
-   
-(defun mm()
-  "Start mm; should not be called directly, instead, use `mm'"
-  (interactive)
-  (let ((buf (get-buffer-create mm/mm-buffer-name))
-	 (inhibit-read-only t))
-    (with-current-buffer buf
-       (erase-buffer)
-       (insert
-	"* "
-	 (propertize "mm - mu mail for emacs version " 'face 'mm/title-face)
-	 (propertize  mm/mu-version 'face 'mm/view-header-key-face)
-	 "\n\n"
-	 (propertize "  Basics\n\n" 'face 'mm/title-face)
-	 (mm/action-str "\t* [j]ump to some maildir\n")
-	 (mm/action-str "\t* enter a [s]earch query\n")
-	 (mm/action-str "\t* [c]ompose a new message\n")
-	 "\n"
-	 (propertize "  Bookmarks\n\n" 'face 'mm/title-face)
-	 (mapconcat
-	   (lambda (bm)
-	     (let* ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
-	       (mm/action-str
-		 (concat "\t* [b" (make-string 1 key) "] " title))))
-	   mm/bookmarks "\n")
-
-	 "\n"
-	 (propertize "  Misc\n\n" 'face 'mm/title-face)
-	 (mm/action-str "\t* [u]pdate email & database\n")
-	 (mm/action-str "\t* toggle [m]ail sending mode ")
-	 "(" (propertize (if smtpmail-queue-mail "queued" "direct")
-	       'face 'mm/view-header-key-face) ")\n"
-	 (mm/action-str "\t* [f]lush queued mail\n")
-	 "\n"
-	 (mm/action-str "\t* [q]uit mm\n"))
-      (mm/mm-mode)
-      (switch-to-buffer buf))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Interactive functions
-
-(defun mm/retrieve-mail-update-db ()
-  "Get new mail and update the database."
-  (interactive)
-  (mm/proc-retrieve-mail-update-db))
-
-(defun mm/toggle-mail-sending-mode ()
-  "Toggle sending mail mode, either queued or direct."
-  (interactive)
-  (setq smtpmail-queue-mail (not smtpmail-queue-mail))
-  (message
-    (if smtpmail-queue-mail
-      "Outgoing mail will now be queued"
-      "Outgoing mail will now be sent directly"))
-  (mm))
-
-
-
 
 
 ;; General helper functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun mm/quit-mm()
-  "Quit the mm session."
-  (interactive)
-  (when (y-or-n-p "Are you sure you want to quit mm? ")
-    (message nil)
-    (mm/kill-proc)
-    (kill-buffer)))
 
 ;; TODO: make this recursive
 (defun mm/get-sub-maildirs (maildir)
