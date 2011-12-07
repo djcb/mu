@@ -129,7 +129,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 	}
 
 	iter = mu_query_run (xapian, query, opts->threads, sortid,
-			     opts->reverse, err);
+			     opts->reverse, -1, err);
 	return iter;
 }
 

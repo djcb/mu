@@ -75,6 +75,8 @@ char* mu_query_version (MuQuery *store)
  * sorting is not desired
  * @param reverse if TRUE, sort in descending (Z-A) order, otherwise,
  * sort in descending (A-Z) order
+ * @param maxnum maximum number of search results to return, or <= 0 for
+ * unlimited
  * @param err receives error information (if there is any); if
  * function returns non-NULL, err will _not_be set. err can be NULL
  * possible error (err->code) is MU_ERROR_QUERY,
@@ -83,7 +85,7 @@ char* mu_query_version (MuQuery *store)
  * case of error
  */
 MuMsgIter* mu_query_run (MuQuery *self, const char* expr, gboolean threads,
-			 MuMsgFieldId sortfieldid, gboolean ascending,
+			 MuMsgFieldId sortfieldid, gboolean ascending, int maxnum,
 			 GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 

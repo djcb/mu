@@ -307,7 +307,7 @@ mu_query_preprocess (const char *query)
 
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
-	      MuMsgFieldId sortfieldid, gboolean revert,
+	      MuMsgFieldId sortfieldid, gboolean revert, int maxnum,
 	      GError **err)
 {
 	g_return_val_if_fail (self, NULL);
@@ -333,7 +333,8 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 
 		return mu_msg_iter_new (
 			(XapianEnquire*)&enq,
-			self->db().get_doccount(), threads,
+			maxnum <= 0 ? self->db().get_doccount() : maxnum,
+			threads,
 			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE,
 			revert);
 

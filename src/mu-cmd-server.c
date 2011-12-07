@@ -81,6 +81,7 @@ install_sig_handler (void)
 }
 
 
+/* BOX - beginning-of-expression */
 #define BOX "\376"
 
 static void  send_expr (const char* frm, ...) G_GNUC_PRINTF(1, 2);
@@ -310,19 +311,29 @@ cmd_info (MuStore *store, GSList *lst, GError **err)
 
 
 
-
+/*
+ * find  <query> <maxnum>
+ * => list of s-expression, each describing a message
+ * => (:found <number of found messages>)
+ */
 static MuError
 cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 {
 	MuMsgIter *iter;
 	unsigned u;
+	int maxnum;
 
-	if (!check_param_num (lst, 1, 1))
+	if (!check_param_num (lst, 2, 2))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: find <searchexpr>");
+				     "usage: find <searchexpr> <maxnum>");
+
+	maxnum = atoi((const char*)lst->next->data);
+	if (maxnum == 0)
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "usage: find <maxnum> <searchexpr>");
 
 	iter = mu_query_run (query, (const char*)lst->data, TRUE,
-			     MU_MSG_FIELD_ID_DATE, TRUE, err);
+			     MU_MSG_FIELD_ID_DATE, TRUE, maxnum, err);
 	if (!iter)
 		return server_error (err, MU_ERROR_INTERNAL,
 				     "couldn't get iterator");
@@ -376,7 +387,7 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 
 	querystr = g_strdup_printf ("msgid:%s", str);
 	iter = mu_query_run (query, querystr, FALSE,
-			     MU_MSG_FIELD_ID_NONE, FALSE, err);
+			     MU_MSG_FIELD_ID_NONE, FALSE, 1, err);
 	g_free (querystr);
 	docid = MU_STORE_INVALID_DOCID;
 	if (!iter || mu_msg_iter_is_done (iter))
@@ -464,7 +475,8 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	 * wel */
 	rv = mu_store_update_msg (store, docid, msg, err);
 	if (rv == MU_STORE_INVALID_DOCID)
-		return server_error (err, MU_ERROR_XAPIAN, "failed to update message");
+		return server_error (err, MU_ERROR_XAPIAN,
+				     "failed to update message");
 
 	sexp = mu_msg_to_sexp (msg, docid, NULL, TRUE);
 	send_expr ("(:update %s :move %s)", sexp, is_move ? "t" : "nil");
