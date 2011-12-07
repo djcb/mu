@@ -57,7 +57,7 @@ get_query_iter (MuQuery *query, const char* expr)
 
 	err = NULL;
 	iter = mu_query_run (query, expr,
-			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, &err);
+			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, -1, &err);
 	if (!iter) {
 		mu_guile_util_g_error ("<internal error>", err);
 		g_clear_error (&err);
