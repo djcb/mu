@@ -204,6 +204,8 @@ or if not available, :body-html converted to text)."
       (define-key map "q" 'mm/view-quit-buffer)
 
       (define-key map "s" 'mm/search)
+      (define-key map "S" 'mm/search-full)
+
       (define-key map "b" 'mm/search-bookmark)
       (define-key map "j" 'mm/jump-to-maildir)
 

@@ -34,6 +34,7 @@
 
     (define-key map "b" 'mm/search-bookmark)
     (define-key map "s" 'mm/search)
+    (define-key map "S" 'mm/search-full)
     (define-key map "q" 'mm/quit-mm)
     (define-key map "j" 'mm/jump-to-maildir)
     (define-key map "c" 'mm/compose-new)

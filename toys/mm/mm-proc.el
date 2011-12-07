@@ -138,13 +138,13 @@ process."
 (defun mm/kill-proc ()
   "Kill the mu server process."
   (let* ((buf (get-buffer mm/server-name))
-	  (proc (and buf (get-buffer-process buf)))) 
+	  (proc (and buf (get-buffer-process buf))))
     (when proc
       (let ((delete-exited-processes t))
 	;; the mu server signal handler will make it quit after 'quit'
 	(mm/proc-send-command "quit"))
 	;; try sending SIGINT (C-c) to process, so it can exit gracefully
-      (ignore-errors 
+      (ignore-errors
 	(signal-process proc 'SIGINT))))
   (setq
     mm/mu-proc nil
@@ -296,7 +296,7 @@ terminates."
       ((eq status 'exit)
 	(cond
 	  ((eq code 0)
-	    (message nil)) ;; don't do anything	  
+	    (message nil)) ;; don't do anything
 	  ((eq code 11)
 	    (message "Database is locked by another process"))
 	  ((eq code 19)
@@ -332,13 +332,15 @@ my `mm/proc-update-func' and `mm/proc-error-func', respectively."
   (mm/proc-send-command "remove %d" docid))
 
 
-(defun mm/proc-find (expr)
-  "Start a database query for EXPR. For each result found, a
-function is called, depending on the kind of result. The variables
+(defun mm/proc-find (expr &optional maxnum)
+  "Start a database query for EXPR, getting up to MAXNUM
+results (or -1 for unlimited). For each result found, a function is
+called, depending on the kind of result. The variables
 `mm/proc-header-func' and `mm/proc-error-func' contain the function
 that will be called for, resp., a message (header row) or an
 error."
-  (mm/proc-send-command "find \"%s\"" expr))
+  (mm/proc-send-command "find \"%s\" %d"
+    expr (if maxnum maxnum -1)))
 
 
 (defun mm/proc-move-msg (docid targetmdir &optional flags)
@@ -358,10 +360,8 @@ The FLAGS parameter can have the following forms:
 The flags are any of `deleted', `flagged', `new', `passed', `replied' `seen' or
 `trashed', or the corresponding \"DFNPRST\" as defined in [1]. See
 `mm/string-to-flags' and `mm/flags-to-string'.
-
 The server reports the results for the operation through
 `mm/proc-update-func'.
-
 The results are reported through either (:update ... )
 or (:error ) sexp, which are handled my `mm/proc-update-func' and
 `mm/proc-error-func', respectively."
@@ -371,7 +371,8 @@ or (:error ) sexp, which are handled my `mm/proc-update-func' and
     (unless (and (file-directory-p fullpath) (file-writable-p fullpath))
       (error "Not a writable directory: %s" fullpath))
     ;; note, we send the maildir, *not* the full path
-    (mm/proc-send-command "move %d \"%s\" \"%s\"" docid targetmdir flagstr)))
+    (mm/proc-send-command "move %d \"%s\" %s" docid
+      targetmdir flagstr)))
 
 (defun mm/proc-flag (docid-or-msgid flags)
   "Set FLAGS for the message identified by either DOCID-OR-MSGID."
@@ -409,7 +410,6 @@ The result will be delivered to the function registered as
   (unless (member compose-type '(forward reply edit))
     (error "Unsupported compose-type"))
   (mm/proc-send-command "compose %s %d" (symbol-name compose-type) docid))
-
 
 (defconst mm/update-buffer-name "*update*"
   "*internal* Name of the buffer to download mail")

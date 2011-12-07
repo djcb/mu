@@ -51,10 +51,11 @@
 (defvar mm/hdrs-buffer nil
   "*internal* Buffer for message headers")
 
-(defun mm/hdrs-search (expr)
+(defun mm/hdrs-search (expr &optional full-search)
   "Search in the mu database for EXPR, and switch to the output
-buffer for the results."
-  (interactive "s[mu] search for: ")
+buffer for the results. If FULL-SEARCH is non-nil return all
+results, otherwise, limit number of results to
+`mm/search-results-limit'."
   (let ((buf (get-buffer-create mm/hdrs-buffer-name))
 	  (inhibit-read-only t))
     (with-current-buffer buf
@@ -67,7 +68,8 @@ buffer for the results."
 	mm/last-expr expr
 	mm/hdrs-buffer buf)))
   (switch-to-buffer mm/hdrs-buffer)
-  (mm/proc-find expr))
+  (mm/proc-find expr ;; '-1' means 'unlimited search'
+    (if full-search -1 mm/search-results-limit)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
@@ -132,7 +134,8 @@ the current list of headers."
 	    (docid-at-pos (and pos (mm/hdrs-get-docid pos))))
       (unless marker (error "Message %d not found" docid))
       (unless (eq docid docid-at-pos)
-	(error "At point %d, expected docid %d, but got %d" pos docid docid-at-pos))
+	(error "At point %d, expected docid %d, but got %d"
+	  pos docid docid-at-pos))
       (mm/hdrs-remove-header docid pos))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,12 +183,13 @@ if provided, or at the end of the buffer otherwise."
 			   (:subject  (concat (mm/thread-prefix thread-info) val))
 			   ((:maildir :path) val)
 			   ((:to :from :cc :bcc) (mm/hdrs-contact-str val))
-			   ;; if we (ie. `user-mail-address' is the 'From', show 'To', otherwise
-			   ;; show From
+			   ;; if we (ie. `user-mail-address' is the 'From', show
+			   ;; 'To', otherwise show From
 			   (:from-or-to
 			     (let* ((from-lst (plist-get msg :from))
 				     (from (and from-lst (cdar from-lst))))
-			       (if (and from (string-match mm/user-mail-address-regexp from))
+			       (if (and from (string-match
+					       mm/user-mail-address-regexp from))
 				 (concat "To "
 				   (mm/hdrs-contact-str (plist-get msg :to)))
 				 (mm/hdrs-contact-str from-lst))))
@@ -247,8 +251,10 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mm/search)
-      (define-key map "b" 'mm/search-bookmark)
+      (define-key map "S" 'mm/search-full)
       
+      (define-key map "b" 'mm/search-bookmark)
+
       (define-key map "q" 'mm/quit-buffer)
 ;;      (define-key map "o" 'mm/change-sort)
       (define-key map "g" 'mm/rerun-search)
@@ -303,6 +309,8 @@ after the end of the search results."
 
 	(define-key menumap [refresh]  '("Refresh" . mm/rerun-search))
 	(define-key menumap [search]  '("Search" . mm/search))
+	(define-key menumap [search-full] '("Search full" . mm/search-full))
+		
 	(define-key menumap [jump]  '("Jump to maildir" . mm/jump-to-maildir))
 	(define-key menumap [sepa3] '("--"))
 
@@ -608,11 +616,18 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
     (message nil)
     unmark))
 
-(defun mm/search ()
-  "Start a new mu search."
-  (interactive)
+(defun mm/search (expr)
+  "Start a new mu search, limited to `mm/search-results-limit'
+results."
+  (interactive "s[mu] search for: ")
+  (when (mm/ignore-marks) (mm/hdrs-search expr)))
+
+(defun mm/search-full (expr)
+  "Start a new mu search; resturn *all* results."
+  (interactive "s[mu] full search for: ")
   (when (mm/ignore-marks)
-    (call-interactively 'mm/hdrs-search)))
+    (mm/hdrs-search expr t)))
+
 
 (defun mm/search-bookmark ()
   "Search using some bookmarked query."
@@ -620,7 +635,7 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
   (let ((query (mm/ask-bookmark "Bookmark: ")))
     (when query
       (mm/hdrs-search query))))
- 
+
 
 (defun mm/quit-buffer ()
   "Quit the current buffer."
