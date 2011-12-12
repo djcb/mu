@@ -12,7 +12,6 @@
 *** documentation
 *** emacs install
 
-
 ** Features ii
 
 *** mark thread
@@ -59,9 +58,10 @@
 ** view raw message
 ** Sent Items
 ** raw-mode / quit
+** customizable bookmarks
+** fix queued sending
+
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
 # End:
-** customizable bookmarks
-** fix queued sending
