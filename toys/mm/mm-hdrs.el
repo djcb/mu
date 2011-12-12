@@ -496,7 +496,7 @@ The following marks are available, and the corresponding props:
       ;; unless we're unmarking
       (remhash docid mm/marks-map)
       ;; remove possible overlays
-      (remove-overlays (point) (line-end-position))
+      (remove-overlays (line-beginning-position) (line-end-position))
 
       ;; now, let's set a mark (unless we were unmarking)
       (unless (eql mark 'unmark)
