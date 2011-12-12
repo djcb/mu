@@ -71,8 +71,8 @@ marking if it still had that."
 		(:subject  (mm/view-header fieldname fieldval))
 		(:path	   (mm/view-header fieldname fieldval))
 		(:maildir  (mm/view-header fieldname fieldval))
-		(:flags	   (mm/view-header fieldname (format "%S" fieldval)))
-
+		(:flags	   (mm/view-header fieldname
+			     (if fieldval (format "%S" fieldval) "")))
 		;; contact fields
 		(:to	   (mm/view-contacts msg field))
 		(:from	   (mm/view-contacts msg field))
@@ -373,7 +373,7 @@ removing '^M' etc."
 	(add-text-properties p (point-max) '(face mm/view-footer-face))))
     ;; this is fairly simplistic...
     (goto-char (point-min))
-    (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!~,:]*\\)\\>"
+    (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!~,:;]*\\)\\>"
 	     nil t)
       (let ((subst (propertize (match-string-no-properties 0)
 		     'face 'mm/view-link-face)))
