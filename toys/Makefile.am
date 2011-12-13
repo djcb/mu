@@ -16,7 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=mm
+SUBDIRS=
 
 # build if there is some gtk available
 if HAVE_GTK

@@ -343,7 +343,7 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	mu_store_unref (store);
 
 	iter = mu_query_run (xapian, query, TRUE, MU_MSG_FIELD_ID_DATE,
-			     TRUE, &err);
+			     TRUE, -1, &err);
 	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("Error: %s", err->message);
