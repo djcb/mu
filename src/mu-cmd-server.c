@@ -31,11 +31,6 @@
 
 #include <glib/gprintf.h>
 
-#ifdef HAVE_LIBREADLINE
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif /*HAVE_LIBREADLINE*/
-
 /* hopefully, the should get us a sane PATH_MAX */
 #include <limits.h>
 /* not all systems provide PATH_MAX in limits.h */
@@ -142,9 +137,6 @@ server_error (GError **err, MuError merr, const char* frm, ...)
 static gchar*
 my_readline (const char *prompt)
 {
-#ifdef HAVE_LIBREADLINE
-	return readline (MU_PROMPT);
-#else
 	GString *gstr;
 	int kar;
 
@@ -162,7 +154,6 @@ my_readline (const char *prompt)
 	} while (1);
 
 	return g_string_free (gstr, FALSE);
-#endif /*!HAVE_LIBREADLINE*/
 }
 
 enum _Cmd {
