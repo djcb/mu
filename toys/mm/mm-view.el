@@ -217,7 +217,7 @@ or if not available, :body-html converted to text)."
 
       (define-key map "." 'mm/view-raw)
       (define-key map "|" 'mm/view-pipe)
-      (define-key map "I" 'mm/inspect-message)
+      ;; (define-key map "I" 'mm/inspect-message)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -650,7 +650,6 @@ results."
 
 (defconst mm/muile-process-name "*muile*"
   "Name of the muile process.")
-
 
 ;; note, implementation is very basic/primitive; we probably need comint to do
 ;; something like geiser does (http://www.nongnu.org/geiser/). Desirable
