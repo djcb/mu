@@ -93,7 +93,7 @@ SCM_DEFINE_PUBLIC (store_foreach, "mu:store:for-each", 1, 1, 0,
 	const char* expr;
 
 	SCM_ASSERT (scm_procedure_p (FUNC), FUNC, SCM_ARG1, FUNC_NAME);
-	SCM_ASSERT (scm_is_string (EXPR) || EXPR == SCM_UNDEFINED,
+	SCM_ASSERT (SCM_UNBNDP(EXPR) || scm_is_string (EXPR),
 		    EXPR, SCM_ARG2, FUNC_NAME);
 
 	query = get_query ();
