@@ -248,17 +248,6 @@ SCM_DEFINE_PUBLIC (msg_subject, "mu:msg:subject", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-
-SCM_DEFINE_PUBLIC (msg_from, "mu:msg:from", 1, 0, 0,
-	    (SCM MSG), "Get the sender of MSG.\n")
-#define FUNC_NAME s_msg_from
-{
-	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
-
-	return msg_str_field (MSG, MU_MSG_FIELD_ID_FROM);
-}
-#undef FUNC_NAME
-
 struct _EachContactData {
 	SCM lst;
 	MuMsgContactType ctype;
@@ -306,6 +295,18 @@ contact_list_field (SCM msg_smob, MuMsgFieldId mfid)
 				&ecdata);
 	return ecdata.lst;
 }
+
+
+SCM_DEFINE_PUBLIC (msg_from, "mu:msg:from", 1, 0, 0,
+	    (SCM MSG), "Get the list of senders of MSG.\n")
+#define FUNC_NAME s_msg_from
+{
+	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
+
+	return contact_list_field (MSG, MU_MSG_FIELD_ID_FROM);
+}
+#undef FUNC_NAME
+
 
 
 SCM_DEFINE_PUBLIC (msg_to, "mu:msg:to", 1, 0, 0,
@@ -398,7 +399,7 @@ SCM_DEFINE_PUBLIC (msg_body, "mu:msg:body", 1, 1, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE_PUBLIC (msg_header, "mu:msg:header", 1, 1, 0,
+SCM_DEFINE_PUBLIC (msg_header, "mu:msg:header", 2, 0, 0,
 		    (SCM MSG, SCM HEADER), "Get an arbitary HEADER from MSG.\n")
 #define FUNC_NAME s_msg_header
 {
