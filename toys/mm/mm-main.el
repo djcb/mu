@@ -29,6 +29,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mm main view mode + keybindings
+(defconst mm/main-buffer-name "*mm*"
+  "*internal* Name of the mm main view buffer.")
+
 (defvar mm/mm-mode-map
   (let ((map (make-sparse-keymap)))
 
@@ -66,45 +69,44 @@
   "Highlight the first occurence of [..] in STR."
   (if (string-match "\\[\\(\\w+\\)\\]" str)
     (let* ((key (match-string 1 str))
-	  (keystr (propertize key 'face 'mm/highlight-face)))
+	    (keystr (propertize key 'face 'mm/highlight-face)))
       (replace-match keystr nil t str 1))
     str))
 
-   
-(defun mm()
-  "Start mm; should not be called directly, instead, use `mm'"
-  (interactive)
-  (let ((buf (get-buffer-create mm/mm-buffer-name))
+
+(defun mm/main-view()
+  "Show the mm main view."
+  (let ((buf (get-buffer-create mm/main-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
-       (erase-buffer)
-       (insert
+      (erase-buffer)
+      (insert
 	"* "
-	 (propertize "mm - mu mail for emacs version " 'face 'mm/title-face)
-	 (propertize  mm/mu-version 'face 'mm/view-header-key-face)
-	 "\n\n"
-	 (propertize "  Basics\n\n" 'face 'mm/title-face)
-	 (mm/action-str "\t* [j]ump to some maildir\n")
-	 (mm/action-str "\t* enter a [s]earch query\n")
-	 (mm/action-str "\t* [c]ompose a new message\n")
-	 "\n"
-	 (propertize "  Bookmarks\n\n" 'face 'mm/title-face)
-	 (mapconcat
-	   (lambda (bm)
-	     (let* ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
-	       (mm/action-str
-		 (concat "\t* [b" (make-string 1 key) "] " title))))
-	   mm/bookmarks "\n")
+	(propertize "mm - mu mail for emacs version " 'face 'mm/title-face)
+	(propertize  mm/mu-version 'face 'mm/view-header-key-face)
+	"\n\n"
+	(propertize "  Basics\n\n" 'face 'mm/title-face)
+	(mm/action-str "\t* [j]ump to some maildir\n")
+	(mm/action-str "\t* enter a [s]earch query\n")
+	(mm/action-str "\t* [c]ompose a new message\n")
+	"\n"
+	(propertize "  Bookmarks\n\n" 'face 'mm/title-face)
+	(mapconcat
+	  (lambda (bm)
+	    (let* ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
+	      (mm/action-str
+		(concat "\t* [b" (make-string 1 key) "] " title))))
+	  mm/bookmarks "\n")
 
-	 "\n"
-	 (propertize "  Misc\n\n" 'face 'mm/title-face)
-	 (mm/action-str "\t* [u]pdate email & database\n")
-	 (mm/action-str "\t* toggle [m]ail sending mode ")
-	 "(" (propertize (if smtpmail-queue-mail "queued" "direct")
-	       'face 'mm/view-header-key-face) ")\n"
-	 (mm/action-str "\t* [f]lush queued mail\n")
-	 "\n"
-	 (mm/action-str "\t* [q]uit mm\n"))
+	"\n"
+	(propertize "  Misc\n\n" 'face 'mm/title-face)
+	(mm/action-str "\t* [u]pdate email & database\n")
+	(mm/action-str "\t* toggle [m]ail sending mode ")
+	"(" (propertize (if smtpmail-queue-mail "queued" "direct")
+	      'face 'mm/view-header-key-face) ")\n"
+	(mm/action-str "\t* [f]lush queued mail\n")
+	"\n"
+	(mm/action-str "\t* [q]uit mm\n"))
       (mm/mm-mode)
       (switch-to-buffer buf))))
 
