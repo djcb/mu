@@ -33,49 +33,51 @@
 (defvar mm/mu-proc nil
   "*internal* The mu-server process")
 
-(defvar mm/proc-error-func nil
+(defvar mm/proc-error-func 'mm/default-handler
   "*internal* A function called for each error returned from the
 server process; the function is passed an error plist as
 argument. See `mm/proc-filter' for the format.")
 
-(defvar mm/proc-update-func nil
+(defvar mm/proc-update-func 'mm/default-handler
   "*internal* A function called for each :update sexp returned from
 the server process; the function is passed a msg sexp as
 argument. See `mm/proc-filter' for the format.")
 
-(defvar mm/proc-remove-func nil
+(defvar mm/proc-remove-func  'mm/default-handler
   "*internal* A function called for each :remove sexp returned from
 the server process, when some message has been deleted. The
 function is passed the docid of the removed message.")
 
-(defvar mm/proc-view-func nil
+(defvar mm/proc-view-func  'mm/default-handler
   "*internal* A function called for each single message sexp
 returned from the server process. The function is passed a message
 sexp as argument. See `mm/proc-filter' for the
 format.")
 
-(defvar mm/proc-header-func nil
+(defvar mm/proc-header-func  'mm/default-handler
   "*internal* A function called for each message returned from the
 server process; the function is passed a msg plist as argument. See
 `mm/proc-filter' for the format.")
 
-(defvar mm/proc-found-func nil
+(defvar mm/proc-found-func  'mm/default-handler
   "*internal* A function called for when we received a :found sexp
 after the headers have returns, to report on the number of
 matches. See `mm/proc-filter' for the format.")
 
-
-(defvar mm/proc-compose-func nil
+(defvar mm/proc-compose-func  'mm/default-handler
   "*internal* A function called for each message returned from the
 server process that is used as basis for composing a new
 message (ie., either a reply or a forward); the function is passed
 msg and a symbol (either reply or forward). See `mm/proc-filter'
 for the format of <msg-plist>.")
 
-(defvar mm/proc-info-func nil
+(defvar mm/proc-info-func  'mm/default-handler
   "*internal* A function called for each (:info type ....) sexp
 received from the server process.")
 
+(defvar mm/proc-pong-func 'mm/default-handler
+  "*internal* A function called for each (:pong type ....) sexp
+received from the server process.")
 
 (defvar mm/buf nil
   "*internal* Buffer for results data.")
@@ -112,9 +114,12 @@ process."
       ((plist-get info :message) (message "%s" (plist-get info :message))))))
 
 
+(defun mm/default-handler (&rest args)
+  "Dummy handler function."
+  (error "Not handled: %S" args))
+
 (defconst mm/server-name "*mm-server"
   "*internal* Name of the server process, buffer.")
-
 
 (defun mm/start-proc ()
   "Start the mu server process."
@@ -247,13 +252,18 @@ updated as well, with all processed sexp data removed."
 	((plist-get sexp :date)
 	  (funcall mm/proc-header-func sexp))
 
-	;; the found sexp, we receive after gett all the headers
+	;; the found sexp, we receive after getting all the headers
 	((plist-get sexp :found)
 	  (funcall mm/proc-found-func (plist-get sexp :found)))
 
 	;; viewin a specific message
 	((plist-get sexp :view)
 	  (funcall mm/proc-view-func (plist-get sexp :view)))
+
+	;; receive a pong message
+	((plist-get sexp :pong)
+	  (funcall mm/proc-pong-func
+	    (plist-get sexp :version) (plist-get sexp :doccount)))
 
 	;; something got moved/flags changed
 	((plist-get sexp :update)
@@ -396,6 +406,11 @@ set to e.g. '/drafts'; if this works, we will receive (:info :path
 (defun mm/proc-open (docid partidx)
   "Open attachment PARTIDX from message with DOCID."
   (mm/proc-send-command "open %d %d" docid partidx))
+
+(defun mm/proc-ping ()
+  "Sends a ping to the mu server, expecting a (:pong ...) in
+response."
+  (mm/proc-send-command "ping"))
 
 (defun mm/proc-view-msg (docid)
   "Get one particular message based on its DOCID. The result will

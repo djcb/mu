@@ -8,7 +8,6 @@
 
 ** Features i
 
-*** version check at startup
 *** documentation
 *** emacs install
 
@@ -60,7 +59,7 @@
 ** raw-mode / quit
 ** customizable bookmarks
 ** fix queued sending
-
+** version check at startup
 
 # Local Variables:
 # mode: org; org-startup-folded: nil

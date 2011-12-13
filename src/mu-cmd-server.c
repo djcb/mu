@@ -178,7 +178,7 @@ enum _Cmd {
 	CMD_QUIT,
 	CMD_REMOVE,
 	CMD_SAVE,
-	CMD_INFO,
+	CMD_PING,
 	CMD_VIEW,
 
 	CMD_IGNORE
@@ -205,7 +205,7 @@ cmd_from_string (const char *str)
 		{ CMD_QUIT,	"quit"},
 		{ CMD_REMOVE,	"remove" },
 		{ CMD_SAVE,     "save"},
-		{ CMD_INFO,	"info"},
+		{ CMD_PING,	"ping"},
 		{ CMD_VIEW,	"view"}
 	};
 
@@ -292,18 +292,20 @@ check_param_num (GSList *lst, unsigned min, unsigned max)
 }
 
 
-
+/* -> ping
+ * <- (:pong mu :version <version> :doccount <doccount>)
+ */
 static MuError
-cmd_info (MuStore *store, GSList *lst, GError **err)
+cmd_ping (MuStore *store, GSList *lst, GError **err)
 {
 	if (!check_param_num (lst, 0, 0))
 		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
 				     "usage: version");
 
-	send_expr ("(:info version "
+	send_expr ("(:pong \"" PACKAGE_NAME "\" "
 		    ":version \"" VERSION "\" "
-		    ":doccount %u "
-		   ")",
+		    ":doccount %u"
+		   ")\n",
 		   mu_store_count (store, err));
 
 	return MU_OK;
@@ -897,7 +899,7 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 	case CMD_QUIT:		rv = cmd_quit (args, err); break;
 	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
 	case CMD_SAVE:		rv = cmd_save  (store, args, err); break;
-	case CMD_INFO:		rv = cmd_info (store, args, err); break;
+	case CMD_PING:		rv = cmd_ping (store, args, err); break;
 	case CMD_VIEW:		rv = cmd_view (store, args, err); break;
 
 	case CMD_IGNORE: return TRUE;
