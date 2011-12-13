@@ -20,10 +20,6 @@ include $(top_srcdir)/gtest.mk
 # before decending into tests/
 SUBDIRS= .
 
-if HAVE_GUILE
-SUBDIRS += guile
-endif
-
 if BUILD_TESTS
 SUBDIRS += tests
 endif
@@ -113,9 +109,7 @@ libmu_la_SOURCES=			\
 	mu-util.h
 
 
-
 libmu_la_LIBADD=			\
 	$(XAPIAN_LIBS)			\
 	$(GMIME_LIBS)			\
-	$(GLIB_LIBS)			\
-	$(READLINE_LIBS)
+	$(GLIB_LIBS)

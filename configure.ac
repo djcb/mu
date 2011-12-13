@@ -211,18 +211,6 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 
 
-
-###############################################################################
-# use readline (for 'mu server') if it's available
-AC_CHECK_LIB([readline], [main],
-              [AC_SUBST([READLINE_LIBS], ["-lreadline"])
-               AC_DEFINE([HAVE_LIBREADLINE], [1],
-                         [Whether we have readline])])
-###############################################################################
-
-
-
-
 ###############################################################################
 # check for guile & guile-snarf
 AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [$PATH])
@@ -282,14 +270,14 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-src/guile/Makefile
-src/guile/mu/Makefile
 src/tests/Makefile
 widgets/Makefile
+emacs/Makefile
+guile/Makefile
+guile/mu/Makefile
 toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile
-toys/mm/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile

@@ -23,6 +23,12 @@ else
 widgets=
 endif
 
+if HAVE_GUILE
+guile=guile
+else
+guile=
+endif
+
 SUBDIRS=m4 man src $(widgets) $(guile) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
