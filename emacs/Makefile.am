@@ -18,18 +18,17 @@ include $(top_srcdir)/gtest.mk
 
 SUBDIRS=
 
-BUILT_SOURCES=mm-version.el
+BUILT_SOURCES=mu4e-version.el
 
-mm-version.el:
+mu4e-version.el:
 	@echo -e ";; auto-generated\n\
-(defconst mm/mu-version \"$(VERSION)\" \"Required mu binary version.\")\n\
-(provide 'mm-version)\n" >$@
+(defconst mu4e-mu-version \"$(VERSION)\" \"Required mu binary version.\")\n\
+(provide 'mu4e-version)\n" >$@
 
 EXTRA_DIST=			\
-	mm.el			\
-	mm-hdrs.el		\
-	mm-view.el		\
-	mm-proc.el		\
-	mm-send.el		\
-	mm-version.el
-
+	mu4e.el			\
+	mu4e-hdrs.el		\
+	mu4e-view.el		\
+	mu4e-proc.el		\
+	mu4e-send.el		\
+	mu4e-version.el

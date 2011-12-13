@@ -1,4 +1,4 @@
-;;; mm-proc.el -- part of mm, the mu mail user agent
+;;; mu4e-proc.el -- part of mm, the mu mail user agent
 ;;
 ;; Copyright (C) 2011 Dirk-Jan C. Binnema
 
@@ -30,65 +30,65 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
 
-(defvar mm/mu-proc nil
+(defvar mu4e-mu-proc nil
   "*internal* The mu-server process")
 
-(defvar mm/proc-error-func 'mm/default-handler
+(defvar mu4e-proc-error-func 'mu4e-default-handler
   "*internal* A function called for each error returned from the
 server process; the function is passed an error plist as
-argument. See `mm/proc-filter' for the format.")
+argument. See `mu4e-proc-filter' for the format.")
 
-(defvar mm/proc-update-func 'mm/default-handler
+(defvar mu4e-proc-update-func 'mu4e-default-handler
   "*internal* A function called for each :update sexp returned from
 the server process; the function is passed a msg sexp as
-argument. See `mm/proc-filter' for the format.")
+argument. See `mu4e-proc-filter' for the format.")
 
-(defvar mm/proc-remove-func  'mm/default-handler
+(defvar mu4e-proc-remove-func  'mu4e-default-handler
   "*internal* A function called for each :remove sexp returned from
 the server process, when some message has been deleted. The
 function is passed the docid of the removed message.")
 
-(defvar mm/proc-view-func  'mm/default-handler
+(defvar mu4e-proc-view-func  'mu4e-default-handler
   "*internal* A function called for each single message sexp
 returned from the server process. The function is passed a message
-sexp as argument. See `mm/proc-filter' for the
+sexp as argument. See `mu4e-proc-filter' for the
 format.")
 
-(defvar mm/proc-header-func  'mm/default-handler
+(defvar mu4e-proc-header-func  'mu4e-default-handler
   "*internal* A function called for each message returned from the
 server process; the function is passed a msg plist as argument. See
-`mm/proc-filter' for the format.")
+`mu4e-proc-filter' for the format.")
 
-(defvar mm/proc-found-func  'mm/default-handler
+(defvar mu4e-proc-found-func  'mu4e-default-handler
   "*internal* A function called for when we received a :found sexp
 after the headers have returns, to report on the number of
-matches. See `mm/proc-filter' for the format.")
+matches. See `mu4e-proc-filter' for the format.")
 
-(defvar mm/proc-compose-func  'mm/default-handler
+(defvar mu4e-proc-compose-func  'mu4e-default-handler
   "*internal* A function called for each message returned from the
 server process that is used as basis for composing a new
 message (ie., either a reply or a forward); the function is passed
-msg and a symbol (either reply or forward). See `mm/proc-filter'
+msg and a symbol (either reply or forward). See `mu4e-proc-filter'
 for the format of <msg-plist>.")
 
-(defvar mm/proc-info-func  'mm/default-handler
+(defvar mu4e-proc-info-func  'mu4e-default-handler
   "*internal* A function called for each (:info type ....) sexp
 received from the server process.")
 
-(defvar mm/proc-pong-func 'mm/default-handler
+(defvar mu4e-proc-pong-func 'mu4e-default-handler
   "*internal* A function called for each (:pong type ....) sexp
 received from the server process.")
 
-(defvar mm/buf nil
+(defvar mu4e-buf nil
   "*internal* Buffer for results data.")
 
-(defvar mm/path-docid-map
+(defvar mu4e-path-docid-map
   (make-hash-table :size 32 :rehash-size 2 :test 'equal :weakness nil)
   "*internal* hash we use to keep a path=>docid mapping for message
 we added ourselves (ie., draft messages), so we can e.g. move them
 to the sent folder using their docid")
 
-(defun mm/proc-info-handler (info)
+(defun mu4e-proc-info-handler (info)
   "Handler function for (:info ...) sexps received from the server
 process."
   (let ((type (plist-get info :info)))
@@ -97,12 +97,12 @@ process."
       ((eq type 'add)
 	;; update our path=>docid map; we use this when composing messages to
 	;; add draft messages to the db, so when we're sending them, we can move
-	;; to the sent folder using the `mm/proc-move'.
-	(puthash (plist-get info :path) (plist-get info :docid) mm/path-docid-map))
+	;; to the sent folder using the `mu4e-proc-move'.
+	(puthash (plist-get info :path) (plist-get info :docid) mu4e-path-docid-map))
       ((eq type 'version)
 	(setq
-	  mm/version  (plist-get info :version)
-	  mm/doccount (plist-get-info :doccount)))
+	  mu4e-version  (plist-get info :version)
+	  mu4e-doccount (plist-get-info :doccount)))
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
 	  (message (format "Indexing... processed %d, updated %d"
@@ -114,78 +114,79 @@ process."
       ((plist-get info :message) (message "%s" (plist-get info :message))))))
 
 
-(defun mm/default-handler (&rest args)
+(defun mu4e-default-handler (&rest args)
   "Dummy handler function."
   (error "Not handled: %S" args))
 
-(defconst mm/server-name "*mm-server"
+(defconst mu4e-server-name "*mu4e-server"
   "*internal* Name of the server process, buffer.")
 
-(defun mm/start-proc ()
+(defun mu4e-start-proc ()
   "Start the mu server process."
   ;; TODO: add version check
-  (unless (file-executable-p mm/mu-binary)
-    (error (format "%S not found" mm/mu-binary)))
+  (unless (file-executable-p mu4e-mu-binary)
+    (error (format "%S not found" mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
 	  (args '("server"))
-	  (args (append args (when mm/mu-home
-			       (list (concat "--muhome=" mm/mu-home))))))
-    (setq mm/buf "")
-    (setq mm/mu-proc (apply 'start-process mm/server-name mm/server-name
-		       mm/mu-binary args))
+	  (args (append args (when mu4e-mu-home
+			       (list (concat "--muhome=" mu4e-mu-home))))))
+    (setq mu4e-buf "")
+    (setq mu4e-mu-proc (apply 'start-process
+			 mu4e-server-name mu4e-server-name
+		       mu4e-mu-binary args))
     ;; register a function for (:info ...) sexps
-    (setq mm/proc-info-func 'mm/proc-info-handler)
-    (when mm/mu-proc
-      (set-process-coding-system mm/mu-proc 'binary 'utf-8-unix)
-      (set-process-filter mm/mu-proc 'mm/proc-filter)
-      (set-process-sentinel mm/mu-proc 'mm/proc-sentinel))))
+    (setq mu4e-proc-info-func 'mu4e-proc-info-handler)
+    (when mu4e-mu-proc
+      (set-process-coding-system mu4e-mu-proc 'binary 'utf-8-unix)
+      (set-process-filter mu4e-mu-proc 'mu4e-proc-filter)
+      (set-process-sentinel mu4e-mu-proc 'mu4e-proc-sentinel))))
 
-(defun mm/kill-proc ()
+(defun mu4e-kill-proc ()
   "Kill the mu server process."
-  (let* ((buf (get-buffer mm/server-name))
+  (let* ((buf (get-buffer mu4e-server-name))
 	  (proc (and buf (get-buffer-process buf))))
     (when proc
       (let ((delete-exited-processes t))
 	;; the mu server signal handler will make it quit after 'quit'
-	(mm/proc-send-command "quit"))
+	(mu4e-proc-send-command "quit"))
 	;; try sending SIGINT (C-c) to process, so it can exit gracefully
       (ignore-errors
 	(signal-process proc 'SIGINT))))
   (setq
-    mm/mu-proc nil
-    mm/buf nil))
+    mu4e-mu-proc nil
+    mu4e-buf nil))
 
-(defun mm/proc-is-running ()
-  (and mm/mu-proc (eq (process-status mm/mu-proc) 'run)))
+(defun mu4e-proc-is-running ()
+  (and mu4e-mu-proc (eq (process-status mu4e-mu-proc) 'run)))
 
-(defun mm/proc-eat-sexp-from-buf ()
-  "'Eat' the next s-expression from `mm/buf'. `mm/buf gets its
+(defun mu4e-proc-eat-sexp-from-buf ()
+  "'Eat' the next s-expression from `mu4e-buf'. `mu4e-buf gets its
   contents from the mu-servers in the following form:
        \376<len-of-sexp>\376<sexp>
-Function returns this sexp, or nil if there was none. `mm/buf' is
+Function returns this sexp, or nil if there was none. `mu4e-buf' is
 updated as well, with all processed sexp data removed."
-  (when mm/buf
+  (when mu4e-buf
     ;; TODO: maybe try a non-regexp solution?
-    (let* ((b (string-match "\376\\([0-9]+\\)\376" mm/buf))
+    (let* ((b (string-match "\376\\([0-9]+\\)\376" mu4e-buf))
 	    (sexp-len
-	      (when b (string-to-number (match-string 1 mm/buf)))))
-      ;; does mm/buf contain the full sexp?
-      (when (and b (>= (length mm/buf) (+ sexp-len (match-end 0))))
+	      (when b (string-to-number (match-string 1 mu4e-buf)))))
+      ;; does mu4e-buf contain the full sexp?
+      (when (and b (>= (length mu4e-buf) (+ sexp-len (match-end 0))))
 	;; clear-up start
-	(setq mm/buf (substring mm/buf (match-end 0)))
+	(setq mu4e-buf (substring mu4e-buf (match-end 0)))
 	;; note: we read the input in binary mode -- here, we take the part that
 	;; is the sexp, and convert that to utf-8, before we interpret it.
 	(let ((objcons
 		(ignore-errors ;; note: this may fail if we killed the process
 			       ;; in the middle
 		  (read-from-string
-		    (decode-coding-string (substring mm/buf 0 sexp-len) 'utf-8)))))
+		    (decode-coding-string (substring mu4e-buf 0 sexp-len) 'utf-8)))))
 	  (when objcons
-	    (setq mm/buf (substring mm/buf sexp-len))
+	    (setq mu4e-buf (substring mu4e-buf sexp-len))
 	    (car objcons)))))))
 
 
-(defun mm/proc-filter (proc str)
+(defun mu4e-proc-filter (proc str)
   "A process-filter for the 'mu server' output; it accumulates the
   strings into valid sexps by checking of the ';;eox' end-of-sexp
   marker, and then evaluating them.
@@ -195,7 +196,7 @@ updated as well, with all processed sexp data removed."
    1. an error
       (:error 2 :error-message \"unknown command\")
       ;; eox
-   => this will be passed to `mm/proc-error-func'.
+   => this will be passed to `mu4e-proc-error-func'.
 
    2a. a message sexp looks something like:
  \(
@@ -216,87 +217,87 @@ updated as well, with all processed sexp data removed."
   :body-txt \" <message body>\"
 \)
 ;; eox
-   => this will be passed to `mm/proc-header-func'.
+   => this will be passed to `mu4e-proc-header-func'.
 
   2b. After the list of message sexps has been returned (see 2a.),
   we'll receive a sexp that looks like
   (:found <n>) with n the number of messages found. The <n> will be
-  passed to `mm/proc-found-func'.
+  passed to `mu4e-proc-found-func'.
 
   3. a view looks like:
   (:view <msg-sexp>)
-  => the <msg-sexp> (see 2.) will be passed to `mm/proc-view-func'.
+  => the <msg-sexp> (see 2.) will be passed to `mu4e-proc-view-func'.
 
   4. a database update looks like:
   (:update <msg-sexp> :move <nil-or-t>)
 
    => the <msg-sexp> (see 2.) will be passed to
-   `mm/proc-update-func', :move tells us whether this is a move to
+   `mu4e-proc-update-func', :move tells us whether this is a move to
    another maildir, or merely a flag change.
 
   5. a remove looks like:
   (:remove <docid>)
-  => the docid will be passed to `mm/proc-remove-func'
+  => the docid will be passed to `mu4e-proc-remove-func'
 
   6. a compose looks like:
   (:compose <msg-sexp> :action <reply|forward>) => the <msg-sexp>
   and either 'reply or 'forward will be passed
-  `mm/proc-compose-func'."
-  (mm/proc-log "* Received %d byte(s)" (length str))
-  (setq mm/buf (concat mm/buf str)) ;; update our buffer
-  (let ((sexp (mm/proc-eat-sexp-from-buf)))
+  `mu4e-proc-compose-func'."
+  (mu4e-proc-log "* Received %d byte(s)" (length str))
+  (setq mu4e-buf (concat mu4e-buf str)) ;; update our buffer
+  (let ((sexp (mu4e-proc-eat-sexp-from-buf)))
     (while sexp
-      (mm/proc-log "<- %S" sexp)
+      (mu4e-proc-log "<- %S" sexp)
       (cond
 	;; a header plist can be recognized by the existence of a :date field
 	((plist-get sexp :date)
-	  (funcall mm/proc-header-func sexp))
+	  (funcall mu4e-proc-header-func sexp))
 
 	;; the found sexp, we receive after getting all the headers
 	((plist-get sexp :found)
-	  (funcall mm/proc-found-func (plist-get sexp :found)))
+	  (funcall mu4e-proc-found-func (plist-get sexp :found)))
 
 	;; viewin a specific message
 	((plist-get sexp :view)
-	  (funcall mm/proc-view-func (plist-get sexp :view)))
+	  (funcall mu4e-proc-view-func (plist-get sexp :view)))
 
 	;; receive a pong message
 	((plist-get sexp :pong)
-	  (funcall mm/proc-pong-func
+	  (funcall mu4e-proc-pong-func
 	    (plist-get sexp :version) (plist-get sexp :doccount)))
 
 	;; something got moved/flags changed
 	((plist-get sexp :update)
-	  (funcall mm/proc-update-func
+	  (funcall mu4e-proc-update-func
 	    (plist-get sexp :update) (plist-get sexp :move)))
 
 	;; a message got removed
 	((plist-get sexp :remove)
-	  (funcall mm/proc-remove-func (plist-get sexp :remove)))
+	  (funcall mu4e-proc-remove-func (plist-get sexp :remove)))
 
 	;; start composing a new message
 	((plist-get sexp :compose)
-	  (funcall mm/proc-compose-func
+	  (funcall mu4e-proc-compose-func
 	    (plist-get sexp :compose-type)
 	    (plist-get sexp :compose)))
 
 	;; get some info
 	((plist-get sexp :info)
-	  (funcall mm/proc-info-func sexp))
+	  (funcall mu4e-proc-info-func sexp))
 
 	;; receive an error
 	((plist-get sexp :error)
-	  (funcall mm/proc-error-func sexp))
+	  (funcall mu4e-proc-error-func sexp))
 	(t (message "Unexpected data from server [%S]" sexp)))
-      (setq sexp (mm/proc-eat-sexp-from-buf)))))
+      (setq sexp (mu4e-proc-eat-sexp-from-buf)))))
 
 
-(defun mm/proc-sentinel (proc msg)
+(defun mu4e-proc-sentinel (proc msg)
   "Function that will be called when the mu-server process
 terminates."
   (let ((status (process-status proc)) (code (process-exit-status proc)))
-    (setq mm/mu-proc nil)
-    (setq mm/buf "") ;; clear any half-received sexps
+    (setq mu4e-mu-proc nil)
+    (setq mu4e-buf "") ;; clear any half-received sexps
     (cond
       ((eq status 'signal)
 	(cond
@@ -316,44 +317,44 @@ terminates."
 	(message "something bad happened to the mu server process")))))
 
 
-(defconst mm/proc-log-buffer-name "*mm-log*"
+(defconst mu4e-proc-log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
 
-(defun mm/proc-log (frm &rest args)
-  "Write something in the *mm-log* buffer - mainly useful for debugging."
-  (when mm/debug
-    (with-current-buffer (get-buffer-create mm/proc-log-buffer-name)
+(defun mu4e-proc-log (frm &rest args)
+  "Write something in the *mu4e-log* buffer - mainly useful for debugging."
+  (when mu4e-debug
+    (with-current-buffer (get-buffer-create mu4e-proc-log-buffer-name)
       (goto-char (point-max))
       (insert (apply 'format (concat (format-time-string "%Y-%m-%d %T "
 				     (current-time)) frm "\n") args)))))
 
-(defun mm/proc-send-command (frm &rest args)
+(defun mu4e-proc-send-command (frm &rest args)
   "Send as command to the mu server process; start the process if needed."
-  (unless (mm/proc-is-running)
-    (mm/start-proc))
+  (unless (mu4e-proc-is-running)
+    (mu4e-start-proc))
   (let ((cmd (apply 'format frm args)))
-    (mm/proc-log (concat "-> " cmd))
-    (process-send-string mm/mu-proc (concat cmd "\n"))))
+    (mu4e-proc-log (concat "-> " cmd))
+    (process-send-string mu4e-mu-proc (concat cmd "\n"))))
 
-(defun mm/proc-remove-msg (docid)
+(defun mu4e-proc-remove-msg (docid)
   "Remove message identified by DOCID. The results are reporter
 through either (:update ... ) or (:error ) sexp, which are handled
-my `mm/proc-update-func' and `mm/proc-error-func', respectively."
-  (mm/proc-send-command "remove %d" docid))
+my `mu4e-proc-update-func' and `mu4e-proc-error-func', respectively."
+  (mu4e-proc-send-command "remove %d" docid))
 
 
-(defun mm/proc-find (expr &optional maxnum)
+(defun mu4e-proc-find (expr &optional maxnum)
   "Start a database query for EXPR, getting up to MAXNUM
 results (or -1 for unlimited). For each result found, a function is
 called, depending on the kind of result. The variables
-`mm/proc-header-func' and `mm/proc-error-func' contain the function
+`mu4e-proc-header-func' and `mu4e-proc-error-func' contain the function
 that will be called for, resp., a message (header row) or an
 error."
-  (mm/proc-send-command "find \"%s\" %d"
+  (mu4e-proc-send-command "find \"%s\" %d"
     expr (if maxnum maxnum -1)))
 
 
-(defun mm/proc-move-msg (docid targetmdir &optional flags)
+(defun mu4e-proc-move-msg (docid targetmdir &optional flags)
   "Move message identified by DOCID to TARGETMDIR, optionally
 setting FLAGS in the process.
 
@@ -369,82 +370,82 @@ The FLAGS parameter can have the following forms:
 
 The flags are any of `deleted', `flagged', `new', `passed', `replied' `seen' or
 `trashed', or the corresponding \"DFNPRST\" as defined in [1]. See
-`mm/string-to-flags' and `mm/flags-to-string'.
+`mu4e-string-to-flags' and `mu4e-flags-to-string'.
 The server reports the results for the operation through
-`mm/proc-update-func'.
+`mu4e-proc-update-func'.
 The results are reported through either (:update ... )
-or (:error ) sexp, which are handled my `mm/proc-update-func' and
-`mm/proc-error-func', respectively."
+or (:error ) sexp, which are handled my `mu4e-proc-update-func' and
+`mu4e-proc-error-func', respectively."
   (let
-    ((flagstr (if (stringp flags) flags (mm/flags-to-string flags)))
-      (fullpath (concat mm/maildir targetmdir)))
+    ((flagstr (if (stringp flags) flags (mu4e-flags-to-string flags)))
+      (fullpath (concat mu4e-maildir targetmdir)))
     (unless (and (file-directory-p fullpath) (file-writable-p fullpath))
       (error "Not a writable directory: %s" fullpath))
     ;; note, we send the maildir, *not* the full path
-    (mm/proc-send-command "move %d \"%s\" %s" docid
+    (mu4e-proc-send-command "move %d \"%s\" %s" docid
       targetmdir flagstr)))
 
-(defun mm/proc-flag (docid-or-msgid flags)
+(defun mu4e-proc-flag (docid-or-msgid flags)
   "Set FLAGS for the message identified by either DOCID-OR-MSGID."
-  (let ((flagstr (if (stringp flags) flags (mm/flags-to-string flags))))
-    (mm/proc-send-command "flag %S %s" docid-or-msgid flagstr)))
+  (let ((flagstr (if (stringp flags) flags (mu4e-flags-to-string flags))))
+    (mu4e-proc-send-command "flag %S %s" docid-or-msgid flagstr)))
 
-(defun mm/proc-index (maildir)
+(defun mu4e-proc-index (maildir)
   "Update the message database for MAILDIR."
-  (mm/proc-send-command "index \"%s\"" maildir))
+  (mu4e-proc-send-command "index \"%s\"" maildir))
 
-(defun mm/proc-add (path maildir)
+(defun mu4e-proc-add (path maildir)
   "Add the message at PATH to the database, with MAILDIR
 set to e.g. '/drafts'; if this works, we will receive (:info :path
 <path> :docid <docid>)."
-  (mm/proc-send-command "add \"%s\" \"%s\"" path maildir))
+  (mu4e-proc-send-command "add \"%s\" \"%s\"" path maildir))
 
-(defun mm/proc-save (docid partidx path)
+(defun mu4e-proc-save (docid partidx path)
   "Save attachment PARTIDX from message with DOCID to PATH."
-  (mm/proc-send-command "save %d %d \"%s\"" docid partidx path))
+  (mu4e-proc-send-command "save %d %d \"%s\"" docid partidx path))
 
-(defun mm/proc-open (docid partidx)
+(defun mu4e-proc-open (docid partidx)
   "Open attachment PARTIDX from message with DOCID."
-  (mm/proc-send-command "open %d %d" docid partidx))
+  (mu4e-proc-send-command "open %d %d" docid partidx))
 
-(defun mm/proc-ping ()
+(defun mu4e-proc-ping ()
   "Sends a ping to the mu server, expecting a (:pong ...) in
 response."
-  (mm/proc-send-command "ping"))
+  (mu4e-proc-send-command "ping"))
 
-(defun mm/proc-view-msg (docid)
+(defun mu4e-proc-view-msg (docid)
   "Get one particular message based on its DOCID. The result will
-be delivered to the function registered as `mm/proc-message-func'."
-  (mm/proc-send-command "view %d" docid))
+be delivered to the function registered as `mu4e-proc-message-func'."
+  (mu4e-proc-send-command "view %d" docid))
 
-(defun mm/proc-compose (compose-type docid)
+(defun mu4e-proc-compose (compose-type docid)
   "Start composing a message with DOCID and COMPOSE-TYPE (a symbol,
   either `forward', `reply' or `edit'.
 The result will be delivered to the function registered as
-`mm/proc-compose-func'."
+`mu4e-proc-compose-func'."
   (unless (member compose-type '(forward reply edit))
     (error "Unsupported compose-type"))
-  (mm/proc-send-command "compose %s %d" (symbol-name compose-type) docid))
+  (mu4e-proc-send-command "compose %s %d" (symbol-name compose-type) docid))
 
-(defconst mm/update-buffer-name "*update*"
+(defconst mu4e-update-buffer-name "*update*"
   "*internal* Name of the buffer to download mail")
 
-(defun mm/proc-retrieve-mail-update-db ()
+(defun mu4e-proc-retrieve-mail-update-db ()
   "Try to retrieve mail (using the user-provided shell command),
 and update the database afterwards."
-  (unless mm/get-mail-command
-    (error "`mm/get-mail-command' is not defined"))
-  (let ((buf (get-buffer-create  mm/update-buffer-name)))
+  (unless mu4e-get-mail-command
+    (error "`mu4e-get-mail-command' is not defined"))
+  (let ((buf (get-buffer-create  mu4e-update-buffer-name)))
     (split-window-vertically -8)
     (switch-to-buffer-other-window buf)
     (with-current-buffer buf
       (erase-buffer))
     (message "Retrieving mail...")
-    (call-process mm/get-mail-command nil buf t)
+    (call-process mu4e-get-mail-command nil buf t)
     (message "Updating the database...")
-    (mm/proc-index mm/maildir)
+    (mu4e-proc-index mu4e-maildir)
     (with-current-buffer buf
       (kill-buffer-and-window))))
 
 
-(provide 'mm-proc)
+(provide 'mu4e-proc)

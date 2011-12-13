@@ -1,4 +1,4 @@
-;;; mm-main.el -- part of mm, the mu mail user agent
+;;; mu4e-main.el -- part of mm, the mu mail user agent
 ;;
 ;; Copyright (C) 2011 Dirk-Jan C. Binnema
 
@@ -29,85 +29,85 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mm main view mode + keybindings
-(defconst mm/main-buffer-name "*mm*"
-  "*internal* Name of the mm main view buffer.")
+(defconst mu4e-main-buffer-name "*mu4e-main*"
+  "*internal* Name of the mm main buffer.")
 
-(defvar mm/mm-mode-map
+(defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "b" 'mm/search-bookmark)
-    (define-key map "s" 'mm/search)
-    (define-key map "S" 'mm/search-full)
-    (define-key map "q" 'mm/quit-mm)
-    (define-key map "j" 'mm/jump-to-maildir)
-    (define-key map "c" 'mm/compose-new)
+    (define-key map "b" 'mu4e-search-bookmark)
+    (define-key map "s" 'mu4e-search)
+    (define-key map "S" 'mu4e-search-full)
+    (define-key map "q" 'mu4e-quit-mm)
+    (define-key map "j" 'mu4e-jump-to-maildir)
+    (define-key map "c" 'mu4e-compose-new)
 
-    (define-key map "m" 'mm/toggle-mail-sending-mode)
+    (define-key map "m" 'mu4e-toggle-mail-sending-mode)
     (define-key map "f" 'smtpmail-send-queued-mail)
-    (define-key map "u" 'mm/retrieve-mail-update-db)
+    (define-key map "u" 'mu4e-retrieve-mail-update-db)
 
     map)
   "Keymap for the *mm* buffer.")
-(fset 'mm/mm-mode-map mm/mm-mode-map)
+(fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
-(defun mm/mm-mode ()
+(defun mu4e-main-mode ()
   "Major mode for the mm main screen."
   (interactive)
 
   (kill-all-local-variables)
-  (use-local-map mm/mm-mode-map)
+  (use-local-map mu4e-main-mode-map)
 
   (setq
-    mm/marks-map (make-hash-table :size 16  :rehash-size 2)
-    major-mode 'mm/mm-mode
-    mode-name "mm: main view"
+    mu4e-marks-map (make-hash-table :size 16  :rehash-size 2)
+    major-mode 'mu4e-main-mode
+    mode-name "mu for emacs"
     truncate-lines t
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
-(defun mm/action-str (str)
+(defun mu4e-action-str (str)
   "Highlight the first occurence of [..] in STR."
   (if (string-match "\\[\\(\\w+\\)\\]" str)
     (let* ((key (match-string 1 str))
-	    (keystr (propertize key 'face 'mm/highlight-face)))
+	    (keystr (propertize key 'face 'mu4e-highlight-face)))
       (replace-match keystr nil t str 1))
     str))
 
 
-(defun mm/main-view()
+(defun mu4e-main-view()
   "Show the mm main view."
-  (let ((buf (get-buffer-create mm/main-buffer-name))
+  (let ((buf (get-buffer-create mu4e-main-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
       (erase-buffer)
       (insert
 	"* "
-	(propertize "mm - mu mail for emacs version " 'face 'mm/title-face)
-	(propertize  mm/mu-version 'face 'mm/view-header-key-face)
+	(propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
+	(propertize  mu4e-mu-version 'face 'mu4e-view-header-key-face)
 	"\n\n"
-	(propertize "  Basics\n\n" 'face 'mm/title-face)
-	(mm/action-str "\t* [j]ump to some maildir\n")
-	(mm/action-str "\t* enter a [s]earch query\n")
-	(mm/action-str "\t* [c]ompose a new message\n")
+	(propertize "  Basics\n\n" 'face 'mu4e-title-face)
+	(mu4e-action-str "\t* [j]ump to some maildir\n")
+	(mu4e-action-str "\t* enter a [s]earch query\n")
+	(mu4e-action-str "\t* [c]ompose a new message\n")
 	"\n"
-	(propertize "  Bookmarks\n\n" 'face 'mm/title-face)
+	(propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
 	(mapconcat
 	  (lambda (bm)
 	    (let* ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
-	      (mm/action-str
+	      (mu4e-action-str
 		(concat "\t* [b" (make-string 1 key) "] " title))))
-	  mm/bookmarks "\n")
+	  mu4e-bookmarks "\n")
 
 	"\n"
-	(propertize "  Misc\n\n" 'face 'mm/title-face)
-	(mm/action-str "\t* [u]pdate email & database\n")
-	(mm/action-str "\t* toggle [m]ail sending mode ")
+	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
+	(mu4e-action-str "\t* [u]pdate email & database\n")
+	(mu4e-action-str "\t* toggle [m]ail sending mode ")
 	"(" (propertize (if smtpmail-queue-mail "queued" "direct")
-	      'face 'mm/view-header-key-face) ")\n"
-	(mm/action-str "\t* [f]lush queued mail\n")
+	      'face 'mu4e-view-header-key-face) ")\n"
+	(mu4e-action-str "\t* [f]lush queued mail\n")
 	"\n"
-	(mm/action-str "\t* [q]uit mm\n"))
-      (mm/mm-mode)
+	(mu4e-action-str "\t* [q]uit mm\n"))
+      (mu4e-main-mode)
       (switch-to-buffer buf))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -115,12 +115,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
 
-(defun mm/retrieve-mail-update-db ()
+(defun mu4e-retrieve-mail-update-db ()
   "Get new mail and update the database."
   (interactive)
-  (mm/proc-retrieve-mail-update-db))
+  (mu4e-proc-retrieve-mail-update-db))
 
-(defun mm/toggle-mail-sending-mode ()
+(defun mu4e-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
@@ -131,12 +131,12 @@
   (mm))
 
 
-(defun mm/quit-mm()
+(defun mu4e-quit-mm()
   "Quit the mm session."
   (interactive)
   (when (y-or-n-p "Are you sure you want to quit mm? ")
     (message nil)
-    (mm/kill-proc)
+    (mu4e-kill-proc)
     (kill-buffer)))
 
-(provide 'mm-main)
+(provide 'mu4e-main)

@@ -1,4 +1,4 @@
-;; mm-view.el -- part of mm, the mu mail user agent
+;; mu4e-view.el -- part of mm, the mu mail user agent
 ;;
 ;; Copyright (C) 2011 Dirk-Jan C. Binnema
 
@@ -36,20 +36,20 @@
 (require 'filladapt)
 (require 'comint)
 
-(defconst mm/view-buffer-name "*mm-view*"
+(defconst mu4e-view-buffer-name "*mu4e-view*"
   "*internal* Name for the message view buffer")
 
-(defconst mm/view-raw-buffer-name "*mm-view-raw*"
+(defconst mu4e-view-raw-buffer-name "*mu4e-view-raw*"
   "*internal* Name for the raw message view buffer")
 
 ;; some buffer-local variables
-(defvar mm/hdrs-buffer nil
+(defvar mu4e-hdrs-buffer nil
   "*internal* Headers buffer connected to this view.")
 
-(defvar mm/current-msg nil
+(defvar mu4e-current-msg nil
   "*internal* The plist describing the current message.")
 
-(defun mm/view (msg hdrsbuf &optional update)
+(defun mu4e-view (msg hdrsbuf &optional update)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
 the the message view affects HDRSBUF, as does marking etc. If
@@ -57,72 +57,72 @@ UPDATE is non-nil, the current message will be (visually) updated.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let ((buf (get-buffer-create mm/view-buffer-name))
+  (let ((buf (get-buffer-create mu4e-view-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
       (erase-buffer)
       (insert
 	(mapconcat
 	  (lambda (field)
-	    (let ((fieldname (cdr (assoc field mm/header-names)))
+	    (let ((fieldname (cdr (assoc field mu4e-header-names)))
 		   (fieldval (plist-get msg field)))
 	      (case field
 
-		(:subject  (mm/view-header fieldname fieldval))
-		(:path	   (mm/view-header fieldname fieldval))
-		(:maildir  (mm/view-header fieldname fieldval))
-		(:flags	   (mm/view-header fieldname
+		(:subject  (mu4e-view-header fieldname fieldval))
+		(:path	   (mu4e-view-header fieldname fieldval))
+		(:maildir  (mu4e-view-header fieldname fieldval))
+		(:flags	   (mu4e-view-header fieldname
 			     (if fieldval (format "%S" fieldval) "")))
 		;; contact fields
-		(:to	   (mm/view-contacts msg field))
-		(:from	   (mm/view-contacts msg field))
-		(:cc	   (mm/view-contacts msg field))
-		(:bcc	   (mm/view-contacts msg field))
+		(:to	   (mu4e-view-contacts msg field))
+		(:from	   (mu4e-view-contacts msg field))
+		(:cc	   (mu4e-view-contacts msg field))
+		(:bcc	   (mu4e-view-contacts msg field))
 
 		;; if we (`user-mail-address' are the From, show To, otherwise,
 		;; show From
 		(:from-or-to
 		  (let* ((from (plist-get msg :from))
 			  (from (and from (cdar from))))
-		    (if (and from (string-match mm/user-mail-address-regexp from))
-		      (mm/view-contacts msg :to)
-		      (mm/view-contacts msg :from))))
+		    (if (and from (string-match mu4e-user-mail-address-regexp from))
+		      (mu4e-view-contacts msg :to)
+		      (mu4e-view-contacts msg :from))))
 
 		;; date
 		(:date
 		  (let ((datestr
-			  (when fieldval (format-time-string mm/view-date-format fieldval))))
-		    (if datestr (mm/view-header fieldname datestr) "")))
+			  (when fieldval (format-time-string mu4e-view-date-format fieldval))))
+		    (if datestr (mu4e-view-header fieldname datestr) "")))
 		;; size
-		(:size	(mm/view-size  msg)
+		(:size	(mu4e-view-size  msg)
 		  (let ((sizestr (when size (format "%d bytes"))))
-		    (if sizestr (mm/view-header fieldname sizestr))))
+		    (if sizestr (mu4e-view-header fieldname sizestr))))
 		;; attachments
-		(:attachments (mm/view-attachments msg))
+		(:attachments (mu4e-view-attachments msg))
 		(t               (error "Unsupported field: %S" field)))))
-	    mm/view-fields "")
+	    mu4e-view-fields "")
 	"\n"
-	(mm/view-body msg))
+	(mu4e-view-body msg))
 
       ;; initialize view-mode
-      (mm/view-mode)
+      (mu4e-view-mode)
       (setq ;; these are buffer-local
 	mode-name (if (plist-get msg :subject)
 		    (truncate-string-to-width (plist-get msg :subject) 16 0 nil t)
-		    (propertize "No subject" 'face 'mm/system-face))
-	mm/current-msg msg
-	mm/hdrs-buffer hdrsbuf
-	mm/link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
+		    (propertize "No subject" 'face 'mu4e-system-face))
+	mu4e-current-msg msg
+	mu4e-hdrs-buffer hdrsbuf
+	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
 
       (switch-to-buffer buf)
       (goto-char (point-min))
-      (mm/view-beautify)
+      (mu4e-view-beautify)
 
       (unless update
-	(mm/view-mark-as-read-maybe)))))
+	(mu4e-view-mark-as-read-maybe)))))
 
 
-(defun mm/view-body (msg)
+(defun mu4e-view-body (msg)
   "Get the body for this message, which is either :body-txt,
 or if not available, :body-html converted to text)."
   (or (plist-get msg :body-txt)
@@ -133,22 +133,22 @@ or if not available, :body-html converted to text)."
     "No body found"))
 
 
-(defun mm/view-header (key val &optional dont-propertize-val)
+(defun mu4e-view-header (key val &optional dont-propertize-val)
   "Show header FIELD for MSG with KEY. ie. <KEY>: value-of-FIELD."
   (if val
     (concat
-      (propertize key 'face 'mm/view-header-key-face) ": "
+      (propertize key 'face 'mu4e-view-header-key-face) ": "
       (if dont-propertize-val
 	val
-        (propertize val 'face 'mm/view-header-value-face))
+        (propertize val 'face 'mu4e-view-header-value-face))
       "\n")
     ""))
 
 
-(defun mm/view-contacts (msg field)
+(defun mu4e-view-contacts (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
   (let* ((lst (plist-get msg field))
-	  (fieldname (cdr (assoc field mm/header-names)))
+	  (fieldname (cdr (assoc field mu4e-header-names)))
 	  (contacts
 	    (and lst
 	      (mapconcat
@@ -158,20 +158,20 @@ or if not available, :body-html converted to text)."
 		      (format "%s <%s>" name email)
 		      (format "%s" email)))) lst ", "))))
     (if contacts
-      (mm/view-header fieldname contacts)
+      (mu4e-view-header fieldname contacts)
       "")))
 
-(defvar mm/attach-map nil
+(defvar mu4e-attach-map nil
   "*internal* Hash which maps a number to a (part-id name mime-type).")
 
 
-(defun mm/view-attachments (msg)
+(defun mu4e-view-attachments (msg)
   "Display attachment information; the field looks like something like:
    	:attachments ((:index 4 :name \"test123.doc\"
                        :mime-type \"application/msword\" :size 1234))."
   (let ((atts (plist-get msg :attachments)))
     (when atts
-      (setq mm/attach-map
+      (setq mu4e-attach-map
 	(make-hash-table :size 32 :rehash-size 2 :weakness nil))
       (let* ((id 0)
 	      (vals
@@ -182,42 +182,42 @@ or if not available, :body-html converted to text)."
 			   (mime-type (plist-get att :mime-type))
 			   (size (plist-get att :size)))
 		      (incf id)
-		      (puthash id att mm/attach-map)
+		      (puthash id att mu4e-attach-map)
 		      (concat
-			(propertize (format "[%d]" id) 'face 'mm/view-attach-number-face)
-			(propertize name 'face 'mm/view-link-face)
+			(propertize (format "[%d]" id) 'face 'mu4e-view-attach-number-face)
+			(propertize name 'face 'mu4e-view-link-face)
 			(if size
 			  (concat
-			    "(" (propertize (mm/display-size size) 'face 'mm/view-header-key-face)
+			    "(" (propertize (mu4e-display-size size) 'face 'mu4e-view-header-key-face)
 			    ")")
 			  "")
 			)))
 		    atts ", ")))
-		(mm/view-header (format "Attachments(%d)" id) vals t)))))
+		(mu4e-view-header (format "Attachments(%d)" id) vals t)))))
 
 
-(defvar mm/view-mode-map nil
-  "Keymap for \"*mm-view*\" buffers.")
-(unless mm/view-mode-map
-  (setq mm/view-mode-map
+(defvar mu4e-view-mode-map nil
+  "Keymap for \"*mu4e-view*\" buffers.")
+(unless mu4e-view-mode-map
+  (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
-      (define-key map "q" 'mm/view-quit-buffer)
+      (define-key map "q" 'mu4e-view-quit-buffer)
 
-      (define-key map "s" 'mm/search)
-      (define-key map "S" 'mm/search-full)
+      (define-key map "s" 'mu4e-search)
+      (define-key map "S" 'mu4e-search-full)
 
-      (define-key map "b" 'mm/search-bookmark)
-      (define-key map "j" 'mm/jump-to-maildir)
+      (define-key map "b" 'mu4e-search-bookmark)
+      (define-key map "j" 'mu4e-jump-to-maildir)
 
-      (define-key map "g" 'mm/view-go-to-url)
-      (define-key map "f" 'mm/compose-forward)
-      (define-key map "r" 'mm/compose-reply)
-      (define-key map "c" 'mm/compose-new)
-      (define-key map "e" 'mm/edit-draft)
+      (define-key map "g" 'mu4e-view-go-to-url)
+      (define-key map "f" 'mu4e-compose-forward)
+      (define-key map "r" 'mu4e-compose-reply)
+      (define-key map "c" 'mu4e-compose-new)
+      (define-key map "e" 'mu4e-edit-draft)
 
-      (define-key map "." 'mm/view-raw)
-      (define-key map "|" 'mm/view-pipe)
-      ;; (define-key map "I" 'mm/inspect-message)
+      (define-key map "." 'mu4e-view-raw)
+      (define-key map "|" 'mu4e-view-pipe)
+      ;; (define-key map "I" 'mu4e-inspect-message)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -232,109 +232,109 @@ or if not available, :body-html converted to text)."
 
 
       ;; navigation between messages
-      (define-key map "n" 'mm/view-next-header)
-      (define-key map "p" 'mm/view-prev-header)
+      (define-key map "n" 'mu4e-view-next-header)
+      (define-key map "p" 'mu4e-view-prev-header)
 
       ;; attachments
-      (define-key map "e" 'mm/view-extract-attachment)
-      (define-key map "o" 'mm/view-open-attachment)
+      (define-key map "e" 'mu4e-view-extract-attachment)
+      (define-key map "o" 'mu4e-view-open-attachment)
 
       ;; marking/unmarking
-      (define-key map (kbd "<backspace>") 'mm/mark-for-trash)
-      (define-key map "d" 'mm/view-mark-for-trash)
+      (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
+      (define-key map "d" 'mu4e-view-mark-for-trash)
 
-      (define-key map (kbd "<delete>") 'mm/view-mark-for-delete)
-      (define-key map "D" 'mm/view-mark-for-delete)
-      (define-key map "a" 'mm/mark-for-move-quick)
+      (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
+      (define-key map "D" 'mu4e-view-mark-for-delete)
+      (define-key map "a" 'mu4e-mark-for-move-quick)
 
-      (define-key map "m" 'mm/view-mark-for-move)
+      (define-key map "m" 'mu4e-view-mark-for-move)
 
       ;; misc
-      (define-key map "w" 'mm/view-toggle-wrap-lines)
-      (define-key map "h" 'mm/view-toggle-hide-cited)
+      (define-key map "w" 'mu4e-view-toggle-wrap-lines)
+      (define-key map "h" 'mu4e-view-toggle-hide-cited)
 
-      (define-key map "R" 'mm/view-refresh)
+      (define-key map "R" 'mu4e-view-refresh)
 
       ;; next 3 only warn user when attempt in the message view
-      (define-key map "u" 'mm/view-unmark)
-      (define-key map "U" 'mm/view-unmark)
-      (define-key map "x" 'mm/view-marked-execute)
+      (define-key map "u" 'mu4e-view-unmark)
+      (define-key map "U" 'mu4e-view-unmark)
+      (define-key map "x" 'mu4e-view-marked-execute)
 
       ;; menu
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "View")))
 	(define-key map [menu-bar headers] (cons "View" menumap))
 
-	(define-key menumap [quit-buffer] '("Quit view" . mm/view-quit-buffer))
+	(define-key menumap [quit-buffer] '("Quit view" . mu4e-view-quit-buffer))
 
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
-	  '("Toggle wrap lines" . mm/view-toggle-wrap-lines))
+	  '("Toggle wrap lines" . mu4e-view-toggle-wrap-lines))
 	(define-key menumap [hide-cited]
-	  '("Toggle hide cited" . mm/view-toggle-hide-cited))
+	  '("Toggle hide cited" . mu4e-view-toggle-hide-cited))
 	(define-key menumap [view-raw]
-	  '("View raw message" . mm/view-raw))
+	  '("View raw message" . mu4e-view-raw))
 	(define-key menumap [pipe]
-	  '("Pipe through shell" . mm/view-pipe))
+	  '("Pipe through shell" . mu4e-view-pipe))
 	(define-key menumap [inspect]
-	  '("Inspect with guile" . mm/inspect-message))
+	  '("Inspect with guile" . mu4e-inspect-message))
 
 	(define-key menumap [sepa8] '("--"))
 	(define-key menumap [open-att]
-	  '("Open attachment" . mm/view-open-attachment))
+	  '("Open attachment" . mu4e-view-open-attachment))
 	(define-key menumap [extract-att]
-	  '("Extract attachment" . mm/view-extract-attachment))
+	  '("Extract attachment" . mu4e-view-extract-attachment))
 	(define-key menumap [goto-url]
-	  '("Visit URL" . mm/view-go-to-url))
+	  '("Visit URL" . mu4e-view-go-to-url))
 
 	(define-key menumap [sepa1] '("--"))
 	(define-key menumap [mark-delete]
-	  '("Mark for deletion" . mm/view-mark-for-delete))
+	  '("Mark for deletion" . mu4e-view-mark-for-delete))
 	(define-key menumap [mark-trash]
-	  '("Mark for trash" .  mm/view-mark-for-trash))
+	  '("Mark for trash" .  mu4e-view-mark-for-trash))
 	(define-key menumap [mark-move]
-	  '("Mark for move" . mm/view-mark-for-move))
+	  '("Mark for move" . mu4e-view-mark-for-move))
 
 	(define-key menumap [sepa2] '("--"))
-	(define-key menumap [compose-new]  '("Compose new" . mm/compose-new))
-	(define-key menumap [forward]  '("Forward" . mm/compose-forward))
-	(define-key menumap [reply]  '("Reply" . mm/compose-reply))
+	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
+	(define-key menumap [forward]  '("Forward" . mu4e-compose-forward))
+	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [sepa3] '("--"))
 
-	(define-key menumap [search]  '("Search" . mm/search))
-	(define-key menumap [jump]  '("Jump to maildir" . mm/jump-to-maildir))
+	(define-key menumap [search]  '("Search" . mu4e-search))
+	(define-key menumap [jump]  '("Jump to maildir" . mu4e-jump-to-maildir))
 
 	(define-key menumap [sepa4] '("--"))
-	(define-key menumap [next]  '("Next" . mm/view-next-header))
-	(define-key menumap [previous]  '("Previous" . mm/view-prev-header)))
+	(define-key menumap [next]  '("Next" . mu4e-view-next-header))
+	(define-key menumap [previous]  '("Previous" . mu4e-view-prev-header)))
       map)))
 
-(fset 'mm/view-mode-map mm/view-mode-map)
+(fset 'mu4e-view-mode-map mu4e-view-mode-map)
 
 
-(defvar mm/wrap-lines nil
+(defvar mu4e-wrap-lines nil
   "*internal* Whether to wrap lines or not (variable controlled by
-  `mm/view-toggle-wrap-lines').")
+  `mu4e-view-toggle-wrap-lines').")
 
-(defvar mm/hide-cited nil
+(defvar mu4e-hide-cited nil
   "*internal* Whether to hide cited lines or not (the variable can
-  be changed with `mm/view-toggle-hide-cited').")
+  be changed with `mu4e-view-toggle-hide-cited').")
 
 
-(defun mm/view-mode ()
+(defun mu4e-view-mode ()
   "Major mode for viewing an e-mail message."
   (interactive)
   (kill-all-local-variables)
-  (use-local-map mm/view-mode-map)
+  (use-local-map mu4e-view-mode-map)
 
-  (make-local-variable 'mm/hdrs-buffer)
-  (make-local-variable 'mm/current-msg)
-  (make-local-variable 'mm/link-map)
+  (make-local-variable 'mu4e-hdrs-buffer)
+  (make-local-variable 'mu4e-current-msg)
+  (make-local-variable 'mu4e-link-map)
 
-  (make-local-variable 'mm/wrap-lines)
-  (make-local-variable 'mm/hide-cited)
+  (make-local-variable 'mu4e-wrap-lines)
+  (make-local-variable 'mu4e-hide-cited)
 
-  (setq major-mode 'mm/view-mode mode-name mm/view-buffer-name)
+  (setq major-mode 'mu4e-view-mode mode-name mu4e-view-buffer-name)
   (setq truncate-lines t buffer-read-only t))
 
 ;;;;;;
@@ -343,21 +343,21 @@ or if not available, :body-html converted to text)."
 ;; we mark messages are as read when we leave the message; ie., when skipping to
 ;; the next/previous one, or leaving the view buffer altogether.
 
-(defun mm/view-mark-as-read-maybe ()
+(defun mu4e-view-mark-as-read-maybe ()
   "Clear the current message's New/Unread status and set it to
 Seen; if the message is not New/Unread, do nothing."
-  (when mm/current-msg
-    (let ((flags (plist-get mm/current-msg :flags))
-	   (docid (plist-get mm/current-msg :docid)))
+  (when mu4e-current-msg
+    (let ((flags (plist-get mu4e-current-msg :flags))
+	   (docid (plist-get mu4e-current-msg :docid)))
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
-	(mm/proc-flag docid "+S-u-N")))))
+	(mu4e-proc-flag docid "+S-u-N")))))
 
 
-(defvar mm/link-map nil
+(defvar mu4e-link-map nil
   "*internal* A map of some number->url so we can jump to url by number.")
 
-(defun mm/view-beautify ()
+(defun mu4e-view-beautify ()
   "Improve the message view a bit, by making URLs clickable,
 removing '^M' etc."
   (let ((num 0))
@@ -370,47 +370,47 @@ removing '^M' etc."
     (goto-char (point-min))
     (let ((p (search-forward "\n-- \n" nil t)))
       (when p
-	(add-text-properties p (point-max) '(face mm/view-footer-face))))
+	(add-text-properties p (point-max) '(face mu4e-view-footer-face))))
     ;; this is fairly simplistic...
     (goto-char (point-min))
     (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!~,:;]*\\)\\>"
 	     nil t)
       (let ((subst (propertize (match-string-no-properties 0)
-		     'face 'mm/view-link-face)))
+		     'face 'mu4e-view-link-face)))
 	(incf num)
-	(puthash num (match-string-no-properties 0) mm/link-map)
+	(puthash num (match-string-no-properties 0) mu4e-link-map)
 	(replace-match (concat subst
 			 (propertize (format "[%d]" num)
-			   'face 'mm/view-url-number-face))))))))
+			   'face 'mu4e-view-url-number-face))))))))
 
 
 ;; raw mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; some buffer-local variables
-(defvar mm/view-buffer nil
+(defvar mu4e-view-buffer nil
   "*internal* View buffer connected to this raw view.")
 
-(defun mm/view-raw-mode ()
+(defun mu4e-view-raw-mode ()
   "Major mode for viewing of raw e-mail message."
   (interactive)
   (kill-all-local-variables)
-  (use-local-map mm/view-raw-mode-map)
+  (use-local-map mu4e-view-raw-mode-map)
 
-  (make-local-variable 'mm/view-buffer)
+  (make-local-variable 'mu4e-view-buffer)
 
-  (setq major-mode 'mm/view-raw-mode
+  (setq major-mode 'mu4e-view-raw-mode
     mode-name "mm: raw view")
   (setq truncate-lines t buffer-read-only t))
 
-(defvar mm/view-raw-mode-map nil
-  "Keymap for \"*mm-view-raw*\" buffers.")
+(defvar mu4e-view-raw-mode-map nil
+  "Keymap for \"*mu4e-view-raw*\" buffers.")
 
-(unless mm/view-raw-mode-map
-  (setq mm/view-raw-mode-map
+(unless mu4e-view-raw-mode-map
+  (setq mu4e-view-raw-mode-map
     (let ((map (make-sparse-keymap)))
 
-      (define-key map "q" 'mm/view-raw-quit-buffer)
-      (define-key map "." 'mm/view-raw-quit-buffer)
+      (define-key map "q" 'mu4e-view-raw-quit-buffer)
+      (define-key map "." 'mu4e-view-raw-quit-buffer)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -428,15 +428,15 @@ removing '^M' etc."
       (let ((menumap (make-sparse-keymap "Raw view")))
 	(define-key map [menu-bar headers] (cons "Raw view" menumap))
 	(define-key menumap [quit-buffer] '("Quit" .
-					     mm/view-raw-quit-buffer))
+					     mu4e-view-raw-quit-buffer))
       map))))
 
-(fset 'mm/view-raw-mode-map mm/view-raw-mode-map)
+(fset 'mu4e-view-raw-mode-map mu4e-view-raw-mode-map)
 
 
-(defun mm/view-raw-message (msg view-buffer)
+(defun mu4e-view-raw-message (msg view-buffer)
   "Display the raw contents of message MSG in a new buffer."
-  (let ((buf (get-buffer-create mm/view-raw-buffer-name))
+  (let ((buf (get-buffer-create mu4e-view-raw-buffer-name))
 	 (inhibit-read-only t)
 	 (file (plist-get msg :path)))
     (unless (and file (file-readable-p file))
@@ -445,15 +445,15 @@ removing '^M' etc."
       (erase-buffer)
       (insert-file file)
       ;; initialize view-mode
-      (mm/view-raw-mode)
-      (setq mm/view-buffer view-buffer)
+      (mu4e-view-raw-mode)
+      (setq mu4e-view-buffer view-buffer)
       (switch-to-buffer buf)
       (goto-char (point-min)))))
 
 
-(defun mm/view-shell-command-on-raw-message (msg view-buffer cmd)
+(defun mu4e-view-shell-command-on-raw-message (msg view-buffer cmd)
   "Process the raw message with shell command CMD."
-  (let ((buf (get-buffer-create mm/view-raw-buffer-name))
+  (let ((buf (get-buffer-create mu4e-view-raw-buffer-name))
 	 (inhibit-read-only t)
 	 (file (plist-get msg :path)))
     (unless (and file (file-readable-p file))
@@ -461,41 +461,41 @@ removing '^M' etc."
     (with-current-buffer buf
       (erase-buffer)
       (process-file-shell-command cmd file buf)
-      (mm/view-raw-mode)
-      (setq mm/view-buffer view-buffer)
+      (mu4e-view-raw-mode)
+      (setq mu4e-view-buffer view-buffer)
       (switch-to-buffer buf)
       (goto-char (point-min)))))
 
 
-(defun mm/view-raw-quit-buffer ()
+(defun mu4e-view-raw-quit-buffer ()
   "Quit the raw view and return to the message."
   (interactive)
-  (if (buffer-live-p mm/view-buffer)
-    (switch-to-buffer mm/view-buffer)
+  (if (buffer-live-p mu4e-view-buffer)
+    (switch-to-buffer mu4e-view-buffer)
     (kill-buffer)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; functions for org-contacts
 
-(defun mm/org-contacts-from (name-or-email)
+(defun mu4e-org-contacts-from (name-or-email)
   "Get a message field if we are in view mode; NAME-OR-EMAIL should
 be either 'name or 'email to get the corresponding field. If the
 field is not found, \"\" is returned. Use this with org-contact
 with a template like:
 
   (\"c\" \"Contacts\" entry (file \"~/Org/contacts.org\")
-          \"* %(mm/org-contacts-from 'name)
+          \"* %(mu4e-org-contacts-from 'name)
   :PROPERTIES:
-  :EMAIL: %(mm/org-contacts-from 'email)
+  :EMAIL: %(mu4e-org-contacts-from 'email)
   :END:\")))
 
 See the `org-contacts' documentation for more details."
-  (with-current-buffer mm/view-buffer-name ;; hackish...
-    (unless (eq major-mode 'mm/view-mode)
-      (error "Not in mm/view mode."))
-    (unless mm/current-msg
+  (with-current-buffer mu4e-view-buffer-name ;; hackish...
+    (unless (eq major-mode 'mu4e-view-mode)
+      (error "Not in mu4e-view mode."))
+    (unless mu4e-current-msg
       (error "No current message."))
-    (let ((from (car-safe (plist-get mm/current-msg :from))))
+    (let ((from (car-safe (plist-get mu4e-current-msg :from))))
       (cond
 	((not from) "") ;; nothing found
 	((eq name-or-email 'name)
@@ -511,85 +511,85 @@ See the `org-contacts' documentation for more details."
 
 ;; Interactive functions
 
-(defun mm/view-toggle-wrap-lines ()
+(defun mu4e-view-toggle-wrap-lines ()
   "Toggle line wrap in the message body."
   (interactive)
-  (if mm/wrap-lines
+  (if mu4e-wrap-lines
     (progn
-      (setq mm/wrap-lines nil)
-      (mm/view-refresh)) ;; back to normal
+      (setq mu4e-wrap-lines nil)
+      (mu4e-view-refresh)) ;; back to normal
     (save-excursion
       (let ((inhibit-read-only t))
-	(setq mm/wrap-lines t)
+	(setq mu4e-wrap-lines t)
 	(goto-char (point-min))
 	(when (search-forward "\n\n") ;; search for the message body
 	  (fill-region (point) (point-max)))))))
 
-(defun mm/view-toggle-hide-cited ()
+(defun mu4e-view-toggle-hide-cited ()
   "Toggle hiding of cited lines in the message body."
   (interactive)
-  (if mm/hide-cited
+  (if mu4e-hide-cited
     (progn
-      (setq mm/hide-cited nil)
-      (mm/view-refresh))
+      (setq mu4e-hide-cited nil)
+      (mu4e-view-refresh))
     (save-excursion
       (let ((inhibit-read-only t))
 	(goto-char (point-min))
 	(flush-lines "^[:blank:]*>")
-	(setq mm/hide-cited t)))))
+	(setq mu4e-hide-cited t)))))
 
 
-(defun mm/view-refresh ()
+(defun mu4e-view-refresh ()
   "Redisplay the current message."
   (interactive)
-  (mm/view mm/current-msg mm/hdrs-buffer t))
+  (mu4e-view mu4e-current-msg mu4e-hdrs-buffer t))
 
 
-(defun mm/view-quit-buffer ()
+(defun mu4e-view-quit-buffer ()
   "Quit the message view and return to the headers."
   (interactive)
-  (if (buffer-live-p mm/hdrs-buffer)
-    (switch-to-buffer mm/hdrs-buffer)
+  (if (buffer-live-p mu4e-hdrs-buffer)
+    (switch-to-buffer mu4e-hdrs-buffer)
     (kill-buffer)))
 
-(defun mm/view-next-header ()
+(defun mu4e-view-next-header ()
   "View the next header."
   (interactive)
-  (when (mm/next-header)
-    (mm/view-message)))
+  (when (mu4e-next-header)
+    (mu4e-view-message)))
 
-(defun mm/view-prev-header ()
+(defun mu4e-view-prev-header ()
   "View the previous header."
   (interactive)
-  (when (mm/prev-header)
-    (mm/view-message)))
+  (when (mu4e-prev-header)
+    (mu4e-view-message)))
 
-(defun mm/view-mark-for-move ()
+(defun mu4e-view-mark-for-move ()
   "Mark the current message for moving."
   (interactive)
-  (when (mm/mark-for-move)
-    (mm/view-message)))
+  (when (mu4e-mark-for-move)
+    (mu4e-view-message)))
 
-(defun mm/view-mark-for-trash ()
+(defun mu4e-view-mark-for-trash ()
   "Mark the current message for moving to the trash folder."
   (interactive)
-  (when (mm/mark-for-trash)
-    (mm/view-message)))
+  (when (mu4e-mark-for-trash)
+    (mu4e-view-message)))
 
-(defun mm/view-mark-for-delete ()
+(defun mu4e-view-mark-for-delete ()
   "Mark the current message for deletion."
   (interactive)
-  (when (mm/mark-for-delete)
-    (mm/view-message)))
+  (when (mu4e-mark-for-delete)
+    (mu4e-view-message)))
 
-(defun mm/view-extract-attachment (attnum)
+(defun mu4e-view-extract-attachment (attnum)
   "Extract the attachment with ATTNUM."
-  (unless mm/attachment-dir (error "`mm/attachment-dir' is not set"))
-  (when (or (null mm/attach-map) (zerop (hash-table-count mm/attach-map)))
+  (unless mu4e-attachment-dir (error "`mu4e-attachment-dir' is not set"))
+  (when (or (null mu4e-attach-map) (zerop (hash-table-count mu4e-attach-map)))
     (error "No attachments for this message"))
   (interactive "nAttachment to extract:")
-  (let* ((att  (gethash attnum mm/attach-map))
-	  (path (and att (concat mm/attachment-dir
+  (let* ((att  (gethash attnum mu4e-attach-map))
+	  (path (and att (concat mu4e-attachment-dir
 			   "/"  (plist-get att :name))))
 	  (id (and att (plist-get att :index)))
 	  (retry t))
@@ -599,74 +599,74 @@ See the `org-contacts' documentation for more details."
       (setq retry
 	(and (file-exists-p path)
 	  (not (y-or-n-p (concat "Overwrite " path "?"))))))
-    (mm/proc-save (plist-get mm/current-msg :docid) id path)))
+    (mu4e-proc-save (plist-get mu4e-current-msg :docid) id path)))
 
-(defun mm/view-open-attachment (attnum)
+(defun mu4e-view-open-attachment (attnum)
   "Extract the attachment with ATTNUM"
-  (unless mm/attach-map
+  (unless mu4e-attach-map
     (error "No attachments for this message"))
   (interactive "nAttachment to open:")
-  (let* ((att (gethash attnum mm/attach-map))
+  (let* ((att (gethash attnum mu4e-attach-map))
 	  (id (and att (plist-get att :index))))
     (unless id (error "Not a valid attachment number"))
-    (mm/proc-open (plist-get mm/current-msg :docid) id)))
+    (mu4e-proc-open (plist-get mu4e-current-msg :docid) id)))
 
-(defun mm/view-unmark ()
+(defun mu4e-view-unmark ()
   "Warn user that unmarking only works in the header list."
   (interactive)
   (message "Unmarking needs to be done in the header list view"))
 
 
-(defun mm/view-marked-execute ()
+(defun mu4e-view-marked-execute ()
   "Warn user that execution can only take place in n the header
 list."
   (interactive)
   (message "Execution needs to be done in the header list view"))
 
-(defun mm/view-go-to-url (num)
+(defun mu4e-view-go-to-url (num)
   "Go to a numbered url."
   (interactive "nGo to url with number: ")
-  (let ((url (gethash num mm/link-map)))
+  (let ((url (gethash num mu4e-link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
 
-(defun mm/view-raw ()
+(defun mu4e-view-raw ()
   "Show the the raw text of the current message."
   (interactive)
-  (unless mm/current-msg
+  (unless mu4e-current-msg
     (error "No current message"))
-  (mm/view-raw-message mm/current-msg (current-buffer)))
+  (mu4e-view-raw-message mu4e-current-msg (current-buffer)))
 
-(defun mm/view-pipe (cmd)
+(defun mu4e-view-pipe (cmd)
   "Pipe the message through shell command CMD, and display the
 results."
   (interactive "sShell command: ")
-  (unless mm/current-msg
+  (unless mu4e-current-msg
     (error "No current message"))
-  (mm/view-shell-command-on-raw-message mm/current-msg (current-buffer) cmd))
+  (mu4e-view-shell-command-on-raw-message mu4e-current-msg (current-buffer) cmd))
 
-(defconst mm/muile-buffer-name "*muile*"
+(defconst mu4e-muile-buffer-name "*muile*"
   "Name of the buffer to execute muile.")
 
-(defconst mm/muile-process-name "*muile*"
+(defconst mu4e-muile-process-name "*muile*"
   "Name of the muile process.")
 
 ;; note, implementation is very basic/primitive; we probably need comint to do
 ;; something like geiser does (http://www.nongnu.org/geiser/). Desirable
 ;; features: a) the output is not editable b) tab-completions work
-(defun mm/inspect-message ()
+(defun mu4e-inspect-message ()
   "Inspect the current message in the Guile/Muile shell."
   (interactive)
-  (unless mm/muile-binary (error "`mm/muile-binary' is not defined"))
-  (unless (or (file-executable-p mm/muile-binary)
-	    (executable-find mm/muile-binary))
-    (error "%S not found" mm/muile-binary))
-  (unless mm/current-msg
+  (unless mu4e-muile-binary (error "`mu4e-muile-binary' is not defined"))
+  (unless (or (file-executable-p mu4e-muile-binary)
+	    (executable-find mu4e-muile-binary))
+    (error "%S not found" mu4e-muile-binary))
+  (unless mu4e-current-msg
     (error "No current message"))
-  (get-buffer-create mm/muile-buffer-name)
-  (start-process mm/muile-buffer-name mm/muile-process-name
-    mm/muile-binary "--msg" (plist-get mm/current-msg :path))
-  (switch-to-buffer mm/muile-buffer-name)
+  (get-buffer-create mu4e-muile-buffer-name)
+  (start-process mu4e-muile-buffer-name mu4e-muile-process-name
+    mu4e-muile-binary "--msg" (plist-get mu4e-current-msg :path))
+  (switch-to-buffer mu4e-muile-buffer-name)
   (shell-mode))
 
-(provide 'mm-view)
+(provide 'mu4e-view)

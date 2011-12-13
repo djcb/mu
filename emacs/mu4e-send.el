@@ -1,4 +1,4 @@
-;; mm-send.el -- part of mm, the mu mail user agent
+;; mu4e-send.el -- part of mm, the mu mail user agent
 ;;
 ;; Copyright (C) 2011 Dirk-Jan C. Binnema
 
@@ -39,23 +39,23 @@
 
 
 ;; internal variables / constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defconst mm/msg-draft-name "*mm-draft*"
+(defconst mu4e-msg-draft-name "*mu4e-draft*"
   "Name for draft messages.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; FIXME
-(defun mm/mu-binary-version () "0.98pre")
+(defun mu4e-mu-binary-version () "0.98pre")
 
 
-(defun mm/msg-user-agent ()
+(defun mu4e-msg-user-agent ()
   "Return the User-Agent string for mm. This is either the value
-of `mm/user-agent', or, if not set, a string based on the
+of `mu4e-user-agent', or, if not set, a string based on the
 version of mm and emacs."
-  (or mm/user-agent
-    (format "mu %s; emacs %s" (mm/mu-binary-version) emacs-version)))
+  (or mu4e-user-agent
+    (format "mu %s; emacs %s" (mu4e-mu-binary-version) emacs-version)))
 
-(defun mm/view-body (msg)
+(defun mu4e-view-body (msg)
   "Get the body for this message, which is either :body-txt,
 or if not available, :body-html converted to text)."
   (or (plist-get msg :body-txt)
@@ -65,12 +65,12 @@ or if not available, :body-html converted to text)."
       (buffer-string))
     "No body found"))
 
-(defun mm/msg-cite-original (msg)
+(defun mu4e-msg-cite-original (msg)
   "Cite the body text of MSG, with a \"On %s, %s wrote:\"
   line (with the %s's replaced with the date of MSG and the name
   or e-mail address of its sender (or 'someone' if nothing
   else)), followed of the quoted body of MSG, constructed by by
-  prepending `mm/msg-citation-prefix' to each line. If there is
+  prepending `mu4e-msg-citation-prefix' to each line. If there is
   no body in MSG, return nil."
   (let* ((from (plist-get msg :from))
 	  ;; first try plain-text, then html
@@ -90,7 +90,7 @@ or if not available, :body-html converted to text)."
 	"\n\n"
 	(replace-regexp-in-string "^" " > " body)))))
 
-(defun mm/msg-recipients-remove (lst email-to-remove)
+(defun mu4e-msg-recipients-remove (lst email-to-remove)
   "Remove the recipient with EMAIL from the recipient list (of form
 '( (\"A\" . \"a@example.com\") (\"B\" . \"B@example.com\"))."
   (remove-if
@@ -98,7 +98,7 @@ or if not available, :body-html converted to text)."
       (let ((email (cdr name-email)))
 	(when email (string= email-to-remove (downcase email))))) lst))
 
-(defun mm/msg-recipients-to-string (lst)
+(defun mu4e-msg-recipients-to-string (lst)
   "Convert a recipient list (of form '( (\"A\"
 . \"a@example.com\") (\"B\" . \"B@example.com\") (nil
 . \"c@example.com\")) into a string of form \"A <@aexample.com>, B
@@ -112,12 +112,12 @@ or if not available, :body-html converted to text)."
 	    (format "%s" email)))) lst ", ")))
 
 
-(defun mm/msg-header (hdr val)
+(defun mu4e-msg-header (hdr val)
   "Return a header line of the form HDR: VAL\n. If VAL is nil,
 return nil."
   (when val (format "%s: %s\n" hdr val)))
 
-(defun mm/msg-references-create (msg)
+(defun mu4e-msg-references-create (msg)
   "Construct the value of the References: header based on MSG as a
 comma-separated string. Normally, this the concatenation of the
 existing References (which may be empty) and the message-id. If the
@@ -131,7 +131,7 @@ return nil."
 	(lambda (msgid) (format "<%s>" msgid))
 	refs ","))))
 
-(defun mm/msg-to-create (msg)
+(defun mu4e-msg-to-create (msg)
   "Construct the To: header for a reply-message based on some
 message MSG. This takes the Reply-To address of MSG if it exist, or
 the From:-address otherwise. The result is either nil or a string
@@ -140,10 +140,10 @@ Reply-To contains a string of one or more addresses,
 comma-separated."
   (or
     (plist-get msg :reply-to)
-    (mm/msg-recipients-to-string (plist-get msg :from))))
+    (mu4e-msg-recipients-to-string (plist-get msg :from))))
 
 
-(defun mm/msg-cc-create (msg reply-all)
+(defun mu4e-msg-cc-create (msg reply-all)
   "Get the list of Cc-addresses for the reply to MSG. If REPLY-ALL
 is nil this is simply empty, otherwise it is the old CC-list
 together with the old TO-list, minus `user-mail-address'. The
@@ -154,11 +154,11 @@ the Cc: field."
     (when reply-all
       (setq cc-lst (append cc-lst to-lst)))
     ;; remove myself from cc
-    (setq cc-lst (mm/msg-recipients-remove cc-lst user-mail-address))
-    (mm/msg-recipients-to-string cc-lst)))
+    (setq cc-lst (mu4e-msg-recipients-remove cc-lst user-mail-address))
+    (mu4e-msg-recipients-to-string cc-lst)))
 
 
-(defun mm/msg-from-create ()
+(defun mu4e-msg-from-create ()
   "Construct a value for the From:-field of the reply to MSG,
 based on `user-full-name' and `user-mail-address'; if the latter is
 nil, function returns nil."
@@ -167,25 +167,25 @@ nil, function returns nil."
       (format "%s <%s>" user-full-name user-mail-address)
       (format "%s" user-mail-address))))
 
-(defun mm/msg-create-reply (msg)
+(defun mu4e-msg-create-reply (msg)
   "Create a draft message as a reply to MSG.
 
 A reply message has fields:
   From:        - see `mu-msg-from-create'
-  To:          - see `mm/msg-to-create'
-  Cc:          - see `mm/msg-cc-create'
-  Subject:     - `mm/msg-reply-prefix' + subject of MSG
+  To:          - see `mu4e-msg-to-create'
+  Cc:          - see `mu4e-msg-cc-create'
+  Subject:     - `mu4e-msg-reply-prefix' + subject of MSG
 
  then, the following fields, normally hidden from user:
   Reply-To:    - if `mail-reply-to' has been set
-  References:  - see `mm/msg-references-create'
+  References:  - see `mu4e-msg-references-create'
   In-Reply-To: - message-id of MSG
-  User-Agent   - see  `mm/msg-user-agent'
+  User-Agent   - see  `mu4e-msg-user-agent'
 
 Then follows `mail-header-separator' (for `message-mode' to separate
 body from headers)
 
-And finally, the cited body of MSG, as per `mm/msg-cite-original'."
+And finally, the cited body of MSG, as per `mu4e-msg-cite-original'."
   (let* ((recipnum (+ (length (plist-get msg :to))
 		     (length (plist-get msg :cc))))
 	  (reply-all (when (> recipnum 1)
@@ -193,60 +193,60 @@ And finally, the cited body of MSG, as per `mm/msg-cite-original'."
 			(format "Reply to all ~%d recipients? "
 			  (+ recipnum))))))
     (concat
-      (mm/msg-header "From" (or (mm/msg-from-create) ""))
+      (mu4e-msg-header "From" (or (mu4e-msg-from-create) ""))
       (when (boundp 'mail-reply-to)
-	(mm/msg-header "Reply-To" mail-reply-to))
+	(mu4e-msg-header "Reply-To" mail-reply-to))
 
-      (mm/msg-header "To" (or (mm/msg-to-create msg) ""))
-      (mm/msg-header "Cc" (mm/msg-cc-create msg reply-all))
+      (mu4e-msg-header "To" (or (mu4e-msg-to-create msg) ""))
+      (mu4e-msg-header "Cc" (mu4e-msg-cc-create msg reply-all))
 
-      (mm/msg-header "User-agent"  (mm/msg-user-agent))
-      (mm/msg-header "References"  (mm/msg-references-create msg))
+      (mu4e-msg-header "User-agent"  (mu4e-msg-user-agent))
+      (mu4e-msg-header "References"  (mu4e-msg-references-create msg))
 
-      (mm/msg-header "In-reply-to" (format "<%s>" (plist-get msg :message-id)))
+      (mu4e-msg-header "In-reply-to" (format "<%s>" (plist-get msg :message-id)))
 
-      (mm/msg-header "Subject"
-	(concat mm/msg-reply-prefix (plist-get msg :subject)))
+      (mu4e-msg-header "Subject"
+	(concat mu4e-msg-reply-prefix (plist-get msg :subject)))
 
       (propertize mail-header-separator 'read-only t 'intangible t) '"\n"
 
       "\n\n"
-      (mm/msg-cite-original msg))))
+      (mu4e-msg-cite-original msg))))
 
 ;; TODO: attachments
-(defun mm/msg-create-forward (msg)
+(defun mu4e-msg-create-forward (msg)
   "Create a draft forward message for MSG.
 
 A forward message has fields:
-  From:        - see `mm/msg-from-create'
+  From:        - see `mu4e-msg-from-create'
   To:          - empty
-  Subject:     - `mm/msg-forward-prefix' + subject of MSG
+  Subject:     - `mu4e-msg-forward-prefix' + subject of MSG
 
 then, the following fields, normally hidden from user:
   Reply-To:    - if `mail-reply-to' has been set
-  References:  - see `mm/msg-references-create'
-  User-Agent   - see  `mm/msg-user-agent'
+  References:  - see `mu4e-msg-references-create'
+  User-Agent   - see  `mu4e-msg-user-agent'
 
 Then follows `mail-header-separator' (for `message-mode' to separate
 body from headers)
 
-And finally, the cited body of MSG, as per `mm/msg-cite-original'."
+And finally, the cited body of MSG, as per `mu4e-msg-cite-original'."
     (concat
-      (mm/msg-header "From" (or (mm/msg-from-create) ""))
+      (mu4e-msg-header "From" (or (mu4e-msg-from-create) ""))
        (when (boundp 'mail-reply-to)
-	 (mm/msg-header "Reply-To" mail-reply-to))
+	 (mu4e-msg-header "Reply-To" mail-reply-to))
 
-      (mm/msg-header "To" "")
-      (mm/msg-header "User-agent"  (mm/msg-user-agent))
-      (mm/msg-header "References"  (mm/msg-references-create msg))
-      (mm/msg-header"Subject"
-	 (concat mm/msg-forward-prefix (plist-get msg :subject)))
+      (mu4e-msg-header "To" "")
+      (mu4e-msg-header "User-agent"  (mu4e-msg-user-agent))
+      (mu4e-msg-header "References"  (mu4e-msg-references-create msg))
+      (mu4e-msg-header"Subject"
+	 (concat mu4e-msg-forward-prefix (plist-get msg :subject)))
       (propertize mail-header-separator 'read-only t 'intangible t) "\n"
 
       "\n\n"
-      (mm/msg-cite-original msg)))
+      (mu4e-msg-cite-original msg)))
 
-(defun mm/msg-create-new ()
+(defun mu4e-msg-create-new ()
   "Create a new message.
 
 A new draft message has fields:
@@ -256,24 +256,24 @@ A new draft message has fields:
 
 then, the following fields, normally hidden from user:
   Reply-To:    - if `mail-reply-to' has been set
-  User-Agent   - see  `mm/msg-user-agent'
+  User-Agent   - see  `mu4e-msg-user-agent'
 
 Then follows `mail-header-separator' (for `message-mode' to separate
 body from headers)."
   (concat
-    (mm/msg-header "From" (or (mm/msg-from-create) ""))
+    (mu4e-msg-header "From" (or (mu4e-msg-from-create) ""))
     (when (boundp 'mail-reply-to)
-      (mm/msg-header "Reply-To" mail-reply-to))
-    (mm/msg-header "To" "")
-    (mm/msg-header "User-agent"  (mm/msg-user-agent))
-    (mm/msg-header "Subject" "")
+      (mu4e-msg-header "Reply-To" mail-reply-to))
+    (mu4e-msg-header "To" "")
+    (mu4e-msg-header "User-agent"  (mu4e-msg-user-agent))
+    (mu4e-msg-header "Subject" "")
     (propertize mail-header-separator 'read-only t 'intangible t) "\n"))
 
-(defun mm/msg-open-draft (compose-type &optional msg)
+(defun mu4e-msg-open-draft (compose-type &optional msg)
   "Open a draft file for a new message, creating it if it does not
 already exist, and optionally fill it with STR. Function also adds
 the new message to the database. When the draft message is added to
-the database, `mm/path-docid-map' will be updated, so that we can
+the database, `mu4e-path-docid-map' will be updated, so that we can
 use the new docid. Returns the full path to the new message."
   (let* ((hostname
 	   (downcase
@@ -281,14 +281,14 @@ use the new docid. Returns the full path to the new message."
 	       (substring system-name
 		 (string-match "^[^.]+" system-name) (match-end 0)))))
 	  (draft
-	    (concat mm/maildir mm/drafts-folder "/cur/"
+	    (concat mu4e-maildir mu4e-drafts-folder "/cur/"
 	      (format "%s-%x%x.%s:2,D" ;; 'D': rarely used, but hey, it's available
 		(format-time-string "%Y%m%d" (current-time))
 		(emacs-pid) (random t) hostname)))
 	  (str (case compose-type
-		 (reply   (mm/msg-create-reply msg))
-		 (forward (mm/msg-create-forward msg))
-		 (new     (mm/msg-create-new))
+		 (reply   (mu4e-msg-create-reply msg))
+		 (forward (mu4e-msg-create-forward msg))
+		 (new     (mu4e-msg-create-new))
 		 (t (error "unsupported compose-type %S" compose-type)))))
     (when str
       (with-temp-file draft
@@ -296,12 +296,12 @@ use the new docid. Returns the full path to the new message."
 	(write-file draft)))
 
     ;; save our file immediately, add add it to the db; thus, we can retrieve
-    ;; the new docid from `mm/path-docid-map'.
-    (mm/proc-add draft mm/drafts-folder)
+    ;; the new docid from `mu4e-path-docid-map'.
+    (mu4e-proc-add draft mu4e-drafts-folder)
     draft))
 
 
-(defun mm/send-compose-handler (compose-type &optional msg)
+(defun mu4e-send-compose-handler (compose-type &optional msg)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -312,20 +312,20 @@ When COMPOSE-TYPE is `reply' or `forward', MSG should be a message
 plist.  If COMPOSE-TYPE is `new', MSG should be nil.
 
 The name of the draft folder is constructed from the concatenation
- of `mm/maildir' and `mm/drafts-folder' (therefore, these must be
+ of `mu4e-maildir' and `mu4e-drafts-folder' (therefore, these must be
  set).
 
 The message file name is a unique name determined by
-`mm/msg-draft-file-name'.
+`mu4e-msg-draft-file-name'.
 
-The initial STR would be created from either `mm/msg-create-reply',
-ar`mm/msg-create-forward' or `mm/msg-create-new'. The editing buffer is
+The initial STR would be created from either `mu4e-msg-create-reply',
+ar`mu4e-msg-create-forward' or `mu4e-msg-create-new'. The editing buffer is
 using Gnus' `message-mode'."
-  (unless mm/maildir       (error "mm/maildir not set"))
-  (unless mm/drafts-folder (error "mm/drafts-folder not set"))
+  (unless mu4e-maildir       (error "mu4e-maildir not set"))
+  (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
   (let ((draft
 	  (if (member compose-type '(reply forward new))
-	    (mm/msg-open-draft compose-type msg)
+	    (mu4e-msg-open-draft compose-type msg)
 	    (if (eq compose-type 'edit)
 	      (plist-get msg :path)
 	      (error "unsupported compose-type %S" compose-type)))))
@@ -340,11 +340,11 @@ using Gnus' `message-mode'."
 
     ;; update the db when the file is saved...]
     (add-to-list 'write-file-functions
-      (lambda() (mm/proc-add (buffer-file-name) mm/drafts-folder)))
+      (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
 
     ;; hook our functions up with sending of the message
-    (add-hook 'message-sent-hook 'mm/msg-save-to-sent nil t)
-    (add-hook 'message-sent-hook 'mm/send-set-parent-flag nil t)
+    (add-hook 'message-sent-hook 'mu4e-msg-save-to-sent nil t)
+    (add-hook 'message-sent-hook 'mu4e-send-set-parent-flag nil t)
 
     (let ((message-hidden-headers
 	    `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
@@ -356,10 +356,10 @@ using Gnus' `message-mode'."
       (message-goto-body))))
 
 
-(defun mm/msg-save-to-sent ()
+(defun mu4e-msg-save-to-sent ()
   "Move the message in this buffer to the sent folder. This is
  meant to be called from message mode's `message-sent-hook'."
-  (unless mm/sent-folder (error "mm/sent-folder not set"))
+  (unless mu4e-sent-folder (error "mu4e-sent-folder not set"))
   (save-excursion
     (goto-char (point-min))
     ;; remove the --text follows this line-- separator
@@ -368,10 +368,10 @@ using Gnus' `message-mode'."
       (error "cannot find mail-header-separator"))
 
     (save-buffer)
-    (let ((docid (gethash (buffer-file-name) mm/path-docid-map)))
+    (let ((docid (gethash (buffer-file-name) mu4e-path-docid-map)))
       (unless docid (error "unknown message (%S)" (buffer-file-name)))
       ;; ok, all seems well, well move the message to the sent-folder
-      (mm/proc-move-msg docid mm/sent-folder "-T-D+S")
+      (mu4e-proc-move-msg docid mu4e-sent-folder "-T-D+S")
       ;; we can remove the value from the hash now, if we can establish there
       ;; are not other compose buffers using this very same docid...
       
@@ -382,7 +382,7 @@ using Gnus' `message-mode'."
     
 
 
-(defun mm/send-set-parent-flag ()
+(defun mu4e-send-set-parent-flag ()
   "Set the 'replied' flag on messages we replied to, and the
 'passed' flag on message we have forwarded.
 
@@ -413,8 +413,8 @@ This is meant to be called from message mode's
 	    (setq forwarded-from (car-safe (last refs)))))))
     ;; remove the <>
     (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-      (mm/proc-flag (match-string 1 in-reply-to) "+R"))
+      (mu4e-proc-flag (match-string 1 in-reply-to) "+R"))
     (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-      (mm/proc-flag (match-string 1 forwarded-from) "+P"))))
+      (mu4e-proc-flag (match-string 1 forwarded-from) "+P"))))
 
-(provide 'mm-send)
+(provide 'mu4e-send)
