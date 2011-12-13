@@ -11,6 +11,9 @@
    - [ ] check wmy (date) for begin-end
    - [ ] tagging rw
 
+ 
+* Releases already done (see NEWS for features)
+
 ** release 0.9.7 [100%]
 
    - [X] mu stats
@@ -19,8 +22,6 @@
    - [X] guile interface
    - [X] add version info to output of configure, mu.log
    - [X] use system locale in output
- 
-* Releases already done (see NEWS for features)
   
 ** release 0.9.6 [100%]
   

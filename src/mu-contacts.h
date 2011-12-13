@@ -64,7 +64,6 @@ gboolean mu_contacts_add (MuContacts *self, const char *email,
 void mu_contacts_destroy (MuContacts *self);
 
 
-
 /**
  * clear all contacts from the cache
  *
