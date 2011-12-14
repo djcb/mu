@@ -1,0 +1,30 @@
+#!/bin/sh
+exec guile -e main -s $0 $@
+!#
+
+(use-modules (mu) (mu stats))
+
+(define (main args)
+
+  (define (usage-exit)
+    (display "usage: mu-msg-stats hour|day|month|year [searchexpr]")
+    (newline)
+    (exit 1))
+
+  (if (not (>= (length args) 2))
+    (usage-exit))
+     
+  (mu:init)
+ 
+  (let* ((lst (cdr (cdr args)))
+	 (expr (if lst (string-join lst) "")))
+    (display expr)
+    (newline)
+    (cond
+      ((string= (cadr args) "hour")  (mu:plot:per-hour expr))
+      ((string= (cadr args) "day")   (mu:plot:per-weekday expr))
+      ((string= (cadr args) "month") (mu:plot:per-month expr))
+      ((string= (cadr args) "year")  (mu:plot:per-year expr))
+      (else (usage-exit)))))
+  
+
