@@ -19,9 +19,11 @@
 ;; some guile/scheme functions to get various statistics of my mu
 ;; message store.
 
-(use-modules (ice-9 optargs) (ice-9 popen))
 
 (define-module (mu stats)
+  :use-module (ice-9 optargs)
+  :use-module (ice-9 popen)
+  :use-module (ice-9 format)
   :use-module (mu log)
   :use-module (mu store)
   :use-module (mu msg)
@@ -33,9 +35,7 @@
     mu:stats:average-recipient-number
     mu:stats:frequency
     mu:stats:per-weekday
-    mu:plot:per-weekday
     mu:stats:per-month
-    mu:plot:per-month
     mu:stats:per-hour
     mu:stats:per-year
     mu:stats:top-n
@@ -44,7 +44,12 @@
     mu:stats:top-n-subject
     mu:stats:table
     mu:stats:histogram
-    mu:stats:export))
+    mu:stats:export
+    mu:plot:per-month
+    mu:plot:per-weekday
+    mu:plot:per-year
+    mu:plot:per-hour
+    ))
 
 ;; note, this is a rather inefficient way to calculate the number; for
 ;; demonstration purposes only...
@@ -134,29 +139,20 @@ that match it. The result is a list of pairs (month . frequency).\n"
 	(< (car a) (car b)))))) ;; in order ofmonth
 
 
-;; (define* (mu:plot:per-month #:optional (EXPR ""))
-;;   (let* ((data
-;; 	   (map ;; add 1 to the month numbers, since gnuplot counts
-;; 		;; months from 1, not 0
-;; 	     (lambda (cell)
-;; 	       (cons (1+ (car cell)) (cdr cell)))
-;; 	   (mu:stats:per-month EXPR)))
-;; 	  (datafile (mu:stats:export data))
-;; 	  (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
-;;     ;; note, we cannot use the weekday "%a" support in gnuplot because
-;;     ;; demands the field to be a date field ('set xdata time' etc.)
-;;     ;; for that to work, but we cannot use that since gnuplot does not
-;;     ;; support weekdays ('%w') as a date field in its input
-;;     (display (string-append
-;; 	       "reset\n"
-;; 	       "set xtics (\"Sun\" 0, \"Mon\" 1, \"Tue\" 2, \"Wed\" 3,"
-;; 	                  "\"Thu\" 4, \"Fri\" 5, \"Sat\" 6);\n"
-;; 	       "set xlabel \"Weekday\"\n"
-;; 	       "set ylabel \"# of messages\"\n"
-;; 	       "set boxwidth 0.9\n") gnuplot)
-;;     (display (string-append "plot \"" datafile "\" using 1:2 with boxes fs solid\n")
-;;       gnuplot)
-;;     (close-pipe gnuplot)))
+(define* (mu:plot:per-month #:optional (EXPR ""))
+  (let* ((datafile (mu:stats:export (mu:stats:per-month EXPR)))
+	  (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
+    (display (string-append
+	       "reset\n"
+	       "set xtics (\"Jan\" 1, \"Feb\" 2, \"Mar\" 3, \"Apr\" 4,"
+	                  "\"May\" 5, \"Jun\" 6, \"Jul\" 7, \"Aug\" 8,"
+	                  "\"Sep\" 9, \"Oct\" 10, \"Nov\" 11, \"Dec\" 12);\n"
+	       "set xlabel \"Month\"\n"
+	       "set ylabel \"# of messages\"\n"
+	       "set boxwidth 0.9\n") gnuplot)
+    (display (string-append "plot \"" datafile "\" using 1:2 with boxes fs solid\n")
+      gnuplot)
+    (close-pipe gnuplot)))
 
 
 (define* (mu:stats:per-hour #:optional (EXPR ""))
@@ -166,6 +162,20 @@ that match it. The result is a list of pairs (weekday . frequency).\n"
   (let* ((stats (mu:stats:frequency
 		  (lambda (msg) (tm:hour (localtime (mu:msg:date msg)))) EXPR)))
     (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of hour
+
+(define* (mu:plot:per-hour #:optional (EXPR ""))
+  (let* ((datafile (mu:stats:export (mu:stats:per-hour EXPR)))
+	  (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
+    (display (string-append
+	       "reset\n"
+	       "set xlabel \"Hour\"\n"
+	       "set ylabel \"# of messages\"\n"
+	       "set boxwidth 0.9\n") gnuplot)
+    (display (string-append "plot \"" datafile "\" using 1:2 with boxes fs solid\n")
+      gnuplot)
+    (close-pipe gnuplot)))
+
+
 
 
 (define* (mu:stats:per-year #:optional (EXPR ""))
@@ -177,6 +187,17 @@ result is a list of pairs (year . frequency).\n"
 		  EXPR)))
     (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of year
 
+(define* (mu:plot:per-year #:optional (EXPR ""))
+  (let* ((datafile (mu:stats:export (mu:stats:per-year EXPR)))
+	  (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
+    (display (string-append
+	       "reset\n"
+	       "set xlabel \"Year\"\n"
+	       "set ylabel \"# of messages\"\n"
+	       "set boxwidth 0.9\n") gnuplot)
+    (display (string-append "plot \"" datafile "\" using 1:2 with boxes fs solid\n")
+      gnuplot)
+    (close-pipe gnuplot)))
 
 (define* (mu:stats:top-n FUNC N #:optional (EXPR ""))
   "Get the Top-N frequency of the result of FUNC applied on each
@@ -227,9 +248,6 @@ that match it."
 ;; is used for the x-asxis, while the cdr represents the y value."
 ;;   (let ((pairs ;; pairs may be unsorted, so let's sort first
 ;; 	  (sort (pairs) (lambda(x1 x2) (< x1 x2)))))
-
-
-
 
 (define (mu:stats:export pairs)
   "Export PAIRS to a temporary file, return its name. The data can
