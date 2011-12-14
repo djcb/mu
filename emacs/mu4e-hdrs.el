@@ -642,7 +642,7 @@ results."
   (when (mu4e-ignore-marks)
     (mu4e-kill-proc) ;; hmmm...
     (kill-buffer)
-    (mm)))
+    (mu4e)))
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,

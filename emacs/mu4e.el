@@ -339,13 +339,18 @@ server has the expected values."
   (interactive)
   (if (buffer-live-p mu4e-main-buffer-name)
     (switch-to-buffer mu4e-main-buffer-name)
-    (setq mu4e-proc-pong-func
-      (lambda (version doccount)
-	(unless (string= version mu4e-mu-version)
-	  (error "mu server has version %s, but we need %s"
-	    version mu4e-mu-version))
-	(mu4e-main-view)))
-    (mu4e-proc-ping)))
+    (progn
+      ;; explicit version checks are a bit questionable,
+      ;; better to check for specific features
+      (when (< emacs-major-version 23)
+	(error "Emacs >= 23.x is required for mu4e"))
+      (setq mu4e-proc-pong-func
+	(lambda (version doccount)
+	  (unless (string= version mu4e-mu-version)
+	    (error "mu server has version %s, but we need %s"
+	      version mu4e-mu-version))
+	  (mu4e-main-view)))
+    (mu4e-proc-ping))))
 
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT) as defined in
@@ -410,7 +415,8 @@ old one first."
 (defun mu4e-flags-to-string (flags)
   "Remove duplicates and sort the output of `mu4e-flags-to-string-raw'."
   (concat
-    (sort (remove-duplicates (append (mu4e-flags-to-string-raw flags) nil)) '>)))
+    (sort (remove-duplicates
+	    (append (mu4e-flags-to-string-raw flags) nil)) '>)))
 
 (defun mu4e-flags-to-string-raw (flags)
   "Convert a list of flags into a string as seen in Maildir

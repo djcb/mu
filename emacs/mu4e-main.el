@@ -47,7 +47,7 @@
     (define-key map "u" 'mu4e-retrieve-mail-update-db)
 
     map)
-  "Keymap for the *mm* buffer.")
+  "Keymap for the *mu4e-main* buffer.")
 (fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
 (defun mu4e-main-mode ()
@@ -128,7 +128,7 @@
     (if smtpmail-queue-mail
       "Outgoing mail will now be queued"
       "Outgoing mail will now be sent directly"))
-  (mm))
+  (mu4e))
 
 
 (defun mu4e-quit-mm()
