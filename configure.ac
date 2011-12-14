@@ -139,6 +139,7 @@ AS_IF([test "x$XAPIAN" = "xno"],[
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
+###############################################################################
 # we set the set the version of the MuStore (Xapian database) layout
 # here; it will become part of the db name, so we can automatically
 # recreate the database when we incompatible have changes.
@@ -147,9 +148,10 @@ AC_SUBST(XAPIAN_LIBS)
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
 AC_DEFINE(MU_STORE_SCHEMA_VERSION,["9.8"], ['Schema' version of the database])
+###############################################################################
 
 
-#
+###############################################################################
 # we need gtk (2 or 3) for some of the graphical tools
 #
 AC_ARG_WITH([gui],
@@ -209,6 +211,10 @@ AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 
 # should we build the widgets/ dir?
 AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
+###############################################################################
+
+
+
 
 
 ###############################################################################
@@ -244,10 +250,19 @@ AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE_CONFIG" != "x" \
 AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
       [AC_MSG_WARN([Only guile >= 2.x is supported]);
        guile_too_old="yes"])
+
+
+
+###############################################################################
+# check for makeinfo
+AC_CHECK_PROG(have_makeinfo, makeinfo, yes, no)
+AM_CONDITIONAL(HAVE_MAKEINFO, test "$have_makeinfo" = yes)
 ###############################################################################
 
+       
 
 
+###############################################################################
 # check for xdg-open
 AS_IF([test "x$buildgui"="xyes"],[
   AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
@@ -255,7 +270,10 @@ AS_IF([test "x$buildgui"="xyes"],[
     AC_DEFINE_UNQUOTED([XDGOPEN], ["$XDGOPEN"],[Path to xdg-open])],[
     AC_MSG_WARN([xdg-open not found, mu cannot open attachments])])
 ])
+###############################################################################
 
+
+###############################################################################
 # check for pmccabe
 AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
 AS_IF([test "x$PMCCABE" = "xno"],[
@@ -264,6 +282,7 @@ AS_IF([test "x$PMCCABE" = "xno"],[
    *** Developers: you do not seem to have the pmccabe tool installed.
    *** Please install it if you want to run the automated code checks])
 ],[have_pmccabe="yes"])
+###############################################################################
 
 
 
@@ -275,6 +294,7 @@ widgets/Makefile
 emacs/Makefile
 guile/Makefile
 guile/mu/Makefile
+guile/examples/Makefile
 toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile

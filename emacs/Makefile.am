@@ -25,7 +25,11 @@ mu4e-version.el:
 (defconst mu4e-mu-version \"$(VERSION)\" \"Required mu binary version.\")\n\
 (provide 'mu4e-version)\n" >$@
 
-EXTRA_DIST=			\
+info_TEXINFOS=mu4e.texi
+mu4e_TEXINFOS=fdl.texi
+
+elispdir= ${prefix}/share/emacs/site-lisp/mu4e/
+elisp_DATA=			\
 	mu4e.el			\
 	mu4e-hdrs.el		\
 	mu4e-view.el		\
