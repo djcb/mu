@@ -32,6 +32,16 @@ GTAGS
 *.gz
 *.bz2
 \#*
+*.aux
+*.cp
+*.fn
+*.info
+*.ky
+*.log
+*.pg
+*.toc
+*.tp
+*.vr
 
 
 /contrib/gmime-test
@@ -51,4 +61,6 @@ test-mu-str
 test-mu-threads
 test-mu-util
 src/mu
-mm-version.el
+mu4e-version.el
+mu4e.pdf
+texinfo.tex
