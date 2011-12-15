@@ -277,19 +277,23 @@ after the end of the search results."
       (define-key map "x" 'mu4e-execute-marks)
 
       ;; message composition
-      (define-key map "r" 'mu4e-compose-reply)
-      (define-key map "f" 'mu4e-compose-forward)
-      (define-key map "c" 'mu4e-compose-new)
-      (define-key map "e" 'mu4e-edit-draft)
+      (define-key map "R" 'mu4e-compose-reply)
+      (define-key map "F" 'mu4e-compose-forward)
+      (define-key map "C" 'mu4e-compose-new)
+      (define-key map "E" 'mu4e-edit-draft)
 
       (define-key map (kbd "RET") 'mu4e-view-message)
+      (define-key map "H" 'mu4e-display-manual)
 
+      
       ;; menu
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "Headers")))
 	(define-key map [menu-bar headers] (cons "Headers" menumap))
 
 	(define-key menumap [quit-buffer] '("Quit view" . mu4e-quit-buffer))
+	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
+
 	(define-key menumap [sepa0] '("--"))
 
 	(define-key menumap [execute-marks]  '("Execute marks" . mu4e-execute-marks))
@@ -306,9 +310,9 @@ after the end of the search results."
 	(define-key menumap [sepa2] '("--"))
 
 	(define-key menumap [refresh]  '("Refresh" . mu4e-rerun-search))
-	(define-key menumap [search]  '("Search" . mu4e-search))
 	(define-key menumap [search-full] '("Search full" . mu4e-search-full))
-		
+	(define-key menumap [search]  '("Search" . mu4e-search))
+
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e-jump-to-maildir))
 	(define-key menumap [sepa3] '("--"))
 

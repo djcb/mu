@@ -40,12 +40,14 @@
     (define-key map "S" 'mu4e-search-full)
     (define-key map "q" 'mu4e-quit-mm)
     (define-key map "j" 'mu4e-jump-to-maildir)
-    (define-key map "c" 'mu4e-compose-new)
+    (define-key map "C" 'mu4e-compose-new)
 
     (define-key map "m" 'mu4e-toggle-mail-sending-mode)
     (define-key map "f" 'smtpmail-send-queued-mail)
     (define-key map "u" 'mu4e-retrieve-mail-update-db)
 
+    (define-key map "H" 'mu4e-display-manual)
+    
     map)
   "Keymap for the *mu4e-main* buffer.")
 (fset 'mu4e-main-mode-map mu4e-main-mode-map)
@@ -88,7 +90,7 @@
 	(propertize "  Basics\n\n" 'face 'mu4e-title-face)
 	(mu4e-action-str "\t* [j]ump to some maildir\n")
 	(mu4e-action-str "\t* enter a [s]earch query\n")
-	(mu4e-action-str "\t* [c]ompose a new message\n")
+	(mu4e-action-str "\t* [C]ompose a new message\n")
 	"\n"
 	(propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
 	(mapconcat
@@ -106,6 +108,7 @@
 	      'face 'mu4e-view-header-key-face) ")\n"
 	(mu4e-action-str "\t* [f]lush queued mail\n")
 	"\n"
+	(mu4e-action-str "\t* [H]elp\n")
 	(mu4e-action-str "\t* [q]uit mm\n"))
       (mu4e-main-mode)
       (switch-to-buffer buf))))
@@ -130,11 +133,16 @@
       "Outgoing mail will now be sent directly"))
   (mu4e))
 
+(defun mu4e-display-manual ()
+  "Display the mu4e manual info pages."
+  (interactive)
+  (info-display-manual "mu4e"))
+
 
 (defun mu4e-quit-mm()
   "Quit the mm session."
   (interactive)
-  (when (y-or-n-p "Are you sure you want to quit mm? ")
+  (when (y-or-n-p "Are you sure you want to quit? ")
     (message nil)
     (mu4e-kill-proc)
     (kill-buffer)))

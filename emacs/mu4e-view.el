@@ -210,10 +210,11 @@ or if not available, :body-html converted to text)."
       (define-key map "j" 'mu4e-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
-      (define-key map "f" 'mu4e-compose-forward)
-      (define-key map "r" 'mu4e-compose-reply)
-      (define-key map "c" 'mu4e-compose-new)
-      (define-key map "e" 'mu4e-edit-draft)
+      
+      (define-key map "F" 'mu4e-compose-forward)
+      (define-key map "R" 'mu4e-compose-reply)
+      (define-key map "C" 'mu4e-compose-new)
+      (define-key map "E" 'mu4e-edit-draft)
 
       (define-key map "." 'mu4e-view-raw)
       (define-key map "|" 'mu4e-view-pipe)
@@ -260,12 +261,15 @@ or if not available, :body-html converted to text)."
       (define-key map "U" 'mu4e-view-unmark)
       (define-key map "x" 'mu4e-view-marked-execute)
 
+      (define-key map "H" 'mu4e-display-manual)
+      
       ;; menu
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "View")))
 	(define-key map [menu-bar headers] (cons "View" menumap))
 
 	(define-key menumap [quit-buffer] '("Quit view" . mu4e-view-quit-buffer))
+	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
@@ -301,6 +305,7 @@ or if not available, :body-html converted to text)."
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [sepa3] '("--"))
 
+	(define-key menumap [search-full] '("Search full" . mu4e-search-full))
 	(define-key menumap [search]  '("Search" . mu4e-search))
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e-jump-to-maildir))
 
