@@ -255,7 +255,7 @@ after the end of the search results."
 
       (define-key map "q" 'mu4e-quit-buffer)
 ;;      (define-key map "o" 'mu4e-change-sort)
-      (define-key map "g" 'mu4e-rerun-search)
+      (define-key map "r" 'mu4e-rerun-search)
 
       ;; navigation
       (define-key map "n" 'mu4e-next-header)

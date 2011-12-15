@@ -38,17 +38,17 @@
     (define-key map "b" 'mu4e-search-bookmark)
     (define-key map "s" 'mu4e-search)
     (define-key map "S" 'mu4e-search-full)
-    (define-key map "q" 'mu4e-quit-mm)
+    (define-key map "q" 'mu4e-quit)
     (define-key map "j" 'mu4e-jump-to-maildir)
     (define-key map "C" 'mu4e-compose-new)
 
     (define-key map "m" 'mu4e-toggle-mail-sending-mode)
     (define-key map "f" 'smtpmail-send-queued-mail)
-    (define-key map "u" 'mu4e-retrieve-mail-update-db)
+    (define-key map "U" 'mu4e-retrieve-mail-update-db)
 
     (define-key map "H" 'mu4e-display-manual)
-    
     map)
+  
   "Keymap for the *mu4e-main* buffer.")
 (fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
@@ -62,7 +62,7 @@
   (setq
     mu4e-marks-map (make-hash-table :size 16  :rehash-size 2)
     major-mode 'mu4e-main-mode
-    mode-name "mu for emacs"
+    mode-name "mu4e"
     truncate-lines t
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
@@ -102,14 +102,14 @@
 
 	"\n"
 	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
-	(mu4e-action-str "\t* [u]pdate email & database\n")
+	(mu4e-action-str "\t* [U]pdate email & database\n")
 	(mu4e-action-str "\t* toggle [m]ail sending mode ")
 	"(" (propertize (if smtpmail-queue-mail "queued" "direct")
 	      'face 'mu4e-view-header-key-face) ")\n"
 	(mu4e-action-str "\t* [f]lush queued mail\n")
 	"\n"
 	(mu4e-action-str "\t* [H]elp\n")
-	(mu4e-action-str "\t* [q]uit mm\n"))
+	(mu4e-action-str "\t* [q]uit\n"))
       (mu4e-main-mode)
       (switch-to-buffer buf))))
 
@@ -139,7 +139,7 @@
   (info-display-manual "mu4e"))
 
 
-(defun mu4e-quit-mm()
+(defun mu4e-quit()
   "Quit the mm session."
   (interactive)
   (when (y-or-n-p "Are you sure you want to quit? ")

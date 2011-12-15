@@ -254,7 +254,7 @@ or if not available, :body-html converted to text)."
       (define-key map "w" 'mu4e-view-toggle-wrap-lines)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
 
-      (define-key map "R" 'mu4e-view-refresh)
+      (define-key map "r" 'mu4e-view-refresh)
 
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
@@ -280,8 +280,8 @@ or if not available, :body-html converted to text)."
 	  '("View raw message" . mu4e-view-raw))
 	(define-key menumap [pipe]
 	  '("Pipe through shell" . mu4e-view-pipe))
-	(define-key menumap [inspect]
-	  '("Inspect with guile" . mu4e-inspect-message))
+	;; (define-key menumap [inspect]
+	;;   '("Inspect with guile" . mu4e-inspect-message))
 
 	(define-key menumap [sepa8] '("--"))
 	(define-key menumap [open-att]
