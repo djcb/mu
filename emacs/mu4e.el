@@ -337,20 +337,22 @@ in which case it will be equal to `:to'.)")
 process, and start the main view if the 'pong' we receive from the
 server has the expected values."
   (interactive)
-  (if (buffer-live-p mu4e-main-buffer-name)
+  (if (buffer-live-p (get-buffer mu4e-main-buffer-name))
     (switch-to-buffer mu4e-main-buffer-name)
-    (progn
-      ;; explicit version checks are a bit questionable,
-      ;; better to check for specific features
-      (when (< emacs-major-version 23)
-	(error "Emacs >= 23.x is required for mu4e"))
-      (setq mu4e-proc-pong-func
-	(lambda (version doccount)
-	  (unless (string= version mu4e-mu-version)
-	    (error "mu server has version %s, but we need %s"
-	      version mu4e-mu-version))
-	  (mu4e-main-view)))
-    (mu4e-proc-ping))))
+    ;; explicit version checks are a bit questionable,
+    ;; better to check for specific features
+    (if (< emacs-major-version 23)
+	(error "Emacs >= 23.x is required for mu4e")
+	(progn 
+	  (setq mu4e-proc-pong-func
+	    (lambda (version doccount)
+	      (unless (string= version mu4e-mu-version)
+		(error "mu server has version %s, but we need %s"
+		  version mu4e-mu-version))
+	      (mu4e-main-view)
+	      (message "Started mu4e with %d message%s in store"
+		doccount (if (= doccount 1) "" "s"))))
+	  (mu4e-proc-ping)))))
 
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT) as defined in
