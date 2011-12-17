@@ -7,7 +7,7 @@
 
 @dircategory Emacs
 @direntry
-* mu4e mail client: (mu4e).        An email client for emacs based on mu.
+* mu4e: (mu4e).        An email client for emacs based on mu.
 @end direntry
 
 @copying
@@ -23,86 +23,165 @@ Texts.
 @end copying
 
 @node Top
-@top mu4e User Manual
+@top mu4e Manual
 
-@emph{Mu-For-Emacs} (or for short, @code{mu4e}), is an @code{emacs} based
-e-mail client, based on the @code{mu} e-mail search engine. @code{mu4e}
-supports GNU Emacs 23 and later, and may work with other versions as well.
+@emph{Mu-For-Emacs} (or for short, @command{mu4e}), is an @command{emacs} based
+e-mail client, based on the @command{mu} e-mail search engine. @command{mu4e}
+supports GNU Emacs 23 and later.
  
 @menu
 * Introduction::
-* Overview::
-* Installation::
-* Getting mail::
-* Searching mail::
-* Reading mail::
-* Processing mail::
-* Sending mail::
+* Getting started::
+* Running mu4e::
+@c * Getting mail::
+@c * Searching mail::
+@c * Reading mail::
+@c * Processing mail::
+@c * Sending mail::
 * Example configuration::
 @end menu
 
 @node Introduction
 @chapter Introduction
 
-@code{mu4e} is an e-mail program for GNU Emacs; it uses the @code{mu} e-mail
-search engine as its backend, making @code{mu} fully search-based.
+@command{mu4e} is an e-mail program for GNU Emacs; it uses the @command{mu}
+e-mail search engine as its backend, making @command{mu} fully search-based.
 
-@code{mu4e} (and @code{mu}) does @emph{not} deal with getting your e-mail
-messages from some e-mail server; instead, this task is delegated to other
-tools, such as @code{fetchmail} and @code{offlineimap}. As long as the messages
-end up in a Maildir, @code{mu4e}/@code{mu} are happy to deal with them.
+@command{mu4e} (and @command{mu}) does @emph{not} deal with getting your
+e-mail messages from some e-mail server; instead, this task is delegated to
+other tools, such as @command{offlineimap}. As long as the messages end up in
+a Maildir, @command{mu4e}/@command{mu} are happy to deal with them.
 
-@code{mu4e} does @emph{not} implement sending messages either; instead, it
+@command{mu4e} does @emph{not} implement sending messages either; instead, it
 depends on the true-and-tested @emph{smtpmail} which is part of emacs. In
-fact, @code{mu4e} piggybacks on @ref{Top, Gnus} for its message editor.
+fact, @command{mu4e} piggybacks on @ref{Top, Gnus} for its message editor.
 
 Thus, many of the traditional things an e-mail client needs to do, are
-subcontracted to other tools. This leaves @code{mu4e} to concentrate on what it
-does best: quick message searching, reading mails, replying them, moving
-messages around and so on.
+subcontracted to other tools. This leaves @command{mu4e} to concentrate on
+what it does best: quick message searching, reading mails, replying them,
+moving messages around and so on.
 
-@subsection Acknowledgments
+It's important to note the @command{mu4e} requires your mail to be in
+Maildir-format, typically stored in @file{~/Maildir}.
 
-@code{mu} has been helped tremendously by users who helped to isolate and fix
+@c @section Acknowledgments
+
+@command{mu} has been helped tremendously by users who helped to isolate and fix
 bugs, and (maybe even more so) by providing suggestions. Thanks to all!
 
-@code{mu4e} has taken inspiration from many places. First, there are @code{sup}
-and @code{notmuch} which showed that one can write a search-based e-mail
+@command{mu4e} has taken inspiration from many places. First, there are @command{sup}
+and @command{notmuch} which showed that one can write a search-based e-mail
 client. Aspects of the Wanderlust e-mail client can be seen in the UI, as well
-as the @code{dired} interaction model. 
+as the @command{dired} interaction model. 
 
-@node Installation
-@chapter Installation
+@node Getting started
+@chapter Getting started
 
-@code{mu4e} is part of @code{mu} - by installing the latter, the former will
+Getting started. 
+
+
+@c @section Installation
+
+@command{mu4e} is part of @command{mu} - by installing the latter, the former will
 be installed as well.
 
-At the time of writing, there are no distribution packages for @code{mu4e}
+At the time of writing, there are no distribution packages for @command{mu4e}
 yet, so we are assuming installation from source packages.
 
 Installation follows the normal sequence of:
 @example
-$ tar xvfz mu-<version>.tar.gz    # use the specific version
-$ cd mu-<version>
+$ tar xvfz mu-<version>.tar.gz  # use the specific version
+$ cd mu-<version>                 
 $./configure && make
 $ sudo make install
 @end example
 
-After this, but @code{mu} and @code{mu4e} should be installed.
+After this, @command{mu} and @command{mu4e} should be
+installed @footnote{there's a hard dependency between versions of
+@command{mu4e} and @command{mu} - you cannot combine different versions.}, a
+be available from the command line and emacs (respectively). For emacs, you
+may to restart it so it can pick up @command{mu4e}.
 
-Note, there's a hard dependency between versions of @code{mu4e} and @code{mu}
-- you cannot combine different versions.
+There is experimental support for using the @command{emacs} customization
+system in @command{mu4e}, but for now we recommend setting the values by
+manually. Please @ref{Example configuration} for a working example of this.
 
-There is experimental support for the @code{emacs} customization system in
-@code{mu4e}, but for now we recommend setting the values by - please
-@xref{Example configuration} for an example of this.
+@c @node Getting mail
+@c @section Getting mail
 
-@node Overview
-@chapter Overview
+In order for @command{mu} (and by extension, @command{mu4e}) to work, we need
+to have our e-mail stored in a Maildir. If you were already using Maildirs,
+your lucky, otherwise you will need to get your mail there in some other way.
 
-@section Elements
+If you are using some external @acronym{IMAP} or @acronym{POP} server, you can
+use tools like @command{getmail} and @command{offlineimap} to download your
+message into a Maildir-directory (@file{~/Maildir}, usually). If you are using
+a local mailserver (such as Postfix or @command{qmail}), you can teach them to
+deliver into a Maildir as well, maybe in combination with @command{qmail}.
+
+For the exact details on how to do this, please consult the documentation of
+the products you are using.
+
+@c @node Indexing your messages
+@c @section Indexing your messages
+@c @ref{Getting mail}
+After you have succeeded in Getting mail, we need to @emph{index}
+it. That is - we need to scan the Maildir and store the information about the
+mails into a special database. We can do that from @code{mu4e}, but for now
+it's better to do it from the command line, because it's easier to spot any
+problems then.
+
+Assuming that your Maildir is at @file{~/Maildir}, you should give the
+following command:
+@example
+  $ mu index --maildir=~/Maildir
+@end example
+
+This should scan your @file{~/Maildir} and fill the database, and give
+progress information while doing so. The first time you index your mail might
+take a few minutes (for thousands of e-mails), afterwards it is much faster
+since it only has to scan the differences.
+
+Note that indexing is discussed at length in the @command{mu-index} man page.
+
+After the indexing is finished, you can quickly test if everything worked, by
+trying some command line searches, for example
+@example
+  $ mu find hello
+@end example
+which should list all messages that match "hello". The @command{mu-find} man
+page describes the various things you can do with @command{mu find}.
+
+If all of this worked well, we are almost ready to start @command{mu4e}.
+
+
+@c @node Basic configuration
+@c @section Basic configuration
+
+The last thing to do before running @command{mu4e} is setting up some basic
+configuration. A good place to put this would be in your @file{~/.emacs} file.
+
+First, we need to load @command{mu4e}:
+
+@example
+(require 'mu4e)
+@end example
+
+Then, we need to tell @command{mu4e} where it can find your Maildir, and some
+special folders. So for example:
+@example
+  (setq
+    mu4e-maildir       "~/Maildir"
+    mu4e-inbox-folder  "/inbox"      ;; where do i receive mail?
+    mu4e-sent-folder   "/sent"       ;; where do i keep sent mail?
+    mu4e-drafts-folder "/drafts"     ;; where do i keep half-written mail?
+    mu4e-trash-folder  "/trash"      ;; where do i move deleted mail?
+@end example
+The folder names are all relative to @code{mu4e-maildir}.
+
+
 Without going into too much technical detail, here we describe the elements in
-a @code{mu4e}-setup, and how they work together. Using some ascii-art:
+a @command{mu4e}-setup, and how they work together. Using some ascii-art:
 
 @example
               +---------+
@@ -126,23 +205,23 @@ So:
 @itemize
 
  @item Your e-mail messages are stored in a Maildir-directory (typically,
- @code{~/Maildir}), and new mail comes in using tools like @code{fetchmail},
- @code{offlineimap} etc., or through a local mail servers (such as
- @code{qmail} or @code{Postfix}).
+ @file{~/Maildir}), and new mail comes in using tools like @command{fetchmail},
+ @command{offlineimap} etc., or through a local mail servers (such as
+ @command{qmail} or @command{Postfix}).
 
- @item @code{mu} indexes these messages periodically, so you can quickly
- search for them. @code{mu} can run in a special @code{server}-mode, where it
+ @item @command{mu} indexes these messages periodically, so you can quickly
+ search for them. @command{mu} can run in a special @command{server}-mode, where it
  provides services to client software.
 
- @item @code{mu4e}, which runs inside @code{emacs} is such a client; it
- communicates with @code{mu} to search for messages, and manipulate them.
+ @item @command{mu4e}, which runs inside @command{emacs} is such a client; it
+ communicates with @command{mu} to search for messages, and manipulate them.
 
- @item @code{mu4e} uses the facilities offered by @code{emacs} (the
- @code{Gnus} message editor and @code{smtpmail}) to send messages.
+ @item @command{mu4e} uses the facilities offered by @command{emacs} (the
+ @command{Gnus} message editor and @command{smtpmail}) to send messages.
  
 @end itemize
 
-@section User interface
+
 @example
 +-----------+       +--------------+        +--------------+
 | main view | <---> | headers view |  <---> | message view |
@@ -154,45 +233,84 @@ So:
 @end example
 
 
-@node Getting mail
+@node Running mu4e
+@chapter Running mu4e
 
-@chapter Getting mail
-@code{mu} works with whatever it finds in your Maildir, without caring much
+After you've installed @command{mu4e} (@pxref{Getting started}), you can start it
+with @code{M-x mu4e}. This will do some checks to ensure everything is set up
+correctly, and then show the @command{mu4e} main view.
+
+@verbatim
+* mu4e - mu for emacs version 0.9.8pre
+
+  Basics
+
+	* [j]ump to some maildir
+	* enter a [s]earch query
+	* [c]ompose a new message
+
+  Bookmarks
+
+	* [bu] Unread messages
+	* [bt] Today's messages
+	* [bw] Last 7 days
+	* [bp] Messages with images
+  Misc
+
+	* [u]pdate email & database
+	* toggle [m]ail sending mode (direct)
+	* [f]lush queued mail
+
+	* [q]uit mm
+
+@end verbatim
+
+First, the @emph{Basics}:
+@itemize
+@item @code{[j]ump to some maildir} means that after pressing @key{j},
+@command{mu4e} will ask you for a maildir to jump to.
+@end itemize
+
+
+
+
+
+@c @node Getting mail
+@c @section Getting mail
+
+@command{mu} works with whatever it finds in your Maildir, without caring much
 how the mail got there. Typical ways to do so are using @code{fetchmail} or
 @code{offlineimap}, but mail servers like @code{qmail} or @code{Postfix} can
 deliver mail in a Maildir as well. Please refer to the documentation for these
 tools.
 
-@code{mu4e} checks the setting of the @env{MAILDIR} environment variable to
+@command{mu4e} checks the setting of the @env{MAILDIR} environment variable to
 locate the Maildir; if that is not set, if falls back to @code{~/Maildir}. If
 you want to use some other directory, you can customize @code{mu4e-mu-home}.
 
-To invoke some mail-getting command from the @code{mu4e} main screen, you can
+To invoke some mail-getting command from the @command{mu4e} main screen, you can
 call @code{mu4e-retrieve-mail-update-db} (by default @kbd{u}); to use it, you
 should set @code{mu4e-get-mail-command} to some shell command.
 
-@node Searching mail
-@chapter Searching mail
+@c @node Searching mail
+@c @section Searching mail
 
-@section Everything is search
-
-@code{mu4e} is full search-based; this means that all the lists of messages
+@command{mu4e} is full search-based; this means that all the lists of messages
 you see, are the result of some query. Even if you 'jump to a folder', in fact
 you are executing a search query for messages that have the property of being
 in a certain folder.
 
-@node Reading mail
-@chapter Reading mail
+@c @node Reading mail
+@c @section Reading mail
 
+@c @node Processing mail
+@c @section Processing mail
 
-@node Processing mail
-@chapter Processing mail
+@c Processing mail is the act of moving mails around (in folders), viewing them
 
-Processing mail is the act of moving mails around (in folders), viewing them
+@c @node Sending mail
+@c @section Sending mail
 
-
-@node Sending mail
-@chapter Sending mail
 
 @node Example configuration
 @chapter Example configuration
