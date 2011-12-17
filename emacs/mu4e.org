@@ -6,7 +6,7 @@
    tool. It turns mu into an e-mail-client.
 
    Mu Mail has things in common with programs such as 'notmuch' and 'md', but -
-   in the opinion of it's author - it offers some unique features as
+   in the opinion of its author - it offers some unique features as
    well. Basically, the mail handling (deleting, moving etc.) is inspired by
    *Wanderlust* (another emacs-based e-mail client) and *dired*, while it takes
    some cues from GMail with respect to being search-based. In practice this

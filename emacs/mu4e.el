@@ -343,7 +343,7 @@ server has the expected values."
     ;; better to check for specific features
     (if (< emacs-major-version 23)
 	(error "Emacs >= 23.x is required for mu4e")
-	(progn 
+	(progn
 	  (setq mu4e-proc-pong-func
 	    (lambda (version doccount)
 	      (unless (string= version mu4e-mu-version)

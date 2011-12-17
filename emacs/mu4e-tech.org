@@ -1,10 +1,10 @@
-* mm
+* mu4e
 
 I haven't written many =emacs-fu= posts recently, but that doesn't mean I
 haven't used emacs a lot. In fact, over the last few months I've been working on
-a bigger emacs-related project; the working title is =mm=, and it's an
+a bigger emacs-related project; the working title is =mu4e=, and it's an
 emacs-based e-mail client based on my [[http://www.djcbsoftware.nl/code/mu][mu]] maildir searcher/indexer that I
-discussed before. Even though I've been using =mm= myself for about two months,
+discussed before. Even though I've been using =mu4e= myself for about two months,
 it's not really ready from prime-time yet - but I'm planning to have something
 ready this year still. 
 
@@ -19,7 +19,7 @@ interesting for others planning emacs-based front-ends to other tools.
   
 ** Getting output from =mu=
   
-   One way to implement this (for =mu=), is to call the =mu= command-line tool
+   One way to implement this (for =mu=), is to call the =mu= comu4eand-line tool
    with some parameters and then parse its output. In fact, that is how some
    tools do it, and it was my first approach - so I would invoke =mu find= and
    then process the output in emacs (more about that in a minute).
@@ -27,8 +27,8 @@ interesting for others planning emacs-based front-ends to other tools.
    However, then I realized that I'd need to load the entire e-mail Xapian
    database for each invocation. Wouldn't it be nicer to keep a running =mu=
    instance around?  Indeed, it would - so I implemented the =mu server=
-   sub-command. Now, when you run =mu server=, you get a shell, in which you can
-   give commands to =mu=, and which will then spit out the results. =mu server=
+   sub-comu4eand. Now, when you run =mu server=, you get a shell, in which you can
+   give comu4eands to =mu=, and which will then spit out the results. =mu server=
    is not really meant for humans, but still I can use it manually, which is
    great for debugging.
 
@@ -56,13 +56,13 @@ interesting for others planning emacs-based front-ends to other tools.
    you can clean things up.
    
    The function =my-process-filter= is a user-defined function that takes the
-   process and the chunk of output as arguments; in =mm= it looks something like
+   process and the chunk of output as arguments; in =mu4e= it looks something like
    (pseudo-lisp):
 #+begin_SRC emacs-lisp
 (defun my-process-filter (proc str)
-  (setq mm/buf (concat mm/buf str)) ;; a global var updated with the new chunk
+  (setq mu4e/buf (concat mu4e/buf str)) ;; a global var updated with the new chunk
   (when <we-have-received-a-full-expression>
-      <eat-expression-from mm/buf> 
+      <eat-expression-from mu4e/buf> 
       <evaluate-expression>))
 #+end_src
 
@@ -90,7 +90,7 @@ interesting for others planning emacs-based front-ends to other tools.
   Then, for some years I've been using Wanderlust; a fine, very feature-rich
   client, but it shows its age - and especially with emacs-24, its cache file
   got corrupted very often, requiring me to delete them etc. Still, you will
-  recognize some Wanderlust features in =mm/mu=.
+  recognize some Wanderlust features in =mu4e/mu=.
 
 * Why not use [[http://notmuchmail.org/][notmuch]]? It seems similar.
 
@@ -106,11 +106,11 @@ interesting for others planning emacs-based front-ends to other tools.
   clients (or synchronize with IMAP-folders through [[http://offlineimap.org/][OfflineIMAP]]). I'd like to be
   able to move messages around, delete messages and so on. This is in fact one
   of the things I liked in [[http://www.gohome.org/wl/][Wanderlust]], and wouldn't want to live without - so
-  =mu=/=mm= make this really easy.
+  =mu=/=mu4e= make this really easy.
   
   Clearly, the emacs-interface to =notmuch= is more mature, and the development
   team is bigger, so I'd give it a try. On the other hand, if you happen to like
-  e-mail the way I like it, =mm= may be something for you.
+  e-mail the way I like it, =mu4e= may be something for you.
 
 
 
