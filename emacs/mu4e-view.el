@@ -204,7 +204,6 @@ or if not available, :body-html converted to text)."
       (define-key map "q" 'mu4e-view-quit-buffer)
 
       (define-key map "s" 'mu4e-search)
-      (define-key map "S" 'mu4e-search-full)
 
       (define-key map "b" 'mu4e-search-bookmark)
       (define-key map "j" 'mu4e-jump-to-maildir)
@@ -305,7 +304,6 @@ or if not available, :body-html converted to text)."
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [sepa3] '("--"))
 
-	(define-key menumap [search-full] '("Search full" . mu4e-search-full))
 	(define-key menumap [search]  '("Search" . mu4e-search))
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e-jump-to-maildir))
 

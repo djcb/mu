@@ -249,7 +249,6 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mu4e-search)
-      (define-key map "S" 'mu4e-search-full)
       
       (define-key map "b" 'mu4e-search-bookmark)
 
@@ -310,7 +309,6 @@ after the end of the search results."
 	(define-key menumap [sepa2] '("--"))
 
 	(define-key menumap [refresh]  '("Refresh" . mu4e-rerun-search))
-	(define-key menumap [search-full] '("Search full" . mu4e-search-full))
 	(define-key menumap [search]  '("Search" . mu4e-search))
 
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e-jump-to-maildir))
@@ -620,24 +618,21 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
     unmark))
 
 (defun mu4e-search (expr)
-  "Start a new mu search, limited to `mu4e-search-results-limit'
-results."
+  "Start a new mu search. If prefix ARG is nil, limit the number of
+results to `mu4e-search-results-limit', otherwise show all. In
+other words, use the C-u prefix to get /all/ results, otherwise get
+up to `mu4e-search-results-limit' much quicker."
   (interactive "s[mu] search for: ")
-  (when (mu4e-ignore-marks) (mu4e-hdrs-search expr)))
-
-(defun mu4e-search-full (expr)
-  "Start a new mu search; resturn *all* results."
-  (interactive "s[mu] full search for: ")
   (when (mu4e-ignore-marks)
-    (mu4e-hdrs-search expr t)))
-
+    (mu4e-hdrs-search expr current-prefix-arg)))
 
 (defun mu4e-search-bookmark ()
-  "Search using some bookmarked query."
+  "Search using some bookmarked query. With C-u prefix, show /all/ results, otherwise,
+limit to up to `mu4e-search-results-limit'."
   (interactive)
   (let ((query (mu4e-ask-bookmark "Bookmark: ")))
     (when query
-      (mu4e-hdrs-search query))))
+      (mu4e-hdrs-search query current-prefix-arg))))
 
 
 (defun mu4e-quit-buffer ()
@@ -687,11 +682,12 @@ return the new docid. Otherwise, return nil."
 
 (defun mu4e-jump-to-maildir ()
   "Show the messages in maildir TARGET. If TARGET is not provided,
-ask user for it."
+ask user for it. With C-u prefix, show /all/ results, otherwise,
+limit to up to `mu4e-search-results-limit'."
   (interactive)
   (let ((fld (mu4e-ask-maildir "Jump to maildir: ")))
     (when fld
-      (mu4e-hdrs-search (concat "maildir:" fld)))))
+      (mu4e-hdrs-search (concat "maildir:" fld) current-prefix-arg))))
 
 
 (defun mu4e-mark-for-move (&optional target)

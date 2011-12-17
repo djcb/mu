@@ -37,7 +37,6 @@
 
     (define-key map "b" 'mu4e-search-bookmark)
     (define-key map "s" 'mu4e-search)
-    (define-key map "S" 'mu4e-search-full)
     (define-key map "q" 'mu4e-quit)
     (define-key map "j" 'mu4e-jump-to-maildir)
     (define-key map "C" 'mu4e-compose-new)
