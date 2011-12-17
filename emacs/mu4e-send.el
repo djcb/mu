@@ -191,7 +191,9 @@ And finally, the cited body of MSG, as per `mu4e-msg-cite-original'."
 	  (reply-all (when (> recipnum 1)
 		      (yes-or-no-p
 			(format "Reply to all ~%d recipients? "
-			  (+ recipnum))))))
+			  (+ recipnum)))))
+	  (old-msgid (plist-get msg :message-id))
+	  (subject (plist-get msg :subject)))
     (concat
       (mu4e-msg-header "From" (or (mu4e-msg-from-create) ""))
       (when (boundp 'mail-reply-to)
@@ -203,10 +205,10 @@ And finally, the cited body of MSG, as per `mu4e-msg-cite-original'."
       (mu4e-msg-header "User-agent"  (mu4e-msg-user-agent))
       (mu4e-msg-header "References"  (mu4e-msg-references-create msg))
 
-      (mu4e-msg-header "In-reply-to" (format "<%s>" (plist-get msg :message-id)))
-
+      (when old-msgid
+	(mu4e-msg-header "In-reply-to" (format "<%s>" old-msgid)))
       (mu4e-msg-header "Subject"
-	(concat mu4e-msg-reply-prefix (plist-get msg :subject)))
+	(concat mu4e-msg-reply-prefix (if subject subject "")))
 
       (propertize mail-header-separator 'read-only t 'intangible t) '"\n"
 
