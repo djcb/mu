@@ -43,7 +43,9 @@ supports GNU Emacs 23 and later.
 @chapter Introduction
 
 @samp{mu4e} is an e-mail program for GNU Emacs; it uses the @samp{mu}
-e-mail search engine as its backend, making @samp{mu} fully search-based.
+e-mail search engine as its backend, making @samp{mu} fully
+search-based.
+
 
 @menu
 * Background::
@@ -291,6 +293,7 @@ correctly, and then show the @samp{mu4e} main view.
 
 This looks something like the following:
 
+--
 @verbatim
 * mu4e - mu for emacs version x.x
 
@@ -315,6 +318,7 @@ This looks something like the following:
         * [H]elp
 	* [q]uit mu4e
 @end verbatim
+--
 
 First, the @emph{Basics}:
 @itemize
@@ -327,9 +331,9 @@ be asked for a search query, and after entering one, the results will be shown.
 will be thrown you in a message-editing buffer, where you can write a new message.
 @end itemize
 
-Next come the bookmarks. These are set in @code{mu4e-bookmarks}; what you see
-in the above example are the @emph{default}, but you can add your own and/or
-replace the default ones. See @xref{Bookmarks}.
+Next come the @emph{Bookmarks}.These are set in @code{mu4e-bookmarks}; what
+you see in the above example are the @emph{default}, but you can add your own
+and/or replace the default ones. See @xref{Bookmarks}.
 
 Finally, there are some @emph{Misc} actions:
 @itemize
@@ -384,20 +388,22 @@ Using the default key bindings, you can do various things with these messages;
 note that these actions are also listed in the @samp{Headers} menu in the
 Emacs menu bar.
 
-@itemize
-@item @key{d} will mark the message at point with 'd' for moving to the @samp{thrash}-folder
-@item @key{DEL} will mark the message at point with 'D' for immediate removal
-@item @key{m} will mark the message at point with 'm' for moving to another maildir (@samp{mu4e}
-will ask which)
-@item @key{u} will unmark the message at point, while @key{U} will do so for
-@emph{all} messages.
-@item @key{x} will execute the actions various message have been marked for.
-@item @key{RET} will open the message at point for viewing @xref{Message view}.
-@item @key{R}, @key{F} @key{C} will, respectively, reply to the message at
-point or forward it, or compose a new message; @xref{Editor view}.
-@item @key{E} will edit the message at point, which is only allowed for draft messages.
-@item @key{q} will leave the headers buffer @ref{Main view}
-@end itemize
+
+@verbatim
+key          description
+---          -----------
+d            mark for moving to the trash folder
+DEL,D        mark for immediate deletion
+m            mark for moving to another maildir folder
+u            unmark message at point
+U            unmark *all* messages
+x            execute actions for the marked messages
+RET          open the message at point in the message view
+R,F,C        reply/forward/compose
+E            edit (only allowed for draft messages)
+H            get help
+q            leave the headers buffer
+@end verbatim
 
 Note, all the mark/unmark commands support the current @emph{region} (i.e.,
 selection) -- so, for example, if you the select a number of message and then
@@ -428,7 +434,7 @@ Hi Paul,
 
 How are you? Sorry we didn't get back to you sooner and sorry for the
 top-quoting. We're still debating your last message; anyway, here are some
-recent pics.
+recent pics. And here's a link: http://example.com[1]
 
 All the best!
 
@@ -446,26 +452,42 @@ Some notes:
 You can find most things you can do with this message in the @emph{View} menu,
 or use the keyboard -- the default bindings are:
 
-@itemize
-@item @key{R}, @key{F} @key{C} will, respectively, reply to the message or forward it, or compose a new message; @xref{Editor view}.
-@item @key{E} will edit the message (only allowed for draft messages).
-@item @key{d} will mark the message for moving to the @samp{thrash}-folder
-@item @key{DEL} will mark the message for immediate removal
-@item @key{m} will mark the message for moving to another maildir (@samp{mu4e}
-will ask which)
-@item @key{u} will unmark the messages.
-@item @key{q} will leave the message view and go back to the Headers view, @ref{Headers view}
-@end itemize
+@verbatim
+key          description
+---          -----------
+n,p          go to next, previous message
+d            mark for moving to the trash folder
+DEL,D        mark for immediate deletion
+m            mark for moving to another maildir folder
+u            unmark message at point
+R,F,C        reply/forward/compose
+E            edit (only allowed for draft messages)
 
-Note that @key{x}, which means 'execute actions on marked messages' does not
-function in this view; to reduce the risk of accidents, you have to go back to
-the headers view to effectuate the actions.
+.            show the raw message view. '.'/'q' take you back
+|            pipe the message through a shell command
 
+g            go to (visit) numbered URL (using `browse-url')
+e,o          extract, open numbered attachment
+
+w            toggle line wrapping
+h            toggle showing cited parts
+
+H            get help
+q            leave the headers buffer
+@end verbatim
+
+Note that @key{x}, which means 'execute actions on marked messages' is not
+available in this view, to reduce the risk of accidents. You have to go back
+to the headers view to effectuate the actions.
+
+Also note that opening of an attachment uses the @samp{xdg-open} programming
+to determine the right program to use for a certain attachment.
 
 
 @node Editor view
 @section Editor view
 
+Currently, @samp{mu4e} uses Gnu's message editor, so for documentation @inforef{Message}.
 
 @node Searching mail
 @chapter Searching mail
@@ -474,6 +496,10 @@ the headers view to effectuate the actions.
 you see, are the result of some query. Even if you 'jump to a folder', in fact
 you are executing a search query for messages that have the property of being
 in a certain folder.
+
+Note, all queries normally return only up to @code{mu4e-search-results-limit}
+results; if you need more than that, prefix your search command with
+@kbd{C-u}.
 
 @menu
 * Queries::
@@ -484,14 +510,103 @@ in a certain folder.
 @node Queries
 @section Queries
 
+The queries you can execute are the same that @code{mu find}
+understands. Please refer to the @code{mu-find} man-page for details. Here, we
+just provide a few examples.
+
+@verbatim
+# get all messages about bananas
+bananas
+
+# get all messages about bananas from john with an attachment
+from:john flag:attach bananas
+
+# get all messages with subject wombat in June 2009
+subject:wombat date:20090601..20090630
+
+# get all messages with PDF attachments in the /projects folder
+maildir:/projects mime:application/pdf
+@end verbatim
+
 @node Bookmarks
 @section Bookmarks
+
+If you have queries that you use often, you may want to store them as
+@emph{bookmarks}. These bookmarks then show up in the main view.  By default,
+bookmark searches are available in the main view @ref{Main view}, header
+view @xref{Headers view}, and message view @xref{Message view}, with the key
+@kbd{b} for @code{mu4e-search-bookmark}.
+
+@code{mu4e} provides some default bookmarks which you of course can
+override. The definition of the default bookmarks is instructive here:
+
+@example
+(defvar mu4e-bookmarks
+  '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
+     ("date:today..now"                  "Today's messages"     ?t)
+     ("date:7d..now"                     "Last 7 days"          ?w)
+     ("mime:image/*"                     "Messages with images" ?p))
+  "A list of pre-defined queries; these will show up in the main
+screen. Each of the list elements is a three-element list of the
+form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
+query, DESCRIPTION is a short description of the query (this will
+show up in the UI), and KEY is a shortcut key for the query.")
+@end example
+
+Thus, you can replaces this or add your own items, by putting in your
+configuration (@file{~/.emacs}) something like:
+@example
+(add-to-list 'mu4e-bookmarks
+  '("size:5M..500M"       "Big messages"     ?b))
+@end example
+
+This prepend your bookmark to the list, and assign the key @key{b} to it. If
+you want to @emph{append} your bookmark, you can use @code{t} as the third
+argument to @code{add-to-list}.
+
+In the various @samp{mu4e} views, pressing @key{b} will list all the bookmarks
+defined in the echo area, with the shortcut key highlight. So, to invoke your
+bookmark (get the list of "Big Message", all you need to type is @kbd{bb}.
+
 
 @node Maildir searches
 @section Maildir searches
 
+Maildir searches are quite similar to bookmark searches (see @ref{Bookmarks}),
+with the difference being that the target is always a maildir -- maildir
+queries provide a 'traditional' folder-like interface to a search-based e-mail
+client. By default, maildir searches are available in the main view
+@ref{Main view}, header view @ref{Headers view}, and message view
+@ref{Message view}, with the key @kbd{j} for @code{mu4e-jump-to-maildir}.
 
+You can do Maildir searches manually (e.g. with a query like
+@code{maildir:/myfolder}, but since it is so common, @samp{mu4e} allows for
+shortcuts for this.
 
+To enable this, you need to define a list of maildirs you'd like to have quick
+access to, for example:
+
+@example
+   (setq mu4e-maildir-shortcuts
+    '( ("/inbox"     . ?i)
+       ("/archive"   . ?a)
+       ("/lists"     . ?l)
+       ("/work"      . ?w)
+       ("/sent"      . ?s))
+@end example
+
+This would set @key{i} as a shortcut for the @t{/inbox} folder; so effectively
+a query @t{maildir:/inbox}. There's one 'built-in' shortcut @key{o} for
+'other' (so don't use that one for your own shortcuts!), which allows you to
+choose from @emph{all} maildirs.
+
+Each of the folder name is relative to your top-level maildir directory; so if
+you keep your maildir in @file{~/Maildir}, @file{/inbox} would refer to
+@file{~/Maildir/inbox}.
+
+Having these shortcuts allows you to jump around your folder very quickly -
+for example, getting to the @t{/lists} folder only requires you to type
+@kbd{jt}. Note that the same shortcuts are use by @code{mu4e-mark-for-move}.
 
 @c @node Reading mail
 @c @section Reading mail
@@ -558,7 +673,7 @@ in a certain folder.
    ;; general emacs mail settings
    mail-reply-to "foo@bar.com"
    user-mail-address "foo@bar.com"
-   user-full-name  "Foo. X Bar"
+   user-full-name  "Foo X. Bar"
 
    ;; include in message with C-c C-w
    message-signature
