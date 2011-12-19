@@ -73,13 +73,7 @@ or if not available, :body-html converted to text)."
   prepending `mu4e-msg-citation-prefix' to each line. If there is
   no body in MSG, return nil."
   (let* ((from (plist-get msg :from))
-	  ;; first try plain-text, then html
-	  (body  (or (plist-get msg :body-txt)
-		   (with-temp-buffer
-		     (plist-get msg :body-html)
-		     (html2text)
-		     (buffer-string))))
-	  (body (and body (replace-regexp-in-string "[\r\240]" " " body))))
+	  (body (mu4e-body-text msg)))
     (when body
       (concat
 	(format "On %s, %s wrote:"

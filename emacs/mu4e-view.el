@@ -102,7 +102,7 @@ marking if it still had that."
 		(t               (error "Unsupported field: %S" field)))))
 	    mu4e-view-fields "")
 	"\n"
-	(mu4e-view-body msg))
+	(mu4e-body-text msg))
 
       ;; initialize view-mode
       (mu4e-view-mode)
@@ -120,35 +120,6 @@ marking if it still had that."
 
       (unless update
 	(mu4e-view-mark-as-read-maybe)))))
-
-
-(defun mu4e-view-body (msg)
-  "Get the body for this message, which is either :body-txt,
-or if not available, :body-html converted to text. Sadly, html2text
-does not really work all the time..."
-  (let ((txt (plist-get msg :body-txt))
-	 (html (plist-get msg :body-html)))
-    ;; show the html body if there is no text, or if the text body is super
-    ;; short compared to the html one -- ie., it's probably just some lame 'this
-    ;; message requires html' message
-    (if (not html)
-      (if (not txt)
-	(propertize "No body found for this message" 'face 'mu4e-system-face)
-	txt)
-      ;; there's an html part
-      (if (or (not txt) (< (* 10 (length txt)) (length html)))
-	;; there's no text part, or it's very small
-	(with-temp-buffer
-	  (insert html)
-	  (if mu4e-html2text-command ;; if defined, use the external tool
-	    (shell-command-on-region (point-min) (point-max) mu4e-html2text-command
-	      nil t)
-	    ;; otherwise...
-	    (html2text))
-	  (buffer-string))
-	;; there's a normal sized text part
-	txt))))
-
 
 (defun mu4e-view-header (key val &optional dont-propertize-val)
   "Show header FIELD for MSG with KEY. ie. <KEY>: value-of-FIELD."
