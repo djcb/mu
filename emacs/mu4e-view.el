@@ -1,4 +1,4 @@
-;; mu4e-view.el -- part of mm, the mu mail user agent
+;; mu4e-view.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011 Dirk-Jan C. Binnema
 
@@ -124,13 +124,30 @@ marking if it still had that."
 
 (defun mu4e-view-body (msg)
   "Get the body for this message, which is either :body-txt,
-or if not available, :body-html converted to text)."
-  (or (plist-get msg :body-txt)
-    (with-temp-buffer
-      (plist-get msg :body-html)
-      (html2text)
-      (buffer-string))
-    "No body found"))
+or if not available, :body-html converted to text. Sadly, html2text
+does not really work all the time..."
+  (let ((txt (plist-get msg :body-txt))
+	 (html (plist-get msg :body-html)))
+    ;; show the html body if there is no text, or if the text body is super
+    ;; short compared to the html one -- ie., it's probably just some lame 'this
+    ;; message requires html' message
+    (if (not html)
+      (if (not txt)
+	(propertize "No body found for this message" 'face 'mu4e-system-face)
+	txt)
+      ;; there's an html part
+      (if (or (not txt) (< (* 10 (length txt)) (length html)))
+	;; there's no text part, or it's very small
+	(with-temp-buffer
+	  (insert html)
+	  (if mu4e-html2text-command ;; if defined, use the external tool
+	    (shell-command-on-region (point-min) (point-max) mu4e-html2text-command
+	      nil t)
+	    ;; otherwise...
+	    (html2text))
+	  (buffer-string))
+	;; there's a normal sized text part
+	txt))))
 
 
 (defun mu4e-view-header (key val &optional dont-propertize-val)
@@ -209,7 +226,7 @@ or if not available, :body-html converted to text)."
       (define-key map "j" 'mu4e-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
-      
+
       (define-key map "F" 'mu4e-compose-forward)
       (define-key map "R" 'mu4e-compose-reply)
       (define-key map "C" 'mu4e-compose-new)
@@ -261,7 +278,7 @@ or if not available, :body-html converted to text)."
       (define-key map "x" 'mu4e-view-marked-execute)
 
       (define-key map "H" 'mu4e-display-manual)
-      
+
       ;; menu
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "View")))
@@ -375,8 +392,8 @@ removing '^M' etc."
       (when p
 	(add-text-properties p (point-max) '(face mu4e-view-footer-face))))
     ;; this is fairly simplistic...
-    (goto-char (point-min))
-    (while (re-search-forward "\\(https?://[-a-zA-Z0-9?_.$%/=+&#@!~,:;]*\\)\\>"
+    (goto-char (point-min)) ;; FIXME: breaks with URLs ending in (e.g.) '='
+    (while (re-search-forward "\\(https?://[+-a-zA-Z0-9.?_$%/+&#@!~,:;=]*\\)\\>"
 	     nil t)
       (let ((subst (propertize (match-string-no-properties 0)
 		     'face 'mu4e-view-link-face)))

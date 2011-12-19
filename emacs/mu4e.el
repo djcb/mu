@@ -194,7 +194,16 @@ complete list of available headers, see `mu4e-header-names'."
   "Date format to use in the message view, in the format of
   `format-time-string'."
   :type 'string
-  :group 'mu4e-headers)
+  :group 'mu4e-view)
+
+(defcustom mu4e-html2text-command nil
+  "Shel command that converts HTML from stdin into plain text on
+stdout. If this is not defined, the emacs `html2text' tool will be
+used when faced with html-only message."
+  :type 'string
+  :group 'mu4e-view
+  :safe 'stringp)
+
 
 ;; Composing / Sending messages
 (defgroup mu4e-compose nil
