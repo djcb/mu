@@ -52,6 +52,10 @@ SCM_DEFINE_PUBLIC (init_mu, "mu:init", 0, 1, 0,
 					    SCM_UNSPECIFIED);
 	initialized = TRUE;
 
+	/* cleanup when we're exiting */
+	if (atexit (mu_runtime_uninit) != 0)
+		g_warning ("failed to register mu_runtime_uninit with atexit");
+
 	return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
