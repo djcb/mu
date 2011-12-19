@@ -150,7 +150,7 @@ show up in the UI), and KEY is a shortcut key for the query.")
 \"/archive/\"), and shortcut a single shortcut character. With
 this, in the header buffer and view buffer you can execute
 `mu4e-mark-for-move-quick' (or 'm', by default) or
-`mu4e-jump-to-maildir-quick' (or 'j', by default), followed by the
+`mu4e-jump-to-maildir' (or 'j', by default), followed by the
 designated shortcut character for the maildir.")
 
 ;; the headers view
@@ -363,6 +363,25 @@ server has the expected values."
 		doccount (if (= doccount 1) "" "s"))))
 	  (mu4e-proc-ping)))))
 
+(defun mu4e-get-maildirs (parentdir)
+  "List the maildirs under PARENTDIR." ;; TODO: recursive?
+  (let* ((files (directory-files parentdir))
+	  (maildirs ;;
+	    (remove-if
+	      (lambda (file)
+		(let ((path (concat parentdir "/" file)))
+		  (cond
+		    ((string-match "^\\.\\{1,2\\}$" file)  t) ;; remove '..' and '.'
+		    ((not (file-directory-p path)) t)   ;; remove non-dirs
+		    ((not ;; remove non-maildirs
+		       (and (file-directory-p (concat path "/cur"))
+			 (file-directory-p (concat path "/new"))
+			 (file-directory-p (concat path "/tmp")))) t)
+		    (t nil) ;; otherwise, it's probably maildir
+		    )))
+	      files)))
+    (map 'list (lambda(dir) (concat "/" dir)) maildirs)))
+
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT) as defined in
 `mu4e-maildir-shortcuts', then return the corresponding folder
@@ -371,7 +390,7 @@ name. If the special shortcut 'o' (for _o_ther) is used, or if
 maildirs under `mu4e-maildir."
   (unless mu4e-maildir (error "`mu4e-maildir' is not defined"))
   (if (not mu4e-maildir-shortcuts)
-    (ido-completing-read prompt (mu4e-get-sub-maildirs mu4e-maildir))
+    (ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
     (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
 	    (fnames
 	      (mapconcat
@@ -384,9 +403,12 @@ maildirs under `mu4e-maildir."
 		mlist ", "))
 	    (kar (read-char (concat prompt fnames))))
       (if (= kar ?o) ;; user chose 'other'?
-	(ido-completing-read prompt (mu4e-get-sub-maildirs mu4e-maildir))
+	(ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
 	(or
-	  (car-safe (find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
+	  (car-safe (find-if
+		      (lambda (item)
+			(= kar (cdr item)))
+		      mu4e-maildir-shortcuts))
 	  (error "Invalid shortcut '%c'" kar))))))
 
 
