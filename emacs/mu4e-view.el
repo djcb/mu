@@ -262,8 +262,6 @@ does not really work all the time..."
 
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
       (define-key map "D" 'mu4e-view-mark-for-delete)
-      (define-key map "a" 'mu4e-mark-for-move-quick)
-
       (define-key map "m" 'mu4e-view-mark-for-move)
 
       ;; misc
