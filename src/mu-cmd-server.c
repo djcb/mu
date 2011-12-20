@@ -273,25 +273,33 @@ get_path_from_docid (MuStore *store, unsigned docid, GError **err)
 
 
 static gboolean
-check_param_num (GSList *lst, unsigned min, unsigned max)
+check_param_num (GSList *args, unsigned min, unsigned max)
 {
 	unsigned len;
 
-	len = g_slist_length (lst);
+	len = g_slist_length (args);
 
 	return len >= min && len <= max;
 }
+
+
+#define return_if_fail_param_num(ARGS,MN,MX,USAGE)			 \
+	do {								 \
+		if (!check_param_num((ARGS),(MN),(MX)))			\
+			return server_error(NULL,MU_ERROR_IN_PARAMETERS, \
+					    (USAGE));			 \
+	} while (0)
+
+
 
 
 /* -> ping
  * <- (:pong mu :version <version> :doccount <doccount>)
  */
 static MuError
-cmd_ping (MuStore *store, GSList *lst, GError **err)
+cmd_ping (MuStore *store, GSList *args, GError **err)
 {
-	if (!check_param_num (lst, 0, 0))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: version");
+	return_if_fail_param_num (args, 0, 0, "usage: version");
 
 	send_expr ("(:pong \"" PACKAGE_NAME "\" "
 		    ":version \"" VERSION "\" "
@@ -302,52 +310,43 @@ cmd_ping (MuStore *store, GSList *lst, GError **err)
 	return MU_OK;
 }
 
-
-
 /*
  * find  <query> <maxnum>
  * => list of s-expression, each describing a message
  * => (:found <number of found messages>)
  */
 static MuError
-cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
+cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
 	MuMsgIter *iter;
 	unsigned u;
 	int maxnum;
+	const char* usage = "usage: find <searchexpr> <maxnum>";
 
-	if (!check_param_num (lst, 2, 2))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: find <searchexpr> <maxnum>");
+	return_if_fail_param_num (args, 2, 2, usage);
 
-	maxnum = atoi((const char*)lst->next->data);
-	if (maxnum == 0)
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: find <maxnum> <searchexpr>");
+	if ((maxnum = atoi((const char*)args->next->data)) == 0)
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS, usage);
 
-	iter = mu_query_run (query, (const char*)lst->data, TRUE,
-			     MU_MSG_FIELD_ID_DATE, TRUE, maxnum, err);
-	if (!iter)
+	if (!(iter = mu_query_run (query, (const char*)args->data, TRUE,
+				   MU_MSG_FIELD_ID_DATE, TRUE, maxnum, err)))
 		return server_error (err, MU_ERROR_INTERNAL,
 				     "couldn't get iterator");
 
-	u = 0;
-	while (!mu_msg_iter_is_done (iter) && !MU_CAUGHT_SIGNAL) {
+	for (u = 0; !mu_msg_iter_is_done (iter) && !MU_CAUGHT_SIGNAL;
+	     mu_msg_iter_next (iter)) {
 		MuMsg *msg;
 		msg = mu_msg_iter_get_msg_floating (iter);
 		if (mu_msg_is_readable (msg)) {
 			char *sexp;
-			sexp = mu_msg_to_sexp (msg,
-					       mu_msg_iter_get_docid (iter),
+			sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
 					       mu_msg_iter_get_thread_info (iter),
 					       TRUE);
 			send_expr ("%s", sexp);
 			g_free (sexp);
 			++u;
 		}
-		mu_msg_iter_next (iter);
 	}
-
 	mu_msg_iter_destroy (iter);
 
 	/* return the number of results found */
@@ -357,16 +356,14 @@ cmd_find (MuStore *store, MuQuery *query, GSList *lst, GError **err)
 }
 
 static MuError
-cmd_mkdir (GSList *lst, GError **err)
+cmd_mkdir (GSList *args, GError **err)
 {
-	if (!check_param_num (lst, 1, 1))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: mkdir <maildir>");
+	return_if_fail_param_num (args, 1, 1, "usage: mkdir <maildir>");
 
-	if (!mu_maildir_mkdir ((const char*)lst->data, 0755, FALSE, err))
+	if (!mu_maildir_mkdir ((const char*)args->data, 0755, FALSE, err))
 		return server_error (err, MU_G_ERROR_CODE (err),
 				     "failed to create maildir '%s'",
-				     (const char*)lst->data);
+				     (const char*)args->data);
 	return MU_OK;
 }
 
@@ -482,7 +479,7 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 
 
 static MuError
-move_or_flag (MuStore *store, MuQuery *query, GSList *lst, gboolean is_move,
+move_or_flag (MuStore *store, MuQuery *query, GSList *args, gboolean is_move,
 	      GError **err)
 {
 	MuError merr;
@@ -492,19 +489,19 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *lst, gboolean is_move,
 	GSList *flagitem;
 	const char *mdir;
 
-	if ((docid = get_docid (query, (const char*)lst->data, err)) == 0)
+	if ((docid = get_docid (query, (const char*)args->data, err)) == 0)
 		return server_error (err, MU_ERROR_IN_PARAMETERS,
-				     "invalid docid '%s'", (char*)lst->data);
+				     "invalid docid '%s'", (char*)args->data);
 	msg = mu_store_get_msg (store, docid, err);
 	if (!msg)
 		return server_error (err, MU_ERROR, "failed to get message");
 
 	if (is_move) {
-		mdir     = (const char*)g_slist_nth (lst, 1)->data;
-		flagitem = g_slist_nth (lst, 2);
+		mdir     = (const char*)g_slist_nth (args, 1)->data;
+		flagitem = g_slist_nth (args, 2);
 	} else { /* flag */
 		mdir     = mu_msg_get_maildir (msg);
-		flagitem = g_slist_nth (lst, 1);
+		flagitem = g_slist_nth (args, 1);
 	}
 
 	flags = get_flags (mu_msg_get_path(msg),
@@ -522,40 +519,34 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *lst, gboolean is_move,
 
 
 static MuError
-cmd_move (MuStore *store, GSList *lst, GError **err)
+cmd_move (MuStore *store, GSList *args, GError **err)
 {
-	if (!check_param_num (lst, 2, 3))
-		return server_error
-			(NULL, MU_ERROR_IN_PARAMETERS,
-			 "usage: move <docid> <maildir> [<flags>]");
+	return_if_fail_param_num (args, 2, 3,
+				  "usage: move <docid> <maildir> [<flags>]");
 
-	return move_or_flag (store, NULL, lst, TRUE, err);
+	return move_or_flag (store, NULL, args, TRUE, err);
 }
 
 static MuError
-cmd_flag (MuStore *store, MuQuery *query, GSList *lst, GError **err)
+cmd_flag (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
-	if (!check_param_num (lst, 2, 2))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: flag <docid>|<msgid> <flags>");
+	return_if_fail_param_num (args, 2, 2,
+				  "usage: flag <docid>|<msgid> <flags>");
 
-	return move_or_flag (store, query, lst, FALSE, err);
+	return move_or_flag (store, query, args, FALSE, err);
 }
 
 
 
-
 static MuError
-cmd_remove (MuStore *store, GSList *lst, GError **err)
+cmd_remove (MuStore *store, GSList *args, GError **err)
 {
 	unsigned docid;
 	const char *path;
 
-	if (!check_param_num (lst, 1, 1))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: remove <docid>");
+	return_if_fail_param_num (args, 1, 1, "usage: remove <docid>");
 
-	docid = get_docid (NULL, (const char*)lst->data, err);
+	docid = get_docid (NULL, (const char*)args->data, err);
 	if (docid == MU_STORE_INVALID_DOCID)
 		return server_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid");
@@ -677,10 +668,8 @@ save_or_open (MuStore *store, GSList *args, gboolean is_save, GError **err)
 static MuError
 cmd_save (MuStore *store, GSList *args, GError **err)
 {
-	if (!check_param_num (args, 3, 3))
-		return server_error
-			(NULL, MU_ERROR_IN_PARAMETERS,
-			 "save <docid> <partindex> <targetpath>");
+	return_if_fail_param_num (args, 3, 3,
+				  "save <docid> <partindex> <targetpath>");
 
 	return save_or_open (store, args, TRUE, err);
 }
@@ -689,10 +678,8 @@ cmd_save (MuStore *store, GSList *args, GError **err)
 static MuError
 cmd_open (MuStore *store, GSList *args, GError **err)
 {
-	if (!check_param_num (args, 2, 2))
-		return server_error
-			(NULL, MU_ERROR_IN_PARAMETERS,
-			 "open <docid> <partindex>");
+	return_if_fail_param_num (args, 2, 2,
+				  "open <docid> <partindex>");
 
 	return save_or_open (store, args, FALSE, err);
 }
@@ -706,10 +693,8 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 	unsigned docid;
 	char *sexp;
 
-
-	if (!check_param_num (args, 1, 1))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "message <docid> <view|reply|forward>");
+	return_if_fail_param_num (args, 1, 1,
+				  "message <docid> <view|reply|forward>");
 
 	docid = get_docid (NULL, (const char*)args->data, err);
 	if (docid == MU_STORE_INVALID_DOCID)
@@ -741,9 +726,8 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 	char *sexp;
 	const char* ctype;
 
-	if ((!check_param_num (args, 2, 2)))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "compose <reply|forward|edit> <docid>");
+	return_if_fail_param_num (args, 2, 2,
+				  "compose <reply|forward|edit> <docid>");
 
 	ctype = (const char*)args->data;
 	if (strcmp (ctype, "reply") != 0 && strcmp(ctype, "forward") != 0
@@ -788,18 +772,17 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
 }
 
 static MuError
-cmd_add (MuStore *store, GSList *lst, GError **err)
+cmd_add (MuStore *store, GSList *args, GError **err)
 {
 	unsigned docid;
 	const char *path, *maildir;
 	gchar *escpath;
 
-	if (!check_param_num (lst, 2, 2))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: add <path> <maildir>");
+	return_if_fail_param_num (args, 2, 2,
+				  "usage: add <path> <maildir>");
 
-	path    = (const char*)lst->data;
-	maildir = (const char*)g_slist_nth (lst, 1)->data;
+	path    = (const char*)args->data;
+	maildir = (const char*)g_slist_nth (args, 1)->data;
 
 	docid = mu_store_add_path (store, path, maildir, err);
 	if (docid == MU_STORE_INVALID_DOCID)
@@ -817,16 +800,15 @@ cmd_add (MuStore *store, GSList *lst, GError **err)
 
 
 static MuError
-cmd_index (MuStore *store, GSList *lst, GError **err)
+cmd_index (MuStore *store, GSList *args, GError **err)
 {
 	MuIndex *index;
 	const char *maildir;
 	MuIndexStats stats, stats2;
 	MuError rv;
 
-	if (!check_param_num (lst, 1, 1))
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
-				     "usage: index <maildir>");
+	return_if_fail_param_num (args, 1, 1,
+				  "usage: index <maildir>");
 
 	index = mu_index_new (store, err);
 	if (!index)
@@ -834,7 +816,7 @@ cmd_index (MuStore *store, GSList *lst, GError **err)
 				     "failed to create index object");
 
 	mu_index_stats_clear (&stats);
-	maildir = (const char*)lst->data;
+	maildir = (const char*)args->data;
 	rv = mu_index_run (index, maildir, FALSE, &stats, index_msg_cb, NULL, NULL);
 
 	if (rv != MU_OK && rv != MU_STOP) {
@@ -859,13 +841,9 @@ cmd_index (MuStore *store, GSList *lst, GError **err)
 
 
 static MuError
-cmd_quit (GSList *lst, GError **err)
+cmd_quit (GSList *args, GError **err)
 {
-	if (lst) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
-				     "`quit' does not take any parameters");
-		return FALSE;
-	}
+	return_if_fail_param_num (args, 0, 0, "usage: quit");
 
 	send_expr (";; quiting");
 	return MU_OK;
