@@ -96,6 +96,8 @@ these steps, @samp{mu4e} should be ready for use.
 * Installation::
 * Getting mail::
 * Indexing your messages::
+* Sending mail::
+* Queuing mail::
 * Basic configuration::
 @end menu
 
@@ -139,17 +141,14 @@ message into a Maildir-directory (@file{~/Maildir}, usually). If you are using
 a local mailserver (such as Postfix or @samp{qmail}), you can teach them to
 deliver into a Maildir as well, maybe in combination with @samp{qmail}.
 
-For the exact details on how to do this, please consult the documentation of
-the products you are using.
-
 @node Indexing your messages
 @section Indexing your messages
 
 After you have succeeded in @ref{Getting mail}, we need to @emph{index}
 it. That is - we need to scan the Maildir and store the information about the
-mails into a special database. We can do that from @code{mu4e}, but for now
-it's better to do it from the command line, because it's easier to spot any
-problems then.
+mails into a special database. We can do that from @code{mu4e} -- @xref{Main
+view}, but for now it's better to do it from the command line, because it's
+easier to spot any problems then.
 
 Assuming that your Maildir is at @file{~/Maildir}, you should give the
 following command:
@@ -174,6 +173,59 @@ page describes the various things you can do with @samp{mu find}.
 
 If all of this worked well, we are almost ready to start @samp{mu4e}.
 
+@node Sending mail
+@section Sending mail
+@samp{mu4e} re-uses Gnu's @samp{message mode} -- @xref{(message)} for writing
+mail and inherits the setup for @emph{sending} mail from that.
+
+For sending mail using @abbr{SMTP}, @samp{mu4e} uses Emacs's built-in
+@samp{smtpmail} package -- @inforef{smtpmail}. This package support many
+different ways to send mail, please refer to its documentation. Here we
+provide some simple examples.
+
+A very minimal setup could look something like:
+
+@verbatim
+;; tell message-mode how to send mail
+(setq message-send-mail-function 'smtpmail-send-it)
+;; if our mail server lives at smtp.example.org; if you have a local
+;; mailserver, simply use 'localhost' here.
+(setq smtpmail-smtp-server "smtp.example.org")
+@end verbatim
+
+Note, since @samp{mu4e} uses the same @samp{message mode} and @samp{smtpmail}
+that Gnus uses, any setting for those will also work for @samp{mu4e}.
+
+
+@node Queuing mail
+@section Queing mail
+
+If you cannot send mail directly, for example because you are currently
+offline, you can queue the mail, and send it when you have restored your
+internet connection. To allow for queueing, you need to tell @samp{smtpmail}
+where you want to do this. For example:
+
+@verbatim
+(setq
+    smtpmail-queue-mail  nil  ;; start in non-queing mode
+    smtpmail-queue-dir   "~/Maildir/queue/cur")
+@end verbatim
+
+For convenience, we locate the queue directory somewhere in our normal
+Maildir. If you want to use queued mail, you should create this directory
+before starting @samp{mu4e}. The @command{mu mkdir} command can be handy here,
+so for example:
+
+@verbatim
+$ mu mkdir ~/Maildir/queue
+$ touch ~/Maildir/queue/.noindex
+@end verbatim
+
+The @command{touch} command tells @samp{mu} to ignore this directory for
+indexing, which makes sense since it does not just consist of 'normal'
+messages but also some of the @samp{smtpmail} metadata.
+
+Also see @samp{mu-mkdir} and @samp{mu-index} man pages.
 
 @node Basic configuration
 @section Basic configuration
@@ -338,8 +390,8 @@ and/or replace the default ones. See @xref{Bookmarks}.
 Finally, there are some @emph{Misc} actions:
 @itemize
 @item @samp{[U]pdate email & database} will execute whatever is in
-@code{mu4e-get-mail-command}, and afterwards update the @samp{mu}
-database. This is a synchronous command.
+@code{mu4e-get-mail-command}, and afterwards update the @samp{mu} database;
+@xref{Indexing your messages}. This is a synchronous command.
 @item @samp{toggle [m]ail sending mode (direct)} will toggle between sending
 mail directly, and queuing it first (for example, when you are offline), and
 @samp{[f]lush queued mail} will flush any queued mail.
@@ -354,6 +406,7 @@ The headers view shows the results of search queries. There's one line for
 each matching message, and each line shows a number of fields describing this
 message.
 
+--
 @verbatim
 * Date              Flags  From/To                Subject
   2011-12-16 18:38  uN     To Edmund Dantès       + Re: Extension security?
@@ -367,6 +420,7 @@ message.
   2011-12-16 16:31  uN     Baron Danglars         | [O] imaxima?
 End of search results
 @end verbatim
+--
 
 It should be fairly obvious what this means, but some notes:
 @itemize
@@ -421,6 +475,7 @@ After selecting a message in the Headers view (@ref{Headers view}), the
 message will be show in the message view. This might look something like the
 following:
 
+--
 @verbatim
 From: info@galatians.net
 To: "Paul" paul@hotmail.com
@@ -442,6 +497,7 @@ On Sun 21 Dec 2003 09:06:34 PM EET, Paul wrote:
 
 [....]
 @end verbatim
+--
 
 Some notes:
 @itemize
@@ -483,11 +539,21 @@ to the headers view to effectuate the actions.
 Also note that opening of an attachment uses the @samp{xdg-open} programming
 to determine the right program to use for a certain attachment.
 
+For displaying messages, @samp{mu4e} normally prefers the plain text version
+if the message consists of both a textversion and an html version of its
+contents. If there is only an html-version, or if the text part is too short
+in comparison with the html part, @samp{mu4e} tries to convert the html into
+plain text for display. The default way to do that is to use the Emacs
+built-in @code{html2text} function, but if you set
+@code{mu4e-html2text-command} to some external program, that will be
+used. This is expected to take html from standard input and write plain text
+on standard output.
 
 @node Editor view
 @section Editor view
 
-Currently, @samp{mu4e} uses Gnu's message editor, so for documentation @inforef{Message}.
+Currently, @samp{mu4e} uses Gnu's message editor, so for documentation
+@inforef{Message}.
 
 @node Searching mail
 @chapter Searching mail
@@ -607,34 +673,6 @@ you keep your maildir in @file{~/Maildir}, @file{/inbox} would refer to
 Having these shortcuts allows you to jump around your folder very quickly -
 for example, getting to the @t{/lists} folder only requires you to type
 @kbd{jt}. Note that the same shortcuts are use by @code{mu4e-mark-for-move}.
-
-@c @node Reading mail
-@c @section Reading mail
-
-@c @node Processing mail
-@c @section Processing mail
-
-@c Processing mail is the act of moving mails around (in folders), viewing them
-
-@c @node Sending mail
-@c @section Sending mail
-
-@c @node Updating the mail store
-@c @section Updating the mail store
-
-@c @samp{mu} works with whatever it finds in your Maildir, without caring much
-@c how the mail got there. Typical ways to do so are using @code{fetchmail} or
-@c @code{offlineimap}, but mail servers like @code{qmail} or @code{Postfix} can
-@c deliver mail in a Maildir as well. Please refer to the documentation for these
-@c tools.
-
-@c @samp{mu4e} checks the setting of the @env{MAILDIR} environment variable to
-@c locate the Maildir; if that is not set, if falls back to @code{~/Maildir}. If
-@c you want to use some other directory, you can customize @code{mu4e-mu-home}.
-
-@c To invoke some mail-getting command from the @samp{mu4e} main screen, you can
-@c call @code{mu4e-retrieve-mail-update-db} (by default @kbd{u}); to use it, you
-@c should set @code{mu4e-get-mail-command} to some shell command.
 
 
 @node Example configuration
