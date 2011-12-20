@@ -2,29 +2,57 @@
 exec guile -e main -s $0 $@
 !#
 
+;;
+;; Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;;
+;; This program is free software; you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation; either version 3, or (at your option) any
+;; later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software Foundation,
+;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
+(use-modules (ice-9 getopt-long))
 (use-modules (mu) (mu stats))
 
 (define (main args)
-
-  (define (usage-exit)
-    (display "usage: mu-msg-stats hour|day|month|year [searchexpr]")
-    (newline)
-    (exit 1))
-
-  (if (not (>= (length args) 2))
-    (usage-exit))
-     
-  (mu:init)
- 
-  (let* ((lst (cdr (cdr args)))
-	 (expr (if lst (string-join lst) "")))
-    (display expr)
-    (newline)
+  (let* ((optionspec   '( (muhome  (value #t))
+			  (period  (value #t))
+			  (help    (single-char #\h) (value #f))))
+	  (options (getopt-long args optionspec))
+	  (msg (string-append
+		 "usage: mu-msg-stats [--help] [--muhome=<muhome>] "
+		 "--period=<hour|day|month|year> [searchexpr]\n"))
+	  (help (option-ref options 'help #f))
+	  (period (option-ref options 'period #f))
+	  (muhome (option-ref options 'muhome #f))
+	  (restargs (option-ref options '() #f))
+	  (expr (if restargs (string-join restargs) "")))
+    (if (or help (not period))
+      (begin
+	(display msg)
+	(exit (if help 0 1)))
+      (if (option-ref options 'muhome #f)
+	(mu:init (option-ref options 'muhome))
+	(mu:init)))
     (cond
-      ((string= (cadr args) "hour")  (mu:plot:per-hour expr))
-      ((string= (cadr args) "day")   (mu:plot:per-weekday expr))
-      ((string= (cadr args) "month") (mu:plot:per-month expr))
-      ((string= (cadr args) "year")  (mu:plot:per-year expr))
-      (else (usage-exit)))))
-  
+      ((string= period "hour")  (mu:plot:per-hour expr))
+      ((string= period "day")   (mu:plot:per-weekday expr))
+      ((string= period "month") (mu:plot:per-month expr))
+      ((string= period "year")  (mu:plot:per-year expr))
+      (else (begin
+	      (display msg)
+	      (exit 1))))))
 
+;; Local Variables:
+;; mode: scheme
+;; End:
