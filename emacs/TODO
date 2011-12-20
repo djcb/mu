@@ -5,11 +5,11 @@
 
 *** forward should take the attachments from the original
 *** database locks
+*** mu4e-get-sub-maildirs
 
 ** Features i
 
 *** documentation
-*** emacs install
 
 ** Features ii
 
@@ -60,6 +60,7 @@
 ** customizable bookmarks
 ** fix queued sending
 ** version check at startup
+** emacs install
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
