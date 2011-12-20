@@ -210,17 +210,17 @@ used when faced with html-only message."
   "Customizations for composing/sending messages."
   :group 'mu4e)
 
-(defcustom mu4e-msg-citation-prefix "> "
+(defcustom mu4e-send-citation-prefix "> "
   "String to prefix cited message parts with."
   :type 'string
   :group 'mu4e-compose)
 
-(defcustom mu4e-msg-reply-prefix "Re: "
+(defcustom mu4e-send-reply-prefix "Re: "
   "String to prefix the subject of replied messages with."
   :type 'string
   :group 'mu4e-compose)
 
-(defcustom mu4e-msg-forward-prefix "Fwd: "
+(defcustom mu4e-send-forward-prefix "Fwd: "
   "String to prefix the subject of forwarded messages with."
   :type 'string
   :group 'mu4e-compose)
@@ -229,7 +229,6 @@ used when faced with html-only message."
   "The user-agent string; leave at `nil' for the default."
   :type 'string
   :group 'mu4e-compose)
-
 
 
 ;; Faces
@@ -519,27 +518,29 @@ Also see `mu/flags-to-string'.
 or if not available, :body-html converted to text. By default, it
 uses the emacs built-in `html2text'. Alternatively, if
 `mu4e-html2text-command' is non-nil, it will use that."
-  (let ((txt (plist-get msg :body-txt))
-	 (html (plist-get msg :body-html)))
-    ;; show the html body if there is no text, or if the text body is super
+  (let* ((txt (plist-get msg :body-txt))
+	 (html (plist-get msg :body-html))
+    ;; get the html body if there is no text, or if the text body is super
     ;; short compared to the html one -- ie., it's probably just some lame 'this
     ;; message requires html' message
-    (if (not html)
-      (if (not txt) "" txt)
-      ;; there's an html part
-      (if (or (not txt) (< (* 10 (length txt)) (length html)))
-	;; there's no text part, or it's very small
-	(with-temp-buffer
-	  (insert html) ;; FIXME somehow, the replace-regexp does not work
-	  (replace-regexp "[\r ]" " " nil (point-min) (point-max))
-	  (if mu4e-html2text-command ;; if defined, use the external tool
-	    (shell-command-on-region (point-min) (point-max) mu4e-html2text-command
-	      nil t)
-	    ;; otherwise...
-	    (html2text))
-	  (buffer-string))
-	;; there's a normal sized text part
-	txt))))
+	  (body (if (not html)
+		  (if (not txt) "" txt)
+		  ;; there's an html part
+		  (if (or (not txt) (< (* 10 (length txt)) (length html)))
+		    ;; there's no text part, or it's very small
+		    (with-temp-buffer
+		      (insert html) 
+		      (if mu4e-html2text-command ;; if defined, use the external tool
+			(shell-command-on-region (point-min) (point-max) mu4e-html2text-command
+			  nil t)
+			;; otherwise...
+			(html2text))
+		      (buffer-string))
+		    ;; there's a normal sized text part
+		    txt))))
+    ;; and finally, remove some crap from the remaining string.
+    (replace-regexp-in-string "[ ]" " " body nil nil nil)))
+
 
 
 
