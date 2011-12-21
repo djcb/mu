@@ -529,9 +529,10 @@ uses the emacs built-in `html2text'. Alternatively, if
 		  (if (or (not txt) (< (* 10 (length txt)) (length html)))
 		    ;; there's no text part, or it's very small
 		    (with-temp-buffer
-		      (insert html) 
+		      (insert html)
 		      (if mu4e-html2text-command ;; if defined, use the external tool
-			(shell-command-on-region (point-min) (point-max) mu4e-html2text-command
+			(shell-command-on-region (point-min) (point-max)
+			  mu4e-html2text-command
 			  nil t)
 			;; otherwise...
 			(html2text))
@@ -540,12 +541,6 @@ uses the emacs built-in `html2text'. Alternatively, if
 		    txt))))
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
-
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
