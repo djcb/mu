@@ -91,7 +91,8 @@ marking if it still had that."
 		;; date
 		(:date
 		  (let ((datestr
-			  (when fieldval (format-time-string mu4e-view-date-format fieldval))))
+			  (when fieldval (format-time-string mu4e-view-date-format
+					   fieldval))))
 		    (if datestr (mu4e-view-header fieldname datestr) "")))
 		;; size
 		(:size	(mu4e-view-size  msg)
@@ -172,11 +173,13 @@ marking if it still had that."
 		      (incf id)
 		      (puthash id att mu4e-attach-map)
 		      (concat
-			(propertize (format "[%d]" id) 'face 'mu4e-view-attach-number-face)
+			(propertize (format "[%d]" id)
+			  'face 'mu4e-view-attach-number-face)
 			(propertize name 'face 'mu4e-view-link-face)
 			(if size
 			  (concat
-			    "(" (propertize (mu4e-display-size size) 'face 'mu4e-view-header-key-face)
+			    "(" (propertize (mu4e-display-size size)
+				  'face 'mu4e-view-header-key-face)
 			    ")")
 			  "")
 			)))
@@ -346,6 +349,11 @@ Seen; if the message is not New/Unread, do nothing."
 (defvar mu4e-link-map nil
   "*internal* A map of some number->url so we can jump to url by number.")
 
+(defconst mu4e-url-regexp
+  "\\(https?://[+-a-zA-Z0-9.?_$%/+&#@!~,:;=/]+\\)"
+  "*internal* regexp that matches URLs; match-string 1 will contain
+  the matched URL, if any.")
+
 (defun mu4e-view-beautify ()
   "Improve the message view a bit, by making URLs clickable,
 removing '^M' etc."
@@ -361,9 +369,8 @@ removing '^M' etc."
       (when p
 	(add-text-properties p (point-max) '(face mu4e-view-footer-face))))
     ;; this is fairly simplistic...
-    (goto-char (point-min)) ;; FIXME: breaks with URLs ending in (e.g.) '='
-    (while (re-search-forward "\\(https?://[+-a-zA-Z0-9.?_$%/+&#@!~,:;=]*\\)\\>"
-	     nil t)
+    (goto-char (point-min)) 
+    (while (re-search-forward mu4e-url-regexp nil t)
       (let ((subst (propertize (match-string-no-properties 0)
 		     'face 'mu4e-view-link-face)))
 	(incf num)
