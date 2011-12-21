@@ -175,7 +175,7 @@ If all of this worked well, we are almost ready to start @samp{mu4e}.
 
 @node Sending mail
 @section Sending mail
-@samp{mu4e} re-uses Gnu's @samp{message mode} -- @xref{(message)} for writing
+@samp{mu4e} re-uses Gnu's @samp{message mode} @ref{(message)}, for writing
 mail and inherits the setup for @emph{sending} mail from that.
 
 For sending mail using @abbr{SMTP}, @samp{mu4e} uses Emacs's built-in
@@ -555,6 +555,9 @@ on standard output.
 Currently, @samp{mu4e} uses Gnu's message editor, so for documentation
 @inforef{Message}.
 
+Also, @xref{Sending mail}.
+
+
 @node Searching mail
 @chapter Searching mail
 
@@ -751,8 +754,21 @@ when you press @samp{C-u s hello} you will get all matches, while @samp{s
 hello} only gets you up-to-a-limited-number matches. Same for the other search
 based commands, @code{mu4e-jump-to-maildir} (default: @key{j}) and
 @code{mu4e-search-bookmark} (default: @key{b}).
+@item @emph{Is there some address-book facility available?}. It should be
+possible to use BBDB (@inforef{bbdb}), but so far, there is no explicit
+support. An alternative is to use
+@samp{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}},
+and use it with a @t{capture}-template:
+@verbatim
+"c" "contacts" entry (file "contacts.org")
+"* %(mu4e-org-contacts-from 'name)
+:PROPERTIES:
+:EMAIL %(mu4e-org-contacts-from 'email)
+:NICK:
+:BIRTHDAY:
+:END:\n\n")
+@end verbatim
 @end itemize
-
 
 @node Known issues / missing features
 @chapter Known issues / missing features
