@@ -264,15 +264,6 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 		 " :duplicate t" : "",
 		 ti->prop & MU_MSG_ITER_THREAD_PROP_HAS_CHILD    ?
 		 " :has-child t" : "");
-
-	/* g_string_append_printf */
-	/* 	(gstr, "\t:thread (:path \"%s\" :level %u :root %s :first-child %s " */
-	/* 	 ":empty-parent %s :duplicate %s)\n", */
-	/* 	 ti->threadpath, ti->level, */
-	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_ROOT ? "t" : "nil", */
-	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD ? "t" : "nil", */
-	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT ? "t" : "nil", */
-	/* 	 ti->prop & MU_MSG_ITER_THREAD_PROP_DUP ? "t" : "nil"); */
 }
 
 
