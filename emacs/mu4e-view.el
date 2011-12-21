@@ -108,9 +108,6 @@ marking if it still had that."
       ;; initialize view-mode
       (mu4e-view-mode)
       (setq ;; these are buffer-local
-	mode-name (if (plist-get msg :subject)
-		    (truncate-string-to-width (plist-get msg :subject) 16 0 nil t)
-		    (propertize "No subject" 'face 'mu4e-system-face))
 	mu4e-current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
@@ -350,26 +347,22 @@ Seen; if the message is not New/Unread, do nothing."
   "*internal* A map of some number->url so we can jump to url by number.")
 
 (defconst mu4e-url-regexp
-  "\\(https?://[+-a-zA-Z0-9.?_$%/+&#@!~,:;=/]+\\)"
+  "\\(https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/]+\\)"
   "*internal* regexp that matches URLs; match-string 1 will contain
   the matched URL, if any.")
 
 (defun mu4e-view-beautify ()
   "Improve the message view a bit, by making URLs clickable,
-removing '^M' etc."
+coloring footers, etc."
   (let ((num 0))
   (save-excursion
-    ;; remove the stupid CRs
-    (goto-char (point-min))
-    (while (re-search-forward "[\r\240]" nil t)
-      (replace-match " " nil t))
     ;; give the footer a different color...
     (goto-char (point-min))
     (let ((p (search-forward "\n-- \n" nil t)))
       (when p
 	(add-text-properties p (point-max) '(face mu4e-view-footer-face))))
     ;; this is fairly simplistic...
-    (goto-char (point-min)) 
+    (goto-char (point-min))
     (while (re-search-forward mu4e-url-regexp nil t)
       (let ((subst (propertize (match-string-no-properties 0)
 		     'face 'mu4e-view-link-face)))
@@ -639,30 +632,7 @@ results."
   (interactive "sShell command: ")
   (unless mu4e-current-msg
     (error "No current message"))
-  (mu4e-view-shell-command-on-raw-message mu4e-current-msg (current-buffer) cmd))
-
-(defconst mu4e-muile-buffer-name "*muile*"
-  "Name of the buffer to execute muile.")
-
-(defconst mu4e-muile-process-name "*muile*"
-  "Name of the muile process.")
-
-;; note, implementation is very basic/primitive; we probably need comint to do
-;; something like geiser does (http://www.nongnu.org/geiser/). Desirable
-;; features: a) the output is not editable b) tab-completions work
-(defun mu4e-inspect-message ()
-  "Inspect the current message in the Guile/Muile shell."
-  (interactive)
-  (unless mu4e-muile-binary (error "`mu4e-muile-binary' is not defined"))
-  (unless (or (file-executable-p mu4e-muile-binary)
-	    (executable-find mu4e-muile-binary))
-    (error "%S not found" mu4e-muile-binary))
-  (unless mu4e-current-msg
-    (error "No current message"))
-  (get-buffer-create mu4e-muile-buffer-name)
-  (start-process mu4e-muile-buffer-name mu4e-muile-process-name
-    mu4e-muile-binary "--msg" (plist-get mu4e-current-msg :path))
-  (switch-to-buffer mu4e-muile-buffer-name)
-  (shell-mode))
+  (mu4e-view-shell-command-on-raw-message mu4e-current-msg
+    (current-buffer) cmd))
 
 (provide 'mu4e-view)
