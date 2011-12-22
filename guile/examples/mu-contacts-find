@@ -1,0 +1,65 @@
+#!/bin/sh
+exec guile -e main -s $0 $@
+!#
+
+;;
+;; Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;;
+;; This program is free software; you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation; either version 3, or (at your option) any
+;; later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software Foundation,
+;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
+(use-modules (ice-9 getopt-long))
+(use-modules (mu) (mu contacts))
+
+(define (sort-by-freq) #f)
+(define (sort-by-newness) #f)
+
+
+(define (main args)
+  (let* ((optionspec   '( (muhome   (value #t))
+			  (sort-by  (value #t))
+			  (revert   (value #f))
+			  (limit    (value #t))
+			  (help    (single-char #\h) (value #f))))
+	  (options (getopt-long args optionspec))
+	  (msg (string-append
+		 "usage: mu-contacts-export [--help] [--muhome=<muhome>] "
+		 "--format=<org-contacts|wl|mutt-ab|plain(*)> "
+		 "--sort-by=<freq(*)|newness> [--revert] [--limit=<n>]\n"))
+	  (help (option-ref options 'help #f))
+	  (sort-by (or (option-ref options 'sort-by #f) "freq"))
+	  (revert (option-ref options 'revert #f))
+	  (format (or (option-ref options 'format #f) "plain"))
+	  (limit (option-ref options 'limit #f)))
+    (if help
+      (begin
+	(display msg)
+	(exit 0))
+     (begin
+       (if (option-ref options 'muhome #f)
+	 (mu:init (option-ref options 'muhome))
+	 (mu:init))
+       (let* ((sort-func
+		(cond
+		  ((string= sort-by "freq") 'sort-by-freq)
+		  ((string= sort-by "newness") 'sort-by-newness)
+		  (else (begin (display msg) (exit 1)))))
+	       (contacts (mu:contacts:list)))
+	 (display "%S" contacts))))))
+		  
+;; Local Variables:
+;; mode: scheme
+;; End:

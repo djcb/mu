@@ -22,7 +22,8 @@ module_DATA=		\
 	msg.scm		\
 	log.scm		\
 	store.scm	\
-	stats.scm
+	stats.scm	\
+	contacts.scm
 
 EXTRA_DIST=		\
 	README
