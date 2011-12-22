@@ -53,8 +53,7 @@ SCM_DEFINE_PUBLIC (init_mu, "mu:init", 0, 1, 0,
 	initialized = TRUE;
 
 	/* cleanup when we're exiting */
-	if (atexit (mu_runtime_uninit) != 0)
-		g_warning ("failed to register mu_runtime_uninit with atexit");
+	g_atexit (mu_runtime_uninit);
 
 	return SCM_UNSPECIFIED;
 }
