@@ -101,12 +101,19 @@
 
 	"\n"
 	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
-	(mu4e-action-str "\t* [U]pdate email & database\n")
-	(mu4e-action-str "\t* toggle [m]ail sending mode ")
-	"(" (propertize (if smtpmail-queue-mail "queued" "direct")
-	      'face 'mu4e-view-header-key-face) ")\n"
-	(mu4e-action-str "\t* [f]lush queued mail\n")
+
+	;; show the queue functions if `smtpmail-queue-dir' is defined
+	(if smtpmail-queue-dir
+	  (concat 
+	    (mu4e-action-str "\t* [U]pdate email & database\n")
+	    (mu4e-action-str "\t* toggle [m]ail sending mode ")
+	    "(" (propertize (if smtpmail-queue-mail "queued" "direct")
+		  'face 'mu4e-view-header-key-face) ")\n"
+	    (mu4e-action-str "\t* [f]lush queued mail\n"))
+	  "")
+	
 	"\n"
+      
 	(mu4e-action-str "\t* [H]elp\n")
 	(mu4e-action-str "\t* [q]uit\n"))
       (mu4e-main-mode)
@@ -130,7 +137,7 @@
     (if smtpmail-queue-mail
       "Outgoing mail will now be queued"
       "Outgoing mail will now be sent directly"))
-  (mu4e))
+  (mu4e-main-view))
 
 (defun mu4e-display-manual ()
   "Display the mu4e manual info pages."
