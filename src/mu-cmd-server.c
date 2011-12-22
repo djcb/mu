@@ -592,7 +592,7 @@ save_part (MuMsg *msg, const char* targetpath, unsigned partindex, GError **err)
 }
 
 
-static gboolean
+static MuError
 open_part (MuMsg *msg, unsigned partindex, GError **err)
 {
 	char *targetpath;
@@ -603,18 +603,17 @@ open_part (MuMsg *msg, unsigned partindex, GError **err)
 	rv = mu_msg_part_save (msg, targetpath, partindex,
 			       FALSE/*overwrite*/, TRUE/*use cache*/, err);
 	if (!rv) {
-		g_set_error (err, 0, MU_ERROR_FILE,
-			     "failed to save to '%s'", targetpath);
 		g_free (targetpath);
-		return FALSE;
+		return server_error (err, MU_ERROR_FILE,
+				     "failed to save");
 	}
 
 	rv = mu_util_play (targetpath, TRUE/*allow local*/,
 			   FALSE/*allow remote*/);
-	if (!rv)
-		g_set_error (err, 0, MU_ERROR_FILE,
-			     "failed to open '%s'", targetpath);
-	else {
+	if (!rv) {
+		g_free (targetpath);
+		return server_error (err, MU_ERROR_FILE, "failed to open");
+	} else {
 		gchar *path;
 		path = mu_str_escape_c_literal (targetpath, FALSE);
 		send_expr ("(:info open :message \"%s has been opened\")",
@@ -624,7 +623,7 @@ open_part (MuMsg *msg, unsigned partindex, GError **err)
 
 	g_free (targetpath);
 
-	return rv;
+	return MU_OK;
 }
 
 
@@ -656,11 +655,7 @@ save_or_open (MuStore *store, GSList *args, gboolean is_save, GError **err)
 
 	mu_msg_unref (msg);
 
-	if (!rv)
-		return server_error (err, MU_ERROR_FILE,
-				     "failed to save to target path");
-
-	return MU_OK;
+	return rv;
 }
 
 
