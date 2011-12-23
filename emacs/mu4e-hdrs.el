@@ -86,7 +86,7 @@ results, otherwise, limit number of results to
 	 (errmsg (plist-get err :error-message)))
     (case errcode
       (4 (message "No matches for this search query."))
-      (t  (message (format "Error %d: %s" errcode errmsg))))))
+      (t (message (format "Error %d: %s" errcode errmsg))))))
 
 (defun mu4e-hdrs-update-handler (msg is-move)
   "Update handler, will be called when a message has been updated
@@ -249,7 +249,7 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mu4e-search)
-      
+
       (define-key map "b" 'mu4e-search-bookmark)
 
       (define-key map "q" 'mu4e-quit-buffer)
@@ -284,7 +284,7 @@ after the end of the search results."
       (define-key map (kbd "RET") 'mu4e-view-message)
       (define-key map "H" 'mu4e-display-manual)
 
-      
+
       ;; menu
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "Headers")))
@@ -355,6 +355,7 @@ after the end of the search results."
     major-mode 'mu4e-hdrs-mode
     mode-name "mm: message headers"
     truncate-lines t
+    buffer-undo-list t ;; don't record undo information
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary)
 

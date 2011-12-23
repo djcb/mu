@@ -137,6 +137,7 @@ process."
     ;; register a function for (:info ...) sexps
     (setq mu4e-proc-info-func 'mu4e-proc-info-handler)
     (when mu4e-mu-proc
+      (set-process-query-on-exit-flag mu4e-mu-proc nil)
       (set-process-coding-system mu4e-mu-proc 'binary 'utf-8-unix)
       (set-process-filter mu4e-mu-proc 'mu4e-proc-filter)
       (set-process-sentinel mu4e-mu-proc 'mu4e-proc-sentinel))))

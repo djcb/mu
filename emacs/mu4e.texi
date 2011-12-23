@@ -78,7 +78,7 @@ from @emph{GMail} with respect to being search-based.
 clients, synchronize over @abbr{IMAP} or backup with @t{rsync}.
 
 @node What mu4e does and doesn't do
-@section What mu4e does and doesn't do 
+@section What mu4e does and doesn't do
 
 @t{mu4e} (and @t{mu}) does @emph{not} deal with getting your e-mail messages
 from some e-mail server; instead, this task is delegated to other tools, such
@@ -733,8 +733,8 @@ some ascii-art:
               |    +------+
               +----| mu4e | --> send mail (smtpmail)
                    +------+
-                    |  A        
-                    V  |  ---/ search, view, move mail  
+                    |  A
+                    V  |  ---/ search, view, move mail
               +---------+    \
               |   mu    |
               +---------+
@@ -806,10 +806,10 @@ process has some chunk of output. Something like:
     (set-process-filter proc 'my-process-filter)
     (set-process-sentinel proc 'my-process-sentinel))
 @end verbatim
-  
+
 Note, the process sentinel is invoked when the process is terminated -- so there
 you can clean things up.
-   
+
 The function =my-process-filter= is a user-defined function that takes the
 process and the chunk of output as arguments; in @t{mu4e} it looks something like
 (pseudo-lisp):
@@ -818,9 +818,9 @@ process and the chunk of output as arguments; in @t{mu4e} it looks something lik
 (defun my-process-filter (proc str)
   ;; mu4e-buf: a global string variable to which data gets appended
   ;; as we receive it
-  (setq mu4e-buf (concat mu4e-buf str)) 
+  (setq mu4e-buf (concat mu4e-buf str))
   (when <we-have-received-a-full-expression>
-      <eat-expression-from mu4e-buf> 
+      <eat-expression-from mu4e-buf>
       <evaluate-expression>))
 @end verbatim
 
@@ -887,6 +887,9 @@ can save attachments, and then re-attach them by hand.
 conveniently read encrypted mail or check signatures (it should be possible
 with e.g. EPA though, @inforef{Top, EasyPG Assistant, epa}.) For outgoing
 messages, it should work though, using the built-in mechanisms.
+@item @emph{One cannot influence the sorting of messages}. Messages are sorted
+according to thread, then descending by date. It would be nice if it could be
+sorted in other ways as well.
 @item @emph{Difficulties with attachments in messages with complex
 MIME-hierarchy.} While dealing with attachments usually works fine, we have
 found some problems with specific mails. This is an issue in @t{mu}, and it is

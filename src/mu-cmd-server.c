@@ -285,7 +285,7 @@ check_param_num (GSList *args, unsigned min, unsigned max)
 
 #define return_if_fail_param_num(ARGS,MN,MX,USAGE)			 \
 	do {								 \
-		if (!check_param_num((ARGS),(MN),(MX)))			\
+		if (!check_param_num((ARGS),(MN),(MX)))			 \
 			return server_error(NULL,MU_ERROR_IN_PARAMETERS, \
 					    (USAGE));			 \
 	} while (0)
