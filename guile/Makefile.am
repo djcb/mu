@@ -24,7 +24,7 @@ AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 # note, we need top_builddir for snarfing with 'make distcheck' (ie.,
 # with separate builddir)
-SUBDIRS= . mu
+SUBDIRS= . mu examples
 INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers

@@ -29,6 +29,7 @@
   :use-module (srfi srfi-1)
   :export
   (mu:contacts:list
+   mu:contacts:convert
    mu:contacts:export))
 
 (define (mu:contacts:hash)
@@ -42,7 +43,7 @@
 	    (let* ((tstamp (mu:msg:date msg))
 		    ;; the contact we just found
 		    (name (car contact))
-		    (email (cdr contact))
+		    (email (cadr contact))
 		    ;; the contact found in the hash
 		    (entry (hash-ref contacts-hash email))
 		    (hash-name   (and entry (vector-ref entry 0)))
@@ -91,7 +92,7 @@ symbol, either 'org-contact, 'mutt-alias, 'bbdb, 'wl, or 'plain."
 	  (freq   (vector-ref contact 2))
 	  (tstamp (vector-ref contact 3))
 	  (nick   (email))) ;; FIXME
-    (case
+    (case format
       ('mutt-alias
 	(format #f "alias ~a ~a <~a>\n" nick name email))
       ('org-contact

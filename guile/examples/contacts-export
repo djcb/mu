@@ -24,8 +24,15 @@ exec guile -e main -s $0 $@
 (use-modules (ice-9 getopt-long))
 (use-modules (mu) (mu contacts))
 
-(define (sort-by-freq) #f)
-(define (sort-by-newness) #f)
+(define (sort-by-freq c1 c2)
+  (let ((freq1 (vector-ref c1 2))
+	 (freq2 (vector-ref c2 2)))
+    (< freq2 freq2)))
+
+(define (sort-by-newness c1 c2)
+  (let ((tstamp1 (vector-ref c1 3))
+	 (tstamp2 (vector-ref c2 3)))
+    (< tstamp1 tstamp2)))
 
 
 (define (main args)
@@ -40,6 +47,7 @@ exec guile -e main -s $0 $@
 		 "--format=<org-contacts|wl|mutt-ab|plain(*)> "
 		 "--sort-by=<freq(*)|newness> [--revert] [--limit=<n>]\n"))
 	  (help (option-ref options 'help #f))
+	  (muhome (option-ref options 'muhome #f))
 	  (sort-by (or (option-ref options 'sort-by #f) "freq"))
 	  (revert (option-ref options 'revert #f))
 	  (format (or (option-ref options 'format #f) "plain"))
@@ -49,16 +57,21 @@ exec guile -e main -s $0 $@
 	(display msg)
 	(exit 0))
      (begin
-       (if (option-ref options 'muhome #f)
-	 (mu:init (option-ref options 'muhome))
+       (if muhome
+	 (mu:init muhome)
 	 (mu:init))
        (let* ((sort-func
 		(cond
-		  ((string= sort-by "freq") 'sort-by-freq)
-		  ((string= sort-by "newness") 'sort-by-newness)
-		  (else (begin (display msg) (exit 1)))))
-	       (contacts (mu:contacts:list)))
-	 (display "%S" contacts))))))
+		  ((string= sort-by "freq")    sort-by-freq)
+		  ((string= sort-by "newness") sort-by-newness)
+		  (else (begin (display msg) (exit 1))))))
+	 (for-each
+	   (lambda (c) (format #t "~S\n" (vector-ref c 0)))
+	   (mu:contacts:list)))))))
+
+	 
+
+	 ;;(mu:contacts:export 'plain sort-func 100))))))
 		  
 ;; Local Variables:
 ;; mode: scheme
