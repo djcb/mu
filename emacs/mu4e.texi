@@ -27,7 +27,8 @@ Texts.
 
 Welcome to @t{mu4e} (@emph{Mu-For-Emacs})! @t{mu4e} is an @t{emacs}
 based e-mail client, based on the @t{mu} e-mail search engine. @t{mu4e}
-supports GNU Emacs 23 and later.
+supports GNU Emacs 23 and later. Also, it assumes a Unix-like system; it has
+been tested on Debian GNU/Linux.
 
 @menu
 * Introduction::
@@ -61,34 +62,32 @@ exactly like I want it to. An even more important goal for me was to write
 some bigger program in Emacs Lisp (@t{elisp}), to better understand the
 language and its idioms.
 
-Specifically, when it comes to @t{emacs}-based clients, I have tried a few of
-them. I never really got into @emph{Gnus}; I think it is by far the most
-popular @t{emacs}-based mail client, but I found it hard to make behave the
-way I like it; and in particular, I do not like its indirect approach to
-Maildirs.
+When it comes to @t{emacs}-based clients, I have tried a few of them. I never
+really got into @emph{Gnus}; I think it is by far the most popular
+@t{emacs}-based mail client, but I found it hard to make behave the way I like
+it; and in particular, I did not like its indirect approach to Maildirs.
 
-@t{mu4e} has more common with programs such as
+@t{mu4e} has things in common with programs such as
 @t{notmuch}@footnote{@url{http://notmuchmail.org}} and @t{md}, but - in my
 humble opinion- it offers some unique features as well. Basically, the mail
 handling (deleting, moving etc.) is inspired by @emph{Wanderlust} (another
-emacs-based e-mail client) @t{mutt} and @t{dired}, while it takes some cues
-from @emph{GMail} with respect to being search-based. Thus, all the 'state' is
-in my maildirs, so I can switch between client and even synchronize over
-@abbr{IMAP}.  In practice, this means that @t{mu4e} can work fully
-search-based, but also resemble a more 'traditional' folder-based e-mail
-client.
+emacs-based e-mail client), @t{mutt} and @t{dired}, while it takes some cues
+from @emph{GMail} with respect to being search-based.
+
+@t{mu4e} tries to keep all the 'state' in the maildirs, so I can switch
+clients, synchronize over @abbr{IMAP} or backup with @t{rsync}.
 
 @node What mu4e does and doesn't do
 @section What mu4e does and doesn't do 
 
-@t{mu4e} (and @t{mu}) does @emph{not} deal with getting your e-mail
-messages from some e-mail server; instead, this task is delegated to other
-tools, such as @t{offlineimap}. As long as the messages end up in a
-Maildir, @t{mu4e}/@t{mu} are happy to deal with them.
+@t{mu4e} (and @t{mu}) does @emph{not} deal with getting your e-mail messages
+from some e-mail server; instead, this task is delegated to other tools, such
+as @t{offlineimap} or @t{isync}. As long as the messages end up in a Maildir,
+@t{mu4e}/@t{mu} are happy to deal with them.
 
-@t{mu4e} also does @emph{not} implement sending messages either; instead, it
-depends on the true-and-tested @emph{smtpmail} which is part of emacs. In
-fact, @t{mu4e} piggybacks on Gnus' message editor; @inforef{Top,Gnus message
+@t{mu4e} also does @emph{not} implement sending messages; instead, it depends
+on the true-and-tested @emph{smtpmail} which is part of emacs. In addition,
+@t{mu4e} piggybacks on Gnus' message editor; @inforef{Top,Gnus message
 editor,message}.
 
 Thus, many of the traditional things an e-mail client needs to do, are
@@ -98,7 +97,6 @@ messages around and so on.
 
 It's important to note the @t{mu4e} requires your mail to be in
 Maildir-format, typically stored in the directory @file{~/Maildir}.
-
 
 @node Getting started
 @chapter Getting started
@@ -147,15 +145,16 @@ manually. Please @ref{Example configuration} for a working example of this.
 @node Getting mail
 @section Getting mail
 
-In order for @t{mu} (and by extension, @t{mu4e}) to work, we need
-to have our e-mail stored in a Maildir. If you were already using Maildirs,
-your lucky, otherwise you will need to get your mail there in some other way.
+In order for @t{mu} (and, by extension, @t{mu4e}) to work, we need to have our
+e-mail messages stored in a Maildir. If you were already using Maildirs, you
+are lucky; otherwise, you will need to get your mail there in some other way.
 
 If you are using some external @abbr{IMAP} or @abbr{POP} server, you can use
-tools like @t{getmail} and @t{offlineimap} to download your message into a
-Maildir-directory (@file{~/Maildir}, usually). If you are using a local
+tools like @t{getmail}, @t{offlineimap} or @t{isync} to download your message
+into a Maildir-directory (@file{~/Maildir}, usually). If you are using a local
 mailserver (such as @emph{Postfix} or @t{qmail}), you can teach them to
-deliver into a Maildir as well, maybe in combination with @t{procmail}.
+deliver into a Maildir as well, maybe in combination with @t{procmail}. A bit
+of googling should be able to provide you with the details.
 
 @node Indexing your messages
 @section Indexing your messages
@@ -477,7 +476,8 @@ Some notes:
 @itemize
 @item You can customize which header fields are shown using
 @t{mu4e-view-fields}.
-@item TODO
+@item You can customize the date format by setting
+@code{mu4e-date-format-long}, using the format of @code{format-time-string}.
 @end itemize
 
 You can find most things you can do with this message in the @emph{View} menu,
@@ -790,7 +790,7 @@ In the design, the next question was what format @t{mu} should use for its
 output for @t{mu4e} (@t{emacs}) to process. Some other programs use
 @abbr{JSON} here, but it seemed easier (and possibly, more efficient) just to
 talk to @t{emacs} in its native language: @emph{s-expressions} (to be precise:
-@emph{plists}), and interpret those using the @{emacs}-function
+@emph{plists}), and interpret those using the @t{emacs}-function
 @code{read-from-string}.
 
 So, now let's look how we process the data from @t{mu server} in
