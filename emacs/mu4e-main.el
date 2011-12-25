@@ -59,20 +59,32 @@
   (use-local-map mu4e-main-mode-map)
 
   (setq
-    mu4e-marks-map (make-hash-table :size 16  :rehash-size 2)
     major-mode 'mu4e-main-mode
     mode-name "mu4e"
     truncate-lines t
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
-(defun mu4e-action-str (str)
-  "Highlight the first occurence of [..] in STR."
-  (if (string-match "\\[\\(\\w+\\)\\]" str)
-    (let* ((key (match-string 1 str))
-	    (keystr (propertize key 'face 'mu4e-highlight-face)))
-      (replace-match keystr nil t str 1))
-    str))
+
+
+(defun mu4e-action-str (str &optional func)
+  "Highlight the first occurence of [..] in STR. Also, optionally
+set FUNC to be called with the STR is clicked."
+  (let ((newstr
+	  (replace-regexp-in-string
+	    "\\[\\(\\w+\\)\\]" 
+	    (lambda(m)
+	      (format "[%s]"
+		(propertize (match-string 1 str) 'face 'mu4e-highlight-face))) str))
+	 (map (make-sparse-keymap)))
+    (define-key map [mouse-2] func)
+    (define-key map (kbd "RET") func)
+    (put-text-property 0 (- (length newstr) 1) 'keymap map newstr)
+    (put-text-property (string-match "\\w" newstr)
+      (- (length newstr) 1) 'mouse-face 'highlight newstr)
+    newstr))
+
+
 
 
 (defun mu4e-main-view()
@@ -87,9 +99,9 @@
 	(propertize  mu4e-mu-version 'face 'mu4e-view-header-key-face)
 	"\n\n"
 	(propertize "  Basics\n\n" 'face 'mu4e-title-face)
-	(mu4e-action-str "\t* [j]ump to some maildir\n")
-	(mu4e-action-str "\t* enter a [s]earch query\n")
-	(mu4e-action-str "\t* [C]ompose a new message\n")
+	(mu4e-action-str "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
+	(mu4e-action-str "\t* enter a [s]earch query\n" 'mu4e-search)
+	(mu4e-action-str "\t* [C]ompose a new message\n" 'mu4e-compose-new)
 	"\n"
 	(propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
 	(mapconcat
@@ -102,20 +114,23 @@
 	"\n"
 	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
+	(mu4e-action-str "\t* [U]pdate email & database\n"
+	  'mu4e-retrieve-mail-update-db)
+	
 	;; show the queue functions if `smtpmail-queue-dir' is defined
 	(if smtpmail-queue-dir
 	  (concat 
-	    (mu4e-action-str "\t* [U]pdate email & database\n")
-	    (mu4e-action-str "\t* toggle [m]ail sending mode ")
+	    (mu4e-action-str "\t* toggle [m]ail sending mode "
+	      'mu4e-toggle-mail-sending-mode)
 	    "(" (propertize (if smtpmail-queue-mail "queued" "direct")
 		  'face 'mu4e-view-header-key-face) ")\n"
-	    (mu4e-action-str "\t* [f]lush queued mail\n"))
-	  "")
-	
+	    (mu4e-action-str "\t* [f]lush queued mail\n"
+	      'smtpmail-send-queued-mail))
+	  "") 
 	"\n"
-      
-	(mu4e-action-str "\t* [H]elp\n")
-	(mu4e-action-str "\t* [q]uit\n"))
+    
+	(mu4e-action-str "\t* [H]elp\n" 'mu4e-display-manual)
+	(mu4e-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
       (switch-to-buffer buf))))
 
