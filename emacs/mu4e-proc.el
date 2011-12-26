@@ -118,7 +118,7 @@ process."
   "Dummy handler function."
   (error "Not handled: %S" args))
 
-(defconst mu4e-server-name "*mu4e-server"
+(defconst mu4e-server-name "*mu4e-server*"
   "*internal* Name of the server process, buffer.")
 
 (defun mu4e-start-proc ()

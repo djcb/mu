@@ -79,12 +79,10 @@ set FUNC to be called with the STR is clicked."
 	 (map (make-sparse-keymap)))
     (define-key map [mouse-2] func)
     (define-key map (kbd "RET") func)
-    (put-text-property 0 (- (length newstr) 1) 'keymap map newstr)
+    (put-text-property 0 (length newstr) 'keymap map newstr)
     (put-text-property (string-match "\\w" newstr)
       (- (length newstr) 1) 'mouse-face 'highlight newstr)
     newstr))
-
-
 
 
 (defun mu4e-main-view()
