@@ -282,6 +282,8 @@ after the end of the search results."
       (define-key map "E" 'mu4e-edit-draft)
 
       (define-key map (kbd "RET") 'mu4e-view-message)
+      (define-key map [mouse-2]   'mu4e-view-message)
+
       (define-key map "H" 'mu4e-display-manual)
 
 
@@ -393,7 +395,12 @@ server.")
 	  ;; Update `mu4e-msg-map' with MSG, and MARKER pointing to the buffer
 	  ;; position for the message header."
 	  (insert (propertize (concat "  " str "\n")  'docid docid))
+	  ;; note: this maintaining the hash with the markers makes things slow
+	  ;; when there are many (say > 1000) headers. this seems to be mostly
+	  ;; in the use of markers. we use those to find messages when they need
+	  ;; to be updated.
 	  (puthash docid (copy-marker point t) mu4e-msg-map))))))
+
 
 (defun mu4e-hdrs-remove-header (docid point)
   "Remove header with DOCID at POINT."
@@ -609,14 +616,17 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
 
 ;;; interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-ignore-marks ()
-  (let*
-    ((num
-       (hash-table-count mu4e-marks-map))
-      (unmark (or (= 0 num)
-		(y-or-n-p
-		  (format "Sure you want to unmark %d message(s)?" num)))))
-    (message nil)
-    unmark))
+  "If there are still marks in the header list, warn the user."
+  (if mu4e-marks-map
+    (let*
+      ((num
+	 (hash-table-count mu4e-marks-map))
+	(unmark (or (= 0 num)
+		  (y-or-n-p
+		    (format "Sure you want to unmark %d message(s)?" num)))))
+      (message nil)
+      unmark))
+  t)
 
 (defun mu4e-search (expr)
   "Start a new mu search. If prefix ARG is nil, limit the number of
