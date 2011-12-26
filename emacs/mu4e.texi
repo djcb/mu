@@ -498,8 +498,11 @@ E            edit (only allowed for draft messages)
 |            pipe the message through a shell command
 
 g            go to (visit) numbered URL (using `browse-url')
-e,o          extract, open numbered attachment
-
+             (or: <mouse-2> or RET with point on url)
+e            extract (save) attachment (asks for number)
+             (or: <mouse-2> or RET with point on attachment)
+o            open attachment (asks for number)
+             (or: <S-mouse-2> or S-RET with point on attachment)
 w            toggle line wrapping
 h            toggle showing cited parts
 
@@ -511,11 +514,13 @@ Note that @key{x}, which means 'execute actions on marked messages' is not
 available in this view, to reduce the risk of accidents. You have to go back
 to the headers view to effectuate the actions.
 
-Also note that opening of an attachment uses the @t{xdg-open} programming
-to determine the right program to use for a certain attachment.
+Also note that opening of an attachment uses the @t{xdg-open} program to
+determine the right program to use for a certain attachment. @t{xdg-open} is
+part of the FreeDesktop
+@t{xdg-utils}.@footnote{@url{http://portland.freedesktop.org/wiki/}}.
 
-For displaying messages, @t{mu4e} normally prefers the plain text version
-if the message consists of both a textversion and an html version of its
+For displaying messages, @t{mu4e} normally prefers the plain text version for
+messages consisting of both a text version and an html version of its
 contents. If there is only an html-version, or if the text part is too short
 in comparison with the html part, @t{mu4e} tries to convert the html into
 plain text for display. The default way to do that is to use the Emacs
@@ -894,8 +899,6 @@ sorted in other ways as well.
 MIME-hierarchy.} While dealing with attachments usually works fine, we have
 found some problems with specific mails. This is an issue in @t{mu}, and it is
 under investigation.
-@item @emph{@t{mu4e} is very much keyboard-driven}. It would be nice to add
-support for mousing as well.
 @end itemize
 
 @bye
