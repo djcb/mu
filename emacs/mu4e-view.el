@@ -108,14 +108,17 @@ marking if it still had that."
       ;; initialize view-mode
       (mu4e-view-mode)
       (setq ;; these are buffer-local
+	buffer-read-only t
 	mu4e-current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
 
       (switch-to-buffer buf)
       (goto-char (point-min))
-      (mu4e-view-beautify)
 
+      (mu4e-mark-footer)
+      (mu4e-make-urls-clickable)
+      
       (unless update
 	(mu4e-view-mark-as-read-maybe)))))
 
@@ -151,6 +154,17 @@ marking if it still had that."
   "*internal* Hash which maps a number to a (part-id name mime-type).")
 
 
+
+(defun mu4e-open-save-attach-func (num is-open)
+  "Return a function that offers to extracts (saves) attachment NUM
+if IS-OPEN is nil, and otherwise open it."
+  (lexical-let ((num num) (is-open is-open))
+    (lambda ()
+      (interactive)
+      (if is-open
+	(mu4e-view-open-attachment num)
+	(mu4e-view-extract-attachment num)))))
+
 (defun mu4e-view-attachments (msg)
   "Display attachment information; the field looks like something like:
    	:attachments ((:index 4 :name \"test123.doc\"
@@ -166,20 +180,27 @@ marking if it still had that."
 		    (let ( (index (plist-get att :index))
 			   (name (plist-get att :name))
 			   (mime-type (plist-get att :mime-type))
-			   (size (plist-get att :size)))
+			   (size (plist-get att :size))
+			   (map (make-sparse-keymap)))
 		      (incf id)
 		      (puthash id att mu4e-attach-map)
+		      ;; mouse-2, RET offers to save the attachment,
+		      ;; S-mouse-2, S-Ret opens it.
+		      (define-key map [mouse-2] (mu4e-open-save-attach-func id nil))
+		      (define-key map [?\r]     (mu4e-open-save-attach-func id nil))
+		      (define-key map [S-mouse-2](mu4e-open-save-attach-func id t))
+		      (define-key map (kbd "<S-return>") (mu4e-open-save-attach-func id t))
 		      (concat
 			(propertize (format "[%d]" id)
 			  'face 'mu4e-view-attach-number-face)
-			(propertize name 'face 'mu4e-view-link-face)
-			(if size
-			  (concat
-			    "(" (propertize (mu4e-display-size size)
-				  'face 'mu4e-view-header-key-face)
-			    ")")
-			  "")
-			)))
+			(propertize name
+			  'face 'mu4e-view-link-face
+			  'keymap map
+			  'mouse-face 'highlight)
+			(when size
+			  (concat (format "(%s)"
+			     (propertize (mu4e-display-size size)
+				  'face 'mu4e-view-header-key-face)))))))
 		    atts ", ")))
 		(mu4e-view-header (format "Attachments(%d)" id) vals t)))))
 
@@ -326,8 +347,6 @@ marking if it still had that."
   (setq major-mode 'mu4e-view-mode mode-name mu4e-view-buffer-name)
   (setq truncate-lines t buffer-read-only t))
 
-;;;;;;
-
 
 ;; we mark messages are as read when we leave the message; ie., when skipping to
 ;; the next/previous one, or leaving the view buffer altogether.
@@ -343,6 +362,16 @@ Seen; if the message is not New/Unread, do nothing."
 	(mu4e-proc-flag docid "+S-u-N")))))
 
 
+(defun mu4e-mark-footer ()
+  "Give the message footers a distinctive color."
+  (let ((inhibit-read-only t))
+    (save-excursion
+      ;; give the footer a different color...
+      (goto-char (point-min))
+      (let ((p (search-forward "\n-- \n" nil t)))
+	(when p
+	  (add-text-properties p (point-max) '(face mu4e-view-footer-face)))))))
+
 (defvar mu4e-link-map nil
   "*internal* A map of some number->url so we can jump to url by number.")
 
@@ -351,27 +380,36 @@ Seen; if the message is not New/Unread, do nothing."
   "*internal* regexp that matches URLs; match-string 1 will contain
   the matched URL, if any.")
 
-(defun mu4e-view-beautify ()
-  "Improve the message view a bit, by making URLs clickable,
-coloring footers, etc."
-  (let ((num 0))
-  (save-excursion
-    ;; give the footer a different color...
-    (goto-char (point-min))
-    (let ((p (search-forward "\n-- \n" nil t)))
-      (when p
-	(add-text-properties p (point-max) '(face mu4e-view-footer-face))))
-    ;; this is fairly simplistic...
-    (goto-char (point-min))
-    (while (re-search-forward mu4e-url-regexp nil t)
-      (let ((subst (propertize (match-string-no-properties 0)
-		     'face 'mu4e-view-link-face)))
-	(incf num)
-	(puthash num (match-string-no-properties 0) mu4e-link-map)
-	(replace-match (concat subst
-			 (propertize (format "[%d]" num)
-			   'face 'mu4e-view-url-number-face))))))))
+(defun mu4e-browse-url-func (url)
+  "Return a function that executes `browse-url' with URL."
+  (lexical-let ((url url))
+    (lambda ()
+      (interactive)
+      (browse-url url))))		 
 
+
+
+;; this is fairly simplistic...
+(defun mu4e-make-urls-clickable ()
+  "Turn things that look like URLs into clickable things, and
+number them so they can be opened using `mu4e-view-go-to-url'."
+  (let ((num 0))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward mu4e-url-regexp nil t)
+	(let ((url (match-string 0))
+	       (map (make-sparse-keymap)))
+	  (define-key map [mouse-2] (mu4e-browse-url-func url))
+	  (define-key map [?\r] (mu4e-browse-url-func url))
+	  (puthash (incf num) url mu4e-link-map)
+	  (add-text-properties 0 (length url)
+	    `(face mu4e-view-link-face
+	       mouse-face highlight
+	       keymap ,map) url)
+	  (replace-match (concat url
+			   (propertize (format "[%d]" num)
+			     'face 'mu4e-view-url-number-face))))))))
+  
 
 ;; raw mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
