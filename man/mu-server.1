@@ -7,27 +7,176 @@ mu server \- the mu backend for the mm e-mail cleint
 .SH DESCRIPTION
 
 \fBmu server\fR starts a simple shell in which can manipulate the mu
-database. The output of the commands is terms of symbolic expressions
+database. The output of the commands is terms of Lisp symbolic expressions
 (s-exps). \fBmu server\fR is not meant for use by humans; instead, it is
-designed specifically for the \fBmm\fR e-mail client.
+designed specifically for the \fBmu4e\fR e-mail client.
+
+In this man-page, we document the commands \fBmu server\fR accepts, as well as
+their responses.
 
 .SH OUTPUT FORMAT
 
 \fBmu server\fR accepts a number of commands, and delivers its results in
 the form:
 
- \\376<length>\\376s-expr
+.nf
+   \\376<length>\\376<s-expr>
+.fi
 
-\\367 (that is, the character with ascii value 254, \\376 in octac notation),
+\\367 (that is, the character with ascii value 254, \\376 in octal notation),
 followed by the length of the s-expression, followed by another \\376,
 followed by the actual s-expression.
 
-By prefixing the expression with length, it can be processed more
-efficiently. The \\376 (254) was choses since it is a value that will never
+By prefixing the expression with its length, it can be processed more
+efficiently. The \\376 (254) was chosen since it is a value that will never
 occur in valid UTF-8 (in which the s-expressions are encoded).
 
 .SH COMMAND AND RESPONSE
 
+
+.TP
+.B ping
+
+The \fBping\fR command provokes a \fBpong\fR response. It is used for the initial
+handshake between \fBmu4e\fR and \fBmu server\fR.
+.nf
+-> ping
+<- (:pong "mu" :version <version> :doccount <doccount>)
+.fi
+
+.TP
+.B find
+
+Using the \fBfind\fR command we can search for messages.
+.nf
+-> find "<query>" <maxnum>
+.fi
+This will return a series of 0 up to <maxnum> s-expression corresponding to each
+message found (with a negative number for <maxnum> meaning 'unlimited'). The
+information for each message does not contain the message body; the \fBview\fR
+command is for that.
+.nf
+<- (...)
+.fi
+and finally, we receive:
+.nf
+<- (:found <number-of-matches>)
+.fi
+
+
+
+.TP
+.B move
+
+Using the \fBmove\fR command, we can move messages to another maildir, and
+update the database correspondingly. The function returns an s-exp describing
+the updated message, so that it can be updated in the user interface.
+
+.nf
+-> move <docid> <maildir> [<flags>]
+<- (:update <s-exp> :move t)
+.fi
+
+.TP
+.B flag
+
+Using the \fBflag\fR command, we can change the message flags - note that this
+may imply moving the message to another maildir, when the 'N' (new) flag
+changes. Update the database correspondingly. The function returns an s-exp
+describing the updated message, so that it can be updated in the user
+interface.
+
+.nf
+-> move <docid> <maildir> [<flags>]
+<- (:update <s-exp> :move nil)
+.fi
+
+.TP
+.B remove
+
+Using the \fBremove\fR command, we can remove the message from disk, and
+update the database accordingly.
+
+.nf
+-> remove <docid>
+<- (:remove <docid>)
+.fi
+
+.TP
+.B save
+
+Using the \fBsave\fR command, we can save an attachment from a message to disk.
+
+.nf
+-> save <docid> <partindex> <targetpath>
+<- (:info save :message "<filename> has been saved")
+.fi
+
+.TP
+.B open
+
+Using the \fBsave\fR command, we can open an attachment file (using the
+\fBxdg-open\fR program).
+
+.nf
+-> open <docid> <partindex>
+<- (:info open :message "<filename> has been opened")
+.fi
+
+
+.TP
+.B view
+
+Using the \fBview\fR command, we can all information (including the body) of a
+particular e-mail message.
+
+.nf
+-> view <docid>
+<- (:view <s-exp>)
+.fi
+
+.TP
+.B compose
+
+Using the \fBcompose\fR command, we get the (unchanged) message, and tell what
+to do with it. The user-interface is then expect to pre-process the message,
+e.g. set the subject, sender and recipient for a reply message.
+
+.nf
+-> compose <reply|forward|edit> <docid>
+<- (:compose <s-exp> :compose-type <reply|forward|edit>)
+.fi
+
+
+.TP
+.B index
+
+Using the \fBindex\fR command, we can (re)index the database, similar to what
+\fBmu find\fR does.
+
+.nf
+-> index <maildir>
+.fi
+As a response, it will send (for each 500 messages):
+.nf
+(:info index :status running :processed <processed> :updated <updated>)
+.fi
+and finally:
+.nf
+(:info index :status complete :processed <processed :updated <updated>
+ :cleaned-up <cleaned-up>)
+.fi
+
+
+.TP
+.B add
+
+Using the \fBadd\fR command, we can add a message to the database.
+
+.nf
+-> add <path> <maildir>
+<- (:info add :path <path> :docid <docid>)
+.fi
 
 
 
