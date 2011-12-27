@@ -688,8 +688,7 @@ cmd_view (MuStore *store, GSList *args, GError **err)
 	unsigned docid;
 	char *sexp;
 
-	return_if_fail_param_num (args, 1, 1,
-				  "message <docid> <view|reply|forward>");
+	return_if_fail_param_num (args, 1, 1, "view <docid>");
 
 	docid = get_docid (NULL, (const char*)args->data, err);
 	if (docid == MU_STORE_INVALID_DOCID)
