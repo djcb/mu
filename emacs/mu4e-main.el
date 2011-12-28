@@ -47,7 +47,7 @@
 
     (define-key map "H" 'mu4e-display-manual)
     map)
-  
+
   "Keymap for the *mu4e-main* buffer.")
 (fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
@@ -67,16 +67,25 @@
 
 
 
-(defun mu4e-action-str (str &optional func)
-  "Highlight the first occurence of [..] in STR. Also, optionally
-set FUNC to be called with the STR is clicked."
+(defun mu4e-action-str (str &optional func-or-shortcut)
+  "Highlight the first occurence of [..] in STR. If
+FUNC-OR-SHORTCUT is non-nil and if it is a function, call it when
+STR is clicked (using RET or mouse-2); if FUNC-OR-SHORTCUT is a
+string, execute the corresponding keyboard action when it is
+clicked."
   (let ((newstr
 	  (replace-regexp-in-string
-	    "\\[\\(\\w+\\)\\]" 
+	    "\\[\\(\\w+\\)\\]"
 	    (lambda(m)
 	      (format "[%s]"
 		(propertize (match-string 1 str) 'face 'mu4e-highlight-face))) str))
-	 (map (make-sparse-keymap)))
+	 (map (make-sparse-keymap))
+	 (func (if (functionp func-or-shortcut)
+		 func-or-shortcut
+		 (if (stringp func-or-shortcut)
+		   (lexical-let ((macro func-or-shortcut))
+		     (lambda()(interactive)
+		       (execute-kbd-macro macro)))))))
     (define-key map [mouse-2] func)
     (define-key map (kbd "RET") func)
     (put-text-property 0 (length newstr) 'keymap map newstr)
@@ -102,31 +111,32 @@ set FUNC to be called with the STR is clicked."
 	(mu4e-action-str "\t* [C]ompose a new message\n" 'mu4e-compose-new)
 	"\n"
 	(propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
+	;; TODO: it's a bit uncool to hard-code the "b" shortcut...
 	(mapconcat
 	  (lambda (bm)
 	    (let* ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
 	      (mu4e-action-str
-		(concat "\t* [b" (make-string 1 key) "] " title))))
+		(concat "\t* [b" (make-string 1 key) "] " title)
+		(concat "b" (make-string 1 key)))))
 	  mu4e-bookmarks "\n")
-
 	"\n"
 	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
 	(mu4e-action-str "\t* [U]pdate email & database\n"
 	  'mu4e-retrieve-mail-update-db)
-	
+
 	;; show the queue functions if `smtpmail-queue-dir' is defined
 	(if smtpmail-queue-dir
-	  (concat 
+	  (concat
 	    (mu4e-action-str "\t* toggle [m]ail sending mode "
 	      'mu4e-toggle-mail-sending-mode)
 	    "(" (propertize (if smtpmail-queue-mail "queued" "direct")
 		  'face 'mu4e-view-header-key-face) ")\n"
 	    (mu4e-action-str "\t* [f]lush queued mail\n"
 	      'smtpmail-send-queued-mail))
-	  "") 
+	  "")
 	"\n"
-    
+
 	(mu4e-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
