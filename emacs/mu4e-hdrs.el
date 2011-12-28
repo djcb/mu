@@ -39,10 +39,6 @@
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-last-expr nil
   "*internal* The most recent search expression.")
-(defvar mu4e-sortfield nil
-  "*internal* Field to sort headers by")
-(defvar mu4e-sort-descending nil
-  "*internal Whether to sort in descending order")
 
 
 (defconst mu4e-hdrs-buffer-name "*mu4e-headers*"

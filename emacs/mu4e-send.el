@@ -36,7 +36,7 @@
 ;; we use some stuff from gnus...
 (require 'message)
 (require 'mail-parse)
-
+(require 'smtpmail)
 
 ;; internal variables / constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e-send-draft-name "*mu4e-draft*"
