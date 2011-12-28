@@ -25,10 +25,12 @@ Texts.
 @node Top
 @top mu4e Manual
 
-Welcome to @t{mu4e} (@emph{Mu-For-Emacs})! @t{mu4e} is an @t{emacs}
-based e-mail client, based on the @t{mu} e-mail search engine. @t{mu4e}
-supports GNU Emacs 23 and later. Also, it assumes a Unix-like system; it has
-been tested on Debian GNU/Linux.
+Welcome to @t{mu4e}!
+
+@t{mu4e} (@emph{mu-for-emacs}) is an @t{emacs}-based e-mail client, based on
+the @t{mu} e-mail search engine. @t{mu4e} supports GNU Emacs 23 and
+later. Also, it assumes a Unix-like system and mail stored in a maildir; it
+has been tested on Debian GNU/Linux.
 
 @menu
 * Introduction::
@@ -44,7 +46,7 @@ been tested on Debian GNU/Linux.
 @node Introduction
 @chapter Introduction
 
-@t{mu4e} is an e-mail program for @emph{GNU Emacs}; it uses the @t{mu} e-mail
+@t{mu4e} is an e-mail program for @emph{GNU/Emacs}; it uses the @t{mu} maildir
 search engine as its backend, making @t{mu} fully search-based.
 
 @menu
@@ -56,26 +58,22 @@ search engine as its backend, making @t{mu} fully search-based.
 @section Why another e-mail client?
 
 Why would the world need another e-mail client?  Well, I'm not sure the world
-needs another one, but maybe @emph{I} do; I spend a @emph{lot} of time (both
-professionally and privately) with my e-mail client, so I'd like it to behave
-exactly like I want it to. An even more important goal for me was to write
-some bigger program in Emacs Lisp (@t{elisp}), to better understand the
-language and its idioms.
-
-When it comes to @t{emacs}-based clients, I have tried a few of them. I never
-really got into @emph{Gnus}; I think it is by far the most popular
-@t{emacs}-based mail client, but I found it hard to make behave the way I like
-it; and in particular, I did not like its indirect approach to Maildirs.
+needs another one, but maybe @emph{I} do; I spend a @emph{lot} of time, both
+professionally and privately, dealing with e-mail. So, I'd like it to behave
+exactly like I want it to. A secondary goal for me was to write some bigger
+program in Emacs Lisp (@t{elisp}), to better understand the language and its
+idioms.
 
 @t{mu4e} has things in common with programs such as
 @t{notmuch}@footnote{@url{http://notmuchmail.org}} and @t{md}, but - in my
-humble opinion- it offers some unique features as well. Basically, the mail
-handling (deleting, moving etc.) is inspired by @emph{Wanderlust} (another
-emacs-based e-mail client), @t{mutt} and @t{dired}, while it takes some cues
-from @emph{GMail} with respect to being search-based.
+humble opinion- it offers some unique features as well. Basically, @t{mu4e}'s
+mail handling (deleting, moving etc.) is inspired by @emph{Wanderlust}
+(another emacs-based e-mail client), @t{mutt} and @t{dired}, while it takes
+some cues from @emph{GMail} with respect to being search-based.
 
 @t{mu4e} tries to keep all the 'state' in the maildirs, so I can switch
-clients, synchronize over @abbr{IMAP} or backup with @t{rsync}.
+between clients, synchronize over @abbr{IMAP} or backup with @t{rsync} -- if
+you delete the database, you don't lose any information.
 
 @node What mu4e does and doesn't do
 @section What mu4e does and doesn't do
@@ -90,7 +88,7 @@ on the true-and-tested @emph{smtpmail} which is part of emacs. In addition,
 @t{mu4e} piggybacks on Gnus' message editor; @inforef{Top,Gnus message
 editor,message}.
 
-Thus, many of the traditional things an e-mail client needs to do, are
+Thus, many of the traditional things an e-mail client needs to do are
 subcontracted to other tools. This leaves @t{mu4e} to concentrate on what it
 does best: quick message searching, reading mails, replying them, moving
 messages around and so on.
@@ -254,16 +252,18 @@ First, we need to load @t{mu4e}:
 @end example
 
 Then, we need to tell @t{mu4e} where it can find your Maildir, and some
-special folders. So for example:
+special folders. So, for example:
 @example
   (setq
-    mu4e-maildir       "~/Maildir"
+    mu4e-maildir       "~/Maildir"   ;; 
     mu4e-inbox-folder  "/inbox"      ;; where do i receive mail?
     mu4e-sent-folder   "/sent"       ;; where do i keep sent mail?
     mu4e-drafts-folder "/drafts"     ;; where do i keep half-written mail?
-    mu4e-trash-folder  "/trash"      ;; where do i move deleted mail?
+    mu4e-trash-folder  "/trash")     ;; where do i move deleted mail?
 @end example
-The folder names are all relative to @code{mu4e-maildir}.
+
+@code{mu4e-maildir} take an actual filesystem-path, the other folder names are
+all relative to @code{mu4e-maildir}.
 
 
 @node Running mu4e
@@ -664,34 +664,49 @@ for example, getting to the @t{/lists} folder only requires you to type
 @example
 @verbatim
 ;; example configuration for mu-for-emacs (mu4e)
-
 (require 'mu4e)
-(load-library "smtpmail")
 
 (setq
-  ;; a regular expression that matches all email address uses by the user;
-  ;; this allows us to correctly determine if user is the sender of some message
-  mu4e-user-mail-address-regexp
+   ;; a regular expression that matches all email address uses by the user;
+   ;; this allows us to correctly determine if user is the sender of some message
+   mu4e-user-mail-address-regexp
       "foo@bar\.com\\|cuux@example\.com"
 
-  mu4e-maildir       "/home/user/Maildir"
-  ;; the next are relative to `mu4e-maildir'
-  mu4e-outbox-folder "/outbox"
-  mu4e-sent-folder   "/sent"
-  mu4e-drafts-folder "/drafts"
-  mu4e-trash-folder  "/trash"
+   ;; path to our Maildir directory    
+   mu4e-maildir       "/home/user/Maildir"
+   ;; the next are relative to `mu4e-maildir'
+   mu4e-outbox-folder "/outbox"
+   mu4e-sent-folder   "/sent"
+   mu4e-drafts-folder "/drafts"
+   mu4e-trash-folder  "/trash"
 
    ;; the maildirs you use frequently; access them with 'j' ('jump')
-  mu4e-maildir-shortcuts
+   mu4e-maildir-shortcuts
     '( ("/archive"     . ?a)
        ("/inbox"       . ?i)
        ("/work"        . ?w)
        ("/sent"        . ?s))
+       
+   ;; when you want to use some external command for text->html conversion,
+   ;; i.e., the 'html2text' program
+   mu4e-html2text-command "html2text"
 
-    ;; program to get mail
-   mu4e-get-mail-command "fetchmail"
+   ;; the headers to show in the headers list -- a pair of the field + its
+   ;; width, with `nil' meaning 'unlimited' (better only use that for
+   ;; the last field. These are the defaults:
+   mu4e-headers-fields
+    '( (:date          .  25)
+       (:flags         .   6)
+       (:from          .  22)
+       (:subject       .  nil))
+  
+       
+   ;; program to get mail; alternatives are 'fetchmail', 'getmail'
+   ;; isync or your own shellscript. called when 'U' is pressed in
+   ;; main view
+   mu4e-get-mail-command "offlineimap"
 
-   ;; general emacs mail settings
+   ;; general emacs mail settings; used when composing e-mail
    mail-reply-to "foo@bar.com"
    user-mail-address "foo@bar.com"
    user-full-name  "Foo X. Bar"
@@ -703,14 +718,15 @@ for example, getting to the @t{/lists} folder only requires you to type
       "http://www.example.com\n")
 
    ;; smtp mail setting
-    message-send-mail-function 'smtpmail-send-it
-    smtpmail-default-smtp-server "smtpa.example.com"
-    smtpmail-smtp-server ""smtpa.example.com"
-    smtpmail-local-domain "example.com"
+   message-send-mail-function 'smtpmail-send-it
+   smtpmail-default-smtp-server "smtp.example.com"
+   smtpmail-smtp-server ""smtp.example.com"
+   smtpmail-local-domain "example.com"
 
-    ;; for offline mode
-    smtpmail-queue-mail  nil
-    smtpmail-queue-dir   "/home/user/Maildir/queue/cur")
+   ;; if you need offline mode, set these -- and create the queue dir
+   ;; with 'mu mkdir', i.e.. mu mkdir /home/user/Maildir/queue
+   smtpmail-queue-mail  nil
+   smtpmail-queue-dir   "/home/user/Maildir/queue/cur")
 @end verbatim
 @end example
 
@@ -895,6 +911,8 @@ messages, it should work though, using the built-in mechanisms.
 @item @emph{One cannot influence the sorting of messages}. Messages are sorted
 according to thread, then descending by date. It would be nice if it could be
 sorted in other ways as well.
+@item @emph{The keybindings are @emph{somewhat} hard-code} That is, the main
+menu assumes the default keybindings, as do the clicks-on-bookmarks.
 @item @emph{Difficulties with attachments in messages with complex
 MIME-hierarchy.} While dealing with attachments usually works fine, we have
 found some problems with specific mails. This is an issue in @t{mu}, and it is
