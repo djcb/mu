@@ -163,7 +163,7 @@ designated shortcut character for the maildir.")
     '( (:date          .  25)
        (:flags         .   6)
        (:from          .  22)
-       (:subject       .  40))
+       (:subject       .  nil))
   "A list of header fields to show in the headers buffer, and their
   respective widths in characters. A width of `nil' means
   'unrestricted', and this is best reserved fo the rightmost (last)
@@ -338,7 +338,7 @@ view). Most fields should be self-explanatory. A special one is
 `:from-or-to', which is equal to `:from' unless `:from' matches ,
 in which case it will be equal to `:to'.)")
 
-
+
 ;; mm startup function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e ()
   "Start mm. We do this by sending a 'ping' to the mu server
@@ -347,6 +347,11 @@ server has the expected values."
   (interactive)
   (if (buffer-live-p (get-buffer mu4e-main-buffer-name))
     (switch-to-buffer mu4e-main-buffer-name)
+    (dolist (var '(mu4e-maildir mu4e-inbox-folder mu4e-outbox-folder
+		    mu4e-outbox-folder mu4e-sent-folder mu4e-drafts-folder
+		    mu4e-trash-folder))
+      (unless (and (boundp var) (symbol-value var))
+	(error "Please set %S" var)))
     ;; explicit version checks are a bit questionable,
     ;; better to check for specific features
     (if (< emacs-major-version 23)
@@ -412,7 +417,7 @@ maildirs under `mu4e-maildir."
 
 
 
-(defun mu4e-ask-bookmark (prompt)
+(defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
   (unless mu4e-bookmarks (error "`mu4e-bookmarks' is not defined"))
@@ -423,13 +428,20 @@ maildirs under `mu4e-maildir."
 		 (concat
 		   "[" (propertize (make-string 1 key) 'face 'mu4e-view-link-face) "]"
 		   title))) mu4e-bookmarks ", "))
-	  (kar (read-char (concat prompt bmarks)))
-	  (chosen-bm
-	    (find-if (lambda (bm) (= kar (nth 2 bm))) mu4e-bookmarks)))
-    (unless chosen-bm (error "Invalid shortcut '%c'" kar))
-    (nth 0 chosen-bm)))
+	  (kar (read-char (concat prompt bmarks))))
+    (mu4e-get-bookmark-query kar)))
 
-
+(defun mu4e-get-bookmark-query (kar)
+  "Get the corresponding bookmarked query for shortcut character
+KAR, or raise an error if none is found."
+ (let ((chosen-bm
+	 (find-if
+	   (lambda (bm)
+	     (= kar (nth 2 bm)))
+	   mu4e-bookmarks)))
+   (if chosen-bm
+     (nth 0 chosen-bm)
+     (error "Invalid shortcut '%c'" kar))))
 
 (defun mu4e-new-buffer (bufname)
   "Return a new buffer BUFNAME; if such already exists, kill the
