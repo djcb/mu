@@ -388,12 +388,20 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 static MuError
 cmd_mkdir (GSList *args, GError **err)
 {
-	return_if_fail_param_num (args, 1, 1, "usage: mkdir <maildir>");
+	const char *path;
 
-	if (!mu_maildir_mkdir ((const char*)args->data, 0755, FALSE, err))
+	return_if_fail_param_num (args, 1, 1, "usage: mkdir <path>");
+
+	path = (const char*)args->data;
+
+	if (!mu_maildir_mkdir (path, 0755, FALSE, err))
 		return server_error (err, MU_G_ERROR_CODE (err),
 				     "failed to create maildir '%s'",
-				     (const char*)args->data);
+				     path);
+
+	send_expr ("(:info mkdir :message \"%s has been created\")",
+		   path);
+
 	return MU_OK;
 }
 

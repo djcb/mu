@@ -178,6 +178,16 @@ Using the \fBadd\fR command, we can add a message to the database.
 <- (:info add :path <path> :docid <docid>)
 .fi
 
+.TP
+.B mkdir
+
+Using the \fBmkdir\fR command, we can create a new maildir.
+
+.nf
+-> mkdir <path>
+<- (:info mkdir :message "<maildir> has been created")
+.fi
+
 
 
 .SH AUTHOR
