@@ -310,33 +310,25 @@ cmd_ping (MuStore *store, GSList *args, GError **err)
 	return MU_OK;
 }
 
-/*
- * find  <query> <maxnum>
- * => list of s-expression, each describing a message
- * => (:found <number of found messages>)
- */
-static MuError
-cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
+
+static unsigned
+output_found_sexps (MuMsgIter *iter, int maxnum)
 {
-	MuMsgIter *iter;
-	unsigned u;
-	int maxnum;
-	const char* usage = "usage: find <searchexpr> <maxnum>";
+	unsigned u, max;
 
-	return_if_fail_param_num (args, 2, 2, usage);
+	u = 0;
+	if (maxnum > 0)
+		max = (unsigned) maxnum;
+	else
+		max = G_MAXUINT32;
 
-	if ((maxnum = atoi((const char*)args->next->data)) == 0)
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS, usage);
+	while (!mu_msg_iter_is_done (iter) && u <= max &&
+	       !MU_CAUGHT_SIGNAL) {
 
-	if (!(iter = mu_query_run (query, (const char*)args->data, TRUE,
-				   MU_MSG_FIELD_ID_DATE, TRUE, maxnum, err)))
-		return server_error (err, MU_ERROR_INTERNAL,
-				     "couldn't get iterator");
-
-	for (u = 0; !mu_msg_iter_is_done (iter) && !MU_CAUGHT_SIGNAL;
-	     mu_msg_iter_next (iter)) {
 		MuMsg *msg;
+
 		msg = mu_msg_iter_get_msg_floating (iter);
+
 		if (mu_msg_is_readable (msg)) {
 			char *sexp;
 			sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
@@ -346,14 +338,52 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 			g_free (sexp);
 			++u;
 		}
+		mu_msg_iter_next (iter);
 	}
-	mu_msg_iter_destroy (iter);
 
-	/* return the number of results found */
-	send_expr ("(:found %u)\n", u);
+	return u;
+}
+
+
+/*
+ * find  <query> <maxnum>
+ * => list of s-expression, each describing a message
+ * => (:found <number of found messages>)
+ */
+static MuError
+cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
+{
+	MuMsgIter *iter;
+	int maxnum;
+	const char* usage;
+
+	usage = "usage: find <searchexpr> <maxnum>";
+
+	return_if_fail_param_num (args, 2, 2, usage);
+
+	if ((maxnum = atoi((const char*)args->next->data)) == 0)
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS, usage);
+
+	/* TODO: ask for *all* results, then, get the <maxnum> newest
+	 * ones; it seems we cannot get a sorted list of a subset of
+	 * the result --> needs investigation, this is a
+	 * work-around */
+	if (!(iter = mu_query_run (query, (const char*)args->data, TRUE,
+				   MU_MSG_FIELD_ID_DATE, TRUE, -1, err)))
+
+	/* if (!(iter = mu_query_run (query, (const char*)args->data, TRUE, */
+	/* 			   MU_MSG_FIELD_ID_DATE, TRUE, maxnum, err))) */
+		return server_error (err, MU_ERROR_INTERNAL,
+				     "couldn't get iterator");
+
+	/* return results + the number of results found */
+	send_expr ("(:found %u)\n", output_found_sexps (iter, maxnum));
+	mu_msg_iter_destroy (iter);
 
 	return MU_OK;
 }
+
+
 
 static MuError
 cmd_mkdir (GSList *args, GError **err)
