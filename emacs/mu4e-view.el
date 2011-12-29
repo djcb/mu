@@ -347,6 +347,8 @@ if IS-OPEN is nil, and otherwise open it."
   (setq major-mode 'mu4e-view-mode mode-name mu4e-view-buffer-name)
   (setq truncate-lines t buffer-read-only t))
 
+(put 'mu4e-view-mode 'mode-class 'special)
+
 
 ;; we mark messages are as read when we leave the message; ie., when skipping to
 ;; the next/previous one, or leaving the view buffer altogether.

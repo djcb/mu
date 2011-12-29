@@ -370,6 +370,10 @@ after the end of the search results."
 		   field)
 		 'face 'mu4e-title-face) " ")))
 	 mu4e-headers-fields))))
+
+(put 'mu4e-hdrs-mode 'mode-class 'special)
+
+
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-msg-map nil
   "*internal* A map (hashtable) which maps a database (Xapian)

@@ -65,6 +65,7 @@
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
 
+(put 'mu4e-main-mode 'mode-class 'special)
 
 
 (defun mu4e-action-str (str &optional func-or-shortcut)
