@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.8pre],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.8-alpha],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -30,8 +30,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AM_PROG_LIBTOOL
 #LT_INIT([disable-shared])
 
-AS_IF([test x$prefix = xNONE],[
-   prefix=/usr/local])
+AS_IF([test x$prefix = xNONE],[prefix=/usr/local])
 AC_SUBST(prefix)
 
 AC_PROG_CC
@@ -259,7 +258,7 @@ AC_CHECK_PROG(have_makeinfo, makeinfo, yes, no)
 AM_CONDITIONAL(HAVE_MAKEINFO, test "$have_makeinfo" = yes)
 ###############################################################################
 
-       
+
 
 
 ###############################################################################

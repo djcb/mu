@@ -6,7 +6,11 @@
    - search for attachment MIME-type using 'mime:' or 'y:'
    - search for text in text-attachments using 'embed:' or 'e:'
    - searching for attachment file names now uses 'file:' (was: 'attach:')
-   - experimental emacs-based mail client
+   - experimental emacs-based mail client -- "mu4e"
+   - added more unit tests
+   - improved guile binding - no special binary is needed anymore, it's
+     installable are works with the normal guile system; code has been
+     substantially improved. still 'experimental'
 
 ** Release 0.9.7 <>
 
