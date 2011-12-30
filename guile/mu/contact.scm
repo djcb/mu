@@ -15,11 +15,21 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-(use-modules (mu log))
-(use-modules (mu msg))
 
-(define-module (mu store)
-  :use-module (mu log)
-  :use-module (mu msg))
+;; some guile/scheme functions to get various statistics of my mu
+;; message store.
 
-(load-extension "libguile-mu" "mu_guile_store_init")
+(define-module (mu contact)
+  :use-module (oop goops)
+  :export ( ;; classes
+	    <contact>
+	    ;; contact methods
+	    name email timestamp frequency last-seen
+	    ))
+
+(define-class <contact> ()
+  (name #:init-value #f #:accessor name #:init-keyword #:name)
+  (email #:init-value #f #:accessor email #:init-keyword #:email)
+  (tstamp #:init-value 0 #:accessor timestamp #:init-keyword #:timestamp)
+  (last-seen #:init-value 0 #:accessor last-seen)
+  (freq #:init-value 1 #:accessor frequency))

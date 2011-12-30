@@ -39,10 +39,6 @@ libguile_mu_la_SOURCES=			\
 	mu-guile.h			\
 	mu-guile-msg.c			\
 	mu-guile-msg.h			\
-	mu-guile-store.c		\
-	mu-guile-store.h		\
-	mu-guile-log.c			\
-	mu-guile-log.h			\
 	mu-guile-util.c			\
 	mu-guile-util.h
 
@@ -52,8 +48,6 @@ libguile_mu_la_LIBADD=			\
 
 XFILES=					\
 	mu-guile-msg.x			\
-	mu-guile-store.x		\
-	mu-guile-log.x			\
 	mu-guile.x
 
 moduledir=$(GUILE_SITEDIR)

@@ -20,10 +20,7 @@ moduledir=$(GUILE_SITEDIR)/mu
 
 module_DATA=		\
 	msg.scm		\
-	log.scm		\
-	store.scm	\
-	stats.scm	\
-	contacts.scm
+	contact.scm
 
 EXTRA_DIST=		\
 	README

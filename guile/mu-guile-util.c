@@ -20,7 +20,7 @@
 
 SCM
 mu_guile_util_error (const char *func_name, int status,
-		const char *fmt, SCM args)
+		     const char *fmt, SCM args)
 {
 	scm_error_scm (scm_from_locale_symbol ("MuError"),
 		       scm_from_utf8_string (func_name ? func_name : "<nameless>"),

@@ -22,57 +22,71 @@ exec guile -e main -s $0 $@
 
 
 (use-modules (ice-9 getopt-long))
-(use-modules (mu) (mu contacts))
+(use-modules (srfi srfi-1))
+(use-modules (mu) (mu contact))
 
 (define (sort-by-freq c1 c2)
-  (let ((freq1 (vector-ref c1 2))
-	 (freq2 (vector-ref c2 2)))
-    (< freq2 freq2)))
+  (< (frequency c1) (frequency c2)))
 
 (define (sort-by-newness c1 c2)
-  (let ((tstamp1 (vector-ref c1 3))
-	 (tstamp2 (vector-ref c2 3)))
-    (< tstamp1 tstamp2)))
+  (< (timestamp c1) (timestamp c2)))
 
+(define (export-contact contact form)
+  (cond
+    ((string= form "org-contacts")
+      (format #t "* ~a\n:PROPERTIES:\n:EMAIL:~a\n:END:\n\n"
+	(or (name contact) (email contact)) (email contact)))))
 
 (define (main args)
   (let* ((optionspec   '( (muhome   (value #t))
 			  (sort-by  (value #t))
 			  (revert   (value #f))
+			  (format   (value #t))
 			  (limit    (value #t))
 			  (help    (single-char #\h) (value #f))))
 	  (options (getopt-long args optionspec))
 	  (msg (string-append
-		 "usage: mu-contacts-export [--help] [--muhome=<muhome>] "
+		 "usage: contacts-export [--help] [--muhome=<muhome>] "
 		 "--format=<org-contacts|wl|mutt-ab|plain(*)> "
-		 "--sort-by=<freq(*)|newness> [--revert] [--limit=<n>]\n"))
+		 "--sort-by=<frequency(*)|newness> [--revert] [--limit=<n>]\n"))
 	  (help (option-ref options 'help #f))
 	  (muhome (option-ref options 'muhome #f))
-	  (sort-by (or (option-ref options 'sort-by #f) "freq"))
+	  (sort-by (or (option-ref options 'sort-by #f) "frequency"))
 	  (revert (option-ref options 'revert #f))
-	  (format (or (option-ref options 'format #f) "plain"))
-	  (limit (option-ref options 'limit #f)))
+	  (form  (or (option-ref options 'format #f) "plain"))
+	  (limit (string->number (option-ref options 'limit 1000000))))
     (if help
       (begin
 	(display msg)
 	(exit 0))
      (begin
        (if muhome
-	 (mu:init muhome)
-	 (mu:init))
+	 (initialize-mu muhome)
+	 (initialize-mu))
        (let* ((sort-func
 		(cond
-		  ((string= sort-by "freq")    sort-by-freq)
+		  ((string= sort-by "frequency")    sort-by-freq)
 		  ((string= sort-by "newness") sort-by-newness)
-		  (else (begin (display msg) (exit 1))))))
+		  (else (begin (display msg) (exit 1)))))
+	       (contacts '()))
+	 ;; make a list of all contacts
+	 (for-each-contact
+	   (lambda (c) (set! contacts (cons c contacts))))
+	 ;; should we sort it?
+	 (if sort-by
+	   (set! contacts (sort! contacts
+			    (if revert (negate sort-func) sort-func))))
+
+	 ;; should we limit the number?
+	 (if limit
+	   (set! contacts (take! contacts limit)))
+	 ;; export!
 	 (for-each
-	   (lambda (c) (format #t "~S\n" (vector-ref c 0)))
-	   (mu:contacts:list)))))))
+	   (lambda (c)
+	     (export-contact c form))
+	   contacts))))))
 
-	 
 
-	 ;;(mu:contacts:export 'plain sort-func 100))))))
-		  
 ;; Local Variables:
 ;; mode: scheme
 ;; End:

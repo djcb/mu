@@ -262,10 +262,12 @@ contacts_to_list (MuMsgContact *contact, EachContactData *ecdata)
 		addr = mu_msg_contact_address (contact);
 		name = mu_msg_contact_name (contact);
 
+
 		item = scm_list_1
-			(scm_list_2 (
+			(scm_cons (
 				scm_from_string_or_null(name),
 				scm_from_string_or_null(addr)));
+
 		ecdata->lst = scm_append_x (scm_list_2(ecdata->lst, item));
 	}
 }

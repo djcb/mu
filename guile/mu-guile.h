@@ -25,15 +25,6 @@
 G_BEGIN_DECLS
 
 /**
- * Whether or not mu/guile has been initialized
- *
- *
- * @return TRUE if it has been initialized, FALSE otherwise
- */
-gboolean mu_guile_initialized (void);
-
-
-/**
  * Initialize this mu guile module.
  *
  * @param data
