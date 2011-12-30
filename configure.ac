@@ -217,45 +217,33 @@ AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "
 
 
 ###############################################################################
-# check for guile & guile-snarf
-AC_PATH_PROG(GUILE_CONFIG, [guile-config], [], [$PATH])
-AC_PATH_PROG(GUILE, [guile], [], [$PATH])
-AS_IF([test "x$GUILE_CONFIG" != "x"],
-  [GUILE_CFLAGS=`$GUILE_CONFIG compile`;
-   GUILE_LIBS=`$GUILE_CONFIG link`;
-   GUILE_SITEDIR=`$GUILE -c '(write (%site-dir)) (newline)'`
-   AC_DEFINE_UNQUOTED([HAVE_GUILE],1,[Whether we have guile])])
-AC_SUBST(GUILE_LIBS)
+# check for guile 2.0 & guile-snarf
+PKG_CHECK_MODULES(GUILE,guile-2.0,[have_guile=yes],[have_guile=no])
 AC_SUBST(GUILE_CFLAGS)
+AC_SUBST(GUILE_LIBS)
+
+AS_IF([test "x$have_guile" = "xyes"],[
+  AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
+  AS_IF([test "x$GUILE_SNARF" != "x"],
+    [AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])
+    GUILE_SITEDIR="`${PKG_CONFIG} guile-2.0 --variable=sitedir`"],
+    [AC_MSG_WARN([cannot find guile-snarf])])])
+
 AC_SUBST(GUILE_SITEDIR)
 
-AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
-AS_IF([test "x$GUILE_SNARF" != "x"],[
-    AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])],[
-    AC_MSG_WARN([cannot find guile-snarf])])
+AS_IF([test "x$have_guile" = "xyes" -a "x$GUILE_SNARF" != "x"],
+  [guile_version="`${PKG_CONFIG} --modversion guile-2.0`"
+  AC_DEFINE_UNQUOTED([HAVE_GUILE],1,[Whether we have guile 2.0])])
 
-AS_IF([test "x$GUILE_CONFIG" != "x"],
- [GUILE_VERSION="`$GUILE_CONFIG --version 2>&1 | sed 's/.*version //'`";
-  GUILE_MAJOR_VERSION="`echo "$GUILE_VERSION" | sed 's/\..*//'`"])
-
-AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
-    [AC_DEFINE_UNQUOTED([HAVE_PRE2_GUILE],[1],[have pre-2.x guile])])
-
-# for now, we require guile 2.x
-AM_CONDITIONAL(HAVE_GUILE,[test "$xGUILE_CONFIG" != "x" \
-                           -a "x$GUILE_SNARF" != "x" \
-			   -a "x$GUILE_MAJOR_VERSION" != "0"])
-
-AS_IF([test "x$GUILE_MAJOR_VERSION" = "x0" -o "x$GUILE_MAJOR_VERSION" = "x1"],
-      [AC_MSG_WARN([Only guile >= 2.x is supported]);
-       guile_too_old="yes"])
+AM_CONDITIONAL(HAVE_GUILE, [test "x$have_guile" = "xyes"])
+###############################################################################
 
 
 
 ###############################################################################
 # check for makeinfo
-AC_CHECK_PROG(have_makeinfo, makeinfo, yes, no)
-AM_CONDITIONAL(HAVE_MAKEINFO, test "$have_makeinfo" = yes)
+AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
+AM_CONDITIONAL(HAVE_MAKEINFO, [test "x$have_makeinfo" = "xyes"])
 ###############################################################################
 
 
@@ -330,8 +318,8 @@ if test "x$have_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
 fi
 
-if test "x$GUILE_CONFIG" != "x"; then
-echo "Guile version                        : $GUILE_VERSION"
+if test "x$have_guile" = "xyes"; then
+echo "Guile version                        : $guile_version"
 fi
 
 echo

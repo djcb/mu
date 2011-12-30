@@ -16,12 +16,11 @@
 
 include $(top_srcdir)/gtest.mk
 
-moduledir=$(GUILE_SITEDIR)/mu
-
-module_DATA=		\
+# FIXME: GUILE_SITEDIR would be better, but that
+# breaks 'make distcheck'
+scmdir=${prefix}/share/guile/site/2.0/
+scm_DATA=		\
 	msg.scm		\
 	contact.scm
 
-EXTRA_DIST=$(module_DATA)
-
-
+EXTRA_DIST=$(scm_DATA)

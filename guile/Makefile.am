@@ -50,9 +50,11 @@ XFILES=					\
 	mu-guile-msg.x			\
 	mu-guile.x
 
-moduledir=$(GUILE_SITEDIR)
+# FIXME: GUILE_SITEDIR would be better, but that
+# breaks 'make distcheck'
+scmdir=${prefix}/share/guile/site/2.0/
 
-module_DATA=				\
+scm_DATA=				\
 	mu.scm
 
 BUILT_SOURCES=$(XFILES)
@@ -67,5 +69,4 @@ MKDEP = $(CC) -M -MG $(snarfcppopts)
 
 DISTCLEANFILES=$(XFILES)
 
-EXTRA_DIST=$(module_DATA)
-
+EXTRA_DIST=$(scm_DATA)
