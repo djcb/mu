@@ -18,7 +18,6 @@
 
 (define-module (mu)
   :use-module (oop goops)
-  :use-module (mu log)
   :use-module (mu msg)
   :use-module (mu contact)
   :export
