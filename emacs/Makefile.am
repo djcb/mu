@@ -20,7 +20,7 @@ SUBDIRS=
 
 BUILT_SOURCES=mu4e-version.el
 
-mu4e-version.el:
+mu4e-version.el: $(top_srcdir)/configure.ac
 	@echo -e ";; auto-generated\n\
 (defconst mu4e-mu-version \"$(VERSION)\" \"Required mu binary version.\")\n\
 (provide 'mu4e-version)\n" >$@
