@@ -36,3 +36,5 @@ elisp_DATA=			\
 	mu4e-proc.el		\
 	mu4e-send.el		\
 	mu4e-version.el
+
+EXTRA_DIST=$(elisp_DATA)

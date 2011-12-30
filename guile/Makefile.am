@@ -67,5 +67,5 @@ MKDEP = $(CC) -M -MG $(snarfcppopts)
 
 DISTCLEANFILES=$(XFILES)
 
-EXTRA_DIST=				\
-	mu.scm
+EXTRA_DIST=$(module_DATA)
+

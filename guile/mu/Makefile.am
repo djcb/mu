@@ -22,5 +22,6 @@ module_DATA=		\
 	msg.scm		\
 	contact.scm
 
-EXTRA_DIST=		\
-	README
+EXTRA_DIST=$(module_DATA)
+
+
