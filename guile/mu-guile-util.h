@@ -21,11 +21,6 @@
 #define __MU_GUILE_UTIL_H__
 
 #include <libguile.h>
-
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif /*HAVE_CONFIG_H*/
-
 #include <glib.h>
 
 G_BEGIN_DECLS
@@ -60,13 +55,6 @@ SCM mu_guile_util_error (const char *func_name, int status,
  * @param err Gerror
  */
 SCM mu_guile_util_g_error (const char *func_name, GError *err);
-
-
-/* compatibility functions for guile 1.8 */
-#if HAVE_PRE2_GUILE
-SCM   scm_from_utf8_string (const char* str);
-char* scm_to_utf8_string   (SCM scm);
-#endif /*HAVE_PRE2_GUILE*/
 
 G_END_DECLS
 
