@@ -71,7 +71,7 @@ fixme:
 gitcheck:
 	cd `mktemp -d`; \
 	git clone git://gitorious.org/mu/mu.git ; \
-	cd mu-ng ; \
+	cd mu; \
 	autoreconf -i ;\
 	./configure ; \
 	make distcheck
