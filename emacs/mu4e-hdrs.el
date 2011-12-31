@@ -356,11 +356,12 @@ after the end of the search results."
     buffer-undo-list t ;; don't record undo information
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary)
-
+  
    (setq header-line-format
-     (cons "*  "
+     (cons
+       (make-string (floor (fringe-columns 'left t)) ?\s)
        (map 'list
-	 (lambda (item) ;; FIXME
+	 (lambda (item)
 	   (let ((field (cdr (assoc (car item) mu4e-header-names)))
 		  (width (cdr item)))
 	     (concat
