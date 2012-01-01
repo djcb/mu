@@ -20,7 +20,6 @@ include $(top_srcdir)/gtest.mk
 # breaks 'make distcheck'
 scmdir=${prefix}/share/guile/site/2.0/mu/
 scm_DATA=		\
-	msg.scm		\
 	message.scm	\
 	contact.scm
 
