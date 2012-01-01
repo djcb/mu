@@ -28,7 +28,7 @@ struct _MuMsgCache {
 	char *_str[MU_MSG_STRING_FIELD_ID_NUM];
 
 	GSList         *_refs, *_tags;
-	
+
 	time_t		_timestamp, _date;
 	size_t		_size;
 	MuFlags	_flags;
@@ -41,8 +41,8 @@ struct _MuMsgCache {
 /* _cached and _allocated have a bit for each MuMsgFieldId to remember
  * which ones have been cached, and which ones have been allocated. */
 
-#define is_allocated(C,MFID)    ((C)->_allocated & (1 << (MFID)))	
-#define is_cached(C,MFID)       ((C)->_cached    & (1 << (MFID)))	
+#define is_allocated(C,MFID)    ((C)->_allocated & (1 << (MFID)))
+#define is_cached(C,MFID)       ((C)->_cached    & (1 << (MFID)))
 
 #define set_allocated(C,MFID)   ((C)->_allocated |= (1 << (MFID)))
 #define set_cached(C,MFID)      ((C)->_cached    |= (1 << (MFID)))
@@ -55,10 +55,10 @@ static void
 cache_clear (MuMsgCache *self)
 {
 	int i;
-	
+
 	for (i = 0; i != MU_MSG_STRING_FIELD_ID_NUM; ++i)
 		self->_str[i] = NULL;
-	
+
 	self->_timestamp = (time_t)-1;
 	self->_size      = (size_t)-1;
 	self->_flags     = MU_FLAG_NONE;
@@ -66,7 +66,7 @@ cache_clear (MuMsgCache *self)
 	self->_date	 = (time_t)-1;
 
 	self->_refs = self->_tags = NULL;
-	
+
 	self->_cached	 = 0;
 	self->_allocated = 0;
 }
@@ -76,10 +76,10 @@ MuMsgCache*
 mu_msg_cache_new (void)
 {
 	MuMsgCache *self;
-	
+
 	self = g_slice_new0 (MuMsgCache);
-	cache_clear (self);		
-	
+	cache_clear (self);
+
 	return self;
 }
 
@@ -88,10 +88,10 @@ void
 mu_msg_cache_destroy (MuMsgCache *self)
 {
 	int i;
-	
+
 	if (!self)
 		return;
-	
+
 	g_return_if_fail (self);
 
 	for (i = 0; i != MU_MSG_STRING_FIELD_ID_NUM; ++i)
@@ -100,10 +100,10 @@ mu_msg_cache_destroy (MuMsgCache *self)
 
 	mu_str_free_list (self->_tags);
 	mu_str_free_list (self->_refs);
-	
+
 	g_slice_free (MuMsgCache, self);
 }
-	
+
 
 
 const char*
@@ -114,7 +114,7 @@ mu_msg_cache_set_str (MuMsgCache *self, MuMsgFieldId mfid, char *str,
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
 
 	/* maybe there was an old, allocated value there already? */
-	if (is_allocated(self, mfid)) 
+	if (is_allocated(self, mfid))
 		g_free (self->_str[mfid]);
 
 	self->_str[mfid] = str;
@@ -133,9 +133,9 @@ const char*
 mu_msg_cache_str (MuMsgCache *cache, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
-	return cache->_str[mfid];	
+	return cache->_str[mfid];
 }
- 
+
 
 
 const GSList*
@@ -144,14 +144,14 @@ mu_msg_cache_set_str_list (MuMsgCache *self, MuMsgFieldId mfid,
 {
 	g_return_val_if_fail(self, NULL);
 	g_return_val_if_fail(mu_msg_field_is_string_list(mfid), NULL);
-		
+
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_REFS:
 		if (is_allocated(self, mfid))
 			mu_str_free_list (self->_refs);
 		self->_refs = lst;
 		break;
-		
+
 	case MU_MSG_FIELD_ID_TAGS:
 		if (is_allocated(self, mfid))
 			mu_str_free_list (self->_tags);
@@ -161,14 +161,14 @@ mu_msg_cache_set_str_list (MuMsgCache *self, MuMsgFieldId mfid,
 		g_return_val_if_reached(NULL);
 		return NULL;
 	}
-	
+
 	set_cached (self, mfid);
 
 	if (do_free)
 		set_allocated (self, mfid);
 	else
 		reset_allocated (self, mfid);
-	
+
 	return lst;
 }
 
@@ -198,9 +198,6 @@ mu_msg_cache_set_num (MuMsgCache *self, MuMsgFieldId mfid, gint64 val)
 	case MU_MSG_FIELD_ID_DATE:
 		self->_date = (time_t)val;
 		break;
-	case MU_MSG_FIELD_ID_TIMESTAMP:
-		self->_timestamp = (time_t)val;
-		break;
 	case MU_MSG_FIELD_ID_PRIO:
 		self->_prio = (MuMsgPrio)val;
 		break;
@@ -228,8 +225,6 @@ mu_msg_cache_num (MuMsgCache *self, MuMsgFieldId mfid)
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_DATE:
 		return (gint64)self->_date;
-	case MU_MSG_FIELD_ID_TIMESTAMP:
-		return (gint64)self->_timestamp;
 	case MU_MSG_FIELD_ID_PRIO:
 		return (gint64)self->_prio;
 	case MU_MSG_FIELD_ID_FLAGS:
@@ -239,7 +234,7 @@ mu_msg_cache_num (MuMsgCache *self, MuMsgFieldId mfid)
 	default: g_return_val_if_reached(-1);
 	}
 
-	set_cached (self, mfid);	
+	set_cached (self, mfid);
 }
 
 
@@ -257,7 +252,7 @@ mu_msg_cache_allocate_all (MuMsgCache *self)
 	int mfid;
 
 	g_return_if_fail (self);
-	
+
 	for (mfid = 0; mfid != MU_MSG_STRING_FIELD_ID_NUM; ++mfid) {
 		if (self->_str[mfid] && !is_allocated(self, mfid)) {
 			self->_str[mfid] = g_strdup (self->_str[mfid]);

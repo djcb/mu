@@ -441,13 +441,6 @@ mu_msg_get_prio (MuMsg *self)
 	return (MuMsgPrio)get_num_field (self, MU_MSG_FIELD_ID_PRIO);
 }
 
-time_t
-mu_msg_get_timestamp (MuMsg *self)
-{
-	g_return_val_if_fail (self, (time_t)-1);
-	return (MuMsgPrio)get_num_field (self, MU_MSG_FIELD_ID_TIMESTAMP);
-}
-
 
 const char*
 mu_msg_get_body_html (MuMsg *self)
@@ -809,6 +802,3 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 
 	return newfullpath ? TRUE : FALSE;
 }
-
-
-

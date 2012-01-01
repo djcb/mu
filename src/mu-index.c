@@ -159,7 +159,8 @@ errexit:
 	}
 }
 
-	static MuError
+
+static MuError
 run_msg_callback_maybe (MuIndexCallbackData *data)
 {
 	MuError result;

@@ -221,13 +221,6 @@ static const MuMsgField FIELD_DATA[] = {
 	},
 
 	{
-		MU_MSG_FIELD_ID_TIMESTAMP,
-		MU_MSG_FIELD_TYPE_TIME_T,
-		"timestamp", 0, 0,
-		FLAG_GMIME
-	},
-
-	{
 		MU_MSG_FIELD_ID_REFS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		NULL, 'r', 'R',
