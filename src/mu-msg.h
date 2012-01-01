@@ -419,6 +419,9 @@ enum _MuMsgContactType {  /* Reply-To:? */
 };
 typedef guint MuMsgContactType;
 
+/* not a 'real' contact type */
+#define MU_MSG_CONTACT_TYPE_ALL (MU_MSG_CONTACT_TYPE_NUM + 1)
+
 #define mu_msg_contact_type_is_valid(MCT)\
 	((MCT) < MU_MSG_CONTACT_TYPE_NUM)
 
