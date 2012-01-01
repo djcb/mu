@@ -119,3 +119,4 @@ argument, and returns some number. For example, to get the average message size 
   (if (= count 0)
     0
     (exact->inexact (/ sum count)))))
+
