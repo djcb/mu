@@ -1,0 +1,176 @@
+\input texinfo.tex    @c -*-texinfo-*-
+@c %**start of header
+@setfilename mu-guile.info
+@settitle mu-guile user manual
+@documentencoding utf-8
+@c %**end of header
+
+@dircategory The Algorithmic Language Scheme
+@direntry
+* mu4e: (mu-guile).        Guile bindings for the @t{mu} maildir indexer/searcher.
+@end direntry
+
+@copying
+Copyright @copyright{} 2012 Dirk-Jan C. Binnema
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
+copy of the license is included in the section entitled ``GNU Free
+Documentation License.''
+@end quotation
+@end copying
+
+@node Top
+@top mu4e Manual
+
+Welcome to @t{mu-guile}!
+
+@t{mu-guile} is a binding of the @t{mu} email search engine and the @t{guile}
+programming language.
+
+@menu
+* Introduction::
+* Installation::
+* First steps::
+
+Appendices
+
+* GNU Free Documentation License::  The license of this manual.
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+@t{mu4e} is an e-mail program for @emph{GNU/Emacs}; it uses the @t{mu} maildir
+search engine as its backend, making @t{mu} fully search-based.
+@t{mu} is a program for indexing / searching e-mails, as well as an
+@t{emacs}-based email-client (@t{mu4e}.
+
+@t{guile} is the @emph{GNU Ubiquitous Intelligent Language for Extensions} - a
+version of the @emph{Scheme} programming language and the official GNU
+extension language.
+
+@t{mu-guile} connects @t{mu} and @t{guile}, and allows you to easily write
+programs to do things with your e-mails.
+
+@c @menu
+@c * Why another e-mail client?::
+@c * What mu4e does and doesn't do::
+@c @end menu
+
+@c @node Why another e-mail client?
+@c @section Why another e-mail client?
+
+@c @node What mu4e does and doesn't do
+@c @section What mu4e does and doesn't do
+
+@node Installation
+@chapter Installation
+
+@t{mu-guile} is part of @t{mu} - by installing the latter, the former will be
+installed as well. Note, however, that @t{mu-guile} requires you to have
+@t{guile} version 2.0 installed, otherwise @t{mu-guile} will not be
+built/installed.
+
+At the time of writing, there are no distribution packages for @t{mu-guile}
+yet, so we are assuming installation from source packages.
+
+Installation follows the normal sequence of:
+@example
+$ tar xvfz mu-<version>.tar.gz  # use the specific version
+$ cd mu-<version>
+$./configure
+@end example
+
+The output of @t{./configure} should end with a little text describing the
+detected versions of various libraries @t{mu} depends on. In particular, it
+should mention the @t{guile} version, e.g.
+
+@example
+Guile version                        : 2.0.3.82-a2c66
+@end example
+
+If you don't see any line referring to @t{guile}, please install it, and run
+@t{configure} again. Note once more, @t{mu-guile} requires @t{guile} version
+2.0.
+
+After a succesfull @t{./configure}, we can make and install the package:
+
+@example
+$ make && sudo make install
+@end example
+
+After this, @t{mu} and @t{mu-guile} should be installed. Note that the above
+instructions will normally install things under @t{/usr/local}; you may need
+to update @t{guile}'s @t{%load-path} to find it there.
+
+You can check the current load-path with the following:
+
+@example
+guile -c '(display %load-path)(newline)'
+@end example
+
+If necessary, you can add the @t{%load-path} by adding something like the
+following to your @file{~/.guile}:
+
+@lisp
+(set! %load-path (cons "/usr/local/share/guile/site/2.0" %load-path))
+@end lisp
+
+After this, you should be ready to go.
+
+@node First steps
+@chapter First steps
+
+Assuming @t{mu-guile} has been installed correctly (@ref{Installation}), and
+also that assuming that you have already indexed your e-mail messages (if
+necessary, see the @t{mu-index} man-page), we are ready to start @t{mu-guile};
+a session may look something like this:
+
+@verbatim
+$ guile
+GNU Guile 2.0.3.82-a2c66
+Copyright (C) 1995-2011 Free Software Foundation, Inc.
+
+Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
+This program is free software, and you are welcome to redistribute it
+under certain conditions; type `,show c' for details.
+
+Enter `,help' for help.
+scheme@(guile-user)>
+@end verbatim
+
+Now, we need to load the @t{mu-guile} module:
+
+@verbatim
+scheme@(guile-user)> (use-modules (mu) (mu message))
+@end verbatim
+
+This will load the basic modules for dealing with messages. After we have
+loaded the modules, we need to initialize the @t{mu-guile} system:
+
+@verbatim
+scheme@(guile-user)> (mu:initialize)
+@end verbatim
+
+When this is done, we can start querying the database. We'll go into various
+functions later in this manual, but just to give an example, let's get a list
+of the subjects of all messages that mention @emph{hello}:
+
+@verbatim
+scheme@(guile-user)> (for-each
+                        (lambda(msg)
+                          (format #t "Subject: ~a\n" (subject msg)))
+                        (mu:message-list "hello"))
+@end verbatim
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+
+@include fdl.texi
+
+
+@bye
