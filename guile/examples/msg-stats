@@ -23,55 +23,6 @@ exec guile -e main -s $0 $@
 (use-modules (ice-9 getopt-long) (ice-9 optargs) (ice-9 popen) (ice-9 format))
 (use-modules (mu) (mu message))
 
-;; note, this is a rather inefficient way to calculate the number; for
-;; demonstration purposes only...
-;; (define* (count #:optional (EXPR ""))
-;;   "Count the total number of messages. If the optional EXPR is
-;; provided, only count the messages that match it.\n"
-;;   (for-each-message (lambda(msg) #f) EXPR))
-
-;; (define* (average FUNC #:optional (EXPR ""))
-;;   "Count the average of the result of applying FUNC on all
-;; messages. If the optional EXPR is provided, only consider the messages
-;; that match it.\n"
-;;   (let* ((sum 0)
-;; 	  (n (for-each-message
-;; 	       (lambda(msg) (set! sum (+ sum (FUNC msg)))) EXPR)))
-;;     (if (= n 0) 0 (exact->inexact (/ sum n)))))
-
-;; (define* (average-size #:optional (EXPR ""))
-;;   "Calculate the average message size. If the optional EXPR is
-;; provided, only consider the messages that match it.\n"
-;;   (average (lambda(msg) (mu:msg:size msg)) EXPR))
-
-;; (define* (average-recipient-number #:optional (EXPR ""))
-;;   "Calculate the average number of recipients (To: + CC: + Bcc:). If
-;; the optional EXPR is provided, only consider the messages that match
-;; it.\n"
-;;   (average (lambda(msg)
-;; 		      (+(length (mu:msg:to msg))
-;; 			(length (mu:msg:cc msg))
-;; 			(length (mu:msg:bcc msg)))) EXPR))
-
-;; (define* (frequency FUNC #:optional (EXPR ""))
-;;   "FUNC is a function that takes a msg, and returns the frequency of
-;; the different values this function returns. If FUNC returns a list,
-;; update the frequency table for each element of this list. If the
-;; optional EXPR is provided, only consider messages that match it.\n"
-;;   (let ((table '()))
-;;     (mu:for-each-message
-;;       (lambda(msg)
-;; 	;; note, if val is not already a list, turn it into a list
-;; 	;; then, take frequency for each element in the list
-;; 	(let* ((val (FUNC msg)) (vals (if (list? val) val (list val))))
-;; 	  (for-each
-;; 	    (lambda (val)
-;; 	      (let ((freq (assoc-ref table val)))
-;; 		(set! table (assoc-set! table val
-;; 			      (+ 1 (if (eq? freq #f) 0 freq)))))) vals))) EXPR)
-;;     table))
-
-
 (define* (per-weekday #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
@@ -169,34 +120,6 @@ result is a list of pairs (year . frequency).\n"
       gnuplot)
     (close-pipe gnuplot)))
 
-;; (define* (top-n FUNC N #:optional (EXPR ""))
-;;   "Get the Top-N frequency of the result of FUNC applied on each
-;; message. If the optional EXPR is provided, only consider the messages
-;; that match it."
-;;   (let* ((freq (frequency FUNC EXPR))
-;; 	  (top (sort freq (lambda (a b) (< (cdr b) (cdr a) )))))
-;;     (list-head top (min (length freq) N))))
-
-;; (define* (top-n-to #:optional (N 10) (EXPR ""))
-;;   "Get the Top-N To:-recipients. If the optional N is not provided,
-;; use 10. If the optional EXPR is provided, only consider the messages
-;; that match it."
-;;   (top-n
-;;     (lambda (msg) (mu:msg:to msg)) N EXPR))
-
-;; (define* (top-n-from #:optional (N 10) (EXPR ""))
-;;   "Get the Top-N senders (From:). If the optional N is not provided,
-;; use 10. If the optional EXPR is provided, only consider the messages
-;; that match it."
-;;   (top-n
-;;     (lambda (msg) (mu:msg:from msg)) N EXPR))
-
-;; (define* (top-n-subject #:optional (N 10) (EXPR ""))
-;;   "Get the Top-N subjects. If the optional N is not provided,
-;; use 10. If the optional EXPR is provided, only consider the messages
-;; that match it."
-;;   (top-n
-;;     (lambda (msg) (mu:msg:subject msg)) N EXPR))
 
 (define* (table pairs #:optional (port (current-output-port)))
   "Display a list of PAIRS in a table-like fashion."
