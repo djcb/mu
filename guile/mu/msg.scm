@@ -17,4 +17,4 @@
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 (define-module (mu msg))
-(load-extension "libguile-mu" "mu_guile_msg_init")
+(load-extension "libguile-mu" "mu_guile_init")

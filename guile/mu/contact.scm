@@ -22,12 +22,12 @@
 (define-module (mu contact)
   :use-module (oop goops)
   :export ( ;; classes
-	    <contact>
+	    <mu-contact>
 	    ;; contact methods
 	    name email timestamp frequency last-seen
 	    ))
 
-(define-class <contact> ()
+(define-class <mu-contact> ()
   (name #:init-value #f #:accessor name #:init-keyword #:name)
   (email #:init-value #f #:accessor email #:init-keyword #:email)
   (tstamp #:init-value 0 #:accessor timestamp #:init-keyword #:timestamp)

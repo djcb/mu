@@ -35,7 +35,13 @@ exec guile -e main -s $0 $@
   (cond
     ((string= form "org-contacts")
       (format #t "* ~a\n:PROPERTIES:\n:EMAIL:~a\n:END:\n\n"
-	(or (name contact) (email contact)) (email contact)))))
+	(or (name contact) (email contact)) (email contact)))
+    ((string= form "plain")
+      (format #t "~a~a\n"
+	(or (name contact) "")
+	(if (name contact)
+	  (string-append " <" (email contact) ">")
+	  (email contact))))))
 
 (define (main args)
   (let* ((optionspec   '( (muhome   (value #t))
@@ -54,15 +60,13 @@ exec guile -e main -s $0 $@
 	  (sort-by (or (option-ref options 'sort-by #f) "frequency"))
 	  (revert (option-ref options 'revert #f))
 	  (form  (or (option-ref options 'format #f) "plain"))
-	  (limit (string->number (option-ref options 'limit 1000000))))
+	  (limit (string->number (option-ref options 'limit "1000000"))))
     (if help
       (begin
 	(display msg)
 	(exit 0))
      (begin
-       (if muhome
-	 (initialize-mu muhome)
-	 (initialize-mu))
+       (mu:initialize muhome)
        (let* ((sort-func
 		(cond
 		  ((string= sort-by "frequency")    sort-by-freq)
@@ -70,7 +74,7 @@ exec guile -e main -s $0 $@
 		  (else (begin (display msg) (exit 1)))))
 	       (contacts '()))
 	 ;; make a list of all contacts
-	 (for-each-contact
+	 (mu:for-each-contact
 	   (lambda (c) (set! contacts (cons c contacts))))
 	 ;; should we sort it?
 	 (if sort-by
@@ -78,7 +82,7 @@ exec guile -e main -s $0 $@
 			    (if revert (negate sort-func) sort-func))))
 
 	 ;; should we limit the number?
-	 (if limit
+	 (if (and limit (< limit (length contacts)))
 	   (set! contacts (take! contacts limit)))
 	 ;; export!
 	 (for-each

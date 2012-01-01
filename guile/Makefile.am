@@ -36,18 +36,13 @@ lib_LTLIBRARIES=			\
 
 libguile_mu_la_SOURCES=			\
 	mu-guile.c			\
-	mu-guile.h			\
-	mu-guile-msg.c			\
-	mu-guile-msg.h			\
-	mu-guile-util.c			\
-	mu-guile-util.h
+	mu-guile.h
 
 libguile_mu_la_LIBADD=			\
 	${top_builddir}/src/libmu.la	\
 	${GUILE_LIBS}
 
 XFILES=					\
-	mu-guile-msg.x			\
 	mu-guile.x
 
 # FIXME: GUILE_SITEDIR would be better, but that

@@ -21,7 +21,7 @@ exec guile -e main -s $0 $@
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 (use-modules (ice-9 getopt-long) (ice-9 optargs) (ice-9 popen) (ice-9 format))
-(use-modules (mu) (mu msg))
+(use-modules (mu) (mu message))
 
 ;; note, this is a rather inefficient way to calculate the number; for
 ;; demonstration purposes only...
@@ -53,31 +53,31 @@ exec guile -e main -s $0 $@
 ;; 			(length (mu:msg:cc msg))
 ;; 			(length (mu:msg:bcc msg)))) EXPR))
 
-(define* (frequency FUNC #:optional (EXPR ""))
-  "FUNC is a function that takes a mMsg, and returns the frequency of
-the different values this function returns. If FUNC returns a list,
-update the frequency table for each element of this list. If the
-optional EXPR is provided, only consider messages that match it.\n"
-  (let ((table '()))
-    (for-each-message
-      (lambda(msg)
-	;; note, if val is not already a list, turn it into a list
-	;; then, take frequency for each element in the list
-	(let* ((val (FUNC msg)) (vals (if (list? val) val (list val))))
-	  (for-each
-	    (lambda (val)
-	      (let ((freq (assoc-ref table val)))
-		(set! table (assoc-set! table val
-			      (+ 1 (if (eq? freq #f) 0 freq)))))) vals))) EXPR)
-    table))
+;; (define* (frequency FUNC #:optional (EXPR ""))
+;;   "FUNC is a function that takes a msg, and returns the frequency of
+;; the different values this function returns. If FUNC returns a list,
+;; update the frequency table for each element of this list. If the
+;; optional EXPR is provided, only consider messages that match it.\n"
+;;   (let ((table '()))
+;;     (mu:for-each-message
+;;       (lambda(msg)
+;; 	;; note, if val is not already a list, turn it into a list
+;; 	;; then, take frequency for each element in the list
+;; 	(let* ((val (FUNC msg)) (vals (if (list? val) val (list val))))
+;; 	  (for-each
+;; 	    (lambda (val)
+;; 	      (let ((freq (assoc-ref table val)))
+;; 		(set! table (assoc-set! table val
+;; 			      (+ 1 (if (eq? freq #f) 0 freq)))))) vals))) EXPR)
+;;     table))
 
 
 (define* (per-weekday #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (weekday . frequency).\n"
-  (let* ((stats (frequency
-		  (lambda (msg) (tm:wday (localtime (mu:msg:date msg)))) EXPR)))
+  (let* ((stats (mu:tabulate-messages
+		  (lambda (msg) (tm:wday (localtime (date msg)))) EXPR)))
     (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of weekday
 
 (define* (mu:plot:per-weekday #:optional (EXPR ""))
@@ -103,9 +103,9 @@ that match it. The result is a list of pairs (weekday . frequency).\n"
   "Count the total number of messages for each month (1-12 for
 Jan..Dec). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (month . frequency).\n"
-  (let* ((stats (frequency
+  (let* ((stats (mu:tabulate-messages
 		  (lambda (msg) ;; note the 1+
-		    (1+ (tm:mon (localtime (mu:msg:date msg))))) EXPR)))
+		    (1+ (tm:mon (localtime (date msg))))) EXPR)))
     (sort stats
       (lambda(a b)
 	(< (car a) (car b)))))) ;; in order ofmonth
@@ -131,8 +131,8 @@ that match it. The result is a list of pairs (month . frequency).\n"
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat). If the optional EXPR is provided, only count the messages
 that match it. The result is a list of pairs (weekday . frequency).\n"
-  (let* ((stats (frequency
-		  (lambda (msg) (tm:hour (localtime (mu:msg:date msg)))) EXPR)))
+  (let* ((stats (mu:tabulate-messages
+		  (lambda (msg) (tm:hour (localtime (date msg)))) EXPR)))
     (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of hour
 
 (define* (mu:plot:per-hour #:optional (EXPR ""))
@@ -152,8 +152,8 @@ that match it. The result is a list of pairs (weekday . frequency).\n"
   "Count the total number of messages for each year since 1970. If the
 optional EXPR is provided, only count the messages that match it. The
 result is a list of pairs (year . frequency).\n"
-  (let* ((stats (frequency
-		  (lambda (msg) (+ 1900 (tm:year (localtime (mu:msg:date msg)))))
+  (let* ((stats (mu:tabulate-messages
+		  (lambda (msg) (+ 1900 (tm:year (localtime (date msg)))))
 		  EXPR)))
     (sort stats (lambda(a b) (< (car a) (car b)))))) ;; in order of year
 
@@ -245,9 +245,7 @@ then be used in, e.g., R and gnuplot."
       (begin
 	(display msg)
 	(exit (if help 0 1))))
-    (if muhome
-      (initialize-mu muhome)
-      (initialize-mu))
+    (mu:initialize muhome)
     (cond
       ((string= period "hour")  (mu:plot:per-hour expr))
       ((string= period "day")   (mu:plot:per-weekday expr))
