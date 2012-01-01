@@ -7,7 +7,7 @@
 
 @dircategory The Algorithmic Language Scheme
 @direntry
-* mu4e: (mu-guile).        Guile bindings for the @t{mu} maildir indexer/searcher.
+* mu-guile manual: (mu-guile).  Guile bindings for the @t{mu} e-mail indexer/searcher.
 @end direntry
 
 @copying
@@ -126,7 +126,7 @@ After this, you should be ready to go.
 @chapter First steps
 
 Assuming @t{mu-guile} has been installed correctly (@ref{Installation}), and
-also that assuming that you have already indexed your e-mail messages (if
+also assuming that you have already indexed your e-mail messages (if
 necessary, see the @t{mu-index} man-page), we are ready to start @t{mu-guile};
 a session may look something like this:
 
