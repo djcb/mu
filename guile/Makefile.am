@@ -45,6 +45,11 @@ libguile_mu_la_LIBADD=			\
 XFILES=					\
 	mu-guile.x
 
+info_TEXINFOS=				\
+	mu-guile.texi
+mu_guile_TEXINFOS=			\
+	fdl.texi
+
 # FIXME: GUILE_SITEDIR would be better, but that
 # breaks 'make distcheck'
 scmdir=${prefix}/share/guile/site/2.0/
