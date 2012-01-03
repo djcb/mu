@@ -708,12 +708,16 @@ not provided, function asks for it."
   (interactive)
   (with-current-buffer mu4e-hdrs-buffer
     (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
+	    (target (if (string= (substring target 0 1) "/")
+		      target
+		      (concat "/" target)))
 	    (fulltarget (concat mu4e-maildir target)))
       (when (or (file-directory-p fulltarget)
 	      (and (yes-or-no-p
 		     (format "%s does not exist. Create now?" fulltarget))
 		(mu4e-proc-mkdir fulltarget)))
-      (mu4e-hdrs-mark 'move target)
+	(sleep-for 1) ;; ugly
+	(mu4e-hdrs-mark 'move target)
 	(mu4e-next-header)))))
 
 

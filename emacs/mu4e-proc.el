@@ -401,6 +401,10 @@ set to e.g. '/drafts'; if this works, we will receive (:info :path
 <path> :docid <docid>)."
   (mu4e-proc-send-command "add \"%s\" \"%s\"" path maildir))
 
+(defun mu4e-proc-mkdir (maildir)
+  "Update the message database for MAILDIR."
+  (mu4e-proc-send-command "mkdir \"%s\"" maildir))
+
 (defun mu4e-proc-save (docid partidx path)
   "Save attachment PARTIDX from message with DOCID to PATH."
   (mu4e-proc-send-command "save %d %d \"%s\"" docid partidx path))
