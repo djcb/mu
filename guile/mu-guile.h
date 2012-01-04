@@ -21,8 +21,67 @@
 #define __MU_GUILE_H__
 
 #include <glib.h>
+#include <mu-query.h>
 
 G_BEGIN_DECLS
+
+
+struct _MuGuile {
+	MuQuery *query;
+};
+typedef struct _MuGuile MuGuile;
+
+/**
+ * get the single MuGuile instance
+ *
+ * @return the instance or NULL in case of error
+ */
+MuGuile *mu_guile_instance (void);
+
+
+/**
+ * whether mu-guile is initialized
+ *
+ * @return TRUE if MuGuile is Initialized, FALSE otherwise
+ */
+gboolean mu_guile_initialized (void);
+
+
+/**
+ * raise a guile error (based on a GError)
+ *
+ * @param func_name function name
+ * @param err the error
+ *
+ * @return SCM_UNSPECIFIED
+ */
+SCM mu_guile_g_error (const char *func_name, GError *err);
+
+
+/**
+ * raise a guile error
+ *
+ * @param func_name function
+ * @param status err code
+ * @param fmt format string for error msg
+ * @param args params for format string
+ *
+ * @return SCM_UNSPECIFIED
+ */
+SCM mu_guile_error   (const char *func_name, int status,
+		      const char *fmt, SCM args);
+
+
+/**
+ * convert a const char* into an SCM -- either a string or, if str ==
+ * NULL, #f
+ *
+ * @param str a string or NULL
+ *
+ * @return a guile string or #f
+ */
+SCM scm_from_string_or_null (const char *str);
+
 
 /**
  * Initialize this mu guile module.

@@ -36,14 +36,17 @@ lib_LTLIBRARIES=			\
 
 libguile_mu_la_SOURCES=			\
 	mu-guile.c			\
-	mu-guile.h
+	mu-guile.h			\
+	mu-guile-message.c		\
+	mu-guile-message.h
 
 libguile_mu_la_LIBADD=			\
 	${top_builddir}/src/libmu.la	\
 	${GUILE_LIBS}
 
 XFILES=					\
-	mu-guile.x
+	mu-guile.x			\
+	mu-guile-message.x
 
 info_TEXINFOS=				\
 	mu-guile.texi

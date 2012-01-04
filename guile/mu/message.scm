@@ -18,13 +18,38 @@
 
 (define-module (mu message)
   :use-module (oop goops)
-  :use-module (mu)
-  :export (
+  :export ( ;; classes
 	    <mu-message>
+	    mu:for-each-message
+	    mu:for-each-contact
+	    ;; internal
+	    mu:for-each-msg-internal
+	    mu:get-contacts
+	    mu:get-header
+	    mu:get-field
+	    ;; message funcs
 	    body
 	    header
 	    contacts
-	    ))
+	    ;; other symbols
+	    mu:bcc
+	    mu:body-html
+	    mu:body-txt
+	    mu:cc
+	    mu:date
+	    mu:flags
+	    mu:from
+	    mu:maildir
+	    mu:message-id
+	    mu:path
+	    mu:prio
+	    mu:refs
+	    mu:size
+	    mu:subject
+	    mu:tags
+	    mu:to))
+
+(load-extension "libguile-mu" "mu_guile_message_init")
 
 (define-class <mu-message> ()
   (msg  #:init-keyword #:msg)) ;; the MuMsg-smob we're wrapping
@@ -34,32 +59,78 @@
     ((define-getter method-name field)
       (begin
 	(define-method (method-name (msg <mu-message>))
-	  (mu:msg:field (slot-ref msg 'msg) field))
+	  (mu:get-field (slot-ref msg 'msg) field))
 	(export method-name)))))
 
-(define-getter bcc        mu:bcc)
+(define-getter bcc	  mu:bcc)
 (define-getter body-html  mu:body-html)
-(define-getter body-txt   mu:body-txt)
-(define-getter cc         mu:cc)
-(define-getter date       mu:date)
-(define-getter flags      mu:flags)
-(define-getter from       mu:from)
-(define-getter maildir    mu:maildir)
+(define-getter body-txt	  mu:body-txt)
+(define-getter cc	  mu:cc)
+(define-getter date	  mu:date)
+(define-getter flags	  mu:flags)
+(define-getter from	  mu:from)
+(define-getter maildir	  mu:maildir)
 (define-getter message-id mu:message-id)
-(define-getter path       mu:path)
-(define-getter priority   mu:prio)
+(define-getter path	  mu:path)
+(define-getter priority	  mu:prio)
 (define-getter references mu:refs)
-(define-getter size        mu:size)
-(define-getter subject    mu:subject)
-(define-getter tags       mu:tags)
-(define-getter to         mu:to)
-
-(define-method (body (msg <mu-message>))
-  (or (body-txt msg) (body-html msg)))
+(define-getter size	  mu:size)
+(define-getter subject	  mu:subject)
+(define-getter tags	  mu:tags)
+(define-getter to	  mu:to)
 
 (define-method (header (msg <mu-message>) (hdr <string>))
   "Get an arbitrary header HDR from message MSG."
-  (mu:msg:header (slot-ref msg 'msg) hdr))
+  (mu:get-header (slot-ref msg 'msg) hdr))
 
 (define-method (contacts (msg <mu-message>) contact-type)
-  (mu:msg:contacts (slot-ref msg 'msg) contact-type))
+  (mu:get-contacts (slot-ref msg 'msg) contact-type))
+
+(define* (mu:for-each-message func #:optional (expr #t))
+  "Execute function FUNC for each message that matches mu search expression EXPR.
+If EXPR is not provided, match /all/ messages in the store."
+  (let ((my-func
+	  (lambda (msg)
+	    (func (make <mu-message> #:msg msg)))))
+    (mu:for-each-msg-internal my-func expr)))
+
+(define* (mu:message-list #:optional (expr #t))
+  "Return a list of all messages matching mu search expression
+EXPR. If EXPR is not provided, return a list of /all/ messages in the store."
+  (let ((lst '()))
+    (mu:for-each-message
+      (lambda (m)
+	(set! lst (append! lst (list m)))) expr)
+    lst))
+
+(define* (mu:tabulate-messages func #:optional (expr #t))
+  "Execute FUNC for each message matching EXPR, and return an alist
+with maps each result of FUNC to its frequency. FUNC is a function
+takes a <mu-message> instance as its argument. For example, to
+tabulate messages by weekday, one could use:
+   (mu:tabulate-messages (lambda(msg) (tm:wday (localtime (date msg)))))."
+  (let ((table '()))
+    (mu:for-each-message
+      (lambda(msg)
+	(let* ((val (func msg))
+		(old-freq (or (assoc-ref table val) 0)))
+	  (set! table (assoc-set! table val (1+ old-freq)))))
+      expr)
+    table))
+
+
+(define* (mu:average-messages func #:optional (expr #t))
+  "Execute FUNC for each message matching EXPR, and return the average
+value of the results of FUNC.  FUNC is a function that takes a
+<mu-message> instance as its argument, and returns some number. For
+example, to get the average message size of messages related to
+icecream:  (mu:average (lambda(msg) (size msg)) \"icecream\" ."
+(let ((count 0) (sum 0))
+  (mu:for-each-message
+    (lambda (msg)
+      (set! count (+1 count))
+      (set! sum (+ sum (func msg))))
+    expr)
+  (if (= count 0)
+    0
+    (exact->inexact (/ sum count)))))
