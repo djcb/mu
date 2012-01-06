@@ -1,11 +1,9 @@
-;;; mu4e-proc.el -- part of mm, the mu mail user agent
+;;; mu4e-proc.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
-;; Keywords: email
-;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -418,10 +416,12 @@ set to e.g. '/drafts'; if this works, we will receive (:info :path
 response."
   (mu4e-proc-send-command "ping"))
 
-(defun mu4e-proc-view-msg (docid)
-  "Get one particular message based on its DOCID. The result will
+(defun mu4e-proc-view-msg (docid-or-msgid)
+  "Get one particular message based on its DOCID-OR-MSGID. The result will
 be delivered to the function registered as `mu4e-proc-message-func'."
-  (mu4e-proc-send-command "view %d" docid))
+  (if (stringp docid-or-msgid)
+    (mu4e-proc-send-command "view %s" docid-or-msgid)
+    (mu4e-proc-send-command "view %d" docid-or-msgid)))
 
 (defun mu4e-proc-compose (compose-type docid)
   "Start composing a message with DOCID and COMPOSE-TYPE (a symbol,
@@ -452,5 +452,6 @@ and update the database afterwards."
     (with-current-buffer buf
       (kill-buffer-and-window))))
 
-
 (provide 'mu4e-proc)
+
+;; End of mu4e-proc.el

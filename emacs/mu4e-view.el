@@ -1,11 +1,9 @@
 ;; mu4e-view.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
-;; Keywords: email
-;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -48,6 +46,12 @@
 
 (defvar mu4e-current-msg nil
   "*internal* The plist describing the current message.")
+
+(defun mu4e-view-message-with-msgid (msgid)
+  "View message with MSGID. This is meant for external programs
+wanting to show specific messages - for example, `mu4e-org'."
+  (mu4e-proc-view-msg msgid))
+
 
 (defun mu4e-view (msg hdrsbuf &optional update)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -118,7 +122,7 @@ marking if it still had that."
 
       (mu4e-mark-footer)
       (mu4e-make-urls-clickable)
-      
+
       (unless update
 	(mu4e-view-mark-as-read-maybe)))))
 
@@ -387,7 +391,7 @@ Seen; if the message is not New/Unread, do nothing."
   (lexical-let ((url url))
     (lambda ()
       (interactive)
-      (browse-url url))))		 
+      (browse-url url))))
 
 
 
@@ -411,7 +415,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 	  (replace-match (concat url
 			   (propertize (format "[%d]" num)
 			     'face 'mu4e-view-url-number-face))))))))
-  
+
 
 ;; raw mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -506,35 +510,32 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 
 ;; functions for org-contacts
 
-(defun mu4e-org-contacts-from (name-or-email)
-  "Get a message field if we are in view mode; NAME-OR-EMAIL should
-be either 'name or 'email to get the corresponding field. If the
-field is not found, \"\" is returned. Use this with org-contact
-with a template like:
+(defun mu4e-view-snarf-from (name-or-email)
+  "Get the From:-data for the current message; NAME-OR-EMAIL should
+be a symbol 'name or 'email to get the corresponding field. If the
+field is not found, \"\" is returned.
 
+You can use this with e.g. org-contact with a template like:
   (\"c\" \"Contacts\" entry (file \"~/Org/contacts.org\")
-          \"* %(mu4e-org-contacts-from 'name)
+          \"* %(mu4e-view-snarf-from 'name)
   :PROPERTIES:
-  :EMAIL: %(mu4e-org-contacts-from 'email)
+  :EMAIL: %(mu4e-view-snarf-from 'email)
   :END:\")))
 
 See the `org-contacts' documentation for more details."
-  (with-current-buffer mu4e-view-buffer-name ;; hackish...
-    (unless (eq major-mode 'mu4e-view-mode)
-      (error "Not in mu4e-view mode."))
-    (unless mu4e-current-msg
-      (error "No current message."))
-    (let ((from (car-safe (plist-get mu4e-current-msg :from))))
-      (cond
-	((not from) "") ;; nothing found
-	((eq name-or-email 'name)
-	  (or (car-safe from) ""))
-	((eq name-or-email 'email)
-	  (or (cdr-safe from) ""))
-	(t (error "Not supported: %S" name-or-email))))))
+  (unless (eq major-mode 'mu4e-view-mode)
+    (error "Not in mu4e-view mode."))
+  (unless mu4e-current-msg
+    (error "No current message."))
+  (let ((from (car-safe (plist-get mu4e-current-msg :from))))
+    (cond
+      ((not from) "") ;; nothing found
+      ((eq name-or-email 'name)
+	(or (car-safe from) ""))
+      ((eq name-or-email 'email)
+	(or (cdr-safe from) ""))
+      (t (error "Not supported: %S" name-or-email)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 
 

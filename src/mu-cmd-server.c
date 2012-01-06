@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2010-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -441,8 +441,6 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 }
 
 
-
-
 /* the string contains either a number (docid) or a message-id if it
  * doesn't look like a number, and the query param is non-nil, try to
  * locale the message with message-id in the database, and return its
@@ -720,15 +718,15 @@ cmd_open (MuStore *store, GSList *args, GError **err)
 
 
 static MuError
-cmd_view (MuStore *store, GSList *args, GError **err)
+cmd_view (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
 	MuMsg *msg;
 	unsigned docid;
 	char *sexp;
 
-	return_if_fail_param_num (args, 1, 1, "view <docid>");
+	return_if_fail_param_num (args, 1, 1, "view <docid>|<msgid>");
 
-	docid = get_docid (NULL, (const char*)args->data, err);
+	docid = get_docid (query, (const char*)args->data, err);
 	if (docid == MU_STORE_INVALID_DOCID)
 		return server_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid");
@@ -901,7 +899,7 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
 	case CMD_SAVE:		rv = cmd_save  (store, args, err); break;
 	case CMD_PING:		rv = cmd_ping (store, args, err); break;
-	case CMD_VIEW:		rv = cmd_view (store, args, err); break;
+	case CMD_VIEW:		rv = cmd_view (store, query, args, err); break;
 
 	case CMD_IGNORE: return TRUE;
 	default:

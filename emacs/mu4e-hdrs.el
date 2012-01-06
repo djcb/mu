@@ -1,11 +1,9 @@
-;; mu4e-hdrs.el -- part of mm, the mu mail user agent
+;; mu4e-hdrs.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
-;; Keywords: email
-;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -28,8 +26,6 @@
 ;; descriptions of emails, aka 'headers' (not to be confused with headers like
 ;; 'To:' or 'Subject:')
 
-;; mm
-
 ;; Code:
 
 (eval-when-compile (require 'cl))
@@ -39,7 +35,6 @@
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-last-expr nil
   "*internal* The most recent search expression.")
-
 
 (defconst mu4e-hdrs-buffer-name "*mu4e-headers*"
   "*internal* Name of the buffer for message headers.")
@@ -322,6 +317,15 @@ after the end of the search results."
 
 (fset 'mu4e-hdrs-mode-map mu4e-hdrs-mode-map)
 
+  ;; we register our handler functions for the mu4e-proc (mu server) output
+(setq mu4e-proc-error-func   'mu4e-hdrs-error-handler)
+(setq mu4e-proc-update-func  'mu4e-hdrs-update-handler)
+(setq mu4e-proc-header-func  'mu4e-hdrs-header-handler)
+(setq mu4e-proc-found-func   'mu4e-hdrs-found-handler)
+(setq mu4e-proc-view-func    'mu4e-hdrs-view-handler)
+(setq mu4e-proc-remove-func  'mu4e-hdrs-remove-handler)
+;; this last one is defined in mu4e-send.el
+(setq mu4e-proc-compose-func 'mu4e-send-compose-handler)
 
 (defun mu4e-hdrs-mode ()
   "Major mode for displaying mua search results."
@@ -336,16 +340,6 @@ after the end of the search results."
   (make-local-variable 'mu4e-msg-map)
   (make-local-variable 'mu4e-thread-info-map)
 
-  ;; we register our handler functions for the mu4e-proc (mu server) output
-  (setq mu4e-proc-error-func   'mu4e-hdrs-error-handler)
-  (setq mu4e-proc-update-func  'mu4e-hdrs-update-handler)
-  (setq mu4e-proc-header-func  'mu4e-hdrs-header-handler)
-  (setq mu4e-proc-found-func   'mu4e-hdrs-found-handler)
-  (setq mu4e-proc-view-func    'mu4e-hdrs-view-handler)
-  (setq mu4e-proc-remove-func  'mu4e-hdrs-remove-handler)
-  ;; this last one is defined in mu4e-send.el
-  (setq mu4e-proc-compose-func 'mu4e-send-compose-handler)
-
   (setq
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
     mu4e-msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
@@ -356,7 +350,7 @@ after the end of the search results."
     buffer-undo-list t ;; don't record undo information
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary)
-  
+
    (setq header-line-format
      (cons
        (make-string (floor (fringe-columns 'left t)) ?\s)
@@ -583,6 +577,7 @@ work well."
     (unless docid (error "No message at point."))
     (mu4e-proc-view-msg docid)))
 
+
 (defun mu4e-hdrs-compose (compose-type)
   "Compose either a reply/forward based on the message at point. or
 start editing it. COMPOSE-TYPE is either `reply', `forward' or
@@ -619,12 +614,10 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
 (defun mu4e-ignore-marks ()
   "If there are still marks in the header list, warn the user."
   (if mu4e-marks-map
-    (let*
-      ((num
-	 (hash-table-count mu4e-marks-map))
-	(unmark (or (= 0 num)
-		  (y-or-n-p
-		    (format "Sure you want to unmark %d message(s)?" num)))))
+    (let* ((num (hash-table-count mu4e-marks-map))
+	    (unmark (or (= 0 num)
+		      (y-or-n-p
+			(format "Sure you want to unmark %d message(s)?" num)))))
       (message nil)
       unmark))
   t)

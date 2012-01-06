@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ elisp_DATA=			\
 	mu4e-view.el		\
 	mu4e-proc.el		\
 	mu4e-send.el		\
-	mu4e-version.el
+	mu4e-version.el		\
+	org-mu4e.el
 
 EXTRA_DIST=$(elisp_DATA)
