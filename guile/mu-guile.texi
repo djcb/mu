@@ -34,7 +34,7 @@ programming language.
 @menu
 * Introduction::
 * Getting started::
-* Initialization::
+* Initializing mu-guile::
 * Messages::
 * Contacts::
 
@@ -169,8 +169,8 @@ scheme@(guile-user)> (for-each
                         (mu:message-list "hello"))
 @end verbatim
 
-@node Initialization
-@chapter Initialization
+@node Initializing mu-guile
+@chapter Initializing mu-guile
 
 It is of course possible to write separate programs with @t{mu-guile}, but for
 now we'll do things @emph{interactively}, i.e., from the Guile-prompt
@@ -291,6 +291,7 @@ scheme@(guile-user)> (mu:for-each-message
                       "subject:coffee")
 Re: best coffee ever!
 best coffee ever!
+Coffee beans
 scheme@(guile-user)>
 @end verbatim
 

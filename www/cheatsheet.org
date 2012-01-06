@@ -142,7 +142,7 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
   will give you a list of pancake-related messages in XML-format.
 
 
-#+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
+#+html:<hr/><div align="center">&copy; 2011-2012 Dirk-Jan C. Binnema</div>
 #+begin_html
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

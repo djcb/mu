@@ -18,11 +18,13 @@
   can then be queried using a custom query language.
 
 ** News
-
-   - 2011-12-30  [[http://code.google.com/p/mu0/downloads/list][mu-0.9.8-alpha]] is available; it comes with a an emacs-based
-     email client, updated guile bindings, search for attachment mime type and
-     search inside any text part of a message, more tests, improvements in many
-     parts of the code.
+   - 2012-01-06: [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8-alpha2.tar.gz&can%3D2&q%3D#makechanges][mu-0.9.8-alpha-2]] is available; updates for =mu4e=, much
+     improved guile bindings + documentation. The work-in-progress documentation
+     is available here: [[http://www.djcbsoftware.nl/code/mu/mu4e/][mu4e]] and [[http://www.djcbsoftware.nl/code/mu/mu-guile/][mu-guile]].
+   - 2011-12-30 [[http://code.google.com/p/mu0/downloads/list][mu-0.9.8-alpha]] is available; it comes with a an emacs-based
+     email client (=mu4e=), updated guile bindings, search for attachment mime
+     type and search inside any text part of a message, more tests, improvements
+     in many parts of the code.
    - 2011-09-03: mu 0.9.7 is now available; compared to the -pre version there
      are a few small changes; the most important one is a fix specifically for
      running mu on MacOS.
@@ -106,7 +108,7 @@
    *mu* was designed and implemented by Dirk-Jan C. Binnema, and is Free
    Software, licensed under the GNU GPLv3
 
-#+html:<hr/><div align="center">&copy; 2011 Dirk-Jan C. Binnema</div>
+#+html:<hr/><div align="center">&copy; 2011-2012 Dirk-Jan C. Binnema</div>
 #+begin_html
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
