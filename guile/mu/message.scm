@@ -22,6 +22,7 @@
 	    <mu-message>
 	    mu:for-each-message
 	    mu:for-each-contact
+	    mu:message-list
 	    ;; internal
 	    mu:for-each-msg-internal
 	    mu:get-contacts
@@ -102,35 +103,3 @@ EXPR. If EXPR is not provided, return a list of /all/ messages in the store."
       (lambda (m)
 	(set! lst (append! lst (list m)))) expr)
     lst))
-
-(define* (mu:tabulate-messages func #:optional (expr #t))
-  "Execute FUNC for each message matching EXPR, and return an alist
-with maps each result of FUNC to its frequency. FUNC is a function
-takes a <mu-message> instance as its argument. For example, to
-tabulate messages by weekday, one could use:
-   (mu:tabulate-messages (lambda(msg) (tm:wday (localtime (date msg)))))."
-  (let ((table '()))
-    (mu:for-each-message
-      (lambda(msg)
-	(let* ((val (func msg))
-		(old-freq (or (assoc-ref table val) 0)))
-	  (set! table (assoc-set! table val (1+ old-freq)))))
-      expr)
-    table))
-
-
-(define* (mu:average-messages func #:optional (expr #t))
-  "Execute FUNC for each message matching EXPR, and return the average
-value of the results of FUNC.  FUNC is a function that takes a
-<mu-message> instance as its argument, and returns some number. For
-example, to get the average message size of messages related to
-icecream:  (mu:average (lambda(msg) (size msg)) \"icecream\" ."
-(let ((count 0) (sum 0))
-  (mu:for-each-message
-    (lambda (msg)
-      (set! count (+1 count))
-      (set! sum (+ sum (func msg))))
-    expr)
-  (if (= count 0)
-    0
-    (exact->inexact (/ sum count)))))

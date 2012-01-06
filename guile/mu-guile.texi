@@ -196,14 +196,14 @@ currently, there are three available:
 
 @itemize
 @item @code{mu} - initialization, functions to get messages, contacts
-@item @code{mu message} - functions to deal with a single message
-@item @code{mu contact} - functions to deal with a single contact
+@item @code{mu message} - functions to deal with messages
+@item @code{mu contact} - functions to deal with contacts
 @end itemize
 
 Let's simply load all of them:
 
 @verbatim
-scheme@(guile-user)> (use-modules (mu) (mu message) (mu contact)) 
+scheme@(guile-user)> (use-modules (mu) (mu message) (mu contact))
 @end verbatim
 
 Assuming you have installed everything correctly, the first time you do this,
@@ -217,15 +217,18 @@ non-default places to keep there @t{mu} data files.
 We can initialize the system with:
 
 @verbatim
-scheme@(guile-user)> (mu:initialize)    
+scheme@(guile-user)> (mu:initialize)
 @end verbatim
 
 Which will use the default location of @file{~/.mu}. Or, instead, if you keep
 your @t{mu} data in a non-standard place:
 
 @verbatim
-scheme@(guile-user)> (mu:initialize "/path/to/my/mu/") 
+scheme@(guile-user)> (mu:initialize #t "/path/to/my/mu/")
 @end verbatim
+
+Note, the second parameter, @t{#t} is for future use; simply set it to @t{#t}
+for now.
 
 If all worked up until here, we're ready to go with @t{mu-guile}.
 
@@ -246,8 +249,8 @@ Now we are ready to retrieve some messages from the system. There are two
 principle functions to do this:
 
 @itemize
-@item @code{(mu:message-list [<search-expression>])}  
-@item @code{(mu:for-each-message <function> [<search-expression>])}  
+@item @code{(mu:message-list [<search-expression>])}
+@item @code{(mu:for-each-message <function> [<search-expression>])}
 @end itemize
 
 The first function, @code{mu:message-list} returns a list of all messages
@@ -321,24 +324,24 @@ for all of these functions here - for the details about various flags /
 properties, please refer to the @t{mu-find} man-page.
 
 @itemize
-@item @code{bcc}: the @t{Bcc} field of the message, or @t{#f} if there is none      
+@item @code{bcc}: the @t{Bcc} field of the message, or @t{#f} if there is none
 @item @code{body-html}: : the html body of the message, or @t{#f} if there is none
-@item @code{body-txt}: the plain-text body of the message, or @t{#f} if there is none 
-@item @code{cc}: the @t{Bcc} field of the message, or @t{#f} if there is none         
-@item @code{date}: the @t{Date} field of the message, or 0 if there is none       
-@item @code{flags}: list of message-flags for this message      
+@item @code{body-txt}: the plain-text body of the message, or @t{#f} if there is none
+@item @code{cc}: the @t{Bcc} field of the message, or @t{#f} if there is none
+@item @code{date}: the @t{Date} field of the message, or 0 if there is none
+@item @code{flags}: list of message-flags for this message
 @item @code{from}: the @t{From} field of the message, or @t{#f} if there is none
-@item @code{maildir}: the maildir this message lives in, or @t{#f} if there is none    
+@item @code{maildir}: the maildir this message lives in, or @t{#f} if there is none
 @item @code{message-id}: the @t{Message-Id} field of the message, or @t{#f} if there is none
-@item @code{path}: the file system path for this message      
+@item @code{path}: the file system path for this message
 @item @code{priority}: the priority of this message (either @t{mu:low}, @t{mu:normal}
 or @t{mu:high}
 @item @code{references}: the list of messages (message-ids) this message
 refers to in the @t{References:} header
-@item @code{size}: size of the message in bytes        
-@item @code{subject}: the @t{Subject} field of the message, or @t{#f} if there is none.   
-@item @code{tags}: list of tags for this message          
-@item @code{to}: the sender of the message, or @t{#f} if there is none.         
+@item @code{size}: size of the message in bytes
+@item @code{subject}: the @t{Subject} field of the message, or @t{#f} if there is none.
+@item @code{tags}: list of tags for this message
+@item @code{to}: the sender of the message, or @t{#f} if there is none.
 @end itemize
 
 With these functions, we can query messages for their properties; for example:
@@ -357,12 +360,31 @@ There are a couple more functions:
 @itemize
 @item @code{(header <mu-message> "<header-name>")} returns an arbitrary message
 header (or @t{#f} if not found) -- e.g. @code{(header msg "User-Agent")}
-@item @code{(contacts <mu-message> contact-type)} which returns a list  
+@item @code{(contacts <mu-message> contact-type)} which returns a list
 of contacts (names/e-mail addresses in the To/From/Cc/Bcc-fields).
 @xref{Contacts}.
-
 @end itemize
 
+Now, let's write a little example -- let's find out what is the @emph{longest
+subject} of any of your e-mail messages; you can put in a separate file, make
+it executable, and run it like any program.
+
+@verbatim
+#!/bin/sh
+exec guile -e main -s $0 $@
+!#
+(use-modules (mu) (mu message))
+
+(let* ((longest-subj ""))
+  (mu:initialize)
+  (mu:for-each-message
+    (lambda(msg)
+      (let ((subj (subject msg)))
+	(if (and subj (> (string-length subj) (string-length longest-subj)))
+	  (set! longest-subj subj))))
+    query)
+  (format #t "Longest subject: ~a" longest-subj))
+@end verbatim
 
 @node Contacts
 @chapter Contacts
@@ -372,6 +394,4 @@ of contacts (names/e-mail addresses in the To/From/Cc/Bcc-fields).
 @appendix GNU Free Documentation License
 
 @include fdl.texi
-
-
 @bye
