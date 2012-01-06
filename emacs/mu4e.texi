@@ -37,13 +37,13 @@ has been tested on Debian GNU/Linux.
 * Getting started::
 * Running mu4e::
 * Searching mail::
-* How it works::
+* Org-mode support::
 * Example configuration::
 * FAQ - Frequently Anticipated Questions::
 * Known issues / missing features::
 
 Appendices
-
+* How it works:: Some notes about the implementation of mu4e
 * GNU Free Documentation License::  The license of this manual.
 @end menu
 
@@ -633,8 +633,8 @@ client. By default, maildir searches are available in the main view
 @ref{Message view}, with the key @kbd{j} for @code{mu4e-jump-to-maildir}.
 
 You can do Maildir searches manually (e.g. with a query like
-@code{maildir:/myfolder}, but since it is so common, @t{mu4e} allows for
-shortcuts for this.
+@code{maildir:/myfolder}, but since it is so common, @t{mu4e} offers some
+quick way to do this.
 
 To enable this, you need to define a list of maildirs you'd like to have quick
 access to, for example:
@@ -661,11 +661,59 @@ Having these shortcuts allows you to jump around your folder very quickly -
 for example, getting to the @t{/lists} folder only requires you to type
 @kbd{jt}. Note that the same shortcuts are use by @code{mu4e-mark-for-move}.
 
+@node Org-mode support
+@chapter Org-mode support
+
+Many emacs-users use @t{org-mode} for note-taking, agenda and many other
+things, and it's useful to integrate e-mail with this as well.
+
+@menu
+* Org-mode links::
+* Org-contacts::
+@end menu
+
+@node Org-mode links
+@section Org-mode links
+When using @t{org-mode}, it can be very useful to include link to
+individual e-mail messages or even queries.
+
+@t{mu4e} supports this with the @t{org-mu4e} module; setting it up is easy:
+
+@verbatim
+(require 'org-mu4e}
+@end verbatim
+
+After this, you can use the normal @t{org-mode} mechanisms to store links:
+@t{M-x org-store-link} will store a link to a particular message when you're
+in Message view (@ref{Message view}, and a link to a query when your in
+Headers view (@ref{Headers view}. You can insert these link later with @t{M-x
+org-insert-link}. Then, you can go to the query or message the link points to
+with either @t{M-x org-agenda-open-link} in agenda buffers, or @t{M-x
+org-open-at-point} elsewhere - both are typically bound to @key{C-c C-o}.
+
+@node Org-contacts
+@section Org-contacts
+
+To manage your addresses using @t{org-mode}, there is
+@t{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}}.
+You can use it with a @t{capture}-template:
+@verbatim
+("c" "contacts" entry (file "contacts.org")
+"* %(mu4e-view-snarf-from 'name)
+:PROPERTIES:
+:EMAIL %(mu4e-view-snarf-from 'email)
+:NICK:
+:BIRTHDAY:
+:END:\n\n")
+@end verbatim
+
+After setting this up, you can use @t{M-x org-capture RET c} to get a template
+for a new contact based on the 'From:' address.
+
 
 @node Example configuration
 @chapter Example configuration
 
-@example
 @verbatim
 ;; example configuration for mu-for-emacs (mu4e)
 (require 'mu4e)
@@ -704,7 +752,6 @@ for example, getting to the @t{/lists} folder only requires you to type
        (:from          .  22)
        (:subject       .  nil))
 
-
    ;; program to get mail; alternatives are 'fetchmail', 'getmail'
    ;; isync or your own shellscript. called when 'U' is pressed in
    ;; main view
@@ -732,13 +779,68 @@ for example, getting to the @t{/lists} folder only requires you to type
    smtpmail-queue-mail  nil
    smtpmail-queue-dir   "/home/user/Maildir/queue/cur")
 @end verbatim
-@end example
+
+
+
+@node FAQ - Frequently Anticipated Questions
+@chapter FAQ - Frequently Anticipated Questions
+
+In this chapter we list a number of anticipated questions and their answers.
+
+@itemize
+@item @emph{How can I quickly delete/move/trash a lot of messages?} You can
+select ('mark' in emacs-speak) the messages, and then press one of the keys to
+mark them for some actions; by default @key{DEL} for delete, @key{m} for move
+and @key{t} for trash.
+@item @emph{mu4e only seems to return a subset of all matches - how can I get
+all?}. Yes, for speed reasons (and because, if you are like the author, you
+usually don't need thousands of matches), @t{mu4e} returns only up to
+@code{m4ue-search-result-limit} matches. You can customize that variable, or
+simply press the emacs prefix @t{C-u} to get all matches. In other words,
+when you press @t{C-u s hello} you will get all matches, while @t{s
+hello} only gets you up-to-a-limited-number matches. Same for the other search
+based commands, @code{mu4e-jump-to-maildir} (default: @key{j}) and
+@code{mu4e-search-bookmark} (default: @key{b}).
+@end itemize
+
+@node Known issues / missing features
+@chapter Known issues / missing features
+
+In this chapter we list a number of known issue and/or missing features in
+@t{mu4e}. Thus, users won't have to search in vain for things that are not
+there (yet), and the author can use it as a todo-list.
+
+@itemize
+@item @emph{Thread handling is incomplete.} While threads are calculated and are
+visible in the headers buffer, there is no functionality to manipulate them
+(e.g., collapse the thread, or delete a whole thread at once). But note that
+you can manipulate a number of consequetive messages at once by selecting
+them, and then using one of the manipulation commands, such as
+@code{mu4e-mark-for-move} or @code{mu4e-mark-for-delete}.
+@item @emph{Forwarding messaging does not forward attachments.} This is a
+missing features, which will be added in some future version. Of course, you
+can save attachments, and then re-attach them by hand.
+@item @emph{No support for crypto when reading mail}. Currently, you cannot
+conveniently read encrypted mail or check signatures (it should be possible
+with e.g. EPA though, @inforef{Top, EasyPG Assistant, epa}.) For outgoing
+messages, it should work though, using the built-in mechanisms.
+@item @emph{One cannot influence the sorting of messages}. Messages are sorted
+according to thread, then descending by date. It would be nice if it could be
+sorted in other ways as well.
+@item @emph{The keybindings are @emph{somewhat} hard-code} That is, the main
+menu assumes the default keybindings, as do the clicks-on-bookmarks.
+@item @emph{Difficulties with attachments in messages with complex
+MIME-hierarchy.} While dealing with attachments usually works fine, we have
+found some problems with specific mails. This is an issue in @t{mu}, and it is
+under investigation.
+@end itemize
+
 
 @node How it works
-@chapter How it works
+@appendix How it works
 
-While not necessarily interesting for all users of @t{mu4e}, for some it
-may be interesting to know how @t{mu4e} does its job.
+While not necessarily interesting for all users of @t{mu4e}, for some it may
+be interesting to know how @t{mu4e} does its job.
 
 @menu
 * High-level overview::
@@ -854,74 +956,6 @@ example, if the s-expression looks like an e-mail message header, it will be
 processed by the header-handling function, which will append it to the header
 list. If the s-expression looks like an error message, it will be reported to
 the user. And so on.
-
-
-@node FAQ - Frequently Anticipated Questions
-@chapter FAQ - Frequently Anticipated Questions
-
-In this chapter we list a number of anticipated questions and their answers.
-
-@itemize
-@item @emph{How can I quickly delete/move/trash a lot of messages?} You can
-select ('mark' in emacs-speak) the messages, and then press one of the keys to
-mark them for some actions; by default @key{DEL} for delete, @key{m} for move
-and @key{t} for trash.
-@item @emph{mu4e only seems to return a subset of all matches - how can I get
-all?}. Yes, for speed reasons (and because, if you are like the author, you
-usually don't need thousands of matches), @t{mu4e} returns only up to
-@code{m4ue-search-result-limit} matches. You can customize that variable, or
-simply press the emacs prefix @t{C-u} to get all matches. In other words,
-when you press @t{C-u s hello} you will get all matches, while @t{s
-hello} only gets you up-to-a-limited-number matches. Same for the other search
-based commands, @code{mu4e-jump-to-maildir} (default: @key{j}) and
-@code{mu4e-search-bookmark} (default: @key{b}).
-@item @emph{Is there some address-book facility available?}. It should be
-possible to use @emph{BBDB} (@inforef{bbdb}), but so far, there is no explicit
-support. An alternative is to use
-@t{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}},
-and use it with a @t{capture}-template:
-@verbatim
-("c" "contacts" entry (file "contacts.org")
-"* %(mu4e-org-contacts-from 'name)
-:PROPERTIES:
-:EMAIL %(mu4e-org-contacts-from 'email)
-:NICK:
-:BIRTHDAY:
-:END:\n\n")
-@end verbatim
-@end itemize
-
-@node Known issues / missing features
-@chapter Known issues / missing features
-
-In this chapter we list a number of known issue and/or missing features in
-@t{mu4e}. Thus, users won't have to search in vain for things that are not
-there (yet), and the author can use it as a todo-list.
-
-@itemize
-@item @emph{Thread handling is incomplete.} While threads are calculated and are
-visible in the headers buffer, there is no functionality to manipulate them
-(e.g., collapse the thread, or delete a whole thread at once). But note that
-you can manipulate a number of consequetive messages at once by selecting
-them, and then using one of the manipulation commands, such as
-@code{mu4e-mark-for-move} or @code{mu4e-mark-for-delete}.
-@item @emph{Forwarding messaging does not forward attachments.} This is a
-missing features, which will be added in some future version. Of course, you
-can save attachments, and then re-attach them by hand.
-@item @emph{No support for crypto when reading mail}. Currently, you cannot
-conveniently read encrypted mail or check signatures (it should be possible
-with e.g. EPA though, @inforef{Top, EasyPG Assistant, epa}.) For outgoing
-messages, it should work though, using the built-in mechanisms.
-@item @emph{One cannot influence the sorting of messages}. Messages are sorted
-according to thread, then descending by date. It would be nice if it could be
-sorted in other ways as well.
-@item @emph{The keybindings are @emph{somewhat} hard-code} That is, the main
-menu assumes the default keybindings, as do the clicks-on-bookmarks.
-@item @emph{Difficulties with attachments in messages with complex
-MIME-hierarchy.} While dealing with attachments usually works fine, we have
-found some problems with specific mails. This is an issue in @t{mu}, and it is
-under investigation.
-@end itemize
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License

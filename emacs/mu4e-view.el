@@ -523,18 +523,22 @@ You can use this with e.g. org-contact with a template like:
   :END:\")))
 
 See the `org-contacts' documentation for more details."
-  (unless (eq major-mode 'mu4e-view-mode)
-    (error "Not in mu4e-view mode."))
-  (unless mu4e-current-msg
-    (error "No current message."))
-  (let ((from (car-safe (plist-get mu4e-current-msg :from))))
-    (cond
-      ((not from) "") ;; nothing found
-      ((eq name-or-email 'name)
-	(or (car-safe from) ""))
-      ((eq name-or-email 'email)
-	(or (cdr-safe from) ""))
-      (t (error "Not supported: %S" name-or-email)))))
+  ;; FIXME: we need to explictly go to some (hopefully the right!) view buffer,
+  ;; since when using this from org-capture, we'll be taken to the capture
+  ;; buffer instead.
+  (with-current-buffer mu4e-view-buffer-name 
+    (unless (eq major-mode 'mu4e-view-mode)
+      (error "Not in mu4e-view mode."))
+    (unless mu4e-current-msg
+      (error "No current message."))
+    (let ((from (car-safe (plist-get mu4e-current-msg :from))))
+      (cond
+	((not from) "") ;; nothing found
+	((eq name-or-email 'name)
+	  (or (car-safe from) ""))
+	((eq name-or-email 'email)
+	  (or (cdr-safe from) ""))
+	(t (error "Not supported: %S" name-or-email))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
