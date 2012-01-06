@@ -9,17 +9,17 @@
 
 ** Indexing your mail
 #+html:<pre> $ mu index</pre>
-  
+
 If =mu= did not guess the right Maildir, you can set it explicitly:
 
 #+html:<pre> $ mu index --maildir=~/MyMaildir</pre>
 
-*** Excluding directories from indexing  
+*** Excluding directories from indexing
 
     If you want to exclude certain directories from being indexed (for example,
     directories with spam-messages), put a file called =.noindex= in the directory
     to exlude, and it will be ignored when indexing (including its children)
-    
+
 ** Finding messages
 
    After you have indexed your messages, you can search them. Here are some
@@ -40,24 +40,33 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
 
 *** unread messages about things starting with 'soc' (soccer, society, socrates, ...)
 #+html:<pre>  $ mu find 'subject:soc*' flag:unread</pre>
-   
-    Note, the '*' only works at the /end/ of a search term.
+
+    Note, the '*' only works at the /end/ of a search term, and you need to
+    quote it or the shell will interpret it before =mu= sees it.
     (searching using the '*' wildcard is available since mu 0.9.6)
-    
+
+*** finding messages with images as attachment
+#+html:<pre>  $ mu find 'mime:image/*' </pre>
+	(since mu version 0.9.8)
+
+*** finding messages with 'milk' in one of its text parts (such as text-based attachments):
+#+html:<pre>  $ mu find embed:milk </pre>
+	(since mu version 0.9.8)
+
 *** finding /all/ your messages
 #+html:<pre>  $ mu find ""</pre>
 	(since mu version 0.9.7)
 
 ** Finding contacts
-   
+
    Contacts (names + email addresses) are cached separately, and can be
    searched with =mu cfind= (after your messages have been indexed):
 
-*** all contacts with 'john' in either name or e-mail address   
+*** all contacts with 'john' in either name or e-mail address
 #+html:<pre> $ mu cfind john</pre>
 
     =mu cfind= takes a regular expression for matching.
-   
+
     You can export the contact information to a number of formats for use in
     e-mail clients. For example:
 
@@ -68,7 +77,7 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
     =bbdb= and =csv= (comma-separated values).
 
 ** Retrieving attachments from messages
-   
+
    You can retrieve attachments from messages using =mu extract=, which takes a
    message file as an argument. Without any other arguments, it displays the
    MIME-parts of the message. You can then get specific attachments:
@@ -94,20 +103,21 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
    non-empty.
 
 #+html:<pre> $ mu find --color capibara</pre>
-   
+
    (since =mu= version 0.9.6)
-   
+
 ** Integration with mail clients
 
-  The =mu-find= man page contains examples for =mutt= and =wanderlust=.
+  The =mu-find= man page contains examples for =mutt= and =wanderlust=. And
+  since version 0.9.8, =mu= includes its own e-mail client for =emacs=, =mu4e=.
 
-** Viewing messages
+** Viewing specific messages
 
    You can view message contents with =mu view=; it does not use the database
    and simply takes a message file as it's argument:
 
 #+html:<pre> $ mu view ~/Maildir/inbox/cur/message24</pre>
-   
+
    You can also use =--color= to get colorized output, and =--summary= to get a
    summary of the message contents instead of the whole thing.
 
@@ -123,7 +133,7 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
 
   Note that we use ='l'=, so the returned message paths will be quoted. This is
   useful if you have maildirs with spaces in their names.
-    
+
   For further processing, also the ~--format=(xml|sexp)~ can be useful. For
   example,
 
