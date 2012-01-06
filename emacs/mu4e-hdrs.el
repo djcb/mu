@@ -700,6 +700,8 @@ limit to up to `mu4e-search-results-limit'."
   "Mark message at point for moving to maildir TARGET. If target is
 not provided, function asks for it."
   (interactive)
+  (unless (mu4e-hdrs-get-docid)
+      (error "No message at point."))
   (with-current-buffer mu4e-hdrs-buffer
     (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	    (target (if (string= (substring target 0 1) "/")
