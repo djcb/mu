@@ -550,6 +550,9 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *args, gboolean is_move,
 	merr = do_move (store, docid, msg, mdir, flags, is_move, err);
 	mu_msg_unref (msg);
 
+	if (merr != MU_OK)
+		return server_error (err, merr, "error moving/flagging file");
+
 	return merr;
 }
 
