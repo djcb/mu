@@ -244,8 +244,9 @@ after the end of the search results."
       (define-key map "b" 'mu4e-search-bookmark)
 
       (define-key map "q" 'mu4e-quit-buffer)
-;;      (define-key map "o" 'mu4e-change-sort)
+
       (define-key map "r" 'mu4e-rerun-search)
+      (define-key map "g" 'mu4e-rerun-search) ;; for compatibility
 
       ;; navigation
       (define-key map "n" 'mu4e-next-header)
