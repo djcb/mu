@@ -127,7 +127,7 @@ clicked."
 	  'mu4e-retrieve-mail-update-db)
 
 	;; show the queue functions if `smtpmail-queue-dir' is defined
-	(if smtpmail-queue-dir
+	(if (file-directory-p smtpmail-queue-dir)
 	  (concat
 	    (mu4e-action-str "\t* toggle [m]ail sending mode "
 	      'mu4e-toggle-mail-sending-mode)
@@ -156,6 +156,8 @@ clicked."
 (defun mu4e-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
+  (unless (file-directory-p smtpmail-queue-dir)
+    (error "`smtp-queue-dir' does not exist"))
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
   (message
     (if smtpmail-queue-mail
