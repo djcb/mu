@@ -44,17 +44,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; FIXME
-(defun mu4e-mu-binary-version () "0.98pre")
-
-
 (defun mu4e-send-user-agent ()
-  "Return the User-Agent string for mm. This is either the value
-of `mu4e-user-agent', or, if not set, a string based on the
-version of mm and emacs."
+  "Return the User-Agent string for mu4e. This is either the value
+of `mu4e-user-agent', or, if not set, a string based on the version
+of mm and emacs."
   (or mu4e-user-agent
-    (format "mu4e %s; emacs %s" (mu4e-mu-binary-version)
-      emacs-version)))
+    (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)))
 
 (defun mu4e-send-cite-original (msg)
   "Cite the body text of MSG, with a \"On %s, %s wrote:\"
@@ -359,7 +354,7 @@ using Gnus' `message-mode'."
       ;; ok, all seems well, well move the message to the sent-folder
       (mu4e-proc-move-msg docid mu4e-sent-folder "-T-D+S")
       (message "Message has been sent"))))
-    
+
 
 
 (defun mu4e-send-set-parent-flag ()
