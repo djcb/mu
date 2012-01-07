@@ -259,8 +259,7 @@ Then, we need to tell @t{mu4e} where it can find your Maildir, and some
 special folders. So, for example:
 @example
   (setq
-    mu4e-maildir       "~/Maildir"   ;;
-    mu4e-inbox-folder  "/inbox"      ;; where do i receive mail?
+    mu4e-maildir       "~/Maildir"   ;; top-level Maildir
     mu4e-sent-folder   "/sent"       ;; where do i keep sent mail?
     mu4e-drafts-folder "/drafts"     ;; where do i keep half-written mail?
     mu4e-trash-folder  "/trash")     ;; where do i move deleted mail?
@@ -714,6 +713,47 @@ for a new contact based on the 'From:' address.
 @node Example configuration
 @chapter Example configuration
 
+In this chapter, we show some example configurations.
+
+@menu
+* Minimal configuration::
+* Longer configuration::
+* Gmail configuration::
+@end menu
+
+
+@node Minimal configuration
+@section Minimal configuration
+
+An (almost) minimal configuration for @t{mu4e} could look something like this:
+
+@verbatim
+;; example configuration for mu-for-emacs (mu4e)
+(require 'mu4e)
+
+;; happily, below settings are all /optional/
+
+;; Only needed if your maildir is _not_ ~/Maildir
+;;(setq mu4e-maildir "/home/user/Maildir")
+
+;; these must start with a "/", and must exist
+;; (i.e.. /home/user/Maildir/sent must exist)
+;; you use e.g. 'mu mkdir' to make the Maildirs if they don't
+;; already exist
+
+;; below are the defaults; if they do not exist yet, mu4e will offer to
+;; create them
+;; (setq mu4e-sent-folder   "/sent")
+;; (setq mu4e-drafts-folder "/drafts")
+;; (setq mu4e-trash-folder  "/trash")
+
+;; for the settings for outgoing mail consult the section 'Longer configuration'
+@end verbatim
+
+
+@node Longer configuration
+@section Longer configuration
+
 @verbatim
 ;; example configuration for mu-for-emacs (mu4e)
 (require 'mu4e)
@@ -727,7 +767,6 @@ for a new contact based on the 'From:' address.
    ;; path to our Maildir directory
    mu4e-maildir       "/home/user/Maildir"
    ;; the next are relative to `mu4e-maildir'
-   mu4e-outbox-folder "/outbox"
    mu4e-sent-folder   "/sent"
    mu4e-drafts-folder "/drafts"
    mu4e-trash-folder  "/trash"
@@ -780,6 +819,143 @@ for a new contact based on the 'From:' address.
    smtpmail-queue-dir   "/home/user/Maildir/queue/cur")
 @end verbatim
 
+
+@node Gmail configuration
+@section Gmail configuration
+
+@emph{Gmail} is a popular e-mail provider; let's see how we can make it work
+with @t{mu4e}.
+
+First of all, we need a program to get the e-mail from Gmail on our local
+machine; for this we use @t{offlineimap}; on Debian (and derivatives like
+Ubuntu), this is as easy as:
+@verbatim
+sudo apt-get install offlineimap
+@end verbatim
+
+Then, create a configuration for @t{offlineimap}, i.e. a file
+@file{~/.offlineimaprc}:
+
+@verbatim
+[general]
+accounts = Gmail
+maxsyncaccounts = 3
+
+[Account Gmail]
+localrepository = Local
+remoterepository = Remote
+
+[Repository Local]
+type = Maildir
+localfolders = ~/Maildir
+
+[Repository Remote]
+type = IMAP
+remotehost = imap.gmail.com
+remoteuser = USERNAME@gmail.com
+remotepass = PASSWORD
+ssl = yes
+maxconnections = 1
+realdelete = no
+@end verbatim
+
+Of course, you need replace @t{USERNAME} and @t{PASSWORD} with your actual
+Gmail username and password.
+
+After this, you can download your mail, it should look something like the
+following:
+@verbatim
+$ offlineimap
+ OfflineIMAP 6.3.4
+Copyright 2002-2011 John Goerzen & contributors.
+Licensed under the GNU GPL v2+ (v2 or any later version).
+
+Account sync Gmail:
+ ***** Processing account Gmail
+ Copying folder structure from IMAP to Maildir
+ Establishing connection to imap.gmail.com:993.
+Folder sync [Gmail]:
+ Syncing INBOX: IMAP -> Maildir
+ Syncing [Gmail]/All Mail: IMAP -> Maildir
+ Syncing [Gmail]/Drafts: IMAP -> Maildir
+ Syncing [Gmail]/Sent Mail: IMAP -> Maildir
+ Syncing [Gmail]/Spam: IMAP -> Maildir
+ Syncing [Gmail]/Starred: IMAP -> Maildir
+ Syncing [Gmail]/Trash: IMAP -> Maildir
+Account sync Gmail:
+ ***** Finished processing account Gmail
+@end verbatim
+
+We can now run @t{mu} to make sure things work:
+
+@verbatim
+$ mu index
+mu: indexing messages under /home/foo/Maildir [/home/foo/.mu/xapian]
+| processing mail; processed: 520; updated/new: 520, cleaned-up: 0
+mu: elapsed: 3 second(s), ~ 173 msg/s
+mu: cleaning up messages [/home/foo/.mu/xapian]
+/ processing mail; processed: 520; updated/new: 0, cleaned-up: 0
+mu: elapsed: 0 second(s)
+@end verbatim
+
+Note that we can run both the @t{offlineimap} and the @t{mu index} from within
+@t{mu4e}, but running it from the command line makes it a bit easier to see
+what is going on.
+
+Now, let's make a @t{mu4e} configuration for this:
+
+@verbatim
+(require 'mu4e)
+
+;; default
+;; (setq mu4e-maildir (expand-file-name "~/Maildir"))
+
+(setq mu4e-drafts-folder "/[Gmail].Drafts")
+(setq mu4e-sent-folder   "/[Gmail].Sent Mail")
+(setq mu4e-trash-folder  "/[Gmail].Trash")
+
+;; setup some handy shortcuts
+(setq mu4e-maildir-shortcuts
+    '( ("/INBOX"               . ?i)
+       ("/[Gmail].Sent Mail"   . ?s)
+       ("/[Gmail].Trash"       . ?t)
+       ("/[Gmail].All Mail"    . ?a)))
+
+;; allow for updating mail using 'U' in the main view:
+(setq mu4e-get-mail-command "offlineimap")
+
+;; something about ourselves
+(setq
+   user-mail-address "USERNAME@gmail.com"
+   user-full-name  "Foo X. Bar"
+
+   ;; include in message with C-c C-w
+   message-signature
+    (concat
+      "Foo X. Bar\n"
+      "http://www.example.com\n"))
+
+;; sending mail -- replace USERNAME with your gmail username
+;; also, make sure the gnutls command line utils are installed
+;; package 'gnutls-bin' in Debian/Ubuntu
+
+(require 'smtpmail)
+(setq message-send-mail-function 'smtpmail-send-it
+      starttls-use-gnutls t
+      smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
+      smtpmail-auth-credentials '(("smtp.gmail.com" 587 "USERNAME@gmail.com" nil))
+      smtpmail-default-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-service 587)
+@end verbatim
+
+And that's it -- put the above in your @file{~/.emacs} (obviously you need to
+change @t{USERNAME} etc. to your own), and restart @t{emacs}, and run @t{M-x
+mu4e}.
+
+Using these setting you can quickly switch to your Inbox -- press
+@t{ji}. Then, when you want archive some messages, move them to the 'All
+Mail' folder by pressing @t{ma}.
 
 
 @node FAQ - Frequently Anticipated Questions
