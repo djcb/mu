@@ -530,8 +530,8 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *args, gboolean is_move,
 	if ((docid = get_docid (query, (const char*)args->data, err)) == 0)
 		return server_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid '%s'", (char*)args->data);
-	msg = mu_store_get_msg (store, docid, err);
-	if (!msg)
+
+	if (!(mu_store_get_msg (store, docid, err)))
 		return server_error (err, MU_ERROR, "failed to get message");
 
 	if (is_move) {
@@ -552,10 +552,8 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *args, gboolean is_move,
 	merr = do_move (store, docid, msg, mdir, flags, is_move, err);
 	mu_msg_unref (msg);
 
-	if (merr != MU_OK)
-		return server_error (err, merr, "error moving/flagging file");
-
-	return merr;
+	return (merr == MU_OK) ? MU_OK :
+		server_error (err, merr, "error moving/flagging file");
 }
 
 
