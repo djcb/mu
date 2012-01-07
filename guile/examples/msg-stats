@@ -21,7 +21,7 @@ exec guile -e main -s $0 $@
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 (use-modules (ice-9 getopt-long) (ice-9 optargs) (ice-9 popen) (ice-9 format))
-(use-modules (mu) (mu message))
+(use-modules (mu) (mu message) (mu stats))
 
 (define* (per-weekday #:optional (EXPR ""))
   "Count the total number of messages for each weekday (0-6 for
@@ -168,7 +168,7 @@ then be used in, e.g., R and gnuplot."
       (begin
 	(display msg)
 	(exit (if help 0 1))))
-    (mu:initialize muhome)
+    (mu:initialize #t muhome)
     (cond
       ((string= period "hour")  (mu:plot:per-hour expr))
       ((string= period "day")   (mu:plot:per-weekday expr))

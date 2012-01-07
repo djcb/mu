@@ -23,7 +23,7 @@ exec guile -e main -s $0 $@
 
 (use-modules (ice-9 getopt-long))
 (use-modules (srfi srfi-1))
-(use-modules (mu) (mu contact))
+(use-modules (mu) (mu message) (mu contact))
 
 (define (sort-by-freq c1 c2)
   (< (frequency c1) (frequency c2)))
@@ -66,7 +66,7 @@ exec guile -e main -s $0 $@
 	(display msg)
 	(exit 0))
      (begin
-       (mu:initialize muhome)
+       (mu:initialize #t muhome)
        (let* ((sort-func
 		(cond
 		  ((string= sort-by "frequency")    sort-by-freq)
