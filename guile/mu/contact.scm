@@ -24,6 +24,8 @@
   :use-module (mu message)
   :export ( ;; classes
 	    <mu-contact>
+	    ;; global methods
+	    mu:for-each-contact
 	    ;; contact methods
 	    name email timestamp frequency last-seen
 	    ))

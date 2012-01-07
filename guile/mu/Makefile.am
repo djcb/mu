@@ -21,6 +21,7 @@ include $(top_srcdir)/gtest.mk
 scmdir=${prefix}/share/guile/site/2.0/mu/
 scm_DATA=		\
 	message.scm	\
-	contact.scm
+	contact.scm	\
+	stats.scm
 
 EXTRA_DIST=$(scm_DATA)

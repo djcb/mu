@@ -21,7 +21,6 @@
   :export ( ;; classes
 	    <mu-message>
 	    mu:for-each-message
-	    mu:for-each-contact
 	    mu:message-list
 	    ;; internal
 	    mu:for-each-msg-internal
