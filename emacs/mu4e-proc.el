@@ -291,6 +291,9 @@ updated as well, with all processed sexp data removed."
       (setq sexp (mu4e-proc-eat-sexp-from-buf)))))
 
 
+;; error codes are defined in src/mu-util.h
+;;(defconst mu4e-xapian-empty 19 "Error code: xapian is empty/non-existent")
+
 (defun mu4e-proc-sentinel (proc msg)
   "Function that will be called when the mu-server process
 terminates."
@@ -310,10 +313,10 @@ terminates."
 	  ((eq code 11)
 	    (message "Database is locked by another process"))
 	  ((eq code 19)
-	    (message "Database is empty; try indexing some messages"))
+	    (message "Database is empty or non-existent; try indexing some messages"))
 	  (t (message (format "mu server process ended with exit code %d" code)))))
       (t
-	(message "something bad happened to the mu server process")))))
+	(message "Something bad happened to the mu server process")))))
 
 
 (defconst mu4e-proc-log-buffer-name "*mu4e-log*"

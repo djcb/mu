@@ -368,13 +368,15 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	 * ones; it seems we cannot get a sorted list of a subset of
 	 * the result --> needs investigation, this is a
 	 * work-around */
-	if (!(iter = mu_query_run (query, (const char*)args->data, TRUE,
-				   MU_MSG_FIELD_ID_DATE, TRUE, -1, err)))
+	iter = mu_query_run (query, (const char*)args->data, TRUE,
+			     MU_MSG_FIELD_ID_DATE, TRUE, -1, err);
+	if (!iter)
+		return server_error (err, MU_ERROR_INTERNAL,
+				     "couldn't get iterator");
 
 	/* if (!(iter = mu_query_run (query, (const char*)args->data, TRUE, */
 	/* 			   MU_MSG_FIELD_ID_DATE, TRUE, maxnum, err))) */
-		return server_error (err, MU_ERROR_INTERNAL,
-				     "couldn't get iterator");
+
 
 	/* return results + the number of results found */
 	send_expr ("(:found %u)\n", output_found_sexps (iter, maxnum));
