@@ -531,7 +531,7 @@ move_or_flag (MuStore *store, MuQuery *query, GSList *args, gboolean is_move,
 		return server_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid '%s'", (char*)args->data);
 
-	if (!(mu_store_get_msg (store, docid, err)))
+	if (!(msg = mu_store_get_msg (store, docid, err)))
 		return server_error (err, MU_ERROR, "failed to get message");
 
 	if (is_move) {
