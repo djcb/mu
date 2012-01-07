@@ -34,6 +34,7 @@ elisp_DATA=			\
 	mu4e-hdrs.el		\
 	mu4e-view.el		\
 	mu4e-proc.el		\
+	mu4e-main.el		\
 	mu4e-send.el		\
 	mu4e-version.el		\
 	org-mu4e.el
