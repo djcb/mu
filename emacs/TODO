@@ -4,30 +4,27 @@
 ** Bugs
 
 *** forward should take the attachments from the original
-*** database locks
-*** mu4e-get-sub-maildirs
-*** handler not registered when compose without headers
+*** database locks (solved?)
+*** sometimes +S-u-n does not seem to work?
 
 ** Features i
 
 *** documentation
-
-** Features ii
-
+*** mu4e-get-sub-maildirs
+*** auto-mail check
+*** extract mailing list name
 *** mark thread
 *** bounce support
 *** sorting
-*** recursive ask-maildir
-*** display unread info at startup
 *** tool bars
-*** make links clickable
 *** colorize cited parts in view
 *** refiling-by-pattern
 *** window management
 *** inspect message (muile)
 *** message statistics
 *** include exchange handling / org integration
-*** integrate with org-contacts, bbdb
+*** integrate bbdb
+*** update headers view
 
 
 * DONE
@@ -62,6 +59,9 @@
 ** fix queued sending
 ** version check at startup
 ** emacs install
+** handler not registered when compose without headers
+** make links clickable
+** integrate with org-contacts
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
