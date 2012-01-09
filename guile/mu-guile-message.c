@@ -179,7 +179,7 @@ check_flag (MuFlags flag, FlagData *fdata)
 		return;
 
 	flagsym = g_strconcat ("mu:", mu_flag_name(flag), NULL);
-	item    = scm_list_1 (scm_from_locale_symbol(flagsym));
+	item    = scm_list_1 (scm_from_utf8_symbol(flagsym));
 
 	g_free (flagsym);
 
@@ -207,11 +207,11 @@ get_prio_scm (MuMsg *msg)
 	switch (mu_msg_get_prio (msg)) {
 
 	case MU_MSG_PRIO_LOW:
-		return scm_from_locale_symbol("mu:low");
+		return scm_from_utf8_symbol("mu:low");
 	case MU_MSG_PRIO_NORMAL:
-		return scm_from_locale_symbol("mu:normal");
+		return scm_from_utf8_symbol("mu:normal");
 	case MU_MSG_PRIO_HIGH:
-		return scm_from_locale_symbol("mu:high");
+		return scm_from_utf8_symbol("mu:high");
 	default:
 		g_return_val_if_reached (SCM_UNDEFINED);
 	}
@@ -229,7 +229,7 @@ msg_string_list_field (MuMsg *msg, MuMsgFieldId mfid)
 	     lst = g_slist_next(lst)) {
 		SCM item;
 		item = scm_list_1
-			(scm_from_string_or_null((const char*)lst->data));
+			(scm_from_str_or_null((const char*)lst->data));
 		scmlst = scm_append_x (scm_list_2(scmlst, item));
 	}
 
@@ -260,7 +260,7 @@ SCM_DEFINE_PUBLIC(get_field, "mu:get-field", 2, 0, 0,
 
 	switch (mu_msg_field_type (mfid)) {
 	case MU_MSG_FIELD_TYPE_STRING:
-		return scm_from_string_or_null
+		return scm_from_str_or_null
 			(mu_msg_get_field_string(msgwrap->_msg, mfid));
 	case MU_MSG_FIELD_TYPE_BYTESIZE:
 	case MU_MSG_FIELD_TYPE_TIME_T:
@@ -288,22 +288,18 @@ typedef struct _EachContactData EachContactData;
 static void
 contacts_to_list (MuMsgContact *contact, EachContactData *ecdata)
 {
-	if (ecdata->ctype == MU_MSG_CONTACT_TYPE_ALL ||
-	    mu_msg_contact_type (contact) == ecdata->ctype) {
+	SCM item;
 
-		SCM item;
-		const char *addr, *name;
+	if (ecdata->ctype != MU_MSG_CONTACT_TYPE_ALL &&
+	    mu_msg_contact_type (contact) != ecdata->ctype)
+		return;
 
-		addr = mu_msg_contact_address (contact);
-		name = mu_msg_contact_name (contact);
+	item = scm_list_1
+		(scm_cons
+		 (scm_from_str_or_null(mu_msg_contact_name (contact)),
+		  scm_from_str_or_null(mu_msg_contact_address (contact))));
 
-		item = scm_list_1
-			(scm_cons (
-				scm_from_string_or_null(name),
-				scm_from_string_or_null(addr)));
-
-		ecdata->lst = scm_append_x (scm_list_2(ecdata->lst, item));
-	}
+	ecdata->lst = scm_append_x (scm_list_2(ecdata->lst, item));
 }
 
 
@@ -353,7 +349,7 @@ SCM_DEFINE_PUBLIC (get_header, "mu:get-header", 2, 0, 0,
 #define FUNC_NAME s_get_header
 {
 	MuMsgWrapper *msgwrap;
-	const char *header;
+	char *header;
 	const char *val;
 
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
@@ -363,8 +359,9 @@ SCM_DEFINE_PUBLIC (get_header, "mu:get-header", 2, 0, 0,
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 	header  =  scm_to_utf8_string (HEADER);
 	val     =  mu_msg_get_header(msgwrap->_msg, header);
+	free (header);
 
-	return val ? scm_from_string_or_null(val) : SCM_BOOL_F;
+	return val ? scm_from_str_or_null(val) : SCM_BOOL_F;
 }
 #undef FUNC_NAME
 
@@ -492,12 +489,11 @@ SCM_DEFINE_PUBLIC (for_each_msg_internal, "mu:for-each-msg-internal", 2, 0, 0,
 #define FUNC_NAME s_for_each_msg_internal
 {
 	MuMsgIter *iter;
-	const char* expr;
+	char* expr;
 
 	SCM_ASSERT (scm_procedure_p (FUNC), FUNC, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_is_bool(EXPR) || scm_is_string (EXPR),
 		    EXPR, SCM_ARG2, FUNC_NAME);
-
 	if (!mu_guile_initialized())
 		return mu_guile_error (FUNC_NAME, 0, "mu not initialized",
 					    SCM_UNSPECIFIED);
@@ -506,11 +502,13 @@ SCM_DEFINE_PUBLIC (for_each_msg_internal, "mu:for-each-msg-internal", 2, 0, 0,
 		return SCM_UNSPECIFIED; /* nothing to do */
 
 	if (EXPR == SCM_BOOL_T)
-		expr = ""; 	/* note, "" matches *all* messages */
+		expr = strdup (""); 	/* note, "" matches *all* messages */
 	else
 		expr = scm_to_utf8_string(EXPR);
 
 	iter = get_query_iter (mu_guile_instance()->query, expr);
+	free (expr);
+
 	if (!iter)
 		return SCM_UNSPECIFIED;
 

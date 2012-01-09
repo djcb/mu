@@ -80,7 +80,7 @@ SCM mu_guile_error   (const char *func_name, int status,
  *
  * @return a guile string or #f
  */
-SCM scm_from_string_or_null (const char *str);
+SCM scm_from_str_or_null (const char *str);
 
 
 /**

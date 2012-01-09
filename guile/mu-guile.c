@@ -21,6 +21,8 @@
 #include <config.h>
 #endif /*HAVE_CONFIG_H*/
 
+#include <locale.h>
+
 #include <glib-object.h>
 #include <libguile.h>
 
@@ -34,11 +36,14 @@
 #include "mu-guile.h"
 
 
-
 SCM
-scm_from_string_or_null (const char *str)
+scm_from_str_or_null (const char *str)
 {
-	return str ? scm_from_utf8_string (str) : SCM_BOOL_F;
+	if (!str)
+		return SCM_BOOL_F;
+
+	return scm_from_stringn (str, strlen(str), "UTF-8",
+				 SCM_FAILED_CONVERSION_ESCAPE_SEQUENCE);
 }
 
 
@@ -51,7 +56,7 @@ mu_guile_error (const char *func_name, int status,
 		       scm_from_utf8_string (fmt), args,
 		       scm_list_1 (scm_from_int (status)));
 
-	return SCM_UNSPECIFIED;
+	return SCM_BOOL_F;
 }
 
 SCM
@@ -62,7 +67,7 @@ mu_guile_g_error (const char *func_name, GError *err)
 		       scm_from_utf8_string (err ? err->message : "error"),
 		       SCM_UNDEFINED, SCM_UNDEFINED);
 
-	return SCM_UNSPECIFIED;
+	return SCM_BOOL_F;
 }
 
 
@@ -76,6 +81,8 @@ mu_guile_init_instance (const char *muhome)
 	MuStore *store;
 	MuQuery *query;
 	GError *err;
+
+	setlocale (LC_ALL, "");
 
 	if (!mu_runtime_init (muhome, "guile"))
 		return FALSE;
@@ -131,34 +138,36 @@ mu_guile_initialized (void)
 
 
 
-SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 2, 0,
-		   (SCM PARAM, SCM MUHOME),
-"Initialize mu - needed before you call any of the other "
-"functions. Optionally, you can provide PARAM (must be #t for now if "
-"provided, for future use) and MUHOME which should be an absolute path "
-"to your mu home directory "
-"-- typically, the default, ~/.mu, should be just fine\n.")
+SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 1, 0,
+		   (SCM MUHOME),
+		   "Initialize mu - needed before you call any of the other "
+		   "functions. Optionally, you can provide MUHOME which should be an "
+		   "absolute path to your mu home directory "
+		   "-- typically, the default, ~/.mu, should be just fine\n.")
 #define FUNC_NAME s_mu_initialize
 {
-	const char *muhome;
+	char *muhome;
+	gboolean rv;
 
-	SCM_ASSERT (PARAM == SCM_BOOL_T || SCM_UNBNDP(PARAM),
-		    PARAM, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_is_string (MUHOME) || MUHOME == SCM_BOOL_F || SCM_UNBNDP(MUHOME),
-		    MUHOME, SCM_ARG2, FUNC_NAME);
+		    MUHOME, SCM_ARG1, FUNC_NAME);
 
 	if (mu_guile_initialized())
 		return mu_guile_error (FUNC_NAME, 0, "Already initialized",
-					    SCM_UNSPECIFIED);
+				       SCM_UNSPECIFIED);
 
 	if (SCM_UNBNDP(MUHOME) || MUHOME == SCM_BOOL_F)
 		muhome = NULL;
 	else
 		muhome =  scm_to_utf8_string (MUHOME);
 
-	if (!mu_guile_init_instance(muhome))
+	rv = mu_guile_init_instance(muhome);
+	free (muhome);
+
+	if (!rv)
 		return mu_guile_error (FUNC_NAME, 0, "Failed to initialize mu",
-					    SCM_UNSPECIFIED);
+				       SCM_UNSPECIFIED);
+
 	/* cleanup when we're exiting */
 	g_atexit (mu_guile_uninit_instance);
 
@@ -193,6 +202,7 @@ write_log (GLogLevelFlags level, SCM FRM, SCM ARGS)
 		gchar *output;
 		output = scm_to_utf8_string (str);
 		g_log (G_LOG_DOMAIN, level, "%s", output);
+		free (output);
 	}
 
 	return SCM_UNSPECIFIED;
