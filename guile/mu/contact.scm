@@ -22,21 +22,40 @@
 (define-module (mu contact)
   :use-module (oop goops)
   :use-module (mu message)
-  :export ( ;; classes
+  :export (
 	    <mu-contact>
-	    ;; global methods
+	    name email
+	    ;;
 	    mu:for-each-contact
-	    ;; contact methods
-	    name email timestamp frequency last-seen
+	    ;;
+	    contacts
+	    ;;
+	    <mu-contact-with-stats>
+	    frequency last-seen
 	    ))
 
 (define-class <mu-contact> ()
-  (name #:init-value #f #:accessor name #:init-keyword #:name)
-  (email #:init-value #f #:accessor email #:init-keyword #:email)
+  (name #:init-value #f  #:accessor name  #:init-keyword #:name)
+  (email #:init-value #f #:accessor email #:init-keyword #:email))
+
+(define-method (contacts (msg <mu-message>) contact-type)
+  "Get all contacts for MSG of the given CONTACT-TYPE. MSG is of type <mu-message>,
+while contact type is either `mu:to', `mu:cc', `mu:from' or `mu:bcc'
+to get the corresponding type of contacts, or #t to get all. Returns a
+list of <mu-contact> objects."
+  (map (lambda (pair) ;; a pair (na . addr)
+	 (make <mu-contact>  #:name (car pair) #:email (cdr pair)))
+    (mu:get-contacts (slot-ref msg 'msg) contact-type)))
+
+(define-method (contacts (msg <mu-message>))
+  "Get contacts of all types for message MSG as a list of <mu-contact>
+objects."
+  (contacts msg #t))
+
+(define-class <mu-contact-with-stats> (<mu-contact>)
   (tstamp #:init-value 0 #:accessor timestamp #:init-keyword #:timestamp)
   (last-seen #:init-value 0 #:accessor last-seen)
   (freq #:init-value 1 #:accessor frequency))
-
 
 (define* (mu:for-each-contact proc #:optional (expr #t))
   "Execute PROC for each contact. PROC receives a <mu-contact> instance
@@ -46,19 +65,18 @@ matching EXPR."
     (mu:for-each-message
       (lambda (msg)
 	(for-each
-	  (lambda (name-addr)
-	    (let ((contact (make <mu-contact>
-			     #:name      (car name-addr)
-			     #:email     (cdr name-addr)
-			     #:timestamp (date msg))))
-	      (update-contacts-hash c-hash contact)))
+	  (lambda (ct)
+	    (let ((ct-ws (make <mu-contact-with-stats>
+			   #:name      (name  ct)
+			   #:email     (email ct)
+			   #:timestamp (date msg))))
+	      (update-contacts-hash c-hash ct-ws)))
 	  (contacts msg #t)))
       expr)
-    ;; c-hash now contains a map of email->contact
-    (hash-for-each
-      (lambda (email contact) (proc contact)) c-hash)))
+    (hash-for-each ;; c-hash now contains a map of email->contact
+      (lambda (email ct-ws) (proc ct-ws)) c-hash)))
 
-(define-method (update-contacts-hash c-hash (nc <mu-contact>))
+(define-method (update-contacts-hash c-hash (nc <mu-contact-with-stats>))
   "Update the contacts hash with a new and/or existing contact."
   ;; xc: existing-contact, nc: new contact
   (let ((xc (hash-ref c-hash (email nc))))

@@ -23,14 +23,11 @@
 	    mu:for-each-message
 	    mu:message-list
 	    ;; internal
-	    mu:for-each-msg-internal
-	    mu:get-contacts
 	    mu:get-header
 	    mu:get-field
 	    ;; message funcs
 	    body
 	    header
-	    contacts
 	    ;; other symbols
 	    mu:bcc
 	    mu:body-html
@@ -82,9 +79,6 @@
 (define-method (header (msg <mu-message>) (hdr <string>))
   "Get an arbitrary header HDR from message MSG."
   (mu:get-header (slot-ref msg 'msg) hdr))
-
-(define-method (contacts (msg <mu-message>) contact-type)
-  (mu:get-contacts (slot-ref msg 'msg) contact-type))
 
 (define* (mu:for-each-message func #:optional (expr #t))
   "Execute function FUNC for each message that matches mu search expression EXPR.
