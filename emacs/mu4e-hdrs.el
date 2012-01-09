@@ -42,6 +42,9 @@
 (defvar mu4e-hdrs-buffer nil
   "*internal* Buffer for message headers")
 
+(defconst mu4e-hdrs-fringe "  "
+  "*internal* The space on the left of message headers to put marks.")
+
 (defun mu4e-hdrs-search (expr &optional full-search)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If FULL-SEARCH is non-nil return all
@@ -328,6 +331,7 @@ after the end of the search results."
 ;; this last one is defined in mu4e-send.el
 (setq mu4e-proc-compose-func 'mu4e-send-compose-handler)
 
+
 (defun mu4e-hdrs-mode ()
   "Major mode for displaying mua search results."
   (interactive)
@@ -354,7 +358,8 @@ after the end of the search results."
 
    (setq header-line-format
      (cons
-       (make-string (floor (fringe-columns 'left t)) ?\s)
+       (make-string
+	 (+ (length mu4e-hdrs-fringe) (floor (fringe-columns 'left t))) ?\s)
        (map 'list
 	 (lambda (item)
 	   (let ((field (cdr (assoc (car item) mu4e-header-names)))
@@ -390,7 +395,7 @@ server.")
 	  (goto-char point)
 	  ;; Update `mu4e-msg-map' with MSG, and MARKER pointing to the buffer
 	  ;; position for the message header."
-	  (insert (propertize (concat "  " str "\n")  'docid docid))
+	  (insert (propertize (concat mu4e-hdrs-fringe str "\n")  'docid docid))
 	  ;; note: this maintaining the hash with the markers makes things slow
 	  ;; when there are many (say > 1000) headers. this seems to be mostly
 	  ;; in the use of markers. we use those to find messages when they need
