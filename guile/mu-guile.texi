@@ -224,11 +224,8 @@ Which will use the default location of @file{~/.mu}. Or, instead, if you keep
 your @t{mu} data in a non-standard place:
 
 @verbatim
-scheme@(guile-user)> (mu:initialize #t "/path/to/my/mu/")
+scheme@(guile-user)> (mu:initialize "/path/to/my/mu/")
 @end verbatim
-
-Note, the second parameter, @t{#t} is for future use; simply set it to @t{#t}
-for now.
 
 If all worked up until here, we're ready to go with @t{mu-guile}.
 
@@ -241,6 +238,7 @@ things with them.
 @menu
 * Finding messages::
 * Message functions::
+* Example - the longest subject::
 @end menu
 
 @node Finding messages
@@ -362,33 +360,178 @@ There are a couple more functions:
 @item @code{(header <mu-message> "<header-name>")} returns an arbitrary message
 header (or @t{#f} if not found) -- e.g. @code{(header msg "User-Agent")}
 @item @code{(contacts <mu-message> contact-type)} which returns a list
-of contacts (names/e-mail addresses in the To/From/Cc/Bcc-fields).
-@xref{Contacts}.
+of contacts (names/e-mail addresses in the To/From/Cc/Bcc-fields). @xref{Contacts}.
 @end itemize
 
+@node Example - the longest subject
+@section Example - the longest subject
+
 Now, let's write a little example -- let's find out what is the @emph{longest
-subject} of any of your e-mail messages; you can put in a separate file, make
-it executable, and run it like any program.
+subject} of any e-mail messages we received in the year 2011.  If you put the
+following in a separate file, make it executable, and run it like any program.
 
 @verbatim
 #!/bin/sh
-exec guile -e main -s $0 $@
+exec guile -s $0 $@
 !#
-(use-modules (mu) (mu message))
 
-(let* ((longest-subj ""))
-  (mu:initialize)
-  (mu:for-each-message
-    (lambda(msg)
-      (let ((subj (subject msg)))
-	(if (and subj (> (string-length subj) (string-length longest-subj)))
-	  (set! longest-subj subj))))
-    query)
-  (format #t "Longest subject: ~a" longest-subj))
+(use-modules (mu) (mu message))
+(use-modules (srfi srfi-1))
+
+(mu:initialize)
+
+;; note: (subject msg) => #f if there is no subject
+(define list-of-subjects
+  (map (lambda (msg)
+      (or (subject msg) "")) (mu:message-list "date:2011..2011")))
+;; see the mu-find manpage for the date syntax
+
+(define longest-subject
+  (fold (lambda (subj1 subj2)
+      (if (> (string-length subj1) (string-length subj2))
+	subj1 subj2))
+    "" list-of-subjects))
+
+(format #t "Longest subject: ~s" longest-subject)
+(newline)
 @end verbatim
+
+There are many other ways to solve the same problem, for example by using an
+iterative approach with @code{mu:for-each-message}, but it should show how one
+can easily write little programs to answer specific questions about an e-mail
+corpus.
 
 @node Contacts
 @chapter Contacts
+
+We can retrieve the sender and recipients of an e-mail message using methods
+like @code{from}, @code{to}, @code{cc} and @code{bcc}; @xref{Message
+functions}. These functions return the list of recipients as a single string;
+however, often it is more useful to deal with recipients as separate objects.
+
+@t{mu-guile} offers some functionality for this in the @code{(mu contact)}
+module.
+
+@menu
+* Contact functions and objects::
+* All contacts::
+* Example - mutt export::
+@end menu
+
+
+@node Contact functions and objects
+@section Contact functions and objects
+
+@verbatim
+(use-modules (mu contact))
+@end verbatim
+
+After loading the @code{(mu contact)}, message objects (@pxref{Messages}) gain
+the the @t{contacts}-methods:
+
+    @code{(contacts <message-object> [<contact-type>])}
+
+The @t{<contact-type>} is a symbol, one of @code{mu:to}, @code{mu:from},
+@code{mu:cc} or @code{mu:bcc}; this will then get the contact objects for the
+contacts of the corresponding type. If you leave out the contact-type (or
+specify @t{#t} for it, you will get a list of @emph{all} contact objects for
+the message.
+
+A contact object (@code{<mu-contact>}) has two methods:
+@itemize
+@item @code{name} returns the name of the contact, or #f if there is none
+@item @code{email} returns the e-mail address of the contact, or #f if there is none
+@end itemize
+
+Let's get a list of all names and e-mail addresses in the 'To:' field, of
+messages matching 'book':
+
+@verbatim
+(use-modules (mu) (mu message) (mu contact))
+(mu:initialize)
+(mu:for-each-message
+   (lambda (msg)
+      (for-each
+        (lambda (contact)
+           (format #t "~a => ~a\n"
+             (or (email contact) "") (or (name contact) "no-name")))
+        (contacts msg mu:to)))
+    "book")
+@end verbatim
+
+This shows what the methods do, but for many uses, it would be more useful to
+have each of the contacts only show up @emph{once} - for that, please refer to
+@xref{All contacts}.
+
+@node All contacts
+@section All contacts
+
+Sometimes it may also be useful to look at @emph{all} the different contacts
+in the @t{mu} database -- that is, all the different contacts. This is useful,
+for example, when exporting contacts to some external format that can then be
+important in an e-mail program.
+
+To enable this, there is the function @code{mu:for-each-contact}, defined as
+
+   @code{(mu:for-each-contact <function> [<search-expression>])}.
+
+This will aggregate the unique contacts from @emph{all} messages matching
+@t{<search-expression>} (when it is left empty, it will match all messages in
+the database), and execute @t{<function>} for each of these contacts.
+
+The @t{<function>} receives an object of the type @t{<contact-with-stats>},
+which is a @emph{subclass} of the @t{<contact>} class discussed in
+@xref{Contact functions and objects}. @t{<contact-with-stats>} objects expose
+the following methods:
+
+@itemize
+@item @code{frequency}: returns the @emph{number of times} this contact occured in
+one of the address fields
+@item @code{last-seen}: returns the @emph{most recent time} the contact was
+seen in one of the address fields, as a @t{time_t} value
+@end itemize
+
+The function aggregates per e-mail address; if a certain e-mail address occurs
+with different names, it uses the most recent non-empty name.
+
+@node Example - mutt export
+@section Example - mutt export
+
+Let's see how we could export the addresses in the @t{mu} database to the
+addressbook format of the venerable
+@t{mutt}@footnote{@url{http://www.mutt.org/}} e-mail client.
+
+The addressbook format that @t{mutt} uses is a sequence of lines that look
+something like:
+@verbatim
+alias <nick> [<name>] "<" <email> ">"
+@end verbatim
+
+Many of the names in our database could be random people writing things in
+mailing lists, so we may want to limit it to people we have seen at least 10
+times in the last year.
+
+It is a bit hard to @emph{guess} the nick name for e-mail contacts, so we are
+going to assume it is the lowercase version of the first word in
+@t{<name>}. You can always adjust them later by hand, obviously.
+
+@verbatim
+(use-modules (mu) (mu message) (mu contact))
+(mu:initialize)
+
+(mu:for-each-contact
+   (lambda (contact)
+
+
+
+
+
+
+@end verbatim
+
+
+
+
 
 
 @node GNU Free Documentation License
