@@ -717,7 +717,6 @@ not provided, function asks for it."
 	      (and (yes-or-no-p
 		     (format "%s does not exist. Create now?" fulltarget))
 		(mu4e-proc-mkdir fulltarget)))
-	(sleep-for 1) ;; ugly
 	(mu4e-hdrs-mark 'move target)
 	(mu4e-next-header)))))
 
