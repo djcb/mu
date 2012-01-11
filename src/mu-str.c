@@ -534,12 +534,32 @@ char*
 mu_str_asciify_in_place (char *buf)
 {
 	char *c;
+
+	g_return_val_if_fail (buf, NULL);
+
 	for (c = buf; c && *c; ++c)
 		if (!isascii(*c))
 			c[0] = '.';
 
 	return buf;
 }
+
+char*
+mu_str_utf8ify (const char *buf)
+{
+	char *utf8;
+
+	g_return_val_if_fail (buf, NULL);
+
+	utf8 = g_strdup (buf);
+
+	if (!g_utf8_validate (buf, -1, NULL))
+	    mu_str_asciify_in_place (utf8);
+
+	return utf8;
+}
+
+
 
 gchar*
 mu_str_convert_to_utf8 (const char* buffer, const char *charset)

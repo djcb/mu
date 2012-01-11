@@ -221,6 +221,17 @@ char* mu_str_asciify_in_place (char *buf);
 
 
 /**
+ * turn string in buf into valid utf8. If this string is not valid
+ * utf8 already, the function massages the offending characters.
+ *
+ * @param buf a buffer to utf8ify
+ *
+ * @return a newly allocated utf8 string
+ */
+char* mu_str_utf8ify (const char *buf);
+
+
+/**
  * convert a string in a certain charset into utf8
  *
  * @param buffer a buffer to convert
