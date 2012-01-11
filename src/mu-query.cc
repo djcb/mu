@@ -67,7 +67,7 @@ private:
 		str = mu_date_interpret_s (s.c_str(), is_begin ? TRUE: FALSE);
 		str = mu_date_complete_s (str, is_begin ? TRUE: FALSE);
 		t   = mu_date_str_to_time_t (str, TRUE /*local*/);
-		str = mu_date_time_t_to_str (t, FALSE /*UTC*/);
+		str = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
 
 		return s = std::string(str);
 	}
