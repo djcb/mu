@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include "mu-util.h"
+#include "mu-str.h"
 #include "mu-msg-priv.h"
 #include "mu-msg-part.h"
 
@@ -160,9 +161,14 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 
 	if (GMIME_IS_PART(mobj)) {
 		GMimePart *part;
+		const gchar *fname;
+
 		part = (GMimePart*)mobj;
 		pi.disposition = (char*)g_mime_object_get_disposition (mobj);
-		pi.file_name   = (char*)g_mime_part_get_filename (part);
+
+		fname	     = g_mime_part_get_filename (part);
+		pi.file_name = fname ? mu_str_utf8ify (fname) : NULL;
+
 		pi.size        = get_part_size (part);
 		pi.is_leaf     = TRUE;
 
@@ -176,6 +182,7 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 	}
 
 	pdata->_func(pdata->_msg, &pi, pdata->_user_data);
+	g_free (pi.file_name);
 }
 
 
@@ -269,7 +276,7 @@ write_to_stream (GMimeObject *part, int fd, GError **err)
 }
 
 
-gboolean
+static gboolean
 save_part (GMimeObject *part, const char *fullpath,
 	   gboolean overwrite, gboolean use_existing, GError **err)
 {

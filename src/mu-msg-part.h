@@ -136,9 +136,11 @@ gchar* mu_msg_part_filepath (MuMsg *msg, const char* targetdir,
 
 
 /**
- * get a full path name for saving the message part in the cache
- * directory for this message; if needed, create the directory (but
- * not the file)
+ * get a full path name for a file for saving the message part INDEX;
+ * this path is unique (1:1) for this particular message and part for
+ * this user. Thus, it can be used as a cache.
+ *
+ * Will create the directory if needed.
  *
  * @param msg a msg
  * @param partidx the part for which to determine a filename
