@@ -107,6 +107,16 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 }
 
 
+void
+mu_msg_close_file_backend (MuMsg *msg)
+{
+	g_return_if_fail (msg);
+
+	mu_msg_file_destroy (msg->_file);
+	msg->_file = NULL;
+}
+
+
 MuMsg*
 mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 {
@@ -310,6 +320,7 @@ get_num_field (MuMsg *self, MuMsgFieldId mfid)
 {
 	guint64 val;
 
+	/* first try the cache */
 	if (mu_msg_cache_cached (self->_cache, mfid))
 		return mu_msg_cache_num (self->_cache, mfid);
 

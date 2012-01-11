@@ -70,6 +70,18 @@ MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
 
 
 /**
+ * close the file-backend, if any; this function is for the use case
+ * where you have a large amount of messages where you need some
+ * file-backed field (body or attachments). If you don't close the
+ * file-backend after retrieving the desired field, you'd quickly run
+ * out of file descriptors. If this message does not have a
+ * file-backend, do nothing.
+ *
+ * @param msg a message object
+ */
+void mu_msg_close_file_backend (MuMsg *msg);
+
+/**
  * increase the reference count for this message
  *
  * @param msg a message
