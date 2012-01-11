@@ -32,13 +32,17 @@
 
 G_BEGIN_DECLS
 
-
 struct _MuMsgFile {
 	GMimeMessage	*_mime_msg;
 	time_t		 _timestamp;
 	size_t		 _size;
 	char		 _path    [PATH_MAX + 1];
 	char		 _maildir [PATH_MAX + 1];
+
+	/* list where we push allocated strings so we can
+	 * free them when the struct gets destroyed
+	 */
+	GSList          *_free_later;
 };
 
 

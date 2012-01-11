@@ -80,7 +80,16 @@ mu_msg_file_destroy (MuMsgFile *self)
 	if (self->_mime_msg)
 		g_object_unref (self->_mime_msg);
 
+	mu_str_free_list (self->_free_later);
+
 	g_slice_free (MuMsgFile, self);
+}
+
+static const gchar*
+free_string_later (MuMsgFile *self, gchar *str)
+{
+	self->_free_later = g_slist_prepend (self->_free_later, str);
+	return str;
 }
 
 
@@ -631,8 +640,7 @@ get_references  (MuMsgFile *self)
 		const GMimeReferences *cur;
 		GMimeReferences *mime_refs;
 
-		str = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
-						headers[u]);
+		str = mu_msg_file_get_header (self, headers[u]);
 		if (!str)
 			continue;
 
@@ -642,9 +650,10 @@ get_references  (MuMsgFile *self)
 			msgid = g_mime_references_get_message_id (cur);
 			/* don't include duplicates */
 			if (msgid && !contains (msgids, msgid))
-				msgids = g_slist_prepend (msgids, g_strdup (msgid));
+				/* explicitly ensure it's utf8-safe, as GMime
+				 * does not ensure that */
+				msgids = g_slist_prepend (msgids, g_strdup((msgid)));
 		}
-
 		g_mime_references_free (mime_refs);
 	}
 
@@ -655,12 +664,13 @@ get_references  (MuMsgFile *self)
 static GSList*
 get_tags (MuMsgFile *self)
 {
-	GMimeObject *obj;
+	const char *hdr;
 
-	obj = GMIME_OBJECT(self->_mime_msg);
+	hdr = mu_msg_file_get_header (self, "X-Label");
+	if (!hdr)
+		return NULL;
 
-	return mu_str_to_list (g_mime_object_get_header
-			       (obj, "X-Label"), ',', TRUE);
+	return mu_str_to_list (hdr, ',', TRUE);
 }
 
 
@@ -797,9 +807,16 @@ mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 const char*
 mu_msg_file_get_header (MuMsgFile *self, const char *header)
 {
+	const gchar *hdr;
+
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (header, NULL);
 
-	return g_mime_object_get_header
-		(GMIME_OBJECT(self->_mime_msg), header);
+	/* sadly, g_mime_object_get_header may return non-ascii;
+	 * so, we need to ensure that
+	 */
+	hdr = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
+					header);
+
+	return hdr ? free_string_later (self, mu_str_utf8ify(hdr)) : NULL;
 }
