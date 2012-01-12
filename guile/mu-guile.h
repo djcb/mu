@@ -74,13 +74,14 @@ SCM mu_guile_error   (const char *func_name, int status,
 
 /**
  * convert a const char* into an SCM -- either a string or, if str ==
- * NULL, #f
+ * NULL, #f. It assumes str is in UTF8 encoding, and replace
+ * characters with '?' if needed.
  *
  * @param str a string or NULL
  *
  * @return a guile string or #f
  */
-SCM scm_from_str_or_null (const char *str);
+SCM mu_guile_scm_from_str (const char *str);
 
 
 /**

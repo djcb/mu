@@ -37,13 +37,13 @@
 
 
 SCM
-scm_from_str_or_null (const char *str)
+mu_guile_scm_from_str (const char *str)
 {
 	if (!str)
 		return SCM_BOOL_F;
-
-	return scm_from_stringn (str, strlen(str), "UTF-8",
-				 SCM_FAILED_CONVERSION_ESCAPE_SEQUENCE);
+	else
+		return scm_from_stringn (str, strlen(str), "UTF-8",
+					 SCM_FAILED_CONVERSION_QUESTION_MARK);
 }
 
 
@@ -56,7 +56,7 @@ mu_guile_error (const char *func_name, int status,
 		       scm_from_utf8_string (fmt), args,
 		       scm_list_1 (scm_from_int (status)));
 
-	return SCM_BOOL_F;
+	return SCM_UNSPECIFIED;
 }
 
 SCM
@@ -67,12 +67,13 @@ mu_guile_g_error (const char *func_name, GError *err)
 		       scm_from_utf8_string (err ? err->message : "error"),
 		       SCM_UNDEFINED, SCM_UNDEFINED);
 
-	return SCM_BOOL_F;
+	return SCM_UNSPECIFIED;
 }
 
 
 
 /* there can be only one */
+
 static MuGuile *_singleton = NULL;
 
 static gboolean
