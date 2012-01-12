@@ -19,9 +19,12 @@
 (define-module (mu stats)
   :use-module (oop goops)
   :use-module (mu message)
+  :use-module (srfi srfi-1)
+  :use-module (ice-9 i18n)
   :export ( mu:tabulate-messages
-	    mu:average-messages))
-
+	    mu:average-messages
+	    mu:day-numbers->names
+	    mu:month-numbers->names))
 
 (define* (mu:tabulate-messages func #:optional (expr #t))
   "Execute FUNC for each message matching EXPR, and return an alist
@@ -54,3 +57,35 @@ icecream:  (mu:average (lambda(msg) (size msg)) \"icecream\" ."
   (if (= count 0)
     0
     (exact->inexact (/ sum count)))))
+
+;; a list of abbreviated, localized day names
+(define day-names
+  (map
+    (lambda (num)
+      (locale-day-short num))
+      (iota 7 1)))
+
+(define (mu:day-numbers->names table)
+  "Convert a list of pairs with the car denoting a day number (0-6)
+into a list of pairs with the car replaced by the corresponding day
+name (abbreviated)."
+    (map
+      (lambda (pair)
+	(cons (list-ref day-names (car pair)) (cdr pair)))
+      table))
+
+;; a list of abbreviated, localized month names
+(define month-names
+  (map
+    (lambda (num)
+      (locale-month-short num))
+      (iota 12 1)))
+
+(define (mu:month-numbers->names table)
+    "Convert a list of pairs with the car denoting a month number (0-11)
+into a list of pairs with the car replaced by the corresponding day
+name (abbreviated)."
+    (map
+      (lambda (pair)
+	(cons (list-ref month-names (car pair)) (cdr pair)))
+      table))
