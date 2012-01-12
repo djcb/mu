@@ -30,6 +30,7 @@
 #include <mu-store.h>
 #include <mu-query.h>
 #include <mu-msg.h>
+#include <mu-msg-part.h>
 
 
 struct _MuMsgWrapper {
@@ -180,7 +181,6 @@ check_flag (MuFlags flag, FlagData *fdata)
 
 	flagsym = g_strconcat ("mu:", mu_flag_name(flag), NULL);
 	item    = scm_list_1 (scm_from_utf8_symbol(flagsym));
-
 	g_free (flagsym);
 
 	fdata->lst = scm_append_x (scm_list_2(fdata->lst, item));
@@ -229,7 +229,7 @@ msg_string_list_field (MuMsg *msg, MuMsgFieldId mfid)
 	     lst = g_slist_next(lst)) {
 		SCM item;
 		item = scm_list_1
-			(scm_from_str_or_null((const char*)lst->data));
+			(mu_guile_scm_from_str((const char*)lst->data));
 		scmlst = scm_append_x (scm_list_2(scmlst, item));
 	}
 
@@ -255,12 +255,24 @@ SCM_DEFINE_PUBLIC(get_field, "mu:get-field", 2, 0, 0,
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_PRIO:  return get_prio_scm (msgwrap->_msg);
 	case MU_MSG_FIELD_ID_FLAGS: return get_flags_scm (msgwrap->_msg);
+
+	case MU_MSG_FIELD_ID_BODY_HTML:
+	case MU_MSG_FIELD_ID_BODY_TEXT:
+	{
+		SCM data;
+		data = mu_guile_scm_from_str
+			(mu_msg_get_field_string (msgwrap->_msg, mfid));
+		/* explicitly close the file backend, so we won't run of fds */
+		mu_msg_close_file_backend (msgwrap->_msg);
+		return data;
+	}
+
 	default: break;
 	}
 
 	switch (mu_msg_field_type (mfid)) {
 	case MU_MSG_FIELD_TYPE_STRING:
-		return scm_from_str_or_null
+		return mu_guile_scm_from_str
 			(mu_msg_get_field_string(msgwrap->_msg, mfid));
 	case MU_MSG_FIELD_TYPE_BYTESIZE:
 	case MU_MSG_FIELD_TYPE_TIME_T:
@@ -296,8 +308,8 @@ contacts_to_list (MuMsgContact *contact, EachContactData *ecdata)
 
 	item = scm_list_1
 		(scm_cons
-		 (scm_from_str_or_null(mu_msg_contact_name (contact)),
-		  scm_from_str_or_null(mu_msg_contact_address (contact))));
+		 (mu_guile_scm_from_str(mu_msg_contact_name (contact)),
+		  mu_guile_scm_from_str(mu_msg_contact_address (contact))));
 
 	ecdata->lst = scm_append_x (scm_list_2(ecdata->lst, item));
 }
@@ -337,9 +349,141 @@ SCM_DEFINE_PUBLIC (get_contacts, "mu:get-contacts", 2, 0, 0,
 	mu_msg_contact_foreach (msgwrap->_msg,
 				(MuMsgContactForeachFunc)contacts_to_list,
 				&ecdata);
+
+	/* explicitly close the file backend, so we won't run of fds */
+	mu_msg_close_file_backend (msgwrap->_msg);
+
 	return ecdata.lst;
 }
 #undef FUNC_NAME
+
+struct _AttInfo {
+	SCM      attlist;
+	gboolean files_only;
+};
+typedef struct _AttInfo AttInfo;
+
+static void
+each_part (MuMsg *msg, MuMsgPart *part, AttInfo *attinfo)
+{
+	char *mime_type;
+	SCM elm;
+
+	if (!part->type)
+		return;
+	if (attinfo->files_only && !part->file_name)
+		return;
+
+	mime_type = g_strdup_printf ("%s/%s", part->type, part->subtype);
+
+	elm = scm_list_5 (
+		/* msg */
+		mu_guile_scm_from_str (mu_msg_get_path(msg)),
+		/* index */
+		scm_from_uint(part->index),
+		/* filename or #f */
+		part->file_name ?
+		mu_guile_scm_from_str (part->file_name) :
+		SCM_BOOL_F,
+		/* mime-type */
+		mime_type ?
+		mu_guile_scm_from_str (mime_type):
+		SCM_BOOL_F,
+		/* size */
+		part->size > 0 ?
+		scm_from_uint (part->size) :
+		SCM_BOOL_F);
+
+	g_free (mime_type);
+
+	attinfo->attlist = scm_cons (elm, attinfo->attlist);
+}
+
+
+SCM_DEFINE_PUBLIC (get_parts, "mu:get-parts", 1, 1, 0,
+		   (SCM MSG, SCM FILES_ONLY),
+		   "Get the list of mime-parts for MSG. If FILES_ONLY is #t, only"
+		   "get parts that file names. The resulting list has elements "
+		   "which are list of the form (index name mime-type size).\n")
+#define FUNC_NAME s_get_parts
+{
+	MuMsgWrapper *msgwrap;
+	AttInfo attinfo;
+
+	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
+	SCM_ASSERT (scm_is_bool(FILES_ONLY), FILES_ONLY,SCM_ARG2, FUNC_NAME);
+
+	attinfo.attlist    = SCM_EOL; /* empty list */
+	attinfo.files_only = FILES_ONLY == SCM_BOOL_T ? TRUE : FALSE;
+
+	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
+	mu_msg_part_foreach (msgwrap->_msg,
+			     (MuMsgPartForeachFunc)each_part,
+			     &attinfo);
+
+	/* explicitly close the file backend, so we won't run of fds */
+	mu_msg_close_file_backend (msgwrap->_msg);
+
+	return attinfo.attlist;
+}
+#undef FUNC_NAME
+
+
+SCM_DEFINE_PUBLIC (save_part, "mu:save-part", 2, 0, 0,
+		   (SCM MSGPATH, SCM INDEX),
+		   "Create a temporary file containing the attachment; this function "
+		   "returns the full path to that temporary file.\n")
+#define FUNC_NAME s_save_part
+{
+	GError *err;
+	gchar *filepath, *msgpath;
+	unsigned index;
+	MuMsg *msg;
+	gboolean rv;
+	SCM rv_scm;
+
+	SCM_ASSERT (scm_is_string(MSGPATH), MSGPATH, SCM_ARG1, FUNC_NAME);
+	SCM_ASSERT (scm_is_integer (INDEX),
+		    INDEX,SCM_ARG2, FUNC_NAME);
+
+	index	= scm_to_uint (INDEX);
+	msgpath = scm_to_utf8_string (MSGPATH);
+
+	err	= NULL;
+	msg	= mu_msg_new_from_file (msgpath, NULL, &err);
+	if (!msg) {
+		rv_scm = mu_guile_g_error (FUNC_NAME, err);
+		goto leave;
+	}
+
+	filepath = mu_msg_part_filepath_cache (msg, index);
+	if (!filepath) {
+		rv_scm = mu_guile_error (FUNC_NAME, 0, "could not get filepath",
+					 SCM_UNSPECIFIED);
+		goto leave;
+	}
+
+	rv = mu_msg_part_save (msg, filepath, index, FALSE, TRUE, &err);
+	if (!rv) {
+		rv_scm = err ? mu_guile_g_error (FUNC_NAME, err) :
+			mu_guile_error (FUNC_NAME, 0, "could not save part",
+					SCM_UNSPECIFIED);
+		goto leave;
+	}
+
+	rv_scm = mu_guile_scm_from_str (filepath);
+
+leave:
+	mu_msg_unref (msg);
+
+	g_clear_error (&err);
+	g_free (filepath);
+	free (msgpath);
+
+	return rv_scm;
+}
+#undef FUNC_NAME
+
 
 
 
@@ -358,14 +502,15 @@ SCM_DEFINE_PUBLIC (get_header, "mu:get-header", 2, 0, 0,
 
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 	header  =  scm_to_utf8_string (HEADER);
-	val     =  mu_msg_get_header(msgwrap->_msg, header);
+	val     =  mu_msg_get_header (msgwrap->_msg, header);
 	free (header);
 
-	return val ? scm_from_str_or_null(val) : SCM_BOOL_F;
+	/* explicitly close the file backend, so we won't run of fds */
+	mu_msg_close_file_backend (msgwrap->_msg);
+
+	return mu_guile_scm_from_str(val);
 }
 #undef FUNC_NAME
-
-
 
 
 
