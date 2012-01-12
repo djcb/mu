@@ -18,24 +18,9 @@
 
 (define-module (mu)
   :export
-  ( mu:initialize))
+  (mu:initialize))
 
-;; :use-module (oop goops)
-  ;; :export
-  ;; (mu:for-each-contact
-  ;;  mu:for-each-message
-  ;;  mu:message-list
-  ;;  mu:tabulate-messages
-  ;;  mu:average-messages
-  ;;   <mu-message>
-  ;;   ;; message funcs
-  ;;   body
-  ;;   header
-  ;;   contacts
-
-  ;;   ;; classes
-  ;;   <mu-contact>
-  ;;   ;; contact methods
-  ;;   name email timestamp frequency last-seen
+;; this is needed for guile < 2.0.4
+(setlocale LC_ALL "")
 
 (load-extension "libguile-mu" "mu_guile_init")

@@ -25,6 +25,7 @@
 	    ;; internal
 	    mu:get-header
 	    mu:get-field
+	    mu:for-each-msg-internal
 	    ;; message funcs
 	    body
 	    header
@@ -83,10 +84,10 @@
 (define* (mu:for-each-message func #:optional (expr #t))
   "Execute function FUNC for each message that matches mu search expression EXPR.
 If EXPR is not provided, match /all/ messages in the store."
-  (let ((my-func
-	  (lambda (msg)
-	    (func (make <mu-message> #:msg msg)))))
-    (mu:for-each-msg-internal my-func expr)))
+    (mu:for-each-msg-internal
+      (lambda (msg)
+	(func (make <mu-message> #:msg msg)))
+      expr))
 
 (define* (mu:message-list #:optional (expr #t))
   "Return a list of all messages matching mu search expression

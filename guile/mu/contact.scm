@@ -52,6 +52,7 @@ list of <mu-contact> objects."
 objects."
   (contacts msg #t))
 
+
 (define-class <mu-contact-with-stats> (<mu-contact>)
   (tstamp #:init-value 0 #:accessor timestamp #:init-keyword #:timestamp)
   (last-seen #:init-value 0 #:accessor last-seen)

@@ -19,8 +19,7 @@
 (define-module (mu stats)
   :use-module (oop goops)
   :use-module (mu message)
-  :export (
-	    mu:tabulate-messages
+  :export ( mu:tabulate-messages
 	    mu:average-messages))
 
 

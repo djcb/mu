@@ -22,6 +22,8 @@ scmdir=${prefix}/share/guile/site/2.0/mu/
 scm_DATA=		\
 	message.scm	\
 	contact.scm	\
-	stats.scm
+	part.scm	\
+	stats.scm	\
+	plot.scm
 
 EXTRA_DIST=$(scm_DATA)
