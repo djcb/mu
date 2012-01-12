@@ -360,13 +360,14 @@ get_prio_header_field (MuMsgFile *self)
 
 	obj = GMIME_OBJECT(self->_mime_msg);
 
-	str = g_mime_object_get_header (obj, "X-Priority");
+	str = g_mime_object_get_header (obj, "Precedence");
 	if (!str)
-		str = g_mime_object_get_header (obj, "X-MSMail-Priority");
+		str = g_mime_object_get_header (obj, "X-Priority");
 	if (!str)
 		str = g_mime_object_get_header (obj, "Importance");
-	if (!str)
-		str = g_mime_object_get_header (obj, "Precedence");
+	/* NOTE: "X-MSMail-Priority" is never seen without "X-Priority" */
+	/* if (!str) */
+	/* 	str = g_mime_object_get_header (obj, "X-MSMail-Priority"); */
 	if (str)
 		return (to_lower(g_strdup(str)));
 	else
