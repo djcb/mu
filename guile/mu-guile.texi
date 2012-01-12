@@ -37,6 +37,9 @@ programming language.
 * Initializing mu-guile::
 * Messages::
 * Contacts::
+* Attachments and other parts::
+* Statistics::
+* Plotting data::
 
 Appendices
 
@@ -446,7 +449,7 @@ A contact object (@code{<mu-contact>}) has two methods:
 Let's get a list of all names and e-mail addresses in the 'To:' field, of
 messages matching 'book':
 
-@verbatim
+@lisp
 (use-modules (mu) (mu message) (mu contact))
 (mu:initialize)
 (mu:for-each-message
@@ -457,7 +460,7 @@ messages matching 'book':
              (or (email contact) "") (or (name contact) "no-name")))
         (contacts msg mu:to)))
     "book")
-@end verbatim
+@end lisp
 
 This shows what the methods do, but for many uses, it would be more useful to
 have each of the contacts only show up @emph{once} - for that, please refer to
@@ -515,22 +518,232 @@ It is a bit hard to @emph{guess} the nick name for e-mail contacts, so we are
 going to assume it is the lowercase version of the first word in
 @t{<name>}. You can always adjust them later by hand, obviously.
 
-@verbatim
+@lisp
+#!/bin/sh
+exec guile -s $0 $@
+!#
 (use-modules (mu) (mu message) (mu contact))
 (mu:initialize)
 
-(mu:for-each-contact
-   (lambda (contact)
+(define (selected-contacts)
+  "Get a list of contacts that were seen at least 20 times since
+2010."
+  (let  ((addrs '())
+	  (start (car (mktime (car (strptime "%F" "2010-01-01")))))
+	  (minfreq 20))
+    (mu:for-each-contact
+      (lambda (contact)
+	(if (and (email contact)
+	      (>= (frequency contact) minfreq)
+	      (>= (last-seen contact) start))
+	  (set! addrs (cons contact addrs)))))
+      addrs))
+
+(define (guess-nick contact)
+   "Guess a nick name for CONTACT."
+    (string-map
+      (lambda(kar)
+	(if (char-alphabetic? kar) kar #\_))
+      (string-downcase (or (name contact) (email contact)))))
+
+(for-each
+  (lambda (contact)
+    (format #t "alias ~a ~a <~a>\n"
+      (guess-nick contact) (name contact) (email contact)))
+  (selected-contacts))
+@end lisp
+
+This simple program could be improved in many ways; this is left as an
+excercise to the reader.
+
+@node Attachments and other parts
+@chapter Attachments and other parts
+
+To deal with @emph{attachments}, or, more in general @emph{MIME-parts}, there
+is the @t{mu part} module.
+
+@menu
+* Parts and their methods::
+* Attachment example::
+@end menu
+
+@node Parts and their methods
+@section Parts and their methods
+The module defines the @code{<mu-part>} class, and adds two methods to
+@code{<mu-message>} objects:
+@itemize
+@item @code{(parts msg)} - returns a list @code{<mu-part>} objects, one for
+each MIME-parts in the message.
+@item @code{(attachments)} - like @code{parts}, but only list those MIME-parts
+that look like proper attachments.
+@end itemize
+
+A @code{<mu-part>} object exposes a few methods to get information about the
+part:
+@itemize
+@item @code{name} - returns the file name of the mime-part, or @code{#f} if
+there is none.
+@item @code{mime-type} - returns the mime-type of the mime-part, or @code{#f}
+if there is none.
+@item @code{size} - returns the size in bytes of the mime-part
+@end itemize
+
+Then, we may want to save the part to a file; this can be done using either:
+@itemize
+@item @code{(save part)} - save a part to a temporary file, return the file
+name@footnote{the temporary filename is a predictable function of (user-id,
+msg-path, part-index)}
+@item @code{(save-as part path)} - save part to file at path
+@end itemize
+
+@node Attachment example
+@section Attachment example
+
+Let's look at some small examples.
+
+First, let's get a list of the biggest attachments in messages about
+Luxemburg:
+
+@lisp
+#!/bin/sh
+exec guile -s $0 $@
+!#
+
+(use-modules (mu) (mu message) (mu part))
+(mu:initialize)
+
+(define (all-attachments expr)
+  "Return a list of (name . size) for all attachments in messages
+matching EXPR."
+  (let ((pairs '()))
+    (mu:for-each-message
+      (lambda (msg)
+	(for-each
+	  (lambda (att) ;; add (filename . size) to the list
+	    (set! pairs (cons (cons (name att) (or (size att) 0)) pairs)))
+	  (attachments msg)))
+      expr)
+    pairs))
+
+(for-each
+  (lambda (att)
+    (format #t "~a: ~,1fKb\n"
+      (car att) (exact->inexact (/ (cdr att) 1024))))
+  (sort (all-attachments "Luxemburg")
+    (lambda (att1 att2)
+      (< (cdr att1) (cdr att2)))))
+@end lisp
+
+As an exercise for the reader, you might want to re-rewrite the
+@code{all-attachments} in terms of @code{mu:message-list}, which would
+probably be a bit more elegant.
 
 
+@node Statistics
+@chapter Statistics
 
+@t{mu-guile} offers some convenience functions to determine various statistics
+about the messages in the database.
 
+First, there is @code{(mu:tabulate-messages <function> [<search-expr>])}. This
+function applies @t{<function>} to each message matching @t{<search-expr>}
+(leave empty to match @emph{all} messages), and returns a associative list
+with each of the different results of @t{<function>} and their frequencies.
 
+This can best be demonstrated with a little example. Suppose we want to know
+how many messages we receive per weekday:
 
+@lisp
+#!/bin/sh
+exec guile -s $0 $@
+!#
+
+(use-modules (mu) (mu message) (mu stats))
+(mu:initialize)
+
+(define (weekday-table)
+  "Returns something like
+ '((0 . 12) (5 . 20) (2 . 16) ... )
+ that is, an unsorted list of (<weekday> . <frequency>)."
+  (mu:tabulate-messages
+    (lambda (msg)
+      (tm:wday (localtime (date msg))))))
+
+;; sort & display
+(let ((table (weekday-table)))
+ (for-each
+  (lambda (pair)
+    (let ((days '("Sun" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat")))
+      (format #t "~a: ~a\n"
+	(list-ref days (car pair)) (cdr pair))))
+  (sort (weekday-table)(lambda (a b) (< (car a) (car b))))))
+@end lisp
+
+The function @code{weekday-table} use @code{mu:tabulate-message} to get the
+frequencies per hour -- this returns a list of pairs:
+@verbatim
+((5 . 2339) (0 . 2278) (4 . 2800) (2 . 3184) (6 . 1856) (3 . 2833) (1 . 2993))
 @end verbatim
 
+The script then output these numbers in following form:
 
+@verbatim
+Sun: 2278
+Mon: 2993
+Tue: 3184
+Wed: 2833
+Thu: 2800
+Fri: 2339
+Sat: 1856
+@end verbatim
 
+Clearly, Saturday is a slow day for e-mail...
+
+@node Plotting data
+@chapter Plotting data
+
+@lisp
+#!/bin/sh
+exec guile -s $0 $@
+!#
+
+(use-modules (mu) (mu message) (mu contact) (mu stats) (mu plot))
+(mu:initialize)
+
+(define (mail-per-hour-table)
+  (sort
+    (mu:tabulate-messages
+      (lambda (msg)
+	(tm:hour (localtime (date msg)))))
+    (lambda (x y) (< (car x) (car y)))))
+
+(mu:plot-ascii (mail-per-hour-table) "Mail per hour" "Hour" "Frequency")
+@end lisp
+
+@verbatim
+                                  Mail per hour
+ Frequency
+   1200 ++--+--+--+--+-+--+--+--+--+-+--+--+--+-+--+--+--+--+-+--+--+--+--++
+        |+  +  +  +  + +  + "/tmp/fileHz7D2u" using 2:xticlabels(1) ********
+   1100 ++                                                            *** +*
+        ****                                                          * *  *
+   1000 *+ *                                                       **** * +*
+        *  *                           ******  ****                * ** *  *
+    900 *+ *                           * ** ****  *             **** ** * +*
+        *  *                           * ** *  *  *********     * ** ** *  *
+    800 *+ *                        **** ** *  *  *  * ** *     * ** ** * +*
+    700 *+ ***                   ****  * ** *  *  *  * ** ****  * ** ** * +*
+        *  * *                ****  *  * ** *  *  *  * ** *  **** ** ** *  *
+    600 *+ * ****             *  *  *  * ** *  *  *  * ** *  *  * ** ** * +*
+        *  * ** *             *  *  *  * ** *  *  *  * ** *  *  * ** ** *  *
+    500 *+ * ** *             *  *  *  * ** *  *  *  * ** *  *  * ** ** * +*
+        *  * ** ****        ***  *  *  * ** *  *  *  * ** *  *  * ** ** *  *
+    400 *+ * ** ** ****     * *  *  *  * ** *  *  *  * ** *  *  * ** ** * +*
+        *+ *+**+**+* +*******+* +* +*+ *+**+* +*+ *+ *+**+* +*+ *+**+**+* +*
+    300 ********************************************************************
+         0  1  2  3  4 5  6  7  8  910 11 12 1314 15 16 17 1819 20 21 22 23
+                                       Hour
+@end verbatim
 
 
 
