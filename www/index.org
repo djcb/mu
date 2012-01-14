@@ -1,6 +1,7 @@
-#+title: Mu
+#+title:
 #+style: <link rel="stylesheet" type="text/css" href="mu.css">
 #+html:<img src="mu.jpg" align="right" margin="10px"/>
+#+options: skip t
 
 * Welcome to mu!
 
@@ -9,15 +10,32 @@
   that mail - in particular, to instantly find that one important e-mail you
   need right now.
 
-  *mu* is a tool for dealing with e-mail messages stored in the
-  [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format. *mu*'s main purpose is to help you to quickly find the
+  *mu* is a tool for dealing with e-mail messages stored in the [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format,
+  on Unix-like systems. *mu*'s main purpose is to help you to quickly find the
   messages you need; in addition, it allows you to view messages, extract
   attachments, create new maildirs, ... See the [[file:cheatsheet.org][mu cheatsheet]] for some examples.
 
   Searching works by first indexing your messages into a [[http://xapian.org/][Xapian]]-database, which
   can then be queried using a custom query language.
 
+** Features
+
+   - fast indexing for Maildir, Maildir+ and Maildir-on-VFAT
+   - search for messages based on the sender, receiver, subject, date range,
+     size, priority, words in message, flags (signed, encrypted, new, replied,
+     has-attachment,...), message-id, maildir, tags, attachment (name,
+     mime-type, text) and more
+   - command-line tools for indexing, searching, viewing, extracting
+     attachments, exporting address lists, creating maildirs, ...
+   - accent/case normalization - so /angstrom/ will match /Ångström/.
+   - can be integrated with other e-mail clients such as [[http://www.mutt.org/][mutt]] and [[http://www.emacswiki.org/emacs/WanderLust][Wanderlust]].
+   - [[file:mu4e.html][mu4e]], an emacs-based e-mail client based on =mu=
+   - [[file:mu-guile.html][mu-guile]]: guile-bindings that allow for scripting, advanced processing of
+     your data
+   - fully documented (man pages, info pages)
+
 ** News
+
    - 2012-01-07: [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8-alpha3.tar.gz][mu-0.9.8-alpha-3]] is available, with fixes for some =mu4e=
      configuration problems; also, the documentation now contains an example of
      how to set up =mu4e= with Gmail.
@@ -73,23 +91,6 @@
 
    - [[file:old-news.org][Old news]]
 
-** Features
-
-   - fast indexing for Maildir, Maildir+ and Maildir-on-VFAT
-   - search for messages based on the sender, receiver, message subject, size,
-     priority, words in the message body, attachments, date range, flags
-     (signed, encrypted, new, replied, unread, ...), message-id, maildir
-   - known to work on Linux (Ubuntu/Fedora/Debian/Gentoo), FreeBSD, MacOS,
-     Solaris, ...
-   - fully documented (man pages)
-   - can be integrated with e-mail clients; documentation has examples for [[http://www.mutt.org/][mutt]]
-     and [[http://www.emacswiki.org/emacs/WanderLust][Wanderlust]].
-   - output in plain text, xml, s-expressions (experimental)
-   - extract message parts, attachments, open them using their default
-     application
-
-   In addition, there is a toy UI for *mu* called [[file:mug.org][mug]]; the plan is to slowly
-   evolve this into a full-featured UI.
 
 ** Development & download
    :PROPERTIES:

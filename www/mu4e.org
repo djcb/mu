@@ -1,0 +1,37 @@
+#+title: mu4e: mu for emacs
+#+style: <link rel="stylesheet" type="text/css" href="mu.css">
+#+options: skip t
+
+  With version 0.9.8, =mu= comes with an emacs-based e-mail client that uses
+  =mu= for its back-end: *mu4e*. For all the details, please see [[file:mu4e/index.html][manual]].
+
+** Screenshots
+
+  Here are some screenshots.
+
+*** The main view
+  [[file:mu4e-1.png]]
+
+*** The headers view
+  [[file:mu4e-2.png]]
+
+*** The message view
+  [[file:mu4e-3.png]]
+
+
+** License & Copyright
+
+   *mu4e* was designed and implemented by Dirk-Jan C. Binnema, and is Free
+   Software, licensed under the GNU GPLv3
+
+#+html:<hr/><div align="center">&copy; 2011-2012 Dirk-Jan C. Binnema</div>
+#+begin_html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-578531-1");
+pageTracker._trackPageview();
+</script>
+#+end_html
