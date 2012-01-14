@@ -64,7 +64,6 @@ and finally, we receive:
 .fi
 
 
-
 .TP
 .B move
 
@@ -138,13 +137,21 @@ particular e-mail message.
 .TP
 .B compose
 
-Using the \fBcompose\fR command, we get the (unchanged) message, and tell what
-to do with it. The user-interface is then expect to pre-process the message,
+Using the \fBcompose\fR command, we get the (original) message, and tell what
+to do with it. The user-interface is then expected to pre-process the message,
 e.g. set the subject, sender and recipient for a reply message.
 
 .nf
 -> compose <reply|forward|edit> <docid>
-<- (:compose <s-exp> :compose-type <reply|forward|edit>)
+<- (:compose-type <reply|forward|edit> :original <s-exp> :include (<list-of-attachments))
+.fi
+
+The <list-of-attachments> is an s-expression describing the attachments to
+include in the message; this currently only applies to message we are
+forwarding. This s-exprssion looks like:
+
+.nf
+   (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
 .fi
 
 

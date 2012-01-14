@@ -527,7 +527,7 @@ mu_msg_part_looks_like_attachment (MuMsgPart *part, gboolean include_inline)
 {
 	g_return_val_if_fail (part, FALSE);
 
-	if (!part->disposition)
+	if (!part->disposition||!part->type || !part->file_name)
 		return FALSE;
 
 	if (g_ascii_strcasecmp (part->disposition,

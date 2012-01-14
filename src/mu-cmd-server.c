@@ -749,6 +749,72 @@ cmd_view (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	return MU_OK;
 }
 
+static void
+each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
+{
+	char *att, *cachefile;
+	GError *err;
+
+	/* exclude things that don't look like proper attachments */
+	if (!mu_msg_part_looks_like_attachment(part, TRUE))
+		return;
+
+	/* save the attachment to some temp file */
+	cachefile = mu_msg_part_filepath_cache (msg, part->index);
+	if (!cachefile) {
+		server_error (NULL, MU_ERROR_FILE,
+			      "could not determine cachefile name");
+		return;
+	}
+
+	err	  = NULL;
+	if (!mu_msg_part_save (msg, cachefile, part->index, FALSE, TRUE, &err)) {
+		server_error (&err, MU_ERROR_FILE,
+			      "could not save %s", cachefile);
+		goto leave;
+	}
+
+	att = g_strdup_printf (
+		"(:file-name \"%s\" :mime-type \"%s/%s\" :disposition \"%s\")",
+		cachefile,
+		part->type, part->subtype,
+		part->disposition ? part->disposition : "attachment");
+
+	*attlist = g_slist_append (*attlist, att);
+
+leave:
+	g_clear_error (&err);
+	g_free (cachefile);
+}
+
+
+/* take the attachments of msg, save them as tmp files, and return
+ * as sexp (as a string) describing them
+ *
+ * ((:name <filename> :mime-type <mime-type> :disposition
+ *   <attachment|inline>) ... )
+ *
+ */
+static gchar*
+include_attachments (MuMsg *msg)
+{
+	GSList *attlist, *cur;
+	GString *gstr;
+
+	attlist = NULL;
+	mu_msg_part_foreach (msg,(MuMsgPartForeachFunc)each_part,
+			     &attlist);
+
+	gstr = g_string_sized_new (512);
+	gstr = g_string_append_c (gstr, '(');
+	for (cur = attlist; cur; cur = g_slist_next (cur))
+		g_string_append (gstr, (gchar*)cur->data);
+	gstr = g_string_append_c (gstr, ')');
+
+	mu_str_free_list (attlist);
+
+	return g_string_free (gstr, FALSE);
+}
 
 
 static MuError
@@ -756,7 +822,7 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 {
 	MuMsg *msg;
 	unsigned docid;
-	char *sexp;
+	char *sexp, *atts;
 	const char* ctype;
 
 	return_if_fail_param_num (args, 2, 2,
@@ -779,11 +845,17 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 				     "failed to get message");
 
 	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE);
-	mu_msg_unref (msg);
+	if (strcmp(ctype, "forward") == 0)
+		atts = include_attachments (msg);
+	else
+		atts = NULL;
 
-	send_expr ("(:compose %s :compose-type %s)", sexp, ctype);
+	mu_msg_unref (msg);
+	send_expr ("(:compose-type %s :original %s :include %s)",
+		   ctype, sexp, atts ? atts : "()");
 
 	g_free (sexp);
+	g_free (atts);
 
 	return MU_OK;
 }

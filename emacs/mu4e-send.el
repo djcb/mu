@@ -283,7 +283,7 @@ use the new docid. Returns the full path to the new message."
     draft))
 
 
-(defun mu4e-send-compose-handler (compose-type &optional msg)
+(defun mu4e-send-compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -292,6 +292,15 @@ editing existing messages.
 
 When COMPOSE-TYPE is `reply' or `forward', MSG should be a message
 plist.  If COMPOSE-TYPE is `new', MSG should be nil.
+
+Optionally (when forwarding, replying) ORIGINAL-MSG is the original
+message we will forward / reply to.
+
+Optionally (when forwarding) INCLUDES contains a list of
+   (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
+for the attachements to include; file-name refers to
+a file which our backend has conveniently saved for us (as a
+tempfile).
 
 The name of the draft folder is constructed from the concatenation
  of `mu4e-maildir' and `mu4e-drafts-folder' (therefore, these must be
@@ -307,16 +316,24 @@ using Gnus' `message-mode'."
   (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
   (let ((draft
 	  (if (member compose-type '(reply forward new))
-	    (mu4e-send-open-draft compose-type msg)
+	    (mu4e-send-open-draft compose-type original-msg)
 	    (if (eq compose-type 'edit)
-	      (plist-get msg :path)
+	      (plist-get original-msg :path)
 	      (error "unsupported compose-type %S" compose-type)))))
 
     (unless (file-readable-p draft)
-      (error "Cannot read %s" path))
+      (error "Cannot read %s" draft))
 
     (find-file draft)
     (message-mode)
+
+        ;; include files -- e.g. when forwarding a message with attachments,
+    ;; we take those from the original.
+    (save-excursion
+      (goto-char (point-max)) ;; put attachments at the end
+      (dolist (att includes)
+	(mml-attach-file
+	  (plist-get att :file-name) (plist-get att :mime-type))))
 
     (make-local-variable 'write-file-functions)
 
@@ -333,7 +350,7 @@ using Gnus' `message-mode'."
 	       "^User-agent:")))
       (message-hide-headers))
 
-    (if (eq compose-type 'new)
+    (if (member compose-type '(new forward))
       (message-goto-to)
       (message-goto-body))))
 

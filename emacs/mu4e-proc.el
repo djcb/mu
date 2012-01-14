@@ -275,10 +275,11 @@ updated as well, with all processed sexp data removed."
 	  (funcall mu4e-proc-remove-func (plist-get sexp :remove)))
 
 	;; start composing a new message
-	((plist-get sexp :compose)
+	((plist-get sexp :compose-type)
 	  (funcall mu4e-proc-compose-func
 	    (plist-get sexp :compose-type)
-	    (plist-get sexp :compose)))
+	    (plist-get sexp :original)
+	    (plist-get sexp :include)))
 
 	;; get some info
 	((plist-get sexp :info)
