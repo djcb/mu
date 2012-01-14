@@ -37,7 +37,7 @@
 (defconst mu4e-view-buffer-name "*mu4e-view*"
   "*internal* Name for the message view buffer")
 
-(defconst mu4e-view-raw-buffer-name "*mu4e-view-raw*"
+(defconst mu4e-raw-view-buffer-name "*mu4e-raw-view*"
   "*internal* Name for the raw message view buffer")
 
 ;; some buffer-local variables
@@ -228,7 +228,7 @@ if IS-OPEN is nil, and otherwise open it."
       (define-key map "C" 'mu4e-compose-new)
       (define-key map "E" 'mu4e-edit-draft)
 
-      (define-key map "." 'mu4e-view-raw)
+      (define-key map "." 'mu4e-raw-view)
       (define-key map "|" 'mu4e-view-pipe)
       ;; (define-key map "I" 'mu4e-inspect-message)
 
@@ -286,8 +286,8 @@ if IS-OPEN is nil, and otherwise open it."
 	  '("Toggle wrap lines" . mu4e-view-toggle-wrap-lines))
 	(define-key menumap [hide-cited]
 	  '("Toggle hide cited" . mu4e-view-toggle-hide-cited))
-	(define-key menumap [view-raw]
-	  '("View raw message" . mu4e-view-raw))
+	(define-key menumap [raw-view]
+	  '("View raw message" . mu4e-raw-view))
 	(define-key menumap [pipe]
 	  '("Pipe through shell" . mu4e-view-pipe))
 	;; (define-key menumap [inspect]
@@ -336,7 +336,9 @@ if IS-OPEN is nil, and otherwise open it."
 
 
 (defun mu4e-view-mode ()
-  "Major mode for viewing an e-mail message."
+  "Major mode for viewing an e-mail message in mu4e.
+
+\\{mu4e-view-mode-map}."
   (interactive)
   (kill-all-local-variables)
   (use-local-map mu4e-view-mode-map)
@@ -348,8 +350,11 @@ if IS-OPEN is nil, and otherwise open it."
   (make-local-variable 'mu4e-wrap-lines)
   (make-local-variable 'mu4e-hide-cited)
 
-  (setq major-mode 'mu4e-view-mode mode-name mu4e-view-buffer-name)
-  (setq truncate-lines t buffer-read-only t))
+  (setq
+    major-mode 'mu4e-view-mode
+    mode-name "mu4e-view"
+    truncate-lines t
+    buffer-read-only t))
 
 (put 'mu4e-view-mode 'mode-class 'special)
 
@@ -423,27 +428,15 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 (defvar mu4e-view-buffer nil
   "*internal* View buffer connected to this raw view.")
 
-(defun mu4e-view-raw-mode ()
-  "Major mode for viewing of raw e-mail message."
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map mu4e-view-raw-mode-map)
+(defvar mu4e-raw-view-mode-map nil
+  "Keymap for \"*mu4e-raw-view*\" buffers.")
 
-  (make-local-variable 'mu4e-view-buffer)
-
-  (setq major-mode 'mu4e-view-raw-mode
-    mode-name "mm: raw view")
-  (setq truncate-lines t buffer-read-only t))
-
-(defvar mu4e-view-raw-mode-map nil
-  "Keymap for \"*mu4e-view-raw*\" buffers.")
-
-(unless mu4e-view-raw-mode-map
-  (setq mu4e-view-raw-mode-map
+(unless mu4e-raw-view-mode-map
+  (setq mu4e-raw-view-mode-map
     (let ((map (make-sparse-keymap)))
 
-      (define-key map "q" 'mu4e-view-raw-quit-buffer)
-      (define-key map "." 'mu4e-view-raw-quit-buffer)
+      (define-key map "q" 'mu4e-raw-view-quit-buffer)
+      (define-key map "." 'mu4e-raw-view-quit-buffer)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -456,20 +449,35 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (define-key map (kbd "<backspace>")
 	'(lambda () (interactive) (scroll-up -1)))
 
-      ;; menu
-      (define-key map [menu-bar] (make-sparse-keymap))
-      (let ((menumap (make-sparse-keymap "Raw view")))
-	(define-key map [menu-bar headers] (cons "Raw view" menumap))
-	(define-key menumap [quit-buffer] '("Quit" .
-					     mu4e-view-raw-quit-buffer))
-      map))))
+      ;; ;; menu
+      ;; (define-key map [menu-bar] (make-sparse-keymap))
+      ;; (let ((menumap (make-sparse-keymap "Raw view")))
+      ;; 	(define-key map [menu-bar headers] (cons "Raw view" menumap))
+      ;; 	(define-key menumap [quit-buffer] '("Quit" .
+      ;; 					     mu4e-raw-view-quit-buffer))
+      map)))
 
-(fset 'mu4e-view-raw-mode-map mu4e-view-raw-mode-map)
+(fset 'mu4e-raw-view-mode-map mu4e-raw-view-mode-map)
+
+(defun mu4e-raw-view-mode ()
+  "Major mode for viewing of raw e-mail message in mu4e.
+
+\\{mu4e-raw-view-mode-map}."
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map mu4e-raw-view-mode-map)
+
+  (make-local-variable 'mu4e-view-buffer)
+
+  (setq
+    major-mode 'mu4e-raw-view-mode
+    mode-name "mu4e-raw-view"
+    truncate-lines t buffer-read-only t))
 
 
-(defun mu4e-view-raw-message (msg view-buffer)
+(defun mu4e-raw-view-message (msg view-buffer)
   "Display the raw contents of message MSG in a new buffer."
-  (let ((buf (get-buffer-create mu4e-view-raw-buffer-name))
+  (let ((buf (get-buffer-create mu4e-raw-view-buffer-name))
 	 (inhibit-read-only t)
 	 (file (plist-get msg :path)))
     (unless (and file (file-readable-p file))
@@ -478,7 +486,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (erase-buffer)
       (insert-file file)
       ;; initialize view-mode
-      (mu4e-view-raw-mode)
+      (mu4e-raw-view-mode)
       (setq mu4e-view-buffer view-buffer)
       (switch-to-buffer buf)
       (goto-char (point-min)))))
@@ -486,7 +494,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 
 (defun mu4e-view-shell-command-on-raw-message (msg view-buffer cmd)
   "Process the raw message with shell command CMD."
-  (let ((buf (get-buffer-create mu4e-view-raw-buffer-name))
+  (let ((buf (get-buffer-create mu4e-raw-view-buffer-name))
 	 (inhibit-read-only t)
 	 (file (plist-get msg :path)))
     (unless (and file (file-readable-p file))
@@ -494,13 +502,13 @@ number them so they can be opened using `mu4e-view-go-to-url'."
     (with-current-buffer buf
       (erase-buffer)
       (process-file-shell-command cmd file buf)
-      (mu4e-view-raw-mode)
+      (mu4e-raw-view-mode)
       (setq mu4e-view-buffer view-buffer)
       (switch-to-buffer buf)
       (goto-char (point-min)))))
 
 
-(defun mu4e-view-raw-quit-buffer ()
+(defun mu4e-raw-view-quit-buffer ()
   "Quit the raw view and return to the message."
   (interactive)
   (if (buffer-live-p mu4e-view-buffer)
@@ -526,7 +534,7 @@ See the `org-contacts' documentation for more details."
   ;; FIXME: we need to explictly go to some (hopefully the right!) view buffer,
   ;; since when using this from org-capture, we'll be taken to the capture
   ;; buffer instead.
-  (with-current-buffer mu4e-view-buffer-name 
+  (with-current-buffer mu4e-view-buffer-name
     (unless (eq major-mode 'mu4e-view-mode)
       (error "Not in mu4e-view mode."))
     (unless mu4e-current-msg
@@ -664,12 +672,12 @@ list."
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
 
-(defun mu4e-view-raw ()
+(defun mu4e-raw-view ()
   "Show the the raw text of the current message."
   (interactive)
   (unless mu4e-current-msg
     (error "No current message"))
-  (mu4e-view-raw-message mu4e-current-msg (current-buffer)))
+  (mu4e-raw-view-message mu4e-current-msg (current-buffer)))
 
 (defun mu4e-view-pipe (cmd)
   "Pipe the message through shell command CMD, and display the

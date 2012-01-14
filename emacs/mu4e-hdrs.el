@@ -56,9 +56,9 @@ results, otherwise, limit number of results to
       (erase-buffer)
       (mu4e-hdrs-mode)
       (setq
-	mode-name expr
 	mu4e-last-expr expr
-	mu4e-hdrs-buffer buf)))
+	mu4e-hdrs-buffer buf
+	mode-name "mu4e-headers")))
   (switch-to-buffer mu4e-hdrs-buffer)
   (mu4e-proc-find expr ;; '-1' means 'unlimited search'
     (if full-search -1 mu4e-search-results-limit)))
@@ -333,7 +333,9 @@ after the end of the search results."
 
 
 (defun mu4e-hdrs-mode ()
-  "Major mode for displaying mua search results."
+  "Major mode for displaying mu4e search results.
+
+\\{mu4e-hdrs-mode-map}."
   (interactive)
 
   (kill-all-local-variables)
@@ -350,7 +352,7 @@ after the end of the search results."
     mu4e-msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
     mu4e-thread-info-map (make-hash-table :size 512  :rehash-size 2)
     major-mode 'mu4e-hdrs-mode
-    mode-name "mm: message headers"
+    mode-name "mu4e: message headers"
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
     buffer-read-only t

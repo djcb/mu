@@ -52,7 +52,9 @@
 (fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
 (defun mu4e-main-mode ()
-  "Major mode for the mm main screen."
+  "Major mode for the mu4e main screen.
+
+\\{mu4e-main-mode-map}."
   (interactive)
 
   (kill-all-local-variables)
@@ -60,7 +62,7 @@
 
   (setq
     major-mode 'mu4e-main-mode
-    mode-name "mu4e"
+    mode-name "mu4e-main"
     truncate-lines t
     buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
