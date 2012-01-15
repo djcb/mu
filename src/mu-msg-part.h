@@ -121,6 +121,21 @@ gboolean mu_msg_part_save (MuMsg *msg, const char *filepath, guint partidx,
 
 
 /**
+ * save a message part to a temporary file and return the full path to
+ * this file
+ *
+ * @param msg a MuMsg message
+ * @param partidx index of the part to save
+ * @param err receives error information if any
+ *
+ * @return the full path to the temp file, or NULL in case of error
+ */
+gchar* mu_msg_part_save_temp (MuMsg *msg, guint partidx, GError **err);
+
+
+
+
+/**
  * get a filename for the saving the message part; try the filename
  * specified for the message part if any, otherwise determine a unique
  * name based on the partidx and the message path

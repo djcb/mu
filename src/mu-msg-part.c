@@ -135,6 +135,23 @@ get_part_size (GMimePart *part)
 }
 
 
+
+static void
+part_foreach_cb_part (GMimePart *part, 	MuMsgPart *pi)
+{
+	const gchar *fname;
+
+	pi->disposition = (char*)g_mime_object_get_disposition
+		((GMimeObject*)part);
+
+	fname	      = g_mime_part_get_filename (part);
+	pi->file_name = fname ? mu_str_utf8ify (fname) : NULL;
+
+	pi->size        = get_part_size (part);
+	pi->is_leaf     = TRUE;
+}
+
+
 static void
 part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 {
@@ -154,25 +171,11 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 	if (GMIME_IS_CONTENT_TYPE(ct)) {
 		pi.type	   = (char*)g_mime_content_type_get_media_type (ct);
 		pi.subtype = (char*)g_mime_content_type_get_media_subtype (ct);
-
-		/* g_print ("==> [%s: %s / %s ]\n", pi.type, pi.subtype, */
-		/* 	 G_OBJECT_TYPE_NAME(mobj)); */
 	}
 
-	if (GMIME_IS_PART(mobj)) {
-		GMimePart *part;
-		const gchar *fname;
-
-		part = (GMimePart*)mobj;
-		pi.disposition = (char*)g_mime_object_get_disposition (mobj);
-
-		fname	     = g_mime_part_get_filename (part);
-		pi.file_name = fname ? mu_str_utf8ify (fname) : NULL;
-
-		pi.size        = get_part_size (part);
-		pi.is_leaf     = TRUE;
-
-	} else if (GMIME_IS_MESSAGE_PART(mobj)) {
+	if (GMIME_IS_PART(mobj))
+		part_foreach_cb_part ((GMimePart*)mobj, &pi);
+	else if (GMIME_IS_MESSAGE_PART(mobj)) {
 		GMimeMessage *mmsg;
 		mmsg = g_mime_message_part_get_message ((GMimeMessagePart*)mobj);
 		if (mmsg)
@@ -404,6 +407,31 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 
 	return TRUE;
 }
+
+
+gchar*
+mu_msg_part_save_temp (MuMsg *msg, guint partidx, GError **err)
+{
+	gchar *filepath;
+	gboolean rv;
+
+	filepath = mu_msg_part_filepath_cache (msg, partidx);
+	if (!filepath) {
+		g_set_error (err, 0, MU_ERROR_FILE,
+			     "Could not get temp filepath");
+		return NULL;
+	}
+
+	rv = mu_msg_part_save (msg, filepath, partidx, FALSE, TRUE, err);
+	if (!rv) {
+		g_free (filepath);
+		return NULL;
+	}
+
+	return filepath;
+}
+
+
 
 typedef gboolean (*MatchFunc) (GMimeObject *part, gpointer data);
 
