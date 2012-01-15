@@ -55,11 +55,12 @@ cc10:
 # this warns about functions that are over 33 non-comment lines long, which is a
 # sign that they need some refactoring. requires the pmccabe tool. if
 # all is fine, it outputs nothing
-# note, mu_msg_str_normalize is excempted from this rule.
+# note, some functions are  exempted from this rule.
 line33:
 	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'`	\
 	 | grep -v mu-str-normalize.c				\
 	 | grep -v config_options_group_find			\
+	 | grep -v SCM_DEFINE_PUBLIC				\
 	 | grep -v tests					\
          | awk '($$5 > 33)'
 
