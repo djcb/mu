@@ -26,14 +26,14 @@ exec guile -e main -s $0 $@
 (use-modules (mu) (mu message) (mu contact))
 
 (define (sort-by-freq c1 c2)
-  (< (frequency c1) (frequency c2)))
+  (< (mu:frequency c1) (mu:frequency c2)))
 
 (define (sort-by-newness c1 c2)
-  (< (timestamp c1) (timestamp c2)))
+  (< (mu:timestamp c1) (mu:timestamp c2)))
 
 (define (export-contact contact form)
   "Convert CONTACT to a string in format FORM."
-  (let ((email (email contact)) (name (name contact)))
+  (let ((email (mu:email contact)) (name (mu:name contact)))
     (if email ;; filter out anything *without* an email address
       (cond
 	((string= form "org-contacts")

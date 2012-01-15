@@ -17,5 +17,5 @@
 include $(top_srcdir)/gtest.mk
 
 noinst_DIST=			\
-	msg-stats		\
+	msg-graphs		\
 	contacts-export
