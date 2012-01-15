@@ -3,7 +3,6 @@
 
 ** Bugs
 
-*** forward should take the attachments from the original
 *** database locks (solved?)
 *** sometimes +S-u-n does not seem to work?
 
@@ -62,6 +61,7 @@
 ** handler not registered when compose without headers
 ** make links clickable
 ** integrate with org-contacts
+** forward should take the attachments from the original
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
