@@ -28,8 +28,9 @@ Documentation License.''
 
 Welcome to @t{mu-guile}!
 
-@t{mu-guile} is a binding of the @t{mu} email search engine and the @t{guile}
-programming language.
+@t{mu-guile} is a binding of the @t{mu} email search engine for the @t{guile}
+programming language. That means that you can write simple (and not so simple)
+programs to data-mine your e-mail database.
 
 @menu
 * Introduction::
@@ -49,17 +50,14 @@ Appendices
 @node Introduction
 @chapter Introduction
 
-@t{mu4e} is an e-mail program for @emph{GNU/Emacs}; it uses the @t{mu} maildir
-search engine as its backend, making @t{mu} fully search-based.
-@t{mu} is a program for indexing / searching e-mails, as well as an
-@t{emacs}-based email-client (@t{mu4e}.
+@t{mu} is a program for indexing / searching e-mails stored in Maildirs.
 
 @t{guile} is the @emph{GNU Ubiquitous Intelligent Language for Extensions} - a
 version of the @emph{Scheme} programming language and the official GNU
 extension language.
 
 @t{mu-guile} connects @t{mu} and @t{guile}, and allows you to easily write
-programs to do things with your e-mails.
+programs for your specific needs.
 
 @node Getting started
 @chapter Getting started
@@ -76,12 +74,10 @@ things work correctly.
 @section Installation
 
 @t{mu-guile} is part of @t{mu} - by installing the latter, the former will be
-installed as well. Note, however, that @t{mu-guile} requires you to have
-@t{guile} version 2.0 installed, otherwise @t{mu-guile} will not be
-built/installed.
+installed as well, provided that you have @t{guile} version 2.0 installed.
 
-At the time of writing, there are no distribution packages for @t{mu-guile}
-yet, so we are assuming installation from source packages.
+At the time of writing, there are no distribution packages for @t{mu-guile},
+so we are assuming installation from source packages.
 
 Installation follows the normal sequence of:
 @example
@@ -148,7 +144,7 @@ Enter `,help' for help.
 scheme@(guile-user)>
 @end verbatim
 
-Now, we need to load the @t{mu-guile} module:
+Now, we need to load some of the @t{mu-guile} modules:
 
 @verbatim
 scheme@(guile-user)> (use-modules (mu) (mu message))
@@ -161,16 +157,21 @@ loaded the modules, we need to initialize the @t{mu-guile} system:
 scheme@(guile-user)> (mu:initialize)
 @end verbatim
 
-When this is done, we can start querying the database. We'll go into various
-functions later in this manual, but just to give an example, let's get a list
-of the subjects of all messages that mention @emph{hello}:
+When this is done, we can start querying the database. We discuss various
+methods and functions later in this manual, but just to give an example, let's
+get a list of the subjects of all messages that mention @emph{hello}:
 
 @verbatim
 scheme@(guile-user)> (for-each
                         (lambda(msg)
-                          (format #t "Subject: ~a\n" (subject msg)))
+                          (format #t "Subject: ~a\n" (mu:subject msg)))
                         (mu:message-list "hello"))
 @end verbatim
+
+Note, the multi-lines in the example are only for readability; since it can be
+a bit uncomfortable to type long sequences at the 'REPL' (the Guile
+command-line), we recommend using a tool like
+Geiser@footnote{@url{http://www.nongnu.org/geiser/}}.
 
 @node Initializing mu-guile
 @chapter Initializing mu-guile
@@ -195,29 +196,30 @@ scheme@(guile-user)>
 @end verbatim
 
 Now, the first thing we need to do is load the @t{mu-guile} modules;
-currently, there are three available:
+currently, there are six available:
 
 @itemize
 @item @code{mu} - initialization, functions to get messages, contacts
 @item @code{mu message} - functions to deal with messages
 @item @code{mu contact} - functions to deal with contacts
+@item @code{mu part} - functions to deal with message-parts / attachments
+@item @code{mu stats} - some functions for doing statistics on your messages
+@item @code{mu plot} - functions to draw graphs from the statistics (requires @t{gnuplot}
 @end itemize
 
 Let's simply load all of them:
 
 @verbatim
-scheme@(guile-user)> (use-modules (mu) (mu message) (mu contact))
+scheme@(guile-user)> (use-modules (mu) (mu message) (mu contact) (mu part)
+                        (mu stats) (mu plot))
 @end verbatim
 
 Assuming you have installed everything correctly, the first time you do this,
 @t{guile} will probably respond by showing some message about compiling the
-modules, and then end with another prompt.
+modules, and then return to you with another prompt.
 
 Before we can do anything with @t{mu guile}, we need to initialize the
-system. The reason as to not do this automatically is to enable people to use
-non-default places to keep there @t{mu} data files.
-
-We can initialize the system with:
+system. This goes like this:
 
 @verbatim
 scheme@(guile-user)> (mu:initialize)
@@ -230,24 +232,25 @@ your @t{mu} data in a non-standard place:
 scheme@(guile-user)> (mu:initialize "/path/to/my/mu/")
 @end verbatim
 
-If all worked up until here, we're ready to go with @t{mu-guile}.
+If all worked up until here, we're ready to go with @t{mu-guile} - hurray! In
+the next chapters we'll walk through all the modules.
 
 @node Messages
 @chapter Messages
 
-In this chapter, we discuss how to find messages, and then how to do various
-things with them.
+In this chapter, we discuss how to find messages and how to do various things
+with them.
 
 @menu
 * Finding messages::
-* Message functions::
+* Message methods::
 * Example - the longest subject::
 @end menu
 
 @node Finding messages
 @section Finding messages
-Now we are ready to retrieve some messages from the system. There are two
-principle functions to do this:
+Now we are ready to retrieve some messages from the system. There are two main
+functions to do this:
 
 @itemize
 @item @code{(mu:message-list [<search-expression>])}
@@ -263,26 +266,27 @@ could do:
 
 @verbatim
 scheme@(guile-user)> (mu:message-list "subject:coffee")
-$1 = (#<<mu-message> 9040640> #<<mu-message> 9040630>
-      #<<mu-message> 9040570>)
+$1 = (#<<mu:message> 9040640> #<<mu:message> 9040630>
+      #<<mu:message> 9040570>)
 @end verbatim
 
-So, we get a list with three @t{<mu-message>} objects. We'll discuss them in a
-bit more detail in the next section, but let's just use the @code{subject}
-function ('method') provided by @t{<mu-message>} objects to retrieve the
-subject-field.
+So, since apparently we have three messages matching @t{subject:coffee}, we
+get a list of three @t{<mu:message>} objects. Let's just use the
+@code{mu:subject} function ('method') provided by @t{<mu:message>} objects to
+retrieve the subject-field (more about methods in the next section).
 
-For your convenience, @t{guile} has saved the result in @t{$1}, so to get the
-subject of the first message in the list, we can do:
+For your convenience, @t{guile} has saved the result of our last query in a
+variable called @t{$1}, so to get the subject of the first message in the
+list, we can do:
 
 @verbatim
-scheme@(guile-user)> (subject (car $1))
+scheme@(guile-user)> (mu:subject (car $1))
 $2 = "Re: best coffee ever!"
 @end verbatim
 
 The second function we mentioned, @code{mu:for-each-message}, executes some
 function for each message matched by the search expression (or @emph{all}
-message if the search expression is omitted).
+messages if the search expression is omitted).
 
 @verbatim
 scheme@(guile-user)> (mu:for-each-message
@@ -300,78 +304,72 @@ Using @code{mu:message-list} and/or
 @code{mu:for-each-message}@footnote{Implementation node:
 @code{mu:message-list} is implemented in terms of @code{mu:for-each-message},
 not the other way around. Due to the way @t{mu} works,
-@code{mu:for-each-message} is rather more efficient than a combination for
-@code{for-each} and @code{mu:message-list}} and a couple of @t{<mu-message>}
-methods, together with that Guile/Scheme provides should allow for many
+@code{mu:for-each-message} is rather more efficient than a combination of
+@code{for-each} and @code{mu:message-list}} and a couple of @t{<mu:message>}
+methods, together with what Guile/Scheme provides, should allow for many
 interesting programs.
 
-@node Message functions
-@section Message functions
+@node Message methods
+@section Message methods
 
 Now that we've seen how to retrieve lists of message objects
-(@code{<mu-message>}), let's see what we can do with such an object.
+(@code{<mu:message>}), let's see what we can do with such an object.
 
-@code{<mu-message>} defines the following methods
-@footnote{A note on naming: functions we have seen before --
-@code{mu:initialize}, @code{mu:message-list} and @code{mu:for-each-message}
-are prefixed with @t{mu:}. This is not the case for the @code{<mu-message>}
-methods to be discussed next, such as the methods @code{subject} and
-@code{from}. Reason for this is that it is not @emph{needed}, since these
-methods only recognized for @code{<mu-message>} objects, and do not affect
-anything else, while the @code{mu:}-prefixed are 'globally visible' and thus
-we need to be careful about naming conflicts}
- that all only take a single
-@code{<mu-message>} object as a parameter. We won't go into the exact meanings
+@code{<mu:message>} defines the following methods that all take a single
+@code{<mu:message>} object as a parameter. We won't go into the exact meanings
 for all of these functions here - for the details about various flags /
 properties, please refer to the @t{mu-find} man-page.
 
 @itemize
-@item @code{bcc}: the @t{Bcc} field of the message, or @t{#f} if there is none
-@item @code{body-html}: : the html body of the message, or @t{#f} if there is none
-@item @code{body-txt}: the plain-text body of the message, or @t{#f} if there is none
-@item @code{cc}: the @t{Bcc} field of the message, or @t{#f} if there is none
-@item @code{date}: the @t{Date} field of the message, or 0 if there is none
-@item @code{flags}: list of message-flags for this message
-@item @code{from}: the @t{From} field of the message, or @t{#f} if there is none
-@item @code{maildir}: the maildir this message lives in, or @t{#f} if there is none
-@item @code{message-id}: the @t{Message-Id} field of the message, or @t{#f} if there is none
-@item @code{path}: the file system path for this message
-@item @code{priority}: the priority of this message (either @t{mu:low}, @t{mu:normal}
-or @t{mu:high}
-@item @code{references}: the list of messages (message-ids) this message
-refers to in the @t{References:} header
-@item @code{size}: size of the message in bytes
-@item @code{subject}: the @t{Subject} field of the message, or @t{#f} if there is none.
-@item @code{tags}: list of tags for this message
-@item @code{to}: the sender of the message, or @t{#f} if there is none.
+@item @code{(mu:bcc msg)}: the @t{Bcc} field of the message, or @t{#f} if there is none
+@item @code{(mu:body-html msg)}: : the html body of the message, or @t{#f} if there is none
+@item @code{(mu:body-txt msg)}: the plain-text body of the message, or @t{#f} if there is none
+@item @code{(mu:cc msg)}: the @t{Bcc} field of the message, or @t{#f} if there is none
+@item @code{(mu:date msg)}: the @t{Date} field of the message, or 0 if there is none
+@item @code{(mu:flags msg)}: list of message-flags for this message
+@item @code{(mu:from msg)}: the @t{From} field of the message, or @t{#f} if there is none
+@item @code{(mu:maildir msg)}: the maildir this message lives in, or @t{#f} if there is none
+@item @code{(mu:message-id msg)}: the @t{Message-Id} field of the message, or @t{#f} if there is none
+@item @code{(mu:path msg)}: the file system path for this message
+@item @code{(mu:priority msg)}: the priority of this message (either @t{mu:prio:low}, @t{mu:prio:normal} or @t{mu:prio:high}
+@item @code{(mu:references msg)}: the list of messages (message-ids) this message
+refers to in(mu: the @t{References:} header
+@item @code{(mu:size msg)}: size of the message in bytes
+@item @code{(mu:subject msg)}: the @t{Subject} field of the message, or @t{#f} if there is none.
+@item @code{(mu:tags msg)}: list of tags for this message
+@item @code{(mu:to msg)}: the sender of the message, or @t{#f} if there is none.
 @end itemize
 
-With these functions, we can query messages for their properties; for example:
+With these methods, we can query messages for their properties; for example:
 
 @verbatim
 scheme@(guile-user)> (define msg (car (mu:message-list "snow")))
-scheme@(guile-user)> (subject msg)
+scheme@(guile-user)> (mu:subject msg)
 $1 = "Re: Running in the snow is beautiful"
-scheme@(guile-user)> (flags msg)
-$2 = (mu:replied mu:seen)
-scheme@(guile-user)> (strftime "%F" (localtime (date msg)))
+scheme@(guile-user)> (mu:flags msg)
+$2 = (mu:flag:replied mu:flag:seen)
+scheme@(guile-user)> (strftime "%F" (localtime (mu:date msg)))
 $3 = "2011-01-15"
 @end verbatim
 
-There are a couple more functions:
+There are a couple more methods:
 @itemize
-@item @code{(header <mu-message> "<header-name>")} returns an arbitrary message
+@item @code{(mu:header msg "<header-name>")} returns an arbitrary message
 header (or @t{#f} if not found) -- e.g. @code{(header msg "User-Agent")}
-@item @code{(contacts <mu-message> contact-type)} which returns a list
-of contacts (names/e-mail addresses in the To/From/Cc/Bcc-fields). @xref{Contacts}.
+@item If you include the @t{mu contact} module, the @code{(mu:contacts
+msg [contact-type])} method (to get a list of contacts) is
+added. @xref{Contacts}.
+@item If you include the @t{mu part} module, the @code{((mu:parts msg)} and
+@code{(mu:attachments msg)} methods are added. @xref{Attachments and other parts}.
 @end itemize
 
 @node Example - the longest subject
 @section Example - the longest subject
 
 Now, let's write a little example -- let's find out what is the @emph{longest
-subject} of any e-mail messages we received in the year 2011.  If you put the
-following in a separate file, make it executable, and run it like any program.
+subject} of any e-mail messages we received in the year 2011.  You can try
+this if you put the following in a separate file, make it executable, and run
+it like any program.
 
 @verbatim
 #!/bin/sh
@@ -386,7 +384,7 @@ exec guile -s $0 $@
 ;; note: (subject msg) => #f if there is no subject
 (define list-of-subjects
   (map (lambda (msg)
-      (or (subject msg) "")) (mu:message-list "date:2011..2011")))
+      (or (mu:subject msg) "")) (mu:message-list "date:2011..2011")))
 ;; see the mu-find manpage for the date syntax
 
 (define longest-subject
@@ -408,16 +406,18 @@ corpus.
 @chapter Contacts
 
 We can retrieve the sender and recipients of an e-mail message using methods
-like @code{from}, @code{to}, @code{cc} and @code{bcc}; @xref{Message
-functions}. These functions return the list of recipients as a single string;
-however, often it is more useful to deal with recipients as separate objects.
+like @code{mu:from}, @code{mu:to} etc.; @xref{Message methods}. These
+functions return the list of recipients as a single string; however, often it
+is more useful to deal with recipients as separate objects.
 
 @t{mu-guile} offers some functionality for this in the @code{(mu contact)}
-module.
+module. Also, it adds some contact-related methods for @code{<mu:message>}
+objects.
 
 @menu
 * Contact functions and objects::
 * All contacts::
+* Utility functions::
 * Example - mutt export::
 @end menu
 
@@ -432,7 +432,7 @@ module.
 After loading the @code{(mu contact)}, message objects (@pxref{Messages}) gain
 the the @t{contacts}-methods:
 
-    @code{(contacts <message-object> [<contact-type>])}
+    @code{(mu:contacts <message-object> [<contact-type>])}
 
 The @t{<contact-type>} is a symbol, one of @code{mu:to}, @code{mu:from},
 @code{mu:cc} or @code{mu:bcc}; this will then get the contact objects for the
@@ -440,10 +440,10 @@ contacts of the corresponding type. If you leave out the contact-type (or
 specify @t{#t} for it, you will get a list of @emph{all} contact objects for
 the message.
 
-A contact object (@code{<mu-contact>}) has two methods:
+A contact object (@code{<mu:contact>}) has two methods:
 @itemize
-@item @code{name} returns the name of the contact, or #f if there is none
-@item @code{email} returns the e-mail address of the contact, or #f if there is none
+@item @code{mu:name} returns the name of the contact, or #f if there is none
+@item @code{mu:email} returns the e-mail address of the contact, or #f if there is none
 @end itemize
 
 Let's get a list of all names and e-mail addresses in the 'To:' field, of
@@ -457,8 +457,8 @@ messages matching 'book':
       (for-each
         (lambda (contact)
            (format #t "~a => ~a\n"
-             (or (email contact) "") (or (name contact) "no-name")))
-        (contacts msg mu:to)))
+             (or (mu:email contact) "") (or (mu:name contact) "no-name")))
+        (mu:contacts msg mu:field:to)))
     "book")
 @end lisp
 
@@ -476,26 +476,39 @@ important in an e-mail program.
 
 To enable this, there is the function @code{mu:for-each-contact}, defined as
 
-   @code{(mu:for-each-contact <function> [<search-expression>])}.
+   @code{(mu:for-each-contact function [search-expression])}.
 
 This will aggregate the unique contacts from @emph{all} messages matching
 @t{<search-expression>} (when it is left empty, it will match all messages in
-the database), and execute @t{<function>} for each of these contacts.
+the database), and execute @t{function} for each of these contacts.
 
-The @t{<function>} receives an object of the type @t{<contact-with-stats>},
-which is a @emph{subclass} of the @t{<contact>} class discussed in
-@xref{Contact functions and objects}. @t{<contact-with-stats>} objects expose
-the following methods:
+The @t{function} receives an object of the type @t{<mu:contact-with-stats>},
+which is a @emph{subclass} of the @t{<mu:contact>} class discussed in
+@xref{Contact functions and objects}. @t{<mu:contact-with-stats>} objects
+expose the following additional methods:
 
 @itemize
-@item @code{frequency}: returns the @emph{number of times} this contact occured in
+@item @code{(mu:frequency <contact>)}: returns the @emph{number of times} this contact occured in
 one of the address fields
-@item @code{last-seen}: returns the @emph{most recent time} the contact was
+@item @code{(mu:last-seen <contact>)}: returns the @emph{most recent time} the contact was
 seen in one of the address fields, as a @t{time_t} value
 @end itemize
 
-The function aggregates per e-mail address; if a certain e-mail address occurs
-with different names, it uses the most recent non-empty name.
+The method assumes an e-mail address is unique for a certain contact; if a
+certain e-mail address occurs with different names, it uses the most recent
+non-empty name.
+
+@node Utility functions
+@section Utility functions
+
+To make dealing with contacts even easier, there are a number of utility
+functions that can save you a bit of typing.
+
+For converting contacts to some textual form, there is @code{(mu:contact->string
+<mu:contact> format)}, which takes a contact and returns a text string with
+the given format. Currently supported formats are @t{"org-contact}, @t{"mutt-alias"},
+@t{"mutt-ab"}, @t{"wanderlust"} and @t{"plain"}.
+
 
 @node Example - mutt export
 @section Example - mutt export
@@ -510,46 +523,41 @@ something like:
 alias <nick> [<name>] "<" <email> ">"
 @end verbatim
 
-Many of the names in our database could be random people writing things in
-mailing lists, so we may want to limit it to people we have seen at least 10
-times in the last year.
+Anyway, there is the function @code{(mu:contact->string <mu:contact> format)}
+that we can use to do the conversion.
 
-It is a bit hard to @emph{guess} the nick name for e-mail contacts, so we are
-going to assume it is the lowercase version of the first word in
-@t{<name>}. You can always adjust them later by hand, obviously.
+We may want to focus on people with whom we have frequent correspondence; so
+we may want to limit ourselves to people we have seen at least 10 times in the
+last year.
+
+It is a bit hard to @emph{guess} the nick name for e-mail contacts, but
+@code{mu:contact->string} tries something based on the name. You can always
+adjust them later by hand, obviously.
 
 @lisp
 #!/bin/sh
 exec guile -s $0 $@
 !#
+
 (use-modules (mu) (mu message) (mu contact))
 (mu:initialize)
 
+;; Get a list of contacts that were seen at least 20 times since 2010
 (define (selected-contacts)
-  "Get a list of contacts that were seen at least 20 times since
-2010."
   (let  ((addrs '())
 	  (start (car (mktime (car (strptime "%F" "2010-01-01")))))
 	  (minfreq 20))
     (mu:for-each-contact
       (lambda (contact)
-	(if (and (email contact)
-	      (>= (frequency contact) minfreq)
-	      (>= (last-seen contact) start))
+	(if (and (mu:email contact)
+	      (>= (mu:frequency contact) minfreq)
+	      (>= (mu:last-seen contact) start))
 	  (set! addrs (cons contact addrs)))))
       addrs))
 
-(define (guess-nick contact)
-   "Guess a nick name for CONTACT."
-    (string-map
-      (lambda(kar)
-	(if (char-alphabetic? kar) kar #\_))
-      (string-downcase (or (name contact) (email contact)))))
-
 (for-each
   (lambda (contact)
-    (format #t "alias ~a ~a <~a>\n"
-      (guess-nick contact) (name contact) (email contact)))
+    (format #t "~a\n" (mu:contact->string contact "mutt-alias")))
   (selected-contacts))
 @end lisp
 
@@ -570,39 +578,37 @@ is the @t{mu part} module.
 @node Parts and their methods
 @section Parts and their methods
 The module defines the @code{<mu-part>} class, and adds two methods to
-@code{<mu-message>} objects:
+@code{<mu:message>} objects:
 @itemize
-@item @code{(parts msg)} - returns a list @code{<mu-part>} objects, one for
+@item @code{(mu:parts msg)} - returns a list @code{<mu-part>} objects, one for
 each MIME-parts in the message.
-@item @code{(attachments)} - like @code{parts}, but only list those MIME-parts
+@item @code{(mu:attachments msg)} - like @code{parts}, but only list those MIME-parts
 that look like proper attachments.
 @end itemize
 
-A @code{<mu-part>} object exposes a few methods to get information about the
+A @code{<mu:part>} object exposes a few methods to get information about the
 part:
 @itemize
-@item @code{name} - returns the file name of the mime-part, or @code{#f} if
+@item @code{(mu:name <part>)} - returns the file name of the mime-part, or @code{#f} if
 there is none.
-@item @code{mime-type} - returns the mime-type of the mime-part, or @code{#f}
+@item @code{(mu:mime-type <part>)} - returns the mime-type of the mime-part, or @code{#f}
 if there is none.
-@item @code{size} - returns the size in bytes of the mime-part
+@item @code{(mu:size <part>)} - returns the size in bytes of the mime-part
 @end itemize
 
 Then, we may want to save the part to a file; this can be done using either:
 @itemize
-@item @code{(save part)} - save a part to a temporary file, return the file
+@item @code{(mu:save part <part>)} - save a part to a temporary file, return the file
 name@footnote{the temporary filename is a predictable function of (user-id,
 msg-path, part-index)}
-@item @code{(save-as part path)} - save part to file at path
+@item @code{(mu:save-as <part> <path>)} - save part to file at path
 @end itemize
 
 @node Attachment example
 @section Attachment example
 
-Let's look at some small examples.
-
-First, let's get a list of the biggest attachments in messages about
-Luxemburg:
+Let's look at some small example. Let's get a list of the biggest attachments
+in messages about Luxemburg:
 
 @lisp
 #!/bin/sh
@@ -620,8 +626,8 @@ matching EXPR."
       (lambda (msg)
 	(for-each
 	  (lambda (att) ;; add (filename . size) to the list
-	    (set! pairs (cons (cons (name att) (or (size att) 0)) pairs)))
-	  (attachments msg)))
+	    (set! pairs (cons (cons (mu:name att) (or (mu:size att) 0)) pairs)))
+	  (mu:attachments msg)))
       expr)
     pairs))
 
@@ -645,9 +651,9 @@ probably be a bit more elegant.
 @t{mu-guile} offers some convenience functions to determine various statistics
 about the messages in the database.
 
-First, there is @code{(mu:tabulate-messages <function> [<search-expr>])}. This
-function applies @t{<function>} to each message matching @t{<search-expr>}
-(leave empty to match @emph{all} messages), and returns a associative list
+@code{(mu:tabulate-messages <function> [<search-expr>])} applies
+@t{<function>} to each message matching @t{<search-expr>} (leave empty to
+match @emph{all} messages), and returns a associative list (a list of pairs)
 with each of the different results of @t{<function>} and their frequencies.
 
 This can best be demonstrated with a little example. Suppose we want to know
@@ -658,34 +664,36 @@ how many messages we receive per weekday:
 exec guile -s $0 $@
 !#
 
-(use-modules (mu) (mu message) (mu stats))
+(use-modules (mu) (mu message) (mu stats) (mu plot))
 (mu:initialize)
 
-(define (weekday-table)
-  "Returns something like
- '((0 . 12) (5 . 20) (2 . 16) ... )
- that is, an unsorted list of (<weekday> . <frequency>)."
-  (mu:tabulate-messages
-    (lambda (msg)
-      (tm:wday (localtime (date msg))))))
+;; create a list like (("Sun" . 13) ("Mon" . 23) ...)
+(define weekday-table
+  (mu:weekday-numbers->names
+    (sort
+      (mu:tabulate-messages
+	(lambda (msg)
+	  (tm:wday (localtime (mu:date msg)))))
+      (lambda (a b) (< (car a) (car b))))))
 
-;; sort & display
-(let ((table (weekday-table)))
- (for-each
-  (lambda (pair)
-    (let ((days '("Sun" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat")))
-      (format #t "~a: ~a\n"
-	(list-ref days (car pair)) (cdr pair))))
-  (sort (weekday-table)(lambda (a b) (< (car a) (car b))))))
+(for-each
+  (lambda (elm)
+    (format #t "~a: ~a\n" (car elm) (cdr elm)))
+  weekday-table)
 @end lisp
 
-The function @code{weekday-table} use @code{mu:tabulate-message} to get the
+The function @code{weekday-table} uses @code{mu:tabulate-message} to get the
 frequencies per hour -- this returns a list of pairs:
 @verbatim
 ((5 . 2339) (0 . 2278) (4 . 2800) (2 . 3184) (6 . 1856) (3 . 2833) (1 . 2993))
 @end verbatim
 
-The script then output these numbers in following form:
+We sort these pairs by the day number, and then apply
+@code{mu:weekday-numbers->names}, which takes the list, and returns a list
+where the day numbers are replace by there abbreviated name (in the current
+locale). Note, there is also @code{mu:month-numbers->names}.
+
+The script then outputs these numbers in the following form:
 
 @verbatim
 Sun: 2278
@@ -702,6 +710,25 @@ Clearly, Saturday is a slow day for e-mail...
 @node Plotting data
 @chapter Plotting data
 
+You can plot the results in the format produced by @code{mu:tabulate} with the
+@t{(mu plot)} module, an experimental module that requires the
+@t{gnuplot}@footnote{@url{http://www.gnuplot.info/}} program to be installed
+on your system.
+
+The @code{mu:plot} function takes the following arguments:
+
+@code{(mu:plot <data> <title> <x-label> <y-label> [<want-ascii>])}
+
+Here, @code{<data>} is a table of data in the format that @code{mu:tabulate}
+produces. @code{<title>}, @code{<x-label>} and @code{<y-lablel>} are,
+respectively, the title of the graph, and the labels for X- and
+Y-axis. Finally, if you pass @t{#t} for the final @code{<want-ascii>}
+parameter, a plain-text rendering of the graph will be produced; otherwise, a
+graphical window will be shown.
+
+An example should clarify how this works in practice; let's plot the number of
+message per hour:
+
 @lisp
 #!/bin/sh
 exec guile -s $0 $@
@@ -714,10 +741,10 @@ exec guile -s $0 $@
   (sort
     (mu:tabulate-messages
       (lambda (msg)
-	(tm:hour (localtime (date msg)))))
+	(tm:hour (localtime (mu:date msg)))))
     (lambda (x y) (< (car x) (car y)))))
 
-(mu:plot-ascii (mail-per-hour-table) "Mail per hour" "Hour" "Frequency")
+(mu:plot (mail-per-hour-table) "Mail per hour" "Hour" "Frequency" #t)
 @end lisp
 
 @verbatim
