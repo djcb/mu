@@ -359,7 +359,7 @@ SCM_DEFINE_PUBLIC (get_contacts, "mu:get-contacts", 2, 0, 0,
 
 struct _AttInfo {
 	SCM      attlist;
-	gboolean files_only;
+	gboolean attachments_only;
 };
 typedef struct _AttInfo AttInfo;
 
@@ -371,7 +371,8 @@ each_part (MuMsg *msg, MuMsgPart *part, AttInfo *attinfo)
 
 	if (!part->type)
 		return;
-	if (attinfo->files_only && !part->file_name)
+	if (attinfo->attachments_only &&
+	    !mu_msg_part_looks_like_attachment (part, TRUE))
 		return;
 
 	mime_type = g_strdup_printf ("%s/%s", part->type, part->subtype);
@@ -401,20 +402,20 @@ each_part (MuMsg *msg, MuMsgPart *part, AttInfo *attinfo)
 
 
 SCM_DEFINE_PUBLIC (get_parts, "mu:get-parts", 1, 1, 0,
-		   (SCM MSG, SCM FILES_ONLY),
-		   "Get the list of mime-parts for MSG. If FILES_ONLY is #t, only"
-		   "get parts that file names. The resulting list has elements "
-		   "which are list of the form (index name mime-type size).\n")
+		   (SCM MSG, SCM ATTS_ONLY),
+		   "Get the list of mime-parts for MSG. If ATTS_ONLY is #t, only"
+		   "get parts that are (look like) attachments. The resulting list has "
+		   "elements which are list of the form (index name mime-type size).\n")
 #define FUNC_NAME s_get_parts
 {
 	MuMsgWrapper *msgwrap;
 	AttInfo attinfo;
 
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
-	SCM_ASSERT (scm_is_bool(FILES_ONLY), FILES_ONLY,SCM_ARG2, FUNC_NAME);
+	SCM_ASSERT (scm_is_bool(ATTS_ONLY), ATTS_ONLY, SCM_ARG2, FUNC_NAME);
 
-	attinfo.attlist    = SCM_EOL; /* empty list */
-	attinfo.files_only = FILES_ONLY == SCM_BOOL_T ? TRUE : FALSE;
+	attinfo.attlist		 = SCM_EOL;	/* empty list */
+	attinfo.attachments_only = ATTS_ONLY == SCM_BOOL_T ? TRUE : FALSE;
 
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 	mu_msg_part_foreach (msgwrap->_msg,
@@ -436,10 +437,9 @@ SCM_DEFINE_PUBLIC (save_part, "mu:save-part", 2, 0, 0,
 #define FUNC_NAME s_save_part
 {
 	GError *err;
-	gchar *filepath, *msgpath;
+	gchar *attachpath, *msgpath;
 	unsigned index;
 	MuMsg *msg;
-	gboolean rv;
 	SCM rv_scm;
 
 	SCM_ASSERT (scm_is_string(MSGPATH), MSGPATH, SCM_ARG1, FUNC_NAME);
@@ -456,30 +456,19 @@ SCM_DEFINE_PUBLIC (save_part, "mu:save-part", 2, 0, 0,
 		goto leave;
 	}
 
-	filepath = mu_msg_part_filepath_cache (msg, index);
-	if (!filepath) {
-		rv_scm = mu_guile_error (FUNC_NAME, 0, "could not get filepath",
-					 SCM_UNSPECIFIED);
+	attachpath = mu_msg_part_save_temp (msg, index, &err);
+	if (!attachpath) {
+		rv_scm = mu_guile_g_error (FUNC_NAME, err);
 		goto leave;
 	}
 
-	rv = mu_msg_part_save (msg, filepath, index, FALSE, TRUE, &err);
-	if (!rv) {
-		rv_scm = err ? mu_guile_g_error (FUNC_NAME, err) :
-			mu_guile_error (FUNC_NAME, 0, "could not save part",
-					SCM_UNSPECIFIED);
-		goto leave;
-	}
-
-	rv_scm = mu_guile_scm_from_str (filepath);
+	rv_scm = mu_guile_scm_from_str (attachpath);
 
 leave:
 	mu_msg_unref (msg);
-
 	g_clear_error (&err);
-	g_free (filepath);
-	free (msgpath);
 
+	g_free (attachpath);
 	return rv_scm;
 }
 #undef FUNC_NAME
@@ -519,38 +508,38 @@ static struct  {
 	unsigned val;
 } SYMPAIRS[] = {
 
-	{ "mu:high",		MU_MSG_PRIO_HIGH },
-	{ "mu:low",		MU_MSG_PRIO_LOW },
-	{ "mu:normal",		MU_MSG_PRIO_NORMAL },
+	{ "mu:prio:high",	MU_MSG_PRIO_HIGH },
+	{ "mu:prio:low",	MU_MSG_PRIO_LOW },
+	{ "mu:prio:normal",	MU_MSG_PRIO_NORMAL },
 
-	{ "mu:new",		MU_FLAG_NEW },
-	{ "mu:passed",		MU_FLAG_PASSED },
-	{ "mu:replied",		MU_FLAG_REPLIED },
-	{ "mu:seen",		MU_FLAG_SEEN },
-	{ "mu:trashed",		MU_FLAG_TRASHED },
-	{ "mu:draft",		MU_FLAG_DRAFT },
-	{ "mu:flagged",		MU_FLAG_FLAGGED },
-	{ "mu:signed",		MU_FLAG_SIGNED },
-	{ "mu:encrypted",	MU_FLAG_ENCRYPTED },
-	{ "mu:has-attach",	MU_FLAG_HAS_ATTACH },
-	{ "mu:unread",		MU_FLAG_UNREAD },
+	{ "mu:flag:new",	MU_FLAG_NEW },
+	{ "mu:flag:passed",	MU_FLAG_PASSED },
+	{ "mu:flag:replied",	MU_FLAG_REPLIED },
+	{ "mu:flag:seen",	MU_FLAG_SEEN },
+	{ "mu:flag:trashed",	MU_FLAG_TRASHED },
+	{ "mu:flag:draft",	MU_FLAG_DRAFT },
+	{ "mu:flag:flagged",	MU_FLAG_FLAGGED },
+	{ "mu:flag:signed",	MU_FLAG_SIGNED },
+	{ "mu:flag:encrypted",	MU_FLAG_ENCRYPTED },
+	{ "mu:flag:has-attach",	MU_FLAG_HAS_ATTACH },
+	{ "mu:flag:unread",	MU_FLAG_UNREAD },
 
-	{ "mu:bcc",		MU_MSG_FIELD_ID_BCC },
-	{ "mu:body-html",	MU_MSG_FIELD_ID_BODY_HTML },
-	{ "mu:body-txt",	MU_MSG_FIELD_ID_BODY_TEXT },
-	{ "mu:cc",		MU_MSG_FIELD_ID_CC },
-	{ "mu:date",		MU_MSG_FIELD_ID_DATE },
-	{ "mu:flags",		MU_MSG_FIELD_ID_FLAGS },
-	{ "mu:from",		MU_MSG_FIELD_ID_FROM },
-	{ "mu:maildir",		MU_MSG_FIELD_ID_MAILDIR },
-	{ "mu:message-id",	MU_MSG_FIELD_ID_MSGID },
-	{ "mu:path",		MU_MSG_FIELD_ID_PATH },
-	{ "mu:prio",		MU_MSG_FIELD_ID_PRIO },
-	{ "mu:refs",		MU_MSG_FIELD_ID_REFS },
-	{ "mu:size",		MU_MSG_FIELD_ID_SIZE },
-	{ "mu:subject",		MU_MSG_FIELD_ID_SUBJECT },
-	{ "mu:tags",		MU_MSG_FIELD_ID_TAGS },
-	{ "mu:to",		MU_MSG_FIELD_ID_TO },
+	{ "mu:field:bcc",	MU_MSG_FIELD_ID_BCC },
+	{ "mu:field:body-html",	MU_MSG_FIELD_ID_BODY_HTML },
+	{ "mu:field:body-txt",	MU_MSG_FIELD_ID_BODY_TEXT },
+	{ "mu:field:cc",	MU_MSG_FIELD_ID_CC },
+	{ "mu:field:date",	MU_MSG_FIELD_ID_DATE },
+	{ "mu:field:flags",	MU_MSG_FIELD_ID_FLAGS },
+	{ "mu:field:from",	MU_MSG_FIELD_ID_FROM },
+	{ "mu:field:maildir",	MU_MSG_FIELD_ID_MAILDIR },
+	{ "mu:field:message-id",MU_MSG_FIELD_ID_MSGID },
+	{ "mu:field:path",	MU_MSG_FIELD_ID_PATH },
+	{ "mu:field:prio",	MU_MSG_FIELD_ID_PRIO },
+	{ "mu:field:refs",	MU_MSG_FIELD_ID_REFS },
+	{ "mu:field:size",	MU_MSG_FIELD_ID_SIZE },
+	{ "mu:field:subject",	MU_MSG_FIELD_ID_SUBJECT },
+	{ "mu:field:tags",	MU_MSG_FIELD_ID_TAGS },
+	{ "mu:field:to",	MU_MSG_FIELD_ID_TO },
 };
 
 
