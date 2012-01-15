@@ -5,18 +5,19 @@
 
 * Welcome to mu!
 
-  Given the /enormous/ amounts of e-mail many people gather and the importance
-  of e-mail message in our work-flows, it's essential to quickly deal with all
-  that mail - in particular, to instantly find that one important e-mail you
-  need right now.
+  With the /enormous/ amounts of e-mail many people gather and the importance of
+  e-mail messages in our daily work-flow, it is very important to be able to
+  quickly deal with all that - in particular, to instantly find that one
+  important e-mail you need right now.
 
-  *mu* is a tool for dealing with e-mail messages stored in the [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format,
-  on Unix-like systems. *mu*'s main purpose is to help you to quickly find the
-  messages you need; in addition, it allows you to view messages, extract
-  attachments, create new maildirs, ... See the [[file:cheatsheet.org][mu cheatsheet]] for some examples.
+  For that, *mu* was created.  *mu* is a tool for dealing with e-mail messages
+  stored in the [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format, on Unix-like systems. *mu*'s main purpose is to
+  help you to find the messages you need, quickly; in addition, it allows you to
+  view messages, extract attachments, create new maildirs, ... See the [[file:cheatsheet.org][mu
+  cheatsheet]] for some examples.
 
-  Searching works by first indexing your messages into a [[http://xapian.org/][Xapian]]-database, which
-  can then be queried using a custom query language.
+  *mu* now comes with an emacs-based e-mail client (=mu4e=), a simple GUI
+  (=mug=) and bindings for the Guile/Scheme programming language.
 
 ** Features
 
@@ -32,10 +33,14 @@
    - [[file:mu4e.html][mu4e]], an emacs-based e-mail client based on =mu=
    - [[file:mu-guile.html][mu-guile]]: guile-bindings that allow for scripting, advanced processing of
      your data
+   -
    - fully documented (man pages, info pages)
 
 ** News
-
+   - 2012-01-15: [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8-alpha3.tar.gz][mu-0.9.8-beta1]] is available - most changes are in the
+     Guile-bindings and their documentation, improved attachment handling (when
+     forwarding), some improvements in =mu4e=, some re-factoring, cleanups. The
+     plan is to do one more beta after this one, and then release the final 0.9.8.
    - 2012-01-07: [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8-alpha3.tar.gz][mu-0.9.8-alpha-3]] is available, with fixes for some =mu4e=
      configuration problems; also, the documentation now contains an example of
      how to set up =mu4e= with Gmail.

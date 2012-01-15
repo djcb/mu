@@ -2,8 +2,10 @@
 #+style: <link rel="stylesheet" type="text/css" href="mu.css">
 #+options: skip t
 
-  With version 0.9.8, =mu= comes with an emacs-based e-mail client that uses
-  =mu= for its back-end: *mu4e*. For all the details, please see [[file:mu4e/index.html][manual]].
+  Starting with version 0.9.8, [[http://www.djcbsoftware.nl/code/mu][mu]] provides an emacs-based e-mail client which
+  uses =mu= for its back-end: *mu4e*.
+
+  For all the details, please see the [[file:mu4e/index.html][manual]].
 
 ** Screenshots
 

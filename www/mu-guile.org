@@ -2,9 +2,9 @@
 #+style: <link rel="stylesheet" type="text/css" href="mu.css">
 #+options: skip t
 
-  Starting from version 0.9.7, =mu= had early, experimental bindings for the
-  [[http://www.gnu.org/software/guile/][GNU/Guile]] programming language, which is a version of the [[http://en.wikipedia.org/wiki/Scheme_(programming_language)][Scheme]] programming
-  language, specifically designed for extending existing programs.
+  Starting from version 0.9.7, [[http://www.djcbsoftware.nl/code/mu][mu]] had experimental bindings for the [[http://www.gnu.org/software/guile/][GNU/Guile]]
+  programming language, which is a version of the [[http://en.wikipedia.org/wiki/Scheme_(programming_language)][Scheme]] programming language,
+  specifically designed for extending existing programs.
 
   =mu= version 0.9.8 has much improved bindings, and they are [[file:mu-guile/index.html][documented]], with
   many examples. You can find more examples in the =guile/examples= directory of
@@ -31,7 +31,7 @@ exec guile -s $0 $@
 
 ;; create a list like (("Mon" . 13) ("Tue" . 23) ...)
 (define weekday-table
-  (mu:day-numbers->names
+  (mu:weekday-numbers->names
     (sort
       (mu:tabulate-messages
 	(lambda (msg)
@@ -44,7 +44,7 @@ exec guile -s $0 $@
   weekday-table)
 #+end_src
 
-    Which might get us something like:
+    Which outputs something like:
 
 #+begin_example
 Sun: 2278
@@ -55,6 +55,9 @@ Thu: 2796
 Fri: 2343
 Sat: 1856
 #+end_example
+
+    The numbers may be a bit different though... In my case, Saturday seems a
+    particularly slow day for e-mail.
 
 *** Drawing graphs
 
@@ -140,7 +143,7 @@ exec guile -s $0 $@ !#
 
 ** License & Copyright
 
-   *mu4e* was designed and implemented by Dirk-Jan C. Binnema, and is Free
+   *mu-guile* was designed and implemented by Dirk-Jan C. Binnema, and is Free
    Software, licensed under the GNU GPLv3
 
 #+html:<hr/><div align="center">&copy; 2011-2012 Dirk-Jan C. Binnema</div>
