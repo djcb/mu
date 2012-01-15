@@ -19,7 +19,7 @@
 (define-module (mu message)
   :use-module (oop goops)
   :export ( ;; classes
-	    <mu-message>
+	    <mu:message>
 	    mu:for-each-message
 	    mu:message-list
 	    ;; internal
@@ -27,58 +27,59 @@
 	    mu:get-field
 	    mu:for-each-msg-internal
 	    ;; message funcs
-	    body
 	    header
 	    ;; other symbols
-	    mu:bcc
-	    mu:body-html
-	    mu:body-txt
-	    mu:cc
-	    mu:date
-	    mu:flags
-	    mu:from
-	    mu:maildir
-	    mu:message-id
-	    mu:path
-	    mu:prio
-	    mu:refs
-	    mu:size
-	    mu:subject
-	    mu:tags
-	    mu:to))
+	    mu:field:bcc
+	    mu:field:body-html
+	    mu:field:body-txt
+	    mu:field:cc
+	    mu:field:date
+	    mu:field:flags
+	    mu:field:from
+	    mu:field:maildir
+	    mu:field:message-id
+	    mu:field:path
+	    mu:field:prio
+	    mu:field:refs
+	    mu:field:size
+	    mu:field:subject
+	    mu:field:tags
+	    mu:field:to))
 
 (load-extension "libguile-mu" "mu_guile_message_init")
 
-(define-class <mu-message> ()
+(define-class <mu:message> ()
   (msg  #:init-keyword #:msg)) ;; the MuMsg-smob we're wrapping
 
 (define-syntax define-getter
   (syntax-rules ()
     ((define-getter method-name field)
       (begin
-	(define-method (method-name (msg <mu-message>))
+	(define-method (method-name (msg <mu:message>))
 	  (mu:get-field (slot-ref msg 'msg) field))
 	(export method-name)))))
 
-(define-getter bcc	  mu:bcc)
-(define-getter body-html  mu:body-html)
-(define-getter body-txt	  mu:body-txt)
-(define-getter cc	  mu:cc)
-(define-getter date	  mu:date)
-(define-getter flags	  mu:flags)
-(define-getter from	  mu:from)
-(define-getter maildir	  mu:maildir)
-(define-getter message-id mu:message-id)
-(define-getter path	  mu:path)
-(define-getter priority	  mu:prio)
-(define-getter references mu:refs)
-(define-getter size	  mu:size)
-(define-getter subject	  mu:subject)
-(define-getter tags	  mu:tags)
-(define-getter to	  mu:to)
+(define-getter mu:bcc	     mu:field:bcc)
+(define-getter mu:body-html  mu:field:body-html)
+(define-getter mu:body-txt   mu:field:body-txt)
+(define-getter mu:cc	     mu:field:cc)
+(define-getter mu:date	     mu:field:date)
+(define-getter mu:flags	     mu:field:flags)
+(define-getter mu:from	     mu:field:from)
+(define-getter mu:maildir    mu:field:maildir)
+(define-getter mu:message-id mu:field:message-id)
+(define-getter mu:path	     mu:field:path)
+(define-getter mu:priority   mu:field:prio)
+(define-getter mu:references mu:field:refs)
+(define-getter mu:size	     mu:field:size)
+(define-getter mu:subject    mu:field:subject)
+(define-getter mu:tags	     mu:field:tags)
+(define-getter mu:to	     mu:field:to)
 
-(define-method (header (msg <mu-message>) (hdr <string>))
-  "Get an arbitrary header HDR from message MSG."
+
+(define-method (header (msg <mu:message>) (hdr <string>))
+  "Get an arbitrary header HDR from message MSG; return #f if it does
+not exist."
   (mu:get-header (slot-ref msg 'msg) hdr))
 
 (define* (mu:for-each-message func #:optional (expr #t))
@@ -86,7 +87,7 @@
 If EXPR is not provided, match /all/ messages in the store."
     (mu:for-each-msg-internal
       (lambda (msg)
-	(func (make <mu-message> #:msg msg)))
+	(func (make <mu:message> #:msg msg)))
       expr))
 
 (define* (mu:message-list #:optional (expr #t))

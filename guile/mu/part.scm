@@ -22,30 +22,29 @@
   :use-module (mu message)
   :export (;; get-part
 	    ;; classes
-	    <mu-part>
+	    <mu:part>
 	    ;; message function
-	    attachments
-	    parts
-	    ;; <mu-part> methods
-	    index
-	    name
-	    mime-type
+	    mu:attachments
+	    mu:parts
+	    ;; <mu:part> methods
+	    mu:name
+	    mu:mime-type
 ;;	    size
-	    save
-	    save-as))
+	    mu:save
+	    mu:save-as))
 
-(define-class <mu-part> ()
+(define-class <mu:part> ()
   (msgpath   #:init-value #f #:init-keyword #:msgpath)
   (index     #:init-value #f #:init-keyword #:index)
-  (name      #:init-value #f #:getter name #:init-keyword #:name)
-  (mime-type #:init-value #f #:getter mime-type #:init-keyword #:mime-type)
-  (size      #:init-value 0  #:getter size #:init-keyword #:size))
+  (name      #:init-value #f #:getter mu:name #:init-keyword #:name)
+  (mime-type #:init-value #f #:getter mu:mime-type #:init-keyword #:mime-type)
+  (size      #:init-value 0  #:getter mu:size #:init-keyword #:size))
 
-(define-method (get-parts (msg <mu-message>) (files-only <boolean>))
-    "Get the part for MSG as a list of <mu-part> objects; if FILES-ONLY is #t,
+(define-method (get-parts (msg <mu:message>) (files-only <boolean>))
+    "Get the part for MSG as a list of <mu:part> objects; if FILES-ONLY is #t,
 only get the part with file names."
   (map (lambda (part)
-	 (make <mu-part>
+	 (make <mu:part>
 	   #:msgpath    (list-ref part 0)
 	   #:index      (list-ref part 1)
 	   #:name       (list-ref part 2)
@@ -53,20 +52,20 @@ only get the part with file names."
 	   #:size       (list-ref part 4)))
     (mu:get-parts (slot-ref msg 'msg) files-only)))
 
-(define-method (attachments (msg <mu-message>))
-  "Get the attachments for MSG as a list of <mu-part> objects."
+(define-method (mu:attachments (msg <mu:message>))
+  "Get the attachments for MSG as a list of <mu:part> objects."
   (get-parts msg #t))
 
-(define-method (parts (msg <mu-message>))
+(define-method (mu:parts (msg <mu:message>))
   "Get the MIME-parts for MSG as a list of <mu-part> objects."
   (get-parts msg #f))
 
-(define-method (save (part <mu-part>))
+(define-method (mu:save (part <mu:part>))
   "Save PART to a temporary file, and return the file name. If the
 part had a filename, the temporary file's file name will be just that;
 otherwise a name is made up."
   (mu:save-part (slot-ref part 'msgpath) (slot-ref part 'index)))
 
-(define-method (save-as (part <mu-part>) (filepath <string>))
+(define-method (mu:save-as (part <mu:part>) (filepath <string>))
   "Save message-part PART to file system path PATH."
     (copy-file (save part) filepath))

@@ -19,8 +19,7 @@
 (define-module (mu plot)
   :use-module (mu message)
   :use-module (ice-9 popen)
-  :export ( mu:plot-x11
-	    mu:plot-ascii))
+  :export ( mu:plot))
 
 (define (export-pairs pairs)
   "Write a temporary file with the list of PAIRS in table format, and
@@ -34,14 +33,14 @@ return the file name."
     (close output)
     datafile))
 
-(define (mu:plot data title x-label y-label want-ascii)
-  "Plot DATA with TITLE, X-LABEL and X-LABEL. If WANT-ASCII is #t,
-output in plain-text; otherwise use an X11 window."
+(define* (mu:plot data title x-label y-label #:optional (ascii #f))
+  "Plot DATA with TITLE, X-LABEL and X-LABEL. If ASCII is true, display
+using raw text, otherwise, use a graphical window."
   (let ((datafile (export-pairs data))
 	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
     (display (string-append
 	       "reset\n"
-	       "set term " (if want-ascii "dumb" "x11") "\n"
+	       "set term " (if ascii "wxt" "dumb") "\n"
 	       "set title \"" title "\"\n"
 	       "set xlabel \"" x-label "\"\n"
 	       "set ylabel \"" y-label "\"\n"
@@ -49,11 +48,3 @@ output in plain-text; otherwise use an X11 window."
 	       "plot \"" datafile "\" using 2:xticlabels(1) with boxes fs solid\n")
       gnuplot)
   (close-pipe gnuplot)))
-
-(define* (mu:plot-ascii data #:optional (title "Title") (x-label "X") (y-label "Y"))
-  "Plot DATA with TITLE, X-LABEL and X-LABEL in plain-text."
-  (mu:plot data title x-label y-label #t))
-
-(define* (mu:plot-x11 data #:optional (title "Title") (x-label "X") (y-label "Y"))
-  "Plot DATA with TITLE, X-LABEL and X-LABEL in an X11 window."
-  (mu:plot data title x-label y-label #f))

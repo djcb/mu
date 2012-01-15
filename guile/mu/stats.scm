@@ -23,7 +23,7 @@
   :use-module (ice-9 i18n)
   :export ( mu:tabulate-messages
 	    mu:average-messages
-	    mu:day-numbers->names
+	    mu:weekday-numbers->names
 	    mu:month-numbers->names))
 
 (define* (mu:tabulate-messages func #:optional (expr #t))
@@ -65,7 +65,7 @@ icecream:  (mu:average (lambda(msg) (size msg)) \"icecream\" ."
       (locale-day-short num))
       (iota 7 1)))
 
-(define (mu:day-numbers->names table)
+(define (mu:weekday-numbers->names table)
   "Convert a list of pairs with the car denoting a day number (0-6)
 into a list of pairs with the car replaced by the corresponding day
 name (abbreviated)."
