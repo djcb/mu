@@ -759,18 +759,10 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
 	if (!mu_msg_part_looks_like_attachment(part, TRUE))
 		return;
 
-	/* save the attachment to some temp file */
-	cachefile = mu_msg_part_filepath_cache (msg, part->index);
+	cachefile = mu_msg_part_save_temp (msg, part->index, &err);
 	if (!cachefile) {
-		server_error (NULL, MU_ERROR_FILE,
-			      "could not determine cachefile name");
-		return;
-	}
-
-	err	  = NULL;
-	if (!mu_msg_part_save (msg, cachefile, part->index, FALSE, TRUE, &err)) {
-		server_error (&err, MU_ERROR_FILE,
-			      "could not save %s", cachefile);
+		server_error (&err, MU_ERROR_FILE, "could not save %s",
+			      cachefile);
 		goto leave;
 	}
 
@@ -841,14 +833,10 @@ cmd_compose (MuStore *store, GSList *args, GError **err)
 
 	msg = mu_store_get_msg (store, docid, err);
 	if (!msg)
-		return server_error (err, MU_ERROR,
-				     "failed to get message");
+		return server_error (err, MU_ERROR, "failed to get message");
 
 	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE);
-	if (strcmp(ctype, "forward") == 0)
-		atts = include_attachments (msg);
-	else
-		atts = NULL;
+	atts = (!strcmp(ctype, "forward")) ? include_attachments (msg) : NULL;
 
 	mu_msg_unref (msg);
 	send_expr ("(:compose-type %s :original %s :include %s)",
