@@ -121,6 +121,15 @@ following to your @file{~/.guile}:
 (set! %load-path (cons "/usr/local/share/guile/site/2.0" %load-path))
 @end lisp
 
+Or, alternatively, you can set @t{GUILE_LOAD_PATH}:
+@example
+export GUILE_LOAD_PATH="/usr/local/share/guile/site/2.0"
+@end example
+
+Note, in both cases the directory should be the directory that contains the
+installed @t{mu.scm}; so if you installed @t{mu} under a different prefix, you
+must change the load-path accordingly.
+
 After this, you should be ready to go.
 
 @node First steps
