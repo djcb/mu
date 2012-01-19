@@ -3,9 +3,13 @@
 #+options: skip t
 
   Starting with version 0.9.8, [[http://www.djcbsoftware.nl/code/mu][mu]] provides an emacs-based e-mail client which
-  uses =mu= for its back-end: *mu4e*.
+  uses =mu= for its back-end: *mu4e*. It's been in use (by the author) for a few
+  months already, but 0.9.8 is the first public release.
+  
+  *mu4e* is designed to enable super-efficient handling of e-mail; searching,
+  reading, replying, moving, deleting, ...
 
-  For all the details, please see the [[file:mu4e/index.html][manual]].
+  For all the details, please see the [[file:mu4e/index.html][manual]]. Or check the screenshots below.
 
 ** Screenshots
 
