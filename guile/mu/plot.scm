@@ -19,7 +19,7 @@
 (define-module (mu plot)
   :use-module (mu message)
   :use-module (ice-9 popen)
-  :export ( mu:plot))
+  :export (mu:plot))
 
 (define (export-pairs pairs)
   "Write a temporary file with the list of PAIRS in table format, and
