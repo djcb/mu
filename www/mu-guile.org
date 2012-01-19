@@ -12,12 +12,26 @@
 
   It must be said that Scheme (and in general, languages from the Lisp-family)
   initially may look a bit 'strange' -- all these parentheses etc.; so please
-  bear with us.
+  bear with us -- you will get used to it.
 
 ** Some examples
 
    Here are some examples; we don't provide too much explanation /how/ they do
    what they do, but the [[file:mu-guile/index.html][manual]] takes you through that, step-by-step.
+
+   *NOTE (1)*: if you get errors like =ERROR: no code for module (mu)=, ~guile~
+   cannot find the ~mu~ modules. To solve this, you need to set the
+   ~GUILE_LOAD_PATH~ to the directory with the installed ~mu.scm~, e.g.
+
+#+begin_src sh
+   export GUILE_LOAD_PATH="/usr/local/share/guile/site/2.0"
+#+end_src
+
+   (you need to adapt this if you installed =mu= in some non-standard place; but
+   it's always the directory with the installed ~mu.scm~).
+
+   *NOTE (2)*: for the graphs (below) to work, you will need to have the =gnuplot=
+    program installed.
 
 *** Messages per weekday
 
@@ -117,7 +131,8 @@ Sat: 1856
 
 #+begin_src scheme
 #!/bin/sh
-exec guile -s $0 $@ !#
+exec guile -s $0 $@
+!#
 
 (use-modules (mu) (mu message) (mu contact))
 (mu:initialize)
