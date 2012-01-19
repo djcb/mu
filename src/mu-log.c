@@ -94,7 +94,7 @@ static void
 log_handler (const gchar* log_domain, GLogLevelFlags log_level,
 	     const gchar* msg)
 {
-	if (log_level == G_LOG_LEVEL_DEBUG && !MU_LOG->_debug)
+	if ((log_level & G_LOG_LEVEL_DEBUG) && !(MU_LOG->_debug))
 	 	return;
 
 	log_write (log_domain ? log_domain : "mu", log_level, msg);
@@ -109,12 +109,12 @@ mu_log_init_with_fd (int fd, gboolean doclose,
 
         MU_LOG = g_new(MuLog, 1);
 
-        MU_LOG->_fd		    = fd;
-	MU_LOG->_quiet		    = quiet;
-	MU_LOG->_debug		    = debug;
-        MU_LOG->_own		    = doclose; /* if we now own the fd, close it
-				    * in _destroy */
-	MU_LOG->_old_log_func	    =
+	MU_LOG->_fd	      = fd;
+	MU_LOG->_quiet	      = quiet;
+	MU_LOG->_debug	      = debug;
+        MU_LOG->_own	      = doclose; /* if we now own the fd, close it
+					  * in _destroy */
+	MU_LOG->_old_log_func =
 		g_log_set_default_handler ((GLogFunc)log_handler, NULL);
 
 	return TRUE;
@@ -255,7 +255,8 @@ log_write (const char* domain, GLogLevelFlags level,
 	/* for serious errors, log them to stderr as well */
 	if (level & G_LOG_LEVEL_ERROR ||
 	    level & G_LOG_LEVEL_CRITICAL ||
-	    level & G_LOG_LEVEL_WARNING) {
+	    level & G_LOG_LEVEL_WARNING ||
+	    level & G_LOG_LEVEL_DEBUG) {
 		fputs ("mu: ", stderr);
 		fputs (msg,    stderr);
 		fputs ("\n",   stderr);

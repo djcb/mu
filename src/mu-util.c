@@ -105,8 +105,8 @@ mu_util_dir_expand (const char *path)
 
 	/* now resolve any symlinks, .. etc. */
 	if (realpath (dir, resolved) == NULL) {
-		g_debug ("%s: could not get realpath for '%s': %s",
-			 __FUNCTION__, dir, strerror(errno));
+		/* g_debug ("%s: could not get realpath for '%s': %s", */
+		/* 	 __FUNCTION__, dir, strerror(errno)); */
 		g_free (dir);
 		return NULL;
 	} else
@@ -189,12 +189,12 @@ mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
 	mode = F_OK | (readable ? R_OK : 0) | (writeable ? W_OK : 0);
 
 	if (access (path, mode) != 0) {
-		g_debug ("Cannot access %s: %s", path, strerror (errno));
+		/* g_debug ("Cannot access %s: %s", path, strerror (errno)); */
 		return FALSE;
 	}
 
 	if (stat (path, &statbuf) != 0) {
-		g_debug ("Cannot stat %s: %s", path, strerror (errno));
+		/* g_debug ("Cannot stat %s: %s", path, strerror (errno)); */
 		return FALSE;
 	}
 
