@@ -51,17 +51,18 @@ buffer for the results. If FULL-SEARCH is non-nil return all
 results, otherwise, limit number of results to
 `mu4e-search-results-limit'."
   (let ((buf (get-buffer-create mu4e-hdrs-buffer-name))
-	  (inhibit-read-only t))
+	  (inhibit-read-only t)
+	 (esc (replace-regexp-in-string "\"" "\\\\\"" expr))) ;; escape "\"
     (with-current-buffer buf
       (erase-buffer)
       (mu4e-hdrs-mode)
       (setq
 	mu4e-last-expr expr
 	mu4e-hdrs-buffer buf
-	mode-name "mu4e-headers")))
-  (switch-to-buffer mu4e-hdrs-buffer)
-  (mu4e-proc-find expr ;; '-1' means 'unlimited search'
-    (if full-search -1 mu4e-search-results-limit)))
+	mode-name "mu4e-headers"))
+    (switch-to-buffer mu4e-hdrs-buffer)
+    (mu4e-proc-find esc ;; '-1' means 'unlimited search'
+      (if full-search -1 mu4e-search-results-limit))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
@@ -700,7 +701,8 @@ limit to up to `mu4e-search-results-limit'."
   (interactive)
   (let ((fld (mu4e-ask-maildir "Jump to maildir: ")))
     (when fld
-      (mu4e-hdrs-search (concat "maildir:" fld) current-prefix-arg))))
+      (mu4e-hdrs-search (concat "\"maildir:" fld "\"")
+	current-prefix-arg))))
 
 
 (defun mu4e-mark-for-move (&optional target)
