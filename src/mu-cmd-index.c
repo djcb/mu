@@ -164,7 +164,7 @@ print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 	if (color)
 		len = (unsigned)snprintf
 			(output, sizeof(output),
-			 MU_COLOR_BLUE "%c " MU_COLOR_DEFAULT
+			 MU_COLOR_YELLOW "%c " MU_COLOR_DEFAULT
 			 "processing mail; "
 			 "processed: " MU_COLOR_GREEN "%u; " MU_COLOR_DEFAULT
 			 "updated/new: " MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
@@ -306,8 +306,16 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	MuError rv;
 	time_t t;
 
-	g_message ("indexing messages under %s [%s]", opts->maildir,
-		   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
+	if (opts->nocolor)
+		g_message ("indexing messages under %s [%s]", opts->maildir,
+			   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
+	else
+		g_message ("indexing messages under "
+			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
+			   " ["
+			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
+			   "]", opts->maildir,
+			   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
 
 	t = time (NULL);
 	idata.color = !opts->nocolor;
