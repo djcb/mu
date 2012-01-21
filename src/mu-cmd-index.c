@@ -148,14 +148,15 @@ backspace (unsigned u)
 }
 
 
+
+
 static void
 print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 {
 	const char *kars="-\\|/";
 	char output[120];
 
-	static int i = 0;
-	static unsigned len = 0;
+	static unsigned i = 0, len = 0;
 
 	if (clear)
 		backspace (len);
@@ -164,12 +165,10 @@ print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 		len = (unsigned)snprintf
 			(output, sizeof(output),
 			 MU_COLOR_BLUE "%c " MU_COLOR_DEFAULT
-			 "processing mail; processed: "
-			 MU_COLOR_GREEN "%u; " MU_COLOR_DEFAULT
-			 "updated/new: "
-			 MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
-			 ", cleaned-up: "
-			 MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT,
+			 "processing mail; "
+			 "processed: " MU_COLOR_GREEN "%u; " MU_COLOR_DEFAULT
+			 "updated/new: " MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
+			 ", cleaned-up: " MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT,
 			 (unsigned)kars[++i % 4],
 			 (unsigned)stats->_processed,
 			 (unsigned)stats->_updated,
@@ -177,8 +176,7 @@ print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 	else
 		len = (unsigned)snprintf
 			(output, sizeof(output),
-			 "%c "
-			 "processing mail; processed: %u; "
+			 "%c processing mail; processed: %u; "
 			 "updated/new: %u, cleaned-up: %u",
 			 (unsigned)kars[++i % 4],
 			 (unsigned)stats->_processed,
