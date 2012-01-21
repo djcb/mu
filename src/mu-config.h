@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,8 +29,8 @@
 
 G_BEGIN_DECLS
 
-/* env var; if non-empty, color are enabled for some commands */
-#define MU_COLORS "MU_COLORS"
+/* env var; if non-empty, color are disabled */
+#define MU_NOCOLOR "MU_NOCOLOR"
 
 
 enum _MuConfigFormat {
@@ -93,7 +93,8 @@ struct _MuConfig {
 	gboolean	version;	/* request mu version */
 	gboolean	log_stderr;	/* log to stderr (not logfile) */
 	gchar**	        params;		/* parameters (for querying) */
-	gboolean        color;          /* use ansi-colors in some output */
+	gboolean        nocolor;        /* don't use use ansi-colors
+					 * in some output */
 
 	/* options for indexing */
 	char	        *maildir;	/* where the mails are */

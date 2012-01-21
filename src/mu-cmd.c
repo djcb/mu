@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2010-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -180,7 +180,8 @@ handle_msg (const char *fname, MuConfig *opts, GError **err)
 
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
-		rv = view_msg_plain (msg, NULL, opts->summary, opts->color);
+		rv = view_msg_plain (msg, NULL, opts->summary,
+				     !opts->nocolor);
 		break;
 	case MU_CONFIG_FORMAT_SEXP:
 		rv = view_msg_sexp (msg);

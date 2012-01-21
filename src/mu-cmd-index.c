@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -148,9 +148,8 @@ backspace (unsigned u)
 }
 
 
-
 static void
-print_stats (MuIndexStats* stats, gboolean clear)
+print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 {
 	const char *kars="-\\|/";
 	char output[120];
@@ -161,25 +160,49 @@ print_stats (MuIndexStats* stats, gboolean clear)
 	if (clear)
 		backspace (len);
 
-	len = (unsigned)snprintf (output, sizeof(output),
-				  "%c processing mail; processed: %u; "
-				  "updated/new: %u, cleaned-up: %u",
-				  (unsigned)kars[++i % 4],
-				  (unsigned)stats->_processed,
-				  (unsigned)stats->_updated,
-				  (unsigned)stats->_cleaned_up);
+	if (color)
+		len = (unsigned)snprintf
+			(output, sizeof(output),
+			 MU_COLOR_BLUE "%c " MU_COLOR_DEFAULT
+			 "processing mail; processed: "
+			 MU_COLOR_GREEN "%u; " MU_COLOR_DEFAULT
+			 "updated/new: "
+			 MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
+			 ", cleaned-up: "
+			 MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT,
+			 (unsigned)kars[++i % 4],
+			 (unsigned)stats->_processed,
+			 (unsigned)stats->_updated,
+			 (unsigned)stats->_cleaned_up);
+	else
+		len = (unsigned)snprintf
+			(output, sizeof(output),
+			 "%c "
+			 "processing mail; processed: %u; "
+			 "updated/new: %u, cleaned-up: %u",
+			 (unsigned)kars[++i % 4],
+			 (unsigned)stats->_processed,
+			 (unsigned)stats->_updated,
+			 (unsigned)stats->_cleaned_up);
+
 	fputs (output, stdout);
 	fflush (stdout);
 }
 
 
+struct _IndexData {
+	gboolean color;
+};
+typedef struct _IndexData IndexData;
+
+
 static MuError
-index_msg_cb  (MuIndexStats* stats, void *user_data)
+index_msg_cb  (MuIndexStats* stats, IndexData *idata)
 {
 	if (stats->_processed % 25)
 	 	return MU_OK;
 
-	print_stats (stats, TRUE);
+	print_stats (stats, TRUE, idata->color);
 
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
@@ -217,13 +240,28 @@ database_version_check_and_update (MuStore *store, MuConfig *opts,
 
 
 static void
-show_time (unsigned t, unsigned processed)
+show_time (unsigned t, unsigned processed, gboolean color)
 {
-	if (t)
-		g_message ("elapsed: %u second(s), ~ %u msg/s",
-			   t, processed/t);
-	else
-		g_message ("elapsed: %u second(s)", t);
+
+	if (color) {
+		if (t)
+			g_message ("elapsed: "
+				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
+				   " second(s), ~ "
+				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
+				   " msg/s",
+				   t, processed/t);
+		else
+			g_message ("elapsed: "
+				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
+				   " second(s)", t);
+	} else {
+		if (t)
+			g_message ("elapsed: %u second(s), ~ %u msg/s",
+				   t, processed/t);
+		else
+			g_message ("elapsed: %u second(s)", t);
+	}
 }
 
 
@@ -234,6 +272,7 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 {
 	MuError rv;
 	time_t t;
+	IndexData idata;
 
 	g_message ("cleaning up messages [%s]",
 		   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
@@ -241,13 +280,19 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	mu_index_stats_clear (stats);
 
 	t = time (NULL);
-	rv = mu_index_cleanup (midx, stats,
-			       show_progress ? index_msg_cb : index_msg_silent_cb,
-			       NULL, err);
+	idata.color = !opts->nocolor;
+	rv = mu_index_cleanup
+		(midx, stats,
+		 show_progress ?
+		 (MuIndexCleanupDeleteCallback)index_msg_cb :
+		 (MuIndexCleanupDeleteCallback)index_msg_silent_cb,
+		 &idata, err);
+
 	if (!opts->quiet) {
-		print_stats (stats, TRUE);
+		print_stats (stats, TRUE, !opts->nocolor);
 		g_print ("\n");
-		show_time ((unsigned)(time(NULL)-t),stats->_processed);
+		show_time ((unsigned)(time(NULL)-t),stats->_processed,
+			   !opts->nocolor);
 	}
 
 	return (rv == MU_OK || rv == MU_STOP) ? MU_OK: MU_G_ERROR_CODE(err);
@@ -259,6 +304,7 @@ static MuError
 cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	   gboolean show_progress, GError **err)
 {
+	IndexData idata;
 	MuError rv;
 	time_t t;
 
@@ -266,14 +312,18 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 		   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
 
 	t = time (NULL);
+	idata.color = !opts->nocolor;
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
-			   show_progress ? index_msg_cb:index_msg_silent_cb,
-			   NULL, NULL);
+			   show_progress ?
+			   (MuIndexMsgCallback)index_msg_cb :
+			   (MuIndexMsgCallback)index_msg_silent_cb,
+			   NULL, &idata);
 
 	if (!opts->quiet) {
-		print_stats (stats, TRUE);
+		print_stats (stats, TRUE, !opts->nocolor);
 		g_print ("\n");
-		show_time ((unsigned)(time(NULL)-t),stats->_processed);
+		show_time ((unsigned)(time(NULL)-t),
+			   stats->_processed, !opts->nocolor);
 	}
 
 	if (rv == MU_OK || rv == MU_STOP)
@@ -348,4 +398,3 @@ mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 
 	return rv;
 }
-

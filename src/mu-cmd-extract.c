@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2010-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -345,7 +345,7 @@ show_parts (const char* path, MuConfig *opts, GError **err)
 
 	mu_msg_part_foreach
 		(msg,(MuMsgPartForeachFunc)each_part_show,
-		 GUINT_TO_POINTER(opts->color));
+		 GUINT_TO_POINTER(!opts->nocolor));
 
 	mu_msg_unref (msg);
 

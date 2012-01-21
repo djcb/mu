@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -239,6 +239,6 @@ mu_cmd_cfind (MuConfig *opts, GError **err)
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
-	return run_cmd_cfind (opts->params[1], opts->format, opts->color,
-			      err);
+	return run_cmd_cfind (opts->params[1], opts->format,
+			      !opts->nocolor, err);
 }

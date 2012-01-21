@@ -1,6 +1,6 @@
-.TH MU 1 "May 2011" "User Manuals"
+.TH MU 1 "January 2012" "User Manuals"
 
-.SH NAME 
+.SH NAME
 
 mu \- a set of tools to deal with Maildirs and message files, in particular to
 index and search e-mail messages.
@@ -98,14 +98,13 @@ for extract MIME-parts (such as attachments) from messages. See
 
 .SH COLORS
 
-Some \fBmu\fR sub-commands support colorized output. By default, this is
-disabled, but you can use the \fI--color\fR/ option to enable it. Even that,
-colors will only shown when output goes to a sufficiently capable terminal
-(this roughly mirrors the \fI--color=auto\fR of the GNU-version of the
-\fBls\fR-command).
+Some \fBmu\fR sub-commands support colorized output. If you don't want this,
+you can use the \fI--nocolor\fR/ option to disable it. Even then, colors will
+only shown when output goes to a sufficiently capable terminal (this roughly
+mirrors the \fI--color=auto\fR of the GNU-version of the \fBls\fR-command).
 
-Instead of the \fI--color\fR/, you can also set the \fBMU_COLORS\fR
-environment variable to non-empty to enable colors.
+Instead of the \fI--color\fR/, you can also set the \fBMU_NOCOLOR\fR
+environment variable to non-empty to disable colors.
 
 Currently, \fBmu find\fR, \fBmu view\fR, \fBmu cfind\fR and \fBmu extract\fR
 support colors.
@@ -184,36 +183,36 @@ The various mu subcommands typically exit with 0 (zero) upon success, and
 non-zero when some error occured. The table lists the various error codes.
 
 .nf
-exit code |  error 
+exit code |  error
 ----------+-------------------------------------------
-     1	  |  MU_ERROR			      
-     2	  |  MU_ERROR_IN_PARAMETERS		      
-     3	  |  MU_ERROR_INTERNAL		      
-     4	  |  MU_ERROR_NO_MATCHES		      
-	  |   
-     11	  |  MU_ERROR_XAPIAN			      
-	  |   
-     13	  |  MU_ERROR_XAPIAN_QUERY		      
-     14	  |  MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE	   
-     15	  |  MU_ERROR_XAPIAN_NOT_UP_TO_DATE	      
-     16	  |  MU_ERROR_XAPIAN_MISSING_DATA	      
-     17	  |  MU_ERROR_XAPIAN_CORRUPTION	      
-     18	  |  MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK  
-     30	  |  MU_ERROR_GMIME			      
-	  |   
-     50	  |  MU_ERROR_CONTACTS		      
-     51	  |  MU_ERROR_CONTACTS_CANNOT_RETRIEVE	   
-	  |   
-     70	  |  MU_ERROR_FILE			      
-     71	  |  MU_ERROR_FILE_INVALID_NAME	      
-     72	  |  MU_ERROR_FILE_CANNOT_LINK	      
-     73	  |  MU_ERROR_FILE_CANNOT_OPEN	      
-     74	  |  MU_ERROR_FILE_CANNOT_READ	      
-     75	  |  MU_ERROR_FILE_CANNOT_CREATE	      
-     76	  |  MU_ERROR_FILE_CANNOT_MKDIR	      
-     77	  |  MU_ERROR_FILE_STAT_FAILED	      
-     78	  |  MU_ERROR_FILE_READDIR_FAILED	      
-     79	  |  MU_ERROR_FILE_INVALID_SOURCE	      
+     1	  |  MU_ERROR
+     2	  |  MU_ERROR_IN_PARAMETERS
+     3	  |  MU_ERROR_INTERNAL
+     4	  |  MU_ERROR_NO_MATCHES
+	  |
+     11	  |  MU_ERROR_XAPIAN
+	  |
+     13	  |  MU_ERROR_XAPIAN_QUERY
+     14	  |  MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE
+     15	  |  MU_ERROR_XAPIAN_NOT_UP_TO_DATE
+     16	  |  MU_ERROR_XAPIAN_MISSING_DATA
+     17	  |  MU_ERROR_XAPIAN_CORRUPTION
+     18	  |  MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK
+     30	  |  MU_ERROR_GMIME
+	  |
+     50	  |  MU_ERROR_CONTACTS
+     51	  |  MU_ERROR_CONTACTS_CANNOT_RETRIEVE
+	  |
+     70	  |  MU_ERROR_FILE
+     71	  |  MU_ERROR_FILE_INVALID_NAME
+     72	  |  MU_ERROR_FILE_CANNOT_LINK
+     73	  |  MU_ERROR_FILE_CANNOT_OPEN
+     74	  |  MU_ERROR_FILE_CANNOT_READ
+     75	  |  MU_ERROR_FILE_CANNOT_CREATE
+     76	  |  MU_ERROR_FILE_CANNOT_MKDIR
+     77	  |  MU_ERROR_FILE_STAT_FAILED
+     78	  |  MU_ERROR_FILE_READDIR_FAILED
+     79	  |  MU_ERROR_FILE_INVALID_SOURCE
 .fi
 
 .SH BUGS
@@ -235,4 +234,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .BR mu-view(1)
 .BR mu-extract(1)
 .BR mu-easy(1)
-.BR mu-bookmarks(5) 
+.BR mu-bookmarks(5)

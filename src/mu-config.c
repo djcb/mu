@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -80,14 +80,13 @@ set_group_mu_defaults (MuConfig *opts)
 		opts->muhome = exp;
 	}
 
-	/* check for the MU_COLORS env var; but in any case don't use
-	 * colors unless we're writing to a tty */
-
-	if (g_getenv (MU_COLORS) != NULL)
-		opts->color = TRUE;
+	/* check for the MU_NOCOLOR env var; but in any case don't
+	 * use colors unless we're writing to a tty */
+	if (g_getenv (MU_NOCOLOR) != NULL)
+		opts->nocolor = TRUE;
 
 	if (!isatty(fileno(stdout)))
-		opts->color = FALSE;
+		opts->nocolor = TRUE;
 
 }
 
@@ -106,8 +105,8 @@ config_options_group_mu (MuConfig *opts)
 		 "specify an alternative mu directory", NULL},
 		{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &opts->log_stderr,
 		 "log to standard error (false)", NULL},
-		{"color", 0, 0, G_OPTION_ARG_NONE, &opts->color,
-		 "use ANSI-colors in some output (false)", NULL},
+		{"nocolor", 0, 0, G_OPTION_ARG_NONE, &opts->nocolor,
+		 "don't use ANSI-colors in some output (false)", NULL},
 
 		{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &opts->params, "parameters", NULL},

@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -100,7 +100,7 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 		return output_links (iter, opts->linksdir, opts->clearlinks, err);
 	case MU_CONFIG_FORMAT_PLAIN:
 		return output_plain (iter, opts->fields, opts->summary,
-				     opts->threads, opts->color,
+				     opts->threads, !opts->nocolor,
 				     opts->include_unreadable, err);
 	case MU_CONFIG_FORMAT_XML:
 		return output_xml (iter, opts->include_unreadable, err);
