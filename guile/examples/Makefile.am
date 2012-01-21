@@ -18,4 +18,5 @@ include $(top_srcdir)/gtest.mk
 
 noinst_DIST=			\
 	msg-graphs		\
-	contacts-export
+	contacts-export		\
+	org2mu4e

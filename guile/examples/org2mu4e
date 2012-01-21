@@ -1,0 +1,79 @@
+#!/bin/sh
+exec guile -e main -s $0 $@
+!#
+
+;;
+;; Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;;
+;; This program is free software; you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation; either version 3, or (at your option) any
+;; later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software Foundation,
+;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
+(use-modules (ice-9 getopt-long) (ice-9 format))
+(use-modules (mu) (mu message))
+
+(define (display-org-header query)
+  "Print the header for the org-file for QUERY."
+  (format #t "* Messages matching '~a'\n\n" query))
+
+(define (org-mu4e-link msg)
+  "Create a link for this message understandable by org-mu4e."
+  (let* ((subject ;; cleanup subject
+	   (string-map
+	     (lambda (kar)
+	       (if (member kar '(#\] #\[)) #\space kar))
+	     (or (mu:subject msg) "No subject"))))
+    (format #f "[[mu4e:msgid:~a][~s]]"
+      (mu:message-id msg) subject)))
+
+(define (display-org-entry msg tag)
+  "Write an org entry for MSG."
+  (format #t "** ~a ~a\n\t~s\n\t~s\n"
+    (org-mu4e-link msg)
+    (if tag (string-concatenate `(":" ,tag "::")) "")
+    (or (mu:from msg) "?")
+    (let ((body (mu:body-txt msg)))
+      (if (not body) ;; get a 'summary' of the body text
+	"<no plain-text body>"
+	(string-map
+	  (lambda (c)
+	    (if (or (char=? c #\newline) (char=? c #\return))
+		  #\space
+		  c))
+	  (substring body 0 (min (string-length body) 100)))))))
+
+(define (main args)
+  (let* ((optionspec   '( (muhome   (value #t))
+			  (tag      (value #t))
+			  (help    (single-char #\h) (value #f))))
+	  (options (getopt-long args optionspec))
+	  (msg (string-append
+		 "usage: mu4e-org [--help] [--muhome=<muhome>] [--tag=<tag>] <query>"))
+	  (help (option-ref options 'help #f))
+	  (tag  (option-ref options 'tag #f))
+	  (muhome (option-ref options 'muhome #f))
+	  (query (string-concatenate (option-ref options '() '()))))
+    (if help
+      (begin (display msg) (exit 0))
+      (begin
+	(mu:initialize muhome)
+	(display-org-header query)
+	(mu:for-each-message
+	    (lambda (msg) (display-org-entry msg tag))
+	  query)))))
+
+;; Local Variables:
+;; mode: scheme
+;; End:
