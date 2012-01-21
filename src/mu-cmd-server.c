@@ -120,7 +120,7 @@ server_error (GError **err, MuError merr, const char* frm, ...)
 	errmsg = g_strdup_vprintf (frm, ap);
 
 	has_err = err && *err;
-	send_expr ("(:error %u :error-message \"%s\") ",
+	send_expr ("(:error %u :error-message \"%s\")\n",
 		   has_err ? (unsigned)(*err)->code : merr,
 		   has_err ? (*err)->message : errmsg);
 
@@ -205,8 +205,8 @@ cmd_from_string (const char *str)
 			return commands[u].cmd;
 
 	/* handle all-blank strings */
-	if (g_regex_match_simple ("^ *$", str, 0, 0))
-		return CMD_IGNORE;
+	/* if (g_regex_match_simple ("^ *$", str, 0, 0)) */
+	/* 	return CMD_IGNORE; */
 
 	return CMD_INVALID;
 }
@@ -373,10 +373,6 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	if (!iter)
 		return server_error (err, MU_ERROR_INTERNAL,
 				     "couldn't get iterator");
-
-	/* if (!(iter = mu_query_run (query, (const char*)args->data, TRUE, */
-	/* 			   MU_MSG_FIELD_ID_DATE, TRUE, maxnum, err))) */
-
 
 	/* return results + the number of results found */
 	send_expr ("(:found %u)\n", output_found_sexps (iter, maxnum));
@@ -938,7 +934,7 @@ cmd_quit (GSList *args, GError **err)
 {
 	return_if_fail_param_num (args, 0, 0, "usage: quit");
 
-	send_expr (";; quiting");
+	send_expr (";; quiting\n");
 	return MU_OK;
 }
 
@@ -950,6 +946,7 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 	MuError rv;
 
 	switch (cmd) {
+
 	case CMD_ADD:		rv = cmd_add (store, args, err); break;
 	case CMD_COMPOSE:	rv = cmd_compose (store, args, err); break;
 	case CMD_FIND:		rv = cmd_find (store, query, args, err); break;
