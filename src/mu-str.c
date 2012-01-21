@@ -350,14 +350,13 @@ eat_esc_string (char **strlst)
 		if (*str == '"') {
 			quoted = !quoted;
 			continue;
-		} else if (quoted)
-			gstr = g_string_append_c (gstr, *str);
-		else if (*str == '\\') {
+		} else if (*str == '\\') {
 			if (str[1] != ' ' && str[1] != '"' && str[1] != '\\')
 				goto err; /* invalid escaping */
-			g_string_append_c (gstr, *(str++));
+			g_string_append_c (gstr, str[1]);
+			++str;
 			continue;
-		} else if (*str == ' ') {
+		} else if (*str == ' ' && !quoted) {
 			++str;
 			goto leave;
 		} else
@@ -445,29 +444,25 @@ mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space)
 
 		switch (*cur) {
 		case ' ':
-			if (!esc_space)
-				break;
 		case '@':
 		case '-':
+		case ';':
 		case '/':
-		case '.':
-		{
-			/* don't replace a final special char */
-			if (cur[1]== ' ' || cur[1]=='\t' || cur[1]== '.')
-				++cur;
-			else if (cur[1] == '\0')
-				break;
+			*cur = escchar;
+			break;
+		case '.': /* don't escape '..' */
+			if (cur[1]=='.')
+				cur += 1;
 			else
 				*cur = escchar;
 			break;
-		}
 		case ':':
 			/* if there's a registered xapian prefix before the
 			 * ':', don't touch it. Otherwise replace ':' with
-			 * a space'... ugh yuck ugly...
+			 * a _'... ugh yuck ugly...
 			 */
 			if (!is_xapian_prefix (query, cur))
-				*cur = ' ';
+				*cur = escchar;
 			break;
 		}
 	}
