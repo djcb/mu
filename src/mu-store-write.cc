@@ -314,19 +314,28 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 	if (mu_msg_field_xapian_value(mfid))
 		doc.add_value ((Xapian::valueno)mfid, val);
 
+	// if (mfid == MU_MSG_FIELD_ID_SUBJECT) {
+	// 	gchar *str;
+	// 	g_print ("subject:%s\n", val);
+	// 	str = mu_str_normalize (val, TRUE);
+	// 	g_print ("norm   :%s\n", str);
+	// 	mu_str_ascii_xapian_escape_in_place (str, TRUE);
+	// 	g_print ("esc    :%s\n", str);
+	// 	g_free (str);
+	// }
+
 	/* now, let's create some search terms... */
 	if (mu_msg_field_normalize (mfid))
 		mu_str_normalize_in_place (val, TRUE);
-	if (mu_msg_field_xapian_escape (mfid))
-		mu_str_ascii_xapian_escape_in_place (val,
-						     TRUE /*esc_space*/);
 
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (val, 1, prefix(mfid));
 	}
-
+	if (mu_msg_field_xapian_escape (mfid))
+		mu_str_ascii_xapian_escape_in_place (val,
+						     TRUE /*esc_space*/);
 	if (mu_msg_field_xapian_term(mfid))
 		doc.add_term (prefix(mfid) +
 			      std::string(val, 0, _MuStore::MAX_TERM_LENGTH));
