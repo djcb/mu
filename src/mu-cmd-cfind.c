@@ -242,4 +242,3 @@ mu_cmd_cfind (MuConfig *opts, GError **err)
 	return run_cmd_cfind (opts->params[1], opts->format, opts->color,
 			      err);
 }
-
