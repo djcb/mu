@@ -16,14 +16,18 @@ can then be queried using a custom query language.
 
 Built on top of mu there are some extensions:
 
-  * mu-for-emacs (mu4e): a full-features e-mail client that runs inside emacs
-  * mu-guile: bindings for the Guile/Scheme programming language
+  * mu-for-emacs (mu4e)[3]: a full-features e-mail client that runs inside emacs
+  * mu-guile[4]: bindings for the Guile/Scheme programming language
 
-Mu is primarily written in C and a bit of C++, with parts of mu4e written in
-Emacs-lisp and mu-guile in Scheme.
+And, there is a toy GTK+-interface called 'mug' (in the 'toys/' subdir)
+
+Mu is written in C and a bit of C++, with mu4e written in Emacs-lisp and
+mu-guile in a mix of C and Scheme.
 
 Note, mu is available in Debian/Ubuntu under the name "maildir-utils" because
 they don't like short names.
 
 [1] http://www.djcbsoftware.nl/code/mu/
 [2] http://www.djcbsoftware.nl/code/mu/cheatsheet.html
+[3] http://www.djcbsoftware.nl/code/mu/mu4e.html
+[4] http://www.djcbsoftware.nl/code/mu/mu-guile.html
