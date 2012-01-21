@@ -154,6 +154,31 @@ test_mu_str_normalize_02 (void)
 }
 
 
+
+static void
+test_mu_str_esc_to_list (void)
+{
+	int			i;
+	struct {
+		const char*  str;
+		const char* strs[3];
+	} strings [] = {
+		{ "maildir:foo",            {"maildir:foo", NULL, NULL}},
+		{ "maildir:sent items",     {"maildir:sent", "items", NULL}},
+		{ "\"maildir:sent items\"", {"maildir:sent items", NULL, NULL}},
+
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(strings); ++i) {
+		GSList *lst, *cur;
+		unsigned u;
+		lst = mu_str_esc_to_list (strings[i].str);
+		for (cur = lst, u = 0; cur; cur = g_slist_next(cur), ++u)
+			g_assert_cmpstr ((const char*)cur->data,==,strings[i].strs[u]);
+		mu_str_free_list (lst);
+	}
+}
+
 static void
 test_mu_str_ascii_xapian_escape (void)
 {
@@ -165,9 +190,9 @@ test_mu_str_ascii_xapian_escape (void)
 		{ "aap@noot.mies", "aap_noot_mies"},
 		{ "Foo..Bar", "foo..bar" },
 		{ "Foo.Bar", "foo_bar" },
-		{ "Foo. Bar", "foo. bar" },
+		{ "Foo. Bar", "foo__bar" },
 		{ "subject:test@foo", "subject:test_foo" },
-		{ "xxx:test@bar", "xxx test_bar" },
+		{ "xxx:test@bar", "xxx_test_bar" },
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
@@ -429,6 +454,9 @@ main (int argc, char *argv[])
 			 test_mu_str_to_list);
 	g_test_add_func ("/mu-str/mu-str-to-list-strip",
 			 test_mu_str_to_list_strip);
+
+	g_test_add_func ("/mu-str/mu-str-esc-to-list",
+			 test_mu_str_esc_to_list);
 
 	g_test_add_func ("/mu-str/mu_str_guess_first_name",
 			 test_mu_str_guess_first_name);

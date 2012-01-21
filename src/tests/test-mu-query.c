@@ -102,12 +102,15 @@ run_and_count_matches (const char *xpath, const char *query)
 
 	if (g_test_verbose()) {
 		char *xs;
-		g_printerr ("\n=>'%s'\n", query);
-		g_print ("query : '%s'\n", query);
+		g_print ("\n==> query: %s\n", query);
+		xs = mu_query_preprocess (query);
+		g_print ("==> preproc: '%s'\n", xs);
+		g_free (xs);
 		xs = mu_query_as_string (mquery, query, NULL);
-		g_print ("xquery: '%s'\n", xs);
+		g_print ("==> xquery: '%s'\n", xs);
 		g_free (xs);
 	}
+
 
 	iter = mu_query_run (mquery, query, FALSE, MU_MSG_FIELD_ID_NONE,
 			     FALSE, -1, NULL);
@@ -207,8 +210,9 @@ test_mu_query_03 (void)
 		{ "s:lisp", 1},
 		{ "s:LISP", 1},
 
-		{ "s:Learning LISP; Scheme vs elisp.", 1},
-		{ "subject:Re Learning LISP; Scheme vs elisp.", 1},
+		{ "s:\"Re: Learning LISP; Scheme vs elisp.\"", 1},
+		{ "subject:Re: Learning LISP; Scheme vs elisp.", 0},
+		{ "subject:\"Re: Learning LISP; Scheme vs elisp.\"", 1},
 		{ "to:help-gnu-emacs@gnu.org", 4},
 		{ "t:help-gnu-emacs", 0},
 	};
@@ -358,7 +362,6 @@ test_mu_query_dates_helsinki (void)
 	gchar *xpath;
 	int i;
 	const char *old_tz;
-
 
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
