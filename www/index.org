@@ -33,10 +33,10 @@
    - [[file:mu4e.html][mu4e]], an emacs-based e-mail client based on =mu=
    - [[file:mu-guile.html][mu-guile]]: guile-bindings that allow for scripting, advanced processing of
      your data
-   -
    - fully documented (man pages, info pages)
 
 ** News
+
    - 2012-01-15: [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8-alpha3.tar.gz][mu-0.9.8-beta1]] is available - most changes are in the
      Guile-bindings and their documentation, improved attachment handling (when
      forwarding), some improvements in =mu4e=, some re-factoring, cleanups. The
@@ -98,9 +98,6 @@
 
 
 ** Development & download
-   :PROPERTIES:
-   :ID:       19324381-696d-4c7e-aff2-528174780fd5
-   :END:
 
    Some Linux-distributions already provide pre-built mu packages; if there's no
    packagage for your distribution, or if you want the latest release, you can
