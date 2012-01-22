@@ -155,8 +155,9 @@ dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 	else
 		++data->_dir_left;
 
-	/* g_print ("%s: %s: %s\n", __FUNCTION__, enter ? "entering" : "leaving", */
-	/* 	 fullpath); */
+	if (g_test_verbose())
+		g_print ("%s: %s: %s (%u)\n", __FUNCTION__, enter ? "entering" : "leaving",
+			 fullpath, enter ? data->_dir_entered : data->_dir_left);
 
 	return MU_OK;
 }
@@ -180,8 +181,6 @@ test_mu_maildir_walk_01 (void)
 
 	tmpdir = copy_test_data ();
 	memset (&data, 0, sizeof(WalkData));
-
-	/* g_print ("tmpdir: %s\n", tmpdir); */
 
 	rv = mu_maildir_walk (tmpdir,
 			      (MuMaildirWalkMsgCallback)msg_cb,
