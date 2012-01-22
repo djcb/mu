@@ -297,6 +297,20 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 }
 
 
+static void
+index_title (const char* maildir, const char* xapiandir, gboolean color)
+{
+	if (color)
+		g_message ("indexing messages under "
+			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
+			   " ["
+			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
+			   "]", maildir, xapiandir);
+	else
+		g_message ("indexing messages under %s [%s]",
+			   maildir, xapiandir);
+}
+
 
 static MuError
 cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
@@ -306,18 +320,11 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	MuError rv;
 	time_t t;
 
-	if (opts->nocolor)
-		g_message ("indexing messages under %s [%s]", opts->maildir,
-			   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
-	else
-		g_message ("indexing messages under "
-			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
-			   " ["
-			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
-			   "]", opts->maildir,
-			   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
-
 	t = time (NULL);
+
+	index_title (opts->maildir, mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+		     !opts->nocolor);
+
 	idata.color = !opts->nocolor;
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
 			   show_progress ?
