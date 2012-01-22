@@ -317,7 +317,7 @@ headers)."
      (:bcc           .  "Bcc")
      (:cc            .  "Cc")
      (:date          .  "Date")
-     (:flags         .  "Flags")
+     (:flags         .  "Flgs")
      (:from          .  "From")
      (:from-or-to    .  "From/To")
      (:maildir       .  "Maildir")
