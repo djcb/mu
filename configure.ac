@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -83,10 +83,10 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
 
 # glib2?
 # we need 2.14 at least, because we use GRegex
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.14)
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.14 gobject-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
-glib_version="`pkg-config --modversion glib-2.0`"
+glib_version="`$PKG_CONFIG --modversion glib-2.0`"
 
 # gtest was introduced in glib 2.16; but we're also using
 # g_test_log_set_fatal_handler, which was introduced in 2.22
@@ -111,9 +111,9 @@ AS_IF([test "x$have_gmime_26" = "xno"],[
       *** installation dir (e.g., /usr/local/lib/pkgconfig) is in your
       *** PKG_CONFIG_PATH.
       ])],[
-         gmime_version="`pkg-config --modversion gmime-2.4`"
+         gmime_version="`$PKG_CONFIG --modversion gmime-2.4`"
     ])],[
-      gmime_version="`pkg-config --modversion gmime-2.6`"
+      gmime_version="`$PKG_CONFIG --modversion gmime-2.6`"
    ])
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
@@ -167,7 +167,7 @@ AS_IF([test "x$gui" = "xgtk3"],[
   PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
-  gtk_version="`pkg-config --modversion gtk+-3.0`"
+  gtk_version="`$PKG_CONFIG --modversion gtk+-3.0`"
 ])
 AS_IF([test "x$gui"="gtk3" -a "x$have_gtk3" = "xno"],
    AC_MSG_ERROR([GTK+ 3.x not found]))
@@ -178,7 +178,7 @@ AS_IF([test "x$gui" != "xnone" -a "x$have_gtk3" != "xyes"],[
   PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
-  gtk_version="`pkg-config --modversion gtk+-2.0`"
+  gtk_version="`$PKG_CONFIG --modversion gtk+-2.0`"
 ])
 # only an error if we explicitly asked for it
 AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "xauto"],
@@ -192,7 +192,7 @@ AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],
 AS_IF([test "x$buildgui" = "xyes"],[
   PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
   AS_IF([test "x$have_webkit" = "xyes"],[
-	    webkit_version="`pkg-config --modversion webkit-1.0`"])
+	    webkit_version="`$PKG_CONFIG --modversion webkit-1.0`"])
   AC_SUBST(WEBKIT_CFLAGS)
   AC_SUBST(WEBKIT_LIBS)
 ])
@@ -202,7 +202,7 @@ AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 AS_IF([test "x$buildgui"="xyes"],[
 PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
 AS_IF([test "x$have_gio" = "xyes"],[
-	    gio_version="`pkg-config --modversion gio-2.0`"])
+	    gio_version="`$PKG_CONFIG --modversion gio-2.0`"])
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 ])
