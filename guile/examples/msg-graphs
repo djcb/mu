@@ -34,7 +34,7 @@ display, otherwise, use a graphical window."
 	(lambda (msg)
 	  (tm:hour (localtime (mu:date msg)))) expr)
       (lambda (x y) (< (car x) (car y))))
-    "Messages per hour" "Hour" "Messages" plain-text))
+    (format #f "Messages per hour matching ~a" expr) "Hour" "Messages" plain-text))
 
 (define (per-day expr plain-text)
   "Count the total number of messages for each weekday (0-6 for
@@ -46,7 +46,7 @@ display, otherwise, use a graphical window."
 	      (lambda (msg)
 		(tm:wday (localtime (mu:date msg)))) expr)
 	(lambda (x y) (< (car x) (car y)))))
-	  "Messages per weekday" "Day" "Messages" plain-text))
+    (format #f "Messages per weekday matching ~a" expr) "Day" "Messages" plain-text))
 
 (define (per-month expr plain-text)
   "Count the total number of messages for each weekday (0-6 for
@@ -59,7 +59,7 @@ display, otherwise, use a graphical window."
 	  (lambda (msg)
 	    (tm:mon (localtime (mu:date msg)))) expr)
 	(lambda (x y) (< (car x) (car y)))))
-    "Messages per month" "Month" "Messages" plain-text))
+    (format #f "Messages per month matching ~a" expr) "Month" "Messages" plain-text))
 
 (define (per-year expr plain-text)
   "Count the total number of messages for each weekday (0-6 for
@@ -70,7 +70,7 @@ display, otherwise, use a graphical window."
 	    (lambda (msg)
 	  (tm:year (localtime (mu:date msg)))) expr)
       (lambda (x y) (< (car x) (car y))))
-    "Messages per year" "Year" "Messages" plain-text))
+    (format #f "Messages per year matching ~a" expr) "Year" "Messages" plain-text))
 
 (define (main args)
   (let* ((optionspec   '( (muhome     (value #t))

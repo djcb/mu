@@ -29,20 +29,7 @@ exec guile -e main -s $0 $@
   (< (mu:frequency c1) (mu:frequency c2)))
 
 (define (sort-by-newness c1 c2)
-  (< (mu:timestamp c1) (mu:timestamp c2)))
-
-(define (export-contact contact form)
-  "Convert CONTACT to a string in format FORM."
-  (let ((email (mu:email contact)) (name (mu:name contact)))
-    (if email ;; filter out anything *without* an email address
-      (cond
-	((string= form "org-contacts")
-	  (format #t "* ~s\n:PROPERTIES:\n:EMAIL:~a\n:END:\n\n"
-	    (or name email) email))
-	((string= form "plain")
-	  (format #t "~a~a\n"
-	    (or name "")
-	    (if name (string-append " <" email ">") email)))))))
+  (< (mu:last-seen c1) (mu:last-seen c2)))
 
 (define (main args)
   (let* ((optionspec   '( (muhome   (value #t))
@@ -54,7 +41,7 @@ exec guile -e main -s $0 $@
 	  (options (getopt-long args optionspec))
 	  (msg (string-append
 		 "usage: contacts-export [--help] [--muhome=<muhome>] "
-		 "--format=<org-contacts|wl|mutt-ab|plain(*)> "
+		 "--format=<org-contact|mutt-alias|mutt-ab|wanderlust|plain(*)> "
 		 "--sort-by=<frequency(*)|newness> [--revert] [--limit=<n>]\n"))
 	  (help (option-ref options 'help #f))
 	  (muhome (option-ref options 'muhome #f))
@@ -89,7 +76,7 @@ exec guile -e main -s $0 $@
 	 ;; export!
 	 (for-each
 	   (lambda (c)
-	     (export-contact c form))
+	     (format #t "~a\n" (mu:contact->string c form)))
 	   contacts))))))
 
 ;; Local Variables:
