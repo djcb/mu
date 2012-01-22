@@ -16,7 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-noinst_DIST=			\
+EXTRA_DIST=			\
 	msg-graphs		\
 	contacts-export		\
 	org2mu4e
