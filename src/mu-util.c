@@ -324,38 +324,42 @@ mu_util_is_local_file (const char* path)
 }
 
 
+
+
 gboolean
 mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote)
 {
-#ifndef XDGOPEN
-	g_warning ("opening files not supported (xdg-open missing)");
-	return FALSE;
-#else
 	gboolean rv;
 	GError *err;
-	const gchar *argv[3];
+	const gchar *prog;
+	char *cmdline;
 
 	g_return_val_if_fail (path, FALSE);
 	g_return_val_if_fail (mu_util_is_local_file (path) || allow_remote,
 			      FALSE);
 	g_return_val_if_fail (!mu_util_is_local_file (path) || allow_local,
 			      FALSE);
-	argv[0] = XDGOPEN;
-	argv[1] = path;
-	argv[2] = NULL;
 
+	prog = g_getenv ("MU_PLAY_PROGRAM");
+	if (!prog) {
+#ifdef __APPLE__
+		prog = "open";
+#else
+		prog = "xdg-open";
+#endif /*!__APPLE__*/
+	}
+
+	cmdline = g_strconcat (prog, " ", path, NULL);
 	err = NULL;
-	rv = g_spawn_async (NULL, (gchar**)&argv, NULL, 0,
-			    NULL, NULL, NULL, &err);
-
+	rv = g_spawn_command_line_async (cmdline, &err);
 	if (!rv) {
-		g_warning ("failed to spawn xdg-open: %s",
-			   err->message ? err->message : "error");
+		g_warning ("failed to spawn %s: %s",
+			   cmdline, err->message ? err->message : "error");
 		g_error_free (err);
 	}
 
+	g_free (cmdline);
 	return rv;
-#endif /*XDGOPEN*/
 }
 
 

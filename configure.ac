@@ -248,18 +248,6 @@ AM_CONDITIONAL(HAVE_MAKEINFO, [test "x$have_makeinfo" = "xyes"])
 
 
 
-
-###############################################################################
-# check for xdg-open
-AS_IF([test "x$buildgui"="xyes"],[
-  AC_PATH_PROG(XDGOPEN, [xdg-open], [], [$PATH])
-  AS_IF([test "x$XDGOPEN" != "x"],[
-    AC_DEFINE_UNQUOTED([XDGOPEN], ["$XDGOPEN"],[Path to xdg-open])],[
-    AC_MSG_WARN([xdg-open not found, mu cannot open attachments])])
-])
-###############################################################################
-
-
 ###############################################################################
 # check for pmccabe
 AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
@@ -326,7 +314,6 @@ echo
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
 echo "Build 'mug' toy-ui (requires GTK+)   : $buildgui"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
-echo "xdg-open                             : $XDGOPEN"
 echo
 
 echo "Have direntry->d_ino                 : $use_dirent_d_ino"

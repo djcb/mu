@@ -179,8 +179,10 @@ gboolean mu_util_printerr_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
 
 
 /**
- * try to 'play' (ie., open with it's associated program) a
- * file. depends on xdg-open to do the actual opening
+ * Try to 'play' (ie., open with it's associated program) a file. On
+ * MacOS, the the program 'open' is used for this; on other platforms
+ * 'xdg-open' to do the actual opening. In addition you can set it to another program
+ * by setting the MU_PLAY_PROGRAM environment variable
  *
  * @param path full path of the file to open
  * @param allow_local allow local files (ie. with file:// prefix or fs paths)
