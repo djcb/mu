@@ -40,7 +40,7 @@ using raw text, otherwise, use a graphical window."
 	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
     (display (string-append
 	       "reset\n"
-	       "set term " (if ascii "wxt" "dumb") "\n"
+	       "set term " (if ascii "dumb" "wxt") "\n"
 	       "set title \"" title "\"\n"
 	       "set xlabel \"" x-label "\"\n"
 	       "set ylabel \"" y-label "\"\n"

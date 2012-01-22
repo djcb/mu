@@ -84,7 +84,7 @@ display, otherwise, use a graphical window."
 		 "--what=<per-hour|per-day|per-month|per-year> [searchexpr]\n"))
 	  (help (option-ref options 'help #f))
 	  (what (option-ref options 'what #f))
-	  (text (option-ref options 'text #t))
+	  (text (option-ref options 'text #f))
 	  (muhome (option-ref options 'muhome #f))
 	  (restargs (option-ref options '() #f))
 	  (expr (if restargs (string-join restargs) "")))
