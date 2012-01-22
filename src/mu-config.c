@@ -63,9 +63,6 @@ get_output_format (const char *formatstr)
 }
 
 
-
-
-
 static void
 set_group_mu_defaults (MuConfig *opts)
 {
@@ -120,17 +117,19 @@ config_options_group_mu (MuConfig *opts)
 }
 
 static void
-set_group_index_defaults (MuConfig * opts)
+set_group_index_defaults (MuConfig *opts)
 {
 	char *exp;
 
 	if (!opts->maildir)
 		opts->maildir = mu_util_guess_maildir ();
 
-	exp = mu_util_dir_expand(opts->maildir);
-	if (exp) {
-		g_free(opts->maildir);
-		opts->maildir = exp;
+	if (opts->maildir) {
+		exp = mu_util_dir_expand(opts->maildir);
+		if (exp) {
+			g_free(opts->maildir);
+			opts->maildir = exp;
+		}
 	}
 }
 
