@@ -283,7 +283,8 @@ test_mu_extract_01 (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 
-	/* g_print ("[%s]", cmdline); */
+	if (g_test_verbose())
+		g_print ("cmd: %s\n", cmdline);
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -700,7 +701,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-find-04", test_mu_find_04);
 	g_test_add_func ("/mu-cmd/test-mu-find-maildir-special",
 			 test_mu_find_maildir_special);
-
 	g_test_add_func ("/mu-cmd/test-mu-extract-01", test_mu_extract_01);
 	g_test_add_func ("/mu-cmd/test-mu-extract-02", test_mu_extract_02);
 	g_test_add_func ("/mu-cmd/test-mu-extract-03", test_mu_extract_03);
