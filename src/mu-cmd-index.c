@@ -332,17 +332,14 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 			   stats->_processed, !opts->nocolor);
 	}
 
-	if (rv == MU_OK || rv == MU_STOP)
+	if (rv == MU_OK || rv == MU_STOP) {
 		MU_WRITE_LOG ("index: processed: %u; updated/new: %u",
 			      stats->_processed, stats->_updated);
-
-	if (rv == MU_OK && !opts->nocleanup)
-		rv = cleanup_missing (midx, opts, stats, show_progress, err);
-
-	if (rv == MU_STOP)
-		rv = MU_OK;
-
-	if (rv != MU_OK && !err)
+		if (rv == MU_OK && !opts->nocleanup)
+			rv = cleanup_missing (midx, opts, stats, show_progress, err);
+		if (rv == MU_STOP)
+			rv = MU_OK;
+	} else
 		g_set_error (err, 0, rv, "error while indexing");
 
 	return rv;
