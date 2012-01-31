@@ -1,6 +1,6 @@
 * NEWS (user visible changes)
 
-** Release 0.9.8 <>
+** Release 0.9.8 <2012-01-31>
 
    - '--descending' has  been renamed into '--reverse'
    - search for attachment MIME-type using 'mime:' or 'y:'
