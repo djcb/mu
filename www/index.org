@@ -36,7 +36,7 @@
    - fully documented (man pages, info pages)
 
 ** News
-   - 2012-01-31: finally, mu-0.9.8 is available. It comes with an emacs-based
+   - 2012-01-31: finally, [[http://mu0.googlecode.com/files/mu-0.9.8.tar.gz][mu-0.9.8]] is available. It comes with an emacs-based
      e-mail client, [[file:mu4e.html][mu4e]], and much improved [[file:mu-guile.html][guile bindings]]. Furthermore, It adds
      search for attachment mime type and search inside any text part of a
      message, more tests, improvements in many parts of the code.

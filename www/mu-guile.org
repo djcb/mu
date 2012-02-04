@@ -32,6 +32,9 @@
 
    *NOTE (2)*: for the graphs (below) to work, you will need to have the =gnuplot=
     program installed.
+    
+   *NOTE (3)*: the examples below assume that you have your messages indexed
+   already using =mu=; see the man pages, or the [[http://www.djcbsoftware.nl/code/mu/cheatsheet.html][mu cheat sheet]].
 
 *** Messages per weekday
 
