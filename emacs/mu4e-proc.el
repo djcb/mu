@@ -123,7 +123,7 @@ process."
   "Start the mu server process."
   ;; TODO: add version check
   (unless (file-executable-p mu4e-mu-binary)
-    (error (format "%S not found" mu4e-mu-binary)))
+    (error (format "mu binary '%s' not found" mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
 	  (args '("server"))
 	  (args (append args (when mu4e-mu-home
