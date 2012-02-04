@@ -341,7 +341,7 @@ dir already existed, or has been created, nil otherwise."
     ((file-directory-p dir) t)
     ((yes-or-no-p (format "%s does not exist yes. Create now?" dir))
       (mu4e-proc-mkdir dir))
-    (otherwise nil)))
+    (t nil)))
 
 (defun mu4e-check-requirements ()
   "Check for the settings required for running mu4e."
@@ -569,7 +569,8 @@ uses the emacs built-in `html2text'. Alternatively, if
 		    ;; there's a normal sized text part
 		    txt))))
     ;; and finally, remove some crap from the remaining string.
-    (replace-regexp-in-string "[ ]" " " body nil nil nil)))
+    (replace-regexp-in-string "[
+ ]" " " body nil nil nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
