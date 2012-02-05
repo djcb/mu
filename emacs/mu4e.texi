@@ -27,10 +27,10 @@ Documentation License.''
 
 Welcome to @t{mu4e}!
 
-@t{mu4e} (@emph{mu-for-emacs}) is an @t{emacs}-based e-mail client, based on
-the @t{mu} e-mail search engine. @t{mu4e} supports GNU Emacs 23 and later. It
-assumes a Unix-like system and mail stored in a maildir; it has been tested on
-Debian GNU/Linux.
+@t{mu4e} (@emph{mu-for-emacs}) is an @t{emacs}-based e-mail client, built on
+top of the @t{mu} e-mail search engine. @t{mu4e} supports GNU Emacs 23 and
+later. It assumes a Unix-like system and mail stored in a maildir; it has been
+tested on Debian GNU/Linux.
 
 @menu
 * Introduction::
@@ -60,27 +60,30 @@ Appendices
 @section Why another e-mail client?
 
 Why would the world need another e-mail client?  Well, I'm not sure the world
-needs another one, but maybe @emph{I} do; I spend a @emph{lot} of time, both
-professionally and privately, dealing with e-mail -- so having an efficient
-e-mail client is essential for me.
+really @emph{needs} another one, but maybe @emph{I} do! I spend a @emph{lot}
+of time, both professionally and privately, dealing with e-mail -- so having
+an efficient e-mail client is essential for me. Since none of the existing
+ones worked they I wanted, I created my own.
 
-A secondary goal for me was to write some bigger program in Emacs Lisp
-(@t{elisp}), to better understand the language and its idioms.
+A secondary goal was to write some bigger program in Emacs Lisp (@t{elisp}),
+to better understand the language and its idioms.
+
+I am happily using @t{mu4e} as my one and only e-mail client, but of course it
+is still a work-in-progress.
 
 @node Other mail clients
 @section Other mail clients
 
-@t{mu4e} is fully search-based, similar to programs such as
+Under the hood, @t{mu4e} is fully search-based, similar to programs such as
 @t{notmuch}@footnote{@url{http://notmuchmail.org}},
 @t{md}@footnote{@url{https://github.com/nicferrier/md}} and
-@t{sup}@footnote{@url{http://sup.rubyforge.org/}}. The way this is presented
-to the user is quite a bit different though.
+@t{sup}@footnote{@url{http://sup.rubyforge.org/}}. The user-interface is quite
+different though.
 
 @t{mu4e}'s mail handling (deleting, moving etc.) is inspired by
 @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
 emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
-@t{dired}, while it takes some cues from @emph{GMail} with respect to being
-search-based.
+@t{dired}, while it takes some cues from @emph{GMail}.
 
 @t{mu4e} tries to keep all the 'state' in the maildirs, so I can switch
 between clients, synchronize over @abbr{IMAP} or backup with @t{rsync} -- if
@@ -153,19 +156,20 @@ $ sudo make install
 
 After this, @t{mu} and @t{mu4e} should be installed @footnote{there's a hard
 dependency between versions of @t{mu4e} and @t{mu} - you cannot combine
-different versions.}, a be available from the command line and emacs
+different versions.}, and be available from the command line and emacs
 (respectively). You may need to restart @t{emacs} so it can pick up @t{mu4e}.
 
-There is experimental support for using the @t{emacs} customization system in
-@t{mu4e}, but for now we recommend setting the values manually. Please refer
-to @ref{Example configuration} for a working example of this.
+There is @emph{experimental} support for using the @t{emacs} customization
+system in @t{mu4e}, but for now we recommend setting the values
+manually. Please refer to @ref{Example configuration} for a couple of examples
+of this.
 
 @node Getting mail
 @section Getting mail
 
 In order for @t{mu} (and, by extension, @t{mu4e}) to work, we need to have our
 e-mail messages stored in a Maildir. If you were already using Maildirs, you
-are lucky; otherwise, you will need to get your mail there in some other way.
+are lucky; otherwise, you will need to get your mail there in some way.
 
 If you are using some external @abbr{IMAP} or @abbr{POP} server, you can use
 tools like @t{getmail}, @t{offlineimap} or @t{isync} to download your message
@@ -191,10 +195,12 @@ following command:
   $ mu index --maildir=~/Maildir
 @end example
 
-This should scan your @file{~/Maildir} and fill the database, and give
-progress information while doing so. The first time you index your mail may
-take a few minutes (for thousands of e-mails), afterwards it is much faster
-since it only has to scan the differences.
+This should scan your @file{~/Maildir}@footnote{In most cases, you do not even
+have to provide the @t{--maildir=~/Maildir}; see the @t{mu-index} man-page for
+details} and fill the database, and give progress information while doing
+so. The first time you index your mail may take a few minutes (for thousands
+of e-mails), afterwards it is much faster since it only has to scan the
+differences.
 
 Note that indexing is discussed at length in the @t{mu-index} man page.
 
@@ -203,9 +209,8 @@ trying some command line searches, for example
 @example
   $ mu find hello
 @end example
-which should list all messages that match "hello". The @t{mu-find} man
-page describes the various things you can do with @t{mu find}, and the
-@t{mu-easy} man page has some examples as well.
+which should list all messages that match @t{hello}. For some more examples of
+searches @xref{Queries}, or check the @t{mu-find} and @t{mu-easy} man pages.
 
 If all of this worked well, we are almost ready to start @t{mu4e}; we only
 need set up @ref{Sending mail}.
@@ -215,10 +220,10 @@ need set up @ref{Sending mail}.
 @t{mu4e} re-uses Gnu's @t{message mode} @inforef{message}, for writing
 mail and inherits the setup for @emph{sending} mail from that.
 
-For sending mail using @abbr{SMTP}, @t{mu4e} uses Emacs built-in @t{smtpmail}
+For sending mail using @abbr{SMTP}, @t{mu4e} uses Emacs' standard @t{smtpmail}
 package -- @inforef{smtpmail}. This package support many different ways to
-send mail, please refer to its documentation. Here we provide some simple
-examples - and @ref{Example configuration}.
+send mail, please refer to its documentation for the details. Here we only
+provide some simple examples - and @ref{Example configuration}.
 
 A very minimal setup could look something like:
 
@@ -404,7 +409,8 @@ database; @pxref{Indexing your messages}. This is a synchronous command - you
 have to wait for it to finish.
 @item @t{toggle [m]ail sending mode (direct)} will toggle between sending
 mail directly, and queuing it first (for example, when you are offline), and
-@t{[f]lush queued mail} will flush any queued mail. @xref{Queuing mail}.
+@t{[f]lush queued mail} will flush any queued mail. This item is visible only
+if you have actually set up mail-queuing. @xref{Queuing mail}.
 @item @t{[H]elp} will show help information for this view.
 @item Finally, @t{[q]uit mu4e} will quit @t{mu4e}.
 @end itemize
@@ -418,9 +424,10 @@ message.
 
 This looks something like the following:
 
---
+
 @verbatim
-* Date              Flags  From/To             Subject
+------------------------------------------------------------------------------------------
+  Date              Flgs   From/To             Subject
   2011-12-16 18:38  uN     To Edmund Dantès    + Re: Extension security?
   2011-12-16 21:44  uN     Abbé Busoni             + Re: Extension security?
   2011-12-17 03:14  uN     Pierre Morrel           + Re: Extension security?
@@ -431,8 +438,8 @@ This looks something like the following:
   2011-12-17 01:53  usaN   Gaspard Caderousse    \ Re: [O] A presentation tool for org-mode
   2011-12-16 16:31  uN     Baron Danglars      | [O] imaxima?
 End of search results
+------------------------------------------------------------------------------------------
 @end verbatim
---
 
 It should be fairly obvious what this means, but some notes:
 @itemize
@@ -486,8 +493,9 @@ message will be show in the message view.
 
 This might look something like the following:
 
---
+
 @verbatim
+----------------------------------------------------------------------------
 From: info@galatians.net
 To: "Paul" paul@hotmail.com
 Subject: Re: some thoughts
@@ -507,8 +515,8 @@ All the best!
 On Sun 21 Dec 2003 09:06:34 PM EET, Paul wrote:
 
 [....]
+----------------------------------------------------------------------------
 @end verbatim
---
 
 Some notes:
 @itemize
@@ -579,6 +587,7 @@ whistles are available.
 The editor view looks something like the following:
 
 @verbatim
+----------------------------------------------------------------------------
 From: Rupert the Monkey <rupert@example.com>
 Reply-To: rupert@example.com
 To: Wally the Walrus <wally@example.com>
@@ -593,6 +602,7 @@ On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
  > Dude - how are things?
  >
  > Later -- wally.
+----------------------------------------------------------------------------
 @end verbatim
 
 Currently, @t{mu4e} uses Gnu's message editor, and so for documentation
@@ -631,9 +641,9 @@ results; if you need more than that, prefix your search command with
 @node Queries
 @section Queries
 
-The queries you can execute are the same that @code{mu find}
+The queries you can execute are the same ones that @code{mu find}
 understands. Please refer to the @code{mu-find} and @code{mu-easy} man pages
-for details. Here, we just provide a few examples.
+for details and more examples.
 
 @verbatim
 # get all messages about bananas
@@ -660,10 +670,10 @@ subject:angstrom flag:unread
 # get all unread messages between Mar-2002 and Aug-2003 about some bird
 date:20020301..20030831 nightingale flag:unread
 
-# get all messages today (well, all messages today in their Date:)
+# get today's messages
 date:today..now
 
-# get all messages we got in the last two weeks about emacs:
+# get all messages we got in the last two weeks regarding emacs
 date:2w..now emacs
 
 # get mails with a subject soccer, Socrates, society...
@@ -679,7 +689,7 @@ mime:application/pdf
 
 # get all messages with image attachments:
 # note: the '*' wildcard can only appear as the rightmost character in the term
-'mime:image/*'
+mime:image/*
 
 
 
@@ -690,15 +700,15 @@ mime:application/pdf
 
 If you have queries that you use often, you may want to store them as
 @emph{bookmarks}. These bookmarks then show up in the main view, and you can
-invoke them in other places as well. By default, bookmark searches are
-available in the main view @ref{Main view}, header view @xref{Headers view},
-and message view @xref{Message view}, with the key @key{b} for the function
-@code{mu4e-search-bookmark}.
+invoke them in other places as well. Bookmark searches are available in the
+main view @ref{Main view}, header view @xref{Headers view}, and message view
+@xref{Message view}, using (by default) the key @key{b}
+(@code{mu4e-search-bookmark}).
 
 @code{mu4e} provides some default bookmarks, which you can override. The
 definition of the default bookmarks is instructive here:
 
-@example
+@lisp
 (defvar mu4e-bookmarks
   '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
      ("date:today..now"                  "Today's messages"     ?t)
@@ -709,22 +719,23 @@ screen. Each of the list elements is a three-element list of the
 form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
 query, DESCRIPTION is a short description of the query (this will
 show up in the UI), and KEY is a shortcut key for the query.")
-@end example
+@end lisp
 
 You can replaces these, or add your own items, by putting in your
 configuration (@file{~/.emacs}) something like:
-@example
+@lisp
 (add-to-list 'mu4e-bookmarks
   '("size:5M..500M"       "Big messages"     ?b))
-@end example
+@end lisp
 
 This prepend your bookmark to the list, and assign the key @key{b} to it. If
 you want to @emph{append} your bookmark, you can use @code{t} as the third
 argument to @code{add-to-list}.
 
 In the various @t{mu4e} views, pressing @key{b} will list all the bookmarks
-defined in the echo area, with the shortcut key highlight. So, to invoke your
-bookmark (get the list of "Big Messages"), all you need to type is @key{bb}.
+defined in the echo area, with the shortcut key highlighted. So, to invoke the
+bookmark we just defined (to get the list of "Big Messages"), all you need to
+type is @key{bb}.
 
 
 @node Maildir searches
@@ -767,15 +778,14 @@ for example, getting to the @t{/lists} folder only requires you to type
 @key{jl}.
 
 The same shortcuts are used by the function @code{mu4e-mark-for-move}; so for
-example, if you want to move a message the @t{/archive} folder, you can mark
-it for that using @key{ma}.
+example, if you want to move a message the @t{/archive} folder, you can do so
+by typing @key{ma}.
 
 @node Org-mode support
 @chapter Org-mode support
 
 Many emacs-users use @t{org-mode} for their note-taking, agenda, to-do list
-and many other things, and it is very useful to integrate e-mail with this as
-well.
+and many other things, so it is useful to integrate e-mail with this as well.
 
 @t{mu4e} support @t{org-mode}-links, and the @t{org-mode}-address book,
 @t{org-contact}.
@@ -787,18 +797,17 @@ well.
 
 @node Org-mode links
 @section Org-mode links
-When using @t{org-mode}, it can be very useful to include link to
-individual e-mail messages or even queries.
+It can be useful to include links to e-mail messages or even search queries in
+your org-mode files. @t{mu4e} supports this with the @t{org-mu4e} module; you
+can set it up by adding it to your configuration:
 
-@t{mu4e} supports this with the @t{org-mu4e} module; setting it up is easy:
-
-@verbatim
-(require 'org-mu4e}
-@end verbatim
+@lisp
+(require 'org-mu4e)
+@end lisp
 
 After this, you can use the normal @t{org-mode} mechanisms to store links:
 @t{M-x org-store-link} will store a link to a particular message when you're
-in Message view (@ref{Message view}), and a link to a query when your in
+in Message view (@ref{Message view}), and a link to a query when you are in
 Headers view (@ref{Headers view}). You can insert these link later with @t{M-x
 org-insert-link}. Then, you can go to the query or message the link points to
 with either @t{M-x org-agenda-open-link} in agenda buffers, or @t{M-x
@@ -809,6 +818,7 @@ org-open-at-point} elsewhere - both are typically bound to @kbd{C-c C-o}.
 
 To manage your addresses using @t{org-mode}, there is
 @t{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}}.
+
 You can use it with a @t{capture}-template:
 @verbatim
 ("c" "contacts" entry (file "contacts.org")
@@ -822,7 +832,6 @@ You can use it with a @t{capture}-template:
 
 After setting this up, you can use @t{M-x org-capture RET c} to get a template
 for a new contact based on the 'From:' address.
-
 
 @node Example configuration
 @chapter Example configuration
@@ -839,9 +848,9 @@ In this chapter, we show some example configurations.
 @node Minimal configuration
 @section Minimal configuration
 
-An (almost) minimal configuration for @t{mu4e} could look something like this:
+An (almost) minimal configuration for @t{mu4e} might look something like this:
 
-@verbatim
+@lisp
 ;; example configuration for mu-for-emacs (mu4e)
 (require 'mu4e)
 
@@ -862,7 +871,7 @@ An (almost) minimal configuration for @t{mu4e} could look something like this:
 ;; (setq mu4e-trash-folder  "/trash")
 
 ;; for the settings for outgoing mail consult the section 'Longer configuration'
-@end verbatim
+@end lisp
 
 
 @node Longer configuration
