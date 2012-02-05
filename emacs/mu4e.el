@@ -357,7 +357,7 @@ dir already existed, or has been created, nil otherwise."
       (error "Please set %S" var))
     (let* ((dir (symbol-value var)) (path (concat mu4e-maildir dir)))
       (unless (string= (substring dir 0 1) "/")
-	(error "%S must start with a '/'"))
+	(error "%S must start with a '/'" dir))
       (unless (mu4e-create-maildir-maybe path)
 	(error "%s (%S) does not exist" path var)))))
 
