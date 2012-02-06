@@ -57,6 +57,7 @@ results, otherwise, limit number of results to
       (erase-buffer)
       (mu4e-hdrs-mode)
       (setq
+	global-mode-string (propertize expr 'face 'mu4e-title-face)
 	mu4e-last-expr expr
 	mu4e-hdrs-buffer buf
 	mode-name "mu4e-headers"))
@@ -347,7 +348,8 @@ after the end of the search results."
   (make-local-variable 'mu4e-marks-map)
   (make-local-variable 'mu4e-msg-map)
   (make-local-variable 'mu4e-thread-info-map)
-
+  (make-local-variable 'global-mode-string)
+  
   (setq
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
     mu4e-msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
