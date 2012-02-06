@@ -488,11 +488,8 @@ trying to protect the user from accidents.
 @node Message view
 @section Message view
 
-After selecting a message in the Headers view (see @ref{Headers view}), the
-message will be show in the message view.
-
-This might look something like the following:
-
+After selecting a message in the @ref{Headers view}, it will be shown in the
+message view, for example:
 
 @verbatim
 ----------------------------------------------------------------------------
@@ -520,15 +517,14 @@ On Sun 21 Dec 2003 09:06:34 PM EET, Paul wrote:
 
 Some notes:
 @itemize
-@item You can customize which header fields are shown using
-@t{mu4e-view-fields}.
-@item You can customize the date format by setting
-@code{mu4e-date-format-long}, using the format that @code{format-time-string}
-uses.
+@item You can customize the header fields to show by setting the variable @code{mu4e-view-fields}.
+@item You can customize the date format by setting the variable
+@code{mu4e-date-format-long}, using the same format that
+@code{format-time-string} uses.
 @end itemize
 
 You can find most things you can do with this message in the @emph{View} menu,
-or use the keyboard -- the default bindings are:
+or by using the keyboard; the default bindings are:
 
 @verbatim
 key          description
@@ -541,7 +537,7 @@ u            unmark message at point
 R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
 
-.            show the raw message view. '.'/'q' takes you back
+.            show the raw message view. ./q take you back
 |            pipe the message through a shell command
 
 g            go to (visit) numbered URL (using `browse-url')
@@ -561,10 +557,10 @@ Note that @key{x}, which means 'execute actions on marked messages' is not
 available in this view, to reduce the risk of accidents. You need to go back
 to the headers view to effectuate the actions.
 
-Also note that opening of an attachment uses the @t{xdg-open} program to
-determine the right program to use for a certain attachment. @t{xdg-open} is
-part of the FreeDesktop
-@t{xdg-utils}.@footnote{@url{http://portland.freedesktop.org/wiki/}}.
+By default, the attachment is opened using either the @t{xdg-open}-program
+@footnote{@url{http://portland.freedesktop.org/wiki/}} or (on MacOS) the
+q@t{open} program. If you want to use another program, you specify this by
+setting the @t{MU_PLAY_PROGRAM} environment variable.
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
 messages consisting of both a plain-text and an html (rich-text_ version of
@@ -581,10 +577,8 @@ is actually called
 @node Editor view
 @section Editor view
 
-For its editor, @t{mu4e} re-uses Gnu's @t{message-mode}, and all its bells and
-whistles are available.
-
-The editor view looks something like the following:
+For its editor, @t{mu4e} re-uses Gnu's @t{message-mode}. For example, when
+replying to a message, the editor view looks something like the following:
 
 @verbatim
 ----------------------------------------------------------------------------
@@ -605,10 +599,10 @@ On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
 ----------------------------------------------------------------------------
 @end verbatim
 
-Currently, @t{mu4e} uses Gnu's message editor, and so for documentation
+Since @t{mu4e} uses Gnu's message editor, for documentation
 @inforef{Message}. Also, @pxref{Sending mail}. There are many key-bindings
 available, here are some of the essential ones (and you can use the menu to
-find many more):
+find more):
 
 @verbatim
 key          description
@@ -623,10 +617,10 @@ C-c C-a      attach a file (pro-tip: drag & drop works as well)
 @node Searching mail
 @chapter Searching mail
 
-@t{mu4e} is fully search-based; this means that all the lists of messages
-you see, are the result of some query. Even if you 'jump to a folder', in fact
-you are executing a search query for messages that have the property of being
-in a certain folder.
+@t{mu4e} is fully search-based; this means that all the lists of messages you
+see, are the result of some query. Even if you 'jump to a folder', in fact you
+are executing a search query for messages that happen to have the property of
+being in a certain folder.
 
 Note, all queries normally return only up to @code{mu4e-search-results-limit}
 results; if you need more than that, prefix your search command with
@@ -690,9 +684,6 @@ mime:application/pdf
 # get all messages with image attachments:
 # note: the '*' wildcard can only appear as the rightmost character in the term
 mime:image/*
-
-
-
 @end verbatim
 
 @node Bookmarks
@@ -744,30 +735,30 @@ type is @key{bb}.
 Maildir searches are quite similar to bookmark searches (see @ref{Bookmarks}),
 with the difference being that the target is always a maildir -- maildir
 queries provide a 'traditional' folder-like interface to a search-based e-mail
-client. By default, maildir searches are available in the main view
-@ref{Main view}, header view @ref{Headers view}, and message view
-@ref{Message view}, with the key @key{j} for @code{mu4e-jump-to-maildir}.
+client. By default, maildir searches are available in the @ref{Main view},
+@ref{Headers view}, and @ref{Message view}, with the key @key{j}
+(@code{mu4e-jump-to-maildir}).
 
 You can do Maildir searches manually (e.g. with a query like
-@code{maildir:/myfolder}, but since it is so common, @t{mu4e} offers a quicker
+@code{maildir:/myfolder}) but since it is so common, @t{mu4e} offers a quicker
 way to do this.
 
 To enable this, you need to set the variable @t{mu4e-maildir-shortcuts} to
 list of maildirs you'd like to have quick access to, for example:
 
-@example
+@lisp
    (setq mu4e-maildir-shortcuts
     '( ("/inbox"     . ?i)
        ("/archive"   . ?a)
        ("/lists"     . ?l)
        ("/work"      . ?w)
        ("/sent"      . ?s))
-@end example
+@end lisp
 
 This would set @key{i} as a shortcut for the @t{/inbox} folder; so effectively
-a query @t{maildir:/inbox}. There's one 'built-in' shortcut @key{o} for
-'other' (so don't use that one for your own shortcuts!), which allows you to
-choose from @emph{all} maildirs.
+a query @t{maildir:/inbox}. There is a special shortcut @key{o} for
+@emph{other} (so don't use that one for your own shortcuts!), which allows you
+to choose from @emph{all} maildirs.
 
 Each of the folder name is relative to your top-level maildir directory; so if
 you keep your maildir in @file{~/Maildir}, @file{/inbox} would refer to
