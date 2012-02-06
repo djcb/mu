@@ -569,8 +569,7 @@ uses the emacs built-in `html2text'. Alternatively, if
 		    ;; there's a normal sized text part
 		    txt))))
     ;; and finally, remove some crap from the remaining string.
-    (replace-regexp-in-string "[
- ]" " " body nil nil nil)))
+    (replace-regexp-in-string "[ ]" " " body nil nil nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
