@@ -264,7 +264,7 @@ flag set)."
   :group 'mu4e-faces)
 
 (defface mu4e-view-header-key-face
-  '((t :inherit font-lock-builtin-face))
+  '((t :inherit font-lock-builtin-face :bold t))
   "Face for the header title (such as \"Subject\" in the message view)."
   :group 'mu4e-faces)
 
@@ -291,6 +291,26 @@ flag set)."
 (defface mu4e-view-attach-number-face
   '((t :inherit font-lock-variable-name-face :bold t))
   "Face for the number tags for attachments."
+  :group 'mu4e-faces)
+
+(defface mu4e-cited-1-face
+  '((t :inherit font-lock-builtin-face :bold nil :italic t))
+  "Face for cited message parts (level 1)."
+  :group 'mu4e-faces)
+
+(defface mu4e-cited-2-face
+  '((t :inherit font-lock-type-face :bold nil :italic t))
+  "Face for cited message parts (level 2)."
+  :group 'mu4e-faces)
+
+(defface mu4e-cited-3-face
+  '((t :inherit font-lock-variable-name-face :bold nil :italic t))
+  "Face for cited message parts (level 3)."
+  :group 'mu4e-faces)
+
+(defface mu4e-cited-4-face
+  '((t :inherit font-lock-pseudo-keyword-face :bold nil :italic t))
+  "Face for cited message parts (level 4)."
   :group 'mu4e-faces)
 
 (defface mu4e-view-footer-face

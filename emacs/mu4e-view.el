@@ -120,6 +120,7 @@ marking if it still had that."
       (switch-to-buffer buf)
       (goto-char (point-min))
 
+      (mu4e-color-cited)
       (mu4e-mark-footer)
       (mu4e-make-urls-clickable)
 
@@ -156,7 +157,6 @@ marking if it still had that."
 
 (defvar mu4e-attach-map nil
   "*internal* Hash which maps a number to a (part-id name mime-type).")
-
 
 
 (defun mu4e-open-save-attach-func (num is-open)
@@ -371,6 +371,39 @@ Seen; if the message is not New/Unread, do nothing."
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
 	(mu4e-proc-flag docid "+S-u-N")))))
+
+
+(defun mu4e-color-cited ()
+  "Colorize message content based on the citation level."  
+  (save-excursion
+    (let ((more-lines t))
+      (goto-char (point-min))
+      (while more-lines
+	;; Get the citation level at point -- ie., the number of '>'
+	;; prefixes, starting with 0 for 'no citation'
+	(beginning-of-line 1)
+	(let* ((text (re-search-forward "[[:word:]]" (line-end-position 1) t 1))
+		(level (or (and text
+			     (how-many ">" (line-beginning-position 1) text)) 0))
+		(face
+		  (cond
+		    ((= 0 level) nil) ;; don't do anything
+		    ((= 1 level) 'mu4e-cited-1-face)
+		    ((= 2 level) 'mu4e-cited-2-face)
+		    ((= 3 level) 'mu4e-cited-3-face)
+		    ((= 4 level) 'mu4e-cited-4-face)
+		    (t           nil))))
+	  (when face
+	    (add-text-properties (line-beginning-position 1)
+	      (line-end-position 1) `(face ,face))))
+	(setq more-lines
+	  (and (= 0 (forward-line 1))
+	    ;; we need to add this weird check below; it seems in some cases
+	    ;; `forward-line' continues to return 0, even when at the end, which
+	    ;; would lead to an infinite loop
+	    (not (= (point-max) (line-end-position)))))))))
+
+
 
 
 (defun mu4e-mark-footer ()
