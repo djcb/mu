@@ -173,7 +173,7 @@ And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
 			(format "Reply to all ~%d recipients? "
 			  (+ recipnum)))))
 	  (old-msgid (plist-get msg :message-id))
-	  (subject (plist-get msg :subject)))
+	  (subject (or (plist-get msg :subject) "")))
     (concat
       (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
       (when (boundp 'mail-reply-to)
@@ -188,14 +188,17 @@ And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
       (when old-msgid
 	(mu4e-send-header "In-reply-to" (format "<%s>" old-msgid)))
       (mu4e-send-header "Subject"
-	(concat mu4e-send-reply-prefix (if subject subject "")))
+	(concat
+	  ;; if there's no Re: yet, prepend it
+	  (if (string-match (concat "^" mu4e-send-reply-prefix) subject)
+	    "" mu4e-send-reply-prefix) 
+	  subject))
 
       (propertize mail-header-separator 'read-only t 'intangible t) '"\n"
 
       "\n\n"
       (mu4e-send-cite-original msg))))
 
-;; TODO: attachments
 (defun mu4e-send-create-forward (msg)
   "Create a draft forward message for MSG.
 
