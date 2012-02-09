@@ -450,7 +450,7 @@ and update the database afterwards."
     (with-current-buffer buf
       (erase-buffer))
     (message "Retrieving mail...")
-    (call-process mu4e-get-mail-command nil buf t)
+    (call-process-shell-command mu4e-get-mail-command nil buf t)
     (message "Updating the database...")
     (mu4e-proc-index mu4e-maildir)
     (with-current-buffer buf
