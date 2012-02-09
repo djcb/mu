@@ -1,5 +1,16 @@
 * NEWS (user visible changes)
 
+** Release 0.9.8.1 (not yet released)
+   
+*** mu4e
+   - allow for shell commands with arguments in `mu4e-get-mail-command'.
+   - support marking messages as 'read' and 'unread'
+   - show the current query in the the mode-line (`global-mode-string').
+   - don't repeat 'Re:' / 'Fwd:'
+   - colorize cited message parts
+   - some other minor things
+   - documentation improvements
+  
 ** Release 0.9.8 <2012-01-31>
 
    - '--descending' has  been renamed into '--reverse'
