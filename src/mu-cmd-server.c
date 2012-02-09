@@ -752,6 +752,7 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
 	if (!mu_msg_part_looks_like_attachment(part, TRUE))
 		return;
 
+	err	  = NULL;
 	cachefile = mu_msg_part_save_temp (msg, part->index, &err);
 	if (!cachefile) {
 		server_error (&err, MU_ERROR_FILE, "could not save %s",
