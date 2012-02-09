@@ -403,9 +403,6 @@ Seen; if the message is not New/Unread, do nothing."
 	    ;; would lead to an infinite loop
 	    (not (= (point-max) (line-end-position)))))))))
 
-
-
-
 (defun mu4e-mark-footer ()
   "Give the message footers a distinctive color."
   (let ((inhibit-read-only t))
