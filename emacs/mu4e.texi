@@ -467,6 +467,8 @@ key          description
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
+o            mark message as unread
+r            mark message as read
 u            unmark message at point
 U            unmark *all* messages
 x            execute actions for the marked messages
