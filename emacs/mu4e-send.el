@@ -216,20 +216,26 @@ Then follows `mail-header-separator' (for `message-mode' to separate
 body from headers)
 
 And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
+  (let ((subject (or (plist-get msg :subject) "")))
     (concat
       (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
-       (when (boundp 'mail-reply-to)
-	 (mu4e-send-header "Reply-To" mail-reply-to))
-
+      (when (boundp 'mail-reply-to)
+	(mu4e-send-header "Reply-To" mail-reply-to))
+      
       (mu4e-send-header "To" "")
       (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
       (mu4e-send-header "References"  (mu4e-send-references-create msg))
-      (mu4e-send-header"Subject"
-	 (concat mu4e-send-forward-prefix (plist-get msg :subject)))
+      (mu4e-send-header "Subject"
+	(concat
+	  ;; if there's no Re: yet, prepend it
+	  (if (string-match (concat "^" mu4e-send-forward-prefix) subject)
+	    "" mu4e-send-forward-prefix) 
+	  subject))
+
       (propertize mail-header-separator 'read-only t 'intangible t) "\n"
 
       "\n\n"
-      (mu4e-send-cite-original msg)))
+      (mu4e-send-cite-original msg))))
 
 (defun mu4e-send-create-new ()
   "Create a new message.
