@@ -475,12 +475,9 @@ get_flags (const char *path, const char *flagstr)
 			MuFlags oldflags;
 			oldflags = mu_maildir_get_flags_from_path (path);
 			return mu_flags_from_str_delta (flagstr, oldflags,
-							MU_FLAG_TYPE_MAILDIR|
-							MU_FLAG_TYPE_MAILFILE);
+							MU_FLAG_TYPE_ANY);
 		} else
-			return  mu_flags_from_str (flagstr,
-						   MU_FLAG_TYPE_MAILDIR |
-						   MU_FLAG_TYPE_MAILFILE);
+			return  mu_flags_from_str (flagstr, MU_FLAG_TYPE_ANY);
 	}
 }
 

@@ -806,8 +806,11 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 		flags |= mu_msg_get_flags (self) &
 			(MU_FLAG_HAS_ATTACH|MU_FLAG_ENCRYPTED|MU_FLAG_SIGNED);
 		/* update the pseudo-flag as well */
-		if (!(flags & MU_FLAG_NEW) || (flags & MU_FLAG_SEEN))
+		if (!(flags & MU_FLAG_NEW) && (flags & MU_FLAG_SEEN))
 			flags &= ~MU_FLAG_UNREAD;
+		else
+			flags |= MU_FLAG_UNREAD;
+
 		mu_msg_cache_set_num (self->_cache, MU_MSG_FIELD_ID_FLAGS, flags);
 	}
 

@@ -717,7 +717,6 @@ mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 		if (!store->in_transaction())
 			store->begin_transaction();
 
-
 		const std::string term
 			(store->get_uid_term(mu_msg_get_path(msg)));
 		doc.add_term (term);

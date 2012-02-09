@@ -265,6 +265,9 @@ after the end of the search results."
       (define-key map (kbd "<delete>") 'mu4e-mark-for-delete)
       (define-key map "D" 'mu4e-mark-for-delete)
 
+      (define-key map "o" 'mu4e-mark-as-unread)
+      (define-key map "r" 'mu4e-mark-as-read)
+
       (define-key map "j" 'mu4e-jump-to-maildir)
       (define-key map "m" 'mu4e-mark-for-move)
 
@@ -297,6 +300,10 @@ after the end of the search results."
 	(define-key menumap [execute-marks]  '("Execute marks" . mu4e-execute-marks))
 	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-unmark-all))
 	(define-key menumap [unmark]      '("Unmark" . mu4e-unmark))
+
+	(define-key menumap [mark-as-read]  '("Mark as read"   . mu4e-mark-as-read))
+	(define-key menumap [mark-as-unread]   '("Mark as unread" .  mu4e-mark-as-unread))
+
 	(define-key menumap [mark-delete]  '("Mark for deletion" . mu4e-mark-for-delete))
 	(define-key menumap [mark-trash]   '("Mark for trash" .  mu4e-mark-for-trash))
 	(define-key menumap [mark-move]  '("Mark for move" . mu4e-mark-for-move))
@@ -349,7 +356,7 @@ after the end of the search results."
   (make-local-variable 'mu4e-msg-map)
   (make-local-variable 'mu4e-thread-info-map)
   (make-local-variable 'global-mode-string)
-  
+
   (setq
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
     mu4e-msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
@@ -494,6 +501,8 @@ The following marks are available, and the corresponding props:
    `move'     y         move the message to some folder
    `trash'    n         move the message to `mu4e-trash-folder'
    `delete'   n         remove the message
+   `read'     n         mark the message as read
+   `unread'   n         mark the message as unread
    `unmark'   n         unmark this message"
   (let* ((docid (mu4e-hdrs-get-docid))
 	  (markkar
@@ -501,7 +510,8 @@ The following marks are available, and the corresponding props:
 	      ('move    "m")
 	      ('trash   "d")
 	      ('delete  "D")
-	      ('select  "*")
+	      ('unread  "U")
+	      ('read    "R")
 	      ('unmark  " ")
 	      (t (error "Invalid mark %S" mark)))))
     (unless docid (error "No message on this line"))
@@ -560,14 +570,14 @@ work well."
       (lambda (docid val)
 	(let ((marker (nth 0 val)) (mark (nth 1 val)) (target (nth 2 val)))
 	  (case mark
-	    (move
-	      (mu4e-proc-move-msg docid target))
+	    (move   (mu4e-proc-move-msg docid target))
+	    (read   (mu4e-proc-flag docid "+S-u-N"))
+	    (unread (mu4e-proc-flag docid "-S+u"))
 	    (trash
 	      (unless mu4e-trash-folder
 		(error "`mu4e-trash-folder' not set"))
 	      (mu4e-proc-move-msg docid mu4e-trash-folder "+T"))
-	    (delete
-	      (mu4e-proc-remove-msg docid)))))
+	    (delete (mu4e-proc-remove-msg docid)))))
 	  mu4e-marks-map)
     (mu4e-hdrs-unmark-all)))
 
@@ -727,29 +737,37 @@ not provided, function asks for it."
 	(mu4e-next-header)))))
 
 
+(defun mu4e-mark (mark)
+  "Mark message for MARK (trash, delete, read, unread, unmark)."
+  (with-current-buffer mu4e-hdrs-buffer
+    (mu4e-hdrs-mark mark)
+    (mu4e-next-header)))
+
 (defun mu4e-mark-for-trash ()
   "Mark message at point for moving to the trash
 folder (`mu4e-trash-folder')."
   (interactive)
-    (unless mu4e-trash-folder
-      (error "`mu4e-trash-folder' is not set"))
-    (with-current-buffer mu4e-hdrs-buffer
-      (mu4e-hdrs-mark 'trash)
-      (mu4e-next-header)))
+  (mu4e-mark 'trash))
 
 (defun mu4e-mark-for-delete ()
   "Mark message at point for direct deletion."
   (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (mu4e-hdrs-mark 'delete)
-    (mu4e-next-header)))
+  (mu4e-mark 'delete))
+
+(defun mu4e-mark-as-read ()
+  "Mark message at point as unread."
+  (interactive)
+  (mu4e-mark 'read))
+
+(defun mu4e-mark-as-unread ()
+  "Mark message at point as read."
+  (interactive)
+  (mu4e-mark 'unread))
 
 (defun mu4e-unmark ()
   "Unmark message at point."
   (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (mu4e-hdrs-mark 'unmark)
-    (mu4e-next-header)))
+  (mu4e-mark 'unmark))
 
 (defun mu4e-unmark-all ()
   "Unmark all messages."
