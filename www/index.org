@@ -36,6 +36,8 @@
    - fully documented (man pages, info pages)
 
 ** News
+
+   - 2012-02-09: moved the mu source code repository [[https://github.com/djcb/mu][to Github]].
    - 2012-01-31: finally, [[http://mu0.googlecode.com/files/mu-0.9.8.tar.gz][mu-0.9.8]] is available. It comes with an emacs-based
      e-mail client, [[file:mu4e.html][mu4e]], and much improved [[file:mu-guile.html][guile bindings]]. Furthermore, It adds
      search for attachment mime type and search inside any text part of a
@@ -51,9 +53,6 @@
      least, =mu= now has bindings for the [[http://www.gnu.org/s/guile/][Guile]] (Scheme) programming language -
      there is a new toy (=toys/muile=) that allows you to inspect messages and
      do all kinds of statistics - see the [[https://gitorious.org/mu/mu/blobs/master/toys/muile/README][README]] for more information.
-
-     Note, the repository name has changed, it's now at: https://gitorious.org/mu/mu.
-
 
    - 2011-06-02: after quite a bit of testing, *0.9.6* has been promoted to be
      the next release -- forget about the 'bèta'. Development continues for
@@ -93,7 +92,7 @@
    [[http://code.google.com/p/mu0/downloads/list][download mu source packages]] from Google Code. In case you find a bug, or have
    a feature requests, please use the [[http://code.google.com/p/mu0/issues/list][issue tracker]].
 
-   If you'd like to work with the mu source code, you can find it [[http://gitorious.org/mu/mu][in Gitorious]];
+   If you'd like to work with the mu source code, you can find it [[https://github.com/djcb/mu][in Github]];
    also, see the notes on [[http://gitorious.org/mu/mu/blobs/master/HACKING][HACKING]] the mu source code.
 
    There's also a [[http://groups.google.com/group/mu-discuss][mailing list]].
