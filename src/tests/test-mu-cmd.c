@@ -292,10 +292,9 @@ test_mu_extract_01 (void)
 	g_assert_cmpstr (output,
 			 ==,
 			 "MIME-parts in this message:\n"
-			 "  0 <none> multipart/mixed [<none>]\n"
-			 "  1 <none> text/plain [<none>] (0.0 kB)\n"
-			 "  2 sittingbull.jpg image/jpeg [inline] (23.9 kB)\n"
-			 "  3 custer.jpg image/jpeg [inline] (21.6 kB)\n");
+			 "  0 <none> text/plain [<none>] (0.0 kB)\n"
+			 "  1 sittingbull.jpg image/jpeg [inline] (23.9 kB)\n"
+			 "  2 custer.jpg image/jpeg [inline] (21.6 kB)\n");
 
 	/* we expect zero lines of error output */
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
@@ -368,7 +367,7 @@ test_mu_extract_03 (void)
 
 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf ("%s extract --muhome=%s --parts 3 "
+	cmdline = g_strdup_printf ("%s extract --muhome=%s --parts 2 "
 				   "--target-dir=%s %s%cFoo%ccur%cmail5",
 				   MU_PROGRAM,
 				   tmpdir,

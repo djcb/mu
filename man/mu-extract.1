@@ -1,4 +1,4 @@
-.TH MU EXTRACT 1 "January 2012" "User Manuals"
+.TH MU EXTRACT 1 "February 2012" "User Manuals"
 
 .SH NAME
 
@@ -26,8 +26,9 @@ argument, all attachments with filenames matching that pattern will be
 extracted. The regular expressions are Perl-compatible (as per the
 PCRE-library).
 
-Without any options, \fBmu extract\fR simply outputs the list of MIME-parts in
-the message.
+Without any options, \fBmu extract\fR simply outputs the list of leaf
+MIME-parts in the message. Only 'leaf' MIME-parts (including RFC822
+attachments) are considered, \fBmultipart/*\fR etc. are ignored.
 
 .SH OPTIONS
 
