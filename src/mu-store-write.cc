@@ -504,7 +504,8 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 		       MuMsgFieldId mfid)
 {
 	PartData pdata (doc, mfid);
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &pdata);
+	mu_msg_part_foreach (msg, TRUE,
+			     (MuMsgPartForeachFunc)each_part, &pdata);
 }
 
 

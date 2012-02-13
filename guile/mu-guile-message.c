@@ -418,7 +418,7 @@ SCM_DEFINE_PUBLIC (get_parts, "mu:get-parts", 1, 1, 0,
 	attinfo.attachments_only = ATTS_ONLY == SCM_BOOL_T ? TRUE : FALSE;
 
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
-	mu_msg_part_foreach (msgwrap->_msg,
+	mu_msg_part_foreach (msgwrap->_msg, FALSE,
 			     (MuMsgPartForeachFunc)each_part,
 			     &attinfo);
 

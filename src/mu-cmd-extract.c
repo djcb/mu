@@ -39,13 +39,19 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 	GError *err;
 	gchar *filepath;
 
-	filepath = mu_msg_part_filepath (msg, targetdir, partidx);
+	err = NULL;
+
+	filepath = mu_msg_part_filepath (msg, targetdir, partidx, &err);
 	if (!filepath) {
-		g_warning ("failed to get filepath");
+		if (err) {
+			g_warning ("failed to save MIME-part: %s",
+				   err->message);
+			g_error_free (err);
+		}
+		g_free (filepath);
 		return FALSE;
 	}
 
-	err = NULL;
 	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE, &err)) {
 		if (err) {
 			g_warning ("failed to save MIME-part: %s",
@@ -203,21 +209,24 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 	rv	 = FALSE;
 	filepath = NULL;
 
-	filepath = mu_msg_part_filepath (msg, sd->targetdir, part->index);
-	if (!filepath)
-		goto leave;
-
 	err = NULL;
+	filepath = mu_msg_part_filepath (msg, sd->targetdir, part->index, &err);
+	if (!filepath) {
+		g_warning ("failed to get file path: %s",
+			   err&&err->message ? err->message : "error");
+		g_clear_error (&err);
+		goto leave;
+	}
+
 	if (!mu_msg_part_save (msg, filepath, part->index,
 			       sd->overwrite, FALSE, &err)) {
 		g_warning ("failed to save MIME-part: %s",
 			   err&&err->message ? err->message : "error");
-		if (err)
-			g_error_free (err);
+		g_clear_error (&err);
 		goto leave;
 	}
 
-	if (sd->play &&  !mu_util_play (filepath, TRUE, FALSE))
+	if (sd->play && !mu_util_play (filepath, TRUE, FALSE))
 		goto leave;
 
 	rv = TRUE;
@@ -241,7 +250,7 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 	sd.targetdir	    = targetdir;
 	sd.play             = play;
 
-	mu_msg_part_foreach (msg,
+	mu_msg_part_foreach (msg, FALSE,
 			     (MuMsgPartForeachFunc)save_part_if,
 			     &sd);
 
@@ -344,7 +353,7 @@ show_parts (const char* path, MuConfig *opts, GError **err)
 	g_print ("MIME-parts in this message:\n");
 
 	mu_msg_part_foreach
-		(msg,(MuMsgPartForeachFunc)each_part_show,
+		(msg, FALSE, (MuMsgPartForeachFunc)each_part_show,
 		 GUINT_TO_POINTER(!opts->nocolor));
 
 	mu_msg_unref (msg);

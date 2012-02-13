@@ -25,7 +25,7 @@ enum {
 	ICON_COL,
 	NAME_COL,
 	PARTNUM_COL,
-	
+
 	NUM_COL
 };
 
@@ -61,7 +61,7 @@ set_message (MuMsgAttachView *self, MuMsg *msg)
 {
 	if (self->_priv->_msg == msg)
 		return; /* nothing to todo */
-	
+
 	if (self->_priv->_msg)  {
 		mu_msg_unref (self->_priv->_msg);
 		self->_priv->_msg = NULL;
@@ -82,7 +82,7 @@ mu_msg_attach_view_class_init (MuMsgAttachViewClass *klass)
 	gobject_class->finalize = mu_msg_attach_view_finalize;
 
 	g_type_class_add_private (gobject_class, sizeof(MuMsgAttachViewPrivate));
-	
+
 	signals[ATTACH_ACTIVATED] =
 		g_signal_new ("attach-activated",
 			      G_TYPE_FROM_CLASS (gobject_class),
@@ -100,16 +100,16 @@ item_activated (MuMsgAttachView *self, GtkTreePath *tpath)
 	GtkTreeModel *model;
 	GtkTreeIter iter;
 	guint partnum;
-	
+
 	model = gtk_icon_view_get_model (GTK_ICON_VIEW(self));
 	if (!gtk_tree_model_get_iter (model, &iter, tpath)) {
 		g_warning ("could not find path");
 	}
-	
+
 	gtk_tree_model_get (model, &iter,
 			    PARTNUM_COL, &partnum,
 			    -1);
-	
+
 	g_signal_emit (G_OBJECT (self),
 		       signals[ATTACH_ACTIVATED], 0,
 		       partnum, self->_priv->_msg);
@@ -152,12 +152,12 @@ on_drag_data_get (MuMsgAttachView *self, GdkDragContext *drag_context,
 	GSList *lst, *cur;
 	char **uris;
 	int i;
-	
+
 	lst = NULL;
 	gtk_icon_view_selected_foreach (GTK_ICON_VIEW(self),
 					(GtkIconViewForeachFunc)accumulate_parts,
 					&lst);
-	
+
 	uris = g_new(char*, g_slist_length(lst) + 1);
 	for (cur = lst, i = 0; cur; cur = g_slist_next(cur))
 	 	uris[i++] = (gchar*)cur->data;
@@ -168,21 +168,21 @@ on_drag_data_get (MuMsgAttachView *self, GdkDragContext *drag_context,
 	g_free (uris);
 	g_slist_foreach (lst, (GFunc)g_free, NULL);
 	g_slist_free (lst);
-}	
+}
 
 static void
 mu_msg_attach_view_init (MuMsgAttachView *obj)
 {
 	GtkListStore *store;
- 
+
 	obj->_priv = MU_MSG_ATTACH_VIEW_GET_PRIVATE(obj);
 	obj->_priv->_msg = NULL;
-	
+
 	store = gtk_list_store_new (NUM_COL,GDK_TYPE_PIXBUF,
 				    G_TYPE_STRING, G_TYPE_UINT);
 	gtk_icon_view_set_model (GTK_ICON_VIEW(obj), GTK_TREE_MODEL(store));
 	g_object_unref (store);
-	
+
 	gtk_icon_view_set_pixbuf_column (GTK_ICON_VIEW(obj), ICON_COL);
 	gtk_icon_view_set_text_column (GTK_ICON_VIEW(obj), NAME_COL);
 
@@ -196,22 +196,22 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 
 	g_signal_connect (G_OBJECT(obj), "item-activated",
 			  G_CALLBACK(item_activated), NULL);
-	
+
 	gtk_icon_view_set_selection_mode (GTK_ICON_VIEW(obj),
 					  GTK_SELECTION_MULTIPLE);
 	/* drag & drop */
 	gtk_icon_view_enable_model_drag_source (GTK_ICON_VIEW(obj), 0, NULL, 0,
 						GDK_ACTION_COPY);
 	gtk_drag_source_add_uri_targets(GTK_WIDGET(obj));
-	g_signal_connect (obj, "drag-data-get", G_CALLBACK(on_drag_data_get), NULL);	
+	g_signal_connect (obj, "drag-data-get", G_CALLBACK(on_drag_data_get), NULL);
 
-}	
+}
 
 
 static void
 mu_msg_attach_view_finalize (GObject *obj)
 {
-	set_message (MU_MSG_ATTACH_VIEW(obj), NULL);	
+	set_message (MU_MSG_ATTACH_VIEW(obj), NULL);
 
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
@@ -236,17 +236,17 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 	GtkTreeIter treeiter;
 	GdkPixbuf *pixbuf;
 	char ctype[128];
-	
+
 	if (!mu_msg_part_looks_like_attachment (part, FALSE))
 		return;
-	
+
 	if (!part->type || !part->subtype)
 		snprintf (ctype, sizeof(ctype), "%s",
 			  "application/octet-stream");
 	else
 		snprintf (ctype, sizeof(ctype), "%s/%s",
 			  part->type, part->subtype);
-	
+
 	pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type (ctype, 16);
 	if (!pixbuf) {
 		g_warning ("%s: could not get icon pixbuf for '%s'",
@@ -254,7 +254,7 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 		pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type
 			("application/octet-stream", 16);
 	}
-	
+
 	gtk_list_store_append (cbdata->store, &treeiter);
 	gtk_list_store_set (cbdata->store, &treeiter,
 			    NAME_COL, mu_msg_part_file_name (part),
@@ -263,7 +263,7 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 			    -1);
 	if (pixbuf)
 		g_object_unref (pixbuf);
-	
+
 	++cbdata->count;
 }
 
@@ -272,22 +272,21 @@ mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg)
 {
 	GtkListStore *store;
 	CBData cbdata;
-	
+
 	g_return_val_if_fail (MU_IS_MSG_ATTACH_VIEW(self), -1);
-	
+
 	store = GTK_LIST_STORE (gtk_icon_view_get_model (GTK_ICON_VIEW(self)));
 	gtk_list_store_clear (store);
 
 	set_message (self, msg);
-	
+
 	if (!msg)
 		return 0;
 
-	
+
 	cbdata.store = store;
 	cbdata.count = 0;
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &cbdata);
-	
+	mu_msg_part_foreach (msg, FALSE, (MuMsgPartForeachFunc)each_part, &cbdata);
+
 	return cbdata.count;
 }
-
