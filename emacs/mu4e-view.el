@@ -201,7 +201,7 @@ if IS-OPEN is nil, and otherwise open it."
 			  'face 'mu4e-view-link-face
 			  'keymap map
 			  'mouse-face 'highlight)
-			(when size
+			(when (and size (> size 0))
 			  (concat (format "(%s)"
 			     (propertize (mu4e-display-size size)
 				  'face 'mu4e-view-header-key-face)))))))
@@ -374,7 +374,7 @@ Seen; if the message is not New/Unread, do nothing."
 
 
 (defun mu4e-color-cited ()
-  "Colorize message content based on the citation level."  
+  "Colorize message content based on the citation level."
   (save-excursion
     (let ((more-lines t))
       (goto-char (point-min))
