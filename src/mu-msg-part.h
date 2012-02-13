@@ -43,6 +43,9 @@ struct _MuMsgPart {
 	/* the file name (if any) */
 	char             *file_name;
 
+	/* description (if any) */
+	char             *description;
+
 	/* usually, "attachment" or "inline" */
 	char             *disposition;
 
@@ -55,6 +58,7 @@ struct _MuMsgPart {
 				   * message body*/
 	gboolean	 is_leaf; /* if the body is a leaf part (MIME
 				   * Part), not eg. a multipart/ */
+	gboolean         is_msg;  /* part is a message/rfc822 */
 
 	/* if TRUE, mu_msg_part_destroy will free the member vars
 	 * as well*/
@@ -70,6 +74,16 @@ typedef struct _MuMsgPart MuMsgPart;
  * @return the file name
  */
 #define mu_msg_part_file_name(pi)    ((pi)->file_name)
+
+
+/**
+ * macro to get the description for this mime-part
+ *
+ * @param pi a MuMsgPart instance
+ *
+ * @return the description
+ */
+#define mu_msg_part_description(pi)    ((pi)->description)
 
 
 /**
@@ -143,11 +157,12 @@ gchar* mu_msg_part_save_temp (MuMsg *msg, guint partidx, GError **err);
  * @param msg a msg
  * @param targetdir where to store the part
  * @param partidx the part for which to determine a filename
+ * @param err receives error information (when function returns NULL)
  *
  * @return a filepath (g_free when done with it) or NULL in case of error
  */
 gchar* mu_msg_part_filepath (MuMsg *msg, const char* targetdir,
-			     guint partidx) G_GNUC_WARN_UNUSED_RESULT;
+			     guint partidx, GError **err) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -194,12 +209,15 @@ typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
  * call a function for each of the mime part in a message
  *
  * @param msg a valid MuMsg* instance
+ * @param recurse_rfc822 whether to recurse into message/rfc822 parts
+ *        generallly, this is only needed when indexing message contents
  * @param func a callback function to call for each contact; when
  * the callback does not return TRUE, it won't be called again
  * @param user_data a user-provide pointer that will be passed to the callback
  *
  */
-void mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func,
+void mu_msg_part_foreach (MuMsg *msg, gboolean recurse_rfc822,
+			  MuMsgPartForeachFunc func,
 			  gpointer user_data);
 
 G_END_DECLS

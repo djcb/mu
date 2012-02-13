@@ -201,20 +201,26 @@ static void
 each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 {
 	const char *fname;
+	char *name;
+
+	if (!mu_msg_part_looks_like_attachment (part, TRUE))
+		return;
 
 	fname = mu_msg_part_file_name (part);
-	if (fname) {
-		char *esc;
-		esc   = mu_str_escape_c_literal (fname, TRUE);
-		*parts = g_strdup_printf
+	if (!fname)
+		fname = mu_msg_part_description (part);
+
+	if (fname)
+		name = mu_str_escape_c_literal (fname, TRUE);
+	else
+		name = g_strdup_printf ("\"part-%d\"", part->index);
+
+	*parts = g_strdup_printf
 			("%s(:index %d :name %s :mime-type \"%s/%s\" :size %d)",
-			 *parts ? *parts : "",
-			 part->index,
-			 esc,
+			 *parts ? *parts : "",  part->index, name,
 			 part->type ? part->type : "application",
 			 part->subtype ? part->subtype : "octet-stream",
 			 part->size);
-	}
 }
 
 
@@ -224,7 +230,8 @@ append_sexp_attachments (GString *gstr, MuMsg *msg)
 	char *parts;
 
 	parts = NULL;
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &parts);
+	mu_msg_part_foreach (msg, FALSE,
+			     (MuMsgPartForeachFunc)each_part, &parts);
 
 	if (parts)
 		g_string_append_printf (gstr, "\t:attachments (%s)\n", parts);

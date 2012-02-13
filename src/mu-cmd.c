@@ -79,7 +79,8 @@ get_attach_str (MuMsg *msg)
 	gchar *attach;
 
 	attach = NULL;
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &attach);
+	mu_msg_part_foreach (msg, FALSE,
+			     (MuMsgPartForeachFunc)each_part, &attach);
 
 	return attach;
 }
