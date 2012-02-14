@@ -167,18 +167,4 @@ clicked."
       "Outgoing mail will now be sent directly"))
   (mu4e-main-view))
 
-(defun mu4e-display-manual ()
-  "Display the mu4e manual info pages."
-  (interactive)
-  (info-display-manual "mu4e"))
-
-
-(defun mu4e-quit()
-  "Quit the mm session."
-  (interactive)
-  (when (y-or-n-p "Are you sure you want to quit? ")
-    (message nil)
-    (mu4e-kill-proc)
-    (kill-buffer)))
-
 (provide 'mu4e-main)

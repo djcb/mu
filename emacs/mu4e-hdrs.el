@@ -286,7 +286,6 @@ after the end of the search results."
 
       (define-key map "H" 'mu4e-display-manual)
 
-
       ;; menu
       (define-key map [menu-bar] (make-sparse-keymap))
       (let ((menumap (make-sparse-keymap "Headers")))

@@ -579,7 +579,8 @@ uses the emacs built-in `html2text'. Alternatively, if
 		    ;; there's no text part, or it's very small
 		    (with-temp-buffer
 		      (insert html)
-		      (if mu4e-html2text-command ;; if defined, use the external tool
+		      ;; if defined, use the external tool
+		      (if mu4e-html2text-command 
 			(shell-command-on-region (point-min) (point-max)
 			  mu4e-html2text-command
 			  nil t)
@@ -590,6 +591,26 @@ uses the emacs built-in `html2text'. Alternatively, if
 		    txt))))
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
+
+
+(defun mu4e-display-manual ()
+  "Display the mu4e manual page for the current mode, or go to the
+top level if there is none."
+  (interactive)
+  (info (case major-mode
+	  ('mu4e-main-mode    "(mu4e)Main view")
+	  ('mu4e-hdrs-mode    "(mu4e)Headers view")
+	  ('mu4e-view-mode    "(mu4e)Message view")
+	  (t                 "mu4e"))))
+
+(defun mu4e-quit()
+  "Quit the mm session."
+  (interactive)
+  (when (y-or-n-p "Are you sure you want to quit? ")
+    (message nil)
+    (mu4e-kill-proc)
+    (kill-buffer)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
