@@ -188,14 +188,20 @@ complete list of available headers, see `mu4e-header-names'."
   :type 'string
   :group 'mu4e-view)
 
+(defcustom mu4e-view-prefer-html nil
+  "Whether to base the body display on the HTML-version of the
+e-mail message (if there is any."
+  :type 'boolean
+  :group 'mu4e-view)
+
 (defcustom mu4e-html2text-command nil
   "Shel command that converts HTML from stdin into plain text on
 stdout. If this is not defined, the emacs `html2text' tool will be
-used when faced with html-only message."
+used when faced with html-only message. If you use htmltext, it's
+recommended you use \"html2text -utf8 -width 72\"."
   :type 'string
   :group 'mu4e-view
   :safe 'stringp)
-
 
 ;; Composing / Sending messages
 (defgroup mu4e-compose nil
@@ -438,7 +444,8 @@ maildirs under `mu4e-maildir."
 		(lambda (item)
 		  (concat
 		    "["
-		    (propertize (make-string 1 (cdr item)) 'face 'mu4e-view-link-face)
+		    (propertize (make-string 1 (cdr item))
+		      'face 'mu4e-view-link-face)
 		    "]"
 		    (car item)))
 		mlist ", "))
@@ -463,7 +470,9 @@ maildirs under `mu4e-maildir."
 	     (lambda (bm)
 	       (let ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
 		 (concat
-		   "[" (propertize (make-string 1 key) 'face 'mu4e-view-link-face) "]"
+		   "[" (propertize (make-string 1 key)
+			 'face 'mu4e-view-link-face)
+		   "]"
 		   title))) mu4e-bookmarks ", "))
 	  (kar (read-char (concat prompt bmarks))))
     (mu4e-get-bookmark-query kar)))
@@ -559,36 +568,41 @@ Also see `mu/flags-to-string'.
     ((and (>= size 1000) (< size 1000000))
       (format "%2.1fK" (/ size 1000.0)))
     ((< size 1000) (format "%d" size))
-    (t "<unknown>")))
+    (t (propertize "?" 'face 'mu4e-system-face))))
 
 
 (defun mu4e-body-text (msg)
   "Get the body in text form for this message, which is either :body-txt,
 or if not available, :body-html converted to text. By default, it
 uses the emacs built-in `html2text'. Alternatively, if
-`mu4e-html2text-command' is non-nil, it will use that."
+`mu4e-html2text-command' is non-nil, it will use that. Normally,
+function prefers the text part, but this can be changed by setting
+`mu4e-view-prefer-html'."
   (let* ((txt (plist-get msg :body-txt))
 	 (html (plist-get msg :body-html))
-    ;; get the html body if there is no text, or if the text body is super
-    ;; short compared to the html one -- ie., it's probably just some lame 'this
-    ;; message requires html' message
-	  (body (if (not html)
-		  (if (not txt) "" txt)
-		  ;; there's an html part
-		  (if (or (not txt) (< (* 10 (length txt)) (length html)))
-		    ;; there's no text part, or it's very small
-		    (with-temp-buffer
-		      (insert html)
-		      ;; if defined, use the external tool
-		      (if mu4e-html2text-command 
-			(shell-command-on-region (point-min) (point-max)
-			  mu4e-html2text-command
-			  nil t)
-			;; otherwise...
-			(html2text))
-		      (buffer-string))
-		    ;; there's a normal sized text part
-		    txt))))
+	  (body))
+    ;; is there an appropriate text body?
+    (when (and txt
+	    (not (and mu4e-view-prefer-html html))
+	    (> (* 10 (length txt))
+	      (if html (length html) 0))) ;; real text part?
+      (setq body txt))
+    ;; no body yet? try html
+    (unless body 
+      (when html
+	(setq body 
+	  (with-temp-buffer
+	    (insert html)
+	    ;; if defined, use the external tool
+	    (if mu4e-html2text-command 
+	      (shell-command-on-region (point-min) (point-max)
+		mu4e-html2text-command nil t)
+	      ;; otherwise...
+	      (html2text))
+	    (buffer-string)))))
+    ;; still no body?
+    (unless body
+      (setq body (propertize "No body" 'face 'mu4e-system-face)))
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
 

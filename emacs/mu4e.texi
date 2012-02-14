@@ -426,7 +426,7 @@ This looks something like the following:
 
 
 @verbatim
-------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
   Date              Flgs   From/To             Subject
   2011-12-16 18:38  uN     To Edmund Dantès    + Re: Extension security?
   2011-12-16 21:44  uN     Abbé Busoni             + Re: Extension security?
@@ -434,11 +434,11 @@ This looks something like the following:
   2011-12-17 04:04  uN     Jacopo                    + Re: Extension security?
   2011-12-17 14:36  uN     Mercédès                    + Re: Extension security?
   2011-12-18 06:05  uN     Beachamp                      \ Re: Extension security?
-  2011-12-16 18:23  uN     Eric Schulte        + Re: [O] A presentation tool for org-mode
-  2011-12-17 01:53  usaN   Gaspard Caderousse    \ Re: [O] A presentation tool for org-mode
+  2011-12-16 18:23  uN     Albert de Moncerf   + Re: [O] A presentation tool
+  2011-12-17 01:53  usaN   Gaspard Caderousse    \ Re: [O] A presentation tool
   2011-12-16 16:31  uN     Baron Danglars      | [O] imaxima?
 End of search results
-------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 @end verbatim
 
 It should be fairly obvious what this means, but some notes:
@@ -565,16 +565,25 @@ q@t{open} program. If you want to use another program, you specify this by
 setting the @t{MU_PLAY_PROGRAM} environment variable.
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
-messages consisting of both a plain-text and an html (rich-text_ version of
+messages consisting of both a plain-text and an html (rich-text) version of
 its body-text. If there is only an html-version, or if the plaint-text version
 is too short in comparison with the html part, @t{mu4e} tries to convert the
 html into plain-text for display. The default way to do that is to use the
 Emacs built-in @code{html2text} function, but if you set the variable
-@code{mu4e-html2text-command} to some external program, that will be
+@code{mu4e-html2text-command} to some external program, that program will be
 used. This program is expected to take html from standard input and write
-plain text on standard output. An obvious choice for this is the program that
-is actually called
-@t{html2text}@footnote{@url{http://www.mbayer.de/html2text/}}.
+plain text in @t{utf-8} encoding on standard output.
+
+An obvious choice for this is the program that is actually @emph{called}
+@t{html2text}@footnote{@url{http://www.mbayer.de/html2text/}}, which you could
+set up with something like the following in your initialization files:
+
+@lisp
+(setq mu4e-html2text-command "html2text -utf8 -width 72")
+@end lisp
+
+Normally, @t{mu4e} prefers the text-version of an e-mail message to determine
+the message body. You can change this by setting @code{mu4e-view-prefer-html}.
 
 @node Editor view
 @section Editor view
