@@ -617,6 +617,65 @@ get_body (MuMsgFile *self, gboolean want_html)
 }
 
 
+static void
+append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
+{
+	GMimeContentType *ct;
+	gchar *parttxt, *tmp;
+	gboolean err;
+
+	if (!GMIME_IS_PART(part))
+		return;
+
+	ct = g_mime_object_get_content_type (part);
+	if (!GMIME_IS_CONTENT_TYPE(ct)) {
+		g_warning ("%s: no content-type for part", __FUNCTION__);
+		return;
+	}
+
+	/* is it right content type? */
+	if (!g_mime_content_type_is_type (ct, "text", "plain"))
+		return; /* nope */
+
+	parttxt = mu_msg_mime_part_to_string (GMIME_PART(part), &err);
+	if (err) {
+		g_warning ("%s: could not get text for part", __FUNCTION__);
+		return;
+	}
+
+	/* it's a text part -- append it! note, we ignore the
+	 * disposition here. */
+	tmp = *txt;
+	if (*txt) {
+		*txt = g_strconcat (*txt, parttxt, NULL);
+		g_free (parttxt);
+	} else
+		*txt = parttxt;
+
+	g_free (tmp);
+}
+
+/* instead of just the body, this function returns a concatenation of
+ * all text/plain parts with inline disposition
+ */
+static char*
+get_concatenated_text (MuMsgFile *self)
+{
+	char *txt;
+
+	g_return_val_if_fail (self, NULL);
+	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
+
+	txt = NULL;
+	g_mime_message_foreach (self->_mime_msg,
+				(GMimeObjectForeachFunc)append_text,
+				&txt);
+
+	return txt;
+}
+
+
+
 
 static gboolean
 contains (GSList *lst, const char *str)
@@ -702,8 +761,8 @@ recipient_type (MuMsgFieldId mfid)
 {
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_BCC: return GMIME_RECIPIENT_TYPE_BCC;
-	case MU_MSG_FIELD_ID_CC: return GMIME_RECIPIENT_TYPE_CC;
-	case MU_MSG_FIELD_ID_TO: return GMIME_RECIPIENT_TYPE_TO;
+	case MU_MSG_FIELD_ID_CC : return GMIME_RECIPIENT_TYPE_CC;
+	case MU_MSG_FIELD_ID_TO : return GMIME_RECIPIENT_TYPE_TO;
 	default: g_return_val_if_reached (-1);
 	}
 }
@@ -728,10 +787,10 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
 		return get_recipient (self, recipient_type(mfid));
 
-	case MU_MSG_FIELD_ID_BODY_TEXT:
+	case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE;
+		return get_concatenated_text (self);
 	case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE;
-		return get_body
-			(self, mfid == MU_MSG_FIELD_ID_BODY_HTML ? TRUE : FALSE);
+		return get_body (self, TRUE);
 
 	case MU_MSG_FIELD_ID_FROM:
 		return (char*)maybe_cleanup

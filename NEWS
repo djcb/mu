@@ -12,6 +12,7 @@
    - don't repeat 'Re:' / 'Fwd:'
    - colorize cited message parts
    - better handling of text-based, embedded message attachments
+   - for text-bodies, concatenate all text/plain parts
    - some other minor things
    - documentation improvements
 
