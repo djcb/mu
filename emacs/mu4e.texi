@@ -835,6 +835,19 @@ You can use it with a @t{capture}-template:
 After setting this up, you can use @t{M-x org-capture RET c} to get a template
 for a new contact based on the 'From:' address.
 
+
+@node Speedbar support
+@chapter Speedbar support
+
+Mu4e can display full list of maildirs in speedbar.
+To enable speedbar support add this to your config:
+
+@lisp
+(require 'speedbar)
+(require 'mu4e-speedbar)
+@end lisp
+
+
 @node Example configuration
 @chapter Example configuration
 
