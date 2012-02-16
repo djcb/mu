@@ -31,7 +31,8 @@
 ;;; Code:
 (eval-when-compile (require 'cl))
 (require 'html2text)
-(require 'filladapt)
+;; we prefer the improved fill-region
+(require 'filladapt nil 'noerror)
 (require 'comint)
 
 (defconst mu4e-view-buffer-name "*mu4e-view*"
@@ -193,7 +194,8 @@ if IS-OPEN is nil, and otherwise open it."
 		      (define-key map [mouse-2] (mu4e-open-save-attach-func id nil))
 		      (define-key map [?\r]     (mu4e-open-save-attach-func id nil))
 		      (define-key map [S-mouse-2](mu4e-open-save-attach-func id t))
-		      (define-key map (kbd "<S-return>") (mu4e-open-save-attach-func id t))
+		      (define-key map (kbd "<S-return>")
+			(mu4e-open-save-attach-func id t))
 		      (concat
 			(propertize (format "[%d]" id)
 			  'face 'mu4e-view-attach-number-face)

@@ -519,7 +519,8 @@ On Sun 21 Dec 2003 09:06:34 PM EET, Paul wrote:
 
 Some notes:
 @itemize
-@item You can customize the header fields to show by setting the variable @code{mu4e-view-fields}.
+@item You can customize the header fields to show by setting the
+variable @code{mu4e-view-fields}.
 @item You can customize the date format by setting the variable
 @code{mu4e-date-format-long}, using the same format that
 @code{format-time-string} uses.
@@ -585,6 +586,11 @@ set up with something like the following in your initialization files:
 Normally, @t{mu4e} prefers the text-version of an e-mail message to determine
 the message body. You can change this by setting @code{mu4e-view-prefer-html}.
 
+Note: if you have installed the
+@t{filladapt}@footnote{@url{http://www.wonderworks.com/download/filladapt.el}}
+package, @t{mu4e} will use it for line-wrapping of the body text (@key{w}), as
+it generally does a better job than the mechanism emacs provides by default.
+
 @node Editor view
 @section Editor view
 
@@ -612,8 +618,8 @@ On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
 
 Since @t{mu4e} uses Gnu's message editor, for documentation
 @inforef{Message}. Also, @pxref{Sending mail}. There are many key-bindings
-available, here are some of the essential ones (and you can use the menu to
-find more):
+available, here are some of the essential ones (you can use the menu to find
+more):
 
 @verbatim
 key          description
@@ -1093,6 +1099,8 @@ In this chapter we list a number of anticipated questions and their answers.
 select ('mark' in emacs-speak) the messages; the actions you then take (e.g.,
 @key{DEL} for delete, @key{m} for move and @key{t} for trash) will apply to
 @emph{all} selected messages
+@item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
+address management with @t{BBDB}; we recommend using @ref{Org-contacts} for now.
 @item @emph{mu4e only seems to return a subset of all matches - how can I get
 all?}. Yes, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
@@ -1103,7 +1111,8 @@ hello} you will get all matches, while @t{s hello} only gets you
 up-to-a-limited-number matches. Same for the other search based commands,
 @code{mu4e-jump-to-maildir} (default: @key{j}) and @code{mu4e-search-bookmark}
 (default: @key{b}).
-@item @emph{How can I easily include attachments in the messages I write?} Drag-and-drop.
+@item @emph{How can I easily include attachments in the messages I write?}
+Drag-and-drop.
 @end itemize
 
 @node Known issues / missing features
