@@ -38,6 +38,7 @@ tested on Debian GNU/Linux.
 * Running mu4e::
 * Searching mail::
 * Org-mode support::
+* Speedbar support::
 * Example configuration::
 * FAQ - Frequently Anticipated Questions::
 * Known issues / missing features::
