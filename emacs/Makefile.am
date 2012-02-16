@@ -37,6 +37,7 @@ elisp_DATA=			\
 	mu4e-main.el		\
 	mu4e-send.el		\
 	mu4e-version.el		\
+	mu4e-speedbar.el	\
 	org-mu4e.el
 
 EXTRA_DIST=$(elisp_DATA)
