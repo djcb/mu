@@ -417,7 +417,7 @@ Seen; if the message is not New/Unread, do nothing."
   "*internal* A map of some number->url so we can jump to url by number.")
 
 (defconst mu4e-url-regexp
-  "\\(https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/]+\\)"
+  "\\(https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\)"
   "*internal* regexp that matches URLs; match-string 1 will contain
   the matched URL, if any.")
 
