@@ -67,7 +67,7 @@
                                     'highlight
                                     'mu4e-main-speedbar-find-file
                                     maildir-name))
-          (mu4e-get-maildirs "~/Maildir/")))
+          (mu4e-get-maildirs mu4e-maildir)))
 
 (defun mu4e-main-speedbar-find-file (&optional text token ident)
   "Load in the mu4e file TEXT. TOKEN and INDENT are not used."
@@ -82,5 +82,5 @@
   (erase-buffer)
   (mu4e-render-maildir-list))
 
-(provide 'sb-mu4e)
+(provide 'mu4e-speedbar)
 ;;; mu4e-speedbar.el ends here
