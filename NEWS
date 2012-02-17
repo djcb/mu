@@ -13,7 +13,7 @@
    - colorize cited message parts
    - better handling of text-based, embedded message attachments
    - for text-bodies, concatenate all text/plain parts
-   - some other minor things
+   - make filladapt dep optional
    - documentation improvements
 
 ** Release 0.9.8 <2012-01-31>

@@ -639,9 +639,14 @@ see, are the result of some query. Even if you 'jump to a folder', in fact you
 are executing a search query for messages that happen to have the property of
 being in a certain folder.
 
-Note, all queries normally return only up to @code{mu4e-search-results-limit}
-results; if you need more than that, prefix your search command with
-@kbd{C-u}.
+Queries normally return only up to @code{mu4e-search-results-limit} (which
+defaults to 500) results. You get @emph{all} results when you prefix your
+search commands (such as with @code{mu4e-search}, @code{mu4e-search-bookmark}
+and @code{mu4e-jump-to-maildir} with @kbd{C-u}.
+
+The reason for limiting the number of results in the query is that emacs may
+become a bit slow when displaying many results, and in many cases
+@code{mu4e-search-results-limit} should be enough.
 
 @menu
 * Queries::
