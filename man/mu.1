@@ -11,8 +11,6 @@ index and search e-mail messages.
 
 .B mu index [options]
 
-.B mu cleanup [options]
-
 .B mu find [options] <search expression>
 
 .B mu view <file> [<files>]
@@ -54,13 +52,6 @@ own man-page as well.
 for indexing (analyzing) the contents of your Maildirs, and storing the
 information in a database. See
 .BR mu-index(1)
-\.
-
-.TP
-\fBcleanup\fR
-for removing messages from the database for which there is no longer a
-corresponding message file in the file system. See
-.BR mu-cleanup(1)
 \.
 
 .TP
@@ -113,7 +104,7 @@ support colors.
 
 \fBmu\fR's output is in the current locale, with the exceptions of the output
 specifically meant for output to UTF8-encoded files. In practice, this means
-that the output of commands \fBindex\fR, \fBcleanup\fR, \fBview\fR,
+that the output of commands \fBindex\fR, \fBview\fR,
 \fBextract\fR is always encoded according to the current locale.
 
 The same is true for \fBfind\fR and \fBcfind\fR, with some exceptions, where
@@ -129,7 +120,7 @@ For \fBfind\fR the output is encoded according the locale for
 
 .SH DATABASE AND FILE
 
-Commands \fBmu index\fR, \fBfind\fR and \fBcleanup\fR work with the database,
+Commands \fBmu index\fR and \fBfind\fR and \fBcfind\fR work with the database,
 while the other ones work on invidual mail files. Hence, running \fview\fR,
 \fBmkdir\fR and \fBextract\fR does not require the mu database.
 
@@ -227,7 +218,6 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .SH "SEE ALSO"
 
 .BR mu-index(1)
-.BR mu-cleanup(1)
 .BR mu-find(1)
 .BR mu-cfind(1)
 .BR mu-mkdir(1)

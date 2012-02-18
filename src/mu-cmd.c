@@ -392,7 +392,7 @@ static void
 show_usage (void)
 {
 	g_message ("usage: mu command [options] [parameters]");
-	g_message ("where command is one of index, find, cfind, view, mkdir, cleanup, "
+	g_message ("where command is one of index, find, cfind, view, mkdir, "
 		   "extract, add, remove or server");
 	g_message ("see the mu, mu-<command> or mu-easy manpages for "
 		   "more information");
