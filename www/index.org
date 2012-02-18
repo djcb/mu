@@ -37,6 +37,10 @@
 
 ** News
 
+   - 2012-02-17: released [[http://mu0.googlecode.com/files/mu-0.9.8.1.tar.gz][mu-0.9.8.1]], which has a number of improvements to the
+     0.9.8 release: add mark as read/unread, colorize cited message parts,
+     better handling of text-based message parts, documentation fixes,
+     documentation updates and a few fixes here and there
    - 2012-02-09: moved the mu source code repository [[https://github.com/djcb/mu][to Github]].
    - 2012-01-31: finally, [[http://mu0.googlecode.com/files/mu-0.9.8.tar.gz][mu-0.9.8]] is available. It comes with an emacs-based
      e-mail client, [[file:mu4e.html][mu4e]], and much improved [[file:mu-guile.html][guile bindings]]. Furthermore, It adds
