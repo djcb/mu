@@ -129,9 +129,9 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
   For example, to get the number of lines in all your messages mentioning
   /banana/, you could use something like:
 
-#+html:<pre> $ mu find --fields="'l'" banana | xargs wc -l</pre>
+#+html:<pre> $ mu find --exec='wc -l'</pre>
 
-  Note that we use ='l'=, so the returned message paths will be quoted. This is
+  Note that we use 'l', so the returned message paths will be quoted. This is
   useful if you have maildirs with spaces in their names.
 
   For further processing, also the ~--format=(xml|sexp)~ can be useful. For
@@ -140,7 +140,6 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
 #+html:<pre> $ mu find --format=xml pancake</pre>
 
   will give you a list of pancake-related messages in XML-format.
-
 
 #+html:<hr/><div align="center">&copy; 2011-2012 Dirk-Jan C. Binnema</div>
 #+begin_html
