@@ -129,13 +129,12 @@ is nil this is simply empty, otherwise it is the old CC-list
 together with the old TO-list, minus `user-mail-address'. The
 result of this function is either nil or a string to be used for
 the Cc: field."
-  (let ((cc-lst (plist-get msg :cc))
-	 (to-lst (plist-get msg :to)))
-    (when reply-all
-      (setq cc-lst (append cc-lst to-lst)))
-    ;; remove myself from cc
-    (setq cc-lst (mu4e-send-recipients-remove cc-lst user-mail-address))
-    (mu4e-send-recipients-to-string cc-lst)))
+  (when reply-all
+    (let ((cc-lst
+	    (mu4e-send-recipients-remove ;; remove myself from cc
+	      (append (plist-get msg :cc) (plist-get msg :to))
+	      user-mail-address)))
+      (mu4e-send-recipients-to-string cc-lst))))
 
 
 (defun mu4e-send-from-create ()
