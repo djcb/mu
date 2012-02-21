@@ -449,8 +449,9 @@ SCM_DEFINE_PUBLIC (save_part, "mu:save-part", 2, 0, 0,
 	index	= scm_to_uint (INDEX);
 	msgpath = scm_to_utf8_string (MSGPATH);
 
-	err	= NULL;
-	msg	= mu_msg_new_from_file (msgpath, NULL, &err);
+	attachpath     = NULL;
+	err	       = NULL;
+	msg	       = mu_msg_new_from_file (msgpath, NULL, &err);
 	if (!msg) {
 		rv_scm = mu_guile_g_error (FUNC_NAME, err);
 		goto leave;
