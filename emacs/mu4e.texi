@@ -837,7 +837,7 @@ You can use it with a @t{capture}-template:
 ("c" "contacts" entry (file "contacts.org")
 "* %(mu4e-view-snarf-from 'name)
 :PROPERTIES:
-:EMAIL %(mu4e-view-snarf-from 'email)
+:EMAIL: %(mu4e-view-snarf-from 'email)
 :NICK:
 :BIRTHDAY:
 :END:\n\n")
