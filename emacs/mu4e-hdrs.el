@@ -237,7 +237,6 @@ after the end of the search results."
 
 
 ;;; hdrs-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq mu4e-hdrs-mode-map nil)
 (defvar mu4e-hdrs-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
 (unless mu4e-hdrs-mode-map
