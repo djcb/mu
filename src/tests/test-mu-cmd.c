@@ -240,6 +240,70 @@ test_mu_find_04 (void)
 }
 
 
+static void
+test_mu_find_links (void)
+{
+	gchar *muhome, *cmdline, *output, *erroutput, *tmpdir;
+
+
+	muhome = fill_database ();
+	g_assert (muhome);
+	tmpdir = test_mu_common_get_random_tmpdir();
+
+	cmdline = g_strdup_printf ("%s find --muhome=%s --format=links --linksdir=%s "
+				   "mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
+
+	if (g_test_verbose())
+		g_printerr ("%s\n", cmdline);
+
+	g_assert (g_spawn_command_line_sync (cmdline,
+					     &output, &erroutput,
+					     NULL, NULL));
+	if (g_test_verbose())
+		g_print ("\nOutput:\n%s", output);
+
+	/* there should be no errors */
+	g_assert_cmpuint (newlines_in_output(output),==,0);
+	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
+	g_free (output);
+	g_free (erroutput);
+
+
+
+	/* now we try again, we should get 2 + 1 lines of error output,
+	 * because the target files already exist */
+	g_assert (g_spawn_command_line_sync (cmdline,
+					     &output, &erroutput,
+					     NULL, NULL));
+	if (g_test_verbose())
+		g_print ("\nOutput:\n%s", output);
+
+	g_assert_cmpuint (newlines_in_output(output),==,0);
+	g_assert_cmpuint (newlines_in_output(erroutput),==,3);
+	g_free (output);
+	g_free (erroutput);
+
+	/* now we try again with --clearlinks, and the we should be back to 0 errors */
+	g_free (cmdline);
+	cmdline = g_strdup_printf ("%s find --muhome=%s --format=links --linksdir=%s --clearlinks "
+				   "mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
+	g_assert (g_spawn_command_line_sync (cmdline,
+					     &output, &erroutput,
+					     NULL, NULL));
+	if (g_test_verbose())
+		g_print ("\nOutput:\n%s", output);
+	g_assert_cmpuint (newlines_in_output(output),==,0);
+	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
+	g_free (output);
+	g_free (erroutput);
+
+	g_free (cmdline);
+	g_free (muhome);
+	g_free (tmpdir);
+}
+
+
+
 /* some more tests */
 static void
 test_mu_find_maildir_special (void)
@@ -692,6 +756,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-find-file", test_mu_find_file);
 
 	g_test_add_func ("/mu-cmd/test-mu-find-mime", test_mu_find_mime);
+
+	g_test_add_func ("/mu-cmd/test-mu-find-links", test_mu_find_links);
 
 	g_test_add_func ("/mu-cmd/test-mu-find-text-in-rfc822",
 			 test_mu_find_text_in_rfc822);

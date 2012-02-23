@@ -404,10 +404,8 @@ create_linksdir_maybe (const char *linksdir, gboolean clearlinks)
 	return TRUE;
 
 fail:
-	if (err) {
-		g_warning ("%s", err->message ? err->message : "unknown error");
-		g_error_free (err);
-	}
+	g_warning ("%s", err->message ? err->message : "unknown error");
+	g_clear_error (&err);
 
 	return FALSE;
 }
@@ -428,11 +426,9 @@ link_message (const char *src, const char *destdir)
 
 	err = NULL;
 	if (!mu_maildir_link (src, destdir, &err)) {
-		if (err) {
-			g_warning ("%s", err->message ?
-				   err->message : "unknown error");
-			g_error_free (err);
-		}
+		g_warning ("%s", err->message ? err->message :
+			   "unknown error");
+		g_clear_error (&err);
 		return FALSE;
 	}
 
@@ -476,13 +472,11 @@ output_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks,
 		return FALSE;
 	}
 
-	if (count) {
+	if (count == 0) {
 		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
-			     "no existing matches for search expression");
+			     "no matches for search expression");
 		return FALSE;
 	}
-
-
 
 	return TRUE;
 }
