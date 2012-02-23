@@ -119,22 +119,24 @@ AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
 
 
-# xapian?
-AC_CHECK_PROG(XAPIAN,xapian-config,xapian-config,no)
-AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN" != "xno")
-AS_IF([test "x$XAPIAN" = "xno"],[
+# xapian checking - we need 1.2.x at least
+AC_CHECK_PROG(XAPIAN_CONFIG,xapian-config,xapian-config,no)
+AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN_CONFIG" != "xno")
+AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
    AC_MSG_ERROR([
    *** xapian could not be found; please install it
    *** e.g., in debian/ubuntu the package would be 'libxapian-dev'
    *** If you compiled it yourself, you should ensure that xapian-config
-   *** is in your PATH.
-   ])
-],[
-   XAPIAN_CXXFLAGS=`$XAPIAN --cxxflags`
-   XAPIAN_LIBS=`$XAPIAN --libs`
-   have_xapian="yes"
-   xapian_version="`xapian-config --version`"
-])
+   *** is in your PATH.])],
+   [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
+AS_CASE([$xapian_version],
+	[1.[[2-9]].[[0-9]]], [],
+	[AC_MSG_ERROR([*** xapian version >= 1.2 needed, but version $xapian_version found.])])
+
+XAPIAN_CXXFLAGS="`$XAPIAN_CONFIG --cxxflags`"
+XAPIAN_LIBS="`$XAPIAN_CONFIG --libs`"
+have_xapian="yes"
+
 AC_SUBST(XAPIAN_CXXFLAGS)
 AC_SUBST(XAPIAN_LIBS)
 
