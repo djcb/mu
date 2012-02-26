@@ -32,7 +32,7 @@
 #include "src/mu-maildir.h"
 
 static void
-test_mu_maildir_mkmdir_01 (void)
+test_mu_maildir_mkdir_01 (void)
 {
 	int i;
 	gchar *tmpdir, *mdir, *tmp;
@@ -66,7 +66,7 @@ test_mu_maildir_mkmdir_01 (void)
 
 
 static void
-test_mu_maildir_mkmdir_02 (void)
+test_mu_maildir_mkdir_02 (void)
 {
 	int i;
 	gchar *tmpdir, *mdir, *tmp;
@@ -99,6 +99,77 @@ test_mu_maildir_mkmdir_02 (void)
 }
 
 
+static void
+test_mu_maildir_mkdir_03 (void)
+{
+	int i;
+	gchar *tmpdir, *mdir, *tmp;
+	const gchar *subs[] = {"tmp", "cur", "new"};
+
+	tmpdir = test_mu_common_get_random_tmpdir ();
+	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
+				  "cuux");
+
+	/* create part of the structure already... */
+	{
+		gchar *dir;
+		dir = g_strdup_printf ("%s%ccur", mdir, G_DIR_SEPARATOR);
+		g_assert_cmpuint (g_mkdir_with_parents (dir, 0755), ==, 0);
+		g_free (dir);
+	}
+
+	/* this should still work */
+	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, FALSE, NULL),
+			  ==, TRUE);
+
+	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
+		gchar* dir;
+
+		dir = g_strdup_printf ("%s%c%s", mdir, G_DIR_SEPARATOR,
+				       subs[i]);
+		g_assert_cmpuint (g_access (dir, R_OK), ==, 0);
+		g_assert_cmpuint (g_access (dir, W_OK), ==, 0);
+		g_free (dir);
+	}
+
+	tmp = g_strdup_printf ("%s%c%s", mdir, G_DIR_SEPARATOR, ".noindex");
+	g_assert_cmpuint (g_access (tmp, F_OK), !=, 0);
+
+	g_free (tmp);
+	g_free (tmpdir);
+	g_free (mdir);
+
+}
+
+
+
+static void
+test_mu_maildir_mkdir_04 (void)
+{
+	gchar *tmpdir, *mdir;
+
+	tmpdir = test_mu_common_get_random_tmpdir ();
+	mdir   = g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR,
+				  "cuux");
+
+	/* create part of the structure already... */
+	{
+		gchar *dir;
+		g_assert_cmpuint (g_mkdir_with_parents (mdir, 0755), ==, 0);
+		dir = g_strdup_printf ("%s%ccur", mdir, G_DIR_SEPARATOR);
+		g_assert_cmpuint (g_mkdir_with_parents (dir, 0000), ==, 0);
+		g_free (dir);
+	}
+
+	/* this should fail now, because cur is not read/writable  */
+	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, FALSE, NULL),
+			  ==, FALSE);
+	g_free (tmpdir);
+	g_free (mdir);
+}
+
+
+
 
 static gboolean
 ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg,
@@ -108,7 +179,7 @@ ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg
 }
 
 static void
-test_mu_maildir_mkmdir_03 (void)
+test_mu_maildir_mkdir_05 (void)
 {
 	/* this must fail */
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
@@ -395,12 +466,17 @@ main (int argc, char *argv[])
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_util_maildir_mkmdir */
- 	g_test_add_func ("/mu-maildir/mu-maildir-mkmdir-01",
-			 test_mu_maildir_mkmdir_01);
-	g_test_add_func ("/mu-maildir/mu-maildir-mkmdir-02",
-			 test_mu_maildir_mkmdir_02);
-	g_test_add_func ("/mu-maildir/mu-maildir-mkmdir-03",
-			 test_mu_maildir_mkmdir_03);
+ 	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-01",
+			 test_mu_maildir_mkdir_01);
+	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-02",
+			 test_mu_maildir_mkdir_02);
+	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-03",
+			 test_mu_maildir_mkdir_03);
+	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-04",
+			 test_mu_maildir_mkdir_04);
+	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-05",
+			 test_mu_maildir_mkdir_05);
+
 
 	/* mu_util_maildir_walk */
 	g_test_add_func ("/mu-maildir/mu-maildir-walk-01",
