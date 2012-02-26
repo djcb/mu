@@ -62,7 +62,7 @@ char* mu_util_guess_maildir (void)
 
 /**
  * guess the place of the mu homedir (typically, ~/.mu). Note, this
- * directory does not necessarily exist. mu_util_check_dir can be use
+ * directory does not necessarily exist. mu_util_check_dir can be used
  * to check that
  *
  * @return the guessed mu homedir, which needs to be freed with g_free

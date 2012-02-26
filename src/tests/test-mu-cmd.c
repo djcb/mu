@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -250,8 +250,9 @@ test_mu_find_links (void)
 	g_assert (muhome);
 	tmpdir = test_mu_common_get_random_tmpdir();
 
-	cmdline = g_strdup_printf ("%s find --muhome=%s --format=links --linksdir=%s "
-				   "mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
+	cmdline = g_strdup_printf (
+		"%s find --muhome=%s --format=links --linksdir=%s "
+		"mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
 
 	if (g_test_verbose())
 		g_printerr ("%s\n", cmdline);
@@ -283,10 +284,12 @@ test_mu_find_links (void)
 	g_free (output);
 	g_free (erroutput);
 
-	/* now we try again with --clearlinks, and the we should be back to 0 errors */
+	/* now we try again with --clearlinks, and the we should be
+	 * back to 0 errors */
 	g_free (cmdline);
-	cmdline = g_strdup_printf ("%s find --muhome=%s --format=links --linksdir=%s --clearlinks "
-				   "mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
+	cmdline = g_strdup_printf (
+		"%s find --muhome=%s --format=links --linksdir=%s --clearlinks "
+		"mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
 	g_assert (g_spawn_command_line_sync (cmdline,
 					     &output, &erroutput,
 					     NULL, NULL));
@@ -404,7 +407,8 @@ test_mu_extract_02 (void)
 				   G_DIR_SEPARATOR);
 
 	output = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
+					     NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
 
 	att1 = g_strdup_printf ("%s%ccuster.jpg", tmpdir, G_DIR_SEPARATOR);
@@ -441,7 +445,8 @@ test_mu_extract_03 (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 	output = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
+					     NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
 
 	att1 = g_strdup_printf ("%s%ccuster.jpg", tmpdir, G_DIR_SEPARATOR);
@@ -559,7 +564,8 @@ test_mu_view_01 (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 	output = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
+					     NULL, NULL));
 	g_assert_cmpstr  (output, !=, NULL);
 
 	/*
@@ -615,7 +621,8 @@ test_mu_view_multi (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 	output = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
+					     NULL, NULL));
 	g_assert_cmpstr  (output, !=, NULL);
 
 	len = strlen(output);
@@ -651,7 +658,8 @@ test_mu_view_multi_separate (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 	output = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
+					     NULL, NULL));
 	g_assert_cmpstr  (output, !=, NULL);
 
 	len = strlen(output);
@@ -683,7 +691,8 @@ test_mu_view_attach (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 	output = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
+					     NULL, NULL));
 	g_assert_cmpstr  (output, !=, NULL);
 
 	len = strlen(output);
@@ -713,7 +722,8 @@ test_mu_mkdir_01 (void)
 				   tmpdir, G_DIR_SEPARATOR);
 
 	output = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL, NULL, NULL));
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
+					     NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
 
 	dir = g_strdup_printf ("%s%ctest1%ccur", tmpdir, G_DIR_SEPARATOR,
