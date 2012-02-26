@@ -394,12 +394,13 @@ create_linksdir_maybe (const char *linksdir, gboolean clearlinks)
 	GError *err;
 
 	err = NULL;
-	if (access (linksdir, F_OK) != 0) {
-		if (!mu_maildir_mkdir (linksdir, 0700, TRUE, &err))
-			goto fail;
-	} else if (clearlinks)
-		if (!mu_maildir_clear_links (linksdir, &err))
-			goto fail;
+	/* note, mu_maildir_mkdir simply ignores whatever part of the
+	 * mail dir already exists */
+	if (!mu_maildir_mkdir (linksdir, 0700, TRUE, &err))
+		goto fail;
+
+	if (clearlinks && !mu_maildir_clear_links (linksdir, &err))
+		goto fail;
 
 	return TRUE;
 
@@ -797,6 +798,7 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, GError **err)
 
 		output_xml_msg (msg);
 		++count;
+
 	}
 	g_print ("</messages>\n");
 
