@@ -69,15 +69,6 @@ create_maildir (const char *path, mode_t mode, GError **err)
 	int i;
 	const gchar* subdirs[] = {"new", "cur", "tmp"};
 
-	/* make sure it does not exist yet */
-	if (access (path, F_OK) == 0)
-		errno = EEXIST;
-
-	if (errno != ENOENT) {
-		g_set_error (err, 0, MU_ERROR_FILE, "%s", strerror (errno));
-		return FALSE;
-	}
-
 	for (i = 0; i != G_N_ELEMENTS(subdirs); ++i) {
 
 		const char *fullpath;
@@ -85,10 +76,21 @@ create_maildir (const char *path, mode_t mode, GError **err)
 
 		/* static buffer */
 		fullpath = mu_str_fullpath_s (path, subdirs[i]);
+
+		/* if subdir already exists, don't try to re-create
+		 * it */
+		if (mu_util_check_dir (fullpath, TRUE, TRUE))
+			continue;
+
 		rv = g_mkdir_with_parents (fullpath, (int)mode);
-		if (rv != 0) {
+
+		/* note, g_mkdir_with_parents won't detect an error if
+		 * there's already such a dir, but with the wrong
+		 * permissions; so we need to check */
+		if (rv != 0 || !mu_util_check_dir(fullpath, TRUE, TRUE)) {
 			g_set_error (err, 0, MU_ERROR_FILE_CANNOT_MKDIR,
-				     "g_mkdir_with_parents failed: %s",
+				     "creating dir failed for %s: %s",
+				     fullpath,
 				     strerror (errno));
 			return FALSE;
 		}
@@ -860,6 +862,3 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 
 	return newfullpath;
 }
-
-
-

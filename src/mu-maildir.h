@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -30,19 +30,22 @@
 G_BEGIN_DECLS
 
 /**
- * create a new maildir. Note, if the function fails 'halfway', it
- * will *not* try to remove the parts the were created. it *will*
- * create any parent dirs that are not yet existant.
+ * create a new maildir. if parts of the maildir already exists, those
+ * will simply be ignored. IOW, if you try to create the same maildir
+ * twice, the second will simply be a no-op (without any errors).
+ * Note, if the function fails 'halfway', it will *not* try to remove
+ * the parts the were created. it *will* create any parent dirs that
+ * are not yet existent.
  *
  *
  * @param path the path (missing components will be created, as in 'mkdir -p')
  * @param mode the file mode (e.g., 0755)
  * @param noindex add a .noindex file to the maildir, so it will be excluded
  * from indexing by 'mu index'
- * @param err if function returns FALSE, err may contain extra
- * information. if err is NULL, does nothing
+ * @param err if function returns FALSE, receives error
+ * information. err may be NULL.
  *
- * @return TRUE if creation succeeded, FALSE otherwise
+ * @return TRUE if creation succeeded (or already existed), FALSE otherwise
  */
 gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex,
 			   GError **err);
@@ -60,7 +63,8 @@ gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex,
  *
  * @return
  */
-gboolean mu_maildir_link   (const char* src, const char *targetpath, GError **err);
+gboolean mu_maildir_link   (const char* src, const char *targetpath,
+			    GError **err);
 
 /**
  * MuMaildirWalkMsgCallback -- callback function for
@@ -72,7 +76,8 @@ gboolean mu_maildir_link   (const char* src, const char *targetpath, GError **er
  * file (see stat(3)), and a user_data pointer
  */
 typedef MuError (*MuMaildirWalkMsgCallback)
-(const char* fullpath, const char* mdir, struct stat *statinfo, void *user_data);
+  (const char* fullpath, const char* mdir, struct stat *statinfo,
+   void *user_data);
 
 /**
  * MuPathWalkDirCallback -- callback function for mu_path_walk_maildir; see the
