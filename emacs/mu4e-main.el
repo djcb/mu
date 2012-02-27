@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mm main view mode + keybindings
 (defconst mu4e-main-buffer-name "*mu4e-main*"
@@ -95,7 +94,6 @@ clicked."
     (put-text-property (string-match "\\w" newstr)
       (- (length newstr) 1) 'mouse-face 'highlight newstr)
     newstr))
-
 
 (defun mu4e-main-view()
   "Show the mm main view."

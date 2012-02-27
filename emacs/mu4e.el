@@ -169,7 +169,6 @@ designated shortcut character for the maildir.")
   :type  'string
   :group 'mu4e-headers)
 
-
 (defcustom mu4e-headers-leave-behavior 'ask
   "What do to when user leaves the headers view (e.g. quit or doing
   a new search). Value is one of the following symbols:
