@@ -228,7 +228,6 @@ recommended you use \"html2text -utf8 -width 72\"."
   :type 'string
   :group 'mu4e-compose)
 
-
 ;; Faces
 
 (defgroup mu4e-faces nil
@@ -546,7 +545,6 @@ flagged, new, passed, replied, seen, trashed and the string is
 the concatenation of the uppercased first letters of these flags,
 as per [1]. Other letters than the ones listed here are ignored.
 Also see `mu/flags-to-string'.
-
 \[1\]: http://cr.yp.to/proto/maildir.html"
   (when (/= 0 (length str))
     (let ((flag
@@ -605,6 +603,41 @@ function prefers the text part, but this can be changed by setting
       (setq body (propertize "No body" 'face 'mu4e-system-face)))
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
+
+(defconst mu4e-get-mail-name "*mu4e-get-mail*"
+  "*internal* Name of the process to retrieve mail")
+
+(defun mu4e-retrieve-mail-update-db-proc (buf)
+  "Try to retrieve mail (using `mu4e-get-mail-command'), with
+output going to BUF if not nil, or discarded if nil. After
+retrieving mail, update the database."
+  (unless mu4e-get-mail-command
+    (error "`mu4e-get-mail-command' is not defined"))
+  (message "Retrieving mail...")
+  (let* ((proc (start-process-shell-command
+		 mu4e-get-mail-name buf mu4e-get-mail-command)))
+    (set-process-sentinel proc
+      (lambda (proc msg)
+	(let ((buf (process-buffer proc)))
+	  (when  (buffer-live-p buf)
+	    (mu4e-proc-index mu4e-maildir)
+	    (kill-buffer buf)))))))
+
+(defun mu4e-retrieve-mail-update-db ()
+  "Try to retrieve mail (using the user-provided shell command),
+and update the database afterwards"
+  (interactive)
+  (unless mu4e-get-mail-command
+    (error "`mu4e-get-mail-command' is not defined"))
+  (let ((buf (get-buffer-create mu4e-update-buffer-name))
+	 (win
+	   (split-window (selected-window)
+	     (- (window-height (selected-window)) 8))))
+    (with-selected-window win
+      (switch-to-buffer buf)
+      (set-window-dedicated-p win t)
+      (erase-buffer)
+      (mu4e-retrieve-mail-update-db-proc buf))))
 
 
 (defun mu4e-display-manual ()

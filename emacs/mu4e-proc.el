@@ -436,25 +436,6 @@ The result will be delivered to the function registered as
     (error "Unsupported compose-type"))
   (mu4e-proc-send-command "compose %s %d" (symbol-name compose-type) docid))
 
-(defconst mu4e-update-buffer-name "*update*"
-  "*internal* Name of the buffer to download mail")
-
-(defun mu4e-proc-retrieve-mail-update-db ()
-  "Try to retrieve mail (using the user-provided shell command),
-and update the database afterwards."
-  (unless mu4e-get-mail-command
-    (error "`mu4e-get-mail-command' is not defined"))
-  (let ((buf (get-buffer-create  mu4e-update-buffer-name)))
-    (split-window-vertically -8)
-    (switch-to-buffer-other-window buf)
-    (with-current-buffer buf
-      (erase-buffer))
-    (message "Retrieving mail...")
-    (call-process-shell-command mu4e-get-mail-command nil buf t)
-    (message "Updating the database...")
-    (mu4e-proc-index mu4e-maildir)
-    (with-current-buffer buf
-      (kill-buffer-and-window))))
 
 (provide 'mu4e-proc)
 
