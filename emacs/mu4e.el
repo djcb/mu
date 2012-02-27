@@ -170,6 +170,15 @@ designated shortcut character for the maildir.")
   :group 'mu4e-headers)
 
 
+(defcustom mu4e-headers-leave-behavior 'ask
+  "What do to when user leaves the headers view (e.g. quit or doing
+  a new search). Value is one of the following symbols:
+ - ask    (ask the user whether to ignore the marks)
+ - apply  (automatically apply the marks before doing anything else)
+ - ignore (automatically ignore the marks without asking)."
+  :type 'symbol
+  :group 'mu4e-headers)
+
 ;; the message view
 (defgroup mu4e-view nil
   "Settings for the message view."

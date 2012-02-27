@@ -300,9 +300,11 @@ after the end of the search results."
 	(define-key menumap [unmark]      '("Unmark" . mu4e-unmark))
 
 	(define-key menumap [mark-as-read]  '("Mark as read"   . mu4e-mark-as-read))
-	(define-key menumap [mark-as-unread]   '("Mark as unread" .  mu4e-mark-as-unread))
+	(define-key menumap [mark-as-unread]
+	  '("Mark as unread" .  mu4e-mark-as-unread))
 
-	(define-key menumap [mark-delete]  '("Mark for deletion" . mu4e-mark-for-delete))
+	(define-key menumap [mark-delete]
+	  '("Mark for deletion" . mu4e-mark-for-delete))
 	(define-key menumap [mark-trash]   '("Mark for trash" .  mu4e-mark-for-trash))
 	(define-key menumap [mark-move]  '("Mark for move" . mu4e-mark-for-move))
 	(define-key menumap [sepa1] '("--"))
@@ -625,30 +627,48 @@ start editing it. COMPOSE-TYPE is either `reply', `forward' or
   (when (gethash docid mu4e-marks-map) t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
+(defun mu4e-handle-marks ()
+  "If there are any marks in the current buffer, handle those
+according to the value of `mu4e-headers-leave-behavior'. This
+function is to be called before any further action (like searching,
+quiting the buffer) is taken; returning t means 'take the following
+action', return nil means 'don't do anything'"
+  (let ((marknum
+	  (if mu4e-marks-map (hash-table-count mu4e-marks-map) 0))
+	 (what mu4e-headers-leave-behavior))
+    (unless (or (= marknum 0) (eq what 'ignore) (eq what 'apply))
+      ;; if `mu4e-headers-leave-behavior' is not apply or ignore, ask the user
+      (setq what 
+	(let ((kar
+		(read-char
+		  (concat
+		    "Do you want to "
+		    "[" (propertize "a" 'face 'mu4e-view-link-face) "]pply marks, "
+		    "[" (propertize "i" 'face 'mu4e-view-link-face) "]gnore them, "
+		    "or [" (propertize "c" 'face'mu4e-view-link-face) "]ancel?"))))
+	  (cond
+	    ((= kar ?a) 'apply)
+	    ((= kar ?i) 'ignore)
+	    (t nil))))) ;; cancel
+    ;; we determined what to do... now do it
+    (cond
+      ((= 0 marknum) t)     ;; no marks, just go ahead 
+      ((eq what 'ignore) t) ;; ignore the marks, go ahead
+      ((eq what 'apply)
+	(progn (mu4e-execute-marks t) t) t) ;; execute marks, go ahead
+      (t nil)))) ;; otherwise, don't do anything 
 
 
 ;;; interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun mu4e-ignore-marks ()
-  "If there are still marks in the header list, warn the user."
-  (if mu4e-marks-map
-    (let* ((num (hash-table-count mu4e-marks-map))
-	    (unmark (or (= 0 num)
-		      (y-or-n-p
-			(format "Sure you want to unmark %d message(s)?" num)))))
-      (message nil)
-      unmark))
-  t)
 
 (defun mu4e-search (expr)
-  "Start a new mu search. If prefix ARG is nil, limit the number of
+    "Start a new mu search. If prefix ARG is nil, limit the number of
 results to `mu4e-search-results-limit', otherwise show all. In
 other words, use the C-u prefix to get /all/ results, otherwise get
 up to `mu4e-search-results-limit' much quicker."
-  (interactive "s[mu] search for: ")
-  (when (mu4e-ignore-marks)
-    (mu4e-hdrs-search expr current-prefix-arg)))
+    (interactive "s[mu] search for: ")
+    (when (mu4e-handle-marks)
+      (mu4e-hdrs-search expr current-prefix-arg)))
 
 (defun mu4e-search-bookmark ()
   "Search using some bookmarked query. With C-u prefix, show /all/ results, otherwise,
@@ -662,7 +682,7 @@ limit to up to `mu4e-search-results-limit'."
 (defun mu4e-quit-buffer ()
   "Quit the current buffer."
   (interactive)
-  (when (mu4e-ignore-marks)
+  (when (mu4e-handle-marks)
     (mu4e-kill-proc) ;; hmmm...
     (kill-buffer)
     (mu4e)))
@@ -671,7 +691,7 @@ limit to up to `mu4e-search-results-limit'."
   "Rerun the search for the last search expression; if none exists,
 do a new search."
   (interactive)
-   (when (mu4e-ignore-marks)
+   (when (mu4e-handle-marks)
     (if mu4e-last-expr
       (mu4e-hdrs-search mu4e-last-expr)
       (mu4e-search))))
@@ -773,17 +793,18 @@ folder (`mu4e-trash-folder')."
   (with-current-buffer mu4e-hdrs-buffer
     (if (= 0 (hash-table-count mu4e-marks-map))
       (message "Nothing is marked")
-      (when (mu4e-ignore-marks)
-	(mu4e-hdrs-unmark-all)))))
+	(mu4e-hdrs-unmark-all))))
 
-(defun mu4e-execute-marks ()
-  "Execute the actions for the marked messages."
+(defun mu4e-execute-marks (&optional no-confirmation)
+  "Execute the actions for the marked messages. If optional
+parameter NO-CONFIRMATION is is t, don't ask for confirmation."
   (interactive)
   (with-current-buffer mu4e-hdrs-buffer
     (if (= 0 (hash-table-count mu4e-marks-map))
       (message "Nothing is marked")
-      (when (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
-			(hash-table-count mu4e-marks-map)))
+      (when (or no-confirmation
+	      (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
+			  (hash-table-count mu4e-marks-map))))
 	(mu4e-hdrs-marks-execute)
 	(message nil)))))
 
