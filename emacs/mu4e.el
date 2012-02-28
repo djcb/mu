@@ -69,6 +69,15 @@ PATH, you can specify the full path."
   :group 'mu4e
   :safe 'stringp)
 
+(defcustom mu4e-update-interval nil
+  "Number of seconds between automatic calls to retrieve mail and
+update the database. If nil, don't update automatically. Note,
+changes in `mu4e-update-interval' only take effect after restarting
+mu4d."
+  :type 'integer
+  :group 'mu4e
+  :safe 'integerp)
+
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
   "Default directory for saving attachments."
   :type 'string
@@ -89,7 +98,6 @@ in :from-or-to headers. By default, match nothing.")
 limiting search results speeds up searches significantly, it's
 useful to limit this. Note, to ignore the limit, use a prefix
 argument (C-u) before invoking the search.")
-
 
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
@@ -152,16 +160,17 @@ designated shortcut character for the maildir.")
 
 
 (defcustom mu4e-headers-fields
-    '( (:date          .  25)
-       (:flags         .   6)
-       (:from          .  22)
-       (:subject       .  nil))
+  '( (:date          .  25)
+     (:flags         .   6)
+     (:from          .  22)
+     (:subject       .  nil))
   "A list of header fields to show in the headers buffer, and their
   respective widths in characters. A width of `nil' means
   'unrestricted', and this is best reserved fo the rightmost (last)
-  field. For the complete list of available headers, see `mu4e-header-names'"
-       :type (list 'symbol)
-       :group 'mu4e-headers)
+  field. For the complete list of available headers, see
+  `mu4e-header-names'"
+  :type (list 'symbol)
+  :group 'mu4e-headers)
 
 (defcustom mu4e-headers-date-format "%x %X"
   "Date format to use in the headers view, in the format of
@@ -170,11 +179,12 @@ designated shortcut character for the maildir.")
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-leave-behavior 'ask
-  "What do to when user leaves the headers view (e.g. quit or doing
-  a new search). Value is one of the following symbols:
- - ask    (ask the user whether to ignore the marks)
- - apply  (automatically apply the marks before doing anything else)
- - ignore (automatically ignore the marks without asking)."
+  "What to do when user leaves the headers view (e.g. quits,
+  refreshes or does a new search). Value is one of the following
+  symbols:
+- ask (ask the user whether to ignore the marks)
+- apply (automatically apply the marks before doing anything else)
+- ignore (automatically ignore the marks without asking)."
   :type 'symbol
   :group 'mu4e-headers)
 
@@ -394,6 +404,9 @@ dir already existed, or has been created, nil otherwise."
       (unless (mu4e-create-maildir-maybe path)
 	(error "%s (%S) does not exist" path var)))))
 
+(defvar mu4e-update-timer nil
+  "*internal* The mu4e update timer.")
+
 (defun mu4e ()
   "Start mm. We do this by sending a 'ping' to the mu server
 process, and start the main view if the 'pong' we receive from the
@@ -413,9 +426,25 @@ server has the expected values."
 		(error "mu server has version %s, but we need %s"
 		  version mu4e-mu-version))
 	      (mu4e-main-view)
+	      (when mu4e-update-interval
+		(setq mu4e-update-timer
+		  (run-at-time
+		    0 mu4e-update-interval
+		    'mu4e-update-mail)))
 	      (message "Started mu4e with %d message%s in store"
 		doccount (if (= doccount 1) "" "s"))))
 	  (mu4e-proc-ping)))))
+
+(defun mu4e-quit()
+  "Quit the mm session."
+  (interactive)
+  (when (y-or-n-p "Are you sure you want to quit? ")
+    (message nil)
+    (when mu4e-update-timer
+      (cancel-timer mu4e-update-timer))
+    (mu4e-kill-proc)
+    (kill-buffer)))
+
 
 (defun mu4e-get-maildirs (parentdir)
   "List the maildirs under PARENTDIR." ;; TODO: recursive?
@@ -521,9 +550,7 @@ message files; flags are symbols draft, flagged, new, passed,
 replied, seen, trashed and the string is the concatenation of the
 uppercased first letters of these flags, as per [1]. Other flags
 than the ones listed here are ignored.
-
 Also see `mu4e-flags-to-string'.
-
 \[1\]: http://cr.yp.to/proto/maildir.html"
   (when flags
     (let ((kar (case (car flags)
@@ -612,40 +639,29 @@ function prefers the text part, but this can be changed by setting
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
 
-(defconst mu4e-get-mail-name "*mu4e-get-mail*"
-  "*internal* Name of the process to retrieve mail")
+(defconst mu4e-update-mail-name "*mu4e-update-mail*"
+  "*internal* Name of the process to update mail")
 
-(defun mu4e-retrieve-mail-update-db-proc (buf)
-  "Try to retrieve mail (using `mu4e-get-mail-command'), with
-output going to BUF if not nil, or discarded if nil. After
-retrieving mail, update the database."
+(defun mu4e-update-mail (&optional buf)
+  "Update mail (retrieve using `mu4e-get-mail-command' and update
+the database afterwards), with output going to BUF if not nil, or
+discarded if nil. After retrieving mail, update the database. Note,
+function is asynchronous, returns (almost) immediately, and all the
+processing takes part in the background, unless buf is non-nil."
   (unless mu4e-get-mail-command
     (error "`mu4e-get-mail-command' is not defined"))
-  (message "Retrieving mail...")
-  (let* ((proc (start-process-shell-command
-		 mu4e-get-mail-name buf mu4e-get-mail-command)))
+  (let* ((process-connection-type t)
+	  (proc (start-process-shell-command
+		 mu4e-update-mail-name buf mu4e-get-mail-command)))
+    (message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
+	(message nil)
+	(mu4e-proc-index mu4e-maildir)
 	(let ((buf (process-buffer proc)))
-	  (when  (buffer-live-p buf)
-	    (mu4e-proc-index mu4e-maildir)
-	    (kill-buffer buf)))))))
-
-(defun mu4e-retrieve-mail-update-db ()
-  "Try to retrieve mail (using the user-provided shell command),
-and update the database afterwards"
-  (interactive)
-  (unless mu4e-get-mail-command
-    (error "`mu4e-get-mail-command' is not defined"))
-  (let ((buf (get-buffer-create mu4e-update-buffer-name))
-	 (win
-	   (split-window (selected-window)
-	     (- (window-height (selected-window)) 8))))
-    (with-selected-window win
-      (switch-to-buffer buf)
-      (set-window-dedicated-p win t)
-      (erase-buffer)
-      (mu4e-retrieve-mail-update-db-proc buf))))
+	  (when (buffer-live-p buf)
+	    (kill-buffer buf)))))
+    (set-process-query-on-exit-flag proc t)))
 
 
 (defun mu4e-display-manual ()
@@ -657,15 +673,6 @@ top level if there is none."
 	  ('mu4e-hdrs-mode    "(mu4e)Headers view")
 	  ('mu4e-view-mode    "(mu4e)Message view")
 	  (t                 "mu4e"))))
-
-(defun mu4e-quit()
-  "Quit the mm session."
-  (interactive)
-  (when (y-or-n-p "Are you sure you want to quit? ")
-    (message nil)
-    (mu4e-kill-proc)
-    (kill-buffer)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

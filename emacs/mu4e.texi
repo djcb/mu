@@ -37,7 +37,7 @@ tested on Debian GNU/Linux.
 * Getting started::
 * Running mu4e::
 * Searching mail::
-* Org-mode support::
+* Interaction with other tools::
 * Example configuration::
 * FAQ - Frequently Anticipated Questions::
 * Known issues / missing features::
@@ -179,6 +179,17 @@ deliver into a Maildir as well, maybe in combination with @t{procmail}. A bit
 of googling should be able to provide you with the details; also there is full
 example of setting @t{mu4e} up with @t{offlineimap} and Gmail; @pxref{Gmail
 configuration}.
+
+You can do all of the mail retrieval @emph{outside} of @t{emacs}/@t{mu4e}, but
+you can also do it from the @t{mu4e}. For that, set the variable
+@code{mu4e-get-mail-command} to the command you want to use for retrieving
+mail, which you can then access from the @ref{Main view}. 
+
+You can also have this command run periodically (in the background), by
+setting the variable @code{mu4e-update-interval} to the number of seconds
+between such updates. If set to @code{nil}, it will not update at all. Note
+that if you make changes to @code{mu4e-update-interval}, @code{mu4e} must be
+restarted before the change will take effect.
 
 @node Indexing your messages
 @section Indexing your messages
@@ -405,8 +416,7 @@ Finally, there are some @emph{Misc} actions:
 @itemize
 @item @t{[U]pdate email & database} will execute whatever is in
 the variable @code{mu4e-get-mail-command}, and afterwards update the @t{mu}
-database; @pxref{Indexing your messages}. This is a synchronous command - you
-have to wait for it to finish.
+database; @pxref{Indexing your messages}. See @ref{Getting mail} for details.
 @item @t{toggle [m]ail sending mode (direct)} will toggle between sending
 mail directly, and queuing it first (for example, when you are offline), and
 @t{[f]lush queued mail} will flush any queued mail. This item is visible only
@@ -486,6 +496,12 @@ press @key{DEL}, all selected message will be marked for deletion.
 The two-step mark-execute sequence is similar to what for example @t{dired}
 does; @inforef{(emacs) Dired} - it tries to be as fast as possible while still
 trying to protect the user from accidents.
+
+When you try to do a new search, or refresh the headers buffer while you still
+have marked messages, by default you will be asked what to do with those marks
+-- whether to @emph{apply} them before leaving, @emph{ignore} them or to
+@emph{cancel} the operation. This behavior can be influenced with the variable
+@code{mu4e-headers-leave-behavior} -- see its documentation.
 
 @node Message view
 @section Message view
@@ -794,22 +810,20 @@ The same shortcuts are used by the function @code{mu4e-mark-for-move}; so for
 example, if you want to move a message the @t{/archive} folder, you can do so
 by typing @key{ma}.
 
-@node Org-mode support
-@chapter Org-mode support
+@node Interaction with other tools
+@chapter Interaction with other tools
 
-Many emacs-users use @t{org-mode} for their note-taking, agenda, to-do list
-and many other things, so it is useful to integrate e-mail with this as well.
-
-@t{mu4e} support @t{org-mode}-links, and the @t{org-mode}-address book,
-@t{org-contact}.
+In this chapter we discuss some ways in ways in which @t{mu4e} can cooperate
+with other tools.
 
 @menu
-* Org-mode links::
-* Org-contacts::
+* Creating org-mode links::
+* Maintaining an address-book with org-contacts::
+* Getting new mail notifications with Sauron::
 @end menu
 
-@node Org-mode links
-@section Org-mode links
+@node Creating org-mode links
+@section Creating org-mode links
 It can be useful to include links to e-mail messages or even search queries in
 your org-mode files. @t{mu4e} supports this with the @t{org-mu4e} module; you
 can set it up by adding it to your configuration:
@@ -826,8 +840,8 @@ org-insert-link}. Then, you can go to the query or message the link points to
 with either @t{M-x org-agenda-open-link} in agenda buffers, or @t{M-x
 org-open-at-point} elsewhere - both are typically bound to @kbd{C-c C-o}.
 
-@node Org-contacts
-@section Org-contacts
+@node Maintaining an address-book with org-contacts
+@section Maintaining an address-book with org-contacts
 
 To manage your addresses using @t{org-mode}, there is
 @t{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}}.
@@ -844,7 +858,55 @@ You can use it with a @t{capture}-template:
 @end verbatim
 
 After setting this up, you can use @t{M-x org-capture RET c} to get a template
-for a new contact based on the 'From:' address.
+for a new contact based on` the 'From:' address.
+
+
+@node Getting new mail notifications with Sauron
+@section Getting new mail notifications with Sauron
+
+The emacs-package Sauron@footnote{Sauron can be found at
+@url{https://github.com/djcb/sauron}, or in the Marmalade package-repository
+at @url{http://http://marmalade-repo.org/}.} (by the same author) can be used
+to get notifications about new mails.
+
+If you put something like the below script in your @t{crontab} (or have some
+other way of having it execute every @emph{n} minutes, you will receive
+notifications in the sauron-buffer when new messages arrive.
+
+@verbatim
+#!/bin/sh
+# put the path to your Inbox folder here
+
+CHECKDIR="/home/$LOGNAME/Maildir/Inbox" 
+sauron-msg () { 
+    DBUS_COOKIE="/home/$LOGNAME/.sauron-dbus" 
+    if test "x$DBUS_SESSION_BUS_ADDRESS" = "x"; then 
+        if test -e $DBUS_COOKIE; then 
+                export DBUS_SESSION_BUS_ADDRESS="`cat $DBUS_COOKIE`" 
+        fi 
+    fi 
+    if test -n "x$DBUS_SESSION_BUS_ADDRESS"; then 
+        dbus-send --session                 \ 
+            --dest="org.gnu.Emacs"        \ 
+            "/org/gnu/Emacs/Sauron"                \ 
+            "org.gnu.Emacs.Sauron.AddMsgEvent"      \ 
+            string:shell uint32:3 string:"$1" 
+    fi 
+} 
+
+for f in `find $CHECKDIR -mmin -2 -a -type f`; do 
+        subject=`$MU view $f | grep '^Subject:' | sed 's/^Subject://'` 
+        sauron-msg "mail: $subject" 
+done 
+@end verbatim
+
+Note, you should put something like:
+@lisp
+(setq sauron-dbus-cookie t)
+@end lisp
+in your setup, which allows the script to find the D-Bus session bus.
+
+
 
 @node Example configuration
 @chapter Example configuration
@@ -1105,7 +1167,8 @@ select ('mark' in emacs-speak) the messages; the actions you then take (e.g.,
 @key{DEL} for delete, @key{m} for move and @key{t} for trash) will apply to
 @emph{all} selected messages
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
-address management with @t{BBDB}; we recommend using @ref{Org-contacts} for now.
+address management with @t{BBDB}; instead, we recommend @ref{Maintaining an
+address-book with org-contacts} for now.
 @item @emph{mu4e only seems to return a subset of all matches - how can I get
 all?}. Yes, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the

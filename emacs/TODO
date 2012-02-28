@@ -4,19 +4,15 @@
 ** Bugs
 
 *** database locks (solved?)
-*** sometimes +S-u-n does not seem to work?
 
 ** Features i
 
-*** documentation
 *** mu4e-get-sub-maildirs
-*** auto-mail check
 *** extract mailing list name
 *** mark thread
 *** bounce support
 *** sorting
 *** tool bars
-*** colorize cited parts in view
 *** refiling-by-pattern
 *** window management
 *** inspect message (muile)
@@ -62,6 +58,10 @@
 ** make links clickable
 ** integrate with org-contacts
 ** forward should take the attachments from the original
+** auto-mail check
+** colorize cited parts in view
+** documentation
+** sometimes +S-u-n does not seem to work?
 
 # Local Variables:
 # mode: org; org-startup-folded: nil

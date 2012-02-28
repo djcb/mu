@@ -31,6 +31,7 @@
 (defconst mu4e-main-buffer-name "*mu4e-main*"
   "*internal* Name of the mm main buffer.")
 
+
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
@@ -42,7 +43,7 @@
 
     (define-key map "m" 'mu4e-toggle-mail-sending-mode)
     (define-key map "f" 'smtpmail-send-queued-mail)
-    (define-key map "U" 'mu4e-retrieve-mail-update-db)
+    (define-key map "U" 'mu4e-update-mail-show-window)
 
     (define-key map "H" 'mu4e-display-manual)
     map)
@@ -124,7 +125,7 @@ clicked."
 	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
 	(mu4e-action-str "\t* [U]pdate email & database\n"
-	  'mu4e-retrieve-mail-update-db)
+	  'mu4e-update-mail-show-window)
 
 	;; show the queue functions if `smtpmail-queue-dir' is defined
 	(if (file-directory-p smtpmail-queue-dir)
@@ -148,10 +149,28 @@ clicked."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
 
-(defun mu4e-retrieve-mail-update-db ()
-  "Get new mail and update the database."
+(defconst mu4e-update-buffer-name "*mu4e-update*"
+  "*internal* Name of the buffer for message retrieval / database
+  updating.")
+
+(defun mu4e-update-mail-show-window ()
+  "Try to retrieve mail (using the user-provided shell command),
+and update the database afterwards, and show the progress in a
+split-window."
   (interactive)
-  (mu4e-proc-retrieve-mail-update-db))
+  (unless mu4e-get-mail-command
+    (error "`mu4e-get-mail-command' is not defined"))
+  (let ((buf (get-buffer-create mu4e-update-buffer-name))
+	 (win
+	   (split-window (selected-window)
+	     (- (window-height (selected-window)) 8))))
+    (with-selected-window win
+      (switch-to-buffer buf)
+      (set-window-dedicated-p win t)
+      (erase-buffer)
+      (insert "\n") ;; FIXME -- needed so output starts
+      (mu4e-update-mail buf))))
+
 
 (defun mu4e-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
@@ -160,9 +179,8 @@ clicked."
     (error "`smtp-queue-dir' does not exist"))
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
   (message
-    (if smtpmail-queue-mail
-      "Outgoing mail will now be queued"
-      "Outgoing mail will now be sent directly"))
+    (concat "Outgoing mail will now be " 
+      (if smtpmail-queue-mail "queued" "sent directly")))
   (mu4e-main-view))
 
 (provide 'mu4e-main)
