@@ -287,7 +287,7 @@ check_param_num (GSList *args, unsigned min, unsigned max)
 	do {								 \
 		if (!check_param_num((ARGS),(MN),(MX)))			 \
 			return server_error(NULL,MU_ERROR_IN_PARAMETERS, \
-					    (USAGE));			 \
+					    "%s",(USAGE));	         \
 	} while (0)
 
 
@@ -362,7 +362,8 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	return_if_fail_param_num (args, 2, 2, usage);
 
 	if ((maxnum = atoi((const char*)args->next->data)) == 0)
-		return server_error (NULL, MU_ERROR_IN_PARAMETERS, usage);
+		return server_error (NULL, MU_ERROR_IN_PARAMETERS,
+				     "%s", usage);
 
 	/* TODO: ask for *all* results, then, get the <maxnum> newest
 	 * ones; it seems we cannot get a sorted list of a subset of
@@ -496,7 +497,7 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	 * wel */
 	rv = mu_store_update_msg (store, docid, msg, err);
 	if (rv == MU_STORE_INVALID_DOCID)
-		return server_error (err, MU_ERROR_XAPIAN,
+		return server_error (err, MU_ERROR_XAPIAN, "%s",
 				     "failed to update message");
 
 	sexp = mu_msg_to_sexp (msg, docid, NULL, TRUE);
@@ -589,7 +590,7 @@ cmd_remove (MuStore *store, GSList *args, GError **err)
 				     "no valid doc for docid");
 
 	if (unlink (path) != 0)
-		return server_error (err, MU_ERROR_FILE_CANNOT_UNLINK,
+		return server_error (err, MU_ERROR_FILE_CANNOT_UNLINK, "%s",
 				     strerror (errno));
 
 	if (!mu_store_remove_path (store, path))

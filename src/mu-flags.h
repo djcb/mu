@@ -31,16 +31,16 @@ enum _MuFlags {
 	/* next 6 are seen in the file-info part of maildir message
 	 * file names, ie., in a name like "1234345346:2,<fileinfo>",
 	 * <fileinfo> consists of zero or more of the following
-	 * characters (in ascii order) */ 
+	 * characters (in ascii order) */
 	MU_FLAG_DRAFT		= 1 << 0,
-	MU_FLAG_FLAGGED		= 1 << 1,   
+	MU_FLAG_FLAGGED		= 1 << 1,
 	MU_FLAG_PASSED		= 1 << 2,
 	MU_FLAG_REPLIED		= 1 << 3,
 	MU_FLAG_SEEN		= 1 << 4,
 	MU_FLAG_TRASHED		= 1 << 5,
 
 	/* decides on cur/ or new/ in the maildir */
-	MU_FLAG_NEW		= 1 << 6,  
+	MU_FLAG_NEW		= 1 << 6,
 
 	/* content flags -- not visible in the filename, but used for
 	 * searching */
@@ -55,7 +55,7 @@ enum _MuFlags {
 };
 typedef enum _MuFlags MuFlags;
 
-#define MU_FLAG_INVALID ((unsigned)-1)
+#define MU_FLAG_INVALID ((MuFlags)-1)
 
 enum _MuFlagType {
 	MU_FLAG_TYPE_MAILFILE    = 1 << 0,
@@ -65,15 +65,15 @@ enum _MuFlagType {
 };
 typedef enum _MuFlagType MuFlagType;
 
-#define MU_FLAG_TYPE_ANY ((MuFlags)-1)
+#define MU_FLAG_TYPE_ANY ((MuFlagType)-1)
 #define MU_FLAG_TYPE_INVALID ((MuFlagType)-1)
 
 
 /**
  * Get the type of flag (mailfile, maildir, pseudo or content)
- * 
+ *
  * @param flag a MuFlag
- * 
+ *
  * @return the flag type or MU_FLAG_TYPE_INVALID in case of error
  */
 MuFlagType mu_flag_type (MuFlags flag) G_GNUC_CONST;
@@ -81,19 +81,19 @@ MuFlagType mu_flag_type (MuFlags flag) G_GNUC_CONST;
 
 /**
  * Get the flag character
- * 
+ *
  * @param flag a MuFlag (single)
- * 
+ *
  * @return the character, or 0 in case of error
  */
 char mu_flag_char (MuFlags flag) G_GNUC_CONST;
 
 
 /**
- * Get the flag name 
- * 
+ * Get the flag name
+ *
  * @param flag a single MuFlag
- * 
+ *
  * @return the name (don't free) as string or NULL in case of error
  */
 const char* mu_flag_name (MuFlags flag) G_GNUC_CONST;
@@ -101,10 +101,10 @@ const char* mu_flag_name (MuFlags flag) G_GNUC_CONST;
 
 /**
  * Get the string representation of an OR'ed set of flags
- * 
+ *
  * @param flags MuFlag (OR'ed)
  * @param types allowable types (OR'ed) for the result; the rest is ignored
- * 
+ *
  * @return The string representation (static, don't free), or NULL in
  * case of error
  */
@@ -113,10 +113,10 @@ const char* mu_flags_to_str_s (MuFlags flags, MuFlagType types);
 
 /**
  * Get the (OR'ed) flags corresponding to a string representation
- * 
+ *
  * @param str the string representation
  * @param types the flag types to acceps (other will be ignored)
- * 
+ *
  * @return the (OR'ed) flags
  */
 MuFlags mu_flags_from_str (const char *str, MuFlagType types);
@@ -129,12 +129,12 @@ MuFlags mu_flags_from_str (const char *str, MuFlagType types);
  * which means resp. "add this flag" or "remove this flag" from
  * oldflags.  So, e.g. "-N+S" would unset the NEW flag and set the
  * SEEN flag, without affecting other flags.
- * 
+ *
  * @param str the string representation
  * @param old flags to update
  * @param types the flag types to accept (other will be ignored)
- * 
- * @return 
+ *
+ * @return
  */
 MuFlags mu_flags_from_str_delta (const char *str, MuFlags oldflags,
 				 MuFlagType types);
@@ -146,7 +146,7 @@ typedef void (*MuFlagsForeachFunc) (MuFlags flag, gpointer user_data);
 
 /**
  * call a function for each available flag
- * 
+ *
  * @param func a function to call
  * @param user_data a user pointer to pass to the function
  */
