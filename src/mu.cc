@@ -77,5 +77,6 @@ main (int argc, char *argv[])
 	g_clear_error (&err);
 
 	mu_runtime_uninit ();
+
 	return rv;
 }

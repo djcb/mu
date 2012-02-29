@@ -633,13 +633,13 @@ output_plain_fields (MuMsg *msg, const char *fields,
 		if (mfid == MU_MSG_FIELD_ID_NONE ||
 		    (!mu_msg_field_xapian_value (mfid) &&
 		     !mu_msg_field_xapian_contact (mfid)))
-			nonempty += printf ("%c", *myfields);
+		  nonempty += printf ("%c", *myfields);
 
 		else {
 			ansi_color_maybe (mfid, color);
-				nonempty += mu_util_fputs_encoded
-					(display_field (msg, mfid), stdout);
-				ansi_reset_maybe (mfid, color);
+			nonempty += mu_util_fputs_encoded
+			  (display_field (msg, mfid), stdout);
+			ansi_reset_maybe (mfid, color);
 		}
 	}
 

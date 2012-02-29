@@ -416,30 +416,32 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 		GError *err;
 		unsigned bytes;
 		err = NULL;
-
 		conv = g_locale_from_utf8 (str, -1, &bytes, NULL, &err);
-		if (err) {
+		if (!conv || err) {
 			/* conversion failed; this happens because is
 			 * some cases GMime may gives us non-UTF-8
 			 * string from e.g. wrongly encoded
 			 * message-subjects; if so, we escape the
 			 * string */
+			g_warning ("%s: fputs failed: %s",
+				   __FUNCTION__,
+				   err ? err->message : "conversion failed");
+			g_clear_error (&err);
 			g_free (conv);
 			conv = g_strescape (str, NULL);
-			g_error_free (err);
-			return FALSE;
 		}
 		rv = fputs (conv, stream);
 		g_free (conv);
 	}
 
 	if (rv == EOF) { /* note, apparently, does not set errno */
-		g_printerr ("fputs failed");
+		g_warning ("%s: fputs failed", __FUNCTION__);
 		return FALSE;
 	}
 
 	return TRUE;
 }
+
 
 
 static gboolean
