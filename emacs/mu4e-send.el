@@ -335,7 +335,7 @@ using Gnus' `message-mode'."
     (find-file draft)
     (message-mode)
 
-        ;; include files -- e.g. when forwarding a message with attachments,
+    ;; include files -- e.g. when forwarding a message with attachments,
     ;; we take those from the original.
     (save-excursion
       (goto-char (point-max)) ;; put attachments at the end

@@ -601,8 +601,8 @@ work well."
 
 (defun mu4e-hdrs-compose (compose-type)
   "Compose either a reply/forward based on the message at point. or
-start editing it. COMPOSE-TYPE is either `reply', `forward' or
-`edit'."
+start editing it. COMPOSE-TYPE is either `reply', `forward', `edit'
+or `new'."
   (if (eq compose-type 'new)
     (mu4e-send-compose-handler 'new)
     (let ((docid (mu4e-hdrs-get-docid))
