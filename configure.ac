@@ -40,6 +40,8 @@ AC_PROG_INSTALL
 AC_PROG_CXX
 AC_HEADER_STDC
 
+AC_CHECK_HEADERS([locale.h langinfo.h])
+
 # use the 64-bit versions
 AC_SYS_LARGEFILE
 
