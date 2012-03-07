@@ -754,7 +754,8 @@ main (int argc, char *argv[])
 	int rv;
 	g_test_init (&argc, &argv, NULL);
 
-	setenv ("LC_ALL", "en_US.utf8", 1);
+	if (!set_en_us_utf8_locale())
+		return 0; /* don't error out... */
 
 	g_test_add_func ("/mu-cmd/test-mu-index", test_mu_index);
 

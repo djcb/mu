@@ -1,5 +1,5 @@
-/* 
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+/*
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -13,8 +13,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -27,6 +27,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+
+#include <langinfo.h>
+#include <locale.h>
 
 #include "test-mu-common.h"
 
@@ -55,6 +58,24 @@ set_tz (const char* tz)
 	tzset ();
 	return oldtz;
 }
+
+
+gboolean
+set_en_us_utf8_locale (void)
+{
+	setenv ("LC_ALL", "en_US.utf8", 1);
+	setlocale (LC_ALL, "en_US.utf8");
+
+	if (strcmp (nl_langinfo(CODESET), "UTF-8") != 0) {
+		g_print ("Note: Unit tests require the en_US.utf8 locale. "
+			 "Ignoring test cases.");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
 
 
 
