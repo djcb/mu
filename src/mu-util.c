@@ -332,7 +332,7 @@ mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote)
 	gboolean rv;
 	GError *err;
 	const gchar *prog;
-	char *cmdline;
+	char *cmdline, *escpath;
 
 	g_return_val_if_fail (path, FALSE);
 	g_return_val_if_fail (mu_util_is_local_file (path) || allow_remote,
@@ -349,7 +349,10 @@ mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote)
 #endif /*!__APPLE__*/
 	}
 
-	cmdline = g_strconcat (prog, " ", path, NULL);
+	escpath = g_strescape (path, NULL);
+	cmdline = g_strdup_printf ("%s \"%s\"", prog, escpath);
+	g_free (escpath);
+
 	err = NULL;
 	rv = g_spawn_command_line_async (cmdline, &err);
 	if (!rv) {
