@@ -604,7 +604,7 @@ Also see `mu/flags-to-string'.
     (t (propertize "?" 'face 'mu4e-system-face))))
 
 
-(defun mu4e-body-text (msg)
+(defun mu4e-body-text (msg &option)
   "Get the body in text form for this message, which is either :body-txt,
 or if not available, :body-html converted to text. By default, it
 uses the emacs built-in `html2text'. Alternatively, if
@@ -635,7 +635,7 @@ function prefers the text part, but this can be changed by setting
 	    (buffer-string)))))
     ;; still no body?
     (unless body
-      (setq body (propertize "No body" 'face 'mu4e-system-face)))
+      (setq body ""))
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
 
