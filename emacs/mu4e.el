@@ -604,7 +604,7 @@ Also see `mu/flags-to-string'.
     (t (propertize "?" 'face 'mu4e-system-face))))
 
 
-(defun mu4e-body-text (msg &option)
+(defun mu4e-body-text (msg)
   "Get the body in text form for this message, which is either :body-txt,
 or if not available, :body-html converted to text. By default, it
 uses the emacs built-in `html2text'. Alternatively, if
