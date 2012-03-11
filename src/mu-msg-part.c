@@ -354,7 +354,7 @@ write_part_to_fd (GMimePart *part, int fd, GError **err)
 			      * give errors...*/
 
 	rv = g_mime_data_wrapper_write_to_stream (wrapper, stream);
-	if (!rv)
+	if (rv == -1)
 		g_set_error (err, 0, MU_ERROR_GMIME,
 			     "failed to write to stream");
 
