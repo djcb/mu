@@ -31,7 +31,7 @@
 #include "mu-config.h"
 #include "mu-log.h"
 #include "mu-util.h"
-	
+
 #define MU_XAPIAN_DIRNAME	"xapian"
 #define MU_BOOKMARKS_FILENAME	"bookmarks"
 #define MU_CACHE_DIRNAME        "cache"
@@ -61,7 +61,7 @@ init_log (const char *muhome, const char *name,
 {
 	gboolean rv;
 	char *logpath;
-	
+
 	if (log_stderr)
 		return mu_log_init_with_fd (fileno(stderr), FALSE,
 					    quiet, debug);
@@ -86,10 +86,10 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 
 	g_return_val_if_fail (!_initialized, FALSE);
 	g_return_val_if_fail (name, FALSE);
-	
+
 	if (!mu_util_init_system())
 		return FALSE;
-	
+
 	if (muhome_arg)
 		muhome = g_strdup (muhome_arg);
 	else
@@ -101,7 +101,7 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 		runtime_free ();
 		return FALSE;
 	}
-	
+
 	_data = g_new0 (MuRuntimeData, 1);
  	_data->_str[MU_RUNTIME_PATH_MUHOME] = muhome;
 	init_paths (muhome, _data);
@@ -112,7 +112,7 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 		g_free (muhome);
 		return FALSE;
 	}
-	
+
 	return _initialized = TRUE;
 }
 
@@ -121,14 +121,14 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 gboolean
 mu_runtime_init_from_cmdline (int *pargc, char ***pargv, const char *name)
 {
-	g_return_val_if_fail (!_initialized, FALSE);	
+	g_return_val_if_fail (!_initialized, FALSE);
 	g_return_val_if_fail (name, FALSE);
-	
+
 	if (!mu_util_init_system())
 		return FALSE;
 
-	_data	       = g_new0 (MuRuntimeData, 1);	
-	_data->_config = mu_config_new (pargc, pargv);
+	_data	       = g_new0 (MuRuntimeData, 1);
+	_data->_config = mu_config_init (pargc, pargv);
 	if (!_data->_config) {
 		runtime_free ();
 		return FALSE;
@@ -145,7 +145,7 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv, const char *name)
 	_data->_str[MU_RUNTIME_PATH_MUHOME] =
 		g_strdup (_data->_config->muhome);
 	init_paths (_data->_str[MU_RUNTIME_PATH_MUHOME], _data);
-	
+
 	if (!init_log (runtime_path(MU_RUNTIME_PATH_MUHOME), name,
 		       _data->_config->log_stderr,
 		       _data->_config->quiet,
@@ -153,7 +153,7 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv, const char *name)
 		runtime_free ();
 		return FALSE;
 	}
-	
+
 	return _initialized = TRUE;
 }
 
@@ -165,14 +165,14 @@ runtime_free (void)
 
 	for (i = 0; i != MU_RUNTIME_PATH_NUM; ++i)
 		g_free (_data->_str[i]);
-	
+
 	g_free (_data->_name);
-	
-	mu_config_destroy (_data->_config);
+
+	mu_config_uninit (_data->_config);
 
 	mu_log_uninit();
-	
-	g_free (_data);	
+
+	g_free (_data);
 }
 
 void
@@ -184,7 +184,7 @@ mu_runtime_uninit (void)
 
 	_initialized = FALSE;
 }
-	
+
 
 static gboolean
 create_dirs_maybe (MuRuntimeData *data)
@@ -200,7 +200,7 @@ create_dirs_maybe (MuRuntimeData *data)
 		g_warning ("failed to create log dir");
 		return FALSE;
 	}
-	
+
 	return TRUE;
 }
 
@@ -212,7 +212,7 @@ init_paths (const char* muhome, MuRuntimeData *data)
 	data->_str [MU_RUNTIME_PATH_XAPIANDB] =
 		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
 				 MU_XAPIAN_DIRNAME);
-	
+
 	data->_str [MU_RUNTIME_PATH_BOOKMARKS] =
 		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
 				 MU_BOOKMARKS_FILENAME);
@@ -220,25 +220,25 @@ init_paths (const char* muhome, MuRuntimeData *data)
 	data->_str [MU_RUNTIME_PATH_CACHE] =
 		g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR,
 				 MU_CACHE_DIRNAME);
-	
+
 	data->_str [MU_RUNTIME_PATH_CONTACTS] =
 		g_strdup_printf ("%s%c%s", data->_str[MU_RUNTIME_PATH_CACHE],
 				 G_DIR_SEPARATOR, MU_CONTACTS_FILENAME);
 
 	data->_str [MU_RUNTIME_PATH_LOG] =
-		g_strdup_printf ("%s%c%s", muhome, 
+		g_strdup_printf ("%s%c%s", muhome,
 				 G_DIR_SEPARATOR, MU_LOG_DIRNAME);
-	
+
 	if (!create_dirs_maybe (data))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
 /* so we can called when _initialized is FALSE still */
 static const char*
 runtime_path (MuRuntimePath path)
-{	
+{
 	return _data->_str[path];
 }
 
@@ -249,13 +249,13 @@ mu_runtime_path (MuRuntimePath path)
 {
 	g_return_val_if_fail (_initialized, NULL);
 	g_return_val_if_fail (path < MU_RUNTIME_PATH_NUM, NULL);
-	
+
 	return runtime_path (path);
 }
 
 MuConfig*
 mu_runtime_config (void)
 {
-	g_return_val_if_fail (_initialized, NULL);	
+	g_return_val_if_fail (_initialized, NULL);
 	return _data->_config;
 }

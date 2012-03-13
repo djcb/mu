@@ -149,45 +149,48 @@ struct _MuConfig {
 typedef struct _MuConfig MuConfig;
 
 /**
- * create a new mu config object
+ * initialize a mu config object
  *
  * set default values for the configuration options; when you call
  * mu_config_init, you should also call mu_config_uninit when the data
  * is no longer needed.
  *
+ * Note that is _static_ data, ie., mu_config_init will always return
+ * the same pointer
+ *
  * @param opts options
  */
-MuConfig *mu_config_new (int *argcp, char ***argvp)
+MuConfig *mu_config_init (int *argcp, char ***argvp)
       G_GNUC_WARN_UNUSED_RESULT;
 /**
- * free the MuOptionsConfig structure; the the muhome and maildir
- * members are heap-allocated, so must be freed.
+ * free the MuConfig structure
  *
  * @param opts a MuConfig struct, or NULL
  */
-void mu_config_destroy (MuConfig *opts);
+void mu_config_uninit (MuConfig *conf);
+
 
 /**
  * execute the command / options in this config
  *
- * @param opts the commands/options
+ * @param opts a MuConfig struct
  *
  * @return a value denoting the success/failure of the execution;
  * MU_ERROR_NONE (0) for success, non-zero for a failure. This is to used for
  * the exit code of the process
+ *
  */
-MuError mu_config_execute (MuConfig *opts);
+MuError mu_config_execute (MuConfig *conf);
 
 
 /**
  * count the number of non-option parameters
  *
- * @param conf a MuConfig instance
+ * @param opts a MuConfig struct
  *
  * @return the number of non-option parameters, or 0 in case of error
  */
-guint mu_config_param_num (MuConfig *conf);
-
+size_t mu_config_param_num (MuConfig *conf);
 
 
 G_END_DECLS

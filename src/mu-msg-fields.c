@@ -60,7 +60,7 @@ enum _FieldFlags {
 					    * body */
 	FLAG_NORMALIZE	         = 1 << 8, /* field needs flattening for
 					    * case/accents */
-	FLAG_DONT_CACHE          = 1 << 9, /* don't cache this field in
+	FLAG_DONT_CACHE          = 1 << 9  /* don't cache this field in
 					    * the MuMsg cache */
 };
 typedef enum _FieldFlags	FieldFlags;

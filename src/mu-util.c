@@ -419,7 +419,7 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 		GError *err;
 		unsigned bytes;
 		err = NULL;
-		conv = g_locale_from_utf8 (str, -1, &bytes, NULL, &err);
+		conv = g_locale_from_utf8 (str, -1, (gsize*)&bytes, NULL, &err);
 		if (!conv || err) {
 			/* conversion failed; this happens because is
 			 * some cases GMime may gives us non-UTF-8

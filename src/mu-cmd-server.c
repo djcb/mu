@@ -93,7 +93,8 @@ send_expr (const char* frm, ...)
 
 	expr    = NULL;
 	exprlen = g_vasprintf (&expr, frm, ap);
-	hdrlen  = snprintf (hdr, sizeof(hdr), BOX "%u" BOX, exprlen);
+	hdrlen  = snprintf (hdr, sizeof(hdr), BOX "%u" BOX,
+			    (unsigned)exprlen);
 
 	if (write (fileno(stdout), hdr, hdrlen) < 0)
 		MU_WRITE_LOG ("error writing output: %s", strerror(errno));

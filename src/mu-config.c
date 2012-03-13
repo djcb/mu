@@ -1,4 +1,4 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
+/* -*-Mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
 ** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -33,6 +33,8 @@
 #include "mu-cmd.h"
 
 
+static MuConfig MU_CONFIG;
+
 
 static MuConfigFormat
 get_output_format (const char *formatstr)
@@ -64,49 +66,49 @@ get_output_format (const char *formatstr)
 
 
 static void
-set_group_mu_defaults (MuConfig *opts)
+set_group_mu_defaults (void)
 {
 	gchar *exp;
 
-	if (!opts->muhome)
-		opts->muhome = mu_util_guess_mu_homedir();
+	if (!MU_CONFIG.muhome)
+		MU_CONFIG.muhome = mu_util_guess_mu_homedir();
 
-	exp = mu_util_dir_expand(opts->muhome);
+	exp = mu_util_dir_expand(MU_CONFIG.muhome);
 	if (exp) {
-		g_free(opts->muhome);
-		opts->muhome = exp;
+		g_free(MU_CONFIG.muhome);
+		MU_CONFIG.muhome = exp;
 	}
 
 	/* check for the MU_NOCOLOR env var; but in any case don't
 	 * use colors unless we're writing to a tty */
 	if (g_getenv (MU_NOCOLOR) != NULL)
-		opts->nocolor = TRUE;
+		MU_CONFIG.nocolor = TRUE;
 
 	if (!isatty(fileno(stdout)))
-		opts->nocolor = TRUE;
+		MU_CONFIG.nocolor = TRUE;
 
 }
 
 static GOptionGroup*
-config_options_group_mu (MuConfig *opts)
+config_options_group_mu (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"debug", 'd', 0, G_OPTION_ARG_NONE, &opts->debug,
+		{"debug", 'd', 0, G_OPTION_ARG_NONE, &MU_CONFIG.debug,
 		 "print debug output to standard error (false)", NULL},
-		{"quiet", 'q', 0, G_OPTION_ARG_NONE, &opts->quiet,
+		{"quiet", 'q', 0, G_OPTION_ARG_NONE, &MU_CONFIG.quiet,
 		 "don't give any progress information (false)", NULL},
-		{"version", 'v', 0, G_OPTION_ARG_NONE, &opts->version,
+		{"version", 'v', 0, G_OPTION_ARG_NONE, &MU_CONFIG.version,
 		 "display version and copyright information (false)", NULL},
-		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &opts->muhome,
+		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.muhome,
 		 "specify an alternative mu directory", NULL},
-		{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &opts->log_stderr,
+		{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.log_stderr,
 		 "log to standard error (false)", NULL},
-		{"nocolor", 0, 0, G_OPTION_ARG_NONE, &opts->nocolor,
+		{"nocolor", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocolor,
 		 "don't use ANSI-colors in some output (false)", NULL},
 
 		{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
-		 &opts->params, "parameters", NULL},
+		 &MU_CONFIG.params, "parameters", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -117,41 +119,41 @@ config_options_group_mu (MuConfig *opts)
 }
 
 static void
-set_group_index_defaults (MuConfig *opts)
+set_group_index_defaults (void)
 {
 	char *exp;
 
-	if (!opts->maildir)
-		opts->maildir = mu_util_guess_maildir ();
+	if (!MU_CONFIG.maildir)
+		MU_CONFIG.maildir = mu_util_guess_maildir ();
 
-	if (opts->maildir) {
-		exp = mu_util_dir_expand(opts->maildir);
+	if (MU_CONFIG.maildir) {
+		exp = mu_util_dir_expand(MU_CONFIG.maildir);
 		if (exp) {
-			g_free(opts->maildir);
-			opts->maildir = exp;
+			g_free(MU_CONFIG.maildir);
+			MU_CONFIG.maildir = exp;
 		}
 	}
 }
 
 static GOptionGroup*
-config_options_group_index (MuConfig * opts)
+config_options_group_index (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
+		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
 		 "top of the maildir", NULL},
-		{"reindex", 0, 0, G_OPTION_ARG_NONE, &opts->reindex,
+		{"reindex", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.reindex,
 		 "index even already indexed messages (false)", NULL},
-		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &opts->rebuild,
+		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.rebuild,
 		 "rebuild the database from scratch (false)", NULL},
-		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &opts->autoupgrade,
+		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.autoupgrade,
 		 "auto-upgrade the database with new mu versions (false)",
 		 NULL},
-		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &opts->nocleanup,
+		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
 		 "don't clean up the database after indexing (false)", NULL},
-		{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &opts->xbatchsize,
+		{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.xbatchsize,
 		 "set transaction batchsize for xapian commits (0)", NULL},
-		{"max-msg-size", 0, 0, G_OPTION_ARG_INT, &opts->max_msg_size,
+		{"max-msg-size", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.max_msg_size,
 		 "set the maximum size for message files", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
@@ -165,61 +167,61 @@ config_options_group_index (MuConfig * opts)
 }
 
 static void
-set_group_find_defaults (MuConfig *opts)
+set_group_find_defaults (void)
 {
 	/* note, when no fields are specified, we use
 	 * date-from-subject, and sort descending by date. If fields
 	 * *are* specified, we sort in ascending order. */
-	if (!opts->fields) {
-		opts->fields = "d f s";
-		if (!opts->sortfield)
-			opts->sortfield = "d";
+	if (!MU_CONFIG.fields) {
+		MU_CONFIG.fields = "d f s";
+		if (!MU_CONFIG.sortfield)
+			MU_CONFIG.sortfield = "d";
 	}
 
-	if (!opts->formatstr) /* by default, use plain output */
-		opts->format = MU_CONFIG_FORMAT_PLAIN;
+	if (!MU_CONFIG.formatstr) /* by default, use plain output */
+		MU_CONFIG.format = MU_CONFIG_FORMAT_PLAIN;
 	else
-		opts->format =
-			get_output_format (opts->formatstr);
+		MU_CONFIG.format =
+			get_output_format (MU_CONFIG.formatstr);
 
-	if (opts->linksdir) {
-		gchar *old = opts->linksdir;
-		opts->linksdir = mu_util_dir_expand(opts->linksdir);
-		if (!opts->linksdir)	/* we'll check the dir later */
-			opts->linksdir = old;
+	if (MU_CONFIG.linksdir) {
+		gchar *old = MU_CONFIG.linksdir;
+		MU_CONFIG.linksdir = mu_util_dir_expand(MU_CONFIG.linksdir);
+		if (!MU_CONFIG.linksdir)	/* we'll check the dir later */
+			MU_CONFIG.linksdir = old;
 		else
 			g_free(old);
 	}
 }
 
 static GOptionGroup*
-config_options_group_find (MuConfig *opts)
+config_options_group_find (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"fields", 'f', 0, G_OPTION_ARG_STRING, &opts->fields,
+		{"fields", 'f', 0, G_OPTION_ARG_STRING, &MU_CONFIG.fields,
 		 "fields to display in the output", NULL},
-		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &opts->sortfield,
+		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &MU_CONFIG.sortfield,
 		 "field to sort on", NULL},
-		{"threads", 't', 0, G_OPTION_ARG_NONE, &opts->threads,
+		{"threads", 't', 0, G_OPTION_ARG_NONE, &MU_CONFIG.threads,
 		 "show message threads", NULL},
-		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &opts->bookmark,
+		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &MU_CONFIG.bookmark,
 		 "use a bookmarked query", NULL},
-		{"reverse", 'z', 0, G_OPTION_ARG_NONE, &opts->reverse,
+		{"reverse", 'z', 0, G_OPTION_ARG_NONE, &MU_CONFIG.reverse,
 		 "sort in reverse (descending) order (z -> a)", NULL},
-		{"summary", 'k', 0, G_OPTION_ARG_NONE, &opts->summary,
+		{"summary", 'k', 0, G_OPTION_ARG_NONE, &MU_CONFIG.summary,
 		 "include a short summary of the message (false)", NULL},
-		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &opts->linksdir,
+		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.linksdir,
 		 "output as symbolic links to a target maildir", NULL},
-		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &opts->clearlinks,
+		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.clearlinks,
 		 "clear old links before filling a linksdir (false)", NULL},
-		{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
+		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'links', 'xml',"
 		 "'sexp', 'xquery')", NULL},
-		{"exec", 'e', 0, G_OPTION_ARG_STRING, &opts->exec,
+		{"exec", 'e', 0, G_OPTION_ARG_STRING, &MU_CONFIG.exec,
 		 "execute command on each match message", NULL},
 		{"include-unreable", 0, 0, G_OPTION_ARG_NONE,
-		 &opts->include_unreadable,
+		 &MU_CONFIG.include_unreadable,
 		 "don't ignore messages without a disk file (false)", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
@@ -233,17 +235,17 @@ config_options_group_find (MuConfig *opts)
 }
 
 static GOptionGroup *
-config_options_group_mkdir (MuConfig *opts)
+config_options_group_mkdir (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"mode", 0, 0, G_OPTION_ARG_INT, &opts->dirmode,
+		{"mode", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.dirmode,
 		 "set the mode (as in chmod), in octal notation", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
 	/* set dirmode before, because '0000' is a valid mode */
-	opts->dirmode = 0755;
+	MU_CONFIG.dirmode = 0755;
 
 	og = g_option_group_new("mkdir", "options for the 'mkdir' command",
 				"", NULL, NULL);
@@ -254,22 +256,22 @@ config_options_group_mkdir (MuConfig *opts)
 
 
 static void
-set_group_cfind_defaults (MuConfig *opts)
+set_group_cfind_defaults (void)
 {
-	if (!opts->formatstr) /* by default, use plain output */
-		opts->format = MU_CONFIG_FORMAT_PLAIN;
+	if (!MU_CONFIG.formatstr) /* by default, use plain output */
+		MU_CONFIG.format = MU_CONFIG_FORMAT_PLAIN;
 	else
-		opts->format  = get_output_format (opts->formatstr);
+		MU_CONFIG.format  = get_output_format (MU_CONFIG.formatstr);
 
 }
 
 
 static GOptionGroup *
-config_options_group_cfind (MuConfig *opts)
+config_options_group_cfind (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
+		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'mutt', 'wanderlust',"
 		 "'org-contact', 'csv')", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
@@ -284,24 +286,24 @@ config_options_group_cfind (MuConfig *opts)
 
 
 static void
-set_group_view_defaults (MuConfig *opts)
+set_group_view_defaults (void)
 {
-	if (!opts->formatstr) /* by default, use plain output */
-		opts->format = MU_CONFIG_FORMAT_PLAIN;
+	if (!MU_CONFIG.formatstr) /* by default, use plain output */
+		MU_CONFIG.format = MU_CONFIG_FORMAT_PLAIN;
 	else
-		opts->format  = get_output_format (opts->formatstr);
+		MU_CONFIG.format  = get_output_format (MU_CONFIG.formatstr);
 }
 
 static GOptionGroup *
-config_options_group_view (MuConfig *opts)
+config_options_group_view (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"summary", 0, 0, G_OPTION_ARG_NONE, &opts->summary,
+		{"summary", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.summary,
 		 "only show a short summary of the message (false)", NULL},
-		{"terminate", 0, 0, G_OPTION_ARG_NONE, &opts->terminator,
+		{"terminate", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.terminator,
 		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
-		{"format", 'o', 0, G_OPTION_ARG_STRING, &opts->formatstr,
+		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'sexp')", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
@@ -316,27 +318,27 @@ config_options_group_view (MuConfig *opts)
 
 
 static GOptionGroup*
-config_options_group_extract (MuConfig *opts)
+config_options_group_extract (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"save-attachments", 'a', 0, G_OPTION_ARG_NONE,
-		 &opts->save_attachments,
+		 &MU_CONFIG.save_attachments,
 		 "save all attachments (false)", NULL},
-		{"save-all", 0, 0, G_OPTION_ARG_NONE, &opts->save_all,
+		{"save-all", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.save_all,
 		 "save all parts (incl. non-attachments) (false)", NULL},
-		{"parts", 0, 0, G_OPTION_ARG_STRING, &opts->parts,
+		{"parts", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.parts,
 		 "save specific parts (comma-separated list)", NULL},
-		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &opts->targetdir,
+		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.targetdir,
 		 "target directory for saving", NULL},
-		{"overwrite", 0, 0, G_OPTION_ARG_NONE, &opts->overwrite,
+		{"overwrite", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.overwrite,
 		 "overwrite existing files (false)", NULL},
-		{"play", 0, 0, G_OPTION_ARG_NONE, &opts->play,
+		{"play", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.play,
 		 "try to 'play' (open) the extracted parts", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
-	opts->targetdir = g_strdup(".");	/* default is the current dir */
+	MU_CONFIG.targetdir = g_strdup(".");	/* default is the current dir */
 
 	og = g_option_group_new("extract",
 				"options for the 'extract' command",
@@ -348,11 +350,11 @@ config_options_group_extract (MuConfig *opts)
 
 
 static GOptionGroup*
-config_options_group_server (MuConfig * opts)
+config_options_group_server (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &opts->maildir,
+		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
 		 "top of the maildir", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
@@ -368,7 +370,7 @@ config_options_group_server (MuConfig * opts)
 
 
 static gboolean
-parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
+parse_cmd (int *argcp, char ***argvp)
 {
 	int i;
 	struct {
@@ -386,8 +388,8 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		{ "server",  MU_CONFIG_CMD_SERVER }
 	};
 
-	opts->cmd	 = MU_CONFIG_CMD_NONE;
-	opts->cmdstr = NULL;
+	MU_CONFIG.cmd	 = MU_CONFIG_CMD_NONE;
+	MU_CONFIG.cmdstr = NULL;
 
 	if (*argcp < 2) /* no command found at all */
 		return TRUE;
@@ -397,37 +399,44 @@ parse_cmd (MuConfig *opts, int *argcp, char ***argvp)
 		 * etc.)*/
 		return TRUE;
 
-	opts->cmd    = MU_CONFIG_CMD_UNKNOWN;
-	opts->cmdstr = (*argvp)[1];
+	MU_CONFIG.cmd    = MU_CONFIG_CMD_UNKNOWN;
+	MU_CONFIG.cmdstr = (*argvp)[1];
 
 	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i)
-		if (strcmp (opts->cmdstr, cmd_map[i]._name) == 0)
-			opts->cmd = cmd_map[i]._cmd;
+		if (strcmp (MU_CONFIG.cmdstr, cmd_map[i]._name) == 0)
+			MU_CONFIG.cmd = cmd_map[i]._cmd;
 
 	return TRUE;
 }
 
 
 static void
-add_context_group (GOptionContext *context, MuConfig *opts)
+add_context_group (GOptionContext *context)
 {
 	GOptionGroup *group;
 
-	switch (opts->cmd) {
+	switch (MU_CONFIG.cmd) {
 	case MU_CONFIG_CMD_INDEX:
-		group = config_options_group_index (opts);	break;
+		group = config_options_group_index();
+		break;
 	case MU_CONFIG_CMD_FIND:
-		group = config_options_group_find (opts);	break;
+		group = config_options_group_find();
+		break;
 	case MU_CONFIG_CMD_MKDIR:
-		group = config_options_group_mkdir (opts);	break;
+		group = config_options_group_mkdir();
+		break;
 	case MU_CONFIG_CMD_EXTRACT:
-		group = config_options_group_extract (opts);	break;
+		group = config_options_group_extract();
+		break;
 	case MU_CONFIG_CMD_CFIND:
-		group = config_options_group_cfind (opts);	break;
+		group = config_options_group_cfind();
+		break;
 	case MU_CONFIG_CMD_VIEW:
-		group = config_options_group_view (opts);	break;
+		group = config_options_group_view();
+		break;
 	case MU_CONFIG_CMD_SERVER:
-		group = config_options_group_server (opts); 	break;
+		group = config_options_group_server();
+		break;
 	default:
 		return; /* no group to add */
 	}
@@ -437,17 +446,16 @@ add_context_group (GOptionContext *context, MuConfig *opts)
 
 
 static gboolean
-parse_params (MuConfig *opts, int *argcp, char ***argvp)
+parse_params (int *argcp, char ***argvp)
 {
 	GError *err = NULL;
 	GOptionContext *context;
 	gboolean rv;
 
 	context = g_option_context_new("- mu general option");
-	g_option_context_set_main_group(context,
-					config_options_group_mu(opts));
+	g_option_context_set_main_group(context, config_options_group_mu());
 
-	add_context_group (context, opts);
+	add_context_group (context);
 
 	rv = g_option_context_parse (context, argcp, argvp, &err);
 	g_option_context_free (context);
@@ -461,33 +469,32 @@ parse_params (MuConfig *opts, int *argcp, char ***argvp)
 
 
 MuConfig*
-mu_config_new (int *argcp, char ***argvp)
+mu_config_init (int *argcp, char ***argvp)
 {
-	MuConfig *config;
-
 	g_return_val_if_fail (argcp && argvp, NULL);
 
-	config = g_new0 (MuConfig, 1);
+	memset (&MU_CONFIG, 0, sizeof(MU_CONFIG));
 
-	if (!parse_cmd (config, argcp, argvp) ||
-	    !parse_params(config, argcp, argvp)) {
-		mu_config_destroy (config);
+	if (!parse_cmd (argcp, argvp) ||
+	    !parse_params(argcp, argvp)) {
+		mu_config_uninit (&MU_CONFIG);
 		return NULL;
 	}
 
 	/* fill in the defaults if user did not specify */
-	set_group_mu_defaults (config);
-	set_group_index_defaults (config);
-	set_group_find_defaults (config);
-	set_group_cfind_defaults (config);
-	set_group_view_defaults (config);
+	set_group_mu_defaults();
+	set_group_index_defaults();
+	set_group_find_defaults();
+	set_group_cfind_defaults();
+	set_group_view_defaults();
 	/* set_group_mkdir_defaults (config); */
 
-	return config;
+	return &MU_CONFIG;
 }
 
+
 void
-mu_config_destroy (MuConfig *opts)
+mu_config_uninit (MuConfig *opts)
 {
 	if (!opts)
 		return;
@@ -498,17 +505,18 @@ mu_config_destroy (MuConfig *opts)
 	g_free (opts->targetdir);
 
 	g_strfreev (opts->params);
-	g_free (opts);
+
+	memset (opts, 0, sizeof(MU_CONFIG));
 }
 
 
-guint
-mu_config_param_num (MuConfig *conf)
+size_t
+mu_config_param_num (MuConfig *opts)
 {
-	guint u;
+	size_t n;
 
-	g_return_val_if_fail (conf, 0);
-	for (u = 0; conf->params[u]; ++u);
+	g_return_val_if_fail (opts && opts->params, 0);
+	for (n = 0; opts->params[n]; ++n);
 
-	return u;
+	return n;
 }

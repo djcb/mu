@@ -366,9 +366,9 @@ show_parts (const char* path, MuConfig *opts, GError **err)
 static gboolean
 check_params (MuConfig *opts)
 {
-	guint param_num;
+	size_t param_num;
 
-	param_num = mu_config_param_num(opts);
+	param_num = mu_config_param_num (opts);
 
 	if (param_num < 2) {
 		g_warning ("usage: mu extract [options] <file> [<pattern>]");

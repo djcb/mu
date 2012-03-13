@@ -469,7 +469,7 @@ output_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks,
 
 	if (errcount > 0) {
 		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_LINK,
-			     "error linking %u message(s)", errcount);
+			     "error linking %u message(s)", (unsigned)errcount);
 		return FALSE;
 	}
 
@@ -765,7 +765,7 @@ output_xml_msg (MuMsg *msg)
 	print_attr_xml ("subject", mu_msg_get_subject (msg));
 	g_print ("\t\t<date>%u</date>\n",
 		 (unsigned)mu_msg_get_date (msg));
-	g_print ("\t\t<size>%u</size>\n", mu_msg_get_size (msg));
+	g_print ("\t\t<size>%u</size>\n", (unsigned)mu_msg_get_size (msg));
 	print_attr_xml ("msgid", mu_msg_get_msgid (msg));
 	print_attr_xml ("path", mu_msg_get_path (msg));
 	print_attr_xml ("maildir", mu_msg_get_maildir (msg));

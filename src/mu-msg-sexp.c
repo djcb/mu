@@ -216,11 +216,11 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 		name = g_strdup_printf ("\"part-%d\"", part->index);
 
 	*parts = g_strdup_printf
-			("%s(:index %d :name %s :mime-type \"%s/%s\" :size %d)",
+			("%s(:index %d :name %s :mime-type \"%s/%s\" :size %u)",
 			 *parts ? *parts : "",  part->index, name,
 			 part->type ? part->type : "application",
 			 part->subtype ? part->subtype : "octet-stream",
-			 part->size);
+			 (unsigned)part->size);
 }
 
 

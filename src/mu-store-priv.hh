@@ -70,7 +70,7 @@ public:
 		}
 
 		MU_WRITE_LOG ("%s: opened %s (batch size: %u) for read-write",
-			      __FUNCTION__, this->path(), batch_size());
+			      __FUNCTION__, this->path(), (unsigned)batch_size());
 	}
 
 	/* create a read-only MuStore */
