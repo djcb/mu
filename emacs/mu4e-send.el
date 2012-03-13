@@ -350,7 +350,7 @@ using Gnus' `message-mode'."
       (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
 
     ;; hook our functions up with sending of the message
-    (add-hook 'message-sent-hook 'mu4e-send-save-to-sent nil t)
+    (add-hook 'message-sent-hook 'mu4e-send-save-copy-maybe nil t)
     (add-hook 'message-sent-hook 'mu4e-send-set-parent-flag nil t)
 
     (let ((message-hidden-headers
@@ -362,24 +362,31 @@ using Gnus' `message-mode'."
       (message-goto-to)
       (message-goto-body))))
 
+ 
 
-(defun mu4e-send-save-to-sent ()
-  "Move the message in this buffer to the sent folder. This is
- meant to be called from message mode's `message-sent-hook'."
-  (unless mu4e-sent-folder (error "mu4e-sent-folder not set"))
-  (save-excursion
-    (goto-char (point-min))
-    ;; remove the --text follows this line-- separator
-    (if (search-forward-regexp (concat "^" mail-header-separator "\n"))
-      (replace-match "")
-      (error "cannot find mail-header-separator"))
-    (save-buffer)
-    (let ((docid (gethash (buffer-file-name) mu4e-path-docid-map)))
-      (unless docid (error "unknown message (%S)" (buffer-file-name)))
-      ;; ok, all seems well, well move the message to the sent-folder
-      (mu4e-proc-move-msg docid mu4e-sent-folder "-T-D+S")
-      (message "Message has been sent"))))
-
+(defun mu4e-send-save-copy-maybe ()
+  "If `mu4e-save-sent-messages-behavior' is a symbol 'delete, move
+ the message in this buffer to the sent folder. Otherwise, delete
+ the draft message.  This is meant to be called from message mode's
+ `message-sent-hook'."
+  (let ((docid (gethash (buffer-file-name) mu4e-path-docid-map)))
+    (unless docid (error "unknown message (%S)" (buffer-file-name)))
+    (save-buffer) ;; save the messages, so emacs won't annoy us
+    (if (eq mu4e-sent-messages-behavior 'delete)
+      (progn
+	(mu4e-proc-remove-msg docid)) ;; remove it
+      (progn ;; try to save the message the sent folder
+	(save-excursion
+	  (goto-char (point-min))
+	  ;; remove the --text follows this line-- separator
+	  (if (search-forward-regexp (concat "^" mail-header-separator "\n"))
+	    (replace-match "")
+	    (error "cannot find mail-header-separator"))
+	  ;; ok, all seems well, well move the message to the sent-folder
+	  (if (eq mu4e-sent-messages-behavior 'trash)
+	    (mu4e-proc-move-msg docid mu4e-trash-folder "+T-D+S")
+	    (mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S")))))))
+      
 
 
 (defun mu4e-send-set-parent-flag ()

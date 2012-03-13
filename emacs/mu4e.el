@@ -114,6 +114,23 @@ query, DESCRIPTION is a short description of the query (this will
 show up in the UI), and KEY is a shortcut key for the query.")
 
 
+;; Sending
+(defgroup mu4e-sending nil
+  "E-mail-sending related settings for mu4e.")
+
+(defcustom mu4e-sent-messages-behavior 'sent
+  "Determines what mu4e does with sent messages - this is a symbol
+which can be either:
+'sent   --> move the sent message to the Sent-folder (`mu4e-sent-folder')
+'trash  --> move the sent message to the Trash-folder (`mu4e-trash-folder')
+'delete --> delete the sent message.
+Note, when using GMail/IMAP, you should set this to either 'trash
+or 'delete, since GMail already takes care of keeping copies in the
+sent folder."
+  :type 'symbol
+  :safe 'symbolp
+  :group 'mu4e-sending)
+
 ;; Folders
 
 (defgroup mu4e-folders nil
