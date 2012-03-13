@@ -36,7 +36,8 @@
    - fully documented (man pages, info pages)
 
 ** News
-
+   - 2012-03-11: released [[http://code.google.com/p/mu0/downloads/detail?name=mu-0.9.8.2.tar.gz][mu-0.9.8.2]], with a number of fixes and improvements,
+     see the link for the details.
    - 2012-02-17: released [[http://mu0.googlecode.com/files/mu-0.9.8.1.tar.gz][mu-0.9.8.1]], which has a number of improvements to the
      0.9.8 release: add mark as read/unread, colorize cited message parts,
      better handling of text-based message parts, documentation fixes,

@@ -255,7 +255,7 @@ for example, when using GMail+@abbr{IMAP} (but @emph{not} with
 GMail+@abbr{POP3}), this interferes with GMail's handling of the sent messages
 folder, and you may end up with duplicate messages. For this, since @t{mu4e}
 0.9.8.3, there is the variable @code{mu4e-sent-messages-behavior}, which takes
-a symbol. The default is @code{'sent} which, as stated causes the message to
+a symbol. The default is @code{'sent} which, as mentioned, causes the message to
 be copied to your sent-messages folder. Other possible values are
 @code{'trash} (so the sent message is copied to the trash-folder
 (@code{mu4e-trash-folder}), and @code{'delete} to simply discard the message
