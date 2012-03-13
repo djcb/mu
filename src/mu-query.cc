@@ -332,7 +332,7 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 		enq.set_cutoff(0,0);
 
 		return mu_msg_iter_new (
-			(XapianEnquire*)&enq,
+			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum <= 0 ? self->db().get_doccount() : maxnum,
 			threads,
 			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE,

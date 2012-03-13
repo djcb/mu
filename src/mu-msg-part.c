@@ -619,7 +619,7 @@ mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 
 	return msg_part_find_idx (msg->_file->_mime_msg,
 				  (MatchFunc)match_content_id,
-				  (gpointer)cid);
+				  (gpointer)(char*)cid);
 }
 
 struct _MatchData2 {
