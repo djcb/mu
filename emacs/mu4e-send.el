@@ -410,7 +410,8 @@ This is meant to be called from message mode's
 	  (let ((refs))
 	    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
 	      (push (match-string 0) refs))
-	    (setq forwarded-from (car-safe (last refs)))))))
+	    ;; the last will the first
+	    (setq forwarded-from (first refs))))))
     ;; remove the <>
     (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
       (mu4e-proc-flag (match-string 1 in-reply-to) "+R"))
