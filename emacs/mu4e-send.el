@@ -190,7 +190,7 @@ And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
 	(concat
 	  ;; if there's no Re: yet, prepend it
 	  (if (string-match (concat "^" mu4e-send-reply-prefix) subject)
-	    "" mu4e-send-reply-prefix) 
+	    "" mu4e-send-reply-prefix)
 	  subject))
 
       (propertize mail-header-separator 'read-only t 'intangible t) '"\n"
@@ -220,7 +220,7 @@ And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
       (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
       (when (boundp 'mail-reply-to)
 	(mu4e-send-header "Reply-To" mail-reply-to))
-      
+
       (mu4e-send-header "To" "")
       (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
       (mu4e-send-header "References"  (mu4e-send-references-create msg))
@@ -228,7 +228,7 @@ And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
 	(concat
 	  ;; if there's no Re: yet, prepend it
 	  (if (string-match (concat "^" mu4e-send-forward-prefix) subject)
-	    "" mu4e-send-forward-prefix) 
+	    "" mu4e-send-forward-prefix)
 	  subject))
 
       (propertize mail-header-separator 'read-only t 'intangible t) "\n"
@@ -362,7 +362,7 @@ using Gnus' `message-mode'."
       (message-goto-to)
       (message-goto-body))))
 
- 
+
 
 (defun mu4e-send-save-copy-maybe ()
   "If `mu4e-save-sent-messages-behavior' is a symbol 'delete, move
@@ -371,9 +371,9 @@ using Gnus' `message-mode'."
  `message-sent-hook'."
   (let ((docid (gethash (buffer-file-name) mu4e-path-docid-map)))
     (unless docid (error "unknown message (%S)" (buffer-file-name)))
-    (save-buffer) ;; save the messages, so emacs won't annoy us
     (if (eq mu4e-sent-messages-behavior 'delete)
       (progn
+	(save-buffer)
 	(mu4e-proc-remove-msg docid)) ;; remove it
       (progn ;; try to save the message the sent folder
 	(save-excursion
@@ -382,11 +382,12 @@ using Gnus' `message-mode'."
 	  (if (search-forward-regexp (concat "^" mail-header-separator "\n"))
 	    (replace-match "")
 	    (error "cannot find mail-header-separator"))
+	  (save-buffer)
 	  ;; ok, all seems well, well move the message to the sent-folder
 	  (if (eq mu4e-sent-messages-behavior 'trash)
 	    (mu4e-proc-move-msg docid mu4e-trash-folder "+T-D+S")
 	    (mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S")))))))
-      
+
 
 
 (defun mu4e-send-set-parent-flag ()

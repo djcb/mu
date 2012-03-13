@@ -263,6 +263,20 @@ recommended you use \"html2text -utf8 -width 72\"."
   :type 'string
   :group 'mu4e-compose)
 
+(defcustom mu4e-sent-messages-behavior 'sent
+  "Determines what mu4e does with sent messages - this is a symbol
+which can be either:
+'sent   --> move the sent message to the Sent-folder (`mu4e-sent-folder')
+'trash  --> move the sent message to the Trash-folder (`mu4e-trash-folder')
+'delete --> delete the sent message.
+Note, when using GMail/IMAP, you should set this to either 'trash
+or 'delete, since GMail already takes care of keeping copies in the
+sent folder."
+  :type 'symbol
+  :safe 'symbolp
+  :group 'mu4e-compose)
+
+
 ;; Faces
 
 (defgroup mu4e-faces nil
@@ -638,13 +652,13 @@ function prefers the text part, but this can be changed by setting
 	      (if html (length html) 0))) ;; real text part?
       (setq body txt))
     ;; no body yet? try html
-    (unless body 
+    (unless body
       (when html
-	(setq body 
+	(setq body
 	  (with-temp-buffer
 	    (insert html)
 	    ;; if defined, use the external tool
-	    (if mu4e-html2text-command 
+	    (if mu4e-html2text-command
 	      (shell-command-on-region (point-min) (point-max)
 		mu4e-html2text-command nil t)
 	      ;; otherwise...

@@ -183,7 +183,7 @@ configuration}.
 You can do all of the mail retrieval @emph{outside} of @t{emacs}/@t{mu4e}, but
 you can also do it from the @t{mu4e}. For that, set the variable
 @code{mu4e-get-mail-command} to the command you want to use for retrieving
-mail, which you can then access from the @ref{Main view}. 
+mail, which you can then access from the @ref{Main view}.
 
 You can also have this command run periodically (in the background), by
 setting the variable @code{mu4e-update-interval} to the number of seconds
@@ -248,6 +248,26 @@ A very minimal setup could look something like:
 
 Note, since @t{mu4e} uses the same @t{message mode} and @t{smtpmail}
 that Gnus uses, any setting for those will also work for @t{mu4e}.
+
+By default, @t{mu4e} puts a copy of any messages you sent in the folder you
+set for @code{mu4e-sent-folder}. In some case, this may not be what you want -
+for example, when using GMail+@abbr{IMAP} (but @emph{not} with
+GMail+@abbr{POP3}), this interferes with GMail's handling of the sent messages
+folder, and you may end up with duplicate messages. For this, since @t{mu4e}
+0.9.8.3, there is the variable @code{mu4e-sent-messages-behavior}, which takes
+a symbol. The default is @code{'sent} which, as stated causes the message to
+be copied to your sent-messages folder. Other possible values are
+@code{'trash} (so the sent message is copied to the trash-folder
+(@code{mu4e-trash-folder}), and @code{'delete} to simply discard the message
+altogether.
+
+Thus, for GMail-IMAP you can add the following to your settings:
+
+@verbatim
+;; don't save message to Sent Messages, GMail/IMAP will take care of this
+(setq mu4e-sent-messages-behavior 'trash)
+@end verbatim
+
 
 @node Queuing mail
 @section Queuing mail
@@ -877,27 +897,27 @@ notifications in the sauron-buffer when new messages arrive.
 #!/bin/sh
 # put the path to your Inbox folder here
 
-CHECKDIR="/home/$LOGNAME/Maildir/Inbox" 
-sauron-msg () { 
-    DBUS_COOKIE="/home/$LOGNAME/.sauron-dbus" 
-    if test "x$DBUS_SESSION_BUS_ADDRESS" = "x"; then 
-        if test -e $DBUS_COOKIE; then 
-                export DBUS_SESSION_BUS_ADDRESS="`cat $DBUS_COOKIE`" 
-        fi 
-    fi 
-    if test -n "x$DBUS_SESSION_BUS_ADDRESS"; then 
-        dbus-send --session                 \ 
-            --dest="org.gnu.Emacs"        \ 
-            "/org/gnu/Emacs/Sauron"                \ 
-            "org.gnu.Emacs.Sauron.AddMsgEvent"      \ 
-            string:shell uint32:3 string:"$1" 
-    fi 
-} 
+CHECKDIR="/home/$LOGNAME/Maildir/Inbox"
+sauron-msg () {
+    DBUS_COOKIE="/home/$LOGNAME/.sauron-dbus"
+    if test "x$DBUS_SESSION_BUS_ADDRESS" = "x"; then
+        if test -e $DBUS_COOKIE; then
+                export DBUS_SESSION_BUS_ADDRESS="`cat $DBUS_COOKIE`"
+        fi
+    fi
+    if test -n "x$DBUS_SESSION_BUS_ADDRESS"; then
+        dbus-send --session                 \
+            --dest="org.gnu.Emacs"        \
+            "/org/gnu/Emacs/Sauron"                \
+            "org.gnu.Emacs.Sauron.AddMsgEvent"      \
+            string:shell uint32:3 string:"$1"
+    fi
+}
 
-for f in `find $CHECKDIR -mmin -2 -a -type f`; do 
-        subject=`$MU view $f | grep '^Subject:' | sed 's/^Subject://'` 
-        sauron-msg "mail: $subject" 
-done 
+for f in `find $CHECKDIR -mmin -2 -a -type f`; do
+        subject=`$MU view $f | grep '^Subject:' | sed 's/^Subject://'`
+        sauron-msg "mail: $subject"
+done
 @end verbatim
 
 Note, you should put something like:
@@ -1058,10 +1078,9 @@ realdelete = no
 @end verbatim
 
 Of course, you need replace @t{USERNAME} and @t{PASSWORD} with your actual
-Gmail username and password.
+GMail username and password.
 
-After this, you can download your mail, it should look something like the
-following:
+After this, you should be able to download your mail:
 @verbatim
 $ offlineimap
  OfflineIMAP 6.3.4
@@ -1111,6 +1130,9 @@ Now, let's make a @t{mu4e} configuration for this:
 (setq mu4e-drafts-folder "/[Gmail].Drafts")
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
 (setq mu4e-trash-folder  "/[Gmail].Trash")
+
+;; don't save message to Sent Messages, GMail/IMAP will take care of this
+(setq mu4e-sent-messages-behavior 'delete)
 
 ;; setup some handy shortcuts
 (setq mu4e-maildir-shortcuts
