@@ -68,7 +68,7 @@ set_en_us_utf8_locale (void)
 
 	if (strcmp (nl_langinfo(CODESET), "UTF-8") != 0) {
 		g_print ("Note: Unit tests require the en_US.utf8 locale. "
-			 "Ignoring test cases.");
+			 "Ignoring test cases.\n");
 		return FALSE;
 	}
 

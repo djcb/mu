@@ -67,7 +67,7 @@ test_mu_msg_01 (void)
 	gint i;
 
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "cur/1220863042.12663_1.mindcrime!2,S",
+				    "/cur/1220863042.12663_1.mindcrime!2,S",
 				    NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -133,7 +133,7 @@ test_mu_msg_02 (void)
 	int i;
 
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "cur/1220863087.12663_19.mindcrime!2,S",
+				    "/cur/1220863087.12663_19.mindcrime!2,S",
 				    NULL, NULL);
 	
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -169,7 +169,7 @@ test_mu_msg_03 (void)
 	MuMsg *msg;
 
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "cur/1283599333.1840_11.cthulhu!2,",
+				    "/cur/1283599333.1840_11.cthulhu!2,",
 				    NULL, NULL);
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "Bilbo Baggins <bilbo@anotherexample.com>");
@@ -197,7 +197,7 @@ test_mu_msg_04 (void)
 	MuMsg *msg;
 
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
-				    "Foo/cur/mail5", NULL, NULL);
+				    "/Foo/cur/mail5", NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "George Custer <gac@example.com>");
@@ -223,7 +223,7 @@ test_mu_msg_umlaut (void)
 	MuMsg *msg;
 
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "cur/1305664394.2171_402.cthulhu!2,",
+				    "/cur/1305664394.2171_402.cthulhu!2,",
 				    NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -248,7 +248,7 @@ test_mu_msg_references (void)
 	const GSList *refs;
 	
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "cur/1305664394.2171_402.cthulhu!2,",
+				    "/cur/1305664394.2171_402.cthulhu!2,",
 				    NULL, NULL);
 	refs = mu_msg_get_references(msg);
 
@@ -275,7 +275,7 @@ test_mu_msg_references_dups (void)
 	const GSList *refs;
 	
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "cur/1252168370_3.14675.cthulhu!2,S",
+				    "/cur/1252168370_3.14675.cthulhu!2,S",
 				    NULL, NULL);
 	refs = mu_msg_get_references(msg);
 
@@ -336,7 +336,7 @@ test_mu_msg_comp_unix_programmer (void)
 	char *refs;
 	
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
-				    "bar/cur/181736.eml", NULL, NULL); 
+				    "/bar/cur/181736.eml", NULL, NULL); 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 	 		 ==, NULL);
 	g_assert_cmpstr (mu_msg_get_subject(msg),
@@ -383,6 +383,9 @@ int
 main (int argc, char *argv[])
 {
 	int rv;
+	
+	mu_util_init_system ();
+
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_msg_str_date */

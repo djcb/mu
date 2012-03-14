@@ -207,7 +207,7 @@ test_mu_util_get_dtype_with_lstat (void)
 	g_assert_cmpuint (
 		mu_util_get_dtype_with_lstat (MU_TESTMAILDIR2), ==, DT_DIR);
 	g_assert_cmpuint (
-		mu_util_get_dtype_with_lstat (MU_TESTMAILDIR2 "Foo/cur/mail5"),
+		mu_util_get_dtype_with_lstat (MU_TESTMAILDIR2 "/Foo/cur/mail5"),
 		==, DT_REG);
 }
 

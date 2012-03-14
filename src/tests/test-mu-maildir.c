@@ -30,6 +30,7 @@
 
 #include "test-mu-common.h"
 #include "src/mu-maildir.h"
+#include "src/mu-util.h"
 
 static void
 test_mu_maildir_mkdir_01 (void)
@@ -260,10 +261,8 @@ test_mu_maildir_walk_01 (void)
 	g_assert_cmpuint (MU_OK, ==, rv);
 	g_assert_cmpuint (data._file_count, ==, 13);
 
-	/* FIXME: comment-out; this fails for some people, apparently because
-	 * the dir is copied one level higher */
-	/* g_assert_cmpuint (data._dir_entered,==, 5); */
-	/* g_assert_cmpuint (data._dir_left,==, 5); */
+	g_assert_cmpuint (data._dir_entered,==, 5);
+	g_assert_cmpuint (data._dir_left,==, 5); 
 
 	g_free (tmpdir);
 }
@@ -302,8 +301,8 @@ test_mu_maildir_walk_02 (void)
 
 	/* FIXME: comment-out; this fails for some people, apparently because
 	 * the dir is copied one level higher */
-	/* g_assert_cmpuint (data._dir_entered,==, 4); */
-	/* g_assert_cmpuint (data._dir_left,==, 4); */
+	g_assert_cmpuint (data._dir_entered,==, 4);
+	g_assert_cmpuint (data._dir_left,==, 4); 
 
 	g_free (tmpdir);
 }
@@ -463,6 +462,8 @@ test_mu_maildir_get_maildir_from_path (void)
 int
 main (int argc, char *argv[])
 {
+	mu_util_init_system ();
+
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_util_maildir_mkmdir */
