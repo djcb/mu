@@ -16,7 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-INCLUDES=$(GMIME_CFLAGS) $(GLIB_CFLAGS)
+INCLUDES=$(GMIME_CFLAGS) $(GLIB_CFLAGS) -I${prefix}/include
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic
 
 noinst_PROGRAMS=gmime-test
