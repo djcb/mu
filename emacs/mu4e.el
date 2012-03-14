@@ -57,7 +57,8 @@ PATH, you can specify the full path."
   :safe 'stringp)
 
 (defcustom mu4e-maildir (expand-file-name "~/Maildir")
-  "Your Maildir directory; by default, mu4e assumes ~/Maildir."
+  "Your Maildir directory; by default, mu4e assumes
+~/Maildir."
   :type 'directory
   :safe 'stringp
   :group 'mu4e)
@@ -422,6 +423,10 @@ dir already existed, or has been created, nil otherwise."
   (unless mu4e-maildir
     (error "Please set `mu4e-maildir' to the full path to your
     Maildir directory."))
+  ;; expand mu4e-maildir, mu4e-attachment-dir
+  (setq
+    mu4e-maildir (expand-file-name mu4e-maildir)
+    mu4e-attachment-dir (expand-file-name mu4e-attachment-dir))
   (unless (mu4e-create-maildir-maybe mu4e-maildir)
     (error "%s is not a valid maildir directory" mu4e-maildir))
   (dolist (var '( mu4e-sent-folder
