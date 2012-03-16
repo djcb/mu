@@ -379,7 +379,7 @@ using Gnus' `message-mode'."
 	(save-excursion
 	  (goto-char (point-min))
 	  ;; remove the --text follows this line-- separator
-	  (if (search-forward-regexp (concat "^" mail-header-separator "\n"))
+	  (if (search-forward-regexp (concat "^" mail-header-separator))
 	    (replace-match "")
 	    (error "cannot find mail-header-separator"))
 	  (save-buffer)
