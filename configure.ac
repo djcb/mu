@@ -45,6 +45,11 @@ AC_CHECK_HEADERS([locale.h langinfo.h])
 # use the 64-bit versions
 AC_SYS_LARGEFILE
 
+# check for makeinfo
+AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
+AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
+
+
 
 # we need some special tricks for filesystems that don't have d_type;
 # e.g. Solaris. See mu-maildir.c. Explicitly disabling it is for
@@ -326,8 +331,15 @@ echo "Have direntry->d_type                : $use_dirent_d_type"
 echo "-----------------------------"
 echo
 
+if test "x$have_makeinfo" != "xyes"; then
+    echo "You do not seem to have the makeinfo program; if you are building from git"
+    echo "you need that to create documentation for guile and emacs. It is in the"
+    echo "texinfo package in debian/ubuntu (ie., apt-get install texinfo)"
+fi
+
+
 if test "x$buildgui" = "xyes"; then
-echo "The demo UIs are in toys/mug and toys/mug2"
+     echo "The demo UIs are in toys/mug and toys/mug2"
      if test "x$gui" = "xgtk3"; then
      	echo "Note that mug2 will *not* work with gtk+3, because it depends"
     	echo "on libraries that use gtk+2, and the two can't be in one process"
