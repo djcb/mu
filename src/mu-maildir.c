@@ -357,12 +357,12 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 static gchar*
 get_mdir_for_path (const gchar *old_mdir, const gchar *dir)
 {
-	if (dir[0] != 'n' && dir[0] != 'c' &&
-	    strcmp(dir, "cur") != 0 && strcmp(dir, "new") != 0)
+	if ((dir[0] == 'n' && !strcmp(dir, "new")) ||
+	    (dir[0] == 'c' && !strcmp(dir, "cur")))
+		return strdup (old_mdir ? old_mdir : G_DIR_SEPARATOR_S);
+	else
 		return g_strconcat (old_mdir ? old_mdir : "",
 				    G_DIR_SEPARATOR_S, dir, NULL);
-	else
-		return strdup (old_mdir ? old_mdir : G_DIR_SEPARATOR_S);
 }
 
 
