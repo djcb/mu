@@ -43,6 +43,8 @@ fill_contacts_cache (void)
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR);
+	if (g_test_verbose())
+		g_print ("%s\n", cmdline);
 
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
@@ -63,14 +65,29 @@ test_mu_cfind_plain (void)
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=plain "
 				   "'testmu\\.xxx?'",
 				   MU_PROGRAM, muhome);
+	if (g_test_verbose())
+		g_print ("%s\n", cmdline);
+
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-	g_assert_cmpstr (output,
-			 ==,
-			 "Helmut Kröger hk@testmu.xxx\n"
-			 "Mü testmu@testmu.xx\n");
+
+	/* note, output order is unspecified */
+	g_assert (output);
+	if (output[0] == 'H')
+		g_assert_cmpstr (output,
+				 ==,
+				 "Helmut Kröger hk@testmu.xxx\n"
+				 "Mü testmu@testmu.xx\n");
+	else
+		g_assert_cmpstr (output,
+				 ==,
+				 "Mü testmu@testmu.xx\n"
+				 "Helmut Kröger hk@testmu.xxx\n");
+
+
+
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
@@ -82,7 +99,8 @@ test_mu_cfind_bbdb (void)
 {
 	gchar *muhome, *cmdline, *output, *erroutput, *expected;
 	gchar today[12];
-	const char* frm;
+	const char* frm1;
+	const char *frm2;
 	struct tm *tmtoday;
 	time_t now;
 	const char *old_tz;
@@ -100,7 +118,7 @@ test_mu_cfind_bbdb (void)
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
 
-	frm =   ";; -*-coding: utf-8-emacs;-*-\n"
+	frm1 =  ";; -*-coding: utf-8-emacs;-*-\n"
 		";;; file-version: 6\n"
 		"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "
 		"((creation-date . \"%s\") "
@@ -109,10 +127,24 @@ test_mu_cfind_bbdb (void)
 		"((creation-date . \"%s\") "
 		"(time-stamp . \"1970-01-01\")) nil]\n";
 
+
+	frm2 =  ";; -*-coding: utf-8-emacs;-*-\n"
+		";;; file-version: 6\n"
+		"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "
+		"((creation-date . \"%s\") "
+		"(time-stamp . \"1970-01-01\")) nil]\n"
+		"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "
+		"((creation-date . \"%s\") "
+		"(time-stamp . \"1970-01-01\")) nil]\n";
+
+	g_assert (output);
+
 	now = time(NULL);
 	tmtoday = localtime(&now);
 	strftime(today,sizeof(today),"%Y-%m-%d", tmtoday);
-	expected = g_strdup_printf (frm, today, today);
+
+	expected = g_strdup_printf (output[52] == 'H' ? frm1 : frm2,
+				    today, today);
 
 	/* g_print ("\n%s\n", output); */
 
@@ -143,10 +175,19 @@ test_mu_cfind_wl (void)
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-	g_assert_cmpstr (output,
-			 ==,
-			 "hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n"
-			 "testmu@testmu.xx \"Mü\" \"Mü\"\n");
+
+	g_assert (output);
+	if (output[0] == 'h')
+		g_assert_cmpstr (output,
+				 ==,
+				 "hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n"
+				 "testmu@testmu.xx \"Mü\" \"Mü\"\n");
+	else
+		g_assert_cmpstr (output,
+				 ==,
+				 "testmu@testmu.xx \"Mü\" \"Mü\"\n"
+				 "hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n");
+
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
@@ -169,10 +210,22 @@ test_mu_cfind_mutt_alias (void)
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-	g_assert_cmpstr (output,
-			 ==,
-			 "alias HelmutK Helmut Kröger <hk@testmu.xxx>\n"
-			 "alias Mü Mü <testmu@testmu.xx>\n");
+
+	/* both orders are possible... */
+	g_assert (output);
+
+	if (output[6] == 'H')
+		g_assert_cmpstr (output,
+				 ==,
+				 "alias HelmutK Helmut Kröger <hk@testmu.xxx>\n"
+				 "alias Mü Mü <testmu@testmu.xx>\n");
+	else
+		g_assert_cmpstr (output,
+				 ==,
+				 "alias Mü Mü <testmu@testmu.xx>\n"
+				 "alias HelmutK Helmut Kröger <hk@testmu.xxx>\n");
+
+
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
@@ -194,11 +247,21 @@ test_mu_cfind_mutt_ab (void)
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-	g_assert_cmpstr (output,
-			 ==,
-			 "Matching addresses in the mu database:\n"
-			 "hk@testmu.xxx\tHelmut Kröger\t\n"
-			 "testmu@testmu.xx\tMü\t\n");
+
+	g_assert (output);
+	if (output[39] == 'h')
+		g_assert_cmpstr (output,
+				 ==,
+				 "Matching addresses in the mu database:\n"
+				 "hk@testmu.xxx\tHelmut Kröger\t\n"
+				 "testmu@testmu.xx\tMü\t\n");
+	else
+		g_assert_cmpstr (output,
+				 ==,
+				 "Matching addresses in the mu database:\n"
+				 "testmu@testmu.xx\tMü\t\n"
+				 "hk@testmu.xxx\tHelmut Kröger\t\n");
+
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
@@ -221,17 +284,33 @@ test_mu_cfind_org_contact (void)
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-	g_assert_cmpstr (output,
-			 ==,
-			 "* Helmut Kröger\n"
-			 ":PROPERTIES:\n"
-			 ":EMAIL: hk@testmu.xxx\n"
-			 ":END:\n\n"
 
-			 "* Mü\n"
-			 ":PROPERTIES:\n"
-			 ":EMAIL: testmu@testmu.xx\n"
-			 ":END:\n\n");
+	g_assert (output);
+
+	if (output[2] == 'H')
+		g_assert_cmpstr (output,
+				 ==,
+				 "* Helmut Kröger\n"
+				 ":PROPERTIES:\n"
+				 ":EMAIL: hk@testmu.xxx\n"
+				 ":END:\n\n"
+				 "* Mü\n"
+				 ":PROPERTIES:\n"
+				 ":EMAIL: testmu@testmu.xx\n"
+				 ":END:\n\n");
+	else
+		g_assert_cmpstr (output,
+				 ==,
+				 "* Mü\n"
+				 ":PROPERTIES:\n"
+				 ":EMAIL: testmu@testmu.xx\n"
+				 ":END:\n\n"
+				 "* Helmut Kröger\n"
+				 ":PROPERTIES:\n"
+				 ":EMAIL: hk@testmu.xxx\n"
+				 ":END:\n\n");
+
+
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
@@ -255,10 +334,20 @@ test_mu_cfind_csv (void)
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-	g_assert_cmpstr (output,
-			 ==,
-			 "Helmut Kröger,hk@testmu.xxx\n"
-			 "Mü,testmu@testmu.xx\n");
+	g_assert (output);
+	if (output[0] == 'H')
+		g_assert_cmpstr (output,
+				 ==,
+				 "Helmut Kröger,hk@testmu.xxx\n"
+				 "Mü,testmu@testmu.xx\n");
+	else
+		g_assert_cmpstr (output,
+				 ==,
+				 "Mü,testmu@testmu.xx\n"
+				 "Helmut Kröger,hk@testmu.xxx\n");
+
+
+
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
