@@ -353,16 +353,25 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 	return is_dotdir_to_ignore (entry->d_name);
 }
 
-
+/*
+ * return the maildir value for the the path - this is the directory
+ * for the message (with the top-level dir as "/"), and without the
+ * leaf "/cur" or "/new". In other words, contatenate old_mdir + "/" + dir,
+ * unless dir is either 'new' or 'cur'. The value will be used in queries.
+ */
 static gchar*
 get_mdir_for_path (const gchar *old_mdir, const gchar *dir)
 {
-	if (dir[0] != 'n' && dir[0] != 'c' &&
-	    strcmp(dir, "cur") != 0 && strcmp(dir, "new") != 0)
+	/* if the current dir is not 'new' or 'cur', contatenate
+	 * old_mdir an dir */
+	if ((dir[0] == 'n' && strcmp(dir, "new") == 0) ||
+	    (dir[0] == 'c' && strcmp(dir, "cur") == 0) ||
+	    (dir[0] == 't' && strcmp(dir, "tmp") == 0))
+		return strdup (old_mdir ? old_mdir : G_DIR_SEPARATOR_S);
+	else
 		return g_strconcat (old_mdir ? old_mdir : "",
 				    G_DIR_SEPARATOR_S, dir, NULL);
-	else
-		return strdup (old_mdir ? old_mdir : G_DIR_SEPARATOR_S);
+
 }
 
 
@@ -398,7 +407,9 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 	case DT_DIR: {
 		char *my_mdir;
 		MuError rv;
-
+		/* my_mdir is the search maildir (the dir starting with the top-level
+		 * maildir as /, and without the /tmp, /cur, /new
+		 */
 		my_mdir = get_mdir_for_path (mdir, entry->d_name);
 		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, data);
 		g_free (my_mdir);
