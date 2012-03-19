@@ -262,7 +262,7 @@ test_mu_maildir_walk_01 (void)
 	g_assert_cmpuint (data._file_count, ==, 13);
 
 	g_assert_cmpuint (data._dir_entered,==, 5);
-	g_assert_cmpuint (data._dir_left,==, 5); 
+	g_assert_cmpuint (data._dir_left,==, 5);
 
 	g_free (tmpdir);
 }
@@ -299,10 +299,8 @@ test_mu_maildir_walk_02 (void)
 	g_assert_cmpuint (MU_OK, ==, rv);
 	g_assert_cmpuint (data._file_count, ==, 9);
 
-	/* FIXME: comment-out; this fails for some people, apparently because
-	 * the dir is copied one level higher */
 	g_assert_cmpuint (data._dir_entered,==, 4);
-	g_assert_cmpuint (data._dir_left,==, 4); 
+	g_assert_cmpuint (data._dir_left,==, 4);
 
 	g_free (tmpdir);
 }
@@ -462,8 +460,6 @@ test_mu_maildir_get_maildir_from_path (void)
 int
 main (int argc, char *argv[])
 {
-	mu_util_init_system ();
-
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_util_maildir_mkmdir */
@@ -498,7 +494,8 @@ main (int argc, char *argv[])
 			test_mu_maildir_get_maildir_from_path);
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+			   G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
 
 	return g_test_run ();

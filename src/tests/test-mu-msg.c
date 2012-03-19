@@ -14,8 +14,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -84,7 +84,7 @@ test_mu_msg_01 (void)
 			 "contact gcc-help-help@gcc.gnu.org; run by ezmlm");
 	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'klub' */
 			  ==, MU_MSG_PRIO_NORMAL);
-	g_assert_cmpuint (mu_msg_get_date(msg), 
+	g_assert_cmpuint (mu_msg_get_date(msg),
 			  ==, 1217530645);
 
 	i = 0;
@@ -120,7 +120,7 @@ check_contact_02 (MuMsgContact *contact, int *idx)
 		g_assert_not_reached ();
 	}
 	++(*idx);
-	
+
 	return TRUE;
 }
 
@@ -135,7 +135,7 @@ test_mu_msg_02 (void)
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
 				    "/cur/1220863087.12663_19.mindcrime!2,S",
 				    NULL, NULL);
-	
+
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "help-gnu-emacs@gnu.org");
 	g_assert_cmpstr (mu_msg_get_subject(msg),
@@ -148,9 +148,9 @@ test_mu_msg_02 (void)
 			 ==, "help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org");
 	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
 			  ==, MU_MSG_PRIO_LOW);
-	g_assert_cmpuint (mu_msg_get_date(msg), 
+	g_assert_cmpuint (mu_msg_get_date(msg),
 			  ==, 1218051515);
-	
+
 	i = 0;
 	mu_msg_contact_foreach (msg,
 				(MuMsgContactForeachFunc)check_contact_02,
@@ -159,7 +159,7 @@ test_mu_msg_02 (void)
 
 	g_assert_cmpuint (mu_msg_get_flags(msg),
 			  ==, MU_FLAG_SEEN);
-	
+
 	mu_msg_unref (msg);
 }
 
@@ -186,7 +186,7 @@ test_mu_msg_03 (void)
 			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
 	g_assert_cmpuint (mu_msg_get_flags(msg),
 			  ==, MU_FLAG_UNREAD); /* not seen => unread */
-		
+
 	mu_msg_unref (msg);
 }
 
@@ -209,10 +209,10 @@ test_mu_msg_04 (void)
 			  ==, MU_MSG_PRIO_NORMAL);
 	g_assert_cmpuint (mu_msg_get_date(msg),
 			  ==, 0);
-	
+
 	g_assert_cmpuint (mu_msg_get_flags(msg),
 			  ==, MU_FLAG_HAS_ATTACH|MU_FLAG_UNREAD);
-	
+
 	mu_msg_unref (msg);
 }
 
@@ -236,7 +236,7 @@ test_mu_msg_umlaut (void)
 			  ==, MU_MSG_PRIO_NORMAL);
 	g_assert_cmpuint (mu_msg_get_date(msg),
 			  ==, 0);
-	
+
 	mu_msg_unref (msg);
 }
 
@@ -246,14 +246,14 @@ test_mu_msg_references (void)
 {
 	MuMsg *msg;
 	const GSList *refs;
-	
+
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
 				    "/cur/1305664394.2171_402.cthulhu!2,",
 				    NULL, NULL);
 	refs = mu_msg_get_references(msg);
 
 	g_assert_cmpuint (g_slist_length ((GSList*)refs), ==, 4);
-	
+
 	g_assert_cmpstr ((char*)refs->data,==, "non-exist-01@msg.id");
 	refs = g_slist_next (refs);
 	g_assert_cmpstr ((char*)refs->data,==, "non-exist-02@msg.id");
@@ -262,7 +262,7 @@ test_mu_msg_references (void)
 	refs = g_slist_next (refs);
 	g_assert_cmpstr ((char*)refs->data,==, "non-exist-04@msg.id");
 	refs = g_slist_next (refs);
-	
+
 	mu_msg_unref (msg);
 }
 
@@ -273,16 +273,16 @@ test_mu_msg_references_dups (void)
 {
 	MuMsg *msg;
 	const GSList *refs;
-	
+
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR
 				    "/cur/1252168370_3.14675.cthulhu!2,S",
 				    NULL, NULL);
 	refs = mu_msg_get_references(msg);
 
 	/* make sure duplicate msg-ids are filtered out */
-	
+
 	g_assert_cmpuint (g_slist_length ((GSList*)refs), ==, 6);
-	
+
 	g_assert_cmpstr ((char*)refs->data,==, "439C1136.90504@euler.org");
 	refs = g_slist_next (refs);
 	g_assert_cmpstr ((char*)refs->data,==, "4399DD94.5070309@euler.org");
@@ -295,16 +295,16 @@ test_mu_msg_references_dups (void)
 	refs = g_slist_next (refs);
 	g_assert_cmpstr ((char*)refs->data,==, "20051211184308.GB13513@gauss.org");
 	refs = g_slist_next (refs);
-	
+
 	mu_msg_unref (msg);
-}	
+}
 
 static void
 test_mu_msg_tags (void)
 {
 	MuMsg *msg;
 	const GSList *tags;
-	
+
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
 				    "/bar/cur/mail1",
 				    NULL, NULL);
@@ -324,26 +324,26 @@ test_mu_msg_tags (void)
 	g_assert_cmpstr ((char*)tags->data,==,"Paradise");
 	g_assert_cmpstr ((char*)tags->next->data,==,"losT");
 	g_assert (tags->next->next == NULL);
-		
+
 	mu_msg_unref (msg);
 }
-	
+
 
 static void
 test_mu_msg_comp_unix_programmer (void)
 {
 	MuMsg *msg;
 	char *refs;
-	
+
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
-				    "/bar/cur/181736.eml", NULL, NULL); 
+				    "/bar/cur/181736.eml", NULL, NULL);
 	g_assert_cmpstr (mu_msg_get_to(msg),
 	 		 ==, NULL);
 	g_assert_cmpstr (mu_msg_get_subject(msg),
 			 ==, "Re: Are writes \"atomic\" to readers of the file?");
-	g_assert_cmpstr (mu_msg_get_from(msg),			 
+	g_assert_cmpstr (mu_msg_get_from(msg),
 			 ==, "Jimbo Foobarcuux <jimbo@slp53.sl.home>");
-	g_assert_cmpstr (mu_msg_get_msgid(msg),			 
+	g_assert_cmpstr (mu_msg_get_msgid(msg),
 			 ==, "oktdp.42997$Te.22361@news.usenetserver.com");
 
 	refs = mu_str_from_list (mu_msg_get_references(msg), ',');
@@ -361,13 +361,13 @@ test_mu_msg_comp_unix_programmer (void)
 			 "ikr6ks$nlf$1@Iltempo.Update.UU.SE,"
 			 "8ioh48-8mu.ln1@leafnode-msgid.gclare.org.uk");
 	g_free (refs);
-	
+
 	//"jimbo@slp53.sl.home (Jimbo Foobarcuux)";
 	g_assert_cmpuint (mu_msg_get_prio(msg), /* 'low' */
 			  ==, MU_MSG_PRIO_NORMAL);
 	g_assert_cmpuint (mu_msg_get_date(msg),
 			  ==, 1299603860);
-	
+
 	mu_msg_unref (msg);
 }
 
@@ -383,8 +383,6 @@ int
 main (int argc, char *argv[])
 {
 	int rv;
-	
-	mu_util_init_system ();
 
 	g_test_init (&argc, &argv, NULL);
 
@@ -407,12 +405,12 @@ main (int argc, char *argv[])
 			 test_mu_msg_umlaut);
 	g_test_add_func ("/mu-msg/mu-msg-comp-unix-programmer",
 			 test_mu_msg_comp_unix_programmer);
-	
+
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
 
-	return rv;		
+	return rv;
 }
