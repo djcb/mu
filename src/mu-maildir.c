@@ -55,10 +55,11 @@
  * and return it in the d_type parameter
  */
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
-#define GET_DTYPE(DE,FP)						\
-	((DE)->d_type == DT_UNKNOWN ? mu_util_get_dtype_with_lstat((FP)) : (DE)->d_type)
+#define GET_DTYPE(DE,FP)						   \
+	((DE)->d_type == DT_UNKNOWN ? mu_util_get_dtype_with_lstat((FP)) : \
+	 (DE)->d_type)
 #else
-#define GET_DTYPE(DE,FP)			\
+#define GET_DTYPE(DE,FP)			                           \
 	mu_util_get_dtype_with_lstat((FP))
 #endif /*HAVE_STRUCT_DIRENT_D_TYPE*/
 
@@ -341,16 +342,23 @@ is_dotdir_to_ignore (const char* dir)
 static gboolean
 ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 {
-	/* if it's not a dir and not a file, ignore it.
-	 * note, this means also symlinks (DT_LNK) are ignored,
-	 * maybe make this optional */
-	if (G_UNLIKELY(d_type != DT_REG && d_type != DT_DIR))
-		return TRUE;
+	if (G_LIKELY(d_type == DT_REG)) {
 
-	/* ignore '.' and '..' dirs, as well as .notmuch and
-	 * .nnmaildir */
+		/* ignore dovecot metadata */
+		if (entry->d_name[0] == 'd' &&
+		    strncmp (entry->d_name, "dovecot", 7) == 0)
+			return TRUE;
+		/* ignore core files */
+		if (entry->d_name[0] == 'c' &&
+		    strncmp (entry->d_name, "core", 4) == 0)
+			return TRUE;
 
-	return is_dotdir_to_ignore (entry->d_name);
+		return FALSE; /* other files: don't ignore */
+
+	} else if (d_type == DT_DIR)
+		return is_dotdir_to_ignore (entry->d_name);
+	else
+		return TRUE; /* ignore non-normal files, non-dirs */
 }
 
 /*
@@ -407,8 +415,9 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 	case DT_DIR: {
 		char *my_mdir;
 		MuError rv;
-		/* my_mdir is the search maildir (the dir starting with the top-level
-		 * maildir as /, and without the /tmp, /cur, /new
+		/* my_mdir is the search maildir (the dir starting
+		 * with the top-level maildir as /, and without the
+		 * /tmp, /cur, /new
 		 */
 		my_mdir = get_mdir_for_path (mdir, entry->d_name);
 		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, data);
@@ -423,22 +432,20 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 }
 
 
+static const size_t DIRENT_ALLOC_SIZE =
+	offsetof (struct dirent, d_name) + PATH_MAX;
+
 static struct dirent*
-dirent_copy (struct dirent *entry)
+dirent_new (void)
 {
-	struct dirent *d;
-
-	d = g_slice_new (struct dirent);
-
-	/* NOTE: simply memcpy'ing sizeof(struct dirent) bytes will
-	 * give memory errors. */
-	return (struct dirent*) memcpy (d, entry, entry->d_reclen);
+	return (struct dirent*) g_slice_alloc (DIRENT_ALLOC_SIZE);
 }
+
 
 static void
 dirent_destroy (struct dirent *entry)
 {
-	g_slice_free (struct dirent, entry);
+	g_slice_free1 (DIRENT_ALLOC_SIZE, entry);
 }
 
 #ifdef HAVE_STRUCT_DIRENT_D_INO
@@ -464,11 +471,28 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 {
 	MuError result;
 	GSList *lst, *c;
-	struct dirent *entry;
 
 	lst = NULL;
-	while ((entry = readdir (dir)))
-		lst = g_slist_prepend (lst, dirent_copy(entry));
+	for (;;) {
+		int rv;
+		struct dirent *entry, *res;
+		entry = dirent_new ();
+		rv = readdir_r (dir, entry, &res);
+		if (rv == 0) {
+			if (res)
+				lst = g_slist_prepend (lst, entry);
+			else {
+				dirent_destroy (entry);
+				break; /* last direntry reached */
+			}
+		} else {
+			dirent_destroy (entry);
+			g_warning ("error scanning dir: %s",
+				   strerror(rv));
+			return MU_ERROR_FILE;
+		}
+	}
+
 
 	/* we sort by inode; this makes things much faster on
 	 * extfs2,3 */
@@ -476,7 +500,8 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 	c = lst = g_slist_sort (lst, (GCompareFunc)dirent_cmp);
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/
 
-	for (c = lst, result = MU_OK; c && result == MU_OK; c = g_slist_next(c)) {
+	for (c = lst, result = MU_OK; c && result == MU_OK;
+	     c = g_slist_next(c)) {
 		result = process_dir_entry (path, mdir,
 					    (struct dirent*)c->data,
 					    msg_cb, dir_cb, data);
@@ -718,7 +743,8 @@ mu_maildir_get_maildir_from_path (const char* path)
 
 	/* determine the maildir */
 	mdir = g_path_get_dirname (path);
-	if (!g_str_has_suffix (mdir, "cur") && !g_str_has_suffix (mdir, "new")) {
+	if (!g_str_has_suffix (mdir, "cur") &&
+	    !g_str_has_suffix (mdir, "new")) {
 		g_warning ("%s: not a valid maildir path: %s",
 			   __FUNCTION__, path);
 		g_free (mdir);
