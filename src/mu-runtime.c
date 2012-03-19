@@ -87,8 +87,8 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 	g_return_val_if_fail (!_initialized, FALSE);
 	g_return_val_if_fail (name, FALSE);
 
-	if (!mu_util_init_system())
-		return FALSE;
+	setlocale (LC_ALL, "");
+	g_type_init ();
 
 	if (muhome_arg)
 		muhome = g_strdup (muhome_arg);
@@ -124,8 +124,8 @@ mu_runtime_init_from_cmdline (int *pargc, char ***pargv, const char *name)
 	g_return_val_if_fail (!_initialized, FALSE);
 	g_return_val_if_fail (name, FALSE);
 
-	if (!mu_util_init_system())
-		return FALSE;
+	setlocale (LC_ALL, "");
+	g_type_init ();
 
 	_data	       = g_new0 (MuRuntimeData, 1);
 	_data->_config = mu_config_init (pargc, pargv);

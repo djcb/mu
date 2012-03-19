@@ -30,15 +30,6 @@
 G_BEGIN_DECLS
 
 /**
- * do system-specific initialization. should be called before anything
- * else. Initializes the locale and Gtype. Note: this function is
- * called by mu_runtime_init.
- *
- * @return TRUE if is succeeds, FALSE otherwise
- */
-gboolean mu_util_init_system (void);
-
-/**
  * get the expanded path; ie. perform shell expansion on the path. the
  * path does not have to exist
  *
