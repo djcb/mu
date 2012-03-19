@@ -840,6 +840,7 @@ with other tools.
 * Creating org-mode links::
 * Maintaining an address-book with org-contacts::
 * Getting new mail notifications with Sauron::
+* Speedbar support::
 @end menu
 
 @node Creating org-mode links
@@ -925,6 +926,24 @@ Note, you should put something like:
 (setq sauron-dbus-cookie t)
 @end lisp
 in your setup, which allows the script to find the D-Bus session bus.
+
+@node Speedbar support
+@section Speedbar support (experimental)
+
+@code{speedbar} is an emacs-extension that shows navigational information for
+an emacs buffer in a separate frame. Using @code{mu4e-speedbar}, @t{mu4e}
+lists your maildir folders and allows for one-click access to them.
+
+You can set it up like this in your emacs configuration:
+@lisp
+(require 'speedbar)
+(require 'mu4e-speedbar)
+@end lisp
+
+You can then activate it with @code{M-x speedbar}.
+
+@code{mu4e-speedbar} was contributed by Antono Vasiljev.
+
 
 
 

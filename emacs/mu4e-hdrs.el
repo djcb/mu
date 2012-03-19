@@ -208,7 +208,7 @@ if provided, or at the end of the buffer otherwise."
 		    (propertize line 'face 'mu4e-header-face)))))
 
     ;; store the thread info, so we can use it when updating the message
-    (when thread-info
+    (when  (and thread-info mu4e-thread-info-map)
       (puthash docid thread-info mu4e-thread-info-map))
     (mu4e-hdrs-add-header line (plist-get msg :docid)
       (if point point (point-max)))))
@@ -360,7 +360,7 @@ after the end of the search results."
   (setq
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
     mu4e-msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
-    mu4e-thread-info-map (make-hash-table :size 512  :rehash-size 2)
+    mu4e-thread-info-map (make-hash-table :size 512 :rehash-size 2)
     major-mode 'mu4e-hdrs-mode
     mode-name "mu4e: message headers"
     truncate-lines t
@@ -638,7 +638,7 @@ action', return nil means 'don't do anything'"
 	 (what mu4e-headers-leave-behavior))
     (unless (or (= marknum 0) (eq what 'ignore) (eq what 'apply))
       ;; if `mu4e-headers-leave-behavior' is not apply or ignore, ask the user
-      (setq what 
+      (setq what
 	(let ((kar
 		(read-char
 		  (concat
@@ -652,11 +652,11 @@ action', return nil means 'don't do anything'"
 	    (t nil))))) ;; cancel
     ;; we determined what to do... now do it
     (cond
-      ((= 0 marknum) t)     ;; no marks, just go ahead 
+      ((= 0 marknum) t)     ;; no marks, just go ahead
       ((eq what 'ignore) t) ;; ignore the marks, go ahead
       ((eq what 'apply)
 	(progn (mu4e-execute-marks t) t) t) ;; execute marks, go ahead
-      (t nil)))) ;; otherwise, don't do anything 
+      (t nil)))) ;; otherwise, don't do anything
 
 
 ;;; interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -725,9 +725,9 @@ return the new docid. Otherwise, return nil."
 
 
 (defun mu4e-jump-to-maildir ()
-  "Show the messages in maildir TARGET. If TARGET is not provided,
-ask user for it. With C-u prefix, show /all/ results, otherwise,
-limit to up to `mu4e-search-results-limit'."
+  "Show the messages in maildir (user is prompted to ask what
+maildir). With C-u prefix, show /all/ results, otherwise, limit to
+up to `mu4e-search-results-limit'."
   (interactive)
   (let ((fld (mu4e-ask-maildir "Jump to maildir: ")))
     (when fld
