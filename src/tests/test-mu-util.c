@@ -64,22 +64,6 @@ test_mu_util_dir_expand_01 (void)
 }
 
 
-static void
-test_mu_util_dir_expand_03 (void)
-{
-	gchar *got;
-	gchar curdir[PATH_MAX + 1];
-
-	realpath (ABS_CURDIR, curdir);
-
-	got = mu_util_dir_expand (".");
-	g_assert_cmpstr (got, ==, curdir);
-
-	g_free (got);
-}
-
-
-
 
 static void
 test_mu_util_guess_maildir_01 (void)
@@ -221,7 +205,6 @@ main (int argc, char *argv[])
 	/* mu_util_dir_expand */
 	g_test_add_func ("/mu-util/mu-util-dir-expand-00", test_mu_util_dir_expand_00);
 	g_test_add_func ("/mu-util/mu-util-dir-expand-01", test_mu_util_dir_expand_01);
-	g_test_add_func ("/mu-util/mu-util-dir-expand-03", test_mu_util_dir_expand_03);
 
 	/* mu_util_guess_maildir */
 	g_test_add_func ("/mu-util/mu-util-guess-maildir-01",
