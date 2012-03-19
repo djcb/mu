@@ -530,7 +530,7 @@ mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 	ssize_t buflen;
 	char *buffer = NULL;
 
-	*err = TRUE;
+	*err = TRUE; /* guilty until proven innocent */
 	g_return_val_if_fail (GMIME_IS_PART(part), NULL);
 
 	wrapper = g_mime_part_get_content_object (part);
@@ -639,7 +639,8 @@ append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
 
 	parttxt = mu_msg_mime_part_to_string (GMIME_PART(part), &err);
 	if (err) {
-		g_warning ("%s: could not get text for part", __FUNCTION__);
+		/* this happens for broken messages */
+		g_debug ("%s: could not get text for part", __FUNCTION__);
 		return;
 	}
 
