@@ -68,7 +68,8 @@ of mm and emacs."
 	    (or (caar from) (cdar from) "someone")
 	    "someone"))
 	"\n\n"
-	(replace-regexp-in-string "^" " > " body)))))
+	(replace-regexp-in-string "^"
+	  mu4e-send-citation-prefix body)))))
 
 (defun mu4e-send-recipients-remove (lst email-to-remove)
   "Remove the recipient with EMAIL from the recipient list (of form
