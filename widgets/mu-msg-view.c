@@ -17,11 +17,16 @@
 **
 */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /*HAVE_CONFIG_H*/
+
 #include "mu-msg-view.h"
 #include "mu-msg-body-view.h"
 #include "mu-msg-header-view.h"
 #include "mu-msg-attach-view.h"
 #include "mu-msg-part.h"
+
 
 /* 'private'/'protected' functions */
 static void mu_msg_view_class_init (MuMsgViewClass *klass);
@@ -43,19 +48,31 @@ struct _MuMsgViewPrivate {
                                          MU_TYPE_MSG_VIEW, \
                                          MuMsgViewPrivate))
 /* globals */
+#ifdef HAVE_GTK3
+static GtkBoxClass *parent_class = NULL;
+#else
 static GtkVBoxClass *parent_class = NULL;
+#endif /*!HAVE_GTK3*/
+
 
 /* uncomment the following if you have defined any signals */
 /* static guint signals[LAST_SIGNAL] = {0}; */
 
+#ifdef HAVE_GTK3
+G_DEFINE_TYPE (MuMsgView, mu_msg_view, GTK_TYPE_BOX);
+#else
 G_DEFINE_TYPE (MuMsgView, mu_msg_view, GTK_TYPE_VBOX);
+#endif /*HAVE_GTK3*/
+
+
+
 
 static void
 set_message (MuMsgView *self, MuMsg *msg)
 {
 	if (self->_priv->_msg == msg)
 		return; /* nothing to todo */
-	
+
 	if (self->_priv->_msg)  {
 		mu_msg_unref (self->_priv->_msg);
 		self->_priv->_msg = NULL;
@@ -97,19 +114,19 @@ on_body_action_requested (GtkWidget *w, const char* action,
 	} else if (g_strcmp0 (action, "view-message") == 0) {
 		if (self->_priv->_msg)
 			mu_msg_view_set_message (self, self->_priv->_msg);
-		
+
 	} else if (g_strcmp0 (action, "reindex") == 0) {
 		g_warning ("reindex");
 	} else {
 		g_warning ("unknown action '%s'", action);
-	}	
+	}
 }
 
 static void
 on_attach_activated (GtkWidget *w, guint partnum, MuMsg *msg)
 {
 	gchar *filepath;
-        
+
 	filepath = mu_msg_part_filepath_cache (msg, partnum);
 	if (filepath) {
 		GError *err;
@@ -120,7 +137,7 @@ on_attach_activated (GtkWidget *w, guint partnum, MuMsg *msg)
 			if (err)
 				g_error_free(err);
 		}
-		
+
 		mu_util_play (filepath, TRUE, FALSE);
 		g_free (filepath);
 	}
@@ -139,17 +156,17 @@ mu_msg_view_init (MuMsgView *self)
 	self->_priv->_attachexpander =  gtk_expander_new_with_mnemonic
 		("_Attachments");
 	gtk_container_add (GTK_CONTAINER(self->_priv->_attachexpander),
-			   self->_priv->_attach);	
+			   self->_priv->_attach);
 	g_signal_connect (self->_priv->_attach, "attach-activated",
 			  G_CALLBACK(on_attach_activated),
 			  self);
-	
+
 	self->_priv->_body    = mu_msg_body_view_new ();
 	g_signal_connect (self->_priv->_body,
 			  "action-requested",
 			  G_CALLBACK(on_body_action_requested),
 			  self);
-	
+
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_headers,
 			    FALSE, FALSE, 2);
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_attachexpander,
@@ -176,7 +193,7 @@ void
 mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 {
 	gint attachnum;
-	
+
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
 
 	set_message (self, msg);
@@ -185,10 +202,10 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 					msg);
 	attachnum = mu_msg_attach_view_set_message (MU_MSG_ATTACH_VIEW(self->_priv->_attach),
 						    msg);
-	
+
 	mu_msg_body_view_set_message (MU_MSG_BODY_VIEW(self->_priv->_body),
 				      msg);
-	
+
 	gtk_widget_set_visible  (self->_priv->_headers, TRUE);
 	gtk_widget_set_visible  (self->_priv->_attachexpander, attachnum > 0);
 	gtk_widget_set_visible  (self->_priv->_body, TRUE);
@@ -198,14 +215,14 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 
 void
 mu_msg_view_set_message_source (MuMsgView *self, MuMsg *msg)
-{	
+{
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
 
 	set_message (self, msg);
-	
+
 	mu_msg_body_view_set_message_source (MU_MSG_BODY_VIEW(self->_priv->_body),
 					     msg);
-	
+
 	gtk_widget_set_visible  (self->_priv->_headers, FALSE);
 	gtk_widget_set_visible  (self->_priv->_attachexpander, FALSE);
 	gtk_widget_set_visible  (self->_priv->_body, TRUE);
@@ -217,7 +234,7 @@ void
 mu_msg_view_set_note (MuMsgView *self, const gchar* html)
 {
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
-	
+
 	gtk_widget_set_visible  (self->_priv->_headers, FALSE);
 	gtk_widget_set_visible  (self->_priv->_attachexpander, FALSE);
 	gtk_widget_set_visible  (self->_priv->_body, TRUE);
@@ -225,4 +242,3 @@ mu_msg_view_set_note (MuMsgView *self, const gchar* html)
 	mu_msg_body_view_set_note (MU_MSG_BODY_VIEW(self->_priv->_body),
 				   html);
 }
-

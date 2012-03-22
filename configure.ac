@@ -198,6 +198,10 @@ AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ]
 AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],
 	    [buildgui=no])
 
+AS_IF([test "x$have_gtk3" = "xyes"],
+  [AC_DEFINE_UNQUOTED([HAVE_GTK3],1,[Whether we have GTK+ 3.x])])
+
+
 # webkit? needed for the fancy web widget
 AS_IF([test "x$buildgui" = "xyes"],[
   PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])

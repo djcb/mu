@@ -4,8 +4,11 @@
 #ifndef __MUG_QUERY_BAR_H__
 #define __MUG_QUERY_BAR_H__
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /*HAVE_CONFIG*/
+
 #include <gtk/gtk.h>
-/* other include files */
 
 G_BEGIN_DECLS
 /* convenience macros */
@@ -19,12 +22,22 @@ typedef struct _MugQueryBar MugQueryBar;
 typedef struct _MugQueryBarClass MugQueryBarClass;
 
 struct _MugQueryBar {
+#ifdef HAVE_GTK3
+	GtkBox parent;
+#else
 	GtkHBox parent;
-	/* insert public members, if any */
+#endif /*!HAVE_GTK3*/
 };
 
 struct _MugQueryBarClass {
+#ifdef HAVE_GTK3
+	GtkBox parent;
+	GtkBoxClass parent_class;
+#else
+	GtkHBox parent;
 	GtkHBoxClass parent_class;
+#endif /*!HAVE_GTK3*/
+
 	/* insert signal callback declarations, e.g. */
 	void (*query_changed) (MugQueryBar * obj, const char *query);
 };

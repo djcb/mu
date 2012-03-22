@@ -23,6 +23,9 @@
 #include <gtk/gtk.h>
 /* other include files */
 
+
+
+
 G_BEGIN_DECLS
 /* convenience macros */
 #define MUG_TYPE_MSG_VIEW             (mug_msg_view_get_type())
@@ -35,12 +38,20 @@ typedef struct _MugMsgView MugMsgView;
 typedef struct _MugMsgViewClass MugMsgViewClass;
 
 struct _MugMsgView {
+#ifdef HAVE_GTK3
+	GtkBox parent;
+#else
 	GtkVBox parent;
-	/* insert public members, if any */
+#endif /*!HAVE_GTK3*/
 };
 
 struct _MugMsgViewClass {
+#ifdef HAVE_GTK3
+	GtkBoxClass parent_class;
+#else
 	GtkVBoxClass parent_class;
+#endif /*!HAVE_GTK3*/
+
 	/* insert signal callback declarations, e.g. */
 	/* void (* my_event) (MugMsg* obj); */
 };

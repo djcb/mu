@@ -46,12 +46,17 @@ struct _MugMsgViewPrivate {
 };
 #define MUG_MSG_VIEW_GET_PRIVATE(o)(G_TYPE_INSTANCE_GET_PRIVATE((o),MUG_TYPE_MSG_VIEW, MugMsgViewPrivate))
 /* globals */
+
+#ifdef HAVE_GTK3
+static GtkBoxClass *parent_class = NULL;
+G_DEFINE_TYPE (MugMsgView, mug_msg_view, GTK_TYPE_BOX);
+#else
 static GtkVBoxClass *parent_class = NULL;
+G_DEFINE_TYPE (MugMsgView, mug_msg_view, GTK_TYPE_VBOX);
+#endif /*!HAVE_GTK3*/
 
 /* uncomment the following if you have defined any signals */
 /* static guint signals[LAST_SIGNAL] = {0}; */
-
-G_DEFINE_TYPE (MugMsgView, mug_msg_view, GTK_TYPE_VBOX);
 
 static void
 mug_msg_view_class_init (MugMsgViewClass * klass)
@@ -88,7 +93,7 @@ mug_msg_view_init (MugMsgView * obj)
 					GTK_POLICY_AUTOMATIC);
 	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled),
 					       priv->_view);
-	
+
 	gtk_box_pack_start (GTK_BOX (obj), scrolled, TRUE, TRUE, 0);
 }
 
@@ -135,7 +140,7 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 				msgpath);
 			mu_msg_view_set_note (MU_MSG_VIEW (priv->_view), note);
 			g_free (note);
-		}		
+		}
 	}
 
 	return TRUE;
@@ -147,7 +152,7 @@ mug_msg_view_set_note (MugMsgView * self, const char* html)
 {
 	MugMsgViewPrivate *priv;
 	g_return_if_fail (MUG_IS_MSG_VIEW (self));
-	
+
 	priv = MUG_MSG_VIEW_GET_PRIVATE (self);
 
 	mu_msg_view_set_note (MU_MSG_VIEW (priv->_view), html);

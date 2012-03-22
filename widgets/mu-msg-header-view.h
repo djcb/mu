@@ -23,6 +23,10 @@
 #include <gtk/gtk.h>
 #include <mu-msg.h>
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /*HAVE_CONFIG_H*/
+
 G_BEGIN_DECLS
 
 /* convenience macros */
@@ -38,7 +42,12 @@ typedef struct _MuMsgHeaderViewClass MuMsgHeaderViewClass;
 typedef struct _MuMsgHeaderViewPrivate         MuMsgHeaderViewPrivate;
 
 struct _MuMsgHeaderView {
-	 GtkVBox parent;
+#ifdef HAVE_GTK3
+	GtkBox parent;
+#else
+	GtkVBox parent;
+#endif /*!HAVE_GTK3*/
+
 	/* insert public members, if any */
 
 	/* private */
@@ -46,7 +55,11 @@ struct _MuMsgHeaderView {
 };
 
 struct _MuMsgHeaderViewClass {
+#ifdef HAVE_GTK3
+	GtkBoxClass parent_class;
+#else
 	GtkVBoxClass parent_class;
+#endif /*!HAVE_GTK3*/
 	/* insert signal callback declarations, e.g. */
 	/* void (* my_event) (MuMsgHeaderView* obj); */
 };
@@ -64,4 +77,3 @@ void mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg);
 G_END_DECLS
 
 #endif /* __MU_MSG_HEADER_VIEW_H__ */
-
