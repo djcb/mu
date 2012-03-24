@@ -472,8 +472,7 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 	MuError result;
 	GSList *lst, *c;
 
-	lst = NULL;
-	for (;;) {
+	for (lst = NULL;;) {
 		int rv;
 		struct dirent *entry, *res;
 		entry = dirent_new ();
@@ -487,12 +486,10 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 			}
 		} else {
 			dirent_destroy (entry);
-			g_warning ("error scanning dir: %s",
-				   strerror(rv));
+			g_warning ("error scanning dir: %s", strerror(rv));
 			return MU_ERROR_FILE;
 		}
 	}
-
 
 	/* we sort by inode; this makes things much faster on
 	 * extfs2,3 */
@@ -500,15 +497,9 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 	c = lst = g_slist_sort (lst, (GCompareFunc)dirent_cmp);
 #endif /*HAVE_STRUCT_DIRENT_D_INO*/
 
-	for (c = lst, result = MU_OK; c && result == MU_OK;
-	     c = g_slist_next(c)) {
-		result = process_dir_entry (path, mdir,
-					    (struct dirent*)c->data,
+	for (c = lst, result = MU_OK; c && result == MU_OK; c = g_slist_next(c))
+		result = process_dir_entry (path, mdir, (struct dirent*)c->data,
 					    msg_cb, dir_cb, data);
-		/* hmmm, break on MU_ERROR as well? */
-		if (result == MU_STOP)
-			break;
-	}
 
 	g_slist_foreach (lst, (GFunc)dirent_destroy, NULL);
 	g_slist_free (lst);
