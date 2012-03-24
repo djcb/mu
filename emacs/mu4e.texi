@@ -1222,6 +1222,19 @@ up-to-a-limited-number matches. Same for the other search based commands,
 (default: @key{b}).
 @item @emph{How can I easily include attachments in the messages I write?}
 Drag-and-drop.
+@item @emph{When I try do run @t{mu index} while @t{mu4e} os running I get
+errors like @t{mu: mu_store_new_writable: xapian error 'Unable to get write
+lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
+this error because the underlying Xapian database allows itself to be opened
+in read-write mode only once. There is not much @t{mu4e} can do about this,
+but what you can do is telling @t{mu} to (gracefully) terminate:
+@verbatim
+   pkill -2 -u $UID mu # send SIGINT
+   sleep 1
+   mu index
+@end verbatim
+@t{mu4e} will automatically restart @t{mu} when it needs it. In practice, this
+seems to work quite well.
 @end itemize
 
 @node Known issues / missing features
