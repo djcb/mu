@@ -1,6 +1,6 @@
 ;;; mu4e-speedbar --- Speedbar support for mu4e
 
-;; Copyright (C) 2012 Antono Vasiljev
+;; Copyright (C) 2012 Antono Vasiljev, Dirk-Jan C. Binnema
 ;;
 ;; Author: Antono Vasiljev <self@antono.info>
 ;; Version: 0.1
@@ -47,8 +47,7 @@
 
 (defun mu4e-install-speedbar-variables ()
   "Install those variables used by speedbar to enhance mu4e."
-  (if mu4e-main-speedbar-key-map
-      nil
+  (unless mu4e-main-speedbar-key-map
     (setq mu4e-main-speedbar-key-map (speedbar-make-specialized-keymap))
     (define-key mu4e-main-speedbar-key-map "RET" 'speedbar-edit-line)
     (define-key mu4e-main-speedbar-key-map "e" 'speedbar-edit-line)
@@ -56,30 +55,57 @@
 
 ;; Make sure our special speedbar major mode is loaded
 (if (featurep 'speedbar)
-    (mu4e-install-speedbar-variables)
+  (mu4e-install-speedbar-variables)
   (add-hook 'speedbar-load-hook 'mu4e-install-speedbar-variables))
 
 (defun mu4e-render-maildir-list ()
+  "Insert the list of maildirs in the speedbar."
   (interactive)
   (mapcar (lambda (maildir-name)
-            (speedbar-insert-button maildir-name
-                                    'speedbar-directory-face
-                                    'highlight
-                                    'mu4e-main-speedbar-find-file
-                                    maildir-name))
-          (mu4e-get-maildirs mu4e-maildir)))
+            (speedbar-insert-button
+	      (concat "  " maildir-name)
+	      'mu4e-highlight-face
+	      'highlight
+	      'mu4e-main-speedbar-maildir
+	      maildir-name))
+    (mu4e-get-maildirs mu4e-maildir)))
 
-(defun mu4e-main-speedbar-find-file (&optional text token ident)
+
+(defun mu4e-render-bookmark-list ()
+  "Insert the list of bookmarks in the speedbar"
+  (interactive)
+  (mapcar (lambda (bookmark)
+            (speedbar-insert-button
+	      (concat "  " (nth 1 bookmark))
+	      'mu4e-highlight-face
+	      'highlight
+	      'mu4e-main-speedbar-bookmark
+	      (nth 0 bookmark)))
+    mu4e-bookmarks))
+
+
+(defun mu4e-main-speedbar-maildir (&optional text token ident)
   "Load in the mu4e file TEXT. TOKEN and INDENT are not used."
   (speedbar-with-attached-buffer
-    (speedbar-message "Loading in MU4E maildir %s..." text)
     (mu4e-search (concat "\"maildir:" token "\""))))
+
+(defun mu4e-main-speedbar-bookmark (&optional text token ident)
+  "Load in the mu4e file TEXT. TOKEN and INDENT are not used."
+  (speedbar-with-attached-buffer
+    (mu4e-search token)))
+
 
 ;;;###autoload
 (defun mu4e-main-speedbar-buttons (buffer)
   "Create buttons for any mu4e BUFFER."
   (interactive)
   (erase-buffer)
+  (insert (propertize "* mu4e\n\n" 'face 'mu4e-title-face))
+
+  (insert (propertize " Bookmarks\n" 'face 'mu4e-title-face))
+  (mu4e-render-bookmark-list)
+  (insert "\n")
+  (insert (propertize " Maildirs\n" 'face 'mu4e-title-face))
   (mu4e-render-maildir-list))
 
 (provide 'mu4e-speedbar)
