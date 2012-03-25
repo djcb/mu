@@ -221,6 +221,8 @@ if IS-OPEN is nil, and otherwise open it."
       (define-key map "s" 'mu4e-search)
 
       (define-key map "b" 'mu4e-search-bookmark)
+      (define-key map "B" 'mu4e-search-bookmark-edit-first)
+      
       (define-key map "j" 'mu4e-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)

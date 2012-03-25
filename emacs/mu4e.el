@@ -532,7 +532,6 @@ maildirs under `mu4e-maildir."
 	  (error "Invalid shortcut '%c'" kar))))))
 
 
-
 (defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."

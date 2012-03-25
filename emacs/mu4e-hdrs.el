@@ -257,7 +257,8 @@ after the end of the search results."
       (define-key map "s" 'mu4e-search)
 
       (define-key map "b" 'mu4e-search-bookmark)
-
+      (define-key map "B" 'mu4e-search-bookmark-edit-first)
+            
       (define-key map "q" 'mu4e-quit-buffer)
 
       (define-key map "r" 'mu4e-rerun-search)
@@ -685,6 +686,17 @@ otherwise, limit to up to `mu4e-search-results-limit'."
       (mu4e-hdrs-search query current-prefix-arg))))
 
 
+(defun mu4e-search-bookmark-edit-first (expr)
+  "Search using some bookmarked query, but allow for editing the
+bookmark before submitting it. With C-u prefix, show /all/ results,
+otherwise, limit to up to `mu4e-search-results-limit'."
+  (interactive
+    (list (read-string "[mu] search for: "
+	    (concat (or (mu4e-ask-bookmark "Edit bookmark: ") "") " "))))
+  (when expr
+    (mu4e-hdrs-search expr current-prefix-arg)))
+
+  
 (defun mu4e-quit-buffer ()
   "Quit the current buffer."
   (interactive)

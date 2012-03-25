@@ -36,6 +36,8 @@
   (let ((map (make-sparse-keymap)))
 
     (define-key map "b" 'mu4e-search-bookmark)
+    (define-key map "B" 'mu4e-search-bookmark-edit-first)
+    
     (define-key map "s" 'mu4e-search)
     (define-key map "q" 'mu4e-quit)
     (define-key map "j" 'mu4e-jump-to-maildir)

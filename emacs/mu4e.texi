@@ -359,10 +359,10 @@ the next sections we will describe what these keys actually @emph{do}.
      /          +--------+          \
     /         [RFCE]^                \
    /                |                 \
-+-------+ [sjb] +---------+  [RET] +---------+
++-------+ [sjbB]+---------+  [RET] +---------+
 | main  | <---> | headers | <----> | message |
-+-------+  [q]  +---------+ [qbjs] +---------+
-                  [sbj]                 ^
++-------+  [q]  +---------+ [qbBjs]+---------+
+                  [sjbB]                ^
                                     [.] | [q]
                                         V
                                       +-----+
@@ -371,10 +371,10 @@ the next sections we will describe what these keys actually @emph{do}.
 
 Default bindings
 ----------------
-R: Reply      s: search            .: raw view
-F: Forward    j: jump-to-maildir
+R: Reply      s: search            .: raw view (toggle)
+F: Forward    j: jump-to-maildir   q: quit
 C: Compose    b: bookmark-search
-E: Edit       q: quit
+E: Edit       B: bookmark-search (edit-first)
 @end example
 
 @node Main view
@@ -677,8 +677,10 @@ being in a certain folder.
 
 Queries normally return only up to @code{mu4e-search-results-limit} (which
 defaults to 500) results. You get @emph{all} results when you prefix your
-search commands (such as with @code{mu4e-search}, @code{mu4e-search-bookmark}
-and @code{mu4e-jump-to-maildir} with @kbd{C-u}.
+search commands (such as with @code{mu4e-search}, @code{mu4e-search-bookmark},
+@code{mu4e-search-bookmark-edit-first} and @code{mu4e-jump-to-maildir} with
+@kbd{C-u}.
+
 
 The reason for limiting the number of results in the query is that emacs may
 become a bit slow when displaying many results, and in many cases
@@ -752,7 +754,8 @@ If you have queries that you use often, you may want to store them as
 invoke them in other places as well. Bookmark searches are available in the
 main view @ref{Main view}, header view @xref{Headers view}, and message view
 @xref{Message view}, using (by default) the key @key{b}
-(@code{mu4e-search-bookmark}).
+(@code{mu4e-search-bookmark}). 
+
 
 @code{mu4e} provides some default bookmarks, which you can override. The
 definition of the default bookmarks is instructive here:
@@ -777,7 +780,7 @@ configuration (@file{~/.emacs}) something like:
   '("size:5M..500M"       "Big messages"     ?b))
 @end lisp
 
-This prepend your bookmark to the list, and assign the key @key{b} to it. If
+This prepends your bookmark to the list, and assigns the key @key{b} to it. If
 you want to @emph{append} your bookmark, you can use @code{t} as the third
 argument to @code{add-to-list}.
 
@@ -785,6 +788,13 @@ In the various @t{mu4e} views, pressing @key{b} will list all the bookmarks
 defined in the echo area, with the shortcut key highlighted. So, to invoke the
 bookmark we just defined (to get the list of "Big Messages"), all you need to
 type is @key{bb}.
+
+There is also @code{mu4e-search-bookmark-edit-first} (key @key{B}), which lets
+you edit the search query with some bookmark already filled in. This can be
+useful if you have many similar queries, but need to change some
+parameter. For example, you could have a bookmark @t{"NOT maildir:/Trash
+AND"}@footnote{Not a valid search query by itself} and add whatever you
+want to search for to that.
 
 
 @node Maildir searches
