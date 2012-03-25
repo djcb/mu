@@ -51,6 +51,12 @@ Using the \fBfind\fR command we can search for messages.
 .nf
 -> find "<query>" <maxnum>
 .fi
+First, this will return an 'erase'-sexp, to clear the buffer from possible
+results from a previous query.
+.nf
+<- (:erase t)
+.fi
+
 This will return a series of 0 up to <maxnum> s-expression corresponding to each
 message found (with a negative number for <maxnum> meaning 'unlimited'). The
 information for each message does not contain the message body; the \fBview\fR

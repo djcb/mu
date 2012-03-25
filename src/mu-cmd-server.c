@@ -376,6 +376,12 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 		return server_error (err, MU_ERROR_INTERNAL,
 				     "couldn't get iterator");
 
+	/* before sending new results, send an 'erase' message, so the
+	 * frontend knows it should erase the headers buffer. this
+	 * will ensure that the output of two finds quickly will not
+	 * be mixed. */
+	send_expr ("(:erase t)");
+
 	/* return results + the number of results found */
 	send_expr ("(:found %u)\n", output_found_sexps (iter, maxnum));
 	mu_msg_iter_destroy (iter);

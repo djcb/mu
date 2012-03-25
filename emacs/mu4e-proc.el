@@ -62,6 +62,11 @@ server process; the function is passed a msg plist as argument. See
 after the headers have returns, to report on the number of
 matches. See `mu4e-proc-filter' for the format.")
 
+(defvar mu4e-proc-erase-func 'mu4e-default-handler
+  "*internal* A function called for when we received an :erase sexp
+after the headers have returns, to clear the current headers
+buffer. See `mu4e-proc-filter' for the format.")
+
 (defvar mu4e-proc-compose-func  'mu4e-default-handler
   "*internal* A function called for each message returned from the
 server process that is used as basis for composing a new
@@ -256,10 +261,14 @@ updated as well, with all processed sexp data removed."
 	((plist-get sexp :found)
 	  (funcall mu4e-proc-found-func (plist-get sexp :found)))
 
-	;; viewin a specific message
+	;; viewing a specific message
 	((plist-get sexp :view)
 	  (funcall mu4e-proc-view-func (plist-get sexp :view)))
 
+	;; receive an erase message
+	((plist-get sexp :erase)
+	  (funcall mu4e-proc-erase-func))
+	
 	;; receive a pong message
 	((plist-get sexp :pong)
 	  (funcall mu4e-proc-pong-func
@@ -433,7 +442,7 @@ be delivered to the function registered as `mu4e-proc-message-func'."
 The result will be delivered to the function registered as
 `mu4e-proc-compose-func'."
   (unless (member compose-type '(forward reply edit))
-    (error "Unsupported compose-type"))
+    (error "Unsupported compose-type %S" compose-type))
   (mu4e-proc-send-command "compose %s %d" (symbol-name compose-type) docid))
 
 
