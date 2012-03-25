@@ -928,23 +928,26 @@ Note, you should put something like:
 in your setup, which allows the script to find the D-Bus session bus.
 
 @node Speedbar support
-@section Speedbar support (experimental)
+@section Speedbar support
 
 @code{speedbar} is an emacs-extension that shows navigational information for
-an emacs buffer in a separate frame. Using @code{mu4e-speedbar}, @t{mu4e}
-lists your maildir folders and allows for one-click access to them.
+an emacs buffer in a separate frame. 
 
-You can set it up like this in your emacs configuration:
+Using @code{mu4e-speedbar}, @t{mu4e} lists your bookmarks and maildir folders
+and allows for one-click access to them.
+
+You can set it up by putting something like the following in your @t{emacs}
+configuration file:
 @lisp
 (require 'speedbar)
 (require 'mu4e-speedbar)
 @end lisp
 
-You can then activate it with @code{M-x speedbar}.
+You can then activate it with @code{M-x speedbar}. When then going to the
+@ref{Main view}, the speedbar-frame will be updated with your bookmarks and
+maildirs.
 
 @code{mu4e-speedbar} was contributed by Antono Vasiljev.
-
-
 
 
 @node Example configuration
