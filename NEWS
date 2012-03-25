@@ -1,11 +1,46 @@
 * NEWS (user visible changes)
 
-** Release 0.9.8.1 (not yet released)
+** Release 0.9.8.3 <unreleased>
+
+*** mu4e
+    - allow for searching by editing bookmarks
+      (`mu4e-search-bookmark-edit-first')
+    - make it configurable what to do with sent messages (see
+      `mu4e-sent-messages-behavior')
+    - add speedbar support (initial patch by Antono V)
+    - improved documentation
+
+*** general
+    - fix compiler warnings for newer/older gcc and clang/clang++
+    - fix unit tests (and some code) for Ubuntu 10.04 and FreeBSD9
+    - fix warnings for compilation with GTK+ 3.2
+    - fixes in maildir scanning
+      
+** Release 0.9.8.2 <2012-03-11>
+
+*** mu4e:
+   - make mail updating non-blocking
+   - allow for automatic periodic update ('mu4e-update-interval')
+   - allow for external triggering of update
+   - make behavior when leaving the headers buffer customizable, ie.
+     ask/apply/ignore ('mu4e-headers-leave-behaviour')
+
+*** general
+    - fix output for some non-UTF8 locales
+    - open ('play') file names with spaces
+    - don't show unnecessary errors for --format=links
+    - make build warning-free for clang/clang++
+    - allow for slightly older autotools
+    - fix unit tests for some hidden assumptions (locale, dir structure etc.)
+    - some documentation updates / clarifications
+
+** Release 0.9.8.1 <2012-02-18 Sat>
 
 *** mu
    - show only leaf/rfc822 MIME-parts
 
 *** mu4e
+
    - allow for shell commands with arguments in `mu4e-get-mail-command'.
    - support marking messages as 'read' and 'unread'
    - show the current query in the the mode-line (`global-mode-string').
