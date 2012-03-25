@@ -70,11 +70,11 @@ fixme:
 
 # check whether we can run make distcheck from the repo version
 gitcheck:
-	cd `mktemp -d`; \
-	git clone git://gitorious.org/mu/mu.git ; \
-	cd mu; \
-	autoreconf -i ;\
-	./configure ; \
+	cd `mktemp -d`;				 \
+	git clone git://github.com/djcb/mu.git ; \
+	cd mu;					 \
+	autoreconf -i ;				 \
+	./configure ;				 \
 	make distcheck
 
 EXTRA_DIST=		\
