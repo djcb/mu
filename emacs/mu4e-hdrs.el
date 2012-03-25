@@ -45,6 +45,17 @@
 (defconst mu4e-hdrs-fringe "  "
   "*internal* The space on the left of message headers to put marks.")
 
+(defun mu4e-hdrs-clear ()
+  "Clear the header buffer and related data structures."
+  (when (buffer-live-p mu4e-hdrs-buffer)
+    (let ((inhibit-read-only t))
+      (with-current-buffer mu4e-hdrs-buffer
+	(erase-buffer)
+	(when mu4e-marks-map (clrhash mu4e-marks-map))
+	(when mu4e-msg-map (clrhash mu4e-msg-map))
+	(when mu4e-thread-info-map (clrhash mu4e-thread-info-map))))))
+
+
 (defun mu4e-hdrs-search (expr &optional full-search)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If FULL-SEARCH is non-nil return all
@@ -54,14 +65,14 @@ results, otherwise, limit number of results to
 	  (inhibit-read-only t)
 	 (esc (replace-regexp-in-string "\"" "\\\\\"" expr))) ;; escape "\"
     (with-current-buffer buf
-      (erase-buffer)
       (mu4e-hdrs-mode)
       (setq
 	global-mode-string (propertize expr 'face 'mu4e-title-face)
 	mu4e-last-expr expr
 	mu4e-hdrs-buffer buf
 	mode-name "mu4e-headers"))
-    (switch-to-buffer mu4e-hdrs-buffer)
+
+    (switch-to-buffer buf)
     (mu4e-proc-find esc ;; '-1' means 'unlimited search'
       (if full-search -1 mu4e-search-results-limit))))
 
@@ -95,8 +106,9 @@ headers."
 	      (point (when marker (marker-position marker))))
 	(when point ;; is the message present in this list?
 	  ;; if it's marked, unmark it now
-	  (when (mu4e-hdrs-docid-is-marked docid) (mu4e-hdrs-mark 'unmark))
-	  ;; first, remove the old one (otherwise, we'd have to headers with
+	  (when (mu4e-hdrs-docid-is-marked docid)
+	    (mu4e-hdrs-mark 'unmark))
+	  ;; first, remove the old one (otherwise, we'd have two headers with
 	  ;; the same docid...
 	  (mu4e-hdrs-remove-handler docid)
 
@@ -120,7 +132,7 @@ headers."
 
 (defun mu4e-hdrs-remove-handler (docid)
   "Remove handler, will be called when a message has been removed
-from the database. This function will hide the remove message in
+from the database. This function will hide the removed message from
 the current list of headers."
   (with-current-buffer mu4e-hdrs-buffer
     (let* ((marker (gethash docid mu4e-msg-map))
@@ -128,7 +140,7 @@ the current list of headers."
 	    (docid-at-pos (and pos (mu4e-hdrs-get-docid pos))))
       (unless marker (error "Message %d not found" docid))
       (unless (eq docid docid-at-pos)
-	(error "At point %d, expected docid %d, but got %d"
+	(error "At point %d, expected docid %d, but got %S"
 	  pos docid docid-at-pos))
       (mu4e-hdrs-remove-header docid pos))))
 
@@ -164,7 +176,7 @@ into a string."
 (defun mu4e-hdrs-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (let* ( (docid (plist-get msg :docid))
+  (let* ((docid (plist-get msg :docid))
 	  (thread-info
 	    (or (plist-get msg :thread) (gethash docid mu4e-thread-info-map)))
 	  (line
@@ -210,9 +222,8 @@ if provided, or at the end of the buffer otherwise."
     ;; store the thread info, so we can use it when updating the message
     (when  (and thread-info mu4e-thread-info-map)
       (puthash docid thread-info mu4e-thread-info-map))
-    (mu4e-hdrs-add-header line (plist-get msg :docid)
-      (if point point (point-max)))))
-
+    ;; now, append the header line
+    (mu4e-hdrs-add-header line docid point)))
 
 (defun mu4e-hdrs-found-handler (count)
   "Create a one line description of the number of headers found
@@ -278,7 +289,7 @@ after the end of the search results."
       (define-key map "R" 'mu4e-compose-reply)
       (define-key map "F" 'mu4e-compose-forward)
       (define-key map "C" 'mu4e-compose-new)
-      (define-key map "E" 'mu4e-edit-draft)
+      (define-key map "E" 'mu4e-compose-edit)
 
       (define-key map (kbd "RET") 'mu4e-view-message)
       (define-key map [mouse-2]   'mu4e-view-message)
@@ -325,7 +336,6 @@ after the end of the search results."
 	(define-key menumap [previous]  '("Previous" . mu4e-prev-header))
 	(define-key menumap [sepa4] '("--")))
 
-	;;(define-key menumap [draft]  '("Edit draft" . mu4e-compose-new))
       map)))
 
 (fset 'mu4e-hdrs-mode-map mu4e-hdrs-mode-map)
@@ -337,6 +347,8 @@ after the end of the search results."
 (setq mu4e-proc-found-func   'mu4e-hdrs-found-handler)
 (setq mu4e-proc-view-func    'mu4e-hdrs-view-handler)
 (setq mu4e-proc-remove-func  'mu4e-hdrs-remove-handler)
+(setq mu4e-proc-erase-func   'mu4e-hdrs-clear)
+
 ;; this last one is defined in mu4e-send.el
 (setq mu4e-proc-compose-func 'mu4e-send-compose-handler)
 
@@ -391,23 +403,40 @@ after the end of the search results."
 (defvar mu4e-msg-map nil
   "*internal* A map (hashtable) which maps a database (Xapian)
 docid (which uniquely identifies a message to a marker.  where
-marker points to the buffer position for the message.
+marker points to the buffer position for the message
 
 Using this map, we can update message headers which are currently
 on the screen, when we receive (:update ) notices from the mu
 server.")
 
+(defun mu4e-select-headers-window-if-visible ()
+  "When there is a visible window for the headers buffer, make sure
+to select it. This is needed when adding new headers, otherwise
+adding a lot of new headers looks really choppy."
+  (let ((win (get-buffer-window mu4e-hdrs-buffer)))
+    (when win (select-window win)
+)))
+
+
 (defun mu4e-hdrs-add-header (str docid point)
-  "Add header STR with DOCID to the buffer at POINT."
+  "Add header STR with DOCID to the buffer at POINT if non-nil, or
+at (point-max) otherwise."
   (unless docid (error "Invalid message"))
   (when (buffer-live-p mu4e-hdrs-buffer)
     (with-current-buffer mu4e-hdrs-buffer
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t) (point (if point point (point-max))))
+ 	;;(mu4e-select-headers-window-if-visible)
 	(save-excursion
 	  (goto-char point)
+	  ;; make sure the output window is selected, which it wouldn't be if called
+	  ;; from e.g. speedbar (output looks choppy when another window is
+	  ;; selected). We use switch-to-buffer for its window-selecting side-effect -
+	  ;; but only if the window is visible
+
+	  (insert (propertize (concat mu4e-hdrs-fringe str "\n")  'docid docid))
 	  ;; Update `mu4e-msg-map' with MSG, and MARKER pointing to the buffer
 	  ;; position for the message header."
-	  (insert (propertize (concat mu4e-hdrs-fringe str "\n")  'docid docid))
+
 	  ;; note: this maintaining the hash with the markers makes things slow
 	  ;; when there are many (say > 1000) headers. this seems to be mostly
 	  ;; in the use of markers. we use those to find messages when they need
@@ -436,7 +465,8 @@ server.")
     (when marker
       (with-current-buffer mu4e-hdrs-buffer
 	(save-excursion
-	  (let ((inhibit-read-only t) (pos (marker-position marker)))
+	  (let ((inhibit-read-only t)
+		 (pos (marker-position marker)))
 	    (goto-char pos)
 	    (delete-char 2)
 	    (insert (propertize mark 'face 'mu4e-hdrs-marks-face) " ")
@@ -598,30 +628,6 @@ work well."
     (unless docid (error "No message at point."))
     (mu4e-proc-view-msg docid)))
 
-
-(defun mu4e-hdrs-compose (compose-type)
-  "Compose either a reply/forward based on the message at point. or
-start editing it. COMPOSE-TYPE is either `reply', `forward', `edit'
-or `new'."
-  (if (eq compose-type 'new)
-    (mu4e-send-compose-handler 'new)
-    (let ((docid (mu4e-hdrs-get-docid))
-	   ;; note, the first two chars of the line (the mark margin) does *not*
-	   ;; have the 'draft property; thus, we check one char before the end of
-	   ;; the current line instead
-	   (is-draft (get-text-property (- (line-end-position) 1) 'draft)))
-      (unless docid
-	(error "No message at point."))
-      (cond
-	((member compose-type '(reply forward))
-	  (mu4e-proc-compose compose-type docid))
-	((eq compose-type 'edit)
-	  (unless is-draft
-	    (error "Cannot edit a non-draft message"))
-	  (mu4e-proc-compose 'edit docid))
-	(t (error "invalid compose type %S" compose-type))))))
-
-
 (defun mu4e-hdrs-docid-is-marked (docid)
   "Is the given docid marked?"
   (when (gethash docid mu4e-marks-map) t))
@@ -671,8 +677,8 @@ up to `mu4e-search-results-limit' much quicker."
       (mu4e-hdrs-search expr current-prefix-arg)))
 
 (defun mu4e-search-bookmark ()
-  "Search using some bookmarked query. With C-u prefix, show /all/ results, otherwise,
-limit to up to `mu4e-search-results-limit'."
+  "Search using some bookmarked query. With C-u prefix, show /all/ results,
+otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive)
   (let ((query (mu4e-ask-bookmark "Bookmark: ")))
     (when query
@@ -808,28 +814,52 @@ parameter NO-CONFIRMATION is is t, don't ask for confirmation."
 	(mu4e-hdrs-marks-execute)
 	(message nil)))))
 
-(defun mu4e-compose-reply ()
-  "Start composing a reply to the current message."
+
+(defun mu4e-compose (&optional compose-type)
+  "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
+a symbol, one of `reply', `forward', `edit', `new'. All but `new'
+take the message at point as input. Symbol `edit' is only allowed
+for draft messages."
   (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (mu4e-hdrs-compose 'reply)))
+  (let ((compose-type
+	  (or compose-type
+	    (intern (ido-completing-read "Compose type: "
+		      '("reply" "forward" "edit" "new"))))))
+    (with-current-buffer mu4e-hdrs-buffer
+      ;; 'new is special, since it takes no existing message as arg therefore,
+      ;; we don't need to call thec backend, and call the handler *directly*
+      (if (eq compose-type 'new)
+	(mu4e-send-compose-handler 'new)
+	;; otherwise, we need the doc-id
+	(let ((docid (mu4e-hdrs-get-docid))
+	       (is-draft ))
+	  (unless docid (error "No message at point."))
+
+	  ;; note, the first two chars of the line (the mark margin) does *not*
+	  ;; have the 'draft property; thus, we check one char before the end of
+	  ;; the current line instead
+	  (when (and (eq compose-type 'edit)
+		  (get-text-property (- (line-end-position) 1) 'draft))
+	    (error "Editing only allowed for draft messages"))
+	  ;; talk to the backend
+	  (mu4e-proc-compose compose-type docid))))))
+
+
+(defun mu4e-compose-reply ()
+  "Reply to the current message."
+  (interactive) (mu4e-compose 'reply))
 
 (defun mu4e-compose-forward ()
-  "Start composing a forward to the current message."
-  (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (mu4e-hdrs-compose 'forward)))
+  "Forward the current message."
+  (interactive) (mu4e-compose 'forward))
+
+(defun mu4e-compose-edit ()
+  "Edit the draft message."
+  (interactive) (mu4e-compose 'edit))
 
 (defun mu4e-compose-new ()
-  "Compose a new, empty message."
-  (interactive)
-  (mu4e-hdrs-compose 'new))
-
-(defun mu4e-edit-draft ()
-  "Start editing the existing draft message at point."
-  (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (mu4e-hdrs-compose 'edit)))
+  "Compose a new message."
+  (interactive) (mu4e-compose 'new))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
