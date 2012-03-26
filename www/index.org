@@ -14,7 +14,8 @@
   stored in the [[http://en.wikipedia.org/wiki/Maildir][Maildir]]-format, on Unix-like systems. *mu*'s main purpose is to
   help you to find the messages you need, quickly; in addition, it allows you to
   view messages, extract attachments, create new maildirs, ... See the [[file:cheatsheet.org][mu
-  cheatsheet]] for some examples.
+  cheatsheet]] for some examples. Mu's source code is available [[https://github.com/djcb/mu][in github]], and
+  there is the [[http://groups.google.com/group/mu-discuss][mu-discuss]] mailing list.
 
   *mu* now comes with an emacs-based e-mail client (=mu4e=), a simple GUI
   (=mug=) and bindings for the Guile/Scheme programming language.
