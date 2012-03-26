@@ -28,6 +28,7 @@
 #include <stdexcept>
 
 #include <errno.h>
+#include <unistd.h>
 
 #include "mu-store.h"
 #include "mu-store-priv.hh" /* _MuStore */
