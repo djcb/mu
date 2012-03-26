@@ -26,6 +26,7 @@
 #include <xapian.h>
 #include <cstring>
 #include <stdexcept>
+#include <unistd.h>
 
 #include <errno.h>
 
