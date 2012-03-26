@@ -344,6 +344,9 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 {
 	if (G_LIKELY(d_type == DT_REG)) {
 
+		/* ignore emacs tempfiles */
+		if (entry->d_name[0] == '#')
+			return TRUE;
 		/* ignore dovecot metadata */
 		if (entry->d_name[0] == 'd' &&
 		    strncmp (entry->d_name, "dovecot", 7) == 0)
