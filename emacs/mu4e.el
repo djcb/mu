@@ -1,6 +1,6 @@
 ;;; mu4e.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -420,6 +420,9 @@ dir already existed, or has been created, nil otherwise."
 
 (defun mu4e-check-requirements ()
   "Check for the settings required for running mu4e."
+  (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
+    (error "Please set `mu4e-mu-binary' to the full path to the mu
+    binary."))
   (unless mu4e-maildir
     (error "Please set `mu4e-maildir' to the full path to your
     Maildir directory."))
