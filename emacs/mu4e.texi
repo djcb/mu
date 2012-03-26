@@ -27,10 +27,9 @@ Documentation License.''
 
 Welcome to @t{mu4e}!
 
-@t{mu4e} (@emph{mu-for-emacs}) is an @t{emacs}-based e-mail client, built on
-top of the @t{mu} e-mail search engine. @t{mu4e} supports GNU Emacs 23 and
-later. It assumes a Unix-like system and mail stored in a maildir; it has been
-tested on Debian GNU/Linux.
+@t{mu4e} (@emph{mu-for-emacs}) is an e-mail client for GNU Emacs (version 23
+and later). It is built on top of the @t{mu} e-mail search engine. This manual
+describes how to set up and use @t{mu4e}.
 
 @menu
 * Introduction::
@@ -50,6 +49,8 @@ Appendices
 @node Introduction
 @chapter Introduction
 
+In this chapter some prelimary thoughs about the how and why of @t{mu4e}.
+
 @menu
 * Why another e-mail client?::
 * Other mail clients::
@@ -61,16 +62,14 @@ Appendices
 
 Why would the world need another e-mail client?  Well, I'm not sure the world
 really @emph{needs} another one, but maybe @emph{I} do! I spend a @emph{lot}
-of time, both professionally and privately, dealing with e-mail -- so having
-an efficient e-mail client is essential for me. Since none of the existing
-ones worked they I wanted, I created my own.
-
-A secondary goal was to write some bigger program in Emacs Lisp (@t{elisp}),
-to better understand the language and its idioms.
-
-I am happily using @t{mu4e} as my one and only e-mail client, but of course it
-is still a work-in-progress.
-
+of time, both professionally and privately, dealing with e-mail -- having an
+efficient e-mail client is essential for me. Since none of the existing ones
+worked they I wanted, I created my own.
+ 
+Still, even while having been created for such selfish motives, the feedback
+of many early adopters has been used to ensure that @t{mu4e} works well for
+other people as well.
+ 
 @node Other mail clients
 @section Other mail clients
 
@@ -85,9 +84,9 @@ different though.
 emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
 @t{dired}, while it takes some cues from @emph{GMail}.
 
-@t{mu4e} tries to keep all the 'state' in the maildirs, so I can switch
+@t{mu4e} tries to keep all the 'state' in the maildirs, so one can switch
 between clients, synchronize over @abbr{IMAP} or backup with @t{rsync} -- if
-you delete the database, you don't lose any information.
+you delete the database, you won't lose any information.
 
 @node What mu4e does and doesn't do
 @section What mu4e does and doesn't do
@@ -100,11 +99,11 @@ tools, such as @t{offlineimap}@footnote{@url{http://offlineimap.org/}},
 messages end up in a Maildir, @t{mu4e}/@t{mu} are happy to deal with them.
 
 @t{mu4e} also does @emph{not} implement sending messages; instead, it depends
-on the true-and-tested @emph{smtpmail} which is part of emacs. In addition,
-@t{mu4e} piggybacks on Gnus' message editor; @inforef{Top,Gnus message
-editor,message}.
+on the true-and-tested @emph{smtpmail}, which is part of @t{emacs}. In
+addition, @t{mu4e} piggybacks on Gnus' message editor; @inforef{Top,Gnus
+message editor,message}.
 
-Thus, many of the traditional things an e-mail client needs to do are
+Thus, many of the traditional things an e-mail client needs to do, are
 subcontracted to other tools. This leaves @t{mu4e} to concentrate on what it
 does best: quick message searching, reading mails, replying them, moving
 messages around and so on.
@@ -112,10 +111,11 @@ messages around and so on.
 @node Getting started
 @chapter Getting started
 
-In this chapter, we see how you can install @t{mu4e} and how to set it
+In this chapter, we go through installing @t{mu4e} and see how to set it
 up. After we have succeeded in @ref{Getting mail}, and @ref{Indexing your
-messages}, we discuss @ref{Basic configuration}. After going through these
-steps, @t{mu4e} should be ready for use.
+messages}, we discuss @ref{Basic configuration}. 
+
+After going through these steps, @t{mu4e} should be ready for use.
 
 @menu
 * Installation::
@@ -238,13 +238,13 @@ provide some simple examples - and @ref{Example configuration}.
 
 A very minimal setup could look something like:
 
-@verbatim
+@lisp
 ;; tell message-mode how to send mail
 (setq message-send-mail-function 'smtpmail-send-it)
 ;; if our mail server lives at smtp.example.org; if you have a local
 ;; mail-server, simply use 'localhost' here.
 (setq smtpmail-smtp-server "smtp.example.org")
-@end verbatim
+@end lisp
 
 Note, since @t{mu4e} uses the same @t{message mode} and @t{smtpmail}
 that Gnus uses, any setting for those will also work for @t{mu4e}.
@@ -280,11 +280,11 @@ view}.
 To allow for queuing, you need to tell @t{smtpmail} where you want to do
 this. For example:
 
-@verbatim
+@lisp
 (setq
     smtpmail-queue-mail  nil  ;; start in non-queuing mode
     smtpmail-queue-dir   "~/Maildir/queue/cur")
-@end verbatim
+@end lisp
 
 For convenience, we locate the queue directory somewhere in our normal
 Maildir. If you want to use queued mail, you should create this directory
@@ -322,13 +322,13 @@ First, we need to load @t{mu4e}:
 
 Then, we need to tell @t{mu4e} where it can find your Maildir, and some
 special folders. So, for example:
-@example
+@lisp
   (setq
     mu4e-maildir       "~/Maildir"   ;; top-level Maildir
     mu4e-sent-folder   "/sent"       ;; where do i keep sent mail?
     mu4e-drafts-folder "/drafts"     ;; where do i keep half-written mail?
     mu4e-trash-folder  "/trash")     ;; where do i move deleted mail?
-@end example
+@end lisp
 
 @code{mu4e-maildir} take an actual filesystem-path, the other folder names are
 all relative to @code{mu4e-maildir}.
@@ -793,9 +793,10 @@ There is also @code{mu4e-search-bookmark-edit-first} (key @key{B}), which lets
 you edit the search query with some bookmark already filled in. This can be
 useful if you have many similar queries, but need to change some
 parameter. For example, you could have a bookmark @t{"NOT maildir:/Trash
-AND"}@footnote{Not a valid search query by itself} and add whatever you
-want to search for to that.
-
+AND"}@footnote{Not a valid search query by itself} and add whatever you want
+to search for to that. Or, to do a query limited to the messages of today, all
+you need to type is @key{Bt} (using the @t{Today's messages}-bookmark, see
+above).
 
 @node Maildir searches
 @section Maildir searches
@@ -828,17 +829,17 @@ a query @t{maildir:/inbox}. There is a special shortcut @key{o} for
 @emph{other} (so don't use that one for your own shortcuts!), which allows you
 to choose from @emph{all} maildirs.
 
-Each of the folder name is relative to your top-level maildir directory; so if
-you keep your maildir in @file{~/Maildir}, @file{/inbox} would refer to
+Each of the folder names is relative to your top-level maildir directory; so if
+you keep your mail in @file{~/Maildir}, @file{/inbox} would refer to
 @file{~/Maildir/inbox}.
 
 Having these shortcuts allows you to jump around your folder very quickly -
 for example, getting to the @t{/lists} folder only requires you to type
 @key{jl}.
 
-The same shortcuts are used by the function @code{mu4e-mark-for-move}; so for
-example, if you want to move a message the @t{/archive} folder, you can do so
-by typing @key{ma}.
+The very same shortcuts are used by the @code{mu4e-mark-for-move} (default
+shortcut @key{m}); so, for example, if you want to move a message the
+@t{/archive} folder, you can do so by typing @key{ma}.
 
 @node Interaction with other tools
 @chapter Interaction with other tools
