@@ -1,12 +1,6 @@
 
 * TODO
 
-** Bugs
-
-*** database locks (solved?)
-
-** Features i
-
 *** mu4e-get-sub-maildirs
 *** extract mailing list name
 *** mark thread
@@ -19,49 +13,10 @@
 *** message statistics
 *** include exchange handling / org integration
 *** integrate bbdb
-*** update headers view
+*** draft messages vs gmail / offlineimap
+*** forward-as-attachment
+*** identity support
 
-
-* DONE
-** don't put updated messages at the end
-** mark region
-** editing drafts
-** combine download / re-index
-** toggleable message line wrapping in view
-** threading problems
-** missing? message
-** double messages (different docids though)
-** sometimes commands are not executed immediately
-** menus
-** flag information for content flags (encrypted, signed, has-attach)
-** use top bar
-** add footer to search results
-** q while adding headers
-** handle start/stopping server
-** hostname in draftname
-** make quick folders work for both jump and move
-** synchronize headers / view buffer point
-** make date format customizable
-** add :from-or-to
-** fix to:/cc: etc.
-** give info about target for move
-** --maildir=~/Maildir does not work anymore
-** message threading
-** view raw message
-** Sent Items
-** raw-mode / quit
-** customizable bookmarks
-** fix queued sending
-** version check at startup
-** emacs install
-** handler not registered when compose without headers
-** make links clickable
-** integrate with org-contacts
-** forward should take the attachments from the original
-** auto-mail check
-** colorize cited parts in view
-** documentation
-** sometimes +S-u-n does not seem to work?
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
