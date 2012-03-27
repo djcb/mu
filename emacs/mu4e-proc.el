@@ -46,6 +46,11 @@ argument. See `mu4e-proc-filter' for the format.")
 the server process, when some message has been deleted. The
 function is passed the docid of the removed message.")
 
+(defvar mu4e-proc-sent-func  'mu4e-default-handler
+  "*internal* A function called for each :sent sexp returned from
+the server process, when some message has been sent. The
+function is passed the docid and the draft-path of the sent message.")
+
 (defvar mu4e-proc-view-func  'mu4e-default-handler
   "*internal* A function called for each single message sexp
 returned from the server process. The function is passed a message
@@ -96,7 +101,6 @@ to the sent folder using their docid")
 process."
   (let ((type (plist-get info :info)))
     (cond
-      ;; (:info :version "3.1")
       ((eq type 'add)
 	;; update our path=>docid map; we use this when composing messages to
 	;; add draft messages to the db, so when we're sending them, we can move
@@ -268,7 +272,13 @@ updated as well, with all processed sexp data removed."
 	;; receive an erase message
 	((plist-get sexp :erase)
 	  (funcall mu4e-proc-erase-func))
-	
+
+	;; receive a :sent message
+	((plist-get sexp :sent)
+	  (funcall mu4e-proc-sent-func
+	    (plist-get sexp :docid)
+	    (plist-get sexp :path)))
+
 	;; receive a pong message
 	((plist-get sexp :pong)
 	  (funcall mu4e-proc-pong-func
@@ -428,6 +438,13 @@ set to e.g. '/drafts'; if this works, we will receive (:info :path
   "Sends a ping to the mu server, expecting a (:pong ...) in
 response."
   (mu4e-proc-send-command "ping"))
+
+
+(defun mu4e-proc-sent (draftpath maildir)
+  "Tell the mu server that message DRAFTPATH has been send and its MAILDIR,
+expecting a (:sent <docid> :path <draftpath>) in response."
+  (mu4e-proc-send-command "sent %s %s" draftpath maildir))
+
 
 (defun mu4e-proc-view-msg (docid-or-msgid)
   "Get one particular message based on its DOCID-OR-MSGID. The result will
