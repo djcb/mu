@@ -222,7 +222,7 @@ if IS-OPEN is nil, and otherwise open it."
 
       (define-key map "b" 'mu4e-search-bookmark)
       (define-key map "B" 'mu4e-search-bookmark-edit-first)
-      
+
       (define-key map "j" 'mu4e-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
@@ -230,7 +230,7 @@ if IS-OPEN is nil, and otherwise open it."
       (define-key map "F" 'mu4e-compose-forward)
       (define-key map "R" 'mu4e-compose-reply)
       (define-key map "C" 'mu4e-compose-new)
-      (define-key map "E" 'mu4e-edit-draft)
+      (define-key map "E" 'mu4e-compose-edit)
 
       (define-key map "." 'mu4e-raw-view)
       (define-key map "|" 'mu4e-view-pipe)
@@ -338,13 +338,9 @@ if IS-OPEN is nil, and otherwise open it."
   "*internal* Whether to hide cited lines or not (the variable can
   be changed with `mu4e-view-toggle-hide-cited').")
 
-
-(defun mu4e-view-mode ()
+(define-derived-mode mu4e-view-mode special-mode "mu4e:view"
   "Major mode for viewing an e-mail message in mu4e.
-
 \\{mu4e-view-mode-map}."
-  (interactive)
-  (kill-all-local-variables)
   (use-local-map mu4e-view-mode-map)
 
   (make-local-variable 'mu4e-hdrs-buffer)
@@ -355,12 +351,7 @@ if IS-OPEN is nil, and otherwise open it."
   (make-local-variable 'mu4e-hide-cited)
 
   (setq
-    major-mode 'mu4e-view-mode
-    mode-name "mu4e-view"
-    truncate-lines t
-    buffer-read-only t))
-
-(put 'mu4e-view-mode 'mode-class 'special)
+    truncate-lines t))
 
 
 ;; we mark messages are as read when we leave the message; ie., when skipping to
@@ -482,31 +473,14 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 	'(lambda () (interactive) (scroll-up 1)))
       (define-key map (kbd "<backspace>")
 	'(lambda () (interactive) (scroll-up -1)))
-
-      ;; ;; menu
-      ;; (define-key map [menu-bar] (make-sparse-keymap))
-      ;; (let ((menumap (make-sparse-keymap "Raw view")))
-      ;; 	(define-key map [menu-bar headers] (cons "Raw view" menumap))
-      ;; 	(define-key menumap [quit-buffer] '("Quit" .
-      ;; 					     mu4e-raw-view-quit-buffer))
       map)))
 
 (fset 'mu4e-raw-view-mode-map mu4e-raw-view-mode-map)
 
-(defun mu4e-raw-view-mode ()
+(define-derived-mode mu4e-raw-view-mode special-mode
+  "mu4e:raw"
   "Major mode for viewing of raw e-mail message in mu4e.
-
-\\{mu4e-raw-view-mode-map}."
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map mu4e-raw-view-mode-map)
-
-  (make-local-variable 'mu4e-view-buffer)
-
-  (setq
-    major-mode 'mu4e-raw-view-mode
-    mode-name "mu4e-raw-view"
-    truncate-lines t buffer-read-only t))
+\\{mu4e-raw-view-mode-map}.")
 
 
 (defun mu4e-raw-view-message (msg view-buffer)
