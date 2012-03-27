@@ -282,15 +282,9 @@ use the new docid. Returns the full path to the new message."
 		 (new     (mu4e-send-create-new))
 		 (t (error "unsupported compose-type %S" compose-type)))))
     (when str
-      (with-temp-file draft
-	(insert str)
-	(write-file draft)))
-
-    ;; save our file immediately, add add it to the db; thus, we can retrieve
-    ;; the new docid from `mu4e-path-docid-map'.
-    (mu4e-proc-add draft mu4e-drafts-folder)
-    draft))
-
+      (with-current-buffer (find-file-noselect draft)
+	(insert str)))
+    draft)) ;; return the draft buffer file
 
 (defun mu4e-send-compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
@@ -330,9 +324,6 @@ using Gnus' `message-mode'."
 	      (plist-get original-msg :path)
 	      (error "unsupported compose-type %S" compose-type)))))
 
-    (unless (file-readable-p draft)
-      (error "Cannot read %s" draft))
-
     (find-file draft)
     (message-mode)
 
@@ -344,15 +335,21 @@ using Gnus' `message-mode'."
 	(mml-attach-file
 	  (plist-get att :file-name) (plist-get att :mime-type))))
 
-    (make-local-variable 'write-file-functions)
+    (make-local-variable 'after-save-hook)
 
     ;; update the db when the file is saved...]
-    (add-to-list 'write-file-functions
+    (add-hook 'after-save-hook
       (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
 
-    ;; hook our functions up with sending of the message
-    (add-hook 'message-sent-hook 'mu4e-send-save-copy-maybe nil t)
-    (add-hook 'message-sent-hook 'mu4e-send-set-parent-flag nil t)
+    ;; notify the backend that a message has been sent. The backend will respond
+    ;; with (:sent ...) sexp, which is handled in .
+    (add-hook 'message-sent-hook
+      (lambda ()
+	(mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
+
+    ;; register the function; this function will be called when the '(:sent...)'
+    ;; message is received (see mu4e-proc.el) with parameters docid and path
+    (setq mu4e-proc-sent-func 'mu4e-sent-handler)
 
     (let ((message-hidden-headers
 	    `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
@@ -365,18 +362,27 @@ using Gnus' `message-mode'."
 
 
 
-(defun mu4e-send-save-copy-maybe ()
-  "If `mu4e-save-sent-messages-behavior' is a symbol 'delete, move
- the message in this buffer to the sent folder. Otherwise, delete
- the draft message.  This is meant to be called from message mode's
- `message-sent-hook'."
-  (let ((docid (gethash (buffer-file-name) mu4e-path-docid-map)))
-    (unless docid (error "unknown message (%S)" (buffer-file-name)))
+(defun mu4e-sent-handler (docid path)
+  "Handler function, called with DOCID and PATH for the just-sent
+message."
+  ;; for Forward ('Passed') and Replied messages, try to set the appropriate
+  ;; flag at the message forwarded or replied-to
+  (mu4e-send-set-parent-flag docid path)
+  ;; handle the draft -- should it be moved to the send folder, or elsewhere?
+  (mu4e-send-save-copy-maybe docid path))
+
+
+(defun mu4e-send-save-copy-maybe (docid path)
+  "Handler function, called with DOCID and PATH for the just-sent
+message."
+  ;; first, what to do with the draft message in PATH?
+  (with-current-buffer (find-file-noselect path)
     (if (eq mu4e-sent-messages-behavior 'delete)
       (progn
 	(save-buffer)
 	(mu4e-proc-remove-msg docid)) ;; remove it
-      (progn ;; try to save the message the sent folder
+      ;; otherwise,
+      (progn ;; prepare the message for saving
 	(save-excursion
 	  (goto-char (point-min))
 	  ;; remove the --text follows this line-- separator
@@ -390,10 +396,9 @@ using Gnus' `message-mode'."
 	    (mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S")))))))
 
 
-
-(defun mu4e-send-set-parent-flag ()
-  "Set the 'replied' flag on messages we replied to, and the
-'passed' flag on message we have forwarded.
+(defun mu4e-send-set-parent-flag (docid path)
+  "Set the 'replied' \"R\" flag on messages we replied to, and the
+'passed' \"F\" flag on message we have forwarded.
 
 If a message has a 'in-reply-to' header, it is considered a reply
 to the message with the corresponding message id. If it does not
@@ -404,27 +409,25 @@ corresponding with the /last/ message-id in the references header.
 Now, if the message has been determined to be either a forwarded
 message or a reply, we instruct the server to update that message
 with resp. the 'P' (passed) flag for a forwarded message, or the
-'R' flag for a replied message.
-
-This is meant to be called from message mode's
-`message-sent-hook'."
-  (let ((in-reply-to (message-fetch-field "in-reply-to"))
-	 (forwarded-from)
-	 (references (message-fetch-field "references")))
-    (unless in-reply-to
-      (when references
-	(with-temp-buffer ;; inspired by `message-shorten-references'.
-	  (insert references)
-	  (goto-char (point-min))
-	  (let ((refs))
-	    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
-	      (push (match-string 0) refs))
-	    ;; the last will the first
-	    (setq forwarded-from (first refs))))))
-    ;; remove the <>
-    (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-      (mu4e-proc-flag (match-string 1 in-reply-to) "+R"))
-    (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-      (mu4e-proc-flag (match-string 1 forwarded-from) "+P"))))
+'R' flag for a replied message."
+  (with-current-buffer (find-file-noselect path)
+    (let ((in-reply-to (message-fetch-field "in-reply-to"))
+	   (forwarded-from)
+	   (references (message-fetch-field "references")))
+      (unless in-reply-to
+	(when references
+	  (with-temp-buffer ;; inspired by `message-shorten-references'.
+	    (insert references)
+	    (goto-char (point-min))
+	    (let ((refs))
+	      (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
+		(push (match-string 0) refs))
+	      ;; the last will the first
+	      (setq forwarded-from (first refs))))))
+      ;; remove the <>
+      (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
+	(mu4e-proc-flag (match-string 1 in-reply-to) "+R"))
+      (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
+	(mu4e-proc-flag (match-string 1 forwarded-from) "+P")))))
 
 (provide 'mu4e-send)

@@ -170,6 +170,7 @@ enum _Cmd {
 	CMD_QUIT,
 	CMD_REMOVE,
 	CMD_SAVE,
+	CMD_SENT,
 	CMD_PING,
 	CMD_VIEW,
 
@@ -197,6 +198,7 @@ cmd_from_string (const char *str)
 		{ CMD_QUIT,	"quit"},
 		{ CMD_REMOVE,	"remove" },
 		{ CMD_SAVE,     "save"},
+		{ CMD_SENT,	"sent"},
 		{ CMD_PING,	"ping"},
 		{ CMD_VIEW,	"view"}
 	};
@@ -856,7 +858,7 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
 	if (MU_CAUGHT_SIGNAL)
 		return MU_STOP;
 
-	if (stats->_processed % 500)
+	if (stats->_processed % 1000)
 		return MU_OK;
 
 	send_expr ("(:info index :status running "
@@ -867,14 +869,16 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
 }
 
 static MuError
-cmd_add (MuStore *store, GSList *args, GError **err)
+cmd_add_or_sent (MuStore *store, Cmd add_or_sent, GSList *args, GError **err)
 {
 	unsigned docid;
 	const char *path, *maildir;
 	gchar *escpath;
 
+	g_return_val_if_fail (add_or_sent == CMD_ADD || add_or_sent == CMD_SENT,
+			      MU_ERROR_INTERNAL);
 	return_if_fail_param_num (args, 2, 2,
-				  "usage: add <path> <maildir>");
+				  "usage: add|sent <path> <maildir>");
 
 	path    = (const char*)args->data;
 	maildir = (const char*)g_slist_nth (args, 1)->data;
@@ -885,13 +889,18 @@ cmd_add (MuStore *store, GSList *args, GError **err)
 				     "failed to add path '%s'", path);
 
 	escpath = mu_str_escape_c_literal (path, TRUE);
-	send_expr ("(:info add :path %s :docid %u)", escpath, docid);
+
+	if (add_or_sent == CMD_ADD)
+		send_expr ("(:info add :path %s :docid %u)",
+			   escpath, docid);
+	else
+		send_expr ("(:sent t :path %s :docid %u)",
+			   escpath, docid);
+
 	g_free (escpath);
 
 	return MU_OK;
 }
-
-
 
 
 static MuError
@@ -953,7 +962,8 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 
 	switch (cmd) {
 
-	case CMD_ADD:		rv = cmd_add (store, args, err); break;
+	case CMD_ADD:		rv = cmd_add_or_sent (store, CMD_ADD,
+						      args, err); break;
 	case CMD_COMPOSE:	rv = cmd_compose (store, args, err); break;
 	case CMD_FIND:		rv = cmd_find (store, query, args, err); break;
 	case CMD_FLAG:		rv = cmd_flag (store, query, args, err); break;
@@ -964,6 +974,8 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 	case CMD_QUIT:		rv = cmd_quit (args, err); break;
 	case CMD_REMOVE:	rv = cmd_remove (store, args, err); break;
 	case CMD_SAVE:		rv = cmd_save  (store, args, err); break;
+	case CMD_SENT:		rv = cmd_add_or_sent  (store, CMD_SENT,
+						       args, err); break;
 	case CMD_PING:		rv = cmd_ping (store, args, err); break;
 	case CMD_VIEW:		rv = cmd_view (store, query, args, err); break;
 

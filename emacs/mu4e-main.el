@@ -37,7 +37,7 @@
 
     (define-key map "b" 'mu4e-search-bookmark)
     (define-key map "B" 'mu4e-search-bookmark-edit-first)
-    
+
     (define-key map "s" 'mu4e-search)
     (define-key map "q" 'mu4e-quit)
     (define-key map "j" 'mu4e-jump-to-maildir)
@@ -53,23 +53,13 @@
   "Keymap for the *mu4e-main* buffer.")
 (fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
-(defun mu4e-main-mode ()
+(define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
-
 \\{mu4e-main-mode-map}."
-  (interactive)
-
-  (kill-all-local-variables)
   (use-local-map mu4e-main-mode-map)
-
   (setq
-    major-mode 'mu4e-main-mode
-    mode-name "mu4e-main"
     truncate-lines t
-    buffer-read-only t
     overwrite-mode 'overwrite-mode-binary))
-
-(put 'mu4e-main-mode 'mode-class 'special)
 
 
 (defun mu4e-action-str (str &optional func-or-shortcut)
@@ -181,7 +171,7 @@ split-window."
     (error "`smtp-queue-dir' does not exist"))
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
   (message
-    (concat "Outgoing mail will now be " 
+    (concat "Outgoing mail will now be "
       (if smtpmail-queue-mail "queued" "sent directly")))
   (mu4e-main-view))
 

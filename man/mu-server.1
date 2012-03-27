@@ -189,6 +189,22 @@ Using the \fBadd\fR command, we can add a message to the database.
 <- (:info add :path <path> :docid <docid>)
 .fi
 
+
+.TP
+.B sent
+
+With the \fBsent\fR command, we tell the backend that a message will be sent.
+
+.nf
+-> sent <path> <maildir>
+<- (:sent :path <path> :docid <docid>)
+.fi
+
+In the frontend, this message can then be used to trigger moving the message
+from the draft folder to the sent folder, setting the Replied/Passed flags on
+the parent messages.
+
+
 .TP
 .B mkdir
 
