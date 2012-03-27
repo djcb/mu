@@ -286,6 +286,33 @@ use the new docid. Returns the full path to the new message."
 	(insert str)))
     draft)) ;; return the draft buffer file
 
+
+(define-derived-mode mu4e-edit-mode message-mode "mu4e:edit"
+  "Major mode for the mu4e main screen.
+\\{message-mode-map}."
+  (let ((message-hidden-headers
+	  `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
+	     "^User-agent:")))
+    (message-hide-headers))
+
+  (make-local-variable 'after-save-hook)
+
+  ;; update the db when the file is saved...]
+  (add-hook 'after-save-hook
+    (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
+
+  ;; notify the backend that a message has been sent. The backend will respond
+  ;; with (:sent ...) sexp, which is handled in .
+  (add-hook 'message-sent-hook
+    (lambda ()
+      (mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
+
+  ;; register the function; this function will be called when the '(:sent...)'
+  ;; message is received (see mu4e-proc.el) with parameters docid and path
+  (setq mu4e-proc-sent-func 'mu4e-sent-handler))
+
+
+
 (defun mu4e-send-compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
@@ -325,7 +352,7 @@ using Gnus' `message-mode'."
 	      (error "unsupported compose-type %S" compose-type)))))
 
     (find-file draft)
-    (message-mode)
+    (mu4e-edit-mode)
 
     ;; include files -- e.g. when forwarding a message with attachments,
     ;; we take those from the original.
@@ -334,27 +361,6 @@ using Gnus' `message-mode'."
       (dolist (att includes)
 	(mml-attach-file
 	  (plist-get att :file-name) (plist-get att :mime-type))))
-
-    (make-local-variable 'after-save-hook)
-
-    ;; update the db when the file is saved...]
-    (add-hook 'after-save-hook
-      (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
-
-    ;; notify the backend that a message has been sent. The backend will respond
-    ;; with (:sent ...) sexp, which is handled in .
-    (add-hook 'message-sent-hook
-      (lambda ()
-	(mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
-
-    ;; register the function; this function will be called when the '(:sent...)'
-    ;; message is received (see mu4e-proc.el) with parameters docid and path
-    (setq mu4e-proc-sent-func 'mu4e-sent-handler)
-
-    (let ((message-hidden-headers
-	    `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
-	       "^User-agent:")))
-      (message-hide-headers))
 
     (if (member compose-type '(new forward))
       (message-goto-to)
