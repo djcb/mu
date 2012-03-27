@@ -258,7 +258,7 @@ after the end of the search results."
 
       (define-key map "b" 'mu4e-search-bookmark)
       (define-key map "B" 'mu4e-search-bookmark-edit-first)
-            
+
       (define-key map "q" 'mu4e-quit-buffer)
 
       (define-key map "r" 'mu4e-rerun-search)
@@ -353,14 +353,10 @@ after the end of the search results."
 ;; this last one is defined in mu4e-send.el
 (setq mu4e-proc-compose-func 'mu4e-send-compose-handler)
 
-
-(defun mu4e-hdrs-mode ()
+(define-derived-mode mu4e-hdrs-mode special-mode
+    "mu4e:headers"
   "Major mode for displaying mu4e search results.
-
 \\{mu4e-hdrs-mode-map}."
-  (interactive)
-
-  (kill-all-local-variables)
   (use-local-map mu4e-hdrs-mode-map)
 
   (make-local-variable 'mu4e-last-expr)
@@ -374,31 +370,25 @@ after the end of the search results."
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
     mu4e-msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
     mu4e-thread-info-map (make-hash-table :size 512 :rehash-size 2)
-    major-mode 'mu4e-hdrs-mode
-    mode-name "mu4e: message headers"
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
-    buffer-read-only t
     overwrite-mode 'overwrite-mode-binary)
 
-   (setq header-line-format
-     (cons
-       (make-string
-	 (+ (length mu4e-hdrs-fringe) (floor (fringe-columns 'left t))) ?\s)
-       (map 'list
-	 (lambda (item)
-	   (let ((field (cdr (assoc (car item) mu4e-header-names)))
-		  (width (cdr item)))
-	     (concat
-	       (propertize
-		 (if width
-		   (truncate-string-to-width field width 0 ?\s t)
-		   field)
-		 'face 'mu4e-title-face) " ")))
-	 mu4e-headers-fields))))
-
-(put 'mu4e-hdrs-mode 'mode-class 'special)
-
+  (setq header-line-format
+    (cons
+      (make-string
+	(+ (length mu4e-hdrs-fringe) (floor (fringe-columns 'left t))) ?\s)
+      (map 'list
+	(lambda (item)
+	  (let ((field (cdr (assoc (car item) mu4e-header-names)))
+		 (width (cdr item)))
+	    (concat
+	      (propertize
+		(if width
+		  (truncate-string-to-width field width 0 ?\s t)
+		  field)
+		'face 'mu4e-title-face) " ")))
+	mu4e-headers-fields))))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-msg-map nil
@@ -696,12 +686,11 @@ otherwise, limit to up to `mu4e-search-results-limit'."
   (when expr
     (mu4e-hdrs-search expr current-prefix-arg)))
 
-  
+
 (defun mu4e-quit-buffer ()
   "Quit the current buffer."
   (interactive)
   (when (mu4e-handle-marks)
-    (mu4e-kill-proc) ;; hmmm...
     (kill-buffer)
     (mu4e)))
 
@@ -833,26 +822,25 @@ a symbol, one of `reply', `forward', `edit', `new'. All but `new'
 take the message at point as input. Symbol `edit' is only allowed
 for draft messages."
   (interactive)
-  (let ((compose-type
-	  (or compose-type
-	    (intern (ido-completing-read "Compose type: "
-		      '("reply" "forward" "edit" "new"))))))
+  (let ((mu4e-hdrs-buffer (get-buffer-create mu4e-hdrs-buffer-name))
+	 (compose-type
+	   (or compose-type
+	     (intern (ido-completing-read "Compose type: "
+		       '("reply" "forward" "edit" "new"))))))
     (with-current-buffer mu4e-hdrs-buffer
       ;; 'new is special, since it takes no existing message as arg therefore,
       ;; we don't need to call thec backend, and call the handler *directly*
       (if (eq compose-type 'new)
 	(mu4e-send-compose-handler 'new)
 	;; otherwise, we need the doc-id
-	(let ((docid (mu4e-hdrs-get-docid))
-	       (is-draft ))
+	(let ((docid (mu4e-hdrs-get-docid)))
 	  (unless docid (error "No message at point."))
-
 	  ;; note, the first two chars of the line (the mark margin) does *not*
 	  ;; have the 'draft property; thus, we check one char before the end of
 	  ;; the current line instead
-	  (when (and (eq compose-type 'edit)
-		  (get-text-property (- (line-end-position) 1) 'draft))
-	    (error "Editing only allowed for draft messages"))
+	  (unless (or (not (eq compose-type 'edit))
+		    (get-text-property (- (line-end-position) 1) 'draft))
+	    (error "Editing is only allowed for draft messages"))
 	  ;; talk to the backend
 	  (mu4e-proc-compose compose-type docid))))))
 
