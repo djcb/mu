@@ -293,23 +293,30 @@ use the new docid. Returns the full path to the new message."
   (let ((message-hidden-headers
 	  `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
 	     "^User-agent:")))
-    (message-hide-headers))
+    (use-local-map mu4e-edit-mode-map)
+        
+    (message-hide-headers) 
+     
+    (make-local-variable 'after-save-hook)
+      
+    ;; update the db when the file is saved...]
+    (add-hook 'after-save-hook
+      (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
 
-  (make-local-variable 'after-save-hook)
+    ;; notify the backend that a message has been sent. The backend will respond
+    ;; with (:sent ...) sexp, which is handled in .
+    (add-hook 'message-sent-hook
+      (lambda ()
+	(mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
+    
+    ;; register the function; this function will be called when the '(:sent...)'
+    ;; message is received (see mu4e-proc.el) with parameters docid and path
+    (setq mu4e-proc-sent-func 'mu4e-sent-handler)
 
-  ;; update the db when the file is saved...]
-  (add-hook 'after-save-hook
-    (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
-
-  ;; notify the backend that a message has been sent. The backend will respond
-  ;; with (:sent ...) sexp, which is handled in .
-  (add-hook 'message-sent-hook
-    (lambda ()
-      (mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
-
-  ;; register the function; this function will be called when the '(:sent...)'
-  ;; message is received (see mu4e-proc.el) with parameters docid and path
-  (setq mu4e-proc-sent-func 'mu4e-sent-handler))
+    ;; set the default directory to the user's home dir; this is probably more
+    ;; useful e.g. when finding an attachment file the directory the current
+    ;; mail files lives in...
+    (setq default-directory (expand-file-name "~/"))))
 
 
 
@@ -371,35 +378,44 @@ using Gnus' `message-mode'."
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
 message."
-  ;; for Forward ('Passed') and Replied messages, try to set the appropriate
-  ;; flag at the message forwarded or replied-to
-  (mu4e-send-set-parent-flag docid path)
-  ;; handle the draft -- should it be moved to the send folder, or elsewhere?
-  (mu4e-send-save-copy-maybe docid path))
+  (with-current-buffer (find-file-noselect path)
+    ;; make sure this buffer is saved
+    (save-buffer)
+    (message "Mail sent")
+    ;; for Forward ('Passed') and Replied messages, try to set the appropriate
+    ;; flag at the message forwarded or replied-to
+    (mu4e-send-set-parent-flag docid path)
+    ;; handle the draft -- should it be moved to the send folder, or elsewhere?
+    (mu4e-send-save-copy-maybe docid path)
+    ;; now, get rid of the buffer
+    (kill-buffer)))
 
 
 (defun mu4e-send-save-copy-maybe (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
-message."
-  ;; first, what to do with the draft message in PATH?
-  (with-current-buffer (find-file-noselect path)
-    (if (eq mu4e-sent-messages-behavior 'delete)
-      (progn
+message, which will move it to the sent-folder or elsewhere,
+depending on the value of `mu4e-sent-messages-behavior'.
+
+Function assumes that it's executed in the context of the message
+buffer."
+      ;; first, what to do with the draft message in PATH?
+  (if (eq mu4e-sent-messages-behavior 'delete)
+    (progn
+      (mu4e-proc-remove-msg docid)) ;; remove it
+    ;; otherwise,
+    (progn ;; prepare the message for saving
+      (save-excursion
+	(goto-char (point-min))
+	;; remove the --text follows this line-- separator
+	(if (search-forward-regexp (concat "^" mail-header-separator))
+	  (replace-match "")
+	  (error "cannot find mail-header-separator"))
 	(save-buffer)
-	(mu4e-proc-remove-msg docid)) ;; remove it
-      ;; otherwise,
-      (progn ;; prepare the message for saving
-	(save-excursion
-	  (goto-char (point-min))
-	  ;; remove the --text follows this line-- separator
-	  (if (search-forward-regexp (concat "^" mail-header-separator))
-	    (replace-match "")
-	    (error "cannot find mail-header-separator"))
-	  (save-buffer)
-	  ;; ok, all seems well, well move the message to the sent-folder
-	  (if (eq mu4e-sent-messages-behavior 'trash)
-	    (mu4e-proc-move-msg docid mu4e-trash-folder "+T-D+S")
-	    (mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S")))))))
+	(message nil)
+	;; ok, all seems well, well move the message to the sent-folder
+	(if (eq mu4e-sent-messages-behavior 'trash)
+	  (mu4e-proc-move-msg docid mu4e-trash-folder "+T-D+S")
+	  (mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S")))))) 
 
 
 (defun mu4e-send-set-parent-flag (docid path)
@@ -415,25 +431,28 @@ corresponding with the /last/ message-id in the references header.
 Now, if the message has been determined to be either a forwarded
 message or a reply, we instruct the server to update that message
 with resp. the 'P' (passed) flag for a forwarded message, or the
-'R' flag for a replied message."
-  (with-current-buffer (find-file-noselect path)
-    (let ((in-reply-to (message-fetch-field "in-reply-to"))
-	   (forwarded-from)
-	   (references (message-fetch-field "references")))
-      (unless in-reply-to
-	(when references
-	  (with-temp-buffer ;; inspired by `message-shorten-references'.
-	    (insert references)
-	    (goto-char (point-min))
-	    (let ((refs))
-	      (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
-		(push (match-string 0) refs))
-	      ;; the last will the first
-	      (setq forwarded-from (first refs))))))
-      ;; remove the <>
-      (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-	(mu4e-proc-flag (match-string 1 in-reply-to) "+R"))
-      (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-	(mu4e-proc-flag (match-string 1 forwarded-from) "+P")))))
+'R' flag for a replied message.
+
+Function assumes that it's executed in the context of the message
+buffer.
+"
+  (let ((in-reply-to (message-fetch-field "in-reply-to"))
+	 (forwarded-from)
+	 (references (message-fetch-field "references")))
+    (unless in-reply-to
+      (when references
+	(with-temp-buffer ;; inspired by `message-shorten-references'.
+	  (insert references)
+	  (goto-char (point-min))
+	  (let ((refs))
+	    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
+	      (push (match-string 0) refs))
+	    ;; the last will the first
+	    (setq forwarded-from (first refs))))))
+    ;; remove the <>
+    (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
+      (mu4e-proc-flag (match-string 1 in-reply-to) "+R"))
+    (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
+      (mu4e-proc-flag (match-string 1 forwarded-from) "+P"))))
 
 (provide 'mu4e-send)
