@@ -134,6 +134,7 @@ headers."
   "Remove handler, will be called when a message has been removed
 from the database. This function will hide the removed message from
 the current list of headers."
+  (when (buffer-live-p mu4e-hdrs-buffer)
   (with-current-buffer mu4e-hdrs-buffer
     (let* ((marker (gethash docid mu4e-msg-map))
 	    (pos (and marker (marker-position marker)))
@@ -142,7 +143,7 @@ the current list of headers."
       (unless (eq docid docid-at-pos)
 	(error "At point %d, expected docid %d, but got %S"
 	  pos docid docid-at-pos))
-      (mu4e-hdrs-remove-header docid pos))))
+      (mu4e-hdrs-remove-header docid pos)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -176,6 +177,7 @@ into a string."
 (defun mu4e-hdrs-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
+  (when (buffer-live-p mu4e-hdrs-buffer)
   (let* ((docid (plist-get msg :docid))
 	  (thread-info
 	    (or (plist-get msg :thread) (gethash docid mu4e-thread-info-map)))
@@ -223,11 +225,12 @@ if provided, or at the end of the buffer otherwise."
     (when  (and thread-info mu4e-thread-info-map)
       (puthash docid thread-info mu4e-thread-info-map))
     ;; now, append the header line
-    (mu4e-hdrs-add-header line docid point)))
+    (mu4e-hdrs-add-header line docid point))))
 
 (defun mu4e-hdrs-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
+  (when (buffer-live-p mu4e-hdrs-buffer)
   (with-current-buffer mu4e-hdrs-buffer
     (save-excursion
       (goto-char (point-max))
@@ -238,14 +241,13 @@ after the end of the search results."
 	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
 	(unless (= 0 count)
 	  (message "Found %d matching message%s"
-	    count (if (= 1 count) "" "s")))))))
+	    count (if (= 1 count) "" "s"))))))))
 	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-	
+
 ;;; hdrs-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-hdrs-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
