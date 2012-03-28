@@ -601,6 +601,14 @@ By default, the attachment is opened using either the @t{xdg-open}-program
 q@t{open} program. If you want to use another program, you specify this by
 setting the @t{MU_PLAY_PROGRAM} environment variable.
 
+When extracting (saving) attachments (with @key{e}), the default directory for
+saving them is your home directory (@file{~/}); you can change this using the
+variable @code{mu4e-attachment-dir}, for example:
+
+@lisp
+(setq mu4e-attachment-dir (file-name-expand "~/Downloads"))
+@end lisp
+
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
 messages consisting of both a plain-text and an html (rich-text) version of
 its body-text. If there is only an html-version, or if the plaint-text version
