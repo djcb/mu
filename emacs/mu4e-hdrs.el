@@ -231,22 +231,21 @@ after the end of the search results."
   (with-current-buffer mu4e-hdrs-buffer
     (save-excursion
       (goto-char (point-max))
-      (let ((inhibit-read-only t))
-	(insert (propertize
-		  (case count
-		    (0 "No matching messages found")
-		    ;; note, don't show the number so we don't have to update it
-		    ;; when we delete messsages...
-		    (otherwise "End of search results"))
-		    ;; (1 "Found 1 message")
-		    ;; (otherwise (format "Found %d messages" count)))
-		  'face 'mu4e-system-face 'intangible t))))))
+      (let ((inhibit-read-only t)
+	     (str (if (= 0 count)
+		    "No matching messages found"
+		    "End of search results")))
+	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
+	(unless (= 0 count)
+	  (message "Found %d matching message%s"
+	    count (if (= 1 count) "" "s")))))))
+	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
-
+	
 ;;; hdrs-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-hdrs-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
