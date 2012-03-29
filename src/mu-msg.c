@@ -736,31 +736,48 @@ mu_msg_is_readable (MuMsg *self)
  * that we got
  */
 char*
-get_target_mdir (MuMsg *msg, const char *maildir, GError **err)
+get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 {
 	char *rootmaildir, *rv;
+	const char *maildir;
+	gboolean not_top_level;
 
-	if (!mu_msg_get_maildir(msg)) {
+	/* maildir is the maildir stored in the message, e.g. '/foo' */
+	maildir = mu_msg_get_maildir(msg);
+	if (!maildir) {
 		g_set_error (err, 0, MU_ERROR_GMIME,
-			     "message misses maildir "
-			     "field, so cannot be moved");
+			     "message without maildir");
 		return NULL;
 	}
 
+	/* the 'rootmaildir' is the filesystem path from root to
+	 * maildir, ie.  /home/user/Maildir/foo */
 	rootmaildir = mu_maildir_get_maildir_from_path (mu_msg_get_path(msg));
 	if (!rootmaildir)
 		return NULL;
 
-	if (!g_str_has_suffix (rootmaildir, mu_msg_get_maildir(msg))) {
+	/* we do a sanity check: verify that that maildir is a suffix of
+	 * rootmaildir;*/
+	not_top_level = TRUE;
+	if (!g_str_has_suffix (rootmaildir, maildir) &&
+	    /* special case for the top-level '/' maildir, and
+	     * remember not_top_level */
+	    (not_top_level = (g_strcmp0 (maildir, "/") != 0))) {
 		g_set_error (err, 0, MU_ERROR_FILE,
-			     "path is %s, but maildir is %s",
-			     mu_msg_get_path(msg), mu_msg_get_maildir(msg));
+			     "path is '%s', but maildir is '%s' ('%s')",
+			     rootmaildir, mu_msg_get_maildir(msg),
+			     mu_msg_get_path (msg));
 		g_free (rootmaildir);
 		return NULL;
 	}
 
-	rootmaildir[strlen(rootmaildir) - strlen (mu_msg_get_maildir(msg))] = '\0';
-	rv = g_strconcat (rootmaildir, maildir, NULL);
+	/* if we're not at the top-level, remove the final '/' from
+	 * the rootmaildir */
+	if (not_top_level)
+		rootmaildir[strlen(rootmaildir) -
+			    strlen (mu_msg_get_maildir(msg))] = '\0';
+
+	rv = g_strconcat (rootmaildir, target_maildir, NULL);
 	g_free (rootmaildir);
 
 	return rv;
