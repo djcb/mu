@@ -194,7 +194,10 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 	Xapian::Query query;
 	char *preprocessed;
 
-	preprocessed = mu_query_preprocess (searchexpr);
+	preprocessed = mu_query_preprocess (searchexpr, err);
+	if (!preprocessed)
+		throw std::runtime_error
+			("parse error while preprocessing query");
 
 	try {
 		query = mqx->query_parser().parse_query
@@ -278,7 +281,7 @@ mu_query_destroy (MuQuery *self)
 
 /* preprocess a query to make them a bit more promiscuous */
 char*
-mu_query_preprocess (const char *query)
+mu_query_preprocess (const char *query, GError **err)
 {
 	GSList *parts, *cur;
 	gchar *myquery;
@@ -287,7 +290,9 @@ mu_query_preprocess (const char *query)
 
 	/* convert the query to a list of query terms, and escape them
 	 * separately */
-	parts = mu_str_esc_to_list (query);
+	parts = mu_str_esc_to_list (query, err);
+	if (!parts)
+		return NULL;
 
 	for (cur = parts; cur; cur = g_slist_next(cur)) {
 		/* remove accents and turn to lower-case */

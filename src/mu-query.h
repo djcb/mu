@@ -113,7 +113,7 @@ char* mu_query_as_string (MuQuery *self, const char* searchexpr, GError **err)
  *
  * @return a pre-processed query, free it with g_free
  */
-char* mu_query_preprocess (const char *query)
+char* mu_query_preprocess (const char *query, GError **err)
         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

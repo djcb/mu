@@ -216,7 +216,7 @@ cmd_from_string (const char *str)
 
 
 static Cmd
-parse_line (const gchar *line, GSList **args)
+parse_line (const gchar *line, GSList **args, GError **err)
 {
 	Cmd cmd;
 	GSList *lst;
@@ -226,7 +226,7 @@ parse_line (const gchar *line, GSList **args)
 	if (!line)
 		return CMD_IGNORE;
 
-	lst = mu_str_esc_to_list (line);
+	lst = mu_str_esc_to_list (line, err);
 	if (!lst)
 		return CMD_INVALID;
 
@@ -1014,8 +1014,11 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 		GError *my_err;
 
 		line = my_readline (MU_PROMPT);
-		cmd  = parse_line (line, &args);
+		cmd  = parse_line (line, &args, err);
 		g_free (line);
+
+		if (cmd == CMD_INVALID)
+
 
 		my_err = NULL;
 		if (!handle_command (cmd, store, query, args, &my_err))
