@@ -139,11 +139,11 @@ the current list of headers."
     (let* ((marker (gethash docid mu4e-msg-map))
 	    (pos (and marker (marker-position marker)))
 	    (docid-at-pos (and pos (mu4e-hdrs-get-docid pos))))
-      (unless marker (error "Message %d not found" docid))
-      (unless (eq docid docid-at-pos)
-	(error "At point %d, expected docid %d, but got %S"
-	  pos docid docid-at-pos))
-      (mu4e-hdrs-remove-header docid pos)))))
+      (when marker
+	(unless (eq docid docid-at-pos)
+	  (error "At point %d, expected docid %d, but got %S"
+	    pos docid docid-at-pos))
+	(mu4e-hdrs-remove-header docid pos))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -242,7 +242,7 @@ after the end of the search results."
 	(unless (= 0 count)
 	  (message "Found %d matching message%s"
 	    count (if (= 1 count) "" "s"))))))))
-	
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

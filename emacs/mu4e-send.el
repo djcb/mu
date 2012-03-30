@@ -294,21 +294,22 @@ use the new docid. Returns the full path to the new message."
 	  `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
 	     "^User-agent:")))
     (use-local-map mu4e-edit-mode-map)
-        
-    (message-hide-headers) 
-     
+
+    (message-hide-headers)
+
     (make-local-variable 'after-save-hook)
-      
+
     ;; update the db when the file is saved...]
     (add-hook 'after-save-hook
       (lambda() (mu4e-proc-add (buffer-file-name) mu4e-drafts-folder)))
 
     ;; notify the backend that a message has been sent. The backend will respond
-    ;; with (:sent ...) sexp, which is handled in .
+    ;; with (:sent ...) sexp, which is handled in `mu4e-send-compose-handler'.
     (add-hook 'message-sent-hook
       (lambda ()
+	(basic-save-buffer)
 	(mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
-    
+
     ;; register the function; this function will be called when the '(:sent...)'
     ;; message is received (see mu4e-proc.el) with parameters docid and path
     (setq mu4e-proc-sent-func 'mu4e-sent-handler)
@@ -379,9 +380,6 @@ using Gnus' `message-mode'."
   "Handler function, called with DOCID and PATH for the just-sent
 message."
   (with-current-buffer (find-file-noselect path)
-    ;; make sure this buffer is saved
-    (save-buffer)
-    (message "Mail sent")
     ;; for Forward ('Passed') and Replied messages, try to set the appropriate
     ;; flag at the message forwarded or replied-to
     (mu4e-send-set-parent-flag docid path)
@@ -398,7 +396,7 @@ depending on the value of `mu4e-sent-messages-behavior'.
 
 Function assumes that it's executed in the context of the message
 buffer."
-      ;; first, what to do with the draft message in PATH?
+  ;; first, what to do with the draft message in PATH?
   (if (eq mu4e-sent-messages-behavior 'delete)
     (progn
       (mu4e-proc-remove-msg docid)) ;; remove it
@@ -410,12 +408,12 @@ buffer."
 	(if (search-forward-regexp (concat "^" mail-header-separator))
 	  (replace-match "")
 	  (error "cannot find mail-header-separator"))
-	(save-buffer)
+	(basic-save-buffer)
 	(message nil)
 	;; ok, all seems well, well move the message to the sent-folder
 	(if (eq mu4e-sent-messages-behavior 'trash)
 	  (mu4e-proc-move-msg docid mu4e-trash-folder "+T-D+S")
-	  (mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S")))))) 
+	  (mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S"))))))
 
 
 (defun mu4e-send-set-parent-flag (docid path)
@@ -438,7 +436,7 @@ buffer.
 "
   (let ((in-reply-to (message-fetch-field "in-reply-to"))
 	 (forwarded-from)
-	 (references (message-fetch-field "references")))
+  	 (references (message-fetch-field "references")))
     (unless in-reply-to
       (when references
 	(with-temp-buffer ;; inspired by `message-shorten-references'.
