@@ -288,7 +288,7 @@ GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
  *
  * @return a list of elements or NULL in case of error
  */
-GSList* mu_str_esc_to_list (const char *str);
+GSList* mu_str_esc_to_list (const char *str, GError **err);
 
 
 /**

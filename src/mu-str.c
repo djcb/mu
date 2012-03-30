@@ -336,7 +336,7 @@ mu_str_to_list (const char *str, char sepa, gboolean strip)
 
 
 static gchar*
-eat_esc_string (char **strlst)
+eat_esc_string (char **strlst, GError **err)
 {
 	char *str;
 	gboolean quoted;
@@ -366,14 +366,15 @@ leave:
 	*strlst = str;
 	return g_string_free (gstr, FALSE);
 err:
-	g_warning ("error in string");
+	g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		     "error parsing string '%s'", g_strchug(*strlst));
 	*strlst = NULL;
 	return g_string_free (gstr, TRUE);
 }
 
 
 GSList*
-mu_str_esc_to_list (const char *strings)
+mu_str_esc_to_list (const char *strings, GError **err)
 {
 	GSList *lst;
 	char *mystrings, *freeme;
@@ -387,9 +388,15 @@ mu_str_esc_to_list (const char *strings)
 	lst = NULL;
 	do {
 		gchar *str;
-		str = eat_esc_string (&mystrings);
+		str = eat_esc_string (&mystrings, err);
 		if (str)
 			lst = g_slist_prepend (lst, str);
+		else {
+			g_free (freeme);
+			mu_str_free_list (lst);
+			return NULL;
+		}
+
 	} while (mystrings && *mystrings);
 
 	g_free (freeme);
@@ -443,11 +450,6 @@ mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space)
 		*cur = tolower(*cur);
 
 		switch (*cur) {
-		case ' ':
-		case '@':
-		case '-':
-		case ';':
-		case '/':
 			*cur = escchar;
 			break;
 		case '.': /* don't escape '..' */
@@ -464,7 +466,14 @@ mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space)
 			if (!is_xapian_prefix (query, cur))
 				*cur = escchar;
 			break;
+		case '\'':
+		case '*':   /* wildcard */
+			break;
+		default:
+			if (!isalnum(*cur))
+				*cur = escchar;
 		}
+
 	}
 
 	return query;

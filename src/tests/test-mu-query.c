@@ -103,7 +103,7 @@ run_and_count_matches (const char *xpath, const char *query)
 	if (g_test_verbose()) {
 		char *xs;
 		g_print ("\n==> query: %s\n", query);
-		xs = mu_query_preprocess (query);
+		xs = mu_query_preprocess (query, NULL);
 		g_print ("==> preproc: '%s'\n", xs);
 		g_free (xs);
 		xs = mu_query_as_string (mquery, query, NULL);
@@ -136,7 +136,6 @@ run_and_count_matches (const char *xpath, const char *query)
 
 	return count1;
 }
-
 
 typedef struct  {
 	const char *query;
@@ -563,6 +562,28 @@ test_mu_query_tags_02 (void)
 }
 
 
+static void
+test_mu_query_preprocess (void)
+{
+	unsigned u;
+	struct {
+		const gchar *expr, *expected;
+	} testcases [] = {
+		{ "hello", "hello" },
+		{ "/[Gmail].Sent Mail", "__gmail__sent mail" }
+		/* add more */
+	};
+
+
+ 	for (u = 0; u != G_N_ELEMENTS(testcases); ++u) {
+		gchar *prep;
+		prep = mu_query_preprocess (testcases[u].expr, NULL);
+		g_assert_cmpstr (prep, ==, testcases[u].expected);
+		g_free (prep);
+	}
+}
+
+
 
 
 int
@@ -571,6 +592,9 @@ main (int argc, char *argv[])
 	int rv;
 
 	g_test_init (&argc, &argv, NULL);
+
+	g_test_add_func ("/mu-query/test-mu-query-preprocess",
+			 test_mu_query_preprocess);
 
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);

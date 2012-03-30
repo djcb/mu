@@ -172,7 +172,7 @@ test_mu_str_esc_to_list (void)
 	for (i = 0; i != G_N_ELEMENTS(strings); ++i) {
 		GSList *lst, *cur;
 		unsigned u;
-		lst = mu_str_esc_to_list (strings[i].str);
+		lst = mu_str_esc_to_list (strings[i].str, NULL);
 		for (cur = lst, u = 0; cur; cur = g_slist_next(cur), ++u)
 			g_assert_cmpstr ((const char*)cur->data,==,strings[i].strs[u]);
 		mu_str_free_list (lst);
