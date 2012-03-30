@@ -264,7 +264,8 @@ mu_store_get_msg (MuStore *self, unsigned docid, GError **err)
 
 	try {
 		Xapian::Document *doc =
-			new Xapian::Document (self->db_read_only()->get_document (docid));
+			new Xapian::Document
+			(self->db_read_only()->get_document (docid));
 		return mu_msg_new_from_doc ((XapianDocument*)doc, err);
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
