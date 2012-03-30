@@ -301,9 +301,10 @@ typedef gpointer XapianEnquire;
 		g_set_error ((GE),0,(E), "%s: xapian error '%s'",		\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
         } catch (...) {								\
-		g_set_error ((GE),0,(MU_ERROR_INTERNAL),			\
+		if ((GE)&&!(*(GE)))						\
+			g_set_error ((GE),0,(MU_ERROR_INTERNAL),		\
 			     "%s: caught exception", __FUNCTION__);		\
-        }
+	 }
 
 
 #define MU_XAPIAN_CATCH_BLOCK_RETURN(R)					\
@@ -323,7 +324,8 @@ typedef gpointer XapianEnquire;
 			   __FUNCTION__, xerr.get_msg().c_str());	\
 		return (R);						\
         } catch (...) {							\
-		g_set_error ((GE),0,(MU_ERROR_INTERNAL),		\
+		if ((GE)&&!(*(GE)))					\
+			g_set_error ((GE),0,(MU_ERROR_INTERNAL),	\
 			     "%s: caught exception", __FUNCTION__);	\
 		return (R);						\
         }
