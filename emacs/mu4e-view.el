@@ -22,11 +22,8 @@
 
 ;;; Commentary:
 
-;; In this file are function related to creating the list of one-line
-;; descriptions of emails, aka 'headers' (not to be confused with headers like
-;; 'To:' or 'Subject:')
-
-;; mm
+;; In this file we define mu4e-view-mode (+ helper functions), which is used for
+;; viewing e-mail messages
 
 ;;; Code:
 (eval-when-compile (require 'cl))
@@ -261,6 +258,7 @@ if IS-OPEN is nil, and otherwise open it."
       (define-key map "d" 'mu4e-view-mark-for-trash)
 
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
+      (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
       (define-key map "D" 'mu4e-view-mark-for-delete)
       (define-key map "m" 'mu4e-view-mark-for-move)
 

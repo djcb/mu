@@ -22,9 +22,9 @@
 
 ;;; Commentary:
 
-;; In this file are function related to creating the list of one-line
-;; descriptions of emails, aka 'headers' (not to be confused with headers like
-;; 'To:' or 'Subject:')
+;; In this file are function related mu4e-hdrs-mode, to creating the list of
+;; one-line descriptions of emails, aka 'headers' (not to be confused with
+;; headers like 'To:' or 'Subject:')
 
 ;; Code:
 
@@ -275,6 +275,7 @@ after the end of the search results."
       (define-key map "d" 'mu4e-mark-for-trash)
 
       (define-key map (kbd "<delete>") 'mu4e-mark-for-delete)
+      (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
       (define-key map "D" 'mu4e-mark-for-delete)
 
       (define-key map "o" 'mu4e-mark-as-unread)
