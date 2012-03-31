@@ -1,6 +1,6 @@
 ;; mu4e-send.el -- part of mm, the mu mail user agent
 ;;
-;; Copyright (C) 2011 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -296,7 +296,6 @@ use the new docid. Returns the full path to the new message."
     (use-local-map mu4e-edit-mode-map)
 
     (message-hide-headers)
-
     (make-local-variable 'after-save-hook)
 
     ;; update the db when the file is saved...]
@@ -369,6 +368,12 @@ using Gnus' `message-mode'."
       (dolist (att includes)
 	(mml-attach-file
 	  (plist-get att :file-name) (plist-get att :mime-type))))
+
+    ;; include the message header if it's set; but not when editing an existing
+    ;; message
+    (unless (eq compose-type 'edit)
+      (when message-signature
+	(message-insert-signature)))
 
     (if (member compose-type '(new forward))
       (message-goto-to)
@@ -445,7 +450,7 @@ buffer.
 	  (let ((refs))
 	    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
 	      (push (match-string 0) refs))
-	    ;; the last will the first
+	    ;; the last will be the first
 	    (setq forwarded-from (first refs))))))
     ;; remove the <>
     (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
