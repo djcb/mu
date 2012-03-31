@@ -334,6 +334,7 @@ use the new docid. Returns the full path to the new message."
     ;; with (:sent ...) sexp, which is handled in `mu4e-send-compose-handler'.
     (add-hook 'message-sent-hook
       (lambda ()
+	(set-buffer-modified-p t)
 	(basic-save-buffer)
 	(mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
 
