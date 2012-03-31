@@ -137,7 +137,7 @@ mu_store_new_writable (const char* xpath, const char *contacts_cache,
 
 		} MU_STORE_CATCH_BLOCK_RETURN(err,NULL);
 
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err,MU_ERROR_XAPIAN, NULL);
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, NULL);
 }
 
 

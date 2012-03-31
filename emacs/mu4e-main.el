@@ -1,12 +1,10 @@
 ;;; mu4e-main.el -- part of mm, the mu mail user agent
 ;;
-;; Copyright (C) 2011 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
-;; Keywords: email
-;; Version: 0.0
-
+ 
 ;; This file is not part of GNU Emacs.
 ;;
 ;; GNU Emacs is free software: you can redistribute it and/or modify
@@ -27,7 +25,6 @@
 ;;; Code:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; mm main view mode + keybindings
 (defconst mu4e-main-buffer-name "*mu4e-main*"
   "*internal* Name of the mm main buffer.")
 
@@ -135,8 +132,6 @@ clicked."
 	(mu4e-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
       (switch-to-buffer buf))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
