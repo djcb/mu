@@ -33,17 +33,12 @@
 (require 'mu4e-proc)
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-last-expr nil
-  "*internal* The most recent search expression.")
-
+(defvar mu4e-last-expr ni "*internal* The most recent search expression.")
 (defconst mu4e-hdrs-buffer-name "*mu4e-headers*"
   "*internal* Name of the buffer for message headers.")
-
-(defvar mu4e-hdrs-buffer nil
-  "*internal* Buffer for message headers")
-
-(defconst mu4e-hdrs-fringe "  "
-  "*internal* The space on the left of message headers to put marks.")
+(defvar mu4e-hdrs-buffer nil "*internal* Buffer for message headers")
+(defconst mu4e-hdrs-fringe " " "*internal* The space on the left of
+message headers to put marks.")
 
 (defun mu4e-hdrs-clear ()
   "Clear the header buffer and related data structures."
@@ -389,7 +384,7 @@ after the end of the search results."
 		(if width
 		  (truncate-string-to-width field width 0 ?\s t)
 		  field)
-		'face 'mu4e-title-face) " ")))
+		'face 'mu4e-header-title-face) " ")))
 	mu4e-headers-fields))))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

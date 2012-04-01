@@ -1,10 +1,10 @@
-;;; mu4e-main.el -- part of mm, the mu mail user agent
+;;; mu4e-main.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
- 
+
 ;; This file is not part of GNU Emacs.
 ;;
 ;; GNU Emacs is free software: you can redistribute it and/or modify
@@ -26,8 +26,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e-main-buffer-name "*mu4e-main*"
-  "*internal* Name of the mm main buffer.")
-
+  "*internal* Name of the mu4e main view buffer.")
 
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
@@ -86,7 +85,7 @@ clicked."
     newstr))
 
 (defun mu4e-main-view()
-  "Show the mm main view."
+  "Show the mu4e main view."
   (let ((buf (get-buffer-create mu4e-main-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf

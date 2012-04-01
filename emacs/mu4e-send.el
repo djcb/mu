@@ -1,11 +1,9 @@
-;; mu4e-send.el -- part of mm, the mu mail user agent
+;; mu4e-send.el -- part of mu4e, the mu mail user agent for emacs
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
-;; Keywords: email
-;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -27,8 +25,6 @@
 ;; In this file, various functions to compose/send messages, piggybacking on
 ;; gnus' message mode
 
-;; mm
-
 ;;; Code:
 
 (eval-when-compile (require 'cl))
@@ -46,8 +42,8 @@
 
 (defun mu4e-send-user-agent ()
   "Return the User-Agent string for mu4e. This is either the value
-of `mu4e-user-agent', or, if not set, a string based on the version
-of mm and emacs."
+of `mu4e-user-agent', or, if not set, a string based on the versions
+of mu4e and emacs."
   (or mu4e-user-agent
     (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)))
 

@@ -485,7 +485,8 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 
 	/* of course, the charset specified may be incorrect... */
 	if (charset) {
-		char *utf8 = mu_str_convert_to_utf8 (buffer, charset);
+		char *utf8;
+		utf8 = mu_str_convert_to_utf8 (buffer, charset);
 		if (utf8) {
 			g_free (buffer);
 			return utf8;
