@@ -318,6 +318,7 @@ use the new docid. Returns the full path to the new message."
     (add-hook 'before-save-hook 'mu4e-remove-mail-header-separator)
     (add-hook 'after-save-hook
       (lambda ()
+	(mu4e-set-buffer-name)
 	(mu4e-insert-mail-header-separator)
 	(set-buffer-modified-p nil)))
 
@@ -344,9 +345,26 @@ use the new docid. Returns the full path to the new message."
     (setq default-directory (expand-file-name "~/")))
 
 
+(defconst mu4e-send-buffer-max-name-length 20
+  "Maximum length of the mu4e-send-buffer-name.")
+
+(defun mu4e-set-buffer-name (&optional compose-type)
+  "Set some user-friendly buffer name based on the compose type."
+  (let* ((subj (message-field-value "subject"))
+	  (subj (unless (and subj (string-match "^[:blank:]*$" subj)) subj))
+	  (str (or subj
+		 (case compose-type
+		   (reply       "*reply*")
+		   (forward     "*forward*")
+		   (otherwise   "*draft*")))))
+    (rename-buffer (generate-new-buffer-name
+		     (truncate-string-to-width str
+		       mu4e-send-buffer-max-name-length
+		       nil nil t)))))
+
 
 (defun mu4e-send-compose-handler (compose-type &optional original-msg includes)
-  "Create a new draft message, or open an existing one.
+    "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
 symbol, either `reply', `forward', `edit', `new'. `edit' is for
@@ -374,42 +392,44 @@ The message file name is a unique name determined by
 The initial STR would be created from either `mu4e-send-create-reply',
 ar`mu4e-send-create-forward' or `mu4e-send-create-new'. The editing buffer is
 using Gnus' `message-mode'."
-  (unless mu4e-maildir       (error "mu4e-maildir not set"))
-  (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
-  (let ((draft
-	  (if (member compose-type '(reply forward new))
-	    (mu4e-send-open-draft compose-type original-msg)
-	    (if (eq compose-type 'edit)
-	      (plist-get original-msg :path)
-	      (error "unsupported compose-type %S" compose-type)))))
+    (unless mu4e-maildir       (error "mu4e-maildir not set"))
+    (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
+    (let ((draft
+	    (if (member compose-type '(reply forward new))
+	      (mu4e-send-open-draft compose-type original-msg)
+	      (if (eq compose-type 'edit)
+		(plist-get original-msg :path)
+		(error "unsupported compose-type %S" compose-type)))))
 
-    (find-file draft)
-    (mu4e-edit-mode)
+      (find-file draft)
+      (mu4e-edit-mode)
 
-    ;; insert mail-header-separator, which is needed by message mode to separate
-    ;; headers and body. will be removed before saving to disk
-    (mu4e-insert-mail-header-separator)
+      ;; insert mail-header-separator, which is needed by message mode to separate
+      ;; headers and body. will be removed before saving to disk
+      (mu4e-insert-mail-header-separator)
 
-    ;; include files -- e.g. when forwarding a message with attachments,
-    ;; we take those from the original.
-    (save-excursion
-      (goto-char (point-max)) ;; put attachments at the end
-      (dolist (att includes)
-	(mml-attach-file
-	  (plist-get att :file-name) (plist-get att :mime-type))))
+      ;; include files -- e.g. when forwarding a message with attachments,
+      ;; we take those from the original.
+      (save-excursion
+	(goto-char (point-max)) ;; put attachments at the end
+	(dolist (att includes)
+	  (mml-attach-file
+	    (plist-get att :file-name) (plist-get att :mime-type))))
 
-    ;; include the message header if it's set; but not when editing an existing
-    ;; message
-    (unless (eq compose-type 'edit)
-      (when message-signature
-	(message-insert-signature)))
+      ;; include the message header if it's set; but not when editing an existing
+      ;; message
+      (unless (eq compose-type 'edit)
+	(when message-signature
+	  (message-insert-signature)))
 
-    (if (member compose-type '(new forward))
-      (message-goto-to)
-      (message-goto-body))
+      (if (member compose-type '(new forward))
+	(message-goto-to)
+	(message-goto-body))
 
-    ;; buffer is not user-modified yet
-    (set-buffer-modified-p nil)))
+      (mu4e-set-buffer-name compose-type)
+
+      ;; buffer is not user-modified yet
+      (set-buffer-modified-p nil)))
 
 
 
