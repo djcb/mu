@@ -337,7 +337,7 @@ write_part_to_fd (GMimePart *part, int fd, GError **err)
 
 	stream = g_mime_stream_fs_new (fd);
 	if (!GMIME_IS_STREAM(stream)) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "failed to create stream");
 		return FALSE;
 	}
@@ -345,7 +345,7 @@ write_part_to_fd (GMimePart *part, int fd, GError **err)
 
 	wrapper = g_mime_part_get_content_object (part);
 	if (!GMIME_IS_DATA_WRAPPER(wrapper)) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "failed to create wrapper");
 		g_object_unref (stream);
 		return FALSE;
@@ -355,7 +355,7 @@ write_part_to_fd (GMimePart *part, int fd, GError **err)
 
 	rv = g_mime_data_wrapper_write_to_stream (wrapper, stream);
 	if (rv == -1)
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "failed to write to stream");
 
 	g_object_unref (wrapper);
@@ -373,13 +373,13 @@ write_object_to_fd (GMimeObject *obj, int fd, GError **err)
 	str = g_mime_object_to_string (obj);
 
 	if (!str) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "could not get string from object");
 		return FALSE;
 	}
 
 	if (write (fd, str, strlen(str)) == -1) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "failed to write object: %s",
 			     strerror(errno));
 		return FALSE;
@@ -405,7 +405,7 @@ save_mime_object (GMimeObject *obj, const char *fullpath,
 	/* ok, try to create the file */
 	fd = mu_util_create_writeable_fd (fullpath, 0600, overwrite);
 	if (fd == -1) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "could not open '%s' for writing: %s",
 			     fullpath, errno ? strerror(errno) : "error");
 		return FALSE;
@@ -417,7 +417,7 @@ save_mime_object (GMimeObject *obj, const char *fullpath,
 		rv = write_object_to_fd (obj, fd, err);
 
 	if (close (fd) != 0 && !err) { /* don't write on top of old err */
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "could not close '%s': %s",
 			     fullpath, errno ? strerror(errno) : "error");
 		return FALSE;
@@ -438,7 +438,7 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 		return NULL;
 
 	if (!(mobj = find_part (msg, partidx))) {
-		g_set_error (err, 0, MU_ERROR_GMIME, "cannot find part %u", partidx);
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME, "cannot find part %u", partidx);
 		return NULL;
 	}
 
@@ -455,7 +455,7 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 		fname  = get_filename_for_mime_message_part
 			(g_mime_message_part_get_message((GMimeMessagePart*)mobj));
 	else {
-		g_set_error (err, 0, MU_ERROR_GMIME, "part %u cannot be saved",
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME, "part %u cannot be saved",
 			     partidx);
 		return NULL;
 	}
@@ -521,7 +521,7 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 
 	part = find_part (msg, partidx);
 	if (!is_part_or_message_part (part)) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "unexpected type %s for part %u",
 			     G_OBJECT_TYPE_NAME((GObject*)part),
 			     partidx);
@@ -540,7 +540,7 @@ mu_msg_part_save_temp (MuMsg *msg, guint partidx, GError **err)
 
 	filepath = mu_msg_part_filepath_cache (msg, partidx);
 	if (!filepath) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "Could not get temp filepath");
 		return NULL;
 	}

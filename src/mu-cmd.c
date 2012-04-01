@@ -202,7 +202,7 @@ view_params_valid (MuConfig *opts, GError **err)
 {
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 				     "error in parameters");
 		return FALSE;
 	}
@@ -212,7 +212,7 @@ view_params_valid (MuConfig *opts, GError **err)
 	case MU_CONFIG_FORMAT_SEXP:
 		break;
 	default:
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 				     "invalid output format");
 		return FALSE;
 	}
@@ -264,7 +264,7 @@ mu_cmd_mkdir (MuConfig *opts, GError **err)
 			      MU_ERROR_INTERNAL);
 
 	if (!opts->params[1]) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "missing directory parameter");
 		return MU_ERROR_IN_PARAMETERS;
 	}
@@ -320,7 +320,7 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_message ("usage: mu add <file> [<files>]");
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "missing source and/or target");
 		return MU_ERROR_IN_PARAMETERS;
 	}
@@ -339,7 +339,7 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 	}
 
 	if (!allok) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_STORE_FAILED,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_STORE_FAILED,
 			     "store failed for some message(s)");
 		return MU_ERROR_XAPIAN_STORE_FAILED;
 	}
@@ -361,7 +361,7 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu remove <file> [<files>]");
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 				     "missing source and/or target");
 		return MU_ERROR_IN_PARAMETERS;
 	}
@@ -379,7 +379,7 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 	}
 
 	if (!allok) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_STORE_FAILED,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_STORE_FAILED,
 			     "remove failed for some message(s)");
 		return MU_ERROR_XAPIAN_REMOVE_FAILED;
 	}
@@ -438,7 +438,7 @@ check_params (MuConfig *opts, GError **err)
 {
 	if (!opts->params||!opts->params[0]) {/* no command? */
 		show_usage ();
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS, "error in parameters");
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS, "error in parameters");
 		return FALSE;
 	}
 
@@ -476,7 +476,7 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		return with_store (mu_cmd_server, opts, FALSE, err);
 	default:
 		show_usage ();
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "unknown command '%s'", opts->cmdstr);
 		return MU_ERROR_IN_PARAMETERS;
 	}

@@ -170,7 +170,7 @@ SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 1, 0,
 				       SCM_UNSPECIFIED);
 
 	/* cleanup when we're exiting */
-	g_atexit (mu_guile_uninit_instance);
+	atexit (mu_guile_uninit_instance);
 
 	return SCM_UNSPECIFIED;
 }

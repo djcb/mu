@@ -137,6 +137,22 @@ mu_util_create_tmpdir (void)
 }
 
 
+GQuark
+mu_util_error_quark (void)
+{
+	static GQuark error_domain = 0;
+
+	if (G_UNLIKELY(error_domain == 0))
+		error_domain = g_quark_from_static_string
+			("mu-error-quark");
+
+	return error_domain;
+}
+
+
+
+
+
 const char*
 mu_util_cache_dir (void)
 {

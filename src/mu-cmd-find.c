@@ -86,7 +86,7 @@ sort_field_from_string (const char* fieldstr, GError **err)
 		mfid = mu_msg_field_id_from_shortcut(fieldstr[0],
 						     FALSE);
 	if (mfid == MU_MSG_FIELD_ID_NONE)
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "not a valid sort field: '%s'\n", fieldstr);
 	return mfid;
 }
@@ -159,7 +159,7 @@ exec_cmd (const char *path, const char *cmd, GError **err)
 	gboolean rv;
 
 	if (access (path, R_OK) != 0) {
-		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_READ,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_READ,
 			     "cannot read %s: %s", path, strerror(errno));
 		return FALSE;
 	}
@@ -209,7 +209,7 @@ exec_cmd_on_query (MuQuery *xapian, const gchar *query, MuConfig *opts,
 	}
 
 	if (count == 0) {
-		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_NO_MATCHES,
 			     "no matches for search expression");
 		return FALSE;
 	}
@@ -231,20 +231,20 @@ format_params_valid (MuConfig *opts, GError **err)
 	case MU_CONFIG_FORMAT_XQUERY:
 		break;
 	default:
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "invalid output format %s",
 			     opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
 
 	if (opts->format == MU_CONFIG_FORMAT_LINKS && !opts->linksdir) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "missing --linksdir argument");
 		return FALSE;
 	}
 
 	if (opts->linksdir && opts->format != MU_CONFIG_FORMAT_LINKS) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "--linksdir is only valid with --format=links");
 		return FALSE;
 	}
@@ -262,7 +262,7 @@ query_params_valid (MuConfig *opts, GError **err)
 	if (mu_util_check_dir (xpath, TRUE, FALSE))
 		return TRUE;
 
-	g_set_error (err, 0, MU_ERROR_FILE_CANNOT_READ,
+	g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_READ,
 		     "'%s' is not a readable Xapian directory", xpath);
 	return FALSE;
 }
@@ -277,14 +277,14 @@ resolve_bookmark (MuConfig *opts, GError **err)
 	bmfile = mu_runtime_path (MU_RUNTIME_PATH_BOOKMARKS);
 	bm = mu_bookmarks_new (bmfile);
 	if (!bm) {
-		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_OPEN,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_OPEN,
 			     "failed to open bookmarks file '%s'", bmfile);
 		return FALSE;
 	}
 
 	val = (gchar*)mu_bookmarks_lookup (bm, opts->bookmark);
 	if (!val)
-		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_NO_MATCHES,
 			     "bookmark '%s' not found", opts->bookmark);
 	else
 		val = g_strdup (val);
@@ -330,7 +330,7 @@ get_query (MuConfig *opts, GError **err)
 
 	/* params[0] is 'find', actual search params start with [1] */
 	if (!opts->bookmark && !opts->params[1]) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "error in parameters");
 		return NULL;
 	}
@@ -368,13 +368,13 @@ get_query_obj (MuStore *store, GError **err)
 		return NULL;
 
 	if (count == 0) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_IS_EMPTY,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_IS_EMPTY,
 			     "the database is empty");
 		return NULL;
 	}
 
 	if (mu_store_needs_upgrade (store)) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
 			     "the database is not up-to-date");
 		return NULL;
 	}
@@ -468,13 +468,13 @@ output_links (MuMsgIter *iter, const char* linksdir, gboolean clearlinks,
 	}
 
 	if (errcount > 0) {
-		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_LINK,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_LINK,
 			     "error linking %u message(s)", (unsigned)errcount);
 		return FALSE;
 	}
 
 	if (count == 0) {
-		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_NO_MATCHES,
 			     "no matches for search expression");
 		return FALSE;
 	}
@@ -686,7 +686,7 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 	}
 
 	if (count == 0) {
-		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_NO_MATCHES,
 			     "no existing matches for search expression");
 		return FALSE;
 	}
@@ -746,7 +746,7 @@ output_sexp (MuMsgIter *iter, gboolean threads,
 	}
 
 	if (count == 0) {
-		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_NO_MATCHES,
 			     "no existing matches for search expression");
 		return FALSE;
 	}
@@ -803,7 +803,7 @@ output_xml (MuMsgIter *iter, gboolean include_unreadable, GError **err)
 	g_print ("</messages>\n");
 
 	if (count == 0) {
-		g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_NO_MATCHES,
 			     "no existing matches for search expression");
 		return FALSE;
 	}

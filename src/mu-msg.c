@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 
 	if (G_UNLIKELY(!_gmime_initialized)) {
 		gmime_init ();
-		g_atexit (gmime_uninit);
+		atexit (gmime_uninit);
 	}
 
 	msgfile = mu_msg_file_new (path, mdir, err);
@@ -127,7 +127,7 @@ mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 
 	if (G_UNLIKELY(!_gmime_initialized)) {
 		gmime_init ();
-		g_atexit (gmime_uninit);
+		atexit (gmime_uninit);
 	}
 
 	msgdoc = mu_msg_doc_new (doc, err);
@@ -745,7 +745,7 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 	/* maildir is the maildir stored in the message, e.g. '/foo' */
 	maildir = mu_msg_get_maildir(msg);
 	if (!maildir) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "message without maildir");
 		return NULL;
 	}
@@ -763,7 +763,7 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 	    /* special case for the top-level '/' maildir, and
 	     * remember not_top_level */
 	    (not_top_level = (g_strcmp0 (maildir, "/") != 0))) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "path is '%s', but maildir is '%s' ('%s')",
 			     rootmaildir, mu_msg_get_maildir(msg),
 			     mu_msg_get_path (msg));

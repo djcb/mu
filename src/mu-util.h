@@ -185,6 +185,19 @@ gboolean mu_util_play (const char *path,
 		       gboolean allow_local, gboolean allow_remote);
 
 
+
+/**
+ * Get an error-query for mu, to be used in `g_set_error'. Recent
+ * version of Glib warn when using 0 for the error-domain in
+ * g_set_error.
+ *
+ *
+ * @return an error quark for mu
+ */
+GQuark mu_util_error_quark (void) G_GNUC_CONST;
+#define MU_ERROR_DOMAIN (mu_util_error_quark())
+
+
 /**
  * convert a string array in to a string, with the elements separated
  * by ' '

@@ -428,7 +428,7 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 	docid = MU_STORE_INVALID_DOCID;
 	if (!iter || mu_msg_iter_is_done (iter))
 		if (err && *err == NULL)
-			g_set_error (err, 0, MU_ERROR_NO_MATCHES,
+			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_NO_MATCHES,
 				     "could not find message %s", str);
 		else
 			return docid;
@@ -436,7 +436,7 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 		MuMsg *msg;
 		msg = mu_msg_iter_get_msg_floating (iter);
 		if (!mu_msg_is_readable(msg)) {
-			g_set_error (err, 0, MU_ERROR_FILE_CANNOT_READ,
+			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_READ,
 				     "'%s' is not readable",
 				     mu_msg_get_path(msg));
 		} else
@@ -462,7 +462,7 @@ get_docid (MuQuery *query, const char *str, GError **err)
 	docid = strtol (str, &endptr, 10);
 	if (*endptr != '\0') {
 		if (!query) {
-			g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 				     "invalid docid '%s'", str);
 			return MU_STORE_INVALID_DOCID;
 		} else
@@ -981,7 +981,7 @@ handle_command (Cmd cmd, MuStore *store, MuQuery *query, GSList *args,
 
 	case CMD_IGNORE: return TRUE;
 	default:
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "unknown command");
 		return FALSE;
 	}

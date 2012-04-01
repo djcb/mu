@@ -89,7 +89,7 @@ create_maildir (const char *path, mode_t mode, GError **err)
 		 * there's already such a dir, but with the wrong
 		 * permissions; so we need to check */
 		if (rv != 0 || !mu_util_check_dir(fullpath, TRUE, TRUE)) {
-			g_set_error (err, 0, MU_ERROR_FILE_CANNOT_MKDIR,
+			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_MKDIR,
 				     "creating dir failed for %s: %s",
 				     fullpath,
 				     strerror (errno));
@@ -115,7 +115,7 @@ create_noindex (const char *path, GError **err)
 	/* note, if the 'close' failed, creation may still have
 	 * succeeded...*/
 	if (fd < 0 || close (fd) != 0) {
-		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_CREATE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_CREATE,
 			     "error in create_noindex: %s",
 			     strerror (errno));
 		return FALSE;
@@ -208,7 +208,7 @@ mu_maildir_link (const char* src, const char *targetpath, GError **err)
 	rv = symlink (src, targetfullpath);
 
 	if (rv != 0) {
-		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_LINK,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_LINK,
 			     "error creating link %s => %s: %s",
 			     targetfullpath, src, strerror (errno));
 		g_free (targetfullpath);
@@ -617,7 +617,7 @@ clear_links (const gchar* dirname, DIR *dir, GError **err)
 	}
 
 	if (errno != 0)
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "file error: %s", strerror(errno));
 
 	return (rv == FALSE && errno == 0);
@@ -634,7 +634,7 @@ mu_maildir_clear_links (const gchar* path, GError **err)
 
 	dir = opendir (path);
 	if (!dir) {
-		g_set_error (err, 0, MU_ERROR_FILE_CANNOT_OPEN,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_OPEN,
 			     "failed to open %s: %s", path,
 			     strerror(errno));
 		return FALSE;
@@ -791,25 +791,25 @@ static gboolean
 msg_move_check_pre (const gchar *src, const gchar *dst, GError **err)
 {
 	if (!g_path_is_absolute(src)) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "source is not an absolute path: '%s'", src);
 		return FALSE;
 	}
 
 	if (!g_path_is_absolute(dst)) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "target is not an absolute path: '%s'", dst);
 		return FALSE;
 	}
 
 	if (access (src, R_OK) != 0) {
-		g_set_error (err, 0, MU_ERROR_FILE, "cannot read %s",
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "cannot read %s",
 			     src);
 		return FALSE;
 	}
 
 	if (access (dst, F_OK) == 0) {
-		g_set_error (err, 0, MU_ERROR_FILE, "%s already exists",
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "%s already exists",
 			     dst);
 		return FALSE;
 	}
@@ -822,13 +822,13 @@ msg_move_check_post (const char *src, const char *dst, GError **err)
 {
 	/* double check -- is the target really there? */
 	if (access (dst, F_OK) != 0) {
-		g_set_error (err, 0, MU_ERROR_FILE, "can't find target (%s)",
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "can't find target (%s)",
 			     dst);
 		return FALSE;
 	}
 
 	if (access (src, F_OK) == 0) {
-		g_set_error (err, 0, MU_ERROR_FILE, "source is still there (%s)",
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "source is still there (%s)",
 			     src);
 		return FALSE;
 	}
@@ -844,7 +844,7 @@ msg_move (const char* src, const char *dst, GError **err)
 		return FALSE;
 
 	if (rename (src, dst) != 0) {
-		g_set_error (err, 0, MU_ERROR_FILE, "error moving %s to %s",
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "error moving %s to %s",
 			     src, dst);
 		return FALSE;
 	}
@@ -869,7 +869,7 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 	newfullpath = mu_maildir_get_new_path (oldpath, targetmdir,
 					       newflags);
 	if (!newfullpath) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "failed to determine target full path");
 		return FALSE;
 	}
@@ -878,7 +878,7 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 	src_is_target = (g_strcmp0 (oldpath, newfullpath) == 0);
 
 	if (!ignore_dups && src_is_target) {
-		g_set_error (err, 0, MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
 			     "target equals source");
 		return FALSE;
 	}

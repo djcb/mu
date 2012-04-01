@@ -100,21 +100,21 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 	struct stat statbuf;
 
 	if (access (path, R_OK) != 0) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "cannot read file %s: %s",
 			     path, strerror(errno));
 		return FALSE;
 	}
 
 	if (stat (path, &statbuf) < 0) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "cannot stat %s: %s",
 			     path, strerror(errno));
 		return FALSE;
 	}
 
 	if (!S_ISREG(statbuf.st_mode)) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "not a regular file: %s", path);
 		return FALSE;
 	}
@@ -138,7 +138,7 @@ get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 
 	file = fopen (path, "r");
 	if (!file) {
-		g_set_error (err, 0, MU_ERROR_FILE,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "cannot open %s: %s",
 			     path, strerror (errno));
 		return NULL;
@@ -146,7 +146,7 @@ get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 
 	stream = g_mime_stream_file_new (file);
 	if (!stream) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "cannot create mime stream for %s",
 			     path);
 		fclose (file);
@@ -169,7 +169,7 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 	parser = g_mime_parser_new_with_stream (stream);
 	g_object_unref (stream);
 	if (!parser) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "%s: cannot create mime parser for %s",
 			     __FUNCTION__, path);
 		return FALSE;
@@ -178,7 +178,7 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 	self->_mime_msg = g_mime_parser_construct_message (parser);
 	g_object_unref (parser);
 	if (!self->_mime_msg) {
-		g_set_error (err, 0, MU_ERROR_GMIME,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "%s: cannot construct mime message for %s",
 			     __FUNCTION__, path);
 		return FALSE;

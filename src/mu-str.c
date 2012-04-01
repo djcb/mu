@@ -366,7 +366,7 @@ leave:
 	*strlst = str;
 	return g_string_free (gstr, FALSE);
 err:
-	g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+	g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 		     "error parsing string '%s'", g_strchug(*strlst));
 	*strlst = NULL;
 	return g_string_free (gstr, TRUE);

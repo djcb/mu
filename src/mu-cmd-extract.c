@@ -401,7 +401,7 @@ mu_cmd_extract (MuConfig *opts, GError **err)
 			      MU_ERROR_INTERNAL);
 
 	if (!check_params (opts)) {
-		g_set_error (err, 0, MU_ERROR_IN_PARAMETERS,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 				     "error in parameters");
 		return MU_ERROR_IN_PARAMETERS;
 	}
@@ -412,7 +412,7 @@ mu_cmd_extract (MuConfig *opts, GError **err)
 	else {
 		rv = mu_util_check_dir(opts->targetdir, FALSE, TRUE);
 		if (!rv)
-			g_set_error (err, 0, MU_ERROR_FILE_CANNOT_WRITE,
+			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_WRITE,
 				     "target '%s' is not a writable directory",
 				     opts->targetdir);
 		else

@@ -213,7 +213,7 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 
 	} catch (...) {
 		/* some error occured */
-		g_set_error (err, 0, MU_ERROR_XAPIAN_QUERY,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_QUERY,
 			     "parse error in query");
 		g_free (preprocessed);
 		throw;
@@ -258,7 +258,7 @@ mu_query_new (MuStore *store, GError **err)
 	g_return_val_if_fail (store, NULL);
 
 	if (mu_store_count (store, err) == 0) {
-		g_set_error (err, 0, MU_ERROR_XAPIAN_IS_EMPTY,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_IS_EMPTY,
 			     "database is empty");
 		return 0;
 	}
