@@ -33,7 +33,7 @@
 (require 'mu4e-proc)
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-last-expr ni "*internal* The most recent search expression.")
+(defvar mu4e-last-expr nil "*internal* The most recent search expression.")
 (defconst mu4e-hdrs-buffer-name "*mu4e-headers*"
   "*internal* Name of the buffer for message headers.")
 (defvar mu4e-hdrs-buffer nil "*internal* Buffer for message headers")
