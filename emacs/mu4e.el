@@ -341,7 +341,7 @@ flag set)."
   :group 'mu4e-faces)
 
 (defface mu4e-header-title-face
-  '((t :inherit font-lock-type-face :underline t))
+  '((t :inherit font-lock-type-face))
   "Face for a header title in the headers view."
   :group 'mu4e-faces)
 
