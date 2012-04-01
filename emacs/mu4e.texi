@@ -65,11 +65,11 @@ really @emph{needs} another one, but maybe @emph{I} do! I spend a @emph{lot}
 of time, both professionally and privately, dealing with e-mail -- having an
 efficient e-mail client is essential for me. Since none of the existing ones
 worked they I wanted, I created my own.
- 
+
 Still, even while having been created for such selfish motives, the feedback
 of many early adopters has been used to ensure that @t{mu4e} works well for
 other people as well.
- 
+
 @node Other mail clients
 @section Other mail clients
 
@@ -113,7 +113,7 @@ messages around and so on.
 
 In this chapter, we go through installing @t{mu4e} and see how to set it
 up. After we have succeeded in @ref{Getting mail}, and @ref{Indexing your
-messages}, we discuss @ref{Basic configuration}. 
+messages}, we discuss @ref{Basic configuration}.
 
 After going through these steps, @t{mu4e} should be ready for use.
 
@@ -555,11 +555,20 @@ On Sun 21 Dec 2003 09:06:34 PM EET, Paul wrote:
 
 Some notes:
 @itemize
-@item You can customize the header fields to show by setting the
+@item You can determine which header fields are shown by setting the
 variable @code{mu4e-view-fields}.
 @item You can customize the date format by setting the variable
 @code{mu4e-date-format-long}, using the same format that
 @code{format-time-string} uses.
+@item The body text can be line-wrapped (toggle between wrapped/not-wrapped with
+@key{w}) and/or cited parts can be hidden (toggle between hidden/not-hidden
+with @key{h}. If you want to do this by default when viewing messages, you can
+set, respectively, @code{mu4e-view-wrap-lines} and @code{mu4e-view-hide-cited}
+to @code{t}. @footnote{If you have installed the @t{filladapt} package
+(@url{http://www.wonderworks.com/download/filladapt.el}), @t{mu4e} will use
+it for line-wrapping, as it generally does a better job than the default
+mechanism emacs provides.}
+
 @end itemize
 
 You can find most things you can do with this message in the @emph{View} menu,
@@ -629,11 +638,6 @@ set up with something like the following in your initialization files:
 
 Normally, @t{mu4e} prefers the text-version of an e-mail message to determine
 the message body. You can change this by setting @code{mu4e-view-prefer-html}.
-
-Note: if you have installed the
-@t{filladapt}@footnote{@url{http://www.wonderworks.com/download/filladapt.el}}
-package, @t{mu4e} will use it for line-wrapping of the body text (@key{w}), as
-it generally does a better job than the mechanism emacs provides by default.
 
 @node Editor view
 @section Editor view
@@ -762,7 +766,7 @@ If you have queries that you use often, you may want to store them as
 invoke them in other places as well. Bookmark searches are available in the
 main view @ref{Main view}, header view @xref{Headers view}, and message view
 @xref{Message view}, using (by default) the key @key{b}
-(@code{mu4e-search-bookmark}). 
+(@code{mu4e-search-bookmark}).
 
 
 @code{mu4e} provides some default bookmarks, which you can override. The

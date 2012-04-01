@@ -55,7 +55,9 @@ wanting to show specific messages - for example, `mu4e-org'."
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
 the the message view affects HDRSBUF, as does marking etc. If
-UPDATE is non-nil, the current message will be (visually) updated.
+UPDATE is nil, the current message may be (visually) 'massaged',
+based on the settings of `mu4e-view-wrap-lines' and
+`mu4e-view-hide-cited'.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
@@ -69,7 +71,6 @@ marking if it still had that."
 	    (let ((fieldname (cdr (assoc field mu4e-header-names)))
 		   (fieldval (plist-get msg field)))
 	      (case field
-
 		(:subject  (mu4e-view-header fieldname fieldval))
 		(:path	   (mu4e-view-header fieldname fieldval))
 		(:maildir  (mu4e-view-header fieldname fieldval))
@@ -122,6 +123,15 @@ marking if it still had that."
       (mu4e-mark-footer)
       (mu4e-make-urls-clickable)
 
+      (unless update
+	;; if we're showing the message for the first time, use the values of
+	;; user-settable variables `mu4e-view-wrap-lines' and
+	;; `mu4e-view-hide-cited' to determine whether we should wrap/hide
+	(progn
+	  (when mu4e-view-wrap-lines (mu4e-view-wrap-lines))
+	  (when mu4e-view-hide-cited (mu4e-view-hide-cited))))
+
+      ;; no use in trying to set flags again
       (unless update
 	(mu4e-view-mark-as-read-maybe)))))
 
@@ -328,13 +338,8 @@ if IS-OPEN is nil, and otherwise open it."
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
 
 
-(defvar mu4e-wrap-lines nil
-  "*internal* Whether to wrap lines or not (variable controlled by
-  `mu4e-view-toggle-wrap-lines').")
-
-(defvar mu4e-hide-cited nil
-  "*internal* Whether to hide cited lines or not (the variable can
-  be changed with `mu4e-view-toggle-hide-cited').")
+(defvar mu4e-lines-wrapped nil "*internal* Whether lines are wrapped.")
+(defvar mu4e-cited-hidden nil "*internal* Whether cited lines are hidden.")
 
 (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
   "Major mode for viewing an e-mail message in mu4e.
@@ -345,14 +350,18 @@ if IS-OPEN is nil, and otherwise open it."
   (make-local-variable 'mu4e-current-msg)
   (make-local-variable 'mu4e-link-map)
 
-  (make-local-variable 'mu4e-wrap-lines)
-  (make-local-variable 'mu4e-hide-cited)
+  (make-local-variable 'mu4e-lines-wrapped)
+  (make-local-variable 'mu4e-cited-hidden)
 
-  (setq
-    truncate-lines t))
+  ;; filladapt is much better than the built-in filling
+  ;; esp. with '>' cited parts
+  (when (fboundp 'filladapt-mode)
+    (filladapt-mode))
+
+  (setq truncate-lines t))
 
 
-;; we mark messages are as read when we leave the message; ie., when skipping to
+;; we mark messages are as read when we leave the message; i.e., when skipping to
 ;; the next/previous one, or leaving the view buffer altogether.
 
 (defun mu4e-view-mark-as-read-maybe ()
@@ -372,7 +381,7 @@ Seen; if the message is not New/Unread, do nothing."
     (let ((more-lines t))
       (goto-char (point-min))
       (while more-lines
-	;; Get the citation level at point -- ie., the number of '>'
+	;; Get the citation level at point -- i.e., the number of '>'
 	;; prefixes, starting with 0 for 'no citation'
 	(beginning-of-line 1)
 	(let* ((text (re-search-forward "[[:word:]]" (line-end-position 1) t 1))
@@ -420,7 +429,6 @@ Seen; if the message is not New/Unread, do nothing."
     (lambda ()
       (interactive)
       (browse-url url))))
-
 
 
 ;; this is fairly simplistic...
@@ -553,45 +561,51 @@ See the `org-contacts' documentation for more details."
 	((eq name-or-email 'email)
 	  (or (cdr-safe from) ""))
 	(t (error "Not supported: %S" name-or-email))))))
+
+
+(defun mu4e-view-wrap-lines ()
+  "Wrap lines in the message body."
+  (save-excursion
+    (let ((inhibit-read-only t))
+      (goto-char (point-min))
+      (when (search-forward "\n\n") ;; search for the message body
+	(fill-region (point) (point-max)))
+      (setq mu4e-lines-wrapped t))))
+
+(defun mu4e-view-hide-cited ()
+  "Toggle hiding of cited lines in the message body."
+  (save-excursion
+    (let ((inhibit-read-only t))
+      (goto-char (point-min))
+      (flush-lines "^[:blank:]*>")
+      (setq mu4e-cited-hidden t))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 ;; Interactive functions
 
 (defun mu4e-view-toggle-wrap-lines ()
   "Toggle line wrap in the message body."
   (interactive)
-  (if mu4e-wrap-lines
-    (progn
-      (setq mu4e-wrap-lines nil)
-      (mu4e-view-refresh)) ;; back to normal
-    (save-excursion
-      (let ((inhibit-read-only t))
-	(setq mu4e-wrap-lines t)
-	(goto-char (point-min))
-	(when (search-forward "\n\n") ;; search for the message body
-	  (fill-region (point) (point-max)))))))
+  (if mu4e-lines-wrapped
+    (mu4e-view-refresh)
+    (mu4e-view-wrap-lines)))
 
 (defun mu4e-view-toggle-hide-cited ()
   "Toggle hiding of cited lines in the message body."
   (interactive)
-  (if mu4e-hide-cited
-    (progn
-      (setq mu4e-hide-cited nil)
-      (mu4e-view-refresh))
-    (save-excursion
-      (let ((inhibit-read-only t))
-	(goto-char (point-min))
-	(flush-lines "^[:blank:]*>")
-	(setq mu4e-hide-cited t)))))
-
+  (if mu4e-cited-hidden
+    (mu4e-view-refresh)
+    (mu4e-view-hide-cited)))
 
 (defun mu4e-view-refresh ()
-  "Redisplay the current message."
+  "Redisplay the current message, without wrapped lines or hidden
+citations."
   (interactive)
-  (mu4e-view mu4e-current-msg mu4e-hdrs-buffer t))
-
+  (mu4e-view mu4e-current-msg mu4e-hdrs-buffer t)
+  (setq
+    mu4e-lines-wrapped nil
+    mu4e-cited-hidden nil))
 
 (defun mu4e-view-quit-buffer ()
   "Quit the message view and return to the headers."

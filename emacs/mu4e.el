@@ -137,7 +137,7 @@ sent folder."
 ;; Folders
 
 (defgroup mu4e-folders nil
-  "Special folders for mm."
+  "Special folders."
   :group 'mu4e)
 
 (defcustom mu4e-sent-folder "/sent"
@@ -241,6 +241,31 @@ recommended you use \"html2text -utf8 -width 72\"."
   :group 'mu4e-view
   :safe 'stringp)
 
+
+(defcustom mu4e-view-wrap-lines nil
+  "Whether to automatically wrap lines in the body of messages when
+viewing them. Note that wrapping does not work well with all
+messages, but you can always toggle between wrapped/unwrapped
+display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-wrap-lines nil
+  "Whether to automatically wrap lines in the body of messages when
+viewing them. Note that wrapping does not work well with all
+messages, but you can always toggle between wrapped/unwrapped
+display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
+  :group 'mu4e-view)
+
+
+(defcustom mu4e-view-hide-cited nil
+  "Whether to automatically hide cited parts of messages (as
+determined by the presence of '> ' at the beginning of the
+line). Note that you can always toggle between hidden/unhidden
+display with `mu4e-view-toggle-hide-cited (default keybinding:
+<w>)."
+  :group 'mu4e-view)
+
+
 ;; Composing / Sending messages
 (defgroup mu4e-compose nil
   "Customizations for composing/sending messages."
@@ -283,18 +308,18 @@ sent folder."
 ;; Faces
 
 (defgroup mu4e-faces nil
-  "Faces used in by mm."
+  "Type faces (fonts) used in mu4e."
   :group 'mu4e
   :group 'faces)
 
 (defface mu4e-unread-face
   '((t :inherit font-lock-keyword-face :bold t))
-  "Face for an unread mm message header."
+  "Face for an unread message header."
   :group 'mu4e-faces)
 
 (defface mu4e-moved-face
   '((t :inherit font-lock-comment-face :slant italic))
-  "Face for an mm message header that has been moved to some
+  "Face for a message header that has been moved to some
 folder (it's still visible in the search results, since we cannot
 be sure it no longer matches)."
   :group 'mu4e-faces)
@@ -312,22 +337,24 @@ flag set)."
 
 (defface mu4e-header-face
   '((t :inherit default))
-  "Face for an mm header without any special flags."
+  "Face for a header without any special flags."
   :group 'mu4e-faces)
 
-(defface mu4e-title-face
-  '((t :inherit font-lock-type-face))
-  "Face for an mm title."
+(defface mu4e-header-title-face
+  '((t :inherit font-lock-type-face :underline t))
+  "Face for a header title in the headers view."
   :group 'mu4e-faces)
 
 (defface mu4e-view-header-key-face
   '((t :inherit font-lock-builtin-face :bold t))
-  "Face for the header title (such as \"Subject\" in the message view)."
+  "Face for a header title (such as \"Subject\") in the message
+  view."
   :group 'mu4e-faces)
 
 (defface mu4e-view-header-value-face
   '((t :inherit font-lock-doc-face))
-  "Face for the header value (such as \"Re: Hello!\" in the message view)."
+  "Face for a header value (such as \"Re: Hello!\") in the message
+  view."
   :group 'mu4e-faces)
 
 (defface mu4e-view-link-face
@@ -408,7 +435,7 @@ view). Most fields should be self-explanatory. A special one is
 in which case it will be equal to `:to'.)")
 
 
-;; mm startup function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create DIR if it does not exist yet. Return t if the
 dir already existed, or has been created, nil otherwise."
@@ -449,7 +476,7 @@ dir already existed, or has been created, nil otherwise."
   "*internal* The mu4e update timer.")
 
 (defun mu4e ()
-  "Start mm. We do this by sending a 'ping' to the mu server
+  "Start mu4e. We do this by sending a 'ping' to the mu server
 process, and start the main view if the 'pong' we receive from the
 server has the expected values."
   (interactive)
@@ -477,7 +504,7 @@ server has the expected values."
 	  (mu4e-proc-ping)))))
 
 (defun mu4e-quit()
-  "Quit the mm session."
+  "Quit the mu4e session."
   (interactive)
   (when (y-or-n-p "Are you sure you want to quit? ")
     (message nil)
