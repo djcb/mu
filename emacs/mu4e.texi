@@ -354,6 +354,8 @@ the next sections we will describe what these keys actually @emph{do}.
 
 
 @example
+----------------------------------------------------------------------------
+
         [C]     +--------+   [RFCE]
       --------> | editor | <--------
      /          +--------+          \
@@ -375,6 +377,8 @@ R: Reply      s: search            .: raw view (toggle)
 F: Forward    j: jump-to-maildir   q: quit
 C: Compose    b: bookmark-search
 E: Edit       B: bookmark-search (edit-first)
+
+----------------------------------------------------------------------------
 @end example
 
 @node Main view
@@ -386,8 +390,8 @@ correctly, and then show the @t{mu4e} main view.
 
 This looks something like the following:
 
---
 @verbatim
+----------------------------------------------------------------------------
 * mu4e - mu for emacs version x.x
 
   Basics
@@ -410,10 +414,11 @@ This looks something like the following:
 
         * [H]elp
 	* [q]uit mu4e
+----------------------------------------------------------------------------
 @end verbatim
---
 
-We assume the default key bindings here.
+In the below, we assume the default key bindings here. If you've changed
+those, well, mutatis mutandis.
 
 First, the @emph{Basics}:
 @itemize
@@ -427,10 +432,12 @@ shown. @xref{Searching mail}.
 will be thrown in a message-editing buffer, where you can compose a new message.
 @end itemize
 
-Next come the @emph{Bookmarks}.These are set in the variable
+Next come the @emph{Bookmarks}.These are set with the variable
 @code{mu4e-bookmarks}; what you see in the above example are the
 @emph{default} bookmarks - you can add your own and/or replace the default
-ones. @xref{Bookmarks}.
+ones. @xref{Bookmarks}. In short, you can view the list of messages matching a
+bookmark by pressing @key{b} followed by the shortcut for this bookmark. If
+you'd like to edit the bookmarked query first, use @key{B}. 
 
 Finally, there are some @emph{Misc} actions:
 @itemize
@@ -471,7 +478,7 @@ End of search results
 ----------------------------------------------------------------------------------
 @end verbatim
 
-It should be fairly obvious what this means, but some notes:
+It should be fairly obvious what this means, but here are some notes:
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
 the variable @t{mu4e-headers-fields}
@@ -494,6 +501,18 @@ these actions are also listed in the @t{Headers} menu in the Emacs menu bar.
 @verbatim
 key          description
 ---          -----------
+n,p          go to next, previous message
+
+j            jump to maildir
+b,B          jump to bookmark (/ edit first)
+
+d            mark for moving to the trash folder
+DEL,D        mark for immediate deletion
+m            mark for moving to another maildir folder
+u            unmark message at point
+R,F,C        reply/forward/compose
+E            edit (only allowed for draft messages)
+
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
@@ -503,22 +522,20 @@ u            unmark message at point
 U            unmark *all* messages
 x            execute actions for the marked messages
 RET          open the message at point in the message view
-R,F,C        reply/forward/compose
-E            edit (only allowed for draft messages)
 H            get help
 q            leave the headers buffer
 @end verbatim
 
-Note, all the mark/unmark commands support the current @emph{region} (i.e.,
+Note, all mark/unmark commands support the current @emph{region} (i.e.,
 selection) -- so, for example, if you the select a number of message and then
 press @key{DEL}, all selected message will be marked for deletion.
 
 The two-step mark-execute sequence is similar to what for example @t{dired}
-does; @inforef{(emacs) Dired} - it tries to be as fast as possible while still
-trying to protect the user from accidents.
+does; @inforef{(emacs) Dired} - it tries to be as quick as possible while
+still trying to protect you from accidents.
 
 When you try to do a new search, or refresh the headers buffer while you still
-have marked messages, by default you will be asked what to do with those marks
+have marked messages, normally you will be asked what to do with those marks
 -- whether to @emph{apply} them before leaving, @emph{ignore} them or to
 @emph{cancel} the operation. This behavior can be influenced with the variable
 @code{mu4e-headers-leave-behavior} -- see its documentation.
@@ -578,6 +595,10 @@ or by using the keyboard; the default bindings are:
 key          description
 ---          -----------
 n,p          go to next, previous message
+
+j            jump to maildir
+b,B          jump to bookmark (/ edit first)
+
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
