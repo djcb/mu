@@ -163,11 +163,7 @@ mu_store_contains_message (MuStore *store, const char* path, GError **err)
 
 	try {
 		const std::string term (store->get_uid_term(path));
-
-		MU_WRITE_LOG ("term exists? '%s': %s", term.c_str(),
-			      store->db_read_only()->term_exists (term) ? "yes" : "no");
-
-		return store->db_read_only()->term_exists (term) ? TRUE: FALSE;
+ 		return store->db_read_only()->term_exists (term) ? TRUE: FALSE;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, FALSE);
 
