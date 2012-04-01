@@ -509,7 +509,7 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 		return server_error (err, MU_ERROR_XAPIAN, "%s",
 				     "failed to update message");
 
-	sexp = mu_msg_to_sexp (msg, docid, NULL, TRUE);
+	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE/*include body*/);
 	send_expr ("(:update %s :move %s)", sexp, is_move ? "t" : "nil");
 
 	g_free (sexp);
