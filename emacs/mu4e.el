@@ -214,7 +214,7 @@ designated shortcut character for the maildir.")
   :group 'mu4e)
 
 (defcustom mu4e-view-fields
-  '(:from :to :cc :subject :flags :date :maildir :path :attachments)
+  '(:from :to :cc :subject :flags :date :maildir :attachments)
   "Header fields to display in the message view buffer. For the
 complete list of available headers, see `mu4e-header-names'."
   :type (list 'symbol)
