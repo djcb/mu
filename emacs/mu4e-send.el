@@ -312,6 +312,13 @@ use the new docid. Returns the full path to the new message."
     (make-local-variable 'before-save-hook)
     (make-local-variable 'after-save-hook)
 
+    (make-local-variable 'message-default-charset)
+
+    ;; if the default charset is not set, use UTF-8
+    (unless message-default-charset
+      (setq message-default-charset 'utf-8))
+
+
     ;; hack-hack-hack... just before saving, we remove the
     ;; mail-header-separator; just after saving we restore it; thus, the
     ;; separator should never appear on disk
