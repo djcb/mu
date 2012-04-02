@@ -159,6 +159,8 @@ dependency between versions of @t{mu4e} and @t{mu} - you cannot combine
 different versions.}, and be available from the command line and emacs
 (respectively). You may need to restart @t{emacs} so it can pick up @t{mu4e}.
 
+@subsection mu4e and emacs customization
+
 There is @emph{experimental} support for using the @t{emacs} customization
 system in @t{mu4e}, but for now we recommend setting the values
 manually. Please refer to @ref{Example configuration} for a couple of examples
@@ -306,7 +308,6 @@ Also, see the @t{mu-mkdir} and @t{mu-index} man pages.
 their destination until you switch it off again; so, be careful not to do so
 accidentally.
 
-
 @node Basic configuration
 @section Basic configuration
 
@@ -420,6 +421,8 @@ This looks something like the following:
 In the below, we assume the default key bindings here. If you've changed
 those, well, mutatis mutandis.
 
+@subsection Basic actions
+
 First, the @emph{Basics}:
 @itemize
 @item @t{[j]ump to some maildir} means that after pressing @key{j},
@@ -432,12 +435,17 @@ shown. @xref{Searching mail}.
 will be thrown in a message-editing buffer, where you can compose a new message.
 @end itemize
 
+@subsection Bookmarks
+
 Next come the @emph{Bookmarks}.These are set with the variable
 @code{mu4e-bookmarks}; what you see in the above example are the
 @emph{default} bookmarks - you can add your own and/or replace the default
 ones. @xref{Bookmarks}. In short, you can view the list of messages matching a
 bookmark by pressing @key{b} followed by the shortcut for this bookmark. If
 you'd like to edit the bookmarked query first, use @key{B}. 
+
+
+@subsection Miscellaneous
 
 Finally, there are some @emph{Misc} actions:
 @itemize
@@ -478,7 +486,10 @@ End of search results
 ----------------------------------------------------------------------------------
 @end verbatim
 
-It should be fairly obvious what this means, but here are some notes:
+@subsection Some notes
+
+Some notes to explain what you see in the example:            
+
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
 the variable @t{mu4e-headers-fields}
@@ -494,9 +505,10 @@ which the header will show @t{To} followed by the recipient.
 threading algorithm}@footnote{@url{http://www.jwz.org/doc/threading.html}}.
 @end itemize
 
+@subsection Keybindings
+
 Using the default key bindings, you can do various things with these messages;
 these actions are also listed in the @t{Headers} menu in the Emacs menu bar.
-
 
 @verbatim
 key          description
@@ -526,19 +538,21 @@ H            get help
 q            leave the headers buffer
 @end verbatim
 
+@subsection Some notes on marking
+
 Note, all mark/unmark commands support the current @emph{region} (i.e.,
 selection) -- so, for example, if you the select a number of message and then
 press @key{DEL}, all selected message will be marked for deletion.
 
-The two-step mark-execute sequence is similar to what for example @t{dired}
-does; @inforef{(emacs) Dired} - it tries to be as quick as possible while
-still trying to protect you from accidents.
+The two-step mark-execute sequence is similar to what @t{dired} and a number
+of other emacs-based programs do. @t{mu4e} tries to be as quick as possible
+while still trying to protect you from accidents.
 
 When you try to do a new search, or refresh the headers buffer while you still
 have marked messages, normally you will be asked what to do with those marks
 -- whether to @emph{apply} them before leaving, @emph{ignore} them or to
 @emph{cancel} the operation. This behavior can be influenced with the variable
-@code{mu4e-headers-leave-behavior} -- see its documentation.
+@code{`mu4e-headers-leave-behavior'} -- see its documentation.
 
 @node Message view
 @section Message view
@@ -588,6 +602,8 @@ mechanism emacs provides.}
 
 @end itemize
 
+@subsection Keybindings
+
 You can find most things you can do with this message in the @emph{View} menu,
 or by using the keyboard; the default bindings are:
 
@@ -626,6 +642,8 @@ Note that @key{x}, which means 'execute actions on marked messages' is not
 available in this view, to reduce the risk of accidents. You need to go back
 to the headers view to effectuate the actions.
 
+@subsection Attachments
+
 By default, the attachment is opened using either the @t{xdg-open}-program
 @footnote{@url{http://portland.freedesktop.org/wiki/}} or (on MacOS) the
 q@t{open} program. If you want to use another program, you specify this by
@@ -638,6 +656,8 @@ variable @code{mu4e-attachment-dir}, for example:
 @lisp
 (setq mu4e-attachment-dir (file-name-expand "~/Downloads"))
 @end lisp
+
+@subsection Displaying messages
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
 messages consisting of both a plain-text and an html (rich-text) version of
@@ -690,6 +710,8 @@ Since @t{mu4e} uses Gnu's message editor, for documentation
 available, here are some of the essential ones (you can use the menu to find
 more):
 
+@subsection Some useful keybindings
+
 @verbatim
 key          description
 ---          -----------
@@ -713,7 +735,6 @@ defaults to 500) results. You get @emph{all} results when you prefix your
 search commands (such as with @code{mu4e-search}, @code{mu4e-search-bookmark},
 @code{mu4e-search-bookmark-edit-first} and @code{mu4e-jump-to-maildir} with
 @kbd{C-u}.
-
 
 The reason for limiting the number of results in the query is that emacs may
 become a bit slow when displaying many results, and in many cases
@@ -789,6 +810,7 @@ main view @ref{Main view}, header view @xref{Headers view}, and message view
 @xref{Message view}, using (by default) the key @key{b}
 (@code{mu4e-search-bookmark}).
 
+@subsection Setting up bookmarks
 
 @code{mu4e} provides some default bookmarks, which you can override. The
 definition of the default bookmarks is instructive here:
@@ -822,6 +844,8 @@ defined in the echo area, with the shortcut key highlighted. So, to invoke the
 bookmark we just defined (to get the list of "Big Messages"), all you need to
 type is @key{bb}.
 
+@subsection Editing bookmarks before searching
+
 There is also @code{mu4e-search-bookmark-edit-first} (key @key{B}), which lets
 you edit the search query with some bookmark already filled in. This can be
 useful if you have many similar queries, but need to change some
@@ -840,6 +864,8 @@ queries provide a 'traditional' folder-like interface to a search-based e-mail
 client. By default, maildir searches are available in the @ref{Main view},
 @ref{Headers view}, and @ref{Message view}, with the key @key{j}
 (@code{mu4e-jump-to-maildir}).
+
+@subsection Setting up maildir shortcuts
 
 You can do Maildir searches manually (e.g. with a query like
 @code{maildir:/myfolder}) but since it is so common, @t{mu4e} offers a quicker
@@ -1238,7 +1264,8 @@ Mail' folder by pressing @kbd{ma}.
 @node FAQ - Frequently Anticipated Questions
 @chapter FAQ - Frequently Anticipated Questions
 
-In this chapter we list a number of anticipated questions and their answers.
+In this chapter we list a number of actual and anticipated questions and their
+answers.
 
 @itemize
 @item @emph{How can I quickly delete/move/trash a lot of messages?} You can
@@ -1260,7 +1287,7 @@ up-to-a-limited-number matches. Same for the other search based commands,
 (default: @key{b}).
 @item @emph{How can I easily include attachments in the messages I write?}
 Drag-and-drop.
-@item @emph{When I try do run @t{mu index} while @t{mu4e} os running I get
+@item @emph{When I try do run @t{mu index} while @t{mu4e} is running I get
 errors like @t{mu: mu_store_new_writable: xapian error 'Unable to get write
 lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
 this error because the underlying Xapian database allows itself to be opened
@@ -1273,6 +1300,19 @@ but what you can do is telling @t{mu} to (gracefully) terminate:
 @end verbatim
 @t{mu4e} will automatically restart @t{mu} when it needs it. In practice, this
 seems to work quite well.
+@item @emph{Can I automatically execute the actions on marked messages when
+leaving the headers buffer?} Yes you can -- see the documentation on
+@t{mu4e-headers-leave-behavior}.
+@item @emph{Can I automatically apply word-wrapping (and hiding cited parts)
+when viewing a message?} Yes -- see the documentation on
+@t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
+between the two states with @key{w} and @key{h}, respectively.
+@item @emph{Is there context-sensitive help available?} Yes - pressing @key{H}
+in most cases should point you to the right spot in this manual.
+
+
+
+
 @end itemize
 
 @node Known issues / missing features
@@ -1298,10 +1338,10 @@ according to thread, then descending by date. It would be nice if it could be
 sorted in other ways as well.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
-@item @emph{Difficulties with attachments in messages with complex
-MIME-hierarchy.} While dealing with attachments usually works fine, we have
-found some problems with specific mails. This is an issue in @t{mu}, and it is
-under investigation.
+@item @emph{Attachments are not accessible in draft/sent messages}. Currently,
+attachments in saved messages are special strings, which are transformed into
+the actual attachments when sending. However, you cannot access them afterwards.
+
 @end itemize
 
 
