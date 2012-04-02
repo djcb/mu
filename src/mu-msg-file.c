@@ -479,23 +479,29 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	ctype = g_mime_object_get_content_type (GMIME_OBJECT(part));
 	g_return_val_if_fail (GMIME_IS_CONTENT_TYPE(ctype), NULL);
 
-	charset = g_mime_content_type_get_parameter (ctype, "charset");
-	if (charset)
-		charset = g_mime_charset_iconv_name (charset);
-
 	/* of course, the charset specified may be incorrect... */
+	charset = g_mime_content_type_get_parameter (ctype, "charset");
 	if (charset) {
 		char *utf8;
-		utf8 = mu_str_convert_to_utf8 (buffer, charset);
+		utf8 = mu_str_convert_to_utf8
+		         (buffer,
+			  g_mime_charset_iconv_name (charset));
 		if (utf8) {
 			g_free (buffer);
 			return utf8;
 		}
+	} else if (g_utf8_validate (buffer, -1, NULL)) {
+		/*  check if the buffer is valid utf8, even if it doesn't
+		 *  say so explicitly... if that is the case, return it as-is */
+
+		/* nothing to do, buffer is already utf8 */
+
+	} else {
+		/* hmmm.... no charset at all, or conversion failed; ugly
+		  *  hack: replace all non-ascii chars with '.' */
+		mu_str_asciify_in_place (buffer);
 	}
 
-	/* hmmm.... no charset at all, or conversion failed; ugly
-	 *  hack: replace all non-ascii chars with '.' */
-	mu_str_asciify_in_place (buffer);
 	return buffer;
 }
 
