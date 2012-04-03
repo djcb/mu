@@ -283,7 +283,8 @@ typedef gpointer XapianEnquire;
 
 #define MU_STORE_CATCH_BLOCK_RETURN(GE,R)				\
           catch (const MuStoreError& merr) {				\
-		g_set_error ((GE), 0, merr.mu_error(), "%s",		\
+		g_set_error ((GE), (MU_ERROR_DOMAIN),			\
+			     merr.mu_error(), "%s",			\
 			     merr.what().c_str());			\
 		return (R);						\
 	  }								\
@@ -299,11 +300,12 @@ typedef gpointer XapianEnquire;
 
 #define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)					\
 	  catch (const Xapian::DatabaseLockError &xerr) {			\
-		g_set_error ((GE),0,MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,	\
+		g_set_error ((GE),(MU_ERROR_DOMAIN),				\
+			     MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,		\
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
 	} catch (const Xapian::DatabaseCorruptError &xerr) {			\
-		g_set_error ((GE),0,MU_ERROR_XAPIAN_CORRUPTION,			\
+		g_set_error ((GE),(MU_ERROR_DOMAIN),MU_ERROR_XAPIAN_CORRUPTION,	\
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
 	} catch (const Xapian::DatabaseError &xerr) {				\
@@ -311,11 +313,12 @@ typedef gpointer XapianEnquire;
 			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
 	} catch (const Xapian::Error &xerr) {					\
-		g_set_error ((GE),0,(E), "%s: xapian error '%s'",		\
+		g_set_error ((GE),(MU_ERROR_DOMAIN),(E),			\
+			     "%s: xapian error '%s'",				\
 			     __FUNCTION__, xerr.get_msg().c_str());		\
         } catch (...) {								\
 		if ((GE)&&!(*(GE)))						\
-			g_set_error ((GE),0,(MU_ERROR_INTERNAL),		\
+			g_set_error ((GE),(MU_ERROR_DOMAIN),(MU_ERROR_INTERNAL),\
 			     "%s: caught exception", __FUNCTION__);		\
 	 }
 
@@ -332,13 +335,14 @@ typedef gpointer XapianEnquire;
 
 #define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)			\
 	  catch (const Xapian::Error &xerr) {				\
-		g_set_error ((GE),0,(E),				\
+		g_set_error ((GE),(MU_ERROR_DOMAIN),(E),		\
 			     "%s: xapian error '%s'",			\
 			   __FUNCTION__, xerr.get_msg().c_str());	\
 		return (R);						\
         } catch (...) {							\
 		if ((GE)&&!(*(GE)))					\
-			g_set_error ((GE),0,(MU_ERROR_INTERNAL),	\
+			g_set_error ((GE),(MU_ERROR_DOMAIN),		\
+				     (MU_ERROR_INTERNAL),		\
 			     "%s: caught exception", __FUNCTION__);	\
 		return (R);						\
         }
