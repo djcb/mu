@@ -494,7 +494,7 @@ server has the expected values."
 		(error "mu server has version %s, but we need %s"
 		  version mu4e-mu-version))
 	      (mu4e-main-view)
-	      (when mu4e-update-interval
+	      (when (and mu4e-update-interval (null mu4e-update-timer))
 		(setq mu4e-update-timer
 		  (run-at-time
 		    0 mu4e-update-interval
