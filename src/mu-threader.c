@@ -173,8 +173,8 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 			c->docid = docid;
 			return c;
 		} else {
-			char fakeid[16];
-			static unsigned id = 0;
+			/* char fakeid[16]; */
+			/* static unsigned id = 0; */
 			/* c && c->msg */
 			/* special case, not in the JWZ algorithm: the
 			 * container exists already and has a message; this
@@ -191,8 +191,10 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 			/* add the container to the id-table with a
 			 * fake-id so it will be freed when the
 			 * id_table is destroyed */
-			snprintf (fakeid, sizeof(fakeid), "%x", ++id);
-			g_hash_table_insert (id_table, (gpointer)fakeid, c);
+
+			/* FIXME: below leads to infloop */
+			/* snprintf (fakeid, sizeof(fakeid), "%x", ++id); */
+			/* g_hash_table_insert (id_table, (gpointer)fakeid, c); */
 
 			return NULL; /* don't process this message further */
 		}
