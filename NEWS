@@ -4,17 +4,30 @@
 
 *** mu4e
     - allow for searching by editing bookmarks
-      (`mu4e-search-bookmark-edit-first')
+      (`mu4e-search-bookmark-edit-first') (keybinding 'B')
     - make it configurable what to do with sent messages (see
       `mu4e-sent-messages-behavior')
-    - add speedbar support (initial patch by Antono V)
+    - speedbar support (initial patch by Antono V)
+    - better handling of drafts:
+      - don't save too early
+      - more descriptive buffer names (based on Subject, if any)
+      - don't put "--text-follows-this-line--" markers in files
+    - automatically include signatures, if set
+    - add user-settable variables mu4e-view-wrap-lines and mu4e-view-hide-cited,
+      which determine the initial way a message is displayed
     - improved documentation
 
 *** general
+
+    - much improved searching for GMail folders (i.e. maildir:/ matching);
+      this requires a 'mu index --rebuild'
+    - correctly handle utf-8 messages, even if they don't specify this explicitly
     - fix compiler warnings for newer/older gcc and clang/clang++
     - fix unit tests (and some code) for Ubuntu 10.04 and FreeBSD9
-    - fix warnings for compilation with GTK+ 3.2
+    - fix warnings for compilation with GTK+ 3.2 and recent glib (g_set_error)
+    - fixe mu_msg_move_to_maildir for top-level messages
     - fixes in maildir scanning
+    - plugs some memleaks
       
 ** Release 0.9.8.2 <2012-03-11>
 
