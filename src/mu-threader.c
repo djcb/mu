@@ -17,7 +17,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-#include <math.h> /* for log, ceil */
+#include <math.h>   /* for log, ceil */
 #include <string.h> /* for memset */
 
 #include "mu-threader.h"
@@ -173,18 +173,27 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 			c->docid = docid;
 			return c;
 		} else {
+			char fakeid[16];
+			static unsigned id = 0;
 			/* c && c->msg */
 			/* special case, not in the JWZ algorithm: the
 			 * container exists already and has a message; this
 			 * means that we are seeing *another message* with a
 			 * message-id we already saw... create this message,
 			 * and mark it as a duplicate, and a child of the one
-			 * we saw before; use its path as a fake message-id*/
+			 * we saw before; use its path as a fake message-id
+			 * */
 			MuContainer *c2;
 			c2 = mu_container_new (msg, docid, "<dup>");
 			c2->flags = MU_CONTAINER_FLAG_DUP;
 			c = mu_container_append_children (c, c2);
-			/* don't add it to the id_table */
+
+			/* add the container to the id-table with a
+			 * fake-id so it will be freed when the
+			 * id_table is destroyed */
+			snprintf (fakeid, sizeof(fakeid), "%x", ++id);
+			g_hash_table_insert (id_table, (gpointer)fakeid, c);
+
 			return NULL; /* don't process this message further */
 		}
 	} else { /* Else: Create a new MuContainer object holding
