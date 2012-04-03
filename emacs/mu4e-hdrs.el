@@ -37,7 +37,7 @@
 (defconst mu4e-hdrs-buffer-name "*mu4e-headers*"
   "*internal* Name of the buffer for message headers.")
 (defvar mu4e-hdrs-buffer nil "*internal* Buffer for message headers")
-(defconst mu4e-hdrs-fringe " " "*internal* The space on the left of
+(defconst mu4e-hdrs-fringe "  " "*internal* The space on the left of
 message headers to put marks.")
 
 (defun mu4e-hdrs-clear ()
