@@ -509,7 +509,8 @@ server has the expected values."
   (when (y-or-n-p "Are you sure you want to quit? ")
     (message nil)
     (when mu4e-update-timer
-      (cancel-timer mu4e-update-timer))
+      (cancel-timer mu4e-update-timer)
+      (setq mu4e-update-timer nil))
     (mu4e-kill-proc)
     (kill-buffer)))
 
