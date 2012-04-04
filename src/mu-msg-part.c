@@ -353,10 +353,12 @@ write_part_to_fd (GMimePart *part, int fd, GError **err)
 	g_object_ref (part); /* FIXME: otherwise, the unrefs below
 			      * give errors...*/
 
-	rv = g_mime_data_wrapper_write_to_stream (wrapper, stream);
-	if (rv == -1)
+	if (g_mime_data_wrapper_write_to_stream (wrapper, stream) == -1) {
+		rv = FALSE;
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "failed to write to stream");
+	} else
+		rv = TRUE;
 
 	g_object_unref (wrapper);
 	g_object_unref (stream);
