@@ -79,9 +79,7 @@ install_sig_handler (void)
 /* BOX - beginning-of-expression */
 #define BOX "\376"
 
-static void  send_expr (const char* frm, ...) G_GNUC_PRINTF(1, 2);
-
-static void
+static void G_GNUC_PRINTF(1, 2)
 send_expr (const char* frm, ...)
 {
 	char *expr;
@@ -89,10 +87,12 @@ send_expr (const char* frm, ...)
 	char hdr[16];
 	size_t exprlen, hdrlen;
 
-	va_start (ap, frm);
-
 	expr    = NULL;
+
+	va_start (ap, frm);
 	exprlen = g_vasprintf (&expr, frm, ap);
+	va_end (ap);
+
 	hdrlen  = snprintf (hdr, sizeof(hdr), BOX "%u" BOX,
 			    (unsigned)exprlen);
 
@@ -103,14 +103,11 @@ send_expr (const char* frm, ...)
 		MU_WRITE_LOG ("error writing output: %s", strerror(errno));
 
 	g_free (expr);
-	va_end (ap);
+
 }
 
 
-static MuError server_error (GError **err, MuError merr, const char* frm, ...)
-	G_GNUC_PRINTF(3, 4);
-
-static MuError
+static MuError G_GNUC_PRINTF(3, 4)
 server_error (GError **err, MuError merr, const char* frm, ...)
 {
 	gboolean has_err;
@@ -119,6 +116,7 @@ server_error (GError **err, MuError merr, const char* frm, ...)
 
 	va_start (ap, frm);
 	errmsg = g_strdup_vprintf (frm, ap);
+	va_end (ap);
 
 	has_err = err && *err;
 	send_expr ("(:error %u :error-message \"%s\")\n",
@@ -126,7 +124,6 @@ server_error (GError **err, MuError merr, const char* frm, ...)
 		   has_err ? (*err)->message : errmsg);
 
 	g_free (errmsg);
-	va_end (ap);
 
 	return has_err ? (unsigned)(*err)->code : merr;
 }
@@ -1014,11 +1011,16 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 		GError *my_err;
 
 		line = my_readline (MU_PROMPT);
+		args = NULL;
 		cmd  = parse_line (line, &args, err);
 		g_free (line);
 
-		if (cmd == CMD_INVALID)
-
+		if (cmd == CMD_INVALID) {
+			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+				     "invalid command");
+			mu_str_free_list (args);
+			break;
+		}
 
 		my_err = NULL;
 		if (!handle_command (cmd, store, query, args, &my_err))
