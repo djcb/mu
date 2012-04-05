@@ -169,13 +169,10 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 	 * Store this message in the MuContainer's message slot. */
 	if (c) {
 		if (!c->msg) {
-			c->msg = mu_msg_ref (msg);
-			c->docid = docid;
+			c->msg	  = mu_msg_ref (msg);
+			c->docid  = docid;
 			return c;
 		} else {
-			/* char fakeid[16]; */
-			/* static unsigned id = 0; */
-			/* c && c->msg */
 			/* special case, not in the JWZ algorithm: the
 			 * container exists already and has a message; this
 			 * means that we are seeing *another message* with a
@@ -184,17 +181,15 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 			 * we saw before; use its path as a fake message-id
 			 * */
 			MuContainer *c2;
-			c2 = mu_container_new (msg, docid, "<dup>");
+			const char* fake_msgid;
+
+			fake_msgid = mu_msg_get_path (msg);
+
+			c2	  = mu_container_new (msg, docid, fake_msgid);
 			c2->flags = MU_CONTAINER_FLAG_DUP;
-			c = mu_container_append_children (c, c2);
+			c	  = mu_container_append_children (c, c2);
 
-			/* add the container to the id-table with a
-			 * fake-id so it will be freed when the
-			 * id_table is destroyed */
-
-			/* FIXME: below leads to infloop */
-			/* snprintf (fakeid, sizeof(fakeid), "%x", ++id); */
-			/* g_hash_table_insert (id_table, (gpointer)fakeid, c); */
+			g_hash_table_insert (id_table, (gpointer)fake_msgid, c2);
 
 			return NULL; /* don't process this message further */
 		}
@@ -333,7 +328,12 @@ create_containers (MuMsgIter *iter)
 static void
 filter_root_set (const gchar *msgid, MuContainer *c, MuContainer **root_set)
 {
+	/* ignore children */
 	if (c->parent)
+		return;
+
+	/* ignore duplicates */
+	if (c->flags & MU_CONTAINER_FLAG_DUP)
 		return;
 
 	if (*root_set == NULL) {
