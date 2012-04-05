@@ -285,7 +285,9 @@ use the new docid. Returns the full path to the new message."
 		 (string-match "^[^.]+" system-name) (match-end 0)))))
 	  (draft
 	    (concat mu4e-maildir mu4e-drafts-folder "/cur/"
-	      (format "%s-%x%x.%s:2,D" ;; 'D': rarely used, but hey, it's available
+	      ;; 'D': rarely used, but hey, it's available
+	      ;; 'S': because we're looking at the draft as we speak
+	      (format "%s-%x%x.%s:2,DS"
 		(format-time-string "%Y%m%d" (current-time))
 		(emacs-pid) (random t) hostname)))
 	  (str (case compose-type
