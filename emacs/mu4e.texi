@@ -62,13 +62,13 @@ In this chapter some prelimary thoughs about the how and why of @t{mu4e}.
 
 Why would the world need another e-mail client?  Well, I'm not sure the world
 really @emph{needs} another one, but maybe @emph{I} do! I spend a @emph{lot}
-of time, both professionally and privately, dealing with e-mail -- having an
+of time, professionally and privately, dealing with e-mail -- having an
 efficient e-mail client is essential for me. Since none of the existing ones
 worked they I wanted, I created my own.
 
-Still, even while having been created for such selfish motives, the feedback
-of many early adopters has been used to ensure that @t{mu4e} works well for
-other people as well.
+Still, while having been created for such selfish motives, @t{mu4e} tries
+hard to be as useful as possible for all its users - suggestions are very
+welcome and are acted upon.
 
 @node Other mail clients
 @section Other mail clients
@@ -84,7 +84,7 @@ different though.
 emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
 @t{dired}, while it takes some cues from @emph{GMail}.
 
-@t{mu4e} tries to keep all the 'state' in the maildirs, so one can switch
+@t{mu4e} tries to keep all the 'state' in your maildirs, so one can switch
 between clients, synchronize over @abbr{IMAP} or backup with @t{rsync} -- if
 you delete the database, you won't lose any information.
 
@@ -442,7 +442,7 @@ Next come the @emph{Bookmarks}.These are set with the variable
 @emph{default} bookmarks - you can add your own and/or replace the default
 ones. @xref{Bookmarks}. In short, you can view the list of messages matching a
 bookmark by pressing @key{b} followed by the shortcut for this bookmark. If
-you'd like to edit the bookmarked query first, use @key{B}. 
+you'd like to edit the bookmarked query first, use @key{B}.
 
 
 @subsection Miscellaneous
@@ -488,7 +488,7 @@ End of search results
 
 @subsection Some notes
 
-Some notes to explain what you see in the example:            
+Some notes to explain what you see in the example:
 
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
@@ -1055,7 +1055,7 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
 @node Longer configuration
 @section Longer configuration
 
-@verbatim
+@lisp
 ;; example configuration for mu-for-emacs (mu4e)
 (require 'mu4e)
 
@@ -1063,7 +1063,7 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
    ;; a regular expression that matches all email address uses by the user;
    ;; this allows us to correctly determine if user is the sender of some message
    mu4e-user-mail-address-regexp
-      "foo@bar\.com\\|cuux@example\.com"
+      "foo@@bar\.com\\|cuux@@example\.com"
 
    ;; path to our Maildir directory
    mu4e-maildir       "/home/user/Maildir"
@@ -1098,8 +1098,8 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
    mu4e-get-mail-command "offlineimap"
 
    ;; general emacs mail settings; used when composing e-mail
-   mail-reply-to "foo@bar.com"
-   user-mail-address "foo@bar.com"
+   mail-reply-to "foo@@bar.com"
+   user-mail-address "foo@@bar.com"
    user-full-name  "Foo X. Bar"
 
    ;; include in message with C-c C-w
@@ -1118,7 +1118,7 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
    ;; with 'mu mkdir', i.e.. mu mkdir /home/user/Maildir/queue
    smtpmail-queue-mail  nil
    smtpmail-queue-dir   "/home/user/Maildir/queue/cur")
-@end verbatim
+@end lisp
 
 
 @node Gmail configuration
@@ -1204,7 +1204,7 @@ what is going on.
 
 Now, let's make a @t{mu4e} configuration for this:
 
-@verbatim
+@lisp
 (require 'mu4e)
 
 ;; default
@@ -1229,7 +1229,7 @@ Now, let's make a @t{mu4e} configuration for this:
 
 ;; something about ourselves
 (setq
-   user-mail-address "USERNAME@gmail.com"
+   user-mail-address "USERNAME@@gmail.com"
    user-full-name  "Foo X. Bar"
 
    ;; include in message with C-c C-w
@@ -1246,11 +1246,11 @@ Now, let's make a @t{mu4e} configuration for this:
 (setq message-send-mail-function 'smtpmail-send-it
       starttls-use-gnutls t
       smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
-      smtpmail-auth-credentials '(("smtp.gmail.com" 587 "USERNAME@gmail.com" nil))
+      smtpmail-auth-credentials '(("smtp.gmail.com" 587 "USERNAME@@gmail.com" nil))
       smtpmail-default-smtp-server "smtp.gmail.com"
       smtpmail-smtp-server "smtp.gmail.com"
       smtpmail-smtp-service 587)
-@end verbatim
+@end lisp
 
 And that's it -- put the above in your @file{~/.emacs} (obviously you need to
 change @t{USERNAME} etc. to your own), and restart @t{emacs}, and run @kbd{M-x
@@ -1440,11 +1440,11 @@ The first is to create a process with, for example, @code{start-process}, and
 then register a filter function for it, which will be invoked whenever the
 process has some chunk of output. Something like:
 
-@verbatim
+@lisp
   (let ((proc (start-process <arguments>)))
     (set-process-filter proc 'my-process-filter)
     (set-process-sentinel proc 'my-process-sentinel))
-@end verbatim
+@end lisp
 
 Note, the process sentinel is invoked when the process is terminated -- so there
 you can clean things up.
@@ -1453,7 +1453,7 @@ The function =my-process-filter= is a user-defined function that takes the
 process and the chunk of output as arguments; in @t{mu4e} it looks something like
 (pseudo-lisp):
 
-@verbatim
+@lisp
 (defun my-process-filter (proc str)
   ;; mu4e-buf: a global string variable to which data gets appended
   ;; as we receive it
@@ -1461,7 +1461,7 @@ process and the chunk of output as arguments; in @t{mu4e} it looks something lik
   (when <we-have-received-a-full-expression>
       <eat-expression-from mu4e-buf>
       <evaluate-expression>))
-@end verbatim
+@end lisp
 
 @code{<evaluate-expression>} de-multiplexes the s-expression we got. For
 example, if the s-expression looks like an e-mail message header, it will be

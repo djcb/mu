@@ -1,8 +1,9 @@
 * NEWS (user visible changes)
 
-** Release 0.9.8.3 <unreleased>
+** Release 0.9.8.3 <2012-04-06>
 
 *** mu4e
+
     - allow for searching by editing bookmarks
       (`mu4e-search-bookmark-edit-first') (keybinding 'B')
     - make it configurable what to do with sent messages (see
@@ -28,10 +29,11 @@
     - fixe mu_msg_move_to_maildir for top-level messages
     - fixes in maildir scanning
     - plugs some memleaks
-      
+
 ** Release 0.9.8.2 <2012-03-11>
 
 *** mu4e:
+
    - make mail updating non-blocking
    - allow for automatic periodic update ('mu4e-update-interval')
    - allow for external triggering of update
@@ -39,6 +41,7 @@
      ask/apply/ignore ('mu4e-headers-leave-behaviour')
 
 *** general
+
     - fix output for some non-UTF8 locales
     - open ('play') file names with spaces
     - don't show unnecessary errors for --format=links
@@ -200,6 +203,7 @@
 
 
 ** Release 0.6 <2010-01-23 Sat>
+
     - First new release of mu since 2008
     - No longer depends on sqlite
 
