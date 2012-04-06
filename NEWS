@@ -2,6 +2,9 @@
 
 ** Release 0.9.8.3 <2012-04-06>
 
+   *NOTE*: existing mu/mu4e are recommended to run `mu index --rebuild' after
+   installation.
+
 *** mu4e
 
     - allow for searching by editing bookmarks
