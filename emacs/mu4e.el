@@ -367,6 +367,11 @@ flag set)."
   "Face for highlighting things."
   :group 'mu4e-faces)
 
+(defface mu4e-title-face
+  '((t :inherit font-lock-type-face :bold t))
+  "Face for a header title in the headers view."
+  :group 'mu4e-faces)
+
 (defface mu4e-view-url-number-face
   '((t :inherit font-lock-reference-face :bold t))
   "Face for the number tags for URLs."
