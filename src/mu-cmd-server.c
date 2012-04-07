@@ -322,7 +322,7 @@ output_found_sexps (MuMsgIter *iter, int maxnum)
 	else
 		max = G_MAXUINT32;
 
-	while (!mu_msg_iter_is_done (iter) && u <= max &&
+	while (!mu_msg_iter_is_done (iter) && u < max &&
 	       !MU_CAUGHT_SIGNAL) {
 
 		MuMsg *msg;
