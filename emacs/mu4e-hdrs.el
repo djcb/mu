@@ -129,7 +129,7 @@ from the database. This function will hide the removed message from
 the current list of headers."
   (when (buffer-live-p mu4e-hdrs-buffer)
     (with-current-buffer mu4e-hdrs-buffer
-      (mu4e-hdrs-remove-header docid pos)))) 
+      (mu4e-hdrs-remove-header docid)))) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -399,12 +399,9 @@ at the beginning of lines to identify headers."
 (defun mu4e--docid-at-point (&optional point)
   "Get the docid for the header at POINT, or at current (point) if
 nil. Returns the docid, or nil if there is none."
-  (if point
     (save-excursion
-      (goto-char point)
-      (get-text-property (line-beginning-position) 'docid))
-    ;; in this case, we don't need save-excursion, should be a bit faster
-    (get-text-property (line-beginning-position) 'docid))) 
+      (when point( goto-char point))
+      (get-text-property (line-beginning-position) 'docid)))
 
 (defun mu4e--goto-docid (docid &optional to-mark)
   "Go to the beginning of the line with the header with docid
@@ -465,15 +462,15 @@ at (point-max) otherwise."
  	;;(mu4e-select-headers-window-if-visible)
 	(save-excursion
 	  (goto-char point)
-	  ;; make sure the output window is selected, which it wouldn't be if called
-	  ;; from e.g. speedbar (output looks choppy when another window is
-	  ;; selected). We use switch-to-buffer for its window-selecting side-effect -
-	  ;; but only if the window is visible
+	  ;; make sure the output window is selected, which it wouldn't be if
+	  ;; called from e.g. speedbar (output looks choppy when another window
+	  ;; is selected). We use switch-to-buffer for its window-selecting
+	  ;; side-effect - but only if the window is visible
 	  (insert
 	    (mu4e--docid-cookie docid)
 	    (propertize (concat mu4e-hdrs-fringe str "\n")  'docid docid)))))))
 
-(defun mu4e-hdrs-remove-header (docid point)
+(defun mu4e-hdrs-remove-header (docid)
   "Remove header with DOCID at POINT."
   (with-current-buffer mu4e-hdrs-buffer
     (unless (mu4e--goto-docid docid)
@@ -618,9 +615,10 @@ work well."
 
 (defun mu4e-hdrs-view ()
   "View message at point."
-  (let ((docid (mu4e-hdrs-get-docid)))
-    (unless docid (error "No message at point."))
-    (mu4e-proc-view-msg docid)))
+  (with-current-buffer mu4e-hdrs-buffer
+    (let ((docid (mu4e--docid-at-point)))
+      (unless docid (error "No message at point."))
+      (mu4e-proc-view-msg docid))))
 
 (defun mu4e-hdrs-docid-is-marked (docid)
   "Is the given docid marked?"
@@ -717,7 +715,7 @@ the new docid. Otherwise, return nil."
   (interactive)
   (with-current-buffer mu4e-hdrs-buffer
     (when (= 0 (forward-line 1))
-      (or (mu4e-hdrs-get-docid) (mu4e-next-header)) ;; skip non-headers
+      (or (mu4e--docid-at-point) (mu4e-next-header)) ;; skip non-headers
       ;; trick to move point, even if this function is called when this window
       ;; is not visible
       (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point)))))
@@ -728,7 +726,7 @@ return the new docid. Otherwise, return nil."
   (interactive)
   (with-current-buffer mu4e-hdrs-buffer
     (when (= 0 (forward-line -1))
-      (or (mu4e-hdrs-get-docid) (mu4e-prev-header)) ;; skip non-headers
+      (or (mu4e--docid-at-point) (mu4e-prev-header)) ;; skip non-headers
       ;; trick to move point, even if this function is called when this window
       ;; is not visible
       (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point)))))
@@ -749,20 +747,21 @@ up to `mu4e-search-results-limit'."
   "Mark message at point for moving to maildir TARGET. If target is
 not provided, function asks for it."
   (interactive)
-  (unless (mu4e-hdrs-get-docid)
-      (error "No message at point."))
   (with-current-buffer mu4e-hdrs-buffer
-    (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
-	    (target (if (string= (substring target 0 1) "/")
-		      target
-		      (concat "/" target)))
-	    (fulltarget (concat mu4e-maildir target)))
-      (when (or (file-directory-p fulltarget)
-	      (and (yes-or-no-p
+    (unless (mu4e--docid-at-point)
+      (error "No message at point."))
+    (with-current-buffer mu4e-hdrs-buffer
+      (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
+	      (target (if (string= (substring target 0 1) "/")
+			target
+			(concat "/" target)))
+	      (fulltarget (concat mu4e-maildir target)))
+	(when (or (file-directory-p fulltarget)
+	      (and (yes-or-no-(point)
 		     (format "%s does not exist. Create now?" fulltarget))
 		(mu4e-proc-mkdir fulltarget)))
-	(mu4e-hdrs-mark 'move target)
-	(mu4e-next-header)))))
+	  (mu4e-hdrs-mark 'move target)
+	  (mu4e-next-header))))))
 
 
 (defun mu4e-mark (mark)
@@ -836,7 +835,7 @@ for draft messages."
       (if (eq compose-type 'new)
 	(mu4e-send-compose-handler 'new)
 	;; otherwise, we need the doc-id
-	(let ((docid (mu4e-hdrs-get-docid)))
+	(let ((docid (mu4e--docid-at-point)))
 	  (unless docid (error "No message at point."))
 	  ;; note, the first two chars of the line (the mark margin) does *not*
 	  ;; have the 'draft property; thus, we check one char before the end of
