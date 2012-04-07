@@ -705,7 +705,7 @@ On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
 ----------------------------------------------------------------------------
 @end verbatim
 
-Since @t{mu4e} uses Gnu's message editor, for documentation
+Since @t{mu4e} uses @t{gnu}'s message editor, for documentation
 @inforef{Message}. Also, @pxref{Sending mail}. There are many key-bindings
 available, here are some of the essential ones (you can use the menu to find
 more):
@@ -731,14 +731,15 @@ are executing a search query for messages that happen to have the property of
 being in a certain folder.
 
 Queries normally return only up to @code{mu4e-search-results-limit} (which
-defaults to 500) results. You get @emph{all} results when you prefix your
+defaults to 1000) results. You get @emph{all} results when you prefix your
 search commands (such as with @code{mu4e-search}, @code{mu4e-search-bookmark},
 @code{mu4e-search-bookmark-edit-first} and @code{mu4e-jump-to-maildir} with
 @kbd{C-u}.
-
-The reason for limiting the number of results in the query is that emacs may
-become a bit slow when displaying many results, and in many cases
-@code{mu4e-search-results-limit} should be enough.
+ 
+This limit was introduced in earlier versions of @t{mu4e}, where @t{emacs}
+could become slow when there were many matches. This is no longer the case
+(post @t{mu4e} version 0.9.8.3), but since it is still faster to limit the
+number of matches, the limit remains.
 
 @menu
 * Queries::

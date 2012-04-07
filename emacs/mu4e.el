@@ -96,7 +96,7 @@ in :from-or-to headers. By default, match nothing.")
   "Date format to use in the message view, in the format of
   `format-time-string'.")
 
-(defvar mu4e-search-results-limit 500
+(defvar mu4e-search-results-limit 1000
   "Maximum number of search results (or -1 for unlimited). Since
 limiting search results speeds up searches significantly, it's
 useful to limit this. Note, to ignore the limit, use a prefix
