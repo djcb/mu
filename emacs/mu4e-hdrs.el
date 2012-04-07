@@ -1,4 +1,4 @@
-;; mu4e-hdrs.el -- part of mu4e, the mu mail user agent
+;;; mu4e-hdrs.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
@@ -27,7 +27,7 @@
 ;; headers like 'To:' or 'Subject:')
 
 ;; Code:
-
+  
 (eval-when-compile (require 'cl))
 
 (require 'mu4e-proc)
@@ -47,7 +47,6 @@ message headers to put marks.")
       (with-current-buffer mu4e-hdrs-buffer
 	(erase-buffer)
 	(when mu4e-marks-map (clrhash mu4e-marks-map))
-	(when mu4e-msg-map (clrhash mu4e-msg-map))
 	(when mu4e-thread-info-map (clrhash mu4e-thread-info-map))))))
 
 
@@ -97,8 +96,7 @@ headers."
   (when (buffer-live-p mu4e-hdrs-buffer)
     (with-current-buffer mu4e-hdrs-buffer
       (let* ((docid (plist-get msg :docid))
-	      (marker (gethash docid mu4e-msg-map))
-	      (point (when marker (marker-position marker))))
+ 	      (point (mu4e--docid-pos docid)))
 	(when point ;; is the message present in this list?
 	  ;; if it's marked, unmark it now
 	  (when (mu4e-hdrs-docid-is-marked docid)
@@ -130,15 +128,8 @@ headers."
 from the database. This function will hide the removed message from
 the current list of headers."
   (when (buffer-live-p mu4e-hdrs-buffer)
-  (with-current-buffer mu4e-hdrs-buffer
-    (let* ((marker (gethash docid mu4e-msg-map))
-	    (pos (and marker (marker-position marker)))
-	    (docid-at-pos (and pos (mu4e-hdrs-get-docid pos))))
-      (when marker
-	(unless (eq docid docid-at-pos)
-	  (error "At point %d, expected docid %d, but got %S"
-	    pos docid docid-at-pos))
-	(mu4e-hdrs-remove-header docid pos))))))
+    (with-current-buffer mu4e-hdrs-buffer
+      (mu4e-hdrs-remove-header docid pos)))) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -359,13 +350,11 @@ after the end of the search results."
   (make-local-variable 'mu4e-last-expr)
   (make-local-variable 'mu4e-hdrs-proc)
   (make-local-variable 'mu4e-marks-map)
-  (make-local-variable 'mu4e-msg-map)
   (make-local-variable 'mu4e-thread-info-map)
   (make-local-variable 'global-mode-string)
 
   (setq
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
-    mu4e-msg-map (make-hash-table :size 1024 :rehash-size 2 :weakness nil)
     mu4e-thread-info-map (make-hash-table :size 512 :rehash-size 2)
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
@@ -388,22 +377,82 @@ after the end of the search results."
 	mu4e-headers-fields))))
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-msg-map nil
-  "*internal* A map (hashtable) which maps a database (Xapian)
-docid (which uniquely identifies a message to a marker.  where
-marker points to the buffer position for the message
-
-Using this map, we can update message headers which are currently
-on the screen, when we receive (:update ) notices from the mu
-server.")
-
-(defun mu4e-select-headers-window-if-visible ()
+ (defun mu4e-select-headers-window-if-visible ()
   "When there is a visible window for the headers buffer, make sure
 to select it. This is needed when adding new headers, otherwise
 adding a lot of new headers looks really choppy."
   (let ((win (get-buffer-window mu4e-hdrs-buffer)))
-    (when win (select-window win)
-)))
+    (when win (select-window win))))
+
+
+;;;; headers in the buffer are prefixed by an invisible string with the docid
+;;;; followed by an EOT ('end-of-transmission', \004, ^D) non-printable ascii
+;;;; character. this string also has a text-property with the docid. the former
+;;;; is used for quickly finding a certain header, the latter for retrieving the
+;;;; docid at point without string matching etc.
+
+(defun mu4e--docid-cookie (docid)
+  "Create an invisible string containing DOCID; this is to be used
+at the beginning of lines to identify headers."
+  (propertize (format "%d\004" docid) 'docid docid 'invisible t))
+
+(defun mu4e--docid-at-point (&optional point)
+  "Get the docid for the header at POINT, or at current (point) if
+nil. Returns the docid, or nil if there is none."
+  (if point
+    (save-excursion
+      (goto-char point)
+      (get-text-property (line-beginning-position) 'docid))
+    ;; in this case, we don't need save-excursion, should be a bit faster
+    (get-text-property (line-beginning-position) 'docid))) 
+
+(defun mu4e--goto-docid (docid &optional to-mark)
+  "Go to the beginning of the line with the header with docid
+DOCID, or nil if it cannot be found. If the optional TO-MARK is
+non-nil, go to the point directly *after* the docid-cookie instead
+of the beginning of the line."
+  (let ((oldpoint (point)) (newpoint))
+    (goto-char (point-min))
+    (setq newpoint
+      (search-forward (format "%d\004" docid) nil t))
+    (when (null to-mark)
+      (if (null newpoint)
+	(goto-char oldpoint) ;; not found; restore old pos
+	(progn 
+	  (beginning-of-line) ;; found, move to beginning of line
+	  (setq newpoint (point)))))
+    newpoint)) ;; return the point, or nil if not found
+      
+
+
+
+(defun mu4e--docid-pos (docid)
+  "Return the pos of the beginning of the line with the header with
+docid DOCID, or nil if it cannot be found."
+  (let ((pos))
+    (save-excursion
+      (setq pos (mu4e--goto-docid docid)))
+    pos))
+
+;;;; markers mark headers for 
+(defun mu4e--mark-header (docid mark)
+  "(Visually) mark the header for DOCID with character MARK."
+  (with-current-buffer mu4e-hdrs-buffer
+    (let ((inhibit-read-only t) (oldpoint (point)))
+      (unless (mu4e--goto-docid docid)
+	(error "Cannot find message with docid %S" docid))
+      ;; now, we're at the beginning of the header, looking at
+      ;; <docid>\004
+      ;; (which is invisible). jumpp past that…
+      (unless (re-search-forward "\004" nil t)
+	  (error "Cannot find \004 separator"))
+      ;; we found the \004; we move point one to the right for the
+      ;; the area to write the marker.
+      ;;(forward-char)
+      ;; clear old marks, and add the new ones.
+      (delete-char 2)
+      (insert (propertize mark 'face 'mu4e-hdrs-marks-face) " ")
+      (goto-char oldpoint))))
 
 
 (defun mu4e-hdrs-add-header (str docid point)
@@ -420,66 +469,18 @@ at (point-max) otherwise."
 	  ;; from e.g. speedbar (output looks choppy when another window is
 	  ;; selected). We use switch-to-buffer for its window-selecting side-effect -
 	  ;; but only if the window is visible
-
-	  (insert (propertize (concat mu4e-hdrs-fringe str "\n")  'docid docid))
-	  ;; Update `mu4e-msg-map' with MSG, and MARKER pointing to the buffer
-	  ;; position for the message header."
-
-	  ;; note: this maintaining the hash with the markers makes things slow
-	  ;; when there are many (say > 1000) headers. this seems to be mostly
-	  ;; in the use of markers. we use those to find messages when they need
-	  ;; to be updated.
-	  (puthash docid (copy-marker point t) mu4e-msg-map))))))
-
+	  (insert
+	    (mu4e--docid-cookie docid)
+	    (propertize (concat mu4e-hdrs-fringe str "\n")  'docid docid)))))))
 
 (defun mu4e-hdrs-remove-header (docid point)
   "Remove header with DOCID at POINT."
   (with-current-buffer mu4e-hdrs-buffer
-    (goto-char point)
-    ;; sanity check
-    (unless (eq docid (mu4e-hdrs-get-docid))
-      (error "%d: Expected %d, but got %d"
-	(line-number-at-pos) docid (mu4e-hdrs-get-docid)))
+    (unless (mu4e--goto-docid docid)
+      (error "Cannot find message with docid %S" docid))
     (let ((inhibit-read-only t))
-      ;; (put-text-property (line-beginning-position line-beginning-positio 2)
-      ;; 	'invisible t))
-      (delete-region (line-beginning-position) (line-beginning-position 2)))
-    (remhash docid mu4e-msg-map)))
-
-(defun mu4e-hdrs-mark-header (docid mark)
-  "(Visually) mark the header for DOCID with character MARK."
-  (let ((marker (gethash docid mu4e-msg-map)))
-    ;; (unless marker (error "Unregistered message"))
-    (when marker
-      (with-current-buffer mu4e-hdrs-buffer
-	(save-excursion
-	  (let ((inhibit-read-only t)
-		 (pos (marker-position marker)))
-	    (goto-char pos)
-	    (delete-char 2)
-	    (insert (propertize mark 'face 'mu4e-hdrs-marks-face) " ")
-	    (put-text-property pos
-	      (line-beginning-position 2) 'docid docid)
-	    ;; update the msg-map, ie., move it back to the start of the line
-	    (puthash docid
-	      (copy-marker (line-beginning-position) t)
-	      mu4e-msg-map)))))))
-
-
-(defun mu4e-hdrs-get-docid (&optional point)
-  "Get the docid for the message at POINT, if provided, or (point), otherwise."
-  (with-current-buffer mu4e-hdrs-buffer
-    (get-text-property (if point point (point)) 'docid)))
-
-(defun mu4e-dump-msg-map ()
-  "*internal* dump the message map (for debugging)."
-  (with-current-buffer mu4e-hdrs-buffer
-    (message "msg-map (%d)" (hash-table-count mu4e-msg-map))
-    (maphash
-      (lambda (k v)
-	(message "%s => %s" k v))
-      mu4e-msg-map)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      (delete-region (line-beginning-position) (line-beginning-position 2)))))
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -522,7 +523,7 @@ The following marks are available, and the corresponding props:
    `read'     n         mark the message as read
    `unread'   n         mark the message as unread
    `unmark'   n         unmark this message"
-  (let* ((docid (mu4e-hdrs-get-docid))
+  (let* ((docid (mu4e--docid-at-point))
 	  (markkar
 	    (case mark     ;; the visual mark
 	      ('move    "m")
@@ -534,7 +535,7 @@ The following marks are available, and the corresponding props:
 	      (t (error "Invalid mark %S" mark)))))
     (unless docid (error "No message on this line"))
     (save-excursion
-      (when (mu4e-hdrs-mark-header docid markkar))
+      (when (mu4e--mark-header docid markkar))
       ;; update the hash -- remove everything current, and if add the new stuff,
       ;; unless we're unmarking
       (remhash docid mu4e-marks-map)
@@ -549,7 +550,10 @@ The following marks are available, and the corresponding props:
 	(when target
 	  (let* ((targetstr (propertize (concat "-> " target " ")
 			      'face 'mu4e-system-face))
-		  (start (+ 2 (line-beginning-position))) ;; +2 for the marker fringe
+		  ;; mu4e-goto-docid docid t will take us just after the docid cookie
+		  ;; and then we skip the mu4e-hdrs-fringe
+		  (start (+ (length mu4e-hdrs-fringe)
+			   (mu4e--goto-docid docid t))) 
 		  (overlay (make-overlay start (+ start (length targetstr)))))
 	    (overlay-put overlay 'display targetstr)))))))
 
@@ -596,7 +600,7 @@ work well."
 		(error "`mu4e-trash-folder' not set"))
 	      (mu4e-proc-move-msg docid mu4e-trash-folder "+T"))
 	    (delete (mu4e-proc-remove-msg docid)))))
-	  mu4e-marks-map)
+      mu4e-marks-map)
     (mu4e-hdrs-unmark-all)))
 
 (defun mu4e-hdrs-unmark-all ()
@@ -608,7 +612,9 @@ work well."
       (save-excursion
 	(goto-char (marker-position (nth 0 val)))
 	(mu4e-hdrs-mark 'unmark)))
-    mu4e-marks-map))
+    mu4e-marks-map)
+  ;; in any case, clear the marks map
+  (clrhash mu4e-marks-map))
 
 (defun mu4e-hdrs-view ()
   "View message at point."
