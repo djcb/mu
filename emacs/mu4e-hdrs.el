@@ -27,9 +27,10 @@
 ;; headers like 'To:' or 'Subject:')
 
 ;; Code:
-  
+
 (eval-when-compile (require 'cl))
 
+(require 'hl-line)
 (require 'mu4e-proc)
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,7 +130,7 @@ from the database. This function will hide the removed message from
 the current list of headers."
   (when (buffer-live-p mu4e-hdrs-buffer)
     (with-current-buffer mu4e-hdrs-buffer
-      (mu4e-hdrs-remove-header docid)))) 
+      (mu4e-hdrs-remove-header docid))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -351,15 +352,20 @@ after the end of the search results."
   (make-local-variable 'mu4e-hdrs-proc)
   (make-local-variable 'mu4e-marks-map)
   (make-local-variable 'mu4e-thread-info-map)
-  (make-local-variable 'global-mode-string)
 
+  (make-local-variable 'global-mode-string)
+  (make-local-variable 'hl-line-face)
+  
   (setq
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
     mu4e-thread-info-map (make-hash-table :size 512 :rehash-size 2)
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
-    overwrite-mode 'overwrite-mode-binary)
+    overwrite-mode 'overwrite-mode-binary
+    hl-line-face 'mu4e-header-highlight-face)
 
+  (hl-line-mode 1)
+  
   (setq header-line-format
     (cons
       (make-string
@@ -415,11 +421,11 @@ of the beginning of the line."
     (when (null to-mark)
       (if (null newpoint)
 	(goto-char oldpoint) ;; not found; restore old pos
-	(progn 
+	(progn
 	  (beginning-of-line) ;; found, move to beginning of line
 	  (setq newpoint (point)))))
     newpoint)) ;; return the point, or nil if not found
-      
+
 
 
 
@@ -431,7 +437,7 @@ docid DOCID, or nil if it cannot be found."
       (setq pos (mu4e--goto-docid docid)))
     pos))
 
-;;;; markers mark headers for 
+;;;; markers mark headers for
 (defun mu4e--mark-header (docid mark)
   "(Visually) mark the header for DOCID with character MARK."
   (with-current-buffer mu4e-hdrs-buffer
@@ -550,7 +556,7 @@ The following marks are available, and the corresponding props:
 		  ;; mu4e-goto-docid docid t will take us just after the docid cookie
 		  ;; and then we skip the mu4e-hdrs-fringe
 		  (start (+ (length mu4e-hdrs-fringe)
-			   (mu4e--goto-docid docid t))) 
+			   (mu4e--goto-docid docid t)))
 		  (overlay (make-overlay start (+ start (length targetstr)))))
 	    (overlay-put overlay 'display targetstr)))))))
 
@@ -707,29 +713,51 @@ do a new search."
 (defun mu4e-view-message ()
   "View the message at point."
   (interactive)
-  (mu4e-hdrs-view))
+  (let ((viewwin (when (buffer-live-p mu4e-view-buffer)
+	       (get-buffer-window mu4e-view-buffer))))
+    (unless (window-live-p viewwin)
+      ;; no view window yet; create one, based on the split settings etc.
+      (setq viewwin
+	(cond ;; is there are live window for the message view?
+	  ;; split horizontally
+	  ((eq mu4e-split-mode 'horizontal)
+	    (split-window nil mu4e-headers-visible-lines 'below))
+	  ;; split vertically
+	  ((eq mu4e-split-mode 'vertical)
+	    (split-window nil mu4e-headers-visible-columns 'right))
+	  ;; no splitting; just use the currently selected one
+	  (t
+	    (selected-window)))))
+    ;; okay, now we have viewwin
+    (select-window viewwin)
+    (mu4e-hdrs-view))) 
 
+(defun mu4e--hdrs-move (lines)
+  "Move point LINES lines forward (if LINES is positive) or
+backward (if LINES is negative). If this succeeds, return the new
+docid. Otherwise, return nil."
+    (with-current-buffer mu4e-hdrs-buffer
+      (hl-line-unhighlight)
+      (let ((succeeded (= 0 (forward-line lines)))
+	     (docid (mu4e--docid-at-point)))
+	;; trick to move point, even if this function is called when this window
+	;; is not visible
+	(set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
+	(hl-line-highlight)
+	;; return the docid only if the move succeeded
+	(when succeeded docid))))
+ 
 (defun mu4e-next-header ()
   "Move point to the next message header. If this succeeds, return
 the new docid. Otherwise, return nil."
   (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (when (= 0 (forward-line 1))
-      (or (mu4e--docid-at-point) (mu4e-next-header)) ;; skip non-headers
-      ;; trick to move point, even if this function is called when this window
-      ;; is not visible
-      (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point)))))
-
+  (mu4e--hdrs-move 1))
+ 
 (defun mu4e-prev-header ()
   "Move point to the previous message header. If this succeeds,
 return the new docid. Otherwise, return nil."
   (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (when (= 0 (forward-line -1))
-      (or (mu4e--docid-at-point) (mu4e-prev-header)) ;; skip non-headers
-      ;; trick to move point, even if this function is called when this window
-      ;; is not visible
-      (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point)))))
+  (mu4e--hdrs-move -1))
 
 
 (defun mu4e-jump-to-maildir ()

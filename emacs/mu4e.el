@@ -116,6 +116,12 @@ form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
 query, DESCRIPTION is a short description of the query (this will
 show up in the UI), and KEY is a shortcut key for the query.")
 
+(defvar mu4e-split-mode nil
+  "How to show messages / headers; as symbol which is either:
+nil: don't split (show either headers or messages, not both)
+horizontal: split horizontally (headers on top)
+vertical: split vertically (headers on the left).
+Also see `mu4e-headers-visible-lines'.")
 
 ;; Sending
 (defgroup mu4e-sending nil
@@ -206,6 +212,20 @@ designated shortcut character for the maildir.")
 - apply (automatically apply the marks before doing anything else)
 - ignore (automatically ignore the marks without asking)."
   :type 'symbol
+  :group 'mu4e-headers)
+
+
+(defcustom mu4e-headers-visible-lines 8
+  "Number of header lines to display for the header view when using
+the horizontal split-view."
+  :type 'integer
+  :group 'mu4e-headers)
+
+
+(defcustom mu4e-headers-visible-columns 30
+  "Number of columns to display for the header view when using the
+vertical split-view."
+  :type 'integer
   :group 'mu4e-headers)
 
 ;; the message view
@@ -312,6 +332,7 @@ sent folder."
   :group 'mu4e
   :group 'faces)
 
+
 (defface mu4e-unread-face
   '((t :inherit font-lock-keyword-face :bold t))
   "Face for an unread message header."
@@ -349,6 +370,11 @@ flag set)."
   '((t :inherit font-lock-builtin-face :bold t))
   "Face for a header title (such as \"Subject\") in the message
   view."
+  :group 'mu4e-faces)
+
+(defface mu4e-header-highlight-face
+  '((t :inherit default :weight bold :underline t))
+  "Face for the header at point."
   :group 'mu4e-faces)
 
 (defface mu4e-view-header-value-face

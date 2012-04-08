@@ -35,8 +35,7 @@
 (defconst mu4e-view-buffer-name "*mu4e-view*"
   "*internal* Name for the message view buffer")
 
-(defconst mu4e-raw-view-buffer-name "*mu4e-raw-view*"
-  "*internal* Name for the raw message view buffer")
+(defvar mu4e-view-buffer nil "*internal* The view buffer.")
 
 ;; some buffer-local variables
 (defvar mu4e-hdrs-buffer nil
@@ -49,7 +48,6 @@
   "View message with MSGID. This is meant for external programs
 wanting to show specific messages - for example, `mu4e-org'."
   (mu4e-proc-view-msg msgid))
-
 
 (defun mu4e-view (msg hdrsbuf &optional update)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -64,6 +62,7 @@ marking if it still had that."
   (let ((buf (get-buffer-create mu4e-view-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
+      (setq mu4e-view-buffer buf)
       (erase-buffer)
       (insert
 	(mapconcat
@@ -456,8 +455,10 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 ;; raw mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; some buffer-local variables
-(defvar mu4e-view-buffer nil
-  "*internal* View buffer connected to this raw view.")
+(defconst mu4e-raw-view-buffer-name "*mu4e-raw-view*"
+  "*internal* Name for the raw message view buffer")
+
+(defvar mu4e-raw-view-buffer nil "*internal* The raw view buffer.")
 
 (defvar mu4e-raw-view-mode-map nil
   "Keymap for \"*mu4e-raw-view*\" buffers.")
@@ -501,7 +502,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (insert-file file)
       ;; initialize view-mode
       (mu4e-raw-view-mode)
-      (setq mu4e-view-buffer view-buffer)
+      (setq mu4e-raw-view-buffer view-buffer)
       (switch-to-buffer buf)
       (goto-char (point-min)))))
 
@@ -517,7 +518,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (erase-buffer)
       (process-file-shell-command cmd file buf)
       (mu4e-raw-view-mode)
-      (setq mu4e-view-buffer view-buffer)
+      (setq mu4e-raw-view-buffer view-buffer)
       (switch-to-buffer buf)
       (goto-char (point-min)))))
 
@@ -525,9 +526,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 (defun mu4e-raw-view-quit-buffer ()
   "Quit the raw view and return to the message."
   (interactive)
-  (if (buffer-live-p mu4e-view-buffer)
-    (switch-to-buffer mu4e-view-buffer)
-    (kill-buffer)))
+  (kill-buffer))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; functions for org-contacts
@@ -610,10 +609,10 @@ citations."
 (defun mu4e-view-quit-buffer ()
   "Quit the message view and return to the headers."
   (interactive)
-  (if (buffer-live-p mu4e-hdrs-buffer)
-    (switch-to-buffer mu4e-hdrs-buffer)
-    (kill-buffer)))
-
+  (kill-buffer-and-window)
+  (when (buffer-live-p mu4e-hdrs-buffer)
+    (switch-to-buffer mu4e-hdrs-buffer)))
+  
 (defun mu4e-view-next-header ()
   "View the next header."
   (interactive)
