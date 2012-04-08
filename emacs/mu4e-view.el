@@ -1,4 +1,4 @@
-;; mu4e-view.el -- part of mu4e, the mu mail user agent
+;;; mu4e-view.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
@@ -41,7 +41,7 @@
 (defvar mu4e-hdrs-buffer nil
   "*internal* Headers buffer connected to this view.")
 
-(defvar mu4e-current-msg nil
+(defvar mu4e--current-msg nil
   "*internal* The plist describing the current message.")
 
 (defun mu4e-view-message-with-msgid (msgid)
@@ -111,7 +111,7 @@ marking if it still had that."
       (mu4e-view-mode)
       (setq ;; these are buffer-local
 	buffer-read-only t
-	mu4e-current-msg msg
+	mu4e--current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
 
@@ -222,8 +222,13 @@ if IS-OPEN is nil, and otherwise open it."
 (unless mu4e-view-mode-map
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
-      (define-key map "q" 'mu4e-view-quit-buffer)
+      
+      (define-key map "q" 'mu4e-view-kill-buffer-and-window)
 
+      ;; note, 'z' is by-default bound to 'bury-buffer'
+      ;; but that's not very useful in this case
+      (define-key map "z" 'mu4e-view-kill-buffer-and-window)
+      
       (define-key map "s" 'mu4e-search)
 
       (define-key map "b" 'mu4e-search-bookmark)
@@ -289,7 +294,8 @@ if IS-OPEN is nil, and otherwise open it."
       (let ((menumap (make-sparse-keymap "View")))
 	(define-key map [menu-bar headers] (cons "View" menumap))
 
-	(define-key menumap [quit-buffer] '("Quit view" . mu4e-view-quit-buffer))
+	(define-key menumap [quit-buffer]
+	  '("Quit view" . mu4e-view-kill-buffer-and-window))
 	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
@@ -346,7 +352,7 @@ if IS-OPEN is nil, and otherwise open it."
   (use-local-map mu4e-view-mode-map)
 
   (make-local-variable 'mu4e-hdrs-buffer)
-  (make-local-variable 'mu4e-current-msg)
+  (make-local-variable 'mu4e--current-msg)
   (make-local-variable 'mu4e-link-map)
 
   (make-local-variable 'mu4e-lines-wrapped)
@@ -366,9 +372,9 @@ if IS-OPEN is nil, and otherwise open it."
 (defun mu4e-view-mark-as-read-maybe ()
   "Clear the current message's New/Unread status and set it to
 Seen; if the message is not New/Unread, do nothing."
-  (when mu4e-current-msg
-    (let ((flags (plist-get mu4e-current-msg :flags))
-	   (docid (plist-get mu4e-current-msg :docid)))
+  (when mu4e--current-msg
+    (let ((flags (plist-get mu4e--current-msg :flags))
+	   (docid (plist-get mu4e--current-msg :docid)))
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
 	(mu4e-proc-flag docid "+S-u-N")))))
@@ -550,9 +556,9 @@ See the `org-contacts' documentation for more details."
   (with-current-buffer mu4e-view-buffer-name
     (unless (eq major-mode 'mu4e-view-mode)
       (error "Not in mu4e-view mode."))
-    (unless mu4e-current-msg
+    (unless mu4e--current-msg
       (error "No current message."))
-    (let ((from (car-safe (plist-get mu4e-current-msg :from))))
+    (let ((from (car-safe (plist-get mu4e--current-msg :from))))
       (cond
 	((not from) "") ;; nothing found
 	((eq name-or-email 'name)
@@ -601,18 +607,19 @@ See the `org-contacts' documentation for more details."
   "Redisplay the current message, without wrapped lines or hidden
 citations."
   (interactive)
-  (mu4e-view mu4e-current-msg mu4e-hdrs-buffer t)
+  (mu4e-view mu4e--current-msg mu4e-hdrs-buffer t)
   (setq
     mu4e-lines-wrapped nil
     mu4e-cited-hidden nil))
 
-(defun mu4e-view-quit-buffer ()
+(defun mu4e-view-kill-buffer-and-window ()
   "Quit the message view and return to the headers."
   (interactive)
-  (kill-buffer-and-window)
-  (when (buffer-live-p mu4e-hdrs-buffer)
-    (switch-to-buffer mu4e-hdrs-buffer)))
-  
+  (when (buffer-live-p mu4e-view-buffer)
+    (with-current-buffer mu4e-view-buffer
+      ;; (mu4e-kill-buffer-and-window mu4e-view-buffer)
+      (kill-buffer-and-window))))
+    
 (defun mu4e-view-next-header ()
   "View the next header."
   (interactive)
@@ -660,7 +667,7 @@ citations."
       (setq retry
 	(and (file-exists-p path)
 	  (not (y-or-n-p (concat "Overwrite " path "?"))))))
-    (mu4e-proc-save (plist-get mu4e-current-msg :docid) id path)))
+    (mu4e-proc-save (plist-get mu4e--current-msg :docid) id path)))
 
 (defun mu4e-view-open-attachment (attnum)
   "Extract the attachment with ATTNUM"
@@ -670,7 +677,7 @@ citations."
   (let* ((att (gethash attnum mu4e-attach-map))
 	  (id (and att (plist-get att :index))))
     (unless id (error "Not a valid attachment number"))
-    (mu4e-proc-open (plist-get mu4e-current-msg :docid) id)))
+    (mu4e-proc-open (plist-get mu4e--current-msg :docid) id)))
 
 (defun mu4e-view-unmark ()
   "Warn user that unmarking only works in the header list."
@@ -694,17 +701,20 @@ list."
 (defun mu4e-raw-view ()
   "Show the the raw text of the current message."
   (interactive)
-  (unless mu4e-current-msg
+  (unless mu4e--current-msg
     (error "No current message"))
-  (mu4e-raw-view-message mu4e-current-msg (current-buffer)))
+  (mu4e-raw-view-message mu4e--current-msg (current-buffer)))
 
 (defun mu4e-view-pipe (cmd)
   "Pipe the message through shell command CMD, and display the
 results."
   (interactive "sShell command: ")
-  (unless mu4e-current-msg
+  (unless mu4e--current-msg
     (error "No current message"))
-  (mu4e-view-shell-command-on-raw-message mu4e-current-msg
+  (mu4e-view-shell-command-on-raw-message mu4e--current-msg
     (current-buffer) cmd))
+
+
+
 
 (provide 'mu4e-view)

@@ -538,7 +538,7 @@ H            get help
 q            leave the headers buffer
 @end verbatim
 
-@subsection Some notes on marking
+@subsection Marking messages
 
 Note, all mark/unmark commands support the current @emph{region} (i.e.,
 selection) -- so, for example, if you the select a number of message and then
@@ -553,6 +553,30 @@ have marked messages, normally you will be asked what to do with those marks
 -- whether to @emph{apply} them before leaving, @emph{ignore} them or to
 @emph{cancel} the operation. This behavior can be influenced with the variable
 @code{`mu4e-headers-leave-behavior'} -- see its documentation.
+
+@subsections Split view
+
+@emph{Split view} refers to viewing the @ref{Headers view} and the
+@ref{Message view} next to each other, with the message selected in the
+former, visible in the latter. Earlier versions of @t{mu4e} only showed one of
+the views at the same time, but now it does support it - in fact, split view
+is the default behavior after version 0.8.3.1.
+
+You can influence the way the splitting works by setting the variable
+@code{mu4e-split-view} in your configuration to one of 3 values:
+@itemize
+@item @t{horizontal} (this is the default): display the message view below the
+header view
+@item @t{vertical} (this is the default): display the message view on the
+right side of the header view
+@item @t{nil}: don't do any splitting
+@end itemize
+
+You can also determine the number of lines (when splitting horizontally) or
+the number of columns (when splitting vertically) to reserve for the header
+view with @t{mu4e-headers-visible-lines} (default: 8) and
+@t{mu4e-headers-visible-columns} (default: 30).
+                 
 
 @node Message view
 @section Message view

@@ -1,5 +1,14 @@
 * NEWS (user visible changes)
 
+** Release 0.9.9.4 <unreleased>
+
+*** mu4e
+
+    - much faster header buffers
+    - fix off-by-one in number of matches shown
+    - split view mode (headers, view); see `mu4e-split-view'.
+
+
 ** Release 0.9.8.3 <2012-04-06>
 
    *NOTE*: existing mu/mu4e are recommended to run `mu index --rebuild' after
@@ -29,9 +38,9 @@
     - fix compiler warnings for newer/older gcc and clang/clang++
     - fix unit tests (and some code) for Ubuntu 10.04 and FreeBSD9
     - fix warnings for compilation with GTK+ 3.2 and recent glib (g_set_error)
-    - fixe mu_msg_move_to_maildir for top-level messages
-    - fixes in maildir scanning
-    - plugs some memleaks
+    - fix mu_msg_move_to_maildir for top-level messages
+    - fix in maildir scanning
+    - plug some memleaks
 
 ** Release 0.9.8.2 <2012-03-11>
 

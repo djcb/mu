@@ -69,8 +69,12 @@ results, otherwise, limit number of results to
 
     (switch-to-buffer buf)
     (mu4e-proc-find esc ;; '-1' means 'unlimited search'
-      (if full-search -1 mu4e-search-results-limit))))
+      (if full-search -1 mu4e-search-results-limit))
 
+    ;;; when we're starting a new search, we also kill the
+    ;;; view buffer, if any
+    (mu4e-view-kill-buffer-and-window)))
+     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
 ;;
@@ -212,7 +216,7 @@ if provided, or at the end of the buffer otherwise."
     (when  (and thread-info mu4e-thread-info-map)
       (puthash docid thread-info mu4e-thread-info-map))
     ;; now, append the header line
-    (mu4e-hdrs-add-header line docid point))))
+    (mu4e-hdrs-add-header line docid point msg))))
 
 (defun mu4e-hdrs-found-handler (count)
   "Create a one line description of the number of headers found
@@ -228,9 +232,7 @@ after the end of the search results."
 	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
 	(unless (= 0 count)
 	  (message "Found %d matching message%s"
-	    count (if (= 1 count) "" "s"))))))))
-
-
+	    count (if (= 1 count) "" "s")))))))) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -247,8 +249,9 @@ after the end of the search results."
       (define-key map "b" 'mu4e-search-bookmark)
       (define-key map "B" 'mu4e-search-bookmark-edit-first)
 
-      (define-key map "q" 'mu4e-quit-buffer)
-
+      (define-key map "q" 'mu4e-hdrs-kill-buffer-and-window)
+      (define-key map "z" 'mu4e-hdrs-kill-buffer-and-window)
+      
       (define-key map "r" 'mu4e-rerun-search)
       (define-key map "g" 'mu4e-rerun-search) ;; for compatibility
 
@@ -291,7 +294,8 @@ after the end of the search results."
       (let ((menumap (make-sparse-keymap "Headers")))
 	(define-key map [menu-bar headers] (cons "Headers" menumap))
 
-	(define-key menumap [quit-buffer] '("Quit view" . mu4e-quit-buffer))
+	(define-key menumap [mu4e-hdrs-kill-buffer-and-window]
+	  '("Quit view" . mu4e-hdrs-kill-buffer-and-window))
 	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
@@ -382,14 +386,13 @@ after the end of the search results."
 		'face 'mu4e-header-title-face) " ")))
 	mu4e-headers-fields))))
 
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  (defun mu4e-select-headers-window-if-visible ()
   "When there is a visible window for the headers buffer, make sure
 to select it. This is needed when adding new headers, otherwise
 adding a lot of new headers looks really choppy."
   (let ((win (get-buffer-window mu4e-hdrs-buffer)))
     (when win (select-window win))))
-
 
 ;;;; headers in the buffer are prefixed by an invisible string with the docid
 ;;;; followed by an EOT ('end-of-transmission', \004, ^D) non-printable ascii
@@ -428,7 +431,6 @@ of the beginning of the line."
 
 
 
-
 (defun mu4e--docid-pos (docid)
   "Return the pos of the beginning of the line with the header with
 docid DOCID, or nil if it cannot be found."
@@ -453,28 +455,31 @@ docid DOCID, or nil if it cannot be found."
       ;; the area to write the marker.
       ;;(forward-char)
       ;; clear old marks, and add the new ones.
-      (delete-char 2)
+      (delete-char (length mu4e-hdrs-fringe))
       (insert (propertize mark 'face 'mu4e-hdrs-marks-face) " ")
       (goto-char oldpoint))))
 
 
-(defun mu4e-hdrs-add-header (str docid point)
+(defun mu4e-hdrs-add-header (str docid point &optional msg)
   "Add header STR with DOCID to the buffer at POINT if non-nil, or
-at (point-max) otherwise."
+at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
   (unless docid (error "Invalid message"))
   (when (buffer-live-p mu4e-hdrs-buffer)
     (with-current-buffer mu4e-hdrs-buffer
-      (let ((inhibit-read-only t) (point (if point point (point-max))))
- 	;;(mu4e-select-headers-window-if-visible)
+      (let ((inhibit-read-only t)
+	     (is-first-header (= (point-min) (point-max))))	
 	(save-excursion
-	  (goto-char point)
-	  ;; make sure the output window is selected, which it wouldn't be if
-	  ;; called from e.g. speedbar (output looks choppy when another window
-	  ;; is selected). We use switch-to-buffer for its window-selecting
-	  ;; side-effect - but only if the window is visible
+	  (goto-char (if point point (point-max)))
 	  (insert
-	    (mu4e--docid-cookie docid)
-	    (propertize (concat mu4e-hdrs-fringe str "\n")  'docid docid)))))))
+	    (propertize
+	      (concat
+		(mu4e--docid-cookie docid)
+		mu4e-hdrs-fringe str "\n")
+	      'docid docid 'msg msg))
+	  ;; if it's the first header, highlight it
+	  (when is-first-header
+	    (goto-char (point-min))
+	    (hl-line-highlight)))))))
 
 (defun mu4e-hdrs-remove-header (docid)
   "Remove header with DOCID at POINT."
@@ -619,12 +624,41 @@ work well."
   ;; in any case, clear the marks map
   (clrhash mu4e-marks-map))
 
-(defun mu4e-hdrs-view ()
-  "View message at point."
+(defun mu4e-view-message ()
+  "View message at point. If there's an existing window for the
+view, re-use that one. If not, create a new one, depending on the
+value of `mu4e-split-view': if it's a symbol `horizontal' or
+`vertical', split the window accordingly; if it is nil, replace the
+current window. "
+  (interactive)
   (with-current-buffer mu4e-hdrs-buffer
-    (let ((docid (mu4e--docid-at-point)))
+    (let ((docid (mu4e--docid-at-point))
+	   (viewwin (get-buffer-window mu4e-view-buffer)))
       (unless docid (error "No message at point."))
+      ;; is there a window already for the message view?
+      (unless (window-live-p viewwin)
+	;; no view window yet; create one, based on the split settings etc.
+	(setq viewwin
+	  (cond ;; is there are live window for the message view?
+
+	    ((eq mu4e-split-view 'horizontal) ;; split horizontally
+	      (split-window nil mu4e-headers-visible-lines 'below))
+
+	    ((eq mu4e-split-view 'vertical) ;; split vertically 
+	      (split-window nil mu4e-headers-visible-columns 'right))
+	 
+	    (t ;; no splitting; just use the currently selected one
+	      (selected-window)))))
+      ;; okay, now we should have a window for the message view
+      ;; we select it, and show the messages there.
+      (select-window viewwin)
+      (switch-to-buffer (get-buffer-create mu4e-view-buffer-name))
+      (let ((inhibit-read-only t))
+	(erase-buffer)
+	(insert (propertize "Waiting for message..."
+		  'face 'mu4e-system-face 'intangible t)))
       (mu4e-proc-view-msg docid))))
+
 
 (defun mu4e-hdrs-docid-is-marked (docid)
   "Is the given docid marked?"
@@ -694,12 +728,12 @@ otherwise, limit to up to `mu4e-search-results-limit'."
     (mu4e-hdrs-search expr current-prefix-arg)))
 
 
-(defun mu4e-quit-buffer ()
-  "Quit the current buffer."
+(defun mu4e-hdrs-kill-buffer-and-window ()
+  "Quit the message view and return to the main view."
   (interactive)
-  (when (mu4e-handle-marks)
-    (kill-buffer)
-    (mu4e)))
+  (message "KILL")
+  (mu4e-kill-buffer-and-window mu4e-hdrs-buffer)
+  (mu4e))  
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,
@@ -709,43 +743,23 @@ do a new search."
     (if mu4e-last-expr
       (mu4e-hdrs-search mu4e-last-expr)
       (mu4e-search))))
-
-(defun mu4e-view-message ()
-  "View the message at point."
-  (interactive)
-  (let ((viewwin (when (buffer-live-p mu4e-view-buffer)
-	       (get-buffer-window mu4e-view-buffer))))
-    (unless (window-live-p viewwin)
-      ;; no view window yet; create one, based on the split settings etc.
-      (setq viewwin
-	(cond ;; is there are live window for the message view?
-	  ;; split horizontally
-	  ((eq mu4e-split-mode 'horizontal)
-	    (split-window nil mu4e-headers-visible-lines 'below))
-	  ;; split vertically
-	  ((eq mu4e-split-mode 'vertical)
-	    (split-window nil mu4e-headers-visible-columns 'right))
-	  ;; no splitting; just use the currently selected one
-	  (t
-	    (selected-window)))))
-    ;; okay, now we have viewwin
-    (select-window viewwin)
-    (mu4e-hdrs-view))) 
-
+ 
 (defun mu4e--hdrs-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
 backward (if LINES is negative). If this succeeds, return the new
 docid. Otherwise, return nil."
-    (with-current-buffer mu4e-hdrs-buffer
-      (hl-line-unhighlight)
-      (let ((succeeded (= 0 (forward-line lines)))
-	     (docid (mu4e--docid-at-point)))
-	;; trick to move point, even if this function is called when this window
-	;; is not visible
-	(set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
-	(hl-line-highlight)
-	;; return the docid only if the move succeeded
-	(when succeeded docid))))
+  (with-current-buffer mu4e-hdrs-buffer
+     (unless (buffer-live-p mu4e-hdrs-buffer)
+    (error "Headers buffer is not alive %S" (current-buffer)))
+        (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
+    (hl-line-unhighlight)
+    (let ((succeeded (= 0 (forward-line lines)))
+	   (docid (mu4e--docid-at-point)))
+      ;; trick to move point, even if this function is called when this window
+      ;; is not visible
+      (hl-line-highlight)
+      ;; return the docid only if the move succeeded
+      (when succeeded docid))))
  
 (defun mu4e-next-header ()
   "Move point to the next message header. If this succeeds, return
