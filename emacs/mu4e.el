@@ -116,12 +116,12 @@ form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
 query, DESCRIPTION is a short description of the query (this will
 show up in the UI), and KEY is a shortcut key for the query.")
 
-(defvar mu4e-split-mode nil
-  "How to show messages / headers; as symbol which is either:
-nil: don't split (show either headers or messages, not both)
-horizontal: split horizontally (headers on top)
-vertical: split vertically (headers on the left).
-Also see `mu4e-headers-visible-lines'.")
+(defvar mu4e-split-view 'horizontal
+  "How to show messages / headers; a symbol which is either:
+  * nil: don't split (show either headers or messages, not both)
+  * horizontal: split horizontally (headers on top)
+  * vertical: split vertically (headers on the left).  Also see
+`mu4e-headers-visible-lines' and `mu4e-headers-visible-columns'.")
 
 ;; Sending
 (defgroup mu4e-sending nil
@@ -216,8 +216,8 @@ designated shortcut character for the maildir.")
 
 
 (defcustom mu4e-headers-visible-lines 8
-  "Number of header lines to display for the header view when using
-the horizontal split-view."
+  "Number of lines to display in the header view when using the
+horizontal split-view."
   :type 'integer
   :group 'mu4e-headers)
 
@@ -772,6 +772,30 @@ top level if there is none."
 	  ('mu4e-hdrs-mode    "(mu4e)Headers view")
 	  ('mu4e-view-mode    "(mu4e)Message view")
 	  (t                 "mu4e"))))
+
+ 
+(defun mu4e-field-at-point (field)
+  "Get FIELD (a symbol, see `mu4e-header-names') for the message at
+point in eiter the headers buffer or the view buffer."
+  (let ((msg 
+	 (cond
+	   ((eq major-mode 'mu4e-hdrs-mode)
+	     (get-text-property (point) 'msg))
+	   ((eq major-mode 'mu4e-view-mode)
+	     mu4e--current-msg))))
+    (unless msg (error "No message at point"))
+    (plist-get msg field))) 
+
+(defun mu4e-kill-buffer-and-window (buf)
+  "Kill buffer BUF and any of its windows. Like
+`kill-buffer-and-window', but can be called from any buffer, and
+simply does not attempt to delete the window if there is none,
+instead of erroring out."
+  (when (buffer-live-p buf) 
+    (with-current-buffer buf
+      (message "deleting all windows showing %S" buf)
+      (delete-windows-on buf) ;; destroy all windows for this buffer
+      (kill-buffer)))) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
