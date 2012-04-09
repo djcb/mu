@@ -27,7 +27,8 @@
 
 ;;; Code:
 (eval-when-compile (require 'cl))
-(require 'html2text)
+
+(require 'mu4e-utils)    ;; utility functions
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
 (require 'comint)
@@ -41,7 +42,7 @@
 (defvar mu4e-hdrs-buffer nil
   "*internal* Headers buffer connected to this view.")
 
-(defvar mu4e--current-msg nil
+(defvar mu4e-current-msg nil
   "*internal* The plist describing the current message.")
 
 (defun mu4e-view-message-with-msgid (msgid)
@@ -111,7 +112,7 @@ marking if it still had that."
       (mu4e-view-mode)
       (setq ;; these are buffer-local
 	buffer-read-only t
-	mu4e--current-msg msg
+	mu4e-current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
 
@@ -258,11 +259,16 @@ if IS-OPEN is nil, and otherwise open it."
       (define-key map (kbd "<backspace>")
 	'(lambda () (interactive) (scroll-up -1)))
 
-
       ;; navigation between messages
-      (define-key map "n" 'mu4e-view-next-header)
       (define-key map "p" 'mu4e-view-prev-header)
+      (define-key map "n" 'mu4e-view-next-header)
+      ;; the same
+      (define-key map (kbd "<M-down>") 'mu4e-view-next-header)
+      (define-key map (kbd "<M-up>") 'mu4e-view-prev-header)
 
+      ;; switching to view mode (if it's visible)
+      (define-key map "y" 'mu4e-select-other-view)
+      
       ;; attachments
       (define-key map "e" 'mu4e-view-extract-attachment)
       (define-key map "o" 'mu4e-view-open-attachment)
@@ -284,7 +290,7 @@ if IS-OPEN is nil, and otherwise open it."
 
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
-      (define-key map "U" 'mu4e-view-unmark)
+      (define-key map "U" 'mu4e-view-unmark-all)
       (define-key map "x" 'mu4e-view-marked-execute)
 
       (define-key map "H" 'mu4e-display-manual)
@@ -352,7 +358,7 @@ if IS-OPEN is nil, and otherwise open it."
   (use-local-map mu4e-view-mode-map)
 
   (make-local-variable 'mu4e-hdrs-buffer)
-  (make-local-variable 'mu4e--current-msg)
+  (make-local-variable 'mu4e-current-msg)
   (make-local-variable 'mu4e-link-map)
 
   (make-local-variable 'mu4e-lines-wrapped)
@@ -372,9 +378,9 @@ if IS-OPEN is nil, and otherwise open it."
 (defun mu4e-view-mark-as-read-maybe ()
   "Clear the current message's New/Unread status and set it to
 Seen; if the message is not New/Unread, do nothing."
-  (when mu4e--current-msg
-    (let ((flags (plist-get mu4e--current-msg :flags))
-	   (docid (plist-get mu4e--current-msg :docid)))
+  (when mu4e-current-msg
+    (let ((flags (plist-get mu4e-current-msg :flags))
+	   (docid (plist-get mu4e-current-msg :docid)))
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
 	(mu4e-proc-flag docid "+S-u-N")))))
@@ -556,9 +562,9 @@ See the `org-contacts' documentation for more details."
   (with-current-buffer mu4e-view-buffer-name
     (unless (eq major-mode 'mu4e-view-mode)
       (error "Not in mu4e-view mode."))
-    (unless mu4e--current-msg
+    (unless mu4e-current-msg
       (error "No current message."))
-    (let ((from (car-safe (plist-get mu4e--current-msg :from))))
+    (let ((from (car-safe (plist-get mu4e-current-msg :from))))
       (cond
 	((not from) "") ;; nothing found
 	((eq name-or-email 'name)
@@ -607,7 +613,7 @@ See the `org-contacts' documentation for more details."
   "Redisplay the current message, without wrapped lines or hidden
 citations."
   (interactive)
-  (mu4e-view mu4e--current-msg mu4e-hdrs-buffer t)
+  (mu4e-view mu4e-current-msg mu4e-hdrs-buffer t)
   (setq
     mu4e-lines-wrapped nil
     mu4e-cited-hidden nil))
@@ -667,7 +673,7 @@ citations."
       (setq retry
 	(and (file-exists-p path)
 	  (not (y-or-n-p (concat "Overwrite " path "?"))))))
-    (mu4e-proc-save (plist-get mu4e--current-msg :docid) id path)))
+    (mu4e-proc-save (plist-get mu4e-current-msg :docid) id path)))
 
 (defun mu4e-view-open-attachment (attnum)
   "Extract the attachment with ATTNUM"
@@ -677,19 +683,36 @@ citations."
   (let* ((att (gethash attnum mu4e-attach-map))
 	  (id (and att (plist-get att :index))))
     (unless id (error "Not a valid attachment number"))
-    (mu4e-proc-open (plist-get mu4e--current-msg :docid) id)))
+    (mu4e-proc-open (plist-get mu4e-current-msg :docid) id)))
+
+
+(defun mu4e--in-split-view ()
+  "Return t if we're in split-view, nil otherwise."
+  (member mu4e-split-view '(horizontal vertical)))
+
+(defun mu4e-view-unmark-all ()
+  "If we're in split-view, unmark all messages. Otherwise, warn
+user that unmarking only works in the header list."
+  (interactive)
+  (if (mu4e--in-split-view)
+    (mu4e-unmark-all)
+    (message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-unmark ()
-  "Warn user that unmarking only works in the header list."
+  "If we're in split-view, unmark message at point. Otherwise, warn
+user that unmarking only works in the header list."
   (interactive)
-  (message "Unmarking needs to be done in the header list view"))
-
+  (if (mu4e--in-split-view)
+    (mu4e-unmark)
+    (message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-marked-execute ()
-  "Warn user that execution can only take place in n the header
-list."
+  "If we're in split-view, execute the marks. Otherwise, warn user
+that execution can only take place in n the header list."
   (interactive)
-  (message "Execution needs to be done in the header list view"))
+  (if (mu4e--in-split-view)
+    (mu4e-execute-marks)
+    (message "Execution needs to be done in the header list view")))
 
 (defun mu4e-view-go-to-url (num)
   "Go to a numbered url."
@@ -701,17 +724,17 @@ list."
 (defun mu4e-raw-view ()
   "Show the the raw text of the current message."
   (interactive)
-  (unless mu4e--current-msg
+  (unless mu4e-current-msg
     (error "No current message"))
-  (mu4e-raw-view-message mu4e--current-msg (current-buffer)))
+  (mu4e-raw-view-message mu4e-current-msg (current-buffer)))
 
 (defun mu4e-view-pipe (cmd)
   "Pipe the message through shell command CMD, and display the
 results."
   (interactive "sShell command: ")
-  (unless mu4e--current-msg
+  (unless mu4e-current-msg
     (error "No current message"))
-  (mu4e-view-shell-command-on-raw-message mu4e--current-msg
+  (mu4e-view-shell-command-on-raw-message mu4e-current-msg
     (current-buffer) cmd))
 
 

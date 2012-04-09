@@ -32,6 +32,8 @@
 
 (require 'hl-line)
 (require 'mu4e-proc)
+(require 'mu4e-utils)    ;; utility functions
+
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-last-expr nil "*internal* The most recent search expression.")
@@ -258,8 +260,13 @@ after the end of the search results."
       ;; navigation
       (define-key map "n" 'mu4e-next-header)
       (define-key map "p" 'mu4e-prev-header)
-
-
+      ;; the same
+      (define-key map (kbd "<M-down>") 'mu4e-next-header)
+      (define-key map (kbd "<M-up>") 'mu4e-prev-header)
+     
+      ;; switching to view mode (if it's visible)
+      (define-key map "y" 'mu4e-select-other-view)
+      
       ;; marking/unmarking/executing
       (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
       (define-key map "d" 'mu4e-mark-for-trash)
@@ -632,21 +639,19 @@ value of `mu4e-split-view': if it's a symbol `horizontal' or
 current window. "
   (interactive)
   (with-current-buffer mu4e-hdrs-buffer
-    (let ((docid (mu4e--docid-at-point))
-	   (viewwin (get-buffer-window mu4e-view-buffer)))
+    (let* ((docid (mu4e--docid-at-point))	    
+	    (viewwin (and mu4e-view-buffer
+		       (get-buffer-window mu4e-view-buffer))))
       (unless docid (error "No message at point."))
       ;; is there a window already for the message view?
       (unless (window-live-p viewwin)
 	;; no view window yet; create one, based on the split settings etc.
 	(setq viewwin
 	  (cond ;; is there are live window for the message view?
-
 	    ((eq mu4e-split-view 'horizontal) ;; split horizontally
 	      (split-window nil mu4e-headers-visible-lines 'below))
-
 	    ((eq mu4e-split-view 'vertical) ;; split vertically 
 	      (split-window nil mu4e-headers-visible-columns 'right))
-	 
 	    (t ;; no splitting; just use the currently selected one
 	      (selected-window)))))
       ;; okay, now we should have a window for the message view
@@ -731,7 +736,6 @@ otherwise, limit to up to `mu4e-search-results-limit'."
 (defun mu4e-hdrs-kill-buffer-and-window ()
   "Quit the message view and return to the main view."
   (interactive)
-  (message "KILL")
   (mu4e-kill-buffer-and-window mu4e-hdrs-buffer)
   (mu4e))  
 
@@ -836,7 +840,8 @@ folder (`mu4e-trash-folder')."
 (defun mu4e-unmark ()
   "Unmark message at point."
   (interactive)
-  (mu4e-mark 'unmark))
+  (with-current-buffer mu4e-hdrs-buffer
+     (mu4e-mark 'unmark)))
 
 (defun mu4e-unmark-all ()
   "Unmark all messages."
@@ -887,7 +892,7 @@ for draft messages."
 	    (error "Editing is only allowed for draft messages"))
 	  ;; talk to the backend
 	  (mu4e-proc-compose compose-type docid))))))
-
+  
 
 (defun mu4e-compose-reply ()
   "Reply to the current message."
