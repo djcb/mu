@@ -99,9 +99,11 @@ headers."
       (let* ((docid (plist-get msg :docid))
  	      (point (mu4e--docid-pos docid)))
 	(when point ;; is the message present in this list?
+
 	  ;; if it's marked, unmark it now
 	  (when (mu4e-hdrs-docid-is-marked docid)
 	    (mu4e-hdrs-mark 'unmark))
+
 	  ;; first, remove the old one (otherwise, we'd have two headers with
 	  ;; the same docid...
 	  (mu4e-hdrs-remove-handler docid)
@@ -114,16 +116,17 @@ headers."
 	    (when (and viewbuf (buffer-live-p viewbuf))
 	      (with-current-buffer viewbuf
 		(when (eq docid (plist-get mu4e-current-msg :docid))
-		  (setq mu4e-current-msg msg)
-		  ;; and re-highlight this message
-		  (mu4e-hdrs-highlight docid)))))
+		  (mu4e-view msg mu4e-hdrs-buffer)))))
 
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
 	  ;; longer matches the query, but this seem a good heuristic.
 	  ;; if it was only a flag-change, show the message with its updated flags.
 	  (unless is-move
-	    (mu4e-hdrs-header-handler msg point)))))))
+	    (mu4e-hdrs-header-handler msg point))
+
+	  ;; attempt to highlight the corresponding line and make it visible
+	  (mu4e-hdrs-highlight docid))))))
 
 
 (defun mu4e-hdrs-remove-handler (docid)
@@ -360,7 +363,8 @@ after the end of the search results."
   (make-local-variable 'mu4e-hdrs-proc)
   (make-local-variable 'mu4e-marks-map)
   (make-local-variable 'mu4e-thread-info-map)
-
+  (make-local-variable 'mu4e--highlighted-docid)
+  
   (make-local-variable 'global-mode-string)
   (make-local-variable 'hl-line-face)
   
@@ -496,8 +500,7 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
 	    (propertize
 	      (concat
 		(mu4e--docid-cookie docid)
-		mu4e-hdrs-fringe str "\n")
-	      'docid docid 'msg msg))))))) 
+		mu4e-hdrs-fringe str "\n") 'docid docid 'msg msg))))))) 
 
 (defun mu4e-hdrs-remove-header (docid)
   "Remove header with DOCID at POINT."
@@ -766,11 +769,12 @@ docid. Otherwise, return nil."
   (with-current-buffer mu4e-hdrs-buffer
      (unless (buffer-live-p mu4e-hdrs-buffer)
     (error "Headers buffer is not alive %S" (current-buffer)))
-        (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
     (let ((succeeded (= 0 (forward-line lines)))
 	   (docid (mu4e--docid-at-point)))
       ;; trick to move point, even if this function is called when this window
       ;; is not visible
+      (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
+      ;; attempt to highlight the new line
       (mu4e-hdrs-highlight docid)
       ;; return the docid only if the move succeeded
       (when succeeded docid))))
