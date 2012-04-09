@@ -42,7 +42,9 @@ GTAGS
 *.toc
 *.tp
 *.vr
-
+*.elc
+elisp-comp
+elc-stamp
 
 /contrib/gmime-test
 /emacs/TODO
