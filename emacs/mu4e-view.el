@@ -109,7 +109,7 @@ marking if it still had that."
 	mu4e-current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
-
+      
       (switch-to-buffer buf)
       (goto-char (point-min))
 
