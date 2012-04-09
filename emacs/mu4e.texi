@@ -554,7 +554,7 @@ have marked messages, normally you will be asked what to do with those marks
 @emph{cancel} the operation. This behavior can be influenced with the variable
 @code{`mu4e-headers-leave-behavior'} -- see its documentation.
 
-@subsections Split view
+@subsection Split view
 
 @emph{Split view} refers to viewing the @ref{Headers view} and the
 @ref{Message view} next to each other, with the message selected in the
