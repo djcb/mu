@@ -514,7 +514,7 @@ these actions are also listed in the @t{Headers} menu in the Emacs menu bar.
 key          description
 ---          -----------
 n,p          go to next, previous message
-
+y            select the message view (if it's visible)
 j            jump to maildir
 b,B          jump to bookmark (/ edit first)
 
@@ -535,7 +535,7 @@ U            unmark *all* messages
 x            execute actions for the marked messages
 RET          open the message at point in the message view
 H            get help
-q            leave the headers buffer
+q,z          leave the headers buffer
 @end verbatim
 
 @subsection Marking messages
@@ -559,8 +559,8 @@ have marked messages, normally you will be asked what to do with those marks
 @emph{Split view} refers to viewing the @ref{Headers view} and the
 @ref{Message view} next to each other, with the message selected in the
 former, visible in the latter. Earlier versions of @t{mu4e} only showed one of
-the views at the same time, but now it does support it - in fact, split view
-is the default behavior after version 0.8.3.1.
+the views at the same time, but split view is the default after version
+0.8.3.1.
 
 You can influence the way the splitting works by setting the variable
 @code{mu4e-split-view} in your configuration to one of 3 values:
@@ -569,14 +569,23 @@ You can influence the way the splitting works by setting the variable
 header view
 @item @t{vertical} (this is the default): display the message view on the
 right side of the header view
-@item @t{nil}: don't do any splitting
+@item anything else: don't do any splitting
 @end itemize
 
-You can also determine the number of lines (when splitting horizontally) or
-the number of columns (when splitting vertically) to reserve for the header
-view with @t{mu4e-headers-visible-lines} (default: 8) and
-@t{mu4e-headers-visible-columns} (default: 30).
+When splitting horizontally, you can determine the number of visible header
+lines with with the variable @t{mu4e-headers-visible-lines} (default value:
+8). When split vertically you can use @t{mu4e-headers-visible-columns}
+(default value: 30) to set the number of visible columns.
+
+When the message view window is selected, you cannot use the arrow keys for
+moving to the next / previous message (like you can in the headers view),
+since those are already assigned to cursor movement in the message.  However,
+instead can use the @key{p} (or @key{M-up}) and @key{n} (or @key{M-down}) keys
+for moving to the previous and the next message, respectively. These keys also
+work in the headers view.
                  
+You can change the selected window from the headers-view to the message-view
+and vice-versa with @code{mu4e-select-other-view}, bound to @key{y}.
 
 @node Message view
 @section Message view
@@ -635,6 +644,7 @@ or by using the keyboard; the default bindings are:
 key          description
 ---          -----------
 n,p          go to next, previous message
+y            select the headers view (if it's visible)
 
 j            jump to maildir
 b,B          jump to bookmark (/ edit first)
@@ -659,7 +669,7 @@ w            toggle line wrapping
 h            toggle showing cited parts
 
 H            get help
-q            leave the headers buffer
+q,z          leave the message view
 @end verbatim
 
 Note that @key{x}, which means 'execute actions on marked messages' is not
