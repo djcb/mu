@@ -27,19 +27,13 @@
 ;; headers like 'To:' or 'Subject:')
 
 ;; Code:
-
-(eval-when-compile (require 'cl))
-
 (require 'hl-line)
+
 (require 'mu4e-proc)
 (require 'mu4e-utils)    ;; utility functions
-
+(require 'mu4e-vars)
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-last-expr nil "*internal* The most recent search expression.")
-(defconst mu4e-hdrs-buffer-name "*mu4e-headers*"
-  "*internal* Name of the buffer for message headers.")
-(defvar mu4e-hdrs-buffer nil "*internal* Buffer for message headers")
 (defconst mu4e-hdrs-fringe "  " "*internal* The space on the left of
 message headers to put marks.")
 
@@ -120,7 +114,9 @@ headers."
 	    (when (and viewbuf (buffer-live-p viewbuf))
 	      (with-current-buffer viewbuf
 		(when (eq docid (plist-get mu4e-current-msg :docid))
-		  (setq mu4e-current-msg msg)))))
+		  (setq mu4e-current-msg msg)
+		  ;; and re-highlight this message
+		  (mu4e-hdrs-highlight docid)))))
 
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
@@ -234,7 +230,9 @@ after the end of the search results."
 	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
 	(unless (= 0 count)
 	  (message "Found %d matching message%s"
-	    count (if (= 1 count) "" "s")))))))) 
+	    count (if (= 1 count) "" "s"))
+	  ;; highlight the first message
+	  (mu4e-hdrs-highlight (mu4e--docid-at-point (point-min))))))))) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -336,7 +334,6 @@ after the end of the search results."
 	(define-key menumap [next]  '("Next" . mu4e-next-header))
 	(define-key menumap [previous]  '("Previous" . mu4e-prev-header))
 	(define-key menumap [sepa4] '("--")))
-
       map)))
 
 (fset 'mu4e-hdrs-mode-map mu4e-hdrs-mode-map)
@@ -376,7 +373,7 @@ after the end of the search results."
     hl-line-face 'mu4e-header-highlight-face)
 
   (hl-line-mode 1)
-  
+ 
   (setq header-line-format
     (cons
       (make-string
@@ -394,7 +391,27 @@ after the end of the search results."
 	mu4e-headers-fields))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- (defun mu4e-select-headers-window-if-visible ()
+;;; higlighting
+(defvar mu4e--highlighted-docid nil
+  "*internal* The highlighted docid")
+
+(defun mu4e-hdrs-highlight (docid)
+  "Highlight the header with DOCID, or do nothing if it's not
+found. Also, unhighlight any previously highlighted headers."
+  (with-current-buffer mu4e-hdrs-buffer
+    (save-excursion
+      ;; first, unhighlight the previously highlighted docid, if any
+      (when (and mu4e--highlighted-docid
+	      (mu4e--goto-docid mu4e--highlighted-docid))
+	(hl-line-unhighlight))
+      ;; now, highlight the new one
+      (when (mu4e--goto-docid docid)
+	(hl-line-highlight)))
+    (setq mu4e--highlighted-docid docid)))
+
+	  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-select-headers-window-if-visible ()
   "When there is a visible window for the headers buffer, make sure
 to select it. This is needed when adding new headers, otherwise
 adding a lot of new headers looks really choppy."
@@ -435,8 +452,6 @@ of the beginning of the line."
 	  (beginning-of-line) ;; found, move to beginning of line
 	  (setq newpoint (point)))))
     newpoint)) ;; return the point, or nil if not found
-
-
 
 (defun mu4e--docid-pos (docid)
   "Return the pos of the beginning of the line with the header with
@@ -482,11 +497,7 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
 	      (concat
 		(mu4e--docid-cookie docid)
 		mu4e-hdrs-fringe str "\n")
-	      'docid docid 'msg msg))
-	  ;; if it's the first header, highlight it
-	  (when is-first-header
-	    (goto-char (point-min))
-	    (hl-line-highlight)))))))
+	      'docid docid 'msg msg))))))) 
 
 (defun mu4e-hdrs-remove-header (docid)
   "Remove header with DOCID at POINT."
@@ -746,7 +757,7 @@ do a new search."
    (when (mu4e-handle-marks)
     (if mu4e-last-expr
       (mu4e-hdrs-search mu4e-last-expr)
-      (mu4e-search))))
+      (call-interactively 'mu4e-search))))
  
 (defun mu4e--hdrs-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
@@ -756,12 +767,11 @@ docid. Otherwise, return nil."
      (unless (buffer-live-p mu4e-hdrs-buffer)
     (error "Headers buffer is not alive %S" (current-buffer)))
         (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
-    (hl-line-unhighlight)
     (let ((succeeded (= 0 (forward-line lines)))
 	   (docid (mu4e--docid-at-point)))
       ;; trick to move point, even if this function is called when this window
       ;; is not visible
-      (hl-line-highlight)
+      (mu4e-hdrs-highlight docid)
       ;; return the docid only if the move succeeded
       (when succeeded docid))))
  
@@ -803,7 +813,7 @@ not provided, function asks for it."
 			(concat "/" target)))
 	      (fulltarget (concat mu4e-maildir target)))
 	(when (or (file-directory-p fulltarget)
-	      (and (yes-or-no-(point)
+	      (and (yes-or-no-p 
 		     (format "%s does not exist. Create now?" fulltarget))
 		(mu4e-proc-mkdir fulltarget)))
 	  (mu4e-hdrs-mark 'move target)

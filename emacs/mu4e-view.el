@@ -26,24 +26,17 @@
 ;; viewing e-mail messages
 
 ;;; Code:
-(eval-when-compile (require 'cl))
-
 (require 'mu4e-utils)    ;; utility functions
+(require 'mu4e-vars)
+(require 'mu4e-raw-view)
+
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
 (require 'comint)
 
-(defconst mu4e-view-buffer-name "*mu4e-view*"
-  "*internal* Name for the message view buffer")
-
-(defvar mu4e-view-buffer nil "*internal* The view buffer.")
-
 ;; some buffer-local variables
 (defvar mu4e-hdrs-buffer nil
   "*internal* Headers buffer connected to this view.")
-
-(defvar mu4e-current-msg nil
-  "*internal* The plist describing the current message.")
 
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
@@ -98,8 +91,9 @@ marking if it still had that."
 					   fieldval))))
 		    (if datestr (mu4e-view-header fieldname datestr) "")))
 		;; size
-		(:size	(mu4e-view-size  msg)
-		  (let ((sizestr (when size (format "%d bytes"))))
+		(:size	
+		  (let* (size (mu4e-view-size msg)
+			  (sizestr (when size (format "%d bytes" size))))
 		    (if sizestr (mu4e-view-header fieldname sizestr))))
 		;; attachments
 		(:attachments (mu4e-view-attachments msg))
@@ -464,82 +458,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 			     'face 'mu4e-view-url-number-face))))))))
 
 
-;; raw mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; some buffer-local variables
-(defconst mu4e-raw-view-buffer-name "*mu4e-raw-view*"
-  "*internal* Name for the raw message view buffer")
-
-(defvar mu4e-raw-view-buffer nil "*internal* The raw view buffer.")
-
-(defvar mu4e-raw-view-mode-map nil
-  "Keymap for \"*mu4e-raw-view*\" buffers.")
-
-(unless mu4e-raw-view-mode-map
-  (setq mu4e-raw-view-mode-map
-    (let ((map (make-sparse-keymap)))
-
-      (define-key map "q" 'mu4e-raw-view-quit-buffer)
-      (define-key map "." 'mu4e-raw-view-quit-buffer)
-
-      ;; intra-message navigation
-      (define-key map (kbd "SPC") 'scroll-up)
-      (define-key map (kbd "<home>")
-	'(lambda () (interactive) (goto-char (point-min))))
-      (define-key map (kbd "<end>")
-	'(lambda () (interactive) (goto-char (point-max))))
-      (define-key map (kbd "RET")
-	'(lambda () (interactive) (scroll-up 1)))
-      (define-key map (kbd "<backspace>")
-	'(lambda () (interactive) (scroll-up -1)))
-      map)))
-
-(fset 'mu4e-raw-view-mode-map mu4e-raw-view-mode-map)
-
-(define-derived-mode mu4e-raw-view-mode special-mode
-  "mu4e:raw"
-  "Major mode for viewing of raw e-mail message in mu4e.
-\\{mu4e-raw-view-mode-map}.")
-
-
-(defun mu4e-raw-view-message (msg view-buffer)
-  "Display the raw contents of message MSG in a new buffer."
-  (let ((buf (get-buffer-create mu4e-raw-view-buffer-name))
-	 (inhibit-read-only t)
-	 (file (plist-get msg :path)))
-    (unless (and file (file-readable-p file))
-      (error "Not a readable file: %S" file))
-    (with-current-buffer buf
-      (erase-buffer)
-      (insert-file file)
-      ;; initialize view-mode
-      (mu4e-raw-view-mode)
-      (setq mu4e-raw-view-buffer view-buffer)
-      (switch-to-buffer buf)
-      (goto-char (point-min)))))
-
-
-(defun mu4e-view-shell-command-on-raw-message (msg view-buffer cmd)
-  "Process the raw message with shell command CMD."
-  (let ((buf (get-buffer-create mu4e-raw-view-buffer-name))
-	 (inhibit-read-only t)
-	 (file (plist-get msg :path)))
-    (unless (and file (file-readable-p file))
-      (error "Not a readable file: %S" file))
-    (with-current-buffer buf
-      (erase-buffer)
-      (process-file-shell-command cmd file buf)
-      (mu4e-raw-view-mode)
-      (setq mu4e-raw-view-buffer view-buffer)
-      (switch-to-buffer buf)
-      (goto-char (point-min)))))
-
-
-(defun mu4e-raw-view-quit-buffer ()
-  "Quit the raw view and return to the message."
-  (interactive)
-  (kill-buffer))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; functions for org-contacts
 
@@ -658,10 +577,10 @@ citations."
 
 (defun mu4e-view-extract-attachment (attnum)
   "Extract the attachment with ATTNUM."
+  (interactive "nAttachment to extract:")
   (unless mu4e-attachment-dir (error "`mu4e-attachment-dir' is not set"))
   (when (or (null mu4e-attach-map) (zerop (hash-table-count mu4e-attach-map)))
     (error "No attachments for this message"))
-  (interactive "nAttachment to extract:")
   (let* ((att  (gethash attnum mu4e-attach-map))
 	  (path (and att (concat mu4e-attachment-dir
 			   "/"  (plist-get att :name))))
@@ -677,9 +596,9 @@ citations."
 
 (defun mu4e-view-open-attachment (attnum)
   "Extract the attachment with ATTNUM"
+  (interactive "nAttachment to open:")
   (unless mu4e-attach-map
     (error "No attachments for this message"))
-  (interactive "nAttachment to open:")
   (let* ((att (gethash attnum mu4e-attach-map))
 	  (id (and att (plist-get att :index))))
     (unless id (error "Not a valid attachment number"))

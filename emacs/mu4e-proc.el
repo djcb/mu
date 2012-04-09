@@ -23,9 +23,11 @@
 ;;; Commentary:
 
 ;;; Code:
-(eval-when-compile (require 'cl))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'mu4e-vars)
+(require 'mu4e-utils)
+(require 'mu4e-version)
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
 
 (defvar mu4e-mu-proc nil
@@ -106,10 +108,6 @@ process."
 	;; add draft messages to the db, so when we're sending them, we can move
 	;; to the sent folder using the `mu4e-proc-move'.
 	(puthash (plist-get info :path) (plist-get info :docid) mu4e-path-docid-map))
-      ((eq type 'version)
-	(setq
-	  mu4e-version  (plist-get info :version)
-	  mu4e-doccount (plist-get-info :doccount)))
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
 	  (message (format "Indexing... processed %d, updated %d"

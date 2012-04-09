@@ -39,6 +39,8 @@
 
 ;;; Code:
 
+(require 'speedbar)
+
 (defvar mu4e-main-speedbar-key-map nil
   "Keymap used when in mu4e display mode.")
 

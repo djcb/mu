@@ -17,28 +17,24 @@
 include $(top_srcdir)/gtest.mk
 
 SUBDIRS=
-
-BUILT_SOURCES=mu4e-version.el
-
-mu4e-version.el: $(top_srcdir)/configure.ac
-	@echo -e ";; auto-generated\n\
-(defconst mu4e-mu-version \"$(VERSION)\" \"Required mu binary version.\")\n\
-(provide 'mu4e-version)\n" >$@
-
+ 
 info_TEXINFOS=mu4e.texi
 mu4e_TEXINFOS=fdl.texi
 
-elispdir= ${prefix}/share/emacs/site-lisp/mu4e/
-elisp_DATA=			\
-	mu4e.el			\
+lispdir=${prefix}/share/emacs/site-lisp/mu4e/
+
+dist_lisp_LISP=			\
+	mu4e-utils.el		\
 	mu4e-hdrs.el		\
-	mu4e-view.el		\
-	mu4e-proc.el		\
 	mu4e-main.el		\
+	mu4e-proc.el		\
+	mu4e-raw-view.el	\
 	mu4e-send.el		\
 	mu4e-speedbar.el	\
-	mu4e-utils.el		\
+	mu4e-vars.el		\
 	mu4e-version.el		\
+	mu4e-view.el		\
+	mu4e.el			\
 	org-mu4e.el
 
 EXTRA_DIST=$(elisp_DATA)

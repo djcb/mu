@@ -26,10 +26,11 @@
 ;; gnus' message mode
 
 ;;; Code:
+ ;; we use some stuff from gnus..
+(require 'cl)
 
-(eval-when-compile (require 'cl))
-
-;; we use some stuff from gnus...
+(require 'mu4e-utils)
+(require 'mu4e-vars)
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
@@ -159,7 +160,7 @@ separator is never written to file. Also see
       (replace-match
 	(propertize mail-header-separator 'read-only t 'intangible t))
       ;; no empty line? then append one
-      ((progn )
+      (progn
 	(goto-char (point-max))
 	(insert (concat "\n" mail-header-separator "\n"))))))
 

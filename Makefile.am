@@ -29,7 +29,13 @@ else
 guile=
 endif
 
-SUBDIRS=m4 man src $(widgets) $(guile) emacs contrib toys
+if HAVE_EMACS
+emacs=emacs
+else
+emacs=
+endif
+
+SUBDIRS=m4 man src $(widgets) $(guile) $(emacs) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 

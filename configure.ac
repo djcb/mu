@@ -49,7 +49,9 @@ AC_SYS_LARGEFILE
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
 
-
+# we need emacs for byte-compiling mu4e
+AM_PATH_LISPDIR
+AM_CONDITIONAL(HAVE_EMACS,test "x$lispdir" != "xno")
 
 # we need some special tricks for filesystems that don't have d_type;
 # e.g. Solaris. See mu-maildir.c. Explicitly disabling it is for
@@ -281,6 +283,7 @@ src/Makefile
 src/tests/Makefile
 widgets/Makefile
 emacs/Makefile
+emacs/mu4e-version.el
 guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile

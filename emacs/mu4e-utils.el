@@ -25,9 +25,8 @@
 ;; Utility functions used in the mu4e
 
 ;;; Code:
+(require 'cl)
 (require 'html2text)
-
-(eval-when-compile (require 'cl))
 
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create DIR if it does not exist yet. Return t if the
@@ -303,7 +302,7 @@ point in eiter the headers buffer or the view buffer."
 	   ((eq major-mode 'mu4e-hdrs-mode)
 	     (get-text-property (point) 'msg))
 	   ((eq major-mode 'mu4e-view-mode)
-	     mu4e--current-msg))))
+	     mu4e-current-msg))))
     (unless msg (error "No message at point"))
     (plist-get msg field))) 
 
@@ -317,7 +316,6 @@ instead of erroring out."
       (message "deleting all windows showing %S" buf)
       (delete-windows-on buf) ;; destroy all windows for this buffer
       (kill-buffer)))) 
-
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
@@ -334,6 +332,48 @@ that has a live window), and vice versa."
       (select-window other-win)
       (message "No window to switch to"))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mu4e-update-timer nil
+  "*internal* The mu4e update timer.")
+
+(defun mu4e ()
+  "Start mu4e. We do this by sending a 'ping' to the mu server
+process, and start the main view if the 'pong' we receive from the
+server has the expected values."
+  (interactive)
+  (if (buffer-live-p (get-buffer mu4e-main-buffer-name))
+    (switch-to-buffer mu4e-main-buffer-name)
+    (mu4e-check-requirements)
+    ;; explicit version checks are a bit questionable,
+    ;; better to check for specific features
+    (if (< emacs-major-version 23)
+	(error "Emacs >= 23.x is required for mu4e")
+	(progn
+	  (setq mu4e-proc-pong-func
+	    (lambda (version doccount)
+	      (unless (string= version mu4e-mu-version)
+		(error "mu server has version %s, but we need %s"
+		  version mu4e-mu-version))
+	      (mu4e-main-view)
+	      (when (and mu4e-update-interval (null mu4e-update-timer))
+		(setq mu4e-update-timer
+		  (run-at-time
+		    0 mu4e-update-interval
+		    'mu4e-update-mail)))
+	      (message "Started mu4e with %d message%s in store"
+		doccount (if (= doccount 1) "" "s"))))
+	  (mu4e-proc-ping)))))
+
+(defun mu4e-quit()
+  "Quit the mu4e session."
+  (interactive)
+  (when (y-or-n-p "Are you sure you want to quit? ")
+    (message nil)
+    (when mu4e-update-timer
+      (cancel-timer mu4e-update-timer)
+      (setq mu4e-update-timer nil))
+    (mu4e-kill-proc)
+    (kill-buffer)))
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el
