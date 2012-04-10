@@ -43,8 +43,7 @@ message headers to put marks.")
     (let ((inhibit-read-only t))
       (with-current-buffer mu4e-hdrs-buffer
 	(erase-buffer)
-	(when mu4e-marks-map (clrhash mu4e-marks-map))
-	(when mu4e-thread-info-map (clrhash mu4e-thread-info-map))))))
+	(when mu4e-marks-map (clrhash mu4e-marks-map))))))
 
 
 (defun mu4e-hdrs-search (expr &optional full-search)
@@ -70,7 +69,7 @@ results, otherwise, limit number of results to
     ;;; when we're starting a new search, we also kill the
     ;;; view buffer, if any
     (mu4e-view-kill-buffer-and-window)))
-     
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
 ;;
@@ -103,6 +102,13 @@ headers."
 	  ;; if it's marked, unmark it now
 	  (when (mu4e-hdrs-docid-is-marked docid)
 	    (mu4e-hdrs-mark 'unmark))
+
+ 	  ;; re-use the thread info from the old one; this is needed because
+ 	  ;; *update* message don't have thread info by themselves (unlike
+ 	  ;; search results)
+ 	  ;; but since we still have the search results, re-use those
+ 	  (plist-put msg :thread
+ 	    (mu4e--field-for-docid docid :thread))
 
 	  ;; first, remove the old one (otherwise, we'd have two headers with
 	  ;; the same docid...
@@ -163,16 +169,12 @@ into a string."
 	  (first-child  "\\ ")
 	  (duplicate    "= ")
 	  (t            "| "))))))
-	;; FIXME: when updating an header line, we don't know the thread
-	;; stuff
 
 (defun mu4e-hdrs-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
   (when (buffer-live-p mu4e-hdrs-buffer)
   (let* ((docid (plist-get msg :docid))
-	  (thread-info
-	    (or (plist-get msg :thread) (gethash docid mu4e-thread-info-map)))
 	  (line
 	   (mapconcat
 	     (lambda (f-w)
@@ -180,7 +182,10 @@ if provided, or at the end of the buffer otherwise."
 		       (val (plist-get msg field))
 		       (str
 			 (case field
-			   (:subject  (concat (mu4e-thread-prefix thread-info) val))
+			   (:subject
+			     (concat ;; prefix subject with a thread indicator
+			       (mu4e-thread-prefix (plist-get msg :thread))
+			       val))
 			   ((:maildir :path) val)
 			   ((:to :from :cc :bcc) (mu4e-hdrs-contact-str val))
 			   ;; if we (ie. `user-mail-address' is the 'From', show
@@ -213,9 +218,6 @@ if provided, or at the end of the buffer otherwise."
 		  (t ;; else
 		    (propertize line 'face 'mu4e-header-face)))))
 
-    ;; store the thread info, so we can use it when updating the message
-    (when  (and thread-info mu4e-thread-info-map)
-      (puthash docid thread-info mu4e-thread-info-map))
     ;; now, append the header line
     (mu4e-hdrs-add-header line docid point msg))))
 
@@ -235,7 +237,7 @@ after the end of the search results."
 	  (message "Found %d matching message%s"
 	    count (if (= 1 count) "" "s"))
 	  ;; highlight the first message
-	  (mu4e-hdrs-highlight (mu4e--docid-at-point (point-min))))))))) 
+	  (mu4e-hdrs-highlight (mu4e--docid-at-point (point-min)))))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -254,7 +256,7 @@ after the end of the search results."
 
       (define-key map "q" 'mu4e-hdrs-kill-buffer-and-window)
       (define-key map "z" 'mu4e-hdrs-kill-buffer-and-window)
-      
+
       (define-key map "r" 'mu4e-rerun-search)
       (define-key map "g" 'mu4e-rerun-search) ;; for compatibility
 
@@ -264,10 +266,10 @@ after the end of the search results."
       ;; the same
       (define-key map (kbd "<M-down>") 'mu4e-next-header)
       (define-key map (kbd "<M-up>") 'mu4e-prev-header)
-     
+
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
-      
+
       ;; marking/unmarking/executing
       (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
       (define-key map "d" 'mu4e-mark-for-trash)
@@ -362,22 +364,20 @@ after the end of the search results."
   (make-local-variable 'mu4e-last-expr)
   (make-local-variable 'mu4e-hdrs-proc)
   (make-local-variable 'mu4e-marks-map)
-  (make-local-variable 'mu4e-thread-info-map)
   (make-local-variable 'mu4e--highlighted-docid)
-  
+
   (make-local-variable 'global-mode-string)
   (make-local-variable 'hl-line-face)
-  
+
   (setq
     mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
-    mu4e-thread-info-map (make-hash-table :size 512 :rehash-size 2)
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
     overwrite-mode 'overwrite-mode-binary
     hl-line-face 'mu4e-header-highlight-face)
 
   (hl-line-mode 1)
- 
+
   (setq header-line-format
     (cons
       (make-string
@@ -413,7 +413,7 @@ found. Also, unhighlight any previously highlighted headers."
 	(hl-line-highlight)))
     (setq mu4e--highlighted-docid docid)))
 
-	  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-select-headers-window-if-visible ()
   "When there is a visible window for the headers buffer, make sure
@@ -437,7 +437,8 @@ at the beginning of lines to identify headers."
   "Get the docid for the header at POINT, or at current (point) if
 nil. Returns the docid, or nil if there is none."
     (save-excursion
-      (when point( goto-char point))
+      (when point
+	(goto-char point))
       (get-text-property (line-beginning-position) 'docid)))
 
 (defun mu4e--goto-docid (docid &optional to-mark)
@@ -464,6 +465,13 @@ docid DOCID, or nil if it cannot be found."
     (save-excursion
       (setq pos (mu4e--goto-docid docid)))
     pos))
+
+(defun mu4e--field-for-docid (docid field)
+  "Get FIELD (a symbol, see `mu4e-headers-names') for the message
+with DOCID which must be present in the headers buffer."
+  (save-excursion
+    (when (mu4e--goto-docid docid)
+      (mu4e-field-at-point field)))) 
 
 ;;;; markers mark headers for
 (defun mu4e--mark-header (docid mark)
@@ -493,14 +501,14 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
   (when (buffer-live-p mu4e-hdrs-buffer)
     (with-current-buffer mu4e-hdrs-buffer
       (let ((inhibit-read-only t)
-	     (is-first-header (= (point-min) (point-max))))	
+	     (is-first-header (= (point-min) (point-max))))
 	(save-excursion
 	  (goto-char (if point point (point-max)))
 	  (insert
 	    (propertize
 	      (concat
 		(mu4e--docid-cookie docid)
-		mu4e-hdrs-fringe str "\n") 'docid docid 'msg msg))))))) 
+		mu4e-hdrs-fringe str "\n") 'docid docid 'msg msg)))))))
 
 (defun mu4e-hdrs-remove-header (docid)
   "Remove header with DOCID at POINT."
@@ -510,18 +518,6 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
     (let ((inhibit-read-only t))
       (delete-region (line-beginning-position) (line-beginning-position 2)))))
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;; threadinfo-map  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-thread-info-map nil
-  "Map (hash) of docid->threadinfo; when filling the list of
-  messages, we fill a map of thread info, such that when a header
-  changes (e.g., it's read-flag gets set) through some (:update
-  ...) message, we can restore the thread-info (this is needed
-  since :update messages do not include thread info).")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 
@@ -653,7 +649,7 @@ value of `mu4e-split-view': if it's a symbol `horizontal' or
 current window. "
   (interactive)
   (with-current-buffer mu4e-hdrs-buffer
-    (let* ((docid (mu4e--docid-at-point))	    
+    (let* ((docid (mu4e--docid-at-point))
 	    (viewwin (and mu4e-view-buffer
 		       (get-buffer-window mu4e-view-buffer))))
       (unless docid (error "No message at point."))
@@ -668,7 +664,7 @@ current window. "
 	    ((eq mu4e-split-view 'horizontal) ;; split horizontally
 	      (split-window-vertically mu4e-headers-visible-lines))
 	    ((eq mu4e-split-view 'vertical) ;; split vertically
-	      (split-window-horizontally mu4e-headers-visible-columns)) 
+	      (split-window-horizontally mu4e-headers-visible-columns))
 	    (t ;; no splitting; just use the currently selected one
 	      (selected-window)))))
       ;; okay, now we should have a window for the message view
@@ -753,7 +749,7 @@ otherwise, limit to up to `mu4e-search-results-limit'."
   "Quit the message view and return to the main view."
   (interactive)
   (mu4e-kill-buffer-and-window mu4e-hdrs-buffer)
-  (mu4e-main-view))  
+  (mu4e-main-view))
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,
@@ -763,7 +759,7 @@ do a new search."
     (if mu4e-last-expr
       (mu4e-hdrs-search mu4e-last-expr)
       (call-interactively 'mu4e-search))))
- 
+
 (defun mu4e--hdrs-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
 backward (if LINES is negative). If this succeeds, return the new
@@ -775,18 +771,19 @@ docid. Otherwise, return nil."
 	   (docid (mu4e--docid-at-point)))
       ;; trick to move point, even if this function is called when this window
       ;; is not visible
-      (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
-      ;; attempt to highlight the new line
-      (mu4e-hdrs-highlight docid)
+      (when docid
+	(set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
+	;; attempt to highlight the new line
+	(mu4e-hdrs-highlight docid))
       ;; return the docid only if the move succeeded
       (when succeeded docid))))
- 
+
 (defun mu4e-next-header ()
   "Move point to the next message header. If this succeeds, return
 the new docid. Otherwise, return nil."
   (interactive)
   (mu4e--hdrs-move 1))
- 
+
 (defun mu4e-prev-header ()
   "Move point to the previous message header. If this succeeds,
 return the new docid. Otherwise, return nil."
@@ -819,7 +816,7 @@ not provided, function asks for it."
 			(concat "/" target)))
 	      (fulltarget (concat mu4e-maildir target)))
 	(when (or (file-directory-p fulltarget)
-	      (and (yes-or-no-p 
+	      (and (yes-or-no-p
 		     (format "%s does not exist. Create now?" fulltarget))
 		(mu4e-proc-mkdir fulltarget)))
 	  (mu4e-hdrs-mark 'move target)
@@ -908,7 +905,7 @@ for draft messages."
 	    (error "Editing is only allowed for draft messages"))
 	  ;; talk to the backend
 	  (mu4e-proc-compose compose-type docid))))))
-  
+
 
 (defun mu4e-compose-reply ()
   "Reply to the current message."
