@@ -62,7 +62,7 @@ append_sexp_attr (GString *gstr, const char* elm, const char *str)
 
 
 struct _ContactData {
-	gboolean from, to, cc, bcc;
+	gboolean from, to, cc, bcc, reply_to;
 	GString *gstr;
 	MuMsgContactType prev_ctype;
 };
@@ -129,6 +129,10 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 		add_prefix_maybe (cdata->gstr, &cdata->bcc, "\t:bcc (");
 		break;
 
+	case MU_MSG_CONTACT_TYPE_REPLY_TO:
+		add_prefix_maybe (cdata->gstr, &cdata->reply_to, "\t:reply-to (");
+		break;
+
 	default: g_return_val_if_reached (FALSE);
 	}
 
@@ -147,14 +151,15 @@ append_sexp_contacts (GString *gstr, MuMsg *msg)
 {
 	ContactData cdata;
 
-	cdata.from	 = cdata.to = cdata.cc = cdata.bcc = FALSE;
+	cdata.from	 = cdata.to = cdata.cc = cdata.bcc
+		         = cdata.reply_to = FALSE;
 	cdata.gstr	 = gstr;
 	cdata.prev_ctype = (unsigned)-1;
 
 	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact,
 				&cdata);
 
-	if (cdata.from || cdata.to || cdata.cc || cdata.bcc)
+	if (cdata.from || cdata.to || cdata.cc || cdata.bcc || cdata.reply_to)
 		gstr = g_string_append (gstr, ")\n");
 }
 
@@ -244,13 +249,12 @@ append_sexp_attachments (GString *gstr, MuMsg *msg)
 }
 
 
+
 static void
 append_sexp_message_file_attr (GString *gstr, MuMsg *msg)
 {
 	append_sexp_attachments (gstr, msg);
 
-	append_sexp_attr (gstr, "reply-to",
-				  mu_msg_get_header (msg, "Reply-To"));
 	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
 	append_sexp_attr (gstr, "in-reply-to",
 			  mu_msg_get_header (msg, "In-Reply-To"));
@@ -290,6 +294,10 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 
 	if (docid != 0)
 		g_string_append_printf (gstr, "\t:docid %u\n", docid);
+
+	if (!header) /* force loading of file... should do this a bit
+		      * more elegantly */
+		mu_msg_get_header (msg, "Reply-To");
 
 	append_sexp_contacts (gstr, msg);
 

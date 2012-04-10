@@ -426,6 +426,7 @@ enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_FROM,
 	MU_MSG_CONTACT_TYPE_CC,
 	MU_MSG_CONTACT_TYPE_BCC,
+	MU_MSG_CONTACT_TYPE_REPLY_TO,
 
 	MU_MSG_CONTACT_TYPE_NUM
 };
@@ -441,7 +442,7 @@ struct _MuMsgContact {
 	const char		*name;	    /* Foo Bar */
 	const char		*address;   /* foo@bar.cuux */
 	MuMsgContactType	 type;	    /* MU_MSG_CONTACT_TYPE_{ TO,
-					     * CC, BCC, FROM} */
+					     * CC, BCC, FROM, REPLY_TO} */
 };
 typedef struct _MuMsgContact	 MuMsgContact;
 
@@ -466,7 +467,7 @@ MuMsgContact *mu_msg_contact_new (const char *name, const char *address,
  *
  * @param contact a contact object, or NULL
  */
-void          mu_msg_contact_destroy (MuMsgContact *contact);
+void mu_msg_contact_destroy (MuMsgContact *contact);
 
 /**
  * macro to get the name of a contact

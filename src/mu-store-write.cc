@@ -564,7 +564,7 @@ static void
 add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 {
 	/* note: contact-stuff (To/Cc/From) will handled in
-	 * add_contact_info, not here */
+	 * each_contact_info, not here */
 	if (!mu_msg_field_xapian_index(mfid) &&
 	    !mu_msg_field_xapian_term(mfid) &&
 	    !mu_msg_field_xapian_value(mfid))
@@ -622,6 +622,10 @@ xapian_pfx (MuMsgContact *contact)
 static void
 each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 {
+	/* for now, don't store reply-to addresses */
+	if (mu_msg_contact_type (contact) == MU_MSG_CONTACT_TYPE_REPLY_TO)
+		return;
+
 	const std::string pfx (xapian_pfx(contact));
 	if (pfx.empty())
 		return; /* unsupported contact type */
@@ -638,7 +642,6 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	if (!mu_str_is_empty(contact->address)) {
 
 		char *escaped;
-
 		escaped = mu_str_ascii_xapian_escape (contact->address,
 						      FALSE /*dont esc space*/);
 		msgdoc->_doc->add_term
