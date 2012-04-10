@@ -91,7 +91,7 @@ marking if it still had that."
 					   fieldval))))
 		    (if datestr (mu4e-view-header fieldname datestr) "")))
 		;; size
-		(:size	
+		(:size
 		  (let* (size (mu4e-view-size msg)
 			  (sizestr (when size (format "%d bytes" size))))
 		    (if sizestr (mu4e-view-header fieldname sizestr))))
@@ -109,7 +109,7 @@ marking if it still had that."
 	mu4e-current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
-      
+
       (switch-to-buffer buf)
       (goto-char (point-min))
 
@@ -217,13 +217,13 @@ if IS-OPEN is nil, and otherwise open it."
 (unless mu4e-view-mode-map
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
-      
+
       (define-key map "q" 'mu4e-view-kill-buffer-and-window)
 
       ;; note, 'z' is by-default bound to 'bury-buffer'
       ;; but that's not very useful in this case
       (define-key map "z" 'mu4e-view-kill-buffer-and-window)
-      
+
       (define-key map "s" 'mu4e-search)
 
       (define-key map "b" 'mu4e-search-bookmark)
@@ -262,7 +262,7 @@ if IS-OPEN is nil, and otherwise open it."
 
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
-      
+
       ;; attachments
       (define-key map "e" 'mu4e-view-extract-attachment)
       (define-key map "o" 'mu4e-view-open-attachment)
@@ -352,7 +352,7 @@ if IS-OPEN is nil, and otherwise open it."
   (use-local-map mu4e-view-mode-map)
 
   (make-local-variable 'mu4e-hdrs-buffer)
-  (make-local-variable 'mu4e-current-msg)
+  ;;(make-local-variable 'mu4e-current-msg)
   (make-local-variable 'mu4e-link-map)
 
   (make-local-variable 'mu4e-lines-wrapped)
@@ -540,8 +540,9 @@ citations."
 (defun mu4e-view-kill-buffer-and-window ()
   "Quit the message view and return to the headers."
   (interactive)
-  (mu4e-kill-buffer-and-window mu4e-view-buffer))
-     
+  (with-current-buffer mu4e-view-buffer
+    (kill-buffer-and-window)))
+
 (defun mu4e-view-next-header ()
   "View the next header."
   (interactive)
