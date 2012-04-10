@@ -567,7 +567,7 @@ You can influence the way the splitting works by setting the variable
 @itemize
 @item @t{horizontal} (this is the default): display the message view below the
 header view
-@item @t{vertical} (this is the default): display the message view on the
+@item @t{vertical}: display the message view on the
 right side of the header view
 @item anything else: don't do any splitting
 @end itemize
@@ -1133,7 +1133,7 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
    mu4e-get-mail-command "offlineimap"
 
    ;; general emacs mail settings; used when composing e-mail
-   mail-reply-to "foo@@bar.com"
+   mu4e-reply-to-address "foo@@bar.com"
    user-mail-address "foo@@bar.com"
    user-full-name  "Foo X. Bar"
 
@@ -1503,6 +1503,33 @@ example, if the s-expression looks like an e-mail message header, it will be
 processed by the header-handling function, which will append it to the header
 list. If the s-expression looks like an error message, it will be reported to
 the user. And so on.
+
+The language between frontend and backend is documented in the @t{mu-server}
+man-page. If you set @t{mu4e-debug} to @t{t}, @t{mu4e} will log all the
+messages that go between frontend and backend in a special @t{*mu4e-log*}
+buffer.
+
+@subsection Example: ping-pong
+
+As an example of this, let's look at the @t{ping-pong}-sequence. When @t{mu4e}
+starts, it sends a command @t{ping} to the the @t{mu server} backend, to learn
+about its version. @t{mu server} then responds with a @t{pong} s-expression to
+provide this information (this is implemented in @file{mu-cmd-server.c}).
+
+We start this sequence when @t{mu4e} is invoked (when the program is
+started). It call @t{mu4e-proc-ping}, and registers a (lambda) function for
+@t{mu4e-proc-pong-func}, so it will retrieve the response.
+
+@verbatim
+-> ping
+<- (pong "mu" :version "x.x.x" :doccount 10000)
+@end verbatim
+
+When we receive such a @t{pong} (in @file{mu4e-proc.el}), the lambda function
+we registered will be called, and it check the version we got from the
+@t{pong} with the version we expected, and raises an error, if they differ.
+
+
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
