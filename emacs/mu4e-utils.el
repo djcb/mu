@@ -4,7 +4,7 @@
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
- 
+
 ;; This file is not part of GNU Emacs.
 ;;
 ;; GNU Emacs is free software: you can redistribute it and/or modify
@@ -297,24 +297,24 @@ top level if there is none."
 (defun mu4e-field-at-point (field)
   "Get FIELD (a symbol, see `mu4e-header-names') for the message at
 point in eiter the headers buffer or the view buffer."
-  (let ((msg 
+  (let ((msg
 	 (cond
 	   ((eq major-mode 'mu4e-hdrs-mode)
 	     (get-text-property (point) 'msg))
 	   ((eq major-mode 'mu4e-view-mode)
 	     mu4e-current-msg))))
     (unless msg (error "No message at point"))
-    (plist-get msg field))) 
+    (plist-get msg field)))
 
 (defun mu4e-kill-buffer-and-window (buf)
   "Kill buffer BUF and any of its windows. Like
 `kill-buffer-and-window', but can be called from any buffer, and
 simply does not attempt to delete the window if there is none,
 instead of erroring out."
-  (when (buffer-live-p buf) 
-    ((bury-buffer buf)
-      (delete-windows-on buf) ;; destroy all windows for this buffer
-      (kill-buffer buf)))) 
+  (when (buffer-live-p buf)
+    (bury-buffer)
+    (delete-windows-on buf) ;; destroy all windows for this buffer
+    (kill-buffer buf)))
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
