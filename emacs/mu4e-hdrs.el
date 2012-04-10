@@ -660,12 +660,15 @@ current window. "
       ;; is there a window already for the message view?
       (unless (window-live-p viewwin)
 	;; no view window yet; create one, based on the split settings etc.
+	;; emacs' use of the terms "horizontally" and "vertically"
+	;; are... suprising. There's a clearer `split-window' in emacs24, but
+	;; it's not compatible with emacs 23
 	(setq viewwin
 	  (cond ;; is there are live window for the message view?
 	    ((eq mu4e-split-view 'horizontal) ;; split horizontally
-	      (split-window nil mu4e-headers-visible-lines 'below))
-	    ((eq mu4e-split-view 'vertical) ;; split vertically 
-	      (split-window nil mu4e-headers-visible-columns 'right))
+	      (split-window-vertically mu4e-headers-visible-lines))
+	    ((eq mu4e-split-view 'vertical) ;; split vertically
+	      (split-window-horizontally mu4e-headers-visible-columns)) 
 	    (t ;; no splitting; just use the currently selected one
 	      (selected-window)))))
       ;; okay, now we should have a window for the message view
