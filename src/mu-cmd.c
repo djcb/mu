@@ -140,11 +140,11 @@ view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 	time_t date;
 	const GSList *lst;
 
-	print_field ("From", mu_msg_get_from (msg), color);
-	print_field ("To",   mu_msg_get_to (msg), color);
-	print_field ("Cc",   mu_msg_get_cc (msg), color);
-	print_field ("Bcc",  mu_msg_get_bcc (msg), color);
-	print_field ("Subject",  mu_msg_get_subject (msg), color);
+	print_field ("From",    mu_msg_get_from (msg),    color);
+	print_field ("To",      mu_msg_get_to (msg),      color);
+	print_field ("Cc",      mu_msg_get_cc (msg),      color);
+	print_field ("Bcc",     mu_msg_get_bcc (msg),     color);
+	print_field ("Subject", mu_msg_get_subject (msg), color);
 
 	if ((date = mu_msg_get_date (msg)))
 		print_field ("Date", mu_date_str_s ("%c", date),

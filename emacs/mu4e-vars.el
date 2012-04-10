@@ -4,7 +4,7 @@
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
- 
+
 ;; This file is not part of GNU Emacs.
 ;;
 ;; GNU Emacs is free software: you can redistribute it and/or modify
@@ -279,7 +279,7 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
   "Customizations for composing/sending messages."
   :group 'mu4e)
 
-(defcustom mu4e-send-citation-prefix "> "
+(defcustom mu4e-send-citation-prefix " > "
   "String to prefix cited message parts with."
   :type 'string
   :group 'mu4e-compose)
