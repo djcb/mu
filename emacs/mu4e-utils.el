@@ -312,10 +312,9 @@ point in eiter the headers buffer or the view buffer."
 simply does not attempt to delete the window if there is none,
 instead of erroring out."
   (when (buffer-live-p buf) 
-    (with-current-buffer buf
-      (message "deleting all windows showing %S" buf)
+    ((bury-buffer buf)
       (delete-windows-on buf) ;; destroy all windows for this buffer
-      (kill-buffer)))) 
+      (kill-buffer buf)))) 
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if

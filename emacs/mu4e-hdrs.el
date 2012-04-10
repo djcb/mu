@@ -749,12 +749,11 @@ otherwise, limit to up to `mu4e-search-results-limit'."
   (when expr
     (mu4e-hdrs-search expr current-prefix-arg)))
 
-
 (defun mu4e-hdrs-kill-buffer-and-window ()
   "Quit the message view and return to the main view."
   (interactive)
   (mu4e-kill-buffer-and-window mu4e-hdrs-buffer)
-  (mu4e))  
+  (mu4e-main-view))  
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,

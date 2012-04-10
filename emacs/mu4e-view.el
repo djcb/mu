@@ -540,11 +540,8 @@ citations."
 (defun mu4e-view-kill-buffer-and-window ()
   "Quit the message view and return to the headers."
   (interactive)
-  (when (buffer-live-p mu4e-view-buffer)
-    (with-current-buffer mu4e-view-buffer
-      ;; (mu4e-kill-buffer-and-window mu4e-view-buffer)
-      (kill-buffer-and-window))))
-    
+  (mu4e-kill-buffer-and-window mu4e-view-buffer))
+     
 (defun mu4e-view-next-header ()
   "View the next header."
   (interactive)
