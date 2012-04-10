@@ -36,8 +36,7 @@
 (require 'smtpmail)
 
 ;; internal variables / constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defconst mu4e-send-draft-name "*mu4e-draft*"
-  "Name for draft messages.")
+(defconst mu4e-send-draft-name "*mu4e-draft*" "Name for draft messages.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -68,32 +67,12 @@ of mu4e and emacs."
 	(replace-regexp-in-string "^"
 	  mu4e-send-citation-prefix body)))))
 
-(defun mu4e-send-recipients-remove (lst email-to-remove)
-  "Remove the recipient with EMAIL from the recipient list (of form
-'( (\"A\" . \"a@example.com\") (\"B\" . \"B@example.com\"))."
-  (remove-if
-    (lambda (name-email)
-      (let ((email (cdr name-email)))
-	(when email (string= email-to-remove (downcase email))))) lst))
-
-(defun mu4e-send-recipients-to-string (lst)
-  "Convert a recipient list (of form '( (\"A\"
-. \"a@example.com\") (\"B\" . \"B@example.com\") (nil
-. \"c@example.com\")) into a string of form \"A <@aexample.com>, B
-<b@example.com>, c@example.com\."
-  (when lst
-    (mapconcat
-      (lambda (recip)
-	(let ((name (car recip)) (email (cdr recip)))
-	  (if name
-	    (format "%s <%s>" name email)
-	    (format "%s" email)))) lst ", ")))
-
-
 (defun mu4e-send-header (hdr val)
   "Return a header line of the form HDR: VAL\n. If VAL is nil,
 return nil."
-  (when val (format "%s: %s\n" hdr val)))
+  (when val
+    (format "%s: %s\n" hdr val)))
+
 
 (defun mu4e-send-references-create (msg)
   "Construct the value of the References: header based on MSG as a
@@ -109,31 +88,93 @@ return nil."
 	(lambda (msgid) (format "<%s>" msgid))
 	refs ","))))
 
-(defun mu4e-send-to-create (msg)
-  "Construct the To: header for a reply-message based on some
-message MSG. This takes the Reply-To address of MSG if it exist, or
-the From:-address otherwise. The result is either nil or a string
-which can be used for the To:-field. Note, when it's present,
-Reply-To contains a string of one or more addresses,
-comma-separated."
-  (or
-    (plist-get msg :reply-to)
-    (mu4e-send-recipients-to-string (plist-get msg :from))))
 
 
-(defun mu4e-send-cc-create (msg reply-all)
-  "Get the list of Cc-addresses for the reply to MSG. If REPLY-ALL
-is nil this is simply empty, otherwise it is the old CC-list
-together with the old TO-list, minus `user-mail-address'. The
-result of this function is either nil or a string to be used for
-the Cc: field."
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; determine the recipient fields for new messages
+
+(defun mu4e--recipients-list-to-string (lst)
+  "Convert a lst LST of address cells into a string with a list of
+e-mail addresses. If LST is nil, returns nil."
+  (when lst
+    (mapconcat
+      (lambda (addrcell)
+	(let ((name (car addrcell))
+	       (email (cdr addrcell)))
+	  (if name
+	    (format "%s <%s>" name email)
+	    (format "%s" email))))
+      lst ", ")))
+
+(defun mu4e--address-cell-equal (cell1 cell2)
+  "Return t if cell1 and cell2 have the same e-mail
+  address (case-insensitively), nil otherwise. cell1 and cell2 are
+  cons cells (NAME . EMAIL)."
+  (message "EQ: %S %S" (cdr cell1) (cdr cell2))
+  (string=
+    (downcase (or (cdr cell1) ""))
+    (downcase (or (cdr cell2) ""))))
+
+(defun mu4e--create-to-lst (origmsg)
+  "Create a list of address for the To: in a new message, based on
+the original message ORIGMSG. If the Reply-To address is set, use
+that, otherwise use the From address. Note, whatever was in the To:
+field before, goes to the Cc:-list (if we're doing a reply-to-all)."
+  (let* ((reply-to (plist-get origmsg :reply-to))
+ 	  (to-lst
+	    (or reply-to
+	      (delete-duplicates
+		(plist-get origmsg :from)
+		:test #'mu4e--address-cell-equal))))
+    to-lst))
+
+(defun mu4e--create-cc-lst (origmsg reply-all)
+  "Create a list of address for the Cc: in a new message, based on
+the original message ORIGMSG, and whether it's a reply-all."
   (when reply-all
-    (let ((cc-lst
-	    (mu4e-send-recipients-remove ;; remove myself from cc
-	      (append (plist-get msg :cc) (plist-get msg :to))
-	      user-mail-address)))
-      (mu4e-send-recipients-to-string cc-lst))))
+    (let* ((cc-lst ;; get the cc-field from the original, remove dups
+	      (delete-duplicates
+		(append
+		  (plist-get origmsg :to)
+		  (plist-get origmsg :cc))
+		:test #'mu4e--address-cell-equal))
+	    ;; now we have the basic list, but we must remove
+	    ;; addresses also in the to list
+	    (cc-lst
+	      (delete-if
+		(lambda (cc-cell)
+		  (find-if
+		    (lambda (to-cell)
+		      (mu4e--address-cell-equal cc-cell to-cell))
+		    (mu4e--create-to-lst origmsg)))
+		cc-lst))
+	    ;; finally, we need to remove ourselves from the cc-list
+	    (cc-lst
+	      (if (null user-mail-address)
+		cc-lst
+		(delete-if
+		  (lambda (cc-cell)
+		    (message "cc %S" cc-lst)
+		    (mu4e--address-cell-equal cc-cell
+		      (cons nil user-mail-address)))
+		  cc-lst))))
+      (message "CC %S" cc-lst)
+      cc-lst)))
 
+ (defun mu4e--create-recipient-field (field origmsg &optional reply-all)
+   "Create value (a string) for the recipient field FIELD (a
+symbol, :to or :cc), based on the original message ORIGMSG,
+and (optionally) REPLY-ALL which indicates this is a reply-to-all
+message. Return nil if there are no recipients for the particular field."
+   (mu4e--recipients-list-to-string
+     (case field
+       (:to
+	 (mu4e--create-to-lst origmsg))
+       (:cc
+	 (mu4e--create-cc-lst origmsg reply-all))
+       (otherwise
+	 (error "Unsupported field")))))
 
 (defun mu4e-send-from-create ()
   "Construct a value for the From:-field of the reply to MSG,
@@ -143,6 +184,8 @@ nil, function returns nil."
     (if user-full-name
       (format "%s <%s>" user-full-name user-mail-address)
       (format "%s" user-mail-address))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 
@@ -174,44 +217,30 @@ never hits the disk. Also see `mu4e-insert-mail-header-separator."
     (when (search-forward-regexp (concat "^" mail-header-separator))
       (replace-match ""))))
 
-
-(defun mu4e-send-create-reply (msg)
-  "Create a draft message as a reply to MSG.
-
-A reply message has fields:
-  From:        - see `mu-msg-from-create'
-  To:          - see `mu4e-send-to-create'
-  Cc:          - see `mu4e-send-cc-create'
-  Subject:     - `mu4e-send-reply-prefix' + subject of MSG
-
- then, the following fields, normally hidden from user:
-  Reply-To:    - if `mail-reply-to' has been set
-  References:  - see `mu4e-send-references-create'
-  In-Reply-To: - message-id of MSG
-  User-Agent   - see  `mu4e-send-user-agent'
-
-And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
-  (let* ((recipnum (+ (length (plist-get msg :to))
-		     (length (plist-get msg :cc))))
+(defun mu4e-send-create-reply (origmsg)
+  "Create a draft message as a reply to original message ORIGMSG."
+  (let* ((recipnum
+	   (+ (length (mu4e--create-to-lst origmsg))
+	      (length (mu4e--create-cc-lst origmsg t))))
 	  (reply-all (when (> recipnum 1)
 		      (yes-or-no-p
 			(format "Reply to all ~%d recipients? "
 			  (+ recipnum)))))
-	  (old-msgid (plist-get msg :message-id))
-	  (subject (or (plist-get msg :subject) "")))
+	  (old-msgid (plist-get origmsg :message-id))
+	  (subject (or (plist-get origmsg :subject) "")))
     (concat
+
       (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
-      (when (boundp 'mail-reply-to)
-	(mu4e-send-header "Reply-To" mail-reply-to))
-
-      (mu4e-send-header "To" (or (mu4e-send-to-create msg) ""))
-      (mu4e-send-header "Cc" (mu4e-send-cc-create msg reply-all))
-
+      (mu4e-send-header "Reply-To" mail-reply-to)
+      (mu4e-send-header "To" (mu4e--create-recipient-field :to origmsg))
+      (mu4e-send-header "Cc" (mu4e--create-recipient-field :cc origmsg
+			       reply-all))
       (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
       (mu4e-send-header "References"  (mu4e-send-references-create msg))
 
       (when old-msgid
 	(mu4e-send-header "In-reply-to" (format "<%s>" old-msgid)))
+
       (mu4e-send-header "Subject"
 	(concat
 	  ;; if there's no Re: yet, prepend it
@@ -221,29 +250,18 @@ And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
       "\n\n"
       (mu4e-send-cite-original msg))))
 
-(defun mu4e-send-create-forward (msg)
-  "Create a draft forward message for MSG.
 
-A forward message has fields:
-  From:        - see `mu4e-send-from-create'
-  To:          - empty
-  Subject:     - `mu4e-send-forward-prefix' + subject of MSG
+(defun mu4e-send-create-forward (origmsg)
+  "Create a draft forward message for original message ORIGMSG."
 
-then, the following fields, normally hidden from user:
-  Reply-To:    - if `mail-reply-to' has been set
-  References:  - see `mu4e-send-references-create'
-  User-Agent   - see  `mu4e-send-user-agent'
-
-And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
-  (let ((subject (or (plist-get msg :subject) "")))
+  (let ((subject
+	  (or (plist-get origmsg :subject) "")))
     (concat
       (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
-      (when (boundp 'mail-reply-to)
-	(mu4e-send-header "Reply-To" mail-reply-to))
-
+      (mu4e-send-header "Reply-To" mail-reply-to)
       (mu4e-send-header "To" "")
       (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
-      (mu4e-send-header "References"  (mu4e-send-references-create msg))
+      (mu4e-send-header "References"  (mu4e-send-references-create origmsg))
       (mu4e-send-header "Subject"
 	(concat
 	  ;; if there's no Re: yet, prepend it
@@ -254,20 +272,10 @@ And finally, the cited body of MSG, as per `mu4e-send-cite-original'."
       (mu4e-send-cite-original msg))))
 
 (defun mu4e-send-create-new ()
-  "Create a new message.
-
-A new draft message has fields:
-  From:        - see `mu-msg-from-create'
-  To:          - empty
-  Subject:     - empty
-
-then, the following fields, normally hidden from user:
-  Reply-To:    - if `mail-reply-to' has been set
-  User-Agent   - see  `mu4e-send-user-agent'."
+  "Create a new message.."
   (concat
     (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
-    (when (boundp 'mail-reply-to)
-      (mu4e-send-header "Reply-To" mail-reply-to))
+    (mu4e-send-header "Reply-To" mail-reply-to)
     (mu4e-send-header "To" "")
     (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
     (mu4e-send-header "Subject" "")
