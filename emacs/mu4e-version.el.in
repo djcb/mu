@@ -1,5 +1,5 @@
 ;; auto-generated
-(defconst mu4e-mu-version "@PACKAGE_STRING@"
+(defconst mu4e-mu-version "@VERSION@"
   "Required mu binary version; mu4e's verson must agree with
   this.")
 
