@@ -279,18 +279,24 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
   "Customizations for composing/sending messages."
   :group 'mu4e)
 
-(defcustom mu4e-send-citation-prefix " > "
+(defcustom mu4e-citation-prefix " > "
   "String to prefix cited message parts with."
   :type 'string
   :group 'mu4e-compose)
 
-(defcustom mu4e-send-reply-prefix "Re: "
+(defcustom mu4e-reply-prefix "Re: "
   "String to prefix the subject of replied messages with."
   :type 'string
   :group 'mu4e-compose)
 
-(defcustom mu4e-send-forward-prefix "Fwd: "
+(defcustom mu4e-forward-prefix "Fwd: "
   "String to prefix the subject of forwarded messages with."
+  :type 'string
+  :group 'mu4e-compose)
+
+(defcustom mu4e-reply-to-address nil
+  "The Reply-To address (if this, for some reason, is not equal to
+the From: address.)"
   :type 'string
   :group 'mu4e-compose)
 

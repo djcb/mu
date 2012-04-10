@@ -35,6 +35,7 @@
 (require 'mail-parse)
 (require 'smtpmail)
 
+
 ;; internal variables / constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e-send-draft-name "*mu4e-draft*" "Name for draft messages.")
 
@@ -52,7 +53,7 @@ of mu4e and emacs."
   line (with the %s's replaced with the date of MSG and the name
   or e-mail address of its sender (or 'someone' if nothing
   else)), followed of the quoted body of MSG, constructed by by
-  prepending `mu4e-send-citation-prefix' to each line. If there is
+  prepending `mu4e-citation-prefix' to each line. If there is
   no body in MSG, return nil."
   (let* ((from (plist-get msg :from))
 	  (body (mu4e-body-text msg)))
@@ -65,7 +66,7 @@ of mu4e and emacs."
 	    "someone"))
 	"\n\n"
 	(replace-regexp-in-string "^"
-	  mu4e-send-citation-prefix body)))))
+	  mu4e-citation-prefix body)))))
 
 (defun mu4e-send-header (hdr val)
   "Return a header line of the form HDR: VAL\n. If VAL is nil,
@@ -111,7 +112,6 @@ e-mail addresses. If LST is nil, returns nil."
   "Return t if cell1 and cell2 have the same e-mail
   address (case-insensitively), nil otherwise. cell1 and cell2 are
   cons cells (NAME . EMAIL)."
-  (message "EQ: %S %S" (cdr cell1) (cdr cell2))
   (string=
     (downcase (or (cdr cell1) ""))
     (downcase (or (cdr cell2) ""))))
@@ -155,11 +155,9 @@ the original message ORIGMSG, and whether it's a reply-all."
 		cc-lst
 		(delete-if
 		  (lambda (cc-cell)
-		    (message "cc %S" cc-lst)
 		    (mu4e--address-cell-equal cc-cell
 		      (cons nil user-mail-address)))
 		  cc-lst))))
-      (message "CC %S" cc-lst)
       cc-lst)))
 
  (defun mu4e--create-recipient-field (field origmsg &optional reply-all)
@@ -231,12 +229,12 @@ never hits the disk. Also see `mu4e-insert-mail-header-separator."
     (concat
 
       (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
-      (mu4e-send-header "Reply-To" mail-reply-to)
+      (mu4e-send-header "Reply-To" mu4e-reply-to-address)
       (mu4e-send-header "To" (mu4e--create-recipient-field :to origmsg))
       (mu4e-send-header "Cc" (mu4e--create-recipient-field :cc origmsg
 			       reply-all))
       (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
-      (mu4e-send-header "References"  (mu4e-send-references-create msg))
+      (mu4e-send-header "References"  (mu4e-send-references-create origmsg))
 
       (when old-msgid
 	(mu4e-send-header "In-reply-to" (format "<%s>" old-msgid)))
@@ -244,11 +242,11 @@ never hits the disk. Also see `mu4e-insert-mail-header-separator."
       (mu4e-send-header "Subject"
 	(concat
 	  ;; if there's no Re: yet, prepend it
-	  (if (string-match (concat "^" mu4e-send-reply-prefix) subject)
-	    "" mu4e-send-reply-prefix)
+	  (if (string-match (concat "^" mu4e-reply-prefix) subject)
+	    "" mu4e-reply-prefix)
 	  subject))
       "\n\n"
-      (mu4e-send-cite-original msg))))
+      (mu4e-send-cite-original origmsg))))
 
 
 (defun mu4e-send-create-forward (origmsg)
@@ -258,24 +256,24 @@ never hits the disk. Also see `mu4e-insert-mail-header-separator."
 	  (or (plist-get origmsg :subject) "")))
     (concat
       (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
-      (mu4e-send-header "Reply-To" mail-reply-to)
+      (mu4e-send-header "Reply-To" mu4e-reply-to-address)
       (mu4e-send-header "To" "")
       (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
       (mu4e-send-header "References"  (mu4e-send-references-create origmsg))
       (mu4e-send-header "Subject"
 	(concat
 	  ;; if there's no Re: yet, prepend it
-	  (if (string-match (concat "^" mu4e-send-forward-prefix) subject)
-	    "" mu4e-send-forward-prefix)
+	  (if (string-match (concat "^" mu4e-forward-prefix) subject)
+	    "" mu4e-forward-prefix)
 	  subject))
       "\n\n"
-      (mu4e-send-cite-original msg))))
+      (mu4e-send-cite-original origmsg))))
 
 (defun mu4e-send-create-new ()
   "Create a new message.."
   (concat
     (mu4e-send-header "From" (or (mu4e-send-from-create) ""))
-    (mu4e-send-header "Reply-To" mail-reply-to)
+    (mu4e-send-header "Reply-To" mu4e-reply-to-address)
     (mu4e-send-header "To" "")
     (mu4e-send-header "User-agent"  (mu4e-send-user-agent))
     (mu4e-send-header "Subject" "")
