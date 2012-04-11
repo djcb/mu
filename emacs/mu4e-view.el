@@ -458,10 +458,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 			     'face 'mu4e-view-url-number-face))))))))
 
 
-
-
 ;; functions for org-contacts
-
 (defun mu4e-view-snarf-from (name-or-email)
   "Get the From:-data for the current message; NAME-OR-EMAIL should
 be a symbol 'name or 'email to get the corresponding field. If the
@@ -540,8 +537,9 @@ citations."
 (defun mu4e-view-kill-buffer-and-window ()
   "Quit the message view and return to the headers."
   (interactive)
-  (with-current-buffer mu4e-view-buffer
-    (kill-buffer-and-window)))
+  (when (buffer-live-p mu4e-view-buffer)
+    (with-current-buffer mu4e-view-buffer
+      (kill-buffer-and-window))))
 
 (defun mu4e-view-next-header ()
   "View the next header."
@@ -653,8 +651,6 @@ results."
     (error "No current message"))
   (mu4e-view-shell-command-on-raw-message mu4e-current-msg
     (current-buffer) cmd))
-
-
 
 
 (provide 'mu4e-view)
