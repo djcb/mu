@@ -215,15 +215,28 @@ never hits the disk. Also see `mu4e-insert-mail-header-separator."
     (when (search-forward-regexp (concat "^" mail-header-separator))
       (replace-match ""))))
 
+(defun mu4e--user-wants-reply-all (origmsg)
+  "Ask user whether she wants to reply to *all* recipients if there
+are more than 1 (based on ORIGMSG)."
+  (let* ((recipnum
+	   (+ (length (mu4e--create-to-lst origmsg))
+	      (length (mu4e--create-cc-lst origmsg t)))) 
+	  (response
+	    (if (= recipnum 1)
+	       ?a ;; with one recipient, we can reply to 'all'.... 
+	       (mu4e-read-option
+		 "Reply to "
+		 `( (,(format "all %d recipients" recipnum))
+		    ("sender only"))))))
+    (= response ?a)))
+
+
 (defun mu4e-send-create-reply (origmsg)
   "Create a draft message as a reply to original message ORIGMSG."
   (let* ((recipnum
 	   (+ (length (mu4e--create-to-lst origmsg))
 	      (length (mu4e--create-cc-lst origmsg t))))
-	  (reply-all (when (> recipnum 1)
-		      (yes-or-no-p
-			(format "Reply to all ~%d recipients? "
-			  (+ recipnum)))))
+	  (reply-all (mu4e--user-wants-reply-all origmsg))
 	  (old-msgid (plist-get origmsg :message-id))
 	  (subject (or (plist-get origmsg :subject) "")))
     (concat
