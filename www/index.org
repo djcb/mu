@@ -102,7 +102,7 @@
    a feature requests, please use the [[http://code.google.com/p/mu0/issues/list][issue tracker]].
 
    If you'd like to work with the mu source code, you can find it [[https://github.com/djcb/mu][in Github]];
-   also, see the notes on [[http://gitorious.org/mu/mu/blobs/master/HACKING][HACKING]] the mu source code.
+   also, see the notes on [[https://github.com/djcb/mu/blob/master/HACKING][HACKING]] the mu source code.
 
    There's also a [[http://groups.google.com/group/mu-discuss][mailing list]].
 
