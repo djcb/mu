@@ -130,7 +130,8 @@ mu_msg_part_get_text (MuMsgPart *self, gboolean *err)
 }
 
 
-
+/* note: this will return -1 in case of error or if the size is
+ * unknown */
 static ssize_t
 get_part_size (GMimePart *part)
 {
@@ -143,11 +144,11 @@ get_part_size (GMimePart *part)
 
 	stream = g_mime_data_wrapper_get_stream (wrapper);
 	if (!stream)
-		return -1;
+		return -1; /* no stream -> size is 0 */
+	else
+		return g_mime_stream_length (stream);
 
 	/* NOTE: it seems we shouldn't unref stream/wrapper */
-
-	return g_mime_stream_length (stream);
 }
 
 

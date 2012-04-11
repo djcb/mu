@@ -49,8 +49,8 @@ struct _MuMsgPart {
 	/* usually, "attachment" or "inline" */
 	char             *disposition;
 
-	/* size of the part; or <= 0 if unknown */
-	size_t		 size;
+	/* size of the part; or < 0 if unknown */
+	ssize_t		 size;
 
 	gpointer         data; /* opaque data */
 
