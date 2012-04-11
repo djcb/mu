@@ -773,8 +773,12 @@ docid. Otherwise, return nil."
       ;; is not visible
       (when docid
 	(set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
-	;; attempt to highlight the new line
-	(mu4e-hdrs-highlight docid))
+	;; attempt to highlight the new line, display the message
+	(mu4e-hdrs-highlight docid)
+	;; if there already is a visible message view, show the message
+	(when (and (buffer-live-p mu4e-view-buffer)
+		(window-live-p (get-buffer-window mu4e-view-buffer)))
+	  (mu4e-view-message)))
       ;; return the docid only if the move succeeded
       (when succeeded docid))))
 
@@ -922,8 +926,6 @@ for draft messages."
 (defun mu4e-compose-new ()
   "Compose a new message."
   (interactive) (mu4e-compose 'new))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mu4e-hdrs)
