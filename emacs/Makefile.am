@@ -29,7 +29,7 @@ dist_lisp_LISP=			\
 	mu4e-main.el		\
 	mu4e-proc.el		\
 	mu4e-raw-view.el	\
-	mu4e-send.el		\
+	mu4e-compose.el		\
 	mu4e-speedbar.el	\
 	mu4e-vars.el		\
 	mu4e-version.el		\

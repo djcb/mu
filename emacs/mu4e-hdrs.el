@@ -81,14 +81,6 @@ results, otherwise, limit number of results to
   "Handler function for displaying a message."
   (mu4e-view msg mu4e-hdrs-buffer))
 
-(defun mu4e-hdrs-error-handler (err)
-  "Handler function for showing an error."
-  (let ((errcode (plist-get err :error))
-	 (errmsg (plist-get err :error-message)))
-    (case errcode
-      (4 (message "No matches for this search query."))
-      (t (message (format "Error %d: %s" errcode errmsg))))))
-
 (defun mu4e-hdrs-update-handler (msg is-move)
   "Update handler, will be called when a message has been updated
 in the database. This function will update the current list of
@@ -343,17 +335,6 @@ after the end of the search results."
 
 (fset 'mu4e-hdrs-mode-map mu4e-hdrs-mode-map)
 
-  ;; we register our handler functions for the mu4e-proc (mu server) output
-(setq mu4e-proc-error-func   'mu4e-hdrs-error-handler)
-(setq mu4e-proc-update-func  'mu4e-hdrs-update-handler)
-(setq mu4e-proc-header-func  'mu4e-hdrs-header-handler)
-(setq mu4e-proc-found-func   'mu4e-hdrs-found-handler)
-(setq mu4e-proc-view-func    'mu4e-hdrs-view-handler)
-(setq mu4e-proc-remove-func  'mu4e-hdrs-remove-handler)
-(setq mu4e-proc-erase-func   'mu4e-hdrs-clear)
-
-;; this last one is defined in mu4e-send.el
-(setq mu4e-proc-compose-func 'mu4e-send-compose-handler)
 
 (define-derived-mode mu4e-hdrs-mode special-mode
     "mu4e:headers"
@@ -471,7 +452,7 @@ docid DOCID, or nil if it cannot be found."
 with DOCID which must be present in the headers buffer."
   (save-excursion
     (when (mu4e--goto-docid docid)
-      (mu4e-field-at-point field)))) 
+      (mu4e-field-at-point field))))
 
 ;;;; markers mark headers for
 (defun mu4e--mark-header (docid mark)
@@ -897,7 +878,7 @@ for draft messages."
       ;; 'new is special, since it takes no existing message as arg therefore,
       ;; we don't need to call thec backend, and call the handler *directly*
       (if (eq compose-type 'new)
-	(mu4e-send-compose-handler 'new)
+	(mu4e-compose-handler 'new)
 	;; otherwise, we need the doc-id
 	(let ((docid (mu4e--docid-at-point)))
 	  (unless docid (error "No message at point."))

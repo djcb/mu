@@ -27,6 +27,7 @@
 ;;; Code:
 (require 'cl)
 (require 'html2text)
+(require 'mu4e-vars)
 
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create DIR if it does not exist yet. Return t if the
@@ -91,7 +92,7 @@ Function returns the CHAR typed."
 		  (setq ;; eat first kar from descr; use it as kar
 		    kar   (string-to-char descr)
 		    descr (substring descr 1)))
-		(add-to-list 'optionkars kar) 
+		(add-to-list 'optionkars kar)
 		(concat
 		  "[" (propertize (make-string 1 kar) 'face 'mu4e-view-link-face) "]"
 		  descr))) options ", "))
@@ -106,7 +107,7 @@ Function returns the CHAR typed."
       (mu4e-read-option prompt options))
     ;; otherwise, return the response char
     response))
- 
+
 
 (defun mu4e-get-maildirs (parentdir)
   "List the maildirs under PARENTDIR." ;; TODO: recursive?
@@ -335,6 +336,12 @@ top level if there is none."
 	  ('mu4e-view-mode    "(mu4e)Message view")
 	  (t                 "mu4e"))))
 
+(defun mu4e-user-agent ()
+  "Return the User-Agent string for mu4e. This is either the value
+of `mu4e-user-agent', or, if not set, a string based on the versions
+of mu4e and emacs."
+  (or mu4e-user-agent
+    (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)))
 
 (defun mu4e-field-at-point (field)
   "Get FIELD (a symbol, see `mu4e-header-names') for the message at
@@ -373,6 +380,46 @@ that has a live window), and vice versa."
       (select-window other-win)
       (message "No window to switch to"))))
 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; some handler functions for server messages
+;;
+(defun mu4e-info-handler (info)
+  "Handler function for (:info ...) sexps received from the server
+process."
+  (let ((type (plist-get info :info)))
+    (cond
+      ((eq type 'add)
+	;; update our path=>docid map; we use this when composing messages to
+	;; add draft messages to the db, so when we're sending them, we can move
+	;; to the sent folder using the `mu4e-proc-move'.
+	(puthash (plist-get info :path) (plist-get info :docid) mu4e-path-docid-map))
+      ((eq type 'index)
+	(if (eq (plist-get info :status) 'running)
+	  (message (format "Indexing... processed %d, updated %d"
+		     (plist-get info :processed) (plist-get info :updated)))
+	  (message
+	    (format "Indexing completed; processed %d, updated %d, cleaned-up %d"
+	      (plist-get info :processed) (plist-get info :updated)
+	      (plist-get info :cleaned-up)))))
+      ((plist-get info :message) (message "%s" (plist-get info :message))))))
+
+
+(defun mu4e-error-handler (err)
+  "Handler function for showing an error."
+  (let ((errcode (plist-get err :error))
+	 (errmsg (plist-get err :error-message)))
+    (case errcode
+      (4 (message "No matches for this search query."))
+      (t (message (format "Error %d: %s" errcode errmsg))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")
@@ -390,7 +437,7 @@ server has the expected values."
     (if (< emacs-major-version 23)
 	(error "Emacs >= 23.x is required for mu4e")
 	(progn
-	  (setq mu4e-proc-pong-func
+	  (setq mu4e-pong-func
 	    (lambda (version doccount)
 	      (unless (string= version mu4e-mu-version)
 		(error "mu server has version %s, but we need %s"
