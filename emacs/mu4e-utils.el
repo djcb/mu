@@ -64,7 +64,49 @@ dir already existed, or has been created, nil otherwise."
       (unless (mu4e-create-maildir-maybe path)
 	(error "%s (%S) does not exist" path var)))))
 
-
+(defun mu4e-read-option (prompt options)
+  "Ask user for an option from a list on the input area. PROMPT
+describes a multiple-choice question to the user, OPTIONS describe
+the options, and is a list of cells describing particular
+options. Cells have the following structure:
+   (OPTIONSTRING CHAR) where CHAR is a short-cut character for the
+option, and OPTIONSTRING is a non-empty string describing the
+option. If CHAR is nil or not-specified, the first character of the
+optionstring is used.
+The options are provided as a list for the user to choose from;
+user can then choose by typing CHAR.
+Example:
+  (mu4e-read-option \"Choose an animal: \"
+              '((\"Monkey\" ?m) (\"Gnu\" ?g) (\"platipus\")))
+User now will be presented with a list:
+   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"
+Function returns the CHAR typed."
+  (let* ((optionkars)
+	  (optionsstr
+	    (mapconcat
+	    (lambda (option)
+	      (let* ((descr (car option)) (kar (and (cdr option) (cadr option))))
+		;; handle the empty kar case
+		(unless kar
+		  (setq ;; eat first kar from descr; use it as kar
+		    kar   (string-to-char descr)
+		    descr (substring descr 1)))
+		(add-to-list 'optionkars kar) 
+		(concat
+		  "[" (propertize (make-string 1 kar) 'face 'mu4e-view-link-face) "]"
+		  descr))) options ", "))
+	  (inhibit-quit nil) ;; allow C-g from read-char, not sure why this is needed
+	  (response
+	    (ignore-errors
+	      (read-char
+		(concat prompt optionsstr
+		  " [or press " (propertize "C-g" 'face 'highlight) " to quit]")))))
+    ;; if the input is not one of the options, try again
+    (unless (member response optionkars)
+      (mu4e-read-option prompt options))
+    ;; otherwise, return the response char
+    response))
+ 
 
 (defun mu4e-get-maildirs (parentdir)
   "List the maildirs under PARENTDIR." ;; TODO: recursive?
