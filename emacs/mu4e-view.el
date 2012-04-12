@@ -266,7 +266,8 @@ if IS-OPEN is nil, and otherwise open it."
       ;; attachments
       (define-key map "e" 'mu4e-view-extract-attachment)
       (define-key map "o" 'mu4e-view-open-attachment)
-
+      (define-key map "a" 'mu4e-view-handle-attachment)
+      
       ;; marking/unmarking
       (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
       (define-key map "d" 'mu4e-view-mark-for-trash)
@@ -571,6 +572,9 @@ citations."
   (when (mu4e-mark-for-delete)
     (mu4e-view-message)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; attachment handling
+
 (defun mu4e-view-extract-attachment (attnum)
   "Extract the attachment with ATTNUM."
   (interactive "nAttachment to extract:")
@@ -600,6 +604,24 @@ citations."
     (unless id (error "Not a valid attachment number"))
     (mu4e-proc-open (plist-get mu4e-current-msg :docid) id)))
 
+(defun mu4e-view-handle-attachment ()
+  "Ask user what to do with attachments, then do it."
+  (interactive)
+  (let ((choice
+	  (mu4e-read-option
+	    "Handle attachments: "
+	    '(("open")
+	       ("pen all" ?O)
+	       ("save")
+	       ("ave all" ?S)
+	       ("ipe" ?p)
+	       ("macs" ?e)))))
+    (case choice
+      (?o (call-interactively 'mu4e-view-open-attachment))
+      (?s (call-interactively 'mu4e-view-extract-attachment))
+      (otherwise (message "Not yet implemented")))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e--in-split-view ()
   "Return t if we're in split-view, nil otherwise."
