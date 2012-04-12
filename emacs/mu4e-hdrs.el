@@ -676,13 +676,9 @@ action', return nil means 'don't do anything'"
     (unless (or (= marknum 0) (eq what 'ignore) (eq what 'apply))
       ;; if `mu4e-headers-leave-behavior' is not apply or ignore, ask the user
       (setq what
-	(let ((kar
-		(read-char
-		  (concat
-		    "Do you want to "
-		    "[" (propertize "a" 'face 'mu4e-view-link-face) "]pply marks, "
-		    "[" (propertize "i" 'face 'mu4e-view-link-face) "]gnore them, "
-		    "or [" (propertize "c" 'face'mu4e-view-link-face) "]ancel?"))))
+	(let ((kar (mu4e-read-option
+		     "There are existing marks; should we: "
+		     '(("apply marks") ("ignore marks?")))))
 	  (cond
 	    ((= kar ?a) 'apply)
 	    ((= kar ?i) 'ignore)
@@ -729,8 +725,9 @@ otherwise, limit to up to `mu4e-search-results-limit'."
 (defun mu4e-hdrs-kill-buffer-and-window ()
   "Quit the message view and return to the main view."
   (interactive)
-  (mu4e-kill-buffer-and-window mu4e-hdrs-buffer)
-  (mu4e-main-view))
+  (when  (mu4e-handle-marks)
+    (mu4e-kill-buffer-and-window mu4e-hdrs-buffer)
+    (mu4e-main-view)))
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,
