@@ -994,14 +994,10 @@ mu_cmd_server (MuStore *store, MuConfig *opts, GError **err)
 
 	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
 
-	install_sig_handler ();
+	if (!(query = mu_query_new (store, err)))
+		return MU_G_ERROR_CODE (err);
 
 	fputs (";; welcome to mu\n", stdout);
-	fputs (";; type your commands, and press Enter to execute them\n", stdout);
-
-	query = mu_query_new (store, err);
-	if (!query)
-		return MU_G_ERROR_CODE (err);
 
 	while (!MU_CAUGHT_SIGNAL) {
 
