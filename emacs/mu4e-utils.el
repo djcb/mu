@@ -101,10 +101,9 @@ Function returns the CHAR typed."
 	    (ignore-errors
 	      (read-char
 		(concat prompt optionsstr
-		  " [or press " (propertize "C-g" 'face 'highlight) " to quit]")))))
+		  " [" (propertize "C-g" 'face 'highlight) " to quit]")))))
     ;; if the input is not one of the options, try again
-    (unless (member response optionkars)
-      (mu4e-read-option prompt options))
+    (unless (member response optionkars) (mu4e-read-option prompt options))
     ;; otherwise, return the response char
     response))
 
