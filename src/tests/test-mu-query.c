@@ -488,7 +488,6 @@ test_mu_query_attach (void)
 
 	QResults queries[] = {
 		{ "j:sittingbull.jpg", 1},
-		{ "'file:sitting*'", 1},
 		{ "file:custer", 0},
 		{ "file:custer.jpg", 1}
 	};

@@ -428,12 +428,13 @@ mu_str_ascii_xapian_escape_in_place (char *term, gboolean esc_space)
 	gchar *cur;
 	const char escchar = '_';
 	gboolean is_field, is_range_field;
+	unsigned colon;
 
 	g_return_val_if_fail (term, NULL);
 
 	check_for_field (term, &is_field, &is_range_field);
 
-	for (cur = term; *cur; ++cur) {
+	for (colon = 0, cur = term; *cur; ++cur) {
 
 		*cur = tolower(*cur);
 
@@ -448,11 +449,13 @@ mu_str_ascii_xapian_escape_in_place (char *term, gboolean esc_space)
 			break;
 		case ':':
 			/* if there's a registered xapian prefix
-			 * before the ':', don't touch it. Otherwise
-			 * replace ':' with '_'... ugh yuck ugly...
+			 * before the *first* ':', don't touch
+			 * it. Otherwise replace ':' with '_'... ugh
+			 * yuck ugly...
 			 */
-			if (!is_field)
+			if (colon != 0 || !is_field)
 				*cur = escchar;
+			++colon;
 			break;
 		case '\'':
 		case '*':   /* wildcard */
