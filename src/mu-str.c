@@ -186,72 +186,6 @@ mu_str_display_contact (const char *str)
 }
 
 
-struct _CheckPrefix {
-	const char		*pfx;
-	guint			 len;
-	gboolean		 match;
-};
-typedef struct _CheckPrefix	 CheckPrefix;
-
-static void
-each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
-{
-	const char *field_name;
-	char field_shortcut;
-
-	if (!cpfx || cpfx->match)
-		return;
-
-	field_shortcut = mu_msg_field_shortcut (mfid);
-	if (field_shortcut == cpfx->pfx[0] && cpfx->pfx[1] == ':') {
-		cpfx->match = TRUE;
-		return;
-	}
-
-	field_name = mu_msg_field_name (mfid);
-	if (field_name &&
-	    strncmp (cpfx->pfx, field_name, cpfx->len) == 0) {
-		cpfx->match = TRUE;
-		return;
-	}
-}
-
-/* 'colon' points at a position inside q pointing at a ':'
- * character. function determines whether the prefix is a registered
- * prefix (like 'subject' or 'from' or 's') */
-static gboolean
-is_xapian_prefix (const char *q, const char *colon)
-{
-	const char *cur;
-
-	if (colon == q)
-		return FALSE; /* : at beginning, not a prefix */
-
-	/* track back from colon until a boundary or beginning of the
-	 * str */
-	for (cur = colon - 1; cur >= q; --cur) {
-
-		if (cur == q || !isalpha (*(cur-1))) {
-
-			CheckPrefix cpfx;
-			memset (&cpfx, 0, sizeof(CheckPrefix));
-
-			cpfx.pfx   = cur;
-			cpfx.len   = (colon - cur);
-			cpfx.match = FALSE;
-
-			mu_msg_field_foreach ((MuMsgFieldForEachFunc)
-					      each_check_prefix,
-					      &cpfx);
-
-			return (cpfx.match);
-		}
-	}
-
-	return FALSE;
-}
-
-
 gint64
 mu_str_size_parse_bkm (const char* str)
 {
@@ -432,38 +366,92 @@ mu_str_subject_normalize (const gchar* str)
 }
 
 
+struct _CheckPrefix {
+	const char *str;
+	gboolean   match;
+	gboolean   range_field;
+};
+typedef struct _CheckPrefix	 CheckPrefix;
+
+
+
+static void
+each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
+{
+	const char *pfx;
+	char pfx_short[3] = { 'X', ':', '\0'};
+	char k;
+
+	if (!cpfx || cpfx->match)
+		return;
+
+	k = pfx_short[0] = mu_msg_field_shortcut (mfid);
+	if (k && g_str_has_prefix (cpfx->str, pfx_short)) {
+		cpfx->match = TRUE;
+		cpfx->range_field = mu_msg_field_is_range_field (mfid);
+	}
+
+	pfx = mu_msg_field_name (mfid);
+	if (pfx && g_str_has_prefix (cpfx->str, pfx) &&
+	    cpfx->str[strlen(pfx)] == ':') {
+		cpfx->match = TRUE;
+		cpfx->range_field = mu_msg_field_is_range_field (mfid);
+	}
+}
+
+
+static void
+check_for_field (const char *str, gboolean *is_field, gboolean *is_range_field)
+{
+	CheckPrefix pfx;
+
+	pfx.str   = str;
+	pfx.match =  pfx.range_field = FALSE;
+
+	mu_msg_field_foreach ((MuMsgFieldForeachFunc)each_check_prefix,
+			      &pfx);
+
+	*is_field	= pfx.match;
+	*is_range_field = pfx.range_field;
+}
 
 /*
  * Xapian treats various characters such as '@', '-', ':' and '.'
  * specially; function below is an ugly hack to make it DWIM in most
- * cases...*/
+ * cases...
+ *
+ * function expects search terms (not complete queries)
+ * */
 char*
-mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space)
+mu_str_ascii_xapian_escape_in_place (char *term, gboolean esc_space)
 {
 	gchar *cur;
 	const char escchar = '_';
+	gboolean is_field, is_range_field;
 
-	g_return_val_if_fail (query, NULL);
+	g_return_val_if_fail (term, NULL);
 
-	for (cur = query; *cur; ++cur) {
+	check_for_field (term, &is_field, &is_range_field);
+
+	for (cur = term; *cur; ++cur) {
 
 		*cur = tolower(*cur);
 
 		switch (*cur) {
 			*cur = escchar;
 			break;
-		case '.': /* don't escape '..' */
-			if (cur[1]=='.')
+		case '.': /* escape '..' if it's not a range field*/
+			if (is_range_field && cur[1] == '.')
 				cur += 1;
 			else
 				*cur = escchar;
 			break;
 		case ':':
-			/* if there's a registered xapian prefix before the
-			 * ':', don't touch it. Otherwise replace ':' with
-			 * a _'... ugh yuck ugly...
+			/* if there's a registered xapian prefix
+			 * before the ':', don't touch it. Otherwise
+			 * replace ':' with '_'... ugh yuck ugly...
 			 */
-			if (!is_xapian_prefix (query, cur))
+			if (!is_field)
 				*cur = escchar;
 			break;
 		case '\'':
@@ -476,7 +464,7 @@ mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space)
 
 	}
 
-	return query;
+	return term;
 }
 
 char*
