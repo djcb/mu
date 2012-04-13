@@ -164,7 +164,7 @@ public:
 		_qparser.add_valuerangeprocessor (&_date_range_processor);
 		_qparser.add_valuerangeprocessor (&_size_range_processor);
 
-		mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_prefix,
+		mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_prefix,
 				      &_qparser);
 	}
 
@@ -212,9 +212,8 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 		return query;
 
 	} catch (...) {
-		/* some error occured */
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_QUERY,
-			     "parse error in query");
+		mu_util_g_set_error (err,MU_ERROR_XAPIAN_QUERY,
+				     "parse error in query");
 		g_free (preprocessed);
 		throw;
 	}
@@ -345,7 +344,6 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }
-
 
 
 char*
