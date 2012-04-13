@@ -443,6 +443,27 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 
 
 
+void
+mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
+{
+	va_list ap;
+	char *msg;
+
+	/* don't bother with NULL errors, or errors already set */
+	if (!err || *err)
+		return;
+
+	msg = NULL;
+	va_start (ap, frm);
+	g_vasprintf (&msg, frm, ap);
+	va_end (ap);
+
+	g_set_error (err, MU_ERROR_DOMAIN, errcode, "%s", msg);
+
+	g_free (msg);
+}
+
+
 static gboolean
 print_args (FILE *stream, const char *frm, va_list args)
 {

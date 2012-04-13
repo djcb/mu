@@ -78,8 +78,8 @@ mu_store_new_read_only (const char* xpath, GError **err)
 		return new _MuStore (xpath);
 
 	} catch (const MuStoreError& merr) {
-		g_set_error (err, MU_ERROR_DOMAIN, merr.mu_error(), "%s",
-			     merr.what().c_str());
+		mu_util_g_set_error (err, merr.mu_error(), "%s",
+				merr.what().c_str());
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR(err, MU_ERROR_XAPIAN);
 
