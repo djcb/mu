@@ -60,8 +60,10 @@ enum _FieldFlags {
 					    * body */
 	FLAG_NORMALIZE	         = 1 << 8, /* field needs flattening for
 					    * case/accents */
-	FLAG_DONT_CACHE          = 1 << 9  /* don't cache this field in
+	FLAG_DONT_CACHE          = 1 << 9,  /* don't cache this field in
 					    * the MuMsg cache */
+	FLAG_RANGE_FIELD         = 1 << 10  /* whether this is a range field */
+
 };
 typedef enum _FieldFlags	FieldFlags;
 
@@ -122,7 +124,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"date", 'd', 'D',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY | FLAG_RANGE_FIELD
 	},
 
 	{
@@ -194,7 +196,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_BYTESIZE,
 		"size", 'z', 'Z', /* siZe */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_XAPIAN_PREFIX_ONLY | FLAG_RANGE_FIELD
 	},
 
 	{
@@ -267,7 +269,7 @@ static const MuMsgField* mu_msg_field (MuMsgFieldId id)
 
 
 void
-mu_msg_field_foreach (MuMsgFieldForEachFunc func, gconstpointer data)
+mu_msg_field_foreach (MuMsgFieldForeachFunc func, gconstpointer data)
 {
 	int i;
 	for (i = 0; i != MU_MSG_FIELD_ID_NUM; ++i)
@@ -286,7 +288,7 @@ mu_msg_field_id_from_name (const char* str, gboolean err)
 		if (g_strcmp0(str, FIELD_DATA[i]._name) == 0)
 			return FIELD_DATA[i]._id;
 
-	if (err)
+if (err)
 		g_return_val_if_reached (MU_MSG_FIELD_ID_NONE);
 
 	return MU_MSG_FIELD_ID_NONE;
@@ -336,6 +338,15 @@ mu_msg_field_xapian_term (MuMsgFieldId id)
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
 	return mu_msg_field(id)->_flags & FLAG_XAPIAN_TERM  ? TRUE: FALSE;
 }
+
+
+gboolean
+mu_msg_field_is_range_field (MuMsgFieldId id)
+{
+	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
+	return mu_msg_field(id)->_flags & FLAG_RANGE_FIELD  ? TRUE: FALSE;
+}
+
 
 
 gboolean

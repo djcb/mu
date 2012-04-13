@@ -82,7 +82,7 @@ enum _MuMsgFieldType {
 typedef guint8 MuMsgFieldType;
 static const MuMsgFieldType MU_MSG_FIELD_TYPE_NONE = (MuMsgFieldType)-1;
 
-typedef void (*MuMsgFieldForEachFunc) (MuMsgFieldId id,
+typedef void (*MuMsgFieldForeachFunc) (MuMsgFieldId id,
 				       gconstpointer data);
 
 /**
@@ -91,7 +91,7 @@ typedef void (*MuMsgFieldForEachFunc) (MuMsgFieldId id,
  * @param func a function called for each field
  * @param data a user data pointer passed the callback function
  */
-void mu_msg_field_foreach (MuMsgFieldForEachFunc func, gconstpointer data);
+void mu_msg_field_foreach (MuMsgFieldForeachFunc func, gconstpointer data);
 
 
 /**
@@ -135,6 +135,7 @@ char  mu_msg_field_xapian_prefix (MuMsgFieldId id) G_GNUC_PURE;
  * MU_MSG_FIELD_TYPE_NONE if it is not found
  */
 MuMsgFieldType mu_msg_field_type (MuMsgFieldId id) G_GNUC_PURE;
+
 
 
 /**
@@ -221,7 +222,6 @@ gboolean mu_msg_field_xapian_value (MuMsgFieldId id) G_GNUC_PURE;
 gboolean mu_msg_field_uses_boolean_prefix (MuMsgFieldId id) G_GNUC_PURE;
 
 
-
 /**
  * wether this fields needs a prefix in queries -- ie,
  * 'msgid:<some-message-id>' will only match with the explicit prefix,
@@ -253,9 +253,18 @@ gboolean mu_msg_field_xapian_escape (MuMsgFieldId id) G_GNUC_PURE;
  *
  * @param field a MuMsgField
  *
- * @return TRUE if the field is normalized, FALSE otherwise
+ * @return TRUE if the field is to be normalized, FALSE otherwise
  */
 gboolean mu_msg_field_normalize (MuMsgFieldId id) G_GNUC_PURE;
+
+/**
+ * is this a range-field? ie. date, or size
+ *
+ * @param id a MuMsgField
+ *
+ * @return TRUE if this field is a range field, FALSE otherwise
+ */
+gboolean mu_msg_field_is_range_field (MuMsgFieldId id) G_GNUC_PURE;
 
 
 /**
