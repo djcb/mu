@@ -188,16 +188,28 @@ test_mu_str_ascii_xapian_escape (void)
 		const char*	esc;
 	} words [] = {
 		{ "aap@noot.mies", "aap_noot_mies"},
-		{ "Foo..Bar", "foo..bar" },
+		{ "Foo..Bar", "foo__bar" },
 		{ "Foo.Bar", "foo_bar" },
 		{ "Foo. Bar", "foo__bar" },
 		{ "subject:test@foo", "subject:test_foo" },
 		{ "xxx:test@bar", "xxx_test_bar" },
+		{ "aa$bb$cc", "aa_bb_cc" },
+		{ "date:2010..2012", "date:2010..2012"},
+		{ "d:2010..2012", "d:2010..2012"},
+		{ "size:10..20", "size:10..20"},
+		{ "x:2010..2012", "x:2010__2012"},
+		{ "q:2010..2012", "q_2010__2012"},
+		{ "subject:2010..2012", "subject:2010__2012"}
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *a = g_strdup (words[i].word);
 		mu_str_ascii_xapian_escape_in_place (a, FALSE);
+
+		if (g_test_verbose())
+			g_print ("expected: '%s' <=> got: '%s'\n",
+				 words[i].esc, a);
+
 		g_assert_cmpstr (a, ==, words[i].esc);
 		g_free (a);
 	}
