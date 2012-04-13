@@ -314,16 +314,6 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 	if (mu_msg_field_xapian_value(mfid))
 		doc.add_value ((Xapian::valueno)mfid, val);
 
-	// if (mfid == MU_MSG_FIELD_ID_SUBJECT) {
-	// 	gchar *str;
-	// 	g_print ("subject:%s\n", val);
-	// 	str = mu_str_normalize (val, TRUE);
-	// 	g_print ("norm   :%s\n", str);
-	// 	mu_str_ascii_xapian_escape_in_place (str, TRUE);
-	// 	g_print ("esc    :%s\n", str);
-	// 	g_free (str);
-	// }
-
 	/* now, let's create some search terms... */
 	if (mu_msg_field_normalize (mfid))
 		mu_str_normalize_in_place (val, TRUE);
@@ -663,7 +653,7 @@ new_doc_from_message (MuStore *store, MuMsg *msg)
 	Xapian::Document doc;
 	MsgDoc docinfo = {&doc, msg, store};
 
-	mu_msg_field_foreach ((MuMsgFieldForEachFunc)add_terms_values, &docinfo);
+	mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
 	/* also store the contact-info as separate terms */
 	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact_info,
 				&docinfo);
@@ -752,7 +742,6 @@ mu_store_add_path (MuStore *store, const char *path, const char *maildir,
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (path, FALSE);
 
-	err = NULL;
 	msg = mu_msg_new_from_file (path, maildir, err);
 	if (!msg)
 		return MU_STORE_INVALID_DOCID;
