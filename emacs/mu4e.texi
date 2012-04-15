@@ -657,7 +657,6 @@ R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
 
 .            show the raw message view. ./q take you back
-|            pipe the message through a shell command
 
 g            go to (visit) numbered URL (using `browse-url')
              (or: <mouse-2> or RET with point on url)
@@ -665,6 +664,7 @@ e            extract (save) attachment (asks for number)
              (or: <mouse-2> or RET with point on attachment)
 o            open attachment (asks for number)
              (or: <S-mouse-2> or S-RET with point on attachment)
+a            additional attachment handling
 w            toggle line wrapping
 h            toggle showing cited parts
 
@@ -676,12 +676,12 @@ Note that @key{x}, which means 'execute actions on marked messages' is not
 available in this view, to reduce the risk of accidents. You need to go back
 to the headers view to effectuate the actions.
 
-@subsection Attachments
+@subsection Opening and saving attachments
 
-By default, the attachment is opened using either the @t{xdg-open}-program
-@footnote{@url{http://portland.freedesktop.org/wiki/}} or (on MacOS) the
-q@t{open} program. If you want to use another program, you specify this by
-setting the @t{MU_PLAY_PROGRAM} environment variable.
+By default, when opening attachments, @t{mu4e} uses the the
+@t{xdg-open}-program @footnote{@url{http://portland.freedesktop.org/wiki/}} or
+(on MacOS) the @t{open} program. If you want to use another program, you can
+specify this by setting the @t{MU_PLAY_PROGRAM} environment variable.
 
 When extracting (saving) attachments (with @key{e}), the default directory for
 saving them is your home directory (@file{~/}); you can change this using the
@@ -691,7 +691,26 @@ variable @code{mu4e-attachment-dir}, for example:
 (setq mu4e-attachment-dir (file-name-expand "~/Downloads"))
 @end lisp
 
-@subsection Displaying messages
+@subsection Additional actions on attachments
+
+When you press @key{a} (@code{mu4e-view-handle-attachment}), @t{mu4e} lets you
+choose from a list with some more actions to perform on attachments:
+@itemize
+@item @t{open-with} (@key{w}): open the attachment with some arbitrary
+program. For example, suppose you have received a message with a picture
+attachment; then, @t{a w 1 RET gimp RET} will open that attachment in The Gimp.
+@item @t{pipe} (@key{|}: process the attachment with some Unix shell-pipe and
+see the results. Suppose you receive a patch file, and would like to get an
+overview of the changes, using the @t{diffstat} program. You can use something
+like: @t{a | 1 RET diffstat -b RET}.
+@item @t{emacs} (@key{e}): open the attachment in your running @t{emacs}
+. For example, if you receive some text file you'd like to open in @t{emacs}:
+@t{a e 1 RET}.
+@end itemize
+
+Note that all these action work on temporary copy of the attachment.
+
+@subsection Displaying rich-text messages
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
 messages consisting of both a plain-text and an html (rich-text) version of
