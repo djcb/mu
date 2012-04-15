@@ -41,7 +41,7 @@
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
 wanting to show specific messages - for example, `mu4e-org'."
-  (mu4e-proc-view-msg msgid))
+  (mu4e-proc-view msgid))
 
 (defun mu4e-view (msg hdrsbuf &optional update)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -57,6 +57,7 @@ marking if it still had that."
 	 (inhibit-read-only t))
     (with-current-buffer buf
       (setq mu4e-view-buffer buf)
+      (setq mu4e-attach-map nil) ;; clear any old attachment stuff
       (erase-buffer)
       (insert
 	(mapconcat
@@ -160,16 +161,15 @@ marking if it still had that."
 (defvar mu4e-attach-map nil
   "*internal* Hash which maps a number to a (part-id name mime-type).")
 
-
 (defun mu4e-open-save-attach-func (num is-open)
-  "Return a function that offers to extracts (saves) attachment NUM
-if IS-OPEN is nil, and otherwise open it."
+  "Return a function that offers to save attachment NUM. If IS-OPEN
+is nil, and otherwise open it."
   (lexical-let ((num num) (is-open is-open))
     (lambda ()
       (interactive)
       (if is-open
 	(mu4e-view-open-attachment num)
-	(mu4e-view-extract-attachment num)))))
+	(mu4e-view-save-attachment num)))))
 
 (defun mu4e-view-attachments (msg)
   "Display attachment information; the field looks like something like:
@@ -264,10 +264,10 @@ if IS-OPEN is nil, and otherwise open it."
       (define-key map "y" 'mu4e-select-other-view)
 
       ;; attachments
-      (define-key map "e" 'mu4e-view-extract-attachment)
+      (define-key map "e" 'mu4e-view-save-attachment)
       (define-key map "o" 'mu4e-view-open-attachment)
       (define-key map "a" 'mu4e-view-handle-attachment)
-      
+
       ;; marking/unmarking
       (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
       (define-key map "d" 'mu4e-view-mark-for-trash)
@@ -315,7 +315,7 @@ if IS-OPEN is nil, and otherwise open it."
 	(define-key menumap [open-att]
 	  '("Open attachment" . mu4e-view-open-attachment))
 	(define-key menumap [extract-att]
-	  '("Extract attachment" . mu4e-view-extract-attachment))
+	  '("Extract attachment" . mu4e-view-save-attachment))
 	(define-key menumap [goto-url]
 	  '("Visit URL" . mu4e-view-go-to-url))
 
@@ -367,8 +367,8 @@ if IS-OPEN is nil, and otherwise open it."
   (setq truncate-lines t))
 
 
-;; we mark messages are as read when we leave the message; i.e., when skipping to
-;; the next/previous one, or leaving the view buffer altogether.
+;; we mark messages are as read when we leave the message; i.e., when skipping
+;; to the next/previous one, or leaving the view buffer altogether.
 
 (defun mu4e-view-mark-as-read-maybe ()
   "Clear the current message's New/Unread status and set it to
@@ -378,8 +378,7 @@ Seen; if the message is not New/Unread, do nothing."
 	   (docid (plist-get mu4e-current-msg :docid)))
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
-	(mu4e-proc-flag docid "+S-u-N")))))
-
+	(mu4e-proc-move docid nil "+S-u-N")))))
 
 (defun mu4e-color-cited ()
   "Colorize message content based on the citation level."
@@ -574,35 +573,87 @@ citations."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
+(defun mu4e--get-attach-count ()
+  "Get the number of attachments for this message."
+  (if (null mu4e-attach-map)
+    0
+    (hash-table-count mu4e-attach-map)))
 
-(defun mu4e-view-extract-attachment (attnum)
-  "Extract the attachment with ATTNUM."
-  (interactive "nAttachment to extract:")
-  (unless mu4e-attachment-dir (error "`mu4e-attachment-dir' is not set"))
-  (when (or (null mu4e-attach-map) (zerop (hash-table-count mu4e-attach-map)))
-    (error "No attachments for this message"))
-  (let* ((att  (gethash attnum mu4e-attach-map))
-	  (path (and att (concat mu4e-attachment-dir
-			   "/"  (plist-get att :name))))
-	  (id (and att (plist-get att :index)))
+(defun mu4e--get-valid-attach (prompt &optional attachnum)
+  "Find an attachment sexp for attachment by asking user with
+PROMPT. Return the sexp with this is present in the message, nil
+otherwise. If (optional) INDEX is provided, don't ask user but just
+return the corresponding attachment sexp."
+  (let ((count (mu4e--get-attach-count)))
+    (when (zerop count)
+      (error "No attachments for this message"))
+    (let* ((attnum
+	     (or attachnum
+	       (if (= count 1)
+		 (read-number (format "%s (1): " prompt) 1)
+		 (read-number (format "%s (1-%d): " prompt count)))))
+	    (att (gethash attnum mu4e-attach-map)))
+      (unless att
+	(error "Not a valid attachment number"))
+      att)))
+
+(defun mu4e-view-save-attachment (&optional attachnum)
+  "Save some attachment (ask user which)."
+  (interactive)
+  (unless mu4e-attachment-dir
+    (error "`mu4e-attachment-dir' is not set"))
+  (let* ((att (mu4e--get-valid-attach "Attachment to save" attachnum))
+	  (path (concat mu4e-attachment-dir
+		  "/"  (plist-get att :name)))
+	  (index (plist-get att :index))
 	  (retry t))
-    (unless att (error "Not a valid attachment number"))
     (while retry
       (setq path (expand-file-name (read-string "Save as " path)))
       (setq retry
 	(and (file-exists-p path)
 	  (not (y-or-n-p (concat "Overwrite " path "?"))))))
-    (mu4e-proc-save (plist-get mu4e-current-msg :docid) id path)))
+    (mu4e-proc-extract
+      'save (plist-get mu4e-current-msg :docid) index path)))
 
-(defun mu4e-view-open-attachment (attnum)
-  "Extract the attachment with ATTNUM"
-  (interactive "nAttachment to open:")
-  (unless mu4e-attach-map
-    (error "No attachments for this message"))
-  (let* ((att (gethash attnum mu4e-attach-map))
-	  (id (and att (plist-get att :index))))
-    (unless id (error "Not a valid attachment number"))
-    (mu4e-proc-open (plist-get mu4e-current-msg :docid) id)))
+(defun mu4e-view-open-attachment (&optional attachnum)
+  "Open some attachment (ask user which)."
+  (interactive)
+  (let* ((att (mu4e--get-valid-attach "Attachment to open" attachnum))
+	  (index (plist-get att :index)))
+    (mu4e-proc-extract 'open
+      (plist-get mu4e-current-msg :docid) index)))
+
+(defun mu4e--temp-action (docid index what &optional param)
+  "Open attachment INDEX for message with DOCID, and invoke
+ACTION."
+  (interactive)
+  (mu4e-proc-extract 'temp docid index nil what param))
+
+(defun mu4e-view-open-attachment-with ()
+  "Open some attachment with some program (ask user which)."
+  (interactive)
+  (let* ((att (mu4e--get-valid-attach "Attachment to open"))
+	  (cmd (read-string "Shell command to open it with: "))
+	  (index (plist-get att :index)))
+    (mu4e--temp-action (plist-get mu4e-current-msg :docid) index
+      "open-with" cmd)))
+
+(defun mu4e-view-pipe-attachment ()
+  "Open some attachment with some program (ask user which)."
+  (interactive)
+  (let* ((att (mu4e--get-valid-attach "Attachment to process"))
+	  (cmd (read-string "Pipe: "))
+	  (index (plist-get att :index)))
+    (mu4e--temp-action (plist-get mu4e-current-msg :docid) index
+      "pipe" cmd)))
+
+(defun mu4e-view-open-attachment-emacs ()
+  "Open some attachment in the current emacs instance."
+  (interactive)
+  (let* ((att (mu4e--get-valid-attach "Attachment to open in current emacs"))
+	  (index (plist-get att :index)))
+    (mu4e--temp-action (plist-get mu4e-current-msg :docid) index
+      "emacs")))
 
 (defun mu4e-view-handle-attachment ()
   "Ask user what to do with attachments, then do it."
@@ -610,17 +661,34 @@ citations."
   (let ((choice
 	  (mu4e-read-option
 	    "Handle attachments: "
-	    '(("open")
-	       ("pen all" ?O)
-	       ("save")
-	       ("ave all" ?S)
-	       ("ipe" ?p)
-	       ("macs" ?e)))))
+	    '(("open-with" ?w)
+	       ("in emacs" ?e)
+	       ("pipe" ?|)))))
     (case choice
-      (?o (call-interactively 'mu4e-view-open-attachment))
-      (?s (call-interactively 'mu4e-view-extract-attachment))
+      (?w (call-interactively 'mu4e-view-open-attachment-with))
+      (?| (call-interactively 'mu4e-view-pipe-attachment))
+      (?e (call-interactively 'mu4e-view-open-attachment-emacs))
       (otherwise (message "Not yet implemented")))))
 
+;; handler-function to handle the response we get from the server when we
+;; want to do something with one of the attachments.
+(defun mu4e-view-temp-handler (path what param)
+  "Handler function for doing things with temp files (ie.,
+attachments) in response to a (mu4e-proc-extract 'temp ... )."
+    (cond
+      ((string= what "open-with")
+	;; 'param' will be the program to open-with
+	(start-file-process-shell-command "*mu4e-open-with*" nil
+	  (concat param " " path)))
+      ((string= what "pipe")
+	;; 'param' will be the pipe command, path the infile for this
+	(switch-to-buffer (get-buffer-create "*mu4e-output*"))
+	(erase-buffer)
+	(call-process-shell-command param path t t)
+	(view-mode))
+      ((string= what "emacs")
+	(find-file path))
+      (t (error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e--in-split-view ()
@@ -673,6 +741,5 @@ results."
     (error "No current message"))
   (mu4e-view-shell-command-on-raw-message mu4e-current-msg
     (current-buffer) cmd))
-
 
 (provide 'mu4e-view)

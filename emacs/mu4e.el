@@ -42,7 +42,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; register our handler functions; these connect server messages to functions
-;; to handle them. 
+;; to handle them.
 ;;
 ;;
 ;; these are all defined in mu4e-hdrs
@@ -64,6 +64,10 @@
 ;; note: mu4e-compose.el dynamically registers mu4e-sent-func
 ;; we don't do that here, because it's only a local (temporary)
 ;; handler
+
+;; this one is defined in mu4e-view
+(setq mu4e-temp-func 'mu4e-view-temp-handler)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

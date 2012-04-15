@@ -114,7 +114,7 @@ Also see `mu4e-headers-visible-lines' and `mu4e-headers-visible-columns'.")
   "E-mail-sending related settings for mu4e."
   :group 'mu4e)
 
- 
+
 ;; Folders
 (defgroup mu4e-folders nil
   "Special folders."
@@ -525,6 +525,10 @@ the server process.")
 (defvar mu4e-pong-func 'mu4e--default-handler
   "A function called for each (:pong type ....) sexp received from
 the server process.")
+
+(defvar mu4e-temp-func 'mu4e--default-handler
+  "A function called for each (:temp <file> <cookie>) sexp received
+from the server process.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
