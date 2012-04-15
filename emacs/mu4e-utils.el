@@ -97,16 +97,17 @@ Function returns the CHAR typed."
 		  "[" (propertize (make-string 1 kar) 'face 'mu4e-view-link-face) "]"
 		  descr))) options ", "))
 	  (inhibit-quit nil) ;; allow C-g from read-char, not sure why this is needed
-	  (response
-	    (ignore-errors
-	      (read-char
-		(concat prompt optionsstr
-		  " [" (propertize "C-g" 'face 'highlight) " to quit]")))))
-    ;; if the input is not one of the options, try again
-    (unless (member response optionkars) (mu4e-read-option prompt options))
-    ;; otherwise, return the response char
+	  (okchar)
+	  (response))
+    (while (not okchar)
+      (message nil) ;; we need to clear the echo area first... why?!
+      (setq response
+	  (read-char-exclusive
+	    (concat prompt optionsstr
+	      " [" (propertize "C-g" 'face 'highlight) " to quit]")))
+      (setq okchar (member response optionkars)))
     response))
-
+ 
 
 (defun mu4e-get-maildirs (parentdir)
   "List the maildirs under PARENTDIR." ;; TODO: recursive?
@@ -330,10 +331,10 @@ processing takes part in the background, unless buf is non-nil."
 top level if there is none."
   (interactive)
   (info (case major-mode
-	  ('mu4e-main-mode    "(mu4e)Main view")
-	  ('mu4e-hdrs-mode    "(mu4e)Headers view")
-	  ('mu4e-view-mode    "(mu4e)Message view")
-	  (t                 "mu4e"))))
+	  ('mu4e-main-mode "(mu4e)Main view")
+	  ('mu4e-hdrs-mode "(mu4e)Headers view")
+	  ('mu4e-view-mode "(mu4e)Message view")
+	  (t               "mu4e"))))
 
 (defun mu4e-user-agent ()
   "Return the User-Agent string for mu4e. This is either the value
@@ -406,16 +407,12 @@ process."
       ((plist-get info :message) (message "%s" (plist-get info :message))))))
 
 
-(defun mu4e-error-handler (err)
+(defun mu4e-error-handler (errcode errmsg)
   "Handler function for showing an error."
-  (let ((errcode (plist-get err :error))
-	 (errmsg (plist-get err :error-message)))
-    (case errcode
+  (case errcode
       (4 (message "No matches for this search query."))
-      (t (message (format "Error %d: %s" errcode errmsg))))))
+      (t (message (format "Error %d: %s" errcode errmsg)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 
 
