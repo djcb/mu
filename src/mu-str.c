@@ -423,9 +423,9 @@ check_for_field (const char *str, gboolean *is_field, gboolean *is_range_field)
  * function expects search terms (not complete queries)
  * */
 char*
-mu_str_ascii_xapian_escape_in_place (char *term, gboolean esc_space)
+mu_str_xapian_escape_in_place (char *term, gboolean esc_space)
 {
-	gchar *cur;
+	unsigned char *cur;
 	const char escchar = '_';
 	gboolean is_field, is_range_field;
 	unsigned colon;
@@ -434,13 +434,10 @@ mu_str_ascii_xapian_escape_in_place (char *term, gboolean esc_space)
 
 	check_for_field (term, &is_field, &is_range_field);
 
-	for (colon = 0, cur = term; *cur; ++cur) {
-
-		*cur = tolower(*cur);
+	for (colon = 0, cur = (unsigned char*)term; *cur; ++cur) {
 
 		switch (*cur) {
-			*cur = escchar;
-			break;
+
 		case '.': /* escape '..' if it's not a range field*/
 			if (is_range_field && cur[1] == '.')
 				cur += 1;
@@ -461,21 +458,24 @@ mu_str_ascii_xapian_escape_in_place (char *term, gboolean esc_space)
 		case '*':   /* wildcard */
 			break;
 		default:
-			if (!isalnum(*cur))
+			/* escape all other special stuff */
+			if (*cur < '0' || (*cur > '9' && *cur < 'A')
+			    || (*cur > 'Z' && *cur < 'a') ||
+			    (*cur > 'z' && *cur < 0x80))
 				*cur = escchar;
 		}
-
 	}
 
-	return term;
+	/* downcase try to remove accents etc. */
+	return mu_str_normalize_in_place (term, TRUE);
 }
 
 char*
-mu_str_ascii_xapian_escape (const char *query, gboolean esc_space)
+mu_str_xapian_escape (const char *query, gboolean esc_space)
 {
 	g_return_val_if_fail (query, NULL);
 
-	return mu_str_ascii_xapian_escape_in_place (g_strdup(query), esc_space);
+	return mu_str_xapian_escape_in_place (g_strdup(query), esc_space);
 }
 
 

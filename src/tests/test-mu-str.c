@@ -180,7 +180,7 @@ test_mu_str_esc_to_list (void)
 }
 
 static void
-test_mu_str_ascii_xapian_escape (void)
+test_mu_str_xapian_escape (void)
 {
 	int			i;
 	struct {
@@ -204,7 +204,7 @@ test_mu_str_ascii_xapian_escape (void)
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *a = g_strdup (words[i].word);
-		mu_str_ascii_xapian_escape_in_place (a, FALSE);
+		mu_str_xapian_escape_in_place (a, FALSE);
 
 		if (g_test_verbose())
 			g_print ("expected: '%s' <=> got: '%s'\n",
@@ -214,6 +214,36 @@ test_mu_str_ascii_xapian_escape (void)
 		g_free (a);
 	}
 }
+
+
+static void
+test_mu_str_xapian_escape_non_ascii (void)
+{
+	int			i;
+	struct {
+		const char*	word;
+		const char*	esc;
+	} words [] = {
+		{ "Тесла, Никола", "тесла__никола"},
+		{ "Masha@Аркона.ru", "masha_аркона_ru" },
+		{ "foo:ελληνικά", "foo_ελληνικά" },
+		{ "日本語!!", "日本語__" },
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
+		gchar *a = g_strdup (words[i].word);
+		mu_str_xapian_escape_in_place (a, FALSE);
+
+		if (g_test_verbose())
+			g_print ("(%s) expected: '%s' <=> got: '%s'\n",
+				 words[i].word, words[i].esc, a);
+
+		g_assert_cmpstr (a, ==, words[i].esc);
+		g_free (a);
+	}
+}
+
+
 
 
 static void
@@ -454,8 +484,10 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-normalize-02",
 			 test_mu_str_normalize_02);
 
-	g_test_add_func ("/mu-str/mu-str-ascii-xapian-escape",
-			 test_mu_str_ascii_xapian_escape);
+	g_test_add_func ("/mu-str/mu-str-xapian-escape",
+			 test_mu_str_xapian_escape);
+	g_test_add_func ("/mu-str/mu-str-xapian-escape-non-ascii",
+			 test_mu_str_xapian_escape_non_ascii);
 
 	g_test_add_func ("/mu-str/mu-str-display_contact",
 			 test_mu_str_display_contact);

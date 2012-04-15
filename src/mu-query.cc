@@ -298,7 +298,7 @@ mu_query_preprocess (const char *query, GError **err)
 		cur->data = mu_str_normalize_in_place ((gchar*)cur->data, TRUE);
 		/* escape '@', single '_' and ':' if it's not following a
 		 * xapian-pfx with '_' */
-		cur->data = mu_str_ascii_xapian_escape_in_place
+		cur->data = mu_str_xapian_escape_in_place
 			((gchar*)cur->data, TRUE /*escape spaces too*/);
 	}
 

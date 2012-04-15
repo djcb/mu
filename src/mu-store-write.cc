@@ -324,7 +324,7 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 		termgen.index_text_without_positions (val, 1, prefix(mfid));
 	}
 	if (mu_msg_field_xapian_escape (mfid))
-		mu_str_ascii_xapian_escape_in_place (val,
+		mu_str_xapian_escape_in_place (val,
 						     TRUE /*esc_space*/);
 	if (mu_msg_field_xapian_term(mfid))
 		doc.add_term (prefix(mfid) +
@@ -476,7 +476,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 
 		/* now, let's create a term... */
 		mu_str_normalize_in_place (val, TRUE);
-		mu_str_ascii_xapian_escape_in_place (val, TRUE /*esc space*/);
+		mu_str_xapian_escape_in_place (val, TRUE /*esc space*/);
 
 		pdata->_doc.add_term
 			(file + std::string(val, 0, MuStore::MAX_TERM_LENGTH));
@@ -632,8 +632,8 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	if (!mu_str_is_empty(contact->address)) {
 
 		char *escaped;
-		escaped = mu_str_ascii_xapian_escape (contact->address,
-						      FALSE /*dont esc space*/);
+		escaped = mu_str_xapian_escape (contact->address,
+						FALSE /*dont esc space*/);
 		msgdoc->_doc->add_term
 			(std::string  (pfx + escaped, 0, MuStore::MAX_TERM_LENGTH));
 		g_free (escaped);

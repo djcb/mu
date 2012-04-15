@@ -138,14 +138,12 @@ char* mu_str_normalize_in_place (char *str, gboolean downcase);
  * changing is done in-place (by changing the argument string). in any
  * case, the string will be downcased.
  *
- * works for ascii strings, like e-mail addresses and message-id.
- *
  * @param query a query string
  * @param esc_space escape space characters as well
  *
  * @return the escaped string or NULL in case of error
  */
-char* mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space);
+char* mu_str_xapian_escape_in_place (char *query, gboolean esc_space);
 
 /**
  * escape the string for use with xapian matching. in practice, if the
@@ -153,14 +151,12 @@ char* mu_str_ascii_xapian_escape_in_place (char *query, gboolean esc_space);
  * replace ':' with '_', if it's not following a xapian-prefix (such
  * as 'subject:', 't:' etc, as defined in mu-msg-fields.[ch]).
  *
- * works for ascii strings, like e-mail addresses and message-id.
- *
  * @param query a query string
  * @param esc_space escape space characters as well
  *
  * @return the escaped string (free with g_free) or NULL in case of error
  */
-char* mu_str_ascii_xapian_escape (const char *query, gboolean esc_space)
+char* mu_str_xapian_escape (const char *query, gboolean esc_space)
         G_GNUC_WARN_UNUSED_RESULT;
 
 
