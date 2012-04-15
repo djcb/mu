@@ -7,6 +7,14 @@
     - much faster header buffers
     - fix off-by-one in number of matches shown
     - split view mode (headers, view); see `mu4e-split-view'.
+    - ability to open attachments with arbitrary program, pipe through shell
+      commands or open in the current emacs
+    - quote names in recipient addresses
+
+*** general
+
+    - fix for opening files with non-ascii names
+    - smarter escaping (fixes issues with finding message ids)
 
 
 ** Release 0.9.8.3 <2012-04-06>
