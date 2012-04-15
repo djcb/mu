@@ -433,7 +433,7 @@ headers)."
      (:bcc           .  "Bcc")
      (:cc            .  "Cc")
      (:date          .  "Date")
-     (:flags         .  "Flgs")
+     (:flags         .  "Flags")
      (:from          .  "From")
      (:from-or-to    .  "From/To")
      (:maildir       .  "Maildir")
@@ -461,6 +461,9 @@ in which case it will be equal to `:to'.)")
 (defvar mu4e-view-buffer nil "*internal* The view buffer.")
 (defvar mu4e-current-msg nil
   "*internal* The plist describing the currently viewed message.")
+
+(defvar mu4e-captured-message nil
+  "*internal* the last-captured message (the s-expression).")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

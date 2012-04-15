@@ -94,7 +94,8 @@ Function returns the CHAR typed."
 		    descr (substring descr 1)))
 		(add-to-list 'optionkars kar)
 		(concat
-		  "[" (propertize (make-string 1 kar) 'face 'mu4e-view-link-face) "]"
+		  "[" (propertize (make-string 1 kar)
+			'face 'mu4e-view-link-face) "]"
 		  descr))) options ", "))
 	  (inhibit-quit nil) ;; allow C-g from read-char, not sure why this is needed
 	  (okchar)
@@ -107,7 +108,7 @@ Function returns the CHAR typed."
 	      " [" (propertize "C-g" 'face 'highlight) " to quit]")))
       (setq okchar (member response optionkars)))
     response))
- 
+
 
 (defun mu4e-get-maildirs (parentdir)
   "List the maildirs under PARENTDIR." ;; TODO: recursive?
@@ -343,9 +344,10 @@ of mu4e and emacs."
   (or mu4e-user-agent
     (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)))
 
-(defun mu4e-field-at-point (field)
-  "Get FIELD (a symbol, see `mu4e-header-names') for the message at
-point in eiter the headers buffer or the view buffer."
+
+(defun mu4e-message-at-point ()
+  "Get the message s-expression for the message at point in either
+the headers buffer or the view buffer."
   (let ((msg
 	 (cond
 	   ((eq major-mode 'mu4e-hdrs-mode)
@@ -353,7 +355,18 @@ point in eiter the headers buffer or the view buffer."
 	   ((eq major-mode 'mu4e-view-mode)
 	     mu4e-current-msg))))
     (unless msg (error "No message at point"))
-    (plist-get msg field)))
+    msg))
+
+(defun mu4e-field-at-point (field)
+  "Get FIELD (a symbol, see `mu4e-header-names') for the message at
+point in eiter the headers buffer or the view buffer."
+  (plist-get (mu4e-message-at-point) field))
+
+(defun mu4e-capture-message ()
+  "Capture the path of the message at point."
+  (interactive)
+  (setq mu4e-captured-message (mu4e-message-at-point))
+  (message "Message has been captured"))
 
 (defun mu4e-kill-buffer-and-window (buf)
   "Kill buffer BUF and any of its windows. Like

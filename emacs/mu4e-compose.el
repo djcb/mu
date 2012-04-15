@@ -435,6 +435,20 @@ using Gnus' `message-mode'."
       ;; buffer is not user-modified yet
       (set-buffer-modified-p nil)))
 
+(defun mu4e-insert-captured-message ()
+  "Insert the last captured message file."
+  (interactive)
+  (unless mu4e-captured-message
+    (error "No message has been captured"))
+  (let ((path (plist-get mu4e-captured-message :path)))
+    (unless (file-exists-p path)
+      (error "Captured message file not found"))
+    (mml-attach-file
+      path
+      "message/rfc822"
+      (or (plist-get mu4e-captured-message :subject) "No subject")
+      "attachment")))
+
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
 message."
