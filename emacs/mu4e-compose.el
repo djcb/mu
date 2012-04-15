@@ -91,7 +91,7 @@ e-mail addresses. If LST is nil, returns nil."
 	(let ((name (car addrcell))
 	       (email (cdr addrcell)))
 	  (if name
-	    (format "%s <%s>" name email)
+	    (format "\"%s\" <%s>" name email)
 	    (format "%s" email))))
       lst ", ")))
 
@@ -318,19 +318,13 @@ use the new docid. Returns the full path to the new message."
 	  `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
 	     "^User-agent:")))
     (use-local-map mu4e-edit-mode-map)
-
     (message-hide-headers)
-
     (make-local-variable 'before-save-hook)
     (make-local-variable 'after-save-hook)
-
     (make-local-variable 'message-default-charset)
-
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
-
-
     ;; hack-hack-hack... just before saving, we remove the
     ;; mail-header-separator; just after saving we restore it; thus, the
     ;; separator should never appear on disk
@@ -340,12 +334,10 @@ use the new docid. Returns the full path to the new message."
 	(mu4e--set-friendly-buffer-name)
 	(mu4e--insert-mail-header-separator)
 	(set-buffer-modified-p nil)))
-
     ;; update the db when the file is saved...]
     (add-hook 'after-save-hook
       (lambda()
 	(mu4e-proc-add (buffer-file-name) mu4e-drafts-folder))))
-
     ;; notify the backend that a message has been sent. The backend will respond
     ;; with (:sent ...) sexp, which is handled in `mu4e-compose-handler'.
     (add-hook 'message-sent-hook
@@ -353,11 +345,9 @@ use the new docid. Returns the full path to the new message."
 	(set-buffer-modified-p t)
 	(basic-save-buffer)
 	(mu4e-proc-sent (buffer-file-name) mu4e-drafts-folder)))
-
   ;; register the function; this function will be called when the '(:sent...)'
   ;; message is received (see mu4e-proc.el) with parameters docid and path
   (setq mu4e-sent-func 'mu4e-sent-handler)
-
     ;; set the default directory to the user's home dir; this is probably more
     ;; useful e.g. when finding an attachment file the directory the current
     ;; mail files lives in...
@@ -419,14 +409,11 @@ using Gnus' `message-mode'."
 	      (if (eq compose-type 'edit)
 		(plist-get original-msg :path)
 		(error "unsupported compose-type %S" compose-type)))))
-
       (find-file draft)
       (mu4e-edit-mode)
-
       ;; insert mail-header-separator, which is needed by message mode to separate
       ;; headers and body. will be removed before saving to disk
       (mu4e--insert-mail-header-separator)
-
       ;; include files -- e.g. when forwarding a message with attachments,
       ;; we take those from the original.
       (save-excursion
@@ -444,26 +431,21 @@ using Gnus' `message-mode'."
       (if (member compose-type '(new forward))
 	(message-goto-to)
 	(message-goto-body))
-
       (mu4e--set-friendly-buffer-name compose-type)
-
       ;; buffer is not user-modified yet
       (set-buffer-modified-p nil)))
-
-
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
 message."
-  (with-current-buffer (find-file-noselect path)
+  (with-current-buffer(find-file-noselect path)
     ;; for Forward ('Passed') and Replied messages, try to set the appropriate
     ;; flag at the message forwarded or replied-to
     (mu4e--set-parent-flag docid path)
-    ;; handle the draft -- should it be moved to the send folder, or elsewhere?
+    ;; handle the draft -- should it be moved to the sent-folder, or elsewhere?
     (mu4e--save-copy-maybe docid path)
     ;; now, get rid of the buffer
     (kill-buffer)))
-
 
 (defun mu4e--save-copy-maybe (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
@@ -474,14 +456,14 @@ Function assumes that it's executed in the context of the message
 buffer."
   ;; first, what to do with the draft message in PATH?
   (if (eq mu4e-sent-messages-behavior 'delete)
-    (mu4e-proc-remove-msg docid) ;; remove it
+    (mu4e-proc-remove docid) ;; remove it
     ;; otherwise,
     (progn ;; prepare the message for saving
       (basic-save-buffer)
       ;; now either move it to trash or to sent
       (if (eq mu4e-sent-messages-behavior 'trash)
-	(mu4e-proc-move-msg docid mu4e-trash-folder "+T-D+S")
-	(mu4e-proc-move-msg docid mu4e-sent-folder  "-T-D+S")))))
+	(mu4e-proc-move docid mu4e-trash-folder "+T-D+S")
+	(mu4e-proc-move docid mu4e-sent-folder  "-T-D+S")))))
 
 (defun mu4e--set-parent-flag (docid path)
   "Set the 'replied' \"R\" flag on messages we replied to, and the
@@ -516,8 +498,8 @@ buffer.
 	    (setq forwarded-from (first refs))))))
     ;; remove the <>
     (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-      (mu4e-proc-flag (match-string 1 in-reply-to) "+R"))
+      (mu4e-proc-move (match-string 1 in-reply-to) nil "+R"))
     (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-      (mu4e-proc-flag (match-string 1 forwarded-from) "+P"))))
+      (mu4e-proc-move (match-string 1 forwarded-from) nil "+P"))))
 
 (provide 'mu4e-compose)

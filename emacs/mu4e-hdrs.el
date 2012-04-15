@@ -52,8 +52,7 @@ buffer for the results. If FULL-SEARCH is non-nil return all
 results, otherwise, limit number of results to
 `mu4e-search-results-limit'."
   (let ((buf (get-buffer-create mu4e-hdrs-buffer-name))
-	  (inhibit-read-only t)
-	 (esc (replace-regexp-in-string "\"" "\\\\\"" expr))) ;; escape "\"
+	  (inhibit-read-only t))
     (with-current-buffer buf
       (mu4e-hdrs-mode)
       (setq
@@ -61,11 +60,10 @@ results, otherwise, limit number of results to
 	mu4e-last-expr expr
 	mu4e-hdrs-buffer buf
 	mode-name "mu4e-headers"))
-
     (switch-to-buffer buf)
-    (mu4e-proc-find esc ;; '-1' means 'unlimited search'
-      (if full-search -1 mu4e-search-results-limit))
-
+    (mu4e-proc-find
+      (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
+      (unless full-search mu4e-search-results-limit))
     ;;; when we're starting a new search, we also kill the
     ;;; view buffer, if any
     (mu4e-view-kill-buffer-and-window)))
@@ -598,14 +596,14 @@ work well."
       (lambda (docid val)
 	(let ((marker (nth 0 val)) (mark (nth 1 val)) (target (nth 2 val)))
 	  (case mark
-	    (move   (mu4e-proc-move-msg docid target))
-	    (read   (mu4e-proc-flag docid "+S-u-N"))
-	    (unread (mu4e-proc-flag docid "-S+u"))
+	    (move   (mu4e-proc-move docid target))
+	    (read   (mu4e-proc-move docid nil "+S-u-N"))
+	    (unread (mu4e-proc-move docid nil "-S+u"))
 	    (trash
 	      (unless mu4e-trash-folder
 		(error "`mu4e-trash-folder' not set"))
-	      (mu4e-proc-move-msg docid mu4e-trash-folder "+T"))
-	    (delete (mu4e-proc-remove-msg docid)))))
+	      (mu4e-proc-move docid mu4e-trash-folder "+T"))
+	    (delete (mu4e-proc-remove docid)))))
       mu4e-marks-map)
     (mu4e-hdrs-unmark-all)))
 
@@ -656,7 +654,7 @@ current window. "
 	(erase-buffer)
 	(insert (propertize "Waiting for message..."
 		  'face 'mu4e-system-face 'intangible t)))
-      (mu4e-proc-view-msg docid))))
+      (mu4e-proc-view docid))))
 
 
 (defun mu4e-hdrs-docid-is-marked (docid)
@@ -708,9 +706,8 @@ up to `mu4e-search-results-limit' much quicker."
 otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive)
   (let ((query (mu4e-ask-bookmark "Bookmark: ")))
-    (when query
+    (when (and query (mu4e-handle-marks))
       (mu4e-hdrs-search query current-prefix-arg))))
-
 
 (defun mu4e-search-bookmark-edit-first (expr)
   "Search using some bookmarked query, but allow for editing the
@@ -719,7 +716,7 @@ otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive
     (list (read-string "[mu] search for: "
 	    (concat (or (mu4e-ask-bookmark "Edit bookmark: ") "") " "))))
-  (when expr
+  (when (and expr (mu4e-handle-marks))
     (mu4e-hdrs-search expr current-prefix-arg)))
 
 (defun mu4e-hdrs-kill-buffer-and-window ()
@@ -779,10 +776,9 @@ maildir). With C-u prefix, show /all/ results, otherwise, limit to
 up to `mu4e-search-results-limit'."
   (interactive)
   (let ((fld (mu4e-ask-maildir "Jump to maildir: ")))
-    (when fld
+    (when (and fld (mu4e-handle-marks))
       (mu4e-hdrs-search (concat "\"maildir:" fld "\"")
 	current-prefix-arg))))
-
 
 (defun mu4e-mark-for-move (&optional target)
   "Mark message at point for moving to maildir TARGET. If target is
@@ -860,7 +856,7 @@ parameter NO-CONFIRMATION is is t, don't ask for confirmation."
 	(message nil)))))
 
 
-(defun mu4e-compose (&optional compose-type)
+(defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
 take the message at point as input. Symbol `edit' is only allowed
