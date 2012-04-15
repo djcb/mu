@@ -238,6 +238,38 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 }
 
 
+/* get a *list* of all messages with the given message id */
+G_GNUC_UNUSED static GSList*
+get_docid_from_msgid_list (MuQuery *query, const char *str, GError **err)
+{
+	gchar *querystr;
+	MuMsgIter *iter;
+	GSList *lst;
+
+	querystr = g_strdup_printf ("msgid:%s", str);
+	iter = mu_query_run (query, querystr, FALSE,
+			     MU_MSG_FIELD_ID_NONE, FALSE, 1, err);
+	g_free (querystr);
+
+	if (!iter || mu_msg_iter_is_done (iter)) {
+		mu_util_g_set_error (err, MU_ERROR_NO_MATCHES,
+				     "could not find message %s", str);
+		return NULL;
+	}
+
+	for (lst = NULL; !mu_msg_iter_is_done (iter); mu_msg_iter_next(iter)) {
+		unsigned docid;
+		docid = mu_msg_iter_get_docid (iter);
+		lst = g_slist_prepend
+			(lst, GUINT_TO_POINTER(docid));
+	}
+
+	mu_msg_iter_destroy (iter);
+
+	return lst;
+}
+
+
 /* the string contains either a number (docid) or a message-id if it
  * doesn't look like a number, and the query param is non-nil, try to
  * locale the message with message-id in the database, and return its
@@ -510,11 +542,10 @@ open_part (MuMsg *msg, unsigned index, GError **err)
 	}
 
 	rv = mu_util_play (targetpath, TRUE/*allow local*/,
-			   FALSE/*allow remote*/);
-	if (!rv) {
-		print_error (MU_ERROR_FILE, "failed to open");
-		goto leave;
-	} else {
+			   FALSE/*allow remote*/, err);
+	if (!rv)
+		print_and_clear_g_error (err);
+	else {
 		gchar *path;
 		path = mu_str_escape_c_literal (targetpath, FALSE);
 		print_expr ("(:info open :message \"%s has been opened\")",
@@ -612,10 +643,6 @@ cmd_extract (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	mu_msg_unref (msg);
 	return MU_OK;
 }
-
-
-
-
 
 
 

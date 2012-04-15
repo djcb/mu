@@ -38,35 +38,30 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
 {
 	GError *err;
 	gchar *filepath;
+	gboolean rv;
 
 	err = NULL;
+	rv = FALSE;
 
 	filepath = mu_msg_part_filepath (msg, targetdir, partidx, &err);
-	if (!filepath) {
-		if (err) {
-			g_warning ("failed to save MIME-part: %s",
-				   err->message);
-			g_error_free (err);
-		}
-		g_free (filepath);
-		return FALSE;
-	}
+	if (!filepath)
+		goto exit;
 
-	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE, &err)) {
-		if (err) {
-			g_warning ("failed to save MIME-part: %s",
-				   err->message);
-			g_error_free (err);
-		}
-		g_free (filepath);
-		return FALSE;
-	}
+	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE, &err))
+		goto exit;
 
 	if (play)
-		mu_util_play (filepath, TRUE, FALSE);
+		rv = mu_util_play (filepath, TRUE, FALSE, &err);
+	else
+		rv = TRUE;
+exit:
+	if (err)
+		g_warning ("error with MIME-part: %s",
+			   err->message);
+	g_clear_error (&err);
 
 	g_free (filepath);
-	return TRUE;
+	return rv;
 }
 
 
@@ -211,30 +206,27 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 
 	err = NULL;
 	filepath = mu_msg_part_filepath (msg, sd->targetdir, part->index, &err);
-	if (!filepath) {
-		g_warning ("failed to get file path: %s",
-			   err&&err->message ? err->message : "error");
-		g_clear_error (&err);
-		goto leave;
-	}
+	if (!filepath)
+		goto exit;
 
 	if (!mu_msg_part_save (msg, filepath, part->index,
-			       sd->overwrite, FALSE, &err)) {
-		g_warning ("failed to save MIME-part: %s",
-			   err&&err->message ? err->message : "error");
-		g_clear_error (&err);
-		goto leave;
-	}
+			       sd->overwrite, FALSE, &err))
+		goto exit;
 
-	if (sd->play && !mu_util_play (filepath, TRUE, FALSE))
-		goto leave;
+	if (sd->play)
+		rv = mu_util_play (filepath, TRUE, FALSE, &err);
+	else
+		rv = TRUE;
 
-	rv = TRUE;
 	++sd->saved_num;
+exit:
+	if (err)
+		g_warning ("error saving MIME part: %s", err->message);
 
-leave:
-	sd->result = rv;
 	g_free (filepath);
+	g_clear_error (&err);
+	sd->result = rv;
+
 }
 
 static gboolean

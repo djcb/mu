@@ -134,11 +134,10 @@ on_attach_activated (GtkWidget *w, guint partnum, MuMsg *msg)
 		if (!mu_msg_part_save (msg, filepath, partnum, FALSE, TRUE, &err)) {
 			g_warning ("failed to save %s: %s", filepath,
 				   err&&err->message?err->message:"error");
-			if (err)
-				g_error_free(err);
+			g_clear_error (&err);
 		}
 
-		mu_util_play (filepath, TRUE, FALSE);
+		mu_util_play (filepath, TRUE, FALSE, NULL);
 		g_free (filepath);
 	}
 }

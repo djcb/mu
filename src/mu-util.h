@@ -178,11 +178,12 @@ gboolean mu_util_printerr_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
  * @param path full path of the file to open
  * @param allow_local allow local files (ie. with file:// prefix or fs paths)
  * @param allow_remote allow URIs (ie., http, mailto)
+ * @param err receives error information, if any
  *
  * @return TRUE if it succeeded, FALSE otherwise
  */
-gboolean mu_util_play (const char *path,
-		       gboolean allow_local, gboolean allow_remote);
+gboolean mu_util_play (const char *path, gboolean allow_local,
+		       gboolean allow_remote, GError **err);
 
 
 

@@ -323,12 +323,12 @@ mu_util_is_local_file (const char* path)
 
 
 gboolean
-mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote)
+mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
+	      GError **err)
 {
 	gboolean rv;
-	GError *err;
-	const gchar *prog;
-	char *cmdline, *escpath;
+	const gchar *argv[3];
+	const char *prog;
 
 	g_return_val_if_fail (path, FALSE);
 	g_return_val_if_fail (mu_util_is_local_file (path) || allow_remote,
@@ -345,19 +345,17 @@ mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote)
 #endif /*!__APPLE__*/
 	}
 
-	escpath = g_strescape (path, NULL);
-	cmdline = g_strdup_printf ("%s \"%s\"", prog, escpath);
-	g_free (escpath);
+	argv[0] = prog;
+	argv[1] = path;
+	argv[2] = NULL;
 
 	err = NULL;
-	rv = g_spawn_command_line_async (cmdline, &err);
-	if (!rv) {
-		g_warning ("failed to spawn %s: %s",
-			   cmdline, err->message ? err->message : "error");
-		g_error_free (err);
-	}
-
-	g_free (cmdline);
+	rv = g_spawn_async (NULL,
+			    (gchar**)&argv,
+			    NULL,
+			    G_SPAWN_SEARCH_PATH,
+			    NULL, NULL, NULL,
+			    err);
 	return rv;
 }
 

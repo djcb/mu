@@ -65,7 +65,7 @@ set_message (MuMsgBodyView *self, MuMsg *msg)
 {
 	if (self->_priv->_msg == msg)
 		return; /* nothing to todo */
-	
+
 	if (self->_priv->_msg)  {
 		mu_msg_unref (self->_priv->_msg);
 		self->_priv->_msg = NULL;
@@ -104,7 +104,7 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	gchar *filepath;
 	gboolean rv;
 	GError *err;
-	
+
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (cid, NULL);
 
@@ -144,19 +144,19 @@ on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *fr
 {
 	const char* uri;
 	WebKitWebNavigationReason reason;
-	
+
 	uri = webkit_network_request_get_uri (request);
 	reason = webkit_web_navigation_action_get_reason (nav_action);
-	
+
 	/* if it wasn't a user click, don't the navigation */
 	if (reason != WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
 		webkit_web_policy_decision_ignore (policy_decision);
 		return TRUE;
 	}
-	
+
 	/* we handle links clicked ourselves, no need for navigation */
 	webkit_web_policy_decision_ignore (policy_decision);
-	
+
 	/* if there are 'cmd:<action>" links in the body text of
 	 * mu-internal messages (ie., notification from mu, not real
 	 * e-mail messages), we emit the 'action requested'
@@ -171,12 +171,12 @@ on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *fr
 		}
 		return TRUE;
 	}
-		
+
 	/* don't try to play files on our local file system, this is not something
 	 * external content should do.*/
 	if (!mu_util_is_local_file(uri))
-		mu_util_play (uri, FALSE, TRUE);
-	
+		mu_util_play (uri, FALSE, TRUE, NULL);
+
 	return TRUE;
 }
 
@@ -194,7 +194,7 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 	uri = webkit_network_request_get_uri (request);
 
 	/* g_warning ("%s: %s", __FUNCTION__, uri); */
-	
+
 	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
 		gchar *filepath;
 		filepath = save_file_for_cid (msg, uri);
@@ -214,7 +214,7 @@ on_menu_item_activate (GtkMenuItem *item, MuMsgBodyView *self)
 {
 	g_signal_emit (G_OBJECT(self),
 		       signals[ACTION_REQUESTED], 0,
-		       g_object_get_data (G_OBJECT(item), "action"));	
+		       g_object_get_data (G_OBJECT(item), "action"));
 }
 
 static void
@@ -230,15 +230,15 @@ popup_menu (MuMsgBodyView *self, guint button, guint32 activate_time)
 		{ "View source...", "view-source", VIEW_MODE_MSG },
 		{ "View message...", "view-message", VIEW_MODE_SOURCE },
 	};
-	
+
 	menu = gtk_menu_new ();
-	
+
 	for (i = 0; i != G_N_ELEMENTS(actions); ++i) {
 		GtkWidget *item;
 
 		if (self->_priv->_view_mode != actions[i].mode)
 			continue;
-		
+
 		item = gtk_menu_item_new_with_label(actions[i].title);
 		g_object_set_data (G_OBJECT(item), "action", (gpointer)actions[i].action);
 		g_signal_connect (item, "activate", G_CALLBACK(on_menu_item_activate),
@@ -263,8 +263,8 @@ on_button_press_event (MuMsgBodyView *self, GdkEventButton *event, gpointer data
 		break;
 	default: return TRUE; /* ignore */
 	}
-	
-	return (event->button > 1) ? TRUE : FALSE;	
+
+	return (event->button > 1) ? TRUE : FALSE;
 }
 
 
@@ -275,7 +275,7 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 
 	obj->_priv->_msg = NULL;
 	obj->_priv->_view_mode = VIEW_MODE_NONE;
-	
+
 	obj->_priv->_settings = webkit_web_settings_new ();
 	g_object_set (G_OBJECT(obj->_priv->_settings),
 		      "enable-scripts", FALSE,
@@ -308,7 +308,7 @@ mu_msg_body_view_finalize (GObject *obj)
 		g_object_unref (priv->_settings);
 
 	set_message (MU_MSG_BODY_VIEW(obj), NULL);
-	
+
 	G_OBJECT_CLASS(parent_class)->finalize (obj);
 }
 
@@ -335,7 +335,7 @@ static void
 set_text (MuMsgBodyView *self, const char* txt)
 {
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
-	
+
 	webkit_web_view_load_string (WEBKIT_WEB_VIEW(self),
 				     txt ? txt : "",
 				     "text/plain",
@@ -347,13 +347,13 @@ void
 mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 {
 	const char* data;
-	
+
 	g_return_if_fail (self);
 
 	set_message (self, msg);
 
 	data = msg ? mu_msg_get_body_html (msg) : "";
-	if (data) 
+	if (data)
 		set_html (self, data);
 	else
 		set_text (self, mu_msg_get_body_text (msg));
@@ -372,9 +372,9 @@ mu_msg_body_view_set_message_source (MuMsgBodyView *self, MuMsg *msg)
 	g_return_if_fail (msg);
 
 	set_message (self, NULL);
-	
+
 	path = msg ? mu_msg_get_path (msg) : NULL;
-	
+
 	if (path && g_file_get_contents (path, &data, NULL, NULL)) {
 		set_text (self, data);
 		g_free (data);
@@ -391,9 +391,9 @@ mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html)
 {
 	g_return_if_fail (self);
 	g_return_if_fail (html);
-		
+
 	set_message (self, NULL);
-	
+
 	set_html (self, html);
 
 	self->_priv->_view_mode = VIEW_MODE_NOTE;
