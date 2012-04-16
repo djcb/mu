@@ -428,7 +428,7 @@ Seen; if the message is not New/Unread, do nothing."
       (goto-char (point-min))
       (let ((p (search-forward "\n-- \n" nil t)))
 	(when p
-	  (add-text-properties p (point-max) '(face mu4e-view-footer-face)))))))
+	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 
 (defvar mu4e-link-map nil
   "*internal* A map of some number->url so we can jump to url by number.")

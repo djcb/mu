@@ -415,10 +415,10 @@ using Gnus' `message-mode'."
 	  (plist-get att :file-name) (plist-get att :mime-type))))
 
     ;; include the message header if it's set; but not when editing an existing
-    ;; message
+    ;; message.
     (unless (eq compose-type 'edit)
       (when message-signature
-	(message-insert-signature)))
+	  (message-insert-signature)))
 
     (if (member compose-type '(new forward))
       (message-goto-to)
