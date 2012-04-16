@@ -542,8 +542,10 @@ citations."
   (interactive)
   (when (buffer-live-p mu4e-view-buffer)
     (with-current-buffer mu4e-view-buffer
-      (kill-buffer-and-window))))
-
+      (if (window-parent)
+	(kill-buffer-and-window)
+	(kill-buffer)))))
+      
 (defun mu4e-view-next-header ()
   "View the next header."
   (interactive)
