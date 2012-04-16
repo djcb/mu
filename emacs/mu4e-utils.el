@@ -319,13 +319,16 @@ processing takes part in the background, unless buf is non-nil."
     (message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
-	(message nil)
-	(mu4e-proc-index mu4e-maildir)
-	(let ((buf (process-buffer proc)))
-	  (when (buffer-live-p buf)
-	    (kill-buffer buf)))))
-    (set-process-query-on-exit-flag proc t)))
-
+	(let ((status (process-status proc)) (code (process-exit-status proc)))
+	  (message nil)
+	  (if (or (not (eq status 'exit)) (/= code 0))
+	    (message "Some error occured while retrieving mail")
+	    (progn ;; update went well, now rerun the index	  
+	      (mu4e-proc-index mu4e-maildir)
+	      (let ((buf (process-buffer proc)))
+		(when (buffer-live-p buf)
+		  (kill-buffer buf))))))))))
+ 
 
 (defun mu4e-display-manual ()
   "Display the mu4e manual page for the current mode, or go to the
