@@ -355,7 +355,7 @@ after the end of the search results."
     buffer-undo-list t ;; don't record undo information
     overwrite-mode 'overwrite-mode-binary
     hl-line-face 'mu4e-header-highlight-face)
-
+  
   (hl-line-mode 1)
 
   (setq header-line-format
@@ -882,6 +882,14 @@ for draft messages."
 	  (unless (or (not (eq compose-type 'edit))
 		    (get-text-property (- (line-end-position) 1) 'draft))
 	    (error "Editing is only allowed for draft messages"))
+	  ;; if there's a visible view window, select that before starting
+	  ;; composing a new message, so that one will be replaced by the
+	  ;; compose window. The 10-or-so line headers buffer is not a good way
+	  ;; to write it...
+	  (let ((viewwin (get-buffer-window mu4e-view-buffer)))
+	    (when (window-live-p viewwin)
+	      (select-window viewwin)))
+ 
 	  ;; talk to the backend
 	  (mu4e-proc-compose compose-type docid))))))
 
