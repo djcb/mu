@@ -53,7 +53,8 @@ PATH, you can specify the full path."
 
 (defcustom mu4e-get-mail-command nil
   "Shell command to run to retrieve new mail; e.g. 'offlineimap' or
-'fetchmail'."
+'fetchmail'. Note, when there is no mail, fetchmail will return 1
+as it error code, which mu4e interprets as an error."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
@@ -358,6 +359,11 @@ flag set)."
   "Face for a header title in the headers view."
   :group 'mu4e-faces)
 
+(defface mu4e-footer-face
+  '((t :inherit font-lock-comment-face))
+  "Face for message footers (signatures)."
+  :group 'mu4e-faces)
+
 (defface mu4e-view-url-number-face
   '((t :inherit font-lock-reference-face :bold t))
   "Face for the number tags for URLs."
@@ -386,11 +392,6 @@ flag set)."
 (defface mu4e-cited-4-face
   '((t :inherit font-lock-pseudo-keyword-face :bold nil :italic t))
   "Face for cited message parts (level 4)."
-  :group 'mu4e-faces)
-
-(defface mu4e-view-footer-face
-  '((t :inherit font-lock-comment-face))
-  "Face for message footers (signatures)."
   :group 'mu4e-faces)
 
 (defface mu4e-hdrs-marks-face

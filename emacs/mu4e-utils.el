@@ -319,15 +319,19 @@ processing takes part in the background, unless buf is non-nil."
     (message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
-	(let ((status (process-status proc)) (code (process-exit-status proc)))
+	(let* ((status (process-status proc))
+		(code (process-exit-status proc))
+		;; sadly, fetchmail returns '1' when there is no mail; this is not really
+		;; an error of course, but it's hard to distinguish from a genuine error
+		(maybe-error (or (not (eq status 'exit)) (/= code 0)))) 
 	  (message nil)
-	  (if (or (not (eq status 'exit)) (/= code 0))
-	    (message "Some error occured while retrieving mail")
-	    (progn ;; update went well, now rerun the index	  
-	      (mu4e-proc-index mu4e-maildir)
-	      (let ((buf (process-buffer proc)))
-		(when (buffer-live-p buf)
-		  (kill-buffer buf))))))))))
+	  ;; there may be an error, give the user up to 5 seconds to check
+	  (when maybe-error
+	    (sit-for 5))
+	  (mu4e-proc-index mu4e-maildir)
+	  (let ((buf (process-buffer proc)))
+	    (when (buffer-live-p buf)
+	      (kill-buffer buf)))))))) 
  
 
 (defun mu4e-display-manual ()
