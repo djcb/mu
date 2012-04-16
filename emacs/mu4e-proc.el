@@ -1,4 +1,4 @@
-;;; mu4e-proc.el -- part of mu4e, the mu mail user agent
+;; mu4e-proc.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 
@@ -162,11 +162,11 @@ updated as well, with all processed sexp data removed."
   6. a compose looks like:
   (:compose <reply|forward|edit|new> [:original<msg-sexp>] [:include <attach>])
   `mu4e-compose-func'."
-  (mu4e-proc-log "* Received %d byte(s)" (length str))
+  (mu4e-log 'misc "* Received %d byte(s)" (length str))
   (setq mu4e-buf (concat mu4e-buf str)) ;; update our buffer
   (let ((sexp (mu4e-proc-eat-sexp-from-buf)))
     (while sexp
-      (mu4e-proc-log "<- %S" sexp)
+      (mu4e-log 'from-server "%S" sexp)
       (cond
 	;; a header plist can be recognized by the existence of a :date field
 	((plist-get sexp :date)
@@ -260,24 +260,12 @@ terminates."
       (t
 	(message "Something bad happened to the mu server process")))))
 
-
-(defconst mu4e-proc-log-buffer-name "*mu4e-log*"
-  "*internal* Name of the logging buffer.")
-
-(defun mu4e-proc-log (frm &rest args)
-  "Write something in the *mu4e-log* buffer - mainly useful for debugging."
-  (when mu4e-debug
-    (with-current-buffer (get-buffer-create mu4e-proc-log-buffer-name)
-      (goto-char (point-max))
-      (insert (apply 'format (concat (format-time-string "%Y-%m-%d %T "
-				     (current-time)) frm "\n") args)))))
-
 (defun mu4e-proc-send-command (frm &rest args)
   "Send as command to the mu server process; start the process if needed."
   (unless (mu4e-proc-is-running)
     (mu4e-start-proc))
   (let ((cmd (apply 'format frm args)))
-    (mu4e-proc-log (concat "-> " cmd))
+    (mu4e-log 'to-server "%s" cmd)
     (process-send-string mu4e-mu-proc (concat cmd "\n"))))
 
 

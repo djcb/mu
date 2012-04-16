@@ -472,5 +472,63 @@ server has the expected values."
     (mu4e-kill-proc)
     (kill-buffer)))
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; logging / debugging
+(defun mu4e-log (type frm &rest args)
+  "Write a message of TYPE with format-string FRM and ARGS in
+*mu4e-log* buffer, if the variable mu4e-debug is non-nil. Type is
+either 'to-server, 'from-server or 'misc. This function is meant for debugging."
+  (when mu4e-debug
+    (with-current-buffer (get-buffer-create mu4e-log-buffer-name)
+      (view-mode)
+      (setq buffer-undo-list t)
+      (let* ((inhibit-read-only t)
+	      (tstamp (propertize (format-time-string "%Y-%m-%d %T" (current-time))
+			'face 'font-lock-string-face))
+	      (msg-face
+		(case type
+		  (from-server 'font-lock-type-face)
+		  (to-server   'font-lock-function-name-face)
+		  (misc        'font-lock-variable-name-face)
+		  (otherwise   (error "Unsupported log type"))))
+	      (msg (propertize (apply 'format frm args) 'face msg-face)))
+	(goto-char (point-max))
+	(insert tstamp 
+	  (case type
+	    (from-server " <- ")
+	    (to-server   " -> " )
+	    (otherwise   " "))
+	  msg "\n")
+	
+	;; if `mu4e-log-max-lines is specified and exceeded, clearest the oldest
+	;; lines
+	(when (numberp mu4e-log-max-lines)
+	  (let ((lines (count-lines (point-min) (point-max))))
+	    (when (> lines mu4e-log-max-lines)
+	      (goto-char (point-max))
+	      (forward-line (- mu4e-log-max-lines lines))
+	      (beginning-of-line)
+	      (delete-region (point-min) (point)))))))))
+       
+(defun mu4e-toggle-logging ()
+  "Toggle between enabling/disabling debug-mode (in debug-mode,
+mu4e logs some of its internal workings to a log-buffer. See
+`mu4e-visit-log'."
+  (interactive)
+  (setq mu4e-debug (not mu4e-debug))
+  (message "mu4e debug logging has been %s"
+    (if mu4e-debug "enabled" "disabled")))
+
+(defun mu4e-show-log ()
+  "Visit the mu4e debug log."
+  (interactive)
+  (let ((buf (get-buffer mu4e-log-buffer-name)))
+    (unless (buffer-live-p buf)
+      (error "No debug log available"))
+    (switch-to-buffer buf)))
+
+
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

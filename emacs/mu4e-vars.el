@@ -465,6 +465,14 @@ in which case it will be equal to `:to'.)")
 (defvar mu4e-captured-message nil
   "*internal* the last-captured message (the s-expression).")
 
+(defvar mu4e-log-max-lines 1200
+  "*internal* Last <n> number of lines to keep around in the buffer.")
+
+(defconst mu4e-log-buffer-name "*mu4e-log*"
+  "*internal* Name of the logging buffer.")
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; our handlers funcs

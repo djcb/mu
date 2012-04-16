@@ -288,6 +288,7 @@ is nil, and otherwise open it."
       (define-key map "U" 'mu4e-view-unmark-all)
       (define-key map "x" 'mu4e-view-marked-execute)
 
+      (define-key map "$" 'mu4e-show-log)
       (define-key map "H" 'mu4e-display-manual)
 
       ;; menu
@@ -359,6 +360,8 @@ is nil, and otherwise open it."
   (make-local-variable 'mu4e-lines-wrapped)
   (make-local-variable 'mu4e-cited-hidden)
 
+  (setq buffer-undo-list t) ;; don't record undo info
+  
   ;; filladapt is much better than the built-in filling
   ;; esp. with '>' cited parts
   (when (fboundp 'filladapt-mode)

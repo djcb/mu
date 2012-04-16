@@ -287,6 +287,7 @@ after the end of the search results."
       (define-key map (kbd "RET") 'mu4e-view-message)
       (define-key map [mouse-2]   'mu4e-view-message)
 
+      (define-key map "$" 'mu4e-show-log)
       (define-key map "H" 'mu4e-display-manual)
 
       ;; menu

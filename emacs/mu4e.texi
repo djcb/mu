@@ -43,6 +43,7 @@ describes how to set up and use @t{mu4e}.
 
 Appendices
 * How it works:: Some notes about the implementation of mu4e
+* Logging and debugging:: How to debug problems in @t{mu4e}
 * GNU Free Documentation License::  The license of this manual.
 @end menu
 
@@ -1395,8 +1396,8 @@ menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @item @emph{Attachments are not accessible in draft/sent messages}. Currently,
 attachments in saved messages are special strings, which are transformed into
 the actual attachments when sending. However, you cannot access them afterwards.
-
 @end itemize
+
 
 
 @node How it works
@@ -1549,6 +1550,24 @@ we registered will be called, and it check the version we got from the
 @t{pong} with the version we expected, and raises an error, if they differ.
 
 
+@node Logging and debugging
+@appendix Logging and debugging
+
+As explained in @ref{How it works}, @t{mu4e} communicates with its backend
+(@t{mu server}) by sending commands and receiving responses (s-expressions).
+
+For debugging purposes, it can be very useful to see this data. For this
+reason, @t{mu4e} can log all these messages. Note that the 'protocol' is
+documented to some extent in the @t{mu-server} manpage.
+
+You can enable (and disable) logging with @t{M-x mu4e-toggle-logging}. The
+log-buffer is called @t{*mu4e-log-buffer*}, and in the @ref{Main view},
+@ref{Headers view} and @t{Message view}, there's a keybinding @key{$} that
+will take you there. You can quit it by pressing @key{q}.
+
+Note that logging can be a bit resource-intensive, so you may not want to
+leave it on all the time. By default, the log only maintains the most recent
+1200 lines.
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
