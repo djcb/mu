@@ -1565,9 +1565,12 @@ log-buffer is called @t{*mu4e-log-buffer*}, and in the @ref{Main view},
 @ref{Headers view} and @t{Message view}, there's a keybinding @key{$} that
 will take you there. You can quit it by pressing @key{q}.
 
-Note that logging can be a bit resource-intensive, so you may not want to
-leave it on all the time. By default, the log only maintains the most recent
-1200 lines.
+Logging can be a bit resource-intensive, so you may not want to leave it on
+all the time. By default, the log only maintains the most recent 1200 lines.
+
+Note, @t{mu} itself keeps a log as well, you can find this it in
+@t{<MUHOME>/log/mu.log}, typically @t{~/.mu/log/mu.log}.
+
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
