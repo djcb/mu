@@ -43,6 +43,53 @@
 wanting to show specific messages - for example, `mu4e-org'."
   (mu4e-proc-view msgid))
 
+(defun mu4e-view-message-text (msg)
+  "Return the message to display (as a string), based on the MSG
+plist."
+  (concat
+    (mapconcat
+      (lambda (field)
+	(let ((fieldname (cdr (assoc field mu4e-header-names)))
+	       (fieldval (plist-get msg field)))
+	  (case field
+	    (:subject  (mu4e-view-header fieldname fieldval))
+	    (:path	   (mu4e-view-header fieldname fieldval))
+	    (:maildir  (mu4e-view-header fieldname fieldval))
+	    (:flags	   (mu4e-view-header fieldname
+			     (if fieldval (format "%S" fieldval) "")))
+	    ;; contact fields
+	    (:to	   (mu4e-view-contacts msg field))
+	    (:from	   (mu4e-view-contacts msg field))
+	    (:cc	   (mu4e-view-contacts msg field))
+	    (:bcc	   (mu4e-view-contacts msg field))
+	    
+	    ;; if we (`user-mail-address' are the From, show To, otherwise,
+	    ;; show From
+	    (:from-or-to
+	      (let* ((from (plist-get msg :from))
+		      (from (and from (cdar from))))
+		(if (and from (string-match mu4e-user-mail-address-regexp from))
+		  (mu4e-view-contacts msg :to)
+		  (mu4e-view-contacts msg :from))))
+	    ;; date
+	    (:date
+	      (let ((datestr
+		      (when fieldval (format-time-string mu4e-view-date-format
+				       fieldval))))
+		(if datestr (mu4e-view-header fieldname datestr) "")))
+	    ;; size
+	    (:size
+	      (let* (size (mu4e-view-size msg)
+		      (sizestr (when size (format "%d bytes" size))))
+		(if sizestr (mu4e-view-header fieldname sizestr))))
+	    ;; attachments
+	    (:attachments (mu4e-view-attachments msg))
+	    (t               (error "Unsupported field: %S" field)))))
+      mu4e-view-fields "")
+    "\n"
+    (mu4e-body-text msg)))
+
+
 (defun mu4e-view (msg hdrsbuf &optional update)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
@@ -59,50 +106,8 @@ marking if it still had that."
       (setq mu4e-view-buffer buf)
       (setq mu4e-attach-map nil) ;; clear any old attachment stuff
       (erase-buffer)
-      (insert
-	(mapconcat
-	  (lambda (field)
-	    (let ((fieldname (cdr (assoc field mu4e-header-names)))
-		   (fieldval (plist-get msg field)))
-	      (case field
-		(:subject  (mu4e-view-header fieldname fieldval))
-		(:path	   (mu4e-view-header fieldname fieldval))
-		(:maildir  (mu4e-view-header fieldname fieldval))
-		(:flags	   (mu4e-view-header fieldname
-			     (if fieldval (format "%S" fieldval) "")))
-		;; contact fields
-		(:to	   (mu4e-view-contacts msg field))
-		(:from	   (mu4e-view-contacts msg field))
-		(:cc	   (mu4e-view-contacts msg field))
-		(:bcc	   (mu4e-view-contacts msg field))
-
-		;; if we (`user-mail-address' are the From, show To, otherwise,
-		;; show From
-		(:from-or-to
-		  (let* ((from (plist-get msg :from))
-			  (from (and from (cdar from))))
-		    (if (and from (string-match mu4e-user-mail-address-regexp from))
-		      (mu4e-view-contacts msg :to)
-		      (mu4e-view-contacts msg :from))))
-
-		;; date
-		(:date
-		  (let ((datestr
-			  (when fieldval (format-time-string mu4e-view-date-format
-					   fieldval))))
-		    (if datestr (mu4e-view-header fieldname datestr) "")))
-		;; size
-		(:size
-		  (let* (size (mu4e-view-size msg)
-			  (sizestr (when size (format "%d bytes" size))))
-		    (if sizestr (mu4e-view-header fieldname sizestr))))
-		;; attachments
-		(:attachments (mu4e-view-attachments msg))
-		(t               (error "Unsupported field: %S" field)))))
-	    mu4e-view-fields "")
-	"\n"
-	(mu4e-body-text msg))
-
+      (insert (mu4e-view-message-text msg))
+      
       ;; initialize view-mode
       (mu4e-view-mode)
       (setq ;; these are buffer-local
@@ -110,7 +115,7 @@ marking if it still had that."
 	mu4e-current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
-
+      
       (switch-to-buffer buf)
       (goto-char (point-min))
 
@@ -125,11 +130,13 @@ marking if it still had that."
 	(progn
 	  (when mu4e-view-wrap-lines (mu4e-view-wrap-lines))
 	  (when mu4e-view-hide-cited (mu4e-view-hide-cited))))
-
+      
       ;; no use in trying to set flags again
       (unless update
 	(mu4e-view-mark-as-read-maybe)))))
 
+
+  
 (defun mu4e-view-header (key val &optional dont-propertize-val)
   "Show header FIELD for MSG with KEY. ie. <KEY>: value-of-FIELD."
   (if val

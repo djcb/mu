@@ -35,27 +35,21 @@
 (require 'mu4e-utils)
 (require 'mu4e-vars)
 (require 'mu4e-proc)
+(require 'mu4e-view)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e--cite-original (msg)
-  "Cite the body text of MSG, with a \"On %s, %s wrote:\"
-  line (with the %s's replaced with the date of MSG and the name
-  or e-mail address of its sender (or 'someone' if nothing
-  else)), followed of the quoted body of MSG, constructed by by
-  prepending `mu4e-citation-prefix' to each line. If there is
-  no body in MSG, return nil."
-  (let* ((from (plist-get msg :from))
-	  (body (mu4e-body-text msg)))
-    (when body
-      (concat
-	(format "On %s, %s wrote:"
-	  (format-time-string "%c" (plist-get msg :date))
-	  (if (and from (car from)) ;; a list ((<name> . <email>))
-	    (or (caar from) (cdar from) "someone")
-	    "someone"))
-	"\n\n"
-	(replace-regexp-in-string "^"
-	  mu4e-citation-prefix body)))))
+  "Return a cited version of the original message MSG (ie., the
+plist). This function use gnus' `message-cite-function', and as
+such all its settings apply."
+  (with-temp-buffer
+    (insert (mu4e-view-message-text msg))
+    (goto-char (point-min))
+    (push-mark (point-max))
+    (funcall message-cite-function)
+    (pop-mark)
+    (buffer-string)))
+   
 
 (defun mu4e--header (hdr val)
   "Return a header line of the form HDR: VAL\n. If VAL is nil,
@@ -243,8 +237,7 @@ are more than 1 (based on ORIGMSG)."
       (mu4e--header "Subject"
 	(concat
 	  ;; if there's no Re: yet, prepend it
-	  (if (string-match (concat "^" mu4e-reply-prefix) subject)
-	    "" mu4e-reply-prefix)
+	  (if (string-match "^Re:" subject) "" "Re:")
 	  subject))
       "\n\n"
       (mu4e--cite-original origmsg))))
@@ -263,9 +256,8 @@ are more than 1 (based on ORIGMSG)."
       (mu4e--header "References"  (mu4e--refererences-construct origmsg))
       (mu4e--header "Subject"
 	(concat
-	  ;; if there's no Re: yet, prepend it
-	  (if (string-match (concat "^" mu4e-forward-prefix) subject)
-	    "" mu4e-forward-prefix)
+	  ;; if there's no Fwd: yet, prepend it
+	  (if (string-match "^Fwd:" subject) "" "Fwd:")
 	  subject))
       "\n\n"
       (mu4e--cite-original origmsg))))

@@ -109,12 +109,7 @@ show up in the UI), and KEY is a shortcut key for the query.")
   * anything else: don't split (show either headers or messages, not both)
 Also see `mu4e-headers-visible-lines' and `mu4e-headers-visible-columns'.")
 
-;; Sending
-(defgroup mu4e-sending nil
-  "E-mail-sending related settings for mu4e."
-  :group 'mu4e)
-
-
+ 
 ;; Folders
 (defgroup mu4e-folders nil
   "Special folders."
@@ -265,22 +260,7 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
 (defgroup mu4e-compose nil
   "Customizations for composing/sending messages."
   :group 'mu4e)
-
-(defcustom mu4e-citation-prefix " > "
-  "String to prefix cited message parts with."
-  :type 'string
-  :group 'mu4e-compose)
-
-(defcustom mu4e-reply-prefix "Re: "
-  "String to prefix the subject of replied messages with."
-  :type 'string
-  :group 'mu4e-compose)
-
-(defcustom mu4e-forward-prefix "Fwd: "
-  "String to prefix the subject of forwarded messages with."
-  :type 'string
-  :group 'mu4e-compose)
-
+ 
 (defcustom mu4e-reply-to-address nil
   "The Reply-To address (if this, for some reason, is not equal to
 the From: address.)"
@@ -307,7 +287,6 @@ sent folder."
 
 
 ;; Faces
-
 (defgroup mu4e-faces nil
   "Type faces (fonts) used in mu4e."
   :group 'mu4e
