@@ -373,7 +373,7 @@ use the new docid. Returns the full path to the new message."
 
 
 (defun mu4e-compose-handler (compose-type &optional original-msg includes)
-    "Create a new draft message, or open an existing one.
+  "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
 symbol, either `reply', `forward', `edit', `new'. `edit' is for
@@ -401,39 +401,39 @@ The message file name is a unique name determined by
 The initial STR would be created from either `mu4e--reply-construct',
 ar`mu4e--forward-construct' or `mu4e--newmsg-construct'. The editing buffer is
 using Gnus' `message-mode'."
-    (unless mu4e-maildir       (error "mu4e-maildir not set"))
-    (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
-    (let ((draft
-	    (if (member compose-type '(reply forward new))
-	      (mu4e--open-new-draft-file compose-type original-msg)
-	      (if (eq compose-type 'edit)
-		(plist-get original-msg :path)
-		(error "unsupported compose-type %S" compose-type)))))
-      (find-file draft)
-      (mu4e-edit-mode)
-      ;; insert mail-header-separator, which is needed by message mode to separate
-      ;; headers and body. will be removed before saving to disk
-      (mu4e--insert-mail-header-separator)
-      ;; include files -- e.g. when forwarding a message with attachments,
-      ;; we take those from the original.
-      (save-excursion
-	(goto-char (point-max)) ;; put attachments at the end
-	(dolist (att includes)
-	  (mml-attach-file
-	    (plist-get att :file-name) (plist-get att :mime-type))))
+  (unless mu4e-maildir       (error "mu4e-maildir not set"))
+  (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
+  (let ((draft
+	  (if (member compose-type '(reply forward new))
+	    (mu4e--open-new-draft-file compose-type original-msg)
+	    (if (eq compose-type 'edit)
+	      (plist-get original-msg :path)
+	      (error "unsupported compose-type %S" compose-type)))))
+    (find-file draft)
+    (mu4e-edit-mode)
+    ;; insert mail-header-separator, which is needed by message mode to separate
+    ;; headers and body. will be removed before saving to disk
+    (mu4e--insert-mail-header-separator)
+    ;; include files -- e.g. when forwarding a message with attachments,
+    ;; we take those from the original.
+    (save-excursion
+      (goto-char (point-max)) ;; put attachments at the end
+      (dolist (att includes)
+	(mml-attach-file
+	  (plist-get att :file-name) (plist-get att :mime-type))))
 
-      ;; include the message header if it's set; but not when editing an existing
-      ;; message
-      (unless (eq compose-type 'edit)
-	(when message-signature
-	  (message-insert-signature)))
+    ;; include the message header if it's set; but not when editing an existing
+    ;; message
+    (unless (eq compose-type 'edit)
+      (when message-signature
+	(message-insert-signature)))
 
-      (if (member compose-type '(new forward))
-	(message-goto-to)
-	(message-goto-body))
-      (mu4e--set-friendly-buffer-name compose-type)
-      ;; buffer is not user-modified yet
-      (set-buffer-modified-p nil)))
+    (if (member compose-type '(new forward))
+      (message-goto-to)
+      (message-goto-body))
+    (mu4e--set-friendly-buffer-name compose-type)
+    ;; buffer is not user-modified yet
+    (set-buffer-modified-p nil)))
 
 (defun mu4e-insert-captured-message ()
   "Insert the last captured message file."
