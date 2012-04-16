@@ -132,7 +132,8 @@ clicked."
 	(mu4e-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
-      (switch-to-buffer buf))))
+      (switch-to-buffer buf)
+      (delete-other-windows))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
