@@ -109,25 +109,44 @@ Function returns the CHAR typed."
       (setq okchar (member response optionkars)))
     response))
 
+(defun mu4e--get-maildirs-1 (path &optional mdir)
+  "Get maildirs under path, recursively, as a list of relative
+paths."
+  ;; first, we get a list of all directory paths under PATH that have a
+  ;; directory 'cur' as leaf; then we we remove from that list all of those that
+  ;; don't have tmp, new sister dirs. And there we're done!
 
-(defun mu4e-get-maildirs (parentdir)
-  "List the maildirs under PARENTDIR." ;; TODO: recursive?
-  (let* ((files (directory-files parentdir))
-	  (maildirs ;;
+  ;; 1. get all proper subdirs of the current dir
+  (let* ((subdirs
 	    (remove-if
-	      (lambda (file)
-		(let ((path (concat parentdir "/" file)))
-		  (cond
-		    ((string-match "^\\.\\{1,2\\}$" file)  t) ;; remove '..' and '.'
-		    ((not (file-directory-p path)) t)   ;; remove non-dirs
-		    ((not ;; remove non-maildirs
-		       (and (file-directory-p (concat path "/cur"))
-			 (file-directory-p (concat path "/new"))
-			 (file-directory-p (concat path "/tmp")))) t)
-		    (t nil) ;; otherwise, it's probably maildir
-		    )))
-	      files)))
-    (map 'list (lambda(dir) (concat "/" dir)) maildirs)))
+	      (lambda (de)
+		(or (not (file-directory-p (concat path mdir "/" de)))
+		  (string-match "\\.\\{1,2\\}$" de)))
+	      (directory-files (concat path mdir))))
+	  ;; 2. get the list of dirs with a /cur leaf dir
+	  (maildirs))  
+    (dolist (dir subdirs)
+      (if (string= dir "cur")
+	;; be pedantic, and insist on there being a new/tmp as well
+	(when (and (file-directory-p (concat path mdir "/new" ))
+		(file-directory-p (concat path mdir "/tmp")))
+	  (add-to-list 'maildirs mdir t))
+	(setq maildirs (append maildirs
+			 (mu4e--get-maildirs-1 path (concat mdir "/" dir))))))
+    maildirs))
+
+
+(defun mu4e-get-maildirs (path)
+  "Get maildirs under path, recursively, as a list of relative
+paths (ie., /archive, /sent etc.). Most of the work is done in `mu4e-get-maildirs-1,
+but we handle the special-case of the top-level Maildir here."
+  (append
+    (when (and (file-directory-p (concat path "/cur"))
+	    (file-directory-p (concat path "/tmp"))
+	    (file-directory-p (concat path "/new")))
+      '("/"))
+    (mu4e--get-maildirs-1 path))) 
+
 
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT) as defined in
