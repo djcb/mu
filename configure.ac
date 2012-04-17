@@ -284,6 +284,7 @@ src/tests/Makefile
 widgets/Makefile
 emacs/Makefile
 emacs/mu4e-version.el
+emacs/version.texi
 guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile
