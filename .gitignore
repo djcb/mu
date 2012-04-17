@@ -66,3 +66,6 @@ src/mu
 mu4e-version.el
 mu4e.pdf
 texinfo.tex
+/emacs/mdate-sh
+/emacs/stamp-vti
+/emacs/version.texi
