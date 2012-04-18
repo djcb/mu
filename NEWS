@@ -10,6 +10,7 @@
     - ability to open attachments with arbitrary program, pipe through shell
       commands or open in the current emacs
     - quote names in recipient addresses
+    - mu4e-get-maildirs works now for recursive maildirs as well
 
 *** general
 
