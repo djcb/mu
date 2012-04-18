@@ -700,7 +700,11 @@ attachments) in response to a (mu4e-proc-extract 'temp ... )."
 	  (call-process-shell-command param path t t)
 	  (view-mode)))
       ((string= what "emacs")
-	(find-file path))
+	(find-file path)
+	;; make the buffer read-only since it usually does not make
+	;; sense to edit the temp buffer; use C-x C-q if you insist...
+	(setq buffer-read-only t)
+	)
       (t (error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
