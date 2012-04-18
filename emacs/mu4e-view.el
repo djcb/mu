@@ -137,17 +137,18 @@ marking if it still had that."
       (unless update
 	(mu4e-view-mark-as-read-maybe)))))
 
-
   
 (defun mu4e-view-header (key val &optional dont-propertize-val)
-  "Show header FIELD for MSG with KEY. ie. <KEY>: value-of-FIELD."
+  "Return header KEY with value VAL if VAL is non-nil. If
+DONT-PROPERTIZE-VAL, do not add text-properties to VAL."
   (if val
-    (concat
-      (propertize key 'face 'mu4e-view-header-key-face) ": "
-      (if dont-propertize-val
-	val
-        (propertize val 'face 'mu4e-view-header-value-face))
-      "\n")
+    (with-temp-buffer
+      (insert (propertize key 'face 'mu4e-view-header-key-face) ": "
+	(if dont-propertize-val
+	  val
+	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
+      (fill-region (point-min) (point-max))
+      (buffer-string))
     ""))
 
 
