@@ -372,28 +372,31 @@ of mu4e and emacs."
     (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)))
 
 
-(defun mu4e-message-at-point ()
+(defun mu4e-message-at-point (&optional raise-err)
   "Get the message s-expression for the message at point in either
-the headers buffer or the view buffer."
+the headers buffer or the view buffer, or nil if there is no such
+message. If optional RAISE-ERR is non-nil, raise an error when
+there is no message at point."
   (let ((msg
 	 (cond
 	   ((eq major-mode 'mu4e-hdrs-mode)
 	     (get-text-property (point) 'msg))
 	   ((eq major-mode 'mu4e-view-mode)
 	     mu4e-current-msg))))
-    (unless msg (error "No message at point"))
-    msg))
+    (if (and (null msg) raise-err)
+      (error "No message at point")
+      msg)))
 
 (defun mu4e-field-at-point (field)
   "Get FIELD (a symbol, see `mu4e-header-names') for the message at
 point in eiter the headers buffer or the view buffer."
-  (plist-get (mu4e-message-at-point) field))
+  (plist-get (mu4e-message-at-point t) field))
 
 (defun mu4e-capture-message ()
   "Capture the path of the message at point."
   (interactive)
-  (setq mu4e-captured-message (mu4e-message-at-point))
-  (message "Message has been captured"))
+  (setq mu4e-captured-message (mu4e-message-at-point t))
+  (message "Message has been captured")) 
 
 (defun mu4e-kill-buffer-and-window (buf)
   "Kill buffer BUF and any of its windows. Like
@@ -421,6 +424,18 @@ that has a live window), and vice versa."
       (message "No window to switch to"))))
 
 
+(defconst mu4e-output-buffer-name "*mu4e-output"
+  "*internal* Name of the mu4e output buffer.")
+
+(defun mu4e-process-file-through-pipe (path pipecmd)
+  "Process file at PATH through a pipe with PIPECMD."
+  (let ((buf (get-buffer-create mu4e-output-buffer-name)))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+	(erase-buffer)
+	(call-process-shell-command pipecmd path t t)
+	(view-mode)))
+    (switch-to-buffer buf)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

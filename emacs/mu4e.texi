@@ -535,6 +535,8 @@ u            unmark message at point
 R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
 
+|            pipe message through shell command
+
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
@@ -544,6 +546,7 @@ u            unmark message at point
 U            unmark *all* messages
 x            execute actions for the marked messages
 RET          open the message at point in the message view
+
 H            get help
 q,z          leave the headers buffer
 @end verbatim
@@ -666,7 +669,7 @@ u            unmark message at point
 R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
 
-.            show the raw message view. ./q take you back
+.            show the raw message view. 'q' takes you back.
 
 g            go to (visit) numbered URL (using `browse-url')
              (or: <mouse-2> or RET with point on url)
@@ -708,7 +711,8 @@ choose from a list with some more actions to perform on attachments:
 @itemize
 @item @t{open-with} (@key{w}): open the attachment with some arbitrary
 program. For example, suppose you have received a message with a picture
-attachment; then, @t{a w 1 RET gimp RET} will open that attachment in The Gimp.
+attachment; then, @t{a w 1 RET gimp RET} will open that attachment in The
+Gimp.
 @item @t{pipe} (@key{|}: process the attachment with some Unix shell-pipe and
 see the results. Suppose you receive a patch file, and would like to get an
 overview of the changes, using the @t{diffstat} program. You can use something

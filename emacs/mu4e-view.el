@@ -28,7 +28,6 @@
 ;;; Code:
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-vars)
-(require 'mu4e-raw-view)
 
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
@@ -37,6 +36,9 @@
 ;; some buffer-local variables
 (defvar mu4e-hdrs-buffer nil
   "*internal* Headers buffer connected to this view.")
+
+(defconst mu4e-view-raw-buffer-name "*mu4e-raw-view*"
+  "*internal* Name for the raw message view buffer")
 
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
@@ -245,7 +247,7 @@ is nil, and otherwise open it."
       (define-key map "C" 'mu4e-compose-new)
       (define-key map "E" 'mu4e-compose-edit)
 
-      (define-key map "." 'mu4e-raw-view)
+      (define-key map "." 'mu4e-view-raw-message)
       (define-key map "|" 'mu4e-view-pipe)
       ;; (define-key map "I" 'mu4e-inspect-message)
 
@@ -682,6 +684,7 @@ ACTION."
       (?e (call-interactively 'mu4e-view-open-attachment-emacs))
       (otherwise (message "Not yet implemented")))))
 
+
 ;; handler-function to handle the response we get from the server when we
 ;; want to do something with one of the attachments.
 (defun mu4e-view-temp-handler (path what param)
@@ -694,17 +697,12 @@ attachments) in response to a (mu4e-proc-extract 'temp ... )."
 	  (concat param " " path)))
       ((string= what "pipe")
 	;; 'param' will be the pipe command, path the infile for this
-	(let ((inhibit-read-only t))
-	  (switch-to-buffer (get-buffer-create "*mu4e-output*"))
-	  (erase-buffer)
-	  (call-process-shell-command param path t t)
-	  (view-mode)))
+	(mu4e-process-file-through-pipe path param))
       ((string= what "emacs")
 	(find-file path)
 	;; make the buffer read-only since it usually does not make
 	;; sense to edit the temp buffer; use C-x C-q if you insist...
-	(setq buffer-read-only t)
-	)
+	(setq buffer-read-only t))
       (t (error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -743,20 +741,28 @@ that execution can only take place in n the header list."
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
 
-(defun mu4e-raw-view ()
-  "Show the the raw text of the current message."
+(defun mu4e-view-raw-message ()
+  "Display the raw contents of message at point in a new buffer."
   (interactive)
-  (unless mu4e-current-msg
-    (error "No current message"))
-  (mu4e-raw-view-message mu4e-current-msg (current-buffer)))
+  (let ((path (mu4e-field-at-point :path))
+	 (buf (get-buffer-create mu4e-view-raw-buffer-name)))
+    (unless (and path (file-readable-p path))
+      (error "Not a readable file: %S" path))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+	(erase-buffer)
+	(insert-file-contents path)
+	(view-mode)
+	(goto-char (point-min))))
+    (switch-to-buffer buf)))
+     
 
 (defun mu4e-view-pipe (cmd)
   "Pipe the message through shell command CMD, and display the
 results."
   (interactive "sShell command: ")
-  (unless mu4e-current-msg
-    (error "No current message"))
-  (mu4e-view-shell-command-on-raw-message mu4e-current-msg
-    (current-buffer) cmd))
+  (let ((path (mu4e-field-at-point :path)))
+    (mu4e-process-file-through-pipe path cmd)))
+
 
 (provide 'mu4e-view)
