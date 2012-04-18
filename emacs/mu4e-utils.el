@@ -138,8 +138,9 @@ paths."
 
 (defun mu4e-get-maildirs (path)
   "Get maildirs under path, recursively, as a list of relative
-paths (ie., /archive, /sent etc.). Most of the work is done in `mu4e-get-maildirs-1,
-but we handle the special-case of the top-level Maildir here."
+paths (ie., /archive, /sent etc.). Most of the work is done in
+`mu4e-get-maildirs-1, but we handle the special-case of the
+top-level Maildir here."
   (append
     (when (and (file-directory-p (concat path "/cur"))
 	    (file-directory-p (concat path "/tmp"))
