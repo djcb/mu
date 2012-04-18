@@ -224,7 +224,7 @@ e-mail message (if there is any."
   :group 'mu4e-view)
 
 (defcustom mu4e-html2text-command nil
-  "Shel command that converts HTML from stdin into plain text on
+  "Shell command that converts HTML from stdin into plain text on
 stdout. If this is not defined, the emacs `html2text' tool will be
 used when faced with html-only message. If you use htmltext, it's
 recommended you use \"html2text -utf8 -width 72\"."
@@ -232,6 +232,12 @@ recommended you use \"html2text -utf8 -width 72\"."
   :group 'mu4e-view
   :safe 'stringp)
 
+(defcustom mu4e-view-show-addresses t
+  "Whether to show e-mail addresses for contacts in address-fields,
+  if names are available as well (note that the e-mail addresses
+  are still available as a tooltip."
+  :type 'boolean
+  :group 'mu4e-view)
 
 (defcustom mu4e-view-wrap-lines nil
   "Whether to automatically wrap lines in the body of messages when

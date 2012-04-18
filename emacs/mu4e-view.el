@@ -161,9 +161,14 @@ DONT-PROPERTIZE-VAL, do not add text-properties to VAL."
 	      (mapconcat
 		(lambda(c)
 		  (let ((name (car c)) (email (cdr c)))
-		    (if name
-		      (format "%s <%s>" name email)
-		      (format "%s" email)))) lst ", "))))
+		    (propertize
+		      (if name
+			(if mu4e-view-show-addresses
+			  (format "%s <%s>" name email)
+			  (format "%s" name))
+			(format "%s" email))
+		      'help-echo email)))
+		lst ", "))))
     (if contacts
       (mu4e-view-header fieldname contacts)
       "")))
