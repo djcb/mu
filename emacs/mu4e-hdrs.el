@@ -580,7 +580,6 @@ region is active, mark all headers in the region. Als see
       (mu4e-hdrs-mark-message mark target))))
 
 
-
 (defun mu4e-hdrs-marks-execute ()
   "Execute the actions for all marked messages in this
 buffer. After the actions have been executed succesfully, the
