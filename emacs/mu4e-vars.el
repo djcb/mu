@@ -104,11 +104,12 @@ query, DESCRIPTION is a short description of the query (this will
 show up in the UI), and KEY is a shortcut key for the query.")
 
 (defvar mu4e-split-view 'horizontal
-  "How to show messages / headers; a symbol which is either:
-  * a symbol 'horizontal: split horizontally (headers on top)
-  * a symbol 'vertical: split vertically (headers on the left).
-  * anything else: don't split (show either headers or messages, not both)
-Also see `mu4e-headers-visible-lines' and `mu4e-headers-visible-columns'.")
+  "How to show messages / headers; a symbol which is either: * a
+symbol 'horizontal: split horizontally (headers on top) * a symbol
+'vertical: split vertically (headers on the left).  * anything
+else: don't split (show either headers or messages, not both) Also
+see `mu4e-headers-visible-lines' and
+`mu4e-headers-visible-columns'.")
 
  
 ;; Folders
@@ -261,6 +262,25 @@ line). Note that you can always toggle between hidden/unhidden
 display with `mu4e-view-toggle-hide-cited (default keybinding:
 <w>)."
   :group 'mu4e-view)
+
+;; some *cough* forward declarations; real definitions are in mu4e-view
+;; on which we don't want to circularly depend
+(defun mu4e-dummy-func (&optional args) (error "dummy"))
+(defalias 'mu4e-view-open-attachment-with 'mu4e-dummy-func)
+(defalias 'mu4e-view-open-attachment-emacs 'mu4e-dummy-func)
+(defalias 'mu4e-view-open-pipe-attachment 'mu4e-dummy-func)
+
+(defvar mu4e-view-attachments-actions
+  '( ("open-with" ?w mu4e-view-open-attachment-with)
+     ("in-emacs"  ?e mu4e-view-open-attachment-emacs)
+     ("pipe"      ?| mu4e-view-pipe-attachment))
+  "List of actions to perform on message attachments. The actions
+are of the form:
+   (NAME SHORTCUT FUNC)
+where:
+    * NAME is the name of the action (e.g. \"Count lines\")
+    * SHORTCUT is a one-character shortcut to call this action
+    * FUNC is a function which takes as argument a message s-exp")
 
 
 ;; Composing / Sending messages

@@ -392,6 +392,17 @@ there is no message at point."
 point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point t) field))
 
+(defun mu4e-offer-actions (prompt actions msg)
+  "Ask user with PROMPT to choose some action from ACTIONS. ACTIONS
+is a list of actions like `mu4e-view-attachments-actions',
+`mu4e-view-actions', `mu4e-header-actions'. Then, call the function
+for this action, with the currrent message plist as the argument."
+  (let ((kar (mu4e-read-option prompt actions)))
+    (dolist (action actions)
+      (let ((shortcut (cadr action)) (func (nth 2 action)))
+	(when (eq kar shortcut)
+	  (funcall func msg))))))
+
 (defun mu4e-capture-message ()
   "Capture the path of the message at point."
   (interactive)
