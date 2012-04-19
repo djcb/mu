@@ -260,13 +260,13 @@ is nil, and otherwise open it."
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
       (define-key map (kbd "<home>")
-	'(lambda () (interactive) (goto-char (point-min))))
+	#'(lambda () (interactive) (goto-char (point-min))))
       (define-key map (kbd "<end>")
-	'(lambda () (interactive) (goto-char (point-max))))
+	#'(lambda () (interactive) (goto-char (point-max))))
       (define-key map (kbd "RET")
-	'(lambda () (interactive) (scroll-up 1)))
+	#'(lambda () (interactive) (scroll-up 1)))
       (define-key map (kbd "<backspace>")
-	'(lambda () (interactive) (scroll-up -1)))
+	#'(lambda () (interactive) (scroll-up -1)))
 
       ;; navigation between messages
       (define-key map "p" 'mu4e-view-prev-header)
@@ -376,6 +376,11 @@ is nil, and otherwise open it."
   (make-local-variable 'mu4e-cited-hidden)
 
   (setq buffer-undo-list t) ;; don't record undo info
+
+  ;; autopair mode gives error when pressing RET
+  ;; turn it off
+  (when (boundp 'autopair-dont-activate)
+    (setq autopair-dont-activate t))
   
   ;; filladapt is much better than the built-in filling
   ;; esp. with '>' cited parts
