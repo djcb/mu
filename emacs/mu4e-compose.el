@@ -317,6 +317,11 @@ use the new docid. Returns the full path to the new message."
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
+
+    ;; make sure mu4e is started in the background (ie. we don't want to error out
+    ;; when sending the message; better to do it now if there's a problem)
+    (mu4e :hide-ui t)
+   
     ;; hack-hack-hack... just before saving, we remove the
     ;; mail-header-separator; just after saving we restore it; thus, the
     ;; separator should never appear on disk
@@ -372,7 +377,7 @@ symbol, either `reply', `forward', `edit', `new'. `edit' is for
 editing existing messages.
 
 When COMPOSE-TYPE is `reply' or `forward', MSG should be a message
-plist.  If COMPOSE-TYPE is `new', MSG should be nil.
+plist.  If COMPOSE-TYPE is `new', ORIGINAL-MSG should be nil.
 
 Optionally (when forwarding, replying) ORIGINAL-MSG is the original
 message we will forward / reply to.
@@ -507,5 +512,44 @@ buffer.
       (mu4e-proc-move (match-string 1 in-reply-to) nil "+R"))
     (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
       (mu4e-proc-move (match-string 1 forwarded-from) nil "+P"))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; mu4e-compose-func and mu4e-send-func are wrappers so we can set ourselves
+;; as default emacs mailer (define-mail-user-agent etc.)
+
+(defun mu4e-compose-func (&optional to subject other-headers continue
+			   switch-function yank-action send-actions
+			   return-action)
+  "mu4e's implementation of `compose-mail'."
+  
+  ;; create a new draft message
+  (mu4e-compose-handler 'new)
+
+  (when to ;; reset to-address, if needed
+    (message-goto-to)
+    (message-delete-line)
+    (insert (concat "To: " to "\n")))
+  (when subject ;; reset subject, if needed
+    (message-goto-subject)
+    (message-delete-line)
+    (insert (concat "Subject: " subject "\n")))
+  ;; add any other headers... inspired by message-mode
+  ;; FIXME: need to convert the headers.
+  ;; (when other-headers
+  ;;   (message-add-header other-headers))
+  
+  (if (bufferp yank-action)
+    (list 'insert-buffer yank-action)
+    yank-action))
+
+;; happily, we can reuse most things from message mode
+(define-mail-user-agent 'mu4e-user-agent
+  'mu4e-compose-func
+  'message-send-and-exit
+  'message-kill-buffer
+  'message-send-hook)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mu4e-compose)

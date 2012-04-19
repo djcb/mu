@@ -29,7 +29,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
-(defvar mu4e-mu-proc nil "*internal* The mu-server process")
+
 (defvar mu4e-buf nil "*internal* Buffer for results data.")
 
 (defvar mu4e-path-docid-map

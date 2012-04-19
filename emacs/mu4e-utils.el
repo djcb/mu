@@ -475,33 +475,45 @@ process."
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")
 
-(defun mu4e ()
-  "Start mu4e. We do this by sending a 'ping' to the mu server
+(defun mu4e-proc-is-running ()
+  "Whether the mu process is running."
+  (buffer-live-p mu4e-mu-proc))
+ 
+(defun* mu4e (&key (hide-ui nil))
+  "Start mu4e . We do this by sending a 'ping' to the mu server
 process, and start the main view if the 'pong' we receive from the
-server has the expected values."
+server has the expected values. If keyword argument :hide-ui is
+non-nil, don't show the UI."
   (interactive)
-  (if (buffer-live-p (get-buffer mu4e-main-buffer-name))
-    (switch-to-buffer mu4e-main-buffer-name)
-    (mu4e-check-requirements)
-    ;; explicit version checks are a bit questionable,
-    ;; better to check for specific features
-    (if (< emacs-major-version 23)
+  ;; if we're already running, simply go to the main view
+  (if (mu4e-proc-is-running)
+    (unless hide-ui
+      (mu4e-main-view))
+    (progn
+      ;; otherwise, check whether all is okay;
+      (mu4e-check-requirements) 
+      ;; explicit version checks are a bit questionable,
+      ;; better to check for specific features
+      (if (< emacs-major-version 23)
 	(error "Emacs >= 23.x is required for mu4e")
 	(progn
-	  (setq mu4e-pong-func
-	    (lambda (version doccount)
-	      (unless (string= version mu4e-mu-version)
-		(error "mu server has version %s, but we need %s"
-		  version mu4e-mu-version))
-	      (mu4e-main-view)
-	      (when (and mu4e-update-interval (null mu4e-update-timer))
-		(setq mu4e-update-timer
-		  (run-at-time
-		    0 mu4e-update-interval
-		    'mu4e-update-mail)))
-	      (message "Started mu4e with %d message%s in store"
-		doccount (if (= doccount 1) "" "s"))))
-	  (mu4e-proc-ping)))))
+	  ;; define the closure (when we receive the 'pong'
+	  (lexical-let ((hide-ui hide-ui))
+	    (setq mu4e-pong-func
+	      (lambda (version doccount)
+		(unless (string= version mu4e-mu-version)
+		  (error "mu server has version %s, but we need %s"
+		    version mu4e-mu-version))
+		(unless hide-ui
+		  (mu4e-main-view))
+		(when (and mu4e-update-interval (null mu4e-update-timer))
+		  (setq mu4e-update-timer
+		    (run-at-time
+		      0 mu4e-update-interval 'mu4e-update-mail)))
+		(message "Started mu4e with %d message%s in store"
+		  doccount (if (= doccount 1) "" "s")))))
+	  ;; send the ping
+	  (mu4e-proc-ping))))))
 
 (defun mu4e-quit()
   "Quit the mu4e session."

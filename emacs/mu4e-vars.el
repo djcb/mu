@@ -457,6 +457,7 @@ in which case it will be equal to `:to'.)")
 (defconst mu4e-log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
 
+(defvar mu4e-mu-proc nil "*internal* The mu-server process")
 
 
 
