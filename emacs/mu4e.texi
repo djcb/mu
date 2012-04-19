@@ -794,6 +794,11 @@ C-c C-w      insert signature
 C-c C-a      attach a file (pro-tip: drag & drop works as well)
 @end verbatim
 
+If you want use @t{mu4e} as the default program for sending mail, please see
+@ref{Setting the default emacs mail program}. With respect to sending mail,
+other interesting topics: @ref{Citations with mu-cite} and @ref{Maintaining an
+address-book with org-contacts}.
+
 @node Searching mail
 @chapter Searching mail
 
@@ -980,12 +985,29 @@ In this chapter we discuss some ways in ways in which @t{mu4e} can cooperate
 with other tools.
 
 @menu
+* Setting the default emacs mail program::
 * Creating org-mode links::
 * Maintaining an address-book with org-contacts::
 * Getting new mail notifications with Sauron::
 * Speedbar support::
 * Citations with mu-cite::
 @end menu
+
+@node Setting the default emacs mail program
+@section Setting the default emacs mail program
+
+@t{emacs} allows you to select an e-mail program as the default program it
+will use when you press @key{C-x m} (@code{compose-mail}), call
+@code{report-emacs-bug} and so on.
+
+If you want to use @t{mu4e} for this, you do so by adding the following to
+your configuration:
+
+@lisp
+(setq mail-user-agent 'mu4e-user-agent)
+@end lisp
+
+At the present time, support is still experimental.
 
 @node Creating org-mode links
 @section Creating org-mode links
