@@ -239,8 +239,8 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 
 
 /* get a *list* of all messages with the given message id */
-G_GNUC_UNUSED static GSList*
-get_docid_from_msgid_list (MuQuery *query, const char *str, GError **err)
+static GSList*
+get_docids_from_msgids (MuQuery *query, const char *str, GError **err)
 {
 	gchar *querystr;
 	MuMsgIter *iter;
@@ -248,7 +248,8 @@ get_docid_from_msgid_list (MuQuery *query, const char *str, GError **err)
 
 	querystr = g_strdup_printf ("msgid:%s", str);
 	iter = mu_query_run (query, querystr, FALSE,
-			     MU_MSG_FIELD_ID_NONE, FALSE, 1, err);
+			     MU_MSG_FIELD_ID_NONE, FALSE,-1 /*unlimited*/,
+			     err);
 	g_free (querystr);
 
 	if (!iter || mu_msg_iter_is_done (iter)) {
@@ -257,12 +258,12 @@ get_docid_from_msgid_list (MuQuery *query, const char *str, GError **err)
 		return NULL;
 	}
 
-	for (lst = NULL; !mu_msg_iter_is_done (iter); mu_msg_iter_next(iter)) {
-		unsigned docid;
-		docid = mu_msg_iter_get_docid (iter);
+	lst = NULL;
+	do {
 		lst = g_slist_prepend
-			(lst, GUINT_TO_POINTER(docid));
-	}
+			(lst,
+			 GSIZE_TO_POINTER(mu_msg_iter_get_docid (iter)));
+	} while (mu_msg_iter_next (iter));
 
 	mu_msg_iter_destroy (iter);
 
@@ -498,8 +499,6 @@ print_sexps (MuMsgIter *iter, int maxnum)
 	}
 	return u;
 }
-
-
 
 
 static MuError
@@ -803,9 +802,14 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	gchar *sexp;
 	gboolean different_mdir;
 
-	/* are we moving to a different mdir, or is it just flags? */
-	different_mdir =
-		(g_strcmp0 (maildir, mu_msg_get_maildir(msg)) != 0);
+	if (!maildir) {
+		maildir = mu_msg_get_maildir (msg);
+		different_mdir = FALSE;
+	} else {
+		/* are we moving to a different mdir, or is it just flags? */
+		different_mdir =
+			(g_strcmp0 (maildir, mu_msg_get_maildir(msg)) != 0);
+	}
 
 	if (!mu_msg_move_to_maildir (msg, maildir, flags, TRUE, err))
 		return MU_G_ERROR_CODE (err);
@@ -830,6 +834,59 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	return MU_OK;
 }
 
+/* when called with a msgid, we need to take care of possibly multiple
+ * message with this message id. this is a common case when sending
+ * messages to ourselves (maybe through a mailing list), where there
+ * would a message in inbox and sentbox with the same id. we set the
+ * flag on both */
+static gboolean
+move_msgid_maybe (MuStore *store, MuQuery *query, GSList *args, GError **err)
+{
+	const char *maildir, *msgid, *flagstr;
+	GSList *docids, *cur;
+	MuFlags flags;
+
+	maildir	= get_string_from_args (args, "maildir", TRUE, err);
+	msgid	= get_string_from_args (args, "msgid", TRUE, err);
+	flagstr	= get_string_from_args (args, "flags", TRUE, err);
+
+	/*  you cannot use 'maildir' for multiple messages at once */
+	if (!msgid || !flagstr || maildir )
+		return FALSE;
+
+	docids = get_docids_from_msgids (query, msgid, err);
+	if (!docids) {
+		print_and_clear_g_error (err);
+		return TRUE;
+	}
+
+	for (cur = docids; cur; cur = g_slist_next(cur)) {
+		MuMsg *msg;
+		unsigned docid = (GPOINTER_TO_SIZE(cur->data));
+		if (!(msg = mu_store_get_msg (store, docid, err))) {
+			print_and_clear_g_error (err);
+			break;
+		}
+		if (flagstr)
+			flags = get_flags (mu_msg_get_path(msg), flagstr);
+		else
+			flags = mu_msg_get_flags (msg);
+		if (flags == MU_FLAG_INVALID) {
+			print_error (MU_ERROR_IN_PARAMETERS, "invalid flags");
+			break;
+		}
+
+		do_move (store, docid, msg, NULL, flags, err);
+		mu_msg_unref (msg);
+	}
+
+	g_slist_free (docids);
+
+	return TRUE;
+}
+
+
+
 /*
  * 'move' moves a message to a different maildir and/or changes its
  * flags. parameters are *either* a 'docid:' or 'msgid:' pointing to
@@ -846,6 +903,11 @@ cmd_move (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	MuMsg *msg;
 	MuFlags flags;
 	const char *maildir, *flagstr;
+
+	/* check if the move is based on the message id; if so, handle
+	 * it in move_msgid_maybe */
+	if (move_msgid_maybe (store, query, args, err))
+		return MU_OK;
 
 	maildir	= get_string_from_args (args, "maildir", TRUE, err);
 	flagstr = get_string_from_args (args, "flags", TRUE, err);
@@ -1074,7 +1136,6 @@ handle_args (MuStore *store, MuQuery *query, GSList *args, GError **err)
 		{ "compose",	cmd_compose },
 		{ "extract",    cmd_extract },
 		{ "find",	cmd_find },
-		/* { "flag",	cmd_flag }, */
 		{ "index",	cmd_index },
 		{ "mkdir",	cmd_mkdir },
 		{ "move",	cmd_move },
