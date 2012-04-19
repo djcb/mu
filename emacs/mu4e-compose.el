@@ -49,7 +49,7 @@ such all its settings apply."
     (funcall message-cite-function)
     (pop-mark)
     (buffer-string)))
-   
+
 
 (defun mu4e--header (hdr val)
   "Return a header line of the form HDR: VAL\n. If VAL is nil,
@@ -321,7 +321,7 @@ use the new docid. Returns the full path to the new message."
     ;; make sure mu4e is started in the background (ie. we don't want to error out
     ;; when sending the message; better to do it now if there's a problem)
     (mu4e :hide-ui t)
-   
+
     ;; hack-hack-hack... just before saving, we remove the
     ;; mail-header-separator; just after saving we restore it; thus, the
     ;; separator should never appear on disk
@@ -519,14 +519,12 @@ buffer.
 ;; mu4e-compose-func and mu4e-send-func are wrappers so we can set ourselves
 ;; as default emacs mailer (define-mail-user-agent etc.)
 
-(defun mu4e-compose-func (&optional to subject other-headers continue
-			   switch-function yank-action send-actions
-			   return-action)
+(defun mu4e--compose-func (&optional to subject other-headers continue
+			   switch-function yank-action send-actions return-action)
   "mu4e's implementation of `compose-mail'."
-  
+
   ;; create a new draft message
   (mu4e-compose-handler 'new)
-
   (when to ;; reset to-address, if needed
     (message-goto-to)
     (message-delete-line)
@@ -535,18 +533,17 @@ buffer.
     (message-goto-subject)
     (message-delete-line)
     (insert (concat "Subject: " subject "\n")))
-  ;; add any other headers... inspired by message-mode
-  ;; FIXME: need to convert the headers.
-  ;; (when other-headers
-  ;;   (message-add-header other-headers))
-  
+  ;; add any other headers specified; FIXME: for some reason, these appear
+  ;; before any other headers
+  (message-add-header other-headers)
+  ;; yank message
   (if (bufferp yank-action)
     (list 'insert-buffer yank-action)
     yank-action))
 
-;; happily, we can reuse most things from message mode
+;; happily, we can re-use most things from message mode
 (define-mail-user-agent 'mu4e-user-agent
-  'mu4e-compose-func
+  'mu4e--compose-func
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)
