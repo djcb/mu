@@ -64,7 +64,7 @@ plist."
 	    (:from	   (mu4e-view-contacts msg field))
 	    (:cc	   (mu4e-view-contacts msg field))
 	    (:bcc	   (mu4e-view-contacts msg field))
-	    
+
 	    ;; if we (`user-mail-address' are the From, show To, otherwise,
 	    ;; show From
 	    (:from-or-to
@@ -109,7 +109,7 @@ marking if it still had that."
       (setq mu4e-attach-map nil) ;; clear any old attachment stuff
       (erase-buffer)
       (insert (mu4e-view-message-text msg))
-      
+
       ;; initialize view-mode
       (mu4e-view-mode)
       (setq ;; these are buffer-local
@@ -117,7 +117,7 @@ marking if it still had that."
 	mu4e-current-msg msg
 	mu4e-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
-      
+
       (switch-to-buffer buf)
       (goto-char (point-min))
 
@@ -132,22 +132,28 @@ marking if it still had that."
 	(progn
 	  (when mu4e-view-wrap-lines (mu4e-view-wrap-lines))
 	  (when mu4e-view-hide-cited (mu4e-view-hide-cited))))
-      
+
       ;; no use in trying to set flags again
       (unless update
 	(mu4e-view-mark-as-read-maybe)))))
 
-  
+
 (defun mu4e-view-header (key val &optional dont-propertize-val)
   "Return header KEY with value VAL if VAL is non-nil. If
-DONT-PROPERTIZE-VAL, do not add text-properties to VAL."
+DONT-PROPERTIZE-VAL is non-nil, do not add text-properties to VAL."
   (if val
     (with-temp-buffer
       (insert (propertize key 'face 'mu4e-view-header-key-face) ": "
 	(if dont-propertize-val
 	  val
 	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
-      (fill-region (point-min) (point-max))
+      ;; temporarily set the fill column <margin> positions to the right, so
+      ;; we can indent following lines with positions
+      (let*((margin 1) (fill-column (- fill-column margin)))
+	(fill-region (point-min) (point-max))
+	(goto-char (point-min))
+	(while (and (zerop (forward-line 1)) (not (looking-at "^$")))
+	  (indent-to-column margin)))
       (buffer-string))
     ""))
 
@@ -381,12 +387,11 @@ is nil, and otherwise open it."
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t))
-  
+
   ;; filladapt is much better than the built-in filling
   ;; esp. with '>' cited parts
   (when (fboundp 'filladapt-mode)
     (filladapt-mode))
-
   (setq truncate-lines t))
 
 
@@ -565,7 +570,7 @@ citations."
       (if (window-parent)
 	(kill-buffer-and-window)
 	(kill-buffer)))))
-      
+
 (defun mu4e-view-next-header ()
   "View the next header."
   (interactive)
@@ -766,7 +771,7 @@ that execution can only take place in n the header list."
 	(view-mode)
 	(goto-char (point-min))))
     (switch-to-buffer buf)))
-     
+
 
 (defun mu4e-view-pipe (cmd)
   "Pipe the message through shell command CMD, and display the
