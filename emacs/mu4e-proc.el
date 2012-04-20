@@ -43,7 +43,6 @@ to the sent folder using their docid")
 
 (defun mu4e-start-proc ()
   "Start the mu server process."
-  ;; TODO: add version check
   (unless (file-executable-p mu4e-mu-binary)
     (error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe

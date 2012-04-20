@@ -432,8 +432,8 @@ using Gnus' `message-mode'."
     ;; buffer is not user-modified yet
     (set-buffer-modified-p nil)))
 
-(defun mu4e-insert-captured-message ()
-  "Insert the last captured message file."
+(defun mu4e-insert-captured-message-as-attachment()
+  "Insert the last captured message file as an attachment."
   (interactive)
   (unless mu4e-captured-message
     (error "No message has been captured"))
