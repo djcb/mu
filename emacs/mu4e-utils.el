@@ -124,7 +124,7 @@ paths."
 		  (string-match "\\.\\{1,2\\}$" de)))
 	      (directory-files (concat path mdir))))
 	  ;; 2. get the list of dirs with a /cur leaf dir
-	  (maildirs))  
+	  (maildirs))
     (dolist (dir subdirs)
       (if (string= dir "cur")
 	;; be pedantic, and insist on there being a new/tmp as well
@@ -146,7 +146,7 @@ top-level Maildir here."
 	    (file-directory-p (concat path "/tmp"))
 	    (file-directory-p (concat path "/new")))
       '("/"))
-    (mu4e--get-maildirs-1 path))) 
+    (mu4e--get-maildirs-1 path)))
 
 
 (defun mu4e-ask-maildir (prompt)
@@ -343,7 +343,7 @@ processing takes part in the background, unless buf is non-nil."
 		(code (process-exit-status proc))
 		;; sadly, fetchmail returns '1' when there is no mail; this is not really
 		;; an error of course, but it's hard to distinguish from a genuine error
-		(maybe-error (or (not (eq status 'exit)) (/= code 0)))) 
+		(maybe-error (or (not (eq status 'exit)) (/= code 0))))
 	  (message nil)
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error
@@ -351,8 +351,8 @@ processing takes part in the background, unless buf is non-nil."
 	  (mu4e-proc-index mu4e-maildir)
 	  (let ((buf (process-buffer proc)))
 	    (when (buffer-live-p buf)
-	      (kill-buffer buf)))))))) 
- 
+	      (kill-buffer buf))))))))
+
 
 (defun mu4e-display-manual ()
   "Display the mu4e manual page for the current mode, or go to the
@@ -397,17 +397,19 @@ point in eiter the headers buffer or the view buffer."
 is a list of actions like `mu4e-view-attachments-actions',
 `mu4e-view-actions', `mu4e-header-actions'. Then, call the function
 for this action, with the currrent message plist as the argument."
-  (let ((kar (mu4e-read-option prompt actions)))
-    (dolist (action actions)
-      (let ((shortcut (cadr action)) (func (nth 2 action)))
-	(when (eq kar shortcut)
-	  (funcall func msg))))))
+  (if (null actions)
+    (message "No actions of this type defined")
+    (let ((kar (mu4e-read-option prompt actions)))
+      (dolist (action actions)
+	(let ((shortcut (cadr action)) (func (nth 2 action)))
+	  (when (eq kar shortcut)
+	    (funcall func msg)))))))
 
 (defun mu4e-capture-message ()
   "Capture the path of the message at point."
   (interactive)
   (setq mu4e-captured-message (mu4e-message-at-point t))
-  (message "Message has been captured")) 
+  (message "Message has been captured"))
 
 (defun mu4e-kill-buffer-and-window (buf)
   "Kill buffer BUF and any of its windows. Like
@@ -489,7 +491,7 @@ process."
 (defun mu4e-proc-is-running ()
   "Whether the mu process is running."
   (buffer-live-p mu4e-mu-proc))
- 
+
 (defun* mu4e (&key (hide-ui nil))
   "Start mu4e . We do this by sending a 'ping' to the mu server
 process, and start the main view if the 'pong' we receive from the
@@ -502,7 +504,7 @@ non-nil, don't show the UI."
       (mu4e-main-view))
     (progn
       ;; otherwise, check whether all is okay;
-      (mu4e-check-requirements) 
+      (mu4e-check-requirements)
       ;; explicit version checks are a bit questionable,
       ;; better to check for specific features
       (if (< emacs-major-version 23)
@@ -560,13 +562,13 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 		  (otherwise   (error "Unsupported log type"))))
 	      (msg (propertize (apply 'format frm args) 'face msg-face)))
 	(goto-char (point-max))
-	(insert tstamp 
+	(insert tstamp
 	  (case type
 	    (from-server " <- ")
 	    (to-server   " -> " )
 	    (otherwise   " "))
 	  msg "\n")
-	
+
 	;; if `mu4e-log-max-lines is specified and exceeded, clearest the oldest
 	;; lines
 	(when (numberp mu4e-log-max-lines)
@@ -576,7 +578,7 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 	      (forward-line (- mu4e-log-max-lines lines))
 	      (beginning-of-line)
 	      (delete-region (point-min) (point)))))))))
-       
+
 (defun mu4e-toggle-logging ()
   "Toggle between enabling/disabling debug-mode (in debug-mode,
 mu4e logs some of its internal workings to a log-buffer. See
