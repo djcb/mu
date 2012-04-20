@@ -405,10 +405,19 @@ action (function) to invoke, or nil. "
       (when action
 	(nth 2 action))))) ;; return func
 
-(defun mu4e-capture-message ()
-  "Capture the path of the message at point."
+
+(defun mu4e-count-lines (msg)
+  "Demonstration function for `mu4e-view-actions'. Count the number
+of lines in the e-mail message."
+  (message "Number of lines: %s"
+    (shell-command-to-string
+      (concat "wc -l < " (shell-quote-argument (plist-get msg :path))))))
+
+(defun mu4e-capture-message (msg)
+  "Remember MSG; we can create a an attachment based on this msg
+with `mu4e-insert-captured-message-as-attachment'."
   (interactive)
-  (setq mu4e-captured-message (mu4e-message-at-point t))
+  (setq mu4e-captured-message msg)
   (message "Message has been captured"))
 
 (defun mu4e-kill-buffer-and-window (buf)

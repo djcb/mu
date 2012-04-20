@@ -200,6 +200,21 @@ vertical split-view."
   :type 'integer
   :group 'mu4e-headers)
 
+(defun mu4e--dummy-func (&optional args) (error "dummy"))
+
+(defalias 'mu4e-capture-message 'mu4e--dummy-func)
+
+(defvar mu4e-headers-actions
+  '( ("capture message" ?c mu4e-capture-message)
+     ("count lines"     ?l mu4e-count-lines))
+  "List of actions to perform on messages in the headers list. The actions
+are of the form:
+   (NAME SHORTCUT FUNC) where:
+* NAME is the name of the action (e.g. \"Count lines\")
+* SHORTCUT is a one-character shortcut to call this action
+* FUNC is a function which receives a message plist as an argument.")
+
+
 ;; the message view
 (defgroup mu4e-view nil
   "Settings for the message view."
@@ -263,12 +278,25 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
 <w>)."
   :group 'mu4e-view)
 
+
+(defalias 'mu4e-count-lines  'mu4e--dummy-func)
+
+(defvar mu4e-view-actions
+  '( ("count-lines" ?l mu4e-count-lines))
+  "List of actions to perform on messages in view mode. The actions
+are of the form:
+   (NAME SHORTCUT FUNC)
+where:
+* NAME is the name of the action (e.g. \"Count lines\")
+* SHORTCUT is a one-character shortcut to call this action
+* FUNC is a function which receives a message plist as an argument.")
+
+
 ;; some *cough* forward declarations; real definitions are in mu4e-view
 ;; on which we don't want to circularly depend
-(defun mu4e-dummy-func (&optional args) (error "dummy"))
-(defalias 'mu4e-view-open-attachment-with 'mu4e-dummy-func)
-(defalias 'mu4e-view-open-attachment-emacs 'mu4e-dummy-func)
-(defalias 'mu4e-view-open-pipe-attachment 'mu4e-dummy-func)
+(defalias 'mu4e-view-open-attachment-with  'mu4e--dummy-func)
+(defalias 'mu4e-view-open-attachment-emacs 'mu4e--dummy-func)
+(defalias 'mu4e-view-open-pipe-attachment  'mu4e--dummy-func)
 
 (defvar mu4e-view-attachments-actions
   '( ("open-with" ?w mu4e-view-open-attachment-with)
@@ -280,7 +308,8 @@ are of the form:
 where:
     * NAME is the name of the action (e.g. \"Count lines\")
     * SHORTCUT is a one-character shortcut to call this action
-    * FUNC is a function which takes as argument a message s-exp")
+    * FUNC is a function which receives two arguments: the message
+      plist and the attachment number.")
 
 
 ;; Composing / Sending messages
@@ -465,8 +494,8 @@ in which case it will be equal to `:to'.)")
 (defconst mu4e-view-buffer-name "*mu4e-view*"
   "*internal* Name for the message view buffer")
 (defvar mu4e-view-buffer nil "*internal* The view buffer.")
-(defvar mu4e-current-msg nil
-  "*internal* The plist describing the currently viewed message.")
+(defvar mu4e-current-msg nil "*internal* The message being
+viewed in view mode.")
 
 (defvar mu4e-captured-message nil
   "*internal* the last-captured message (the s-expression).")
