@@ -278,6 +278,8 @@ after the end of the search results."
       (define-key map "U" 'mu4e-unmark-all)
       (define-key map "x" 'mu4e-execute-marks)
 
+      (define-key map "a" 'mu4e-hdrs-action) 
+      
       ;; message composition
       (define-key map "R" 'mu4e-compose-reply)
       (define-key map "F" 'mu4e-compose-forward)
@@ -892,7 +894,6 @@ for draft messages."
 	  ;; talk to the backend
 	  (mu4e-proc-compose compose-type docid))))))
 
-
 (defun mu4e-compose-reply ()
   "Reply to the current message."
   (interactive) (mu4e-compose 'reply))
@@ -908,6 +909,15 @@ for draft messages."
 (defun mu4e-compose-new ()
   "Compose a new message."
   (interactive) (mu4e-compose 'new))
+
+(defun mu4e-hdrs-action ()
+  "Ask user what to do with message-at-point, then do it. The
+actions are specified in `mu4e-headers-actions'."
+  (interactive)
+  (let ((msg (mu4e-message-at-point t))
+	 (actionfunc (mu4e-choose-action "Action: " mu4e-headers-actions)))
+    (funcall actionfunc msg)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mu4e-hdrs)
