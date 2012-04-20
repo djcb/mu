@@ -250,7 +250,7 @@ is nil, and otherwise open it."
 
       (define-key map "." 'mu4e-view-raw-message)
       (define-key map "|" 'mu4e-view-pipe)
-      ;; (define-key map "I" 'mu4e-inspect-message)
+      (define-key map "a" 'mu4e-view-action)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -276,8 +276,8 @@ is nil, and otherwise open it."
       ;; attachments
       (define-key map "e" 'mu4e-view-save-attachment)
       (define-key map "o" 'mu4e-view-open-attachment)
-      (define-key map "a" 'mu4e-view-handle-attachment)
-
+      (define-key map "A" 'mu4e-view-attachment-action)
+      
       ;; marking/unmarking
       (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
       (define-key map "d" 'mu4e-view-mark-for-trash)
@@ -505,7 +505,6 @@ See the `org-contacts' documentation for more details."
 	  (or (cdr-safe from) ""))
 	(t (error "Not supported: %S" name-or-email))))))
 
-
 (defun mu4e-view-wrap-lines ()
   "Wrap lines in the message body."
   (save-excursion
@@ -522,6 +521,7 @@ See the `org-contacts' documentation for more details."
       (goto-char (point-min))
       (flush-lines "^[:blank:]*>")
       (setq mu4e-cited-hidden t))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -588,6 +588,17 @@ citations."
   (interactive)
   (when (mu4e-mark-for-delete)
     (mu4e-view-message)))
+
+
+(defun mu4e-view-action (&optional msg)
+  "Ask user for some action to apply on MSG (or message-at-point,
+if nil), then do it. The actions are specified in
+`mu4e-view-actions'."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point t)))
+	  (actionfunc (mu4e-choose-action "Action: " mu4e-view-actions)))
+    (funcall actionfunc msg)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
@@ -673,8 +684,10 @@ PIPECMD is nil, ask user for it."
 	  (index (plist-get att :index)))
     (mu4e--temp-action (plist-get msg :docid) index "emacs")))
 
-(defun mu4e-view-handle-attachment (&optional msg)
-  "Ask user what to do with attachments, then do it."
+(defun mu4e-view-attachment-action (&optional msg)
+  "Ask user what to do with attachments in MSG (or nil to use
+message-at-point, then do it. The actions are specified in
+`mu4e-view-attachment-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point t)))
 	  (actionfunc (mu4e-choose-action
