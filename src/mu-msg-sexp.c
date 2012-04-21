@@ -208,7 +208,6 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 	const char *fname;
 	char *name, *tmp;
 
-
 	if (!mu_msg_part_looks_like_attachment (part, TRUE))
 		return;
 
