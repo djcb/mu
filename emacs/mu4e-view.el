@@ -277,7 +277,7 @@ is nil, and otherwise open it."
       (define-key map "e" 'mu4e-view-save-attachment)
       (define-key map "o" 'mu4e-view-open-attachment)
       (define-key map "A" 'mu4e-view-attachment-action)
-      
+
       ;; marking/unmarking
       (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
       (define-key map "d" 'mu4e-view-mark-for-trash)
@@ -692,7 +692,7 @@ message-at-point, then do it. The actions are specified in
   (let* ((msg (or msg (mu4e-message-at-point t)))
 	  (actionfunc (mu4e-choose-action
 			"Action on attachment: "
-			mu4e-view-attachments-actions))
+			mu4e-view-attachment-actions))
 	  (attnum (mu4e--get-attach-num "Which attachment" msg)))
     (when (and actionfunc attnum)
       (funcall actionfunc msg attnum))))

@@ -300,7 +300,7 @@ where:
 (defalias 'mu4e-view-open-attachment-emacs 'mu4e--dummy-func)
 (defalias 'mu4e-view-open-pipe-attachment  'mu4e--dummy-func)
 
-(defvar mu4e-view-attachments-actions
+(defvar mu4e-view-attachment-actions
   '( ("open-with" ?w mu4e-view-open-attachment-with)
      ("in-emacs"  ?e mu4e-view-open-attachment-emacs)
      ("pipe"      ?| mu4e-view-pipe-attachment))

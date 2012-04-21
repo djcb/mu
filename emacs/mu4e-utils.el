@@ -395,7 +395,7 @@ point in eiter the headers buffer or the view buffer."
 
 (defun mu4e-choose-action (prompt actions)
   "Ask user with PROMPT to choose some action from ACTIONS. ACTIONS
-is a list of actions like `mu4e-view-attachments-actions',
+is a list of actions like `mu4e-view-attachment-actions',
 `mu4e-view-actions', `mu4e-header-actions'. Returns the
 action (function) to invoke, or nil. "
   (if (null actions)
