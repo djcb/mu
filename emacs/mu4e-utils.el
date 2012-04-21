@@ -373,6 +373,45 @@ of mu4e and emacs."
     (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-msg-field (msg field)
+  "Retrieve FIELD from message plist MSG. FIELD is one
+of :from, :to, :cc, :bcc, :subject, :data, :message-id, :path, :maildir,
+:priority, :attachments, :references, :in-reply-to, :body-txt, :body-html
+
+A message plist looks something like:
+\(:docid 32461
+ :from ((\"Nikola Tesla\" . \"niko@example.com\"))
+ :to ((\"Thomas Edison\" . \"tom@example.com\"))
+ :cc ((\"Rupert The Monkey\" . \"rupert@example.com\"))
+ :subject \"RE: what about the 50K?\"
+ :date (20369 17624 0)
+ :size 4337
+ :message-id \"6BDC23465F79238C8233AB82D81EE81AF0114E4E74@123213.mail.example.com\"
+ :path  \"/home/tom/Maildir/INBOX/cur/133443243973_1.10027.atlas:2,S\"
+ :maildir \"/INBOX\"
+ :priority normal
+ :flags (seen)
+ :attachments ((:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)
+               (:index 3 :name \"book.pdf\" :mime-type \"application/pdf\" :size 192220))
+ :references  (\"6BDC23465F79238C8384574032D81EE81AF0114E4E74@123213.mail.example.com\"
+ \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\")
+ :in-reply-to \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\"
+ :body-txt \"Hi Tom, ...\"
+\)).
+
+Some  notes on the format:
+- The address fields are lists of pairs (NAME . EMAIL), where NAME can be nil.
+- The date is in format emacs uses in `current-time'
+- Attachments are a list of elements with fields :index (the number of
+  the MIME-part), :name (the file name, if any), :mime-type (the
+  MIME-type, if any) and :size (the size in bytes, if any).
+- Messages in the Headers view come from the database and do not have
+  :attachments. :body-txt or :body-html fields. Message in the
+  Message view use the actual message file, and do include these fields."
+  ;; after all this documentation, the spectacular implementation
+  (plist-get msg field))
+
 (defun mu4e-message-at-point (&optional raise-err)
   "Get the message s-expression for the message at point in either
 the headers buffer or the view buffer, or nil if there is no such
@@ -474,7 +513,7 @@ that has a live window), and vice versa."
 	(view-mode)))
     (switch-to-buffer buf)))
 
-
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; some handler functions for server messages
 ;;
@@ -514,7 +553,8 @@ process."
 
 (defun mu4e-proc-is-running ()
   "Whether the mu process is running."
-  (buffer-live-p mu4e-mu-proc))
+  (and mu4e-mu-proc (eq (process-status mu4e-mu-proc) 'run)))
+
 
 (defun* mu4e (&key (hide-ui nil))
   "Start mu4e . We do this by sending a 'ping' to the mu server
