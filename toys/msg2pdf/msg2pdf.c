@@ -23,6 +23,7 @@
 
 #include <gtk/gtk.h>
 #include <webkit/webkitwebview.h>
+#include <webkit/webkitwebresource.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -41,6 +42,67 @@ get_print_operation (const char *path)
 }
 
 
+static char*
+save_file_for_cid (MuMsg *msg, const char* cid)
+{
+	gint idx;
+	gchar *filepath;
+	gboolean rv;
+	GError *err;
+
+	g_return_val_if_fail (msg, NULL);
+	g_return_val_if_fail (cid, NULL);
+
+	idx = mu_msg_part_find_cid (msg, cid);
+	if (idx < 0) {
+		g_warning ("%s: cannot find %s", __FUNCTION__, cid);
+		return NULL;
+	}
+
+	filepath = mu_msg_part_filepath_cache (msg, idx);
+	if (!filepath) {
+		g_warning ("%s: cannot create filepath", filepath);
+		return NULL;
+	}
+
+	err = NULL;
+	rv = mu_msg_part_save (msg, filepath, idx, FALSE, TRUE, &err);
+	if (!rv) {
+		g_warning ("%s: failed to save %s: %s", __FUNCTION__,
+			   filepath,
+			   err&&err->message?err->message:"error");
+		if (err)
+			g_error_free (err);
+		g_free (filepath);
+		filepath = NULL;
+	}
+
+	return filepath;
+}
+
+static void
+on_resource_request_starting (WebKitWebView *self, WebKitWebFrame *frame,
+			      WebKitWebResource *resource,
+			      WebKitNetworkRequest *request,
+			      WebKitNetworkResponse *response, MuMsg *msg)
+{
+	const char* uri;
+	uri = webkit_network_request_get_uri (request);
+
+	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
+		gchar *filepath;
+		filepath = save_file_for_cid (msg, uri);
+		if (filepath) {
+			gchar *fileuri;
+			fileuri = g_strdup_printf ("file://%s", filepath);
+			webkit_network_request_set_uri (request, fileuri);
+			g_free (fileuri);
+			g_free (filepath);
+		}
+	}
+}
+
+
 /* return the path to the output file, or NULL in case of error */
 static char*
 generate_pdf (MuMsg *msg, const char *str, GError **err)
@@ -48,10 +110,12 @@ generate_pdf (MuMsg *msg, const char *str, GError **err)
 	GtkWidget *view;
 	WebKitWebFrame *frame;
 	WebKitWebSettings *settings;
-
 	GtkPrintOperationResult printres;
 	GtkPrintOperation *printop;
 	char *path;
+	WebKitLoadStatus status;
+	time_t start;
+	const int max_time = 2; /* max two seconds to download stuff */
 
 	settings = webkit_web_settings_new ();
 	g_object_set (G_OBJECT(settings),
@@ -61,10 +125,17 @@ generate_pdf (MuMsg *msg, const char *str, GError **err)
 		      NULL);
 
 	view = webkit_web_view_new ();
+
+	/* to support cid: */
+	g_signal_connect (G_OBJECT(view), "resource-request-starting",
+			  G_CALLBACK (on_resource_request_starting),
+			  msg);
+
 	webkit_web_view_set_settings (WEBKIT_WEB_VIEW(view), settings);
  	webkit_web_view_load_string (WEBKIT_WEB_VIEW(view),
 				     str, "text/html", "utf-8", "");
 	g_object_unref (settings);
+
 	frame = webkit_web_view_get_main_frame (WEBKIT_WEB_VIEW(view));
 	if (!frame) {
 		g_set_error (err, 0, MU_ERROR, "cannot get web frame");
@@ -73,6 +144,13 @@ generate_pdf (MuMsg *msg, const char *str, GError **err)
 
 	path = g_strdup_printf ("%s%c%x.pdf",mu_util_cache_dir(),
 				G_DIR_SEPARATOR, (unsigned)random());
+
+	start = time (NULL);
+	do {
+		status = webkit_web_view_get_load_status (WEBKIT_WEB_VIEW(view));
+		g_main_context_iteration (NULL, TRUE);
+	} while (status != WEBKIT_LOAD_FINISHED ||
+		 time(NULL) - start > max_time);
 
 	printop  = get_print_operation (path);
 	printres = webkit_web_frame_print_full
