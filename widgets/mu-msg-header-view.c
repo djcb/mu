@@ -84,14 +84,14 @@ mu_msg_header_view_class_init (MuMsgHeaderViewClass *klass)
 static void
 mu_msg_header_view_init (MuMsgHeaderView *obj)
 {
+
+/* #ifdef HAVE_GTK3 */
+/* 	static GtkBoxClass *parent_class = NULL; */
+/* #endif /\*!HAVE_GTK3*\/ */
+
+
 	obj->_priv = MU_MSG_HEADER_VIEW_GET_PRIVATE(obj);
 	obj->_priv->_table = NULL;
-
-#ifdef HAVE_GTK3
-	static GtkBoxClass *parent_class = NULL;
-#endif /*!HAVE_GTK3*/
-
-
 }
 
 static void
