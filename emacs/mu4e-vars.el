@@ -313,7 +313,6 @@ where:
     * FUNC is a function which receives two arguments: the message
       plist and the attachment number.")
 
-
 ;; Composing / Sending messages
 (defgroup mu4e-compose nil
   "Customizations for composing/sending messages."
