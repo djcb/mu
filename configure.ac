@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.8.4-dev1],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.8.4-dev2],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -203,15 +203,27 @@ AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],
 AS_IF([test "x$have_gtk3" = "xyes"],
   [AC_DEFINE_UNQUOTED([HAVE_GTK3],1,[Whether we have GTK+ 3.x])])
 
-
 # webkit? needed for the fancy web widget
-AS_IF([test "x$buildgui" = "xyes"],[
+
+# note; gtk2 and gtk3 imply different webkit versions
+AS_IF([test "x$have_gtk2" = "xyes"],[
   PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
   AS_IF([test "x$have_webkit" = "xyes"],[
 	    webkit_version="`$PKG_CONFIG --modversion webkit-1.0`"])
   AC_SUBST(WEBKIT_CFLAGS)
   AC_SUBST(WEBKIT_LIBS)
 ])
+
+AS_IF([test "x$have_gtk3" = "xyes"],[
+  PKG_CHECK_MODULES(WEBKIT,webkitgtk-3.0 >= 1.8.0, [have_webkit=yes],[have_webkit=no])
+  AS_IF([test "x$have_webkit" = "xyes"],[
+	    webkit_version="`$PKG_CONFIG --modversion webkitgtk-3.0`"])
+  AC_SUBST(WEBKIT_CFLAGS)
+  AC_SUBST(WEBKIT_LIBS)
+])
+
+
+
 AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 
 # gio is needed for some widget/ things
@@ -283,7 +295,7 @@ src/Makefile
 src/tests/Makefile
 widgets/Makefile
 emacs/Makefile
-emacs/mu4e-version.el
+emacs/mu4e-meta.el
 emacs/version.texi
 guile/Makefile
 guile/mu/Makefile
@@ -291,6 +303,7 @@ guile/examples/Makefile
 toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile
+toys/msg2pdf/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile

@@ -23,7 +23,7 @@ if HAVE_GTK
 SUBDIRS += mug
 endif
 
-# for mug2, we need webkit
+# for mug2 and msg2pdf, we need webkit
 if BUILD_WIDGETS
-SUBDIRS += mug2
+SUBDIRS += mug2 msg2pdf
 endif
