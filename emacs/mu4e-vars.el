@@ -26,6 +26,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization
+(require 'mu4e-meta)
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"
@@ -111,7 +112,7 @@ else: don't split (show either headers or messages, not both) Also
 see `mu4e-headers-visible-lines' and
 `mu4e-headers-visible-columns'.")
 
- 
+
 ;; Folders
 (defgroup mu4e-folders nil
   "Special folders."
@@ -282,7 +283,8 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
 (defalias 'mu4e-count-lines  'mu4e--dummy-func)
 
 (defvar mu4e-view-actions
-  '( ("count-lines" ?l mu4e-count-lines))
+  '( ("count-lines" ?l mu4e-count-lines)
+     ("view as pdf" ?p mu4e-show-as-pdf))
   "List of actions to perform on messages in view mode. The actions
 are of the form:
    (NAME SHORTCUT FUNC)
@@ -316,7 +318,7 @@ where:
 (defgroup mu4e-compose nil
   "Customizations for composing/sending messages."
   :group 'mu4e)
- 
+
 (defcustom mu4e-reply-to-address nil
   "The Reply-To address (if this, for some reason, is not equal to
 the From: address.)"
@@ -507,6 +509,18 @@ viewed in view mode.")
   "*internal* Name of the logging buffer.")
 
 (defvar mu4e-mu-proc nil "*internal* The mu-server process")
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc other stuff
+
+;; for the msg2pdf toy program
+(defvar mu4e-msg2pdf
+  (concat mu4e-builddir "/toys/msg2pdf/msg2pdf"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 

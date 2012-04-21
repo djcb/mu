@@ -3,5 +3,7 @@
   "Required mu binary version; mu4e's verson must agree with
   this.")
 
-(provide 'mu4e-version)
+(defconst mu4e-builddir "@abs_top_builddir@"
+  "Top-level build directory.")
 
+(provide 'mu4e-meta)

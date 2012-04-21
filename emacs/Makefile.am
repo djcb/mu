@@ -17,7 +17,7 @@
 include $(top_srcdir)/gtest.mk
 
 SUBDIRS=
- 
+
 info_TEXINFOS=mu4e.texi
 mu4e_TEXINFOS=fdl.texi
 
@@ -27,6 +27,7 @@ dist_lisp_LISP=			\
 	mu4e-compose.el		\
 	mu4e-hdrs.el		\
 	mu4e-main.el		\
+	mu4e-meta.el		\
 	mu4e-proc.el		\
 	mu4e-speedbar.el	\
 	mu4e-utils.el		\
