@@ -6,7 +6,7 @@
 @c %**end of header
 @include version.texi
 
-@titlepage 
+@titlepage
 @title @t{mu4e} - an e-mail client for emacs
 @author{Dirk-Jan C. Binnema}
 @end titlepage
@@ -44,7 +44,8 @@ This manual has been updated for @t{mu}/@t{mu4e} version @emph{@value{mu4e-versi
 * Introduction::
 * Getting started::
 * Running mu4e::
-* Searching mail::
+* Searching::
+* Actions::
 * Interaction with other tools::
 * Example configuration::
 * FAQ - Frequently Anticipated Questions::
@@ -440,7 +441,7 @@ First, the @emph{Basics}:
 set in @ref{Basic configuration}.
 @item @t{enter a [s]earch query} means that after pressing @key{s} you will
 be asked for a search query, and after entering one, the results will be
-shown. @xref{Searching mail}.
+shown. @xref{Searching}.
 @item @t{[C]ompose a new message} means that after pressing @key{C}, you
 will be thrown in a message-editing buffer, where you can compose a new message.
 @end itemize
@@ -527,6 +528,7 @@ n,p          go to next, previous message
 y            select the message view (if it's visible)
 j            jump to maildir
 b,B          jump to bookmark (/ edit first)
+a            execute some action on header
 
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
@@ -553,9 +555,9 @@ q,z          leave the headers buffer
 
 @subsection Marking messages
 
-Note, all mark/unmark commands support the current @emph{region} (i.e.,
-selection) -- so, for example, if you the select a number of message and then
-press @key{DEL}, all selected message will be marked for deletion.
+All mark/unmark commands support the current @emph{region} (i.e., selection)
+-- so, for example, if you the select a number of message and then press
+@key{DEL}, all selected message will be marked for deletion.
 
 The two-step mark-execute sequence is similar to what @t{dired} and a number
 of other emacs-based programs do. @t{mu4e} tries to be as quick as possible
@@ -567,13 +569,20 @@ have marked messages, normally you will be asked what to do with those marks
 @emph{cancel} the operation. This behavior can be influenced with the variable
 @code{`mu4e-headers-leave-behavior'} -- see its documentation.
 
+@subsection Actions
+
+@code{mu4e-hdrs-action} (@key{a}) lets you pick some custom action to perform
+on the message at point. You can specify these actions using the variable
+@code{mu4e-headers-actions}. Refer to @ref{Actions} for details.
+
 @subsection Split view
 
-@emph{Split view} refers to viewing the @ref{Headers view} and the
-@ref{Message view} next to each other, with the message selected in the
-former, visible in the latter. Earlier versions of @t{mu4e} only showed one of
-the views at the same time, but split view is the default after version
-0.8.3.1.
+Using the @emph{Split view} means viewing the @ref{Headers view} and the
+@ref{Message view} next to each other, with the message that is selected in
+the former, visible in the latter.
+
+Earlier versions of @t{mu4e} only showed one of the views at a time, but split
+view has become the default after version 0.8.9.3.
 
 You can influence the way the splitting works by setting the variable
 @code{mu4e-split-view} in your configuration to one of 3 values:
@@ -596,7 +605,7 @@ since those are already assigned to cursor movement in the message.  However,
 instead can use the @key{p} (or @key{M-up}) and @key{n} (or @key{M-down}) keys
 for moving to the previous and the next message, respectively. These keys also
 work in the headers view.
-                 
+
 You can change the selected window from the headers-view to the message-view
 and vice-versa with @code{mu4e-select-other-view}, bound to @key{y}.
 
@@ -666,6 +675,8 @@ y            select the headers view (if it's visible)
 j            jump to maildir
 b,B          jump to bookmark (/ edit first)
 
+a            execute some action on the message
+
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
@@ -681,7 +692,7 @@ e            extract (save) attachment (asks for number)
              (or: <mouse-2> or RET with point on attachment)
 o            open attachment (asks for number)
              (or: <S-mouse-2> or S-RET with point on attachment)
-a            additional attachment handling
+A            execute some action on an attachment
 w            toggle line wrapping
 h            toggle showing cited parts
 
@@ -708,26 +719,36 @@ variable @code{mu4e-attachment-dir}, for example:
 (setq mu4e-attachment-dir (file-name-expand "~/Downloads"))
 @end lisp
 
-@subsection Additional actions on attachments
+@subsection Actions
 
-When you press @key{a} (@code{mu4e-view-handle-attachment}), @t{mu4e} lets you
-choose from a list with some more actions to perform on attachments:
+@code{mu4e-view-action} (@key{a}) lets you pick some custom action to perform
+on the current message. You can specify these actions using the variable
+@code{mu4e-view-actions}.
+
+Similarly, there is @code{mu4e-view-attachment-action} (@key{A}) for actions
+on attachments, which you can specify with
+@code{mu4e-view-attachment-actions}.
+
+By default, @t{mu4e} already offers a few useful actions for attachments:
+
 @itemize
 @item @t{open-with} (@key{w}): open the attachment with some arbitrary
 program. For example, suppose you have received a message with a picture
-attachment; then, @t{a w 1 RET gimp RET} will open that attachment in The
+attachment; then, @t{A w 1 RET gimp RET} will open that attachment in The
 Gimp.
 @item @t{pipe} (@key{|}: process the attachment with some Unix shell-pipe and
 see the results. Suppose you receive a patch file, and would like to get an
 overview of the changes, using the @t{diffstat} program. You can use something
-like: @t{a | 1 RET diffstat -b RET}.
+like: @t{A | 1 RET diffstat -b RET}.
 @item @t{emacs} (@key{e}): open the attachment in your running @t{emacs}
 . For example, if you receive some text file you'd like to open in @t{emacs}:
-@t{a e 1 RET}.
+@t{A e 1 RET}.
 @end itemize
 
-Note that all of these actions work on @emph{temporary copy} of the
-attachment.
+These actions all work on @emph{temporary copy} of the attachment.
+
+For more information about actions and how to define your own, see
+@ref{Actions}.
 
 @subsection Displaying rich-text messages
 
@@ -799,8 +820,8 @@ If you want use @t{mu4e} as the default program for sending mail, please see
 other interesting topics: @ref{Citations with mu-cite} and @ref{Maintaining an
 address-book with org-contacts}.
 
-@node Searching mail
-@chapter Searching mail
+@node Searching
+@chapter Searching
 
 @t{mu4e} is fully search-based; this means that all the lists of messages you
 see, are the result of some query. Even if you 'jump to a folder', in fact you
@@ -812,7 +833,7 @@ defaults to 1000) results. You get @emph{all} results when you prefix your
 search commands (such as with @code{mu4e-search}, @code{mu4e-search-bookmark},
 @code{mu4e-search-bookmark-edit-first} and @code{mu4e-jump-to-maildir} with
 @kbd{C-u}.
- 
+
 This limit was introduced in earlier versions of @t{mu4e}, where @t{emacs}
 could become slow when there were many matches. This is no longer the case
 (post @t{mu4e} version 0.9.8.3), but since it is still faster to limit the
@@ -977,6 +998,93 @@ for example, getting to the @t{/lists} folder only requires you to type
 The very same shortcuts are used by the @code{mu4e-mark-for-move} (default
 shortcut @key{m}); so, for example, if you want to move a message the
 @t{/archive} folder, you can do so by typing @key{ma}.
+
+
+@node Actions
+@chapter Actions
+
+@t{mu4e} allows you to define custom actions for messages in the @ref{Headers
+view} and for both messages and attachments in the @ref{Message view}. Custom
+actions allow you to easily extend @t{mu4e} for specific needs -- for example,
+marking messages as spam in a spam filter or applying an attachment with a
+source code patch.
+
+You can invoke the actions with @key{a} for actions on messages, and @key{A}
+for actions on attachments. In the following, we'll gives some examples of
+defining actions.
+
+@subsection Functions for actions
+
+Defining a new custom action means that you need to write an elisp-function to
+do the work. Functions that operate on messages look like:
+@lisp
+(defun my-action-func (msg)
+ "Describe my func."
+;; do stuff
+)
+@end lisp
+
+Messages that operate on attachments look like:
+@lisp
+(defun my-attachment-action-func (msg attachment-num)
+ "Describe my func."
+;; do stuff
+)
+@end lisp
+
+After you have defined your function, you can add it to the list of actions,
+either @code{mu4e-headers-actions}, @code{mu4e-view-actions} or
+@code{mu4e-view-attachment-actions}.
+
+Let's now look at some simple examples.
+
+@subsection Example: adding an action in the headers view
+
+Suppose we would like to inspect the number of recipients for a message in the
+@ref{Headers view}.  We could define the following function in our configuration:
+
+@lisp
+(defun show-number-of-recipients (msg)
+  "Display the number of recipients for this message."
+  (message "Number of recipients: %d"
+     (+ (length (mu4e-msg-field :to)) (length (mu4e-msg-field :cc)))))
+
+(add-to-list 'mu4e-headers-actions
+   '("Number of recipients" ?n show-number-of-recipients) t)
+@end lisp
+
+After activating this, @key{a n} in the headers view will show the number of
+recipients for the message at point.
+
+@subsection Example: adding an action in the message view
+
+As another example, suppose we would like to search for messages by the sender
+of this message.
+@lisp
+(defun search-for-sender (msg)
+  "Search for messages sent by the sender of the current one."
+  (mu4e-search (concat "from:" (cdar (mu4e-msg-field msg :from)))))
+
+(add-to-list 'mu4e-view-actions
+   '("search for sender" ?s search-for-sender) t)
+@end lisp
+
+@subsection Example: adding an attachment action
+
+Finally, let's define an action for an attachment. As mentioned,
+attachment-action function take @emph{2} arguments, the message and the
+attachment number to use.
+
+The following will count the number of lines in an attachment.
+
+@lisp
+(defun count-lines-in-attachment (msg attachnum)
+  "Count the number of lines in an attachment."
+  (mu4e-view-pipe-attachment msg attachnum "wc -l"))
+(add-to-list 'mu4e-view-attachment-actions
+   '("count lines" ?n count-lines-in-attachment) t)
+@end lisp
+
 
 @node Interaction with other tools
 @chapter Interaction with other tools
@@ -1468,6 +1576,7 @@ be interesting to know how @t{mu4e} does its job.
 @menu
 * High-level overview::
 * mu server::
+* The message s-expression::
 * Reading from the server::
 @end menu
 
@@ -1544,7 +1653,8 @@ output for @t{mu4e} (@t{emacs}) to process. Some other programs use
 @abbr{JSON} here, but it seemed easier (and possibly, more efficient) just to
 talk to @t{emacs} in its native language: @emph{s-expressions} (to be precise:
 @emph{plists}), and interpret those using the @t{emacs}-function
-@code{read-from-string}.
+@code{read-from-string}. See @ref{The message s-expression} for details on the
+format.
 
 So, now let's look how we process the data from @t{mu server} in
 emacs. We'll leave out a lot of detail, @t{mu4e}-specifics, and look at a
@@ -1584,9 +1694,60 @@ list. If the s-expression looks like an error message, it will be reported to
 the user. And so on.
 
 The language between frontend and backend is documented in the @t{mu-server}
-man-page. If you set @t{mu4e-debug} to @t{t}, @t{mu4e} will log all the
-messages that go between frontend and backend in a special @t{*mu4e-log*}
-buffer.
+man-page. @t{mu4e} can log these communications; you can use @code{M-x
+mu4e-toggle-logging} to turn logging on and off, and you can view the log
+using @code{M-x mu4e-show-log}.
+
+@node The message s-expression
+@section The message s-expression
+
+
+A typical message s-expression could look something like the following:
+
+@lisp
+(:docid 32461
+ :from (("Nikola Tesla" . "niko@@example.com"))
+ :to (("Thomas Edison" . "tom@@example.com"))
+ :cc (("Rupert The Monkey" . "rupert@@example.com"))
+ :subject "RE: what about the 50K?"
+ :date (20369 17624 0)
+ :size 4337
+ :message-id "6BDC23465F79238C8233AB82D81EE81AF0114E4E74@@123213.mail.example.com"
+ :path  "/home/tom/Maildir/INBOX/cur/133443243973_1.10027.atlas:2,S"
+ :maildir "/INBOX"
+ :priority normal
+ :flags (seen)
+ :attachments ((:index 2 :name "photo.jpg" :mime-type "image/jpeg" :size 147331)
+               (:index 3 :name "book.pdf" :mime-type "application/pdf" :size 192220))
+ :references  ("6BDC23465F79238C8384574032D81EE81AF0114E4E74@@123213.mail.example.com"
+ "6BDC23465F79238203498230942D81EE81AF0114E4E74@@123213.mail.example.com")
+ :in-reply-to "6BDC23465F79238203498230942D81EE81AF0114E4E74@@123213.mail.example.com"
+ :body-txt "Hi Tom,
+ ....
+"))
+@end lisp
+
+This s-expression forms a property list (@t{plist}), and we can get values
+from it using @t{plist-get}; for example @code{(plist-get msg :subject)} would
+get you the message subject. However, it's better to use the function
+@code{mu4e-msg-field} to shield you from some of the implementation details
+that are subject to change.
+
+Some notes on the format:
+@itemize
+@item The address fields are @emph{lists} of pairs @code{(name . email)},
+where @t{name} can be nil.
+@item The date is in format emacs uses (for example in
+@code{current-time}).@footnote{Emacs 32-bit integers have only 29 bits
+available for the actual number; the other bits are use by emacs for internal
+purposes. Therefore, we need to split @t{time_t} in two numbers.}
+@item Attachments are a list of elements with fields @t{:index} (the number of
+the MIME-part), @t{:name} (the file name, if any), @t{:mime-type} (the
+MIME-type, if any) and @t{:size} (the size in bytes, if any).
+@item Messages in the @ref{Headers view} come from the database and do not have
+@t{:attachments}. @t{:body-txt} or @t{:body-html} fields. Message in the
+@ref{Message view} use the actual message file, and do include these fields.
+@end itemize
 
 @subsection Example: ping-pong
 
