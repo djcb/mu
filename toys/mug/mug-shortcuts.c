@@ -16,6 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include <config.h>
 
 #include "mug-shortcuts.h"
 #include "mu-bookmarks.h"
@@ -82,7 +83,13 @@ mug_shortcuts_init (MugShortcuts * obj)
 {
 	obj->_priv = MUG_SHORTCUTS_GET_PRIVATE (obj);
 
+#ifdef HAVE_GTK3
+	obj->_priv->_bbox = gtk_button_box_new (GTK_ORIENTATION_VERTICAL);
+#else
 	obj->_priv->_bbox = gtk_vbutton_box_new ();
+
+#endif /*!HAVE_GTK3 */
+
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (obj->_priv->_bbox),
 				   GTK_BUTTONBOX_START);
 	gtk_box_pack_start (GTK_BOX (obj), obj->_priv->_bbox, TRUE, TRUE, 0);

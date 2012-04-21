@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,6 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include <config.h>
 
 #include "mug-msg-view.h"
 #include "mu-msg.h"
@@ -161,7 +162,13 @@ headers_area (MugMsgViewPrivate * priv)
 	gtk_container_add (GTK_CONTAINER (priv->_expander),
 			   priv->_tableexpander);
 
-	vbox = gtk_vbox_new (FALSE, FALSE);
+
+#ifdef HAVE_GTK3
+	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+#else
+	vbox = gtk_vbox_new (FALSE, 0);
+#endif /*!HAVE_GTK3 */
+
 	gtk_box_pack_start (GTK_BOX (vbox), priv->_tablemain, FALSE, FALSE, 0);
 	gtk_box_pack_start (GTK_BOX (vbox), priv->_expander, FALSE, FALSE, 0);
 
