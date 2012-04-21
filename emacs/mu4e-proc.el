@@ -25,7 +25,7 @@
 ;;; Code:
 (require 'mu4e-vars)
 (require 'mu4e-utils)
-(require 'mu4e-version)
+(require 'mu4e-meta)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
@@ -75,8 +75,6 @@ to the sent folder using their docid")
     mu4e-mu-proc nil
     mu4e-buf nil))
 
-(defun mu4e-proc-is-running ()
-  (and mu4e-mu-proc (eq (process-status mu4e-mu-proc) 'run)))
 
 (defun mu4e-proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e-buf'. `mu4e-buf gets its
