@@ -341,8 +341,9 @@ processing takes part in the background, unless buf is non-nil."
       (lambda (proc msg)
 	(let* ((status (process-status proc))
 		(code (process-exit-status proc))
-		;; sadly, fetchmail returns '1' when there is no mail; this is not really
-		;; an error of course, but it's hard to distinguish from a genuine error
+		;; sadly, fetchmail returns '1' when there is no mail; this is
+		;; not really an error of course, but it's hard to distinguish
+		;; from a genuine error
 		(maybe-error (or (not (eq status 'exit)) (/= code 0))))
 	  (message nil)
 	  ;; there may be an error, give the user up to 5 seconds to check
@@ -412,6 +413,20 @@ of lines in the e-mail message."
   (message "Number of lines: %s"
     (shell-command-to-string
       (concat "wc -l < " (shell-quote-argument (plist-get msg :path))))))
+
+
+(defun mu4e-show-as-pdf (msg)
+  "Demonstration function for `mu4e-view-actions'. Show attachment as PDF."
+  (unless (file-executable-p mu4e-msg2pdf)
+    (error "msg2pdf not found; please set `mu4e-msg2pdf'"))
+  (let* ((pdf
+	  (shell-command-to-string
+	    (concat mu4e-msg2pdf " "
+	      (shell-quote-argument (plist-get msg :path)))))
+	 (pdf (and pdf (substring pdf 0 -1)))) ;; chop \n
+    (unless (file-exists-p pdf)
+      (error "Failed to create PDF file"))
+    (find-file pdf)))
 
 (defun mu4e-capture-message (msg)
   "Remember MSG; we can create a an attachment based on this msg
