@@ -194,7 +194,8 @@ convert_to_pdf (MuMsg *msg, GError **err)
 	add_header (gstr, "To", mu_msg_get_to (msg));
 	add_header (gstr, "Cc", mu_msg_get_cc (msg));
 	add_header (gstr, "Subject", mu_msg_get_subject (msg));
-	add_header (gstr, "Date", mu_date_display_s (mu_msg_get_date(msg)));
+	add_header (gstr, "Date", mu_date_str_s
+		    ("%c", mu_msg_get_date(msg)));
 
 	gstr =	g_string_append (gstr, "<hr>\n");
 
