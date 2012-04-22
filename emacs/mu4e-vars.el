@@ -206,15 +206,13 @@ vertical split-view."
 (defalias 'mu4e-capture-message 'mu4e--dummy-func)
 
 (defvar mu4e-headers-actions
-  '( ("capture message" ?c mu4e-capture-message)
-     ("count lines"     ?l mu4e-count-lines))
+  '( ("capture message" ?c mu4e-capture-message))
   "List of actions to perform on messages in the headers list. The actions
 are of the form:
    (NAME SHORTCUT FUNC) where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * SHORTCUT is a one-character shortcut to call this action
 * FUNC is a function which receives a message plist as an argument.")
-
 
 ;; the message view
 (defgroup mu4e-view nil
@@ -279,11 +277,9 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
 <w>)."
   :group 'mu4e-view)
 
-
-(defalias 'mu4e-count-lines  'mu4e--dummy-func)
-
+ 
 (defvar mu4e-view-actions
-  '( ("count-lines" ?l mu4e-count-lines)
+  '( ("capture message" ?c mu4e-capture-message)
      ("view as pdf" ?p mu4e-show-as-pdf))
   "List of actions to perform on messages in view mode. The actions
 are of the form:
