@@ -28,6 +28,7 @@
 (require 'cl)
 (require 'html2text)
 (require 'mu4e-vars)
+(require 'doc-view)
 
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create DIR if it does not exist yet. Return t if the
@@ -392,8 +393,9 @@ A message plist looks something like:
  :maildir \"/INBOX\"
  :priority normal
  :flags (seen)
- :attachments ((:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)
-               (:index 3 :name \"book.pdf\" :mime-type \"application/pdf\" :size 192220))
+ :attachments
+     ((:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)
+      (:index 3 :name \"book.pdf\" :mime-type \"application/pdf\" :size 192220))
  :references  (\"6BDC23465F79238C8384574032D81EE81AF0114E4E74@123213.mail.example.com\"
  \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\")
  :in-reply-to \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\"
@@ -465,7 +467,9 @@ of lines in the e-mail message."
 	 (pdf (and pdf (substring pdf 0 -1)))) ;; chop \n
     (unless (file-exists-p pdf)
       (error "Failed to create PDF file"))
-    (find-file pdf)))
+    (find-file pdf)   
+    (doc-view-fit-width-to-window)
+    (rename-buffer "*mu4e-view-pdf*")))
 
 (defun mu4e-capture-message (msg)
   "Remember MSG; we can create a an attachment based on this msg
