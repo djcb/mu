@@ -32,7 +32,6 @@ dist_lisp_LISP=			\
 	mu4e-speedbar.el	\
 	mu4e-utils.el		\
 	mu4e-vars.el		\
-	mu4e-version.el		\
 	mu4e-view.el		\
 	mu4e.el			\
 	org-mu4e.el
