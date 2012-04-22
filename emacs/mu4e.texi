@@ -1051,7 +1051,7 @@ Suppose we would like to inspect the number of recipients for a message in the
 (defun show-number-of-recipients (msg)
   "Display the number of recipients for this message."
   (message "Number of recipients: %d"
-     (+ (length (mu4e-msg-field :to)) (length (mu4e-msg-field :cc)))))
+     (+ (length (mu4e-msg-field msg :to)) (length (mu4e-msg-field msg :cc)))))
 
 (add-to-list 'mu4e-headers-actions
    '("Number of recipients" ?n show-number-of-recipients) t)
