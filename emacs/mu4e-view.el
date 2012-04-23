@@ -28,17 +28,15 @@
 ;;; Code:
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-vars)
+(require 'mu4e-mark)
 
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
 (require 'comint)
 
 ;; some buffer-local variables
-(defvar mu4e-hdrs-buffer nil
+(defvar mu4e--view-hdrs-buffer nil
   "*internal* Headers buffer connected to this view.")
-
-(defconst mu4e-view-raw-buffer-name "*mu4e-raw-view*"
-  "*internal* Name for the raw message view buffer")
 
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
@@ -114,7 +112,7 @@ marking if it still had that."
       (setq ;; these are buffer-local
 	buffer-read-only t
 	mu4e-current-msg msg
-	mu4e-hdrs-buffer hdrsbuf
+	mu4e--view-hdrs-buffer hdrsbuf
 	mu4e-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
 
       (switch-to-buffer buf)
@@ -225,6 +223,7 @@ is nil, and otherwise open it."
 (defvar mu4e-view-mode-map nil
   "Keymap for \"*mu4e-view*\" buffers.")
 (unless mu4e-view-mode-map
+
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
 
@@ -264,11 +263,11 @@ is nil, and otherwise open it."
 	#'(lambda () (interactive) (scroll-up -1)))
 
       ;; navigation between messages
-      (define-key map "p" 'mu4e-view-prev-header)
-      (define-key map "n" 'mu4e-view-next-header)
+      (define-key map "p" 'mu4e--view-prev-header)
+      (define-key map "n" 'mu4e--view-next-header)
       ;; the same
-      (define-key map (kbd "<M-down>") 'mu4e-view-next-header)
-      (define-key map (kbd "<M-up>") 'mu4e-view-prev-header)
+      (define-key map (kbd "<M-down>") 'mu4e--view-next-header)
+      (define-key map (kbd "<M-up>") 'mu4e--view-prev-header)
 
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
@@ -348,8 +347,8 @@ is nil, and otherwise open it."
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e-jump-to-maildir))
 
 	(define-key menumap [sepa4] '("--"))
-	(define-key menumap [next]  '("Next" . mu4e-view-next-header))
-	(define-key menumap [previous]  '("Previous" . mu4e-view-prev-header)))
+	(define-key menumap [next]  '("Next" . mu4e--view-next-header))
+	(define-key menumap [previous]  '("Previous" . mu4e--view-prev-header)))
       map)))
 
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
@@ -363,7 +362,7 @@ is nil, and otherwise open it."
 \\{mu4e-view-mode-map}."
   (use-local-map mu4e-view-mode-map)
 
-  (make-local-variable 'mu4e-hdrs-buffer)
+  (make-local-variable 'mu4e--view-hdrs-buffer)
   (make-local-variable 'mu4e-current-msg)
   (make-local-variable 'mu4e-link-map)
 
@@ -545,7 +544,7 @@ See the `org-contacts' documentation for more details."
   "Redisplay the current message, without wrapped lines or hidden
 citations."
   (interactive)
-  (mu4e-view mu4e-current-msg mu4e-hdrs-buffer t)
+  (mu4e-view mu4e-current-msg mu4e--view-hdrs-buffer t)
   (setq
     mu4e-lines-wrapped nil
     mu4e-cited-hidden nil))
@@ -559,35 +558,16 @@ citations."
 	(kill-buffer-and-window)
 	(kill-buffer)))))
 
-(defun mu4e-view-next-header ()
-  "View the next header."
-  (interactive)
-  (when (mu4e-next-header)
-    (mu4e-view-message)))
+(defun mu4e--view-hdrs-move (lines)
+  "Move point LINES lines forward (if LINES is positive) or
+backward (if LINES is negative). If this succeeds, return the new
+docid. Otherwise, return nil."
+  (when (buffer-live-p mu4e--view-hdrs-buffer)
+    (with-current-buffer mu4e--view-hdrs-buffer
+      (mu4e--hdrs-move lines))))
 
-(defun mu4e-view-prev-header ()
-  "View the previous header."
-  (interactive)
-  (when (mu4e-prev-header)
-    (mu4e-view-message)))
-
-(defun mu4e-view-mark-for-move ()
-  "Mark the current message for moving."
-  (interactive)
-  (when (mu4e-mark-for-move)
-    (mu4e-view-message)))
-
-(defun mu4e-view-mark-for-trash ()
-  "Mark the current message for moving to the trash folder."
-  (interactive)
-  (when (mu4e-mark-for-trash)
-    (mu4e-view-message)))
-
-(defun mu4e-view-mark-for-delete ()
-  "Mark the current message for deletion."
-  (interactive)
-  (when (mu4e-mark-for-delete)
-    (mu4e-view-message)))
+(defun mu4e--view-next-header()(interactive)(mu4e--view-hdrs-move 1))
+(defun mu4e--view-prev-header()(interactive)(mu4e--view-hdrs-move -1))
 
 
 (defun mu4e-view-action (&optional msg)
@@ -684,6 +664,7 @@ PIPECMD is nil, ask user for it."
 	  (index (plist-get att :index)))
     (mu4e--temp-action (plist-get msg :docid) index "emacs")))
 
+
 (defun mu4e-view-attachment-action (&optional msg)
   "Ask user what to do with attachments in MSG (or nil to use
 message-at-point, then do it. The actions are specified in
@@ -696,6 +677,7 @@ message-at-point, then do it. The actions are specified in
 	  (attnum (mu4e--get-attach-num "Which attachment" msg)))
     (when (and actionfunc attnum)
       (funcall actionfunc msg attnum))))
+
 
 ;; handler-function to handle the response we get from the server when we
 ;; want to do something with one of the attachments.
@@ -718,7 +700,22 @@ attachments) in response to a (mu4e-proc-extract 'temp ... )."
       (t (error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e--in-split-view ()
+;;; marking
+(defun mu4e--view-mark-set (mark)
+  "Set mark on the current messages."
+  (unless (buffer-live-p mu4e--view-hdrs-buffer)
+    (error "No headers buffer available"))
+  (let ((docid (mu4e-msg-field mu4e-current-msg :docid)))
+    (with-current-buffer mu4e--view-hdrs-buffer
+      (if (eq mark 'move)
+	(mu4e-mark-for-move-set)
+	(mu4e-mark-at-point mark)))))
+      ;; (when (not (eq mark 'unmark))
+      ;; 	(mu4e--view-next-header)
+      ;; 	(mu4e-view-message)))))
+ 
+
+(defun mu4e--split-view-p ()
   "Return t if we're in split-view, nil otherwise."
   (member mu4e-split-view '(horizontal vertical)))
 
@@ -726,24 +723,43 @@ attachments) in response to a (mu4e-proc-extract 'temp ... )."
   "If we're in split-view, unmark all messages. Otherwise, warn
 user that unmarking only works in the header list."
   (interactive)
-  (if (mu4e--in-split-view)
-    (mu4e-unmark-all)
+  (if (mu4e--split-view-p)
+    (mu4e-mark-unmark-all)
     (message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-unmark ()
   "If we're in split-view, unmark message at point. Otherwise, warn
 user that unmarking only works in the header list."
   (interactive)
-  (if (mu4e--in-split-view)
-    (mu4e-unmark)
+  (if (mu4e--split-view-p)
+    (mu4e--view-mark-set 'unmark)
     (message "Unmarking needs to be done in the header list view")))
+
+(defun mu4e-view-mark-for-move ()
+  "Mark the current message for moving."
+  (interactive)
+  (mu4e--view-mark-set 'move)
+  (mu4e--view-next-header))
+
+(defun mu4e-view-mark-for-trash ()
+  "Mark the current message for moving to the trash folder."
+  (interactive)
+  (mu4e--view-mark-set 'trash)
+  (mu4e--view-next-header))
+
+(defun mu4e-view-mark-for-delete ()
+  "Mark the current message for deletion."
+  (interactive)
+  (mu4e--view-mark-set 'delete)
+  (mu4e--view-next-header))
 
 (defun mu4e-view-marked-execute ()
   "If we're in split-view, execute the marks. Otherwise, warn user
 that execution can only take place in n the header list."
   (interactive)
-  (if (mu4e--in-split-view)
-    (mu4e-execute-marks)
+  (if (mu4e--split-view-p)
+    (with-current-buffer mu4e--view-hdrs-buffer
+      (mu4e-mark-execute-all))
     (message "Execution needs to be done in the header list view")))
 
 (defun mu4e-view-go-to-url (num)
@@ -752,6 +768,9 @@ that execution can only take place in n the header list."
   (let ((url (gethash num mu4e-link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
+
+(defconst mu4e-view-raw-buffer-name "*mu4e-raw-view*"
+  "*internal* Name for the raw message view buffer")
 
 (defun mu4e-view-raw-message ()
   "Display the raw contents of message at point in a new buffer."

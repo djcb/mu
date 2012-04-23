@@ -32,6 +32,7 @@
 (require 'mu4e-proc)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-vars)
+(require 'mu4e-mark)
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e-hdrs-fringe "  " "*internal* The space on the left of
@@ -43,7 +44,7 @@ message headers to put marks.")
     (let ((inhibit-read-only t))
       (with-current-buffer mu4e-hdrs-buffer
 	(erase-buffer)
-	(when mu4e-marks-map (clrhash mu4e-marks-map))))))
+	(mu4e--mark-clear)))))
 
 
 (defun mu4e-hdrs-search (expr &optional full-search)
@@ -90,8 +91,8 @@ headers."
 	(when point ;; is the message present in this list?
 
 	  ;; if it's marked, unmark it now
-	  (when (mu4e-hdrs-docid-is-marked docid)
-	    (mu4e-hdrs-mark 'unmark))
+	  (when (mu4e-mark-docid-marked-p docid)
+	    (mu4e-mark-set 'unmark))
 
  	  ;; re-use the thread info from the old one; this is needed because
  	  ;; *update* message don't have thread info by themselves (unlike
@@ -232,10 +233,19 @@ after the end of the search results."
 
 
 
+ 
+
 ;;; hdrs-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-hdrs-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
 (unless mu4e-hdrs-mode-map
+  ;; add some quick funcs so our key descriptions below are shorter
+  (defun mu4e--hdrs-mark-trash()(interactive)(mu4e-hdrs-mark-and-next 'trash))
+  (defun mu4e--hdrs-mark-delete()(interactive)(mu4e-hdrs-mark-and-next 'delete))
+  (defun mu4e--hdrs-mark-unmark()(interactive)(mu4e-hdrs-mark-and-next 'unmark))
+  (defun mu4e--hdrs-mark-read()(interactive)(mu4e-hdrs-mark-and-next 'read))
+  (defun mu4e--hdrs-mark-unread()(interactive)(mu4e-hdrs-mark-and-next 'unread))
+  
   (setq mu4e-hdrs-mode-map
     (let ((map (make-sparse-keymap)))
 
@@ -260,24 +270,26 @@ after the end of the search results."
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
-      ;; marking/unmarking/executing
-      (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
-      (define-key map "d" 'mu4e-mark-for-trash)
+      ;; marking/unmarking ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      (define-key map (kbd "<backspace>") 'mu4e--hdrs-mark-trash)
+      (define-key map (kbd "d") 'mu4e--hdrs-mark-trash)
 
-      (define-key map (kbd "<delete>") 'mu4e-mark-for-delete)
-      (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
-      (define-key map "D" 'mu4e-mark-for-delete)
-
-      (define-key map "o" 'mu4e-mark-as-unread)
-      (define-key map "r" 'mu4e-mark-as-read)
+      (define-key map (kbd "<delete>") 'mu4e--hdrs-mark-delete)
+      (define-key map (kbd "<deletechar>") 'mu4e--hdrs-mark-delete)
+      (define-key map (kbd "D") 'mu4e--hdrs-mark-delete)
+      
+      (define-key map (kbd "o") 'mu4e--hdrs-mark-unread)
+      (define-key map (kbd "r") 'mu4e--hdrs-mark-read)
+      (define-key map (kbd "u") 'mu4e--hdrs-mark-unmark)
+ 
+      (define-key map "m" 'mu4e-hdrs-mark-for-move-and-next)
+      
+      (define-key map "U" 'mu4e-mark-unmark-all)
+      (define-key map "x" 'mu4e-mark-execute-all)
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     
 
       (define-key map "j" 'mu4e-jump-to-maildir)
-      (define-key map "m" 'mu4e-mark-for-move)
-
-      (define-key map "u" 'mu4e-unmark)
-      (define-key map "U" 'mu4e-unmark-all)
-      (define-key map "x" 'mu4e-execute-marks)
-
       (define-key map "a" 'mu4e-hdrs-action) 
       
       ;; message composition
@@ -302,19 +314,22 @@ after the end of the search results."
 	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
+	
+	(define-key menumap [execute-marks]  '("Execute marks"
+						. mu4e-mark-execute-all))
+	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-mark-unmark-all))
+	(define-key menumap [unmark]      '("Unmark" . mu4e--hdrs-mark-unmark))
 
-	(define-key menumap [execute-marks]  '("Execute marks" . mu4e-execute-marks))
-	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-unmark-all))
-	(define-key menumap [unmark]      '("Unmark" . mu4e-unmark))
-
-	(define-key menumap [mark-as-read]  '("Mark as read"   . mu4e-mark-as-read))
+	(define-key menumap [mark-as-read]  '("Mark as read" . mu4e--hdrs-mark-read))
 	(define-key menumap [mark-as-unread]
-	  '("Mark as unread" .  mu4e-mark-as-unread))
+	  '("Mark as unread" .  mu4e--hdrs-mark-unread))
 
 	(define-key menumap [mark-delete]
-	  '("Mark for deletion" . mu4e-mark-for-delete))
-	(define-key menumap [mark-trash]   '("Mark for trash" .  mu4e-mark-for-trash))
-	(define-key menumap [mark-move]  '("Mark for move" . mu4e-mark-for-move))
+	  '("Mark for deletion" . mu4e--hdrs-mark-delete))
+	(define-key menumap [mark-trash]
+	  '("Mark for trash" .  mu4e--hdrs-mark-trash))
+	(define-key menumap [mark-move]
+	  '("Mark for move" . mu4e-hdrs-mark-for-move-and-next))
 	(define-key menumap [sepa1] '("--"))
 
 	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
@@ -345,19 +360,17 @@ after the end of the search results."
 
   (make-local-variable 'mu4e-last-expr)
   (make-local-variable 'mu4e-hdrs-proc)
-  (make-local-variable 'mu4e-marks-map)
   (make-local-variable 'mu4e--highlighted-docid)
 
   (make-local-variable 'global-mode-string)
   (make-local-variable 'hl-line-face)
 
   (setq
-    mu4e-marks-map (make-hash-table :size 16 :rehash-size 2)
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
     overwrite-mode 'overwrite-mode-binary
     hl-line-face 'mu4e-header-highlight-face)
-  
+  (mu4e--mark-initialize) ;; initialize the marking subsystem
   (hl-line-mode 1)
 
   (setq header-line-format
@@ -503,195 +516,6 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
 
 
 
-;;; marks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-marks-map nil
-  "Map (hash) of docid->markinfo; when a message is marked, the
-information is added here.
-
-markinfo is a list consisting of the following:
-\(marker mark target)
-where
-   MARKER is an emacs-textmarker pointing to the beginning of the header line
-   MARK is the type of mark (move, trash, delete)
-   TARGET (optional) is the target directory (for 'move')")
-
-(defun mu4e-hdrs-mark-message (mark &optional target)
-  "Mark (or unmark) message at point. MARK specifies the
-  mark-type. For `move'-marks there is also the TARGET argument,
-  which specifies to which maildir the message is to be moved.
-
-The following marks are available, and the corresponding props:
-
-   MARK       TARGET    description
-   ----------------------------------------------------------
-   `move'     y         move the message to some folder
-   `trash'    n         move the message to `mu4e-trash-folder'
-   `delete'   n         remove the message
-   `read'     n         mark the message as read
-   `unread'   n         mark the message as unread
-   `unmark'   n         unmark this message"
-  (let* ((docid (mu4e--docid-at-point))
-	  (markkar
-	    (case mark     ;; the visual mark
-	      ('move    "m")
-	      ('trash   "d")
-	      ('delete  "D")
-	      ('unread  "U")
-	      ('read    "R")
-	      ('unmark  " ")
-	      (t (error "Invalid mark %S" mark)))))
-    (unless docid (error "No message on this line"))
-    (save-excursion
-      (when (mu4e--mark-header docid markkar))
-      ;; update the hash -- remove everything current, and if add the new stuff,
-      ;; unless we're unmarking
-      (remhash docid mu4e-marks-map)
-      ;; remove possible overlays
-      (remove-overlays (line-beginning-position) (line-end-position))
-
-      ;; now, let's set a mark (unless we were unmarking)
-      (unless (eql mark 'unmark)
-	(puthash docid (list (point-marker) mark target) mu4e-marks-map)
-	;; when we have a target (ie., when moving), show the target folder in
-	;; an overlay
-	(when target
-	  (let* ((targetstr (propertize (concat "-> " target " ")
-			      'face 'mu4e-system-face))
-		  ;; mu4e-goto-docid docid t will take us just after the docid cookie
-		  ;; and then we skip the mu4e-hdrs-fringe
-		  (start (+ (length mu4e-hdrs-fringe)
-			   (mu4e--goto-docid docid t)))
-		  (overlay (make-overlay start (+ start (length targetstr)))))
-	    (overlay-put overlay 'display targetstr)))))))
-
-
-(defun mu4e-hdrs-mark (mark &optional target)
-  "Mark the header at point, or, if
-region is active, mark all headers in the region. Als see
-`mu4e-hdrs-mark-message'."
-  (with-current-buffer mu4e-hdrs-buffer
-    (if (use-region-p)
-      ;; mark all messages in the region.
-      (save-excursion
-	(let ((b (region-beginning)) (e (region-end)))
-	  (goto-char b)
-	  (while (<= (line-beginning-position) e)
-	    (mu4e-hdrs-mark-message mark target)
-	    (forward-line 1))))
-      ;; just a single message
-      (mu4e-hdrs-mark-message mark target))))
-
-
-(defun mu4e-hdrs-marks-execute ()
-  "Execute the actions for all marked messages in this
-buffer. After the actions have been executed succesfully, the
-affected messages are *hidden* from the current header list. Since
-the headers are the result of a search, we cannot be certain that
-the messages no longer matches the current one - to get that
-certainty, we need to rerun the search, but we don't want to do
-that automatically, as it may be too slow and/or break the users
-flow. Therefore, we hide the message, which in practice seems to
-work well."
-  (if (= 0 (hash-table-count mu4e-marks-map))
-    (message "Nothing is marked")
-    (maphash
-      (lambda (docid val)
-	(let ((marker (nth 0 val)) (mark (nth 1 val)) (target (nth 2 val)))
-	  (case mark
-	    (move   (mu4e-proc-move docid target))
-	    (read   (mu4e-proc-move docid nil "+S-u-N"))
-	    (unread (mu4e-proc-move docid nil "-S+u"))
-	    (trash
-	      (unless mu4e-trash-folder
-		(error "`mu4e-trash-folder' not set"))
-	      (mu4e-proc-move docid mu4e-trash-folder "+T"))
-	    (delete (mu4e-proc-remove docid)))))
-      mu4e-marks-map)
-    (mu4e-hdrs-unmark-all)))
-
-(defun mu4e-hdrs-unmark-all ()
-  "Unmark all marked messages."
-  (unless (/= 0 (hash-table-count mu4e-marks-map))
-    (error "Nothing is marked"))
-  (maphash
-    (lambda (docid val)
-      (save-excursion
-	(goto-char (marker-position (nth 0 val)))
-	(mu4e-hdrs-mark 'unmark)))
-    mu4e-marks-map)
-  ;; in any case, clear the marks map
-  (clrhash mu4e-marks-map))
-
-(defun mu4e-view-message ()
-  "View message at point. If there's an existing window for the
-view, re-use that one. If not, create a new one, depending on the
-value of `mu4e-split-view': if it's a symbol `horizontal' or
-`vertical', split the window accordingly; if it is nil, replace the
-current window. "
-  (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (let* ((docid (mu4e--docid-at-point))
-	    (viewwin (and mu4e-view-buffer
-		       (get-buffer-window mu4e-view-buffer))))
-      (unless docid (error "No message at point."))
-      ;; is there a window already for the message view?
-      (unless (window-live-p viewwin)
-	;; no view window yet; create one, based on the split settings etc.
-	;; emacs' use of the terms "horizontally" and "vertically"
-	;; are... suprising. There's a clearer `split-window' in emacs24, but
-	;; it's not compatible with emacs 23
-	(setq viewwin
-	  (cond ;; is there are live window for the message view?
-	    ((eq mu4e-split-view 'horizontal) ;; split horizontally
-	      (split-window-vertically mu4e-headers-visible-lines))
-	    ((eq mu4e-split-view 'vertical) ;; split vertically
-	      (split-window-horizontally mu4e-headers-visible-columns))
-	    (t ;; no splitting; just use the currently selected one
-	      (selected-window)))))
-      ;; okay, now we should have a window for the message view
-      ;; we select it, and show the messages there.
-      (select-window viewwin)
-      (switch-to-buffer (get-buffer-create mu4e-view-buffer-name))
-      (let ((inhibit-read-only t))
-	(erase-buffer)
-	(insert (propertize "Waiting for message..."
-		  'face 'mu4e-system-face 'intangible t)))
-      (mu4e-proc-view docid))))
-
-
-(defun mu4e-hdrs-docid-is-marked (docid)
-  "Is the given docid marked?"
-  (when (gethash docid mu4e-marks-map) t))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun mu4e-handle-marks ()
-  "If there are any marks in the current buffer, handle those
-according to the value of `mu4e-headers-leave-behavior'. This
-function is to be called before any further action (like searching,
-quiting the buffer) is taken; returning t means 'take the following
-action', return nil means 'don't do anything'"
-  (let ((marknum
-	  (if mu4e-marks-map (hash-table-count mu4e-marks-map) 0))
-	 (what mu4e-headers-leave-behavior))
-    (unless (or (= marknum 0) (eq what 'ignore) (eq what 'apply))
-      ;; if `mu4e-headers-leave-behavior' is not apply or ignore, ask the user
-      (setq what
-	(let ((kar (mu4e-read-option
-		     "There are existing marks; should we: "
-		     '(("apply marks") ("ignore marks?")))))
-	  (cond
-	    ((= kar ?a) 'apply)
-	    ((= kar ?i) 'ignore)
-	    (t nil))))) ;; cancel
-    ;; we determined what to do... now do it
-    (cond
-      ((= 0 marknum) t)     ;; no marks, just go ahead
-      ((eq what 'ignore) t) ;; ignore the marks, go ahead
-      ((eq what 'apply)
-	(progn (mu4e-execute-marks t) t) t) ;; execute marks, go ahead
-      (t nil)))) ;; otherwise, don't do anything
-
-
 ;;; interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e-search (expr)
@@ -700,7 +524,7 @@ results to `mu4e-search-results-limit', otherwise show all. In
 other words, use the C-u prefix to get /all/ results, otherwise get
 up to `mu4e-search-results-limit' much quicker."
     (interactive "s[mu] search for: ")
-    (when (mu4e-handle-marks)
+    (when (mu4e-mark-handle-when-leaving)
       (mu4e-hdrs-search expr current-prefix-arg)))
 
 (defun mu4e-search-bookmark ()
@@ -708,7 +532,7 @@ up to `mu4e-search-results-limit' much quicker."
 otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive)
   (let ((query (mu4e-ask-bookmark "Bookmark: ")))
-    (when (and query (mu4e-handle-marks))
+    (when (and query (mu4e-mark-handle-when-leaving))
       (mu4e-hdrs-search query current-prefix-arg))))
 
 (defun mu4e-search-bookmark-edit-first (expr)
@@ -718,13 +542,51 @@ otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive
     (list (read-string "[mu] search for: "
 	    (concat (or (mu4e-ask-bookmark "Edit bookmark: ") "") " "))))
-  (when (and expr (mu4e-handle-marks))
+  (when (and expr (mu4e-mark-handle-when-leaving))
     (mu4e-hdrs-search expr current-prefix-arg)))
+
+
+(defun mu4e-view-message ()
+  "View message at point. If there's an existing window for the
+view, re-use that one. If not, create a new one, depending on the
+value of `mu4e-split-view': if it's a symbol `horizontal' or
+`vertical', split the window accordingly; if it is nil, replace the
+current window. "
+  (interactive)
+  (unless (eq major-mode 'mu4e-hdrs-mode)
+    (error "Must be in mu4e-hdrs-mode (%S)" major-mode))
+  (let* ((docid (mu4e--docid-at-point))
+	  (viewwin (and mu4e-view-buffer
+		     (get-buffer-window mu4e-view-buffer))))
+    (unless docid (error "No message at point."))
+    ;; is there a window already for the message view?
+    (unless (window-live-p viewwin)
+      ;; no view window yet; create one, based on the split settings etc.
+      ;; emacs' use of the terms "horizontally" and "vertically"
+      ;; are... suprising. There's a clearer `split-window' in emacs24, but
+      ;; it's not compatible with emacs 23
+      (setq viewwin
+	(cond ;; is there are live window for the message view?
+	  ((eq mu4e-split-view 'horizontal) ;; split horizontally
+	    (split-window-vertically mu4e-headers-visible-lines))
+	  ((eq mu4e-split-view 'vertical) ;; split vertically
+	    (split-window-horizontally mu4e-headers-visible-columns))
+	  (t ;; no splitting; just use the currently selected one
+	    (selected-window)))))
+    ;; okay, now we should have a window for the message view
+    ;; we select it, and show the messages there.
+    (select-window viewwin)
+    (switch-to-buffer (get-buffer-create mu4e-view-buffer-name))
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert (propertize "Waiting for message..."
+		'face 'mu4e-system-face 'intangible t)))
+    (mu4e-proc-view docid)))
 
 (defun mu4e-hdrs-kill-buffer-and-window ()
   "Quit the message view and return to the main view."
   (interactive)
-  (when  (mu4e-handle-marks)
+  (when  (mu4e-mark-handle-when-leaving)
     (mu4e-kill-buffer-and-window mu4e-hdrs-buffer)
     (mu4e-main-view)))
 
@@ -732,7 +594,7 @@ otherwise, limit to up to `mu4e-search-results-limit'."
   "Rerun the search for the last search expression; if none exists,
 do a new search."
   (interactive)
-   (when (mu4e-handle-marks)
+   (when (mu4e-mark-handle-when-leaving)
     (if mu4e-last-expr
       (mu4e-hdrs-search mu4e-last-expr)
       (call-interactively 'mu4e-search))))
@@ -741,23 +603,22 @@ do a new search."
   "Move point LINES lines forward (if LINES is positive) or
 backward (if LINES is negative). If this succeeds, return the new
 docid. Otherwise, return nil."
-  (with-current-buffer mu4e-hdrs-buffer
-     (unless (buffer-live-p mu4e-hdrs-buffer)
-    (error "Headers buffer is not alive %S" (current-buffer)))
-    (let ((succeeded (= 0 (forward-line lines)))
-	   (docid (mu4e--docid-at-point)))
-      ;; trick to move point, even if this function is called when this window
-      ;; is not visible
-      (when docid
-	(set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
-	;; attempt to highlight the new line, display the message
-	(mu4e-hdrs-highlight docid)
-	;; if there already is a visible message view, show the message
-	(when (and (buffer-live-p mu4e-view-buffer)
-		(window-live-p (get-buffer-window mu4e-view-buffer)))
-	  (mu4e-view-message)))
-      ;; return the docid only if the move succeeded
-      (when succeeded docid))))
+  (unless (eq major-mode 'mu4e-hdrs-mode)
+    (error "Must be in mu4e-hdrs-mode (%S)" major-mode))
+  (let ((succeeded (= 0 (forward-line lines)))
+	 (docid (mu4e--docid-at-point)))
+    ;; trick to move point, even if this function is called when this window
+    ;; is not visible
+    (when docid
+      (set-window-point (get-buffer-window mu4e-hdrs-buffer) (point))
+      ;; attempt to highlight the new line, display the message
+      (mu4e-hdrs-highlight docid)
+      ;; if there already is a visible message view, show the message
+      (when (and (buffer-live-p mu4e-view-buffer)
+	      (window-live-p (get-buffer-window mu4e-view-buffer)))
+	(mu4e-view-message)))
+    ;; return the docid only if the move succeeded
+    (when succeeded docid)))
 
 (defun mu4e-next-header ()
   "Move point to the next message header. If this succeeds, return
@@ -778,84 +639,9 @@ maildir). With C-u prefix, show /all/ results, otherwise, limit to
 up to `mu4e-search-results-limit'."
   (interactive)
   (let ((fld (mu4e-ask-maildir "Jump to maildir: ")))
-    (when (and fld (mu4e-handle-marks))
+    (when (and fld (mu4e-mark-handle-when-leaving))
       (mu4e-hdrs-search (concat "\"maildir:" fld "\"")
 	current-prefix-arg))))
-
-(defun mu4e-mark-for-move (&optional target)
-  "Mark message at point for moving to maildir TARGET. If target is
-not provided, function asks for it."
-  (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (unless (mu4e--docid-at-point)
-      (error "No message at point."))
-    (with-current-buffer mu4e-hdrs-buffer
-      (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
-	      (target (if (string= (substring target 0 1) "/")
-			target
-			(concat "/" target)))
-	      (fulltarget (concat mu4e-maildir target)))
-	(when (or (file-directory-p fulltarget)
-	      (and (yes-or-no-p
-		     (format "%s does not exist. Create now?" fulltarget))
-		(mu4e-proc-mkdir fulltarget)))
-	  (mu4e-hdrs-mark 'move target)
-	  (mu4e-next-header))))))
-
-
-(defun mu4e-mark (mark)
-  "Mark message for MARK (trash, delete, read, unread, unmark)."
-  (with-current-buffer mu4e-hdrs-buffer
-    (mu4e-hdrs-mark mark)
-    (mu4e-next-header)))
-
-(defun mu4e-mark-for-trash ()
-  "Mark message at point for moving to the trash
-folder (`mu4e-trash-folder')."
-  (interactive)
-  (mu4e-mark 'trash))
-
-(defun mu4e-mark-for-delete ()
-  "Mark message at point for direct deletion."
-  (interactive)
-  (mu4e-mark 'delete))
-
-(defun mu4e-mark-as-read ()
-  "Mark message at point as unread."
-  (interactive)
-  (mu4e-mark 'read))
-
-(defun mu4e-mark-as-unread ()
-  "Mark message at point as read."
-  (interactive)
-  (mu4e-mark 'unread))
-
-(defun mu4e-unmark ()
-  "Unmark message at point."
-  (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-     (mu4e-mark 'unmark)))
-
-(defun mu4e-unmark-all ()
-  "Unmark all messages."
-  (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (if (= 0 (hash-table-count mu4e-marks-map))
-      (message "Nothing is marked")
-	(mu4e-hdrs-unmark-all))))
-
-(defun mu4e-execute-marks (&optional no-confirmation)
-  "Execute the actions for the marked messages. If optional
-parameter NO-CONFIRMATION is is t, don't ask for confirmation."
-  (interactive)
-  (with-current-buffer mu4e-hdrs-buffer
-    (if (= 0 (hash-table-count mu4e-marks-map))
-      (message "Nothing is marked")
-      (when (or no-confirmation
-	      (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
-			  (hash-table-count mu4e-marks-map))))
-	(mu4e-hdrs-marks-execute)
-	(message nil)))))
 
 
 (defun mu4e-compose (compose-type)
@@ -917,6 +703,21 @@ actions are specified in `mu4e-headers-actions'."
   (let ((msg (mu4e-message-at-point t))
 	 (actionfunc (mu4e-choose-action "Action: " mu4e-headers-actions)))
     (funcall actionfunc msg)))
+
+(defun mu4e-hdrs-mark-and-next (mark)
+  "Set mark MARK on the message at point or on all messages in the
+region if there is a region, then move to the next message."
+  (interactive)
+  (mu4e-mark-set mark)
+  (mu4e-next-header))
+
+(defun mu4e-hdrs-mark-for-move-and-next ()
+  "Set mark MARK on the message at point or on all messages in the
+region if there is a region, then move to the next message."
+  (interactive)
+  (mu4e-mark-for-move-set)
+  (mu4e-next-header))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
