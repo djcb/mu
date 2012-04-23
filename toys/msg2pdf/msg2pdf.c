@@ -71,8 +71,7 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 		g_warning ("%s: failed to save %s: %s", __FUNCTION__,
 			   filepath,
 			   err&&err->message?err->message:"error");
-		if (err)
-			g_error_free (err);
+		g_clear_error (&err);
 		g_free (filepath);
 		filepath = NULL;
 	}
@@ -144,6 +143,11 @@ generate_pdf (MuMsg *msg, const char *str, GError **err)
 
 	path = g_strdup_printf ("%s%c%x.pdf",mu_util_cache_dir(),
 				G_DIR_SEPARATOR, (unsigned)random());
+	if (!mu_util_create_dir_maybe (mu_util_cache_dir(),0700,FALSE)) {
+		g_warning ("Couldn't create tempdir");
+		return FALSE;
+	}
+
 
 	start = time (NULL);
 	do {
