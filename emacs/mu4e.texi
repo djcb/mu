@@ -1089,6 +1089,21 @@ The following will count the number of lines in an attachment.
    '("count lines" ?n count-lines-in-attachment) t)
 @end lisp
 
+@subsection What functions are available?
+
+@t{elisp} does not have a module-system, so it can be hard to see what
+functions are internal, and which are usable for others as well.
+
+To help a bit with this, all functions and variables in @t{mu4e} marked for
+@emph{internal} use have the prefix @t{mu4e~}, while all the public ones use
+@t{mu4e-}. The @t{~} was chosen because its ascii-code is after all the
+letters, so they will only appear at the end of completion buffers and the
+like.
+
+Functions that start with @t{mu4e-view-} and @t{mu4e-hdrs-} should be called
+only with that particular context (the message view and the headers view,
+respectively).
+
 
 @node Interaction with other tools
 @chapter Interaction with other tools
