@@ -659,7 +659,7 @@ for draft messages."
       ;; 'new is special, since it takes no existing message as arg therefore,
       ;; we don't need to call thec backend, and call the handler *directly*
       (if (eq compose-type 'new)
-	(mu4e-compose-handler 'new)
+	(mu4e~compose-handler 'new)
 	;; otherwise, we need the doc-id
 	(let ((docid (mu4e~docid-at-point)))
 	  (unless docid (error "No message at point."))

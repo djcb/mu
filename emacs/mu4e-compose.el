@@ -336,7 +336,7 @@ use the new docid. Returns the full path to the new message."
       (lambda()
 	(mu4e~proc-add (buffer-file-name) mu4e-drafts-folder))))
     ;; notify the backend that a message has been sent. The backend will respond
-    ;; with (:sent ...) sexp, which is handled in `mu4e-compose-handler'.
+    ;; with (:sent ...) sexp, which is handled in `mu4e~compose-handler'.
     (add-hook 'message-sent-hook
       (lambda ()
 	(set-buffer-modified-p t)
@@ -369,7 +369,7 @@ use the new docid. Returns the full path to the new message."
 		       nil nil t)))))
 
 
-(defun mu4e-compose-handler (compose-type &optional original-msg includes)
+(defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -524,7 +524,7 @@ buffer.
   "mu4e's implementation of `compose-mail'."
 
   ;; create a new draft message
-  (mu4e-compose-handler 'new)
+  (mu4e~compose-handler 'new)
   (when to ;; reset to-address, if needed
     (message-goto-to)
     (message-delete-line)
