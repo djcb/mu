@@ -110,44 +110,41 @@ Function returns the CHAR typed."
       (setq okchar (member response optionkars)))
     response))
 
-(defun mu4e--get-maildirs-1 (path &optional mdir)
+(defun mu4e~get-maildirs-1 (path &optional mdir)
   "Get maildirs under path, recursively, as a list of relative
 paths."
   ;; first, we get a list of all directory paths under PATH that have a
   ;; directory 'cur' as leaf; then we we remove from that list all of those that
   ;; don't have tmp, new sister dirs. And there we're done!
-
   ;; 1. get all proper subdirs of the current dir
   (let* ((subdirs
-	    (remove-if
-	      (lambda (de)
-		(or (not (file-directory-p (concat path mdir "/" de)))
-		  (string-match "\\.\\{1,2\\}$" de)))
-	      (directory-files (concat path mdir))))
+	   (remove-if
+	     (lambda (de)
+	       (or (not (file-directory-p (concat path mdir "/" de)))
+		 (string-match "\\.\\{1,2\\}$" de)))
+	     (directory-files (concat path mdir))))
 	  ;; 2. get the list of dirs with a /cur leaf dir
-	  (maildirs))
+	  (maildirs '()))
     (dolist (dir subdirs)
-      (if (string= dir "cur")
+      (when (string= dir "cur")
 	;; be pedantic, and insist on there being a new/tmp as well
 	(when (and (file-directory-p (concat path mdir "/new" ))
 		(file-directory-p (concat path mdir "/tmp")))
-	  (add-to-list 'maildirs mdir t))
-	(setq maildirs (append maildirs
-			 (mu4e--get-maildirs-1 path (concat mdir "/" dir))))))
-    maildirs))
+	  (add-to-list 'maildirs (if mdir mdir "/") t)))
+      (setq maildirs (append maildirs
+		       (mu4e~get-maildirs-1 path (concat mdir "/" dir)))))
+    maildirs)) 
 
 
 (defun mu4e-get-maildirs (path)
   "Get maildirs under path, recursively, as a list of relative
 paths (ie., /archive, /sent etc.). Most of the work is done in
-`mu4e-get-maildirs-1, but we handle the special-case of the
-top-level Maildir here."
-  (append
-    (when (and (file-directory-p (concat path "/cur"))
-	    (file-directory-p (concat path "/tmp"))
-	    (file-directory-p (concat path "/new")))
-      '("/"))
-    (mu4e--get-maildirs-1 path)))
+`mu4e-get-maildirs-1'."
+  (sort (mu4e~get-maildirs-1 path)
+    (lambda (m1 m2)
+      (when (string= m1 "/")
+	-1 ;; '/' comes first
+	(compare-strings m1 0 nil m2 0 nil t)))))
 
 
 (defun mu4e-ask-maildir (prompt)
