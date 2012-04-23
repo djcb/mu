@@ -539,9 +539,14 @@ citations."
   (interactive)
   (when (buffer-live-p mu4e-view-buffer)
     (with-current-buffer mu4e-view-buffer
-      (if (window-parent)
-	(kill-buffer-and-window)
-	(kill-buffer)))))
+      (if (fboundp 'window-parent) ;; window-parent is an emacs24ism
+	(if (window-parent)
+	  (kill-buffer-and-window)
+	  (kill-buffer))
+	;; emacs23 hack: trial and error
+	(condition-case nil
+	  (kill-buffer-and-window)
+	  (kill-buffer))))))
 
 (defun mu4e-view-action (&optional msg)
   "Ask user for some action to apply on MSG (or message-at-point,
