@@ -483,9 +483,9 @@ in which case it will be equal to `:to'.)")
 
 ;; headers
 (defvar mu4e-last-expr nil "*internal* The most recent search expression.")
-(defconst mu4e-hdrs-buffer-name "*mu4e-headers*"
+(defconst mu4e~hdrs-buffer-name "*mu4e-headers*"
   "*internal* Name of the buffer for message headers.")
-(defvar mu4e-hdrs-buffer nil "*internal* Buffer for message headers")
+(defvar mu4e~hdrs-buffer nil "*internal* Buffer for message headers")
 
 ;; view
 (defconst mu4e-view-buffer-name "*mu4e-view*"
@@ -503,10 +503,6 @@ viewed in view mode.")
 (defconst mu4e-log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
 
-(defvar mu4e-mu-proc nil "*internal* The mu-server process")
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc other stuff
@@ -523,66 +519,66 @@ viewed in view mode.")
 ;; our handlers funcs
 ;; these handler funcs define what happens when we receive a certain message
 ;; from the server
-(defun mu4e--default-handler (&rest args)
+(defun mu4e~default-handler (&rest args)
   "*internal* Dummy handler function."
   (error "Not handled: %S" args))
 
-(defvar mu4e-error-func 'mu4e--default-handler
+(defvar mu4e-error-func 'mu4e~default-handler
   "A function called for each error returned from the server
 process; the function is passed an error plist as argument. See
-`mu4e-proc-filter' for the format.")
+`mu4e~proc-filter' for the format.")
 
-(defvar mu4e-update-func 'mu4e--default-handler
+(defvar mu4e-update-func 'mu4e~default-handler
   "A function called for each :update sexp returned from the server
 process; the function is passed a msg sexp as argument. See
-`mu4e-proc-filter' for the format.")
+`mu4e~proc-filter' for the format.")
 
-(defvar mu4e-remove-func  'mu4e--default-handler
+(defvar mu4e-remove-func  'mu4e~default-handler
   "A function called for each :remove sexp returned from the server
 process, when some message has been deleted. The function is passed
 the docid of the removed message.")
 
-(defvar mu4e-sent-func  'mu4e--default-handler
+(defvar mu4e-sent-func  'mu4e~default-handler
   "A function called for each :sent sexp returned from the server
 process, when some message has been sent. The function is passed
 the docid and the draft-path of the sent message.")
 
-(defvar mu4e-view-func  'mu4e--default-handler
+(defvar mu4e-view-func  'mu4e~default-handler
   "A function called for each single message sexp returned from the
 server process. The function is passed a message sexp as
-argument. See `mu4e-proc-filter' for the format.")
+argument. See `mu4e~proc-filter' for the format.")
 
-(defvar mu4e-header-func  'mu4e--default-handler
+(defvar mu4e-header-func  'mu4e~default-handler
   "A function called for each message returned from the server
 process; the function is passed a msg plist as argument. See
-`mu4e-proc-filter' for the format.")
+`mu4e~proc-filter' for the format.")
 
-(defvar mu4e-found-func  'mu4e--default-handler
+(defvar mu4e-found-func  'mu4e~default-handler
   "A function called for when we received a :found sexp after the
 headers have returns, to report on the number of matches. See
-`mu4e-proc-filter' for the format.")
+`mu4e~proc-filter' for the format.")
 
-(defvar mu4e-erase-func 'mu4e--default-handler
+(defvar mu4e-erase-func 'mu4e~default-handler
   "A function called for when we received an :erase sexp after the
 headers have returns, to clear the current headers buffer. See
-`mu4e-proc-filter' for the format.")
+`mu4e~proc-filter' for the format.")
 
-(defvar mu4e-compose-func  'mu4e--default-handler
+(defvar mu4e-compose-func  'mu4e~default-handler
   "A function called for each message returned from the server
 process that is used as basis for composing a new message (ie.,
 either a reply or a forward); the function is passed msg and a
-symbol (either reply or forward). See `mu4e-proc-filter' for the
+symbol (either reply or forward). See `mu4e~proc-filter' for the
 format of <msg-plist>.")
 
-(defvar mu4e-info-func  'mu4e--default-handler
+(defvar mu4e-info-func  'mu4e~default-handler
   "A function called for each (:info type ....) sexp received from
 the server process.")
 
-(defvar mu4e-pong-func 'mu4e--default-handler
+(defvar mu4e-pong-func 'mu4e~default-handler
   "A function called for each (:pong type ....) sexp received from
 the server process.")
 
-(defvar mu4e-temp-func 'mu4e--default-handler
+(defvar mu4e-temp-func 'mu4e~default-handler
   "A function called for each (:temp <file> <cookie>) sexp received
 from the server process.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

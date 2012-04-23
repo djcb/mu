@@ -38,7 +38,7 @@ dir already existed, or has been created, nil otherwise."
   (cond
     ((file-directory-p dir) t)
     ((yes-or-no-p (format "%s does not exist yes. Create now?" dir))
-      (mu4e-proc-mkdir dir))
+      (mu4e~proc-mkdir dir))
     (t nil)))
 
 (defun mu4e-check-requirements ()
@@ -287,6 +287,36 @@ Also see `mu/flags-to-string'.
     ((< size 1000) (format "%d" size))
     (t (propertize "?" 'face 'mu4e-system-face))))
 
+;; functions for org-contacts
+(defun mu4e-view-snarf-from (name-or-email)
+  "Get the From:-data for the current message; NAME-OR-EMAIL should
+be a symbol 'name or 'email to get the corresponding field. If the
+field is not found, \"\" is returned.
+
+You can use this with e.g. org-contact with a template like:
+  (\"c\" \"Contacts\" entry (file \"~/Org/contacts.org\")
+          \"* %(mu4e-view-snarf-from 'name)
+  :PROPERTIES:
+  :EMAIL: %(mu4e-view-snarf-from 'email)
+  :END:\")))
+
+See the `org-contacts' documentation for more details."
+  ;; FIXME: we need to explictly go to some view buffer, since when using this
+  ;; from org-capture, we'll be taken to the capture buffer instead.
+  (with-current-buffer mu4e-view-buffer-name
+    (unless (eq major-mode 'mu4e-view-mode)
+      (error "Not in mu4e-view mode."))
+    (unless mu4e-current-msg
+      (error "No current message."))
+    (let ((from (car-safe (plist-get mu4e-current-msg :from))))
+      (cond
+	((not from) "") ;; nothing found
+	((eq name-or-email 'name)
+	  (or (car-safe from) ""))
+	((eq name-or-email 'email)
+	  (or (cdr-safe from) ""))
+	(t (error "Not supported: %S" name-or-email))))))
+
 
 (defun mu4e-body-text (msg)
   "Get the body in text form for this message, which is either :body-txt,
@@ -350,7 +380,7 @@ processing takes part in the background, unless buf is non-nil."
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error
 	    (sit-for 5))
-	  (mu4e-proc-index mu4e-maildir)
+	  (mu4e~proc-index mu4e-maildir)
 	  (let ((buf (process-buffer proc)))
 	    (when (buffer-live-p buf)
 	      (kill-buffer buf))))))))
@@ -497,7 +527,7 @@ that has a live window), and vice versa."
 	     ((eq major-mode 'mu4e-hdrs-mode)
 	       mu4e-view-buffer)
 	     ((eq major-mode 'mu4e-view-mode)
-	       mu4e-hdrs-buffer)))
+	       mu4e~hdrs-buffer)))
 	  (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
       (select-window other-win)
@@ -526,11 +556,7 @@ that has a live window), and vice versa."
 process."
   (let ((type (plist-get info :info)))
     (cond
-      ((eq type 'add)
-	;; update our path=>docid map; we use this when composing messages to
-	;; add draft messages to the db, so when we're sending them, we can move
-	;; to the sent folder using the `mu4e-proc-move'.
-	(puthash (plist-get info :path) (plist-get info :docid) mu4e-path-docid-map))
+      ((eq type 'add) t) ;; do nothing	
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
 	  (message (format "Indexing... processed %d, updated %d"
@@ -555,9 +581,9 @@ process."
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")
 
-(defun mu4e-proc-is-running ()
+(defun mu4e~proc-is-running ()
   "Whether the mu process is running."
-  (and mu4e-mu-proc (eq (process-status mu4e-mu-proc) 'run)))
+  (and mu4e~proc-process (eq (process-status mu4e~proc-process) 'run)))
 
 
 (defun* mu4e (&key (hide-ui nil))
@@ -567,7 +593,7 @@ server has the expected values. If keyword argument :hide-ui is
 non-nil, don't show the UI."
   (interactive)
   ;; if we're already running, simply go to the main view
-  (if (mu4e-proc-is-running)
+  (if (mu4e~proc-is-running)
     (unless hide-ui
       (mu4e-main-view))
     (progn
@@ -594,7 +620,7 @@ non-nil, don't show the UI."
 		(message "Started mu4e with %d message%s in store"
 		  doccount (if (= doccount 1) "" "s")))))
 	  ;; send the ping
-	  (mu4e-proc-ping))))))
+	  (mu4e~proc-ping))))))
 
 (defun mu4e-quit()
   "Quit the mu4e session."
@@ -604,7 +630,7 @@ non-nil, don't show the UI."
     (when mu4e-update-timer
       (cancel-timer mu4e-update-timer)
       (setq mu4e-update-timer nil))
-    (mu4e-kill-proc)
+    (mu4e~proc-kill)
     (kill-buffer)))
 
 

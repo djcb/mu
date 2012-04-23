@@ -27,21 +27,18 @@
 (require 'mu4e-utils)
 (require 'mu4e-meta)
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
 
-(defvar mu4e-buf nil "*internal* Buffer for results data.")
+(defvar mu4e~proc-buf nil "Buffer for results data.")
+(defconst mu4e~proc-name "*mu4e-proc*" "Name of the server process, buffer.")
+(defvar mu4e~proc-process nil "The mu-server process")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar mu4e-path-docid-map
-  (make-hash-table :size 32 :rehash-size 2 :test 'equal :weakness nil)
-  "*internal* hash we use to keep a path=>docid mapping for message
-we added ourselves (ie., draft messages), so we can e.g. move them
-to the sent folder using their docid")
 
-(defconst mu4e-server-name "*mu4e-server*"
-  "*internal* Name of the server process, buffer.")
 
-(defun mu4e-start-proc ()
+(defun mu4e~proc-start ()
   "Start the mu server process."
   (unless (file-executable-p mu4e-mu-binary)
     (error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
@@ -49,61 +46,61 @@ to the sent folder using their docid")
 	  (args '("server"))
 	  (args (append args (when mu4e-mu-home
 			       (list (concat "--muhome=" mu4e-mu-home))))))
-    (setq mu4e-buf "")
-    (setq mu4e-mu-proc (apply 'start-process
-			 mu4e-server-name mu4e-server-name
+    (setq mu4e~proc-buf "")
+    (setq mu4e~proc-process (apply 'start-process
+			 mu4e~proc-name mu4e~proc-name
 		       mu4e-mu-binary args))
     ;; register a function for (:info ...) sexps
-    (when mu4e-mu-proc
-      (set-process-query-on-exit-flag mu4e-mu-proc nil)
-      (set-process-coding-system mu4e-mu-proc 'binary 'utf-8-unix)
-      (set-process-filter mu4e-mu-proc 'mu4e-proc-filter)
-      (set-process-sentinel mu4e-mu-proc 'mu4e-proc-sentinel))))
+    (when mu4e~proc-process
+      (set-process-query-on-exit-flag mu4e~proc-process nil)
+      (set-process-coding-system mu4e~proc-process 'binary 'utf-8-unix)
+      (set-process-filter mu4e~proc-process 'mu4e~proc-filter)
+      (set-process-sentinel mu4e~proc-process 'mu4e~proc-sentinel))))
 
-(defun mu4e-kill-proc ()
+(defun mu4e~proc-kill ()
   "Kill the mu server process."
-  (let* ((buf (get-buffer mu4e-server-name))
+  (let* ((buf (get-buffer mu4e~proc-name))
 	  (proc (and buf (get-buffer-process buf))))
     (when proc
       (let ((delete-exited-processes t))
 	;; the mu server signal handler will make it quit after 'quit'
-	(mu4e-proc-send-command "quit"))
+	(mu4e~proc-send-command "quit"))
 	;; try sending SIGINT (C-c) to process, so it can exit gracefully
       (ignore-errors
 	(signal-process proc 'SIGINT))))
   (setq
-    mu4e-mu-proc nil
-    mu4e-buf nil))
+    mu4e~proc-process nil
+    mu4e~proc-buf nil))
 
 
-(defun mu4e-proc-eat-sexp-from-buf ()
-  "'Eat' the next s-expression from `mu4e-buf'. `mu4e-buf gets its
+(defun mu4e~proc-eat-sexp-from-buf ()
+  "'Eat' the next s-expression from `mu4e~proc-buf'. `mu4e~proc-buf gets its
   contents from the mu-servers in the following form:
        \376<len-of-sexp>\376<sexp>
-Function returns this sexp, or nil if there was none. `mu4e-buf' is
+Function returns this sexp, or nil if there was none. `mu4e~proc-buf' is
 updated as well, with all processed sexp data removed."
-  (when mu4e-buf
+  (when mu4e~proc-buf
     ;; TODO: maybe try a non-regexp solution?
-    (let* ((b (string-match "\376\\([0-9]+\\)\376" mu4e-buf))
+    (let* ((b (string-match "\376\\([0-9]+\\)\376" mu4e~proc-buf))
 	    (sexp-len
-	      (when b (string-to-number (match-string 1 mu4e-buf)))))
-      ;; does mu4e-buf contain the full sexp?
-      (when (and b (>= (length mu4e-buf) (+ sexp-len (match-end 0))))
+	      (when b (string-to-number (match-string 1 mu4e~proc-buf)))))
+      ;; does mu4e~proc-buf contain the full sexp?
+      (when (and b (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0))))
 	;; clear-up start
-	(setq mu4e-buf (substring mu4e-buf (match-end 0)))
+	(setq mu4e~proc-buf (substring mu4e~proc-buf (match-end 0)))
 	;; note: we read the input in binary mode -- here, we take the part that
 	;; is the sexp, and convert that to utf-8, before we interpret it.
 	(let ((objcons
 		(ignore-errors ;; note: this may fail if we killed the process
 			       ;; in the middle
 		  (read-from-string
-		    (decode-coding-string (substring mu4e-buf 0 sexp-len) 'utf-8)))))
+		    (decode-coding-string (substring mu4e~proc-buf 0 sexp-len) 'utf-8)))))
 	  (when objcons
-	    (setq mu4e-buf (substring mu4e-buf sexp-len))
+	    (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
 	    (car objcons)))))))
 
 
-(defun mu4e-proc-filter (proc str)
+(defun mu4e~proc-filter (proc str)
   "A process-filter for the 'mu server' output; it accumulates the
   strings into valid sexps by checking of the ';;eox' end-of-sexp
   marker, and then evaluating them.
@@ -160,8 +157,8 @@ updated as well, with all processed sexp data removed."
   (:compose <reply|forward|edit|new> [:original<msg-sexp>] [:include <attach>])
   `mu4e-compose-func'."
   (mu4e-log 'misc "* Received %d byte(s)" (length str))
-  (setq mu4e-buf (concat mu4e-buf str)) ;; update our buffer
-  (let ((sexp (mu4e-proc-eat-sexp-from-buf)))
+  (setq mu4e~proc-buf (concat mu4e~proc-buf str)) ;; update our buffer
+  (let ((sexp (mu4e~proc-eat-sexp-from-buf)))
     (while sexp
       (mu4e-log 'from-server "%S" sexp)
       (cond
@@ -227,18 +224,18 @@ updated as well, with all processed sexp data removed."
 
 	(t (message "Unexpected data from server [%S]" sexp)))
 
-      (setq sexp (mu4e-proc-eat-sexp-from-buf)))))
+      (setq sexp (mu4e~proc-eat-sexp-from-buf)))))
 
 
 ;; error codes are defined in src/mu-util.h
 ;;(defconst mu4e-xapian-empty 19 "Error code: xapian is empty/non-existent")
 
-(defun mu4e-proc-sentinel (proc msg)
+(defun mu4e~proc-sentinel (proc msg)
   "Function that will be called when the mu-server process
 terminates."
   (let ((status (process-status proc)) (code (process-exit-status proc)))
-    (setq mu4e-mu-proc nil)
-    (setq mu4e-buf "") ;; clear any half-received sexps
+    (setq mu4e~proc-process nil)
+    (setq mu4e~proc-buf "") ;; clear any half-received sexps
     (cond
       ((eq status 'signal)
 	(cond
@@ -257,13 +254,13 @@ terminates."
       (t
 	(message "Something bad happened to the mu server process")))))
 
-(defun mu4e-proc-send-command (frm &rest args)
+(defun mu4e~proc-send-command (frm &rest args)
   "Send as command to the mu server process; start the process if needed."
-  (unless (mu4e-proc-is-running)
-    (mu4e-start-proc))
+  (unless (mu4e~proc-is-running)
+    (mu4e~proc-start))
   (let ((cmd (apply 'format frm args)))
     (mu4e-log 'to-server "%s" cmd)
-    (process-send-string mu4e-mu-proc (concat cmd "\n"))))
+    (process-send-string mu4e~proc-process (concat cmd "\n"))))
 
 
 (defun mu4e--docid-msgid-param (docid-or-msgid)
@@ -274,23 +271,23 @@ terminates."
       "docid:%d")
     docid-or-msgid))
 
-(defun mu4e-proc-remove (docid)
+(defun mu4e~proc-remove (docid)
   "Remove message identified by docid.
  The results are reporter through either (:update ... ) or (:error
 ) sexp, which are handled my `mu4e-error-func', respectively."
-  (mu4e-proc-send-command "remove docid:%d" docid))
+  (mu4e~proc-send-command "remove docid:%d" docid))
 
-(defun mu4e-proc-find (query &optional maxnum)
+(defun mu4e~proc-find (query &optional maxnum)
   "Start a database query for QUERY, (optionally) getting up to
 MAXNUM results. For each result found, a function is called,
 depending on the kind of result. The variables `mu4e-error-func'
 contain the function that will be called for, resp., a
 message (header row) or an error."
-  (mu4e-proc-send-command
+  (mu4e~proc-send-command
     "find query:\"%s\"%s" query
     (if maxnum (format " maxnum:%d" maxnum) "")))
 
-(defun mu4e-proc-move (docid-or-msgid &optional maildir flags)
+(defun mu4e~proc-move (docid-or-msgid &optional maildir flags)
   "Move message identified by DOCID-OR-MSGID. At least one of
   MAILDIR and FLAGS should be specified. Note, even if MAILDIR is
   nil, this is still a move, since a change in flags still implies
@@ -329,30 +326,30 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 	  (path
 	    (when maildir
 	      (format " maildir:\"%s\"" maildir))))
-    (mu4e-proc-send-command "move %s %s %s"
+    (mu4e~proc-send-command "move %s %s %s"
       idparam (or flagstr "") (or path ""))))
 
 
-(defun mu4e-proc-index (path)
+(defun mu4e~proc-index (path)
   "Update the message database for filesystem PATH, which should
 point to some maildir directory structure."
-  (mu4e-proc-send-command "index path:\"%s\"" path))
+  (mu4e~proc-send-command "index path:\"%s\"" path))
 
-(defun mu4e-proc-add (path maildir)
+(defun mu4e~proc-add (path maildir)
   "Add the message at PATH to the database, with MAILDIR set to the
 maildir this message resides in, e.g. '/drafts'; if this works, we
 will receive (:info add :path <path> :docid <docid>)."
-  (mu4e-proc-send-command "add path:\"%s\" maildir:\"%s\""
+  (mu4e~proc-send-command "add path:\"%s\" maildir:\"%s\""
     path maildir))
 
-(defun mu4e-proc-sent (path maildir)
+(defun mu4e~proc-sent (path maildir)
   "Add the message at PATH to the database, with MAILDIR set to the
 maildir this message resides in, e.g. '/drafts'; if this works, we
 will receive (:info add :path <path> :docid <docid>)."
-  (mu4e-proc-send-command "sent path:\"%s\" maildir:\"%s\""
+  (mu4e~proc-send-command "sent path:\"%s\" maildir:\"%s\""
     path maildir))
 
-(defun mu4e-proc-compose (type &optional docid)
+(defun mu4e~proc-compose (type &optional docid)
   "Start composing a message of certain TYPE (a symbol, either
 `forward', `reply', `edit' or `new', based on an original
 message (ie, replying to, forwarding, editing) with DOCID or nil
@@ -364,14 +361,14 @@ for type `new'.
     (error "Unsupported compose-type %S" type))
   (unless (eq (null docid) (eq type 'new))
     (error "`new' implies docid not-nil, and vice-versa"))
-  (mu4e-proc-send-command "compose type:%s docid:%d"
+  (mu4e~proc-send-command "compose type:%s docid:%d"
     (symbol-name type) docid))
 
-(defun mu4e-proc-mkdir (path)
+(defun mu4e~proc-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."
-  (mu4e-proc-send-command "mkdir path:\"%s\"" path))
+  (mu4e~proc-send-command "mkdir path:\"%s\"" path))
 
-(defun mu4e-proc-extract (action docid partidx &optional path what param)
+(defun mu4e~proc-extract (action docid partidx &optional path what param)
   "Extract an attachment with index PARTIDX from message with DOCID
 and perform ACTION on it (as symbol, either `save', `open', `temp') which
 mean:
@@ -390,19 +387,19 @@ mean:
 		(format "action:temp docid:%d index:%d what:%s param:\"%s\""
 		  docid partidx what param))
 	      (otherwise (error "Unsupported action %S" action))))))
-    (mu4e-proc-send-command cmd)))
+    (mu4e~proc-send-command cmd)))
 
 
-(defun mu4e-proc-ping ()
+(defun mu4e~proc-ping ()
   "Sends a ping to the mu server, expecting a (:pong ...) in
 response."
-  (mu4e-proc-send-command "ping"))
+  (mu4e~proc-send-command "ping"))
 
-(defun mu4e-proc-view (docid-or-msgid)
+(defun mu4e~proc-view (docid-or-msgid)
   "Get one particular message based on its DOCID-OR-MSGID (keyword
 argument). The result will be delivered to the function registered
 as `mu4e-message-func'."
-  (mu4e-proc-send-command "view %s"
+  (mu4e~proc-send-command "view %s"
     (mu4e--docid-msgid-param docid-or-msgid)))
 
 (provide 'mu4e-proc)

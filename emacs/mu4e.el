@@ -45,12 +45,12 @@
 ;;
 ;;
 ;; these are all defined in mu4e-hdrs
-(setq mu4e-update-func  'mu4e-hdrs-update-handler)
-(setq mu4e-header-func  'mu4e-hdrs-header-handler)
-(setq mu4e-found-func   'mu4e-hdrs-found-handler)
-(setq mu4e-view-func    'mu4e-hdrs-view-handler)
-(setq mu4e-remove-func  'mu4e-hdrs-remove-handler)
-(setq mu4e-erase-func   'mu4e-hdrs-clear)
+(setq mu4e-update-func  'mu4e~hdrs-update-handler)
+(setq mu4e-header-func  'mu4e~hdrs-header-handler)
+(setq mu4e-found-func   'mu4e~hdrs-found-handler)
+(setq mu4e-view-func    'mu4e~hdrs-view-handler)
+(setq mu4e-remove-func  'mu4e~hdrs-remove-handler)
+(setq mu4e-erase-func   'mu4e~hdrs-clear)
 
 ;; these ones are define in mu4e-utils
 (setq mu4e-info-func    'mu4e-info-handler)
@@ -59,13 +59,13 @@
 ;; registers mu4e-pong func
 
 ;; this one is defined in mu4e-compose
-(setq mu4e-compose-func 'mu4e-compose-handler)
+(setq mu4e-compose-func 'mu4e~compose-handler)
 ;; note: mu4e-compose.el dynamically registers mu4e-sent-func
 ;; we don't do that here, because it's only a local (temporary)
 ;; handler
 
 ;; this one is defined in mu4e-view
-(setq mu4e-temp-func 'mu4e-view-temp-handler)
+(setq mu4e-temp-func 'mu4e~view-temp-handler)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
