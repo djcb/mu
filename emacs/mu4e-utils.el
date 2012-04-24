@@ -146,12 +146,42 @@ maildirs under `mu4e-maildir."
 	    (kar (read-char (concat prompt fnames))))
       (if (= kar ?o) ;; user chose 'other'?
 	(ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
-	(or
-	  (car-safe (find-if
-		      (lambda (item)
-			(= kar (cdr item)))
-		      mu4e-maildir-shortcuts))
-	  (error "Invalid shortcut '%c'" kar))))))
+	(or (car-safe
+	      (find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
+	  (error "Invalid shortcut '%c'" kar)))))) 
+
+
+(defun mu4e-ask-maildir-check-exists (prompt)
+  "Like `mu4e-ask-maildir', but check for existence of the maildir,
+and offer to create it if it does not exist yet."
+  (let* ((mdir (mu4e-ask-maildir prompt))
+	  (fullpath (concat mu4e-maildir mdir)))
+    (unless (file-directory-p fullpath)
+      (and (yes-or-no-p (format "%s does not exist. Create now?" fullpath))
+	      (mu4e~proc-mkdir fullpath)))
+    mdir))
+   
+
+(defun mu4e-mark-for-move-set (&optional target)
+  "Mark message at point or, if region is active, all messages in
+the region, for moving to maildir TARGET. If target is not
+provided, function asks for it."
+  (interactive)
+  (unless (mu4e~docid-at-point)
+    (error "No message at point."))
+  (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
+	  (target (if (string= (substring target 0 1) "/")
+		    target
+		    (concat "/" target)))
+	  (fulltarget (concat mu4e-maildir target)))
+    (when (or (file-directory-p fulltarget)
+	    (and (yes-or-no-p
+		   (format "%s does not exist. Create now?" fulltarget))
+	      (mu4e~proc-mkdir fulltarget)))
+      (mu4e-mark-set 'move target))))
+
+
+
 
 
 (defun mu4e-ask-bookmark (prompt &optional kar)
@@ -568,12 +598,17 @@ non-nil, don't show the UI."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; logging / debugging
+(defvar mu4e~log-max-lines 1200
+  "*internal* Last <n> number of lines to keep around in the buffer.")
+(defconst mu4e~log-buffer-name "*mu4e-log*"
+  "*internal* Name of the logging buffer.")
+
 (defun mu4e-log (type frm &rest args)
   "Write a message of TYPE with format-string FRM and ARGS in
 *mu4e-log* buffer, if the variable mu4e-debug is non-nil. Type is
 either 'to-server, 'from-server or 'misc. This function is meant for debugging."
   (when mu4e-debug
-    (with-current-buffer (get-buffer-create mu4e-log-buffer-name)
+    (with-current-buffer (get-buffer-create mu4e~log-buffer-name)
       (view-mode)
       (setq buffer-undo-list t)
       (let* ((inhibit-read-only t)
@@ -596,11 +631,11 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 
 	;; if `mu4e-log-max-lines is specified and exceeded, clearest the oldest
 	;; lines
-	(when (numberp mu4e-log-max-lines)
+	(when (numberp mu4e~log-max-lines)
 	  (let ((lines (count-lines (point-min) (point-max))))
-	    (when (> lines mu4e-log-max-lines)
+	    (when (> lines mu4e~log-max-lines)
 	      (goto-char (point-max))
-	      (forward-line (- mu4e-log-max-lines lines))
+	      (forward-line (- mu4e~log-max-lines lines))
 	      (beginning-of-line)
 	      (delete-region (point-min) (point)))))))))
 
@@ -609,14 +644,16 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 mu4e logs some of its internal workings to a log-buffer. See
 `mu4e-visit-log'."
   (interactive)
+  (mu4e-log 'misc "logging disabled")
   (setq mu4e-debug (not mu4e-debug))
   (message "mu4e debug logging has been %s"
-    (if mu4e-debug "enabled" "disabled")))
+    (if mu4e-debug "enabled" "disabled"))
+  (mu4e-log 'misc "logging enabled"))
 
 (defun mu4e-show-log ()
   "Visit the mu4e debug log."
   (interactive)
-  (let ((buf (get-buffer mu4e-log-buffer-name)))
+  (let ((buf (get-buffer mu4e~log-buffer-name)))
     (unless (buffer-live-p buf)
       (error "No debug log available"))
     (switch-to-buffer buf)))
