@@ -659,7 +659,7 @@ message-at-point, then do it. The actions are specified in
 
 ;; handler-function to handle the response we get from the server when we
 ;; want to do something with one of the attachments.
-(defun mu4e-view-temp-handler (path what param)
+(defun mu4e~view-temp-handler (path what param)
   "Handler function for doing things with temp files (ie.,
 attachments) in response to a (mu4e~proc-extract 'temp ... )."
     (cond
