@@ -27,8 +27,9 @@
 ;; headers like 'To:' or 'Subject:')
 
 ;; Code:
-(require 'hl-line)
+(require 'cl)
 
+(require 'hl-line)
 (require 'mu4e-proc)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-vars)
@@ -105,6 +106,9 @@ are of the form:
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e~hdrs-fringe "  " "*internal* The space on the left of
 message headers to put marks.")
+
+(defconst mu4e-docid-sepa "\004"
+  "Each header starts (invisibly) with the docid followd by `mu4e-docid-sepa'.")
 
 (defun mu4e~hdrs-clear ()
   "Clear the header buffer and related data structures."
@@ -195,12 +199,13 @@ headers."
 
 
 (defun mu4e~hdrs-remove-handler (docid)
-  "Remove handler, will be called when a message has been removed
-from the database. This function will hide the removed message from
-the current list of headers."
+  "Remove handler, will be called when a message with DOCID has
+been removed from the database. This function will hide the removed
+message from the current list of headers. If the message is not
+present, don't do anything."
   (when (buffer-live-p mu4e~hdrs-buffer)
     (with-current-buffer mu4e~hdrs-buffer
-      (mu4e~hdrs-remove-header docid))))
+      (mu4e~hdrs-remove-header docid t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -328,6 +333,8 @@ after the end of the search results."
       (define-key map "r" 'mu4e-rerun-search)
       (define-key map "g" 'mu4e-rerun-search) ;; for compatibility
 
+      (define-key map "%" 'mu4e-hdrs-mark-matches)
+      
       ;; navigation
       (define-key map "n" 'mu4e-next-header)
       (define-key map "p" 'mu4e-prev-header)
@@ -494,7 +501,8 @@ adding a lot of new headers looks really choppy."
 (defun mu4e~docid-cookie (docid)
   "Create an invisible string containing DOCID; this is to be used
 at the beginning of lines to identify headers."
-  (propertize (format "%d\004" docid) 'docid docid 'invisible t))
+  (propertize (format "%d%s" docid mu4e-docid-sepa)
+    'docid docid 'invisible t))
 
 (defun mu4e~docid-at-point (&optional point)
   "Get the docid for the header at POINT, or at current (point) if
@@ -512,7 +520,7 @@ of the beginning of the line."
   (let ((oldpoint (point)) (newpoint))
     (goto-char (point-min))
     (setq newpoint
-      (search-forward (format "%d\004" docid) nil t))
+      (search-forward  (mu4e~docid-cookie docid) nil t))
     (when (null to-mark)
       (if (null newpoint)
 	(goto-char oldpoint) ;; not found; restore old pos
@@ -546,9 +554,9 @@ with DOCID which must be present in the headers buffer."
       ;; now, we're at the beginning of the header, looking at
       ;; <docid>\004
       ;; (which is invisible). jumpp past that…
-      (unless (re-search-forward "\004" nil t)
-	  (error "Cannot find \004 separator"))
-      ;; we found the \004; we move point one to the right for the
+      (unless (re-search-forward mu4e-docid-sepa nil t)
+	  (error "Cannot find the `mu4e-docid-sepa' separator"))
+      ;; we found the separatpr we move point one to the right for the
       ;; the area to write the marker.
       ;;(forward-char)
       ;; clear old marks, and add the new ones.
@@ -573,14 +581,78 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
 		(mu4e~docid-cookie docid)
 		mu4e~hdrs-fringe str "\n") 'docid docid 'msg msg)))))))
 
-(defun mu4e~hdrs-remove-header (docid)
-  "Remove header with DOCID at POINT."
+(defun mu4e~hdrs-remove-header (docid &optional ignore-missing)
+  "Remove header with DOCID at POINT; when IGNORE-MISSING is
+non-nill, don't raise an error when the docid is not found."
   (with-current-buffer mu4e~hdrs-buffer
-    (unless (mu4e~goto-docid docid)
-      (error "Cannot find message with docid %S" docid))
-    (let ((inhibit-read-only t))
-      (delete-region (line-beginning-position) (line-beginning-position 2)))))
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    (if (mu4e~goto-docid docid)
+      (let ((inhibit-read-only t))
+	(delete-region (line-beginning-position) (line-beginning-position 2)))
+      (unless ignore-missing
+	(error "Cannot find message with docid %S" docid)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; search-based marking
+
+(defun mu4e-hdrs-for-each (func)
+  "Call FUNC for each header. FUNC takes one argument msg, the msg
+s-expression for the corresponding header."
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward mu4e-docid-sepa nil t)
+      (let ((msg (get-text-property (point) 'msg)))
+	(when msg
+	  (funcall func msg))))))
+
+(defun mu4e-hdrs-mark-matches ()
+  "Ask user for a kind of mark (move, delete etc.), a field to
+match and a regular expression to match with. Then, mark all
+matching messages with that mark."
+  (interactive)
+  (let* ((target) (mark)
+	  (markkar
+	    (mu4e-read-option "Mark to set: "
+	      '( ("move"  ?m)
+		 ("trash"  ?d)
+		 ("delete" ?D)
+		 ("unread" ?o)
+		 ("read"   ?r)
+		 ("unmark" ?u))))
+	  (mark
+	    (case markkar
+	      (?m
+		(setq target (mu4e-ask-maildir-check-exists "Move message to: "))
+		'move)
+	      (?d 'trash)
+	      (?D 'delete)
+	      (?o 'unread)
+	      (?r 'read)
+	      (?u 'unmark)))
+	  (fieldkar
+	    (mu4e-read-option "Field to match: "
+	      '(("subject" ?s)
+		 ("from" ?f)
+		 ("to" ?t))))
+	  (field
+	    (case fieldkar
+	      (?s :subject)
+	      (?f :from)
+	      (?t :to)))
+	  (pattern (read-string "Regexp: ")))   
+    (mu4e-hdrs-for-each
+      (lambda (msg)
+	(let* ((do-mark) (value (mu4e-msg-field msg field)))
+	  (setq do-mark
+	    (if (member field '(:to :from :cc :bcc :reply-to))
+	      (find-if (lambda (contact)
+			 (let ((name (car contact)) (email (cdr contact)))
+			   (or (and name (string-match pattern name))
+			     (and email (string-match pattern email))))) value)
+	      (string-match pattern (or value ""))))
+	  (when do-mark
+	    (mu4e-mark-at-point mark target)))))))
 
 
 
@@ -755,7 +827,7 @@ for draft messages."
 
 (defun mu4e-compose-reply ()
   "Reply to the current message."
-  (interactive) (mu4e-compose 'reply))
+(interactive) (mu4e-compose 'reply))
 
 (defun mu4e-compose-forward ()
   "Forward the current message."
@@ -790,7 +862,6 @@ region if there is a region, then move to the next message."
   (interactive)
   (mu4e-mark-for-move-set)
   (mu4e-next-header))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
