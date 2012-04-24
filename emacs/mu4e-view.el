@@ -334,6 +334,8 @@ is nil, and otherwise open it."
       (define-key map "b" 'mu4e-search-bookmark)
       (define-key map "B" 'mu4e-search-bookmark-edit-first)
 
+      (define-key map "%" 'mu4e-view-mark-matches)
+        
       (define-key map "j" 'mu4e-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
@@ -585,7 +587,6 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (flush-lines "^[:blank:]*>")
       (setq mu4e~view-cited-hidden t))))
 
-
 (defun mu4e~view-hdrs-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
 backward (if LINES is negative). If this succeeds, return the new
@@ -649,7 +650,15 @@ if nil), then do it. The actions are specified in
 	  (actionfunc (mu4e-choose-action "Action: " mu4e-view-actions)))
     (funcall actionfunc msg)))
 
-
+(defun mu4e-view-mark-matches ()
+    "Ask user for a kind of mark (move, delete etc.), a field to
+match and a regular expression to match with. Then, mark all
+matching messages with that mark."
+  (interactive)
+  (when (buffer-live-p mu4e~view-hdrs-buffer)
+    (with-current-buffer mu4e~view-hdrs-buffer
+      (mu4e-hdrs-mark-matches))))
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
 (defun mu4e~view-get-attach-num (prompt msg)
