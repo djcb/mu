@@ -41,30 +41,6 @@ dir already existed, or has been created, nil otherwise."
       (mu4e~proc-mkdir dir))
     (t nil)))
 
-(defun mu4e-check-requirements ()
-  "Check for the settings required for running mu4e."
-  (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
-    (error "Please set `mu4e-mu-binary' to the full path to the mu
-    binary."))
-  (unless mu4e-maildir
-    (error "Please set `mu4e-maildir' to the full path to your
-    Maildir directory."))
-  ;; expand mu4e-maildir, mu4e-attachment-dir
-  (setq
-    mu4e-maildir (expand-file-name mu4e-maildir)
-    mu4e-attachment-dir (expand-file-name mu4e-attachment-dir))
-  (unless (mu4e-create-maildir-maybe mu4e-maildir)
-    (error "%s is not a valid maildir directory" mu4e-maildir))
-  (dolist (var '( mu4e-sent-folder
-		  mu4e-drafts-folder
-		  mu4e-trash-folder))
-    (unless (and (boundp var) (symbol-value var))
-      (error "Please set %S" var))
-    (let* ((dir (symbol-value var)) (path (concat mu4e-maildir dir)))
-      (unless (string= (substring dir 0 1) "/")
-	(error "%S must start with a '/'" dir))
-      (unless (mu4e-create-maildir-maybe path)
-	(error "%s (%S) does not exist" path var)))))
 
 (defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area. PROMPT
@@ -205,27 +181,10 @@ KAR, or raise an error if none is found."
    (if chosen-bm
      (nth 0 chosen-bm)
      (error "Invalid shortcut '%c'" kar))))
-
-(defun mu4e-new-buffer (bufname)
-  "Return a new buffer BUFNAME; if such already exists, kill the
-old one first."
-  (when (get-buffer bufname)
-    (progn
-      (message (format "Killing %s" bufname))
-      (kill-buffer bufname)))
-  (get-buffer-create bufname))
-
-
+ 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun mu4e-flags-to-string (flags)
-  "Remove duplicates and sort the output of `mu4e-flags-to-string-raw'."
-  (concat
-    (sort (remove-duplicates
-	    (append (mu4e-flags-to-string-raw flags) nil)) '>)))
-
-(defun mu4e-flags-to-string-raw (flags)
+(defun mu4e~flags-to-string-raw (flags)
   "Convert a list of flags into a string as seen in Maildir
 message files; flags are symbols draft, flagged, new, passed,
 replied, seen, trashed and the string is the concatenation of the
@@ -247,21 +206,23 @@ Also see `mu4e-flags-to-string'.
 		 ('signed    ?s)
 		 ('unread    ?u))))
       (concat (and kar (string kar))
-	(mu4e-flags-to-string-raw (cdr flags))))))
+	(mu4e~flags-to-string-raw (cdr flags))))))
+
+(defun mu4e-flags-to-string (flags)
+  "Remove duplicates and sort the output of `mu4e~flags-to-string-raw'."
+  (concat
+    (sort (remove-duplicates
+	    (append (mu4e~flags-to-string-raw flags) nil)) '>)))
 
 
-(defun mu4e-string-to-flags (str)
-  "Remove duplicates from the output of `mu4e-string-to-flags-1'"
-  (remove-duplicates (mu4e-string-to-flags-1 str)))
-
-(defun mu4e-string-to-flags-1 (str)
+(defun mu4e~string-to-flags-1 (str)
   "Convert a string with message flags as seen in Maildir
 messages into a list of flags in; flags are symbols draft,
 flagged, new, passed, replied, seen, trashed and the string is
 the concatenation of the uppercased first letters of these flags,
 as per [1]. Other letters than the ones listed here are ignored.
-Also see `mu/flags-to-string'.
-\[1\]: http://cr.yp.to/proto/maildir.html"
+Also see `mu4e-flags-to-string'.
+\[1\]: http://cr.yp.to/proto/maildir.html."
   (when (/= 0 (length str))
     (let ((flag
 	    (case (string-to-char str)
@@ -272,7 +233,21 @@ Also see `mu/flags-to-string'.
 	      (?S   'seen)
 	      (?T   'trashed))))
       (append (when flag (list flag))
-	(mu4e-string-to-flags-1 (substring str 1))))))
+	(mu4e~string-to-flags-1 (substring str 1))))))
+
+(defun mu4e-string-to-flags (str)
+" Convert a string with message flags as seen in Maildir messages
+into a list of flags in; flags are symbols draft, flagged, new,
+passed, replied, seen, trashed and the string is the concatenation
+of the uppercased first letters of these flags, as per [1]. Other
+letters than the ones listed here are ignored.  Also see
+`mu4e-flags-to-string'.  \[1\]:
+http://cr.yp.to/proto/maildir.html "
+  ;;  "Remove duplicates from the output of `mu4e~string-to-flags-1'"
+  (remove-duplicates (mu4e~string-to-flags-1 str)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 
 (defun mu4e-display-size (size)
@@ -349,6 +324,9 @@ function prefers the text part, but this can be changed by setting
       (setq body ""))
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
+
+(defvar mu4e-update-timer nil
+  "*internal* The mu4e update timer.")
 
 (defconst mu4e-update-mail-name "*mu4e-update-mail*"
   "*internal* Name of the process to update mail")
@@ -505,15 +483,6 @@ with `mu4e-insert-captured-message-as-attachment'."
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
 
-(defun mu4e-kill-buffer-and-window (buf)
-  "Kill buffer BUF and any of its windows. Like
-`kill-buffer-and-window', but can be called from any buffer, and
-simply does not attempt to delete the window if there is none,
-instead of erroring out."
-  (when (buffer-live-p buf)
-    (bury-buffer)
-    (delete-windows-on buf) ;; destroy all windows for this buffer
-    (kill-buffer buf)))
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
@@ -575,8 +544,31 @@ process."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-update-timer nil
-  "*internal* The mu4e update timer.")
+;; start and stopping
+(defun mu4e-check-requirements ()
+  "Check for the settings required for running mu4e."
+  (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
+    (error "Please set `mu4e-mu-binary' to the full path to the mu
+    binary."))
+  (unless mu4e-maildir
+    (error "Please set `mu4e-maildir' to the full path to your
+    Maildir directory."))
+  ;; expand mu4e-maildir, mu4e-attachment-dir
+  (setq
+    mu4e-maildir (expand-file-name mu4e-maildir)
+    mu4e-attachment-dir (expand-file-name mu4e-attachment-dir))
+  (unless (mu4e-create-maildir-maybe mu4e-maildir)
+    (error "%s is not a valid maildir directory" mu4e-maildir))
+  (dolist (var '( mu4e-sent-folder
+		  mu4e-drafts-folder
+		  mu4e-trash-folder))
+    (unless (and (boundp var) (symbol-value var))
+      (error "Please set %S" var))
+    (let* ((dir (symbol-value var)) (path (concat mu4e-maildir dir)))
+      (unless (string= (substring dir 0 1) "/")
+	(error "%S must start with a '/'" dir))
+      (unless (mu4e-create-maildir-maybe path)
+	(error "%s (%S) does not exist" path var)))))
 
 (defun mu4e~proc-is-running ()
   "Whether the mu process is running."
@@ -629,10 +621,11 @@ non-nil, don't show the UI."
       (setq mu4e-update-timer nil))
     (mu4e~proc-kill)
     (kill-buffer)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; logging / debugging
 (defun mu4e-log (type frm &rest args)
   "Write a message of TYPE with format-string FRM and ARGS in
@@ -686,6 +679,7 @@ mu4e logs some of its internal workings to a log-buffer. See
     (unless (buffer-live-p buf)
       (error "No debug log available"))
     (switch-to-buffer buf)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (provide 'mu4e-utils)

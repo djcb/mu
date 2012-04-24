@@ -587,8 +587,13 @@ current window. "
   "Quit the message view and return to the main view."
   (interactive)
   (when  (mu4e-mark-handle-when-leaving)
-    (mu4e-kill-buffer-and-window mu4e~hdrs-buffer)
+    (let ((buf mu4e~hdrs-buffer))
+      (when (buffer-live-p buf)
+	(bury-buffer)
+	(delete-windows-on buf) ;; destroy all windows for this buffer
+	(kill-buffer buf)))
     (mu4e-main-view)))
+ 
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,
