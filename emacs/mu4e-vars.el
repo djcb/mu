@@ -151,192 +151,6 @@ this, in the header buffer and view buffer you can execute
 `mu4e-jump-to-maildir' (or 'j', by default), followed by the
 designated shortcut character for the maildir.")
 
-;; the headers view
-(defgroup mu4e-headers nil
-  "Settings for the headers view."
-  :group 'mu4e)
-
-
-(defcustom mu4e-headers-fields
-  '( (:date          .  25)
-     (:flags         .   6)
-     (:from          .  22)
-     (:subject       .  nil))
-  "A list of header fields to show in the headers buffer, and their
-  respective widths in characters. A width of `nil' means
-  'unrestricted', and this is best reserved fo the rightmost (last)
-  field. For the complete list of available headers, see
-  `mu4e-header-names'"
-  :type (list 'symbol)
-  :group 'mu4e-headers)
-
-(defcustom mu4e-headers-date-format "%x %X"
-  "Date format to use in the headers view, in the format of
-  `format-time-string'."
-  :type  'string
-  :group 'mu4e-headers)
-
-(defcustom mu4e-headers-leave-behavior 'ask
-  "What to do when user leaves the headers view (e.g. quits,
-  refreshes or does a new search). Value is one of the following
-  symbols:
-- ask (ask the user whether to ignore the marks)
-- apply (automatically apply the marks before doing anything else)
-- ignore (automatically ignore the marks without asking)."
-  :type 'symbol
-  :group 'mu4e-headers)
-
-
-(defcustom mu4e-headers-visible-lines 10
-  "Number of lines to display in the header view when using the
-horizontal split-view. This includes the header-line at the top,
-and the mode-line."
-  :type 'integer
-  :group 'mu4e-headers)
-
-
-(defcustom mu4e-headers-visible-columns 30
-  "Number of columns to display for the header view when using the
-vertical split-view."
-  :type 'integer
-  :group 'mu4e-headers)
-
-(defun mu4e--dummy-func (&optional args) (error "dummy"))
-
-(defalias 'mu4e-capture-message 'mu4e--dummy-func)
-
-(defvar mu4e-headers-actions
-  '( ("capture message" ?c mu4e-capture-message))
-  "List of actions to perform on messages in the headers list. The actions
-are of the form:
-   (NAME SHORTCUT FUNC) where:
-* NAME is the name of the action (e.g. \"Count lines\")
-* SHORTCUT is a one-character shortcut to call this action
-* FUNC is a function which receives a message plist as an argument.")
-
-;; the message view
-(defgroup mu4e-view nil
-  "Settings for the message view."
-  :group 'mu4e)
-
-(defcustom mu4e-view-fields
-  '(:from :to :cc :subject :flags :date :maildir :attachments)
-  "Header fields to display in the message view buffer. For the
-complete list of available headers, see `mu4e-header-names'."
-  :type (list 'symbol)
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-date-format "%c"
-  "Date format to use in the message view, in the format of
-  `format-time-string'."
-  :type 'string
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-prefer-html nil
-  "Whether to base the body display on the HTML-version of the
-e-mail message (if there is any."
-  :type 'boolean
-  :group 'mu4e-view)
-
-(defcustom mu4e-html2text-command nil
-  "Shell command that converts HTML from stdin into plain text on
-stdout. If this is not defined, the emacs `html2text' tool will be
-used when faced with html-only message. If you use htmltext, it's
-recommended you use \"html2text -utf8 -width 72\"."
-  :type 'string
-  :group 'mu4e-view
-  :safe 'stringp)
-
-(defcustom mu4e-view-show-addresses t
-  "Whether to show e-mail addresses for contacts in address-fields,
-  if names are available as well (note that the e-mail addresses
-  are still available as a tooltip."
-  :type 'boolean
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-wrap-lines nil
-  "Whether to automatically wrap lines in the body of messages when
-viewing them. Note that wrapping does not work well with all
-messages, but you can always toggle between wrapped/unwrapped
-display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-wrap-lines nil
-  "Whether to automatically wrap lines in the body of messages when
-viewing them. Note that wrapping does not work well with all
-messages, but you can always toggle between wrapped/unwrapped
-display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
-  :group 'mu4e-view)
-
-
-(defcustom mu4e-view-hide-cited nil
-  "Whether to automatically hide cited parts of messages (as
-determined by the presence of '> ' at the beginning of the
-line). Note that you can always toggle between hidden/unhidden
-display with `mu4e-view-toggle-hide-cited (default keybinding:
-<w>)."
-  :group 'mu4e-view)
-
- 
-(defvar mu4e-view-actions
-  '( ("capture message" ?c mu4e-capture-message)
-     ("view as pdf" ?p mu4e-show-as-pdf))
-  "List of actions to perform on messages in view mode. The actions
-are of the form:
-   (NAME SHORTCUT FUNC)
-where:
-* NAME is the name of the action (e.g. \"Count lines\")
-* SHORTCUT is a one-character shortcut to call this action
-* FUNC is a function which receives a message plist as an argument.")
-
-
-;; some *cough* forward declarations; real definitions are in mu4e-view
-;; on which we don't want to circularly depend
-(defalias 'mu4e-view-open-attachment-with  'mu4e--dummy-func)
-(defalias 'mu4e-view-open-attachment-emacs 'mu4e--dummy-func)
-(defalias 'mu4e-view-open-pipe-attachment  'mu4e--dummy-func)
-
-(defvar mu4e-view-attachment-actions
-  '( ("open-with" ?w mu4e-view-open-attachment-with)
-     ("in-emacs"  ?e mu4e-view-open-attachment-emacs)
-     ("pipe"      ?| mu4e-view-pipe-attachment))
-  "List of actions to perform on message attachments. The actions
-are of the form:
-   (NAME SHORTCUT FUNC)
-where:
-    * NAME is the name of the action (e.g. \"Count lines\")
-    * SHORTCUT is a one-character shortcut to call this action
-    * FUNC is a function which receives two arguments: the message
-      plist and the attachment number.")
-
-;; Composing / Sending messages
-(defgroup mu4e-compose nil
-  "Customizations for composing/sending messages."
-  :group 'mu4e)
-
-(defcustom mu4e-reply-to-address nil
-  "The Reply-To address (if this, for some reason, is not equal to
-the From: address.)"
-  :type 'string
-  :group 'mu4e-compose)
-
-(defcustom mu4e-user-agent nil
-  "The user-agent string; leave at `nil' for the default."
-  :type 'string
-  :group 'mu4e-compose)
-
-(defcustom mu4e-sent-messages-behavior 'sent
-  "Determines what mu4e does with sent messages - this is a symbol
-which can be either:
-'sent   --> move the sent message to the Sent-folder (`mu4e-sent-folder')
-'trash  --> move the sent message to the Trash-folder (`mu4e-trash-folder')
-'delete --> delete the sent message.
-Note, when using GMail/IMAP, you should set this to either 'trash
-or 'delete, since GMail already takes care of keeping copies in the
-sent folder."
-  :type 'symbol
-  :safe 'symbolp
-  :group 'mu4e-compose)
 
 
 ;; Faces
@@ -494,8 +308,6 @@ in which case it will be equal to `:to'.)")
 (defvar mu4e-current-msg nil "*internal* The message being
 viewed in view mode.")
 
-(defvar mu4e-captured-message nil
-  "*internal* the last-captured message (the s-expression).")
 
 (defvar mu4e-log-max-lines 1200
   "*internal* Last <n> number of lines to keep around in the buffer.")
@@ -503,16 +315,8 @@ viewed in view mode.")
 (defconst mu4e-log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; misc other stuff
-
-;; for the msg2pdf toy program
-(defvar mu4e-msg2pdf
-  (concat mu4e-builddir "/toys/msg2pdf/msg2pdf"))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
+(defvar mu4e-captured-message nil
+  "The last-captured message (the s-expression).")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

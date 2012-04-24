@@ -30,10 +30,102 @@
 (require 'mu4e-vars)
 (require 'mu4e-mark)
 (require 'mu4e-proc)
+(require 'mu4e-actions)
 
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
 (require 'comint)
+
+
+;; the message view
+(defgroup mu4e-view nil
+  "Settings for the message view."
+  :group 'mu4e)
+
+(defcustom mu4e-view-fields
+  '(:from :to :cc :subject :flags :date :maildir :attachments)
+  "Header fields to display in the message view buffer. For the
+complete list of available headers, see `mu4e-header-names'."
+  :type (list 'symbol)
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-date-format "%c"
+  "Date format to use in the message view, in the format of
+  `format-time-string'."
+  :type 'string
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-prefer-html nil
+  "Whether to base the body display on the HTML-version of the
+e-mail message (if there is any."
+  :type 'boolean
+  :group 'mu4e-view)
+
+(defcustom mu4e-html2text-command nil
+  "Shell command that converts HTML from stdin into plain text on
+stdout. If this is not defined, the emacs `html2text' tool will be
+used when faced with html-only message. If you use htmltext, it's
+recommended you use \"html2text -utf8 -width 72\"."
+  :type 'string
+  :group 'mu4e-view
+  :safe 'stringp)
+
+(defcustom mu4e-view-show-addresses t
+  "Whether to show e-mail addresses for contacts in address-fields,
+  if names are available as well (note that the e-mail addresses
+  are still available as a tooltip."
+  :type 'boolean
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-wrap-lines nil
+  "Whether to automatically wrap lines in the body of messages when
+viewing them. Note that wrapping does not work well with all
+messages, but you can always toggle between wrapped/unwrapped
+display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-wrap-lines nil
+  "Whether to automatically wrap lines in the body of messages when
+viewing them. Note that wrapping does not work well with all
+messages, but you can always toggle between wrapped/unwrapped
+display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
+  :group 'mu4e-view)
+
+
+(defcustom mu4e-view-hide-cited nil
+  "Whether to automatically hide cited parts of messages (as
+determined by the presence of '> ' at the beginning of the
+line). Note that you can always toggle between hidden/unhidden
+display with `mu4e-view-toggle-hide-cited (default keybinding:
+<w>)."
+  :group 'mu4e-view)
+
+ 
+(defvar mu4e-view-actions
+  '( ("capture message" ?c mu4e-action-capture-message)
+     ("view as pdf"     ?p mu4e-action-view-as-pdf))
+  "List of actions to perform on messages in view mode. The actions
+are of the form:
+   (NAME SHORTCUT FUNC)
+where:
+* NAME is the name of the action (e.g. \"Count lines\")
+* SHORTCUT is a one-character shortcut to call this action
+* FUNC is a function which receives a message plist as an argument.")
+ 
+(defvar mu4e-view-attachment-actions
+  '( ("open-with" ?w mu4e-view-open-attachment-with)
+     ("in-emacs"  ?e mu4e-view-open-attachment-emacs)
+     ("pipe"      ?| mu4e-view-pipe-attachment))
+  "List of actions to perform on message attachments. The actions
+are of the form:
+   (NAME SHORTCUT FUNC)
+where:
+    * NAME is the name of the action (e.g. \"Count lines\")
+    * SHORTCUT is a one-character shortcut to call this action
+    * FUNC is a function which receives two arguments: the message
+      plist and the attachment number.")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;; some buffer-local variables
 (defvar mu4e~view-hdrs-buffer nil

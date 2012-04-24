@@ -38,6 +38,40 @@
 (require 'mu4e-view)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Composing / Sending messages
+(defgroup mu4e-compose nil
+  "Customizations for composing/sending messages."
+  :group 'mu4e)
+
+(defcustom mu4e-reply-to-address nil
+  "The Reply-To address (if this, for some reason, is not equal to
+the From: address.)"
+  :type 'string
+  :group 'mu4e-compose)
+
+(defcustom mu4e-user-agent nil
+  "The user-agent string; leave at `nil' for the default."
+  :type 'string
+  :group 'mu4e-compose)
+
+(defcustom mu4e-sent-messages-behavior 'sent
+  "Determines what mu4e does with sent messages - this is a symbol
+which can be either:
+'sent   --> move the sent message to the Sent-folder (`mu4e-sent-folder')
+'trash  --> move the sent message to the Trash-folder (`mu4e-trash-folder')
+'delete --> delete the sent message.
+Note, when using GMail/IMAP, you should set this to either 'trash
+or 'delete, since GMail already takes care of keeping copies in the
+sent folder."
+  :type 'symbol
+  :safe 'symbolp
+  :group 'mu4e-compose)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~compose-cite-original (msg)
   "Return a cited version of the original message MSG (ie., the
 plist). This function use gnus' `message-cite-function', and as

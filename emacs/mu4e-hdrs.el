@@ -33,6 +33,74 @@
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-vars)
 (require 'mu4e-mark)
+(require 'mu4e-actions)
+
+;; the headers view
+(defgroup mu4e-headers nil
+  "Settings for the headers view."
+  :group 'mu4e)
+
+
+(defcustom mu4e-headers-fields
+  '( (:date          .  25)
+     (:flags         .   6)
+     (:from          .  22)
+     (:subject       .  nil))
+  "A list of header fields to show in the headers buffer, and their
+  respective widths in characters. A width of `nil' means
+  'unrestricted', and this is best reserved fo the rightmost (last)
+  field. For the complete list of available headers, see
+  `mu4e-header-names'"
+  :type (list 'symbol)
+  :group 'mu4e-headers)
+
+(defcustom mu4e-headers-date-format "%x %X"
+  "Date format to use in the headers view, in the format of
+  `format-time-string'."
+  :type  'string
+  :group 'mu4e-headers)
+
+(defcustom mu4e-headers-leave-behavior 'ask
+  "What to do when user leaves the headers view (e.g. quits,
+  refreshes or does a new search). Value is one of the following
+  symbols:
+- ask (ask the user whether to ignore the marks)
+- apply (automatically apply the marks before doing anything else)
+- ignore (automatically ignore the marks without asking)."
+  :type 'symbol
+  :group 'mu4e-headers)
+
+
+(defcustom mu4e-headers-visible-lines 10
+  "Number of lines to display in the header view when using the
+horizontal split-view. This includes the header-line at the top,
+and the mode-line."
+  :type 'integer
+  :group 'mu4e-headers)
+
+
+(defcustom mu4e-headers-visible-columns 30
+  "Number of columns to display for the header view when using the
+vertical split-view."
+  :type 'integer
+  :group 'mu4e-headers)
+ 
+(defvar mu4e-headers-actions
+  '( ("capture message" ?c mu4e-action-capture-message))
+  "List of actions to perform on messages in the headers list. The actions
+are of the form:
+   (NAME SHORTCUT FUNC) where:
+* NAME is the name of the action (e.g. \"Count lines\")
+* SHORTCUT is a one-character shortcut to call this action
+* FUNC is a function which receives a message plist as an argument.")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+
+
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e~hdrs-fringe "  " "*internal* The space on the left of
