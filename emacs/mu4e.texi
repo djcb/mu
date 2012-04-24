@@ -1148,11 +1148,13 @@ can set it up by adding it to your configuration:
 
 After this, you can use the normal @t{org-mode} mechanisms to store links:
 @t{M-x org-store-link} will store a link to a particular message when you're
-in Message view (@ref{Message view}), and a link to a query when you are in
-Headers view (@ref{Headers view}). You can insert these link later with @t{M-x
-org-insert-link}. Then, you can go to the query or message the link points to
-with either @t{M-x org-agenda-open-link} in agenda buffers, or @t{M-x
-org-open-at-point} elsewhere - both are typically bound to @kbd{C-c C-o}.
+in @ref{Message view}, and a link to a query when you are in @ref{Headers
+view}.
+
+You can insert these link later with @t{M-x org-insert-link}. Then, you can go
+to the query or message the link points to with either @t{M-x
+org-agenda-open-link} in agenda buffers, or @t{M-x org-open-at-point}
+elsewhere - both are typically bound to @kbd{C-c C-o}.
 
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
@@ -1160,27 +1162,27 @@ org-open-at-point} elsewhere - both are typically bound to @kbd{C-c C-o}.
 To manage your addresses using @t{org-mode}, there is
 @t{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}}.
 
-You can use it with a @t{capture}-template:
-@verbatim
-("c" "contacts" entry (file "contacts.org")
-"* %(mu4e-view-snarf-from 'name)
-:PROPERTIES:
-:EMAIL: %(mu4e-view-snarf-from 'email)
-:NICK:
-:BIRTHDAY:
-:END:\n\n")
-@end verbatim
+@t{mu4e-actions} defines a useful action (@xref{Actions}) for this to add a
+contact based on the @t{From:}-address in the current mail (current header or
+view). To enable this, add to your configuration something like:
 
-After setting this up, you can use @t{M-x org-capture RET c} to get a template
-for a new contact based on` the 'From:' address.
+@lisp
+(setq mu4e-org-contacts-file  <full-path-to-your-org-contacts-file>)
+(add-to-list 'mu4e-headers-actions
+  '("org-contact-add" ?o mu4e-action-add-org-contact) t)
+(add-to-list 'mu4e-view-actions
+  '("org-contact-add" ?o mu4e-action-add-org-contact) t)
+@end lisp 
 
-
+After this, you should be able to add contacts using @key{a o} in the headers
+view and the message view, using the @t{org-capture} mechanism.
+ 
 @node Getting new mail notifications with Sauron
 @section Getting new mail notifications with Sauron
 
 The emacs-package Sauron@footnote{Sauron can be found at
 @url{https://github.com/djcb/sauron}, or in the Marmalade package-repository
-at @url{http://http://marmalade-repo.org/}.} (by the same author) can be used
+at @url{http://http://marmalade-repo.org/}} (by the same author) can be used
 to get notifications about new mails.
 
 If you put something like the below script in your @t{crontab} (or have some
