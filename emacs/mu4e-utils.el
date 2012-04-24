@@ -259,35 +259,6 @@ http://cr.yp.to/proto/maildir.html "
     ((< size 1000) (format "%d" size))
     (t (propertize "?" 'face 'mu4e-system-face))))
 
-;; functions for org-contacts
-(defun mu4e-view-snarf-from (name-or-email)
-  "Get the From:-data for the current message; NAME-OR-EMAIL should
-be a symbol 'name or 'email to get the corresponding field. If the
-field is not found, \"\" is returned.
-
-You can use this with e.g. org-contact with a template like:
-  (\"c\" \"Contacts\" entry (file \"~/Org/contacts.org\")
-          \"* %(mu4e-view-snarf-from 'name)
-  :PROPERTIES:
-  :EMAIL: %(mu4e-view-snarf-from 'email)
-  :END:\")))
-
-See the `org-contacts' documentation for more details."
-  ;; FIXME: we need to explictly go to some view buffer, since when using this
-  ;; from org-capture, we'll be taken to the capture buffer instead.
-  (with-current-buffer mu4e-view-buffer-name
-    (unless (eq major-mode 'mu4e-view-mode)
-      (error "Not in mu4e-view mode."))
-    (unless mu4e-current-msg
-      (error "No current message."))
-    (let ((from (car-safe (plist-get mu4e-current-msg :from))))
-      (cond
-	((not from) "") ;; nothing found
-	((eq name-or-email 'name)
-	  (or (car-safe from) ""))
-	((eq name-or-email 'email)
-	  (or (cdr-safe from) ""))
-	(t (error "Not supported: %S" name-or-email))))))
 
 
 (defun mu4e-body-text (msg)
@@ -452,36 +423,6 @@ action (function) to invoke, or nil. "
       (when action
 	(nth 2 action))))) ;; return func
 
-
-(defun mu4e-count-lines (msg)
-  "Demonstration function for `mu4e-view-actions'. Count the number
-of lines in the e-mail message."
-  (message "Number of lines: %s"
-    (shell-command-to-string
-      (concat "wc -l < " (shell-quote-argument (plist-get msg :path))))))
-
-
-(defun mu4e-show-as-pdf (msg)
-  "Demonstration function for `mu4e-view-actions'. Show attachment as PDF."
-  (unless (file-executable-p mu4e-msg2pdf)
-    (error "msg2pdf not found; please set `mu4e-msg2pdf'"))
-  (let* ((pdf
-	  (shell-command-to-string
-	    (concat mu4e-msg2pdf " "
-	      (shell-quote-argument (plist-get msg :path)))))
-	 (pdf (and pdf (substring pdf 0 -1)))) ;; chop \n
-    (unless (file-exists-p pdf)
-      (error "Failed to create PDF file"))
-    (find-file pdf)   
-    (doc-view-fit-width-to-window)
-    (rename-buffer "*mu4e-view-pdf*")))
-
-(defun mu4e-capture-message (msg)
-  "Remember MSG; we can create a an attachment based on this msg
-with `mu4e-insert-captured-message-as-attachment'."
-  (interactive)
-  (setq mu4e-captured-message msg)
-  (message "Message has been captured"))
 
 
 (defun mu4e-select-other-view ()

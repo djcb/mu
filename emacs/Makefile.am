@@ -24,6 +24,7 @@ mu4e_TEXINFOS=fdl.texi
 lispdir=${prefix}/share/emacs/site-lisp/mu4e/
 
 dist_lisp_LISP=			\
+	mu4e-actions.el		\
 	mu4e-compose.el		\
 	mu4e-hdrs.el		\
 	mu4e-main.el		\
