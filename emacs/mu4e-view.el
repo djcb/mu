@@ -727,6 +727,7 @@ PIPECMD is nil, ask user for it."
 	  (index (plist-get att :index)))
     (mu4e~temp-action (plist-get msg :docid) index "pipe" pipecmd)))
 
+
 (defun mu4e-view-open-attachment-emacs (msg attachnum)
   "Open MSG's attachment ATTACHNUM in the current emacs instance."
   (interactive)

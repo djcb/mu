@@ -315,9 +315,6 @@ viewed in view mode.")
 (defconst mu4e-log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
 
-(defvar mu4e-captured-message nil
-  "The last-captured message (the s-expression).")
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; our handlers funcs

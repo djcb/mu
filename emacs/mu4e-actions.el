@@ -39,6 +39,8 @@ headers view and message-view."
       (concat "wc -l < " (shell-quote-argument (plist-get msg :path))))))
 
 
+
+
 (defvar mu4e-msg2pdf (concat mu4e-builddir "/toys/msg2pdf/msg2pdf")
   "Path to the msg2pdf toy.")
 
@@ -58,14 +60,17 @@ view."
 
 
 
+
+
+(defvar mu4e-captured-message nil
+  "The last-captured message (the s-expression).")
+
 (defun mu4e-action-capture-message (msg)
   "Remember MSG; we can create a an attachment based on this msg
-with `mu4e-insert-captured-message-as-attachment'."
+with `mu4e-compose-attach-captured-message'."
   (interactive)
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
-
-
 
 
 
