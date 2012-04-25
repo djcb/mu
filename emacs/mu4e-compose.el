@@ -263,7 +263,8 @@ are more than 1 (based on ORIGMSG)."
       (mu4e~compose-header "Cc" (mu4e~compose-recipients-construct :cc origmsg
 			       reply-all))
       (mu4e~compose-header "User-agent"  (mu4e-user-agent))
-      (mu4e~compose-header "References"  (mu4e~compose-refererences-construct origmsg))
+      (mu4e~compose-header "References"
+	(mu4e~compose-refererences-construct origmsg))
 
       (when old-msgid
 	(mu4e~compose-header "In-reply-to" (format "<%s>" old-msgid)))
@@ -287,7 +288,8 @@ are more than 1 (based on ORIGMSG)."
       (mu4e~compose-header "Reply-To" mu4e-reply-to-address)
       (mu4e~compose-header "To" "")
       (mu4e~compose-header "User-agent"  (mu4e-user-agent))
-      (mu4e~compose-header "References"  (mu4e~compose-refererences-construct origmsg))
+      (mu4e~compose-header "References"
+	(mu4e~compose-refererences-construct origmsg))
       (mu4e~compose-header "Subject"
 	(concat
 	  ;; if there's no Fwd: yet, prepend it
@@ -352,8 +354,8 @@ use the new docid. Returns the full path to the new message."
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
 
-    ;; make sure mu4e is started in the background (ie. we don't want to error out
-    ;; when sending the message; better to do it now if there's a problem)
+    ;; make sure mu4e is started in the background (ie. we don't want to error
+    ;; out when sending the message; better to do it now if there's a problem)
     (mu4e :hide-ui t)
 
     ;; hack-hack-hack... just before saving, we remove the
@@ -429,9 +431,10 @@ The name of the draft folder is constructed from the concatenation
 The message file name is a unique name determined by
 `mu4e-send-draft-file-name'.
 
-The initial STR would be created from either `mu4e~compose-reply-construct',
-ar`mu4e~compose-forward-construct' or `mu4e~compose-newmsg-construct'. The editing buffer is
-using Gnus' `message-mode'."
+The initial STR would be created from either
+`mu4e~compose-reply-construct', ar`mu4e~compose-forward-construct'
+or `mu4e~compose-newmsg-construct'. The editing buffer is using
+Gnus' `message-mode'."
   (unless mu4e-maildir       (error "mu4e-maildir not set"))
   (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
   (let ((draft
@@ -553,31 +556,42 @@ buffer.
 ;; mu4e-compose-func and mu4e-send-func are wrappers so we can set ourselves
 ;; as default emacs mailer (define-mail-user-agent etc.)
 
-(defun mu4e~compose-compose-func (&optional to subject other-headers continue
-			   switch-function yank-action send-actions return-action)
+(defun mu4e~compose (&optional to subject other-headers continue
+		      switch-function yank-action send-actions return-action)
   "mu4e's implementation of `compose-mail'."
 
-  ;; create a new draft message
+  ;; create a new draft message 'resetting' (as below) is not actually needed in
+  ;; this case, but let's prepare for the re-edit case as well
+ 
   (mu4e~compose-handler 'new)
-  (when to ;; reset to-address, if needed
-    (message-goto-to)
-    (message-delete-line)
-    (insert (concat "To: " to "\n")))
-  (when subject ;; reset subject, if needed
-    (message-goto-subject)
-    (message-delete-line)
-    (insert (concat "Subject: " subject "\n")))
+  (when (message-goto-to) ;; reset to-address, if needed
+    (message-delete-line))
+  (insert (concat "To: " to "\n"))
+  
+  (when (message-goto-subject) ;; reset subject, if needed
+    (message-delete-line))
+  (insert (concat "Subject: " subject "\n"))
+  
   ;; add any other headers specified; FIXME: for some reason, these appear
   ;; before any other headers
-  (message-add-header other-headers)
+  (when other-headers
+    (message-add-header other-headers))
+
   ;; yank message
   (if (bufferp yank-action)
     (list 'insert-buffer yank-action)
-    yank-action))
+    yank-action)
+
+  ;; try to put the user at some reasonable spot...
+  (if (not to)
+    (message-goto-to)
+    (if (not subject)
+      (message-goto-subject)
+      (message-goto-body))))
 
 ;; happily, we can re-use most things from message mode
 (define-mail-user-agent 'mu4e-user-agent
-  'mu4e--compose-func
+  'mu4e~compose
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)
