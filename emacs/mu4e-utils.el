@@ -63,7 +63,8 @@ Function returns the CHAR typed."
 	  (optionsstr
 	    (mapconcat
 	    (lambda (option)
-	      (let* ((descr (car option)) (kar (and (cdr option) (cadr option))))
+	      (let* ((descr (car option))
+		      (kar (and (cdr option) (cadr option))))
 		;; handle the empty kar case
 		(unless kar
 		  (setq ;; eat first kar from descr; use it as kar
@@ -72,9 +73,10 @@ Function returns the CHAR typed."
 		(add-to-list 'optionkars kar)
 		(concat
 		  "[" (propertize (make-string 1 kar)
-			'face 'mu4e-view-link-face) "]"
+			'face 'mu4e-highlight-face) "]"
 		  descr))) options ", "))
-	  (inhibit-quit nil) ;; allow C-g from read-char, not sure why this is needed
+	  ;; allow C-g from read-char, not sure why this is needed
+	  (inhibit-quit nil) 
 	  (okchar)
 	  (response))
     (while (not okchar)
@@ -82,7 +84,7 @@ Function returns the CHAR typed."
       (setq response
 	  (read-char-exclusive
 	    (concat prompt optionsstr
-	      " [" (propertize "C-g" 'face 'highlight) " to quit]")))
+	      " [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")))
       (setq okchar (member response optionkars)))
     response))
 
@@ -139,7 +141,7 @@ maildirs under `mu4e-maildir."
 		  (concat
 		    "["
 		    (propertize (make-string 1 (cdr item))
-		      'face 'mu4e-view-link-face)
+		      'face 'mu4e-highlight-face)
 		    "]"
 		    (car item)))
 		mlist ", "))
@@ -194,7 +196,7 @@ provided, function asks for it."
 	       (let ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
 		 (concat
 		   "[" (propertize (make-string 1 key)
-			 'face 'mu4e-view-link-face)
+			 'face 'mu4e-highlight-face)
 		   "]"
 		   title))) mu4e-bookmarks ", "))
 	  (kar (read-char (concat prompt bmarks))))

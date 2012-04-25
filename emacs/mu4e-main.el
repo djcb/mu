@@ -71,7 +71,8 @@ clicked."
 	    "\\[\\(\\w+\\)\\]"
 	    (lambda(m)
 	      (format "[%s]"
-		(propertize (match-string 1 str) 'face 'mu4e-highlight-face))) str))
+		(propertize (match-string 1 str) 'face 'mu4e-highlight-face)))
+	    str))
 	 (map (make-sparse-keymap))
 	 (func (if (functionp func-or-shortcut)
 		 func-or-shortcut
