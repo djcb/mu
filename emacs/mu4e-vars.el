@@ -192,16 +192,16 @@ flag set)."
   '((t :inherit font-lock-type-face))
   "Face for a header title in the headers view."
   :group 'mu4e-faces)
-
-(defface mu4e-view-header-key-face
-  '((t :inherit font-lock-builtin-face :bold t))
-  "Face for a header title (such as \"Subject\") in the message
-  view."
-  :group 'mu4e-faces)
-
+ 
 (defface mu4e-header-highlight-face
   '((t :inherit default :weight bold :underline t))
   "Face for the header at point."
+  :group 'mu4e-faces)
+
+(defface mu4e-view-header-key-face
+  '((t :inherit font-lock-builtin-face :bold t))
+  "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\") in
+  the message view."
   :group 'mu4e-faces)
 
 (defface mu4e-view-header-value-face
