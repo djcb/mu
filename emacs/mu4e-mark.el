@@ -84,28 +84,28 @@ The following marks are available, and the corresponding props:
 	      (t (error "Invalid mark %S" mark)))))
     (unless docid (error "No message on this line"))
     (save-excursion
-      (when (mu4e~mark-header docid markkar))
-      ;; update the hash -- remove everything current, and if add the new stuff,
-      ;; unless we're unmarking
-      (remhash docid mu4e~mark-map)
-      ;; remove possible overlays
-      (remove-overlays (line-beginning-position) (line-end-position))
+      (when (mu4e~mark-header docid markkar)
+	;; update the hash -- remove everything current, and if add the new stuff,
+	;; unless we're unmarking
+	(remhash docid mu4e~mark-map)
+	;; remove possible overlays
+	(remove-overlays (line-beginning-position) (line-end-position))
 
-      ;; now, let's set a mark (unless we were unmarking)
-      (unless (eql mark 'unmark)
-	(puthash docid (list mark target) mu4e~mark-map)
-	;; when we have a target (ie., when moving), show the target folder in
-	;; an overlay
-	(when target
-	  (let* ((targetstr (propertize (concat "-> " target " ")
-			      'face 'mu4e-system-face))
-		  ;; mu4e-goto-docid docid t \will take us just after the docid cookie
-		  ;; and then we skip the mu4e~hdrs-fringe
-		  (start (+ (length mu4e~hdrs-fringe)
-			   (mu4e~goto-docid docid t)))
-		  (overlay (make-overlay start (+ start (length targetstr)))))
-	    (overlay-put overlay 'display targetstr)
-	    docid))))))
+	;; now, let's set a mark (unless we were unmarking)
+	(unless (eql mark 'unmark)
+	  (puthash docid (list mark target) mu4e~mark-map)
+	  ;; when we have a target (ie., when moving), show the target folder in
+	  ;; an overlay
+	  (when target
+	    (let* ((targetstr (propertize (concat "-> " target " ")
+				'face 'mu4e-system-face))
+		    ;; mu4e-goto-docid docid t \will take us just after the
+		    ;; docid cookie and then we skip the mu4e~hdrs-fringe
+		    (start (+ (length mu4e~hdrs-fringe)
+			     (mu4e~goto-docid docid t)))
+		    (overlay (make-overlay start (+ start (length targetstr)))))
+	      (overlay-put overlay 'display targetstr)
+	      docid)))))))
 
 
 (defun mu4e-mark-set (mark &optional target)
@@ -144,7 +144,7 @@ provided, function asks for it."
 
 
 
-(defun mu4e-mark-execute-all (&optional no-confirmation)
+(defun mu4e-mark-execute-all ()
   "Execute the actions for all marked messages in this
 buffer. After the actions have been executed succesfully, the
 affected messages are *hidden* from the current header list. Since
@@ -153,29 +153,27 @@ the messages no longer matches the current one - to get that
 certainty, we need to rerun the search, but we don't want to do
 that automatically, as it may be too slow and/or break the users
 flow. Therefore, we hide the message, which in practice seems to
-work well.
-
-If NO-CONFIRMATION is non-nil, do not ask the user for
-confirmation."
+work well."
   (interactive)
-  (if (zerop (hash-table-count mu4e~mark-map))
-    (message "Nothing is marked")
-    (when (or no-confirmation
-	    (y-or-n-p (format "Sure you want to execute marks on %d message(s)?"
-			(hash-table-count mu4e~mark-map))))
-      (maphash
-	(lambda (docid val)
-	  (let ((mark (nth 0 val)) (target (nth 1 val)))
-	    (case mark
-	      (move   (mu4e~proc-move docid target))
-	      (read   (mu4e~proc-move docid nil "+S-u-N"))
-	      (unread (mu4e~proc-move docid nil "-S+u"))
-	      (trash
-		(unless mu4e-trash-folder
-		  (error "`mu4e-trash-folder' not set"))
-		(mu4e~proc-move docid mu4e-trash-folder "+T"))
-	      (delete (mu4e~proc-remove docid)))))
-	mu4e~mark-map)
+  (let ((marknum (hash-table-count mu4e~mark-map)))
+    (if (zerop marknum)
+      (message "Nothing is marked")
+      (when (yes-or-no-p
+	      (format "Are you sure you want to execute %d mark%s?"
+		marknum (if (> marknum 1) "s" "")))
+	(maphash
+	  (lambda (docid val)
+	    (let ((mark (nth 0 val)) (target (nth 1 val)))
+	      (case mark
+		(move   (mu4e~proc-move docid target))
+		(read   (mu4e~proc-move docid nil "+S-u-N"))
+		(unread (mu4e~proc-move docid nil "-S+u"))
+		(trash
+		  (unless mu4e-trash-folder
+		    (error "`mu4e-trash-folder' not set"))
+		  (mu4e~proc-move docid mu4e-trash-folder "+T"))
+		(delete (mu4e~proc-remove docid)))))
+	  mu4e~mark-map))
       (mu4e-mark-unmark-all)
       (message nil))))
   
@@ -206,26 +204,18 @@ according to the value of `mu4e-headers-leave-behavior'. This
 function is to be called before any further action (like searching,
 quiting the buffer) is taken; returning t means 'take the following
 action', return nil means 'don't do anything'"
-  (let ((marknum
-	  (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0))
+  (let ((marknum (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0))
 	 (what mu4e-headers-leave-behavior))
-    (unless (or (= marknum 0) (eq what 'ignore) (eq what 'apply))
-      ;; if `mu4e-headers-leave-behavior' is not apply or ignore, ask the user
-      (setq what
-	(let ((kar (mu4e-read-option
-		     "There are existing marks; should we: "
-		     '(("apply marks") ("ignore marks?")))))
-	  (cond
-	    ((= kar ?a) 'apply)
-	    ((= kar ?i) 'ignore)
-	    (t nil))))) ;; cancel
-    ;; we determined what to do... now do it
-    (cond
-      ((= 0 marknum) t)     ;; no marks, just go ahead
-      ((eq what 'ignore) t) ;; ignore the marks, go ahead
-      ((eq what 'apply)
-	(progn (mu4e-mark-execute-all t) t) t) ;; execute marks, go ahead
-      (t nil)))) ;; otherwise, don't do anything
-
+    (unless (zerop marknum) ;; nothing to do
+      (unless (or (eq what 'ignore) (eq what 'apply))
+	;; if `mu4e-headers-leave-behavior' is not apply or ignore, ask the user
+	(setq what
+	  (let ((what (mu4e-read-option
+			  "There are existing marks; should we: "
+			  '( ("apply marks"   nil apply)
+			     ("ignore marks?" nil ignore)))))
+	    ;; we determined what to do... now do it
+	    (when (eq what 'apply)
+	      (mu4e-mark-execute-all))))))))	  
   
 (provide 'mu4e-mark)
