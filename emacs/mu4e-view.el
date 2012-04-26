@@ -298,9 +298,12 @@ is nil, and otherwise open it."
 		      (size (plist-get att :size))
 		      (map (make-sparse-keymap)))
 		 (incf id)
-		 (define-key map [mouse-2] (mu4e~view-open-save-attach-func msg id nil))
-		 (define-key map [?\r]     (mu4e~view-open-save-attach-func msg id nil))
-		 (define-key map [S-mouse-2](mu4e~view-open-save-attach-func msg id t))
+		 (define-key map [mouse-2]
+		   (mu4e~view-open-save-attach-func msg id nil))
+		 (define-key map [?\r]
+		   (mu4e~view-open-save-attach-func msg id nil))
+		 (define-key map [S-mouse-2]
+		   (mu4e~view-open-save-attach-func msg id t))
 		 (define-key map (kbd "<S-return>")
 		   (mu4e~view-open-save-attach-func msg id t))
 		 (concat
@@ -310,7 +313,7 @@ is nil, and otherwise open it."
 		   (when (and size (> size 0))
 		     (concat (format "(%s)"
 			       (propertize (mu4e-display-size size)
-				 'face 'mu4e-header-key-face)))))))
+				 'face 'mu4e-view-header-key-face)))))))
 	     (plist-get msg :attachments) ", ")))
     (unless (zerop id)
       (mu4e~view-construct-header (format "Attachments(%d)" id) attstr t))))
@@ -335,7 +338,9 @@ is nil, and otherwise open it."
       (define-key map "B" 'mu4e-search-bookmark-edit-first)
 
       (define-key map "%" 'mu4e-view-mark-matches)
-        
+      (define-key map "t" 'mu4e-view-mark-subthread)
+      (define-key map "T" 'mu4e-view-mark-thread)
+      
       (define-key map "j" 'mu4e-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
@@ -647,7 +652,7 @@ if nil), then do it. The actions are specified in
 `mu4e-view-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point t)))
-	  (actionfunc (mu4e-choose-action "Action: " mu4e-view-actions)))
+	  (actionfunc (mu4e-read-option "Action: " mu4e-view-actions)))
     (funcall actionfunc msg)))
 
 (defun mu4e-view-mark-matches ()
@@ -658,7 +663,24 @@ matching messages with that mark."
   (when (buffer-live-p mu4e~view-hdrs-buffer)
     (with-current-buffer mu4e~view-hdrs-buffer
       (mu4e-hdrs-mark-matches))))
- 
+
+(defun mu4e-view-mark-thread ()
+  "Ask user for a kind of mark (move, delete etc.), and apply it to
+all messages in the thread at point in the headers view."
+  (interactive)
+  (when (buffer-live-p mu4e~view-hdrs-buffer)
+    (with-current-buffer mu4e~view-hdrs-buffer
+      (mu4e-hdrs-mark-thread))))
+
+(defun mu4e-view-mark-subthread ()
+  "Ask user for a kind of mark (move, delete etc.), and apply it to
+all messages in the thread at point in the headers view."
+  (interactive)
+  (when (buffer-live-p mu4e~view-hdrs-buffer)
+    (with-current-buffer mu4e~view-hdrs-buffer
+      (mu4e-hdrs-mark-subthread))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
 (defun mu4e~view-get-attach-num (prompt msg)
@@ -751,7 +773,7 @@ message-at-point, then do it. The actions are specified in
 `mu4e-view-attachment-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point t)))
-	  (actionfunc (mu4e-choose-action
+	  (actionfunc (mu4e-read-option
 			"Action on attachment: "
 			mu4e-view-attachment-actions))
 	  (attnum (mu4e~view-get-attach-num "Which attachment" msg)))
