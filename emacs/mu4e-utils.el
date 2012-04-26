@@ -42,35 +42,60 @@ dir already existed, or has been created, nil otherwise."
     (t nil)))
 
 
+
+(defun mu4e~read-option-normalize-list (options)
+  "Turn a list OPTIONS into normal-form for `mu4e-read-option'."
+  ;; transform options into 'normal-form', so that in case an option has 'nil
+  ;; for CHAR, it's replaced by the first letter of OPTIONSTRING (and that char
+  ;; is eaten off OPTIONSTR. If RESULT is nil, replace it by CHAR
+  (map 'list
+    (lambda (option)
+      (if (nth 1 option)
+	(list
+	  (nth 0 option)
+	  (nth 1 option)
+	  (or (nth 2 option) (nth 1 option))) ;
+	(list
+	  (substring (nth 0 option) 1)    ;; chop off first char
+	  (string-to-char (nth 0 option)) ;; first char as shortcut
+	  (or (nth 2 option) (nth 1 option)))))
+    options))
+ 
+
 (defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area. PROMPT
 describes a multiple-choice question to the user, OPTIONS describe
 the options, and is a list of cells describing particular
 options. Cells have the following structure:
-   (OPTIONSTRING CHAR) where CHAR is a short-cut character for the
+
+   (OPTIONSTRING CHAR [RESULT])
+
+ where CHAR is a short-cut character for the
 option, and OPTIONSTRING is a non-empty string describing the
 option. If CHAR is nil or not-specified, the first character of the
 optionstring is used.
+
+If RESULT is provide, this will be returned if the user presses the
+corresponding CHAR; otherwise, CHAR is returned.
+
 The options are provided as a list for the user to choose from;
-user can then choose by typing CHAR.
-Example:
+user can then choose by typing CHAR.  Example:
   (mu4e-read-option \"Choose an animal: \"
               '((\"Monkey\" ?m) (\"Gnu\" ?g) (\"platipus\")))
 User now will be presented with a list:
-   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"
-Function returns the CHAR typed."
-  (let* ((optionkars)
+   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."
+  (let* ((options (mu4e~read-option-normalize-list options)) 
+	  (chosen)
 	  (optionsstr
 	    (mapconcat
-	    (lambda (option)
-	      (let* ((descr (car option))
+	      (lambda (option)
+		(let* ((descr (car option))
 		      (kar (and (cdr option) (cadr option))))
 		;; handle the empty kar case
 		(unless kar
 		  (setq ;; eat first kar from descr; use it as kar
 		    kar   (string-to-char descr)
 		    descr (substring descr 1)))
-		(add-to-list 'optionkars kar)
 		(concat
 		  "[" (propertize (make-string 1 kar)
 			'face 'mu4e-highlight-face) "]"
@@ -79,14 +104,16 @@ Function returns the CHAR typed."
 	  (inhibit-quit nil) 
 	  (okchar)
 	  (response))
-    (while (not okchar)
+    (while (not chosen)
       (message nil) ;; we need to clear the echo area first... why?!
       (setq response
 	  (read-char-exclusive
 	    (concat prompt optionsstr
 	      " [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")))
-      (setq okchar (member response optionkars)))
-    response))
+      (setq chosen
+	(find-if (lambda (option) (eq response (nth 1 option))) options)))
+    (nth 2 chosen)))
+ 
 
 (defun mu4e~get-maildirs-1 (path &optional mdir)
   "Get maildirs under path, recursively, as a list of relative
@@ -328,40 +355,6 @@ function prefers the text part, but this can be changed by setting
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
 
-(defvar mu4e-update-timer nil
-  "*internal* The mu4e update timer.")
-
-(defconst mu4e-update-mail-name "*mu4e-update-mail*"
-  "*internal* Name of the process to update mail")
-
-(defun mu4e-update-mail (&optional buf)
-  "Update mail (retrieve using `mu4e-get-mail-command' and update
-the database afterwards), with output going to BUF if not nil, or
-discarded if nil. After retrieving mail, update the database. Note,
-function is asynchronous, returns (almost) immediately, and all the
-processing takes part in the background, unless buf is non-nil."
-  (unless mu4e-get-mail-command
-    (error "`mu4e-get-mail-command' is not defined"))
-  (let* ((process-connection-type t)
-	  (proc (start-process-shell-command
-		 mu4e-update-mail-name buf mu4e-get-mail-command)))
-    (message "Retrieving mail...")
-    (set-process-sentinel proc
-      (lambda (proc msg)
-	(let* ((status (process-status proc))
-		(code (process-exit-status proc))
-		;; sadly, fetchmail returns '1' when there is no mail; this is
-		;; not really an error of course, but it's hard to distinguish
-		;; from a genuine error
-		(maybe-error (or (not (eq status 'exit)) (/= code 0))))
-	  (message nil)
-	  ;; there may be an error, give the user up to 5 seconds to check
-	  (when maybe-error
-	    (sit-for 5))
-	  (mu4e~proc-index mu4e-maildir)
-	  (let ((buf (process-buffer proc)))
-	    (when (buffer-live-p buf)
-	      (kill-buffer buf))))))))
 
 
 (defun mu4e-display-manual ()
@@ -515,10 +508,38 @@ process."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+(defconst mu4e-update-buffer-name "*mu4e-update*"
+  "*internal* Name of the buffer for message retrieval / database
+  updating.")
+
+(defun mu4e-update-mail-show-window ()
+  "Try to retrieve mail (using the user-provided shell command),
+and update the database afterwards, and show the progress in a
+split-window."
+  (interactive)
+  (unless mu4e-get-mail-command
+    (error "`mu4e-get-mail-command' is not defined"))
+  (let ((buf (get-buffer-create mu4e-update-buffer-name))
+	 (win
+	   (split-window (selected-window)
+	     (- (window-height (selected-window)) 8))))
+    (with-selected-window win
+      (switch-to-buffer buf)
+      (set-window-dedicated-p win t)
+      (erase-buffer)
+      (insert "\n") ;; FIXME -- needed so output starts
+      (mu4e-update-mail buf))))
+
+
+
+
+
+
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start and stopping
-(defun mu4e-check-requirements ()
+
+(defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (error "Please set `mu4e-mu-binary' to the full path to the mu
@@ -542,49 +563,40 @@ process."
 	(error "%S must start with a '/'" dir))
       (unless (mu4e-create-maildir-maybe path)
 	(error "%s (%S) does not exist" path var)))))
+ 
 
-(defun mu4e~proc-is-running ()
-  "Whether the mu process is running."
-  (and mu4e~proc-process (eq (process-status mu4e~proc-process) 'run)))
-
-
-(defun* mu4e (&key (hide-ui nil))
-  "Start mu4e . We do this by sending a 'ping' to the mu server
-process, and start the main view if the 'pong' we receive from the
-server has the expected values. If keyword argument :hide-ui is
-non-nil, don't show the UI."
-  (interactive)
+(defun mu4e~start (&optional func)
+  "If mu4e is already running, execute function FUNC (if non-nil). Otherwise,
+check various requirements, then start mu4e. When succesful, call
+FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
-  (if (mu4e~proc-is-running)
-    (unless hide-ui
-      (mu4e-main-view))
-    (progn
-      ;; otherwise, check whether all is okay;
-      (mu4e-check-requirements)
+  (if (mu4e~proc-is-running)   ;; already running?
+    (when func
+      (funcall func))) ;; yup!
+    (progn ;; nope: check whether all is okay;
+      (mu4e~check-requirements)
       ;; explicit version checks are a bit questionable,
       ;; better to check for specific features
-      (if (< emacs-major-version 23)
-	(error "Emacs >= 23.x is required for mu4e")
-	(progn
-	  ;; define the closure (when we receive the 'pong'
-	  (lexical-let ((hide-ui hide-ui))
-	    (setq mu4e-pong-func
-	      (lambda (version doccount)
-		(unless (string= version mu4e-mu-version)
-		  (error "mu server has version %s, but we need %s"
-		    version mu4e-mu-version))
-		(unless hide-ui
-		  (mu4e-main-view))
-		(when (and mu4e-update-interval (null mu4e-update-timer))
-		  (setq mu4e-update-timer
-		    (run-at-time
-		      0 mu4e-update-interval 'mu4e-update-mail)))
-		(message "Started mu4e with %d message%s in store"
-		  doccount (if (= doccount 1) "" "s")))))
+      (unless (>= emacs-major-version 23)
+	(error "Emacs >= 23.x is required for mu4e"))
+      ;; set up the 'pong' handler func
+      (lexical-let ((func func))
+	(setq mu4e-pong-func
+	  (lambda (version doccount)
+	    (unless (string= version mu4e-mu-version)
+	      (error "mu server has version %s, but we need %s"
+		version mu4e-mu-version))
+	    (when func (funcall func))
+	    (when (and mu4e-update-interval (null mu4e-update-timer))
+	      (setq mu4e-update-timer
+		(run-at-time
+		  0 mu4e-update-interval 'mu4e-update-mail)))
+	    (message "Started mu4e with %d message%s in store"
+	      doccount (if (= doccount 1) "" "s")))))
 	  ;; send the ping
-	  (mu4e~proc-ping))))))
+	  (mu4e~proc-ping)))
 
-(defun mu4e-quit()
+(defun mu4e~stop ()
   "Quit the mu4e session."
   (interactive)
   (when (y-or-n-p "Are you sure you want to quit? ")
@@ -594,7 +606,42 @@ non-nil, don't show the UI."
       (setq mu4e-update-timer nil))
     (mu4e~proc-kill)
     (kill-buffer)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar mu4e-update-timer nil
+  "*internal* The mu4e update timer.")
+
+(defconst mu4e-update-mail-name "*mu4e-update-mail*"
+  "*internal* Name of the process to update mail")
+
+(defun mu4e-update-mail (&optional buf)
+  "Update mail (retrieve using `mu4e-get-mail-command' and update
+the database afterwards), with output going to BUF if not nil, or
+discarded if nil. After retrieving mail, update the database. Note,
+function is asynchronous, returns (almost) immediately, and all the
+processing takes part in the background, unless buf is non-nil."
+  (unless mu4e-get-mail-command
+    (error "`mu4e-get-mail-command' is not defined"))
+  (let* ((process-connection-type t)
+	  (proc (start-process-shell-command
+		 mu4e-update-mail-name buf mu4e-get-mail-command)))
+    (message "Retrieving mail...")
+    (set-process-sentinel proc
+      (lambda (proc msg)
+	(let* ((status (process-status proc))
+		(code (process-exit-status proc))
+		;; sadly, fetchmail returns '1' when there is no mail; this is
+		;; not really an error of course, but it's hard to distinguish
+		;; from a genuine error
+		(maybe-error (or (not (eq status 'exit)) (/= code 0))))
+	  (message nil)
+	  ;; there may be an error, give the user up to 5 seconds to check
+	  (when maybe-error
+	    (sit-for 5))
+	  (mu4e~proc-index mu4e-maildir)
+	  (let ((buf (process-buffer proc)))
+	    (when (buffer-live-p buf)
+	      (kill-buffer buf))))))))
+
 
 
 

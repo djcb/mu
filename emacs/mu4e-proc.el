@@ -72,6 +72,10 @@
     mu4e~proc-process nil
     mu4e~proc-buf nil))
 
+(defun mu4e~proc-is-running ()
+  "Whether the mu process is running."
+  (and mu4e~proc-process (eq (process-status mu4e~proc-process) 'run)))
+
 
 (defun mu4e~proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e~proc-buf'. `mu4e~proc-buf gets its
@@ -102,10 +106,10 @@ updated as well, with all processed sexp data removed."
 
 (defun mu4e~proc-filter (proc str)
   "A process-filter for the 'mu server' output; it accumulates the
-  strings into valid sexps by checking of the ';;eox' end-of-sexp
-  marker, and then evaluating them.
+strings into valid sexps by checking of the ';;eox' end-of-sexp
+marker, and then evaluating them.
 
-  The server output is as follows:
+The server output is as follows:
 
    1. an error
       (:error 2 :message \"unknown command\")
@@ -344,8 +348,10 @@ will receive (:info add :path <path> :docid <docid>)."
 
 (defun mu4e~proc-sent (path maildir)
   "Add the message at PATH to the database, with MAILDIR set to the
-maildir this message resides in, e.g. '/drafts'; if this works, we
-will receive (:info add :path <path> :docid <docid>)."
+maildir this message resides in, e.g. '/drafts'.
+
+ if this works, we will receive (:info add :path <path> :docid
+<docid> :fcc <path>)."
   (mu4e~proc-send-command "sent path:\"%s\" maildir:\"%s\""
     path maildir))
 

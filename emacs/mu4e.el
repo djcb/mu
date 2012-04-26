@@ -66,8 +66,25 @@
 
 ;; this one is defined in mu4e-view
 (setq mu4e-temp-func 'mu4e~view-temp-handler)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun mu4e () 
+  "Start mu4e."
+  (interactive)
+  ;; start mu4e, then show the main view
+  (mu4e~start 'mu4e~main-view))
+
+(defun mu4e-quit()
+  "Quit the mu4e session."
+  (interactive)
+  (when (y-or-n-p "Are you sure you want to quit? ")
+    (mu4e~stop)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mu4e)
