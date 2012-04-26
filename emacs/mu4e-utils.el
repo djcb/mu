@@ -434,22 +434,7 @@ there is no message at point."
   "Get FIELD (a symbol, see `mu4e-header-names') for the message at
 point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point t) field))
-
-(defun mu4e-choose-action (prompt actions)
-  "Ask user with PROMPT to choose some action from ACTIONS. ACTIONS
-is a list of actions like `mu4e-view-attachment-actions',
-`mu4e-view-actions', `mu4e-header-actions'. Returns the
-action (function) to invoke, or nil. "
-  (if (null actions)
-    (message "No actions of this type defined")
-    (let* ((kar (mu4e-read-option prompt actions))
-	    (action ;; find the action for this kar
-	      (find-if (lambda (ac) (eq kar (cadr ac))) actions)))
-      (when action
-	(nth 2 action))))) ;; return func
-
-
-
+ 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
 that has a live window), and vice versa."
