@@ -1073,7 +1073,8 @@ cmd_sent (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	else {
 		gchar *escpath;
 		escpath = mu_str_escape_c_literal (path, TRUE);
-		print_expr ("(:sent t :path %s :docid %u)", escpath, docid);
+		print_expr ("(:sent t :path %s :docid %u)",
+			    escpath, docid);
 		g_free (escpath);
 	}
 

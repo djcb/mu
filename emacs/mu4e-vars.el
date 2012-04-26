@@ -286,11 +286,12 @@ headers)."
      (:path          .  "Path")
      (:subject       .  "Subject")
      (:to            .  "To"))
-"A alist of all possible header fields; this is used in the UI (the
+"An alist of all possible header fields; this is used in the UI (the
 column headers in the header list, and the fields the message
 view). Most fields should be self-explanatory. A special one is
-`:from-or-to', which is equal to `:from' unless `:from' matches ,
-in which case it will be equal to `:to'.)")
+`:from-or-to', which is equal to `:from' unless `:from' matches
+`mu4e-user-mail-address-regexp', in which case it will be equal to
+`:to'.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; run-time vars used in multiple places

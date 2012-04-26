@@ -732,7 +732,7 @@ current window. "
 	(bury-buffer)
 	(delete-windows-on buf) ;; destroy all windows for this buffer
 	(kill-buffer buf)))
-    (mu4e-main-view)))
+    (mu4e~main-view)))
  
 
 (defun mu4e-rerun-search ()
