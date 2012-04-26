@@ -41,7 +41,6 @@
   "Settings for the headers view."
   :group 'mu4e)
 
-
 (defcustom mu4e-headers-fields
   '( (:date          .  25)
      (:flags         .   6)
@@ -98,17 +97,16 @@ are of the form:
 
 
 
-
-
-
-
-
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e~hdrs-fringe "  " "*internal* The space on the left of
 message headers to put marks.")
 
-(defconst mu4e-docid-sepa "\004"
-  "Each header starts (invisibly) with the docid followd by `mu4e-docid-sepa'.")
+(defconst mu4e~docid-pre "\376"
+  "Each header starts (invisibly) with the `mu4e-docid-pre',
+  followed by the docid, followd by `mu4e-docid-post'.")
+(defconst mu4e~docid-post "\377"
+  "Each header starts (invisibly) with the `mu4e-docid-pre',
+  followed by the docid, followd by `mu4e-docid-post'.")
 
 (defun mu4e~hdrs-clear ()
   "Clear the header buffer and related data structures."
@@ -126,6 +124,7 @@ results, otherwise, limit number of results to
 `mu4e-search-results-limit'."
   (let ((buf (get-buffer-create mu4e~hdrs-buffer-name))
 	  (inhibit-read-only t))
+    (mu4e-mark-handle-when-leaving)
     (with-current-buffer buf
       (mu4e-hdrs-mode)
       (setq
@@ -249,6 +248,7 @@ if provided, or at the end of the buffer otherwise."
 			   (:subject
 			     (concat ;; prefix subject with a thread indicator
 			       (mu4e-thread-prefix (plist-get msg :thread))
+;; 			       "["(plist-get (plist-get msg :thread) :path) "] "
 			       val))
 			   ((:maildir :path) val)
 			   ((:to :from :cc :bcc) (mu4e~hdrs-contact-str val))
@@ -334,6 +334,9 @@ after the end of the search results."
       (define-key map "g" 'mu4e-rerun-search) ;; for compatibility
 
       (define-key map "%" 'mu4e-hdrs-mark-matches)
+      (define-key map "t" 'mu4e-hdrs-mark-subthread)
+      (define-key map "T" 'mu4e-hdrs-mark-thread)
+     
       
       ;; navigation
       (define-key map "n" 'mu4e-next-header)
@@ -501,8 +504,10 @@ adding a lot of new headers looks really choppy."
 (defun mu4e~docid-cookie (docid)
   "Create an invisible string containing DOCID; this is to be used
 at the beginning of lines to identify headers."
-  (propertize (format "%d%s" docid mu4e-docid-sepa)
+  (propertize (format "%s%d%s"
+		mu4e~docid-pre docid mu4e~docid-post)
     'docid docid 'invisible t))
+
 
 (defun mu4e~docid-at-point (&optional point)
   "Get the docid for the header at POINT, or at current (point) if
@@ -520,8 +525,8 @@ of the beginning of the line."
   (let ((oldpoint (point)) (newpoint))
     (goto-char (point-min))
     (setq newpoint
-      (search-forward  (mu4e~docid-cookie docid) nil t))
-    (when (null to-mark)
+      (search-forward (mu4e~docid-cookie docid) nil t))
+    (unless to-mark
       (if (null newpoint)
 	(goto-char oldpoint) ;; not found; restore old pos
 	(progn
@@ -553,17 +558,17 @@ with DOCID which must be present in the headers buffer."
 	(error "Cannot find message with docid %S" docid))
       ;; now, we're at the beginning of the header, looking at
       ;; <docid>\004
-      ;; (which is invisible). jumpp past that…
-      (unless (re-search-forward mu4e-docid-sepa nil t)
-	  (error "Cannot find the `mu4e-docid-sepa' separator"))
-      ;; we found the separatpr we move point one to the right for the
+      ;; (which is invisible). jump past that…
+      (unless (re-search-forward mu4e~docid-post nil t)
+	(error "Cannot find the `mu4e~docid-post' separator"))
+      ;; we found the separator we move point one to the right for the
       ;; the area to write the marker.
       ;;(forward-char)
       ;; clear old marks, and add the new ones.
       (delete-char (length mu4e~hdrs-fringe))
-      (insert (propertize mark 'face 'mu4e-hdrs-marks-face) " ")
+      (insert (propertize mark 'face 'mu4e-hdrs-marks-face) " ") ;; FIXME
       (goto-char oldpoint))))
-
+ 
 
 (defun mu4e~hdrs-add-header (str docid point &optional msg)
   "Add header STR with DOCID to the buffer at POINT if non-nil, or
@@ -601,46 +606,40 @@ non-nill, don't raise an error when the docid is not found."
 s-expression for the corresponding header."
   (save-excursion
     (goto-char (point-min))
-    (while (search-forward mu4e-docid-sepa nil t)
-      (let ((msg (get-text-property (point) 'msg)))
+    (while (search-forward mu4e~docid-pre nil t)
+      ;; not really sure why we need to jump to bol; we we need
+      ;; to, otherwise we miss lines sometimes...
+      (let ((msg (get-text-property (line-beginning-position) 'msg)))
 	(when msg
 	  (funcall func msg))))))
+
+
+(defun mu4e~hdrs-get-markpair ()
+  "Ask user for a mark; return (MARK . TARGET)."
+  (let* ((mark
+	   (mu4e-read-option "Mark to set: "
+	      '( ("move"   nil move)
+		 ("trash"  ?d  trash)
+		 ("elete"  ?D  delete)
+		 ("unread" ?o  unread)
+		 ("read"   nil read)
+		 ("unmark" nil unmark))))
+	  (target
+	    (when (eq mark 'move)
+	      (mu4e-ask-maildir-check-exists "Move message to: "))))
+    (cons mark target)))
 
 (defun mu4e-hdrs-mark-matches ()
   "Ask user for a kind of mark (move, delete etc.), a field to
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
-  (let* ((target) (mark)
-	  (markkar
-	    (mu4e-read-option "Mark to set: "
-	      '( ("move"  ?m)
-		 ("trash"  ?d)
-		 ("delete" ?D)
-		 ("unread" ?o)
-		 ("read"   ?r)
-		 ("unmark" ?u))))
-	  (mark
-	    (case markkar
-	      (?m
-		(setq target (mu4e-ask-maildir-check-exists "Move message to: "))
-		'move)
-	      (?d 'trash)
-	      (?D 'delete)
-	      (?o 'unread)
-	      (?r 'read)
-	      (?u 'unmark)))
-	  (fieldkar
-	    (mu4e-read-option "Field to match: "
-	      '(("subject" ?s)
-		 ("from" ?f)
-		 ("to" ?t))))
-	  (field
-	    (case fieldkar
-	      (?s :subject)
-	      (?f :from)
-	      (?t :to)))
-	  (pattern (read-string "Regexp: ")))   
+  (let ((markpair (mu4e~hdrs-get-markpair))
+	 (field (mu4e-read-option "Field to match: "
+		  '(("subject" nil :subject)
+		     ("from"   nil :from)
+		     ("to"     nil :to))))
+	  (pattern (read-string "Regexp: ")))
     (mu4e-hdrs-for-each
       (lambda (msg)
 	(let* ((do-mark) (value (mu4e-msg-field msg field)))
@@ -652,7 +651,54 @@ matching messages with that mark."
 			     (and email (string-match pattern email))))) value)
 	      (string-match pattern (or value ""))))
 	  (when do-mark
-	    (mu4e-mark-at-point mark target)))))))
+	    (mu4e-mark-at-point (car markpair) (cdr markpair))))))))
+
+
+(defun mu4e~hdrs-get-thread-info (msg what)
+  "Get WHAT (a symbol, either path or thread-id) for MSG."
+  (let* ((thread (or (plist-get msg :thread)  (error "No thread info found")))
+	  (path  (or (plist-get thread :path)  (error "No threadpath found"))))
+    (case what
+      (path path)
+      (thread-id
+	(save-match-data
+	  ;; the thread id is the first segment of the thread path
+	  (when (string-match "^\\([[:xdigit:]]+\\):?" path)
+	    (match-string 1 path))))
+      (otherwise (error "Not supported"))))) 
+   
+ 
+(defun mu4e-hdrs-mark-thread (&optional subthread)
+  "Mark the thread at point, if SUBTHREAD is non-nil, marking is
+limited to the message at point and its descendants."
+  ;; the tread id is shared by all messages in a thread
+  (interactive "P")
+  (let* ((thread-id (mu4e~hdrs-get-thread-info
+		      (mu4e-message-at-point t) 'thread-id))
+	  (path     (mu4e~hdrs-get-thread-info
+		      (mu4e-message-at-point t) 'path))
+	  (markpair (mu4e~hdrs-get-markpair)))    
+    (mu4e-hdrs-for-each
+      (lambda (msg)
+ 	(let ((my-thread-id (mu4e~hdrs-get-thread-info msg 'thread-id)))
+	  (if subthread
+	    ;; subthread matching; msg's thread path should have path as its
+	    ;; prefix	      
+	    (when (string-match (concat "^" path)
+		    (mu4e~hdrs-get-thread-info msg 'path))
+		(mu4e-mark-at-point (car markpair) (cdr markpair)))
+	    ;; nope; not looking for the subthread; looking for the whole thread
+	    (when (string= thread-id
+		    (mu4e~hdrs-get-thread-info msg 'thread-id))
+	      (mu4e-mark-at-point (car markpair) (cdr markpair)))))))))
+
+(defun mu4e-hdrs-mark-subthread ()
+  "Like `mu4e-mark-thread', but only for a sub-thread."
+  (interactive)
+  (mu4e-hdrs-mark-thread t))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+
 
 
 
@@ -663,16 +709,15 @@ matching messages with that mark."
 results to `mu4e-search-results-limit', otherwise show all. In
 other words, use the C-u prefix to get /all/ results, otherwise get
 up to `mu4e-search-results-limit' much quicker."
-    (interactive "s[mu] search for: ")
-    (when (mu4e-mark-handle-when-leaving)
-      (mu4e-hdrs-search expr current-prefix-arg)))
+  (interactive "s[mu] search for: ")
+  (mu4e-hdrs-search expr current-prefix-arg))
 
 (defun mu4e-search-bookmark ()
   "Search using some bookmarked query. With C-u prefix, show /all/ results,
 otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive)
   (let ((query (mu4e-ask-bookmark "Bookmark: ")))
-    (when (and query (mu4e-mark-handle-when-leaving))
+    (when query
       (mu4e-hdrs-search query current-prefix-arg))))
 
 (defun mu4e-search-bookmark-edit-first (expr)
@@ -682,7 +727,7 @@ otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive
     (list (read-string "[mu] search for: "
 	    (concat (or (mu4e-ask-bookmark "Edit bookmark: ") "") " "))))
-  (when (and expr (mu4e-mark-handle-when-leaving))
+  (when expr
     (mu4e-hdrs-search expr current-prefix-arg)))
 
 
@@ -726,23 +771,22 @@ current window. "
 (defun mu4e~hdrs-kill-buffer-and-window ()
   "Quit the message view and return to the main view."
   (interactive)
-  (when  (mu4e-mark-handle-when-leaving)
-    (let ((buf mu4e~hdrs-buffer))
-      (when (buffer-live-p buf)
-	(bury-buffer)
-	(delete-windows-on buf) ;; destroy all windows for this buffer
-	(kill-buffer buf)))
-    (mu4e~main-view)))
+  (mu4e-mark-handle-when-leaving)
+  (let ((buf mu4e~hdrs-buffer))
+    (when (buffer-live-p buf)
+      (bury-buffer)
+      (delete-windows-on buf) ;; destroy all windows for this buffer
+      (kill-buffer buf)))
+  (mu4e~main-view))
  
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,
 do a new search."
   (interactive)
-   (when (mu4e-mark-handle-when-leaving)
     (if mu4e-last-expr
       (mu4e-hdrs-search mu4e-last-expr)
-      (call-interactively 'mu4e-search))))
+      (call-interactively 'mu4e-search)))
 
 (defun mu4e~hdrs-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
@@ -784,7 +828,8 @@ maildir). With C-u prefix, show /all/ results, otherwise, limit to
 up to `mu4e-search-results-limit'."
   (interactive)
   (let ((fld (mu4e-ask-maildir "Jump to maildir: ")))
-    (when (and fld (mu4e-mark-handle-when-leaving))
+    (when fld
+      (mu4e-mark-handle-when-leaving)
       (mu4e-hdrs-search (concat "\"maildir:" fld "\"")
 	current-prefix-arg))))
 
@@ -846,7 +891,7 @@ for draft messages."
 actions are specified in `mu4e-headers-actions'."
   (interactive)
   (let ((msg (mu4e-message-at-point t))
-	 (actionfunc (mu4e-choose-action "Action: " mu4e-headers-actions)))
+	 (actionfunc (mu4e-read-option "Action: " mu4e-headers-actions)))
     (funcall actionfunc msg)))
 
 (defun mu4e-hdrs-mark-and-next (mark)
