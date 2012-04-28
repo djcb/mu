@@ -198,6 +198,13 @@ flag set)."
   "Face for the header at point."
   :group 'mu4e-faces)
 
+(defface mu4e-header-marks-face
+  '((t :inherit font-lock-preprocessor-face))
+  "Face for the mark in the headers list."
+  :group 'mu4e-faces)
+
+
+
 (defface mu4e-view-header-key-face
   '((t :inherit font-lock-builtin-face :bold t))
   "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\") in
@@ -258,11 +265,6 @@ flag set)."
 (defface mu4e-cited-4-face
   '((t :inherit font-lock-pseudo-keyword-face :bold nil :italic t))
   "Face for cited message parts (level 4)."
-  :group 'mu4e-faces)
-
-(defface mu4e-hdrs-marks-face
-  '((t :inherit font-lock-preprocessor-face))
-  "Face for the mark in the headers list."
   :group 'mu4e-faces)
 
 (defface mu4e-system-face
