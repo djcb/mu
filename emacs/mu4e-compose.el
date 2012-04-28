@@ -79,7 +79,7 @@ sent folder."
       (error "Captured message file not found"))
     (mml-attach-file
       path
-      "message/rfc822"
+      "application/octet-stream"
       (or (plist-get mu4e-captured-message :subject) "No subject")
       "attachment")))
 
