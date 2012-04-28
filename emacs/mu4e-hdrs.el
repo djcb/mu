@@ -107,12 +107,12 @@ are of the form:
 (defconst mu4e~hdrs-fringe (make-string mu4e~hdrs-fringe-len ?\s)
   "The space on the left of message headers to put marks.")
 (defconst mu4e~hdrs-fringe-format (format "%%-%ds" mu4e~hdrs-fringe-len)
-  "Format string to set a mark and leave remaining space.") 
+  "Format string to set a mark and leave remaining space.")
 
 ;; docid cookies
 (defconst mu4e~docid-pre "\376"
   "Each header starts (invisibly) with the `mu4e-docid-pre',
-  followed by the docid, followed by `mu4e-docid-post'.") 
+  followed by the docid, followed by `mu4e-docid-post'.")
 (defconst mu4e~docid-post "\377"
   "Each header starts (invisibly) with the `mu4e-docid-pre',
   followed by the docid, followed by `mu4e-docid-post'.")
@@ -570,7 +570,7 @@ with DOCID which must be present in the headers buffer."
       ;; (which is invisible). jump past that…
       (unless (re-search-forward mu4e~docid-post nil t)
 	(error "Cannot find the `mu4e~docid-post' separator"))
- 
+
       ;; clear old marks, and add the new ones.
       (let ((msg (get-text-property (point) 'msg)))
 	(delete-char mu4e~hdrs-fringe-len)
@@ -579,7 +579,7 @@ with DOCID which must be present in the headers buffer."
 		  'face 'mu4e-header-marks-face
 		  'docid docid
 		  'msg msg)))
-      
+
       (goto-char oldpoint))))
 
 
@@ -780,8 +780,8 @@ current window. "
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert (propertize "Waiting for message..."
-		'face 'mu4e-system-face 'intangible t)))
-    (mu4e~proc-view docid)))
+		'face 'mu4e-system-face 'intangible t))
+      (mu4e~proc-view docid))))
 
 (defun mu4e~hdrs-kill-buffer-and-window ()
   "Quit the message view and return to the main view."

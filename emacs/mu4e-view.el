@@ -100,7 +100,7 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
 <w>)."
   :group 'mu4e-view)
 
- 
+
 (defvar mu4e-view-actions
   '( ("capture message" ?c mu4e-action-capture-message)
      ("view as pdf"     ?p mu4e-action-view-as-pdf))
@@ -111,7 +111,7 @@ where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * SHORTCUT is a one-character shortcut to call this action
 * FUNC is a function which receives a message plist as an argument.")
- 
+
 (defvar mu4e-view-attachment-actions
   '( ("open-with" ?w mu4e-view-open-attachment-with)
      ("in-emacs"  ?e mu4e-view-open-attachment-emacs)
@@ -196,60 +196,57 @@ based on the settings of `mu4e~view-wrap-lines' and
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let ((buf (get-buffer-create mu4e-view-buffer-name))
-	 (inhibit-read-only t))
+  (let ((buf (get-buffer-create mu4e-view-buffer-name)))
     (with-current-buffer buf
-      (setq mu4e-view-buffer buf)
-      (erase-buffer)
-      (insert (mu4e-view-message-text msg))
+      (let ((inhibit-read-only t))
+	(setq ;; buffer local
+	  mu4e-current-msg msg
+	  mu4e~view-hdrs-buffer hdrsbuf
+	  mu4e-view-buffer buf)
 
-      ;; initialize view-mode
-      (mu4e-view-mode)
-      (setq ;; these are buffer-local
-	buffer-read-only t
-	mu4e-current-msg msg
-	mu4e~view-hdrs-buffer hdrsbuf
-	mu4e~view-link-map (make-hash-table :size 32 :rehash-size 2 :weakness nil))
+	(erase-buffer)
+	(insert (mu4e-view-message-text msg))
 
-      (switch-to-buffer buf)
-      (goto-char (point-min))
+	(switch-to-buffer buf)
+	(goto-char (point-min))
 
-      (mu4e~view-fontify-cited)
-      (mu4e~view-fontify-footer)
-      (mu4e~view-make-urls-clickable)
+	(mu4e~view-fontify-cited)
+	(mu4e~view-fontify-footer)
+	(mu4e~view-make-urls-clickable)
 
-      (unless update
-	;; if we're showing the message for the first time, use the values of
-	;; user-settable variables `mu4e~view-wrap-lines' and
-	;; `mu4e~view-hide-cited' to determine whether we should wrap/hide
-	(progn
-	  (when mu4e~view-lines-wrapped (mu4e~view-wrap-lines))
-	  (when mu4e~view-cited-hidden  (mu4e~view-hide-cited))))
+	(unless update
+	  ;; if we're showing the message for the first time, use the values of
+	  ;; user-settable variables `mu4e~view-wrap-lines' and
+	  ;; `mu4e~view-hide-cited' to determine whether we should wrap/hide
+	  (progn
+	    (when mu4e~view-lines-wrapped (mu4e~view-wrap-lines))
+	    (when mu4e~view-cited-hidden  (mu4e~view-hide-cited))))
 
-      ;; no use in trying to set flags again
-      (unless update
-	(mu4e~view-mark-as-read-maybe)))))
+	;; no use in trying to set flags again
+	(unless update
+	  (mu4e~view-mark-as-read-maybe)))
+
+      (mu4e-view-mode))))
 
 
 (defun mu4e~view-construct-header (key val &optional dont-propertize-val)
-  "Return header KEY with value VAL if VAL is non-nil. If
+    "Return header KEY with value VAL if VAL is non-nil. If
 DONT-PROPERTIZE-VAL is non-nil, do not add text-properties to VAL."
-  (if val
-    (with-temp-buffer
-      (insert (propertize key 'face 'mu4e-view-header-key-face) ": "
-	(if dont-propertize-val
-	  val
-	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
-      ;; temporarily set the fill column <margin> positions to the right, so
-      ;; we can indent following lines with positions
-      (let*((margin 1) (fill-column (- fill-column margin)))
-	(fill-region (point-min) (point-max))
-	(goto-char (point-min))
-	(while (and (zerop (forward-line 1)) (not (looking-at "^$")))
-	  (indent-to-column margin)))
-      (buffer-string))
-    ""))
-
+    (if val
+      (with-temp-buffer
+	(insert (propertize key 'face 'mu4e-view-header-key-face) ": "
+	  (if dont-propertize-val
+	    val
+	    (propertize val 'face 'mu4e-view-header-value-face)) "\n")
+	;; temporarily set the fill column <margin> positions to the right, so
+	;; we can indent following lines with positions
+	(let*((margin 1) (fill-column (- fill-column margin)))
+	  (fill-region (point-min) (point-max))
+	  (goto-char (point-min))
+	  (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
+	    (indent-to-column margin)))
+	(buffer-string))
+      ""))
 
 (defun mu4e~view-construct-contacts (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
@@ -340,7 +337,7 @@ is nil, and otherwise open it."
       (define-key map "%" 'mu4e-view-mark-matches)
       (define-key map "t" 'mu4e-view-mark-subthread)
       (define-key map "T" 'mu4e-view-mark-thread)
-      
+
       (define-key map "j" 'mu4e-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
@@ -558,6 +555,8 @@ Seen; if the message is not New/Unread, do nothing."
 number them so they can be opened using `mu4e-view-go-to-url'."
   (let ((num 0))
     (save-excursion
+      (setq mu4e~view-link-map ;; buffer local
+	(make-hash-table :size 32 :rehash-size 2 :weakness nil))
       (goto-char (point-min))
       (while (re-search-forward mu4e~view-url-regexp nil t)
 	(let ((url (match-string 0))
@@ -812,7 +811,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
       (if (eq mark 'move)
 	(mu4e-mark-for-move-set)
 	(mu4e-mark-at-point mark)))))
-  
+
 
 (defun mu4e~split-view-p ()
   "Return t if we're in split-view, nil otherwise."
