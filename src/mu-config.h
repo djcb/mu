@@ -113,7 +113,10 @@ struct _MuConfig {
 	char	        *sortfield;	/* field to sort by (string) */
 	gboolean	 reverse;	/* sort in revers order (z->a) */
 	gboolean	 threads;       /* show message threads */
+
 	gboolean	 summary;	/* include a summary? */
+	int	         summary_len;   /* max # of lines for summary */
+
 	char            *bookmark;	/* use bookmark */
 	char		*formatstr;     /* output type for find
 					 * (plain,links,xml,json,sexp)

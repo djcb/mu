@@ -108,19 +108,19 @@ print_field (const char* field, const char *val, gboolean color)
 }
 
 
+/* a summary_len of 0 mean 'don't show summary, show body */
 static void
-body_or_summary (MuMsg *msg, gboolean summary, gboolean color)
+body_or_summary (MuMsg *msg, unsigned summary_len, gboolean color)
 {
 	const char* field;
-	const int SUMMARY_LEN = 5;
 
 	field = mu_msg_get_body_text (msg);
 	if (!field)
 		return; /* no body -- nothing more to do */
 
-	if (summary) {
+	if (summary_len != 0) {
 		gchar *summ;
-		summ = mu_str_summarize (field, SUMMARY_LEN);
+		summ = mu_str_summarize (field, summary_len);
 		print_field ("Summary", summ, color);
 		g_free (summ);
 	} else {
@@ -132,8 +132,9 @@ body_or_summary (MuMsg *msg, gboolean summary, gboolean color)
 
 
 /* we ignore fields for now */
+/* summary_len == 0 means "no summary */
 static gboolean
-view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
+view_msg_plain (MuMsg *msg, const gchar *fields, unsigned summary_len,
 	  gboolean color)
 {
 	gchar *attachs;
@@ -162,7 +163,7 @@ view_msg_plain (MuMsg *msg, const gchar *fields, gboolean summary,
 		g_free (attachs);
 	}
 
-	body_or_summary (msg, summary, color);
+	body_or_summary (msg, summary_len, color);
 
 	return TRUE;
 }
@@ -181,8 +182,10 @@ handle_msg (const char *fname, MuConfig *opts, GError **err)
 
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
-		rv = view_msg_plain (msg, NULL, opts->summary,
-				     !opts->nocolor);
+		rv = view_msg_plain
+			(msg, NULL,
+			 opts->summary ? opts->summary_len : 0,
+			 !opts->nocolor);
 		break;
 	case MU_CONFIG_FORMAT_SEXP:
 		rv = view_msg_sexp (msg);
@@ -202,7 +205,7 @@ view_params_valid (MuConfig *opts, GError **err)
 {
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "error in parameters");
 		return FALSE;
 	}
@@ -212,7 +215,7 @@ view_params_valid (MuConfig *opts, GError **err)
 	case MU_CONFIG_FORMAT_SEXP:
 		break;
 	default:
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid output format");
 		return FALSE;
 	}
@@ -438,7 +441,8 @@ check_params (MuConfig *opts, GError **err)
 {
 	if (!opts->params||!opts->params[0]) {/* no command? */
 		show_usage ();
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS, "error in parameters");
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "error in parameters");
 		return FALSE;
 	}
 

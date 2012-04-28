@@ -35,6 +35,8 @@
 
 static MuConfig MU_CONFIG;
 
+#define DEFAULT_SUMMARY_LEN 5
+
 
 static MuConfigFormat
 get_output_format (const char *formatstr)
@@ -192,6 +194,10 @@ set_group_find_defaults (void)
 		else
 			g_free(old);
 	}
+
+	if ((MU_CONFIG.summary && !MU_CONFIG.summary_len)||
+	    (MU_CONFIG.summary_len < 1))
+		MU_CONFIG.summary_len = DEFAULT_SUMMARY_LEN;
 }
 
 static GOptionGroup*
@@ -211,6 +217,8 @@ config_options_group_find (void)
 		 "sort in reverse (descending) order (z -> a)", NULL},
 		{"summary", 'k', 0, G_OPTION_ARG_NONE, &MU_CONFIG.summary,
 		 "include a short summary of the message (false)", NULL},
+		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+		 "use up to <n> lines for the summary (5)", NULL},
 		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.linksdir,
 		 "output as symbolic links to a target maildir", NULL},
 		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.clearlinks,
@@ -292,6 +300,10 @@ set_group_view_defaults (void)
 		MU_CONFIG.format = MU_CONFIG_FORMAT_PLAIN;
 	else
 		MU_CONFIG.format  = get_output_format (MU_CONFIG.formatstr);
+
+	if ((MU_CONFIG.summary && !MU_CONFIG.summary_len)||
+	    (MU_CONFIG.summary_len < 1))
+		MU_CONFIG.summary_len = DEFAULT_SUMMARY_LEN;
 }
 
 static GOptionGroup *
@@ -301,6 +313,8 @@ config_options_group_view (void)
 	GOptionEntry entries[] = {
 		{"summary", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.summary,
 		 "only show a short summary of the message (false)", NULL},
+		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+		 "use up to <n> lines for the summary (5)", NULL},
 		{"terminate", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.terminator,
 		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,

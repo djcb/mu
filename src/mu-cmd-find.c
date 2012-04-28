@@ -53,7 +53,8 @@ static gboolean output_sexp (MuMsgIter *iter, gboolean threads,
 static gboolean output_xml (MuMsgIter *iter,gboolean include_unreadable,
 			    GError **err);
 static gboolean output_plain (MuMsgIter *iter, const char *fields,
-			      gboolean summary,gboolean threads,
+			      gboolean summary, int summary_len,
+			      gboolean threads,
 			      gboolean color,  gboolean include_unreadable,
 			      GError **err);
 
@@ -99,7 +100,8 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 	case MU_CONFIG_FORMAT_LINKS:
 		return output_links (iter, opts->linksdir, opts->clearlinks, err);
 	case MU_CONFIG_FORMAT_PLAIN:
-		return output_plain (iter, opts->fields, opts->summary,
+		return output_plain (iter, opts->fields,
+				     opts->summary, opts->summary_len,
 				     opts->threads, !opts->nocolor,
 				     opts->include_unreadable, err);
 	case MU_CONFIG_FORMAT_XML:
@@ -266,6 +268,7 @@ query_params_valid (MuConfig *opts, GError **err)
 		     "'%s' is not a readable Xapian directory", xpath);
 	return FALSE;
 }
+
 
 static gchar*
 resolve_bookmark (MuConfig *opts, GError **err)
@@ -566,13 +569,11 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 
 
 static void
-print_summary (MuMsg *msg)
+print_summary (MuMsg *msg, int summary_len)
 {
 	char *summ;
-
-	const guint SUMMARY_LEN = 5; /* summary based on first 5
-				      * lines */
-	summ = mu_str_summarize (mu_msg_get_body_text(msg), SUMMARY_LEN);
+	summ = mu_str_summarize (mu_msg_get_body_text(msg),
+				 (unsigned)summary_len);
 	g_print ("Summary: %s\n", summ ? summ : "<none>");
 	g_free (summ);
 }
@@ -648,7 +649,7 @@ output_plain_fields (MuMsg *msg, const char *fields,
 }
 
 static gboolean
-output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
+output_plain (MuMsgIter *iter, const char *fields, gboolean summary, int summary_len,
 	      gboolean threads, gboolean color, gboolean include_unreadable,
 	      GError **err)
 {
@@ -657,6 +658,12 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 
 	g_return_val_if_fail (iter, FALSE);
 	g_return_val_if_fail (fields, FALSE);
+
+	if (summary && summary_len < 1) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "summary must be >= 1");
+		return FALSE;
+	}
 
 	for (myiter = iter, count = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
@@ -680,7 +687,7 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary,
 		output_plain_fields (msg, fields, color, threads);
 
 		if (summary)
-			print_summary (msg);
+			print_summary (msg, summary_len);
 
 		++count;
 	}
