@@ -34,8 +34,22 @@
 (defvar mu4e~proc-buf nil "Buffer for results data.")
 (defconst mu4e~proc-name "*mu4e-proc*" "Name of the server process, buffer.")
 (defvar mu4e~proc-process nil "The mu-server process")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;; dealing with the length cookie that precedes expressions
+(defconst mu4e~cookie-pre "\376"
+  "Each expression we get from the backend (mu server) starts with
+   a length cookie:
+   <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>.")
+(defconst mu4e~cookie-post "\377"
+    "Each expression we get from the backend (mu server) starts with
+   a length cookie:
+   <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>.")
+(defconst mu4e~cookie-matcher-rx
+  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
+  "Regular expression matching the length cookie. Match 1 will be
+the length (in hex).")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun mu4e~proc-start ()
@@ -78,16 +92,20 @@
 
 
 (defun mu4e~proc-eat-sexp-from-buf ()
-  "'Eat' the next s-expression from `mu4e~proc-buf'. `mu4e~proc-buf gets its
-  contents from the mu-servers in the following form:
-       \376<len-of-sexp>\376<sexp>
-Function returns this sexp, or nil if there was none. `mu4e~proc-buf' is
-updated as well, with all processed sexp data removed."
+  "'Eat' the next s-expression from `mu4e~proc-buf'. Note: this is a string,
+not an emacs-buffer. `mu4e~proc-buf gets its contents from the
+mu-servers in the following form:
+   <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>
+
+Function returns this sexp, or nil if there was
+none. `mu4e~proc-buf' is updated as well, with all processed sexp
+data removed."
   (when mu4e~proc-buf
-    ;; TODO: maybe try a non-regexp solution?
-    (let* ((b (string-match "\376\\([0-9]+\\)\376" mu4e~proc-buf))
+    ;; mu4e~cookie-matcher-rx:
+    ;;  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)]" mu4e~cookie-post)
+    (let* ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf))
 	    (sexp-len
-	      (when b (string-to-number (match-string 1 mu4e~proc-buf)))))
+	      (when b (string-to-number (match-string 1 mu4e~proc-buf) 16))))
       ;; does mu4e~proc-buf contain the full sexp?
       (when (and b (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0))))
 	;; clear-up start
@@ -96,7 +114,7 @@ updated as well, with all processed sexp data removed."
 	;; is the sexp, and convert that to utf-8, before we interpret it.
 	(let ((objcons
 		(ignore-errors ;; note: this may fail if we killed the process
-			       ;; in the middle
+		  ;; in the middle
 		  (read-from-string
 		    (decode-coding-string (substring mu4e~proc-buf 0 sexp-len) 'utf-8)))))
 	  (when objcons

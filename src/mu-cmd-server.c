@@ -82,17 +82,26 @@ install_sig_handler (void)
 /************************************************************************/
 
 
+/*
+ * Markers for/after the lenght cookie that precedes the expression we
+ * write to output. We use octal 376, 377 (ie, 0xfe, 0xff) as they
+ * will never occur in utf8 */
 
 
-/* BOX - beginning-of-expression */
-#define BOX "\376"
+#define COOKIE_PRE  '\376'
+#define COOKIE_POST '\377'
 
 static void G_GNUC_PRINTF(1, 2)
 print_expr (const char* frm, ...)
 {
 	char *expr;
 	va_list ap;
-	size_t exprlen;
+	size_t exprlen, lenlen;
+	char cookie[16];
+	static int outfd = 0;
+
+	if (outfd == 0)
+		outfd = fileno (stdout);
 
 	expr    = NULL;
 
@@ -100,8 +109,16 @@ print_expr (const char* frm, ...)
 	exprlen = g_vasprintf (&expr, frm, ap);
 	va_end (ap);
 
-	g_print (BOX "%u" BOX "%s\n", (unsigned)exprlen + 1,
-		 expr);
+	/* this cookie tells the frontend where to expect the next
+	 * expression */
+
+	cookie[0] = COOKIE_PRE;
+	lenlen = sprintf(cookie + 1, "%x", exprlen + 1); /* + 1 for \n */
+	cookie[lenlen + 1] = COOKIE_POST;
+
+	write (outfd, cookie, lenlen + 2); /* + 2 for the 2 BOX */
+	write (outfd, expr, exprlen);
+	write (outfd, "\n", 1);
 
 	g_free (expr);
 }
