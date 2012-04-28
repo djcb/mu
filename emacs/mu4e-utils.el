@@ -58,7 +58,8 @@ dir already existed, or has been created, nil otherwise."
 	(list
 	  (substring (nth 0 option) 1)    ;; chop off first char
 	  (string-to-char (nth 0 option)) ;; first char as shortcut
-	  (or (nth 2 option) (nth 1 option)))))
+	  (or (nth 2 option) (nth 1 option)
+	    (string-to-char (nth 0 option))))))
     options))
  
 
