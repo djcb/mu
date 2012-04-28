@@ -617,8 +617,9 @@ non-nill, don't raise an error when the docid is not found."
 ;; search-based marking
 
 (defun mu4e-hdrs-for-each (func)
-  "Call FUNC for each header. FUNC takes one argument msg, the msg
-s-expression for the corresponding header."
+  "Call FUNC for each header, moving point to the header. FUNC
+takes one argument msg, the msg s-expression for the corresponding
+header."
   (save-excursion
     (goto-char (point-min))
     (while (search-forward mu4e~docid-pre nil t)
@@ -692,7 +693,8 @@ limited to the message at point and its descendants."
 		      (mu4e-message-at-point t) 'thread-id))
 	  (path     (mu4e~hdrs-get-thread-info
 		      (mu4e-message-at-point t) 'path))
-	  (markpair (mu4e~hdrs-get-markpair)))
+	  (markpair (mu4e~hdrs-get-markpair))
+	  (last-marked-point))
     (mu4e-hdrs-for-each
       (lambda (msg)
  	(let ((my-thread-id (mu4e~hdrs-get-thread-info msg 'thread-id)))
@@ -701,11 +703,16 @@ limited to the message at point and its descendants."
 	    ;; prefix
 	    (when (string-match (concat "^" path)
 		    (mu4e~hdrs-get-thread-info msg 'path))
-		(mu4e-mark-at-point (car markpair) (cdr markpair)))
+	      (mu4e-mark-at-point (car markpair) (cdr markpair))
+	      (setq last-marked-point (point)))
 	    ;; nope; not looking for the subthread; looking for the whole thread
 	    (when (string= thread-id
 		    (mu4e~hdrs-get-thread-info msg 'thread-id))
-	      (mu4e-mark-at-point (car markpair) (cdr markpair)))))))))
+	      (mu4e-mark-at-point (car markpair) (cdr markpair))
+	      (setq last-marked-point (point)))))))
+    (when last-marked-point
+      (goto-char last-marked-point)
+      (mu4e-next-header)))) 
 
 (defun mu4e-hdrs-mark-subthread ()
   "Like `mu4e-mark-thread', but only for a sub-thread."
