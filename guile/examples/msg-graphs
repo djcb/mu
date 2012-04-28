@@ -1,7 +1,6 @@
 #!/bin/sh
 exec guile -e main -s $0 $@
 !#
-
 ;;
 ;; Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
@@ -61,6 +60,25 @@ display, otherwise, use a graphical window."
 	(lambda (x y) (< (car x) (car y)))))
     (format #f "Messages per month matching ~a" expr) "Month" "Messages" plain-text))
 
+
+(define (per-year-month expr plain-text)
+  "Count the total number of messages for each weekday (0-6 for
+Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
+display, otherwise, use a graphical window."
+  (mu:plot
+    (sort (mu:tabulate-messages
+	    (lambda (msg)
+	      (string->number
+		(format #f "~d~2'0d"	
+		  (+ 1900 (tm:year (localtime (mu:date msg))))
+		  (tm:mon (localtime (mu:date msg))))))
+	    expr)
+      (lambda (x y) (< (car x) (car y))))
+    (format #f "Messages per year/month matching ~a" expr)
+    "Year/Month" "Messages" plain-text))
+
+
+
 (define (per-year expr plain-text)
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
@@ -68,9 +86,11 @@ display, otherwise, use a graphical window."
   (mu:plot
     (sort (mu:tabulate-messages
 	    (lambda (msg)
-	  (tm:year (localtime (mu:date msg)))) expr)
+	      (+ 1900 (tm:year (localtime (mu:date msg))))) expr)
       (lambda (x y) (< (car x) (car y))))
     (format #f "Messages per year matching ~a" expr) "Year" "Messages" plain-text))
+
+
 
 (define (main args)
   (let* ((optionspec   '( (muhome     (value #t))
@@ -81,7 +101,8 @@ display, otherwise, use a graphical window."
 	  (msg (string-append
 		 "usage: mu-msg-stats [--help] [--text] "
 		 "[--muhome=<muhome>] "
-		 "--what=<per-hour|per-day|per-month|per-year> [searchexpr]\n"))
+		 "--what=<per-hour|per-day|per-month|per-year-month|"
+		 "per-year> [searchexpr]\n"))
 	  (help (option-ref options 'help #f))
 	  (what (option-ref options 'what #f))
 	  (text (option-ref options 'text #f))
@@ -97,6 +118,7 @@ display, otherwise, use a graphical window."
       ((string= what "per-hour")  (per-hour expr text))
       ((string= what "per-day")   (per-day expr text))
       ((string= what "per-month") (per-month expr text))
+      ((string= what "per-year-month") (per-year-month expr text)) 
       ((string= what "per-year")  (per-year expr text))
       (else (begin
 	      (display msg)
