@@ -420,7 +420,7 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 			 * string from e.g. wrongly encoded
 			 * message-subjects; if so, we escape the
 			 * string */
-			g_warning ("%s: fputs failed: %s",
+			g_warning ("%s: g_locale_from_utf8 failed: %s",
 				   __FUNCTION__,
 				   err ? err->message : "conversion failed");
 			g_clear_error (&err);
