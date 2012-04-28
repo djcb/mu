@@ -113,10 +113,14 @@ print_expr (const char* frm, ...)
 	 * expression */
 
 	cookie[0] = COOKIE_PRE;
-	lenlen = sprintf(cookie + 1, "%x", exprlen + 1); /* + 1 for \n */
+	lenlen = sprintf(cookie + 1, "%x",
+			 (unsigned)exprlen + 1); /* + 1 for \n */
 	cookie[lenlen + 1] = COOKIE_POST;
 
-	write (outfd, cookie, lenlen + 2); /* + 2 for the 2 BOX */
+	/* write the cookie, ie.
+	 *   COOKIE_PRE <len-of-following-sexp-in-hex> COOKIE_POST
+	 */
+	write (outfd, cookie, lenlen + 2);
 	write (outfd, expr, exprlen);
 	write (outfd, "\n", 1);
 
