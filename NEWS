@@ -1,6 +1,6 @@
 * NEWS (user visible changes)
 
-** Release 0.9.9.4 <unreleased>
+** Release 0.9.8.4 <unreleased>
 
 *** mu4e
 
@@ -11,11 +11,22 @@
       commands or open in the current emacs
     - quote names in recipient addresses
     - mu4e-get-maildirs works now for recursive maildirs as well
+    - define arbitrary actions for headers/messages/attachments using the
+      actions system -- see chapter Actions in the manual
+    - allow mu4e to be uses as the default emacs mailer (`mu4e-user-agent)
+    - mark headers based on a regexp, `mu4e-mark-matches', or '%'
+    - mark threads, sub-threads (mu4e-hdrs-mark-thread,
+      mu4e-hdrs-mark-subthread, or 'T', 't')
+    - use the message-mode FCC system for saving messages to the sent-messages
+      folder
 
 *** general
 
     - fix for opening files with non-ascii names
+    - much improved support for searching non-Latin (Cyrillic etc.) languages
+      we can now match 'Тесла' or 'Аркона' without problems
     - smarter escaping (fixes issues with finding message ids)
+    - allow --summary-len for the length of message summaries
 
 
 ** Release 0.9.8.3 <2012-04-06>
