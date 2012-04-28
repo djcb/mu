@@ -52,8 +52,8 @@ where
 
 (defun mu4e~mark-clear ()
   "Clear the marks subsystem."
-  (clrhash mu4e~mark-map)) 
- 
+  (clrhash mu4e~mark-map))
+
 
 (defun mu4e-mark-at-point (mark &optional target)
   "Mark (or unmark) message at point. MARK specifies the
@@ -143,8 +143,7 @@ provided, function asks for it."
       (mu4e-mark-set 'move target))))
 
 
-
-(defun mu4e-mark-execute-all ()
+(defun mu4e-mark-execute-all (&optional no-confirmation)
   "Execute the actions for all marked messages in this
 buffer. After the actions have been executed succesfully, the
 affected messages are *hidden* from the current header list. Since
@@ -153,14 +152,17 @@ the messages no longer matches the current one - to get that
 certainty, we need to rerun the search, but we don't want to do
 that automatically, as it may be too slow and/or break the users
 flow. Therefore, we hide the message, which in practice seems to
-work well."
+work well.
+
+If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (interactive)
   (let ((marknum (hash-table-count mu4e~mark-map)))
     (if (zerop marknum)
       (message "Nothing is marked")
-      (when (yes-or-no-p
-	      (format "Are you sure you want to execute %d mark%s?"
-		marknum (if (> marknum 1) "s" "")))
+      (when (or no-confirmation
+	      (y-or-n-p
+		(format "Are you sure you want to execute %d mark%s?"
+		  marknum (if (> marknum 1) "s" ""))))
 	(maphash
 	  (lambda (docid val)
 	    (let ((mark (nth 0 val)) (target (nth 1 val)))
@@ -176,7 +178,7 @@ work well."
 	  mu4e~mark-map))
       (mu4e-mark-unmark-all)
       (message nil))))
-  
+
 (defun mu4e-mark-unmark-all ()
   "Unmark all marked messages."
   (interactive)
@@ -216,6 +218,6 @@ action', return nil means 'don't do anything'"
 			     ("ignore marks?" nil ignore)))))
 	    ;; we determined what to do... now do it
 	    (when (eq what 'apply)
-	      (mu4e-mark-execute-all))))))))	  
-  
+	      (mu4e-mark-execute-all t))))))))
+
 (provide 'mu4e-mark)
