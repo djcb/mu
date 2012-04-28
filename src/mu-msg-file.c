@@ -624,7 +624,7 @@ get_body (MuMsgFile *self, gboolean want_html)
 }
 
 
-static void
+G_GNUC_UNUSED static void
 append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
 {
 	GMimeContentType *ct;
@@ -666,7 +666,7 @@ append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
 /* instead of just the body, this function returns a concatenation of
  * all text/plain parts with inline disposition
  */
-static char*
+G_GNUC_UNUSED static char*
 get_concatenated_text (MuMsgFile *self)
 {
 	char *txt;
@@ -678,7 +678,6 @@ get_concatenated_text (MuMsgFile *self)
 	g_mime_message_foreach (self->_mime_msg,
 				(GMimeObjectForeachFunc)append_text,
 				&txt);
-
 	return txt;
 }
 
@@ -796,7 +795,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 		return get_recipient (self, recipient_type(mfid));
 
 	case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE;
-		return get_concatenated_text (self);
+		return get_body (self, FALSE);
 	case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE;
 		return get_body (self, TRUE);
 
