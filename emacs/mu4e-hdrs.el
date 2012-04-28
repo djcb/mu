@@ -84,7 +84,7 @@ and the mode-line."
 vertical split-view."
   :type 'integer
   :group 'mu4e-headers)
- 
+
 (defvar mu4e-headers-actions
   '( ("capture message" ?c mu4e-action-capture-message))
   "List of actions to perform on messages in the headers list. The actions
@@ -98,15 +98,24 @@ are of the form:
 
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defconst mu4e~hdrs-fringe "  " "*internal* The space on the left of
-message headers to put marks.")
 
+;; the fringe is the space on the left of headers, where we put marks below some
+;; handy definitions; only `mu4e-hdrs-fringe-len' should be change (if ever),
+;; the others follow from that.
+(defconst mu4e~hdrs-fringe-len 2
+  "Width of the fringe for marks on the left.")
+(defconst mu4e~hdrs-fringe (make-string mu4e~hdrs-fringe-len ?\s)
+  "The space on the left of message headers to put marks.")
+(defconst mu4e~hdrs-fringe-format (format "%%-%ds" mu4e~hdrs-fringe-len)
+  "Format string to set a mark and leave remaining space.") 
+
+;; docid cookies
 (defconst mu4e~docid-pre "\376"
   "Each header starts (invisibly) with the `mu4e-docid-pre',
-  followed by the docid, followd by `mu4e-docid-post'.")
+  followed by the docid, followed by `mu4e-docid-post'.") 
 (defconst mu4e~docid-post "\377"
   "Each header starts (invisibly) with the `mu4e-docid-pre',
-  followed by the docid, followd by `mu4e-docid-post'.")
+  followed by the docid, followed by `mu4e-docid-post'.")
 
 (defun mu4e~hdrs-clear ()
   "Clear the header buffer and related data structures."
@@ -306,7 +315,7 @@ after the end of the search results."
 
 
 
- 
+
 
 ;;; hdrs-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-hdrs-mode-map nil
@@ -318,7 +327,7 @@ after the end of the search results."
   (defun mu4e~hdrs-mark-unmark()(interactive)(mu4e-hdrs-mark-and-next 'unmark))
   (defun mu4e~hdrs-mark-read()(interactive)(mu4e-hdrs-mark-and-next 'read))
   (defun mu4e~hdrs-mark-unread()(interactive)(mu4e-hdrs-mark-and-next 'unread))
-  
+
   (setq mu4e-hdrs-mode-map
     (let ((map (make-sparse-keymap)))
 
@@ -336,8 +345,8 @@ after the end of the search results."
       (define-key map "%" 'mu4e-hdrs-mark-matches)
       (define-key map "t" 'mu4e-hdrs-mark-subthread)
       (define-key map "T" 'mu4e-hdrs-mark-thread)
-     
-      
+
+
       ;; navigation
       (define-key map "n" 'mu4e-next-header)
       (define-key map "p" 'mu4e-prev-header)
@@ -355,21 +364,21 @@ after the end of the search results."
       (define-key map (kbd "<delete>") 'mu4e~hdrs-mark-delete)
       (define-key map (kbd "<deletechar>") 'mu4e~hdrs-mark-delete)
       (define-key map (kbd "D") 'mu4e~hdrs-mark-delete)
-      
+
       (define-key map (kbd "o") 'mu4e~hdrs-mark-unread)
       (define-key map (kbd "r") 'mu4e~hdrs-mark-read)
       (define-key map (kbd "u") 'mu4e~hdrs-mark-unmark)
- 
+
       (define-key map "m" 'mu4e-hdrs-mark-for-move-and-next)
-      
+
       (define-key map "U" 'mu4e-mark-unmark-all)
       (define-key map "x" 'mu4e-mark-execute-all)
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     
+
 
       (define-key map "j" 'mu4e-jump-to-maildir)
-      (define-key map "a" 'mu4e-hdrs-action) 
-      
+      (define-key map "a" 'mu4e-hdrs-action)
+
       ;; message composition
       (define-key map "R" 'mu4e-compose-reply)
       (define-key map "F" 'mu4e-compose-forward)
@@ -392,7 +401,7 @@ after the end of the search results."
 	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
-	
+
 	(define-key menumap [execute-marks]  '("Execute marks"
 						. mu4e-mark-execute-all))
 	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-mark-unmark-all))
@@ -454,7 +463,7 @@ after the end of the search results."
   (setq header-line-format
     (cons
       (make-string
-	(+ (length mu4e~hdrs-fringe) (floor (fringe-columns 'left t))) ?\s)
+	(+ mu4e~hdrs-fringe-len (floor (fringe-columns 'left t))) ?\s)
       (map 'list
 	(lambda (item)
 	  (let ((field (cdr (assoc (car item) mu4e-header-names)))
@@ -561,14 +570,18 @@ with DOCID which must be present in the headers buffer."
       ;; (which is invisible). jump past that…
       (unless (re-search-forward mu4e~docid-post nil t)
 	(error "Cannot find the `mu4e~docid-post' separator"))
-      ;; we found the separator we move point one to the right for the
-      ;; the area to write the marker.
-      ;;(forward-char)
-      ;; clear old marks, and add the new ones.
-      (delete-char (length mu4e~hdrs-fringe))
-      (insert (propertize mark 'face 'mu4e-hdrs-marks-face) " ") ;; FIXME
-      (goto-char oldpoint))))
  
+      ;; clear old marks, and add the new ones.
+      (let ((msg (get-text-property (point) 'msg)))
+	(delete-char mu4e~hdrs-fringe-len)
+	(insert (propertize
+		  (format mu4e~hdrs-fringe-format mark)
+		  'face 'mu4e-header-marks-face
+		  'docid docid
+		  'msg msg)))
+      
+      (goto-char oldpoint))))
+
 
 (defun mu4e~hdrs-add-header (str docid point &optional msg)
   "Add header STR with DOCID to the buffer at POINT if non-nil, or
@@ -584,7 +597,9 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
 	    (propertize
 	      (concat
 		(mu4e~docid-cookie docid)
-		mu4e~hdrs-fringe str "\n") 'docid docid 'msg msg)))))))
+		mu4e~hdrs-fringe
+		str "\n")
+	      'docid docid 'msg msg)))))))
 
 (defun mu4e~hdrs-remove-header (docid &optional ignore-missing)
   "Remove header with DOCID at POINT; when IGNORE-MISSING is
@@ -665,9 +680,9 @@ matching messages with that mark."
 	  ;; the thread id is the first segment of the thread path
 	  (when (string-match "^\\([[:xdigit:]]+\\):?" path)
 	    (match-string 1 path))))
-      (otherwise (error "Not supported"))))) 
-   
- 
+      (otherwise (error "Not supported")))))
+
+
 (defun mu4e-hdrs-mark-thread (&optional subthread)
   "Mark the thread at point, if SUBTHREAD is non-nil, marking is
 limited to the message at point and its descendants."
@@ -677,13 +692,13 @@ limited to the message at point and its descendants."
 		      (mu4e-message-at-point t) 'thread-id))
 	  (path     (mu4e~hdrs-get-thread-info
 		      (mu4e-message-at-point t) 'path))
-	  (markpair (mu4e~hdrs-get-markpair)))    
+	  (markpair (mu4e~hdrs-get-markpair)))
     (mu4e-hdrs-for-each
       (lambda (msg)
  	(let ((my-thread-id (mu4e~hdrs-get-thread-info msg 'thread-id)))
 	  (if subthread
 	    ;; subthread matching; msg's thread path should have path as its
-	    ;; prefix	      
+	    ;; prefix
 	    (when (string-match (concat "^" path)
 		    (mu4e~hdrs-get-thread-info msg 'path))
 		(mu4e-mark-at-point (car markpair) (cdr markpair)))
@@ -697,7 +712,7 @@ limited to the message at point and its descendants."
   (interactive)
   (mu4e-hdrs-mark-thread t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
 
 
 
@@ -778,7 +793,7 @@ current window. "
       (delete-windows-on buf) ;; destroy all windows for this buffer
       (kill-buffer buf)))
   (mu4e~main-view))
- 
+
 
 (defun mu4e-rerun-search ()
   "Rerun the search for the last search expression; if none exists,
@@ -866,7 +881,7 @@ for draft messages."
 	  (let ((viewwin (get-buffer-window mu4e-view-buffer)))
 	    (when (window-live-p viewwin)
 	      (select-window viewwin)))
- 
+
 	  ;; talk to the backend
 	  (mu4e~proc-compose compose-type docid))))))
 
