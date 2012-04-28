@@ -44,7 +44,7 @@ configuration, and explains the daily use. It also shows how you can customize
 
 At the end of the manual, there are a number of example configurations, which
 should help you to get up to speed quickly.
-  
+
 This manual has been updated for @t{mu}/@t{mu4e} version
 @emph{@value{mu4e-version}}.
 
@@ -106,7 +106,7 @@ emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
 @t{mu4e} tries to keep all the 'state' in your maildirs, so you can easily
 switch between clients, synchronize over @abbr{IMAP} or backup with @t{rsync}
 -- if you delete the database, you won't lose any information.
- 
+
 @node What mu4e does and does not do
 @section What mu4e does and does not do
 
@@ -178,7 +178,7 @@ $ sudo make install
 After this, @t{mu} and @t{mu4e} should be installed @footnote{there's a hard
 dependency between versions of @t{mu4e} and @t{mu} - you cannot combine
 different versions.}, and be available from the command line and emacs
-(respectively). 
+(respectively).
 
 You may need to restart @t{emacs}.
 
@@ -188,7 +188,7 @@ There is @emph{experimental} support for using the @t{emacs} customization
 system in @t{mu4e}, but for now we recommend setting the values
 manually. Please refer to @ref{Example configuration} for a couple of examples
 of this.
- 
+
 @node Getting mail
 @section Getting mail
 
@@ -235,7 +235,7 @@ following command:
 This should scan your @file{~/Maildir}@footnote{In most cases, you do not even
 have to provide the @t{--maildir=~/Maildir}; see the @t{mu-index} man-page for
 details} and fill the database, and give progress information while doing
-so. 
+so.
 
 The indexing process may take a few minutes the first time you do it (for
 thousands of e-mails); afterwards it is much faster, since it only has to scan
@@ -261,7 +261,7 @@ next step is to do some basic configuration.
 The first thing we need to do before we can start using @t{mu4e} is to tell
 @t{emacs} to load @t{mu4e}, and tell @t{mu4e} where it can find specific
 maildir folders.
- 
+
 So, add to your @file{~/.emacs} (or equivalent) something like:
 
 @example
@@ -293,7 +293,7 @@ the setup for @emph{sending} mail from that.
 
 For sending mail using @abbr{SMTP}, @t{mu4e} uses
 @inforef{Top,,smtpmail}. This package support many different ways to send
-mail, please refer to its documentation for the details. 
+mail, please refer to its documentation for the details.
 
 Here, we only provide some simple examples - for more, @ref{Example
 configuration}.
@@ -315,10 +315,10 @@ By default, @t{mu4e} puts a copy of any messages you sent in the folder you
 set for @code{mu4e-sent-folder}. In some case, this may not be what you want -
 for example, when using GMail+@abbr{IMAP} (but @emph{not} with
 GMail+@abbr{POP3}), this interferes with GMail's handling of the sent messages
-folder, and you may end up with duplicate messages. 
+folder, and you may end up with duplicate messages.
 
-For this, since @t{mu4e} 0.9.8.3, there is the variable
-@code{mu4e-sent-messages-behavior}, which takes a symbol. The default is
+Since @t{mu4e} 0.9.8.3, there is the variable
+@code{mu4e-sent-messages-behavior} for, which takes a symbol. The default is
 @code{'sent} which, as mentioned, causes the message to be copied to your
 sent-messages folder. Other possible values are @code{'trash} (so the sent
 message is copied to the trash-folder (@code{mu4e-trash-folder}), and
@@ -521,6 +521,7 @@ DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
 u            unmark message at point
 %            mark based on a regular expression
+T,t          mark whole thread, subthread
 
 R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
@@ -542,8 +543,9 @@ q,z          leave the headers buffer
 @end verbatim
 
 @subsection Marking messages
+@anchor{Marking messages}
 
-All mark/unmark commands support the current @emph{region} (i.e., selection)
+The mark/unmark commands support the current @emph{region} (i.e., selection)
 -- so, for example, if you the select a number of message and then press
 @key{DEL}, all selected message will be marked for deletion.
 
@@ -551,11 +553,16 @@ The two-step mark-execute sequence is similar to what @t{dired} and a number
 of other emacs-based programs do. @t{mu4e} tries to be as quick as possible
 while still trying to protect you from accidents.
 
+You can also mark all messages that match a certain regular expression with
+@key{%}. In addition you can mark all messages in the current thread (@key{T})
+or sub-thread (@key{t}).
+
 When you try to do a new search, or refresh the headers buffer while you still
 have marked messages, normally you will be asked what to do with those marks
 -- whether to @emph{apply} them before leaving, @emph{ignore} them or to
 @emph{cancel} the operation. This behavior can be influenced with the variable
 @code{`mu4e-headers-leave-behavior'} -- see its documentation.
+
 
 @subsection Actions
 
@@ -566,7 +573,7 @@ on the message at point. You can specify these actions using the variable
 @t{mu4e} defines some default actions - one is @t{capture} - @key{a c} will
 'capture' the current message. Next, when you're editing some message, you can
 include the previously captured message as an attachment, using
-@code{mu4e-insert-captured-message-as-attachment}. 
+@code{mu4e-insert-captured-message-as-attachment}.
 
 @subsection Split view
 
@@ -675,6 +682,7 @@ DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
 u            unmark message at point
 %            mark based on a regular expression
+T,t          mark whole thread, subthread
 
 R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
@@ -695,9 +703,7 @@ H            get help
 q,z          leave the message view
 @end verbatim
 
-Note that @key{x}, which means 'execute actions on marked messages' is not
-available in this view, to reduce the risk of accidents. You need to go back
-to the headers view to effectuate the actions.
+For the marking commands, please refer to @ref{Marking messages}.
 
 @subsection Opening and saving attachments
 
@@ -1200,11 +1206,11 @@ view). To enable this, add to your configuration something like:
   '("org-contact-add" ?o mu4e-action-add-org-contact) t)
 (add-to-list 'mu4e-view-actions
   '("org-contact-add" ?o mu4e-action-add-org-contact) t)
-@end lisp 
+@end lisp
 
 After this, you should be able to add contacts using @key{a o} in the headers
 view and the message view, using the @t{org-capture} mechanism.
- 
+
 @node Getting new mail notifications with Sauron
 @section Getting new mail notifications with Sauron
 
@@ -1546,7 +1552,11 @@ answers.
 @item @emph{How can I quickly delete/move/trash a lot of messages?} You can
 select ('mark' in emacs-speak) the messages; the actions you then take (e.g.,
 @key{DEL} for delete, @key{m} for move and @key{t} for trash) will apply to
-@emph{all} selected messages
+@emph{all} selected messages. You can also use functions like
+@code{mu4e-hdrs-mark-thread} (@key{T}), @code{mu4e-hdrs-mark-subthread}
+(@key{t}) to mark whole threads at the same time, and
+@code{mu4e-hdrs-mark-matches} (@key{%}) to mark all messages matching a
+certain regular expression.
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
 address management with @t{BBDB}; instead, we recommend @ref{Maintaining an
 address-book with org-contacts} for now.
@@ -1584,7 +1594,7 @@ when viewing a message?} Yes -- see the documentation on
 between the two states with @key{w} and @key{h}, respectively.
 @item @emph{Is there context-sensitive help available?} Yes - pressing @key{H}
 in most cases should point you to the right spot in this manual.
-@item @emph{How can I set @t{mu4e} as the default e-mail client in emacs?} 
+@item @emph{How can I set @t{mu4e} as the default e-mail client in emacs?}
 See @ref{Setting the default emacs mail program}.
 @item @emph{How can I perform custom actions on messages and attachments?} See
 @ref{Actions}.
@@ -1599,11 +1609,7 @@ there (yet), and the author can use it as a todo-list.
 
 @itemize
 @item @emph{Thread handling is incomplete.} While threads are calculated and are
-visible in the headers buffer, there is no functionality to manipulate them
-(e.g., collapse the thread, or delete a whole thread at once). But note that
-you can manipulate a number of consecutive messages at once by selecting
-them, and then using one of the manipulation commands, such as
-@code{mu4e-mark-for-move} or @code{mu4e-mark-for-delete}.
+visible in the headers buffer, you can now collapse/open them.
 @item @emph{No support for crypto when reading mail}. Currently, you cannot
 conveniently read encrypted mail or check signatures. For outgoing messages,
 it should work though, using the built-in mechanisms.
@@ -1616,11 +1622,7 @@ headers.}. Yes -- don't do that.
 sent.} Same for the drafts-folder.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
-@item @emph{Attachments are not accessible in draft/sent messages}. Currently,
-attachments in saved messages are special strings, which are transformed into
-the actual attachments when sending. However, you cannot access them afterwards.
 @end itemize
-
 
 
 @node How it works
