@@ -35,7 +35,7 @@
   (cond
     ;; storing links to queries
     ((eq major-mode 'mu4e-hdrs-mode)
-      (let* ((query mu4e-last-expr)
+      (let* ((query (mu4e-last-query))
 	      desc link)
 	(org-store-link-props :type "mu4e" :query query)
 	(setq
@@ -46,7 +46,7 @@
 
       ;; storing links to messages
     ((eq major-mode 'mu4e-view-mode)
-      (let* ((msg mu4e-current-msg)
+      (let* ((msg  (mu4e-message-at-point))
 	      (msgid   (or (plist-get msg :message-id) "<none>"))
 	      (subject (or (plist-get msg :subject) "No subject"))
 	      link)

@@ -98,6 +98,7 @@ are of the form:
 
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mu4e~hdrs-query nil "The most recent search expression.")
 
 ;; the fringe is the space on the left of headers, where we put marks below some
 ;; handy definitions; only `mu4e-hdrs-fringe-len' should be change (if ever),
@@ -138,7 +139,7 @@ results, otherwise, limit number of results to
       (mu4e-hdrs-mode)
       (setq
 	global-mode-string (propertize expr 'face 'mu4e-title-face)
-	mu4e-last-expr expr
+	mu4e~hdrs-query expr
 	mu4e~hdrs-buffer buf
 	mode-name "mu4e-headers"))
     (switch-to-buffer buf)
@@ -186,13 +187,12 @@ headers."
 	  (mu4e~hdrs-remove-handler docid)
 
 	  ;; if we we're actually viewing this message (in mu4e-view mode), we
-	  ;; update the `mu4e-current-msg' there as well; that way, the flags can
-	  ;; be updated, as well as the path (which is useful for viewing the
-	  ;; raw message)
-	  (let ((viewbuf (get-buffer mu4e-view-buffer-name)))
+	  ;; update it; that way, the flags can be updated, as well as the path
+	  ;; (which is useful for viewing the raw message)
+	  (let ((viewbuf (get-buffer mu4e~view-buffer-name)))
 	    (when (and viewbuf (buffer-live-p viewbuf))
 	      (with-current-buffer viewbuf
-		(when (eq docid (plist-get mu4e-current-msg :docid))
+		(when (eq docid (plist-get mu4e~view-msg :docid))
 		  (mu4e-view msg mu4e~hdrs-buffer)))))
 
 	  ;; now, if this update was about *moving* a message, we don't show it
@@ -444,8 +444,8 @@ after the end of the search results."
   "Major mode for displaying mu4e search results.
 \\{mu4e-hdrs-mode-map}."
   (use-local-map mu4e-hdrs-mode-map)
-
-  (make-local-variable 'mu4e-last-expr)
+   
+  (make-local-variable 'mu4e~hdrs-query)
   (make-local-variable 'mu4e~hdrs-proc)
   (make-local-variable 'mu4e~highlighted-docid)
 
@@ -763,8 +763,8 @@ current window. "
   (unless (eq major-mode 'mu4e-hdrs-mode)
     (error "Must be in mu4e-hdrs-mode (%S)" major-mode))
   (let* ((docid (mu4e~docid-at-point))
-	  (viewwin (and mu4e-view-buffer
-		     (get-buffer-window mu4e-view-buffer))))
+	  (viewwin (and mu4e~view-buffer
+		     (get-buffer-window mu4e~view-buffer))))
     (unless docid (error "No message at point."))
     ;; is there a window already for the message view?
     (unless (window-live-p viewwin)
@@ -783,7 +783,7 @@ current window. "
     ;; okay, now we should have a window for the message view
     ;; we select it, and show the messages there.
     (select-window viewwin)
-    (switch-to-buffer (get-buffer-create mu4e-view-buffer-name))
+    (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert (propertize "Waiting for message..."
@@ -806,8 +806,8 @@ current window. "
   "Rerun the search for the last search expression; if none exists,
 do a new search."
   (interactive)
-    (if mu4e-last-expr
-      (mu4e-hdrs-search mu4e-last-expr)
+    (if mu4e~hdrs-query
+      (mu4e-hdrs-search mu4e~hdrs-query)
       (call-interactively 'mu4e-search)))
 
 (defun mu4e~hdrs-move (lines)
@@ -825,8 +825,8 @@ docid. Otherwise, return nil."
       ;; attempt to highlight the new line, display the message
       (mu4e~hdrs-highlight docid)
       ;; if there already is a visible message view, show the message
-      (when (and (buffer-live-p mu4e-view-buffer)
-	      (window-live-p (get-buffer-window mu4e-view-buffer)))
+      (when (and (buffer-live-p mu4e~view-buffer)
+	      (window-live-p (get-buffer-window mu4e~view-buffer)))
 	(mu4e-view-message)))
     ;; return the docid only if the move succeeded
     (when succeeded docid)))
@@ -885,7 +885,7 @@ for draft messages."
 	  ;; composing a new message, so that one will be replaced by the
 	  ;; compose window. The 10-or-so line headers buffer is not a good way
 	  ;; to write it...
-	  (let ((viewwin (get-buffer-window mu4e-view-buffer)))
+	  (let ((viewwin (get-buffer-window mu4e~view-buffer)))
 	    (when (window-live-p viewwin)
 	      (select-window viewwin)))
 
