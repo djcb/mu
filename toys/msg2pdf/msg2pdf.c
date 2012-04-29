@@ -28,17 +28,37 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-static GtkPrintOperation*
-get_print_operation (const char *path)
+static gboolean
+print_to_pdf (WebKitWebFrame *frame, GError **err)
 {
-	GtkPrintOperation *printop;
+	GtkPrintOperation *op;
+	GtkPrintOperationResult res;
+	char *path;
+	gboolean rv;
 
-	printop = gtk_print_operation_new ();
+	path = g_strdup_printf ("%s%c%x.pdf",mu_util_cache_dir(),
+				G_DIR_SEPARATOR, (unsigned)random());
+	if (!mu_util_create_dir_maybe (mu_util_cache_dir(),0700,FALSE)) {
+		g_warning ("Couldn't create tempdir");
+		return FALSE;
+	}
 
+
+	op = gtk_print_operation_new ();
 	gtk_print_operation_set_export_filename
-		(GTK_PRINT_OPERATION(printop), path);
+		(GTK_PRINT_OPERATION(op), path);
 
-	return printop;
+	res = webkit_web_frame_print_full (frame, op,
+					   GTK_PRINT_OPERATION_ACTION_EXPORT,
+					   err);
+	g_object_unref (op);
+	rv = (res != GTK_PRINT_OPERATION_RESULT_ERROR);
+	if (rv)
+		g_print ("%s\n", path);
+
+	g_free (path);
+	return rv;
+
 }
 
 
@@ -103,18 +123,15 @@ on_resource_request_starting (WebKitWebView *self, WebKitWebFrame *frame,
 
 
 /* return the path to the output file, or NULL in case of error */
-static char*
+static gboolean
 generate_pdf (MuMsg *msg, const char *str, GError **err)
 {
 	GtkWidget *view;
 	WebKitWebFrame *frame;
 	WebKitWebSettings *settings;
-	GtkPrintOperationResult printres;
-	GtkPrintOperation *printop;
-	char *path;
 	WebKitLoadStatus status;
-	time_t start;
-	const int max_time = 2; /* max two seconds to download stuff */
+	time_t started;
+	const int max_time = 3; /* max two seconds to download stuff */
 
 	settings = webkit_web_settings_new ();
 	g_object_set (G_OBJECT(settings),
@@ -141,33 +158,14 @@ generate_pdf (MuMsg *msg, const char *str, GError **err)
 		return FALSE;
 	}
 
-	path = g_strdup_printf ("%s%c%x.pdf",mu_util_cache_dir(),
-				G_DIR_SEPARATOR, (unsigned)random());
-	if (!mu_util_create_dir_maybe (mu_util_cache_dir(),0700,FALSE)) {
-		g_warning ("Couldn't create tempdir");
-		return FALSE;
-	}
-
-
-	start = time (NULL);
+	started = time (NULL);
 	do {
 		status = webkit_web_view_get_load_status (WEBKIT_WEB_VIEW(view));
-		g_main_context_iteration (NULL, TRUE);
-	} while (status != WEBKIT_LOAD_FINISHED ||
-		 time(NULL) - start > max_time);
+		gtk_main_iteration_do (FALSE);
+	} while (status != WEBKIT_LOAD_FINISHED &&
+		 (time(NULL) - started) <= max_time);
 
-	printop  = get_print_operation (path);
-	printres = webkit_web_frame_print_full
-		(frame, printop, GTK_PRINT_OPERATION_ACTION_EXPORT,
-		 err);
-	g_object_unref (printop);
-
-	if (printres != GTK_PRINT_OPERATION_RESULT_ERROR)
-		return path;
-	else {
-		g_free (path);
-		return  NULL;
-	}
+	return print_to_pdf (frame, err);
 }
 
 
@@ -185,12 +183,13 @@ add_header (GString *gstr, const char* header, const char *val)
 }
 
  /* return the path to the output file, or NULL in case of error */
-static char*
+static gboolean
 convert_to_pdf (MuMsg *msg, GError **err)
 {
 	GString *gstr;
 	const char *body;
-	gchar *data, *path;
+	gchar *data;
+	gboolean rv;
 
 	gstr = g_string_sized_new (4096);
 
@@ -220,10 +219,10 @@ convert_to_pdf (MuMsg *msg, GError **err)
 	}
 
 	data = g_string_free (gstr, FALSE);
-	path = generate_pdf (msg, data, err);
+	rv = generate_pdf (msg, data, err);
 	g_free (data);
 
-	return path;
+	return rv;
 }
 
 
@@ -232,7 +231,6 @@ main(int argc, char *argv[])
 {
 	MuMsg *msg;
 	GError *err;
-	char *path;
 
 	if (argc != 2) {
 		g_print ("msg2pdf: generate pdf files from e-mail messages\n"
@@ -258,8 +256,7 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	path = convert_to_pdf (msg, &err);
-	if (!path) {
+	if (!convert_to_pdf (msg, &err)) {
 		g_printerr ("failed to create pdf from %s: %s\n",
 			    argv[1],
 			    err && err->message ? err->message :
@@ -270,6 +267,5 @@ main(int argc, char *argv[])
 	}
 	mu_msg_unref (msg);
 
-	g_print ("%s\n", path);
 	return 0;
 }
