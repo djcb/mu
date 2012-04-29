@@ -52,9 +52,12 @@ view."
   (let* ((pdf
 	  (shell-command-to-string
 	    (concat mu4e-msg2pdf " "
-	      (shell-quote-argument (plist-get msg :path)))))
-	 (pdf (and pdf (substring pdf 0 -1)))) ;; chop \n
-    (unless (file-exists-p pdf)
+	      (shell-quote-argument (mu4e-msg-field msg :path))
+	      " 2> /dev/null")))
+	 (pdf (and pdf (> (length pdf) 5)
+		(substring pdf 0 -1)))) ;; chop \n
+    (unless (and pdf (file-exists-p pdf))
+      (message "==> %S %S" pdf (mu4e-msg-field msg :path))
       (error "Failed to create PDF file"))
     (find-file pdf)))
 
