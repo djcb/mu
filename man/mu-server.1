@@ -35,16 +35,16 @@ command are simply ignored.
 the form:
 
 .nf
-   \\376<length>\\376<s-expr>
+   \\376<length>\\377<s-expr>
 .fi
 
-\\367 (that is, the character with ascii value 254, \\376 in octal notation),
-followed by the length of the s-expression, followed by another \\376,
-followed by the actual s-expression.
+\\376 (one byte 0xfe), followed by the length of the s-expression expressed as
+an hexadecimal number, followed by another \\377 (one byte 0xff), followed by
+the actual s-expression.
 
 By prefixing the expression with its length, it can be processed more
-efficiently. The \\376 (254) was chosen since it is a value that will never
-occur in valid UTF-8 (in which the s-expressions are encoded).
+efficiently. The \\376 and \\377 were chosen since they never occur in valid
+UTF-8 (in which the s-expressions are encoded).
 
 .SH COMMAND AND RESPONSE
 
