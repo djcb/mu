@@ -299,19 +299,14 @@ view). Most fields should be self-explanatory. A special one is
 ;; run-time vars used in multiple places
 
 ;; headers
-(defvar mu4e-last-expr nil "*internal* The most recent search expression.")
 (defconst mu4e~hdrs-buffer-name "*mu4e-headers*"
-  "*internal* Name of the buffer for message headers.")
-(defvar mu4e~hdrs-buffer nil "*internal* Buffer for message headers")
-
-;; view
-(defconst mu4e-view-buffer-name "*mu4e-view*"
-  "*internal* Name for the message view buffer")
-(defvar mu4e-view-buffer nil "*internal* The view buffer.")
-(defvar mu4e-current-msg nil "*internal* The message being
-viewed in view mode.")
-
-
+  "Name of the buffer for message headers.")
+(defvar mu4e~hdrs-buffer nil "Buffer for message headers")
+; view
+(defconst mu4e~view-buffer-name "*mu4e-view*"
+  "Name for the message view buffer")
+(defvar mu4e~view-buffer nil "The view buffer.")
+ 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; our handlers funcs

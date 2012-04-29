@@ -36,7 +36,6 @@
 (require 'filladapt nil 'noerror)
 (require 'comint)
 
-
 ;; the message view
 (defgroup mu4e-view nil
   "Settings for the message view."
@@ -134,6 +133,9 @@ where:
 (defvar mu4e~view-lines-wrapped nil "*internal* Whether lines are wrapped.")
 (defvar mu4e~view-cited-hidden nil "*internal* Whether cited lines are hidden.")
 
+(defvar mu4e~view-msg nil "The message being viewed in view mode.")
+
+
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
 wanting to show specific messages - for example, `mu4e-org'."
@@ -186,23 +188,23 @@ plist."
     (mu4e-body-text msg)))
 
 
-(defun mu4e-view (msg hdrsbuf &optional update)
+(defun mu4e-view (msg hdrsbuf &optional refresh)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
-the the message view affects HDRSBUF, as does marking etc. If
-UPDATE is nil, the current message may be (visually) 'massaged',
-based on the settings of `mu4e~view-wrap-lines' and
-`mu4e~view-hide-cited'.
+the the message view affects HDRSBUF, as does marking etc.
+
+REFRESH is for re-showing an already existing message.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let ((buf (get-buffer-create mu4e-view-buffer-name)))
+  (let ((buf (get-buffer-create mu4e~view-buffer-name)))
     (with-current-buffer buf
+      (mu4e-view-mode)
       (let ((inhibit-read-only t))
 	(setq ;; buffer local
-	  mu4e-current-msg msg
+	  mu4e~view-msg msg
 	  mu4e~view-hdrs-buffer hdrsbuf
-	  mu4e-view-buffer buf)
+	  mu4e~view-buffer buf)
 
 	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
@@ -214,19 +216,14 @@ marking if it still had that."
 	(mu4e~view-fontify-footer)
 	(mu4e~view-make-urls-clickable)
 
-	(unless update
+	(unless refresh
 	  ;; if we're showing the message for the first time, use the values of
 	  ;; user-settable variables `mu4e~view-wrap-lines' and
 	  ;; `mu4e~view-hide-cited' to determine whether we should wrap/hide
-	  (progn
-	    (when mu4e~view-lines-wrapped (mu4e~view-wrap-lines))
-	    (when mu4e~view-cited-hidden  (mu4e~view-hide-cited))))
-
-	;; no use in trying to set flags again
-	(unless update
-	  (mu4e~view-mark-as-read-maybe)))
-
-      (mu4e-view-mode))))
+	  (when mu4e~view-lines-wrapped (mu4e~view-wrap-lines))
+	  (when mu4e~view-cited-hidden  (mu4e~view-hide-cited))
+	  ;; no use in trying to set flags again
+	  (mu4e~view-mark-as-read-maybe))))))
 
 
 (defun mu4e~view-construct-header (key val &optional dont-propertize-val)
@@ -460,7 +457,7 @@ is nil, and otherwise open it."
   (use-local-map mu4e-view-mode-map)
 
   (make-local-variable 'mu4e~view-hdrs-buffer)
-  (make-local-variable 'mu4e-current-msg)
+  (make-local-variable 'mu4e~view-msg)
   (make-local-variable 'mu4e~view-link-map)
 
   (make-local-variable 'mu4e~view-lines-wrapped)
@@ -486,9 +483,9 @@ is nil, and otherwise open it."
 (defun mu4e~view-mark-as-read-maybe ()
   "Clear the current message's New/Unread status and set it to
 Seen; if the message is not New/Unread, do nothing."
-  (when mu4e-current-msg
-    (let ((flags (plist-get mu4e-current-msg :flags))
-	   (docid (plist-get mu4e-current-msg :docid)))
+  (when mu4e~view-msg
+    (let ((flags (plist-get mu4e~view-msg :flags))
+	   (docid (plist-get mu4e~view-msg :docid)))
       ;; is it a new message?
       (when (or (member 'unread flags) (member 'new flags))
 	(mu4e~proc-move docid nil "+S-u-N")))))
@@ -626,7 +623,7 @@ docid. Otherwise, return nil."
   "Redisplay the current message, without wrapped lines or hidden
 citations."
   (interactive)
-  (mu4e-view mu4e-current-msg mu4e~view-hdrs-buffer t)
+  (mu4e-view mu4e~view-msg mu4e~view-hdrs-buffer t)
   (setq
     mu4e~view-lines-wrapped nil
     mu4e~view-cited-hidden nil))
@@ -634,8 +631,8 @@ citations."
 (defun mu4e-view-kill-buffer-and-window ()
   "Quit the message view and return to the headers."
   (interactive)
-  (when (buffer-live-p mu4e-view-buffer)
-    (with-current-buffer mu4e-view-buffer
+  (when (buffer-live-p mu4e~view-buffer)
+    (with-current-buffer mu4e~view-buffer
       (if (fboundp 'window-parent) ;; window-parent is an emacs24ism
 	(if (window-parent)
 	  (kill-buffer-and-window)
@@ -806,7 +803,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
   "Set mark on the current messages."
   (unless (buffer-live-p mu4e~view-hdrs-buffer)
     (error "No headers buffer available"))
-  (let ((docid (mu4e-msg-field mu4e-current-msg :docid)))
+  (let ((docid (mu4e-msg-field mu4e~view-msg :docid)))
     (with-current-buffer mu4e~view-hdrs-buffer
       (if (eq mark 'move)
 	(mu4e-mark-for-move-set)

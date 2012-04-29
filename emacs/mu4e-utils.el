@@ -426,7 +426,7 @@ there is no message at point."
 	   ((eq major-mode 'mu4e-hdrs-mode)
 	     (get-text-property (point) 'msg))
 	   ((eq major-mode 'mu4e-view-mode)
-	     mu4e-current-msg))))
+	     mu4e~view-msg))))
     (if (and (null msg) raise-err)
       (error "No message at point")
       msg)))
@@ -435,7 +435,13 @@ there is no message at point."
   "Get FIELD (a symbol, see `mu4e-header-names') for the message at
 point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point t) field))
- 
+
+(defun mu4e-last-query ()
+  "Get the most recent query or nil if there is none."
+  (when (buffer-live-p mu4e~hdrs-buffer)
+    (with-current-buffer mu4e~hdrs-buffer
+      mu4e~hdrs-query)))
+
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
 that has a live window), and vice versa."
@@ -443,7 +449,7 @@ that has a live window), and vice versa."
   (let* ((other-buf
 	   (cond
 	     ((eq major-mode 'mu4e-hdrs-mode)
-	       mu4e-view-buffer)
+	       mu4e~view-buffer)
 	     ((eq major-mode 'mu4e-view-mode)
 	       mu4e~hdrs-buffer)))
 	  (other-win (and other-buf (get-buffer-window other-buf))))
