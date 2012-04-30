@@ -41,6 +41,7 @@
 
 (require 'speedbar)
 (require 'mu4e-vars)
+(require 'mu4e-hdrs)
 
 (defvar mu4e-main-speedbar-key-map nil
   "Keymap used when in mu4e display mode.")
