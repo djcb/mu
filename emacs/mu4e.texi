@@ -39,7 +39,7 @@ later. It is built on top of the @t{mu} e-mail search engine, and it focuses
 on quickly dealing with large amounts of e-mail.
 
 This manual goes through the installation of @t{mu4e}, discusses the basic
-configuration, and explains the daily use. It also shows how you can customize
+configuration, and explains its daily use. It also shows how you can customize
 @t{mu4e} for your needs.
 
 At the end of the manual, there are a number of example configurations, which
@@ -95,8 +95,8 @@ and are acted upon.
 Under the hood, @t{mu4e} is fully search-based, similar to programs such as
 @t{notmuch}@footnote{@url{http://notmuchmail.org}},
 @t{md}@footnote{@url{https://github.com/nicferrier/md}} and
-@t{sup}@footnote{@url{http://sup.rubyforge.org/}}. The user-interface is quite
-different.
+@t{sup}@footnote{@url{http://sup.rubyforge.org/}}. @t{mu4e}'s user-interface
+is quite different from those programs though.
 
 @t{mu4e}'s mail handling (deleting, moving etc.) is inspired by
 @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
@@ -105,26 +105,27 @@ emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
 
 @t{mu4e} tries to keep all the 'state' in your maildirs, so you can easily
 switch between clients, synchronize over @abbr{IMAP} or backup with @t{rsync}
--- if you delete the database, you won't lose any information.
+-- if you delete the database, you won't lose any information, and there is no
+@emph{lock-in}.
 
 @node What mu4e does and does not do
 @section What mu4e does and does not do
 
-@t{mu}, and, by extension, @t{mu4e}, do @emph{not} deal with getting your
-e-mail messages from a mail server. That task is delegated to other tools,
-such as @t{offlineimap}@footnote{@url{http://offlineimap.org/}},
+@t{mu} and @t{mu4e} do @emph{not} deal with getting your e-mail messages from
+a mail server. That task is delegated to other tools, such as
+@t{offlineimap}@footnote{@url{http://offlineimap.org/}},
 @t{isync}@footnote{@url{http://isync.sourceforge.net/}} or
 @t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}. As long as the
-messages end up in a Maildir, @t{mu4e}/@t{mu} are happy to deal with them.
+messages end up in a Maildir, @t{mu4e} and @t{mu} are happy to deal with them.
 
 @t{mu4e} also does @emph{not} implement sending of messages; instead, it
-depends on the true-and-tested @emph{smtpmail}, which is part of @t{emacs}. In
-addition, @t{mu4e} piggybacks on Gnus' message editor; @inforef{Top,Gnus
-message editor,message}.
+depends on the tried-and-tested @inforef{Top,smtpmail,smtpmail}, which is part
+of @t{emacs}. In addition, @t{mu4e} piggybacks on Gnus' message editor;
+@inforef{Top,Gnus message editor,message}.
 
-Thus, many of the traditional things an e-mail client needs to do, are
-subcontracted to other tools. This leaves @t{mu4e} to concentrate on what it
-does best: quickly getting you the mails you looking for, and handle them as
+Thus, many of the things an e-mail client traditional needs to do, are
+delegated to other tools. This leaves @t{mu4e} to concentrate on what it does
+best: quickly getting you the mails you looking for, and handle them as
 efficiently as possible.
 
 
@@ -153,21 +154,22 @@ After these steps, @t{mu4e} should be ready to go.
 @t{mu4e} is part of @t{mu} - by installing the latter, the former will
 be installed as well.
 
-At the time of writing, there are no distribution packages for @t{mu4e}
-yet, so we are assuming installation from source packages.
+At the time of writing, there are no distribution packages for @t{mu4e} yet,
+so we are assuming installation from source packages.
 
 First, you need make sure you have the necessary dependencies. On a Debian or
 Ubuntu system, you can get these with:
 
 @example
 sudo apt-get install libgmime-2.4-dev libxapian-dev
-# emacs if you don't have it yet
+# emacs if you don't have it yet, mu4e works with GNU-Emacs 23 and 24
 sudo apt-get install emacs23
 # optional
 sudo apt-get install guile-2.0-dev html2text xdg-utils
 @end example
 
 Installation follows the normal sequence of:
+
 @example
 $ tar xvfz mu-<version>.tar.gz  # use the specific version
 $ cd mu-<version>
@@ -755,10 +757,12 @@ For more information about actions and how to define your own, see
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
 messages consisting of both a plain-text and an html (rich-text) version of
-its body-text. If there is only an html-version, or if the plaint-text version
-is too short in comparison with the html part, @t{mu4e} tries to convert the
-html into plain-text for display. The default way to do that is to use the
-Emacs built-in @code{html2text} function, but if you set the variable
+its body-text. 
+
+If there is only an html-version, or if the plain-text version is too short in
+comparison with the html part, @t{mu4e} tries to convert the html into
+plain-text for display. The default way to do that is to use the Emacs
+built-in @code{html2text} function, but if you set the variable
 @code{mu4e-html2text-command} to some external program, that program will be
 used. This program is expected to take html from standard input and write
 plain text in @t{utf-8} encoding on standard output.
@@ -771,8 +775,16 @@ set up with something like the following in your initialization files:
 (setq mu4e-html2text-command "html2text -utf8 -width 72")
 @end lisp
 
-Normally, @t{mu4e} prefers the text-version of an e-mail message to determine
-the message body. You can change this by setting @code{mu4e-view-prefer-html}.
+An alternative to this is to use the Python @t{python-html2text} package;
+after installing that, you can tell @t{mu4e} to use it with something like:
+
+@lisp
+(setq mu4e-html2text-command "html2markdown | grep -v '&nbsp_place_holder;'")
+@end lisp
+
+As mentioned, by default @t{mu4e} prefers the text-version of an e-mail
+message over the html version. You can change this by setting
+@code{mu4e-view-prefer-html} to @t{t}.
 
 @node Editor view
 @section Editor view

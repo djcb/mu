@@ -36,7 +36,6 @@
      of your data, and doing all kinds of statistics
    - fully documented (man pages, info pages)
 
-#+html:<a href="mu4e-splitview.png" border="0"><img src="mu4e-splitview-small.png" align="right" margin="10px"/></a>
 
 ** News
    - 2012-04-06: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.3.tar.gz][mu-0.9.8.3]], with many improvements, fixes. See the
@@ -60,6 +59,8 @@
    - [[file:old-news.org][Old news]]
 
 ** Development & download
+
+#+html:<a href="mu4e-splitview.png" border="0"><img src="mu4e-splitview-small.png" align="right" margin="10px"/></a>
 
    Some Linux-distributions already provide pre-built mu packages; if there's no
    packagage for your distribution, or if you want the latest release, you can
