@@ -29,6 +29,17 @@
 (require 'mu4e-proc)
 (require 'mu4e-utils)
 
+(defcustom mu4e-headers-leave-behavior 'ask
+  "What to do when user leaves the headers view (e.g. quits,
+  refreshes or does a new search). Value is one of the following
+  symbols:
+- ask (ask the user whether to ignore the marks)
+- apply (automatically apply the marks before doing anything else)
+- ignore (automatically ignore the marks without asking)."
+  :type 'symbol
+  :group 'mu4e-headers)
+
+
 ;;; marks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e~mark-map nil
   "Map (hash) of docid->markinfo; when a message is marked, the
@@ -43,6 +54,19 @@ where
 ;; the mark-map is specific for the current header buffer
 ;; currently, there can't be more than one, but we never know what will
 ;; happen in the future
+
+;; the fringe is the space on the left of headers, where we put marks below some
+;; handy definitions; only `mu4e-mark-fringe-len' should be change (if ever),
+;; the others follow from that.
+(defconst mu4e~mark-fringe-len 2
+  "Width of the fringe for marks on the left.")
+(defconst mu4e~mark-fringe (make-string mu4e~mark-fringe-len ?\s)
+  "The space on the left of message headers to put marks.")
+(defconst mu4e~mark-fringe-format (format "%%-%ds" mu4e~mark-fringe-len)
+  "Format string to set a mark and leave remaining space.")
+
+
+
 
 
 (defun mu4e~mark-initialize ()
@@ -100,8 +124,8 @@ The following marks are available, and the corresponding props:
 	    (let* ((targetstr (propertize (concat "-> " target " ")
 				'face 'mu4e-system-face))
 		    ;; mu4e-goto-docid docid t \will take us just after the
-		    ;; docid cookie and then we skip the mu4e~hdrs-fringe
-		    (start (+ (length mu4e~hdrs-fringe)
+		    ;; docid cookie and then we skip the mu4e~mark-fringe
+		    (start (+ (length mu4e~mark-fringe)
 			     (mu4e~goto-docid docid t)))
 		    (overlay (make-overlay start (+ start (length targetstr)))))
 	      (overlay-put overlay 'display targetstr)

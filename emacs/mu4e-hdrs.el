@@ -60,17 +60,6 @@
   :type  'string
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-leave-behavior 'ask
-  "What to do when user leaves the headers view (e.g. quits,
-  refreshes or does a new search). Value is one of the following
-  symbols:
-- ask (ask the user whether to ignore the marks)
-- apply (automatically apply the marks before doing anything else)
-- ignore (automatically ignore the marks without asking)."
-  :type 'symbol
-  :group 'mu4e-headers)
-
-
 (defcustom mu4e-headers-visible-lines 10
   "Number of lines to display in the header view when using the
 horizontal split-view. This includes the header-line at the top,
@@ -100,15 +89,6 @@ are of the form:
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e~hdrs-query nil "The most recent search expression.")
 
-;; the fringe is the space on the left of headers, where we put marks below some
-;; handy definitions; only `mu4e-hdrs-fringe-len' should be change (if ever),
-;; the others follow from that.
-(defconst mu4e~hdrs-fringe-len 2
-  "Width of the fringe for marks on the left.")
-(defconst mu4e~hdrs-fringe (make-string mu4e~hdrs-fringe-len ?\s)
-  "The space on the left of message headers to put marks.")
-(defconst mu4e~hdrs-fringe-format (format "%%-%ds" mu4e~hdrs-fringe-len)
-  "Format string to set a mark and leave remaining space.")
 
 ;; docid cookies
 (defconst mu4e~docid-pre "\376"
@@ -463,7 +443,7 @@ after the end of the search results."
   (setq header-line-format
     (cons
       (make-string
-	(+ mu4e~hdrs-fringe-len (floor (fringe-columns 'left t))) ?\s)
+	(+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
       (map 'list
 	(lambda (item)
 	  (let ((field (cdr (assoc (car item) mu4e-header-names)))
@@ -573,13 +553,12 @@ with DOCID which must be present in the headers buffer."
 
       ;; clear old marks, and add the new ones.
       (let ((msg (get-text-property (point) 'msg)))
-	(delete-char mu4e~hdrs-fringe-len)
+	(delete-char mu4e~mark-fringe-len)
 	(insert (propertize
-		  (format mu4e~hdrs-fringe-format mark)
+		  (format mu4e~mark-fringe-format mark)
 		  'face 'mu4e-header-marks-face
 		  'docid docid
 		  'msg msg)))
-
       (goto-char oldpoint))))
 
 
@@ -597,7 +576,7 @@ at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
 	    (propertize
 	      (concat
 		(mu4e~docid-cookie docid)
-		mu4e~hdrs-fringe
+		mu4e~mark-fringe
 		str "\n")
 	      'docid docid 'msg msg)))))))
 
