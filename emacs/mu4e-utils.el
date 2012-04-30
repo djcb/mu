@@ -329,30 +329,29 @@ uses the emacs built-in `html2text'. Alternatively, if
 function prefers the text part, but this can be changed by setting
 `mu4e-view-prefer-html'."
   (let* ((txt (plist-get msg :body-txt))
-	 (html (plist-get msg :body-html))
-	  (body))
-    ;; is there an appropriate text body?
-    (when (and txt
-	    (not (and mu4e-view-prefer-html html))
-	    (> (* 10 (length txt))
-	      (if html (length html) 0))) ;; real text part?
-      (setq body txt))
-    ;; no body yet? try html
-    (unless body
-      (when html
-	(setq body
-	  (with-temp-buffer
-	    (insert html)
-	    ;; if defined, use the external tool
-	    (if mu4e-html2text-command
-	      (shell-command-on-region (point-min) (point-max)
-		mu4e-html2text-command nil t)
-	      ;; otherwise...
-	      (html2text))
-	    (buffer-string)))))
-    ;; still no body?
-    (unless body
-      (setq body ""))
+	  (html (plist-get msg :body-html))
+	  (body
+	    (cond
+	      ;; does it look like some text? ie., 20x the length of the text
+	      ;; should be longer than the html, an heuristic to guard against
+	      ;; 'This messages requires html' text bodies.
+	      ((and (> (* 20 (length txt)) (length html))
+		 ;; use html if it's prefered, unless there is no html
+		 (or (not mu4e-view-prefer-html) (not html)))
+		txt)
+	      ;; otherwise, it there some html?
+	      (html
+		(with-temp-buffer
+		  (insert html)
+		  ;; if defined, use the external tool
+		  (if mu4e-html2text-command
+		    (shell-command-on-region (point-min) (point-max)
+		      mu4e-html2text-command nil t)
+		    ;; otherwise...
+		    (html2text))
+		  (buffer-string)))
+	      (t ;; otherwise, an empty body
+		""))))
     ;; and finally, remove some crap from the remaining string.
     (replace-regexp-in-string "[ ]" " " body nil nil nil)))
 
