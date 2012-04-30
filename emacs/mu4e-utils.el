@@ -368,13 +368,6 @@ top level if there is none."
 	  ('mu4e-view-mode "(mu4e)Message view")
 	  (t               "mu4e"))))
 
-(defun mu4e-user-agent ()
-  "Return the User-Agent string for mu4e. This is either the value
-of `mu4e-user-agent', or, if not set, a string based on the versions
-of mu4e and emacs."
-  (or mu4e-user-agent
-    (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-msg-field (msg field)

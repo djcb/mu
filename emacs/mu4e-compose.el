@@ -48,12 +48,7 @@
 the From: address.)"
   :type 'string
   :group 'mu4e-compose)
-
-(defcustom mu4e-user-agent nil
-  "The user-agent string; leave at `nil' for the default."
-  :type 'string
-  :group 'mu4e-compose)
-
+ 
 (defcustom mu4e-sent-messages-behavior 'sent
   "Determines what mu4e does with sent messages - this is a symbol
 which can be either:
@@ -85,6 +80,16 @@ sent folder."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun mu4e~compose-user-agent-construct ()
+  "Return the User-Agent string for mu4e. This is either the value
+of `mu4e-user-agent', or, if not set, a string based on the versions
+of mu4e and emacs."
+  (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version))
+
+
+
+
 (defun mu4e~compose-cite-original (msg)
   "Return a cited version of the original message MSG (ie., the
 plist). This function use gnus' `message-cite-function', and as
@@ -273,7 +278,7 @@ You can append flags."
 
 (defun mu4e~compose-common-construct ()
   "Construct the common headers for each message."
-  (mu4e~compose-header "User-agent"  (mu4e-user-agent)))
+  (mu4e~compose-header "User-agent" (mu4e~compose-user-agent-construct)))
 
 
 (defun mu4e~compose-reply-construct (origmsg)
