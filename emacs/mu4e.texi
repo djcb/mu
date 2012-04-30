@@ -1408,14 +1408,14 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
 @emph{Gmail} is a popular e-mail provider; let's see how we can make it work
 with @t{mu4e}.
 
-First of all, we need a program to get the e-mail from Gmail on our local
+First of all, we need a program to get the e-mail from Gmail to our local
 machine; for this we use @t{offlineimap}; on Debian (and derivatives like
 Ubuntu), this is as easy as:
 @verbatim
 sudo apt-get install offlineimap
 @end verbatim
 
-Then, create a configuration for @t{offlineimap}, i.e. a file
+Then, we need to create a configuration for @t{offlineimap}, i.e. a file
 @file{~/.offlineimaprc}:
 
 @verbatim
@@ -1441,7 +1441,7 @@ maxconnections = 1
 realdelete = no
 @end verbatim
 
-Of course, you need replace @t{USERNAME} and @t{PASSWORD} with your actual
+Obviously, you need to replace @t{USERNAME} and @t{PASSWORD} with your actual
 GMail username and password.
 
 After this, you should be able to download your mail:
@@ -1512,8 +1512,6 @@ Now, let's make a @t{mu4e} configuration for this:
 (setq
    user-mail-address "USERNAME@@gmail.com"
    user-full-name  "Foo X. Bar"
-
-   ;; include in message with C-c C-w
    message-signature
     (concat
       "Foo X. Bar\n"
@@ -1537,7 +1535,7 @@ And that's it -- put the above in your @file{~/.emacs} (obviously you need to
 change @t{USERNAME} etc. to your own), and restart @t{emacs}, and run @kbd{M-x
 mu4e}.
 
-Using these setting you can quickly switch to your Inbox -- press
+Using these settings, you can quickly switch to your Inbox -- press
 @kbd{ji}. Then, when you want archive some messages, move them to the 'All
 Mail' folder by pressing @kbd{ma}.
 
@@ -1714,13 +1712,13 @@ talk to @t{emacs} in its native language: @emph{s-expressions} (to be precise:
 @code{read-from-string}. See @ref{The message s-expression} for details on the
 format.
 
-So, now let's look how we process the data from @t{mu server} in
-emacs. We'll leave out a lot of detail, @t{mu4e}-specifics, and look at a
-bit more generic approach.
+So, now let's look how we process the data from @t{mu server} in emacs. We'll
+leave out a lot of detail, @t{mu4e}-specifics, and look at a bit more generic
+approach.
 
-The first is to create a process with, for example, @code{start-process}, and
-then register a filter function for it, which will be invoked whenever the
-process has some chunk of output. Something like:
+The first thing to do is to create a process (for example, with
+@code{start-process}), and then register a filter function for it, which will
+be invoked whenever the process has some data for us. Something like:
 
 @lisp
   (let ((proc (start-process <arguments>)))
