@@ -137,15 +137,13 @@ generate_pdf (MuMsg *msg, const char *str, GError **err)
 	g_object_set (G_OBJECT(settings),
 		      "enable-scripts", FALSE,
 		      "auto-load-images", TRUE,
-		      "enable-plugins", FALSE,
-		      NULL);
+		      "enable-plugins", FALSE,  NULL);
 
 	view = webkit_web_view_new ();
 
 	/* to support cid: */
 	g_signal_connect (G_OBJECT(view), "resource-request-starting",
-			  G_CALLBACK (on_resource_request_starting),
-			  msg);
+			  G_CALLBACK (on_resource_request_starting), msg);
 
 	webkit_web_view_set_settings (WEBKIT_WEB_VIEW(view), settings);
  	webkit_web_view_load_string (WEBKIT_WEB_VIEW(view),
@@ -248,24 +246,27 @@ main(int argc, char *argv[])
 	err = NULL;
 	msg = mu_msg_new_from_file (argv[1], NULL, &err);
 	if (!msg) {
-		g_printerr ("failed to create msg for %s: %s\n",
-			    argv[1],
-			    err && err->message ? err->message :
-			    "unknown error");
-		g_clear_error (&err);
-		return 1;
+		g_printerr ("failed to create msg for %s\n", argv[1]);
+		goto err;
 	}
 
 	if (!convert_to_pdf (msg, &err)) {
-		g_printerr ("failed to create pdf from %s: %s\n",
-			    argv[1],
-			    err && err->message ? err->message :
-			    "unknown error");
-		g_clear_error (&err);
-		mu_msg_unref (msg);
-		return 1;
+		g_printerr ("failed to create pdf from %s\n", argv[1]);
+		goto err;
 	}
+
+	/* it worked! */
+	mu_msg_unref (msg);
+	return 0;
+
+err:
+	/* some error occured */
 	mu_msg_unref (msg);
 
-	return 0;
+	if (err)
+		g_printerr ("error: %s", err->message);
+
+	g_clear_error (&err);
+	return 1;
+
 }

@@ -865,7 +865,6 @@ move_msgid_maybe (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
 	const char *maildir, *msgid, *flagstr;
 	GSList *docids, *cur;
-	MuFlags flags;
 
 	maildir	= get_string_from_args (args, "maildir", TRUE, err);
 	msgid	= get_string_from_args (args, "msgid", TRUE, err);
@@ -875,25 +874,26 @@ move_msgid_maybe (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	if (!msgid || !flagstr || maildir )
 		return FALSE;
 
-	docids = get_docids_from_msgids (query, msgid, err);
-	if (!docids) {
+	if (!(docids = get_docids_from_msgids (query, msgid, err))) {
 		print_and_clear_g_error (err);
 		return TRUE;
 	}
 
 	for (cur = docids; cur; cur = g_slist_next(cur)) {
 		MuMsg *msg;
+		MuFlags flags;
 		unsigned docid = (GPOINTER_TO_SIZE(cur->data));
 		if (!(msg = mu_store_get_msg (store, docid, err))) {
 			print_and_clear_g_error (err);
 			break;
 		}
-		if (flagstr)
-			flags = get_flags (mu_msg_get_path(msg), flagstr);
-		else
-			flags = mu_msg_get_flags (msg);
+
+		flags = flagstr ? get_flags (mu_msg_get_path(msg), flagstr) :
+			mu_msg_get_flags (msg);
+
 		if (flags == MU_FLAG_INVALID) {
 			print_error (MU_ERROR_IN_PARAMETERS, "invalid flags");
+			mu_msg_unref (msg);
 			break;
 		}
 

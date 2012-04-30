@@ -53,8 +53,7 @@ static gboolean output_sexp (MuMsgIter *iter, gboolean threads,
 static gboolean output_xml (MuMsgIter *iter,gboolean include_unreadable,
 			    GError **err);
 static gboolean output_plain (MuMsgIter *iter, const char *fields,
-			      gboolean summary, int summary_len,
-			      gboolean threads,
+			      int summary_len, gboolean threads,
 			      gboolean color,  gboolean include_unreadable,
 			      GError **err);
 
@@ -101,7 +100,7 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 		return output_links (iter, opts->linksdir, opts->clearlinks, err);
 	case MU_CONFIG_FORMAT_PLAIN:
 		return output_plain (iter, opts->fields,
-				     opts->summary, opts->summary_len,
+				     opts->summary ? opts->summary_len : 0,
 				     opts->threads, !opts->nocolor,
 				     opts->include_unreadable, err);
 	case MU_CONFIG_FORMAT_XML:
@@ -649,21 +648,14 @@ output_plain_fields (MuMsg *msg, const char *fields,
 }
 
 static gboolean
-output_plain (MuMsgIter *iter, const char *fields, gboolean summary, int summary_len,
-	      gboolean threads, gboolean color, gboolean include_unreadable,
-	      GError **err)
+output_plain (MuMsgIter *iter, const char *fields, int summary_len,
+	      gboolean threads, gboolean color, gboolean include_unreadable,  GError **err)
 {
 	MuMsgIter *myiter;
 	size_t count;
 
 	g_return_val_if_fail (iter, FALSE);
 	g_return_val_if_fail (fields, FALSE);
-
-	if (summary && summary_len < 1) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "summary must be >= 1");
-		return FALSE;
-	}
 
 	for (myiter = iter, count = 0; !mu_msg_iter_is_done (myiter);
 	     mu_msg_iter_next (myiter)) {
@@ -686,7 +678,7 @@ output_plain (MuMsgIter *iter, const char *fields, gboolean summary, int summary
 
 		output_plain_fields (msg, fields, color, threads);
 
-		if (summary)
+		if (summary_len > 0)
 			print_summary (msg, summary_len);
 
 		++count;

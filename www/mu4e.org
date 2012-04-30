@@ -11,7 +11,8 @@
   super-efficient handling of e-mail; searching, reading, replying, moving,
   deleting. The overall 'feel' is a bit of a mix of =dired= and [[http://www.gohome.org/wl/][Wanderlust]].
 
-  For all the details, please see the [[file:mu4e/index.html][manual]]. Or check the screenshots below.
+  For all the details, please see the [[file:mu4e/index.html][manual]]. Or check the screenshots
+  below. The code is [[https://github.com/djcb/mu][available on Github]].
 
 ** Screenshots
 
@@ -28,10 +29,9 @@
 
 *** The message/headers split view (0.9.8.4)
 
-#+html:<a href="mu4e-splitview.png" border="0"><img src="mu4e-splitview-small.png" align="right" margin="10px"/></a>
+    [[file:mu4e-splitview.png]]
 
     The message/headers split view, and speedbar support.
-
 
 *** View message as pdf (0.9.8.4)
 

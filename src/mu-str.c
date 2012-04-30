@@ -459,9 +459,7 @@ mu_str_xapian_escape_in_place (char *term, gboolean esc_space)
 			break;
 		default:
 			/* escape all other special stuff */
-			if (*cur < '0' || (*cur > '9' && *cur < 'A')
-			    || (*cur > 'Z' && *cur < 'a') ||
-			    (*cur > 'z' && *cur < 0x80))
+			if (*cur < 0x80 && !isalnum (*cur))
 				*cur = escchar;
 		}
 	}
