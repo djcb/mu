@@ -96,7 +96,7 @@ The following marks are available, and the corresponding props:
    `unread'   n         mark the message as unread
    `unmark'   n         unmark this message"
   (interactive)
-  (let* ((docid (mu4e~docid-at-point))
+  (let* ((docid (mu4e~headers-docid-at-point))
 	  (markkar
 	    (case mark ;; the visual mark
 	      ('move    "m")
@@ -108,7 +108,7 @@ The following marks are available, and the corresponding props:
 	      (t (error "Invalid mark %S" mark)))))
     (unless docid (error "No message on this line"))
     (save-excursion
-      (when (mu4e~mark-header docid markkar)
+      (when (mu4e~headers-mark docid markkar)
 	;; update the hash -- remove everything current, and if add the new stuff,
 	;; unless we're unmarking
 	(remhash docid mu4e~mark-map)
@@ -123,10 +123,10 @@ The following marks are available, and the corresponding props:
 	  (when target
 	    (let* ((targetstr (propertize (concat "-> " target " ")
 				'face 'mu4e-system-face))
-		    ;; mu4e-goto-docid docid t \will take us just after the
+		    ;; mu4e~headers-goto-docid docid t \will take us just after the
 		    ;; docid cookie and then we skip the mu4e~mark-fringe
 		    (start (+ (length mu4e~mark-fringe)
-			     (mu4e~goto-docid docid t)))
+			     (mu4e~headers-goto-docid docid t)))
 		    (overlay (make-overlay start (+ start (length targetstr)))))
 	      (overlay-put overlay 'display targetstr)
 	      docid)))))))
@@ -153,7 +153,7 @@ headers in the region."
 the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
   (interactive)
-  (unless (mu4e~docid-at-point)
+  (unless (mu4e~headers-docid-at-point)
     (error "No message at point."))
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	  (target (if (string= (substring target 0 1) "/")
@@ -211,7 +211,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (maphash
     (lambda (docid val)
       (save-excursion
-	(when (mu4e~goto-docid docid)
+	(when (mu4e~headers-goto-docid docid)
 	  (mu4e-mark-set 'unmark))))
     mu4e~mark-map)
   ;; in any case, clear the marks map

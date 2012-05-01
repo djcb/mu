@@ -41,18 +41,18 @@
 
 (require 'speedbar)
 (require 'mu4e-vars)
-(require 'mu4e-hdrs)
+(require 'mu4e-headers)
 
 (defvar mu4e-main-speedbar-key-map nil
   "Keymap used when in mu4e display mode.")
-(defvar mu4e-hdrs-speedbar-key-map nil
+(defvar mu4e-headers-speedbar-key-map nil
   "Keymap used when in mu4e display mode.")
 (defvar mu4e-view-speedbar-key-map nil
   "Keymap used when in mu4e display mode.")
 
 (defvar mu4e-main-speedbar-menu-items nil
   "Additional menu-items to add to speedbar frame.")
-(defvar mu4e-hdrs-speedbar-menu-items nil
+(defvar mu4e-headers-speedbar-menu-items nil
   "Additional menu-items to add to speedbar frame.")
 (defvar mu4e-view-speedbar-menu-items nil
   "Additional menu-items to add to speedbar frame.")
@@ -62,7 +62,7 @@
   "Install those variables used by speedbar to enhance mu4e."
   (dolist (keymap
 	    '( mu4e-main-speedbar-key-map
-	       mu4e-hdrs-speedbar-key-map
+	       mu4e-headers-speedbar-key-map
 	       mu4e-view-speedbar-key-map))
     (unless keymap
       (setq keymap (speedbar-make-specialized-keymap))
@@ -88,9 +88,10 @@
     (mu4e-get-maildirs mu4e-maildir)))
 
 (defun mu4e~speedbar-maildir (&optional text token ident)
-  "Load in the mu4e file TEXT. TOKEN and INDENT are not used."
+  "Jump to maildir TOKEN. TEXT and INDENT are not used."
   (speedbar-with-attached-buffer
-    (mu4e-search (concat "\"maildir:" token "\""))))
+    (mu4e-headers-search (concat "\"maildir:" token "\"")
+      current-prefix-arg)))
 
 (defun mu4e~speedbar-render-bookmark-list ()
   "Insert the list of bookmarks in the speedbar"
@@ -105,9 +106,9 @@
     mu4e-bookmarks))
 
 (defun mu4e~speedbar-bookmark (&optional text token ident)
-  "Load in the mu4e file TEXT. TOKEN and INDENT are not used."
+  "Run bookmarked query TOKEN. TEXT and INDENT are not used."
   (speedbar-with-attached-buffer
-    (mu4e-search token)))
+    (mu4e-headers-search token current-prefix-arg)))
 
 ;;;###autoload
 (defun mu4e-speedbar-buttons (buffer)
@@ -123,7 +124,7 @@
   (mu4e~speedbar-render-maildir-list))
 
 (defun mu4e-main-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer)) 
-(defun mu4e-hdrs-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer)) 
+(defun mu4e-headers-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer)) 
 (defun mu4e-view-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer)) 
 
 

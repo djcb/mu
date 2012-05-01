@@ -32,12 +32,12 @@
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "b" 'mu4e-search-bookmark)
-    (define-key map "B" 'mu4e-search-bookmark-edit-first)
+    (define-key map "b" 'mu4e-headers-search-bookmark)
+    (define-key map "B" 'mu4e-headers-search-bookmark-edit-first)
 
-    (define-key map "s" 'mu4e-search)
+    (define-key map "s" 'mu4e-headers-search)
     (define-key map "q" 'mu4e-quit)
-    (define-key map "j" 'mu4e-jump-to-maildir)
+    (define-key map "j" 'mu4e~headers-jump-to-maildir)
     (define-key map "C" 'mu4e-compose-new)
 
     (define-key map "m" 'mu4e~main-toggle-mail-sending-mode)

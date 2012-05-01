@@ -35,7 +35,7 @@
 (require 'mu4e-utils)
 (require 'mu4e-vars)
 (require 'mu4e-proc)
-(require 'mu4e-view)
+(require 'mu4e-actions)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Composing / Sending messages
@@ -86,8 +86,6 @@ sent folder."
 of `mu4e-user-agent', or, if not set, a string based on the versions
 of mu4e and emacs."
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version))
-
-
 
 
 (defun mu4e~compose-cite-original (msg)
@@ -588,13 +586,66 @@ buffer."
 	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P")))))))
 
 
+
+(defun mu4e-compose (compose-type)
+  "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
+a symbol, one of `reply', `forward', `edit', `new'. All but `new'
+take the message at point as input. Symbol `edit' is only allowed
+for draft messages."
+  (unless (member compose-type '(reply forward edit new))
+    (error "Invalid compose type '%S'" compose-type))
+  ;; 'new is special, since it takes no existing message as arg therefore,
+  ;; we don't need to call thec backend, and call the handler *directly*
+  (if (eq compose-type 'new)
+    (mu4e~compose-handler 'new)
+    ;; otherwise, we need the doc-id
+    (let ((docid (mu4e-field-at-point :docid)))
+      ;; note, the first two chars of the line (the mark margin) does *not*
+      ;; have the 'draft property; thus, we check one char before the end of
+      ;; the current line instead
+      (unless (or (not (eq compose-type 'edit))
+		(member 'draft (mu4e-field-at-point :flags)))
+	  (error "Editing is only allowed for draft messages"))
+      ;; if there's a visible view window, select that before starting
+      ;; composing a new message, so that one will be replaced by the
+      ;; compose window. The 10-or-so line headers buffer is not a good way
+      ;; to write it...
+	(let ((viewwin (get-buffer-window mu4e~view-buffer)))
+	  (when (window-live-p viewwin)
+	    (select-window viewwin)))
+	;; talk to the backend
+      (mu4e~proc-compose compose-type docid))))
+
+(defun mu4e-compose-reply ()
+  "Compose a reply for the message at point in the headers buffer."
+  (interactive)
+  (mu4e-compose 'reply))
+
+(defun mu4e-compose-forward ()
+  "Forward the message at point in the headers buffer."
+  (interactive)
+  (mu4e-compose 'forward))
+
+(defun mu4e-compose-edit ()
+  "Edit the draft message at point in the headers buffer. This is
+only possible if the message at point is, in fact, a draft
+message."
+  (interactive)
+  (mu4e-compose 'edit))
+
+(defun mu4e-compose-new ()
+  "Start writing a new message."
+  (interactive)
+  (mu4e-compose 'new))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mu4e-compose-func and mu4e-send-func are wrappers so we can set ourselves
 ;; as default emacs mailer (define-mail-user-agent etc.)
 
-(defun mu4e~compose (&optional to subject other-headers continue
-		      switch-function yank-action send-actions return-action)
+(defun mu4e~compose-mail (&optional to subject other-headers continue
+			   switch-function yank-action send-actions return-action)
   "mu4e's implementation of `compose-mail'."
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
@@ -626,7 +677,7 @@ buffer."
 
 ;; happily, we can re-use most things from message mode
 (define-mail-user-agent 'mu4e-user-agent
-  'mu4e~compose
+  'mu4e~compose-mail
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)

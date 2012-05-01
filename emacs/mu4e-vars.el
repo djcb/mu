@@ -203,8 +203,6 @@ flag set)."
   "Face for the mark in the headers list."
   :group 'mu4e-faces)
 
-
-
 (defface mu4e-view-header-key-face
   '((t :inherit font-lock-builtin-face :bold t))
   "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\") in
@@ -273,6 +271,14 @@ flag set)."
 headers)."
   :group 'mu4e-faces)
 
+
+(defconst mu4e-logo
+  (concat
+    (propertize "mu" 'face 'font-lock-builtin-face)
+    (propertize "4"  'face 'font-lock-constant-face)
+    (propertize "e"  'face 'font-lock-string-face))
+  "A propertized string for the mu4e 'logo'.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal variables / constants
 
@@ -299,9 +305,9 @@ view). Most fields should be self-explanatory. A special one is
 ;; run-time vars used in multiple places
 
 ;; headers
-(defconst mu4e~hdrs-buffer-name "*mu4e-headers*"
+(defconst mu4e~headers-buffer-name "*mu4e-headers*"
   "Name of the buffer for message headers.")
-(defvar mu4e~hdrs-buffer nil "Buffer for message headers")
+(defvar mu4e~headers-buffer nil "Buffer for message headers")
 ; view
 (defconst mu4e~view-buffer-name "*mu4e-view*"
   "Name for the message view buffer")

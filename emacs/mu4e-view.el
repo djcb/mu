@@ -30,6 +30,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-mark)
 (require 'mu4e-proc)
+(require 'mu4e-compose)
 (require 'mu4e-actions)
 
 ;; we prefer the improved fill-region
@@ -127,7 +128,7 @@ where:
 
 
 ;; some buffer-local variables
-(defvar mu4e~view-hdrs-buffer nil
+(defvar mu4e~view-headers-buffer nil
   "*internal* Headers buffer connected to this view.")
 
 (defvar mu4e~view-lines-wrapped nil "*internal* Whether lines are wrapped.")
@@ -151,15 +152,15 @@ plist."
 	       (fieldval (plist-get msg field)))
 	  (case field
 	    (:subject  (mu4e~view-construct-header fieldname fieldval))
-	    (:path	   (mu4e~view-construct-header fieldname fieldval))
+	    (:path     (mu4e~view-construct-header fieldname fieldval))
 	    (:maildir  (mu4e~view-construct-header fieldname fieldval))
-	    (:flags	   (mu4e~view-construct-header fieldname
-			     (if fieldval (format "%S" fieldval) "")))
+	    (:flags    (mu4e~view-construct-header fieldname
+			 (if fieldval (format "%S" fieldval) "")))
 	    ;; contact fields
-	    (:to	   (mu4e~view-construct-contacts msg field))
-	    (:from	   (mu4e~view-construct-contacts msg field))
-	    (:cc	   (mu4e~view-construct-contacts msg field))
-	    (:bcc	   (mu4e~view-construct-contacts msg field))
+	    (:to       (mu4e~view-construct-contacts msg field))
+	    (:from     (mu4e~view-construct-contacts msg field))
+	    (:cc       (mu4e~view-construct-contacts msg field))
+	    (:bcc      (mu4e~view-construct-contacts msg field))
 
 	    ;; if we (`user-mail-address' are the From, show To, otherwise,
 	    ;; show From
@@ -188,7 +189,7 @@ plist."
     (mu4e-body-text msg)))
 
 
-(defun mu4e-view (msg hdrsbuf &optional refresh)
+(defun mu4e-view (msg headersbuf &optional refresh)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
 the the message view affects HDRSBUF, as does marking etc.
@@ -203,7 +204,7 @@ marking if it still had that."
       (let ((inhibit-read-only t))
 	(setq ;; buffer local
 	  mu4e~view-msg msg
-	  mu4e~view-hdrs-buffer hdrsbuf
+	  mu4e~view-headers-buffer headersbuf
 	  mu4e~view-buffer buf)
 
 	(erase-buffer)
@@ -326,16 +327,16 @@ is nil, and otherwise open it."
       ;; but that's not very useful in this case
       (define-key map "z" 'mu4e-view-kill-buffer-and-window)
 
-      (define-key map "s" 'mu4e-search)
+      (define-key map "s" 'mu4e-headers-search)
 
-      (define-key map "b" 'mu4e-search-bookmark)
-      (define-key map "B" 'mu4e-search-bookmark-edit-first)
+      (define-key map "b" 'mu4e-headers-search-bookmark)
+      (define-key map "B" 'mu4e-headers-search-bookmark-edit-first)
 
       (define-key map "%" 'mu4e-view-mark-matches)
       (define-key map "t" 'mu4e-view-mark-subthread)
       (define-key map "T" 'mu4e-view-mark-thread)
 
-      (define-key map "j" 'mu4e-jump-to-maildir)
+      (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
 
@@ -440,8 +441,8 @@ is nil, and otherwise open it."
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [sepa3] '("--"))
 
-	(define-key menumap [search]  '("Search" . mu4e-search))
-	(define-key menumap [jump]  '("Jump to maildir" . mu4e-jump-to-maildir))
+	(define-key menumap [search]  '("Search" . mu4e-headers-search))
+	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
 
 	(define-key menumap [sepa4] '("--"))
 	(define-key menumap [next]  '("Next" . mu4e~view-next-header))
@@ -456,7 +457,7 @@ is nil, and otherwise open it."
 \\{mu4e-view-mode-map}."
   (use-local-map mu4e-view-mode-map)
 
-  (make-local-variable 'mu4e~view-hdrs-buffer)
+  (make-local-variable 'mu4e~view-headers-buffer)
   (make-local-variable 'mu4e~view-msg)
   (make-local-variable 'mu4e~view-link-map)
 
@@ -588,16 +589,16 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (flush-lines "^[:blank:]*>")
       (setq mu4e~view-cited-hidden t))))
 
-(defun mu4e~view-hdrs-move (lines)
+(defun mu4e~view-headers-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
 backward (if LINES is negative). If this succeeds, return the new
 docid. Otherwise, return nil."
-  (when (buffer-live-p mu4e~view-hdrs-buffer)
-    (with-current-buffer mu4e~view-hdrs-buffer
-      (mu4e~hdrs-move lines))))
+  (when (buffer-live-p mu4e~view-headers-buffer)
+    (with-current-buffer mu4e~view-headers-buffer
+      (mu4e~headers-move lines))))
 
-(defun mu4e~view-next-header()(interactive)(mu4e~view-hdrs-move 1))
-(defun mu4e~view-prev-header()(interactive)(mu4e~view-hdrs-move -1))
+(defun mu4e~view-next-header()(interactive)(mu4e~view-headers-move 1))
+(defun mu4e~view-prev-header()(interactive)(mu4e~view-headers-move -1))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -623,7 +624,7 @@ docid. Otherwise, return nil."
   "Redisplay the current message, without wrapped lines or hidden
 citations."
   (interactive)
-  (mu4e-view mu4e~view-msg mu4e~view-hdrs-buffer t)
+  (mu4e-view mu4e~view-msg mu4e~view-headers-buffer t)
   (setq
     mu4e~view-lines-wrapped nil
     mu4e~view-cited-hidden nil))
@@ -656,25 +657,25 @@ if nil), then do it. The actions are specified in
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
-  (when (buffer-live-p mu4e~view-hdrs-buffer)
-    (with-current-buffer mu4e~view-hdrs-buffer
-      (mu4e-hdrs-mark-matches))))
+  (when (buffer-live-p mu4e~view-headers-buffer)
+    (with-current-buffer mu4e~view-headers-buffer
+      (mu4e-headers-mark-matches))))
 
 (defun mu4e-view-mark-thread ()
   "Ask user for a kind of mark (move, delete etc.), and apply it to
 all messages in the thread at point in the headers view."
   (interactive)
-  (when (buffer-live-p mu4e~view-hdrs-buffer)
-    (with-current-buffer mu4e~view-hdrs-buffer
-      (mu4e-hdrs-mark-thread))))
+  (when (buffer-live-p mu4e~view-headers-buffer)
+    (with-current-buffer mu4e~view-headers-buffer
+      (mu4e-headers-mark-thread))))
 
 (defun mu4e-view-mark-subthread ()
   "Ask user for a kind of mark (move, delete etc.), and apply it to
 all messages in the thread at point in the headers view."
   (interactive)
-  (when (buffer-live-p mu4e~view-hdrs-buffer)
-    (with-current-buffer mu4e~view-hdrs-buffer
-      (mu4e-hdrs-mark-subthread))))
+  (when (buffer-live-p mu4e~view-headers-buffer)
+    (with-current-buffer mu4e~view-headers-buffer
+      (mu4e-headers-mark-subthread))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -801,10 +802,10 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
 ;;; marking
 (defun mu4e~view-mark-set (mark)
   "Set mark on the current messages."
-  (unless (buffer-live-p mu4e~view-hdrs-buffer)
+  (unless (buffer-live-p mu4e~view-headers-buffer)
     (error "No headers buffer available"))
   (let ((docid (mu4e-msg-field mu4e~view-msg :docid)))
-    (with-current-buffer mu4e~view-hdrs-buffer
+    (with-current-buffer mu4e~view-headers-buffer
       (if (eq mark 'move)
 	(mu4e-mark-for-move-set)
 	(mu4e-mark-at-point mark)))))
@@ -853,7 +854,7 @@ user that unmarking only works in the header list."
 that execution can only take place in n the header list."
   (interactive)
   (if (mu4e~split-view-p)
-    (with-current-buffer mu4e~view-hdrs-buffer
+    (with-current-buffer mu4e~view-headers-buffer
       (mu4e-mark-execute-all))
     (message "Execution needs to be done in the header list view")))
 

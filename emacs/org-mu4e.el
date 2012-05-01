@@ -34,7 +34,7 @@
   "Store a link to a mu4e query or message."
   (cond
     ;; storing links to queries
-    ((eq major-mode 'mu4e-hdrs-mode)
+    ((eq major-mode 'mu4e-headers-mode)
       (let* ((query (mu4e-last-query))
 	      desc link)
 	(org-store-link-props :type "mu4e" :query query)
@@ -67,11 +67,10 @@ the query (for paths starting with 'query:')."
     ((string-match "^msgid:\\(.+\\)" path)
       (mu4e-view-message-with-msgid (match-string 1 path)))
     ((string-match "^query:\\(.+\\)" path)
-      (mu4e-search (match-string 1 path)))
+      (mu4e-headers-search (match-string 1 path) current-prefix-arg))
     (t (message "mu4e: unrecognized link type '%s'" path))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'org-mu4e)
-
 ;;; org-mu4e.el ends here

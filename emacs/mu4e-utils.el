@@ -197,7 +197,7 @@ and offer to create it if it does not exist yet."
 the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
   (interactive)
-  (unless (mu4e~docid-at-point)
+  (unless (mu4e~headers-docid-at-point)
     (error "No message at point."))
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	  (target (if (string= (substring target 0 1) "/")
@@ -209,9 +209,6 @@ provided, function asks for it."
 		   (format "%s does not exist. Create now?" fulltarget))
 	      (mu4e~proc-mkdir fulltarget)))
       (mu4e-mark-set 'move target))))
-
-
-
 
 
 (defun mu4e-ask-bookmark (prompt &optional kar)
@@ -363,10 +360,11 @@ top level if there is none."
   (interactive)
   (info (case major-mode
 	  ('mu4e-main-mode "(mu4e)Main view")
-	  ('mu4e-hdrs-mode "(mu4e)Headers view")
+	  ('mu4e-headers-mode "(mu4e)Headers view")
 	  ('mu4e-view-mode "(mu4e)Message view")
 	  (t               "mu4e"))))
 
+ 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-msg-field (msg field)
@@ -415,7 +413,7 @@ message. If optional RAISE-ERR is non-nil, raise an error when
 there is no message at point."
   (let ((msg
 	 (cond
-	   ((eq major-mode 'mu4e-hdrs-mode)
+	   ((eq major-mode 'mu4e-headers-mode)
 	     (get-text-property (point) 'msg))
 	   ((eq major-mode 'mu4e-view-mode)
 	     mu4e~view-msg))))
@@ -430,9 +428,9 @@ point in eiter the headers buffer or the view buffer."
 
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
-  (when (buffer-live-p mu4e~hdrs-buffer)
-    (with-current-buffer mu4e~hdrs-buffer
-      mu4e~hdrs-query)))
+  (when (buffer-live-p mu4e~headers-buffer)
+    (with-current-buffer mu4e~headers-buffer
+      mu4e~headers-query)))
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
@@ -440,10 +438,10 @@ that has a live window), and vice versa."
   (interactive)
   (let* ((other-buf
 	   (cond
-	     ((eq major-mode 'mu4e-hdrs-mode)
+	     ((eq major-mode 'mu4e-headers-mode)
 	       mu4e~view-buffer)
 	     ((eq major-mode 'mu4e-view-mode)
-	       mu4e~hdrs-buffer)))
+	       mu4e~headers-buffer)))
 	  (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
       (select-window other-win)
@@ -513,8 +511,6 @@ split-window."
       (erase-buffer)
       (insert "\n") ;; FIXME -- needed so output starts
       (mu4e-update-mail buf))))
-
-
 
 
 
