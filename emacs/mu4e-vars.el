@@ -612,19 +612,6 @@ view). Most fields should be self-explanatory. A special one is
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; run-time vars used in multiple places
 
