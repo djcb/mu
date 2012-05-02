@@ -55,21 +55,6 @@ complete list of available headers, see `mu4e-header-names'."
   :type 'string
   :group 'mu4e-view)
 
-(defcustom mu4e-view-prefer-html nil
-  "Whether to base the body display on the HTML-version of the
-e-mail message (if there is any."
-  :type 'boolean
-  :group 'mu4e-view)
-
-(defcustom mu4e-html2text-command nil
-  "Shell command that converts HTML from stdin into plain text on
-stdout. If this is not defined, the emacs `html2text' tool will be
-used when faced with html-only message. If you use htmltext, it's
-recommended you use \"html2text -utf8 -width 72\"."
-  :type 'string
-  :group 'mu4e-view
-  :safe 'stringp)
-
 (defcustom mu4e-view-show-addresses t
   "Whether to show e-mail addresses for contacts in address-fields,
   if names are available as well (note that the e-mail addresses
@@ -133,8 +118,6 @@ where:
 
 (defvar mu4e~view-lines-wrapped nil "*internal* Whether lines are wrapped.")
 (defvar mu4e~view-cited-hidden nil "*internal* Whether cited lines are hidden.")
-
-(defvar mu4e~view-msg nil "The message being viewed in view mode.")
 
 
 (defun mu4e-view-message-with-msgid (msgid)

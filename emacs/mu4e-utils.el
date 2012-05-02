@@ -30,6 +30,25 @@
 (require 'mu4e-vars)
 (require 'doc-view)
 
+
+
+(defcustom mu4e-html2text-command nil
+  "Shell command that converts HTML from stdin into plain text on
+stdout. If this is not defined, the emacs `html2text' tool will be
+used when faced with html-only message. If you use htmltext, it's
+recommended you use \"html2text -utf8 -width 72\"."
+  :type 'string
+  :group 'mu4e-view
+  :safe 'stringp)
+
+
+(defcustom mu4e-view-prefer-html nil
+  "Whether to base the body display on the HTML-version of the
+e-mail message (if there is any."
+  :type 'boolean
+  :group 'mu4e-view)
+
+
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create DIR if it does not exist yet. Return t if the
 dir already existed, or has been created, nil otherwise."
