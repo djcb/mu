@@ -671,8 +671,8 @@ all messages in the thread at point in the headers view."
 	  (count (length attlist)))
     (when (zerop count) (error "No attachments for this message"))
     (if (= count 1)
-      (read-number (format "%s (1): " prompt) 1)
-      (read-number (format "%s (1-%d): " prompt count)))))
+      (read-number (mu4e-format "%s: " prompt) 1)
+      (read-number (mu4e-format "%s (1-%d): " prompt count)))))
 
 (defun mu4e~view-get-attach (msg attnum)
   "Return the attachment plist in MSG corresponding to attachment
@@ -694,10 +694,11 @@ message-at-point if nil) to disk."
 	  (index (plist-get att :index))
 	  (retry t))
     (while retry
-      (setq path (expand-file-name (read-string "Save as " path)))
+      (setq path (expand-file-name (read-string
+				     (mu4e-format "Save as ") path)))
       (setq retry
 	(and (file-exists-p path)
-	  (not (y-or-n-p (concat "Overwrite " path "?"))))))
+	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?"))))))
     (mu4e~proc-extract
       'save (plist-get msg :docid) index path)))
 
@@ -720,21 +721,34 @@ ACTION."
   (interactive)
   (mu4e~proc-extract 'temp docid index nil what param))
 
+(defvar mu4e~view-open-with-hist nil
+  "History list for the open-with argument.")
+
 (defun mu4e-view-open-attachment-with (msg attachnum &optional cmd)
   "Open MSG's attachment ATTACHNUM with CMD; if CMD is nil, ask
 user for it."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
-	  (cmd (or cmd (read-string "Shell command to open it with: ")))
+	  (cmd (or cmd
+		 (read-string
+		   (mu4e-format "Shell command to open it with: ")
+		   nil 'mu4e~view-open-with-hist)))
 	  (index (plist-get att :index)))
     (mu4e~temp-action (plist-get msg :docid) index "open-with" cmd)))
+
+(defvar mu4e~view-pipe-hist nil
+  "History list for the pipe argument.")
 
 (defun mu4e-view-pipe-attachment (msg attachnum &optional pipecmd)
   "Feed MSG's attachment ATTACHNUM throught pipe PIPECMD; if
 PIPECMD is nil, ask user for it."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
-	  (pipecmd (or pipecmd (read-string "Pipe: ")))
+	  (pipecmd (or pipecmd
+		     (read-string
+		       (mu4e-format "Pipe: ")
+		       nil
+		       'mu4e~view-pipe-hist)))
 	  (index (plist-get att :index)))
     (mu4e~temp-action (plist-get msg :docid) index "pipe" pipecmd)))
 
@@ -804,7 +818,7 @@ user that unmarking only works in the header list."
   (interactive)
   (if (mu4e~split-view-p)
     (mu4e-mark-unmark-all)
-    (message "Unmarking needs to be done in the header list view")))
+    (mu4e-message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-unmark ()
   "If we're in split-view, unmark message at point. Otherwise, warn
@@ -812,7 +826,7 @@ user that unmarking only works in the header list."
   (interactive)
   (if (mu4e~split-view-p)
     (mu4e~view-mark-set 'unmark)
-    (message "Unmarking needs to be done in the header list view")))
+    (mu4e-message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-mark-for-move ()
   "Mark the current message for moving."
@@ -839,11 +853,11 @@ that execution can only take place in n the header list."
   (if (mu4e~split-view-p)
     (with-current-buffer mu4e~view-headers-buffer
       (mu4e-mark-execute-all))
-    (message "Execution needs to be done in the header list view")))
+    (mu4e-message "Execution needs to be done in the header list view")))
 
 (defun mu4e-view-go-to-url (num)
   "Go to a numbered url."
-  (interactive "nGo to url with number: ")
+  (interactive (concat "n" (mu4e-format "Go to url with number: ")))
   (let ((url (gethash num mu4e~view-link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
