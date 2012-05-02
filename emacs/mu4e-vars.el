@@ -576,13 +576,13 @@ flag set)."
 headers)."
   :group 'mu4e-faces)
 
-
-(defconst mu4e-logo
-  (concat
-    (propertize "mu" 'face 'font-lock-builtin-face)
-    (propertize "4"  'face 'font-lock-constant-face)
-    (propertize "e"  'face 'font-lock-string-face))
+(defconst mu4e-logo 
+  (propertize "mu4e" 'face 'mu4e-title-face)
   "A propertized string for the mu4e 'logo'.")
+
+(defconst mu4e-prefix 
+  (concat "[" mu4e-logo "]")
+  "Prefix for mu4e minibuffer input.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal variables / constants
