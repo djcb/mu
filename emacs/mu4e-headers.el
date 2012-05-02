@@ -48,10 +48,10 @@
      (:from          .  22)
      (:subject       .  nil))
   "A list of header fields to show in the headers buffer, and their
-  respective widths in characters. A width of `nil' means
-  'unrestricted', and this is best reserved fo the rightmost (last)
-  field. For the complete list of available headers, see
-  `mu4e-header-names'"
+respective widths in characters. A width of `nil' means
+'unrestricted', and this is best reserved fo the rightmost (last)
+field. For the complete list of available headers, see
+`mu4e-header-names'"
   :type (list 'symbol)
   :group 'mu4e-headers)
 
@@ -92,11 +92,11 @@ are of the form:
 
 ;; docid cookies
 (defconst mu4e~headers-docid-pre "\376"
-  "Each header starts (invisibly) with the `mu4e-docid-pre',
-  followed by the docid, followed by `mu4e-docid-post'.")
+  "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
+  followed by the docid, followed by `mu4e~headers-docid-post'.")
 (defconst mu4e~headers-docid-post "\377"
-  "Each header starts (invisibly) with the `mu4e-docid-pre',
-  followed by the docid, followed by `mu4e-docid-post'.")
+  "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
+  followed by the docid, followed by `mu4e~headers-docid-post'.")
 
 (defun mu4e~headers-clear ()
   "Clear the header buffer and related data structures."
@@ -106,13 +106,24 @@ are of the form:
 	(erase-buffer)
 	(mu4e~mark-clear)))))
 
-(defun mu4e-headers-search (expr full-search)
+
+(defvar mu4e~headers-search-hist nil
+  "History list of searches.")
+
+
+(defun mu4e-headers-search (expr search-all)
   "Search in the mu database for EXPR, and switch to the output
-buffer for the results. If FULL-SEARCH is non-nil return all
+buffer for the results. If SEARCH-ALL is non-nil return all
 results, otherwise, limit number of results to
 `mu4e-search-results-limit'. This is an interactive function which
-ask user for EXPR, and FULL-SEARCH as prefix-argument."
-  (interactive "s\nPSearch: ")
+ask user for EXPR, and SEARCH-ALL as prefix-argument."
+  (interactive
+    (let ((expr (read-string
+		  (mu4e-format "Search for: ")
+		  nil
+		  'mu4e~headers-search-hist nil t))
+	   (search-all current-prefix-arg))
+      (list expr search-all)))
   (let ((buf (get-buffer-create mu4e~headers-buffer-name))
 	  (inhibit-read-only t))
     (mu4e-mark-handle-when-leaving)
@@ -126,7 +137,7 @@ ask user for EXPR, and FULL-SEARCH as prefix-argument."
     (switch-to-buffer buf)
     (mu4e~proc-find
       (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
-      (unless full-search mu4e-search-results-limit))
+      (unless search-all mu4e-search-results-limit))
     ;;; when we're starting a new search, we also kill the
     ;;; view buffer, if any
     (mu4e-view-kill-buffer-and-window)))
@@ -288,7 +299,7 @@ after the end of the search results."
 		    "End of search results")))
 	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
 	(unless (= 0 count)
-	  (message "Found %d matching message%s"
+	  (mu4e-message "Found %d matching message%s"
 	    count (if (= 1 count) "" "s"))
 	  ;; highlight the first message
 	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))))))
@@ -313,7 +324,7 @@ after the end of the search results."
   (setq mu4e-headers-mode-map
     (let ((map (make-sparse-keymap)))
 
-      (define-key map "s" 'mu4e-search)
+      (define-key map "s" 'mu4e-headers-search)
 
       (define-key map "b" 'mu4e-headers-search-bookmark)
       (define-key map "B" 'mu4e-headers-search-bookmark-edit-first)
@@ -407,7 +418,7 @@ after the end of the search results."
 	(define-key menumap [sepa2] '("--"))
 
 	(define-key menumap [refresh]  '("Refresh" . mu4e-headers-rerun-search))
-	(define-key menumap [search]  '("Search" . mu4e-search))
+	(define-key menumap [search]  '("Search" . mu4e-headers-search))
 
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
 	(define-key menumap [sepa3] '("--"))
@@ -626,6 +637,9 @@ header."
 	      (mu4e-ask-maildir-check-exists "Move message to: "))))
     (cons mark target)))
 
+(defvar mu4e~headers-regexp-hist nil
+  "History list of regexps used.")
+
 (defun mu4e-headers-mark-matches ()
   "Ask user for a kind of mark (move, delete etc.), a field to
 match and a regular expression to match with. Then, mark all
@@ -718,14 +732,17 @@ argument) is non-nil, show /all/ results, otherwise, limit to up to
    (when query
      (mu4e-headers-search query search-all)))
 
+(defvar mu4e~headers-bookmark-hist nil
+  "History list for bookmarks used.")
+
 (defun mu4e-headers-search-bookmark-edit-first (expr search-all)
   "Search using some bookmarked query, but allow for editing the
 bookmark before submitting it. With C-u prefix, show /all/ results,
 otherwise, limit to up to `mu4e-search-results-limit'."
   (interactive
     (list (read-string
-	    (concat "Search for:")
-	    (concat (or (mu4e-ask-bookmark "Edit bookmark: ") "") " "))
+	    (concat (or (mu4e-ask-bookmark "Edit bookmark: ") "") " ")
+	    'mu4e~headers-bookmark-hist)
       current-prefix-arg))
   (when expr
     (mu4e-headers-search expr search-all)))
