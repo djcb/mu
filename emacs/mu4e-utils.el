@@ -56,10 +56,18 @@ dir already existed, or has been created, nil otherwise."
     (error "%s exists, but is not a directory." dir))
   (cond
     ((file-directory-p dir) t)
-    ((yes-or-no-p (format "%s does not exist yes. Create now?" dir))
+    ((yes-or-no-p (mu4e-format "%s does not exist yes. Create now?" dir))
       (mu4e~proc-mkdir dir))
     (t nil)))
 
+
+(defun mu4e-format (frm &rest args)
+  "Create [mu4e]-prefixed string based on format FRM and ARGS."
+  (concat "[" mu4e-logo "] "  (apply 'format frm args)))
+
+(defun mu4e-message (frm &rest args)
+  "Like `message', but prefixed with mu4e."
+  (message "%s" (apply 'mu4e-format frm args)))
 
 
 (defun mu4e~read-option-normalize-list (options)
@@ -105,6 +113,7 @@ user can then choose by typing CHAR.  Example:
 User now will be presented with a list:
    \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."
   (let* ((options (mu4e~read-option-normalize-list options)) 
+	  (prompt (mu4e-format "%s" prompt))
 	  (chosen)
 	  (optionsstr
 	    (mapconcat
@@ -120,20 +129,15 @@ User now will be presented with a list:
 		  "[" (propertize (make-string 1 kar)
 			'face 'mu4e-highlight-face) "]"
 		  descr))) options ", "))
-	  ;; allow C-g from read-char, not sure why this is needed
-	  (inhibit-quit nil) 
-	  (okchar)
-	  (response))
-    (while (not chosen)
-      (message nil) ;; we need to clear the echo area first... why?!
-      (setq response
-	  (read-char-exclusive
-	    (concat prompt optionsstr
-	      " [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")))
-      (setq chosen
-	(find-if (lambda (option) (eq response (nth 1 option))) options)))
-    (nth 2 chosen)))
- 
+	  (response
+	    (read-char-choice
+	      (concat prompt optionsstr
+		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")
+	      (map 'list (lambda(elm) (nth 1 elm)) options))) ;; the allowable chars
+	  (chosen
+	    (find-if (lambda (option) (eq response (nth 1 option))) options)))
+    (nth 2 chosen))) 
+
 
 (defun mu4e~get-maildirs-1 (path &optional mdir)
   "Get maildirs under path, recursively, as a list of relative
@@ -179,25 +183,27 @@ name. If the special shortcut 'o' (for _o_ther) is used, or if
 `mu4e-maildir-shortcuts is not defined, let user choose from all
 maildirs under `mu4e-maildir."
   (unless mu4e-maildir (error "`mu4e-maildir' is not defined"))
-  (if (not mu4e-maildir-shortcuts)
-    (ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
-    (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
-	    (fnames
-	      (mapconcat
-		(lambda (item)
-		  (concat
-		    "["
-		    (propertize (make-string 1 (cdr item))
-		      'face 'mu4e-highlight-face)
-		    "]"
-		    (car item)))
-		mlist ", "))
-	    (kar (read-char (concat prompt fnames))))
-      (if (= kar ?o) ;; user chose 'other'?
-	(ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
-	(or (car-safe
-	      (find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
-	  (error "Invalid shortcut '%c'" kar)))))) 
+  (let ((prompt (mu4e-format "%s" prompt)))
+    (if (not mu4e-maildir-shortcuts)
+      (ido-completing-read prompt
+	(mu4e-get-maildirs mu4e-maildir))
+      (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
+	      (fnames
+		(mapconcat
+		  (lambda (item)
+		    (concat
+		      "["
+		      (propertize (make-string 1 (cdr item))
+			'face 'mu4e-highlight-face)
+		      "]"
+		      (car item)))
+		  mlist ", "))
+	      (kar (read-char (concat prompt fnames))))
+	(if (= kar ?o) ;; user chose 'other'?
+	  (ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
+	  (or (car-safe
+		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
+	    (error "Invalid shortcut '%c'" kar))))))) 
 
 
 (defun mu4e-ask-maildir-check-exists (prompt)
@@ -206,7 +212,8 @@ and offer to create it if it does not exist yet."
   (let* ((mdir (mu4e-ask-maildir prompt))
 	  (fullpath (concat mu4e-maildir mdir)))
     (unless (file-directory-p fullpath)
-      (and (yes-or-no-p (format "%s does not exist. Create now?" fullpath))
+      (and (yes-or-no-p
+	     (mu4e-format "%s does not exist. Create now?" fullpath))
 	      (mu4e~proc-mkdir fullpath)))
     mdir))
    
@@ -225,7 +232,7 @@ provided, function asks for it."
 	  (fulltarget (concat mu4e-maildir target)))
     (when (or (file-directory-p fulltarget)
 	    (and (yes-or-no-p
-		   (format "%s does not exist. Create now?" fulltarget))
+		   (mu4e-format "%s does not exist. Create now?" fulltarget))
 	      (mu4e~proc-mkdir fulltarget)))
       (mu4e-mark-set 'move target))))
 
@@ -234,7 +241,8 @@ provided, function asks for it."
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
   (unless mu4e-bookmarks (error "`mu4e-bookmarks' is not defined"))
-  (let* ((bmarks
+  (let* ((prompt (mu4e-format "%s" prompt))
+	  (bmarks
 	   (mapconcat
 	     (lambda (bm)
 	       (let ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
@@ -464,7 +472,7 @@ that has a live window), and vice versa."
 	  (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
       (select-window other-win)
-      (message "No window to switch to"))))
+      (mu4e-message "No window to switch to"))))
 
 
 (defconst mu4e-output-buffer-name "*mu4e-output"
@@ -492,20 +500,21 @@ process."
       ((eq type 'add) t) ;; do nothing	
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
-	  (message (format "Indexing... processed %d, updated %d"
-		     (plist-get info :processed) (plist-get info :updated)))
-	  (message
-	    (format "Indexing completed; processed %d, updated %d, cleaned-up %d"
-	      (plist-get info :processed) (plist-get info :updated)
-	      (plist-get info :cleaned-up)))))
-      ((plist-get info :message) (message "%s" (plist-get info :message))))))
+	  (mu4e-message "Indexing... processed %d, updated %d"
+	    (plist-get info :processed) (plist-get info :updated))
+	  (mu4e-message
+	    "Indexing completed; processed %d, updated %d, cleaned-up %d"
+	    (plist-get info :processed) (plist-get info :updated)
+	    (plist-get info :cleaned-up))))
+      ((plist-get info :message)
+	(mu4e-message "%s" (plist-get info :message))))))
 
 
 (defun mu4e-error-handler (errcode errmsg)
   "Handler function for showing an error."
   (case errcode
-      (4 (message "No matches for this search query."))
-      (t (message (format "Error %d: %s" errcode errmsg)))))
+    (4 (mu4e-message "No matches for this search query."))
+    (t (mu4e-message "Error %d: %s" errcode errmsg))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -590,7 +599,7 @@ FUNC (if non-nil) afterwards."
 	      (setq mu4e-update-timer
 		(run-at-time
 		  0 mu4e-update-interval 'mu4e-update-mail)))
-	    (message "Started mu4e with %d message%s in store"
+	    (mu4e-message "Started mu4e with %d message%s in store"
 	      doccount (if (= doccount 1) "" "s")))))
 	  ;; send the ping
 	  (mu4e~proc-ping)))
@@ -598,7 +607,7 @@ FUNC (if non-nil) afterwards."
 (defun mu4e~stop ()
   "Quit the mu4e session."
   (interactive)
-  (when (y-or-n-p "Are you sure you want to quit? ")
+  (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
     (message nil)
     (when mu4e-update-timer
       (cancel-timer mu4e-update-timer)
@@ -623,7 +632,7 @@ processing takes part in the background, unless buf is non-nil."
   (let* ((process-connection-type t)
 	  (proc (start-process-shell-command
 		 mu4e-update-mail-name buf mu4e-get-mail-command)))
-    (message "Retrieving mail...")
+    (mu4e-message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
 	(let* ((status (process-status proc))
@@ -640,7 +649,6 @@ processing takes part in the background, unless buf is non-nil."
 	  (let ((buf (process-buffer proc)))
 	    (when (buffer-live-p buf)
 	      (kill-buffer buf))))))))
-
 
 
 
@@ -694,7 +702,7 @@ mu4e logs some of its internal workings to a log-buffer. See
   (interactive)
   (mu4e-log 'misc "logging disabled")
   (setq mu4e-debug (not mu4e-debug))
-  (message "mu4e debug logging has been %s"
+  (mu4e-message "debug logging has been %s"
     (if mu4e-debug "enabled" "disabled"))
   (mu4e-log 'misc "logging enabled"))
 
