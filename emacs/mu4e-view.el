@@ -43,7 +43,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-fields
-  '(:from :to :cc :subject :flags :date :maildir :attachments)
+  '(:from :to  :cc :subject :flags :date :maildir :attachments)
   "Header fields to display in the message view buffer. For the
 complete list of available headers, see `mu4e-header-names'."
   :type (list 'symbol)
@@ -857,7 +857,7 @@ that execution can only take place in n the header list."
 
 (defun mu4e-view-go-to-url (num)
   "Go to a numbered url."
-  (interactive (concat "n" (mu4e-format "Go to url with number: ")))
+  (interactive "n[mu4e] Go to url with number: ")
   (let ((url (gethash num mu4e~view-link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
