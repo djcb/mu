@@ -636,7 +636,9 @@ matching messages with that mark."
 		  '(("subject" nil :subject)
 		     ("from"   nil :from)
 		     ("to"     nil :to))))
-	  (pattern (read-string "Regexp: ")))
+	  (pattern (read-string
+		     (mu4e-format "Regexp:")
+		     nil 'mu4e~headers-regexp-hist)))
     (mu4e-headers-for-each
       (lambda (msg)
 	(let* ((do-mark) (value (mu4e-msg-field msg field)))
