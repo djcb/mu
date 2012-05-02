@@ -204,7 +204,7 @@ using a local mail-server (such as @emph{Postfix} or @t{qmail}), you can teach
 them to deliver into a maildir as well, maybe in combination with
 @t{procmail}. A bit of googling should be able to provide you with the
 details; also there is full example of setting @t{mu4e} up with
-@t{offlineimap} and Gmail; @pxref{Gmail configuration}.
+@t{offlineimap} and GMail; @pxref{GMail configuration}.
 
 You can do all of the mail retrieval @emph{outside} of @t{emacs}/@t{mu4e}, but
 you can also do it from within @t{mu4e}. For that, set the variable
@@ -488,15 +488,20 @@ Some notes to explain what you see in the example:
 
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
-the variable @t{mu4e-headers-fields}
-@item You can change the date format by customizing the variable
-@t{mu4e-headers-date-format}
+the variable @code{mu4e-headers-fields}
+@item Instead of showing the @t{From:} and @t{To:} fields separately, you
+can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
+compact way to convey the most important information: it shows @t{From:}
+@emph{except} when the e-mail was sent by the user (i.e., you) - in that case
+it shows @t{To:} (prefixed by @t{To}, as in the example above). To determine
+whether a message was sent by you, @t{mu4e} uses the variable
+@code{mu4e-user-mail-address-regexp}, which should be a regular expression
+matching all the e-mail addresses that you use.
 @item The letters in the 'Flags' field correspond to the following: D=draft,
 F=flagged, N=new, P=passed (i.e.., forwarded), R=replied, S=seen, T=trashed,
 a=has-attachment, x=encrypted, s=signed, u=unread.
-@item The From/To field shows the sender of the message unless the sender
-matches the regular expression in @t{mu4e-user-mail-address-regexp}, in
-which the header will show @t{To} followed by the recipient.
+@item You can change the date format by customizing the variable
+@t{mu4e-headers-date-format}
 @item The subject field displays the discussion threads according to the @emph{JWZ mail
 threading algorithm}@footnote{@url{http://www.jwz.org/doc/threading.html}}.
 @end itemize
