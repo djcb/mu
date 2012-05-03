@@ -740,7 +740,7 @@ user for it."
   "History list for the pipe argument.")
 
 (defun mu4e-view-pipe-attachment (msg attachnum &optional pipecmd)
-  "Feed MSG's attachment ATTACHNUM throught pipe PIPECMD; if
+  "Feed MSG's attachment ATTACHNUM through pipe PIPECMD; if
 PIPECMD is nil, ask user for it."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
@@ -780,19 +780,19 @@ message-at-point, then do it. The actions are specified in
 (defun mu4e~view-temp-handler (path what param)
   "Handler function for doing things with temp files (ie.,
 attachments) in response to a (mu4e~proc-extract 'temp ... )."
-    (cond
-      ((string= what "open-with")
-	;; 'param' will be the program to open-with
-	(start-file-process-shell-command "*mu4e-open-with*" nil
-	  (concat param " " path)))
-      ((string= what "pipe")
-	;; 'param' will be the pipe command, path the infile for this
-	(mu4e-process-file-through-pipe path param))
-      ((string= what "emacs")
-	(find-file path)
-	;; make the buffer read-only since it usually does not make
+  (cond
+    ((string= what "open-with")
+      ;; 'param' will be the program to open-with
+      (start-process "*mu4e-open-with-proc*" "*mu4e-open-with*" param path))
+    ((string= what "pipe")
+      ;; 'param' will be the pipe command, path the infile for this
+      (mu4e-process-file-through-pipe path
+	(shell-quote-argument param)))
+    ((string= what "emacs")
+      (find-file path)
+      ;; make the buffer read-only since it usually does not make
 	;; sense to edit the temp buffer; use C-x C-q if you insist...
-	(setq buffer-read-only t))
+      (setq buffer-read-only t))
       (t (error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
