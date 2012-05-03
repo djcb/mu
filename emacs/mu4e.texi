@@ -101,7 +101,7 @@ is quite different from those programs though.
 @t{mu4e}'s mail handling (deleting, moving etc.) is inspired by
 @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
 emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
-@t{dired}, while it takes some cues from @emph{GMail}.
+@t{dired}, while it takes some cues from @emph{Gmail}.
 
 @t{mu4e} tries to keep all the 'state' in your maildirs, so you can easily
 switch between clients, synchronize over @abbr{IMAP} or backup with @t{rsync}
@@ -204,7 +204,7 @@ using a local mail-server (such as @emph{Postfix} or @t{qmail}), you can teach
 them to deliver into a maildir as well, maybe in combination with
 @t{procmail}. A bit of googling should be able to provide you with the
 details; also there is full example of setting @t{mu4e} up with
-@t{offlineimap} and GMail; @pxref{GMail configuration}.
+@t{offlineimap} and Gmail; @pxref{Gmail configuration}.
 
 You can do all of the mail retrieval @emph{outside} of @t{emacs}/@t{mu4e}, but
 you can also do it from within @t{mu4e}. For that, set the variable
@@ -314,8 +314,8 @@ many settings for those will also apply to @t{mu4e}.
 
 By default, @t{mu4e} puts a copy of any messages you sent in the folder you
 set for @code{mu4e-sent-folder}. In some case, this may not be what you want -
-for example, when using GMail+@abbr{IMAP} (but @emph{not} with
-GMail+@abbr{POP3}), this interferes with GMail's handling of the sent messages
+for example, when using Gmail+@abbr{IMAP} (but @emph{not} with
+Gmail+@abbr{POP3}), this interferes with Gmail's handling of the sent messages
 folder, and you may end up with duplicate messages.
 
 Since @t{mu4e} 0.9.8.3, there is the variable
@@ -325,10 +325,10 @@ sent-messages folder. Other possible values are @code{'trash} (so the sent
 message is copied to the trash-folder (@code{mu4e-trash-folder}), and
 @code{'delete} to simply discard the message altogether.
 
-For GMail-IMAP you could add the following to your settings:
+For Gmail-IMAP you could add the following to your settings:
 
 @verbatim
-;; don't save messages to Sent Messages, GMail/IMAP will take care of this
+;; don't save messages to Sent Messages, Gmail/IMAP will take care of this
 (setq mu4e-sent-messages-behavior 'trash)
 @end verbatim
 
@@ -1455,7 +1455,7 @@ realdelete = no
 @end verbatim
 
 Obviously, you need to replace @t{USERNAME} and @t{PASSWORD} with your actual
-GMail username and password.
+Gmail username and password.
 
 After this, you should be able to download your mail:
 @verbatim
@@ -1508,7 +1508,7 @@ Now, let's make a @t{mu4e} configuration for this:
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
 (setq mu4e-trash-folder  "/[Gmail].Trash")
 
-;; don't save message to Sent Messages, GMail/IMAP will take care of this
+;; don't save message to Sent Messages, Gmail/IMAP will take care of this
 (setq mu4e-sent-messages-behavior 'delete)
 
 ;; setup some handy shortcuts
