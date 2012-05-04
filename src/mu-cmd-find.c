@@ -570,10 +570,17 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 static void
 print_summary (MuMsg *msg, int summary_len)
 {
+	const char* body;
 	char *summ;
-	summ = mu_str_summarize (mu_msg_get_body_text(msg),
-				 (unsigned)summary_len);
-	g_print ("Summary: %s\n", summ ? summ : "<none>");
+
+	body = mu_msg_get_body_text(msg);
+
+	summ = body ? mu_str_summarize (body, (unsigned)summary_len) : NULL;
+
+	g_print ("Summary: ");
+	mu_util_fputs_encoded (summ ? summ : "<none>", stdout);
+	g_print ("\n");
+
 	g_free (summ);
 }
 
