@@ -564,7 +564,10 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 	else
 		self->address  = NULL;
 
-	return TRUE;
+	/* note, the address could NULL e.g. when the recipient is something like
+	 * 'Undisclosed recipients'
+	 */
+	return self->address != NULL;
 }
 
 

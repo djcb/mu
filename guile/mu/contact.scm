@@ -113,7 +113,7 @@ either \"org-contact\", \"mutt-alias\", \"mutt-ab\",
 	      (string-downcase (or name email)))))
     (cond
       ((string= form "plain")
-	(format #f "~a~a~a" (if name name) (if name " ") email))
+	(format #f "~a~a~a" (or name "") (if name " " "") email))
       ((string= form "org-contact")
 	(format #f "* ~s\n:PROPERTIES:\n:EMAIL:~a\n:NICK:~a\n:END:"
 	  (or name email) email nick))
