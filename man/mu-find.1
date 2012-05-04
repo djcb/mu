@@ -1,4 +1,4 @@
-.TH MU FIND 1 "April 2012" "User Manuals"
+.TH MU FIND 1 "May 2012" "User Manuals"
 
 .SH NAME
 
@@ -213,17 +213,13 @@ another example would be:
   $ mu find date:2009-05-05/12:23..2010-06-02/17:18
 .fi
 
-An important point here is that the date matches are against local the local
-time zone active the time when the mu database was filled (using \fBmu
-index\fR).
-
 \fBmu\fR also understand relative dates, in the form of a posiive number
 followed by h (hour), d (day), w (week), m (30 days) or y (365 days). Some
-examples will explain this:
+examples to explain this:
 
 .nf
 	5h      five hours in the past
-	2w      one week in the past
+	2w      two weeks in the past
 	3m      three times 30 days in the past
 	1y      365 days in the past
 .fi
