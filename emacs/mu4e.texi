@@ -36,12 +36,12 @@ Welcome to @t{mu4e}!
 
 @t{mu4e} (mu-for-emacs) is an e-mail client for GNU-Emacs version 23 and
 later, built on top of the @t{mu} e-mail search engine. @t{mu4e} is optimized
-for fast handling of large amounts of e-mail. 
+for fast handling of large amounts of e-mail.
 
 This manual goes through the installation of @t{mu4e}, discusses the basic
 configuration, and explains its daily use. It also shows how you can customize
 @t{mu4e} for your needs.
- 
+
 At the end of the manual, there are a number of example configurations, which
 should help you to get up to speed quickly.
 
@@ -758,7 +758,7 @@ For more information about actions and how to define your own, see
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
 messages consisting of both a plain-text and an html (rich-text) version of
-its body-text. 
+its body-text.
 
 If there is only an html-version, or if the plain-text version is too short in
 comparison with the html part, @t{mu4e} tries to convert the html into
@@ -1583,7 +1583,7 @@ up-to-a-limited-number matches. Same for the other search based commands,
 (default: @key{b}).
 @item @emph{How can I easily include attachments in the messages I write?}
 Drag-and-drop.
-@item @emph{When I try do run @t{mu index} while @t{mu4e} is running I get
+@item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like @t{mu: mu_store_new_writable: xapian error 'Unable to get write
 lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
 this error because the underlying Xapian database allows itself to be opened
@@ -1619,14 +1619,17 @@ In this chapter we list a number of known issue and/or missing features in
 there (yet), and the author can use it as a todo-list.
 
 @itemize
+@item @emph{mu4e does not work well if the emacs language environment is not
+utf-8}; so, if you problems with encodings, be sure to have
+@code{(set-language-environment "UTF-8")} in your @file{.emacs}.
 @item @emph{Thread handling is incomplete.} While threads are calculated and are
-visible in the headers buffer, you can now collapse/open them.
+visible in the headers buffer, you can not collapse/open them.
 @item @emph{No support for crypto when reading mail}. Currently, you cannot
 conveniently read encrypted mail or check signatures. For outgoing messages,
 it should work though, using the built-in mechanisms.
 @item @emph{One cannot influence the sorting of messages}. Messages are sorted
-according to thread, then descending by date. It would be nice if it could be
-sorted in other ways as well.
+according to their thread, then descending by date. It would be nice if it
+could be sorted in other ways as well.
 @item @emph{@t{mu4e} gets confused when there are multiple windows showing the
 headers.}. Yes -- don't do that.
 @item @emph{Messages in the sent-folder do not include the attachments you
