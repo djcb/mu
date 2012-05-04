@@ -116,7 +116,8 @@ data removed."
 		(ignore-errors ;; note: this may fail if we killed the process
 		  ;; in the middle
 		  (read-from-string
-		    (decode-coding-string (substring mu4e~proc-buf 0 sexp-len) 'utf-8)))))
+		    (decode-coding-string (substring mu4e~proc-buf 0 sexp-len)
+		      'utf-8 t)))))
 	  (when objcons
 	    (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
 	    (car objcons)))))))
