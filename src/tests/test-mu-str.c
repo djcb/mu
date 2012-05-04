@@ -199,7 +199,8 @@ test_mu_str_xapian_escape (void)
 		{ "size:10..20", "size:10..20"},
 		{ "x:2010..2012", "x:2010__2012"},
 		{ "q:2010..2012", "q_2010__2012"},
-		{ "subject:2010..2012", "subject:2010__2012"}
+		{ "subject:2010..2012", "subject:2010__2012"},
+		{ "(maildir:foo)", "(maildir:foo)"}
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {

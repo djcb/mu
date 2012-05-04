@@ -223,7 +223,6 @@ test_mu_query_03 (void)
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
 				  ==, queries[i].count);
 	g_free (xpath);
-
 }
 
 
@@ -234,10 +233,10 @@ test_mu_query_04 (void)
 	int i;
 
 	QResults queries[] = {
-		{ "frodo@example.com", 1}, /* does not match: see mu-find (1) */
+		{ "frodo@example.com", 1},
 		{ "f:frodo@example.com", 1},
 		{ "f:Frodo Baggins", 1},
-		{ "bilbo@anotherexample.com", 1}, /* same things */
+		{ "bilbo@anotherexample.com", 1},
 		{ "t:bilbo@anotherexample.com", 1},
 		{ "t:bilbo", 1},
 		{ "f:bilbo", 0},
@@ -256,8 +255,36 @@ test_mu_query_04 (void)
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
 				  ==, queries[i].count);
 	g_free (xpath);
-
 }
+
+
+static void
+test_mu_query_logic (void)
+{
+	gchar *xpath;
+	int i;
+
+	QResults queries[] = {
+		{ "subject:gcc" , 1},
+		{ "subject:lisp" , 1},
+		{ "subject:gcc OR subject:lisp" , 2},
+		{ "subject:gcc or subject:lisp" , 2},
+		{ "subject:gcc AND subject:lisp" , 0},
+
+		{ "subject:gcc OR (subject:scheme AND subject:elisp)" , 2},
+		{ "(subject:gcc OR subject:scheme) AND subject:elisp" , 1}
+	};
+
+	xpath = fill_database (MU_TESTMAILDIR);
+	g_assert (xpath != NULL);
+
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+	g_free (xpath);
+}
+
+
 
 
 static void
@@ -599,6 +626,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);
 	g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03);
 	g_test_add_func ("/mu-query/test-mu-query-04", test_mu_query_04);
+
+	g_test_add_func ("/mu-query/test-mu-query-logic", test_mu_query_logic);
+
 	g_test_add_func ("/mu-query/test-mu-query-accented-chars-1",
 			 test_mu_query_accented_chars_01);
 	g_test_add_func ("/mu-query/test-mu-query-accented-chars-2",

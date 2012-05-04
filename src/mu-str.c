@@ -406,6 +406,13 @@ check_for_field (const char *str, gboolean *is_field, gboolean *is_range_field)
 	CheckPrefix pfx;
 
 	pfx.str   = str;
+
+	/* skip any non-alphanum starts in cpfx->str; this is to
+	 * handle the case where we have e.g. "(maildir:/abc)"
+	 */
+	while (pfx.str && !isalnum(*pfx.str))
+		++pfx.str;
+
 	pfx.match =  pfx.range_field = FALSE;
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)each_check_prefix,
@@ -454,6 +461,8 @@ mu_str_xapian_escape_in_place (char *term, gboolean esc_space)
 				*cur = escchar;
 			++colon;
 			break;
+		case '(':
+		case ')':
 		case '\'':
 		case '*':   /* wildcard */
 			break;
