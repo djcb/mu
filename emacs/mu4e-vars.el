@@ -192,7 +192,7 @@ flag set)."
   '((t :inherit font-lock-type-face))
   "Face for a header title in the headers view."
   :group 'mu4e-faces)
- 
+
 (defface mu4e-header-highlight-face
   '((t :inherit default :weight bold :underline t))
   "Face for the header at point."
@@ -389,12 +389,6 @@ in :from-or-to headers. By default, match nothing.")
   "Date format to use in the message view, in the format of
   `format-time-string'.")
 
-(defvar mu4e-search-results-limit 1000
-  "Maximum number of search results (or -1 for unlimited). Since
-limiting search results speeds up searches significantly, it's
-useful to limit this. Note, to ignore the limit, use a prefix
-argument (C-u) before invoking the search.")
-
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
@@ -497,7 +491,7 @@ flag set)."
   '((t :inherit font-lock-type-face))
   "Face for a header title in the headers view."
   :group 'mu4e-faces)
- 
+
 (defface mu4e-header-highlight-face
   '((t :inherit default :weight bold :underline t))
   "Face for the header at point."
@@ -576,11 +570,11 @@ flag set)."
 headers)."
   :group 'mu4e-faces)
 
-(defconst mu4e-logo 
+(defconst mu4e-logo
   (propertize "mu4e" 'face 'mu4e-title-face)
   "A propertized string for the mu4e 'logo'.")
 
-(defconst mu4e-prefix 
+(defconst mu4e-prefix
   (concat "[" mu4e-logo "]")
   "Prefix for mu4e minibuffer input.")
 
