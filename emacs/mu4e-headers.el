@@ -234,6 +234,9 @@ into a string."
 	  (duplicate    "= ")
 	  (t            "| "))))))
 
+(defconst mu4e~headers-from-or-to-prefix "To "
+  "Prefix for the :from-or-to field when it is showing To:.")
+
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
@@ -260,7 +263,7 @@ if provided, or at the end of the buffer otherwise."
 				     (from (and from-lst (cdar from-lst))))
 			       (if (and from (string-match
 					       mu4e-user-mail-address-regexp from))
-				 (concat "To "
+				 (concat (or mu4e~headers-from-or-to-prefix "") 
 				   (mu4e~headers-contact-str (plist-get msg :to)))
 				 (mu4e~headers-contact-str from-lst))))
 			   (:date (format-time-string mu4e-headers-date-format val))
