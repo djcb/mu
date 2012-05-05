@@ -376,7 +376,7 @@ Default bindings
 R: Reply      s: search            .: raw view (toggle)
 F: Forward    j: jump-to-maildir   q: quit
 C: Compose    b: bookmark-search
-E: Edit       B: bookmark-search (edit-first)
+E: Edit       B: edit bookmark-search
 
 ----------------------------------------------------------------------------
 @end example
@@ -881,9 +881,10 @@ being in a certain folder.
 
 Queries normally return only up to @code{mu4e-search-results-limit} (which
 defaults to 1000) results. You get @emph{all} results when you prefix your
-search commands (such as with @code{mu4e-search}, @code{mu4e-search-bookmark},
-@code{mu4e-search-bookmark-edit-first} and @code{mu4e-jump-to-maildir} with
-@kbd{C-u}.
+search commands (such as with @code{mu4e-headers-search},
+@code{mu4e-headers-search-bookmark},
+@code{mu4e-headers-search-bookmark-edit-first} and
+@code{mu4e-headers-jump-to-maildir} with @kbd{C-u}.
 
 This limit was introduced in earlier versions of @t{mu4e}, where @t{emacs}
 could become slow when there were many matches. This is no longer the case
@@ -996,10 +997,10 @@ type is @key{bb}.
 
 @subsection Editing bookmarks before searching
 
-There is also @code{mu4e-search-bookmark-edit-first} (key @key{B}), which lets
-you edit the search query with some bookmark already filled in. This can be
-useful if you have many similar queries, but need to change some
-parameter. For example, you could have a bookmark @t{"NOT maildir:/Trash
+There is also @code{mu4e-headers-search-bookmark-edit-first} (key @key{B}),
+which lets you edit the search query with some bookmark already filled
+in. This can be useful if you have many similar queries, but need to change
+some parameter. For example, you could have a bookmark @t{"NOT maildir:/Trash
 AND"}@footnote{Not a valid search query by itself} and add whatever you want
 to search for to that. Or, to do a query limited to the messages of today, all
 you need to type is @key{Bt} (using the @t{Today's messages}-bookmark, see
@@ -1114,10 +1115,10 @@ of this message.
 @lisp
 (defun search-for-sender (msg)
   "Search for messages sent by the sender of the current one."
-  (mu4e-search (concat "from:" (cdar (mu4e-msg-field msg :from)))))
+  (mu4e-headers-search (concat "from:" (cdar (mu4e-msg-field msg :from)))))
 
 (add-to-list 'mu4e-view-actions
-   '("search for sender" ?s search-for-sender) t)
+   '("search for sender" ?x search-for-sender) t)
 @end lisp
 
 @subsection Example: adding an attachment action
@@ -1575,12 +1576,12 @@ address-book with org-contacts} for now.
 all?}. Yes, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
 value of the variable @code{m4ue-search-result-limit} matches. You can
-customize that variable, or simply press the emacs prefix @kbd{C-u} before your
-search command to get all matches. In other words, when you press @t{C-u s
-hello} you will get all matches, while @t{s hello} only gets you
+customize that variable, or simply press the emacs prefix @kbd{C-u} before
+your search command to get all matches. In other words, when you press @t{C-u
+s hello} you will get all matches, while @t{s hello} only gets you
 up-to-a-limited-number matches. Same for the other search based commands,
-@code{mu4e-jump-to-maildir} (default: @key{j}) and @code{mu4e-search-bookmark}
-(default: @key{b}).
+@code{mu4e-headers-jump-to-maildir} (default: @key{j}) and
+@code{mu4e-headers-search-bookmark} (default: @key{b}).
 @item @emph{How can I easily include attachments in the messages I write?}
 Drag-and-drop.
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
