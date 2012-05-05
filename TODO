@@ -1,141 +1,34 @@
-* Future release
+* TODO (fixes, ideas, etc.)
 
-   - [ ] config system (config file) (?)
-   - [ ] don't make test mail files executable
-   - [ ] make 'make check' more useful for others
-   - [ ] completion for zsh
-   - [ ] follow symlinks when indexing
-   - [ ] better 'usage' info
-   - [ ] generalize mu_str_normalize for all unicode
-   - [ ] check wmy (date) for begin-end
-   - [ ] tagging rw
+** For 0.9.8.4
 
+   - check the iso-8859-1 problems (see Emilio's mail)
 
-* Releases already done (see NEWS for features)
+** Future stuff
 
-** release 0.9.7 [100%]
+*** mu4e
 
-   - [X] mu stats
-   - [X] tagging (ro, based on X-Label)
-   - [X] mail threads
-   - [X] guile interface
-   - [X] add version info to output of configure, mu.log
-   - [X] use system locale in output
+  - identities (see Jacek's 'mu4e: From field in replies' mail)
+  - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
+    mail)
+  - contact completion (see Jacek's 'mu4e: using' mail)
+  - interactive split-view control (Jacek)
 
-** release 0.9.6 [100%]
+  - actions for /all/ headers, actions for /all/ attachment
+  - custom header fields in headers-view, message-view
+  - guile integration
 
-   (see NEWS)
+  - check if we can speed up mu4e-proc parsing by using search rather than
+    regexp search
+  - show maildirs as a tree, not a list in speed bar
 
-** release 0.9.5 [100%]
+  - put threading information in the database, and enable getting the complete
+    threads when searching
+  - hide/show messages matching a certain pattern
+  - make search results a stack
 
-   (see NEWS)
-
-** release 0.9.4 [100%]
-
-   - [X] add 'mu cfind' to find contacts
-   - [X] add 'flag:unread' as a synonym for 'flag:new OR NOT flag:unseen'
-   - [X] updated documentation
-   - [X] internal updates
-
-
-** release 0.9.3 [100%]
-
-   - [X] minor bug fixes since 0.9.2
-
-** release 0.9.2 [100%]
-
-   - [X] size range searches
-   - [X] xml,json,sexp output (experimental)
-   - [X] check all strings are really UTF8
-   - [X] add drag & drop support for attachments
-   - [X] add drag & drop support for body images
-   - [X] fix size value
-   - [X] fix matching strange folder names
-   - [X] separate exit code for 'not found' vs other errors
-   - [X] fix build for Solaris (hopefully)
-   - [X] clearer errors when /home/user does not exist
-   - [X] fix -pedantic build (somewhat)
-   - [X] make commit batch size configurable param
-
-
-** release 0.9 / 0.9.1 [100%]
-
-   - [X] bookmarks
-   - [X] gtk-ui for searching
-   - [X] clean up mu-msg-field
-   - [X] normalize search fields
-   - [X] cleanup version check
-   - [X] propagate errors to ui
-   - [X] update mug for GErrors feedback
-   - [X] improve date ranges
-   - [X] improve spacing in mug
-   - [X] fix flag searches + synonyms
-   - [X] unbreak cc10/line33
-   - [X] fix issue #28 (lstat)
-   - [X] fix sorting by date in mug
-   - [X] make mug icon square
-   - [X] fix sort-order
-   - [X] pre-process terms, queries for '@'/':'/'.'
-   - [X] add support for Fedora14 (GMime 2.6)
-   - [X] normalize error output
-
-** release 0.8 [100%]
-
-   - [X] remove gio dependency
-   - [X] fix macos/wordexp bug(?)
-   - [X] fix rhel5 installation issue
-   - [X] fix non-ascii searches
-   - [X] summary
-   - [X] attachment handling
-   - [X] review docs
-   - [X] add summary unit test(s)
-   - [X] add attachment unit test(s)
-   - [X] fix e-mail address searches (issue #21)
-   - [X] mu-easy.1, man page with simple examples
-   - [X] fix progress info
-
-
-** release 0.7 [100%]
-
-   - [X] signal handler for indexing
-   - [X] fix max 10000 matches limit
-   - [X] embed database version in database
-   - [X] MuMsgXapian => MuMsgIterXapian
-   - [X] make 'make distcheck' work
-   - [X] don't store both values and terms
-   - [X] fix the batch stuff
-   - [X] mu view <path>
-   - [X] basic test suite
-   - [X] auto clean log file
-   - [X] configure error for missing ->dt_dtype
-
-
-** release 0.6 [100%]
-
-   - [X] implement re-index
-   - [X] mu-index config options
-   - [X] check which options actually work, remove rest
-   - [X] fix AND/OR escaping issue
-   - [X] update web page
-   - [X] man page / help
-   - [X] --mode for mkdir
-   - [X] add mu cleanup
-   - [X] add --clear option for --linksdir
-   - [X] document support for mutt, wanderlust
-   - [X] check cmdline letters
-   - [X] add mkmdir
-   - [X] re-add symlink support for search
-   - [X] support MAILDIR
-   - [X] config system (centralize options)
-   - [X] logging system
-   - [X] better output for indexing (statistics)
-   - [X] size check in indexing (~15Mb)
-   - [X] change directory setup a bit (~/.mu/xapian)
-   - [X] remove path-is-absolute checks
-   - [X] valgrind checking
-   - [X] check existing bugs in c.g.c
-   - [X] cleanup ascending/descending stuff
-   - [X] testing
+  - fix having multiple header views visible
+  - make next/prev header respect prefix argument (Jacek's patch)
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
