@@ -312,8 +312,8 @@ is nil, and otherwise open it."
 
       (define-key map "s" 'mu4e-headers-search)
 
-      (define-key map "b" 'mu4e-headers-search-bookmark)
-      (define-key map "B" 'mu4e-headers-search-bookmark-edit-first)
+      (define-key map "b" 'mu4e-headers-search-bookmark)     
+      (define-key map "B" 'mu4e-headers-search-bookmark-edit)
 
       (define-key map "%" 'mu4e-view-mark-matches)
       (define-key map "t" 'mu4e-view-mark-subthread)

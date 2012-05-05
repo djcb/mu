@@ -106,42 +106,6 @@ are of the form:
 	(erase-buffer)
 	(mu4e~mark-clear)))))
 
-
-(defvar mu4e~headers-search-hist nil
-  "History list of searches.")
-
-
-(defun mu4e-headers-search (expr search-all)
-  "Search in the mu database for EXPR, and switch to the output
-buffer for the results. If SEARCH-ALL is non-nil return all
-results, otherwise, limit number of results to
-`mu4e-search-results-limit'. This is an interactive function which
-ask user for EXPR, and SEARCH-ALL as prefix-argument."
-  (interactive
-    (let ((expr (read-string
-		  (mu4e-format "Search for: ")
-		  nil
-		  'mu4e~headers-search-hist nil t))
-	   (search-all current-prefix-arg))
-      (list expr search-all)))
-  (let ((buf (get-buffer-create mu4e~headers-buffer-name))
-	  (inhibit-read-only t))
-    (mu4e-mark-handle-when-leaving)
-    (with-current-buffer buf
-      (mu4e-headers-mode)
-      (setq
-	global-mode-string (propertize expr 'face 'mu4e-title-face)
-	mu4e~headers-query expr
-	mu4e~headers-buffer buf
-	mode-name "mu4e-headers"))
-    (switch-to-buffer buf)
-    (mu4e~proc-find
-      (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
-      (unless search-all mu4e-search-results-limit))
-    ;;; when we're starting a new search, we also kill the
-    ;;; view buffer, if any
-    (mu4e-view-kill-buffer-and-window)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
 ;;
@@ -264,7 +228,7 @@ if provided, or at the end of the buffer otherwise."
 				     (from (and from-lst (cdar from-lst))))
 			       (if (and from (string-match
 					       mu4e-user-mail-address-regexp from))
-				 (concat (or mu4e~headers-from-or-to-prefix "") 
+				 (concat (or mu4e~headers-from-or-to-prefix "")
 				   (mu4e~headers-contact-str (plist-get msg :to)))
 				 (mu4e~headers-contact-str from-lst))))
 			   (:date (format-time-string mu4e-headers-date-format val))
@@ -324,15 +288,15 @@ after the end of the search results."
   (defun mu4e~headers-mark-read()(interactive)(mu4e-headers-mark-and-next 'read))
   (defun mu4e~headers-mark-unread()(interactive)(mu4e-headers-mark-and-next 'unread))
   
-  
+
   (setq mu4e-headers-mode-map
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mu4e-headers-search)
 
       (define-key map "b" 'mu4e-headers-search-bookmark)
-      (define-key map "B" 'mu4e-headers-search-bookmark-edit-first)
-
+      (define-key map "B" 'mu4e-headers-search-bookmark-edit)
+ 
       (define-key map "q" 'mu4e~headers-kill-buffer-and-window)
       (define-key map "z" 'mu4e~headers-kill-buffer-and-window)
 
@@ -441,7 +405,7 @@ after the end of the search results."
   "Major mode for displaying mu4e search results.
 \\{mu4e-headers-mode-map}."
   (use-local-map mu4e-headers-mode-map)
-   
+
   (make-local-variable 'mu4e~headers-query)
   (make-local-variable 'mu4e~headers-proc)
   (make-local-variable 'mu4e~highlighted-docid)
@@ -608,6 +572,27 @@ non-nill, don't raise an error when the docid is not found."
 	(error "Cannot find message with docid %S" docid)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mu4e~headers-search-execute (expr search-all)
+  "Search in the mu database for EXPR, and switch to the output
+buffer for the results. If SEARCH-ALL is non-nil return all
+results, otherwise, limit number of results to
+`mu4e-search-results-limit'."
+  (let ((buf (get-buffer-create mu4e~headers-buffer-name))
+	 (inhibit-read-only t))
+    (with-current-buffer buf
+      (mu4e-headers-mode)
+      (setq
+	global-mode-string (propertize expr 'face 'mu4e-title-face)
+	mu4e~headers-query expr
+	mu4e~headers-buffer buf
+	mode-name "mu4e-headers"))
+    (switch-to-buffer buf)
+    (mu4e~proc-find
+      (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
+      (unless search-all mu4e-search-results-limit))
+;;; when we're starting a new search, we also kill the
+;;; view buffer, if any
+    (mu4e-view-kill-buffer-and-window)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; search-based marking
@@ -713,7 +698,7 @@ limited to the message at point and its descendants."
 	      (setq last-marked-point (point)))))))
     (when last-marked-point
       (goto-char last-marked-point)
-      (mu4e-headers-next)))) 
+      (mu4e-headers-next))))
 
 (defun mu4e-headers-mark-subthread ()
   "Like `mu4e-mark-thread', but only for a sub-thread."
@@ -726,31 +711,46 @@ limited to the message at point and its descendants."
 
 
 ;;; interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- (defun mu4e-headers-search-bookmark (query search-all)
-  "Search using some bookmarked query. when search-all (prefix
-argument) is non-nil, show /all/ results, otherwise, limit to up to
-`mu4e-search-results-limit'."
-  (interactive
-    (let ((query (mu4e-ask-bookmark "Bookmark: ")))
-      (list query current-prefix-arg)))
-   (when query
-     (mu4e-headers-search query search-all)))
+(defvar mu4e~headers-search-hist nil
+  "History list of searches.")
 
-(defvar mu4e~headers-bookmark-hist nil
-  "History list for bookmarks used.")
+(defun mu4e-headers-search (&optional expr search-all prompt edit)
+  "Search in the mu database for EXPR, and switch to the output
+buffer for the results. If SEARCH-ALL is non-nil return all
+results, otherwise, limit number of results to
+`mu4e-search-results-limit'. This is an interactive function which
+ask user for EXPR, and SEARCH-ALL as prefix-argument. PROMPT, if
+non-nil, is the prompt used by this function (default is \"Search
+for:\"). If EDIT is non-nil, instead of executing the query for
+EXPR, let the user edit the query before executing it."
+  (interactive)
+  (let* ((prompt (mu4e-format (or prompt "Search for: ")))
+	  (expr
+	    (if edit
+	      (read-string prompt expr)
+	      (or expr
+		(read-string prompt nil 'mu4e~headers-search-hist)))))
+    (mu4e-mark-handle-when-leaving)
+    (mu4e~headers-search-execute expr (or search-all current-prefix-arg))))
 
-(defun mu4e-headers-search-bookmark-edit-first (expr search-all)
-  "Search using some bookmarked query, but allow for editing the
-bookmark before submitting it. With C-u prefix, show /all/ results,
-otherwise, limit to up to `mu4e-search-results-limit'."
-  (interactive
-    (list (read-string
-	    (concat (or (mu4e-ask-bookmark "Edit bookmark: ") "") " ")
-	    'mu4e~headers-bookmark-hist)
-      current-prefix-arg))
-  (when expr
-    (mu4e-headers-search expr search-all)))
 
+(defun mu4e-headers-search-bookmark (&optional expr search-all edit)
+  "Search using some bookmarked query EXPR. When SEARCH-ALL (prefix
+argument) is non-nil, show *all* results, otherwise, limit to up to
+`mu4e-search-results-limit'. If EDIT is non-nil, let the user edit
+the bookmark before starting the search."
+  (interactive)
+  (let ((expr
+	  (or expr
+	    (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: ")))))
+    (mu4e-headers-search expr (or search-all current-prefix-arg)
+      (when edit "Edit bookmark: ") edit)))
+
+(defun mu4e-headers-search-bookmark-edit ()
+  "Edit an existing bookmark before executing it."
+  (interactive)
+  (mu4e-headers-search-bookmark nil current-prefix-arg t))
+ 
 
 (defun mu4e-headers-view-message ()
   "View message at point. If there's an existing window for the

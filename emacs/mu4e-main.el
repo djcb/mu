@@ -33,7 +33,7 @@
   (let ((map (make-sparse-keymap)))
 
     (define-key map "b" 'mu4e-headers-search-bookmark)
-    (define-key map "B" 'mu4e-headers-search-bookmark-edit-first)
+    (define-key map "B" 'mu4e-headers-search-bookmark-edit)
 
     (define-key map "s" 'mu4e-headers-search)
     (define-key map "q" 'mu4e-quit)
