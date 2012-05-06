@@ -666,7 +666,7 @@ set, respectively, @code{mu4e-view-wrap-lines} and @code{mu4e-view-hide-cited}
 to @code{t}. @footnote{If you have installed the @t{filladapt} package
 (@url{http://www.wonderworks.com/download/filladapt.el}), @t{mu4e} will use it
 for line-wrapping, as it generally does a better job than the default
-mechanism emacs provides.
+mechanism emacs provides.}
 @item For search-related operations, see @ref{Searching}.
 @end itemize
 
