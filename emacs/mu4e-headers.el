@@ -273,15 +273,15 @@ after the end of the search results."
 	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+ 
 
 
-
-
-;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-headers-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
 (unless mu4e-headers-mode-map
   ;; add some quick funcs so our key descriptions below are shorter
+  ;; TODO: defmacro this
   (defun mu4e~headers-mark-trash()(interactive)(mu4e-headers-mark-and-next 'trash))
   (defun mu4e~headers-mark-delete()(interactive)(mu4e-headers-mark-and-next 'delete))
   (defun mu4e~headers-mark-unmark()(interactive)(mu4e-headers-mark-and-next 'unmark))
@@ -293,7 +293,10 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mu4e-headers-search)
-
+      (define-key map "S" 'mu4e-headers-search-edit)
+      (define-key map "/" 'mu4e-headers-search-narrow)
+ 
+      
       (define-key map "b" 'mu4e-headers-search-bookmark)
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
  
@@ -302,13 +305,10 @@ after the end of the search results."
 
       (define-key map "r" 'mu4e-headers-rerun-search)
       (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
-
-      (define-key map "/" 'mu4e-headers-search-refine)
       
       (define-key map "%" 'mu4e-headers-mark-matches)
       (define-key map "t" 'mu4e-headers-mark-subthread)
       (define-key map "T" 'mu4e-headers-mark-thread)
-
 
       ;; navigation
       (define-key map "n" 'mu4e-headers-next)
@@ -735,6 +735,13 @@ EXPR, let the user edit the query before executing it."
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr (or search-all current-prefix-arg))))
 
+(defun mu4e-headers-search-edit (search-all)
+  "Edit the last search expression. If SEARCH-ALL (prefix-argument)
+is non-nil, retrieve *all* results, otherwise only get up to
+`mu4e-search-results-limit'."
+  (interactive "P")
+  (mu4e-headers-search mu4e~headers-query search-all nil t))
+
 
 (defun mu4e-headers-search-bookmark (&optional expr search-all edit)
   "Search using some bookmarked query EXPR. When SEARCH-ALL (prefix
@@ -754,21 +761,21 @@ the bookmark before starting the search."
   (mu4e-headers-search-bookmark nil current-prefix-arg t))
 
 
-(defun mu4e-headers-search-refine (extra search-all)
-  "Do a search based on the last search with clause EXTRA
-appended. SEARCH-ALL (prefix-argument) determines whether to run
-*all* results or only up to `mu4e-search-results-limit'. You can
-use this function to 'filter', 'zoom in' to your search results."
+(defun mu4e-headers-search-narrow (filter search-all)
+  "Narrow the last search by appending search expression FILTER to
+the last search expression. If SEARCH-ALL (prefix-argument) is
+non-nil, retrieve *all* results, otherwise only get up to
+`mu4e-search-results-limit'."
   (interactive
-    (let ((extra
-  	    (read-string (mu4e-format "Filter result: ")
+    (let ((filter
+  	    (read-string (mu4e-format "Filter: ")
   	      nil 'mu4e~headers-search-hist nil t))
   	   (search-all current-prefix-arg))
-        (list extra search-all)))
+        (list filter search-all)))
   (unless mu4e~headers-query
     (error "There's nothing to filter"))
   (mu4e-headers-search
-    (format "(%s) AND %s" mu4e~headers-query extra) search-all))
+    (format "(%s) AND %s" mu4e~headers-query filter) search-all))
 
 
 
