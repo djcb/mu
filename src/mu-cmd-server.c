@@ -751,7 +751,8 @@ cmd_index (MuStore *store, MuQuery *query, GSList *args, GError **err)
 
 	}
 	mu_index_stats_clear (&stats);
-	rv = mu_index_run (index, path, FALSE, &stats, index_msg_cb, NULL, NULL);
+	rv = mu_index_run (index, path, FALSE, &stats, index_msg_cb, NULL, FALSE,
+			   NULL);
 	if (rv != MU_OK && rv != MU_STOP) {
 		print_error (MU_ERROR_INTERNAL, "indexing failed");
 		goto leave;

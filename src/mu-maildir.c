@@ -46,7 +46,9 @@
 #include "mu-maildir.h"
 #include "mu-str.h"
 
-#define MU_MAILDIR_NOINDEX_FILE       ".noindex"
+#define MU_MAILDIR_NOINDEX_FILE           ".noindex"
+#define MU_MAILDIR_QUICKINDEX_FILE        ".quickindex"
+#define MU_MAILDIR_QUICKINDEX_FILE_LENGTH 11
 
 /* On Linux (and some BSD), we have entry->d_type, but some file
  * systems (XFS, ReiserFS) do not support it, and set it DT_UNKNOWN.
@@ -223,7 +225,8 @@ mu_maildir_link (const char* src, const char *targetpath, GError **err)
 static MuError
 process_dir (const char* path, const gchar *mdir,
 	     MuMaildirWalkMsgCallback msg_cb,
-	     MuMaildirWalkDirCallback dir_cb, void *data);
+	     MuMaildirWalkDirCallback dir_cb, gboolean quick_index,
+	     void *data);
 
 static MuError
 process_file (const char* fullpath, const gchar* mdir,
@@ -292,25 +295,34 @@ is_maildir_new_or_cur (const char *path)
 	return FALSE;
 }
 
-/* check if there is a noindex file (MU_MAILDIR_NOINDEX_FILE) in this
- * dir; */
 static gboolean
-has_noindex_file (const char *path)
+has_file (const char *path, const char *filename)
 {
-	const char* noindexpath;
+	const char* filepath;
 
 	/* static buffer */
-	noindexpath = mu_str_fullpath_s (path, MU_MAILDIR_NOINDEX_FILE);
+	filepath = mu_str_fullpath_s (path, filename);
 
-	if (access (noindexpath, F_OK) == 0)
+	if (access (filepath, F_OK) == 0)
 		return TRUE;
 	else if (G_UNLIKELY(errno != ENOENT))
-		g_warning ("error testing for noindex file %s: %s",
-			   noindexpath, strerror(errno));
+		g_warning ("error testing for file %s: %s",
+			   filepath, strerror(errno));
 
 	return FALSE;
 }
 
+static gboolean
+has_noindex_file (const char *path)
+{
+	return has_file (path, MU_MAILDIR_NOINDEX_FILE);
+}
+
+static gboolean
+has_quickindex_file (const char *path)
+{
+	return has_file (path, MU_MAILDIR_QUICKINDEX_FILE);
+}
 
 static gboolean
 is_dotdir_to_ignore (const char* dir)
@@ -356,6 +368,12 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 		    strncmp (entry->d_name, "core", 4) == 0)
 			return TRUE;
 
+		/* ignore .quickindex files */
+		if (entry->d_name[0] == '.' &&
+		    strncmp (entry->d_name, MU_MAILDIR_QUICKINDEX_FILE,
+			     MU_MAILDIR_QUICKINDEX_FILE_LENGTH) == 0)
+			return TRUE;
+
 		return FALSE; /* other files: don't ignore */
 
 	} else if (d_type == DT_DIR)
@@ -390,6 +408,7 @@ static MuError
 process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 		   MuMaildirWalkMsgCallback cb_msg,
 		   MuMaildirWalkDirCallback cb_dir,
+		   gboolean quick_index,
 		   void *data)
 {
 	const char *fp;
@@ -423,7 +442,8 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 		 * /tmp, /cur, /new
 		 */
 		my_mdir = get_mdir_for_path (mdir, entry->d_name);
-		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, data);
+		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, quick_index,
+				  data);
 		g_free (my_mdir);
 
 		return rv;
@@ -470,7 +490,9 @@ dirent_cmp (struct dirent *d1, struct dirent *d2)
 static MuError
 process_dir_entries (DIR *dir, const char* path, const char* mdir,
 		     MuMaildirWalkMsgCallback msg_cb,
-		     MuMaildirWalkDirCallback dir_cb, void *data)
+		     MuMaildirWalkDirCallback dir_cb,
+		     gboolean quick_index,
+		     void *data)
 {
 	MuError result;
 	GSList *lst, *c;
@@ -502,7 +524,7 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 
 	for (c = lst, result = MU_OK; c && result == MU_OK; c = g_slist_next(c))
 		result = process_dir_entry (path, mdir, (struct dirent*)c->data,
-					    msg_cb, dir_cb, data);
+					    msg_cb, dir_cb, quick_index, data);
 
 	g_slist_foreach (lst, (GFunc)dirent_destroy, NULL);
 	g_slist_free (lst);
@@ -514,7 +536,9 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 static MuError
 process_dir (const char* path, const char* mdir,
 	     MuMaildirWalkMsgCallback msg_cb,
-	     MuMaildirWalkDirCallback dir_cb, void *data)
+	     MuMaildirWalkDirCallback dir_cb,
+	     gboolean quick_index,
+	     void *data)
 {
 	MuError result;
 	DIR* dir;
@@ -522,6 +546,11 @@ process_dir (const char* path, const char* mdir,
 	/* if it has a noindex file, we ignore this dir */
 	if (has_noindex_file (path)) {
 		g_debug ("found .noindex: ignoring dir %s", path);
+		return MU_OK;
+	}
+
+	if (quick_index && !has_quickindex_file (path)) {
+		g_debug ("Quick indexing and did not find .quickindex, ignoring dir %s", path);
 		return MU_OK;
 	}
 
@@ -541,7 +570,7 @@ process_dir (const char* path, const char* mdir,
 		}
 	}
 
-	result = process_dir_entries (dir, path, mdir, msg_cb, dir_cb, data);
+	result = process_dir_entries (dir, path, mdir, msg_cb, dir_cb, quick_index, data);
 	closedir (dir);
 
 	/* only run dir_cb if it exists and so far, things went ok */
@@ -554,7 +583,8 @@ process_dir (const char* path, const char* mdir,
 
 MuError
 mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
-		 MuMaildirWalkDirCallback cb_dir, void *data)
+		 MuMaildirWalkDirCallback cb_dir, gboolean quick_index,
+		 void *data)
 {
 	MuError rv;
 	char *mypath;
@@ -567,7 +597,7 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 	if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
 		mypath[strlen(mypath)-1] = '\0';
 
-	rv = process_dir (mypath, NULL, cb_msg, cb_dir, data);
+	rv = process_dir (mypath, NULL, cb_msg, cb_dir, quick_index, data);
 	g_free (mypath);
 
 	return rv;

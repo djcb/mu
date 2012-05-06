@@ -330,7 +330,8 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 			   show_progress ?
 			   (MuIndexMsgCallback)index_msg_cb :
 			   (MuIndexMsgCallback)index_msg_silent_cb,
-			   NULL, &idata);
+			   NULL, opts->quick,
+			   &idata);
 
 	if (!opts->quiet) {
 		print_stats (stats, TRUE, !opts->nocolor);

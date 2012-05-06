@@ -125,6 +125,7 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  * @mu_index_stats_clear before calling this function
  * @param cb_msg a callback function called for every msg indexed;
  * @param cb_dir a callback function called for every dir entered/left or NULL
+ * @param quick_index whether a quick index was requested
  * @param user_data a user pointer that will be passed to the callback function
  *
  * @return MU_OK if the stats gathering was completed succesfully,
@@ -133,7 +134,8 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  */
 MuError mu_index_run (MuIndex *index, const char* path, gboolean force,
 		      MuIndexStats *stats, MuIndexMsgCallback msg_cb,
-		      MuIndexDirCallback dir_cb, void *user_data);
+		      MuIndexDirCallback dir_cb, gboolean quick_index,
+		      void *user_data);
 
 /**
  * gather some statistics about the Maildir; this is usually much faster

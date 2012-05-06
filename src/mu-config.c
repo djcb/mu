@@ -144,6 +144,8 @@ config_options_group_index (void)
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
 		 "top of the maildir", NULL},
+		{"quick", 'q', 0, G_OPTION_ARG_NONE, &MU_CONFIG.quick,
+		 "only index directories marked with .quickindex (false)", NULL},
 		{"reindex", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.reindex,
 		 "index even already indexed messages (false)", NULL},
 		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.rebuild,

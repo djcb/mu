@@ -20,6 +20,18 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
     directories with spam-messages), put a file called =.noindex= in the directory
     to exlude, and it will be ignored when indexing (including its children)
 
+*** Declaring which directories are part of a quick index
+
+    You can declare which directories should be part of a quick index by putting
+    =.quickindex = files in those directories. When =mu-index= is invoked with
+    =--quick=, only those folders will be indexed. The rest of the index will stay
+    untouched.
+    
+    Note that the whole directory tree has to be marked as quick indexable (the
+    reverse of .noindex):
+
+#+html:<pre> $ touch ~/Maildir/.quickindex ~/Maildir/inbox/.quickindex ~/Maildir/inbox/cur/.quickindex</pre>
+
 ** Finding messages
 
    After you have indexed your messages, you can search them. Here are some

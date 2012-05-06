@@ -47,6 +47,12 @@ or 'spam' folders) by creating a file called \fI.noindex\fR in the directory.
 When \fBmu\fR sees such a file, it will exclude this directory and its
 sub-directories from indexing.
 
+You can also define which directories \fBmu index\fR should visit when using the
+\fI--quick\fR option. By creating files called \fI.quickindex\fR in \fBall\fR
+the directories that you want indexed (from Maildir down to the specific directory)
+you can limit a quick index to only those directories. This is useful for quick
+incremental indexes of directories that you know updates regularly.
+
 .SH SEARCHING YOUR E-MAIL
 
 After you have indexed your mail, you can start searching it. By default, the
