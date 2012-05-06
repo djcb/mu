@@ -168,9 +168,10 @@ headers."
 	    (mu4e-mark-set 'unmark))
 
  	  ;; re-use the thread info from the old one; this is needed because
- 	  ;; *update* message don't have thread info by themselves (unlike
+ 	  ;; *update* messages don't have thread info by themselves (unlike
  	  ;; search results)
- 	  ;; but since we still have the search results, re-use those
+	  ;; since we still have the search results, re-use
+ 	  ;; those
  	  (plist-put msg :thread
  	    (mu4e~headers-field-for-docid docid :thread))
 
