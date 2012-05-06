@@ -64,7 +64,7 @@ as it error code, which mu4e interprets as an error."
   "Number of seconds between automatic calls to retrieve mail and
 update the database. If nil, don't update automatically. Note,
 changes in `mu4e-update-interval' only take effect after restarting
-mu4d."
+mu4e."
   :type 'integer
   :group 'mu4e
   :safe 'integerp)
