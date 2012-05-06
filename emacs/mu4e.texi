@@ -516,8 +516,14 @@ key          description
 ---          -----------
 n,p          go to next, previous message
 y            select the message view (if it's visible)
+
+s            search
+S            edit last query
+/            narrow the search
+b            search bookmark
+B            edit bookmark, then search
 j            jump to maildir
-b,B          jump to bookmark (/ edit first)
+
 a            execute some action on header
 
 d            mark for moving to the trash folder
@@ -660,8 +666,8 @@ set, respectively, @code{mu4e-view-wrap-lines} and @code{mu4e-view-hide-cited}
 to @code{t}. @footnote{If you have installed the @t{filladapt} package
 (@url{http://www.wonderworks.com/download/filladapt.el}), @t{mu4e} will use it
 for line-wrapping, as it generally does a better job than the default
-mechanism emacs provides.}
-
+mechanism emacs provides.
+@item For search-related operations, see @ref{Searching}.
 @end itemize
 
 @subsection Keybindings
@@ -675,8 +681,13 @@ key          description
 n,p          go to next, previous message
 y            select the headers view (if it's visible)
 
+s            search
+S            edit last query
+/            narrow the search
+b            search bookmark
+B            edit bookmark, then search
 j            jump to maildir
-b,B          jump to bookmark (/ edit first)
+
 
 a            execute some action on the message
 
@@ -879,10 +890,9 @@ see, are the result of some query. Even if you 'jump to a folder', in fact you
 are executing a search query for messages that happen to have the property of
 being in a certain folder.
 
-Queries normally return only up to @code{mu4e-search-results-limit} (which
-defaults to 1000) results. You get @emph{all} results when you prefix your
-search commands (such as with @code{mu4e-headers-search},
-@code{mu4e-headers-search-bookmark},
+Queries normally return only up to @code{mu4e-search-results-limit} (default:
+500) results. You get @emph{all} results when you prefix your search commands
+(such as with @code{mu4e-headers-search}, @code{mu4e-headers-search-bookmark},
 @code{mu4e-headers-search-bookmark-edit-first} and
 @code{mu4e-headers-jump-to-maildir} with @kbd{C-u}.
 
