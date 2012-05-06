@@ -303,6 +303,8 @@ after the end of the search results."
       (define-key map "r" 'mu4e-headers-rerun-search)
       (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
 
+      (define-key map "/" 'mu4e-headers-search-refine)
+      
       (define-key map "%" 'mu4e-headers-mark-matches)
       (define-key map "t" 'mu4e-headers-mark-subthread)
       (define-key map "T" 'mu4e-headers-mark-thread)
@@ -750,7 +752,25 @@ the bookmark before starting the search."
   "Edit an existing bookmark before executing it."
   (interactive)
   (mu4e-headers-search-bookmark nil current-prefix-arg t))
- 
+
+
+(defun mu4e-headers-search-refine (extra search-all)
+  "Do a search based on the last search with clause EXTRA
+appended. SEARCH-ALL (prefix-argument) determines whether to run
+*all* results or only up to `mu4e-search-results-limit'. You can
+use this function to 'filter', 'zoom in' to your search results."
+  (interactive
+    (let ((extra
+  	    (read-string (mu4e-format "Filter result: ")
+  	      nil 'mu4e~headers-search-hist nil t))
+  	   (search-all current-prefix-arg))
+        (list extra search-all)))
+  (unless mu4e~headers-query
+    (error "There's nothing to filter"))
+  (mu4e-headers-search
+    (format "(%s) AND %s" mu4e~headers-query extra) search-all))
+
+
 
 (defun mu4e-headers-view-message ()
   "View message at point. If there's an existing window for the

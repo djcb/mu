@@ -311,7 +311,8 @@ is nil, and otherwise open it."
       (define-key map "z" 'mu4e-view-kill-buffer-and-window)
 
       (define-key map "s" 'mu4e-headers-search)
-
+      (define-key map "/" 'mu4e-headers-search-refine)
+      
       (define-key map "b" 'mu4e-headers-search-bookmark)     
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
 
