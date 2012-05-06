@@ -829,17 +829,19 @@ docid. Otherwise, return nil."
     ;; return the docid only if the move succeeded
     (when succeeded docid)))
 
-(defun mu4e-headers-next ()
+(defun mu4e-headers-next (&optional n)
   "Move point to the next message header. If this succeeds, return
-the new docid. Otherwise, return nil."
-  (interactive)
-  (mu4e~headers-move 1))
+the new docid. Otherwise, return nil. Optionally, takes an integer
+N (prefix argument), to the Nth next header."
+  (interactive "P")
+  (mu4e~headers-move (or n 1)))
 
-(defun mu4e-headers-prev ()
-  "Move point to the previous message header. If this succeeds,
-return the new docid. Otherwise, return nil."
-  (interactive)
-  (mu4e~headers-move -1))
+(defun mu4e-headers-prev (&optional n)
+  "Move point to the previous message header. If this succeeds, return
+the new docid. Otherwise, return nil. Optionally, takes an integer
+N (prefix argument), to the Nth previous header."
+  (interactive "P")
+  (mu4e~headers-move (- (or n 1))))
 
 (defun mu4e~headers-jump-to-maildir (maildir search-all)
   "Show the messages in maildir (user is prompted to ask what

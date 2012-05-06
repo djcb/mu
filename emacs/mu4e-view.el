@@ -344,11 +344,11 @@ is nil, and otherwise open it."
 	#'(lambda () (interactive) (scroll-up -1)))
 
       ;; navigation between messages
-      (define-key map "p" 'mu4e~view-prev-header)
-      (define-key map "n" 'mu4e~view-next-header)
+      (define-key map "p" 'mu4e-view-headers-prev)
+      (define-key map "n" 'mu4e-view-headers-next)
       ;; the same
-      (define-key map (kbd "<M-down>") 'mu4e~view-next-header)
-      (define-key map (kbd "<M-up>") 'mu4e~view-prev-header)
+      (define-key map (kbd "<M-down>") 'mu4e-view-headers-next)
+      (define-key map (kbd "<M-up>") 'mu4e-view-headers-prev)
 
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
@@ -428,8 +428,8 @@ is nil, and otherwise open it."
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
 
 	(define-key menumap [sepa4] '("--"))
-	(define-key menumap [next]  '("Next" . mu4e~view-next-header))
-	(define-key menumap [previous]  '("Previous" . mu4e~view-prev-header)))
+	(define-key menumap [next]  '("Next" . mu4e-view-headers-next))
+	(define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
       map)))
 
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
@@ -580,8 +580,23 @@ docid. Otherwise, return nil."
     (with-current-buffer mu4e~view-headers-buffer
       (mu4e~headers-move lines))))
 
-(defun mu4e~view-next-header()(interactive)(mu4e~view-headers-move 1))
-(defun mu4e~view-prev-header()(interactive)(mu4e~view-headers-move -1))
+(defun mu4e-view-headers-next(&optional n)
+  "Move point to the next message header in the headers buffer
+connected with this message view. If this succeeds, return the new
+docid. Otherwise, return nil. Optionally, takes an integer
+N (prefix argument), to the Nth next header."
+  (interactive "P")
+  (mu4e~view-headers-move (or n 1)))
+
+
+(defun mu4e-view-headers-prev(&optional n)
+  "Move point to the previous message header in the headers buffer
+connected with this message view. If this succeeds, return the new
+docid. Otherwise, return nil. Optionally, takes an integer
+N (prefix argument), to the Nth previous header."
+  (interactive "P")
+  (mu4e~view-headers-move (- (or n 1))))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -832,19 +847,19 @@ user that unmarking only works in the header list."
   "Mark the current message for moving."
   (interactive)
   (mu4e~view-mark-set 'move)
-  (mu4e~view-next-header))
+  (mu4e-view-headers-next))
 
 (defun mu4e-view-mark-for-trash ()
   "Mark the current message for moving to the trash folder."
   (interactive)
   (mu4e~view-mark-set 'trash)
-  (mu4e~view-next-header))
+  (mu4e-view-headers-next))
 
 (defun mu4e-view-mark-for-delete ()
   "Mark the current message for deletion."
   (interactive)
   (mu4e~view-mark-set 'delete)
-  (mu4e~view-next-header))
+  (mu4e-view-headers-next))
 
 (defun mu4e-view-marked-execute ()
   "If we're in split-view, execute the marks. Otherwise, warn user
