@@ -311,7 +311,8 @@ is nil, and otherwise open it."
       (define-key map "z" 'mu4e-view-kill-buffer-and-window)
 
       (define-key map "s" 'mu4e-headers-search)
-      (define-key map "/" 'mu4e-headers-search-refine)
+      (define-key map "S" 'mu4e-view-headers-search-edit)
+      (define-key map "/" 'mu4e-view-headers-search-narrow)
       
       (define-key map "b" 'mu4e-headers-search-bookmark)     
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
@@ -573,13 +574,15 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (flush-lines "^[:blank:]*>")
       (setq mu4e~view-cited-hidden t))))
 
-(defun mu4e~view-headers-move (lines)
-  "Move point LINES lines forward (if LINES is positive) or
-backward (if LINES is negative). If this succeeds, return the new
-docid. Otherwise, return nil."
-  (when (buffer-live-p mu4e~view-headers-buffer)
-    (with-current-buffer mu4e~view-headers-buffer
-      (mu4e~headers-move lines))))
+
+(defmacro mu4e~view-in-headers-context (&rest body)
+  "Evaluate BODY in the current headers buffer."
+  `(progn
+     (unless '(buffer-live-p mu4e~view-headers-buffer)
+       (error "no headers buffer available."))
+     (with-current-buffer mu4e~view-headers-buffer
+       ,@body)))
+
 
 (defun mu4e-view-headers-next(&optional n)
   "Move point to the next message header in the headers buffer
@@ -587,8 +590,8 @@ connected with this message view. If this succeeds, return the new
 docid. Otherwise, return nil. Optionally, takes an integer
 N (prefix argument), to the Nth next header."
   (interactive "P")
-  (mu4e~view-headers-move (or n 1)))
-
+  (mu4e~view-in-headers-context
+    (mu4e~headers-move (or n 1))))
 
 (defun mu4e-view-headers-prev(&optional n)
   "Move point to the previous message header in the headers buffer
@@ -596,13 +599,12 @@ connected with this message view. If this succeeds, return the new
 docid. Otherwise, return nil. Optionally, takes an integer
 N (prefix argument), to the Nth previous header."
   (interactive "P")
-  (mu4e~view-headers-move (- (or n 1))))
-
-
+  (mu4e~view-in-headers-context
+    (mu4e~headers-move (- (or n 1)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Interactive functions
+  
+  ;; Interactive functions
 
 
 (defun mu4e-view-toggle-wrap-lines ()
@@ -656,26 +658,34 @@ if nil), then do it. The actions are specified in
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
-  (when (buffer-live-p mu4e~view-headers-buffer)
-    (with-current-buffer mu4e~view-headers-buffer
-      (mu4e-headers-mark-matches))))
+  (mu4e~view-in-headers-context
+    (mu4e-headers-mark-matches)))
 
 (defun mu4e-view-mark-thread ()
   "Ask user for a kind of mark (move, delete etc.), and apply it to
 all messages in the thread at point in the headers view."
   (interactive)
-  (when (buffer-live-p mu4e~view-headers-buffer)
-    (with-current-buffer mu4e~view-headers-buffer
-      (mu4e-headers-mark-thread))))
+  (mu4e~view-in-headers-context
+    (mu4e-headers-mark-thread)))
 
 (defun mu4e-view-mark-subthread ()
   "Ask user for a kind of mark (move, delete etc.), and apply it to
 all messages in the thread at point in the headers view."
   (interactive)
-  (when (buffer-live-p mu4e~view-headers-buffer)
-    (with-current-buffer mu4e~view-headers-buffer
-      (mu4e-headers-mark-subthread))))
+  (mu4e~view-in-headers-context
+    (mu4e-headers-mark-subthread)))
 
+(defun mu4e-view-search-narrow (search-all)
+  "Run `mu4e-headers-search-narrow' in the headers buffer."
+  (interactive "P")
+  (mu4e~view-in-headers-context
+    (mu4e-headers-search-narrow nil search-all)))
+
+(defun mu4e-view-search-edit (search-all)
+  "Run `mu4e-headers-search-edit' in the headers buffer."
+  (interactive "P")
+  (mu4e~view-in-headers-context
+    (mu4e-headers-search-edit search-all)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
@@ -815,10 +825,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
 ;;; marking
 (defun mu4e~view-mark-set (mark)
   "Set mark on the current messages."
-  (unless (buffer-live-p mu4e~view-headers-buffer)
-    (error "No headers buffer available"))
   (let ((docid (mu4e-msg-field mu4e~view-msg :docid)))
-    (with-current-buffer mu4e~view-headers-buffer
+    (mu4e~view-in-headers-context
       (if (eq mark 'move)
 	(mu4e-mark-for-move-set)
 	(mu4e-mark-at-point mark)))))
@@ -863,13 +871,10 @@ user that unmarking only works in the header list."
   (mu4e-view-headers-next))
 
 (defun mu4e-view-marked-execute ()
-  "If we're in split-view, execute the marks. Otherwise, warn user
-that execution can only take place in n the header list."
+  "Execute the marks."
   (interactive)
-  (if (mu4e~split-view-p)
-    (with-current-buffer mu4e~view-headers-buffer
-      (mu4e-mark-execute-all))
-    (mu4e-message "Execution needs to be done in the header list view")))
+  (mu4e~view-in-headers-context
+    (mu4e-mark-execute-all)))
 
 (defun mu4e-view-go-to-url (num)
   "Go to a numbered url."
