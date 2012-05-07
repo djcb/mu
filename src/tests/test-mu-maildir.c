@@ -256,6 +256,7 @@ test_mu_maildir_walk_01 (void)
 	rv = mu_maildir_walk (tmpdir,
 			      (MuMaildirWalkMsgCallback)msg_cb,
 			      (MuMaildirWalkDirCallback)dir_cb,
+			      FALSE,
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
@@ -294,6 +295,7 @@ test_mu_maildir_walk_02 (void)
 	rv = mu_maildir_walk (tmpdir,
 			      (MuMaildirWalkMsgCallback)msg_cb,
 			      (MuMaildirWalkDirCallback)dir_cb,
+			      FALSE,
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
@@ -306,7 +308,48 @@ test_mu_maildir_walk_02 (void)
 }
 
 
+static void
+test_mu_maildir_walk_03 (void)
+{
+	char *tmpdir, *cmd;
+	WalkData data;
+	MuError rv;
 
+	tmpdir = copy_test_data ();
+	memset (&data, 0, sizeof(WalkData));
+
+	/* mark all the directories between the root and new as
+	   quick indexed directories */
+	cmd = g_strdup_printf ("touch %s%c.quickindex", tmpdir, G_DIR_SEPARATOR);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+
+	cmd = g_strdup_printf ("touch %s%ctestdir%c.quickindex", tmpdir,
+			       G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+
+	cmd = g_strdup_printf ("touch %s%ctestdir%cnew%c.quickindex", tmpdir,
+			       G_DIR_SEPARATOR, G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+
+	rv = mu_maildir_walk (tmpdir,
+			      (MuMaildirWalkMsgCallback)msg_cb,
+			      (MuMaildirWalkDirCallback)dir_cb,
+			      TRUE, /* Walk with quick indexing */
+			      &data);
+
+	g_assert_cmpuint (MU_OK, ==, rv);
+	/* Found only the entries in the new directory */
+	g_assert_cmpuint (data._file_count, ==, 4);
+
+	/* Only entered tmpdir, testdir and new */
+	g_assert_cmpuint (data._dir_entered,==, 3);
+	g_assert_cmpuint (data._dir_left,==, 3);
+
+	g_free (tmpdir);
+}
 static void
 test_mu_maildir_get_flags_from_path (void)
 {
@@ -480,6 +523,8 @@ main (int argc, char *argv[])
 			 test_mu_maildir_walk_01);
 	g_test_add_func ("/mu-maildir/mu-maildir-walk-02",
 			 test_mu_maildir_walk_02);
+	g_test_add_func ("/mu-maildir/mu-maildir-walk-03",
+			 test_mu_maildir_walk_03);
 
 	/* get/set flags */
 	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01",

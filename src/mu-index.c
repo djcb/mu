@@ -313,6 +313,7 @@ MuError
 mu_index_run (MuIndex *index, const char* path,
 	      gboolean reindex, MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
+	      gboolean quick_index,
 	      void *user_data)
 {
 	MuIndexCallbackData cb_data;
@@ -336,6 +337,7 @@ mu_index_run (MuIndex *index, const char* path,
 	rv = mu_maildir_walk (path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
 			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
+			      quick_index,
 			      &cb_data);
 
 	mu_store_flush (index->_store);
@@ -392,7 +394,7 @@ mu_index_stats (MuIndex *index, const char* path,
 
 	return mu_maildir_walk (path,
 				(MuMaildirWalkMsgCallback)on_stats_maildir_file,
-				NULL,&cb_data);
+				NULL, FALSE, &cb_data);
 }
 
 struct _CleanupData {

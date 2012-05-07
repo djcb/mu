@@ -33,6 +33,12 @@ directory and all of its subdirectories will be ignored. This can be useful to
 exclude certain directories from the indexing process, for example directories
 with spam-messages.
 
+If the \fI--quick\fT option is specified and there is a file called
+\fI.quickindex\fR in a directory, that directory will get included in the quick
+index. In this case, the subdirectories has to be marked explicitly as
+well. Also note that you have to mark your Maildir with a
+\fI.quickindex\fR for it to start indexing at all.
+
 The first run of \fBmu index\fR may take a few minutes if you have a lot of
 mail (ten thousands of messages).  Fortunately, such a full scan needs to be
 done only once; after that it suffices to index the changes, which goes much
@@ -58,6 +64,11 @@ and not here, as they apply to multiple mu commands.
 starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
 \fBMAILDIR\fR environment variable is set to; if it is not set, it tries
 \fI~/Maildir\fR. See the note on mixing sub-maildirs below.
+
+.TP
+\fB\-\-quick\fR
+performs a quick index, only indexing directories marked with
+\fI.quickindex\fR. Leaves the rest of the index untouched.
 
 .TP
 \fB\-\-reindex\fR
