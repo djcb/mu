@@ -31,7 +31,6 @@
 (require 'doc-view)
 
 
-
 (defcustom mu4e-html2text-command nil
   "Shell command that converts HTML from stdin into plain text on
 stdout. If this is not defined, the emacs `html2text' tool will be
@@ -88,7 +87,18 @@ dir already existed, or has been created, nil otherwise."
 	  (or (nth 2 option) (nth 1 option)
 	    (string-to-char (nth 0 option))))))
     options))
- 
+
+(defun mu4e~read-char-choice (prompt choices)
+  "Compatiblity wrapper for `read-char-choice', which is emacs-24
+only."
+  (if (fboundp 'read-char-choice)
+    (read-char-choice prompt choices)
+    (let ((choice) (ok))
+      (while (not ok)
+	(message nil);; this seems needed...
+	(setq choice (read-char prompt))
+	(setq ok (member choice choices)))
+      choice)))
 
 (defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area. PROMPT
@@ -130,7 +140,7 @@ User now will be presented with a list:
 			'face 'mu4e-highlight-face) "]"
 		  descr))) options ", "))
 	  (response
-	    (read-char-choice
+	    (mu4e~read-char-choice
 	      (concat prompt optionsstr
 		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")
 	      (map 'list (lambda(elm) (nth 1 elm)) options))) ;; the allowable chars
