@@ -300,7 +300,6 @@ is nil, and otherwise open it."
 (defvar mu4e-view-mode-map nil
   "Keymap for \"*mu4e-view*\" buffers.")
 (unless mu4e-view-mode-map
-
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
 
@@ -313,6 +312,9 @@ is nil, and otherwise open it."
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-view-headers-search-edit)
       (define-key map "/" 'mu4e-view-headers-search-narrow)
+      
+      (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
+      (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
       
       (define-key map "b" 'mu4e-headers-search-bookmark)     
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
