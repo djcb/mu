@@ -913,7 +913,17 @@ determines where the query is taken from and is a symbol, either
   "Execute the previous query from the query stacks."
   (interactive "P")
   (mu4e~headers-query-navigate full-search 'past)) 
-  
+
+;; forget the past so we don't repeat it :/
+(defun mu4e-headers-forget-queries ()
+  "Forget all the complete query history."
+  (interactive)
+  (setq
+    mu4e~headers-query-past nil
+    mu4e~headers-query-present nil
+    mu4e~headers-query-future nil)
+  (mu4e-message "Query history cleared"))
+
 (defun mu4e~headers-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
 backward (if LINES is negative). If this succeeds, return the new
