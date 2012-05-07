@@ -88,7 +88,6 @@ are of the form:
 
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e~headers-query nil "The most recent search expression.")
 
 ;; docid cookies
 (defconst mu4e~headers-docid-pre "\376"
@@ -295,7 +294,9 @@ after the end of the search results."
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-headers-search-edit)
       (define-key map "/" 'mu4e-headers-search-narrow)
- 
+
+      (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
+      (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
       
       (define-key map "b" 'mu4e-headers-search-bookmark)
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
@@ -408,10 +409,8 @@ after the end of the search results."
 \\{mu4e-headers-mode-map}."
   (use-local-map mu4e-headers-mode-map)
 
-  (make-local-variable 'mu4e~headers-query)
   (make-local-variable 'mu4e~headers-proc)
-  (make-local-variable 'mu4e~highlighted-docid)
-
+  (make-local-variable 'mu4e~highlighted-docid) 
   (make-local-variable 'global-mode-string)
   (make-local-variable 'hl-line-face)
 
@@ -574,20 +573,27 @@ non-nill, don't raise an error when the docid is not found."
 	(error "Cannot find message with docid %S" docid)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e~headers-search-execute (expr search-all)
+(defun mu4e~headers-search-execute (expr search-all ignore-history)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If SEARCH-ALL is non-nil return all
 results, otherwise, limit number of results to
-`mu4e-search-results-limit'."
+`mu4e-search-results-limit'. If IGNORE-HISTORY is true, do *not*
+update the query history stack."
+  ;; note: we don't want to update the history if this query comes from
+  ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'.
   (let ((buf (get-buffer-create mu4e~headers-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
       (mu4e-headers-mode)
+      (unless ignore-history
+	;; save the old present query to the history list
+	(when mu4e~headers-query-present
+	  (mu4e~headers-push-query mu4e~headers-query-present 'past)))
       (setq
 	global-mode-string (propertize expr 'face 'mu4e-title-face)
-	mu4e~headers-query expr
 	mu4e~headers-buffer buf
-	mode-name "mu4e-headers"))
+	mode-name "mu4e-headers"
+	mu4e~headers-query-present expr))
     (switch-to-buffer buf)
     (mu4e~proc-find
       (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
@@ -708,6 +714,54 @@ limited to the message at point and its descendants."
   (mu4e-headers-mark-thread t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;;; the query past / present / future ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mu4e~headers-query-past nil
+  "Stack of queries before the present one.")
+(defvar mu4e~headers-query-future nil
+  "Stack of queries after the present one.")
+(defvar mu4e~headers-query-present nil
+  "The present (most recent) query.")
+(defvar mu4e~headers-query-stack-size 20
+  "Maximum size for the query stacks.")
+ 
+(defun mu4e~headers-push-query (query where)
+  "Push QUERY to one of the query stacks; WHERE is a symbol telling
+us where to push; it's a symbol, either 'future or
+'past. Functional also removes duplicats, limits the stack size."
+  (let ((stack
+	  (case where
+	    (past   mu4e~headers-query-past)
+	    (future mu4e~headers-query-future))))
+     ;; only add if not the same item
+    (unless (and stack (string= (car stack) query))
+      (push query stack)
+      ;; limit the stack to `mu4e~headers-query-stack-size' elements
+      (when (> (length stack) mu4e~headers-query-stack-size)
+	(setq stack (subseq stack 0 mu4e~headers-query-stack-size)))
+      ;; remove all duplicates of the new element
+      (remove-if (lambda (elm) (string= elm (car stack))) (cdr stack))
+      ;; update the stacks
+      (case where
+	(past   (setq mu4e~headers-query-past   stack))
+	(future (setq mu4e~headers-query-future stack))))))
+
+(defun mu4e~headers-pop-query (whence)
+    "Pop a query from the stack. WHENCE is a symbol telling us where
+to get it from; it's a symbol, either 'future or 'past."
+  (case whence
+    (past
+      (unless mu4e~headers-query-past
+	(error "No more previous queries"))
+      (pop mu4e~headers-query-past))
+    (future
+      (unless mu4e~headers-query-future
+	(error "No more next queries"))
+      (pop mu4e~headers-query-future))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     
+
+ 
 
 
 
@@ -716,7 +770,8 @@ limited to the message at point and its descendants."
 (defvar mu4e~headers-search-hist nil
   "History list of searches.")
 
-(defun mu4e-headers-search (&optional expr search-all prompt edit)
+(defun mu4e-headers-search (&optional expr search-all prompt edit
+			     ignore-history)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If SEARCH-ALL is non-nil return all
 results, otherwise, limit number of results to
@@ -724,7 +779,10 @@ results, otherwise, limit number of results to
 ask user for EXPR, and SEARCH-ALL as prefix-argument. PROMPT, if
 non-nil, is the prompt used by this function (default is \"Search
 for:\"). If EDIT is non-nil, instead of executing the query for
-EXPR, let the user edit the query before executing it."
+EXPR, let the user edit the query before executing it. If
+IGNORE-HISTORY is true, do *not* update the query history stack."
+  ;; note: we don't want to update the history if this query comes from
+  ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'."
   (interactive)
   (let* ((prompt (mu4e-format (or prompt "Search for: ")))
 	  (expr
@@ -733,14 +791,17 @@ EXPR, let the user edit the query before executing it."
 	      (or expr
 		(read-string prompt nil 'mu4e~headers-search-hist)))))
     (mu4e-mark-handle-when-leaving)
-    (mu4e~headers-search-execute expr (or search-all current-prefix-arg))))
+    (mu4e~headers-search-execute expr
+      (or search-all current-prefix-arg)
+      ignore-history)))
 
 (defun mu4e-headers-search-edit (search-all)
   "Edit the last search expression. If SEARCH-ALL (prefix-argument)
 is non-nil, retrieve *all* results, otherwise only get up to
 `mu4e-search-results-limit'."
   (interactive "P")
-  (mu4e-headers-search mu4e~headers-query search-all nil t))
+  (mu4e-headers-search
+    (car-safe mu4e~headers-query-past) search-all nil t))
 
 
 (defun mu4e-headers-search-bookmark (&optional expr search-all edit)
@@ -772,12 +833,11 @@ non-nil, retrieve *all* results, otherwise only get up to
   	      nil 'mu4e~headers-search-hist nil t))
   	   (search-all current-prefix-arg))
         (list filter search-all)))
-  (unless mu4e~headers-query
+  (unless (car-safe mu4e~headers-query-past)
     (error "There's nothing to filter"))
   (mu4e-headers-search
-    (format "(%s) AND %s" mu4e~headers-query filter) search-all))
-
-
+    (format "(%s) AND %s"
+      (car-safe mu4e~headers-query-past) filter) search-all))
 
 (defun mu4e-headers-view-message ()
   "View message at point. If there's an existing window for the
@@ -827,14 +887,33 @@ current window. "
       (kill-buffer buf)))
   (mu4e~main-view))
 
-
 (defun mu4e-headers-rerun-search (full-search)
   "Rerun the search for the last search expression; if none exists,
 do a new search. If full-search is non-nil, return /all/ search
 results, otherwise show up to `mu4e-search-results-limit'."
   (interactive "P")
-  (mu4e-headers-search mu4e~headers-query full-search))
+  (mu4e-headers-search
+    (car-safe mu4e~headers-query-past) full-search))
 
+(defun mu4e~headers-query-navigate (full-search whence)
+  "Execute the previous query from the query stacks. WHENCE
+determines where the query is taken from and is a symbol, either
+`future' or `past'."
+  (let ((query (mu4e~headers-pop-query whence))
+	 (where (if (eq whence 'future) 'past 'future)))
+    (mu4e~headers-push-query mu4e~headers-query-present where)     
+    (mu4e-headers-search query full-search nil nil t))) 
+
+(defun mu4e-headers-query-next (full-search)
+  "Execute the previous query from the query stacks."
+  (interactive "P")
+  (mu4e~headers-query-navigate full-search 'future)) 
+
+(defun mu4e-headers-query-prev (full-search)
+  "Execute the previous query from the query stacks."
+  (interactive "P")
+  (mu4e~headers-query-navigate full-search 'past)) 
+  
 (defun mu4e~headers-move (lines)
   "Move point LINES lines forward (if LINES is positive) or
 backward (if LINES is negative). If this succeeds, return the new

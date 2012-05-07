@@ -465,7 +465,7 @@ point in eiter the headers buffer or the view buffer."
   "Get the most recent query or nil if there is none."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
-      mu4e~headers-query)))
+      mu4e~headers-query-present)))
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
