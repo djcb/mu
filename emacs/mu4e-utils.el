@@ -91,14 +91,12 @@ dir already existed, or has been created, nil otherwise."
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
 only."
-  (if (fboundp 'read-char-choice)
-    (read-char-choice prompt choices)
-    (let ((choice) (ok))
-      (while (not ok)
-	(message nil);; this seems needed...
-	(setq choice (read-char prompt))
-	(setq ok (member choice choices)))
-      choice)))
+  (let ((choice) (ok) (inhibit-quit nil))
+    (while (not ok)
+      (message nil);; this seems needed...
+      (setq choice (read-char-exclusive prompt))
+      (setq ok (member choice choices)))
+    choice))
 
 (defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area. PROMPT

@@ -182,72 +182,73 @@ The server output is as follows:
   (mu4e-log 'misc "* Received %d byte(s)" (length str))
   (setq mu4e~proc-buf (concat mu4e~proc-buf str)) ;; update our buffer
   (let ((sexp (mu4e~proc-eat-sexp-from-buf)))
-    (while sexp
-      (mu4e-log 'from-server "%S" sexp)
-      (cond
-	;; a header plist can be recognized by the existence of a :date field
-	((plist-get sexp :date)
-	  (funcall mu4e-header-func sexp))
+    (with-local-quit
+      (while sexp
+	(mu4e-log 'from-server "%S" sexp)
+	(cond
+	  ;; a header plist can be recognized by the existence of a :date field
+	  ((plist-get sexp :date)
+	    (funcall mu4e-header-func sexp))
 
-	;; the found sexp, we receive after getting all the headers
-	((plist-get sexp :found)
-	  (funcall mu4e-found-func (plist-get sexp :found)))
+	  ;; the found sexp, we receive after getting all the headers
+	  ((plist-get sexp :found)
+	    (funcall mu4e-found-func (plist-get sexp :found)))
 
-	;; viewing a specific message
-	((plist-get sexp :view)
-	  (funcall mu4e-view-func (plist-get sexp :view)))
+	  ;; viewing a specific message
+	  ((plist-get sexp :view)
+	    (funcall mu4e-view-func (plist-get sexp :view)))
 
-	;; receive an erase message
-	((plist-get sexp :erase)
-	  (funcall mu4e-erase-func))
+	  ;; receive an erase message
+	  ((plist-get sexp :erase)
+	    (funcall mu4e-erase-func))
 
-	;; receive a :sent message
-	((plist-get sexp :sent)
-	  (funcall mu4e-sent-func
-	    (plist-get sexp :docid)
-	    (plist-get sexp :path)))
+	  ;; receive a :sent message
+	  ((plist-get sexp :sent)
+	    (funcall mu4e-sent-func
+	      (plist-get sexp :docid)
+	      (plist-get sexp :path)))
 
-	;; receive a pong message
-	((plist-get sexp :pong)
-	  (funcall mu4e-pong-func
-	    (plist-get sexp :version) (plist-get sexp :doccount)))
+	  ;; receive a pong message
+	  ((plist-get sexp :pong)
+	    (funcall mu4e-pong-func
+	      (plist-get sexp :version) (plist-get sexp :doccount)))
 
-	;; something got moved/flags changed
-	((plist-get sexp :update)
-	  (funcall mu4e-update-func
-	    (plist-get sexp :update) (plist-get sexp :move)))
+	  ;; something got moved/flags changed
+	  ((plist-get sexp :update)
+	    (funcall mu4e-update-func
+	      (plist-get sexp :update) (plist-get sexp :move)))
 
-	;; a message got removed
-	((plist-get sexp :remove)
-	  (funcall mu4e-remove-func (plist-get sexp :remove)))
+	  ;; a message got removed
+	  ((plist-get sexp :remove)
+	    (funcall mu4e-remove-func (plist-get sexp :remove)))
 
-	;; start composing a new message
-	((plist-get sexp :compose)
-	  (funcall mu4e-compose-func
-	    (plist-get sexp :compose)
-	    (plist-get sexp :original)
-	    (plist-get sexp :include)))
+	  ;; start composing a new message
+	  ((plist-get sexp :compose)
+	    (funcall mu4e-compose-func
+	      (plist-get sexp :compose)
+	      (plist-get sexp :original)
+	      (plist-get sexp :include)))
 
-	;; do something with a temporary file
-	((plist-get sexp :temp)
-	  (funcall mu4e-temp-func
-	    (plist-get sexp :temp)   ;; name of the temp file
-	    (plist-get sexp :what)   ;; what to do with it (pipe|emacs|open-with...)
-	    (plist-get sexp :param)));; parameter for the action
+	  ;; do something with a temporary file
+	  ((plist-get sexp :temp)
+	    (funcall mu4e-temp-func
+	      (plist-get sexp :temp)   ;; name of the temp file
+	      (plist-get sexp :what)   ;; what to do with it (pipe|emacs|open-with...)
+	      (plist-get sexp :param)));; parameter for the action
 
-	;; get some info
-	((plist-get sexp :info)
-	  (funcall mu4e-info-func sexp))
+	  ;; get some info
+	  ((plist-get sexp :info)
+	    (funcall mu4e-info-func sexp))
 
-	;; receive an error
-	((plist-get sexp :error)
-	  (funcall mu4e-error-func
-	    (plist-get sexp :error)
-	    (plist-get sexp :message)))
+	  ;; receive an error
+	  ((plist-get sexp :error)
+	    (funcall mu4e-error-func
+	      (plist-get sexp :error)
+	      (plist-get sexp :message)))
 
-	(t (mu4e-message "Unexpected data from server [%S]" sexp)))
+	  (t (mu4e-message "Unexpected data from server [%S]" sexp)))
 
-      (setq sexp (mu4e~proc-eat-sexp-from-buf)))))
+	(setq sexp (mu4e~proc-eat-sexp-from-buf))))))
 
 
 ;; error codes are defined in src/mu-util.h
