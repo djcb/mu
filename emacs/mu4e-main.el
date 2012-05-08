@@ -112,7 +112,7 @@ clicked."
 		(concat "\t* [b" (make-string 1 key) "] " title)
 		(concat "b" (make-string 1 key)))))
 	  mu4e-bookmarks "\n")
-	"\n"
+	"\n\n"
 	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
 	(mu4e~main-action-str "\t* [U]pdate email & database\n"

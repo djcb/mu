@@ -1,6 +1,6 @@
 ;; auto-generated
 (defconst mu4e-mu-version "@VERSION@"
-  "Required mu binary version; mu4e's verson must agree with
+  "Required mu binary version; mu4e's version must agree with
   this.")
 
 (defconst mu4e-builddir "@abs_top_builddir@"
