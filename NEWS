@@ -1,24 +1,28 @@
 * NEWS (user visible changes)
 
-** Release 0.9.8.4 <unreleased>
+** Release 0.9.8.4 <2012-05-08>
 
 *** mu4e
 
     - much faster header buffers
-    - fix off-by-one in number of matches shown
     - split view mode (headers, view); see `mu4e-split-view'.
-    - ability to open attachments with arbitrary program, pipe through shell
+    - add search history for queries
+    - ability to open attachments with arbitrary programs, pipe through shell
       commands or open in the current emacs
     - quote names in recipient addresses
     - mu4e-get-maildirs works now for recursive maildirs as well
-    - define arbitrary actions for headers/messages/attachments using the
-      actions system -- see chapter Actions in the manual
-    - allow mu4e to be uses as the default emacs mailer (`mu4e-user-agent)
+    - define arbitrary operations for headers/messages/attachments using the
+      actions system -- see the chapter 'Actions' in the manual
+    - allow mu4e to be uses as the default emacs mailer (`mu4e-user-agent')
     - mark headers based on a regexp, `mu4e-mark-matches', or '%'
     - mark threads, sub-threads (mu4e-hdrs-mark-thread,
       mu4e-hdrs-mark-subthread, or 'T', 't')
+    - add msg2pdf toy
+    - easy logging (using `mu4e-toggle-logging')
+    - improve mu4e-speedbar for use in headers/view
     - use the message-mode FCC system for saving messages to the sent-messages
       folder
+    - fix: off-by-one in number of matches shown
 
 *** general
 
@@ -26,7 +30,9 @@
     - much improved support for searching non-Latin (Cyrillic etc.) languages
       we can now match 'Тесла' or 'Аркона' without problems
     - smarter escaping (fixes issues with finding message ids)
+    - fixes for queries with brackets
     - allow --summary-len for the length of message summaries
+    - numerous other small fixes
 
 
 ** Release 0.9.8.3 <2012-04-06>

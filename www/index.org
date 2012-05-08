@@ -22,13 +22,14 @@
 
 ** Features
 
-   - fast indexing for Maildir, Maildir+ and Maildir-on-VFAT
+   - fast indexing for [[http://en.wikipedia.org/wiki/Maildir][Maildir]], Maildir+ and Maildir-on-VFAT
    - search for messages based on the sender, receiver, subject, date range,
      size, priority, words in message, flags (signed, encrypted, new, replied,
      has-attachment,...), message-id, maildir, tags, attachment (name,
      mime-type, text) and more
-   - command-line tools for indexing, searching, viewing, extracting
-     attachments, exporting address lists, creating maildirs, ...
+   - command-line tools for indexing, searching, viewing, adding/removing
+     messages, extracting attachments, exporting/searching address lists,
+     creating maildirs, ...
    - accent/case normalization - so /angstrom/  matches /Ångström/
    - can be integrated with other e-mail clients such as [[http://www.mutt.org/][mutt]] and [[http://www.emacswiki.org/emacs/WanderLust][Wanderlust]].
    - [[file:mu4e.html][mu4e]], an emacs-based e-mail client based on =mu= (see screenshot).
@@ -38,6 +39,9 @@
 
 
 ** News
+
+   - 2012-05-08: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.4.tar.gz][mu-0.9.8.4]] with even more improvements (the link has
+     all the details) 
    - 2012-04-06: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.3.tar.gz][mu-0.9.8.3]], with many improvements, fixes. See the
      link for details. *NOTE*: existing =mu= and =mu4e= users are recommended to
      execute =mu index --rebuild= after installation.
