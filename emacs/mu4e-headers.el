@@ -800,8 +800,7 @@ IGNORE-HISTORY is true, do *not* update the query history stack."
 is non-nil, retrieve *all* results, otherwise only get up to
 `mu4e-search-results-limit'."
   (interactive "P")
-  (mu4e-headers-search
-    (car-safe mu4e~headers-query-past) search-all nil t))
+  (mu4e-headers-search mu4e~headers-query-present search-all nil t))
 
 
 (defun mu4e-headers-search-bookmark (&optional expr search-all edit)
@@ -833,11 +832,10 @@ non-nil, retrieve *all* results, otherwise only get up to
   	      nil 'mu4e~headers-search-hist nil t))
   	   (search-all current-prefix-arg))
         (list filter search-all)))
-  (unless (car-safe mu4e~headers-query-past)
+  (unless mu4e~headers-query-present
     (error "There's nothing to filter"))
   (mu4e-headers-search
-    (format "(%s) AND %s"
-      (car-safe mu4e~headers-query-past) filter) search-all))
+    (format "(%s) AND %s" mu4e~headers-query-present filter search-all)))
 
 (defun mu4e-headers-view-message ()
   "View message at point. If there's an existing window for the
@@ -892,8 +890,7 @@ current window. "
 do a new search. If full-search is non-nil, return /all/ search
 results, otherwise show up to `mu4e-search-results-limit'."
   (interactive "P")
-  (mu4e-headers-search
-    (car-safe mu4e~headers-query-past) full-search))
+  (mu4e-headers-search mu4e~headers-query-present full-search))
 
 (defun mu4e~headers-query-navigate (full-search whence)
   "Execute the previous query from the query stacks. WHENCE
