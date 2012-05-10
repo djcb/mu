@@ -48,7 +48,7 @@
 the From: address.)"
   :type 'string
   :group 'mu4e-compose)
- 
+
 (defcustom mu4e-sent-messages-behavior 'sent
   "Determines what mu4e does with sent messages - this is a symbol
 which can be either:
@@ -297,7 +297,7 @@ You can append flags."
       (mu4e~compose-header "References"
 	(mu4e~compose-refererences-construct origmsg))
       (mu4e~compose-common-construct)
-      
+
       (when old-msgid
 	(mu4e~compose-header "In-reply-to" (format "<%s>" old-msgid)))
 
@@ -423,7 +423,7 @@ needed, set the Fcc header, and register the handler function."
     (use-local-map mu4e-compose-mode-map)
     (message-hide-headers)
     (make-local-variable 'message-default-charset)
-    
+
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
@@ -487,18 +487,18 @@ or `mu4e~compose-newmsg-construct'. The editing buffer is using
 Gnus' `message-mode'."
   (unless mu4e-maildir       (error "mu4e-maildir not set"))
   (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
-  (let ((draft
+  (let ((inhibit-read-only t)
+	 (draft
 	  (if (member compose-type '(reply forward new))
 	    (mu4e~compose-open-new-draft-file compose-type original-msg)
 	    (if (eq compose-type 'edit)
 	      (plist-get original-msg :path)
 	      (error "unsupported compose-type %S" compose-type)))))
     (find-file draft)
-    (mu4e-compose-mode)
     ;; insert mail-header-separator, which is needed by message mode to separate
     ;; headers and body. will be removed before saving to disk
     (mu4e~compose-insert-mail-header-separator)
-    
+
     ;; include files -- e.g. when forwarding a message with attachments,
     ;; we take those from the original.
     (save-excursion
@@ -511,15 +511,15 @@ Gnus' `message-mode'."
     (unless (eq compose-type 'edit)
       (when message-signature
 	(message-insert-signature)))
-    
-    ;; setup the fcc-stuff, if needed 
+
+    ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda ()
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
 	(mu4e~setup-fcc-maybe)) nil t)
-    
+
     ;; when the message has been sent.
     (add-hook 'message-sent-hook
       (lambda ()
@@ -529,10 +529,14 @@ Gnus' `message-mode'."
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
+
+  ;; set compose mode -- so now hooks can run
+  (mu4e-compose-mode)
+
   ;; now jump to some use positions, and start writing that mail!
   (if (member compose-type '(new forward))
     (message-goto-to)
-    (message-goto-body))) 
+    (message-goto-body)))
 
 
 (defun mu4e-sent-handler (docid path)
@@ -650,7 +654,7 @@ message."
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
   (mu4e~compose-handler 'new)
-  
+
   (when (message-goto-to) ;; reset to-address, if needed
     (message-delete-line))
   (message-add-header (concat "To: " to "\n"))
@@ -659,7 +663,7 @@ message."
     (message-delete-line))
   (message-add-header (concat "Subject: " subject "\n"))
 
-  ;; add any other headers specified 
+  ;; add any other headers specified
   (when other-headers
     (message-add-header other-headers))
 
