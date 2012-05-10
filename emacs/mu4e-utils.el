@@ -120,7 +120,7 @@ user can then choose by typing CHAR.  Example:
               '((\"Monkey\" ?m) (\"Gnu\" ?g) (\"platipus\")))
 User now will be presented with a list:
    \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."
-  (let* ((options (mu4e~read-option-normalize-list options)) 
+  (let* ((options (mu4e~read-option-normalize-list options))
 	  (prompt (mu4e-format "%s" prompt))
 	  (chosen)
 	  (optionsstr
@@ -144,7 +144,7 @@ User now will be presented with a list:
 	      (map 'list (lambda(elm) (nth 1 elm)) options))) ;; the allowable chars
 	  (chosen
 	    (find-if (lambda (option) (eq response (nth 1 option))) options)))
-    (nth 2 chosen))) 
+    (nth 2 chosen)))
 
 
 (defun mu4e~get-maildirs-1 (path &optional mdir)
@@ -170,7 +170,7 @@ paths."
 	  (add-to-list 'maildirs (if mdir mdir "/") t)))
       (setq maildirs (append maildirs
 		       (mu4e~get-maildirs-1 path (concat mdir "/" dir)))))
-    maildirs)) 
+    maildirs))
 
 
 (defun mu4e-get-maildirs (path)
@@ -211,7 +211,7 @@ maildirs under `mu4e-maildir."
 	  (ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
-	    (error "Invalid shortcut '%c'" kar))))))) 
+	    (error "Invalid shortcut '%c'" kar)))))))
 
 
 (defun mu4e-ask-maildir-check-exists (prompt)
@@ -224,7 +224,7 @@ and offer to create it if it does not exist yet."
 	     (mu4e-format "%s does not exist. Create now?" fullpath))
 	      (mu4e~proc-mkdir fullpath)))
     mdir))
-   
+
 
 (defun mu4e-mark-for-move-set (&optional target)
   "Mark message at point or, if region is active, all messages in
@@ -273,7 +273,7 @@ KAR, or raise an error if none is found."
    (if chosen-bm
      (nth 0 chosen-bm)
      (error "Invalid shortcut '%c'" kar))))
- 
+
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~flags-to-string-raw (flags)
@@ -399,7 +399,7 @@ top level if there is none."
 	  ('mu4e-view-mode "(mu4e)Message view")
 	  (t               "mu4e"))))
 
- 
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-msg-field (msg field)
@@ -483,7 +483,7 @@ that has a live window), and vice versa."
       (mu4e-message "No window to switch to"))))
 
 
-(defconst mu4e-output-buffer-name "*mu4e-output"
+(defconst mu4e-output-buffer-name "*mu4e-output*"
   "*internal* Name of the mu4e output buffer.")
 
 (defun mu4e-process-file-through-pipe (path pipecmd)
@@ -505,7 +505,7 @@ that has a live window), and vice versa."
 process."
   (let ((type (plist-get info :info)))
     (cond
-      ((eq type 'add) t) ;; do nothing	
+      ((eq type 'add) t) ;; do nothing
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
 	  (mu4e-message "Indexing... processed %d, updated %d"
@@ -579,7 +579,7 @@ split-window."
 	(error "%S must start with a '/'" dir))
       (unless (mu4e-create-maildir-maybe path)
 	(error "%s (%S) does not exist" path var)))))
- 
+
 
 (defun mu4e~start (&optional func)
   "If mu4e is already running, execute function FUNC (if non-nil). Otherwise,
@@ -613,15 +613,12 @@ FUNC (if non-nil) afterwards."
 	  (mu4e~proc-ping)))
 
 (defun mu4e~stop ()
-  "Quit the mu4e session."
-  (interactive)
-  (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
-    (message nil)
-    (when mu4e-update-timer
-      (cancel-timer mu4e-update-timer)
-      (setq mu4e-update-timer nil))
-    (mu4e~proc-kill)
-    (kill-buffer)))
+  "Stop the mu4e session."
+  (when mu4e-update-timer
+    (cancel-timer mu4e-update-timer)
+    (setq mu4e-update-timer nil))
+  (mu4e~proc-kill)
+  (kill-buffer))
 
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")

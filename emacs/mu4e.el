@@ -73,7 +73,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e () 
+(defun mu4e ()
   "Start mu4e."
   (interactive)
   ;; start mu4e, then show the main view
@@ -82,7 +82,7 @@
 (defun mu4e-quit()
   "Quit the mu4e session."
   (interactive)
-  (when (y-or-n-p "Are you sure you want to quit? ")
+  (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
     (mu4e~stop)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
