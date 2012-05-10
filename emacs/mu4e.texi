@@ -1103,6 +1103,9 @@ subset of the headers matching that expression.
 Technically, narrowing the results of query @t{x} with expression @t{y}
 implies doing a search @t{(x) AND y}. 
 
+Note, messages that were note in your in your original search results because
+of @code{mu4e-search-results-limit} may still show up in the narrowed query.
+
 @node Actions
 @chapter Actions
 
