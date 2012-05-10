@@ -292,9 +292,11 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mu4e-headers-search)
-      (define-key map "S" 'mu4e-headers-search-edit)
+      (define-key map "e" 'mu4e-headers-search-edit)
       (define-key map "/" 'mu4e-headers-search-narrow)
 
+      (define-key map "j" 'mu4e~headers-jump-to-maildir)
+      
       (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
       (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
       
@@ -307,16 +309,10 @@ after the end of the search results."
       (define-key map "r" 'mu4e-headers-rerun-search)
       (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
       
-      (define-key map "%" 'mu4e-headers-mark-matches)
+      (define-key map "%" 'mu4e-headers-mark-pattern)
       (define-key map "t" 'mu4e-headers-mark-subthread)
       (define-key map "T" 'mu4e-headers-mark-thread)
 
-      ;; navigation
-      (define-key map "n" 'mu4e-headers-next)
-      (define-key map "p" 'mu4e-headers-prev)
-      ;; the same
-      (define-key map (kbd "<M-down>") 'mu4e-headers-next)
-      (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
 
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
@@ -337,10 +333,8 @@ after the end of the search results."
 
       (define-key map "U" 'mu4e-mark-unmark-all)
       (define-key map "x" 'mu4e-mark-execute-all)
-      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-      (define-key map "j" 'mu4e~headers-jump-to-maildir)
       (define-key map "a" 'mu4e-headers-action)
 
       ;; message composition
@@ -371,6 +365,7 @@ after the end of the search results."
 	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-mark-unmark-all))
 	(define-key menumap [unmark]      '("Unmark" . mu4e~headers-mark-unmark))
 
+	(define-key menumap [mark-pattern]  '("Mark pattern" . mu4e-headers-mark-pattern))
 	(define-key menumap [mark-as-read]  '("Mark as read" . mu4e~headers-mark-read))
 	(define-key menumap [mark-as-unread]
 	  '("Mark as unread" .  mu4e~headers-mark-unread))
@@ -388,10 +383,15 @@ after the end of the search results."
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [sepa2] '("--"))
 
+	(define-key menumap [query-next]  '("Next query" . mu4e-headers-query-next))
+	(define-key menumap [query-prev]  '("Previous query" . mu4e-headers-query-prev))	
+	(define-key menumap [narrow-search] '("Narrow search" . mu4e-headers-search-narrow))
+	(define-key menumap [bookmark]  '("Search bookmark" . mu4e-headers-search-bookmark))
+	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
 	(define-key menumap [refresh]  '("Refresh" . mu4e-headers-rerun-search))
 	(define-key menumap [search]  '("Search" . mu4e-headers-search))
 
-	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
+
 	(define-key menumap [sepa3] '("--"))
 
 	(define-key menumap [view]  '("View" . mu4e-headers-view-message))
@@ -637,7 +637,7 @@ header."
 (defvar mu4e~headers-regexp-hist nil
   "History list of regexps used.")
 
-(defun mu4e-headers-mark-matches ()
+(defun mu4e-headers-mark-pattern ()
   "Ask user for a kind of mark (move, delete etc.), a field to
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
@@ -828,14 +828,14 @@ non-nil, retrieve *all* results, otherwise only get up to
 `mu4e-search-results-limit'."
   (interactive
     (let ((filter
-  	    (read-string (mu4e-format "Filter: ")
+  	    (read-string (mu4e-format "Narrow down to: ")
   	      nil 'mu4e~headers-search-hist nil t))
   	   (search-all current-prefix-arg))
         (list filter search-all)))
   (unless mu4e~headers-query-present
     (error "There's nothing to filter"))
   (mu4e-headers-search
-    (format "(%s) AND %s" mu4e~headers-query-present filter search-all)))
+    (format "(%s) AND %s" mu4e~headers-query-present filter) search-all))
 
 (defun mu4e-headers-view-message ()
   "View message at point. If there's an existing window for the
@@ -916,8 +916,8 @@ determines where the query is taken from and is a symbol, either
   "Forget all the complete query history."
   (interactive)
   (setq
+    ;; note: don't forget the present one
     mu4e~headers-query-past nil
-    mu4e~headers-query-present nil
     mu4e~headers-query-future nil)
   (mu4e-message "Query history cleared"))
 

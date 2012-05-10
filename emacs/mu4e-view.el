@@ -319,7 +319,7 @@ is nil, and otherwise open it."
       (define-key map "b" 'mu4e-headers-search-bookmark)     
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
 
-      (define-key map "%" 'mu4e-view-mark-matches)
+      (define-key map "%" 'mu4e-view-mark-pattern)
       (define-key map "t" 'mu4e-view-mark-subthread)
       (define-key map "T" 'mu4e-view-mark-thread)
 
@@ -428,8 +428,15 @@ is nil, and otherwise open it."
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [sepa3] '("--"))
 
-	(define-key menumap [search]  '("Search" . mu4e-headers-search))
+
+	(define-key menumap [query-next]  '("Next query" . mu4e-headers-query-next))
+	(define-key menumap [query-prev]  '("Previous query" . mu4e-headers-query-prev))	
+	(define-key menumap [narrow-search] '("Narrow search" . mu4e-headers-search-narrow))
+	(define-key menumap [bookmark]  '("Search bookmark" . mu4e-headers-search-bookmark))
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
+	(define-key menumap [refresh]  '("Refresh" . mu4e-headers-rerun-search))
+	(define-key menumap [search]  '("Search" . mu4e-headers-search))
+ 
 
 	(define-key menumap [sepa4] '("--"))
 	(define-key menumap [next]  '("Next" . mu4e-view-headers-next))
@@ -655,13 +662,13 @@ if nil), then do it. The actions are specified in
 	  (actionfunc (mu4e-read-option "Action: " mu4e-view-actions)))
     (funcall actionfunc msg)))
 
-(defun mu4e-view-mark-matches ()
+(defun mu4e-view-mark-pattern ()
     "Ask user for a kind of mark (move, delete etc.), a field to
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
   (mu4e~view-in-headers-context
-    (mu4e-headers-mark-matches)))
+    (mu4e-headers-mark-pattern)))
 
 (defun mu4e-view-mark-thread ()
   "Ask user for a kind of mark (move, delete etc.), and apply it to
