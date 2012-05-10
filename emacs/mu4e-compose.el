@@ -526,12 +526,12 @@ Gnus' `message-mode'."
 	(setq mu4e-sent-func 'mu4e-sent-handler)
 	(mu4e~proc-sent (buffer-file-name) mu4e-drafts-folder)) nil t))
 
+  ;; set compose mode -- so now hooks can run
+  (mu4e-compose-mode)
+
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
-
-  ;; set compose mode -- so now hooks can run
-  (mu4e-compose-mode)
 
   ;; now jump to some use positions, and start writing that mail!
   (if (member compose-type '(new forward))
