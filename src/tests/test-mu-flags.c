@@ -14,8 +14,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -37,7 +37,7 @@ test_mu_flag_char (void)
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_SEEN),		==, 'S');
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_TRASHED),	==, 'T');
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_NEW),		==, 'N');
-	g_assert_cmpuint (mu_flag_char (MU_FLAG_SIGNED),	==, 's');
+	g_assert_cmpuint (mu_flag_char (MU_FLAG_SIGNED),	==, 'z');
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_ENCRYPTED),	==, 'x');
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_HAS_ATTACH),	==, 'a');
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_UNREAD),	==, 'u');
@@ -68,7 +68,7 @@ test_mu_flags_to_str_s (void)
 {
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_PASSED|MU_FLAG_SIGNED,
 					   MU_FLAG_TYPE_ANY),
-			 ==, "Ps");
+			 ==, "Pz");
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_NEW, MU_FLAG_TYPE_ANY),
 			 ==, "N");
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_HAS_ATTACH|MU_FLAG_TRASHED,
@@ -76,10 +76,10 @@ test_mu_flags_to_str_s (void)
 			 ==, "Ta");
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_NONE, MU_FLAG_TYPE_ANY),
 			 ==, "");
-	
+
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_PASSED|MU_FLAG_SIGNED,
 					   MU_FLAG_TYPE_CONTENT),
-			 ==, "s");
+			 ==, "z");
 
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_NEW, MU_FLAG_TYPE_MAILDIR),
 			 ==, "N");
@@ -97,18 +97,18 @@ test_mu_flags_from_str (void)
 {
 	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_ANY), ==,
 			  MU_FLAG_REPLIED | MU_FLAG_PASSED);
-	g_assert_cmpuint (mu_flags_from_str ("Ns", MU_FLAG_TYPE_ANY), ==,
+	g_assert_cmpuint (mu_flags_from_str ("Nz", MU_FLAG_TYPE_ANY), ==,
 			  MU_FLAG_NEW | MU_FLAG_SIGNED);
 	g_assert_cmpuint (mu_flags_from_str ("axD", MU_FLAG_TYPE_ANY), ==,
 			  MU_FLAG_HAS_ATTACH | MU_FLAG_ENCRYPTED | MU_FLAG_DRAFT);
 
 	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_MAILFILE), ==,
 			  MU_FLAG_REPLIED | MU_FLAG_PASSED);
-	g_assert_cmpuint (mu_flags_from_str ("Ns", MU_FLAG_TYPE_MAILFILE), ==,
+	g_assert_cmpuint (mu_flags_from_str ("Nz", MU_FLAG_TYPE_MAILFILE), ==,
 			  MU_FLAG_NONE);
 
 	g_assert_cmpuint (mu_flags_from_str ("qwi", MU_FLAG_TYPE_MAILFILE), ==,
-			  MU_FLAG_INVALID);	
+			  MU_FLAG_INVALID);
 }
 
 static void
@@ -132,9 +132,9 @@ test_mu_flags_from_str_delta (void)
 	/* g_assert_cmpuint (mu_flags_from_str_delta ("foobar", */
 	/* 					   MU_FLAG_INVALID, */
 	/* 					   MU_FLAG_TYPE_ANY),==, */
-	/* 		  MU_FLAG_INVALID); */	
+	/* 		  MU_FLAG_INVALID); */
 }
-	
+
 
 
 int
@@ -156,5 +156,5 @@ main (int argc, char *argv[])
 
 	rv = g_test_run ();
 
-	return rv;		
+	return rv;
 }

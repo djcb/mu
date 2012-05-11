@@ -156,6 +156,9 @@ attachment:
   $ mu find flag:signed flag:attach
 .fi
 
+Encrypted messages may be signed as well, but this is only visible after
+decrypting, and thus, is invisible to \fBmu\fR.
+
 The message-priority has three possible values: low, normal or high. We can
 match them using \fBprio:\fR - for example, to get all high-priority messages
 with a subject containing some bird:

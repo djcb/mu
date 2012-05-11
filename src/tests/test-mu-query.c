@@ -160,7 +160,7 @@ test_mu_query_01 (void)
 		{ "foo:pepernoot",      0 },
 		{ "funky",              1 },
 		{ "fünkÿ",              1 },
-		{ "",                   13 }
+		{ "",                   16 }
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -243,9 +243,9 @@ test_mu_query_04 (void)
  		{ "baggins", 1},
 		{ "prio:h", 1},
 		{ "prio:high", 1},
-		{ "prio:normal", 5},
+		{ "prio:normal", 8},
 		{ "prio:l", 7},
-		{ "not prio:l", 6},
+		{ "not prio:l", 9},
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -394,11 +394,11 @@ test_mu_query_dates_helsinki (void)
 		/* { "date:20080804..20080731", 5}, */
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 1},
-		{ "date:200808110803..today", 1},
+		{ "date:200808110803..now", 4},
+		{ "date:200808110803..today", 4},
 		/* { "date:now..2008-08-11-08-03", 1}, */
 		/* { "date:today..2008-08-11-08-03", 1}, */
-		{ "date:200808110801..now", 1},
+		{ "date:200808110801..now", 4},
 	};
 
 	old_tz = set_tz ("Europe/Helsinki");
@@ -427,11 +427,11 @@ test_mu_query_dates_sydney (void)
 		/* { "date:20080804..20080731", 5}, */
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 1},
-		{ "date:200808110803..today", 1},
+		{ "date:200808110803..now", 4},
+		{ "date:200808110803..today", 4},
 		/* { "date:now..2008-08-11-08-03", 1}, */
 		/* { "date:today..2008-08-11-08-03", 1}, */
-		{ "date:200808110801..now", 1},
+		{ "date:200808110801..now", 4},
 	};
 
 	old_tz = set_tz ("Australia/Sydney");
@@ -460,11 +460,11 @@ test_mu_query_dates_la (void)
 		/* { "date:20080804..20080731", 5}, */
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 0},
-		{ "date:200808110803..today", 0},
+		{ "date:200808110803..now", 3},
+		{ "date:200808110803..today", 3},
 		/* { "date:now..2008-08-11-08-03", 1}, */
 		/* { "date:today..2008-08-11-08-03", 1}, */
-		{ "date:200808110801..now", 0}, /* does not match in LA */
+		{ "date:200808110801..now", 3}, /* does not match in LA */
  	};
 
 	old_tz = set_tz ("America/Los_Angeles");
@@ -490,9 +490,9 @@ test_mu_query_sizes (void)
 	int i;
 
 	QResults queries[] = {
-		{ "size:0b..2m", 13},
-		{ "size:2k..4k", 2},
-		{ "size:2m..0b", 13}
+		{ "size:0b..2m", 16},
+		{ "size:2k..4k", 4},
+		{ "size:2m..0b", 16}
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -561,6 +561,30 @@ test_mu_query_tags (void)
 
 
 static void
+test_mu_query_signed_encrypted (void)
+{
+	gchar *xpath;
+	int i;
+
+	QResults queries[] = {
+		{ "flag:encrypted", 2},
+		{ "flag:signed", 2},
+	};
+
+	xpath = fill_database (MU_TESTMAILDIR);
+	g_assert (xpath != NULL);
+
+	/* g_print ("(%s)\n", xpath); */
+
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+				  ==, queries[i].count);
+
+	g_free (xpath);
+}
+
+
+static void
 test_mu_query_tags_02 (void)
 {
 	gchar *xpath;
@@ -611,7 +635,6 @@ test_mu_query_preprocess (void)
 
 
 
-
 int
 main (int argc, char *argv[])
 {
@@ -626,6 +649,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);
 	g_test_add_func ("/mu-query/test-mu-query-03", test_mu_query_03);
 	g_test_add_func ("/mu-query/test-mu-query-04", test_mu_query_04);
+
+	g_test_add_func ("/mu-query/test-mu-query-signed-encrypted",
+			 test_mu_query_signed_encrypted);
 
 	g_test_add_func ("/mu-query/test-mu-query-logic", test_mu_query_logic);
 

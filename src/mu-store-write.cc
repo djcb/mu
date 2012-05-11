@@ -92,7 +92,7 @@ add_synonym_for_flag (MuFlags flag, Xapian::WritableDatabase *db)
 
 	db->clear_synonyms (pfx + mu_flag_name (flag));
 	db->add_synonym (pfx + mu_flag_name (flag), pfx +
-			 (std::string(1, tolower(mu_flag_char (flag)))));
+			 (std::string(1, (char)(tolower(mu_flag_char(flag))))));
 }
 
 
@@ -219,7 +219,6 @@ flag_val (char flagchar)
 {
 	static const std::string
 		pfx (prefix(MU_MSG_FIELD_ID_FLAGS)),
-		/* xapian wants lowercase */
 		draftstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_DRAFT))),
 		flaggedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_FLAGGED))),
 		passedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_PASSED))),
@@ -228,10 +227,10 @@ flag_val (char flagchar)
 		trashedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_TRASHED))),
 		newstr		(pfx + (char)tolower(mu_flag_char(MU_FLAG_NEW))),
 
-		signedstr	(pfx + mu_flag_char(MU_FLAG_SIGNED)),
-		encryptedstr	(pfx + mu_flag_char(MU_FLAG_ENCRYPTED)),
-		has_attachstr	(pfx + mu_flag_char(MU_FLAG_HAS_ATTACH)),
-		unreadstr	(pfx + mu_flag_char(MU_FLAG_UNREAD));
+		signedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_SIGNED))),
+		encryptedstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_ENCRYPTED))),
+		has_attachstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_HAS_ATTACH))),
+		unreadstr	(pfx + (char)tolower(mu_flag_char(MU_FLAG_UNREAD)));
 
 	switch (flagchar) {
 
@@ -244,7 +243,7 @@ flag_val (char flagchar)
 
 	case 'N': return newstr;
 
-	case 's': return signedstr;
+	case 'z': return signedstr;
 	case 'x': return encryptedstr;
 	case 'a': return has_attachstr;
 

@@ -126,6 +126,9 @@ EXTRA_DIST=							\
 	testdir/cur/1283599333.1840_11.cthulhu!2,		\
 	testdir/cur/1305664394.2171_402.cthulhu!2,		\
 	testdir/cur/1252168370_3.14675.cthulhu!2,S		\
+	testdir/cur/signed!2,S					\
+	testdir/cur/encrypted!2,S				\
+	testdir/cur/signed-encrypted!2,S			\
 	testdir2/bar/cur/mail1					\
 	testdir2/bar/cur/mail2					\
 	testdir2/bar/cur/mail3					\
