@@ -222,8 +222,9 @@ nil, function returns nil."
     (if user-full-name
       (format "%s <%s>" user-full-name user-mail-address)
       (format "%s" user-mail-address))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~compose-insert-mail-header-separator ()
   "Insert `mail-header-separator' in the first empty line of the
 message. message-mode needs this line to know where the headers end
@@ -236,12 +237,11 @@ separator is never written to file. Also see
     ;; search for the first empty line
     (if (search-forward-regexp (concat "^$"))
       (replace-match
-	(concat
-	  (propertize mail-header-separator 'read-only t 'intangible t)))
+	(concat (propertize mail-header-separator 'read-only t 'intangible t)))
       ;; no empty line? then append one
       (progn
 	(goto-char (point-max))
-	(insert (concat "\n" mail-header-separator "\n"))))))
+	(insert (concat "\n" mail-header-separator))))))
 
 (defun mu4e~compose-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
@@ -251,7 +251,8 @@ never hits the disk. Also see `mu4e~compose-insert-mail-header-separator."
     (goto-char (point-min))
     ;; remove the --text follows this line-- separator
     (when (search-forward-regexp (concat "^" mail-header-separator))
-      (replace-match ""))))
+      (let ((inhibit-read-only t))
+	(replace-match "")))))
 
 (defun mu4e~compose-user-wants-reply-all (origmsg)
   "Ask user whether she wants to reply to *all* recipients if there
@@ -506,7 +507,7 @@ Gnus' `message-mode'."
     ;; insert mail-header-separator, which is needed by message mode to separate
     ;; headers and body. will be removed before saving to disk
     (mu4e~compose-insert-mail-header-separator)
-
+    (insert "\n") ;; insert a newline after header separator
     ;; include files -- e.g. when forwarding a message with attachments,
     ;; we take those from the original.
     (save-excursion
