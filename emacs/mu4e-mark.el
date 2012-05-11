@@ -65,10 +65,6 @@ where
 (defconst mu4e~mark-fringe-format (format "%%-%ds" mu4e~mark-fringe-len)
   "Format string to set a mark and leave remaining space.")
 
-
-
-
-
 (defun mu4e~mark-initialize ()
   "Initialize the marks subsystem."
   (make-local-variable 'mu4e~mark-map)
@@ -94,6 +90,8 @@ The following marks are available, and the corresponding props:
    `delete'   n         remove the message
    `read'     n         mark the message as read
    `unread'   n         mark the message as unread
+   `flag'     n         mark this message for flagging
+   `unflag'   n         mark this message for unflagging
    `unmark'   n         unmark this message"
   (interactive)
   (let* ((docid (mu4e~headers-docid-at-point))
@@ -104,6 +102,8 @@ The following marks are available, and the corresponding props:
 	      ('delete  "D")
 	      ('unread  "U")
 	      ('read    "R")
+	      ('flag    "+")
+	      ('unflag  "-")
 	      ('unmark  " ")
 	      (t (error "Invalid mark %S" mark)))))
     (unless docid (error "No message on this line"))
@@ -194,6 +194,8 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 		(move   (mu4e~proc-move docid target))
 		(read   (mu4e~proc-move docid nil "+S-u-N"))
 		(unread (mu4e~proc-move docid nil "-S+u"))
+		(flag   (mu4e~proc-move docid nil "+F-u-N"))
+		(unflag (mu4e~proc-move docid nil "-F"))
 		(trash
 		  (unless mu4e-trash-folder
 		    (error "`mu4e-trash-folder' not set"))

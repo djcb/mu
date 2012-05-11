@@ -242,11 +242,13 @@ if provided, or at the end of the buffer otherwise."
 	  (flags (plist-get msg :flags))
 	  (line	(cond
 		  ((member 'draft flags)
-		    (propertize line 'face 'mu4e-draft-face 'draft t))
+		    (propertize line 'face 'mu4e-draft-face))
 		  ((member 'trashed flags)
 		    (propertize line 'face 'mu4e-trashed-face))
 		  ((member 'unread flags)
 		    (propertize line 'face 'mu4e-unread-face))
+		  ((member 'flagged flags)
+		    (propertize line 'face 'mu4e-flagged-face))		  
 		  (t ;; else
 		    (propertize line 'face 'mu4e-header-face)))))
 
@@ -286,7 +288,8 @@ after the end of the search results."
   (defun mu4e~headers-mark-unmark()(interactive)(mu4e-headers-mark-and-next 'unmark))
   (defun mu4e~headers-mark-read()(interactive)(mu4e-headers-mark-and-next 'read))
   (defun mu4e~headers-mark-unread()(interactive)(mu4e-headers-mark-and-next 'unread))
-  
+  (defun mu4e~headers-mark-flag()(interactive)(mu4e-headers-mark-and-next 'flag))
+  (defun mu4e~headers-mark-unflag()(interactive)(mu4e-headers-mark-and-next 'unflag))
 
   (setq mu4e-headers-mode-map
     (let ((map (make-sparse-keymap)))
@@ -335,7 +338,9 @@ after the end of the search results."
       (define-key map (kbd "o") 'mu4e~headers-mark-unread)
       (define-key map (kbd "r") 'mu4e~headers-mark-read)
       (define-key map (kbd "u") 'mu4e~headers-mark-unmark)
-
+      (define-key map (kbd "+") 'mu4e~headers-mark-flag)
+      (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
+      
       (define-key map "m" 'mu4e-headers-mark-for-move-and-next)
 
       (define-key map "U" 'mu4e-mark-unmark-all)
@@ -635,6 +640,8 @@ header."
 		 ("elete"  ?D  delete)
 		 ("unread" ?o  unread)
 		 ("read"   nil read)
+		 ("star"   ?+  star)
+		 ("unstar" ?-  unstar)	 
 		 ("unmark" nil unmark))))
 	  (target
 	    (when (eq mark 'move)

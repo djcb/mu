@@ -183,6 +183,11 @@ be sure it no longer matches)."
 flag set)."
   :group 'mu4e-faces)
 
+(defface mu4e-flagged-face
+  '((t :inherit font-lock-builtin-face :bold t))
+  "Face for a flagged message header."
+  :group 'mu4e-faces)
+
 (defface mu4e-header-face
   '((t :inherit default))
   "Face for a header without any special flags."

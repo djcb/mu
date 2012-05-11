@@ -312,11 +312,11 @@ is nil, and otherwise open it."
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-view-headers-search-edit)
       (define-key map "/" 'mu4e-view-headers-search-narrow)
-      
+
       (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
       (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
-      
-      (define-key map "b" 'mu4e-headers-search-bookmark)     
+
+      (define-key map "b" 'mu4e-headers-search-bookmark)
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
 
       (define-key map "%" 'mu4e-view-mark-pattern)
@@ -370,6 +370,9 @@ is nil, and otherwise open it."
       (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
       (define-key map "D" 'mu4e-view-mark-for-delete)
       (define-key map "m" 'mu4e-view-mark-for-move)
+
+      (define-key map (kbd "+") 'mu4e-view-mark-flag)
+      (define-key map (kbd "-") 'mu4e-view-mark-unflag)
 
       ;; misc
       (define-key map "w" 'mu4e-view-toggle-wrap-lines)
@@ -430,13 +433,13 @@ is nil, and otherwise open it."
 
 
 	(define-key menumap [query-next]  '("Next query" . mu4e-headers-query-next))
-	(define-key menumap [query-prev]  '("Previous query" . mu4e-headers-query-prev))	
+	(define-key menumap [query-prev]  '("Previous query" . mu4e-headers-query-prev))
 	(define-key menumap [narrow-search] '("Narrow search" . mu4e-headers-search-narrow))
 	(define-key menumap [bookmark]  '("Search bookmark" . mu4e-headers-search-bookmark))
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
 	(define-key menumap [refresh]  '("Refresh" . mu4e-headers-rerun-search))
 	(define-key menumap [search]  '("Search" . mu4e-headers-search))
- 
+
 
 	(define-key menumap [sepa4] '("--"))
 	(define-key menumap [next]  '("Next" . mu4e-view-headers-next))
@@ -877,6 +880,18 @@ user that unmarking only works in the header list."
   "Mark the current message for deletion."
   (interactive)
   (mu4e~view-mark-set 'delete)
+  (mu4e-view-headers-next))
+
+(defun mu4e-view-mark-flag ()
+  "Mark the current message for flagging."
+  (interactive)
+  (mu4e~view-mark-set 'flag)
+  (mu4e-view-headers-next))
+
+(defun mu4e-view-mark-unflag ()
+  "Mark the current message for unflagging."
+  (interactive)
+  (mu4e~view-mark-set 'unflag)
   (mu4e-view-headers-next))
 
 (defun mu4e-view-marked-execute ()
