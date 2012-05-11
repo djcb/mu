@@ -733,7 +733,7 @@ message-at-point if nil) to disk."
 				     (mu4e-format "Save as ") path)))
       (setq retry
 	(and (file-exists-p path)
-	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?"))))))
+	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" path))))))
     (mu4e~proc-extract
       'save (plist-get msg :docid) index path)))
 
