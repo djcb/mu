@@ -314,6 +314,13 @@ after the end of the search results."
       (define-key map "T" 'mu4e-headers-mark-thread)
 
 
+      ;; navigation between messages
+      (define-key map "p" 'mu4e-headers-prev)
+      (define-key map "n" 'mu4e-headers-next)
+      (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
+      (define-key map (kbd "<M-down>") 'mu4e-headers-next)
+
+      
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
