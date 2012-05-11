@@ -61,6 +61,13 @@ sent folder."
   :type 'symbol
   :safe 'symbolp
   :group 'mu4e-compose)
+
+
+(defcustom mu4e-compose-keep-self-cc nil
+  "Non-nil means your e-mail address is kept on the CC list when
+replying to messages."
+  :type 'boolean
+  :group 'mu4e-compose)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -147,7 +154,6 @@ e-mail addresses. If LST is nil, returns nil."
     (downcase (or (cdr cell2) ""))))
 
 
-
 (defun mu4e~compose-create-to-lst (origmsg)
   "Create a list of address for the To: in a new message, based on
 the original message ORIGMSG. If the Reply-To address is set, use
@@ -182,8 +188,9 @@ the original message ORIGMSG, and whether it's a reply-all."
 		    (mu4e~compose-create-to-lst origmsg)))
 		cc-lst))
 	    ;; finally, we need to remove ourselves from the cc-list
+	    ;; unless mu4e-compose-keep-self-cc is non-nil
 	    (cc-lst
-	      (if (null user-mail-address)
+	      (if (or mu4e-compose-keep-self-cc (null user-mail-address))
 		cc-lst
 		(delete-if
 		  (lambda (cc-cell)
@@ -229,7 +236,8 @@ separator is never written to file. Also see
     ;; search for the first empty line
     (if (search-forward-regexp (concat "^$"))
       (replace-match
-	(propertize mail-header-separator 'read-only t 'intangible t))
+	(concat
+	  (propertize mail-header-separator 'read-only t 'intangible t)))
       ;; no empty line? then append one
       (progn
 	(goto-char (point-max))
