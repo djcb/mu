@@ -248,7 +248,7 @@ if provided, or at the end of the buffer otherwise."
 		  ((member 'unread flags)
 		    (propertize line 'face 'mu4e-unread-face))
 		  ((member 'flagged flags)
-		    (propertize line 'face 'mu4e-flagged-face))		  
+		    (propertize line 'face 'mu4e-flagged-face))
 		  (t ;; else
 		    (propertize line 'face 'mu4e-header-face)))))
 
@@ -274,7 +274,7 @@ after the end of the search results."
 	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
- 
+
 
 
 ;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -299,19 +299,19 @@ after the end of the search results."
       (define-key map "/" 'mu4e-headers-search-narrow)
 
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
-      
+
       (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
       (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
-      
+
       (define-key map "b" 'mu4e-headers-search-bookmark)
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
- 
+
       (define-key map "q" 'mu4e~headers-kill-buffer-and-window)
       (define-key map "z" 'mu4e~headers-kill-buffer-and-window)
 
       (define-key map "r" 'mu4e-headers-rerun-search)
       (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
-      
+
       (define-key map "%" 'mu4e-headers-mark-pattern)
       (define-key map "t" 'mu4e-headers-mark-subthread)
       (define-key map "T" 'mu4e-headers-mark-thread)
@@ -323,7 +323,7 @@ after the end of the search results."
       (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
       (define-key map (kbd "<M-down>") 'mu4e-headers-next)
 
-      
+
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
@@ -340,7 +340,7 @@ after the end of the search results."
       (define-key map (kbd "u") 'mu4e~headers-mark-unmark)
       (define-key map (kbd "+") 'mu4e~headers-mark-flag)
       (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
-      
+
       (define-key map "m" 'mu4e-headers-mark-for-move-and-next)
 
       (define-key map "U" 'mu4e-mark-unmark-all)
@@ -396,7 +396,7 @@ after the end of the search results."
 	(define-key menumap [sepa2] '("--"))
 
 	(define-key menumap [query-next]  '("Next query" . mu4e-headers-query-next))
-	(define-key menumap [query-prev]  '("Previous query" . mu4e-headers-query-prev))	
+	(define-key menumap [query-prev]  '("Previous query" . mu4e-headers-query-prev))
 	(define-key menumap [narrow-search] '("Narrow search" . mu4e-headers-search-narrow))
 	(define-key menumap [bookmark]  '("Search bookmark" . mu4e-headers-search-bookmark))
 	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
@@ -422,7 +422,7 @@ after the end of the search results."
   (use-local-map mu4e-headers-mode-map)
 
   (make-local-variable 'mu4e~headers-proc)
-  (make-local-variable 'mu4e~highlighted-docid) 
+  (make-local-variable 'mu4e~highlighted-docid)
   (make-local-variable 'global-mode-string)
   (make-local-variable 'hl-line-face)
 
@@ -640,8 +640,8 @@ header."
 		 ("elete"  ?D  delete)
 		 ("unread" ?o  unread)
 		 ("read"   nil read)
-		 ("star"   ?+  star)
-		 ("unstar" ?-  unstar)	 
+		 ("flag"   ?+  flag)
+		 ("unflag" ?-  unflag)
 		 ("unmark" nil unmark))))
 	  (target
 	    (when (eq mark 'move)
@@ -738,7 +738,7 @@ limited to the message at point and its descendants."
   "The present (most recent) query.")
 (defvar mu4e~headers-query-stack-size 20
   "Maximum size for the query stacks.")
- 
+
 (defun mu4e~headers-push-query (query where)
   "Push QUERY to one of the query stacks; WHERE is a symbol telling
 us where to push; it's a symbol, either 'future or
@@ -773,9 +773,9 @@ to get it from; it's a symbol, either 'future or 'past."
 	(error "No more next queries"))
       (pop mu4e~headers-query-future))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     
 
- 
+
+
 
 
 
@@ -912,18 +912,18 @@ determines where the query is taken from and is a symbol, either
 `future' or `past'."
   (let ((query (mu4e~headers-pop-query whence))
 	 (where (if (eq whence 'future) 'past 'future)))
-    (mu4e~headers-push-query mu4e~headers-query-present where)     
-    (mu4e-headers-search query full-search nil nil t))) 
+    (mu4e~headers-push-query mu4e~headers-query-present where)
+    (mu4e-headers-search query full-search nil nil t)))
 
 (defun mu4e-headers-query-next (full-search)
   "Execute the previous query from the query stacks."
   (interactive "P")
-  (mu4e~headers-query-navigate full-search 'future)) 
+  (mu4e~headers-query-navigate full-search 'future))
 
 (defun mu4e-headers-query-prev (full-search)
   "Execute the previous query from the query stacks."
   (interactive "P")
-  (mu4e~headers-query-navigate full-search 'past)) 
+  (mu4e~headers-query-navigate full-search 'past))
 
 ;; forget the past so we don't repeat it :/
 (defun mu4e-headers-forget-queries ()
