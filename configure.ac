@@ -140,7 +140,7 @@ AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
    *** is in your PATH.])],
    [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
 AS_CASE([$xapian_version],
-	[1.[[2-9]].[[0-9]]], [],
+	[1.[[2-9]].[[0-9]]*], [],
 	[AC_MSG_ERROR([*** xapian version >= 1.2 needed, but version $xapian_version found.])])
 
 XAPIAN_CXXFLAGS="`$XAPIAN_CONFIG --cxxflags`"
