@@ -1,8 +1,5 @@
 * TODO (fixes, ideas, etc.)
 
-** For 0.9.8.4
-
-   - check the iso-8859-1 problems (see Emilio's mail)
 
 ** Future stuff
 
@@ -25,10 +22,20 @@
   - put threading information in the database, and enable getting the complete
     threads when searching
   - hide/show messages matching a certain pattern
-  - make search results a stack
 
   - fix having multiple header views visible
   - make next/prev header respect prefix argument (Jacek's patch)
+
+  - mark message, decide what to do with them later
+
+** Done
+
+  - make next/prev header respect prefix argument (Jacek's patch)
+  - make search results a stack (well, multiple stacks)
+  - optionally keep cc with user's email
+  - enable setting/unsetting 'Flagged' on messages
+  - allow narrowing of search results
+
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
