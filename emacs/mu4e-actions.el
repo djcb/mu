@@ -30,17 +30,21 @@
 (require 'mu4e-utils)
 (require 'mu4e-meta)
 
-
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-count-lines (msg)
   "Count the number of lines in the e-mail message. Works for
 headers view and message-view."
   (message "Number of lines: %s"
     (shell-command-to-string
       (concat "wc -l < " (shell-quote-argument (plist-get msg :path))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-msg2pdf (concat mu4e-builddir "/toys/msg2pdf/msg2pdf")
   "Path to the msg2pdf toy.")
 
@@ -60,11 +64,51 @@ view."
       (message "==> %S %S" pdf (mu4e-msg-field msg :path))
       (error "Failed to create PDF file"))
     (find-file pdf)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-action-view-in-browser (msg)
+  "Hack to view the html part for MSG in a web browser."
+  (let* ((shellpath (shell-quote-argument (mu4e-msg-field msg :path)))
+	  (partnum
+	    (shell-command-to-string
+	      (format "%s extract %s | grep 'text/html' | awk '{print $1}'"
+		mu4e-mu-binary shellpath))))
+    (unless (> (length partnum) 0)
+      (error "No html part for this message"))
+    (call-process-shell-command
+      (format "cd %s; %s extract %s --parts=%s --overwrite --play"
+	(shell-quote-argument temporary-file-directory)
+	mu4e-mu-binary shellpath (substring partnum 0 -1)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defconst mu4e-text2speech-command "festival --tts"
+  "Program that speaks out text it receives on standard-input.")
+
+(defun mu4e-action-message-to-speech (msg)
+  "Pronounce the message text using `mu4e-text2speech-command'."
+  (unless (mu4e-msg-field msg :body-txt)
+    (error "No text body for this message"))
+  (with-temp-buffer
+    (insert (mu4e-msg-field msg :body-txt))
+    (shell-command-on-region (point-min) (point-max)
+      mu4e-text2speech-command)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
 
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-captured-message nil
   "The last-captured message (the s-expression).")
 
@@ -74,9 +118,11 @@ with `mu4e-compose-attach-captured-message'."
   (interactive)
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-org-contacts-file nil
   "File to store contact information for org-contacts. Needed by
   `mu4e-action-add-org-contact'.")
@@ -93,8 +139,8 @@ store your org-contacts."
   (unless (require 'org-capture nil 'noerror)
     (error "org-capture is not available."))
   (unless mu4e-org-contacts-file
-    (error "`mu4e-org-contacts-file' is not defined.")) 
-  (let* ((sender (car-safe (mu4e-msg-field msg :from)))  
+    (error "`mu4e-org-contacts-file' is not defined."))
+  (let* ((sender (car-safe (mu4e-msg-field msg :from)))
 	  (name (car-safe sender)) (email (cdr-safe sender))
 	  (blurb
 	    (format
@@ -114,7 +160,8 @@ store your org-contacts."
 		      (list 'file mu4e-org-contacts-file) blurb)))))
     (message "%S" org-capture-templates)
     (org-capture nil key)))
- 
- 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 (provide 'mu4e-actions)
