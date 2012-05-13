@@ -198,8 +198,10 @@ into a string."
 	  (duplicate    "= ")
 	  (t            "| "))))))
 
-(defconst mu4e~headers-from-or-to-prefix "To "
-  "Prefix for the :from-or-to field when it is showing To:.")
+(defconst mu4e-headers-from-or-to-prefix '("" . "To ")
+  "Prefix for the :from-or-to field when it is showing,
+  respectively, From: or To:. It's a cons cell with the car element
+  being the From: prefix, the cdr element the To: prefix.")
 
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
@@ -225,11 +227,11 @@ if provided, or at the end of the buffer otherwise."
 			   (:from-or-to
 			     (let* ((from-lst (plist-get msg :from))
 				     (from (and from-lst (cdar from-lst))))
-			       (if (and from (string-match
-					       mu4e-user-mail-address-regexp from))
-				 (concat (or mu4e~headers-from-or-to-prefix "")
+			       (if (and from (string-match mu4e-user-mail-address-regexp from))
+				 (concat (or (cdr-safe mu4e-headers-from-or-to-prefix))
 				   (mu4e~headers-contact-str (plist-get msg :to)))
-				 (mu4e~headers-contact-str from-lst))))
+				 (concat  (or (car-safe mu4e-headers-from-or-to-prefix))
+				   (mu4e~headers-contact-str from-lst))))) 
 			   (:date (format-time-string mu4e-headers-date-format val))
 			   (:flags (mu4e-flags-to-string val))
 			   (:size (mu4e-display-size val))
