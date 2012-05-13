@@ -53,6 +53,7 @@ This manual has been updated for @t{mu}/@t{mu4e} version
 * Getting started::
 * Running mu4e::
 * Searching::
+* Marking::
 * Actions::
 * Interaction with other tools::
 * Example configuration::
@@ -441,8 +442,9 @@ Next come the @emph{Bookmarks}.These are set with the variable
 @code{mu4e-bookmarks}; what you see in the above example are the
 @emph{default} bookmarks - you can add your own and/or replace the default
 ones. @xref{Bookmarks}. In short, you can view the list of messages matching a
-bookmark by pressing @key{b} followed by the shortcut for this bookmark. If
-you'd like to edit the bookmarked query first, use @key{B}.
+certain bookmark by pressing @key{b} followed by the shortcut for this
+bookmark. If you'd like to edit the bookmarked query first, use @key{B}. For
+information about creating bookmarks @xref{Bookmarks}.
 
 @subsection Miscellaneous
 
@@ -493,10 +495,11 @@ the variable @code{mu4e-headers-fields}
 can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
 compact way to convey the most important information: it shows @t{From:}
 @emph{except} when the e-mail was sent by the user (i.e., you) - in that case
-it shows @t{To:} (prefixed by @t{To}, as in the example above). To determine
-whether a message was sent by you, @t{mu4e} uses the variable
-@code{mu4e-user-mail-address-regexp}, which should be a regular expression
-matching all the e-mail addresses that you use.
+it shows @t{To:} (prefixed by @t{To}@footnote{You can customize this by
+changing the variable @code{mu4e-headers-from-or-to-prefix} (a cons cell)}, as
+in the example above). To determine whether a message was sent by you,
+@t{mu4e} uses the variable @code{mu4e-user-mail-address-regexp}, which should
+be a regular expression matching all the e-mail addresses that you use.
 @item The letters in the 'Flags' field correspond to the following: D=draft,
 F=flagged, N=new, P=passed (i.e.., forwarded), R=replied, S=seen, T=trashed,
 a=has-attachment, x=encrypted, s=signed, u=unread.
@@ -531,6 +534,7 @@ a            execute some action on header
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
++,-          mark for flagging/unflagging
 u            unmark message at point
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
@@ -565,15 +569,17 @@ The two-step mark-execute sequence is similar to what @t{dired} and a number
 of other emacs-based programs do. @t{mu4e} tries to be as quick as possible
 while still trying to avoid accidents.
 
-You can mark all messages that match a certain regular expression with
-@key{%}. In addition, you can mark all messages in the current thread (@key{T})
-or sub-thread (@key{t}).
+You can mark all messages that match a certain pattern with @key{%}. In
+addition, you can mark all messages in the current thread (@key{T}) or
+sub-thread (@key{t}).
 
 When you try to do a new search, or refresh the headers buffer while you still
 have marked messages, normally you will be asked what to do with those marks
 -- whether to @emph{apply} them before leaving, @emph{ignore} them. This
 behavior can be influenced with the variable
 @code{mu4e-headers-leave-behavior} -- see its documentation.
+
+For more information about marking, @xref{Marking}.
 
 @subsection Actions
 
@@ -586,14 +592,13 @@ on the message at point. You can specify these actions using the variable
 include the previously captured message as an attachment, using
 @code{mu4e-compose-attach-captured-message}.
 
+See @ref{Actions} for details about setting up your own actions.
+
 @subsection Split view
 
 Using the @emph{Split view} means viewing the @ref{Headers view} and the
 @ref{Message view} next to each other, with the message that is selected in
 the former, visible in the latter.
-
-Earlier versions of @t{mu4e} only showed one of the views at a time, but split
-view has become the default after version 0.9.8.3.
 
 You can influence the way the splitting works by setting the variable
 @code{mu4e-split-view} in your configuration to one of 3 values:
@@ -691,13 +696,14 @@ B            edit bookmark before search
 j            jump to maildir
 
 M-left       previous query
-M-right      next query 
+M-right      next query
 
 a            execute some action on the message
 
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
++,-          mark for flagging/unflagging
 u            unmark message at point
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
@@ -766,7 +772,7 @@ like: @t{A | 1 RET diffstat -b RET}.
 
 These actions all work on @emph{temporary copy} of the attachment.
 
-For more information about actions and how to define your own, see
+For more information on setting up actions and how to define them, see
 @ref{Actions}.
 
 @subsection Displaying rich-text messages
@@ -1071,11 +1077,10 @@ shortcut @key{m}); so, for example, if you want to move a message the
 @section Other search functionality
 
 @subsection Navigating through search queries
-
 You can navigate through previous/next queries using
 @code{mu4e-headers-query-prev} and @code{mu4e-headers-query-next}, which are
 bound to @key{M-left} and @key{M-right}, just like the way you can navigate to
-previous and next pages in many webbrowsers. 
+previous and next pages in many webbrowsers.
 
 The functions try to be smart as to not record duplicate queries. Also, the
 numbers of queries remembered has a fixed limit, so long-running @t{mu4e}
@@ -1097,14 +1102,87 @@ search, you want to narrow things down to only those messages that have
 attachments.
 
 Now, @code{mu4e-headers-search-narrow} (@key{/}) comes in handy. That function
-as for an extra search query; if you now specify @t{flag:attach} you get the
-subset of the headers matching that expression.
+asks for an additional search pattern, which will be appended to the current
+search query, in effect getting you the subset of the currently shown headers
+that also match this extra search pattern.
 
 Technically, narrowing the results of query @t{x} with expression @t{y}
-implies doing a search @t{(x) AND y}. 
+implies doing a search @t{(x) AND y}.
 
-Note, messages that were note in your in your original search results because
-of @code{mu4e-search-results-limit} may still show up in the narrowed query.
+Note, messages that were not in your in your original search results because
+of @code{mu4e-search-results-limit}, may still show up in the narrowed query.
+
+@node Marking
+@chapter Marking
+
+The common way in @t{mu4e} to do things with messages is a two-step process -
+first you @emph{mark} them for a certain action, then you @emph{execute}
+(@key{x})the marks. This works in a way somewhat similar to @t{dired}.
+
+Marking can happen in both the @ref{Headers view} and the @ref{Message view}.
+
+@menu
+* Selecting messages for marking::
+* What to mark for::
+* Leaving the headers buffer::
+* Some marking examples::
+@end menu
+
+@node Selecting messages for marking
+@section Selecting messages for marking
+
+There are a couple of ways to select messages for marking:
+@itemize
+@item @emph{message at point}: you can put a mark on the message-at-point in
+either the @ref{Headers view} or @ref{Message view}
+@item @emph{region}: you can put a mark on all messages in the current region
+(selection) in the @ref{Headers view}
+@item @emph{Pattern}: you can put a mark on all messages in the @ref{Headers
+view} matching a certain pattern with @code{mu4e-headers-mark-pattern}
+(@key{%})
+@item You can put a mark on all the messages in the thread/subthread at point
+with @code{mu4e-headers-mark-thread} and @code{mu4e-headers-mark-subthread},
+respectively
+@end itemize
+
+@node What to mark for
+@section What to mark for
+
+@t{mu4e} supports a number of different marks - i.e., different actions to
+apply to messages:
+
+@itemize
+@item moving to trash (@key{t})
+@item delete (@key{D} or @key{<delete>})
+@item move to some maildir (@key{m})
+@item flag/unflag (@key{+}, @key{-})
+@item mark as read/unread (@key{r}, @key{o})
+@item remove the mark (@key{u})
+@end itemize
+
+You can remove @emph{all} marks in the @ref{Headers view} with @key{U}.
+
+@node Leaving the headers buffer
+@section Leaving the headers buffer
+
+When you quit the buffer (for example, but doing a new search) with marks being
+present, @t{mu4e} asks you what to do with them, depending on the value of the
+variable @code{mu4e-headers-leave-behavior} -- see its documentation.
+
+@node Some marking examples
+@section Some marking examples
+
+Let's look at some examples, assuming the default key-bindings.
+
+@itemize
+@item @emph{Mark the message at point for trashing}: press @key{d}
+@item @emph{Mark all messages in the buffer as unread}: press @key{C-x h o}
+@item @emph{Delete the messages in the current thread}: press @key{T D}
+@item @emph{Mark messages with a subject matching ``hello'' for flagging}:
+press @key{% + s hello RET}. Note, the menu system helps you here; all you
+need to remember is @key{%} for @code{mu4e-headers-mark-pattern}.
+@end itemize
+
 
 @node Actions
 @chapter Actions
@@ -1206,6 +1284,15 @@ Functions that start with @t{mu4e-view-} and @t{mu4e-headers-} should be called
 only from that particular context (the message view and the headers view,
 respectively).
 
+@subsection Example actions
+
+@t{mu4e} includes a number of example actions in @file{mu4e-actions.el} in the
+source distribution (see @key{C-h f mu4e-action-TAB}). For example, for
+viewing messages in an external web browser, or listening to a message's
+body-text using text-to-speech.
+
+If you have come up with any interesting actions that may be useful for
+others, you are invited to contribute those.
 
 @node Interaction with other tools
 @chapter Interaction with other tools
@@ -1638,6 +1725,9 @@ up-to-a-limited-number matches. Same for the other search based commands,
 @code{mu4e-headers-search-bookmark} (default: @key{b}).
 @item @emph{How can I easily include attachments in the messages I write?}
 Drag-and-drop.
+@item @emph{@t{mu4e} seems to remove myself from the Cc: list; how can I
+prevent that?}
+Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like @t{mu: mu_store_new_writable: xapian error 'Unable to get write
 lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
@@ -1843,8 +1933,9 @@ A typical message s-expression looks something like the following:
  :maildir "/INBOX"
  :priority normal
  :flags (seen)
- :attachments ((:index 2 :name "photo.jpg" :mime-type "image/jpeg" :size 147331)
-               (:index 3 :name "book.pdf" :mime-type "application/pdf" :size 192220))
+ :parts ( (:index 1 :mime-type "text/plain" :size 12345 :attachment nil)
+          (:index 2 :name "photo.jpg" :mime-type "image/jpeg" :size 147331 :attachment t)
+          (:index 3 :name "book.pdf" :mime-type "application/pdf" :size 192220 :attachment t))
  :references  ("6BDC23465F79238C8384574032D81EE81AF0114E4E74@@123213.mail.example.com"
  "6BDC23465F79238203498230942D81EE81AF0114E4E74@@123213.mail.example.com")
  :in-reply-to "6BDC23465F79238203498230942D81EE81AF0114E4E74@@123213.mail.example.com"
@@ -1906,7 +1997,7 @@ reason, @t{mu4e} can log all these messages. Note that the 'protocol' is
 documented to some extent in the @t{mu-server} manpage.
 
 You can enable (and disable) logging with @t{M-x mu4e-toggle-logging}. The
-log-buffer is called @t{*mu4e-log-buffer*}, and in the @ref{Main view},
+log-buffer is called @t{*mu4e-log*}, and in the @ref{Main view},
 @ref{Headers view} and @t{Message view}, there's a keybinding @key{$} that
 will take you there. You can quit it by pressing @key{q}.
 
