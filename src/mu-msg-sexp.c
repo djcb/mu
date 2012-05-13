@@ -208,9 +208,6 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 	const char *fname;
 	char *name, *tmp;
 
-	if (!mu_msg_part_looks_like_attachment (part, TRUE))
-		return;
-
 	fname = mu_msg_part_file_name (part);
 	if (!fname)
 		fname = mu_msg_part_description (part);
@@ -218,13 +215,18 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 	if (fname)
 		name = mu_str_escape_c_literal (fname, TRUE);
 	else
-		name = g_strdup_printf ("\"part-%d\"", part->index);
+		name = g_strdup_printf
+			("\"%s-%s-%d\"",
+			 part->type    ? part->type    : "application",
+			 part->subtype ? part->subtype : "octet-stream",
+			 part->index);
 
 	tmp = g_strdup_printf
-		("%s(:index %d :name %s :mime-type \"%s/%s\" :size %i)",
+		("%s(:index %d :name %s :mime-type \"%s/%s\" :attachment %s :size %i)",
 		 *parts ? *parts : "",  part->index, name,
 		 part->type ? part->type : "application",
 		 part->subtype ? part->subtype : "octet-stream",
+		 mu_msg_part_looks_like_attachment (part, TRUE) ? "t" : "nil",
 		 (int)part->size);
 
 	g_free (*parts);
@@ -233,7 +235,7 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 
 
 static void
-append_sexp_attachments (GString *gstr, MuMsg *msg)
+append_sexp_parts (GString *gstr, MuMsg *msg)
 {
 	char *parts;
 
@@ -242,7 +244,7 @@ append_sexp_attachments (GString *gstr, MuMsg *msg)
 			     (MuMsgPartForeachFunc)each_part, &parts);
 
 	if (parts) {
-		g_string_append_printf (gstr, "\t:attachments (%s)\n", parts);
+		g_string_append_printf (gstr, "\t:parts (%s)\n", parts);
 		g_free (parts);
 	}
 }
@@ -252,7 +254,7 @@ append_sexp_attachments (GString *gstr, MuMsg *msg)
 static void
 append_sexp_message_file_attr (GString *gstr, MuMsg *msg)
 {
-	append_sexp_attachments (gstr, msg);
+	append_sexp_parts (gstr, msg);
 
 	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
 	append_sexp_attr (gstr, "in-reply-to",

@@ -112,12 +112,26 @@ where:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;; some buffer-local variables
+;; some buffer-local variables / constants
 (defvar mu4e~view-headers-buffer nil
-  "*internal* Headers buffer connected to this view.")
+  "The headers buffer connected to this view.")
 
-(defvar mu4e~view-lines-wrapped nil "*internal* Whether lines are wrapped.")
-(defvar mu4e~view-cited-hidden nil "*internal* Whether cited lines are hidden.")
+(defvar mu4e~view-lines-wrapped nil "Whether lines are wrapped.")
+(defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
+
+(defvar mu4e~view-link-map nil
+  "A map of some number->url so we can jump to url by number.")
+
+(defconst mu4e~view-url-regexp
+  "\\(https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\)"
+  "Regexp that matches URLs; match-string 1 will contain
+  the matched URL, if any.")
+
+(defvar mu4e~view-attach-map nil
+  "A mapping of user-visible attachment number to the actual part index.")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 
 (defun mu4e-view-message-with-msgid (msgid)
@@ -261,21 +275,32 @@ is nil, and otherwise open it."
 	(mu4e-view-open-attachment msg attachnum)
 	(mu4e-view-save-attachment msg attachnum)))))
 
-;; note -- attachments have an index which is needed for the backend, which does
-;; not necessarily follow 1,2,3,4 etc.
 (defun mu4e~view-construct-attachments (msg)
   "Display attachment information; the field looks like something like:
-   	:attachments ((:index 4 :name \"test123.doc\"
-                       :mime-type \"application/msword\" :size 1234))."
+   	:parts ((:index 1 :name \"test123.doc\"
+                       :mime-type \"application/msword\" :attachment t :size 1234)
+                (:index 2 :name \"test456.pdf\"
+                       :mime-type \"application/pdf\" :attachment t :size 12234))."
+  (setq mu4e~view-attach-map ;; buffer local
+    (make-hash-table :size 16 :rehash-size 2 :weakness nil))
   (let* ((id 0)
+	  (attachments
+	    ;; we only list parts that look like attachments, ie. that have a
+	    ;; non-nil :attachment property; we record a mapping between user-visible
+	    ;; numbers and the part indices
+	    (remove-if-not
+	      (lambda (part)
+		(plist-get part :attachment))
+	      (plist-get msg :parts)))
 	  (attstr
 	   (mapconcat
-	     (lambda (att)
-	       (let ( (index (plist-get att :index))
-		      (name (plist-get att :name))
-		      (size (plist-get att :size))
+	     (lambda (part)
+	       (let ((index (plist-get part :index))
+		      (name (plist-get part :name))
+		      (size (plist-get part :size))
 		      (map (make-sparse-keymap)))
 		 (incf id)
+		 (puthash id index mu4e~view-attach-map)
 		 (define-key map [mouse-2]
 		   (mu4e~view-open-save-attach-func msg id nil))
 		 (define-key map [?\r]
@@ -292,7 +317,7 @@ is nil, and otherwise open it."
 		     (concat (format "(%s)"
 			       (propertize (mu4e-display-size size)
 				 'face 'mu4e-view-header-key-face)))))))
-	     (plist-get msg :attachments) ", ")))
+	     attachments ", ")))
     (unless (zerop id)
       (mu4e~view-construct-header (format "Attachments(%d)" id) attstr t))))
 
@@ -457,6 +482,7 @@ is nil, and otherwise open it."
   (make-local-variable 'mu4e~view-headers-buffer)
   (make-local-variable 'mu4e~view-msg)
   (make-local-variable 'mu4e~view-link-map)
+  (make-local-variable 'mu4e~view-attach-map)
 
   (make-local-variable 'mu4e~view-lines-wrapped)
   (make-local-variable 'mu4e~view-cited-hidden)
@@ -527,14 +553,6 @@ Seen; if the message is not New/Unread, do nothing."
       (let ((p (search-forward "\n-- \n" nil t)))
 	(when p
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
-
-(defvar mu4e~view-link-map nil
-  "*internal* A map of some number->url so we can jump to url by number.")
-
-(defconst mu4e~view-url-regexp
-  "\\(https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\)"
-  "*internal* regexp that matches URLs; match-string 1 will contain
-  the matched URL, if any.")
 
 (defun mu4e~view-browse-url-func (url)
   "Return a function that executes `browse-url' with URL."
@@ -705,8 +723,7 @@ all messages in the thread at point in the headers view."
   "Ask the user with PROMPT for an attachment number for MSG, and
   ensure it is valid. The number is [1..n] for attachments
   [0..(n-1)] in the message."
-  (let* ((attlist (plist-get msg :attachments))
-	  (count (length attlist)))
+  (let* ((count (hash-table-count mu4e~view-attach-map)))
     (when (zerop count) (error "No attachments for this message"))
     (if (= count 1)
       (read-number (mu4e-format "%s: " prompt) 1)
@@ -715,8 +732,12 @@ all messages in the thread at point in the headers view."
 (defun mu4e~view-get-attach (msg attnum)
   "Return the attachment plist in MSG corresponding to attachment
 number ATTNUM."
-  (let ((attlist (plist-get msg :attachments)))
-    (nth (- attnum 1) attlist)))
+  (let ((partid (gethash attnum mu4e~view-attach-map)))
+    (find-if
+      (lambda (part)
+	(eq (plist-get part :index) partid))
+      (plist-get msg :parts))))
+
 
 (defun mu4e-view-save-attachment (&optional msg attnum)
   "Save attachment number ATTNUM (or ask if nil) from MSG (or
