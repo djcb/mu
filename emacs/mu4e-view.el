@@ -36,6 +36,7 @@
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
 (require 'comint)
+(require 'cl)
 
 ;; the message view
 (defgroup mu4e-view nil
