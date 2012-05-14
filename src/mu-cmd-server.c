@@ -131,7 +131,12 @@ print_expr (const char* frm, ...)
 static MuError
 print_error (MuError errcode, const char *msg)
 {
-	print_expr ("(:error %u :message %s)", errcode, msg);
+	char *str;
+
+	str = mu_str_escape_c_literal (msg, TRUE);
+	print_expr ("(:error %u :message %s)", errcode, str);
+	g_free (str);
+
 	return errcode;
 }
 
