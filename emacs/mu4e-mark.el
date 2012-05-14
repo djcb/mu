@@ -208,7 +208,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 (defun mu4e-mark-unmark-all ()
   "Unmark all marked messages."
   (interactive)
-  (when (zerop (hash-table-count mu4e~mark-map))
+  (when (or (null mu4e~mark-map) (zerop (hash-table-count mu4e~mark-map)))
     (error "Nothing is marked"))
   (maphash
     (lambda (docid val)
