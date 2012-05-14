@@ -544,6 +544,8 @@ E            edit (only allowed for draft messages)
 
 |            pipe message through shell command
 
+C-+,C--      increase / decrease the number of headers shown
+
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
@@ -697,6 +699,8 @@ j            jump to maildir
 
 M-left       previous query
 M-right      next query
+
+C-+,C--      increase / decrease the number of headers shown
 
 a            execute some action on the message
 

@@ -362,6 +362,14 @@ is nil, and otherwise open it."
       (define-key map "|" 'mu4e-view-pipe)
       (define-key map "a" 'mu4e-view-action)
 
+      ;; change the number of headers
+      (define-key map (kbd "C-+") 'mu4e-headers-split-view-resize)
+      (define-key map (kbd "C--")
+	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
+      (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-resize)
+      (define-key map (kbd "<C-kp-subtract>")
+	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
+      
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
       (define-key map (kbd "<home>")

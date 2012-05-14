@@ -231,7 +231,7 @@ if provided, or at the end of the buffer otherwise."
 				 (concat (or (cdr-safe mu4e-headers-from-or-to-prefix))
 				   (mu4e~headers-contact-str (plist-get msg :to)))
 				 (concat  (or (car-safe mu4e-headers-from-or-to-prefix))
-				   (mu4e~headers-contact-str from-lst))))) 
+				   (mu4e~headers-contact-str from-lst)))))
 			   (:date (format-time-string mu4e-headers-date-format val))
 			   (:flags (mu4e-flags-to-string val))
 			   (:size (mu4e-display-size val))
@@ -325,7 +325,15 @@ after the end of the search results."
       (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
       (define-key map (kbd "<M-down>") 'mu4e-headers-next)
 
+      ;; change the number of headers
+      (define-key map (kbd "C-+") 'mu4e-headers-split-view-resize)
+      (define-key map (kbd "C--")
+	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
+      (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-resize)
+      (define-key map (kbd "<C-kp-subtract>")
+	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
 
+      
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
@@ -616,6 +624,23 @@ update the query history stack."
 ;;; view buffer, if any
     (mu4e-view-kill-buffer-and-window)))
 
+
+(defun mu4e~headers-redraw-get-view-window ()
+  "Close all windows, redraw the headers buffer based on the value
+of `mu4e-split-view', and return a window for the message view."
+  (unless (buffer-live-p mu4e~headers-buffer)
+    (error "No headers buffer available"))
+  (while (> (count-windows) 1)
+    (delete-window))
+  (switch-to-buffer mu4e~headers-buffer)
+  (cond
+    ((eq mu4e-split-view 'horizontal) ;; split horizontally
+      (split-window-vertically mu4e-headers-visible-lines))
+    ((eq mu4e-split-view 'vertical) ;; split vertically
+      (split-window-horizontally mu4e-headers-visible-columns))
+    (t ;; no splitting; just use the currently selected one
+      (selected-window))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; search-based marking
 
@@ -863,25 +888,9 @@ current window. "
   (unless (eq major-mode 'mu4e-headers-mode)
     (error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((docid (mu4e~headers-docid-at-point))
-	  (viewwin (and mu4e~view-buffer
-		     (get-buffer-window mu4e~view-buffer))))
-    (unless docid (error "No message at point."))
-    ;; is there a window already for the message view?
+	  (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
-      ;; no view window yet; create one, based on the split settings etc.
-      ;; emacs' use of the terms "horizontally" and "vertically"
-      ;; are... suprising. There's a clearer `split-window' in emacs24, but
-      ;; it's not compatible with emacs 23
-      (setq viewwin
-	(cond ;; is there are live window for the message view?
-	  ((eq mu4e-split-view 'horizontal) ;; split horizontally
-	    (split-window-vertically mu4e-headers-visible-lines))
-	  ((eq mu4e-split-view 'vertical) ;; split vertically
-	    (split-window-horizontally mu4e-headers-visible-columns))
-	  (t ;; no splitting; just use the currently selected one
-	    (selected-window)))))
-    ;; okay, now we should have a window for the message view
-    ;; we select it, and show the messages there.
+      (error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (let ((inhibit-read-only t))
@@ -983,6 +992,28 @@ up to `mu4e-search-results-limit'."
     (mu4e-mark-handle-when-leaving)
     (mu4e-headers-search (concat "\"maildir:" maildir "\"") search-all)))
 
+
+(defun mu4e-headers-split-view-resize (n)
+  "In horizontal split-view, increase the number of lines shown by
+N; in vertical split-view, increase the number of columns shown by
+N. Otherwise, don't do anything."
+  (interactive "P")
+   (when (buffer-live-p mu4e~view-buffer)
+    (case mu4e-split-view
+	(horizontal
+	  (let ((newval (+ (or n 1) mu4e-headers-visible-lines)))
+	    (unless (> newval 0)
+	      (error "Cannot make the number of visible lines any smaller"))
+	    (setq mu4e-headers-visible-lines newval)))
+	(vertical
+	  (let ((newval (+ (or n 1) mu4e-headers-visible-columns)))
+	    (unless (> newval 0)
+	      (error "Cannot make the number of visible columns any smaller"))
+	    (setq mu4e-headers-visible-columns newval))))
+      (let ((viewwin (mu4e~headers-redraw-get-view-window)))
+	(when (window-live-p viewwin)
+	  (select-window viewwin)
+	  (switch-to-buffer mu4e~view-buffer)))))
 
 (defun mu4e-headers-action ()
   "Ask user what to do with message-at-point, then do it. The
