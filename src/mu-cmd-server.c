@@ -143,20 +143,16 @@ print_error (MuError errcode, const char *msg)
 static MuError
 print_and_clear_g_error (GError **err)
 {
-	char *msg;
-	unsigned errcode;
+	MuError rv;
 
-	if (err && *err) {
-		msg = mu_str_escape_c_literal ((*err)->message, TRUE);
-		errcode = (*err)->code;
-	} else {
-		msg = g_strdup ("\"unknown error\"");
-		errcode = MU_ERROR_INTERNAL;
-	}
+	if (err && *err)
+		rv = print_error ((*err)->code, (*err)->message);
+	else
+		rv = print_error (MU_ERROR_INTERNAL, "unknown error");
 
 	g_clear_error (err);
 
-	return print_error (errcode, msg);
+	return rv;
 }
 
 
