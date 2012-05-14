@@ -520,7 +520,10 @@ Gnus' `message-mode'."
     (unless (eq compose-type 'edit)
       (when message-signature
 	(message-insert-signature)))
-
+    
+    ;; set compose mode -- so now hooks can run
+    (mu4e-compose-mode)
+    
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda ()
@@ -534,9 +537,6 @@ Gnus' `message-mode'."
       (lambda ()
 	(setq mu4e-sent-func 'mu4e-sent-handler)
 	(mu4e~proc-sent (buffer-file-name) mu4e-drafts-folder)) nil t))
-
-  ;; set compose mode -- so now hooks can run
-  (mu4e-compose-mode)
 
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
