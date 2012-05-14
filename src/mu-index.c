@@ -130,6 +130,7 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 {
 	MuMsg *msg;
 	GError *err;
+	gboolean rv;
 
 	*updated = FALSE;
 	if (!needs_index (data, fullpath, filestamp))
@@ -137,26 +138,26 @@ insert_or_update_maybe (const char* fullpath, const char* mdir,
 
 	err = NULL;
 	msg = mu_msg_new_from_file (fullpath, mdir, &err);
-	if ((G_UNLIKELY(!msg)))
-		goto errexit;
+	if (!msg) {
+		g_warning ("error creating message object: %s",
+			   err ? err->message : "cause unknown");
+		/* warn, then simply continue */
+		return MU_OK;
+	}
 
 	/* we got a valid id; scan the message contents as well */
-	if (G_UNLIKELY((!mu_store_add_msg (data->_store, msg, &err))))
-		goto errexit;
-
+	rv = mu_store_add_msg (data->_store, msg, &err);
 	mu_msg_unref (msg);
-	*updated = TRUE;
-	return MU_OK;
 
-errexit:
-	{
-		MuError me;
-		me = err ? err->code : MU_ERROR;
+	if (!rv) {
+		g_warning ("error storing message object: %s",
+			   err ? err->message : "cause unknown");
 		g_clear_error (&err);
-		if (msg)
-			mu_msg_unref (msg);
-		return me;
+		return MU_ERROR;
 	}
+
+ 	*updated = TRUE;
+	return MU_OK;
 }
 
 
