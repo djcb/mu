@@ -1,0 +1,36 @@
+Return-path: <>
+Envelope-to: skipio@localhost
+Delivery-date: Fri, 11 May 2012 16:21:57 +0300
+Received: from localhost.roma.net([127.0.0.1] helo=borealis)
+	by borealis with esmtp (Exim 4.77)
+	id 1SSpnB-00038a-55
+	for djcb@localhost; Fri, 11 May 2012 16:21:57 +0300
+Delivered-To: diggler@gmail.com
+From: Skipio <skipio@roma.net>
+To: Hannibal <hanni@carthago.net> 
+Subject: signed
+User-agent: mu4e 0.9.8.5-dev1; emacs 24.1.50.8
+Date: Fri, 11 May 2012 16:20:45 +0300
+Message-ID: <878vgy97ma.fsf@roma.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
+	protocol="application/pgp-signature"
+
+--=-=-=
+Content-Type: text/plain
+
+
+I am signed!
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk+tEi0ACgkQ6WrHoQF92jxTzACeKd/XxY+P7bpymWL3JBRHaW9p
+DpwAoKw7PDW4z/lNTkWjndVTjoO9jGhs
+=blXz
+-----END PGP SIGNATURE-----
+--=-=-=--
+
