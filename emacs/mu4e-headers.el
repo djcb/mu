@@ -630,7 +630,7 @@ update the query history stack."
 of `mu4e-split-view', and return a window for the message view."
   (unless (buffer-live-p mu4e~headers-buffer)
     (error "No headers buffer available"))
-  (while (> (count-windows) 1)
+  (while (> (count-windows) 2) ;; FIXME: why 2 and not 1?
     (delete-window))
   (switch-to-buffer mu4e~headers-buffer)
   (cond
