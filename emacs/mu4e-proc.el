@@ -421,12 +421,15 @@ mean:
 response."
   (mu4e~proc-send-command "ping"))
 
-(defun mu4e~proc-view (docid-or-msgid)
+(defun mu4e~proc-view (docid-or-msgid &optional images)
   "Get one particular message based on its DOCID-OR-MSGID (keyword
-argument). The result will be delivered to the function registered
-as `mu4e-message-func'."
-  (mu4e~proc-send-command "view %s"
-    (mu4e--docid-msgid-param docid-or-msgid)))
+argument). Optionally, if IMAGES is non-nil, backend will any
+images attached to the message, and return them as temp files.  The
+result will be delivered to the function registered as
+`mu4e-message-func'."
+  (mu4e~proc-send-command "view %s extract-images:%s"
+    (mu4e--docid-msgid-param docid-or-msgid)
+    (if images "true" "false")))
 
 (provide 'mu4e-proc)
 

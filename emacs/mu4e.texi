@@ -748,6 +748,26 @@ variable @code{mu4e-attachment-dir}, for example:
 (setq mu4e-attachment-dir (file-name-expand "~/Downloads"))
 @end lisp
 
+@subsection Viewing images inline
+
+It is possible to show images inline in the message view buffer if you run
+emacs in GUI-mode. You can enable this by setting the variable
+@code{mu4e-view-show-images} to @t{t}.
+
+Since emacs does not always handle images correctly, this is not enabled by
+default. Note, if you are using a (pre-) release of emacs 24 and build it
+yourself, you probable want to build it with @emph{Imagemagick} support -- in
+that case, also make sure you call @code{imagemagick-register-types} in your
+configuration, so it is used for images.
+
+@lisp
+;; enable inline images
+(setq mu4e-view-show-images-t)
+;; use imagemagick, if available
+(when (fboundp 'imagemagick-register-types)
+   (imagemagick-register-types))
+@end lisp
+
 @subsection Actions
 
 @code{mu4e-view-action} (@key{a}) lets you pick some custom action to perform

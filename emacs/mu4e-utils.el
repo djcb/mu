@@ -720,6 +720,27 @@ mu4e logs some of its internal workings to a log-buffer. See
     (switch-to-buffer buf)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defvar mu4e-imagemagick-identify "identify"
+  "Name/path of the Imagemagick 'identify' program.")
+
+(defun mu4e-display-image (imgpath &optional maxwidth)
+  "Display image IMG at point; optionally specify
+MAXWIDTH. Function tries to use imagemagick if available; otherwise
+MAXWIDTH is ignored."
+  (when
+    (let*
+      ((identify (and maxwidth (executable-find mu4e-imagemagick-identify)))
+	(props (and identify (shell-command-to-string
+			       (format "%s -format '%%w' %s"
+				 identify (shell-quote-argument imgpath)))))
+	(width (and props (string-to-number props)))
+	(img
+	      (if (> (or width 0) (or maxwidth 0))
+		(create-image imgpath 'imagemagick nil :width maxwidth)
+		(create-image imgpath 'imagemagick))))
+      (newline)
+      (insert-image img imgpath nil t))))
+
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

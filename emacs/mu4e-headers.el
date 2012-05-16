@@ -333,7 +333,7 @@ after the end of the search results."
       (define-key map (kbd "<C-kp-subtract>")
 	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
 
-      
+
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
@@ -897,7 +897,7 @@ current window. "
       (erase-buffer)
       (insert (propertize "Waiting for message..."
 		'face 'mu4e-system-face 'intangible t))
-      (mu4e~proc-view docid))))
+      (mu4e~proc-view docid mu4e-view-show-images))))
 
 (defun mu4e~headers-kill-buffer-and-window ()
   "Quit the message view and return to the main view."

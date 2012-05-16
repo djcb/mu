@@ -86,6 +86,15 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
 <w>)."
   :group 'mu4e-view)
 
+(defcustom mu4e-view-show-images nil
+  "Whether to automatically display attached images in the message
+buffer."
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-image-max-width 800
+  "The maximum width for images to display; this is only effective
+  if you're using an emacs with Imagemagick support."
+  :group 'mu4e-view)
 
 (defvar mu4e-view-actions
   '( ("capture message" ?c mu4e-action-capture-message)
@@ -134,11 +143,10 @@ where:
 
 
 
-
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
 wanting to show specific messages - for example, `mu4e-org'."
-  (mu4e~proc-view msgid))
+  (mu4e~proc-view msgid mu4e-view-show-images))
 
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG
@@ -214,6 +222,8 @@ marking if it still had that."
 	(mu4e~view-fontify-cited)
 	(mu4e~view-fontify-footer)
 	(mu4e~view-make-urls-clickable)
+
+	(mu4e~view-show-images-maybe msg)
 
 	(unless refresh
 	  ;; if we're showing the message for the first time, use the values of
@@ -322,6 +332,15 @@ is nil, and otherwise open it."
     (unless (zerop id)
       (mu4e~view-construct-header (format "Attachments(%d)" id) attstr t))))
 
+(defun mu4e-view-for-each-part (msg func)
+  "Apply FUNC to each part in MSG. FUNC should be a function taking two arguments;
+ 1. the message MSG, and
+ 2. a plist describing the attachment. The plist looks like:
+    	 (:index 1 :name \"test123.doc\"
+          :mime-type \"application/msword\" :attachment t :size 1234)."
+  (dolist (part (mu4e-msg-field msg :parts))
+    (funcall func msg part)))
+
 
 (defvar mu4e-view-mode-map nil
   "Keymap for \"*mu4e-view*\" buffers.")
@@ -369,7 +388,7 @@ is nil, and otherwise open it."
       (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-resize)
       (define-key map (kbd "<C-kp-subtract>")
 	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
-      
+
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
       (define-key map (kbd "<home>")
@@ -571,6 +590,18 @@ Seen; if the message is not New/Unread, do nothing."
       (browse-url url))))
 
 
+(defun mu4e~view-show-images-maybe (msg)
+  "Show attached images, if `mu4e-view-show-images' is non-nil."
+  (when (and (display-images-p) mu4e-view-show-images)
+    (mu4e-view-for-each-part msg
+      (lambda (msg part)
+	(when (string-match "^image/" (plist-get part :mime-type))
+	  (let ((imgfile (plist-get part :temp)))
+	    (when (and imgfile (file-exists-p imgfile))
+	      (save-excursion
+		(goto-char (point-max))
+		(mu4e-display-image imgfile mu4e-view-image-max-width)))))))))
+		
 ;; this is fairly simplistic...
 (defun mu4e~view-make-urls-clickable ()
   "Turn things that look like URLs into clickable things, and
@@ -595,7 +626,6 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 			     'face 'mu4e-view-url-number-face))))))))
 
 
-
 (defun mu4e~view-wrap-lines ()
   "Wrap lines in the message body."
   (save-excursion
