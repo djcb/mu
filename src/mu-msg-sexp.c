@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011  Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -201,12 +201,40 @@ append_sexp_flags (GString *gstr, MuMsg *msg)
 	g_free (fdata.flagstr);
 }
 
+static char*
+get_temp_file (MuMsg *msg, unsigned index)
+{
+	char *path;
+	GError *err;
+
+	err = NULL;
+	path = mu_msg_part_filepath_cache (msg, index);
+	if (!mu_msg_part_save (msg, path, index,
+			       FALSE/*overwrite*/, TRUE/*use cache*/, &err)) {
+		g_warning ("failed to save mime part: %s",
+			   err->message ? err->message : "something went wrong");
+		g_clear_error (&err);
+		g_free (path);
+		return NULL;
+	}
+
+	return path;
+}
+
+
+struct _PartInfo {
+	char *parts;
+	gboolean want_images;
+};
+typedef struct _PartInfo PartInfo;
+
 
 static void
-each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
+each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
 	const char *fname;
 	char *name, *tmp;
+	char *tmpfile;
 
 	fname = mu_msg_part_file_name (part);
 	if (!fname)
@@ -221,31 +249,44 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **parts)
 			 part->subtype ? part->subtype : "octet-stream",
 			 part->index);
 
+	tmpfile = NULL;
+	if (pinfo->want_images && g_ascii_strcasecmp (part->type, "image") == 0) {
+		char *tmp;
+		tmp = get_temp_file (msg, part->index);
+		if (tmp) {
+			tmpfile = mu_str_escape_c_literal (tmp, TRUE);
+			g_free (tmp);
+		}
+	}
+
 	tmp = g_strdup_printf
-		("%s(:index %d :name %s :mime-type \"%s/%s\" :attachment %s :size %i)",
-		 *parts ? *parts : "",  part->index, name,
+		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s :attachment %s :size %i)",
+		 pinfo->parts ? pinfo->parts : "",  part->index, name,
 		 part->type ? part->type : "application",
 		 part->subtype ? part->subtype : "octet-stream",
+		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
 		 mu_msg_part_looks_like_attachment (part, TRUE) ? "t" : "nil",
 		 (int)part->size);
 
-	g_free (*parts);
-	*parts = tmp;
+	g_free (pinfo->parts);
+	pinfo->parts = tmp;
 }
 
 
 static void
-append_sexp_parts (GString *gstr, MuMsg *msg)
+append_sexp_parts (GString *gstr, MuMsg *msg, gboolean want_images)
 {
-	char *parts;
+	PartInfo pinfo;
 
-	parts = NULL;
+	pinfo.parts       = NULL;
+	pinfo.want_images = want_images;
+
 	mu_msg_part_foreach (msg, FALSE,
-			     (MuMsgPartForeachFunc)each_part, &parts);
+			     (MuMsgPartForeachFunc)each_part, &pinfo);
 
-	if (parts) {
-		g_string_append_printf (gstr, "\t:parts (%s)\n", parts);
-		g_free (parts);
+	if (pinfo.parts) {
+		g_string_append_printf (gstr, "\t:parts (%s)\n", pinfo.parts);
+		g_free (pinfo.parts);
 	}
 }
 
@@ -254,9 +295,7 @@ append_sexp_parts (GString *gstr, MuMsg *msg)
 static void
 append_sexp_message_file_attr (GString *gstr, MuMsg *msg)
 {
-	append_sexp_parts (gstr, msg);
-
-	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
+ 	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
 	append_sexp_attr (gstr, "in-reply-to",
 			  mu_msg_get_header (msg, "In-Reply-To"));
 	append_sexp_attr (gstr, "body-txt",
@@ -285,18 +324,21 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 
 char*
 mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
-		gboolean header)
+		gboolean header_only, gboolean extract_images)
 {
 	GString *gstr;
 	time_t t;
 
-	gstr = g_string_sized_new (header ? 1024 : 8192);
+	g_return_val_if_fail (msg, NULL);
+	g_return_val_if_fail (!(header_only && extract_images), NULL);
+
+	gstr = g_string_sized_new (header_only ? 1024 : 8192);
 	g_string_append (gstr, "(\n");
 
 	if (docid != 0)
 		g_string_append_printf (gstr, "\t:docid %u\n", docid);
 
-	if (!header) /* force loading of file... should do this a bit
+	if (!header_only) /* force loading of file... should do this a bit
 		      * more elegantly */
 		mu_msg_get_header (msg, "Reply-To");
 
@@ -327,8 +369,10 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	 *
 	 * file attr things can only be gotten from the file (ie., mu
 	 * view), not from the database (mu find).  */
-	if (!header)
+	if (!header_only) {
 		append_sexp_message_file_attr (gstr, msg);
+		append_sexp_parts (gstr, msg, extract_images);
+	}
 
 	g_string_append (gstr, ")\n");
 

@@ -390,15 +390,17 @@ struct _MuMsgIterThreadInfo;
  * @param msg a valid message
  * @param docid the docid for this message, or 0
  * @param ti thread info for the current message, or NULL
- * @param dbonly if TRUE, only include message fields which can be
+ * @param headers if TRUE, only include message fields which can be
  * obtained from the database (this is much faster if the MuMsg is
  * database-backed, so no file needs to be opened)
+ * @param extract_images if TRUE, extract image attachments as temporary
+ * files and include links to those in the sexp
  *
  * @return a string with the sexp (free with g_free) or NULL in case of error
  */
 char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
 		      const struct _MuMsgIterThreadInfo *ti,
-		      gboolean dbonly);
+		      gboolean headers_only, gboolean extract_images);
 
 /**
  * move a message to another maildir; note that this does _not_ update

@@ -743,7 +743,7 @@ output_sexp (MuMsgIter *iter, gboolean threads,
 		ti   = threads ? mu_msg_iter_get_thread_info (iter) : NULL;
 		sexp = mu_msg_to_sexp (msg,
 				       mu_msg_iter_get_docid (iter),
-				       ti, TRUE);
+				       ti, TRUE, FALSE);
 
 		fputs (sexp, stdout);
 		g_free (sexp);

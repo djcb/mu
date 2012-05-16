@@ -48,7 +48,7 @@ view_msg_sexp (MuMsg *msg)
 {
 	char *sexp;
 
-	sexp = mu_msg_to_sexp (msg, 0, NULL, FALSE);
+	sexp = mu_msg_to_sexp (msg, 0, NULL, FALSE, FALSE);
 	fputs (sexp, stdout);
 	g_free (sexp);
 

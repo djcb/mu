@@ -188,7 +188,7 @@ read_line_as_list (GError **err)
 }
 
 
-const char*
+static const char*
 get_string_from_args (GSList *args, const char *param, gboolean optional,
 		      GError **err)
 {
@@ -213,6 +213,27 @@ get_string_from_args (GSList *args, const char *param, gboolean optional,
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "parameter '%s' not found", param);
 	return NULL;
+}
+
+static gboolean
+get_bool_from_args (GSList *args, const char *param, gboolean optional, GError **err)
+{
+	const char *val;
+
+	val = get_string_from_args (args, param, optional, err);
+	if (err && (*err != NULL))
+		return FALSE;
+
+	if (g_strcmp0 (val, "true") == 0)
+		return TRUE;
+
+	if (!val || g_strcmp0 (val, "false") == 0)
+		return FALSE;
+
+	mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+			     "invalid value for parameter '%s'", param);
+	return FALSE;
+
 }
 
 
@@ -479,7 +500,7 @@ cmd_compose (MuStore *store, MuQuery *query, GSList *args, GError **err)
 			print_and_clear_g_error (err);
 			return MU_OK;
 		}
-		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL, FALSE);
+		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL, FALSE, FALSE);
 		atts = (ctype == FORWARD) ? include_attachments (msg) : NULL;
 		mu_msg_unref (msg);
 	} else
@@ -512,7 +533,7 @@ print_sexps (MuMsgIter *iter, int maxnum)
 			char *sexp;
 			sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
 					       mu_msg_iter_get_thread_info (iter),
-					       TRUE);
+					       TRUE, FALSE);
 			print_expr ("%s", sexp);
 			g_free (sexp);
 			++u;
@@ -846,7 +867,8 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 		print_and_clear_g_error (err);
 	}
 
-	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE/*include body*/);
+	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE/*include body*/,
+			       FALSE/*do not include images*/);
 	/* note, the :move t thing is a hint to the frontend that it
 	 * could remove the particular header */
 	print_expr ("(:update %s :move %s)", sexp,
@@ -1049,11 +1071,7 @@ cmd_remove (MuStore *store, MuQuery *query, GSList *args, GError **err)
 
 	path = get_path_from_docid (store, docid, err);
 	if (!path) {
-		if (err && *err)
-			print_and_clear_g_error (err);
-		else
-			print_error (MU_ERROR_IN_PARAMETERS,
-				     "no path for docid");
+		print_and_clear_g_error (err);
 		return MU_OK;
 	}
 
@@ -1114,6 +1132,13 @@ cmd_view (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	MuMsg *msg;
 	unsigned docid;
 	char *sexp;
+	gboolean extract_images;
+
+	extract_images = get_bool_from_args (args, "extract-images", FALSE, err);
+	if (err && *err) {
+		print_and_clear_g_error (err);
+		return MU_OK;
+	}
 
 	docid = determine_docid (query, args, err);
 	if (docid == MU_STORE_INVALID_DOCID) {
@@ -1123,15 +1148,11 @@ cmd_view (MuStore *store, MuQuery *query, GSList *args, GError **err)
 
 	msg = mu_store_get_msg (store, docid, err);
 	if (!msg) {
-		if (err && *err)
-			print_and_clear_g_error (err);
-		else
-			print_error (MU_ERROR_IN_PARAMETERS,
-				     "failed to get message");
+		print_and_clear_g_error (err);
 		return MU_OK;
 	}
 
-	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE);
+	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE, extract_images);
 	mu_msg_unref (msg);
 
 	print_expr ("(:view %s)\n", sexp);

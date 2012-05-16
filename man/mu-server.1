@@ -215,8 +215,11 @@ update the database accordingly.
 Using the \fBview\fR command, we can all information (including the body) of a
 particular e-mail message.
 
+If the optional parameter \fBextract-images\fR is \fBtrue\fR, extract images
+to temp files, and include links to them in the returned s-exp.
+
 .nf
--> view docid:<docid>|msgid:<msgid>
+-> view docid:<docid>|msgid:<msgid> [extract-images:true]
 <- (:view <s-exp>)
 .fi
 
