@@ -630,8 +630,10 @@ update the query history stack."
 of `mu4e-split-view', and return a window for the message view."
   (unless (buffer-live-p mu4e~headers-buffer)
     (error "No headers buffer available"))
-  (while (> (count-windows) 2) ;; FIXME: why 2 and not 1?
-    (delete-window))
+  (walk-windows
+    (lambda (win)
+      (when (> (count-windows) 2)
+	(delete-window win))) nil nil)
   (switch-to-buffer mu4e~headers-buffer)
   (cond
     ((eq mu4e-split-view 'horizontal) ;; split horizontally
