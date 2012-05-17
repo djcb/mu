@@ -18,14 +18,9 @@
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
-
   - put threading information in the database, and enable getting the complete
     threads when searching
-  - hide/show messages matching a certain pattern
-
   - fix having multiple header views visible
-  - make next/prev header respect prefix argument (Jacek's patch)
-
   - mark message, decide what to do with them later
 
 ** Done
