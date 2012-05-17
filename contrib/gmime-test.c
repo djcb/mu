@@ -28,8 +28,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <locale.h>
 
-gchar*
+static gchar*
 get_recip (GMimeMessage *msg, GMimeRecipientType rtype)
 {
 	char *recep;
@@ -54,8 +55,7 @@ get_refs_str (GMimeMessage *msg)
 	GMimeReferences *mime_refs;
 	gchar *rv;
 
-	str = g_mime_object_get_header (GMIME_OBJECT(msg),
-					"References");
+	str = g_mime_object_get_header (GMIME_OBJECT(msg), "References");
 	if (!str)
 		return NULL;
 
@@ -197,6 +197,8 @@ main (int argc, char *argv[])
 		g_printerr ("usage: %s <msg-file>\n", argv[0]);
 		return 1;
 	}
+
+	setlocale (LC_ALL, "");
 
 	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
 
