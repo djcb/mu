@@ -82,19 +82,24 @@
 not exist."
   (mu:get-header (slot-ref msg 'msg) hdr))
 
-(define* (mu:for-each-message func #:optional (expr #t))
+(define* (mu:for-each-message func #:optional (expr #t) (maxresults -1))
   "Execute function FUNC for each message that matches mu search expression EXPR.
-If EXPR is not provided, match /all/ messages in the store."
+If EXPR is not provided, match /all/ messages in the store. MAXRESULTS
+specifies the maximum of messages to return, or -1 (the default) for
+no limit."
     (mu:for-each-msg-internal
       (lambda (msg)
 	(func (make <mu:message> #:msg msg)))
-      expr))
+      expr
+      maxresults))
 
-(define* (mu:message-list #:optional (expr #t))
+(define* (mu:message-list #:optional (expr #t) (maxresults -1))
   "Return a list of all messages matching mu search expression
-EXPR. If EXPR is not provided, return a list of /all/ messages in the store."
+EXPR. If EXPR is not provided, return a list of /all/ messages in the
+store. MAXRESULTS specifies the maximum of messages to return, or
+-1 (the default) for no limit."
   (let ((lst '()))
     (mu:for-each-message
       (lambda (m)
-	(set! lst (append! lst (list m)))) expr)
+	(set! lst (append! lst (list m)))) expr maxresults)
     lst))

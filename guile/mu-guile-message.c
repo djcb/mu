@@ -597,14 +597,14 @@ call_func (SCM FUNC, MuMsgIter *iter, const char* func_name)
 
 
 static MuMsgIter*
-get_query_iter (MuQuery *query, const char* expr)
+get_query_iter (MuQuery *query, const char* expr, int maxnum)
 {
 	MuMsgIter *iter;
 	GError *err;
 
 	err = NULL;
 	iter = mu_query_run (query, expr,
-			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, -1, &err);
+			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, maxnum, &err);
 	if (!iter) {
 		mu_guile_g_error ("<internal error>", err);
 		g_clear_error (&err);
@@ -614,8 +614,8 @@ get_query_iter (MuQuery *query, const char* expr)
 }
 
 
-SCM_DEFINE_PUBLIC (for_each_msg_internal, "mu:for-each-msg-internal", 2, 0, 0,
-		   (SCM FUNC, SCM EXPR),
+SCM_DEFINE_PUBLIC (for_each_msg_internal, "mu:for-each-msg-internal", 3, 0, 0,
+		   (SCM FUNC, SCM EXPR, SCM MAXNUM),
 "Call FUNC for each msg in the message store matching EXPR. EXPR is "
 "either a string containing a mu search expression or a boolean; in the former "
 "case, limit the messages to only those matching the expression, in the "
@@ -629,10 +629,11 @@ SCM_DEFINE_PUBLIC (for_each_msg_internal, "mu:for-each-msg-internal", 2, 0, 0,
 	SCM_ASSERT (scm_procedure_p (FUNC), FUNC, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_is_bool(EXPR) || scm_is_string (EXPR),
 		    EXPR, SCM_ARG2, FUNC_NAME);
+	SCM_ASSERT (scm_is_integer (MAXNUM), MAXNUM, SCM_ARG3, FUNC_NAME);
+
 	if (!mu_guile_initialized())
 		return mu_guile_error (FUNC_NAME, 0, "mu not initialized",
 					    SCM_UNSPECIFIED);
-
 	if (EXPR == SCM_BOOL_F)
 		return SCM_UNSPECIFIED; /* nothing to do */
 
@@ -641,14 +642,14 @@ SCM_DEFINE_PUBLIC (for_each_msg_internal, "mu:for-each-msg-internal", 2, 0, 0,
 	else
 		expr = scm_to_utf8_string(EXPR);
 
-	iter = get_query_iter (mu_guile_instance()->query, expr);
+	iter = get_query_iter (mu_guile_instance()->query, expr,
+			       scm_to_int(MAXNUM));
 	free (expr);
 
 	if (!iter)
 		return SCM_UNSPECIFIED;
 
 	while (!mu_msg_iter_is_done(iter)) {
-
 		call_func (FUNC, iter, FUNC_NAME);
 		mu_msg_iter_next (iter);
 	}
