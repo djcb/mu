@@ -741,7 +741,7 @@ get_tags (MuMsgFile *self)
 }
 
 
-/* wrongly encoded messages my cause GMime to return invalid
+/* wrongly encoded messages may cause GMime to return invalid
  * UTF8... we double check, and ensure our output is always correct
  * utf8 */
 gchar *
