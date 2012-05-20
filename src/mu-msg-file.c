@@ -624,10 +624,11 @@ get_body (MuMsgFile *self, gboolean want_html)
 }
 
 
-G_GNUC_UNUSED static void
+static void
 append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
 {
 	GMimeContentType *ct;
+	GMimeContentDisposition *disp;
 	gchar *parttxt, *tmp;
 	gboolean err;
 
@@ -635,14 +636,15 @@ append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
 		return;
 
 	ct = g_mime_object_get_content_type (part);
-	if (!GMIME_IS_CONTENT_TYPE(ct)) {
-		g_warning ("%s: no content-type for part", __FUNCTION__);
-		return;
-	}
+	if (!GMIME_IS_CONTENT_TYPE(ct) ||
+	    !g_mime_content_type_is_type (ct, "text", "plain"))
+		return; /* not a text-plain part */
 
-	/* is it right content type? */
-	if (!g_mime_content_type_is_type (ct, "text", "plain"))
-		return; /* nope */
+	disp = g_mime_object_get_content_disposition (part);
+	if (GMIME_IS_CONTENT_DISPOSITION(disp) &&
+	    g_strcmp0 (g_mime_content_disposition_get_disposition (disp),
+		       GMIME_DISPOSITION_ATTACHMENT) == 0)
+		return; /* it's an attachment, don't include */
 
 	parttxt = mu_msg_mime_part_to_string (GMIME_PART(part), &err);
 	if (err) {
@@ -651,8 +653,7 @@ append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
 		return;
 	}
 
-	/* it's a text part -- append it! note, we ignore the
-	 * disposition here. */
+	/* it's a text part -- append it! */
 	tmp = *txt;
 	if (*txt) {
 		*txt = g_strconcat (*txt, parttxt, NULL);
@@ -666,7 +667,7 @@ append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
 /* instead of just the body, this function returns a concatenation of
  * all text/plain parts with inline disposition
  */
-G_GNUC_UNUSED static char*
+static char*
 get_concatenated_text (MuMsgFile *self)
 {
 	char *txt;
@@ -795,7 +796,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 		return get_recipient (self, recipient_type(mfid));
 
 	case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE;
-		return get_body (self, FALSE);
+		return get_concatenated_text (self);
 	case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE;
 		return get_body (self, TRUE);
 

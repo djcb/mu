@@ -218,6 +218,24 @@ test_mu_msg_04 (void)
 
 
 static void
+test_mu_msg_multimime (void)
+{
+	MuMsg *msg;
+
+	msg = mu_msg_new_from_file
+		(MU_TESTMAILDIR "/cur/multimime!2,FS", NULL, NULL);
+	/* ie., are text parts properly concatenated? */
+	g_assert_cmpstr (mu_msg_get_subject(msg),
+			 ==, "multimime");
+	g_assert_cmpstr (mu_msg_get_body_text(msg),
+			 ==, "abcdef");
+
+	mu_msg_unref (msg);
+}
+
+
+
+static void
 test_mu_msg_umlaut (void)
 {
 	MuMsg *msg;
@@ -395,6 +413,8 @@ main (int argc, char *argv[])
 			 test_mu_msg_03);
 	g_test_add_func ("/mu-msg/mu-msg-04",
 			 test_mu_msg_04);
+	g_test_add_func ("/mu-msg/mu-msg-multimime",
+			 test_mu_msg_multimime);
 	g_test_add_func ("/mu-msg/mu-msg-tags",
 			 test_mu_msg_tags);
 	g_test_add_func ("/mu-msg/mu-msg-references",

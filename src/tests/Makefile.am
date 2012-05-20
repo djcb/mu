@@ -129,6 +129,7 @@ EXTRA_DIST=							\
 	testdir/cur/signed!2,S					\
 	testdir/cur/encrypted!2,S				\
 	testdir/cur/signed-encrypted!2,S			\
+	testdir/cur/multimime!2,FS				\
 	testdir2/bar/cur/mail1					\
 	testdir2/bar/cur/mail2					\
 	testdir2/bar/cur/mail3					\
