@@ -31,8 +31,8 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-str.h"
-#include "src/mu-msg-prio.h"
+#include "mu-str.h"
+#include "mu-msg-prio.h"
 
 
 

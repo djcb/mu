@@ -31,8 +31,8 @@
 #include <string.h>
 
 #include "test-mu-common.h"
-#include "src/mu-query.h"
-#include "src/mu-str.h"
+#include "mu-query.h"
+#include "mu-str.h"
 
 static gchar*
 fill_database (const char *testdir)

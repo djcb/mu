@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
-/* 
+/*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -15,8 +15,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -31,7 +31,7 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-date.h"
+#include "mu-date.h"
 
 
 static void
@@ -41,7 +41,7 @@ test_mu_date_str (void)
 	char buf[64];
 	gchar *tmp;
 	time_t some_time;
-		
+
 	some_time = 1234567890;
 	tmbuf = localtime (&some_time);
 	strftime (buf, 64, "%x", tmbuf);
@@ -54,9 +54,9 @@ test_mu_date_str (void)
 	tmbuf = localtime (&some_time);
 	strftime (buf, 64, "%c", tmbuf);
 	tmp = mu_date_str ("%c", some_time);
-	
+
 	g_assert_cmpstr (tmp, ==, buf);
-	g_free (tmp);		
+	g_free (tmp);
 }
 
 
@@ -73,7 +73,7 @@ test_mu_date_parse_hdwmy (void)
 	diff = time(NULL) - mu_date_parse_hdwmy ("5y");
 	g_assert (diff > 0);
 	g_assert_cmpuint (5 * 365 * 24 * 60 * 60 - diff, <=, 1);
-	
+
 	diff = time(NULL) - mu_date_parse_hdwmy ("3m");
 	g_assert (diff > 0);
 	g_assert_cmpuint (3 * 30 * 24 * 60 * 60 - diff, <=, 1);
@@ -81,13 +81,13 @@ test_mu_date_parse_hdwmy (void)
 	diff = time(NULL) - mu_date_parse_hdwmy ("21d");
 	g_assert (diff > 0);
 	g_assert_cmpuint (21 * 24 * 60 * 60 - diff, <=, 1);
-	
+
 	diff = time(NULL) - mu_date_parse_hdwmy ("2w");
 	g_assert (diff > 0);
 	g_assert_cmpuint (2 * 7 * 24 * 60 * 60 - diff, <=, 1);
-	
-	
-	g_assert_cmpint (mu_date_parse_hdwmy("-1y"),==, (time_t)-1);  
+
+
+	g_assert_cmpint (mu_date_parse_hdwmy("-1y"),==, (time_t)-1);
 }
 
 
@@ -95,9 +95,9 @@ static void
 test_mu_date_complete_begin (void)
 {
 	g_assert_cmpstr (mu_date_complete_s("2000", TRUE), ==,
-			 "20000101000000");	
+			 "20000101000000");
 	g_assert_cmpstr (mu_date_complete_s("2", TRUE), ==,
-			 "20000101000000");	
+			 "20000101000000");
 	g_assert_cmpstr (mu_date_complete_s ("", TRUE), ==,
 			 "00000101000000");
 	g_assert_cmpstr (mu_date_complete_s ("201007", TRUE), ==,
@@ -113,9 +113,9 @@ static void
 test_mu_date_complete_end (void)
 {
 	g_assert_cmpstr (mu_date_complete_s ("2000", FALSE), ==,
-			 "20001231235959");	
+			 "20001231235959");
 	g_assert_cmpstr (mu_date_complete_s ("2", FALSE), ==,
-			 "29991231235959");	
+			 "29991231235959");
 	g_assert_cmpstr (mu_date_complete_s ("", FALSE), ==,
 			 "99991231235959");
 	g_assert_cmpstr (mu_date_complete_s ("201007", FALSE), ==,
@@ -134,7 +134,7 @@ test_mu_date_interpret_begin (void)
 {
 	time_t now;
 	now = time (NULL);
-	
+
 	g_assert_cmpstr (mu_date_interpret_s ("now", TRUE) , ==,
 			 mu_date_str_s("%Y%m%d%H%M%S", now));
 
@@ -147,7 +147,7 @@ test_mu_date_interpret_end (void)
 {
 	time_t now;
 	now = time (NULL);
-	
+
 	g_assert_cmpstr (mu_date_interpret_s ("now", FALSE) , ==,
 			 mu_date_str_s("%Y%m%d%H%M%S", now));
 
@@ -167,7 +167,7 @@ main (int argc, char *argv[])
 	/* mu_str_date */
 	g_test_add_func ("/mu-str/mu-date-str",
 			 test_mu_date_str);
-	
+
 	g_test_add_func ("/mu-str/mu_date_parse_hdwmy",
 			 test_mu_date_parse_hdwmy);
 	g_test_add_func ("/mu-str/mu_date_complete_begin",
@@ -180,10 +180,10 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu_date_interpret_end",
 			 test_mu_date_interpret_end);
 
-	
+
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
-	
+
 	return g_test_run ();
 }

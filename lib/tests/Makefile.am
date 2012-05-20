@@ -19,11 +19,11 @@ include $(top_srcdir)/gtest.mk
 INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	 $(GMIME_CFLAGS)					\
 	 $(GLIB_CFLAGS)						\
-	-I ${top_srcdir} -I ${top_srcdir}/src			\
+	-I ${top_srcdir}					\
+	-I ${top_srcdir}/lib					\
 	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"		\
 	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"		\
 	-DMU_TESTMAILDIR3=\"${abs_srcdir}/testdir3\"		\
-	-DMU_PROGRAM=\"${abs_top_builddir}/src/mu\"		\
 	-DABS_CURDIR=\"${abs_builddir}\"			\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
@@ -53,38 +53,13 @@ TEST_PROGS += test-mu-msg-fields
 test_mu_msg_fields_SOURCES= test-mu-msg-fields.c dummy.cc
 test_mu_msg_fields_LDADD=  libtestmucommon.la
 
-TEST_PROGS += test-mu-query
-test_mu_query_SOURCES= test-mu-query.c dummy.cc
-test_mu_query_LDADD=    libtestmucommon.la
-
-TEST_PROGS += test-mu-contacts
-test_mu_contacts_SOURCES= test-mu-contacts.c dummy.cc
-test_mu_contacts_LDADD=    libtestmucommon.la
-
-TEST_PROGS += test-mu-cmd
-test_mu_cmd_SOURCES= test-mu-cmd.c dummy.cc
-test_mu_cmd_LDADD=    libtestmucommon.la
-
-TEST_PROGS += test-mu-cmd-cfind
-test_mu_cmd_cfind_SOURCES= test-mu-cmd-cfind.c dummy.cc
-test_mu_cmd_cfind_LDADD= libtestmucommon.la
-
-
 TEST_PROGS += test-mu-msg
 test_mu_msg_SOURCES= test-mu-msg.c dummy.cc
 test_mu_msg_LDADD=  libtestmucommon.la
 
-TEST_PROGS += test-mu-runtime
-test_mu_runtime_SOURCES= test-mu-runtime.c dummy.cc
-test_mu_runtime_LDADD=  libtestmucommon.la
-
 TEST_PROGS += test-mu-store
 test_mu_store_SOURCES= test-mu-store.c dummy.cc
 test_mu_store_LDADD= libtestmucommon.la
-
-TEST_PROGS += test-mu-threads
-test_mu_threads_SOURCES= test-mu-threads.c dummy.cc
-test_mu_threads_LDADD= libtestmucommon.la
 
 TEST_PROGS += test-mu-date
 test_mu_date_SOURCES= test-mu-date.c dummy.cc
@@ -94,22 +69,27 @@ TEST_PROGS += test-mu-flags
 test_mu_flags_SOURCES= test-mu-flags.c dummy.cc
 test_mu_flags_LDADD=  libtestmucommon.la
 
+# we need to use dummy.cc to enforce c++ linking...
+BUILT_SOURCES=					\
+	dummy.cc
 
-# TEST_PROGS += test-mu-msg-file
-# test_mu_msg_file_SOURCES= test-mu-msg-file.c dummy.cc
-# test_mu_msg_file_LDADD=  libtestmucommon.la
-#
+dummy.cc:
+	touch dummy.cc
+
 
 libtestmucommon_la_SOURCES=				\
 	test-mu-common.c				\
 	test-mu-common.h
 libtestmucommon_la_LIBADD= ../libmu.la
 
+
+
+
 # note the question marks; make does not like files with ':', so we
 # use the (also supported) version with '!' instead. We could escape
 # the : with \: but automake does not recognize that....
 
-# 12 messages, the '.ignore' message should be ignored
+# test messages, the '.ignore' message should be ignored
 # when indexing
 EXTRA_DIST=							\
 	testdir/tmp/1220863087.12663.ignore			\
@@ -145,30 +125,4 @@ EXTRA_DIST=							\
 	testdir2/Foo/new/.noindex				\
 	testdir2/wom_bat/cur/atomic				\
 	testdir2/wom_bat/cur/rfc822.1				\
-	testdir2/wom_bat/cur/rfc822.2				\
-	testdir3/tree						\
-	testdir3/tree/new					\
-	testdir3/tree/new/.noindex				\
-	testdir3/tree/cur					\
-	testdir3/tree/cur/child0.1				\
-	testdir3/tree/cur/root1					\
-	testdir3/tree/cur/child3.0.0.0.0			\
-	testdir3/tree/cur/child0.0				\
-	testdir3/tree/cur/child4.1				\
-	testdir3/tree/cur/child4.0				\
-	testdir3/tree/cur/root2					\
-	testdir3/tree/cur/child0.1.0				\
-	testdir3/tree/cur/child2.0.0				\
-	testdir3/tree/cur/root0					\
-	testdir3/tree/tmp					\
-	testdir3/tree/tmp/.noindex				\
-	testdir3/cycle						\
-	testdir3/cycle/new					\
-	testdir3/cycle/new/.noindex				\
-	testdir3/cycle/cur					\
-	testdir3/cycle/cur/rogue0				\
-	testdir3/cycle/cur/cycle0				\
-	testdir3/cycle/cur/cycle0.0.0				\
-	testdir3/cycle/cur/cycle0.0				\
-	testdir3/cycle/tmp					\
-	testdir3/cycle/tmp/.noindex
+	testdir2/wom_bat/cur/rfc822.2

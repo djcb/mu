@@ -29,8 +29,8 @@
 #include <string.h>
 
 #include "test-mu-common.h"
-#include "src/mu-maildir.h"
-#include "src/mu-util.h"
+#include "mu-maildir.h"
+#include "mu-util.h"
 
 static void
 test_mu_maildir_mkdir_01 (void)

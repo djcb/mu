@@ -32,32 +32,12 @@ INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic -Wno-variadic-macros
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
-bin_PROGRAMS=				\
-	mu
-
 noinst_LTLIBRARIES=			\
-	libmu.la
-
-# note, mu.cc is only '.cc' and not '.c' because libmu must explicitly
-# be linked as c++, not c.
-mu_SOURCES=				\
-	mu.cc
-
-mu_LDADD=				\
 	libmu.la
 
 libmu_la_SOURCES=			\
 	mu-bookmarks.c			\
 	mu-bookmarks.h			\
-	mu-cmd-cfind.c			\
-	mu-cmd-extract.c		\
-	mu-cmd-find.c			\
-	mu-cmd-index.c			\
-	mu-cmd-server.c			\
-	mu-cmd.c			\
-	mu-cmd.h			\
-	mu-config.c			\
-	mu-config.h			\
 	mu-contacts.c			\
 	mu-contacts.h			\
 	mu-container.c			\

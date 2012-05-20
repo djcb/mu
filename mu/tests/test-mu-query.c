@@ -32,9 +32,9 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-query.h"
-#include "src/mu-str.h"
-#include "src/mu-store.h"
+#include "mu-query.h"
+#include "mu-str.h"
+#include "mu-store.h"
 
 static gchar*
 fill_database (const char *testdir)

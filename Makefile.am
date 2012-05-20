@@ -35,7 +35,7 @@ else
 emacs=
 endif
 
-SUBDIRS=m4 man src $(widgets) $(guile) $(emacs) contrib toys
+SUBDIRS=m4 man lib $(widgets) $(guile) mu $(emacs) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 

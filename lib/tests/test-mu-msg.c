@@ -30,8 +30,8 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-msg.h"
-#include "src/mu-str.h"
+#include "mu-msg.h"
+#include "mu-str.h"
 
 static gboolean
 check_contact_01 (MuMsgContact *contact, int *idx)

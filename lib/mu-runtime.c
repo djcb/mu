@@ -26,9 +26,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <mu-msg.h>
-
-#include "mu-config.h"
+#include "mu-msg.h"
 #include "mu-log.h"
 #include "mu-util.h"
 
@@ -41,7 +39,6 @@
 
 struct _MuRuntimeData {
 	gchar            *_str[MU_RUNTIME_PATH_NUM];
-	MuConfig	 *_config;
 	gchar            *_name; /* e.g., 'mu', 'mug' */
 };
 typedef struct _MuRuntimeData	 MuRuntimeData;
@@ -116,48 +113,6 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 	return _initialized = TRUE;
 }
 
-
-
-gboolean
-mu_runtime_init_from_cmdline (int *pargc, char ***pargv, const char *name)
-{
-	g_return_val_if_fail (!_initialized, FALSE);
-	g_return_val_if_fail (name, FALSE);
-
-	setlocale (LC_ALL, "");
-	g_type_init ();
-
-	_data	       = g_new0 (MuRuntimeData, 1);
-	_data->_config = mu_config_init (pargc, pargv);
-	if (!_data->_config) {
-		runtime_free ();
-		return FALSE;
-	 }
-
-	if (!mu_util_create_dir_maybe (_data->_config->muhome, 0700, TRUE)) {
-		g_printerr ("mu: invalid mu homedir specified;"
-			    " use --muhome=<dir>\n");
-		runtime_free ();
-		return FALSE;
-	}
-
-	_data->_name = g_strdup (name);
-	_data->_str[MU_RUNTIME_PATH_MUHOME] =
-		g_strdup (_data->_config->muhome);
-	init_paths (_data->_str[MU_RUNTIME_PATH_MUHOME], _data);
-
-	if (!init_log (runtime_path(MU_RUNTIME_PATH_MUHOME), name,
-		       _data->_config->log_stderr,
-		       _data->_config->quiet,
-		       _data->_config->debug)) {
-		runtime_free ();
-		return FALSE;
-	}
-
-	return _initialized = TRUE;
-}
-
-
 static void
 runtime_free (void)
 {
@@ -168,7 +123,7 @@ runtime_free (void)
 
 	g_free (_data->_name);
 
-	mu_config_uninit (_data->_config);
+	/* mu_config_uninit (_data->_config); */
 
 	mu_log_uninit();
 
@@ -251,11 +206,4 @@ mu_runtime_path (MuRuntimePath path)
 	g_return_val_if_fail (path < MU_RUNTIME_PATH_NUM, NULL);
 
 	return runtime_path (path);
-}
-
-MuConfig*
-mu_runtime_config (void)
-{
-	g_return_val_if_fail (_initialized, NULL);
-	return _data->_config;
 }

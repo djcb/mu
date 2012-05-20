@@ -20,7 +20,7 @@ include $(top_srcdir)/gtest.mk
 SUBDIRS= .
 
 
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"'
+INCLUDES=-I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"'
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -28,8 +28,7 @@ INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondi
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
-
-noinst_PROGRAMS=			\
+noinst_PROGRAMS=					\
 	msg2pdf
 
 # note, mug.cc is '.cc' only because libmu must explicitly
@@ -49,7 +48,7 @@ DISTCLEANFILES=						\
 	$(BUILT_SOURCES)
 
 
-msg2pdf_LDADD=				\
-	${top_builddir}/src/libmu.la    \
-	$(GTK_LIBS)			\
+msg2pdf_LDADD=						\
+	${top_builddir}/lib/libmu.la			\
+	$(GTK_LIBS)					\
 	${WEBKIT_LIBS}

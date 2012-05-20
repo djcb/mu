@@ -20,7 +20,7 @@ include $(top_srcdir)/gtest.mk
 SUBDIRS= .
 
 
-INCLUDES=-I${top_srcdir}/src $(GTK_CFLAGS) -DICONDIR='"$(icondir)"'
+INCLUDES=-I${top_srcdir}/lib $(GTK_CFLAGS) -DICONDIR='"$(icondir)"'
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -58,8 +58,5 @@ DISTCLEANFILES=						\
 
 
 mug_LDADD=				\
-	${top_builddir}/src/libmu.la	\
+	${top_builddir}/lib/libmu.la	\
 	${GTK_LIBS}
-
-
-

@@ -1,4 +1,4 @@
-/* 
+/*
 ** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -13,8 +13,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #if HAVE_CONFIG_H
@@ -29,7 +29,7 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-msg-fields.h"
+#include "mu-msg-fields.h"
 
 static void
 test_mu_msg_field_body (void)
@@ -37,11 +37,11 @@ test_mu_msg_field_body (void)
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_BODY_TEXT;
-	
+
 	g_assert_cmpstr (mu_msg_field_name(field),==, "body");
 	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 'b');
 	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'B');
-	
+
 	g_assert_cmpuint (mu_msg_field_is_numeric(field), ==, FALSE);
 }
 
@@ -51,11 +51,11 @@ test_mu_msg_field_subject (void)
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_SUBJECT;
-	
+
 	g_assert_cmpstr (mu_msg_field_name(field),==, "subject");
 	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 's');
 	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'S');
-	
+
 	g_assert_cmpuint (mu_msg_field_is_numeric(field), ==,FALSE);
 }
 
@@ -65,7 +65,7 @@ test_mu_msg_field_to (void)
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_TO;
-	
+
 	g_assert_cmpstr (mu_msg_field_name(field),==, "to");
 	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 't');
 	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'T');
@@ -80,7 +80,7 @@ test_mu_msg_field_prio (void)
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_PRIO;
-	
+
 	g_assert_cmpstr (mu_msg_field_name(field),==, "prio");
 	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 'p');
 	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'P');
@@ -94,12 +94,12 @@ test_mu_msg_field_flags (void)
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_FLAGS;
-	
+
 	g_assert_cmpstr (mu_msg_field_name(field),==, "flag");
 	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 'g');
 	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'G');
 
-	g_assert_cmpuint (mu_msg_field_is_numeric(field),==, TRUE);	
+	g_assert_cmpuint (mu_msg_field_is_numeric(field),==, TRUE);
 }
 
 
@@ -124,11 +124,11 @@ main (int argc, char *argv[])
 
 	/* FIXME: add tests for mu_msg_str_flags; but note the
 	 * function simply calls mu_msg_field_str */
-		
+
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
 			   G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
-	
+
 	return g_test_run ();
 }

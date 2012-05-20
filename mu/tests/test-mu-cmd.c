@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include "test-mu-common.h"
-#include "src/mu-store.h"
+#include "mu-store.h"
 
 
 /* tests for the command line interface, uses testdir2 */

@@ -23,7 +23,7 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include <glib.h>
-#include "src/mu-flags.h"
+#include "mu-flags.h"
 #include "test-mu-common.h"
 
 

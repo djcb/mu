@@ -29,7 +29,7 @@
 #include <limits.h>
 
 #include "test-mu-common.h"
-#include "src/mu-util.h"
+#include "lib/mu-util.h"
 
 static void
 test_mu_util_dir_expand_00 (void)

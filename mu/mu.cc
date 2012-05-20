@@ -24,9 +24,13 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include <glib.h>
+#include <glib-object.h>
+#include <locale.h>
 
+#include "mu-config.h"
 #include "mu-cmd.h"
 #include "mu-runtime.h"
+
 
 static void
 handle_error (GError *err)
@@ -66,16 +70,28 @@ main (int argc, char *argv[])
 {
 	GError *err;
 	MuError rv;
+	MuConfig *conf;
 
-	if (!mu_runtime_init_from_cmdline (&argc, &argv, "mu"))
+	setlocale (LC_ALL, "");
+	g_type_init ();
+
+	conf = mu_config_init (&argc, &argv);
+	if (!conf)
 		return 1;
 
+	if (!mu_runtime_init (conf->muhome, PACKAGE_NAME)) {
+		mu_config_uninit (conf);
+		return 1;
+	}
+
 	err = NULL;
-	rv = mu_cmd_execute (mu_runtime_config(), &err);
+	rv = mu_cmd_execute (conf, &err);
 
 	handle_error (err);
 	g_clear_error (&err);
 
+
+	mu_config_uninit (conf);
 	mu_runtime_uninit ();
 
 	return rv;

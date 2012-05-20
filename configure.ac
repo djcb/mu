@@ -16,7 +16,7 @@
 
 AC_INIT([mu],[0.9.8.5-dev2],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_SRCDIR([src/mu.cc])
+AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
 # autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
@@ -291,8 +291,10 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 
 AC_CONFIG_FILES([
 Makefile
-src/Makefile
-src/tests/Makefile
+mu/Makefile
+mu/tests/Makefile
+lib/Makefile
+lib/tests/Makefile
 widgets/Makefile
 emacs/Makefile
 emacs/mu4e-meta.el

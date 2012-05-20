@@ -31,7 +31,7 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "src/mu-store.h"
+#include "mu-store.h"
 
 static void
 test_mu_store_new_destroy (void)

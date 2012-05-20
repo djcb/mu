@@ -25,7 +25,7 @@ AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 # note, we need top_builddir for snarfing with 'make distcheck' (ie.,
 # with separate builddir)
 SUBDIRS= . mu examples
-INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/src ${GUILE_CFLAGS} ${GLIB_CFLAGS}
+INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/lib ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -41,7 +41,7 @@ libguile_mu_la_SOURCES=			\
 	mu-guile-message.h
 
 libguile_mu_la_LIBADD=			\
-	${top_builddir}/src/libmu.la	\
+	${top_builddir}/lib/libmu.la	\
 	${GUILE_LIBS}
 
 XFILES=					\

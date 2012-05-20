@@ -229,6 +229,15 @@ struct _PartInfo {
 typedef struct _PartInfo PartInfo;
 
 
+/* like the elvis operator,
+ * http://colinharrington.net/blog/2008/10/groovy-elvis-operator/
+ */
+static const char*
+elvis (const char *s1, const char *s2)
+{
+	return s1 ? s1 : s2;
+}
+
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
@@ -236,34 +245,31 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 	char *name, *tmp;
 	char *tmpfile;
 
-	fname = mu_msg_part_file_name (part);
-	if (!fname)
+	if (!(fname = mu_msg_part_file_name (part)))
 		fname = mu_msg_part_description (part);
-
 	if (fname)
 		name = mu_str_escape_c_literal (fname, TRUE);
 	else
-		name = g_strdup_printf
-			("\"%s-%s-%d\"",
-			 part->type    ? part->type    : "application",
-			 part->subtype ? part->subtype : "octet-stream",
-			 part->index);
+		name = g_strdup_printf ("\"%s-%s-%d\"",
+					elvis (part->type, "application"),
+					elvis (part->subtype, "octet-stream"),
+					part->index);
 
 	tmpfile = NULL;
 	if (pinfo->want_images && g_ascii_strcasecmp (part->type, "image") == 0) {
 		char *tmp;
-		tmp = get_temp_file (msg, part->index);
-		if (tmp) {
+		if ((tmp = get_temp_file (msg, part->index))) {
 			tmpfile = mu_str_escape_c_literal (tmp, TRUE);
 			g_free (tmp);
 		}
 	}
 
 	tmp = g_strdup_printf
-		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s :attachment %s :size %i)",
-		 pinfo->parts ? pinfo->parts : "",  part->index, name,
-		 part->type ? part->type : "application",
-		 part->subtype ? part->subtype : "octet-stream",
+		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s "
+		 ":attachment %s :size %i)",
+		 elvis (pinfo->parts, ""), part->index, name,
+		 elvis (part->type, "application"),
+		 elvis (part->subtype, "octet-stream"),
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
 		 mu_msg_part_looks_like_attachment (part, TRUE) ? "t" : "nil",
 		 (int)part->size);
@@ -338,10 +344,6 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	if (docid != 0)
 		g_string_append_printf (gstr, "\t:docid %u\n", docid);
 
-	if (!header_only) /* force loading of file... should do this a bit
-		      * more elegantly */
-		mu_msg_get_header (msg, "Reply-To");
-
 	append_sexp_contacts (gstr, msg);
 
 	if (ti)
@@ -351,8 +353,7 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 
 	t = mu_msg_get_date (msg);
 	/* weird time format for emacs 29-bit ints...*/
-	g_string_append_printf (gstr,
-				"\t:date (%u %u 0)\n", (unsigned)(t >> 16),
+	g_string_append_printf (gstr,"\t:date (%u %u 0)\n", (unsigned)(t >> 16),
 				(unsigned)(t & 0xffff));
 	g_string_append_printf (gstr, "\t:size %u\n",
 				(unsigned) mu_msg_get_size (msg));
@@ -366,7 +367,6 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	append_sexp_flags (gstr, msg);
 
 	/* headers are retrieved from the database, views from the message file
-	 *
 	 * file attr things can only be gotten from the file (ie., mu
 	 * view), not from the database (mu find).  */
 	if (!header_only) {
@@ -375,6 +375,5 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	}
 
 	g_string_append (gstr, ")\n");
-
 	return g_string_free (gstr, FALSE);
 }

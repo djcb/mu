@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
-** 
+**
 ** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -21,18 +21,17 @@
 #define __MU_RUNTIME_H__
 
 #include <glib.h>
-#include <mu-config.h>
 
 G_BEGIN_DECLS
 
 /**
  * initialize the mu runtime system; initializes logging and other
  * systems. To uninitialize, use mu_runtime_uninit
- * 
- * @param muhome path where to find the mu home directory (typicaly, ~/.mu) 
+ *
+ * @param muhome path where to find the mu home directory (typicaly, ~/.mu)
  * @param name of the main program, ie. 'mu', 'mug' or
  * 'procmule'. this influences the name of the e.g. the logfile
- * 
+ *
  * @return TRUE if succeeded, FALSE in case of error
  */
 gboolean mu_runtime_init (const char *muhome, const char *name);
@@ -43,12 +42,12 @@ gboolean mu_runtime_init (const char *muhome, const char *name);
  * will parse the command line assuming the parameters of the 'mu'
  * program. Initializes logging and other systems. To uninitialize,
  * use mu_runtime_uninit
- * 
+ *
  * @param ptr to the param count (typically, argc)
  * @param ptr to the params (typically, argv)
  * @param name of the main program, ie. 'mu', 'mug' or
  * 'procmule'. this influences the name of the e.g. the logfile
- * 
+ *
  * @return TRUE if succeeded, FALSE in case of error
  */
 gboolean mu_runtime_init_from_cmdline (int *pargc, char ***pargv,
@@ -56,8 +55,8 @@ gboolean mu_runtime_init_from_cmdline (int *pargc, char ***pargv,
 
 
 /**
- * free all resources 
- * 
+ * free all resources
+ *
  */
 void mu_runtime_uninit (void);
 
@@ -76,20 +75,11 @@ typedef enum _MuRuntimePath MuRuntimePath;
 
 /**
  * get a file system path to some 'special' file or directory
- * 
+ *
  * @return ma string which should be not be modified/freed, or NULL in
  * case of error.
  */
 const char* mu_runtime_path   (MuRuntimePath path);
-
-
-/**
- * get the mu configuration options (ie., the parsed command line
- * parameters)
- * 
- * @return the configuration options
- */
-MuConfig* mu_runtime_config (void);
 
 G_END_DECLS
 

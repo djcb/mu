@@ -19,7 +19,7 @@ include $(top_srcdir)/gtest.mk
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
 
-INCLUDES=-I${top_srcdir} -I${top_srcdir}/src $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"' \
+INCLUDES=-I${top_srcdir} -I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"' \
 	 -DMUG2DIR='"$(abs_srcdir)"' -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
 
 # don't use -Werror, as it might break on other compilers
@@ -57,10 +57,9 @@ DISTCLEANFILES=					\
 
 
 mug2_LDADD=					\
-	${top_builddir}/src/libmu.la		\
+	${top_builddir}/lib/libmu.la		\
 	${top_builddir}/widgets/libmuwidgets.la	\
 	${GTK_LIBS}
 
 EXTRA_DIST=					\
 	mug.svg
-

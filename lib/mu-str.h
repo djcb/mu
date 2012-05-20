@@ -25,8 +25,8 @@
 #include <time.h>
 #include <sys/types.h>
 
-#include <mu-msg.h>
-#include <mu-flags.h>
+#include "lib/mu-msg.h"
+#include "lib/mu-flags.h"
 
 G_BEGIN_DECLS
 

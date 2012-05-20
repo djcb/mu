@@ -22,7 +22,7 @@
 #define __MU_MSG_ATTACH_VIEW_H__
 
 #include <gtk/gtk.h>
-#include <mu-msg.h>
+#include <lib/mu-msg.h>
 
 G_BEGIN_DECLS
 
@@ -65,4 +65,3 @@ int  mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg);
 G_END_DECLS
 
 #endif /* __MU_MSG_ATTACH_VIEW_H__ */
-

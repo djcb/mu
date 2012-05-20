@@ -1,4 +1,4 @@
-/* 
+/*
 ** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -13,8 +13,8 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  
-**  
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
 */
 
 #ifdef HAVE_CONFIG_H
@@ -29,22 +29,22 @@
 #include <string.h>
 
 #include "test-mu-common.h"
-#include "src/mu-contacts.h"
+#include "mu-contacts.h"
 
 static gchar*
 fill_database (void)
 {
 	gchar *cmdline, *tmpdir;
-	
+
 	tmpdir = test_mu_common_get_random_tmpdir();
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR);
-	
+
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
 	g_free (cmdline);
-		
+
 	return tmpdir;
 }
 
@@ -59,7 +59,7 @@ static Contact*
 contact_new (const char *email, const char *name, size_t tstamp)
 {
 	Contact *contact;
-	
+
 	contact		= g_slice_new (Contact);
 	contact->name	= name ? g_strdup (name) :NULL;
 	contact->email	= email ? g_strdup (email) : NULL;
@@ -87,7 +87,7 @@ each_contact (const char *email, const char *name, time_t tstamp,
 	Contact *contact;
 
 	/* g_print ("[n:%s, e:%s]\n", name, email); */
-	
+
 	contact = contact_new (email, name, tstamp);
 	*lst = g_slist_prepend (*lst, contact);
 }
@@ -100,7 +100,7 @@ has_contact (GSList *lst, const char* name_or_email, gboolean use_name)
 		c = (Contact*)lst->data;
 
 		/* g_print ("{n:%s,e:%s}\n", c->name, c->email); */
-		
+
 		if (use_name && g_strcmp0(name_or_email, c->name) == 0)
 			return TRUE;
 		if (g_strcmp0 (name_or_email, c->email) == 0)
@@ -133,13 +133,13 @@ test_mu_contacts_01 (void)
 	MuContacts *contacts;
 	gchar *muhome, *contactsfile;
 	GSList *clist;
-	
+
 	muhome = fill_database ();
 	g_assert (muhome != NULL);
 	contactsfile = g_strdup_printf ("%s%ccache%ccontacts",
 					muhome, G_DIR_SEPARATOR, G_DIR_SEPARATOR);
 	/* g_print ("[%s]\n", contactsfile); */
-	
+
 	contacts = mu_contacts_new (contactsfile);
 	g_assert (contacts);
 
@@ -156,12 +156,12 @@ test_mu_contacts_01 (void)
 	g_assert (has_contact (clist, "testmu@testmu.xx", FALSE));
 	g_assert (has_contact (clist, "Helmut Kröger", TRUE));
 	g_assert (has_contact (clist, "hk@testmu.xxx", FALSE));
-	
+
 	g_slist_foreach (clist, (GFunc)contact_destroy, NULL);
 	g_slist_free (clist);
 
 	mu_contacts_destroy (contacts);
-	
+
 	g_free (contactsfile);
 	g_free (muhome);
 }
@@ -171,15 +171,14 @@ int
 main (int argc, char *argv[])
 {
 	int rv;
-	
-	g_test_init (&argc, &argv, NULL);	
+
+	g_test_init (&argc, &argv, NULL);
 	g_test_add_func ("/mu-contacts/test-mu-contacts-01", test_mu_contacts_01);
-	
+
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
 	rv = g_test_run ();
-	
+
 	return rv;
 }
-

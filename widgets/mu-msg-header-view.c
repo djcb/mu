@@ -19,8 +19,8 @@
 
 #include "mu-msg-header-view.h"
 
-#include <mu-str.h>
-#include <mu-date.h>
+#include <lib/mu-str.h>
+#include <lib/mu-date.h>
 
 #if HAVE_CONFIG_H
 #include <config.h>
