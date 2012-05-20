@@ -270,13 +270,31 @@ flag set)."
   "Face for cited message parts (level 4)."
   :group 'mu4e-faces)
 
+(defface mu4e-cited-5-face
+  '((t :inherit font-lock-comment-face :bold nil :italic t))
+  "Face for cited message parts (level 5)."
+  :group 'mu4e-faces)
+
+(defface mu4e-cited-6-face
+  '((t :inherit font-lock-comment-delimiter-face :bold nil :italic t))
+  "Face for cited message parts (level 6)."
+  :group 'mu4e-faces)
+
+(defface mu4e-cited-7-face
+  '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
+  "Face for cited message parts (level 7)."
+  :group 'mu4e-faces)
+
+
+
+
 (defface mu4e-system-face
   '((t :inherit font-lock-comment-face :slant italic))
   "Face for system message (such as the footers for message
 headers)."
   :group 'mu4e-faces)
 
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal variables / constants
 
@@ -299,7 +317,7 @@ view). Most fields should be self-explanatory. A special one is
 `mu4e-user-mail-address-regexp', in which case it will be equal to
 `:to'.")
 
-     
+
 (defconst mu4e-logo
   (propertize "mu4e" 'face 'mu4e-title-face)
   "A propertized string for the mu4e 'logo'.")
