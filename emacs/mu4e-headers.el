@@ -97,6 +97,10 @@ are of the form:
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
   followed by the docid, followed by `mu4e~headers-docid-post'.")
 
+(defvar mu4e~headers-view-win nil
+  "The view window connected to this headers view.")
+
+
 (defun mu4e~headers-clear ()
   "Clear the header buffer and related data structures."
   (when (buffer-live-p mu4e~headers-buffer)
@@ -621,27 +625,25 @@ update the query history stack."
       (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
       (unless search-all mu4e-search-results-limit))
 ;;; when we're starting a new search, we also kill the
-;;; view buffer, if any
-    (mu4e-view-kill-buffer-and-window)))
-
+;;; view window, if any
+    (ignore-errors (delete-window mu4e~headers-view-win))))
 
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value
 of `mu4e-split-view', and return a window for the message view."
   (unless (buffer-live-p mu4e~headers-buffer)
     (error "No headers buffer available"))
-  (walk-windows
-    (lambda (win)
-      (when (> (count-windows) 2)
-	(delete-window win))) nil nil)
+  (ignore-errors (delete-window mu4e~headers-view-win))
   (switch-to-buffer mu4e~headers-buffer)
-  (cond
-    ((eq mu4e-split-view 'horizontal) ;; split horizontally
-      (split-window-vertically mu4e-headers-visible-lines))
-    ((eq mu4e-split-view 'vertical) ;; split vertically
-      (split-window-horizontally mu4e-headers-visible-columns))
-    (t ;; no splitting; just use the currently selected one
-      (selected-window))))
+  (setq mu4e~headers-view-win
+    (cond
+      ((eq mu4e-split-view 'horizontal) ;; split horizontally
+	(split-window-vertically mu4e-headers-visible-lines))
+      ((eq mu4e-split-view 'vertical) ;; split vertically
+	(split-window-horizontally mu4e-headers-visible-columns))
+      (t ;; no splitting; just use the currently selected one
+	(selected-window))))
+  mu4e~headers-view-win)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; search-based marking
@@ -838,6 +840,7 @@ IGNORE-HISTORY is true, do *not* update the query history stack."
       (or search-all current-prefix-arg)
       ignore-history)))
 
+
 (defun mu4e-headers-search-edit (search-all)
   "Edit the last search expression. If SEARCH-ALL (prefix-argument)
 is non-nil, retrieve *all* results, otherwise only get up to
@@ -902,7 +905,7 @@ current window. "
       (mu4e~proc-view docid mu4e-view-show-images))))
 
 (defun mu4e~headers-kill-buffer-and-window ()
-  "Quit the message view and return to the main view."
+  "Quit the headers view and return to the main view."
   (interactive)
   (mu4e-mark-handle-when-leaving)
   (let ((buf mu4e~headers-buffer))
@@ -956,18 +959,16 @@ docid. Otherwise, return nil."
     (error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let ((succeeded (= 0 (forward-line lines)))
 	 (docid (mu4e~headers-docid-at-point)))
-    ;; trick to move point, even if this function is called when this window
-    ;; is not visible
+    ;; move point, even if this function is called when this window is not
+    ;; visible
     (when docid
       (set-window-point (get-buffer-window mu4e~headers-buffer) (point))
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
-      ;; if there already is a visible message view, show the message
-      (when (and (buffer-live-p mu4e~view-buffer)
-	      (window-live-p (get-buffer-window mu4e~view-buffer)))
-	(mu4e-headers-view-message)))
-    ;; return the docid only if the move succeeded
-    (when succeeded docid)))
+      (when (window-live-p mu4e~headers-view-win)
+	(select-window (mu4e~headers-redraw-get-view-window)
+	  (mu4e-headers-view-message)))
+      docid)))
 
 (defun mu4e-headers-next (&optional n)
   "Move point to the next message header. If this succeeds, return

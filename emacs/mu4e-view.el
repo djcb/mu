@@ -601,7 +601,7 @@ Seen; if the message is not New/Unread, do nothing."
 	      (save-excursion
 		(goto-char (point-max))
 		(mu4e-display-image imgfile mu4e-view-image-max-width)))))))))
-		
+
 ;; this is fairly simplistic...
 (defun mu4e~view-make-urls-clickable ()
   "Turn things that look like URLs into clickable things, and
@@ -913,7 +913,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
 user that unmarking only works in the header list."
   (interactive)
   (if (mu4e~split-view-p)
-    (mu4e-mark-unmark-all)
+    (mu4e~view-in-headers-context (mu4e-mark-unmark-all))
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-unmark ()
