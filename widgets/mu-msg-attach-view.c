@@ -19,7 +19,7 @@
 
 #include "mu-msg-attach-view.h"
 #include "mu-widget-util.h"
-#include <lib/mu-msg-part.h>
+#include <mu-msg-part.h>
 
 enum {
 	ICON_COL,

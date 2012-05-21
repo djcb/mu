@@ -22,7 +22,7 @@
 #define __MU_MSG_ATTACH_VIEW_H__
 
 #include <gtk/gtk.h>
-#include <lib/mu-msg.h>
+#include <mu-msg.h>
 
 G_BEGIN_DECLS
 

@@ -25,7 +25,7 @@
 #include "mu-msg-body-view.h"
 #include "mu-msg-header-view.h"
 #include "mu-msg-attach-view.h"
-#include <lib/mu-msg-part.h>
+#include <mu-msg-part.h>
 
 
 /* 'private'/'protected' functions */
