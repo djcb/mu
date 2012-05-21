@@ -633,8 +633,8 @@ update the query history stack."
 of `mu4e-split-view', and return a window for the message view."
   (unless (buffer-live-p mu4e~headers-buffer)
     (error "No headers buffer available"))
-  (ignore-errors (delete-window mu4e~headers-view-win))
   (switch-to-buffer mu4e~headers-buffer)
+  (delete-other-windows)
   (setq mu4e~headers-view-win
     (cond
       ((eq mu4e-split-view 'horizontal) ;; split horizontally
@@ -965,10 +965,10 @@ docid. Otherwise, return nil."
       (set-window-point (get-buffer-window mu4e~headers-buffer) (point))
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
+      ;; update message view if it was already showing
       (when (window-live-p mu4e~headers-view-win)
-	(select-window (mu4e~headers-redraw-get-view-window)
-	  (mu4e-headers-view-message)))
-      docid)))
+	(mu4e-headers-view-message)) 
+      docid))) 
 
 (defun mu4e-headers-next (&optional n)
   "Move point to the next message header. If this succeeds, return
