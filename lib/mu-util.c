@@ -449,7 +449,7 @@ mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 
 	/* don't bother with NULL errors, or errors already set */
 	if (!err || *err)
-		return;
+		return FALSE;
 
 	msg = NULL;
 	va_start (ap, frm);
