@@ -256,6 +256,7 @@ test_mu_maildir_walk_01 (void)
 	rv = mu_maildir_walk (tmpdir,
 			      (MuMaildirWalkMsgCallback)msg_cb,
 			      (MuMaildirWalkDirCallback)dir_cb,
+			      TRUE,
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
@@ -269,7 +270,7 @@ test_mu_maildir_walk_01 (void)
 
 
 static void
-test_mu_maildir_walk_02 (void)
+test_mu_maildir_walk (void)
 {
 	char *tmpdir, *cmd, *dir;
 	WalkData data;
@@ -287,13 +288,13 @@ test_mu_maildir_walk_02 (void)
 
 	cmd = g_strdup_printf ("touch %s%c.noindex", dir, G_DIR_SEPARATOR);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
-
 	g_free (cmd);
 	g_free (dir);
 
 	rv = mu_maildir_walk (tmpdir,
 			      (MuMaildirWalkMsgCallback)msg_cb,
 			      (MuMaildirWalkDirCallback)dir_cb,
+			      TRUE,
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
@@ -304,6 +305,90 @@ test_mu_maildir_walk_02 (void)
 
 	g_free (tmpdir);
 }
+
+static void
+test_mu_maildir_walk_with_noupdate (void)
+{
+	char *tmpdir, *cmd, *dir;
+	WalkData data;
+	MuError rv;
+
+	tmpdir = copy_test_data ();
+
+	/* mark the 'new' dir with '.noindex', to ignore it */
+	dir =  g_strdup_printf ("%s%ctestdir%cnew", tmpdir,
+				G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+	cmd = g_strdup_printf ("chmod 700 %s", dir);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+
+	memset (&data, 0, sizeof(WalkData));
+	rv = mu_maildir_walk (tmpdir,
+			      (MuMaildirWalkMsgCallback)msg_cb,
+			      (MuMaildirWalkDirCallback)dir_cb,
+			      FALSE, /* ie., non-full update */
+			      &data);
+
+	g_assert_cmpuint (MU_OK, ==, rv);
+	g_assert_cmpuint (data._file_count, ==, 17);
+	g_assert_cmpuint (data._dir_entered,==, 5);
+	g_assert_cmpuint (data._dir_left,==, 5);
+
+
+
+	/* again, full update. results should be the same, since there
+	 * is no noupdate yet */
+	memset (&data, 0, sizeof(WalkData));
+	rv = mu_maildir_walk (tmpdir,
+			      (MuMaildirWalkMsgCallback)msg_cb,
+			      (MuMaildirWalkDirCallback)dir_cb,
+			      TRUE, /* ie., full update */
+			      &data);
+
+	g_assert_cmpuint (MU_OK, ==, rv);
+	g_assert_cmpuint (data._file_count, ==, 17);
+	g_assert_cmpuint (data._dir_entered,==, 5);
+	g_assert_cmpuint (data._dir_left,==, 5);
+
+	/* add a '.noupdate' file; this affects the outcome when the
+	 * 4th arg to mu_maildir_walk is FALSE */
+	cmd = g_strdup_printf ("touch %s%c.noupdate", dir, G_DIR_SEPARATOR);
+	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
+	g_free (cmd);
+
+	memset (&data, 0, sizeof(WalkData));
+	rv = mu_maildir_walk (tmpdir,
+			      (MuMaildirWalkMsgCallback)msg_cb,
+			      (MuMaildirWalkDirCallback)dir_cb,
+			      FALSE, /* non-full update */
+			      &data);
+
+	g_assert_cmpuint (MU_OK, ==, rv);
+	g_assert_cmpuint (data._file_count, ==, 13);
+
+	g_assert_cmpuint (data._dir_entered,==, 4);
+	g_assert_cmpuint (data._dir_left,==, 4);
+
+	/* now run again, but do a full update */
+	memset (&data, 0, sizeof(WalkData));
+	rv = mu_maildir_walk (tmpdir,
+			      (MuMaildirWalkMsgCallback)msg_cb,
+			      (MuMaildirWalkDirCallback)dir_cb,
+			      TRUE, /* full update */
+			      &data);
+
+	g_assert_cmpuint (MU_OK, ==, rv);
+	g_assert_cmpuint (data._file_count, ==, 17);
+
+	g_assert_cmpuint (data._dir_entered,==, 5);
+	g_assert_cmpuint (data._dir_left,==, 5);
+
+	g_free (dir);
+	g_free (tmpdir);
+}
+
+
+
 
 
 
@@ -478,8 +563,10 @@ main (int argc, char *argv[])
 	/* mu_util_maildir_walk */
 	g_test_add_func ("/mu-maildir/mu-maildir-walk-01",
 			 test_mu_maildir_walk_01);
-	g_test_add_func ("/mu-maildir/mu-maildir-walk-02",
-			 test_mu_maildir_walk_02);
+	g_test_add_func ("/mu-maildir/mu-maildir-walk",
+			 test_mu_maildir_walk);
+	g_test_add_func ("/mu-maildir/mu-maildir-walk-with-noupdate",
+			 test_mu_maildir_walk_with_noupdate);
 
 	/* get/set flags */
 	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01",

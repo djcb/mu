@@ -309,7 +309,6 @@ mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
 
 
 
-
 MuError
 mu_index_run (MuIndex *index, const char* path,
 	      gboolean reindex, MuIndexStats *stats,
@@ -337,6 +336,7 @@ mu_index_run (MuIndex *index, const char* path,
 	rv = mu_maildir_walk (path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
 			      (MuMaildirWalkDirCallback)on_run_maildir_dir,
+			      reindex, /* re-index, ie. do a full update */
 			      &cb_data);
 
 	mu_store_flush (index->_store);
@@ -393,7 +393,7 @@ mu_index_stats (MuIndex *index, const char* path,
 
 	return mu_maildir_walk (path,
 				(MuMaildirWalkMsgCallback)on_stats_maildir_file,
-				NULL,&cb_data);
+				NULL, FALSE, &cb_data);
 }
 
 struct _CleanupData {

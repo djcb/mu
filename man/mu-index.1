@@ -1,6 +1,6 @@
-.TH MU-INDEX 1 "May 2011" "User Manuals"
+.TH MU-INDEX 1 "May 2012" "User Manuals"
 
-.SH NAME 
+.SH NAME
 
 mu index \- index e-mail messages stored in Maildirs
 
@@ -14,7 +14,7 @@ mu index \- index e-mail messages stored in Maildirs
 directories and storing the results in a Xapian database. The data can then be
 queried using
 .BR mu-find(1)
-\.	
+\.
 
 .B index
 understands Maildirs as defined by Daniel Bernstein for qmail(7). In addition,
@@ -32,6 +32,12 @@ If there is a file called \fI.noindex\fR in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to
 exclude certain directories from the indexing process, for example directories
 with spam-messages.
+
+If there is a file called \fI.noupdate\fR in a directory, the contents of that
+directory and all of its subdirectories will be ignored, unless we do a full
+rebuild (with \fB--rebuild\fR). This can be useful to speed up things you have
+some maildirs that never change. Note that you can still search for these
+messages, this only affects updating the database.
 
 The first run of \fBmu index\fR may take a few minutes if you have a lot of
 mail (ten thousands of messages).  Fortunately, such a full scan needs to be

@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -47,6 +47,8 @@
 #include "mu-str.h"
 
 #define MU_MAILDIR_NOINDEX_FILE       ".noindex"
+#define MU_MAILDIR_NOUPDATE_FILE      ".noupdate"
+
 
 /* On Linux (and some BSD), we have entry->d_type, but some file
  * systems (XFS, ReiserFS) do not support it, and set it DT_UNKNOWN.
@@ -88,13 +90,11 @@ create_maildir (const char *path, mode_t mode, GError **err)
 		/* note, g_mkdir_with_parents won't detect an error if
 		 * there's already such a dir, but with the wrong
 		 * permissions; so we need to check */
-		if (rv != 0 || !mu_util_check_dir(fullpath, TRUE, TRUE)) {
-			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_MKDIR,
-				     "creating dir failed for %s: %s",
-				     fullpath,
-				     strerror (errno));
-			return FALSE;
-		}
+		if (rv != 0 || !mu_util_check_dir(fullpath, TRUE, TRUE))
+			return mu_util_g_set_error
+				(err,MU_ERROR_FILE_CANNOT_MKDIR,
+				 "creating dir failed for %s: %s",
+				 fullpath, strerror (errno));
 	}
 
 	return TRUE;
@@ -114,13 +114,10 @@ create_noindex (const char *path, GError **err)
 
 	/* note, if the 'close' failed, creation may still have
 	 * succeeded...*/
-	if (fd < 0 || close (fd) != 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_CREATE,
-			     "error in create_noindex: %s",
-			     strerror (errno));
-		return FALSE;
-	}
-
+	if (fd < 0 || close (fd) != 0)
+		return mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_CREATE,
+					    "error in create_noindex: %s",
+					    strerror (errno));
 	return TRUE;
 }
 
@@ -146,22 +143,22 @@ mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex, GError **err)
 static gboolean
 check_subdir (const char *src, gboolean *in_cur, GError **err)
 {
+	gboolean rv;
 	gchar *srcpath;
 
 	srcpath = g_path_get_dirname (src);
 
+	rv = TRUE;
 	if (g_str_has_suffix (srcpath, "new"))
 		*in_cur = FALSE;
 	else if (g_str_has_suffix (srcpath, "cur"))
 		*in_cur = TRUE;
-	else {
-		g_set_error(err, 0, MU_ERROR_FILE_INVALID_SOURCE,
-			    "invalid source message '%s'", src);
-		return FALSE;
-	}
+	else
+		rv = mu_util_g_set_error(err, MU_ERROR_FILE_INVALID_SOURCE,
+					 "invalid source message '%s'", src);
 	g_free (srcpath);
 
-	return TRUE;
+	return rv;
 }
 
 static gchar*
@@ -207,23 +204,21 @@ mu_maildir_link (const char* src, const char *targetpath, GError **err)
 
 	rv = symlink (src, targetfullpath);
 
-	if (rv != 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_LINK,
-			     "error creating link %s => %s: %s",
-			     targetfullpath, src, strerror (errno));
-		g_free (targetfullpath);
-		return FALSE;
-	}
-
+	if (rv != 0)
+		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_LINK,
+				     "error creating link %s => %s: %s",
+				     targetfullpath, src, strerror (errno));
 	g_free (targetfullpath);
-	return TRUE;
+
+	return rv == 0 ? TRUE: FALSE;
 }
 
 
 static MuError
 process_dir (const char* path, const gchar *mdir,
 	     MuMaildirWalkMsgCallback msg_cb,
-	     MuMaildirWalkDirCallback dir_cb, void *data);
+	     MuMaildirWalkDirCallback dir_cb, gboolean full,
+	     void *data);
 
 static MuError
 process_file (const char* fullpath, const gchar* mdir,
@@ -292,25 +287,25 @@ is_maildir_new_or_cur (const char *path)
 	return FALSE;
 }
 
-/* check if there is a noindex file (MU_MAILDIR_NOINDEX_FILE) in this
+
+/* check if there path contains file; used for checking if there is
+ * MU_MAILDIR_NOINDEX_FILE or MU_MAILDIR_NOUPDATE_FILE in this
  * dir; */
 static gboolean
-has_noindex_file (const char *path)
+dir_contains_file (const char *path, const char *file)
 {
-	const char* noindexpath;
+	const char* fullpath;
 
 	/* static buffer */
-	noindexpath = mu_str_fullpath_s (path, MU_MAILDIR_NOINDEX_FILE);
+	fullpath = mu_str_fullpath_s (path, file);
 
-	if (access (noindexpath, F_OK) == 0)
+	if (access (fullpath, F_OK) == 0)
 		return TRUE;
 	else if (G_UNLIKELY(errno != ENOENT))
-		g_warning ("error testing for noindex file %s: %s",
-			   noindexpath, strerror(errno));
-
+		g_warning ("error testing for %s/%s: %s",
+			   fullpath, file, strerror(errno));
 	return FALSE;
 }
-
 
 static gboolean
 is_dotdir_to_ignore (const char* dir)
@@ -351,6 +346,9 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 		if (entry->d_name[0] == 'd' &&
 		    strncmp (entry->d_name, "dovecot", 7) == 0)
 			return TRUE;
+		/* ignore special files */
+		if (entry->d_name[0] == '.')
+			return TRUE;
 		/* ignore core files */
 		if (entry->d_name[0] == 'c' &&
 		    strncmp (entry->d_name, "core", 4) == 0)
@@ -390,7 +388,7 @@ static MuError
 process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 		   MuMaildirWalkMsgCallback cb_msg,
 		   MuMaildirWalkDirCallback cb_dir,
-		   void *data)
+		   gboolean full, void *data)
 {
 	const char *fp;
 	char* fullpath;
@@ -420,10 +418,9 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 		MuError rv;
 		/* my_mdir is the search maildir (the dir starting
 		 * with the top-level maildir as /, and without the
-		 * /tmp, /cur, /new
-		 */
+		 * /tmp, /cur, /new  */
 		my_mdir = get_mdir_for_path (mdir, entry->d_name);
-		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, data);
+		rv = process_dir (fullpath, my_mdir, cb_msg, cb_dir, full, data);
 		g_free (my_mdir);
 
 		return rv;
@@ -470,7 +467,8 @@ dirent_cmp (struct dirent *d1, struct dirent *d2)
 static MuError
 process_dir_entries (DIR *dir, const char* path, const char* mdir,
 		     MuMaildirWalkMsgCallback msg_cb,
-		     MuMaildirWalkDirCallback dir_cb, void *data)
+		     MuMaildirWalkDirCallback dir_cb,
+		     gboolean full, void *data)
 {
 	MuError result;
 	GSList *lst, *c;
@@ -502,7 +500,7 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 
 	for (c = lst, result = MU_OK; c && result == MU_OK; c = g_slist_next(c))
 		result = process_dir_entry (path, mdir, (struct dirent*)c->data,
-					    msg_cb, dir_cb, data);
+					    msg_cb, dir_cb, full, data);
 
 	g_slist_foreach (lst, (GFunc)dirent_destroy, NULL);
 	g_slist_free (lst);
@@ -513,22 +511,22 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 
 static MuError
 process_dir (const char* path, const char* mdir,
-	     MuMaildirWalkMsgCallback msg_cb,
-	     MuMaildirWalkDirCallback dir_cb, void *data)
+	     MuMaildirWalkMsgCallback msg_cb, MuMaildirWalkDirCallback dir_cb,
+	     gboolean full, void *data)
 {
 	MuError result;
 	DIR* dir;
 
 	/* if it has a noindex file, we ignore this dir */
-	if (has_noindex_file (path)) {
-		g_debug ("found .noindex: ignoring dir %s", path);
+	if (dir_contains_file (path, MU_MAILDIR_NOINDEX_FILE) ||
+	    (!full && dir_contains_file (path, MU_MAILDIR_NOUPDATE_FILE))) {
+		g_debug ("found noindex/noupdate: ignoring dir %s", path);
 		return MU_OK;
 	}
 
 	dir = opendir (path);
 	if (G_UNLIKELY(!dir)) {
-		g_warning ("%s: ignoring  %s: %s",  __FUNCTION__,
-			   path, strerror(errno));
+		g_warning ("opendir failed %s: %s", path, strerror(errno));
 		return MU_OK;
 	}
 
@@ -541,7 +539,7 @@ process_dir (const char* path, const char* mdir,
 		}
 	}
 
-	result = process_dir_entries (dir, path, mdir, msg_cb, dir_cb, data);
+	result = process_dir_entries (dir, path, mdir, msg_cb, dir_cb, full, data);
 	closedir (dir);
 
 	/* only run dir_cb if it exists and so far, things went ok */
@@ -554,7 +552,8 @@ process_dir (const char* path, const char* mdir,
 
 MuError
 mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
-		 MuMaildirWalkDirCallback cb_dir, void *data)
+		 MuMaildirWalkDirCallback cb_dir, gboolean full,
+		 void *data)
 {
 	MuError rv;
 	char *mypath;
@@ -567,7 +566,7 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 	if (mypath[strlen(mypath)-1] == G_DIR_SEPARATOR)
 		mypath[strlen(mypath)-1] = '\0';
 
-	rv = process_dir (mypath, NULL, cb_msg, cb_dir, data);
+	rv = process_dir (mypath, NULL, cb_msg, cb_dir, full, data);
 	g_free (mypath);
 
 	return rv;
@@ -617,8 +616,8 @@ clear_links (const gchar* dirname, DIR *dir, GError **err)
 	}
 
 	if (errno != 0)
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-			     "file error: %s", strerror(errno));
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "file error: %s", strerror(errno));
 
 	return (rv == FALSE && errno == 0);
 }
@@ -633,12 +632,10 @@ mu_maildir_clear_links (const gchar* path, GError **err)
 	g_return_val_if_fail (path, FALSE);
 
 	dir = opendir (path);
-	if (!dir) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_OPEN,
-			     "failed to open %s: %s", path,
-			     strerror(errno));
-		return FALSE;
-	}
+	if (!dir)
+		return mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_OPEN,
+				       "failed to open %s: %s", path,
+				       strerror(errno));
 
 	rv = clear_links (path, dir, err);
 	closedir (dir);
@@ -790,29 +787,23 @@ mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 static gboolean
 msg_move_check_pre (const gchar *src, const gchar *dst, GError **err)
 {
-	if (!g_path_is_absolute(src)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-			     "source is not an absolute path: '%s'", src);
-		return FALSE;
-	}
+	if (!g_path_is_absolute(src))
+		return mu_util_g_set_error
+			(err, MU_ERROR_FILE,
+			 "source is not an absolute path: '%s'", src);
 
-	if (!g_path_is_absolute(dst)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-			     "target is not an absolute path: '%s'", dst);
-		return FALSE;
-	}
+	if (!g_path_is_absolute(dst))
+		return mu_util_g_set_error
+			(err, MU_ERROR_FILE,
+			 "target is not an absolute path: '%s'", dst);
 
-	if (access (src, R_OK) != 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "cannot read %s",
-			     src);
-		return FALSE;
-	}
+	if (access (src, R_OK) != 0)
+		return mu_util_g_set_error (err, MU_ERROR_FILE,
+					    "cannot read %s",  src);
 
-	if (access (dst, F_OK) == 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "%s already exists",
-			     dst);
-		return FALSE;
-	}
+	if (access (dst, F_OK) == 0)
+		return mu_util_g_set_error (err, MU_ERROR_FILE,
+					    "%s already exists", dst);
 
 	return TRUE;
 }
@@ -821,17 +812,13 @@ static gboolean
 msg_move_check_post (const char *src, const char *dst, GError **err)
 {
 	/* double check -- is the target really there? */
-	if (access (dst, F_OK) != 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "can't find target (%s)",
-			     dst);
-		return FALSE;
-	}
+	if (access (dst, F_OK) != 0)
+		return mu_util_g_set_error
+			(err, MU_ERROR_FILE, "can't find target (%s)",  dst);
 
-	if (access (src, F_OK) == 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "source is still there (%s)",
-			     src);
-		return FALSE;
-	}
+	if (access (src, F_OK) == 0)
+		return mu_util_g_set_error
+			(err, MU_ERROR_FILE, "source still there (%s)", src);
 
 	return TRUE;
 }
@@ -843,16 +830,11 @@ msg_move (const char* src, const char *dst, GError **err)
 	if (!msg_move_check_pre (src, dst, err))
 		return FALSE;
 
-	if (rename (src, dst) != 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE, "error moving %s to %s",
-			     src, dst);
-		return FALSE;
-	}
+	if (rename (src, dst) != 0)
+		return mu_util_g_set_error
+			(err, MU_ERROR_FILE,"error moving %s to %s", src, dst);
 
-	if (!msg_move_check_post (src, dst, err))
-		return FALSE;
-
-	return TRUE;
+	return msg_move_check_post (src, dst, err);
 }
 
 gchar*
@@ -869,18 +851,17 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 	newfullpath = mu_maildir_get_new_path (oldpath, targetmdir,
 					       newflags);
 	if (!newfullpath) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-			     "failed to determine target full path");
-		return FALSE;
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "failed to determine targetpath");
+		return NULL;
 	}
-
 
 	src_is_target = (g_strcmp0 (oldpath, newfullpath) == 0);
 
 	if (!ignore_dups && src_is_target) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
-			     "target equals source");
-		return FALSE;
+		mu_util_g_set_error (err, MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
+				     "target equals source");
+		return NULL;
 	}
 
 	if (!src_is_target) {

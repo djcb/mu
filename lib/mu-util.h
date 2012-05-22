@@ -439,13 +439,15 @@ typedef enum _MuError MuError;
 
 
 /**
- * set an error if it's not already set
+ * set an error if it's not already set, and return FALSE
  *
  * @param err errptr, or NULL
  * @param errcode error code
  * @param frm printf-style format, followed by paremeters
+ *
+ * @return FALSE
  */
-void mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
+gboolean mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 	G_GNUC_PRINTF(3,4);
 
 

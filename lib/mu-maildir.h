@@ -96,7 +96,9 @@ typedef MuError (*MuMaildirWalkDirCallback)
  * dotdirs are visited (ie. '.dotdir/cur'), so this enables Maildir++.
  * (http://www.inter7.com/courierimap/README.maildirquota.html, search
  * for 'Mission statement'). In addition, dirs containing a file named
- * '.noindex' are ignored, as are their subdirectories.
+ * '.noindex' are ignored, as are their subdirectories, and dirs
+ * containing a file called '.noupdate' are ignored, unless @param
+ * full is TRUE.
  *
  * mu_walk_maildir stops if the callbacks return something different
  * from MU_OK. For example, it can return MU_STOP to stop the scan, or
@@ -105,6 +107,7 @@ typedef MuError (*MuMaildirWalkDirCallback)
  * @param path the maildir path to scan
  * @param cb_msg the callback function called for each msg
  * @param cb_dir the callback function called for each dir
+ * @param full whether do a full scan, i.e., to ignore .noupdate files
  * @param data user data pointer
  *
  * @return a scanner result; MU_OK if everything went ok,
@@ -112,7 +115,8 @@ typedef MuError (*MuMaildirWalkDirCallback)
  * case of error
  */
 MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
-			 MuMaildirWalkDirCallback cb_dir, void *data);
+			 MuMaildirWalkDirCallback cb_dir, gboolean full,
+			 void *data);
 /**
  * recursively delete all the symbolic links in a directory tree
  *

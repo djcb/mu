@@ -441,7 +441,7 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 
 
 
-void
+gboolean
 mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 {
 	va_list ap;
@@ -459,6 +459,8 @@ mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 	g_set_error (err, MU_ERROR_DOMAIN, errcode, "%s", msg);
 
 	g_free (msg);
+
+	return FALSE;
 }
 
 
