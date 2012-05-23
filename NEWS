@@ -1,5 +1,25 @@
 * NEWS (user visible changes)
 
+** Release 0.9.8.5 <unreleased>
+
+*** mu4e
+
+    - inline display of images (see `mu4e-view-show-images')
+    - interactively change number of headers / columns for showing headers with
+      C-+ and C-- in headers, view mode
+    - support flagging message
+    - navigate to previous/next queries like a web browser (with <M-left>,
+      <M-right>)
+    - narrow search results with '/'
+    - next/previous take a prefix arg now, to move to the nth previous/next message
+    - allow for writing rich-text messages with org-mode
+
+*** mu
+
+    - support .noupdate files (parallel to .noindex, dir is ignored unless we're
+      doing a --rebuild)
+    - append all inline text parts, when getting the text body
+
 ** Release 0.9.8.4 <2012-05-08>
 
 *** mu4e
