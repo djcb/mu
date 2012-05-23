@@ -237,7 +237,7 @@ separator is never written to file. Also see
     ;; search for the first empty line
     (if (search-forward-regexp (concat "^$"))
       (replace-match
-	(concat (propertize mail-header-separator 'read-only t 'intangible t)))
+	(concat (propertize mail-header-separator 'intangible t)))
       ;; no empty line? then append one
       (progn
 	(goto-char (point-max))
@@ -423,16 +423,20 @@ needed, set the Fcc header, and register the handler function."
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e-drafts-folder)) nil t))
 
+(defconst mu4e~compose-hidden-headers
+  `("^References:" "^Face:" "^X-Face:"
+     "^X-Draft-From:" "^User-agent:")
+  "Hidden headers when composing.")
+
 
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
 \\{message-mode-map}."
-  (let ((message-hidden-headers
-	  `("^References:" "^Face:" "^X-Face:" "^X-Draft-From:" "^User-agent:")))
+  (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (use-local-map mu4e-compose-mode-map)
-    (message-hide-headers)
     (make-local-variable 'message-default-charset)
-
+    (message-hide-headers)
+    
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
@@ -443,7 +447,21 @@ needed, set the Fcc header, and register the handler function."
     ;; set the default directory to the user's home dir; this is probably more
     ;; useful e.g. when finding an attachment file the directory the current
     ;; mail files lives in...
-    (setq default-directory (expand-file-name "~/"))))
+    (setq default-directory (expand-file-name "~/"))
+
+    ;; setup the fcc-stuff, if needed
+    (add-hook 'message-send-hook
+      (lambda ()
+	;; for safety, always save the draft before sending
+	(set-buffer-modified-p t)
+	(save-buffer)
+	(mu4e~setup-fcc-maybe)) nil t)
+
+    ;; when the message has been sent.
+    (add-hook 'message-sent-hook
+      (lambda ()
+	(setq mu4e-sent-func 'mu4e-sent-handler)
+	(mu4e~proc-sent (buffer-file-name) mu4e-drafts-folder)) nil)))
 
 
 (defconst mu4e~compose-buffer-max-name-length 30
@@ -520,23 +538,9 @@ Gnus' `message-mode'."
     (unless (eq compose-type 'edit)
       (when message-signature
 	(message-insert-signature)))
-    
+
     ;; set compose mode -- so now hooks can run
     (mu4e-compose-mode)
-    
-    ;; setup the fcc-stuff, if needed
-    (add-hook 'message-send-hook
-      (lambda ()
-	;; for safety, always save the draft before sending
-	(set-buffer-modified-p t)
-	(save-buffer)
-	(mu4e~setup-fcc-maybe)) nil t)
-
-    ;; when the message has been sent.
-    (add-hook 'message-sent-hook
-      (lambda ()
-	(setq mu4e-sent-func 'mu4e-sent-handler)
-	(mu4e~proc-sent (buffer-file-name) mu4e-drafts-folder)) nil t))
 
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
@@ -545,8 +549,7 @@ Gnus' `message-mode'."
   ;; now jump to some use positions, and start writing that mail!
   (if (member compose-type '(new forward))
     (message-goto-to)
-    (message-goto-body)))
-
+    (message-goto-body))))
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
@@ -695,5 +698,8 @@ message."
   'message-kill-buffer
   'message-send-hook)
 
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(provide 'mu4e-compose)
+(provide 'mu4e-compose) 
