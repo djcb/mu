@@ -344,8 +344,6 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	if (docid != 0)
 		g_string_append_printf (gstr, "\t:docid %u\n", docid);
 
-	append_sexp_contacts (gstr, msg);
-
 	if (ti)
 		append_sexp_thread_info (gstr, ti);
 
@@ -373,6 +371,10 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 		append_sexp_message_file_attr (gstr, msg);
 		append_sexp_parts (gstr, msg, extract_images);
 	}
+
+	/* note, some of the contacts info comes from the file, soe
+	 * this has to be after the previous */
+	append_sexp_contacts (gstr, msg);
 
 	g_string_append (gstr, ")\n");
 	return g_string_free (gstr, FALSE);
