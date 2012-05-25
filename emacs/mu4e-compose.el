@@ -159,13 +159,11 @@ e-mail addresses. If LST is nil, returns nil."
 the original message ORIGMSG. If the Reply-To address is set, use
 that, otherwise use the From address. Note, whatever was in the To:
 field before, goes to the Cc:-list (if we're doing a reply-to-all)."
-  (let* ((reply-to (plist-get origmsg :reply-to))
- 	  (to-lst
-	    (or reply-to
-	      (delete-duplicates
-		(plist-get origmsg :from)
-		:test #'mu4e~compose-address-cell-equal))))
-    to-lst))
+  (message "REPLY TO %S" (plist-get origmsg :reply-to))
+  (let ((reply-to
+	   (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
+    (delete-duplicates reply-to  :test #'mu4e~compose-address-cell-equal)))
+
 
 (defun mu4e~compose-create-cc-lst (origmsg reply-all)
   "Create a list of address for the Cc: in a new message, based on
@@ -435,8 +433,7 @@ needed, set the Fcc header, and register the handler function."
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (use-local-map mu4e-compose-mode-map)
     (make-local-variable 'message-default-charset)
-    (message-hide-headers)
-    
+
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
@@ -541,15 +538,17 @@ Gnus' `message-mode'."
 
     ;; set compose mode -- so now hooks can run
     (mu4e-compose-mode)
+    (message-hide-headers)
 
-  ;; buffer is not user-modified yet
-  (mu4e~compose-set-friendly-buffer-name compose-type)
-  (set-buffer-modified-p nil)
 
-  ;; now jump to some use positions, and start writing that mail!
-  (if (member compose-type '(new forward))
-    (message-goto-to)
-    (message-goto-body))))
+    ;; buffer is not user-modified yet
+    (mu4e~compose-set-friendly-buffer-name compose-type)
+    (set-buffer-modified-p nil)
+
+    ;; now jump to some use positions, and start writing that mail!
+    (if (member compose-type '(new forward))
+      (message-goto-to)
+      (message-goto-body))))
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
@@ -702,4 +701,4 @@ message."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(provide 'mu4e-compose) 
+(provide 'mu4e-compose)

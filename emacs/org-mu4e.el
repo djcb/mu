@@ -86,7 +86,7 @@ the query (for paths starting with 'query:')."
   (format (concat "<#part type=\"%s\" filename=\"%s\" "
 	    "disposition=inline id=\"<%s>\">\n<#/part>\n")
     ext path id))
-   
+
 (defun org~mu4e-mime-multipart (plain html &optional images)
   "Create a multipart/alternative with text/plain and text/html alternatives.
 If the html portion of the message includes images, wrap the html
@@ -99,7 +99,7 @@ and images in a multipart/related part."
     images
     (when images "<#/multipart>\n")
     "<#/multipart>\n"))
- 
+
 (defun org~mu4e-mime-replace-images (str current-file)
   "Replace images in html files with cid links."
   (let (html-images)
@@ -147,88 +147,96 @@ and images in a multipart/related part."
 	      (org-export-string raw-body 'html (file-name-directory tmp-file))
 	      tmp-file))
 	  (html-images (cdr html-and-images))
-	  (html (car html-and-images))) 
-    (delete-region begin end)   
+	  (html (car html-and-images)))
+    (delete-region begin end)
     (save-excursion
       (goto-char begin)
       (newline)
       (insert (org~mu4e-mime-multipart
-		body html (mapconcat 'identity html-images "\n")))))) 
+		body html (mapconcat 'identity html-images "\n"))))))
 
 ;; next some functions to make the org/mu4e-compose-mode switch as smooth as
 ;; possible.
-
- (defun org~mu4e-mime-decorate-headers (where)
-  "If WHERE is the symbol 'body, prefix headers with '#' block;
-when it is 'headers, remove this."
+(defun org~mu4e-mime-decorate-headers ()
+  "Make the headers visually distinctive (org-mode)."
   (save-excursion
-    (message-narrow-to-headers)
-    (goto-char (point-min))  
-    (case where
-      (headers
-	(when (looking-at "#")
-	  (goto-char (point-min))  
-	  (while (re-search-forward "^#" nil t)
-	    (replace-match ""))))
-      (body
-	(unless (looking-at "#")
-	  (goto-char (point-min))  
-	  (while (re-search-forward "^" nil t)
-	    (replace-match "#")))))    
-    (widen)))
+    (goto-char (point-min))
+    (let* ((eoh (when (search-forward mail-header-separator)
+		  (match-end 0)))
+	    (olay (make-overlay (point-min) eoh)))
+      (when olay
+	(overlay-put olay 'face 'font-lock-comment-face)))))
+
+(defun org~mu4e-mime-undecorate-headers ()
+  "Don't make the headers visually distinctive (well,
+mu4e-compose-mode will take care of that)."
+  (save-excursion
+    (goto-char (point-min))
+    (let* ((eoh (when (search-forward mail-header-separator)
+		  (match-end 0))))
+      (remove-overlays (point-min) eoh))))
+
+(defvar org-mu4e-convert-to-html nil
+  "Wether to an org-mode => html conversion when sending messages.")
 
 (defun org~mu4e-mime-convert-to-html-maybe ()
   "Convert to html if `org-mu4e-convert-to-html' is non-nil. This
 function is called when sending a message (from
 `message-send-hook') and, if non-nil, will send the message as the
 rich-text version of the what is assumed to be an org-mode body."
-  (message "Converting to html")
   (when org-mu4e-convert-to-html
+    (message "Converting to html")
     (org~mu4e-mime-convert-to-html)))
 
+(defun org~mu4e-execute-key-sequence-in-compose-mode (keyseq)
+  "Execute keysequence KEYSEQ by (temporarily) switching to compose
+mode."
+  (mu4e-compose-mode)
+  (setq org-mu4e-compose-org-mode t)
+  (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t)
+  (let ((func (lookup-key (current-local-map) key)))
+    (unless (functionp func)
+      (error "Invalid key binding"))
+    (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe t t)
+    (funcall func))) 
 
-(defun org~mu4e-mime-switch-headers-or-body (&optional firsttime)
+
+(defun org~mu4e-mime-switch-headers-or-body ()
   "Switch the buffer to either mu4e-compose-mode (when in headers)
 or org-mode (when in the body),"
   (interactive)
   (let* ((sepapoint
 	   (save-excursion
 	     (goto-char (point-min))
-	     (search-forward-regexp mail-header-separator)))
-	  (where ;; is point in the headers or in the body?
-	    (if (> (point) sepapoint) 'body 'headers))
-	  (first-char (buffer-substring (point-min) (1+ (point-min))))
-	  (state-changed
-	    (if (string= first-char "#")
-	      (eq where 'headers)
-	      (eq where 'body))))
-    (when (or firsttime state-changed)
-      ;; now make sure the headers correspond to the mode...
-      (case where
-	(headers
-	  (org~mu4e-mime-decorate-headers 'headers)
+	     (search-forward-regexp mail-header-separator nil t))))
+    ;; only do stuff when the sepapoint exist; note that after sending the
+    ;; message, this function maybe called on a message with the sepapoint
+    ;; stripped.
+    (when sepapoint
+      (cond
+	;; we're in the body, but in mu4e-compose-mode?
+	;; if so, switch to org-mode
+	((and (> (point) sepapoint) (eq major-mode 'mu4e-compose-mode))
+	  (org-mode)
+	  (add-hook 'before-save-hook
+	    (lambda ()
+	      (error "Switch to mu4e-compose-mode (M-m) before saving.")) nil t)
+	  (org~mu4e-mime-decorate-headers)
+	  (local-set-key (kbd "M-m")
+	    (lambda (key)
+	      (interactive "kEnter mu4e-compose-mode key sequence: ")
+	      (org~mu4e-execute-key-sequence-in-compose-mode key))))
+	;; we're in the headers, but in org-mode?
+	;; if so, switch to mu4e-compose-mode
+	((and (<= (point) sepapoint) (eq major-mode 'org-mode))
+      	  (org~mu4e-mime-undecorate-headers)
 	  (mu4e-compose-mode)
 	  (add-hook 'message-send-hook
-	    'org~mu4e-mime-convert-to-html-maybe t t))
-	(body
-	  (org-mode)
-	  (org~mu4e-mime-decorate-headers 'body)
-	  (local-set-key (kbd "M-m")
-	    (lambda ()
-	      (interactive)
-	      (org~mu4e-mime-decorate-headers 'headers)
-	      (mu4e-compose-mode)
-	      (setq org-mu4e-compose-org-mode t)
-	      (add-hook 'message-send-hook
-		'org~mu4e-mime-convert-to-html-maybe t t)))) 
-	(otherwise (error "unexpected where %S" where)))
-      (setq org-mu4e-compose-org-mode t)
+	    'org~mu4e-mime-convert-to-html-maybe nil t)))
       ;; and add the hook
       (add-hook 'post-command-hook
-	'org~mu4e-mime-switch-headers-or-body t t)))) 
+	'org~mu4e-mime-switch-headers-or-body t t))))
 
-(defvar org-mu4e-compose-org-mode nil)
-(setq org-mu4e-compose-org-mode nil)
 
 (defun org-mu4e-compose-org-mode ()
   "Pseudo-Minor mode for mu4e-compose-mode, to edit the message
@@ -236,19 +244,23 @@ or org-mode (when in the body),"
   (interactive)
   (unless (member major-mode '(org-mode mu4e-compose-mode))
     (error "Need org-mode or mu4e-compose-mode"))
-  (if (not org-mu4e-compose-org-mode)
+  (unless (executable-find "dvipng")
+    (error "Required program dvipng not found"))
+  ;; we can check if we're already in mu4e-compose-mode by checking
+  ;; if the post-command-hook is set; hackish...
+  (if (not (member 'org~mu4e-mime-switch-headers-or-body post-command-hook))
     (progn
-      (org~mu4e-mime-switch-headers-or-body t)
-      (message "org-mu4e-compose-org-mode enabled"))
+      (org~mu4e-mime-switch-headers-or-body)
+      (message
+	(concat
+	  "org-mu4e-compose-org-mode enabled; "
+	  "press M-m before issuing message-mode commands")))
     (progn ;; otherwise, remove crap
       (remove-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t)
-      (org~mu4e-mime-decorate-headers 'headers) ;; shut off org-mode stuff
+      (org~mu4e-mime-undecorate-headers) ;; shut off org-mode stuff
       (setq org-mu4e-compose-org-mode nil)
       (mu4e-compose-mode)
       (message "org-mu4e-compose-org-mode disabled"))))
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'org-mu4e)
