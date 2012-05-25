@@ -523,6 +523,10 @@ Gnus' `message-mode'."
     ;; headers and body. will be removed before saving to disk
     (mu4e~compose-insert-mail-header-separator)
     (insert "\n") ;; insert a newline after header separator
+
+    ;; hide headers
+    (message-hide-headers)
+
     ;; include files -- e.g. when forwarding a message with attachments,
     ;; we take those from the original.
     (save-excursion
@@ -535,11 +539,9 @@ Gnus' `message-mode'."
     (unless (eq compose-type 'edit)
       (when message-signature
 	(message-insert-signature)))
-
+    
     ;; set compose mode -- so now hooks can run
     (mu4e-compose-mode)
-    (message-hide-headers)
-
 
     ;; buffer is not user-modified yet
     (mu4e~compose-set-friendly-buffer-name compose-type)
