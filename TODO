@@ -9,7 +9,8 @@
   - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
     mail)
   - contact completion (see Jacek's 'mu4e: using' mail)
-  - interactive split-view control (Jacek)
+
+  - rich text composing (with org-mode)
 
   - actions for /all/ headers, actions for /all/ attachment
   - custom header fields in headers-view, message-view
@@ -22,6 +23,7 @@
     threads when searching
   - fix having multiple header views visible
   - mark message, decide what to do with them later
+  - sorting
 
 ** Done
 
@@ -30,6 +32,10 @@
   - optionally keep cc with user's email
   - enable setting/unsetting 'Flagged' on messages
   - allow narrowing of search results
+  - interactive split-view control (Jacek)
+  - *bug*: reply-to does not make it the frontend
+  - view images inline
+
 
 
 # Local Variables:
