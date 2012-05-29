@@ -1082,7 +1082,10 @@ list of maildirs you'd like to have quick access to, for example:
 This would set @key{i} as a shortcut for the @t{/inbox} folder; so effectively
 a query @t{maildir:/inbox}. There is a special shortcut @key{o} for
 @emph{other} (so don't use that one for your own shortcuts!), which allows you
-to choose from @emph{all} maildirs.
+to choose from @emph{all} maildirs. There is support for autocompletion; note
+that the list of maildirs is determined when @t{mu4e} starts; if there are
+changes in the maildirs while @t{mu4e} is running, you need to restart
+@t{mu4e}.
 
 Each of the folder names is relative to your top-level maildir directory; so if
 you keep your mail in @file{~/Maildir}, @file{/inbox} would refer to
@@ -1490,7 +1493,11 @@ them.
 
 @t{mu4e} loads @t{mu4e-speedbar} automatically; all you need to do to activate
 it is @code{M-x speedbar}. Then, when then going to the @ref{Main view}, the
-speedbar-frame will be updated with your bookmarks and maildirs.
+speedbar-frame will be updated with your bookmarks and maildirs. For speed
+reasons, the list of maildirs is determined when @t{mu4e} starts; if the list
+of maildirs changes while @t{mu4e} is running, you need to restart @t{mu4e} to
+reflect those changes in the speedbar and in other places that use this list,
+such as auto-completion when jumping to a maildir.
 
 @code{mu4e-speedbar} was contributed by Antono Vasiljev.
 

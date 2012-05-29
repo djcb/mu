@@ -172,16 +172,21 @@ paths."
 		       (mu4e~get-maildirs-1 path (concat mdir "/" dir)))))
     maildirs))
 
+(defvar mu4e~maildir-list nil "Cached list of maildirs.")
 
 (defun mu4e-get-maildirs (path)
   "Get maildirs under path, recursively, as a list of relative
 paths (ie., /archive, /sent etc.). Most of the work is done in
-`mu4e-get-maildirs-1'."
-  (sort (mu4e~get-maildirs-1 path)
-    (lambda (m1 m2)
-      (when (string= m1 "/")
-	-1 ;; '/' comes first
-	(compare-strings m1 0 nil m2 0 nil t)))))
+`mu4e-get-maildirs-1'. Note, these results are /cached/, so the
+list of maildirs will not change until you restart mu4e."
+  (unless mu4e~maildir-list
+    (setq mu4e~maildir-list
+      (sort (mu4e~get-maildirs-1 path)
+	(lambda (m1 m2)
+	  (when (string= m1 "/")
+	    -1 ;; '/' comes first
+	    (compare-strings m1 0 nil m2 0 nil t))))))
+  mu4e~maildir-list)
 
 
 (defun mu4e-ask-maildir (prompt)
@@ -616,9 +621,12 @@ FUNC (if non-nil) afterwards."
   "Stop the mu4e session."
   (when mu4e-update-timer
     (cancel-timer mu4e-update-timer)
-    (setq mu4e-update-timer nil))
+    (setq
+      mu4e-update-timer nil 
+      mu4e~maildir-list nil))
   (mu4e~proc-kill)
   (kill-buffer))
+
 
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")
