@@ -21,9 +21,14 @@
   - show maildirs as a tree, not a list in speed bar
   - put threading information in the database, and enable getting the complete
     threads when searching
-  - fix having multiple header views visible
   - mark message, decide what to do with them later
   - sorting
+  - refactor fill_database function in test cases
+
+  - *FIX* having multiple header views visible
+  - *FIX* add runtime check for imagemagick
+  - *FIX* fix for strings where len (g_utf8_strdown (str)) > len (str)
+
 
 ** Done
 
@@ -35,7 +40,7 @@
   - interactive split-view control (Jacek)
   - *bug*: reply-to does not make it the frontend
   - view images inline
-
+  - *FIX* slow maildirs when there are many
 
 
 # Local Variables:
