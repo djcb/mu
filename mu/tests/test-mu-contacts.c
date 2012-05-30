@@ -35,14 +35,22 @@ static gchar*
 fill_database (void)
 {
 	gchar *cmdline, *tmpdir;
+	GError *err;
 
 	tmpdir = test_mu_common_get_random_tmpdir();
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, MU_TESTMAILDIR);
 
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
-					     NULL, NULL));
+	err = NULL;
+	if (!g_spawn_command_line_sync (cmdline, NULL, NULL,
+					NULL, &err)) {
+		g_printerr ("Error: %s\n", err ? err->message : "?");
+		g_clear_error (&err);
+		g_assert (0);
+	}
+
+	g_clear_error (&err);
 	g_free (cmdline);
 
 	return tmpdir;

@@ -523,11 +523,15 @@ test_mu_query_attach (void)
 	xpath = fill_database (MU_TESTMAILDIR2);
 	g_assert (xpath != NULL);
 
-	/* g_print ("(%s)\n", xpath); */
+	if (g_test_verbose())
+		g_print ("(%s)\n", xpath);
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+		if (g_test_verbose())
+			g_print ("query: %s\n", queries[i].query);
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
 				  ==, queries[i].count);
+	}
 
 	g_free (xpath);
 }

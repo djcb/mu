@@ -41,6 +41,7 @@ static gchar*
 fill_database (void)
 {
 	gchar *cmdline, *tmpdir;
+	GError *err;
 
 	tmpdir = test_mu_common_get_random_tmpdir();
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
@@ -50,12 +51,17 @@ fill_database (void)
 	if (g_test_verbose())
 		g_print ("%s\n", cmdline);
 
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
-					     NULL, NULL));
-	g_free (cmdline);
+	err  = NULL;
+	if (!g_spawn_command_line_sync (cmdline, NULL, NULL,
+					NULL, &err)) {
+		g_printerr ("Error: %s\n", err ? err->message : "?");
+		g_assert (0);
+	}
 
+	g_free (cmdline);
 	return tmpdir;
 }
+
 
 static unsigned
 newlines_in_output (const char* str)
