@@ -115,13 +115,14 @@ const char* mu_flags_to_str_s (MuFlags flags, MuFlagType types);
  * Get the (OR'ed) flags corresponding to a string representation
  *
  * @param str the string representation
- * @param types the flag types to acceps (other will be ignored)
+ * @param types the flag types to accept (other will be ignored)
+ * @param ignore invalid if TRUE, ignore invalid flags, otherwise return
+ * MU_FLAG_INVALID if an invalid flag is encountered
  *
  * @return the (OR'ed) flags
  */
-MuFlags mu_flags_from_str (const char *str, MuFlagType types);
-
-
+MuFlags mu_flags_from_str (const char *str, MuFlagType types,
+			   gboolean ignore_invalid);
 
 /**
  * Update #oldflags with the flags in #str, where #str consists of the

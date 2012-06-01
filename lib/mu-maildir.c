@@ -690,8 +690,9 @@ mu_maildir_get_flags_from_path (const char *path)
 		    (info[1] != ','))
 			return MU_FLAG_NONE;
 		else
-			return mu_flags_from_str (&info[2],
-						  MU_FLAG_TYPE_MAILFILE);
+			return mu_flags_from_str
+				(&info[2], MU_FLAG_TYPE_MAILFILE,
+				 TRUE /*ignore invalid */);
 	}
 }
 

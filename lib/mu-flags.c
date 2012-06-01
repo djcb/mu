@@ -162,7 +162,8 @@ mu_flags_to_str_s (MuFlags flags, MuFlagType types)
 
 
 MuFlags
-mu_flags_from_str (const char *str, MuFlagType types)
+mu_flags_from_str (const char *str, MuFlagType types,
+		   gboolean ignore_invalid)
 {
 	const char *cur;
 	MuFlags flag;
@@ -174,6 +175,13 @@ mu_flags_from_str (const char *str, MuFlagType types)
 		MuFlags f;
 
 		f = mu_flag_from_char (*cur);
+
+		if (f == MU_FLAG_INVALID) {
+			if (ignore_invalid)
+				continue;
+			return MU_FLAG_INVALID;
+		}
+
 		if (mu_flag_type (f) & types)
 			flag |= f;
 	}

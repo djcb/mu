@@ -250,8 +250,8 @@ time_t          mu_msg_get_date            (MuMsg *msg);
  *
  * @param msg valid MuMsg* instance
  *
- * @return the fileflags as logically OR'd #Mu MsgFlags or 0 if
- * there are none.
+ * @return the file/content flags as logically OR'd #MuMsgFlags or 0
+ * if there are none. Non-standard flags are ignored.
  */
 MuFlags     mu_msg_get_flags      (MuMsg *msg);
 

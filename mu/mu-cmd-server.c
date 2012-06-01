@@ -832,7 +832,8 @@ get_flags (const char *path, const char *flagstr)
 			return mu_flags_from_str_delta (flagstr, oldflags,
 							MU_FLAG_TYPE_ANY);
 		} else
-			return  mu_flags_from_str (flagstr, MU_FLAG_TYPE_ANY);
+			return  mu_flags_from_str (flagstr, MU_FLAG_TYPE_ANY,
+						   TRUE /*ignore invalid*/);
 	}
 }
 

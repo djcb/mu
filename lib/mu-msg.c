@@ -677,7 +677,7 @@ mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 
 
 static int
-cmp_str (const char* s1, const char *s2)
+cmp_str (const char *s1, const char *s2)
 {
 	if (s1 == s2)
 		return 0;
