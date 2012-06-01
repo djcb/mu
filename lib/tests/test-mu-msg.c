@@ -198,7 +198,6 @@ test_mu_msg_04 (void)
 
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
 				    "/mail5", NULL, NULL);
-
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "George Custer <gac@example.com>");
 	g_assert_cmpstr (mu_msg_get_subject(msg),
@@ -209,10 +208,8 @@ test_mu_msg_04 (void)
 			  ==, MU_MSG_PRIO_NORMAL);
 	g_assert_cmpuint (mu_msg_get_date(msg),
 			  ==, 0);
-
 	g_assert_cmpuint (mu_msg_get_flags(msg),
 			  ==, MU_FLAG_HAS_ATTACH|MU_FLAG_UNREAD);
-
 	mu_msg_unref (msg);
 }
 
@@ -229,10 +226,49 @@ test_mu_msg_multimime (void)
 			 ==, "multimime");
 	g_assert_cmpstr (mu_msg_get_body_text(msg),
 			 ==, "abcdef");
-
+	g_assert_cmpuint (mu_msg_get_flags(msg),
+			 ==, MU_FLAG_FLAGGED | MU_FLAG_SEEN |
+			 MU_FLAG_HAS_ATTACH);
 	mu_msg_unref (msg);
 }
 
+
+
+static void
+test_mu_msg_flags (void)
+{
+	unsigned u;
+
+	struct {
+		const char *path;
+		MuFlags flags;
+	} msgflags [] = {
+		{ MU_TESTMAILDIR4 "/multimime!2,FS",
+		  MU_FLAG_FLAGGED | MU_FLAG_SEEN |
+		  MU_FLAG_HAS_ATTACH },
+		{ MU_TESTMAILDIR4 "/special!2,Sabc",
+		  MU_FLAG_SEEN }
+
+	};
+
+	for (u = 0; u != G_N_ELEMENTS(msgflags); ++u) {
+		MuMsg *msg;
+		MuFlags flags;
+
+		g_assert ((msg = mu_msg_new_from_file (msgflags[u].path, NULL, NULL)));
+		flags = mu_msg_get_flags (msg);
+
+		if (g_test_verbose())
+			g_print ("=> %s [ %s, %u] <=> [ %s, %u]\n",
+				 msgflags[u].path,
+				 mu_flags_to_str_s(msgflags[u].flags, MU_FLAG_TYPE_ANY),
+				 (unsigned)msgflags[u].flags,
+				 mu_flags_to_str_s(flags, MU_FLAG_TYPE_ANY),
+				 (unsigned)flags);
+		g_assert_cmpuint (flags ,==, msgflags[u].flags);
+		mu_msg_unref (msg);
+	}
+}
 
 
 static void
@@ -243,7 +279,6 @@ test_mu_msg_umlaut (void)
 	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
 				    "/1305664394.2171_402.cthulhu!2,",
 				    NULL, NULL);
-
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "Helmut Kröger <hk@testmu.xxx>");
 	g_assert_cmpstr (mu_msg_get_subject(msg),
@@ -301,17 +336,23 @@ test_mu_msg_references_dups (void)
 
 	g_assert_cmpuint (g_slist_length ((GSList*)refs), ==, 6);
 
-	g_assert_cmpstr ((char*)refs->data,==, "439C1136.90504@euler.org");
+	g_assert_cmpstr ((char*)refs->data,==,
+			 "439C1136.90504@euler.org");
 	refs = g_slist_next (refs);
-	g_assert_cmpstr ((char*)refs->data,==, "4399DD94.5070309@euler.org");
+	g_assert_cmpstr ((char*)refs->data,==,
+			 "4399DD94.5070309@euler.org");
 	refs = g_slist_next (refs);
-	g_assert_cmpstr ((char*)refs->data,==, "20051209233303.GA13812@gauss.org");
+	g_assert_cmpstr ((char*)refs->data,==,
+			 "20051209233303.GA13812@gauss.org");
 	refs = g_slist_next (refs);
-	g_assert_cmpstr ((char*)refs->data,==, "439B41ED.2080402@euler.org");
+	g_assert_cmpstr ((char*)refs->data,==,
+			 "439B41ED.2080402@euler.org");
 	refs = g_slist_next (refs);
-	g_assert_cmpstr ((char*)refs->data,==, "439A1E03.3090604@euler.org");
+	g_assert_cmpstr ((char*)refs->data,==,
+			 "439A1E03.3090604@euler.org");
 	refs = g_slist_next (refs);
-	g_assert_cmpstr ((char*)refs->data,==, "20051211184308.GB13513@gauss.org");
+	g_assert_cmpstr ((char*)refs->data,==,
+			 "20051211184308.GB13513@gauss.org");
 	refs = g_slist_next (refs);
 
 	mu_msg_unref (msg);
@@ -388,14 +429,6 @@ test_mu_msg_comp_unix_programmer (void)
 	mu_msg_unref (msg);
 }
 
-/* static gboolean */
-/* ignore_error (const char* log_domain, GLogLevelFlags log_level, const gchar* msg, */
-/* 	      gpointer user_data) */
-/* { */
-/* 	return FALSE; /\* don't abort *\/ */
-/* } */
-
-
 int
 main (int argc, char *argv[])
 {
@@ -414,6 +447,10 @@ main (int argc, char *argv[])
 			 test_mu_msg_04);
 	g_test_add_func ("/mu-msg/mu-msg-multimime",
 			 test_mu_msg_multimime);
+
+	g_test_add_func ("/mu-msg/mu-msg-flags",
+			 test_mu_msg_flags);
+
 	g_test_add_func ("/mu-msg/mu-msg-tags",
 			 test_mu_msg_tags);
 	g_test_add_func ("/mu-msg/mu-msg-references",

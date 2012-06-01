@@ -95,20 +95,29 @@ test_mu_flags_to_str_s (void)
 static void
 test_mu_flags_from_str (void)
 {
-	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_ANY), ==,
+	/* note, the 3rd arg to mu_flags_from_str determines whether
+	 * invalid flags will be ignored (if TRUE) or MU_FLAG_INVALID (if FALSE)
+	 */
+
+	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_ANY, TRUE), ==,
 			  MU_FLAG_REPLIED | MU_FLAG_PASSED);
-	g_assert_cmpuint (mu_flags_from_str ("Nz", MU_FLAG_TYPE_ANY), ==,
+	g_assert_cmpuint (mu_flags_from_str ("Nz", MU_FLAG_TYPE_ANY, TRUE), ==,
 			  MU_FLAG_NEW | MU_FLAG_SIGNED);
-	g_assert_cmpuint (mu_flags_from_str ("axD", MU_FLAG_TYPE_ANY), ==,
+	g_assert_cmpuint (mu_flags_from_str ("axD", MU_FLAG_TYPE_ANY, TRUE), ==,
 			  MU_FLAG_HAS_ATTACH | MU_FLAG_ENCRYPTED | MU_FLAG_DRAFT);
 
-	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_MAILFILE), ==,
+	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_MAILFILE, TRUE), ==,
 			  MU_FLAG_REPLIED | MU_FLAG_PASSED);
-	g_assert_cmpuint (mu_flags_from_str ("Nz", MU_FLAG_TYPE_MAILFILE), ==,
+	g_assert_cmpuint (mu_flags_from_str ("Nz", MU_FLAG_TYPE_MAILFILE, TRUE), ==,
 			  MU_FLAG_NONE);
 
-	g_assert_cmpuint (mu_flags_from_str ("qwi", MU_FLAG_TYPE_MAILFILE), ==,
+	/* ignore errors or not */
+	g_assert_cmpuint (mu_flags_from_str ("qwi", MU_FLAG_TYPE_MAILFILE, FALSE), ==,
 			  MU_FLAG_INVALID);
+	g_assert_cmpuint (mu_flags_from_str ("qwi", MU_FLAG_TYPE_MAILFILE, TRUE), ==,
+			  0);
+
+
 }
 
 static void

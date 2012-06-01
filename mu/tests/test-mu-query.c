@@ -214,7 +214,7 @@ test_mu_query_03 (void)
 		{ "subject:\"Re: Learning LISP; Scheme vs elisp.\"", 1},
 		{ "to:help-gnu-emacs@gnu.org", 4},
 		{ "t:help-gnu-emacs", 0},
-		{ "flag:flagged", 2}
+		{ "flag:flagged", 1}
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -560,8 +560,8 @@ test_mu_query_signed_encrypted (void)
 	int i;
 
 	QResults queries[] = {
-		{ "flag:encrypted", 3},
-		{ "flag:signed", 3},
+		{ "flag:encrypted", 2},
+		{ "flag:signed", 2},
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
