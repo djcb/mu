@@ -147,17 +147,17 @@ check_subdir (const char *src, gboolean *in_cur, GError **err)
 	gchar *srcpath;
 
 	srcpath = g_path_get_dirname (src);
-
+	*in_cur = FALSE;
 	rv = TRUE;
-	if (g_str_has_suffix (srcpath, "new"))
-		*in_cur = FALSE;
-	else if (g_str_has_suffix (srcpath, "cur"))
-		*in_cur = TRUE;
-	else
-		rv = mu_util_g_set_error(err, MU_ERROR_FILE_INVALID_SOURCE,
-					 "invalid source message '%s'", src);
-	g_free (srcpath);
 
+	if (g_str_has_suffix (srcpath, "cur"))
+		*in_cur = TRUE;
+	else if (!g_str_has_suffix (srcpath, "new"))
+		rv = mu_util_g_set_error (err,
+					  MU_ERROR_FILE_INVALID_SOURCE,
+					  "invalid source message '%s'",
+					  src);
+	g_free (srcpath);
 	return rv;
 }
 
