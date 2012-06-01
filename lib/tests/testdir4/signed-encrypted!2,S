@@ -1,0 +1,54 @@
+Return-path: <>
+Envelope-to: karjala@localhost
+Delivery-date: Fri, 11 May 2012 16:37:57 +0300
+From: karjala@example.com
+To: lapinkulta@example.com
+Subject: signed + encrypted
+User-agent: mu4e 0.9.8.5-dev1; emacs 24.1.50.8
+Date: Fri, 11 May 2012 16:36:08 +0300
+Message-ID: <874nrm96wn.fsf@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+hQQOA1T38TPQrHD6EA/+K4kSpMa7zk+qihUkQnHSq28xYxisNQx6X5DVNjA/Qx16
+uZj/40ae+PoSMTVfklP+B2S/IomuTW6dwVqS7aQ3u4MTzi+YOi11k1lEMD7hR0Wb
+L0i48o3/iCPuCTpnOsaLZvRL06g+oTi0BF2pgz/YdsgsBTGrTb3pkDGSlLIhvh/J
+P8eE3OuzkXS6d8ymJKx2S2wQJrc1AFf1BgJfgc5T0iAvcV+zIMG+PIYcVd04zVpj
+cORFEfvGgfxWkeX+Ks3tu/l5PA1EesnoqFdNFZm+RKBg3RFsOm8tBlJ46xJjfeHg
+zLgifeSLy3tOX7CvWYs9torrx7s7UOI2gV8kzBqz+a7diyCMezceeQ9l0nIRybwW
+C9Egp8Bpfb02iXTOGdE/vRiNItQH14GKmXf4nCSwdtQUm3yzaqY9yL3xBxAlW53e
+YOFfPMESt+E7IlPn0c7llWGrcdrhJbUEoGOIPezES7kdeNPzi8G1lLtvT04/SSZJ
+QxPH5FNzSFaYFAQSdI7TR69P7L7vtLL8ndkjY49HfLFXochQQzsqrzVxzRCruHxA
+zbZSRptNf9SuXEaX9buO1vlFHheGvrCKzEWa6O7JD/DiyrE/zqy4jdlh9abMCouQ
+GWGSbn8jk6SMTQQ2Yv/VOyFqifHZp0UJD59tyIdenpxoYu5M0lwHLNVDlRjLEwUQ
+AIDz1tbLoM7lxs2FOKGr8QqbKIeMfL+NUmbvVIDc4mJrOlRnHh+cZYm4Z49iTl1v
+bYNMYgR5nY7W6rqh0ae7ZOW0h2NzpkAwTzuf1YrSjNavd9KBwOCFtAoZhRwfwFVx
+ju+ByHFNnf7g/R6DekHS0pSiatM0cPDJT05atEZb+13CRHHznonmLHi+VahXjrpg
+cIUA8Lhjdfm6Fsabo7gNZnTTRxNBqUXKK2vJF/XLbNrH5K2BH2dCCmUNtm3yFWiM
+DOzaw3665Y3S6MvZdyKpatbNrVoJdBpRgPxJ1YCSEituFUqHJBStay+aRb5fVkQR
+w3+9hWw+Ob0+2EumKbgfQ7iMwTZBCZP4VOxkoqdHvs9aWm4N7wHtXsyCew3icbJx
+lyUWsDx/FI+HlQRfOqeAMxmp8kKybmHNw8oGiw+uPPUHSD1NFYVm2DtwhYll3Fvs
+YY7r5s3yP1ZnwxMqWI3OsExVUXs8MS4UTAgO+cggO7YidPcANbBDihBFP8mTXtni
+Oo5n5v+/eRoLfHmnsGcaK8EkKsfFHpbqn4gxXGcBuHaTTJ/ZhbW6bi1WWZA9ExaJ
+IeTDtp5Bks1pJvTjCDacvgwl3rEBM6yaeIvB7575Y/GPMTOZhawhfOxV1smMmTKI
+JOWYb3+PuN2cvWetkjFgH8re4sRXq22DKBZHJEWYU8sH0sACAePnIr+pkrOtGeJB
+t1zBqZUnrupH6ptk9n/AjbQ+XSMTEKu55gSjYLAYx1EHApx52QLkdh+ej5xCIVeY
+6wS1Iipkoc6/r6F7CKctupXurNY2AlD4uQIOfD6kQgkqK4PY3hsRHQA+Zqj6oRfr
+kxysFJZvhgt26IeBVapFs10WuYt9iHfpbPUBQUIZCLyPAh08UdVW64Uc2DvUPy+I
+C+3RrmTHQPP/YNKgDQaZ3ySVEDkqjaDPmXr5K0Ibaib2dtPCLcA=
+=pv03
+-----END PGP MESSAGE-----
+--=-=-=--
+

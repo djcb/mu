@@ -1,0 +1,146 @@
+Return-Path: <gcc-help-return-33661-xxxx.klub=gmail.com@gcc.gnu.org>
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on mindcrime
+X-Spam-Level: 
+X-Spam-Status: No, score=-4.9 required=3.0 tests=BAYES_00,DATE_IN_PAST_96_XX,
+	RCVD_IN_DNSWL_MED autolearn=ham version=3.2.5
+X-Original-To: xxxx@localhost
+Delivered-To: xxxx@localhost
+Received: from mindcrime (localhost [127.0.0.1])
+	by mail.xxxxsoftware.nl (Postfix) with ESMTP id 5123469CB3
+	for <xxxx@localhost>; Thu,  7 Aug 2008 08:10:19 +0300 (EEST)
+Delivered-To: xxxx.klub@gmail.com
+Received: from gmail-imap.l.google.com [66.249.91.109]
+	by mindcrime with IMAP (fetchmail-6.3.8)
+	for <xxxx@localhost> (single-drop); Thu, 07 Aug 2008 08:10:19 +0300 (EEST)
+Received: by 10.142.237.21 with SMTP id k21cs39272wfh; Wed, 6 Aug 2008
+ 20:15:17 -0700 (PDT)
+Received: by 10.65.133.8 with SMTP id k8mr2071878qbn.7.1218078916289; Wed, 06
+ Aug 2008 20:15:16 -0700 (PDT)
+Received: from sourceware.org (sourceware.org [209.132.176.174]) by
+ mx.google.com with SMTP id 28si7904461qbw.0.2008.08.06.20.15.15; Wed, 06 Aug
+ 2008 20:15:16 -0700 (PDT)
+Received-SPF: neutral (google.com: 209.132.176.174 is neither permitted nor
+ denied by domain of gcc-help-return-33661-xxxx.klub=gmail.com@gcc.gnu.org)
+ client-ip=209.132.176.174;
+Authentication-Results: mx.google.com; spf=neutral (google.com:
+ 209.132.176.174 is neither permitted nor denied by domain of
+ gcc-help-return-33661-xxxx.klub=gmail.com@gcc.gnu.org)
+ smtp.mail=gcc-help-return-33661-xxxx.klub=gmail.com@gcc.gnu.org
+Received: (qmail 13493 invoked by alias); 7 Aug 2008 03:15:13 -0000
+Received: (qmail 13485 invoked by uid 22791); 7 Aug 2008 03:15:12 -0000
+Received: from mailgw1a.lmco.com (HELO mailgw1a.lmco.com) (192.31.106.7)    
+ by sourceware.org (qpsmtpd/0.31) with ESMTP; Thu, 07 Aug 2008 03:14:27 +0000
+Received: from emss07g01.ems.lmco.com (relay5.ems.lmco.com [166.29.2.16])by
+ mailgw1a.lmco.com  (LM-6) with ESMTP id m773EPZH014730for
+ <gcc-help@gcc.gnu.org>; Wed, 6 Aug 2008 21:14:25 -0600 (MDT)
+Received: from CONVERSION2-DAEMON.lmco.com by lmco.com (PMDF V6.3-x14 #31428) 
+ id <0K5700601NO18J@lmco.com> for gcc-help@gcc.gnu.org; Wed, 06 Aug 2008
+ 21:14:25 -0600 (MDT)
+Received: from EMSS04I00.us.lmco.com ([166.17.13.135]) by lmco.com (PMDF
+ V6.3-x14 #31428)  with ESMTP id <0K5700H5MNNWGX@lmco.com> for
+ gcc-help@gcc.gnu.org; Wed, 06 Aug 2008 21:14:20 -0600 (MDT)
+Received: from EMSS35M06.us.lmco.com ([158.187.107.143]) by
+ EMSS04I00.us.lmco.com with Microsoft SMTPSVC(5.0.2195.6713); Wed,  06 Aug
+ 2008 23:14:20 -0400
+Date: Thu, 31 Jul 2008 14:57:25 -0400
+From: "Mickey Mouse" <anon@example.com>
+Subject: gcc include search order
+To: "Donald Duck" <gcc-help@gcc.gnu.org>
+Message-id: <3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Content-transfer-encoding: 7BIT
+Content-class: urn:content-classes:message
+Mailing-List: contact gcc-help-help@gcc.gnu.org; run by ezmlm
+Precedence: klub
+List-Id: <gcc-help.gcc.gnu.org>
+List-Unsubscribe: <mailto:gcc-help-unsubscribe-xxxx.klub=gmail.com@gcc.gnu.org>
+List-Archive: <http://gcc.gnu.org/ml/gcc-help/>
+List-Post: <mailto:gcc-help@gcc.gnu.org>
+List-Help: <mailto:gcc-help-help@gcc.gnu.org>
+Sender: gcc-help-owner@gcc.gnu.org
+Delivered-To: mailing list gcc-help@gcc.gnu.org
+Content-Length: 3024
+
+
+Hi.
+In my unit testing I need to change some header files (target is
+vxWorks, which supports some things that the sun does not). 
+So, what I do is fetch the development tree, and then in a new unit test
+directory I attempt to compile the unit under test. Since this is NOT
+vxworks, I use sed to change some of the .h files and put them in a
+./changed directory.
+
+When I try to compile the file, it is still using the .h file from the
+original location, even though I have listed the include path for
+./changed before the include path for the development tree.
+
+Here is a partial output from gcc using the -v option
+
+GNU CPP version 3.1 (cpplib) (sparc ELF)
+GNU C++ version 3.1 (sparc-sun-solaris2.8)
+        compiled by GNU C version 3.1.
+ignoring nonexistent directory "NONE/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ .
+ changed
+ /export/home4/xxx/yyyy/builds/int_rel5_latest/src/mp/interface
+ /export/home4/xxx/yyyy/builds/int_rel5_latest/src/ap/app
+ /export/home4/xxx/yyyy/builds/int_rel5_latest/src/shared/common
+ /export/home4/xxx/yyyy/builds/int_rel5_latest/src/shared/interface
+ /usr/local/include/g++-v3
+ /usr/local/include/g++-v3/sparc-sun-solaris2.8
+ /usr/local/include/g++-v3/backward
+ /usr/local/include
+ /usr/local/lib/gcc-lib/sparc-sun-solaris2.8/3.1/include
+ /usr/local/sparc-sun-solaris2.8/include
+ /usr/include
+End of search list.
+
+I know the changed file is correct and that the include is not working
+as expected, because when I copy the file from ./changed, back into the
+development tree, the compilation works as expected.
+
+One more bit of information. The source that I cam compiling is in
+/export/home4/xxx/yyyy/builds/int_rel5_latest/src/ap/app
+And it is including files from
+/export/home4/xxx/yyyy/builds/int_rel5_latest/src/shared/common
+These include files should be including the files from ./changed (when
+they exist) but they are ignoring the .h files in the ./changed
+directory and are instead using other, unchanged files in the
+/export/home4/xxx/yyyy/builds/int_rel5_latest/src/shared/common
+directory.
+
+The gcc command line is something like
+
+  TEST_DIR="."
+  
+  CHANGED_DIR_NAME=changed
+  CHANGED_FILES_DIR=${TEST_DIR}/${CHANGED_DIR_NAME}
+
+  CICU_HEADER_FILES="-I ${AP_INTERFACE_FILES} -I ${AP_APP_FILES} -I
+${SHARED_COMMON_FILES} -I ${SHARED_INTERFACE_FILES}"
+  
+  HEADERS="-I ./ -I ${CHANGED_FILES_DIR} ${CICU_HEADER_FILES}"
+  DEFINES="-DSUNRUN -DA10_DEBUG -DJOETEST"
+  
+  CFLAGS="-v -c -g -O1 -pipe -Wformat -Wunused -Wuninitialized -Wshadow
+-Wmissing-prototypes -Wmissing-declarations"
+  
+  printf "Compiling the UUT File\n"
+  gcc -fprofile-arcs -ftest-coverage ${CFLAGS} ${HEADERS} ${DEFINES}
+${AP_APP_FILES}/unitUnderTest.cpp 
+
+
+I hope this explanation is clear. If anyone knows how to fix the command
+line so that it gets the .h files in the "changed" directory are used
+instead of files in the other include directories.
+
+Thanks
+Joe
+
+----------------------------------------------------
+Time Flies like an Arrow. Fruit Flies like a Banana
+ 
+

@@ -66,8 +66,8 @@ test_mu_msg_01 (void)
 	MuMsg *msg;
 	gint i;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "/cur/1220863042.12663_1.mindcrime!2,S",
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/1220863042.12663_1.mindcrime!2,S",
 				    NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -132,8 +132,8 @@ test_mu_msg_02 (void)
 	MuMsg *msg;
 	int i;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "/cur/1220863087.12663_19.mindcrime!2,S",
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/1220863087.12663_19.mindcrime!2,S",
 				    NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -168,8 +168,8 @@ test_mu_msg_03 (void)
 {
 	MuMsg *msg;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "/cur/1283599333.1840_11.cthulhu!2,",
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/1283599333.1840_11.cthulhu!2,",
 				    NULL, NULL);
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "Bilbo Baggins <bilbo@anotherexample.com>");
@@ -196,8 +196,8 @@ test_mu_msg_04 (void)
 {
 	MuMsg *msg;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
-				    "/Foo/cur/mail5", NULL, NULL);
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/mail5", NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
 			 ==, "George Custer <gac@example.com>");
@@ -223,7 +223,7 @@ test_mu_msg_multimime (void)
 	MuMsg *msg;
 
 	msg = mu_msg_new_from_file
-		(MU_TESTMAILDIR "/cur/multimime!2,FS", NULL, NULL);
+		(MU_TESTMAILDIR4 "/multimime!2,FS", NULL, NULL);
 	/* ie., are text parts properly concatenated? */
 	g_assert_cmpstr (mu_msg_get_subject(msg),
 			 ==, "multimime");
@@ -240,8 +240,8 @@ test_mu_msg_umlaut (void)
 {
 	MuMsg *msg;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "/cur/1305664394.2171_402.cthulhu!2,",
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/1305664394.2171_402.cthulhu!2,",
 				    NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -265,8 +265,8 @@ test_mu_msg_references (void)
 	MuMsg *msg;
 	const GSList *refs;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "/cur/1305664394.2171_402.cthulhu!2,",
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/1305664394.2171_402.cthulhu!2,",
 				    NULL, NULL);
 	refs = mu_msg_get_references(msg);
 
@@ -292,8 +292,8 @@ test_mu_msg_references_dups (void)
 	MuMsg *msg;
 	const GSList *refs;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR
-				    "/cur/1252168370_3.14675.cthulhu!2,S",
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/1252168370_3.14675.cthulhu!2,S",
 				    NULL, NULL);
 	refs = mu_msg_get_references(msg);
 
@@ -323,8 +323,7 @@ test_mu_msg_tags (void)
 	MuMsg *msg;
 	const GSList *tags;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
-				    "/bar/cur/mail1",
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4 "/mail1",
 				    NULL, NULL);
 
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -353,8 +352,8 @@ test_mu_msg_comp_unix_programmer (void)
 	MuMsg *msg;
 	char *refs;
 
-	msg = mu_msg_new_from_file (MU_TESTMAILDIR2
-				    "/bar/cur/181736.eml", NULL, NULL);
+	msg = mu_msg_new_from_file (MU_TESTMAILDIR4
+				    "/181736.eml", NULL, NULL);
 	g_assert_cmpstr (mu_msg_get_to(msg),
 	 		 ==, NULL);
 	g_assert_cmpstr (mu_msg_get_subject(msg),

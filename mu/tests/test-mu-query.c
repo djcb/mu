@@ -160,7 +160,7 @@ test_mu_query_01 (void)
 		{ "foo:pepernoot",      0 },
 		{ "funky",              1 },
 		{ "fünkÿ",              1 },
-		{ "",                   17 }
+		{ "",                   18 }
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -214,7 +214,7 @@ test_mu_query_03 (void)
 		{ "subject:\"Re: Learning LISP; Scheme vs elisp.\"", 1},
 		{ "to:help-gnu-emacs@gnu.org", 4},
 		{ "t:help-gnu-emacs", 0},
-		{ "flag:flagged", 1}
+		{ "flag:flagged", 2}
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -244,9 +244,9 @@ test_mu_query_04 (void)
  		{ "baggins", 1},
 		{ "prio:h", 1},
 		{ "prio:high", 1},
-		{ "prio:normal", 9},
+		{ "prio:normal", 10},
 		{ "prio:l", 7},
-		{ "not prio:l", 10},
+		{ "not prio:l", 11},
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -392,14 +392,10 @@ test_mu_query_dates_helsinki (void)
 
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
-		/* { "date:20080804..20080731", 5}, */
-		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
 		{ "date:200808110803..now", 5},
-		{ "date:200808110803..today", 5},
-		/* { "date:now..2008-08-11-08-03", 1}, */
-		/* { "date:today..2008-08-11-08-03", 1}, */
-		{ "date:200808110801..now", 5},
+		{ "date:200808110803..today", 6},
+		{ "date:200808110801..now", 5}
 	};
 
 	old_tz = set_tz ("Europe/Helsinki");
@@ -425,14 +421,10 @@ test_mu_query_dates_sydney (void)
 
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
-		/* { "date:20080804..20080731", 5}, */
-		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
 		{ "date:200808110803..now", 5},
 		{ "date:200808110803..today", 5},
-		/* { "date:now..2008-08-11-08-03", 1}, */
-		/* { "date:today..2008-08-11-08-03", 1}, */
-		{ "date:200808110801..now", 5},
+		{ "date:200808110801..now", 5}
 	};
 
 	old_tz = set_tz ("Australia/Sydney");
@@ -458,13 +450,9 @@ test_mu_query_dates_la (void)
 
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
-		/* { "date:20080804..20080731", 5}, */
-		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
 		{ "date:200808110803..now", 4},
-		{ "date:200808110803..today", 4},
-		/* { "date:now..2008-08-11-08-03", 1}, */
-		/* { "date:today..2008-08-11-08-03", 1}, */
+		{ "date:200808110803..today", 5},
 		{ "date:200808110801..now", 4}, /* does not match in LA */
  	};
 
@@ -491,9 +479,9 @@ test_mu_query_sizes (void)
 	int i;
 
 	QResults queries[] = {
-		{ "size:0b..2m", 17},
+		{ "size:0b..2m", 18},
 		{ "size:2k..4k", 4},
-		{ "size:2m..0b", 17}
+		{ "size:2m..0b", 18}
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);
@@ -572,8 +560,8 @@ test_mu_query_signed_encrypted (void)
 	int i;
 
 	QResults queries[] = {
-		{ "flag:encrypted", 2},
-		{ "flag:signed", 2},
+		{ "flag:encrypted", 3},
+		{ "flag:signed", 3},
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR);

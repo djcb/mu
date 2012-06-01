@@ -260,7 +260,7 @@ test_mu_maildir_walk_01 (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 17);
+	g_assert_cmpuint (data._file_count, ==, 18);
 
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
@@ -298,7 +298,7 @@ test_mu_maildir_walk (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 13);
+	g_assert_cmpuint (data._file_count, ==, 14);
 
 	g_assert_cmpuint (data._dir_entered,==, 4);
 	g_assert_cmpuint (data._dir_left,==, 4);
@@ -330,7 +330,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 17);
+	g_assert_cmpuint (data._file_count, ==, 18);
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
 
@@ -346,7 +346,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 17);
+	g_assert_cmpuint (data._file_count, ==, 18);
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
 
@@ -364,7 +364,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 13);
+	g_assert_cmpuint (data._file_count, ==, 14);
 
 	g_assert_cmpuint (data._dir_entered,==, 4);
 	g_assert_cmpuint (data._dir_left,==, 4);
@@ -378,7 +378,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 17);
+	g_assert_cmpuint (data._file_count, ==, 18);
 
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);

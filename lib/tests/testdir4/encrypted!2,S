@@ -1,0 +1,57 @@
+Return-path: <>
+Envelope-to: peter@example.com
+Delivery-date: Fri, 11 May 2012 16:22:03 +0300
+Received: from localhost.example.com ([127.0.0.1] helo=borealis)
+	by borealis with esmtp (Exim 4.77)
+	id 1SSpnB-00038a-Ux
+	for djcb@localhost; Fri, 11 May 2012 16:21:58 +0300
+Delivered-To: peter@example.com 
+From: Brian <brian@example.com>
+To: Peter <peter@example.com>
+Subject: encrypted
+User-agent: mu4e 0.9.8.5-dev1; emacs 24.1.50.8
+Date: Fri, 11 May 2012 16:21:42 +0300
+Message-ID: <877gwi97kp.fsf@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+hQQOA1T38TPQrHD6EA//YXkUB4Dy09ngCRyHWbXmV3XBjuKTr8xrak5ML1kwurav
+gyagOHKLMU+5CKvObChiKtXhtgU0od7IC8o+ALlHevQ0XXcqNYA2KUfX8R7akq7d
+Xx9mA6D8P7Y/P8juUCLBpfrCi2GC42DtvPZSUu3bL/ctUJ3InPHIfHibKF2HMm7/
+gUHAKY8VPJF39dLP8GLcfki6qFdeWbxgtzmuyzHfCBCLnDL0J9vpEQBpGDFMcc4v
+cCbmMJaiPOmRb6U4WOuRVnuXuTztLiIn0jMslzOSFDcLTVBAsrC01r71O+XZKfN4
+mIfcpcWJYKM2NQW8Jwf+8Hr84uznBqs8uTTlrmppjkAHZGqGMjiQDxLhDVaCQzMy
+O8PSV4xT6HPlKXOwV1OLc+vm0A0RAdSBctgZg40oFn4XdB1ur8edwAkLvc0hJKaz
+gyTQiPaXm2Uh2cDeEx4xNgXmwCKasqc9jAlnDC2QwA33+pw3OqgZT5h1obn0fAeR
+mgB+iW1503DIi/96p8HLZcr2EswLEH9ViHIEaFj/vlR5BaOncsLB0SsNV/MHRvym
+Xg5GUjzPIiyBZ3KaR9OIBiZ5eXw+bSrPAo/CAs0Zwxag7W3CH//oK39Qo1GnkYpc
+4IQxhx4IwkzqtCnripltV/kfpGu0yA/OdK8lOjkUqCwvL97o73utXIxm21Zd3mEP
+/iLNrduZjMCq+goz1pDAQa9Dez6VjwRuRPTqeAac8Fx/nzrVzIoIEAt36hpuaH1l
+KpbmHpKgsUWcrE5iYT0RRlRRtRF4PfJg8PUmP1hvw8TaEmNfT+0HgzcJB/gRsVdy
+gTzkzUDzGZLhRcpmM5eW4BkuUmIO7625pM6Jd3HOGyfCGSXyEZGYYeVKzv8xbzYf
+QM6YYKooRN9Ya2jdcWguW0sCSJO/RZ9eaORpTeOba2+Fp6w5L7lga+XM9GLfgref
+Cf39XX1RsmRBsrJTw0z5COf4bT8G3/IfQP0QyKWIFITiFjGmpZhLsKQ3KT4vSe/d
+gTY1xViVhkjvMFn3cgSOSrvktQpAhsXx0IRazN0T7pTU33a5K0SrZajY9ynFDIw9
+we7XYyVwZzYEXjGih5mTH1PhWYK5fZZEKKqaz5TyYv9SeWJ+8FrHeXUKD38SQEHM
+qkpl9Iv17RF4Qy9uASWwRoobhKO+GykTaBSTyw8R8ctG/hfAlnaZxQ3TwNyHWyvU
+9SVJsp27ulv/W9MLZtGpEMK0ckAR164Vyou1KOn200BqxbC2tJpegNeD2TP5ZtdY
+HIcxkgKr0haYcDnVEf1ulSxv23pZWIexbgvVCG7dRL0eB+6O28f9CWehle10MDyM
+0AYyw8Da2cu7PONMovqt4nayScyGTacFBp7c2KXR9DGZ0mcBwOjL/mGRKcVWN3MG
+2auCrwn2KVWmKZI3Jp0T8KhfGBnFs9lUElpDTOiED1/2bKz6Yoc385QtWx99DFMZ
+IWiH5wMxkWFpzjE+GHiJ09vSbTTL4JY9eu2n5nxQmtjYMBVxQm7S7qwH
+=0Paa
+-----END PGP MESSAGE-----
+--=-=-=--
+

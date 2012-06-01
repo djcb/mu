@@ -1,0 +1,27 @@
+Return-path: <>
+Envelope-to: djcb@localhost
+Delivery-date: Sun, 20 May 2012 09:59:51 +0300
+From: Steve Jobs <jobs@example.com>
+To: Bill Gates <bg@example.com>
+Subject: multimime
+User-agent: mu4e 0.9.8.4; emacs 23.3.1
+Date: Sat, 19 May 2012 20:57:56 +0100
+Message-ID: <m2fwaw2baz.fsf@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-=-="
+
+--=-=-=
+Content-Type: text/plain
+
+abc
+--=-=-=
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="test1.C"
+Content-Transfer-Encoding: base64
+
+aGVyZSBpcyBhIHNpbXBsZSB0ZXN0IGZpbGUuCg==
+--=-=-=
+Content-Type: text/plain
+
+def
+--=-=-=--

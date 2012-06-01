@@ -24,6 +24,7 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"		\
 	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"		\
 	-DMU_TESTMAILDIR3=\"${abs_srcdir}/testdir3\"		\
+	-DMU_TESTMAILDIR4=\"${abs_srcdir}/testdir4\"		\
 	-DABS_CURDIR=\"${abs_builddir}\"			\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
@@ -106,10 +107,11 @@ EXTRA_DIST=						\
 	testdir/cur/1283599333.1840_11.cthulhu!2,	\
 	testdir/cur/1305664394.2171_402.cthulhu!2,	\
 	testdir/cur/1252168370_3.14675.cthulhu!2,S	\
-	testdir/cur/signed!2,S				\
 	testdir/cur/encrypted!2,S			\
-	testdir/cur/signed-encrypted!2,S		\
 	testdir/cur/multimime!2,FS			\
+	testdir/cur/signed!2,S				\
+	testdir/cur/signed-encrypted!2,S		\
+	testdir/cur/special!2,Sabc			\
 	testdir2/bar/cur/mail1				\
 	testdir2/bar/cur/mail2				\
 	testdir2/bar/cur/mail3				\
@@ -144,4 +146,17 @@ EXTRA_DIST=						\
         testdir3/tree/cur/child0.1			\
         testdir3/tree/cur/child0.1.0			\
         testdir3/tree/cur/child4.1			\
-        testdir3/tree/tmp/.noindex
+        testdir3/tree/tmp/.noindex			\
+	testdir4/1220863087.12663_19.mindcrime!2,S	\
+	testdir4/1220863042.12663_1.mindcrime!2,S	\
+	testdir4/1283599333.1840_11.cthulhu!2,		\
+	testdir4/1305664394.2171_402.cthulhu!2,		\
+	testdir4/1252168370_3.14675.cthulhu!2,S		\
+	testdir4/mail1					\
+        testdir4/mail5					\
+        testdir4/181736.eml				\
+	testdir4/encrypted!2,S				\
+	testdir4/multimime!2,FS				\
+	testdir4/signed!2,S				\
+	testdir4/signed-encrypted!2,S			\
+	testdir4/special!2,Sabc
