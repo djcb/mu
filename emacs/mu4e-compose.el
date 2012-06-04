@@ -231,7 +231,9 @@ and the body starts. Note, in `mu4e-compose-mode, we use
 separator is never written to file. Also see
 `mu4e-remove-mail-header-separator'."
   (save-excursion
-    (let ((sepa (propertize mail-header-separator 'intangible t)))
+    (let ((sepa (propertize mail-header-separator
+		  'intangible t 'read-only t
+		  'font-lock-face 'mu4e-system-face)))
       (goto-char (point-min))
       ;; search for the first empty line
       (if (search-forward-regexp "^$" nil t)
