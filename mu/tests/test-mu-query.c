@@ -567,7 +567,8 @@ test_mu_query_signed_encrypted (void)
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 
-	/* g_print ("(%s)\n", xpath); */
+	if (g_test_verbose ())
+		g_print ("%s (%s)\n", __FUNCTION__, xpath);
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
