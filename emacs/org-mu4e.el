@@ -211,7 +211,7 @@ or org-mode (when in the body),"
 	     (search-forward-regexp mail-header-separator nil t))))
     ;; only do stuff when the sepapoint exist; note that after sending the
     ;; message, this function maybe called on a message with the sepapoint
-    ;; stripped.
+    ;; stripped. This is why we don't use `message-point-in-header'.
     (when sepapoint
       (cond
 	;; we're in the body, but in mu4e-compose-mode?
