@@ -25,10 +25,11 @@
   - sorting
   - refactor fill_database function in test cases
 
-  - *FIX* having multiple header views visible
-  - *FIX* add runtime check for imagemagick
-  - *FIX* fix for strings where len (g_utf8_strdown (str)) > len (str)
-
+  - *BUG* having multiple header views visible
+  - *BUG* add runtime check for imagemagick
+  - *BUG* fix for strings where len (g_utf8_strdown (str)) > len (str)
+  - *BUG* don't remove unknown message flags when moving
+  - *BUG* wrong buffer deleted after sending (see '(non mu) buffer is killed')
 
 ** Done
 
@@ -38,9 +39,11 @@
   - enable setting/unsetting 'Flagged' on messages
   - allow narrowing of search results
   - interactive split-view control (Jacek)
-  - *bug*: reply-to does not make it the frontend
   - view images inline
   - *FIX* slow maildirs when there are many
+  - *FIX* ignore unrecognized maildir flag letters
+  - *FIX*: reply-to does not make it to the frontend
+
 
 
 # Local Variables:
