@@ -733,19 +733,22 @@ mu4e logs some of its internal workings to a log-buffer. See
 
 (defun mu4e-display-image (imgpath &optional maxwidth)
   "Display image IMG at point; optionally specify
-MAXWIDTH. Function tries to use imagemagick if available; otherwise
-MAXWIDTH is ignored."
-  (when
-    (let*
-      ((identify (and maxwidth (executable-find mu4e-imagemagick-identify)))
-	(props (and identify (shell-command-to-string
-			       (format "%s -format '%%w' %s"
-				 identify (shell-quote-argument imgpath)))))
-	(width (and props (string-to-number props)))
-	(img
-	      (if (> (or width 0) (or maxwidth 0))
-		(create-image imgpath 'imagemagick nil :width maxwidth)
-		(create-image imgpath 'imagemagick))))
+MAXWIDTH. Function tries to use imagemagick if available (ie.,
+emacs was compiled with inmagemagick support); otherwise MAXWIDTH
+is ignored."
+  (let* ((have-im (boundp 'imagemagick))
+	  (identify (and have-im maxwidth (executable-find mu4e-imagemagick-identify)))
+	  (props (and identify (shell-command-to-string
+				 (format "%s -format '%%w' %s"
+				   identify (shell-quote-argument imgpath)))))
+	  (width (and props (string-to-number props)))
+	  (img (if have-im
+		 (if (> (or width 0) (or maxwidth 0))
+		   (create-image imgpath 'imagemagick nil :width maxwidth)
+		   (create-image imgpath 'imagemagick))
+		 (create-image imgpath))))
+    ;;(message "DISPLAY: %S %S" imgpath img)
+    (when img
       (newline)
       (insert-image img imgpath nil t))))
 
