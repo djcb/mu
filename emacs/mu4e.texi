@@ -1335,6 +1335,7 @@ with other tools.
 * Getting new mail notifications with Sauron::
 * Speedbar support::
 * Citations with mu-cite::
+* Attaching files with dired::
 @end menu
 
 @node Setting the default emacs mail program
@@ -1521,6 +1522,39 @@ following to make it work with @t{mu4e}:
     '("On " date ", " full-name " wrote:\n\n"))
 (setq mu-cite-prefix-format '(" > ")))
 @end lisp
+
+@node Attaching files with dired
+@section Attaching files with @t{dired}
+
+It's possible to attach files to @t{mu4e} messages, using the following steps
+(based on a post on the @t{mu-discuss} mailing list by Stephen Eglen).
+
+To prepare for this, you need a special version of the @code{gnus-dired-mail-buffers}
+function so it understands @t{mu4e} buffers as well; so put in your
+configuration:
+
+@lisp
+(require 'gnus-dired)
+;; make the `gnus-dired-mail-buffers' function also work on message-mode derived
+;; modes, such as mu4e-compose-mode
+(defun gnus-dired-mail-buffers ()
+  "Return a list of active message buffers."
+  (let (buffers)
+    (save-current-buffer
+      (dolist (buffer (buffer-list t))
+	(set-buffer buffer)
+	(when (and (derived-mode-p 'message-mode)
+		(null message-sent-message-via))
+	  (push (buffer-name buffer) buffers))))
+    (nreverse buffers)))
+
+(setq gnus-dired-mail-mode 'mu4e-user-agent)
+(add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+@end lisp
+ 
+Then, mark the file(s) in @t{dired} you would like to attach and press @t{C-c
+RET C-a}, and you'll be asked whether to attach them to an existing message,
+or create a new one.
 
 
 @node Example configuration
