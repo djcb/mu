@@ -231,15 +231,14 @@ and the body starts. Note, in `mu4e-compose-mode, we use
 separator is never written to file. Also see
 `mu4e-remove-mail-header-separator'."
   (save-excursion
-    (goto-char (point-min))
-    ;; search for the first empty line
-    (if (search-forward-regexp (concat "^$"))
-      (replace-match
-	(concat (propertize mail-header-separator 'intangible t)))
-      ;; no empty line? then append one
-      (progn
-	(goto-char (point-max))
-	(insert (concat "\n" mail-header-separator))))))
+    (let ((sepa (propertize mail-header-separator 'intangible t)))
+      (goto-char (point-min))
+      ;; search for the first empty line
+      (if (search-forward-regexp "^$" nil t)
+	(replace-match sepa)
+	(progn 	;; no empty line? then prepend one
+	  (goto-char (point-max))
+	  (insert (concat "\n" sepa)))))))
 
 (defun mu4e~compose-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
@@ -554,14 +553,11 @@ Gnus' `message-mode'."
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
-message."
-  ;; for Forward ('Passed') and Replied messages, try to set the appropriate
-  ;; flag at the message forwarded or replied-to
+message. For Forwarded ('Passed') and Replied messages, try to set
+the appropriate flag at the message forwarded or replied-to."
   (mu4e~compose-set-parent-flag path)
-  (kill-buffer)   ;; remove the draft
   (when (file-exists-p path) ;; maybe the draft was not saved at all
     (mu4e~proc-remove docid)))
-
 
 (defun mu4e~compose-set-parent-flag (path)
   "Set the 'replied' \"R\" flag on messages we replied to, and the
