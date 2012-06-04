@@ -514,11 +514,11 @@ Gnus' `message-mode'."
   (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
   (let ((inhibit-read-only t)
 	 (draft
-	  (if (member compose-type '(reply forward new))
-	    (mu4e~compose-open-new-draft-file compose-type original-msg)
-	    (if (eq compose-type 'edit)
-	      (plist-get original-msg :path)
-	      (error "unsupported compose-type %S" compose-type)))))
+	   (if (member compose-type '(reply forward new))
+	     (mu4e~compose-open-new-draft-file compose-type original-msg)
+	     (if (eq compose-type 'edit)
+	       (plist-get original-msg :path)
+	       (error "unsupported compose-type %S" compose-type)))))
     (find-file draft)
     ;; insert mail-header-separator, which is needed by message mode to separate
     ;; headers and body. will be removed before saving to disk
@@ -535,11 +535,11 @@ Gnus' `message-mode'."
       (dolist (att includes)
 	(mml-attach-file
 	  (plist-get att :file-name) (plist-get att :mime-type))))
-    ;; include the message header if it's set; but not when editing an existing
-    ;; message.
+
+    ;; include the message header (if it's set); but not when editing an
+    ;; existing message.
     (unless (eq compose-type 'edit)
-      (when message-signature
-	(message-insert-signature)))
+      (message-insert-signature))
     
     ;; set compose mode -- so now hooks can run
     (mu4e-compose-mode)
