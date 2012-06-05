@@ -763,7 +763,7 @@ configuration, so it is used for images.
 
 @lisp
 ;; enable inline images
-(setq mu4e-view-show-images-t)
+(setq mu4e-view-show-images t)
 ;; use imagemagick, if available
 (when (fboundp 'imagemagick-register-types)
    (imagemagick-register-types))
@@ -795,7 +795,7 @@ like: @t{A | 1 RET diffstat -b RET}.
 @t{A e 1 RET}.
 @end itemize
 
-These actions all work on @emph{temporary copy} of the attachment.
+These actions all work on a @emph{temporary copy} of the attachment.
 
 For more information on setting up actions and how to define them, see
 @ref{Actions}.
@@ -871,7 +871,6 @@ key          description
 C-c C-c      send message
 C-c C-d      save to drafts and leave
 C-c C-k      kill the message
-C-c C-w      insert signature
 C-c C-a      attach a file (pro-tip: drag & drop works as well)
 @end verbatim
 
@@ -879,6 +878,14 @@ If you want use @t{mu4e} as the default program for sending mail, please see
 @ref{Setting the default emacs mail program}. With respect to sending mail,
 other interesting topics: @ref{Citations with mu-cite} and @ref{Maintaining an
 address-book with org-contacts}.
+
+Normally, @t{mu4e} will @emph{bury} the message buffer after sending; if you
+want to kill the buffer instead, add something like the following to your
+configuration:
+
+@lisp
+(setq message-kill-buffer-on-exit t)
+@end lisp
 
 
 @subsection Queuing mail
