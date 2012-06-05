@@ -749,6 +749,7 @@ variable @code{mu4e-attachment-dir}, for example:
 @end lisp
 
 @subsection Viewing images inline
+@anchor{Viewing images inline}
 
 It is possible to show images inline in the message view buffer if you run
 emacs in GUI-mode. You can enable this by setting the variable
@@ -1833,8 +1834,11 @@ s hello} you will get all matches, while @t{s hello} only gets you
 up-to-a-limited-number matches. Same for the other search based commands,
 @code{mu4e-headers-jump-to-maildir} (default: @key{j}) and
 @code{mu4e-headers-search-bookmark} (default: @key{b}).
-@item @emph{How can I easily include attachments in the messages I write?}
-Drag-and-drop.
+@item @emph{How can I show attached images in my message view buffers?} See
+@ref{Viewing images inline}.
+@item @emph{How can I easily include attachments in the messages I write?} 
+You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
+-- see @ref{Attaching files with dired}.
 @item @emph{@t{mu4e} seems to remove myself from the Cc: list; how can I
 prevent that?}
 Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
