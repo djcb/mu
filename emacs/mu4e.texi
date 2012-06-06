@@ -151,11 +151,11 @@ After these steps, @t{mu4e} should be ready to go.
 @node Installation
 @section Installation
 
-@t{mu4e} is part of @t{mu} - by installing the latter, the former will
-be installed as well.
-
-At the time of writing, there are no distribution packages for @t{mu4e} yet,
-so we are assuming installation from source packages.
+@t{mu4e} is part of @t{mu} - by installing the latter, the former will be
+installed as well. Note, some distributions provide packed versions of
+@t{mu}/@t{mu4e}; if you can use those, there's no need to compile anything
+yourself. Anyway, if there are no packages for your distribution, you can
+follow the steps below.
 
 First, you need make sure you have the necessary dependencies. On a Debian or
 Ubuntu system, you can get these with:
@@ -168,12 +168,25 @@ sudo apt-get install emacs23
 sudo apt-get install guile-2.0-dev html2text xdg-utils
 @end example
 
-Installation follows the normal sequence of:
+Using a release-tarball (as avaiable from
+GoogleCode@footnote{@url{http://code.google.com/p/mu0/downloads/list}},
+Installation follows the normal sequence:
 
 @example
 $ tar xvfz mu-<version>.tar.gz  # use the specific version
 $ cd mu-<version>
 $./configure && make
+$ sudo make install
+@end example
+
+Alternatively, if you build from the git repository, or use a tarball like the
+ones that @t{github} produces, the instructions are slightly different (and
+require you to have the autotools installed):
+
+@example
+# get from git, or from a github tarball
+$ cd mu-<version>
+$ autoreconf -i && ./configure && make
 $ sudo make install
 @end example
 
