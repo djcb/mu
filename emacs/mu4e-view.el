@@ -355,8 +355,8 @@ is nil, and otherwise open it."
       (define-key map "z" 'mu4e-view-kill-buffer-and-window)
 
       (define-key map "s" 'mu4e-headers-search)
-      (define-key map "S" 'mu4e-view-headers-search-edit)
-      (define-key map "/" 'mu4e-view-headers-search-narrow)
+      (define-key map "S" 'mu4e-view-search-edit)
+      (define-key map "/" 'mu4e-view-search-narrow)
 
       (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
       (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
