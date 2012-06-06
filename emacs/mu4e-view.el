@@ -808,7 +808,7 @@ message-at-point if nil)."
     (mu4e~proc-extract 'open (plist-get msg :docid) index)))
 
 
-(defun mu4e~temp-action (docid index what &optional param)
+(defun mu4e~view-temp-action (docid index what &optional param)
   "Open attachment INDEX for message with DOCID, and invoke
 ACTION."
   (interactive)
@@ -827,7 +827,7 @@ user for it."
 		   (mu4e-format "Shell command to open it with: ")
 		   nil 'mu4e~view-open-with-hist)))
 	  (index (plist-get att :index)))
-    (mu4e~temp-action (plist-get msg :docid) index "open-with" cmd)))
+    (mu4e~view-temp-action (plist-get msg :docid) index "open-with" cmd)))
 
 (defvar mu4e~view-pipe-hist nil
   "History list for the pipe argument.")
@@ -843,7 +843,7 @@ PIPECMD is nil, ask user for it."
 		       nil
 		       'mu4e~view-pipe-hist)))
 	  (index (plist-get att :index)))
-    (mu4e~temp-action (plist-get msg :docid) index "pipe" pipecmd)))
+    (mu4e~view-temp-action (plist-get msg :docid) index "pipe" pipecmd)))
 
 
 (defun mu4e-view-open-attachment-emacs (msg attachnum)
@@ -851,7 +851,7 @@ PIPECMD is nil, ask user for it."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
 	  (index (plist-get att :index)))
-    (mu4e~temp-action (plist-get msg :docid) index "emacs")))
+    (mu4e~view-temp-action (plist-get msg :docid) index "emacs")))
 
 
 (defun mu4e-view-attachment-action (&optional msg)
@@ -879,8 +879,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
       (start-process "*mu4e-open-with-proc*" "*mu4e-open-with*" param path))
     ((string= what "pipe")
       ;; 'param' will be the pipe command, path the infile for this
-      (mu4e-process-file-through-pipe path
-	(shell-quote-argument param)))
+      (mu4e-process-file-through-pipe path param))
     ((string= what "emacs")
       (find-file path)
       ;; make the buffer read-only since it usually does not make
