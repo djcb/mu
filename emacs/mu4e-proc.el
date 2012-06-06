@@ -88,7 +88,7 @@ the length (in hex).")
 
 (defun mu4e~proc-is-running ()
   "Whether the mu process is running."
-  (and mu4e~proc-process (eq (process-status mu4e~proc-process) 'run)))
+  (and mu4e~proc-process (process-live-p mu4e~proc-process)))
 
 
 (defun mu4e~proc-eat-sexp-from-buf ()
