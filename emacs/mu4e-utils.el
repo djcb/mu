@@ -736,8 +736,10 @@ mu4e logs some of its internal workings to a log-buffer. See
 MAXWIDTH. Function tries to use imagemagick if available (ie.,
 emacs was compiled with inmagemagick support); otherwise MAXWIDTH
 is ignored."
-  (let* ((have-im (boundp 'imagemagick))
-	  (identify (and have-im maxwidth (executable-find mu4e-imagemagick-identify)))
+  (let* ((have-im (and (fboundp 'imagemagick-types)
+		    (imagemagick-types))) ;; hmm, should check for specific type
+	  (identify (and have-im maxwidth
+		      (executable-find mu4e-imagemagick-identify)))
 	  (props (and identify (shell-command-to-string
 				 (format "%s -format '%%w' %s"
 				   identify (shell-quote-argument imgpath)))))
