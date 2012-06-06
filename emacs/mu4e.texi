@@ -1829,7 +1829,7 @@ select ('mark' in emacs-speak) the messages; the actions you then take (e.g.,
 @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages matching a
 certain regular expression.
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
-address management with @t{BBDB}; instead, we recommend @ref{Maintaining an
+address management with @t{BBDB}; instead, we recommend @xref{Maintaining an
 address-book with org-contacts} for now.
 @item @emph{mu4e only seems to return a subset of all matches - how can I get
 all?}. Yes, for speed reasons (and because, if you are like the author, you
@@ -1855,11 +1855,13 @@ lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
 this error because the underlying Xapian database allows itself to be opened
 in read-write mode only once. There is not much @t{mu4e} can do about this,
 but what you can do is telling @t{mu} to (gracefully) terminate:
+
 @verbatim
    pkill -2 -u $UID mu # send SIGINT
    sleep 1
    mu index
 @end verbatim
+
 @t{mu4e} will automatically restart @t{mu} when it needs it. In practice, this
 seems to work quite well.
 @item @emph{Can I automatically execute the actions on marked messages when
@@ -1870,7 +1872,7 @@ when viewing a message?} Yes -- see the documentation on
 @t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
 between the two states with @key{w} and @key{h}, respectively.
 @item @emph{Is there context-sensitive help available?} Yes - pressing @key{H}
-in most cases should point you to the right spot in this manual.
+should take you to the right place in this manual.
 @item @emph{How can I set @t{mu4e} as the default e-mail client in emacs?}
 See @ref{Setting the default emacs mail program}.
 @item @emph{How can I perform custom actions on messages and attachments?} See
