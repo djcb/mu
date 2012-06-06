@@ -22,6 +22,7 @@
 (define-module (mu contact)
   :use-module (oop goops)
   :use-module (mu message)
+  :use-module (texinfo string-utils)
   :export (
 	    <mu:contact>
 	    mu:name
@@ -104,7 +105,7 @@ matching EXPR."
 (define-method (mu:contact->string (contact <mu:contact>) (form <string>))
   "Convert a contact to a string in format FORM, which is a string,
 either \"org-contact\", \"mutt-alias\", \"mutt-ab\",
-\"wanderlust\" \"plain\"."
+\"wanderlust\", \"quoted\" \"plain\"."
   (let* ((name (mu:name contact)) (email (mu:email contact))
 	  (nick ;; simplistic nick guessing...
 	    (string-map
@@ -126,4 +127,15 @@ either \"org-contact\", \"mutt-alias\", \"mutt-ab\",
       ((string= form "mutt-ab")
 	(format #f "~a\t~a\t"
 	 email (or name "")))
+      ((string= form  "quoted")
+	  (string-append
+	    "\""
+	    (escape-special-chars
+	      (string-append
+		(if name
+		  (format #f "\"~a\" " name)
+		  "")
+		(format #f "<~a>" email))
+	      "\"" #\\)
+	      "\""))
       (else (error "Unsupported format")))))

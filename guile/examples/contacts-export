@@ -41,7 +41,7 @@ exec guile -e main -s $0 $@
 	  (options (getopt-long args optionspec))
 	  (msg (string-append
 		 "usage: contacts-export [--help] [--muhome=<muhome>] "
-		 "--format=<org-contact|mutt-alias|mutt-ab|wanderlust|plain(*)> "
+		 "--format=<org-contact|mutt-alias|mutt-ab|wanderlust|quoted|plain(*)> "
 		 "--sort-by=<frequency(*)|newness> [--revert] [--limit=<n>]\n"))
 	  (help (option-ref options 'help #f))
 	  (muhome (option-ref options 'muhome #f))
@@ -65,6 +65,7 @@ exec guile -e main -s $0 $@
 	 ;; make a list of all contacts
 	 (mu:for-each-contact
 	   (lambda (c) (set! contacts (cons c contacts))))
+
 	 ;; should we sort it?
 	 (if sort-by
 	   (set! contacts (sort! contacts
