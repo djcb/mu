@@ -887,12 +887,10 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 static gboolean
 move_msgid_maybe (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
-	const char *maildir, *msgid, *flagstr;
 	GSList *docids, *cur;
-
-	maildir	= get_string_from_args (args, "maildir", TRUE, err);
-	msgid	= get_string_from_args (args, "msgid", TRUE, err);
-	flagstr	= get_string_from_args (args, "flags", TRUE, err);
+	const char *maildir = get_string_from_args (args, "maildir", TRUE, err);
+	const char *msgid = get_string_from_args (args, "msgid", TRUE, err);
+	const char *flagstr = get_string_from_args (args, "flags", TRUE, err);
 
 	/*  you cannot use 'maildir' for multiple messages at once */
 	if (!msgid || !flagstr || maildir )
@@ -921,7 +919,9 @@ move_msgid_maybe (MuStore *store, MuQuery *query, GSList *args, GError **err)
 			break;
 		}
 
-		do_move (store, docid, msg, NULL, flags, err);
+		if ((do_move (store, docid, msg, NULL, flags, err) != MU_OK))
+			print_and_clear_g_error (err);
+
 		mu_msg_unref (msg);
 	}
 
@@ -958,12 +958,8 @@ cmd_move (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	flagstr = get_string_from_args (args, "flags", TRUE, err);
 
 	docid = determine_docid (query, args, err);
-	if (docid == MU_STORE_INVALID_DOCID) {
-		print_and_clear_g_error (err);
-		return MU_OK;
-	}
-
-	if (!(msg = mu_store_get_msg (store, docid, err))) {
+	if (docid == MU_STORE_INVALID_DOCID ||
+	    !(msg = mu_store_get_msg (store, docid, err))) {
 		print_and_clear_g_error (err);
 		return MU_OK;
 	}
@@ -985,7 +981,8 @@ cmd_move (MuStore *store, MuQuery *query, GSList *args, GError **err)
 		goto leave;
 	}
 
-	do_move (store, docid, msg, maildir, flags, err);
+	if ((do_move (store, docid, msg, maildir, flags, err) != MU_OK))
+		print_and_clear_g_error (err);
 
 leave:
 	mu_msg_unref (msg);
