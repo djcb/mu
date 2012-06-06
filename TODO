@@ -22,6 +22,7 @@
   - sorting
   - refactor fill_database function in test cases
 
+  - *BUG* no error note if target message already exists (when moving)
   - *BUG* having multiple header views visible
   - *BUG* fix for strings where len (g_utf8_strdown (str)) > len (str)
   - *BUG* don't remove unknown message flags when moving
