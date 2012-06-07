@@ -726,6 +726,42 @@ mu4e logs some of its internal workings to a log-buffer. See
     (unless (buffer-live-p buf)
       (error "No debug log available"))
     (switch-to-buffer buf)))
+
+
+
+(defun mu4e-split-ranges-to-numbers (str n)
+  "Convert STR containing attachment numbers into a list of numbers.
+STR is a string; N is the highest possible number in the list.
+This includes expanding e.g. 3-5 into 3,4,5.  If the letter
+\"a\" ('all')) is given, that is expanded to a list with numbers [1..n]."
+  (let ((str-split (split-string str))
+	 beg end list)
+    (dolist (elem str-split list)
+      ;; special number "a" converts into all attachments 1-N.
+      (when (equal elem "a")
+	(setq elem (concat "1-" (int-to-string n))))
+      (if (string-match "\\([0-9]+\\)-\\([0-9]+\\)" elem)
+	;; we have found a range A-B, which needs converting
+	;; into the numbers A, A+1, A+2, ... B.
+	(progn
+	  (setq beg (string-to-int (match-string 1 elem))
+	    end (string-to-int (match-string 2 elem)))
+	  (while (<= beg end)
+	    (add-to-list 'list beg 'append)
+	    (setq beg (1+ beg))))
+	;; else just a number
+	(add-to-list 'list (string-to-int elem) 'append)))
+    ;; Check that all numbers are valid.
+    (mapc
+      '(lambda (x)
+	 (cond
+	   ((> x n)
+	     (error "Attachment %d bigger than maximum (%d)" x n))
+	   ((< x 1)
+	     (error "Attachment number must be greater than 0 (%d)" x))))
+      list)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar mu4e-imagemagick-identify "identify"

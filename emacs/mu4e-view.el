@@ -753,16 +753,23 @@ all messages in the thread at point in the headers view."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
-(defun mu4e~view-get-attach-num (prompt msg)
+(defun mu4e~view-get-attach-num (prompt msg &optional multi)
   "Ask the user with PROMPT for an attachment number for MSG, and
   ensure it is valid. The number is [1..n] for attachments
-  [0..(n-1)] in the message."
-  (let* ((count (hash-table-count mu4e~view-attach-map)))
+  [0..(n-1)] in the message. If MULTI is nil, return the number for
+  the attachment; otherwise (MULTI is non-nil), accept ranges of
+  attachment numbers, as per `mu4e-split-ranges-to-numbers', and
+  return the corresponding string."
+  (let* ((count (hash-table-count mu4e~view-attach-map)) (def))
     (when (zerop count) (error "No attachments for this message"))
-    (if (= count 1)
-      (read-number (mu4e-format "%s: " prompt) 1)
-      (read-number (mu4e-format "%s (1-%d): " prompt count)))))
-
+    (if (not multi)
+      (if (= count 1)
+	(read-number (mu4e-format "%s: " prompt) 1)
+	(read-number (mu4e-format "%s (1-%d): " prompt count)))
+      (progn
+	(setq def (if (= count 1) "1" (format "1-%d" count)))
+	(read-string (mu4e-format "%s (default %s): " prompt def) nil nil def)))))
+ 
 (defun mu4e~view-get-attach (msg attnum)
   "Return the attachment plist in MSG corresponding to attachment
 number ATTNUM."
@@ -773,7 +780,7 @@ number ATTNUM."
       (plist-get msg :parts))))
 
 
-(defun mu4e-view-save-attachment (&optional msg attnum)
+(defun mu4e-view-save-attachment-single (&optional msg attnum)
   "Save attachment number ATTNUM (or ask if nil) from MSG (or
 message-at-point if nil) to disk."
   (interactive)
@@ -795,6 +802,31 @@ message-at-point if nil) to disk."
     (mu4e~proc-extract
       'save (plist-get msg :docid) index path)))
 
+(defun mu4e-view-save-attachment-multi (&optional msg)
+  "Offer to save multiple email attachments from the current message.
+Default is to save all messages, [1..n], where n is the number of
+attachments.  You can type multiple values separated by space, e.g.
+  1 3-6 8
+will save attachments 1,3,4,5,6 and 8.
+
+Furthermore, there is a shortcut \"a\" which so means all
+attachments, but as this is the default, you may not need it."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+	 (attachstr (mu4e~view-get-attach-num
+		      "Attachment number range (or 'a' for 'all')" msg t))
+	 (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
+    (dolist (num attachnums)
+      (mu4e-view-save-attachment-single msg num))))
+
+(defun mu4e-view-save-attachment (&optional multi)
+  "Offer to save attachment(s). If MULTI (prefix-argument) is nil,
+save a single one, otherwise, offer to save a range of
+attachments."
+  (interactive "P")
+  (if multi
+    (mu4e-view-save-attachment-multi)
+    (mu4e-view-save-attachment-single)))
 
 (defun mu4e-view-open-attachment (&optional msg attnum)
   "Open attachment number ATTNUM (or ask if nil) from MSG (or

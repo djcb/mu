@@ -734,6 +734,7 @@ g            go to (visit) numbered URL (using `browse-url')
              (or: <mouse-2> or RET with point on url)
 e            extract (save) attachment (asks for number)
              (or: <mouse-2> or RET with point on attachment)
+             C-u e will extract multiple attachments
 o            open attachment (asks for number)
              (or: <S-mouse-2> or S-RET with point on attachment)
 A            execute some action on an attachment
@@ -760,6 +761,11 @@ variable @code{mu4e-attachment-dir}, for example:
 @lisp
 (setq mu4e-attachment-dir (file-name-expand "~/Downloads"))
 @end lisp
+
+If you want to extract multiple attachments at once, you can do so by
+prefixing the extracting command by @key{C-u}; so @key{C-u e} will ask you for
+a range of attachments to extract (for example, 1 3-6 8). Range @t{a} is a
+shortcut for @emph{all} attachments. 
 
 @subsection Viewing images inline
 @anchor{Viewing images inline}
