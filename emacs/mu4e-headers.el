@@ -301,7 +301,7 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map "s" 'mu4e-headers-search)
-      (define-key map "e" 'mu4e-headers-search-edit)
+      (define-key map "S" 'mu4e-headers-search-edit)
       (define-key map "/" 'mu4e-headers-search-narrow)
 
       (define-key map "j" 'mu4e~headers-jump-to-maildir)

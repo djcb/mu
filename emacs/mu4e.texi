@@ -534,7 +534,7 @@ n,p          go to next, previous message
 y            select the message view (if it's visible)
 
 s            search
-e            edit last query
+S            edit last query
 /            narrow the search
 b            search bookmark
 B            edit bookmark before search
