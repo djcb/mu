@@ -393,9 +393,9 @@ test_mu_query_dates_helsinki (void)
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 5},
+		{ "date:200808110803..now", 6},
 		{ "date:200808110803..today", 6},
-		{ "date:200808110801..now", 5}
+		{ "date:200808110801..now", 6}
 	};
 
 	old_tz = set_tz ("Europe/Helsinki");
@@ -422,9 +422,9 @@ test_mu_query_dates_sydney (void)
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 5},
-		{ "date:200808110803..today", 5},
-		{ "date:200808110801..now", 5}
+		{ "date:200808110803..now", 6},
+		{ "date:200808110803..today", 6},
+		{ "date:200808110801..now", 6}
 	};
 
 	old_tz = set_tz ("Australia/Sydney");
@@ -451,9 +451,9 @@ test_mu_query_dates_la (void)
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 4},
+		{ "date:200808110803..now", 5},
 		{ "date:200808110803..today", 5},
-		{ "date:200808110801..now", 4}, /* does not match in LA */
+		{ "date:200808110801..now", 5}
  	};
 
 	old_tz = set_tz ("America/Los_Angeles");
@@ -659,7 +659,7 @@ main (int argc, char *argv[])
 			 test_mu_query_sizes);
 
 	g_test_add_func ("/mu-query/test-mu-query-dates-helsinki",
-			 test_mu_query_dates_helsinki); /* finland */
+			 test_mu_query_dates_helsinki);
 	g_test_add_func ("/mu-query/test-mu-query-dates-sydney",
 			 test_mu_query_dates_sydney);
 	g_test_add_func ("/mu-query/test-mu-query-dates-la",
