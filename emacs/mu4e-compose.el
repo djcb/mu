@@ -286,37 +286,40 @@ You can append flags."
   "Construct the common headers for each message."
   (mu4e~compose-header "User-agent" (mu4e~compose-user-agent-construct)))
 
+(defconst mu4e~compose-reply-prefix "Re: "
+  "String to prefix replies with.")
 
 (defun mu4e~compose-reply-construct (origmsg)
   "Create a draft message as a reply to original message ORIGMSG."
+  (message "%S %S" (or (plist-get origmsg :subject) "")
+    (string-match message-subject-re-regexp
+      (or (plist-get origmsg :subject) "")))
   (let* ((recipnum
 	   (+ (length (mu4e~compose-create-to-lst origmsg))
 	     (length (mu4e~compose-create-cc-lst origmsg t))))
 	  (reply-all (mu4e~compose-user-wants-reply-all origmsg))
 	  (old-msgid (plist-get origmsg :message-id))
-	  (subject (or (plist-get origmsg :subject) "")))
+	  (subject
+	    (concat mu4e~compose-reply-prefix
+	      (message-strip-subject-re (or (plist-get origmsg :subject) "")))))
+    (message "S:%s" subject)
     (concat
-
       (mu4e~compose-header "From" (or (mu4e~compose-from-construct) ""))
       (mu4e~compose-header "Reply-To" mu4e-reply-to-address)
       (mu4e~compose-header "To" (mu4e~compose-recipients-construct :to origmsg))
       (mu4e~compose-header "Cc" (mu4e~compose-recipients-construct :cc origmsg
 				  reply-all))
+      (mu4e~compose-header "Subject" subject)
       (mu4e~compose-header "References"
 	(mu4e~compose-refererences-construct origmsg))
       (mu4e~compose-common-construct)
-
       (when old-msgid
 	(mu4e~compose-header "In-reply-to" (format "<%s>" old-msgid)))
-
-      (mu4e~compose-header "Subject"
-	(concat
-	  ;; if there's no Re: yet, prepend it
-	  (if (string-match "^Re:" subject) "" "Re:")
-	  subject))
       "\n\n"
       (mu4e~compose-cite-original origmsg))))
 
+(defconst mu4e~compose-forward-prefix "Fwd: "
+  "String to prefix replies with.")
 
 (defun mu4e~compose-forward-construct (origmsg)
   "Create a draft forward message for original message ORIGMSG."
@@ -332,7 +335,9 @@ You can append flags."
       (mu4e~compose-header "Subject"
 	(concat
 	  ;; if there's no Fwd: yet, prepend it
-	  (if (string-match "^Fwd:" subject) "" "Fwd:")
+	  (if (string-match "^Fwd:" subject)
+	    ""
+	    mu4e~compose-forward-prefix)
 	  subject))
       "\n\n"
       (mu4e~compose-cite-original origmsg))))
@@ -540,7 +545,7 @@ Gnus' `message-mode'."
     ;; existing message.
     (unless (eq compose-type 'edit)
       (message-insert-signature))
-    
+
     ;; set compose mode -- so now hooks can run
     (mu4e-compose-mode)
 
