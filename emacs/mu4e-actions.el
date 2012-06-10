@@ -26,7 +26,9 @@
 ;; manual)
 
 ;;; Code:
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
+
 (require 'mu4e-utils)
 (require 'mu4e-meta)
 

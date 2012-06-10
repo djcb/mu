@@ -27,7 +27,10 @@
 
 ;;; Code:
 ;; we use some stuff from gnus..
+
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
+
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
@@ -100,12 +103,13 @@ of mu4e and emacs."
 plist). This function use gnus' `message-cite-function', and as
 such all its settings apply."
   (with-temp-buffer
-    (insert (mu4e-view-message-text msg))
-    (goto-char (point-min))
-    (push-mark (point-max))
-    (funcall message-cite-function)
-    (pop-mark)
-    (buffer-string)))
+    (when (fboundp 'mu4e-view-message-text) ;; keep bytecompiler happy
+      (insert (mu4e-view-message-text msg))
+      (goto-char (point-min))
+      (push-mark (point-max))
+      (funcall message-cite-function)
+      (pop-mark)
+      (buffer-string))))
 
 
 (defun mu4e~compose-header (hdr val)

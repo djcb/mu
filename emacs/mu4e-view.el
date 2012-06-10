@@ -36,8 +36,10 @@
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
 (require 'comint)
-(require 'cl)
 
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
+(require 'cl)
+ 
 ;; the message view
 (defgroup mu4e-view nil
   "Settings for the message view."

@@ -27,11 +27,12 @@
 ;; headers like 'To:' or 'Subject:')
 
 ;; Code:
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
 (require 'hl-line)
-(require 'mu4e-proc)
 (require 'mu4e-utils)    ;; utility functions
+(require 'mu4e-proc)
 (require 'mu4e-vars)
 (require 'mu4e-mark)
 (require 'mu4e-compose)

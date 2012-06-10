@@ -25,7 +25,9 @@
 ;; Utility functions used in the mu4e
 
 ;;; Code:
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
+
 (require 'html2text)
 (require 'mu4e-vars)
 (require 'doc-view)
