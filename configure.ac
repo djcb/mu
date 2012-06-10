@@ -206,6 +206,7 @@ AS_IF([test "x$have_gtk3" = "xyes"],
 # webkit? needed for the fancy web widget
 
 # note; gtk2 and gtk3 imply different webkit versions
+have_webkit=no
 AS_IF([test "x$have_gtk2" = "xyes"],[
   PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
   AS_IF([test "x$have_webkit" = "xyes"],[
@@ -221,9 +222,6 @@ AS_IF([test "x$have_gtk3" = "xyes"],[
   AC_SUBST(WEBKIT_CFLAGS)
   AC_SUBST(WEBKIT_LIBS)
 ])
-
-
-
 AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 
 # gio is needed for some widget/ things
@@ -314,7 +312,7 @@ AC_OUTPUT
 
 echo
 echo "mu configuration is complete."
-echo "-----------------------------"
+echo "------------------------------------------------"
 
 if test -e ~/.mu/xapian-0.6; then
    echo "Note: since version 0.7, the Xapian database is no longer stored as "
@@ -345,13 +343,14 @@ fi
 
 echo
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
-echo "Build 'mug' toy-ui (requires GTK+)   : $buildgui"
+echo "Build 'mug' toy-ui (gtk+)            : $buildgui"
+echo "Build 'mug2' toy-ui (gtk+, webkit)   : $have_webkit"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
 
 echo "Have direntry->d_ino                 : $use_dirent_d_ino"
 echo "Have direntry->d_type                : $use_dirent_d_type"
-echo "-----------------------------"
+echo "------------------------------------------------"
 echo
 
 if test "x$have_makeinfo" != "xyes"; then
