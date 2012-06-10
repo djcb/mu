@@ -96,6 +96,7 @@ print_expr (const char* frm, ...)
 {
 	char *expr;
 	va_list ap;
+	ssize_t rv;
 	size_t exprlen, lenlen;
 	char cookie[16];
 	static int outfd = 0;
@@ -120,9 +121,14 @@ print_expr (const char* frm, ...)
 	/* write the cookie, ie.
 	 *   COOKIE_PRE <len-of-following-sexp-in-hex> COOKIE_POST
 	 */
-	(void)write (outfd, cookie, lenlen + 2);
-	(void)write (outfd, expr, exprlen);
-	(void)write (outfd, "\n", 1);
+	rv = write (outfd, cookie, lenlen + 2);
+	if (rv != -1)
+		rv = write (outfd, expr, exprlen);
+	if (rv != -1)
+		rv = write (outfd, "\n", 1);
+	if (rv == -1)
+		g_warning ("%s: write() failed: %s",
+			   __FUNCTION__, strerror(errno));
 
 	g_free (expr);
 }
@@ -699,6 +705,7 @@ get_find_params (GSList *args, gboolean *threads, MuMsgFieldId *sortfield,
 
 	/* whether to show threads or not */
 	*threads = get_bool_from_args (args, "threads", TRUE, NULL);
+	*reverse = get_bool_from_args (args, "reverse", TRUE, NULL);
 
 	/* field to sort by */
 	sortfieldstr = get_string_from_args (args, "sortfield", TRUE, NULL);
@@ -712,8 +719,6 @@ get_find_params (GSList *args, gboolean *threads, MuMsgFieldId *sortfield,
 		}
 	} else
 		*sortfield = MU_MSG_FIELD_ID_DATE;
-
-	*reverse = get_bool_from_args (args, "reverse", TRUE, NULL);
 
 	return MU_OK;
 }

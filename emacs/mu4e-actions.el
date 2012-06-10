@@ -159,7 +159,8 @@ store your org-contacts."
 	      (list (list key "contacts" 'entry
 		      (list 'file mu4e-org-contacts-file) blurb)))))
     (message "%S" org-capture-templates)
-    (org-capture nil key)))
+    (when (fboundp 'org-capture)
+      (org-capture nil key))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
