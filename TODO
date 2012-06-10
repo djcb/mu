@@ -19,7 +19,6 @@
   - put threading information in the database, and enable getting the complete
     threads when searching
   - mark message, decide what to do with them later
-  - sorting
   - refactor fill_database function in test cases
 
   - *BUG* having multiple header views visible
@@ -43,6 +42,7 @@
   - let message-mode deal with burying/killing compose buffers
   - *FIX* add runtime check for imagemagick
   - *FIX* no error note if target message already exists (when moving)
+  - sorting + show / hide threads
 
 
 

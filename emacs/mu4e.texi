@@ -993,6 +993,9 @@ could become slow when there were many matches. This is no longer the case
 (post @t{mu4e} version 0.9.8.3), but since it is still faster to limit the
 number of matches, the limit remains.
 
+Note that you can influence the sort order and whether threads are shown or
+not; see @ref{Sort order and threading}.
+
 @menu
 * Queries::
 * Bookmarks::
@@ -1945,13 +1948,8 @@ visible in the headers buffer, you can not collapse/open them.
 @item @emph{No support for crypto when reading mail}. Currently, you cannot
 conveniently read encrypted mail or check signatures. For outgoing messages,
 it should work though, using the built-in mechanisms.
-@item @emph{One cannot influence the sorting of messages}. Messages are sorted
-according to their thread, then descending by date. It would be nice if it
-could be sorted in other ways as well.
 @item @emph{@t{mu4e} gets confused when there are multiple windows showing the
 headers.}. Yes -- don't do that.
-@item @emph{Messages in the sent-folder do not include the attachments you
-sent.} Same for the drafts-folder.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @end itemize
