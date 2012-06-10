@@ -1,5 +1,6 @@
 www/mu
 mug
+mu
 mug2
 .desktop
 *html
@@ -45,7 +46,8 @@ GTAGS
 *.elc
 elisp-comp
 elc-stamp
-
+dummy.cc
+msg2pdf
 /contrib/gmime-test
 /emacs/TODO
 test-mu-cmd
@@ -62,11 +64,13 @@ test-mu-store
 test-mu-str
 test-mu-threads
 test-mu-util
-src/mu
-mu4e-version.el
+mu4e-meta.el
 mu4e.pdf
 texinfo.tex
 /emacs/mdate-sh
 /emacs/stamp-vti
 /emacs/version.texi
-/www/mu4e.tex
+*.tex
+*.pdf
+/www/auto/*
+configure.lineno
