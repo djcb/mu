@@ -120,9 +120,9 @@ print_expr (const char* frm, ...)
 	/* write the cookie, ie.
 	 *   COOKIE_PRE <len-of-following-sexp-in-hex> COOKIE_POST
 	 */
-	write (outfd, cookie, lenlen + 2);
-	write (outfd, expr, exprlen);
-	write (outfd, "\n", 1);
+	(void)write (outfd, cookie, lenlen + 2);
+	(void)write (outfd, expr, exprlen);
+	(void)write (outfd, "\n", 1);
 
 	g_free (expr);
 }
