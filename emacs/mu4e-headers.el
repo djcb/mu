@@ -647,7 +647,7 @@ last query, sorting settings."
 	  (optchar (or (nth 1 cell) (substring (nth 0 cell) 0 1))))
     (setq global-mode-string
       (concat
-	(propertize expr 'face 'mu4e-title-face)
+	(propertize mu4e~headers-last-query 'face 'mu4e-title-face)
 	"("
 	optchar
 	(if mu4e-headers-sort-revert "d" "a")

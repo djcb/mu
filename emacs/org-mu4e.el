@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'org)
+(eval-when-compile (require 'org-exp))
 (eval-when-compile (require 'cl))
 (eval-when-compile (require 'mu4e))
 
@@ -192,14 +193,12 @@ rich-text version of the what is assumed to be an org-mode body."
   "Execute keysequence KEYSEQ by (temporarily) switching to compose
 mode."
   (mu4e-compose-mode)
-  (setq org-mu4e-compose-org-mode t)
   (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t)
-  (let ((func (lookup-key (current-local-map) key)))
+  (let ((func (lookup-key (current-local-map) keyseq)))
     (unless (functionp func)
       (error "Invalid key binding"))
     (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe t t)
-    (funcall func))) 
-
+    (funcall func)))
 
 (defun org~mu4e-mime-switch-headers-or-body ()
   "Switch the buffer to either mu4e-compose-mode (when in headers)
@@ -258,7 +257,6 @@ or org-mode (when in the body),"
     (progn ;; otherwise, remove crap
       (remove-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t)
       (org~mu4e-mime-undecorate-headers) ;; shut off org-mode stuff
-      (setq org-mu4e-compose-org-mode nil)
       (mu4e-compose-mode)
       (message "org-mu4e-compose-org-mode disabled"))))
 

@@ -284,7 +284,7 @@ is nil, and otherwise open it."
       (interactive)
       (if is-open
 	(mu4e-view-open-attachment msg attachnum)
-	(mu4e-view-save-attachment msg attachnum)))))
+	(mu4e-view-save-attachment-single msg attachnum)))))
 
 (defun mu4e~view-construct-attachments (msg)
   "Display attachment information; the field looks like something like:
@@ -769,7 +769,7 @@ all messages in the thread at point in the headers view."
       (progn
 	(setq def (if (= count 1) "1" (format "1-%d" count)))
 	(read-string (mu4e-format "%s (default %s): " prompt def) nil nil def)))))
- 
+
 (defun mu4e~view-get-attach (msg attnum)
   "Return the attachment plist in MSG corresponding to attachment
 number ATTNUM."
@@ -815,7 +815,8 @@ attachments, but as this is the default, you may not need it."
   (let* ((msg (or msg (mu4e-message-at-point)))
 	 (attachstr (mu4e~view-get-attach-num
 		      "Attachment number range (or 'a' for 'all')" msg t))
-	 (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
+	  (count (hash-table-count mu4e~view-attach-map))
+	  (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
     (dolist (num attachnums)
       (mu4e-view-save-attachment-single msg num))))
 

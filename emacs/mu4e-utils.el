@@ -620,7 +620,7 @@ FUNC (if non-nil) afterwards."
   (when mu4e-update-timer
     (cancel-timer mu4e-update-timer)
     (setq
-      mu4e-update-timer nil 
+      mu4e-update-timer nil
       mu4e~maildir-list nil))
   (mu4e~proc-kill)
   (kill-buffer))
@@ -742,21 +742,21 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
 	;; we have found a range A-B, which needs converting
 	;; into the numbers A, A+1, A+2, ... B.
 	(progn
-	  (setq beg (string-to-int (match-string 1 elem))
-	    end (string-to-int (match-string 2 elem)))
+	  (setq beg (string-to-number (match-string 1 elem))
+	    end (string-to-number (match-string 2 elem)))
 	  (while (<= beg end)
 	    (add-to-list 'list beg 'append)
 	    (setq beg (1+ beg))))
 	;; else just a number
-	(add-to-list 'list (string-to-int elem) 'append)))
+	(add-to-list 'list (string-to-number elem) 'append)))
     ;; Check that all numbers are valid.
     (mapc
-      '(lambda (x)
-	 (cond
-	   ((> x n)
-	     (error "Attachment %d bigger than maximum (%d)" x n))
-	   ((< x 1)
-	     (error "Attachment number must be greater than 0 (%d)" x))))
+      #'(lambda (x)
+	  (cond
+	    ((> x n)
+	      (error "Attachment %d bigger than maximum (%d)" x n))
+	    ((< x 1)
+	      (error "Attachment number must be greater than 0 (%d)" x))))
       list)))
 
 
