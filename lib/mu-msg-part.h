@@ -23,6 +23,7 @@
 #define __MU_MSG_PART_H__
 
 #include <glib.h>
+#include <unistd.h> /* for ssize_t */
 
 G_BEGIN_DECLS
 
