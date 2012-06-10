@@ -119,8 +119,17 @@ to a shell command.
 
 Using the \fBfind\fR command we can search for messages.
 .nf
--> find query:"<query>" [maxnum:<maxnum>]
+-> find query:"<query>" [threads:true|false] [sortfield:<sortfield>]
+   [reverse:true|false] [maxnum:<maxnum>]
 .fi
+The \fBquery\fR-parameter provides the search query; the
+\fBthreads\fR-parameter determines whether the results will be returned in
+threaded fashion or not; the \fBsortfield\fR-parameter (a string, "to",
+"from", "subject", "date", "size", "prio") sets the search field, the
+\fBreverse\fR-parameter, if true, set the sorting order Z->A and, finally, the
+\fBmaxnum\fR-parameter limits the number of results to return (<= 0
+means 'unlimited').
+
 First, this will return an 'erase'-sexp, to clear the buffer from possible
 results from a previous query.
 .nf

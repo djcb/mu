@@ -288,8 +288,7 @@ mu_msg_field_id_from_name (const char* str, gboolean err)
 	for (i = 0; i != G_N_ELEMENTS(FIELD_DATA); ++i)
 		if (g_strcmp0(str, FIELD_DATA[i]._name) == 0)
 			return FIELD_DATA[i]._id;
-
-if (err)
+	if (err)
 		g_return_val_if_reached (MU_MSG_FIELD_ID_NONE);
 
 	return MU_MSG_FIELD_ID_NONE;

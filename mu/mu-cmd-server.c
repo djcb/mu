@@ -517,23 +517,23 @@ cmd_compose (MuStore *store, MuQuery *query, GSList *args, GError **err)
 
 
 static unsigned
-print_sexps (MuMsgIter *iter, int maxnum)
+print_sexps (MuMsgIter *iter, gboolean threads)
 {
-	unsigned u, max;
-
+	unsigned u;
 	u = 0;
-	max = (maxnum > 0) ? (unsigned)maxnum : G_MAXUINT32;
 
-	while (!mu_msg_iter_is_done (iter) && u < max && !MU_TERMINATE) {
+	while (!mu_msg_iter_is_done (iter) && !MU_TERMINATE) {
 
 		MuMsg *msg;
 		msg = mu_msg_iter_get_msg_floating (iter);
 
 		if (mu_msg_is_readable (msg)) {
 			char *sexp;
+			const MuMsgIterThreadInfo* ti;
+
+			ti = threads ? mu_msg_iter_get_thread_info (iter) : NULL;
 			sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
-					       mu_msg_iter_get_thread_info (iter),
-					       TRUE, FALSE);
+					       ti, TRUE, FALSE);
 			print_expr ("%s", sexp);
 			g_free (sexp);
 			++u;
@@ -686,6 +686,37 @@ cmd_extract (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	return MU_OK;
 }
 
+/* parse the find parameters, and return the values as out params */
+static MuError
+get_find_params (GSList *args, gboolean *threads, MuMsgFieldId *sortfield,
+		 gboolean *reverse, int *maxnum, GError **err)
+{
+	const char *maxnumstr, *sortfieldstr;
+
+	/* maximum number of results */
+	maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
+	*maxnum = maxnumstr ? atoi (maxnumstr) : 0;
+
+	/* whether to show threads or not */
+	*threads = get_bool_from_args (args, "threads", TRUE, NULL);
+
+	/* field to sort by */
+	sortfieldstr = get_string_from_args (args, "sortfield", TRUE, NULL);
+	if (sortfieldstr) {
+		*sortfield = mu_msg_field_id_from_name (sortfieldstr, FALSE);
+		/* note: shortcuts are not allowed here */
+		if (*sortfield == MU_MSG_FIELD_ID_NONE) {
+			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+				     "not a valid sort field: '%s'\n", sortfield);
+			return MU_G_ERROR_CODE(err);
+		}
+	} else
+		*sortfield = MU_MSG_FIELD_ID_DATE;
+
+	*reverse = get_bool_from_args (args, "reverse", TRUE, NULL);
+
+	return MU_OK;
+}
 
 
 /*
@@ -701,21 +732,21 @@ static MuError
 cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
 	MuMsgIter *iter;
-	int maxnum;
 	unsigned foundnum;
-	const char *querystr, *maxnumstr;
+	int maxnum;
+	gboolean threads, reverse;
+	MuMsgFieldId sortfield;
+	const char *querystr;
 
 	GET_STRING_OR_ERROR_RETURN (args, "query", &querystr, err);
-	/* optional */
-	maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
-	maxnum = maxnumstr ? atoi (maxnumstr) : 0;
+	if (get_find_params (args, &threads, &sortfield,
+			     &reverse, &maxnum, err) != MU_OK) {
+		print_and_clear_g_error (err);
+		return MU_OK;
+	}
 
-	/* TODO: ask for *all* results, then, get the <maxnum> newest
-	 * ones; it seems we cannot get a sorted list of a subset of
-	 * the result --> needs investigation, this is a
-	 * work-around */
-	iter = mu_query_run (query, querystr, TRUE,
-			     MU_MSG_FIELD_ID_DATE, TRUE, -1, err);
+	iter = mu_query_run (query, querystr, threads, sortfield, reverse,
+			     maxnum, err);
 	if (!iter) {
 		print_and_clear_g_error (err);
 		return MU_OK;
@@ -723,12 +754,11 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 
 	/* before sending new results, send an 'erase' message, so the
 	 * frontend knows it should erase the headers buffer. this
-	 * will ensure that the output of two finds quickly will not
-	 * be mixed. */
+	 * will ensure that the output of two finds will not be
+	 * mixed. */
 	print_expr ("(:erase t)");
-	foundnum = print_sexps (iter, maxnum);
+	foundnum = print_sexps (iter, threads);
 	print_expr ("(:found %u)", foundnum);
-
 	mu_msg_iter_destroy (iter);
 
 	return MU_OK;

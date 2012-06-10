@@ -30,7 +30,6 @@
 (require 'mu4e-vars)
 (require 'doc-view)
 
-
 (defcustom mu4e-html2text-command nil
   "Shell command that converts HTML from stdin into plain text on
 stdout. If this is not defined, the emacs `html2text' tool will be
@@ -433,7 +432,6 @@ A message plist looks something like:
  :in-reply-to \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\"
  :body-txt \"Hi Tom, ...\"
 \)).
-
 Some  notes on the format:
 - The address fields are lists of pairs (NAME . EMAIL), where NAME can be nil.
 - The date is in format emacs uses in `current-time'
@@ -470,7 +468,7 @@ point in eiter the headers buffer or the view buffer."
   "Get the most recent query or nil if there is none."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
-      mu4e~headers-query-present)))
+      mu4e~headers-last-query)))
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
@@ -789,7 +787,6 @@ is ignored."
     (when img
       (newline)
       (insert-image img imgpath nil t))))
-
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

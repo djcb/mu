@@ -323,7 +323,8 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 		Xapian::Enquire enq (self->db());
 
 		/* note, when our result will be *threaded*, we sort
-		 * there, and don't let Xapian do any sorting */
+		 * in our threading code (mu-threader etc.), and don't
+		 * let Xapian do any sorting */
 		if (!threads && sortfieldid != MU_MSG_FIELD_ID_NONE)
 			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
 					       revert ? true : false);

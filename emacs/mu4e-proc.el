@@ -299,19 +299,26 @@ terminates."
 
 (defun mu4e~proc-remove (docid)
   "Remove message identified by docid.
- The results are reporter through either (:update ... ) or (:error
-) sexp, which are handled my `mu4e-error-func', respectively."
+The results are reporter through either (:update ... ) or (:error)
+sexp, which are handled my `mu4e-error-func', respectively."
   (mu4e~proc-send-command "remove docid:%d" docid))
 
-(defun mu4e~proc-find (query &optional maxnum)
-  "Start a database query for QUERY, (optionally) getting up to
-MAXNUM results. For each result found, a function is called,
-depending on the kind of result. The variables `mu4e-error-func'
-contain the function that will be called for, resp., a
-message (header row) or an error."
+(defun mu4e~proc-find (query threads sortfield revert maxnum)
+  "Start a database query for QUERY. If THREADS is non-nil, show
+results in threaded fasion, SORTFIELD is a symmbol describing the
+field to sort by (or nil); see `mu4e~headers-sortfield-choices'. If
+REVERT is non-nil, sort Z->A instead of A->Z. MAXNUM determines the
+maximum number of results to return, or nil for 'unlimited'. For
+each result found, a function is called, depending on the kind of
+result. The variables `mu4e-error-func' contain the function that
+will be called for, resp., a message (header row) or an error."
   (mu4e~proc-send-command
-    "find query:\"%s\"%s" query
-    (if maxnum (format " maxnum:%d" maxnum) "")))
+    "find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d"
+    query
+    (if threads "true" "false")
+    (format "%S" sortfield)
+    (if revert "true" "false")
+    (if maxnum maxnum -1)))
 
 (defun mu4e~proc-move (docid-or-msgid &optional maildir flags)
   "Move message identified by DOCID-OR-MSGID. At least one of

@@ -542,6 +542,9 @@ j            jump to maildir
 M-left       previous query
 M-right      next query
 
+O            change sort order
+P            toggle threading
+
 a            execute some action on header
 
 d            mark for moving to the trash folder
@@ -595,6 +598,34 @@ behavior can be influenced with the variable
 @code{mu4e-headers-leave-behavior} -- see its documentation.
 
 For more information about marking, @xref{Marking}.
+
+@subsection Sort order and threading
+@anchor{Sort order and threading}
+
+By default, @t{mu4e} sorts messages by date, in descending order: the most
+recent messages are at the top. In addition, the messages are @emph{threaded},
+i.e., shown in the context of a message thread; this also affects the sort
+order.
+
+You can change the sort order with @t{M-x mu4e-headers-change-sorting} or
+@key{O}, and you can toggle threading on/off using @t{M-x
+mu4e-headers-toggle-threading}. For both of these functions, if you provide a
+prefix argument (@key{C-u}), the current search is updated immediately using
+the new parameters.
+
+If you want to change the defaults for these settings, you can use the
+variables @code{mu4e-headers-sortfield} and @code{mu4e-headers-show-threads}.
+
+Note that you can see the current settings in the emacs modeline; it shows the
+current query, followed by the shortcut character for sortfield (the same
+character you'd use in @code{mu4e-headers-change-sorting}. The next character
+is either @t{a} (for ascending, A->Z order), or @t{d} (for descending, Z->A
+order). If threading is enabled, the next character is a @t{T}, and finally,
+if we're doing an unlimited, full search, the last character is an @t{F}.
+
+So, suppose our query is @t{subject:foo maildir:/bar}, we're sorting by
+subject in ascending order with threads enabled, and it's a full search. The
+mode string will then look like: @t{subject:foo maildir:/bar(saTF)}.
 
 @subsection Actions
 
@@ -765,7 +796,7 @@ variable @code{mu4e-attachment-dir}, for example:
 If you want to extract multiple attachments at once, you can do so by
 prefixing the extracting command by @key{C-u}; so @key{C-u e} will ask you for
 a range of attachments to extract (for example, 1 3-6 8). Range @t{a} is a
-shortcut for @emph{all} attachments. 
+shortcut for @emph{all} attachments.
 
 @subsection Viewing images inline
 @anchor{Viewing images inline}
@@ -1411,7 +1442,7 @@ tables, mathematical formulae etc. In addition, it can convert them to
 An @emph{experimental} @t{mu4e} feature lets you edit your messages with
 @t{org-mode}, and (optionally) convert them on the fly (when sending them) to
 messages with an HTML-part containing the rich-text version of your messages.
- 
+
 To enable all this, make sure you have
 @lisp
 (require 'org-mu4e)
@@ -1578,7 +1609,7 @@ configuration:
 (setq gnus-dired-mail-mode 'mu4e-user-agent)
 (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 @end lisp
- 
+
 Then, mark the file(s) in @t{dired} you would like to attach and press @t{C-c
 RET C-a}, and you'll be asked whether to attach them to an existing message,
 or create a new one.
@@ -1862,7 +1893,7 @@ up-to-a-limited-number matches. Same for the other search based commands,
 @code{mu4e-headers-search-bookmark} (default: @key{b}).
 @item @emph{How can I show attached images in my message view buffers?} See
 @ref{Viewing images inline}.
-@item @emph{How can I easily include attachments in the messages I write?} 
+@item @emph{How can I easily include attachments in the messages I write?}
 You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
 -- see @ref{Attaching files with dired}.
 @item @emph{@t{mu4e} seems to remove myself from the Cc: list; how can I
