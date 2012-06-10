@@ -95,8 +95,11 @@ are of the form:
 
 (defvar mu4e-headers-show-threads t
   "Whether to show threads in the headers list.")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defvar mu4e-headers-full-search nil
+  "Whether to show all results (or just up to
+  `mu4e-search-results-limit')")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,10 +124,7 @@ are of the form:
      ("to"	nil to))
   "List of cells describing the various sort-options (in the format
   needed for `mu4e-read-option'.")
-
-(defvar mu4e~headers-full-search nil
-  "Whether the last search was a 'full search'.")
-
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~headers-clear ()
@@ -344,6 +344,7 @@ after the end of the search results."
 
       (define-key map "O" 'mu4e-headers-change-sorting)
       (define-key map "P" 'mu4e-headers-toggle-threading)
+      (define-key map "Q" 'mu4e-headers-toggle-full-search)
 
       (define-key map "q" 'mu4e~headers-kill-buffer-and-window)
       (define-key map "z" 'mu4e~headers-kill-buffer-and-window)
@@ -652,15 +653,13 @@ last query, sorting settings."
 	optchar
 	(if mu4e-headers-sort-revert "d" "a")
 	(when mu4e-headers-show-threads "T")
-	(when mu4e~headers-full-search "F")
+	(when mu4e-headers-full-search "F")
 	")"))))
 
-(defun mu4e~headers-search-execute (expr full-search ignore-history)
+(defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
-buffer for the results. If FULL-SEARCH is non-nil return all
-results, otherwise, limit number of results to
-`mu4e-search-results-limit'. If IGNORE-HISTORY is true, do *not*
-update the query history stack."
+buffer for the results. If IGNORE-HISTORY is true, do *not* update
+the query history stack."
   ;; note: we don't want to update the history if this query comes from
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'.
   (let ((buf (get-buffer-create mu4e~headers-buffer-name))
@@ -674,8 +673,7 @@ update the query history stack."
       (setq
 	mu4e~headers-buffer buf
 	mode-name "mu4e-headers"
-	mu4e~headers-last-query expr
-	mu4e~headers-full-search full-search)
+	mu4e~headers-last-query expr)
       (mu4e~headers-update-global-mode-string))
     (switch-to-buffer buf)
     (mu4e~proc-find
@@ -683,7 +681,7 @@ update the query history stack."
       mu4e-headers-show-threads
       mu4e-headers-sortfield
       mu4e-headers-sort-revert
-      (unless full-search mu4e-search-results-limit))
+      (unless mu4e-headers-full-search mu4e-search-results-limit))
 ;;; when we're starting a new search, we also kill the
 ;;; view window, if any
     (ignore-errors (delete-window mu4e~headers-view-win))))
@@ -872,17 +870,14 @@ to get it from; it's a symbol, either 'future or 'past."
 (defvar mu4e~headers-search-hist nil
   "History list of searches.")
 
-(defun mu4e-headers-search (&optional expr search-all prompt edit
-			     ignore-history)
+(defun mu4e-headers-search (&optional expr prompt edit ignore-history)
   "Search in the mu database for EXPR, and switch to the output
-buffer for the results. If SEARCH-ALL is non-nil return all
-results, otherwise, limit number of results to
-`mu4e-search-results-limit'. This is an interactive function which
-ask user for EXPR, and SEARCH-ALL as prefix-argument. PROMPT, if
-non-nil, is the prompt used by this function (default is \"Search
-for:\"). If EDIT is non-nil, instead of executing the query for
-EXPR, let the user edit the query before executing it. If
-IGNORE-HISTORY is true, do *not* update the query history stack."
+buffer for the results. This is an interactive function which ask
+user for EXPR. PROMPT, if non-nil, is the prompt used by this
+function (default is \"Search for:\"). If EDIT is non-nil, instead
+of executing the query for EXPR, let the user edit the query before
+executing it. If IGNORE-HISTORY is true, do *not* update the query
+history stack."
   ;; note: we don't want to update the history if this query comes from
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'."
   (interactive)
@@ -894,51 +889,42 @@ IGNORE-HISTORY is true, do *not* update the query history stack."
 		(read-string prompt nil 'mu4e~headers-search-hist)))))
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr
-      (or search-all current-prefix-arg)
       ignore-history)))
 
 
-(defun mu4e-headers-search-edit (search-all)
-  "Edit the last search expression. If SEARCH-ALL (prefix-argument)
-is non-nil, retrieve *all* results, otherwise only get up to
-`mu4e-search-results-limit'."
-  (interactive "P")
-  (mu4e-headers-search mu4e~headers-last-query search-all nil t))
+(defun mu4e-headers-search-edit ()
+  "Edit the last search expression."
+  (interactive)
+  (mu4e-headers-search mu4e~headers-last-query nil t))
 
-
-(defun mu4e-headers-search-bookmark (&optional expr search-all edit)
-  "Search using some bookmarked query EXPR. When SEARCH-ALL (prefix
-argument) is non-nil, show *all* results, otherwise, limit to up to
-`mu4e-search-results-limit'. If EDIT is non-nil, let the user edit
-the bookmark before starting the search."
+(defun mu4e-headers-search-bookmark (&optional expr edit)
+  "Search using some bookmarked query EXPR.
+If EDIT is non-nil, let the user edit the bookmark before starting
+the search."
   (interactive)
   (let ((expr
 	  (or expr
 	    (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: ")))))
-    (mu4e-headers-search expr (or search-all current-prefix-arg)
-      (when edit "Edit bookmark: ") edit)))
+    (mu4e-headers-search expr (when edit "Edit bookmark: ") edit)))
 
 (defun mu4e-headers-search-bookmark-edit ()
   "Edit an existing bookmark before executing it."
   (interactive)
-  (mu4e-headers-search-bookmark nil current-prefix-arg t))
+  (mu4e-headers-search-bookmark nil t))
 
 
-(defun mu4e-headers-search-narrow (filter search-all)
+(defun mu4e-headers-search-narrow (filter )
   "Narrow the last search by appending search expression FILTER to
-the last search expression. If SEARCH-ALL (prefix-argument) is
-non-nil, retrieve *all* results, otherwise only get up to
-`mu4e-search-results-limit'."
+the last search expression."
   (interactive
     (let ((filter
   	    (read-string (mu4e-format "Narrow down to: ")
-  	      nil 'mu4e~headers-search-hist nil t))
-  	   (search-all current-prefix-arg))
-        (list filter search-all)))
+  	      nil 'mu4e~headers-search-hist nil t)))
+      (list filter)))
   (unless mu4e~headers-last-query
     (error "There's nothing to filter"))
   (mu4e-headers-search
-    (format "(%s) AND %s" mu4e~headers-last-query filter) search-all))
+    (format "(%s) AND %s" mu4e~headers-last-query filter)))
 
 
 (defun mu4e-headers-change-sorting (&optional rerun)
@@ -963,6 +949,14 @@ rerun the last search with the new setting for threading."
   (setq mu4e-headers-show-threads (not mu4e-headers-show-threads))
   (when rerun
     (mu4e-headers-rerun-search)))
+
+(defun mu4e-headers-toggle-full-search (&optional rerun)
+  "Toggle full-search on/off for the search results. With prefix-argument,
+rerun the last search with the new setting for threading."
+  (interactive "P")
+  (setq mu4e-headers-full-search (not mu4e-headers-full-search))
+  (when rerun  (mu4e-headers-rerun-search)))
+
 
 
 (defun mu4e-headers-view-message ()
@@ -1000,28 +994,26 @@ current window. "
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
   (interactive)
-  (mu4e-headers-search
-    mu4e~headers-last-query
-    mu4e~headers-full-search))
+  (mu4e-headers-search mu4e~headers-last-query))
 
-(defun mu4e~headers-query-navigate (full-search whence)
+(defun mu4e~headers-query-navigate (whence)
   "Execute the previous query from the query stacks. WHENCE
 determines where the query is taken from and is a symbol, either
 `future' or `past'."
   (let ((query (mu4e~headers-pop-query whence))
 	 (where (if (eq whence 'future) 'past 'future)))
     (mu4e~headers-push-query mu4e~headers-last-query where)
-    (mu4e-headers-search query full-search nil nil t)))
+    (mu4e-headers-search query nil nil t)))
 
-(defun mu4e-headers-query-next (full-search)
+(defun mu4e-headers-query-next ()
   "Execute the previous query from the query stacks."
   (interactive "P")
-  (mu4e~headers-query-navigate full-search 'future))
+  (mu4e~headers-query-navigate 'future))
 
-(defun mu4e-headers-query-prev (full-search)
+(defun mu4e-headers-query-prev ()
   "Execute the previous query from the query stacks."
   (interactive "P")
-  (mu4e~headers-query-navigate full-search 'past))
+  (mu4e~headers-query-navigate 'past))
 
 ;; forget the past so we don't repeat it :/
 (defun mu4e-headers-forget-queries ()
@@ -1066,16 +1058,15 @@ N (prefix argument), to the Nth previous header."
   (interactive "P")
   (mu4e~headers-move (- (or n 1))))
 
-(defun mu4e~headers-jump-to-maildir (maildir search-all)
+(defun mu4e~headers-jump-to-maildir (maildir)
   "Show the messages in maildir (user is prompted to ask what
-maildir). With C-u prefix, show /all/ results, otherwise, limit to
-up to `mu4e-search-results-limit'."
+maildir)."
   (interactive
     (let ((maildir (mu4e-ask-maildir "Jump to maildir: ")))
-      (list maildir current-prefix-arg)))
+      (list maildir)))
   (when maildir
     (mu4e-mark-handle-when-leaving)
-    (mu4e-headers-search (concat "\"maildir:" maildir "\"") search-all)))
+    (mu4e-headers-search (concat "\"maildir:" maildir "\""))))
 
 
 (defun mu4e-headers-split-view-resize (n)

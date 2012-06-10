@@ -739,17 +739,17 @@ all messages in the thread at point in the headers view."
   (mu4e~view-in-headers-context
     (mu4e-headers-mark-subthread)))
 
-(defun mu4e-view-search-narrow (search-all)
+(defun mu4e-view-search-narrow ()
   "Run `mu4e-headers-search-narrow' in the headers buffer."
-  (interactive "P")
+  (interactive)
   (mu4e~view-in-headers-context
-    (mu4e-headers-search-narrow nil search-all)))
+    (mu4e-headers-search-narrow nil)))
 
-(defun mu4e-view-search-edit (search-all)
+(defun mu4e-view-search-edit ()
   "Run `mu4e-headers-search-edit' in the headers buffer."
-  (interactive "P")
+  (interactive)
   (mu4e~view-in-headers-context
-    (mu4e-headers-search-edit search-all)))
+    (mu4e-headers-search-edit)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
