@@ -982,19 +982,15 @@ see, are the result of some query. Even if you 'jump to a folder', in fact you
 are executing a search query for messages that happen to have the property of
 being in a certain folder.
 
-Queries normally return only up to @code{mu4e-search-results-limit} (default:
-500) results. You get @emph{all} results when you prefix your search commands
-(such as with @code{mu4e-headers-search}, @code{mu4e-headers-search-bookmark},
-@code{mu4e-headers-search-bookmark-edit-first} and
-@code{mu4e-headers-jump-to-maildir} with @kbd{C-u}.
-
-This limit was introduced in earlier versions of @t{mu4e}, where @t{emacs}
-could become slow when there were many matches. This is no longer the case
-(post @t{mu4e} version 0.9.8.3), but since it is still faster to limit the
-number of matches, the limit remains.
-
-Note that you can influence the sort order and whether threads are shown or
-not; see @ref{Sort order and threading}.
+By default, queries normally return only up to
+@code{mu4e-search-results-limit} (default: 500) results. That's usually more
+than enough, and helps performance quite a bit. Sometimes, you may want to
+show @emph{all} results; you can enable this with @t{M-x
+mu4e-headers-toggle-full-search}, or by customizing the variable
+@code{mu4e-headers-full-search}. This applies to all search commands.
+  
+You can also influence the sort order and whether threads are shown or not;
+see @ref{Sort order and threading}.
 
 @menu
 * Queries::
@@ -1171,8 +1167,8 @@ bound to @key{M-left} and @key{M-right}, just like the way you can navigate to
 previous and next pages in many webbrowsers.
 
 The functions try to be smart as to not record duplicate queries. Also, the
-numbers of queries remembered has a fixed limit, so long-running @t{mu4e}
-won't use too much memory.
+number of queries remembered has a fixed limit, so long-running @t{mu4e} won't
+use too much memory.
 
 If you want to forget previous/next queries, you can use
 @code{mu4e-headers-forget-queries}.
@@ -1887,13 +1883,10 @@ address-book with org-contacts} for now.
 @item @emph{mu4e only seems to return a subset of all matches - how can I get
 all?}. Yes, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
-value of the variable @code{m4ue-search-result-limit} matches. You can
-customize that variable, or simply press the emacs prefix @kbd{C-u} before
-your search command to get all matches. In other words, when you press @t{C-u
-s hello} you will get all matches, while @t{s hello} only gets you
-up-to-a-limited-number matches. Same for the other search based commands,
-@code{mu4e-headers-jump-to-maildir} (default: @key{j}) and
-@code{mu4e-headers-search-bookmark} (default: @key{b}).
+value of the variable @code{m4ue-search-result-limit} matches. To show
+@emph{all} results, use @t{M-x mu4e-headers-toggle-full-search}, or customize
+the variable @code{mu4e-headers-full-search}. This applies to all search
+commands.
 @item @emph{How can I show attached images in my message view buffers?} See
 @ref{Viewing images inline}.
 @item @emph{How can I easily include attachments in the messages I write?}
