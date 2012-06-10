@@ -523,12 +523,12 @@ cmd_compose (MuStore *store, MuQuery *query, GSList *args, GError **err)
 
 
 static unsigned
-print_sexps (MuMsgIter *iter, gboolean threads)
+print_sexps (MuMsgIter *iter, gboolean threads, unsigned maxnum)
 {
 	unsigned u;
 	u = 0;
 
-	while (!mu_msg_iter_is_done (iter) && !MU_TERMINATE) {
+	while (!mu_msg_iter_is_done (iter) && u < maxnum && !MU_TERMINATE) {
 
 		MuMsg *msg;
 		msg = mu_msg_iter_get_msg_floating (iter);
@@ -750,8 +750,11 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 		return MU_OK;
 	}
 
+	/* note: when we're threading, we get *all* messages, and then
+	 * only return maxnum; this is so that we maximimize the
+	 * change of all messages in a thread showing up */
 	iter = mu_query_run (query, querystr, threads, sortfield, reverse,
-			     maxnum, err);
+			     threads ? -1 : maxnum, err);
 	if (!iter) {
 		print_and_clear_g_error (err);
 		return MU_OK;
@@ -762,7 +765,7 @@ cmd_find (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	 * will ensure that the output of two finds will not be
 	 * mixed. */
 	print_expr ("(:erase t)");
-	foundnum = print_sexps (iter, threads);
+	foundnum = print_sexps (iter, threads, maxnum > 0 ? maxnum : G_MAXINT32);
 	print_expr ("(:found %u)", foundnum);
 	mu_msg_iter_destroy (iter);
 
