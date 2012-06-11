@@ -938,6 +938,11 @@ rerun the last search with the new parameters."
     (setq
       mu4e-headers-sortfield sortfield
       mu4e-headers-sort-revert revert) ;; "descending" means "revert"
+    (mu4e-message "Sorting by %s (%s)%s"
+      (symbol-name sortfield)
+      (if revert "descending" "ascending")
+      (if rerun
+	"" " (press 'g' to refresh)"))
     (when rerun
       (mu4e-headers-rerun-search))))
 
@@ -946,6 +951,9 @@ rerun the last search with the new parameters."
 rerun the last search with the new setting for threading."
   (interactive "P")
   (setq mu4e-headers-show-threads (not mu4e-headers-show-threads))
+  (mu4e-message "Threading turned %s%s"
+    (if mu4e-headers-show-threads "on" "off")
+    (if rerun "" " (press 'g' to refresh)"))
   (when rerun
     (mu4e-headers-rerun-search)))
 
@@ -954,7 +962,11 @@ rerun the last search with the new setting for threading."
 rerun the last search with the new setting for threading."
   (interactive "P")
   (setq mu4e-headers-full-search (not mu4e-headers-full-search))
-  (when rerun  (mu4e-headers-rerun-search)))
+  (mu4e-message "Full search turned %s%s"
+    (if mu4e-headers-full-search "on" "off")
+    (if rerun "" " (press 'g' to refresh)")) 
+  (when rerun
+    (mu4e-headers-rerun-search)))
 
 
 (defun mu4e-headers-view-message ()

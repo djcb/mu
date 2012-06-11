@@ -544,6 +544,7 @@ M-right      next query
 
 O            change sort order
 P            toggle threading
+Q            toggle full-search
 
 a            execute some action on header
 
@@ -609,9 +610,10 @@ order.
 
 You can change the sort order with @t{M-x mu4e-headers-change-sorting} or
 @key{O}, and you can toggle threading on/off using @t{M-x
-mu4e-headers-toggle-threading}. For both of these functions, if you provide a
-prefix argument (@key{C-u}), the current search is updated immediately using
-the new parameters.
+mu4e-headers-toggle-threading} or @key{P}. For both of these functions, if you
+provide a prefix argument (@key{C-u}), the current search is updated
+immediately using the new parameters. You can toggle full-search
+(@ref{Searching}) using @t{M-x mu4e-headers-toggle-full-search} or @key{Q}.
 
 If you want to change the defaults for these settings, you can use the
 variables @code{mu4e-headers-sortfield} and @code{mu4e-headers-show-threads}.
