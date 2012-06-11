@@ -73,18 +73,15 @@ view."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-view-in-browser (msg)
-  "Hack to view the html part for MSG in a web browser."
-  (let* ((shellpath (shell-quote-argument (mu4e-msg-field msg :path)))
-	  (partnum
-	    (shell-command-to-string
-	      (format "%s extract %s | grep 'text/html' | awk '{print $1}'"
-		mu4e-mu-binary shellpath))))
-    (unless (> (length partnum) 0)
-      (error "No html part for this message"))
-    (call-process-shell-command
-      (format "cd %s; %s extract %s --parts=%s --overwrite --play"
-	(shell-quote-argument temporary-file-directory)
-	mu4e-mu-binary shellpath (substring partnum 0 -1)))))
+  "View the body of the message in a web browser. You can influence
+the browser to use with the variable `browse-url-generic-program'."
+  (let ((html (mu4e-msg-field msg :body-html))
+	 (tmpfile (format "%s/%d.html" temporary-file-directory (random))))
+    (unless html (error "No html part for this message"))
+       (with-temp-file tmpfile
+	 (insert html)
+	 (save-buffer)
+	 (url-view-url (concat "file:///" tmpfile)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
