@@ -265,12 +265,12 @@ are more than 1 (based on ORIGMSG)."
 	     (length (mu4e~compose-create-cc-lst origmsg t))))
 	  (response
 	    (if (= recipnum 1)
-	      ?a ;; with one recipient, we can reply to 'all'....
+	      'all ;; with one recipient, we can reply to 'all'....
 	      (mu4e-read-option
 		"Reply to "
-		`( (,(format "all %d recipients" recipnum) . 'all)
-		   ("sender only" . 'sender-only))))))
-    (= response 'all)))
+		`( (,(format "all %d recipients" recipnum) . all)
+		   ("sender only" . sender-only))))))
+    (eq response 'all)))
 
 (defun mu4e~compose-message-filename-construct (&optional flagstr)
   "Construct a randomized name for a message file with flags FLAGSTR; it looks

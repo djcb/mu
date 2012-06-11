@@ -938,7 +938,7 @@ rerun the last search with the new parameters."
 	      '(("ascending" . nil) ("descending" . t)))))
     (setq
       mu4e-headers-sortfield sortfield
-      mu4e-headers-sort-revert revert)
+      mu4e-headers-sort-revert revert) ;; "descending" means "revert"
     (when rerun
       (mu4e-headers-rerun-search))))
 
