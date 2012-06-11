@@ -982,11 +982,10 @@ see, are the result of some query. Even if you 'jump to a folder', in fact you
 are executing a search query for messages that happen to have the property of
 being in a certain folder.
 
-By default, queries normally return only up to
-@code{mu4e-search-results-limit} (default: 500) results. That's usually more
-than enough, and helps performance quite a bit. Sometimes, you may want to
-show @emph{all} results; you can enable this with @t{M-x
-mu4e-headers-toggle-full-search}, or by customizing the variable
+By default, queries return up to @code{mu4e-search-results-limit} (default:
+500) results. That's usually more than enough, and helps performance quite a
+bit. Sometimes, you may want to show @emph{all} results; you can enable this
+with @t{M-x mu4e-headers-toggle-full-search}, or by customizing the variable
 @code{mu4e-headers-full-search}. This applies to all search commands.
   
 You can also influence the sort order and whether threads are shown or not;
