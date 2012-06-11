@@ -430,7 +430,7 @@ check_for_field (const char *str, gboolean *is_field, gboolean *is_range_field)
  * function expects search terms (not complete queries)
  * */
 char*
-mu_str_xapian_escape_in_place (char *term, gboolean esc_space)
+mu_str_xapian_escape_in_place_try (char *term, gboolean esc_space, GStringChunk *strchunk)
 {
 	unsigned char *cur;
 	const char escchar = '_';
@@ -474,15 +474,22 @@ mu_str_xapian_escape_in_place (char *term, gboolean esc_space)
 	}
 
 	/* downcase try to remove accents etc. */
-	return mu_str_normalize_in_place (term, TRUE);
+	return mu_str_normalize_in_place_try (term, TRUE, strchunk);
 }
 
 char*
-mu_str_xapian_escape (const char *query, gboolean esc_space)
+mu_str_xapian_escape (const char *query, gboolean esc_space, GStringChunk *strchunk)
 {
+	char *mystr;
+
 	g_return_val_if_fail (query, NULL);
 
-	return mu_str_xapian_escape_in_place (g_strdup(query), esc_space);
+	if (strchunk)
+		mystr = g_string_chunk_insert (strchunk, query);
+	else
+		mystr = g_strdup (query);
+
+	return mu_str_xapian_escape_in_place_try (mystr, esc_space, strchunk);
 }
 
 

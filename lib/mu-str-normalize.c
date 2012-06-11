@@ -30,34 +30,48 @@
 
 
 char*
-mu_str_normalize (const char *str, gboolean downcase)
+mu_str_normalize (const char *str, gboolean downcase, GStringChunk *strchunk)
 {
+	char *mystr;
+
 	g_return_val_if_fail (str, NULL);
 
-	return mu_str_normalize_in_place (g_strdup(str), downcase);
+	if (strchunk)
+		mystr = g_string_chunk_insert (strchunk, str);
+	else
+		mystr = g_strdup (str);
+
+	return mu_str_normalize_in_place_try (mystr, downcase, strchunk);
 }
 
 
 /* this implementation should work for _all_ locales. */
 static char*
-mu_str_normalize_in_place_generic (char *str, gboolean downcase)
+mu_str_normalize_in_place_generic (char *str, gboolean downcase, GStringChunk *strchunk)
 {
+
+	char *norm;
+	size_t len;
+
 	/* FIXME: add accent-folding etc. */
+	if (!downcase)
+		return str; /* nothing to do */
 
-	if (downcase) {
+	len  = strlen (str);
+	norm = g_utf8_strdown (str, len);
 
-		char *norm;
-		size_t len;
 
-		len  = strlen (str);
-		norm = g_utf8_strdown (str, len);
-
-		if (strlen (norm) > len)
-			g_warning ("normalized text doesn't fit :/");
-
-		memcpy (str, norm, len);
+	if (strlen (norm) > len) {
+		/* this case is rare, but does happen */
+		char *copy;
+		if (!strchunk)
+			return norm;
+		copy = g_string_chunk_insert (strchunk, norm);
+		g_free (norm);
+		return copy;
 	}
 
+	memcpy (str, norm, len);
 	return str;
 }
 
@@ -78,7 +92,7 @@ mu_str_normalize_in_place_generic (char *str, gboolean downcase)
  * original 0xc3 0x9f
  */
 char*
-mu_str_normalize_in_place (char *str, gboolean downcase)
+mu_str_normalize_in_place_try (char *str, gboolean downcase, GStringChunk *strchunk)
 {
 	const guchar *cur;
 	int i;
@@ -386,7 +400,7 @@ mu_str_normalize_in_place (char *str, gboolean downcase)
 			/* our fast-path for latin-utf8 does not work -- bummer!
 			 * use something more generic (but a bit slower)
 			 */
-			return mu_str_normalize_in_place_generic (str, downcase);
+			return mu_str_normalize_in_place_generic (str, downcase, strchunk);
 		}
 	}
 

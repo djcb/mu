@@ -294,12 +294,13 @@ mu_query_preprocess (const char *query, GError **err)
 		return NULL;
 
 	for (cur = parts; cur; cur = g_slist_next(cur)) {
+		char *data;
+		data = (gchar*)cur->data;
 		/* remove accents and turn to lower-case */
-		cur->data = mu_str_normalize_in_place ((gchar*)cur->data, TRUE);
 		/* escape '@', single '_' and ':' if it's not following a
 		 * xapian-pfx with '_' */
-		cur->data = mu_str_xapian_escape_in_place
-			((gchar*)cur->data, TRUE /*escape spaces too*/);
+		cur->data = mu_str_xapian_escape (data, TRUE, NULL);
+		g_free (data);
 	}
 
 	myquery = mu_str_from_list (parts, ' ');

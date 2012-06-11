@@ -107,13 +107,15 @@ char* mu_str_summarize (const char* str, size_t max_lines)
  *
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
+ * @param strchunk (optional) if non-NULL, allocate strings on strchunk
  *
- * @return the normalize string, or NULL in case of error or str was NULL
+ * @return the normalized string, or NULL in case of error or str was
+ * NULL. Unless strchunk was provided, user must g_free the string when
+ * no longer needed
  */
-char* mu_str_normalize (const char *str, gboolean downcase)
+char* mu_str_normalize (const char *str, gboolean downcase,
+			GStringChunk *strchunk)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-
 
 /**
  * normalize a string (ie., collapse accented characters etc.), and
@@ -123,12 +125,14 @@ char* mu_str_normalize (const char *str, gboolean downcase)
  *
  * @param str a valid utf8 string or NULL
  * @param downcase if TRUE, convert the string to lowercase
+ * @param strchunk (optional) if non-NULL, allocate strings on strchunk
  *
  * @return the normalized string, or NULL in case of error or str was
- * NULL
+ * NULL. User only needs to free the returned string if a) return
+ * value != str and b) strchunk was not provided.
  */
-char* mu_str_normalize_in_place (char *str, gboolean downcase);
-
+char* mu_str_normalize_in_place_try (char *str, gboolean downcase,
+				     GStringChunk *strchunk);
 
 /**
  * escape the string for use with xapian matching. in practice, if the
@@ -140,10 +144,15 @@ char* mu_str_normalize_in_place (char *str, gboolean downcase);
  *
  * @param query a query string
  * @param esc_space escape space characters as well
+ * @param strchunk (optional) if non-NULL, allocate strings on strchunk
  *
- * @return the escaped string or NULL in case of error
+ * @return the escaped string or NULL in case of error. User only
+ * needs to free the returned string if a) return value != query and b)
+ * strchunk was not provided.
+ *
  */
-char* mu_str_xapian_escape_in_place (char *query, gboolean esc_space);
+char* mu_str_xapian_escape_in_place_try (char *query, gboolean esc_space,
+					 GStringChunk *strchunk);
 
 /**
  * escape the string for use with xapian matching. in practice, if the
@@ -153,11 +162,14 @@ char* mu_str_xapian_escape_in_place (char *query, gboolean esc_space);
  *
  * @param query a query string
  * @param esc_space escape space characters as well
+ * @param strchunk (optional) if non-NULL, allocate strings on strchunk
  *
  * @return the escaped string (free with g_free) or NULL in case of error
+ * Unless strchunk was provided, user must g_free the string when
+ * no longer needed
  */
-char* mu_str_xapian_escape (const char *query, gboolean esc_space)
-        G_GNUC_WARN_UNUSED_RESULT;
+char* mu_str_xapian_escape (const char *query, gboolean esc_space,
+			    GStringChunk *strchunk)  G_GNUC_WARN_UNUSED_RESULT;
 
 
 

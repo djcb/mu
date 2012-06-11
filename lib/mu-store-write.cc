@@ -306,7 +306,7 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 /* for string and string-list */
 static void
 add_terms_values_str (Xapian::Document& doc, char *val,
-		      MuMsgFieldId mfid)
+		      MuMsgFieldId mfid, GStringChunk *strchunk)
 {
 	/* the value is what we display in search results; the
 	 * unchanged original */
@@ -315,7 +315,7 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 
 	/* now, let's create some search terms... */
 	if (mu_msg_field_normalize (mfid))
-		mu_str_normalize_in_place (val, TRUE);
+		val = mu_str_normalize_in_place_try (val, TRUE, strchunk);
 
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
@@ -323,8 +323,8 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 		termgen.index_text_without_positions (val, 1, prefix(mfid));
 	}
 	if (mu_msg_field_xapian_escape (mfid))
-		mu_str_xapian_escape_in_place (val,
-						     TRUE /*esc_space*/);
+		val= mu_str_xapian_escape_in_place_try (val, TRUE /*esc_space*/,
+							strchunk);
 	if (mu_msg_field_xapian_term(mfid))
 		doc.add_term (prefix(mfid) +
 			      std::string(val, 0, _MuStore::MAX_TERM_LENGTH));
@@ -333,31 +333,23 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 
 static void
 add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
-			 MuMsgFieldId mfid)
+			 MuMsgFieldId mfid, GStringChunk *strchunk)
 {
 	const char *orig;
 	char *val;
-	size_t len;
 
 	if (!(orig = mu_msg_get_field_string (msg, mfid)))
 		return; /* nothing to do */
 
-	/* try stack-allocation, it's much faster*/
-	len = strlen (orig);
-	val = (char*)(G_LIKELY(len < 1024)?g_alloca(len+1):g_malloc(len+1));
-	strcpy (val, orig);
-
-	add_terms_values_str (doc, val, mfid);
-
-	if (!(G_LIKELY(len < 1024)))
-		g_free (val);
+	val = g_string_chunk_insert (strchunk, orig);
+	add_terms_values_str (doc, val, mfid, strchunk);
 }
 
 
 
 static void
 add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
-			       MuMsgFieldId mfid)
+			       MuMsgFieldId mfid, GStringChunk *strchunk)
 {
 	const GSList *lst;
 
@@ -373,21 +365,9 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 
 	if (lst && mu_msg_field_xapian_term (mfid)) {
 		while (lst) {
-			size_t len;
 			char *val;
-			/* try stack-allocation, it's much faster*/
-			len = strlen ((char*)lst->data);
-			if (G_LIKELY(len < 1024))
-				val =  (char*)g_alloca(len+1);
-			else
-				val  = (char*)g_malloc(len+1);
-			strcpy (val, (char*)lst->data);
-
-			add_terms_values_str (doc, val, mfid);
-
-			if (!(G_LIKELY(len < 1024)))
-				g_free (val);
-
+			val = g_string_chunk_insert (strchunk, (const gchar*)lst->data);
+			add_terms_values_str (doc, val, mfid, strchunk);
 			lst = g_slist_next ((GSList*)lst);
 		}
 	}
@@ -395,10 +375,11 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 
 
 struct PartData {
-	PartData (Xapian::Document& doc, MuMsgFieldId mfid):
-		_doc (doc), _mfid(mfid) {}
+	PartData (Xapian::Document& doc, MuMsgFieldId mfid, GStringChunk *strchunk):
+		_doc (doc), _mfid(mfid), _strchunk(strchunk) {}
 	Xapian::Document _doc;
 	MuMsgFieldId _mfid;
+	GStringChunk *_strchunk;
 };
 
 static gboolean
@@ -434,14 +415,13 @@ index_text_part (MuMsgPart *part, PartData *pdata)
 
 	termgen.set_document(pdata->_doc);
 
-	norm = mu_str_normalize (txt, TRUE);
+	/* allocated on strchunk, no need to free */
+	norm = mu_str_normalize (txt, TRUE, pdata->_strchunk);
 
 	termgen.index_text_without_positions
 		(norm, 1, prefix(MU_MSG_FIELD_ID_EMBEDDED_TEXT));
 
-	g_free (norm);
 	g_free (txt);
-
 	return TRUE;
 }
 
@@ -470,13 +450,11 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 
 	/* save the name of anything that has a filename */
 	if (part->file_name) {
-		char val[MuStore::MAX_TERM_LENGTH + 1];
-		strncpy (val, part->file_name, sizeof(val));
-
-		/* now, let's create a term... */
-		mu_str_normalize_in_place (val, TRUE);
-		mu_str_xapian_escape_in_place (val, TRUE /*esc space*/);
-
+		char *val;
+		/* now, let's create a term... allocated on strchunk,
+		 * no need to free*/
+		val = mu_str_xapian_escape (part->file_name, TRUE /*esc space*/,
+					    pdata->_strchunk);
 		pdata->_doc.add_term
 			(file + std::string(val, 0, MuStore::MAX_TERM_LENGTH));
 	}
@@ -490,9 +468,9 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 
 static void
 add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
-		       MuMsgFieldId mfid)
+			 MuMsgFieldId mfid, GStringChunk *strchunk)
 {
-	PartData pdata (doc, mfid);
+	PartData pdata (doc, mfid, strchunk);
 	mu_msg_part_foreach (msg, TRUE,
 			     (MuMsgPartForeachFunc)each_part, &pdata);
 }
@@ -500,7 +478,7 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 
 static void
 add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
-		       MuMsgFieldId mfid)
+		       MuMsgFieldId mfid, GStringChunk *strchunk)
 {
 	const char *str;
 	char *norm;
@@ -518,32 +496,32 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
 
-	norm = mu_str_normalize (str, TRUE);
+	/* norm is allocated on strchunk, no need for freeing */
+	norm = mu_str_normalize (str, TRUE, strchunk);
 	termgen.index_text_without_positions (norm, 1, prefix(mfid));
-
-	g_free (norm);
 }
 
 struct _MsgDoc {
 	Xapian::Document	*_doc;
 	MuMsg			*_msg;
 	MuStore                 *_store;
+	GStringChunk            *_strchunk;
 };
 typedef struct _MsgDoc		 MsgDoc;
 
 
 static void
-add_terms_values_default  (MuMsgFieldId mfid, MsgDoc* msgdoc)
+add_terms_values_default  (MuMsgFieldId mfid, MsgDoc *msgdoc)
 {
 	if (mu_msg_field_is_numeric (mfid))
 		add_terms_values_number
 			(*msgdoc->_doc, msgdoc->_msg, mfid);
 	else if (mu_msg_field_is_string (mfid))
 		add_terms_values_string
-			(*msgdoc->_doc, msgdoc->_msg, mfid);
+			(*msgdoc->_doc, msgdoc->_msg, mfid, msgdoc->_strchunk);
 	else if (mu_msg_field_is_string_list(mfid))
 		add_terms_values_string_list
-			(*msgdoc->_doc, msgdoc->_msg, mfid);
+			(*msgdoc->_doc, msgdoc->_msg, mfid, msgdoc->_strchunk);
 	else
 		g_return_if_reached ();
 
@@ -564,13 +542,14 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 		add_terms_values_date (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
 	case MU_MSG_FIELD_ID_BODY_TEXT:
-		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid);
+		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid, msgdoc->_strchunk);
 		break;
 
 	/* note: add_terms_values_attach handles _FILE, _MIME and
 	 * _ATTACH_TEXT msgfields */
 	case MU_MSG_FIELD_ID_FILE:
-		add_terms_values_attach (*msgdoc->_doc, msgdoc->_msg, mfid);
+		add_terms_values_attach (*msgdoc->_doc, msgdoc->_msg, mfid,
+					 msgdoc->_strchunk);
 		break;
 	case MU_MSG_FIELD_ID_MIME:
 	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
@@ -622,20 +601,22 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	if (!mu_str_is_empty(contact->name)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (*msgdoc->_doc);
-		char *norm = mu_str_normalize (contact->name, TRUE);
+		/* note: norm is added to stringchunk, no need for freeing */
+		char *norm = mu_str_normalize (contact->name, TRUE, msgdoc->_strchunk);
 		termgen.index_text_without_positions (norm, 1, pfx);
-		g_free (norm);
 	}
 
 	/* don't normalize e-mail address, but do lowercase it */
 	if (!mu_str_is_empty(contact->address)) {
 
 		char *escaped;
+		/* note: escaped is added to stringchunk, no need for
+		 * freeing */
 		escaped = mu_str_xapian_escape (contact->address,
-						FALSE /*dont esc space*/);
+						FALSE /*dont esc space*/,
+						msgdoc->_strchunk);
 		msgdoc->_doc->add_term
 			(std::string  (pfx + escaped, 0, MuStore::MAX_TERM_LENGTH));
-		g_free (escaped);
 
 		/* store it also in our contacts cache */
 		if (msgdoc->_store->contacts())
@@ -645,17 +626,21 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	}
 }
 
+#define MU_STRING_CHUNK_SIZE 8192
 
 Xapian::Document
 new_doc_from_message (MuStore *store, MuMsg *msg)
 {
 	Xapian::Document doc;
-	MsgDoc docinfo = {&doc, msg, store};
+	MsgDoc docinfo = {&doc, msg, store, 0};
+	docinfo._strchunk = g_string_chunk_new (MU_STRING_CHUNK_SIZE);
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
 	/* also store the contact-info as separate terms */
 	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact_info,
 				&docinfo);
+
+	g_string_chunk_free (docinfo._strchunk);
 
 	return doc;
 }
