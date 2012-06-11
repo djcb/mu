@@ -76,9 +76,6 @@ set_en_us_utf8_locale (void)
 }
 
 
-
-
-
 void
 black_hole (void)
 {

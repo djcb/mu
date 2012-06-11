@@ -122,7 +122,7 @@ test_mu_str_normalize_01 (void)
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *str;
-		str = mu_str_normalize (words[i].word, TRUE);
+		str = mu_str_normalize (words[i].word, TRUE, NULL);
 		g_assert_cmpstr (str, ==, words[i].norm);
 		g_free (str);
 	}
@@ -147,7 +147,7 @@ test_mu_str_normalize_02 (void)
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *str;
-		str = mu_str_normalize (words[i].word, FALSE);
+		str = mu_str_normalize (words[i].word, FALSE, NULL);
 		g_assert_cmpstr (str, ==, words[i].norm);
 		g_free (str);
 	}
@@ -205,7 +205,7 @@ test_mu_str_xapian_escape (void)
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *a = g_strdup (words[i].word);
-		mu_str_xapian_escape_in_place (a, FALSE);
+		mu_str_xapian_escape_in_place_try (a, FALSE, NULL);
 
 		if (g_test_verbose())
 			g_print ("expected: '%s' <=> got: '%s'\n",
@@ -233,7 +233,7 @@ test_mu_str_xapian_escape_non_ascii (void)
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *a = g_strdup (words[i].word);
-		mu_str_xapian_escape_in_place (a, FALSE);
+		mu_str_xapian_escape_in_place_try (a, FALSE, NULL);
 
 		if (g_test_verbose())
 			g_print ("(%s) expected: '%s' <=> got: '%s'\n",
