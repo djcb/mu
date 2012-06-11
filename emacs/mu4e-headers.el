@@ -134,7 +134,7 @@ are of the form:
     (let ((inhibit-read-only t))
       (with-current-buffer mu4e~headers-buffer
 	(erase-buffer)
-	(mu4e~mark-clear)))))
+(mu4e~mark-clear)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
@@ -347,8 +347,8 @@ after the end of the search results."
       (define-key map "P" 'mu4e-headers-toggle-threading)
       (define-key map "Q" 'mu4e-headers-toggle-full-search)
 
-      (define-key map "q" 'mu4e~headers-kill-buffer-and-window)
-      (define-key map "z" 'mu4e~headers-kill-buffer-and-window)
+      (define-key map "q" 'mu4e~headers-quit-buffer)
+      (define-key map "z" 'mu4e~headers-quit-buffer)
 
       (define-key map "r" 'mu4e-headers-rerun-search)
       (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
@@ -415,8 +415,8 @@ after the end of the search results."
       (let ((menumap (make-sparse-keymap "Headers")))
 	(define-key map [menu-bar headers] (cons "Headers" menumap))
 
-	(define-key menumap [mu4e~headers-kill-buffer-and-window]
-	  '("Quit view" . mu4e~headers-kill-buffer-and-window))
+	(define-key menumap [mu4e~headers-quit-buffer]
+	  '("Quit view" . mu4e~headers-quit-buffer))
 	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
@@ -663,6 +663,7 @@ buffer for the results. If IGNORE-HISTORY is true, do *not* update
 the query history stack."
   ;; note: we don't want to update the history if this query comes from
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'.
+  (mu4e-hide-other-mu4e-buffers)
   (let ((buf (get-buffer-create mu4e~headers-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
@@ -682,18 +683,15 @@ the query history stack."
       mu4e-headers-show-threads
       mu4e-headers-sortfield
       mu4e-headers-sort-revert
-      (unless mu4e-headers-full-search mu4e-search-results-limit))
-;;; when we're starting a new search, we also kill the
-;;; view window, if any
-    (ignore-errors (delete-window mu4e~headers-view-win))))
+      (unless mu4e-headers-full-search mu4e-search-results-limit)))) 
 
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value
 of `mu4e-split-view', and return a window for the message view."
+  (mu4e-hide-other-mu4e-buffers)
   (unless (buffer-live-p mu4e~headers-buffer)
     (error "No headers buffer available"))
   (switch-to-buffer mu4e~headers-buffer)
-  (delete-other-windows)
   (setq mu4e~headers-view-win
     (cond
       ((eq mu4e-split-view 'horizontal) ;; split horizontally
@@ -959,7 +957,6 @@ rerun the last search with the new setting for threading."
   (when rerun  (mu4e-headers-rerun-search)))
 
 
-
 (defun mu4e-headers-view-message ()
   "View message at point. If there's an existing window for the
 view, re-use that one. If not, create a new one, depending on the
@@ -981,15 +978,13 @@ current window. "
 		'face 'mu4e-system-face 'intangible t))
       (mu4e~proc-view docid mu4e-view-show-images))))
 
-(defun mu4e~headers-kill-buffer-and-window ()
+(defun mu4e~headers-quit-buffer ()
   "Quit the headers view and return to the main view."
   (interactive)
+  (unless (eq major-mode 'mu4e-headers-mode)
+    (error "Must be in mu4e-headers-mode (%S)" major-mode))
   (mu4e-mark-handle-when-leaving)
-  (let ((buf mu4e~headers-buffer))
-    (when (buffer-live-p buf)
-      (bury-buffer)
-      (delete-windows-on buf) ;; destroy all windows for this buffer
-      (kill-buffer buf)))
+  (mu4e-quit-buffer)
   (mu4e~main-view))
 
 (defun mu4e-headers-rerun-search ()
@@ -1032,12 +1027,18 @@ backward (if LINES is negative). If this succeeds, return the new
 docid. Otherwise, return nil."
   (unless (eq major-mode 'mu4e-headers-mode)
     (error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (let ((succeeded (= 0 (forward-line lines)))
+  (let ((succeeded (zerop (forward-line lines)))
 	 (docid (mu4e~headers-docid-at-point)))
     ;; move point, even if this function is called when this window is not
     ;; visible
     (when docid
-      (set-window-point (get-buffer-window mu4e~headers-buffer) (point))
+      ;; update all windows showing the headers buffer
+      (walk-windows
+	(lambda (win)
+	  (when (eq (window-buffer win) mu4e~headers-buffer)
+	    (set-window-point win (point))))
+	nil t)
+       ;;(set-window-point (get-buffer-window mu4e~headers-buffer t) (point))
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
       ;; update message view if it was already showing

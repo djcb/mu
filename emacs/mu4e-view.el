@@ -350,11 +350,11 @@ is nil, and otherwise open it."
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
 
-      (define-key map "q" 'mu4e-view-kill-buffer-and-window)
+      (define-key map "q" 'mu4e-quit-buffer)
 
       ;; note, 'z' is by-default bound to 'bury-buffer'
       ;; but that's not very useful in this case
-      (define-key map "z" 'mu4e-view-kill-buffer-and-window)
+      (define-key map "z" 'mu4e-quit-buffer)
 
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-view-search-edit)
@@ -449,7 +449,7 @@ is nil, and otherwise open it."
 	(define-key map [menu-bar headers] (cons "View" menumap))
 
 	(define-key menumap [quit-buffer]
-	  '("Quit view" . mu4e-view-kill-buffer-and-window))
+	  '("Quit view" . mu4e-quit-buffer))
 	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
@@ -695,21 +695,7 @@ citations."
   (setq
     mu4e~view-lines-wrapped nil
     mu4e~view-cited-hidden nil))
-
-(defun mu4e-view-kill-buffer-and-window ()
-  "Quit the message view and return to the headers."
-  (interactive)
-  (when (buffer-live-p mu4e~view-buffer)
-    (with-current-buffer mu4e~view-buffer
-      (if (fboundp 'window-parent) ;; window-parent is an emacs24ism
-	(if (window-parent)
-	  (kill-buffer-and-window)
-	  (kill-buffer))
-	;; emacs23 hack: trial and error
-	(condition-case nil
-	  (kill-buffer-and-window)
-	  (kill-buffer))))))
-
+  
 (defun mu4e-view-action (&optional msg)
   "Ask user for some action to apply on MSG (or message-at-point,
 if nil), then do it. The actions are specified in
@@ -995,7 +981,7 @@ user that unmarking only works in the header list."
   (let ((url (gethash num mu4e~view-link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
-
+ 
 (defconst mu4e~view-raw-buffer-name "*mu4e-raw-view*"
   "*internal* Name for the raw message view buffer")
 

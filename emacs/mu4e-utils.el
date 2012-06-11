@@ -625,8 +625,14 @@ FUNC (if non-nil) afterwards."
       mu4e-update-timer nil
       mu4e~maildir-list nil))
   (mu4e~proc-kill)
-  (kill-buffer))
-
+  ;; kill all main/view/headers buffer
+  (mapcar
+    (lambda (buf)
+      (with-current-buffer buf
+	(when (member major-mode '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
+	  (kill-buffer))))
+    (buffer-list)))
+ 
 
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")
@@ -789,6 +795,34 @@ is ignored."
     (when img
       (newline)
       (insert-image img imgpath nil t))))
+
+ 
+(defun mu4e-quit-buffer ()
+  "Bury the current buffer (and delete all windows displaying it)."
+  (interactive)
+  (walk-windows
+    ;; kill any window that:
+    ;; a) displays the current buffer
+    ;; b) is not the only win
+    (lambda (win)
+      (when (eq (window-buffer win) (current-buffer))
+	(unless (one-window-p t)
+	  (delete-window win)))) nil t))
+
+
+(defun mu4e-hide-other-mu4e-buffers ()
+  "Bury mu4e-buffers (main, headers, view) (and delete all windows
+displaying it). Do _not_ bury the current buffer, though."
+  (interactive)
+  (let ((curbuf (current-buffer)))
+    (walk-windows
+      (lambda (win)
+	(with-current-buffer (window-buffer win)
+	  (unless (eq curbuf (current-buffer))
+	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
+	      (unless (one-window-p t)
+		(delete-window win)))))) nil t)))
+ 
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el
