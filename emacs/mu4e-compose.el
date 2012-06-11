@@ -268,9 +268,9 @@ are more than 1 (based on ORIGMSG)."
 	      ?a ;; with one recipient, we can reply to 'all'....
 	      (mu4e-read-option
 		"Reply to "
-		`( (,(format "all %d recipients" recipnum))
-		   ("sender only"))))))
-    (= response ?a)))
+		`( (,(format "all %d recipients" recipnum) . 'all)
+		   ("sender only" . 'sender-only))))))
+    (= response 'all)))
 
 (defun mu4e~compose-message-filename-construct (&optional flagstr)
   "Construct a randomized name for a message file with flags FLAGSTR; it looks

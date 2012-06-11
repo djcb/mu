@@ -77,7 +77,7 @@ vertical split-view."
   :group 'mu4e-headers)
 
 (defvar mu4e-headers-actions
-  '( ("capture message" ?c mu4e-action-capture-message))
+  '( ("capture message" . mu4e-action-capture-message))
   "List of actions to perform on messages in the headers list. The actions
 are of the form:
    (NAME SHORTCUT FUNC) where:
@@ -117,12 +117,12 @@ are of the form:
   "The view window connected to this headers view.")
 
 (defvar mu4e~headers-sortfield-choices
-  '( ("date"	nil date)
-     ("from"	nil from)
-     ("prio"	nil prio)
-     ("size"	?z  size)
-     ("subject"	nil subject)
-     ("to"	nil to))
+  '( ("date"	. date)
+     ("from"	. from)
+     ("prio"	. prio)
+     ("zsize"	. size)
+     ("subject"	. subject)
+     ("to"	. to))
   "List of cells describing the various sort-options (in the format
   needed for `mu4e-read-option'.")
  
@@ -644,9 +644,10 @@ non-nill, don't raise an error when the docid is not found."
 last query, sorting settings."
   (let* ((cell (find-if
 		(lambda (cell)
-		  (eq (nth 2 cell) mu4e-headers-sortfield))
+		  (eq (cdr cell) mu4e-headers-sortfield))
 		mu4e~headers-sortfield-choices))
-	  (optchar (or (nth 1 cell) (substring (nth 0 cell) 0 1))))
+	  (optchar (substring (car cell) 0 1)))
+    (message "==> %S" optchar)
     (setq global-mode-string
       (concat
 	(propertize mu4e~headers-last-query 'face 'mu4e-title-face)
@@ -723,14 +724,14 @@ header."
   "Ask user for a mark; return (MARK . TARGET)."
   (let* ((mark
 	   (mu4e-read-option "Mark to set: "
-	      '( ("move"   nil move)
-		 ("trash"  ?d  trash)
-		 ("elete"  ?D  delete)
-		 ("unread" ?o  unread)
-		 ("read"   nil read)
-		 ("flag"   ?+  flag)
-		 ("unflag" ?-  unflag)
-		 ("unmark" nil unmark))))
+	      '( ("move"	. move)
+		 ("dtrash"	. trash)
+		 ("Delete"	. delete)
+		 ("ounread"	. unread)
+		 ("read"	. read)
+		 ("+flag"	. flag)
+		 ("-unflag"	. unflag)
+		 ("unmark"	. unmark))))
 	  (target
 	    (when (eq mark 'move)
 	      (mu4e-ask-maildir-check-exists "Move message to: "))))
@@ -746,9 +747,9 @@ matching messages with that mark."
   (interactive)
   (let ((markpair (mu4e~headers-get-markpair))
 	 (field (mu4e-read-option "Field to match: "
-		  '(("subject" nil :subject)
-		     ("from"   nil :from)
-		     ("to"     nil :to))))
+		  '( ("subject" . :subject)
+		     ("from"    . :from)
+		     ("to"      . :to))))
 	  (pattern (read-string
 		     (mu4e-format "Regexp:")
 		     nil 'mu4e~headers-regexp-hist)))
@@ -934,7 +935,7 @@ rerun the last search with the new parameters."
 	   (mu4e-read-option "Sortfield: " mu4e~headers-sortfield-choices))
 	  (revert
 	    (mu4e-read-option "Direction: "
-	      '(("ascending" nil nil) ("descending" nil t)))))
+	      '(("ascending" . nil) ("descending" . t)))))
     (setq
       mu4e-headers-sortfield sortfield
       mu4e-headers-sort-revert revert)

@@ -1280,6 +1280,13 @@ You can invoke the actions with @key{a} for actions on messages, and @key{A}
 for actions on attachments. In the following, we'll gives some examples of
 defining actions.
 
+Note, the format of the actions has changed slightly since version 0.9.8.4;
+@t{mu4e} warns you if you use the old format still. The older format was:
+@code{(DESCRIPTION SHORTCUT [VALUE])}, while the new format is a cons-cell,
+@code{(DESCRIPTION . VALUE)}; see below for some examples. If your shortcut is
+not also the first character of the description, simply prefix the description
+with that character.
+
 @subsection Functions for actions
 
 Defining a new custom action means that you need to write an elisp-function to
@@ -1316,24 +1323,27 @@ Suppose we would like to inspect the number of recipients for a message in the
   (message "Number of recipients: %d"
      (+ (length (mu4e-msg-field msg :to)) (length (mu4e-msg-field msg :cc)))))
 
+;; define 'N' (the first letter of the description) as the shortcut
 (add-to-list 'mu4e-headers-actions
-   '("Number of recipients" ?n show-number-of-recipients) t)
+   '("Number of recipients" . show-number-of-recipients) t)
 @end lisp
 
 After activating this, @key{a n} in the headers view will show the number of
-recipients for the message at point.
+recipients for the message at point. 
 
 @subsection Example: adding an action in the message view
 
 As another example, suppose we would like to search for messages by the sender
 of this message.
+
 @lisp
 (defun search-for-sender (msg)
   "Search for messages sent by the sender of the current one."
   (mu4e-headers-search (concat "from:" (cdar (mu4e-msg-field msg :from)))))
 
+;; define 'x' as the shortcut
 (add-to-list 'mu4e-view-actions
-   '("search for sender" ?x search-for-sender) t)
+   '("xsearch for sender" . search-for-sender) t)
 @end lisp
 
 @subsection Example: adding an attachment action
@@ -1342,14 +1352,15 @@ Finally, let's define an action for an attachment. As mentioned,
 attachment-action function take @emph{2} arguments, the message and the
 attachment number to use.
 
-The following will count the number of lines in an attachment.
+The following will count the number of lines in an attachment, and define
+@key{n} as the shortcut key (the 'n' is prefixed to the description).
 
 @lisp
 (defun count-lines-in-attachment (msg attachnum)
   "Count the number of lines in an attachment."
   (mu4e-view-pipe-attachment msg attachnum "wc -l"))
 (add-to-list 'mu4e-view-attachment-actions
-   '("count lines" ?n count-lines-in-attachment) t)
+   '("ncount lines" . count-lines-in-attachment) t)
 @end lisp
 
 @subsection What functions are available?

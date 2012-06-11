@@ -240,8 +240,8 @@ action', return nil means 'don't do anything'"
 	(setq what
 	  (let ((what (mu4e-read-option
 			  "There are existing marks; should we: "
-			  '( ("apply marks"   nil apply)
-			     ("ignore marks?" nil ignore)))))
+			  '( ("apply marks"   . apply)
+			     ("ignore marks?" . ignore)))))
 	    ;; we determined what to do... now do it
 	    (when (eq what 'apply)
 	      (mu4e-mark-execute-all t))))))))

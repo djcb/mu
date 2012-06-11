@@ -69,26 +69,7 @@ dir already existed, or has been created, nil otherwise."
   "Like `message', but prefixed with mu4e."
   (message "%s" (apply 'mu4e-format frm args)))
 
-
-(defun mu4e~read-option-normalize-list (options)
-  "Turn a list OPTIONS into normal-form for `mu4e-read-option'."
-  ;; transform options into 'normal-form', so that in case an option has 'nil
-  ;; for CHAR, it's replaced by the first letter of OPTIONSTRING (and that char
-  ;; is eaten off OPTIONSTR. If RESULT is nil, replace it by CHAR
-  (map 'list
-    (lambda (option)
-      (if (nth 1 option)
-	(list
-	  (nth 0 option)
-	  (nth 1 option)
-	  (or (nth 2 option) (nth 1 option))) ;
-	(list
-	  (substring (nth 0 option) 1)    ;; chop off first char
-	  (string-to-char (nth 0 option)) ;; first char as shortcut
-	  (or (nth 2 option) (nth 1 option)
-	    (string-to-char (nth 0 option))))))
-    options))
-
+ 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
 only."
@@ -105,47 +86,45 @@ describes a multiple-choice question to the user, OPTIONS describe
 the options, and is a list of cells describing particular
 options. Cells have the following structure:
 
-   (OPTIONSTRING CHAR [RESULT])
+   (OPTIONSTRING . RESULT)
 
- where CHAR is a short-cut character for the
-option, and OPTIONSTRING is a non-empty string describing the
-option. If CHAR is nil or not-specified, the first character of the
-optionstring is used.
-
-If RESULT is provide, this will be returned if the user presses the
-corresponding CHAR; otherwise, CHAR is returned.
-
+ where OPTIONSTRING is a non-empty string describing the
+ option. The first character of OPTIONSTRING is used as the
+ shortcut, and obviously all shortcuts must be different, so you
+ can prefix the string with an uniquifying character.
+ 
 The options are provided as a list for the user to choose from;
 user can then choose by typing CHAR.  Example:
   (mu4e-read-option \"Choose an animal: \"
               '((\"Monkey\" ?m) (\"Gnu\" ?g) (\"platipus\")))
 User now will be presented with a list:
-   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."
-  (let* ((options (mu4e~read-option-normalize-list options))
-	  (prompt (mu4e-format "%s" prompt))
+   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."  
+  (let* ((prompt (mu4e-format "%s" prompt))
 	  (chosen)
 	  (optionsstr
 	    (mapconcat
 	      (lambda (option)
-		(let* ((descr (car option))
-		      (kar (and (cdr option) (cadr option))))
-		;; handle the empty kar case
-		(unless kar
-		  (setq ;; eat first kar from descr; use it as kar
-		    kar   (string-to-char descr)
-		    descr (substring descr 1)))
-		(concat
-		  "[" (propertize (make-string 1 kar)
-			'face 'mu4e-highlight-face) "]"
-		  descr))) options ", "))
+		(when (consp (cdr option))
+		  (error (concat "Please use the new format for options/actions; "
+			   "see the manual")))
+		(let* ((kar (substring (car option) 0 1))
+			(val (cdr option)))
+		  (concat
+		    "[" (propertize kar 'face 'mu4e-highlight-face) "]"
+		    (substring (car option) 1))))
+	      options ", "))
 	  (response
 	    (mu4e~read-char-choice
 	      (concat prompt optionsstr
 		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")
-	      (map 'list (lambda(elm) (nth 1 elm)) options))) ;; the allowable chars
+	      ;; the allowable chars
+	      (map 'list (lambda(elm) (string-to-char (car elm))) options))) 
 	  (chosen
-	    (find-if (lambda (option) (eq response (nth 1 option))) options)))
-    (nth 2 chosen)))
+	    (find-if
+	      (lambda (option) (eq response (string-to-char (car option))))
+	      options)))
+    (unless chosen (error "%S not found" response))
+    (cdr chosen)))
 
 
 (defun mu4e~get-maildirs-1 (path &optional mdir)

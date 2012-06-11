@@ -99,8 +99,8 @@ buffer."
   :group 'mu4e-view)
 
 (defvar mu4e-view-actions
-  '( ("capture message" ?c mu4e-action-capture-message)
-     ("view as pdf"     ?p mu4e-action-view-as-pdf))
+  '( ("capture message" . mu4e-action-capture-message)
+     ("view as pdf"     . mu4e-action-view-as-pdf))
   "List of actions to perform on messages in view mode. The actions
 are of the form:
    (NAME SHORTCUT FUNC)
@@ -110,9 +110,9 @@ where:
 * FUNC is a function which receives a message plist as an argument.")
 
 (defvar mu4e-view-attachment-actions
-  '( ("open-with" ?w mu4e-view-open-attachment-with)
-     ("in-emacs"  ?e mu4e-view-open-attachment-emacs)
-     ("pipe"      ?| mu4e-view-pipe-attachment))
+  '( ("wopen-with" . mu4e-view-open-attachment-with)
+     ("ein-emacs"  . mu4e-view-open-attachment-emacs)
+     ("|pipe"      . mu4e-view-pipe-attachment))
   "List of actions to perform on message attachments. The actions
 are of the form:
    (NAME SHORTCUT FUNC)
