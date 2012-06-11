@@ -647,7 +647,6 @@ last query, sorting settings."
 		  (eq (cdr cell) mu4e-headers-sortfield))
 		mu4e~headers-sortfield-choices))
 	  (optchar (substring (car cell) 0 1)))
-    (message "==> %S" optchar)
     (setq global-mode-string
       (concat
 	(propertize mu4e~headers-last-query 'face 'mu4e-title-face)
