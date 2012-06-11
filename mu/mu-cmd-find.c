@@ -850,13 +850,8 @@ execute_find (MuStore *store, MuConfig *opts, GError **err)
 static void
 show_usage (void)
 {
-	const char *usage_str =
-		"usage: mu find [options] <search expression>\n";
-	g_message ("%s", usage_str);
+	g_print ("%s", "usage: mu find [options] <search expression>\n");
 }
-
-
-
 
 
 MuError

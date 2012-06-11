@@ -243,23 +243,25 @@ show_time (unsigned t, unsigned processed, gboolean color)
 
 	if (color) {
 		if (t)
-			g_message ("elapsed: "
+			g_print ("elapsed: "
 				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
 				   " second(s), ~ "
 				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
 				   " msg/s",
 				   t, processed/t);
 		else
-			g_message ("elapsed: "
+			g_print ("elapsed: "
 				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
 				   " second(s)", t);
 	} else {
 		if (t)
-			g_message ("elapsed: %u second(s), ~ %u msg/s",
+			g_print ("elapsed: %u second(s), ~ %u msg/s",
 				   t, processed/t);
 		else
-			g_message ("elapsed: %u second(s)", t);
+			g_print ("elapsed: %u second(s)", t);
 	}
+
+	g_print ("\n");
 }
 
 
@@ -272,8 +274,9 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	time_t t;
 	IndexData idata;
 
-	g_message ("cleaning up messages [%s]",
-		   mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
+	if (!opts->quiet)
+		g_print ("cleaning up messages [%s]\n",
+			 mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
 
 	mu_index_stats_clear (stats);
 
@@ -301,13 +304,13 @@ static void
 index_title (const char* maildir, const char* xapiandir, gboolean color)
 {
 	if (color)
-		g_message ("indexing messages under "
+		g_print ("indexing messages under "
 			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
 			   " ["
 			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
-			   "]", maildir, xapiandir);
+			   "]\n", maildir, xapiandir);
 	else
-		g_message ("indexing messages under %s [%s]",
+		g_print ("indexing messages under %s [%s]\n",
 			   maildir, xapiandir);
 }
 
@@ -322,8 +325,9 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 
 	t = time (NULL);
 
-	index_title (opts->maildir, mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-		     !opts->nocolor);
+	if (!opts->quiet)
+		index_title (opts->maildir, mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			     !opts->nocolor);
 
 	idata.color = !opts->nocolor;
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
@@ -395,9 +399,6 @@ mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 	if (!midx)
 		return MU_G_ERROR_CODE(err);
 
-	/* note, 'opts->quiet' already cause g_message output not to
-	 * be shown; here, we make sure we only print progress info if
-	 * opts->quiet is false case and when stdout is a tty */
 	show_progress = !opts->quiet && isatty(fileno(stdout));
 
 	mu_index_stats_clear (&stats);

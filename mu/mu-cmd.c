@@ -322,7 +322,7 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_message ("usage: mu add <file> [<files>]");
+		g_print ("usage: mu add <file> [<files>]\n");
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			     "missing source and/or target");
 		return MU_ERROR_IN_PARAMETERS;
@@ -394,11 +394,11 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 static void
 show_usage (void)
 {
-	g_message ("usage: mu command [options] [parameters]");
-	g_message ("where command is one of index, find, cfind, view, mkdir, "
-		   "extract, add, remove or server");
-	g_message ("see the mu, mu-<command> or mu-easy manpages for "
-		   "more information");
+	g_print ("usage: mu command [options] [parameters]\n");
+	g_print ("where command is one of index, find, cfind, view, mkdir, "
+		   "extract, add, remove or server\n");
+	g_print ("see the mu, mu-<command> or mu-easy manpages for "
+		   "more information\n");
 }
 
 static void
