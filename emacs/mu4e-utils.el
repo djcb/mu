@@ -69,7 +69,7 @@ dir already existed, or has been created, nil otherwise."
   "Like `message', but prefixed with mu4e."
   (message "%s" (apply 'mu4e-format frm args)))
 
- 
+
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
 only."
@@ -92,13 +92,13 @@ options. Cells have the following structure:
  option. The first character of OPTIONSTRING is used as the
  shortcut, and obviously all shortcuts must be different, so you
  can prefix the string with an uniquifying character.
- 
+
 The options are provided as a list for the user to choose from;
 user can then choose by typing CHAR.  Example:
   (mu4e-read-option \"Choose an animal: \"
               '((\"Monkey\" ?m) (\"Gnu\" ?g) (\"platipus\")))
 User now will be presented with a list:
-   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."  
+   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."
   (let* ((prompt (mu4e-format "%s" prompt))
 	  (chosen)
 	  (optionsstr
@@ -118,7 +118,7 @@ User now will be presented with a list:
 	      (concat prompt optionsstr
 		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")
 	      ;; the allowable chars
-	      (map 'list (lambda(elm) (string-to-char (car elm))) options))) 
+	      (map 'list (lambda(elm) (string-to-char (car elm))) options)))
 	  (chosen
 	    (find-if
 	      (lambda (option) (eq response (string-to-char (car option))))
@@ -611,7 +611,7 @@ FUNC (if non-nil) afterwards."
 	(when (member major-mode '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
 	  (kill-buffer))))
     (buffer-list)))
- 
+
 
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")
@@ -775,18 +775,22 @@ is ignored."
       (newline)
       (insert-image img imgpath nil t))))
 
- 
+
 (defun mu4e-quit-buffer ()
   "Bury the current buffer (and delete all windows displaying it)."
   (interactive)
-  (walk-windows
-    ;; kill any window that:
-    ;; a) displays the current buffer
-    ;; b) is not the only win
-    (lambda (win)
-      (when (eq (window-buffer win) (current-buffer))
-	(unless (one-window-p t)
-	  (delete-window win)))) nil t))
+  (let ((buf (current-buffer)))
+    (walk-windows
+      ;; kill any window that:
+      ;; a) displays the current buffer
+      ;; b) is not the only win
+      (lambda (win)
+	(when (eq (window-buffer win) (current-buffer))
+	  (unless (one-window-p t)
+	    (delete-window win)))) nil t)
+    ;; if current buffer is still here, bury it
+    (when (eq buf (current-buffer))
+      (bury-buffer))))
 
 
 (defun mu4e-hide-other-mu4e-buffers ()
@@ -801,7 +805,7 @@ displaying it). Do _not_ bury the current buffer, though."
 	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
 	      (unless (one-window-p t)
 		(delete-window win)))))) nil t)))
- 
+
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el
