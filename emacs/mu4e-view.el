@@ -39,7 +39,7 @@
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
- 
+
 ;; the message view
 (defgroup mu4e-view nil
   "Settings for the message view."
@@ -642,13 +642,17 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 
 
 (defmacro mu4e~view-in-headers-context (&rest body)
-  "Evaluate BODY in the current headers buffer."
+  "Evaluate BODY in the current headers buffer, with moved to the
+current message."
   `(progn
      (unless '(buffer-live-p mu4e~view-headers-buffer)
        (error "no headers buffer available."))
-     (with-current-buffer mu4e~view-headers-buffer
-       ,@body)))
-
+     (let* ((docid (mu4e-field-at-point :docid)))
+       (with-current-buffer mu4e~view-headers-buffer
+	 (if (and docid (mu4e~headers-goto-docid docid))
+	   ,@body
+	   (error "Cannot find corresponding message in headers
+	     buffer."))))))
 
 (defun mu4e-view-headers-next(&optional n)
   "Move point to the next message header in the headers buffer
@@ -695,7 +699,7 @@ citations."
   (setq
     mu4e~view-lines-wrapped nil
     mu4e~view-cited-hidden nil))
-  
+
 (defun mu4e-view-action (&optional msg)
   "Ask user for some action to apply on MSG (or message-at-point,
 if nil), then do it. The actions are specified in
@@ -981,7 +985,7 @@ user that unmarking only works in the header list."
   (let ((url (gethash num mu4e~view-link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
- 
+
 (defconst mu4e~view-raw-buffer-name "*mu4e-raw-view*"
   "*internal* Name for the raw message view buffer")
 
