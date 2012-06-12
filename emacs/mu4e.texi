@@ -34,7 +34,7 @@ Documentation License.''
 
 Welcome to @t{mu4e}!
 
-@t{mu4e} (mu-for-emacs) is an e-mail client for GNU-Emacs version 23 and
+@t{mu4e} (mu-for-emacs) is an e-mail client for GNU-Emacs, version 23 and
 later, built on top of the @t{mu} e-mail search engine. @t{mu4e} is optimized
 for fast handling of large amounts of e-mail.
 
@@ -42,23 +42,23 @@ This manual goes through the installation of @t{mu4e}, discusses the basic
 configuration, and explains its daily use. It also shows how you can customize
 @t{mu4e} for your needs.
 
-At the end of the manual, there are a number of example configurations, which
-should help you to get up to speed quickly.
+At the end of the manual, there are some example configurations, which should
+help you to get up to speed quickly.
 
 This manual has been updated for @t{mu}/@t{mu4e} version
 @emph{@value{mu4e-version}}.
 
 @menu
-* Introduction::
-* Getting started::
-* Running mu4e::
-* Searching::
-* Marking::
-* Actions::
-* Interaction with other tools::
-* Example configuration::
-* FAQ - Frequently Anticipated Questions::
-* Known issues / missing features::
+* Introduction:: How it all begins
+* Getting started:: Setting thinsg up
+* Running mu4e:: Daily use
+* Searching:: Some more details about queries and searching
+* Marking:: Marking messages
+* Actions:: Defining and using custom actions
+* Interaction with other tools:: Integrating mu4e
+* Example configuration:: Some examples to set you up quickly
+* FAQ - Frequently Anticipated Questions:: Common questions and answers
+* Known issues / missing features:: mu4e is not perfect yet
 
 Appendices
 * How it works:: Some notes about the implementation of @t{mu4e}
@@ -80,24 +80,24 @@ Let's get started!
 @node Why another e-mail client?
 @section Why another e-mail client?
 
-Why does the world need another e-mail client?  Well, I'm not sure the world
-@emph{needs} another one, but maybe @emph{I} do! I spend a @emph{lot} of time,
-professionally and privately, dealing with e-mail and therefore, having an
-efficient e-mail client is essential for me. Since none of the existing ones
-worked the way I wanted, I created my own.
+I'm not sure the world @emph{needs} yet another e-mail client, but maybe
+@emph{I} do! I (the author) spend a @emph{lot} of time, professionally and
+privately, dealing with e-mail messdae and therefore, having an efficient
+e-mail client is essential for me. Since none of the existing ones worked the
+way I wanted, I created my own.
 
-Even while having been created for such selfish reasons, @t{mu4e} tries hard
-to be as useful as possible for all its users - suggestions are very welcome
-and are acted upon.
+While having been created for such selfish reasons, @t{mu4e} tries hard to be
+as useful as possible for all its users - suggestions are very welcome and are
+acted upon.
 
 @node Other mail clients
 @section Other mail clients
 
-Under the hood, @t{mu4e} is fully search-based, similar to programs such as
+Under the hood, @t{mu4e} is fully search-based, similar to programs like
 @t{notmuch}@footnote{@url{http://notmuchmail.org}},
 @t{md}@footnote{@url{https://github.com/nicferrier/md}} and
-@t{sup}@footnote{@url{http://sup.rubyforge.org/}}. @t{mu4e}'s user-interface
-is quite different from those programs though.
+@t{sup}@footnote{@url{http://sup.rubyforge.org/}}. However, @t{mu4e}'s
+user-interface is quite different from those programs.
 
 @t{mu4e}'s mail handling (deleting, moving etc.) is inspired by
 @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
@@ -106,8 +106,7 @@ emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
 
 @t{mu4e} tries to keep all the 'state' in your maildirs, so you can easily
 switch between clients, synchronize over @abbr{IMAP} or backup with @t{rsync}
--- if you delete the database, you won't lose any information; there is no
-@emph{lock-in}.
+-- if you delete the database, you won't lose any information.
 
 @node What mu4e does and does not do
 @section What mu4e does and does not do
@@ -154,8 +153,8 @@ After these steps, @t{mu4e} should be ready to go.
 @t{mu4e} is part of @t{mu} - by installing the latter, the former will be
 installed as well. Note, some distributions provide packed versions of
 @t{mu}/@t{mu4e}; if you can use those, there's no need to compile anything
-yourself. Anyway, if there are no packages for your distribution, you can
-follow the steps below.
+yourself. However, if there are no packages for your distribution, or if you
+want to use the latest development versions, you can follow the steps below.
 
 First, you need make sure you have the necessary dependencies. On a Debian or
 Ubuntu system, you can get these with:
@@ -200,16 +199,16 @@ You may need to restart @t{emacs}.
 @subsection mu4e and emacs customization
 
 There is @emph{experimental} support for using the @t{emacs} customization
-system in @t{mu4e}, but for now we recommend setting the values
+system in @t{mu4e}, but for now, we recommend setting the values
 manually. Please refer to @ref{Example configuration} for a couple of examples
 of this.
 
 @node Getting mail
 @section Getting mail
 
-In order for @t{mu} (and, by extension, @t{mu4e}) to work, we need to have our
-e-mail messages stored in a Maildir. If you were already using Maildirs, you
-are lucky; otherwise, you will need to get your mail there in some way.
+In order for @t{mu} (and, by extension, @t{mu4e}) to work, you need to have
+your e-mail messages stored in a Maildir. If you are already using Maildirs,
+you are lucky; otherwise, you will need to get your mail there in some way.
 
 If you are using some external @abbr{IMAP} or @abbr{POP} server, you can use
 tools like @t{getmail}, @t{fetchmail} @t{offlineimap} or @t{isync} to download
@@ -248,14 +247,13 @@ following command:
 @end example
 
 This should scan your @file{~/Maildir}@footnote{In most cases, you do not even
-have to provide the @t{--maildir=~/Maildir}; see the @t{mu-index} man-page for
-details} and fill the database, and give progress information while doing
-so.
+need to provide the @t{--maildir=~/Maildir}; see the @t{mu-index} man-page for
+details} and fill the database, and give progress information while doing so.
 
 The indexing process may take a few minutes the first time you do it (for
-thousands of e-mails); afterwards it is much faster, since it only has to scan
-the differences. Indexing is discussed in more detail in the @t{mu-index} man
-page.
+thousands of e-mails); afterwards it is much faster, since @t{mu} only has to
+scan the differences. Indexing is discussed in more detail in the @t{mu-index}
+man page.
 
 After the indexing process has finished, you can quickly test if everything
 worked, by trying some command line searches, for example
@@ -360,10 +358,10 @@ each other, and the default key-bindings to get from one view to the next. In
 the next sections we will describe what these keys actually @emph{do}.
 
 @menu
-* Main view::
-* Headers view::
-* Message view::
-* Editor view::
+* Main view:: This is where we start
+* Headers view:: Lists of message headers
+* Message view:: Viewing specific messages
+* Editor view:: Creating / editing messages
 @end menu
 
 
@@ -399,8 +397,8 @@ E: Edit       B: edit bookmark-search
 @section Main view
 
 After you have installed @t{mu4e} (@pxref{Getting started}), you can start it
-with @code{M-x mu4e}. This will do some checks to ensure everything is set up
-correctly, and then show the @t{mu4e} main view.
+with @code{M-x mu4e}. @t{mu4e} wil do some checks to ensure everything is set
+up correctly, and then show you the @t{mu4e} main view.
 
 This looks something like the following:
 
@@ -431,8 +429,8 @@ This looks something like the following:
 ----------------------------------------------------------------------------
 @end verbatim
 
-In the below, we assume the default key bindings here. If you've changed
-those, well, mutatis mutandis.
+Below, we assume the default key bindings here. If you've changed those, well,
+@emph{mutatis mutandis}.
 
 @subsection Basic actions
 
@@ -451,17 +449,16 @@ will be thrown in a message-editing buffer, where you can compose a new message.
 
 @subsection Bookmarks
 
-Next come the @emph{Bookmarks}.These are set with the variable
+Next come @emph{Bookmarks}. These are set with the variable
 @code{mu4e-bookmarks}; what you see in the above example are the
 @emph{default} bookmarks - you can add your own and/or replace the default
-ones. @xref{Bookmarks}. In short, you can view the list of messages matching a
+ones; @xref{Bookmarks}. In short, you can view the list of messages matching a
 certain bookmark by pressing @key{b} followed by the shortcut for this
-bookmark. If you'd like to edit the bookmarked query first, use @key{B}. For
-information about creating bookmarks @xref{Bookmarks}.
+bookmark. If you'd like to edit the bookmarked query first, use @key{B}.
 
 @subsection Miscellaneous
 
-Finally, there are some @emph{Misc} actions:
+Finally, there are some @emph{Misc} (miscellaneous) actions:
 @itemize
 @item @t{[U]pdate email & database} will execute whatever is in
 the variable @code{mu4e-get-mail-command}, and afterwards update the @t{mu}
@@ -581,12 +578,13 @@ q,z          leave the headers buffer
 @anchor{Marking messages}
 
 The mark/unmark commands support the current @emph{region} (i.e., selection)
--- so, for example, if you the select a number of message and then press
-@key{DEL}, all selected message will be marked for deletion.
+-- so, for example, if you the select ('mark' in emacs lingo) a number of
+message (like you would select text in a buffer) and then press @key{DEL}, all
+selected message will be marked for deletion.
 
-The two-step mark-execute sequence is similar to what @t{dired} and a number
-of other emacs-based programs do. @t{mu4e} tries to be as quick as possible
-while still trying to avoid accidents.
+The two-step mark-execute sequence is similar to what @t{dired} and som other
+emacs-based programs do. This way, @t{mu4e} tries to be as quick as possible
+while avoiding accidents.
 
 You can mark all messages that match a certain pattern with @key{%}. In
 addition, you can mark all messages in the current thread (@key{T}) or
@@ -594,7 +592,7 @@ sub-thread (@key{t}).
 
 When you try to do a new search, or refresh the headers buffer while you still
 have marked messages, normally you will be asked what to do with those marks
--- whether to @emph{apply} them before leaving, @emph{ignore} them. This
+-- whether to @emph{apply} them before leaving, or @emph{ignore} them. This
 behavior can be influenced with the variable
 @code{mu4e-headers-leave-behavior} -- see its documentation.
 
@@ -604,9 +602,9 @@ For more information about marking, @xref{Marking}.
 @anchor{Sort order and threading}
 
 By default, @t{mu4e} sorts messages by date, in descending order: the most
-recent messages are at the top. In addition, the messages are @emph{threaded},
-i.e., shown in the context of a message thread; this also affects the sort
-order.
+recent messages are shown at the top. In addition, the messages are
+@emph{threaded}, i.e., shown in the context of a message thread; this also
+affects the sort order.
 
 You can change the sort order with @t{M-x mu4e-headers-change-sorting} or
 @key{O}, and you can toggle threading on/off using @t{M-x
@@ -621,17 +619,19 @@ variables @code{mu4e-headers-sortfield} and @code{mu4e-headers-show-threads}.
 Note that you can see the current settings in the emacs modeline; it shows the
 current query, followed by the shortcut character for sortfield (the same
 character you'd use in @code{mu4e-headers-change-sorting}. The next character
-is either @t{a} (for ascending, A->Z order), or @t{d} (for descending, Z->A
-order). If threading is enabled, the next character is a @t{T}, and finally,
-if we're doing an unlimited, full search, the last character is an @t{F}.
+is either @t{a} (for ascending, @emph{A->Z} order), or @t{d} (for descending,
+@emph{Z->A} order). If threading is enabled, the next character is a @t{T}, and
+finally, if we're doing an unlimited, full search, the last character is an
+@t{F}.
 
-So, suppose our query is @t{subject:foo maildir:/bar}, we're sorting by
-subject in ascending order with threads enabled, and it's a full search. The
-mode string will then look like: @t{subject:foo maildir:/bar(saTF)}.
+To illustrate this, suppose our query is @t{subject:foo maildir:/bar}, we're
+sorting by subject in ascending order with threads enabled, and it's a full
+search. The corresponding mode-line string then is: @t{subject:foo
+maildir:/bar(saTF)}.
 
 @subsection Actions
 
-@code{mu4e-headers-action} (@key{a}) lets you pick some custom action to perform
+@code{mu4e-headers-action} (@key{a}) lets you pick custom actions to perform
 on the message at point. You can specify these actions using the variable
 @code{mu4e-headers-actions}. Refer to @ref{Actions} for details.
 
@@ -640,15 +640,17 @@ on the message at point. You can specify these actions using the variable
 include the previously captured message as an attachment, using
 @code{mu4e-compose-attach-captured-message}.
 
-See @ref{Actions} for details about setting up your own actions.
+The file @file{mu4e-actions.el} in the @t{mu4e} source distribution contains a
+number of example actions.
+  
 
 @subsection Split view
 
-Using the @emph{Split view} means viewing the @ref{Headers view} and the
+Using the @emph{Split view}, we can see the @ref{Headers view} and the
 @ref{Message view} next to each other, with the message that is selected in
 the former, visible in the latter.
 
-You can influence the way the splitting works by setting the variable
+You can influence the way the splitting is done by customizing the variable
 @code{mu4e-split-view} in your configuration to one of 3 values:
 @itemize
 @item @t{horizontal} (this is the default): display the message view below the
@@ -1882,18 +1884,18 @@ answers.
 
 @itemize
 @item @emph{How can I quickly delete/move/trash a lot of messages?} You can
-select ('mark' in emacs-speak) the messages; the actions you then take (e.g.,
-@key{DEL} for delete, @key{m} for move and @key{t} for trash) will apply to
-@emph{all} selected messages. You can also use functions like
-@code{mu4e-headers-mark-thread} (@key{T}), @code{mu4e-headers-mark-subthread}
-(@key{t}) to mark whole threads at the same time, and
-@code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages matching a
-certain regular expression.
+select ('mark' in emacs-speak) the messages like you would select text in a
+buffer; the actions you then take (e.g., @key{DEL} for delete, @key{m} for
+move and @key{t} for trash) will apply to @emph{all} selected messages. You
+can also use functions like @code{mu4e-headers-mark-thread} (@key{T}),
+@code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at the same
+time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
+matching a certain regular expression.
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
 address management with @t{BBDB}; instead, we recommend @xref{Maintaining an
 address-book with org-contacts} for now.
-@item @emph{mu4e only seems to return a subset of all matches - how can I get
-all?}. Yes, for speed reasons (and because, if you are like the author, you
+@item @emph{mu4e seems to return a mere subset of all matches - how can I get
+all?}. Indeed, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
 value of the variable @code{m4ue-search-result-limit} matches. To show
 @emph{all} results, use @t{M-x mu4e-headers-toggle-full-search}, or customize
@@ -1922,11 +1924,11 @@ but what you can do is telling @t{mu} to (gracefully) terminate:
 
 @t{mu4e} will automatically restart @t{mu} when it needs it. In practice, this
 seems to work quite well.
-@item @emph{Can I automatically execute the actions on marked messages when
+@item @emph{Can I automatically apply the marks on messages when
 leaving the headers buffer?} Yes you can -- see the documentation on
 @t{mu4e-headers-leave-behavior}.
-@item @emph{Can I automatically apply word-wrapping (and hiding cited parts)
-when viewing a message?} Yes -- see the documentation on
+@item @emph{How can I automatically apply word-wrapping (and hiding cited
+parts) when viewing a message?} See the documentation on
 @t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
 between the two states with @key{w} and @key{h}, respectively.
 @item @emph{Is there context-sensitive help available?} Yes - pressing @key{H}
