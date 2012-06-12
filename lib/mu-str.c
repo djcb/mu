@@ -401,7 +401,8 @@ each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
 
 
 static void
-check_for_field (const char *str, gboolean *is_field, gboolean *is_range_field)
+check_for_field (const char *str, gboolean *is_field,
+		 gboolean *is_range_field)
 {
 	CheckPrefix pfx;
 
@@ -410,7 +411,7 @@ check_for_field (const char *str, gboolean *is_field, gboolean *is_range_field)
 	/* skip any non-alphanum starts in cpfx->str; this is to
 	 * handle the case where we have e.g. "(maildir:/abc)"
 	 */
-	while (pfx.str && !isalnum(*pfx.str))
+	while (pfx.str && *pfx.str && !isalnum(*pfx.str))
 		++pfx.str;
 
 	pfx.match =  pfx.range_field = FALSE;

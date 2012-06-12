@@ -91,12 +91,25 @@ run_and_count_matches (const char *xpath, const char *query)
 	MuMsgIter *iter;
 	MuStore *store;
 	guint count1, count2;
+	GError *err;
 
-	store = mu_store_new_read_only (xpath, NULL);
+	err = NULL;
+	store = mu_store_new_read_only (xpath, &err);
+	if (err) {
+		g_printerr ("error: %s\n", err->message);
+		g_clear_error (&err);
+		err = NULL;
+	}
 	g_assert (store);
 
-	mquery = mu_query_new (store, NULL);
-	g_assert (query);
+	mquery = mu_query_new (store, &err);
+	if (err) {
+		g_printerr ("error: %s\n", err->message);
+		g_clear_error (&err);
+		err = NULL;
+	}
+
+	g_assert (mquery);
 
 	mu_store_unref (store);
 

@@ -265,8 +265,7 @@ mu_query_new (MuStore *store, GError **err)
 	try {
 		return new MuQuery (store);
 
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err,
-						MU_ERROR_XAPIAN, 0);
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 	return 0;
 }
 
