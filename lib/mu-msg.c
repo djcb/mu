@@ -524,7 +524,7 @@ mu_msg_contact_new (const char *name, const char *address,
 
 	self = g_slice_new (MuMsgContact);
 
-	self->name	  = g_strdup (name);
+	self->name    = g_strdup (name);
 	self->address = g_strdup (address);
 	self->type    = type;
 
