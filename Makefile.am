@@ -23,7 +23,7 @@ else
 widgets=
 endif
 
-if HAVE_GUILE
+if BUILD_GUILE
 guile=guile
 else
 guile=

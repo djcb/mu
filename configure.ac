@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.8.5-dev3],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.8.5-dev4],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -170,72 +170,75 @@ AC_ARG_WITH([gui],
    [gui=$withval],[gui=auto])
 
 AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" \
-	    -a "x$gui" != "xauto"],
+	-a "x$gui" != "xauto"],
       AC_MSG_ERROR([the argument for --with-gui= must be either \
-      			gtk2|gtk3|auto|none ($gui)]))
+      			gtk2|gtk3|auto|no ($gui)]))
+AS_IF([test "x$gui" != "xnone"],[
+   # check for gtk3
+   AS_IF([test "x$gui" = "xgtk3"],[
+     PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
+     AC_SUBST(GTK_CFLAGS)
+     AC_SUBST(GTK_LIBS)
+     gtk_version="`$PKG_CONFIG --modversion gtk+-3.0`"
+   ])
+   AS_IF([test "x$gui"="gtk3" -a "x$have_gtk3" = "xno"],
+      AC_MSG_ERROR([GTK+ 3.x not found]))
 
-# check for gtk3
-AS_IF([test "x$gui" = "xgtk3"],[
-  PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
-  AC_SUBST(GTK_CFLAGS)
-  AC_SUBST(GTK_LIBS)
-  gtk_version="`$PKG_CONFIG --modversion gtk+-3.0`"
+   # check for gtk2 if we did not find gtk3 already
+   # (gtk3 is only sought if asked for it explicitly)
+   AS_IF([test "x$gui" != "xno" -a "x$have_gtk3" != "xyes"],[
+     PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
+     AC_SUBST(GTK_CFLAGS)
+     AC_SUBST(GTK_LIBS)
+     gtk_version="`$PKG_CONFIG --modversion gtk+-2.0`"
+   ])
+   # only an error if we explicitly asked for it
+   AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "xauto"],
+      AC_MSG_ERROR([GTK+ 2.x not found]))
 ])
-AS_IF([test "x$gui"="gtk3" -a "x$have_gtk3" = "xno"],
-   AC_MSG_ERROR([GTK+ 3.x not found]))
-
-# check for gtk2 if we did not find gtk3 already
-# (gtk3 is only sought if asked for it explicitly)
-AS_IF([test "x$gui" != "xnone" -a "x$have_gtk3" != "xyes"],[
-  PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
-  AC_SUBST(GTK_CFLAGS)
-  AC_SUBST(GTK_LIBS)
-  gtk_version="`$PKG_CONFIG --modversion gtk+-2.0`"
-])
-# only an error if we explicitly asked for it
-AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "xauto"],
-   AC_MSG_ERROR([GTK+ 2.x not found]))
 
 AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ])
 AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],
-	    [buildgui=no])
-
+    	    [buildgui=no])
 AS_IF([test "x$have_gtk3" = "xyes"],
-  [AC_DEFINE_UNQUOTED([HAVE_GTK3],1,[Whether we have GTK+ 3.x])])
+    [AC_DEFINE_UNQUOTED([HAVE_GTK3],1,[Whether we have GTK+ 3.x])])
 
 # webkit? needed for the fancy web widget
-
+# use --disable-webkit to disable it, even if you have it
 # note; gtk2 and gtk3 imply different webkit versions
-have_webkit=no
-AS_IF([test "x$have_gtk2" = "xyes"],[
-  PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[have_webkit=yes],[have_webkit=no])
-  AS_IF([test "x$have_webkit" = "xyes"],[
+build_webkit=no
+AC_ARG_ENABLE([webkit],
+   AS_HELP_STRING([--disable-webkit],[Disable webkit]))
+AS_IF([test "x$enable_webkit" != "xno"], [
+   AS_IF([test "x$have_gtk2" = "xyes"],[
+       PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[build_webkit=yes],[build_webkit=no])
+       AS_IF([test "x$build_webkit" = "xyes"],[
 	    webkit_version="`$PKG_CONFIG --modversion webkit-1.0`"])
-  AC_SUBST(WEBKIT_CFLAGS)
-  AC_SUBST(WEBKIT_LIBS)
-])
+       AC_SUBST(WEBKIT_CFLAGS)
+       AC_SUBST(WEBKIT_LIBS)])
 
-AS_IF([test "x$have_gtk3" = "xyes"],[
-  PKG_CHECK_MODULES(WEBKIT,webkitgtk-3.0 >= 1.8.0, [have_webkit=yes],[have_webkit=no])
-  AS_IF([test "x$have_webkit" = "xyes"],[
+   AS_IF([test "x$have_gtk3" = "xyes"],[
+       PKG_CHECK_MODULES(WEBKIT,webkitgtk-3.0 >= 1.8.0, [build_webkit=yes],[build_webkit=no])
+       AS_IF([test "x$build_webkit" = "xyes"],[
 	    webkit_version="`$PKG_CONFIG --modversion webkitgtk-3.0`"])
-  AC_SUBST(WEBKIT_CFLAGS)
-  AC_SUBST(WEBKIT_LIBS)
+       AC_SUBST(WEBKIT_CFLAGS)
+       AC_SUBST(WEBKIT_LIBS)])
 ])
-AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
+AM_CONDITIONAL(BUILD_WEBKIT, [test "x$build_webkit" = "xyes"])
+
 
 # gio is needed for some widget/ things
 AS_IF([test "x$buildgui"="xyes"],[
-PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
-AS_IF([test "x$have_gio" = "xyes"],[
+   PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
+   AS_IF([test "x$have_gio" = "xyes"],[
 	    gio_version="`$PKG_CONFIG --modversion gio-2.0`"])
-AC_SUBST(GIO_CFLAGS)
-AC_SUBST(GIO_LIBS)
+   AC_SUBST(GIO_CFLAGS)
+   AC_SUBST(GIO_LIBS)
 ])
 AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 
 # should we build the widgets/ dir?
-AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "xyes"])
+AM_CONDITIONAL(BUILD_WIDGETS, [test "x$build_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 ###############################################################################
 
 
@@ -244,24 +247,28 @@ AM_CONDITIONAL(BUILD_WIDGETS, [test "x$have_webkit" = "xyes" -a "x$have_gio" = "
 
 ###############################################################################
 # check for guile 2.0 & guile-snarf
-PKG_CHECK_MODULES(GUILE,guile-2.0,[have_guile=yes],[have_guile=no])
-AC_SUBST(GUILE_CFLAGS)
-AC_SUBST(GUILE_LIBS)
+build_guile=no
+AC_ARG_ENABLE([guile],
+   AS_HELP_STRING([--disable-guile],[Disable guile]))
 
-AS_IF([test "x$have_guile" = "xyes"],[
-  AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
-  AS_IF([test "x$GUILE_SNARF" != "x"],
-    [AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])
-    GUILE_SITEDIR="`${PKG_CONFIG} guile-2.0 --variable=sitedir`"],
-    [AC_MSG_WARN([cannot find guile-snarf])])])
+AS_IF([test "x$enable_guile" != "xno"], [
+   PKG_CHECK_MODULES(GUILE,guile-2.0,[build_guile=yes],[build_guile=no])
+   AC_SUBST(GUILE_CFLAGS)
+   AC_SUBST(GUILE_LIBS)
 
-AC_SUBST(GUILE_SITEDIR)
+   AS_IF([test "x$build_guile" = "xyes"],[
+      AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
+      AS_IF([test "x$GUILE_SNARF" != "x"],
+         [AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])
+         GUILE_SITEDIR="`${PKG_CONFIG} guile-2.0 --variable=sitedir`"],
+         [AC_MSG_WARN([cannot find guile-snarf])])])
 
-AS_IF([test "x$have_guile" = "xyes" -a "x$GUILE_SNARF" != "x"],
-  [guile_version="`${PKG_CONFIG} --modversion guile-2.0`"
-  AC_DEFINE_UNQUOTED([HAVE_GUILE],1,[Whether we have guile 2.0])])
+   AC_SUBST(GUILE_SITEDIR)])
 
-AM_CONDITIONAL(HAVE_GUILE, [test "x$have_guile" = "xyes"])
+AS_IF([test "x$build_guile" = "xyes" -a "x$GUILE_SNARF" != "x"],
+      [guile_version="`${PKG_CONFIG} --modversion guile-2.0`"
+      AC_DEFINE_UNQUOTED([BUILD_GUILE],1,[Whether we have guile 2.0])])
+AM_CONDITIONAL(BUILD_GUILE, [test "x$build_guile" = "xyes"])
 ###############################################################################
 
 
@@ -333,18 +340,18 @@ if test "x$have_gio" = "xyes"; then
 echo "GIO version                          : $gio_version"
 fi
 
-if test "x$have_webkit" = "xyes"; then
+if test "x$build_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
 fi
 
-if test "x$have_guile" = "xyes"; then
+if test "x$build_guile" = "xyes"; then
 echo "Guile version                        : $guile_version"
 fi
 
 echo
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
 echo "Build 'mug' toy-ui (gtk+)            : $buildgui"
-echo "Build 'mug2' toy-ui (gtk+, webkit)   : $have_webkit"
+echo "Build 'mug2' toy-ui (gtk+, webkit)   : $build_webkit"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
 
