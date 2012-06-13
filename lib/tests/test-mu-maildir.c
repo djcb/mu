@@ -517,6 +517,43 @@ test_mu_maildir_get_new_path_02 (void)
 }
 
 
+static void
+test_mu_maildir_get_new_path_custom (void)
+{
+	int i;
+
+	struct {
+		const char *oldpath;
+		MuFlags flags;
+		const char *targetdir;
+		const char *newpath;
+	} paths[] = {
+		{
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			MU_FLAG_REPLIED, "/home/foo/Maildir/blabla",
+			"/home/foo/Maildir/blabla/cur/123456:2,R"
+		}, {
+			"/home/foo/Maildir/test/cur/123456:2,hFeRllo123",
+			MU_FLAG_FLAGGED, "/home/foo/Maildir/blabla",
+			"/home/foo/Maildir/blabla/cur/123456:2,Fhello123"
+		}, {
+			"/home/foo/Maildir/test/cur/123456:2,abc",
+			MU_FLAG_PASSED, "/home/foo/Maildir/blabla",
+			"/home/foo/Maildir/blabla/cur/123456:2,Pabc"
+		}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		gchar *str;
+		str = mu_maildir_get_new_path(paths[i].oldpath,
+					      paths[i].targetdir,
+					      paths[i].flags);
+		g_assert_cmpstr(str, ==, paths[i].newpath);
+		g_free(str);
+	}
+}
+
+
 
 static void
 test_mu_maildir_get_maildir_from_path (void)
@@ -573,6 +610,8 @@ main (int argc, char *argv[])
 			test_mu_maildir_get_new_path_01);
 	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02",
 			test_mu_maildir_get_new_path_02);
+	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-custom",
+			test_mu_maildir_get_new_path_custom);
 	g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
 			test_mu_maildir_get_flags_from_path);
 

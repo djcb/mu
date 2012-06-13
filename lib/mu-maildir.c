@@ -711,7 +711,8 @@ mu_maildir_get_flags_from_path (const char *path)
  *
  */
 static gchar*
-get_new_path (const char *mdir, const char *mfile, MuFlags flags)
+get_new_path (const char *mdir, const char *mfile, MuFlags flags,
+	      const char* custom_flags)
 {
 	if (flags & MU_FLAG_NEW)
 		return g_strdup_printf ("%s%cnew%c%s",
@@ -721,9 +722,10 @@ get_new_path (const char *mdir, const char *mfile, MuFlags flags)
 		const char *flagstr;
 		flagstr = mu_flags_to_str_s (flags, MU_FLAG_TYPE_MAILFILE);
 
-		return g_strdup_printf ("%s%ccur%c%s:2,%s",
+		return g_strdup_printf ("%s%ccur%c%s:2,%s%s",
 					mdir, G_DIR_SEPARATOR, G_DIR_SEPARATOR,
-					mfile, flagstr);
+					mfile, flagstr,
+					custom_flags ? custom_flags : "");
 	}
 }
 
@@ -755,32 +757,35 @@ char*
 mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 			 MuFlags newflags)
 {
-	char *mfile, *mdir, *newpath, *cur;
+	char *mfile, *mdir, *custom_flags, *newpath, *cur;
 
 	g_return_val_if_fail (oldpath, NULL);
 
-	mfile = newpath = NULL;
+	mfile = newpath = custom_flags = NULL;
 
 	/* determine the maildir */
 	mdir = mu_maildir_get_maildir_from_path (oldpath);
 	if (!mdir)
 		return NULL;
 
-	/* determine the name of the mailfile, stripped of its flags */
+	/* determine the name of the mailfile, stripped of its flags, as well
+	 * as any custom (non-standard) flags */
 	mfile = g_path_get_basename (oldpath);
 	for (cur = &mfile[strlen(mfile)-1]; cur > mfile; --cur) {
 		if ((*cur == ':' || *cur == '!') &&
 		    (cur[1] == '2' && cur[2] == ',')) {
+			/* get the custom flags (if any) */
+			custom_flags = mu_flags_custom_from_str (cur + 3);
 			cur[0] = '\0'; /* strip the flags */
 			break;
 		}
 	}
 
 	newpath = get_new_path (new_mdir ? new_mdir : mdir,
-				mfile, newflags);
-
+				mfile, newflags, custom_flags);
 	g_free (mfile);
 	g_free (mdir);
+	g_free (custom_flags);
 
 	return newpath;
 }
