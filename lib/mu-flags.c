@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011  <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2012  <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,6 +16,8 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+
+#include <string.h>
 #include "mu-flags.h"
 
 struct _FlagInfo {
@@ -187,6 +189,36 @@ mu_flags_from_str (const char *str, MuFlagType types,
 	}
 
 	return flag;
+}
+
+
+
+char*
+mu_flags_custom_from_str (const char *str)
+{
+	char *custom;
+	const char* cur;
+	unsigned u;
+
+	g_return_val_if_fail (str, NULL);
+
+	for (cur = str, u = 0, custom = NULL; *cur; ++cur) {
+
+		MuFlags flag;
+		flag = mu_flag_from_char (*cur);
+
+		/* if it's a valid file flag, ignore it */
+		if (flag != MU_FLAG_INVALID &&
+		    mu_flag_type (flag) == MU_FLAG_TYPE_MAILFILE)
+			continue;
+
+		/* otherwise, add it to our custom string */
+		if (!custom)
+			custom = g_new0 (char, strlen(str) + 1);
+		custom[u++] = *cur;
+	}
+
+	return custom;
 }
 
 

@@ -114,7 +114,7 @@ const char* mu_flags_to_str_s (MuFlags flags, MuFlagType types);
 /**
  * Get the (OR'ed) flags corresponding to a string representation
  *
- * @param str the string representation
+ * @param str the file info string
  * @param types the flag types to accept (other will be ignored)
  * @param ignore invalid if TRUE, ignore invalid flags, otherwise return
  * MU_FLAG_INVALID if an invalid flag is encountered
@@ -123,6 +123,19 @@ const char* mu_flags_to_str_s (MuFlags flags, MuFlagType types);
  */
 MuFlags mu_flags_from_str (const char *str, MuFlagType types,
 			   gboolean ignore_invalid);
+
+
+/**
+ * return the concatenation of all non-standard file flags in str
+ * (ie., characters other than DFPRST) as a newly allocated string.
+ *
+ * @param str the file info string
+ *
+ * @return concatenation of all non-standard flags, as a string; free
+ * with g_free when done. If there are no such flags, return NULL.
+ */
+char*  mu_flags_custom_from_str (const char *str) G_GNUC_WARN_UNUSED_RESULT;
+
 
 /**
  * Update #oldflags with the flags in #str, where #str consists of the
@@ -139,8 +152,6 @@ MuFlags mu_flags_from_str (const char *str, MuFlagType types,
  */
 MuFlags mu_flags_from_str_delta (const char *str, MuFlags oldflags,
 				 MuFlagType types);
-
-
 
 
 typedef void (*MuFlagsForeachFunc) (MuFlags flag, gpointer user_data);

@@ -137,11 +137,33 @@ test_mu_flags_from_str_delta (void)
 						   MU_FLAG_SIGNED | MU_FLAG_DRAFT,
 						   MU_FLAG_TYPE_ANY),==,
 			  MU_FLAG_PASSED | MU_FLAG_SEEN | MU_FLAG_SIGNED);
+}
 
-	/* g_assert_cmpuint (mu_flags_from_str_delta ("foobar", */
-	/* 					   MU_FLAG_INVALID, */
-	/* 					   MU_FLAG_TYPE_ANY),==, */
-	/* 		  MU_FLAG_INVALID); */
+
+static void
+test_mu_flags_custom_from_str (void)
+{
+	unsigned u;
+
+	struct {
+		const char *str;
+		const char *expected;
+	} cases[] = {
+		{ "ABC", "ABC" },
+		{ "PAF", "A" },
+		{ "ShelloPwoFrDldR123", "helloworld123" },
+		{ "SPD", NULL }
+	};
+
+	for (u = 0; u != G_N_ELEMENTS(cases); ++u) {
+		char *cust;
+		cust = mu_flags_custom_from_str (cases[u].str);
+		if (g_test_verbose())
+			g_print ("%s: str:%s; got:%s; expected:%s\n",
+				 __FUNCTION__, cases[u].str, cust, cases[u].expected);
+		g_assert_cmpstr (cust, ==, cases[u].expected);
+		g_free (cust);
+	}
 }
 
 
@@ -158,6 +180,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-flags/test-mu-flags-to-str-s",test_mu_flags_to_str_s);
 	g_test_add_func ("/mu-flags/test-mu-flags-from-str",test_mu_flags_from_str);
 	g_test_add_func ("/mu-flags/test-mu-flags-from-str-delta",test_mu_flags_from_str_delta );
+	g_test_add_func ("/mu-flags/test-mu-flags-custom-from-str",
+			 test_mu_flags_custom_from_str);
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
