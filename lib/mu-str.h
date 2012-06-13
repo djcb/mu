@@ -48,8 +48,8 @@ G_BEGIN_DECLS
  *
  * @return a newly allocated string with a display contact
  */
-const char* mu_str_display_contact_s (const char *str);
-char *mu_str_display_contact (const char *str);
+const char* mu_str_display_contact_s (const char *str) G_GNUC_CONST;
+char *mu_str_display_contact (const char *str) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
