@@ -31,6 +31,7 @@
 (require 'html2text)
 (require 'mu4e-vars)
 (require 'doc-view)
+(require 'org) ;; for org-parse-time-string
 
 (defcustom mu4e-html2text-command nil
   "Shell command that converts HTML from stdin into plain text on
@@ -104,7 +105,8 @@ User now will be presented with a list:
 	  (optionsstr
 	    (mapconcat
 	      (lambda (option)
-		(when (consp (cdr option))
+		;; try to detect old-style options...
+		(when (or (characterp (cdr option)) (null (cdr option)))
 		  (error (concat "Please use the new format for options/actions; "
 			   "see the manual")))
 		(let* ((kar (substring (car option) 0 1))
@@ -323,8 +325,6 @@ http://cr.yp.to/proto/maildir.html "
   ;;  "Remove duplicates from the output of `mu4e~string-to-flags-1'"
   (remove-duplicates (mu4e~string-to-flags-1 str)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 
 (defun mu4e-display-size (size)
@@ -806,6 +806,13 @@ displaying it). Do _not_ bury the current buffer, though."
 	      (unless (one-window-p t)
 		(delete-window win)))))) nil t)))
 
+
+(defun mu4e-get-time-date (prompt)
+  "Determine the emacs time value for the time/date entered by user
+  after PROMPT. Formats are all that are accepted by
+  `parse-time-string'."
+  (let ((timestr (read-string (mu4e-format "%s" prompt))))
+    (apply 'encode-time (org-parse-time-string timestr))))
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

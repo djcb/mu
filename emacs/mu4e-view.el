@@ -423,9 +423,10 @@ is nil, and otherwise open it."
 
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
-      (define-key map "D" 'mu4e-view-mark-for-delete)
-      (define-key map "m" 'mu4e-view-mark-for-move)
-
+      (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
+      (define-key map (kbd "m") 'mu4e-view-mark-for-move)
+      (define-key map (kbd "&") 'mu4e-view-mark-custom)
+      
       (define-key map (kbd "+") 'mu4e-view-mark-flag)
       (define-key map (kbd "-") 'mu4e-view-mark-unflag)
       
@@ -926,6 +927,10 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
 	(mu4e-mark-for-move-set)
 	(mu4e-mark-at-point mark)))))
 
+(defun mu4e-view-mark-custom ()
+  "Run some custom mark function."
+  (mu4e~view-in-headers-context
+    (mu4e-headers-mark-custom)))
 
 (defun mu4e~split-view-p ()
   "Return t if we're in split-view, nil otherwise."
@@ -983,8 +988,7 @@ user that unmarking only works in the header list."
   (mu4e~view-mark-set 'deferred)
   (mu4e-view-headers-next))
 
-
-(defun mu4e-view-marked-execute ()
+ (defun mu4e-view-marked-execute ()
   "Execute the marks."
   (interactive)
   (mu4e~view-in-headers-context

@@ -87,6 +87,26 @@ are of the form:
 * SHORTCUT is a one-character shortcut to call this action
 * FUNC is a function which receives a message plist as an argument.")
 
+(defvar mu4e-headers-custom-markers
+  '(("Older than"
+      (lambda (msg date) (time-less-p (mu4e-msg-field msg :date) date))
+      (lambda () (mu4e-get-time-date "Match messages before: ")))
+     ("Newer than"
+       (lambda (msg date) (time-less-p date (mu4e-msg-field msg :date)))
+       (lambda () (mu4e-get-time-date "Match messages after: ")))
+     ("Bigger than"
+       (lambda (msg bytes) (> (mu4e-msg-field msg :size) (* 1024 bytes)))
+       (lambda () (read-number "Match messages bigger than (Kbytes): "))))
+  "List of custom markers -- functions to mark message that match
+some custom function. Each of the list members has the following format:
+  (NAME PREDICATE-FUNC PARAM-FUNC)
+* NAME is the name of the predicate function, and the first character
+is the shortcut (so keep those unique).
+* PREDICATE-FUNC is a function that takes to parameters, MSG and (optionally) PARAM,
+and should return non-nil when there's a match.
+* PARAM-FUNC is function that is evaluated once, and its value is then passed to
+PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
+
 (defvar mu4e-headers-sortfield 'date
   "Field to sort the headers by. Field must be a symbol, one of:
      date, subject, size, prio, from, to.")
@@ -401,7 +421,7 @@ after the end of the search results."
       (define-key map (kbd "u") 'mu4e~headers-mark-unmark)
       (define-key map (kbd "+") 'mu4e~headers-mark-flag)
       (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
-
+      (define-key map (kbd "&") 'mu4e-headers-mark-custom)
       (define-key map "m" 'mu4e-headers-mark-for-move-and-next)
       
       (define-key map (kbd "*")  'mu4e~headers-mark-deferred)
@@ -737,6 +757,16 @@ header."
  (defvar mu4e~headers-regexp-hist nil
   "History list of regexps used.")
 
+ (defun mu4e~headers-mark-for-each-if (markpair mark-pred &optional param)
+  "Mark all headers for with predicate function MARK-PRED return
+non-nil with MARKPAIR. MARK-PRED is function that takes two
+arguments, MSG (the message at point) and PARAM (a user-specified
+parameter). MARKPAIR is a cell (MARK . TARGET)."
+  (mu4e-headers-for-each
+    (lambda (msg)
+      (when (funcall mark-pred msg param)
+	(mu4e-mark-at-point (car markpair) (cdr markpair)))))) 
+
 (defun mu4e-headers-mark-pattern ()
   "Ask user for a kind of mark (move, delete etc.), a field to
 match and a regular expression to match with. Then, mark all
@@ -750,8 +780,9 @@ matching messages with that mark."
 	  (pattern (read-string
 		     (mu4e-format "Regexp:")
 		     nil 'mu4e~headers-regexp-hist)))
-    (mu4e-headers-for-each
-      (lambda (msg)
+    (mu4e~headers-mark-for-each-if
+      markpair
+      (lambda (msg param)
 	(let* ((do-mark) (value (mu4e-msg-field msg field)))
 	  (setq do-mark
 	    (if (member field '(:to :from :cc :bcc :reply-to))
@@ -759,10 +790,16 @@ matching messages with that mark."
 			 (let ((name (car contact)) (email (cdr contact)))
 			   (or (and name (string-match pattern name))
 			     (and email (string-match pattern email))))) value)
-	      (string-match pattern (or value ""))))
-	  (when do-mark
-	    (mu4e-mark-at-point (car markpair) (cdr markpair))))))))
+	      (string-match pattern (or value "")))))))))
 
+(defun mu4e-headers-mark-custom ()
+  "Mark messages based on a user-provided predicate function."
+  (interactive)
+  (let* ((pred (mu4e-read-option "Match function: "
+		 mu4e-headers-custom-markers))
+	  (param (when (cdr pred) (eval (cdr pred))))
+	  (markpair (mu4e~mark-get-markpair "Mark matched messages with: " t)))
+    (mu4e~headers-mark-for-each-if markpair (car pred) param))) 
 
 (defun mu4e~headers-get-thread-info (msg what)
   "Get WHAT (a symbol, either path or thread-id) for MSG."
@@ -862,8 +899,6 @@ to get it from; it's a symbol, either 'future or 'past."
 	(error "No more next queries"))
       (pop mu4e~headers-query-future))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 
 ;;; interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1082,7 +1117,6 @@ maildir)."
   (when maildir
     (mu4e-mark-handle-when-leaving)
     (mu4e-headers-search (concat "\"maildir:" maildir "\""))))
-
 
 (defun mu4e-headers-split-view-resize (n)
   "In horizontal split-view, increase the number of lines shown by

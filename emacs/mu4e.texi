@@ -1235,6 +1235,7 @@ Marking can happen in both the @ref{Headers view} and the @ref{Message view}.
 * What to mark for::
 * Executing the marks::
 * Leaving the headers buffer::
+* Custom mark functions::
 * Some marking examples::
 @end menu
 
@@ -1302,6 +1303,48 @@ When you quit the buffer (for example, but doing a new search) with marks being
 present, @t{mu4e} asks you what to do with them, depending on the value of the
 variable @code{mu4e-headers-leave-behavior} -- see its documentation.
 
+@node Custom mark functions
+@section Custom mark functions
+
+Sometimes, the built-in functions to mark messages may not be sufficient for
+your needs. For this, @t{mu4e} offers an easy way to define your own custom
+mark functions. You can choose one of the custom marker functions using
+@key{&} in @ref{Headers view} and @ref{Message view}.
+
+Custom mark functions should be appended to the list
+@code{mu4e-headers-custom-markers}. Each of the elements of this list
+('markers') is a list with three (or two) elements:
+@itemize
+@item The name of the marker - as short string describing this marker. The
+first character of this string will also be its shortcut, so these should be
+unique.
+@item a predicate function taking two arguments @t{msg} and @t{param}- first, 
+@t{msg}, which is the message
+plist (see @ref{The message s-expression}); second is a parameter provided by
+the third of the marker elements (next item). The predicate function should
+return non-nil if the messages matches.
+@item (optionally) a function that is evaluated once, and its result is passed as a
+parameter to the predicate function. This is useful to ask for user-input.
+@end itemize
+
+So, let's look at an example: suppose we want to match all messages that have
+more than @emph{n} recipients. We could do it like this:
+
+@lisp
+(add-to-list 'mu4e-headers-custom-markers
+  '("More than n recipients"           
+      (lambda (msg n) (> (+ (length (mu4e-msg-field msg :to)) 
+                            (length (mu4e-msg-field msg :cc))) n))
+      (lambda () (read-number "Match messages with more recipients than: "))) t) 
+@end lisp
+
+After evaluating this, pressing @key{&} should let you choose the custom
+marker function, and ask you for the parameters.
+
+As you can see, it's not very hard to define simple functions to match
+messages. There are some more examples in the defaults for
+`mu4e-headers-custom-markers'; see @file{mu4e-headers.el}.
+
 @node Some marking examples
 @section Some marking examples
 
@@ -1315,6 +1358,7 @@ Let's look at some examples, assuming the default key-bindings.
 press @key{% + s hello RET}. Note, the menu system helps you here; all you
 need to remember is @key{%} for @code{mu4e-headers-mark-pattern}.
 @end itemize
+
 
 @node Actions
 @chapter Actions
