@@ -463,13 +463,11 @@ needed, set the Fcc header, and register the handler function."
 	(set-buffer-modified-p t)
 	(save-buffer)
 	(mu4e~setup-fcc-maybe)) nil t)
-
     ;; when the message has been sent.
     (add-hook 'message-sent-hook
       (lambda ()
 	(setq mu4e-sent-func 'mu4e-sent-handler)
 	(mu4e~proc-sent (buffer-file-name) mu4e-drafts-folder)) nil)))
-
 
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
@@ -568,7 +566,14 @@ message. For Forwarded ('Passed') and Replied messages, try to set
 the appropriate flag at the message forwarded or replied-to."
   (mu4e~compose-set-parent-flag path)
   (when (file-exists-p path) ;; maybe the draft was not saved at all
-    (mu4e~proc-remove docid)))
+    (mu4e~proc-remove docid))
+  ;; kill any remaining buffers for the draft file, or they will hang around...
+  ;; this seems a bit hamfisted...
+  (dolist (buf (buffer-list))
+    (when (and (buffer-file-name buf)
+	    (string= (buffer-file-name buf) path))
+      (kill-buffer buf)))
+  (mu4e-message "Message sent"))
 
 (defun mu4e~compose-set-parent-flag (path)
   "Set the 'replied' \"R\" flag on messages we replied to, and the
@@ -705,9 +710,6 @@ message."
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-compose)
