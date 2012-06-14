@@ -31,10 +31,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
 
-(defvar mu4e~proc-buf nil "Buffer for results data.")
-(defconst mu4e~proc-name "*mu4e-proc*" "Name of the server process, buffer.")
-(defvar mu4e~proc-process nil "The mu-server process")
-
+(defvar mu4e~proc-buf nil
+  "Buffer (string) for data received from
+the backend.")
+(defconst mu4e~proc-name " *mu4e-proc*"
+  "Name of the server process, buffer.")
+(defvar mu4e~proc-process nil
+  "The mu-server process.")
 
 ;; dealing with the length cookie that precedes expressions
 (defconst mu4e~cookie-pre "\376"
