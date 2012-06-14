@@ -526,10 +526,13 @@ these actions are also listed in the @t{Headers} menu in the Emacs menu bar.
 
 @verbatim
 key          description
----          -----------
+===========================================================
 n,p          go to next, previous message
 y            select the message view (if it's visible)
+RET          open the message at point in the message view
 
+searching
+---------
 s            search
 S            edit last query
 /            narrow the search
@@ -543,33 +546,34 @@ O            change sort order
 P            toggle threading
 Q            toggle full-search
 
-a            execute some action on header
 
+marking
+-------
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
 +,-          mark for flagging/unflagging
+o,r          mark message as unread, read
+
 u            unmark message at point
+U            unmark *all* messages 
+
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
+x            execute actions for the marked messages
+
+composition
+-----------
 R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
 
+
+misc
+----
+a            execute some custom action on a header
 |            pipe message through shell command
-
 C-+,C--      increase / decrease the number of headers shown
-
-d            mark for moving to the trash folder
-DEL,D        mark for immediate deletion
-m            mark for moving to another maildir folder
-o            mark message as unread
-r            mark message as read
-u            unmark message at point
-U            unmark *all* messages
-x            execute actions for the marked messages
-RET          open the message at point in the message view
-
 H            get help
 q,z          leave the headers buffer
 @end verbatim
@@ -642,7 +646,7 @@ include the previously captured message as an attachment, using
 
 The file @file{mu4e-actions.el} in the @t{mu4e} source distribution contains a
 number of example actions.
-  
+ 
 
 @subsection Split view
 
@@ -941,7 +945,6 @@ configuration:
 (setq message-kill-buffer-on-exit t)
 @end lisp
 
-
 @subsection Queuing mail
 @anchor{Queuing mail}
 
@@ -1159,7 +1162,6 @@ The very same shortcuts are used by the @code{mu4e-mark-for-move} (default
 shortcut @key{m}); so, for example, if you want to move a message the
 @t{/archive} folder, you can do so by typing @key{ma}.
 
-
 @node Other search functionality
 @section Other search functionality
 
@@ -1211,6 +1213,7 @@ Marking can happen in both the @ref{Headers view} and the @ref{Message view}.
 @menu
 * Selecting messages for marking::
 * What to mark for::
+* Executing the marks::
 * Leaving the headers buffer::
 * Some marking examples::
 @end menu
@@ -1238,16 +1241,34 @@ respectively
 @t{mu4e} supports a number of different marks - i.e., different actions to
 apply to messages:
 
-@itemize
-@item moving to trash (@key{t})
-@item delete (@key{D} or @key{<delete>})
-@item move to some maildir (@key{m})
-@item flag/unflag (@key{+}, @key{-})
-@item mark as read/unread (@key{r}, @key{o})
-@item remove the mark (@key{u})
-@end itemize
+@verbatim
+| mark for     | keybinding  | description              |
+|--------------+-------------+--------------------------|
+| trash        | d           | move to the trash folder |
+| delete       | D, <delete> | delete                   |
+| move         | m           | move to some maildir     |
+| flag         | +           | mark as 'flagged'        |
+| unflag       | -           | remove 'flagged' mark    |
+| read         | r           | mark as read             |
+| unread       | o           | marks as unread          |
+| unmark       | u           | remove mark at point     |
+| remove all   | U           | remove all marks         |
+@end verbatim
+  
+After marking a header for something, the leftmost columns shows a character
+(same as the keybinding) to remind you what you marked it with. Next to that,
+@t{mu4e} displays the name of the mark, on top of the beginning of the header
+line. This latter display is informative, but if you often mark many
+(thousands) messages, this may slow down things significantly@footnote{this
+uses an emacs feature called @emph{overlays}, which are slow when used a lot
+in a buffer}. For this reason, you can disable this by setting
+@code{mu4e-headers-show-target} to @code{nil}.
 
-You can remove @emph{all} marks in the @ref{Headers view} with @key{U}.
+@node Executing the marks
+@section Executing the marks
+
+After you have marked some messages, you can execute them with @key{x}
+(@code{mu4e-mark-execute-all}).
 
 @node Leaving the headers buffer
 @section Leaving the headers buffer
@@ -1269,7 +1290,6 @@ Let's look at some examples, assuming the default key-bindings.
 press @key{% + s hello RET}. Note, the menu system helps you here; all you
 need to remember is @key{%} for @code{mu4e-headers-mark-pattern}.
 @end itemize
-
 
 @node Actions
 @chapter Actions
@@ -1735,6 +1755,9 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
    ;; with 'mu mkdir', i.e.. mu mkdir /home/user/Maildir/queue
    smtpmail-queue-mail  nil
    smtpmail-queue-dir  "/home/user/Maildir/queue/cur")
+
+   ;; don't keep message buffers around
+   (setq message-kill-buffer-on-exit t)
 @end lisp
 
 
@@ -1865,6 +1888,9 @@ Now, let's make a @t{mu4e} configuration for this:
       smtpmail-default-smtp-server "smtp.gmail.com"
       smtpmail-smtp-server "smtp.gmail.com"
       smtpmail-smtp-service 587)
+
+;; don't keep message buffers around
+(setq message-kill-buffer-on-exit t)
 @end lisp
 
 And that's it -- put the above in your @file{~/.emacs} (obviously you need to

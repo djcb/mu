@@ -39,8 +39,15 @@
   :type 'symbol
   :group 'mu4e-headers)
 
+(defvar mu4e-headers-show-target t
+  "Whether to show targets (such as '-> delete', '-> /archive')
+when marking message. Normally, this is useful information for the
+user, however, when you often mark large numbers (thousands) of
+message, showing the target makes this quite a bit slower (showing
+the target uses an emacs feature called 'overlays', which aren't
+particularly fast).")
 
-;;; marks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; insert stuff;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e~mark-map nil
   "Map (hash) of docid->markinfo; when a message is marked, the
 information is added here.
@@ -95,17 +102,22 @@ The following marks are available, and the corresponding props:
    `unmark'   n         unmark this message"
   (interactive)
   (let* ((docid (mu4e~headers-docid-at-point))
-	  (markkar
+	  ;; get a cell with the mark char and the 'target' 'move' already has a
+	  ;; target (the target folder) the other ones get a pseudo "target", as
+	  ;; info for the user.
+	  (markcell
 	    (case mark ;; the visual mark
-	      ('move    "m")
-	      ('trash   "d")
-	      ('delete  "D")
-	      ('unread  "U")
-	      ('read    "R")
-	      ('flag    "+")
-	      ('unflag  "-")
-	      ('unmark  " ")
-	      (t (error "Invalid mark %S" mark)))))
+	      ('move    `("m" . ,target))
+	      ('trash   '("d" . "trash"))
+	      ('delete  '("D" . "delete"))
+	      ('unread  '("o" . "unread"))
+	      ('read    '("r" . "read"))
+	      ('flag    '("+" . "flag"))
+	      ('unflag  '("-" . "unflag"))
+	      ('unmark  '(" " . nil))
+	      (t (error "Invalid mark %S" mark))))
+	  (markkar (car markcell))
+	  (target (cdr markcell)))
     (unless docid (error "No message on this line"))
     (save-excursion
       (when (mu4e~headers-mark docid markkar)
@@ -114,13 +126,12 @@ The following marks are available, and the corresponding props:
 	(remhash docid mu4e~mark-map)
 	;; remove possible overlays
 	(remove-overlays (line-beginning-position) (line-end-position))
-
 	;; now, let's set a mark (unless we were unmarking)
 	(unless (eql mark 'unmark)
 	  (puthash docid (list mark target) mu4e~mark-map)
 	  ;; when we have a target (ie., when moving), show the target folder in
 	  ;; an overlay
-	  (when target
+	  (when (and target mu4e-headers-show-target)
 	    (let* ((targetstr (propertize (concat "-> " target " ")
 				'face 'mu4e-system-face))
 		    ;; mu4e~headers-goto-docid docid t \will take us just after the
