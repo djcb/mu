@@ -428,7 +428,11 @@ is nil, and otherwise open it."
 
       (define-key map (kbd "+") 'mu4e-view-mark-flag)
       (define-key map (kbd "-") 'mu4e-view-mark-unflag)
-
+      
+      (define-key map (kbd "*")             'mu4e-view-mark-deferred)
+      (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-deferred)
+      (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
+      
       ;; misc
       (define-key map "w" 'mu4e-view-toggle-wrap-lines)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
@@ -972,6 +976,13 @@ user that unmarking only works in the header list."
   (interactive)
   (mu4e~view-mark-set 'unflag)
   (mu4e-view-headers-next))
+
+(defun mu4e-view-mark-deferred ()
+  "Mark the current message for unflagging."
+  (interactive)
+  (mu4e~view-mark-set 'deferred)
+  (mu4e-view-headers-next))
+
 
 (defun mu4e-view-marked-execute ()
   "Execute the marks."

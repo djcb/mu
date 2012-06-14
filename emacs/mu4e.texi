@@ -561,6 +561,9 @@ U            unmark *all* messages
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
+SPC          deferred mark (decide what to mark for later)
+*            resolve deferred marks
+
 x            execute actions for the marked messages
 
 composition
@@ -646,7 +649,6 @@ include the previously captured message as an attachment, using
 
 The file @file{mu4e-actions.el} in the @t{mu4e} source distribution contains a
 number of example actions.
- 
 
 @subsection Split view
 
@@ -738,10 +740,12 @@ or by using the keyboard; the default bindings are:
 
 @verbatim
 key          description
----          -----------
+==============================================================
 n,p          go to next, previous message
 y            select the headers view (if it's visible)
 
+searching
+---------
 s            search
 e            edit last query
 /            narrow the search
@@ -752,23 +756,32 @@ j            jump to maildir
 M-left       previous query
 M-right      next query
 
-C-+,C--      increase / decrease the number of headers shown
-
-a            execute some action on the message
-
+marking
+-------
 d            mark for moving to the trash folder
 DEL,D        mark for immediate deletion
 m            mark for moving to another maildir folder
 +,-          mark for flagging/unflagging
+o,r          mark message as unread, read
+
 u            unmark message at point
+U            unmark *all* messages 
+
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
+SPC          deferred mark (decide what to mark for later)
+*            resolve deferred marks
+
+x            execute actions for the marked messages
+
+composition
+-----------
 R,F,C        reply/forward/compose
 E            edit (only allowed for draft messages)
 
-.            show the raw message view. 'q' takes you back.
-
+actions
+-------
 g            go to (visit) numbered URL (using `browse-url')
              (or: <mouse-2> or RET with point on url)
 e            extract (save) attachment (asks for number)
@@ -776,10 +789,17 @@ e            extract (save) attachment (asks for number)
              C-u e will extract multiple attachments
 o            open attachment (asks for number)
              (or: <S-mouse-2> or S-RET with point on attachment)
-A            execute some action on an attachment
+
+a            execute some custom action on the message
+A            execute some custom action on an attachment
+
+misc
+----
 w            toggle line wrapping
 h            toggle showing cited parts
 
+.            show the raw message view. 'q' takes you back.
+C-+,C--      increase / decrease the number of headers shown
 H            get help
 q,z          leave the message view
 @end verbatim
@@ -1251,18 +1271,23 @@ apply to messages:
 | unflag       | -           | remove 'flagged' mark    |
 | read         | r           | mark as read             |
 | unread       | o           | marks as unread          |
+| deferred     | *           | mark now, decide later   |
 | unmark       | u           | remove mark at point     |
-| remove all   | U           | remove all marks         |
+| unmark all   | U           | remove all marks         |
 @end verbatim
   
-After marking a header for something, the leftmost columns shows a character
-(same as the keybinding) to remind you what you marked it with. Next to that,
-@t{mu4e} displays the name of the mark, on top of the beginning of the header
-line. This latter display is informative, but if you often mark many
-(thousands) messages, this may slow down things significantly@footnote{this
-uses an emacs feature called @emph{overlays}, which are slow when used a lot
-in a buffer}. For this reason, you can disable this by setting
-@code{mu4e-headers-show-target} to @code{nil}.
+After marking a header for something, the left-most columns shows a character
+to remind you what you marked it with. Next to that, @t{mu4e} displays the
+name of the mark, on top of the beginning of the header line. This latter
+display is informative, but if you often mark many (thousands) messages, this
+may slow down things significantly@footnote{this uses an emacs feature called
+@emph{overlays}, which are slow when used a lot in a buffer}. For this reason,
+you can disable this by setting @code{mu4e-headers-show-target} to @code{nil}.
+
+@t{deferred} is a special kind of mark; you can use it to mark some messages,
+and then decide later what mark to use for them. At any time, you can set the
+actual mark with @code{mu4e-mark-resolve-deferred-marks} (@key{#}), or
+@t{mu4e} will ask you for it when you execute the marks (@key{x}).
 
 @node Executing the marks
 @section Executing the marks
@@ -1304,12 +1329,14 @@ You can invoke the actions with @key{a} for actions on messages, and @key{A}
 for actions on attachments. In the following, we'll gives some examples of
 defining actions.
 
-Note, the format of the actions has changed slightly since version 0.9.8.4;
-@t{mu4e} warns you if you use the old format still. The older format was:
-@code{(DESCRIPTION SHORTCUT [VALUE])}, while the new format is a cons-cell,
-@code{(DESCRIPTION . VALUE)}; see below for some examples. If your shortcut is
-not also the first character of the description, simply prefix the description
-with that character.
+Note, the format of the actions has changed since version 0.9.8.4, and you
+must change your configuration to use the new format; @t{mu4e} warns you when
+you are using the old format.
+
+The older format was: @code{(DESCRIPTION SHORTCUT [VALUE])}, while the new
+format is a cons-cell, @code{(DESCRIPTION . VALUE)}; see below for some
+examples. If your shortcut is not also the first character of the description,
+simply prefix the description with that character.
 
 @subsection Functions for actions
 
@@ -1334,7 +1361,7 @@ After you have defined your function, you can add it to the list of actions,
 either @code{mu4e-headers-actions}, @code{mu4e-view-actions} or
 @code{mu4e-view-attachment-actions}.
 
-Let's now look at some simple examples.
+Let's take a at some simple examples.
 
 @subsection Example: adding an action in the headers view
 
@@ -1398,9 +1425,9 @@ To help a bit with this, all functions and variables in @t{mu4e} marked for
 letters, so they will only appear at the end of completion buffers and the
 like.
 
-Functions that start with @t{mu4e-view-} and @t{mu4e-headers-} should be called
-only from that particular context (the message view and the headers view,
-respectively).
+Functions that start with @t{mu4e-view-} and @t{mu4e-headers-} should be
+called only from that particular context (the message view and the headers
+view, respectively).
 
 @subsection Example actions
 
@@ -1918,7 +1945,7 @@ can also use functions like @code{mu4e-headers-mark-thread} (@key{T}),
 time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
 matching a certain regular expression.
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
-address management with @t{BBDB}; instead, we recommend @xref{Maintaining an
+address management with @t{BBDB}; instead, we recommend @ref{Maintaining an
 address-book with org-contacts} for now.
 @item @emph{mu4e seems to return a mere subset of all matches - how can I get
 all?}. Indeed, for speed reasons (and because, if you are like the author, you

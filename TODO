@@ -18,13 +18,14 @@
   - contact completion (see Jacek's 'mu4e: using' mail)
   - actions for /all/ headers, actions for /all/ attachment
   - custom header fields in headers-view, message-view
+  - custom predicate functions for marking
   - guile integration
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
-  - mark message, decide what to do with them later
   - make killing all windows (i.e.. 'fullscreen mode' optional)
-  - improve fringe marks (see https://github.com/djcb/mu/issues/21)
+  - better naming for draft buffers
+  - review emacs menus
 
 ** Done
 
@@ -50,7 +51,8 @@
     https://github.com/djcb/mu/issues/26)
   - *FIX* don't remove unknown message flags when moving
   - make guile/gtk/webkit dependency optional
-
+  - improve fringe marks (see https://github.com/djcb/mu/issues/21)
+  - mark message, decide what to do with them later (i.e.. 'deferred marking')
 
 
 # Local Variables:

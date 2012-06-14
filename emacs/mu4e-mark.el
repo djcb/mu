@@ -52,8 +52,8 @@ particularly fast).")
   "Map (hash) of docid->markinfo; when a message is marked, the
 information is added here.
 
-markinfo is a list consisting of the following:
-\(mark target)
+markinfo is a cons cell consisting of the following:
+\(mark . target)
 where
    MARK is the type of mark (move, trash, delete)
    TARGET (optional) is the target directory (for 'move')")
@@ -99,6 +99,7 @@ The following marks are available, and the corresponding props:
    `unread'   n         mark the message as unread
    `flag'     n         mark this message for flagging
    `unflag'   n         mark this message for unflagging
+   `deferred' n         mark this message for *something* (decided later)
    `unmark'   n         unmark this message"
   (interactive)
   (let* ((docid (mu4e~headers-docid-at-point))
@@ -106,16 +107,17 @@ The following marks are available, and the corresponding props:
 	  ;; target (the target folder) the other ones get a pseudo "target", as
 	  ;; info for the user.
 	  (markcell
-	    (case mark ;; the visual mark
-	      ('move    `("m" . ,target))
-	      ('trash   '("d" . "trash"))
-	      ('delete  '("D" . "delete"))
-	      ('unread  '("o" . "unread"))
-	      ('read    '("r" . "read"))
-	      ('flag    '("+" . "flag"))
-	      ('unflag  '("-" . "unflag"))
-	      ('unmark  '(" " . nil))
-	      (t (error "Invalid mark %S" mark))))
+	    (case mark 
+	      (move      `("m" . ,target))
+	      (trash     '("d" . "trash"))
+	      (delete    '("D" . "delete"))
+	      (unread    '("o" . "unread"))
+	      (read      '("r" . "read"))
+	      (flag      '("+" . "flag"))
+	      (unflag    '("-" . "unflag"))
+	      (deferred  '("*" . "deferred"))
+	      (unmark    '(" " . nil))
+	      (otherwise (error "Invalid mark %S" mark))))
 	  (markkar (car markcell))
 	  (target (cdr markcell)))
     (unless docid (error "No message on this line"))
@@ -128,7 +130,7 @@ The following marks are available, and the corresponding props:
 	(remove-overlays (line-beginning-position) (line-end-position))
 	;; now, let's set a mark (unless we were unmarking)
 	(unless (eql mark 'unmark)
-	  (puthash docid (list mark target) mu4e~mark-map)
+	  (puthash docid (cons mark target) mu4e~mark-map)
 	  ;; when we have a target (ie., when moving), show the target folder in
 	  ;; an overlay
 	  (when (and target mu4e-headers-show-target)
@@ -178,6 +180,45 @@ provided, function asks for it."
       (mu4e-mark-set 'move target))))
 
 
+(defun mu4e~mark-get-markpair (prompt &optional allow-deferred)
+  "Ask user for a mark; return (MARK . TARGET). If ALLOW-DEFERRED
+is non-nil, allow the 'deferred' pseudo mark as well."
+  (let* ((marks '(("move"	. move)
+		   ("dtrash"	. trash)
+		   ("Delete"	. delete)
+		   ("ounread"	. unread)
+		   ("read"	. read)
+		   ("+flag"	. flag)
+		   ("-unflag"	. unflag)
+		   ("unmark"	. unmark)))
+	  (marks
+	    (if allow-deferred
+	      (append marks (list '("*deferred" . deferred)))
+	      marks))
+	  (mark (mu4e-read-option prompt marks))  
+	  (target
+	    (when (eq mark 'move)
+	      (mu4e-ask-maildir-check-exists "Move message to: "))))
+    (cons mark target)))
+
+
+(defun mu4e-mark-resolve-deferred-marks ()
+  "Check if there are any deferred marks. If there are such marks,
+replace them with a _real_ mark (ask the user which one)."
+  (interactive)
+  (let ((markpair))
+    (maphash
+      (lambda (docid val)
+	(let ((mark (car val)) (target (cdr val)))
+	  (when (eql mark 'deferred)
+	    (unless markpair
+	      (setq markpair
+		(mu4e~mark-get-markpair "Set deferred mark to: " nil)))
+	    (save-excursion
+	      (when (mu4e~headers-goto-docid docid)
+		(mu4e-mark-set (car markpair) (cdr markpair)))))))
+      mu4e~mark-map)))
+
 (defun mu4e-mark-execute-all (&optional no-confirmation)
   "Execute the actions for all marked messages in this
 buffer. After the actions have been executed succesfully, the
@@ -194,13 +235,14 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (let ((marknum (hash-table-count mu4e~mark-map)))
     (if (zerop marknum)
       (message "Nothing is marked")
+      (mu4e-mark-resolve-deferred-marks)
       (when (or no-confirmation
 	      (y-or-n-p
 		(format "Are you sure you want to execute %d mark%s?"
 		  marknum (if (> marknum 1) "s" ""))))
 	(maphash
 	  (lambda (docid val)
-	    (let ((mark (nth 0 val)) (target (nth 1 val)))
+	    (let ((mark (car val)) (target (cdr val)))
 	      (case mark
 		(move   (mu4e~proc-move docid target))
 		(read   (mu4e~proc-move docid nil "+S-u-N"))
@@ -211,7 +253,8 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 		  (unless mu4e-trash-folder
 		    (error "`mu4e-trash-folder' not set"))
 		  (mu4e~proc-move docid mu4e-trash-folder "+T"))
-		(delete (mu4e~proc-remove docid)))))
+		(delete (mu4e~proc-remove docid))
+		(otherwise (error "Unrecognized mark %S" mark)))))
 	  mu4e~mark-map))
       (mu4e-mark-unmark-all)
       (message nil))))

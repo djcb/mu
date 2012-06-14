@@ -30,7 +30,9 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
+(require 'fringe)
 (require 'hl-line)
+
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-proc)
 (require 'mu4e-vars)
@@ -310,24 +312,34 @@ after the end of the search results."
 	  ;; highlight the first message
 	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
+ 
 
+(defmacro mu4e~headers-defun-mark-func (mark)
+  "Define a function mu4e~headers-mark-MARK."
+  (let ((funcname (intern (concat "mu4e~headers-mark-" (symbol-name mark))))
+	 (docstring (concat "Mark header at point with " (symbol-name mark) ".")))
+     `(defun ,funcname () ,docstring
+	(interactive)
+	(mu4e-headers-mark-and-next (quote ,mark)))))
+ 
+;; define our mark functions; there must be some way to do this in a loop but
+;; since `mu4e~headers-defun-mark-func' is a macro, the argument must be a
+;; literal value.
+(mu4e~headers-defun-mark-func trash)
+(mu4e~headers-defun-mark-func delete)
+(mu4e~headers-defun-mark-func read)
+(mu4e~headers-defun-mark-func unread)
+(mu4e~headers-defun-mark-func flag)
+(mu4e~headers-defun-mark-func unflag)
+(mu4e~headers-defun-mark-func deferred)
+(mu4e~headers-defun-mark-func unmark)
+
+
 ;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-headers-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
 (unless mu4e-headers-mode-map
-  ;; add some quick funcs so our key descriptions below are shorter
-  ;; TODO: defmacro this
-  (defun mu4e~headers-mark-trash()(interactive)(mu4e-headers-mark-and-next 'trash))
-  (defun mu4e~headers-mark-delete()(interactive)(mu4e-headers-mark-and-next 'delete))
-  (defun mu4e~headers-mark-unmark()(interactive)(mu4e-headers-mark-and-next 'unmark))
-  (defun mu4e~headers-mark-read()(interactive)(mu4e-headers-mark-and-next 'read))
-  (defun mu4e~headers-mark-unread()(interactive)(mu4e-headers-mark-and-next 'unread))
-  (defun mu4e~headers-mark-flag()(interactive)(mu4e-headers-mark-and-next 'flag))
-  (defun mu4e~headers-mark-unflag()(interactive)(mu4e-headers-mark-and-next 'unflag))
-
+   
   (setq mu4e-headers-mode-map
     (let ((map (make-sparse-keymap)))
 
@@ -391,7 +403,11 @@ after the end of the search results."
       (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
 
       (define-key map "m" 'mu4e-headers-mark-for-move-and-next)
-
+      
+      (define-key map (kbd "*")  'mu4e~headers-mark-deferred)
+      (define-key map (kbd "<kp-multiply>")  'mu4e~headers-mark-deferred)
+      (define-key map (kbd "#")   'mu4e-mark-resolve-deferred-marks)
+     
       (define-key map "U" 'mu4e-mark-unmark-all)
       (define-key map "x" 'mu4e-mark-execute-all)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -718,25 +734,7 @@ header."
 	(when msg
 	  (funcall func msg))))))
 
-
-(defun mu4e~headers-get-markpair ()
-  "Ask user for a mark; return (MARK . TARGET)."
-  (let* ((mark
-	   (mu4e-read-option "Mark to set: "
-	      '( ("move"	. move)
-		 ("dtrash"	. trash)
-		 ("Delete"	. delete)
-		 ("ounread"	. unread)
-		 ("read"	. read)
-		 ("+flag"	. flag)
-		 ("-unflag"	. unflag)
-		 ("unmark"	. unmark))))
-	  (target
-	    (when (eq mark 'move)
-	      (mu4e-ask-maildir-check-exists "Move message to: "))))
-    (cons mark target)))
-
-(defvar mu4e~headers-regexp-hist nil
+ (defvar mu4e~headers-regexp-hist nil
   "History list of regexps used.")
 
 (defun mu4e-headers-mark-pattern ()
@@ -744,7 +742,7 @@ header."
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
-  (let ((markpair (mu4e~headers-get-markpair))
+  (let ((markpair (mu4e~mark-get-markpair "Mark matched messages with: " t))
 	 (field (mu4e-read-option "Field to match: "
 		  '( ("subject" . :subject)
 		     ("from"    . :from)
@@ -789,7 +787,10 @@ limited to the message at point and its descendants."
 		      (mu4e-message-at-point t) 'thread-id))
 	  (path     (mu4e~headers-get-thread-info
 		      (mu4e-message-at-point t) 'path))
-	  (markpair (mu4e~headers-get-markpair))
+	  (markpair
+	    (mu4e~mark-get-markpair
+	      (if subthread "Mark subthread with: " "Mark whole thread with: ")
+	      t))
 	  (last-marked-point))
     (mu4e-headers-for-each
       (lambda (msg)
