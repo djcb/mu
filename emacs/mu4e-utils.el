@@ -30,6 +30,7 @@
 
 (require 'html2text)
 (require 'mu4e-vars)
+(require 'mu4e-about)
 (require 'doc-view)
 (require 'org) ;; for org-parse-time-string
 
@@ -775,23 +776,7 @@ is ignored."
       (newline)
       (insert-image img imgpath nil t))))
 
-
-(defun mu4e-quit-buffer ()
-  "Bury the current buffer (and delete all windows displaying it)."
-  (interactive)
-  (let ((buf (current-buffer)))
-    (walk-windows
-      ;; kill any window that:
-      ;; a) displays the current buffer
-      ;; b) is not the only win
-      (lambda (win)
-	(when (eq (window-buffer win) (current-buffer))
-	  (unless (one-window-p t)
-	    (delete-window win)))) nil t)
-    ;; if current buffer is still here, bury it
-    (when (eq buf (current-buffer))
-      (bury-buffer))))
-
+ 
 
 (defun mu4e-hide-other-mu4e-buffers ()
   "Bury mu4e-buffers (main, headers, view) (and delete all windows
@@ -813,6 +798,29 @@ displaying it). Do _not_ bury the current buffer, though."
   `parse-time-string'."
   (let ((timestr (read-string (mu4e-format "%s" prompt))))
     (apply 'encode-time (org-parse-time-string timestr))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defconst mu4e~main-about-buffer-name "*mu4e-about*"
+  "Name for the mu4e-about buffer.")
+
+(defun mu4e-about ()
+  "Show a buffer with the mu4e-about text."
+  (interactive)
+  (with-current-buffer
+    (get-buffer-create mu4e~main-about-buffer-name)
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert mu4e-about)
+      (org-mode)))
+  (switch-to-buffer mu4e~main-about-buffer-name)
+  (setq buffer-read-only t)
+  (local-set-key "q" 'bury-buffer)
+  (goto-char (point-min)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

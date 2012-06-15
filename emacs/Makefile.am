@@ -24,6 +24,7 @@ mu4e_TEXINFOS=fdl.texi
 lispdir=${prefix}/share/emacs/site-lisp/mu4e/
 
 dist_lisp_LISP=			\
+	mu4e-about.el		\
 	mu4e-actions.el		\
 	mu4e-compose.el		\
 	mu4e-headers.el		\
@@ -38,8 +39,8 @@ dist_lisp_LISP=			\
 	mu4e.el			\
 	org-mu4e.el
 
-BUILT_SOURCES=			\
-	mu4e-about.el
+# BUILT_SOURCES=			\
+# 	mu4e-about.el
 
 mu4e-about.el: mu4e-about.org
 	@echo ";; auto-generated"              >   mu4e-about.el

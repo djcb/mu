@@ -25,7 +25,6 @@
 ;;; Code:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'mu4e-utils)    ;; utility functions
-(require 'mu4e-about)
 
 (defconst mu4e~main-buffer-name "*mu4e-main*"
   "*internal* Name of the mu4e main view buffer.")
@@ -46,6 +45,7 @@
     (define-key map "U" 'mu4e-update-mail-show-window)
 
     (define-key map "$" 'mu4e-show-log)
+    (define-key map "A" 'mu4e-about)
     (define-key map "H" 'mu4e-display-manual)
     map)
 
@@ -130,7 +130,7 @@ clicked."
 	      'smtpmail-send-queued-mail))
 	  "")
 	"\n"
-	(mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e~main-about)
+	(mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
 	(mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
@@ -148,23 +148,5 @@ clicked."
     (concat "Outgoing mail will now be "
       (if smtpmail-queue-mail "queued" "sent directly")))
   (mu4e~main-view))
-
- 
-(defconst mu4e~main-about-buffer-name "*mu4e-about*"
-  "Name for the mu4e-about buffer.")
-
-(defun mu4e~main-about ()
-  "Create a buffer with the mu4e-about text."
-  (interactive)
-  (with-current-buffer
-    (get-buffer-create mu4e~main-about-buffer-name)
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert mu4e-about)
-      (org-mode)))
-  (switch-to-buffer mu4e~main-about-buffer-name)
-  (setq buffer-read-only t)
-  (local-set-key "q" 'bury-buffer)
-  (goto-char (point-min)))
  
 (provide 'mu4e-main)
