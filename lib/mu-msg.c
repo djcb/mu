@@ -686,7 +686,29 @@ cmp_str (const char *s1, const char *s2)
 	else if (!s2)
 		return 1;
 
-	return g_utf8_collate (s1, s2);
+	/* optimization 1: ascii */
+	if (isascii(s1[0]) && isascii(s2[0])) {
+		int diff;
+		diff = tolower(s1[0]) - tolower(s2[0]);
+		if (diff != 0)
+			return diff;
+	}
+
+	/* utf 8 */
+	{
+		char *u1, *u2;
+		int diff;
+
+		u1 = g_utf8_strdown (s1, -1);
+		u2 = g_utf8_strdown (s2, -1);
+
+		diff = g_utf8_collate (u1, u2);
+
+		g_free (u1);
+		g_free (u2);
+
+		return diff;
+	}
 }
 
 
@@ -700,7 +722,7 @@ cmp_subject (const char* s1, const char *s2)
 	else if (!s2)
 		return 1;
 
-	return g_utf8_collate (
+	return cmp_str (
 		mu_str_subject_normalize (s1),
 		mu_str_subject_normalize (s2));
 }
