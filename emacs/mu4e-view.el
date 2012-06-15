@@ -350,11 +350,11 @@ is nil, and otherwise open it."
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
 
-      (define-key map "q" 'mu4e-quit-buffer)
+      (define-key map "q" 'mu4e~view-quit-buffer)
 
       ;; note, 'z' is by-default bound to 'bury-buffer'
       ;; but that's not very useful in this case
-      (define-key map "z" 'mu4e-quit-buffer)
+      (define-key map "z" 'mu4e~view-quit-buffer)
 
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-view-search-edit)
@@ -454,7 +454,7 @@ is nil, and otherwise open it."
 	(define-key map [menu-bar headers] (cons "View" menumap))
 
 	(define-key menumap [quit-buffer]
-	  '("Quit view" . mu4e-quit-buffer))
+	  '("Quit view" . mu4e~view-quit-buffer))
 	(define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
 	(define-key menumap [sepa0] '("--"))
@@ -1026,4 +1026,37 @@ the results."
   (let ((path (mu4e-field-at-point :path)))
     (mu4e-process-file-through-pipe path cmd)))
 
+(defun mu4e~view-quit-buffer ()
+  "Quit the mu4e-view buffer. This is a rather complex function; to
+ensure we don't disturb other windows."
+  (interactive)
+  (unless (eq major-mode 'mu4e-view-mode)
+    (error "Must be in mu4e-view-mode (%S)" major-mode))
+  (let ((curbuf (current-buffer)) (curwin (selected-window))
+	 (headers-visible))
+    (walk-windows
+      (lambda (win)
+	;; check whether the headers buffer window is visible
+	(when (eq mu4e~view-headers-buffer (window-buffer win))
+	  (setq headers-visible t))
+	;; and kill any _other_ (non-selected) window that shows the current
+	;; buffer
+	(when
+	  (and
+	    (eq curbuf (window-buffer win)) ;; does win show curbuf?
+	    (not (eq curwin win))	    ;; but it's not the curwin?
+	    (not (one-window-p))) ;; and not the last one on the frame?  
+	  (delete-window win))))  ;; delete it!
+    ;; now, all *other* windows should be gone.
+    ;; if the headers view is also visible, kill ourselves + window; otherwise
+    ;; switch to the headers view
+    (if headers-visible
+      (kill-buffer-and-window)
+      ;; headers are not visible...
+      (kill-buffer)
+      (when (buffer-live-p mu4e~view-headers-buffer)
+	(switch-to-buffer mu4e~view-headers-buffer))))) 
+ 
+
 (provide 'mu4e-view)
+;; end of mu4e-view
