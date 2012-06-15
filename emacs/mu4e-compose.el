@@ -486,6 +486,10 @@ needed, set the Fcc header, and register the handler function."
 		       mu4e~compose-buffer-max-name-length
 		       nil nil t)))))
 
+(defconst mu4e~compose-hidden-headers
+  '("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
+     "^User-Agent:")
+  "List of regexps with message headers that are to be hidden.")
 
 (defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
@@ -532,9 +536,6 @@ Gnus' `message-mode'."
     (mu4e~compose-insert-mail-header-separator)
     (insert "\n") ;; insert a newline after header separator
 
-    ;; hide headers
-    (message-hide-headers)
-
     ;; include files -- e.g. when forwarding a message with attachments,
     ;; we take those from the original.
     (save-excursion
@@ -548,13 +549,17 @@ Gnus' `message-mode'."
     (unless (eq compose-type 'edit)
       (message-insert-signature))
 
+    ;; hide some headers
+    (let ((message-hidden-headers mu4e~compose-hidden-headers))
+      (message-hide-headers))  
+
     ;; set compose mode -- so now hooks can run
     (mu4e-compose-mode)
 
     ;; buffer is not user-modified yet
     (mu4e~compose-set-friendly-buffer-name compose-type)
     (set-buffer-modified-p nil)
-
+    
     ;; now jump to some use positions, and start writing that mail!
     (if (member compose-type '(new forward))
       (message-goto-to)
