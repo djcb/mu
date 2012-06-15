@@ -448,7 +448,7 @@ test_mu_str_subject_normalize (void)
 		{ "Re:test123", "test123" },
 		{ "Re: Fwd: test123", "test123" },
 		{ "Re[3]: Fwd: test123", "test123" },
-		{ "operation: mindcrime", "mindcrime" }, /*...*/
+		{ "operation: mindcrime", "operation: mindcrime" }, /*...*/
 		{ "", "" }
 	};
 

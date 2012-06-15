@@ -55,6 +55,7 @@ tags:
 cc10:
 	@$(PMCCABE) `find -name '*.c' -o -name '*.cc'`		\
 	| grep -v mu-str-normalize.c				\
+	| grep -v mu_str_subject_normalize			\
 	| grep -v tests						\
 	| sort -nr | awk '($$1 > 10)'
 
@@ -65,6 +66,7 @@ cc10:
 line35:
 	@$(PMCCABE) -c `find -name '*.c' -o -name '*.cc'`	\
 	 | grep -v mu-str-normalize.c				\
+	 | grep -v mu_str_subject_normalize			\
 	 | grep -v config_options_group_find			\
 	 | grep -v SCM_DEFINE_PUBLIC				\
 	 | grep -v tests					\

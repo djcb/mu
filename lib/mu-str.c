@@ -347,22 +347,52 @@ mu_str_free_list (GSList *lst)
 	g_slist_free (lst);
 }
 
+
+/* this function is critical for sorting performance; therefore, no
+ * regexps, but just some good old c pointer magic */
 const gchar*
 mu_str_subject_normalize (const gchar* str)
 {
-	gchar *last_colon;
+	const char* cur;
+
 	g_return_val_if_fail (str, NULL);
 
-	last_colon = g_strrstr (str, ":");
-	if (!last_colon)
+	cur = str;
+	while (isspace(*cur)) ++cur; /* skip space */
+
+	/* starts with Re:? */
+	if (tolower(cur[0]) == 'r' && tolower(cur[1]) == 'e')
+		cur += 2;
+	/* starts with Fwd:? */
+	else if (tolower(cur[0]) == 'f' && tolower(cur[1]) == 'w' &&
+		 tolower(cur[2]) == 'd')
+		cur += 3;
+	else /* nope, different string */
 		return str;
-	else {
-		gchar *str;
-		str = last_colon + 1;
-		while (*str == ' ')
-			++str;
-		return str;
+
+	/* we're now past either 'Re' or 'Fwd'. Maybe there's a [<num>] now?
+	 * ie., the Re[3]: foo case */
+	if (cur[0] == '[') { /* handle the Re[3]: case */
+		if (isdigit(cur[1])) {
+			do { ++cur; } while (isdigit(*cur));
+			if ( cur[0] != ']') {
+				return str; /* nope: no ending ']' */
+			} else /* skip ']' and space */
+				do { ++cur; } while (isspace(*cur));
+		} else /* nope: no number after '[' */
+			return str;
 	}
+
+	/* now, cur points past either 're' or 'fwd', possibly with
+	 * [<num>]; check if it's really a prefix -- after re or fwd
+	 * there should either a ':' and possibly some space */
+	if (cur[0] == ':') {
+		do { ++cur; } while (isspace(*cur));
+		/* note: there may still be another prefix, such as
+		 * Re[2]: Fwd: foo */
+		return mu_str_subject_normalize (cur);
+	} else
+		return str; /* nope, it was not a prefix */
 }
 
 
