@@ -38,4 +38,16 @@ dist_lisp_LISP=			\
 	mu4e.el			\
 	org-mu4e.el
 
-EXTRA_DIST=$(elisp_DATA)
+BUILT_SOURCES=			\
+	mu4e-about.el
+
+mu4e-about.el: mu4e-about.org
+	@echo ";; auto-generated"              >   mu4e-about.el
+	@echo -n "(defconst mu4e-about \""     >>  mu4e-about.el
+	@sed 's/"/\\"/g' < mu4e-about.org      >>  mu4e-about.el
+	@echo "\" \"About mu4e.\")"            >>  mu4e-about.el
+	@echo "(provide 'mu4e-about)"          >>  mu4e-about.el
+
+EXTRA_DIST=$(elisp_DATA) mu4e-about.org
+
+CLEANFILES=*.elc ${BUILT_SOURCES}

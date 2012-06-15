@@ -424,6 +424,7 @@ This looks something like the following:
 	* toggle [m]ail sending mode (direct)
 	* [f]lush queued mail
 
+        * [A]bout mu4e
         * [H]elp
 	* [q]uit mu4e
 ----------------------------------------------------------------------------
@@ -467,6 +468,7 @@ database; @pxref{Indexing your messages}. See @ref{Getting mail} for details.
 mail directly, and queuing it first (for example, when you are offline), and
 @t{[f]lush queued mail} will flush any queued mail. This item is visible only
 if you have actually set up mail-queuing. @ref{Queuing mail}.
+@item @t{[A]bout mu4e} will give some general information about @t{mu4e}.
 @item @t{[H]elp} will show help information for this view.
 @item Finally, @t{[q]uit mu4e} will quit @t{mu4e}.
 @end itemize

@@ -81,7 +81,6 @@ where
   "Clear the marks subsystem."
   (clrhash mu4e~mark-map))
 
-
 (defun mu4e-mark-at-point (mark &optional target)
   "Mark (or unmark) message at point. MARK specifies the
   mark-type. For `move'-marks there is also the TARGET argument,
@@ -160,6 +159,13 @@ headers in the region."
     ;; just a single message
     (mu4e-mark-at-point mark target)))
 
+(defun mu4e-mark-restore (docid)
+  "Restore the visual mark for the message with DOCID."
+  (let ((markcell (gethash docid mu4e~mark-map)))
+    (when markcell
+      (save-excursion
+	(when (mu4e~headers-goto-docid docid)
+	  (mu4e-mark-at-point (car markcell) (cdr markcell)))))))
 
 (defun mu4e-mark-for-move-set (&optional target)
   "Mark message at point or, if region is active, all messages in
@@ -300,5 +306,6 @@ action', return nil means 'don't do anything'"
 	    (when (eq what 'apply)
 	      (mu4e-mark-execute-all t))))))))
 
-
 (provide 'mu4e-mark)
+;; End of mu4e-mark.el
+
