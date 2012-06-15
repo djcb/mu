@@ -147,7 +147,7 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
      ("to"	. to))
   "List of cells describing the various sort-options (in the format
   needed for `mu4e-read-option'.")
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~headers-clear ()
@@ -332,7 +332,7 @@ after the end of the search results."
 	  ;; highlight the first message
 	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
 
 (defmacro mu4e~headers-defun-mark-func (mark)
   "Define a function mu4e~headers-mark-MARK."
@@ -341,7 +341,7 @@ after the end of the search results."
      `(defun ,funcname () ,docstring
 	(interactive)
 	(mu4e-headers-mark-and-next (quote ,mark)))))
- 
+
 ;; define our mark functions; there must be some way to do this in a loop but
 ;; since `mu4e~headers-defun-mark-func' is a macro, the argument must be a
 ;; literal value.
@@ -359,7 +359,7 @@ after the end of the search results."
 (defvar mu4e-headers-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
 (unless mu4e-headers-mode-map
-   
+
   (setq mu4e-headers-mode-map
     (let ((map (make-sparse-keymap)))
 
@@ -423,11 +423,11 @@ after the end of the search results."
       (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
       (define-key map (kbd "&") 'mu4e-headers-mark-custom)
       (define-key map "m" 'mu4e-headers-mark-for-move-and-next)
-      
+
       (define-key map (kbd "*")  'mu4e~headers-mark-deferred)
       (define-key map (kbd "<kp-multiply>")  'mu4e~headers-mark-deferred)
       (define-key map (kbd "#")   'mu4e-mark-resolve-deferred-marks)
-     
+
       (define-key map "U" 'mu4e-mark-unmark-all)
       (define-key map "x" 'mu4e-mark-execute-all)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -719,7 +719,7 @@ the query history stack."
       mu4e-headers-show-threads
       mu4e-headers-sortfield
       mu4e-headers-sort-revert
-      (unless mu4e-headers-full-search mu4e-search-results-limit)))) 
+      (unless mu4e-headers-full-search mu4e-search-results-limit))))
 
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value
@@ -765,7 +765,7 @@ parameter). MARKPAIR is a cell (MARK . TARGET)."
   (mu4e-headers-for-each
     (lambda (msg)
       (when (funcall mark-pred msg param)
-	(mu4e-mark-at-point (car markpair) (cdr markpair)))))) 
+	(mu4e-mark-at-point (car markpair) (cdr markpair))))))
 
 (defun mu4e-headers-mark-pattern ()
   "Ask user for a kind of mark (move, delete etc.), a field to
@@ -799,7 +799,7 @@ matching messages with that mark."
 		 mu4e-headers-custom-markers))
 	  (param (when (cdr pred) (eval (cdr pred))))
 	  (markpair (mu4e~mark-get-markpair "Mark matched messages with: " t)))
-    (mu4e~headers-mark-for-each-if markpair (car pred) param))) 
+    (mu4e~headers-mark-for-each-if markpair (car pred) param)))
 
 (defun mu4e~headers-get-thread-info (msg what)
   "Get WHAT (a symbol, either path or thread-id) for MSG."
@@ -962,9 +962,9 @@ the last search expression."
     (format "(%s) AND %s" mu4e~headers-last-query filter)))
 
 
-(defun mu4e-headers-change-sorting (&optional rerun)
+(defun mu4e-headers-change-sorting (&optional dont-refresh)
   "Interactively change the sorting/threading parameters. With prefix-argument,
-rerun the last search with the new parameters."
+do _not_ refresh the last search with the new parameters."
   (interactive "P")
   (let* ((sortfield
 	   (mu4e-read-option "Sortfield: " mu4e~headers-sortfield-choices))
@@ -974,34 +974,41 @@ rerun the last search with the new parameters."
     (setq
       mu4e-headers-sortfield sortfield
       mu4e-headers-sort-revert revert) ;; "descending" means "revert"
+    ;; turn off threading if we don't sort by date (FIXME)
+    (unless (eq sortfield  'date)
+      (setq mu4e-headers-show-threads nil))
     (mu4e-message "Sorting by %s (%s)%s"
       (symbol-name sortfield)
       (if revert "descending" "ascending")
-      (if rerun
-	"" " (press 'g' to refresh)"))
-    (when rerun
+      (if dont-refresh
+	" (press 'g' to refresh)" ""))
+    (unless dont-refresh
       (mu4e-headers-rerun-search))))
 
-(defun mu4e-headers-toggle-threading (&optional rerun)
+(defun mu4e-headers-toggle-threading (&optional dont-refresh)
   "Toggle threading on/off for the search results. With prefix-argument,
-rerun the last search with the new setting for threading."
+do _not_ refresh the last search with the new setting for
+threading."
   (interactive "P")
   (setq mu4e-headers-show-threads (not mu4e-headers-show-threads))
   (mu4e-message "Threading turned %s%s"
     (if mu4e-headers-show-threads "on" "off")
-    (if rerun "" " (press 'g' to refresh)"))
-  (when rerun
+    (if dont-refresh
+	" (press 'g' to refresh)" ""))
+  (unless dont-refresh
     (mu4e-headers-rerun-search)))
 
-(defun mu4e-headers-toggle-full-search (&optional rerun)
+(defun mu4e-headers-toggle-full-search (&optional dont-refresh)
   "Toggle full-search on/off for the search results. With prefix-argument,
-rerun the last search with the new setting for threading."
+do _not_ refresh the last search with the new setting for
+threading."
   (interactive "P")
   (setq mu4e-headers-full-search (not mu4e-headers-full-search))
   (mu4e-message "Full search turned %s%s"
     (if mu4e-headers-full-search "on" "off")
-    (if rerun "" " (press 'g' to refresh)")) 
-  (when rerun
+    (if dont-refresh
+	" (press 'g' to refresh)" ""))
+  (unless dont-refresh
     (mu4e-headers-rerun-search)))
 
 
@@ -1025,7 +1032,7 @@ current window. "
       (insert (propertize "Waiting for message..."
 		'face 'mu4e-system-face 'intangible t))
       (mu4e~proc-view docid mu4e-view-show-images))))
- 
+
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
   (interactive)
@@ -1174,12 +1181,12 @@ ensure we don't disturb other windows."
 	  (and
 	    (eq curbuf (window-buffer win)) ;; does win show curbuf?
 	    (not (eq curwin win))	    ;; but it's not the curwin?
-	    (not (one-window-p))) ;; and not the last one on the frame?  
+	    (not (one-window-p))) ;; and not the last one on the frame?
 	  (delete-window win))))  ;; delete it!
     ;; now, all *other* windows should be gone. kill ourselves, and return
     ;; to the main view
     (kill-buffer)
     (mu4e~main-view)))
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-headers)
