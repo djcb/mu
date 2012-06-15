@@ -974,9 +974,6 @@ do _not_ refresh the last search with the new parameters."
     (setq
       mu4e-headers-sortfield sortfield
       mu4e-headers-sort-revert revert) ;; "descending" means "revert"
-    ;; turn off threading if we don't sort by date (FIXME)
-    (unless (eq sortfield  'date)
-      (setq mu4e-headers-show-threads nil))
     (mu4e-message "Sorting by %s (%s)%s"
       (symbol-name sortfield)
       (if revert "descending" "ascending")
