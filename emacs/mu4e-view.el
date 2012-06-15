@@ -1033,12 +1033,12 @@ ensure we don't disturb other windows."
   (unless (eq major-mode 'mu4e-view-mode)
     (error "Must be in mu4e-view-mode (%S)" major-mode))
   (let ((curbuf (current-buffer)) (curwin (selected-window))
-	 (headers-visible))
+	 (headers-win))
     (walk-windows
       (lambda (win)
 	;; check whether the headers buffer window is visible
 	(when (eq mu4e~view-headers-buffer (window-buffer win))
-	  (setq headers-visible t))
+	  (setq headers-win win))
 	;; and kill any _other_ (non-selected) window that shows the current
 	;; buffer
 	(when
@@ -1050,13 +1050,16 @@ ensure we don't disturb other windows."
     ;; now, all *other* windows should be gone.
     ;; if the headers view is also visible, kill ourselves + window; otherwise
     ;; switch to the headers view
-    (if headers-visible
-      (kill-buffer-and-window)
+    (when (window-live-p headers-win)
+      ;; headers are visible
+      (progn
+	(kill-buffer-and-window) ;; kill the view win
+	(select-window headers-win)) ;; and switch to the headers win...
       ;; headers are not visible...
-      (kill-buffer)
-      (when (buffer-live-p mu4e~view-headers-buffer)
-	(switch-to-buffer mu4e~view-headers-buffer))))) 
+      (progn
+	(kill-buffer)
+	(when (buffer-live-p mu4e~view-headers-buffer)
+	  (switch-to-buffer mu4e~view-headers-buffer)))))) 
  
-
 (provide 'mu4e-view)
 ;; end of mu4e-view
