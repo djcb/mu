@@ -25,6 +25,7 @@
   - better naming for draft buffers
   - review emacs menus
   - *BUG* header updating screws up marks
+  - make refresh after changing sort, threads the default
 
 ** Done
 
@@ -54,6 +55,7 @@
   - mark message, decide what to do with them later (i.e.. 'deferred marking')
   - custom predicate functions for marking
   - make mu4e buffer killing less aggressive (i.e.., DWIM)
+  - about mu4e
 
 
 # Local Variables:

@@ -4,7 +4,8 @@
 
 *** mu4e
 
-    - inline display of images (see `mu4e-view-show-images')
+    - inline display of images (see `mu4e-view-show-images'), uses imagemagick
+      if available
     - interactively change number of headers / columns for showing headers with
       C-+ and C-- in headers, view mode
     - support flagging message
@@ -13,12 +14,24 @@
     - narrow search results with '/'
     - next/previous take a prefix arg now, to move to the nth previous/next message
     - allow for writing rich-text messages with org-mode
-
+    - enable marking messages as Flagged
+    - custom marker functions (see manual)
+    - better "dwim" handling of buffer switching / killing
+    - deferred marking of message (i.e.., mark now, decide what to mark for
+      later)
+    - enable changing of sort order, display of threads
+    - clearer marks for marked messages
+    - much faster handling when there are many maildirs (speedbar)
+      
 *** mu
 
     - support .noupdate files (parallel to .noindex, dir is ignored unless we're
       doing a --rebuild)
     - append all inline text parts, when getting the text body
+    - respect custom maildir flags
+    - correctly handle the case where g_utf8_strdown (str) > len (str)
+    - make gtk, guile, webkit dependency optional, even if they are installed
+
 
 ** Release 0.9.8.4 <2012-05-08>
 
