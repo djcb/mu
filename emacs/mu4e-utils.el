@@ -98,16 +98,19 @@ options. Cells have the following structure:
 The options are provided as a list for the user to choose from;
 user can then choose by typing CHAR.  Example:
   (mu4e-read-option \"Choose an animal: \"
-              '((\"Monkey\" ?m) (\"Gnu\" ?g) (\"platipus\")))
-User now will be presented with a list:
-   \"Choose an animal: [m]Monkey, [g]Gnu, [p]latipus\"."
+              '((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
+
+User now will be presented with a list: \"Choose an animal:
+   [M]onkey, [G]nu, [x]Moose\".
+
+Function will return the cdr of the list element."
   (let* ((prompt (mu4e-format "%s" prompt))
 	  (chosen)
 	  (optionsstr
 	    (mapconcat
 	      (lambda (option)
 		;; try to detect old-style options...
-		(when (or (characterp (cdr option)) (null (cdr option)))
+		(when (characterp (cdr option))
 		  (error (concat "Please use the new format for options/actions; "
 			   "see the manual")))
 		(let* ((kar (substring (car option) 0 1))
