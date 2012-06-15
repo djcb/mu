@@ -26,6 +26,8 @@
   - review emacs menus
   - *BUG* header updating screws up marks
   - make refresh after changing sort, threads the default
+  - strip signature from original when replying
+
 
 ** Done
 
@@ -56,6 +58,8 @@
   - custom predicate functions for marking
   - make mu4e buffer killing less aggressive (i.e.., DWIM)
   - about mu4e
+  - hide some headers when composing
+  - fix sorting subjects with ':' (but not 'Re:' or 'Fwd:')
 
 
 # Local Variables:
