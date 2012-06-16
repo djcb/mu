@@ -102,7 +102,7 @@ some custom function. Each of the list members has the following format:
   (NAME PREDICATE-FUNC PARAM-FUNC)
 * NAME is the name of the predicate function, and the first character
 is the shortcut (so keep those unique).
-* PREDICATE-FUNC is a function that takes to parameters, MSG and (optionally) PARAM,
+* PREDICATE-FUNC is a function that takes two parameters, MSG and (optionally) PARAM,
 and should return non-nil when there's a match.
 * PARAM-FUNC is function that is evaluated once, and its value is then passed to
 PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
@@ -1046,12 +1046,12 @@ determines where the query is taken from and is a symbol, either
 
 (defun mu4e-headers-query-next ()
   "Execute the previous query from the query stacks."
-  (interactive "P")
+  (interactive)
   (mu4e~headers-query-navigate 'future))
 
 (defun mu4e-headers-query-prev ()
   "Execute the previous query from the query stacks."
-  (interactive "P")
+  (interactive)
   (mu4e~headers-query-navigate 'past))
 
 ;; forget the past so we don't repeat it :/
