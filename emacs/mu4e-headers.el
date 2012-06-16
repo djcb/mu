@@ -1158,8 +1158,8 @@ region if there is a region, then move to the next message."
   (mu4e-headers-next))
 
 (defun mu4e~headers-quit-buffer ()
-  "Quit the mu4e-headers buffer. This is a rather complex function; to
-ensure we don't disturb other windows."
+  "Quit the mu4e-headers buffer. This is a rather complex function,
+to ensure we don't disturb other windows."
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
     (error "Must be in mu4e-headers-mode (%S)" major-mode))

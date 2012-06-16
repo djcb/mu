@@ -1027,7 +1027,7 @@ the results."
     (mu4e-process-file-through-pipe path cmd)))
 
 (defun mu4e~view-quit-buffer ()
-  "Quit the mu4e-view buffer. This is a rather complex function; to
+  "Quit the mu4e-view buffer. This is a rather complex function, to
 ensure we don't disturb other windows."
   (interactive)
   (unless (eq major-mode 'mu4e-view-mode)
@@ -1050,7 +1050,7 @@ ensure we don't disturb other windows."
     ;; now, all *other* windows should be gone.
     ;; if the headers view is also visible, kill ourselves + window; otherwise
     ;; switch to the headers view
-    (when (window-live-p headers-win)
+    (if (window-live-p headers-win)
       ;; headers are visible
       (progn
 	(kill-buffer-and-window) ;; kill the view win
