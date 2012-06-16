@@ -107,10 +107,9 @@ such all its settings apply."
       (insert (mu4e-view-message-text msg))
       (goto-char (point-min))
       (push-mark (point-max))
-      (funcall message-cite-function)
+      (funcall message-cite-function)      
       (pop-mark)
       (buffer-string))))
-
 
 (defun mu4e~compose-header (hdr val)
   "Return a header line of the form HDR: VAL\n. If VAL is nil,
@@ -163,7 +162,6 @@ e-mail addresses. If LST is nil, returns nil."
 the original message ORIGMSG. If the Reply-To address is set, use
 that, otherwise use the From address. Note, whatever was in the To:
 field before, goes to the Cc:-list (if we're doing a reply-to-all)."
-  (message "REPLY TO %S" (plist-get origmsg :reply-to))
   (let ((reply-to
 	   (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
     (delete-duplicates reply-to  :test #'mu4e~compose-address-cell-equal)))
