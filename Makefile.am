@@ -29,7 +29,7 @@ else
 guile=
 endif
 
-if HAVE_EMACS
+if BUILD_MU4E
 emacs=emacs
 else
 emacs=

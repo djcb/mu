@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.8.5-dev4],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.8.5-dev5],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -50,8 +50,17 @@ AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
 
 # we need emacs for byte-compiling mu4e
-AM_PATH_LISPDIR
-AM_CONDITIONAL(HAVE_EMACS,test "x$lispdir" != "xno")
+
+build_mu4e=no
+AC_ARG_ENABLE([mu4e],
+   AS_HELP_STRING([--disable-mu4e],[Disable building mu4e]))
+AS_IF([test "x$enable_mu4e" != "xno"], [
+  AM_PATH_LISPDIR
+  AS_IF([test "x$lispdir" != "xno"], [emacs_version="`$EMACS --version | head -1`"])
+  AS_CASE([$emacs_version],[*23*|*24*|*25*],[build_mu4e=yes],
+          [AC_WARN([emacs is too old to build mu4e (need emacs >= 23.x)])])
+])  	      
+AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")
 
 # we need some special tricks for filesystems that don't have d_type;
 # e.g. Solaris. See mu-maildir.c. Explicitly disabling it is for
@@ -348,7 +357,12 @@ if test "x$build_guile" = "xyes"; then
 echo "Guile version                        : $guile_version"
 fi
 
+if test "x$build_mu4e" = "xyes"; then
+echo "Emacs version                        : $emacs_version"
+fi
+
 echo
+echo "Build mu4e emacs frontend            : $build_mu4e"
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
 echo "Build 'mug' toy-ui (gtk+)            : $buildgui"
 echo "Build 'mug2' toy-ui (gtk+, webkit)   : $build_webkit"
@@ -384,5 +398,7 @@ if test "x$GUILE_MAJOR_VERSION" = "x1"; then
 fi
 
 echo
-echo "type 'make' to build mu, or 'make check' to run the unit tests."
-echo "use 'make V=1' to show the detailed output during the build"
+echo "Now, type 'make' to build mu."
+echo
+echo "If unit tests are built (see above), you can run 'make check'"
+echo "for some basic testing of mu functionality."
