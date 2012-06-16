@@ -26,6 +26,9 @@
   - review emacs menus
   - header updating interferes with marks (when updating for 'mark as read',
     when reading a marked message)
+  - enable keeping message view buffers around
+  - 'human' dates
+  - tooltip for flags field
 
 ** Done
 
@@ -60,8 +63,6 @@
   - fix sorting subjects with ':' (but not 'Re:' or 'Fwd:')
   - strip signature from original when replying
   - make refresh after changing sort, threads the default
-
-
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
