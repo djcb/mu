@@ -563,8 +563,8 @@ U            unmark *all* messages
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
-SPC          deferred mark (decide what to mark for later)
-*            resolve deferred marks
+*            deferred mark (decide what to mark for later)
+#            resolve deferred marks
 
 x            execute actions for the marked messages
 
