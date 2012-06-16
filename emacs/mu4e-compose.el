@@ -105,6 +105,9 @@ such all its settings apply."
   (with-temp-buffer
     (when (fboundp 'mu4e-view-message-text) ;; keep bytecompiler happy
       (insert (mu4e-view-message-text msg))
+      ;; this seems to be needed, otherwise existing signatures
+      ;; won't be stripped
+      (message-yank-original)
       (goto-char (point-min))
       (push-mark (point-max))
       (funcall message-cite-function)      
