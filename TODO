@@ -24,10 +24,8 @@
   - show maildirs as a tree, not a list in speed bar
   - better naming for draft buffers
   - review emacs menus
-  - *BUG* header updating screws up marks
-  - make refresh after changing sort, threads the default
-  - strip signature from original when replying
-
+  - header updating interferes with marks (when updating for 'mark as read',
+    when reading a marked message)
 
 ** Done
 
@@ -60,6 +58,9 @@
   - about mu4e
   - hide some headers when composing
   - fix sorting subjects with ':' (but not 'Re:' or 'Fwd:')
+  - strip signature from original when replying
+  - make refresh after changing sort, threads the default
+
 
 
 # Local Variables:
