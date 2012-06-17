@@ -673,6 +673,24 @@ message."
   (interactive)
   (mu4e-compose 'new))
 
+(defun mu4e~mailto-compose-mail-from-mailto (mailto-url)
+  "Create a draft message based on a mailto URL."
+  (require 'rfc2368)
+  (let* ((headers (rfc2368-parse-mailto-url mailto-url))
+         (To (cdr (assoc "To" headers)))
+         (Subject (cdr (assoc "Subject" headers)))
+         (Body (cdr (assoc "Body" headers)))
+         )
+    (mu4e~compose-mail To Subject)
+    (if Body (progn
+               (message-goto-body)
+               (insert Body)
+               (if (not To)
+                   (message-goto-to)
+                 (if (not Subject)
+                     (message-goto-subject)
+                   (message-goto-body)))
+               ))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

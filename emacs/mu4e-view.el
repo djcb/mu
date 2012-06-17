@@ -135,7 +135,11 @@ where:
   "A map of some number->url so we can jump to url by number.")
 
 (defconst mu4e~view-url-regexp
-  "\\(https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\)"
+  (concat "\\("
+          "https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\|"
+          "mailto:[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+"
+          "\\)"
+          )
   "Regexp that matches URLs; match-string 1 will contain
   the matched URL, if any.")
 
@@ -589,8 +593,9 @@ Seen; if the message is not New/Unread, do nothing."
   (lexical-let ((url url))
     (lambda ()
       (interactive)
-      (browse-url url))))
-
+      (if (string-match "mailto:" url)
+          (mu4e~mailto-compose-mail-from-mailto url)
+        (browse-url url)))))
 
 (defun mu4e~view-show-images-maybe (msg)
   "Show attached images, if `mu4e-view-show-images' is non-nil."
@@ -999,7 +1004,7 @@ user that unmarking only works in the header list."
   (interactive "n[mu4e] Go to url with number: ")
   (let ((url (gethash num mu4e~view-link-map)))
     (unless url (error "Invalid number for URL"))
-    (browse-url url)))
+    (funcall (mu4e~view-browse-url-func url))))
 
 (defconst mu4e~view-raw-buffer-name "*mu4e-raw-view*"
   "*internal* Name for the raw message view buffer")
