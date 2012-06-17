@@ -107,6 +107,9 @@ struct _MuConfig {
 					 * commits, or 0 for
 					 * default */
 	int		max_msg_size;   /* maximum size for message files */
+	char**          my_addresses;   /* 'my e-mail address', for mu
+					 * cfind; can be use multiple
+					 * times */
 
 	/* options for querying 'find' (and view-> 'summary') */
 	char		*fields;	/* fields to show in output */

@@ -148,6 +148,8 @@ config_options_group_index (void)
 		 "index even already indexed messages (false)", NULL},
 		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.rebuild,
 		 "rebuild the database from scratch (false)", NULL},
+		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,&MU_CONFIG.my_addresses,
+		 "my e-mail address (regexp); can be used multiple times", NULL},
 		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.autoupgrade,
 		 "auto-upgrade the database with new mu versions (false)",
 		 NULL},
