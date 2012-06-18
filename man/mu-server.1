@@ -1,4 +1,4 @@
-.TH MU-SERVER 1 "April 2012" "User Manuals"
+.TH MU-SERVER 1 "June 2012" "User Manuals"
 
 .SH NAME
 
@@ -69,7 +69,7 @@ e.g. set the subject, sender and recipient for a reply message.
 Messages of type 'new' don't use the docid: parameter, the other ones do.
 
 .nf
--> compose <reply|forward|edit|new> [docid:<docid>]
+-> compose type:<reply|forward|edit|new> [docid:<docid>]
 <- (:compose <reply|forward|edit|new> :original <s-exp> :include (<list-of-attachments))
 .fi
 
@@ -79,6 +79,18 @@ forwarding. This s-exprssion looks like:
 
 .nf
    (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
+.fi
+
+
+.TP
+.B contacts
+
+Using the \fBcompose\fR command, we can retrieve an s-expression with all known
+contacts (name + e-mail address). For the details, see \fBmu-cfind(1)\fR.
+
+.nf
+-> contacts [only-personal:true|false] [newer-than:<time_t>]
+<- (:contacts ((:name abc :mail foo@exampl.com ...) ...)
 .fi
 
 
