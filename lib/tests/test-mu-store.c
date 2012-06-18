@@ -44,7 +44,7 @@ test_mu_store_new_destroy (void)
 	g_assert (tmpdir);
 
 	err = NULL;
-	store = mu_store_new_writable (tmpdir, NULL, FALSE, &err);
+	store = mu_store_new_writable (tmpdir, NULL, NULL, FALSE, &err);
 	g_assert (store);
 	g_assert (err == NULL);
 
@@ -68,7 +68,7 @@ test_mu_store_version (void)
 	g_assert (tmpdir);
 
 	err = NULL;
-	store = mu_store_new_writable (tmpdir, NULL, FALSE, &err);
+	store = mu_store_new_writable (tmpdir, NULL, NULL, FALSE, &err);
 	g_assert (store);
 	mu_store_unref (store);
 	store = mu_store_new_read_only (tmpdir, &err);
@@ -95,7 +95,7 @@ test_mu_store_store_msg_and_count (void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (tmpdir);
 
-	store = mu_store_new_writable (tmpdir, NULL, FALSE, NULL);
+	store = mu_store_new_writable (tmpdir, NULL, NULL, FALSE, NULL);
 	g_assert (store);
 
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));
@@ -151,7 +151,7 @@ test_mu_store_store_msg_remove_and_count (void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (tmpdir);
 
-	store = mu_store_new_writable (tmpdir, NULL, FALSE, NULL);
+	store = mu_store_new_writable (tmpdir, NULL, NULL, FALSE, NULL);
 	g_assert (store);
 
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));

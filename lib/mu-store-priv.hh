@@ -32,7 +32,7 @@
 
 #include "mu-store.h"
 #include "mu-contacts.h"
-
+#include "mu-str.h"
 
 class MuStoreError {
 public:
@@ -49,9 +49,11 @@ private:
 struct _MuStore {
 public:
 	/* create a read-write MuStore */
-	_MuStore (const char *path, const char *contacts_path, bool rebuild) {
+	_MuStore (const char *path, const char *contacts_path,
+		  const char **my_addresses,
+		  bool rebuild) {
 
-		init (path, contacts_path, rebuild, false);
+		init (path, contacts_path, my_addresses, rebuild, false);
 
 		if (rebuild)
 			_db = new Xapian::WritableDatabase
@@ -64,7 +66,7 @@ public:
 
 		if (contacts_path) {
 			_contacts = mu_contacts_new (contacts_path);
-			if (!_contacts) /* don't bail-out for this */
+			if (!_contacts)
 				throw MuStoreError (MU_ERROR_FILE,
 					    ("failed to init contacts cache"));
 		}
@@ -76,7 +78,7 @@ public:
 	/* create a read-only MuStore */
 	_MuStore (const char *path) {
 
-		init (path, NULL, false, false);
+		init (path, NULL, NULL, false, false);
 
 		_db = new Xapian::Database (path);
 		if (mu_store_needs_upgrade(this))
@@ -86,7 +88,7 @@ public:
 		MU_WRITE_LOG ("%s: opened %s read-only", __FUNCTION__, this->path());
 	}
 
-	void init (const char *path, const char *contacts_path,
+	void init (const char *path, const char *contacts_path, const char **my_addresses,
 		   bool rebuild, bool read_only) {
 
 		_batch_size	= DEFAULT_BATCH_SIZE;
@@ -97,6 +99,15 @@ public:
 		_read_only      = read_only;
 		_ref_count      = 1;
 		_version        = NULL;
+
+		/* copy 'my adresses' */
+		_my_addresses    = NULL;
+		while (my_addresses && *my_addresses) {
+			_my_addresses = g_slist_prepend
+				(_my_addresses, g_strdup (*my_addresses));
+			++my_addresses;
+		}
+
 	}
 
 	void check_set_version () {
@@ -124,6 +135,8 @@ public:
 			mu_contacts_destroy (_contacts);
 			if (!_read_only)
 				mu_store_flush (this);
+
+			mu_str_free_list (_my_addresses);
 
 			MU_WRITE_LOG ("closing xapian database with %d document(s)",
 				      (int)db_read_only()->get_doccount());
@@ -201,6 +214,8 @@ public:
 		return --_ref_count;
 	}
 
+	GSList *my_addresses () { return _my_addresses; }
+
 	/* by default, use transactions of 30000 messages */
 	static const unsigned DEFAULT_BATCH_SIZE = 30000;
 	/* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
@@ -220,8 +235,9 @@ private:
 
 	Xapian::Database *_db;
 	bool _read_only;
-
 	guint _ref_count;
+
+	GSList *_my_addresses;
 };
 
 

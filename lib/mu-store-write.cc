@@ -123,14 +123,14 @@ add_synonyms (MuStore *store)
 
 MuStore*
 mu_store_new_writable (const char* xpath, const char *contacts_cache,
-		       gboolean rebuild, GError **err)
+		       const char **my_addresses, gboolean rebuild, GError **err)
 {
 	g_return_val_if_fail (xpath, NULL);
 
 	try {
 		try {
 			MuStore *store;
-			store = new _MuStore (xpath, contacts_cache,
+			store = new _MuStore (xpath, contacts_cache, my_addresses,
 					      rebuild ? true : false);
 			add_synonyms (store);
 			return store;
@@ -506,6 +506,10 @@ struct _MsgDoc {
 	MuMsg			*_msg;
 	MuStore                 *_store;
 	GStringChunk            *_strchunk;
+
+	/* callback data, to determine whether this message is 'personal' */
+	gboolean                _personal;
+	GSList                 *_my_addresses;
 };
 typedef struct _MsgDoc		 MsgDoc;
 
@@ -622,9 +626,28 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		if (msgdoc->_store->contacts())
 			mu_contacts_add (msgdoc->_store->contacts(),
 					 contact->address, contact->name,
+					 msgdoc->_personal,
 					 mu_msg_get_date(msgdoc->_msg));
 	}
 }
+
+
+static void
+each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
+{
+	GSList *cur;
+
+	if (msgdoc->_personal || !contact->address)
+		return;
+
+	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
+		//g_print ("%s <=> %s\n", contact->address, (const char*)cur->data);
+		if (g_ascii_strcasecmp (contact->address, (const char*)cur->data) == 0)
+			msgdoc->_personal = TRUE;
+	}
+}
+
+
 
 #define MU_STRING_CHUNK_SIZE 8192
 
@@ -632,11 +655,22 @@ Xapian::Document
 new_doc_from_message (MuStore *store, MuMsg *msg)
 {
 	Xapian::Document doc;
-	MsgDoc docinfo = {&doc, msg, store, 0};
+	MsgDoc docinfo = {&doc, msg, store, 0, FALSE, NULL};
 	docinfo._strchunk = g_string_chunk_new (MU_STRING_CHUNK_SIZE);
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
-	/* also store the contact-info as separate terms */
+
+	/* determine whether this is 'personal' email, ie. one of my
+	 * e-mail addresses is explicitly mentioned -- it's not a
+	 * mailing list message. Callback will update docinfo->_personal */
+	if (store->my_addresses()) {
+		docinfo._my_addresses = store->my_addresses();
+		mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact_check_if_personal,
+					&docinfo);
+	}
+
+	/* also store the contact-info as separate terms, and add it
+	 * to the cache */
 	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact_info,
 				&docinfo);
 

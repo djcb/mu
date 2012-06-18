@@ -36,12 +36,15 @@ typedef struct _MuStore MuStore;
  *
  * @param path the path to the database
  * @param ccachepath path where to cache the contacts information, or NULL
+ * @param my_addresses, array of strings with regexps for my e-mail addresses (or NULL)
+ *        (used for the contactac information)
  * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return a new MuStore object with ref count == 1, or NULL in case
  * of error; free with mu_store_unref
  */
-MuStore*  mu_store_new_writable  (const char *xpath, const char *ccachepath,
+MuStore*  mu_store_new_writable  (const char *xpath,
+				  const char *ccachepath, const char **my_addresses,
 				  gboolean rebuild, GError **err)
                  G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
