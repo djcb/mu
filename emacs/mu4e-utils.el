@@ -43,7 +43,6 @@ recommended you use \"html2text -utf8 -width 72\"."
   :group 'mu4e-view
   :safe 'stringp)
 
-
 (defcustom mu4e-view-prefer-html nil
   "Whether to base the body display on the HTML-version of the
 e-mail message (if there is any."
@@ -542,6 +541,27 @@ split-window."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start and stopping
+(defun mu4e~fill-contacts (contacts)
+  "We receive a list of contacts, which each contact of the form
+     (:name NAME :mail EMAIL)
+and fill the list `mu4e~contacts-for-completion' with it, with
+each element looking like
+    name <email>
+This is used by the completion function in mu4e-compose."
+  (let ((lst))
+    (dolist (contact contacts)
+      (let ((name (plist-get contact :name))
+	     (mail (plist-get contact :mail)))
+	;;(message "N:%S M:%S" name mail)
+	(when mail
+	  (add-to-list 'lst
+	    (if name
+	      (format "%s <%s>" name mail)
+	      mail)))))
+    (setq mu4e~contacts-for-completion lst)
+    (mu4e-message "Contacts received: %d"
+      (length mu4e~contacts-for-completion))))
+
 
 (defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
@@ -583,6 +603,7 @@ FUNC (if non-nil) afterwards."
       ;; better to check for specific features
       (unless (>= emacs-major-version 23)
 	(error "Emacs >= 23.x is required for mu4e"))
+
       ;; set up the 'pong' handler func
       (lexical-let ((func func))
 	(setq mu4e-pong-func
@@ -597,8 +618,17 @@ FUNC (if non-nil) afterwards."
 		  0 mu4e-update-interval 'mu4e-update-mail)))
 	    (mu4e-message "Started mu4e with %d message%s in store"
 	      doccount (if (= doccount 1) "" "s")))))
-	  ;; send the ping
-	  (mu4e~proc-ping)))
+      ;; send the ping
+      (mu4e~proc-ping)
+
+      ;; get the address list
+      (when mu4e-compose-complete-addresses
+	(setq mu4e-contacts-func 'mu4e~fill-contacts)
+	(mu4e~proc-contacts
+	  mu4e-compose-complete-only-newer-than
+	  ;; calculate time_t value -- now minus so-many days
+	  (floor (- (float-time (current-time))
+		   (* 3600 24 mu4e-compose-complete-only-newer-than)))))))
 
 (defun mu4e~stop ()
   "Stop the mu4e session."
@@ -779,7 +809,7 @@ is ignored."
       (newline)
       (insert-image img imgpath nil t))))
 
- 
+
 
 (defun mu4e-hide-other-mu4e-buffers ()
   "Bury mu4e-buffers (main, headers, view) (and delete all windows
@@ -790,7 +820,7 @@ displaying it). Do _not_ bury the current buffer, though."
       (lambda (win)
 	(with-current-buffer (window-buffer win)
 	  (unless (eq curbuf (current-buffer))
-	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
+	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
 	      (unless (one-window-p t)
 		(delete-window win)))))) nil t)))
 

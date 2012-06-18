@@ -213,10 +213,15 @@ The server output is as follows:
 	      (plist-get sexp :docid)
 	      (plist-get sexp :path)))
 
-	  ;; receive a pong message
+	  ;; received a pong message
 	  ((plist-get sexp :pong)
 	    (funcall mu4e-pong-func
 	      (plist-get sexp :version) (plist-get sexp :doccount)))
+
+	  ;; received a contacts message
+	  ((plist-get sexp :contacts)
+	    (funcall mu4e-contacts-func
+	      (plist-get sexp :contacts)))
 
 	  ;; something got moved/flags changed
 	  ((plist-get sexp :update)
@@ -432,6 +437,17 @@ mean:
   "Sends a ping to the mu server, expecting a (:pong ...) in
 response."
   (mu4e~proc-send-command "ping"))
+
+(defun mu4e~proc-contacts (only-personal newer-than)
+  "Sends the contacts command to the mu server, expecting
+a (:contacts (<list>)) in response. If ONLY-PERSONAL is non-nil,
+only get personal contacts, if newer-than is non-nil, get only
+contacts seen after NEWER-THAN (the time_t value)."
+  (mu4e~proc-send-command
+    "contacts only-personal:%s newer-than:%d"
+    (if only-personal "true" "false")
+    (if newer-than newer-than 0)))
+
 
 (defun mu4e~proc-view (docid-or-msgid &optional images)
   "Get one particular message based on its DOCID-OR-MSGID (keyword

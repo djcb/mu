@@ -71,6 +71,19 @@ sent folder."
 replying to messages."
   :type 'boolean
   :group 'mu4e-compose)
+
+
+(defcustom mu4e-compose-completion-styles '(substring)
+  "How to do matching for contacts-completion; see
+`completion-styles'."
+  :type 'list
+  :group 'mu4e-compose)
+
+(defcustom mu4e-compose-cycle-threshold 5
+  "Number of completion matches below which you can cycle through
+them; see `completion-cycle-threshold'."
+  :type 'list
+  :group 'mu4e-compose)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -110,7 +123,7 @@ such all its settings apply."
       (message-yank-original)
       (goto-char (point-min))
       (push-mark (point-max))
-      (funcall message-cite-function)      
+      (funcall message-cite-function)
       (pop-mark)
       (buffer-string))))
 
@@ -444,7 +457,6 @@ needed, set the Fcc header, and register the handler function."
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (use-local-map mu4e-compose-mode-map)
     (make-local-variable 'message-default-charset)
-
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
@@ -456,6 +468,15 @@ needed, set the Fcc header, and register the handler function."
     ;; useful e.g. when finding an attachment file the directory the current
     ;; mail files lives in...
     (setq default-directory (expand-file-name "~/"))
+
+    ;; offer completion for e-mail addresses
+    (when mu4e-compose-complete-addresses
+      (make-local-variable 'completion-styles)
+      (make-local-variable 'completion-cycle-threshold)
+      (setq
+	completion-cycle-threshold mu4e-compose-cycle-threshold
+	completion-styles mu4e-compose-completion-styles)
+      (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact))
 
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
@@ -552,7 +573,7 @@ Gnus' `message-mode'."
 
     ;; hide some headers
     (let ((message-hidden-headers mu4e~compose-hidden-headers))
-      (message-hide-headers))  
+      (message-hide-headers))
 
     ;; set compose mode -- so now hooks can run
     (mu4e-compose-mode)
@@ -560,7 +581,7 @@ Gnus' `message-mode'."
     ;; buffer is not user-modified yet
     (mu4e~compose-set-friendly-buffer-name compose-type)
     (set-buffer-modified-p nil)
-    
+
     ;; now jump to some use positions, and start writing that mail!
     (if (member compose-type '(new forward))
       (message-goto-to)
@@ -673,6 +694,36 @@ message."
   (interactive)
   (mu4e-compose 'new))
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; address completion; inspired by org-contacts.el
+(defun mu4e~compose-complete-contact (&optional start)
+  "Complete the text at START with a contact (ie. either 'name
+<email>' or 'email')."
+  (interactive)
+  (let ((mail-abbrev-mode-regexp
+	  (concat
+	    "^\\(Resent-To\\|To\\|B?Cc\\|Reply-To\\|From"
+	    "\\|Mail-Followup-To\\|Mail-Copies-To"
+	    "\\|Disposition-Notification-To\\|Return-Receipt-To\\):"))
+	 (eoh ;; end-of-headers
+	   (save-excursion
+	     (goto-char (point-min))
+	     (search-forward-regexp mail-header-separator nil t))))
+	 ;; try to complete only when we're in the headers area,
+	 ;; looking  at an address field.
+    (when (and (> eoh (point)) (mail-abbrev-in-expansion-header-p))
+      (let* ((end (point))
+	      (start
+		(or start
+		  (save-excursion
+		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
+		    (goto-char (match-end 0))
+		    (point))))
+	      (orig (buffer-substring-no-properties start end))
+	      (completion-ignore-case t))
+	  (list start end mu4e~contacts-for-completion)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
