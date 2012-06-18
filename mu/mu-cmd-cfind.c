@@ -136,8 +136,8 @@ typedef struct _ECData ECData;
 
 
 static void
-each_contact (const char *email, const char *name, time_t tstamp,
-	      ECData *ecdata)
+each_contact (const char *email, const char *name, gboolean personal,
+	      time_t tstamp, ECData *ecdata)
 {
 	switch (ecdata->format) {
 	case MU_CONFIG_FORMAT_MUTT_ALIAS:

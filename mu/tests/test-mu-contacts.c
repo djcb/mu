@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -59,19 +59,21 @@ fill_database (void)
 
 struct _Contact {
 	char *name, *email;
+	gboolean personal;
 	time_t tstamp;
 };
 typedef struct _Contact Contact;
 
 static Contact*
-contact_new (const char *email, const char *name, size_t tstamp)
+contact_new (const char *email, const char *name, gboolean personal, size_t tstamp)
 {
 	Contact *contact;
 
-	contact		= g_slice_new (Contact);
-	contact->name	= name ? g_strdup (name) :NULL;
-	contact->email	= email ? g_strdup (email) : NULL;
-	contact->tstamp = tstamp;
+	contact			= g_slice_new (Contact);
+	contact->name		= name ? g_strdup (name) :NULL;
+	contact->email		= email ? g_strdup (email) : NULL;
+	contact->personal	= personal;
+	contact->tstamp		= tstamp;
 
 	return contact;
 
@@ -89,14 +91,14 @@ contact_destroy (Contact *contact)
 
 
 static void
-each_contact (const char *email, const char *name, time_t tstamp,
-	      GSList **lst)
+each_contact (const char *email, const char *name, gboolean personal,
+	      time_t tstamp,  GSList **lst)
 {
 	Contact *contact;
 
 	/* g_print ("[n:%s, e:%s]\n", name, email); */
 
-	contact = contact_new (email, name, tstamp);
+	contact = contact_new (email, name, personal, tstamp);
 	*lst = g_slist_prepend (*lst, contact);
 }
 

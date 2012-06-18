@@ -92,9 +92,6 @@ test_mu_cfind_plain (void)
 				 ==,
 				 "Mü testmu@testmu.xx\n"
 				 "Helmut Kröger hk@testmu.xxx\n");
-
-
-
 	g_free (cmdline);
 	g_free (muhome);
 	g_free (output);
