@@ -30,16 +30,21 @@
 #define EMAIL_KEY	"email"
 #define NAME_KEY	"name"
 #define TSTAMP_KEY	"tstamp"
+#define PERSONAL_KEY	"personal"
 
+
+/* note: 'personal' here means a mail where my e-mail addresses is explicitly
+ * in one of the address fields, ie., it's not some mailing list message */
 struct _ContactInfo {
-	gchar *_name, *_email;
-	time_t _tstamp;
+	gchar *  _name, *_email;
+	gboolean _personal;
+	time_t   _tstamp;
 };
 typedef struct _ContactInfo ContactInfo;
 
 static void contact_info_destroy (ContactInfo *cinfo);
 static ContactInfo *contact_info_new (char *email, char *name,
-				      time_t tstamp);
+				      gboolean personal, time_t tstamp);
 
 struct _MuContacts {
         GKeyFile      *_ccache;
@@ -109,33 +114,32 @@ load_key_file (const char *path)
 
 static gboolean
 get_values (GKeyFile *kfile, const gchar *group,
-	    gchar **email, gchar **name, size_t *tstamp)
+	    gchar **email, gchar **name, gboolean *personal, size_t *tstamp)
 {
 	GError *err;
-
 	err = NULL;
-	*email = g_key_file_get_value (kfile, group, EMAIL_KEY, &err);
-	if (!*email) {
-		g_warning ("cannot get e-mail for %s: %s",
-			   group, err->message ? err->message: "error");
+
+	do {
+		*email = g_key_file_get_value (kfile, group, EMAIL_KEY, &err);
+		if (!*email)
+			break;
+
+		*tstamp = (time_t)g_key_file_get_integer (kfile, group, TSTAMP_KEY, &err);
 		if (err)
-			g_error_free (err);
-		return FALSE;
-	}
+			break;
 
-	*tstamp = (time_t)g_key_file_get_integer (kfile, group, TSTAMP_KEY, &err);
-	if (err) {
-		g_warning ("cannot get timestamp for %s: %s",
-			   group, err->message ? err->message: "error");
-		if (err)
-			g_error_free (err);
-		return FALSE;
-	}
+		*personal = g_key_file_get_boolean (kfile, group, PERSONAL_KEY, NULL);
+		*name = g_key_file_get_value (kfile, group, NAME_KEY, NULL);
 
-	/* name is not required */
-	*name = g_key_file_get_value (kfile, group, NAME_KEY, NULL);
+		return TRUE;
 
-	return TRUE;
+	} while (0);
+
+	g_warning ("error getting value for %s: %s",
+		   group, err->message ? err->message: "error");
+	g_clear_error (&err);
+
+	return FALSE;
 }
 
 
@@ -150,11 +154,12 @@ deserialize_cache (MuContacts *self)
 		ContactInfo *cinfo;
 		char *name, *email;
 		size_t tstamp;
+		gboolean personal;
 		if (!get_values (self->_ccache, groups[i],
-				 &email, &name, &tstamp))
+				 &email, &name, &personal, &tstamp))
 			continue; /* ignore this one... */
 
-		cinfo = contact_info_new (email, name, tstamp);
+		cinfo = contact_info_new (email, name, personal, tstamp);
 
 		/* note, we're using the groups[i], so don't free with g_strfreev */
 		g_hash_table_insert (self->_hash, groups[i],
@@ -228,8 +233,8 @@ mu_contacts_clear (MuContacts *self)
 
 
 gboolean
-mu_contacts_add (MuContacts *self, const char *email, const char* name,
-		 time_t tstamp)
+mu_contacts_add (MuContacts *self, const char *email, const char *name,
+		 gboolean personal, time_t tstamp)
 {
 	ContactInfo *cinfo;
 	const char* group;
@@ -246,7 +251,7 @@ mu_contacts_add (MuContacts *self, const char *email, const char* name,
 	if (!cinfo || (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
 		ContactInfo *ci;
 		ci = contact_info_new (g_strdup(email),
-				       name ? g_strdup(name) : NULL,
+				       name ? g_strdup(name) : NULL, personal,
 				       tstamp);
 
 		g_hash_table_insert (self->_hash, g_strdup(group), ci);
@@ -283,8 +288,9 @@ each_contact (const char *group, ContactInfo *ci, EachContactData *ecdata)
 		return; /* nothing matched, ignore this one */
 	}
 
-	ecdata->_func (ci->_email, ci->_name,
+	ecdata->_func (ci->_email, ci->_name, ci->_personal,
 		       ci->_tstamp, ecdata->_user_data);
+
 	++ecdata->_num;
 }
 
@@ -340,6 +346,8 @@ each_keyval (const char *group, ContactInfo *cinfo, MuContacts *self)
 
 	g_key_file_set_value (self->_ccache, group, EMAIL_KEY,
 			       cinfo->_email);
+	g_key_file_set_boolean (self->_ccache, group, PERSONAL_KEY,
+				cinfo->_personal);
 	g_key_file_set_integer (self->_ccache, group, TSTAMP_KEY,
 				(int)cinfo->_tstamp);
 }
@@ -351,7 +359,7 @@ serialize_cache (MuContacts *self)
 	gsize len;
 	gboolean rv;
 
-	g_hash_table_foreach (self->_hash, (GHFunc) each_keyval, self);
+	g_hash_table_foreach (self->_hash, (GHFunc)each_keyval, self);
 
 	/* Note: err arg is unused */
 	data = g_key_file_to_data (self->_ccache, &len, NULL);
@@ -412,7 +420,7 @@ clear_str (char* str)
 /* note, we will *own* the name, email we get, and we'll free them in
  * the end... */
 static ContactInfo *
-contact_info_new (char *email, char *name, time_t tstamp)
+contact_info_new (char *email, char *name, gboolean personal, time_t tstamp)
 {
 	ContactInfo *cinfo;
 
@@ -426,9 +434,10 @@ contact_info_new (char *email, char *name, time_t tstamp)
 	clear_str (email);
 	clear_str (name);
 
-	cinfo->_email  = email;
-	cinfo->_name   = name;
-	cinfo->_tstamp = tstamp;
+	cinfo->_email    = email;
+	cinfo->_name     = name;
+	cinfo->_personal = personal;
+	cinfo->_tstamp   = tstamp;
 
 	return cinfo;
 }
@@ -445,3 +454,11 @@ contact_info_destroy (ContactInfo *cinfo)
 	g_slice_free (ContactInfo, cinfo);
 }
 
+
+size_t
+mu_contacts_count (MuContacts *self)
+{
+	g_return_val_if_fail (self, 0);
+
+	return g_hash_table_size (self->_hash);
+}

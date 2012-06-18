@@ -49,12 +49,14 @@ MuContacts* mu_contacts_new (const gchar *ccachefile)
  * @param contacts a contacts object
  * @param email e-mail address of the contact (not NULL)
  * @param name name of the contact (or NULL)
+ * @param personal whether the contact is 'personal' (ie., my address
+ *        appears in one of the address fields)
  * @param tstamp timestamp for this address
  *
  * @return TRUE if succeeded, FALSE otherwise
  */
 gboolean mu_contacts_add (MuContacts *self, const char *email,
-			  const char* name, time_t tstamp);
+			  const char* name, gboolean personal, time_t tstamp);
 
 /**
  * destroy the Contacts object
@@ -83,13 +85,24 @@ void mu_contacts_clear (MuContacts *self);
 const gchar* mu_contacts_get_path (MuContacts *self);
 
 
+/**
+ * return the number of contacts
+ *
+ * @param self a contacts object
+ *
+ * @return the number of contacts
+ */
+size_t mu_contacts_count (MuContacts *self);
+
 
 /**
  * call called for mu_contacts_foreach; returns the e-mail address,
- * name (which may be NULL) and the timestamp for the address
+ * name (which may be NULL) , whether the message is 'personal', and
+ * the timestamp for the address
  *
  */
 typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
+				       gboolean personal,
 				       time_t tstamp, gpointer user_data);
 
 /**
