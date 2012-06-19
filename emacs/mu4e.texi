@@ -1629,10 +1629,11 @@ sauron-msg () {
         fi
     fi
     if test -n "x$DBUS_SESSION_BUS_ADDRESS"; then
-        dbus-send --session                 \
-            --dest="org.gnu.Emacs"        \
-            "/org/gnu/Emacs/Sauron"                \
-            "org.gnu.Emacs.Sauron.AddMsgEvent"      \
+        dbus-send --session                          \
+            --dest="org.gnu.Emacs"                   \
+            --type=method_call                       \
+            "/org/gnu/Emacs/Sauron"                  \
+            "org.gnu.Emacs.Sauron.AddMsgEvent"       \
             string:shell uint32:3 string:"$1"
     fi
 }
