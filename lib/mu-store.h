@@ -133,6 +133,18 @@ XapianDatabase* mu_store_get_read_only_database (MuStore *store);
 void  mu_store_set_batch_size (MuStore *store, guint batchsize);
 
 
+/**
+ * register a char** of email addresses as 'my' addresses, ie. mark
+ * message that have these addresses in one of the address fields as
+ * 'personal' (e.g., in mu-contacts). calling this function overrides
+ * any 'my addresses' that were set before, using this function or
+ * through mu_store_new_writable
+ *
+ * @param store a valid store object
+ * @param my_addresses a char** of email addresses
+ */
+void mu_store_set_my_addresses (MuStore *store, const char **my_addresses);
+
 
 /**
  * get the numbers of documents in the database

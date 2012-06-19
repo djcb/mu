@@ -51,7 +51,7 @@ public:
 	/* create a read-write MuStore */
 	_MuStore (const char *path, const char *contacts_path,
 		  const char **my_addresses,
-		  bool rebuild) {
+		  bool rebuild) :_my_addresses(NULL) {
 
 		init (path, contacts_path, my_addresses, rebuild, false);
 
@@ -88,7 +88,8 @@ public:
 		MU_WRITE_LOG ("%s: opened %s read-only", __FUNCTION__, this->path());
 	}
 
-	void init (const char *path, const char *contacts_path, const char **my_addresses,
+	void init (const char *path, const char *contacts_path,
+		   const char **my_addresses,
 		   bool rebuild, bool read_only) {
 
 		_batch_size	= DEFAULT_BATCH_SIZE;
@@ -100,15 +101,23 @@ public:
 		_ref_count      = 1;
 		_version        = NULL;
 
-		/* copy 'my adresses' */
-		_my_addresses    = NULL;
+		set_my_addresses (my_addresses);
+	}
+
+	void set_my_addresses (const char **my_addresses) {
+
+		if (_my_addresses) {
+			mu_str_free_list (_my_addresses);
+			_my_addresses = NULL;
+		}
+
 		while (my_addresses && *my_addresses) {
 			_my_addresses = g_slist_prepend
 				(_my_addresses, g_strdup (*my_addresses));
 			++my_addresses;
 		}
-
 	}
+
 
 	void check_set_version () {
 		/* check version...*/

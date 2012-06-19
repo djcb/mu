@@ -58,7 +58,6 @@ mu_store_unref (MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
 
-
 	if (store->unref() == 0) {
 		try { delete store; } MU_XAPIAN_CATCH_BLOCK;
 	}
@@ -116,4 +115,13 @@ mu_store_database_is_locked (const gchar *xpath)
 	}
 
 	return FALSE;
+}
+
+
+void
+mu_store_set_my_addresses (MuStore *store, const char **my_addresses)
+{
+	g_return_if_fail (store);
+
+	store->set_my_addresses (my_addresses);
 }
