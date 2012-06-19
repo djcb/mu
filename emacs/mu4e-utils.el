@@ -677,10 +677,9 @@ processing takes part in the background, unless buf is non-nil."
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error
 	    (sit-for 5))
-	  (mu4e~proc-index mu4e-maildir)
-	  (let ((buf (process-buffer proc)))
-	    (when (buffer-live-p buf)
-	      (kill-buffer buf))))))))
+	  (mu4e~proc-index mu4e-maildir mu4e-my-email-addresses)
+	  (when (buffer-live-p buf)
+	    (kill-buffer buf)))))))
 
 
 

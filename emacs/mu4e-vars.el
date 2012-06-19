@@ -75,10 +75,20 @@ mu4e."
   :group 'mu4e
   :safe 'stringp)
 
-(defvar mu4e-user-mail-address-regexp "$^"
+(defcustom mu4e-user-mail-address-regexp "$^"
   "Regular expression matching the user's mail address(es). This is
 used to distinguish ourselves from others, e.g. when replying and
-in :from-or-to headers. By default, match nothing.")
+in :from-or-to headers. By default, match nothing."
+  :type 'string
+  :group 'mu4e
+  :safe 'stringp)
+
+(defcustom mu4e-my-email-addresses `(,user-mail-address)
+  "List of e-mail addresses to consider 'my email addresses',
+ie. addresses whose presence in an email imply that it is a
+personal message. This is used when indexing messages."
+  :type '(string)
+  :group 'mu4e)
 
 (defvar mu4e-date-format-long "%c"
   "Date format to use in the message view, in the format of
@@ -139,12 +149,6 @@ restriction."
   :type 'integer
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-my-email-addresses `(,user-mail-address)
-  "List of e-mail addresses to consider 'my email addresses',
-ie. addresses whose presence in an email imply that it is a
-personal message."
-  :type '(string)
-  :group 'mu4e-compose)
 
 ;; Folders
 (defgroup mu4e-folders nil

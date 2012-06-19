@@ -895,6 +895,21 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
 	return MU_OK;
 }
 
+
+static void
+set_my_addresses (MuStore *store, char *addrstr)
+{
+	char **my_addresses;
+
+	if (!addrstr)
+		return;
+
+	my_addresses = g_strsplit (addrstr,"," -1);
+	mu_store_set_my_addresses (store, my_addresses);
+
+	g_strfreev (my_addresses);
+}
+
 /*
  * 'index' (re)indexs maildir at path:<path>, and responds with (:info
  * index ... ) messages while doing so (see the code)
@@ -903,11 +918,13 @@ static MuError
 cmd_index (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
 	MuIndex *index;
-	const char *path;
+	const char *path, *addresses;
 	MuIndexStats stats, stats2;
 	MuError rv;
 
 	GET_STRING_OR_ERROR_RETURN (args, "path", &path, err);
+	set_my_addresses (store,
+			  get_string_from_args (args, "my-addresses", TRUE, NULL));
 
 	index = mu_index_new (store, err);
 	if (!index) {
@@ -915,6 +932,7 @@ cmd_index (MuStore *store, MuQuery *query, GSList *args, GError **err)
 		return MU_OK;
 
 	}
+
 	mu_index_stats_clear (&stats);
 	rv = mu_index_run (index, path, FALSE, &stats, index_msg_cb, NULL, NULL);
 	if (rv != MU_OK && rv != MU_STOP) {

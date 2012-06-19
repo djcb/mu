@@ -165,10 +165,12 @@ and finally, we receive:
 .B index
 
 Using the \fBindex\fR command, we can (re)index the database, similar to what
-\fBmu find\fR does.
+\fBmu find\fR does. The \fBmy-addresses\fR parameter (optionally)
+registers 'my' email addresses; see the documentation for
+\fBmu_store_set_my_addresses\fR.
 
 .nf
--> index path:<path>
+-> index path:<path> [my-addresses:<comma-separated-list-of-email-addresses>]
 .fi
 As a response, it will send (for each 500 messages):
 .nf

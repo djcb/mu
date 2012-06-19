@@ -371,10 +371,18 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
       idparam (or flagstr "") (or path ""))))
 
 
-(defun mu4e~proc-index (path)
+
+(defun mu4e~proc-index (path my-addresses)
   "Update the message database for filesystem PATH, which should
-point to some maildir directory structure."
-  (mu4e~proc-send-command "index path:\"%s\"" path))
+point to some maildir directory structure. MY-ADDRESSES is a
+list of my email addresses (see e.g. `mu4e-my-email-addresses')."
+  (let ((addrs
+	  (when my-addresses
+	    (mapconcat 'identity my-addresses ","))))
+    (if addrs
+      (mu4e~proc-send-command "index path:\"%s\" my-addresses:%s"
+	path addrs)
+      (mu4e~proc-send-command "index path:\"%s\"" path))))
 
 (defun mu4e~proc-add (path maildir)
   "Add the message at PATH to the database, with MAILDIR set to the
@@ -447,7 +455,6 @@ contacts seen after NEWER-THAN (the time_t value)."
     "contacts only-personal:%s newer-than:%d"
     (if only-personal "true" "false")
     (if newer-than newer-than 0)))
-
 
 (defun mu4e~proc-view (docid-or-msgid &optional images)
   "Get one particular message based on its DOCID-OR-MSGID (keyword
