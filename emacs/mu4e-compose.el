@@ -34,6 +34,7 @@
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
+(require 'rfc2368)
 
 (require 'mu4e-utils)
 (require 'mu4e-vars)
@@ -768,5 +769,22 @@ message."
   'message-kill-buffer
   'message-send-hook)
 
+(defun mu4e~compose-browse-url-mail (url &optional ignored)
+  "Adapter for `browse-url-mailto-function."
+  (let* ((headers (rfc2368-parse-mailto-url url))
+	  (to (cdr (assoc "To" headers)))
+	  (subject (cdr (assoc "Subject" headers)))
+	  (body (cdr (assoc "Body" headers))))
+    (mu4e~compose-mail to subject)
+    (if body
+      (progn
+	(message-goto-body)
+	(insert body)
+	(if (not to)
+	  (message-goto-to)
+	  (if (not subject)
+	    (message-goto-subject)
+	    (message-goto-body)))))))
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-compose)

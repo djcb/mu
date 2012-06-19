@@ -36,6 +36,7 @@
 ;; we prefer the improved fill-region
 (require 'filladapt nil 'noerror)
 (require 'comint)
+(require 'browse-url)
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
@@ -98,6 +99,11 @@ buffer."
   if you're using an emacs with Imagemagick support."
   :group 'mu4e-view)
 
+
+(defvar mu4e-view-browse-url-mailto-function
+  'mu4e~compose-browse-url-mail
+  "Function to use for mailto: links.")
+ 
 (defvar mu4e-view-actions
   '( ("capture message" . mu4e-action-capture-message)
      ("view as pdf"     . mu4e-action-view-as-pdf))
@@ -135,9 +141,15 @@ where:
   "A map of some number->url so we can jump to url by number.")
 
 (defconst mu4e~view-url-regexp
-  "\\(https?://[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\)"
-  "Regexp that matches URLs; match-string 1 will contain
+  "\\(\\(https?\\://\\|mailto:\\)[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\)"
+  "Regexp that matches http:/https:/mailto: URLs; match-string 1
+  will contain the matched URL, if any.")
+
+(defconst mu4e~view-mailto-regexp
+  "\\("
+  "Regexp that matches mailto: URLs; match-string 1 will contain
   the matched URL, if any.")
+
 
 (defvar mu4e~view-attach-map nil
   "A mapping of user-visible attachment number to the actual part index.")
@@ -522,6 +534,9 @@ is nil, and otherwise open it."
   (make-local-variable 'mu4e~view-lines-wrapped)
   (make-local-variable 'mu4e~view-cited-hidden)
 
+  (make-local-variable 'browse-url-mailto-function)
+  (setq browse-url-mailto-function mu4e-view-browse-url-mailto-function)
+
   (setq buffer-undo-list t) ;; don't record undo info
 
   ;; autopair mode gives error when pressing RET
@@ -585,7 +600,9 @@ Seen; if the message is not New/Unread, do nothing."
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 
 (defun mu4e~view-browse-url-func (url)
-  "Return a function that executes `browse-url' with URL."
+  "Return a function that executes `browse-url' with URL. What
+browser is called is depending on `browse-url-browser-function' and
+`browse-url-mailto-function'."
   (lexical-let ((url url))
     (lambda ()
       (interactive)
@@ -996,7 +1013,7 @@ user that unmarking only works in the header list."
 
 (defun mu4e-view-go-to-url (num)
   "Go to a numbered url."
-  (interactive "n[mu4e] Go to url with number: ")
+  (interactive "n[mu4e] Visit url with number: ")
   (let ((url (gethash num mu4e~view-link-map)))
     (unless url (error "Invalid number for URL"))
     (browse-url url)))
