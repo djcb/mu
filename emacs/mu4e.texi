@@ -1595,13 +1595,14 @@ view). To enable this, add to your configuration something like:
 @lisp
 (setq mu4e-org-contacts-file  <full-path-to-your-org-contacts-file>)
 (add-to-list 'mu4e-headers-actions
-  '("org-contact-add" ?o mu4e-action-add-org-contact) t)
+  '("org-contact-add" . mu4e-action-add-org-contact) t)
 (add-to-list 'mu4e-view-actions
-  '("org-contact-add" ?o mu4e-action-add-org-contact) t)
+  '("org-contact-add" . mu4e-action-add-org-contact) t)
 @end lisp
 
 After this, you should be able to add contacts using @key{a o} in the headers
-view and the message view, using the @t{org-capture} mechanism.
+view and the message view, using the @t{org-capture} mechanism. Note, the
+@key{o} is because of the first character of @t{org-contact-add}.
 
 @node Getting new mail notifications with Sauron
 @section Getting new mail notifications with Sauron
