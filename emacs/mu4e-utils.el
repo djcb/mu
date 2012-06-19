@@ -108,8 +108,8 @@ Function will return the cdr of the list element."
 	  (optionsstr
 	    (mapconcat
 	      (lambda (option)
-		;; try to detect old-style options...
-		(when (characterp (cdr option))
+		;; try to detect old-style options, and warn
+		(when (characterp (car-safe (cdr-safe option)))
 		  (error (concat "Please use the new format for options/actions; "
 			   "see the manual")))
 		(let* ((kar (substring (car option) 0 1))
