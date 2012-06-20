@@ -9,16 +9,18 @@
   - put threading information in the database, and enable getting the complete
      threads when searching
   - refactor fill_database function in test cases
+  - handling of command line options / help
 
 *** mu4e
 
   - identities (see Jacek's 'mu4e: From field in replies' mail)
   - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
     mail)
-  - contact completion (see Jacek's 'mu4e: using' mail)
   - actions for /all/ headers, actions for /all/ attachment
   - custom header fields in headers-view, message-view
+    - 'human' dates
   - guile integration
+    - statistics
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
@@ -27,8 +29,8 @@
   - header updating interferes with marks (when updating for 'mark as read',
     when reading a marked message)
   - enable keeping message view buffers around
-  - 'human' dates
   - tooltip for flags field
+  - handling of database upgrades
 
 ** Done
 
@@ -63,6 +65,7 @@
   - fix sorting subjects with ':' (but not 'Re:' or 'Fwd:')
   - strip signature from original when replying
   - make refresh after changing sort, threads the default
+  - contact completion (see Jacek's 'mu4e: using' mail)
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
