@@ -554,13 +554,16 @@ This is used by the completion function in mu4e-compose."
 	     (mail (plist-get contact :mail)))
 	;;(message "N:%S M:%S" name mail)
 	(when mail
+	  (unless ;; ignore some address ('noreply' etc.)
+	    (and mu4e-compose-complete-ignore-address-regexp
+	      (string-match mu4e-compose-complete-ignore-address-regexp mail))
 	  (add-to-list 'lst
 	    (if name
 	      (format "%s <%s>" name mail)
 	      mail)))))
     (setq mu4e~contacts-for-completion lst)
     (mu4e-message "Contacts received: %d"
-      (length mu4e~contacts-for-completion))))
+      (length mu4e~contacts-for-completion)))))
 
 
 (defun mu4e~check-requirements ()
@@ -625,10 +628,11 @@ FUNC (if non-nil) afterwards."
       (when mu4e-compose-complete-addresses
 	(setq mu4e-contacts-func 'mu4e~fill-contacts)
 	(mu4e~proc-contacts
-	  mu4e-compose-complete-only-newer-than
-	  ;; calculate time_t value -- now minus so-many days
-	  (floor (- (float-time (current-time))
-		   (* 3600 24 mu4e-compose-complete-only-newer-than)))))))
+	  mu4e-compose-complete-only-personal
+	  (when mu4e-compose-complete-only-after
+	    (floor (float-time
+		     (apply 'encode-time
+		       (org-parse-time-string mu4e-compose-complete-only-after)))))))))
 
 (defun mu4e~stop ()
   "Stop the mu4e session."
@@ -726,6 +730,8 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 	      (beginning-of-line)
 	      (delete-region (point-min) (point)))))))))
 
+
+
 (defun mu4e-toggle-logging ()
   "Toggle between enabling/disabling debug-mode (in debug-mode,
 mu4e logs some of its internal workings to a log-buffer. See
@@ -737,6 +743,8 @@ mu4e logs some of its internal workings to a log-buffer. See
     (if mu4e-debug "enabled" "disabled"))
   (mu4e-log 'misc "logging enabled"))
 
+
+
 (defun mu4e-show-log ()
   "Visit the mu4e debug log."
   (interactive)
@@ -744,7 +752,6 @@ mu4e logs some of its internal workings to a log-buffer. See
     (unless (buffer-live-p buf)
       (error "No debug log available"))
     (switch-to-buffer buf)))
-
 
 
 (defun mu4e-split-ranges-to-numbers (str n)
@@ -830,8 +837,6 @@ displaying it). Do _not_ bury the current buffer, though."
   `parse-time-string'."
   (let ((timestr (read-string (mu4e-format "%s" prompt))))
     (apply 'encode-time (org-parse-time-string timestr))))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst mu4e~main-about-buffer-name "*mu4e-about*"
@@ -851,7 +856,6 @@ displaying it). Do _not_ bury the current buffer, though."
   (local-set-key "q" 'bury-buffer)
   (goto-char (point-min)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 (provide 'mu4e-utils)

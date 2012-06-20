@@ -142,12 +142,20 @@ the address fields (this excludes mailing list messages)."
   :type 'boolean
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-complete-only-newer-than 500
-  "Consider only contacts last seen less than so many *days*. This
-excludes really old contacts. Set to nil to not have any time-based
-restriction."
-  :type 'integer
+(defcustom mu4e-compose-complete-only-after "2010-01-01"
+  "Consider only contacts last seen after this date. Date must be a
+  string, in a format parseable by `org-parse-time-string'. This
+  excludes really old contacts. Set to nil to not have any
+  time-based restriction."
+  :type 'string
   :group 'mu4e-compose)
+
+(defcustom mu4e-compose-complete-ignore-address-regexp "noreply"
+  "Ignore any e-mail addresses for completion if they match this
+regexp."
+  :type 'string
+  :group 'mu4e-compose)
+
 
 
 ;; Folders

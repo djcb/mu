@@ -446,15 +446,15 @@ mean:
 response."
   (mu4e~proc-send-command "ping"))
 
-(defun mu4e~proc-contacts (only-personal newer-than)
+(defun mu4e~proc-contacts (personal after)
   "Sends the contacts command to the mu server, expecting
-a (:contacts (<list>)) in response. If ONLY-PERSONAL is non-nil,
-only get personal contacts, if newer-than is non-nil, get only
-contacts seen after NEWER-THAN (the time_t value)."
+a (:contacts (<list>)) in response. If PERSONAL is non-nil, only
+get personal contacts, if AFTER is non-nil, get only contacts
+seen AFTER (the time_t value)."
   (mu4e~proc-send-command
-    "contacts only-personal:%s newer-than:%d"
-    (if only-personal "true" "false")
-    (if newer-than newer-than 0)))
+    "contacts personal:%s after:%d"
+    (if personal "true" "false")
+    (or after 0)))
 
 (defun mu4e~proc-view (docid-or-msgid &optional images)
   "Get one particular message based on its DOCID-OR-MSGID (keyword
