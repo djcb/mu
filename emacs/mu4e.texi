@@ -561,7 +561,7 @@ m            mark for moving to another maildir folder
 o,r          mark message as unread, read
 
 u            unmark message at point
-U            unmark *all* messages 
+U            unmark *all* messages
 
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
@@ -770,7 +770,7 @@ m            mark for moving to another maildir folder
 o,r          mark message as unread, read
 
 u            unmark message at point
-U            unmark *all* messages 
+U            unmark *all* messages
 
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
@@ -979,7 +979,7 @@ the addresses to complete, @t{mu4e} uses the e-mail addresses in its database
 -- addresses you sent messages to or received messages from.
 
 Address auto-completion is enabled by default, using the variable
-@t{mu4e-compose-complete-addresses}. 
+@t{mu4e-compose-complete-addresses}.
 
 You can influence how we match addresses by setting
 @t{mu4e-compose-completion-styles}. By default, that is set to
@@ -1003,7 +1003,7 @@ completion pool by filter the ones that are most likely to be relevant. The
 following variables are available to tune this:
 
 @itemize
-@item @code{mu4e-compose-complete-only-personal} - when @t{t} (the default),
+@item @code{mu4e-compose-complete-only-personal} - when set to @t{t},
 only consider addresses that were seen in @emph{personal} messages -- that is,
 messages in which one of my e-mail addresses was seen in one of the address
 fields. This is to exclude mailing list posts. You can define what is
@@ -1014,7 +1014,7 @@ the command line, the @t{--my-address} parameter for @t{mu index}.
 addresses seen after some date. Parameter is a string, parseable by
 @code{org-parse-time-string}. This excludes very old e-mail addresses. The
 default is @t{"2010-01-01"}, i.e., only consider e-mail addresses used since
-the start of 2010.                 
+the start of 2010.
 @item @code{mu4e-compose-complete-ignore-address-regexp} - a regular expression to
 filter out other 'junk' e-mail addresses; defaults to @t{noreply}.
 @end itemize
@@ -1069,7 +1069,7 @@ By default, queries return up to @code{mu4e-search-results-limit} (default:
 bit. Sometimes, you may want to show @emph{all} results; you can enable this
 with @t{M-x mu4e-headers-toggle-full-search}, or by customizing the variable
 @code{mu4e-headers-full-search}. This applies to all search commands.
-  
+
 You can also influence the sort order and whether threads are shown or not;
 see @ref{Sort order and threading}.
 
@@ -1331,7 +1331,7 @@ apply to messages:
 | unmark       | u           | remove mark at point     |
 | unmark all   | U           | remove all marks         |
 @end verbatim
-  
+
 After marking a header for something, the left-most columns shows a character
 to remind you what you marked it with. Next to that, @t{mu4e} displays the
 name of the mark, on top of the beginning of the header line. This latter
@@ -1373,7 +1373,7 @@ Custom mark functions should be appended to the list
 @item The name of the marker - as short string describing this marker. The
 first character of this string will also be its shortcut, so these should be
 unique.
-@item a predicate function taking two arguments @t{msg} and @t{param}- first, 
+@item a predicate function taking two arguments @t{msg} and @t{param}- first,
 @t{msg}, which is the message
 plist (see @ref{The message s-expression}); second is a parameter provided by
 the third of the marker elements (next item). The predicate function should
@@ -1387,10 +1387,10 @@ more than @emph{n} recipients. We could do it like this:
 
 @lisp
 (add-to-list 'mu4e-headers-custom-markers
-  '("More than n recipients"           
-      (lambda (msg n) (> (+ (length (mu4e-msg-field msg :to)) 
+  '("More than n recipients"
+      (lambda (msg n) (> (+ (length (mu4e-msg-field msg :to))
                             (length (mu4e-msg-field msg :cc))) n))
-      (lambda () (read-number "Match messages with more recipients than: "))) t) 
+      (lambda () (read-number "Match messages with more recipients than: "))) t)
 @end lisp
 
 After evaluating this, pressing @key{&} should let you choose the custom
@@ -1479,7 +1479,7 @@ Suppose we would like to inspect the number of recipients for a message in the
 @end lisp
 
 After activating this, @key{a n} in the headers view will show the number of
-recipients for the message at point. 
+recipients for the message at point.
 
 @subsection Example: adding an action in the message view
 

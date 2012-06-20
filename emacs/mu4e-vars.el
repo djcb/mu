@@ -135,7 +135,7 @@ see `mu4e-headers-visible-lines' and
   :type 'boolean
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-complete-only-personal t
+(defcustom mu4e-compose-complete-only-personal nil
   "Whether to consider only 'personal' e-mail addresses,
 i.e. addresses from messages where user was explicitly in one of
 the address fields (this excludes mailing list messages)."
