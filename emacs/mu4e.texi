@@ -45,12 +45,15 @@ configuration, and explains its daily use. It also shows how you can customize
 At the end of the manual, there are some example configurations, which should
 help you to get up to speed quickly.
 
+Also quite useful are the @ref{FAQ - Frequently Anticipated Questions}, and
+the section on @ref{Known issues / missing features}.
+
 This manual has been updated for @t{mu}/@t{mu4e} version
 @emph{@value{mu4e-version}}.
 
 @menu
 * Introduction:: How it all begins
-* Getting started:: Setting thinsg up
+* Getting started:: Setting things up
 * Running mu4e:: Daily use
 * Searching:: Some more details about queries and searching
 * Marking:: Marking messages
@@ -967,6 +970,56 @@ configuration:
 (setq message-kill-buffer-on-exit t)
 @end lisp
 
+@subsection Address autocompletion
+@anchor{Address autocompletion}
+
+Since @t{mu}/@t{mu4e} version 0.9.8.5, there is support for autocompleting
+addresses using @key{TAB} when composing e-mail messages. As the source for
+the addresses to complete, @t{mu4e} uses the e-mail addresses in its database
+-- addresses you sent messages to or received messages from.
+
+Address auto-completion is enabled by default, using the variable
+@t{mu4e-compose-complete-addresses}. 
+
+You can influence how we match addresses by setting
+@t{mu4e-compose-completion-styles}. By default, that is set to
+@t{(substring)}, which means that we're matching on any substring --
+e.g. @t{amp} matches @t{foo@@example.com}. See the documentation for
+@code{completion-styles} for the alternatives.
+
+Another tunable is @t{mu4e-compose-cycle-threshold}, which determines below
+which number of matches we start cycling through them using @key{TAB}. The
+default is 5
+
+@subsection Limiting the number of addresses for autocompletion
+
+If you have a lot of mail, especially from mailing lists and the like, there
+will be @emph{many} e-mail adresses, most of which are unlikely to be useful
+when auto-completing. For example, consider e-mail addresses in five year old
+mailing lists posts.
+
+So, @t{mu4e} attempts to limit the number of e-mail addresses in the
+completion pool by filter the ones that are most likely to be relevant. The
+following variables are available to tune this:
+
+@itemize
+@item @code{mu4e-compose-complete-only-personal} - when @t{t} (the default),
+only consider addresses that were seen in @emph{personal} messages -- that is,
+messages in which one of my e-mail addresses was seen in one of the address
+fields. This is to exclude mailing list posts. You can define what is
+considered 'my e-mail address' using @code{mu4e-my-email-addresses}, a list of
+e-mail address (defaults to @t{(user-mail-address)}), and when indexing from
+the command line, the @t{--my-address} parameter for @t{mu index}.
+@item @code{mu4e-compose-complete-only-after} - only consider e-mail
+addresses seen after some date. Parameter is a string, parseable by
+@code{org-parse-time-string}. This excludes very old e-mail addresses. The
+default is @t{"2010-01-01"}, i.e., only consider e-mail addresses used since
+the start of 2010.                 
+@item @code{mu4e-compose-complete-ignore-address-regexp} - a regular expression to
+filter out other 'junk' e-mail addresses; defaults to @t{noreply}.
+@end itemize
+
+
 @subsection Queuing mail
 @anchor{Queuing mail}
 
@@ -1539,7 +1592,7 @@ org-agenda-open-link} in agenda buffers, or @t{M-x org-open-at-point}
 elsewhere - both are typically bound to @kbd{C-c C-o}.
 
 @node Rich-text messages with org-mode
-@section Rich-text messages with org-mode
+@section Rich-text messages with org-mode (EXPERIMENTAL)
 
 @t{org-mode} has some nice facilities for editing texts -- creating lists,
 tables, mathematical formulae etc. In addition, it can convert them to
@@ -1585,7 +1638,10 @@ mode-switching between @t{org-mode} and @t{mu4e-compose-mode} is
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
 
-To manage your addresses using @t{org-mode}, there is
+Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
+autocompletion}, and that is the recommended way to do this.
+
+However, it is also possible to manage your addresses with @t{org-mode}, using
 @t{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}}.
 
 @t{mu4e-actions} defines a useful action (@ref{Actions}) for this to add a
@@ -2028,6 +2084,7 @@ seems to work quite well.
 @item @emph{Can I automatically apply the marks on messages when
 leaving the headers buffer?} Yes you can -- see the documentation on
 @t{mu4e-headers-leave-behavior}.
+@item @emph{Can I influence the way @t{mu4e} does address autocompletion?} Yes: @ref{Address autocompletion}
 @item @emph{How can I automatically apply word-wrapping (and hiding cited
 parts) when viewing a message?} See the documentation on
 @t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
@@ -2056,8 +2113,6 @@ visible in the headers buffer, you can not collapse/open them.
 @item @emph{No support for crypto when reading mail}. Currently, you cannot
 conveniently read encrypted mail or check signatures. For outgoing messages,
 it should work though, using the built-in mechanisms.
-@item @emph{@t{mu4e} gets confused when there are multiple windows showing the
-headers.}. Yes -- don't do that.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @end itemize

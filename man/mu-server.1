@@ -89,8 +89,8 @@ Using the \fBcompose\fR command, we can retrieve an s-expression with all known
 contacts (name + e-mail address). For the details, see \fBmu-cfind(1)\fR.
 
 .nf
--> contacts [only-personal:true|false] [newer-than:<time_t>]
-<- (:contacts ((:name abc :mail foo@exampl.com ...) ...)
+-> contacts [personal:true|false] [after:<time_t>]
+<- (:contacts ((:name abc :mail foo@example.com ...) ...)
 .fi
 
 
