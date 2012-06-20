@@ -50,10 +50,9 @@ struct _MuStore {
 public:
 	/* create a read-write MuStore */
 	_MuStore (const char *path, const char *contacts_path,
-		  const char **my_addresses,
-		  bool rebuild) :_my_addresses(NULL) {
+		  bool rebuild) {
 
-		init (path, contacts_path, my_addresses, rebuild, false);
+		init (path, contacts_path, rebuild, false);
 
 		if (rebuild)
 			_db = new Xapian::WritableDatabase
@@ -78,7 +77,7 @@ public:
 	/* create a read-only MuStore */
 	_MuStore (const char *path) {
 
-		init (path, NULL, NULL, false, false);
+		init (path, NULL, false, false);
 
 		_db = new Xapian::Database (path);
 		if (mu_store_needs_upgrade(this))
@@ -89,9 +88,9 @@ public:
 	}
 
 	void init (const char *path, const char *contacts_path,
-		   const char **my_addresses,
 		   bool rebuild, bool read_only) {
 
+		_my_addresses   = NULL;
 		_batch_size	= DEFAULT_BATCH_SIZE;
 		_contacts       = 0;
 		_in_transaction = false;
@@ -100,8 +99,6 @@ public:
 		_read_only      = read_only;
 		_ref_count      = 1;
 		_version        = NULL;
-
-		set_my_addresses (my_addresses);
 	}
 
 	void set_my_addresses (const char **my_addresses) {
@@ -117,7 +114,6 @@ public:
 			++my_addresses;
 		}
 	}
-
 
 	void check_set_version () {
 		/* check version...*/

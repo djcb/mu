@@ -123,14 +123,14 @@ add_synonyms (MuStore *store)
 
 MuStore*
 mu_store_new_writable (const char* xpath, const char *contacts_cache,
-		       const char **my_addresses, gboolean rebuild, GError **err)
+		       gboolean rebuild, GError **err)
 {
 	g_return_val_if_fail (xpath, NULL);
 
 	try {
 		try {
 			MuStore *store;
-			store = new _MuStore (xpath, contacts_cache, my_addresses,
+			store = new _MuStore (xpath, contacts_cache,
 					      rebuild ? true : false);
 			add_synonyms (store);
 			return store;
