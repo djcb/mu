@@ -1168,7 +1168,7 @@ to ensure we don't disturb other windows."
 	 (headers-visible))
     (walk-windows
       (lambda (win)
-	;; if we find a view window connect to this one, kill it
+	;; if we find a view window connected to this one, kill it
 	(when (eq mu4e~headers-view-win win)
 	  (delete-window win)
 	  (setq mu4e~headers-view-win nil))
