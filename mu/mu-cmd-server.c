@@ -897,15 +897,15 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
 
 
 static void
-set_my_addresses (MuStore *store, char *addrstr)
+set_my_addresses (MuStore *store, const char *addrstr)
 {
 	char **my_addresses;
 
 	if (!addrstr)
 		return;
 
-	my_addresses = g_strsplit (addrstr,"," -1);
-	mu_store_set_my_addresses (store, my_addresses);
+	my_addresses = g_strsplit (addrstr, ",", -1);
+	mu_store_set_my_addresses (store, (const char**)my_addresses);
 
 	g_strfreev (my_addresses);
 }
@@ -918,7 +918,7 @@ static MuError
 cmd_index (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
 	MuIndex *index;
-	const char *path, *addresses;
+	const char *path;
 	MuIndexStats stats, stats2;
 	MuError rv;
 
