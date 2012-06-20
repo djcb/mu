@@ -525,8 +525,8 @@ cmd_compose (MuStore *store, MuQuery *query, GSList *args, GError **err)
 
 struct _SexpData {
 	GString *gstr;
-	gboolean only_personal;
-	time_t newer_than;
+	gboolean personal;
+	time_t after;
 };
 typedef struct _SexpData SexpData;
 
@@ -535,31 +535,33 @@ static void
 each_contact_sexp (const char *email, const char *name, gboolean personal,
 		   time_t tstamp, SexpData *sdata)
 {
-	static const char *nil = "nil";
-	char *escmail, *escname;
-
-	/* only include newer-than-x contacts */
-	if (tstamp < sdata->newer_than)
-		return;
+	char *escmail;
 
 	/* (maybe) only include 'personal' contacts */
-	if (sdata->only_personal && !personal)
+	if (sdata->personal && !personal)
 		return;
 
-	escmail = email ? mu_str_escape_c_literal (email, TRUE) : (char*)nil;
-	escname = name  ? mu_str_escape_c_literal (name,  TRUE) : (char*)nil;
+	/* only include newer-than-x contacts */
+	if (tstamp < sdata->after)
+		return;
 
-	g_string_append_printf (sdata->gstr,
-				"(:name %s :mail %s "
-				":timestamp (%u %u 0))\n",
-				escname, escmail,
-				(unsigned)(tstamp >> 16),
-				(unsigned)(tstamp & 0xffff));
-	if (escmail != nil)
-		g_free (escmail);
+	/* only include *real* e-mail addresses (ignore local
+	 * addresses... there's little to complete there anyway...) */
+	if (!email || !strstr (email, "@"))
+		return;
 
-	if (escname != nil)
+	escmail = mu_str_escape_c_literal (email, TRUE);
+
+	if (name) {
+		char *escname;
+		escname = mu_str_escape_c_literal (name, TRUE);
+		g_string_append_printf (sdata->gstr, "(:name %s :mail %s)\n",
+					escname, escmail);
 		g_free (escname);
+	} else
+		g_string_append_printf (sdata->gstr, "(:mail %s)\n", escmail);
+
+	g_free (escmail);
 }
 
 
@@ -572,15 +574,14 @@ each_contact_sexp (const char *email, const char *name, gboolean personal,
  * @return the sexp
  */
 static char*
-contacts_to_sexp (MuContacts *contacts,
-		  gboolean only_personal, time_t newer_than)
+contacts_to_sexp (MuContacts *contacts, gboolean personal, time_t after)
 {
 	SexpData sdata;
 
 	g_return_val_if_fail (contacts, NULL);
 
-	sdata.only_personal = only_personal;
-	sdata.newer_than    = newer_than;
+	sdata.personal = personal;
+	sdata.after    = after;
 
 	/* make a guess for the initial size */
 	sdata.gstr = g_string_sized_new (mu_contacts_count(contacts) * 128);
@@ -599,14 +600,13 @@ cmd_contacts (MuStore *store, MuQuery *query, GSList *args, GError **err)
 {
 	MuContacts *contacts;
 	char *sexp;
-	gboolean only_personal;
-	time_t newer_than;
+	gboolean personal;
+	time_t after;
 	const char *str;
 
-	only_personal = get_bool_from_args (args, "only-personal", TRUE,
-					    NULL);
-	str = get_string_from_args (args, "newer-than", TRUE, NULL);
-	newer_than = str ? (time_t)atoi(str) : 0;
+	personal = get_bool_from_args (args, "personal", TRUE, NULL);
+	str = get_string_from_args (args, "after", TRUE, NULL);
+	after = str ? (time_t)atoi(str) : 0;
 
 	contacts = mu_contacts_new
 		(mu_runtime_path (MU_RUNTIME_PATH_CONTACTS));
@@ -617,8 +617,8 @@ cmd_contacts (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	}
 
 	/* dump the contacts cache as a giant sexp */
-	sexp = contacts_to_sexp (contacts, only_personal, newer_than);
-	print_expr ("%s", sexp);
+	sexp = contacts_to_sexp (contacts, personal, after);
+	print_expr ("%s\n", sexp);
 	g_free (sexp);
 
 	mu_contacts_destroy (contacts);
