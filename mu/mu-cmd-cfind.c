@@ -130,7 +130,8 @@ print_plain (const char *email, const char *name, gboolean color)
 
 struct _ECData {
 	MuConfigFormat format;
-	gboolean color;
+	gboolean color, personal;
+	time_t after;
 };
 typedef struct _ECData ECData;
 
@@ -139,6 +140,12 @@ static void
 each_contact (const char *email, const char *name, gboolean personal,
 	      time_t tstamp, ECData *ecdata)
 {
+	if (ecdata->personal && !personal)
+		return;
+
+	if (ecdata->after < tstamp)
+		return;
+
 	switch (ecdata->format) {
 	case MU_CONFIG_FORMAT_MUTT_ALIAS:
 		each_contact_mutt_alias (email, name);
@@ -166,7 +173,9 @@ each_contact (const char *email, const char *name, gboolean personal,
 
 
 static MuError
-run_cmd_cfind (const char* pattern, MuConfigFormat format,
+run_cmd_cfind (const char* pattern,
+	       gboolean personal, time_t after,
+	       MuConfigFormat format,
 	       gboolean color, GError **err)
 {
 	gboolean rv;
@@ -174,8 +183,10 @@ run_cmd_cfind (const char* pattern, MuConfigFormat format,
 	size_t num;
 	ECData ecdata;
 
-	ecdata.format = format;
-	ecdata.color  = color;
+	ecdata.personal = personal;
+	ecdata.after    = after;
+	ecdata.format	= format;
+	ecdata.color	= color;
 
 	contacts = mu_contacts_new (mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
 	if (!contacts) {
@@ -239,6 +250,10 @@ mu_cmd_cfind (MuConfig *opts, GError **err)
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
-	return run_cmd_cfind (opts->params[1], opts->format,
-			      !opts->nocolor, err);
+	return run_cmd_cfind (opts->params[1],
+			      opts->personal,
+			      opts->after,
+			      opts->format,
+			      !opts->nocolor,
+			      err);
 }

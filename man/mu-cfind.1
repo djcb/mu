@@ -1,4 +1,4 @@
-.TH MU CFIND 1 "May 2011" "User Manuals"
+.TH MU CFIND 1 "June 2012" "User Manuals"
 
 .SH NAME
 
@@ -59,6 +59,24 @@ sets the output format to the given value. The following are available:
 | org-contact | org-mode org-contact format       |
 | bbdb        | BBDB format                       |
 | csv         | comma-separated values            |
+.fi
+
+.TP
+\fB\-\-personal\fR only show addresses seen in messages where one of 'my'
+e-mail addresses was seen in one of the address fields; this is to exclude
+addresses only seen in mailing-list messages. See the \fB\-\-my-address\fR
+parameter in \fBmu index\fR.
+
+.TP
+\fB\-\-after=\fR\fI<timestamp>\fR only show addresses last seen after
+\fI<timestamp>\fR. \fI<timestamp>\fR is a UNIX \fBtime_t\fR value, the number
+of seconds since 1970-01-01 (in UTC).
+
+From the command line, you can use the \fBdate\fR command to get this
+value. For example, only consider addresses last seen after 2009-06-01, you
+could specify
+.nf
+  --after=`date +%s --date='2009-06-01'`
 .fi
 
 .SH RETURN VALUE

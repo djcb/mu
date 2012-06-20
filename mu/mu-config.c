@@ -151,8 +151,7 @@ config_options_group_index (void)
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,&MU_CONFIG.my_addresses,
 		 "my e-mail address (regexp); can be used multiple times", NULL},
 		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.autoupgrade,
-		 "auto-upgrade the database with new mu versions (false)",
-		 NULL},
+		 "auto-upgrade the database with new mu versions (false)", NULL},
 		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
 		 "don't clean up the database after indexing (false)", NULL},
 		{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.xbatchsize,
@@ -273,6 +272,7 @@ set_group_cfind_defaults (void)
 	else
 		MU_CONFIG.format  = get_output_format (MU_CONFIG.formatstr);
 
+	MU_CONFIG.after = 0;
 }
 
 
@@ -284,6 +284,10 @@ config_options_group_cfind (void)
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'mutt', 'wanderlust',"
 		 "'org-contact', 'csv')", NULL},
+		{"personal", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.personal,
+		 "whether to only get 'personal' contacts", NULL},
+		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
+		 "only get addresses last seen after T", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 

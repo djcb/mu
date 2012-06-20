@@ -136,6 +136,10 @@ struct _MuConfig {
 	gboolean         terminator;      /* add separator \f between
 					   * multiple messages in mu
 					   * view */
+	/* options for cfind */
+	gboolean          personal;       /* only show 'personal' addresses */b
+	time_t            after;          /* only show addresses last
+					   * seen after T */
 
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */
