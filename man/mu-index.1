@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "May 2012" "User Manuals"
+.TH MU-INDEX 1 "June 2012" "User Manuals"
 
 .SH NAME
 
@@ -66,8 +66,19 @@ starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
 \fI~/Maildir\fR. See the note on mixing sub-maildirs below.
 
 .TP
-\fB\-\-reindex\fR
-re-index all mails, even ones that are already in the database.
+\fB\-\-my-address\fR=\fI<my-email-address>\fR
+
+specifies that some e-mail address is 'my-address' (\fB\-\-my-address\fR can
+be used multiple times). This is used by \fBmu cfind\fR -- any e-mail address
+found in the address fields of a message which also has
+\fI<my-email-address>\fR in one of its address fields, is considered a
+\fIpersonal\fR e-mail address. This allows you, for example, to filter out
+(\fBmu cfind --personal\fR) addresses which were merely seen in mailing list
+messages.
+
+.TP
+\fB\-\-reindex\fR re-index all mails, even ones that are already in the
+database.
 
 .TP
 \fB\-\-nocleanup\fR
@@ -114,7 +125,7 @@ in the same database; for example, it's better not to index both with
 may lead to unexpected results when searching with the the 'maildir:' search
 parameter (see below).
 
-.SS A note on performance
+.SS A note on performance (i)
 As a non-scientific benchmark, a simple test on the authors machine (a
 Thinkpad X61s laptop using Linux 2.6.35 and an ext3 file system) with no
 existing database, and a maildir with 27273 messages:
@@ -134,7 +145,7 @@ already, goes much faster:
  $ time mu index --quiet
  0,48s user 0,76s system 10% cpu 11,796 total
 .si
-(more than 2300 messages per second)
+(more than 56818 messages per second)
 
 Note that each of test flushes the caches first; a more common use case might
 be to run \fBmu index\fR when new mail has arrived; the cache may stay
@@ -145,6 +156,30 @@ quite 'warm' in that case:
 0,33s user 0,40s system 80% cpu 0,905 total
 .si
 which is more than 30000 messages per second.
+
+
+.SS A note on performance (ii)
+As per June 2012, we did the same non-scientific benchmark, this time with an
+Intel) i5-2500 CPU @ 3.30GHz, an ext4 file system and a maildir with 22589
+messages.
+
+.nf
+ $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
+ $ time mu index --quiet
+ 27,79s user 2,17s system 48% cpu 1:01,47 total
+.si
+(about 813 messages per second)
+
+A second run, which is the more typical use case when there is a database
+already, goes much faster:
+
+.nf
+ $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
+ $ time mu index --quiet
+ 0,13s user 0,30s system 19% cpu 2,162 total
+.si
+(more than 173000 messages per second)
+
 
 In general, \fBmu\fR has been getting faster with each release, even with
 relatively expensive new features such as text-normalization (for
@@ -159,9 +194,9 @@ updating of \fBmu\fR-versions, without the need to clear out any old
 databases.
 
 However, note that versions of \fBmu\fR before 0.7 used a different scheme,
-which put the database in \fI~/.mu/xapian\-<version>\fR. These older databases
-can safely be deleted. Starting from version 0.7, this manual cleanup should
-no longer be needed.
+which puts the database in \fI~/.mu/xapian\-<version>\fR. These older
+databases can safely be deleted. Starting from version 0.7, this manual
+cleanup should no longer be needed.
 
 \fBmu\fR stores logs of its operations and queries in \fI<muhome>/mu.log\fR
 (by default, this is \fI~/.mu/mu.log\fR). Upon startup, \fBmu\fR checks the
@@ -203,3 +238,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .BR maildir(5)
 .BR mu(1)
 .BR mu-find(1)
+.BR mu-cfind(1)
