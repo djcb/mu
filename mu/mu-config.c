@@ -271,8 +271,6 @@ set_group_cfind_defaults (void)
 		MU_CONFIG.format = MU_CONFIG_FORMAT_PLAIN;
 	else
 		MU_CONFIG.format  = get_output_format (MU_CONFIG.formatstr);
-
-	MU_CONFIG.after = 0;
 }
 
 

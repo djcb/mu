@@ -424,7 +424,8 @@ with_store (store_func func, MuConfig *opts, gboolean read_only,
 		store = mu_store_new_writable
 			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 			 mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
-			 opts->my_addresses, opts->rebuild, err);
+			 (const char**)opts->my_addresses,
+			 opts->rebuild, err);
 	if (!store)
 		return MU_G_ERROR_CODE(err);
 	else {

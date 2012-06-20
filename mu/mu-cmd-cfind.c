@@ -143,7 +143,7 @@ each_contact (const char *email, const char *name, gboolean personal,
 	if (ecdata->personal && !personal)
 		return;
 
-	if (ecdata->after < tstamp)
+	if (tstamp < ecdata->after)
 		return;
 
 	switch (ecdata->format) {

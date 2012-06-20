@@ -137,7 +137,7 @@ struct _MuConfig {
 					   * multiple messages in mu
 					   * view */
 	/* options for cfind */
-	gboolean          personal;       /* only show 'personal' addresses */b
+	gboolean          personal;       /* only show 'personal' addresses */
 	time_t            after;          /* only show addresses last
 					   * seen after T */
 
