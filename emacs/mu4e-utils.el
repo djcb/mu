@@ -513,9 +513,11 @@ process."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(defconst mu4e-update-buffer-name "*mu4e-update*"
-  "*internal* Name of the buffer for message retrieval / database
-  updating.")
+(defconst mu4e~update-buffer-name "*mu4e-update*"
+  "Name of the buffer for message retrieval/database updating.")
+
+(defconst mu4e~update-buffer-height 8
+  "Height of the mu4e message retrieval/update buffer.")
 
 (defun mu4e-update-mail-show-window ()
   "Try to retrieve mail (using the user-provided shell command),
@@ -524,9 +526,13 @@ split-window."
   (interactive)
   (unless mu4e-get-mail-command
     (error "`mu4e-get-mail-command' is not defined"))
-  (let ((buf (get-buffer-create mu4e-update-buffer-name))
-	 (win
-	   (split-window (selected-window)
+  ;; delete any old update buffer
+  (when (buffer-live-p mu4e~update-buffer-name)
+    (with-current-buffer mu4e~update-buffer-name
+      (kill-buffer-and-window)))
+  ;; create a new one
+  (let ((buf (get-buffer-create mu4e~update-buffer-name))
+	 (win (split-window (selected-window)
 	     (- (window-height (selected-window)) 8))))
     (with-selected-window win
       (switch-to-buffer buf)
@@ -534,8 +540,6 @@ split-window."
       (erase-buffer)
       (insert "\n") ;; FIXME -- needed so output starts
       (mu4e-update-mail buf))))
-
-
 
 
 
@@ -630,9 +634,9 @@ FUNC (if non-nil) afterwards."
 	(mu4e~proc-contacts
 	  mu4e-compose-complete-only-personal
 	  (when mu4e-compose-complete-only-after
-	    (floor (float-time
-		     (apply 'encode-time
-		       (org-parse-time-string mu4e-compose-complete-only-after)))))))))
+	    (float-time
+	      (apply 'encode-time
+		(org-parse-time-string mu4e-compose-complete-only-after))))))))
 
 (defun mu4e~stop ()
   "Stop the mu4e session."
@@ -676,7 +680,8 @@ processing takes part in the background, unless buf is non-nil."
 		;; sadly, fetchmail returns '1' when there is no mail; this is
 		;; not really an error of course, but it's hard to distinguish
 		;; from a genuine error
-		(maybe-error (or (not (eq status 'exit)) (/= code 0))))
+		(maybe-error (or (not (eq status 'exit)) (/= code 0)))
+		(buf (process-buffer proc)))
 	  (message nil)
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error
