@@ -134,7 +134,7 @@ return nil."
   (when val (format "%s: %s\n" hdr val)))
 
 
-(defun mu4e~compose-refererences-construct (msg)
+(defun mu4e~compose-references-construct (msg)
   "Construct the value of the References: header based on MSG as a
 comma-separated string. Normally, this the concatenation of the
 existing References (which may be empty) and the message-id. If the
@@ -330,7 +330,7 @@ You can append flags."
 				  reply-all))
       (mu4e~compose-header "Subject" subject)
       (mu4e~compose-header "References"
-	(mu4e~compose-refererences-construct origmsg))
+	(mu4e~compose-references-construct origmsg))
       (mu4e~compose-common-construct)
       (when old-msgid
 	(mu4e~compose-header "In-reply-to" (format "<%s>" old-msgid)))
@@ -350,7 +350,7 @@ You can append flags."
       (mu4e~compose-header "To" "")
       (mu4e~compose-common-construct)
       (mu4e~compose-header "References"
-	(mu4e~compose-refererences-construct origmsg))
+	(mu4e~compose-references-construct origmsg))
       (mu4e~compose-header "Subject"
 	(concat
 	  ;; if there's no Fwd: yet, prepend it
@@ -785,6 +785,6 @@ message."
 	  (if (not subject)
 	    (message-goto-subject)
 	    (message-goto-body)))))))
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-compose)
