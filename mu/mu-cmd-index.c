@@ -128,27 +128,6 @@ index_msg_silent_cb (MuIndexStats* stats, void *user_data)
 }
 
 
-static void
-backspace (unsigned u)
-{
-	static gboolean init = FALSE;
-	static char backspace[80];
-
-	if (G_UNLIKELY(!init)) {
-		/* fill with backspaces */
-		int i;
-		for (i = 0; i != sizeof(backspace); ++i)
-			backspace[i] = '\b';
-		init = TRUE;
-	}
-
-	backspace[MIN(u,sizeof(backspace))] = '\0';
-	fputs (backspace, stdout);
-	backspace[u] = '\b';
-}
-
-
-
 
 static void
 print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
@@ -156,13 +135,13 @@ print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 	const char *kars="-\\|/";
 	char output[120];
 
-	static unsigned i = 0, len = 0;
+	static unsigned i = 0;
 
 	if (clear)
-		backspace (len);
+		fputs ("\r", stdout);
 
 	if (color)
-		len = (unsigned)snprintf
+		snprintf
 			(output, sizeof(output),
 			 MU_COLOR_YELLOW "%c " MU_COLOR_DEFAULT
 			 "processing mail; "
@@ -174,7 +153,7 @@ print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 			 (unsigned)stats->_updated,
 			 (unsigned)stats->_cleaned_up);
 	else
-		len = (unsigned)snprintf
+		snprintf
 			(output, sizeof(output),
 			 "%c processing mail; processed: %u; "
 			 "updated/new: %u, cleaned-up: %u",
@@ -240,7 +219,6 @@ database_version_check_and_update (MuStore *store, MuConfig *opts,
 static void
 show_time (unsigned t, unsigned processed, gboolean color)
 {
-
 	if (color) {
 		if (t)
 			g_print ("elapsed: "
