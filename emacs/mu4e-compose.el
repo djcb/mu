@@ -73,12 +73,14 @@ replying to messages."
   :type 'boolean
   :group 'mu4e-compose)
 
-
-(defcustom mu4e-compose-completion-styles '(substring)
+;; note, "substring" seems to work pretty well, but is not available for emacs23;
+;; so there we use "partial-completion" instead
+(defvar mu4e-compose-completion-styles
+  (if (find-if (lambda (style) (eq 'substring (car style))) completion-styles-alist)
+    '(substring)
+    '(partial-completion))
   "How to do matching for contacts-completion; see
-`completion-styles'."
-  :type 'list
-  :group 'mu4e-compose)
+`completion-styles' and `completion-styles-alist'.")
 
 (defcustom mu4e-compose-cycle-threshold 5
   "Number of completion matches below which you can cycle through
@@ -451,6 +453,18 @@ needed, set the Fcc header, and register the handler function."
      "^X-Draft-From:" "^User-agent:")
   "Hidden headers when composing.")
 
+(defun mu4e~compose-setup-completion ()
+  "Set up autocompletion of addresses."
+  (make-local-variable 'completion-styles)
+  (make-local-variable 'completion-cycle-threshold)
+  (setq
+    completion-cycle-threshold mu4e-compose-cycle-threshold
+    completion-styles mu4e-compose-completion-styles)
+  (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
+  ;; this seems to be needed for emacs23:
+  (make-local-variable 'message-completion-alist)
+  (add-to-list 'message-completion-alist
+    '("^\\(To\\|Cc\\|Bcc\\):" . completion-at-point)))
 
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
@@ -472,12 +486,7 @@ needed, set the Fcc header, and register the handler function."
 
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
-      (make-local-variable 'completion-styles)
-      (make-local-variable 'completion-cycle-threshold)
-      (setq
-	completion-cycle-threshold mu4e-compose-cycle-threshold
-	completion-styles mu4e-compose-completion-styles)
-      (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact))
+      (mu4e~compose-setup-completion))
 
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
