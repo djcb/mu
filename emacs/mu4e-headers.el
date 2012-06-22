@@ -1168,17 +1168,16 @@ to ensure we don't disturb other windows."
 	 (headers-visible))
     (walk-windows
       (lambda (win)
-	;; if we find a view window connected to this one, kill it
+	;; if we the view window connected to this one, kill it
 	(when (eq mu4e~headers-view-win win)
 	  (delete-window win)
 	  (setq mu4e~headers-view-win nil))
 	;; and kill any _other_ (non-selected) window that shows the current
 	;; buffer
-	(when
-	  (and
-	    (eq curbuf (window-buffer win)) ;; does win show curbuf?
-	    (not (eq curwin win))	    ;; but it's not the curwin?
-	    (not (one-window-p))) ;; and not the last one on the frame?
+	(when (and
+		(eq curbuf (window-buffer win)) ;; does win show curbuf?
+		(not (eq curwin win))	        ;; it's not the curwin?
+		(not (one-window-p)))           ;; and not the last one?
 	  (delete-window win))))  ;; delete it!
     ;; now, all *other* windows should be gone. kill ourselves, and return
     ;; to the main view

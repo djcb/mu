@@ -77,7 +77,7 @@ the length (in hex).")
 (defun mu4e~proc-kill ()
   "Kill the mu server process."
   (let* ((buf (get-buffer mu4e~proc-name))
-	  (proc (and buf (get-buffer-process buf))))
+	  (proc (and (buffer-live-p buf) (get-buffer-process buf))))
     (when proc
       (let ((delete-exited-processes t))
 	;; the mu server signal handler will make it quit after 'quit'
@@ -283,7 +283,7 @@ terminates."
 	  ((eq code 11)
 	    (mu4e-message "Database is locked by another process"))
 	  ((eq code 19)
-	    (mu4e-message "Database empty or non-existent; try indexing some messages"))
+	    (mu4e-message "Database empty; try indexing some messages"))
 	  (t (mu4e-message "mu server process ended with exit code %d" code))))
       (t
 	(mu4e-message "Something bad happened to the mu server process")))))

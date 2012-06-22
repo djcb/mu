@@ -218,7 +218,7 @@ REFRESH is for re-showing an already existing message.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let ((buf (get-buffer-create mu4e~view-buffer-name)))
+  (let ((buf (generate-new-buffer mu4e~view-buffer-name)))
     (with-current-buffer buf
       (mu4e-view-mode)
       (let ((inhibit-read-only t))
@@ -668,12 +668,12 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 current message."
   `(progn
      (unless '(buffer-live-p mu4e~view-headers-buffer)
-       (error "no headers buffer available."))
+       (error "no headers-buffer connected"))
      (let* ((docid (mu4e-field-at-point :docid)))
        (with-current-buffer mu4e~view-headers-buffer
 	 (if (and docid (mu4e~headers-goto-docid docid))
 	   ,@body
-	   (error "Cannot find corresponding message in headers
+	   (error "cannot find corresponding message in headers
 	     buffer."))))))
 
 (defun mu4e-view-headers-next(&optional n)
