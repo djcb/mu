@@ -873,8 +873,8 @@ Gimp.
 see the results. Suppose you receive a patch file, and would like to get an
 overview of the changes, using the @t{diffstat} program. You can use something
 like: @t{A | 1 RET diffstat -b RET}.
-@item @t{emacs} (@key{e}): open the attachment in your running @t{emacs}
-. For example, if you receive some text file you'd like to open in @t{emacs}:
+@item @t{emacs} (@key{e}): open the attachment in your running @t{emacs}. For
+example, if you receive some text file you'd like to open in @t{emacs}:
 @t{A e 1 RET}.
 @end itemize
 
