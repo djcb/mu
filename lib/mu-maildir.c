@@ -707,7 +707,8 @@ mu_maildir_get_flags_from_path (const char *path)
  * /home/user/Maildir/foo/bar/new/abc  and flags == MU_FLAG_REPLIED
  *    => /home/user/Maildir/foo/bar/cur
  *
- * so only difference is whether MuFlags matches MU_FLAG_NEW is set or not
+ * so the difference is whether MuFlags matches MU_FLAG_NEW is set or
+ * not; and in the latter case, no other flags are allowed.
  *
  */
 static gchar*

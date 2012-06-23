@@ -106,7 +106,7 @@ The following marks are available, and the corresponding props:
 	  ;; target (the target folder) the other ones get a pseudo "target", as
 	  ;; info for the user.
 	  (markcell
-	    (case mark 
+	    (case mark
 	      (move      `("m" . ,target))
 	      (trash     '("d" . "trash"))
 	      (delete    '("D" . "delete"))
@@ -201,7 +201,7 @@ is non-nil, allow the 'deferred' pseudo mark as well."
 	    (if allow-deferred
 	      (append marks (list '("*deferred" . deferred)))
 	      marks))
-	  (mark (mu4e-read-option prompt marks))  
+	  (mark (mu4e-read-option prompt marks))
 	  (target
 	    (when (eq mark 'move)
 	      (mu4e-ask-maildir-check-exists "Move message to: "))))
@@ -249,16 +249,18 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 	(maphash
 	  (lambda (docid val)
 	    (let ((mark (car val)) (target (cdr val)))
+	      ;; note: whenever you do something with the message,
+	      ;; it looses its N (new) flag
 	      (case mark
-		(move   (mu4e~proc-move docid target))
+		(move   (mu4e~proc-move docid target "-N"))
 		(read   (mu4e~proc-move docid nil "+S-u-N"))
-		(unread (mu4e~proc-move docid nil "-S+u"))
+		(unread (mu4e~proc-move docid nil "-S+u-N"))
 		(flag   (mu4e~proc-move docid nil "+F-u-N"))
-		(unflag (mu4e~proc-move docid nil "-F"))
+		(unflag (mu4e~proc-move docid nil "-F-N"))
 		(trash
 		  (unless mu4e-trash-folder
 		    (error "`mu4e-trash-folder' not set"))
-		  (mu4e~proc-move docid mu4e-trash-folder "+T"))
+		  (mu4e~proc-move docid mu4e-trash-folder "+T-N"))
 		(delete (mu4e~proc-remove docid))
 		(otherwise (error "Unrecognized mark %S" mark)))))
 	  mu4e~mark-map))
@@ -308,4 +310,3 @@ action', return nil means 'don't do anything'"
 
 (provide 'mu4e-mark)
 ;; End of mu4e-mark.el
-
