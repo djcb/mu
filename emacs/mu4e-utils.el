@@ -565,10 +565,9 @@ This is used by the completion function in mu4e-compose."
 	  (add-to-list 'lst
 	    (if name
 	      (format "%s <%s>" name mail)
-	      mail)))))
+	      mail))))))
     (setq mu4e~contacts-for-completion lst)
-    (mu4e-message "Contacts received: %d"
-      (length mu4e~contacts-for-completion)))))
+    (mu4e-message "Contacts received: %d" (length mu4e~contacts-for-completion))))
 
 
 (defun mu4e~check-requirements ()
