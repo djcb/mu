@@ -62,6 +62,7 @@ dir already existed, or has been created, nil otherwise."
     (t nil)))
 
 
+
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
   (concat "[" mu4e-logo "] "  (apply 'format frm args)))
@@ -827,13 +828,15 @@ is ignored."
 displaying it). Do _not_ bury the current buffer, though."
   (interactive)
   (let ((curbuf (current-buffer)))
-    (walk-windows
-      (lambda (win)
+    ;; note: 'walk-windows' does not seem to work correctly when modifying
+    ;; windows; therefore, the doloops here
+    (dolist (frame (frame-list))
+      (dolist (win (window-list frame nil))
 	(with-current-buffer (window-buffer win)
 	  (unless (eq curbuf (current-buffer))
 	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
 	      (unless (one-window-p t)
-		(delete-window win)))))) nil t)))
+		(delete-window win))))))) nil t)) 
 
 
 (defun mu4e-get-time-date (prompt)
