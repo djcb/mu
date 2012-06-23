@@ -84,7 +84,7 @@ replying to messages."
 
 (defcustom mu4e-compose-cycle-threshold 5
   "Number of completion matches below which you can cycle through
-them; see `completion-cycle-threshold'."
+them; see `completion-cycle-threshold' (emacs24)."
   :type 'list
   :group 'mu4e-compose)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -453,18 +453,21 @@ needed, set the Fcc header, and register the handler function."
      "^X-Draft-From:" "^User-agent:")
   "Hidden headers when composing.")
 
+(defconst mu4e~compose-address-fields-regexp
+  "^\\(To\\|B?Cc\\|Reply-To\\|From\\):")
+
 (defun mu4e~compose-setup-completion ()
   "Set up autocompletion of addresses."
+  (when (boundp 'completion-cycle-threshold) ;; emacs24 only
+    (make-local-variable 'completion-cycle-threshold)
+    completion-cycle-threshold) mu4e-compose-cycle-threshold
   (make-local-variable 'completion-styles)
-  (make-local-variable 'completion-cycle-threshold)
-  (setq
-    completion-cycle-threshold mu4e-compose-cycle-threshold
-    completion-styles mu4e-compose-completion-styles)
+  (setq completion-styles mu4e-compose-completion-styles)
   (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
   ;; this seems to be needed for emacs23:
   (make-local-variable 'message-completion-alist)
   (add-to-list 'message-completion-alist
-    '("^\\(To\\|Cc\\|Bcc\\):" . completion-at-point)))
+    mu4e~compose-address-fields-regexp . completion-at-point))
 
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
@@ -520,7 +523,7 @@ needed, set the Fcc header, and register the handler function."
 
 (defconst mu4e~compose-hidden-headers
   '("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
-     "^User-Agent:")
+     "^User-Agent:" "^In-Reply-To:")
   "List of regexps with message headers that are to be hidden.")
 
 (defun mu4e~compose-handler (compose-type &optional original-msg includes)
@@ -712,11 +715,7 @@ message."
   "Complete the text at START with a contact (ie. either 'name
 <email>' or 'email')."
   (interactive)
-  (let ((mail-abbrev-mode-regexp
-	  (concat
-	    "^\\(Resent-To\\|To\\|B?Cc\\|Reply-To\\|From"
-	    "\\|Mail-Followup-To\\|Mail-Copies-To"
-	    "\\|Disposition-Notification-To\\|Return-Receipt-To\\):"))
+  (let ((mail-abbrev-mode-regexp mu4e~compose-address-fields-regexp)
 	 (eoh ;; end-of-headers
 	   (save-excursion
 	     (goto-char (point-min))
