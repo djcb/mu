@@ -31,6 +31,10 @@
   - enable keeping message view buffers around
   - tooltip for flags field
   - handling of database upgrades
+  - restore point after rerunning a search
+  - fix emacs23 mailto: handling
+  - fix emacs23 auto-completion
+  - fix message interference
 
 ** Done
 
