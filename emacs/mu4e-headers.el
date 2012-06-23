@@ -728,6 +728,10 @@ of `mu4e-split-view', and return a window for the message view."
   (unless (buffer-live-p mu4e~headers-buffer)
     (error "No headers buffer available"))
   (switch-to-buffer mu4e~headers-buffer)
+  ;; kill the existing view win
+  (when (buffer-live-p mu4e~view-buffer)
+    (kill-buffer mu4e~view-buffer))
+  ;; get a new view window
   (setq mu4e~headers-view-win
     (cond
       ((eq mu4e-split-view 'horizontal) ;; split horizontally
