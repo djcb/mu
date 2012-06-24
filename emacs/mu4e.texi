@@ -980,17 +980,7 @@ the addresses to complete, @t{mu4e} uses the e-mail addresses in its database
 
 Address auto-completion is enabled by default, using the variable
 @t{mu4e-compose-complete-addresses}.
-
-You can influence how we match addresses by setting
-@t{mu4e-compose-completion-styles}. By default, that is set to
-@t{(substring)}, which means that we're matching on any substring --
-e.g. @t{amp} matches @t{foo@@example.com}. See the documentation for
-@code{completion-styles} for the alternatives.
-
-Another tunable is @t{mu4e-compose-cycle-threshold}, which determines below
-which number of matches we start cycling through them using @key{TAB}. The
-default is 5
-
+ 
 @subsection Limiting the number of addresses for autocompletion
 
 If you have a lot of mail, especially from mailing lists and the like, there

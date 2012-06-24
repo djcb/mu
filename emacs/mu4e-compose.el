@@ -72,21 +72,7 @@ sent folder."
 replying to messages."
   :type 'boolean
   :group 'mu4e-compose)
-
-
-;; note, "substring" seems to work pretty well, but is not available for emacs23;
-;; so there we use "partial-completion" instead
-(defvar mu4e-compose-completion-styles
-  (if (find-if (lambda (style) (eq 'substring (car style))) completion-styles-alist)
-    '(substring)
-    '(partial-completion))
-  "How to do matching for contacts-completion; see
-`completion-styles' and `completion-styles-alist'.")
-
-(defvar mu4e~compose-cycle-threshold 5
-  "Number of completion matches below which you can cycle through
-them; see `completion-cycle-threshold' (emacs24).")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun mu4e-compose-attach-captured-message()
@@ -310,9 +296,6 @@ You can append flags."
 
 (defun mu4e~compose-reply-construct (origmsg)
   "Create a draft message as a reply to original message ORIGMSG."
-  (message "%S %S" (or (plist-get origmsg :subject) "")
-    (string-match message-subject-re-regexp
-      (or (plist-get origmsg :subject) "")))
   (let* ((recipnum
 	   (+ (length (mu4e~compose-create-to-lst origmsg))
 	     (length (mu4e~compose-create-cc-lst origmsg t))))
@@ -460,6 +443,9 @@ needed, set the Fcc header, and register the handler function."
     (find-if
       (lambda (style) (eq some-style (car style))) completion-styles-alist)))
 
+(defconst mu4e~completion-cycle-treshold 5
+  "mu4e value for `completion-cycle-treshold'.")
+
 (defun mu4e~compose-setup-completion ()
   "Set up autocompletion of addresses."
   (let ((compstyle
@@ -469,22 +455,13 @@ needed, set the Fcc header, and register the handler function."
     ;; we leave it at the default
     (when compstyle
       (make-local-variable 'completion-styles)
-      (setq completion-styles compstyle))
-    ;; completion-cycle-treshold requires emacs-24+
-    (when (boundp 'completion-cycle-threshold) ;; emacs24 only
+      (add-to-list 'completion-styles compstyle t))
+    (when (boundp 'completion-cycle-threshold)
+      ;;(make-local-variable 'completion-styles)
       (make-local-variable 'completion-cycle-threshold)
-      (setq completion-cycle-threshold mu4e~compose-cycle-threshold))
-    ;; this is a bit ugly...
-    (make-local-variable 'completion-at-point-functions)
-    (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
-    ;; this seems to be needed for emacs23:
-    ;; (when (eq emacs-major-version 23)
-    ;;   (make-local-variable 'message-completion-alist)
-    ;;   (add-to-list 'message-completion-alist
-    ;; 	(cons mu4e~compose-address-fields-regexp
-    ;; 	  'mu4e~compose-complete-contact)))
-    ))
-
+      (setq completion-cycle-threshold mu4e~completion-cycle-treshold))
+    (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)))
+  
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
 \\{message-mode-map}."
@@ -503,11 +480,14 @@ needed, set the Fcc header, and register the handler function."
     ;; mail files lives in...
     (setq default-directory (expand-file-name "~/"))
     
-    ;; offer completion for e-mail addresses, for now only for emacs-24
-    (when (and mu4e-compose-complete-addresses
-	    (> emacs-major-version 23))
+    ;; offer completion for e-mail addresses
+    ;; (when mu4e-compose-complete-addresses
+    ;;   (mu4e~compose-setup-completion))
+
+        ;; offer completion for e-mail addresses
+    (when mu4e-compose-complete-addresses
       (mu4e~compose-setup-completion))
-    
+      
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda ()
@@ -739,7 +719,7 @@ message."
 	     (search-forward-regexp mail-header-separator nil t))))
 	 ;; try to complete only when we're in the headers area,
 	 ;; looking  at an address field.
-    (when (and (> eoh (point)) (mail-abbrev-in-expansion-header-p))
+    (when (and eoh (> eoh (point)) (mail-abbrev-in-expansion-header-p))
       (let* ((end (point))
 	      (start
 		(or start
