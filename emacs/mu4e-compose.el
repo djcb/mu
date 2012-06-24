@@ -485,7 +485,8 @@ needed, set the Fcc header, and register the handler function."
     (setq default-directory (expand-file-name "~/"))
      
     ;; offer completion for e-mail addresses
-    (when mu4e-compose-complete-addresses
+    (when (and mu4e-compose-complete-addresses
+	    (boundp 'completion-at-point-functions))
       (mu4e~compose-setup-completion))
       
     ;; setup the fcc-stuff, if needed

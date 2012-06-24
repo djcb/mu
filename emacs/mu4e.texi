@@ -976,7 +976,8 @@ configuration:
 Since @t{mu}/@t{mu4e} version 0.9.8.5, there is support for autocompleting
 addresses using @key{TAB} when composing e-mail messages. As the source for
 the addresses to complete, @t{mu4e} uses the e-mail addresses in its database
--- addresses you sent messages to or received messages from.
+-- addresses you sent messages to or received messages from. @emph{Note:}
+auto-completion should work with emacs versions 23.2 and later.
 
 Address auto-completion is enabled by default, using the variable
 @t{mu4e-compose-complete-addresses}.
