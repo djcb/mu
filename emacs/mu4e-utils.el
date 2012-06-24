@@ -557,17 +557,15 @@ This is used by the completion function in mu4e-compose."
     (dolist (contact contacts)
       (let ((name (plist-get contact :name))
 	     (mail (plist-get contact :mail)))
-	;;(message "N:%S M:%S" name mail)
 	(when mail
 	  (unless ;; ignore some address ('noreply' etc.)
 	    (and mu4e-compose-complete-ignore-address-regexp
 	      (string-match mu4e-compose-complete-ignore-address-regexp mail))
 	  (add-to-list 'lst
-	    (if name
-	      (format "%s <%s>" name mail)
-	      mail))))))
+	    (if name (format "%s <%s>" name mail) mail))))))
     (setq mu4e~contacts-for-completion lst)
-    (mu4e-message "Contacts received: %d" (length mu4e~contacts-for-completion))))
+    (mu4e-message "Contacts received: %d"
+      (length mu4e~contacts-for-completion))))
 
 
 (defun mu4e~check-requirements ()
