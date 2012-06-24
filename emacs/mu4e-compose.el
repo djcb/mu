@@ -439,9 +439,7 @@ needed, set the Fcc header, and register the handler function."
 
 (defun mu4e~compose-find-completion-style (some-style)
   "Find completion style SOME-STYLE in completion-styles-alist, or return nil."
-  (car-safe
-    (find-if
-      (lambda (style) (eq some-style (car style))) completion-styles-alist)))
+  (find-if (lambda (style) (eq some-style (car style))) completion-styles-alist))
 
 (defconst mu4e~completion-cycle-treshold 5
   "mu4e value for `completion-cycle-treshold'.")
@@ -455,12 +453,18 @@ needed, set the Fcc header, and register the handler function."
     ;; we leave it at the default
     (when compstyle
       (make-local-variable 'completion-styles)
-      (add-to-list 'completion-styles compstyle t))
+      (add-to-list 'completion-styles (car compstyle)))
     (when (boundp 'completion-cycle-threshold)
-      ;;(make-local-variable 'completion-styles)
       (make-local-variable 'completion-cycle-threshold)
       (setq completion-cycle-threshold mu4e~completion-cycle-treshold))
-    (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)))
+    (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
+    ;; needed for emacs 23...
+    (when (= emacs-major-version 23)
+      (make-local-variable 'message-completion-alist)
+      (setq message-completion-alist
+	(cons
+	  (cons mu4e~compose-address-fields-regexp 'completion-at-point)
+	  message-completion-alist)))))
   
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
@@ -479,12 +483,8 @@ needed, set the Fcc header, and register the handler function."
     ;; useful e.g. when finding an attachment file the directory the current
     ;; mail files lives in...
     (setq default-directory (expand-file-name "~/"))
-    
+     
     ;; offer completion for e-mail addresses
-    ;; (when mu4e-compose-complete-addresses
-    ;;   (mu4e~compose-setup-completion))
-
-        ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
       (mu4e~compose-setup-completion))
       
