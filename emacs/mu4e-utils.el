@@ -61,16 +61,13 @@ dir already existed, or has been created, nil otherwise."
       (mu4e~proc-mkdir dir))
     (t nil)))
 
-
-
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
   (concat "[" mu4e-logo "] "  (apply 'format frm args)))
-
+ 
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e."
   (message "%s" (apply 'mu4e-format frm args)))
-
 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24

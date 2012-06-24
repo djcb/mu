@@ -32,7 +32,6 @@
   - tooltip for flags field
   - handling of database upgrades
   - restore point after rerunning a search
-  - fix emacs23 mailto: handling
   - fix emacs23 auto-completion
   - fix message interference
   - opening urls is too eager
@@ -71,6 +70,7 @@
   - strip signature from original when replying
   - make refresh after changing sort, threads the default
   - contact completion (see Jacek's 'mu4e: using' mail)
+  - *FIX* emacs23 mailto: handling
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
