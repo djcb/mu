@@ -207,7 +207,7 @@ REFRESH is for re-showing an already existing message.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let ((buf (generate-new-buffer mu4e~view-buffer-name)))
+  (let ((buf (get-buffer-create mu4e~view-buffer-name)))
     (with-current-buffer buf
       (mu4e-view-mode)
       (let ((inhibit-read-only t))
