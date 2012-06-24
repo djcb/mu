@@ -560,14 +560,16 @@ Seen; if the message is not New/Unread, do nothing."
 	  ;; Get the citation level at point -- i.e., the number of '>'
 	  ;; prefixes, starting with 0 for 'no citation'
 	  (beginning-of-line 1)
-	  (let* ((level (how-many ">" (line-beginning-position 1)
-			  (line-end-position 1)))
-		  (face
-		    (unless (zerop level)
-		      (intern-soft (format "mu4e-cited-%d-face" level)))))
-	    (when face
-	      (add-text-properties (line-beginning-position 1)
-		(line-end-position 1) `(face ,face))))
+	  ;; consider only lines that heuristically look like a citation line...
+	  (when (looking-at "[[:blank:]]*[^[:blank:]]*[[:blank:]]*>")
+	    (let* ((level (how-many ">" (line-beginning-position 1)
+			    (line-end-position 1)))
+		    (face
+		      (unless (zerop level)
+			(intern-soft (format "mu4e-cited-%d-face" level)))))
+	      (when face
+		(add-text-properties (line-beginning-position 1)
+		  (line-end-position 1) `(face ,face)))))
 	  (setq more-lines
 	    (and (= 0 (forward-line 1))
 	      ;; we need to add this weird check below; it seems in some cases
