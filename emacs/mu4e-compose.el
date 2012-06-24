@@ -73,6 +73,7 @@ replying to messages."
   :type 'boolean
   :group 'mu4e-compose)
 
+
 ;; note, "substring" seems to work pretty well, but is not available for emacs23;
 ;; so there we use "partial-completion" instead
 (defvar mu4e-compose-completion-styles
@@ -82,17 +83,15 @@ replying to messages."
   "How to do matching for contacts-completion; see
 `completion-styles' and `completion-styles-alist'.")
 
-(defcustom mu4e-compose-cycle-threshold 5
+(defvar mu4e~compose-cycle-threshold 5
   "Number of completion matches below which you can cycle through
-them; see `completion-cycle-threshold' (emacs24)."
-  :type 'list
-  :group 'mu4e-compose)
+them; see `completion-cycle-threshold' (emacs24).")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun mu4e-compose-attach-captured-message()
   "Insert the last captured message file as an attachment."
-  (interactive)
+    (interactive)
   (unless mu4e-captured-message
     (error "No message has been captured"))
   (let ((path (plist-get mu4e-captured-message :path)))
@@ -102,8 +101,7 @@ them; see `completion-cycle-threshold' (emacs24)."
       path
       "application/octet-stream"
       (or (plist-get mu4e-captured-message :subject) "No subject")
-      "attachment")))
-
+      "attachment"))) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -111,7 +109,7 @@ them; see `completion-cycle-threshold' (emacs24)."
   "Return the User-Agent string for mu4e. This is either the value
 of `mu4e-user-agent', or, if not set, a string based on the versions
 of mu4e and emacs."
-  (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version))
+  (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)) 
 
 
 (defun mu4e~compose-cite-original (msg)
@@ -456,18 +454,36 @@ needed, set the Fcc header, and register the handler function."
 (defconst mu4e~compose-address-fields-regexp
   "^\\(To\\|B?Cc\\|Reply-To\\|From\\):")
 
+(defun mu4e~compose-find-completion-style (some-style)
+  "Find completion style SOME-STYLE in completion-styles-alist, or return nil."
+  (car-safe
+    (find-if
+      (lambda (style) (eq some-style (car style))) completion-styles-alist)))
+
 (defun mu4e~compose-setup-completion ()
   "Set up autocompletion of addresses."
-  (when (boundp 'completion-cycle-threshold) ;; emacs24 only
-    (make-local-variable 'completion-cycle-threshold)
-    completion-cycle-threshold) mu4e-compose-cycle-threshold
-  (make-local-variable 'completion-styles)
-  (setq completion-styles mu4e-compose-completion-styles)
-  (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
-  ;; this seems to be needed for emacs23:
-  (make-local-variable 'message-completion-alist)
-  (add-to-list 'message-completion-alist
-    mu4e~compose-address-fields-regexp . completion-at-point))
+  (let ((compstyle
+	  (or (mu4e~compose-find-completion-style 'substring)
+	    (mu4e~compose-find-completion-style 'partial-completion))))
+    ;; emacs-24+ has 'substring, otherwise we try partial-completion, otherwise
+    ;; we leave it at the default
+    (when compstyle
+      (make-local-variable 'completion-styles)
+      (setq completion-styles compstyle))
+    ;; completion-cycle-treshold requires emacs-24+
+    (when (boundp 'completion-cycle-threshold) ;; emacs24 only
+      (make-local-variable 'completion-cycle-threshold)
+      (setq completion-cycle-threshold mu4e~compose-cycle-threshold))
+    ;; this is a bit ugly...
+    (make-local-variable 'completion-at-point-functions)
+    (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
+    ;; this seems to be needed for emacs23:
+    ;; (when (eq emacs-major-version 23)
+    ;;   (make-local-variable 'message-completion-alist)
+    ;;   (add-to-list 'message-completion-alist
+    ;; 	(cons mu4e~compose-address-fields-regexp
+    ;; 	  'mu4e~compose-complete-contact)))
+    ))
 
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
@@ -486,11 +502,12 @@ needed, set the Fcc header, and register the handler function."
     ;; useful e.g. when finding an attachment file the directory the current
     ;; mail files lives in...
     (setq default-directory (expand-file-name "~/"))
-
-    ;; offer completion for e-mail addresses
-    (when mu4e-compose-complete-addresses
+    
+    ;; offer completion for e-mail addresses, for now only for emacs-24
+    (when (and mu4e-compose-complete-addresses
+	    (> emacs-major-version 23))
       (mu4e~compose-setup-completion))
-
+    
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda ()
