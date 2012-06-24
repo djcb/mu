@@ -33,7 +33,6 @@
   - handling of database upgrades
   - restore point after rerunning a search
   - fix emacs23 auto-completion
-  - fix message interference
   - opening urls is too eager
 
 ** Done
@@ -71,6 +70,7 @@
   - make refresh after changing sort, threads the default
   - contact completion (see Jacek's 'mu4e: using' mail)
   - *FIX* emacs23 mailto: handling
+  - *FIX* message interference
 
 # Local Variables:
 # mode: org; org-startup-folded: nil

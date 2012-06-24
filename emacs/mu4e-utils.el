@@ -66,9 +66,11 @@ dir already existed, or has been created, nil otherwise."
   (concat "[" mu4e-logo "] "  (apply 'format frm args)))
  
 (defun mu4e-message (frm &rest args)
-  "Like `message', but prefixed with mu4e."
-  (message "%s" (apply 'mu4e-format frm args)))
-
+  "Like `message', but prefixed with mu4e. If we're waiting for
+user-input, don't show anyhting."
+  (unless (waiting-for-user-input-p)
+    (message "%s" (apply 'mu4e-format frm args))))
+ 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
 only."
@@ -622,7 +624,6 @@ FUNC (if non-nil) afterwards."
 	      doccount (if (= doccount 1) "" "s")))))
       ;; send the ping
       (mu4e~proc-ping)
-
       ;; get the address list
       (when mu4e-compose-complete-addresses
 	(setq mu4e-contacts-func 'mu4e~fill-contacts)
