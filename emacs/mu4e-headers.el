@@ -137,7 +137,7 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
 (defvar mu4e~headers-view-win nil
   "The view window connected to this headers view.")
-
+ 
 (defvar mu4e~headers-sortfield-choices
   '( ("date"	. date)
      ("from"	. from)
@@ -147,7 +147,7 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
      ("to"	. to))
   "List of cells describing the various sort-options (in the format
   needed for `mu4e-read-option'.")
-
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~headers-clear ()
@@ -525,6 +525,8 @@ after the end of the search results."
   (mu4e~mark-initialize) ;; initialize the marking subsystem
   (hl-line-mode 1)
 
+
+  
   (setq header-line-format
     (cons
       (make-string
@@ -1012,6 +1014,19 @@ threading."
   (unless dont-refresh
     (mu4e-headers-rerun-search)))
 
+(defvar mu4e~headers-loading-buf nil
+  "A buffer for loading a message view.")
+
+(defun mu4e~headers-get-loading-buf ()
+  "Get a buffer to give feedback while loading a message view."
+  (unless (buffer-live-p mu4e~headers-loading-buf)
+    (setq mu4e~headers-loading-buf
+      (get-buffer-create " *mu4e-loading*"))
+    (with-current-buffer mu4e~headers-loading-buf
+      (erase-buffer)
+      (insert (propertize "Waiting for message..."
+		'face 'mu4e-system-face 'intangible t))))
+  mu4e~headers-loading-buf)
 
 (defun mu4e-headers-view-message ()
   "View message at point. If there's an existing window for the
@@ -1024,15 +1039,10 @@ current window. "
     (error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((docid (mu4e~headers-docid-at-point))
 	  (viewwin (mu4e~headers-redraw-get-view-window)))
-    (unless (window-live-p viewwin)
-      (error "Cannot get a message view"))
+    (unless (window-live-p viewwin) (error "Cannot get a message view"))
     (select-window viewwin)
-    (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert (propertize "Waiting for message..."
-		'face 'mu4e-system-face 'intangible t))
-      (mu4e~proc-view docid mu4e-view-show-images))))
+    (switch-to-buffer (mu4e~headers-get-loading-buf))
+    (mu4e~proc-view docid mu4e-view-show-images))) 
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
