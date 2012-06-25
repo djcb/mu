@@ -1,4 +1,4 @@
-.TH MU FIND 1 "May 2012" "User Manuals"
+.TH MU FIND 1 "June 2012" "User Manuals"
 
 .SH NAME
 
@@ -40,16 +40,6 @@ The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are treated as
 if there were a logical \fBAND\fR between them.
 
-If you want to make your own constructions (using \fBAND\fR, \fBOR\fR,
-\fBNOT\fR etc., you have to put quotes around them so \fBmu\fR can consider
-them as a unit; for example to find mails with oranges OR mandarins in the
-subject-field, you can use:
-
-.nf
-  $ mu find 'subject:orange OR subject:mandarin'
-.fi
-
-
 \fBmu\fR relies on the Xapian database for its searching capabilities, so it
 offers all the search functionality that Xapian offers; for all the details,
 see:
@@ -72,10 +62,11 @@ mails with a subject containing a word starting with \fBcom\fR, you can use:
 .fi
 
 and get mails about computers, comments, compilation and so on. Note, when
-running from the command-line it's import to put the query in quotes,
-otherwise the shell would interpret the '*'. It is important to remember that
-the '*' invokes the wildcard search only when used as the rightmost character
-of a search term. Furthermore, it is \fBnot\fR a regular expression.
+running from the command-line it's important to put the query in quotes,
+otherwise the shell would interpret the '*'. It is equally important to
+remember that the '*' invokes the wildcard search only when used as the
+rightmost character of a search term. Furthermore, it is \fBnot\fR a regular
+expression.
 
 In older versions of mu, queries were logged in \fI<mu-home>/mu.log\fR;
 however, since version 0.9, mu no longer does this.
