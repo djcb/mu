@@ -24,12 +24,14 @@
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
-  - better naming for draft buffers
   - review emacs menus
+  - re-factor / separate window/buffer management
+    - enable keeping message view buffers around
+    - better naming for draft/view buffers
   - header updating interferes with marks (when updating for 'mark as read',
     when reading a marked message)
-  - enable keeping message view buffers around
   - tooltip for flags field
+  - set/unset flag editing command
   - handling of database upgrades
   - restore point after rerunning a search
   - opening urls is too eager

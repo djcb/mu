@@ -90,6 +90,8 @@ mu_str_normalize_in_place_generic (char *str, gboolean downcase, GStringChunk *s
  * longer than the original.  even for replacements that are 2 chars
  * wide (e.g. German ß => ss), the replacement is 2 bytes, like the
  * original 0xc3 0x9f
+ *
+ * note-to-self: http://www.geertvanderploeg.com/unicode-gen/
  */
 char*
 mu_str_normalize_in_place_try (char *str, gboolean downcase, GStringChunk *strchunk)

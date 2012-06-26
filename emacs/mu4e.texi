@@ -38,27 +38,37 @@ Welcome to @t{mu4e}!
 later, built on top of the @t{mu} e-mail search engine. @t{mu4e} is optimized
 for fast handling of large amounts of e-mail.
 
+Some of the features include:
+
+@itemize
+@item Fully search-based: there are no folders, only queries
+@item Fully documented, with example configurations
+@item UI optimized for speed with quick key strokes for common actions
+@item Asynchronous: heavy actions never block @t{emacs}
+@item Rich-text e-mails using @t{org-mode} (experimental)
+@item Address auto-completion based on your messages -- no need for managing address books
+@item Extendable using your own custom actions
+@end itemize
+
 This manual goes through the installation of @t{mu4e}, discusses the basic
 configuration, and explains its daily use. It also shows how you can customize
-@t{mu4e} for your needs.
+@t{mu4e} for your needs. At the end of the manual, there are some example
+configurations, which should help you to get up to speed quickly.
 
-At the end of the manual, there are some example configurations, which should
-help you to get up to speed quickly.
-
-Also quite useful are the @ref{FAQ - Frequently Anticipated Questions}, and
-the section on @ref{Known issues / missing features}.
+Also note the @xref{FAQ - Frequently Anticipated Questions}, and the section
+on @xref{Known issues / missing features}, which may save you some time.
 
 This manual has been updated for @t{mu}/@t{mu4e} version
 @emph{@value{mu4e-version}}.
 
 @menu
-* Introduction:: How it all begins
+* Introduction:: How it all began
 * Getting started:: Setting things up
 * Running mu4e:: Daily use
-* Searching:: Some more details about queries and searching
-* Marking:: Marking messages
+* Searching:: Some more background on searching/queries
+* Marking:: Marking messages and performing actions
 * Actions:: Defining and using custom actions
-* Interaction with other tools:: Integrating mu4e
+* Interaction with other tools:: mu4e and the rest of the world
 * Example configuration:: Some examples to set you up quickly
 * FAQ - Frequently Anticipated Questions:: Common questions and answers
 * Known issues / missing features:: mu4e is not perfect yet
@@ -72,26 +82,32 @@ Appendices
 @node Introduction
 @chapter Introduction
 
-Let's get started!
+Welcome to @t{mu4e}!
 
 @menu
 * Why another e-mail client?::
 * Other mail clients::
-* What mu4e does and does not do::
+* What mu4e does not do::
 @end menu
 
 @node Why another e-mail client?
 @section Why another e-mail client?
 
-I'm not sure the world @emph{needs} yet another e-mail client, but maybe
+Fair question.
+
+I'm not sure the world @emph{needs} yet another e-mail client, but perhaps
 @emph{I} do! I (the author) spend a @emph{lot} of time, professionally and
 privately, dealing with e-mail messdae and therefore, having an efficient
 e-mail client is essential for me. Since none of the existing ones worked the
 way I wanted, I created my own.
 
-While having been created for such selfish reasons, @t{mu4e} tries hard to be
-as useful as possible for all its users - suggestions are very welcome and are
-acted upon.
+As @t{emacs} is such an integral part of my workflow, it made a lot of sense
+to integrate my e-mail client with it. And as I already had written an e-mail
+search engine (@t{mu}), it seemed only logical to use that as a basis.
+
+Even though I created @t{mu4e} for such selfish reasons, @t{mu4e} tries hard
+to be as useful as possible for @emph{all} its users - suggestions are very
+welcome and many have already made it to @t{mu4e}.
 
 @node Other mail clients
 @section Other mail clients
@@ -105,14 +121,14 @@ user-interface is quite different from those programs.
 @t{mu4e}'s mail handling (deleting, moving etc.) is inspired by
 @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
 emacs-based e-mail client), @t{mutt}@footnote{@url{http://www.mutt.org/}} and
-@t{dired}, while it takes some cues from @emph{Gmail}.
+@t{dired}, while it also takes some cues from @emph{Gmail}.
 
 @t{mu4e} tries to keep all the 'state' in your maildirs, so you can easily
-switch between clients, synchronize over @abbr{IMAP} or backup with @t{rsync}
--- if you delete the database, you won't lose any information.
+switch between clients, synchronize over @abbr{IMAP}, backup with @t{rsync}
+and so on. If you delete the database, you won't lose any information.
 
-@node What mu4e does and does not do
-@section What mu4e does and does not do
+@node What mu4e does not do
+@section What mu4e does not do
 
 @t{mu} and @t{mu4e} do @emph{not} deal with getting your e-mail messages from
 a mail server. That task is delegated to other tools, such as
@@ -165,9 +181,12 @@ Ubuntu system, you can get these with:
 @example
 sudo apt-get install libgmime-2.4-dev libxapian-dev
 # emacs if you don't have it yet, mu4e works with GNU-Emacs 23 and 24
+# emacs 24 works better; it may be available as 'emacs-snapshot'
 sudo apt-get install emacs23
 # optional
 sudo apt-get install guile-2.0-dev html2text xdg-utils
+# optional: only needed for msg2pdf
+sudo apt-get install libwebkit-dev
 @end example
 
 Using a release-tarball (as avaiable from
@@ -183,7 +202,7 @@ $ sudo make install
 
 Alternatively, if you build from the git repository, or use a tarball like the
 ones that @t{github} produces, the instructions are slightly different (and
-require you to have the autotools installed):
+require you to have @t{autotools} installed):
 
 @example
 # get from git, or from a github tarball
@@ -203,8 +222,8 @@ You may need to restart @t{emacs}.
 
 There is @emph{experimental} support for using the @t{emacs} customization
 system in @t{mu4e}, but for now, we recommend setting the values
-manually. Please refer to @ref{Example configuration} for a couple of examples
-of this.
+manually. Please refer to @xref{Example configuration} for a couple of
+examples of this.
 
 @node Getting mail
 @section Getting mail
@@ -981,7 +1000,7 @@ auto-completion should work with emacs versions 23.2 and later.
 
 Address auto-completion is enabled by default, using the variable
 @t{mu4e-compose-complete-addresses}.
- 
+
 @subsection Limiting the number of addresses for autocompletion
 
 If you have a lot of mail, especially from mailing lists and the like, there
@@ -2040,8 +2059,8 @@ can also use functions like @code{mu4e-headers-mark-thread} (@key{T}),
 time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
 matching a certain regular expression.
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
-address management with @t{BBDB}; instead, we recommend @ref{Maintaining an
-address-book with org-contacts} for now.
+address management with @t{BBDB}; instead, we recommend using @t{mu4e}'s
+built-in @ref{Address autocompletion}.
 @item @emph{mu4e seems to return a mere subset of all matches - how can I get
 all?}. Indeed, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
@@ -2075,7 +2094,6 @@ seems to work quite well.
 @item @emph{Can I automatically apply the marks on messages when
 leaving the headers buffer?} Yes you can -- see the documentation on
 @t{mu4e-headers-leave-behavior}.
-@item @emph{Can I influence the way @t{mu4e} does address autocompletion?} Yes: @ref{Address autocompletion}
 @item @emph{How can I automatically apply word-wrapping (and hiding cited
 parts) when viewing a message?} See the documentation on
 @t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
