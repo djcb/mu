@@ -98,7 +98,7 @@ buffer."
   "The maximum width for images to display; this is only effective
   if you're using an emacs with Imagemagick support."
   :group 'mu4e-view)
-  
+
 (defvar mu4e-view-actions
   '( ("capture message" . mu4e-action-capture-message)
      ("view as pdf"     . mu4e-action-view-as-pdf))
@@ -139,7 +139,7 @@ where:
   "\\(\\(https?\\://\\|mailto:\\)[-+a-zA-Z0-9.?_$%/+&#@!~,:;=/()]+\\)"
   "Regexp that matches http:/https:/mailto: URLs; match-string 1
   will contain the matched URL, if any.")
- 
+
 (defvar mu4e~view-attach-map nil
   "A mapping of user-visible attachment number to the actual part index.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -225,7 +225,6 @@ marking if it still had that."
 	(mu4e~view-fontify-cited)
 	(mu4e~view-fontify-footer)
 	(mu4e~view-make-urls-clickable)
-
 	(mu4e~view-show-images-maybe msg)
 
 	(unless refresh
@@ -296,7 +295,7 @@ is nil, and otherwise open it."
                 (:index 2 :name \"test456.pdf\"
                        :mime-type \"application/pdf\" :attachment t :size 12234))."
   (setq mu4e~view-attach-map ;; buffer local
-    (make-hash-table :size 16 :rehash-size 2 :weakness nil))
+    (make-hash-table :size 64 :weakness nil))
   (let* ((id 0)
 	  (attachments
 	    ;; we only list parts that look like attachments, ie. that have a
@@ -427,14 +426,14 @@ is nil, and otherwise open it."
       (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "m") 'mu4e-view-mark-for-move)
       (define-key map (kbd "&") 'mu4e-view-mark-custom)
-      
+
       (define-key map (kbd "+") 'mu4e-view-mark-flag)
       (define-key map (kbd "-") 'mu4e-view-mark-unflag)
-      
+
       (define-key map (kbd "*")             'mu4e-view-mark-deferred)
       (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-deferred)
       (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
-      
+
       ;; misc
       (define-key map "w" 'mu4e-view-toggle-wrap-lines)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
@@ -522,7 +521,7 @@ is nil, and otherwise open it."
 
   (make-local-variable 'mu4e~view-lines-wrapped)
   (make-local-variable 'mu4e~view-cited-hidden)
- 
+
   (setq buffer-undo-list t) ;; don't record undo info
 
   ;; autopair mode gives error when pressing RET
@@ -601,7 +600,7 @@ browser is called is depending on `browse-url-browser-function' and
 	(lambda ()
 	  (interactive)
 	  (browse-url url))))))
-     
+
 (defun mu4e~view-show-images-maybe (msg)
   "Show attached images, if `mu4e-view-show-images' is non-nil."
   (when (and (display-images-p) mu4e-view-show-images)
@@ -621,7 +620,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
   (let ((num 0))
     (save-excursion
       (setq mu4e~view-link-map ;; buffer local
-	(make-hash-table :size 32 :rehash-size 2 :weakness nil))
+	(make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
       (while (re-search-forward mu4e~view-url-regexp nil t)
 	(let ((url (match-string 0))
@@ -1055,7 +1054,7 @@ ensure we don't disturb other windows."
 	  (and
 	    (eq curbuf (window-buffer win)) ;; does win show curbuf?
 	    (not (eq curwin win))	    ;; but it's not the curwin?
-	    (not (one-window-p))) ;; and not the last one on the frame?  
+	    (not (one-window-p))) ;; and not the last one on the frame?
 	  (delete-window win))))  ;; delete it!
     ;; now, all *other* windows should be gone.
     ;; if the headers view is also visible, kill ourselves + window; otherwise
@@ -1069,7 +1068,7 @@ ensure we don't disturb other windows."
       (progn
 	(kill-buffer)
 	(when (buffer-live-p mu4e~view-headers-buffer)
-	  (switch-to-buffer mu4e~view-headers-buffer)))))) 
- 
+	  (switch-to-buffer mu4e~view-headers-buffer))))))
+
 (provide 'mu4e-view)
 ;; end of mu4e-view

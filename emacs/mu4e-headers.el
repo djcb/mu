@@ -359,7 +359,6 @@ after the end of the search results."
 (defvar mu4e-headers-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
 (unless mu4e-headers-mode-map
-
   (setq mu4e-headers-mode-map
     (let ((map (make-sparse-keymap)))
 
@@ -524,8 +523,6 @@ after the end of the search results."
     hl-line-face 'mu4e-header-highlight-face)
   (mu4e~mark-initialize) ;; initialize the marking subsystem
   (hl-line-mode 1)
-
-
   
   (setq header-line-format
     (cons

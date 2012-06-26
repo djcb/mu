@@ -75,7 +75,7 @@ where
 (defun mu4e~mark-initialize ()
   "Initialize the marks subsystem."
   (make-local-variable 'mu4e~mark-map)
-  (setq mu4e~mark-map (make-hash-table :size 16 :rehash-size 2)))
+  (setq mu4e~mark-map (make-hash-table :size 16)))
 
 (defun mu4e~mark-clear ()
   "Clear the marks subsystem."
