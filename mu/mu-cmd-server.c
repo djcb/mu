@@ -67,7 +67,7 @@ static void
 install_sig_handler (void)
 {
         struct sigaction action;
-        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM };
+        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM, SIGPIPE };
 
         MU_TERMINATE = FALSE;
 
@@ -123,15 +123,18 @@ print_expr (const char* frm, ...)
 	 *   COOKIE_PRE <len-of-following-sexp-in-hex> COOKIE_POST
 	 */
 	rv = write (outfd, cookie, lenlen + 2);
-	if (rv != -1)
+	if (rv != -1) {
 		rv = write (outfd, expr, exprlen);
+		g_free (expr);
+	}
 	if (rv != -1)
 		rv = write (outfd, "\n", 1);
-	if (rv == -1)
-		g_warning ("%s: write() failed: %s",
+	if (rv == -1) {
+		g_critical ("%s: write() failed: %s",
 			   __FUNCTION__, strerror(errno));
-
-	g_free (expr);
+		/* terminate ourselves */
+		raise (SIGTERM);
+	}
 }
 
 
@@ -1351,6 +1354,11 @@ handle_args (MuStore *store, MuQuery *query, GSList *args, GError **err)
 	};
 
 	cmd = (const char*) args->data;
+
+	/* ignore empty */
+	if (strlen (cmd) == 0)
+		return MU_OK;
+
 	for (u = 0; u != G_N_ELEMENTS (cmd_map); ++u)
 		if (g_strcmp0(cmd, cmd_map[u].cmd) == 0)
 			return cmd_map[u].func (store, query,

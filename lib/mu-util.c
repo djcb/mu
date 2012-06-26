@@ -431,12 +431,7 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 		g_free (conv);
 	}
 
-	if (rv == EOF) { /* note, apparently, does not set errno */
-		g_warning ("%s: fputs failed", __FUNCTION__);
-		return FALSE;
-	}
-
-	return TRUE;
+	return (rv == EOF) ? FALSE : TRUE;
 }
 
 
