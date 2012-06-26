@@ -64,13 +64,13 @@ dir already existed, or has been created, nil otherwise."
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
   (concat "[" mu4e-logo "] "  (apply 'format frm args)))
- 
+
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e. If we're waiting for
 user-input, don't show anyhting."
   (unless (waiting-for-user-input-p)
     (message "%s" (apply 'mu4e-format frm args))))
- 
+
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
 only."
@@ -372,8 +372,19 @@ function prefers the text part, but this can be changed by setting
 		  (buffer-string)))
 	      (t ;; otherwise, an empty body
 		""))))
-    ;; and finally, remove some crap from the remaining string.
-    (replace-regexp-in-string "[ ]" " " body nil nil nil)))
+    ;; and finally, remove some crap from the remaining string; it seems
+    ;; esp. outlook lies about its encoding (ie., it says 'iso-8859-1' but
+    ;; really it's 'windows-1252'), thus giving us these funky chars. here, we
+    ;; either remove them, or replace with 'what-was-meant' (heuristically)
+    (with-temp-buffer
+      (insert body)
+      (goto-char (point-min))
+      (while (re-search-forward "[ ]" nil t)
+	(replace-match
+	  (cond
+	    ((string= (match-string 0) "") "'")
+	    (t		                       ""))))
+      (buffer-string))))
 
 
 
@@ -831,7 +842,7 @@ displaying it). Do _not_ bury the current buffer, though."
 	  (unless (eq curbuf (current-buffer))
 	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
 	      (unless (one-window-p t)
-		(delete-window win))))))) nil t)) 
+		(delete-window win))))))) nil t))
 
 
 (defun mu4e-get-time-date (prompt)
