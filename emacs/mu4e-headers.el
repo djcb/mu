@@ -1020,9 +1020,11 @@ threading."
     (setq mu4e~headers-loading-buf
       (get-buffer-create " *mu4e-loading*"))
     (with-current-buffer mu4e~headers-loading-buf
-      (erase-buffer)
-      (insert (propertize "Waiting for message..."
-		'face 'mu4e-system-face 'intangible t))))
+      (let ((inhibit-read-only t))
+	(erase-buffer)
+	(insert (propertize "Waiting for message..."
+		  'face 'mu4e-system-face 'intangible t)))
+      (setq buffer-read-only t)))
   mu4e~headers-loading-buf)
 
 (defun mu4e-headers-view-message ()
@@ -1034,9 +1036,11 @@ current window. "
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
     (error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (let* ((docid (mu4e~headers-docid-at-point))
+  (let* ((docid (or (mu4e~headers-docid-at-point)
+		  (error "No message at point")))
 	  (viewwin (mu4e~headers-redraw-get-view-window)))
-    (unless (window-live-p viewwin) (error "Cannot get a message view"))
+    (unless (window-live-p viewwin)
+      (error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
     (mu4e~proc-view docid mu4e-view-show-images))) 
