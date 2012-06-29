@@ -106,6 +106,14 @@ test_mu_date_complete_begin (void)
 			 "19721214000000");
 	g_assert_cmpstr (mu_date_complete_s ("19721214234512", TRUE), ==,
 			 "19721214234512");
+
+	g_assert_cmpstr (mu_date_complete_s ("2010-07", TRUE), ==,
+			 "20100701000000");
+	g_assert_cmpstr (mu_date_complete_s ("1972/12/14", TRUE), ==,
+			 "19721214000000");
+	g_assert_cmpstr (mu_date_complete_s ("1972-12-14 23:45:12", TRUE), ==,
+			 "19721214234512");
+
 }
 
 
@@ -123,6 +131,13 @@ test_mu_date_complete_end (void)
 	g_assert_cmpstr (mu_date_complete_s ("19721214", FALSE), ==,
 			 "19721214235959");
 	g_assert_cmpstr (mu_date_complete_s ("19721214234512", FALSE), ==,
+			 "19721214234512");
+
+	g_assert_cmpstr (mu_date_complete_s ("2010-07", FALSE), ==,
+			 "20100731235959");
+	g_assert_cmpstr (mu_date_complete_s ("1972.12.14", FALSE), ==,
+			 "19721214235959");
+	g_assert_cmpstr (mu_date_complete_s ("1972.12.14 23:45/12", FALSE), ==,
 			 "19721214234512");
 }
 

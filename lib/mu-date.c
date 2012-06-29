@@ -19,10 +19,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "mu-util.h"
 #include "mu-date.h"
-
 
 const char*
 mu_date_str_s (const char* frm, time_t t)
@@ -119,19 +119,40 @@ mu_date_parse_hdwmy (const char *nptr)
 }
 
 
+/* clear a date of anything non-numberic; static string, non-reentrant */
+static char*
+clear_date_s (const char *date)
+{
+	static char cleandate [14 + 1];
+	unsigned u1, u2;
+
+	for (u1 = u2 = 0; date[u1] != '\0'; ++u1)
+		if (isdigit(date[u1]))
+			cleandate[u2++] = date[u1];
+
+	cleandate[u2] = '\0';
+
+	return cleandate;
+}
+
+
+
 const char*
 mu_date_complete_s (const char *date, gboolean is_begin)
 {
 	static char fulldate[14 + 1];
-
 	static const char* full_begin = "00000101000000";
 	static const char* full_end   = "99991231235959";
 
+	char *cleardate;
+
 	g_return_val_if_fail (date, NULL);
+
+	cleardate = clear_date_s (date);
 
 	strncpy (fulldate, is_begin ? full_begin : full_end,
 		sizeof(fulldate));
-	memcpy (fulldate, date, strlen(date));
+	memcpy (fulldate, cleardate, strlen(cleardate));
 
 	return fulldate;
 }
