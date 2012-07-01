@@ -23,7 +23,7 @@
 ** Features
 
    - fast indexing for [[http://en.wikipedia.org/wiki/Maildir][Maildir]], Maildir+ and Maildir-on-VFAT
-   - search for messages based on the sender, receiver, subject, date range,
+   - search for messages based on the sender, receiver, subject, date-range,
      size, priority, words in message, flags (signed, encrypted, new, replied,
      has-attachment,...), message-id, maildir, tags, attachment (name,
      mime-type, text) and more
@@ -39,7 +39,8 @@
 
 
 ** News
-
+   
+   - 2012-07-01: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.5.tar.gz][mu-0.9.8.5]]; more fixes, improvements (see the link).
    - 2012-05-08: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.4.tar.gz][mu-0.9.8.4]] with even more improvements (the link has
      all the details) 
    - 2012-04-06: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.3.tar.gz][mu-0.9.8.3]], with many improvements, fixes. See the

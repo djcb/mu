@@ -1,9 +1,10 @@
 * NEWS (user visible changes)
 
-** Release 0.9.8.5 <unreleased>
+** Release 0.9.8.5 <2012-07-01>
 
 *** mu4e
 
+    - auto-completion of e-mail addresses
     - inline display of images (see `mu4e-view-show-images'), uses imagemagick
       if available
     - interactively change number of headers / columns for showing headers with
@@ -21,12 +22,15 @@
       later)
     - enable changing of sort order, display of threads
     - clearer marks for marked messages
+    - fix sorting by subject (disregarding Re:, Fwd: etc.)
     - much faster handling when there are many maildirs (speedbar)
+    - handle mailto: links
+    - improved, extended documentation  
       
 *** mu
 
     - support .noupdate files (parallel to .noindex, dir is ignored unless we're
-      doing a --rebuild)
+      doing a --rebuild).
     - append all inline text parts, when getting the text body
     - respect custom maildir flags
     - correctly handle the case where g_utf8_strdown (str) > len (str)
