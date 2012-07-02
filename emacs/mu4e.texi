@@ -222,7 +222,7 @@ You may need to restart @t{emacs}.
 
 There is @emph{experimental} support for using the @t{emacs} customization
 system in @t{mu4e}, but for now, we recommend setting the values
-manually. Please refer to @xref{Example configuration} for a couple of
+manually. Please refer to @ref{Example configuration} for a couple of
 examples of this.
 
 @node Getting mail
@@ -2023,10 +2023,19 @@ Now, let's make a @t{mu4e} configuration for this:
 
 (require 'smtpmail)
 (setq message-send-mail-function 'smtpmail-send-it
-      smtpmail-stream-type 'starttls
-      smtpmail-default-smtp-server "smtp.gmail.com"      
-      smtpmail-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-service 587)
+   starttls-use-gnutls t      
+   smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
+   smtpmail-auth-credentials '(("smtp.gmail.com" 587 "USERNAME@@gmail.com" nil))
+   smtpmail-default-smtp-server "smtp.gmail.com"
+   smtpmail-smtp-server "smtp.gmail.com"
+   smtpmail-smtp-service 587)
+
+;; alternatively, for emacs-24 you can use:
+;;(setq message-send-mail-function 'smtpmail-send-it
+;;     smtpmail-stream-type 'starttls
+;;     smtpmail-default-smtp-server "smtp.gmail.com"      
+;;     smtpmail-smtp-server "smtp.gmail.com"
+;;     smtpmail-smtp-service 587)
 
 ;; don't keep message buffers around
 (setq message-kill-buffer-on-exit t)
