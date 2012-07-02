@@ -2023,10 +2023,8 @@ Now, let's make a @t{mu4e} configuration for this:
 
 (require 'smtpmail)
 (setq message-send-mail-function 'smtpmail-send-it
-      starttls-use-gnutls t
-      smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
-      smtpmail-auth-credentials '(("smtp.gmail.com" 587 "USERNAME@@gmail.com" nil))
-      smtpmail-default-smtp-server "smtp.gmail.com"
+      smtpmail-stream-type 'starttls
+      smtpmail-default-smtp-server "smtp.gmail.com"      
       smtpmail-smtp-server "smtp.gmail.com"
       smtpmail-smtp-service 587)
 
