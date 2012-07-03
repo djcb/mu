@@ -34,11 +34,25 @@
   - set/unset flag editing command
   - handling of database upgrades
   - restore point after rerunning a search
-  - opening urls is too eager
   - make the mu4e-bookmarks format similar to the other ones
   - refresh current query after update?
 
-** Done
+
+
+
+** Done (0.8.9.6)
+  - opening urls is too eager (now use M-RET for opening url at point, not just
+    RET, which conflicted with using RET for scrolling)
+
+
+
+
+
+
+
+
+
+** Done (0.8.9.5)
 
   - make next/prev header respect prefix argument (Jacek's patch)
   - make search results a stack (well, multiple stacks)

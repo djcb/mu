@@ -768,6 +768,9 @@ key          description
 n,p          go to next, previous message
 y            select the headers view (if it's visible)
 
+RET          scroll down
+M-RET        open URL at point / attachment at point
+
 searching
 ---------
 s            search

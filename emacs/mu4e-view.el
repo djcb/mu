@@ -316,7 +316,7 @@ is nil, and otherwise open it."
 		 (puthash id index mu4e~view-attach-map)
 		 (define-key map [mouse-2]
 		   (mu4e~view-open-save-attach-func msg id nil))
-		 (define-key map [?\r]
+		 (define-key map [?\M-\r]
 		   (mu4e~view-open-save-attach-func msg id nil))
 		 (define-key map [S-mouse-2]
 		   (mu4e~view-open-save-attach-func msg id t))
@@ -492,13 +492,20 @@ is nil, and otherwise open it."
 	(define-key menumap [sepa3] '("--"))
 
 
-	(define-key menumap [query-next]  '("Next query" . mu4e-headers-query-next))
-	(define-key menumap [query-prev]  '("Previous query" . mu4e-headers-query-prev))
-	(define-key menumap [narrow-search] '("Narrow search" . mu4e-headers-search-narrow))
-	(define-key menumap [bookmark]  '("Search bookmark" . mu4e-headers-search-bookmark))
-	(define-key menumap [jump]  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
-	(define-key menumap [refresh]  '("Refresh" . mu4e-headers-rerun-search))
-	(define-key menumap [search]  '("Search" . mu4e-headers-search))
+	(define-key menumap [query-next]
+	  '("Next query" . mu4e-headers-query-next))
+	(define-key menumap [query-prev]
+	  '("Previous query" . mu4e-headers-query-prev))
+	(define-key menumap [narrow-search]
+	  '("Narrow search" . mu4e-headers-search-narrow))
+	(define-key menumap [bookmark]
+	  '("Search bookmark" . mu4e-headers-search-bookmark))
+	(define-key menumap [jump]
+	  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
+	(define-key menumap [refresh]
+	  '("Refresh" . mu4e-headers-rerun-search))
+	(define-key menumap [search]
+	  '("Search" . mu4e-headers-search))
 
 
 	(define-key menumap [sepa4] '("--"))
@@ -626,7 +633,7 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 	(let ((url (match-string 0))
 	       (map (make-sparse-keymap)))
 	  (define-key map [mouse-2] (mu4e~view-browse-url-func url))
-	  (define-key map [?\r] (mu4e~view-browse-url-func url))
+	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
 	  (puthash (incf num) url mu4e~view-link-map)
 	  (add-text-properties 0 (length url)
 	    `(face mu4e-view-link-face
@@ -634,7 +641,8 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 	       keymap ,map) url)
 	  (replace-match
 	    (concat url
-	      (propertize (format "[%d]" num) 'face 'mu4e-view-url-number-face))))))))
+	      (propertize (format "[%d]" num)
+		'face 'mu4e-view-url-number-face))))))))
 
 
 (defun mu4e~view-wrap-lines ()
