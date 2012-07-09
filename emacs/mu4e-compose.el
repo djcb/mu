@@ -439,7 +439,8 @@ needed, set the Fcc header, and register the handler function."
 
 (defun mu4e~compose-find-completion-style (some-style)
   "Find completion style SOME-STYLE in completion-styles-alist, or return nil."
-  (find-if (lambda (style) (eq some-style (car style))) completion-styles-alist))
+  (find-if (lambda (style) (eq some-style (car style)))
+    completion-styles-alist))
 
 (defconst mu4e~completion-cycle-treshold 5
   "mu4e value for `completion-cycle-treshold'.")
@@ -718,8 +719,8 @@ message."
 	   (save-excursion
 	     (goto-char (point-min))
 	     (search-forward-regexp mail-header-separator nil t))))
-	 ;; try to complete only when we're in the headers area,
-	 ;; looking  at an address field.
+    ;; try to complete only when we're in the headers area,
+    ;; looking  at an address field.
     (when (and eoh (> eoh (point)) (mail-abbrev-in-expansion-header-p))
       (let* ((end (point))
 	      (start
