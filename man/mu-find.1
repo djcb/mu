@@ -81,14 +81,14 @@ would do in an internet search engine. For example,
 will find all messages that contain both 'monkey' and 'banana' in either body
 or subject or one of the address-fields (to/from/cc).
 
-As mentioned, matching is case-insensitive and accent-insensitive;
-thus
+As mentioned, matching is case-insensitive and accent-insensitive; thus
 
 .nf
   $ mu find Mönkey BÄNAÑå
 .fi
 
 yields the same results as the example above.
+
 
 \fBmu\fR also recognizes prefixes for specific fields in a messages; for
 example:
@@ -243,7 +243,21 @@ could use:
   $ mu find size:10K..2M
 .fi
 
-Finally, you can match \fIall\fR messages using "":
+
+It's important to remember that if a search term includes spaces, you should
+\fIquote\fr those parts. Thus, when we look at the following examples:
+
+.nf
+  $ mu find maildir:/Sent Items yoghurt
+  $ mu find maildir:'/Sent Items' yoghurt
+.fi
+
+The first query searches for messages in the \fI/Sent\fR maildir matching
+\fIItems\fR and \fIyoghurt\fR, while the second query searches the \fI/Sent
+Items\fR maildir searching for messages matching \fIyoghurt\fR.
+
+
+You can match \fIall\fR messages using "" (or ''):
 
 .nf
   $ mu find ""

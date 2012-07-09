@@ -38,6 +38,10 @@ If =mu= did not guess the right Maildir, you can set it explicitly:
 *** signed messages about apples *OR* oranges
 #+html:<pre>  $ mu find flag:signed apples OR oranges</pre>
 
+*** messages about yoghurt in the Sent Items folder (note the quoting):
+#+html:<pre>  $ mu find maildir:'/Sent Items' yoghurt</pre>
+
+
 *** unread messages about things starting with 'soc' (soccer, society, socrates, ...)
 #+html:<pre>  $ mu find 'subject:soc*' flag:unread</pre>
 

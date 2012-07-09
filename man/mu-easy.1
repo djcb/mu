@@ -1,4 +1,4 @@
-.TH MU-EASY 1 "May 2012" "User Manuals"
+.TH MU-EASY 1 "July 2012" "User Manuals"
 
 .SH NAME
 
@@ -143,6 +143,13 @@ Get all messages from Jim without an attachment:
 .nf
   \fB$ mu find from:jim AND NOT flag:attach\fR
 .fi
+
+Get all messages in the Sent Items folder about yoghurt:
+.nf
+ \fB$mu find maildir:'/Sent Items' yoghurt\fR
+.fi
+Note how we need to quote search terms that include spaces.
+
 
 Get all unread messages where the subject mentions Ångström:
 .nf

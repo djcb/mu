@@ -1119,6 +1119,10 @@ subject:wombat date:20090601..20090630
 # get all messages with PDF attachments in the /projects folder
 maildir:/projects mime:application/pdf
 
+# get all messages about Rupert in the Sent Items folder
+# note that terms with spaces need quotes
+maildir:"/Sent Items" rupert
+
 # get all important messages which are signed:
 flag:signed prio:high
 
