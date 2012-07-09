@@ -1002,7 +1002,13 @@ the addresses to complete, @t{mu4e} uses the e-mail addresses in its database
 auto-completion should work with emacs versions 23.2 and later.
 
 Address auto-completion is enabled by default, using the variable
-@t{mu4e-compose-complete-addresses}.
+@t{mu4e-compose-complete-addresses}. Set it to @t{nil} to disable it.
+
+Emacs 24 also supports cycling through the alternatives. When there are more
+than @emph{5} matching addresses, they are shown in a @t{*Completions*}
+buffer. Once the number of matches gets below this number, one is selected
+(put in the address field) and you can cycle through the alternatives using
+@key{TAB}.
 
 @subsection Limiting the number of addresses for autocompletion
 
