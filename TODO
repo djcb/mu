@@ -30,7 +30,6 @@
     - better naming for draft/view buffers
   - header updating interferes with marks (when updating for 'mark as read',
     when reading a marked message)
-  - tooltip for flags field
   - set/unset flag editing command
   - handling of database upgrades
   - restore point after rerunning a search
@@ -43,7 +42,10 @@
   - opening urls is too eager (now use M-RET for opening url at point, not just
     RET, which conflicted with using RET for scrolling)
   - document quoting of queries
-  - use mu-error  
+  - use mu-error
+  - tooltips in header labels
+  - tooltip for flags field
+
 
 ** Done (0.8.9.5)
 
