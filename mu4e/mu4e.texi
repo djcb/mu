@@ -504,15 +504,15 @@ following:
 
 @verbatim
 ----------------------------------------------------------------------------------
-  Date              Flags  From/To             Subject
-  2011-12-16 18:38  uN     To Edmund Dantès    + Re: Extension security?
-  2011-12-16 21:44  uN     Abbé Busoni             + Re: Extension security?
-  2011-12-17 03:14  uN     Pierre Morrel           + Re: Extension security?
+  Date              Flgs   From/To             Subject
+  2011-12-16 18:38  S      To Edmund Dantès    + Re: Extension security?
+  2011-12-16 21:44  S      Abbé Busoni             + Re: Extension security?
+  2011-12-17 03:14  SR     Pierre Morrel           + Re: Extension security?
   2011-12-17 04:04  uN     Jacopo                    + Re: Extension security?
   2011-12-17 14:36  uN     Mercédès                    + Re: Extension security?
   2011-12-18 06:05  uN     Beachamp                      \ Re: Extension security?
-  2011-12-16 18:23  uN     Albert de Moncerf   + Re: [O] A presentation tool
-  2011-12-17 01:53  usaN   Gaspard Caderousse    \ Re: [O] A presentation tool
+  2011-12-16 18:23  Ss     Albert de Moncerf   + Re: [O] A presentation tool
+  2011-12-17 01:53  Sa     Gaspard Caderousse    \ Re: [O] A presentation tool
   2011-12-16 16:31  uN     Baron Danglars      | [O] imaxima?
 End of search results
 ----------------------------------------------------------------------------------
@@ -524,7 +524,7 @@ Some notes to explain what you see in the example:
 
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
-the variable @code{mu4e-headers-fields}
+the variable @code{mu4e-headers-fields}.
 @item Instead of showing the @t{From:} and @t{To:} fields separately, you
 can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
 compact way to convey the most important information: it shows @t{From:}
@@ -536,7 +536,8 @@ in the example above). To determine whether a message was sent by you,
 be a regular expression matching all the e-mail addresses that you use.
 @item The letters in the 'Flags' field correspond to the following: D=draft,
 F=flagged, N=new, P=passed (i.e.., forwarded), R=replied, S=seen, T=trashed,
-a=has-attachment, x=encrypted, s=signed, u=unread.
+a=has-attachment, x=encrypted, s=signed, u=unread. The tooltip for this field
+also contains this information.
 @item You can change the date format by customizing the variable
 @t{mu4e-headers-date-format}
 @item The subject field displays the discussion threads according to the @emph{JWZ mail
@@ -2276,7 +2277,7 @@ the user. And so on.
 The language between frontend and backend is documented in the @t{mu-server}
 man-page. @t{mu4e} can log these communications; you can use @code{M-x
 mu4e-toggle-logging} to turn logging on and off, and you can view the log
-using @code{M-x mu4e-show-log}.
+using @code{M-x mu4e-show-log} (@key{$}).
 
 @node The message s-expression
 @section The message s-expression

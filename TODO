@@ -21,6 +21,7 @@
     - 'human' dates
   - guile integration
     - statistics
+    - new-mail warning
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
@@ -41,7 +42,7 @@
     mu4e-view-message-with-msgid)
     
 
-** Done (0.8.9.6)
+** Done (0.9.9)
 
   - opening urls is too eager (now use M-RET for opening url at point, not just
     RET, which conflicted with using RET for scrolling)
