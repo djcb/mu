@@ -36,9 +36,13 @@
   - make the mu4e-bookmarks format similar to the other ones
   - refresh current query after update?
   - fix mu4e-mark-set to work from the view buffer as well
-
+  - add sort buttons to header labels (and do the sorting)
+  - open links to mails through headers-mode somehow (i.e..,
+    mu4e-view-message-with-msgid)
+    
 
 ** Done (0.8.9.6)
+
   - opening urls is too eager (now use M-RET for opening url at point, not just
     RET, which conflicted with using RET for scrolling)
   - document quoting of queries

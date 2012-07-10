@@ -30,12 +30,12 @@ guile=
 endif
 
 if BUILD_MU4E
-emacs=emacs
+mu4e=mu4e
 else
-emacs=
+mu4e=
 endif
 
-SUBDIRS=m4 man lib $(widgets) $(guile) mu $(emacs) contrib toys
+SUBDIRS=m4 man lib $(widgets) $(guile) mu $(mu4e) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 

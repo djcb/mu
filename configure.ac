@@ -310,9 +310,9 @@ mu/tests/Makefile
 lib/Makefile
 lib/tests/Makefile
 widgets/Makefile
-emacs/Makefile
-emacs/mu4e-meta.el
-emacs/version.texi
+mu4e/Makefile
+mu4e/mu4e-meta.el
+mu4e/version.texi
 guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile
