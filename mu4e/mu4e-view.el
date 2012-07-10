@@ -674,8 +674,7 @@ current message."
        (with-current-buffer mu4e~view-headers-buffer
 	 (if (and docid (mu4e~headers-goto-docid docid))
 	   ,@body
-	   (mu4e-error "cannot find corresponding message in headers
-	     buffer."))))))
+	   (mu4e-error "cannot find message in headers buffer."))))))
 
 (defun mu4e-view-headers-next(&optional n)
   "Move point to the next message header in the headers buffer

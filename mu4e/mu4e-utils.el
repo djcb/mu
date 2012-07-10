@@ -634,8 +634,8 @@ FUNC (if non-nil) afterwards."
 	      (mu4e-error "mu server has version %s, but we need %s"
 		version mu4e-mu-version))
 	    (when func (funcall func))
-	    (when (and mu4e-update-interval (null mu4e-update-timer))
-	      (setq mu4e-update-timer
+	    (when (and mu4e-update-interval (null mu4e~update-timerr))
+	      (setq mu4e~update-timerr
 		(run-at-time
 		  0 mu4e-update-interval 'mu4e-update-mail)))
 	    (mu4e-message "Started mu4e with %d message%s in store"
@@ -655,10 +655,10 @@ FUNC (if non-nil) afterwards."
 
 (defun mu4e~stop ()
   "Stop the mu4e session."
-  (when mu4e-update-timer
-    (cancel-timer mu4e-update-timer)
+  (when mu4e~update-timerr
+    (cancel-timer mu4e~update-timerr)
     (setq
-      mu4e-update-timer nil
+      mu4e~update-timerr nil
       mu4e~maildir-list nil
       mu4e~contacts-for-completion nil))
   (mu4e~proc-kill)
@@ -670,11 +670,11 @@ FUNC (if non-nil) afterwards."
 	  (kill-buffer))))
     (buffer-list)))
 
-(defvar mu4e-update-timer nil
-  "*internal* The mu4e update timer.")
+(defvar mu4e~update-timer nil
+  "The mu4e update timer.")
 
-(defconst mu4e-update-mail-name "*mu4e-update-mail*"
-  "*internal* Name of the process to update mail")
+(defconst mu4e~update-mail-name "*mu4e-update-mail*"
+  "Name of the process to update mail.")
 
 (defun mu4e-update-mail (&optional buf)
   "Update mail (retrieve using `mu4e-get-mail-command' and update
@@ -686,7 +686,7 @@ processing takes part in the background, unless buf is non-nil."
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
   (let* ((process-connection-type t)
 	  (proc (start-process-shell-command
-		 mu4e-update-mail-name buf mu4e-get-mail-command)))
+		 mu4e~update-mail-name buf mu4e-get-mail-command)))
     (mu4e-message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
