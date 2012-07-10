@@ -1,0 +1,59 @@
+#!/bin/sh
+exec guile -e main -s $0 $@
+!#
+
+;;
+;; Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;;
+;; This program is free software; you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation; either version 3, or (at your option) any
+;; later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software Foundation,
+;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+;; script to list the message matching <query> which are newer than
+;; <n> minutes
+
+;; use it, eg. like:
+;;   $ mu-biff --newer-than=`date +%s --date='5 minutes ago'` "maildir:/inbox"
+
+
+(use-modules (ice-9 getopt-long) (ice-9 format))
+(use-modules (mu) (mu message))
+
+(define (main args)
+  (let* ((optionspec   '((muhome      (value #t))
+			  (newer-than (value #t))
+			  (help       (single-char #\h) (value #f))))
+	  (options (getopt-long args optionspec))
+	  (msg (string-append
+		 "usage: mu-biff [--help] [--muhome=<muhome>]"
+		 " [--newer-than=<timestamp>] <query>"))
+	  (help (option-ref options 'help #f))
+	  (newer-than (string->number (option-ref options 'newer-than "0")))
+	  (muhome (option-ref options 'muhome #f))
+	  (query (string-concatenate (option-ref options '() '()))))
+    (if help
+      (begin (display msg) (exit 0))
+      (begin
+	(mu:initialize muhome)
+	(mu:for-each-message
+	  (lambda (msg)
+	    (if (> (mu:timestamp msg) newer-than)
+	      (format #t "~s ~s\n"
+		(mu:from msg)
+		(mu:subject msg))))
+	  query)))))
+
+;; Local Variables:
+;; mode: scheme
+;; End:

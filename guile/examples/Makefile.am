@@ -19,4 +19,5 @@ include $(top_srcdir)/gtest.mk
 EXTRA_DIST=			\
 	msg-graphs		\
 	contacts-export		\
-	org2mu4e
+	org2mu4e		\
+	mu-biff
