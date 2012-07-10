@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.8.5],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.9-dev1],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -336,7 +336,8 @@ if test -e ~/.mu/xapian-0.6; then
    echo "remove the old <muhome>/xapian-0.6 directory to save some disk space"
 fi
 
-
+echo "mu version                           : $VERSION"
+echo
 echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version"
 echo "GMime version                        : $gmime_version"
