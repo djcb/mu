@@ -290,7 +290,8 @@ if provided, or at the end of the buffer otherwise."
 						mu4e-headers-from-or-to-prefix))
 				   (mu4e~headers-contact-str from-lst)))))
 			   (:date (format-time-string mu4e-headers-date-format val))
-			   (:flags (mu4e-flags-to-string val))
+			   (:flags (propertize (mu4e-flags-to-string val)
+				     'help-echo (format "%S" val)))
 			   (:size (mu4e-display-size val))
 			   (t (mu4e-error "Unsupported header field (%S)" field)))))
 		 (when str
