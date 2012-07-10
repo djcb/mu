@@ -167,10 +167,10 @@ plist."
 	    (:flags    (mu4e~view-construct-header field
 			 (if fieldval (format "%S" fieldval) "")))
 	    ;; contact fields
-	    (:to       (mu4e~view-construct-contacts msg field))
-	    (:from     (mu4e~view-construct-contacts msg field))
-	    (:cc       (mu4e~view-construct-contacts msg field))
-	    (:bcc      (mu4e~view-construct-contacts msg field))
+	    (:to       (mu4e~view-construct-contacts-header msg field))
+	    (:from     (mu4e~view-construct-contacts-header msg field))
+	    (:cc       (mu4e~view-construct-contacts-header msg field))
+	    (:bcc      (mu4e~view-construct-contacts-header msg field))
 
 	    ;; if we (`user-mail-address' are the From, show To, otherwise,
 	    ;; show From
@@ -178,8 +178,8 @@ plist."
 	      (let* ((from (plist-get msg :from))
 		      (from (and from (cdar from))))
 		(if (and from (string-match mu4e-user-mail-address-regexp from))
-		  (mu4e~view-construct-contacts msg :to)
-		  (mu4e~view-construct-contacts msg :from))))
+		  (mu4e~view-construct-contacts-header msg :to)
+		  (mu4e~view-construct-contacts-header msg :from))))
 	    ;; date
 	    (:date
 	      (let ((datestr
@@ -192,7 +192,7 @@ plist."
 		      (sizestr (when size (format "%d bytes" size))))
 		(if sizestr (mu4e~view-construct-header field sizestr))))
 	    ;; attachments
-	    (:attachments (mu4e~view-construct-attachments msg))
+	    (:attachments (mu4e~view-construct-attachments-header msg))
 	    (t               (mu4e-error "Unsupported field: %S" field)))))
       mu4e-view-fields "")
     "\n"
@@ -237,12 +237,12 @@ marking if it still had that."
 	  ;; no use in trying to set flags again
 	  (mu4e~view-mark-as-read-maybe))))))
 
-
+ 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
 add text-properties to VAL."
-  (let* ((info (cadr (assoc field mu4e-header-info)))
+  (let* ((info (cdr (assoc field mu4e-header-info)))
 	  (key (plist-get info :name))
 	  (help (plist-get info :help)))
     (if (and val (> (length val) 0))
@@ -263,7 +263,7 @@ add text-properties to VAL."
       (buffer-string))
     "")))
 
-(defun mu4e~view-construct-contacts (msg field)
+(defun mu4e~view-construct-contacts-header (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
   (mu4e~view-construct-header field
     (mapconcat
@@ -288,7 +288,7 @@ is nil, and otherwise open it."
 	(mu4e-view-open-attachment msg attachnum)
 	(mu4e-view-save-attachment-single msg attachnum)))))
 
-(defun mu4e~view-construct-attachments (msg)
+(defun mu4e~view-construct-attachments-header (msg)
   "Display attachment information; the field looks like something like:
    	:parts ((:index 1 :name \"test123.doc\"
                        :mime-type \"application/msword\" :attachment t :size 1234)
@@ -332,7 +332,8 @@ is nil, and otherwise open it."
 				 'face 'mu4e-view-header-key-face)))))))
 	     attachments ", ")))
     (unless (zerop id)
-      (mu4e~view-construct-header (format "Attachments(%d)" id) attstr t))))
+      (mu4e~view-construct-header
+	:attachments (format "%s (%d)" attstr id) t))))
 
 (defun mu4e-view-for-each-part (msg func)
   "Apply FUNC to each part in MSG. FUNC should be a function taking two arguments;

@@ -102,8 +102,9 @@ some custom function. Each of the list members has the following format:
   (NAME PREDICATE-FUNC PARAM-FUNC)
 * NAME is the name of the predicate function, and the first character
 is the shortcut (so keep those unique).
-* PREDICATE-FUNC is a function that takes two parameters, MSG and (optionally) PARAM,
-and should return non-nil when there's a match.
+* PREDICATE-FUNC is a function that takes two parameters, MSG
+and (optionally) PARAM, and should return non-nil when there's a
+match.
 * PARAM-FUNC is function that is evaluated once, and its value is then passed to
 PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
@@ -531,7 +532,7 @@ after the end of the search results."
 	(+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
       (mapcar
 	(lambda (item)
-	  (let* ((info (cadr (assoc (car item) mu4e-header-info)))
+	  (let* ((info (cdr (assoc (car item) mu4e-header-info)))
 		  (name (plist-get info :shortname))
 		  (help (plist-get info :help))
 		  (width (cdr item)))

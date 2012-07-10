@@ -337,61 +337,59 @@ headers)."
   :group 'mu4e-faces)
 
 
-
-
 ;; headers info
 (defconst mu4e-header-info
-  '( (:attachments   .
+  '( (:attachments .
        ( :name "Attachments"
 	 :shortname "Atts"
 	 :help "Message attachments"))
-     (:bcc           .
+     (:bcc .
        ( :name "Bcc"
 	 :shortname "Bcc"
 	 :help "Blind Carbon-Copy recipients for the message"
 	 :sortable t))
-     (:cc
+     (:cc .
        ( :name "Cc"
 	 :shortname "Cc"
 	 :help "Carbon-Copy recipients for the message"
 	 :sortable t))
-     (:date
+     (:date .
        ( :name "Date"
 	 :shortname "Date"
 	 :help "Date/time when the message was written"
 	 :sortable t))
-     (:flags
+     (:flags .
        ( :name "Flags"
 	 :shortname "Flgs"
 	 :help "Flags for the message"
 	 :sortable t))
-     (:from
+     (:from .
        ( :name "From"
 	 :shortname "From"
 	 :help "The sender of the message"
 	 :sortable t))
-     (:from-or-to
+     (:from-or-to .
        ( :name "From/To"
 	 :shortname "From/To"
 	 :help "Sender of the message if it's not me; otherwise
 	 the recipient"
 	 :sortable t))
-     (:maildir
+     (:maildir .
        ( :name "Maildir"
 	 :shortname "Maildir"
 	 :help "Maildir for this message"
 	 :sortable t))
-     (:path
+     (:path .
        ( :name "Path"
 	 :shortname "Path"
 	 :help "Full filesystem path to the message"
 	 :sortable t))
-     (:subject
+     (:subject .
        ( :name "Subject"
-	 :shortname "S"
+	 :shortname "Subject"
 	 :help "Subject of the message"
 	 :sortable t))
-     (:to
+     (:to .
        ( :name "To"
 	 :shortname "T"
 	 :help "Recipient of the message"
