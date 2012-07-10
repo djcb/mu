@@ -203,7 +203,6 @@ designated shortcut character for the maildir.")
   :group 'mu4e
   :group 'faces)
 
-
 (defface mu4e-unread-face
   '((t :inherit font-lock-keyword-face :bold t))
   "Face for an unread message header."
@@ -228,8 +227,13 @@ flag set)."
   :group 'mu4e-faces)
 
 (defface mu4e-flagged-face
-  '((t :inherit font-lock-builtin-face :bold t))
+  '((t :inherit font-lock-constant-face :bold t))
   "Face for a flagged message header."
+  :group 'mu4e-faces)
+
+(defface mu4e-replied-face
+  '((t :inherit font-lock-builtin-face :bold nil))
+  "Face for a replied (or passed) message header."
   :group 'mu4e-faces)
 
 (defface mu4e-header-face

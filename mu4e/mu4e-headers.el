@@ -306,10 +306,12 @@ if provided, or at the end of the buffer otherwise."
 		    (propertize line 'face 'mu4e-draft-face))
 		  ((member 'trashed flags)
 		    (propertize line 'face 'mu4e-trashed-face))
-		  ((member 'unread flags)
+		  ((or (member 'unread flags) (member 'new flags))
 		    (propertize line 'face 'mu4e-unread-face))
 		  ((member 'flagged flags)
 		    (propertize line 'face 'mu4e-flagged-face))
+		  ((or (member 'replied flags) (member 'passed flags))
+		    (propertize line 'face 'mu4e-replied-face))
 		  (t ;; else
 		    (propertize line 'face 'mu4e-header-face)))))
 
