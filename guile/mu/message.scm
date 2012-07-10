@@ -44,6 +44,7 @@
 	    mu:field:size
 	    mu:field:subject
 	    mu:field:tags
+	    mu:field:timestamp
 	    mu:field:to))
 
 (load-extension "libguile-mu" "mu_guile_message_init")
@@ -74,6 +75,7 @@
 (define-getter mu:size	     mu:field:size)
 (define-getter mu:subject    mu:field:subject)
 (define-getter mu:tags	     mu:field:tags)
+(define-getter mu:timestamp  mu:field:timestamp)
 (define-getter mu:to	     mu:field:to)
 
 

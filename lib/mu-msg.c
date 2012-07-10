@@ -360,6 +360,31 @@ mu_msg_get_header (MuMsg *self, const char *header)
 }
 
 
+time_t
+mu_msg_get_timestamp (MuMsg *self)
+{
+	g_return_val_if_fail (self, 0);
+
+	if (self->_file)
+		return self->_file->_timestamp;
+	else {
+		const char *path;
+		struct stat statbuf;
+
+		path = mu_msg_get_path (self);
+		if (!path)
+			return 0;
+
+		if (stat (path, &statbuf) < 0)
+			return 0;
+
+		return statbuf.st_mtime;
+	}
+}
+
+
+
+
 const char*
 mu_msg_get_path (MuMsg *self)
 {
@@ -535,7 +560,6 @@ mu_msg_contact_new (const char *name, const char *address,
 void
 mu_msg_contact_destroy (MuMsgContact *self)
 {
-
 	if (!self)
 		return;
 

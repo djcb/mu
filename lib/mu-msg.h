@@ -320,7 +320,6 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
 time_t     mu_msg_get_timestamp       (MuMsg *msg);
 
 
-
 /**
  * get a specific header from the message. This value will _not_ be
  * cached

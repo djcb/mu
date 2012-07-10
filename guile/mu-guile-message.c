@@ -40,6 +40,10 @@ struct _MuMsgWrapper {
 typedef struct _MuMsgWrapper MuMsgWrapper;
 static long MSG_TAG;
 
+/* pseudo field, not in Xapian */
+#define MU_GUILE_MSG_FIELD_ID_TIMESTAMP (MU_MSG_FIELD_ID_NUM + 1)
+
+
 static gboolean
 mu_guile_scm_is_msg (SCM scm)
 {
@@ -250,7 +254,9 @@ SCM_DEFINE_PUBLIC(get_field, "mu:get-field", 2, 0, 0,
 	SCM_ASSERT (scm_integer_p(FIELD), FIELD, SCM_ARG2, FUNC_NAME);
 
 	mfid = scm_to_int (FIELD);
-	SCM_ASSERT (mfid < MU_MSG_FIELD_ID_NUM, FIELD, SCM_ARG2, FUNC_NAME);
+	SCM_ASSERT (mfid < MU_MSG_FIELD_ID_NUM ||
+		    mfid == MU_GUILE_MSG_FIELD_ID_TIMESTAMP,
+		    FIELD, SCM_ARG2, FUNC_NAME);
 
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_PRIO:  return get_prio_scm (msgwrap->_msg);
@@ -266,6 +272,11 @@ SCM_DEFINE_PUBLIC(get_field, "mu:get-field", 2, 0, 0,
 		mu_msg_close_file_backend (msgwrap->_msg);
 		return data;
 	}
+
+	/* our pseudo-field; we get it from the message file */
+	case MU_GUILE_MSG_FIELD_ID_TIMESTAMP:
+		return scm_from_uint (
+			(unsigned)mu_msg_get_timestamp(msgwrap->_msg));
 
 	default: break;
 	}
@@ -541,6 +552,9 @@ static struct  {
 	{ "mu:field:subject",	MU_MSG_FIELD_ID_SUBJECT },
 	{ "mu:field:tags",	MU_MSG_FIELD_ID_TAGS },
 	{ "mu:field:to",	MU_MSG_FIELD_ID_TO },
+
+	/* non-Xapian field: timestamp */
+	{ "mu:field:timestamp",  MU_GUILE_MSG_FIELD_ID_TIMESTAMP }
 };
 
 
