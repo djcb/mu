@@ -101,7 +101,7 @@ The following marks are available, and the corresponding props:
    `deferred' n         mark this message for *something* (decided later)
    `unmark'   n         unmark this message"
   (interactive)
-  (let* ((docid (mu4e~headers-docid-at-point))
+  (let* ((docid (mu4e-field-at-point :docid))
 	  ;; get a cell with the mark char and the 'target' 'move' already has a
 	  ;; target (the target folder) the other ones get a pseudo "target", as
 	  ;; info for the user.
@@ -116,10 +116,12 @@ The following marks are available, and the corresponding props:
 	      (unflag    '("-" . "unflag"))
 	      (deferred  '("*" . "deferred"))
 	      (unmark    '(" " . nil))
-	      (otherwise (error "Invalid mark %S" mark))))
+	      (otherwise (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (car markcell))
 	  (target (cdr markcell)))
-    (unless docid (error "No message on this line"))
+    (unless docid (mu4e-error "No message on this line"))
+    (unless (eq major-mode 'mu4e-headers-mode)
+      (mu4e-error "Not in headers-mode"))
     (save-excursion
       (when (mu4e~headers-mark docid markkar)
 	;; update the hash -- remove everything current, and if add the new stuff,
@@ -172,8 +174,7 @@ headers in the region."
 the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
   (interactive)
-  (unless (mu4e~headers-docid-at-point)
-    (error "No message at point."))
+  (mu4e-field-at-point :docid) ;; will raise an error if there is none
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	  (target (if (string= (substring target 0 1) "/")
 		    target
@@ -259,10 +260,10 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 		(unflag (mu4e~proc-move docid nil "-F-N"))
 		(trash
 		  (unless mu4e-trash-folder
-		    (error "`mu4e-trash-folder' not set"))
+		    (mu4e-error "`mu4e-trash-folder' not set"))
 		  (mu4e~proc-move docid mu4e-trash-folder "+T-N"))
 		(delete (mu4e~proc-remove docid))
-		(otherwise (error "Unrecognized mark %S" mark)))))
+		(otherwise (mu4e-error "Unrecognized mark %S" mark)))))
 	  mu4e~mark-map))
       (mu4e-mark-unmark-all)
       (message nil))))
@@ -271,7 +272,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   "Unmark all marked messages."
   (interactive)
   (when (or (null mu4e~mark-map) (zerop (hash-table-count mu4e~mark-map)))
-    (error "Nothing is marked"))
+    (mu4e-error "Nothing is marked"))
   (maphash
     (lambda (docid val)
       (save-excursion

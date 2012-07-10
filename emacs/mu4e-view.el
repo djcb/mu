@@ -193,7 +193,7 @@ plist."
 		(if sizestr (mu4e~view-construct-header field sizestr))))
 	    ;; attachments
 	    (:attachments (mu4e~view-construct-attachments msg))
-	    (t               (error "Unsupported field: %S" field)))))
+	    (t               (mu4e-error "Unsupported field: %S" field)))))
       mu4e-view-fields "")
     "\n"
     (mu4e-body-text msg)))
@@ -668,12 +668,12 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 current message."
   `(progn
      (unless '(buffer-live-p mu4e~view-headers-buffer)
-       (error "no headers-buffer connected"))
+       (mu4e-error "no headers-buffer connected"))
      (let* ((docid (mu4e-field-at-point :docid)))
        (with-current-buffer mu4e~view-headers-buffer
 	 (if (and docid (mu4e~headers-goto-docid docid))
 	   ,@body
-	   (error "cannot find corresponding message in headers
+	   (mu4e-error "cannot find corresponding message in headers
 	     buffer."))))))
 
 (defun mu4e-view-headers-next(&optional n)
@@ -775,7 +775,7 @@ all messages in the thread at point in the headers view."
   attachment numbers, as per `mu4e-split-ranges-to-numbers', and
   return the corresponding string."
   (let* ((count (hash-table-count mu4e~view-attach-map)) (def))
-    (when (zerop count) (error "No attachments for this message"))
+    (when (zerop count) (mu4e-error "No attachments for this message"))
     (if (not multi)
       (if (= count 1)
 	(read-number (mu4e-format "%s: " prompt) 1)
@@ -799,7 +799,7 @@ number ATTNUM."
 message-at-point if nil) to disk."
   (interactive)
   (unless mu4e-attachment-dir
-    (error "`mu4e-attachment-dir' is not set"))
+    (mu4e-error "`mu4e-attachment-dir' is not set"))
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to save" msg)))
@@ -932,7 +932,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
       ;; make the buffer read-only since it usually does not make
 	;; sense to edit the temp buffer; use C-x C-q if you insist...
       (setq buffer-read-only t))
-      (t (error "Unsupported action %S" what))))
+      (t (mu4e-error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; marking
@@ -1015,7 +1015,7 @@ user that unmarking only works in the header list."
   "Go to a numbered url."
   (interactive "n[mu4e] Visit url with number: ")
   (let ((url (gethash num mu4e~view-link-map)))
-    (unless url (error "Invalid number for URL"))
+    (unless url (mu4e-error "Invalid number for URL"))
     (funcall (mu4e~view-browse-url-func url))))
 
 (defconst mu4e~view-raw-buffer-name "*mu4e-raw-view*"
@@ -1027,7 +1027,7 @@ user that unmarking only works in the header list."
   (let ((path (mu4e-field-at-point :path))
 	 (buf (get-buffer-create mu4e~view-raw-buffer-name)))
     (unless (and path (file-readable-p path))
-      (error "Not a readable file: %S" path))
+      (mu4e-error "Not a readable file: %S" path))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
 	(erase-buffer)
@@ -1048,7 +1048,7 @@ the results."
 ensure we don't disturb other windows."
   (interactive)
   (unless (eq major-mode 'mu4e-view-mode)
-    (error "Must be in mu4e-view-mode (%S)" major-mode))
+    (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
   (let ((curbuf (current-buffer)) (curwin (selected-window))
 	 (headers-win))
     (walk-windows

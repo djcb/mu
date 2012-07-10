@@ -196,7 +196,7 @@ mode."
   (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t)
   (let ((func (lookup-key (current-local-map) keyseq)))
     (unless (functionp func)
-      (error "Invalid key binding"))
+      (mu4e-error "Invalid key binding"))
     (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe t t)
     (funcall func)))
 
@@ -219,7 +219,7 @@ or org-mode (when in the body),"
 	  (org-mode)
 	  (add-hook 'before-save-hook
 	    (lambda ()
-	      (error "Switch to mu4e-compose-mode (M-m) before saving.")) nil t)
+	      (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving.")) nil t)
 	  (org~mu4e-mime-decorate-headers)
 	  (local-set-key (kbd "M-m")
 	    (lambda (key)
@@ -242,9 +242,9 @@ or org-mode (when in the body),"
     body using org-mode."
   (interactive)
   (unless (member major-mode '(org-mode mu4e-compose-mode))
-    (error "Need org-mode or mu4e-compose-mode"))
+    (mu4e-error "Need org-mode or mu4e-compose-mode"))
   (unless (executable-find "dvipng")
-    (error "Required program dvipng not found"))
+    (mu4e-error "Required program dvipng not found"))
   ;; we can check if we're already in mu4e-compose-mode by checking
   ;; if the post-command-hook is set; hackish...
   (if (not (member 'org~mu4e-mime-switch-headers-or-body post-command-hook))

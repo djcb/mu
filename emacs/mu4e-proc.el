@@ -58,7 +58,7 @@ the length (in hex).")
 (defun mu4e~proc-start ()
   "Start the mu server process."
   (unless (file-executable-p mu4e-mu-binary)
-    (error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
+    (mu4e-error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
 	  (args '("server"))
 	  (args (append args (when mu4e-mu-home
@@ -358,7 +358,7 @@ The results are reported through either (:update ... )
 or (:error ) sexp, which are handled my `mu4e-update-func' and
 `mu4e-error-func', respectively."
   (unless (or maildir flags)
-    (error "At least one of maildir and flags must be specified"))
+    (mu4e-error "At least one of maildir and flags must be specified"))
   (let* ((idparam (mu4e--docid-msgid-param docid-or-msgid))
 	  (flagstr
 	    (when flags
@@ -409,9 +409,9 @@ for type `new'.
   The result will be delivered to the function registered as
 `mu4e-compose-func'."
   (unless (member type '(forward reply edit new))
-    (error "Unsupported compose-type %S" type))
+    (mu4e-error "Unsupported compose-type %S" type))
   (unless (eq (null docid) (eq type 'new))
-    (error "`new' implies docid not-nil, and vice-versa"))
+    (mu4e-error "`new' implies docid not-nil, and vice-versa"))
   (mu4e~proc-send-command "compose type:%s docid:%d"
     (symbol-name type) docid))
 
@@ -437,7 +437,7 @@ mean:
 	      (temp
 		(format "action:temp docid:%d index:%d what:%s param:\"%s\""
 		  docid partidx what param))
-	      (otherwise (error "Unsupported action %S" action))))))
+	      (otherwise (mu4e-error "Unsupported action %S" action))))))
     (mu4e~proc-send-command cmd)))
 
 

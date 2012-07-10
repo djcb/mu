@@ -54,16 +54,18 @@ e-mail message (if there is any."
   "Offer to create DIR if it does not exist yet. Return t if the
 dir already existed, or has been created, nil otherwise."
   (if (and (file-exists-p dir) (not (file-directory-p dir)))
-    (error "%s exists, but is not a directory." dir))
+    (mu4e-error "%s exists, but is not a directory." dir))
   (cond
     ((file-directory-p dir) t)
     ((yes-or-no-p (mu4e-format "%s does not exist yes. Create now?" dir))
       (mu4e~proc-mkdir dir))
     (t nil)))
-
+ 
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
-  (concat "[" mu4e-logo "] "  (apply 'format frm args)))
+  (concat
+    "[" (propertize "mu4e" 'face 'mu4e-title-face) "] "
+    (apply 'format frm args)))
 
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e. If we're waiting for
@@ -71,6 +73,11 @@ user-input, don't show anyhting."
   (unless (waiting-for-user-input-p)
     (message "%s" (apply 'mu4e-format frm args))))
 
+(defun mu4e-error (frm &rest args)
+  "Create [mu4e]-prefixed error based on format FRM and ARGS."
+  (mu4e-log 'error (apply 'mu4e-format frm args))
+  (message "%s" (apply 'mu4e-format frm args)))
+ 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
 only."
@@ -110,7 +117,7 @@ Function will return the cdr of the list element."
 	      (lambda (option)
 		;; try to detect old-style options, and warn
 		(when (characterp (car-safe (cdr-safe option)))
-		  (error (concat "Please use the new format for options/actions; "
+		  (mu4e-error (concat "Please use the new format for options/actions; "
 			   "see the manual")))
 		(let* ((kar (substring (car option) 0 1))
 			(val (cdr option)))
@@ -128,7 +135,7 @@ Function will return the cdr of the list element."
 	    (find-if
 	      (lambda (option) (eq response (string-to-char (car option))))
 	      options)))
-    (unless chosen (error "%S not found" response))
+    (unless chosen (mu4e-error "%S not found" response))
     (cdr chosen)))
 
 
@@ -180,7 +187,7 @@ list of maildirs will not change until you restart mu4e."
 name. If the special shortcut 'o' (for _o_ther) is used, or if
 `mu4e-maildir-shortcuts is not defined, let user choose from all
 maildirs under `mu4e-maildir."
-  (unless mu4e-maildir (error "`mu4e-maildir' is not defined"))
+  (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not mu4e-maildir-shortcuts)
       (ido-completing-read prompt
@@ -201,7 +208,7 @@ maildirs under `mu4e-maildir."
 	  (ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
-	    (error "Invalid shortcut '%c'" kar)))))))
+	    (mu4e-error "Invalid shortcut '%c'" kar)))))))
 
 
 (defun mu4e-ask-maildir-check-exists (prompt)
@@ -222,7 +229,7 @@ the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
   (interactive)
   (unless (mu4e~headers-docid-at-point)
-    (error "No message at point."))
+    (mu4e-error "No message at point."))
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	  (target (if (string= (substring target 0 1) "/")
 		    target
@@ -238,7 +245,7 @@ provided, function asks for it."
 (defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
-  (unless mu4e-bookmarks (error "`mu4e-bookmarks' is not defined"))
+  (unless mu4e-bookmarks (mu4e-error "`mu4e-bookmarks' is not defined"))
   (let* ((prompt (mu4e-format "%s" prompt))
 	  (bmarks
 	   (mapconcat
@@ -262,7 +269,7 @@ KAR, or raise an error if none is found."
 	   mu4e-bookmarks)))
    (if chosen-bm
      (nth 0 chosen-bm)
-     (error "Invalid shortcut '%c'" kar))))
+     (mu4e-error "Invalid shortcut '%c'" kar))))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -451,7 +458,7 @@ there is no message at point."
 	   ((eq major-mode 'mu4e-view-mode)
 	     mu4e~view-msg))))
     (if (and (null msg) raise-err)
-      (error "No message at point")
+      (mu4e-error "No message at point")
       msg)))
 
 (defun mu4e-field-at-point (field)
@@ -536,7 +543,7 @@ and update the database afterwards, and show the progress in a
 split-window."
   (interactive)
   (unless mu4e-get-mail-command
-    (error "`mu4e-get-mail-command' is not defined"))
+    (mu4e-error "`mu4e-get-mail-command' is not defined"))
   ;; delete any old update buffer
   (when (buffer-live-p mu4e~update-buffer-name)
     (with-current-buffer mu4e~update-buffer-name
@@ -581,27 +588,27 @@ This is used by the completion function in mu4e-compose."
 (defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
-    (error "Please set `mu4e-mu-binary' to the full path to the mu
+    (mu4e-error "Please set `mu4e-mu-binary' to the full path to the mu
     binary."))
   (unless mu4e-maildir
-    (error "Please set `mu4e-maildir' to the full path to your
+    (mu4e-error "Please set `mu4e-maildir' to the full path to your
     Maildir directory."))
   ;; expand mu4e-maildir, mu4e-attachment-dir
   (setq
     mu4e-maildir (expand-file-name mu4e-maildir)
     mu4e-attachment-dir (expand-file-name mu4e-attachment-dir))
   (unless (mu4e-create-maildir-maybe mu4e-maildir)
-    (error "%s is not a valid maildir directory" mu4e-maildir))
+    (mu4e-error "%s is not a valid maildir directory" mu4e-maildir))
   (dolist (var '( mu4e-sent-folder
 		  mu4e-drafts-folder
 		  mu4e-trash-folder))
     (unless (and (boundp var) (symbol-value var))
-      (error "Please set %S" var))
+      (mu4e-error "Please set %S" var))
     (let* ((dir (symbol-value var)) (path (concat mu4e-maildir dir)))
       (unless (string= (substring dir 0 1) "/")
-	(error "%S must start with a '/'" dir))
+	(mu4e-error "%S must start with a '/'" dir))
       (unless (mu4e-create-maildir-maybe path)
-	(error "%s (%S) does not exist" path var)))))
+	(mu4e-error "%s (%S) does not exist" path var)))))
 
 
 (defun mu4e~start (&optional func)
@@ -617,14 +624,14 @@ FUNC (if non-nil) afterwards."
       ;; explicit version checks are a bit questionable,
       ;; better to check for specific features
       (unless (>= emacs-major-version 23)
-	(error "Emacs >= 23.x is required for mu4e"))
+	(mu4e-error "Emacs >= 23.x is required for mu4e"))
 
       ;; set up the 'pong' handler func
       (lexical-let ((func func))
 	(setq mu4e-pong-func
 	  (lambda (version doccount)
 	    (unless (string= version mu4e-mu-version)
-	      (error "mu server has version %s, but we need %s"
+	      (mu4e-error "mu server has version %s, but we need %s"
 		version mu4e-mu-version))
 	    (when func (funcall func))
 	    (when (and mu4e-update-interval (null mu4e-update-timer))
@@ -676,7 +683,7 @@ discarded if nil. After retrieving mail, update the database. Note,
 function is asynchronous, returns (almost) immediately, and all the
 processing takes part in the background, unless buf is non-nil."
   (unless mu4e-get-mail-command
-    (error "`mu4e-get-mail-command' is not defined"))
+    (mu4e-error "`mu4e-get-mail-command' is not defined"))
   (let* ((process-connection-type t)
 	  (proc (start-process-shell-command
 		 mu4e-update-mail-name buf mu4e-get-mail-command)))
@@ -723,13 +730,15 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 		  (from-server 'font-lock-type-face)
 		  (to-server   'font-lock-function-name-face)
 		  (misc        'font-lock-variable-name-face)
-		  (otherwise   (error "Unsupported log type"))))
+		  (error       'font-lock-warning-face)
+		  (otherwise   (mu4e-error "Unsupported log type"))))
 	      (msg (propertize (apply 'format frm args) 'face msg-face)))
 	(goto-char (point-max))
 	(insert tstamp
 	  (case type
 	    (from-server " <- ")
-	    (to-server   " -> " )
+	    (to-server   " -> ")
+	    (error       " !! ")
 	    (otherwise   " "))
 	  msg "\n")
 
@@ -763,7 +772,7 @@ mu4e logs some of its internal workings to a log-buffer. See
   (interactive)
   (let ((buf (get-buffer mu4e~log-buffer-name)))
     (unless (buffer-live-p buf)
-      (error "No debug log available"))
+      (mu4e-error "No debug log available"))
     (switch-to-buffer buf)))
 
 
@@ -794,9 +803,9 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
       #'(lambda (x)
 	  (cond
 	    ((> x n)
-	      (error "Attachment %d bigger than maximum (%d)" x n))
+	      (mu4e-error "Attachment %d bigger than maximum (%d)" x n))
 	    ((< x 1)
-	      (error "Attachment number must be greater than 0 (%d)" x))))
+	      (mu4e-error "Attachment number must be greater than 0 (%d)" x))))
       list)))
 
 

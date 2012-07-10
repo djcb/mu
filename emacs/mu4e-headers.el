@@ -292,7 +292,7 @@ if provided, or at the end of the buffer otherwise."
 			   (:date (format-time-string mu4e-headers-date-format val))
 			   (:flags (mu4e-flags-to-string val))
 			   (:size (mu4e-display-size val))
-			   (t (error "Unsupported header field (%S)" field)))))
+			   (t (mu4e-error "Unsupported header field (%S)" field)))))
 		 (when str
 		   (if (not width)
 		     str
@@ -534,7 +534,6 @@ after the end of the search results."
 		  (name (plist-get info :shortname))
 		  (help (plist-get info :help))
 		  (width (cdr item)))
-	    (message "%S %S" item info)
 	    (concat
 	      (propertize
 		(if width
@@ -632,12 +631,12 @@ with DOCID which must be present in the headers buffer."
   (with-current-buffer mu4e~headers-buffer
     (let ((inhibit-read-only t) (oldpoint (point)))
       (unless (mu4e~headers-goto-docid docid)
-	(error "Cannot find message with docid %S" docid))
+	(mu4e-error "Cannot find message with docid %S" docid))
       ;; now, we're at the beginning of the header, looking at
       ;; <docid>\004
       ;; (which is invisible). jump past that…
       (unless (re-search-forward mu4e~headers-docid-post nil t)
-	(error "Cannot find the `mu4e~headers-docid-post' separator"))
+	(mu4e-error "Cannot find the `mu4e~headers-docid-post' separator"))
 
       ;; clear old marks, and add the new ones.
       (let ((msg (get-text-property (point) 'msg)))
@@ -653,7 +652,7 @@ with DOCID which must be present in the headers buffer."
 (defun mu4e~headers-add-header (str docid point &optional msg)
   "Add header STR with DOCID to the buffer at POINT if non-nil, or
 at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
-  (unless docid (error "Invalid message"))
+  (unless docid (mu4e-error "Invalid message"))
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (let ((inhibit-read-only t)
@@ -676,7 +675,7 @@ non-nill, don't raise an error when the docid is not found."
       (let ((inhibit-read-only t))
 	(delete-region (line-beginning-position) (line-beginning-position 2)))
       (unless ignore-missing
-	(error "Cannot find message with docid %S" docid)))))
+	(mu4e-error "Cannot find message with docid %S" docid)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~headers-update-global-mode-string ()
   "Determine the mode string for the headers buffers (based on the
@@ -729,7 +728,7 @@ the query history stack."
 of `mu4e-split-view', and return a window for the message view."
   (mu4e-hide-other-mu4e-buffers)
   (unless (buffer-live-p mu4e~headers-buffer)
-    (error "No headers buffer available"))
+    (mu4e-error "No headers buffer available"))
   (switch-to-buffer mu4e~headers-buffer)
   ;; kill the existing view win
   (when (buffer-live-p mu4e~view-buffer)
@@ -810,8 +809,10 @@ matching messages with that mark."
 
 (defun mu4e~headers-get-thread-info (msg what)
   "Get WHAT (a symbol, either path or thread-id) for MSG."
-  (let* ((thread (or (plist-get msg :thread)  (error "No thread info found")))
-	  (path  (or (plist-get thread :path)  (error "No threadpath found"))))
+  (let* ((thread (or (plist-get msg :thread)
+		   (mu4e-error "No thread info found")))
+	  (path  (or (plist-get thread :path)
+		   (mu4e-error "No threadpath found"))))
     (case what
       (path path)
       (thread-id
@@ -819,7 +820,7 @@ matching messages with that mark."
 	  ;; the thread id is the first segment of the thread path
 	  (when (string-match "^\\([[:xdigit:]]+\\):?" path)
 	    (match-string 1 path))))
-      (otherwise (error "Not supported")))))
+      (otherwise (mu4e-error "Not supported")))))
 
 
 (defun mu4e-headers-mark-thread (&optional subthread)
@@ -899,11 +900,11 @@ to get it from; it's a symbol, either 'future or 'past."
   (case whence
     (past
       (unless mu4e~headers-query-past
-	(error "No more previous queries"))
+	(mu4e-error "No more previous queries"))
       (pop mu4e~headers-query-past))
     (future
       (unless mu4e~headers-query-future
-	(error "No more next queries"))
+	(mu4e-error "No more next queries"))
       (pop mu4e~headers-query-future))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -964,7 +965,7 @@ the last search expression."
   	      nil 'mu4e~headers-search-hist nil t)))
       (list filter)))
   (unless mu4e~headers-last-query
-    (error "There's nothing to filter"))
+    (mu4e-error "There's nothing to filter"))
   (mu4e-headers-search
     (format "(%s) AND %s" mu4e~headers-last-query filter)))
 
@@ -1039,12 +1040,12 @@ value of `mu4e-split-view': if it's a symbol `horizontal' or
 current window. "
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
-    (error "Must be in mu4e-headers-mode (%S)" major-mode))
+    (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((docid (or (mu4e~headers-docid-at-point)
-		  (error "No message at point")))
+		  (mu4e-error "No message at point")))
 	  (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
-      (error "Cannot get a message view"))
+      (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
     (mu4e~proc-view docid mu4e-view-show-images))) 
@@ -1088,7 +1089,7 @@ determines where the query is taken from and is a symbol, either
 backward (if LINES is negative). If this succeeds, return the new
 docid. Otherwise, return nil."
   (unless (eq major-mode 'mu4e-headers-mode)
-    (error "Must be in mu4e-headers-mode (%S)" major-mode))
+    (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let ((succeeded (zerop (forward-line lines)))
 	 (docid (mu4e~headers-docid-at-point)))
     ;; move point, even if this function is called when this window is not
@@ -1142,12 +1143,14 @@ N. Otherwise, don't do anything."
 	(horizontal
 	  (let ((newval (+ (or n 1) mu4e-headers-visible-lines)))
 	    (unless (> newval 0)
-	      (error "Cannot make the number of visible lines any smaller"))
+	      (mu4e-error
+		"Cannot make the number of visible lines any smaller"))
 	    (setq mu4e-headers-visible-lines newval)))
 	(vertical
 	  (let ((newval (+ (or n 1) mu4e-headers-visible-columns)))
 	    (unless (> newval 0)
-	      (error "Cannot make the number of visible columns any smaller"))
+	      (mu4e-error
+		"Cannot make the number of visible columns any smaller"))
 	    (setq mu4e-headers-visible-columns newval))))
       (let ((viewwin (mu4e~headers-redraw-get-view-window)))
 	(when (window-live-p viewwin)
@@ -1181,7 +1184,7 @@ region if there is a region, then move to the next message."
 to ensure we don't disturb other windows."
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
-    (error "Must be in mu4e-headers-mode (%S)" major-mode))
+    (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (mu4e-mark-handle-when-leaving)
   (let ((curbuf (current-buffer)) (curwin (selected-window))
 	 (headers-visible))

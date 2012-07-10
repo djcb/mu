@@ -337,17 +337,9 @@ headers)."
   :group 'mu4e-faces)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; internal variables / constants
- 
-(defconst mu4e-logo
-  (propertize "mu4e" 'face 'mu4e-title-face)
-  "A propertized string for the mu4e 'logo'.")
 
-(defconst mu4e-prefix
-  (concat "[" mu4e-logo "]")
-  "Prefix for mu4e minibuffer input.")
- 
+
+;; headers info
 (defconst mu4e-header-info
   '( (:attachments   .
        ( :name "Attachments"
@@ -410,9 +402,7 @@ list, and the fields the message view). Most fields should be
 self-explanatory. A special one is `:from-or-to', which is equal to
 `:from' unless `:from' matches `mu4e-user-mail-address-regexp', in
 which case it will be equal to `:to'.")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -441,7 +431,7 @@ mu4e starts.")
 ;; from the server
 (defun mu4e~default-handler (&rest args)
   "*internal* Dummy handler function."
-  (error "Not handled: %S" args))
+  (mu4e-error "Not handled: %S" args))
 
 (defvar mu4e-error-func 'mu4e~default-handler
   "A function called for each error returned from the server

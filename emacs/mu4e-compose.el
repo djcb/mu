@@ -79,10 +79,10 @@ replying to messages."
   "Insert the last captured message file as an attachment."
     (interactive)
   (unless mu4e-captured-message
-    (error "No message has been captured"))
+    (mu4e-error "No message has been captured"))
   (let ((path (plist-get mu4e-captured-message :path)))
     (unless (file-exists-p path)
-      (error "Captured message file not found"))
+      (mu4e-error "Captured message file not found"))
     (mml-attach-file
       path
       "application/octet-stream"
@@ -214,7 +214,7 @@ message. Return nil if there are no recipients for the particular field."
       (:cc
 	(mu4e~compose-create-cc-lst origmsg reply-all))
       (otherwise
-	(error "Unsupported field")))))
+	(mu4e-error "Unsupported field")))))
 
 
 (defun mu4e~compose-from-construct ()
@@ -368,7 +368,7 @@ use the new docid. Returns the full path to the new message."
 		 (reply   (mu4e~compose-reply-construct msg))
 		 (forward (mu4e~compose-forward-construct msg))
 		 (new     (mu4e~compose-newmsg-construct))
-		 (t (error "unsupported compose-type %S" compose-type)))))
+		 (t (mu4e-error "unsupported compose-type %S" compose-type)))))
     (when str
       (with-current-buffer (find-file-noselect draft)
 	(insert str)))
@@ -396,7 +396,7 @@ needed, set the Fcc header, and register the handler function."
 	     (trash mu4e-trash-folder)
 	     (sent mu4e-sent-folder)
 	     (otherwise
-	       (error "unsupported value '%S' `mu4e-sent-messages-behavior'."
+	       (mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
 		 mu4e-sent-messages-behavior))))
 	  (fccfile (and mdir
 		     (concat mu4e-maildir mdir "/cur/"
@@ -555,15 +555,15 @@ The initial STR would be created from either
 `mu4e~compose-reply-construct', ar`mu4e~compose-forward-construct'
 or `mu4e~compose-newmsg-construct'. The editing buffer is using
 Gnus' `message-mode'."
-  (unless mu4e-maildir       (error "mu4e-maildir not set"))
-  (unless mu4e-drafts-folder (error "mu4e-drafts-folder not set"))
+  (unless mu4e-maildir       (mu4e-error "mu4e-maildir not set"))
+  (unless mu4e-drafts-folder (mu4e-error "mu4e-drafts-folder not set"))
   (let ((inhibit-read-only t)
 	 (draft
 	   (if (member compose-type '(reply forward new))
 	     (mu4e~compose-open-new-draft-file compose-type original-msg)
 	     (if (eq compose-type 'edit)
 	       (plist-get original-msg :path)
-	       (error "unsupported compose-type %S" compose-type)))))
+	       (mu4e-error "unsupported compose-type %S" compose-type)))))
     (find-file draft)
     ;; insert mail-header-separator, which is needed by message mode to separate
     ;; headers and body. will be removed before saving to disk
@@ -661,7 +661,7 @@ a symbol, one of `reply', `forward', `edit', `new'. All but `new'
 take the message at point as input. Symbol `edit' is only allowed
 for draft messages."
   (unless (member compose-type '(reply forward edit new))
-    (error "Invalid compose type '%S'" compose-type))
+    (mu4e-error "Invalid compose type '%S'" compose-type))
   ;; 'new is special, since it takes no existing message as arg therefore,
   ;; we don't need to call thec backend, and call the handler *directly*
   (if (eq compose-type 'new)
@@ -673,7 +673,7 @@ for draft messages."
       ;; the current line instead
       (unless (or (not (eq compose-type 'edit))
 		(member 'draft (mu4e-field-at-point :flags)))
-	  (error "Editing is only allowed for draft messages"))
+	  (mu4e-error "Editing is only allowed for draft messages"))
       ;; if there's a visible view window, select that before starting
       ;; composing a new message, so that one will be replaced by the
       ;; compose window. The 10-or-so line headers buffer is not a good way
