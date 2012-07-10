@@ -54,7 +54,7 @@
 respective widths in characters. A width of `nil' means
 'unrestricted', and this is best reserved fo the rightmost (last)
 field. For the complete list of available headers, see
-`mu4e-header-names'"
+`mu4e-header-info'."
   :type (list 'symbol)
   :group 'mu4e-headers)
 
@@ -528,17 +528,21 @@ after the end of the search results."
     (cons
       (make-string
 	(+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
-      (map 'list
+      (mapcar
 	(lambda (item)
-	  (let ((field (cdr (assoc (car item) mu4e-header-names)))
-		 (width (cdr item)))
+	  (let* ((info (cadr (assoc (car item) mu4e-header-info)))
+		  (name (plist-get info :shortname))
+		  (help (plist-get info :help))
+		  (width (cdr item)))
+	    (message "%S %S" item info)
 	    (concat
 	      (propertize
 		(if width
-		  (truncate-string-to-width field width 0 ?\s t)
-		  field)
-		'face 'mu4e-header-title-face) " ")))
-	mu4e-headers-fields))))
+		  (truncate-string-to-width name width 0 ?\s t)
+		  name)
+		'face 'mu4e-header-title-face
+		'help-echo help) " ")))
+	mu4e-headers-fields)))) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; higlighting

@@ -455,7 +455,7 @@ there is no message at point."
       msg)))
 
 (defun mu4e-field-at-point (field)
-  "Get FIELD (a symbol, see `mu4e-header-names') for the message at
+  "Get FIELD (a symbol, see `mu4e-header-info') for the message at
 point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point t) field))
 
@@ -635,8 +635,9 @@ FUNC (if non-nil) afterwards."
 	      doccount (if (= doccount 1) "" "s")))))
       ;; send the ping
       (mu4e~proc-ping)
-      ;; get the address list
-      (when mu4e-compose-complete-addresses
+      ;; get the address list if it's not already set.
+      (when (and mu4e-compose-complete-addresses
+	      (not mu4e~contacts-for-completion))
 	(setq mu4e-contacts-func 'mu4e~fill-contacts)
 	(mu4e~proc-contacts
 	  mu4e-compose-complete-only-personal
@@ -651,7 +652,8 @@ FUNC (if non-nil) afterwards."
     (cancel-timer mu4e-update-timer)
     (setq
       mu4e-update-timer nil
-      mu4e~maildir-list nil))
+      mu4e~maildir-list nil
+      mu4e~contacts-for-completion nil))
   (mu4e~proc-kill)
   ;; kill all main/view/headers buffer
   (mapcar
@@ -660,7 +662,6 @@ FUNC (if non-nil) afterwards."
 	(when (member major-mode '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
 	  (kill-buffer))))
     (buffer-list)))
-
 
 (defvar mu4e-update-timer nil
   "*internal* The mu4e update timer.")

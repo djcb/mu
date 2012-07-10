@@ -49,7 +49,7 @@
 (defcustom mu4e-view-fields
   '(:from :to  :cc :subject :flags :date :maildir :attachments)
   "Header fields to display in the message view buffer. For the
-complete list of available headers, see `mu4e-header-names'."
+complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
   :group 'mu4e-view)
 
@@ -104,11 +104,12 @@ buffer."
      ("view as pdf"     . mu4e-action-view-as-pdf))
   "List of actions to perform on messages in view mode. The actions
 are of the form:
-   (NAME SHORTCUT FUNC)
+   (NAME FUNC)
 where:
 * NAME is the name of the action (e.g. \"Count lines\")
-* SHORTCUT is a one-character shortcut to call this action
-* FUNC is a function which receives a message plist as an argument.")
+* FUNC is a function which receives a message plist as an argument.
+
+The first letter of NAME is used as a shortcut character.")
 
 (defvar mu4e-view-attachment-actions
   '( ("wopen-with" . mu4e-view-open-attachment-with)
@@ -116,12 +117,13 @@ where:
      ("|pipe"      . mu4e-view-pipe-attachment))
   "List of actions to perform on message attachments. The actions
 are of the form:
-   (NAME SHORTCUT FUNC)
+   (NAME  FUNC)
 where:
     * NAME is the name of the action (e.g. \"Count lines\")
-    * SHORTCUT is a one-character shortcut to call this action
-    * FUNC is a function which receives two arguments: the message
-      plist and the attachment number.")
+     * FUNC is a function which receives two arguments: the message
+      plist and the attachment number.
+
+The first letter of NAME is used as a shortcut character.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -157,13 +159,12 @@ plist."
   (concat
     (mapconcat
       (lambda (field)
-	(let ((fieldname (cdr (assoc field mu4e-header-names)))
-	       (fieldval (plist-get msg field)))
+	(let ((fieldval (plist-get msg field)))
 	  (case field
-	    (:subject  (mu4e~view-construct-header fieldname fieldval))
-	    (:path     (mu4e~view-construct-header fieldname fieldval))
-	    (:maildir  (mu4e~view-construct-header fieldname fieldval))
-	    (:flags    (mu4e~view-construct-header fieldname
+	    (:subject  (mu4e~view-construct-header field fieldval))
+	    (:path     (mu4e~view-construct-header field fieldval))
+	    (:maildir  (mu4e~view-construct-header field fieldval))
+	    (:flags    (mu4e~view-construct-header field
 			 (if fieldval (format "%S" fieldval) "")))
 	    ;; contact fields
 	    (:to       (mu4e~view-construct-contacts msg field))
@@ -184,12 +185,12 @@ plist."
 	      (let ((datestr
 		      (when fieldval (format-time-string mu4e-view-date-format
 				       fieldval))))
-		(if datestr (mu4e~view-construct-header fieldname datestr) "")))
+		(if datestr (mu4e~view-construct-header field datestr) "")))
 	    ;; size
 	    (:size
 	      (let* (size (mu4e-view-size msg)
 		      (sizestr (when size (format "%d bytes" size))))
-		(if sizestr (mu4e~view-construct-header fieldname sizestr))))
+		(if sizestr (mu4e~view-construct-header field sizestr))))
 	    ;; attachments
 	    (:attachments (mu4e~view-construct-attachments msg))
 	    (t               (error "Unsupported field: %S" field)))))
@@ -237,47 +238,46 @@ marking if it still had that."
 	  (mu4e~view-mark-as-read-maybe))))))
 
 
-(defun mu4e~view-construct-header (key val &optional dont-propertize-val)
-    "Return header KEY with value VAL if VAL is non-nil. If
-DONT-PROPERTIZE-VAL is non-nil, do not add text-properties to VAL."
-    (if val
-      (with-temp-buffer
-	(insert (propertize key 'face 'mu4e-view-header-key-face) ": "
-	  (if dont-propertize-val
-	    val
-	    (propertize val 'face 'mu4e-view-header-value-face)) "\n")
-	;; temporarily set the fill column <margin> positions to the right, so
-	;; we can indent following lines with positions
-	(let*((margin 1) (fill-column (- fill-column margin)))
-	  (fill-region (point-min) (point-max))
-	  (goto-char (point-min))
-	  (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
-	    (indent-to-column margin)))
-	(buffer-string))
-      ""))
+(defun mu4e~view-construct-header (field val &optional dont-propertize-val)
+  "Return header field FIELD (as in `mu4e-header-info') with value
+VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
+add text-properties to VAL."
+  (let* ((info (cadr (assoc field mu4e-header-info)))
+	  (key (plist-get info :name))
+	  (help (plist-get info :help)))
+    (if (and val (> (length val) 0))
+    (with-temp-buffer
+      (insert (propertize key
+		'face 'mu4e-view-header-key-face
+		'help-echo help) ": "
+	(if dont-propertize-val
+	  val
+	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
+      ;; temporarily set the fill column <margin> positions to the right, so
+      ;; we can indent following lines with positions
+      (let*((margin 1) (fill-column (- fill-column margin)))
+	(fill-region (point-min) (point-max))
+	(goto-char (point-min))
+	(while (and (zerop (forward-line 1)) (not (looking-at "^$")))
+	  (indent-to-column margin)))
+      (buffer-string))
+    "")))
 
 (defun mu4e~view-construct-contacts (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
-  (let* ((lst (plist-get msg field))
-	  (fieldname (cdr (assoc field mu4e-header-names)))
-	  (contacts
-	    (and lst
-	      (mapconcat
-		(lambda(c)
-		  (let ((name (car c)) (email (cdr c)))
-		    (propertize
-		      (if name
-			(if mu4e-view-show-addresses
-			  (format "%s <%s>" name email)
-			  (format "%s" name))
-			(format "%s" email))
-		      'help-echo email)))
-		lst ", "))))
-    (if contacts
-      (mu4e~view-construct-header fieldname contacts)
-      "")))
-
-
+  (mu4e~view-construct-header field
+    (mapconcat
+      (lambda(c)
+	(let ((name (car c)) (email (cdr c)))
+	  (propertize
+	    (if name
+	      (if mu4e-view-show-addresses
+		(format "%s <%s>" name email)
+		(format "%s" name))
+	      (format "%s" email))
+	    'help-echo email)))
+      (plist-get msg field) ", ")))
+ 
 (defun mu4e~view-open-save-attach-func (msg attachnum is-open)
   "Return a function that offers to save attachment NUM. If IS-OPEN
 is nil, and otherwise open it."

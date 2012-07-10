@@ -150,12 +150,11 @@ the address fields (this excludes mailing list messages)."
   :type 'string
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-complete-ignore-address-regexp "noreply"
+(defcustom mu4e-compose-complete-ignore-address-regexp "no-?reply"
   "Ignore any e-mail addresses for completion if they match this
 regexp."
   :type 'string
   :group 'mu4e-compose)
-
 
 
 ;; Folders
@@ -331,8 +330,6 @@ flag set)."
   :group 'mu4e-faces)
 
 
-
-
 (defface mu4e-system-face
   '((t :inherit font-lock-comment-face :slant italic))
   "Face for system message (such as the footers for message
@@ -342,27 +339,7 @@ headers)."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal variables / constants
-
-(defconst mu4e-header-names
-  '( (:attachments   .  "Attach")
-     (:bcc           .  "Bcc")
-     (:cc            .  "Cc")
-     (:date          .  "Date")
-     (:flags         .  "Flags")
-     (:from          .  "From")
-     (:from-or-to    .  "From/To")
-     (:maildir       .  "Maildir")
-     (:path          .  "Path")
-     (:subject       .  "Subject")
-     (:to            .  "To"))
-"An alist of all possible header fields; this is used in the UI (the
-column headers in the header list, and the fields the message
-view). Most fields should be self-explanatory. A special one is
-`:from-or-to', which is equal to `:from' unless `:from' matches
-`mu4e-user-mail-address-regexp', in which case it will be equal to
-`:to'.")
-
-
+ 
 (defconst mu4e-logo
   (propertize "mu4e" 'face 'mu4e-title-face)
   "A propertized string for the mu4e 'logo'.")
@@ -370,30 +347,69 @@ view). Most fields should be self-explanatory. A special one is
 (defconst mu4e-prefix
   (concat "[" mu4e-logo "]")
   "Prefix for mu4e minibuffer input.")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; internal variables / constants
-
-(defconst mu4e-header-names
-  '( (:attachments   .  "Attach")
-     (:bcc           .  "Bcc")
-     (:cc            .  "Cc")
-     (:date          .  "Date")
-     (:flags         .  "Flags")
-     (:from          .  "From")
-     (:from-or-to    .  "From/To")
-     (:maildir       .  "Maildir")
-     (:path          .  "Path")
-     (:subject       .  "Subject")
-     (:to            .  "To"))
-"An alist of all possible header fields; this is used in the UI (the
-column headers in the header list, and the fields the message
-view). Most fields should be self-explanatory. A special one is
-`:from-or-to', which is equal to `:from' unless `:from' matches
-`mu4e-user-mail-address-regexp', in which case it will be equal to
-`:to'.")
-
-
+ 
+(defconst mu4e-header-info
+  '( (:attachments   .
+       ( :name "Attachments"
+	 :shortname "Atts"
+	 :help "Message attachments"))
+     (:bcc           .
+       ( :name "Bcc"
+	 :shortname "Bcc"
+	 :help "Blind Carbon-Copy recipients for the message"
+	 :sortable t))
+     (:cc
+       ( :name "Cc"
+	 :shortname "Cc"
+	 :help "Carbon-Copy recipients for the message"
+	 :sortable t))
+     (:date
+       ( :name "Date"
+	 :shortname "Date"
+	 :help "Date/time when the message was written"
+	 :sortable t))
+     (:flags
+       ( :name "Flags"
+	 :shortname "Flgs"
+	 :help "Flags for the message"
+	 :sortable t))
+     (:from
+       ( :name "From"
+	 :shortname "From"
+	 :help "The sender of the message"
+	 :sortable t))
+     (:from-or-to
+       ( :name "From/To"
+	 :shortname "From/To"
+	 :help "Sender of the message if it's not me; otherwise
+	 the recipient"
+	 :sortable t))
+     (:maildir
+       ( :name "Maildir"
+	 :shortname "Maildir"
+	 :help "Maildir for this message"
+	 :sortable t))
+     (:path
+       ( :name "Path"
+	 :shortname "Path"
+	 :help "Full filesystem path to the message"
+	 :sortable t))
+     (:subject
+       ( :name "Subject"
+	 :shortname "S"
+	 :help "Subject of the message"
+	 :sortable t))
+     (:to
+       ( :name "To"
+	 :shortname "T"
+	 :help "Recipient of the message"
+	 :sortable t)))     
+  "An alist of all possible header fields and information about
+them.; this is used in the UI (the column headers in the header
+list, and the fields the message view). Most fields should be
+self-explanatory. A special one is `:from-or-to', which is equal to
+`:from' unless `:from' matches `mu4e-user-mail-address-regexp', in
+which case it will be equal to `:to'.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
