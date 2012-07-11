@@ -2082,6 +2082,30 @@ matching a certain regular expression.
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
 address management with @t{BBDB}; instead, we recommend using @t{mu4e}'s
 built-in @ref{Address autocompletion}.
+@item @emph{How can I automatically set the @t{From:} address for a
+reply-message, based on some field in the original?} Currently, you cannot do
+that automatically. It is possible to do it non-automatically though, with
+something like:
+@lisp
+(defun mu4e-change-from ()
+  "Change the from header."
+  (interactive)
+  (save-excursion
+    (when (message-goto-from)
+      (message-delete-line))
+    (goto-char (point-min))
+    (insert
+      (concat "From: "
+	(ido-completing-read "From: "
+	  '("Mail1 <foo@@bar.com>"
+	    "Mail2 <test@@example.com>"
+	     "Mail3 <another@@cuux.org>"))
+	"\n"))))
+@end lisp
+@item @emph{And what about customizable folders for sent messages, based on
+  the @t{From:} header?} This is currently not possible either, but you can periodically move messages from the main sent-folder to the specific
+sent-folders. You can easily find those messages with a query like
+@t{maildir:/sent from:myaddress@@example.com}.
 @item @emph{mu4e seems to return a mere subset of all matches - how can I get
 all?}. Indeed, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
