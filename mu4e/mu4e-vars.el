@@ -346,7 +346,8 @@ headers)."
   '( (:attachments .
        ( :name "Attachments"
 	 :shortname "Atts"
-	 :help "Message attachments"))
+	 :help "Message attachments"
+	 :sortable nil))
      (:bcc .
        ( :name "Bcc"
 	 :shortname "Bcc"
@@ -366,7 +367,7 @@ headers)."
        ( :name "Flags"
 	 :shortname "Flgs"
 	 :help "Flags for the message"
-	 :sortable t))
+	 :sortable nil))
      (:from .
        ( :name "From"
 	 :shortname "From"
@@ -377,7 +378,7 @@ headers)."
 	 :shortname "From/To"
 	 :help "Sender of the message if it's not me; otherwise
 	 the recipient"
-	 :sortable t))
+	 :sortable nil))
      (:maildir .
        ( :name "Maildir"
 	 :shortname "Maildir"

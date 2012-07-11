@@ -508,6 +508,17 @@ after the end of the search results."
 
 (fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
 
+;; borrowed from `tabulated-list'
+(defvar mu4e~glyphless-char-display
+  (let ((table (make-char-table 'glyphless-char-display nil)))
+    (set-char-table-parent table glyphless-char-display)
+    ;; Some text terminals can't display the Unicode arrows; be safe.
+    (aset table 9650 (cons nil "^"))
+    (aset table 9660 (cons nil "v"))
+    table)
+  "The `glyphless-char-display' table in mu4e heders buffers.")
+
+
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
   (cons
@@ -517,12 +528,28 @@ after the end of the search results."
       (lambda (item)
 	(let* ((field (car item)) (width (cdr item))
 		(info (cdr (assoc field mu4e-header-info)))
+		(sortable (plist-get info :sortable))
 		(help (plist-get info :help))
 		;; triangle to mark the sorted-by column
 		(triangle
-		  (when (eq (car item) mu4e-headers-sortfield)
-		    (if mu4e-headers-sort-revert "▼" "▲")))
-		(name (concat triangle (plist-get info :shortname))))
+		  (when (and sortable (eq (car item) mu4e-headers-sortfield))
+		    (if mu4e-headers-sort-revert "▼ " "▲ ")))
+		(name (concat triangle (plist-get info :shortname)))
+		(map (make-sparse-keymap)))
+	  (when sortable
+	    (define-key map [header-line mouse-1]
+	      (lambda (&optional e)
+		;; getting the field, inspired by `tabulated-list-col-sort'
+		(interactive "e")
+		(let* ((obj (posn-object (event-start e))) 
+			(field
+			  (and obj (get-text-property 0 'field (car obj)))))
+		  (if (eq field mu4e-headers-sortfield)
+		    (setq mu4e-headers-sort-revert (not mu4e-headers-sort-revert))
+		    (setq mu4e-headers-sortfield field))
+		  ;;(message "REFRESH! %S %S" obj field)
+		  )
+		(mu4e-headers-rerun-search))))
 	  (concat
 	    (propertize
 	      (if width
@@ -530,7 +557,9 @@ after the end of the search results."
 		name)
 	      'face 'mu4e-header-title-face
 	      'help-echo help
-	      'mouse-face 'highlight) " ")))
+	      'mouse-face (when sortable 'highlight)
+	      'keymap (when sortable map)
+	      'field field) " ")))
       mu4e-headers-fields)))
 
  
@@ -543,13 +572,14 @@ after the end of the search results."
   (make-local-variable 'mu4e~headers-proc)
   (make-local-variable 'mu4e~highlighted-docid)
   (make-local-variable 'global-mode-string)
-  (make-local-variable 'hl-line-face)
-
+  (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
+  (set (make-local-variable 'glyphless-char-display)
+    mu4e~glyphless-char-display) 
+ 
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
     overwrite-mode 'overwrite-mode-binary
-    hl-line-face 'mu4e-header-highlight-face
     header-line-format (mu4e~header-line-format))
 
   (mu4e~mark-initialize) ;; initialize the marking subsystem
@@ -689,24 +719,7 @@ non-nill, don't raise an error when the docid is not found."
       (unless ignore-missing
 	(mu4e-error "Cannot find message with docid %S" docid)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun mu4e~headers-update-global-mode-string ()
-  "Determine the mode string for the headers buffers (based on the
-last query, sorting settings."
-  (let* ((cell (find-if
-		(lambda (cell)
-		  (eq (cdr cell) mu4e-headers-sortfield))
-		mu4e~headers-sortfield-choices))
-	  (optchar (substring (car cell) 0 1)))
-    (setq global-mode-string
-      (concat
-	(propertize mu4e~headers-last-query 'face 'mu4e-title-face)
-	"("
-	optchar
-	(if mu4e-headers-sort-revert "d" "a")
-	(when mu4e-headers-show-threads "T")
-	(when mu4e-headers-full-search "F")
-	")"))))
-
+ 
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If IGNORE-HISTORY is true, do *not* update
@@ -725,8 +738,8 @@ the query history stack."
       (setq
 	mu4e~headers-buffer buf
 	mode-name "mu4e-headers"
-	mu4e~headers-last-query expr)
-      (mu4e~headers-update-global-mode-string))
+	mu4e~headers-last-query expr
+	global-mode-string (propertize mu4e~headers-last-query 'face 'mu4e-title-face)))
     (switch-to-buffer buf)
     (mu4e~proc-find
       (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
