@@ -12,7 +12,4 @@
    there's also the [[http://groups.google.com/group/mu-discuss][mu mailing list]].
 
    [Press *q* to quit this buffer]
-
-# Local Variables:
-# mode: org; org-startup-folded: nil
-# End:
+ 
