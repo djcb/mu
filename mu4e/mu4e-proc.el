@@ -313,7 +313,7 @@ sexp, which are handled my `mu4e-error-func', respectively."
 
 (defun mu4e~proc-find (query threads sortfield revert maxnum)
   "Start a database query for QUERY. If THREADS is non-nil, show
-results in threaded fasion, SORTFIELD is a symmbol describing the
+results in threaded fasion, SORTFIELD is a symbol describing the
 field to sort by (or nil); see `mu4e~headers-sortfield-choices'. If
 REVERT is non-nil, sort Z->A instead of A->Z. MAXNUM determines the
 maximum number of results to return, or nil for 'unlimited'. For
@@ -324,7 +324,8 @@ will be called for, resp., a message (header row) or an error."
     "find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d"
     query
     (if threads "true" "false")
-    (format "%S" sortfield)
+    ;; sortfield is e.g. ':subject'; this removes the ':'
+    (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
     (if revert "true" "false")
     (if maxnum maxnum -1)))
 

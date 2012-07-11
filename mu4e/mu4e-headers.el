@@ -108,7 +108,7 @@ match.
 * PARAM-FUNC is function that is evaluated once, and its value is then passed to
 PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
-(defvar mu4e-headers-sortfield 'date
+(defvar mu4e-headers-sortfield :date
   "Field to sort the headers by. Field must be a symbol, one of:
      date, subject, size, prio, from, to.")
 
@@ -140,12 +140,12 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
   "The view window connected to this headers view.")
  
 (defvar mu4e~headers-sortfield-choices
-  '( ("date"	. date)
-     ("from"	. from)
-     ("prio"	. prio)
-     ("zsize"	. size)
-     ("subject"	. subject)
-     ("to"	. to))
+  '( ("date"	. :date)
+     ("from"	. :from)
+     ("prio"	. :prio)
+     ("zsize"	. :size)
+     ("subject"	. :subject)
+     ("to"	. :to))
   "List of cells describing the various sort-options (in the format
   needed for `mu4e-read-option'.")
  
@@ -508,7 +508,32 @@ after the end of the search results."
 
 (fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
 
+(defun mu4e~header-line-format ()
+  "Get the format for the header line."
+  (cons
+    (make-string
+      (+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
+    (mapcar
+      (lambda (item)
+	(let* ((field (car item)) (width (cdr item))
+		(info (cdr (assoc field mu4e-header-info)))
+		(help (plist-get info :help))
+		;; triangle to mark the sorted-by column
+		(triangle
+		  (when (eq (car item) mu4e-headers-sortfield)
+		    (if mu4e-headers-sort-revert "▼" "▲")))
+		(name (concat triangle (plist-get info :shortname))))
+	  (concat
+	    (propertize
+	      (if width
+		(truncate-string-to-width name width 0 ?\s t)
+		name)
+	      'face 'mu4e-header-title-face
+	      'help-echo help
+	      'mouse-face 'highlight) " ")))
+      mu4e-headers-fields)))
 
+ 
 (define-derived-mode mu4e-headers-mode special-mode
     "mu4e:headers"
   "Major mode for displaying mu4e search results.
@@ -524,33 +549,16 @@ after the end of the search results."
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
     overwrite-mode 'overwrite-mode-binary
-    hl-line-face 'mu4e-header-highlight-face)
-  (mu4e~mark-initialize) ;; initialize the marking subsystem
-  (hl-line-mode 1)
-  
-  (setq header-line-format
-    (cons
-      (make-string
-	(+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
-      (mapcar
-	(lambda (item)
-	  (let* ((info (cdr (assoc (car item) mu4e-header-info)))
-		  (name (plist-get info :shortname))
-		  (help (plist-get info :help))
-		  (width (cdr item)))
-	    (concat
-	      (propertize
-		(if width
-		  (truncate-string-to-width name width 0 ?\s t)
-		  name)
-		'face 'mu4e-header-title-face
-		'help-echo help) " ")))
-	mu4e-headers-fields)))) 
+    hl-line-face 'mu4e-header-highlight-face
+    header-line-format (mu4e~header-line-format))
 
+  (mu4e~mark-initialize) ;; initialize the marking subsystem
+  (hl-line-mode 1))
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; higlighting
 (defvar mu4e~highlighted-docid nil
-  "*internal* The highlighted docid")
+  "The highlighted docid")
 
 (defun mu4e~headers-highlight (docid)
   "Highlight the header with DOCID, or do nothing if it's not
