@@ -1,3 +1,5 @@
+#+STARTUP: showall
+
 * TODO (fixes, ideas, etc.)
 
 ** Future stuff
@@ -40,7 +42,6 @@
   - add sort buttons to header labels (and do the sorting)
   - open links to mails through headers-mode somehow (i.e..,
     mu4e-view-message-with-msgid)
-    
 
 ** Done (0.9.9)
 
@@ -51,6 +52,11 @@
   - tooltips in header labels
   - tooltip for flags field
 
+
+* Done
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
 
 ** Done (0.8.9.5)
 
@@ -90,6 +96,7 @@
   - *FIX* message interference
   - *FIX* emacs23.2+ auto-completion
 
+
 # Local Variables:
-# mode: org; org-startup-folded: nil
+# mode: org
 # End:
