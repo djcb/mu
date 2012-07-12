@@ -229,9 +229,8 @@ config_options_group_find (void)
 		 "'sexp', 'xquery')", NULL},
 		{"exec", 'e', 0, G_OPTION_ARG_STRING, &MU_CONFIG.exec,
 		 "execute command on each match message", NULL},
-		{"include-unreable", 0, 0, G_OPTION_ARG_NONE,
-		 &MU_CONFIG.include_unreadable,
-		 "don't ignore messages without a disk file (false)", NULL},
+		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
+		 "only show messages whose m_time > T (t_time)", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 

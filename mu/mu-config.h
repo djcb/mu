@@ -53,7 +53,9 @@ enum _MuConfigFormat {
 	/* for find */
 	MU_CONFIG_FORMAT_LINKS,		/* output as symlinks */
 	MU_CONFIG_FORMAT_XML,		/* output xml */
-	MU_CONFIG_FORMAT_XQUERY		/* output the xapian query */
+	MU_CONFIG_FORMAT_XQUERY,	/* output the xapian query */
+
+	MU_CONFIG_FORMAT_EXEC		/* execute some command */
 };
 typedef enum _MuConfigFormat MuConfigFormat;
 
@@ -129,17 +131,18 @@ struct _MuConfig {
 	char		*exec;		/* command to execute on the
 					 * files for the matched
 					 * messages */
-	gboolean        include_unreadable; /* don't ignore messages
-					     * without a disk file */
+	/* for find and cind */
+	time_t            after;          /* only show messages or
+					   * adresses last seen after
+					   * T */
 
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between
 					   * multiple messages in mu
 					   * view */
-	/* options for cfind */
+	/* options for cfind (and 'find' --> "after") */
 	gboolean          personal;       /* only show 'personal' addresses */
-	time_t            after;          /* only show addresses last
-					   * seen after T */
+	/* also 'after' --> see above */
 
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */

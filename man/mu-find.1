@@ -397,6 +397,20 @@ inserts a \fI.noindex\fR file, to exclude the directory from \fBmu
 index\fR.
 
 .TP
+\fB\-\-after=\fR\fI<timestamp>\fR only show messages whose message files were
+last modified (\fBmtime\fR) after \fI<timestamp>\fR. \fI<timestamp>\fR is a
+UNIX \fBtime_t\fR value, the number of seconds since 1970-01-01 (in UTC).
+
+From the command line, you can use the \fBdate\fR command to get this
+value. For example, only consider messages modified (or created) in the last 5
+minutes, you could specify
+.nf
+  --after=`date +%s --date='5 min ago'`
+.fi
+This is assuming the GNU \fBdate\fR command.
+
+
+.TP
 \fB\-\-exec\fR=\fI<command>\fR
 the \fB\-\-exec\fR command causes the \fIcommand\fR to be executed on each
 matched message; for example, to see the raw text of all messages
