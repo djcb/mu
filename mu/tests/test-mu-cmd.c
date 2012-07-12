@@ -248,32 +248,28 @@ test_mu_find_links (void)
 		"mime:message/rfc822", MU_PROGRAM, DBPATH, tmpdir);
 
 	if (g_test_verbose())
-		g_printerr ("%s\n", cmdline);
+		g_print ("cmdline: %s\n", cmdline);
 
 	g_assert (g_spawn_command_line_sync (cmdline,
 					     &output, &erroutput,
 					     NULL, NULL));
-	if (g_test_verbose())
-		g_print ("\nOutput:\n%s", output);
-
-	/* there should be no errors */
+ 	/* there should be no errors */
 	g_assert_cmpuint (newlines_in_output(output),==,0);
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
 	g_free (output);
 	g_free (erroutput);
 
+	/* now we try again, we should get a line of error output,
+	 * when we find the first target file already exists */
 
+	if (g_test_verbose())
+		g_print ("cmdline: %s\n", cmdline);
 
-	/* now we try again, we should get 2 + 1 lines of error output,
-	 * because the target files already exist */
 	g_assert (g_spawn_command_line_sync (cmdline,
 					     &output, &erroutput,
 					     NULL, NULL));
-	if (g_test_verbose())
-		g_print ("\nOutput:\n%s", output);
-
-	g_assert_cmpuint (newlines_in_output(output),==,0);
-	g_assert_cmpuint (newlines_in_output(erroutput),==,3);
+ 	g_assert_cmpuint (newlines_in_output(output),==,0);
+	g_assert_cmpuint (newlines_in_output(erroutput),==,1);
 	g_free (output);
 	g_free (erroutput);
 
@@ -287,7 +283,7 @@ test_mu_find_links (void)
 					     &output, &erroutput,
 					     NULL, NULL));
 	if (g_test_verbose())
-		g_print ("\nOutput:\n%s", output);
+		g_print ("cmdline: %s\n", cmdline);
 	g_assert_cmpuint (newlines_in_output(output),==,0);
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
 	g_free (output);
