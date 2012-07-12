@@ -119,7 +119,7 @@ struct _MuConfig {
 	gboolean	 reverse;	/* sort in revers order (z->a) */
 	gboolean	 threads;       /* show message threads */
 
-	gboolean	 summary;	/* include a summary? */
+	gboolean	 summary;	/* OBSOLETE: use summary_len */
 	int	         summary_len;   /* max # of lines for summary */
 
 	char            *bookmark;	/* use bookmark */
