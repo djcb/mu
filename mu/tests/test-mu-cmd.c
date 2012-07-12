@@ -37,6 +37,8 @@
 
 /* tests for the command line interface, uses testdir2 */
 
+static gchar *DBPATH; /* global */
+
 static gchar*
 fill_database (void)
 {
@@ -82,13 +84,10 @@ newlines_in_output (const char* str)
 static void
 search (const char* query, unsigned expected)
 {
-        gchar *muhome, *cmdline, *output, *erroutput;
-
-	muhome = fill_database ();
-	g_assert (muhome);
+        gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf ("%s find --muhome=%s %s",
-				   MU_PROGRAM, muhome, query);
+				   MU_PROGRAM, DBPATH, query);
 
 	if (g_test_verbose())
 		g_printerr ("%s\n", cmdline);
@@ -110,7 +109,6 @@ search (const char* query, unsigned expected)
 	g_free (output);
 	g_free (erroutput);
 	g_free (cmdline);
-	g_free (muhome);
 }
 
 /* index testdir2, and make sure it adds two documents */
@@ -118,12 +116,9 @@ static void
 test_mu_index (void)
 {
 	MuStore *store;
-	gchar *muhome, *xpath;
+	gchar *xpath;
 
-	muhome = fill_database ();
-	g_assert (muhome != NULL);
-
-	xpath = g_strdup_printf ("%s%c%s", muhome, G_DIR_SEPARATOR, "xapian");
+	xpath = g_strdup_printf ("%s%c%s", DBPATH, G_DIR_SEPARATOR, "xapian");
 
 	store = mu_store_new_read_only (xpath, NULL);
 	g_assert (store);
@@ -131,7 +126,6 @@ test_mu_index (void)
 	g_assert_cmpuint (mu_store_count (store, NULL), ==, 12);
 	mu_store_unref (store);
 
-	g_free (muhome);
 	g_free (xpath);
 }
 
@@ -222,10 +216,7 @@ test_mu_find_03 (void)
 static void /* error cases */
 test_mu_find_04 (void)
 {
-        gchar *muhome, *cmdline, *erroutput;
-
-	muhome = fill_database ();
-	g_assert (muhome);
+        gchar *cmdline, *erroutput;
 
 	cmdline = g_strdup_printf ("%s --muhome=%cfoo%cbar%cnonexistent "
 				   "find f:socrates",
@@ -242,23 +233,19 @@ test_mu_find_04 (void)
 
 	g_free (erroutput);
 	g_free (cmdline);
-	g_free (muhome);
 }
 
 
 static void
 test_mu_find_links (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput, *tmpdir;
+	gchar *cmdline, *output, *erroutput, *tmpdir;
 
-
-	muhome = fill_database ();
-	g_assert (muhome);
 	tmpdir = test_mu_common_get_random_tmpdir();
 
 	cmdline = g_strdup_printf (
 		"%s find --muhome=%s --format=links --linksdir=%s "
-		"mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
+		"mime:message/rfc822", MU_PROGRAM, DBPATH, tmpdir);
 
 	if (g_test_verbose())
 		g_printerr ("%s\n", cmdline);
@@ -295,7 +282,7 @@ test_mu_find_links (void)
 	g_free (cmdline);
 	cmdline = g_strdup_printf (
 		"%s find --muhome=%s --format=links --linksdir=%s --clearlinks "
-		"mime:message/rfc822", MU_PROGRAM, muhome, tmpdir);
+		"mime:message/rfc822", MU_PROGRAM, DBPATH, tmpdir);
 	g_assert (g_spawn_command_line_sync (cmdline,
 					     &output, &erroutput,
 					     NULL, NULL));
@@ -307,7 +294,6 @@ test_mu_find_links (void)
 	g_free (erroutput);
 
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (tmpdir);
 }
 
@@ -803,7 +789,10 @@ main (int argc, char *argv[])
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|
 			   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
+
+	DBPATH = fill_database ();
 	rv = g_test_run ();
+	g_free (DBPATH);
 
 	return rv;
 }
