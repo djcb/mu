@@ -66,12 +66,14 @@ fill_database (void)
 static void
 test_something (const char *what)
 {
-	char *dir, *cmdline, *output, *erroutput;
+	char *dir, *cmdline;
 	gint result;
 
 	dir = fill_database ();
 	cmdline = g_strdup_printf (
-		"%s -q -L %s -e main %s/test-mu-guile.scm --muhome=%s --test=%s",
+		"LD_LIBRARY_PATH=%s %s -q -L %s -e main %s/test-mu-guile.scm "
+		"--muhome=%s --test=%s",
+		MU_GUILE_LIBRARY_PATH,
 		GUILE_BINARY,
 		MU_GUILE_MODULE_PATH,
 		ABS_SRCDIR,
@@ -81,21 +83,9 @@ test_something (const char *what)
 	if (g_test_verbose ())
 		g_print ("cmdline: %s\n", cmdline);
 
-	output = erroutput = NULL;
-	g_assert (g_spawn_command_line_sync (cmdline,
-					     &output, &erroutput,
-					     &result, NULL));
+	result = system (cmdline);
 	g_assert (result == 0);
 
-	if (g_test_verbose ()) {
-		if (output)
-			g_print ("stdout: %s\n", output);
-		if (erroutput)
-			g_print ("stderr: %s\n", erroutput);
-	}
-
-	g_free (output);
-	g_free (erroutput);
 	g_free (dir);
 	g_free (cmdline);
 }

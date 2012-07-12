@@ -27,6 +27,7 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	-DMU_TESTMAILDIR3=\"${top_srcdir}/lib/tests/testdir3\"	\
 	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"		\
 	-DMU_GUILE_MODULE_PATH=\"${top_srcdir}/guile/mu\"       \
+	-DMU_GUILE_LIBRARY_PATH=\"${abs_top_builddir}/guile/.libs\" \
 	-DABS_CURDIR=\"${abs_builddir}\"			\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
@@ -47,3 +48,5 @@ BUILT_SOURCES=					\
 	dummy.cc
 dummy.cc:
 	touch dummy.cc
+
+EXTRA_DIST=test-mu-guile.scm
