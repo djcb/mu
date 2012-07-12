@@ -252,8 +252,6 @@ AM_CONDITIONAL(BUILD_WIDGETS, [test "x$build_webkit" = "xyes" -a "x$have_gio" = 
 
 
 
-
-
 ###############################################################################
 # check for guile 2.0 & guile-snarf
 build_guile=no
@@ -265,13 +263,20 @@ AS_IF([test "x$enable_guile" != "xno"], [
    AC_SUBST(GUILE_CFLAGS)
    AC_SUBST(GUILE_LIBS)
 
+   GUILE_EXECDIR="`${PKG_CONFIG} guile-2.0 --variable=exec_prefix`/bin"
+
    AS_IF([test "x$build_guile" = "xyes"],[
-      AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$PATH])
-      AS_IF([test "x$GUILE_SNARF" != "x"],
-         [AC_DEFINE_UNQUOTED([GUILE_SNARF], ["$GUILE_SNARF"],[Path to guile-snarf])
-         GUILE_SITEDIR="`${PKG_CONFIG} guile-2.0 --variable=sitedir`"],
+   AC_PATH_PROG(GUILE_BINARY, [guile], [], [$GUILE_EXECDIR])
+      AS_IF([test "x$GUILE_BINARY" != "x"],
+         [AC_DEFINE_UNQUOTED([GUILE_BINARY],["$GUILE_BINARY"],[Path to the guile binary])],
          [AC_MSG_WARN([cannot find guile-snarf])])])
 
+   AS_IF([test "x$build_guile" = "xyes"],[
+      AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$GUILE_EXECDIR])
+      AS_IF([test "x$GUILE_SNARF" != "x"],
+         [AC_DEFINE_UNQUOTED([GUILE_SNARF],["$GUILE_SNARF"],[Path to guile-snarf])
+         GUILE_SITEDIR="`${PKG_CONFIG} guile-2.0 --variable=sitedir`"],
+         [AC_MSG_WARN([cannot find guile-snarf])])])
    AC_SUBST(GUILE_SITEDIR)])
 
 AS_IF([test "x$build_guile" = "xyes" -a "x$GUILE_SNARF" != "x"],
