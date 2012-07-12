@@ -59,7 +59,7 @@ AS_IF([test "x$enable_mu4e" != "xno"], [
   AS_IF([test "x$lispdir" != "xno"], [emacs_version="`$EMACS --version | head -1`"])
   AS_CASE([$emacs_version],[*23*|*24*|*25*],[build_mu4e=yes],
           [AC_WARN([emacs is too old to build mu4e (need emacs >= 23.x)])])
-])  	      
+])
 AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")
 
 # we need some special tricks for filesystems that don't have d_type;
@@ -316,6 +316,7 @@ mu4e/version.texi
 guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile
+guile/tests/Makefile
 toys/Makefile
 toys/mug/Makefile
 toys/mug2/Makefile
