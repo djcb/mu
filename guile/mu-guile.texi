@@ -1,4 +1,4 @@
-\input texinfo.tex    @c -*-texinfo-*-
+\\input texinfo.tex    @c -*-texinfo-*-
 @c %**start of header
 @setfilename mu-guile.info
 @settitle mu-guile user manual
@@ -663,7 +663,7 @@ probably be a bit more elegant.
 @t{mu-guile} offers some convenience functions to determine various statistics
 about the messages in the database.
 
-@code{(mu:tabulate-messages <function> [<search-expr>])} applies
+@code{(mu:tabulate <function> [<search-expr>])} applies
 @t{<function>} to each message matching @t{<search-expr>} (leave empty to
 match @emph{all} messages), and returns a associative list (a list of pairs)
 with each of the different results of @t{<function>} and their frequencies.
@@ -683,7 +683,7 @@ exec guile -s $0 $@
 (define weekday-table
   (mu:weekday-numbers->names
     (sort
-      (mu:tabulate-messages
+      (mu:tabulate
 	(lambda (msg)
 	  (tm:wday (localtime (mu:date msg)))))
       (lambda (a b) (< (car a) (car b))))))
@@ -751,7 +751,7 @@ exec guile -s $0 $@
 
 (define (mail-per-hour-table)
   (sort
-    (mu:tabulate-messages
+    (mu:tabulate
       (lambda (msg)
 	(tm:hour (localtime (mu:date msg)))))
     (lambda (x y) (< (car x) (car y)))))
