@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -404,7 +404,6 @@ enum _MuError {
 	MU_ERROR_XAPIAN_STORE_FAILED	      = 20,
 	/* could not remove */
 	MU_ERROR_XAPIAN_REMOVE_FAILED	      = 21,
-
 
 	/* GMime related errors */
 
