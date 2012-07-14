@@ -12,6 +12,8 @@
      threads when searching
   - refactor fill_database function in test cases
   - handling of command line options / help
+  - fix 'mu find maildir:/'
+  - check for valid flags (i.e.., flag:foobar should raise an error)
 
 *** mu-guile
 
