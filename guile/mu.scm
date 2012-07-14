@@ -88,6 +88,20 @@
 (load-extension "libguile-mu" "mu_guile_init")
 (load-extension "libguile-mu" "mu_guile_message_init")
 
+;; define some dummies so we don't get errors during byte compilation
+(eval-when (compile)
+  (define mu:c:get-field)
+  (define mu:c:get-contacts)
+  (define mu:c:for-each-message)
+  (define mu:c:get-header)
+  (define mu:critical)
+  (define mu:c:log)
+  (define mu:message)
+  (define mu:c:log)
+  (define mu:warning)
+  (define mu:c:log)
+  (define mu:get-parts))
+
 (define (mu:log-warning frm . args)
   "Log FRM with ARGS at warning."
   (mu:c:log mu:warning frm args))
