@@ -77,13 +77,10 @@ BUILT_SOURCES=					\
 dummy.cc:
 	touch dummy.cc
 
-
 libtestmucommon_la_SOURCES=				\
 	test-mu-common.c				\
 	test-mu-common.h
 libtestmucommon_la_LIBADD= ../libmu.la
-
-
 
 
 # note the question marks; make does not like files with ':', so we
