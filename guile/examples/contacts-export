@@ -23,7 +23,7 @@ exec guile -e main -s $0 $@
 
 (use-modules (ice-9 getopt-long) (ice-9 format))
 (use-modules (srfi srfi-1))
-(use-modules (mu) (mu message) (mu contact))
+(use-modules (mu))
 
 (define (sort-by-freq c1 c2)
   (< (mu:frequency c1) (mu:frequency c2)))

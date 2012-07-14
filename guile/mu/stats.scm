@@ -18,7 +18,7 @@
 
 (define-module (mu stats)
   :use-module (oop goops)
-  :use-module (mu message)
+  :use-module (mu)
   :use-module (srfi srfi-1)
   :use-module (ice-9 i18n)
   :use-module (ice-9 r5rs)

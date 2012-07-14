@@ -43,7 +43,7 @@ exec guile -e main -s $0 $@
 	  (muhome (option-ref options 'muhome #f))
 	  (query (string-concatenate (option-ref options '() '()))))
     (if help
-      (begin (display msg) (exit 0))
+      (begin (display msg) (newline) (exit 0))
       (begin
 	(mu:initialize muhome)
 	(mu:for-each-message

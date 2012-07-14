@@ -171,7 +171,7 @@ to get the corresponding type of contacts, or #t to get all. Returns a
 list of <mu-contact> objects."
   (map (lambda (pair) ;; a pair (na . addr)
 	 (make <mu:contact>  #:name (car pair) #:email (cdr pair)))
-    (mu:get-contacts (slot-ref msg 'msg) contact-type)))
+    (mu:c:get-contacts (slot-ref msg 'msg) contact-type)))
 
 (define-method (mu:contacts (msg <mu:message>))
   "Get contacts of all types for message MSG as a list of <mu-contact>

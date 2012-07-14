@@ -21,7 +21,8 @@ exec guile -e main -s $0 $@
 (setlocale LC_ALL "")
 
 (use-modules (ice-9 getopt-long) (ice-9 optargs) (ice-9 popen) (ice-9 format))
-(use-modules (mu) (mu message) (mu stats) (mu plot))
+(use-modules (mu) (mu stats) (mu plot))
+;;(use-modules (mu) (mu message) (mu stats) (mu plot))
 
 (define (per-hour expr plain-text)
   "Count the total number of messages for each weekday (0-6 for

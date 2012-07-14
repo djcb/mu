@@ -17,7 +17,7 @@
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 (define-module (mu plot)
-  :use-module (mu message)
+  :use-module (mu)
   :use-module (ice-9 popen)
   :export (mu:plot))
 
