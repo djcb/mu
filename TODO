@@ -13,6 +13,11 @@
   - refactor fill_database function in test cases
   - handling of command line options / help
 
+*** mu-guile
+
+    - add stats test cases
+    - move contact export to separate scm
+
 *** mu4e
 
   - identities (see Jacek's 'mu4e: From field in replies' mail)
@@ -39,9 +44,8 @@
   - make the mu4e-bookmarks format similar to the other ones
   - refresh current query after update?
   - fix mu4e-mark-set to work from the view buffer as well
-  - add sort buttons to header labels (and do the sorting)
-  - open links to mails through headers-mode somehow (i.e..,
-    mu4e-view-message-with-msgid)
+    - open links to mails through headers-mode somehow (i.e..,
+     mu4e-view-message-with-msgid)
 
 ** Done (0.9.9)
 
@@ -51,7 +55,13 @@
   - use mu-error
   - tooltips in header labels
   - tooltip for flags field
-
+  - remove --summary option (for mu find, mu view); use --summary-len instead
+  - add sort buttons to header labels (and do the sorting)
+  - cleanup mu-cmd-find
+  - implement --after for mu find, to only show message files changed after a
+    certain time (mtime)
+  - add mu:timestamp for guile (refering to the message file's mtime)
+  - guile automated tests
 
 * Done
   :PROPERTIES:
