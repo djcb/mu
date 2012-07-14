@@ -78,7 +78,12 @@ struct _FlagData {
 typedef struct _FlagData FlagData;
 
 
-
+#define MU_GUILE_INITIALIZED_OR_ERROR					\
+	do { if (!(mu_guile_initialized()))				\
+		     return mu_guile_error (FUNC_NAME, 0,		\
+			     "mu not initialized; call mu:initialize",	\
+				     SCM_UNDEFINED);			\
+	} while (0)
 
 
 static void
@@ -166,6 +171,8 @@ SCM_DEFINE (get_field, "mu:c:get-field", 2, 0, 0,
 	MuMsgFieldId mfid;
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 
+	MU_GUILE_INITIALIZED_OR_ERROR;
+
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_integer_p(FIELD), FIELD, SCM_ARG2, FUNC_NAME);
 
@@ -250,6 +257,8 @@ SCM_DEFINE (get_contacts, "mu:c:get-contacts", 2, 0, 0,
 	MuMsgWrapper *msgwrap;
 	EachContactData ecdata;
 
+	MU_GUILE_INITIALIZED_OR_ERROR;
+
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_symbol_p (CONTACT_TYPE) || scm_is_bool(CONTACT_TYPE),
 		    CONTACT_TYPE, SCM_ARG2, FUNC_NAME);
@@ -268,7 +277,7 @@ SCM_DEFINE (get_contacts, "mu:c:get-contacts", 2, 0, 0,
 		else if (scm_is_eq (CONTACT_TYPE, SYMB_CONTACT_FROM))
 			ecdata.ctype = MU_MSG_CONTACT_TYPE_FROM;
 		else
-			/* FIXME: rais error */
+			/* FIXME: raise error */
 			g_return_val_if_reached (SCM_UNDEFINED);
 	}
 
@@ -338,6 +347,8 @@ SCM_DEFINE (get_parts, "mu:c:get-parts", 1, 1, 0,
 	MuMsgWrapper *msgwrap;
 	AttInfo attinfo;
 
+	MU_GUILE_INITIALIZED_OR_ERROR;
+
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_is_bool(ATTS_ONLY), ATTS_ONLY, SCM_ARG2, FUNC_NAME);
 
@@ -364,6 +375,8 @@ SCM_DEFINE (get_header, "mu:c:get-header", 2, 0, 0,
 	MuMsgWrapper *msgwrap;
 	char *header;
 	const char *val;
+
+	MU_GUILE_INITIALIZED_OR_ERROR;
 
 	SCM_ASSERT (mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_is_string (HEADER)||HEADER==SCM_UNDEFINED,
@@ -424,6 +437,8 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 {
 	MuMsgIter *iter;
 	char* expr;
+
+	MU_GUILE_INITIALIZED_OR_ERROR;
 
 	SCM_ASSERT (scm_procedure_p (FUNC), FUNC, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT (scm_is_bool(EXPR) || scm_is_string (EXPR),
