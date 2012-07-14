@@ -44,6 +44,8 @@ libguile_mu_la_LIBADD=			\
 	${top_builddir}/lib/libmu.la	\
 	${GUILE_LIBS}
 
+libguile_mu_la_LDFLAGS= -export-dynamic
+
 XFILES=					\
 	mu-guile.x			\
 	mu-guile-message.x
@@ -53,13 +55,6 @@ info_TEXINFOS=				\
 mu_guile_TEXINFOS=			\
 	fdl.texi
 
-# FIXME: GUILE_SITEDIR would be better, but that
-# breaks 'make distcheck'
-scmdir=${prefix}/share/guile/site/2.0/
-
-scm_DATA=				\
-	mu.scm
-
 BUILT_SOURCES=$(XFILES)
 
 snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS) $(INCLUDES)
@@ -67,9 +62,14 @@ SUFFIXES = .x .doc
 .c.x:
 	$(GUILE_SNARF) -o $@ $< $(snarfcppopts)
 
+# FIXME: GUILE_SITEDIR would be better, but that
+# breaks 'make distcheck'
+scmdir=${prefix}/share/guile/site/2.0/
+scm_DATA=mu.scm
+
+EXTRA_DIST=$(scm_DATA)
+
 ## Add -MG to make the .x magic work with auto-dep code.
 MKDEP = $(CC) -M -MG $(snarfcppopts)
 
 DISTCLEANFILES=$(XFILES)
-
-EXTRA_DIST=$(scm_DATA)

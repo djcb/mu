@@ -138,20 +138,19 @@ mu_guile_initialized (void)
 }
 
 
-
 SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 1, 0,
 		   (SCM MUHOME),
 		   "Initialize mu - needed before you call any of the other "
 		   "functions. Optionally, you can provide MUHOME which should be an "
 		   "absolute path to your mu home directory "
-		   "-- typically, the default, ~/.mu, should be just fine\n.")
+		   "-- typically, the default, ~/.mu, should be just fine.")
 #define FUNC_NAME s_mu_initialize
 {
 	char *muhome;
 	gboolean rv;
 
-	SCM_ASSERT (scm_is_string (MUHOME) || MUHOME == SCM_BOOL_F || SCM_UNBNDP(MUHOME),
-		    MUHOME, SCM_ARG1, FUNC_NAME);
+	SCM_ASSERT (scm_is_string (MUHOME) || MUHOME == SCM_BOOL_F ||
+		    SCM_UNBNDP(MUHOME), MUHOME, SCM_ARG1, FUNC_NAME);
 
 	if (mu_guile_initialized())
 		return mu_guile_error (FUNC_NAME, 0, "Already initialized",
@@ -176,9 +175,8 @@ SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 1, 0,
 }
 #undef FUNC_NAME
 
-
 SCM_DEFINE_PUBLIC (mu_initialized_p, "mu:initialized?", 0, 0, 0,
-		   (void), "Whether mu is initialized or not.\n")
+	    (void), "Whether mu is initialized or not.\n")
 #define FUNC_NAME s_mu_initialized_p
 {
 	return mu_guile_initialized() ? SCM_BOOL_T : SCM_BOOL_F;
@@ -186,63 +184,71 @@ SCM_DEFINE_PUBLIC (mu_initialized_p, "mu:initialized?", 0, 0, 0,
 #undef FUNC_NAME
 
 
-
-static SCM
-write_log (GLogLevelFlags level, SCM FRM, SCM ARGS)
-#define FUNC_NAME __FUNCTION__
+SCM_DEFINE (log_func, "mu:c:log", 1, 0, 1, (SCM LEVEL, SCM FRM, SCM ARGS),
+	    "log some message at LEVEL using a list of ARGS applied to FRM"
+	    "(in 'simple-format' notation).\n")
+#define FUNC_NAME s_log_func
 {
+	gchar *output;
 	SCM str;
+	int level;
 
-	SCM_ASSERT (scm_is_string(FRM), FRM, SCM_ARG1, "<write_log>");
+	SCM_ASSERT (scm_integer_p(LEVEL), LEVEL, SCM_ARG1, FUNC_NAME);
+	SCM_ASSERT (scm_is_string(FRM), FRM, SCM_ARG2, "<write_log>");
 	SCM_VALIDATE_REST_ARGUMENT(ARGS);
+
+	level = scm_to_int (LEVEL);
+	if (level != G_LOG_LEVEL_MESSAGE &&
+	    level != G_LOG_LEVEL_WARNING &&
+	    level != G_LOG_LEVEL_CRITICAL)
+		return mu_guile_error (FUNC_NAME, 0, "invalid log level",
+				       SCM_UNSPECIFIED);
 
 	str = scm_simple_format (SCM_BOOL_F, FRM, ARGS);
 
-	if (scm_is_string (str)) {
+	if (!scm_is_string (str))
+		return SCM_UNSPECIFIED;
 
-		gchar *output;
-		output = scm_to_utf8_string (str);
-		g_log (G_LOG_DOMAIN, level, "%s", output);
-		free (output);
-	}
+	output = scm_to_utf8_string (str);
+	g_log (G_LOG_DOMAIN, level, "%s", output);
+	free (output);
 
 	return SCM_UNSPECIFIED;
-
-#undef FUNC_NAME
 }
+#undef FUNC_NAME
 
 
-SCM_DEFINE_PUBLIC (log_info, "mu:log-info", 1, 0, 1,  (SCM FRM, SCM ARGS),
-	    "log some message using a list of ARGS applied to FRM "
-	    "(in 'simple-format' notation).\n")
-#define FUNC_NAME s_info
+static struct  {
+	const char* name;
+	unsigned val;
+} VAR_PAIRS[] = {
+
+	{ "mu:message",	 G_LOG_LEVEL_MESSAGE },
+	{ "mu:warning",	 G_LOG_LEVEL_WARNING },
+	{ "mu:critical", G_LOG_LEVEL_CRITICAL }
+};
+
+static void
+define_vars (void)
 {
-	return write_log (G_LOG_LEVEL_INFO, FRM, ARGS);
+	unsigned u;
+	for (u = 0; u != G_N_ELEMENTS(VAR_PAIRS); ++u) {
+		scm_c_define (VAR_PAIRS[u].name,
+			      scm_from_uint (VAR_PAIRS[u].val));
+		scm_c_export (VAR_PAIRS[u].name, NULL);
+	}
 }
-#undef FUNC_NAME
-
-SCM_DEFINE_PUBLIC (log_warning, "mu:log-warning", 1, 0, 1,  (SCM FRM, SCM ARGS),
-	    "log some warning using a list of ARGS applied to FRM (in 'simple-format' "
-	    "notation).\n")
-#define FUNC_NAME s_warning
-{
-	return write_log (G_LOG_LEVEL_WARNING, FRM, ARGS);
-}
-#undef FUNC_NAME
-
-SCM_DEFINE_PUBLIC (log_critical, "mu:log-critical", 1, 0, 1,  (SCM FRM, SCM ARGS),
-	    "log some critical message using a list of ARGS applied to FRM "
-	    "(in 'simple-format' notation).\n")
-#define FUNC_NAME s_critical
-{
-	return write_log (G_LOG_LEVEL_CRITICAL, FRM, ARGS);
-}
-#undef FUNC_NAME
 
 
 void*
 mu_guile_init (void *data)
 {
+	define_vars ();
+
+
+#ifndef SCM_MAGIC_SNARFER
 #include "mu-guile.x"
+#endif /*SCM_MAGIC_SNARFER*/
+
 	return NULL;
 }

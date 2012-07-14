@@ -19,11 +19,6 @@ include $(top_srcdir)/gtest.mk
 # FIXME: GUILE_SITEDIR would be better, but that
 # breaks 'make distcheck'
 scmdir=${prefix}/share/guile/site/2.0/mu/
-scm_DATA=		\
-	message.scm	\
-	contact.scm	\
-	part.scm	\
-	stats.scm	\
-	plot.scm
+scm_DATA=stats.scm plot.scm
 
 EXTRA_DIST=$(scm_DATA)

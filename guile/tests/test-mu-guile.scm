@@ -21,7 +21,7 @@ exec guile -e main -s $0 $@
 (setlocale LC_ALL "")
 
 (use-modules (ice-9 getopt-long) (ice-9 optargs) (ice-9 popen) (ice-9 format))
-(use-modules (mu) (mu message) (mu stats) (mu plot))
+(use-modules (mu))
 
 (define (n-results-or-exit query n)
   "Run QUERY, and exit 1 if the number of results != N."
@@ -34,7 +34,6 @@ exec guile -e main -s $0 $@
 
 (define (test-queries)
   "Test a bunch of queries (or die trying)."
-
   (n-results-or-exit "hello" 1)
   (n-results-or-exit "f:john fruit" 1)
   (n-results-or-exit "f:soc@example.com" 1)
@@ -55,22 +54,36 @@ exec guile -e main -s $0 $@
   (n-results-or-exit "y:image*" 1)
   (n-results-or-exit "mime:message/rfc822" 2))
 
+(define (error-exit msg . args)
+  "Print error and exit."
+  (let ((msg (apply format #f msg args)))
+    (simple-format (current-error-port) "*ERROR*: ~A\n" msg)
+    (exit 1)))
 
-(define (str-equal-or-exit s1 s2)
+(define (str-equal-or-exit got exp)
   "S1 == S2 or exit 1."
   ;; (format #t "'~A' <=> '~A'\n" s1 s2)
-  (if (not (string= s1 s2))
-    (begin
-      (simple-format (current-error-port) "Message: expected \"~A\", got \"~A\"\n"
-	s1 s2)
-      (exit 1))))
+  (if (not (string= exp got))
+    (error-exit "Expected \"~A\", got \"~A\"\n" exp got)))
 
 (define (test-message)
   "Test functions for a particular message."
+
   (let ((msg (car (mu:message-list "hello"))))
     (str-equal-or-exit (mu:subject msg) "Fwd: rfc822")
     (str-equal-or-exit (mu:to      msg) "martin")
-    (str-equal-or-exit (mu:from    msg) "foobar <foo@example.com>")))
+    (str-equal-or-exit (mu:from    msg) "foobar <foo@example.com>")
+
+    (if (not (equal? (mu:priority msg) mu:prio:normal))
+      (error-exit "Expected ~A, got ~A"  (mu:priority msg) mu:prio:normal)))
+
+  (let ((msg (car (mu:message-list "atoms"))))
+    (str-equal-or-exit (mu:subject msg) "atoms")
+    (str-equal-or-exit (mu:to      msg) "Democritus <demo@example.com>")
+    (str-equal-or-exit (mu:from    msg) "\"Richard P. Feynman\" <rpf@example.com>")
+
+    (if (not (equal? (mu:priority msg) mu:prio:high))
+      (error-exit "Expected ~a, got ~a"  (mu:priority msg) mu:prio:high))))
 
 
 (define (test-stats)
