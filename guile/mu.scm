@@ -35,7 +35,7 @@
     mu:for-each-msg
     mu:message-list
     ;; message funcs
-    header
+    mu:header
     ;; message accessors
     mu:field:bcc
     mu:field:body-html
@@ -143,7 +143,7 @@
 (define-getter mu:timestamp  mu:field:timestamp)
 (define-getter mu:to	     mu:field:to)
 
-(define-method (header (msg <mu:message>) (hdr <string>))
+(define-method (mu:header (msg <mu:message>) (hdr <string>))
   "Get an arbitrary header HDR from message MSG; return #f if it does
 not exist."
   (mu:c:get-header (slot-ref msg 'msg) hdr))

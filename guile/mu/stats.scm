@@ -24,8 +24,9 @@
   :use-module (ice-9 r5rs)
   :export ( mu:tabulate
 	    mu:average
-	    mu:standard-deviation
-	    mu:pearsons-r
+	    mu:stddev
+	    mu:max
+	    mu:min
 	    mu:weekday-numbers->names
 	    mu:month-numbers->names))
 
@@ -68,11 +69,11 @@ undefined."
 EXPR (or #t for all). Returns #f if undefined."
   (average (map func (mu:message-list expr))))
 
-(define* (mu:standard-deviation func #:optional (expr #t))
-  "Get the standard deviation for the the values of FUNC applied to
-all messages matching EXPR (or #t for all). Returns #f if undefined."
+(define* (mu:stddev func #:optional (expr #t))
+  "Get the standard deviation the the values of FUNC applied to all
+messages matching EXPR (or #t for all). This is the 'population' stddev, not the 'sample' stddev. Returns #f if undefined."
   (stddev (map func (mu:message-list expr))))
-
+ 
 (define* (mu:max func #:optional (expr #t))
   "Get the maximum value of FUNC applied to all messages matching
 EXPR (or #t for all). Returns #f if undefined."
@@ -82,25 +83,7 @@ EXPR (or #t for all). Returns #f if undefined."
   "Get the minimum value of FUNC applied to all messages matching
 EXPR (or #t for all). Returns #f if undefined."
   (apply min (map func (mu:message-list expr))))
-
-(define* (mu:pearsons-r func1 func2 #:optional (expr #t))
-  "Calculate Pearson's product-moment correlation coefficient between
-func1 and func2. Inefficient implementation."
-  (let* ((msglist (mu:message-list expr))
-	  (lst-x (map func1 msglist))
-	  (lst-y (map func2 msglist))
-	  (avg-x (average lst-x))
-	  (avg-y (average lst-y)) 
-	  (denominator (sqrt (* (stddev lst-x) (stddev lst-y))))
-	  (n (length lst-x))
-	  (cov-xy 0))
-    (while (not (null? lst-x))
-      (set! cov-xy (+ (* (- (car lst-x) avg-x) (- (car lst-y) avg-y))))
-      (set! lst-x (cdr lst-x))
-      (set! lst-y (cdr lst-y)))
-    (/ (/ cov-xy n) denominator)))
-
-
+ 
 ;; a list of abbreviated, localized day names
 (define day-names
   (map locale-day-short (iota 7 1)))

@@ -20,8 +20,9 @@ exec guile -e main -s $0 $@
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 (setlocale LC_ALL "")
 
+(use-modules (srfi srfi-1))
 (use-modules (ice-9 getopt-long) (ice-9 optargs) (ice-9 popen) (ice-9 format))
-(use-modules (mu))
+(use-modules (mu) (mu stats))
 
 (define (n-results-or-exit query n)
   "Run QUERY, and exit 1 if the number of results != N."
@@ -73,6 +74,7 @@ exec guile -e main -s $0 $@
     (str-equal-or-exit (mu:subject msg) "Fwd: rfc822")
     (str-equal-or-exit (mu:to      msg) "martin")
     (str-equal-or-exit (mu:from    msg) "foobar <foo@example.com>")
+    (str-equal-or-exit (mu:header msg "X-Mailer") "Ximian Evolution 1.4.5")
 
     (if (not (equal? (mu:priority msg) mu:prio:normal))
       (error-exit "Expected ~A, got ~A"  (mu:priority msg) mu:prio:normal)))
@@ -81,18 +83,27 @@ exec guile -e main -s $0 $@
     (str-equal-or-exit (mu:subject msg) "atoms")
     (str-equal-or-exit (mu:to      msg) "Democritus <demo@example.com>")
     (str-equal-or-exit (mu:from    msg) "\"Richard P. Feynman\" <rpf@example.com>")
+    (str-equal-or-exit (mu:header msg "Content-transfer-encoding") "7BIT")
 
     (if (not (equal? (mu:priority msg) mu:prio:high))
       (error-exit "Expected ~a, got ~a"  (mu:priority msg) mu:prio:high))))
 
+(define (num-equal-or-exit got exp)
+  "S1 == S2 or exit 1."
+  ;; (format #t "'~A' <=> '~A'\n" s1 s2)
+  (if (not (= exp got))
+    (error-exit "Expected \"~S\", got \"~S\"\n" exp got)))
 
 (define (test-stats)
   "Test statistical functions."
-  )
-
+  ;; average
+  (num-equal-or-exit (mu:average mu:size) 20422/3)
+  (num-equal-or-exit (floor (mu:stddev mu:size))
+    (floor 13414.7101616927))
+  (num-equal-or-exit (mu:max mu:size) 46230)
+  (num-equal-or-exit (mu:min mu:size) 111))
 
 (define (main args)
-
   (let* ((optionspec  '((muhome  (value #t))
 			 (test (value #t))))
 	  (options (getopt-long args optionspec))

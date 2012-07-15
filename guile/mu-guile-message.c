@@ -374,7 +374,7 @@ SCM_DEFINE (get_header, "mu:c:get-header", 2, 0, 0,
 {
 	MuMsgWrapper *msgwrap;
 	char *header;
-	const char *val;
+	SCM val;
 
 	MU_GUILE_INITIALIZED_OR_ERROR;
 
@@ -384,13 +384,14 @@ SCM_DEFINE (get_header, "mu:c:get-header", 2, 0, 0,
 
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
 	header  =  scm_to_utf8_string (HEADER);
-	val     =  mu_msg_get_header (msgwrap->_msg, header);
+	val     = mu_guile_scm_from_str
+		(mu_msg_get_header(msgwrap->_msg, header));
 	free (header);
 
 	/* explicitly close the file backend, so we won't run of fds */
 	mu_msg_close_file_backend (msgwrap->_msg);
 
-	return mu_guile_scm_from_str(val);
+	return val;
 }
 #undef FUNC_NAME
 
