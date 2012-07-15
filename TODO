@@ -14,11 +14,14 @@
   - handling of command line options / help
   - fix 'mu find maildir:/'
   - check for valid flags (i.e.., flag:foobar should raise an error)
+  - handle exception 'The revision being read has been discarded - you should
+    call Xapian::Database::reopen() and retry the operation'
 
 *** mu-guile
 
-    - add stats test cases
-    - move contact export to separate scm
+  - add stats test cases
+  - move contact export to separate scm
+  - get docs to work
 
 *** mu4e
 
@@ -30,7 +33,7 @@
     - 'human' dates
   - guile integration
     - statistics
-    - new-mail warning
+  - new-mail warning
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
@@ -48,6 +51,7 @@
   - fix mu4e-mark-set to work from the view buffer as well
     - open links to mails through headers-mode somehow (i.e..,
      mu4e-view-message-with-msgid)
+  - improve mouse interaction (i.e., cursor vs point)
 
 ** Done (0.9.9)
 
