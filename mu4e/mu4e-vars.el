@@ -268,6 +268,11 @@ flag set)."
   view."
   :group 'mu4e-faces)
 
+(defface mu4e-view-special-header-value-face
+  '((t :inherit font-lock-variable-name-face))
+  "Face for special header values in the message view."
+  :group 'mu4e-faces)
+
 (defface mu4e-view-link-face
   '((t :inherit font-lock-type-face :underline t))
   "Face for showing URLs and attachments in the message view."
@@ -403,7 +408,7 @@ headers)."
        ( :name "To"
 	 :shortname "T"
 	 :help "Recipient of the message"
-	 :sortable t)))     
+	 :sortable t)))
   "An alist of all possible header fields and information about
 them.; this is used in the UI (the column headers in the header
 list, and the fields the message view). Most fields should be

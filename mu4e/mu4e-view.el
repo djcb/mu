@@ -165,8 +165,7 @@ plist."
 	    (:subject  (mu4e~view-construct-header field fieldval))
 	    (:path     (mu4e~view-construct-header field fieldval))
 	    (:maildir  (mu4e~view-construct-header field fieldval))
-	    (:flags    (mu4e~view-construct-header field
-			 (if fieldval (format "%S" fieldval) "")))
+	    (:flags    (mu4e~view-construct-flags-header fieldval))
 	    ;; contact fields
 	    (:to       (mu4e~view-construct-contacts-header msg field))
 	    (:from     (mu4e~view-construct-contacts-header msg field))
@@ -238,7 +237,7 @@ marking if it still had that."
 	  ;; no use in trying to set flags again
 	  (mu4e~view-mark-as-read-maybe))))))
 
- 
+
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
@@ -297,7 +296,7 @@ at POINT, or if nil, at (point)."
     (mapconcat
       (lambda(c)
 	(let* ((name (car c))
-		(email (cdr c)) 
+		(email (cdr c))
 		(short (or name email)) ;; name may be nil
 		(long (if name (format "%s <%s>" name email) email))
 		(map (make-sparse-keymap)))
@@ -321,6 +320,16 @@ at POINT, or if nil, at (point)."
 		      "[mouse-2] or C to compose a mail for this recipient")))))
       (plist-get msg field) ", ") t))
 
+
+(defun mu4e~view-construct-flags-header (flags)
+  "Construct a Flags: header."
+  (mu4e~view-construct-header
+    :flags
+    (mapconcat
+      (lambda (flag)
+	(propertize (symbol-name flag) 'face 'mu4e-view-special-header-value-face))
+      flags
+      (propertize ", " 'face 'mu4e-view-header-value-face)) t))
 
 (defun mu4e~view-open-save-attach-func (msg attachnum is-open)
   "Return a function that offers to save attachment NUM. If IS-OPEN
