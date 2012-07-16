@@ -441,14 +441,17 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 		return NULL;
 
 	if (!(mobj = find_part (msg, partidx))) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME, "cannot find part %u", partidx);
+		mu_util_g_set_error (err,
+				     MU_ERROR_GMIME,
+				     "cannot find part %u", partidx);
 		return NULL;
 	}
 
 	if (GMIME_IS_PART (mobj)) {
 		/* the easy case: the part has a filename */
 		fname = (gchar*)g_mime_part_get_filename (GMIME_PART(mobj));
-		if (fname) /* security: don't include any directory components... */
+		if (fname) /* security: don't includ directory
+			    * components */
 			fname = g_path_get_basename (fname);
 		else
 			fname = g_strdup_printf ("%x-part-%u",
@@ -456,10 +459,11 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 						 partidx);
 	} else if (GMIME_IS_MESSAGE_PART(mobj))
 		fname  = get_filename_for_mime_message_part
-			(g_mime_message_part_get_message((GMimeMessagePart*)mobj));
+			(g_mime_message_part_get_message
+			 ((GMimeMessagePart*)mobj));
 	else {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME, "part %u cannot be saved",
-			     partidx);
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
+			     "part %u cannot be saved", partidx);
 		return NULL;
 	}
 
@@ -530,7 +534,8 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 			     partidx);
 		return FALSE;
 	} else
-		return save_mime_object (part, fullpath, overwrite, use_cached, err);
+		return save_mime_object (part, fullpath, overwrite,
+					 use_cached, err);
 
 }
 
@@ -569,7 +574,8 @@ struct _MatchData {
 typedef struct _MatchData MatchData;
 
 static void
-part_match_foreach_cb (GMimeObject *parent, GMimeObject *part, MatchData *mdata)
+part_match_foreach_cb (GMimeObject *parent, GMimeObject *part,
+		       MatchData *mdata)
 {
 	if (mdata->_found_idx < 0)
 		if (mdata->_matcher (part, mdata->_user_data))
