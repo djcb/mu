@@ -275,33 +275,6 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 }
 
 
-static gboolean
-load_msg_file_maybe (MuMsg *msg)
-{
-	GError *err;
-
-	if (msg->_file)
-		return TRUE;
-
-	err = NULL;
-	msg->_file = mu_msg_file_new (mu_msg_get_path(msg), NULL,
-				      &err);
-	if (!msg->_file) {
-		MU_HANDLE_G_ERROR(err); /* will free it */
-		return FALSE;
-	}
-
-	if (!msg->_file->_mime_msg) {
-		mu_msg_file_destroy (msg->_file);
-		msg->_file = NULL;
-		g_warning ("failed to create mime-msg");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-
 void
 mu_msg_part_foreach (MuMsg *msg, gboolean recurse_rfc822,
 		     MuMsgPartForeachFunc func, gpointer user_data)
@@ -311,7 +284,7 @@ mu_msg_part_foreach (MuMsg *msg, gboolean recurse_rfc822,
 
 	g_return_if_fail (msg);
 
-	if (!load_msg_file_maybe (msg))
+	if (!mu_msg_load_msg_file (msg, NULL))
 		return;
 
 	mime_msg = msg->_file->_mime_msg;
@@ -437,7 +410,7 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 	char *fname, *filepath;
 	GMimeObject* mobj;
 
-	if (!load_msg_file_maybe (msg))
+	if (!mu_msg_load_msg_file (msg, NULL))
 		return NULL;
 
 	if (!(mobj = find_part (msg, partidx))) {
@@ -485,7 +458,7 @@ mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 
 	g_return_val_if_fail (msg, NULL);
 
-	if (!load_msg_file_maybe (msg))
+	if (!mu_msg_load_msg_file (msg, NULL))
 		return NULL;
 
 	path = mu_msg_get_path (msg);
@@ -523,7 +496,7 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 	g_return_val_if_fail (fullpath, FALSE);
 	g_return_val_if_fail (!overwrite||!use_cached, FALSE);
 
-	if (!load_msg_file_maybe (msg))
+	if (!mu_msg_load_msg_file (msg, NULL))
 		return FALSE;
 
 	part = find_part (msg, partidx);
@@ -620,7 +593,7 @@ mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 	g_return_val_if_fail (msg, -1);
 	g_return_val_if_fail (sought_cid, -1);
 
-	if (!load_msg_file_maybe (msg))
+	if (!mu_msg_load_msg_file (msg, NULL))
 		return -1;
 
 	cid = g_str_has_prefix (sought_cid, "cid:") ?
@@ -671,7 +644,7 @@ mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern)
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (pattern, NULL);
 
-	if (!load_msg_file_maybe (msg))
+	if (!mu_msg_load_msg_file (msg, NULL))
 		return NULL;
 
 	mdata._lst = NULL;

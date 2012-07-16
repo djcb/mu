@@ -192,7 +192,7 @@ SCM_DEFINE (get_field, "mu:c:get-field", 2, 0, 0,
 		data = mu_guile_scm_from_str
 			(mu_msg_get_field_string (msgwrap->_msg, mfid));
 		/* explicitly close the file backend, so we won't run of fds */
-		mu_msg_close_file_backend (msgwrap->_msg);
+		mu_msg_unload_msg_file (msgwrap->_msg);
 		return data;
 	}
 
@@ -287,7 +287,7 @@ SCM_DEFINE (get_contacts, "mu:c:get-contacts", 2, 0, 0,
 				(MuMsgContactForeachFunc)contacts_to_list,
 				&ecdata);
 	/* explicitly close the file backend, so we won't run out of fds */
-	mu_msg_close_file_backend (msgwrap->_msg);
+	mu_msg_unload_msg_file (msgwrap->_msg);
 
 	return ecdata.lst;
 }
@@ -361,7 +361,7 @@ SCM_DEFINE (get_parts, "mu:c:get-parts", 1, 1, 0,
 			     &attinfo);
 
 	/* explicitly close the file backend, so we won't run of fds */
-	mu_msg_close_file_backend (msgwrap->_msg);
+	mu_msg_unload_msg_file (msgwrap->_msg);
 
 	return attinfo.attlist;
 }
@@ -389,7 +389,7 @@ SCM_DEFINE (get_header, "mu:c:get-header", 2, 0, 0,
 	free (header);
 
 	/* explicitly close the file backend, so we won't run of fds */
-	mu_msg_close_file_backend (msgwrap->_msg);
+	mu_msg_unload_msg_file (msgwrap->_msg);
 
 	return val;
 }

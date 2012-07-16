@@ -107,14 +107,6 @@ mu_msg_new_from_file (const char *path, const char *mdir, GError **err)
 }
 
 
-void
-mu_msg_close_file_backend (MuMsg *msg)
-{
-	g_return_if_fail (msg);
-
-	mu_msg_file_destroy (msg->_file);
-	msg->_file = NULL;
-}
 
 
 MuMsg*
@@ -220,27 +212,37 @@ get_path (MuMsg *self)
 
 
 /* for some data, we need to read the message file from disk */
-static MuMsgFile*
-get_msg_file (MuMsg *self)
+gboolean
+mu_msg_load_msg_file (MuMsg *self, GError **err)
 {
-	MuMsgFile *mfile;
 	const char *path;
-	GError *err;
 
-	if (!(path = get_path (self)))
-		return NULL;
+	g_return_val_if_fail (self, FALSE);
 
-	err = NULL;
-	mfile = mu_msg_file_new (path, NULL, &err);
-	if (!mfile) {
-		g_warning ("%s: failed to create MuMsgFile: %s",
-			   __FUNCTION__, err->message ? err->message : "?");
-		g_error_free (err);
-		return NULL;
+	if (self->_file)
+		return TRUE; /* nothing to do */
+
+	if (!(path = get_path (self))) {
+		mu_util_g_set_error (err, MU_ERROR_INTERNAL,
+				     "cannot get path for message");
+		return FALSE;
 	}
 
-	return mfile;
+	self->_file = mu_msg_file_new (path, NULL, err);
+
+	return  (self->_file != NULL);
 }
+
+
+void
+mu_msg_unload_msg_file (MuMsg *msg)
+{
+	g_return_if_fail (msg);
+
+	mu_msg_file_destroy (msg->_file);
+	msg->_file = NULL;
+}
+
 
 
 static const GSList*
@@ -262,9 +264,7 @@ get_str_list_field (MuMsg *self, MuMsgFieldId mfid)
 	else {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
-		if (!self->_file)
-			self->_file = get_msg_file (self);
-		if (!self->_file && !(self->_file = get_msg_file (self)))
+		if (!mu_msg_load_msg_file (self, NULL))
 			return NULL;
 		val = mu_msg_file_get_str_list_field (self->_file, mfid,
 						      &do_free);
@@ -298,9 +298,7 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 	else if (mu_msg_field_gmime (mfid)) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
-		if (!self->_file)
-			self->_file = get_msg_file (self);
-		if (!self->_file && !(self->_file = get_msg_file (self)))
+		if (!mu_msg_load_msg_file (self, NULL))
 			return NULL;
 		val = mu_msg_file_get_str_field (self->_file, mfid, &do_free);
 	} else {
@@ -332,9 +330,7 @@ get_num_field (MuMsg *self, MuMsgFieldId mfid)
 	else {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
-		if (!self->_file)
-			self->_file = get_msg_file (self);
-		if (!self->_file && !(self->_file = get_msg_file (self)))
+		if (!mu_msg_load_msg_file (self, NULL))
 			return -1;
 		val = mu_msg_file_get_num_field (self->_file, mfid);
 	}
@@ -351,9 +347,7 @@ mu_msg_get_header (MuMsg *self, const char *header)
 
 	/* if we don't have a file object yet, we need to
 	 * create it from the file on disk */
-	if (!self->_file)
-		self->_file = get_msg_file (self);
-	if (!self->_file && !(self->_file = get_msg_file (self)))
+	if (!mu_msg_load_msg_file (self, NULL))
 		return NULL;
 
 	return mu_msg_file_get_header (self->_file, header);

@@ -81,7 +81,6 @@ gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err);
  */
 GMimePart* mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html);
 
-
-G_END_DECLS
+ G_END_DECLS
 
 #endif /*__MU_MSG_PRIV_H__*/

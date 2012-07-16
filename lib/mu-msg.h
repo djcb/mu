@@ -70,6 +70,18 @@ MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
 
 
 /**
+ *  if we don't have a message file yet (because this message is
+ *  database-backed), load it.
+ *
+ * @param msg a MuMsg
+ * @param err receives error information
+ *
+ * @return TRUE if this succceeded, FALSE in case of error
+ */
+gboolean mu_msg_load_msg_file (MuMsg *msg, GError **err);
+
+
+/**
  * close the file-backend, if any; this function is for the use case
  * where you have a large amount of messages where you need some
  * file-backed field (body or attachments). If you don't close the
@@ -79,7 +91,9 @@ MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
  *
  * @param msg a message object
  */
-void mu_msg_close_file_backend (MuMsg *msg);
+void mu_msg_unload_msg_file (MuMsg *msg);
+
+
 
 /**
  * increase the reference count for this message
