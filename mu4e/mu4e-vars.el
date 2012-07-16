@@ -273,6 +273,11 @@ flag set)."
   "Face for showing URLs and attachments in the message view."
   :group 'mu4e-faces)
 
+(defface mu4e-view-contact-face
+  '((t :inherit font-lock-variable-name-face))
+  "Face for showing URLs and attachments in the message view."
+  :group 'mu4e-faces)
+
 (defface mu4e-highlight-face
   '((t :inherit font-lock-pseudo-keyword-face :bold t))
   "Face for highlighting things."

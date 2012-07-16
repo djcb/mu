@@ -12,8 +12,6 @@
      threads when searching
   - refactor fill_database function in test cases
   - handling of command line options / help
-  - fix 'mu find maildir:/'
-  - check for valid flags (i.e.., flag:foobar should raise an error)
   - handle exception 'The revision being read has been discarded - you should
     call Xapian::Database::reopen() and retry the operation'
 
@@ -52,9 +50,11 @@
     - open links to mails through headers-mode somehow (i.e..,
      mu4e-view-message-with-msgid)
   - improve mouse interaction (i.e., cursor vs point)
+  - add example 'run shellscript on message'
 
 ** Done (0.9.9)
 
+  - make contacts in the view clickable (toggle long/short display, compose message)
   - opening urls is too eager (now use M-RET for opening url at point, not just
     RET, which conflicted with using RET for scrolling)
   - document quoting of queries

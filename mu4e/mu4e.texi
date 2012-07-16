@@ -743,10 +743,12 @@ variable @code{mu4e-view-fields}.
 @item You can customize the date format by setting the variable
 @code{mu4e-date-format-long}, using the same format that
 @code{format-time-string} uses.
-@item If you only want to see the name and not the e-mail address of the
-contacts in address fields, you can set @option{mu4e-view-show-addresses} to
-@t{nil}. This will hide the addresses for contacts that also have a name. The
-e-mail address is still available as a tool-tip.
+@item By default, @t{mu4e} shows only the names of contacts in address fields,
+and not the e-mail addresses. You can see the e-mail addresses by clicking on
+the name, or pressing @key{M-RET}. Furthermore, you can compose a message for
+the contact at point by either @key{[mouse-2]} or pressing @key{C}. If you
+always want to see the addresses, you can set
+@option{mu4e-view-show-addresses} to @t{t}.
 @item The body text can be line-wrapped (toggle between wrapped/not-wrapped with
 @key{w}) and/or cited parts can be hidden (toggle between hidden/not-hidden
 with @key{h}. If you want to do this by default when viewing messages, you can

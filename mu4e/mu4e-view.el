@@ -59,10 +59,11 @@ complete list of available headers, see `mu4e-header-info'."
   :type 'string
   :group 'mu4e-view)
 
-(defcustom mu4e-view-show-addresses t
-  "Whether to show e-mail addresses for contacts in address-fields,
-  if names are available as well (note that the e-mail addresses
-  are still available as a tooltip."
+(defcustom mu4e-view-show-addresses nil
+  "Whether to initially show full e-mail addresses for contacts in
+address fields, rather than only their names. Note that you can
+toggle between long/short display by klicking / M-RET on the
+contact."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -263,21 +264,64 @@ add text-properties to VAL."
       (buffer-string))
     "")))
 
+(defun mu4e~view-toggle-contact (&optional point)
+  "Toggle between the long and short versions of long/short string
+at POINT, or if nil, at (point)."
+  (interactive)
+  (unless (get-text-property (or point (point)) 'long)
+    (error "point is not toggleable"))
+  (let* ((point (or point (point)))
+	  ;; find the first pos part of the button
+	  (start (previous-property-change point))
+	  (start (if start (next-property-change start) (point-min)))
+	  ;; find the first pos not part of the button (possibly nil)
+	  (end (next-property-change point))
+	  (end (or end (1+ (point-max)))) ;; one beyond
+	  (longtext (get-text-property point 'long))
+	  (shorttext (get-text-property point 'short))
+	  (inhibit-read-only t))
+    (if (string= (get-text-property point 'display) longtext)
+      (add-text-properties start end `(display ,shorttext))
+      (add-text-properties start end `(display ,longtext)))))
+
+(defun mu4e~view-compose-contact (&optional point)
+  "Compose a message for the address at point."
+  (interactive)
+  (unless (get-text-property (or point (point)) 'email)
+    (error "No address at point"))
+  (mu4e~compose-mail (get-text-property (or point (point)) 'email)))
+
 (defun mu4e~view-construct-contacts-header (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
   (mu4e~view-construct-header field
     (mapconcat
       (lambda(c)
-	(let ((name (car c)) (email (cdr c)))
+	(let* ((name (car c))
+		(email (cdr c)) 
+		(short (or name email)) ;; name may be nil
+		(long (if name (format "%s <%s>" name email) email))
+		(map (make-sparse-keymap)))
+	  (define-key map [mouse-1] 'mu4e~view-toggle-contact)
+	  (define-key map [?\M-\r]  'mu4e~view-toggle-contact)
+	  (define-key map [mouse-2] 'mu4e~view-compose-contact)
+	  (define-key map "C"  'mu4e~view-compose-contact)
 	  (propertize
-	    (if name
-	      (if mu4e-view-show-addresses
-		(format "%s <%s>" name email)
-		(format "%s" name))
-	      (format "%s" email))
-	    'help-echo email)))
-      (plist-get msg field) ", ")))
- 
+	    (if mu4e-view-show-addresses long short)
+	    'long long
+	    'short short
+	    'email email
+	    'display (if mu4e-view-show-addresses long short)
+	    'keymap map
+	    'face 'mu4e-view-contact-face
+	    'mouse-face 'highlight
+	    'help-echo
+	    (format (concat
+		      "<" email ">\n"
+		      "[mouse-1] or [M-RET] to toggle long/short display\n"
+		      "[mouse-2] or C to compose a mail for this recipient")))))
+      (plist-get msg field) ", ") t))
+
+
 (defun mu4e~view-open-save-attach-func (msg attachnum is-open)
   "Return a function that offers to save attachment NUM. If IS-OPEN
 is nil, and otherwise open it."
