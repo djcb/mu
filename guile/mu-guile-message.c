@@ -356,9 +356,9 @@ SCM_DEFINE (get_parts, "mu:c:get-parts", 1, 1, 0,
 	attinfo.attachments_only = ATTS_ONLY == SCM_BOOL_T ? TRUE : FALSE;
 
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
-	mu_msg_part_foreach (msgwrap->_msg, FALSE,
+	mu_msg_part_foreach (msgwrap->_msg,
 			     (MuMsgPartForeachFunc)each_part,
-			     &attinfo);
+			     &attinfo, MU_MSG_PART_OPTION_NONE);
 
 	/* explicitly close the file backend, so we won't run of fds */
 	mu_msg_unload_msg_file (msgwrap->_msg);

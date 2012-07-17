@@ -471,8 +471,9 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 			 MuMsgFieldId mfid, GStringChunk *strchunk)
 {
 	PartData pdata (doc, mfid, strchunk);
-	mu_msg_part_foreach (msg, TRUE,
-			     (MuMsgPartForeachFunc)each_part, &pdata);
+	mu_msg_part_foreach (msg,
+			     (MuMsgPartForeachFunc)each_part, &pdata,
+			     MU_MSG_PART_OPTION_RECURSE_RFC822);
 }
 
 

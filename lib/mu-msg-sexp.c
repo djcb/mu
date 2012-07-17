@@ -287,8 +287,8 @@ append_sexp_parts (GString *gstr, MuMsg *msg, gboolean want_images)
 	pinfo.parts       = NULL;
 	pinfo.want_images = want_images;
 
-	mu_msg_part_foreach (msg, FALSE,
-			     (MuMsgPartForeachFunc)each_part, &pinfo);
+	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part,
+			     &pinfo, MU_MSG_PART_OPTION_CHECK_SIGNATURES);
 
 	if (pinfo.parts) {
 		g_string_append_printf (gstr, "\t:parts (%s)\n", pinfo.parts);
