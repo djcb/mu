@@ -1,0 +1,79 @@
+.TH MU VERIFY 1 "July 2012" "User Manuals"
+
+.SH NAME
+
+mu verify\- verify message signatures and display information about them
+
+.SH SYNOPSIS
+
+.B mu verify [options] <file> [<file>*]
+
+.SH DESCRIPTION
+
+\fBmu verify\fR is the \fBmu\fR sub-command for verify the message signatures
+(such as PGP/GPG signatures) and displaying information about them. The
+sub-command works on message files, and does not require the message to be
+indexed in the database.
+
+\fBmu verify\fR depends on \fBgpg\fR, and uses the one it finds in your
+\fBPATH\fR. If you want to use another one, you need to set \fBMU_GPG_PATH\fB
+to the full path to the desired \fBgpg\fR.
+
+.SH OPTIONS
+
+.TP
+\fB\-r\fR, \fB\-\-auto\-retrieve\fR
+attempt to find keys online (see the \fBauto-key-retrieve\fR option in the
+\fBgnupg(1)\fR documentation).
+
+.TP
+\fB\-u\fR, \fB\-\-use\-agent\fR attempt to use the GPG-agent (see the the
+\fBgnupg-agent(1)\fR documentation). Note that GPG-agent is running many
+desktop-evironment; you can check whether this is the case using:
+.nf
+   $ env | grep GPG_AGENT_INFO
+.fi
+
+.SH EXAMPLES
+
+To display aggregated (one-line) information about the signatures in a message:
+.nf
+   $ mu verify --verbose msgfile
+.fi
+
+To display information about all the signatures:
+.nf
+   $ mu verify --verbose msgfile
+.fi
+
+If you only want to use the exit code, you can use:
+.nf
+   $ mu verify --verbose msgfile
+.fi
+which does not give any output.
+
+.SH RETURN VALUE
+
+\fBmu verify\fR returns 0 when all signatures could be verified to be good,
+and returns some non-zero error code when this is not the case
+
+.nf
+| code | meaning                        |
+|------+--------------------------------|
+|    0 | ok                             |
+|    1 | some runtime error             |
+|    2 | > 0 non-verified signatures    |
+.fi
+
+.SH BUGS
+
+Please report bugs if you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR mu(1)
