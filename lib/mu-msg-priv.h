@@ -22,6 +22,10 @@
 #ifndef __MU_MSG_PRIV_H__
 #define __MU_MSG_PRIV_H__
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif /*HAVE_CONFIG_H*/
+
 #include <gmime/gmime.h>
 #include <stdlib.h>
 
@@ -29,6 +33,7 @@
 #include <mu-msg-file.h>
 #include <mu-msg-doc.h>
 #include <mu-msg-cache.h>
+#include "mu-msg-part.h"
 
 G_BEGIN_DECLS
 
@@ -81,6 +86,22 @@ gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err);
  */
 GMimePart* mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html);
 
- G_END_DECLS
+
+#ifdef BUILD_CRYPTO
+/**
+ * get signature information for the mime part
+ *
+ * @param part a multipart/sigde part
+ * @param opts options for the signature verification (we only use the
+ * crypto-related options in opts)
+ * @param err receives error info
+ *
+ * @return a list of MuMsgPartSig, or NULL
+ */
+GSList* mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart,
+			       MuMsgPartOptions opts, GError **err);
+#endif /*BUILD_CRYPTO*/
+
+G_END_DECLS
 
 #endif /*__MU_MSG_PRIV_H__*/

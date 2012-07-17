@@ -31,6 +31,11 @@
 #include "mu-msg-priv.h"
 #include "mu-msg-part.h"
 
+#ifdef BUILD_CRYPTO
+#include "mu-msg-crypto.h"
+#endif /*BUILD_CRYPTO*/
+
+
 struct _FindPartData {
 	guint			 idx, wanted_idx;
 	GMimeObject		*part;
@@ -83,7 +88,7 @@ struct _PartData {
 	MuMsgPartForeachFunc	_func;
 	gpointer		_user_data;
 	GMimePart               *_body_part;
-	gboolean                _recurse_rfc822;
+	MuMsgPartOptions        _opts;
 };
 typedef struct _PartData PartData;
 
@@ -231,8 +236,41 @@ msg_part_free (MuMsgPart *pi)
 
 	g_free (pi->file_name);
 	g_free (pi->description);
+
+#ifdef BUILD_CRYPTO
+	mu_msg_part_free_sig_infos (pi->sig_infos);
+#endif /*BUILD_CRYPTO*/
 }
 
+
+static void
+check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
+		       MuMsgPartOptions opts)
+{
+#ifdef BUILD_CRYPTO
+	GError *err;
+	err = NULL;
+
+	if (!GMIME_IS_MULTIPART_SIGNED (parent))
+		return;
+
+	/* we're interested in the signed thing here, not the
+	 * signature itself */
+	if (g_mime_content_type_is_type (
+		    g_mime_object_get_content_type (mobj),
+		    "application", "pgp-signature"))
+	    return;
+
+	pi->sig_infos = mu_msg_mime_sig_infos
+		(GMIME_MULTIPART_SIGNED (parent), opts, &err);
+	if (err) {
+		g_warning ("error verifying signature: %s", err->message);
+		g_clear_error (&err);
+	}
+#endif /*BUILD_CRYPTO*/
+
+	return;
+}
 
 
 static void
@@ -260,13 +298,17 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 		if (!mmsg)
 			return;
 		rv = init_msg_part_from_mime_message_part (mmsg, &pi);
-		if (rv && pdata->_recurse_rfc822)
+		if (rv && (pdata->_opts && MU_MSG_PART_OPTION_RECURSE_RFC822))
 			/* NOTE: this screws up the counting (pdata->_idx) */
 			g_mime_message_foreach /* recurse */
 				(mmsg, (GMimeObjectForeachFunc)part_foreach_cb,
 				 pdata);
 	} else
 		rv = FALSE; /* ignore */
+
+	/* if we have crypto support, check the signature if there is one */
+	if (pdata->_opts & MU_MSG_PART_OPTION_CHECK_SIGNATURES)
+		check_signature_maybe (parent, mobj, &pi, pdata->_opts);
 
 	if (rv)
 		pdata->_func(pdata->_msg, &pi, pdata->_user_data);
@@ -276,8 +318,8 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 
 
 void
-mu_msg_part_foreach (MuMsg *msg, gboolean recurse_rfc822,
-		     MuMsgPartForeachFunc func, gpointer user_data)
+mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func, gpointer user_data,
+		     MuMsgPartOptions opts)
 {
 	PartData pdata;
 	GMimeMessage *mime_msg;
@@ -294,7 +336,7 @@ mu_msg_part_foreach (MuMsg *msg, gboolean recurse_rfc822,
 	pdata._body_part      = mu_msg_mime_get_body_part (mime_msg, FALSE);
 	pdata._func	      = func;
 	pdata._user_data      = user_data;
-	pdata._recurse_rfc822 = recurse_rfc822;
+	pdata._opts           = opts;
 
 	g_mime_message_foreach (msg->_file->_mime_msg,
 				(GMimeObjectForeachFunc)part_foreach_cb,
@@ -496,7 +538,7 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 	g_return_val_if_fail (fullpath, FALSE);
 	g_return_val_if_fail (!overwrite||!use_cached, FALSE);
 
-	if (!mu_msg_load_msg_file (msg, NULL))
+	if (!mu_msg_load_msg_file (msg, err))
 		return FALSE;
 
 	part = find_part (msg, partidx);
@@ -643,6 +685,7 @@ mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern)
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (pattern, NULL);
+
 
 	if (!mu_msg_load_msg_file (msg, NULL))
 		return NULL;

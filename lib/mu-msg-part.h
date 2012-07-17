@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 struct _MuMsgPart {
 
-	/* index of this message */
+	/* index of this message part */
 	unsigned         index;
 
 	/* cid */
@@ -60,6 +60,9 @@ struct _MuMsgPart {
 	gboolean	 is_leaf; /* if the body is a leaf part (MIME
 				   * Part), not eg. a multipart/ */
 	gboolean         is_msg;  /* part is a message/rfc822 */
+
+	/* crypto stuff */
+	GSList           *sig_infos; /* list of MuMsgPartSig */
 
 	/* if TRUE, mu_msg_part_destroy will free the member vars
 	 * as well*/
@@ -206,20 +209,32 @@ GSList* mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern);
 
 
 typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
+
+
+enum _MuMsgPartOptions {
+	MU_MSG_PART_OPTION_NONE              = 0,
+	MU_MSG_PART_OPTION_RECURSE_RFC822    = 1 << 0, /* recurse into submessages */
+
+	/* below options are for checking signatures; only effective
+	 * if mu was built with crypto support */
+	MU_MSG_PART_OPTION_CHECK_SIGNATURES  = 1 << 1,
+	MU_MSG_PART_OPTION_AUTO_RETRIEVE_KEY = 1 << 2,
+	MU_MSG_PART_OPTION_USE_AGENT         = 1 << 3
+};
+typedef enum _MuMsgPartOptions MuMsgPartOptions;
+
 /**
  * call a function for each of the mime part in a message
  *
  * @param msg a valid MuMsg* instance
- * @param recurse_rfc822 whether to recurse into message/rfc822 parts
- *        generallly, this is only needed when indexing message contents
  * @param func a callback function to call for each contact; when
  * the callback does not return TRUE, it won't be called again
  * @param user_data a user-provide pointer that will be passed to the callback
+ * @param options, bit-wise OR'ed
  *
  */
-void mu_msg_part_foreach (MuMsg *msg, gboolean recurse_rfc822,
-			  MuMsgPartForeachFunc func,
-			  gpointer user_data);
+void mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func, gpointer user_data,
+			  MuMsgPartOptions opts);
 
 G_END_DECLS
 
