@@ -115,10 +115,6 @@ AS_IF([test "x$have_gtest" = "xno"],[
 ])
 
 # gmime 2.4 or 2.6?
-# mu has only been tested with gmime-2.4, but Fedora
-# 14 ships with gmime 2.5.x, which registers itself (pkgconfig) as 2.6
-# it is reported mu works fine with this new gmime as well, so we support
-# both; based on patch by GooseYArd
 PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
 AS_IF([test "x$have_gmime_26" = "xno"],[
    PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime_24=yes],[have_gmime_24=no])
@@ -137,6 +133,10 @@ AS_IF([test "x$have_gmime_26" = "xno"],[
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
 
+# note, we need gmime 2.6 for the crypto stuff
+AM_CONDITIONAL(BUILD_CRYPTO,[test "x$have_gmime_26" = "xyes"])
+AS_IF([test "x$have_gmime_26" = "xyes"],
+   AC_DEFINE_UNQUOTED([BUILD_CRYPTO],1,[Whether to build crypto; reqs gmime 2.6]))
 
 # xapian checking - we need 1.2.x at least
 AC_CHECK_PROG(XAPIAN_CONFIG,xapian-config,xapian-config,no)
@@ -281,7 +281,7 @@ AS_IF([test "x$enable_guile" != "xno"], [
 
 AS_IF([test "x$build_guile" = "xyes" -a "x$GUILE_SNARF" != "x"],
       [guile_version="`${PKG_CONFIG} --modversion guile-2.0`"
-      AC_DEFINE_UNQUOTED([BUILD_GUILE],1,[Whether we have guile 2.0])])
+      AC_DEFINE_UNQUOTED([BUILD_GUILE],1,[Whether we build with guile 2.0 support])])
 AM_CONDITIONAL(BUILD_GUILE, [test "x$build_guile" = "xyes"])
 ###############################################################################
 
@@ -370,6 +370,7 @@ fi
 
 echo
 echo "Build mu4e emacs frontend            : $build_mu4e"
+echo "Build crypto support (gmime >= 2.6)  : $have_gmime_26"
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
 echo "Build 'mug' toy-ui (gtk+)            : $buildgui"
 echo "Build 'mug2' toy-ui (gtk+, webkit)   : $build_webkit"

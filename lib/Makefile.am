@@ -24,6 +24,12 @@ if BUILD_TESTS
 SUBDIRS += tests
 endif
 
+if BUILD_CRYPTO
+crypto=mu-msg-crypto.c mu-msg-crypto.h
+else
+crypto=
+endif
+
 INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
@@ -54,6 +60,8 @@ libmu_la_SOURCES=			\
 	mu-maildir.h			\
 	mu-msg-cache.c			\
 	mu-msg-cache.h			\
+	${crypto}			\
+	mu-msg-crypto.h			\
 	mu-msg-doc.cc			\
 	mu-msg-doc.h			\
 	mu-msg-fields.c			\
@@ -93,3 +101,5 @@ libmu_la_LIBADD=			\
 	$(XAPIAN_LIBS)			\
 	$(GMIME_LIBS)			\
 	$(GLIB_LIBS)
+
+EXTRA_DIST=mu-msg-crypto.c mu-msg-crypto.h
