@@ -103,6 +103,8 @@ config_options_group_mu (void)
 		 "log to standard error (false)", NULL},
 		{"nocolor", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocolor,
 		 "don't use ANSI-colors in some output (false)", NULL},
+		{"verbose", 'v', 0, G_OPTION_ARG_NONE, &MU_CONFIG.verbose,
+		 "verbose output (false)", NULL},
 
 		{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.params, "parameters", NULL},
@@ -345,6 +347,28 @@ config_options_group_extract (void)
 
 
 static GOptionGroup*
+config_options_group_verify (void)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"auto-retrieve", 'r', 0, G_OPTION_ARG_NONE,
+		 &MU_CONFIG.auto_retrieve,
+		 "attempt to retrieve keys online (false)", NULL},
+		{"use-agent", 'a', 0, G_OPTION_ARG_NONE, &MU_CONFIG.use_agent,
+		 "attempt to use the GPG agent (false)", NULL},
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
+	};
+
+	og = g_option_group_new("verify",
+				"options for the 'verify' command",
+				"", NULL, NULL);
+	g_option_group_add_entries(og, entries);
+
+	return og;
+}
+
+
+static GOptionGroup*
 config_options_group_server (void)
 {
 	GOptionGroup *og;
@@ -372,15 +396,16 @@ parse_cmd (int *argcp, char ***argvp)
 		const gchar*	_name;
 		MuConfigCmd	_cmd;
 	} cmd_map[] = {
+		{ "add",     MU_CONFIG_CMD_ADD },
 		{ "cfind",   MU_CONFIG_CMD_CFIND },
 		{ "extract", MU_CONFIG_CMD_EXTRACT },
 		{ "find",    MU_CONFIG_CMD_FIND },
 		{ "index",   MU_CONFIG_CMD_INDEX },
 		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
-		{ "view",    MU_CONFIG_CMD_VIEW },
-		{ "add",     MU_CONFIG_CMD_ADD },
 		{ "remove",  MU_CONFIG_CMD_REMOVE },
-		{ "server",  MU_CONFIG_CMD_SERVER }
+		{ "server",  MU_CONFIG_CMD_SERVER },
+		{ "verify",  MU_CONFIG_CMD_VERIFY },
+		{ "view",    MU_CONFIG_CMD_VIEW }
 	};
 
 	MU_CONFIG.cmd	 = MU_CONFIG_CMD_NONE;
@@ -425,6 +450,9 @@ add_context_group (GOptionContext *context)
 		break;
 	case MU_CONFIG_CMD_CFIND:
 		group = config_options_group_cfind();
+		break;
+	case MU_CONFIG_CMD_VERIFY:
+		group = config_options_group_verify ();
 		break;
 	case MU_CONFIG_CMD_VIEW:
 		group = config_options_group_view();

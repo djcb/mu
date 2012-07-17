@@ -452,8 +452,8 @@ include_attachments (MuMsg *msg)
 	GString *gstr;
 
 	attlist = NULL;
-	mu_msg_part_foreach (msg, FALSE, (MuMsgPartForeachFunc)each_part,
-			     &attlist);
+	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part,
+			     &attlist, MU_MSG_PART_OPTION_NONE);
 
 	gstr = g_string_sized_new (512);
 	gstr = g_string_append_c (gstr, '(');

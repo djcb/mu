@@ -72,6 +72,7 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_ADD,
 	MU_CONFIG_CMD_REMOVE,
 	MU_CONFIG_CMD_SERVER,
+	MU_CONFIG_CMD_VERIFY,
 
 	MU_CONFIG_CMD_NONE
 };
@@ -97,6 +98,7 @@ struct _MuConfig {
 	gchar**	        params;		/* parameters (for querying) */
 	gboolean        nocolor;        /* don't use use ansi-colors
 					 * in some output */
+	gboolean	verbose;	/* verbose output */
 
 	/* options for indexing */
 	char	        *maildir;	/* where the mails are */
@@ -135,6 +137,10 @@ struct _MuConfig {
 	time_t            after;          /* only show messages or
 					   * adresses last seen after
 					   * T */
+	/* options for verify */
+	gboolean	 auto_retrieve;	  /* assume we're online */
+	gboolean	 use_agent;	  /* attempt to use the gpg-agent */
+
 
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between

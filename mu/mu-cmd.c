@@ -40,6 +40,10 @@
 #include "mu-flags.h"
 #include "mu-store.h"
 
+#ifdef BUILD_CRYPTO
+#include "mu-msg-crypto.h"
+#endif /*BUILD_CRYPTO*/
+
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
 
@@ -79,8 +83,8 @@ get_attach_str (MuMsg *msg)
 	gchar *attach;
 
 	attach = NULL;
-	mu_msg_part_foreach (msg, FALSE,
-			     (MuMsgPartForeachFunc)each_part, &attach);
+	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &attach,
+			     MU_MSG_PART_OPTION_NONE);
 
 	return attach;
 }
@@ -391,6 +395,65 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 }
 
 
+
+#ifdef BUILD_CRYPTO
+static void print_signatures (MuMsg *msg, MuMsgPart *part, MuConfig *opts)
+{
+	GSList *cur;
+
+	if (!part->sig_infos)
+		return;
+
+	g_print ("MIME-part %u has %u signature(s): ",
+		 part->index, g_slist_length (part->sig_infos));
+
+	for (cur = part->sig_infos; cur; cur = g_slist_next (cur)) {
+		char *descr;
+		descr = mu_msg_part_sig_info_to_string
+			((MuMsgPartSigInfo*)cur->data);
+		g_print ("%s\n", descr);
+		g_free (descr);
+	}
+}
+
+MuError
+mu_cmd_verify (MuConfig *opts, GError **err)
+{
+	MuMsg *msg;
+	MuMsgPartOptions partopts;
+
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VERIFY,
+			      MU_ERROR_INTERNAL);
+
+	msg = mu_msg_new_from_file (opts->params[1], NULL, err);
+	if (!msg)
+		return MU_ERROR;
+
+	partopts = MU_MSG_PART_OPTION_CHECK_SIGNATURES;
+	if (opts->auto_retrieve)
+		partopts |= MU_MSG_PART_OPTION_AUTO_RETRIEVE_KEY;
+	if (opts->use_agent)
+		partopts |= MU_MSG_PART_OPTION_USE_AGENT;
+
+	mu_msg_part_foreach (msg,(MuMsgPartForeachFunc)print_signatures, opts,
+			     partopts);
+
+	mu_msg_unref (msg);
+
+	return MU_OK;
+}
+#else
+MuError
+mu_cmd_verify (MuConfig *opts, GError **err)
+{
+	g_warning ("Your version of mu does not support crypto");
+}
+
+#endif /*!BUILD_CRYPTO*/
+
+
+
 static void
 show_usage (void)
 {
@@ -466,6 +529,7 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	case MU_CONFIG_CMD_CFIND:   return mu_cmd_cfind (opts, err);
 	case MU_CONFIG_CMD_MKDIR:   return mu_cmd_mkdir (opts, err);
 	case MU_CONFIG_CMD_VIEW:    return mu_cmd_view (opts, err);
+	case MU_CONFIG_CMD_VERIFY:  return mu_cmd_verify (opts, err);
 	case MU_CONFIG_CMD_EXTRACT: return mu_cmd_extract (opts, err);
 
 	case MU_CONFIG_CMD_FIND:

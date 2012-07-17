@@ -148,7 +148,19 @@ MuError mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err);
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_server (MuStore *store, MuConfig *opts,GError**/*unused*/);
+MuError mu_cmd_server (MuStore *store, MuConfig *opts, GError**/*unused*/);
+
+/**
+ * execute the verify command (to verify signatures)
+ * @param store store object to use
+ * @param opts configuration options
+ * @param err receives error information, or NULL
+ *
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
+ */
+MuError mu_cmd_verify (MuConfig *opts, GError **err);
+
 
 /**
  * execute some mu command, based on 'opts'
