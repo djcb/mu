@@ -242,9 +242,9 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 	sd.targetdir	    = targetdir;
 	sd.play             = play;
 
-	mu_msg_part_foreach (msg, FALSE,
+	mu_msg_part_foreach (msg,
 			     (MuMsgPartForeachFunc)save_part_if,
-			     &sd);
+			     &sd, MU_MSG_PART_OPTION_NONE);
 
 	if (sd.saved_num == 0) {
 		g_warning ("no %s extracted from this message",
@@ -345,8 +345,9 @@ show_parts (const char* path, MuConfig *opts, GError **err)
 	g_print ("MIME-parts in this message:\n");
 
 	mu_msg_part_foreach
-		(msg, FALSE, (MuMsgPartForeachFunc)each_part_show,
-		 GUINT_TO_POINTER(!opts->nocolor));
+		(msg, (MuMsgPartForeachFunc)each_part_show,
+		 GUINT_TO_POINTER(!opts->nocolor),
+		 MU_MSG_PART_OPTION_NONE);
 
 	mu_msg_unref (msg);
 
