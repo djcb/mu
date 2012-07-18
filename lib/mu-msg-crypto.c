@@ -43,7 +43,7 @@ dummy_password_requester (GMimeCryptoContext *ctx, const char *user_id,
 
 
 GMimeCryptoContext*
-get_gpg_crypto_context (MuMsgPartOptions opts, GError **err)
+get_gpg_crypto_context (MuMsgOptions opts, GError **err)
 {
 	GMimeCryptoContext *ctx;
 	const char *prog;
@@ -72,18 +72,18 @@ get_gpg_crypto_context (MuMsgPartOptions opts, GError **err)
 
 	g_mime_gpg_context_set_use_agent
 		(GMIME_GPG_CONTEXT(ctx),
-		 opts & MU_MSG_PART_OPTION_USE_AGENT);
+		 opts & MU_MSG_OPTION_USE_AGENT);
 	g_mime_gpg_context_set_always_trust
 		(GMIME_GPG_CONTEXT(ctx), FALSE);
 	g_mime_gpg_context_set_auto_key_retrieve
 		(GMIME_GPG_CONTEXT(ctx),
-		 opts & MU_MSG_PART_OPTION_AUTO_RETRIEVE_KEY);
+		 opts & MU_MSG_OPTION_AUTO_RETRIEVE_KEY);
 
 	return ctx;
 }
 
 GMimeCryptoContext*
-get_pkcs7_crypto_context (MuMsgPartOptions opts, GError **err)
+get_pkcs7_crypto_context (MuMsgOptions opts, GError **err)
 {
 	GMimeCryptoContext *ctx;
 
@@ -252,7 +252,7 @@ error_sig_infos (void)
 
 
 GSList*
-mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart, MuMsgPartOptions opts,
+mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart, MuMsgOptions opts,
 		       GError **err)
 {
 	int i;
@@ -266,7 +266,7 @@ mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart, MuMsgPartOptions opts,
 		return NULL; /* error */
 	}
 
-	if (opts & MU_MSG_PART_OPTION_USE_PKCS7)
+	if (opts & MU_MSG_OPTION_USE_PKCS7)
 		cctx =  get_pkcs7_crypto_context (opts, err);
 	else
 		cctx =  get_gpg_crypto_context (opts, err);

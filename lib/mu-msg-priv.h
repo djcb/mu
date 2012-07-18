@@ -99,7 +99,7 @@ GMimePart* mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html);
  * @return a list of MuMsgPartSig, or NULL
  */
 GSList* mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart,
-			       MuMsgPartOptions opts, GError **err);
+			       MuMsgOptions opts, GError **err);
 #endif /*BUILD_CRYPTO*/
 
 G_END_DECLS

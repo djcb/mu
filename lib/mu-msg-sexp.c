@@ -280,16 +280,15 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 
 
 static void
-append_sexp_parts (GString *gstr, MuMsg *msg, gboolean want_images)
+append_sexp_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 {
 	PartInfo pinfo;
 
 	pinfo.parts       = NULL;
-	pinfo.want_images = want_images;
+	pinfo.want_images = opts & MU_MSG_OPTION_EXTRACT_IMAGES;
 
 	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part,
-			     &pinfo, MU_MSG_PART_OPTION_CHECK_SIGNATURES);
-
+			     &pinfo, opts);
 	if (pinfo.parts) {
 		g_string_append_printf (gstr, "\t:parts (%s)\n", pinfo.parts);
 		g_free (pinfo.parts);
@@ -330,15 +329,18 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 
 char*
 mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
-		gboolean header_only, gboolean extract_images)
+		MuMsgOptions opts)
 {
 	GString *gstr;
 	time_t t;
 
 	g_return_val_if_fail (msg, NULL);
-	g_return_val_if_fail (!(header_only && extract_images), NULL);
+	g_return_val_if_fail (!((opts & MU_MSG_OPTION_HEADERS_ONLY) &&
+				(opts & MU_MSG_OPTION_EXTRACT_IMAGES)),
+			      NULL);
 
-	gstr = g_string_sized_new (header_only ? 1024 : 8192);
+	gstr = g_string_sized_new ((opts & MU_MSG_OPTION_HEADERS_ONLY) ?
+				   1024 : 8192);
 	g_string_append (gstr, "(\n");
 
 	if (docid != 0)
@@ -367,9 +369,9 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	/* headers are retrieved from the database, views from the message file
 	 * file attr things can only be gotten from the file (ie., mu
 	 * view), not from the database (mu find).  */
-	if (!header_only) {
+	if (!(opts & MU_MSG_OPTION_HEADERS_ONLY)) {
 		append_sexp_message_file_attr (gstr, msg);
-		append_sexp_parts (gstr, msg, extract_images);
+		append_sexp_parts (gstr, msg, opts);
 	}
 
 	/* note, some of the contacts info comes from the file, soe

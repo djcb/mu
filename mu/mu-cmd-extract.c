@@ -244,7 +244,7 @@ save_certain_parts (MuMsg *msg, gboolean attachments_only,
 
 	mu_msg_part_foreach (msg,
 			     (MuMsgPartForeachFunc)save_part_if,
-			     &sd, MU_MSG_PART_OPTION_NONE);
+			     &sd, MU_MSG_OPTION_NONE);
 
 	if (sd.saved_num == 0) {
 		g_warning ("no %s extracted from this message",
@@ -347,7 +347,7 @@ show_parts (const char* path, MuConfig *opts, GError **err)
 	mu_msg_part_foreach
 		(msg, (MuMsgPartForeachFunc)each_part_show,
 		 GUINT_TO_POINTER(!opts->nocolor),
-		 MU_MSG_PART_OPTION_NONE);
+		 MU_MSG_OPTION_NONE);
 
 	mu_msg_unref (msg);
 

@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -88,7 +88,7 @@ struct _PartData {
 	MuMsgPartForeachFunc	_func;
 	gpointer		_user_data;
 	GMimePart               *_body_part;
-	MuMsgPartOptions        _opts;
+	MuMsgOptions        _opts;
 };
 typedef struct _PartData PartData;
 
@@ -245,7 +245,7 @@ msg_part_free (MuMsgPart *pi)
 
 static void
 check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
-		       MuMsgPartOptions opts)
+		       MuMsgOptions opts)
 {
 #ifdef BUILD_CRYPTO
 
@@ -266,7 +266,7 @@ check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
 	else return; /* don't know how to handle other kinds */
 
 	if (pkcs7)
-		opts |= MU_MSG_PART_OPTION_USE_PKCS7; /* gpg is the default */
+		opts |= MU_MSG_OPTION_USE_PKCS7; /* gpg is the default */
 
 	err = NULL;
 	pi->sig_infos = mu_msg_mime_sig_infos
@@ -306,7 +306,7 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 		if (!mmsg)
 			return;
 		rv = init_msg_part_from_mime_message_part (mmsg, &pi);
-		if (rv && (pdata->_opts && MU_MSG_PART_OPTION_RECURSE_RFC822))
+		if (rv && (pdata->_opts && MU_MSG_OPTION_RECURSE_RFC822))
 			/* NOTE: this screws up the counting (pdata->_idx) */
 			g_mime_message_foreach /* recurse */
 				(mmsg, (GMimeObjectForeachFunc)part_foreach_cb,
@@ -315,7 +315,7 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 		rv = FALSE; /* ignore */
 
 	/* if we have crypto support, check the signature if there is one */
-	if (pdata->_opts & MU_MSG_PART_OPTION_CHECK_SIGNATURES)
+	if (pdata->_opts & MU_MSG_OPTION_CHECK_SIGNATURES)
 		check_signature_maybe (parent, mobj, &pi, pdata->_opts);
 
 	if (rv)
@@ -327,7 +327,7 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 
 void
 mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func, gpointer user_data,
-		     MuMsgPartOptions opts)
+		     MuMsgOptions opts)
 {
 	PartData pdata;
 	GMimeMessage *mime_msg;

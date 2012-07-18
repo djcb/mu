@@ -24,12 +24,34 @@
 #include <mu-flags.h>
 #include <mu-msg-fields.h>
 #include <mu-msg-prio.h>
+/* #include <mu-msg-part.h> */
 #include <mu-util.h> /* for MuError and XapianDocument */
 
 G_BEGIN_DECLS
 
 struct _MuMsg;
 typedef struct _MuMsg MuMsg;
+
+/* options for various functions */
+enum _MuMsgOptions {
+	MU_MSG_OPTION_NONE              = 0,
+	MU_MSG_OPTION_RECURSE_RFC822    = 1 << 0, /* recurse into submessages */
+
+	/* for -> sexp conversion */
+
+	MU_MSG_OPTION_HEADERS_ONLY      = 1 << 1,
+	MU_MSG_OPTION_EXTRACT_IMAGES    = 1 << 2,
+
+	/* below options are for checking signatures; only effective
+	 * if mu was built with crypto support */
+	MU_MSG_OPTION_CHECK_SIGNATURES  = 1 << 3,
+	MU_MSG_OPTION_AUTO_RETRIEVE_KEY = 1 << 4,
+	MU_MSG_OPTION_USE_AGENT         = 1 << 5,
+	MU_MSG_OPTION_USE_PKCS7         = 1 << 6   /* gpg is the default */
+};
+typedef enum _MuMsgOptions MuMsgOptions;
+
+
 
 /**
  * create a new MuMsg* instance which parses a message and provides
@@ -403,17 +425,23 @@ struct _MuMsgIterThreadInfo;
  * @param msg a valid message
  * @param docid the docid for this message, or 0
  * @param ti thread info for the current message, or NULL
- * @param headers if TRUE, only include message fields which can be
- * obtained from the database (this is much faster if the MuMsg is
- * database-backed, so no file needs to be opened)
- * @param extract_images if TRUE, extract image attachments as temporary
- * files and include links to those in the sexp
+ * @param opts, bitwise OR'ed;
+ *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
+ *      obtained from the database (this is much faster if the MuMsg is
+ *      database-backed, so no file needs to be opened)
+ *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
+ *      files and include links to those in the sexp
+ *  and for message parts:
+ *  	MU_MSG_OPTION_CHECK_SIGNATURES: check signatures
+ *	MU_MSG_OPTION_AUTO_RETRIEVE_KEY: attempt to retrieve keys online
+ *	MU_MSG_OPTION_USE_AGENT: attempt to use GPG-agent
+ *	MU_MSG_OPTION_USE_PKCS7: attempt to use PKCS (instead of gpg)
  *
  * @return a string with the sexp (free with g_free) or NULL in case of error
  */
 char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
 		      const struct _MuMsgIterThreadInfo *ti,
-		      gboolean headers_only, gboolean extract_images);
+		      MuMsgOptions ops);
 
 /**
  * move a message to another maildir; note that this does _not_ update

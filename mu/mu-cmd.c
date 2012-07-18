@@ -52,7 +52,7 @@ view_msg_sexp (MuMsg *msg)
 {
 	char *sexp;
 
-	sexp = mu_msg_to_sexp (msg, 0, NULL, FALSE, FALSE);
+	sexp = mu_msg_to_sexp (msg, 0, NULL, MU_MSG_OPTION_NONE);
 	fputs (sexp, stdout);
 	g_free (sexp);
 
@@ -84,7 +84,7 @@ get_attach_str (MuMsg *msg)
 
 	attach = NULL;
 	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &attach,
-			     MU_MSG_PART_OPTION_NONE);
+			     MU_MSG_OPTION_NONE);
 
 	return attach;
 }
@@ -437,7 +437,7 @@ MuError
 mu_cmd_verify (MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
-	MuMsgPartOptions partopts;
+	MuMsgOptions msgopts;
 	VData vdata;
 
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
@@ -448,18 +448,18 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 	if (!msg)
 		return MU_ERROR;
 
-	partopts = MU_MSG_PART_OPTION_CHECK_SIGNATURES;
+	msgopts = MU_MSG_OPTION_CHECK_SIGNATURES;
 	if (opts->auto_retrieve)
-		partopts |= MU_MSG_PART_OPTION_AUTO_RETRIEVE_KEY;
+		msgopts |= MU_MSG_OPTION_AUTO_RETRIEVE_KEY;
 	if (opts->use_agent)
-		partopts |= MU_MSG_PART_OPTION_USE_AGENT;
+		msgopts |= MU_MSG_OPTION_USE_AGENT;
 
 	vdata.status = MU_MSG_PART_SIG_STATUS_UNKNOWN;
 	vdata.opts   = opts;
 	vdata.msg    = NULL;
 
 	mu_msg_part_foreach (msg,(MuMsgPartForeachFunc)each_sig, &vdata,
-			     partopts);
+			     msgopts);
 
 	/* if there's anything bad, all goodness goes away */
 	if (vdata.status & MU_MSG_PART_SIG_STATUS_BAD ||

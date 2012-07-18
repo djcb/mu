@@ -211,19 +211,6 @@ GSList* mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern);
 typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
 
 
-enum _MuMsgPartOptions {
-	MU_MSG_PART_OPTION_NONE              = 0,
-	MU_MSG_PART_OPTION_RECURSE_RFC822    = 1 << 0, /* recurse into submessages */
-
-	/* below options are for checking signatures; only effective
-	 * if mu was built with crypto support */
-	MU_MSG_PART_OPTION_CHECK_SIGNATURES  = 1 << 1,
-	MU_MSG_PART_OPTION_AUTO_RETRIEVE_KEY = 1 << 2,
-	MU_MSG_PART_OPTION_USE_AGENT         = 1 << 3,
-	MU_MSG_PART_OPTION_USE_PKCS7         = 1 << 4   /* gpg is the default */
-};
-typedef enum _MuMsgPartOptions MuMsgPartOptions;
-
 /**
  * call a function for each of the mime part in a message
  *
@@ -235,7 +222,7 @@ typedef enum _MuMsgPartOptions MuMsgPartOptions;
  *
  */
 void mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func, gpointer user_data,
-			  MuMsgPartOptions opts);
+			  MuMsgOptions opts);
 
 G_END_DECLS
 

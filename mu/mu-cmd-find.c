@@ -493,7 +493,7 @@ output_sexp (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 
 	ti   = opts->threads ? mu_msg_iter_get_thread_info (iter) : NULL;
 	sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
-			       ti, TRUE, FALSE);
+			       ti, MU_MSG_OPTION_HEADERS_ONLY);
 	fputs (sexp, stdout);
 	g_free (sexp);
 

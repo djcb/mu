@@ -453,7 +453,7 @@ include_attachments (MuMsg *msg)
 
 	attlist = NULL;
 	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part,
-			     &attlist, MU_MSG_PART_OPTION_NONE);
+			     &attlist, MU_MSG_OPTION_NONE);
 
 	gstr = g_string_sized_new (512);
 	gstr = g_string_append_c (gstr, '(');
@@ -518,7 +518,8 @@ cmd_compose (ServerContext *ctx, GSList *args, GError **err)
 			print_and_clear_g_error (err);
 			return MU_OK;
 		}
-		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL, FALSE, FALSE);
+		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL,
+				       MU_MSG_OPTION_NONE);
 		atts = (ctype == FORWARD) ? include_attachments (msg) : NULL;
 		mu_msg_unref (msg);
 	} else
@@ -655,7 +656,7 @@ print_sexps (MuMsgIter *iter, gboolean threads, unsigned maxnum)
 
 			ti = threads ? mu_msg_iter_get_thread_info (iter) : NULL;
 			sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
-					       ti, TRUE, FALSE);
+					       ti, MU_MSG_OPTION_HEADERS_ONLY);
 			print_expr ("%s", sexp);
 			g_free (sexp);
 			++u;
@@ -1081,8 +1082,7 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 		print_and_clear_g_error (err);
 	}
 
-	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE/*include body*/,
-			       FALSE/*do not include images*/);
+	sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_NONE);
 	/* note, the :move t thing is a hint to the frontend that it
 	 * could remove the particular header */
 	print_expr ("(:update %s :move %s)", sexp,
@@ -1343,13 +1343,15 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 	MuMsg *msg;
 	unsigned docid;
 	char *sexp;
-	gboolean extract_images;
+	MuMsgOptions opts;
 
-	extract_images = get_bool_from_args (args, "extract-images", FALSE, err);
-	if (err && *err) {
-		print_and_clear_g_error (err);
-		return MU_OK;
-	}
+	opts = MU_MSG_OPTION_CHECK_SIGNATURES;
+	if (get_bool_from_args (args, "extract-images", FALSE, err))
+		opts |= MU_MSG_OPTION_EXTRACT_IMAGES;
+	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
+		opts |= MU_MSG_OPTION_USE_AGENT;
+	if (get_bool_from_args (args, "auto-retrieve-key", FALSE, NULL))
+		opts |= MU_MSG_OPTION_AUTO_RETRIEVE_KEY;
 
 	docid = determine_docid (ctx->query, args, err);
 	if (docid == MU_STORE_INVALID_DOCID) {
@@ -1363,7 +1365,7 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 		return MU_OK;
 	}
 
-	sexp = mu_msg_to_sexp (msg, docid, NULL, FALSE, extract_images);
+	sexp = mu_msg_to_sexp (msg, docid, NULL, opts);
 	mu_msg_unref (msg);
 
 	print_expr ("(:view %s)\n", sexp);

@@ -288,7 +288,7 @@ mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg)
 	cbdata.store = store;
 	cbdata.count = 0;
 	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &cbdata,
-			     MU_MSG_PART_OPTION_NONE);
+			     MU_MSG_OPTION_NONE);
 
 	return cbdata.count;
 }
