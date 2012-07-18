@@ -33,11 +33,14 @@ enum _MuMsgPartSigStatus {
 	MU_MSG_PART_SIG_STATUS_BAD                = 1 << 1,
 	MU_MSG_PART_SIG_STATUS_ERROR              = 1 << 2,
 
-	MU_MSG_PART_SIG_STATUS_EXPSIG             = 1 << 3, /* expired sig */
-	MU_MSG_PART_SIG_STATUS_NO_PUBKEY	  = 1 << 4, /* no public key */
-	MU_MSG_PART_SIG_STATUS_EXPKEYSIG          = 1 << 5, /* key expired */
-	MU_MSG_PART_SIG_STATUS_REVKEYSIG          = 1 << 6, /* revoked key */
-	MU_MSG_PART_SIG_STATUS_UNSUPP_ALGO        = 1 << 7  /* unsupp'd algo */
+	/* status when crypto does not work */
+	MU_MSG_PART_SIG_STATUS_FAIL               = 1 << 3,
+
+	MU_MSG_PART_SIG_STATUS_EXPSIG             = 1 << 4, /* expired sig */
+	MU_MSG_PART_SIG_STATUS_NO_PUBKEY	  = 1 << 5, /* no public key */
+	MU_MSG_PART_SIG_STATUS_EXPKEYSIG          = 1 << 6, /* key expired */
+	MU_MSG_PART_SIG_STATUS_REVKEYSIG          = 1 << 7, /* revoked key */
+	MU_MSG_PART_SIG_STATUS_UNSUPP_ALGO        = 1 << 8  /* unsupp'd algo */
 };
 typedef enum _MuMsgPartSigStatus MuMsgPartSigStatus;
 
@@ -57,6 +60,8 @@ struct _MuMsgPartSigInfo {
 	const char         *pubkey_algo;   /* public key algorithm */
 	const char         *digest_algo;   /* digest algorithm */
 
+	const char         *errmsg;        /* errmsg when status ==
+					    * MU_MSG_PART_SIG_STATUS_FAIL */
 	/* don't touch */
 	gpointer           _cert;
 };
@@ -75,13 +80,25 @@ const char* mu_msg_part_sig_status_to_string (MuMsgPartSigStatus status);
 
 
 /**
+ * convert the bitwise-OR'ed statuses to a string
+ *
+ * @param statuses bitwise-OR'ed statuses
+ *
+ * @return newly allocated string (g_free)
+ */
+char* mu_msg_part_sig_statuses_to_string (MuMsgPartSigStatus statuses)
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+/**
  * get a human readable-description of siginfo
  *
  * @param info a MuMsgPartSigInfo ptr
  *
  * @return a newly allocated string (g_free)
  */
-char* mu_msg_part_sig_info_to_string (MuMsgPartSigInfo *info);
+char* mu_msg_part_sig_info_to_string (MuMsgPartSigInfo *info)
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * free the list of MuMsgPartSigInfo structures

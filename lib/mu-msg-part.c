@@ -248,19 +248,27 @@ check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
 		       MuMsgPartOptions opts)
 {
 #ifdef BUILD_CRYPTO
+
+	GMimeContentType *ctype;
 	GError *err;
-	err = NULL;
+	gboolean pkcs7;
 
 	if (!GMIME_IS_MULTIPART_SIGNED (parent))
 		return;
 
-	/* we're interested in the signed thing here, not the
-	 * signature itself */
-	if (g_mime_content_type_is_type (
-		    g_mime_object_get_content_type (mobj),
-		    "application", "pgp-signature"))
-	    return;
+	ctype = g_mime_object_get_content_type (mobj);
+	if (g_mime_content_type_is_type
+	    (ctype, "application", "pgp-signature"))
+		pkcs7 = FALSE;
+	else if (g_mime_content_type_is_type
+		 (ctype, "application", "x-pkcs7-signature"))
+		pkcs7 = TRUE;
+	else return; /* don't know how to handle other kinds */
 
+	if (pkcs7)
+		opts |= MU_MSG_PART_OPTION_USE_PKCS7; /* gpg is the default */
+
+	err = NULL;
 	pi->sig_infos = mu_msg_mime_sig_infos
 		(GMIME_MULTIPART_SIGNED (parent), opts, &err);
 	if (err) {

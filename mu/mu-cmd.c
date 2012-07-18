@@ -397,22 +397,39 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 
 
 #ifdef BUILD_CRYPTO
-static void print_signatures (MuMsg *msg, MuMsgPart *part, MuConfig *opts)
+struct _VData {
+	MuMsgPartSigStatus status;
+	MuConfig*opts;
+	gchar *msg;
+};
+typedef struct _VData VData;
+
+
+static void
+each_sig (MuMsg *msg, MuMsgPart *part, VData *vdata)
 {
 	GSList *cur;
 
 	if (!part->sig_infos)
 		return;
 
-	g_print ("MIME-part %u has %u signature(s): ",
-		 part->index, g_slist_length (part->sig_infos));
+	if (vdata->opts->verbose)
+		g_print ("MIME-part %u has %u signature(s): ",
+			 part->index, g_slist_length (part->sig_infos));
 
 	for (cur = part->sig_infos; cur; cur = g_slist_next (cur)) {
-		char *descr;
-		descr = mu_msg_part_sig_info_to_string
-			((MuMsgPartSigInfo*)cur->data);
-		g_print ("%s\n", descr);
-		g_free (descr);
+
+		MuMsgPartSigInfo *sig_info;
+		sig_info = (MuMsgPartSigInfo*)cur->data;
+
+		if (vdata->opts->verbose) {
+			char *descr;
+			descr = mu_msg_part_sig_info_to_string (sig_info);
+			g_print ("%s\n", descr);
+			g_free (descr);
+		}
+
+		vdata->status |= sig_info->status;
 	}
 }
 
@@ -421,6 +438,7 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
 	MuMsgPartOptions partopts;
+	VData vdata;
 
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VERIFY,
@@ -436,12 +454,28 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 	if (opts->use_agent)
 		partopts |= MU_MSG_PART_OPTION_USE_AGENT;
 
-	mu_msg_part_foreach (msg,(MuMsgPartForeachFunc)print_signatures, opts,
+	vdata.status = MU_MSG_PART_SIG_STATUS_UNKNOWN;
+	vdata.opts   = opts;
+	vdata.msg    = NULL;
+
+	mu_msg_part_foreach (msg,(MuMsgPartForeachFunc)each_sig, &vdata,
 			     partopts);
+
+	/* if there's anything bad, all goodness goes away */
+	if (vdata.status & MU_MSG_PART_SIG_STATUS_BAD ||
+	    vdata.status & MU_MSG_PART_SIG_STATUS_ERROR)
+		vdata.status &= ~MU_MSG_PART_SIG_STATUS_GOOD;
+
+	if (!opts->quiet) {
+		gchar *str;
+		str = mu_msg_part_sig_statuses_to_string (vdata.status);
+		g_print ("verdict: %s\n", str);
+		g_free (str);
+	}
 
 	mu_msg_unref (msg);
 
-	return MU_OK;
+	return vdata.status == MU_MSG_PART_SIG_STATUS_GOOD ? MU_OK : MU_ERROR;
 }
 #else
 MuError
