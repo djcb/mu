@@ -25,6 +25,7 @@ INCLUDES=$(XAPIAN_CXXFLAGS)					\
 	-DMU_TESTMAILDIR=\"${top_srcdir}/lib/tests/testdir\"	\
 	-DMU_TESTMAILDIR2=\"${top_srcdir}/lib/tests/testdir2\"	\
 	-DMU_TESTMAILDIR3=\"${top_srcdir}/lib/tests/testdir3\"	\
+	-DMU_TESTMAILDIR4=\"${top_srcdir}/lib/tests/testdir4\"	\
 	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"		\
 	-DABS_CURDIR=\"${abs_builddir}\"			\
 	-DABS_SRCDIR=\"${abs_srcdir}\"

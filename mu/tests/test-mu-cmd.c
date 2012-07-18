@@ -734,6 +734,79 @@ test_mu_mkdir_01 (void)
 	g_free (cmdline);
 }
 
+/* we can only test 'verify' if gpg is installed, and has
+ * djcb@djcbsoftware's key in the keyring */
+static gboolean
+verify_is_testable (void)
+{
+	gchar *gpg, *cmdline;
+	gchar *output, *erroutput;
+	int retval;
+	gboolean rv;
+
+	/* find GPG or return FALSE */
+	if ((gpg = (char*)g_getenv ("MU_GPG_PATH"))) {
+		if (access (gpg, X_OK) != 0)
+			return FALSE;
+		else
+			gpg = g_strdup (gpg);
+
+	} else if (!(gpg = g_find_program_in_path ("gpg")))
+		return FALSE;
+
+	cmdline = g_strdup_printf ("%s --list-keys 017DDA3C", gpg);
+	g_free (gpg);
+
+	output = erroutput = NULL;
+	rv = g_spawn_command_line_sync (cmdline, &output, &erroutput,
+					&retval, NULL);
+	g_free (output);
+	g_free (erroutput);
+	g_free (cmdline);
+
+	return (rv && retval == 0) ? TRUE:FALSE;
+}
+
+static void
+test_mu_verify_good (void)
+{
+        gchar *cmdline;
+	int retval;
+
+	if (!verify_is_testable ())
+		return;
+
+	cmdline = g_strdup_printf ("%s verify %s/signed!2,S",
+				   MU_PROGRAM,
+				   MU_TESTMAILDIR4);
+
+	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+					     &retval, NULL));
+	g_assert_cmpuint (retval, ==, 0);
+	g_free (cmdline);
+
+}
+
+
+static void
+test_mu_verify_bad (void)
+{
+        gchar *cmdline;
+	int retval;
+
+	if (!verify_is_testable ())
+		return;
+
+	cmdline = g_strdup_printf ("%s verify %s/signed-bad!2,S",
+				   MU_PROGRAM,
+				   MU_TESTMAILDIR4);
+
+	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+					     &retval, NULL));
+	g_assert_cmpuint (retval, !=, 0);
+	g_free (cmdline);
+}
+
 
 
 int
@@ -780,6 +853,9 @@ main (int argc, char *argv[])
 			 test_mu_view_multi_separate);
 	g_test_add_func ("/mu-cmd/test-mu-view-attach",  test_mu_view_attach);
 	g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
+
+	g_test_add_func ("/mu-cmd/test-mu-verify-good",  test_mu_verify_good);
+	g_test_add_func ("/mu-cmd/test-mu-verify-bad",  test_mu_verify_bad);
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|
