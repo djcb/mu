@@ -481,7 +481,8 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 MuError
 mu_cmd_verify (MuConfig *opts, GError **err)
 {
-	g_warning ("Your version of mu does not support crypto");
+	g_warning ("your version of mu does not support the 'verify' command");
+	return MU_ERROR_IN_PARAMETERS;
 }
 
 #endif /*!BUILD_CRYPTO*/

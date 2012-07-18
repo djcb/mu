@@ -6,7 +6,7 @@ mu verify\- verify message signatures and display information about them
 
 .SH SYNOPSIS
 
-.B mu verify [options] <file> [<file>*]
+.B mu verify [options] <msgfile>
 
 .SH DESCRIPTION
 
@@ -55,7 +55,7 @@ which does not give any output.
 .SH RETURN VALUE
 
 \fBmu verify\fR returns 0 when all signatures could be verified to be good,
-and returns some non-zero error code when this is not the case
+and returns some non-zero error code when this is not the case.
 
 .nf
 | code | meaning                        |

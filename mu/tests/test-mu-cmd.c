@@ -736,7 +736,7 @@ test_mu_mkdir_01 (void)
 
 /* we can only test 'verify' if gpg is installed, and has
  * djcb@djcbsoftware's key in the keyring */
-static gboolean
+G_GNUC_UNUSED  static gboolean
 verify_is_testable (void)
 {
 	gchar *gpg, *cmdline;
@@ -767,7 +767,7 @@ verify_is_testable (void)
 	return (rv && retval == 0) ? TRUE:FALSE;
 }
 
-static void
+G_GNUC_UNUSED static void
 test_mu_verify_good (void)
 {
         gchar *cmdline;
@@ -788,7 +788,7 @@ test_mu_verify_good (void)
 }
 
 
-static void
+G_GNUC_UNUSED  static void
 test_mu_verify_bad (void)
 {
         gchar *cmdline;
@@ -854,8 +854,10 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-view-attach",  test_mu_view_attach);
 	g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 
+#ifdef BUILD_CRYPTO
 	g_test_add_func ("/mu-cmd/test-mu-verify-good",  test_mu_verify_good);
 	g_test_add_func ("/mu-cmd/test-mu-verify-bad",  test_mu_verify_bad);
+#endif /*BUILD_CRYPTO*/
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|

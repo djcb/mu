@@ -6,7 +6,7 @@
 
 *** mu
 
-  - handling of signed / encrypted messages
+  - handling of encrypted messages
   - maybe use gstringchunk in mu-msg-cache
   - put threading information in the database, and enable getting the complete
      threads when searching
@@ -51,8 +51,10 @@
      mu4e-view-message-with-msgid)
   - improve mouse interaction (i.e., cursor vs point)
   - add example 'run shellscript on message'
+  - hook up with 'mu verify'
+  - don't show GPG/PKCS7 sigs as attachments
 
-** Done (0.9.9)
+* Done (0.9.9)
 
   - make contacts in the view clickable (toggle long/short display, compose message)
   - opening urls is too eager (now use M-RET for opening url at point, not just
@@ -68,6 +70,11 @@
     certain time (mtime)
   - add mu:timestamp for guile (refering to the message file's mtime)
   - guile automated tests
+  - add 'mu verify'
+    - automated tests
+    - handle verbose/quiet/normal output 'mu verify'
+    - handle pkcs signatures
+    - check gmime 2.4 does not break
 
 * Done
   :PROPERTIES:
