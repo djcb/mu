@@ -399,6 +399,11 @@ headers)."
 	 :shortname "Path"
 	 :help "Full filesystem path to the message"
 	 :sortable t))
+     (:signature .
+       ( :name "Signature"
+	 :shortname "Sgn"
+	 :help "Check for the cryptographic signature"
+	 :sortable nil))     
      (:subject .
        ( :name "Subject"
 	 :shortname "Subject"
@@ -415,6 +420,22 @@ list, and the fields the message view). Most fields should be
 self-explanatory. A special one is `:from-or-to', which is equal to
 `:from' unless `:from' matches `mu4e-user-mail-address-regexp', in
 which case it will be equal to `:to'.")
+
+
+(defvar mu4e-custom-header-info nil
+  "A list like `mu4e-custom-header-info', but for
+custom (user-specified) headers. Each of the list items is a
+property list with :name (the full-name, as displayed in the
+message view), :shortname (the name as displayed in the headers
+view), :help (some help information, which shows up in the
+tooltip). Furthermore, there are two special fields:
+:headers-func and :message-func, and the values should be functions
+that take a MSG property list as argument, and return a string as
+result.
+Note, :sortable does not work for custom header fields.")
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

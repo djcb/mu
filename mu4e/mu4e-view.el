@@ -47,7 +47,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-fields
-  '(:from :to  :cc :subject :flags :date :maildir :attachments)
+  '(:from :to  :cc :subject :flags :date :maildir :attachments :signature)
   "Header fields to display in the message view buffer. For the
 complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
@@ -193,7 +193,8 @@ plist."
 		(if sizestr (mu4e~view-construct-header field sizestr))))
 	    ;; attachments
 	    (:attachments (mu4e~view-construct-attachments-header msg))
-	    (t               (mu4e-error "Unsupported field: %S" field)))))
+	    (:signature   (mu4e~view-construct-signature-header msg))
+	    (t (mu4e-error "Unsupported field: %S" field)))))
       mu4e-view-fields "")
     "\n"
     (mu4e-body-text msg)))
@@ -330,6 +331,22 @@ at POINT, or if nil, at (point)."
 	(propertize (symbol-name flag) 'face 'mu4e-view-special-header-value-face))
       flags
       (propertize ", " 'face 'mu4e-view-header-value-face)) t))
+
+(defun mu4e~view-construct-signature-header (msg)
+  "Construct a Signature: header, if there are any signed parts."
+  (let* ((parts (plist-get msg :parts))
+	  (verdicts
+	    (remove-if 'null
+	      (mapcar (lambda (part) (plist-get part :signature)) parts)))
+	  (val (when verdicts
+		 (mapconcat (lambda (v) (symbol-name v)) verdicts ", ")))
+	  (btn (when val
+		 (with-temp-buffer
+		   (insert-text-button "Details") (buffer-string))))
+	  (val (when val 
+		 (concat (propertize val 'face 'mu4e-view-special-header-value-face)
+		   " (" btn ")"))))
+    (mu4e~view-construct-header :signature val t))) 
 
 (defun mu4e~view-open-save-attach-func (msg attachnum is-open)
   "Return a function that offers to save attachment NUM. If IS-OPEN
