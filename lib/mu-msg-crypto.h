@@ -80,6 +80,24 @@ const char* mu_msg_part_sig_status_to_string (MuMsgPartSigStatus status);
 
 
 /**
+ * summarize the signatures to one status:
+ *
+ * - if there's any signature with MU_MSG_PART_SIG_STATUS_(ERROR|FAIL),
+ *   the verdict is MU_MSG_PART_SIG_STATUS_ERROR
+ * - if not, if there's any signature with MU_MSG_PART_SIG_STATUS_BAD
+ *   the verdict is MU_MSG_PART_SIG_STATUS_BAD
+ * - if not, if there's any signature with MU_MSG_PART_SIG_STATUS_GOOD
+ *   the verdict is MU_MSG_PART_SIG_STATUS_GOOD
+ * - if not, the verdic is MU_MSG_PART_SIG_STATUS_UNKNOWN
+ *
+ * @param sig_infos
+ *
+ * @return the status
+ */
+MuMsgPartSigStatus mu_msg_mime_sig_infos_verdict (GSList *sig_infos);
+
+
+/**
  * convert the bitwise-OR'ed statuses to a string
  *
  * @param statuses bitwise-OR'ed statuses

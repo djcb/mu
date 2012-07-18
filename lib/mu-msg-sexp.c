@@ -22,6 +22,7 @@
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-msg-part.h"
+#include "mu-msg-crypto.h"
 #include "mu-maildir.h"
 
 static void
@@ -238,6 +239,22 @@ elvis (const char *s1, const char *s2)
 	return s1 ? s1 : s2;
 }
 
+static const char*
+sig_verdict (GSList *sig_infos)
+{
+	switch (mu_msg_mime_sig_infos_verdict (sig_infos)) {
+	case MU_MSG_PART_SIG_STATUS_GOOD:
+		return ":signature good";
+	case MU_MSG_PART_SIG_STATUS_BAD:
+		return ":signature bad";
+	case MU_MSG_PART_SIG_STATUS_ERROR:
+		return ":signature error"; /* ugly */
+	default:
+		return "";
+	}
+}
+
+
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
@@ -266,13 +283,14 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 
 	tmp = g_strdup_printf
 		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s "
-		 ":attachment %s :size %i)",
+		 ":attachment %s :size %i %s)",
 		 elvis (pinfo->parts, ""), part->index, name,
 		 elvis (part->type, "application"),
 		 elvis (part->subtype, "octet-stream"),
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
 		 mu_msg_part_looks_like_attachment (part, TRUE) ? "t" : "nil",
-		 (int)part->size);
+		 (int)part->size,
+		 sig_verdict (part->sig_infos));
 
 	g_free (pinfo->parts);
 	pinfo->parts = tmp;

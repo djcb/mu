@@ -293,6 +293,7 @@ mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart, MuMsgOptions opts,
 }
 
 
+
 void
 mu_msg_part_free_sig_infos (GSList *siginfos)
 {
@@ -300,6 +301,46 @@ mu_msg_part_free_sig_infos (GSList *siginfos)
 			 (GFunc)sig_info_destroy, NULL);
 	g_slist_free (siginfos);
 }
+
+
+/*
+ * - if there's any signature with MU_MSG_PART_SIG_STATUS_(ERROR|FAIL),
+ *   the verdict is MU_MSG_PART_SIG_STATUS_ERROR
+ * - if not, if there's any signature with MU_MSG_PART_SIG_STATUS_BAD
+ *   the verdict is MU_MSG_PART_SIG_STATUS_BAD
+ * - if not, if there's any signature with MU_MSG_PART_SIG_STATUS_GOOD
+ *   the verdict is MU_MSG_PART_SIG_STATUS_GOOD
+ * - if not, the verdic is MU_MSG_PART_SIG_STATUS_UNKNOWN
+ */
+MuMsgPartSigStatus
+mu_msg_mime_sig_infos_verdict (GSList *sig_infos)
+{
+	GSList *cur;
+	MuMsgPartSigStatus status;
+
+	status = MU_MSG_PART_SIG_STATUS_UNKNOWN;
+
+	for (cur = sig_infos; cur; cur = g_slist_next (cur)) {
+		MuMsgPartSigInfo *siginfo;
+		siginfo = (MuMsgPartSigInfo*)cur->data;
+
+		/* if there's an error/failure, the verdict is error */
+		if (siginfo->status & MU_MSG_PART_SIG_STATUS_ERROR ||
+		    siginfo->status & MU_MSG_PART_SIG_STATUS_FAIL)
+			return MU_MSG_PART_SIG_STATUS_ERROR;
+
+		if (siginfo->status & MU_MSG_PART_SIG_STATUS_BAD)
+			status = MU_MSG_PART_SIG_STATUS_BAD;
+
+		if ((siginfo->status & MU_MSG_PART_SIG_STATUS_GOOD) &&
+		    status == MU_MSG_PART_SIG_STATUS_UNKNOWN)
+			status = MU_MSG_PART_SIG_STATUS_GOOD;
+	}
+
+	return status;
+}
+
+
 
 
 const char*
