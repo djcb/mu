@@ -220,8 +220,7 @@ enum _MuMsgPartOptions {
 	MU_MSG_PART_OPTION_CHECK_SIGNATURES  = 1 << 1,
 	MU_MSG_PART_OPTION_AUTO_RETRIEVE_KEY = 1 << 2,
 	MU_MSG_PART_OPTION_USE_AGENT         = 1 << 3,
-	MU_MSG_PART_OPTION_TRUST_ALWAYS      = 1 << 4,
-	MU_MSG_PART_OPTION_USE_PKCS7         = 1 << 5 /* gpg is the default */
+	MU_MSG_PART_OPTION_USE_PKCS7         = 1 << 4   /* gpg is the default */
 };
 typedef enum _MuMsgPartOptions MuMsgPartOptions;
 

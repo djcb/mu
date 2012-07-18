@@ -74,8 +74,7 @@ get_gpg_crypto_context (MuMsgPartOptions opts, GError **err)
 		(GMIME_GPG_CONTEXT(ctx),
 		 opts & MU_MSG_PART_OPTION_USE_AGENT);
 	g_mime_gpg_context_set_always_trust
-		(GMIME_GPG_CONTEXT(ctx),
-		 opts & MU_MSG_PART_OPTION_TRUST_ALWAYS);
+		(GMIME_GPG_CONTEXT(ctx), FALSE);
 	g_mime_gpg_context_set_auto_key_retrieve
 		(GMIME_GPG_CONTEXT(ctx),
 		 opts & MU_MSG_PART_OPTION_AUTO_RETRIEVE_KEY);
@@ -97,8 +96,7 @@ get_pkcs7_crypto_context (MuMsgPartOptions opts, GError **err)
 	}
 
 	g_mime_pkcs7_context_set_always_trust
-		(GMIME_PKCS7_CONTEXT(ctx),
-		 opts & MU_MSG_PART_OPTION_TRUST_ALWAYS);
+		(GMIME_PKCS7_CONTEXT(ctx), FALSE);
 
 	return ctx;
 }

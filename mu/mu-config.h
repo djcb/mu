@@ -141,7 +141,6 @@ struct _MuConfig {
 	gboolean	 auto_retrieve;	  /* assume we're online */
 	gboolean	 use_agent;	  /* attempt to use the gpg-agent */
 
-
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between
 					   * multiple messages in mu
