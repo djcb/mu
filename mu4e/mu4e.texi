@@ -1269,8 +1269,8 @@ shortcut @key{m}); so, for example, if you want to move a message the
 @subsection Navigating through search queries
 You can navigate through previous/next queries using
 @code{mu4e-headers-query-prev} and @code{mu4e-headers-query-next}, which are
-bound to @key{M-left} and @key{M-right}, just like the way you can navigate to
-previous and next pages in many webbrowsers.
+bound, respectively, to @key{M-left} and @key{M-right}, just like the way you
+can navigate to previous and next pages in many web browsers.
 
 The functions try to be smart as to not record duplicate queries. Also, the
 number of queries remembered has a fixed limit, so long-running @t{mu4e} won't
@@ -1294,7 +1294,9 @@ attachments.
 Now, @code{mu4e-headers-search-narrow} (@key{/}) comes in handy. That function
 asks for an additional search pattern, which will be appended to the current
 search query, in effect getting you the subset of the currently shown headers
-that also match this extra search pattern.
+that also match this extra search pattern. @key{\} takes you back to the
+previous query, so, effectively 'widens' the search if you have just narrowed
+it.
 
 Technically, narrowing the results of query @t{x} with expression @t{y}
 implies doing a search @t{(x) AND y}.

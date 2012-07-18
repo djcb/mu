@@ -368,13 +368,15 @@ after the end of the search results."
 
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-headers-search-edit)
-      (define-key map "/" 'mu4e-headers-search-narrow)
 
+      (define-key map "/" 'mu4e-headers-search-narrow)
+            
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
       (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
+      (define-key map (kbd "\\")        'mu4e-headers-query-prev)
       (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
-
+      
       (define-key map "b" 'mu4e-headers-search-bookmark)
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
 
@@ -1086,8 +1088,9 @@ determines where the query is taken from and is a symbol, either
 `future' or `past'."
   (let ((query (mu4e~headers-pop-query whence))
 	 (where (if (eq whence 'future) 'past 'future)))
-    (mu4e~headers-push-query mu4e~headers-last-query where)
-    (mu4e-headers-search query nil nil t)))
+    (when query
+      (mu4e~headers-push-query mu4e~headers-last-query where)
+      (mu4e-headers-search query nil nil t))))
 
 (defun mu4e-headers-query-next ()
   "Execute the previous query from the query stacks."
