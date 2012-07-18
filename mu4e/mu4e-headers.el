@@ -369,6 +369,7 @@ after the end of the search results."
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-headers-search-edit)
       (define-key map "/" 'mu4e-headers-search-narrow)
+      (define-key map "\\" 'mu4e-headers-search-widen)
 
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
@@ -993,6 +994,12 @@ the last search expression."
     (mu4e-error "There's nothing to filter"))
   (mu4e-headers-search
     (format "(%s) AND %s" mu4e~headers-last-query filter)))
+
+
+(defun mu4e-headers-search-widen ()
+  "Widen the current search by removing any narrowing query."
+  (interactive)
+  (mu4e-headers-search (mu4e~headers-pop-query 'past)))
 
 
 (defun mu4e-headers-change-sorting (&optional dont-refresh)
