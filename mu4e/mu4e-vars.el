@@ -122,6 +122,24 @@ else: don't split (show either headers or messages, not both) Also
 see `mu4e-headers-visible-lines' and
 `mu4e-headers-visible-columns'.")
 
+
+
+
+;; crypto
+(defgroup mu4e-crypto nil
+  "Crypto-related settings."
+  :group 'mu4e)
+
+(defcustom mu4e-auto-retrieve-keys nil
+  "Attempt to automatically retrieve public keys when needed."
+  :type 'boolean
+  :group 'mu4e-compose)
+
+(defcustom mu4e-use-agent nil
+  "Attempt to use GPG-agent when it is available."
+  :type 'boolean
+  :group 'mu4e-compose)
+
 ;; completion; we put them here rather than in mu4e-compose, as mu4e-utils needs
 ;; the variables.
 
@@ -273,6 +291,7 @@ flag set)."
   "Face for special header values in the message view."
   :group 'mu4e-faces)
 
+
 (defface mu4e-view-link-face
   '((t :inherit font-lock-type-face :underline t))
   "Face for showing URLs and attachments in the message view."
@@ -350,6 +369,17 @@ flag set)."
 headers)."
   :group 'mu4e-faces)
 
+(defface mu4e-ok-face
+  '((t :inherit font-lock-comment-face :bold t :slant normal))
+  "Face for things that are okay."
+  :group 'mu4e-faces)
+
+(defface mu4e-warning-face
+  '((t :inherit font-lock-warning-face :bold t :slant normal))
+  "Face for warnings / error."
+  :group 'mu4e-faces)
+
+
 
 ;; headers info
 (defconst mu4e-header-info
@@ -403,7 +433,7 @@ headers)."
        ( :name "Signature"
 	 :shortname "Sgn"
 	 :help "Check for the cryptographic signature"
-	 :sortable nil))     
+	 :sortable nil))
      (:subject .
        ( :name "Subject"
 	 :shortname "Subject"

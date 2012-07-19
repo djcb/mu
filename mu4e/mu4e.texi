@@ -828,6 +828,8 @@ misc
 w            toggle line wrapping
 h            toggle showing cited parts
 
+v            show details about the cryptographic signature
+
 .            show the raw message view. 'q' takes you back.
 C-+,C--      increase / decrease the number of headers shown
 H            get help
@@ -940,6 +942,28 @@ after installing that, you can tell @t{mu4e} to use it with something like:
 As mentioned, by default @t{mu4e} prefers the text-version of an e-mail
 message over the html version. You can change this by setting
 @code{mu4e-view-prefer-html} to @t{t}.
+
+@subsection Verifying signatures
+
+Some e-mail messages are cryptographically signed, and @t{mu4e} can check the
+validity of the signatures@footnote{Signature-verification is only available
+if @t{mu} was built with crypto-support; this requires at least @t{mu} version 0.9.9
+and @t{GMime 2.6}, and the @t{gpg} program}.
+
+If a message has a signature, the message view shows an extra header
+@t{Signature:} (assuming it is part of your @code{mu4e-view-fields}), and one
+or more 'verdicts' of the signatures found; either @t{good}, @t{bad} or
+@t{error}. For instance:
+
+@verbatim
+Signature: good, error (Details)
+@end verbatim
+
+You can see the details of the signature verification by activating the
+@t{Details} or pressing @key{v}. This will pop-up a little window with the
+details of the signatures found and whether they could be verified or not.
+
+For more information, see the @t{mu-verify} manual page.
 
 @node Editor view
 @section Editor view
@@ -2041,7 +2065,7 @@ Now, let's make a @t{mu4e} configuration for this:
 
 (require 'smtpmail)
 (setq message-send-mail-function 'smtpmail-send-it
-   starttls-use-gnutls t      
+   starttls-use-gnutls t
    smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
    smtpmail-auth-credentials '(("smtp.gmail.com" 587 "USERNAME@@gmail.com" nil))
    smtpmail-default-smtp-server "smtp.gmail.com"
@@ -2051,7 +2075,7 @@ Now, let's make a @t{mu4e} configuration for this:
 ;; alternatively, for emacs-24 you can use:
 ;;(setq message-send-mail-function 'smtpmail-send-it
 ;;     smtpmail-stream-type 'starttls
-;;     smtpmail-default-smtp-server "smtp.gmail.com"      
+;;     smtpmail-default-smtp-server "smtp.gmail.com"
 ;;     smtpmail-smtp-server "smtp.gmail.com"
 ;;     smtpmail-smtp-service 587)
 

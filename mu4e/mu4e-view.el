@@ -37,6 +37,7 @@
 (require 'filladapt nil 'noerror)
 (require 'comint)
 (require 'browse-url)
+(require 'button)
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
@@ -331,7 +332,7 @@ at POINT, or if nil, at (point)."
 	(propertize (symbol-name flag) 'face 'mu4e-view-special-header-value-face))
       flags
       (propertize ", " 'face 'mu4e-view-header-value-face)) t))
-
+ 
 (defun mu4e~view-construct-signature-header (msg)
   "Construct a Signature: header, if there are any signed parts."
   (let* ((parts (plist-get msg :parts))
@@ -339,14 +340,20 @@ at POINT, or if nil, at (point)."
 	    (remove-if 'null
 	      (mapcar (lambda (part) (plist-get part :signature)) parts)))
 	  (val (when verdicts
-		 (mapconcat (lambda (v) (symbol-name v)) verdicts ", ")))
+		 (mapconcat
+		   (lambda (v)
+		     (propertize (symbol-name v)
+		       'face (if (eq v 'good) 'mu4e-ok-face 'mu4e-warning-face)))
+		   verdicts ", ")))
 	  (btn (when val
 		 (with-temp-buffer
-		   (insert-text-button "Details") (buffer-string))))
-	  (val (when val 
-		 (concat (propertize val 'face 'mu4e-view-special-header-value-face)
-		   " (" btn ")"))))
-    (mu4e~view-construct-header :signature val t))) 
+		   (insert-text-button "Details"
+		     'msg msg
+		     'action (lambda (b)
+			       (mu4e-view-verify-msg-popup (button-get b 'msg))))
+		   (buffer-string))))
+	  (val (when val (concat val " (" btn ")"))))
+    (mu4e~view-construct-header :signature val t)))
 
 (defun mu4e~view-open-save-attach-func (msg attachnum is-open)
   "Return a function that offers to save attachment NUM. If IS-OPEN
@@ -441,6 +448,8 @@ is nil, and otherwise open it."
       (define-key map "t" 'mu4e-view-mark-subthread)
       (define-key map "T" 'mu4e-view-mark-thread)
 
+      (define-key map "v" 'mu4e-view-verify-msg-popup)
+      
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
@@ -1112,6 +1121,32 @@ the results."
   (interactive "sShell command: ")
   (let ((path (mu4e-field-at-point :path)))
     (mu4e-process-file-through-pipe path cmd)))
+
+(defconst mu4e~verify-buffer-name " *mu4e-verify*")
+
+(defun mu4e-view-verify-msg-popup (&optional msg) 
+  "Pop-up a little signature verification window for (optional) MSG
+or message-at-point."
+  (interactive)
+  (let* ((path (if msg (plist-get msg :path)  (mu4e-field-at-point :path)))
+	  (cmd (format "%s verify --verbose %s"
+		 mu4e-mu-binary
+		 (shell-quote-argument path)))
+	  (output (shell-command-to-string cmd))
+	    ;; create a new one
+	  (buf (get-buffer-create mu4e~verify-buffer-name))
+	  (win (or (get-buffer-window buf)
+		 (split-window-vertically (- (window-height) 6)))))
+    (with-selected-window win
+      (let ((inhibit-read-only t))
+	;; (set-window-dedicated-p win t)
+	(switch-to-buffer buf)
+	(erase-buffer)
+	(insert output)
+	(goto-char (point-min))
+	(local-set-key "q" 'kill-buffer-and-window)))
+    (select-window win)))
+
 
 (defun mu4e~view-quit-buffer ()
   "Quit the mu4e-view buffer. This is a rather complex function, to

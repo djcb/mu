@@ -60,7 +60,7 @@ dir already existed, or has been created, nil otherwise."
     ((yes-or-no-p (mu4e-format "%s does not exist yes. Create now?" dir))
       (mu4e~proc-mkdir dir))
     (t nil)))
- 
+
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
   (concat
@@ -77,7 +77,7 @@ user-input, don't show anyhting."
   "Create [mu4e]-prefixed error based on format FRM and ARGS."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (message "%s" (apply 'mu4e-format frm args)))
- 
+
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
 only."
@@ -526,8 +526,8 @@ process."
 (defun mu4e-error-handler (errcode errmsg)
   "Handler function for showing an error."
   (case errcode
-    (4 (mu4e-message "No matches for this search query."))
-    (t (mu4e-message "Error %d: %s" errcode errmsg))))
+    (4 (mu4e-error "No matches for this search query."))
+    (t (mu4e-error "Error %d: %s" errcode errmsg))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
