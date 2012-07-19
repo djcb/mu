@@ -1,9 +1,9 @@
-.TH MU CFIND 1 "June 2012" "User Manuals"
+.TH MU CFIND 1 "July 2012" "User Manuals"
 
 .SH NAME
 
-mu cfind \- find contacts in the \fBmu\fR database and export them for use in
-other programs.
+\fBmu cfind\fR is the \fBmu\fR command to find contacts in the \fBmu\fR
+database and export them for use in other programs.
 
 .SH SYNOPSIS
 
@@ -19,9 +19,9 @@ other programs.
 .SH SEARCHING CONTACTS
 
 When you index your messages (see \fBmu index\fR), \fBmu\fR creates a list of
-unique e-mail addresses found and the accompanying name. In case the same
-e-mail address is used with different names, the most recent non-empty name is
-used.
+unique e-mail addresses found and the accompanying name, and caches this
+list. In case the same e-mail address is used with different names, the most
+recent non-empty name is used.
 
 \fBmu cfind\fR starts a search for contacts that match a \fIregular
 expression\fR. For example:
@@ -39,7 +39,9 @@ would find all contacts with a gmail-address, while
 would find all contact with Mary in either name or e-mail address.
 
 If you do not specify any search expression, \fBmu cfind\fR will return the
-full list of contacts.
+full list of contacts. Note, \fBmu cfind\fR uses does not directly use the
+database, but uses a cache file with e-mail addresses that is populated during
+the indexing process.
 
 The regular expressions are Perl-compatible (as per the PCRE-library).
 
