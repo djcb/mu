@@ -387,19 +387,19 @@ config_options_group_server (void)
 }
 
 
-
-static gboolean
-parse_cmd (int *argcp, char ***argvp)
+static MuConfigCmd
+cmd_from_string (const char *str)
 {
 	int i;
 	struct {
-		const gchar*	_name;
-		MuConfigCmd	_cmd;
+		const gchar*	name;
+		MuConfigCmd	cmd;
 	} cmd_map[] = {
 		{ "add",     MU_CONFIG_CMD_ADD },
 		{ "cfind",   MU_CONFIG_CMD_CFIND },
 		{ "extract", MU_CONFIG_CMD_EXTRACT },
 		{ "find",    MU_CONFIG_CMD_FIND },
+		{ "help",    MU_CONFIG_CMD_HELP },
 		{ "index",   MU_CONFIG_CMD_INDEX },
 		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
 		{ "remove",  MU_CONFIG_CMD_REMOVE },
@@ -408,6 +408,19 @@ parse_cmd (int *argcp, char ***argvp)
 		{ "view",    MU_CONFIG_CMD_VIEW }
 	};
 
+
+	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i)
+		if (strcmp (str, cmd_map[i].name) == 0)
+			return cmd_map[i].cmd;
+
+	return MU_CONFIG_CMD_UNKNOWN;
+}
+
+
+
+static gboolean
+parse_cmd (int *argcp, char ***argvp)
+{
 	MU_CONFIG.cmd	 = MU_CONFIG_CMD_NONE;
 	MU_CONFIG.cmdstr = NULL;
 
@@ -419,74 +432,208 @@ parse_cmd (int *argcp, char ***argvp)
 		 * etc.)*/
 		return TRUE;
 
-	MU_CONFIG.cmd    = MU_CONFIG_CMD_UNKNOWN;
 	MU_CONFIG.cmdstr = (*argvp)[1];
-
-	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i)
-		if (strcmp (MU_CONFIG.cmdstr, cmd_map[i]._name) == 0)
-			MU_CONFIG.cmd = cmd_map[i]._cmd;
+	MU_CONFIG.cmd    = cmd_from_string (MU_CONFIG.cmdstr);
 
 	return TRUE;
 }
 
 
-static void
-add_context_group (GOptionContext *context)
+static GOptionGroup*
+get_option_group (MuConfigCmd cmd)
 {
-	GOptionGroup *group;
-
-	switch (MU_CONFIG.cmd) {
+	switch (cmd) {
 	case MU_CONFIG_CMD_INDEX:
-		group = config_options_group_index();
-		break;
+		return config_options_group_index();
 	case MU_CONFIG_CMD_FIND:
-		group = config_options_group_find();
-		break;
+		return config_options_group_find();
 	case MU_CONFIG_CMD_MKDIR:
-		group = config_options_group_mkdir();
-		break;
+		return config_options_group_mkdir();
 	case MU_CONFIG_CMD_EXTRACT:
-		group = config_options_group_extract();
-		break;
+		return config_options_group_extract();
 	case MU_CONFIG_CMD_CFIND:
-		group = config_options_group_cfind();
-		break;
+		return config_options_group_cfind();
 	case MU_CONFIG_CMD_VERIFY:
-		group = config_options_group_verify ();
-		break;
+		return config_options_group_verify ();
 	case MU_CONFIG_CMD_VIEW:
-		group = config_options_group_view();
-		break;
+		return config_options_group_view();
 	case MU_CONFIG_CMD_SERVER:
-		group = config_options_group_server();
-		break;
+		return config_options_group_server();
 	default:
-		return; /* no group to add */
+		return NULL; /* no group to add */
 	}
+}
 
-	g_option_context_add_group(context, group);
+
+
+
+static const gchar*
+cmd_help (MuConfigCmd cmd, gboolean long_help)
+{
+	unsigned u;
+
+	static const struct {
+		MuConfigCmd cmd;
+		const char *usage;
+		const char *long_help;
+	} help_strings[] = {
+		{ MU_CONFIG_CMD_ADD,
+		  "mu add <file> [<files>]",
+		  "mu add is the command to add specific measage files to the\n"
+		  "database. Each of the files must be specified with an "
+		  "absolute path." },
+		{ MU_CONFIG_CMD_CFIND,
+		  "mu cfind [options] [<pattern>]",
+		  "mu cfind is the mu command to find contacts in the mu\n"
+		  "database and export them for use in other programs." },
+		{ MU_CONFIG_CMD_EXTRACT,
+		  "mu extract [options] <file>\n"
+		  "mu extract [options] <file> <pattern>",
+		  "mu extract is the mu command to display and save message parts "
+		  "(attachments)\n, and open them with other tools." },
+		{ MU_CONFIG_CMD_FIND,
+		  "mu find [options] <search expression>",
+		  "mu find is the mu command for searching e-mail message that were "
+		  "stored earlier using mu index(1)." },
+		{ MU_CONFIG_CMD_HELP,
+		  "mu help <command>",
+		  "mu find is the mu command to get help about <command>." },
+		{ MU_CONFIG_CMD_INDEX,
+		  "mu index [options]",
+		  "mu index is the mu command for scanning the contents of Maildir "
+		  "directories\nand storing the results in a Xapian database.\n\nThe "
+		  "data can then be queried using mu-find(1)."},
+		{ MU_CONFIG_CMD_MKDIR,
+		  "mu mkdir [options] <dir> [<dirs>]",
+		  "mu mkdir is the mu command for creating Maildirs.\nIt does not "
+		  "use the mu database. "},
+		{ MU_CONFIG_CMD_REMOVE,
+		  "mu remove [options] <file> [<files>]",
+		  "mu remove is the mu command to remove messages from the database." },
+		{ MU_CONFIG_CMD_SERVER,
+		  "mu server [options]",
+		  "mu server starts a simple shell in which one can query and "
+		  "manipulate the mu database.\nThe output of the commands is terms "
+		  "of Lisp symbolic expressions (s-exps).\nmu server is not meant for "
+		  "use by humans; instead, it is designed specifically\nfor the "
+		  "mu4e e-mail client." },
+		{ MU_CONFIG_CMD_VERIFY,
+		  "mu verify [options] <msgfile>",
+		  "mu verify is the mu command for verifying message signatures "
+		  "(such as PGP/GPG signatures)\nand displaying information about them."
+		  "\n\nThe command works on message files, and does not require "
+		  "the message to be indexed in the database."},
+		{ MU_CONFIG_CMD_VIEW,
+		  "mu view [options] <file> [<files>]",
+		  "mu view is the mu command for displaying e-mail message files. It "
+		  "works on message files and does \fInot\fR require the message to be "
+		  "indexed in the database."}
+	};
+
+	for (u = 0; u != G_N_ELEMENTS(help_strings); ++u)
+		if (cmd == help_strings[u].cmd) {
+			if (long_help)
+				return help_strings[u].long_help;
+			else
+				return help_strings[u].usage ;
+		}
+
+	g_return_val_if_reached ("");
+	return "";
+}
+
+
+/* ugh yuck massaging of the GOption text output */
+static gchar*
+massage_help (const char *help)
+{
+	GRegex *rx;
+	char *str;
+
+	rx = g_regex_new ("^Usage:.*\n.*\n",
+			  0, G_REGEX_MATCH_NEWLINE_ANY, NULL);
+	str = g_regex_replace (rx, help,
+			       -1, 0, "",
+			       G_REGEX_MATCH_NEWLINE_ANY, NULL);
+	g_regex_unref (rx);
+	return str;
+}
+
+
+static gboolean
+init_cmd_help (GError **err)
+{
+	MuConfigCmd cmd;
+	GOptionContext *ctx;
+	GOptionGroup *group;
+	char *cleanhelp;
+
+	if (!MU_CONFIG.params ||
+	    !MU_CONFIG.params[0] || !MU_CONFIG.params[1] ||
+	    MU_CONFIG.params[2])
+		goto errexit;
+
+	cmd = cmd_from_string (MU_CONFIG.params[1]);
+	if (cmd == MU_CONFIG_CMD_UNKNOWN)
+		goto errexit;
+
+	ctx = g_option_context_new ("");
+	g_option_context_set_main_group
+		(ctx, config_options_group_mu());
+	group = get_option_group (cmd);
+	if (group)
+		g_option_context_add_group (ctx, group);
+
+	g_option_context_set_description (ctx, cmd_help (cmd, TRUE));
+	cleanhelp = massage_help
+		(g_option_context_get_help (ctx, TRUE, group));
+
+	g_print ("Usage:\n\t%s\n%s",
+		 cmd_help (cmd, FALSE), cleanhelp);
+	g_free (cleanhelp);
+
+	return TRUE;
+
+errexit:
+	mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+			     "usage: mu help <command>");
+	return FALSE;
 }
 
 
 static gboolean
 parse_params (int *argcp, char ***argvp)
 {
-	GError *err = NULL;
+	GError *err;
 	GOptionContext *context;
 	gboolean rv;
 
-	context = g_option_context_new("- mu general option");
+	context = g_option_context_new("- mu general options");
 	g_option_context_set_main_group(context, config_options_group_mu());
+	g_option_context_set_help_enabled (context, TRUE);
 
-	add_context_group (context);
+	err = NULL;
 
-	rv = g_option_context_parse (context, argcp, argvp, &err);
+	/* help is special */
+	if (MU_CONFIG.cmd == MU_CONFIG_CMD_HELP) {
+		rv = g_option_context_parse (context, argcp, argvp, &err) &&
+			init_cmd_help (&err);
+	} else {
+		GOptionGroup *group;
+		group = get_option_group (MU_CONFIG.cmd);
+		if (group)
+			g_option_context_add_group(context, group);
+		rv = g_option_context_parse (context, argcp, argvp, &err);
+	}
+
 	g_option_context_free (context);
 	if (!rv) {
-		g_printerr ("mu: error in options: %s\n", err->message);
-		g_error_free (err);
+		g_printerr ("mu: error in options: %s\n",
+			    err ? err->message : "?");
+		g_clear_error (&err);
 		return FALSE;
 	}
+
 	return TRUE;
 }
 
@@ -498,11 +645,11 @@ mu_config_init (int *argcp, char ***argvp)
 
 	memset (&MU_CONFIG, 0, sizeof(MU_CONFIG));
 
-	if (!parse_cmd (argcp, argvp) ||
-	    !parse_params(argcp, argvp)) {
-		mu_config_uninit (&MU_CONFIG);
-		return NULL;
-	}
+	if (!parse_cmd (argcp, argvp))
+		goto errexit;
+
+	if (!parse_params(argcp, argvp))
+		goto errexit;
 
 	/* fill in the defaults if user did not specify */
 	set_group_mu_defaults();
@@ -513,6 +660,10 @@ mu_config_init (int *argcp, char ***argvp)
 	/* set_group_mkdir_defaults (config); */
 
 	return &MU_CONFIG;
+
+errexit:
+	mu_config_uninit (&MU_CONFIG);
+	return NULL;
 }
 
 

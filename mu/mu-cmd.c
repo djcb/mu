@@ -561,6 +561,9 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		return MU_G_ERROR_CODE(err);
 
 	switch (opts->cmd) {
+		/* already handled in mu-config.c */
+	case MU_CONFIG_CMD_HELP: return MU_OK;
+
 	case MU_CONFIG_CMD_CFIND:   return mu_cmd_cfind (opts, err);
 	case MU_CONFIG_CMD_MKDIR:   return mu_cmd_mkdir (opts, err);
 	case MU_CONFIG_CMD_VIEW:    return mu_cmd_view (opts, err);
