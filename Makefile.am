@@ -68,7 +68,7 @@ line35:
 	 | grep -v mu-str-normalize.c				\
 	 | grep -v mu_str_subject_normalize			\
 	 | grep -v config_options_group_find			\
-	 | grep -v SCM_DEFINE_PUBLIC				\
+	 | grep -v SCM_DEFINE					\
 	 | grep -v tests					\
          | awk '($$5 > 35)'
 
