@@ -22,6 +22,7 @@
 #endif /*HAVE_CONFIG*/
 
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <string.h>		/* for memset */
 
 #include "mu-util.h"
@@ -362,6 +363,16 @@ mug_shell (MugData * mugdata)
 	return mugdata->win;
 }
 
+static gint
+on_focus_query_bar (GtkWidget* ignored, GdkEventKey *event, MugData* mugdata)
+{
+	if (event->type==GDK_KEY_RELEASE && event->keyval==GDK_KEY_Escape) {
+		mug_query_bar_grab_focus (MUG_QUERY_BAR (mugdata->querybar));
+		return 1;
+	}
+	return 0;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -390,6 +401,8 @@ main (int argc, char *argv[])
 	mugshell = mug_shell (&mugdata);
 	g_signal_connect (G_OBJECT (mugshell), "destroy",
 			  G_CALLBACK (gtk_main_quit), NULL);
+	g_signal_connect (G_OBJECT (mugshell), "key_release_event",
+			  G_CALLBACK ( on_focus_query_bar ), (gpointer)&mugdata );
 
 	gtk_widget_show (mugshell);
 	mug_query_bar_grab_focus (MUG_QUERY_BAR (mugdata.querybar));
