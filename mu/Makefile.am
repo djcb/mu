@@ -53,7 +53,7 @@ BUILT_SOURCES=				\
 	mu-help-strings.h
 
 mu-help-strings.h: mu-help-strings.txt mu-help-strings.awk
-	$(AWK) -f mu-help-strings.awk < $< > $@
+	$(AWK) -f ${top_srcdir}/mu/mu-help-strings.awk < $< > $@
 
 mu_LDADD=				\
 	${top_builddir}/lib/libmu.la    \
@@ -62,3 +62,5 @@ mu_LDADD=				\
 EXTRA_DIST=				\
 	mu-help-strings.awk		\
 	mu-help-strings.txt
+
+CLEANFILES=$(BUILT_SOURCES)

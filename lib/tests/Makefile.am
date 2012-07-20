@@ -155,5 +155,6 @@ EXTRA_DIST=						\
 	testdir4/encrypted!2,S				\
 	testdir4/multimime!2,FS				\
 	testdir4/signed!2,S				\
+	testdir4/signed-bad!2,S				\
 	testdir4/signed-encrypted!2,S			\
 	testdir4/special!2,Sabc
