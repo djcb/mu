@@ -1,0 +1,115 @@
+#-*-mode:org-*-
+# Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
+#BEGIN MU_CONFIG_CMD_ADD
+#STRING
+mu add <file> [<files>]
+#STRING
+mu add is the command to add specific measage files to the
+database. Each of the files must be specified with an
+absolute path
+#END
+
+#BEGIN MU_CONFIG_CMD_CFIND
+#STRING
+mu cfind [options] [<pattern>]
+#STRING
+mu cfind is the mu command to find contacts in the mu database and export them
+for use in other programs.
+#END
+
+#BEGIN MU_CONFIG_CMD_EXTRACT
+#STRING
+mu extract [options] <file>
+#STRING
+mu extract is the mu command to display and save message parts
+(attachments), and open them with other tools.
+#END
+
+#BEGIN MU_CONFIG_CMD_FIND
+#STRING
+mu find [options] <search expression>
+#STRING
+mu find is the mu command for searching e-mail message that were
+stored earlier using mu index(1).
+#END
+
+
+#BEGIN MU_CONFIG_CMD_HELP
+#STRING
+mu help <command>
+#STRING
+mu find is the mu command to get help about <command>.
+#END
+
+#BEGIN MU_CONFIG_CMD_INDEX
+#STRING
+mu index [options]
+#STRING
+mu index is the mu command for scanning the contents of Maildir
+directories and storing the results in a Xapian database.The
+data can then be queried using mu-find(1).
+#END
+
+#BEGIN MU_CONFIG_CMD_MKDIR
+#STRING
+mu mkdir [options] <dir> [<dirs>]
+#STRING
+mu mkdir is the mu command for creating Maildirs.It does not
+use the mu database.
+#END
+
+
+#BEGIN MU_CONFIG_CMD_REMOVE
+#STRING
+mu remove [options] <file> [<files>]
+#STRING
+mu remove is the mu command to remove messages from the database.
+#END
+
+
+#BEGIN MU_CONFIG_CMD_SERVER
+#STRING
+mu server [options]
+#STRING
+mu server starts a simple shell in which one can query and
+manipulate the mu database.The output of the commands is terms
+of Lisp symbolic expressions (s-exps).mu server is not meant for
+use by humans; instead, it is designed specificallyfor the
+mu4e e-mail client.
+#END
+
+
+#BEGIN MU_CONFIG_CMD_VERIFY
+#STRING
+mu verify [options] <msgfile>
+#STRING
+mu verify is the mu command for verifying message signatures
+(such as PGP/GPG signatures)and displaying information about them.
+The command works on message files, and does not require
+the message to be indexed in the database.
+#END
+
+#BEGIN MU_CONFIG_CMD_VIEW
+#STRING
+mu view [options] <file> [<files>]
+#STRING
+mu view is the mu command for displaying e-mail message files. It
+works on message files and does not require the message to be
+indexed in the database.
+#END
