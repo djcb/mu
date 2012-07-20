@@ -14,7 +14,7 @@
   - handling of command line options / help
   - handle exception 'The revision being read has been discarded - you should
     call Xapian::Database::reopen() and retry the operation'
-  - add 'help' command
+  - improved checked for gmime-2.6 crypto funcs
 
 *** mu-guile
 
@@ -52,7 +52,6 @@
      mu4e-view-message-with-msgid)
   - improve mouse interaction (i.e., cursor vs point)
   - add example 'run shellscript on message'
-  - hook up with 'mu verify'
   - don't show GPG/PKCS7 sigs as attachments
 
 * Done (0.9.9)
@@ -76,6 +75,10 @@
     - handle verbose/quiet/normal output 'mu verify'
     - handle pkcs signatures
     - check gmime 2.4 does not break
+  - hook up mu4e with 'mu verify'
+  - add 'help' command
+
+
 
 * Done
   :PROPERTIES:
