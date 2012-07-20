@@ -76,7 +76,7 @@ user-input, don't show anyhting."
 (defun mu4e-error (frm &rest args)
   "Create [mu4e]-prefixed error based on format FRM and ARGS."
   (mu4e-log 'error (apply 'mu4e-format frm args))
-  (message "%s" (apply 'mu4e-format frm args)))
+  (error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
