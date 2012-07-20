@@ -166,6 +166,11 @@ and finally, we receive:
 
 
 .TP
+.B guile
+The \fBguile\fR command is reserved for future use.
+
+
+.TP
 .B index
 
 Using the \fBindex\fR command, we can (re)index the database, similar to what
@@ -245,8 +250,14 @@ particular e-mail message.
 If the optional parameter \fBextract-images\fR is \fBtrue\fR, extract images
 to temp files, and include links to them in the returned s-exp.
 
+If the optional parameter \fBuse-agent\fR is \fBtrue\fR, try to use
+\fBgpg-agent\fR when verifying PGP/GPG message parts.
+
+If the optional parameter \fBauto-retrieve-key\fR is \fBtrue\fR, attempt to
+retrieve public keys online automatically.
+
 .nf
--> view docid:<docid>|msgid:<msgid> [extract-images:true]
+-> view docid:<docid>|msgid:<msgid> [extract-images:true] [use-agent:false] [auto-retrieve-key:false]
 <- (:view <s-exp>)
 .fi
 
