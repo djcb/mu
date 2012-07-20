@@ -16,20 +16,21 @@
 
 include $(top_srcdir)/gtest.mk
 
-# don't use -Werror, as it might break on other compilers
-# use -Wno-unused-parameters, because some callbacks may not
-# really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
-
 # note, we need top_builddir for snarfing with 'make distcheck' (ie.,
 # with separate builddir)
-SUBDIRS= . mu examples tests
+SUBDIRS= . mu examples
+
+if BUILD_TESTS
+SUBDIRS += tests
+endif
+
 INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/lib ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
+AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 lib_LTLIBRARIES=			\
 	libguile-mu.la
