@@ -255,22 +255,40 @@ sig_verdict (GSList *sig_infos)
 }
 
 
-static void
-each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
+static char*
+get_part_filename (MuMsgPart *part)
 {
 	const char *fname;
-	char *name, *tmp;
-	char *tmpfile;
+	char *name;
+	const char *ctype, *csubtype;
 
-	if (!(fname = mu_msg_part_file_name (part)))
+	ctype = part->type;
+	csubtype = part->subtype;
+	if (!ctype || !csubtype) {
+		ctype = "application";
+		csubtype = "octet-stream";
+	}
+
+	fname = mu_msg_part_file_name (part);
+	if (!fname)
 		fname = mu_msg_part_description (part);
+
 	if (fname)
 		name = mu_str_escape_c_literal (fname, TRUE);
 	else
 		name = g_strdup_printf ("\"%s-%s-%d\"",
-					elvis (part->type, "application"),
-					elvis (part->subtype, "octet-stream"),
-					part->index);
+					ctype, csubtype, part->index);
+	return name;
+}
+
+
+static void
+each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
+{
+	char *name, *tmp;
+	char *tmpfile;
+
+	name = get_part_filename (part);
 
 	tmpfile = NULL;
 	if (pinfo->want_images && g_ascii_strcasecmp (part->type, "image") == 0) {
@@ -344,6 +362,13 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 		 " :has-child t" : "");
 }
 
+static void
+append_non_headers_only_attr (GString *gstr, MuMsg *msg, MuMsgOptions opts)
+{
+	append_sexp_message_file_attr (gstr, msg);
+	append_sexp_parts (gstr, msg, opts);
+}
+
 
 char*
 mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
@@ -356,9 +381,8 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	g_return_val_if_fail (!((opts & MU_MSG_OPTION_HEADERS_ONLY) &&
 				(opts & MU_MSG_OPTION_EXTRACT_IMAGES)),
 			      NULL);
-
-	gstr = g_string_sized_new ((opts & MU_MSG_OPTION_HEADERS_ONLY) ?
-				   1024 : 8192);
+	gstr = g_string_sized_new
+		((opts & MU_MSG_OPTION_HEADERS_ONLY) ?  1024 : 8192);
 	g_string_append (gstr, "(\n");
 
 	if (docid != 0)
@@ -374,23 +398,20 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	g_string_append_printf (gstr,"\t:date (%u %u 0)\n", (unsigned)(t >> 16),
 				(unsigned)(t & 0xffff));
 	g_string_append_printf (gstr, "\t:size %u\n",
-				(unsigned) mu_msg_get_size (msg));
+				(unsigned)mu_msg_get_size (msg));
 	append_sexp_attr (gstr, "message-id", mu_msg_get_msgid (msg));
 	append_sexp_attr (gstr, "path",	 mu_msg_get_path (msg));
 	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
 
 	g_string_append_printf (gstr, "\t:priority %s\n",
 				mu_msg_prio_name(mu_msg_get_prio(msg)));
-
 	append_sexp_flags (gstr, msg);
 
 	/* headers are retrieved from the database, views from the message file
 	 * file attr things can only be gotten from the file (ie., mu
 	 * view), not from the database (mu find).  */
-	if (!(opts & MU_MSG_OPTION_HEADERS_ONLY)) {
-		append_sexp_message_file_attr (gstr, msg);
-		append_sexp_parts (gstr, msg, opts);
-	}
+	if (!(opts & MU_MSG_OPTION_HEADERS_ONLY))
+		append_non_headers_only_attr (gstr, msg, opts);
 
 	/* note, some of the contacts info comes from the file, soe
 	 * this has to be after the previous */

@@ -975,9 +975,8 @@ cmd_index (ServerContext *ctx, GSList *args, GError **err)
 	MuError rv;
 
 	GET_STRING_OR_ERROR_RETURN (args, "path", &path, err);
-	set_my_addresses (ctx->store,
-			  get_string_from_args (args, "my-addresses",
-						TRUE, NULL));
+	set_my_addresses (ctx->store, get_string_from_args
+			  (args, "my-addresses", TRUE, NULL));
 
 	index = mu_index_new (ctx->store, err);
 	if (!index) {
@@ -1004,7 +1003,6 @@ cmd_index (ServerContext *ctx, GSList *args, GError **err)
 	print_expr ("(:info index :status complete "
 		   ":processed %u :updated %u :cleaned-up %u)",
 		    stats._processed, stats._updated, stats2._cleaned_up);
-
 leave:
 	mu_index_destroy (index);
 	return MU_OK;

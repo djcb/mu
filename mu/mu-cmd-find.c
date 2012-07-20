@@ -534,6 +534,40 @@ output_xml (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 }
 
 
+static OutputFunc*
+output_prepare (MuConfig *opts, GError **err)
+{
+	switch (opts->format) {
+	case MU_CONFIG_FORMAT_EXEC:
+		return exec_cmd;
+	case MU_CONFIG_FORMAT_LINKS:
+		if (!prepare_links (opts, err))
+			return NULL;
+		else
+			return output_link;
+	case MU_CONFIG_FORMAT_PLAIN:
+		return output_plain;
+	case MU_CONFIG_FORMAT_XML:
+		g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+		g_print ("<messages>\n");
+		return output_xml;
+	case MU_CONFIG_FORMAT_SEXP:
+		return output_sexp;
+
+	default:
+		g_return_val_if_reached (NULL);
+		return NULL;
+	}
+}
+
+static void
+output_finish (MuConfig *opts)
+{
+	if (opts->format == MU_CONFIG_FORMAT_XML)
+		g_print ("</messages>\n");
+}
+
+
 static gboolean
 output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 {
@@ -541,22 +575,9 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 	gboolean rv;
 	OutputFunc *output_func;
 
-	switch (opts->format) {
-	case MU_CONFIG_FORMAT_EXEC:  output_func = exec_cmd; break;
-	case MU_CONFIG_FORMAT_LINKS:
-		if (!prepare_links (opts, err))
-			return FALSE;
-		output_func = output_link;
-		break;
-	case MU_CONFIG_FORMAT_PLAIN: output_func = output_plain; break;
-	case MU_CONFIG_FORMAT_XML:   output_func = output_xml;
-		g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-		g_print ("<messages>\n");
-		break;
-	case MU_CONFIG_FORMAT_SEXP: output_func = output_sexp; break;
-			break;
-	default: g_assert_not_reached ();
-	}
+	output_func = output_prepare (opts, err);
+	if (!output_func)
+		return FALSE;
 
 	for (count = 0, rv = TRUE; !mu_msg_iter_is_done(iter);
 	     mu_msg_iter_next (iter)) {
@@ -574,8 +595,7 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 			++count;
 	}
 
-	if (opts->format == MU_CONFIG_FORMAT_XML)
-		g_print ("</messages>\n");
+	output_finish (opts);
 
 	if (rv && count == 0) {
 		mu_util_g_set_error (err, MU_ERROR_NO_MATCHES,
@@ -645,15 +665,15 @@ format_params_valid (MuConfig *opts, GError **err)
 	case MU_CONFIG_FORMAT_XML:
 	case MU_CONFIG_FORMAT_XQUERY:
 		if (opts->exec) {
-			mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-					     "--exec cannot be combined with --format");
+			mu_util_g_set_error
+				(err, MU_ERROR_IN_PARAMETERS,
+				 "--exec and --format cannot be combined");
 			return FALSE;
 		}
 		break;
-	default:
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "invalid output format %s",
-				     opts->formatstr ? opts->formatstr : "<none>");
+	default:  mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				       "invalid output format %s",
+			 opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
 
@@ -665,7 +685,7 @@ format_params_valid (MuConfig *opts, GError **err)
 
 	if (opts->linksdir && opts->format != MU_CONFIG_FORMAT_LINKS) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "--linksdir is only valid with --format=links");
+			 "--linksdir is only valid with --format=links");
 		return FALSE;
 	}
 

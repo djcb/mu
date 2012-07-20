@@ -464,8 +464,7 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 		return NULL;
 
 	if (!(mobj = find_part (msg, partidx))) {
-		mu_util_g_set_error (err,
-				     MU_ERROR_GMIME,
+		mu_util_g_set_error (err,MU_ERROR_GMIME,
 				     "cannot find part %u", partidx);
 		return NULL;
 	}
@@ -477,7 +476,7 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 			    * components */
 			fname = g_path_get_basename (fname);
 		else
-			fname = g_strdup_printf ("%x-part-%u",
+			fname =	g_strdup_printf ("%x-part-%u",
 					 g_str_hash (mu_msg_get_path (msg)),
 						 partidx);
 	} else if (GMIME_IS_MESSAGE_PART(mobj))
@@ -485,8 +484,8 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 			(g_mime_message_part_get_message
 			 ((GMimeMessagePart*)mobj));
 	else {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
-			     "part %u cannot be saved", partidx);
+		mu_util_g_set_error (err, MU_ERROR_GMIME,
+				     "part %u cannot be saved", partidx);
 		return NULL;
 	}
 
