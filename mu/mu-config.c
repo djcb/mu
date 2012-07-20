@@ -386,6 +386,23 @@ config_options_group_server (void)
 	return og;
 }
 
+static GOptionGroup*
+config_options_group_list (void)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
+	};
+
+	og = g_option_group_new("list",
+				"options for the 'list' command",
+				"", NULL, NULL);
+	g_option_group_add_entries(og, entries);
+
+	return og;
+}
+
+
 
 static MuConfigCmd
 cmd_from_string (const char *str)
@@ -405,7 +422,8 @@ cmd_from_string (const char *str)
 		{ "remove",  MU_CONFIG_CMD_REMOVE },
 		{ "server",  MU_CONFIG_CMD_SERVER },
 		{ "verify",  MU_CONFIG_CMD_VERIFY },
-		{ "view",    MU_CONFIG_CMD_VIEW }
+		{ "view",    MU_CONFIG_CMD_VIEW },
+		{ "list",    MU_CONFIG_CMD_LIST }
 	};
 
 
@@ -459,6 +477,8 @@ get_option_group (MuConfigCmd cmd)
 		return config_options_group_view();
 	case MU_CONFIG_CMD_SERVER:
 		return config_options_group_server();
+	case MU_CONFIG_CMD_LIST:
+		return config_options_group_list();
 	default:
 		return NULL; /* no group to add */
 	}
