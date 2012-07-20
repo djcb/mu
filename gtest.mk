@@ -29,8 +29,7 @@ test: all $(TEST_PROGS)
 	 test -z "$(SUBDIRS)" || \
 		for subdir in $(SUBDIRS); do \
 			test "$$subdir" = "." || \
-		(cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@ ) || exit $$? ; \
+		(cd ./$$subdir && $(MAKE) $(AM_MAKEFLAGS) $@ ) || exit $$? ; \
 		done
 
 .PHONY: test gprof
-
