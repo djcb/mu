@@ -314,6 +314,23 @@ MuError  mu_store_foreach (MuStore *self, MuStoreForeachFunc func,
 			   void *user_data, GError **err);
 
 /**
+ * call a function for each term in the database
+ *
+ * @param self a valid store
+ * @param func a callback function to to call for each term
+ * @param user_data a user pointer passed to the callback function
+ * @param err to receive error info or NULL. err->code is MuError value
+ *
+ * @return MU_OK if all went well, MU_STOP if the foreach was interrupted,
+ * MU_ERROR in case of error
+ */
+typedef MuError (*MuStoreForeachTermFunc) (const char* term,
+				           const unsigned int term_freq,
+				           void *user_data);
+MuError  mu_store_foreach_term (MuStore *self, MuStoreForeachTermFunc func,
+			   void *user_data, GError **err);
+
+/**
  * set metadata for this MuStore
  *
  * @param store a store
