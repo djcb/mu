@@ -21,6 +21,8 @@
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
+#include <string.h>
+
 #include "mu-msg.h"
 #include "mu-msg-priv.h"
 #include "mu-msg-part.h"
@@ -31,74 +33,138 @@
 #include <gmime/gmime.h>
 #include <gmime/gmime-multipart-signed.h>
 
-static gboolean
-dummy_password_requester (GMimeCryptoContext *ctx, const char *user_id,
-			  const char* prompt_ctx, gboolean reprompt,
-			  GMimeStream *response, GError **err)
-{
-	g_print ("password requested\n");
-	return TRUE;
+#define CALLBACK_DATA "callback-data"
 
+struct _CallbackData {
+	MuMsgPartPasswordFunc  pw_func;
+	gpointer               user_data;
+};
+typedef struct _CallbackData CallbackData;
+
+
+static gboolean
+password_requester (GMimeCryptoContext *ctx, const char *user_id,
+		    const char* prompt_ctx, gboolean reprompt,
+		    GMimeStream *response, GError **err)
+{
+	CallbackData *cbdata;
+	gchar *password;
+	ssize_t written;
+
+	cbdata = g_object_get_data (G_OBJECT(ctx), CALLBACK_DATA);
+	g_return_val_if_fail (cbdata, FALSE);
+
+	password = cbdata->pw_func (user_id, prompt_ctx, reprompt,
+				    cbdata->user_data);
+	if (!password)
+		return FALSE;
+
+	written = g_mime_stream_write_string (response, password);
+	if (written != -1)
+		written = g_mime_stream_write_string (response, "\n");
+	if (written == -1)
+		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
+			             "writing password to mime stream failed");
+
+	if (g_mime_stream_flush (response) != 0)
+		g_printerr ("error flushing stream!\n");
+
+	memset (password, 0, strlen(password));
+	g_free (password);
+
+	return written != -1 ? TRUE : FALSE;
 }
 
 
-GMimeCryptoContext*
+static char*
+dummy_password_func (const char *user_id, const char *prompt_ctx,
+		     gboolean reprompt, gpointer user_data)
+{
+	g_print ("password requested for %s (%s) %s\n",
+		 user_id, prompt_ctx, reprompt ? "again" : "");
+
+	return NULL;
+}
+
+
+static GMimeCryptoContext*
 get_gpg_crypto_context (MuMsgOptions opts, GError **err)
 {
-	GMimeCryptoContext *ctx;
+	GMimeCryptoContext *cctx;
 	const char *prog;
 
-	ctx  = NULL;
+	cctx  = NULL;
 
 	prog = g_getenv ("MU_GPG_PATH");
 	if (prog)
-		ctx = g_mime_gpg_context_new (
-		(GMimePasswordRequestFunc)dummy_password_requester,
-			prog);
+		cctx = g_mime_gpg_context_new (
+		(GMimePasswordRequestFunc)password_requester, prog);
 	else {
 		char *path;
 		path  = g_find_program_in_path ("gpg");
 		if (path)
-			ctx = g_mime_gpg_context_new (
-				(GMimePasswordRequestFunc)dummy_password_requester,
-				path);
+			cctx = g_mime_gpg_context_new (
+				password_requester, path);
 		g_free (path);
 	}
-	if (!ctx) {
+	if (!cctx) {
 		mu_util_g_set_error (err, MU_ERROR,
 				     "failed to get GPG crypto context");
 		return NULL;
 	}
 
 	g_mime_gpg_context_set_use_agent
-		(GMIME_GPG_CONTEXT(ctx),
-		 opts & MU_MSG_OPTION_USE_AGENT);
-	g_mime_gpg_context_set_always_trust
-		(GMIME_GPG_CONTEXT(ctx), FALSE);
+		(GMIME_GPG_CONTEXT(cctx),
+		 opts & MU_MSG_OPTION_USE_AGENT ? TRUE:FALSE);
 	g_mime_gpg_context_set_auto_key_retrieve
-		(GMIME_GPG_CONTEXT(ctx),
-		 opts & MU_MSG_OPTION_AUTO_RETRIEVE_KEY);
+		(GMIME_GPG_CONTEXT(cctx),
+		 opts & MU_MSG_OPTION_AUTO_RETRIEVE_KEY ? TRUE:FALSE);
+	g_mime_gpg_context_set_always_trust
+		(GMIME_GPG_CONTEXT(cctx), FALSE);
 
-	return ctx;
+	return cctx;
 }
 
-GMimeCryptoContext*
+static GMimeCryptoContext*
 get_pkcs7_crypto_context (MuMsgOptions opts, GError **err)
 {
-	GMimeCryptoContext *ctx;
+	GMimeCryptoContext *cctx;
 
-	ctx = g_mime_pkcs7_context_new
-		((GMimePasswordRequestFunc)dummy_password_requester);
-	if (!ctx) {
+	cctx = g_mime_pkcs7_context_new (password_requester);
+	if (!cctx) {
 		mu_util_g_set_error (err, MU_ERROR,
 				     "failed to get PKCS7 crypto context");
 		return NULL;
 	}
 
 	g_mime_pkcs7_context_set_always_trust
-		(GMIME_PKCS7_CONTEXT(ctx), FALSE);
+		(GMIME_PKCS7_CONTEXT(cctx), FALSE);
 
-	return ctx;
+	return cctx;
+}
+
+
+
+static GMimeCryptoContext*
+get_crypto_context (MuMsgOptions opts, MuMsgPartPasswordFunc password_func,
+		    gpointer user_data, GError **err)
+{
+	CallbackData *cbdata;
+	GMimeCryptoContext *cctx;
+
+	if (opts & MU_MSG_OPTION_USE_PKCS7)
+		cctx = get_pkcs7_crypto_context (opts, err);
+	else
+		cctx = get_gpg_crypto_context (opts, err);
+
+	/* use gobject to pass data to the callback func */
+	cbdata = g_new0 (CallbackData, 1);
+	cbdata->pw_func   = password_func;
+	cbdata->user_data = user_data;
+
+	g_object_set_data_full (G_OBJECT(cctx), CALLBACK_DATA,
+				cbdata, (GDestroyNotify)g_free);
+	return cctx;
 }
 
 
@@ -266,13 +332,11 @@ mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart, MuMsgOptions opts,
 		return NULL; /* error */
 	}
 
-	if (opts & MU_MSG_OPTION_USE_PKCS7)
-		cctx =  get_pkcs7_crypto_context (opts, err);
-	else
-		cctx =  get_gpg_crypto_context (opts, err);
+	/* dummy is good, since we don't need a password when checking
+	 * signatures */
+	cctx = get_crypto_context (opts, dummy_password_func, NULL, err);
 
-	/* return a fake siginfos with the error */
-	if (!cctx)
+	if (!cctx) /* return a fake siginfos with the error */
 		return error_sig_infos (); /* error */
 
 	sigs = g_mime_multipart_signed_verify (sigmpart, cctx, err);
@@ -313,7 +377,7 @@ mu_msg_part_free_sig_infos (GSList *siginfos)
  * - if not, the verdic is MU_MSG_PART_SIG_STATUS_UNKNOWN
  */
 MuMsgPartSigStatus
-mu_msg_mime_sig_infos_verdict (GSList *sig_infos)
+mu_msg_part_sig_infos_verdict (GSList *sig_infos)
 {
 	GSList *cur;
 	MuMsgPartSigStatus status;
@@ -456,4 +520,121 @@ mu_msg_part_sig_info_to_string (MuMsgPartSigInfo *info)
 					info->fingerprint);
 
 	return g_string_free (gstr, FALSE);
+}
+
+
+struct _MuMsgDecryptedPart {
+	GMimeObject *decrypted;
+};
+
+
+struct _PartData {
+	MuMsgPartDecryptForeachFunc func;
+	gpointer user_data;
+	GMimeCryptoContext *cctx;
+	GError *err;
+};
+typedef struct _PartData PartData;
+
+
+static void
+each_encpart (GMimeObject *parent, GMimeObject *part, PartData *pdata)
+{
+	MuMsgDecryptedPart dpart;
+
+	if (pdata->err)
+		return;
+
+	if (!GMIME_IS_MULTIPART_ENCRYPTED (part))
+		return; /* nothing to do for this part */
+
+	dpart.decrypted =
+		g_mime_multipart_encrypted_decrypt (
+			GMIME_MULTIPART_ENCRYPTED(part),
+			pdata->cctx, NULL, &pdata->err);
+	if (!dpart.decrypted || pdata->err) {
+		if (!pdata->err)
+			mu_util_g_set_error
+				(&pdata->err,
+				 MU_ERROR_CRYPTO,
+				 "decryption failed");
+		return;
+	}
+
+	pdata->func (&dpart, pdata->user_data);
+}
+
+
+gboolean
+mu_msg_part_decrypt_foreach  (MuMsg *msg, MuMsgPartDecryptForeachFunc func,
+			      MuMsgPartPasswordFunc password_func,
+			      gpointer user_data, MuMsgOptions opts, GError **err)
+{
+	PartData pdata;
+
+	g_return_val_if_fail (msg, FALSE);
+	g_return_val_if_fail (func, FALSE);
+	g_return_val_if_fail (password_func, FALSE);
+
+	if (!mu_msg_load_msg_file (msg, err))
+		return FALSE;
+
+	pdata.func	= func;
+	pdata.user_data = user_data;
+	pdata.err	= NULL;
+	pdata.cctx	= get_crypto_context (opts, password_func,
+					 user_data, err);
+	if (!pdata.cctx)
+		return FALSE;
+
+	g_mime_message_foreach (msg->_file->_mime_msg,
+				(GMimeObjectForeachFunc)each_encpart,
+				&pdata);
+	if (pdata.err) {
+		*err = pdata.err;
+		return FALSE;
+	}
+
+	g_object_unref (pdata.cctx);
+
+	return TRUE;
+}
+
+char*
+mu_msg_decrypted_part_to_string (MuMsgDecryptedPart *dpart, GError **err)
+{
+	GMimePart *part;
+	gboolean not_ok;
+	gchar *str;
+
+	g_return_val_if_fail (dpart, NULL);
+
+	if (!GMIME_IS_PART(dpart->decrypted)) {
+		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
+				     "wrong mime-type");
+		return NULL; /* can only convert parts to string*/
+	}
+	part = GMIME_PART(dpart->decrypted);
+	str = mu_msg_mime_part_to_string (part, &not_ok);
+
+	if (not_ok) {
+		g_free (str);
+		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
+				     "failed to convert part to string");
+		return NULL;
+	}
+
+	return str;
+}
+
+
+gboolean
+mu_msg_decrypted_part_to_file (MuMsgDecryptedPart *dpart, const char *path,
+			       GError **err)
+{
+	g_return_val_if_fail (dpart, FALSE);
+	g_return_val_if_fail (path, FALSE);
+
+	return mu_msg_part_mime_save_object (dpart->decrypted, path, FALSE, FALSE,
+					     err);
 }

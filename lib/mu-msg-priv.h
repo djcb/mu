@@ -77,6 +77,23 @@ gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err);
 
 
 /**
+ * write a GMimeObject to a file
+ *
+ * @param obj a GMimeObject
+ * @param fullpath full file path
+ * @param overwrite allow overwriting existing file
+ * @param if file already exist, don't bother to write
+ * @param err receives error information
+ *
+ * @return TRUE if writing succeeded, FALSE otherwise.
+ */
+gboolean mu_msg_part_mime_save_object (GMimeObject *obj, const char *fullpath,
+				       gboolean overwrite, gboolean use_existing,
+				       GError **err);
+
+
+
+/**
  * get the MIME part that's probably the body of the message (heuristic)
  *
  * @param self a MuMsg
@@ -85,6 +102,9 @@ gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err);
  * @return the MIME part, or NULL in case of error.
  */
 GMimePart* mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html);
+
+
+
 
 
 #ifdef BUILD_CRYPTO
@@ -100,6 +120,22 @@ GMimePart* mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html);
  */
 GSList* mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart,
 			       MuMsgOptions opts, GError **err);
+
+
+
+/**
+ * decrypt the given mime part
+ *
+ * @param encpart
+ * @param opts
+ * @param err
+ *
+ * @return
+ */
+char* mu_msg_mime_decrypt (GMimeMultipartEncrypted *encpart,
+			   MuMsgOptions opts, GError **err);
+
+
 #endif /*BUILD_CRYPTO*/
 
 G_END_DECLS

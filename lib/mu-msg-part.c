@@ -242,13 +242,11 @@ msg_part_free (MuMsgPart *pi)
 #endif /*BUILD_CRYPTO*/
 }
 
-
+#ifdef BUILD_CRYPTO
 static void
 check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
 		       MuMsgOptions opts)
 {
-#ifdef BUILD_CRYPTO
-
 	GMimeContentType *ctype;
 	GError *err;
 	gboolean pkcs7;
@@ -275,10 +273,10 @@ check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
 		g_warning ("error verifying signature: %s", err->message);
 		g_clear_error (&err);
 	}
+}
+
 #endif /*BUILD_CRYPTO*/
 
-	return;
-}
 
 
 static void
@@ -307,7 +305,9 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 			return;
 		rv = init_msg_part_from_mime_message_part (mmsg, &pi);
 		if (rv && (pdata->_opts && MU_MSG_OPTION_RECURSE_RFC822))
-			/* NOTE: this screws up the counting (pdata->_idx) */
+			/* NOTE: this screws up the counting
+			 * (pdata->_idx); happily, we only use it
+			 * where we don't care about that */
 			g_mime_message_foreach /* recurse */
 				(mmsg, (GMimeObjectForeachFunc)part_foreach_cb,
 				 pdata);
@@ -315,8 +315,10 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 		rv = FALSE; /* ignore */
 
 	/* if we have crypto support, check the signature if there is one */
+#ifdef BUILD_CRYPTO
 	if (pdata->_opts & MU_MSG_OPTION_CHECK_SIGNATURES)
 		check_signature_maybe (parent, mobj, &pi, pdata->_opts);
+#endif /*BUILD_CRYPTO*/
 
 	if (rv)
 		pdata->_func(pdata->_msg, &pi, pdata->_user_data);
@@ -352,7 +354,7 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func, gpointer user_data,
 }
 
 
-static gboolean
+gboolean
 write_part_to_fd (GMimePart *part, int fd, GError **err)
 {
 	GMimeStream *stream;
@@ -416,9 +418,9 @@ write_object_to_fd (GMimeObject *obj, int fd, GError **err)
 
 
 
-static gboolean
-save_mime_object (GMimeObject *obj, const char *fullpath,
-		  gboolean overwrite, gboolean use_existing, GError **err)
+gboolean
+mu_msg_part_mime_save_object (GMimeObject *obj, const char *fullpath,
+			      gboolean overwrite, gboolean use_existing, GError **err)
 {
 	int fd;
 	gboolean rv;
@@ -498,7 +500,6 @@ mu_msg_part_filepath (MuMsg *msg, const char* targetdir, guint partidx,
 
 
 
-
 gchar*
 mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
 {
@@ -556,8 +557,8 @@ mu_msg_part_save (MuMsg *msg, const char *fullpath, guint partidx,
 			     partidx);
 		return FALSE;
 	} else
-		return save_mime_object (part, fullpath, overwrite,
-					 use_cached, err);
+		return mu_msg_part_mime_save_object (part, fullpath, overwrite,
+						     use_cached, err);
 
 }
 

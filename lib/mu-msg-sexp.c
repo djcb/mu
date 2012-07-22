@@ -242,7 +242,7 @@ elvis (const char *s1, const char *s2)
 static const char*
 sig_verdict (GSList *sig_infos)
 {
-	switch (mu_msg_mime_sig_infos_verdict (sig_infos)) {
+	switch (mu_msg_part_sig_infos_verdict (sig_infos)) {
 	case MU_MSG_PART_SIG_STATUS_GOOD:
 		return ":signature good";
 	case MU_MSG_PART_SIG_STATUS_BAD:

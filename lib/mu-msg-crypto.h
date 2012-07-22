@@ -80,7 +80,7 @@ const char* mu_msg_part_sig_status_to_string (MuMsgPartSigStatus status);
 
 
 /**
- * summarize the signatures to one status:
+ * summarize the signature checks to one status:
  *
  * - if there's any signature with MU_MSG_PART_SIG_STATUS_(ERROR|FAIL),
  *   the verdict is MU_MSG_PART_SIG_STATUS_ERROR
@@ -94,7 +94,7 @@ const char* mu_msg_part_sig_status_to_string (MuMsgPartSigStatus status);
  *
  * @return the status
  */
-MuMsgPartSigStatus mu_msg_mime_sig_infos_verdict (GSList *sig_infos);
+MuMsgPartSigStatus mu_msg_part_sig_infos_verdict (GSList *sig_infos);
 
 
 /**
@@ -124,5 +124,82 @@ char* mu_msg_part_sig_info_to_string (MuMsgPartSigInfo *info)
  * @param siginfo
  */
 void mu_msg_part_free_sig_infos (GSList *siginfos);
+
+
+
+
+
+/*
+ * below function only do anything useful if mu was built with crypto
+ * support
+ */
+
+struct _MuMsgDecryptedPart;
+typedef struct _MuMsgDecryptedPart MuMsgDecryptedPart;
+
+
+/**
+ * callback function to provide decrypted message parts
+ *
+ * @param dpart a decrypted par
+ * @param user_data user pointer (as passed to mu_msg_part_decrypt_foreach)
+ */
+typedef void (*MuMsgPartDecryptForeachFunc) (MuMsgDecryptedPart *dpart,
+					     gpointer user_data);
+
+
+/**
+ * callback function to retrieve a password from the user
+ *
+ * @param user_id the user name / id to get the password for
+ * @param prompt_ctx a string containing some helpful context for the prompt
+ * @param reprompt whether this is a reprompt after an earlier, incorrect password
+ * @param user_data the user_data pointer passed to mu_msg_part_decrypt_foreach
+ *
+ * @return a newly allocated (g_free'able) string
+ */
+typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *prompt_ctx,
+					  gboolean reprompt, gpointer user_data);
+
+/**
+ * go through all MIME-parts for this message, and decrypted all parts
+ * that are encrypted. After decryption,
+ *
+ * If mu was built without crypto support, function does nothing.
+ *
+ * @param msg a valid MuMsg instance
+ * @param fun a callback function called for each decrypted part
+ * @param password_func a callback func called to retrieve a password from user
+ * @param user_data user data which passed to the callback function
+ * @param opts options
+ * @param err receives error information
+ *
+ * @return TRUE if function succeeded, FALSE otherwise
+ */
+gboolean mu_msg_part_decrypt_foreach       (MuMsg *msg, MuMsgPartDecryptForeachFunc func,
+					    MuMsgPartPasswordFunc password_func,
+					    gpointer user_data, MuMsgOptions opts,
+					    GError **err);
+/**
+ * convert the decrypted part to a string.
+ *
+ * @param dpart decrypted part
+ * @param err receives error information
+ *
+ * @return decrypted part as a string (g_free after use), or NULL
+ */
+char*     mu_msg_decrypted_part_to_string (MuMsgDecryptedPart *dpart, GError **err);
+
+/**
+ * write the decrypted part to a file.
+ *
+ * @param dpart decrypted part
+ * @param path path to write it to
+ * @param err receives error information
+ *
+ * @return TRUE if it succeeded, FALSE otherwise
+ */
+gboolean mu_msg_decrypted_part_to_file (MuMsgDecryptedPart *dpart, const char *path,
+					GError **err);
 
 #endif /*__MU_MSG_CRYPTO_H__*/

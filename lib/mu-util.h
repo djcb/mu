@@ -414,6 +414,9 @@ enum _MuError {
 	MU_ERROR_CONTACTS                     = 50,
 	MU_ERROR_CONTACTS_CANNOT_RETRIEVE     = 51,
 
+	/* crypto related errors */
+	MU_ERROR_CRYPTO		              = 60,
+
 
 	/* File errors */
 	/* generic file-related error */
