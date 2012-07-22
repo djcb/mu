@@ -89,7 +89,6 @@ struct _MuConfig {
 					 * MU_CONFIG_CMD_NONE */
 	const char	*cmdstr;       /* cmd string, for user
 					* info */
-
 	/* general options */
 	gboolean	quiet;		/* don't give any output */
 	gboolean	debug;		/* spew out debug info */
@@ -146,6 +145,9 @@ struct _MuConfig {
 	gboolean         terminator;      /* add separator \f between
 					   * multiple messages in mu
 					   * view */
+	gboolean	 decrypt;         /* try to decrypt the
+					   * message body, if any */
+
 	/* options for cfind (and 'find' --> "after") */
 	gboolean          personal;       /* only show 'personal' addresses */
 	/* also 'after' --> see above */

@@ -302,6 +302,9 @@ config_options_group_view (void)
 		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'sexp')", NULL},
+		{"decrypt", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.decrypt,
+		 "attempt to decrypt the message body, if it is encrypted", NULL},
+
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
