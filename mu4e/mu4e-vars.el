@@ -27,6 +27,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization
 (require 'mu4e-meta)
+(require 'message)
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"
@@ -275,7 +276,7 @@ flag set)."
   :group 'mu4e-faces)
 
 (defface mu4e-view-header-key-face
-  '((t :inherit font-lock-builtin-face :bold t))
+  '((t :inherit message-header-name :bold t))
   "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\") in
   the message view."
   :group 'mu4e-faces)
@@ -293,7 +294,7 @@ flag set)."
 
 
 (defface mu4e-view-link-face
-  '((t :inherit font-lock-type-face :underline t))
+  '((t :inherit link))
   "Face for showing URLs and attachments in the message view."
   :group 'mu4e-faces)
 
