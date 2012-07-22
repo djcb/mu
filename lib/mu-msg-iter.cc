@@ -1,6 +1,6 @@
 /* -*- mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -240,5 +240,3 @@ mu_msg_iter_get_thread_info (MuMsgIter *iter)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
-
-
