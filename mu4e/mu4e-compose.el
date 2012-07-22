@@ -87,7 +87,7 @@ replying to messages."
       path
       "application/octet-stream"
       (or (plist-get mu4e-captured-message :subject) "No subject")
-      "attachment"))) 
+      "attachment")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -95,7 +95,7 @@ replying to messages."
   "Return the User-Agent string for mu4e. This is either the value
 of `mu4e-user-agent', or, if not set, a string based on the versions
 of mu4e and emacs."
-  (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)) 
+  (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version))
 
 
 (defun mu4e~compose-cite-original (msg)
@@ -242,10 +242,10 @@ separator is never written to file. Also see
       (goto-char (point-min))
       ;; search for the first empty line
       (if (search-forward-regexp "^$" nil t)
-	(replace-match sepa)
+	(replace-match (concat sepa "\n"))
 	(progn 	;; no empty line? then prepend one
 	  (goto-char (point-max))
-	  (insert (concat "\n" sepa)))))))
+	  (insert "\n" sepa "\n"))))))
 
 (defun mu4e~compose-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
@@ -379,10 +379,11 @@ use the new docid. Returns the full path to the new message."
 ;; what these 'Sent mail' folders are for!
 ;;
 ;; We let message mode take care of this by adding a field
+
 ;;   Fcc: <full-path-to-message-in-target-folder>
-;; in the "message-send-hook" (ie., just before sending).
-;; message mode will then take care of the saving when the message is actually
-;; sent.
+
+;; in the "message-send-hook" (ie., just before sending).  message mode will
+;; then take care of the saving when the message is actually sent.
 ;;
 ;; note, where and if you make this copy depends on the value of
 ;; `mu4e-sent-messages-behavior'.
@@ -402,16 +403,16 @@ needed, set the Fcc header, and register the handler function."
 		     (concat mu4e-maildir mdir "/cur/"
 		       (mu4e~compose-message-filename-construct "S")))))
     ;; if there's an fcc header, add it to the file
-    (when fccfile
-      (message-add-header (concat "Fcc: " fccfile "\n"))
-      ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
-      ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
-      ;; hander after we've done our thing.
+     (when fccfile
+       (message-add-header (concat "Fcc: " fccfile "\n"))
+       ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
+       ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
+       ;; hander after we've done our thing.
       (setq message-fcc-handler-function
 	(lexical-let ((maildir mdir) (old-handler message-fcc-handler-function))
 	  (lambda (file)
 	    (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
-	    (write-file file) ;; writing maildirs files is easy
+	    (write-file file)		       ;; writing maildirs files is easy
 	    (mu4e~proc-add file maildir))))))) ;; update the database
 
 
@@ -466,7 +467,7 @@ needed, set the Fcc header, and register the handler function."
 	(cons
 	  (cons mu4e~compose-address-fields-regexp 'completion-at-point)
 	  message-completion-alist)))))
-  
+
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
 \\{message-mode-map}."
@@ -484,12 +485,12 @@ needed, set the Fcc header, and register the handler function."
     ;; useful e.g. when finding an attachment file the directory the current
     ;; mail files lives in...
     (setq default-directory (expand-file-name "~/"))
-     
+
     ;; offer completion for e-mail addresses
     (when (and mu4e-compose-complete-addresses
 	    (boundp 'completion-at-point-functions))
       (mu4e~compose-setup-completion))
-      
+
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda ()
