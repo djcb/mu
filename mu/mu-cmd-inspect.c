@@ -60,11 +60,53 @@ static void fill_prefix_ids()
 		char prefix = mu_msg_field_xapian_prefix(i);
 		unsigned int j = (unsigned int)prefix;
 		field_types[j].valid = TRUE;
-		field_types[j].print = TRUE; /* TODO: let the user choose which types to print */
+		field_types[j].print = FALSE; /* by default, no types will be printed */
 		field_types[j].name = mu_msg_field_name(i);
 		field_types[j].shortcut = mu_msg_field_shortcut(i);
 		field_types[j].type = mu_msg_field_type(i);
 	}
+}
+
+/* Sets the types to print, based on the command-line parameters */
+static gboolean set_types_to_print(gchar** params)
+{
+	if (params==NULL || params[0]==NULL) {
+		g_warning("Internal error: mu inspect: got empty opt->params");
+		return FALSE;
+	}
+
+	/* no types specified, print all types */
+	if (params[1]==NULL) {
+		for (MuMsgFieldId i = 0 ;i < MU_MSG_FIELD_ID_NUM ; ++i) {
+			char prefix = mu_msg_field_xapian_prefix(i);
+			unsigned int j = (unsigned int)prefix;
+			field_types[j].print = TRUE;
+		}
+		return TRUE;
+	}
+
+	/* at least one type specified, show only request types */
+	for (int p=1;params[p];++p) {
+		gboolean found = FALSE;
+		for (MuMsgFieldId i = 0 ;i < MU_MSG_FIELD_ID_NUM ; ++i) {
+			char prefix = mu_msg_field_xapian_prefix(i);
+			unsigned int j = (unsigned int)prefix;
+
+			if (field_types[j].name &&
+			    strcmp(field_types[j].name, params[p])==0) {
+				field_types[j].print = TRUE;
+				found = TRUE;
+				break;
+			}
+		}
+		if (!found) {
+			g_warning("error: type '%s' does not exist.\n", params[p]);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+
 }
 
 
@@ -159,6 +201,8 @@ mu_cmd_inspect (MuStore *store, MuConfig *opts, GError **err)
 	}
 
 	fill_prefix_ids();
+	if (!set_types_to_print(opts->params))
+		return MU_ERROR_INTERNAL;
 
 	if (!execute_inspect (store, opts, err))
 		return MU_G_ERROR_CODE(err);
