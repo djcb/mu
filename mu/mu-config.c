@@ -391,6 +391,8 @@ config_options_group_inspect (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
+		{"types", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.print_types,
+		 "List all available types", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 

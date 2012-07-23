@@ -151,6 +151,9 @@ struct _MuConfig {
 	gboolean          personal;       /* only show 'personal' addresses */
 	/* also 'after' --> see above */
 
+	/* options for inspect */
+	gboolean        print_types;     /* list all available types, instead of terms */
+
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */
 	gboolean	 clearlinks;	/* clear a linksdir before filling */

@@ -59,11 +59,30 @@ static void fill_prefix_ids()
 	for (MuMsgFieldId i = 0 ;i < MU_MSG_FIELD_ID_NUM ; ++i) {
 		char prefix = mu_msg_field_xapian_prefix(i);
 		unsigned int j = (unsigned int)prefix;
-		field_types[j].valid = TRUE;
-		field_types[j].print = FALSE; /* by default, no types will be printed */
-		field_types[j].name = mu_msg_field_name(i);
-		field_types[j].shortcut = mu_msg_field_shortcut(i);
-		field_types[j].type = mu_msg_field_type(i);
+		if (j>0) {
+			field_types[j].valid = TRUE;
+			field_types[j].print = FALSE; /* by default, no types will be printed */
+			field_types[j].name = mu_msg_field_name(i);
+			field_types[j].shortcut = mu_msg_field_shortcut(i);
+			field_types[j].type = mu_msg_field_type(i);
+		}
+	}
+}
+
+/* Print information about the available types */
+static void print_types()
+{
+	g_print("DB\tfind\tID\tname\n");
+	for (MuMsgFieldId i = 0 ;i < MU_MSG_FIELD_ID_NUM ; ++i) {
+		char prefix = mu_msg_field_xapian_prefix(i);
+		unsigned int j = (unsigned int)prefix;
+
+		if (field_types[j].print) {
+			g_print("%c\t%c\t%d\t%s\n",
+				j,
+				field_types[j].shortcut?field_types[j].shortcut:'-', i,
+				field_types[j].name?field_types[j].name:"-");
+		}
 	}
 }
 
@@ -80,7 +99,8 @@ static gboolean set_types_to_print(gchar** params)
 		for (MuMsgFieldId i = 0 ;i < MU_MSG_FIELD_ID_NUM ; ++i) {
 			char prefix = mu_msg_field_xapian_prefix(i);
 			unsigned int j = (unsigned int)prefix;
-			field_types[j].print = TRUE;
+			if (j>0)
+				field_types[j].print = TRUE;
 		}
 		return TRUE;
 	}
@@ -203,6 +223,11 @@ mu_cmd_inspect (MuStore *store, MuConfig *opts, GError **err)
 	fill_prefix_ids();
 	if (!set_types_to_print(opts->params))
 		return MU_ERROR_INTERNAL;
+
+	if (opts->print_types) {
+		print_types();
+		return MU_OK;
+	}
 
 	if (!execute_inspect (store, opts, err))
 		return MU_G_ERROR_CODE(err);
