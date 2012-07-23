@@ -237,7 +237,8 @@ separator is never written to file. Also see
 `mu4e-remove-mail-header-separator'."
   (save-excursion
     (let ((sepa (propertize mail-header-separator
-		  'intangible t 'read-only t
+		  'intangible t
+		  'read-only "Can't touch this"
 		  'font-lock-face 'mu4e-system-face)))
       (goto-char (point-min))
       ;; search for the first empty line
