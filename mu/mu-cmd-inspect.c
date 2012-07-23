@@ -92,7 +92,7 @@ static MuError print_term(const char* term,
 }
 
 static gboolean
-execute_list (MuStore *store, MuConfig *opts, GError **err)
+execute_inspect (MuStore *store, MuConfig *opts, GError **err)
 {
 	MuError foreach_err;
 	foreach_err = mu_store_foreach_term(store, print_term, store, err);
@@ -136,15 +136,15 @@ query_params_valid (MuConfig *opts, GError **err)
 static void
 show_usage (void)
 {
-	g_print ("%s", "usage: mu list <search expression>\n");
+	g_print ("%s", "usage: mu inspect <search expression>\n");
 }
 
 
 MuError
-mu_cmd_list (MuStore *store, MuConfig *opts, GError **err)
+mu_cmd_inspect (MuStore *store, MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_LIST,
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INSPECT,
 			      MU_ERROR_INTERNAL);
 
 	if (opts->exec)
@@ -160,7 +160,7 @@ mu_cmd_list (MuStore *store, MuConfig *opts, GError **err)
 
 	fill_prefix_ids();
 
-	if (!execute_list (store, opts, err))
+	if (!execute_inspect (store, opts, err))
 		return MU_G_ERROR_CODE(err);
 	else
 		return MU_OK;

@@ -387,15 +387,15 @@ config_options_group_server (void)
 }
 
 static GOptionGroup*
-config_options_group_list (void)
+config_options_group_inspect (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
-	og = g_option_group_new("list",
-				"options for the 'list' command",
+	og = g_option_group_new("inspect",
+				"options for the 'inspect' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 
@@ -423,7 +423,7 @@ cmd_from_string (const char *str)
 		{ "server",  MU_CONFIG_CMD_SERVER },
 		{ "verify",  MU_CONFIG_CMD_VERIFY },
 		{ "view",    MU_CONFIG_CMD_VIEW },
-		{ "list",    MU_CONFIG_CMD_LIST }
+		{ "inspect", MU_CONFIG_CMD_INSPECT }
 	};
 
 
@@ -477,8 +477,8 @@ get_option_group (MuConfigCmd cmd)
 		return config_options_group_view();
 	case MU_CONFIG_CMD_SERVER:
 		return config_options_group_server();
-	case MU_CONFIG_CMD_LIST:
-		return config_options_group_list();
+	case MU_CONFIG_CMD_INSPECT:
+		return config_options_group_inspect();
 	default:
 		return NULL; /* no group to add */
 	}
