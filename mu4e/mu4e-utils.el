@@ -525,9 +525,10 @@ process."
 
 (defun mu4e-error-handler (errcode errmsg)
   "Handler function for showing an error."
+  ;; don't use mu4e-error here; it's running in the process filter ctx
   (case errcode
-    (4 (mu4e-error "No matches for this search query."))
-    (t (mu4e-error "Error %d: %s" errcode errmsg))))
+    (4 (error "No matches for this search query."))
+    (t (error "Error %d: %s" errcode errmsg))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -625,7 +626,6 @@ FUNC (if non-nil) afterwards."
       ;; better to check for specific features
       (unless (>= emacs-major-version 23)
 	(mu4e-error "Emacs >= 23.x is required for mu4e"))
-
       ;; set up the 'pong' handler func
       (lexical-let ((func func))
 	(setq mu4e-pong-func
