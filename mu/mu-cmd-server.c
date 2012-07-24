@@ -417,7 +417,7 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
 	GError *err;
 
 	/* exclude things that don't look like proper attachments */
-	if (!mu_msg_part_looks_like_attachment(part, TRUE))
+	if (!mu_msg_part_looks_like_attachment(part, FALSE))
 		return;
 
 	err	  = NULL;

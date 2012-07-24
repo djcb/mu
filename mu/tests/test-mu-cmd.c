@@ -90,7 +90,7 @@ search (const char* query, unsigned expected)
 				   MU_PROGRAM, DBPATH, query);
 
 	if (g_test_verbose())
-		g_printerr ("%s\n", cmdline);
+		g_printerr ("\n$ %s\n", cmdline);
 
 	g_assert (g_spawn_command_line_sync (cmdline,
 					     &output, &erroutput,

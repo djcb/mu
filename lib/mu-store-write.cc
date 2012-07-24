@@ -382,32 +382,14 @@ struct PartData {
 	GStringChunk *_strchunk;
 };
 
-static gboolean
-is_textual (MuMsgPart *part)
-{
-	/* all text parts except text/html */
-	if ((strcasecmp (part->type, "text") == 0) &&
-	    (strcasecmp (part->subtype, "html") != 0))
-		return TRUE;
-
-	/* message/rfc822 */
-	if ((strcasecmp (part->type, "message") == 0) &&
-	    (strcasecmp (part->subtype, "rfc822") == 0))
-		return TRUE;
-
-	return FALSE;
-}
 
 
 static gboolean
-index_text_part (MuMsgPart *part, PartData *pdata)
+maybe_index_text_part (MuMsgPart *part, PartData *pdata)
 {
 	gboolean err;
 	char *txt, *norm;
 	Xapian::TermGenerator termgen;
-
-	if (!is_textual (part))
-		return FALSE;
 
 	txt = mu_msg_part_get_text (part, &err);
 	if (!txt || err)
@@ -461,8 +443,8 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 
 	/* now, for non-body parts with some MIME-types, index the
 	 * content as well */
-	if (!part->is_body)
-		index_text_part (part, pdata);
+	if (mu_msg_part_looks_like_attachment (part, FALSE))
+		maybe_index_text_part (part, pdata);
 }
 
 
@@ -473,7 +455,7 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 	PartData pdata (doc, mfid, strchunk);
 	mu_msg_part_foreach (msg,
 			     (MuMsgPartForeachFunc)each_part, &pdata,
-			     MU_MSG_OPTION_RECURSE_RFC822);
+			     MU_MSG_OPTION_NONE);
 }
 
 
@@ -547,7 +529,8 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 		add_terms_values_date (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
 	case MU_MSG_FIELD_ID_BODY_TEXT:
-		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid, msgdoc->_strchunk);
+		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid,
+				       msgdoc->_strchunk);
 		break;
 
 	/* note: add_terms_values_attach handles _FILE, _MIME and
@@ -643,7 +626,8 @@ each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 
 	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
 		//g_print ("%s <=> %s\n", contact->address, (const char*)cur->data);
-		if (g_ascii_strcasecmp (contact->address, (const char*)cur->data) == 0)
+		if (g_ascii_strcasecmp (contact->address,
+					(const char*)cur->data) == 0)
 			msgdoc->_personal = TRUE;
 	}
 }
@@ -666,8 +650,10 @@ new_doc_from_message (MuStore *store, MuMsg *msg)
 	 * mailing list message. Callback will update docinfo->_personal */
 	if (store->my_addresses()) {
 		docinfo._my_addresses = store->my_addresses();
-		mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact_check_if_personal,
-					&docinfo);
+		mu_msg_contact_foreach
+			(msg,
+			 (MuMsgContactForeachFunc)each_contact_check_if_personal,
+			 &docinfo);
 	}
 
 	/* also store the contact-info as separate terms, and add it

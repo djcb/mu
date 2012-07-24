@@ -1,6 +1,5 @@
-
 /*
-** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -238,7 +237,7 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 	GdkPixbuf *pixbuf;
 	char ctype[128];
 
-	if (!mu_msg_part_looks_like_attachment (part, FALSE))
+	if (!mu_msg_part_looks_like_attachment(part, FALSE))
 		return;
 
 	if (!part->type || !part->subtype)

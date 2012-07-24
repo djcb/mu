@@ -281,11 +281,52 @@ get_part_filename (MuMsgPart *part)
 	return name;
 }
 
+static gchar *
+get_part_type_string (MuMsgPartType ptype)
+{
+	GString *gstr;
+	unsigned u;
+	MuMsgPartType ptypes[] = {
+		MU_MSG_PART_TYPE_BODY,
+		MU_MSG_PART_TYPE_LEAF,
+		MU_MSG_PART_TYPE_MESSAGE,
+		MU_MSG_PART_TYPE_INLINE,
+		MU_MSG_PART_TYPE_SIGNED,
+		MU_MSG_PART_TYPE_ENCRYPTED
+	};
+
+	gstr = g_string_sized_new (100); /* more than enough */
+	gstr = g_string_append_c (gstr, '(');
+
+	for (u = 0; u!= G_N_ELEMENTS(ptypes); ++u) {
+		const char* name;
+		switch (ptype & ptypes[u]) {
+		case MU_MSG_PART_TYPE_NONE      : continue;
+		case MU_MSG_PART_TYPE_BODY	:name = "body"; break;
+		case MU_MSG_PART_TYPE_LEAF	:name = "leaf"; break;
+		case MU_MSG_PART_TYPE_MESSAGE	:name = "message"; break;
+		case MU_MSG_PART_TYPE_INLINE	:name = "inline"; break;
+		case MU_MSG_PART_TYPE_SIGNED	:name = "signed"; break;
+		case MU_MSG_PART_TYPE_ENCRYPTED	:name = "encrypted"; break;
+
+		default:g_return_val_if_reached (NULL);
+			return NULL;
+		}
+		if (gstr->len > 1)
+			gstr = g_string_append_c (gstr, ' ');
+		gstr = g_string_append (gstr, name);
+	}
+
+	gstr = g_string_append_c (gstr, ')');
+
+	return g_string_free (gstr, FALSE);
+}
+
 
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
-	char *name, *tmp;
+	char *name, *tmp, *parttype;
 	char *tmpfile;
 
 	name = get_part_filename (part);
@@ -299,18 +340,23 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		}
 	}
 
+	parttype = get_part_type_string (part->part_type);
+
 	tmp = g_strdup_printf
 		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s "
+		 ":type %s "
 		 ":attachment %s :size %i %s)",
 		 elvis (pinfo->parts, ""), part->index, name,
 		 elvis (part->type, "application"),
 		 elvis (part->subtype, "octet-stream"),
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
+		 parttype,
 		 mu_msg_part_looks_like_attachment (part, TRUE) ? "t" : "nil",
 		 (int)part->size,
 		 sig_verdict (part->sig_infos));
 
 	g_free (pinfo->parts);
+
 	pinfo->parts = tmp;
 }
 
