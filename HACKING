@@ -39,7 +39,7 @@
       declares a function of 'mu_foo_bar (int a);', mu-foo.c implements this.
 
    8. non-global functions *don't* have the module prefix, and are declared
-      static.'
+      static.
 
    9. functions have their return type on a separate line before the function
       name, so:
@@ -113,5 +113,9 @@
 
 
 # Local Variables:
-# mode: org; org-startup-folded: nil
+# mode: org; org-startup-folded: nofold
 # End:
+   
+   
+   
+   
