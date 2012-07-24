@@ -259,6 +259,12 @@ looks_like_attachment (GMimeObject *part)
 static void
 msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuFlags *flags)
 {
+	if (GMIME_IS_MULTIPART_SIGNED(part))
+		*flags |= MU_FLAG_SIGNED;
+
+	if (GMIME_IS_MULTIPART_ENCRYPTED(part))
+		*flags |= MU_FLAG_ENCRYPTED;
+
 	if (*flags & MU_FLAG_HAS_ATTACH)
 		return;
 
@@ -274,40 +280,14 @@ msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuFlags *flags)
 static MuFlags
 get_content_flags (MuMsgFile *self)
 {
-	GMimeContentType *ctype;
 	MuFlags flags;
-	GMimeObject *part;
 
-	if (!GMIME_IS_MESSAGE(self->_mime_msg))
-		return MU_FLAG_NONE;
+	flags = MU_FLAG_NONE;
 
-	flags = 0;
-	g_mime_message_foreach (self->_mime_msg,
-				(GMimeObjectForeachFunc)msg_cflags_cb,
-				&flags);
-
-	/* note: signed or encrypted status for a message is determined by
-	 *  the top-level mime-part
-	 */
-	if ((part = g_mime_message_get_mime_part(self->_mime_msg))) {
-		ctype = g_mime_object_get_content_type
-			(GMIME_OBJECT(part));
-		if (!ctype) {
-			g_warning ("not a content type!");
-			return 0;
-		}
-
-		if (ctype) {
-			if (g_mime_content_type_is_type
-			    (ctype,"*", "signed"))
-				flags |= MU_FLAG_SIGNED;
-			if (g_mime_content_type_is_type
-			    (ctype,"*", "encrypted"))
-				flags |= MU_FLAG_ENCRYPTED;
-		}
-	} else
-		g_warning ("no top level mime part found");
-
+	if (GMIME_IS_MESSAGE(self->_mime_msg))
+		g_mime_message_foreach (self->_mime_msg,
+					(GMimeObjectForeachFunc)msg_cflags_cb,
+					&flags);
 	return flags;
 }
 
