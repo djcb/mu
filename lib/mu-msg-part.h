@@ -27,6 +27,25 @@
 
 G_BEGIN_DECLS
 
+enum _MuMsgPartType {
+	MU_MSG_PART_TYPE_NONE		= 0,
+
+	/* look like the message body (heuristic) ? */
+	MU_MSG_PART_TYPE_BODY		= 1 << 0,
+	/* MIME part without children */
+	MU_MSG_PART_TYPE_LEAF		= 1 << 1,
+	/* an RFC822 message part? */
+	MU_MSG_PART_TYPE_MESSAGE	= 1 << 2,
+	/* disposition inline? */
+	MU_MSG_PART_TYPE_INLINE		= 1 << 3,
+	/* a signed part? */
+	MU_MSG_PART_TYPE_SIGNED		= 1 << 5,
+	/* an encrypted part? */
+	MU_MSG_PART_TYPE_ENCRYPTED	= 1 << 6
+};
+typedef enum _MuMsgPartType MuMsgPartType;
+
+
 struct _MuMsgPart {
 
 	/* index of this message part */
@@ -55,11 +74,7 @@ struct _MuMsgPart {
 
 	gpointer         data; /* opaque data */
 
-	gboolean         is_body; /* TRUE if this is probably the
-				   * message body*/
-	gboolean	 is_leaf; /* if the body is a leaf part (MIME
-				   * Part), not eg. a multipart/ */
-	gboolean         is_msg;  /* part is a message/rfc822 */
+	MuMsgPartType    part_type;
 
 	/* crypto stuff */
 	GSList           *sig_infos; /* list of MuMsgPartSig */
@@ -121,6 +136,7 @@ char* mu_msg_part_get_text (MuMsgPart *part, gboolean *err);
  */
 gboolean mu_msg_part_looks_like_attachment (MuMsgPart *part,
 					    gboolean include_inline);
+
 
 /**
  * save a specific attachment to some targetdir

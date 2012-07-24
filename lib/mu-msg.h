@@ -35,19 +35,21 @@ typedef struct _MuMsg MuMsg;
 /* options for various functions */
 enum _MuMsgOptions {
 	MU_MSG_OPTION_NONE              = 0,
-	MU_MSG_OPTION_RECURSE_RFC822    = 1 << 0, /* recurse into submessages */
+/* 1 << 0 is still free! */
 
 	/* for -> sexp conversion */
 
 	MU_MSG_OPTION_HEADERS_ONLY      = 1 << 1,
 	MU_MSG_OPTION_EXTRACT_IMAGES    = 1 << 2,
 
+/* 1 << 3 is still free! */
+
 	/* below options are for checking signatures; only effective
 	 * if mu was built with crypto support */
-	MU_MSG_OPTION_CHECK_SIGNATURES  = 1 << 3,
-	MU_MSG_OPTION_AUTO_RETRIEVE_KEY = 1 << 4,
-	MU_MSG_OPTION_USE_AGENT         = 1 << 5,
-	MU_MSG_OPTION_USE_PKCS7         = 1 << 6   /* gpg is the default */
+	MU_MSG_OPTION_CHECK_SIGNATURES  = 1 << 4,
+	MU_MSG_OPTION_AUTO_RETRIEVE_KEY = 1 << 5,
+	MU_MSG_OPTION_USE_AGENT         = 1 << 6,
+	MU_MSG_OPTION_USE_PKCS7         = 1 << 7   /* gpg is the default */
 };
 typedef enum _MuMsgOptions MuMsgOptions;
 

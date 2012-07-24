@@ -88,10 +88,73 @@ struct _PartData {
 	MuMsgPartForeachFunc	_func;
 	gpointer		_user_data;
 	GMimePart               *_body_part;
-	MuMsgOptions        _opts;
+	MuMsgOptions		_opts;
 };
 typedef struct _PartData PartData;
 
+
+
+static gchar *mime_message_to_string (GMimeMessage *mimemsg);
+
+static void
+each_mime_part_get_text (GMimeObject *parent, GMimeObject *part,
+			 GString **gstr)
+{
+	char *txt;
+	txt = NULL;
+
+	if (GMIME_IS_MESSAGE(part)) {
+		txt = mime_message_to_string (GMIME_MESSAGE(part));
+		if (txt)
+			*gstr = g_string_append (*gstr, txt);
+	}
+
+	if (GMIME_IS_PART (part)) {
+		GMimeContentType *ctype;
+		gboolean err;
+		ctype = g_mime_object_get_content_type (part);
+		if (!g_mime_content_type_is_type (ctype, "text", "plain"))
+			return; /* not plain text */
+		txt = mu_msg_mime_part_to_string
+			((GMimePart*)part, &err);
+	}
+
+	if (txt) {
+		*gstr = g_string_append_c (*gstr, '\n');
+		*gstr = g_string_append (*gstr, txt);
+		g_free (txt);
+	}
+}
+
+static gchar *
+mime_message_to_string (GMimeMessage *mimemsg)
+{
+	GString *data;
+	InternetAddressList *addresses;
+	gchar *adrs;
+
+	data = g_string_sized_new (2048); /* just a guess */
+
+	g_string_append (data, g_mime_message_get_sender(mimemsg));
+	g_string_append_c (data, '\n');
+	g_string_append (data, g_mime_message_get_subject(mimemsg));
+	g_string_append_c (data, '\n');
+
+	addresses = g_mime_message_get_all_recipients (mimemsg);
+	adrs = internet_address_list_to_string (addresses, FALSE);
+	g_object_unref(G_OBJECT(addresses));
+
+	g_string_append (data, adrs);
+	g_free (adrs);
+
+	/* recurse through all text parts */
+	g_mime_message_foreach
+		(mimemsg,
+		 (GMimeObjectForeachFunc)each_mime_part_get_text,
+		 &data);
+
+	return g_string_free (data, FALSE);
+}
 
 char*
 mu_msg_part_get_text (MuMsgPart *self, gboolean *err)
@@ -99,38 +162,20 @@ mu_msg_part_get_text (MuMsgPart *self, gboolean *err)
 	GMimeObject *mobj;
 
 	g_return_val_if_fail (self && self->data, NULL);
-
 	mobj = (GMimeObject*)self->data;
 
-	if (GMIME_IS_PART(mobj))
+	if (GMIME_IS_PART(mobj)) {
+		/* ignore all but plain text */
+		if ((strcasecmp (self->type, "text") == 0) &&
+		    (strcasecmp (self->subtype, "plain") == 0))
+			return NULL;
 		return mu_msg_mime_part_to_string ((GMimePart*)mobj, err);
-	else if (GMIME_IS_MESSAGE(mobj)) {
-		/* when it's an (embedded) message, the text is just
-		 * of the message metadata, so we can index it.
-		 */
-		GString *data;
-		GMimeMessage *msg;
-		InternetAddressList *addresses;
-		gchar *adrs;
+	}
 
-		msg = (GMimeMessage*)mobj;
-		data = g_string_sized_new (512); /* just a guess */
+	if (GMIME_IS_MESSAGE(mobj))
+		return mime_message_to_string ((GMimeMessage*)mobj);
 
-		g_string_append (data, g_mime_message_get_sender(msg));
-		g_string_append_c (data, '\n');
-		g_string_append (data, g_mime_message_get_subject(msg));
-		g_string_append_c (data, '\n');
-
-		addresses = g_mime_message_get_all_recipients (msg);
-		adrs = internet_address_list_to_string (addresses, FALSE);
-		g_object_unref(G_OBJECT(addresses));
-
-		g_string_append (data, adrs);
-		g_free (adrs);
-
-		return g_string_free (data, FALSE);
-	} else
-
+	g_return_val_if_reached (NULL);
 	return NULL;
 }
 
@@ -156,91 +201,6 @@ get_part_size (GMimePart *part)
 	/* NOTE: it seems we shouldn't unref stream/wrapper */
 }
 
-
-
-static gboolean
-init_msg_part_from_mime_part (GMimePart *part, MuMsgPart *pi)
-{
-	const gchar *fname, *descr;
-	GMimeContentType *ct;
-
-	ct = g_mime_object_get_content_type ((GMimeObject*)part);
-	if (GMIME_IS_CONTENT_TYPE(ct)) {
-		pi->type    = (char*)g_mime_content_type_get_media_type (ct);
-		pi->subtype = (char*)g_mime_content_type_get_media_subtype (ct);
-	}
-
-	pi->disposition = (char*)g_mime_object_get_disposition
-		((GMimeObject*)part);
-
-	fname	      = g_mime_part_get_filename (part);
-	pi->file_name = fname ? mu_str_utf8ify (fname) : NULL;
-
-	descr		= g_mime_part_get_content_description (part);
-	pi->description = descr ? mu_str_utf8ify (descr) : NULL;
-
-	pi->size        = get_part_size (part);
-	pi->is_leaf     = TRUE;
-	pi->is_msg      = FALSE;
-
-	return TRUE;
-}
-
-static gchar*
-get_filename_for_mime_message_part (GMimeMessage *mmsg)
-{
-	gchar *name, *cur;
-
-	name = (char*)g_mime_message_get_subject (mmsg);
-	if (!name)
-		name = "message";
-
-	name = g_strconcat (name, ".eml", NULL);
-
-	/* remove slashes... */
-	for (cur = name ; *cur; ++cur) {
-		if (*cur == '/' || *cur == ' ' || *cur == ':')
-			*cur = '-';
-	}
-
-	return name;
-}
-
-
-static gboolean
-init_msg_part_from_mime_message_part (GMimeMessage *mmsg, MuMsgPart *pi)
-{
-	pi->disposition = GMIME_DISPOSITION_ATTACHMENT;
-
-	/* pseudo-file name... */
-	pi->file_name	= get_filename_for_mime_message_part (mmsg);
-	pi->description = g_strdup ("message");
-
-	pi->type        = "message";
-	pi->subtype     = "rfc822";
-
-	pi->size        = 0;
-	pi->is_leaf     = TRUE;
-	pi->is_msg      = TRUE;
-
-	return TRUE;
-}
-
-
-
-static void
-msg_part_free (MuMsgPart *pi)
-{
-	if (!pi)
-		return;
-
-	g_free (pi->file_name);
-	g_free (pi->description);
-
-#ifdef BUILD_CRYPTO
-	mu_msg_part_free_sig_infos (pi->sig_infos);
-#endif /*BUILD_CRYPTO*/
-}
 
 #ifdef BUILD_CRYPTO
 static void
@@ -274,9 +234,104 @@ check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
 		g_clear_error (&err);
 	}
 }
-
 #endif /*BUILD_CRYPTO*/
 
+static gboolean
+init_msg_part_from_mime_part (MuMsgOptions opts, GMimeObject *parent,
+			      GMimePart *part, MuMsgPart *pi)
+{
+	const gchar *fname, *descr;
+	GMimeContentType *ct;
+
+	ct = g_mime_object_get_content_type ((GMimeObject*)part);
+	if (GMIME_IS_CONTENT_TYPE(ct)) {
+		pi->type    = (char*)g_mime_content_type_get_media_type (ct);
+		pi->subtype = (char*)g_mime_content_type_get_media_subtype (ct);
+	}
+
+	pi->disposition = (char*)g_mime_object_get_disposition
+		((GMimeObject*)part);
+
+	fname	      = g_mime_part_get_filename (part);
+	pi->file_name = fname ? mu_str_utf8ify (fname) : NULL;
+
+	descr		  = g_mime_part_get_content_description (part);
+	pi->description   = descr ? mu_str_utf8ify (descr) : NULL;
+	pi->size          = get_part_size (part);
+	pi->part_type     = MU_MSG_PART_TYPE_LEAF;
+
+	if (!pi->disposition ||
+	    g_ascii_strcasecmp (pi->disposition,
+				GMIME_DISPOSITION_INLINE) == 0)
+		pi->part_type |= MU_MSG_PART_TYPE_INLINE;
+
+	if (GMIME_IS_MULTIPART_SIGNED (parent))
+		pi->part_type |= MU_MSG_PART_TYPE_SIGNED;
+	if (GMIME_IS_MULTIPART_ENCRYPTED (parent))
+		pi->part_type |= MU_MSG_PART_TYPE_ENCRYPTED;
+
+	/* if we have crypto support, check the signature if there is one */
+#ifdef BUILD_CRYPTO
+	if (opts & MU_MSG_OPTION_CHECK_SIGNATURES)
+		check_signature_maybe (parent, (GMimeObject*)part,
+				       pi, opts);
+#endif /*BUILD_CRYPTO*/
+
+	return TRUE;
+}
+
+static gchar*
+get_filename_for_mime_message_part (GMimeMessage *mmsg)
+{
+	gchar *name, *cur;
+
+	name = (char*)g_mime_message_get_subject (mmsg);
+	if (!name)
+		name = "message";
+
+	name = g_strconcat (name, ".eml", NULL);
+
+	/* remove slashes... */
+	for (cur = name ; *cur; ++cur) {
+		if (*cur == '/' || *cur == ' ' || *cur == ':')
+			*cur = '-';
+	}
+
+	return name;
+}
+
+
+static gboolean
+init_msg_part_from_mime_message_part (GMimeMessage *mmsg, MuMsgPart *pi)
+{
+	pi->disposition = GMIME_DISPOSITION_ATTACHMENT;
+
+	/* pseudo-file name... */
+	pi->file_name	= get_filename_for_mime_message_part (mmsg);
+	pi->description = g_strdup ("message");
+	pi->type        = "message";
+	pi->subtype     = "rfc822";
+	pi->size        = 0;
+	pi->part_type   = MU_MSG_PART_TYPE_MESSAGE;
+
+	return TRUE;
+}
+
+
+
+static void
+msg_part_free (MuMsgPart *pi)
+{
+	if (!pi)
+		return;
+
+	g_free (pi->file_name);
+	g_free (pi->description);
+
+#ifdef BUILD_CRYPTO
+	mu_msg_part_free_sig_infos (pi->sig_infos);
+#endif /*BUILD_CRYPTO*/
+}
 
 
 static void
@@ -292,33 +347,24 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 	memset (&pi, 0, sizeof(pi));
 	pi.index      = pdata->_idx++;
 	pi.content_id = (char*)g_mime_object_get_content_id (mobj);
-	pi.data       = (gpointer)mobj;
 	/* check if this is the body part */
-	pi.is_body    = ((void*)pdata->_body_part == (void*)mobj);
+	if ((void*)pdata->_body_part == (void*)mobj)
+		pi.part_type |= MU_MSG_PART_TYPE_BODY;
 
-	if (GMIME_IS_PART(mobj))
-		rv = init_msg_part_from_mime_part ((GMimePart*)mobj, &pi);
-	else if (GMIME_IS_MESSAGE_PART(mobj)) {
+	if (GMIME_IS_PART(mobj)) {
+		pi.data = (gpointer)mobj;
+		rv = init_msg_part_from_mime_part
+			(pdata->_opts, parent, (GMimePart*)mobj, &pi);
+	} else if (GMIME_IS_MESSAGE_PART(mobj)) {
 		GMimeMessage *mmsg;
 		mmsg = g_mime_message_part_get_message ((GMimeMessagePart*)mobj);
 		if (!mmsg)
 			return;
+		/* use the message, not the message part */
+		pi.data = (gpointer)mmsg;
 		rv = init_msg_part_from_mime_message_part (mmsg, &pi);
-		if (rv && (pdata->_opts && MU_MSG_OPTION_RECURSE_RFC822))
-			/* NOTE: this screws up the counting
-			 * (pdata->_idx); happily, we only use it
-			 * where we don't care about that */
-			g_mime_message_foreach /* recurse */
-				(mmsg, (GMimeObjectForeachFunc)part_foreach_cb,
-				 pdata);
 	} else
 		rv = FALSE; /* ignore */
-
-	/* if we have crypto support, check the signature if there is one */
-#ifdef BUILD_CRYPTO
-	if (pdata->_opts & MU_MSG_OPTION_CHECK_SIGNATURES)
-		check_signature_maybe (parent, mobj, &pi, pdata->_opts);
-#endif /*BUILD_CRYPTO*/
 
 	if (rv)
 		pdata->_func(pdata->_msg, &pi, pdata->_user_data);
@@ -710,17 +756,15 @@ mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern)
 
 
 gboolean
-mu_msg_part_looks_like_attachment (MuMsgPart *part, gboolean include_inline)
+mu_msg_part_looks_like_attachment (MuMsgPart *part,
+				   gboolean include_inline)
 {
 	g_return_val_if_fail (part, FALSE);
 
-	if (part->is_body||!part->disposition||!part->type)
+	if  (part->part_type & MU_MSG_PART_TYPE_BODY)
+		return FALSE;
+	if (!include_inline && (part->part_type & MU_MSG_PART_TYPE_INLINE))
 		return FALSE;
 
-	if (include_inline ||
-	    g_ascii_strcasecmp (part->disposition,
-				GMIME_DISPOSITION_ATTACHMENT) == 0)
-		return TRUE;
-
-	return FALSE;
+	return TRUE;
 }
