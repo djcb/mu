@@ -332,7 +332,7 @@ at POINT, or if nil, at (point)."
 	(propertize (symbol-name flag) 'face 'mu4e-view-special-header-value-face))
       flags
       (propertize ", " 'face 'mu4e-view-header-value-face)) t))
- 
+
 (defun mu4e~view-construct-signature-header (msg)
   "Construct a Signature: header, if there are any signed parts."
   (let* ((parts (plist-get msg :parts))
@@ -378,9 +378,9 @@ is nil, and otherwise open it."
 	    ;; we only list parts that look like attachments, ie. that have a
 	    ;; non-nil :attachment property; we record a mapping between user-visible
 	    ;; numbers and the part indices
-	    (remove-if-not
+	    (remove-if
 	      (lambda (part)
-		(plist-get part :attachment))
+		(member 'inline (plist-get part :type)))
 	      (plist-get msg :parts)))
 	  (attstr
 	   (mapconcat
@@ -449,7 +449,7 @@ is nil, and otherwise open it."
       (define-key map "T" 'mu4e-view-mark-thread)
 
       (define-key map "v" 'mu4e-view-verify-msg-popup)
-      
+
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
@@ -1124,7 +1124,7 @@ the results."
 
 (defconst mu4e~verify-buffer-name " *mu4e-verify*")
 
-(defun mu4e-view-verify-msg-popup (&optional msg) 
+(defun mu4e-view-verify-msg-popup (&optional msg)
   "Pop-up a little signature verification window for (optional) MSG
 or message-at-point."
   (interactive)
