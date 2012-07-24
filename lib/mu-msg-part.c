@@ -318,7 +318,6 @@ init_msg_part_from_mime_message_part (GMimeMessage *mmsg, MuMsgPart *pi)
 }
 
 
-
 static void
 msg_part_free (MuMsgPart *pi)
 {
@@ -347,15 +346,19 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 	memset (&pi, 0, sizeof(pi));
 	pi.index      = pdata->_idx++;
 	pi.content_id = (char*)g_mime_object_get_content_id (mobj);
-	/* check if this is the body part */
-	if ((void*)pdata->_body_part == (void*)mobj)
-		pi.part_type |= MU_MSG_PART_TYPE_BODY;
 
 	if (GMIME_IS_PART(mobj)) {
+
 		pi.data = (gpointer)mobj;
 		rv = init_msg_part_from_mime_part
 			(pdata->_opts, parent, (GMimePart*)mobj, &pi);
+
+		/* check if this is the body part */
+		if ((void*)pdata->_body_part == (void*)mobj)
+			pi.part_type |= MU_MSG_PART_TYPE_BODY;
+
 	} else if (GMIME_IS_MESSAGE_PART(mobj)) {
+
 		GMimeMessage *mmsg;
 		mmsg = g_mime_message_part_get_message ((GMimeMessagePart*)mobj);
 		if (!mmsg)
@@ -363,6 +366,7 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 		/* use the message, not the message part */
 		pi.data = (gpointer)mmsg;
 		rv = init_msg_part_from_mime_message_part (mmsg, &pi);
+
 	} else
 		rv = FALSE; /* ignore */
 
