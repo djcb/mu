@@ -25,6 +25,7 @@
   :export ( mu:tabulate
 	    mu:average
 	    mu:stddev
+	    mu:correl
 	    mu:max
 	    mu:min
 	    mu:weekday-numbers->names
@@ -47,7 +48,7 @@ get back a list like
 	  (set! table (assoc-set! table val (1+ old-freq)))))
       expr)
     table))
- 
+
 (define (average lst)
   "Calculate the average of a list LST of numbers, or #f if undefined."
   (if (null? lst)
@@ -73,7 +74,7 @@ EXPR (or #t for all). Returns #f if undefined."
   "Get the standard deviation the the values of FUNC applied to all
 messages matching EXPR (or #t for all). This is the 'population' stddev, not the 'sample' stddev. Returns #f if undefined."
   (stddev (map func (mu:message-list expr))))
- 
+
 (define* (mu:max func #:optional (expr #t))
   "Get the maximum value of FUNC applied to all messages matching
 EXPR (or #t for all). Returns #f if undefined."
@@ -83,7 +84,32 @@ EXPR (or #t for all). Returns #f if undefined."
   "Get the minimum value of FUNC applied to all messages matching
 EXPR (or #t for all). Returns #f if undefined."
   (apply min (map func (mu:message-list expr))))
- 
+
+
+(define (correl lst)
+  "Calculate Pearson's correlation coefficient for a list LST of cons
+pair, where the car and cdr of the pairs are values from data set 1
+and 2, respectively."
+  (let ((n (length lst))
+	 (sx (apply + (map car lst)))
+	 (sy (apply + (map cdr lst)))
+	 (sxy (apply + (map (lambda (cell) (* (car cell) (cdr cell))) lst)))
+	 (sxx (apply + (map (lambda (cell) (* (car cell) (car cell))) lst)))
+	 (syy (apply + (map (lambda (cell) (* (cdr cell) (cdr cell))) lst))))
+    (/ (- (* n sxy) (* sx sy)) 
+      (sqrt (* (-  (* n sxx) (* sx sx)) (- (* n syy) (* sy sy)))))))
+
+(define* (mu:correl func1 func2 #:optional (expr #t))
+  "Determine Pearson's correlation coefficient between the value for
+functions FUNC1 and FUNC2 to all messages matching EXPR (or #t for
+all). Returns #f if undefined."
+  (let ((data
+	  (map (lambda (msg)
+		 (cons (func1 msg) (func2 msg)))
+	    (mu:message-list expr))))
+    (if data (correl data) #f)))
+
+
 ;; a list of abbreviated, localized day names
 (define day-names
   (map locale-day-short (iota 7 1)))
