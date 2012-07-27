@@ -52,12 +52,16 @@ password_requester (GMimeCryptoContext *ctx, const char *user_id,
 	ssize_t written;
 
 	cbdata = g_object_get_data (G_OBJECT(ctx), CALLBACK_DATA);
-	g_return_val_if_fail (cbdata, FALSE);
+	if (!cbdata || !cbdata->pw_func)
+		return FALSE;
 
 	password = cbdata->pw_func (user_id, prompt_ctx, reprompt,
 				    cbdata->user_data);
-	if (!password)
+	if (!password) {
+		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
+				     "failed to get password");
 		return FALSE;
+	}
 
 	written = g_mime_stream_write_string (response, password);
 	if (written != -1)
@@ -67,7 +71,7 @@ password_requester (GMimeCryptoContext *ctx, const char *user_id,
 			             "writing password to mime stream failed");
 
 	if (g_mime_stream_flush (response) != 0)
-		g_printerr ("error flushing stream!\n");
+		g_printerr ("error flushing stream\n");
 
 	memset (password, 0, strlen(password));
 	g_free (password);
@@ -114,8 +118,11 @@ get_gpg_crypto_context (MuMsgOptions opts, GError **err)
 	}
 
 	g_mime_gpg_context_set_use_agent
-		(GMIME_GPG_CONTEXT(cctx),
-		 opts & MU_MSG_OPTION_USE_AGENT ? TRUE:FALSE);
+		(GMIME_GPG_CONTEXT(cctx), TRUE);
+		 /* opts & MU_MSG_OPTION_USE_AGENT ? TRUE:FALSE); */
+	/* g_mime_gpg_context_set_use_agent */
+	/* 	(GMIME_GPG_CONTEXT(cctx), */
+	/* 	 opts & MU_MSG_OPTION_USE_AGENT ? TRUE:FALSE); */
 	g_mime_gpg_context_set_auto_key_retrieve
 		(GMIME_GPG_CONTEXT(cctx),
 		 opts & MU_MSG_OPTION_AUTO_RETRIEVE_KEY ? TRUE:FALSE);
@@ -523,118 +530,30 @@ mu_msg_part_sig_info_to_string (MuMsgPartSigInfo *info)
 }
 
 
-struct _MuMsgDecryptedPart {
-	GMimeObject *decrypted;
-};
-
-
-struct _PartData {
-	MuMsgPartDecryptForeachFunc func;
-	gpointer user_data;
-	GMimeCryptoContext *cctx;
-	GError *err;
-};
-typedef struct _PartData PartData;
-
-
-static void
-each_encpart (GMimeObject *parent, GMimeObject *part, PartData *pdata)
+GMimeObject* /* this is declared in mu-msg-priv.h */
+mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
+			    GError **err)
 {
-	MuMsgDecryptedPart dpart;
+	GMimeObject *dec;
+	GMimeCryptoContext *ctx;
 
-	if (pdata->err)
-		return;
+	g_return_val_if_fail (GMIME_IS_MULTIPART_ENCRYPTED(enc), NULL);
 
-	if (!GMIME_IS_MULTIPART_ENCRYPTED (part))
-		return; /* nothing to do for this part */
-
-	dpart.decrypted =
-		g_mime_multipart_encrypted_decrypt (
-			GMIME_MULTIPART_ENCRYPTED(part),
-			pdata->cctx, NULL, &pdata->err);
-	if (!dpart.decrypted || pdata->err) {
-		if (!pdata->err)
-			mu_util_g_set_error
-				(&pdata->err,
-				 MU_ERROR_CRYPTO,
-				 "decryption failed");
-		return;
-	}
-
-	pdata->func (&dpart, pdata->user_data);
-}
-
-
-gboolean
-mu_msg_part_decrypt_foreach  (MuMsg *msg, MuMsgPartDecryptForeachFunc func,
-			      MuMsgPartPasswordFunc password_func,
-			      gpointer user_data, MuMsgOptions opts, GError **err)
-{
-	PartData pdata;
-
-	g_return_val_if_fail (msg, FALSE);
-	g_return_val_if_fail (func, FALSE);
-	g_return_val_if_fail (password_func, FALSE);
-
-	if (!mu_msg_load_msg_file (msg, err))
-		return FALSE;
-
-	pdata.func	= func;
-	pdata.user_data = user_data;
-	pdata.err	= NULL;
-	pdata.cctx	= get_crypto_context (opts, password_func,
-					 user_data, err);
-	if (!pdata.cctx)
-		return FALSE;
-
-	g_mime_message_foreach (msg->_file->_mime_msg,
-				(GMimeObjectForeachFunc)each_encpart,
-				&pdata);
-	if (pdata.err) {
-		*err = pdata.err;
-		return FALSE;
-	}
-
-	g_object_unref (pdata.cctx);
-
-	return TRUE;
-}
-
-char*
-mu_msg_decrypted_part_to_string (MuMsgDecryptedPart *dpart, GError **err)
-{
-	GMimePart *part;
-	gboolean not_ok;
-	gchar *str;
-
-	g_return_val_if_fail (dpart, NULL);
-
-	if (!GMIME_IS_PART(dpart->decrypted)) {
+	ctx = get_crypto_context (opts, NULL, NULL, err);
+	if (!ctx) {
 		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
-				     "wrong mime-type");
-		return NULL; /* can only convert parts to string*/
-	}
-	part = GMIME_PART(dpart->decrypted);
-	str = mu_msg_mime_part_to_string (part, &not_ok);
-
-	if (not_ok) {
-		g_free (str);
-		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
-				     "failed to convert part to string");
+				     "failed to get crypto context");
 		return NULL;
 	}
 
-	return str;
-}
+	dec = g_mime_multipart_encrypted_decrypt (enc, ctx, NULL, err);
+	g_object_unref (ctx);
+	if (!dec) {
+		if (err && !*err)
+			mu_util_g_set_error (err, MU_ERROR_CRYPTO,
+					     "decryption failed");
+		return NULL;
+	}
 
-
-gboolean
-mu_msg_decrypted_part_to_file (MuMsgDecryptedPart *dpart, const char *path,
-			       GError **err)
-{
-	g_return_val_if_fail (dpart, FALSE);
-	g_return_val_if_fail (path, FALSE);
-
-	return mu_msg_part_mime_save_object (dpart->decrypted, path, FALSE, FALSE,
-					     err);
+	return dec;
 }
