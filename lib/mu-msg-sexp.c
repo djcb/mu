@@ -223,9 +223,28 @@ get_temp_file (MuMsg *msg, unsigned index)
 }
 
 
+static gchar*
+get_temp_file_maybe (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
+{
+	char *tmp, *tmpfile;
+
+	if  (!(opts & MU_MSG_OPTION_EXTRACT_IMAGES) ||
+	     g_ascii_strcasecmp (part->type, "image") != 0)
+		return NULL;
+
+	tmp = get_temp_file (msg, part->index);
+	if (!tmp)
+		return NULL;
+
+	tmpfile = mu_str_escape_c_literal (tmp, TRUE);
+	g_free (tmp);
+	return tmpfile;
+}
+
+
 struct _PartInfo {
-	char *parts;
-	gboolean want_images;
+	char        *parts;
+	MuMsgOptions opts;
 };
 typedef struct _PartInfo PartInfo;
 
@@ -331,15 +350,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 
 	name = get_part_filename (part);
 
-	tmpfile = NULL;
-	if (pinfo->want_images && g_ascii_strcasecmp (part->type, "image") == 0) {
-		char *tmp;
-		if ((tmp = get_temp_file (msg, part->index))) {
-			tmpfile = mu_str_escape_c_literal (tmp, TRUE);
-			g_free (tmp);
-		}
-	}
-
+	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
 	parttype = get_part_type_string (part->part_type);
 
 	tmp = g_strdup_printf
@@ -356,7 +367,6 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 sig_verdict (part->sig_infos));
 
 	g_free (pinfo->parts);
-
 	pinfo->parts = tmp;
 }
 
@@ -366,8 +376,8 @@ append_sexp_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 {
 	PartInfo pinfo;
 
-	pinfo.parts       = NULL;
-	pinfo.want_images = opts & MU_MSG_OPTION_EXTRACT_IMAGES;
+	pinfo.parts = NULL;
+	pinfo.opts  = opts;
 
 	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part,
 			     &pinfo, opts);

@@ -385,13 +385,13 @@ struct PartData {
 
 
 static gboolean
-maybe_index_text_part (MuMsgPart *part, PartData *pdata)
+maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 {
 	gboolean err;
 	char *txt, *norm;
 	Xapian::TermGenerator termgen;
 
-	txt = mu_msg_part_get_text (part, &err);
+	txt = mu_msg_part_get_text (msg, part, &err);
 	if (!txt || err)
 		return FALSE;
 
@@ -444,7 +444,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	/* now, for non-body parts with some MIME-types, index the
 	 * content as well */
 	if (mu_msg_part_looks_like_attachment (part, FALSE))
-		maybe_index_text_part (part, pdata);
+		maybe_index_text_part (msg, part, pdata);
 }
 
 

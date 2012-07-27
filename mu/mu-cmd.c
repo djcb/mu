@@ -111,94 +111,19 @@ print_field (const char* field, const char *val, gboolean color)
 	fputs ("\n", stdout);
 }
 
-static char*
-get_password (const char *user_id, const char *prompt_ctx,
-	      gboolean reprompt, gpointer user_data)
-{
-	char *pass, *prompt;
-	if (reprompt)
-		g_printerr ("Incorrect password. Please try again\n");
-	/* else */
-	/* 	g_print ("mu: %s\n", prompt_ctx); *\/ */
-
-	prompt = g_strdup_printf ("mu: password for %s: ", user_id);
-	pass   = getpass (prompt);
-	g_free (prompt);
-
-	return pass;
-}
-
-
-struct _DData {
-	GString *gstr;
-	GError *err;
-};
-typedef struct _DData DData;
-
-static void
-each_decrypted_part (MuMsgDecryptedPart *dpart, DData *ddata)
-{
-	gchar *str;
-
-	if (ddata->err)
-		return;
-
-	str = mu_msg_decrypted_part_to_string (dpart,
-					       &ddata->err);
-	ddata->gstr = g_string_append (ddata->gstr,
-				       str ? str : "");
-	g_free (str);
-}
-
-
-static gchar*
-try_decrypt_body (MuMsg *msg, MuConfig *opts)
-{
-	DData ddata;
-	GError *err;
-
-	err = NULL;
-	ddata.gstr = g_string_sized_new (mu_msg_get_size(msg));
-	ddata.err = NULL;
-
-	if (!mu_msg_part_decrypt_foreach
-	    (msg,(MuMsgPartDecryptForeachFunc)each_decrypted_part,
-	     (MuMsgPartPasswordFunc)get_password,
-	     &ddata, MU_MSG_OPTION_USE_AGENT, &err))
-		goto errexit;
-
-	if (ddata.err)
-		goto errexit;
-
-	return g_string_free (ddata.gstr, FALSE);
-
-errexit:
-	g_warning ("decryption failed: %s",
-		   err ? err->message : "something went wrong");
-	g_clear_error (&err);
-	return NULL;
-}
-
 
 /* a summary_len of 0 mean 'don't show summary, show body */
 static void
 body_or_summary (MuMsg *msg, MuConfig *opts)
 {
-	const char *str;
 	const char *body;
-	char *decrypted;
 	gboolean color;
 
 	color = !opts->nocolor;
+	body = mu_msg_get_body_text (msg);
 
-	str = mu_msg_get_body_text (msg);
-	decrypted = NULL;
-
-	if (!str && opts->decrypt)
-		decrypted = try_decrypt_body (msg, opts);
-	if (!str && !decrypted)
-		return; /* no body -- nothing more to do */
-	body = str ? str : decrypted;
+	if (!body)
+		return;
 
 	if (opts->summary_len != 0) {
 		gchar *summ;
@@ -210,8 +135,6 @@ body_or_summary (MuMsg *msg, MuConfig *opts)
 		mu_util_print_encoded ("\n%s\n", body);
 		color_maybe (MU_COLOR_DEFAULT);
 	}
-
-	g_free (decrypted);
 }
 
 
@@ -264,6 +187,8 @@ handle_msg (const char *fname, MuConfig *opts, GError **err)
 	msg = mu_msg_new_from_file (fname, NULL, err);
 	if (!msg)
 		return FALSE;
+
+	mu_msg_set_auto_decrypt (msg, opts->decrypt);
 
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:

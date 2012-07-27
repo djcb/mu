@@ -1215,8 +1215,12 @@ cmd_ping (ServerContext *ctx, GSList *args, GError **err)
 		return print_and_clear_g_error (err);
 
 	print_expr ("(:pong \"" PACKAGE_NAME "\" "
-		    ":version \"" VERSION "\" "
-		    ":doccount %u)", doccount);
+		    " :props ("
+#ifdef BUILD_CRYPTO
+		    "  :crypto t "
+#endif /*BUILD_CRYPTO*/
+		    "  :version \"" VERSION "\" "
+		    "  :doccount %u))",doccount);
 
 	return MU_OK;
 }
@@ -1342,6 +1346,7 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 	unsigned docid;
 	char *sexp;
 	MuMsgOptions opts;
+	gboolean decrypt;
 
 	opts = MU_MSG_OPTION_CHECK_SIGNATURES;
 	if (get_bool_from_args (args, "extract-images", FALSE, err))
@@ -1350,6 +1355,8 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 		opts |= MU_MSG_OPTION_USE_AGENT;
 	if (get_bool_from_args (args, "auto-retrieve-key", FALSE, NULL))
 		opts |= MU_MSG_OPTION_AUTO_RETRIEVE_KEY;
+
+	decrypt = get_bool_from_args (args, "extract-encrypted", FALSE, err);
 
 	docid = determine_docid (ctx->query, args, err);
 	if (docid == MU_STORE_INVALID_DOCID) {
@@ -1363,6 +1370,7 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 		return MU_OK;
 	}
 
+	mu_msg_set_auto_decrypt (msg, decrypt);
 	sexp = mu_msg_to_sexp (msg, docid, NULL, opts);
 	mu_msg_unref (msg);
 
