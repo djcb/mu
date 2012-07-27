@@ -76,9 +76,10 @@ find_part (MuMsg* msg, guint partidx)
 	fpdata.idx	  = 0;
 	fpdata.part	  = NULL;
 
-	g_mime_message_foreach (msg->_file->_mime_msg,
-				(GMimeObjectForeachFunc)find_part_cb,
-				&fpdata);
+	mu_mime_message_foreach (msg->_file->_mime_msg,
+				 mu_msg_get_auto_decrypt(msg),
+				 (GMimeObjectForeachFunc)find_part_cb,
+				 &fpdata);
 	return fpdata.part;
 }
 
@@ -94,19 +95,28 @@ typedef struct _PartData PartData;
 
 
 
-static gchar *mime_message_to_string (GMimeMessage *mimemsg);
+struct _TxtData {
+	GString *gstr;
+	gboolean decrypt;
+};
+typedef struct _TxtData TxtData;
+
+static gchar *mime_message_to_string (GMimeMessage *mimemsg,
+				      gboolean decrypt);
 
 static void
 each_mime_part_get_text (GMimeObject *parent, GMimeObject *part,
-			 GString **gstr)
+			 TxtData *tdata)
 {
 	char *txt;
 	txt = NULL;
 
 	if (GMIME_IS_MESSAGE(part)) {
-		txt = mime_message_to_string (GMIME_MESSAGE(part));
+		txt = mime_message_to_string (GMIME_MESSAGE(part),
+					      tdata->decrypt);
 		if (txt)
-			*gstr = g_string_append (*gstr, txt);
+			tdata->gstr =
+				g_string_append (tdata->gstr, txt);
 	}
 
 	if (GMIME_IS_PART (part)) {
@@ -120,47 +130,57 @@ each_mime_part_get_text (GMimeObject *parent, GMimeObject *part,
 	}
 
 	if (txt) {
-		*gstr = g_string_append_c (*gstr, '\n');
-		*gstr = g_string_append (*gstr, txt);
+		tdata->gstr = g_string_append_c (tdata->gstr, '\n');
+		tdata->gstr = g_string_append (tdata->gstr, txt);
 		g_free (txt);
 	}
 }
 
-static gchar *
-mime_message_to_string (GMimeMessage *mimemsg)
+static gchar*
+mime_message_to_string (GMimeMessage *mimemsg, gboolean decrypt)
 {
-	GString *data;
+	TxtData tdata;
 	InternetAddressList *addresses;
 	gchar *adrs;
+	const char *str;
 
-	data = g_string_sized_new (2048); /* just a guess */
+	tdata.gstr = g_string_sized_new (2048); /* just a guess */
 
-	g_string_append (data, g_mime_message_get_sender(mimemsg));
-	g_string_append_c (data, '\n');
-	g_string_append (data, g_mime_message_get_subject(mimemsg));
-	g_string_append_c (data, '\n');
-
+	/* put sender, recipients and subject in the string, so they
+	 * can be indexed as well */
+	str = g_mime_message_get_sender(mimemsg);
+	if (str) {
+		g_string_append (tdata.gstr, str);
+		g_string_append_c (tdata.gstr, '\n');
+	}
+	str = g_mime_message_get_subject(mimemsg);
+	if (str) {
+		g_string_append (tdata.gstr, str);
+		g_string_append_c (tdata.gstr, '\n');
+	}
 	addresses = g_mime_message_get_all_recipients (mimemsg);
 	adrs = internet_address_list_to_string (addresses, FALSE);
 	g_object_unref(G_OBJECT(addresses));
-
-	g_string_append (data, adrs);
+	if (adrs)
+		g_string_append (tdata.gstr, adrs);
 	g_free (adrs);
 
 	/* recurse through all text parts */
-	g_mime_message_foreach
-		(mimemsg,
+	tdata.decrypt = decrypt;
+	mu_mime_message_foreach
+		(mimemsg, decrypt,
 		 (GMimeObjectForeachFunc)each_mime_part_get_text,
-		 &data);
+		 &tdata);
 
-	return g_string_free (data, FALSE);
+	return g_string_free (tdata.gstr, FALSE);
 }
 
 char*
-mu_msg_part_get_text (MuMsgPart *self, gboolean *err)
+mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, gboolean *err)
 {
 	GMimeObject *mobj;
 
+	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (self && self->data, NULL);
 	mobj = (GMimeObject*)self->data;
 
@@ -173,8 +193,8 @@ mu_msg_part_get_text (MuMsgPart *self, gboolean *err)
 	}
 
 	if (GMIME_IS_MESSAGE(mobj))
-		return mime_message_to_string ((GMimeMessage*)mobj);
-
+		return mime_message_to_string ((GMimeMessage*)mobj,
+					       mu_msg_get_auto_decrypt(msg));
 	g_return_val_if_reached (NULL);
 	return NULL;
 }
@@ -234,6 +254,9 @@ check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi,
 		g_clear_error (&err);
 	}
 }
+
+
+
 #endif /*BUILD_CRYPTO*/
 
 static gboolean
@@ -273,7 +296,7 @@ init_msg_part_from_mime_part (MuMsgOptions opts, GMimeObject *parent,
 	/* if we have crypto support, check the signature if there is one */
 #ifdef BUILD_CRYPTO
 	if (opts & MU_MSG_OPTION_CHECK_SIGNATURES)
-		check_signature_maybe (parent, (GMimeObject*)part,
+ 		check_signature_maybe (parent, (GMimeObject*)part,
 				       pi, opts);
 #endif /*BUILD_CRYPTO*/
 
@@ -332,14 +355,13 @@ msg_part_free (MuMsgPart *pi)
 #endif /*BUILD_CRYPTO*/
 }
 
-
 static void
 part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 {
 	MuMsgPart pi;
 	gboolean rv;
 
-	/* ignore non-leaf / message parts */
+	/* ignore other non-leaf / message parts */
 	if (!is_part_or_message_part (mobj))
 		return;
 
@@ -348,13 +370,12 @@ part_foreach_cb (GMimeObject *parent, GMimeObject *mobj, PartData *pdata)
 	pi.content_id = (char*)g_mime_object_get_content_id (mobj);
 
 	if (GMIME_IS_PART(mobj)) {
-
 		pi.data = (gpointer)mobj;
 		rv = init_msg_part_from_mime_part
 			(pdata->_opts, parent, (GMimePart*)mobj, &pi);
 
 		/* check if this is the body part */
-		if ((void*)pdata->_body_part == (void*)mobj)
+		if (rv && (void*)pdata->_body_part == (void*)mobj)
 			pi.part_type |= MU_MSG_PART_TYPE_BODY;
 
 	} else if (GMIME_IS_MESSAGE_PART(mobj)) {
@@ -393,14 +414,16 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func, gpointer user_data,
 
 	pdata._msg	      = msg;
 	pdata._idx	      = 0;
-	pdata._body_part      = mu_msg_mime_get_body_part (mime_msg, FALSE);
+	pdata._body_part      = mu_msg_mime_get_body_part
+		(mime_msg, mu_msg_get_auto_decrypt(msg), FALSE);
 	pdata._func	      = func;
 	pdata._user_data      = user_data;
 	pdata._opts           = opts;
 
-	g_mime_message_foreach (msg->_file->_mime_msg,
-				(GMimeObjectForeachFunc)part_foreach_cb,
-				&pdata);
+	mu_mime_message_foreach (msg->_file->_mime_msg,
+				 mu_msg_get_auto_decrypt(msg),
+				 (GMimeObjectForeachFunc)part_foreach_cb,
+				 &pdata);
 }
 
 
@@ -658,21 +681,22 @@ part_match_foreach_cb (GMimeObject *parent, GMimeObject *part,
 }
 
 static int
-msg_part_find_idx (GMimeMessage *msg, MatchFunc func, gpointer user_data)
+msg_part_find_idx (GMimeMessage *mimemsg, gboolean auto_decrypt,
+		   MatchFunc func, gpointer user_data)
 {
 	MatchData mdata;
 
-	g_return_val_if_fail (msg, -1);
-	g_return_val_if_fail (GMIME_IS_MESSAGE(msg), -1);
+	g_return_val_if_fail (mimemsg, -1);
+	g_return_val_if_fail (GMIME_IS_MESSAGE(mimemsg), -1);
 
 	mdata._idx       = 0;
 	mdata._found_idx = -1;
 	mdata._matcher   = func;
 	mdata._user_data = user_data;
 
-	g_mime_message_foreach (msg,
-				(GMimeObjectForeachFunc)part_match_foreach_cb,
-				&mdata);
+	mu_mime_message_foreach (mimemsg, auto_decrypt,
+				 (GMimeObjectForeachFunc)part_match_foreach_cb,
+				 &mdata);
 
 	return mdata._found_idx;
 }
@@ -700,6 +724,7 @@ mu_msg_part_find_cid (MuMsg *msg, const char* sought_cid)
 		sought_cid + 4 : sought_cid;
 
 	return msg_part_find_idx (msg->_file->_mime_msg,
+				  mu_msg_get_auto_decrypt(msg),
 				  (MatchFunc)match_content_id,
 				  (gpointer)(char*)cid);
 }
@@ -752,9 +777,10 @@ mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern)
 	mdata._rx  = pattern;
 	mdata._idx = 0;
 
-	g_mime_message_foreach (msg->_file->_mime_msg,
-				(GMimeObjectForeachFunc)match_filename_rx,
-				&mdata);
+	mu_mime_message_foreach (msg->_file->_mime_msg,
+				 mu_msg_get_auto_decrypt(msg),
+				 (GMimeObjectForeachFunc)match_filename_rx,
+				 &mdata);
 	return mdata._lst;
 }
 

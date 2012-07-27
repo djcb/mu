@@ -123,7 +123,7 @@ typedef struct _MuMsgPart MuMsgPart;
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
-char* mu_msg_part_get_text (MuMsgPart *part, gboolean *err);
+char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, gboolean *err);
 
 
 /**
@@ -210,6 +210,8 @@ gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
  * @return the part index number of the found part, or -1 if it was not found
  */
 int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
+
+
 
 /**
  * retrieve a list of indices for mime-parts with filenames matching a regex

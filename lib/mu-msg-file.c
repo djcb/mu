@@ -42,6 +42,10 @@
 #include "mu-maildir.h"
 #include "mu-msg-priv.h"
 
+#ifdef BUILD_CRYPTO
+#include "mu-msg-crypto.h"
+#endif /*BUILD_CRYPTO*/
+
 
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
 				    const char *mdir, GError **err);
@@ -285,9 +289,10 @@ get_content_flags (MuMsgFile *self)
 	flags = MU_FLAG_NONE;
 
 	if (GMIME_IS_MESSAGE(self->_mime_msg))
-		g_mime_message_foreach (self->_mime_msg,
-					(GMimeObjectForeachFunc)msg_cflags_cb,
-					&flags);
+		mu_mime_message_foreach (self->_mime_msg,
+					 FALSE, /* never decrypt for this */
+					 (GMimeObjectForeachFunc)msg_cflags_cb,
+					 &flags);
 	return flags;
 }
 
@@ -555,7 +560,8 @@ cleanup:
 
 
 GMimePart*
-mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html)
+mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean decrypt,
+			   gboolean want_html)
 {
 	GetBodyData data;
 
@@ -564,9 +570,10 @@ mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean want_html)
 	memset (&data, 0, sizeof(GetBodyData));
 	data._want_html = want_html;
 
-	g_mime_message_foreach (msg,
-				(GMimeObjectForeachFunc)get_body_cb,
-				&data);
+	mu_mime_message_foreach (msg,
+				 decrypt,
+				 (GMimeObjectForeachFunc)get_body_cb,
+				 &data);
 	if (want_html)
 		return (GMimePart*)data._html_part;
 	else
@@ -583,7 +590,9 @@ get_body (MuMsgFile *self, gboolean want_html)
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
 
-	part = mu_msg_mime_get_body_part (self->_mime_msg, want_html);
+	part = mu_msg_mime_get_body_part (self->_mime_msg,
+					  self->_auto_decrypt,
+					  want_html);
 	if (GMIME_IS_PART(part)) {
 		gboolean err;
 		gchar *str;
@@ -656,7 +665,7 @@ get_concatenated_text (MuMsgFile *self)
 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
 
 	txt = NULL;
-	g_mime_message_foreach (self->_mime_msg,
+	mu_mime_message_foreach (self->_mime_msg, self->_auto_decrypt,
 				(GMimeObjectForeachFunc)append_text,
 				&txt);
 	return txt;
@@ -851,7 +860,6 @@ mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 }
 
 
-
 const char*
 mu_msg_file_get_header (MuMsgFile *self, const char *header)
 {
@@ -867,4 +875,71 @@ mu_msg_file_get_header (MuMsgFile *self, const char *header)
 					header);
 
 	return hdr ? free_string_later (self, mu_str_utf8ify(hdr)) : NULL;
+}
+
+
+struct _ForeachData {
+	GMimeObjectForeachFunc user_func;
+	gpointer user_data;
+	gboolean decrypt;
+};
+typedef struct _ForeachData ForeachData;
+
+
+static void
+foreach_cb (GMimeObject *parent, GMimeObject *part, ForeachData *fdata)
+{
+	fdata->user_func (parent, part, fdata->user_data);
+
+#ifdef BUILD_CRYPTO
+	/* maybe iterate over decrypted parts */
+	if (fdata->decrypt &&
+	    GMIME_IS_MULTIPART_ENCRYPTED (part)) {
+
+		GError *err;
+		GMimeObject *dec;
+
+		err = NULL;
+		dec = mu_msg_crypto_decrypt_part
+			(GMIME_MULTIPART_ENCRYPTED(part),
+			 MU_MSG_OPTION_NONE, &err);
+		if (!dec||err) {
+			g_printerr ("crypto error: %s\n",
+				    err ? err->message : "something went wrong");
+			g_clear_error(&err);
+			g_clear_object(&dec);
+			return;
+		}
+
+		if (GMIME_IS_MULTIPART (dec))
+			g_mime_multipart_foreach (
+				(GMIME_MULTIPART(dec)),
+				(GMimeObjectForeachFunc)foreach_cb,
+				fdata);
+		else
+			foreach_cb (parent, dec, fdata);
+
+		g_object_unref (dec);
+	}
+#endif /*BUILD_CRYPTO*/
+}
+
+
+void
+mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
+			 GMimeObjectForeachFunc func, gpointer user_data)
+{
+	ForeachData fdata;
+
+	g_return_if_fail (GMIME_IS_MESSAGE (msg));
+	g_return_if_fail (func);
+
+	fdata.user_func = func;
+	fdata.user_data = user_data;
+	fdata.decrypt   = decrypt;
+
+	g_mime_message_foreach
+		(msg,
+		 (GMimeObjectForeachFunc)foreach_cb,
+		 &fdata);
 }

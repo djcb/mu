@@ -38,11 +38,8 @@ enum _MuMsgOptions {
 /* 1 << 0 is still free! */
 
 	/* for -> sexp conversion */
-
 	MU_MSG_OPTION_HEADERS_ONLY      = 1 << 1,
 	MU_MSG_OPTION_EXTRACT_IMAGES    = 1 << 2,
-
-/* 1 << 3 is still free! */
 
 	/* below options are for checking signatures; only effective
 	 * if mu was built with crypto support */
@@ -50,6 +47,7 @@ enum _MuMsgOptions {
 	MU_MSG_OPTION_AUTO_RETRIEVE_KEY = 1 << 5,
 	MU_MSG_OPTION_USE_AGENT         = 1 << 6,
 	MU_MSG_OPTION_USE_PKCS7         = 1 << 7   /* gpg is the default */
+
 };
 typedef enum _MuMsgOptions MuMsgOptions;
 
@@ -136,6 +134,28 @@ MuMsg *mu_msg_ref (MuMsg *msg);
  * @param msg a message
  */
 void mu_msg_unref (MuMsg *msg);
+
+
+/**
+ * should we set this message to 'autodecrypt'? if so, try to
+ * automatically decrypt encrypted message parts.
+ *
+ * @param msg a message
+ * @param autodecrypt TRUE or FALSE
+ *
+ * @return
+ */
+void     mu_msg_set_auto_decrypt (MuMsg *msg, gboolean autodecrypt);
+
+/**
+ * get the autodecrypt status for this message. See @func mu_msg_set_auto_decrypt
+ *
+ * @param msg a message
+ *
+ * @return the auto-decrypt status
+ */
+gboolean mu_msg_get_auto_decrypt (MuMsg *msg);
+
 
 
 
@@ -565,6 +585,8 @@ typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
  */
 void mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 			     gpointer user_data);
+
+
 
 G_END_DECLS
 
