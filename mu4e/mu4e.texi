@@ -2131,7 +2131,8 @@ something like:
 	"\n"))))
 @end lisp
 @item @emph{And what about customizable folders for sent messages, based on
-  the @t{From:} header?} This is currently not possible either, but you can periodically move messages from the main sent-folder to the specific
+  the @t{From:} header?} This is currently not possible either, but you can
+periodically move messages from the main sent-folder to the specific
 sent-folders. You can easily find those messages with a query like
 @t{maildir:/sent from:myaddress@@example.com}.
 @item @emph{mu4e seems to return a mere subset of all matches - how can I get
@@ -2141,6 +2142,16 @@ value of the variable @code{m4ue-search-result-limit} matches. To show
 @emph{all} results, use @t{M-x mu4e-headers-toggle-full-search}, or customize
 the variable @code{mu4e-headers-full-search}. This applies to all search
 commands.
+@item @emph{How can I automatically add some header to an outgoing message?}
+You can use @code{mu4e-compose-mode-hook}. For example, to add a Bcc:-header,
+you could add something like the following to your configuration:
+
+@lisp
+(add-hook 'mu4e-compose-mode-hook
+  (defun add-bcc ()
+    (message-add-header "Bcc: me@@example.com\n")))
+@end lisp
+
 @item @emph{How can I show attached images in my message view buffers?} See
 @ref{Viewing images inline}.
 @item @emph{How can I easily include attachments in the messages I write?}
