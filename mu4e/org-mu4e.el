@@ -36,12 +36,26 @@
   "Settings for the org interface."
   :group 'org-mu4e)
 
-(defcustom org-mu4e-link-description 'subject
-       "How to make the org-mode link description."
-       :type 'string
-       :group 'org-mu4e)
+(defcustom org-mu4e-link-desc-func (lambda (msg)
+				     (or (plist-get msg :subject)
+					 "No subject"))
+  "Function that takes a msg and returns a string for the
+   description part of an org-mode link.
 
-;;(setq org-mu4e-link-description '(concat date " " subject))
+   Example usage:
+
+   (defun my-link-descr (msg)
+     (let
+         ((subject (or (plist-get msg :subject)
+                      \"No subject\"))
+          (date (or (format-time-string mu4e-headers-date-format
+                      (mu4e-msg-field msg :date))
+                   \"No date\")))
+       (concat subject \" \" date)))
+
+  (setq org-mu4e-link-desc-func 'my-link-descr)"
+  :type 'function
+  :group 'org-mu4e)
 
 (defun org-mu4e-store-link ()
   "Store a link to a mu4e query or message."
@@ -60,18 +74,14 @@
       ;; storing links to messages
     ((eq major-mode 'mu4e-view-mode)
       (let* ((msg  (mu4e-message-at-point))
-	      (msgid   (or (plist-get msg :message-id) "<none>"))
-	      (subject (or (plist-get msg :subject) "No subject"))
-	      (date (or (format-time-string mu4e-headers-date-format
-					    (mu4e-msg-field msg :date))
-			"No date"))
-	      link)
-	(org-store-link-props :type "mu4e" :link link
-          :message-id msgid :subject subject :date date)
-	(setq link (org-make-link "mu4e:msgid:" msgid))
-        (org-add-link-props :link link
-		            :description (eval org-mu4e-link-description))
-	link))))
+	     (msgid   (or (plist-get msg :message-id) "<none>"))
+	     link)
+       (org-store-link-props :type "mu4e" :link link
+			     :message-id msgid)
+       (setq link (org-make-link "mu4e:msgid:" msgid))
+       (org-add-link-props :link link
+			   :description (funcall org-mu4e-link-desc-func msg))
+       link))))
 
 (org-add-link-type "mu4e" 'org-mu4e-open)
 (add-hook 'org-store-link-functions 'org-mu4e-store-link)
