@@ -88,26 +88,26 @@ mu_guile_init_instance (const char *muhome)
 	if (!mu_runtime_init (muhome, "guile"))
 		return FALSE;
 
+	err = NULL;
 	store = mu_store_new_read_only (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 					&err);
-	if (!store) {
-		mu_guile_g_error (__FUNCTION__, err);
-		g_clear_error (&err);
-		return FALSE;
-	}
+	if (!store)
+		goto errexit;
 
 	query = mu_query_new (store, &err);
 	mu_store_unref (store);
-	if (!query) {
-		mu_guile_g_error (__FUNCTION__, err);
-		g_clear_error (&err);
-		return FALSE;
-	}
+	if (!query)
+		goto errexit;
 
 	_singleton        = g_new0 (MuGuile, 1);
 	_singleton->query = query;
 
 	return TRUE;
+
+errexit:
+	mu_guile_g_error (__FUNCTION__, err);
+	g_clear_error (&err);
+	return FALSE;
 }
 
 static void
@@ -161,7 +161,7 @@ SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 1, 0,
 	else
 		muhome =  scm_to_utf8_string (MUHOME);
 
-	rv = mu_guile_init_instance(muhome);
+	rv = mu_guile_init_instance (muhome);
 	free (muhome);
 
 	if (!rv)

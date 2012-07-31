@@ -302,7 +302,7 @@ typedef struct _AttInfo AttInfo;
 static void
 each_part (MuMsg *msg, MuMsgPart *part, AttInfo *attinfo)
 {
-	char *mime_type;
+	char *mime_type, *filename;
 	SCM elm;
 
 	if (!part->type)
@@ -312,6 +312,7 @@ each_part (MuMsg *msg, MuMsgPart *part, AttInfo *attinfo)
 		return;
 
 	mime_type = g_strdup_printf ("%s/%s", part->type, part->subtype);
+	filename  = mu_msg_part_get_filename (part, FALSE);
 
 	elm = scm_list_5 (
 		/* msg */
@@ -319,19 +320,14 @@ each_part (MuMsg *msg, MuMsgPart *part, AttInfo *attinfo)
 		/* index */
 		scm_from_uint(part->index),
 		/* filename or #f */
-		part->file_name ?
-		mu_guile_scm_from_str (part->file_name) :
-		SCM_BOOL_F,
+		filename ? mu_guile_scm_from_str (filename) : SCM_BOOL_F,
 		/* mime-type */
-		mime_type ?
-		mu_guile_scm_from_str (mime_type):
-		SCM_BOOL_F,
+		mime_type ? mu_guile_scm_from_str (mime_type): SCM_BOOL_F,
 		/* size */
-		part->size > 0 ?
-		scm_from_uint (part->size) :
-		SCM_BOOL_F);
+		part->size > 0 ? scm_from_uint (part->size) : SCM_BOOL_F);
 
 	g_free (mime_type);
+	g_free (filename);
 
 	attinfo->attlist = scm_cons (elm, attinfo->attlist);
 }
@@ -356,9 +352,9 @@ SCM_DEFINE (get_parts, "mu:c:get-parts", 1, 1, 0,
 	attinfo.attachments_only = ATTS_ONLY == SCM_BOOL_T ? TRUE : FALSE;
 
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
-	mu_msg_part_foreach (msgwrap->_msg,
+	mu_msg_part_foreach (msgwrap->_msg, MU_MSG_OPTION_NONE,
 			     (MuMsgPartForeachFunc)each_part,
-			     &attinfo, MU_MSG_OPTION_NONE);
+			     &attinfo);
 
 	/* explicitly close the file backend, so we won't run of fds */
 	mu_msg_unload_msg_file (msgwrap->_msg);
