@@ -189,6 +189,8 @@ mu_log_init (const char* logfile, gboolean backup,
 		return FALSE;
 	}
 
+	MU_WRITE_LOG ("logging started");
+
 	return TRUE;
 }
 
@@ -197,6 +199,8 @@ mu_log_uninit (void)
 {
 	if (!MU_LOG)
 		return;
+
+	MU_WRITE_LOG ("logging stopped");
 
 	if (MU_LOG->_own)
 		try_close (MU_LOG->_fd);
@@ -252,11 +256,10 @@ log_write (const char* domain, GLogLevelFlags level,
 		fputs ("\n",   stdout);
 	}
 
-	/* for serious errors, log them to stderr as well */
+	/* for errors, log them to stderr as well */
 	if (level & G_LOG_LEVEL_ERROR ||
 	    level & G_LOG_LEVEL_CRITICAL ||
-	    level & G_LOG_LEVEL_WARNING ||
-	    level & G_LOG_LEVEL_DEBUG) {
+	    level & G_LOG_LEVEL_WARNING) {
 		fputs ("mu: ", stderr);
 		fputs (msg,    stderr);
 		fputs ("\n",   stderr);
