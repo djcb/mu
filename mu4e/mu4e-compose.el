@@ -243,10 +243,10 @@ separator is never written to file. Also see
       (goto-char (point-min))
       ;; search for the first empty line
       (if (search-forward-regexp "^$" nil t)
-	(replace-match (concat sepa "\n"))
+	(replace-match (concat sepa))
 	(progn 	;; no empty line? then prepend one
 	  (goto-char (point-max))
-	  (insert "\n" sepa "\n"))))))
+	  (insert "\n" sepa))))))
 
 (defun mu4e~compose-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
