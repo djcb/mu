@@ -104,31 +104,37 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 	struct stat statbuf;
 
 	if (access (path, R_OK) != 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-			     "cannot read file %s: %s",
-			     path, strerror(errno));
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "cannot read file %s: %s",
+				     path, strerror(errno));
 		return FALSE;
 	}
 
 	if (stat (path, &statbuf) < 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-			     "cannot stat %s: %s",
-			     path, strerror(errno));
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "cannot stat %s: %s",
+				     path, strerror(errno));
 		return FALSE;
 	}
 
 	if (!S_ISREG(statbuf.st_mode)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-			     "not a regular file: %s", path);
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "not a regular file: %s", path);
 		return FALSE;
 	}
 
 	self->_timestamp = statbuf.st_mtime;
 	self->_size	 = (size_t)statbuf.st_size;
 
-	strncpy (self->_path, path, PATH_MAX);
-	strncpy (self->_maildir, mdir ? mdir : "", PATH_MAX);
+	/* remove double slashes, relative paths etc. from path & mdir */
+	if (!realpath (path, self->_path)) {
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "could not get realpath for %s: %s",
+				     path, strerror(errno));
+		return FALSE;
+	}
 
+	strncpy (self->_maildir, mdir ? mdir : "", PATH_MAX);
 	return TRUE;
 }
 
