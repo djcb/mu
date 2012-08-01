@@ -33,12 +33,11 @@
 (eval-when-compile (require 'mu4e))
 
 (defgroup org-mu4e nil
-  "Settings for the org interface."
+  "Settings for the org-mode related functionality in mu4e."
   :group 'org-mu4e)
 
-(defcustom org-mu4e-link-desc-func (lambda (msg)
-				     (or (plist-get msg :subject)
-					 "No subject"))
+(defcustom org-mu4e-link-desc-func
+  (lambda (msg) (or (plist-get msg :subject) "No subject"))
   "Function that takes a msg and returns a string for the
    description part of an org-mode link.
 
@@ -70,7 +69,6 @@
 	  link desc)
 	(org-add-link-props :link link :description desc)
 	link))
-
       ;; storing links to messages
     ((eq major-mode 'mu4e-view-mode)
       (let* ((msg  (mu4e-message-at-point))
@@ -107,6 +105,8 @@ the query (for paths starting with 'query:')."
 ;; below, some functions for the org->html conversion
 ;; based on / inspired by Eric Schulte's org-mime.el
 ;; Homepage: http://orgmode.org/worg/org-contrib/org-mime.php
+;;
+;; EXPERIMENTAL
 (defun org~mu4e-mime-file (ext path id)
   "Create a file for an attachment."
   (format (concat "<#part type=\"%s\" filename=\"%s\" "
@@ -161,7 +161,7 @@ and images in a multipart/related part."
 	  (body (org-export-string raw-body 'org (file-name-directory tmp-file)))
 	  ;; because we probably don't want to skip part of our mail
 	  (org-export-skip-text-before-1st-heading nil)
-         ;; because we probably don't want to export a huge style file
+	  ;; because we probably don't want to export a huge style file
 	  (org-export-htmlize-output-type 'inline-css)
 	  ;; makes the replies with ">"s look nicer
 	  (org-export-preserve-breaks t)
@@ -227,7 +227,7 @@ mode."
 
 (defun org~mu4e-mime-switch-headers-or-body ()
   "Switch the buffer to either mu4e-compose-mode (when in headers)
-or org-mode (when in the body),"
+or org-mode (when in the body)."
   (interactive)
   (let* ((sepapoint
 	   (save-excursion
