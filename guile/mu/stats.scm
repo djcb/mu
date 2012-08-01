@@ -23,6 +23,7 @@
   :use-module (ice-9 i18n)
   :use-module (ice-9 r5rs)
   :export ( mu:tabulate
+	    mu:count
 	    mu:average
 	    mu:stddev
 	    mu:correl
@@ -48,6 +49,17 @@ get back a list like
 	  (set! table (assoc-set! table val (1+ old-freq)))))
       expr)
     table))
+
+
+(define* (mu:count #:optional (expr #t))
+  "Count the number of messages matching EXPR. If EXPR is not
+provided, match /all/ messages."
+  (let ((num 0))
+    (mu:for-each-message
+      (lambda (msg) (set! num (1+ num)))
+      expr)
+    num))
+
 
 (define (average lst)
   "Calculate the average of a list LST of numbers, or #f if undefined."
@@ -96,7 +108,7 @@ and 2, respectively."
 	 (sxy (apply + (map (lambda (cell) (* (car cell) (cdr cell))) lst)))
 	 (sxx (apply + (map (lambda (cell) (* (car cell) (car cell))) lst)))
 	 (syy (apply + (map (lambda (cell) (* (cdr cell) (cdr cell))) lst))))
-    (/ (- (* n sxy) (* sx sy)) 
+    (/ (- (* n sxy) (* sx sy))
       (sqrt (* (-  (* n sxx) (* sx sx)) (- (* n syy) (* sy sy)))))))
 
 (define* (mu:correl func1 func2 #:optional (expr #t))
