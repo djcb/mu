@@ -134,12 +134,15 @@ see `mu4e-headers-visible-lines' and
 (defcustom mu4e-auto-retrieve-keys nil
   "Attempt to automatically retrieve public keys when needed."
   :type 'boolean
-  :group 'mu4e-compose)
+  :group 'mu4e-crypto)
 
-(defcustom mu4e-use-agent nil
-  "Attempt to use GPG-agent when it is available."
-  :type 'boolean
-  :group 'mu4e-compose)
+(defcustom mu4e-decryption-policy 'auto
+  "Policy for dealing with encrypted parts. The setting is a symbol:
+ * `auto': try to decrypt automatically
+ * `ask': ask before decrypting anything
+ * `no': don't try to decrypt anything."
+  :type 'symbol
+  :group 'mu4e-crypto)
 
 ;; completion; we put them here rather than in mu4e-compose, as mu4e-utils needs
 ;; the variables.
@@ -488,6 +491,10 @@ Note, :sortable does not work for custom header fields.")
   "List of contacts (ie. 'name <e-mail>'),
 used by the completion functions in mu4e-compose, and filled when
 mu4e starts.")
+
+(defvar mu4e~server-props nil
+  "Properties we receive from the mu4e server process (in the
+  'pong-handler').")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

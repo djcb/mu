@@ -38,6 +38,8 @@
 (require 'comint)
 (require 'browse-url)
 (require 'button)
+(require 'epa)
+(require 'epg)
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
@@ -52,12 +54,6 @@
   "Header fields to display in the message view buffer. For the
 complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-date-format "%c"
-  "Date format to use in the message view, in the format of
-  `format-time-string'."
-  :type 'string
   :group 'mu4e-view)
 
 (defcustom mu4e-view-show-addresses nil
@@ -75,15 +71,13 @@ messages, but you can always toggle between wrapped/unwrapped
 display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
   :group 'mu4e-view)
 
-(defcustom mu4e-view-wrap-lines nil
-  "Whether to automatically wrap lines in the body of messages when
-viewing them. Note that wrapping does not work well with all
-messages, but you can always toggle between wrapped/unwrapped
-display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
+(defcustom mu4e-view-date-format "%c"
+  "Date format to use in the message view, in the format of
+  `format-time-string'."
+  :type 'string
   :group 'mu4e-view)
 
-
-(defcustom mu4e-view-hide-cited nil
+ (defcustom mu4e-view-hide-cited nil
   "Whether to automatically hide cited parts of messages (as
 determined by the presence of '> ' at the beginning of the
 line). Note that you can always toggle between hidden/unhidden
@@ -198,7 +192,11 @@ plist."
 	    (t (mu4e-error "Unsupported field: %S" field)))))
       mu4e-view-fields "")
     "\n"
-    (mu4e-body-text msg)))
+    (mu4e-body-text msg)
+    ;; ;; decrypt maybe; depends on whether there are any such parts
+    ;; ;; and the value of `mu4e-view-decrypt-parts'
+    ;; (mu4e~decrypt-parts-maybe msg)
+    ))
 
 
 (defun mu4e-view (msg headersbuf &optional refresh)
@@ -383,43 +381,67 @@ is nil, and otherwise open it."
 		(member 'inline (plist-get part :type)))
 	      (plist-get msg :parts)))
 	  (attstr
-	   (mapconcat
-	     (lambda (part)
-	       (let ((index (plist-get part :index))
-		      (name (plist-get part :name))
-		      (size (plist-get part :size))
-		      (map (make-sparse-keymap)))
-		 (incf id)
-		 (puthash id index mu4e~view-attach-map)
-		 (define-key map [mouse-2]
-		   (mu4e~view-open-save-attach-func msg id nil))
-		 (define-key map [?\M-\r]
-		   (mu4e~view-open-save-attach-func msg id nil))
-		 (define-key map [S-mouse-2]
-		   (mu4e~view-open-save-attach-func msg id t))
-		 (define-key map (kbd "<S-return>")
-		   (mu4e~view-open-save-attach-func msg id t))
-		 (concat
-		   (propertize (format "[%d]" id) 'face 'mu4e-view-attach-number-face)
-		   (propertize name 'face 'mu4e-view-link-face
-		     'keymap map 'mouse-face 'highlight)
-		   (when (and size (> size 0))
-		     (concat (format "(%s)"
-			       (propertize (mu4e-display-size size)
-				 'face 'mu4e-view-header-key-face)))))))
-	     attachments ", ")))
-    (unless (zerop id)
-      (mu4e~view-construct-header
-	:attachments (format "%s (%d)" attstr id) t))))
+	    (mapconcat
+	      (lambda (part)
+		(let ((index (plist-get part :index))
+		       (name (plist-get part :name))
+		       (size (plist-get part :size))
+		       (map (make-sparse-keymap)))
+		  (incf id)
+		  (puthash id index mu4e~view-attach-map)
+		  (define-key map [mouse-2]
+		    (mu4e~view-open-save-attach-func msg id nil))
+		  (define-key map [?\M-\r]
+		    (mu4e~view-open-save-attach-func msg id nil))
+		  (define-key map [S-mouse-2]
+		    (mu4e~view-open-save-attach-func msg id t))
+		  (define-key map (kbd "<S-return>")
+		    (mu4e~view-open-save-attach-func msg id t))
+		  (concat
+		    (propertize (format "[%d]" id)
+		      'face 'mu4e-view-attach-number-face)
+		    (propertize name 'face 'mu4e-view-link-face
+		      'keymap map 'mouse-face 'highlight)
+		    (when (and size (> size 0))
+		      (concat (format "(%s)"
+				(propertize (mu4e-display-size size)
+				  'face 'mu4e-view-header-key-face)))))))
+	      attachments ", ")))
+    (when attachments
+      (mu4e~view-construct-header :attachments attstr t))))
+
+;; (defun mu4e~decrypt-parts-maybe (msg)
+;;   "Decrypt maybe; depends on whether there are any such parts
+;; and the value of `mu4e-view-decrypt-parts'."
+;;   (let ((str ""))
+;;     (mu4e-view-for-each-part msg
+;;       (lambda (msg part)
+;; 	(when (member 'encrypted (plist-get part :type))
+;; 	  (let ((file (plist-get part :temp)))
+;; 	    (when (and file (file-exists-p file))
+;; 	      ;; if our mu-server was build with crypto support, we only use EPA
+;; 	      ;; to push the password into gpg's memory
+;; 	      (let* ((decr
+;; 		       (condition-case nil
+;; 			 (epg-decrypt-file (epg-make-context epa-protocol) file nil)
+;; 			 (err (mu4e-error "Decryption failed: %S" err))))
+;; 		      (decr
+;; 			(if (and decr (plist-get mu4e~server-props :crypto))
+
+;; 			  )))) ;; TODO: reload message
+;; 			 ;; otherwise, we try to handle it here.
+;; 			 )
+;; 		decr))))))))
 
 (defun mu4e-view-for-each-part (msg func)
-  "Apply FUNC to each part in MSG. FUNC should be a function taking two arguments;
+    "Apply FUNC to each part in MSG. FUNC should be a function taking
+  two arguments:
  1. the message MSG, and
  2. a plist describing the attachment. The plist looks like:
     	 (:index 1 :name \"test123.doc\"
           :mime-type \"application/msword\" :attachment t :size 1234)."
-  (dolist (part (mu4e-msg-field msg :parts))
-    (funcall func msg part)))
+    (dolist (part (mu4e-msg-field msg :parts))
+      (funcall func msg part)))
 
 
 (defvar mu4e-view-mode-map nil

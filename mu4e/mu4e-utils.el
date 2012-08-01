@@ -629,17 +629,21 @@ FUNC (if non-nil) afterwards."
       ;; set up the 'pong' handler func
       (lexical-let ((func func))
 	(setq mu4e-pong-func
-	  (lambda (version doccount)
-	    (unless (string= version mu4e-mu-version)
-	      (mu4e-error "mu server has version %s, but we need %s"
-		version mu4e-mu-version))
-	    (when func (funcall func))
-	    (when (and mu4e-update-interval (null mu4e~update-timer))
-	      (setq mu4e~update-timer
-		(run-at-time
-		  0 mu4e-update-interval 'mu4e-update-mail)))
-	    (mu4e-message "Started mu4e with %d message%s in store"
-	      doccount (if (= doccount 1) "" "s")))))
+	  (lambda (props)
+	    (let ((version (plist-get props :version))
+		   (doccount (plist-get props :doccount)))
+	      (unless (string= version mu4e-mu-version)
+		(mu4e-error "mu server has version %s, but we need %s"
+		  version mu4e-mu-version))
+	      (when func (funcall func))
+	      (when (and mu4e-update-interval (null mu4e~update-timer))
+		(setq mu4e~update-timer
+		  (run-at-time
+		    0 mu4e-update-interval 'mu4e-update-mail)))
+	      (mu4e-message "Started mu4e with %d message%s in store"
+		doccount (if (= doccount 1) "" "s"))
+	      ;; save the props we got from the server
+	      (setq mu4e~server-props props)))))
       ;; send the ping
       (mu4e~proc-ping)
       ;; get the address list if it's not already set.

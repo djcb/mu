@@ -217,7 +217,7 @@ The server output is as follows:
 	  ;; received a pong message
 	  ((plist-get sexp :pong)
 	    (funcall mu4e-pong-func
-	      (plist-get sexp :version) (plist-get sexp :doccount)))
+	      (plist-get sexp :props)))
 
 	  ;; received a contacts message
 	  ((plist-get sexp :contacts)
@@ -464,7 +464,8 @@ argument). Optionally, if IMAGES is non-nil, backend will any
 images attached to the message, and return them as temp files.  The
 result will be delivered to the function registered as
 `mu4e-message-func'."
-  (mu4e~proc-send-command "view %s extract-images:%s"
+  (mu4e~proc-send-command
+    "view %s extract-images:%s extract-encrypted:true"
     (mu4e--docid-msgid-param docid-or-msgid)
     (if images "true" "false")))
 
