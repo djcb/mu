@@ -614,11 +614,18 @@ mu_str_convert_to_utf8 (const char* buffer, const char *charset)
 	utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
 					charset, NULL,
 					NULL, NULL, &err);
+	if (!utf8) /* maybe the charset lied; try 8859-15 */
+		utf8 = g_convert_with_fallback (buffer, -1, "UTF-8",
+						"ISO8859-15", NULL,
+						NULL, NULL, &err);
+	/* final attempt, maybe it was utf-8 already */
+	if (!utf8 && g_utf8_validate (buffer, -1, NULL))
+		utf8 = g_strdup (buffer);
+
 	if (!utf8) {
-		g_debug ("%s: conversion failed from %s: %s",
+		g_warning ("%s: conversion failed from %s: %s",
 			 __FUNCTION__, charset, err ? err->message : "");
-		if (err)
-			g_error_free (err);
+		g_clear_error (&err);
 	}
 
 	return utf8;
