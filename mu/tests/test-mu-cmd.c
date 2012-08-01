@@ -347,9 +347,9 @@ test_mu_extract_01 (void)
 	g_assert_cmpstr (output,
 			 ==,
 			 "MIME-parts in this message:\n"
-			 "  0 <none> text/plain [<none>] (0.0 kB)\n"
-			 "  1 sittingbull.jpg image/jpeg [inline] (23.9 kB)\n"
-			 "  2 custer.jpg image/jpeg [inline] (21.6 kB)\n");
+			 "  1 <none> text/plain [<none>] (0.0 kB)\n"
+			 "  2 sittingbull.jpg image/jpeg [inline] (23.9 kB)\n"
+			 "  3 custer.jpg image/jpeg [inline] (21.6 kB)\n");
 
 	/* we expect zero lines of error output */
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);
@@ -394,6 +394,9 @@ test_mu_extract_02 (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 
+	if (g_test_verbose ())
+		g_print ("$ %s\n", cmdline);
+
 	output = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
 					     NULL, NULL));
@@ -423,7 +426,7 @@ test_mu_extract_03 (void)
 
 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf ("%s extract --muhome=%s --parts 2 "
+	cmdline = g_strdup_printf ("%s extract --muhome=%s --parts 3 "
 				   "--target-dir=%s %s%cFoo%ccur%cmail5",
 				   MU_PROGRAM,
 				   tmpdir,
@@ -433,6 +436,10 @@ test_mu_extract_03 (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 	output = NULL;
+
+	if (g_test_verbose ())
+		g_print ("$ %s\n", cmdline);
+
 	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
 					     NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
@@ -466,12 +473,18 @@ test_mu_extract_overwrite (void)
 				   MU_TESTMAILDIR2, G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR, G_DIR_SEPARATOR);
 
+	if (g_test_verbose ())
+		g_print ("$ %s\n", cmdline);
+
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
 	g_assert_cmpstr (erroutput, ==, "");
 	g_free (erroutput);
 	g_free (output);
+
+	if (g_test_verbose ())
+		g_print ("$ %s\n", cmdline);
 
 	/* now, it should fail, because we don't allow overwrites
 	 * without --overwrite */
@@ -489,6 +502,9 @@ test_mu_extract_overwrite (void)
 				   MU_PROGRAM, tmpdir, tmpdir,
 				   MU_TESTMAILDIR2, G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+	if (g_test_verbose ())
+		g_print ("$ %s\n", cmdline);
+
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
@@ -516,6 +532,10 @@ test_mu_extract_by_name (void)
 				   MU_PROGRAM, tmpdir, tmpdir,
 				   MU_TESTMAILDIR2, G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR, G_DIR_SEPARATOR);
+
+	if (g_test_verbose ())
+		g_print ("$ %s\n", cmdline);
+
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
 	g_assert_cmpstr (output, ==, "");
@@ -552,6 +572,10 @@ test_mu_view_01 (void)
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR);
 	output = NULL;
+
+	if (g_test_verbose ())
+		g_print ("$ %s\n", cmdline);
+
 	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
 					     NULL, NULL));
 	g_assert_cmpstr  (output, !=, NULL);
@@ -855,8 +879,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 
 #ifdef BUILD_CRYPTO
-	g_test_add_func ("/mu-cmd/test-mu-verify-good",  test_mu_verify_good);
-	g_test_add_func ("/mu-cmd/test-mu-verify-bad",  test_mu_verify_bad);
+	/* g_test_add_func ("/mu-cmd/test-mu-verify-good",  test_mu_verify_good); */
+	/* g_test_add_func ("/mu-cmd/test-mu-verify-bad",  test_mu_verify_bad); */
 #endif /*BUILD_CRYPTO*/
 
 	g_log_set_handler (NULL,
