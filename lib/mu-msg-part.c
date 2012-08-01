@@ -34,6 +34,9 @@
 #include "mu-msg-crypto.h"
 #endif /*BUILD_CRYPTO*/
 
+static gboolean handle_children (MuMsg *msg, GMimeObject *mobj, MuMsgOptions opts,
+				 unsigned index, MuMsgPartForeachFunc func, gpointer user_data);
+
 
 struct _DoData {
 	GMimeObject *mime_obj;
@@ -102,86 +105,49 @@ get_matching_part_index (MuMsg *msg, MuMsgOptions opts,
 }
 
 
-struct _TxtData {
-	GString *gstr;
-	gboolean decrypt;
-};
-typedef struct _TxtData TxtData;
-
-static gchar *mime_message_to_string (GMimeMessage *mimemsg, gboolean decrypt);
-
 static void
-each_mime_part_get_text (GMimeObject *parent, GMimeObject *part, TxtData *tdata)
+accumulate_text (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 {
-	char *txt;
-	txt = NULL;
+	if (GMIME_IS_MESSAGE(part->data)) {
+		const gchar *str;
+		char *adrs;
+		GMimeMessage *mimemsg;
+		InternetAddressList *addresses;
+		/* put sender, recipients and subject in the string, so they
+		 * can be indexed as well */
+		mimemsg = GMIME_MESSAGE (part->data);
+		str = g_mime_message_get_sender (mimemsg);
+		g_string_append_printf
+			(*gstrp, "%s%s", str ? str : "", str ? "\n" : "");
+		str = g_mime_message_get_subject (mimemsg);
+		g_string_append_printf
+			(*gstrp, "%s%s", str ? str : "", str ? "\n" : "");
+		addresses = g_mime_message_get_all_recipients (mimemsg);
+		adrs = internet_address_list_to_string (addresses, FALSE);
+		g_object_unref (addresses);
+		g_string_append_printf
+			(*gstrp, "%s%s", adrs ? adrs : "", adrs ? "\n" : "");
+		g_free (adrs);
 
-	if (GMIME_IS_MESSAGE(part)) {
-		txt = mime_message_to_string (GMIME_MESSAGE(part),
-					      tdata->decrypt);
-		if (txt)
-			tdata->gstr =
-				g_string_append (tdata->gstr, txt);
-	}
-
-	if (GMIME_IS_PART (part)) {
+	} else if (GMIME_IS_PART (part->data)) {
 		GMimeContentType *ctype;
 		gboolean err;
-		ctype = g_mime_object_get_content_type (part);
+		char *txt;
+		ctype = g_mime_object_get_content_type ((GMimeObject*)part->data);
 		if (!g_mime_content_type_is_type (ctype, "text", "plain"))
 			return; /* not plain text */
 		txt = mu_msg_mime_part_to_string
 			((GMimePart*)part, &err);
-	}
-
-	if (txt) {
-		tdata->gstr = g_string_append_c (tdata->gstr, '\n');
-		tdata->gstr = g_string_append (tdata->gstr, txt);
+		if (txt)
+			g_string_append (*gstrp, txt);
 		g_free (txt);
 	}
 }
 
-static gchar*
-mime_message_to_string (GMimeMessage *mimemsg, gboolean decrypt)
-{
-	TxtData tdata;
-	InternetAddressList *addresses;
-	gchar *adrs;
-	const char *str;
-
-	tdata.gstr = g_string_sized_new (2048); /* just a guess */
-
-	/* put sender, recipients and subject in the string, so they
-	 * can be indexed as well */
-	str = g_mime_message_get_sender(mimemsg);
-	if (str) {
-		g_string_append (tdata.gstr, str);
-		g_string_append_c (tdata.gstr, '\n');
-	}
-	str = g_mime_message_get_subject(mimemsg);
-	if (str) {
-		g_string_append (tdata.gstr, str);
-		g_string_append_c (tdata.gstr, '\n');
-	}
-	addresses = g_mime_message_get_all_recipients (mimemsg);
-	adrs = internet_address_list_to_string (addresses, FALSE);
-	g_object_unref(G_OBJECT(addresses));
-	if (adrs)
-		g_string_append (tdata.gstr, adrs);
-	g_free (adrs);
-
-	/* recurse through all text parts */
-	tdata.decrypt = decrypt;
-	mu_mime_message_foreach
-		(mimemsg, decrypt,
-		 (GMimeObjectForeachFunc)each_mime_part_get_text,
-		 &tdata);
-
-	return g_string_free (tdata.gstr, FALSE);
-}
 
 char*
-mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, gboolean *err)
+mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts,
+		      gboolean *err)
 {
 	GMimeObject *mobj;
 
@@ -189,18 +155,18 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, gboolean *err)
 	g_return_val_if_fail (self && self->data, NULL);
 	mobj = (GMimeObject*)self->data;
 
-	if (GMIME_IS_PART(mobj)) {
-		/* ignore all but plain text */
-		if ((strcasecmp (self->type, "text") != 0) ||
-		    (strcasecmp (self->subtype, "plain") != 0))
-			return NULL;
+	if (GMIME_IS_PART (mobj) &&
+	    (strcasecmp (self->type, "text") == 0) &&
+	    (strcasecmp (self->subtype, "plain") == 0))
 		return mu_msg_mime_part_to_string ((GMimePart*)mobj, err);
+	else {
+		GString *gstr;
+		gstr = g_string_sized_new (4096);
+		handle_children (msg, mobj, opts, self->index,
+				 (MuMsgPartForeachFunc)accumulate_text,
+				 &gstr);
+		return g_string_free (gstr, FALSE);
 	}
-
-	if (GMIME_IS_MESSAGE(mobj))
-		return mime_message_to_string ((GMimeMessage*)mobj,TRUE);
-
-	return NULL;
 }
 
 
@@ -371,10 +337,8 @@ get_disposition (GMimeObject *mobj)
 }
 
 static gboolean
-handle_children (MuMsg *msg,
-		 GMimeObject *mobj, MuMsgOptions opts,
-		 unsigned index, MuMsgPartForeachFunc func,
-		 gpointer user_data);
+handle_children (MuMsg *msg, GMimeObject *mobj, MuMsgOptions opts,
+		 unsigned index, MuMsgPartForeachFunc func, gpointer user_data);
 
 /* call 'func' with information about this MIME-part */
 static gboolean
