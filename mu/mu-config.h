@@ -25,6 +25,7 @@
 #include <glib.h>
 #include <sys/types.h> /* for mode_t */
 #include <mu-msg-fields.h>
+#include <mu-msg.h>
 #include <mu-util.h>
 
 G_BEGIN_DECLS
@@ -137,16 +138,20 @@ struct _MuConfig {
 	time_t            after;          /* only show messages or
 					   * adresses last seen after
 					   * T */
-	/* options for verify */
+	/* options for crypto
+	 * ie, 'view', 'extract' */
 	gboolean	 auto_retrieve;	  /* assume we're online */
 	gboolean	 use_agent;	  /* attempt to use the gpg-agent */
+	gboolean	 decrypt;         /* try to decrypt the
+					   * message body, if any */
+	gboolean	 verify;          /* try to crypto-verify the
+					   * message */
 
 	/* options for view */
 	gboolean         terminator;      /* add separator \f between
 					   * multiple messages in mu
 					   * view */
-	gboolean	 decrypt;         /* try to decrypt the
-					   * message body, if any */
+
 
 	/* options for cfind (and 'find' --> "after") */
 	gboolean          personal;       /* only show 'personal' addresses */
@@ -212,6 +217,18 @@ MuError mu_config_execute (MuConfig *conf);
  * @return the number of non-option parameters, or 0 in case of error
  */
 size_t mu_config_param_num (MuConfig *conf);
+
+
+
+
+/**
+ * determine MuMsgOptions for command line args
+ *
+ * @param opts a MuConfig struct
+ *
+ * @return the corresponding MuMsgOptions
+ */
+MuMsgOptions mu_config_get_msg_options (MuConfig *opts);
 
 
 G_END_DECLS

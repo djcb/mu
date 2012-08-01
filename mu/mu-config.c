@@ -159,7 +159,7 @@ config_options_group_index (void)
 	};
 
 	og = g_option_group_new("index",
-				"options for the 'index' command",
+				"Options for the 'index' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 
@@ -219,7 +219,7 @@ config_options_group_find (void)
 	};
 
 	og = g_option_group_new("find",
-				"options for the 'find' command",
+				"Options for the 'find' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 
@@ -239,7 +239,7 @@ config_options_group_mkdir (void)
 	/* set dirmode before, because '0000' is a valid mode */
 	MU_CONFIG.dirmode = 0755;
 
-	og = g_option_group_new("mkdir", "options for the 'mkdir' command",
+	og = g_option_group_new("mkdir", "Options for the 'mkdir' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 
@@ -272,7 +272,7 @@ config_options_group_cfind (void)
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
-	og = g_option_group_new("cfind", "options for the 'cfind' command",
+	og = g_option_group_new("cfind", "Options for the 'cfind' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 
@@ -289,6 +289,26 @@ set_group_view_defaults (void)
 		MU_CONFIG.format  = get_output_format (MU_CONFIG.formatstr);
 }
 
+
+/* crypto options are used in a few different commands */
+static GOptionEntry*
+crypto_option_entries (void)
+{
+	static GOptionEntry entries[] = {
+		{"auto-retrieve", 'r', 0, G_OPTION_ARG_NONE,
+		 &MU_CONFIG.auto_retrieve,
+		 "attempt to retrieve keys online (false)", NULL},
+		{"use-agent", 'a', 0, G_OPTION_ARG_NONE, &MU_CONFIG.use_agent,
+		 "attempt to use the GPG agent (false)", NULL},
+		{"decrypt", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.decrypt,
+		 "attempt to decrypt the message", NULL},
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
+	};
+
+	return entries;
+}
+
+
 static GOptionGroup *
 config_options_group_view (void)
 {
@@ -302,15 +322,16 @@ config_options_group_view (void)
 		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'sexp')", NULL},
-		{"decrypt", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.decrypt,
-		 "attempt to decrypt the message body, if it is encrypted", NULL},
-
+		{"verify", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.verify,
+		 "attempt to verify message signatures", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
-	og = g_option_group_new("view", "options for the 'view' command",
+	og = g_option_group_new("view", "Options for the 'view' command",
 				"", NULL, NULL);
+
 	g_option_group_add_entries(og, entries);
+	g_option_group_add_entries(og, crypto_option_entries());
 
 	return og;
 }
@@ -341,9 +362,10 @@ config_options_group_extract (void)
 	MU_CONFIG.targetdir = g_strdup(".");	/* default is the current dir */
 
 	og = g_option_group_new("extract",
-				"options for the 'extract' command",
+				"Options for the 'extract' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
+	g_option_group_add_entries(og, crypto_option_entries());
 
 	return og;
 }
@@ -353,19 +375,10 @@ static GOptionGroup*
 config_options_group_verify (void)
 {
 	GOptionGroup *og;
-	GOptionEntry entries[] = {
-		{"auto-retrieve", 'r', 0, G_OPTION_ARG_NONE,
-		 &MU_CONFIG.auto_retrieve,
-		 "attempt to retrieve keys online (false)", NULL},
-		{"use-agent", 'a', 0, G_OPTION_ARG_NONE, &MU_CONFIG.use_agent,
-		 "attempt to use the GPG agent (false)", NULL},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
-	};
-
 	og = g_option_group_new("verify",
-				"options for the 'verify' command",
+				"Options for the 'verify' command",
 				"", NULL, NULL);
-	g_option_group_add_entries(og, entries);
+	g_option_group_add_entries(og, crypto_option_entries());
 
 	return og;
 }
@@ -382,7 +395,7 @@ config_options_group_server (void)
 	};
 
 	og = g_option_group_new("server",
-				"options for the 'server' command",
+				"Options for the 'server' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 
@@ -643,4 +656,28 @@ mu_config_param_num (MuConfig *opts)
 	for (n = 0; opts->params[n]; ++n);
 
 	return n;
+}
+
+
+
+
+MuMsgOptions
+mu_config_get_msg_options (MuConfig *muopts)
+{
+	MuMsgOptions opts;
+
+	opts = MU_MSG_OPTION_NONE;
+
+	if (muopts->decrypt)
+		opts |= MU_MSG_OPTION_DECRYPT;
+	if (muopts->verify)
+		opts |= MU_MSG_OPTION_VERIFY;
+	if (muopts->use_agent)
+		opts |= MU_MSG_OPTION_USE_AGENT;
+	if (muopts->auto_retrieve)
+		opts |= MU_MSG_OPTION_AUTO_RETRIEVE;
+	if (muopts->overwrite)
+		opts |= MU_MSG_OPTION_OVERWRITE;
+
+	return opts;
 }
