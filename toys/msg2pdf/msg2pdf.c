@@ -67,36 +67,36 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 {
 	gint idx;
 	gchar *filepath;
-	gboolean rv;
 	GError *err;
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (cid, NULL);
 
-	idx = mu_msg_part_find_cid (msg, cid);
+	idx = mu_msg_find_index_for_cid (msg, MU_MSG_OPTION_NONE, cid);
 	if (idx < 0) {
 		g_warning ("%s: cannot find %s", __FUNCTION__, cid);
 		return NULL;
 	}
 
-	filepath = mu_msg_part_filepath_cache (msg, idx);
-	if (!filepath) {
-		g_warning ("%s: cannot create filepath", filepath);
-		return NULL;
-	}
-
 	err = NULL;
-	rv = mu_msg_part_save (msg, filepath, idx, FALSE, TRUE, &err);
-	if (!rv) {
-		g_warning ("%s: failed to save %s: %s", __FUNCTION__,
-			   filepath,
-			   err&&err->message?err->message:"error");
-		g_clear_error (&err);
-		g_free (filepath);
-		filepath = NULL;
-	}
+	filepath = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE, idx, NULL);
+	if (!filepath)
+		goto errexit;
+
+	if (!mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING, filepath, idx,
+			       &err))
+		goto errexit;
 
 	return filepath;
+
+errexit:
+	g_warning ("%s: failed to save %s: %s", __FUNCTION__,
+		   filepath,
+		   err&&err->message?err->message:"error");
+	g_clear_error (&err);
+	g_free (filepath);
+
+	return NULL;
 }
 
 static void

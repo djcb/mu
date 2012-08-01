@@ -115,31 +115,39 @@ on_body_action_requested (GtkWidget *w, const char* action,
 		if (self->_priv->_msg)
 			mu_msg_view_set_message (self, self->_priv->_msg);
 
-	} else if (g_strcmp0 (action, "reindex") == 0) {
+	} else if (g_strcmp0 (action, "reindex") == 0)
 		g_warning ("reindex");
-	} else {
+	else
 		g_warning ("unknown action '%s'", action);
-	}
 }
 
 static void
 on_attach_activated (GtkWidget *w, guint partnum, MuMsg *msg)
 {
 	gchar *filepath;
+	GError *err;
 
-	filepath = mu_msg_part_filepath_cache (msg, partnum);
-	if (filepath) {
-		GError *err;
-		err = NULL;
-		if (!mu_msg_part_save (msg, filepath, partnum, FALSE, TRUE, &err)) {
-			g_warning ("failed to save %s: %s", filepath,
-				   err&&err->message?err->message:"error");
-			g_clear_error (&err);
-		}
-
-		mu_util_play (filepath, TRUE, FALSE, NULL);
-		g_free (filepath);
+	err = NULL;
+	filepath = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE, partnum,
+					       &err);
+	if (!filepath) {
+		g_warning ("failed to get cache path: %s",
+			   err&&err->message?err->message:"error");
+		g_clear_error (&err);
+		return;
 	}
+
+	if (!mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
+			       filepath, partnum, &err)) {
+		g_warning ("failed to save %s: %s", filepath,
+			   err&&err->message?err->message:"error");
+		g_clear_error (&err);
+		return;
+
+	} else
+		mu_util_play (filepath, TRUE, FALSE, NULL);
+
+	g_free (filepath);
 }
 
 

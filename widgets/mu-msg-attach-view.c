@@ -128,10 +128,14 @@ accumulate_parts (MuMsgAttachView *self, GtkTreePath *path, GSList **lst)
 		gchar *filepath;
 		gint idx;
 		gtk_tree_model_get (model, &iter, PARTNUM_COL, &idx, -1);
-		filepath = mu_msg_part_filepath_cache (self->_priv->_msg, idx);
+		filepath = mu_msg_part_get_cache_path (self->_priv->_msg,
+						       MU_MSG_OPTION_NONE,
+						       idx, NULL);
 		if (filepath) {
-			if (mu_msg_part_save (self->_priv->_msg, filepath,
-					      idx, FALSE, TRUE, NULL)) {
+			if (mu_msg_part_save (self->_priv->_msg,
+					      MU_MSG_OPTION_USE_EXISTING,
+					      filepath,
+					      idx, NULL)) {
 				GFile *file;
 				file = g_file_new_for_path (filepath);
 				*lst = g_slist_prepend (*lst, g_file_get_uri(file));
@@ -257,7 +261,7 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 
 	gtk_list_store_append (cbdata->store, &treeiter);
 	gtk_list_store_set (cbdata->store, &treeiter,
-			    NAME_COL, mu_msg_part_file_name (part),
+			    NAME_COL, mu_msg_part_get_filename (part, TRUE),
 			    ICON_COL, pixbuf,
 			    PARTNUM_COL, part->index,
 			    -1);
@@ -286,8 +290,8 @@ mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg)
 
 	cbdata.store = store;
 	cbdata.count = 0;
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &cbdata,
-			     MU_MSG_OPTION_NONE);
+	mu_msg_part_foreach (msg, MU_MSG_OPTION_NONE,
+			     (MuMsgPartForeachFunc)each_part, &cbdata);
 
 	return cbdata.count;
 }

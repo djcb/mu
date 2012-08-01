@@ -108,25 +108,25 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (cid, NULL);
 
-	idx = mu_msg_part_find_cid (msg, cid);
+	idx = mu_msg_find_index_for_cid (msg, MU_MSG_OPTION_NONE, cid);
 	if (idx < 0) {
 		g_warning ("%s: cannot find %s", __FUNCTION__, cid);
 		return NULL;
 	}
 
-	filepath = mu_msg_part_filepath_cache (msg, idx);
+	filepath = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE, idx, NULL);
 	if (!filepath) {
 		g_warning ("%s: cannot create filepath", filepath);
 		return NULL;
 	}
 
 	err = NULL;
-	rv = mu_msg_part_save (msg, filepath, idx, FALSE, TRUE, &err);
+	rv = mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
+			       filepath, idx, &err);
 	if (!rv) {
 		g_warning ("%s: failed to save %s: %s", __FUNCTION__, filepath,
 			   err&&err->message?err->message:"error");
-		if (err)
-			g_error_free (err);
+		g_clear_error (&err);
 		g_free (filepath);
 		filepath = NULL;
 	}
