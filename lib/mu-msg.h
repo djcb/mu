@@ -43,10 +43,19 @@ enum _MuMsgOptions {
 
 	/* below options are for checking signatures; only effective
 	 * if mu was built with crypto support */
-	MU_MSG_OPTION_CHECK_SIGNATURES  = 1 << 4,
-	MU_MSG_OPTION_AUTO_RETRIEVE_KEY = 1 << 5,
+	MU_MSG_OPTION_VERIFY            = 1 << 4,
+	MU_MSG_OPTION_AUTO_RETRIEVE     = 1 << 5,
 	MU_MSG_OPTION_USE_AGENT         = 1 << 6,
-	MU_MSG_OPTION_USE_PKCS7         = 1 << 7   /* gpg is the default */
+	MU_MSG_OPTION_USE_PKCS7         = 1 << 7,   /* gpg is the default */
+
+	MU_MSG_OPTION_DECRYPT           = 1 << 8,
+
+	/* misc */
+	MU_MSG_OPTION_OVERWRITE         = 1 << 9,
+	MU_MSG_OPTION_USE_EXISTING      = 1 << 10,
+
+	/* recurse into submessages */
+	MU_MSG_OPTION_RECURSE_RFC822    = 1 << 11
 
 };
 typedef enum _MuMsgOptions MuMsgOptions;
@@ -135,30 +144,6 @@ MuMsg *mu_msg_ref (MuMsg *msg);
  */
 void mu_msg_unref (MuMsg *msg);
 
-
-/**
- * should we set this message to 'autodecrypt'? if so, try to
- * automatically decrypt encrypted message parts.
- *
- * @param msg a message
- * @param autodecrypt TRUE or FALSE
- *
- * @return
- */
-void     mu_msg_set_auto_decrypt (MuMsg *msg, gboolean autodecrypt);
-
-/**
- * get the autodecrypt status for this message. See @func mu_msg_set_auto_decrypt
- *
- * @param msg a message
- *
- * @return the auto-decrypt status
- */
-gboolean mu_msg_get_auto_decrypt (MuMsg *msg);
-
-
-
-
 /**
  * cache the values from the backend (file or db), so we don't the
  * backend anymore
@@ -222,7 +207,6 @@ const char*     mu_msg_get_to	   (MuMsg *msg);
  * or freed.
  */
 const char*     mu_msg_get_cc	     (MuMsg *msg);
-
 
 /**
  * get the blind carbon-copy recipients (Bcc:) of this message; this

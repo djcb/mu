@@ -421,18 +421,17 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
 		return;
 
 	err	  = NULL;
-	cachefile = mu_msg_part_save_temp (msg, part->index, &err);
+	cachefile = mu_msg_part_save_temp (msg,
+					   MU_MSG_OPTION_NONE,
+					   part->index, &err);
 	if (!cachefile) {
 		print_and_clear_g_error (&err);
 		return;
 	}
 
 	att = g_strdup_printf (
-		"(:file-name \"%s\" :mime-type \"%s/%s\" "
-		":disposition \"%s\")",
-		cachefile,
-		part->type, part->subtype,
-		part->disposition ? part->disposition : "attachment");
+		"(:file-name \"%s\" :mime-type \"%s/%s\")",
+		cachefile, part->type, part->subtype);
 	*attlist = g_slist_append (*attlist, att);
 	g_free (cachefile);
 }
@@ -452,8 +451,9 @@ include_attachments (MuMsg *msg)
 	GString *gstr;
 
 	attlist = NULL;
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part,
-			     &attlist, MU_MSG_OPTION_NONE);
+	mu_msg_part_foreach (msg, MU_MSG_OPTION_NONE,
+			     (MuMsgPartForeachFunc)each_part,
+			     &attlist);
 
 	gstr = g_string_sized_new (512);
 	gstr = g_string_append_c (gstr, '(');
@@ -676,8 +676,8 @@ save_part (MuMsg *msg, unsigned index, GSList *args, GError **err)
 
 	GET_STRING_OR_ERROR_RETURN (args, "path", &path, err);
 
-	rv = mu_msg_part_save (msg, path, index,
-			       TRUE/*overwrite*/, FALSE/*use cache*/, err);
+	rv = mu_msg_part_save (msg, MU_MSG_OPTION_OVERWRITE,
+			       path, index, err);
 	if (!rv) {
 		print_and_clear_g_error (err);
 		return MU_OK;
@@ -698,15 +698,19 @@ open_part (MuMsg *msg, unsigned index, GError **err)
 	char *targetpath;
 	gboolean rv;
 
-	targetpath = mu_msg_part_filepath_cache (msg, index);
-	rv = mu_msg_part_save (msg, targetpath, index,
-			       FALSE/*overwrite*/, TRUE/*use cache*/, err);
+	targetpath = mu_msg_part_get_cache_path (msg,MU_MSG_OPTION_NONE,
+						 index, err);
+	if (!targetpath)
+		return print_and_clear_g_error (err);
+
+	rv = mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
+			       targetpath, index, err);
 	if (!rv) {
 		print_and_clear_g_error (err);
 		goto leave;
 	}
 
-	rv = mu_util_play (targetpath, TRUE/*allow local*/,
+	rv = mu_util_play (targetpath, TRUE,/*allow local*/
 			   FALSE/*allow remote*/, err);
 	if (!rv)
 		print_and_clear_g_error (err);
@@ -732,9 +736,11 @@ temp_part (MuMsg *msg, unsigned index, GSList *args, GError **err)
 	GET_STRING_OR_ERROR_RETURN (args, "what", &what, err);
 	GET_STRING_OR_ERROR_RETURN (args, "param", &param, err);
 
-	path = mu_msg_part_filepath_cache (msg, index);
-	if (!mu_msg_part_save (msg, path, index,
-			       FALSE/*overwrite*/, TRUE/*use cache*/, err))
+	path = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE, index, err);
+	if (!path)
+		print_and_clear_g_error (err);
+	else if (!mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
+				    path, index, err))
 		print_and_clear_g_error (err);
 	else {
 		gchar *escpath, *escparam;
@@ -1346,17 +1352,16 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 	unsigned docid;
 	char *sexp;
 	MuMsgOptions opts;
-	gboolean decrypt;
 
-	opts = MU_MSG_OPTION_CHECK_SIGNATURES;
-	if (get_bool_from_args (args, "extract-images", FALSE, err))
+	opts = MU_MSG_OPTION_VERIFY;
+	if (get_bool_from_args (args, "extract-images", FALSE, NULL))
 		opts |= MU_MSG_OPTION_EXTRACT_IMAGES;
 	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
 		opts |= MU_MSG_OPTION_USE_AGENT;
 	if (get_bool_from_args (args, "auto-retrieve-key", FALSE, NULL))
-		opts |= MU_MSG_OPTION_AUTO_RETRIEVE_KEY;
-
-	decrypt = get_bool_from_args (args, "extract-encrypted", FALSE, err);
+		opts |= MU_MSG_OPTION_AUTO_RETRIEVE;
+	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
+		opts |= MU_MSG_OPTION_DECRYPT;
 
 	docid = determine_docid (ctx->query, args, err);
 	if (docid == MU_STORE_INVALID_DOCID) {
@@ -1370,7 +1375,6 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 		return MU_OK;
 	}
 
-	mu_msg_set_auto_decrypt (msg, decrypt);
 	sexp = mu_msg_to_sexp (msg, docid, NULL, opts);
 	mu_msg_unref (msg);
 

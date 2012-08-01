@@ -382,18 +382,26 @@ struct PartData {
 	GStringChunk *_strchunk;
 };
 
-
-
-static gboolean
+/* index non-body text parts */
+static void
 maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 {
 	gboolean err;
 	char *txt, *norm;
 	Xapian::TermGenerator termgen;
 
-	txt = mu_msg_part_get_text (msg, part, &err);
+	if (part->part_type & MU_MSG_PART_TYPE_BODY)
+		return;
+
+	/* TODO: add other text types? */
+	if (g_ascii_strcasecmp (part->type, "text") != 0 ||
+	    g_ascii_strcasecmp (part->subtype, "plain")  != 0)
+		return;
+
+	txt = mu_msg_part_get_text (msg, part, MU_MSG_OPTION_NONE,
+				    &err);
 	if (!txt || err)
-		return FALSE;
+		return;
 
 	termgen.set_document(pdata->_doc);
 
@@ -404,13 +412,13 @@ maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 		(norm, 1, prefix(MU_MSG_FIELD_ID_EMBEDDED_TEXT));
 
 	g_free (txt);
-	return TRUE;
 }
 
 
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 {
+	char *fname;
 	static const std::string
 		file (prefix(MU_MSG_FIELD_ID_FILE)),
 		mime (prefix(MU_MSG_FIELD_ID_MIME));
@@ -430,21 +438,18 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 			(mime + std::string(ctype, 0, MuStore::MAX_TERM_LENGTH));
 	}
 
-	/* save the name of anything that has a filename */
-	if (part->file_name) {
+	/* now, let's create a term it there's a filename. allocated
+	 * on strchunk, no need to free*/
+	if ((fname = mu_msg_part_get_filename (part, FALSE))) {
 		char *val;
-		/* now, let's create a term... allocated on strchunk,
-		 * no need to free*/
-		val = mu_str_xapian_escape (part->file_name, TRUE /*esc space*/,
+		val = mu_str_xapian_escape (fname, TRUE /*esc space*/,
 					    pdata->_strchunk);
+		g_free (fname);
 		pdata->_doc.add_term
 			(file + std::string(val, 0, MuStore::MAX_TERM_LENGTH));
 	}
 
-	/* now, for non-body parts with some MIME-types, index the
-	 * content as well */
-	if (mu_msg_part_looks_like_attachment (part, FALSE))
-		maybe_index_text_part (msg, part, pdata);
+	maybe_index_text_part (msg, part, pdata);
 }
 
 
@@ -453,9 +458,8 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 			 MuMsgFieldId mfid, GStringChunk *strchunk)
 {
 	PartData pdata (doc, mfid, strchunk);
-	mu_msg_part_foreach (msg,
-			     (MuMsgPartForeachFunc)each_part, &pdata,
-			     MU_MSG_OPTION_NONE);
+	mu_msg_part_foreach (msg, MU_MSG_OPTION_NONE,
+			     (MuMsgPartForeachFunc)each_part, &pdata);
 }
 
 

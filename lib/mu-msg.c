@@ -170,26 +170,6 @@ mu_msg_unref (MuMsg *self)
 }
 
 
-void
-mu_msg_set_auto_decrypt (MuMsg *msg, gboolean autodecrypt)
-{
-	g_return_if_fail (msg);
-	mu_msg_load_msg_file (msg, NULL);
-	msg->_file->_auto_decrypt = autodecrypt;
-}
-
-
-gboolean
-mu_msg_get_auto_decrypt (MuMsg *msg)
-{
-	g_return_val_if_fail (msg, FALSE);
-	if (!msg->_file)
-		return FALSE;
-	return msg->_file->_auto_decrypt;
-}
-
-
-
 /* use this instead of mu_msg_get_path so we don't get into infinite
  * regress...*/
 static const char*

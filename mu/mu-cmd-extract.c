@@ -32,33 +32,37 @@
 #include "mu-util.h"
 #include "mu-str.h"
 
+
+
 static gboolean
-save_part (MuMsg *msg, const char *targetdir, guint partidx, gboolean overwrite,
-	   gboolean play)
+save_part (MuMsg *msg, const char *targetdir, guint partidx, MuConfig *opts)
 {
 	GError *err;
 	gchar *filepath;
 	gboolean rv;
+	MuMsgOptions msgopts;
 
 	err = NULL;
 	rv = FALSE;
 
-	filepath = mu_msg_part_filepath (msg, targetdir, partidx, &err);
+	msgopts = mu_config_get_msg_options (opts);
+
+	filepath = mu_msg_part_get_path (msg, msgopts, targetdir, partidx, &err);
 	if (!filepath)
 		goto exit;
 
-	if (!mu_msg_part_save (msg, filepath, partidx, overwrite, FALSE, &err))
+	if (!mu_msg_part_save (msg, msgopts, filepath, partidx, &err))
 		goto exit;
 
-	if (play)
+	if (opts->play)
 		rv = mu_util_play (filepath, TRUE, FALSE, &err);
 	else
 		rv = TRUE;
 exit:
-	if (err)
-		g_warning ("error with MIME-part: %s",
-			   err->message);
-	g_clear_error (&err);
+	if (err) {
+		g_warning ("error with MIME-part: %s", err->message);
+		g_clear_error (&err);
+	}
 
 	g_free (filepath);
 	return rv;
@@ -87,8 +91,7 @@ save_numbered_parts (MuMsg *msg, MuConfig *opts)
 			break;
 		}
 
-		if (!save_part (msg, opts->targetdir, idx, opts->overwrite,
-				opts->play)) {
+		if (!save_part (msg, opts->targetdir, idx, opts)) {
 			g_warning ("failed to save MIME-part %d", idx);
 			rv = FALSE;
 			break;
@@ -135,13 +138,16 @@ save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
 	GSList *lst, *cur;
 	GRegex *rx;
 	gboolean rv;
+	MuMsgOptions msgopts;
+
+	msgopts = mu_config_get_msg_options (opts);
 
 	/* 'anchor' the pattern with '^...$' if not already */
 	rx = anchored_regex (pattern);
 	if (!rx)
 		return FALSE;
 
-	lst = mu_msg_part_find_files (msg, rx);
+	lst = mu_msg_find_files (msg, msgopts, rx);
 	g_regex_unref (rx);
 	if (!lst) {
 		g_warning ("no matching attachments found");
@@ -149,9 +155,8 @@ save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
 	}
 
 	for (cur = lst, rv = TRUE; cur; cur = g_slist_next (cur))
-		rv &= save_part (msg, opts->targetdir,
-				 GPOINTER_TO_UINT(cur->data),
-				 opts->overwrite, opts->play);
+		rv = rv && save_part (msg, opts->targetdir,
+				      GPOINTER_TO_UINT(cur->data), opts);
 	g_slist_free (lst);
 
 	return rv;
@@ -160,12 +165,9 @@ save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
 
 
 struct _SaveData {
-	gboolean		 attachments_only;
 	gboolean		 result;
 	guint			 saved_num;
-	const gchar*		 targetdir;
-	gboolean		 overwrite;
-	gboolean		 play;
+	MuConfig                 *opts;
 };
 typedef struct _SaveData	 SaveData;
 
@@ -177,14 +179,13 @@ ignore_part (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 	if (!sd->result)
 		return TRUE;
 
-	/* filter out non-attachments if only want attachments */
-	if (sd->attachments_only &&
-	    !mu_msg_part_looks_like_attachment (part, TRUE))
+	/* only consider leaf parts */
+	if (!(part->part_type & MU_MSG_PART_TYPE_LEAF))
 		return TRUE;
 
-	/* ignore multiparts */
-	if (part->type &&
-	    g_ascii_strcasecmp (part->type, "multipart") == 0)
+	/* filter out non-attachments? */
+	if (!sd->opts->save_all &&
+	    !(mu_msg_part_looks_like_attachment (part, TRUE)))
 		return TRUE;
 
 	return FALSE;
@@ -197,23 +198,26 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 	gchar *filepath;
 	gboolean rv;
 	GError *err;
+	MuMsgOptions msgopts;
 
 	if (ignore_part (msg, part, sd))
 		return;
 
 	rv	 = FALSE;
 	filepath = NULL;
+	err      = NULL;
 
-	err = NULL;
-	filepath = mu_msg_part_filepath (msg, sd->targetdir, part->index, &err);
+	msgopts = mu_config_get_msg_options (sd->opts);
+	filepath = mu_msg_part_get_path (msg, msgopts,
+					 sd->opts->targetdir,
+					 part->index, &err);
 	if (!filepath)
 		goto exit;
 
-	if (!mu_msg_part_save (msg, filepath, part->index,
-			       sd->overwrite, FALSE, &err))
+	if (!mu_msg_part_save (msg, msgopts, filepath, part->index, &err))
 		goto exit;
 
-	if (sd->play)
+	if (sd->opts->play)
 		rv = mu_util_play (filepath, TRUE, FALSE, &err);
 	else
 		rv = TRUE;
@@ -225,30 +229,28 @@ exit:
 
 	g_free (filepath);
 	g_clear_error (&err);
+
 	sd->result = rv;
 
 }
 
 static gboolean
-save_certain_parts (MuMsg *msg, gboolean attachments_only,
-		    const gchar *targetdir, gboolean overwrite, gboolean play)
+save_certain_parts (MuMsg *msg, MuConfig *opts)
 {
 	SaveData sd;
+	MuMsgOptions msgopts;
 
 	sd.result	    = TRUE;
 	sd.saved_num        = 0;
-	sd.attachments_only = attachments_only;
-	sd.overwrite	    = overwrite;
-	sd.targetdir	    = targetdir;
-	sd.play             = play;
+	sd.opts             = opts;
 
-	mu_msg_part_foreach (msg,
-			     (MuMsgPartForeachFunc)save_part_if,
-			     &sd, MU_MSG_OPTION_NONE);
+	msgopts = mu_config_get_msg_options (opts);
+	mu_msg_part_foreach (msg, msgopts,
+			     (MuMsgPartForeachFunc)save_part_if, &sd);
 
 	if (sd.saved_num == 0) {
 		g_warning ("no %s extracted from this message",
-			   attachments_only ? "attachments" : "parts");
+			   opts->save_attachments ? "attachments" : "parts");
 		sd.result = FALSE;
 	}
 
@@ -281,16 +283,8 @@ save_parts (const char *path, const char *filename, MuConfig *opts)
 		rv = save_numbered_parts (msg, opts);
 	else if (filename)
 		rv = save_part_with_filename (msg, filename, opts);
-	else if (opts->save_attachments)  /* all attachments */
-		rv = save_certain_parts (msg, TRUE,
-					 opts->targetdir, opts->overwrite,
-					 opts->play);
-	else if (opts->save_all)  /* all parts */
-		rv = save_certain_parts (msg, FALSE,
-					 opts->targetdir, opts->overwrite,
-					 opts->play);
 	else
-		g_assert_not_reached ();
+		rv = save_certain_parts (msg, opts);
 
 	mu_msg_unref (msg);
 
@@ -299,6 +293,16 @@ save_parts (const char *path, const char *filename, MuConfig *opts)
 
 #define color_maybe(C)	do{ if (color) fputs ((C),stdout);}while(0)
 
+static const char*
+disp_str (MuMsgPartType ptype)
+{
+	if (ptype & MU_MSG_PART_TYPE_ATTACHMENT)
+		return "attach";
+	if (ptype & MU_MSG_PART_TYPE_INLINE)
+		return "inline";
+	return "<none>";
+}
+
 static void
 each_part_show (MuMsg *msg, MuMsgPart *part, gboolean color)
 {
@@ -306,9 +310,12 @@ each_part_show (MuMsg *msg, MuMsgPart *part, gboolean color)
 	g_print ("  %u ", part->index);
 
 	/* filename */
-	color_maybe (MU_COLOR_GREEN);
-	mu_util_fputs_encoded (part->file_name ? part->file_name : "<none>",
-			       stdout);
+	color_maybe (MU_COLOR_GREEN); {
+		gchar *fname;
+		fname = mu_msg_part_get_filename (part, FALSE);
+		mu_util_fputs_encoded (fname ? fname : "<none>", stdout);
+		g_free (fname);
+	}
 	/* content-type */
 	color_maybe (MU_COLOR_BLUE);
 	mu_util_print_encoded (
@@ -316,11 +323,9 @@ each_part_show (MuMsg *msg, MuMsgPart *part, gboolean color)
 		part->type ? part->type : "<none>",
 		part->subtype ? part->subtype : "<none>");
 
-	/* disposition */
+	/* /\* disposition *\/ */
 	color_maybe (MU_COLOR_MAGENTA);
-	mu_util_print_encoded (
-		"[%s]",	part->disposition ? part->disposition : "<none>");
-
+	mu_util_print_encoded ("[%s]",	disp_str(part->part_type));
 
 	/* size */
 	if (part->size > 0) {
@@ -336,18 +341,21 @@ each_part_show (MuMsg *msg, MuMsgPart *part, gboolean color)
 static gboolean
 show_parts (const char* path, MuConfig *opts, GError **err)
 {
-	MuMsg* msg;
+	MuMsg *msg;
+	MuMsgOptions msgopts;
 
 	msg = mu_msg_new_from_file (path, NULL, err);
 	if (!msg)
 		return FALSE;
 
-	g_print ("MIME-parts in this message:\n");
+	msgopts = mu_config_get_msg_options (opts);
 
+	/* TODO: update this for crypto */
+	g_print ("MIME-parts in this message:\n");
 	mu_msg_part_foreach
-		(msg, (MuMsgPartForeachFunc)each_part_show,
-		 GUINT_TO_POINTER(!opts->nocolor),
-		 MU_MSG_OPTION_NONE);
+		(msg, msgopts,
+		 (MuMsgPartForeachFunc)each_part_show,
+		 GUINT_TO_POINTER(!opts->nocolor));
 
 	mu_msg_unref (msg);
 
@@ -370,8 +378,8 @@ check_params (MuConfig *opts)
 
 	if (opts->save_attachments || opts->save_all)
 		if (opts->parts || param_num == 3) {
-			g_warning ("--save-attachments --save-all don't accept "
-				   "a filename pattern or --parts");
+			g_warning ("--save-attachments and --save-all don't "
+				   "accept a filename pattern or --parts");
 			return FALSE;
 		}
 
@@ -405,9 +413,10 @@ mu_cmd_extract (MuConfig *opts, GError **err)
 	else {
 		rv = mu_util_check_dir(opts->targetdir, FALSE, TRUE);
 		if (!rv)
-			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_WRITE,
-				     "target '%s' is not a writable directory",
-				     opts->targetdir);
+			mu_util_g_set_error
+				(err, MU_ERROR_FILE_CANNOT_WRITE,
+				 "target '%s' is not a writable directory",
+				 opts->targetdir);
 		else
 			rv = save_parts (opts->params[1],
 					 opts->params[2],

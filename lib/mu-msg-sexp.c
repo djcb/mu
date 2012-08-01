@@ -117,23 +117,18 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 	case MU_MSG_CONTACT_TYPE_FROM:
 		add_prefix_maybe (cdata->gstr, &cdata->from, "\t:from (");
 		break;
-
 	case MU_MSG_CONTACT_TYPE_TO:
 		add_prefix_maybe (cdata->gstr, &cdata->to, "\t:to (");
 		break;
-
 	case MU_MSG_CONTACT_TYPE_CC:
 		add_prefix_maybe (cdata->gstr, &cdata->cc, "\t:cc (");
 		break;
-
 	case MU_MSG_CONTACT_TYPE_BCC:
 		add_prefix_maybe (cdata->gstr, &cdata->bcc, "\t:bcc (");
 		break;
-
 	case MU_MSG_CONTACT_TYPE_REPLY_TO:
 		add_prefix_maybe (cdata->gstr, &cdata->reply_to, "\t:reply-to (");
 		break;
-
 	default: g_return_val_if_reached (FALSE);
 	}
 
@@ -203,23 +198,27 @@ append_sexp_flags (GString *gstr, MuMsg *msg)
 }
 
 static char*
-get_temp_file (MuMsg *msg, unsigned index)
+get_temp_file (MuMsg *msg, MuMsgOptions opts, unsigned index)
 {
 	char *path;
 	GError *err;
 
 	err = NULL;
-	path = mu_msg_part_filepath_cache (msg, index);
-	if (!mu_msg_part_save (msg, path, index,
-			       FALSE/*overwrite*/, TRUE/*use cache*/, &err)) {
-		g_warning ("failed to save mime part: %s",
-			   err->message ? err->message : "something went wrong");
-		g_clear_error (&err);
-		g_free (path);
-		return NULL;
-	}
+	path = mu_msg_part_get_cache_path (msg, opts, index, &err);
+	if (!path)
+		goto errexit;
+
+	if (!mu_msg_part_save (msg, opts, path, index, &err))
+		goto errexit;
 
 	return path;
+
+errexit:
+	g_warning ("failed to save mime part: %s",
+		   err->message ? err->message : "something went wrong");
+	g_clear_error (&err);
+	g_free (path);
+	return NULL;
 }
 
 
@@ -232,7 +231,7 @@ get_temp_file_maybe (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
 	     g_ascii_strcasecmp (part->type, "image") != 0)
 		return NULL;
 
-	tmp = get_temp_file (msg, part->index);
+	tmp = get_temp_file (msg, opts, part->index);
 	if (!tmp)
 		return NULL;
 
@@ -273,32 +272,6 @@ sig_verdict (GSList *sig_infos)
 	}
 }
 
-
-static char*
-get_part_filename (MuMsgPart *part)
-{
-	const char *fname;
-	char *name;
-	const char *ctype, *csubtype;
-
-	ctype = part->type;
-	csubtype = part->subtype;
-	if (!ctype || !csubtype) {
-		ctype = "application";
-		csubtype = "octet-stream";
-	}
-
-	fname = mu_msg_part_file_name (part);
-	if (!fname)
-		fname = mu_msg_part_description (part);
-
-	if (fname)
-		name = mu_str_escape_c_literal (fname, TRUE);
-	else
-		name = g_strdup_printf ("\"%s-%s-%d\"",
-					ctype, csubtype, part->index);
-	return name;
-}
 
 static gchar *
 get_part_type_string (MuMsgPartType ptype)
@@ -348,16 +321,16 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 	char *name, *tmp, *parttype;
 	char *tmpfile;
 
-	name = get_part_filename (part);
-
+	name     = mu_msg_part_get_filename (part, TRUE);
 	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
 	parttype = get_part_type_string (part->part_type);
 
 	tmp = g_strdup_printf
-		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s "
+		("%s(:index %d :name \"%s\" :mime-type \"%s/%s\"%s%s "
 		 ":type %s "
 		 ":attachment %s :size %i %s)",
-		 elvis (pinfo->parts, ""), part->index, name,
+		 elvis (pinfo->parts, ""), part->index,
+		 name ? name : "noname",
 		 elvis (part->type, "application"),
 		 elvis (part->subtype, "octet-stream"),
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
@@ -379,26 +352,14 @@ append_sexp_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 	pinfo.parts = NULL;
 	pinfo.opts  = opts;
 
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part,
-			     &pinfo, opts);
-	if (pinfo.parts) {
+	if (!mu_msg_part_foreach (msg, opts, (MuMsgPartForeachFunc)each_part,
+				  &pinfo)) {
+		/* if decryption failed, mark this message as encrypted */
+		g_string_append (gstr, "\t:encrypted t\n");
+	} else if (pinfo.parts) {
 		g_string_append_printf (gstr, "\t:parts (%s)\n", pinfo.parts);
 		g_free (pinfo.parts);
 	}
-}
-
-
-
-static void
-append_sexp_message_file_attr (GString *gstr, MuMsg *msg)
-{
- 	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
-	append_sexp_attr (gstr, "in-reply-to",
-			  mu_msg_get_header (msg, "In-Reply-To"));
-	append_sexp_attr (gstr, "body-txt",
-			  mu_msg_get_body_text(msg));
-	append_sexp_attr (gstr, "body-html",
-			  mu_msg_get_body_html(msg));
 }
 
 static void
@@ -418,11 +379,30 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 		 " :has-child t" : "");
 }
 
+
 static void
-append_non_headers_only_attr (GString *gstr, MuMsg *msg, MuMsgOptions opts)
+append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 {
-	append_sexp_message_file_attr (gstr, msg);
+	GError *err;
+	err = NULL;
+
+	if (!mu_msg_load_msg_file (msg, &err)) {
+		g_warning ("failed to load message file: %s",
+			   err ? err->message : "some error occured");
+		g_clear_error (&err);
+		return;
+	}
+
 	append_sexp_parts (gstr, msg, opts);
+	append_sexp_contacts (gstr, msg);
+
+	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
+	append_sexp_attr (gstr, "in-reply-to",
+			  mu_msg_get_header (msg, "In-Reply-To"));
+	append_sexp_attr (gstr, "body-txt",
+			  mu_msg_get_body_text(msg));
+	append_sexp_attr (gstr, "body-html",
+			  mu_msg_get_body_html(msg));
 }
 
 
@@ -449,6 +429,11 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 
 	append_sexp_attr (gstr, "subject", mu_msg_get_subject (msg));
 
+	/* in the no-headers-only case (see below) we get a more complete list
+	 * of contacts, so no need to get them here if that's the case */
+	if (opts & MU_MSG_OPTION_HEADERS_ONLY)
+		append_sexp_contacts (gstr, msg);
+
 	t = mu_msg_get_date (msg);
 	/* weird time format for emacs 29-bit ints...*/
 	g_string_append_printf (gstr,"\t:date (%u %u 0)\n", (unsigned)(t >> 16),
@@ -467,11 +452,7 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	 * file attr things can only be gotten from the file (ie., mu
 	 * view), not from the database (mu find).  */
 	if (!(opts & MU_MSG_OPTION_HEADERS_ONLY))
-		append_non_headers_only_attr (gstr, msg, opts);
-
-	/* note, some of the contacts info comes from the file, soe
-	 * this has to be after the previous */
-	append_sexp_contacts (gstr, msg);
+		append_message_file_parts (gstr, msg, opts);
 
 	g_string_append (gstr, ")\n");
 	return g_string_free (gstr, FALSE);

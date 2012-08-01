@@ -29,7 +29,6 @@
 #include "mu-msg-crypto.h"
 #include "mu-date.h"
 
-
 #include <gmime/gmime.h>
 #include <gmime/gmime-multipart-signed.h>
 
@@ -117,17 +116,11 @@ get_gpg_crypto_context (MuMsgOptions opts, GError **err)
 		return NULL;
 	}
 
-	g_mime_gpg_context_set_use_agent
-		(GMIME_GPG_CONTEXT(cctx), TRUE);
-		 /* opts & MU_MSG_OPTION_USE_AGENT ? TRUE:FALSE); */
-	/* g_mime_gpg_context_set_use_agent */
-	/* 	(GMIME_GPG_CONTEXT(cctx), */
-	/* 	 opts & MU_MSG_OPTION_USE_AGENT ? TRUE:FALSE); */
-	g_mime_gpg_context_set_auto_key_retrieve
+	/* always try to use the agent */
+	g_mime_gpg_context_set_use_agent (GMIME_GPG_CONTEXT(cctx), TRUE);
+ 	g_mime_gpg_context_set_auto_key_retrieve
 		(GMIME_GPG_CONTEXT(cctx),
-		 opts & MU_MSG_OPTION_AUTO_RETRIEVE_KEY ? TRUE:FALSE);
-	g_mime_gpg_context_set_always_trust
-		(GMIME_GPG_CONTEXT(cctx), FALSE);
+		 opts & MU_MSG_OPTION_AUTO_RETRIEVE ? TRUE:FALSE);
 
 	return cctx;
 }
@@ -532,6 +525,7 @@ mu_msg_part_sig_info_to_string (MuMsgPartSigInfo *info)
 
 GMimeObject* /* this is declared in mu-msg-priv.h */
 mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
+			    MuMsgPartPasswordFunc func, gpointer user_data,
 			    GError **err)
 {
 	GMimeObject *dec;
@@ -539,7 +533,7 @@ mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 
 	g_return_val_if_fail (GMIME_IS_MULTIPART_ENCRYPTED(enc), NULL);
 
-	ctx = get_crypto_context (opts, NULL, NULL, err);
+	ctx = get_crypto_context (opts, func, user_data, err);
 	if (!ctx) {
 		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
 				     "failed to get crypto context");
