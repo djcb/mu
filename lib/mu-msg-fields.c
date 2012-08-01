@@ -226,7 +226,7 @@ static const MuMsgField FIELD_DATA[] = {
 	{
 		MU_MSG_FIELD_ID_REFS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
-		NULL, 'r', 'R',
+		"refs", 'r', 'R',
 		FLAG_GMIME | FLAG_XAPIAN_VALUE | FLAG_XAPIAN_PREFIX_ONLY
 	},
 
