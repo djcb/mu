@@ -518,9 +518,12 @@ gchar*
 mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 {
 	GMimeDataWrapper *wrapper;
-	GMimeStream *stream = NULL;
+	GMimeStream *stream;
 	ssize_t buflen;
-	char *buffer = NULL;
+	char *buffer;
+
+	buffer = NULL;
+	stream = NULL;
 
 	*err = TRUE; /* guilty until proven innocent */
 	g_return_val_if_fail (GMIME_IS_PART(part), NULL);
@@ -548,13 +551,10 @@ mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 
 	/* convert_to_utf8 will free the old 'buffer' if needed */
 	buffer = convert_to_utf8 (part, buffer);
-
 	*err = FALSE;
 
 cleanup:
-	if (stream)
-		g_object_unref (G_OBJECT(stream));
-
+	g_clear_object (&stream);
 	return buffer;
 }
 
@@ -583,33 +583,30 @@ mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean decrypt,
 
 
 static char*
-get_body (MuMsgFile *self, gboolean want_html)
+get_body (MuMsgFile *self, gboolean decrypt, gboolean want_html)
 {
 	GMimePart *part;
+	gboolean err;
+	gchar *str;
 
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
 
 	part = mu_msg_mime_get_body_part (self->_mime_msg,
-					  self->_auto_decrypt,
-					  want_html);
-	if (GMIME_IS_PART(part)) {
-		gboolean err;
-		gchar *str;
+					  decrypt, want_html);
+	if (!GMIME_IS_PART(part))
+		return NULL;
 
-		err = FALSE;
-		str = mu_msg_mime_part_to_string (part, &err);
+	err = FALSE;
+	str = mu_msg_mime_part_to_string (part, &err);
 
-		/* note, str may be NULL (no body), but that's not necessarily
-		 * an error; we only warn when an actual error occured */
-		if (err)
-			g_warning ("error occured while retrieving %s body "
-				   "for message %s",
-				   want_html ? "html" : "text", self->_path);
-		return str;
-	}
-
-	return NULL;
+	/* note, str may be NULL (no body), but that's not necessarily
+	 * an error; we only warn when an actual error occured */
+	if (err)
+		g_warning ("error occured while retrieving %s body "
+			   "for message %s",
+			   want_html ? "html" : "text", self->_path);
+	return str;
 }
 
 
@@ -657,7 +654,7 @@ append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
  * all text/plain parts with inline disposition
  */
 static char*
-get_concatenated_text (MuMsgFile *self)
+get_concatenated_text (MuMsgFile *self, gboolean decrypt)
 {
 	char *txt;
 
@@ -665,9 +662,9 @@ get_concatenated_text (MuMsgFile *self)
 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
 
 	txt = NULL;
-	mu_mime_message_foreach (self->_mime_msg, self->_auto_decrypt,
+	mu_mime_message_foreach (self->_mime_msg, decrypt,
 				(GMimeObjectForeachFunc)append_text,
-				&txt);
+				 &txt);
 	return txt;
 }
 
@@ -766,8 +763,7 @@ recipient_type (MuMsgFieldId mfid)
 
 
 char*
-mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
-			   gboolean *do_free)
+mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
@@ -785,9 +781,9 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 		return get_recipient (self, recipient_type(mfid));
 
 	case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE;
-		return get_concatenated_text (self);
+		return get_concatenated_text (self, TRUE); /* FIXME: decrypt ? */
 	case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE;
-		return get_body (self, TRUE);
+		return get_body (self, TRUE, TRUE); /* FIXME: decrypt ? */
 
 	case MU_MSG_FIELD_ID_FROM:
 		return (char*)maybe_cleanup
@@ -889,27 +885,19 @@ typedef struct _ForeachData ForeachData;
 static void
 foreach_cb (GMimeObject *parent, GMimeObject *part, ForeachData *fdata)
 {
+	/* invoke the callback function */
 	fdata->user_func (parent, part, fdata->user_data);
 
 #ifdef BUILD_CRYPTO
 	/* maybe iterate over decrypted parts */
 	if (fdata->decrypt &&
 	    GMIME_IS_MULTIPART_ENCRYPTED (part)) {
-
-		GError *err;
 		GMimeObject *dec;
-
-		err = NULL;
 		dec = mu_msg_crypto_decrypt_part
 			(GMIME_MULTIPART_ENCRYPTED(part),
-			 MU_MSG_OPTION_NONE, &err);
-		if (!dec||err) {
-			g_printerr ("crypto error: %s\n",
-				    err ? err->message : "something went wrong");
-			g_clear_error(&err);
-			g_clear_object(&dec);
+			 MU_MSG_OPTION_NONE, NULL, NULL, NULL);
+		if (!dec)
 			return;
-		}
 
 		if (GMIME_IS_MULTIPART (dec))
 			g_mime_multipart_foreach (
@@ -936,7 +924,6 @@ mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
 
 	fdata.user_func = func;
 	fdata.user_data = user_data;
-	fdata.decrypt   = decrypt;
 
 	g_mime_message_foreach
 		(msg,

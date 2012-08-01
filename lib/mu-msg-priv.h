@@ -44,9 +44,6 @@ struct _MuMsgFile {
 	char		 _path    [PATH_MAX + 1];
 	char		 _maildir [PATH_MAX + 1];
 
-	/* whether to attemp to automagically decrypt encrypted parts */
-	gboolean         _auto_decrypt;
-
 	/* list where we push allocated strings so we can
 	 * free them when the struct gets destroyed
 	 */
@@ -79,20 +76,20 @@ struct _MuMsg {
 gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err);
 
 
-/**
- * write a GMimeObject to a file
- *
- * @param obj a GMimeObject
- * @param fullpath full file path
- * @param overwrite allow overwriting existing file
- * @param if file already exist, don't bother to write
- * @param err receives error information
- *
- * @return TRUE if writing succeeded, FALSE otherwise.
- */
-gboolean mu_msg_part_mime_save_object (GMimeObject *obj, const char *fullpath,
-				       gboolean overwrite, gboolean use_existing,
-				       GError **err);
+/* /\** */
+/*  * write a GMimeObject to a file */
+/*  * */
+/*  * @param obj a GMimeObject */
+/*  * @param fullpath full file path */
+/*  * @param overwrite allow overwriting existing file */
+/*  * @param if file already exist, don't bother to write */
+/*  * @param err receives error information */
+/*  * */
+/*  * @return TRUE if writing succeeded, FALSE otherwise. */
+/*  *\/ */
+/* gboolean mu_msg_part_mime_save_object (GMimeObject *obj, const char *fullpath, */
+/* 				       gboolean overwrite, gboolean use_existing, */
+/* 				       GError **err); */
 
 
 
@@ -111,14 +108,18 @@ GMimePart* mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean decrypt,
 
 /**
  * Like g_mime_message_foreach, but will recurse into encrypted parts
+ * if @param decrypt is TRUE and mu was built with crypto support
  *
- * @param msg
+ * @param msg a GMimeMessage
  * @param decrypt whether to try to automatically decrypt
- * @param func
- * @param user_data
+ * @param func user callback function for each part
+ * @param user_data user point passed to callback function
+ * @param err receives error information
+ *
  */
 void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
-			      GMimeObjectForeachFunc func, gpointer user_data);
+			      GMimeObjectForeachFunc func,
+			      gpointer user_data);
 
 #ifdef BUILD_CRYPTO
 /**
@@ -134,32 +135,32 @@ void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
 GSList* mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart,
 			       MuMsgOptions opts, GError **err);
 
-
-
 /**
- * decrypt the given mime part
+ * callback function to retrieve a password from the user
  *
- * @param encpart
- * @param opts
- * @param err
+ * @param user_id the user name / id to get the password for
+ * @param prompt_ctx a string containing some helpful context for the prompt
+ * @param reprompt whether this is a reprompt after an earlier, incorrect password
+ * @param user_data the user_data pointer passed to mu_msg_part_decrypt_foreach
  *
- * @return
+ * @return a newly allocated (g_free'able) string
  */
-char* mu_msg_mime_decrypt (GMimeMultipartEncrypted *encpart,
-			   MuMsgOptions opts, GError **err);
-
-
+typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *prompt_ctx,
+					  gboolean reprompt, gpointer user_data);
 
 /**
  * decrypt the given encrypted mime multipart
  *
  * @param enc encrypted part
  * @param opts options
+ * @param password_func callback function to retrieve as password (or NULL)
+ * @param user_data pointer passed to the password func
  * @param err receives error data
  *
  * @return the decrypted part, or NULL in case of error
  */
 GMimeObject* mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
+					 MuMsgPartPasswordFunc func, gpointer user_data,
 					 GError **err);
 #endif /*BUILD_CRYPTO*/
 

@@ -27,11 +27,11 @@ typedef struct _MuMsgFile MuMsgFile;
 
 /**
  * create a new message from a file
- * 
+ *
  * @param path full path to the message
  * @param mdir
  * @param err error to receive (when function returns NULL), or NULL
- * 
+ *
  * @return a new MuMsg, or NULL in case of error
  */
 MuMsgFile *mu_msg_file_new (const char *path,
@@ -49,10 +49,10 @@ void mu_msg_file_destroy (MuMsgFile *self);
 
 /**
  * get a specific header
- * 
+ *
  * @param self a MuMsgFile instance
  * @param header a header (e.g. 'X-Mailer' or 'List-Id')
- * 
+ *
  * @return the value of the header or NULL if not found. Note, only
  * valid as long as this MuMsgFile is valid -- before
  * mu_msg_file_destroy
@@ -62,7 +62,7 @@ const char* mu_msg_file_get_header (MuMsgFile *self, const char *header);
 
 /**
  * get a string value for this message
- * 
+ *
  * @param self a valid MuMsgFile
  * @param msfid the message field id to get (must be of type string)
  * @param do_free receives TRUE or FALSE, conveying if this string
@@ -70,7 +70,7 @@ const char* mu_msg_file_get_header (MuMsgFile *self, const char *header);
  * this function should be treated as if it were returning a const
  * char*, and note that in that case the string is only valid as long
  * as the MuMsgFile is alive, ie. before mu_msg_file_destroy
- * 
+ *
  * @return a string, or NULL
  */
 char* mu_msg_file_get_str_field (MuMsgFile *self,
@@ -81,7 +81,7 @@ char* mu_msg_file_get_str_field (MuMsgFile *self,
 
 /**
  * get a string-list value for this message
- * 
+ *
  * @param self a valid MuMsgFile
  * @param msfid the message field id to get (must be of type string-list)
  * @param do_free receives TRUE or FALSE, conveying if this string
@@ -89,7 +89,7 @@ char* mu_msg_file_get_str_field (MuMsgFile *self,
  * this function should be treated as if it were returning a const
  * GSList*, and note that in that case the string is only valid as long
  * as the MuMsgFile is alive, ie. before mu_msg_file_destroy
- * 
+ *
  * @return a GSList*, or NULL
  */
 GSList* mu_msg_file_get_str_list_field (MuMsgFile *self,
@@ -102,10 +102,10 @@ GSList* mu_msg_file_get_str_list_field (MuMsgFile *self,
 /**
  * get a numeric value for this message -- the return value should be
  * cast into the actual type, e.g., time_t, MuMsgPrio etc.
- * 
+ *
  * @param self a valid MuMsgFile
  * @param msfid the message field id to get (must be string-based one)
- * 
+ *
  * @return the numeric value, or -1 in case of error
  */
 gint64 mu_msg_file_get_num_field (MuMsgFile *self, MuMsgFieldId mfid);

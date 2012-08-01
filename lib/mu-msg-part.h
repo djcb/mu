@@ -38,10 +38,14 @@ enum _MuMsgPartType {
 	MU_MSG_PART_TYPE_MESSAGE	= 1 << 2,
 	/* disposition inline? */
 	MU_MSG_PART_TYPE_INLINE		= 1 << 3,
+	/* disposition attachment? */
+	MU_MSG_PART_TYPE_ATTACHMENT	= 1 << 4,
 	/* a signed part? */
 	MU_MSG_PART_TYPE_SIGNED		= 1 << 5,
 	/* an encrypted part? */
-	MU_MSG_PART_TYPE_ENCRYPTED	= 1 << 6
+	MU_MSG_PART_TYPE_ENCRYPTED	= 1 << 6,
+	/* a decrypted part? */
+	MU_MSG_PART_TYPE_DECRYPTED	= 1 << 7
 };
 typedef enum _MuMsgPartType MuMsgPartType;
 
@@ -52,22 +56,11 @@ struct _MuMsgPart {
 	unsigned         index;
 
 	/* cid */
-	char             *content_id;
+	/* const char       *content_id; */
 
 	/* content-type: type/subtype, ie. text/plain */
-	char             *type;
-	char             *subtype;
-	/* full content-type, e.g. image/jpeg  */
-	/* char             *content_type; */
-
-	/* the file name (if any) */
-	char             *file_name;
-
-	/* description (if any) */
-	char             *description;
-
-	/* usually, "attachment" or "inline" */
-	char             *disposition;
+	const char       *type;
+	const char       *subtype;
 
 	/* size of the part; or < 0 if unknown */
 	ssize_t		 size;
@@ -78,41 +71,20 @@ struct _MuMsgPart {
 
 	/* crypto stuff */
 	GSList           *sig_infos; /* list of MuMsgPartSig */
-
-	/* if TRUE, mu_msg_part_destroy will free the member vars
-	 * as well*/
-	gboolean          own_members;
-};
+ };
 typedef struct _MuMsgPart MuMsgPart;
 
 /**
- * macro to get the file name for this mime-part
+ * get some appropriate file name for the mime-part
  *
- * @param pi a MuMsgPart instance
+ * @param mpart a MuMsgPart
+ * @param construct_if_needed if there is no
+ * real filename, construct one.
  *
- * @return the file name
+ * @return the file name (free with g_free)
  */
-#define mu_msg_part_file_name(pi)    ((pi)->file_name)
-
-
-/**
- * macro to get the description for this mime-part
- *
- * @param pi a MuMsgPart instance
- *
- * @return the description
- */
-#define mu_msg_part_description(pi)    ((pi)->description)
-
-
-/**
- * macro to get the content-id (cid) for this mime-part
- *
- * @param pi a MuMsgPart instance
- *
- * @return the file name
- */
-#define  mu_msg_part_content_id(pi) ((pi)->content_id)
+char *mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -123,7 +95,8 @@ typedef struct _MuMsgPart MuMsgPart;
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
-char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, gboolean *err);
+char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, gboolean *err)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -142,16 +115,17 @@ gboolean mu_msg_part_looks_like_attachment (MuMsgPart *part,
  * save a specific attachment to some targetdir
  *
  * @param msg a valid MuMsg instance
+ * @param opts mu-message options (OVERWRITE/USE_EXISTING)
  * @gchar filepath the filepath to save
  * @param partidx index of the attachment you want to save
- * @param overwrite overwrite existing files?
- * @param don't raise error when the file already exists
  * @param err receives error information (when function returns NULL)
  *
- * @return full path to the message part saved or NULL in case or error; free with g_free
+ * @return full path to the message part saved or NULL in case or
+ * error; free with g_free
  */
-gboolean mu_msg_part_save (MuMsg *msg, const char *filepath, guint partidx,
-			   gboolean overwrite, gboolean use_cached, GError **err);
+gboolean mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
+			   const char *filepath, guint partidx,
+			   GError **err);
 
 
 /**
@@ -159,13 +133,15 @@ gboolean mu_msg_part_save (MuMsg *msg, const char *filepath, guint partidx,
  * this file
  *
  * @param msg a MuMsg message
+ * @param opts mu-message options (OVERWRITE/USE_EXISTING)
  * @param partidx index of the part to save
  * @param err receives error information if any
  *
  * @return the full path to the temp file, or NULL in case of error
  */
-gchar* mu_msg_part_save_temp (MuMsg *msg, guint partidx, GError **err);
-
+gchar* mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts,
+			      guint partidx, GError **err)
+        G_GNUC_WARN_UNUSED_RESULT;
 
 
 
@@ -175,14 +151,17 @@ gchar* mu_msg_part_save_temp (MuMsg *msg, guint partidx, GError **err);
  * name based on the partidx and the message path
  *
  * @param msg a msg
+ * @param opts mu-message options
  * @param targetdir where to store the part
  * @param partidx the part for which to determine a filename
  * @param err receives error information (when function returns NULL)
  *
  * @return a filepath (g_free when done with it) or NULL in case of error
  */
-gchar* mu_msg_part_filepath (MuMsg *msg, const char* targetdir,
-			     guint partidx, GError **err) G_GNUC_WARN_UNUSED_RESULT;
+gchar* mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
+			     const char* targetdir,
+			     guint partidx, GError **err)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -193,11 +172,14 @@ gchar* mu_msg_part_filepath (MuMsg *msg, const char* targetdir,
  * Will create the directory if needed.
  *
  * @param msg a msg
+ * @param opts mu-message options
  * @param partidx the part for which to determine a filename
+ * @param err receives error information (when function returns NULL)
  *
  * @return a filepath (g_free when done with it) or NULL in case of error
  */
-gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
+gchar* mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts,
+				   guint partidx, GError **err)
         G_GNUC_WARN_UNUSED_RESULT;
 
 
@@ -209,7 +191,7 @@ gchar* mu_msg_part_filepath_cache (MuMsg *msg, guint partid)
  *
  * @return the part index number of the found part, or -1 if it was not found
  */
-int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
+int mu_msg_find_index_for_cid (MuMsg *msg, MuMsgOptions opts, const char* content_id);
 
 
 
@@ -217,16 +199,17 @@ int mu_msg_part_find_cid (MuMsg *msg, const char* content_id);
  * retrieve a list of indices for mime-parts with filenames matching a regex
  *
  * @param msg a message
+ * @param opts
  * @param a regular expression to match the filename with
  *
  * @return a list with indices for the files matching the pattern; the
  * indices are the GPOINTER_TO_UINT(lst->data) of the list. They must
  * be freed with g_slist_free
  */
-GSList* mu_msg_part_find_files (MuMsg *msg, const GRegex *pattern);
+GSList* mu_msg_find_files (MuMsg *msg, MuMsgOptions opts, const GRegex *pattern);
 
 
-typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
+typedef void (*MuMsgPartForeachFunc) (MuMsg *msg, MuMsgPart*, gpointer);
 
 
 /**
@@ -239,8 +222,8 @@ typedef void (*MuMsgPartForeachFunc) (MuMsg*, MuMsgPart*, gpointer);
  * @param options, bit-wise OR'ed
  *
  */
-void mu_msg_part_foreach (MuMsg *msg, MuMsgPartForeachFunc func, gpointer user_data,
-			  MuMsgOptions opts);
+gboolean mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
+			      MuMsgPartForeachFunc func, gpointer user_data);
 
 G_END_DECLS
 
