@@ -277,6 +277,8 @@ mime_part_get_filename (GMimeObject *mobj, unsigned index,
 {
 	gchar *fname, *cur;
 
+	fname = NULL;
+
 	if (GMIME_IS_PART (mobj)) {
 		/* the easy case: the part has a filename */
 		fname = (gchar*)g_mime_part_get_filename (GMIME_PART(mobj));
