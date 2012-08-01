@@ -63,17 +63,21 @@ view_msg_sexp (MuMsg *msg, MuConfig *opts)
 static void
 each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
 {
-	if (mu_msg_part_looks_like_attachment (part, TRUE) &&
-	    (part->file_name)) {
+	char *fname, *tmp;
 
-		char *tmp = *attach;
+	if (!mu_msg_part_looks_like_attachment (part, TRUE))
+		return;
 
-		*attach = g_strdup_printf ("%s%s'%s'",
-					   *attach ? *attach : "",
-					   *attach ? ", " : "",
-					   part->file_name);
-		g_free (tmp);
-	}
+	fname = mu_msg_part_get_filename (part, FALSE);
+	if (!fname)
+		return;
+
+	tmp = *attach;
+	*attach = g_strdup_printf ("%s%s'%s'",
+				   *attach ? *attach : "",
+				   *attach ? ", " : "",
+				   fname);
+	g_free (tmp);
 }
 
 /* return comma-sep'd list of attachments */
@@ -83,9 +87,8 @@ get_attach_str (MuMsg *msg)
 	gchar *attach;
 
 	attach = NULL;
-	mu_msg_part_foreach (msg, (MuMsgPartForeachFunc)each_part, &attach,
-			     MU_MSG_OPTION_NONE);
-
+	mu_msg_part_foreach (msg, MU_MSG_OPTION_NONE,
+			     (MuMsgPartForeachFunc)each_part, &attach);
 	return attach;
 }
 
@@ -187,8 +190,6 @@ handle_msg (const char *fname, MuConfig *opts, GError **err)
 	msg = mu_msg_new_from_file (fname, NULL, err);
 	if (!msg)
 		return FALSE;
-
-	mu_msg_set_auto_decrypt (msg, opts->decrypt);
 
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
@@ -451,18 +452,14 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 	if (!msg)
 		return MU_ERROR;
 
-	msgopts = MU_MSG_OPTION_CHECK_SIGNATURES;
-	if (opts->auto_retrieve)
-		msgopts |= MU_MSG_OPTION_AUTO_RETRIEVE_KEY;
-	if (opts->use_agent)
-		msgopts |= MU_MSG_OPTION_USE_AGENT;
+	msgopts = mu_config_get_msg_options (opts);
 
 	vdata.status = MU_MSG_PART_SIG_STATUS_UNKNOWN;
 	vdata.opts   = opts;
 	vdata.msg    = NULL;
 
-	mu_msg_part_foreach (msg,(MuMsgPartForeachFunc)each_sig, &vdata,
-			     msgopts);
+	/* TODO: update for decryption */
+	mu_msg_part_foreach (msg, msgopts, (MuMsgPartForeachFunc)each_sig, &vdata);
 
 	/* if there's anything bad, all goodness goes away */
 	if (vdata.status & MU_MSG_PART_SIG_STATUS_BAD ||
