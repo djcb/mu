@@ -138,7 +138,7 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
 (defvar mu4e~headers-view-win nil
   "The view window connected to this headers view.")
- 
+
 (defvar mu4e~headers-sortfield-choices
   '( ("date"	. :date)
      ("from"	. :from)
@@ -148,7 +148,7 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
      ("to"	. :to))
   "List of cells describing the various sort-options (in the format
   needed for `mu4e-read-option'.")
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~headers-clear ()
@@ -164,7 +164,6 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 ;;
 ;; next are a bunch of handler functions; those will be called from mu4e~proc in
 ;; response to output from the server process
-
 
 (defun mu4e~headers-view-handler (msg)
   "Handler function for displaying a message."
@@ -370,13 +369,13 @@ after the end of the search results."
       (define-key map "S" 'mu4e-headers-search-edit)
 
       (define-key map "/" 'mu4e-headers-search-narrow)
-            
+
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
       (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
       (define-key map (kbd "\\")        'mu4e-headers-query-prev)
       (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
-      
+
       (define-key map "b" 'mu4e-headers-search-bookmark)
       (define-key map "B" 'mu4e-headers-search-bookmark-edit)
 
@@ -543,7 +542,7 @@ after the end of the search results."
 	      (lambda (&optional e)
 		;; getting the field, inspired by `tabulated-list-col-sort'
 		(interactive "e")
-		(let* ((obj (posn-object (event-start e))) 
+		(let* ((obj (posn-object (event-start e)))
 			(field
 			  (and obj (get-text-property 0 'field (car obj)))))
 		  (if (eq field mu4e-headers-sortfield)
@@ -564,7 +563,7 @@ after the end of the search results."
 	      'field field) " ")))
       mu4e-headers-fields)))
 
- 
+
 (define-derived-mode mu4e-headers-mode special-mode
     "mu4e:headers"
   "Major mode for displaying mu4e search results.
@@ -576,8 +575,8 @@ after the end of the search results."
   (make-local-variable 'global-mode-string)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
   (set (make-local-variable 'glyphless-char-display)
-    mu4e~glyphless-char-display) 
- 
+    mu4e~glyphless-char-display)
+
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
@@ -586,7 +585,7 @@ after the end of the search results."
 
   (mu4e~mark-initialize) ;; initialize the marking subsystem
   (hl-line-mode 1))
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; higlighting
 (defvar mu4e~highlighted-docid nil
@@ -721,7 +720,7 @@ non-nill, don't raise an error when the docid is not found."
       (unless ignore-missing
 	(mu4e-error "Cannot find message with docid %S" docid)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If IGNORE-HISTORY is true, do *not* update
@@ -741,7 +740,8 @@ the query history stack."
 	mu4e~headers-buffer buf
 	mode-name "mu4e-headers"
 	mu4e~headers-last-query expr
-	global-mode-string (propertize mu4e~headers-last-query 'face 'mu4e-title-face)))
+	global-mode-string (propertize mu4e~headers-last-query
+			     'face 'mu4e-title-face)))
     (switch-to-buffer buf)
     (mu4e~proc-find
       (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
@@ -1075,7 +1075,7 @@ current window. "
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
-    (mu4e~proc-view docid mu4e-view-show-images))) 
+    (mu4e~proc-view docid mu4e-view-show-images)))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."

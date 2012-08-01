@@ -308,8 +308,7 @@ gboolean mu_store_is_read_only (MuStore *store);
  * @return MU_OK if all went well, MU_STOP if the foreach was interrupted,
  * MU_ERROR in case of error
  */
-typedef MuError (*MuStoreForeachFunc) (const char* path,
-					      void *user_data);
+typedef MuError (*MuStoreForeachFunc) (const char* path, gpointer user_data);
 MuError  mu_store_foreach (MuStore *self, MuStoreForeachFunc func,
 			   void *user_data, GError **err);
 
@@ -397,7 +396,8 @@ gboolean mu_store_database_is_locked (const gchar *xpath);
  * @return a MuMsg instance (use mu_msg_unref when done with it), or
  * NULL in case of error
  */
-MuMsg* mu_store_get_msg (MuStore *self, unsigned docid, GError **err);
+MuMsg* mu_store_get_msg (MuStore *self, unsigned docid, GError **err)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 

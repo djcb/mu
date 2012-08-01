@@ -78,7 +78,6 @@ public:
 	_MuStore (const char *path) {
 
 		init (path, NULL, false, false);
-
 		_db = new Xapian::Database (path);
 		if (mu_store_needs_upgrade(this))
 			throw MuStoreError (MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
