@@ -362,6 +362,20 @@ handle_encrypted_part (MuMsg *msg,
 	return TRUE;
 }
 
+static gboolean
+looks_like_body (GMimeObject *parent, MuMsgPart *msgpart)
+{
+	if (parent &&
+	    !GMIME_IS_MESSAGE_PART(parent) &&
+	    !GMIME_IS_MULTIPART(parent))
+		return FALSE; /* probably not a body */
+
+	if (g_strcmp0 (msgpart->type, "text") != 0)
+		return FALSE; /* probably not a body */
+
+	return TRUE; /* maybe a body part */
+}
+
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
@@ -385,9 +399,7 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	msgpart.part_type |= get_disposition ((GMimeObject*)part);
 
 	/* a top-level non-attachment text part is probably a body */
-	if ((!parent || GMIME_IS_MESSAGE(parent)) &&
-	    ((msgpart.part_type & MU_MSG_PART_TYPE_ATTACHMENT) == 0) &&
-	    g_strcmp0 (msgpart.type, "text") == 0)
+	if (looks_like_body (parent, &msgpart))
 		msgpart.part_type |= MU_MSG_PART_TYPE_BODY;
 
 	msgpart.data        = (gpointer)part;
