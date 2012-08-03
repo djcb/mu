@@ -20,6 +20,11 @@
 #ifndef __MUG_SHORTCUTS_H__
 #define __MUG_SHORTCUTS_H__
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /*HAVE_CONFIG_H*/
+
+
 #include <gtk/gtk.h>
 /* other include files */
 
@@ -36,15 +41,23 @@ typedef struct _MugShortcutsClass MugShortcutsClass;
 typedef struct _MugShortcutsPrivate MugShortcutsPrivate;
 
 struct _MugShortcuts {
+#ifdef HAVE_GTK3
+	GtkBox parent;
+#else
 	GtkVBox parent;
-	/* insert public members, if any */
+#endif /*!HAVE_GTK3*/
 
 	/* private */
 	MugShortcutsPrivate *_priv;
 };
 
 struct _MugShortcutsClass {
+#ifdef HAVE_GTK3
+	GtkBoxClass parent_class;
+#else
 	GtkVBoxClass parent_class;
+#endif /*!HAVE_GTK3*/
+
 	void (*clicked) (MugShortcuts * obj, const char *query);
 };
 

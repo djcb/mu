@@ -18,12 +18,7 @@ include $(top_srcdir)/gtest.mk
 
 SUBDIRS=
 
-# build if there is some gtk available
-if HAVE_GTK
-SUBDIRS += mug
-endif
-
 # for mug2 and msg2pdf, we need webkit
-if BUILD_WIDGETS
-SUBDIRS += mug2 msg2pdf
+if BUILD_GUI
+SUBDIRS += mug msg2pdf
 endif

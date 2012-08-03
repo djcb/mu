@@ -16,7 +16,6 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-#include <config.h>
 
 #include "mug-shortcuts.h"
 #include "mu-bookmarks.h"
@@ -46,11 +45,17 @@ struct _MugShortcutsPrivate {
                                            MUG_TYPE_SHORTCUTS, \
                                            MugShortcutsPrivate))
 /* globals */
-static GtkVBoxClass *parent_class = NULL;
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
+
+#ifdef HAVE_GTK3
+static GtkBoxClass *parent_class = NULL;
+G_DEFINE_TYPE (MugShortcuts, mug_shortcuts, GTK_TYPE_BOX);
+#else
+static GtkVBoxClass *parent_class = NULL;
 G_DEFINE_TYPE (MugShortcuts, mug_shortcuts, GTK_TYPE_VBOX);
+#endif /*!HAVE_GTK3*/
 
 static void
 mug_shortcuts_class_init (MugShortcutsClass * klass)
@@ -87,8 +92,7 @@ mug_shortcuts_init (MugShortcuts * obj)
 	obj->_priv->_bbox = gtk_button_box_new (GTK_ORIENTATION_VERTICAL);
 #else
 	obj->_priv->_bbox = gtk_vbutton_box_new ();
-
-#endif /*!HAVE_GTK3 */
+#endif /*!HAVE_GTK3*/
 
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (obj->_priv->_bbox),
 				   GTK_BUTTONBOX_START);

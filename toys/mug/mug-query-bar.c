@@ -1,22 +1,6 @@
-/*
-** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
-**
-** This program is free software; you can redistribute it and/or modify it
-** under the terms of the GNU General Public License as published by the
-** Free Software Foundation; either version 3, or (at your option) any
-** later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software Foundation,
-** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-**
-*/
+/* mug-query-bar.c */
 
+/* insert (c)/licensing information) */
 
 #include "mug-query-bar.h"
 /* include other impl specific header files */
@@ -42,30 +26,16 @@ struct _MugQueryBarPrivate {
 /* globals */
 static GtkContainerClass *parent_class = NULL;
 
+
 static guint signals[LAST_SIGNAL] = { 0 };
 
-GType
-mug_query_bar_get_type (void)
-{
-	static GType my_type = 0;
-	if (!my_type) {
-		static const GTypeInfo my_info = {
-			sizeof (MugQueryBarClass),
-			NULL,	/* base init */
-			NULL,	/* base finalize */
-			(GClassInitFunc) mug_query_bar_class_init,
-			NULL,	/* class finalize */
-			NULL,	/* class data */
-			sizeof (MugQueryBar),
-			0,	/* n_preallocs, ignored since 2.10 */
-			(GInstanceInitFunc) mug_query_bar_init,
-			NULL
-		};
-		my_type = g_type_register_static (GTK_TYPE_HBOX,
-						  "MugQueryBar", &my_info, 0);
-	}
-	return my_type;
-}
+
+#ifdef HAVE_GTK3
+G_DEFINE_TYPE (MugQueryBar, mug_query_bar, GTK_TYPE_BOX);
+#else
+G_DEFINE_TYPE (MugQueryBar, mug_query_bar, GTK_TYPE_HBOX);
+#endif /*!HAVE_GTK3*/
+
 
 static void
 mug_query_bar_class_init (MugQueryBarClass * klass)

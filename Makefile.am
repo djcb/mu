@@ -16,13 +16,6 @@
 
 include $(top_srcdir)/gtest.mk
 
-# only build widgets if we have webkit
-if BUILD_WIDGETS
-widgets=widgets
-else
-widgets=
-endif
-
 if BUILD_GUILE
 guile=guile
 else
@@ -35,7 +28,7 @@ else
 mu4e=
 endif
 
-SUBDIRS=m4 man lib $(widgets) $(guile) mu $(mu4e) contrib toys
+SUBDIRS=m4 man lib $(guile) mu $(mu4e) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 

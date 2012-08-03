@@ -248,8 +248,8 @@ AS_IF([test "x$buildgui"="xyes"],[
 ])
 AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
 
-# should we build the widgets/ dir?
-AM_CONDITIONAL(BUILD_WIDGETS, [test "x$build_webkit" = "xyes" -a "x$have_gio" = "xyes"])
+# should we build the gui toys?
+AM_CONDITIONAL(BUILD_GUI, [test "x$build_webkit" = "xyes" -a "x$have_gio" = "xyes"])
 ###############################################################################
 
 
@@ -309,14 +309,12 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 ###############################################################################
 
 
-
 AC_CONFIG_FILES([
 Makefile
 mu/Makefile
 mu/tests/Makefile
 lib/Makefile
 lib/tests/Makefile
-widgets/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el
 mu4e/version.texi
@@ -326,7 +324,6 @@ guile/examples/Makefile
 guile/tests/Makefile
 toys/Makefile
 toys/mug/Makefile
-toys/mug2/Makefile
 toys/msg2pdf/Makefile
 man/Makefile
 m4/Makefile
@@ -374,8 +371,7 @@ echo
 echo "Build mu4e emacs frontend            : $build_mu4e"
 echo "Build crypto support (gmime >= 2.6)  : $have_gmime_26"
 echo "Build unit tests (glib >= 2.22)      : $have_gtest"
-echo "Build 'mug' toy-ui (gtk+)            : $buildgui"
-echo "Build 'mug2' toy-ui (gtk+, webkit)   : $build_webkit"
+echo "Build 'mug' toy-ui (gtk+/webkit)     : $buildgui"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
 

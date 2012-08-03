@@ -23,6 +23,9 @@
 #include <gtk/gtk.h>
 /* other include files */
 
+
+
+
 G_BEGIN_DECLS
 /* convenience macros */
 #define MUG_TYPE_MSG_VIEW             (mug_msg_view_get_type())
@@ -35,27 +38,32 @@ typedef struct _MugMsgView MugMsgView;
 typedef struct _MugMsgViewClass MugMsgViewClass;
 
 struct _MugMsgView {
+#ifdef HAVE_GTK3
+	GtkBox parent;
+#else
 	GtkVBox parent;
-	/* insert public members, if any */
+#endif /*!HAVE_GTK3*/
 };
 
 struct _MugMsgViewClass {
+#ifdef HAVE_GTK3
+	GtkBoxClass parent_class;
+#else
 	GtkVBoxClass parent_class;
+#endif /*!HAVE_GTK3*/
+
 	/* insert signal callback declarations, e.g. */
 	/* void (* my_event) (MugMsg* obj); */
 };
 
 /* member functions */
-GType
-mug_msg_view_get_type (void)
-    G_GNUC_CONST;
+GType mug_msg_view_get_type (void) G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget *
-mug_msg_view_new (void);
-gboolean
-mug_msg_view_set_msg (MugMsgView * self, const char *msgpath);
+GtkWidget* mug_msg_view_new (void);
+gboolean mug_msg_view_set_msg (MugMsgView * self, const char *msgpath);
+void mug_msg_view_set_note (MugMsgView * self, const char* html);
 
 G_END_DECLS
 #endif				/* __MUG_MSG_VIEW_H__ */
