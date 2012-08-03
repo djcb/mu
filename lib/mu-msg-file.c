@@ -26,16 +26,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-/* hopefully, the should get us a sane PATH_MAX */
-#include <limits.h>
-/* not all systems provide PATH_MAX in limits.h */
-#ifndef PATH_MAX
-#include <sys/param.h>
-#ifndef PATH_MAX
-#define PATH_MAX MAXPATHLEN
-#endif 	/*!PATH_MAX */
-#endif 	/*PATH_MAX */
-
 #include <gmime/gmime.h>
 #include "mu-util.h"
 #include "mu-str.h"
