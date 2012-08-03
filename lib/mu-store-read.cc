@@ -26,6 +26,9 @@
 #include <xapian.h>
 #include <cstring>
 #include <stdexcept>
+#include <limits.h>
+#include <stdlib.h>
+#include <errno.h>
 
 #include "mu-store.h"
 #include "mu-store-priv.hh" /* _MuStore */
@@ -46,20 +49,30 @@ _MuStore::get_uid_term (const char* path)
 {
 	// combination of DJB, BKDR hash functions to get a 64 bit
 	// value
-
 	unsigned djbhash, bkdrhash, bkdrseed;
 	unsigned u;
+
+	char real_path[PATH_MAX + 1];
 	static char hex[18];
 	static const char uid_prefix =
 		mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID);
+
+	/* check profile to see if realpath is expensive; we need
+	 * realpath here (and in mu-msg-file) to ensure that the same
+	 * messages are only considered ones (ignore e.g. symlinks and
+	 * '//' in paths) */
+	if (!realpath (path, real_path)) {
+		g_warning ("realpath() failed: %s", strerror (errno));
+		strcpy (real_path, path); /* ignore errors */
+	}
 
 	djbhash  = 5381;
 	bkdrhash = 0;
 	bkdrseed = 1313;
 
-	for(u = 0; path[u]; ++u) {
-		djbhash  = ((djbhash << 5) + djbhash) + path[u];
-		bkdrhash = bkdrhash * bkdrseed + path[u];
+	for(u = 0; real_path[u]; ++u) {
+		djbhash  = ((djbhash << 5) + djbhash) + real_path[u];
+		bkdrhash = bkdrhash * bkdrseed + real_path[u];
 	}
 
 	snprintf (hex, sizeof(hex), "%c%08x%08x",
