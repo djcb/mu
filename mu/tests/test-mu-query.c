@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -36,6 +36,9 @@
 #include "mu-str.h"
 #include "mu-store.h"
 
+static char* DB_PATH1 = NULL;
+static char* DB_PATH2 = NULL;
+
 static gchar*
 fill_database (const char *testdir)
 {
@@ -59,6 +62,8 @@ fill_database (const char *testdir)
 
 	return xpath;
 }
+
+
 
 static void
 assert_no_dups (MuMsgIter *iter)
@@ -158,9 +163,7 @@ typedef struct  {
 static void
 test_mu_query_01 (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "basic",              3 },
 		{ "question",           5 },
@@ -176,38 +179,24 @@ test_mu_query_01 (void)
 		{ "",                   18 }
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-
-	g_free (xpath);
 }
 
 static void
 test_mu_query_02 (void)
 {
 	const char* q;
-	gchar *xpath;
-
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath);
-
 	q = "i:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com";
-
-	g_assert_cmpuint (run_and_count_matches(xpath, q), ==, 1);
-	g_free (xpath);
+	g_assert_cmpuint (run_and_count_matches (DB_PATH1, q), ==, 1);
 }
 
 
 static void
 test_mu_query_03 (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "ploughed", 1},
 		{ "i:3BE9E6535E3029448670913581E7A1A20D852173@"
@@ -230,20 +219,15 @@ test_mu_query_03 (void)
 		{ "flag:flagged", 1}
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-	g_free (xpath);
 }
 
 
 static void
 test_mu_query_04 (void)
 {
-	gchar *xpath;
 	int i;
 
 	QResults queries[] = {
@@ -262,22 +246,16 @@ test_mu_query_04 (void)
 		{ "not prio:l", 11},
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-	g_free (xpath);
 }
 
 
 static void
 test_mu_query_logic (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "subject:gcc" , 1},
 		{ "subject:lisp" , 1},
@@ -289,13 +267,9 @@ test_mu_query_logic (void)
 		{ "(subject:gcc OR subject:scheme) AND subject:elisp" , 1}
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-	g_free (xpath);
 }
 
 
@@ -308,14 +282,10 @@ test_mu_query_accented_chars_01 (void)
 	MuMsgIter *iter;
 	MuMsg *msg;
 	MuStore *store;
-	gchar *xpath;
 	GError *err;
 	gchar *summ;
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
-	store = mu_store_new_read_only (xpath, NULL);
+	store = mu_store_new_read_only (DB_PATH1, NULL);
 	g_assert (store);
 
 	query = mu_query_new (store, NULL);
@@ -341,13 +311,11 @@ test_mu_query_accented_chars_01 (void)
 
 	mu_msg_iter_destroy (iter);
 	mu_query_destroy (query);
-	g_free (xpath);
 }
 
 static void
 test_mu_query_accented_chars_02 (void)
 {
-	gchar *xpath;
 	int i;
 
 	QResults queries[] = {
@@ -360,21 +328,15 @@ test_mu_query_accented_chars_02 (void)
 		{ "Queensrÿche", 1},
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-	g_free (xpath);
-
 }
 
 
 static void
 test_mu_query_wildcards (void)
 {
-	gchar *xpath;
 	int i;
 
 	QResults queries[] = {
@@ -385,15 +347,10 @@ test_mu_query_wildcards (void)
 		{ "Queen*", 1},
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-	g_free (xpath);
 }
-
 
 
 static void
@@ -488,23 +445,16 @@ test_mu_query_dates_la (void)
 static void
 test_mu_query_sizes (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "size:0b..2m", 18},
 		{ "size:2k..4k", 4},
 		{ "size:2m..0b", 18}
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-
-	g_free (xpath);
 
 }
 
@@ -512,38 +462,26 @@ test_mu_query_sizes (void)
 static void
 test_mu_query_attach (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "j:sittingbull.jpg", 1},
 		{ "file:custer", 0},
 		{ "file:custer.jpg", 1}
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR2);
-	g_assert (xpath != NULL);
-
-	if (g_test_verbose())
-		g_print ("(%s)\n", xpath);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		if (g_test_verbose())
 			g_print ("query: %s\n", queries[i].query);
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2, queries[i].query),
 				  ==, queries[i].count);
 	}
-
-	g_free (xpath);
 }
 
 
 static void
 test_mu_query_tags (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "x:paradise", 1},
 		{ "tag:lost", 1},
@@ -553,50 +491,31 @@ test_mu_query_tags (void)
 		{ "x:paradise,lost", 0},
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR2);
-	g_assert (xpath != NULL);
-
-	/* g_print ("(%s)\n", xpath); */
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2, queries[i].query),
 				  ==, queries[i].count);
-
-	g_free (xpath);
 }
 
 
 static void
 test_mu_query_signed_encrypted (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "flag:encrypted", 2},
 		{ "flag:signed", 2},
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
-	if (g_test_verbose ())
-		g_print ("%s (%s)\n", __FUNCTION__, xpath);
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
 				  ==, queries[i].count);
-
-	g_free (xpath);
 }
 
 
 static void
 test_mu_query_tags_02 (void)
 {
-	gchar *xpath;
 	int i;
-
 	QResults queries[] = {
 		{ "x:paradise", 1},
 		{ "tag:@NextActions", 1},
@@ -604,18 +523,10 @@ test_mu_query_tags_02 (void)
 		{ "tag:lost OR tag:operation*", 2},
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR2);
-	g_assert (xpath != NULL);
-
-	/* g_print ("(%s)\n", xpath); */
-
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
-		/* g_print ("%s\n", queries[i].query); */
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2, queries[i].query),
 				  ==, queries[i].count);
 	}
-
-	g_free (xpath);
 }
 
 
@@ -631,7 +542,6 @@ test_mu_query_preprocess (void)
 		/* add more */
 	};
 
-
  	for (u = 0; u != G_N_ELEMENTS(testcases); ++u) {
 		gchar *prep;
 		prep = mu_query_preprocess (testcases[u].expr, NULL);
@@ -642,12 +552,20 @@ test_mu_query_preprocess (void)
 
 
 
+
+
 int
 main (int argc, char *argv[])
 {
 	int rv;
 
 	g_test_init (&argc, &argv, NULL);
+
+	DB_PATH1 = fill_database (MU_TESTMAILDIR);
+	g_assert (DB_PATH1);
+
+	DB_PATH2 = fill_database (MU_TESTMAILDIR2);
+	g_assert (DB_PATH2);
 
 	g_test_add_func ("/mu-query/test-mu-query-preprocess",
 			 test_mu_query_preprocess);
@@ -691,6 +609,9 @@ main (int argc, char *argv[])
 			       (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
+
+	g_free (DB_PATH1);
+	g_free (DB_PATH2);
 
 	return rv;
 }
