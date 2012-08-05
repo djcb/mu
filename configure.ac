@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.9-dev2],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.9-dev3],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -152,7 +152,8 @@ AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
    [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
 AS_CASE([$xapian_version],
 	[1.[[2-9]].[[0-9]]*], [],
-	[AC_MSG_ERROR([*** xapian version >= 1.2 needed, but version $xapian_version found.])])
+	[AC_MSG_ERROR([*** xapian version >= 1.2 needed,
+	but version $xapian_version found.])])
 
 XAPIAN_CXXFLAGS="`$XAPIAN_CONFIG --cxxflags`"
 XAPIAN_LIBS="`$XAPIAN_CONFIG --libs`"
