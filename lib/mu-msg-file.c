@@ -920,6 +920,7 @@ mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
 
 	fdata.user_func = func;
 	fdata.user_data = user_data;
+	fdata.decrypt   = decrypt;
 
 	g_mime_message_foreach
 		(msg,
