@@ -390,6 +390,8 @@ maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	char *txt, *norm;
 	Xapian::TermGenerator termgen;
 
+	/* we handle the body text elsewhere; this is about other text
+	 * parts */
 	if (part->part_type & MU_MSG_PART_TYPE_BODY)
 		return;
 
@@ -458,7 +460,7 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 			 MuMsgFieldId mfid, GStringChunk *strchunk)
 {
 	PartData pdata (doc, mfid, strchunk);
-	mu_msg_part_foreach (msg, MU_MSG_OPTION_NONE,
+	mu_msg_part_foreach (msg, MU_MSG_OPTION_RECURSE_RFC822,
 			     (MuMsgPartForeachFunc)each_part, &pdata);
 }
 
@@ -688,7 +690,7 @@ mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
 
 		doc.add_term (term);
 
-		MU_WRITE_LOG ("adding: %s", term.c_str());
+		// MU_WRITE_LOG ("adding: %s", term.c_str());
 
 		/* note, this will replace any other messages for this path */
 		id = store->db_writable()->replace_document (term, doc);

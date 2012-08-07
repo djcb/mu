@@ -521,6 +521,8 @@ mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 	buffer = NULL;
 	stream = NULL;
 
+	g_return_val_if_fail (err, NULL);
+
 	*err = TRUE; /* guilty until proven innocent */
 	g_return_val_if_fail (GMIME_IS_PART(part), NULL);
 

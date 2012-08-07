@@ -35,8 +35,8 @@
 #endif /*BUILD_CRYPTO*/
 
 static gboolean handle_children (MuMsg *msg, GMimeObject *mobj, MuMsgOptions opts,
-				 unsigned index, MuMsgPartForeachFunc func, gpointer user_data);
-
+				 unsigned index, MuMsgPartForeachFunc func,
+				 gpointer user_data);
 
 struct _DoData {
 	GMimeObject *mime_obj;
@@ -137,7 +137,7 @@ accumulate_text (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 		if (!g_mime_content_type_is_type (ctype, "text", "plain"))
 			return; /* not plain text */
 		txt = mu_msg_mime_part_to_string
-			((GMimePart*)part, &err);
+			((GMimePart*)part->data, &err);
 		if (txt)
 			g_string_append (*gstrp, txt);
 		g_free (txt);
@@ -153,6 +153,8 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts,
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (self && self->data, NULL);
+	g_return_val_if_fail (err, NULL);
+
 	mobj = (GMimeObject*)self->data;
 
 	if (GMIME_IS_PART (mobj) &&
@@ -363,8 +365,13 @@ handle_encrypted_part (MuMsg *msg,
 }
 
 static gboolean
-looks_like_body (GMimeObject *parent, MuMsgPart *msgpart)
+looks_like_body (MuMsg *msg, GMimeObject *parent, MuMsgPart *msgpart)
 {
+	/* if we've already seen a body for this one, don't consider
+	 * more */
+	if (msg->_file->_body_seen)
+		return FALSE;
+
 	if (parent &&
 	    !GMIME_IS_MESSAGE_PART(parent) &&
 	    !GMIME_IS_MULTIPART(parent))
@@ -399,8 +406,11 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	msgpart.part_type |= get_disposition ((GMimeObject*)part);
 
 	/* a top-level non-attachment text part is probably a body */
-	if (looks_like_body (parent, &msgpart))
+	if (looks_like_body (msg, parent, &msgpart)) {
 		msgpart.part_type |= MU_MSG_PART_TYPE_BODY;
+		/* remember that we (probably) saw the body */
+		msg->_file->_body_seen = TRUE;
+	}
 
 	msgpart.data        = (gpointer)part;
 	msgpart.index       = index;
@@ -434,12 +444,11 @@ handle_message_part (MuMsg *msg, GMimeMessagePart *mmsg, GMimeObject *parent,
 	func (msg, &msgpart, user_data);
 
 	if (opts & MU_MSG_OPTION_RECURSE_RFC822) {
-		GMimeMessage *mime_msg;
-		mime_msg = g_mime_message_part_get_message (mmsg);
+		GMimeObject *mobj;
+		mobj = g_mime_message_get_mime_part
+			(g_mime_message_part_get_message (mmsg));
 		return handle_children
-			(msg,
-			 (GMimeObject*)mime_msg,
-			 opts, index, func, user_data);
+			(msg, mobj, opts, index, func, user_data);
 	}
 	return TRUE;
 }

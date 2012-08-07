@@ -44,6 +44,10 @@ struct _MuMsgFile {
 	char		 _path    [PATH_MAX + 1];
 	char		 _maildir [PATH_MAX + 1];
 
+	/* when we iterate over the parts, remember whether
+	 * the body has been seen already */
+	gboolean         _body_seen;
+
 	/* list where we push allocated strings so we can
 	 * free them when the struct gets destroyed
 	 */
@@ -69,7 +73,7 @@ struct _MuMsg {
  * convert a GMimePart to a string
  *
  * @param part a GMimePart
- * @param err will receive TRUE if there was an error, FALSE otherwise
+ * @param err will receive TRUE if there was an error, FALSE otherwise. Must NOT be NULL.
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
