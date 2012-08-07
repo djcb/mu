@@ -1779,12 +1779,11 @@ such as auto-completion when jumping to a maildir.
 @node Citations with mu-cite
 @section Citations with @t{mu-cite}
 
-Note, apart from its name @t{mu-cite} is a project totally unconnected to
-@t{mu}/@t{mu4e}.
-
-@t{mu-cite} is a package to control the way message citations look like (i.e.,
-the message you responded to when you reply to them or forward them), with its
-latest version available at @url{http://www.jpl.org/elips/mu/}.
+@t{mu-cite}@footnote{Note, despite its name, @t{mu-cite} is a project
+unconnected to @t{mu}/@t{mu4e}} is a package to control the way message
+citations look like (i.e., the message you responded to when you reply to them
+or forward them), with its latest version available at
+@url{http://www.jpl.org/elips/mu/}.
 
 After installation of the @t{mu-cite}, you can use something like the
 following to make it work with @t{mu4e}:
@@ -1793,7 +1792,7 @@ following to make it work with @t{mu4e}:
 (require 'mu-cite)
 (setq message-cite-function 'mu-cite-original)
 (setq mu-cite-top-format
-    '("On " date ", " full-name " wrote:\n\n"))
+    '("On " date ", " from " wrote:\n\n"))
 (setq mu-cite-prefix-format '(" > ")))
 @end lisp
 
