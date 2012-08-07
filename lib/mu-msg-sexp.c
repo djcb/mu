@@ -415,14 +415,14 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (!((opts & MU_MSG_OPTION_HEADERS_ONLY) &&
-				(opts & MU_MSG_OPTION_EXTRACT_IMAGES)),
-			      NULL);
+				(opts & MU_MSG_OPTION_EXTRACT_IMAGES)),NULL);
 	gstr = g_string_sized_new
 		((opts & MU_MSG_OPTION_HEADERS_ONLY) ?  1024 : 8192);
-	g_string_append (gstr, "(\n");
 
-	if (docid != 0)
-		g_string_append_printf (gstr, "\t:docid %u\n", docid);
+	if (docid == 0)
+		g_string_append (gstr, "(\n");
+	else
+		g_string_append_printf (gstr, "(\n\t:docid %u\n", docid);
 
 	if (ti)
 		append_sexp_thread_info (gstr, ti);
@@ -436,14 +436,12 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 
 	t = mu_msg_get_date (msg);
 	/* weird time format for emacs 29-bit ints...*/
-	g_string_append_printf (gstr,"\t:date (%u %u 0)\n", (unsigned)(t >> 16),
-				(unsigned)(t & 0xffff));
-	g_string_append_printf (gstr, "\t:size %u\n",
+	g_string_append_printf (gstr,"\t:date (%u %u 0)\n\t:size %u\n",
+				(unsigned)(t >> 16), (unsigned)(t & 0xffff),
 				(unsigned)mu_msg_get_size (msg));
 	append_sexp_attr (gstr, "message-id", mu_msg_get_msgid (msg));
 	append_sexp_attr (gstr, "path",	 mu_msg_get_path (msg));
 	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
-
 	g_string_append_printf (gstr, "\t:priority %s\n",
 				mu_msg_prio_name(mu_msg_get_prio(msg)));
 	append_sexp_flags (gstr, msg);

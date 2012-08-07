@@ -106,44 +106,54 @@ get_matching_part_index (MuMsg *msg, MuMsgOptions opts,
 
 
 static void
-accumulate_text (MuMsg *msg, MuMsgPart *part, GString **gstrp)
+accumulate_text_message (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 {
-	if (GMIME_IS_MESSAGE(part->data)) {
-		const gchar *str;
-		char *adrs;
-		GMimeMessage *mimemsg;
-		InternetAddressList *addresses;
-		/* put sender, recipients and subject in the string, so they
-		 * can be indexed as well */
-		mimemsg = GMIME_MESSAGE (part->data);
-		str = g_mime_message_get_sender (mimemsg);
-		g_string_append_printf
-			(*gstrp, "%s%s", str ? str : "", str ? "\n" : "");
-		str = g_mime_message_get_subject (mimemsg);
-		g_string_append_printf
-			(*gstrp, "%s%s", str ? str : "", str ? "\n" : "");
+	const gchar *str;
+	char *adrs;
+	GMimeMessage *mimemsg;
+	InternetAddressList *addresses;
+
+	/* put sender, recipients and subject in the string, so they
+	 * can be indexed as well */
+	mimemsg = GMIME_MESSAGE (part->data);
+	str = g_mime_message_get_sender (mimemsg);
+	g_string_append_printf
+		(*gstrp, "%s%s", str ? str : "", str ? "\n" : "");
+	str = g_mime_message_get_subject (mimemsg);
+	g_string_append_printf
+		(*gstrp, "%s%s", str ? str : "", str ? "\n" : "");
 		addresses = g_mime_message_get_all_recipients (mimemsg);
 		adrs = internet_address_list_to_string (addresses, FALSE);
 		g_object_unref (addresses);
 		g_string_append_printf
 			(*gstrp, "%s%s", adrs ? adrs : "", adrs ? "\n" : "");
 		g_free (adrs);
-
-	} else if (GMIME_IS_PART (part->data)) {
-		GMimeContentType *ctype;
-		gboolean err;
-		char *txt;
-		ctype = g_mime_object_get_content_type ((GMimeObject*)part->data);
-		if (!g_mime_content_type_is_type (ctype, "text", "plain"))
-			return; /* not plain text */
-		txt = mu_msg_mime_part_to_string
-			((GMimePart*)part->data, &err);
-		if (txt)
-			g_string_append (*gstrp, txt);
-		g_free (txt);
-	}
 }
 
+static void
+accumulate_text_part (MuMsg *msg, MuMsgPart *part, GString **gstrp)
+{
+	GMimeContentType *ctype;
+	gboolean err;
+	char *txt;
+	ctype = g_mime_object_get_content_type ((GMimeObject*)part->data);
+	if (!g_mime_content_type_is_type (ctype, "text", "plain"))
+		return; /* not plain text */
+	txt = mu_msg_mime_part_to_string
+		((GMimePart*)part->data, &err);
+	if (txt)
+		g_string_append (*gstrp, txt);
+	g_free (txt);
+}
+
+static void
+accumulate_text (MuMsg *msg, MuMsgPart *part, GString **gstrp)
+{
+	if (GMIME_IS_MESSAGE(part->data))
+		accumulate_text_message (msg, part, gstrp);
+	else if (GMIME_IS_PART (part->data))
+		accumulate_text_part (msg, part, gstrp);
+}
 
 char*
 mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts,
@@ -273,11 +283,25 @@ get_part_size (GMimePart *part)
 /* 	return TRUE; */
 /* } */
 
+
+
+static void
+cleanup_filename (char *fname)
+{
+	gchar *cur;
+
+	/* remove slashes, spaces, colons... */
+	for (cur = fname; *cur; ++cur)
+		if (*cur == '/' || *cur == ' ' || *cur == ':')
+			*cur = '-';
+}
+
+
 static char*
 mime_part_get_filename (GMimeObject *mobj, unsigned index,
 			gboolean construct_if_needed)
 {
-	gchar *fname, *cur;
+	gchar *fname;
 
 	fname = NULL;
 
@@ -304,9 +328,7 @@ mime_part_get_filename (GMimeObject *mobj, unsigned index,
 		fname =	g_strdup_printf ("%u.part", index);
 
 	/* remove slashes, spaces, colons... */
-	for (cur = fname; *cur; ++cur)
-		if (*cur == '/' || *cur == ' ' || *cur == ':')
-			*cur = '-';
+	cleanup_filename (fname);
 	return fname;
 }
 
