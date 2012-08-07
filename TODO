@@ -52,7 +52,6 @@
      mu4e-view-message-with-msgid)
   - improve mouse interaction (i.e., cursor vs point)
   - add example 'run shellscript on message'
-  - don't show GPG/PKCS7 sigs as attachments
 
 * Done (0.9.9)
 
@@ -77,8 +76,11 @@
     - check gmime 2.4 does not break
   - hook up mu4e with 'mu verify'
   - add 'help' command
-
-
+  - refactor mu-msg-part
+  - move widgets/ into toys/mug2, remove toys/mug/, rename toys/mug2 -> toys/mug
+  - add guile mu:count
+  - don't show GPG/PKCS7 sigs as attachments
+  - fix address completion (quote names)
 
 * Done
   :PROPERTIES:
