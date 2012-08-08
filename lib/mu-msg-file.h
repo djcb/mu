@@ -53,11 +53,9 @@ void mu_msg_file_destroy (MuMsgFile *self);
  * @param self a MuMsgFile instance
  * @param header a header (e.g. 'X-Mailer' or 'List-Id')
  *
- * @return the value of the header or NULL if not found. Note, only
- * valid as long as this MuMsgFile is valid -- before
- * mu_msg_file_destroy
+ * @return the value of the header or NULL if not found; free with g_free
  */
-const char* mu_msg_file_get_header (MuMsgFile *self, const char *header);
+char* mu_msg_file_get_header (MuMsgFile *self, const char *header);
 
 
 /**
@@ -84,17 +82,10 @@ char* mu_msg_file_get_str_field (MuMsgFile *self,
  *
  * @param self a valid MuMsgFile
  * @param msfid the message field id to get (must be of type string-list)
- * @param do_free receives TRUE or FALSE, conveying if this string
- * should be owned & freed (TRUE) or not by caller. In case 'FALSE',
- * this function should be treated as if it were returning a const
- * GSList*, and note that in that case the string is only valid as long
- * as the MuMsgFile is alive, ie. before mu_msg_file_destroy
  *
- * @return a GSList*, or NULL
+ * @return a GSList*, or NULL; free with mu_str_free_list
  */
-GSList* mu_msg_file_get_str_list_field (MuMsgFile *self,
-					MuMsgFieldId msfid,
-					gboolean *do_free)
+GSList* mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId msfid)
 					G_GNUC_WARN_UNUSED_RESULT;
 
 

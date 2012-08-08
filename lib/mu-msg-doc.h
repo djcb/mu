@@ -29,14 +29,14 @@ struct _MuMsgDoc;
 typedef struct _MuMsgDoc MuMsgDoc;
 
 /**
- * create a new MuMsgDoc instance 
- * 
+ * create a new MuMsgDoc instance
+ *
  * @param doc a Xapian::Document* (you'll need to cast the
  * Xapian::Document* to XapianDocument*, because only C (not C++) is
  * allowed in this header file. MuMsgDoc takes _ownership_ of this pointer;
  * don't touch it afterwards
  * @param err receives error info, or NULL
- * 
+ *
  * @return a new MuMsgDoc instance (free with mu_msg_doc_destroy), or
  * NULL in case of error.
  */
@@ -47,7 +47,7 @@ MuMsgDoc* mu_msg_doc_new (XapianDocument *doc, GError **err)
  * destroy a MuMsgDoc instance -- free all the resources. Note, after
  * destroying, any strings returned from mu_msg_doc_get_str_field with
  * do_free==FALSE are no longer valid
- * 
+ *
  * @param self a MuMsgDoc instance
  */
 void mu_msg_doc_destroy (MuMsgDoc *self);
@@ -55,45 +55,36 @@ void mu_msg_doc_destroy (MuMsgDoc *self);
 
 /**
  * get a string parameter from the msgdoc
- * 
+ *
  * @param self a MuMsgDoc instance
  * @param mfid a MuMsgFieldId for a string field
- * @param do_free receives either TRUE or FALSE, where TRUE means that
- * the caller owns the string, and has to free it (g_free) when done
- * with it; FALSE means that the MuMsgDoc owns the string, and it is
- * only valid as long as the MuMsgDoc is valid (ie., before
- * mu_msg_doc_destroy).
- * 
- * @return a string for the given field (see do_free), or NULL in case of error
+ *
+ * @return a string for the given field (see do_free), or NULL in case of error.
+ * free with g_free
  */
-gchar* mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid,
-				 gboolean *do_free)
+gchar* mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
           G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string-list parameter from the msgdoc
- * 
+ *
  * @param self a MuMsgDoc instance
  * @param mfid a MuMsgFieldId for a string-list field
- * @param do_free receives either TRUE or FALSE, where TRUE means that
- * the caller owns the string, and has to free it (mu_str_free_list) when done
- * with it; FALSE means that the MuMsgDoc owns the list, and it is
- * only valid as long as the MuMsgDoc is valid (ie., before
- * mu_msg_doc_destroy).
- * 
- * @return a list for the given field (see do_free), or NULL in case of error
+ *
+ * @return a list for the given field (see do_free), or NULL in case
+ * of error. free with mu_str_free_list
  */
-GSList* mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid,
-				       gboolean *do_free) G_GNUC_WARN_UNUSED_RESULT;
+GSList* mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
+    G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
- * 
+ *
  * get a numeric parameter from the msgdoc
- * 
+ *
  * @param self a MuMsgDoc instance
  * @param mfid a MuMsgFieldId for a numeric field
- * 
+ *
  * @return the numerical value, or -1 in case of error. You'll need to
  * cast this value to the actual type (e.g. time_t for MU_MSG_FIELD_ID_DATE)
  */

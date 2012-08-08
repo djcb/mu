@@ -32,7 +32,6 @@
 #include <mu-msg.h>
 #include <mu-msg-file.h>
 #include <mu-msg-doc.h>
-#include <mu-msg-cache.h>
 #include "mu-msg-part.h"
 
 G_BEGIN_DECLS
@@ -43,15 +42,6 @@ struct _MuMsgFile {
 	size_t		 _size;
 	char		 _path    [PATH_MAX + 1];
 	char		 _maildir [PATH_MAX + 1];
-
-	/* when we iterate over the parts, remember whether
-	 * the body has been seen already */
-	gboolean         _body_seen;
-
-	/* list where we push allocated strings so we can
-	 * free them when the struct gets destroyed
-	 */
-	GSList          *_free_later;
 };
 
 
@@ -65,7 +55,12 @@ struct _MuMsg {
 	MuMsgFile	*_file; /* based on GMime, ie. a file on disc */
 	MuMsgDoc        *_doc;  /* based on Xapian::Document */
 
-	MuMsgCache      *_cache;
+	/* lists where we push allocated strings / GSLists of string
+	 * so we can free them when the struct gets destroyed (and we
+	 * can return them as 'const to callers)
+	 */
+	GSList          *_free_later_str;
+	GSList          *_free_later_lst;
 };
 
 

@@ -63,14 +63,11 @@ mu_msg_doc_destroy (MuMsgDoc *self)
 
 
 gchar*
-mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid,
-			  gboolean *do_free)
+mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
-
-	*do_free = TRUE;
 
 	try {
 		const std::string s (self->doc().get_value(mfid));
@@ -81,14 +78,11 @@ mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid,
 
 
 GSList*
-mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid,
-			       gboolean *do_free)
+mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
 	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
-
-	*do_free = TRUE;
 
 	try {
 		/* return a comma-separated string as a GSList */
@@ -122,5 +116,3 @@ mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);
 }
-
-

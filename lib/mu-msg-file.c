@@ -74,16 +74,7 @@ mu_msg_file_destroy (MuMsgFile *self)
 	if (self->_mime_msg)
 		g_object_unref (self->_mime_msg);
 
-	mu_str_free_list (self->_free_later);
-
 	g_slice_free (MuMsgFile, self);
-}
-
-static const gchar*
-free_string_later (MuMsgFile *self, gchar *str)
-{
-	self->_free_later = g_slist_prepend (self->_free_later, str);
-	return str;
 }
 
 
@@ -316,43 +307,7 @@ static size_t
 get_size (MuMsgFile *self)
 {
 	g_return_val_if_fail (self, 0);
-
 	return self->_size;
-}
-
-
-static char*
-to_lower (char *s)
-{
-	char *t = s;
-	while (t&&*t) {
-		t[0] = g_ascii_tolower(t[0]);
-		++t;
-	}
-	return s;
-}
-
-
-static char*
-get_prio_header_field (MuMsgFile *self)
-{
-	const char *str;
-	GMimeObject *obj;
-
-	obj = GMIME_OBJECT(self->_mime_msg);
-
-	str = g_mime_object_get_header (obj, "Precedence");
-	if (!str)
-		str = g_mime_object_get_header (obj, "X-Priority");
-	if (!str)
-		str = g_mime_object_get_header (obj, "Importance");
-	/* NOTE: "X-MSMail-Priority" is never seen without "X-Priority" */
-	/* if (!str) */
-	/* 	str = g_mime_object_get_header (obj, "X-MSMail-Priority"); */
-	if (str)
-		return (to_lower(g_strdup(str)));
-	else
-		return NULL;
 }
 
 
@@ -379,7 +334,7 @@ parse_prio_str (const char* priostr)
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(str_prio); ++i)
-		if (g_strstr_len (priostr, -1, str_prio[i]._str) != NULL)
+		if (g_ascii_strcasecmp (priostr, str_prio[i]._str) == 0)
 			return str_prio[i]._prio;
 
 	/* e.g., last-fm uses 'fm-user'... as precedence */
@@ -389,29 +344,25 @@ parse_prio_str (const char* priostr)
 static MuMsgPrio
 get_prio (MuMsgFile *self)
 {
-	MuMsgPrio prio;
-	char* priostr;
+	GMimeObject *obj;
+	const char* priostr;
 
 	g_return_val_if_fail (self, MU_MSG_PRIO_NONE);
 
-	priostr = get_prio_header_field (self);
+	obj = GMIME_OBJECT(self->_mime_msg);
+
+	priostr = g_mime_object_get_header (obj, "Precedence");
 	if (!priostr)
-		return MU_MSG_PRIO_NORMAL;
+		priostr = g_mime_object_get_header (obj, "X-Priority");
+	if (!priostr)
+		priostr = g_mime_object_get_header (obj, "Importance");
 
-	prio = parse_prio_str (priostr);
-	g_free (priostr);
-
-	return prio;
+	return priostr ? parse_prio_str (priostr) : MU_MSG_PRIO_NORMAL;
 }
 
 
-struct _GetBodyData {
-	GMimeObject *_txt_part, *_html_part;
-	gboolean _want_html;
-};
+struct _GetBodyData { GMimeObject *_txt_part, *_html_part;};
 typedef struct _GetBodyData GetBodyData;
-
-
 
 static void
 get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
@@ -419,8 +370,7 @@ get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 	GMimeContentType *ct;
 
 	/* already found what we're looking for? */
-	if ((data->_want_html && data->_html_part != NULL) ||
-	    (!data->_want_html && data->_txt_part != NULL))
+	if (data->_html_part && data->_txt_part)
 		return;
 
 	ct = g_mime_object_get_content_type (part);
@@ -433,12 +383,12 @@ get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
 		return; /* not the body */
 
 	/* is it right content type? */
-	if (g_mime_content_type_is_type (ct, "text", "plain"))
+	if (!data->_txt_part &&
+	    g_mime_content_type_is_type (ct, "text", "plain"))
 		data->_txt_part = part;
-	else if (g_mime_content_type_is_type (ct, "text", "html"))
+	else if (!data->_html_part &&
+		 g_mime_content_type_is_type (ct, "text", "html"))
 		data->_html_part = part;
-	else
-		return; /* wrong type */
 }
 
 
@@ -566,10 +516,7 @@ mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean decrypt,
 	g_return_val_if_fail (GMIME_IS_MESSAGE(msg), NULL);
 
 	memset (&data, 0, sizeof(GetBodyData));
-	data._want_html = want_html;
-
-	mu_mime_message_foreach (msg,
-				 decrypt,
+	mu_mime_message_foreach (msg, decrypt,
 				 (GMimeObjectForeachFunc)get_body_cb,
 				 &data);
 	if (want_html)
@@ -667,8 +614,6 @@ get_concatenated_text (MuMsgFile *self, gboolean decrypt)
 }
 
 
-
-
 static gboolean
 contains (GSList *lst, const char *str)
 {
@@ -683,12 +628,12 @@ static GSList*
 get_references  (MuMsgFile *self)
 {
 	GSList *msgids;
-	const char *str;
 	unsigned u;
 	const char *headers[] = { "References", "In-reply-to", NULL };
 
 	for (msgids = NULL, u = 0; headers[u]; ++u) {
 
+		char *str;
 		const GMimeReferences *cur;
 		GMimeReferences *mime_refs;
 
@@ -697,6 +642,8 @@ get_references  (MuMsgFile *self)
 			continue;
 
 		mime_refs = g_mime_references_decode (str);
+		g_free (str);
+
 		for (cur = mime_refs; cur; cur = g_mime_references_get_next(cur)) {
 			const char* msgid;
 			msgid = g_mime_references_get_message_id (cur);
@@ -716,13 +663,17 @@ get_references  (MuMsgFile *self)
 static GSList*
 get_tags (MuMsgFile *self)
 {
-	const char *hdr;
+	GSList *lst;
+	char *hdr;
 
 	hdr = mu_msg_file_get_header (self, "X-Label");
 	if (!hdr)
 		return NULL;
 
-	return mu_str_to_list (hdr, ',', TRUE);
+	lst = mu_str_to_list (hdr, ',', TRUE);
+	g_free (hdr);
+
+	return lst;
 }
 
 
@@ -761,7 +712,8 @@ recipient_type (MuMsgFieldId mfid)
 
 
 char*
-mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free)
+mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
+			   gboolean *do_free)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
@@ -806,22 +758,15 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid, gboolean *do_free
 
 
 GSList*
-mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId mfid,
-				gboolean *do_free)
+mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
 
 	switch (mfid) {
-
-	case MU_MSG_FIELD_ID_REFS:
-		*do_free = TRUE;
-		return get_references (self);
-	case MU_MSG_FIELD_ID_TAGS:
-		*do_free = TRUE;
-		return get_tags (self);
-	default:
-		g_return_val_if_reached (NULL);
+	case MU_MSG_FIELD_ID_REFS: return get_references (self);
+	case MU_MSG_FIELD_ID_TAGS: return get_tags (self);
+	default: g_return_val_if_reached (NULL);
 	}
 }
 
@@ -854,7 +799,7 @@ mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 }
 
 
-const char*
+char*
 mu_msg_file_get_header (MuMsgFile *self, const char *header)
 {
 	const gchar *hdr;
@@ -868,7 +813,7 @@ mu_msg_file_get_header (MuMsgFile *self, const char *header)
 	hdr = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
 					header);
 
-	return hdr ? free_string_later (self, mu_str_utf8ify(hdr)) : NULL;
+	return hdr ? mu_str_utf8ify(hdr) : NULL;
 }
 
 

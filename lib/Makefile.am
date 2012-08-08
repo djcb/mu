@@ -58,8 +58,6 @@ libmu_la_SOURCES=			\
 	mu-log.h			\
 	mu-maildir.c			\
 	mu-maildir.h			\
-	mu-msg-cache.c			\
-	mu-msg-cache.h			\
 	${crypto}			\
 	mu-msg-crypto.h			\
 	mu-msg-doc.cc			\
@@ -95,7 +93,6 @@ libmu_la_SOURCES=			\
 	mu-threader.h			\
 	mu-util.c			\
 	mu-util.h
-
 
 libmu_la_LIBADD=			\
 	$(XAPIAN_LIBS)			\
