@@ -157,23 +157,25 @@ void mu_msg_cache_values (MuMsg *self);
  * get the plain text body of this message
  *
  * @param msg a valid MuMsg* instance
+ * @param opts options for getting the body
  *
  * @return the plain text body or NULL in case of error or if there is no
  * such body. the returned string should *not* be modified or freed.
  * The returned data is in UTF8 or NULL.
  */
-const char*     mu_msg_get_body_text       (MuMsg *msg);
+const char*     mu_msg_get_body_text       (MuMsg *msg, MuMsgOptions opts);
 
 
 /**
  * get the html body of this message
  *
  * @param msg a valid MuMsg* instance
+ * @param opts options for getting the body
  *
  * @return the html body or NULL in case of error or if there is no
  * such body. the returned string should *not* be modified or freed.
  */
-const char*     mu_msg_get_body_html       (MuMsg *msg);
+const char*     mu_msg_get_body_html       (MuMsg *msgMu, MuMsgOptions opts);
 
 /**
  * get the sender (From:) of this message

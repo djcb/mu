@@ -659,21 +659,35 @@ get_references  (MuMsgFile *self)
 	return g_slist_reverse (msgids);
 }
 
-
+/* see: http://does-not-exist.org/mail-archives/mutt-dev/msg08249.html */
 static GSList*
 get_tags (MuMsgFile *self)
 {
-	GSList *lst;
+	GSList *lst1, *lst2, *last;
 	char *hdr;
 
+	/* X-Label are space-separated */
 	hdr = mu_msg_file_get_header (self, "X-Label");
-	if (!hdr)
-		return NULL;
+	if (hdr) {
+		lst1 = mu_str_to_list (hdr, ' ', TRUE);
+		g_free (hdr);
+	}
 
-	lst = mu_str_to_list (hdr, ',', TRUE);
-	g_free (hdr);
+	/* X-Keywords are ','-separated */
+	hdr = mu_msg_file_get_header (self, "X-Keywords");
+	if (hdr) {
+		lst2 = mu_str_to_list (hdr, ',', TRUE);
+		g_free (hdr);
+	}
 
-	return lst;
+	if (!lst1)
+		return lst2;
+
+	/* append lst2, if any */
+	last = g_slist_last (lst1);
+	last->next = lst2;
+
+	return last;
 }
 
 
@@ -722,18 +736,15 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 
 	switch (mfid) {
 
-	case MU_MSG_FIELD_ID_EMBEDDED_TEXT: *do_free = TRUE;
-		return NULL; /* FIXME */
-
 	case MU_MSG_FIELD_ID_BCC:
 	case MU_MSG_FIELD_ID_CC:
 	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
 		return get_recipient (self, recipient_type(mfid));
 
-	case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE;
-		return get_concatenated_text (self, TRUE); /* FIXME: decrypt ? */
-	case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE;
-		return get_body (self, TRUE, TRUE); /* FIXME: decrypt ? */
+	/* case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE; */
+	/* 	return get_concatenated_text (self, TRUE); /\* FIXME: decrypt ? *\/ */
+	/* case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE; */
+	/* 	return get_body (self, TRUE, TRUE); /\* FIXME: decrypt ? *\/ */
 
 	case MU_MSG_FIELD_ID_FROM:
 		return (char*)maybe_cleanup
@@ -751,6 +762,14 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 		return (char*)g_mime_message_get_message_id (self->_mime_msg);
 
 	case MU_MSG_FIELD_ID_MAILDIR: return self->_maildir;
+
+	case MU_MSG_FIELD_ID_BODY_TEXT:
+	case MU_MSG_FIELD_ID_BODY_HTML:
+	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
+		g_warning ("not available here: %s",
+			   mu_msg_field_name (mfid));
+		g_return_val_if_reached (NULL);
+		return NULL;
 
 	default: g_return_val_if_reached (NULL);
 	}

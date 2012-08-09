@@ -34,8 +34,9 @@
 #include "mu-msg-crypto.h"
 #endif /*BUILD_CRYPTO*/
 
-static gboolean handle_children (MuMsg *msg, GMimeObject *mobj, MuMsgOptions opts,
-				 unsigned index, MuMsgPartForeachFunc func,
+static gboolean handle_children (MuMsg *msg, GMimeObject *mobj,
+				 MuMsgOptions opts, unsigned index,
+				 MuMsgPartForeachFunc func,
 				 gpointer user_data);
 
 struct _DoData {
@@ -386,26 +387,6 @@ handle_encrypted_part (MuMsg *msg,
 	return TRUE;
 }
 
-/* check if the current part might be a body part, and, if so, update
- * the msgpart struct */
-static void
-check_if_body_part (MuMsg *msg, GMimeObject *mobj, MuMsgPart *msgpart)
-{
-	/* is it an attachment? if so, this one is not the body */
-	if (msgpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT)
-		return;
-
-	/* is it a text part? */
-	if (g_ascii_strcasecmp (msgpart->type, "text") != 0)
-		return;
-
-	/* we consider it a body part if it's an inline text/plain or
-	 * text/html */
-	if ((g_ascii_strcasecmp (msgpart->subtype, "plain") == 0) ||
-	    (g_ascii_strcasecmp (msgpart->subtype, "html") == 0))
-		msgpart->part_type |=  MU_MSG_PART_TYPE_BODY;
-}
-
 
 /* call 'func' with information about this MIME-part */
 static gboolean
@@ -418,17 +399,21 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 
 	memset (&msgpart, 0, sizeof(MuMsgPart));
 
-	ct = g_mime_object_get_content_type ((GMimeObject*)part);
-	if (GMIME_IS_CONTENT_TYPE(ct)) {
-		msgpart.type    = g_mime_content_type_get_media_type (ct);
-		msgpart.subtype = g_mime_content_type_get_media_subtype (ct);
-	}
-
 	msgpart.size        = get_part_size (part);
 	msgpart.part_type   = MU_MSG_PART_TYPE_LEAF;
 	msgpart.part_type |= get_disposition ((GMimeObject*)part);
 
-	check_if_body_part (msg, (GMimeObject*)part, &msgpart);
+	ct = g_mime_object_get_content_type ((GMimeObject*)part);
+	if (GMIME_IS_CONTENT_TYPE(ct)) {
+		msgpart.type    = g_mime_content_type_get_media_type (ct);
+		msgpart.subtype = g_mime_content_type_get_media_subtype (ct);
+		/* store as in the part_type as well, for quick
+		 * checking */
+		if (g_mime_content_type_is_type (ct, "text", "plain"))
+			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_PLAIN;
+		else if (g_mime_content_type_is_type (ct, "text", "html"))
+			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
+	}
 
 	msgpart.data    = (gpointer)part;
 	msgpart.index   = index;
@@ -703,8 +688,8 @@ mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts, guint partid,
 				   partid);
 
 	if (!mu_util_create_dir_maybe (dirname, 0700, FALSE)) {
-		mu_util_g_set_error (err, MU_ERROR_FILE, "failed to create dir %s",
-				     dirname);
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "failed to create dir %s", dirname);
 		g_free (dirname);
 		return NULL;
 	}
@@ -840,8 +825,6 @@ mu_msg_part_looks_like_attachment (MuMsgPart *part, gboolean include_inline)
 {
 	g_return_val_if_fail (part, FALSE);
 
-	if  (part->part_type & MU_MSG_PART_TYPE_BODY)
-		return FALSE;
 	if (!include_inline && (part->part_type & MU_MSG_PART_TYPE_INLINE))
 		return FALSE;
 

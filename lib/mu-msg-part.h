@@ -30,8 +30,6 @@ G_BEGIN_DECLS
 enum _MuMsgPartType {
 	MU_MSG_PART_TYPE_NONE		= 0,
 
-	/* look like the message body (heuristic) ? */
-	MU_MSG_PART_TYPE_BODY		= 1 << 0,
 	/* MIME part without children */
 	MU_MSG_PART_TYPE_LEAF		= 1 << 1,
 	/* an RFC822 message part? */
@@ -45,7 +43,11 @@ enum _MuMsgPartType {
 	/* an encrypted part? */
 	MU_MSG_PART_TYPE_ENCRYPTED	= 1 << 6,
 	/* a decrypted part? */
-	MU_MSG_PART_TYPE_DECRYPTED	= 1 << 7
+	MU_MSG_PART_TYPE_DECRYPTED	= 1 << 7,
+	/* a text/plain part? */
+	MU_MSG_PART_TYPE_TEXT_PLAIN     = 1 << 8,
+	/* a text/html part? */
+	MU_MSG_PART_TYPE_TEXT_HTML      = 1 << 9
 };
 typedef enum _MuMsgPartType MuMsgPartType;
 

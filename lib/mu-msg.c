@@ -335,23 +335,19 @@ mu_msg_get_header (MuMsg *self, const char *header)
 time_t
 mu_msg_get_timestamp (MuMsg *self)
 {
+	const char *path;
+	struct stat statbuf;
+
 	g_return_val_if_fail (self, 0);
 
 	if (self->_file)
 		return self->_file->_timestamp;
-	else {
-		const char *path;
-		struct stat statbuf;
 
-		path = mu_msg_get_path (self);
-		if (!path)
-			return 0;
+	path = mu_msg_get_path (self);
+	if (!path || stat (path, &statbuf) < 0)
+		return 0;
 
-		if (stat (path, &statbuf) < 0)
-			return 0;
-
-		return statbuf.st_mtime;
-	}
+	return statbuf.st_mtime;
 }
 
 
@@ -424,7 +420,6 @@ mu_msg_get_date (MuMsg *self)
 }
 
 
-
 MuFlags
 mu_msg_get_flags (MuMsg *self)
 {
@@ -448,19 +443,70 @@ mu_msg_get_prio (MuMsg *self)
 }
 
 
-const char*
-mu_msg_get_body_html (MuMsg *self)
+
+struct _BodyData {
+	GString *gstr;
+	gboolean want_html;
+};
+typedef struct _BodyData BodyData;
+
+
+static void
+accumulate_body (MuMsg *msg, MuMsgPart *mpart, BodyData *bdata)
 {
-	g_return_val_if_fail (self, NULL);
-	return get_str_field (self, MU_MSG_FIELD_ID_BODY_HTML);
+	char *txt;
+	gboolean err;
+
+	/* if it looks like an attachment, skip it */
+	if (mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT)
+		return;
+
+	txt = NULL;
+
+	if (!bdata->want_html &&
+	    (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
+		txt = mu_msg_mime_part_to_string (
+			(GMimePart*)mpart->data, &err);
+	else if (bdata->want_html &&
+		 (mpart->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
+		txt = mu_msg_mime_part_to_string (
+			(GMimePart*)mpart->data, &err);
+	if (!err && txt)
+		bdata->gstr = g_string_append (bdata->gstr, txt);
+
+	g_free (txt);
 }
 
 
+static char*
+get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
+{
+	BodyData bdata;
+
+	bdata.want_html = want_html;
+	bdata.gstr = g_string_sized_new (4096);
+
+	mu_msg_part_foreach (self, opts,
+			     (MuMsgPartForeachFunc)accumulate_body,
+			     &bdata);
+
+	return g_string_free (bdata.gstr, FALSE);
+}
+
 const char*
-mu_msg_get_body_text (MuMsg *self)
+mu_msg_get_body_html (MuMsg *self, MuMsgOptions opts)
 {
 	g_return_val_if_fail (self, NULL);
-	return get_str_field (self, MU_MSG_FIELD_ID_BODY_TEXT);
+	return free_later_str (self, get_body (self, opts, TRUE));
+}
+
+
+
+const char*
+mu_msg_get_body_text (MuMsg *self, MuMsgOptions opts)
+{
+	g_return_val_if_fail (self, NULL);
+	return free_later_str (self, get_body (self, opts, FALSE));
 }
 
 
@@ -750,8 +796,7 @@ mu_msg_is_readable (MuMsg *self)
 {
 	g_return_val_if_fail (self, FALSE);
 
-	return (access (get_str_field (self, MU_MSG_FIELD_ID_PATH), R_OK)
-		== 0) ? TRUE : FALSE;
+	return access (mu_msg_get_path (self), R_OK) == 0 ? TRUE : FALSE;
 }
 
 
@@ -771,16 +816,19 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 	/* maildir is the maildir stored in the message, e.g. '/foo' */
 	maildir = mu_msg_get_maildir(msg);
 	if (!maildir) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
-			     "message without maildir");
+		mu_util_g_set_error (err, MU_ERROR_GMIME,
+				     "message without maildir");
 		return NULL;
 	}
 
 	/* the 'rootmaildir' is the filesystem path from root to
 	 * maildir, ie.  /home/user/Maildir/foo */
 	rootmaildir = mu_maildir_get_maildir_from_path (mu_msg_get_path(msg));
-	if (!rootmaildir)
+	if (!rootmaildir) {
+		mu_util_g_set_error (err, MU_ERROR_GMIME,
+				     "cannot determinex maildir");
 		return NULL;
+	}
 
 	/* we do a sanity check: verify that that maildir is a suffix of
 	 * rootmaildir;*/
@@ -825,6 +873,8 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 	g_return_val_if_fail (self, FALSE);
 	g_return_val_if_fail (maildir, FALSE);     /* i.e. "/inbox" */
 
+	/* targetmdir is the full path to maildir, i.e.,
+	 * /home/foo/Maildir/inbox */
 	targetmdir = get_target_mdir (self, maildir, err);
 	if (!targetmdir)
 		return FALSE;
@@ -832,18 +882,22 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 	newfullpath = mu_maildir_move_message (mu_msg_get_path (self),
 					       targetmdir, flags,
 					       ignore_dups, err);
-	g_free (targetmdir);
-
 	/* update the message path and the flags; they may have
 	 * changed */
-	if (!newfullpath)
+	if (!newfullpath) {
+		g_free (targetmdir);
 		return FALSE;
+	}
 
 	/* clear the old backends */
 	mu_msg_doc_destroy  (self->_doc);
+	self->_doc = NULL;
+
 	mu_msg_file_destroy (self->_file);
 
 	/* and create a new one */
-	self->_file = mu_msg_file_new (newfullpath, targetmdir, err);
+	self->_file = mu_msg_file_new (newfullpath, maildir, err);
+	g_free (targetmdir);
+
 	return self->_file ? TRUE : FALSE;
 }

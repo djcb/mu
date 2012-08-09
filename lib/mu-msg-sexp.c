@@ -279,7 +279,6 @@ get_part_type_string (MuMsgPartType ptype)
 	GString *gstr;
 	unsigned u;
 	MuMsgPartType ptypes[] = {
-		MU_MSG_PART_TYPE_BODY,
 		MU_MSG_PART_TYPE_LEAF,
 		MU_MSG_PART_TYPE_MESSAGE,
 		MU_MSG_PART_TYPE_INLINE,
@@ -294,7 +293,6 @@ get_part_type_string (MuMsgPartType ptype)
 		const char* name;
 		switch (ptype & ptypes[u]) {
 		case MU_MSG_PART_TYPE_NONE      : continue;
-		case MU_MSG_PART_TYPE_BODY	:name = "body"; break;
 		case MU_MSG_PART_TYPE_LEAF	:name = "leaf"; break;
 		case MU_MSG_PART_TYPE_MESSAGE	:name = "message"; break;
 		case MU_MSG_PART_TYPE_INLINE	:name = "inline"; break;
@@ -400,9 +398,9 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 	append_sexp_attr (gstr, "in-reply-to",
 			  mu_msg_get_header (msg, "In-Reply-To"));
 	append_sexp_attr (gstr, "body-txt",
-			  mu_msg_get_body_text(msg));
+			  mu_msg_get_body_text(msg, opts));
 	append_sexp_attr (gstr, "body-html",
-			  mu_msg_get_body_html(msg));
+			  mu_msg_get_body_html(msg, opts));
 }
 
 
