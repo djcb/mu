@@ -352,11 +352,12 @@ mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg)
 
 	set_message (self, msg);
 
-	data = msg ? mu_msg_get_body_html (msg) : "";
+	data = msg ? mu_msg_get_body_html (msg, MU_MSG_OPTION_NONE) : "";
 	if (data)
 		set_html (self, data);
 	else
-		set_text (self, mu_msg_get_body_text (msg));
+		set_text (self,
+			  mu_msg_get_body_text (msg, MU_MSG_OPTION_NONE));
 
 	self->_priv->_view_mode = VIEW_MODE_MSG;
 }

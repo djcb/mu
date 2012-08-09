@@ -390,14 +390,13 @@ maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	char *txt, *norm;
 	Xapian::TermGenerator termgen;
 
-	/* we handle the body text elsewhere; this is about other text
+	/* only deal with attachments, inlines are indexed as body
 	 * parts */
-	if (part->part_type & MU_MSG_PART_TYPE_BODY)
+	if (!(part->part_type & MU_MSG_PART_TYPE_ATTACHMENT))
 		return;
 
-	/* TODO: add other text types? */
-	if (g_ascii_strcasecmp (part->type, "text") != 0 ||
-	    g_ascii_strcasecmp (part->subtype, "plain")  != 0)
+	/* only text/plain */
+	if (!(part->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
 		return;
 
 	txt = mu_msg_part_get_text (msg, part, MU_MSG_OPTION_NONE,
@@ -475,10 +474,10 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	if (mu_msg_get_flags(msg) & MU_FLAG_ENCRYPTED)
 		return; /* ignore encrypted bodies */
 
-	str = mu_msg_get_body_text (msg);
+	str = mu_msg_get_body_text (msg, MU_MSG_OPTION_NONE);
 	if (!str) /* FIXME: html->txt fallback needed */
-		str = mu_msg_get_body_html (msg);
-
+		str = mu_msg_get_body_html (msg,
+					    MU_MSG_OPTION_NONE);
 	if (!str)
 		return; /* no body... */
 

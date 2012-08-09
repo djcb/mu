@@ -123,8 +123,8 @@ body_or_summary (MuMsg *msg, MuConfig *opts)
 	gboolean color;
 
 	color = !opts->nocolor;
-	body = mu_msg_get_body_text (msg);
-
+	body = mu_msg_get_body_text (msg,
+				     mu_config_get_msg_options(opts));
 	if (!body)
 		return;
 

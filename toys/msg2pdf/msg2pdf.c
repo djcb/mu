@@ -200,11 +200,11 @@ convert_to_pdf (MuMsg *msg, GError **err)
 
 	gstr =	g_string_append (gstr, "<hr>\n");
 
-	body = mu_msg_get_body_html (msg);
+	body = mu_msg_get_body_html (msg, MU_MSG_OPTION_NONE);
 	if (body)
  		g_string_append_printf (gstr, "%s", body);
 	else {
-		body = mu_msg_get_body_text (msg);
+		body = mu_msg_get_body_text (msg, MU_MSG_OPTION_NONE);
 		if (body) {
 			gchar *esc;
 			esc = g_markup_escape_text (body, -1);

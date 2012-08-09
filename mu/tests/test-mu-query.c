@@ -305,7 +305,7 @@ test_mu_query_accented_chars_01 (void)
 			 "Greetings from Lothlórien");
 	/* TODO: fix this again */
 
-	summ = mu_str_summarize (mu_msg_get_body_text(msg), 5);
+	summ = mu_str_summarize (mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE), 5);
 	g_assert_cmpstr (summ,==, "Let's write some fünkÿ text using umlauts. Foo.");
 	g_free (summ);
 

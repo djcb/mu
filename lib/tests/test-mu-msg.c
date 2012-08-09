@@ -181,7 +181,7 @@ test_mu_msg_03 (void)
 			  ==, MU_MSG_PRIO_NORMAL);
 	g_assert_cmpuint (mu_msg_get_date(msg),
 			  ==, 0);
-	g_assert_cmpstr (mu_msg_get_body_text(msg),
+	g_assert_cmpstr (mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE),
 			 ==,
 			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
 	g_assert_cmpuint (mu_msg_get_flags(msg),
@@ -224,7 +224,7 @@ test_mu_msg_multimime (void)
 	/* ie., are text parts properly concatenated? */
 	g_assert_cmpstr (mu_msg_get_subject(msg),
 			 ==, "multimime");
-	g_assert_cmpstr (mu_msg_get_body_text(msg),
+	g_assert_cmpstr (mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE),
 			 ==, "abcdef");
 	g_assert_cmpuint (mu_msg_get_flags(msg),
 			 ==, MU_FLAG_FLAGGED | MU_FLAG_SEEN |

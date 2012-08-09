@@ -380,14 +380,19 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 
 
 static void
-print_summary (MuMsg *msg, int summary_len)
+print_summary (MuMsg *msg, MuConfig *opts)
 {
 	const char* body;
 	char *summ;
+	MuMsgOptions msgopts;
 
-	body = mu_msg_get_body_text(msg);
+	msgopts = mu_config_get_msg_options (opts);
+	body = mu_msg_get_body_text(msg, msgopts);
 
-	summ = body ? mu_str_summarize (body, (unsigned)summary_len) : NULL;
+	if (body)
+		summ = mu_str_summarize (body, (unsigned)opts->summary_len);
+	else
+		summ = NULL;
 
 	g_print ("Summary: ");
 	mu_util_fputs_encoded (summ ? summ : "<none>", stdout);
@@ -478,7 +483,7 @@ output_plain (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 	output_plain_fields (msg, opts->fields, !opts->nocolor, opts->threads);
 
 	if (opts->summary_len > 0)
-		print_summary (msg, opts->summary_len);
+		print_summary (msg, opts);
 
 	return TRUE;
 }

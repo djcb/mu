@@ -62,7 +62,8 @@ _MuStore::get_uid_term (const char* path)
 	 * messages are only considered ones (ignore e.g. symlinks and
 	 * '//' in paths) */
 	if (!realpath (path, real_path)) {
-		g_warning ("realpath() failed: %s", strerror (errno));
+		g_warning ("realpath() failed for %s: %s",
+			   path, strerror (errno));
 		strcpy (real_path, path); /* ignore errors */
 	}
 
