@@ -354,8 +354,10 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 	const GSList *lst;
 
 	lst = mu_msg_get_field_string_list (msg, mfid);
+	if (!lst)
+		return;
 
-	if (lst && mu_msg_field_xapian_value (mfid)) {
+	if (mu_msg_field_xapian_value (mfid)) {
 		gchar *str;
 		str = mu_str_from_list (lst, ',');
 		if (str)
@@ -363,12 +365,12 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 		g_free (str);
 	}
 
-	if (lst && mu_msg_field_xapian_term (mfid)) {
-		while (lst) {
+	if (mu_msg_field_xapian_term (mfid)) {
+		for  (; lst; lst = g_slist_next ((GSList*)lst)) {
 			char *val;
-			val = g_string_chunk_insert (strchunk, (const gchar*)lst->data);
+			val = g_string_chunk_insert
+				(strchunk, (const gchar*)lst->data);
 			add_terms_values_str (doc, val, mfid, strchunk);
-			lst = g_slist_next ((GSList*)lst);
 		}
 	}
 }
