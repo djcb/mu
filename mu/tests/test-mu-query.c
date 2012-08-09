@@ -492,7 +492,8 @@ test_mu_query_tags (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH2, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
@@ -507,7 +508,8 @@ test_mu_query_signed_encrypted (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
