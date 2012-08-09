@@ -527,91 +527,91 @@ mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean decrypt,
 
 
 
-static char*
-get_body (MuMsgFile *self, gboolean decrypt, gboolean want_html)
-{
-	GMimePart *part;
-	gboolean err;
-	gchar *str;
+/* static char* */
+/* get_body (MuMsgFile *self, gboolean decrypt, gboolean want_html) */
+/* { */
+/* 	GMimePart *part; */
+/* 	gboolean err; */
+/* 	gchar *str; */
 
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
+/* 	g_return_val_if_fail (self, NULL); */
+/* 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL); */
 
-	part = mu_msg_mime_get_body_part (self->_mime_msg,
-					  decrypt, want_html);
-	if (!GMIME_IS_PART(part))
-		return NULL;
+/* 	part = mu_msg_mime_get_body_part (self->_mime_msg, */
+/* 					  decrypt, want_html); */
+/* 	if (!GMIME_IS_PART(part)) */
+/* 		return NULL; */
 
-	err = FALSE;
-	str = mu_msg_mime_part_to_string (part, &err);
+/* 	err = FALSE; */
+/* 	str = mu_msg_mime_part_to_string (part, &err); */
 
-	/* note, str may be NULL (no body), but that's not necessarily
-	 * an error; we only warn when an actual error occured */
-	if (err)
-		g_warning ("error occured while retrieving %s body "
-			   "for message %s",
-			   want_html ? "html" : "text", self->_path);
-	return str;
-}
+/* 	/\* note, str may be NULL (no body), but that's not necessarily */
+/* 	 * an error; we only warn when an actual error occured *\/ */
+/* 	if (err) */
+/* 		g_warning ("error occured while retrieving %s body " */
+/* 			   "for message %s", */
+/* 			   want_html ? "html" : "text", self->_path); */
+/* 	return str; */
+/* } */
 
 
-static void
-append_text (GMimeObject *parent, GMimeObject *part, gchar **txt)
-{
-	GMimeContentType *ct;
-	GMimeContentDisposition *disp;
-	gchar *parttxt, *tmp;
-	gboolean err;
+/* static void */
+/* append_text (GMimeObject *parent, GMimeObject *part, gchar **txt) */
+/* { */
+/* 	GMimeContentType *ct; */
+/* 	GMimeContentDisposition *disp; */
+/* 	gchar *parttxt, *tmp; */
+/* 	gboolean err; */
 
-	if (!GMIME_IS_PART(part))
-		return;
+/* 	if (!GMIME_IS_PART(part)) */
+/* 		return; */
 
-	ct = g_mime_object_get_content_type (part);
-	if (!GMIME_IS_CONTENT_TYPE(ct) ||
-	    !g_mime_content_type_is_type (ct, "text", "plain"))
-		return; /* not a text-plain part */
+/* 	ct = g_mime_object_get_content_type (part); */
+/* 	if (!GMIME_IS_CONTENT_TYPE(ct) || */
+/* 	    !g_mime_content_type_is_type (ct, "text", "plain")) */
+/* 		return; /\* not a text-plain part *\/ */
 
-	disp = g_mime_object_get_content_disposition (part);
-	if (GMIME_IS_CONTENT_DISPOSITION(disp) &&
-	    g_strcmp0 (g_mime_content_disposition_get_disposition (disp),
-		       GMIME_DISPOSITION_ATTACHMENT) == 0)
-		return; /* it's an attachment, don't include */
+/* 	disp = g_mime_object_get_content_disposition (part); */
+/* 	if (GMIME_IS_CONTENT_DISPOSITION(disp) && */
+/* 	    g_strcmp0 (g_mime_content_disposition_get_disposition (disp), */
+/* 		       GMIME_DISPOSITION_ATTACHMENT) == 0) */
+/* 		return; /\* it's an attachment, don't include *\/ */
 
-	parttxt = mu_msg_mime_part_to_string (GMIME_PART(part), &err);
-	if (err) {
-		/* this happens for broken messages */
-		g_debug ("%s: could not get text for part", __FUNCTION__);
-		return;
-	}
+/* 	parttxt = mu_msg_mime_part_to_string (GMIME_PART(part), &err); */
+/* 	if (err) { */
+/* 		/\* this happens for broken messages *\/ */
+/* 		g_debug ("%s: could not get text for part", __FUNCTION__); */
+/* 		return; */
+/* 	} */
 
-	/* it's a text part -- append it! */
-	tmp = *txt;
-	if (*txt) {
-		*txt = g_strconcat (*txt, parttxt, NULL);
-		g_free (parttxt);
-	} else
-		*txt = parttxt;
+/* 	/\* it's a text part -- append it! *\/ */
+/* 	tmp = *txt; */
+/* 	if (*txt) { */
+/* 		*txt = g_strconcat (*txt, parttxt, NULL); */
+/* 		g_free (parttxt); */
+/* 	} else */
+/* 		*txt = parttxt; */
 
-	g_free (tmp);
-}
+/* 	g_free (tmp); */
+/* } */
 
 /* instead of just the body, this function returns a concatenation of
  * all text/plain parts with inline disposition
  */
-static char*
-get_concatenated_text (MuMsgFile *self, gboolean decrypt)
-{
-	char *txt;
+/* static char* */
+/* get_concatenated_text (MuMsgFile *self, gboolean decrypt) */
+/* { */
+/* 	char *txt; */
 
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL);
+/* 	g_return_val_if_fail (self, NULL); */
+/* 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL); */
 
-	txt = NULL;
-	mu_mime_message_foreach (self->_mime_msg, decrypt,
-				(GMimeObjectForeachFunc)append_text,
-				 &txt);
-	return txt;
-}
+/* 	txt = NULL; */
+/* 	mu_mime_message_foreach (self->_mime_msg, decrypt, */
+/* 				(GMimeObjectForeachFunc)append_text, */
+/* 				 &txt); */
+/* 	return txt; */
+/* } */
 
 
 static gboolean
@@ -651,7 +651,8 @@ get_references  (MuMsgFile *self)
 			if (msgid && !contains (msgids, msgid))
 				/* explicitly ensure it's utf8-safe, as GMime
 				 * does not ensure that */
-				msgids = g_slist_prepend (msgids, g_strdup((msgid)));
+				msgids = g_slist_prepend (msgids,
+							  g_strdup((msgid)));
 		}
 		g_mime_references_free (mime_refs);
 	}
@@ -687,7 +688,7 @@ get_tags (MuMsgFile *self)
 	last = g_slist_last (lst1);
 	last->next = lst2;
 
-	return last;
+	return lst1;
 }
 
 
@@ -740,11 +741,6 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 	case MU_MSG_FIELD_ID_CC:
 	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
 		return get_recipient (self, recipient_type(mfid));
-
-	/* case MU_MSG_FIELD_ID_BODY_TEXT: *do_free = TRUE; */
-	/* 	return get_concatenated_text (self, TRUE); /\* FIXME: decrypt ? *\/ */
-	/* case MU_MSG_FIELD_ID_BODY_HTML: *do_free = TRUE; */
-	/* 	return get_body (self, TRUE, TRUE); /\* FIXME: decrypt ? *\/ */
 
 	case MU_MSG_FIELD_ID_FROM:
 		return (char*)maybe_cleanup

@@ -255,13 +255,15 @@ test_mu_msg_flags (void)
 		MuMsg *msg;
 		MuFlags flags;
 
-		g_assert ((msg = mu_msg_new_from_file (msgflags[u].path, NULL, NULL)));
+		g_assert ((msg = mu_msg_new_from_file
+			   (msgflags[u].path, NULL, NULL)));
 		flags = mu_msg_get_flags (msg);
 
 		if (g_test_verbose())
 			g_print ("=> %s [ %s, %u] <=> [ %s, %u]\n",
 				 msgflags[u].path,
-				 mu_flags_to_str_s(msgflags[u].flags, MU_FLAG_TYPE_ANY),
+				 mu_flags_to_str_s(msgflags[u].flags,
+						   MU_FLAG_TYPE_ANY),
 				 (unsigned)msgflags[u].flags,
 				 mu_flags_to_str_s(flags, MU_FLAG_TYPE_ANY),
 				 (unsigned)flags);
@@ -381,7 +383,10 @@ test_mu_msg_tags (void)
 	tags = mu_msg_get_tags (msg);
 	g_assert_cmpstr ((char*)tags->data,==,"Paradise");
 	g_assert_cmpstr ((char*)tags->next->data,==,"losT");
-	g_assert (tags->next->next == NULL);
+	g_assert_cmpstr ((char*)tags->next->next->data,==,"john");
+	g_assert_cmpstr ((char*)tags->next->next->next->data,==,"milton");
+
+	g_assert (!tags->next->next->next->next);
 
 	mu_msg_unref (msg);
 }
@@ -463,7 +468,8 @@ main (int argc, char *argv[])
 			 test_mu_msg_comp_unix_programmer);
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+			   G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
