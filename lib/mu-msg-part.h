@@ -105,12 +105,10 @@ char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts,
  * does this msg part look like an attachment?
  *
  * @param part a message part
- * @param include_inline consider 'inline' parts also as attachments
  *
  * @return TRUE if it looks like an attachment, FALSE otherwise
  */
-gboolean mu_msg_part_looks_like_attachment (MuMsgPart *part,
-					    gboolean include_inline);
+gboolean mu_msg_part_maybe_attachment (MuMsgPart *part);
 
 
 /**

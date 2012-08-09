@@ -93,19 +93,6 @@ gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err);
 
 
 /**
- * get the MIME part that's probably the body of the message (heuristic)
- *
- * @param self a MuMsg
- * @param decrypt whether decryption should be attempted, if needed
- * @param want_html whether it should be a html type of body
- *
- * @return the MIME part, or NULL in case of error.
- */
-GMimePart* mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean decrypt,
-				      gboolean want_html);
-
-
-/**
  * Like g_mime_message_foreach, but will recurse into encrypted parts
  * if @param decrypt is TRUE and mu was built with crypto support
  *

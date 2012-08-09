@@ -207,43 +207,28 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 static gboolean
 looks_like_attachment (GMimeObject *part)
 {
-	const char *str;
 	GMimeContentDisposition *disp;
-	GMimeContentType *ct;
+	GMimeContentType *ctype;
 
-	disp = g_mime_object_get_content_disposition (GMIME_OBJECT(part));
+	const char *dispstr;
+
+	disp = g_mime_object_get_content_disposition (part);
+
 	if (!GMIME_IS_CONTENT_DISPOSITION(disp))
 		return FALSE;
 
-	str = g_mime_content_disposition_get_disposition (disp);
-	if (!str)
-		return FALSE;
+	dispstr = g_mime_content_disposition_get_disposition (disp);
 
-	ct = g_mime_object_get_content_type (part);
-	if (!ct)
-		return FALSE; /* ignore this part... */
-
-	/* note, some mailers use ATTACHMENT, INLINE instead of their
-	 * more common lower-case counterparts */
-	if (g_ascii_strcasecmp(str, GMIME_DISPOSITION_ATTACHMENT) == 0)
+	if (g_ascii_strcasecmp (dispstr, "attachment") == 0)
 		return TRUE;
 
-	if (g_ascii_strcasecmp(str, GMIME_DISPOSITION_INLINE) == 0) {
-		/* some inline parts are also considered attachments... */
-		int i;
-		const char* att_types[][2] = {
-			{"image", "*"},
-			{"application", "*"},
-			{"message", "*"}};
+	/* we also consider images, attachment or inline, to be
+	 * attachments... */
+	ctype = g_mime_object_get_content_type (part);
+	if (g_mime_content_type_is_type (ctype, "image", "*"))
+		return TRUE;
 
-		for (i = 0; i != G_N_ELEMENTS (att_types); ++i)
-			if (g_mime_content_type_is_type (ct,
-							 att_types[i][0],
-							 att_types[i][1]))
-				return TRUE; /* looks like an attachment */
-	}
-
-	return FALSE; /* does not look like an attachment */
+	return FALSE;
 }
 
 
@@ -262,7 +247,10 @@ msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuFlags *flags)
 	if (!GMIME_IS_PART(part))
 		return;
 
-	if (!(*flags & MU_FLAG_HAS_ATTACH) && looks_like_attachment(part))
+	if (*flags & MU_FLAG_HAS_ATTACH)
+		return;
+
+	if (looks_like_attachment (part))
 		*flags |= MU_FLAG_HAS_ATTACH;
 }
 
@@ -359,38 +347,6 @@ get_prio (MuMsgFile *self)
 
 	return priostr ? parse_prio_str (priostr) : MU_MSG_PRIO_NORMAL;
 }
-
-
-struct _GetBodyData { GMimeObject *_txt_part, *_html_part;};
-typedef struct _GetBodyData GetBodyData;
-
-static void
-get_body_cb (GMimeObject *parent, GMimeObject *part, GetBodyData *data)
-{
-	GMimeContentType *ct;
-
-	/* already found what we're looking for? */
-	if (data->_html_part && data->_txt_part)
-		return;
-
-	ct = g_mime_object_get_content_type (part);
-	if (!GMIME_IS_CONTENT_TYPE(ct)) {
-		g_warning ("not a content type!");
-		return;
-	}
-
-	if (looks_like_attachment (part))
-		return; /* not the body */
-
-	/* is it right content type? */
-	if (!data->_txt_part &&
-	    g_mime_content_type_is_type (ct, "text", "plain"))
-		data->_txt_part = part;
-	else if (!data->_html_part &&
-		 g_mime_content_type_is_type (ct, "text", "html"))
-		data->_html_part = part;
-}
-
 
 
 /* NOTE: buffer will be *freed* or returned unchanged */
@@ -507,112 +463,6 @@ cleanup:
 }
 
 
-GMimePart*
-mu_msg_mime_get_body_part (GMimeMessage *msg, gboolean decrypt,
-			   gboolean want_html)
-{
-	GetBodyData data;
-
-	g_return_val_if_fail (GMIME_IS_MESSAGE(msg), NULL);
-
-	memset (&data, 0, sizeof(GetBodyData));
-	mu_mime_message_foreach (msg, decrypt,
-				 (GMimeObjectForeachFunc)get_body_cb,
-				 &data);
-	if (want_html)
-		return (GMimePart*)data._html_part;
-	else
-		return (GMimePart*)data._txt_part;
-}
-
-
-
-/* static char* */
-/* get_body (MuMsgFile *self, gboolean decrypt, gboolean want_html) */
-/* { */
-/* 	GMimePart *part; */
-/* 	gboolean err; */
-/* 	gchar *str; */
-
-/* 	g_return_val_if_fail (self, NULL); */
-/* 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL); */
-
-/* 	part = mu_msg_mime_get_body_part (self->_mime_msg, */
-/* 					  decrypt, want_html); */
-/* 	if (!GMIME_IS_PART(part)) */
-/* 		return NULL; */
-
-/* 	err = FALSE; */
-/* 	str = mu_msg_mime_part_to_string (part, &err); */
-
-/* 	/\* note, str may be NULL (no body), but that's not necessarily */
-/* 	 * an error; we only warn when an actual error occured *\/ */
-/* 	if (err) */
-/* 		g_warning ("error occured while retrieving %s body " */
-/* 			   "for message %s", */
-/* 			   want_html ? "html" : "text", self->_path); */
-/* 	return str; */
-/* } */
-
-
-/* static void */
-/* append_text (GMimeObject *parent, GMimeObject *part, gchar **txt) */
-/* { */
-/* 	GMimeContentType *ct; */
-/* 	GMimeContentDisposition *disp; */
-/* 	gchar *parttxt, *tmp; */
-/* 	gboolean err; */
-
-/* 	if (!GMIME_IS_PART(part)) */
-/* 		return; */
-
-/* 	ct = g_mime_object_get_content_type (part); */
-/* 	if (!GMIME_IS_CONTENT_TYPE(ct) || */
-/* 	    !g_mime_content_type_is_type (ct, "text", "plain")) */
-/* 		return; /\* not a text-plain part *\/ */
-
-/* 	disp = g_mime_object_get_content_disposition (part); */
-/* 	if (GMIME_IS_CONTENT_DISPOSITION(disp) && */
-/* 	    g_strcmp0 (g_mime_content_disposition_get_disposition (disp), */
-/* 		       GMIME_DISPOSITION_ATTACHMENT) == 0) */
-/* 		return; /\* it's an attachment, don't include *\/ */
-
-/* 	parttxt = mu_msg_mime_part_to_string (GMIME_PART(part), &err); */
-/* 	if (err) { */
-/* 		/\* this happens for broken messages *\/ */
-/* 		g_debug ("%s: could not get text for part", __FUNCTION__); */
-/* 		return; */
-/* 	} */
-
-/* 	/\* it's a text part -- append it! *\/ */
-/* 	tmp = *txt; */
-/* 	if (*txt) { */
-/* 		*txt = g_strconcat (*txt, parttxt, NULL); */
-/* 		g_free (parttxt); */
-/* 	} else */
-/* 		*txt = parttxt; */
-
-/* 	g_free (tmp); */
-/* } */
-
-/* instead of just the body, this function returns a concatenation of
- * all text/plain parts with inline disposition
- */
-/* static char* */
-/* get_concatenated_text (MuMsgFile *self, gboolean decrypt) */
-/* { */
-/* 	char *txt; */
-
-/* 	g_return_val_if_fail (self, NULL); */
-/* 	g_return_val_if_fail (GMIME_IS_MESSAGE(self->_mime_msg), NULL); */
-
-/* 	txt = NULL; */
-/* 	mu_mime_message_foreach (self->_mime_msg, decrypt, */
-/* 				(GMimeObjectForeachFunc)append_text, */
-/* 				 &txt); */
-/* 	return txt; */
-/* } */
-
 
 static gboolean
 contains (GSList *lst, const char *str)
@@ -644,7 +494,8 @@ get_references  (MuMsgFile *self)
 		mime_refs = g_mime_references_decode (str);
 		g_free (str);
 
-		for (cur = mime_refs; cur; cur = g_mime_references_get_next(cur)) {
+		for (cur = mime_refs; cur;
+		     cur = g_mime_references_get_next(cur)) {
 			const char* msgid;
 			msgid = g_mime_references_get_message_id (cur);
 			/* don't include duplicates */

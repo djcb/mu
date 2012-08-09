@@ -821,12 +821,20 @@ mu_msg_find_files (MuMsg *msg, MuMsgOptions opts, const GRegex *pattern)
 
 
 gboolean
-mu_msg_part_looks_like_attachment (MuMsgPart *part, gboolean include_inline)
+mu_msg_part_maybe_attachment (MuMsgPart *part)
 {
 	g_return_val_if_fail (part, FALSE);
 
-	if (!include_inline && (part->part_type & MU_MSG_PART_TYPE_INLINE))
+	/* attachments must be leaf parts */
+	if (!part->part_type && MU_MSG_PART_TYPE_LEAF)
 		return FALSE;
 
-	return TRUE;
+	/* non-textual inline parts are considered attachments as
+	 * well */
+	if (part->part_type & MU_MSG_PART_TYPE_INLINE &&
+	    !(part->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN) &&
+	    !(part->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
+		return TRUE;
+
+	return FALSE;
 }
