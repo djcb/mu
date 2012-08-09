@@ -667,6 +667,8 @@ get_tags (MuMsgFile *self)
 	GSList *lst1, *lst2, *last;
 	char *hdr;
 
+	lst1 = lst2 = NULL;
+
 	/* X-Label are space-separated */
 	hdr = mu_msg_file_get_header (self, "X-Label");
 	if (hdr) {
