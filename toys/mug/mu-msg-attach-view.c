@@ -208,7 +208,6 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 						GDK_ACTION_COPY);
 	gtk_drag_source_add_uri_targets(GTK_WIDGET(obj));
 	g_signal_connect (obj, "drag-data-get", G_CALLBACK(on_drag_data_get), NULL);
-
 }
 
 
@@ -241,7 +240,7 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 	GdkPixbuf *pixbuf;
 	char ctype[128];
 
-	if (!mu_msg_part_looks_like_attachment(part, FALSE))
+	if (!mu_msg_part_maybe_attachment(part))
 		return;
 
 	if (!part->type || !part->subtype)

@@ -185,7 +185,7 @@ ignore_part (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 
 	/* filter out non-attachments? */
 	if (!sd->opts->save_all &&
-	    !(mu_msg_part_looks_like_attachment (part, TRUE)))
+	    !(mu_msg_part_maybe_attachment (part)))
 		return TRUE;
 
 	return FALSE;

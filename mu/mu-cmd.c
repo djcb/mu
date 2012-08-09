@@ -65,7 +65,7 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
 {
 	char *fname, *tmp;
 
-	if (!mu_msg_part_looks_like_attachment (part, TRUE))
+	if (!mu_msg_part_maybe_attachment (part))
 		return;
 
 	fname = mu_msg_part_get_filename (part, FALSE);

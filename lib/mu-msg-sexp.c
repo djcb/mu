@@ -333,7 +333,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 elvis (part->subtype, "octet-stream"),
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
 		 parttype,
-		 mu_msg_part_looks_like_attachment (part, TRUE) ? "t" : "nil",
+		 mu_msg_part_maybe_attachment (part) ? "t" : "nil",
 		 (int)part->size,
 		 sig_verdict (part->sig_infos));
 

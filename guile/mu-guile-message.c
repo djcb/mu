@@ -308,7 +308,7 @@ each_part (MuMsg *msg, MuMsgPart *part, AttInfo *attinfo)
 	if (!part->type)
 		return;
 	if (attinfo->attachments_only &&
-	    !mu_msg_part_looks_like_attachment (part, TRUE))
+	    !mu_msg_part_maybe_attachment (part))
 		return;
 
 	mime_type = g_strdup_printf ("%s/%s", part->type, part->subtype);
