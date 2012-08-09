@@ -81,6 +81,7 @@
   - add guile mu:count
   - don't show GPG/PKCS7 sigs as attachments
   - fix address completion (quote names)
+  - add support for X-Keywords (in addition to X-Label)
 
 * Done
   :PROPERTIES:
