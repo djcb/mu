@@ -125,23 +125,23 @@ get_gpg_crypto_context (MuMsgOptions opts, GError **err)
 	return cctx;
 }
 
-static GMimeCryptoContext*
-get_pkcs7_crypto_context (MuMsgOptions opts, GError **err)
-{
-	GMimeCryptoContext *cctx;
+/* static GMimeCryptoContext* */
+/* get_pkcs7_crypto_context (MuMsgOptions opts, GError **err) */
+/* { */
+/* 	GMimeCryptoContext *cctx; */
 
-	cctx = g_mime_pkcs7_context_new (password_requester);
-	if (!cctx) {
-		mu_util_g_set_error (err, MU_ERROR,
-				     "failed to get PKCS7 crypto context");
-		return NULL;
-	}
+/* 	cctx = g_mime_pkcs7_context_new (password_requester); */
+/* 	if (!cctx) { */
+/* 		mu_util_g_set_error (err, MU_ERROR, */
+/* 				     "failed to get PKCS7 crypto context"); */
+/* 		return NULL; */
+/* 	} */
 
-	g_mime_pkcs7_context_set_always_trust
-		(GMIME_PKCS7_CONTEXT(cctx), FALSE);
+/* 	g_mime_pkcs7_context_set_always_trust */
+/* 		(GMIME_PKCS7_CONTEXT(cctx), FALSE); */
 
-	return cctx;
-}
+/* 	return cctx; */
+/* } */
 
 
 
@@ -152,10 +152,10 @@ get_crypto_context (MuMsgOptions opts, MuMsgPartPasswordFunc password_func,
 	CallbackData *cbdata;
 	GMimeCryptoContext *cctx;
 
-	if (opts & MU_MSG_OPTION_USE_PKCS7)
-		cctx = get_pkcs7_crypto_context (opts, err);
-	else
-		cctx = get_gpg_crypto_context (opts, err);
+	/* if (opts & MU_MSG_OPTION_USE_PKCS7) */
+	/* 	cctx = get_pkcs7_crypto_context (opts, err); */
+	/* else */
+	cctx = get_gpg_crypto_context (opts, err);
 
 	/* use gobject to pass data to the callback func */
 	cbdata = g_new0 (CallbackData, 1);

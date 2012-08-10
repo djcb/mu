@@ -46,7 +46,7 @@ enum _MuMsgOptions {
 	MU_MSG_OPTION_VERIFY            = 1 << 4,
 	MU_MSG_OPTION_AUTO_RETRIEVE     = 1 << 5,
 	MU_MSG_OPTION_USE_AGENT         = 1 << 6,
-	MU_MSG_OPTION_USE_PKCS7         = 1 << 7,   /* gpg is the default */
+	/* MU_MSG_OPTION_USE_PKCS7         = 1 << 7,   /\* gpg is the default *\/ */
 
 	MU_MSG_OPTION_DECRYPT           = 1 << 8,
 
