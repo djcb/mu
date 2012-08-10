@@ -18,9 +18,7 @@
 
 *** mu-guile
 
-  - add stats test cases
   - move contact export to separate scm
-  - get docs to work
 
 *** mu4e
 
@@ -52,6 +50,9 @@
      mu4e-view-message-with-msgid)
   - improve mouse interaction (i.e., cursor vs point)
   - add example 'run shellscript on message'
+  - fix ' realpath() failed for...' stuff
+  - check move + create new dir
+  - check japanese encoding
 
 * Done (0.9.9)
 
@@ -82,6 +83,7 @@
   - don't show GPG/PKCS7 sigs as attachments
   - fix address completion (quote names)
   - add support for X-Keywords (in addition to X-Label)
+  - guile: add stats test cases
 
 * Done
   :PROPERTIES:
