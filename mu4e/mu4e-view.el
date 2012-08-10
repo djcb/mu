@@ -378,8 +378,10 @@ is nil, and otherwise open it."
 	    ;; numbers and the part indices
 	    (remove-if
 	      (lambda (part)
-		(or (member 'body (plist-get part :type)) 
-		  (member 'inline (plist-get part :type))))
+		(or
+		  (not (member 'attachment (plist-get part :type)))
+		  ;;
+		  ))
 	      (plist-get msg :parts)))
 	  (attstr
 	    (mapconcat
