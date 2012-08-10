@@ -355,13 +355,6 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 {
 	GMimeContentType *ctype;
 	const char* charset;
-	unsigned char *cur;
-
-	/* optimization: if the buffer is plain ascii, no conversion
-	 * is done... */
-	for (cur = (unsigned char*)buffer; *cur && *cur < 0x80; ++cur);
-	if (*cur == '\0')
-		return buffer;
 
 	ctype = g_mime_object_get_content_type (GMIME_OBJECT(part));
 	g_return_val_if_fail (GMIME_IS_CONTENT_TYPE(ctype), NULL);
@@ -371,21 +364,15 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	if (charset) {
 		char *utf8;
 		utf8 = mu_str_convert_to_utf8
-		         (buffer,
-			  g_mime_charset_iconv_name (charset));
+		         (buffer,  g_mime_charset_iconv_name (charset));
 		if (utf8) {
 			g_free (buffer);
 			return utf8;
 		}
-	} else if (g_utf8_validate (buffer, -1, NULL)) {
-		/*  check if the buffer is valid utf8, even if it doesn't
-		 *  say so explicitly... if that is the case, return it as-is */
-
-		/* nothing to do, buffer is already utf8 */
-
-	} else {
-		/* hmmm.... no charset at all, or conversion failed; ugly
-		  *  hack: replace all non-ascii chars with '.' */
+	} else if (!g_utf8_validate (buffer, -1, NULL)) {
+		/* if it's already utf8, nothing to do otherwise: no
+		   charset at all, or conversion failed; ugly * hack:
+		   replace all non-ascii chars with '.' */
 		mu_str_asciify_in_place (buffer);
 	}
 
