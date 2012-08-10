@@ -359,10 +359,10 @@ function prefers the text part, but this can be changed by setting
 	  (html (plist-get msg :body-html))
 	  (body
 	    (cond
-	      ;; does it look like some text? ie., 20x the length of the text
+	      ;; does it look like some text? ie., 10x the length of the text
 	      ;; should be longer than the html, an heuristic to guard against
 	      ;; 'This messages requires html' text bodies.
-	      ((and (> (* 20 (length txt)) (length html))
+	      ((and (> (* 10 (length txt)) (length html))
 		 ;; use html if it's prefered, unless there is no html
 		 (or (not mu4e-view-prefer-html) (not html)))
 		txt)
