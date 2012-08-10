@@ -515,33 +515,34 @@ get_references  (MuMsgFile *self)
 static GSList*
 get_tags (MuMsgFile *self)
 {
-	GSList *lst1, *lst2, *last;
-	char *hdr;
+	GSList *lst;
+	unsigned u;
+	struct {
+		const char *header;
+		char sepa;
+	} tagfields[] = {
+		{ "X-Label",    ' ' },
+		{ "X-Keywords", ',' },
+		{ "Keywords",   ' ' }
+	};
 
-	lst1 = lst2 = NULL;
+	for (lst = NULL, u = 0; u != G_N_ELEMENTS(tagfields); ++u) {
+		gchar *hdr;
+		hdr = mu_msg_file_get_header (self, tagfields[u].header);
+		if (hdr) {
+			GSList *hlst;
+			hlst = mu_str_to_list (hdr, tagfields[u].sepa, TRUE);
 
-	/* X-Label are space-separated */
-	hdr = mu_msg_file_get_header (self, "X-Label");
-	if (hdr) {
-		lst1 = mu_str_to_list (hdr, ' ', TRUE);
-		g_free (hdr);
+			if (lst)
+				(g_slist_last (lst))->next = hlst;
+			else
+				lst = hlst;
+
+			g_free (hdr);
+		}
 	}
 
-	/* X-Keywords are ','-separated */
-	hdr = mu_msg_file_get_header (self, "X-Keywords");
-	if (hdr) {
-		lst2 = mu_str_to_list (hdr, ',', TRUE);
-		g_free (hdr);
-	}
-
-	if (!lst1)
-		return lst2;
-
-	/* append lst2, if any */
-	last = g_slist_last (lst1);
-	last->next = lst2;
-
-	return lst1;
+	return lst;
 }
 
 
