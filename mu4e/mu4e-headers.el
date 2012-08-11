@@ -1218,10 +1218,11 @@ to ensure we don't disturb other windows."
 	 (headers-visible))
     (walk-windows
       (lambda (win)
-	;; if we the view window connected to this one, kill it
-	(when (eq mu4e~headers-view-win win)
-	  (delete-window win)
-	  (setq mu4e~headers-view-win nil))
+	(with-selected-window win
+	  ;; if we the view window connected to this one, kill it
+	  (when (and (not (one-window-p win)) (eq mu4e~headers-view-win win))
+	    (delete-window win)
+	    (setq mu4e~headers-view-win nil)))
 	;; and kill any _other_ (non-selected) window that shows the current
 	;; buffer
 	(when (and
