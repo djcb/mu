@@ -445,7 +445,9 @@ mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 	*err = FALSE;
 
 cleanup:
-	g_clear_object (&stream);
+	if (G_IS_OBJECT(stream))
+		g_object_unref (stream);
+
 	return buffer;
 }
 
