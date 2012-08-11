@@ -328,7 +328,8 @@ mu_msg_get_header (MuMsg *self, const char *header)
 	if (!mu_msg_load_msg_file (self, NULL))
 		return NULL;
 
-	return mu_msg_file_get_header (self->_file, header);
+	return free_later_str
+		(self, mu_msg_file_get_header (self->_file, header));
 }
 
 
