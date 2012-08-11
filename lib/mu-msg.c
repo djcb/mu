@@ -276,8 +276,8 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 	char *val;
 	gboolean do_free;
 
-	do_free = FALSE;
-	val = NULL;
+	do_free = TRUE;
+	val     = NULL;
 
 	if (self->_doc && mu_msg_field_xapian_value (mfid))
 		val = mu_msg_doc_get_str_field (self->_doc, mfid);
