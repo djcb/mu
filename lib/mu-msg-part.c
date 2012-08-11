@@ -34,9 +34,9 @@
 #include "mu-msg-crypto.h"
 #endif /*BUILD_CRYPTO*/
 
-static gboolean handle_children (MuMsg *msg, GMimeObject *mobj,
-				 MuMsgOptions opts, unsigned index,
-				 MuMsgPartForeachFunc func,
+static gboolean handle_children (MuMsg *msg,
+				 GMimeMessage *mime_msg, MuMsgOptions opts,
+				 unsigned index, MuMsgPartForeachFunc func,
 				 gpointer user_data);
 
 struct _DoData {
@@ -160,7 +160,8 @@ char*
 mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts,
 		      gboolean *err)
 {
-	GMimeObject *mobj;
+	GMimeObject  *mobj;
+	GMimeMessage *mime_msg;
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (self && self->data, NULL);
@@ -168,17 +169,31 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts,
 
 	mobj = (GMimeObject*)self->data;
 
-	if (GMIME_IS_PART (mobj) &&
-	    (strcasecmp (self->type, "text") == 0) &&
-	    (strcasecmp (self->subtype, "plain") == 0))
-		return mu_msg_mime_part_to_string ((GMimePart*)mobj, err);
-	else {
+	if (GMIME_IS_PART (mobj)) {
+		if (self->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN)
+			return mu_msg_mime_part_to_string ((GMimePart*)mobj, err);
+		else
+			return NULL; /* non-text MimePart */
+	}
+
+	mime_msg = NULL;
+	if (GMIME_IS_MESSAGE_PART (mobj))
+		mime_msg = g_mime_message_part_get_message
+			((GMimeMessagePart*)mobj);
+	else if (GMIME_IS_MESSAGE (mobj))
+		mime_msg = (GMimeMessage*)mobj;
+
+	if (mime_msg) {
 		GString *gstr;
 		gstr = g_string_sized_new (4096);
-		handle_children (msg, mobj, opts, self->index,
-				 (MuMsgPartForeachFunc)accumulate_text,
+		handle_children (msg, mime_msg, opts, self->index,
+ 				 (MuMsgPartForeachFunc)accumulate_text,
 				 &gstr);
 		return g_string_free (gstr, FALSE);
+	} else {
+		g_warning ("%s: cannot get text for %s",
+			   __FUNCTION__, G_OBJECT_TYPE_NAME (mobj));
+		return NULL;
 	}
 }
 
@@ -363,10 +378,6 @@ get_disposition (GMimeObject *mobj)
 	return MU_MSG_PART_TYPE_NONE;
 }
 
-static gboolean
-handle_children (MuMsg *msg, GMimeObject *mobj, MuMsgOptions opts,
-		 unsigned index, MuMsgPartForeachFunc func, gpointer user_data);
-
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_signed_part (MuMsg *msg,
@@ -427,8 +438,8 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_message_part (MuMsg *msg, GMimeMessagePart *mmsg, GMimeObject *parent,
-		MuMsgOptions opts, unsigned index,
-		MuMsgPartForeachFunc func, gpointer user_data)
+		     MuMsgOptions opts, unsigned index,
+		     MuMsgPartForeachFunc func, gpointer user_data)
 {
 	MuMsgPart msgpart;
 	memset (&msgpart, 0, sizeof(MuMsgPart));
@@ -446,13 +457,11 @@ handle_message_part (MuMsg *msg, GMimeMessagePart *mmsg, GMimeObject *parent,
 
 	func (msg, &msgpart, user_data);
 
-	if (opts & MU_MSG_OPTION_RECURSE_RFC822) {
-		GMimeObject *mobj;
-		mobj = g_mime_message_get_mime_part
-			(g_mime_message_part_get_message (mmsg));
+	if (opts & MU_MSG_OPTION_RECURSE_RFC822)
 		return handle_children
-			(msg, mobj, opts, index, func, user_data);
-	}
+			(msg, g_mime_message_part_get_message (mmsg),
+			 opts, index, func, user_data);
+
 	return TRUE;
 }
 
@@ -482,38 +491,58 @@ handle_mime_object (MuMsg *msg,
 	return TRUE;
 }
 
+struct _ForeachData {
+	MuMsgPartForeachFunc func;
+	gpointer             user_data;
+	MuMsg                *msg;
+	unsigned             index;
+	MuMsgOptions         opts;
+
+};
+
+typedef struct _ForeachData ForeachData;
+
+
+static void
+each_child (GMimeObject *parent, GMimeObject *part,
+	    ForeachData *fdata)
+{
+	handle_mime_object (fdata->msg,
+			    part,
+			    parent,
+			    fdata->opts,
+			    fdata->index++,
+			    fdata->func,
+			    fdata->user_data);
+}
+
 
 static gboolean
 handle_children (MuMsg *msg,
-		 GMimeObject *mobj, MuMsgOptions opts,
+		 GMimeMessage *mime_msg, MuMsgOptions opts,
 		 unsigned index, MuMsgPartForeachFunc func,
 		 gpointer user_data)
 {
-	gboolean rv;
-	GMimePartIter *iter;
+	ForeachData fdata;
 
-	/* the children */
-	iter = g_mime_part_iter_new (mobj);
+ 	fdata.func	= func;
+	fdata.user_data = user_data;
+	fdata.opts	= opts;
+	fdata.msg	= msg;
+	fdata.index	= 0;
 
-	if (!iter)
-		return FALSE;
-	for (rv = TRUE; rv && g_mime_part_iter_is_valid (iter);
-	     g_mime_part_iter_next (iter), index++)
-		rv = handle_mime_object (
-			msg, g_mime_part_iter_get_current (iter),
-			g_mime_part_iter_get_parent (iter),
-			opts, index, func, user_data);
+	g_mime_message_foreach (mime_msg, (GMimeObjectForeachFunc)each_child,
+				&fdata);
 
-	g_mime_part_iter_free (iter);
-
-	return rv;
+	return TRUE;
 }
+
 
 gboolean
 mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 		     MuMsgPartForeachFunc func, gpointer user_data)
 {
-	GMimeObject *toplevel;
+	GMimeMessage *mime_msg;
 	unsigned idx;
 
 	g_return_val_if_fail (msg, FALSE);
@@ -522,14 +551,9 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 		return FALSE;
 
 	idx = 0;
-	toplevel = g_mime_message_get_mime_part
-		(GMIME_MESSAGE(msg->_file->_mime_msg));
-	if (!toplevel || !handle_mime_object
-	    (msg, toplevel, NULL, opts, idx++, func, user_data))
-		return FALSE;
+	mime_msg = GMIME_MESSAGE(msg->_file->_mime_msg);
 
-	return handle_children (msg, toplevel, opts, idx, func,
-				user_data);
+	return handle_children (msg, mime_msg, opts, idx, func, user_data);
 }
 
 
