@@ -97,6 +97,7 @@ test_mu_store_store_msg_and_count (void)
 
 	store = mu_store_new_writable (tmpdir, NULL, FALSE, NULL);
 	g_assert (store);
+	g_free (tmpdir);
 
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));
 
@@ -135,7 +136,6 @@ test_mu_store_store_msg_and_count (void)
 	g_assert_cmpuint (2,==,mu_store_count (store, NULL));
 
 	mu_msg_unref (msg);
-
 	mu_store_unref (store);
 }
 
