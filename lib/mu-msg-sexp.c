@@ -22,7 +22,12 @@
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-msg-part.h"
+
+#ifdef BUILD_CRYPTO
 #include "mu-msg-crypto.h"
+#endif /*BUILD_CRYPTO*/
+
+
 #include "mu-maildir.h"
 
 static void
@@ -260,6 +265,7 @@ elvis (const char *s1, const char *s2)
 static const char*
 sig_verdict (GSList *sig_infos)
 {
+#ifdef BUILD_CRYPTO
 	switch (mu_msg_part_sig_infos_verdict (sig_infos)) {
 	case MU_MSG_PART_SIG_STATUS_GOOD:
 		return ":signature good";
@@ -270,6 +276,9 @@ sig_verdict (GSList *sig_infos)
 	default:
 		return "";
 	}
+#else
+	return "";
+#endif /*!BUILD_CRYPTO*/
 }
 
 
