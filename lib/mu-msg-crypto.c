@@ -298,7 +298,9 @@ sig_info_destroy (MuMsgPartSigInfo *siginfo)
 	if (!siginfo)
 		return;
 
-	g_clear_object (&siginfo->_cert);
+	if (G_IS_OBJECT(siginfo->_cert))
+		g_object_unref (siginfo->_cert);
+
 	g_free (siginfo);
 }
 
