@@ -18,11 +18,7 @@ include $(top_srcdir)/gtest.mk
 
 # note, we need top_builddir for snarfing with 'make distcheck' (ie.,
 # with separate builddir)
-SUBDIRS= . mu examples
-
-if BUILD_TESTS
-SUBDIRS += tests
-endif
+SUBDIRS= . mu examples tests
 
 INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/lib ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 

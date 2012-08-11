@@ -103,18 +103,10 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
 
 # glib2?
 # we need 2.14 at least, because we use GRegex
-PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.14 gobject-2.0)
+PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.24 gobject-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`$PKG_CONFIG --modversion glib-2.0`"
-
-# gtest was introduced in glib 2.16; but we're also using
-# g_test_log_set_fatal_handler, which was introduced in 2.22
-PKG_CHECK_MODULES(g_test,glib-2.0 >= 2.22, [have_gtest=yes],[have_gtest=no])
-AM_CONDITIONAL(BUILD_TESTS, test "x$have_gtest" = "xyes")
-AS_IF([test "x$have_gtest" = "xno"],[
-     AC_MSG_WARN([You need GLIB version >= 2.22 to build the tests])
-])
 
 # gmime 2.4 or 2.6?
 PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
@@ -371,7 +363,6 @@ fi
 echo
 echo "Build mu4e emacs frontend            : $build_mu4e"
 echo "Build crypto support (gmime >= 2.6)  : $have_gmime_26"
-echo "Build unit tests (glib >= 2.22)      : $have_gtest"
 echo "Build 'mug' toy-ui (gtk+/webkit)     : $buildgui"
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo

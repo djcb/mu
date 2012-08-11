@@ -18,11 +18,7 @@ include $(top_srcdir)/gtest.mk
 
 # enforce compiling guile (optionally) first,then this dir first
 # before decending into tests/
-SUBDIRS= .
-
-if BUILD_TESTS
-SUBDIRS += tests
-endif
+SUBDIRS= . tests
 
 INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 
