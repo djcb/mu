@@ -370,6 +370,11 @@ mug_shell (MugData * mugdata)
 static gint
 on_focus_query_bar (GtkWidget* ignored, GdkEventKey *event, MugData* mugdata)
 {
+/* gtk2: GDK_Escape; gtk3: GDK_Key_Escape */
+#ifndef GDK_KEY_Escape
+#define GDK_KEY_Escape GDK_Escape
+#endif /* GDK_KEY_Escape */
+
 	if (event->type==GDK_KEY_RELEASE && event->keyval==GDK_KEY_Escape) {
 		mug_query_bar_grab_focus (MUG_QUERY_BAR (mugdata->querybar));
 		return 1;
