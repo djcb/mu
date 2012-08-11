@@ -511,12 +511,13 @@ after the end of the search results."
 
 ;; borrowed from `tabulated-list'
 (defvar mu4e~glyphless-char-display
-  (let ((table (make-char-table 'glyphless-char-display nil)))
-    (set-char-table-parent table glyphless-char-display)
-    ;; Some text terminals can't display the Unicode arrows; be safe.
-    (aset table 9650 (cons nil "^"))
-    (aset table 9660 (cons nil "v"))
-    table)
+  (when (boundp 'glyphless-char-display)
+    (let ((table (make-char-table 'glyphless-char-display nil)))
+      (set-char-table-parent table glyphless-char-display)
+      ;; Some text terminals can't display the Unicode arrows; be safe.
+      (aset table 9650 (cons nil "^"))
+      (aset table 9660 (cons nil "v"))
+      table))
   "The `glyphless-char-display' table in mu4e heders buffers.")
 
 
@@ -574,8 +575,9 @@ after the end of the search results."
   (make-local-variable 'mu4e~highlighted-docid)
   (make-local-variable 'global-mode-string)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
-  (set (make-local-variable 'glyphless-char-display)
-    mu4e~glyphless-char-display)
+  (when (boundp 'glyphless-char-display)
+    (set (make-local-variable 'glyphless-char-display)
+      mu4e~glyphless-char-display))
 
   (setq
     truncate-lines t
