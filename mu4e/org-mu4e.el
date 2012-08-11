@@ -150,36 +150,38 @@ and images in a multipart/related part."
 
 (defun org~mu4e-mime-convert-to-html ()
   "Convert the current body to html."
-  (let* ((begin
-	   (save-excursion
-	     (goto-char (point-min))
-	     (search-forward mail-header-separator)))
-	  (end (point-max))
-	  (raw-body (buffer-substring begin end))
-	  (tmp-file (make-temp-name (expand-file-name "mail"
-					 temporary-file-directory)))
-	  (body (org-export-string raw-body 'org (file-name-directory tmp-file)))
-	  ;; because we probably don't want to skip part of our mail
-	  (org-export-skip-text-before-1st-heading nil)
-	  ;; because we probably don't want to export a huge style file
-	  (org-export-htmlize-output-type 'inline-css)
-	  ;; makes the replies with ">"s look nicer
-	  (org-export-preserve-breaks t)
-	  ;; dvipng for inline latex because MathJax doesn't work in mail
-	  (org-export-with-LaTeX-fragments 'dvipng)
-	  ;; to hold attachments for inline html images
-	  (html-and-images
-	    (org~mu4e-mime-replace-images
-	      (org-export-string raw-body 'html (file-name-directory tmp-file))
-	      tmp-file))
-	  (html-images (cdr html-and-images))
-	  (html (car html-and-images)))
-    (delete-region begin end)
-    (save-excursion
-      (goto-char begin)
-      (newline)
-      (insert (org~mu4e-mime-multipart
-		body html (mapconcat 'identity html-images "\n"))))))
+  (if (not (fboundp 'org-export-string))
+    (mu4e-error "require function 'org-export-string not found.")
+    (let* ((begin
+	     (save-excursion
+	       (goto-char (point-min))
+	       (search-forward mail-header-separator)))
+	    (end (point-max))
+	    (raw-body (buffer-substring begin end))
+	    (tmp-file (make-temp-name (expand-file-name "mail"
+					temporary-file-directory)))
+	    (body (org-export-string raw-body 'org (file-name-directory tmp-file)))
+	    ;; because we probably don't want to skip part of our mail
+	    (org-export-skip-text-before-1st-heading nil)
+	    ;; because we probably don't want to export a huge style file
+	    (org-export-htmlize-output-type 'inline-css)
+	    ;; makes the replies with ">"s look nicer
+	    (org-export-preserve-breaks t)
+	    ;; dvipng for inline latex because MathJax doesn't work in mail
+	    (org-export-with-LaTeX-fragments 'dvipng)
+	    ;; to hold attachments for inline html images
+	    (html-and-images
+	      (org~mu4e-mime-replace-images
+		(org-export-string raw-body 'html (file-name-directory tmp-file))
+		tmp-file))
+	    (html-images (cdr html-and-images))
+	    (html (car html-and-images)))
+      (delete-region begin end)
+      (save-excursion
+	(goto-char begin)
+	(newline)
+	(insert (org~mu4e-mime-multipart
+		  body html (mapconcat 'identity html-images "\n")))))))
 
 ;; next some functions to make the org/mu4e-compose-mode switch as smooth as
 ;; possible.
