@@ -31,6 +31,7 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
+(require 'startup) ;; silence elint re `user-mail-address'.
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
@@ -469,6 +470,7 @@ needed, set the Fcc header, and register the handler function."
 	  (cons mu4e~compose-address-fields-regexp 'completion-at-point)
 	  message-completion-alist)))))
 
+(defvar mu4e-compose-mode-abbrev-table nil)
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
 \\{message-mode-map}."

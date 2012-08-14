@@ -85,14 +85,10 @@ display with `mu4e-view-toggle-hide-cited (default keybinding:
 <w>)."
   :group 'mu4e-view)
 
-(defcustom mu4e-view-show-images nil
-  "Whether to automatically display attached images in the message
-buffer."
-  :group 'mu4e-view)
-
 (defcustom mu4e-view-image-max-width 800
   "The maximum width for images to display; this is only effective
-  if you're using an emacs with Imagemagick support."
+  if you're using an emacs with Imagemagick support, and
+  `mu4e-show-image' is non-nil."
   :group 'mu4e-view)
 
 (defvar mu4e-view-actions
@@ -147,7 +143,7 @@ The first letter of NAME is used as a shortcut character.")
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
 wanting to show specific messages - for example, `mu4e-org'."
-  (mu4e~proc-view msgid mu4e-view-show-images))
+  (mu4e~proc-view msgid mu4e-show-images))
 
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG
@@ -620,7 +616,7 @@ is nil, and otherwise open it."
 
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
 
-
+(defvar mu4e-view-mode-abbrev-table nil)
 (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
   "Major mode for viewing an e-mail message in mu4e.
 \\{mu4e-view-mode-map}."
@@ -714,8 +710,8 @@ browser is called is depending on `browse-url-browser-function' and
 	  (browse-url url))))))
 
 (defun mu4e~view-show-images-maybe (msg)
-  "Show attached images, if `mu4e-view-show-images' is non-nil."
-  (when (and (display-images-p) mu4e-view-show-images)
+  "Show attached images, if `mu4e-show-images' is non-nil."
+  (when (and (display-images-p) mu4e-show-images)
     (mu4e-view-for-each-part msg
       (lambda (msg part)
 	(when (string-match "^image/" (plist-get part :mime-type))

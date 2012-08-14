@@ -24,7 +24,9 @@
 
 ;;; Code:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'smtpmail)      ;; the queing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
+
 
 (defconst mu4e~main-buffer-name "*mu4e-main*"
   "*internal* Name of the mu4e main view buffer.")
@@ -52,6 +54,7 @@
   "Keymap for the *mu4e-main* buffer.")
 (fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
+(defvar mu4e-main-mode-abbrev-table nil)
 (define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
 \\{mu4e-main-mode-map}."

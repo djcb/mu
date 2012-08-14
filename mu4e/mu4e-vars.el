@@ -28,6 +28,7 @@
 ;; Customization
 (require 'mu4e-meta)
 (require 'message)
+(require 'startup) ;; silence elint re `user-mail-address'.
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"
@@ -123,8 +124,10 @@ else: don't split (show either headers or messages, not both) Also
 see `mu4e-headers-visible-lines' and
 `mu4e-headers-visible-columns'.")
 
-
-
+(defcustom mu4e-show-images nil
+  "Whether to automatically display attached images in the message
+view buffer."
+  :group 'mu4e-view)
 
 ;; crypto
 (defgroup mu4e-crypto nil
@@ -496,6 +499,8 @@ mu4e starts.")
   "Properties we receive from the mu4e server process (in the
   'pong-handler').")
 
+(defvar mu4e~headers-last-query nil
+  "The present (most recent) query.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; our handlers funcs

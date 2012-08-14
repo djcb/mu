@@ -565,6 +565,7 @@ after the end of the search results."
       mu4e-headers-fields)))
 
 
+(defvar mu4e-headers-mode-abbrev-table nil)
 (define-derived-mode mu4e-headers-mode special-mode
     "mu4e:headers"
   "Major mode for displaying mu4e search results.
@@ -897,8 +898,6 @@ limited to the message at point and its descendants."
   "Stack of queries before the present one.")
 (defvar mu4e~headers-query-future nil
   "Stack of queries after the present one.")
-(defvar mu4e~headers-last-query nil
-  "The present (most recent) query.")
 (defvar mu4e~headers-query-stack-size 20
   "Maximum size for the query stacks.")
 
@@ -1077,7 +1076,7 @@ current window. "
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
-    (mu4e~proc-view docid mu4e-view-show-images)))
+    (mu4e~proc-view docid mu4e-show-images)))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
