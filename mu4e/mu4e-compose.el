@@ -31,7 +31,6 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
-(require 'startup) ;; silence elint re `user-mail-address'.
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
@@ -476,10 +475,13 @@ needed, set the Fcc header, and register the handler function."
 \\{message-mode-map}."
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (use-local-map mu4e-compose-mode-map)
+    
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
+    ;; make completion case-insensitive
+    (set (make-local-variable 'completion-ignore-case) t)    
     ;; make sure mu4e is started in the background (ie. we don't want to error
     ;; out when sending the message; better to do it now if there's a problem)
     (mu4e~start) ;; start mu4e in background, if needed
@@ -657,8 +659,6 @@ buffer."
 	  (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
 	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P")))))))
 
-
-
 (defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
@@ -733,9 +733,7 @@ message."
 		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
 		    (goto-char (match-end 0))
 		    (point))))
-	      (orig (buffer-substring-no-properties start end))
-	      (completion-ignore-case t))
-	  (list start end mu4e~contacts-for-completion)))))
+	  (list start end mu4e~contacts-for-completion))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
