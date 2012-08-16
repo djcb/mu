@@ -15,6 +15,8 @@
   - handle exception 'The revision being read has been discarded - you should
     call Xapian::Database::reopen() and retry the operation'
   - improved checked for gmime-2.6 crypto funcs
+  - handle attached messages with attachments
+  - add 'contact:' as alias for to: or cc: or bcc: or from:
 
 *** mu-guile
 
@@ -52,7 +54,9 @@
   - add example 'run shellscript on message'
   - fix ' realpath() failed for...' stuff
   - check move + create new dir
-  - check japanese encoding
+  - show counts of messages in searches (in main view)
+  - show flush only if there's something to flush (and # of flushables)
+
 
 * Done (0.9.9)
 
@@ -68,7 +72,7 @@
   - cleanup mu-cmd-find
   - implement --after for mu find, to only show message files changed after a
     certain time (mtime)
-  - add mu:timestamp for guile (refering to the message file's mtime)
+  - add mu:timestamp for guile (referring to the message file's mtime)
   - guile automated tests
   - add 'mu verify'
     - automated tests
@@ -84,6 +88,9 @@
   - fix address completion (quote names)
   - add support for X-Keywords (in addition to X-Label)
   - guile: add stats test cases
+  - fixed iso-2022-jp (japanese) decoding
+  - make address completion case-insensitive
+  - recognize '*' in urls
 
 * Done
   :PROPERTIES:
