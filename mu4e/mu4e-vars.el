@@ -28,7 +28,6 @@
 ;; Customization
 (require 'mu4e-meta)
 (require 'message)
-(require 'startup) ;; silence elint re `user-mail-address'.
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"

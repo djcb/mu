@@ -45,8 +45,6 @@ enum _MuMsgFieldId {
 
 	MU_MSG_FIELD_ID_UID, /* special, generated from path */
 
-	/* MU_MSG_STRING_FIELD_ID_NUM, see below */
-
 	/* string list items... */
 	MU_MSG_FIELD_ID_REFS,
 	MU_MSG_FIELD_ID_TAGS,
