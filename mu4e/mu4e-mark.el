@@ -297,17 +297,16 @@ quiting the buffer) is taken; returning t means 'take the following
 action', return nil means 'don't do anything'"
   (let ((marknum (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0))
 	 (what mu4e-headers-leave-behavior))
-    (unless (zerop marknum) ;; nothing to do
-      (unless (or (eq what 'ignore) (eq what 'apply))
-	;; if `mu4e-headers-leave-behavior' is not apply or ignore, ask the user
-	(setq what
-	  (let ((what (mu4e-read-option
-			  "There are existing marks; should we: "
-			  '( ("apply marks"   . apply)
-			     ("ignore marks?" . ignore)))))
-	    ;; we determined what to do... now do it
-	    (when (eq what 'apply)
-	      (mu4e-mark-execute-all t))))))))
+    (unless (zerop marknum) ;; nothing to do?
+      (when (eq what 'ask)
+	(setq what (mu4e-read-option
+		     "There are existing marks; should we: "
+		     '( ("apply marks"   . apply)
+			("ignore marks?" . ignore)))))
+      ;; we determined what to do... now do it
+      (when (eq what 'apply)
+	(mu4e-mark-execute-all t)))))
+
 
 (provide 'mu4e-mark)
 ;; End of mu4e-mark.el
