@@ -61,11 +61,10 @@ _MuStore::get_uid_term (const char* path)
 	 * realpath here (and in mu-msg-file) to ensure that the same
 	 * messages are only considered ones (ignore e.g. symlinks and
 	 * '//' in paths) */
-	if (!realpath (path, real_path)) {
-		g_warning ("realpath() failed for %s: %s",
-			   path, strerror (errno));
-		strcpy (real_path, path); /* ignore errors */
-	}
+
+	// note: realpath fails when there's no file at path
+	if (!realpath (path, real_path))
+		strcpy (real_path, path);
 
 	djbhash  = 5381;
 	bkdrhash = 0;
@@ -139,9 +138,6 @@ gboolean
 mu_store_needs_upgrade (MuStore *store)
 {
 	g_return_val_if_fail (store, TRUE);
-
-	// g_print ("'%s' <=> '%s'\n", mu_store_version (store),
-	// MU_STORE_SCHEMA_VERSION);
 
 	return  (g_strcmp0 (mu_store_version (store),
 			    MU_STORE_SCHEMA_VERSION) == 0) ? FALSE : TRUE;
