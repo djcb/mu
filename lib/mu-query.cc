@@ -309,6 +309,26 @@ mu_query_preprocess (const char *query, GError **err)
 }
 
 
+/* this function is for handling the case where a DatabaseModified
+ * exception is raised. We try to reopen the database, and run the
+ * query again. */
+static MuMsgIter *
+try_requery (MuQuery *self, const char* searchexpr, gboolean threads,
+	     MuMsgFieldId sortfieldid, gboolean revert, int maxnum,
+	     GError **err)
+{
+	try {
+		/* let's assume that infinite regression is
+		 * impossible */
+		self->db().reopen();
+		MU_WRITE_LOG ("reopening db after modification");
+		return mu_query_run (self, searchexpr, threads, sortfieldid,
+				     revert, maxnum, err);
+
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
+}
+
+
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 	      MuMsgFieldId sortfieldid, gboolean revert, int maxnum,
@@ -320,6 +340,7 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			      sortfieldid == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
+		MuMsgIter *iter;
 		Xapian::Enquire enq (self->db());
 
 		/* note, when our result will be *threaded*, we sort
@@ -336,12 +357,18 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 
 		enq.set_cutoff(0,0);
 
-		return mu_msg_iter_new (
+		iter = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum <= 0 ? self->db().get_doccount() : maxnum,
-			threads,
-			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE,
-			revert);
+			threads, threads ? sortfieldid : MU_MSG_FIELD_ID_NONE,
+			revert,	err);
+
+		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
+			g_clear_error (err);
+			return try_requery (self, searchexpr, threads, sortfieldid,
+					    revert, maxnum, err);
+		} else
+			return iter;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }

@@ -110,9 +110,12 @@ private:
 	MuMsg		*_msg;
 };
 
+
+
 MuMsgIter*
 mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
-		 gboolean threads, MuMsgFieldId sortfield, gboolean revert)
+		 gboolean threads, MuMsgFieldId sortfield, gboolean revert,
+		 GError **err)
 {
 	g_return_val_if_fail (enq, NULL);
 	/* sortfield should be set to .._NONE when we're not threading */
@@ -125,7 +128,13 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 		return new MuMsgIter ((Xapian::Enquire&)*enq, maxnum, threads,
 				      sortfield, revert ? true : false);
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	} catch (const Xapian::DatabaseModifiedError &dbmex) {
+
+		mu_util_g_set_error (err, MU_ERROR_XAPIAN_MODIFIED,
+				     "database was modified; please reopen");
+		return 0;
+
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }
 
 

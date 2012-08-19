@@ -414,6 +414,8 @@ enum _MuError {
 	MU_ERROR_XAPIAN_STORE_FAILED	      = 20,
 	/* could not remove */
 	MU_ERROR_XAPIAN_REMOVE_FAILED	      = 21,
+	/* database was modified; reload */
+	MU_ERROR_XAPIAN_MODIFIED              = 22,
 
 	/* GMime related errors */
 
