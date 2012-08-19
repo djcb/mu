@@ -475,13 +475,13 @@ needed, set the Fcc header, and register the handler function."
 \\{message-mode-map}."
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (use-local-map mu4e-compose-mode-map)
-    
+
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
     ;; make completion case-insensitive
-    (set (make-local-variable 'completion-ignore-case) t)    
+    (set (make-local-variable 'completion-ignore-case) t)
     ;; make sure mu4e is started in the background (ie. we don't want to error
     ;; out when sending the message; better to do it now if there's a problem)
     (mu4e~start) ;; start mu4e in background, if needed
@@ -732,8 +732,8 @@ message."
 		  (save-excursion
 		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
 		    (goto-char (match-end 0))
-		    (point))))
-	  (list start end mu4e~contacts-for-completion))))))
+		    (point)))))
+	  (list start end mu4e~contacts-for-completion)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
