@@ -194,7 +194,7 @@ mu_store_flush (MuStore *store)
 	try {
 		if (store->in_transaction())
 			store->commit_transaction ();
-		store->db_writable()->flush (); /* => commit, post X 1.1.x */
+		store->db_writable()->commit ();
 
 	} MU_XAPIAN_CATCH_BLOCK;
 }
