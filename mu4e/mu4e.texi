@@ -2219,8 +2219,8 @@ be interesting to know how @t{mu4e} does its job.
 @menu
 * High-level overview::
 * mu server::
-* The message s-expression::
 * Reading from the server::
+* The message s-expression::
 @end menu
 
 @node High-level overview
