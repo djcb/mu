@@ -27,7 +27,7 @@
 
 ;;; Code:
 
-(require 'org)
+;;(require 'org)
 (eval-when-compile (require 'org-exp))
 (eval-when-compile (require 'cl))
 (eval-when-compile (require 'mu4e))
