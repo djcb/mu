@@ -65,7 +65,7 @@
 	      desc link)
 	(org-store-link-props :type "mu4e" :query query)
 	(setq
-	  desc (org-make-link "mu4e:query:" query)
+	  desc (concat "mu4e:query:" query)
 	  link desc)
 	(org-add-link-props :link link :description desc)
 	link))
@@ -76,7 +76,7 @@
 	     link)
        (org-store-link-props :type "mu4e" :link link
 			     :message-id msgid)
-       (setq link (org-make-link "mu4e:msgid:" msgid))
+       (setq link (concat "mu4e:msgid:" msgid))
        (org-add-link-props :link link
 			   :description (funcall org-mu4e-link-desc-func msg))
        link))))
