@@ -82,8 +82,10 @@
 (defun mu4e-quit()
   "Quit the mu4e session."
   (interactive)
-  (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
-    (mu4e~stop)))
+  (if mu4e-confirm-quit
+	  (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
+		(mu4e~stop))
+	(mu4e~stop)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
