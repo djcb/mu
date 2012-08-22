@@ -145,24 +145,25 @@ paths."
   ;; first, we get a list of all directory paths under PATH that have a
   ;; directory 'cur' as leaf; then we we remove from that list all of those that
   ;; don't have tmp, new sister dirs. And there we're done!
-  ;; 1. get all proper subdirs of the current dir
-  (let* ((subdirs
-	   (remove-if
-	     (lambda (de)
-	       (or (not (file-directory-p (concat path mdir "/" de)))
-		 (string-match "\\.\\{1,2\\}$" de)))
-	     (directory-files (concat path mdir))))
-	  ;; 2. get the list of dirs with a /cur leaf dir
-	  (maildirs '()))
-    (dolist (dir subdirs)
-      (when (string= dir "cur")
-	;; be pedantic, and insist on there being a new/tmp as well
-	(when (and (file-directory-p (concat path mdir "/new" ))
-		(file-directory-p (concat path mdir "/tmp")))
-	  (add-to-list 'maildirs (if mdir mdir "/") t)))
-      (setq maildirs (append maildirs
-		       (mu4e~get-maildirs-1 path (concat mdir "/" dir)))))
-    maildirs))
+  ;; 1. get all proper subdirs of the current dir, if it is readable
+  (when (file-accessible-directory-p path)
+    (let* ((subdirs
+	     (remove-if
+	       (lambda (de)
+		 (or (not (file-directory-p (concat path mdir "/" de)))
+		   (string-match "\\.\\{1,2\\}$" de)))
+	       (directory-files (concat path mdir))))
+	    ;; 2. get the list of dirs with a /cur leaf dir
+	    (maildirs '()))
+      (dolist (dir subdirs)
+	(when (string= dir "cur")
+	  ;; be pedantic, and insist on there being a new/tmp as well
+	  (when (and (file-directory-p (concat path mdir "/new" ))
+		  (file-directory-p (concat path mdir "/tmp")))
+	    (add-to-list 'maildirs (if mdir mdir "/") t)))
+	(setq maildirs (append maildirs
+			 (mu4e~get-maildirs-1 path (concat mdir "/" dir)))))
+      maildirs)))
 
 (defvar mu4e~maildir-list nil "Cached list of maildirs.")
 
