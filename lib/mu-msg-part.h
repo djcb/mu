@@ -92,13 +92,14 @@ char *mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
 /**
  * get the text in the MuMsgPart (ie. in its GMimePart)
  *
+ * @param msg a MuMsg
  * @param part a MuMsgPart
- * @param err will receive TRUE if there was an error, FALSE otherwise
+ * @param opts MuMsgOptions
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
-char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts,
-			    gboolean *err) G_GNUC_WARN_UNUSED_RESULT;
+char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**

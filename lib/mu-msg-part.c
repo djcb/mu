@@ -157,21 +157,21 @@ accumulate_text (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 }
 
 char*
-mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts,
-		      gboolean *err)
+mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 {
 	GMimeObject  *mobj;
 	GMimeMessage *mime_msg;
+	gboolean err;
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (self && self->data, NULL);
-	g_return_val_if_fail (err, NULL);
 
 	mobj = (GMimeObject*)self->data;
 
+	err = FALSE;
 	if (GMIME_IS_PART (mobj)) {
 		if (self->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN)
-			return mu_msg_mime_part_to_string ((GMimePart*)mobj, err);
+			return mu_msg_mime_part_to_string ((GMimePart*)mobj, &err);
 		else
 			return NULL; /* non-text MimePart */
 	}

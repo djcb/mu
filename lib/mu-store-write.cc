@@ -388,7 +388,6 @@ struct PartData {
 static void
 maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 {
-	gboolean err;
 	char *txt, *norm;
 	Xapian::TermGenerator termgen;
 
@@ -398,9 +397,8 @@ maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	    !(part->part_type & MU_MSG_PART_TYPE_MESSAGE))
 		return;
 
-	txt = mu_msg_part_get_text (msg, part, MU_MSG_OPTION_NONE,
-				    &err);
-	if (!txt || err)
+	txt = mu_msg_part_get_text (msg, part, MU_MSG_OPTION_NONE);
+	if (!txt)
 		return;
 
 	termgen.set_document(pdata->_doc);
