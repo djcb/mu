@@ -128,6 +128,11 @@ see `mu4e-headers-visible-lines' and
 view buffer."
   :group 'mu4e-view)
 
+(defcustom mu4e-confirm-quit t
+  "Whether to confirm to quit mu4e."
+  :type 'boolean
+  :group 'mu4e)
+
 ;; crypto
 (defgroup mu4e-crypto nil
   "Crypto-related settings."
