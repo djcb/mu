@@ -146,7 +146,7 @@ paths."
   ;; directory 'cur' as leaf; then we we remove from that list all of those that
   ;; don't have tmp, new sister dirs. And there we're done!
   ;; 1. get all proper subdirs of the current dir, if it is readable
-  (when (file-accessible-directory-p path)
+  (when (file-accessible-directory-p (concat path mdir))
     (let* ((subdirs
 	     (remove-if
 	       (lambda (de)
@@ -259,6 +259,7 @@ provided, function asks for it."
 		   title))) mu4e-bookmarks ", "))
 	  (kar (read-char (concat prompt bmarks))))
     (mu4e-get-bookmark-query kar)))
+
 
 (defun mu4e-get-bookmark-query (kar)
   "Get the corresponding bookmarked query for shortcut character
