@@ -709,7 +709,16 @@ processing takes part in the background, unless buf is non-nil."
 	    (sit-for 5))
 	  (mu4e~proc-index mu4e-maildir mu4e-my-email-addresses)
 	  (when (buffer-live-p buf)
-	    (kill-buffer buf)))))))
+	    (kill-buffer buf)))))
+    (set-process-filter proc
+      (lambda (proc msg)
+        (save-current-buffer
+          (set-buffer (process-buffer proc))
+          (let ((inhibit-read-only t))
+            ;; Check whether process asks for a password and query user
+            (when (string-match "^Remote: Enter password: $" msg)
+              (process-send-string proc (concat (read-passwd "Password: ") "\n")))
+            (insert msg)))))))
 
 
 
