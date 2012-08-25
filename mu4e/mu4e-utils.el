@@ -682,6 +682,9 @@ FUNC (if non-nil) afterwards."
 (defconst mu4e~update-mail-name "*mu4e-update-mail*"
   "Name of the process to update mail.")
 
+(defvar mu4e~get-mail-ask-password "mu4e get-mail: Enter password: "
+  "Query string for `mu4e-get-mail-command' password.")
+
 (defvar mu4e~get-mail-password-regexp "^Remote: Enter password: $"
   "Regexp to match a password query in the `mu4e-get-mail-command' output.")
 
@@ -695,7 +698,9 @@ into the process buffer."
     (let ((inhibit-read-only t))
       ;; Check whether process asks for a password and query user
       (when (string-match mu4e~get-mail-password-regexp msg)
-        (process-send-string proc (concat (read-passwd "Password: ") "\n")))
+        (process-send-string proc (concat
+                                   (read-passwd mu4e~get-mail-ask-password)
+                                   "\n")))
       (insert msg))))
 
 (defun mu4e-update-mail (&optional buf)
