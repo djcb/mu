@@ -138,6 +138,20 @@ Function will return the cdr of the list element."
     (unless chosen (mu4e-error "%S not found" response))
     (cdr chosen)))
 
+(defun mu4e~get-dirs (dir)
+  "Get a list of directories under DIR."
+  ;; is 'ls' available on this system? 
+  (if (not (string= insert-directory-program "ls"))
+    ;; nope; get the subdirs the slow way
+    (remove-if
+      (lambda (de)
+	(or
+	  (string= (substring de 0 1) ".")
+	  (not (file-directory-p (concat dir "/" de)))))
+      (directory-files dir))
+    ;; yes; we have ls. let ls sort out the dirs for us
+    (let ((cmd (concat "ls -d " (shell-quote-argument dir) "/*/")))
+      (process-lines "sh" "-c" cmd)))) 
 
 (defun mu4e~get-maildirs-1 (path &optional mdir)
   "Get maildirs under path, recursively, as a list of relative
@@ -147,13 +161,8 @@ paths."
   ;; don't have tmp, new sister dirs. And there we're done!
   ;; 1. get all proper subdirs of the current dir, if it is readable
   (when (file-accessible-directory-p (concat path mdir))
-    (let* ((subdirs
-	     (remove-if
-	       (lambda (de)
-		 (or (not (file-directory-p (concat path mdir "/" de)))
-		   (string-match "\\.\\{1,2\\}$" de)))
-	       (directory-files (concat path mdir))))
-	    ;; 2. get the list of dirs with a /cur leaf dir
+    (let* ((subdirs (mu4e~get-dirs (concat path mdir)))
+	     ;; 2. get the list of dirs with a /cur leaf dir
 	    (maildirs '()))
       (dolist (dir subdirs)
 	(when (string= dir "cur")
@@ -167,20 +176,22 @@ paths."
 
 (defvar mu4e~maildir-list nil "Cached list of maildirs.")
 
-(defun mu4e-get-maildirs (path)
-  "Get maildirs under path, recursively, as a list of relative
-paths (ie., /archive, /sent etc.). Most of the work is done in
-`mu4e-get-maildirs-1'. Note, these results are /cached/, so the
-list of maildirs will not change until you restart mu4e."
+(defun mu4e-get-maildirs ()
+  "Get maildirs under `mu4e-maildir', recursively, as a list of
+relative paths (ie., /archive, /sent etc.). Most of the work is
+done in `mu4e-get-maildirs-1'. Note, these results are /cached/, so
+the list of maildirs will not change until you restart mu4e."
+  (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
   (unless mu4e~maildir-list
     (setq mu4e~maildir-list
-      (sort (mu4e~get-maildirs-1 path)
+      (sort (mu4e~get-maildirs-1 mu4e-maildir)
 	(lambda (m1 m2)
 	  (when (string= m1 "/")
 	    -1 ;; '/' comes first
 	    (compare-strings m1 0 nil m2 0 nil t))))))
   mu4e~maildir-list)
 
+;;(setq mu4e~maildir-list nil)
 
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT) as defined in
@@ -192,7 +203,7 @@ maildirs under `mu4e-maildir."
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not mu4e-maildir-shortcuts)
       (ido-completing-read prompt
-	(mu4e-get-maildirs mu4e-maildir))
+	(mu4e-get-maildirs))
       (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
 	      (fnames
 		(mapconcat
@@ -206,7 +217,7 @@ maildirs under `mu4e-maildir."
 		  mlist ", "))
 	      (kar (read-char (concat prompt fnames))))
 	(if (= kar ?o) ;; user chose 'other'?
-	  (ido-completing-read prompt (mu4e-get-maildirs mu4e-maildir))
+	  (ido-completing-read prompt (mu4e-get-maildirs))
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
 	    (mu4e-error "Invalid shortcut '%c'" kar)))))))

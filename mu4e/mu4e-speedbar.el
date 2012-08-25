@@ -85,7 +85,7 @@
 	      'highlight
 	      'mu4e~speedbar-maildir
 	      maildir-name))
-    (mu4e-get-maildirs mu4e-maildir)))
+    (mu4e-get-maildirs)))
 
 (defun mu4e~speedbar-maildir (&optional text token ident)
   "Jump to maildir TOKEN. TEXT and INDENT are not used."
