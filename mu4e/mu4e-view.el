@@ -374,8 +374,9 @@ is nil, and otherwise open it."
 	    ;; numbers and the part indices
 	    (remove-if
 	      (lambda (part)
-		(or
-		  (not (member 'attachment (plist-get part :type)))
+		(or ;; remove if it's not an attachment, unless it's an image
+		  (and (not (member 'attachment (plist-get part :type)))
+		    (not (string-match "^image" (plist-get part :mime-type))))
 		  ;;
 		  ))
 	      (plist-get msg :parts)))
