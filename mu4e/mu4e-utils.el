@@ -137,42 +137,25 @@ Function will return the cdr of the list element."
 	      options)))
     (unless chosen (mu4e-error "%S not found" response))
     (cdr chosen)))
+ 
 
-(defun mu4e~get-dirs (dir)
-  "Get a list of directories under DIR."
-  ;; is 'ls' available on this system? 
-  (if (not (string= insert-directory-program "ls"))
-    ;; nope; get the subdirs the slow way
-    (remove-if
-      (lambda (de)
-	(or
-	  (string= (substring de 0 1) ".")
-	  (not (file-directory-p (concat dir "/" de)))))
-      (directory-files dir))
-    ;; yes; we have ls. let ls sort out the dirs for us
-    (let ((cmd (concat "ls -d " (shell-quote-argument dir) "/*/")))
-      (process-lines "sh" "-c" cmd)))) 
-
-(defun mu4e~get-maildirs-1 (path &optional mdir)
+(defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative
 paths."
-  ;; first, we get a list of all directory paths under PATH that have a
-  ;; directory 'cur' as leaf; then we we remove from that list all of those that
-  ;; don't have tmp, new sister dirs. And there we're done!
-  ;; 1. get all proper subdirs of the current dir, if it is readable
-  (when (file-accessible-directory-p (concat path mdir))
-    (let* ((subdirs (mu4e~get-dirs (concat path mdir)))
-	     ;; 2. get the list of dirs with a /cur leaf dir
-	    (maildirs '()))
-      (dolist (dir subdirs)
-	(when (string= dir "cur")
-	  ;; be pedantic, and insist on there being a new/tmp as well
-	  (when (and (file-directory-p (concat path mdir "/new" ))
-		  (file-directory-p (concat path mdir "/tmp")))
-	    (add-to-list 'maildirs (if mdir mdir "/") t)))
-	(setq maildirs (append maildirs
-			 (mu4e~get-maildirs-1 path (concat mdir "/" dir)))))
-      maildirs)))
+  (let ((dirs)
+	 (dentries
+	   (ignore-errors
+	     (directory-files-and-attributes
+	       (concat path mdir) nil
+	       "^[^.]\\|\\.[^.][^.]" t))))
+    (dolist (dentry dentries)
+      (when (and (booleanp (cadr dentry)) (cadr dentry))
+	(if (file-accessible-directory-p
+	      (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))	
+	  (setq dirs (cons (concat mdir (car dentry)) dirs))
+	  (setq dirs (append dirs (mu4e~get-maildirs-1 path
+				    (concat mdir (car dentry) "/")))))))
+    dirs))
 
 (defvar mu4e~maildir-list nil "Cached list of maildirs.")
 
@@ -183,15 +166,13 @@ done in `mu4e-get-maildirs-1'. Note, these results are /cached/, so
 the list of maildirs will not change until you restart mu4e."
   (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
   (unless mu4e~maildir-list
-    (setq mu4e~maildir-list
-      (sort (mu4e~get-maildirs-1 mu4e-maildir)
-	(lambda (m1 m2)
-	  (when (string= m1 "/")
-	    -1 ;; '/' comes first
-	    (compare-strings m1 0 nil m2 0 nil t))))))
+    (setq mu4e~maildir-list 
+      (sort 
+	(append
+	  (when (file-accessible-directory-p (concat mu4e-maildir "/cur")) '("/"))
+	  (mu4e~get-maildirs-1 mu4e-maildir "/"))
+	(lambda (s1 s2) (string< (downcase s1) (downcase s2))))))
   mu4e~maildir-list)
-
-;;(setq mu4e~maildir-list nil)
 
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT) as defined in
@@ -199,11 +180,9 @@ the list of maildirs will not change until you restart mu4e."
 name. If the special shortcut 'o' (for _o_ther) is used, or if
 `mu4e-maildir-shortcuts is not defined, let user choose from all
 maildirs under `mu4e-maildir."
-  (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not mu4e-maildir-shortcuts)
-      (ido-completing-read prompt
-	(mu4e-get-maildirs))
+      (ido-completing-read prompt (mu4e-get-maildirs))
       (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
 	      (fnames
 		(mapconcat
