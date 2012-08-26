@@ -275,6 +275,61 @@ KAR, or raise an error if none is found."
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defcustom  mu4e-draft-flag-mark  ?D
+  "Mark to use when Message is a draft"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-flagged-flag-mark ?F
+  "Mark to use when Message is flagged"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-new-flag-mark     ?N
+  "Mark to use when Message is new"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-pased-flag-mark   ?P
+  "Mark to use when Message has been passed (forwarded)"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-replied-flag-mark ?R
+  "Mark to use when Message has been replied to"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-seen-flag-mark    ?S
+  "Mark to use when Message has been seen"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-trashed-flag-mark ?T
+  "Mark to use when Message has been trashed"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-attach-flag-mark  ?a
+  "Mark to use when Message has an attachment"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-encrypted-flag-mark ?x
+  "Mark to use when Message is encrypted"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-signed-flag-mark ?s
+  "Mark to use when Message is signed"
+  :type 'string
+  :group 'mu4e-flags)
+
+(defcustom mu4e-unread-flag-mark  ?u
+  "Mark to use when Message is unread"
+  :type 'string
+  :group 'mu4e-flags)
+
 (defun mu4e~flags-to-string-raw (flags)
   "Convert a list of flags into a string as seen in Maildir
 message files; flags are symbols draft, flagged, new, passed,
@@ -284,20 +339,9 @@ than the ones listed here are ignored.
 Also see `mu4e-flags-to-string'.
 \[1\]: http://cr.yp.to/proto/maildir.html"
   (when flags
-    (let ((kar (case (car flags)
-		 ('draft     ?D)
-		 ('flagged   ?F)
-		 ('new       ?N)
-		 ('passed    ?P)
-		 ('replied   ?R)
-		 ('seen      ?S)
-		 ('trashed   ?T)
-		 ('attach    ?a)
-		 ('encrypted ?x)
-		 ('signed    ?s)
-		 ('unread    ?u))))
+    (let ((kar (eval (intern (concat "mu4e-" (symbol-name (car flags)) "-flag-mark")))))
       (concat (and kar (string kar))
-	(mu4e~flags-to-string-raw (cdr flags))))))
+              (mu4e~flags-to-string-raw (cdr flags))))))
 
 (defun mu4e-flags-to-string (flags)
   "Remove duplicates and sort the output of `mu4e~flags-to-string-raw'."
