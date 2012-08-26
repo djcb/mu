@@ -672,6 +672,27 @@ FUNC (if non-nil) afterwards."
 (defconst mu4e~update-mail-name "*mu4e-update-mail*"
   "Name of the process to update mail.")
 
+(defvar mu4e~get-mail-ask-password "mu4e get-mail: Enter password: "
+  "Query string for `mu4e-get-mail-command' password.")
+
+(defvar mu4e~get-mail-password-regexp "^Remote: Enter password: $"
+  "Regexp to match a password query in the `mu4e-get-mail-command' output.")
+
+(defun mu4e~process-filter (proc msg)
+  "Filter the output of `mu4e-get-mail-command'.
+Currently the filter only checks if the command asks for a password by matching
+the output against `mu4e~get-mail-password-regexp'.  The messages are inserted
+into the process buffer."
+  (save-current-buffer
+    (set-buffer (process-buffer proc))
+    (let ((inhibit-read-only t))
+      ;; Check whether process asks for a password and query user
+      (when (string-match mu4e~get-mail-password-regexp msg)
+        (process-send-string proc (concat
+                                   (read-passwd mu4e~get-mail-ask-password)
+                                   "\n")))
+      (insert msg))))
+
 (defun mu4e-update-mail (&optional buf)
   "Update mail (retrieve using `mu4e-get-mail-command' and update
 the database afterwards), with output going to BUF if not nil, or
@@ -699,7 +720,8 @@ processing takes part in the background, unless buf is non-nil."
 	    (sit-for 5))
 	  (mu4e~proc-index mu4e-maildir mu4e-my-email-addresses)
 	  (when (buffer-live-p buf)
-	    (kill-buffer buf)))))))
+	    (kill-buffer buf)))))
+    (set-process-filter proc 'mu4e~process-filter)))
 
 
 
