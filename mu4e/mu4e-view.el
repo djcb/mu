@@ -228,8 +228,8 @@ marking if it still had that."
 	  ;; if we're showing the message for the first time, use the values of
 	  ;; user-settable variables `mu4e~view-wrap-lines' and
 	  ;; `mu4e~view-hide-cited' to determine whether we should wrap/hide
-	  (when mu4e~view-lines-wrapped (mu4e~view-wrap-lines))
-	  (when mu4e~view-cited-hidden  (mu4e~view-hide-cited))
+	  (when mu4e-view-wrap-lines (mu4e~view-wrap-lines))
+	  (when mu4e-view-hide-cited  (mu4e~view-hide-cited))
 	  ;; no use in trying to set flags again
 	  (mu4e~view-mark-as-read-maybe))))))
 
