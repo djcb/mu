@@ -362,9 +362,9 @@ is nil, and otherwise open it."
 (defun mu4e~view-construct-attachments-header (msg)
   "Display attachment information; the field looks like something like:
    	:parts ((:index 1 :name \"test123.doc\"
-                       :mime-type \"application/msword\" :attachment t :size 1234)
+                 :mime-type \"application/msword\" :attachment t :size 1234)
                 (:index 2 :name \"test456.pdf\"
-                       :mime-type \"application/pdf\" :attachment t :size 12234))."
+                 :mime-type \"application/pdf\" :attachment t :size 12234))."
   (setq mu4e~view-attach-map ;; buffer local
     (make-hash-table :size 64 :weakness nil))
   (let* ((id 0)

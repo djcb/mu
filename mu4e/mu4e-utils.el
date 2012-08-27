@@ -137,7 +137,7 @@ Function will return the cdr of the list element."
 	      options)))
     (unless chosen (mu4e-error "%S not found" response))
     (cdr chosen)))
- 
+
 
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative
@@ -151,7 +151,7 @@ paths."
     (dolist (dentry dentries)
       (when (and (booleanp (cadr dentry)) (cadr dentry))
 	(if (file-accessible-directory-p
-	      (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))	
+	      (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))
 	  (setq dirs (cons (concat mdir (car dentry)) dirs))
 	  (setq dirs (append dirs (mu4e~get-maildirs-1 path
 				    (concat mdir (car dentry) "/")))))))
@@ -166,8 +166,8 @@ done in `mu4e-get-maildirs-1'. Note, these results are /cached/, so
 the list of maildirs will not change until you restart mu4e."
   (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
   (unless mu4e~maildir-list
-    (setq mu4e~maildir-list 
-      (sort 
+    (setq mu4e~maildir-list
+      (sort
 	(append
 	  (when (file-accessible-directory-p (concat mu4e-maildir "/cur")) '("/"))
 	  (mu4e~get-maildirs-1 mu4e-maildir "/"))
@@ -295,7 +295,6 @@ Also see `mu4e-flags-to-string'.
     (sort (remove-duplicates
 	    (append (mu4e~flags-to-string-raw flags) nil)) '>)))
 
-
 (defun mu4e~string-to-flags-1 (str)
   "Convert a string with message flags as seen in Maildir
 messages into a list of flags in; flags are symbols draft,
@@ -317,7 +316,7 @@ Also see `mu4e-flags-to-string'.
 	(mu4e~string-to-flags-1 (substring str 1))))))
 
 (defun mu4e-string-to-flags (str)
-" Convert a string with message flags as seen in Maildir messages
+"Convert a string with message flags as seen in Maildir messages
 into a list of flags in; flags are symbols draft, flagged, new,
 passed, replied, seen, trashed and the string is the concatenation
 of the uppercased first letters of these flags, as per [1]. Other
