@@ -226,6 +226,27 @@ present, don't do anything."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defcustom mu4e-has-child-mark    "+ "
+  "Mark to use when thread has a child"
+  :type 'string
+  :group 'mu4e-marks)
+(defcustom mu4e-empty-parent-mark "- "
+  "Mark to use when thread has no parent"
+  :type 'string
+  :group 'mu4e-marks)
+(defcustom mu4e-first-child-mark  "\\ "
+  "Mark to use when message is the first child of the thread"
+  :type 'string
+  :group 'mu4e-marks)
+(defcustom mu4e-duplicate-mark    "= "
+  "Mark to use when message is a duplicate"
+  :type 'string
+  :group 'mu4e-marks)
+(defcustom mu4e-default-mark      "| "
+  "Default Mark"
+  :type 'string
+  :group 'mu4e-marks)
+
 (defun mu4e~headers-contact-str (contacts)
   "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
 into a string."
@@ -245,11 +266,11 @@ into a string."
       (concat
 	(make-string (* (if empty-parent 0 2) level) ?\s)
 	(cond
-	  (has-child    "+ ")
-	  (empty-parent "- ")
-	  (first-child  "\\ ")
-	  (duplicate    "= ")
-	  (t            "| "))))))
+	  (has-child    mu4e-has-child-mark)
+	  (empty-parent mu4e-empty-parent-mark)
+	  (first-child  mu4e-first-child-mark)
+	  (duplicate    mu4e-duplicate-mark)
+	  (t            mu4e-default-mark))))))
 
 (defconst mu4e-headers-from-or-to-prefix '("" . "To ")
   "Prefix for the :from-or-to field when it is showing,
