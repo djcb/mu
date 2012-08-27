@@ -694,7 +694,8 @@ Currently the filter only checks if the command asks for a password by matching
 the output against `mu4e~get-mail-password-regexp'.  The messages are inserted
 into the process buffer."
   (save-current-buffer
-    (set-buffer (process-buffer proc))
+    (when (process-buffer proc)
+      (set-buffer (process-buffer proc)))
     (let ((inhibit-read-only t))
       ;; Check whether process asks for a password and query user
       (when (string-match mu4e~get-mail-password-regexp msg)
@@ -704,7 +705,8 @@ into the process buffer."
                                        "\n"))
            ;; TODO kill process?
           (error "Get-mail process requires a password but was not called interactively")))
-      (insert msg))))
+      (when (process-buffer proc)
+        (insert msg)))))
 
 (defun mu4e-update-mail (&optional buf interactive)
   "Update mail (retrieve using `mu4e-get-mail-command' and update
