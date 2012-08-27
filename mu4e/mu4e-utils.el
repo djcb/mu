@@ -560,7 +560,7 @@ split-window."
       (set-window-dedicated-p win t)
       (erase-buffer)
       (insert "\n") ;; FIXME -- needed so output starts
-      (mu4e-update-mail buf))))
+      (mu4e-update-mail buf t))))
 
 
 
@@ -698,17 +698,22 @@ into the process buffer."
     (let ((inhibit-read-only t))
       ;; Check whether process asks for a password and query user
       (when (string-match mu4e~get-mail-password-regexp msg)
-        (process-send-string proc (concat
-                                   (read-passwd mu4e~get-mail-ask-password)
-                                   "\n")))
+        (if (process-get proc 'x-interactive)
+            (process-send-string proc (concat
+                                       (read-passwd mu4e~get-mail-ask-password)
+                                       "\n"))
+           ;; TODO kill process?
+          (error "Get-mail process requires a password but was not called interactively")))
       (insert msg))))
 
-(defun mu4e-update-mail (&optional buf)
+(defun mu4e-update-mail (&optional buf interactive)
   "Update mail (retrieve using `mu4e-get-mail-command' and update
 the database afterwards), with output going to BUF if not nil, or
 discarded if nil. After retrieving mail, update the database. Note,
 function is asynchronous, returns (almost) immediately, and all the
-processing takes part in the background, unless buf is non-nil."
+processing takes part in the background, unless buf is non-nil.
+If INTERACTIVE is not nil then the user might be asked for a
+password."
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
   (let* ((process-connection-type t)
@@ -731,6 +736,7 @@ processing takes part in the background, unless buf is non-nil."
 	  (mu4e~proc-index mu4e-maildir mu4e-my-email-addresses)
 	  (when (buffer-live-p buf)
 	    (kill-buffer buf)))))
+    (process-put proc 'x-interactive interactive)
     (set-process-filter proc 'mu4e~process-filter)))
 
 
