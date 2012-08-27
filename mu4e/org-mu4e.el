@@ -27,10 +27,11 @@
 
 ;;; Code:
 
-;;(require 'org)
-(eval-when-compile (require 'org-exp))
 (eval-when-compile (require 'cl))
 (eval-when-compile (require 'mu4e))
+;; hack: we don't want to require org (as that doesn't always work in
+;; byte-compiliation, yet we'd like to prevent compilations warnings
+(eval-when-compile (defun org-export-string (&rest x)))
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
