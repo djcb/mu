@@ -53,10 +53,9 @@ PATH, you can specify the full path."
   :safe 'stringp
   :group 'mu4e)
 
-(defcustom mu4e-get-mail-command nil
+(defcustom mu4e-get-mail-command "true"
   "Shell command to run to retrieve new mail; e.g. 'offlineimap' or
-'fetchmail'. Note, when there is no mail, fetchmail will return 1
-as it error code, which mu4e interprets as an error."
+'fetchmail'."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
