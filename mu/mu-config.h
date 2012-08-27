@@ -75,6 +75,7 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_SERVER,
 	MU_CONFIG_CMD_VERIFY,
 	MU_CONFIG_CMD_VIEW,
+	MU_CONFIG_CMD_INSPECT,
 
 	MU_CONFIG_CMD_NONE
 };
@@ -156,6 +157,9 @@ struct _MuConfig {
 	/* options for cfind (and 'find' --> "after") */
 	gboolean          personal;       /* only show 'personal' addresses */
 	/* also 'after' --> see above */
+
+	/* options for inspect */
+	gboolean        print_types;     /* list all available types, instead of terms */
 
 	/* output to a maildir with symlinks */
 	char            *linksdir;	/* maildir to output symlinks */

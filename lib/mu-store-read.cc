@@ -262,6 +262,31 @@ mu_store_foreach (MuStore *self,
 	return MU_OK;
 }
 
+MuError
+mu_store_foreach_term (MuStore *self,
+		  MuStoreForeachTermFunc func, void *user_data, GError **err)
+{
+	g_return_val_if_fail (self, MU_ERROR);
+	g_return_val_if_fail (func, MU_ERROR);
+
+	try {
+		Xapian::Database &db = *self->db_read_only();
+
+		for (Xapian::TermIterator iter = db.allterms_begin();
+		     iter != db.allterms_end(); ++iter) {
+			const std::string &term(*iter);
+			unsigned int term_freq = iter.get_termfreq();
+			MuError res = func (term.c_str(), term_freq, user_data);
+			if (res != MU_OK)
+				return res;
+		}
+
+	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN,
+					       MU_ERROR_XAPIAN);
+
+	return MU_OK;
+}
+
 
 
 MuMsg*

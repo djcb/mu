@@ -40,6 +40,7 @@ mu_SOURCES=				\
 	mu-config.h			\
 	mu-cmd-extract.c		\
 	mu-cmd-find.c			\
+	mu-cmd-inspect.c		\
 	mu-cmd-index.c			\
 	mu-cmd-server.c			\
 	mu-cmd.c			\

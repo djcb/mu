@@ -494,7 +494,7 @@ show_usage (void)
 {
 	g_print ("usage: mu command [options] [parameters]\n");
 	g_print ("where command is one of index, find, cfind, view, mkdir, "
-		   "extract, add, remove or server\n");
+		   "extract, add, remove, inspect or server\n");
 	g_print ("see the mu, mu-<command> or mu-easy manpages for "
 		   "more information\n");
 }
@@ -580,6 +580,8 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		return with_store (mu_cmd_remove, opts, FALSE, err);
 	case MU_CONFIG_CMD_SERVER:
 		return with_store (mu_cmd_server, opts, FALSE, err);
+	case MU_CONFIG_CMD_INSPECT:
+		return with_store (mu_cmd_inspect, opts, TRUE, err);
 	default:
 		show_usage ();
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
