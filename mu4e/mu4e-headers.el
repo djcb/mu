@@ -71,12 +71,40 @@ and the mode-line."
   :type 'integer
   :group 'mu4e-headers)
 
-
 (defcustom mu4e-headers-visible-columns 30
   "Number of columns to display for the header view when using the
 vertical split-view."
   :type 'integer
   :group 'mu4e-headers)
+
+(defcustom mu4e-headers-use-fancy-chars nil
+  "Whether to use fancy (non-ascii) characters to show message
+flags and thread prefixes."
+  :type 'booleanp
+  :group 'mu4e-headers)
+
+
+;; marks for headers of the form; each is a cons-cell (basic . fancy)
+;; each of which is basic ascii char and something fancy, respectively
+(defvar mu4e-headers-draft-mark     '("D" . "✎") "Mark for draft messages.")
+(defvar mu4e-headers-flagged-mark   '("F" . "⚑") "Mark for flagged messages.")
+(defvar mu4e-headers-new-mark       '("N" . "★") "Mark for new messages.")
+(defvar mu4e-headers-passed-mark    '("P" . "➔") "Mark for passed (fwd) messages.")
+(defvar mu4e-headers-replied-mark   '("R" . "↳") "Mark for replied messages.")
+(defvar mu4e-headers-seen-mark      '("S" . "✔") "Mark for seen messages.")
+(defvar mu4e-headers-trashed-mark   '("T" . "♻") "Mark for trashed messages.")
+(defvar mu4e-headers-attach-mark    '("a" . "a") "Mark for messages w/ attachments.")
+(defvar mu4e-headers-encrypted-mark '("x" . "x") "Mark for encrypted messages.")
+(defvar mu4e-headers-signed-mark    '("s" . "s") "Mark for signed messages.")
+(defvar mu4e-headers-unread-mark    '("u" . "u") "Mark for unread messages.")
+
+;; thread prefix marks
+(defvar mu4e-headers-has-child-prefix     '("+"  . "+") "Prefix for thread with child(ren).")
+(defvar mu4e-headers-empty-parent-prefix  '("-"  . "⚬") "Prefix for thread without parent.")
+(defvar mu4e-headers-first-child-prefix   '("\\" . "┗➔") "Prefix for the first child.")
+(defvar mu4e-headers-duplicate-prefix     '("="  . "≟") "Prefix for a duplicate message.")
+(defvar mu4e-headers-default-prefix       '("|"  . "┃") "Default prefix.")
+
 
 (defvar mu4e-headers-actions
   '( ("capture message" . mu4e-action-capture-message))
@@ -234,22 +262,50 @@ into a string."
       (let ((name (car ct)) (email (cdr ct)))
 	(or name email "?"))) contacts ", "))
 
-(defun mu4e~headers-thread-prefix (thread)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defsubst mu4e~headers-thread-prefix (thread)
   "Calculate the thread prefix based on thread info THREAD."
-  (if thread
-    (let ( (level        (plist-get thread :level))
-	   (first-child  (plist-get thread :first-child))
-	   (has-child    (plist-get thread :has-child))
-	   (duplicate    (plist-get thread :duplicate))
-	   (empty-parent (plist-get thread :empty-parent)))
+  (when thread
+    (let ((get-prefix
+	    (lambda (cell)  (if mu4e-headers-use-fancy-chars (cdr cell) (car cell)))))
       (concat
-	(make-string (* (if empty-parent 0 2) level) ?\s)
+	(make-string (* (if (plist-get thread :empty-parent) 0 2)
+		 (plist-get thread :level)) ?\s)
 	(cond
-	  (has-child    "+ ")
-	  (empty-parent "- ")
-	  (first-child  "\\ ")
-	  (duplicate    "= ")
-	  (t            "| "))))))
+	  ((plist-get thread :has-child)    (funcall get-prefix mu4e-headers-has-child-prefix))
+	  ((plist-get thread :empty-parent) (funcall get-prefix mu4e-headers-empty-parent-prefix))
+	  ((plist-get thread :first-child)  (funcall get-prefix mu4e-headers-first-child-prefix))
+	  ((plist-get thread :duplicate)    (funcall get-prefix mu4e-headers-duplicate-prefix))
+	  (t				    (funcall get-prefix mu4e-headers-default-prefix)))
+	" "))))
+
+(defsubst mu4e~headers-flags-str (flags)
+  "Get a display string for the flags; note, there is
+`mu4e-flags-to-string' but that is for internal use; this function
+is for display. (This difference is significant, since internally,
+the Maildir spec determines what the flags look like, while our
+display may be different)."
+  (let ((str)
+	 (get-prefix
+	   (lambda (cell) (if mu4e-headers-use-fancy-chars (cdr cell) (car cell)))))
+    (dolist (flag flags)
+      (setq str
+	(concat str
+	  (case flag
+	    ('draft     (funcall get-prefix mu4e-headers-draft-mark))
+	    ('flagged   (funcall get-prefix mu4e-headers-flagged-mark))
+	    ('new       (funcall get-prefix mu4e-headers-new-mark))
+	    ('passed    (funcall get-prefix mu4e-headers-passed-mark))
+	    ('replied   (funcall get-prefix mu4e-headers-replied-mark))
+	    ('seen      (funcall get-prefix mu4e-headers-seen-mark))
+	    ('trashed   (funcall get-prefix mu4e-headers-trashed-mark))
+	    ('attach    (funcall get-prefix mu4e-headers-attach-mark))
+	    ('encrypted (funcall get-prefix mu4e-headers-encrypted-mark))
+	    ('signed    (funcall get-prefix mu4e-headers-signed-mark))
+	    ('unread    (funcall get-prefix mu4e-headers-unread-mark))))))
+	   str))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (defconst mu4e-headers-from-or-to-prefix '("" . "To ")
   "Prefix for the :from-or-to field when it is showing,
@@ -290,7 +346,7 @@ if provided, or at the end of the buffer otherwise."
 						mu4e-headers-from-or-to-prefix))
 				   (mu4e~headers-contact-str from-lst)))))
 			   (:date (format-time-string mu4e-headers-date-format val))
-			   (:flags (propertize (mu4e-flags-to-string val)
+			   (:flags (propertize (mu4e~headers-flags-str val)
 				     'help-echo (format "%S" val)))
 			   (:size (mu4e-display-size val))
 			   (t (mu4e-error "Unsupported header field (%S)" field)))))
@@ -520,7 +576,6 @@ after the end of the search results."
       table))
   "The `glyphless-char-display' table in mu4e heders buffers.")
 
-
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
   (cons
@@ -623,15 +678,14 @@ adding a lot of new headers looks really choppy."
 ;;;; is used for quickly finding a certain header, the latter for retrieving the
 ;;;; docid at point without string matching etc.
 
-(defun mu4e~headers-docid-cookie (docid)
+(defsubst mu4e~headers-docid-cookie (docid)
   "Create an invisible string containing DOCID; this is to be used
 at the beginning of lines to identify headers."
   (propertize (format "%s%d%s"
 		mu4e~headers-docid-pre docid mu4e~headers-docid-post)
     'docid docid 'invisible t))
 
-
-(defun mu4e~headers-docid-at-point (&optional point)
+(defsubst mu4e~headers-docid-at-point (&optional point)
   "Get the docid for the header at POINT, or at current (point) if
 nil. Returns the docid, or nil if there is none."
     (save-excursion
@@ -656,7 +710,7 @@ of the beginning of the line."
 	  (setq newpoint (point)))))
     newpoint)) ;; return the point, or nil if not found
 
-(defun mu4e~headers-docid-pos (docid)
+(defsubst mu4e~headers-docid-pos (docid)
   "Return the pos of the beginning of the line with the header with
 docid DOCID, or nil if it cannot be found."
   (let ((pos))
@@ -664,7 +718,7 @@ docid DOCID, or nil if it cannot be found."
       (setq pos (mu4e~headers-goto-docid docid)))
     pos))
 
-(defun mu4e~headers-field-for-docid (docid field)
+(defsubst mu4e~headers-field-for-docid (docid field)
   "Get FIELD (a symbol, see `mu4e-headers-names') for the message
 with DOCID which must be present in the headers buffer."
   (save-excursion
