@@ -97,7 +97,7 @@ the length (in hex).")
       '(run open listen connect stop))))
 
 
-(defun mu4e~proc-eat-sexp-from-buf ()
+(defsubst mu4e~proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e~proc-buf'. Note: this is a string,
 not an emacs-buffer. `mu4e~proc-buf gets its contents from the
 mu-servers in the following form:
@@ -371,8 +371,6 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 	      (format " maildir:\"%s\"" maildir))))
     (mu4e~proc-send-command "move %s %s %s"
       idparam (or flagstr "") (or path ""))))
-
-
 
 (defun mu4e~proc-index (path my-addresses)
   "Update the message database for filesystem PATH, which should
