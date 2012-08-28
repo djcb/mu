@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.9-dev3],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.9-dev4],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -25,20 +25,21 @@ AM_INIT_AUTOMAKE
 # silent build if we have a new enough automake
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+AS_IF([test x$prefix = xNONE],[prefix=/usr/local])
+AC_SUBST(prefix)
+
+# AC_PROG_CXX *before* AC_PROG_CC, otherwise configure won't error out
+# when a c++ compiler is not found. Weird, huh?
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CC_STDC
+AC_PROG_INSTALL
+AC_HEADER_STDC
+
 # for now, use AM_PROG_LIBTOOL, as we don't want to require
 # a too new setup for autotools/libtool
 AM_PROG_LIBTOOL
 #LT_INIT([disable-shared])
-
-AS_IF([test x$prefix = xNONE],[prefix=/usr/local])
-AC_SUBST(prefix)
-
-AC_PROG_CC
-AC_PROG_CC_C_O
-AC_PROG_CC_STDC
-AC_PROG_INSTALL
-AC_PROG_CXX
-AC_HEADER_STDC
 
 AC_PROG_AWK
 
@@ -47,6 +48,11 @@ AC_CHECK_HEADERS([locale.h langinfo.h])
 # use the 64-bit versions
 AC_SYS_LARGEFILE
 
+# check for some libs
+AC_CHECK_LIB([uuid], [uuid_generate_random],[],AC_MSG_ERROR([libuuid not found]))
+AC_CHECK_LIB([z], [inflateEnd], [],AC_MSG_ERROR([zlib not found]))
+
+    
 # check for makeinfo
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
