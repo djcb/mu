@@ -77,12 +77,6 @@ vertical split-view."
   :type 'integer
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-use-fancy-chars nil
-  "Whether to use fancy (non-ascii) characters to show message
-flags and thread prefixes."
-  :type 'booleanp
-  :group 'mu4e-headers)
-
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
@@ -254,7 +248,7 @@ present, don't do anything."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e~headers-contact-str (contacts)
+(defsubst mu4e~headers-contact-str (contacts)
   "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
 into a string."
   (mapconcat
@@ -267,7 +261,7 @@ into a string."
   "Calculate the thread prefix based on thread info THREAD."
   (when thread
     (let ((get-prefix
-	    (lambda (cell)  (if mu4e-headers-use-fancy-chars (cdr cell) (car cell)))))
+	    (lambda (cell)  (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
       (concat
 	(make-string (* (if (plist-get thread :empty-parent) 0 2)
 		 (plist-get thread :level)) ?\s)
@@ -287,7 +281,7 @@ the Maildir spec determines what the flags look like, while our
 display may be different)."
   (let ((str)
 	 (get-prefix
-	   (lambda (cell) (if mu4e-headers-use-fancy-chars (cdr cell) (car cell)))))
+	   (lambda (cell) (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
     (dolist (flag flags)
       (setq str
 	(concat str
@@ -564,18 +558,7 @@ after the end of the search results."
       map)))
 
 (fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
-
-;; borrowed from `tabulated-list'
-(defvar mu4e~glyphless-char-display
-  (when (boundp 'glyphless-char-display)
-    (let ((table (make-char-table 'glyphless-char-display nil)))
-      (set-char-table-parent table glyphless-char-display)
-      ;; Some text terminals can't display the Unicode arrows; be safe.
-      (aset table 9650 (cons nil "^"))
-      (aset table 9660 (cons nil "v"))
-      table))
-  "The `glyphless-char-display' table in mu4e heders buffers.")
-
+ 
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
   (cons
@@ -587,11 +570,13 @@ after the end of the search results."
 		(info (cdr (assoc field mu4e-header-info)))
 		(sortable (plist-get info :sortable))
 		(help (plist-get info :help))
+		(uparrow   (if mu4e-use-fancy-chars "▲ " "^ "))
+		(downarrow (if mu4e-use-fancy-chars "▼ " "V "))
 		;; triangle to mark the sorted-by column
-		(triangle
+		(arrow
 		  (when (and sortable (eq (car item) mu4e-headers-sortfield))
-		    (if mu4e-headers-sort-revert "▼ " "▲ ")))
-		(name (concat triangle (plist-get info :shortname)))
+		    (if mu4e-headers-sort-revert downarrow uparrow)))
+		(name (concat arrow (plist-get info :shortname)))
 		(map (make-sparse-keymap)))
 	  (when sortable
 	    (define-key map [header-line mouse-1]
@@ -631,10 +616,7 @@ after the end of the search results."
   (make-local-variable 'mu4e~highlighted-docid)
   (make-local-variable 'global-mode-string)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
-  (when (boundp 'glyphless-char-display)
-    (set (make-local-variable 'glyphless-char-display)
-      mu4e~glyphless-char-display))
-
+  
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information

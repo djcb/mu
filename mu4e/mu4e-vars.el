@@ -83,6 +83,11 @@ in :from-or-to headers. By default, match nothing."
   :group 'mu4e
   :safe 'stringp)
 
+(defcustom mu4e-use-fancy-chars nil
+  "Whether to use fancy (non-ascii) characters."
+  :type 'booleanp
+  :group 'mu4e)
+
 (defcustom mu4e-my-email-addresses `(,user-mail-address)
   "List of e-mail addresses to consider 'my email addresses',
 ie. addresses whose presence in an email imply that it is a
