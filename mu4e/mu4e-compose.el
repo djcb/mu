@@ -72,7 +72,14 @@ sent folder."
 replying to messages."
   :type 'boolean
   :group 'mu4e-compose)
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar mu4e-compose-pre-hook nil
+  "Hook run just *before* message composition starts. If the
+compose-type is either /reply/ or /forward/, the variable
+`mu4e-compose-parent-message' points to the message replied to / being forwarded.")
+
+(defvar mu4e-compose-parent-message nil)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun mu4e-compose-attach-captured-message()
@@ -659,6 +666,16 @@ buffer."
 	  (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
 	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P")))))))
 
+(defun mu4e~compose-run-hooks (compose-type)
+  "Run the hooks defined for `mu4e-compose-pre-hook'. If
+compose-type is either `reply' or `forward',
+`mu4e-compose-parent-message' points to the message being forwarded
+or replied to, otherwise it is nil."
+  (setq mu4e-compose-parent-message
+    (when (member compose-type '(reply forward))
+      (mu4e-message-at-point)))
+  (run-hooks 'mu4e-compose-pre-hook))
+
 (defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
@@ -678,6 +695,9 @@ for draft messages."
       (unless (or (not (eq compose-type 'edit))
 		(member 'draft (mu4e-field-at-point :flags)))
 	  (mu4e-error "Editing is only allowed for draft messages"))
+
+      (mu4e~compose-run-hooks compose-type)
+
       ;; if there's a visible view window, select that before starting
       ;; composing a new message, so that one will be replaced by the
       ;; compose window. The 10-or-so line headers buffer is not a good way
@@ -685,7 +705,11 @@ for draft messages."
 	(let ((viewwin (get-buffer-window mu4e~view-buffer)))
 	  (when (window-live-p viewwin)
 	    (select-window viewwin)))
-	;; talk to the backend
+
+
+
+
+      ;; talk to the backend
       (mu4e~proc-compose compose-type docid))))
 
 (defun mu4e-compose-reply ()
@@ -743,6 +767,9 @@ message."
 (defun mu4e~compose-mail (&optional to subject other-headers continue
 			   switch-function yank-action send-actions return-action)
   "mu4e's implementation of `compose-mail'."
+
+  (mu4e~compose-run-hooks 'new)
+
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
   (mu4e~compose-handler 'new)
