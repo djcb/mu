@@ -22,7 +22,7 @@ exec guile -e main -s $0 $@
 
 
 (use-modules (ice-9 getopt-long) (ice-9 format))
-(use-modules (mu) (mu message))
+(use-modules (mu))
 
 (define (display-org-header query)
   "Print the header for the org-file for QUERY."
