@@ -71,7 +71,8 @@ dir already existed, or has been created, nil otherwise."
   "Like `message', but prefixed with mu4e. If we're waiting for
 user-input, don't show anyhting."
   (unless (waiting-for-user-input-p)
-    (message "%s" (apply 'mu4e-format frm args))))
+    (message "%s" (apply 'mu4e-format frm args))
+    nil))
 
 (defun mu4e-error (frm &rest args)
   "Create [mu4e]-prefixed error based on format FRM and ARGS."
@@ -135,9 +136,10 @@ Function will return the cdr of the list element."
 	    (find-if
 	      (lambda (option) (eq response (string-to-char (car option))))
 	      options)))
-    (unless chosen (mu4e-error "%S not found" response))
-    (cdr chosen)))
-
+    (if chosen
+      (cdr chosen)
+      (mu4e-error "Unknown shortcut '%c'" response))))
+    
 
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative
@@ -199,7 +201,7 @@ maildirs under `mu4e-maildir."
 	  (ido-completing-read prompt (mu4e-get-maildirs))
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
-	    (mu4e-error "Invalid shortcut '%c'" kar)))))))
+	    (mu4e-error "Unknown shortcut '%c'" kar)))))))
 
 
 (defun mu4e-ask-maildir-check-exists (prompt)
@@ -261,7 +263,7 @@ KAR, or raise an error if none is found."
 	   mu4e-bookmarks)))
    (if chosen-bm
      (nth 0 chosen-bm)
-     (mu4e-error "Invalid shortcut '%c'" kar))))
+     (mu4e-error "Unknown shortcut '%c'" kar))))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -385,7 +387,6 @@ function prefers the text part, but this can be changed by setting
       (buffer-string))))
 
 
-
 (defun mu4e-display-manual ()
   "Display the mu4e manual page for the current mode, or go to the
 top level if there is none."
@@ -396,10 +397,8 @@ top level if there is none."
 	  ('mu4e-view-mode "(mu4e)Message view")
 	  (t               "mu4e"))))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun mu4e-msg-field (msg field)
+(defsubst mu4e-msg-field (msg field)
   "Retrieve FIELD from message plist MSG. FIELD is one
 of :from, :to, :cc, :bcc, :subject, :data, :message-id, :path, :maildir,
 :priority, :attachments, :references, :in-reply-to, :body-txt, :body-html
