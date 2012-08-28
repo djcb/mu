@@ -406,13 +406,34 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 			  mu_msg_get_body_html(msg, opts));
 }
 
+static void
+append_sexp_date_and_size (GString *gstr, MuMsg *msg)
+{
+	time_t t;
+	size_t s;
+
+	t = mu_msg_get_date (msg);
+	if (t == (time_t)-1)  /* invalid date? */
+		t = 0;
+
+	s = mu_msg_get_size (msg);
+	if (s == (size_t)-1)   /* invalid size? */
+		s = 0;
+
+	g_string_append_printf
+		(gstr,
+		 "\t:date (%u %u 0)\n\t:size %u\n",
+		 (unsigned)(t >> 16),
+		 (unsigned)(t & 0xffff),
+		 (unsigned)s);
+}
+
 
 char*
 mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 		MuMsgOptions opts)
 {
 	GString *gstr;
-	time_t t;
 
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (!((opts & MU_MSG_OPTION_HEADERS_ONLY) &&
@@ -435,11 +456,8 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	if (opts & MU_MSG_OPTION_HEADERS_ONLY)
 		append_sexp_contacts (gstr, msg);
 
-	t = mu_msg_get_date (msg);
-	/* weird time format for emacs 29-bit ints...*/
-	g_string_append_printf (gstr,"\t:date (%u %u 0)\n\t:size %u\n",
-				(unsigned)(t >> 16), (unsigned)(t & 0xffff),
-				(unsigned)mu_msg_get_size (msg));
+	append_sexp_date_and_size (gstr, msg);
+
 	append_sexp_attr (gstr, "message-id", mu_msg_get_msgid (msg));
 	append_sexp_attr (gstr, "path",	 mu_msg_get_path (msg));
 	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
