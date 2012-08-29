@@ -76,9 +76,12 @@ replying to messages."
 (defvar mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts. If the
 compose-type is either /reply/ or /forward/, the variable
-`mu4e-compose-parent-message' points to the message replied to / being forwarded.")
+`mu4e-compose-parent-message' points to the message replied to /
+being forwarded / edited.")
 
-(defvar mu4e-compose-parent-message nil)
+(defvar mu4e-compose-parent-message nil
+  "The parent message plist (ie., the message being replied to,
+forwarded or edited) in `mu4e-compose-pre-hook.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -668,11 +671,11 @@ buffer."
 
 (defun mu4e~compose-run-hooks (compose-type)
   "Run the hooks defined for `mu4e-compose-pre-hook'. If
-compose-type is either `reply' or `forward',
+compose-type is `reply', `forward' or `edit',
 `mu4e-compose-parent-message' points to the message being forwarded
 or replied to, otherwise it is nil."
   (setq mu4e-compose-parent-message
-    (when (member compose-type '(reply forward))
+    (when (member compose-type '(reply forward edit))
       (mu4e-message-at-point)))
   (run-hooks 'mu4e-compose-pre-hook))
 
@@ -681,33 +684,29 @@ or replied to, otherwise it is nil."
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
 take the message at point as input. Symbol `edit' is only allowed
 for draft messages."
+
   (unless (member compose-type '(reply forward edit new))
     (mu4e-error "Invalid compose type '%S'" compose-type))
+  (when (and (eq compose-type 'edit)  
+	  (not (member 'draft (mu4e-field-at-point :flags))))
+    (mu4e-error "Editing is only allowed for draft messages")) 
+
+  ;; run the hooks
+  (mu4e~compose-run-hooks compose-type)
+  
   ;; 'new is special, since it takes no existing message as arg therefore,
   ;; we don't need to call thec backend, and call the handler *directly*
   (if (eq compose-type 'new)
     (mu4e~compose-handler 'new)
+
     ;; otherwise, we need the doc-id
     (let ((docid (mu4e-field-at-point :docid)))
-      ;; note, the first two chars of the line (the mark margin) does *not*
-      ;; have the 'draft property; thus, we check one char before the end of
-      ;; the current line instead
-      (unless (or (not (eq compose-type 'edit))
-		(member 'draft (mu4e-field-at-point :flags)))
-	  (mu4e-error "Editing is only allowed for draft messages"))
-
-      (mu4e~compose-run-hooks compose-type)
-
-      ;; if there's a visible view window, select that before starting
-      ;; composing a new message, so that one will be replaced by the
-      ;; compose window. The 10-or-so line headers buffer is not a good way
-      ;; to write it...
+       ;; if there's a visible view window, select that before starting composing
+      ;; a new message, so that one will be replaced by the compose window. The
+      ;; 10-or-so line headers buffer is not a good place to write it...
 	(let ((viewwin (get-buffer-window mu4e~view-buffer)))
 	  (when (window-live-p viewwin)
 	    (select-window viewwin)))
-
-
-
 
       ;; talk to the backend
       (mu4e~proc-compose compose-type docid))))

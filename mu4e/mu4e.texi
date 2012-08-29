@@ -1065,6 +1065,64 @@ the start of 2010.
 filter out other 'junk' e-mail addresses; defaults to @t{noreply}.
 @end itemize
 
+@subsection Compose hooks
+@anchor{Compose hooks}
+
+If you want to execute some custom action before message composition starts,
+you can define a @emph{hook function}. @t{mu4e} offers two hooks:
+@itemize
+@item @code{mu4e-compose-pre-hook}: this hook is run @emph{before} composition
+starts; if you are composing a @emph{reply}, @emph{forward} a message, or
+@emph{edit} an existing message, the variable
+@code{mu4e-compose-parent-message} points to the message being replied to,
+forwarded or edit, and you can use @code{mu4e-msg-field} to get the value of
+various properties (and see @ref{The message s-expression}).
+@item @code{mu4e-compose-mode-hook}: this hook is run just before composition
+starts, when the whole buffer has already been set up. This is a good place
+for editing-related settings. @code{mu4e-compose-parent-message} (see above)
+is also at your disposal.
+@end itemize
+
+Let's look at some examples.
+
+First, suppose we want to set the @t{From:}-address for a reply message based
+on the receiver of the original:
+@lisp
+;; messages sent to me@@foo.com should be replied with me@@foo.com as From:
+;; address; messages sent to me@@bar.com should be replied with me@@bar.com as From:
+;; address; all other mail should use me@@cuux.com as From: address
+(add-hook 'mu4e-compose-pre-hook
+  (defun my-set-from-address ()
+    "Set the From address based on the To address of the original."
+    (let ((orig-to (cdar (mu4e-msg-field mu4e-compose-parent-message :to))))
+      (setq user-mail-address
+	(cond 
+	  ((string= "me@@foo.com" orig-to) "me@@foo.com")
+	  ((string= "me@@bar.com" orig-to) "me@@bar.com")
+	  (t "me@@cuux.com")))))) 
+@end lisp
+
+Second, as mentioned, @code{mu4e-compose-mode-hook} is especially useful for
+editing-related settings. For example:
+@lisp
+(add-hook 'mu4e-compose-mode-hook
+   (defun my-do-compose-stuff ()
+      "My settings for message composition."
+      (set-fill-column 72)
+      (flyspell-mode)))
+@end lisp
+
+This hook is also useful for adding headers or changing headers, since the
+message is fully formed when this hook runs. For example, to add a
+@t{Bcc:}-header, you could add something like the following:
+
+@lisp
+(add-hook 'mu4e-compose-mode-hook
+  (defun my-add-bcc ()
+    "Add a Bcc: header."
+    (message-add-header "Bcc: me@@example.com\n")))
+@end lisp
+
 
 @subsection Queuing mail
 @anchor{Queuing mail}
@@ -2097,6 +2155,8 @@ Mail' folder by pressing @kbd{ma}.
 In this chapter we list a number of actual and anticipated questions and their
 answers.
 
+@subsection General
+
 @itemize
 @item @emph{How can I quickly delete/move/trash a lot of messages?} You can
 select ('mark' in emacs-speak) the messages like you would select text in a
@@ -2106,34 +2166,6 @@ can also use functions like @code{mu4e-headers-mark-thread} (@key{T}),
 @code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at the same
 time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
 matching a certain regular expression.
-@item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
-address management with @t{BBDB}; instead, we recommend using @t{mu4e}'s
-built-in @ref{Address autocompletion}.
-@item @emph{How can I automatically set the @t{From:} address for a
-reply-message, based on some field in the original?} Currently, you cannot do
-that automatically. It is possible to do it non-automatically though, with
-something like:
-@lisp
-(defun mu4e-change-from ()
-  "Change the from header."
-  (interactive)
-  (save-excursion
-    (when (message-goto-from)
-      (message-delete-line))
-    (goto-char (point-min))
-    (insert
-      (concat "From: "
-	(ido-completing-read "From: "
-	  '("Mail1 <foo@@bar.com>"
-	    "Mail2 <test@@example.com>"
-	     "Mail3 <another@@cuux.org>"))
-	"\n"))))
-@end lisp
-@item @emph{And what about customizable folders for sent messages, based on
-  the @t{From:} header?} This is currently not possible either, but you can
-periodically move messages from the main sent-folder to the specific
-sent-folders. You can easily find those messages with a query like
-@t{maildir:/sent from:myaddress@@example.com}.
 @item @emph{mu4e seems to return a mere subset of all matches - how can I get
 all?}. Indeed, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
@@ -2141,24 +2173,6 @@ value of the variable @code{m4ue-search-result-limit} matches. To show
 @emph{all} results, use @t{M-x mu4e-headers-toggle-full-search}, or customize
 the variable @code{mu4e-headers-full-search}. This applies to all search
 commands.
-@item @emph{How can I automatically add some header to an outgoing message?}
-You can use @code{mu4e-compose-mode-hook}. For example, to add a Bcc:-header,
-you could add something like the following to your configuration:
-
-@lisp
-(add-hook 'mu4e-compose-mode-hook
-  (defun add-bcc ()
-    (message-add-header "Bcc: me@@example.com\n")))
-@end lisp
-
-@item @emph{How can I show attached images in my message view buffers?} See
-@ref{Viewing images inline}.
-@item @emph{How can I easily include attachments in the messages I write?}
-You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
--- see @ref{Attaching files with dired}.
-@item @emph{@t{mu4e} seems to remove myself from the Cc: list; how can I
-prevent that?}
-Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like @t{mu: mu_store_new_writable: xapian error 'Unable to get write
 lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
@@ -2177,17 +2191,49 @@ seems to work quite well.
 @item @emph{Can I automatically apply the marks on messages when
 leaving the headers buffer?} Yes you can -- see the documentation on
 @t{mu4e-headers-leave-behavior}.
-@item @emph{How can I automatically apply word-wrapping (and hiding cited
-parts) when viewing a message?} See the documentation on
-@t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
-between the two states with @key{w} and @key{h}, respectively.
 @item @emph{Is there context-sensitive help available?} Yes - pressing @key{H}
 should take you to the right place in this manual.
 @item @emph{How can I set @t{mu4e} as the default e-mail client in emacs?}
 See @ref{Setting the default emacs mail program}.
+@end itemize
+
+
+@subsection Reading messages
+
+@itemize
+@item @emph{How can I show attached images in my message view buffers?} See
+@ref{Viewing images inline}.
+@item @emph{How can I automatically apply word-wrapping (and hiding cited
+parts) when viewing a message?} See the documentation on
+@t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
+between the two states with @key{w} and @key{h}, respectively.
 @item @emph{How can I perform custom actions on messages and attachments?} See
 @ref{Actions}.
 @end itemize
+
+
+@subsection Writing messages
+
+@itemize
+@item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
+address management with @t{BBDB}; instead, we recommend using @t{mu4e}'s
+built-in @ref{Address autocompletion}.
+@item @emph{How can I automatically set the @t{From:} address for a
+reply-message, based on some field in the original?} See @ref{Compose hooks}.
+@item @emph{And what about customizable folders for sent messages, based on e.g.
+the @t{From:} header?} Again, see @ref{Compose hooks}; alternatively, you can
+periodically move messages from the main sent-folder to the specific
+sent-folders. You can easily find those messages with a query like
+@t{maildir:/sent from:myaddress@@example.com}.
+@item @emph{How can I automatically add some header to an outgoing message?}
+Once more, see @ref{Compose hooks}. 
+@item @emph{How can I easily include attachments in the messages I write?}
+You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
+-- see @ref{Attaching files with dired}.
+@item @emph{@t{mu4e} seems to remove myself from the Cc: list; how can I
+prevent that?}
+Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
+@end itemize 
 
 @node Known issues / missing features
 @chapter Known issues / missing features
@@ -2208,7 +2254,6 @@ it should work though, using the built-in mechanisms.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @end itemize
-
 
 @node How it works
 @appendix How it works
