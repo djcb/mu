@@ -75,21 +75,24 @@ view."
 (defun mu4e-action-view-in-browser (msg)
   "View the body of the message in a web browser. You can influence
 the browser to use with the variable `browse-url-generic-program'."
-  (let ((html (mu4e-msg-field msg :body-html))
+  (let* ((html (mu4e-msg-field msg :body-htm ))
+	 (txt (mu4e-msg-field msg :body-txt))
 	 (tmpfile (format "%s/%d.html" temporary-file-directory (random))))
-    (unless html (mu4e-error "No html part for this message"))
-       (with-temp-file tmpfile
-	 (insert html)
-	 (save-buffer)
-	 (url-view-url (concat "file:///" tmpfile)))))
+    (unless (or html txt)
+      (mu4e-error "No body part for this message"))
+    (with-temp-buffer
+      ;; this is simplistic -- but note that it's only an example
+      (insert (or html (concat "<pre>" txt "</pre>")))
+      (when (write-file tmpfile)
+	  (url-view-url (concat "file:///" tmpfile))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
-
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defconst mu4e-text2speech-command "festival --tts"
-  "Program that speaks out text it receives on standard-input.")
+  (defconst mu4e-text2speech-command "festival --tts"
+    "Program that speaks out text it receives on standard-input.")
 
 (defun mu4e-action-message-to-speech (msg)
   "Pronounce the message text using `mu4e-text2speech-command'."
