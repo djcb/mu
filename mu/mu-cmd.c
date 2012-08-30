@@ -285,7 +285,6 @@ mu_cmd_mkdir (MuConfig *opts, GError **err)
 				       FALSE, err))
 			return err && *err ? (*err)->code :
 				MU_ERROR_FILE_CANNOT_MKDIR;
-
 	return MU_OK;
 }
 
@@ -401,22 +400,74 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 
 
 #ifdef BUILD_CRYPTO
- static void
-each_sig (MuMsg *msg, MuMsgPart *part, MuMsgPartSigStatus *sigstat)
+
+struct _VData {
+	MuMsgPartSigStatus combined_status;
+	char *report;
+};
+typedef struct _VData VData;
+
+static void
+each_sig (MuMsg *msg, MuMsgPart *part, VData *vdata)
 {
-	if (*sigstat == MU_MSG_PART_SIG_STATUS_BAD ||
-	    *sigstat == MU_MSG_PART_SIG_STATUS_ERROR)
+	MuMsgPartSigStatusReport *report;
+	report = part->sig_status_report;
+	if (!report)
 		return;
 
-	*sigstat = part->sig_status;
+	vdata->report = g_strdup_printf
+		("%s%s%s",
+		 vdata->report ? vdata->report : "",
+		 vdata->report ? "; " : "",
+		 report->report);
+
+	if (vdata->combined_status == MU_MSG_PART_SIG_STATUS_BAD ||
+	    vdata->combined_status == MU_MSG_PART_SIG_STATUS_ERROR)
+		return;
+
+	vdata->combined_status = report->verdict;
 }
+
+
+static void
+print_verdict (VData *vdata, gboolean color)
+{
+	char *str;
+
+	switch (vdata->combined_status) {
+
+	case MU_MSG_PART_SIG_STATUS_UNSIGNED:
+		str = g_strdup ("no signature found");
+		break;
+	case MU_MSG_PART_SIG_STATUS_GOOD:
+		str = g_strdup_printf ("signature verified; %s",
+				       vdata->report);
+		break;
+	case MU_MSG_PART_SIG_STATUS_BAD:
+		str = g_strdup_printf ("bad signature; %s",
+				       vdata->report);
+		break;
+	case MU_MSG_PART_SIG_STATUS_ERROR:
+		str = g_strdup_printf ("verification failed; %s",
+				       vdata->report);
+		break;
+	case MU_MSG_PART_SIG_STATUS_FAIL:
+		str = g_strdup ("error in verification process");
+		break;
+	default: g_return_if_reached ();
+	}
+
+	print_field ("verdict", str, color);
+	g_free (str);
+}
+
 
 MuError
 mu_cmd_verify (MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
 	MuMsgOptions msgopts;
-	MuMsgPartSigStatus sigstat;
+	VData vdata;
 
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VERIFY,
@@ -426,36 +477,20 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 	if (!msg)
 		return MU_ERROR;
 
-	msgopts = mu_config_get_msg_options (opts);
-
-	sigstat = MU_MSG_PART_SIG_STATUS_UNSIGNED;
+	msgopts = mu_config_get_msg_options (opts) | MU_MSG_OPTION_VERIFY;
+	vdata.report  = NULL;
+	vdata.combined_status = MU_MSG_PART_SIG_STATUS_UNSIGNED;
 	mu_msg_part_foreach (msg, msgopts,
-			     (MuMsgPartForeachFunc)each_sig, &sigstat);
+			     (MuMsgPartForeachFunc)each_sig, &vdata);
 
-	if (!opts->quiet) {
-		const char *verdict;
-
-		switch (sigstat) {
-		case MU_MSG_PART_SIG_STATUS_UNSIGNED:
-			verdict = "no signature found"; break;
-		case MU_MSG_PART_SIG_STATUS_GOOD:
-			verdict = "signature verified"; break;
-		case MU_MSG_PART_SIG_STATUS_BAD:
-			verdict = "signature not verified"; break;
-		case MU_MSG_PART_SIG_STATUS_ERROR:
-			verdict = "failed to verify signature"; break;
-		case MU_MSG_PART_SIG_STATUS_FAIL:
-			verdict = "error in verification process"; break;
-		default:
-			g_return_val_if_reached (MU_ERROR);
-		}
-
-		g_print ("verdict: %s\n", verdict);
-	}
+	if (!opts->quiet)
+		print_verdict (&vdata, !opts->nocolor);
 
 	mu_msg_unref (msg);
+	g_free (vdata.report);
 
-	return sigstat == MU_MSG_PART_SIG_STATUS_GOOD ? MU_OK : MU_ERROR;
+	return vdata.combined_status == MU_MSG_PART_SIG_STATUS_GOOD ?
+		MU_OK : MU_ERROR;
 }
 #else
 MuError

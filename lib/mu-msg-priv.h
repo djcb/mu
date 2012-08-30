@@ -129,12 +129,11 @@ typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *promp
  * @param opts message options
  * @param err receive error information
  *
- * @return the verification status, or MU_MSG_PART_SIG_STATUS_FAIL in
- * case of some internal error
+ * @return a status report object, free with mu_msg_part_sig_status_report_destroy
  */
-MuMsgPartSigStatus mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
-					      GError **err);
-
+MuMsgPartSigStatusReport* mu_msg_crypto_verify_part (GMimeMultipartSigned *sig,
+						     MuMsgOptions opts,
+						     GError **err);
 
 /**
  * decrypt the given encrypted mime multipart

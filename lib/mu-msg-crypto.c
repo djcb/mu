@@ -145,50 +145,207 @@ get_crypto_context (MuMsgOptions opts, MuMsgPartPasswordFunc password_func,
 	return cctx;
 }
 
-
-static MuMsgPartSigStatus
-get_verdict (GMimeSignatureList *sigs)
+static const char*
+get_pubkey_algo_name (GMimePubKeyAlgo algo)
 {
-	int i;
-	MuMsgPartSigStatus status;
+	switch (algo) {
+	case GMIME_PUBKEY_ALGO_DEFAULT:
+		return "default";
+	case GMIME_PUBKEY_ALGO_RSA:
+		return "RSA";
+	case GMIME_PUBKEY_ALGO_RSA_E:
+		return "RSA (encryption only)";
+	case GMIME_PUBKEY_ALGO_RSA_S:
+		return "RSA (signing only)";
+	case GMIME_PUBKEY_ALGO_ELG_E:
+		return "ElGamal (encryption only)";
+	case GMIME_PUBKEY_ALGO_DSA:
+		return "DSA";
+	case GMIME_PUBKEY_ALGO_ELG:
+		return "ElGamal";
+	default:
+		return "unknown pubkey algorithm";
+	}
+}
 
-	status = MU_MSG_PART_SIG_STATUS_GOOD; /* let's start positive! */
+static const gchar*
+get_digestkey_algo_name (GMimeDigestAlgo algo)
+{
+	switch (algo) {
+	case GMIME_DIGEST_ALGO_DEFAULT:
+		return "default";
+	case GMIME_DIGEST_ALGO_MD5:
+		return "MD5";
+	case GMIME_DIGEST_ALGO_SHA1:
+		return "SHA-1";
+	case GMIME_DIGEST_ALGO_RIPEMD160:
+		return "RIPEMD160";
+	case GMIME_DIGEST_ALGO_MD2:
+		return "MD2";
+	case GMIME_DIGEST_ALGO_TIGER192:
+		return "TIGER-192";
+	case GMIME_DIGEST_ALGO_HAVAL5160:
+		return "HAVAL-5-160";
+	case GMIME_DIGEST_ALGO_SHA256:
+		return "SHA-256";
+	case GMIME_DIGEST_ALGO_SHA384:
+		return "SHA-384";
+	case GMIME_DIGEST_ALGO_SHA512:
+		return "SHA-512";
+	case GMIME_DIGEST_ALGO_SHA224:
+		return "SHA-224";
+	case GMIME_DIGEST_ALGO_MD4:
+		return "MD4";
+	default:
+		return "unknown digest algorithm";
+	}
+}
 
-	for (i = 0; i != g_mime_signature_list_length (sigs); ++i) {
 
-		GMimeSignature *msig;
-		GMimeSignatureStatus sigstat;
-		msig = g_mime_signature_list_get_signature (sigs, i);
-		sigstat = g_mime_signature_get_status (msig);
+/* get data from the 'certificate' */
+static char*
+get_cert_data (GMimeCertificate *cert)
+{
+	const char /*issuer_name, *issuer_serial, ,*fprint*/
+		*email, *name,
+		*digest_algo, *pubkey_algo,
+		*keyid, *trust;
 
-		switch (sigstat) {
-		case GMIME_SIGNATURE_STATUS_GOOD:  continue;
-		case GMIME_SIGNATURE_STATUS_ERROR: return MU_MSG_PART_SIG_STATUS_ERROR;
-		case GMIME_SIGNATURE_STATUS_BAD:   return MU_MSG_PART_SIG_STATUS_BAD;
-		}
+	/* issuer_name   =  g_mime_certificate_get_issuer_name (cert); */
+	/* issuer_serial =  g_mime_certificate_get_issuer_serial (cert); */
+	email         =  g_mime_certificate_get_email (cert);
+	name          =  g_mime_certificate_get_name (cert);
+	/* fprint        =  g_mime_certificate_get_fingerprint (cert); */
+	keyid         =  g_mime_certificate_get_key_id (cert);
+
+	digest_algo  =  get_digestkey_algo_name
+		(g_mime_certificate_get_digest_algo (cert));
+	pubkey_algo  =  get_pubkey_algo_name
+		(g_mime_certificate_get_pubkey_algo (cert));
+
+	switch (g_mime_certificate_get_trust (cert)) {
+	case GMIME_CERTIFICATE_TRUST_NONE:       trust = "none"; break;
+	case GMIME_CERTIFICATE_TRUST_NEVER:      trust = "never"; break;
+	case GMIME_CERTIFICATE_TRUST_UNDEFINED:  trust = "undefined"; break;
+	case GMIME_CERTIFICATE_TRUST_MARGINAL:   trust=  "marginal"; break;
+	case GMIME_CERTIFICATE_TRUST_FULLY:      trust = "full"; break;
+	case GMIME_CERTIFICATE_TRUST_ULTIMATE:   trust = "ultimate"; break;
+	default:
+		g_return_val_if_reached (NULL);
 	}
 
-	return status;
+	return g_strdup_printf (
+		"signed by: %s <%s>; " /*; issued by %s (%s); */
+		"algos: <%s,%s>; key-id: %s; trust: %s",
+		name ? name : "?", email ? email : "?",
+		/* issuer_name, issuer_serial */
+		pubkey_algo, digest_algo, keyid, trust);
 }
 
 
 
-MuMsgPartSigStatus
+/* get a human-readable report about the signature */
+static char*
+get_verdict_report (GMimeSignature *msig)
+{
+	time_t t;
+	const char *status, *created, *expires;
+	gchar *certdata, *report;
+
+	switch (g_mime_signature_get_status (msig)) {
+	case GMIME_SIGNATURE_STATUS_GOOD:  status = "good";  break;
+	case GMIME_SIGNATURE_STATUS_ERROR: status = "error"; break;
+	case GMIME_SIGNATURE_STATUS_BAD:   status = "bad";   break;
+	default: g_return_val_if_reached (NULL);
+	}
+
+	t = g_mime_signature_get_created (msig);
+	created = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s ("%x", t);
+
+	t = g_mime_signature_get_expires (msig);
+	expires = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s ("%x", t);
+
+	certdata = get_cert_data (g_mime_signature_get_certificate (msig));
+	report = g_strdup_printf ("status: %s; created: %s, expires: %s (%s)",
+				  status, created, expires,
+				  certdata ? certdata : "?");
+	g_free (certdata);
+	return report;
+}
+
+
+static MuMsgPartSigStatusReport*
+get_status_report (GMimeSignatureList *sigs)
+{
+	int i;
+	MuMsgPartSigStatus status;
+	MuMsgPartSigStatusReport *status_report;
+	char *report;
+
+	status = MU_MSG_PART_SIG_STATUS_GOOD; /* let's start positive! */
+
+	for (i = 0, report = NULL; i != g_mime_signature_list_length (sigs); ++i) {
+
+		GMimeSignature *msig;
+		GMimeSignatureStatus sigstat;
+		gchar *rep;
+
+		msig = g_mime_signature_list_get_signature (sigs, i);
+		sigstat = g_mime_signature_get_status (msig);
+
+		switch (sigstat) {
+		case GMIME_SIGNATURE_STATUS_GOOD:
+			break;
+		case GMIME_SIGNATURE_STATUS_ERROR:
+			status = MU_MSG_PART_SIG_STATUS_ERROR;
+			break;
+		case GMIME_SIGNATURE_STATUS_BAD:
+			status = MU_MSG_PART_SIG_STATUS_BAD;
+			break;
+		default: g_return_val_if_reached (NULL);
+		}
+
+		rep  = get_verdict_report (msig);
+		report = g_strdup_printf ("%s%s[%d] %s",
+					  report ? report : "",
+					  report ? "; " : "",
+					  i, rep);
+		g_free (rep);
+	}
+
+	status_report = g_slice_new (MuMsgPartSigStatusReport);
+	status_report->verdict = status;
+	status_report->report  = report;
+
+	return status_report;
+}
+
+void
+mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report)
+{
+	if (!report)
+		return;
+
+	g_free ((char*)report->report);
+	g_slice_free (MuMsgPartSigStatusReport, report);
+}
+
+
+MuMsgPartSigStatusReport*
 mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 			   GError **err)
 {
-	MuMsgPartSigStatus sigstat;
+	MuMsgPartSigStatusReport *report;
 	GMimeCryptoContext *ctx;
 	GMimeSignatureList *sigs;
 
-	g_return_val_if_fail (GMIME_IS_MULTIPART_SIGNED(sig),
-			      MU_MSG_PART_SIG_STATUS_FAIL);
+	g_return_val_if_fail (GMIME_IS_MULTIPART_SIGNED(sig), NULL);
 
 	ctx = get_crypto_context (opts, NULL, NULL, err);
 	if (!ctx) {
 		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
 				     "failed to get crypto context");
-		return MU_MSG_PART_SIG_STATUS_FAIL;
+		return NULL;
 	}
 
 	sigs = g_mime_multipart_signed_verify (sig, ctx, err);
@@ -197,13 +354,13 @@ mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 		if (err && !*err)
 			mu_util_g_set_error (err, MU_ERROR_CRYPTO,
 					     "verification failed");
-		return MU_MSG_PART_SIG_STATUS_FAIL;
+		return NULL;
 	}
 
-	sigstat = get_verdict (sigs);
+	report = get_status_report (sigs);
 	g_mime_signature_list_clear (sigs);
 
-	return sigstat;
+	return report;
 }
 
 

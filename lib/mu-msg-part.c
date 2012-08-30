@@ -297,27 +297,28 @@ get_disposition (GMimeObject *mobj)
 	return MU_MSG_PART_TYPE_NONE;
 }
 
-#define SIG_STATUS "sig-status"
+#define SIG_STATUS_REPORT "sig-status-report"
 
 /* call 'func' with information about this MIME-part */
 static gboolean
 check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 {
 	/* the signature status */
-	MuMsgPartSigStatus sigstat;
+	MuMsgPartSigStatusReport *sigrep;
 	GError *err;
 
 	err     = NULL;
-	sigstat = mu_msg_crypto_verify_part (part, opts, &err);
-
+	sigrep = mu_msg_crypto_verify_part (part, opts, &err);
 	if (err) {
 		g_warning ("error verifying signature: %s", err->message);
 		g_clear_error (&err);
 	}
 
 	/* tag this part with the signature status check */
-	g_object_set_data (G_OBJECT(part), SIG_STATUS,
-			   GSIZE_TO_POINTER(sigstat));
+	g_object_set_data_full
+		(G_OBJECT(part), SIG_STATUS_REPORT,
+		 sigrep,
+		 (GDestroyNotify)mu_msg_part_sig_status_report_destroy);
 
 	return TRUE;
 }
@@ -348,12 +349,6 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	msgpart.part_type   = MU_MSG_PART_TYPE_LEAF;
 	msgpart.part_type |= get_disposition ((GMimeObject*)part);
 
-	/* get the sig status from the parent */
-	msgpart.sig_status =
-		(MuMsgPartSigStatus)
-		GPOINTER_TO_SIZE(g_object_get_data (G_OBJECT(parent),
-						    SIG_STATUS));
-
 	ct = g_mime_object_get_content_type ((GMimeObject*)part);
 	if (GMIME_IS_CONTENT_TYPE(ct)) {
 		msgpart.type    = g_mime_content_type_get_media_type (ct);
@@ -365,6 +360,14 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 		else if (g_mime_content_type_is_type (ct, "text", "html"))
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
 	}
+
+	/* get the sig status from the parent, but don't set if for
+	 * the signature part itself */
+	msgpart.sig_status_report = NULL;
+	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") != 0)
+		msgpart.sig_status_report =
+			(MuMsgPartSigStatusReport*)
+			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);
 
 	msgpart.data    = (gpointer)part;
 	msgpart.index   = index;
@@ -419,7 +422,8 @@ handle_mime_object (MuMsg *msg,
 		return handle_message_part
 			(msg, GMIME_MESSAGE_PART(mobj),
 			 parent, opts, index, func, user_data);
-	else if (GMIME_IS_MULTIPART_SIGNED (mobj))
+	else if ((opts & MU_MSG_OPTION_VERIFY) &&
+		 GMIME_IS_MULTIPART_SIGNED (mobj))
 		return check_signature
 			(msg, GMIME_MULTIPART_SIGNED (mobj), opts);
 	else if (GMIME_IS_MULTIPART_ENCRYPTED (mobj))

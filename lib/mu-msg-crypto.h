@@ -25,9 +25,7 @@
 #include <glib.h>
 #include <mu-msg.h>
 
-
 struct _MuMsgDecryptedPart;
 typedef struct _MuMsgDecryptedPart MuMsgDecryptedPart;
-
 
 #endif /*__MU_MSG_CRYPTO_H__*/

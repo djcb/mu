@@ -63,6 +63,19 @@ enum _MuMsgPartSigStatus {
 };
 typedef enum _MuMsgPartSigStatus MuMsgPartSigStatus;
 
+struct _MuMsgPartSigStatusReport {
+	MuMsgPartSigStatus verdict;
+	const char        *report;
+};
+typedef struct _MuMsgPartSigStatusReport MuMsgPartSigStatusReport;
+
+/**
+ * destroy a MuMsgPartSignatureStatusReport object
+ *
+ * @param report a MuMsgPartSignatureStatusReport object
+ */
+void mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report);
+
 
 struct _MuMsgPart {
 
@@ -81,9 +94,8 @@ struct _MuMsgPart {
 
 	gpointer         data; /* opaque data */
 
-	MuMsgPartType      part_type;
-	MuMsgPartSigStatus sig_status;
-
+	MuMsgPartType            part_type;
+	MuMsgPartSigStatusReport *sig_status_report;
  };
 typedef struct _MuMsgPart MuMsgPart;
 
