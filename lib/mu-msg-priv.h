@@ -109,19 +109,6 @@ void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
 
 #ifdef BUILD_CRYPTO
 /**
- * get signature information for the mime part
- *
- * @param part a multipart/sigde part
- * @param opts options for the signature verification (we only use the
- * crypto-related options in opts)
- * @param err receives error info
- *
- * @return a list of MuMsgPartSig, or NULL
- */
-GSList* mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart,
-			       MuMsgOptions opts, GError **err);
-
-/**
  * callback function to retrieve a password from the user
  *
  * @param user_id the user name / id to get the password for
@@ -133,6 +120,21 @@ GSList* mu_msg_mime_sig_infos (GMimeMultipartSigned *sigmpart,
  */
 typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *prompt_ctx,
 					  gboolean reprompt, gpointer user_data);
+
+
+/**
+ * verify the signature of a signed message part
+ *
+ * @param sig a signed message part
+ * @param opts message options
+ * @param err receive error information
+ *
+ * @return the verification status, or MU_MSG_PART_SIG_STATUS_FAIL in
+ * case of some internal error
+ */
+MuMsgPartSigStatus mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
+					      GError **err);
+
 
 /**
  * decrypt the given encrypted mime multipart

@@ -220,87 +220,6 @@ get_part_size (GMimePart *part)
 }
 
 
-/* #ifdef BUILD_CRYPTO */
-/* static void */
-/* check_signature_maybe (GMimeObject *parent, GMimeObject *mobj, MuMsgPart *pi, */
-/* 		       MuMsgOptions opts) */
-/* { */
-/* 	GMimeContentType *ctype; */
-/* 	GError *err; */
-/* 	gboolean pkcs7; */
-
-/* 	if (!GMIME_IS_MULTIPART_SIGNED (parent)) */
-/* 		return; */
-
-/* 	ctype = g_mime_object_get_content_type (mobj); */
-/* 	if (g_mime_content_type_is_type */
-/* 	    (ctype, "application", "pgp-signature")) */
-/* 		pkcs7 = FALSE; */
-/* 	else if (g_mime_content_type_is_type */
-/* 		 (ctype, "application", "x-pkcs7-signature")) */
-/* 		pkcs7 = TRUE; */
-/* 	else return; /\* don't know how to handle other kinds *\/ */
-
-/* 	if (pkcs7) */
-/* 		opts |= MU_MSG_OPTION_USE_PKCS7; /\* gpg is the default *\/ */
-
-/* 	err = NULL; */
-/* 	pi->sig_infos = mu_msg_mime_sig_infos */
-/* 		(GMIME_MULTIPART_SIGNED (parent), opts, &err); */
-/* 	if (err) { */
-/* 		g_warning ("error verifying signature: %s", err->message); */
-/* 		g_clear_error (&err); */
-/* 	} */
-/* } */
-
-
-
-/* #endif /\*BUILD_CRYPTO*\/ */
-
-/* static gboolean */
-/* init_msg_part_from_mime_part (MuMsgOptions opts, GMimeObject *parent, */
-/* 			      GMimePart *part, MuMsgPart *pi) */
-/* { */
-/* 	const gchar *fname, *descr; */
-/* 	GMimeContentType *ct; */
-
-/* 	ct = g_mime_object_get_content_type ((GMimeObject*)part); */
-/* 	if (GMIME_IS_CONTENT_TYPE(ct)) { */
-/* 		pi->type    = (char*)g_mime_content_type_get_media_type (ct); */
-/* 		pi->subtype = (char*)g_mime_content_type_get_media_subtype (ct); */
-/* 	} */
-
-/* 	pi->disposition = (char*)g_mime_object_get_disposition */
-/* 		((GMimeObject*)part); */
-
-/* 	fname	      = g_mime_part_get_filename (part); */
-/* 	pi->file_name = fname ? mu_str_utf8ify (fname) : NULL; */
-
-/* 	descr		  = g_mime_part_get_content_description (part); */
-/* 	pi->description   = descr ? mu_str_utf8ify (descr) : NULL; */
-/* 	pi->size          = get_part_size (part); */
-/* 	pi->part_type     = MU_MSG_PART_TYPE_LEAF; */
-
-/* 	if (!pi->disposition || */
-/* 	    g_ascii_strcasecmp (pi->disposition, */
-/* 				GMIME_DISPOSITION_INLINE) == 0) */
-/* 		pi->part_type |= MU_MSG_PART_TYPE_INLINE; */
-
-/* 	if (GMIME_IS_MULTIPART_SIGNED (parent)) */
-/* 		pi->part_type |= MU_MSG_PART_TYPE_SIGNED; */
-
-/* 	/\* if we have crypto support, check the signature if there is one *\/ */
-/* #ifdef BUILD_CRYPTO */
-/* 	if (opts & MU_MSG_OPTION_CHECK_SIGNATURES) */
-/*  		check_signature_maybe (parent, (GMimeObject*)part, */
-/* 				       pi, opts); */
-/* #endif /\*BUILD_CRYPTO*\/ */
-
-/* 	return TRUE; */
-/* } */
-
-
-
 static void
 cleanup_filename (char *fname)
 {
@@ -378,13 +297,28 @@ get_disposition (GMimeObject *mobj)
 	return MU_MSG_PART_TYPE_NONE;
 }
 
+#define SIG_STATUS "sig-status"
+
 /* call 'func' with information about this MIME-part */
 static gboolean
-handle_signed_part (MuMsg *msg,
-		    GMimeMultipartSigned *part, GMimeObject *parent,
-		    MuMsgOptions opts, unsigned index,
-		    MuMsgPartForeachFunc func, gpointer user_data)
+check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 {
+	/* the signature status */
+	MuMsgPartSigStatus sigstat;
+	GError *err;
+
+	err     = NULL;
+	sigstat = mu_msg_crypto_verify_part (part, opts, &err);
+
+	if (err) {
+		g_warning ("error verifying signature: %s", err->message);
+		g_clear_error (&err);
+	}
+
+	/* tag this part with the signature status check */
+	g_object_set_data (G_OBJECT(part), SIG_STATUS,
+			   GSIZE_TO_POINTER(sigstat));
+
 	return TRUE;
 }
 
@@ -413,6 +347,12 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	msgpart.size        = get_part_size (part);
 	msgpart.part_type   = MU_MSG_PART_TYPE_LEAF;
 	msgpart.part_type |= get_disposition ((GMimeObject*)part);
+
+	/* get the sig status from the parent */
+	msgpart.sig_status =
+		(MuMsgPartSigStatus)
+		GPOINTER_TO_SIZE(g_object_get_data (G_OBJECT(parent),
+						    SIG_STATUS));
 
 	ct = g_mime_object_get_content_type ((GMimeObject*)part);
 	if (GMIME_IS_CONTENT_TYPE(ct)) {
@@ -480,9 +420,8 @@ handle_mime_object (MuMsg *msg,
 			(msg, GMIME_MESSAGE_PART(mobj),
 			 parent, opts, index, func, user_data);
 	else if (GMIME_IS_MULTIPART_SIGNED (mobj))
-		return handle_signed_part
-				(msg, GMIME_MULTIPART_SIGNED (mobj),
-				 parent, opts, index, func, user_data);
+		return check_signature
+			(msg, GMIME_MULTIPART_SIGNED (mobj), opts);
 	else if (GMIME_IS_MULTIPART_ENCRYPTED (mobj))
 		return handle_encrypted_part
 			(msg, GMIME_MULTIPART_ENCRYPTED (mobj),

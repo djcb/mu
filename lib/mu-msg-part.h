@@ -52,6 +52,18 @@ enum _MuMsgPartType {
 typedef enum _MuMsgPartType MuMsgPartType;
 
 
+/* the signature status */
+enum _MuMsgPartSigStatus {
+	MU_MSG_PART_SIG_STATUS_UNSIGNED         = 0,
+
+	MU_MSG_PART_SIG_STATUS_GOOD,
+	MU_MSG_PART_SIG_STATUS_BAD,
+	MU_MSG_PART_SIG_STATUS_ERROR,
+	MU_MSG_PART_SIG_STATUS_FAIL
+};
+typedef enum _MuMsgPartSigStatus MuMsgPartSigStatus;
+
+
 struct _MuMsgPart {
 
 	/* index of this message part */
@@ -69,10 +81,9 @@ struct _MuMsgPart {
 
 	gpointer         data; /* opaque data */
 
-	MuMsgPartType    part_type;
+	MuMsgPartType      part_type;
+	MuMsgPartSigStatus sig_status;
 
-	/* crypto stuff */
-	GSList           *sig_infos; /* list of MuMsgPartSig */
  };
 typedef struct _MuMsgPart MuMsgPart;
 

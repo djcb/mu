@@ -401,40 +401,14 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 
 
 #ifdef BUILD_CRYPTO
-struct _VData {
-	MuMsgPartSigStatus status;
-	MuConfig*opts;
-	gchar *msg;
-};
-typedef struct _VData VData;
-
-
-static void
-each_sig (MuMsg *msg, MuMsgPart *part, VData *vdata)
+ static void
+each_sig (MuMsg *msg, MuMsgPart *part, MuMsgPartSigStatus *sigstat)
 {
-	GSList *cur;
-
-	if (!part->sig_infos)
+	if (*sigstat == MU_MSG_PART_SIG_STATUS_BAD ||
+	    *sigstat == MU_MSG_PART_SIG_STATUS_ERROR)
 		return;
 
-	if (vdata->opts->verbose)
-		g_print ("MIME-part %u has %u signature(s): ",
-			 part->index, g_slist_length (part->sig_infos));
-
-	for (cur = part->sig_infos; cur; cur = g_slist_next (cur)) {
-
-		MuMsgPartSigInfo *sig_info;
-		sig_info = (MuMsgPartSigInfo*)cur->data;
-
-		if (vdata->opts->verbose) {
-			char *descr;
-			descr = mu_msg_part_sig_info_to_string (sig_info);
-			g_print ("%s\n", descr);
-			g_free (descr);
-		}
-
-		vdata->status |= sig_info->status;
-	}
+	*sigstat = part->sig_status;
 }
 
 MuError
@@ -442,7 +416,7 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
 	MuMsgOptions msgopts;
-	VData vdata;
+	MuMsgPartSigStatus sigstat;
 
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VERIFY,
@@ -454,34 +428,40 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 
 	msgopts = mu_config_get_msg_options (opts);
 
-	vdata.status = MU_MSG_PART_SIG_STATUS_UNKNOWN;
-	vdata.opts   = opts;
-	vdata.msg    = NULL;
-
-	/* TODO: update for decryption */
-	mu_msg_part_foreach (msg, msgopts, (MuMsgPartForeachFunc)each_sig, &vdata);
-
-	/* if there's anything bad, all goodness goes away */
-	if (vdata.status & MU_MSG_PART_SIG_STATUS_BAD ||
-	    vdata.status & MU_MSG_PART_SIG_STATUS_ERROR)
-		vdata.status &= ~MU_MSG_PART_SIG_STATUS_GOOD;
+	sigstat = MU_MSG_PART_SIG_STATUS_UNSIGNED;
+	mu_msg_part_foreach (msg, msgopts,
+			     (MuMsgPartForeachFunc)each_sig, &sigstat);
 
 	if (!opts->quiet) {
-		gchar *str;
-		str = mu_msg_part_sig_statuses_to_string (vdata.status);
-		g_print ("verdict: %s\n", str);
-		g_free (str);
+		const char *verdict;
+
+		switch (sigstat) {
+		case MU_MSG_PART_SIG_STATUS_UNSIGNED:
+			verdict = "no signature found"; break;
+		case MU_MSG_PART_SIG_STATUS_GOOD:
+			verdict = "signature verified"; break;
+		case MU_MSG_PART_SIG_STATUS_BAD:
+			verdict = "signature not verified"; break;
+		case MU_MSG_PART_SIG_STATUS_ERROR:
+			verdict = "failed to verify signature"; break;
+		case MU_MSG_PART_SIG_STATUS_FAIL:
+			verdict = "error in verification process"; break;
+		default:
+			g_return_val_if_reached (MU_ERROR);
+		}
+
+		g_print ("verdict: %s\n", verdict);
 	}
 
 	mu_msg_unref (msg);
 
-	return vdata.status == MU_MSG_PART_SIG_STATUS_GOOD ? MU_OK : MU_ERROR;
+	return sigstat == MU_MSG_PART_SIG_STATUS_GOOD ? MU_OK : MU_ERROR;
 }
 #else
 MuError
 mu_cmd_verify (MuConfig *opts, GError **err)
 {
-	g_warning ("your version of mu does not support the 'verify' command");
+	g_warning ("this version of mu does not support the 'verify' command");
 	return MU_ERROR_IN_PARAMETERS;
 }
 
