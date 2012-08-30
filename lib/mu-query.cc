@@ -329,6 +329,30 @@ try_requery (MuQuery *self, const char* searchexpr, gboolean threads,
 }
 
 
+static Xapian::Enquire
+get_enquire (MuQuery *self, const char *searchexpr, gboolean threads,
+	     MuMsgFieldId sortfieldid, gboolean revert, GError **err)
+{
+	Xapian::Enquire enq (self->db());
+
+	/* note, when our result will be *threaded*, we sort
+	 * in our threading code (mu-threader etc.), and don't
+	 * let Xapian do any sorting */
+	if (!threads && sortfieldid != MU_MSG_FIELD_ID_NONE)
+			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
+					       revert ? true : false);
+	if (!mu_str_is_empty(searchexpr) &&
+	    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
+			enq.set_query(get_query (self, searchexpr, err));
+		else
+			enq.set_query(Xapian::Query::MatchAll);
+
+	enq.set_cutoff(0,0);
+
+	return enq;
+}
+
+
 MuMsgIter*
 mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 	      MuMsgFieldId sortfieldid, gboolean revert, int maxnum,
@@ -341,22 +365,8 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			      NULL);
 	try {
 		MuMsgIter *iter;
-		Xapian::Enquire enq (self->db());
-
-		/* note, when our result will be *threaded*, we sort
-		 * in our threading code (mu-threader etc.), and don't
-		 * let Xapian do any sorting */
-		if (!threads && sortfieldid != MU_MSG_FIELD_ID_NONE)
-			enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
-					       revert ? true : false);
-		if (!mu_str_is_empty(searchexpr) &&
-		    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
-			enq.set_query(get_query (self, searchexpr, err));
-		else
-			enq.set_query(Xapian::Query::MatchAll);
-
-		enq.set_cutoff(0,0);
-
+		Xapian::Enquire enq (get_enquire(self, searchexpr, threads,
+						 sortfieldid, revert, err));
 		iter = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum <= 0 ? self->db().get_doccount() : maxnum,
