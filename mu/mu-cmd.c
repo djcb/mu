@@ -40,12 +40,7 @@
 #include "mu-flags.h"
 #include "mu-store.h"
 
-#ifdef BUILD_CRYPTO
-#include "mu-msg-crypto.h"
-#endif /*BUILD_CRYPTO*/
-
 #define VIEW_TERMINATOR '\f' /* form-feed */
-
 
 static gboolean
 view_msg_sexp (MuMsg *msg, MuConfig *opts)
