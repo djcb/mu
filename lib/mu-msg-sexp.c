@@ -22,12 +22,6 @@
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-msg-part.h"
-
-#ifdef BUILD_CRYPTO
-#include "mu-msg-crypto.h"
-#endif /*BUILD_CRYPTO*/
-
-
 #include "mu-maildir.h"
 
 static void
@@ -252,35 +246,25 @@ struct _PartInfo {
 };
 typedef struct _PartInfo PartInfo;
 
-
-/* like the elvis operator,
- * http://colinharrington.net/blog/2008/10/groovy-elvis-operator/
- */
-static const char*
-elvis (const char *s1, const char *s2)
-{
-	return s1 ? s1 : s2;
-}
-
 static const char*
 sig_verdict (MuMsgPart *mpart)
 {
-#ifdef BUILD_CRYPTO
-	MuMsgPartSigStatus sigstat;
+	MuMsgPartSigStatusReport *report;
 
-	switch (mpart->sig_status) {
+	report = mpart->sig_status_report;
+	if (!report)
+		return "";
+
+	switch (report->verdict) {
 	case MU_MSG_PART_SIG_STATUS_GOOD:
-		return ":signature good";
+		return ":signature verified";
 	case MU_MSG_PART_SIG_STATUS_BAD:
 		return ":signature bad";
 	case MU_MSG_PART_SIG_STATUS_ERROR:
-		return ":signature error"; /* ugly */
+		return ":signature unverified";
 	default:
 		return "";
 	}
-#else
-	return "";
-#endif /*!BUILD_CRYPTO*/
 }
 
 
@@ -332,10 +316,11 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		("%s(:index %d :name \"%s\" :mime-type \"%s/%s\"%s%s "
 		 ":type %s "
 		 ":attachment %s :size %i %s)",
-		 elvis (pinfo->parts, ""), part->index,
+		 pinfo->parts ? pinfo->parts: "",
+		 part->index,
 		 name ? name : "noname",
-		 elvis (part->type, "application"),
-		 elvis (part->subtype, "octet-stream"),
+		 part->type ? part->type : "application",
+		 part->subtype ? part->subtype : "octet-stream",
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
 		 parttype,
 		 mu_msg_part_maybe_attachment (part) ? "t" : "nil",
