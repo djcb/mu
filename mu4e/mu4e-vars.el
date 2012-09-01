@@ -171,7 +171,9 @@ view buffer."
 (defcustom mu4e-compose-complete-only-personal nil
   "Whether to consider only 'personal' e-mail addresses,
 i.e. addresses from messages where user was explicitly in one of
-the address fields (this excludes mailing list messages)."
+the address fields (this excludes mailing list messages). See
+`mu4e-my-email-addresses' and the mu-index manpage for details for
+details (in particular, how to define your own e-mail addresses)."
   :type 'boolean
   :group 'mu4e-compose)
 
