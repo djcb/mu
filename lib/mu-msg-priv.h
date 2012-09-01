@@ -108,6 +108,7 @@ void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
 			      gpointer user_data);
 
 #ifdef BUILD_CRYPTO
+
 /**
  * callback function to retrieve a password from the user
  *

@@ -30,15 +30,10 @@
 #include "mu-msg-priv.h"
 #include "mu-msg-part.h"
 
-#ifdef BUILD_CRYPTO
-#include "mu-msg-crypto.h"
-#endif /*BUILD_CRYPTO*/
-
 static gboolean handle_children (MuMsg *msg,
 				 GMimeMessage *mime_msg, MuMsgOptions opts,
 				 unsigned index, MuMsgPartForeachFunc func,
 				 gpointer user_data);
-
 struct _DoData {
 	GMimeObject *mime_obj;
 	unsigned    index;
@@ -303,6 +298,7 @@ get_disposition (GMimeObject *mobj)
 static gboolean
 check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 {
+#ifdef BUILD_CRYPTO
 	/* the signature status */
 	MuMsgPartSigStatusReport *sigrep;
 	GError *err;
@@ -319,7 +315,7 @@ check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 		(G_OBJECT(part), SIG_STATUS_REPORT,
 		 sigrep,
 		 (GDestroyNotify)mu_msg_part_sig_status_report_destroy);
-
+#endif /*BUILD_CRYPTO*/
 	return TRUE;
 }
 
@@ -361,10 +357,9 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
 	}
 
-	/* get the sig status from the parent, but don't set if for
-	 * the signature part itself */
+	/* put the verification info in the pgp-signature part */
 	msgpart.sig_status_report = NULL;
-	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") != 0)
+	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0)
 		msgpart.sig_status_report =
 			(MuMsgPartSigStatusReport*)
 			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);

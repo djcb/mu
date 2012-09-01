@@ -26,7 +26,6 @@
 #include "mu-msg.h"
 #include "mu-msg-priv.h"
 #include "mu-msg-part.h"
-#include "mu-msg-crypto.h"
 #include "mu-date.h"
 
 #include <gmime/gmime.h>
@@ -206,16 +205,11 @@ get_digestkey_algo_name (GMimeDigestAlgo algo)
 static char*
 get_cert_data (GMimeCertificate *cert)
 {
-	const char /*issuer_name, *issuer_serial, ,*fprint*/
-		*email, *name,
-		*digest_algo, *pubkey_algo,
+	const char *email, *name, *digest_algo, *pubkey_algo,
 		*keyid, *trust;
 
-	/* issuer_name   =  g_mime_certificate_get_issuer_name (cert); */
-	/* issuer_serial =  g_mime_certificate_get_issuer_serial (cert); */
 	email         =  g_mime_certificate_get_email (cert);
 	name          =  g_mime_certificate_get_name (cert);
-	/* fprint        =  g_mime_certificate_get_fingerprint (cert); */
 	keyid         =  g_mime_certificate_get_key_id (cert);
 
 	digest_algo  =  get_digestkey_algo_name
@@ -235,10 +229,9 @@ get_cert_data (GMimeCertificate *cert)
 	}
 
 	return g_strdup_printf (
-		"signed by: %s <%s>; " /*; issued by %s (%s); */
+		"signed by: %s <%s>; "
 		"algos: <%s,%s>; key-id: %s; trust: %s",
 		name ? name : "?", email ? email : "?",
-		/* issuer_name, issuer_serial */
 		pubkey_algo, digest_algo, keyid, trust);
 }
 
@@ -294,8 +287,7 @@ get_status_report (GMimeSignatureList *sigs)
 		sigstat = g_mime_signature_get_status (msig);
 
 		switch (sigstat) {
-		case GMIME_SIGNATURE_STATUS_GOOD:
-			break;
+		case GMIME_SIGNATURE_STATUS_GOOD: break;
 		case GMIME_SIGNATURE_STATUS_ERROR:
 			status = MU_MSG_PART_SIG_STATUS_ERROR;
 			break;
@@ -306,10 +298,8 @@ get_status_report (GMimeSignatureList *sigs)
 		}
 
 		rep  = get_verdict_report (msig);
-		report = g_strdup_printf ("%s%s[%d] %s",
-					  report ? report : "",
-					  report ? "; " : "",
-					  i, rep);
+		report = g_strdup_printf ("%s%s[%d] %s", report ? report : "",
+					  report ? "; " : "",  i, rep);
 		g_free (rep);
 	}
 
@@ -362,8 +352,6 @@ mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 
 	return report;
 }
-
-
 
 
 GMimeObject* /* this is declared in mu-msg-priv.h */

@@ -32,11 +32,6 @@
 #include "mu-maildir.h"
 #include "mu-msg-priv.h"
 
-#ifdef BUILD_CRYPTO
-#include "mu-msg-crypto.h"
-#endif /*BUILD_CRYPTO*/
-
-
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
 				    const char *mdir, GError **err);
 static gboolean init_mime_msg (MuMsgFile *msg, const char *path, GError **err);
@@ -711,6 +706,7 @@ foreach_cb (GMimeObject *parent, GMimeObject *part, ForeachData *fdata)
 		g_object_unref (dec);
 	}
 #endif /*BUILD_CRYPTO*/
+
 }
 
 

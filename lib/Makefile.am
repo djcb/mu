@@ -21,7 +21,7 @@ include $(top_srcdir)/gtest.mk
 SUBDIRS= . tests
 
 if BUILD_CRYPTO
-crypto=mu-msg-crypto.c mu-msg-crypto.h
+crypto=mu-msg-crypto.c
 else
 crypto=
 endif

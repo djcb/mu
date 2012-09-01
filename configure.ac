@@ -52,7 +52,7 @@ AC_SYS_LARGEFILE
 AC_CHECK_LIB([uuid], [uuid_generate_random],[],AC_MSG_ERROR([libuuid not found]))
 AC_CHECK_LIB([z], [inflateEnd], [],AC_MSG_ERROR([zlib not found]))
 
-    
+
 # check for makeinfo
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
