@@ -101,6 +101,15 @@ clicked."
 	"* "
 	(propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
 	(propertize  mu4e-mu-version 'face 'mu4e-view-header-key-face)
+
+	;; show some server properties; in this case; a big C when there's
+	;; crypto support
+	" "
+	(when (plist-get mu4e~server-props :crypto)
+	  (propertize "C" 'face 'mu4e-title-face))
+	""
+
+
 	"\n\n"
 	(propertize "  Basics\n\n" 'face 'mu4e-title-face)
 	(mu4e~main-action-str "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
@@ -151,5 +160,5 @@ clicked."
     (concat "Outgoing mail will now be "
       (if smtpmail-queue-mail "queued" "sent directly")))
   (mu4e~main-view))
- 
+
 (provide 'mu4e-main)
