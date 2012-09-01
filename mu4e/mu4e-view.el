@@ -337,7 +337,7 @@ at POINT, or if nil, at (point)."
 		 (mapconcat
 		   (lambda (v)
 		     (propertize (symbol-name v)
-		       'face (if (eq v 'good) 'mu4e-ok-face 'mu4e-warning-face)))
+		       'face (if (eq v 'verified) 'mu4e-ok-face 'mu4e-warning-face)))
 		   verdicts ", ")))
 	  (btn (when val
 		 (with-temp-buffer
