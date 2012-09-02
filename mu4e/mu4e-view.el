@@ -888,11 +888,13 @@ all messages in the thread at point in the headers view."
 (defun mu4e~view-get-attach (msg attnum)
   "Return the attachment plist in MSG corresponding to attachment
 number ATTNUM."
-  (let ((partid (gethash attnum mu4e~view-attach-map)))
-    (find-if
-      (lambda (part)
-	(eq (plist-get part :index) partid))
-      (plist-get msg :parts))))
+  (let* ((partid (gethash attnum mu4e~view-attach-map))
+	 (attach
+	   (find-if
+	     (lambda (part)
+	       (eq (plist-get part :index) partid))
+	     (plist-get msg :parts))))
+    (or attach (mu4e-error "Not a valid attachment"))))
 
 
 (defun mu4e-view-save-attachment-single (&optional msg attnum)
@@ -951,7 +953,7 @@ message-at-point if nil)."
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to open" msg)))
-	  (att (mu4e~view-get-attach msg attnum))
+	  (att (or (mu4e~view-get-attach msg attnum)))
 	  (index (plist-get att :index)))
     (mu4e~proc-extract 'open (plist-get msg :docid) index)))
 
