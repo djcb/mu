@@ -49,7 +49,10 @@ AC_CHECK_HEADERS([locale.h langinfo.h])
 AC_SYS_LARGEFILE
 
 # check for some libs
-AC_CHECK_LIB([uuid], [uuid_generate_random],[],AC_MSG_ERROR([libuuid not found]))
+AC_CHECK_LIB([uuid], [uuid_generate_random],[],
+   AC_MSG_ERROR([
+      libuuid not found. In debian/ubuntu the package would be 'uuid-dev'.
+   ]))
 AC_CHECK_LIB([z], [inflateEnd], [],AC_MSG_ERROR([zlib not found]))
 
     
