@@ -32,8 +32,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-about)
 (require 'doc-view)
-(require 'org) ;; for org-parse-time-string
-
+ 
 (defcustom mu4e-html2text-command nil
   "Shell command that converts HTML from stdin into plain text on
 stdout. If this is not defined, the emacs `html2text' tool will be
@@ -48,6 +47,35 @@ recommended you use \"html2text -utf8 -width 72\"."
 e-mail message (if there is any."
   :type 'boolean
   :group 'mu4e-view)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; the following is taken from org.el; we copy it here since we don't want to
+;; depend on org-mode directly (it causes byte-compilation errors) TODO: a
+;; cleaner solution....
+(defconst mu4e~ts-regexp0
+ "\\(\\([0-9]\\{4\\}\\)-\\([0-9]\\{2\\}\\)-\\([0-9]\\{2\\}\\)\\( +[^]+0-9>\r\n -]+\\)?\\( +\\([0-9]\\{1,2\\}\\):\\([0-9]\\{2\\}\\)\\)?\\)"
+  "Regular expression matching time strings for analysis.
+This one does not require the space after the date, so it can be
+used on a string that terminates immediately after the date.")
+
+(defun mu4e-parse-time-string (s &optional nodefault)
+  "Parse the standard Org-mode time string.
+This should be a lot faster than the normal `parse-time-string'.
+If time is not given, defaults to 0:00.  However, with optional NODEFAULT,
+hour and minute fields will be nil if not given."
+  (if (string-match mu4e~ts-regexp0 s)
+      (list 0
+	    (if (or (match-beginning 8) (not nodefault))
+		(string-to-number (or (match-string 8 s) "0")))
+	    (if (or (match-beginning 7) (not nodefault))
+		(string-to-number (or (match-string 7 s) "0")))
+	    (string-to-number (match-string 4 s))
+	    (string-to-number (match-string 3 s))
+	    (string-to-number (match-string 2 s))
+	    nil nil nil)
+    (mu4e-error "Not a standard mu4e time string: %s" s)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun mu4e-create-maildir-maybe (dir)
@@ -645,7 +673,7 @@ FUNC (if non-nil) afterwards."
 	  (when mu4e-compose-complete-only-after
 	    (float-time
 	      (apply 'encode-time
-		(org-parse-time-string mu4e-compose-complete-only-after))))))))
+		(mu4e-parse-time-string mu4e-compose-complete-only-after))))))))
 
 (defun mu4e~stop ()
   "Stop the mu4e session."
@@ -884,7 +912,7 @@ displaying it). Do _not_ bury the current buffer, though."
   after PROMPT. Formats are all that are accepted by
   `parse-time-string'."
   (let ((timestr (read-string (mu4e-format "%s" prompt))))
-    (apply 'encode-time (org-parse-time-string timestr))))
+    (apply 'encode-time (mu4e-parse-time-string timestr))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst mu4e~main-about-buffer-name "*mu4e-about*"

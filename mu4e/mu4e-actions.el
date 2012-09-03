@@ -138,7 +138,7 @@ with `mu4e-compose-attach-captured-message'."
 current message (in headers or view). You need to set
 `mu4e-org-contacts-file' to the full path to the file where you
 store your org-contacts."
-  (unless (require 'org-capture nil 'nomu4e-error)
+  (unless (require 'org-capture nil 'noerror)
     (mu4e-error "org-capture is not available."))
   (unless mu4e-org-contacts-file
     (mu4e-error "`mu4e-org-contacts-file' is not defined."))

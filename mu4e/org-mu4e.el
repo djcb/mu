@@ -27,6 +27,10 @@
 
 ;;; Code:
 
+;; the 'noerror is just to make sure bytecompilations does not break...
+;; FIXME: find a better solution
+(require 'org nil 'noerror)
+
 (eval-when-compile (require 'cl))
 (eval-when-compile (require 'mu4e))
 ;; hack: we don't want to require org (as that doesn't always work in
