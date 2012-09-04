@@ -1086,7 +1086,7 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 		print_and_clear_g_error (err);
 	}
 
-	sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_NONE);
+	sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY);
 	/* note, the :move t thing is a hint to the frontend that it
 	 * could remove the particular header */
 	print_expr ("(:update %s :move %s)", sexp,
