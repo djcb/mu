@@ -184,6 +184,7 @@ plist."
 		(if sizestr (mu4e~view-construct-header field sizestr))))
 	    ;; attachments
 	    (:attachments (mu4e~view-construct-attachments-header msg))
+	    ;; pgp-signatures
 	    (:signature   (mu4e~view-construct-signature-header msg))
 	    (t (mu4e-error "Unsupported field: %S" field)))))
       mu4e-view-fields "")
@@ -342,7 +343,6 @@ at POINT, or if nil, at (point)."
 	  (btn (when val
 		 (with-temp-buffer
 		   (insert-text-button "Details"
-		     'msg msg
 		     'action (lambda (b)
 			       (mu4e-view-verify-msg-popup (button-get b 'msg))))
 		   (buffer-string))))

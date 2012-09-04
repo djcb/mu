@@ -33,11 +33,11 @@ static void
 fill_hash (GHashTable *hash, GKeyFile *kfile)
 {
 	gchar **keys, **cur;
-	
+
 	keys = g_key_file_get_keys (kfile, MU_BOOKMARK_GROUP, NULL, NULL);
 	if (!keys)
 		return;
-	
+
 	for (cur = keys; *cur; ++cur) {
 		gchar *val;
 		val = g_key_file_get_string (kfile, MU_BOOKMARK_GROUP,
@@ -56,9 +56,9 @@ create_hash_from_key_file (const gchar *bmpath)
 {
 	GKeyFile *kfile;
 	GHashTable *hash;
-	
+
 	kfile = g_key_file_new ();
-	
+
 	if (!g_key_file_load_from_file (kfile, bmpath, G_KEY_FILE_NONE, NULL)) {
 		g_key_file_free (kfile);
 		return NULL;
@@ -79,15 +79,15 @@ mu_bookmarks_new (const gchar *bmpath)
 {
 	MuBookmarks *bookmarks;
 	GHashTable *hash;
-	
+
 	g_return_val_if_fail (bmpath, NULL);
 
 	hash = create_hash_from_key_file (bmpath);
 	if (!hash)
 		return NULL;
-	
+
 	bookmarks	   = g_new (MuBookmarks, 1);
-	
+
 	bookmarks->_bmpath = g_strdup (bmpath);
 	bookmarks->_hash   = hash;
 
@@ -121,7 +121,7 @@ struct _BMData {
 	gpointer _user_data;
 };
 typedef struct _BMData BMData;
-	
+
 
 static void
 each_bookmark (const gchar* key, const gchar *val, BMData *bmdata)
@@ -135,13 +135,12 @@ mu_bookmarks_foreach (MuBookmarks *bm, MuBookmarksForeachFunc func,
 		      gpointer user_data)
 {
 	BMData bmdata;
-	
+
 	g_return_if_fail (bm);
 	g_return_if_fail (func);
 
 	bmdata._func	  = func;
 	bmdata._user_data = user_data;
-	
+
 	g_hash_table_foreach (bm->_hash, (GHFunc)each_bookmark, &bmdata);
 }
-	
