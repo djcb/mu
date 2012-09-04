@@ -72,8 +72,10 @@ encode_email_address (const char *addr)
 
 	/* make sure chars are with {' ' .. '~'}, and not '[' ']' */
 	for (cur = strncpy(enc, addr, sizeof(enc)); *cur != '\0'; ++cur)
-		if (!isalnum(*cur))
+		if (!isalnum(*cur)) {
 			*cur = 'A' +  (*cur % ('Z' - 'A'));
+		} else
+			*cur = tolower(*cur);
 
 	return enc;
 }
