@@ -28,7 +28,7 @@
 (require 'mu4e-utils)    ;; utility functions
 
 
-(defconst mu4e~main-buffer-name "*mu4e-main*"
+(defconst mu4e~main-buffer-name " *mu4e-main*"
   "*internal* Name of the mu4e main view buffer.")
 
 (defvar mu4e-main-mode-map

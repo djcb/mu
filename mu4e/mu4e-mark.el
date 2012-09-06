@@ -119,7 +119,7 @@ The following marks are available, and the corresponding props:
 	      (otherwise (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (car markcell))
 	  (target (cdr markcell)))
-    (unless docid (mu4e-error "No message on this line"))
+    (unless docid (mu4e-warn "No message on this line"))
     (unless (eq major-mode 'mu4e-headers-mode)
       (mu4e-error "Not in headers-mode"))
     (save-excursion
@@ -272,7 +272,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   "Unmark all marked messages."
   (interactive)
   (when (or (null mu4e~mark-map) (zerop (hash-table-count mu4e~mark-map)))
-    (mu4e-error "Nothing is marked"))
+    (mu4e-warn "Nothing is marked"))
   (maphash
     (lambda (docid val)
       (save-excursion

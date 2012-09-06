@@ -964,11 +964,11 @@ to get it from; it's a symbol, either 'future or 'past."
   (case whence
     (past
       (unless mu4e~headers-query-past
-	(mu4e-error "No more previous queries"))
+	(mu4e-warn "No more previous queries"))
       (pop mu4e~headers-query-past))
     (future
       (unless mu4e~headers-query-future
-	(mu4e-error "No more next queries"))
+	(mu4e-warn "No more next queries"))
       (pop mu4e~headers-query-future))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1029,7 +1029,7 @@ the last search expression."
   	      nil 'mu4e~headers-search-hist nil t)))
       (list filter)))
   (unless mu4e~headers-last-query
-    (mu4e-error "There's nothing to filter"))
+    (mu4e-warn "There's nothing to filter"))
   (mu4e-headers-search
     (format "(%s) AND %s" mu4e~headers-last-query filter)))
 
@@ -1106,7 +1106,7 @@ current window. "
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((docid (or (mu4e~headers-docid-at-point)
-		  (mu4e-error "No message at point")))
+		  (mu4e-warn "No message at point")))
 	  (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
@@ -1208,13 +1208,13 @@ N. Otherwise, don't do anything."
 	(horizontal
 	  (let ((newval (+ (or n 1) mu4e-headers-visible-lines)))
 	    (unless (> newval 0)
-	      (mu4e-error
+	      (mu4e-warn
 		"Cannot make the number of visible lines any smaller"))
 	    (setq mu4e-headers-visible-lines newval)))
 	(vertical
 	  (let ((newval (+ (or n 1) mu4e-headers-visible-columns)))
 	    (unless (> newval 0)
-	      (mu4e-error
+	      (mu4e-warn
 		"Cannot make the number of visible columns any smaller"))
 	    (setq mu4e-headers-visible-columns newval))))
       (let ((viewwin (mu4e~headers-redraw-get-view-window)))

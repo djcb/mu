@@ -1121,7 +1121,7 @@ user that unmarking only works in the header list."
   "Go to a numbered url."
   (interactive "n[mu4e] Visit url with number: ")
   (let ((url (gethash num mu4e~view-link-map)))
-    (unless url (mu4e-error "Invalid number for URL"))
+    (unless url (mu4e-warn "Invalid number for URL"))
     (funcall (mu4e~view-browse-url-func url))))
 
 (defconst mu4e~view-raw-buffer-name "*mu4e-raw-view*"

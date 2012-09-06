@@ -89,10 +89,10 @@ forwarded or edited) in `mu4e-compose-pre-hook.")
   "Insert the last captured message file as an attachment."
     (interactive)
   (unless mu4e-captured-message
-    (mu4e-error "No message has been captured"))
+    (mu4e-warn "No message has been captured"))
   (let ((path (plist-get mu4e-captured-message :path)))
     (unless (file-exists-p path)
-      (mu4e-error "Captured message file not found"))
+      (mu4e-warn "Captured message file not found"))
     (mml-attach-file
       path
       "application/octet-stream"
@@ -689,7 +689,7 @@ for draft messages."
     (mu4e-error "Invalid compose type '%S'" compose-type))
   (when (and (eq compose-type 'edit)  
 	  (not (member 'draft (mu4e-field-at-point :flags))))
-    (mu4e-error "Editing is only allowed for draft messages")) 
+    (mu4e-warn "Editing is only allowed for draft messages")) 
 
   ;; run the hooks
   (mu4e~compose-run-hooks compose-type)

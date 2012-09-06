@@ -103,9 +103,16 @@ user-input, don't show anyhting."
     nil))
 
 (defun mu4e-error (frm &rest args)
-  "Create [mu4e]-prefixed error based on format FRM and ARGS."
+  "Create [mu4e]-prefixed error based on format FRM and ARGS. Does
+a local-exit and does not return."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (error "%s" (apply 'mu4e-format frm args)))
+
+(defun mu4e-warn (frm &rest args)
+  "Create [mu4e]-prefixed warning based on format FRM and
+ARGS. Does a local-exit and does not return."
+  (mu4e-log 'error (apply 'mu4e-format frm args))
+  (user-error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
@@ -166,7 +173,7 @@ Function will return the cdr of the list element."
 	      options)))
     (if chosen
       (cdr chosen)
-      (mu4e-error "Unknown shortcut '%c'" response))))
+      (mu4e-warn "Unknown shortcut '%c'" response))))
     
 
 (defun mu4e~get-maildirs-1 (path mdir)
@@ -229,7 +236,7 @@ maildirs under `mu4e-maildir."
 	  (ido-completing-read prompt (mu4e-get-maildirs))
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
-	    (mu4e-error "Unknown shortcut '%c'" kar)))))))
+	    (mu4e-warn "Unknown shortcut '%c'" kar)))))))
 
 
 (defun mu4e-ask-maildir-check-exists (prompt)
@@ -250,7 +257,7 @@ the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
   (interactive)
   (unless (mu4e~headers-docid-at-point)
-    (mu4e-error "No message at point."))
+    (mu4e-warn "No message at point."))
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	  (target (if (string= (substring target 0 1) "/")
 		    target
@@ -291,7 +298,7 @@ KAR, or raise an error if none is found."
 	   mu4e-bookmarks)))
    (if chosen-bm
      (nth 0 chosen-bm)
-     (mu4e-error "Unknown shortcut '%c'" kar))))
+     (mu4e-warn "Unknown shortcut '%c'" kar))))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -476,7 +483,7 @@ there is no message at point."
 	   ((eq major-mode 'mu4e-view-mode)
 	     mu4e~view-msg))))
     (if (and (null msg) raise-err)
-      (mu4e-error "No message at point")
+      (mu4e-warn "No message at point")
       msg)))
 
 (defun mu4e-field-at-point (field)
@@ -545,7 +552,7 @@ process."
   "Handler function for showing an error."
   ;; don't use mu4e-error here; it's running in the process filter ctx
   (case errcode
-    (4 (error "No matches for this search query."))
+    (4 (user-error "No matches for this search query."))
     (t (error "Error %d: %s" errcode errmsg))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -855,9 +862,9 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
       #'(lambda (x)
 	  (cond
 	    ((> x n)
-	      (mu4e-error "Attachment %d bigger than maximum (%d)" x n))
+	      (mu4e-warn "Attachment %d bigger than maximum (%d)" x n))
 	    ((< x 1)
-	      (mu4e-error "Attachment number must be greater than 0 (%d)" x))))
+	      (mu4e-warn "Attachment number must be greater than 0 (%d)" x))))
       list)))
 
 
