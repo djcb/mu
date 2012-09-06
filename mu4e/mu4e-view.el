@@ -361,10 +361,10 @@ is nil, and otherwise open it."
 
 (defun mu4e~view-construct-attachments-header (msg)
   "Display attachment information; the field looks like something like:
-   	:parts ((:index 1 :name \"test123.doc\"
-                 :mime-type \"application/msword\" :attachment t :size 1234)
-                (:index 2 :name \"test456.pdf\"
-                 :mime-type \"application/pdf\" :attachment t :size 12234))."
+   	:parts ((:index 1 :name \"1.part\" :mime-type \"text/plain\"
+                 :type (leaf) :attachment nil :size 228)
+                (:index 2 :name \"analysis.doc\" :mime-type \"application/msword\"
+                 :type (leaf attachment) :attachment nil :size 605196))"
   (setq mu4e~view-attach-map ;; buffer local
     (make-hash-table :size 64 :weakness nil))
   (let* ((id 0)
@@ -372,13 +372,16 @@ is nil, and otherwise open it."
 	    ;; we only list parts that look like attachments, ie. that have a
 	    ;; non-nil :attachment property; we record a mapping between user-visible
 	    ;; numbers and the part indices
-	    (remove-if
+	    (remove-if-not
 	      (lambda (part)
-		(or ;; remove if it's not an attachment, unless it's an image
-		  (and (not (member 'attachment (plist-get part :type)))
-		    (not (string-match "^image" (plist-get part :mime-type))))
-		  ;;
-		  ))
+		(let ((mtype (plist-get part :mime-type))
+			(isattach  (member 'attachment (plist-get part :type))))
+		  (or ;; remove if it's not an attach *or* if it's an image/audio/application type
+		      ;; (but not a signature)
+		    isattach
+		    (string-match "^\\(image\\|audio\\)" mtype)
+		    (and (string-match "^application" mtype)
+		      (not (string-match "signature" mtype))))))
 	      (plist-get msg :parts)))
 	  (attstr
 	    (mapconcat
