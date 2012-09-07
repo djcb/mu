@@ -98,7 +98,7 @@ dir already existed, or has been created, nil otherwise."
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e. If we're waiting for
 user-input, don't show anyhting."
-  (unless (waiting-for-user-input-p)
+  (unless (active-minibuffer-window)
     (message "%s" (apply 'mu4e-format frm args))
     nil))
 
@@ -824,14 +824,12 @@ mu4e logs some of its internal workings to a log-buffer. See
     (if mu4e-debug "enabled" "disabled"))
   (mu4e-log 'misc "logging enabled"))
 
-
-
 (defun mu4e-show-log ()
   "Visit the mu4e debug log."
   (interactive)
   (let ((buf (get-buffer mu4e~log-buffer-name)))
     (unless (buffer-live-p buf)
-      (mu4e-error "No debug log available"))
+      (mu4e-warn "No debug log available"))
     (switch-to-buffer buf)))
 
 
