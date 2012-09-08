@@ -217,10 +217,15 @@ looks_like_attachment (GMimeObject *part)
 	if (g_ascii_strcasecmp (dispstr, "attachment") == 0)
 		return TRUE;
 
-	/* we also consider images, attachment or inline, to be
-	 * attachments... */
+	/* we also consider images, audio, and non-pgp-signature
+	 * application attachments to be attachments... */
 	ctype = g_mime_object_get_content_type (part);
 	if (g_mime_content_type_is_type (ctype, "image", "*"))
+		return TRUE;
+	if (g_mime_content_type_is_type (ctype, "audio", "*"))
+		return TRUE;
+	if ((g_mime_content_type_is_type (ctype, "application", "*")) &&
+	    !g_mime_content_type_is_type (ctype, "*", "pgp-signature"))
 		return TRUE;
 
 	return FALSE;
