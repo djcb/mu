@@ -37,6 +37,8 @@
   "Location of the mu homedir, or nil for the default."
   :type 'directory
   :group 'mu4e
+  :type '(choice (const :tag "Default location" nil)
+                 (const :tag "Specify location" string))
   :safe 'stringp)
 
 (defcustom mu4e-mu-binary (executable-find "mu")
@@ -65,13 +67,14 @@ PATH, you can specify the full path."
 update the database. If nil, don't update automatically. Note,
 changes in `mu4e-update-interval' only take effect after restarting
 mu4e."
-  :type 'integer
+  :type '(choice (const :tag "No automatic update" nil)
+                 (integer :tag "Seconds"))
   :group 'mu4e
   :safe 'integerp)
 
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
   "Default directory for saving attachments."
-  :type 'string
+  :type 'directory
   :group 'mu4e
   :safe 'stringp)
 
@@ -79,31 +82,34 @@ mu4e."
   "Regular expression matching the user's mail address(es). This is
 used to distinguish ourselves from others, e.g. when replying and
 in :from-or-to headers. By default, match nothing."
-  :type 'string
+  :type 'regexp
   :group 'mu4e
   :safe 'stringp)
 
 (defcustom mu4e-use-fancy-chars nil
   "Whether to use fancy (non-ascii) characters."
-  :type 'booleanp
+  :type 'boolean
   :group 'mu4e)
 
 (defcustom mu4e-my-email-addresses `(,user-mail-address)
   "List of e-mail addresses to consider 'my email addresses',
 ie. addresses whose presence in an email imply that it is a
 personal message. This is used when indexing messages."
-  :type '(string)
+  :type '(repeat (string :tag "Address"))
   :group 'mu4e)
 
 (defvar mu4e-date-format-long "%c"
   "Date format to use in the message view, in the format of
   `format-time-string'.")
 
-(defvar mu4e-search-results-limit 500
+(defcustom mu4e-search-results-limit 500
   "Maximum number of search results (or -1 for unlimited). Since
 limiting search results speeds up searches significantly, it's
 useful to limit this. Note, to ignore the limit, use a prefix
-argument (C-u) before invoking the search.")
+argument (C-u) before invoking the search."
+  :type '(choice (const :tag "Unlimited" -1)
+                 (integer :tag "Limit"))
+  :group 'mu4e)
 
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
@@ -119,17 +125,21 @@ form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
 query, DESCRIPTION is a short description of the query (this will
 show up in the UI), and KEY is a shortcut key for the query.")
 
-(defvar mu4e-split-view 'horizontal
+(defcustom mu4e-split-view 'horizontal
   "How to show messages / headers; a symbol which is either: * a
 symbol 'horizontal: split horizontally (headers on top) * a symbol
 'vertical: split vertically (headers on the left).  * anything
 else: don't split (show either headers or messages, not both) Also
 see `mu4e-headers-visible-lines' and
-`mu4e-headers-visible-columns'.")
+`mu4e-headers-visible-columns'."
+  :type '(choice (const :tag "Split horizontally" horizontal)
+                 (const :tag "Split vertically" vertical)
+                 (const :tag "Don't split" nil)))
 
 (defcustom mu4e-show-images nil
   "Whether to automatically display attached images in the message
 view buffer."
+  :type 'boolean
   :group 'mu4e-view)
 
 (defcustom mu4e-confirm-quit t
@@ -152,7 +162,9 @@ view buffer."
  * `auto': try to decrypt automatically
  * `ask': ask before decrypting anything
  * `no': don't try to decrypt anything."
-  :type 'symbol
+  :type '(choice (const :tag "Try to decrypt automatically" auto)
+                 (const :tag "Ask before decrypting anything" ask)
+                 (const :tag "Don't try to decrypt anything" no))
   :group 'mu4e-crypto)
 
 ;; completion; we put them here rather than in mu4e-compose, as mu4e-utils needs
