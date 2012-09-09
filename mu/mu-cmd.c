@@ -515,13 +515,6 @@ show_usage (void)
 		   "more information\n");
 }
 
-static void
-show_version (void)
-{
-	g_print ("mu (mail indexer/searcher) version " VERSION "\n"
-		 "Copyright (C) 2008-2011 Dirk-Jan C. Binnema (GPLv3+)\n");
-}
-
 typedef MuError (*store_func) (MuStore *, MuConfig *, GError **err);
 
 MuError
@@ -568,11 +561,6 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 {
 	MuError merr;
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
-
-	if (opts->version) {
-		show_version ();
-		return MU_OK;
-	}
 
 	if (!check_params(opts, err))
 		return MU_G_ERROR_CODE(err);

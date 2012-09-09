@@ -33,6 +33,14 @@
 
 
 static void
+show_version (void)
+{
+	g_print ("mu (mail indexer/searcher) version " VERSION "\n"
+		 "Copyright (C) 2008-2012 Dirk-Jan C. Binnema (GPLv3+)\n");
+}
+
+
+static void
 handle_error (MuConfig *conf, GError *err)
 {
 	const char *advise;
@@ -47,13 +55,11 @@ handle_error (MuConfig *conf, GError *err)
 	switch (err->code) {
 
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
-		advise = "maybe mu is already running?";
-		break;
+		advise = "maybe mu is already running?"; break;
 
 	case MU_ERROR_XAPIAN_CORRUPTION:
 	case MU_ERROR_XAPIAN_NOT_UP_TO_DATE:
-		advise = "please try 'mu index --rebuild'";
-		break;
+		advise = "please try 'mu index --rebuild'"; break;
 	case MU_ERROR_XAPIAN_IS_EMPTY:
 		advise = "please try 'mu index'";
 		break;
@@ -62,8 +68,7 @@ handle_error (MuConfig *conf, GError *err)
 			dynadvise = g_strdup_printf ("see 'mu help %s'",
 						     conf->cmdstr);
 		break;
-	default:
-		break; /* nothing to do */
+	default:break; /* nothing to do */
 	}
 
 	g_warning ("%s", err->message);
@@ -89,6 +94,10 @@ main (int argc, char *argv[])
 	conf = mu_config_init (&argc, &argv);
 	if (!conf)
 		return 1;
+	else if (conf->version) {
+		show_version ();
+		return 0;
+	}
 
 	if (!mu_runtime_init (conf->muhome, PACKAGE_NAME)) {
 		mu_config_uninit (conf);
