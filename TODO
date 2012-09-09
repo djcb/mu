@@ -96,7 +96,11 @@
   - improve performance of getting the list of maildirs
   - fix setting wrapped/hide state in viewer
   - fix ' realpath() failed for...' stuff
-  - allow for fancy chars (> ascii), make it configurable (mu4e-use-fancy-chars)  
+  - allow for fancy chars (> ascii), make it configurable (mu4e-use-fancy-chars)
+  - don't user `error' for user-errors
+  - better echo-area reporting
+  - improve help feedback for user (command line)
+
 
 * Done
   :PROPERTIES:
