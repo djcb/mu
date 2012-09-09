@@ -702,8 +702,13 @@ query_params_valid (MuConfig *opts, GError **err)
 {
 	const gchar *xpath;
 
-	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
+	if (!opts->params[1]) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "missing query");
+		return FALSE;
+	}
 
+	xpath = mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB);
 	if (mu_util_check_dir (xpath, TRUE, FALSE))
 		return TRUE;
 
@@ -731,11 +736,10 @@ mu_cmd_find (MuStore *store, MuConfig *opts, GError **err)
 	if (opts->exec)
 		opts->format = MU_CONFIG_FORMAT_EXEC; /* pseudo format */
 
-	if (!query_params_valid (opts, err) || !format_params_valid(opts, err)) {
-
+	if (!query_params_valid (opts, err) ||
+	    !format_params_valid(opts, err)) {
 		if (MU_G_ERROR_CODE(err) == MU_ERROR_IN_PARAMETERS)
 			show_usage ();
-
 		return MU_G_ERROR_CODE (err);
 	}
 

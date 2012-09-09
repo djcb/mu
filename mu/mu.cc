@@ -33,14 +33,16 @@
 
 
 static void
-handle_error (GError *err)
+handle_error (MuConfig *conf, GError *err)
 {
 	const char *advise;
+	char *dynadvise;
 
 	if (!err)
 		return; /* nothing to do */
 
-	advise = NULL;
+	dynadvise = NULL;
+	advise    = NULL;
 
 	switch (err->code) {
 
@@ -55,13 +57,22 @@ handle_error (GError *err)
 	case MU_ERROR_XAPIAN_IS_EMPTY:
 		advise = "please try 'mu index'";
 		break;
+	case MU_ERROR_IN_PARAMETERS:
+		if (conf->cmd != MU_CONFIG_CMD_UNKNOWN)
+			dynadvise = g_strdup_printf ("see 'mu help %s'",
+						     conf->cmdstr);
+		break;
 	default:
 		break; /* nothing to do */
 	}
 
 	g_warning ("%s", err->message);
 	if (advise)
-		g_message ("%s", advise);
+		g_print ("%s\n", advise);
+	if (dynadvise) {
+		g_print ("%s\n", dynadvise);
+		g_free (dynadvise);
+	}
 }
 
 
@@ -87,7 +98,7 @@ main (int argc, char *argv[])
 	err = NULL;
 	rv = mu_cmd_execute (conf, &err);
 
-	handle_error (err);
+	handle_error (conf, err);
 	g_clear_error (&err);
 
 

@@ -270,8 +270,8 @@ mu_cmd_mkdir (MuConfig *opts, GError **err)
 			      MU_ERROR_INTERNAL);
 
 	if (!opts->params[1]) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			     "missing directory parameter");
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "missing directory parameter");
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
@@ -325,8 +325,8 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_print ("usage: mu add <file> [<files>]\n");
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			     "missing source and/or target");
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "missing source and/or target");
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
@@ -344,8 +344,8 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 	}
 
 	if (!allok) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_STORE_FAILED,
-			     "store failed for some message(s)");
+		mu_util_g_set_error (err, MU_ERROR_XAPIAN_STORE_FAILED,
+				     "store failed for some message(s)");
 		return MU_ERROR_XAPIAN_STORE_FAILED;
 	}
 
@@ -366,7 +366,7 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu remove <file> [<files>]");
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "missing source and/or target");
 		return MU_ERROR_IN_PARAMETERS;
 	}
@@ -468,6 +468,12 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VERIFY,
 			      MU_ERROR_INTERNAL);
 
+	if (!opts->params[1]) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "missing message-file parameter");
+		return MU_ERROR_IN_PARAMETERS;
+	}
+
 	msg = mu_msg_new_from_file (opts->params[1], NULL, err);
 	if (!msg)
 		return MU_ERROR;
@@ -504,7 +510,7 @@ show_usage (void)
 {
 	g_print ("usage: mu command [options] [parameters]\n");
 	g_print ("where command is one of index, find, cfind, view, mkdir, "
-		   "extract, add, remove or server\n");
+		   "extract, add, remove, verify or server\n");
 	g_print ("see the mu, mu-<command> or mu-easy manpages for "
 		   "more information\n");
 }
@@ -560,6 +566,7 @@ check_params (MuConfig *opts, GError **err)
 MuError
 mu_cmd_execute (MuConfig *opts, GError **err)
 {
+	MuError merr;
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 
 	if (opts->version) {
@@ -574,26 +581,28 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		/* already handled in mu-config.c */
 	case MU_CONFIG_CMD_HELP: return MU_OK;
 
-	case MU_CONFIG_CMD_CFIND:   return mu_cmd_cfind (opts, err);
-	case MU_CONFIG_CMD_MKDIR:   return mu_cmd_mkdir (opts, err);
-	case MU_CONFIG_CMD_VIEW:    return mu_cmd_view (opts, err);
-	case MU_CONFIG_CMD_VERIFY:  return mu_cmd_verify (opts, err);
-	case MU_CONFIG_CMD_EXTRACT: return mu_cmd_extract (opts, err);
+	case MU_CONFIG_CMD_CFIND:  merr = mu_cmd_cfind (opts, err); break;
+	case MU_CONFIG_CMD_MKDIR:  merr = mu_cmd_mkdir (opts, err); break;
+	case MU_CONFIG_CMD_VIEW:   merr = mu_cmd_view (opts, err); break;
+	case MU_CONFIG_CMD_VERIFY: merr = mu_cmd_verify (opts, err); break;
+	case MU_CONFIG_CMD_EXTRACT:merr = mu_cmd_extract (opts, err); break;
 
 	case MU_CONFIG_CMD_FIND:
-		return with_store (mu_cmd_find, opts, TRUE, err);
+		merr = with_store (mu_cmd_find, opts, TRUE, err); break;
 	case MU_CONFIG_CMD_INDEX:
-		return with_store (mu_cmd_index, opts, FALSE, err);
+		merr = with_store (mu_cmd_index, opts, FALSE, err); break;
 	case MU_CONFIG_CMD_ADD:
-		return with_store (mu_cmd_add, opts, FALSE, err);
+		merr = with_store (mu_cmd_add, opts, FALSE, err); break;
 	case MU_CONFIG_CMD_REMOVE:
-		return with_store (mu_cmd_remove, opts, FALSE, err);
+		merr = with_store (mu_cmd_remove, opts, FALSE, err); break;
 	case MU_CONFIG_CMD_SERVER:
-		return with_store (mu_cmd_server, opts, FALSE, err);
+		merr = with_store (mu_cmd_server, opts, FALSE, err); break;
 	default:
 		show_usage ();
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			     "unknown command '%s'", opts->cmdstr);
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "unknown command '%s'", opts->cmdstr);
 		return MU_ERROR_IN_PARAMETERS;
 	}
+
+	return merr;
 }
