@@ -46,7 +46,7 @@ Some of the features include:
 @item UI optimized for speed with quick key strokes for common actions
 @item Asynchronous: heavy actions never block @t{emacs}
 @item Rich-text e-mails using @t{org-mode} (experimental)
-@item Address auto-completion based on your messages -- no need for managing address books
+@item Address auto-completion based on your messages
 @item Extendable using your own custom actions
 @end itemize
 
@@ -461,8 +461,8 @@ First, the @emph{Basics}:
 @itemize
 @item @t{[j]ump to some maildir} means that after pressing @key{j},
 @t{mu4e} will ask you for a maildir to visit. These are the maildirs you set
-in @ref{Basic configuration}, or, if you choose @key{o} for @emph{other}, all
-maildirs.
+in @ref{Basic configuration}. If you choose @key{o} (@emph{other}) or @key{/},
+you can choose from @emph{all} maildirs under @var{mu4e-maildir}.
 @item @t{enter a [s]earch query} means that after pressing @key{s} you will
 be asked for a search query, and after entering one, the results will be
 shown. @xref{Searching}.
@@ -1971,7 +1971,8 @@ An (almost) minimal configuration for @t{mu4e} might look something like this:
 
    ;; program to get mail; alternatives are 'fetchmail', 'getmail'
    ;; isync or your own shellscript. called when 'U' is pressed in
-   ;; main view
+   ;; main view. Note: if you get your mail without an explicit command,
+   ;; but "true" for the command (also the default)
    mu4e-get-mail-command "offlineimap"
 
    ;; general emacs mail settings; used when composing e-mail
@@ -2166,13 +2167,16 @@ can also use functions like @code{mu4e-headers-mark-thread} (@key{T}),
 @code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at the same
 time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
 matching a certain regular expression.
-@item @emph{mu4e seems to return a mere subset of all matches - how can I get
+@item @emph{mu4e seems to return a subset of all matches - how can I get
 all?}. Indeed, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
 value of the variable @code{m4ue-search-result-limit} matches. To show
 @emph{all} results, use @t{M-x mu4e-headers-toggle-full-search}, or customize
 the variable @code{mu4e-headers-full-search}. This applies to all search
 commands.
+@item @emph{I don't use @t{offlineimap}, @t{fetchmail} etc., what should I use
+for @code{mu4e-get-mail-command}}? Use @t{"true"}. This will make the getting
+mail command a no-op, and then re-index the messages.
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like @t{mu: mu_store_new_writable: xapian error 'Unable to get write
 lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
@@ -2195,6 +2199,10 @@ leaving the headers buffer?} Yes you can -- see the documentation on
 should take you to the right place in this manual.
 @item @emph{How can I set @t{mu4e} as the default e-mail client in emacs?}
 See @ref{Setting the default emacs mail program}.
+@item @emph{Can @t{mu4e} use some fancy Unicode characters instead of these
+boring plain-ASCII ones?} Glad you asked! Yes, you can set
+@var{mu4e-use-fancy-chars}  to @t{t}, and @t{mu4e} will use those fancy
+characters in a number of places.  
 @end itemize
 
 
