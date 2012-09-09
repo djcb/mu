@@ -1170,7 +1170,8 @@ or message-at-point."
 	(switch-to-buffer buf)
 	(erase-buffer)
 	(insert output)
-	(goto-char (point-min))
+    (replace-string "; " "\n" nil (point-min) (point-max))
+    (goto-char (point-min))
 	(local-set-key "q" 'kill-buffer-and-window)))
     (select-window win)))
 
