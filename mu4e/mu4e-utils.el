@@ -232,7 +232,7 @@ maildirs under `mu4e-maildir."
 		      (car item)))
 		  mlist ", "))
 	      (kar (read-char (concat prompt fnames))))
-	(if (= kar ?o) ;; user chose 'other'?
+	(if (member kar '(?/ ?o)) ;; user chose 'other'?
 	  (ido-completing-read prompt (mu4e-get-maildirs))
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
