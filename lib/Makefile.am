@@ -94,4 +94,4 @@ libmu_la_LIBADD=			\
 	$(GMIME_LIBS)			\
 	$(GLIB_LIBS)
 
-EXTRA_DIST=mu-msg-crypto.c mu-msg-crypto.h
+EXTRA_DIST=mu-msg-crypto.c
