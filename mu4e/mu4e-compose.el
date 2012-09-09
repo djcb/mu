@@ -486,6 +486,11 @@ needed, set the Fcc header, and register the handler function."
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (use-local-map mu4e-compose-mode-map)
 
+    ;; we set this here explicitly, since (as it has happened) a wrong
+    ;; value for this (such as "") breaks address completion and other things
+    (set (make-local-variable 'mail-header-separator)
+      (purecopy "--text follows this line--"))
+     
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
