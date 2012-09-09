@@ -55,7 +55,6 @@ libmu_la_SOURCES=			\
 	mu-maildir.c			\
 	mu-maildir.h			\
 	${crypto}			\
-	mu-msg-crypto.h			\
 	mu-msg-doc.cc			\
 	mu-msg-doc.h			\
 	mu-msg-fields.c			\
