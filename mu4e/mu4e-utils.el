@@ -530,11 +530,10 @@ that has a live window), and vice versa."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar mu4e-index-updated-hook nil
-  "Hook run when the indexing process had >0 updated messages. This
-can be used as a simple (but imperfect) way to invoke some action
-when new messages appear. It's imperfect in the sense that any
-change implies 'updated' means any change, not necessarily a new
-message.")
+  "Hook run when the indexing process had one or more updated
+messages. This can be used as a simple way to invoke some action
+when new messages appear, but note that an update in the index does
+not necessarily mean a new message.")
 
 ;; some handler functions for server messages
 ;;
