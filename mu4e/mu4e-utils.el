@@ -530,6 +530,14 @@ that has a live window), and vice versa."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; some handler functions for server messages
 ;;
+(defvar mu4e-index-updated-hook nil
+  "Hook run when the indexing process had >0 updated messages. This
+can be used as a simple (but imperfect) way to invoke some action
+when new messages appear. It's imperfect in the sense that anything
+that 'updated' means any change, not just a new message. Also, this
+hook only applies to changes seen in the indexing process, not
+changes when e.g. moving messages within mu4e.")
+
 (defun mu4e-info-handler (info)
   "Handler function for (:info ...) sexps received from the server
 process."
@@ -540,13 +548,15 @@ process."
 	(if (eq (plist-get info :status) 'running)
 	  (mu4e-message "Indexing... processed %d, updated %d"
 	    (plist-get info :processed) (plist-get info :updated))
-	  (mu4e-message
-	    "Indexing completed; processed %d, updated %d, cleaned-up %d"
-	    (plist-get info :processed) (plist-get info :updated)
-	    (plist-get info :cleaned-up))))
+	  (progn
+	    (mu4e-message
+	      "Indexing completed; processed %d, updated %d, cleaned-up %d"
+	      (plist-get info :processed) (plist-get info :updated)
+	      (plist-get info :cleaned-up))
+	    (unless (zerop (plist-get info :updated))
+	      (run-hooks 'mu4e-index-updated-hook)))))
       ((plist-get info :message)
 	(mu4e-message "%s" (plist-get info :message))))))
-
 
 (defun mu4e-error-handler (errcode errmsg)
   "Handler function for showing an error."

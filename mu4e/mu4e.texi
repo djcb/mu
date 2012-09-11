@@ -243,15 +243,19 @@ details; also there is full example of setting @t{mu4e} up with
 
 You can do all of the mail retrieval @emph{outside} of @t{emacs}/@t{mu4e}, but
 you can also do it from within @t{mu4e}. For that, set the variable
-@code{mu4e-get-mail-command} to the program or shell command you want to use
+@var{mu4e-get-mail-command} to the program or shell command you want to use
 for retrieving mail. You can then retrieve your e-mail from the @ref{Main
 view}.
 
 You can also have this command run periodically in the background, by setting
-the variable @code{mu4e-update-interval} to the number of seconds between
+the variable @var{mu4e-update-interval} to the number of seconds between
 these updates. If set to @code{nil}, it will not update at all. If you make
-changes to @code{mu4e-update-interval}, @code{mu4e} must be restarted before
+changes to @var{mu4e-update-interval}, @code{mu4e} must be restarted before
 the change will take effect.
+
+It is possible to get notifications when the indexing process does any updates
+- for example when receiving new mail. See @code{mu4e-index-updated-hook} and
+the tips on its use in the @ref{FAQ - Frequently Anticipated Questions}.
 
 @node Indexing your messages
 @section Indexing your messages
@@ -2170,10 +2174,21 @@ matching a certain regular expression.
 @item @emph{mu4e seems to return a subset of all matches - how can I get
 all?}. Indeed, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
-value of the variable @code{m4ue-search-result-limit} matches. To show
+value of the variable @var{m4ue-search-result-limit} matches. To show
 @emph{all} results, use @t{M-x mu4e-headers-toggle-full-search}, or customize
 the variable @code{mu4e-headers-full-search}. This applies to all search
 commands.
+@item @emph{How can I get notifications when receiving mail?} There is
+@var{mu4e-index-updated-hook}, which gets triggered when the indexing process
+triggered sees an update -- which not necessarily implies a new message, but
+might close enough. To use this hook, you could put something like the
+following in your setup (assuming you have @t{aplay} and some soundfile,
+change as needed):
+@lisp
+(add-hook 'mu4e-index-updated-hook      
+  (defun new-mail-sound ()
+    (shell-command "aplay ~/Sounds/boing.wav&"))) 
+@end lisp
 @item @emph{I don't use @t{offlineimap}, @t{fetchmail} etc., what should I use
 for @code{mu4e-get-mail-command}}? Use @t{"true"}. This will make the getting
 mail command a no-op, and then re-index the messages.
@@ -2256,9 +2271,6 @@ utf-8}; so, if you problems with encodings, be sure to have
 @code{(set-language-environment "UTF-8")} in your @file{.emacs}.
 @item @emph{Thread handling is incomplete.} While threads are calculated and are
 visible in the headers buffer, you can not collapse/open them.
-@item @emph{No support for crypto when reading mail}. Currently, you cannot
-conveniently read encrypted mail or check signatures. For outgoing messages,
-it should work though, using the built-in mechanisms.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @end itemize
