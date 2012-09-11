@@ -528,16 +528,16 @@ that has a live window), and vice versa."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; some handler functions for server messages
-;;
+
 (defvar mu4e-index-updated-hook nil
   "Hook run when the indexing process had >0 updated messages. This
 can be used as a simple (but imperfect) way to invoke some action
-when new messages appear. It's imperfect in the sense that anything
-that 'updated' means any change, not just a new message. Also, this
-hook only applies to changes seen in the indexing process, not
-changes when e.g. moving messages within mu4e.")
+when new messages appear. It's imperfect in the sense that any
+change implies 'updated' means any change, not necessarily a new
+message.")
 
+;; some handler functions for server messages
+;;
 (defun mu4e-info-handler (info)
   "Handler function for (:info ...) sexps received from the server
 process."
