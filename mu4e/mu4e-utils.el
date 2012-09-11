@@ -112,7 +112,9 @@ a local-exit and does not return."
   "Create [mu4e]-prefixed warning based on format FRM and
 ARGS. Does a local-exit and does not return."
   (mu4e-log 'error (apply 'mu4e-format frm args))
-  (user-error "%s" (apply 'mu4e-format frm args)))
+  (if (fboundp 'user-error)
+    (user-error "%s" (apply 'mu4e-format frm args)) ;; only in emacs-trunk
+    (error "%s" (apply 'mu4e-format frm args))))
 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice', which is emacs-24
