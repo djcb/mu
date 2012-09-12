@@ -319,6 +319,14 @@ check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 	return TRUE;
 }
 
+/* declaration, so we can use it in handle_encrypted_part */
+static gboolean handle_mime_object (MuMsg *msg,
+				    GMimeObject *mobj, GMimeObject *parent,
+				    MuMsgOptions opts,
+				    unsigned index, MuMsgPartForeachFunc func,
+				    gpointer user_data);
+
+
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_encrypted_part (MuMsg *msg,
@@ -326,6 +334,26 @@ handle_encrypted_part (MuMsg *msg,
 		       MuMsgOptions opts, unsigned index,
 		       MuMsgPartForeachFunc func, gpointer user_data)
 {
+#ifdef BUILD_CRYPTO
+	GError *err;
+	GMimeObject *dec;
+
+	err = NULL;
+	dec = mu_msg_crypto_decrypt_part (part, opts, NULL, NULL, &err);
+	if (err) {
+		g_warning ("error decrypting part: %s", err->message);
+		g_clear_error (&err);
+	}
+
+	if (dec) {
+		gboolean rv;
+		rv = handle_mime_object (msg, dec, parent, opts,
+					 index + 1, func, user_data);
+		g_object_unref (dec);
+		return rv;
+	}
+
+#endif /*BUILD_CRYPTO*/
 	return TRUE;
 }
 
@@ -421,11 +449,11 @@ handle_mime_object (MuMsg *msg,
 		 GMIME_IS_MULTIPART_SIGNED (mobj))
 		return check_signature
 			(msg, GMIME_MULTIPART_SIGNED (mobj), opts);
-	else if (GMIME_IS_MULTIPART_ENCRYPTED (mobj))
+	else if ((opts & MU_MSG_OPTION_DECRYPT) &&
+		GMIME_IS_MULTIPART_ENCRYPTED (mobj))
 		return handle_encrypted_part
 			(msg, GMIME_MULTIPART_ENCRYPTED (mobj),
 			 parent, opts, index, func, user_data);
-
 	return TRUE;
 }
 
