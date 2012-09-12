@@ -120,8 +120,18 @@ body_or_summary (MuMsg *msg, MuConfig *opts)
 	color = !opts->nocolor;
 	body = mu_msg_get_body_text (msg,
 				     mu_config_get_msg_options(opts));
-	if (!body)
+	if (!body) {
+		if (mu_msg_get_flags (msg) & MU_FLAG_ENCRYPTED) {
+			color_maybe (MU_COLOR_CYAN);
+			g_print ("[No body found; "
+				 "message has encrypted parts]\n");
+		} else {
+			color_maybe (MU_COLOR_MAGENTA);
+			g_print ("[No body found]\n");
+		}
+		color_maybe (MU_COLOR_DEFAULT);
 		return;
+	}
 
 	if (opts->summary_len != 0) {
 		gchar *summ;
@@ -129,9 +139,9 @@ body_or_summary (MuMsg *msg, MuConfig *opts)
 		print_field ("Summary", summ, color);
 		g_free (summ);
 	} else {
-		color_maybe (MU_COLOR_YELLOW);
-		mu_util_print_encoded ("\n%s\n", body);
-		color_maybe (MU_COLOR_DEFAULT);
+		mu_util_print_encoded ("%s", body);
+		if (!g_str_has_suffix (body, "\n"))
+			g_print ("\n");
 	}
 }
 
@@ -237,7 +247,7 @@ mu_cmd_view (MuConfig *opts, GError **err)
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VIEW,
 			      MU_ERROR_INTERNAL);
 
-	rv = view_params_valid(opts, err);
+	rv = view_params_valid (opts, err);
 	if (!rv)
 		goto leave;
 
