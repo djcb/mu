@@ -134,7 +134,8 @@ typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *promp
  */
 MuMsgPartSigStatusReport* mu_msg_crypto_verify_part (GMimeMultipartSigned *sig,
 						     MuMsgOptions opts,
-						     GError **err);
+						     GError **err)
+                                         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * decrypt the given encrypted mime multipart
@@ -149,7 +150,8 @@ MuMsgPartSigStatusReport* mu_msg_crypto_verify_part (GMimeMultipartSigned *sig,
  */
 GMimeObject* mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 					 MuMsgPartPasswordFunc func, gpointer user_data,
-					 GError **err);
+					 GError **err)
+					G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 #endif /*BUILD_CRYPTO*/
 
 G_END_DECLS
