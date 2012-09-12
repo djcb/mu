@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -449,7 +449,8 @@ struct _MuMsgIterThreadInfo;
  */
 char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
 		      const struct _MuMsgIterThreadInfo *ti,
-		      MuMsgOptions ops);
+		      MuMsgOptions ops)
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * move a message to another maildir; note that this does _not_ update
@@ -571,8 +572,6 @@ typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
  */
 void mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 			     gpointer user_data);
-
-
 
 G_END_DECLS
 
