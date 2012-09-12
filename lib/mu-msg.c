@@ -491,7 +491,11 @@ get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 			     (MuMsgPartForeachFunc)accumulate_body,
 			     &bdata);
 
-	return g_string_free (bdata.gstr, FALSE);
+	if (bdata.gstr->len == 0) {
+		g_string_free (bdata.gstr, TRUE);
+		return NULL;
+	} else
+		return g_string_free (bdata.gstr, FALSE);
 }
 
 const char*
