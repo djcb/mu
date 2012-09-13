@@ -84,7 +84,7 @@ check_match (MuMsg *msg, MuMsgPart *part, MatchData *mdata)
 		mdata->index = part->index;
 }
 
-int
+static int
 get_matching_part_index (MuMsg *msg, MuMsgOptions opts,
 			 MuMsgPartMatchFunc func, gpointer user_data)
 {
@@ -166,7 +166,8 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 	err = FALSE;
 	if (GMIME_IS_PART (mobj)) {
 		if (self->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN)
-			return mu_msg_mime_part_to_string ((GMimePart*)mobj, &err);
+			return mu_msg_mime_part_to_string ((GMimePart*)mobj,
+							   &err);
 		else
 			return NULL; /* non-text MimePart */
 	}
@@ -326,7 +327,6 @@ static gboolean handle_mime_object (MuMsg *msg,
 				    unsigned index, MuMsgPartForeachFunc func,
 				    gpointer user_data);
 
-
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_encrypted_part (MuMsg *msg,
@@ -465,9 +465,7 @@ struct _ForeachData {
 	MuMsgOptions         opts;
 
 };
-
 typedef struct _ForeachData ForeachData;
-
 
 static void
 each_child (GMimeObject *parent, GMimeObject *part,

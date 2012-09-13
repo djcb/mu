@@ -496,7 +496,7 @@ point in eiter the headers buffer or the view buffer."
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
   (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer mu4e~headers-buffer
+    (with-current-buffer  mu4e~headers-buffer
       mu4e~headers-last-query)))
 
 (defun mu4e-select-other-view ()

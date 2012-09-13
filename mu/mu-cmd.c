@@ -87,7 +87,7 @@ get_attach_str (MuMsg *msg)
 	return attach;
 }
 
-#define color_maybe(C)	do{ if (color) fputs ((C),stdout);}while(0)
+#define color_maybe(C) do { if(color) fputs ((C),stdout);} while(0)
 
 static void
 print_field (const char* field, const char *val, gboolean color)
@@ -157,6 +157,7 @@ view_msg_plain (MuMsg *msg, MuConfig *opts)
 	gboolean color;
 
 	color = !opts->nocolor;
+
 	print_field ("From",    mu_msg_get_from (msg),    color);
 	print_field ("To",      mu_msg_get_to (msg),      color);
 	print_field ("Cc",      mu_msg_get_cc (msg),      color);
@@ -294,7 +295,6 @@ mu_cmd_mkdir (MuConfig *opts, GError **err)
 }
 
 
-
 static gboolean
 check_file_okay (const char *path, gboolean cmd_add)
 {
@@ -311,14 +311,6 @@ check_file_okay (const char *path, gboolean cmd_add)
 
 	return TRUE;
 }
-
-gboolean
-check_add_params (MuConfig *opts, GError **err)
-{
-
-	return TRUE;
-}
-
 
 
 MuError
@@ -553,7 +545,7 @@ with_store (store_func func, MuConfig *opts, gboolean read_only,
 }
 
 
-gboolean
+static gboolean
 check_params (MuConfig *opts, GError **err)
 {
 	if (!opts->params||!opts->params[0]) {/* no command? */
@@ -579,22 +571,27 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		/* already handled in mu-config.c */
 	case MU_CONFIG_CMD_HELP: return MU_OK;
 
-	case MU_CONFIG_CMD_CFIND:  merr = mu_cmd_cfind (opts, err); break;
-	case MU_CONFIG_CMD_MKDIR:  merr = mu_cmd_mkdir (opts, err); break;
-	case MU_CONFIG_CMD_VIEW:   merr = mu_cmd_view (opts, err); break;
-	case MU_CONFIG_CMD_VERIFY: merr = mu_cmd_verify (opts, err); break;
-	case MU_CONFIG_CMD_EXTRACT:merr = mu_cmd_extract (opts, err); break;
+	case MU_CONFIG_CMD_CFIND:   merr = mu_cmd_cfind (opts, err);   break;
+	case MU_CONFIG_CMD_MKDIR:   merr = mu_cmd_mkdir (opts, err);   break;
+	case MU_CONFIG_CMD_VIEW:    merr = mu_cmd_view (opts, err);    break;
+	case MU_CONFIG_CMD_VERIFY:  merr = mu_cmd_verify (opts, err);  break;
+	case MU_CONFIG_CMD_EXTRACT: merr = mu_cmd_extract (opts, err); break;
 
 	case MU_CONFIG_CMD_FIND:
-		merr = with_store (mu_cmd_find, opts, TRUE, err); break;
+		merr = with_store (mu_cmd_find, opts, TRUE, err);
+		break;
 	case MU_CONFIG_CMD_INDEX:
-		merr = with_store (mu_cmd_index, opts, FALSE, err); break;
+		merr = with_store (mu_cmd_index, opts, FALSE, err);
+		break;
 	case MU_CONFIG_CMD_ADD:
-		merr = with_store (mu_cmd_add, opts, FALSE, err); break;
+		merr = with_store (mu_cmd_add, opts, FALSE, err);
+		break;
 	case MU_CONFIG_CMD_REMOVE:
-		merr = with_store (mu_cmd_remove, opts, FALSE, err); break;
+		merr = with_store (mu_cmd_remove, opts, FALSE, err);
+		break;
 	case MU_CONFIG_CMD_SERVER:
-		merr = with_store (mu_cmd_server, opts, FALSE, err); break;
+		merr = with_store (mu_cmd_server, opts, FALSE, err);
+		break;
 	default:
 		show_usage ();
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
