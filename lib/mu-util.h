@@ -180,6 +180,16 @@ gboolean mu_util_printerr_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
 
 
 /**
+ * read a password from stdin (without echoing), and return it.
+ *
+ * @param prompt the prompt text before the password
+ *
+ * @return the password (free with g_free), or NULL
+ */
+char* mu_util_read_password (const char *prompt)
+	   G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+/**
  * Try to 'play' (ie., open with it's associated program) a file. On
  * MacOS, the the program 'open' is used for this; on other platforms
  * 'xdg-open' to do the actual opening. In addition you can set it to another program
