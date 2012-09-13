@@ -967,7 +967,7 @@ decrypt messages automatically; this is the default. If you set it to @t{nil},
 @t{mu4e} will @emph{not} attempt to decrypt anything, and finally if you set
 it to @t{'ask}, it asks you each time when encountering an encrypted message.
 
-When opening an encrypted message, @t{mu} consults @t{gnupg-agent} to see
+When opening an encrypted message, @t{mu} consults @t{gpg-agent} to see
 whether it already has unlocked the key needed to decrypt the message; if not,
 it will prompt us for a password (typically with a separate top-level
 window). This is only needed once per session.
@@ -1126,10 +1126,10 @@ on the receiver of the original:
     "Set the From address based on the To address of the original."
     (let ((orig-to (cdar (mu4e-msg-field mu4e-compose-parent-message :to))))
       (setq user-mail-address
-	(cond 
+	(cond
 	  ((string= "me@@foo.com" orig-to) "me@@foo.com")
 	  ((string= "me@@bar.com" orig-to) "me@@bar.com")
-	  (t "me@@cuux.com")))))) 
+	  (t "me@@cuux.com"))))))
 @end lisp
 
 Second, as mentioned, @code{mu4e-compose-mode-hook} is especially useful for
@@ -1153,8 +1153,7 @@ message is fully formed when this hook runs. For example, to add a
     (message-add-header "Bcc: me@@example.com\n")))
 @end lisp
 
-
-@subsection{Signing and encrypting}
+@subsection Signing and encrypting
 @anchor{Signing and encrypting}
 
 Signing and encrypting of messages is possible using @ref{(emacs-mime)
@@ -2202,7 +2201,7 @@ Mail' folder by pressing @kbd{ma}.
 In this chapter we list a number of actual and anticipated questions and their
 answers.
 
-@subsection General 
+@subsection General
 
 @itemize
 @item @emph{How can I quickly delete/move/trash a lot of messages?} You can
@@ -2227,9 +2226,9 @@ might close enough. To use this hook, you could put something like the
 following in your setup (assuming you have @t{aplay} and some soundfile,
 change as needed):
 @lisp
-(add-hook 'mu4e-index-updated-hook      
+(add-hook 'mu4e-index-updated-hook
   (defun new-mail-sound ()
-    (shell-command "aplay ~/Sounds/boing.wav&"))) 
+    (shell-command "aplay ~/Sounds/boing.wav&")))
 @end lisp
 @item @emph{I don't use @t{offlineimap}, @t{fetchmail} etc., what should I use
 for @code{mu4e-get-mail-command}}? Use @t{"true"}. This will make the getting
@@ -2259,7 +2258,7 @@ See @ref{Setting the default emacs mail program}.
 @item @emph{Can @t{mu4e} use some fancy Unicode characters instead of these
 boring plain-ASCII ones?} Glad you asked! Yes, you can set
 @var{mu4e-use-fancy-chars}  to @t{t}, and @t{mu4e} will use those fancy
-characters in a number of places.  
+characters in a number of places.
 @end itemize
 
 
@@ -2297,7 +2296,7 @@ periodically move messages from the main sent-folder to the specific
 sent-folders. You can easily find those messages with a query like
 @t{maildir:/sent from:myaddress@@example.com}.
 @item @emph{How can I automatically add some header to an outgoing message?}
-Once more, see @ref{Compose hooks}. 
+Once more, see @ref{Compose hooks}.
 @item @emph{How can I easily include attachments in the messages I write?}
 You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
 -- see @ref{Attaching files with dired}.
@@ -2307,7 +2306,7 @@ Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
 @item @emph{How can I sign or encrypt messages?} You can do so using emacs'
 MIME-support (check the @t{Attachments}-menu while composing a message. Also
 see @ref{Signing and encrypting}.
-@end itemize 
+@end itemize
 
 @node Known issues / missing features
 @chapter Known issues / missing features
