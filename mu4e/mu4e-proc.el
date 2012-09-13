@@ -456,17 +456,17 @@ seen AFTER (the time_t value)."
     (if personal "true" "false")
     (or after 0)))
 
-(defun mu4e~proc-view (docid-or-msgid &optional images)
+(defun mu4e~proc-view (docid-or-msgid &optional images decrypt)
   "Get one particular message based on its DOCID-OR-MSGID (keyword
 argument). Optionally, if IMAGES is non-nil, backend will any
 images attached to the message, and return them as temp files.  The
 result will be delivered to the function registered as
 `mu4e-message-func'."
   (mu4e~proc-send-command
-    "view %s extract-images:%s extract-encrypted:true"
+    "view %s extract-images:%s extract-encrypted:%s"
     (mu4e--docid-msgid-param docid-or-msgid)
-    (if images "true" "false")))
+    (if images "true" "false")
+    (if decrypt "true" "false")))
 
 (provide 'mu4e-proc)
-
 ;; End of mu4e-proc.el

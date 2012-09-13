@@ -138,12 +138,15 @@ The first letter of NAME is used as a shortcut character.")
   "A mapping of user-visible attachment number to the actual part index.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
 (defun mu4e-view-message-with-msgid (msgid)
   "View message with MSGID. This is meant for external programs
 wanting to show specific messages - for example, `mu4e-org'."
-  (mu4e~proc-view msgid mu4e-show-images))
+  ;; note: hackish; if mu4e-decryption-policy is non-nil (ie., t or 'ask), we
+  ;; decrpt the message. Since here we don't know if message is encrypted or
+  ;; not, when the policy is 'ask'. we simply assume the user said yes...  the
+  ;; alternative would be to ask for each message, encrypted or not.  maybe we
+  ;; need an extra policy...
+  (mu4e~proc-view msgid mu4e-show-images mu4e-decryption-policy))
 
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG

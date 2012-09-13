@@ -1107,12 +1107,18 @@ current window. "
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((docid (or (mu4e~headers-docid-at-point)
 		  (mu4e-warn "No message at point")))
+	  ;; decrypt (or not), based on `mu4e-decryption-policy'.
+	  (decrypt
+	    (and (member 'encrypted (mu4e-field-at-point :flags))
+	      (if (eq mu4e-decryption-policy 'ask)
+		(yes-or-no-p (mu4e-format "Decrypt message?"))
+		mu4e-decryption-policy)))  
 	  (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
-    (mu4e~proc-view docid mu4e-show-images)))
+    (mu4e~proc-view docid mu4e-show-images decrypt)))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."

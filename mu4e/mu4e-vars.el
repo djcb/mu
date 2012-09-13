@@ -157,14 +157,14 @@ view buffer."
   :type 'boolean
   :group 'mu4e-crypto)
 
-(defcustom mu4e-decryption-policy 'auto
+(defcustom mu4e-decryption-policy t
   "Policy for dealing with encrypted parts. The setting is a symbol:
- * `auto': try to decrypt automatically
+ * t:     try to decrypt automatically
  * `ask': ask before decrypting anything
- * `no': don't try to decrypt anything."
-  :type '(choice (const :tag "Try to decrypt automatically" auto)
+ * nil:   don't try to decrypt anything."
+  :type '(choice (const :tag "Try to decrypt automatically" t)
                  (const :tag "Ask before decrypting anything" ask)
-                 (const :tag "Don't try to decrypt anything" no))
+                 (const :tag "Don't try to decrypt anything" nil))
   :group 'mu4e-crypto)
 
 ;; completion; we put them here rather than in mu4e-compose, as mu4e-utils needs
