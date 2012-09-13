@@ -119,7 +119,8 @@ body_or_summary (MuMsg *msg, MuConfig *opts)
 
 	color = !opts->nocolor;
 	body = mu_msg_get_body_text (msg,
-				     mu_config_get_msg_options(opts));
+				     mu_config_get_msg_options(opts) |
+				     MU_MSG_OPTION_CONSOLE_PASSWORD);
 	if (!body) {
 		if (mu_msg_get_flags (msg) & MU_FLAG_ENCRYPTED) {
 			color_maybe (MU_COLOR_CYAN);
