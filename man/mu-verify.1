@@ -1,4 +1,4 @@
-.TH MU VERIFY 1 "July 2012" "User Manuals"
+.TH MU VERIFY 1 "September 2012" "User Manuals"
 
 .SH NAME
 
@@ -26,13 +26,13 @@ to the full path to the desired \fBgpg\fR.
 attempt to find keys online (see the \fBauto-key-retrieve\fR option in the
 \fBgnupg(1)\fR documentation).
 
-.TP
-\fB\-u\fR, \fB\-\-use\-agent\fR attempt to use the GPG-agent (see the the
-\fBgnupg-agent(1)\fR documentation). Note that GPG-agent is running many
-desktop-evironment; you can check whether this is the case using:
-.nf
-   $ env | grep GPG_AGENT_INFO
-.fi
+\" .TP
+\" \fB\-u\fR, \fB\-\-use\-agent\fR attempt to use the GPG-agent (see the the
+\" \fBgnupg-agent(1)\fR documentation). Note that GPG-agent is running many
+\" desktop-evironment; you can check whether this is the case using:
+\" .nf
+\"    $ env | grep GPG_AGENT_INFO
+\" .fi
 
 .SH EXAMPLES
 
@@ -76,3 +76,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .SH "SEE ALSO"
 
 .BR mu(1)
+.BR gpg(1)
