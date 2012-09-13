@@ -301,7 +301,7 @@ The first thing we need to do before we can start using @t{mu4e} is to tell
 @t{emacs} to load @t{mu4e}, and tell @t{mu4e} where it can find specific
 maildir folders.
 
-So, add to your @file{~/.emacs} (or equivalent) something like:
+So, add to your @file{~/.emacs} (or its moral equivalent) something like:
 
 @example
 (require 'mu4e)
@@ -456,7 +456,12 @@ This looks something like the following:
 ----------------------------------------------------------------------------
 @end verbatim
 
-Below, we assume the default key bindings here. If you've changed those, well,
+If you see a @t{C} on the right hand side of @t{version x.x}, your @t{mu4e}
+has support for decryption of encrypted messages, and verifying
+signatures. See @ref{Decryption} and @ref{Verifying signatures} in the
+@ref{Message view}.
+
+Below, we assume the default key bindings. If you've changed those, well,
 @emph{mutatis mutandis}.
 
 @subsection Basic actions
@@ -947,27 +952,48 @@ As mentioned, by default @t{mu4e} prefers the text-version of an e-mail
 message over the html version. You can change this by setting
 @code{mu4e-view-prefer-html} to @t{t}.
 
+@subsection Decryption
+@anchor{Decryption}
+
+If you receive messages that are encrypted (using PGP/MIME), @t{mu4e} can try
+to decrypt them@footnote{Decryption is only available if @t{mu} was built with
+crypto-support; see the @ref{FAQ - Frequently Anticipated Questions}}. In
+addition, @t{gnupg-agent} must be running; thankfully, in most mainstream
+Linux/Unix desktop environments, this should work automatically.
+
+You can influence how @t{mu4e} should deal with encrypted messages using
+@var{mu4e-decryption-policy}. If you set it to @t{t}, @t{mu4e} will attempt to
+decrypt messages automatically; this is the default. If you set it to @t{nil},
+@t{mu4e} will @emph{not} attempt to decrypt anything, and finally if you set
+it to @t{'ask}, it asks you each time when encountering an encrypted message.
+
+When opening an encrypted message, @t{mu} consults @t{gnupg-agent} to see
+whether it already has unlocked the key needed to decrypt the message; if not,
+it will prompt us for a password (typically with a separate top-level
+window). This is only needed once per session.
+
 @subsection Verifying signatures
+@anchor{Verifying signatures}
 
 Some e-mail messages are cryptographically signed, and @t{mu4e} can check the
-validity of the signatures@footnote{Signature-verification is only available
-if @t{mu} was built with crypto-support; this requires at least @t{mu} version 0.9.9
-and @t{GMime 2.6}, and the @t{gpg} program}.
+validity of the signatures@footnote{Signature verification is only available
+if @t{mu} was built with crypto-support; see the @ref{FAQ - Frequently
+Anticipated Questions}}.
 
 If a message has a signature, the message view shows an extra header
 @t{Signature:} (assuming it is part of your @code{mu4e-view-fields}), and one
-or more 'verdicts' of the signatures found; either @t{good}, @t{bad} or
-@t{error}. For instance:
+or more 'verdicts' of the signatures found; either @t{verified},
+@t{unverified} or @t{error}. For instance:
 
 @verbatim
-Signature: good, error (Details)
+Signature: unverified (Details)
 @end verbatim
 
 You can see the details of the signature verification by activating the
 @t{Details} or pressing @key{v}. This will pop-up a little window with the
 details of the signatures found and whether they could be verified or not.
 
-For more information, see the @t{mu-verify} manual page.
+For more information, please see the @t{mu-verify} manual page.
 
 @node Editor view
 @section Editor view
@@ -1127,6 +1153,22 @@ message is fully formed when this hook runs. For example, to add a
     (message-add-header "Bcc: me@@example.com\n")))
 @end lisp
 
+
+@subsection{Signing and encrypting}
+@anchor{Signing and encrypting}
+
+Signing and encrypting of messages is possible using @ref{(emacs-mime)
+Composing}, most easily accessed through the @t{Attachments}-menu while
+composing a message, or functions like @code{mml-secure-message-encrypt-pgp},
+@code{mml-secure-message-sign-pgp}.
+
+The support for encryption and signing is @emph{independent} of the support
+for their counterparts, decrypting and signature verification; even if your
+@t{mu4e} does have support for the latter two, you can still sign/encrypt
+messages.
+
+Note however that decryption and signature verification only works for
+PGP/MIME; inline-PGP and S/MIME are currently not supported.
 
 @subsection Queuing mail
 @anchor{Queuing mail}
@@ -2160,7 +2202,7 @@ Mail' folder by pressing @kbd{ma}.
 In this chapter we list a number of actual and anticipated questions and their
 answers.
 
-@subsection General
+@subsection General 
 
 @itemize
 @item @emph{How can I quickly delete/move/trash a lot of messages?} You can
@@ -2232,6 +2274,12 @@ parts) when viewing a message?} See the documentation on
 between the two states with @key{w} and @key{h}, respectively.
 @item @emph{How can I perform custom actions on messages and attachments?} See
 @ref{Actions}.
+@item @emph{Does @t{mu4e} support crypto (i.e., decrypting messages and verifying signatures)?}
+Yes -- if @t{mu} was built with @t{GMime} 2.6 or later, it is possible to do
+both (note, only PGP/MIME is supported). In the @ref{Main view} the support is
+indicated by a big letter @t{C} on the right hand side of the @t{mu4e}
+version. See @ref{Decryption} and @ref{Verifying signatures}. For encryption
+and signing messages, see the below.
 @end itemize
 
 
@@ -2256,6 +2304,9 @@ You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
 @item @emph{@t{mu4e} seems to remove myself from the Cc: list; how can I
 prevent that?}
 Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
+@item @emph{How can I sign or encrypt messages?} You can do so using emacs'
+MIME-support (check the @t{Attachments}-menu while composing a message. Also
+see @ref{Signing and encrypting}.
 @end itemize 
 
 @node Known issues / missing features
