@@ -218,12 +218,12 @@ get_cert_data (GMimeCertificate *cert)
 		(g_mime_certificate_get_pubkey_algo (cert));
 
 	switch (g_mime_certificate_get_trust (cert)) {
-	case GMIME_CERTIFICATE_TRUST_NONE:       trust = "none"; break;
-	case GMIME_CERTIFICATE_TRUST_NEVER:      trust = "never"; break;
-	case GMIME_CERTIFICATE_TRUST_UNDEFINED:  trust = "undefined"; break;
-	case GMIME_CERTIFICATE_TRUST_MARGINAL:   trust=  "marginal"; break;
-	case GMIME_CERTIFICATE_TRUST_FULLY:      trust = "full"; break;
-	case GMIME_CERTIFICATE_TRUST_ULTIMATE:   trust = "ultimate"; break;
+	case GMIME_CERTIFICATE_TRUST_NONE:      trust = "none"; break;
+	case GMIME_CERTIFICATE_TRUST_NEVER:     trust = "never"; break;
+	case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
+	case GMIME_CERTIFICATE_TRUST_MARGINAL:  trust = "marginal"; break;
+	case GMIME_CERTIFICATE_TRUST_FULLY:     trust = "full"; break;
+	case GMIME_CERTIFICATE_TRUST_ULTIMATE:  trust = "ultimate"; break;
 	default:
 		g_return_val_if_reached (NULL);
 	}
@@ -361,6 +361,7 @@ mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 {
 	GMimeObject *dec;
 	GMimeCryptoContext *ctx;
+	GMimeDecryptResult *res;
 
 	g_return_val_if_fail (GMIME_IS_MULTIPART_ENCRYPTED(enc), NULL);
 
@@ -371,8 +372,20 @@ mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 		return NULL;
 	}
 
-	dec = g_mime_multipart_encrypted_decrypt (enc, ctx, NULL, err);
+	/* at the time of writing, there is a small leak in
+	 * g_mime_multipart_encrypted_decrypt; I've notified its
+	 * author and it has been fixed 2012-09-12:
+	 * http://git.gnome.org/browse/gmime/commit/
+	 * ?id=1bacd43b50d91bd03a4ae1dc9f46f5783dee61b1 */
+	res = NULL;
+	dec = g_mime_multipart_encrypted_decrypt (enc, ctx, &res, err);
 	g_object_unref (ctx);
+
+	/* we don't use the 3rd param 'res' * (GMimeDecryptResult),
+	 * but we must unref it. */
+	if (res)
+		g_object_unref (res);
+
 	if (!dec) {
 		if (err && !*err)
 			mu_util_g_set_error (err, MU_ERROR_CRYPTO,
