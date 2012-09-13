@@ -327,6 +327,26 @@ static gboolean handle_mime_object (MuMsg *msg,
 				    unsigned index, MuMsgPartForeachFunc func,
 				    gpointer user_data);
 
+
+#ifdef BUILD_CRYPTO
+static gchar*
+get_console_pw (const char* user_id, const char *prompt_ctx,
+		gboolean reprompt, gpointer user_data)
+{
+	char *prompt, *pass;
+
+	if (reprompt)
+		g_print ("Authentication failed. Please try again\n");
+
+	prompt = g_strdup_printf ("Password for %s: ", user_id);
+
+	pass = mu_util_read_password (prompt);
+	g_free (prompt);
+
+	return pass;
+}
+#endif /*BUILD_CRYPTO*/
+
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_encrypted_part (MuMsg *msg,
@@ -337,9 +357,16 @@ handle_encrypted_part (MuMsg *msg,
 #ifdef BUILD_CRYPTO
 	GError *err;
 	GMimeObject *dec;
+	MuMsgPartPasswordFunc pw_func;
+
+	if (opts & MU_MSG_OPTION_CONSOLE_PASSWORD)
+		pw_func = (MuMsgPartPasswordFunc)get_console_pw;
+	else
+		pw_func = NULL;
+
 
 	err = NULL;
-	dec = mu_msg_crypto_decrypt_part (part, opts, NULL, NULL, &err);
+	dec = mu_msg_crypto_decrypt_part (part, opts, pw_func, NULL, &err);
 	if (err) {
 		g_warning ("error decrypting part: %s", err->message);
 		g_clear_error (&err);

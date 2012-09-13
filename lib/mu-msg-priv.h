@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -68,28 +68,13 @@ struct _MuMsg {
  * convert a GMimePart to a string
  *
  * @param part a GMimePart
- * @param err will receive TRUE if there was an error, FALSE otherwise. Must NOT be NULL.
+ * @param err will receive TRUE if there was an error, FALSE
+ * otherwise. Must NOT be NULL.
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
-gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err);
-
-
-/* /\** */
-/*  * write a GMimeObject to a file */
-/*  * */
-/*  * @param obj a GMimeObject */
-/*  * @param fullpath full file path */
-/*  * @param overwrite allow overwriting existing file */
-/*  * @param if file already exist, don't bother to write */
-/*  * @param err receives error information */
-/*  * */
-/*  * @return TRUE if writing succeeded, FALSE otherwise. */
-/*  *\/ */
-/* gboolean mu_msg_part_mime_save_object (GMimeObject *obj, const char *fullpath, */
-/* 				       gboolean overwrite, gboolean use_existing, */
-/* 				       GError **err); */
-
+gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
+      G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -108,7 +93,6 @@ void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
 			      gpointer user_data);
 
 #ifdef BUILD_CRYPTO
-
 /**
  * callback function to retrieve a password from the user
  *

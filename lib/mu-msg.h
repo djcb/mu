@@ -48,6 +48,9 @@ enum _MuMsgOptions {
 	MU_MSG_OPTION_USE_AGENT         = 1 << 6,
 	/* MU_MSG_OPTION_USE_PKCS7         = 1 << 7,   /\* gpg is the default *\/ */
 
+	/* get password from console if needed */
+	MU_MSG_OPTION_CONSOLE_PASSWORD  = 1 << 7,
+
 	MU_MSG_OPTION_DECRYPT           = 1 << 8,
 
 	/* misc */
