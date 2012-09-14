@@ -39,7 +39,6 @@ struct _CallbackData {
 };
 typedef struct _CallbackData CallbackData;
 
-
 static gboolean
 password_requester (GMimeCryptoContext *ctx, const char *user_id,
 		    const char* prompt_ctx, gboolean reprompt,
@@ -68,8 +67,19 @@ password_requester (GMimeCryptoContext *ctx, const char *user_id,
 		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
 			             "writing password to mime stream failed");
 
-	if (g_mime_stream_flush (response) != 0)
-		g_printerr ("error flushing stream\n");
+	/* it seems that GMime tries to flush the fd; however, this
+	 * does not work for pipes/sockets, causing getting a password
+	 * to fail.
+	 *
+	 * I have reported this, and it has been fixed now:
+	 *
+	 * http://git.gnome.org/browse/gmime/commit/
+	 *      ?id=bda4834d3d9a1fbefb6d97edfef2bc1da9357f58
+	 *
+	 * however, it may take a while before everybody has this
+	 * version of GMime (ie. version > 2.6.10)
+	 *
+	 */
 
 	memset (password, 0, strlen(password));
 	g_free (password);
@@ -375,8 +385,10 @@ mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 	/* at the time of writing, there is a small leak in
 	 * g_mime_multipart_encrypted_decrypt; I've notified its
 	 * author and it has been fixed 2012-09-12:
-	 * http://git.gnome.org/browse/gmime/commit/
-	 * ?id=1bacd43b50d91bd03a4ae1dc9f46f5783dee61b1 */
+	 *   http://git.gnome.org/browse/gmime/commit/
+	 *   ?id=1bacd43b50d91bd03a4ae1dc9f46f5783dee61b1
+	 * (or GMime > 2.6.10)
+	 *   */
 	res = NULL;
 	dec = g_mime_multipart_encrypted_decrypt (enc, ctx, &res, err);
 	g_object_unref (ctx);
