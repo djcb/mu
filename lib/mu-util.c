@@ -499,22 +499,18 @@ mu_util_printerr_encoded (const char *frm, ...)
 char*
 mu_util_read_password (const char *prompt)
 {
-	char *pass, *tmp;
+	char *pass;
 
 	g_return_val_if_fail (prompt, NULL);
 
 	/* note: getpass is obsolete; replace with something better */
 
-	tmp = getpass (prompt);
-	if (!tmp) {
+	pass = getpass (prompt); /* returns static mem, don't free */
+	if (!pass) {
 		if (errno)
 			g_warning ("error: %s", strerror(errno));
 		return NULL;
 	}
-	/* make sure we can free with g_free(), not free() */
 
-	pass = g_strdup (tmp);
-	free (tmp);
-
-	return pass;
+	return g_strdup (pass);
 }
