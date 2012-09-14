@@ -708,17 +708,12 @@ test_mu_view_attach (void)
 	g_assert_cmpstr  (output, !=, NULL);
 
 	len = strlen(output);
-	/* g_print ("\n[%s] (%d)\n", output, len);*/
-	/* if (g_test_verbose()) */
-	/* 	g_print ("{%s}\n[%d]", output, len); */
-
 	g_assert (len == 168 || len == 166);
 
 	g_free (output);
 	g_free (cmdline);
 	g_free (tmpdir);
 }
-
 
 
 
@@ -763,7 +758,7 @@ test_mu_mkdir_01 (void)
 
 /* we can only test 'verify' if gpg is installed, and has
  * djcb@djcbsoftware's key in the keyring */
-G_GNUC_UNUSED  static gboolean
+G_GNUC_UNUSED static gboolean
 verify_is_testable (void)
 {
 	gchar *gpg, *cmdline;
@@ -797,7 +792,7 @@ verify_is_testable (void)
 G_GNUC_UNUSED static void
 test_mu_verify_good (void)
 {
-        gchar *cmdline;
+        gchar *cmdline, *output;
 	int retval;
 
 	if (!verify_is_testable ())
@@ -807,8 +802,10 @@ test_mu_verify_good (void)
 				   MU_PROGRAM,
 				   MU_TESTMAILDIR4);
 
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+	output = NULL;
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
 					     &retval, NULL));
+	g_free (output);
 	g_assert_cmpuint (retval, ==, 0);
 	g_free (cmdline);
 
@@ -818,7 +815,7 @@ test_mu_verify_good (void)
 G_GNUC_UNUSED  static void
 test_mu_verify_bad (void)
 {
-        gchar *cmdline;
+        gchar *cmdline, *output;
 	int retval;
 
 	if (!verify_is_testable ())
@@ -828,8 +825,10 @@ test_mu_verify_bad (void)
 				   MU_PROGRAM,
 				   MU_TESTMAILDIR4);
 
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+	output = NULL;
+	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
 					     &retval, NULL));
+	g_free (output);
 	g_assert_cmpuint (retval, !=, 0);
 	g_free (cmdline);
 }
@@ -882,8 +881,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 
 #ifdef BUILD_CRYPTO
-	/* g_test_add_func ("/mu-cmd/test-mu-verify-good",  test_mu_verify_good); */
-	/* g_test_add_func ("/mu-cmd/test-mu-verify-bad",  test_mu_verify_bad); */
+	g_test_add_func ("/mu-cmd/test-mu-verify-good",  test_mu_verify_good);
+	g_test_add_func ("/mu-cmd/test-mu-verify-bad",  test_mu_verify_bad);
 #endif /*BUILD_CRYPTO*/
 
 	g_log_set_handler (NULL,
