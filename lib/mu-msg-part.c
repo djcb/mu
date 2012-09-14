@@ -151,6 +151,21 @@ accumulate_text (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 		accumulate_text_part (msg, part, gstrp);
 }
 
+static char*
+get_text_from_mime_msg (MuMsg *msg, GMimeMessage *mmsg, MuMsgOptions opts,
+			unsigned index)
+{
+	GString *gstr;
+
+	gstr = g_string_sized_new (4096);
+	handle_children (msg, mmsg, opts, index,
+			 (MuMsgPartForeachFunc)accumulate_text,
+			 &gstr);
+
+	return g_string_free (gstr, FALSE);
+}
+
+
 char*
 mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 {
@@ -173,24 +188,17 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 	}
 
 	mime_msg = NULL;
+
 	if (GMIME_IS_MESSAGE_PART (mobj))
 		mime_msg = g_mime_message_part_get_message
 			((GMimeMessagePart*)mobj);
 	else if (GMIME_IS_MESSAGE (mobj))
 		mime_msg = (GMimeMessage*)mobj;
-
-	if (mime_msg) {
-		GString *gstr;
-		gstr = g_string_sized_new (4096);
-		handle_children (msg, mime_msg, opts, self->index,
- 				 (MuMsgPartForeachFunc)accumulate_text,
-				 &gstr);
-		return g_string_free (gstr, FALSE);
-	} else {
-		g_warning ("%s: cannot get text for %s",
-			   __FUNCTION__, G_OBJECT_TYPE_NAME (mobj));
+	else
 		return NULL;
-	}
+
+	return get_text_from_mime_msg (msg, mime_msg,
+				       opts, self->index);
 }
 
 

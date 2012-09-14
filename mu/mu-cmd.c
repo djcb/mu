@@ -520,7 +520,7 @@ show_usage (void)
 
 typedef MuError (*store_func) (MuStore *, MuConfig *, GError **err);
 
-MuError
+static MuError
 with_store (store_func func, MuConfig *opts, gboolean read_only,
 	    GError **err)
 {
@@ -563,6 +563,7 @@ MuError
 mu_cmd_execute (MuConfig *opts, GError **err)
 {
 	MuError merr;
+
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 
 	if (!check_params(opts, err))
@@ -579,20 +580,15 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	case MU_CONFIG_CMD_EXTRACT: merr = mu_cmd_extract (opts, err); break;
 
 	case MU_CONFIG_CMD_FIND:
-		merr = with_store (mu_cmd_find, opts, TRUE, err);
-		break;
+		merr = with_store (mu_cmd_find, opts, TRUE, err);      break;
 	case MU_CONFIG_CMD_INDEX:
-		merr = with_store (mu_cmd_index, opts, FALSE, err);
-		break;
+		merr = with_store (mu_cmd_index, opts, FALSE, err);    break;
 	case MU_CONFIG_CMD_ADD:
-		merr = with_store (mu_cmd_add, opts, FALSE, err);
-		break;
+		merr = with_store (mu_cmd_add, opts, FALSE, err);      break;
 	case MU_CONFIG_CMD_REMOVE:
-		merr = with_store (mu_cmd_remove, opts, FALSE, err);
-		break;
+		merr = with_store (mu_cmd_remove, opts, FALSE, err);   break;
 	case MU_CONFIG_CMD_SERVER:
-		merr = with_store (mu_cmd_server, opts, FALSE, err);
-		break;
+		merr = with_store (mu_cmd_server, opts, FALSE, err);   break;
 	default:
 		show_usage ();
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
