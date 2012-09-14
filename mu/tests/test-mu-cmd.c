@@ -709,7 +709,10 @@ test_mu_view_attach (void)
 
 	len = strlen(output);
 	/* g_print ("\n[%s] (%d)\n", output, len);*/
-	g_assert (len == 170 || len == 168);
+	/* if (g_test_verbose()) */
+	/* 	g_print ("{%s}\n[%d]", output, len); */
+
+	g_assert (len == 168 || len == 166);
 
 	g_free (output);
 	g_free (cmdline);
