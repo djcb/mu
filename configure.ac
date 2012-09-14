@@ -96,7 +96,7 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
 
 
 # we need these
-AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror])
+AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass])
 
 # require pkg-config
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
@@ -133,7 +133,7 @@ AS_IF([test "x$have_gmime_26" = "xno"],[
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
 
-# note, we need gmime 2.6 for the crypto stuff
+# we need gmime 2.6 for the crypto stuff
 AM_CONDITIONAL(BUILD_CRYPTO,[test "x$have_gmime_26" = "xyes"])
 AS_IF([test "x$have_gmime_26" = "xyes"],
    AC_DEFINE_UNQUOTED([BUILD_CRYPTO],1,[Whether to build crypto; reqs gmime 2.6]))
