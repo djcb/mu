@@ -301,13 +301,29 @@ get_disposition (GMimeObject *mobj)
 	return MU_MSG_PART_TYPE_NONE;
 }
 
+/* declaration, so we can use it in handle_encrypted_part */
+static gboolean handle_mime_object (MuMsg *msg,
+				    GMimeObject *mobj, GMimeObject *parent,
+				    MuMsgOptions opts,
+				    unsigned index, MuMsgPartForeachFunc func,
+				    gpointer user_data);
+
+/* if mu is build without crypto support (i.e, gmime < 2.6), the crypto funcs
+ * are no-ops
+ */
+#ifndef BUILD_CRYPTO
+
+#define check_signature(A,B,C) (TRUE)
+#define handle_encrypted_part(A,B,C,D,E,F,G) (TRUE)
+
+#else /* BUILD_CRYPTO */
+
 #define SIG_STATUS_REPORT "sig-status-report"
 
 /* call 'func' with information about this MIME-part */
 static gboolean
 check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 {
-#ifdef BUILD_CRYPTO
 	/* the signature status */
 	MuMsgPartSigStatusReport *sigrep;
 	GError *err;
@@ -324,24 +340,31 @@ check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 		(G_OBJECT(part), SIG_STATUS_REPORT,
 		 sigrep,
 		 (GDestroyNotify)mu_msg_part_sig_status_report_destroy);
-#endif /*BUILD_CRYPTO*/
+
 	return TRUE;
 }
 
-/* declaration, so we can use it in handle_encrypted_part */
-static gboolean handle_mime_object (MuMsg *msg,
-				    GMimeObject *mobj, GMimeObject *parent,
-				    MuMsgOptions opts,
-				    unsigned index, MuMsgPartForeachFunc func,
-				    gpointer user_data);
 
-
-#ifdef BUILD_CRYPTO
+/* Note: this is function will be called by GMime when it needs a
+ * password. However, GMime <= 2.6.10 does not handle
+ * getting passwords correctly, so this might fail.  see:
+ * password_requester in mu-msg-crypto.c */
 static gchar*
 get_console_pw (const char* user_id, const char *prompt_ctx,
 		gboolean reprompt, gpointer user_data)
 {
 	char *prompt, *pass;
+
+	/* versions <= 2.6.10 have the bug. gmime-git has it fixed,
+	 * but there is no 2.6.11 yet (2012-09-14) */
+	if (!g_mime_check_version(2,6,11))
+		g_printerr (
+			"*** the gmime library you are using has version "
+			"%u.%u.%u (<= 2.6.10)\n"
+			"*** this version has a bug in its password "
+			"retrieval routine, and probably won't work.\n",
+			gmime_major_version, gmime_minor_version,
+			gmime_micro_version);
 
 	if (reprompt)
 		g_print ("Authentication failed. Please try again\n");
@@ -353,16 +376,14 @@ get_console_pw (const char* user_id, const char *prompt_ctx,
 
 	return pass;
 }
-#endif /*BUILD_CRYPTO*/
 
-/* call 'func' with information about this MIME-part */
+
 static gboolean
 handle_encrypted_part (MuMsg *msg,
 		       GMimeMultipartEncrypted *part, GMimeObject *parent,
 		       MuMsgOptions opts, unsigned index,
 		       MuMsgPartForeachFunc func, gpointer user_data)
 {
-#ifdef BUILD_CRYPTO
 	GError *err;
 	GMimeObject *dec;
 	MuMsgPartPasswordFunc pw_func;
@@ -388,9 +409,9 @@ handle_encrypted_part (MuMsg *msg,
 		return rv;
 	}
 
-#endif /*BUILD_CRYPTO*/
 	return TRUE;
 }
+#endif /*BUILD_CRYPTO */
 
 
 /* call 'func' with information about this MIME-part */
