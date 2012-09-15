@@ -291,7 +291,7 @@ dir_contains_file (const char *path, const char *file)
 
 	if (access (fullpath, F_OK) == 0)
 		return TRUE;
-	else if (G_UNLIKELY(errno != ENOENT))
+	else if (G_UNLIKELY(errno != ENOENT && errno != EACCES))
 		g_warning ("error testing for %s/%s: %s",
 			   fullpath, file, strerror(errno));
 	return FALSE;
@@ -515,8 +515,8 @@ process_dir (const char* path, const char* mdir,
 	}
 
 	dir = opendir (path);
-	if (G_UNLIKELY(!dir)) {
-		g_warning ("opendir failed %s: %s", path, strerror(errno));
+	if (!dir) {
+		g_warning ("cannot access %s: %s", path, strerror(errno));
 		return MU_OK;
 	}
 
