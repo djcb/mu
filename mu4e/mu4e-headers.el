@@ -82,21 +82,21 @@ vertical split-view."
 ;; each of which is basic ascii char and something fancy, respectively
 (defvar mu4e-headers-draft-mark     '("D" . "✎") "Mark for draft messages.")
 (defvar mu4e-headers-flagged-mark   '("F" . "⚑") "Mark for flagged messages.")
-(defvar mu4e-headers-new-mark       '("N" . "★") "Mark for new messages.")
+(defvar mu4e-headers-new-mark       '("N" . "✉") "Mark for new messages.")
 (defvar mu4e-headers-passed-mark    '("P" . "➔") "Mark for passed (fwd) messages.")
 (defvar mu4e-headers-replied-mark   '("R" . "↳") "Mark for replied messages.")
 (defvar mu4e-headers-seen-mark      '("S" . "✔") "Mark for seen messages.")
 (defvar mu4e-headers-trashed-mark   '("T" . "♻") "Mark for trashed messages.")
 (defvar mu4e-headers-attach-mark    '("a" . "a") "Mark for messages w/ attachments.")
-(defvar mu4e-headers-encrypted-mark '("x" . "x") "Mark for encrypted messages.")
+(defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Mark for encrypted messages.")
 (defvar mu4e-headers-signed-mark    '("s" . "s") "Mark for signed messages.")
 (defvar mu4e-headers-unread-mark    '("u" . "u") "Mark for unread messages.")
 
 ;; thread prefix marks
-(defvar mu4e-headers-has-child-prefix     '("+"  . "+") "Prefix for thread with child(ren).")
-(defvar mu4e-headers-empty-parent-prefix  '("-"  . "⚬") "Prefix for thread without parent.")
-(defvar mu4e-headers-first-child-prefix   '("\\" . "┗➔") "Prefix for the first child.")
-(defvar mu4e-headers-duplicate-prefix     '("="  . "≟") "Prefix for a duplicate message.")
+(defvar mu4e-headers-has-child-prefix     '("+"  . "◼") "Prefix for thread with child(ren).")
+(defvar mu4e-headers-empty-parent-prefix  '("-"  . "◽ ") "Prefix for thread without parent.")
+(defvar mu4e-headers-first-child-prefix   '("\\" . "┗▶") "Prefix for the first child.")
+(defvar mu4e-headers-duplicate-prefix     '("="  . "⚌") "Prefix for a duplicate message.")
 (defvar mu4e-headers-default-prefix       '("|"  . "┃") "Default prefix.")
 
 
