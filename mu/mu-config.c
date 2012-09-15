@@ -82,7 +82,7 @@ set_group_mu_defaults (void)
 	if (g_getenv (MU_NOCOLOR) != NULL)
 		MU_CONFIG.nocolor = TRUE;
 
-	if (!isatty(fileno(stdout)))
+	if (!isatty(fileno(stdout)) || !isatty(fileno(stderr)))
 		MU_CONFIG.nocolor = TRUE;
 }
 
