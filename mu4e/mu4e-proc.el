@@ -92,9 +92,10 @@ the length (in hex).")
 
 (defun mu4e~proc-is-running ()
   "Whether the mu process is running."
-  (and mu4e~proc-process
-    (memq (process-status mu4e~proc-process)
-      '(run open listen connect stop))))
+  (when (and mu4e~proc-process
+	  (memq (process-status mu4e~proc-process)
+	    '(run open listen connect stop)))
+    t))
 
 
 (defsubst mu4e~proc-eat-sexp-from-buf ()

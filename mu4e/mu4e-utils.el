@@ -32,7 +32,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-about)
 (require 'doc-view)
- 
+
 (defcustom mu4e-html2text-command nil
   "Shell command that converts HTML from stdin into plain text on
 stdout. If this is not defined, the emacs `html2text' tool will be
@@ -176,7 +176,7 @@ Function will return the cdr of the list element."
     (if chosen
       (cdr chosen)
       (mu4e-warn "Unknown shortcut '%c'" response))))
-    
+
 
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative
@@ -624,6 +624,13 @@ This is used by the completion function in mu4e-compose."
 
 (defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
+  (unless (>= emacs-major-version 23)
+    (mu4e-error "Emacs >= 23.x is required for mu4e"))
+  (when mu4e~server-props
+    (let ((version (plist-get mu4e~server-props :version)))
+      (unless (string= version mu4e-mu-version)
+	(mu4e-error "mu server has version %s, but we need %s"
+	  version mu4e-mu-version))))  
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error "Please set `mu4e-mu-binary' to the full path to the mu
     binary."))
@@ -648,40 +655,37 @@ This is used by the completion function in mu4e-compose."
 	(mu4e-error "%s (%S) does not exist" path var)))))
 
 
+
 (defun mu4e~start (&optional func)
   "If mu4e is already running, execute function FUNC (if non-nil). Otherwise,
 check various requirements, then start mu4e. When succesful, call
 FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
   (if (mu4e~proc-is-running)   ;; already running?
-    (when func
-      (funcall func))) ;; yup!
-    (progn ;; nope: check whether all is okay;
-      (mu4e~check-requirements)
-      ;; explicit version checks are a bit questionable,
-      ;; better to check for specific features
-      (unless (>= emacs-major-version 23)
-	(mu4e-error "Emacs >= 23.x is required for mu4e"))
-      ;; set up the 'pong' handler func
-      (lexical-let ((func func))
+    (when func                 ;; yes! run func if defined
+      (funcall func)) 
+    (progn
+      ;; no! do some checks, set up pong handler and ping the server
+
+      (lexical-let ((func func)) 
+	(mu4e~check-requirements)
+	;; set up the 'pong' handler func
 	(setq mu4e-pong-func
 	  (lambda (props)
+	    (setq mu4e~server-props props) ;; save the props we got from the server
 	    (let ((version (plist-get props :version))
 		   (doccount (plist-get props :doccount)))
-	      (unless (string= version mu4e-mu-version)
-		(mu4e-error "mu server has version %s, but we need %s"
-		  version mu4e-mu-version))
+	      (mu4e~check-requirements)
 	      (when func (funcall func))
 	      (when (and mu4e-update-interval (null mu4e~update-timer))
 		(setq mu4e~update-timer
 		  (run-at-time
 		    0 mu4e-update-interval 'mu4e-update-mail)))
 	      (mu4e-message "Started mu4e with %d message%s in store"
-		doccount (if (= doccount 1) "" "s"))
-	      ;; save the props we got from the server
-	      (setq mu4e~server-props props)))))
-      ;; send the ping
+		doccount (if (= doccount 1) "" "s"))))))
+
       (mu4e~proc-ping)
+
       ;; get the address list if it's not already set.
       (when (and mu4e-compose-complete-addresses
 	      (not mu4e~contacts-for-completion))
@@ -691,7 +695,8 @@ FUNC (if non-nil) afterwards."
 	  (when mu4e-compose-complete-only-after
 	    (float-time
 	      (apply 'encode-time
-		(mu4e-parse-time-string mu4e-compose-complete-only-after))))))))
+		(mu4e-parse-time-string mu4e-compose-complete-only-after))))))))) 
+
 
 (defun mu4e~stop ()
   "Stop the mu4e session."
