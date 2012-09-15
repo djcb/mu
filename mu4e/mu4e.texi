@@ -243,14 +243,14 @@ details; also there is full example of setting @t{mu4e} up with
 
 You can do all of the mail retrieval @emph{outside} of @t{emacs}/@t{mu4e}, but
 you can also do it from within @t{mu4e}. For that, set the variable
-@var{mu4e-get-mail-command} to the program or shell command you want to use
+@code{mu4e-get-mail-command} to the program or shell command you want to use
 for retrieving mail. You can then retrieve your e-mail from the @ref{Main
 view}.
 
 You can also have this command run periodically in the background, by setting
-the variable @var{mu4e-update-interval} to the number of seconds between
+the variable @code{mu4e-update-interval} to the number of seconds between
 these updates. If set to @code{nil}, it will not update at all. If you make
-changes to @var{mu4e-update-interval}, @code{mu4e} must be restarted before
+changes to @code{mu4e-update-interval}, @code{mu4e} must be restarted before
 the change will take effect.
 
 It is possible to get notifications when the indexing process does any updates
@@ -471,7 +471,7 @@ First, the @emph{Basics}:
 @item @t{[j]ump to some maildir} means that after pressing @key{j},
 @t{mu4e} will ask you for a maildir to visit. These are the maildirs you set
 in @ref{Basic configuration}. If you choose @key{o} (@emph{other}) or @key{/},
-you can choose from @emph{all} maildirs under @var{mu4e-maildir}.
+you can choose from @emph{all} maildirs under @code{mu4e-maildir}.
 @item @t{enter a [s]earch query} means that after pressing @key{s} you will
 be asked for a search query, and after entering one, the results will be
 shown. @xref{Searching}.
@@ -533,7 +533,7 @@ Some notes to explain what you see in the example:
 
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
-the variable @var{mu4e-headers-fields}; see @var{mu4e-header-info} for the
+the variable @code{mu4e-headers-fields}; see @code{mu4e-header-info} for the
 list of available fields.
 @item Instead of showing the @t{From:} and @t{To:} fields separately, you
 can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
@@ -963,7 +963,7 @@ addition, @t{gnupg-agent} must be running; thankfully, in most mainstream
 Linux/Unix desktop environments, this should work automatically.
 
 You can influence how @t{mu4e} should deal with encrypted messages using
-@var{mu4e-decryption-policy}. If you set it to @t{t}, @t{mu4e} will attempt to
+@code{mu4e-decryption-policy}. If you set it to @t{t}, @t{mu4e} will attempt to
 decrypt messages automatically; this is the default. If you set it to @t{nil},
 @t{mu4e} will @emph{not} attempt to decrypt anything, and finally if you set
 it to @t{'ask}, it asks you each time when encountering an encrypted message.
@@ -2216,12 +2216,12 @@ matching a certain regular expression.
 @item @emph{mu4e seems to return a subset of all matches - how can I get
 all?}. Indeed, for speed reasons (and because, if you are like the author, you
 usually don't need thousands of matches), @t{mu4e} returns only up to the
-value of the variable @var{m4ue-search-result-limit} matches. To show
+value of the variable @code{m4ue-search-result-limit} matches. To show
 @emph{all} results, use @t{M-x mu4e-headers-toggle-full-search}, or customize
 the variable @code{mu4e-headers-full-search}. This applies to all search
 commands.
 @item @emph{How can I get notifications when receiving mail?} There is
-@var{mu4e-index-updated-hook}, which gets triggered when the indexing process
+@code{mu4e-index-updated-hook}, which gets triggered when the indexing process
 triggered sees an update -- which not necessarily implies a new message, but
 might close enough. To use this hook, you could put something like the
 following in your setup (assuming you have @t{aplay} and some soundfile,
@@ -2258,7 +2258,7 @@ should take you to the right place in this manual.
 See @ref{Setting the default emacs mail program}.
 @item @emph{Can @t{mu4e} use some fancy Unicode characters instead of these
 boring plain-ASCII ones?} Glad you asked! Yes, you can set
-@var{mu4e-use-fancy-chars}  to @t{t}, and @t{mu4e} will use those fancy
+@code{mu4e-use-fancy-chars}  to @t{t}, and @t{mu4e} will use those fancy
 characters in a number of places.
 @end itemize
 
