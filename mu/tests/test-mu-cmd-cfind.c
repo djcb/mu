@@ -34,7 +34,7 @@
 #include "test-mu-common.h"
 #include "mu-store.h"
 
-
+static gchar *CONTACTS_CACHE = NULL;
 
 static gchar*
 fill_contacts_cache (void)
@@ -64,17 +64,13 @@ fill_contacts_cache (void)
 static void
 test_mu_cfind_plain (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput;
-
-	muhome = fill_contacts_cache ();
-	g_assert (muhome != NULL);
+	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=plain "
 				   "'testmu\\.xxx?'",
-				   MU_PROGRAM, muhome);
+				   MU_PROGRAM, CONTACTS_CACHE);
 	if (g_test_verbose())
 		g_print ("%s\n", cmdline);
-
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -93,7 +89,6 @@ test_mu_cfind_plain (void)
 				 "Mü testmu@testmu.xx\n"
 				 "Helmut Kröger hk@testmu.xxx\n");
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
 }
@@ -101,7 +96,7 @@ test_mu_cfind_plain (void)
 static void
 test_mu_cfind_bbdb (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput, *expected;
+	gchar *cmdline, *output, *erroutput, *expected;
 	gchar today[12];
 	const char* frm1;
 	const char *frm2;
@@ -109,14 +104,11 @@ test_mu_cfind_bbdb (void)
 	time_t now;
 	const char *old_tz;
 
-	muhome = fill_contacts_cache ();
-	g_assert (muhome != NULL);
-
 	old_tz = set_tz ("Europe/Helsinki");
 
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=bbdb "
 				   "'testmu\\.xxx?'",
-				   MU_PROGRAM, muhome);
+				   MU_PROGRAM, CONTACTS_CACHE);
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -155,7 +147,6 @@ test_mu_cfind_bbdb (void)
 	g_assert_cmpstr (output, ==, expected);
 
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
 	g_free (expected);
@@ -167,14 +158,11 @@ test_mu_cfind_bbdb (void)
 static void
 test_mu_cfind_wl (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput;
-
-	muhome = fill_contacts_cache ();
-	g_assert (muhome != NULL);
+	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=wl "
 				   "'testmu\\.xxx?'",
-				   MU_PROGRAM, muhome);
+				   MU_PROGRAM, CONTACTS_CACHE);
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -193,7 +181,6 @@ test_mu_cfind_wl (void)
 				 "hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n");
 
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
 }
@@ -202,14 +189,11 @@ test_mu_cfind_wl (void)
 static void
 test_mu_cfind_mutt_alias (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput;
-
-	muhome = fill_contacts_cache ();
-	g_assert (muhome != NULL);
+	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=mutt-alias "
 				   "'testmu\\.xxx?'",
-				   MU_PROGRAM, muhome);
+				   MU_PROGRAM, CONTACTS_CACHE);
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -231,7 +215,6 @@ test_mu_cfind_mutt_alias (void)
 
 
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
 }
@@ -239,14 +222,11 @@ test_mu_cfind_mutt_alias (void)
 static void
 test_mu_cfind_mutt_ab (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput;
-
-	muhome = fill_contacts_cache ();
-	g_assert (muhome != NULL);
+	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=mutt-ab "
 				   "'testmu\\.xxx?'",
-				   MU_PROGRAM, muhome);
+				   MU_PROGRAM, CONTACTS_CACHE);
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -267,7 +247,6 @@ test_mu_cfind_mutt_ab (void)
 				 "hk@testmu.xxx\tHelmut Kröger\t\n");
 
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
 }
@@ -276,14 +255,11 @@ test_mu_cfind_mutt_ab (void)
 static void
 test_mu_cfind_org_contact (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput;
-
-	muhome = fill_contacts_cache ();
-	g_assert (muhome != NULL);
+	gchar*cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=org-contact "
 				   "'testmu\\.xxx?'",
-				   MU_PROGRAM, muhome);
+				   MU_PROGRAM, CONTACTS_CACHE);
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -316,7 +292,6 @@ test_mu_cfind_org_contact (void)
 
 
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
 }
@@ -326,14 +301,11 @@ test_mu_cfind_org_contact (void)
 static void
 test_mu_cfind_csv (void)
 {
-	gchar *muhome, *cmdline, *output, *erroutput;
-
-	muhome = fill_contacts_cache ();
-	g_assert (muhome != NULL);
+	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf ("%s cfind --muhome=%s --format=csv "
 				   "'testmu\\.xxx?'",
-				   MU_PROGRAM, muhome);
+				   MU_PROGRAM, CONTACTS_CACHE);
 
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
@@ -349,11 +321,7 @@ test_mu_cfind_csv (void)
 				 ==,
 				 "Mü,testmu@testmu.xx\n"
 				 "Helmut Kröger,hk@testmu.xxx\n");
-
-
-
 	g_free (cmdline);
-	g_free (muhome);
 	g_free (output);
 	g_free (erroutput);
 }
@@ -367,6 +335,8 @@ main (int argc, char *argv[])
 
 	if (!set_en_us_utf8_locale())
 		return 0; /* don't error out... */
+
+	CONTACTS_CACHE = fill_contacts_cache ();
 
 	g_test_add_func ("/mu-cmd-cfind/test-mu-cfind-plain", test_mu_cfind_plain);
 	g_test_add_func ("/mu-cmd-cfind/test-mu-cfind-bbdb",  test_mu_cfind_bbdb);
@@ -386,6 +356,9 @@ main (int argc, char *argv[])
 			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
+
+	g_free (CONTACTS_CACHE);
+	CONTACTS_CACHE = NULL;
 
 	return rv;
 }

@@ -16,18 +16,18 @@
 
 include $(top_srcdir)/gtest.mk
 
-INCLUDES=$(XAPIAN_CXXFLAGS)					\
-	 $(GMIME_CFLAGS)					\
-	 $(GLIB_CFLAGS)						\
-	-I ${top_srcdir}					\
-	-I ${top_srcdir}/lib					\
-	-I ${top_srcdir}/lib/tests				\
-	-DMU_TESTMAILDIR=\"${top_srcdir}/lib/tests/testdir\"	\
-	-DMU_TESTMAILDIR2=\"${top_srcdir}/lib/tests/testdir2\"	\
-	-DMU_TESTMAILDIR3=\"${top_srcdir}/lib/tests/testdir3\"	\
-	-DMU_TESTMAILDIR4=\"${top_srcdir}/lib/tests/testdir4\"	\
-	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"		\
-	-DABS_CURDIR=\"${abs_builddir}\"			\
+INCLUDES=$(XAPIAN_CXXFLAGS)						\
+	 $(GMIME_CFLAGS)						\
+	 $(GLIB_CFLAGS)							\
+	-I ${top_srcdir}						\
+	-I ${top_srcdir}/lib						\
+	-I ${top_srcdir}/lib/tests					\
+	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/tests/testdir\"	\
+	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/tests/testdir2\"	\
+	-DMU_TESTMAILDIR3=\"${abs_top_srcdir}/lib/tests/testdir3\"	\
+	-DMU_TESTMAILDIR4=\"${abs_top_srcdir}/lib/tests/testdir4\"	\
+	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"			\
+	-DABS_CURDIR=\"${abs_builddir}\"				\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 # don't use -Werror, as it might break on other compilers
