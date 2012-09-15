@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -53,26 +53,21 @@ static const char* runtime_path (MuRuntimePath path);
 
 
 static gboolean
-init_log (const char *muhome, const char *name,
-	  gboolean log_stderr, gboolean quiet, gboolean debug)
+init_log (const char *muhome, const char *name, MuLogOptions opts)
 {
 	gboolean rv;
 	char *logpath;
-
-	if (log_stderr)
-		return mu_log_init_with_fd (fileno(stderr), FALSE,
-					    quiet, debug);
 
 	logpath = g_strdup_printf ("%s%c%s%c%s.log",
 				   muhome, G_DIR_SEPARATOR,
 				   MU_LOG_DIRNAME, G_DIR_SEPARATOR,
 				   name);
-	rv = mu_log_init (logpath, TRUE, quiet, debug);
+
+	rv = mu_log_init (logpath, opts);
 	g_free (logpath);
 
 	return rv;
 }
-
 
 
 
@@ -104,7 +99,7 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 	init_paths (muhome, _data);
 	_data->_name = g_strdup (name);
 
-	if (!init_log (muhome, name, FALSE, TRUE, FALSE)) {
+	if (!init_log (muhome, name, MU_LOG_OPTIONS_BACKUP)) {
 		runtime_free ();
 		g_free (muhome);
 		return FALSE;
