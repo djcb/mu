@@ -98,39 +98,36 @@ the length (in hex).")
     t))
 
 
+
 (defsubst mu4e~proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e~proc-buf'. Note: this is a string,
 not an emacs-buffer. `mu4e~proc-buf gets its contents from the
 mu-servers in the following form:
    <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>
-
 Function returns this sexp, or nil if there was
 none. `mu4e~proc-buf' is updated as well, with all processed sexp
 data removed."
-  (when mu4e~proc-buf
-    ;; mu4e~cookie-matcher-rx:
-    ;;  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)]" mu4e~cookie-post)
-    (let* ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf))
-	    (sexp-len
-	      (when b (string-to-number (match-string 1 mu4e~proc-buf) 16))))
-      ;; does mu4e~proc-buf contain the full sexp?
-      (when (and b (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0))))
-	;; clear-up start
-	(setq mu4e~proc-buf (substring mu4e~proc-buf (match-end 0)))
-	;; note: we read the input in binary mode -- here, we take the part that
-	;; is the sexp, and convert that to utf-8, before we interpret it.
-	(let ((objcons
-		(ignore-errors ;; note: this may fail if we killed the process
-		  ;; in the middle
-		  (read-from-string
-		    (decode-coding-string (substring mu4e~proc-buf 0 sexp-len)
-		      'utf-8 t)))))
+  ;; mu4e~cookie-matcher-rx:
+  ;;  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)]" mu4e~cookie-post)
+  (ignore-errors ;; an error would e.g. when proc is killed in the middel
+    (let ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf)) (sexp-len) (objcons))
+      (when b
+	(setq sexp-len (string-to-number (match-string 1 mu4e~proc-buf) 16))
+	;; does mu4e~proc-buf contain the full sexp?
+	(when (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0)))
+	  ;; clear-up start
+	  (setq mu4e~proc-buf (substring mu4e~proc-buf (match-end 0)))
+	  ;; note: we read the input in binary mode -- here, we take the part that
+	  ;; is the sexp, and convert that to utf-8, before we interpret it.
+	  (setq objcons (read-from-string
+			  (decode-coding-string (substring mu4e~proc-buf 0 sexp-len)
+			    'utf-8 t)))
 	  (when objcons
 	    (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
-	    (car objcons)))))))
+	    (car objcons)))))))   
 
 
-(defun mu4e~proc-filter (proc str)
+(defsubst mu4e~proc-filter (proc str)
   "A process-filter for the 'mu server' output; it accumulates the
 strings into valid sexps by checking of the ';;eox' end-of-sexp
 marker, and then evaluating them.
@@ -290,7 +287,7 @@ terminates."
       (t
 	(error "Something bad happened to the mu server process")))))
 
-(defun mu4e~proc-send-command (frm &rest args)
+(defsubst mu4e~proc-send-command (frm &rest args)
   "Send as command to the mu server process; start the process if needed."
   (unless (mu4e~proc-is-running)
     (mu4e~proc-start))
@@ -298,8 +295,7 @@ terminates."
     (mu4e-log 'to-server "%s" cmd)
     (process-send-string mu4e~proc-process (concat cmd "\n"))))
 
-
-(defun mu4e--docid-msgid-param (docid-or-msgid)
+(defsubst mu4e--docid-msgid-param (docid-or-msgid)
   "Construct a backend parameter based on DOCID-OR-MSGID."
   (format
     (if (stringp docid-or-msgid)

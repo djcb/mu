@@ -266,11 +266,16 @@ into a string."
 	(make-string (* (if (plist-get thread :empty-parent) 0 2)
 		 (plist-get thread :level)) ?\s)
 	(cond
-	  ((plist-get thread :has-child)    (funcall get-prefix mu4e-headers-has-child-prefix))
-	  ((plist-get thread :empty-parent) (funcall get-prefix mu4e-headers-empty-parent-prefix))
-	  ((plist-get thread :first-child)  (funcall get-prefix mu4e-headers-first-child-prefix))
-	  ((plist-get thread :duplicate)    (funcall get-prefix mu4e-headers-duplicate-prefix))
-	  (t				    (funcall get-prefix mu4e-headers-default-prefix)))
+	  ((plist-get thread :has-child)
+	    (funcall get-prefix mu4e-headers-has-child-prefix))
+	  ((plist-get thread :empty-parent)
+	    (funcall get-prefix mu4e-headers-empty-parent-prefix))
+	  ((plist-get thread :first-child)
+	    (funcall get-prefix mu4e-headers-first-child-prefix))
+	  ((plist-get thread :duplicate)
+	    (funcall get-prefix mu4e-headers-duplicate-prefix))
+	  (t
+	    (funcall get-prefix mu4e-headers-default-prefix)))
 	" "))))
 
 (defsubst mu4e~headers-flags-str (flags)
@@ -306,66 +311,60 @@ display may be different)."
   respectively, From: or To:. It's a cons cell with the car element
   being the From: prefix, the cdr element the To: prefix.")
 
+(defsubst mu4e~headers-from-or-to (msg)
+  "When the from address for message MSG matches
+`mu4e-user-mail-address-regexp', show the To address; otherwise
+show the from address; prefixed with the appropriate
+`mu4e-headers-from-or-to-prefix'."
+  (let ((addr (cdr-safe (car-safe (plist-get msg :from)))))
+    (if (and addr (string-match mu4e-user-mail-address-regexp addr))
+      (concat (cdr mu4e-headers-from-or-to-prefix)
+	(mu4e~headers-contact-str (plist-get msg :to)))
+      (concat (car mu4e-headers-from-or-to-prefix)
+	(mu4e~headers-contact-str (plist-get msg :from))))))
+
+;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (when (buffer-live-p mu4e~headers-buffer)
-  (let* ((docid (plist-get msg :docid))
-	  (line
-	   (mapconcat
-	     (lambda (f-w)
-	       (let* ((field (car f-w)) (width (cdr f-w))
-		       (val (plist-get msg field))
-		       (str
-			 (case field
-			   (:subject
-			     (concat ;; prefix subject with a thread indicator
-			       (mu4e~headers-thread-prefix (plist-get msg :thread))
-			       ;;  "["(plist-get (plist-get msg :thread) :path) "] "
-			       val))
-			   ((:maildir :path) val)
-			   ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
-			   ;; if we (ie. `user-mail-address' is the 'From', show
-			   ;; 'To', otherwise show From
-			   (:from-or-to
-			     (let* ((from-lst (plist-get msg :from))
-				     (from (and from-lst (cdar from-lst))))
-			       (if (and from
-				     (string-match mu4e-user-mail-address-regexp
-				       from))
-				 (concat (or (cdr-safe
-					       mu4e-headers-from-or-to-prefix))
-				   (mu4e~headers-contact-str (plist-get msg :to)))
-				 (concat  (or (car-safe
-						mu4e-headers-from-or-to-prefix))
-				   (mu4e~headers-contact-str from-lst)))))
-			   (:date (format-time-string mu4e-headers-date-format val))
-			   (:flags (propertize (mu4e~headers-flags-str val)
-				     'help-echo (format "%S" val)))
-			   (:size (mu4e-display-size val))
-			   (t (mu4e-error "Unsupported header field (%S)" field)))))
-		 (when str
-		   (if (not width)
-		     str
-		     (truncate-string-to-width str width 0 ?\s t)))))
-	     mu4e-headers-fields " "))
-	  (flags (plist-get msg :flags))
-	  (line	(cond
-		  ((member 'draft flags)
-		    (propertize line 'face 'mu4e-draft-face))
-		  ((member 'trashed flags)
-		    (propertize line 'face 'mu4e-trashed-face))
-		  ((or (member 'unread flags) (member 'new flags))
-		    (propertize line 'face 'mu4e-unread-face))
-		  ((member 'flagged flags)
-		    (propertize line 'face 'mu4e-flagged-face))
-		  ((or (member 'replied flags) (member 'passed flags))
-		    (propertize line 'face 'mu4e-replied-face))
-		  (t ;; else
-		    (propertize line 'face 'mu4e-header-face)))))
-
+  (let ((docid (plist-get msg :docid)) (line "")) 
+    (dolist (f-w mu4e-headers-fields)
+      (let ((field (car f-w)) (width (cdr f-w))
+	     (val (plist-get msg (car f-w))) (str))
+	(setq str
+	  (case field
+	    (:subject
+	      (concat ;; prefix subject with a thread indicator
+		(mu4e~headers-thread-prefix (plist-get msg :thread))
+		;;  "["(plist-get (plist-get msg :thread) :path) "] "
+		val))
+	    ((:maildir :path) val)
+	    ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
+	    ;; if we (ie. `user-mail-address' is the 'From', show
+	    ;; 'To', otherwise show From
+	    (:from-or-to (mu4e~headers-from-or-to msg))
+	    (:date (format-time-string mu4e-headers-date-format val))
+	    (:flags (propertize (mu4e~headers-flags-str val)
+		      'help-echo (format "%S" val)))
+	    (:size (mu4e-display-size val))
+	    (t (mu4e-error "Unsupported header field (%S)" field)))) 
+	(when str
+	  (setq line
+	    (concat line
+	      (if (not width)
+		str
+		(truncate-string-to-width str width 0 ?\s t)) " "))))) 
+    ;; now, propertize it.
+    (setq line (propertize line 'face
+		 (case (car-safe (plist-get msg :flags))
+		   ('draft           'mu4e-draft-face)
+		   ('trash           'mu4e-trashed-face)
+		   ((unread new)     'mu4e-unread-face)
+		   ('flagged         'mu4e-flagged-face)
+		   ((replied passed) 'mu4e-replied-face)
+		   (t                'mu4e-header-face))))
     ;; now, append the header line
-    (mu4e~headers-add-header line docid point msg))))
+    (mu4e~headers-add-header line docid point msg)))
 
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
@@ -588,9 +587,7 @@ after the end of the search results."
 			  (and obj (get-text-property 0 'field (car obj)))))
 		  (if (eq field mu4e-headers-sortfield)
 		    (setq mu4e-headers-sort-revert (not mu4e-headers-sort-revert))
-		    (setq mu4e-headers-sortfield field))
-		  ;;(message "REFRESH! %S %S" obj field)
-		  )
+		    (setq mu4e-headers-sortfield field)))
 		(mu4e-headers-rerun-search))))
 	  (concat
 	    (propertize
@@ -731,10 +728,10 @@ with DOCID which must be present in the headers buffer."
       (goto-char oldpoint))))
 
 
-(defun mu4e~headers-add-header (str docid point &optional msg)
+(defsubst mu4e~headers-add-header (str docid point &optional msg)
   "Add header STR with DOCID to the buffer at POINT if non-nil, or
-at (point-max) otherwise. If MSG is not nil, add it as the text-property `msg'."
-  (unless docid (mu4e-error "Invalid message"))
+at (point-max) otherwise. If MSG is not nil, add it as the
+text-property `msg'."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (let ((inhibit-read-only t)
