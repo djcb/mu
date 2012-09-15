@@ -1,4 +1,4 @@
-#+STARTUP: showall
+f#+STARTUP: showall
 
 * TODO (fixes, ideas, etc.)
 
@@ -6,13 +6,9 @@
 
 *** mu
 
-  - handling of encrypted messages
-  - maybe use gstringchunk in mu-msg-cache
   - put threading information in the database, and enable getting the complete
      threads when searching
   - refactor fill_database function in test cases
-  - handling of command line options / help
-  - improved checked for gmime-2.6 crypto funcs
   - handle attached messages with attachments
   - add 'contact:' as alias for to: or cc: or bcc: or from:
 
@@ -24,6 +20,7 @@
 *** mu4e
 
   - identities (see Jacek's 'mu4e: From field in replies' mail)
+    [ workaround available, using mu4e-pre-compose-hook ]
   - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
     mail)
   - actions for /all/ headers, actions for /all/ attachment
@@ -32,6 +29,7 @@
   - guile integration
     - statistics
   - new-mail warning
+    [ workaround available, using mu4e-index-updated-hook ]
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
@@ -100,6 +98,11 @@
   - don't user `error' for user-errors
   - better echo-area reporting
   - improve help feedback for user (command line)
+  - handling of encrypted messages  
+  - improved checked for gmime-2.6 crypto funcs
+  - handling of command line options / help
+  - fix / add support for :size
+
 
 
 * Done
