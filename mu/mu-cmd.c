@@ -39,6 +39,7 @@
 #include "mu-runtime.h"
 #include "mu-flags.h"
 #include "mu-store.h"
+#include "mu-log.h"
 
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
@@ -559,6 +560,27 @@ check_params (MuConfig *opts, GError **err)
 	return TRUE;
 }
 
+
+static void
+set_log_options (MuConfig *opts)
+{
+	MuLogOptions logopts;
+
+	logopts = MU_LOG_OPTIONS_NONE;
+
+	if (opts->quiet)
+		logopts |= MU_LOG_OPTIONS_QUIET;
+	if (!opts->nocolor)
+		logopts |= MU_LOG_OPTIONS_COLOR;
+	if (opts->log_stderr)
+		logopts |= MU_LOG_OPTIONS_STDERR;
+	if (opts->debug)
+		logopts |= MU_LOG_OPTIONS_DEBUG;
+}
+
+
+
+
 MuError
 mu_cmd_execute (MuConfig *opts, GError **err)
 {
@@ -568,6 +590,8 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 
 	if (!check_params(opts, err))
 		return MU_G_ERROR_CODE(err);
+
+	set_log_options (opts);
 
 	switch (opts->cmd) {
 		/* already handled in mu-config.c */

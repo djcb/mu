@@ -36,6 +36,7 @@
 #include "mu-index.h"
 #include "mu-store.h"
 #include "mu-runtime.h"
+#include "mu-log.h"
 
 static gboolean MU_CAUGHT_SIGNAL;
 
@@ -176,7 +177,7 @@ typedef struct _IndexData IndexData;
 static MuError
 index_msg_cb  (MuIndexStats* stats, IndexData *idata)
 {
-	if (stats->_processed % 25)
+	if (stats->_processed % 75)
 	 	return MU_OK;
 
 	print_stats (stats, TRUE, idata->color);
@@ -242,30 +243,40 @@ show_time (unsigned t, unsigned processed, gboolean color)
 	g_print ("\n");
 }
 
-
+/* when logging to console, print a newline before doing so; this
+ * makes it more clear when something happens during the
+ * indexing/cleanup progress output */
+#define newline_before_on()			                          \
+	mu_log_options_set(mu_log_options_get() | MU_LOG_OPTIONS_NEWLINE)
+#define newline_before_off()						  \
+	mu_log_options_set(mu_log_options_get() & ~MU_LOG_OPTIONS_NEWLINE)
 
 static MuError
 cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
-		 gboolean show_progress, GError **err)
+		 GError **err)
 {
 	MuError rv;
 	time_t t;
 	IndexData idata;
+	gboolean show_progress;
 
 	if (!opts->quiet)
 		g_print ("cleaning up messages [%s]\n",
 			 mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
 
+	show_progress = !opts->quiet && isatty(fileno(stdout));
 	mu_index_stats_clear (stats);
 
 	t = time (NULL);
 	idata.color = !opts->nocolor;
+	newline_before_on();
 	rv = mu_index_cleanup
 		(midx, stats,
 		 show_progress ?
 		 (MuIndexCleanupDeleteCallback)index_msg_cb :
 		 (MuIndexCleanupDeleteCallback)index_msg_silent_cb,
 		 &idata, err);
+	newline_before_off();
 
 	if (!opts->quiet) {
 		print_stats (stats, TRUE, !opts->nocolor);
@@ -294,42 +305,32 @@ index_title (const char* maildir, const char* xapiandir, gboolean color)
 
 
 static MuError
-cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
-	   gboolean show_progress, GError **err)
+cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 {
 	IndexData idata;
 	MuError rv;
-	time_t t;
-
-	t = time (NULL);
+	gboolean show_progress;
 
 	if (!opts->quiet)
-		index_title (opts->maildir, mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+		index_title (opts->maildir,
+			     mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 			     !opts->nocolor);
 
+	show_progress = !opts->quiet && isatty(fileno(stdout));
 	idata.color = !opts->nocolor;
+	newline_before_on();
 	rv = mu_index_run (midx, opts->maildir, opts->reindex, stats,
 			   show_progress ?
 			   (MuIndexMsgCallback)index_msg_cb :
 			   (MuIndexMsgCallback)index_msg_silent_cb,
 			   NULL, &idata);
-
-	if (!opts->quiet) {
-		print_stats (stats, TRUE, !opts->nocolor);
-		g_print ("\n");
-		show_time ((unsigned)(time(NULL)-t),
-			   stats->_processed, !opts->nocolor);
-	}
+	newline_before_off();
 
 	if (rv == MU_OK || rv == MU_STOP) {
 		MU_WRITE_LOG ("index: processed: %u; updated/new: %u",
 			      stats->_processed, stats->_updated);
-		if (rv == MU_OK && !opts->nocleanup)
-			rv = cleanup_missing (midx, opts, stats, show_progress, err);
-		if (rv == MU_STOP)
-			rv = MU_OK;
 	} else
-		g_set_error (err, MU_ERROR_DOMAIN, rv, "error while indexing");
+		mu_util_g_set_error (err, rv, "error while indexing");
 
 	return rv;
 }
@@ -366,7 +367,8 @@ mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 {
 	MuIndex *midx;
 	MuIndexStats stats;
-	gboolean rv, show_progress;
+	gboolean rv;
+	time_t t;
 
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX,
@@ -377,12 +379,25 @@ mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 	if (!midx)
 		return MU_G_ERROR_CODE(err);
 
-	show_progress = !opts->quiet && isatty(fileno(stdout));
-
 	mu_index_stats_clear (&stats);
 	install_sig_handler ();
 
-	rv = cmd_index (midx, opts, &stats, show_progress, err);
+	t = time (NULL);
+	rv = cmd_index (midx, opts, &stats, err);
+
+	if (rv == MU_OK && !opts->nocleanup) {
+		if (!opts->quiet)
+			g_print ("\n");
+		rv = cleanup_missing (midx, opts, &stats, err);
+	}
+
+	if (!opts->quiet)  {
+		print_stats (&stats, TRUE, !opts->nocolor);
+		g_print ("\n");
+		show_time ((unsigned)(time(NULL)-t),
+			   stats._processed, !opts->nocolor);
+	}
+
 	mu_index_destroy (midx);
 
 	return rv;
