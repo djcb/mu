@@ -182,9 +182,7 @@ plist."
 		(if datestr (mu4e~view-construct-header field datestr) "")))
 	    ;; size
 	    (:size
-	      (let* (size (mu4e-view-size msg)
-		      (sizestr (when size (format "%d bytes" size))))
-		(if sizestr (mu4e~view-construct-header field sizestr))))
+	      (mu4e~view-construct-header field (mu4e-display-size fieldval)))
 	    ;; attachments
 	    (:attachments (mu4e~view-construct-attachments-header msg))
 	    ;; pgp-signatures

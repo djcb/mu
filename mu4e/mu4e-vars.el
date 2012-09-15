@@ -462,7 +462,12 @@ headers)."
        ( :name "Signature"
 	 :shortname "Sgn"
 	 :help "Check for the cryptographic signature"
-	 :sortable nil))
+	 :sortable nil))   
+     (:size .
+       ( :name "Size"
+	 :shortname "Size"
+	 :help "Size of the message"
+	 :sortable t))
      (:subject .
        ( :name "Subject"
 	 :shortname "Subject"

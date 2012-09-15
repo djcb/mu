@@ -533,7 +533,8 @@ Some notes to explain what you see in the example:
 
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
-the variable @code{mu4e-headers-fields}.
+the variable @var{mu4e-headers-fields}; see @var{mu4e-header-info} for the
+list of available fields.
 @item Instead of showing the @t{From:} and @t{To:} fields separately, you
 can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
 compact way to convey the most important information: it shows @t{From:}
