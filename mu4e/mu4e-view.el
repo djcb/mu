@@ -33,8 +33,7 @@
 (require 'mu4e-compose)
 (require 'mu4e-actions)
 
-;; we prefer the improved fill-region
-(require 'filladapt nil 'noerror)
+(require 'longlines)
 (require 'comint)
 (require 'browse-url)
 (require 'button)
@@ -63,28 +62,16 @@ toggle between long/short display by klicking / M-RET on the
 contact."
   :type 'boolean
   :group 'mu4e-view)
-
-(defcustom mu4e-view-wrap-lines nil
-  "Whether to automatically wrap lines in the body of messages when
-viewing them. Note that wrapping does not work well with all
-messages, but you can always toggle between wrapped/unwrapped
-display with `mu4e-view-toggle-wrap-lines (default keybinding: <w>)."
-  :group 'mu4e-view)
+ 
+(make-obsolete-variable 'mu4e-view-wrap-lines nil "0.9.9-dev7")
+(make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
 
 (defcustom mu4e-view-date-format "%c"
   "Date format to use in the message view, in the format of
   `format-time-string'."
   :type 'string
   :group 'mu4e-view)
-
- (defcustom mu4e-view-hide-cited nil
-  "Whether to automatically hide cited parts of messages (as
-determined by the presence of '> ' at the beginning of the
-line). Note that you can always toggle between hidden/unhidden
-display with `mu4e-view-toggle-hide-cited (default keybinding:
-<w>)."
-  :group 'mu4e-view)
-
+ 
 (defcustom mu4e-view-image-max-width 800
   "The maximum width for images to display; this is only effective
   if you're using an emacs with Imagemagick support, and
@@ -123,9 +110,7 @@ The first letter of NAME is used as a shortcut character.")
 (defvar mu4e~view-headers-buffer nil
   "The headers buffer connected to this view.")
 
-(defvar mu4e~view-lines-wrapped nil "Whether lines are wrapped.")
 (defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
-
 (defvar mu4e~view-link-map nil
   "A map of some number->url so we can jump to url by number.")
 
@@ -227,11 +212,6 @@ marking if it still had that."
 	(mu4e~view-show-images-maybe msg)
 
 	(unless refresh
-	  ;; if we're showing the message for the first time, use the values of
-	  ;; user-settable variables `mu4e~view-wrap-lines' and
-	  ;; `mu4e~view-hide-cited' to determine whether we should wrap/hide
-	  (when mu4e-view-wrap-lines (mu4e~view-wrap-lines))
-	  (when mu4e-view-hide-cited  (mu4e~view-hide-cited))
 	  ;; no use in trying to set flags again
 	  (mu4e~view-mark-as-read-maybe))))))
 
@@ -541,7 +521,7 @@ is nil, and otherwise open it."
       (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
 
       ;; misc
-      (define-key map "w" 'mu4e-view-toggle-wrap-lines)
+      (define-key map "w" 'longlines-mode)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
 
       (define-key map "r" 'mu4e-view-refresh)
@@ -565,7 +545,7 @@ is nil, and otherwise open it."
 
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
-	  '("Toggle wrap lines" . mu4e-view-toggle-wrap-lines))
+	  '("Toggle wrap lines" . longlines-mode))
 	(define-key menumap [hide-cited]
 	  '("Toggle hide cited" . mu4e-view-toggle-hide-cited))
 	(define-key menumap [raw-view]
@@ -631,8 +611,6 @@ is nil, and otherwise open it."
   (make-local-variable 'mu4e~view-msg)
   (make-local-variable 'mu4e~view-link-map)
   (make-local-variable 'mu4e~view-attach-map)
-
-  (make-local-variable 'mu4e~view-lines-wrapped)
   (make-local-variable 'mu4e~view-cited-hidden)
 
   (setq buffer-undo-list t) ;; don't record undo info
@@ -751,14 +729,6 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 		'face 'mu4e-view-url-number-face))))))))
 
 
-(defun mu4e~view-wrap-lines ()
-  "Wrap lines in the message body."
-  (save-excursion
-    (let ((inhibit-read-only t))
-      (goto-char (point-min))
-      (when (search-forward "\n\n") ;; search for the message body
-	(fill-region (point) (point-max)))
-      (setq mu4e~view-lines-wrapped t))))
 
 (defun mu4e~view-hide-cited ()
   "Toggle hiding of cited lines in the message body."
@@ -802,15 +772,7 @@ N (prefix argument), to the Nth previous header."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   ;; Interactive functions
-
-
-(defun mu4e-view-toggle-wrap-lines ()
-  "Toggle line wrap in the message body."
-  (interactive)
-  (if mu4e~view-lines-wrapped
-    (mu4e-view-refresh)
-    (mu4e~view-wrap-lines)))
-
+ 
 (defun mu4e-view-toggle-hide-cited ()
   "Toggle hiding of cited lines in the message body."
   (interactive)
@@ -819,13 +781,10 @@ N (prefix argument), to the Nth previous header."
     (mu4e~view-hide-cited)))
 
 (defun mu4e-view-refresh ()
-  "Redisplay the current message, without wrapped lines or hidden
-citations."
+  "Redisplay the current message."
   (interactive)
   (mu4e-view mu4e~view-msg mu4e~view-headers-buffer t)
-  (setq
-    mu4e~view-lines-wrapped nil
-    mu4e~view-cited-hidden nil))
+  (setq mu4e~view-cited-hidden nil))
 
 (defun mu4e-view-action (&optional msg)
   "Ask user for some action to apply on MSG (or message-at-point,
