@@ -80,24 +80,24 @@ vertical split-view."
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
-(defvar mu4e-headers-draft-mark     '("D" . "✎") "Mark for draft messages.")
-(defvar mu4e-headers-flagged-mark   '("F" . "⚑") "Mark for flagged messages.")
-(defvar mu4e-headers-new-mark       '("N" . "✉") "Mark for new messages.")
-(defvar mu4e-headers-passed-mark    '("P" . "➔") "Mark for passed (fwd) messages.")
-(defvar mu4e-headers-replied-mark   '("R" . "↳") "Mark for replied messages.")
-(defvar mu4e-headers-seen-mark      '("S" . "✔") "Mark for seen messages.")
-(defvar mu4e-headers-trashed-mark   '("T" . "♻") "Mark for trashed messages.")
-(defvar mu4e-headers-attach-mark    '("a" . "a") "Mark for messages w/ attachments.")
-(defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Mark for encrypted messages.")
-(defvar mu4e-headers-signed-mark    '("s" . "s") "Mark for signed messages.")
-(defvar mu4e-headers-unread-mark    '("u" . "u") "Mark for unread messages.")
+(defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Mark for draft messages.")
+(defvar mu4e-headers-flagged-mark   (purecopy '("F" . "⚑")) "Mark for flagged messages.")
+(defvar mu4e-headers-new-mark       (purecopy '("N" . "⭑")) "Mark for new messages.")
+(defvar mu4e-headers-passed-mark    (purecopy '("P" . "❯")) "Mark for passed (fwd) messages.")
+(defvar mu4e-headers-replied-mark   (purecopy '("R" . "❮")) "Mark for replied messages.")
+(defvar mu4e-headers-seen-mark      (purecopy '("S" . "✔")) "Mark for seen messages.")
+(defvar mu4e-headers-trashed-mark   (purecopy '("T" . "♻")) "Mark for trashed messages.")
+(defvar mu4e-headers-attach-mark    (purecopy '("a" . "⚓")) "Mark for messages w/ attachments.")
+(defvar mu4e-headers-encrypted-mark (purecopy '("x" . "⚴")) "Mark for encrypted messages.")
+(defvar mu4e-headers-signed-mark    (purecopy '("s" . "☡")) "Mark for signed messages.")
+(defvar mu4e-headers-unread-mark    (purecopy '("u" . "☐")) "Mark for unread messages.")
 
 ;; thread prefix marks
-(defvar mu4e-headers-has-child-prefix     '("+"  . "◼") "Prefix for thread with child(ren).")
-(defvar mu4e-headers-empty-parent-prefix  '("-"  . "◽ ") "Prefix for thread without parent.")
-(defvar mu4e-headers-first-child-prefix   '("\\" . "┗▶") "Prefix for the first child.")
-(defvar mu4e-headers-duplicate-prefix     '("="  . "⚌") "Prefix for a duplicate message.")
-(defvar mu4e-headers-default-prefix       '("|"  . "┃") "Default prefix.")
+(defvar mu4e-headers-has-child-prefix    (purecopy '("+"  . "◼"))  "Thread with child(ren).")
+(defvar mu4e-headers-empty-parent-prefix (purecopy '("-"  . "◽"))  "Thread without parent.")
+(defvar mu4e-headers-first-child-prefix  (purecopy '("\\" . "┗▶")) "The first child.")
+(defvar mu4e-headers-duplicate-prefix    (purecopy '("="  . "⚌")) "Duplicate message.")
+(defvar mu4e-headers-default-prefix       (purecopy '("|"  . "┃")) "Default prefix.")
 
 
 (defvar mu4e-headers-actions
@@ -151,10 +151,10 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; docid cookies
-(defconst mu4e~headers-docid-pre "\376"
+(defconst mu4e~headers-docid-pre (purecopy "\376")
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
   followed by the docid, followed by `mu4e~headers-docid-post'.")
-(defconst mu4e~headers-docid-post "\377"
+(defconst mu4e~headers-docid-post (purecopy "\377")
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
   followed by the docid, followed by `mu4e~headers-docid-post'.")
 
@@ -327,7 +327,7 @@ show the from address; prefixed with the appropriate
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (let ((docid (plist-get msg :docid)) (line "")) 
+  (let ((docid (plist-get msg :docid)) (line ""))
     (dolist (f-w mu4e-headers-fields)
       (let ((field (car f-w)) (width (cdr f-w))
 	     (val (plist-get msg (car f-w))) (str))
@@ -347,13 +347,13 @@ if provided, or at the end of the buffer otherwise."
 	    (:flags (propertize (mu4e~headers-flags-str val)
 		      'help-echo (format "%S" val)))
 	    (:size (mu4e-display-size val))
-	    (t (mu4e-error "Unsupported header field (%S)" field)))) 
+	    (t (mu4e-error "Unsupported header field (%S)" field))))
 	(when str
 	  (setq line
 	    (concat line
 	      (if (not width)
 		str
-		(truncate-string-to-width str width 0 ?\s t)) " "))))) 
+		(truncate-string-to-width str width 0 ?\s t)) " ")))))
     ;; now, propertize it.
     (setq line (propertize line 'face
 		 (case (car-safe (plist-get msg :flags))
@@ -366,6 +366,9 @@ if provided, or at the end of the buffer otherwise."
     ;; now, append the header line
     (mu4e~headers-add-header line docid point msg)))
 
+(defconst mu4e~no-matches     (purecopy "No matching messages found"))
+(defconst mu4e~end-of-results (purecopy "End of search results"))
+
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
@@ -375,8 +378,8 @@ after the end of the search results."
       (goto-char (point-max))
       (let ((inhibit-read-only t)
 	     (str (if (= 0 count)
-		    "No matching messages found"
-		    "End of search results")))
+		    mu4e~no-matches
+		    mu4e~end-of-results)))
 	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
 	(unless (= 0 count)
 	  (mu4e-message "Found %d matching message%s"
@@ -557,7 +560,7 @@ after the end of the search results."
       map)))
 
 (fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
- 
+
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
   (cons
@@ -569,13 +572,13 @@ after the end of the search results."
 		(info (cdr (assoc field mu4e-header-info)))
 		(sortable (plist-get info :sortable))
 		(help (plist-get info :help))
-		(uparrow   (if mu4e-use-fancy-chars "▲ " "^ "))
-		(downarrow (if mu4e-use-fancy-chars "▼ " "V "))
+		(uparrow   (if mu4e-use-fancy-chars " ▲" " ^"))
+		(downarrow (if mu4e-use-fancy-chars " ▼" " V"))
 		;; triangle to mark the sorted-by column
 		(arrow
 		  (when (and sortable (eq (car item) mu4e-headers-sortfield))
 		    (if mu4e-headers-sort-revert downarrow uparrow)))
-		(name (concat arrow (plist-get info :shortname)))
+		(name (concat (plist-get info :shortname) arrow))
 		(map (make-sparse-keymap)))
 	  (when sortable
 	    (define-key map [header-line mouse-1]
@@ -594,7 +597,7 @@ after the end of the search results."
 	      (if width
 		(truncate-string-to-width name width 0 ?\s t)
 		name)
-	      'face 'mu4e-header-title-face
+	      'face (if arrow 'bold 'fixed-pitch)
 	      'help-echo help
 	      'mouse-face (when sortable 'highlight)
 	      'keymap (when sortable map)
@@ -613,7 +616,7 @@ after the end of the search results."
   (make-local-variable 'mu4e~highlighted-docid)
   (make-local-variable 'global-mode-string)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
-  
+
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
@@ -1109,7 +1112,7 @@ current window. "
 	    (and (member 'encrypted (mu4e-field-at-point :flags))
 	      (if (eq mu4e-decryption-policy 'ask)
 		(yes-or-no-p (mu4e-format "Decrypt message?"))
-		mu4e-decryption-policy)))  
+		mu4e-decryption-policy)))
 	  (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
