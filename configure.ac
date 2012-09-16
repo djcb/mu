@@ -43,14 +43,10 @@ AM_PROG_LIBTOOL
 
 AC_PROG_AWK
 
-AC_CHECK_HEADERS([locale.h langinfo.h])
+AC_CHECK_HEADERS([locale.h langinfo.h wordexp.h])
 
 # use the 64-bit versions
 AC_SYS_LARGEFILE
-
-# check for some libs
-AC_CHECK_LIB([uuid], [uuid_generate_random],[],AC_MSG_ERROR([libuuid not found]))
-AC_CHECK_LIB([z], [inflateEnd], [],AC_MSG_ERROR([zlib not found]))
 
 
 # check for makeinfo
