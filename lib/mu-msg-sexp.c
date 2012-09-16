@@ -226,6 +226,8 @@ get_temp_file_maybe (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
 {
 	char *tmp, *tmpfile;
 
+	opts |= MU_MSG_OPTION_USE_EXISTING;
+
 	if  (!(opts & MU_MSG_OPTION_EXTRACT_IMAGES) ||
 	     g_ascii_strcasecmp (part->type, "image") != 0)
 		return NULL;
