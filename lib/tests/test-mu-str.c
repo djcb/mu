@@ -141,7 +141,9 @@ test_mu_str_normalize_02 (void)
 		{ "foo", "foo" },
 		{ "Föö", "Foo" },
 		{ "číslO", "cislO" },
-		{ "hÆvý mëÐal ümláõt", "hAevy meDal umlaot"}
+		{ "hÆvý mëÐal ümláõt", "hAevy meDal umlaot"},
+		{ "￡300", "￡300" }
+
 	};
 
 
@@ -163,10 +165,12 @@ test_mu_str_esc_to_list (void)
 		const char*  str;
 		const char* strs[3];
 	} strings [] = {
-		{ "maildir:foo",            {"maildir:foo", NULL, NULL}},
-		{ "maildir:sent items",     {"maildir:sent", "items", NULL}},
-		{ "\"maildir:sent items\"", {"maildir:sent items", NULL, NULL}},
-
+		{ "maildir:foo",
+		  {"maildir:foo", NULL, NULL}},
+		{ "maildir:sent items",
+		  {"maildir:sent", "items", NULL}},
+		{ "\"maildir:sent items\"",
+		  {"maildir:sent items", NULL, NULL}},
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(strings); ++i) {
@@ -200,7 +204,8 @@ test_mu_str_xapian_escape (void)
 		{ "x:2010..2012", "x:2010__2012"},
 		{ "q:2010..2012", "q_2010__2012"},
 		{ "subject:2010..2012", "subject:2010__2012"},
-		{ "(maildir:foo)", "(maildir:foo)"}
+		{ "(maildir:foo)", "(maildir:foo)"},
+		{ "￡300", "￡300" }
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
@@ -229,6 +234,7 @@ test_mu_str_xapian_escape_non_ascii (void)
 		{ "Masha@Аркона.ru", "masha_аркона_ru" },
 		{ "foo:ελληνικά", "foo_ελληνικά" },
 		{ "日本語!!", "日本語__" },
+		{ "￡", "￡" }
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {

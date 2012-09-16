@@ -355,8 +355,6 @@ get_console_pw (const char* user_id, const char *prompt_ctx,
 {
 	char *prompt, *pass;
 
-	/* versions <= 2.6.10 have the bug. gmime-git has it fixed,
-	 * but there is no 2.6.11 yet (2012-09-14) */
 	if (!g_mime_check_version(2,6,11))
 		g_printerr (
 			"*** the gmime library you are using has version "
