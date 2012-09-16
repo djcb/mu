@@ -124,7 +124,7 @@ data removed."
 			    'utf-8 t)))
 	  (when objcons
 	    (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
-	    (car objcons)))))))   
+	    (car objcons)))))))
 
 
 (defsubst mu4e~proc-filter (proc str)
