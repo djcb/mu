@@ -117,21 +117,26 @@ config_options_group_mu (void)
 	return og;
 }
 
+
+#define expand_dir(D)			                     	\
+	if ((D)) {						\
+		char *exp;					\
+		exp = mu_util_dir_expand((D));			\
+		if (exp) {					\
+			g_free((D));				\
+			(D) = exp;				\
+		}						\
+	}
+
+
+
 static void
 set_group_index_defaults (void)
 {
-	char *exp;
-
 	if (!MU_CONFIG.maildir)
 		MU_CONFIG.maildir = mu_util_guess_maildir ();
 
-	if (MU_CONFIG.maildir) {
-		exp = mu_util_dir_expand(MU_CONFIG.maildir);
-		if (exp) {
-			g_free(MU_CONFIG.maildir);
-			MU_CONFIG.maildir = exp;
-		}
-	}
+	expand_dir (MU_CONFIG.maildir);
 }
 
 static GOptionGroup*
@@ -183,6 +188,8 @@ set_group_find_defaults (void)
 	else
 		MU_CONFIG.format =
 			get_output_format (MU_CONFIG.formatstr);
+
+	expand_dir (MU_CONFIG.linksdir);
 }
 
 static GOptionGroup*
@@ -334,6 +341,14 @@ config_options_group_view (void)
 	g_option_group_add_entries(og, crypto_option_entries());
 
 	return og;
+}
+
+
+
+static void
+set_group_extract_defaults (void)
+{
+	expand_dir (MU_CONFIG.targetdir);
 }
 
 
@@ -620,6 +635,7 @@ mu_config_init (int *argcp, char ***argvp)
 	set_group_find_defaults();
 	set_group_cfind_defaults();
 	set_group_view_defaults();
+	set_group_extract_defaults();
 	/* set_group_mkdir_defaults (config); */
 
 	return &MU_CONFIG;
@@ -657,8 +673,6 @@ mu_config_param_num (MuConfig *opts)
 
 	return n;
 }
-
-
 
 
 MuMsgOptions
