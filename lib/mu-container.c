@@ -80,15 +80,6 @@ set_parent (MuContainer *c, MuContainer *parent)
 	}
 }
 
-static MuContainer*
-find_last (MuContainer *c)
-{
-	while (c && c->next)
-		c = c->next;
-
-	return c;
-}
-
 
 G_GNUC_UNUSED static gboolean
 check_dup (MuContainer *c, GHashTable *hash)
@@ -131,7 +122,21 @@ mu_container_append_siblings (MuContainer *c, MuContainer *sibling)
 	/* assert_no_duplicates (c); */
 
 	set_parent (sibling, c->parent);
-	(find_last(c))->next = sibling;
+
+	/* find the last sibling and append; first we try our cache
+	 * 'last', otherwise we need to walk the chain. We use a
+	 * cached last as to avoid walking the chain (which is
+	 * O(n*n)) */
+	if (c->last)
+		c->last->next = sibling;
+	else {
+		/* no 'last' cached, so walk the chain */
+		MuContainer *c2;
+		for (c2 = c; c2 && c2->next; c2 = c2->next);
+		c2->next = sibling;
+	}
+	/* update the cached last */
+	c->last = sibling->last ? sibling->last : sibling;
 
 	/* assert_no_duplicates (c); */
 
@@ -157,6 +162,13 @@ mu_container_remove_sibling (MuContainer *c, MuContainer *sibling)
 		}
 		prev = cur;
 	}
+
+	/* unset the cached last; it's not valid anymore
+	 *
+	 * TODO: we could actually do a better job updating last
+	 * rather than invalidating it. */
+	if (c)
+		c->last = NULL;
 
 	return c;
 }
@@ -201,7 +213,8 @@ typedef void (*MuContainerPathForeachFunc) (MuContainer*, gpointer, Path*);
 
 static void
 mu_container_path_foreach_real (MuContainer *c, guint level, Path *path,
-			     MuContainerPathForeachFunc func, gpointer user_data)
+				MuContainerPathForeachFunc func,
+				gpointer user_data)
 {
 	if (!c)
 		return;
@@ -210,7 +223,8 @@ mu_container_path_foreach_real (MuContainer *c, guint level, Path *path,
 	func (c, user_data, path);
 
 	/* children */
-	mu_container_path_foreach_real (c->child, level + 1, path, func, user_data);
+	mu_container_path_foreach_real (c->child, level + 1, path,
+					func, user_data);
 
 	/* siblings */
 	mu_container_path_foreach_real (c->next, level, path, func, user_data);

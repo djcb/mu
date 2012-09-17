@@ -29,8 +29,7 @@ enum _MuContainerFlag {
 	MU_CONTAINER_FLAG_SPLICE  = 1 << 1,
 	MU_CONTAINER_FLAG_DUP     = 1 << 2
 };
-
-typedef guint8 MuContainerFlag;
+typedef enum _MuContainerFlag MuContainerFlag;
 
 /*
  * MuContainer data structure, as seen in JWZs document:
@@ -38,10 +37,21 @@ typedef guint8 MuContainerFlag;
  */
 struct _MuContainer {
 	struct _MuContainer *parent, *child, *next;
-	MuContainerFlag flags;
-	MuMsg *msg;
-	guint docid;
-	const char* msgid;
+
+	/* note: we cache the last of the string of next->next->...
+	 * `mu_container_append_siblings' shows up high in the
+	 * profiles since it needs to walk to the end, and this give
+	 * O(n*n) behavior.
+	 * */
+	struct _MuContainer *last;
+
+
+	MuMsg               *msg;
+	const char          *msgid;
+
+	unsigned            docid;
+	MuContainerFlag     flags;
+
 };
 typedef struct _MuContainer MuContainer;
 
@@ -177,7 +187,8 @@ typedef int (*MuContainerCmpFunc) (MuContainer *c1, MuContainer *c2,
  *
  * @return a sorted container
  */
-MuContainer* mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean revert,
+MuContainer* mu_container_sort (MuContainer *c, MuMsgFieldId mfid,
+				gboolean revert,
 				gpointer user_data);
 
 
