@@ -162,6 +162,32 @@ msg_string_list_field (MuMsg *msg, MuMsgFieldId mfid)
 }
 
 
+static SCM
+get_body (MuMsg *msg, gboolean html)
+{
+	SCM data;
+	const char* body;
+	MuMsgOptions opts;
+
+	opts = MU_MSG_OPTION_NONE;
+
+	if (html)
+		body = mu_msg_get_body_html (msg, opts);
+	else
+		body = mu_msg_get_body_text (msg, opts);
+
+	if (body)
+		data = mu_guile_scm_from_str (body);
+	else
+		data = SCM_BOOL_F;
+
+	/* explicitly close the file backend, so we won't run of fds */
+	mu_msg_unload_msg_file (msg);
+
+	return data;
+}
+
+
 SCM_DEFINE (get_field, "mu:c:get-field", 2, 0, 0,
 	    (SCM MSG, SCM FIELD),
 	    "Get the field FIELD from message MSG.\n")
@@ -186,21 +212,14 @@ SCM_DEFINE (get_field, "mu:c:get-field", 2, 0, 0,
 	case MU_MSG_FIELD_ID_FLAGS: return get_flags_scm (msgwrap->_msg);
 
 	case MU_MSG_FIELD_ID_BODY_HTML:
+		return get_body (msgwrap->_msg, TRUE);
 	case MU_MSG_FIELD_ID_BODY_TEXT:
-	{
-		SCM data;
-		data = mu_guile_scm_from_str
-			(mu_msg_get_field_string (msgwrap->_msg, mfid));
-		/* explicitly close the file backend, so we won't run of fds */
-		mu_msg_unload_msg_file (msgwrap->_msg);
-		return data;
-	}
+		return get_body (msgwrap->_msg, FALSE);
 
 	/* our pseudo-field; we get it from the message file */
 	case MU_GUILE_MSG_FIELD_ID_TIMESTAMP:
 		return scm_from_uint (
 			(unsigned)mu_msg_get_timestamp(msgwrap->_msg));
-
 	default: break;
 	}
 

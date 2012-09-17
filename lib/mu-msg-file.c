@@ -602,13 +602,12 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 
 	case MU_MSG_FIELD_ID_MAILDIR: return self->_maildir;
 
-	case MU_MSG_FIELD_ID_BODY_TEXT:
-	case MU_MSG_FIELD_ID_BODY_HTML:
+	case MU_MSG_FIELD_ID_BODY_TEXT:  /* use mu_msg_get_body_text */
+	case MU_MSG_FIELD_ID_BODY_HTML:  /* use mu_msg_get_body_html */
 	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
-		g_warning ("not available here: %s",
-			   mu_msg_field_name (mfid));
-		g_return_val_if_reached (NULL);
-		return NULL;
+		g_warning ("%s is not retrievable through: %s",
+			   mu_msg_field_name (mfid), __FUNCTION__);
+ 		return NULL;
 
 	default: g_return_val_if_reached (NULL);
 	}
