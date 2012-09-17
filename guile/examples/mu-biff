@@ -28,7 +28,7 @@ exec guile -e main -s $0 $@
 
 
 (use-modules (ice-9 getopt-long) (ice-9 format))
-(use-modules (mu) (mu message))
+(use-modules (mu))
 
 (define (main args)
   (let* ((optionspec   '((muhome      (value #t))
@@ -49,7 +49,7 @@ exec guile -e main -s $0 $@
 	(mu:for-each-message
 	  (lambda (msg)
 	    (if (> (mu:timestamp msg) newer-than)
-	      (format #t "~s ~s\n"
+	      (format #t "~a ~a\n"
 		(mu:from msg)
 		(mu:subject msg))))
 	  query)))))
