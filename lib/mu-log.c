@@ -245,18 +245,15 @@ pfx (GLogLevelFlags level)
 	do{if (MU_LOG->_color_stderr) fputs ((C),stderr);} while (0)
 
 
+
 static void
-log_write (const char* domain, GLogLevelFlags level,
-	   const gchar *msg)
+log_write_fd (GLogLevelFlags level, const gchar *msg)
 {
 	time_t now;
 	ssize_t len;
-	const char *mu;
 
-	/* log lines will be truncated at 768-1 chars */
+	/* truncate at 768-1 chars */
 	char buf [768], timebuf [22];
-
-	g_return_if_fail (MU_LOG);
 
 	/* get the time/date string */
 	now = time(NULL);
@@ -267,9 +264,17 @@ log_write (const char* domain, GLogLevelFlags level,
 	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf,
 			pfx(level), msg);
 
+
 	if (write (MU_LOG->_fd, buf, (size_t)len) < 0)
 		fprintf (stderr, "%s: failed to write to log: %s\n",
 			 __FUNCTION__,  strerror(errno));
+}
+
+
+static void
+log_write_stdout_stderr (GLogLevelFlags level, const gchar *msg)
+{
+	const char *mu;
 
 	mu = MU_LOG->_opts & MU_LOG_OPTIONS_NEWLINE ?
 		"\nmu: " : "mu: ";
@@ -293,4 +298,14 @@ log_write (const char* domain, GLogLevelFlags level,
 		fputs ("\n",   stderr);
 		color_stderr_maybe (MU_COLOR_DEFAULT);
 	}
+}
+
+
+static void
+log_write (const char* domain, GLogLevelFlags level, const gchar *msg)
+{
+	g_return_if_fail (MU_LOG);
+
+	log_write_fd (level, msg);
+	log_write_stdout_stderr (level, msg);
 }
