@@ -406,7 +406,9 @@ prune_empty_containers (MuContainer *root_set)
 {
 	MuContainer *cur;
 
-	mu_container_foreach (root_set, (MuContainerForeachFunc)prune_maybe, NULL);
+	mu_container_foreach (root_set,
+			      (MuContainerForeachFunc)prune_maybe,
+			      NULL);
 
 	/* and prune the root_set itself... */
 	for (cur = root_set; cur; cur = cur->next) {
@@ -418,7 +420,8 @@ prune_empty_containers (MuContainer *root_set)
 			MuContainer *newchild;
 			newchild = cur->child;
 			cur->child = NULL;
-			root_set = mu_container_append_siblings (root_set, newchild);
+			root_set = mu_container_append_siblings (root_set,
+								 newchild);
 		}
 	}
 

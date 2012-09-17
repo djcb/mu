@@ -111,7 +111,8 @@ mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 			t = mu_date_str_to_time_t (s.c_str(), FALSE/*utc*/);
 			return static_cast<gint64>(t);
 		} else {
-			return static_cast<gint64>(Xapian::sortable_unserialise(s));
+			return static_cast<gint64>
+				(Xapian::sortable_unserialise(s));
 		}
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);

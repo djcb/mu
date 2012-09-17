@@ -126,7 +126,8 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 		add_prefix_maybe (cdata->gstr, &cdata->bcc, "\t:bcc (");
 		break;
 	case MU_MSG_CONTACT_TYPE_REPLY_TO:
-		add_prefix_maybe (cdata->gstr, &cdata->reply_to, "\t:reply-to (");
+		add_prefix_maybe (cdata->gstr, &cdata->reply_to,
+				  "\t:reply-to (");
 		break;
 	default: g_return_val_if_reached (FALSE);
 	}
@@ -386,7 +387,8 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 	append_sexp_parts (gstr, msg, opts);
 	append_sexp_contacts (gstr, msg);
 
-	append_sexp_attr_list (gstr, "references", mu_msg_get_references (msg));
+	append_sexp_attr_list (gstr, "references",
+			       mu_msg_get_references (msg));
 	append_sexp_attr (gstr, "in-reply-to",
 			  mu_msg_get_header (msg, "In-Reply-To"));
 	append_sexp_attr (gstr, "body-txt",
@@ -440,8 +442,9 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 
 	append_sexp_attr (gstr, "subject", mu_msg_get_subject (msg));
 
-	/* in the no-headers-only case (see below) we get a more complete list
-	 * of contacts, so no need to get them here if that's the case */
+	/* in the no-headers-only case (see below) we get a more
+	 * complete list of contacts, so no need to get them here if
+	 * that's the case */
 	if (opts & MU_MSG_OPTION_HEADERS_ONLY)
 		append_sexp_contacts (gstr, msg);
 
@@ -454,9 +457,9 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 				mu_msg_prio_name(mu_msg_get_prio(msg)));
 	append_sexp_flags (gstr, msg);
 
-	/* headers are retrieved from the database, views from the message file
-	 * file attr things can only be gotten from the file (ie., mu
-	 * view), not from the database (mu find).  */
+	/* headers are retrieved from the database, views from the
+	 * message file file attr things can only be gotten from the
+	 * file (ie., mu view), not from the database (mu find).  */
 	if (!(opts & MU_MSG_OPTION_HEADERS_ONLY))
 		append_message_file_parts (gstr, msg, opts);
 
