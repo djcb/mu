@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include "mu-msg.h"
 #include "mu-log.h"
 #include "mu-util.h"
@@ -95,7 +96,8 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 	}
 
 	_data = g_new0 (MuRuntimeData, 1);
- 	_data->_str[MU_RUNTIME_PATH_MUHOME] = muhome;
+	_data->_str[MU_RUNTIME_PATH_MUHOME] = muhome;
+
 	init_paths (muhome, _data);
 	_data->_name = g_strdup (name);
 
@@ -113,15 +115,16 @@ runtime_free (void)
 {
 	int i;
 
-	for (i = 0; i != MU_RUNTIME_PATH_NUM; ++i)
-		g_free (_data->_str[i]);
-
-	g_free (_data->_name);
-
-	/* mu_config_uninit (_data->_config); */
-
 	mu_log_uninit();
 
+	if (!_data)
+		return;
+
+	if (_data->_str)
+		for (i = 0; i != MU_RUNTIME_PATH_NUM; ++i)
+			g_free (_data->_str[i]);
+
+	g_free (_data->_name);
 	g_free (_data);
 }
 
