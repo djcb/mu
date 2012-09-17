@@ -1,0 +1,161 @@
+#!/bin/sh
+exec guile -e main -s $0 $@
+!#
+
+;; Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;;
+;; This program is free software; you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation; either version 3, or (at your option) any
+;; later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software Foundation,
+;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+(use-modules (ice-9 getopt-long) (ice-9 format))
+(use-modules (sxml simple))
+
+(define (mapconcat func lst sepa)
+  "Apply FUNC to elements of LST, concat the result as strings
+separated by SEPA."
+  (if (null? lst)
+    ""
+    (string-append
+      (func (car lst))
+      (if (null? (cdr lst))
+	""
+	(string-append sepa (mapconcat func (cdr lst) sepa))))))
+
+(define (property-list? obj)
+  "Is OBJ a elisp-style property list (ie. a list of the
+form (:symbol1 something :symbol2 somethingelse), as in an elisp
+proplilst."
+  (and (list? obj)
+    (not (null? obj))
+    (symbol? (car obj))
+    (string= ":" (substring (symbol->string (car obj)) 0 1))))
+
+(define (plist->pairs plist)
+  "Convert an elisp-style property list; e.g:
+   (:prop1 foo :prop2: bar ...)
+into a list of pairs
+   ((prop1 . foo) (prop2 . bar) ...)."
+  (if (null? plist)
+    '()
+    (cons
+      (cons
+	(substring (symbol->string (car plist)) 1)
+	(cadr plist))
+      (plist->pairs (cddr plist)))))
+
+(define (string->xml str)
+  "XML-encode STR."
+  (call-with-output-string (lambda (port) (sxml->xml str port))))
+
+(define (etime->time_t t)
+  "Convert elisp time object T into a time_t value."
+  (logior (ash (car t) 16) (car t)))
+
+(define (output-xml)
+  "Convert string INPUT to XML and print on stdout."
+  (letrec ((convert-xml
+	     (lambda* (expr #:optional parent)
+	    (cond
+	      ((property-list? expr)
+		(mapconcat
+		  (lambda (pair)
+		    (format #f "\t<~a>~a</~a>\n"
+		      (car pair) (convert-xml (cdr pair) (car pair)) (car pair)))
+		  (plist->pairs expr) " "))
+	      ((list? expr)
+		(cond
+		  ((member parent '("from" "to" "cc" "bcc"))
+		    (mapconcat (lambda (addr)
+				 (format #f "<address>~a~a</email>"
+				   (if (string? (car addr))
+				     (format #f "<name>~a</name>" (string->xml (car addr))) "")
+				   (if (string? (cdr addr))
+				     (format #f "<email>~a</email>" (string->xml (cdr addr))) "")))
+		      expr " "))
+		  ((string= parent "parts") "<!-- message parts -->") ;; for now, ignore
+		  ;; convert the crazy emacs time thingy to time_t...
+		  ((string= parent "date") (format #f "~a" (etime->time_t expr)))
+		  ((string= parent "flags")
+		    (mapconcat (lambda (flag)  (format #f "<flag>~a</flag>" flag)) expr ""))))
+	      ((or (string? expr) (symbol? expr)) (string->xml expr))
+	      ((number? expr) (number->string expr))
+	      (#t ".")))))
+    (let ((expr (read)))
+      (if (not (eof-object? expr))
+	(begin
+	  (format #t "<message>\n~a</message>\n" (convert-xml expr))
+	  (output-xml))))))
+
+
+(define (output-json)
+  "Convert string INPUT to JSON and print on stdout."
+  (letrec ((convert-json
+	     (lambda* (expr #:optional parent)
+	    (cond
+	      ((property-list? expr)
+		(mapconcat
+		  (lambda (pair)
+		    (format #f "\n\t\"~a\":~a"
+		      (car pair) (convert-json (cdr pair) (car pair))))
+		  (plist->pairs expr) ", "))
+	      ((list? expr)
+		(cond
+		  ((member parent '("from" "to" "cc" "bcc"))
+		    (string-append "["
+		      (mapconcat (lambda (addr)
+				   (format #f "{~a~a}"
+				     (if (string? (car addr))
+				       (format #f "\"name\":\"~a\"," (string->xml (car addr))) "")
+				     (if (string? (cdr addr))
+				       (format #f "\"email\":\"~a\"" (string->xml (cdr addr))) "")))
+			expr " ")
+		      "]"))
+		  ((string= parent "parts") "[<!-- message parts -->]") ;; for now, ignore
+		  ;; convert the crazy emacs time thingy to time_t...
+		  ((string= parent "date") (format #f "~a" (format #f "~a" (etime->time_t expr))))
+		  ((string= parent "flags")
+		    (string-append "["
+		      (mapconcat (lambda (flag)  (format #f "\"flag\":\"~a\"" flag)) expr ", ")
+		      "]"))))
+	      ((or (string? expr) (symbol? expr)) (format #f "\"~a\"" (string->xml expr)))
+	      ((number? expr) (number->string expr))
+	      (#t ".")))))
+    (let ((expr (read)))
+      (if (not (eof-object? expr))
+	(begin
+	  (format #t "{~a\n},\n" (convert-json expr))
+	  (output-json))))))
+
+(define (main args)
+  (let* ((optionspec '((format  (value #t))))
+	  (options (getopt-long args optionspec))
+	  (msg (string-append
+		 "usage: mu-sexp-convert "
+		 "--format=<xml|json>\n"
+		 "reads from standard-input and prints to standard output\n"))
+	  (outformat (or (option-ref options 'format #f)
+		       (begin (display msg) (exit 1)))))
+    (cond
+      ((string= outformat "xml")
+	(output-xml))
+      ((string= outformat "json")
+	(output-json))
+      (#t (begin
+	    (display msg)
+	    (exit 1))))))
+
+;; Local Variables:
+;; mode: scheme
+;; End:
