@@ -194,11 +194,13 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 			((GMimeMessagePart*)mobj);
 	else if (GMIME_IS_MESSAGE (mobj))
 		mime_msg = (GMimeMessage*)mobj;
-	else
-		return NULL;
 
-	return get_text_from_mime_msg (msg, mime_msg,
-				       opts, self->index);
+	/* apparently, g_mime_message_part_get_message may still
+	 * return NULL */
+ 	if (mime_msg)
+		return get_text_from_mime_msg (msg, mime_msg,
+					       opts, self->index);
+	return NULL;
 }
 
 
@@ -439,14 +441,14 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
 	}
 
-#ifdef HAVE_CRYPTO
+#ifdef BUILD_CRYPTO
 	/* put the verification info in the pgp-signature part */
 	msgpart.sig_status_report = NULL;
 	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0)
 		msgpart.sig_status_report =
 			(MuMsgPartSigStatusReport*)
 			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);
-#endif /*HAVE_CRYPTO*/
+#endif /*BUILD_CRYPTO*/
 
 	msgpart.data    = (gpointer)part;
 	msgpart.index   = index;
@@ -459,11 +461,12 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 
 /* call 'func' with information about this MIME-part */
 static gboolean
-handle_message_part (MuMsg *msg, GMimeMessagePart *mmsg, GMimeObject *parent,
+handle_message_part (MuMsg *msg, GMimeMessagePart *mimemsgpart, GMimeObject *parent,
 		     MuMsgOptions opts, unsigned index,
 		     MuMsgPartForeachFunc func, gpointer user_data)
 {
 	MuMsgPart msgpart;
+
 	memset (&msgpart, 0, sizeof(MuMsgPart));
 
 	msgpart.type        = "message";
@@ -473,16 +476,19 @@ handle_message_part (MuMsg *msg, GMimeMessagePart *mmsg, GMimeObject *parent,
 	/* msgpart.size        = 0; /\* maybe calculate this? *\/ */
 
 	msgpart.part_type  = MU_MSG_PART_TYPE_MESSAGE;
-	msgpart.part_type |= get_disposition ((GMimeObject*)mmsg);
+	msgpart.part_type |= get_disposition ((GMimeObject*)mimemsgpart);
 
-	msgpart.data        = (gpointer)mmsg;
-
+	msgpart.data        = (gpointer)mimemsgpart;
 	func (msg, &msgpart, user_data);
 
-	if (opts & MU_MSG_OPTION_RECURSE_RFC822)
-		return handle_children
-			(msg, g_mime_message_part_get_message (mmsg),
-			 opts, index, func, user_data);
+	if (opts & MU_MSG_OPTION_RECURSE_RFC822) {
+		GMimeMessage *mmsg; /* this may return NULL for some messages */
+		mmsg = g_mime_message_part_get_message (mimemsgpart);
+		if (mmsg)
+			return handle_children
+				(msg, mmsg,
+				 opts, index, func, user_data);
+	}
 
 	return TRUE;
 }
@@ -562,18 +568,13 @@ gboolean
 mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 		     MuMsgPartForeachFunc func, gpointer user_data)
 {
-	GMimeMessage *mime_msg;
-	unsigned idx;
-
 	g_return_val_if_fail (msg, FALSE);
 
 	if (!mu_msg_load_msg_file (msg, NULL))
 		return FALSE;
 
-	idx = 0;
-	mime_msg = GMIME_MESSAGE(msg->_file->_mime_msg);
-
-	return handle_children (msg, mime_msg, opts, idx, func, user_data);
+	return handle_children (msg, msg->_file->_mime_msg,
+				opts, 0, func, user_data);
 }
 
 
