@@ -150,7 +150,8 @@ config_options_group_index (void)
 		 "index even already indexed messages (false)", NULL},
 		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.rebuild,
 		 "rebuild the database from scratch (false)", NULL},
-		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,&MU_CONFIG.my_addresses,
+		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
+		 &MU_CONFIG.my_addresses,
 		 "my e-mail address (regexp); can be used multiple times", NULL},
 		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.autoupgrade,
 		 "auto-upgrade the database with new mu versions (false)", NULL},
@@ -321,16 +322,12 @@ config_options_group_view (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"summary", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.summary,
-		 "(deprecated; use --summary-len)", NULL},
-		/* {"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len, */
-		/*  "use up to <n> lines for the summary (5)", NULL}, */
+		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+		 "use up to <n> lines for the summary, or 0 for none (0)", NULL},
 		{"terminate", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.terminator,
 		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'sexp')", NULL},
-		{"verify", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.verify,
-		 "attempt to verify message signatures", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
