@@ -439,12 +439,14 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
 	}
 
+#ifdef HAVE_CRYPTO
 	/* put the verification info in the pgp-signature part */
 	msgpart.sig_status_report = NULL;
 	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0)
 		msgpart.sig_status_report =
 			(MuMsgPartSigStatusReport*)
 			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);
+#endif /*HAVE_CRYPTO*/
 
 	msgpart.data    = (gpointer)part;
 	msgpart.index   = index;
