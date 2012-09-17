@@ -98,11 +98,11 @@ config_options_group_mu (void)
 		{"version", 'v', 0, G_OPTION_ARG_NONE, &MU_CONFIG.version,
 		 "display version and copyright information (false)", NULL},
 		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.muhome,
-		 "specify an alternative mu directory", NULL},
+		 "specify an alternative mu directory", "<dir>"},
 		{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.log_stderr,
 		 "log to standard error (false)", NULL},
 		{"nocolor", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocolor,
-		 "don't use ANSI-colors in some output (false)", NULL},
+		 "don't use ANSI-colors in output (false)", NULL},
 		{"verbose", 'v', 0, G_OPTION_ARG_NONE, &MU_CONFIG.verbose,
 		 "verbose output (false)", NULL},
 
@@ -145,14 +145,15 @@ config_options_group_index (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
-		 "top of the maildir", NULL},
+		 "top of the maildir", "<maildir>"},
 		{"reindex", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.reindex,
 		 "index even already indexed messages (false)", NULL},
 		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.rebuild,
 		 "rebuild the database from scratch (false)", NULL},
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.my_addresses,
-		 "my e-mail address (regexp); can be used multiple times", NULL},
+		 "my e-mail address (regexp); can be used multiple times",
+		 "<address>"},
 		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.autoupgrade,
 		 "auto-upgrade the database with new mu versions (false)", NULL},
 		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
@@ -160,7 +161,7 @@ config_options_group_index (void)
 		{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.xbatchsize,
 		 "set transaction batchsize for xapian commits (0)", NULL},
 		{"max-msg-size", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.max_msg_size,
-		 "set the maximum size for message files", NULL},
+		 "set the maximum size for message files", "<size>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -199,30 +200,26 @@ config_options_group_find (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &MU_CONFIG.fields,
-		 "fields to display in the output", NULL},
+		 "fields to display in the output", "<fields>"},
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &MU_CONFIG.sortfield,
-		 "field to sort on", NULL},
+		 "field to sort on", "<field>"},
 		{"threads", 't', 0, G_OPTION_ARG_NONE, &MU_CONFIG.threads,
 		 "show message threads", NULL},
 		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &MU_CONFIG.bookmark,
-		 "use a bookmarked query", NULL},
+		 "use a bookmarked query", "<bookmark>"},
 		{"reverse", 'z', 0, G_OPTION_ARG_NONE, &MU_CONFIG.reverse,
 		 "sort in reverse (descending) order (z -> a)", NULL},
-		/* {"summary", 'k', 0, G_OPTION_ARG_NONE, &MU_CONFIG.summary, */
-		/*  "(deprecated; use --summary-len)", NULL}, */
-		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
-		 "use up to <n> lines for the summary (5)", NULL},
 		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.linksdir,
-		 "output as symbolic links to a target maildir", NULL},
+		 "output as symbolic links to a target maildir", "<dir>"},
 		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.clearlinks,
 		 "clear old links before filling a linksdir (false)", NULL},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'links', 'xml',"
-		 "'sexp', 'xquery')", NULL},
+		 "'sexp', 'xquery')", "<format>"},
 		{"exec", 'e', 0, G_OPTION_ARG_STRING, &MU_CONFIG.exec,
-		 "execute command on each match message", NULL},
+		 "execute command on each match message", "<command>"},
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
-		 "only show messages whose m_time > T (t_time)", NULL},
+		 "only show messages whose m_time > T (t_time)", "<timestamp>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -240,7 +237,7 @@ config_options_group_mkdir (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"mode", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.dirmode,
-		 "set the mode (as in chmod), in octal notation", NULL},
+		 "set the mode (as in chmod), in octal notation", "<mode>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -272,11 +269,11 @@ config_options_group_cfind (void)
 	GOptionEntry entries[] = {
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'mutt', 'wanderlust',"
-		 "'org-contact', 'csv')", NULL},
+		 "'org-contact', 'csv')", "<format>"},
 		{"personal", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.personal,
 		 "whether to only get 'personal' contacts", NULL},
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
-		 "only get addresses last seen after T", NULL},
+		 "only get addresses last seen after T", "<timestamp>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -323,11 +320,13 @@ config_options_group_view (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
-		 "use up to <n> lines for the summary, or 0 for none (0)", NULL},
+		 "use up to <n> lines for the summary, or 0 for none (0)",
+		 "<len>"},
 		{"terminate", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.terminator,
-		 "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
+		 "terminate messages with ascii-0x07 (\\f, form-feed)",
+		 "<term>"},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
-		 "output format ('plain'(*), 'sexp')", NULL},
+		 "output format ('plain'(*), 'sexp')", "<format>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -361,9 +360,9 @@ config_options_group_extract (void)
 		{"save-all", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.save_all,
 		 "save all parts (incl. non-attachments) (false)", NULL},
 		{"parts", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.parts,
-		 "save specific parts (comma-separated list)", NULL},
+		 "save specific parts (comma-separated list)", "<parts>"},
 		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.targetdir,
-		 "target directory for saving", NULL},
+		 "target directory for saving", "<dir>"},
 		{"overwrite", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.overwrite,
 		 "overwrite existing files (false)", NULL},
 		{"play", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.play,
@@ -402,7 +401,7 @@ config_options_group_server (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
-		 "top of the maildir", NULL},
+		 "top of the maildir", "<maildir>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
