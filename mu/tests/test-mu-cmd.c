@@ -802,6 +802,9 @@ test_mu_verify_good (void)
 				   MU_PROGRAM,
 				   MU_TESTMAILDIR4);
 
+	if (g_test_verbose())
+		g_print ("$ %s\n", cmdline);
+
 	output = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,
 					     &retval, NULL));
@@ -824,6 +827,9 @@ test_mu_verify_bad (void)
 	cmdline = g_strdup_printf ("%s verify %s/signed-bad!2,S",
 				   MU_PROGRAM,
 				   MU_TESTMAILDIR4);
+
+	if (g_test_verbose())
+		g_print ("$ %s\n", cmdline);
 
 	output = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, NULL,

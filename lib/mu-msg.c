@@ -136,7 +136,6 @@ mu_msg_destroy (MuMsg *self)
 	mu_msg_file_destroy (self->_file);
 	mu_msg_doc_destroy  (self->_doc);
 
-
 	{ /* cleanup the strings / lists we stored */
 	 	mu_str_free_list (self->_free_later_str);
 		g_slist_foreach (self->_free_later_lst,
