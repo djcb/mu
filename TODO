@@ -20,9 +20,7 @@ f#+STARTUP: showall
 *** mu4e
 
   - identities (see Jacek's 'mu4e: From field in replies' mail)
-    [ workaround available, using mu4e-pre-compose-hook ]
-  - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
-    mail)
+    ==> [ workaround available, using mu4e-pre-compose-hook ]
   - actions for /all/ headers, actions for /all/ attachment
   - custom header fields in headers-view, message-view
     - 'human' dates
@@ -98,11 +96,14 @@ f#+STARTUP: showall
   - don't user `error' for user-errors
   - better echo-area reporting
   - improve help feedback for user (command line)
-  - handling of encrypted messages  
+  - handling of encrypted messages
   - improved checked for gmime-2.6 crypto funcs
   - handling of command line options / help
   - fix / add support for :size
-
+  - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
+    mail)
+  - better help
+  - threading optimizations
 
 
 * Done
