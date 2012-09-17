@@ -76,20 +76,20 @@ check_params (MuConfig *opts, GError **err)
 {
 	/* param[0] == 'index'  there should be no param[1] */
 	if (opts->params[1]) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "unexpected parameter");
 		return FALSE;
 	}
 
 	if (opts->xbatchsize < 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-				     "the batch size must be non-negative");
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "the batch size must be >= 0");
 		return FALSE;
 	}
 
 	if (opts->max_msg_size < 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-				     "the maximum message size must be non-negative");
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "the maximum message size must >= 0");
 		return FALSE;
 	}
 
@@ -100,21 +100,21 @@ static gboolean
 check_maildir (const char *maildir, GError **err)
 {
 	if (!maildir) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			     "no maildir to work on; use --maildir=");
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "no maildir to work on; use --maildir=");
 		return FALSE;
 	}
 
 	if (!g_path_is_absolute (maildir)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			     "maildir path '%s' is not absolute",
-			     maildir);
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "maildir path '%s' is not absolute",
+				     maildir);
 		return FALSE;
 	}
 
 	if (!mu_util_check_dir (maildir, TRUE, FALSE)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			     "not a valid Maildir: %s", maildir);
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "not a valid Maildir: %s", maildir);
 		return FALSE;
 	}
 

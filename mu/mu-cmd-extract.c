@@ -365,27 +365,33 @@ show_parts (const char* path, MuConfig *opts, GError **err)
 
 
 static gboolean
-check_params (MuConfig *opts)
+check_params (MuConfig *opts, GError **err)
 {
 	size_t param_num;
 
 	param_num = mu_config_param_num (opts);
 
 	if (param_num < 2) {
-		g_warning ("usage: mu extract [options] <file> [<pattern>]");
+		mu_util_g_set_error
+			(err, MU_ERROR_IN_PARAMETERS,
+			 "parameters missing");
 		return FALSE;
 	}
 
 	if (opts->save_attachments || opts->save_all)
 		if (opts->parts || param_num == 3) {
-			g_warning ("--save-attachments and --save-all don't "
-				   "accept a filename pattern or --parts");
+			mu_util_g_set_error
+				(err, MU_ERROR_IN_PARAMETERS,
+				 "--save-attachments and --save-all don't "
+				 "accept a filename pattern or --parts");
 			return FALSE;
 		}
 
 	if (opts->save_attachments && opts->save_all) {
-		g_warning ("only one of --save-attachments and"
-			   " --save-all is allowed");
+		mu_util_g_set_error
+			(err, MU_ERROR_IN_PARAMETERS,
+			 "only one of --save-attachments and"
+			 " --save-all is allowed");
 		return FALSE;
 	}
 
@@ -401,15 +407,13 @@ mu_cmd_extract (MuConfig *opts, GError **err)
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_EXTRACT,
 			      MU_ERROR_INTERNAL);
 
-	if (!check_params (opts)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-				     "error in parameters");
+	if (!check_params (opts, err))
 		return MU_ERROR_IN_PARAMETERS;
-	}
 
 	if (!opts->params[2] && !opts->parts &&
 	    !opts->save_attachments && !opts->save_all)
-		rv = show_parts (opts->params[1], opts, err); /* show, don't save */
+		/* show, don't save */
+		rv = show_parts (opts->params[1], opts, err);
 	else {
 		rv = mu_util_check_dir(opts->targetdir, FALSE, TRUE);
 		if (!rv)

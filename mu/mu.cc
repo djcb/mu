@@ -43,41 +43,27 @@ show_version (void)
 static void
 handle_error (MuConfig *conf, GError *err)
 {
-	const char *advise;
-	char *dynadvise;
-
 	if (!err)
 		return; /* nothing to do */
 
-	dynadvise = NULL;
-	advise    = NULL;
-
 	switch (err->code) {
-
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
-		advise = "maybe mu is already running?"; break;
-
+		g_print ("maybe mu is already running?\n");
+		break;
 	case MU_ERROR_XAPIAN_CORRUPTION:
 	case MU_ERROR_XAPIAN_NOT_UP_TO_DATE:
-		advise = "please try 'mu index --rebuild'"; break;
+		g_print ("database needs update; try 'mu index --rebuild'\n");
+		break;
 	case MU_ERROR_XAPIAN_IS_EMPTY:
-		advise = "please try 'mu index'";
+		g_print ("database is empty; try 'mu index'");
 		break;
 	case MU_ERROR_IN_PARAMETERS:
-		if (conf->cmd != MU_CONFIG_CMD_UNKNOWN)
-			dynadvise = g_strdup_printf ("see 'mu help %s'",
-						     conf->cmdstr);
+		mu_config_show_help (conf->cmd);
 		break;
 	default:break; /* nothing to do */
 	}
 
 	g_warning ("%s", err->message);
-	if (advise)
-		g_print ("%s\n", advise);
-	if (dynadvise) {
-		g_print ("%s\n", dynadvise);
-		g_free (dynadvise);
-	}
 }
 
 
@@ -98,6 +84,10 @@ main (int argc, char *argv[])
 		show_version ();
 		return 0;
 	}
+
+	/* nothing to do */
+	if (conf->cmd == MU_CONFIG_CMD_NONE)
+		return 0;
 
 	if (!mu_runtime_init (conf->muhome, PACKAGE_NAME)) {
 		mu_config_uninit (conf);

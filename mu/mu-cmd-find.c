@@ -719,13 +719,6 @@ query_params_valid (MuConfig *opts, GError **err)
 }
 
 
-static void
-show_usage (void)
-{
-	g_print ("%s", "usage: mu find [options] <search expression>\n");
-}
-
-
 MuError
 mu_cmd_find (MuStore *store, MuConfig *opts, GError **err)
 {
@@ -737,11 +730,8 @@ mu_cmd_find (MuStore *store, MuConfig *opts, GError **err)
 		opts->format = MU_CONFIG_FORMAT_EXEC; /* pseudo format */
 
 	if (!query_params_valid (opts, err) ||
-	    !format_params_valid(opts, err)) {
-		if (MU_G_ERROR_CODE(err) == MU_ERROR_IN_PARAMETERS)
-			show_usage ();
+	    !format_params_valid(opts, err))
 		return MU_G_ERROR_CODE (err);
-	}
 
 	if (!execute_find (store, opts, err))
 		return MU_G_ERROR_CODE(err);

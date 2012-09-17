@@ -219,8 +219,6 @@ MuError mu_config_execute (MuConfig *conf);
 size_t mu_config_param_num (MuConfig *conf);
 
 
-
-
 /**
  * determine MuMsgOptions for command line args
  *
@@ -230,6 +228,13 @@ size_t mu_config_param_num (MuConfig *conf);
  */
 MuMsgOptions mu_config_get_msg_options (MuConfig *opts);
 
+
+/**
+ * print help text for the current command
+ *
+ * @param cmd the command to show help for
+ */
+void mu_config_show_help (MuConfigCmd cmd);
 
 G_END_DECLS
 

@@ -435,6 +435,8 @@ cmd_from_string (const char *str)
 		{ "view",    MU_CONFIG_CMD_VIEW }
 	};
 
+	if (!str)
+		return MU_CONFIG_CMD_UNKNOWN;
 
 	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i)
 		if (strcmp (str, cmd_map[i].name) == 0)
@@ -493,27 +495,6 @@ get_option_group (MuConfigCmd cmd)
 
 
 
-static const gchar*
-cmd_help (MuConfigCmd cmd, gboolean long_help)
-{
-	unsigned u;
-
-	/* this include gets us MU_HELP_STRINGS */
-#include "mu-help-strings.h"
-
-	for (u = 0; u != G_N_ELEMENTS(MU_HELP_STRINGS); ++u)
-		if (cmd == MU_HELP_STRINGS[u].cmd) {
-			if (long_help)
-				return MU_HELP_STRINGS[u].long_help;
-			else
-				return MU_HELP_STRINGS[u].usage ;
-		}
-
-	g_return_val_if_reached ("");
-	return "";
-}
-
-
 /* ugh yuck massaging the GOption text output; glib prepares some text
  * which has a 'Usage:' for the 'help' commmand. However, we need the
  * help for the command we're asking help for. So, we remove the Usage:
@@ -534,44 +515,77 @@ massage_help (const char *help)
 }
 
 
-static gboolean
-init_cmd_help (GError **err)
+
+static const gchar*
+get_help_string (MuConfigCmd cmd, gboolean long_help)
 {
-	MuConfigCmd cmd;
+	unsigned u;
+
+	/* this include gets us MU_HELP_STRINGS */
+#include "mu-help-strings.h"
+
+	for (u = 0; u != G_N_ELEMENTS(MU_HELP_STRINGS); ++u)
+		if (cmd == MU_HELP_STRINGS[u].cmd) {
+			if (long_help)
+				return MU_HELP_STRINGS[u].long_help;
+			else
+				return MU_HELP_STRINGS[u].usage ;
+		}
+
+	g_return_val_if_reached ("");
+	return "";
+}
+
+
+void
+mu_config_show_help (MuConfigCmd cmd)
+{
 	GOptionContext *ctx;
 	GOptionGroup *group;
 	char *cleanhelp;
 
-	if (!MU_CONFIG.params ||
-	    !MU_CONFIG.params[0] || !MU_CONFIG.params[1] ||
-	    MU_CONFIG.params[2])
-		goto errexit;
-
-	cmd = cmd_from_string (MU_CONFIG.params[1]);
-	if (cmd == MU_CONFIG_CMD_UNKNOWN)
-		goto errexit;
-
 	ctx = g_option_context_new ("");
-	g_option_context_set_main_group
-		(ctx, config_options_group_mu());
+	g_option_context_set_main_group	(ctx, config_options_group_mu());
+
 	group = get_option_group (cmd);
 	if (group)
 		g_option_context_add_group (ctx, group);
 
-	g_option_context_set_description (ctx, cmd_help (cmd, TRUE));
+	g_option_context_set_description (ctx,
+					  get_help_string (cmd, TRUE));
 	cleanhelp = massage_help
 		(g_option_context_get_help (ctx, TRUE, group));
 
-	g_print ("Usage:\n\t%s\n%s",
-		 cmd_help (cmd, FALSE), cleanhelp);
+	g_print ("usage:\n\t%s\n%s",
+		 get_help_string (cmd, FALSE), cleanhelp);
+
 	g_free (cleanhelp);
+}
 
+
+
+static gboolean
+cmd_help (void)
+{
+	MuConfigCmd cmd;
+
+	cmd = cmd_from_string (MU_CONFIG.params[1]);
+	if (cmd == MU_CONFIG_CMD_UNKNOWN) {
+		mu_config_show_help (MU_CONFIG_CMD_HELP);
+		return TRUE;
+	}
+
+	mu_config_show_help (cmd);
 	return TRUE;
+}
 
-errexit:
-	mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-			     "usage: mu help <command>");
-	return FALSE;
+
+static void
+show_usage (void)
+{
+	g_print ("usage: mu <command> [options] [parameters]\n");
+	g_print ("try 'mu help <command>', or ");
+	g_print ("see the mu, mu-<command> or mu-easy manpages.\n");
 }
 
 
@@ -588,10 +602,15 @@ parse_params (int *argcp, char ***argvp)
 
 	err = NULL;
 
+	if (MU_CONFIG.cmd == MU_CONFIG_CMD_NONE) {
+		show_usage ();
+		return TRUE;
+	}
+
 	/* help is special */
 	if (MU_CONFIG.cmd == MU_CONFIG_CMD_HELP) {
 		rv = g_option_context_parse (context, argcp, argvp, &err) &&
-			init_cmd_help (&err);
+			cmd_help ();
 	} else {
 		GOptionGroup *group;
 		group = get_option_group (MU_CONFIG.cmd);
