@@ -870,12 +870,14 @@ message-at-point if nil) to disk."
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to save" msg)))
 	  (att (mu4e~view-get-attach msg attnum))
-	  (path (concat mu4e-attachment-dir "/" (plist-get att :name)))
+_	  (path (concat mu4e-attachment-dir "/"))
+	  (fname  (plist-get att :name)) 
 	  (index (plist-get att :index))
 	  (retry t))
     (while retry
-      (setq path (expand-file-name (read-string
-				     (mu4e-format "Save as ") path)))
+      (setq path (expand-file-name
+		   (read-directory-name
+		     (mu4e-format "Save as ") path nil nil fname)))
       (setq retry
 	(and (file-exists-p path)
 	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" path))))))
