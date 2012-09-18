@@ -19,7 +19,14 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-(use-modules (ice-9 getopt-long) (ice-9 format))
+;;
+;; a little hack to convert the output of
+;;    mu find <expr> --format=sexp
+;; and
+;;    mu view <expr>  --format=sexp
+;; into XML or JSON
+
+(use-modules (ice-9 getopt-long) (ice-9 format) (ice-9 regex))
 (use-modules (sxml simple))
 
 (define (mapconcat func lst sepa)
@@ -57,14 +64,35 @@ into a list of pairs
 
 (define (string->xml str)
   "XML-encode STR."
+  ;; sneakily re-using sxml->xml
   (call-with-output-string (lambda (port) (sxml->xml str port))))
+
+(define (string->json str)
+  "Convert string into a JSON-encoded string."
+  (letrec ((convert
+	     (lambda (lst)
+	       (if (null? lst)
+		 ""
+		 (string-append
+		   (cond
+		     ((equal? (car lst) #\")  "\\\"")
+		     ((equal? (car lst) #\\)  "\\\\")
+		     ((equal? (car lst) #\/)  "\\/")
+		     ((equal? (car lst) #\bs) "\\b")
+		     ((equal? (car lst) #\ff) "\\f")
+		     ((equal? (car lst) #\lf) "\\n")
+		     ((equal? (car lst) #\cr) "\\r")
+		     ((equal? (car lst) #\ht) "\\t")
+		     (#t (string (car lst))))
+		   (convert (cdr lst)))))))
+    (convert (string->list str))))
 
 (define (etime->time_t t)
   "Convert elisp time object T into a time_t value."
   (logior (ash (car t) 16) (car t)))
 
-(define (output-xml)
-  "Convert string INPUT to XML and print on stdout."
+(define (sexp->xml)
+  "Convert string INPUT to XML, return the XML (string)."
   (letrec ((convert-xml
 	     (lambda* (expr #:optional parent)
 	    (cond
@@ -78,37 +106,43 @@ into a list of pairs
 		(cond
 		  ((member parent '("from" "to" "cc" "bcc"))
 		    (mapconcat (lambda (addr)
-				 (format #f "<address>~a~a</email>"
+				 (format #f "<address>~a~a</address>"
 				   (if (string? (car addr))
-				     (format #f "<name>~a</name>" (string->xml (car addr))) "")
+				     (format #f "<name>~a</name>"
+				       (string->xml (car addr))) "")
 				   (if (string? (cdr addr))
-				     (format #f "<email>~a</email>" (string->xml (cdr addr))) "")))
+				     (format #f "<email>~a</email>"
+				       (string->xml (cdr addr))) "")))
 		      expr " "))
 		  ((string= parent "parts") "<!-- message parts -->") ;; for now, ignore
 		  ;; convert the crazy emacs time thingy to time_t...
 		  ((string= parent "date") (format #f "~a" (etime->time_t expr)))
-		  ((string= parent "flags")
-		    (mapconcat (lambda (flag)  (format #f "<flag>~a</flag>" flag)) expr ""))))
-	      ((or (string? expr) (symbol? expr)) (string->xml expr))
+		  (#t
+		    (mapconcat
+		      (lambda (elm) (format #f "<item>~a</item>" (convert-xml elm))) expr ""))))
+	      ((string? expr) (string->xml expr))
+	      ((symbol? expr) (format #f "~a" expr))
 	      ((number? expr) (number->string expr))
-	      (#t ".")))))
-    (let ((expr (read)))
-      (if (not (eof-object? expr))
-	(begin
-	  (format #t "<message>\n~a</message>\n" (convert-xml expr))
-	  (output-xml))))))
+	      (#t "."))))
+	    (msg->xml
+	      (lambda ()
+		(let ((expr (read)))
+		  (if (not (eof-object? expr))
+		    (string-append (format #f "<message>\n~a</message>\n" (convert-xml expr)) (msg->xml))
+		    "")))))
+    (format #f "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<messages>\n~a</messages>" (msg->xml))))
 
 
-(define (output-json)
-  "Convert string INPUT to JSON and print on stdout."
+(define (sexp->json)
+  "Convert string INPUT to JSON, return the JSON (string)."
   (letrec ((convert-json
 	     (lambda* (expr #:optional parent)
 	    (cond
 	      ((property-list? expr)
 		(mapconcat
 		  (lambda (pair)
-		    (format #f "\n\t\"~a\":~a"
-		      (car pair) (convert-json (cdr pair) (car pair))))
+		    (format #f "\n\t\"~a\": ~a"
+		      (car pair) (convert-json (cdr pair) (car pair)))) 
 		  (plist->pairs expr) ", "))
 	      ((list? expr)
 		(cond
@@ -117,27 +151,36 @@ into a list of pairs
 		      (mapconcat (lambda (addr)
 				   (format #f "{~a~a}"
 				     (if (string? (car addr))
-				       (format #f "\"name\":\"~a\"," (string->xml (car addr))) "")
+				       (format #f "\"name\": \"~a\","
+					 (string->json (car addr))) "")
 				     (if (string? (cdr addr))
-				       (format #f "\"email\":\"~a\"" (string->xml (cdr addr))) "")))
+				       (format #f "\"email\": \"~a\""
+					 (string->json (cdr addr))) "")))
 			expr " ")
 		      "]"))
-		  ((string= parent "parts") "[<!-- message parts -->]") ;; for now, ignore
+		  ((string= parent "parts") "[]") ;; todo 
 		  ;; convert the crazy emacs time thingy to time_t...
-		  ((string= parent "date") (format #f "~a" (format #f "~a" (etime->time_t expr))))
-		  ((string= parent "flags")
+		  ((string= parent "date")
+		    (format #f "~a" (format #f "~a" (etime->time_t expr))))
+		  (#t
 		    (string-append "["
-		      (mapconcat (lambda (flag)  (format #f "\"flag\":\"~a\"" flag)) expr ", ")
-		      "]"))))
-	      ((or (string? expr) (symbol? expr)) (format #f "\"~a\"" (string->xml expr)))
+		      (mapconcat (lambda (elm) (format #f "~a" (convert-json elm))) expr ",") "]")))) 
+	      ((string? expr)
+		(format #f "\"~a\"" (string->json expr)))
+	      ((symbol? expr)
+		(format #f "\"~a\"" expr))	       
 	      ((number? expr) (number->string expr))
-	      (#t ".")))))
-    (let ((expr (read)))
-      (if (not (eof-object? expr))
-	(begin
-	  (format #t "{~a\n},\n" (convert-json expr))
-	  (output-json))))))
-
+	      (#t "."))))
+	    (msg->json
+	      (lambda (first)
+		(let ((expr (read)))
+		  (if (not (eof-object? expr))
+		    (string-append (format #f "~a{~a\n}"
+				     (if first "" ",\n")
+				     (convert-json expr)) (msg->json #f))
+		    "")))))
+    (format #f "[\n~a\n]" (msg->json #t))))
+ 
 (define (main args)
   (let* ((optionspec '((format  (value #t))))
 	  (options (getopt-long args optionspec))
@@ -149,9 +192,9 @@ into a list of pairs
 		       (begin (display msg) (exit 1)))))
     (cond
       ((string= outformat "xml")
-	(output-xml))
+	(format #t "~a\n" (sexp->xml)))
       ((string= outformat "json")
-	(output-json))
+	(format #t "~a\n" (sexp->json)))
       (#t (begin
 	    (display msg)
 	    (exit 1))))))
