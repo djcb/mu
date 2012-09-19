@@ -154,13 +154,16 @@ config_options_group_index (void)
 		 &MU_CONFIG.my_addresses,
 		 "my e-mail address (regexp); can be used multiple times",
 		 "<address>"},
-		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.autoupgrade,
-		 "auto-upgrade the database with new mu versions (false)", NULL},
+		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE,
+		 &MU_CONFIG.autoupgrade,
+		 "auto-upgrade the database with new mu versions (false)",
+		 NULL},
 		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
 		 "don't clean up the database after indexing (false)", NULL},
 		{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.xbatchsize,
 		 "set transaction batchsize for xapian commits (0)", NULL},
-		{"max-msg-size", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.max_msg_size,
+		{"max-msg-size", 0, 0, G_OPTION_ARG_INT,
+		 &MU_CONFIG.max_msg_size,
 		 "set the maximum size for message files", "<size>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
@@ -201,7 +204,8 @@ config_options_group_find (void)
 	GOptionEntry entries[] = {
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &MU_CONFIG.fields,
 		 "fields to display in the output", "<fields>"},
-		{"sortfield", 's', 0, G_OPTION_ARG_STRING, &MU_CONFIG.sortfield,
+		{"sortfield", 's', 0, G_OPTION_ARG_STRING,
+		 &MU_CONFIG.sortfield,
 		 "field to sort on", "<field>"},
 		{"threads", 't', 0, G_OPTION_ARG_NONE, &MU_CONFIG.threads,
 		 "show message threads", NULL},
@@ -219,7 +223,8 @@ config_options_group_find (void)
 		{"exec", 'e', 0, G_OPTION_ARG_STRING, &MU_CONFIG.exec,
 		 "execute command on each match message", "<command>"},
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
-		 "only show messages whose m_time > T (t_time)", "<timestamp>"},
+		 "only show messages whose m_time > T (t_time)",
+		 "<timestamp>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -361,7 +366,8 @@ config_options_group_extract (void)
 		 "save all parts (incl. non-attachments) (false)", NULL},
 		{"parts", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.parts,
 		 "save specific parts (comma-separated list)", "<parts>"},
-		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.targetdir,
+		{"target-dir", 0, 0, G_OPTION_ARG_FILENAME,
+		 &MU_CONFIG.targetdir,
 		 "target directory for saving", "<dir>"},
 		{"overwrite", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.overwrite,
 		 "overwrite existing files (false)", NULL},
@@ -370,7 +376,7 @@ config_options_group_extract (void)
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
-	MU_CONFIG.targetdir = g_strdup(".");	/* default is the current dir */
+	MU_CONFIG.targetdir = g_strdup("."); /* default is the current dir */
 
 	og = g_option_group_new("extract",
 				"Options for the 'extract' command",
@@ -543,6 +549,8 @@ mu_config_show_help (MuConfigCmd cmd)
 	GOptionContext *ctx;
 	GOptionGroup *group;
 	char *cleanhelp;
+
+	g_return_if_fail (mu_config_cmd_is_valid(cmd));
 
 	ctx = g_option_context_new ("");
 	g_option_context_set_main_group	(ctx, config_options_group_mu());

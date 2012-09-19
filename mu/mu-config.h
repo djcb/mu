@@ -81,6 +81,10 @@ enum _MuConfigCmd {
 typedef enum _MuConfigCmd MuConfigCmd;
 
 
+#define mu_config_cmd_is_valid(C)					\
+	((C) > MU_CONFIG_CMD_UNKNOWN && (C) < MU_CONFIG_CMD_NONE)
+
+
 /* struct with all configuration options for mu; it will be filled
  * from the config file, and/or command line arguments */
 

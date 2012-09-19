@@ -35,8 +35,16 @@
 static void
 show_version (void)
 {
-	g_print ("mu (mail indexer/searcher) version " VERSION "\n"
-		 "Copyright (C) 2008-2012 Dirk-Jan C. Binnema (GPLv3+)\n");
+	const char* blurb =
+		"mu (mail indexer/searcher) version " VERSION "\n"
+		"Copyright (C) 2008-2012 Dirk-Jan C. Binnema\n"
+		"License GPLv3+: GNU GPL version 3 or later "
+		"<http://gnu.org/licenses/gpl.html>.\n"
+		"This is free software: you are free to change "
+		"and redistribute it.\n"
+		"There is NO WARRANTY, to the extent permitted by law.";
+
+	g_print ("%s\n", blurb);
 }
 
 
@@ -58,7 +66,8 @@ handle_error (MuConfig *conf, GError *err)
 		g_print ("database is empty; try 'mu index'");
 		break;
 	case MU_ERROR_IN_PARAMETERS:
-		mu_config_show_help (conf->cmd);
+		if (mu_config_cmd_is_valid(conf->cmd))
+			mu_config_show_help (conf->cmd);
 		break;
 	default:break; /* nothing to do */
 	}
