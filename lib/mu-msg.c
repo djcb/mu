@@ -779,13 +779,16 @@ mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
 	g_return_val_if_fail (m2, 0);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), 0);
 
+	/* even though date is a numeric field, we can sort it by its
+	 * string repr. in the database, which is much faster */
+	if (mfid == MU_MSG_FIELD_ID_DATE ||
+	    mu_msg_field_is_string (mfid))
+		return cmp_str (get_str_field (m1, mfid),
+				get_str_field (m2, mfid));
+
 	if (mfid == MU_MSG_FIELD_ID_SUBJECT)
 		return cmp_subject (get_str_field (m1, mfid),
 				    get_str_field (m2, mfid));
-
-	if (mu_msg_field_is_string (mfid))
-		return cmp_str (get_str_field (m1, mfid),
-				get_str_field (m2, mfid));
 
 	/* TODO: note, we cast (potentially > MAXINT to int) */
 	if (mu_msg_field_is_numeric (mfid))
