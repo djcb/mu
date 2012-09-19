@@ -215,10 +215,10 @@ get_digestkey_algo_name (GMimeDigestAlgo algo)
 static char*
 get_cert_data (GMimeCertificate *cert)
 {
-	const char *email, *name, *digest_algo, *pubkey_algo,
+	const char /**email,*/ *name, *digest_algo, *pubkey_algo,
 		*keyid, *trust;
 
-	email         =  g_mime_certificate_get_email (cert);
+	/* email         =  g_mime_certificate_get_email (cert); */
 	name          =  g_mime_certificate_get_name (cert);
 	keyid         =  g_mime_certificate_get_key_id (cert);
 
@@ -239,10 +239,11 @@ get_cert_data (GMimeCertificate *cert)
 	}
 
 	return g_strdup_printf (
-		"signed by: %s <%s>; "
-		"algos: <%s,%s>; key-id: %s; trust: %s",
-		name ? name : "?", email ? email : "?",
-		pubkey_algo, digest_algo, keyid, trust);
+		"signer:%s, key:%s (%s,%s), trust:%s",
+		name ? name : "?",
+		/* email ? email : "?", */
+		keyid, pubkey_algo, digest_algo,
+		trust);
 }
 
 
@@ -269,7 +270,7 @@ get_verdict_report (GMimeSignature *msig)
 	expires = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s ("%x", t);
 
 	certdata = get_cert_data (g_mime_signature_get_certificate (msig));
-	report = g_strdup_printf ("status: %s; created: %s, expires: %s (%s)",
+	report = g_strdup_printf ("%s; created:%s, expires:%s, %s",
 				  status, created, expires,
 				  certdata ? certdata : "?");
 	g_free (certdata);
@@ -287,7 +288,8 @@ get_status_report (GMimeSignatureList *sigs)
 
 	status = MU_MSG_PART_SIG_STATUS_GOOD; /* let's start positive! */
 
-	for (i = 0, report = NULL; i != g_mime_signature_list_length (sigs); ++i) {
+	for (i = 0, report = NULL; i != g_mime_signature_list_length (sigs);
+	     ++i) {
 
 		GMimeSignature *msig;
 		GMimeSignatureStatus sigstat;
@@ -308,8 +310,10 @@ get_status_report (GMimeSignatureList *sigs)
 		}
 
 		rep  = get_verdict_report (msig);
-		report = g_strdup_printf ("%s%s[%d] %s", report ? report : "",
-					  report ? "; " : "",  i, rep);
+		report = g_strdup_printf ("%s%s%d: %s",
+					  report ? report : "",
+					  report ? "; " : "",  i + 1,
+					  rep);
 		g_free (rep);
 	}
 

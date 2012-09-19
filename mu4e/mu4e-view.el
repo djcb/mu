@@ -62,7 +62,7 @@ toggle between long/short display by klicking / M-RET on the
 contact."
   :type 'boolean
   :group 'mu4e-view)
- 
+
 (make-obsolete-variable 'mu4e-view-wrap-lines nil "0.9.9-dev7")
 (make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
 
@@ -71,7 +71,7 @@ contact."
   `format-time-string'."
   :type 'string
   :group 'mu4e-view)
- 
+
 (defcustom mu4e-view-image-max-width 800
   "The maximum width for images to display; this is only effective
   if you're using an emacs with Imagemagick support, and
@@ -772,7 +772,7 @@ N (prefix argument), to the Nth previous header."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   ;; Interactive functions
- 
+
 (defun mu4e-view-toggle-hide-cited ()
   "Toggle hiding of cited lines in the message body."
   (interactive)
@@ -871,7 +871,7 @@ message-at-point if nil) to disk."
 		    (mu4e~view-get-attach-num "Attachment to save" msg)))
 	  (att (mu4e~view-get-attach msg attnum))
 _	  (path (concat mu4e-attachment-dir "/"))
-	  (fname  (plist-get att :name)) 
+	  (fname  (plist-get att :name))
 	  (index (plist-get att :index))
 	  (retry t))
     (while retry
@@ -1133,7 +1133,8 @@ or message-at-point."
 	(erase-buffer)
 	(insert output)
 	(goto-char (point-min))
-	(local-set-key "q" 'kill-buffer-and-window)))
+	(local-set-key "q" 'kill-buffer-and-window))
+      (setq buffer-read-only t))
     (select-window win)))
 
 

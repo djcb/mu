@@ -403,6 +403,7 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 struct _VData {
 	MuMsgPartSigStatus combined_status;
 	char *report;
+	gboolean oneline;
 };
 typedef struct _VData VData;
 
@@ -410,15 +411,23 @@ static void
 each_sig (MuMsg *msg, MuMsgPart *part, VData *vdata)
 {
 	MuMsgPartSigStatusReport *report;
+
 	report = part->sig_status_report;
 	if (!report)
 		return;
 
-	vdata->report = g_strdup_printf
-		("%s%s%s",
-		 vdata->report ? vdata->report : "",
-		 vdata->report ? "; " : "",
-		 report->report);
+	if (vdata->oneline)
+		vdata->report = g_strdup_printf
+			("%s%s%s",
+			 vdata->report ? vdata->report : "",
+			 vdata->report ? "; " : "",
+			 report->report);
+	else
+		vdata->report = g_strdup_printf
+			("%s%s\t%s",
+			 vdata->report ? vdata->report : "",
+			 vdata->report ? "\n" : "",
+			 report->report);
 
 	if (vdata->combined_status == MU_MSG_PART_SIG_STATUS_BAD ||
 	    vdata->combined_status == MU_MSG_PART_SIG_STATUS_ERROR)
@@ -431,33 +440,36 @@ each_sig (MuMsg *msg, MuMsgPart *part, VData *vdata)
 static void
 print_verdict (VData *vdata, gboolean color)
 {
-	char *str;
+ 	g_print ("verdict: ");
 
 	switch (vdata->combined_status) {
-
 	case MU_MSG_PART_SIG_STATUS_UNSIGNED:
-		str = g_strdup ("no signature found");
+		g_print ("%s", "no signature found");
 		break;
 	case MU_MSG_PART_SIG_STATUS_GOOD:
-		str = g_strdup_printf ("signature verified; %s",
-				       vdata->report);
+		color_maybe (MU_COLOR_GREEN);
+		g_print ("%s", "signature(s) verified");
 		break;
 	case MU_MSG_PART_SIG_STATUS_BAD:
-		str = g_strdup_printf ("bad signature; %s",
-				       vdata->report);
+		color_maybe (MU_COLOR_RED);
+		g_print ("%s", "bad signature");
 		break;
 	case MU_MSG_PART_SIG_STATUS_ERROR:
-		str = g_strdup_printf ("verification failed; %s",
-				       vdata->report);
+		color_maybe (MU_COLOR_RED);
+		g_print ("%s", "verification failed");
 		break;
 	case MU_MSG_PART_SIG_STATUS_FAIL:
-		str = g_strdup ("error in verification process");
+		color_maybe(MU_COLOR_RED);
+		g_print ("%s", "error in verification process");
 		break;
 	default: g_return_if_reached ();
 	}
 
-	print_field ("verdict", str, color);
-	g_free (str);
+	color_maybe (MU_COLOR_DEFAULT);
+	if (vdata->report)
+		g_print ("%s%s\n",
+			 (vdata->oneline) ? ";" : "\n",
+			 vdata->report);
 }
 
 
@@ -483,8 +495,11 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 		return MU_ERROR;
 
 	msgopts = mu_config_get_msg_options (opts) | MU_MSG_OPTION_VERIFY;
+
 	vdata.report  = NULL;
 	vdata.combined_status = MU_MSG_PART_SIG_STATUS_UNSIGNED;
+	vdata.oneline = FALSE;
+
 	mu_msg_part_foreach (msg, msgopts,
 			     (MuMsgPartForeachFunc)each_sig, &vdata);
 
