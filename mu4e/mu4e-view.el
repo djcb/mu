@@ -26,7 +26,7 @@
 ;; viewing e-mail messages
 
 ;;; Code:
-(require 'mu4e-utils)    ;; utility functions
+(require 'mu4e-utils) ;; utility functions
 (require 'mu4e-vars)
 (require 'mu4e-mark)
 (require 'mu4e-proc)
@@ -292,10 +292,9 @@ at POINT, or if nil, at (point)."
 	    'face 'mu4e-view-contact-face
 	    'mouse-face 'highlight
 	    'help-echo
-	    (format (concat
-		      "<" email ">\n"
-		      "[mouse-1] or [M-RET] to toggle long/short display\n"
-		      "[mouse-2] or C to compose a mail for this recipient")))))
+	    (format "<%s>\n%s\n%s" email
+	      "[mouse-1] or [M-RET] to toggle long/short display"
+	      "[mouse-2] or C to compose a mail for this recipient"))))
       (plist-get msg field) ", ") t))
 
 
@@ -305,7 +304,8 @@ at POINT, or if nil, at (point)."
     :flags
     (mapconcat
       (lambda (flag)
-	(propertize (symbol-name flag) 'face 'mu4e-view-special-header-value-face))
+	(propertize (symbol-name flag)
+	  'face 'mu4e-view-special-header-value-face))
       flags
       (propertize ", " 'face 'mu4e-view-header-value-face)) t))
 
@@ -319,46 +319,50 @@ at POINT, or if nil, at (point)."
 		 (mapconcat
 		   (lambda (v)
 		     (propertize (symbol-name v)
-		       'face (if (eq v 'verified) 'mu4e-ok-face 'mu4e-warning-face)))
+		       'face (if (eq v 'verified)
+			       'mu4e-ok-face 'mu4e-warning-face)))
 		   verdicts ", ")))
 	  (btn (when val
 		 (with-temp-buffer
 		   (insert-text-button "Details"
 		     'action (lambda (b)
-			       (mu4e-view-verify-msg-popup (button-get b 'msg))))
+			       (mu4e-view-verify-msg-popup
+				 (button-get b 'msg))))
 		   (buffer-string))))
 	  (val (when val (concat val " (" btn ")"))))
     (mu4e~view-construct-header :signature val t)))
 
-(defun mu4e~view-open-save-attach-func (msg attachnum is-open)
-  "Return a function that offers to save attachment NUM. If IS-OPEN
-is nil, and otherwise open it."
-  (lexical-let ((msg msg) (attachnum attachnum) (is-open is-open))
-    (lambda ()
-      (interactive)
-      (if is-open
-	(mu4e-view-open-attachment msg attachnum)
-	(mu4e-view-save-attachment-single msg attachnum)))))
+(defun mu4e~view-open-attach-func (msg attnum)
+  "Return a function that opens attachment with ATTNUM."
+  (lexical-let ((msg msg) (attnum attnum))
+    (lambda () (interactive) (mu4e-view-open-attachment msg attnum))))
+
+(defun mu4e~view-save-attach-func (msg attnum)
+  "Return a function that saves attachment with ATTNUM."
+  (lexical-let ((msg msg) (attnum attnum))
+    (lambda () (interactive)
+      (mu4e-view-save-attachment-single msg attnum))))
 
 (defun mu4e~view-construct-attachments-header (msg)
   "Display attachment information; the field looks like something like:
    	:parts ((:index 1 :name \"1.part\" :mime-type \"text/plain\"
                  :type (leaf) :attachment nil :size 228)
-                (:index 2 :name \"analysis.doc\" :mime-type \"application/msword\"
+                (:index 2 :name \"analysis.doc\"
+                 :mime-type \"application/msword\"
                  :type (leaf attachment) :attachment nil :size 605196))"
   (setq mu4e~view-attach-map ;; buffer local
     (make-hash-table :size 64 :weakness nil))
   (let* ((id 0)
 	  (attachments
 	    ;; we only list parts that look like attachments, ie. that have a
-	    ;; non-nil :attachment property; we record a mapping between user-visible
-	    ;; numbers and the part indices
+	    ;; non-nil :attachment property; we record a mapping between
+	    ;; user-visible numbers and the part indices
 	    (remove-if-not
 	      (lambda (part)
 		(let ((mtype (plist-get part :mime-type))
-			(isattach  (member 'attachment (plist-get part :type))))
-		  (or ;; remove if it's not an attach *or* if it's an image/audio/application type
-		      ;; (but not a signature)
+		       (isattach  (member 'attachment (plist-get part :type))))
+		  (or ;; remove if it's not an attach *or* if it's an
+		      ;; image/audio/application type (but not a signature)
 		    isattach
 		    (string-match "^\\(image\\|audio\\)" mtype)
 		    (and (string-match "^application" mtype)
@@ -373,19 +377,26 @@ is nil, and otherwise open it."
 		       (map (make-sparse-keymap)))
 		  (incf id)
 		  (puthash id index mu4e~view-attach-map)
+
+		  (define-key map [mouse-1]
+		    (mu4e~view-open-attach-func msg id))
+		  (define-key map  [?\M-\r]
+		    (mu4e~view-open-attach-func msg id))
 		  (define-key map [mouse-2]
-		    (mu4e~view-open-save-attach-func msg id nil))
-		  (define-key map [?\M-\r]
-		    (mu4e~view-open-save-attach-func msg id nil))
-		  (define-key map [S-mouse-2]
-		    (mu4e~view-open-save-attach-func msg id t))
+		    (mu4e~view-save-attach-func msg id))
 		  (define-key map (kbd "<S-return>")
-		    (mu4e~view-open-save-attach-func msg id t))
+		    (mu4e~view-save-attach-func msg id))
+
 		  (concat
 		    (propertize (format "[%d]" id)
 		      'face 'mu4e-view-attach-number-face)
 		    (propertize name 'face 'mu4e-view-link-face
-		      'keymap map 'mouse-face 'highlight)
+		      'keymap map
+		      'mouse-face 'highlight
+		      'help-echo
+		      (concat
+			"[mouse-1] or [M-RET] opens the attachment\n"
+			"[mouse-2] or [S-RET] offers to save it"))
 		    (when (and size (> size 0))
 		      (concat (format "(%s)"
 				(propertize (mu4e-display-size size)
@@ -407,25 +418,26 @@ is nil, and otherwise open it."
 ;; 	      ;; to push the password into gpg's memory
 ;; 	      (let* ((decr
 ;; 		       (condition-case nil
-;; 			 (epg-decrypt-file (epg-make-context epa-protocol) file nil)
+;; 			 (epg-decrypt-file (epg-make-context epa-protocol)
+;;                                         file nil)
 ;; 			 (err (mu4e-error "Decryption failed: %S" err))))
 ;; 		      (decr
 ;; 			(if (and decr (plist-get mu4e~server-props :crypto))
-
+;;
 ;; 			  )))) ;; TODO: reload message
 ;; 			 ;; otherwise, we try to handle it here.
 ;; 			 )
 ;; 		decr))))))))
 
 (defun mu4e-view-for-each-part (msg func)
-    "Apply FUNC to each part in MSG. FUNC should be a function taking
+  "Apply FUNC to each part in MSG. FUNC should be a function taking
   two arguments:
  1. the message MSG, and
  2. a plist describing the attachment. The plist looks like:
     	 (:index 1 :name \"test123.doc\"
           :mime-type \"application/msword\" :attachment t :size 1234)."
-    (dolist (part (mu4e-msg-field msg :parts))
-      (funcall func msg part)))
+  (dolist (part (mu4e-msg-field msg :parts))
+    (funcall func msg part)))
 
 
 (defvar mu4e-view-mode-map nil
@@ -663,8 +675,8 @@ Seen; if the message is not New/Unread, do nothing."
 	  (setq more-lines
 	    (and (= 0 (forward-line 1))
 	      ;; we need to add this weird check below; it seems in some cases
-	      ;; `forward-line' continues to return 0, even when at the end, which
-	      ;; would lead to an infinite loop
+	      ;; `forward-line' continues to return 0, even when at the end,
+	      ;; which would lead to an infinite loop
 	      (not (= (point-max) (line-end-position))))))))))
 
 (defun mu4e~view-fontify-footer ()
@@ -716,13 +728,15 @@ number them so they can be opened using `mu4e-view-go-to-url'."
       (while (re-search-forward mu4e~view-url-regexp nil t)
 	(let ((url (match-string 0))
 	       (map (make-sparse-keymap)))
-	  (define-key map [mouse-2] (mu4e~view-browse-url-func url))
+	  (define-key map [mouse-1] (mu4e~view-browse-url-func url))
 	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
 	  (puthash (incf num) url mu4e~view-link-map)
 	  (add-text-properties 0 (length url)
 	    `(face mu4e-view-link-face
 	       mouse-face highlight
-	       keymap ,map) url)
+	       keymap ,map
+	       help-echo
+	       ("[mouse-1] or [M-RET] to open the link")) url)
 	  (replace-match
 	    (concat url
 	      (propertize (format "[%d]" num)
@@ -770,8 +784,8 @@ N (prefix argument), to the Nth previous header."
     (mu4e~headers-move (- (or n 1)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
-  ;; Interactive functions
+
+;; Interactive functions
 
 (defun mu4e-view-toggle-hide-cited ()
   "Toggle hiding of cited lines in the message body."

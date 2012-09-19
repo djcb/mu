@@ -824,12 +824,12 @@ E            edit (only allowed for draft messages)
 actions
 -------
 g            go to (visit) numbered URL (using `browse-url')
-             (or: <mouse-2> or RET with point on url)
+             (or: <mouse-1> or M-RET with point on url)
 e            extract (save) attachment (asks for number)
-             (or: <mouse-2> or RET with point on attachment)
+             (or: <mouse-2> or S-RET with point on attachment)
              C-u e will extract multiple attachments
 o            open attachment (asks for number)
-             (or: <S-mouse-2> or S-RET with point on attachment)
+             (or: <mouse-1> or M-RET with point on attachment)
 
 a            execute some custom action on the message
 A            execute some custom action on an attachment
