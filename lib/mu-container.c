@@ -342,7 +342,7 @@ sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
 }
 
 static MuContainer*
-mu_container_sort_real (MuContainer *c, SortFuncData *sfdata)
+container_sort_real (MuContainer *c, SortFuncData *sfdata)
 {
 	GSList *lst;
 	MuContainer *cur;
@@ -352,7 +352,7 @@ mu_container_sort_real (MuContainer *c, SortFuncData *sfdata)
 
 	for (cur = c; cur; cur = cur->next)
 		if (cur->child)
-			cur->child = mu_container_sort_real (cur->child, sfdata);
+			cur->child = container_sort_real (cur->child, sfdata);
 
 	/* sort siblings */
 	lst = mu_container_to_list (c);
@@ -379,7 +379,7 @@ mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean revert,
 	g_return_val_if_fail (c, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
 
-	return mu_container_sort_real (c, &sfdata);
+	return container_sort_real (c, &sfdata);
 }
 
 
