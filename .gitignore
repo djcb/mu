@@ -74,3 +74,9 @@ texinfo.tex
 *.pdf
 /www/auto/*
 configure.lineno
+/test.xml
+/mu4e/mdate-sh
+/mu4e/mu4e-about.el
+/mu4e/stamp-vti
+/mu4e/version.texi
+/guile/tests/test-mu-guile
