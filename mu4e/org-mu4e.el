@@ -30,12 +30,10 @@
 ;; the 'noerror is just to make sure bytecompilations does not break...
 ;; FIXME: find a better solution
 (require 'org nil 'noerror)
+(require 'org-exp nil 'noerror)
 
 (eval-when-compile (require 'cl))
 (eval-when-compile (require 'mu4e))
-;; hack: we don't want to require org (as that doesn't always work in
-;; byte-compiliation, yet we'd like to prevent compilations warnings
-(eval-when-compile (defun org-export-string (&rest x)))
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
@@ -102,8 +100,6 @@ the query (for paths starting with 'query:')."
 
 
 
-
-
 
 ;;; editing with org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -165,7 +161,8 @@ and images in a multipart/related part."
 	    (raw-body (buffer-substring begin end))
 	    (tmp-file (make-temp-name (expand-file-name "mail"
 					temporary-file-directory)))
-	    (body (org-export-string raw-body 'org (file-name-directory tmp-file)))
+	    (body (org-export-string raw-body 'org
+		    (file-name-directory tmp-file)))
 	    ;; because we probably don't want to skip part of our mail
 	    (org-export-skip-text-before-1st-heading nil)
 	    ;; because we probably don't want to export a huge style file
@@ -177,7 +174,8 @@ and images in a multipart/related part."
 	    ;; to hold attachments for inline html images
 	    (html-and-images
 	      (org~mu4e-mime-replace-images
-		(org-export-string raw-body 'html (file-name-directory tmp-file))
+		(org-export-string raw-body 'html
+		  (file-name-directory tmp-file))
 		tmp-file))
 	    (html-images (cdr html-and-images))
 	    (html (car html-and-images)))
@@ -210,7 +208,8 @@ mu4e-compose-mode will take care of that)."
       (remove-overlays (point-min) eoh))))
 
 (defvar org-mu4e-convert-to-html nil
-  "Wether to an org-mode => html conversion when sending messages.")
+  "Whether to do automatic org-mode => html conversion when sending
+  messages.")
 
 (defun org~mu4e-mime-convert-to-html-maybe ()
   "Convert to html if `org-mu4e-convert-to-html' is non-nil. This
@@ -251,7 +250,8 @@ or org-mode (when in the body)."
 	  (org-mode)
 	  (add-hook 'before-save-hook
 	    (lambda ()
-	      (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving.")) nil t)
+	      (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving."))
+	    nil t)
 	  (org~mu4e-mime-decorate-headers)
 	  (local-set-key (kbd "M-m")
 	    (lambda (key)
@@ -282,7 +282,7 @@ or org-mode (when in the body)."
   (if (not (member 'org~mu4e-mime-switch-headers-or-body post-command-hook))
     (progn
       (org~mu4e-mime-switch-headers-or-body)
-      (message
+      (mu4e-message
 	(concat
 	  "org-mu4e-compose-org-mode enabled; "
 	  "press M-m before issuing message-mode commands")))
@@ -294,4 +294,5 @@ or org-mode (when in the body)."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'org-mu4e)
+
 ;;; org-mu4e.el ends here
