@@ -255,15 +255,21 @@ log_write_fd (GLogLevelFlags level, const gchar *msg)
 	/* truncate at 768-1 chars */
 	char buf [768], timebuf [22];
 
+	/* get the process id, once. */
+	static pid_t pid = 0;
+	if (G_UNLIKELY(pid == 0))
+		pid = getpid();
+
 	/* get the time/date string */
 	now = time(NULL);
 	strftime (timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S",
 		  localtime(&now));
 
 	/* now put it all together */
-	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf,
+	len = snprintf (buf, sizeof(buf), "%s [%05u] %s: %s\n",
+			timebuf,
+			(unsigned)pid,
 			pfx(level), msg);
-
 
 	if (write (MU_LOG->_fd, buf, (size_t)len) < 0)
 		fprintf (stderr, "%s: failed to write to log: %s\n",
