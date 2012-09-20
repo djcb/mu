@@ -21,13 +21,13 @@ f#+STARTUP: showall
 
   - identities (see Jacek's 'mu4e: From field in replies' mail)
     ==> [ workaround available, using mu4e-pre-compose-hook ]
+  - new-mail warning
+    ==> [ workaround available, using mu4e-index-updated-hook ]
   - actions for /all/ headers, actions for /all/ attachment
   - custom header fields in headers-view, message-view
     - 'human' dates
   - guile integration
     - statistics
-  - new-mail warning
-    [ workaround available, using mu4e-index-updated-hook ]
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
   - show maildirs as a tree, not a list in speed bar
