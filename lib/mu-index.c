@@ -124,7 +124,7 @@ needs_index (MuIndexCallbackData *data, const char *fullpath,
 
 
 static MuError
-insert_or_update_maybe (const char* fullpath, const char* mdir,
+insert_or_update_maybe (const char *fullpath, const char *mdir,
 			time_t filestamp, MuIndexCallbackData *data,
 			gboolean *updated)
 {
@@ -178,7 +178,7 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 
 
 static MuError
-on_run_maildir_msg (const char* fullpath, const char* mdir,
+on_run_maildir_msg (const char *fullpath, const char *mdir,
 		    struct stat *statbuf, MuIndexCallbackData *data)
 {
 	MuError result;
@@ -248,7 +248,7 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 }
 
 static gboolean
-check_path (const char* path)
+check_path (const char *path)
 {
 	g_return_val_if_fail (path, FALSE);
 
@@ -310,7 +310,7 @@ mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
 
 
 MuError
-mu_index_run (MuIndex *index, const char* path,
+mu_index_run (MuIndex *index, const char *path,
 	      gboolean reindex, MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 	      void *user_data)
@@ -345,7 +345,7 @@ mu_index_run (MuIndex *index, const char* path,
 }
 
 static MuError
-on_stats_maildir_file (const char *fullpath, const char* mdir,
+on_stats_maildir_file (const char *fullpath, const char *mdir,
 		       struct stat *statbuf,
 		       MuIndexCallbackData *cb_data)
 {
@@ -368,7 +368,7 @@ on_stats_maildir_file (const char *fullpath, const char* mdir,
 
 
 MuError
-mu_index_stats (MuIndex *index, const char* path,
+mu_index_stats (MuIndex *index, const char *path,
 		MuIndexStats *stats, MuIndexMsgCallback cb_msg,
 		MuIndexDirCallback cb_dir, void *user_data)
 {

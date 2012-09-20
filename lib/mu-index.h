@@ -110,7 +110,7 @@ typedef MuError (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data);
  * case of some error.
  */
 typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
-					void *user_data);
+				       void *user_data);
 
 /**
  * start the indexing process
@@ -131,7 +131,7 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuError mu_index_run (MuIndex *index, const char* path, gboolean force,
+MuError mu_index_run (MuIndex *index, const char *path, gboolean force,
 		      MuIndexStats *stats, MuIndexMsgCallback msg_cb,
 		      MuIndexDirCallback dir_cb, void *user_data);
 
@@ -155,7 +155,7 @@ MuError mu_index_run (MuIndex *index, const char* path, gboolean force,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuError mu_index_stats (MuIndex *index, const char* path, MuIndexStats *stats,
+MuError mu_index_stats (MuIndex *index, const char *path, MuIndexStats *stats,
 			MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 			void *user_data);
 
@@ -169,7 +169,7 @@ MuError mu_index_stats (MuIndex *index, const char* path, MuIndexStats *stats,
  * @return a MuResult
  */
 typedef MuError (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
-						  void *user_data);
+						 void *user_data);
 
 /**
  * cleanup the database; ie. remove entries for which no longer a corresponding

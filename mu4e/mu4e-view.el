@@ -860,7 +860,8 @@ all messages in the thread at point in the headers view."
 	(read-number (mu4e-format "%s (1-%d): " prompt count)))
       (progn
 	(setq def (if (= count 1) "1" (format "1-%d" count)))
-	(read-string (mu4e-format "%s (default %s): " prompt def) nil nil def)))))
+	(read-string (mu4e-format "%s (default %s): " prompt def)
+	  nil nil def)))))
 
 (defun mu4e~view-get-attach (msg attnum)
   "Return the attachment plist in MSG corresponding to attachment

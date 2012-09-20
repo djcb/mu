@@ -83,8 +83,8 @@ gchar* mu_util_guess_mu_homedir (void)
  * @return TRUE if a read/writeable directory `path' exists after
  * leaving this function, FALSE otherwise
  */
-gboolean mu_util_create_dir_maybe (const gchar *path, mode_t mode, gboolean nowarn)
-    G_GNUC_WARN_UNUSED_RESULT;
+gboolean mu_util_create_dir_maybe (const gchar *path, mode_t mode,
+				   gboolean nowarn) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * check whether path is a directory, and optionally, if it's readable
