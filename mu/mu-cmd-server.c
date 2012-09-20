@@ -969,6 +969,26 @@ set_my_addresses (MuStore *store, const char *addrstr)
 	g_strfreev (my_addresses);
 }
 
+
+static char*
+get_checked_path (const char *path)
+{
+	char *cpath;
+
+	cpath = mu_util_dir_expand(path);
+	if (!cpath ||
+	    !mu_util_check_dir (cpath, TRUE, FALSE)) {
+		print_error (MU_ERROR_IN_PARAMETERS,
+			     "not a readable dir: '%s'");
+		g_free (cpath);
+		return NULL;
+	}
+
+	return cpath;
+}
+
+
+
 /*
  * 'index' (re)indexs maildir at path:<path>, and responds with (:info
  * index ... ) messages while doing so (see the code)
@@ -977,23 +997,26 @@ static MuError
 cmd_index (ServerContext *ctx, GSList *args, GError **err)
 {
 	MuIndex *index;
-	const char *path;
+	const char *argpath;
+	char *path;
 	MuIndexStats stats, stats2;
 	MuError rv;
 
-	GET_STRING_OR_ERROR_RETURN (args, "path", &path, err);
+	index = NULL;
+
+	GET_STRING_OR_ERROR_RETURN (args, "path", &argpath, err);
+	if (!(path = get_checked_path (argpath)))
+		goto leave;
+
 	set_my_addresses (ctx->store, get_string_from_args
 			  (args, "my-addresses", TRUE, NULL));
 
-	index = mu_index_new (ctx->store, err);
-	if (!index) {
-		print_and_clear_g_error (err);
-		return MU_OK;
-
-	}
+	if (!(index = mu_index_new (ctx->store, err)))
+		goto leave;
 
 	mu_index_stats_clear (&stats);
-	rv = mu_index_run (index, path, FALSE, &stats, index_msg_cb, NULL, NULL);
+	rv = mu_index_run (index, argpath, FALSE, &stats,
+			   index_msg_cb, NULL, NULL);
 	if (rv != MU_OK && rv != MU_STOP) {
 		print_error (MU_ERROR_INTERNAL, "indexing failed");
 		goto leave;
@@ -1011,6 +1034,11 @@ cmd_index (ServerContext *ctx, GSList *args, GError **err)
 		   ":processed %u :updated %u :cleaned-up %u)",
 		    stats._processed, stats._updated, stats2._cleaned_up);
 leave:
+	g_free (path);
+
+	if (err && *err)
+		print_and_clear_g_error (err);
+
 	mu_index_destroy (index);
 	return MU_OK;
 }
@@ -1341,8 +1369,6 @@ cmd_sent (ServerContext *ctx, GSList *args, GError **err)
 	return MU_OK;
 }
 
-
-
 /* 'view' gets a full (including body etc.) sexp for some message,
  * identified by either docid: or msgid:; return a (:view <sexp>)
  */
@@ -1350,9 +1376,10 @@ static MuError
 cmd_view (ServerContext *ctx, GSList *args, GError **err)
 {
 	MuMsg *msg;
-	unsigned docid;
+	const gchar *path;
 	char *sexp;
 	MuMsgOptions opts;
+	unsigned docid;
 
 	opts = MU_MSG_OPTION_VERIFY;
 	if (get_bool_from_args (args, "extract-images", FALSE, NULL))
@@ -1364,13 +1391,22 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
 		opts |= MU_MSG_OPTION_DECRYPT;
 
-	docid = determine_docid (ctx->query, args, err);
-	if (docid == MU_STORE_INVALID_DOCID) {
-		print_and_clear_g_error (err);
-		return MU_OK;
+	/* when 'path' is specified, get the message at path */
+	path = get_string_from_args (args, "path", FALSE, NULL);
+
+	if (path) {
+		docid = 0;
+		msg   = mu_msg_new_from_file (path, NULL, err);
+	} else {
+		docid = determine_docid (ctx->query, args, err);
+		if (docid == MU_STORE_INVALID_DOCID) {
+			print_and_clear_g_error (err);
+			return MU_OK;
+		}
+
+		msg = mu_store_get_msg (ctx->store, docid, err);
 	}
 
-	msg = mu_store_get_msg (ctx->store, docid, err);
 	if (!msg) {
 		print_and_clear_g_error (err);
 		return MU_OK;

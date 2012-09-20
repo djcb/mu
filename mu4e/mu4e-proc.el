@@ -110,17 +110,20 @@ data removed."
   ;; mu4e~cookie-matcher-rx:
   ;;  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)]" mu4e~cookie-post)
   (ignore-errors ;; an error would e.g. when proc is killed in the middel
-    (let ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf)) (sexp-len) (objcons))
+    (let ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf))
+	   (sexp-len) (objcons))
       (when b
 	(setq sexp-len (string-to-number (match-string 1 mu4e~proc-buf) 16))
 	;; does mu4e~proc-buf contain the full sexp?
 	(when (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0)))
 	  ;; clear-up start
 	  (setq mu4e~proc-buf (substring mu4e~proc-buf (match-end 0)))
-	  ;; note: we read the input in binary mode -- here, we take the part that
-	  ;; is the sexp, and convert that to utf-8, before we interpret it.
+	  ;; note: we read the input in binary mode -- here, we take the part
+	  ;; that is the sexp, and convert that to utf-8, before we interpret
+	  ;; it.
 	  (setq objcons (read-from-string
-			  (decode-coding-string (substring mu4e~proc-buf 0 sexp-len)
+			  (decode-coding-string
+			    (substring mu4e~proc-buf 0 sexp-len)
 			    'utf-8 t)))
 	  (when objcons
 	    (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
@@ -242,7 +245,8 @@ The server output is as follows:
 	  ((plist-get sexp :temp)
 	    (funcall mu4e-temp-func
 	      (plist-get sexp :temp)   ;; name of the temp file
-	      (plist-get sexp :what)   ;; what to do with it (pipe|emacs|open-with...)
+	      (plist-get sexp :what)   ;; what to do with it
+	                               ;; (pipe|emacs|open-with...)
 	      (plist-get sexp :param)));; parameter for the action
 
 	  ;; get some info
@@ -454,8 +458,8 @@ seen AFTER (the time_t value)."
     (or after 0)))
 
 (defun mu4e~proc-view (docid-or-msgid &optional images decrypt)
-  "Get one particular message based on its DOCID-OR-MSGID (keyword
-argument). Optionally, if IMAGES is non-nil, backend will any
+  "Get one particular message based on its
+DOCID-OR-MSGID. Optionally, if IMAGES is non-nil, backend will any
 images attached to the message, and return them as temp files.  The
 result will be delivered to the function registered as
 `mu4e-message-func'."
@@ -464,6 +468,19 @@ result will be delivered to the function registered as
     (mu4e--docid-msgid-param docid-or-msgid)
     (if images "true" "false")
     (if decrypt "true" "false")))
+
+(defun mu4e~proc-view-path (path &optional images decrypt)
+  "View message at PATH (keyword
+argument). Optionally, if IMAGES is non-nil, backend will any
+images attached to the message, and return them as temp files.  The
+result will be delivered to the function registered as
+`mu4e-message-func'."
+  (mu4e~proc-send-command
+    "view path:\"%s\" extract-images:%s extract-encrypted:%s"
+    path
+    (if images "true" "false")
+    (if decrypt "true" "false")))
+
 
 (provide 'mu4e-proc)
 ;; End of mu4e-proc.el
