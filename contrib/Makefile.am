@@ -25,4 +25,6 @@ gmime_test_LDADD=$(GMIME_LIBS) $(GLIB_LIBS)
 
 
 EXTRA_DIST=			\
-	mu-completion.zsh
+	mu-completion.zsh	\
+	mu-sexp-convert
+
