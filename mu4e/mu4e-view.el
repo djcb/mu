@@ -133,6 +133,18 @@ wanting to show specific messages - for example, `mu4e-org'."
   ;; need an extra policy...
   (mu4e~proc-view msgid mu4e-show-images mu4e-decryption-policy))
 
+
+(defun mu4e-view-message-with-path (path)
+  "View message at PATH. This is meant for external programs
+wanting to show specific messages - for example, `mu4e-org'."
+  ;; note: hackish; if mu4e-decryption-policy is non-nil (ie., t or 'ask), we
+  ;; decrpt the message. Since here we don't know if message is encrypted or
+  ;; not, when the policy is 'ask'. we simply assume the user said yes...  the
+  ;; alternative would be to ask for each message, encrypted or not.  maybe we
+  ;; need an extra policy...
+  (mu4e~proc-view-path path mu4e-show-images mu4e-decryption-policy))
+
+
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG
 plist."
@@ -199,21 +211,17 @@ marking if it still had that."
 	  mu4e~view-msg msg
 	  mu4e~view-headers-buffer headersbuf
 	  mu4e~view-buffer buf)
-
 	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
-
 	(switch-to-buffer buf)
 	(goto-char (point-min))
-
 	(mu4e~view-fontify-cited)
 	(mu4e~view-fontify-footer)
 	(mu4e~view-make-urls-clickable)
 	(mu4e~view-show-images-maybe msg)
-
 	(unless refresh
 	  ;; no use in trying to set flags again
-	  (mu4e~view-mark-as-read-maybe))))))
+	  (mu4e~view-mark-as-read-maybe))) )))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -232,7 +240,7 @@ add text-properties to VAL."
 	  val
 	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
       ;; temporarily set the fill column <margin> positions to the right, so
-      ;; we can indent following lines with positions
+      ;; we can indent the following lines correctly
       (let*((margin 1) (fill-column (- fill-column margin)))
 	(fill-region (point-min) (point-max))
 	(goto-char (point-min))
@@ -648,9 +656,10 @@ Seen; if the message is not New/Unread, do nothing."
   (when mu4e~view-msg
     (let ((flags (plist-get mu4e~view-msg :flags))
 	   (docid (plist-get mu4e~view-msg :docid)))
-      ;; is it a new message?
-      (when (or (member 'unread flags) (member 'new flags))
-	(mu4e~proc-move docid nil "+S-u-N")))))
+      (when docid ;; attached (embedded) messages don't have docids; leave them alone
+	;; is it a new message
+	(when (or (member 'unread flags) (member 'new flags))
+	  (mu4e~proc-move docid nil "+S-u-N"))))))
 
 (defun mu4e~view-fontify-cited ()
   "Colorize message content based on the citation level."
@@ -760,8 +769,10 @@ current message."
      (unless '(buffer-live-p mu4e~view-headers-buffer)
        (mu4e-error "no headers-buffer connected"))
      (let* ((docid (mu4e-field-at-point :docid)))
+       (unless docid
+	 (mu4e-error "message without docid: action is not possible."))
        (with-current-buffer mu4e~view-headers-buffer
-	 (if (and docid (mu4e~headers-goto-docid docid))
+	 (if (mu4e~headers-goto-docid docid)
 	   ,@body
 	   (mu4e-error "cannot find message in headers buffer."))))))
 
@@ -885,7 +896,7 @@ message-at-point if nil) to disk."
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to save" msg)))
 	  (att (mu4e~view-get-attach msg attnum))
-_	  (path (concat mu4e-attachment-dir "/"))
+	  (path (concat mu4e-attachment-dir "/"))
 	  (fname  (plist-get att :name))
 	  (index (plist-get att :index))
 	  (retry t))
@@ -934,8 +945,13 @@ message-at-point if nil)."
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to open" msg)))
 	  (att (or (mu4e~view-get-attach msg attnum)))
-	  (index (plist-get att :index)))
-    (mu4e~proc-extract 'open (plist-get msg :docid) index)))
+	  (index (plist-get att :index))
+	  (mimetype (plist-get att :mime-type)))
+    (if (and mimetype (string= mimetype "message/rfc822"))
+      ;; special handling for message-attachments; we open them in mu4e.
+      (mu4e~view-temp-action (plist-get msg :docid) index "mu4e")
+      ;; otherwise, open with the default program (handled in mu-server
+      (mu4e~proc-extract 'open (plist-get msg :docid) index))))
 
 
 (defun mu4e~view-temp-action (docid index what &optional param)
@@ -997,7 +1013,6 @@ message-at-point, then do it. The actions are specified in
     (when (and actionfunc attnum)
       (funcall actionfunc msg attnum))))
 
-
 ;; handler-function to handle the response we get from the server when we
 ;; want to do something with one of the attachments.
 (defun mu4e~view-temp-handler (path what param)
@@ -1010,6 +1025,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     ((string= what "pipe")
       ;; 'param' will be the pipe command, path the infile for this
       (mu4e-process-file-through-pipe path param))
+    ((string= what "mu4e")
+      (mu4e-view-message-with-path path))
     ((string= what "emacs")
       (find-file path)
       ;; make the buffer read-only since it usually does not make

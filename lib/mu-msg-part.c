@@ -761,13 +761,20 @@ mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
 		return FALSE;
 
 	part = get_mime_object_at_index (msg, opts, partidx);
-	if (!GMIME_IS_PART(part) || GMIME_IS_MESSAGE_PART(part)) {
+
+	/* special case: convert a message-part into a message */
+	if (GMIME_IS_MESSAGE_PART (part))
+		part = (GMimeObject*)g_mime_message_part_get_message
+			(GMIME_MESSAGE_PART (part));
+
+	if (!GMIME_IS_PART(part) && !GMIME_IS_MESSAGE(part)) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "unexpected type %s for part %u",
 			     G_OBJECT_TYPE_NAME((GObject*)part),
 			     partidx);
 		return FALSE;
 	}
+
 
 	return save_object (part, opts, fullpath, err);
 }
