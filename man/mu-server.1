@@ -1,4 +1,4 @@
-.TH MU-SERVER 1 "July 2012" "User Manuals"
+.TH MU-SERVER 1 "September 2012" "User Manuals"
 
 .SH NAME
 
@@ -124,7 +124,7 @@ is sent.
 If the action is 'temp', the arguments 'what' is required. The attachment will
 saved to a temporary file, and the following message is sent:
 .nf
-<- (:temp :what <what> :param <param)
+<- (:temp :what <what> :param <param :docid 12345)
 .fi
 The front-end can then take action on the temp file, based on what :what and
 :param contain. \fBmu4e\fR uses this mechanism e.g. for piping an attachment
@@ -244,8 +244,8 @@ update the database accordingly.
 .TP
 .B view
 
-Using the \fBview\fR command, we can all information (including the body) of a
-particular e-mail message.
+Using the \fBview\fR command, we can retrieve all information (including the
+body) of a particular e-mail message.
 
 If the optional parameter \fBextract-images\fR is \fBtrue\fR, extract images
 to temp files, and include links to them in the returned s-exp.
@@ -258,6 +258,13 @@ retrieve public keys online automatically.
 
 .nf
 -> view docid:<docid>|msgid:<msgid> [extract-images:true] [use-agent:false] [auto-retrieve-key:false]
+<- (:view <s-exp>)
+.fi
+
+or, alternatively:
+
+.nf
+-> view path:<path-to-msg> [extract-images:true] [use-agent:false] [auto-retrieve-key:false]
 <- (:view <s-exp>)
 .fi
 
