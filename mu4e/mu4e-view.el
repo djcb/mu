@@ -114,6 +114,10 @@ The first letter of NAME is used as a shortcut character.")
 (defvar mu4e~view-link-map nil
   "A map of some number->url so we can jump to url by number.")
 
+(defvar mu4e~path-parent-docid-map (make-hash-table :test 'equal)
+  "A map of msg paths --> parent-docids.  This is to determine what
+  is the parent docid for embedded message extracted at some path.")
+
 (defconst mu4e~view-url-regexp
   "\\(\\(https?\\://\\|mailto:\\)[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=/()]+\\)"
   "Regexp that matches http:/https:/mailto: URLs; match-string 1
@@ -132,17 +136,6 @@ wanting to show specific messages - for example, `mu4e-org'."
   ;; alternative would be to ask for each message, encrypted or not.  maybe we
   ;; need an extra policy...
   (mu4e~proc-view msgid mu4e-show-images mu4e-decryption-policy))
-
-
-(defun mu4e-view-message-with-path (path)
-  "View message at PATH. This is meant for external programs
-wanting to show specific messages - for example, `mu4e-org'."
-  ;; note: hackish; if mu4e-decryption-policy is non-nil (ie., t or 'ask), we
-  ;; decrpt the message. Since here we don't know if message is encrypted or
-  ;; not, when the policy is 'ask'. we simply assume the user said yes...  the
-  ;; alternative would be to ask for each message, encrypted or not.  maybe we
-  ;; need an extra policy...
-  (mu4e~proc-view-path path mu4e-show-images mu4e-decryption-policy))
 
 
 (defun mu4e-view-message-text (msg)
@@ -193,6 +186,13 @@ plist."
     ;; (mu4e~decrypt-parts-maybe msg)
     ))
 
+ (defun mu4e~view-embedded-winbuf ()
+  "Get a buffer (shown in a window) for the embedded message."
+  (let* ((buf (get-buffer-create mu4e~view-embedded-buffer-name))
+	  (win (or (get-buffer-window buf) (split-window-vertically))))
+    (select-window win)
+    (switch-to-buffer buf)))
+
 
 (defun mu4e-view (msg headersbuf &optional refresh)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -203,14 +203,20 @@ REFRESH is for re-showing an already existing message.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let ((buf (get-buffer-create mu4e~view-buffer-name)))
+  (let* ((embedded ;; is it registered as an embedded msg?
+	   (when (gethash (plist-get msg :path) mu4e~path-parent-docid-map) t))
+	  (buf
+	    (if embedded
+	      (mu4e~view-embedded-winbuf)
+	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (mu4e-view-mode)
+
       (let ((inhibit-read-only t))
 	(setq ;; buffer local
 	  mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf
-	  mu4e~view-buffer buf)
+	  mu4e~view-headers-buffer headersbuf)
+
 	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
 	(switch-to-buffer buf)
@@ -219,9 +225,15 @@ marking if it still had that."
 	(mu4e~view-fontify-footer)
 	(mu4e~view-make-urls-clickable)
 	(mu4e~view-show-images-maybe msg)
-	(unless refresh
-	  ;; no use in trying to set flags again
-	  (mu4e~view-mark-as-read-maybe))) )))
+
+	(if embedded
+	  (local-set-key "q" 'kill-buffer-and-window)
+	  (setq mu4e~view-buffer buf))
+
+	(unless (or refresh embedded)
+	  ;; no use in trying to set flags again, or when it's an embedded
+	  ;; message
+	  (mu4e~view-mark-as-read-maybe))))))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -946,12 +958,17 @@ message-at-point if nil)."
 		    (mu4e~view-get-attach-num "Attachment to open" msg)))
 	  (att (or (mu4e~view-get-attach msg attnum)))
 	  (index (plist-get att :index))
+	  (docid (plist-get msg :docid))
 	  (mimetype (plist-get att :mime-type)))
     (if (and mimetype (string= mimetype "message/rfc822"))
-      ;; special handling for message-attachments; we open them in mu4e.
-      (mu4e~view-temp-action (plist-get msg :docid) index "mu4e")
+      ;; special handling for message-attachments; we open them in mu4e. we also
+      ;; send the docid as parameter (4th arg); we'll get this back from the
+      ;; server, and use it to determine the parent message (ie., the current
+      ;; message) when showing the embedded message/rfc822, and return to the
+      ;; current message when quiting that one.
+      (mu4e~view-temp-action docid index "mu4e" docid)
       ;; otherwise, open with the default program (handled in mu-server
-      (mu4e~proc-extract 'open (plist-get msg :docid) index))))
+      (mu4e~proc-extract 'open docid index))))
 
 
 (defun mu4e~view-temp-action (docid index what &optional param)
@@ -1015,7 +1032,7 @@ message-at-point, then do it. The actions are specified in
 
 ;; handler-function to handle the response we get from the server when we
 ;; want to do something with one of the attachments.
-(defun mu4e~view-temp-handler (path what param)
+(defun mu4e~view-temp-handler (path what docid param)
   "Handler function for doing things with temp files (ie.,
 attachments) in response to a (mu4e~proc-extract 'temp ... )."
   (cond
@@ -1025,14 +1042,19 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     ((string= what "pipe")
       ;; 'param' will be the pipe command, path the infile for this
       (mu4e-process-file-through-pipe path param))
+    ;; if it's mu4e, it's some embedded message; 'param' may contain the docid of
+    ;; the parent message.
     ((string= what "mu4e")
-      (mu4e-view-message-with-path path))
+      ;; remember the mapping path->docid, which maps the path of the embedded
+      ;; message to the docid of its parent
+      (puthash path docid mu4e~path-parent-docid-map)
+      (mu4e~proc-view-path path mu4e-show-images mu4e-decryption-policy))
     ((string= what "emacs")
       (find-file path)
       ;; make the buffer read-only since it usually does not make
-	;; sense to edit the temp buffer; use C-x C-q if you insist...
+      ;; sense to edit the temp buffer; use C-x C-q if you insist...
       (setq buffer-read-only t))
-      (t (mu4e-error "Unsupported action %S" what))))
+    (t (mu4e-error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; marking
@@ -1118,7 +1140,7 @@ user that unmarking only works in the header list."
     (unless url (mu4e-warn "Invalid number for URL"))
     (funcall (mu4e~view-browse-url-func url))))
 
-(defconst mu4e~view-raw-buffer-name "*mu4e-raw-view*"
+(defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
   "*internal* Name for the raw message view buffer")
 
 (defun mu4e-view-raw-message ()

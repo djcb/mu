@@ -247,6 +247,7 @@ The server output is as follows:
 	      (plist-get sexp :temp)   ;; name of the temp file
 	      (plist-get sexp :what)   ;; what to do with it
 	                               ;; (pipe|emacs|open-with...)
+	      (plist-get sexp :docid)  ;; docid of the message
 	      (plist-get sexp :param)));; parameter for the action
 
 	  ;; get some info
@@ -436,8 +437,9 @@ mean:
 		      docid partidx path))
 	      (open (format "action:open docid:%d index:%d" docid partidx))
 	      (temp
-		(format "action:temp docid:%d index:%d what:%s param:\"%s\""
-		  docid partidx what param))
+		(format "action:temp docid:%d index:%d what:%s%s"
+		  docid partidx what
+		  (if param (format " param:\"%s\"" param) "")))
 	      (otherwise (mu4e-error "Unsupported action %S" action))))))
     (mu4e~proc-send-command cmd)))
 

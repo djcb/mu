@@ -462,7 +462,7 @@ headers)."
        ( :name "Signature"
 	 :shortname "Sgn"
 	 :help "Check for the cryptographic signature"
-	 :sortable nil))   
+	 :sortable nil))
      (:size .
        ( :name "Size"
 	 :shortname "Size"
@@ -509,10 +509,14 @@ Note, :sortable does not work for custom header fields.")
 ;; headers
 (defconst mu4e~headers-buffer-name "*mu4e-headers*"
   "Name of the buffer for message headers.")
-(defvar mu4e~headers-buffer nil "Buffer for message headers")
+(defvar mu4e~headers-buffer nil "Buffer for message headers.")
 ; view
 (defconst mu4e~view-buffer-name "*mu4e-view*"
-  "Name for the message view buffer")
+  "Name for the message view buffer.")
+
+(defconst mu4e~view-embedded-buffer-name " *mu4e-embedded-view*"
+  "Name for the embedded message view buffer.")
+
 (defvar mu4e~view-buffer nil "The view buffer.")
 
 (defvar mu4e~view-msg nil "The message being viewed in view mode.")
