@@ -669,7 +669,8 @@ print_sexps (MuMsgIter *iter, gboolean threads, unsigned maxnum)
 
 
 static MuError
-save_part (MuMsg *msg, unsigned index, GSList *args, GError **err)
+save_part (MuMsg *msg, unsigned docid,
+	   unsigned index, GSList *args, GError **err)
 {
 	gboolean rv;
 	const gchar *path;
@@ -694,7 +695,7 @@ save_part (MuMsg *msg, unsigned index, GSList *args, GError **err)
 
 
 static MuError
-open_part (MuMsg *msg, unsigned index, GError **err)
+open_part (MuMsg *msg, unsigned docid, unsigned index, GError **err)
 {
 	char *targetpath;
 	gboolean rv;
@@ -719,7 +720,7 @@ open_part (MuMsg *msg, unsigned index, GError **err)
 		gchar *path;
 		path = mu_str_escape_c_literal (targetpath, FALSE);
 		print_expr ("(:info open :message \"%s has been opened\")",
-			   path);
+			    path);
 		g_free (path);
 	}
 leave:
@@ -729,13 +730,14 @@ leave:
 
 
 static MuError
-temp_part (MuMsg *msg, unsigned index, GSList *args, GError **err)
+temp_part (MuMsg *msg, unsigned docid, unsigned index, GSList *args,
+	   GError **err)
 {
 	const char *what, *param;
 	char *path;
 
 	GET_STRING_OR_ERROR_RETURN (args, "what", &what, err);
-	GET_STRING_OR_ERROR_RETURN (args, "param", &param, err);
+	param = get_string_from_args (args, "param", TRUE, NULL);
 
 	path = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE, index, err);
 	if (!path)
@@ -744,14 +746,24 @@ temp_part (MuMsg *msg, unsigned index, GSList *args, GError **err)
 				    path, index, err))
 		print_and_clear_g_error (err);
 	else {
-		gchar *escpath, *escparam;
+		gchar *escpath;
 		escpath = mu_str_escape_c_literal (path, FALSE);
-		escparam = mu_str_escape_c_literal (param, FALSE);
-		print_expr ("(:temp \"%s\""
-			    " :what \"%s\""
-			    " :param \"%s\")", escpath, what, escparam);
+
+		if (param) {
+			char *escparam;
+			escparam = mu_str_escape_c_literal (param, FALSE);
+			print_expr ("(:temp \"%s\""
+				    " :what \"%s\""
+				    " :docid %u"
+				    " :param \"%s\""")",
+				    escpath, what, docid, escparam);
+			g_free (escparam);
+		} else
+			print_expr ("(:temp \"%s\" :what \"%s\" :docid %u)",
+				    escpath, what, docid);
+
 		g_free (escpath);
-		g_free (escparam);
+
 	}
 
 	g_free (path);
@@ -803,9 +815,9 @@ cmd_extract (ServerContext *ctx, GSList *args, GError **err)
 	}
 
 	switch (action) {
-	case SAVE: rv = save_part (msg, index, args, err); break;
-	case OPEN: rv = open_part (msg, index, err); break;
-	case TEMP: rv = temp_part (msg, index, args, err); break;
+	case SAVE: rv = save_part (msg, docid, index, args, err); break;
+	case OPEN: rv = open_part (msg, docid, index, err); break;
+	case TEMP: rv = temp_part (msg, docid, index, args, err); break;
 	default: print_error (MU_ERROR_INTERNAL, "unknown action");
 	}
 
