@@ -739,7 +739,8 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index, GSList *args,
 	GET_STRING_OR_ERROR_RETURN (args, "what", &what, err);
 	param = get_string_from_args (args, "param", TRUE, NULL);
 
-	path = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE, index, err);
+	path = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE,
+					   index, err);
 	if (!path)
 		print_and_clear_g_error (err);
 	else if (!mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
@@ -849,8 +850,8 @@ get_find_params (GSList *args, gboolean *threads, MuMsgFieldId *sortfield,
 		*sortfield = mu_msg_field_id_from_name (sortfieldstr, FALSE);
 		/* note: shortcuts are not allowed here */
 		if (*sortfield == MU_MSG_FIELD_ID_NONE) {
-			g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-				     "not a valid sort field: '%s'\n", sortfield);
+			mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "not a valid sort field: '%s'", sortfield);
 			return MU_G_ERROR_CODE(err);
 		}
 	} else
@@ -902,7 +903,8 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 	 * will ensure that the output of two finds will not be
 	 * mixed. */
 	print_expr ("(:erase t)");
-	foundnum = print_sexps (iter, threads, maxnum > 0 ? maxnum : G_MAXINT32);
+	foundnum = print_sexps (iter, threads,
+				maxnum > 0 ? maxnum : G_MAXINT32);
 	print_expr ("(:found %u)", foundnum);
 	mu_msg_iter_destroy (iter);
 
@@ -1146,7 +1148,7 @@ static gboolean
 move_msgid_maybe (ServerContext *ctx, GSList *args, GError **err)
 {
 	GSList *docids, *cur;
-	const char *maildir = get_string_from_args (args, "maildir", TRUE, err);
+	const char *maildir = get_string_from_args (args, "maildir", TRUE,err);
 	const char *msgid = get_string_from_args (args, "msgid", TRUE, err);
 	const char *flagstr = get_string_from_args (args, "flags", TRUE, err);
 
@@ -1177,7 +1179,8 @@ move_msgid_maybe (ServerContext *ctx, GSList *args, GError **err)
 			break;
 		}
 
-		if ((do_move (ctx->store, docid, msg, NULL, flags, err) != MU_OK))
+		if ((do_move (ctx->store, docid, msg, NULL, flags, err)
+		     != MU_OK))
 			print_and_clear_g_error (err);
 
 		mu_msg_unref (msg);
@@ -1285,7 +1288,8 @@ cmd_quit (ServerContext *ctx, GSList *args , GError **err)
 
 /*
  * creating a message object just to get a path seems a bit excessive
- * maybe mu_store_get_path could be added if this turns out to be a problem
+ * maybe mu_store_get_path could be added if this turns out to be a
+ * problem
  *
  * NOTE: not re-entrant.
  */
