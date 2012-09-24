@@ -96,7 +96,7 @@ the query (for paths starting with 'query:')."
       (mu4e-view-message-with-msgid (match-string 1 path)))
     ((string-match "^query:\\(.+\\)" path)
       (mu4e-headers-search (match-string 1 path) current-prefix-arg))
-    (t (message "mu4e: unrecognized link type '%s'" path))))
+    (t (mu4e-error "mu4e: unrecognized link type '%s'" path))))
 
 
 
@@ -151,9 +151,11 @@ and images in a multipart/related part."
 
 (defun org~mu4e-mime-convert-to-html ()
   "Convert the current body to html."
-  (if (not (fboundp 'org-export-string))
-    (mu4e-error "require function 'org-export-string not found.")
-    (let* ((begin
+  (unless (fboundp 'org-export-string)
+    (mu4e-error "require function 'org-export-string not found."))
+  (unless (executable-find "dvipng")
+    (mu4e-error "Required program dvipng not found"))
+  (let* ((begin
 	     (save-excursion
 	       (goto-char (point-min))
 	       (search-forward mail-header-separator)))
@@ -217,20 +219,9 @@ function is called when sending a message (from
 `message-send-hook') and, if non-nil, will send the message as the
 rich-text version of the what is assumed to be an org-mode body."
   (when org-mu4e-convert-to-html
-    (message "Converting to html")
+    (mu4e-message "Converting to html")
     (org~mu4e-mime-convert-to-html)))
-
-(defun org~mu4e-execute-key-sequence-in-compose-mode (keyseq)
-  "Execute keysequence KEYSEQ by (temporarily) switching to compose
-mode."
-  (mu4e-compose-mode)
-  (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t)
-  (let ((func (lookup-key (current-local-map) keyseq)))
-    (unless (functionp func)
-      (mu4e-error "Invalid key binding"))
-    (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe t t)
-    (funcall func)))
-
+ 
 (defun org~mu4e-mime-switch-headers-or-body ()
   "Switch the buffer to either mu4e-compose-mode (when in headers)
 or org-mode (when in the body)."
@@ -254,19 +245,18 @@ or org-mode (when in the body)."
 	    nil t)
 	  (org~mu4e-mime-decorate-headers)
 	  (local-set-key (kbd "M-m")
-	    (lambda (key)
+	    (lambda (keyseq)
 	      (interactive "kEnter mu4e-compose-mode key sequence: ")
-	      (org~mu4e-execute-key-sequence-in-compose-mode key))))
+	      (let ((func (lookup-key mu4e-compose-mode-map keyseq)))
+		(if func (funcall func) (insert keyseq))))))
 	;; we're in the headers, but in org-mode?
 	;; if so, switch to mu4e-compose-mode
 	((and (<= (point) sepapoint) (eq major-mode 'org-mode))
       	  (org~mu4e-mime-undecorate-headers)
 	  (mu4e-compose-mode)
-	  (add-hook 'message-send-hook
-	    'org~mu4e-mime-convert-to-html-maybe nil t)))
+	  (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe nil t)))
       ;; and add the hook
-      (add-hook 'post-command-hook
-	'org~mu4e-mime-switch-headers-or-body t t))))
+      (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t))))
 
 
 (defun org-mu4e-compose-org-mode ()
@@ -275,10 +265,9 @@ or org-mode (when in the body)."
   (interactive)
   (unless (member major-mode '(org-mode mu4e-compose-mode))
     (mu4e-error "Need org-mode or mu4e-compose-mode"))
-  (unless (executable-find "dvipng")
-    (mu4e-error "Required program dvipng not found"))
-  ;; we can check if we're already in mu4e-compose-mode by checking
-  ;; if the post-command-hook is set; hackish...
+  ;; we can check if we're already in org-mu4e-compose-mode by checking if the
+  ;; post-command-hook is set; hackish...but a buffer-local variable does not
+  ;; seem to survive buffer switching
   (if (not (member 'org~mu4e-mime-switch-headers-or-body post-command-hook))
     (progn
       (org~mu4e-mime-switch-headers-or-body)
