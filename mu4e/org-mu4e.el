@@ -186,7 +186,7 @@ and images in a multipart/related part."
 	(goto-char begin)
 	(newline)
 	(insert (org~mu4e-mime-multipart
-		  body html (mapconcat 'identity html-images "\n")))))))
+		  body html (mapconcat 'identity html-images "\n"))))))
 
 ;; next some functions to make the org/mu4e-compose-mode switch as smooth as
 ;; possible.
