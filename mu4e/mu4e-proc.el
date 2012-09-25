@@ -48,8 +48,8 @@ the backend.")
     "Each expression we get from the backend (mu server) starts with
    a length cookie:
    <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>.")
-(defconst mu4e~cookie-matcher-rx
-  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
+(defconst mu4e~cookie-matcher-rx 
+  (purecopy (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post))
   "Regular expression matching the length cookie. Match 1 will be
 the length (in hex).")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -98,7 +98,6 @@ the length (in hex).")
     t))
 
 
-
 (defsubst mu4e~proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e~proc-buf'. Note: this is a string,
 not an emacs-buffer. `mu4e~proc-buf gets its contents from the
@@ -109,25 +108,24 @@ none. `mu4e~proc-buf' is updated as well, with all processed sexp
 data removed."
   ;; mu4e~cookie-matcher-rx:
   ;;  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)]" mu4e~cookie-post)
-  (ignore-errors ;; an error would e.g. when proc is killed in the middel
-    (let ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf))
-	   (sexp-len) (objcons))
-      (when b
-	(setq sexp-len (string-to-number (match-string 1 mu4e~proc-buf) 16))
-	;; does mu4e~proc-buf contain the full sexp?
-	(when (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0)))
-	  ;; clear-up start
-	  (setq mu4e~proc-buf (substring mu4e~proc-buf (match-end 0)))
-	  ;; note: we read the input in binary mode -- here, we take the part
-	  ;; that is the sexp, and convert that to utf-8, before we interpret
-	  ;; it.
-	  (setq objcons (read-from-string
-			  (decode-coding-string
-			    (substring mu4e~proc-buf 0 sexp-len)
-			    'utf-8 t)))
-	  (when objcons
-	    (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
-	    (car objcons)))))))
+  (let ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf))
+	 (sexp-len) (objcons))
+    (when b
+      (setq sexp-len (string-to-number (match-string 1 mu4e~proc-buf) 16))
+      ;; does mu4e~proc-buf contain the full sexp?
+      (when (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0)))
+	;; clear-up start
+	(setq mu4e~proc-buf (substring mu4e~proc-buf (match-end 0)))
+	;; note: we read the input in binary mode -- here, we take the part
+	;; that is the sexp, and convert that to utf-8, before we interpret
+	;; it.
+	(setq objcons (read-from-string
+			(decode-coding-string
+			  (substring mu4e~proc-buf 0 sexp-len)
+			  'utf-8 t)))
+	(when objcons
+	  (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
+	  (car objcons))))))
 
 
 (defsubst mu4e~proc-filter (proc str)
