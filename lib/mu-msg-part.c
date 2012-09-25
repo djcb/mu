@@ -878,15 +878,15 @@ mu_msg_part_maybe_attachment (MuMsgPart *part)
 	g_return_val_if_fail (part, FALSE);
 
 	/* attachments must be leaf parts */
-	if (!part->part_type && MU_MSG_PART_TYPE_LEAF)
+	if (!(part->part_type & MU_MSG_PART_TYPE_LEAF))
 		return FALSE;
 
-	/* non-textual inline parts are considered attachments as
+	/* non-textual parts are considered attachments as
 	 * well */
-	if (part->part_type & MU_MSG_PART_TYPE_INLINE &&
-	    !(part->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN) &&
-	    !(part->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
-		return TRUE;
+	/* if (!(part->part_type & MU_MSG_PART_TYPE_ATTACHMENT) && */
+	/*     !(part->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN) && */
+	/*     !(part->part_type & MU_MSG_PART_TYPE_TEXT_HTML)) */
+	/* 	return TRUE; */
 
-	return FALSE;
+	return part->part_type & MU_MSG_PART_TYPE_ATTACHMENT ? TRUE : FALSE;
 }

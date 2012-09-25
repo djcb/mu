@@ -418,12 +418,11 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
 
 	/* exclude things that don't look like proper attachments,
 	 * unless they're images */
-	if (!mu_msg_part_maybe_attachment(part) ||
-	    g_strcmp0 (part->type, "image") != 0)
+	if (!mu_msg_part_maybe_attachment(part))
 		return;
 
 	err	  = NULL;
-	cachefile = mu_msg_part_save_temp (msg, MU_MSG_OPTION_NONE,
+	cachefile = mu_msg_part_save_temp (msg, MU_MSG_OPTION_OVERWRITE,
 					   part->index, &err);
 	if (!cachefile) {
 		print_and_clear_g_error (&err);
