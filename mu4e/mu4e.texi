@@ -677,9 +677,10 @@ maildir:/bar(saTF)}.
 on the message at point. You can specify these actions using the variable
 @code{mu4e-headers-actions}. Refer to @ref{Actions} for details.
 
-@t{mu4e} defines some default actions - one is @t{capture} - @key{a c} will
-'capture' the current message. Next, when you're editing some message, you can
-include the previously captured message as an attachment, using
+@t{mu4e} defines some default actions. One of this those is for
+@emph{capturing} a message: @key{a c} will 'capture' the current
+message. Next, when you're editing some message, you can include the
+previously captured message as an attachment, using
 @code{mu4e-compose-attach-captured-message}.
 
 The file @file{mu4e-actions.el} in the @t{mu4e} source distribution contains a
@@ -1768,7 +1769,7 @@ available in your path.
 
 Then, when composing a message, you can use @t{M-x org-mu4e-compose-org-mode}
 to enable this mode.
- 
+
 @t{org-mu4e-compose-org-mode} behaves more or less like a minor-mode. When it
 is active, editing the message body takes place in @t{org-mode}, while editing
 the headers uses the normal message editing mode, @t{mu4e-compose-mode}.

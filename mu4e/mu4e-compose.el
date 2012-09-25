@@ -85,8 +85,9 @@ forwarded or edited) in `mu4e-compose-pre-hook.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(defun mu4e-compose-attach-captured-message()
-  "Insert the last captured message file as an attachment."
+(defun mu4e-compose-attach-captured-message ()
+  "Insert the last captured message (through
+`mu4e-action-capture-message') file as an attachment."
     (interactive)
   (unless mu4e-captured-message
     (mu4e-warn "No message has been captured"))
@@ -95,7 +96,7 @@ forwarded or edited) in `mu4e-compose-pre-hook.")
       (mu4e-warn "Captured message file not found"))
     (mml-attach-file
       path
-      "application/octet-stream"
+      "message/rfc822"
       (or (plist-get mu4e-captured-message :subject) "No subject")
       "attachment")))
 
@@ -490,7 +491,7 @@ needed, set the Fcc header, and register the handler function."
     ;; value for this (such as "") breaks address completion and other things
     (set (make-local-variable 'mail-header-separator)
       (purecopy "--text follows this line--"))
-     
+
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
@@ -566,8 +567,7 @@ a file which our backend has conveniently saved for us (as a
 tempfile).
 
 The name of the draft folder is constructed from the concatenation
- of `mu4e-maildir' and `mu4e-drafts-folder' (therefore, these must be
- set).
+ of `mu4e-maildir' and `mu4e-drafts-folder' (these must be set).
 
 The message file name is a unique name determined by
 `mu4e-send-draft-file-name'.
@@ -692,13 +692,13 @@ for draft messages."
 
   (unless (member compose-type '(reply forward edit new))
     (mu4e-error "Invalid compose type '%S'" compose-type))
-  (when (and (eq compose-type 'edit)  
+  (when (and (eq compose-type 'edit)
 	  (not (member 'draft (mu4e-field-at-point :flags))))
-    (mu4e-warn "Editing is only allowed for draft messages")) 
+    (mu4e-warn "Editing is only allowed for draft messages"))
 
   ;; run the hooks
   (mu4e~compose-run-hooks compose-type)
-  
+
   ;; 'new is special, since it takes no existing message as arg therefore,
   ;; we don't need to call thec backend, and call the handler *directly*
   (if (eq compose-type 'new)
