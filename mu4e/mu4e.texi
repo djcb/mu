@@ -1766,10 +1766,9 @@ To enable all this, make sure you have
 somewhere in your setup, and also make sure that the @t{dvipng} program is
 available in your path.
 
-Then, when composing a message, you can use @code{M-x
-org-mu4e-compose-org-mode} to enable this mode, or, alternatively, put in the
-mode-hook for @t{mu4e-compose-mode}.
-
+Then, when composing a message, you can use @t{M-x org-mu4e-compose-org-mode}
+to enable this mode.
+ 
 @t{org-mu4e-compose-org-mode} behaves more or less like a minor-mode. When it
 is active, editing the message body takes place in @t{org-mode}, while editing
 the headers uses the normal message editing mode, @t{mu4e-compose-mode}.
@@ -1791,6 +1790,17 @@ The code for doing the conversion is based on Eric Schultze's
 but has been customized for use with @t{mu4e}. In particular, the
 mode-switching between @t{org-mode} and @t{mu4e-compose-mode} is
 @t{mu4e-specific}.
+
+@subsection Some caveats
+
+It is better @emph{not} to put @t{org-mu4e-compose-org-mode} in a mode-hook
+for @t{mu4e-compose-mode}, since that makes it impossible to shut it off
+again@footnote{This is because @t{mu4e-compose-mode} in invoked again
+internally when switching, which re-triggers the hook function.}
+
+In addition, currently the rich-text code does not work well with the
+functionality for signing and encrypting messages. If you want to do that, you
+are recommend to use plain-text e-mail messages.
 
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
