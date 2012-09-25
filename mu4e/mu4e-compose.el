@@ -608,17 +608,17 @@ Gnus' `message-mode'."
     (let ((message-hidden-headers mu4e~compose-hidden-headers))
       (message-hide-headers))
 
-    ;; set compose mode -- so now hooks can run
-    (mu4e-compose-mode)
-
     ;; buffer is not user-modified yet
     (mu4e~compose-set-friendly-buffer-name compose-type)
     (set-buffer-modified-p nil)
 
-    ;; now jump to some use positions, and start writing that mail!
+    ;; now jump to some useful positions, and start writing that mail!
     (if (member compose-type '(new forward))
       (message-goto-to)
-      (message-goto-body))))
+      (message-goto-body)))
+
+  ;; switch on the mode
+  (mu4e-compose-mode))
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
