@@ -1800,8 +1800,9 @@ again@footnote{This is because @t{mu4e-compose-mode} in invoked again
 internally when switching, which re-triggers the hook function.}
 
 In addition, currently the rich-text code does not work well with the
-functionality for signing and encrypting messages. If you want to do that, you
-are recommend to use plain-text e-mail messages.
+MIME-functionality, such as adding attachments or signing/encrypting
+messages. If you want to do that, you are recommended to use plain-text e-mail
+messages.
 
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
