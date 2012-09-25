@@ -186,7 +186,7 @@ and images in a multipart/related part."
 	(goto-char begin)
 	(newline)
 	(insert (org~mu4e-mime-multipart
-		  body html (mapconcat 'identity html-images "\n")))))) 
+		  body html (mapconcat 'identity html-images "\n")))))))
 
 ;; next some functions to make the org/mu4e-compose-mode switch as smooth as
 ;; possible.
@@ -254,15 +254,14 @@ or org-mode (when in the body)."
 	((and (<= (point) sepapoint) (eq major-mode 'org-mode))
       	  (org~mu4e-mime-undecorate-headers)
 	  (mu4e-compose-mode)
-	  (add-hook 'message-send-hook
-	    'org~mu4e-mime-convert-to-html-maybe nil t)))
+	  (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe nil t)))
       ;; and add the hook
       (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t))))
 
 
 (defun org-mu4e-compose-org-mode ()
   "Pseudo-Minor mode for mu4e-compose-mode, to edit the message
-body using org-mode."
+    body using org-mode."
   (interactive)
   (unless (member major-mode '(org-mode mu4e-compose-mode))
     (mu4e-error "Need org-mode or mu4e-compose-mode"))
@@ -275,7 +274,7 @@ body using org-mode."
       (mu4e-message
 	(concat
 	  "org-mu4e-compose-org-mode enabled; "
-	  "press M-m before mu4e-compose-mode commands")))
+	  "press M-m before issuing message-mode commands")))
     (progn ;; otherwise, remove crap
       (remove-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t)
       (org~mu4e-mime-undecorate-headers) ;; shut off org-mode stuff
