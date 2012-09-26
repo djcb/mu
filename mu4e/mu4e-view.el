@@ -32,6 +32,7 @@
 (require 'mu4e-proc)
 (require 'mu4e-compose)
 (require 'mu4e-actions)
+(require 'mu4e-message)
 
 (require 'longlines)
 (require 'comint)
@@ -144,7 +145,7 @@ plist."
   (concat
     (mapconcat
       (lambda (field)
-	(let ((fieldval (plist-get msg field)))
+	(let ((fieldval (mu4e-message-field msg field)))
 	  (case field
 	    (:subject  (mu4e~view-construct-header field fieldval))
 	    (:path     (mu4e~view-construct-header field fieldval))
@@ -159,7 +160,7 @@ plist."
 	    ;; if we (`user-mail-address' are the From, show To, otherwise,
 	    ;; show From
 	    (:from-or-to
-	      (let* ((from (plist-get msg :from))
+	      (let* ((from (mu4e-message-field msg :from))
 		      (from (and from (cdar from))))
 		(if (and from (string-match mu4e-user-mail-address-regexp from))
 		  (mu4e~view-construct-contacts-header msg :to)
@@ -180,7 +181,7 @@ plist."
 	    (t (mu4e-error "Unsupported field: %S" field)))))
       mu4e-view-fields "")
     "\n"
-    (mu4e-body-text msg)
+    (mu4e-message-body-text msg)
     ;; ;; decrypt maybe; depends on whether there are any such parts
     ;; ;; and the value of `mu4e-view-decrypt-parts'
     ;; (mu4e~decrypt-parts-maybe msg)
@@ -204,7 +205,8 @@ REFRESH is for re-showing an already existing message.
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
   (let* ((embedded ;; is it registered as an embedded msg?
-	   (when (gethash (plist-get msg :path) mu4e~path-parent-docid-map) t))
+	   (when (gethash (mu4e-message-field msg :path)
+		   mu4e~path-parent-docid-map) t))
 	  (buf
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
@@ -315,7 +317,7 @@ at POINT, or if nil, at (point)."
 	    (format "<%s>\n%s\n%s" email
 	      "[mouse-1] or [M-RET] to toggle long/short display"
 	      "[mouse-2] or C to compose a mail for this recipient"))))
-      (plist-get msg field) ", ") t))
+      (mu4e-message-field msg field) ", ") t))
 
 
 (defun mu4e~view-construct-flags-header (flags)
@@ -331,10 +333,10 @@ at POINT, or if nil, at (point)."
 
 (defun mu4e~view-construct-signature-header (msg)
   "Construct a Signature: header, if there are any signed parts."
-  (let* ((parts (plist-get msg :parts))
+  (let* ((parts (mu4e-message-field msg :parts))
 	  (verdicts
 	    (remove-if 'null
-	      (mapcar (lambda (part) (plist-get part :signature)) parts)))
+	      (mapcar (lambda (part) (mu4e-message-part-field part :signature)) parts)))
 	  (val (when verdicts
 		 (mapconcat
 		   (lambda (v)
@@ -379,21 +381,21 @@ at POINT, or if nil, at (point)."
 	    ;; user-visible numbers and the part indices
 	    (remove-if-not
 	      (lambda (part)
-		(let ((mtype (plist-get part :mime-type))
-		       (isattach  (member 'attachment (plist-get part :type))))
+		(let ((mtype (mu4e-message-part-field part :mime-type))
+		       (isattach  (member 'attachment (mu4e-message-part-field part :type))))
 		  (or ;; remove if it's not an attach *or* if it's an
 		      ;; image/audio/application type (but not a signature)
 		    isattach
 		    (string-match "^\\(image\\|audio\\)" mtype)
 		    (and (string-match "^application" mtype)
 		      (not (string-match "signature" mtype))))))
-	      (plist-get msg :parts)))
+	      (mu4e-message-field msg :parts)))
 	  (attstr
 	    (mapconcat
 	      (lambda (part)
-		(let ((index (plist-get part :index))
-		       (name (plist-get part :name))
-		       (size (plist-get part :size))
+		(let ((index (mu4e-message-part-field part :index))
+		       (name (mu4e-message-part-field part :name))
+		       (size (mu4e-message-part-field part :size))
 		       (map (make-sparse-keymap)))
 		  (incf id)
 		  (puthash id index mu4e~view-attach-map)
@@ -431,8 +433,8 @@ at POINT, or if nil, at (point)."
 ;;   (let ((str ""))
 ;;     (mu4e-view-for-each-part msg
 ;;       (lambda (msg part)
-;; 	(when (member 'encrypted (plist-get part :type))
-;; 	  (let ((file (plist-get part :temp)))
+;; 	(when (member 'encrypted (mu4e-message-part-field part :type))
+;; 	  (let ((file (mu4e-message-part-field part :temp)))
 ;; 	    (when (and file (file-exists-p file))
 ;; 	      ;; if our mu-server was build with crypto support, we only use EPA
 ;; 	      ;; to push the password into gpg's memory
@@ -730,8 +732,8 @@ browser is called is depending on `browse-url-browser-function' and
   (when (and (display-images-p) mu4e-show-images)
     (mu4e-view-for-each-part msg
       (lambda (msg part)
-	(when (string-match "^image/" (plist-get part :mime-type))
-	  (let ((imgfile (plist-get part :temp)))
+	(when (string-match "^image/" (mu4e-message-part-field part :mime-type))
+	  (let ((imgfile (mu4e-message-part-field part :temp)))
 	    (when (and imgfile (file-exists-p imgfile))
 	      (save-excursion
 		(goto-char (point-max))
@@ -893,8 +895,8 @@ number ATTNUM."
 	 (attach
 	   (find-if
 	     (lambda (part)
-	       (eq (plist-get part :index) partid))
-	     (plist-get msg :parts))))
+	       (eq (mu4e-message-part-field part :index) partid))
+	     (mu4e-message-field msg :parts))))
     (or attach (mu4e-error "Not a valid attachment"))))
 
 
@@ -920,7 +922,7 @@ message-at-point if nil) to disk."
 	(and (file-exists-p path)
 	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" path))))))
     (mu4e~proc-extract
-      'save (plist-get msg :docid) index path)))
+      'save (mu4e-message-field msg :docid) index path)))
 
 (defun mu4e-view-save-attachment-multi (&optional msg)
   "Offer to save multiple email attachments from the current message.
@@ -958,7 +960,7 @@ message-at-point if nil)."
 		    (mu4e~view-get-attach-num "Attachment to open" msg)))
 	  (att (or (mu4e~view-get-attach msg attnum)))
 	  (index (plist-get att :index))
-	  (docid (plist-get msg :docid))
+	  (docid (mu4e-message-field msg :docid))
 	  (mimetype (plist-get att :mime-type)))
     (if (and mimetype (string= mimetype "message/rfc822"))
       ;; special handling for message-attachments; we open them in mu4e. we also
@@ -990,7 +992,7 @@ user for it."
 		   (mu4e-format "Shell command to open it with: ")
 		   nil 'mu4e~view-open-with-hist)))
 	  (index (plist-get att :index)))
-    (mu4e~view-temp-action (plist-get msg :docid) index "open-with" cmd)))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "open-with" cmd)))
 
 (defvar mu4e~view-pipe-hist nil
   "History list for the pipe argument.")
@@ -1006,7 +1008,7 @@ PIPECMD is nil, ask user for it."
 		       nil
 		       'mu4e~view-pipe-hist)))
 	  (index (plist-get att :index)))
-    (mu4e~view-temp-action (plist-get msg :docid) index "pipe" pipecmd)))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "pipe" pipecmd)))
 
 
 (defun mu4e-view-open-attachment-emacs (msg attachnum)
@@ -1014,7 +1016,7 @@ PIPECMD is nil, ask user for it."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
 	  (index (plist-get att :index)))
-    (mu4e~view-temp-action (plist-get msg :docid) index "emacs")))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "emacs")))
 
 
 (defun mu4e-view-attachment-action (&optional msg)
@@ -1171,7 +1173,7 @@ the results."
   "Pop-up a little signature verification window for (optional) MSG
 or message-at-point."
   (interactive)
-  (let* ((path (if msg (plist-get msg :path)  (mu4e-field-at-point :path)))
+  (let* ((path (if msg (mu4e-message-field msg :path)  (mu4e-field-at-point :path)))
 	  (cmd (format "%s verify --verbose %s"
 		 mu4e-mu-binary
 		 (shell-quote-argument path)))

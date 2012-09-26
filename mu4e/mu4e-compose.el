@@ -99,7 +99,6 @@ forwarded or edited) in `mu4e-compose-pre-hook.")
       "message/rfc822"
       (or (plist-get mu4e-captured-message :subject) "No subject")
       "attachment")))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~compose-user-agent-construct ()
@@ -137,8 +136,8 @@ comma-separated string. Normally, this the concatenation of the
 existing References (which may be empty) and the message-id. If the
 message-id is empty, returns the old References. If both are empty,
 return nil."
-  (let ((refs (plist-get msg :references))
-	 (old-msgid (plist-get msg :message-id)))
+  (let ((refs (mu4e-message-field msg :references))
+	 (old-msgid (mu4e-message-field msg :message-id)))
     (when old-msgid
       (setq refs (append refs (list old-msgid)))
       (mapconcat

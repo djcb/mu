@@ -39,6 +39,7 @@
 (require 'mu4e-mark)
 (require 'mu4e-compose)
 (require 'mu4e-actions)
+(require 'mu4e-message)
 
 ;; the headers view
 (defgroup mu4e-headers nil
@@ -197,7 +198,7 @@ in the database. This function will update the current list of
 headers."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
-      (let* ((docid (plist-get msg :docid))
+      (let* ((docid (mu4e-message-field msg :docid))
  	      (point (mu4e~headers-docid-pos docid)))
 	(when point ;; is the message present in this list?
 
@@ -316,27 +317,27 @@ display may be different)."
 `mu4e-user-mail-address-regexp', show the To address; otherwise
 show the from address; prefixed with the appropriate
 `mu4e-headers-from-or-to-prefix'."
-  (let ((addr (cdr-safe (car-safe (plist-get msg :from)))))
+  (let ((addr (cdr-safe (car-safe (mu4e-message-field msg :from)))))
     (if (and addr (string-match mu4e-user-mail-address-regexp addr))
       (concat (cdr mu4e-headers-from-or-to-prefix)
-	(mu4e~headers-contact-str (plist-get msg :to)))
+	(mu4e~headers-contact-str (mu4e-message-field msg :to)))
       (concat (car mu4e-headers-from-or-to-prefix)
-	(mu4e~headers-contact-str (plist-get msg :from))))))
+	(mu4e~headers-contact-str (mu4e-message-field msg :from))))))
 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (let ((docid (plist-get msg :docid)) (line ""))
+  (let ((docid (mu4e-message-field msg :docid)) (line ""))
     (dolist (f-w mu4e-headers-fields)
       (let ((field (car f-w)) (width (cdr f-w))
-	     (val (plist-get msg (car f-w))) (str))
+	     (val (mu4e-message-field msg (car f-w))) (str))
 	(setq str
 	  (case field
 	    (:subject
 	      (concat ;; prefix subject with a thread indicator
-		(mu4e~headers-thread-prefix (plist-get msg :thread))
-		;;  "["(plist-get (plist-get msg :thread) :path) "] "
+		(mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
+		;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
 		val))
 	    ((:maildir :path) val)
 	    ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
@@ -356,7 +357,7 @@ if provided, or at the end of the buffer otherwise."
 		(truncate-string-to-width str width 0 ?\s t)) " ")))))
     ;; now, propertize it.
     (setq line (propertize line 'face
-		 (case (car-safe (plist-get msg :flags))
+		 (case (car-safe (mu4e-message-field msg :flags))
 		   ('draft           'mu4e-draft-face)
 		   ('trash           'mu4e-trashed-face)
 		   ((unread new)     'mu4e-unread-face)
@@ -875,7 +876,7 @@ matching messages with that mark."
 
 (defun mu4e~headers-get-thread-info (msg what)
   "Get WHAT (a symbol, either path or thread-id) for MSG."
-  (let* ((thread (or (plist-get msg :thread)
+  (let* ((thread (or (mu4e-message-field msg :thread)
 		   (mu4e-error "No thread info found")))
 	  (path  (or (plist-get thread :path)
 		   (mu4e-error "No threadpath found"))))
