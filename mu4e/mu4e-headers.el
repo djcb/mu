@@ -706,7 +706,7 @@ docid DOCID, or nil if it cannot be found."
 with DOCID which must be present in the headers buffer."
   (save-excursion
     (when (mu4e~headers-goto-docid docid)
-      (mu4e-field-at-point field))))
+      (mu4e-message-field (mu4e-message-at-point t) field))))
 
 ;;;; markers mark headers for
 (defun mu4e~headers-mark (docid mark)
@@ -1106,11 +1106,12 @@ current window. "
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (let* ((docid (or (mu4e~headers-docid-at-point)
-		  (mu4e-warn "No message at point")))
+  (let* ((msg (mu4e-message-at-point t))
+	  (docid (or (mu4e-message-field msg :docid)
+		   (mu4e-warn "No message at point"))) 
 	  ;; decrypt (or not), based on `mu4e-decryption-policy'.
 	  (decrypt
-	    (and (member 'encrypted (mu4e-field-at-point :flags))
+	    (and (member 'encrypted (mu4e-message-field msg :flags))
 	      (if (eq mu4e-decryption-policy 'ask)
 		(yes-or-no-p (mu4e-format "Decrypt message?"))
 		mu4e-decryption-policy)))

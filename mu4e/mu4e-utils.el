@@ -378,21 +378,6 @@ top level if there is none."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defalias 'mu4e-msg-field 'mu4e-message-field) ;; backward compatibility
- 
-(defun mu4e-message-at-point (&optional raise-err)
-  "Get the message s-expression for the message at point in either
-the headers buffer or the view buffer, or nil if there is no such
-message. If optional RAISE-ERR is non-nil, raise an error when
-there is no message at point."
-  (let ((msg
-	 (cond
-	   ((eq major-mode 'mu4e-headers-mode)
-	     (get-text-property (point) 'msg))
-	   ((eq major-mode 'mu4e-view-mode)
-	     mu4e~view-msg))))
-    (if (and (null msg) raise-err)
-      (mu4e-warn "No message at point")
-      msg)))
 
 (defun mu4e-field-at-point (field)
   "Get FIELD (a symbol, see `mu4e-header-info') for the message at

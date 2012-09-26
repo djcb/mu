@@ -782,7 +782,8 @@ current message."
   `(progn
      (unless '(buffer-live-p mu4e~view-headers-buffer)
        (mu4e-error "no headers-buffer connected"))
-     (let* ((docid (mu4e-field-at-point :docid)))
+     (let* ((msg (mu4e-message-at-point t))
+	     (docid (mu4e-message-field msg :docid)))
        (unless docid
 	 (mu4e-error "message without docid: action is not possible."))
        (with-current-buffer mu4e~view-headers-buffer
@@ -934,7 +935,7 @@ will save attachments 1,3,4,5,6 and 8.
 Furthermore, there is a shortcut \"a\" which so means all
 attachments, but as this is the default, you may not need it."
   (interactive)
-  (let* ((msg (or msg (mu4e-message-at-point)))
+  (let* ((msg (or msg (mu4e-message-at-point t)))
 	 (attachstr (mu4e~view-get-attach-num
 		      "Attachment number range (or 'a' for 'all')" msg t))
 	  (count (hash-table-count mu4e~view-attach-map))
@@ -955,7 +956,7 @@ attachments."
   "Open attachment number ATTNUM (or ask if nil) from MSG (or
 message-at-point if nil)."
   (interactive)
-  (let* ((msg (or msg (mu4e-message-at-point)))
+  (let* ((msg (or msg (mu4e-message-at-point t)))
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to open" msg)))
 	  (att (or (mu4e~view-get-attach msg attnum)))
@@ -1148,8 +1149,9 @@ user that unmarking only works in the header list."
 (defun mu4e-view-raw-message ()
   "Display the raw contents of message at point in a new buffer."
   (interactive)
-  (let ((path (mu4e-field-at-point :path))
-	 (buf (get-buffer-create mu4e~view-raw-buffer-name)))
+  (let* ((msg (mu4e-message-at-point))
+	  (path (mu4e-message-field msg :path))
+	  (buf (get-buffer-create mu4e~view-raw-buffer-name)))
     (unless (and path (file-readable-p path))
       (mu4e-error "Not a readable file: %S" path))
     (with-current-buffer buf
@@ -1164,7 +1166,7 @@ user that unmarking only works in the header list."
   "Pipe the message at point through shell command CMD, and display
 the results."
   (interactive "sShell command: ")
-  (let ((path (mu4e-field-at-point :path)))
+  (let ((path (mu4e-message-field (mu4e-message-at-point) :path)))
     (mu4e-process-file-through-pipe path cmd)))
 
 (defconst mu4e~verify-buffer-name " *mu4e-verify*")
@@ -1173,7 +1175,8 @@ the results."
   "Pop-up a little signature verification window for (optional) MSG
 or message-at-point."
   (interactive)
-  (let* ((path (if msg (mu4e-message-field msg :path)  (mu4e-field-at-point :path)))
+  (let* ((msg (or msg (mu4e-message-at-point)))
+	  (path (mu4e-message-field msg :path))
 	  (cmd (format "%s verify --verbose %s"
 		 mu4e-mu-binary
 		 (shell-quote-argument path)))

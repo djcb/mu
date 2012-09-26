@@ -26,6 +26,9 @@
 
 ;;; Code:
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
+
+(require 'mu4e-vars)
+
 (require 'cl)
 (require 'html2text)
  
@@ -84,9 +87,17 @@ Some  notes on the format:
   Message view use the actual message file, and do include these fields."
   ;; after all this documentation, the spectacular implementation
   (plist-get msg field))
-
-
-
+  
+(defsubst mu4e-message-at-point (&optional raise-err)
+  "Get the message s-expression for the message at point in either
+the headers buffer or the view buffer, or nil if there is no such
+message. If optional RAISE-ERR is non-nil, raise an error when
+there is no message at point."
+  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-msg))) 
+    (if msg
+      msg
+      (when raise-err
+	(mu4e-warn "No message at point")))))
 
 
 (defun mu4e-message-for-each (msg field func)
@@ -153,7 +164,6 @@ function prefers the text part, but this can be changed by setting
 	    ((string= (match-string 0) "") "'")
 	    (t		                       ""))))
       (buffer-string))))
-
 
 
 (defsubst mu4e-message-part-field  (msgpart field)
