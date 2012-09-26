@@ -706,7 +706,7 @@ docid DOCID, or nil if it cannot be found."
 with DOCID which must be present in the headers buffer."
   (save-excursion
     (when (mu4e~headers-goto-docid docid)
-      (mu4e-message-field (mu4e-message-at-point t) field))))
+      (mu4e-message-field (mu4e-message-at-point) field))))
 
 ;;;; markers mark headers for
 (defun mu4e~headers-mark (docid mark)
@@ -895,28 +895,27 @@ matching messages with that mark."
 limited to the message at point and its descendants."
   ;; the tread id is shared by all messages in a thread
   (interactive "P")
-  (let* ((thread-id (mu4e~headers-get-thread-info
-		      (mu4e-message-at-point t) 'thread-id))
-	  (path     (mu4e~headers-get-thread-info
-		      (mu4e-message-at-point t) 'path))
+  (let* ((msg (mu4e-message-at-point))
+	  (thread-id (mu4e~headers-get-thread-info msg 'thread-id))
+	  (path     (mu4e~headers-get-thread-info msg 'path))
 	  (markpair
 	    (mu4e~mark-get-markpair
 	      (if subthread "Mark subthread with: " "Mark whole thread with: ")
 	      t))
 	  (last-marked-point))
     (mu4e-headers-for-each
-      (lambda (msg)
- 	(let ((my-thread-id (mu4e~headers-get-thread-info msg 'thread-id)))
+      (lambda (mymsg)
+ 	(let ((my-thread-id (mu4e~headers-get-thread-info mymsg 'thread-id)))
 	  (if subthread
-	    ;; subthread matching; msg's thread path should have path as its
+	    ;; subthread matching; mymsg's thread path should have path as its
 	    ;; prefix
 	    (when (string-match (concat "^" path)
-		    (mu4e~headers-get-thread-info msg 'path))
+		    (mu4e~headers-get-thread-info mymsg 'path))
 	      (mu4e-mark-at-point (car markpair) (cdr markpair))
 	      (setq last-marked-point (point)))
 	    ;; nope; not looking for the subthread; looking for the whole thread
 	    (when (string= thread-id
-		    (mu4e~headers-get-thread-info msg 'thread-id))
+		    (mu4e~headers-get-thread-info mymsg 'thread-id))
 	      (mu4e-mark-at-point (car markpair) (cdr markpair))
 	      (setq last-marked-point (point)))))))
     (when last-marked-point
@@ -1106,7 +1105,7 @@ current window. "
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (let* ((msg (mu4e-message-at-point t))
+  (let* ((msg (mu4e-message-at-point))
 	  (docid (or (mu4e-message-field msg :docid)
 		   (mu4e-warn "No message at point"))) 
 	  ;; decrypt (or not), based on `mu4e-decryption-policy'.
@@ -1234,7 +1233,7 @@ N. Otherwise, don't do anything."
   "Ask user what to do with message-at-point, then do it. The
 actions are specified in `mu4e-headers-actions'."
   (interactive)
-  (let ((msg (mu4e-message-at-point t))
+  (let ((msg (mu4e-message-at-point))
 	 (actionfunc (mu4e-read-option "Action: " mu4e-headers-actions)))
     (funcall actionfunc msg)))
 

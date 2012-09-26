@@ -28,10 +28,11 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 
 (require 'mu4e-vars)
+(require 'mu4e-utils)
 
 (require 'cl)
 (require 'html2text)
- 
+
 
 (defcustom mu4e-html2text-command nil
   "Shell command that converts HTML from stdin into plain text on
@@ -88,16 +89,15 @@ Some  notes on the format:
   ;; after all this documentation, the spectacular implementation
   (plist-get msg field))
   
-(defsubst mu4e-message-at-point (&optional raise-err)
+(defsubst mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point in either
 the headers buffer or the view buffer, or nil if there is no such
-message. If optional RAISE-ERR is non-nil, raise an error when
+message. If optional NOERROR is non-nil, do not raise an error when
 there is no message at point."
   (let ((msg (or (get-text-property (point) 'msg) mu4e~view-msg))) 
     (if msg
       msg
-      (when raise-err
-	(mu4e-warn "No message at point")))))
+      (unless noerror (mu4e-warn "No message at point")))))
 
 
 (defun mu4e-message-for-each (msg field func)
@@ -170,5 +170,18 @@ function prefers the text part, but this can be changed by setting
   "Get some field in a message part; a part would look something like:
    (:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)."
   (plist-get msgpart field))
+
+
+
+;; backward compatibility ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defalias 'mu4e-msg-field 'mu4e-message-field)
+(defalias 'mu4e-body-text 'mu4e-message-body-text) ;; backward compatibility
+
+(defun mu4e-field-at-point (field)
+  "Get FIELD (a symbol, see `mu4e-header-info') for the message at
+point in eiter the headers buffer or the view buffer."
+  (plist-get (mu4e-message-at-point) field))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (provide 'mu4e-message)

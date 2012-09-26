@@ -30,7 +30,9 @@
 (require 'cl)
 
 (require 'mu4e-utils)
+(require 'mu4e-message)
 (require 'mu4e-meta)
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,7 +41,7 @@
 headers view and message-view."
   (message "Number of lines: %s"
     (shell-command-to-string
-      (concat "wc -l < " (shell-quote-argument (plist-get msg :path))))))
+      (concat "wc -l < " (shell-quote-argument (mu4e-message-field msg :path))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -58,13 +60,12 @@ view."
   (let* ((pdf
 	  (shell-command-to-string
 	    (concat mu4e-msg2pdf " "
-	      (shell-quote-argument (mu4e-msg-field msg :path))
+	      (shell-quote-argument (mu4e-message-field msg :path))
 	      " 2> /dev/null")))
 	 (pdf (and pdf (> (length pdf) 5)
 		(substring pdf 0 -1)))) ;; chop \n
     (unless (and pdf (file-exists-p pdf))
-      (message "==> %S %S" pdf (mu4e-msg-field msg :path))
-      (mu4e-error "Failed to create PDF file"))
+      (mu4e-warn "Failed to create PDF file"))
     (find-file pdf)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -75,8 +76,8 @@ view."
 (defun mu4e-action-view-in-browser (msg)
   "View the body of the message in a web browser. You can influence
 the browser to use with the variable `browse-url-generic-program'."
-  (let* ((html (mu4e-msg-field msg :body-html))
-	  (txt (mu4e-msg-field msg :body-txt))
+  (let* ((html (mu4e-message-field msg :body-html))
+	  (txt (mu4e-message-field msg :body-txt))
 	  (tmpfile (format "%s%x.html" temporary-file-directory (random t))))
     (unless (or html txt)
       (mu4e-error "No body part for this message"))
@@ -96,10 +97,10 @@ the browser to use with the variable `browse-url-generic-program'."
 
 (defun mu4e-action-message-to-speech (msg)
   "Pronounce the message text using `mu4e-text2speech-command'."
-  (unless (mu4e-msg-field msg :body-txt)
-    (mu4e-error "No text body for this message"))
+  (unless (mu4e-message-field msg :body-txt)
+    (mu4e-warn "No text body for this message"))
   (with-temp-buffer
-    (insert (mu4e-msg-field msg :body-txt))
+    (insert (mu4e-message-field msg :body-txt))
     (shell-command-on-region (point-min) (point-max)
       mu4e-text2speech-command)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -142,7 +143,7 @@ store your org-contacts."
     (mu4e-error "org-capture is not available."))
   (unless mu4e-org-contacts-file
     (mu4e-error "`mu4e-org-contacts-file' is not defined."))
-  (let* ((sender (car-safe (mu4e-msg-field msg :from)))
+  (let* ((sender (car-safe (mu4e-message-field msg :from)))
 	  (name (car-safe sender)) (email (cdr-safe sender))
 	  (blurb
 	    (format

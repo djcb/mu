@@ -28,19 +28,18 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
-(require 'mu4e-message)
 (require 'mu4e-vars)
 (require 'mu4e-about)
 (require 'doc-view)
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the following is taken from org.el; we copy it here since we don't want to
 ;; depend on org-mode directly (it causes byte-compilation errors) TODO: a
 ;; cleaner solution....
 (defconst mu4e~ts-regexp0
- "\\(\\([0-9]\\{4\\}\\)-\\([0-9]\\{2\\}\\)-\\([0-9]\\{2\\}\\)\\( +[^]+0-9>\r\n -]+\\)?\\( +\\([0-9]\\{1,2\\}\\):\\([0-9]\\{2\\}\\)\\)?\\)"
+  (concat
+    "\\(\\([0-9]\\{4\\}\\)-\\([0-9]\\{2\\}\\)-\\([0-9]\\{2\\}\\)"
+    "\\( +[^]+0-9>\r\n -]+\\)?\\( +\\([0-9]\\{1,2\\}\\):\\([0-9]\\{2\\}\\)\\)?\\)")
   "Regular expression matching time strings for analysis.
 This one does not require the space after the date, so it can be
 used on a string that terminates immediately after the date.")
@@ -90,13 +89,15 @@ user-input, don't show anyhting."
 
 (defun mu4e-error (frm &rest args)
   "Create [mu4e]-prefixed error based on format FRM and ARGS. Does
-a local-exit and does not return."
+a local-exit and does not return, and raises a
+debuggable (backtrace) error."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e-warn (frm &rest args)
   "Create [mu4e]-prefixed warning based on format FRM and
-ARGS. Does a local-exit and does not return."
+ARGS. Does a local-exit and does not return. In emacs versions
+below 24.2, the functions is the same as `mu4e-error'."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (if (fboundp 'user-error)
     (user-error "%s" (apply 'mu4e-format frm args)) ;; only in emacs-trunk
@@ -239,25 +240,6 @@ and offer to create it if it does not exist yet."
     mdir))
 
 
-(defun mu4e-mark-for-move-set (&optional target)
-  "Mark message at point or, if region is active, all messages in
-the region, for moving to maildir TARGET. If target is not
-provided, function asks for it."
-  (interactive)
-  (unless (mu4e~headers-docid-at-point)
-    (mu4e-warn "No message at point."))
-  (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
-	  (target (if (string= (substring target 0 1) "/")
-		    target
-		    (concat "/" target)))
-	  (fulltarget (concat mu4e-maildir target)))
-    (when (or (file-directory-p fulltarget)
-	    (and (yes-or-no-p
-		   (mu4e-format "%s does not exist. Create now?" fulltarget))
-	      (mu4e~proc-mkdir fulltarget)))
-      (mu4e-mark-set 'move target))))
-
-
 (defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
@@ -361,9 +343,6 @@ http://cr.yp.to/proto/maildir.html "
       (format "%2.1fK" (/ size 1000.0)))
     ((< size 1000) (format "%d" size))
     (t (propertize "?" 'face 'mu4e-system-face))))
-
-
-(defalias 'mu4e-body-text 'mu4e-message-body-text) ;; backward compatibility
  
 
 (defun mu4e-display-manual ()
@@ -377,13 +356,6 @@ top level if there is none."
 	  (t               "mu4e"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defalias 'mu4e-msg-field 'mu4e-message-field) ;; backward compatibility
-
-(defun mu4e-field-at-point (field)
-  "Get FIELD (a symbol, see `mu4e-header-info') for the message at
-point in eiter the headers buffer or the view buffer."
-  (plist-get (mu4e-message-at-point t) field))
-
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
   (when (buffer-live-p mu4e~headers-buffer)

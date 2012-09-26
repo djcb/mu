@@ -782,7 +782,7 @@ current message."
   `(progn
      (unless '(buffer-live-p mu4e~view-headers-buffer)
        (mu4e-error "no headers-buffer connected"))
-     (let* ((msg (mu4e-message-at-point t))
+     (let* ((msg (mu4e-message-at-point))
 	     (docid (mu4e-message-field msg :docid)))
        (unless docid
 	 (mu4e-error "message without docid: action is not possible."))
@@ -831,7 +831,7 @@ N (prefix argument), to the Nth previous header."
 if nil), then do it. The actions are specified in
 `mu4e-view-actions'."
   (interactive)
-  (let* ((msg (or msg (mu4e-message-at-point t)))
+  (let* ((msg (or msg (mu4e-message-at-point)))
 	  (actionfunc (mu4e-read-option "Action: " mu4e-view-actions)))
     (funcall actionfunc msg)))
 
@@ -935,7 +935,7 @@ will save attachments 1,3,4,5,6 and 8.
 Furthermore, there is a shortcut \"a\" which so means all
 attachments, but as this is the default, you may not need it."
   (interactive)
-  (let* ((msg (or msg (mu4e-message-at-point t)))
+  (let* ((msg (or msg (mu4e-message-at-point)))
 	 (attachstr (mu4e~view-get-attach-num
 		      "Attachment number range (or 'a' for 'all')" msg t))
 	  (count (hash-table-count mu4e~view-attach-map))
@@ -956,7 +956,7 @@ attachments."
   "Open attachment number ATTNUM (or ask if nil) from MSG (or
 message-at-point if nil)."
   (interactive)
-  (let* ((msg (or msg (mu4e-message-at-point t)))
+  (let* ((msg (or msg (mu4e-message-at-point)))
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to open" msg)))
 	  (att (or (mu4e~view-get-attach msg attnum)))
@@ -1025,7 +1025,7 @@ PIPECMD is nil, ask user for it."
 message-at-point, then do it. The actions are specified in
 `mu4e-view-attachment-actions'."
   (interactive)
-  (let* ((msg (or msg (mu4e-message-at-point t)))
+  (let* ((msg (or msg (mu4e-message-at-point)))
 	  (actionfunc (mu4e-read-option
 			"Action on attachment: "
 			mu4e-view-attachment-actions))

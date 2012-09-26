@@ -28,6 +28,7 @@
 ;; Code:
 (require 'mu4e-proc)
 (require 'mu4e-utils)
+(require 'mu4e-message)
 
 (defcustom mu4e-headers-leave-behavior 'ask
   "What to do when user leaves the headers view (e.g. quits,
@@ -101,7 +102,8 @@ The following marks are available, and the corresponding props:
    `deferred' n         mark this message for *something* (decided later)
    `unmark'   n         unmark this message"
   (interactive)
-  (let* ((docid (mu4e-field-at-point :docid))
+  (let* ((msg (mu4e-message-at-point))
+	  (docid (mu4e-message-field msg :docid))
 	  ;; get a cell with the mark char and the 'target' 'move' already has a
 	  ;; target (the target folder) the other ones get a pseudo "target", as
 	  ;; info for the user.
@@ -174,7 +176,7 @@ headers in the region."
 the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
   (interactive)
-  (mu4e-field-at-point :docid) ;; will raise an error if there is none
+  (mu4e-message-at-point) ;; raises error if there is none 
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	  (target (if (string= (substring target 0 1) "/")
 		    target
@@ -281,8 +283,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
     mu4e~mark-map)
   ;; in any case, clear the marks map
   (mu4e~mark-clear))
-
-
+ 
 (defun mu4e-mark-docid-marked-p (docid)
   "Is the given docid marked?"
   (when (gethash docid mu4e~mark-map) t))

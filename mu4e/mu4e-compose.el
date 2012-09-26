@@ -40,6 +40,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-proc)
 (require 'mu4e-actions)
+(require 'mu4e-message)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Composing / Sending messages
@@ -688,32 +689,33 @@ or replied to, otherwise it is nil."
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
 take the message at point as input. Symbol `edit' is only allowed
 for draft messages."
+  (let ((msg (mu4e-message-at-point 'noerror)))
+    ;; some sanity checks
+    (unless (or msg (eq compose-type 'new))
+      (mu4e-warn "No message at point"))
+    (unless (member compose-type '(reply forward edit new))
+      (mu4e-error "Invalid compose type '%S'" compose-type))   
+    (when (and (eq compose-type 'edit)
+	    (not (member 'draft (mu4e-message-field msg :flags))))
+      (mu4e-warn "Editing is only allowed for draft messages"))
+    ;; run the hooks
+    (mu4e~compose-run-hooks compose-type)
 
-  (unless (member compose-type '(reply forward edit new))
-    (mu4e-error "Invalid compose type '%S'" compose-type))
-  (when (and (eq compose-type 'edit)
-	  (not (member 'draft (mu4e-field-at-point :flags))))
-    (mu4e-warn "Editing is only allowed for draft messages"))
-
-  ;; run the hooks
-  (mu4e~compose-run-hooks compose-type)
-
-  ;; 'new is special, since it takes no existing message as arg therefore,
-  ;; we don't need to call thec backend, and call the handler *directly*
-  (if (eq compose-type 'new)
-    (mu4e~compose-handler 'new)
-
-    ;; otherwise, we need the doc-id
-    (let ((docid (mu4e-field-at-point :docid)))
-       ;; if there's a visible view window, select that before starting composing
-      ;; a new message, so that one will be replaced by the compose window. The
-      ;; 10-or-so line headers buffer is not a good place to write it...
+    ;; 'new is special, since it takes no existing message as arg therefore,
+    ;; we don't need to call thec backend, and call the handler *directly*
+    (if (eq compose-type 'new)
+      (mu4e~compose-handler 'new)
+      ;; otherwise, we need the doc-id
+      (let ((docid (mu4e-message-field msg :docid)))
+	;; if there's a visible view window, select that before starting composing
+	;; a new message, so that one will be replaced by the compose window. The
+	;; 10-or-so line headers buffer is not a good place to write it...
 	(let ((viewwin (get-buffer-window mu4e~view-buffer)))
 	  (when (window-live-p viewwin)
 	    (select-window viewwin)))
 
-      ;; talk to the backend
-      (mu4e~proc-compose compose-type docid))))
+	;; talk to the backend
+	(mu4e~proc-compose compose-type docid)))))
 
 (defun mu4e-compose-reply ()
   "Compose a reply for the message at point in the headers buffer."
