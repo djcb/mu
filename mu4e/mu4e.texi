@@ -64,9 +64,13 @@ This manual has been updated for @t{mu}/@t{mu4e} version
 @menu
 * Introduction:: How it all began
 * Getting started:: Setting things up
-* Running mu4e:: Daily use
+* Main view:: Where we go when starting @t{mu4e}
+* Headers view:: Lists of message headers
+* Message view:: Viewing specific messages
+* Editor view:: Creating / editing messages
 * Searching:: Some more background on searching/queries
 * Marking:: Marking messages and performing actions
+* Dynamic folders:: Folders that depend on the context
 * Actions:: Defining and using custom actions
 * Interaction with other tools:: mu4e and the rest of the world
 * Example configuration:: Some examples to set you up quickly
@@ -157,12 +161,13 @@ can set it up. After we have succeeded in @ref{Getting mail}, and
 After these steps, @t{mu4e} should be ready to go.
 
 @menu
-* Installation::
-* Getting mail::
-* Indexing your messages::
-* Basic configuration::
-* Folders::
-* Sending mail::
+* Installation:: How to install @t{mu} and @t{mu4e}
+* Getting mail:: Getting mail from a server
+* Indexing your messages:: Creating and maintaining the index
+* Basic configuration:: Settings for @t{mu4e}
+* Folders::  Setting up standard folders
+* Sending mail:: How to send mail
+* Running mu4e:: Overview of the @t{mu4e} views 
 
 @end menu
 
@@ -301,7 +306,8 @@ The first thing we need to do before we can start using @t{mu4e} is to tell
 @t{emacs} to load @t{mu4e}, and tell @t{mu4e} where it can find specific
 maildir folders.
 
-So, add to your @file{~/.emacs} (or its moral equivalent) something like:
+So, add to your @file{~/.emacs} (or its moral equivalent, such as
+@file{~/.emacs.d/init.el}) something like:
 
 @example
 (require 'mu4e)
@@ -311,18 +317,24 @@ So, add to your @file{~/.emacs} (or its moral equivalent) something like:
 @section Folders
 
 The next step is to tell @t{mu4e} where it can find your Maildir, and some
-special folders. So, for example:
+special folders. So, for example@footnote{Note that the folders
+(@t{mu4e-sent-folder}, @t{mu4e-drafts-folder}, @t{mu4e-trash-folder} and
+@t{mu4e-refile-folder}), instead of simple strings like the example above, can
+actually be @emph{functions}, that can be evaluated a runtime. This allows for
+dynamically changing them depending on context. See @ref{Dynamic folders} for
+details.}:
 @lisp
   (setq
     mu4e-maildir       "~/Maildir"   ;; top-level Maildir
-    mu4e-sent-folder   "/sent"       ;; where do i keep sent mail?
-    mu4e-drafts-folder "/drafts"     ;; where do i keep half-written mail?
-    mu4e-trash-folder  "/trash")     ;; where do i move deleted mail?
+    mu4e-sent-folder   "/sent"       ;; where do I keep sent mail?
+    mu4e-drafts-folder "/drafts"     ;; where do I keep half-written mail?
+    mu4e-trash-folder  "/trash"      ;; where do I move deleted mail?
+    mu4e-refile-folder "/archive")   ;; where do I move message after completion?
 @end lisp
 
-@code{mu4e-maildir} takes an actual filesystem-path, the other folder names are
-all relative to @code{mu4e-maildir}. The next step is telling @t{mu4e} how we
-want to send mail.
+@code{mu4e-maildir} takes an actual filesystem-path, the other folder names
+are all relative to @code{mu4e-maildir}. The next step is telling @t{mu4e} how
+we want to send mail.
 
 @node Sending mail
 @section Sending mail
@@ -363,7 +375,7 @@ sent-messages folder. Other possible values are @code{'trash} (so the sent
 message is copied to the trash-folder (@code{mu4e-trash-folder}), and
 @code{'delete} to simply discard the message altogether.
 
-For Gmail-IMAP you could add the following to your settings:
+For Gmail-IMAP, you could add the following to your settings:
 
 @verbatim
 ;; don't save messages to Sent Messages, Gmail/IMAP will take care of this
@@ -373,15 +385,11 @@ For Gmail-IMAP you could add the following to your settings:
 And that's it! We should be ready to go now.
 
 @node Running mu4e
-@chapter Running mu4e
+@section Running mu4e
 
-After the following the steps in @ref{Getting started}, we should now have a
-working @t{mu4e} setup. In this chapter, we'll give a tour of the @t{mu4e}
-program, and show its use.
-
-@t{mu4e} consists of a number of views; the diagram shows how they relate to
-each other, and the default key-bindings to get from one view to the next. In
-the next sections we will describe what these keys actually @emph{do}.
+After the following the steps in this chapter, we now hopefully have a working
+@t{mu4e} setup. @t{mu4e} consists of a number of views, and in the next
+chapter we go through all of them:
 
 @menu
 * Main view:: This is where we start
@@ -390,6 +398,8 @@ the next sections we will describe what these keys actually @emph{do}.
 * Editor view:: Creating / editing messages
 @end menu
 
+For your orientation, the diagram below shows how the views relate to each
+other, and the default key-bindings to get from one view to the next. 
 
 @example
 ----------------------------------------------------------------------------
@@ -420,7 +430,7 @@ E: Edit       B: edit bookmark-search
 @end example
 
 @node Main view
-@section Main view
+@chapter Main view
 
 After you have installed @t{mu4e} (@pxref{Getting started}), you can start it
 with @code{M-x mu4e}. @t{mu4e} wil do some checks to ensure everything is set
@@ -505,7 +515,7 @@ if you have actually set up mail-queuing. @ref{Queuing mail}.
 @end itemize
 
 @node Headers view
-@section Headers view
+@chapter Headers view
 
 The headers view shows the results of a search query. There is a line for each
 matching message, showing information about it. It looks something like the
@@ -585,10 +595,11 @@ Q            toggle full-search
 marking
 -------
 d            mark for moving to the trash folder
-DEL,D        mark for immediate deletion
+DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
+r            mark for refiling
 +,-          mark for flagging/unflagging
-o,r          mark message as unread, read
+o,s          mark message as unread, read (seen)
 
 u            unmark message at point
 U            unmark *all* messages
@@ -619,14 +630,17 @@ q,z          leave the headers buffer
 @subsection Marking messages
 @anchor{Marking messages}
 
+When working with messages, usually the first step is @emph{marking} them for
+a certain action, such as deleting them or moving them. Then, after one or
+more marks are set, you execute (@key{x}) these marks. The two-step
+mark-execute sequence is similar to what @t{dired} and som other emacs-based
+programs do. This way, @t{mu4e} tries to be as quick as possible while
+avoiding accidents.
+
 The mark/unmark commands support the current @emph{region} (i.e., selection)
 -- so, for example, if you the select ('mark' in emacs lingo) a number of
 message (like you would select text in a buffer) and then press @key{DEL}, all
 selected message will be marked for deletion.
-
-The two-step mark-execute sequence is similar to what @t{dired} and som other
-emacs-based programs do. This way, @t{mu4e} tries to be as quick as possible
-while avoiding accidents.
 
 You can mark all messages that match a certain pattern with @key{%}. In
 addition, you can mark all messages in the current thread (@key{T}) or
@@ -718,7 +732,7 @@ You can change the selected window from the headers-view to the message-view
 and vice-versa with @code{mu4e-select-other-view}, bound to @key{y}.
 
 @node Message view
-@section Message view
+@chapter Message view
 
 After selecting a message in the @ref{Headers view}, it will be shown in the
 message view, for example:
@@ -801,10 +815,10 @@ M-right      next query
 marking
 -------
 d            mark for moving to the trash folder
-DEL,D        mark for immediate deletion
+DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
+r            mark for refiling
 +,-          mark for flagging/unflagging
-o,r          mark message as unread, read
 
 u            unmark message at point
 U            unmark *all* messages
@@ -999,7 +1013,7 @@ details of the signatures found and whether they could be verified or not.
 For more information, please see the @t{mu-verify} manual page.
 
 @node Editor view
-@section Editor view
+@chapter Editor view
 
 For its editor, @t{mu4e} re-uses Gnu's @t{message-mode}. For example, when
 replying to a message, the editor view looks something like the following:
@@ -1206,7 +1220,6 @@ man pages for details.
 @emph{Warning}: when you switch on queued-mode, your messages will not reach
 their destination until you switch it off again; so, be careful not to do this
 accidentally.
-
 
 @node Searching
 @chapter Searching
@@ -1478,16 +1491,17 @@ apply to messages:
 @verbatim
 | mark for     | keybinding  | description              |
 |--------------+-------------+--------------------------|
-| trash        | d           | move to the trash folder |
-| delete       | D, <delete> | delete                   |
-| move         | m           | move to some maildir     |
-| flag         | +           | mark as 'flagged'        |
-| unflag       | -           | remove 'flagged' mark    |
-| read         | r           | mark as read             |
-| unread       | o           | marks as unread          |
 | deferred     | *           | mark now, decide later   |
+| delete       | D, <delete> | delete                   |
+| flag         | +           | mark as 'flagged'        |
+| move         | m           | move to some maildir     |
+| read         | s           | mark as read (seen)      |
+| refile       | r           | mark for refiling        |
+| trash        | d           | move to the trash folder |
+| unflag       | -           | remove 'flagged' mark    |
 | unmark       | u           | remove mark at point     |
 | unmark all   | U           | remove all marks         |
+| unread       | o           | marks as unread          |
 @end verbatim
 
 After marking a header for something, the left-most columns shows a character
@@ -1572,6 +1586,64 @@ press @key{% + s hello RET}. Note, the menu system helps you here; all you
 need to remember is @key{%} for @code{mu4e-headers-mark-pattern}.
 @end itemize
 
+
+@node Dynamic folders
+@chapter Dynamic folders
+
+In @ref{Folders} we gave an example of setting the standard folders:
+@lisp
+  (setq
+    mu4e-sent-folder   "/sent"       ;; where do I keep sent mail?
+    mu4e-drafts-folder "/drafts"     ;; where do I keep half-written mail?
+    mu4e-trash-folder  "/trash"      ;; where do I move deleted mail?
+    mu4e-refile-folder "/archive")   ;; where do I move message after completion?
+@end lisp
+
+In some case, these static folders may not suffice, and you might want to
+change the folders depending on the context; for example, we may have
+different folders for refiling, based on the sender of the message.
+
+To enable this, instead of setting the standard folders to constant strings,
+you can set them to be a @emph{function} that takes a message as parameter,
+and returns the desired folder name.
+
+For example, for the refile folder you could put something like the following
+in your setup:
+@lisp
+(setq mu4e-refile-folder
+  (lambda (msg)
+    (cond
+      ;; messages to the mu mailing list go to the /mu folder
+      ((mu4e-message-contact-field-matches msg :to  "mu-discuss@@googlegroups.com")
+	"/mu")     
+      ;; messages sent directly to me go to /archive
+      ;; also `mu4e-user-mail-address-regexp' can be used
+      ((mu4e-message-contact-field-matches msg :to "me@@example.com")
+	"/private")
+      ;; message with football or soccer in the subject go to /football  
+      ((string-match "football\\|soccer" (mu4e-message-field msg :subject))
+       "/football)
+      ;; everything else goes to /archive
+      (t 
+	"/archive"))))
+@end lisp
+
+Let's look at this example a bit:
+@itemize
+@item we set @code{mu4e-refile-folder} to an anonymous (@t{lambda}) function. This
+function takes one argument, a message.  @file{mu4e-message.el} contains
+various convenience functions to deal which such messages
+@item In this function, we use a @t{cond} control structure; the function
+returns the first of the clauses that matches
+@item Especially useful are the function @file{mu4e-message.el}; here we use
+the convenience function @code{mu4e-message-contact-field-matches}, which 
+@end itemize
+
+Using the same mechanism, you can set special sent-, trash-, and draft-folders
+for messages. Note that the message-parameter you receive for sent and draft
+folder is the @emph{original} message, that is, the message you reply to or
+forward. If there is not such message (for example when composing a new
+message) the message parameter will be @t{nil}.
 
 @node Actions
 @chapter Actions
@@ -1695,6 +1767,11 @@ body-text using text-to-speech.
 
 If you have come up with any interesting actions that may be useful for
 others, you are invited to contribute those.
+
+
+
+
+
 
 @node Interaction with other tools
 @chapter Interaction with other tools
@@ -2304,11 +2381,9 @@ address management with @t{BBDB}; instead, we recommend using @t{mu4e}'s
 built-in @ref{Address autocompletion}.
 @item @emph{How can I automatically set the @t{From:} address for a
 reply-message, based on some field in the original?} See @ref{Compose hooks}.
-@item @emph{And what about customizable folders for sent messages, based on e.g.
-the @t{From:} header?} Again, see @ref{Compose hooks}; alternatively, you can
-periodically move messages from the main sent-folder to the specific
-sent-folders. You can easily find those messages with a query like
-@t{maildir:/sent from:myaddress@@example.com}.
+@item @emph{And what about customizable folders for draft messages, sent
+messages, trashed messages, based on e.g.  the @t{From:} header?} See
+@ref{Dynamic folders}.
 @item @emph{How can I automatically add some header to an outgoing message?}
 Once more, see @ref{Compose hooks}.
 @item @emph{How can I easily include attachments in the messages I write?}
