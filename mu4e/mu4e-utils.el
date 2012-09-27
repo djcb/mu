@@ -67,13 +67,12 @@ hour and minute fields will be nil if not given."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the standard folders can be functions too
-
 (defun mu4e~get-folder (foldervar msg)
   "Get message folder FOLDER. If FOLDER is a string, return it, if
 it is a function, evaluate this function with MSG as
 parameter (which may be `nil'), and return the result."
   (unless (member foldervar '(mu4e-sent-folder mu4e-drafts-folder
-			       mu4e-trash-folder))
+			       mu4e-trash-folder mu4e-refile-folder))
     (mu4e-error "Folder must be either mu4e-sent-folder,
     mu4e-drafts-folder or mu4e-trash-folder (not %S)" foldervar))
   (let* ((folder (symbol-value foldervar))
@@ -84,13 +83,17 @@ parameter (which may be `nil'), and return the result."
 	      (t (error "unsupported type for %S" folder)))))
     (or val (mu4e-error "%S evaluates to nil" foldervar))))
 
-(defun mu4e-get-sent-folder (msg)
-  "Get the sent folder. See `mu4e-sent-folder'."
-  (mu4e~get-folder 'mu4e-sent-folder msg))
-
 (defun mu4e-get-drafts-folder (msg)
   "Get the sent folder. See `mu4e-drafts-folder'."
   (mu4e~get-folder 'mu4e-drafts-folder msg))
+
+(defun mu4e-get-refile-folder (msg)
+  "Get the folder for refiling. See `mu4e-refile-folder'."
+  (mu4e~get-folder 'mu4e-refile-folder msg))
+
+(defun mu4e-get-sent-folder (msg)
+  "Get the sent folder. See `mu4e-sent-folder'."
+  (mu4e~get-folder 'mu4e-sent-folder msg))
 
 (defun mu4e-get-trash-folder (msg)
   "Get the sent folder. See `mu4e-trash-folder'."

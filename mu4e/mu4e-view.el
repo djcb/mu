@@ -545,6 +545,8 @@ at POINT, or if nil, at (point)."
       (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
       (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "m") 'mu4e-view-mark-for-move)
+      (define-key map (kbd "r") 'mu4e-view-mark-for-refile)
+      
       (define-key map (kbd "&") 'mu4e-view-mark-custom)
 
       (define-key map (kbd "+") 'mu4e-view-mark-flag)
@@ -557,9 +559,7 @@ at POINT, or if nil, at (point)."
       ;; misc
       (define-key map "w" 'longlines-mode)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
-
-      (define-key map "r" 'mu4e-view-refresh)
-
+ 
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
       (define-key map "U" 'mu4e-view-unmark-all)
@@ -1102,6 +1102,12 @@ user that unmarking only works in the header list."
   "Mark the current message for moving to the trash folder."
   (interactive)
   (mu4e~view-mark-set 'trash)
+  (mu4e-view-headers-next))
+
+(defun mu4e-view-mark-for-refile ()
+  "Mark the current message for refiling."
+  (interactive)
+  (mu4e~view-mark-set 'refile)
   (mu4e-view-headers-next))
 
 (defun mu4e-view-mark-for-delete ()

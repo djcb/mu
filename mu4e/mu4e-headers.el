@@ -401,15 +401,16 @@ after the end of the search results."
 ;; define our mark functions; there must be some way to do this in a loop but
 ;; since `mu4e~headers-defun-mark-func' is a macro, the argument must be a
 ;; literal value.
-(mu4e~headers-defun-mark-func trash)
+(mu4e~headers-defun-mark-func refile)
+(mu4e~headers-defun-mark-func deferred)
 (mu4e~headers-defun-mark-func delete)
+(mu4e~headers-defun-mark-func flag)
 (mu4e~headers-defun-mark-func move)
 (mu4e~headers-defun-mark-func read)
-(mu4e~headers-defun-mark-func unread)
-(mu4e~headers-defun-mark-func flag)
+(mu4e~headers-defun-mark-func trash)
 (mu4e~headers-defun-mark-func unflag)
-(mu4e~headers-defun-mark-func deferred)
 (mu4e~headers-defun-mark-func unmark)
+(mu4e~headers-defun-mark-func unread)
 
 
 ;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -473,9 +474,11 @@ after the end of the search results."
       (define-key map (kbd "<deletechar>") 'mu4e~headers-mark-delete)
       (define-key map (kbd "D") 'mu4e~headers-mark-delete)
       (define-key map (kbd "m") 'mu4e~headers-mark-move)
-      
+      (define-key map (kbd "r") 'mu4e~headers-mark-refile)
+
       (define-key map (kbd "o") 'mu4e~headers-mark-unread)
-      (define-key map (kbd "r") 'mu4e~headers-mark-read)
+      (define-key map (kbd "s") 'mu4e~headers-mark-read)
+      
       (define-key map (kbd "u") 'mu4e~headers-mark-unmark)
       (define-key map (kbd "+") 'mu4e~headers-mark-flag)
       (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
@@ -490,7 +493,7 @@ after the end of the search results."
       (define-key map "x" 'mu4e-mark-execute-all)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-      (define-key map "a" 'mu4e-headers-action)
+      (define-key map "A" 'mu4e-headers-action)
 
       ;; message composition
       (define-key map "R" 'mu4e-compose-reply)

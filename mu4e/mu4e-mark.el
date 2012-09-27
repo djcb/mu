@@ -93,15 +93,16 @@ The following marks are available, and the corresponding props:
 
    MARK       TARGET    description
    ----------------------------------------------------------
-   `move'     y         move the message to some folder
-   `trash'    y         thrash the message to some folder
-   `delete'   n         remove the message
-   `read'     n         mark the message as read
-   `unread'   n         mark the message as unread
-   `flag'     n         mark this message for flagging
-   `unflag'   n         mark this message for unflagging
+   `refile'  y		mark this message for archiving
    `deferred' n         mark this message for *something* (decided later)
-   `unmark'   n         unmark this message"
+   `delete'   n         remove the message
+   `flag'     n         mark this message for flagging
+   `move'     y         move the message to some folder
+   `read'     n         mark the message as read
+   `trash'    y         thrash the message to some folder
+   `unflag'   n         mark this message for unflagging
+   `unmark'   n         unmark this message
+   `unread'   n         mark the message as unread"
   (interactive)
   (let* ((msg (mu4e-message-at-point))
 	  (docid (mu4e-message-field msg :docid))
@@ -110,15 +111,16 @@ The following marks are available, and the corresponding props:
 	  ;; info for the user.
 	  (markcell
 	    (case mark
-	      (move      `("m" . ,target))
-	      (trash     `("d" . ,target))
-	      (delete    '("D" . "delete"))
-	      (unread    '("o" . "unread"))
-	      (read      '("r" . "read"))
-	      (flag      '("+" . "flag"))
-	      (unflag    '("-" . "unflag"))
+	      (refile    `("r" . ,target))
 	      (deferred  '("*" . "deferred"))
+	      (delete    '("D" . "delete"))
+	      (flag      '("+" . "flag"))
+	      (move      `("m" . ,target))
+	      (read      '("r" . "read"))
+	      (trash     `("d" . ,target))
+	      (unflag    '("-" . "unflag"))
 	      (unmark    '(" " . nil))
+	      (unread    '("o" . "unread")) 
 	      (otherwise (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (car markcell))
 	  (target (cdr markcell)))
@@ -148,7 +150,6 @@ The following marks are available, and the corresponding props:
 	      docid)))))))
 
 
-
 (defun mu4e~mark-get-move-target (&optional target)
   "Mark message at point or, if region is active, all messages in
 the region, for moving to maildir TARGET. If target is not
@@ -172,8 +173,9 @@ provided, function asks for it."
 headers in the region. Optionally, provide TARGET (for moves)."
   (let ((target ;; ask or check the target if it's a move
 	  (case mark
-	    ('move  (mu4e~mark-get-move-target target))
-	    ('trash (mu4e-get-trash-folder (mu4e-message-at-point)))))) 
+	    ('refile  (mu4e-get-refile-folder (mu4e-message-at-point)))
+	    ('move     (mu4e~mark-get-move-target target))
+	    ('trash    (mu4e-get-trash-folder (mu4e-message-at-point))) ))) 
     (if (not (use-region-p))
       ;; single message
       (mu4e-mark-at-point mark target)
@@ -182,9 +184,11 @@ headers in the region. Optionally, provide TARGET (for moves)."
 	(let ((b (region-beginning)) (e (region-end)))
 	  (goto-char b)
 	  (while (<= (line-beginning-position) e)
-	    ;; trash folder is determined for each message
-	    (when (eq mark 'trash) ;; determine the message-specific trash folder
-	      (setq target (mu4e-get-trash-folder (mu4e-message-at-point))))    
+	    (setq target ;; refile/trash targets are determined per-message
+	      (case mark
+		(refile (mu4e-get-refile-folder (mu4e-message-at-point)))
+		(trash   (mu4e-get-trash-folder (mu4e-message-at-point)))
+		(t       target)))
 	    (mu4e-mark-at-point mark target)
 	    (forward-line 1)))))))
       
@@ -196,11 +200,11 @@ headers in the region. Optionally, provide TARGET (for moves)."
 	(when (mu4e~headers-goto-docid docid)
 	  (mu4e-mark-at-point (car markcell) (cdr markcell)))))))
 
-
 (defun mu4e~mark-get-markpair (prompt &optional allow-deferred)
   "Ask user for a mark; return (MARK . TARGET). If ALLOW-DEFERRED
 is non-nil, allow the 'deferred' pseudo mark as well."
-  (let* ((marks '(("move"	. move)
+  (let* ((marks '( ("refile"   . refile)
+		   ("move"	. move)
 		   ("dtrash"	. trash)
 		   ("Delete"	. delete)
 		   ("ounread"	. unread)
@@ -263,13 +267,14 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 	      ;; note: whenever you do something with the message,
 	      ;; it looses its N (new) flag
 	      (case mark
-		(move   (mu4e~proc-move docid target "-N"))
-		(read   (mu4e~proc-move docid nil    "+S-u-N"))
-		(unread (mu4e~proc-move docid nil    "-S+u-N"))
-		(flag   (mu4e~proc-move docid nil    "+F-u-N"))
-		(unflag (mu4e~proc-move docid nil    "-F-N"))
-		(trash  (mu4e~proc-move docid target "+T-N"))
-		(delete (mu4e~proc-remove docid))
+		(refile (mu4e~proc-move docid target "-N"))
+		(delete  (mu4e~proc-remove docid))
+		(flag    (mu4e~proc-move docid nil    "+F-u-N"))
+		(move    (mu4e~proc-move docid target "-N"))
+		(read    (mu4e~proc-move docid nil    "+S-u-N"))
+		(trash   (mu4e~proc-move docid target "+T-N"))
+		(unflag  (mu4e~proc-move docid nil    "-F-N"))
+		(unread  (mu4e~proc-move docid nil    "-S+u-N"))
 		(otherwise (mu4e-error "Unrecognized mark %S" mark)))))
 	  mu4e~mark-map))
       (mu4e-mark-unmark-all)
