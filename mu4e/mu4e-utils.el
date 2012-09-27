@@ -521,7 +521,10 @@ This is used by the completion function in mu4e-compose."
 	    (and mu4e-compose-complete-ignore-address-regexp
 	      (string-match mu4e-compose-complete-ignore-address-regexp mail))
 	  (add-to-list 'lst
-	    (if name (format "\"%s\" <%s>" name mail) mail))))))
+	    (if name (format "\"%s\" <%s>"
+		       ;; hack so we don't get ',' in e-mail addresses...
+		       (replace-regexp-in-string "," "" name)
+		       mail) mail))))))
     (setq mu4e~contacts-for-completion lst)
     (mu4e-message "Contacts received: %d"
       (length mu4e~contacts-for-completion))))

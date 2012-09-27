@@ -390,9 +390,9 @@ after the end of the search results."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(defmacro mu4e~headers-defun-mark-func (mark)
+(defmacro mu4e~headers-defun-mark-for (mark)
   "Define a function mu4e~headers-mark-MARK."
-  (let ((funcname (intern (concat "mu4e~headers-mark-" (symbol-name mark))))
+  (let ((funcname (intern (concat "mu4e-headers-mark-for-" (symbol-name mark))))
 	 (docstring (concat "Mark header at point with " (symbol-name mark) ".")))
      `(defun ,funcname () ,docstring
 	(interactive)
@@ -401,16 +401,16 @@ after the end of the search results."
 ;; define our mark functions; there must be some way to do this in a loop but
 ;; since `mu4e~headers-defun-mark-func' is a macro, the argument must be a
 ;; literal value.
-(mu4e~headers-defun-mark-func refile)
-(mu4e~headers-defun-mark-func deferred)
-(mu4e~headers-defun-mark-func delete)
-(mu4e~headers-defun-mark-func flag)
-(mu4e~headers-defun-mark-func move)
-(mu4e~headers-defun-mark-func read)
-(mu4e~headers-defun-mark-func trash)
-(mu4e~headers-defun-mark-func unflag)
-(mu4e~headers-defun-mark-func unmark)
-(mu4e~headers-defun-mark-func unread)
+(mu4e~headers-defun-mark-for refile)
+(mu4e~headers-defun-mark-for deferred)
+(mu4e~headers-defun-mark-for delete)
+(mu4e~headers-defun-mark-for flag)
+(mu4e~headers-defun-mark-for move)
+(mu4e~headers-defun-mark-for read)
+(mu4e~headers-defun-mark-for trash)
+(mu4e~headers-defun-mark-for unflag)
+(mu4e~headers-defun-mark-for unmark)
+(mu4e~headers-defun-mark-for unread)
 
 
 ;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -468,25 +468,24 @@ after the end of the search results."
       (define-key map "y" 'mu4e-select-other-view)
 
       ;; marking/unmarking ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      (define-key map (kbd "<backspace>") 'mu4e~headers-mark-trash)
-      (define-key map (kbd "d") 'mu4e~headers-mark-trash)
-      (define-key map (kbd "<delete>") 'mu4e~headers-mark-delete)
-      (define-key map (kbd "<deletechar>") 'mu4e~headers-mark-delete)
-      (define-key map (kbd "D") 'mu4e~headers-mark-delete)
-      (define-key map (kbd "m") 'mu4e~headers-mark-move)
-      (define-key map (kbd "r") 'mu4e~headers-mark-refile)
+      (define-key map (kbd "<backspace>")  'mu4e-headers-mark-for-trash)
+      (define-key map (kbd "d")            'mu4e-headers-mark-for-trash)
+      (define-key map (kbd "<delete>")     'mu4e-headers-mark-for-delete)
+      (define-key map (kbd "<deletechar>") 'mu4e-headers-mark-for-delete)
+      (define-key map (kbd "D")            'mu4e-headers-mark-for-delete)
+      (define-key map (kbd "m")            'mu4e-headers-mark-for-move)
+      (define-key map (kbd "r")            'mu4e-headers-mark-for-refile)
+				            
+      (define-key map (kbd "o")            'mu4e-headers-mark-for-unread)
+      (define-key map (kbd "s")            'mu4e-headers-mark-for-read)
+      				            
+      (define-key map (kbd "u")            'mu4e-headers-mark-for-unmark)
+      (define-key map (kbd "+")            'mu4e-headers-mark-for-flag)
+      (define-key map (kbd "-")            'mu4e-headers-mark-for-unflag)
+      (define-key map (kbd "&")            'mu4e-headers-mark-for-custom)
 
-      (define-key map (kbd "o") 'mu4e~headers-mark-unread)
-      (define-key map (kbd "s") 'mu4e~headers-mark-read)
-      
-      (define-key map (kbd "u") 'mu4e~headers-mark-unmark)
-      (define-key map (kbd "+") 'mu4e~headers-mark-flag)
-      (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
-      (define-key map (kbd "&") 'mu4e-headers-mark-custom)
-
-
-      (define-key map (kbd "*")  'mu4e~headers-mark-deferred)
-      (define-key map (kbd "<kp-multiply>")  'mu4e~headers-mark-deferred)
+      (define-key map (kbd "*")              'mu4e-headers-mark-for-deferred)
+      (define-key map (kbd "<kp-multiply>")  'mu4e-headers-mark-for-deferred)
       (define-key map (kbd "#")   'mu4e-mark-resolve-deferred-marks)
 
       (define-key map "U" 'mu4e-mark-unmark-all)

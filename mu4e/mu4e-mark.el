@@ -172,10 +172,11 @@ provided, function asks for it."
   "Mark the header at point, or, if region is active, mark all
 headers in the region. Optionally, provide TARGET (for moves)."
   (let ((target ;; ask or check the target if it's a move
-	  (case mark
-	    ('refile  (mu4e-get-refile-folder (mu4e-message-at-point)))
-	    ('move     (mu4e~mark-get-move-target target))
-	    ('trash    (mu4e-get-trash-folder (mu4e-message-at-point))) ))) 
+	  (or target
+	    (case mark
+	      (refile   (mu4e-get-refile-folder (mu4e-message-at-point)))
+	      (move     (mu4e~mark-get-move-target target))
+	      (trash    (mu4e-get-trash-folder (mu4e-message-at-point))) )))) 
     (if (not (use-region-p))
       ;; single message
       (mu4e-mark-at-point mark target)
@@ -186,7 +187,7 @@ headers in the region. Optionally, provide TARGET (for moves)."
 	  (while (<= (line-beginning-position) e)
 	    (setq target ;; refile/trash targets are determined per-message
 	      (case mark
-		(refile (mu4e-get-refile-folder (mu4e-message-at-point)))
+		(refile  (mu4e-get-refile-folder (mu4e-message-at-point)))
 		(trash   (mu4e-get-trash-folder (mu4e-message-at-point)))
 		(t       target)))
 	    (mu4e-mark-at-point mark target)

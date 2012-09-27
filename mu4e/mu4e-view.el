@@ -546,7 +546,7 @@ at POINT, or if nil, at (point)."
       (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "m") 'mu4e-view-mark-for-move)
       (define-key map (kbd "r") 'mu4e-view-mark-for-refile)
-      
+
       (define-key map (kbd "&") 'mu4e-view-mark-custom)
 
       (define-key map (kbd "+") 'mu4e-view-mark-flag)
@@ -559,7 +559,7 @@ at POINT, or if nil, at (point)."
       ;; misc
       (define-key map "w" 'longlines-mode)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
- 
+
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
       (define-key map "U" 'mu4e-view-unmark-all)
@@ -1059,15 +1059,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
       (setq buffer-read-only t))
     (t (mu4e-error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; marking
-(defun mu4e~view-mark-set (mark)
-  "Set mark on the current messages."
-  (let ((docid (mu4e-msg-field mu4e~view-msg :docid)))
-    (mu4e~view-in-headers-context
-      (mu4e-mark-at-point mark))))
-
-(defun mu4e-view-mark-custom ()
+ (defun mu4e-view-mark-custom ()
   "Run some custom mark function."
   (mu4e~view-in-headers-context
     (mu4e-headers-mark-custom)))
@@ -1089,50 +1081,31 @@ user that unmarking only works in the header list."
 user that unmarking only works in the header list."
   (interactive)
   (if (mu4e~split-view-p)
-    (mu4e~view-mark-set 'unmark)
+    (mu4e-view-mark-for-unmark)
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
-(defun mu4e-view-mark-for-move ()
-  "Mark the current message for moving."
-  (interactive)
-  (mu4e~view-mark-set 'move)
-  (mu4e-view-headers-next))
+(defmacro mu4e~view-defun-mark-for (mark)
+  "Define a function mu4e-view-mark-for-MARK."
+  (let ((funcname (intern (concat "mu4e-view-mark-for-" (symbol-name mark))))	
+	 (docstring (concat "Mark the current message for " (symbol-name mark) ".")))
+    `(defun ,funcname () ,docstring
+       (interactive)
+       (mu4e~view-in-headers-context
+	 (mu4e-headers-mark-and-next (quote mark))))))
 
-(defun mu4e-view-mark-for-trash ()
-  "Mark the current message for moving to the trash folder."
-  (interactive)
-  (mu4e~view-mark-set 'trash)
-  (mu4e-view-headers-next))
+;; would be cool to do something like the following, but somehow, I can't get
+;; the quoting right...
+;; (dolist (mark '(move trash refile delete flag unflag unmark deferred))
+;;   (mu4e~view-defun-mark-for mark))
 
-(defun mu4e-view-mark-for-refile ()
-  "Mark the current message for refiling."
-  (interactive)
-  (mu4e~view-mark-set 'refile)
-  (mu4e-view-headers-next))
-
-(defun mu4e-view-mark-for-delete ()
-  "Mark the current message for deletion."
-  (interactive)
-  (mu4e~view-mark-set 'delete)
-  (mu4e-view-headers-next))
-
-(defun mu4e-view-mark-flag ()
-  "Mark the current message for flagging."
-  (interactive)
-  (mu4e~view-mark-set 'flag)
-  (mu4e-view-headers-next))
-
-(defun mu4e-view-mark-unflag ()
-  "Mark the current message for unflagging."
-  (interactive)
-  (mu4e~view-mark-set 'unflag)
-  (mu4e-view-headers-next))
-
-(defun mu4e-view-mark-deferred ()
-  "Mark the current message for unflagging."
-  (interactive)
-  (mu4e~view-mark-set 'deferred)
-  (mu4e-view-headers-next))
+(mu4e~view-defun-mark-for move)
+(mu4e~view-defun-mark-for trash)
+(mu4e~view-defun-mark-for refile)
+(mu4e~view-defun-mark-for delete)
+(mu4e~view-defun-mark-for flag)
+(mu4e~view-defun-mark-for unflag)
+(mu4e~view-defun-mark-for unmark)
+(mu4e~view-defun-mark-for deferred)
 
  (defun mu4e-view-marked-execute ()
   "Execute the marks."
