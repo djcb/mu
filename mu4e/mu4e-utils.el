@@ -551,17 +551,18 @@ This is used by the completion function in mu4e-compose."
     mu4e-attachment-dir (expand-file-name mu4e-attachment-dir))
   (unless (mu4e-create-maildir-maybe mu4e-maildir)
     (mu4e-error "%s is not a valid maildir directory" mu4e-maildir))
-  (dolist (var '( mu4e-sent-folder
+  (dolist (var '(mu4e-sent-folder
 		  mu4e-drafts-folder
 		  mu4e-trash-folder))
     (unless (and (boundp var) (symbol-value var))
       (mu4e-error "Please set %S" var))
-    (let* ((dir (symbol-value var)) (path (concat mu4e-maildir dir)))
-      (unless (string= (substring dir 0 1) "/")
-	(mu4e-error "%S must start with a '/'" dir))
-      (unless (mu4e-create-maildir-maybe path)
-	(mu4e-error "%s (%S) does not exist" path var)))))
-
+    (unless (functionp (symbol-value var)) ;; functions are okay, too
+      (let* ((dir (symbol-value var))
+	      (path (concat mu4e-maildir dir)))
+	(unless (string= (substring dir 0 1) "/")
+	  (mu4e-error "%S must start with a '/'" dir))
+	(unless (mu4e-create-maildir-maybe path)
+	  (mu4e-error "%s (%S) does not exist" path var))))))
 
 
 (defun mu4e~start (&optional func)
