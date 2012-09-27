@@ -100,25 +100,24 @@ there is no message at point."
       (unless noerror (mu4e-warn "No message at point")))))
 
 
-(defun mu4e-message-for-each (msg field func)
-  "Call FUNC for each element in the field FIELD (which must be a
-lists-type field). FUNC takes the element as its arg."
-  (let ((lst (mu4e-message-field msg field)))
-    (unless (listp lst)
-      (error "Not a list type"))
-    (dolist (elm (mu4e-message-field msg field))
-      (funcall func elm))))
+;; (defun mu4e-message-for-each (msg field func)
+;;   "Call FUNC for each element in the field FIELD (which must be a
+;; lists-type field). FUNC takes the element as its arg."
+;;   (let ((lst (mu4e-message-field msg field)))
+;;     (unless (listp lst)
+;;       (error "Not a list type"))
+;;     (dolist (elm (mu4e-message-field msg field))
+;;       (funcall func elm))))
 
-(defun mu4e-message-for-each-contact-field (msg field func)
-  "Call FUNC for each element of contact
-FIELD (:to, :cc, :bcc, :from). FUNC takes two args, strings
-name (possibly nil) and an email address."
-  (unless (member field '(:to :from :bcc :cc))
-    (error "Not a contacts field"))
-  (mu4e-message-for-each msg field
-    (lambda (contact)
-      (funcall func (car contact) (cdr contact)))))
-
+;; (defun mu4e-message-for-each-contact-field (msg field func)
+;;   "Call FUNC for each element of contact
+;; FIELD (:to, :cc, :bcc, :from). FUNC takes two args, strings
+;; name (possibly nil) and an email address."
+;;   (unless (member field '(:to :from :bcc :cc))
+;;     (error "Not a contacts field"))
+;;   (mu4e-message-for-each msg field
+;;     (lambda (contact)
+;;       (funcall func (car contact) (cdr contact)))))
 
 (defun mu4e-message-body-text (msg)
   "Get the body in text form for this message, which is either :body-txt,
@@ -164,6 +163,22 @@ function prefers the text part, but this can be changed by setting
 	    ((string= (match-string 0) "") "'")
 	    (t		                       ""))))
       (buffer-string))))
+
+(defun mu4e-message-contact-field-matches (msg cfield rx)
+  "Checks whether any of the of the contacts in field
+CFIELD (either :to, :from, :cc or :bcc) of msg MSG matches (with
+their name or e-mail address) regular expressions RX. If there is a
+match, return t otherwise nil."
+  (unless (member cfield '(:to :from :bcc :cc))
+    (mu4e-error "Not a contacts field (%S)" cfield))
+  (when (find-if
+	  (lambda (ct)
+	    (let ((name (car ct)) (email (cdr ct)))
+	      (or
+		(and name  (string-match rx name))
+		(and email (string-match rx email)))))
+	  (mu4e-message-field msg cfield))
+    t)) 
 
 
 (defsubst mu4e-message-part-field  (msgpart field)
