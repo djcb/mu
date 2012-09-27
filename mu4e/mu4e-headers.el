@@ -403,6 +403,7 @@ after the end of the search results."
 ;; literal value.
 (mu4e~headers-defun-mark-func trash)
 (mu4e~headers-defun-mark-func delete)
+(mu4e~headers-defun-mark-func move)
 (mu4e~headers-defun-mark-func read)
 (mu4e~headers-defun-mark-func unread)
 (mu4e~headers-defun-mark-func flag)
@@ -468,18 +469,18 @@ after the end of the search results."
       ;; marking/unmarking ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       (define-key map (kbd "<backspace>") 'mu4e~headers-mark-trash)
       (define-key map (kbd "d") 'mu4e~headers-mark-trash)
-
       (define-key map (kbd "<delete>") 'mu4e~headers-mark-delete)
       (define-key map (kbd "<deletechar>") 'mu4e~headers-mark-delete)
       (define-key map (kbd "D") 'mu4e~headers-mark-delete)
-
+      (define-key map (kbd "m") 'mu4e~headers-mark-move)
+      
       (define-key map (kbd "o") 'mu4e~headers-mark-unread)
       (define-key map (kbd "r") 'mu4e~headers-mark-read)
       (define-key map (kbd "u") 'mu4e~headers-mark-unmark)
       (define-key map (kbd "+") 'mu4e~headers-mark-flag)
       (define-key map (kbd "-") 'mu4e~headers-mark-unflag)
       (define-key map (kbd "&") 'mu4e-headers-mark-custom)
-      (define-key map "m" 'mu4e-headers-mark-for-move-and-next)
+
 
       (define-key map (kbd "*")  'mu4e~headers-mark-deferred)
       (define-key map (kbd "<kp-multiply>")  'mu4e~headers-mark-deferred)
@@ -531,7 +532,7 @@ after the end of the search results."
 	(define-key menumap [mark-trash]
 	  '("Mark for trash" .  mu4e~headers-mark-trash))
 	(define-key menumap [mark-move]
-	  '("Mark for move" . mu4e-headers-mark-for-move-and-next))
+	  '("Mark for move" . mu4e~headers-mark-move))
 	(define-key menumap [sepa1] '("--"))
 
 	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
@@ -1243,14 +1244,7 @@ region if there is a region, then move to the next message."
   (interactive)
   (mu4e-mark-set mark)
   (mu4e-headers-next))
-
-(defun mu4e-headers-mark-for-move-and-next ()
-  "Set mark MARK on the message at point or on all messages in the
-region if there is a region, then move to the next message."
-  (interactive)
-  (mu4e-mark-for-move-set)
-  (mu4e-headers-next))
-
+ 
 (defun mu4e~headers-quit-buffer ()
   "Quit the mu4e-headers buffer. This is a rather complex function,
 to ensure we don't disturb other windows."

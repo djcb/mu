@@ -82,7 +82,7 @@ parameter (which may be `nil'), and return the result."
 	      ((stringp   folder) folder)
 	      ((functionp folder) (funcall folder msg))
 	      (t (error "unsupported type for %S" folder)))))
-    (or val (mu4e-error "%S not defined" foldervar))))
+    (or val (mu4e-error "%S evaluates to nil" foldervar))))
 
 (defun mu4e-get-sent-folder (msg)
   "Get the sent folder. See `mu4e-sent-folder'."
@@ -97,8 +97,7 @@ parameter (which may be `nil'), and return the result."
   (mu4e~get-folder 'mu4e-trash-folder msg))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
+ 
 
 
 

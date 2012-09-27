@@ -1065,9 +1065,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
   "Set mark on the current messages."
   (let ((docid (mu4e-msg-field mu4e~view-msg :docid)))
     (mu4e~view-in-headers-context
-      (if (eq mark 'move)
-	(mu4e-mark-for-move-set)
-	(mu4e-mark-at-point mark)))))
+      (mu4e-mark-at-point mark))))
 
 (defun mu4e-view-mark-custom ()
   "Run some custom mark function."

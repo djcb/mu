@@ -84,16 +84,17 @@ where
 
 (defun mu4e-mark-at-point (mark &optional target)
   "Mark (or unmark) message at point. MARK specifies the
-  mark-type. For `move'-marks there is also the TARGET argument,
-  which specifies to which maildir the message is to be moved. The
-  functipn works in both headers buffers and message buffers.
+mark-type. For `move'-marks and `trash'-marks there is also the
+TARGET argument, which specifies to which maildir the message is to
+be moved/trashed. The function works in both headers buffers and
+message buffers.
 
 The following marks are available, and the corresponding props:
 
    MARK       TARGET    description
    ----------------------------------------------------------
    `move'     y         move the message to some folder
-   `trash'    n         move the message to `mu4e-trash-folder'
+   `trash'    y         thrash the message to some folder
    `delete'   n         remove the message
    `read'     n         mark the message as read
    `unread'   n         mark the message as unread
@@ -110,7 +111,7 @@ The following marks are available, and the corresponding props:
 	  (markcell
 	    (case mark
 	      (move      `("m" . ,target))
-	      (trash     '("d" . "trash"))
+	      (trash     `("d" . ,target))
 	      (delete    '("D" . "delete"))
 	      (unread    '("o" . "unread"))
 	      (read      '("r" . "read"))
@@ -122,8 +123,7 @@ The following marks are available, and the corresponding props:
 	  (markkar (car markcell))
 	  (target (cdr markcell)))
     (unless docid (mu4e-warn "No message on this line"))
-    (unless (eq major-mode 'mu4e-headers-mode)
-      (mu4e-error "Not in headers-mode"))
+    (unless (eq major-mode 'mu4e-headers-mode) (mu4e-error "Not in headers-mode"))
     (save-excursion
       (when (mu4e~headers-mark docid markkar)
 	;; update the hash -- remove everything current, and if add the new stuff,
@@ -148,30 +148,8 @@ The following marks are available, and the corresponding props:
 	      docid)))))))
 
 
-(defun mu4e-mark-set (mark &optional target)
-  "Mark the header at point, or, if region is active, mark all
-headers in the region."
-  (interactive)
-  (if (use-region-p)
-    ;; mark all messages in the region.
-    (save-excursion
-      (let ((b (region-beginning)) (e (region-end)))
-	(goto-char b)
-	(while (<= (line-beginning-position) e)
-	  (mu4e-mark-at-point mark target)
-	  (forward-line 1))))
-    ;; just a single message
-    (mu4e-mark-at-point mark target)))
 
-(defun mu4e-mark-restore (docid)
-  "Restore the visual mark for the message with DOCID."
-  (let ((markcell (gethash docid mu4e~mark-map)))
-    (when markcell
-      (save-excursion
-	(when (mu4e~headers-goto-docid docid)
-	  (mu4e-mark-at-point (car markcell) (cdr markcell)))))))
-
-(defun mu4e-mark-for-move-set (&optional target)
+(defun mu4e~mark-get-move-target (&optional target)
   "Mark message at point or, if region is active, all messages in
 the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
@@ -186,7 +164,37 @@ provided, function asks for it."
 	    (and (yes-or-no-p
 		   (format "%s does not exist. Create now?" fulltarget))
 	      (mu4e~proc-mkdir fulltarget)))
-      (mu4e-mark-set 'move target))))
+      target)))
+
+
+(defun mu4e-mark-set (mark &optional target)
+  "Mark the header at point, or, if region is active, mark all
+headers in the region. Optionally, provide TARGET (for moves)."
+  (let ((target ;; ask or check the target if it's a move
+	  (case mark
+	    ('move  (mu4e~mark-get-move-target target))
+	    ('trash (mu4e-get-trash-folder (mu4e-message-at-point)))))) 
+    (if (not (use-region-p))
+      ;; single message
+      (mu4e-mark-at-point mark target)
+      ;; mark all messages in the region.
+      (save-excursion
+	(let ((b (region-beginning)) (e (region-end)))
+	  (goto-char b)
+	  (while (<= (line-beginning-position) e)
+	    ;; trash folder is determined for each message
+	    (when (eq mark 'trash) ;; determine the message-specific trash folder
+	      (setq target (mu4e-get-trash-folder (mu4e-message-at-point))))    
+	    (mu4e-mark-at-point mark target)
+	    (forward-line 1)))))))
+      
+(defun mu4e-mark-restore (docid)
+  "Restore the visual mark for the message with DOCID."
+  (let ((markcell (gethash docid mu4e~mark-map)))
+    (when markcell
+      (save-excursion
+	(when (mu4e~headers-goto-docid docid)
+	  (mu4e-mark-at-point (car markcell) (cdr markcell)))))))
 
 
 (defun mu4e~mark-get-markpair (prompt &optional allow-deferred)
@@ -256,14 +264,11 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 	      ;; it looses its N (new) flag
 	      (case mark
 		(move   (mu4e~proc-move docid target "-N"))
-		(read   (mu4e~proc-move docid nil "+S-u-N"))
-		(unread (mu4e~proc-move docid nil "-S+u-N"))
-		(flag   (mu4e~proc-move docid nil "+F-u-N"))
-		(unflag (mu4e~proc-move docid nil "-F-N"))
-		(trash
-		  (unless mu4e-trash-folder
-		    (mu4e-error "`mu4e-trash-folder' not set"))
-		  (mu4e~proc-move docid mu4e-trash-folder "+T-N"))
+		(read   (mu4e~proc-move docid nil    "+S-u-N"))
+		(unread (mu4e~proc-move docid nil    "-S+u-N"))
+		(flag   (mu4e~proc-move docid nil    "+F-u-N"))
+		(unflag (mu4e~proc-move docid nil    "-F-N"))
+		(trash  (mu4e~proc-move docid target "+T-N"))
 		(delete (mu4e~proc-remove docid))
 		(otherwise (mu4e-error "Unrecognized mark %S" mark)))))
 	  mu4e~mark-map))
