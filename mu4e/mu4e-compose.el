@@ -67,7 +67,6 @@ sent folder."
   :safe 'symbolp
   :group 'mu4e-compose)
 
-
 (defcustom mu4e-compose-keep-self-cc nil
   "Non-nil means your e-mail address is kept on the CC list when
 replying to messages."
@@ -250,6 +249,7 @@ separator is never written to file. Also see
     (let ((sepa (propertize mail-header-separator
 		  'intangible t
 		  'read-only "Can't touch this"
+		  'rear-nonsticky t
 		  'font-lock-face 'mu4e-system-face)))
       (goto-char (point-min))
       ;; search for the first empty line
@@ -367,25 +367,58 @@ You can append flags."
     (mu4e~compose-common-construct)))
 
 
-(defun mu4e~compose-open-new-draft-file (compose-type &optional msg)
-  "Open a draft file for a new message, creating it if it does not
-already exist, and optionally fill it with STR. Function also adds
-the new message to the database. When the draft message is added to
-the database, `mu4e-path-docid-map' will be updated, so that we can
-use the new docid. Returns the full path to the new message."
-  (let* ((draft
-	   (concat mu4e-maildir mu4e-drafts-folder "/cur/"
-	     (mu4e~compose-message-filename-construct "DS")))
-	  (str (case compose-type
-		 (reply   (mu4e~compose-reply-construct msg))
-		 (forward (mu4e~compose-forward-construct msg))
-		 (new     (mu4e~compose-newmsg-construct))
-		 (t (mu4e-error "unsupported compose-type %S" compose-type)))))
-    (when str
-      (with-current-buffer (find-file-noselect draft)
-	(insert str)))
-    draft))  ;; return the draft buffer file
+(defvar mu4e~compose-trash-folder nil
+  "The trash-folder for this compose buffer, based on
+`mu4e-trash-folder', which will be evaluated once.")
+(defvar mu4e~compose-sent-folder nil
+  "The sent-folder for this compose buffer, based on
+`mu4e-sent-folder', which will be evaluated once.")
+(defvar mu4e~compose-drafts-folder nil
+  "The drafts-folder for this compose buffer, based on
+`mu4e-drafts-folder', which will be evaluated once.")
 
+(defmacro mu4e~compose-setup-folder (var func msg)
+  "Create a buffer-permanent local folder variable."
+  `(progn
+     (set (make-local-variable ,var) (,func ,msg))
+     (put ,var 'permanent-local t)))
+
+(defun mu4e~compose-open-draft (compose-type &optional msg)
+  "Open a draft file for a new message (when COMPOSE-TYPE is reply, forward or new),
+or open an existing draft (when COMPOSE-TYPE is edit).
+
+The name of the draft folder is constructed from the concatenation
+of `mu4e-maildir' and `mu4e-drafts-folder' (the latter will be
+evaluated, and its value will be available through
+`mu4e~compose-drafts-folder'). The message file name is a unique
+name determined by `mu4e-send-draft-file-name'. The initial
+contents will be created from either
+`mu4e~compose-reply-construct', or `mu4e~compose-forward-construct'
+or `mu4e~compose-newmsg-construct'.
+
+Also sets `mu4e~compose-trash-folder',
+`mu4e~compose-drafts-folder' and `mu4e~compose-sent-folder' as
+buffer-local, permanent variables."
+  (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
+  (if (eq compose-type 'edit)
+    (find-file (mu4e-message-field msg :path))  
+    (let* ((draftdir (mu4e-get-drafts-folder msg))
+	    (draftfile (mu4e~compose-message-filename-construct "DS"))
+	    (draftpath (concat mu4e-maildir draftdir "/cur/" draftfile)))
+      (find-file draftpath)
+      (insert
+	(case compose-type
+	  (reply   (mu4e~compose-reply-construct msg))
+	  (forward (mu4e~compose-forward-construct msg))
+	  (new     (mu4e~compose-newmsg-construct))
+	  (t (mu4e-error "unsupported compose-type %S" compose-type))))))
+
+  ;; now, or draft file has been setup. setup the buffer-local special dirs.
+  (mu4e~compose-setup-folder 'mu4e~compose-trash-folder  mu4e-get-trash-folder msg)
+  (mu4e~compose-setup-folder 'mu4e~compose-drafts-folder mu4e-get-drafts-folder msg)
+  (mu4e~compose-setup-folder 'mu4e~compose-sent-folder   mu4e-get-sent-folder msg))
+
+  
 
 ;; 'fcc' refers to saving a copy of a sent message to a certain folder. that's
 ;; what these 'Sent mail' folders are for!
@@ -406,8 +439,8 @@ needed, set the Fcc header, and register the handler function."
   (let* ((mdir
 	   (case mu4e-sent-messages-behavior
 	     (delete nil)
-	     (trash mu4e-trash-folder)
-	     (sent mu4e-sent-folder)
+	     (trash mu4e~compose-trash-folder)
+	     (sent  mu4e~compose-sent-folder)
 	     (otherwise
 	       (mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
 		 mu4e-sent-messages-behavior))))
@@ -419,7 +452,7 @@ needed, set the Fcc header, and register the handler function."
        (message-add-header (concat "Fcc: " fccfile "\n"))
        ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
        ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
-       ;; hander after we've done our thing.
+       ;; handler after we've done our thing.
       (setq message-fcc-handler-function
 	(lexical-let ((maildir mdir) (old-handler message-fcc-handler-function))
 	  (lambda (file)
@@ -440,7 +473,7 @@ needed, set the Fcc header, and register the handler function."
       (mu4e~compose-insert-mail-header-separator)
       (set-buffer-modified-p nil)
       ;; update the file on disk -- ie., without the separator
-      (mu4e~proc-add (buffer-file-name) mu4e-drafts-folder)) nil t))
+      (mu4e~proc-add (buffer-file-name) mu4e~compose-drafts-folder)) nil t))
 
 (defconst mu4e~compose-hidden-headers
   `("^References:" "^Face:" "^X-Face:"
@@ -486,7 +519,6 @@ needed, set the Fcc header, and register the handler function."
 \\{message-mode-map}."
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (use-local-map mu4e-compose-mode-map)
-
     ;; we set this here explicitly, since (as it has happened) a wrong
     ;; value for this (such as "") breaks address completion and other things
     (set (make-local-variable 'mail-header-separator)
@@ -523,7 +555,7 @@ needed, set the Fcc header, and register the handler function."
     (add-hook 'message-sent-hook
       (lambda ()
 	(setq mu4e-sent-func 'mu4e-sent-handler)
-	(mu4e~proc-sent (buffer-file-name) mu4e-drafts-folder)) nil)))
+	(mu4e~proc-sent (buffer-file-name) mu4e~compose-drafts-folder)) nil)))
 
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
@@ -546,16 +578,15 @@ needed, set the Fcc header, and register the handler function."
   '("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
      "^User-Agent:" "^In-Reply-To:")
   "List of regexps with message headers that are to be hidden.")
-
+ 
 (defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
 symbol, either `reply', `forward', `edit', `new'. `edit' is for
-editing existing messages.
-
-When COMPOSE-TYPE is `reply' or `forward', MSG should be a message
-plist.  If COMPOSE-TYPE is `new', ORIGINAL-MSG should be nil.
+editing existing messages. When COMPOSE-TYPE is `reply' or
+`forward', MSG should be a message plist.  If COMPOSE-TYPE is
+`new', ORIGINAL-MSG should be nil.
 
 Optionally (when forwarding, replying) ORIGINAL-MSG is the original
 message we will forward / reply to.
@@ -564,61 +595,37 @@ Optionally (when forwarding) INCLUDES contains a list of
    (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
 for the attachements to include; file-name refers to
 a file which our backend has conveniently saved for us (as a
-tempfile).
-
-The name of the draft folder is constructed from the concatenation
- of `mu4e-maildir' and `mu4e-drafts-folder' (these must be set).
-
-The message file name is a unique name determined by
-`mu4e-send-draft-file-name'.
-
-The initial STR would be created from either
-`mu4e~compose-reply-construct', ar`mu4e~compose-forward-construct'
-or `mu4e~compose-newmsg-construct'. The editing buffer is using
-Gnus' `message-mode'."
-  (unless mu4e-maildir       (mu4e-error "mu4e-maildir not set"))
-  (unless mu4e-drafts-folder (mu4e-error "mu4e-drafts-folder not set"))
-  (let ((inhibit-read-only t)
-	 (draft
-	   (if (member compose-type '(reply forward new))
-	     (mu4e~compose-open-new-draft-file compose-type original-msg)
-	     (if (eq compose-type 'edit)
-	       (plist-get original-msg :path)
-	       (mu4e-error "unsupported compose-type %S" compose-type)))))
-    (find-file draft)
-    ;; insert mail-header-separator, which is needed by message mode to separate
-    ;; headers and body. will be removed before saving to disk
-    (mu4e~compose-insert-mail-header-separator)
-    (insert "\n") ;; insert a newline after header separator
-
-    ;; include files -- e.g. when forwarding a message with attachments,
-    ;; we take those from the original.
-    (save-excursion
-      (goto-char (point-max)) ;; put attachments at the end
-      (dolist (att includes)
-	(mml-attach-file
-	  (plist-get att :file-name) (plist-get att :mime-type))))
-
-    ;; include the message header (if it's set); but not when editing an
-    ;; existing message.
-    (unless (eq compose-type 'edit)
-      (message-insert-signature))
-
-    ;; hide some headers
-    (let ((message-hidden-headers mu4e~compose-hidden-headers))
-      (message-hide-headers))
-
-    ;; buffer is not user-modified yet
-    (mu4e~compose-set-friendly-buffer-name compose-type)
-    (set-buffer-modified-p nil)
-
-    ;; now jump to some useful positions, and start writing that mail!
-    (if (member compose-type '(new forward))
-      (message-goto-to)
-      (message-goto-body)))
-
+tempfile)."
+  ;; this opens (or re-opens) a messages with all the basic headers set.
+  (mu4e~compose-open-draft compose-type original-msg)
+  ;; insert mail-header-separator, which is needed by message mode to separate
+  ;; headers and body. will be removed before saving to disk
+  (mu4e~compose-insert-mail-header-separator)
+  (insert "\n") ;; insert a newline after header separator
+  ;; include files -- e.g. when forwarding a message with attachments,
+  ;; we take those from the original.
+  (save-excursion
+    (goto-char (point-max)) ;; put attachments at the end
+    (dolist (att includes)
+      (mml-attach-file
+	(plist-get att :file-name) (plist-get att :mime-type))))
+  ;; include the message signature (if it's set); but not when editing an
+  ;; existing message.
+  (unless (eq compose-type 'edit)
+    (message-insert-signature))
+  ;; hide some headers
+  (let ((message-hidden-headers mu4e~compose-hidden-headers))
+    (message-hide-headers)) 
+  ;; buffer is not user-modified yet
+  (mu4e~compose-set-friendly-buffer-name compose-type)
+  (set-buffer-modified-p nil)
+  ;; now jump to some useful positions, and start writing that mail!
+  (if (member compose-type '(new forward))
+    (message-goto-to)
+    (message-goto-body))
   ;; switch on the mode
   (mu4e-compose-mode))
+
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
@@ -698,6 +705,7 @@ for draft messages."
     (when (and (eq compose-type 'edit)
 	    (not (member 'draft (mu4e-message-field msg :flags))))
       (mu4e-warn "Editing is only allowed for draft messages"))
+
     ;; run the hooks
     (mu4e~compose-run-hooks compose-type)
 
@@ -771,7 +779,7 @@ message."
 
 (defun mu4e~compose-mail (&optional to subject other-headers continue
 			   switch-function yank-action send-actions return-action)
-  "mu4e's implementation of `compose-mail'."
+  "This is mu4e's implementation of `compose-mail'."
 
   (mu4e~compose-run-hooks 'new)
 

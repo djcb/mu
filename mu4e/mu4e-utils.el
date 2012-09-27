@@ -63,6 +63,46 @@ hour and minute fields will be nil if not given."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; the standard folders can be functions too
+
+(defun mu4e~get-folder (foldervar msg)
+  "Get message folder FOLDER. If FOLDER is a string, return it, if
+it is a function, evaluate this function with MSG as
+parameter (which may be `nil'), and return the result."
+  (unless (member foldervar '(mu4e-sent-folder mu4e-drafts-folder
+			       mu4e-trash-folder))
+    (mu4e-error "Folder must be either mu4e-sent-folder,
+    mu4e-drafts-folder or mu4e-trash-folder (not %S)" foldervar))
+  (let* ((folder (symbol-value foldervar))
+	  (val
+	    (cond
+	      ((stringp   folder) folder)
+	      ((functionp folder) (funcall folder msg))
+	      (t (error "unsupported type for %S" folder)))))
+    (or val (mu4e-error "%S not defined" foldervar))))
+
+(defun mu4e-get-sent-folder (msg)
+  "Get the sent folder. See `mu4e-sent-folder'."
+  (mu4e~get-folder 'mu4e-sent-folder msg))
+
+(defun mu4e-get-drafts-folder (msg)
+  "Get the sent folder. See `mu4e-drafts-folder'."
+  (mu4e~get-folder 'mu4e-drafts-folder msg))
+
+(defun mu4e-get-trash-folder (msg)
+  "Get the sent folder. See `mu4e-trash-folder'."
+  (mu4e~get-folder 'mu4e-trash-folder msg))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create DIR if it does not exist yet. Return t if the
 dir already existed, or has been created, nil otherwise."
@@ -772,7 +812,6 @@ is ignored."
     (when img
       (newline)
       (insert-image img imgpath nil t))))
-
 
 
 (defun mu4e-hide-other-mu4e-buffers ()
