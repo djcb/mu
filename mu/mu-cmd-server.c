@@ -1002,6 +1002,36 @@ get_checked_path (const char *path)
 
 
 
+
+static MuError
+index_and_cleanup (MuIndex *index, const char *path, GError **err)
+{
+	MuError rv;
+	MuIndexStats stats, stats2;
+
+	mu_index_stats_clear (&stats);
+	rv = mu_index_run (index, path, FALSE, &stats,
+			   index_msg_cb, NULL, NULL);
+
+	if (rv != MU_OK && rv != MU_STOP) {
+		mu_util_g_set_error (err, MU_ERROR_INTERNAL, "indexing failed");
+		return rv;
+	}
+
+	mu_index_stats_clear (&stats2);
+	rv = mu_index_cleanup (index, &stats2, NULL, NULL, err);
+	if (rv != MU_OK && rv != MU_STOP) {
+		mu_util_g_set_error (err, MU_ERROR_INTERNAL, "cleanup failed");
+		return rv;
+	}
+
+	print_expr ("(:info index :status complete "
+		    ":processed %u :updated %u :cleaned-up %u)",
+		    stats._processed, stats._updated, stats2._cleaned_up);
+
+	return rv;
+}
+
 /*
  * 'index' (re)indexs maildir at path:<path>, and responds with (:info
  * index ... ) messages while doing so (see the code)
@@ -1012,8 +1042,6 @@ cmd_index (ServerContext *ctx, GSList *args, GError **err)
 	MuIndex *index;
 	const char *argpath;
 	char *path;
-	MuIndexStats stats, stats2;
-	MuError rv;
 
 	index = NULL;
 
@@ -1027,25 +1055,8 @@ cmd_index (ServerContext *ctx, GSList *args, GError **err)
 	if (!(index = mu_index_new (ctx->store, err)))
 		goto leave;
 
-	mu_index_stats_clear (&stats);
-	rv = mu_index_run (index, argpath, FALSE, &stats,
-			   index_msg_cb, NULL, NULL);
-	if (rv != MU_OK && rv != MU_STOP) {
-		print_error (MU_ERROR_INTERNAL, "indexing failed");
-		goto leave;
-	}
+	index_and_cleanup (index, path, err);
 
-	mu_index_stats_clear (&stats2);
-	rv = mu_index_cleanup (index, &stats2, NULL, NULL, err);
-	if (rv != MU_OK && rv != MU_STOP) {
-		print_error (MU_ERROR_INTERNAL, "cleanup failed");
-		goto leave;
-	}
-
-	mu_store_flush (ctx->store);
-	print_expr ("(:info index :status complete "
-		   ":processed %u :updated %u :cleaned-up %u)",
-		    stats._processed, stats._updated, stats2._cleaned_up);
 leave:
 	g_free (path);
 
@@ -1053,6 +1064,7 @@ leave:
 		print_and_clear_g_error (err);
 
 	mu_index_destroy (index);
+
 	return MU_OK;
 }
 
@@ -1138,6 +1150,42 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	return MU_OK;
 }
 
+static gboolean
+move_msgid (MuStore *store, unsigned docid, const char* flagstr, GError **err)
+{
+	MuMsg *msg;
+	gboolean rv;
+	MuFlags flags;
+
+	err = NULL;
+	rv  = FALSE;
+
+	msg = mu_store_get_msg (store, docid, err);
+
+	if (!msg)
+		goto leave;
+
+	flags = flagstr ? get_flags (mu_msg_get_path(msg), flagstr) :
+		mu_msg_get_flags (msg);
+	if (flags == MU_FLAG_INVALID) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "invalid flags");
+		goto leave;
+	}
+
+	rv = do_move (store, docid, msg, NULL, flags, err);
+
+leave:
+	if (msg)
+		mu_msg_unref (msg);
+
+	print_and_clear_g_error (err);
+
+	return rv;
+
+}
+
+
 /* when called with a msgid, we need to take care of possibly multiple
  * message with this message id. this is a common case when sending
  * messages to ourselves (maybe through a mailing list), where there
@@ -1147,12 +1195,12 @@ static gboolean
 move_msgid_maybe (ServerContext *ctx, GSList *args, GError **err)
 {
 	GSList *docids, *cur;
-	const char *maildir = get_string_from_args (args, "maildir", TRUE,err);
-	const char *msgid = get_string_from_args (args, "msgid", TRUE, err);
+	const char *maildir = get_string_from_args (args, "maildir", TRUE, err);
+	const char *msgid   = get_string_from_args (args, "msgid", TRUE, err);
 	const char *flagstr = get_string_from_args (args, "flags", TRUE, err);
 
 	/*  you cannot use 'maildir' for multiple messages at once */
-	if (!msgid || !flagstr || maildir )
+	if (!msgid || !flagstr || maildir)
 		return FALSE;
 
 	if (!(docids = get_docids_from_msgids (ctx->query, msgid, err))) {
@@ -1160,30 +1208,10 @@ move_msgid_maybe (ServerContext *ctx, GSList *args, GError **err)
 		return TRUE;
 	}
 
-	for (cur = docids; cur; cur = g_slist_next(cur)) {
-		MuMsg *msg;
-		MuFlags flags;
-		unsigned docid = (GPOINTER_TO_SIZE(cur->data));
-		if (!(msg = mu_store_get_msg (ctx->store, docid, err))) {
-			print_and_clear_g_error (err);
+	for (cur = docids; cur; cur = g_slist_next(cur))
+		if (!move_msgid (ctx->store, GPOINTER_TO_SIZE(cur->data),
+				 flagstr, err))
 			break;
-		}
-
-		flags = flagstr ? get_flags (mu_msg_get_path(msg), flagstr) :
-			mu_msg_get_flags (msg);
-
-		if (flags == MU_FLAG_INVALID) {
-			print_error (MU_ERROR_IN_PARAMETERS, "invalid flags");
-			mu_msg_unref (msg);
-			break;
-		}
-
-		if ((do_move (ctx->store, docid, msg, NULL, flags, err)
-		     != MU_OK))
-			print_and_clear_g_error (err);
-
-		mu_msg_unref (msg);
-	}
 
 	g_slist_free (docids);
 
@@ -1384,6 +1412,25 @@ cmd_sent (ServerContext *ctx, GSList *args, GError **err)
 	return MU_OK;
 }
 
+static MuMsgOptions
+get_view_msg_opts (GSList *args)
+{
+	MuMsgOptions opts;
+
+	opts = MU_MSG_OPTION_VERIFY;
+
+	if (get_bool_from_args (args, "extract-images", FALSE, NULL))
+		opts |= MU_MSG_OPTION_EXTRACT_IMAGES;
+	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
+		opts |= MU_MSG_OPTION_USE_AGENT;
+	if (get_bool_from_args (args, "auto-retrieve-key", FALSE, NULL))
+		opts |= MU_MSG_OPTION_AUTO_RETRIEVE;
+	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
+		opts |= MU_MSG_OPTION_DECRYPT;
+
+	return opts;
+}
+
 /* 'view' gets a full (including body etc.) sexp for some message,
  * identified by either docid: or msgid:; return a (:view <sexp>)
  */
@@ -1396,15 +1443,7 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 	MuMsgOptions opts;
 	unsigned docid;
 
-	opts = MU_MSG_OPTION_VERIFY;
-	if (get_bool_from_args (args, "extract-images", FALSE, NULL))
-		opts |= MU_MSG_OPTION_EXTRACT_IMAGES;
-	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
-		opts |= MU_MSG_OPTION_USE_AGENT;
-	if (get_bool_from_args (args, "auto-retrieve-key", FALSE, NULL))
-		opts |= MU_MSG_OPTION_AUTO_RETRIEVE;
-	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
-		opts |= MU_MSG_OPTION_DECRYPT;
+	opts = get_view_msg_opts (args);
 
 	/* when 'path' is specified, get the message at path */
 	path = get_string_from_args (args, "path", FALSE, NULL);
@@ -1418,7 +1457,6 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 			print_and_clear_g_error (err);
 			return MU_OK;
 		}
-
 		msg = mu_store_get_msg (ctx->store, docid, err);
 	}
 

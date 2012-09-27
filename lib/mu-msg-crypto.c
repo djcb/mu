@@ -299,13 +299,11 @@ get_status_report (GMimeSignatureList *sigs)
 		sigstat = g_mime_signature_get_status (msig);
 
 		switch (sigstat) {
-		case GMIME_SIGNATURE_STATUS_GOOD: break;
+		case GMIME_SIGNATURE_STATUS_GOOD:              break;
 		case GMIME_SIGNATURE_STATUS_ERROR:
-			status = MU_MSG_PART_SIG_STATUS_ERROR;
-			break;
+			status = MU_MSG_PART_SIG_STATUS_ERROR; break;
 		case GMIME_SIGNATURE_STATUS_BAD:
-			status = MU_MSG_PART_SIG_STATUS_BAD;
-			break;
+			status = MU_MSG_PART_SIG_STATUS_BAD;   break;
 		default: g_return_val_if_reached (NULL);
 		}
 
