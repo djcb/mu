@@ -162,8 +162,6 @@ save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
 	return rv;
 }
 
-
-
 struct _SaveData {
 	gboolean		 result;
 	guint			 saved_num;

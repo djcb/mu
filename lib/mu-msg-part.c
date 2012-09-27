@@ -881,12 +881,11 @@ mu_msg_part_maybe_attachment (MuMsgPart *part)
 	if (!(part->part_type & MU_MSG_PART_TYPE_LEAF))
 		return FALSE;
 
-	/* non-textual parts are considered attachments as
-	 * well */
-	/* if (!(part->part_type & MU_MSG_PART_TYPE_ATTACHMENT) && */
-	/*     !(part->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN) && */
-	/*     !(part->part_type & MU_MSG_PART_TYPE_TEXT_HTML)) */
-	/* 	return TRUE; */
+	/* parts other than text/plain, text/html are considered
+	 * attachments as well */
+	if (!(part->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN) &&
+	    !(part->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
+		return TRUE;
 
 	return part->part_type & MU_MSG_PART_TYPE_ATTACHMENT ? TRUE : FALSE;
 }
