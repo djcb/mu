@@ -81,24 +81,24 @@ vertical split-view."
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
-(defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Mark for draft messages.")
-(defvar mu4e-headers-flagged-mark   (purecopy '("F" . "⚑")) "Mark for flagged messages.")
-(defvar mu4e-headers-new-mark       (purecopy '("N" . "⭑")) "Mark for new messages.")
-(defvar mu4e-headers-passed-mark    (purecopy '("P" . "❯")) "Mark for passed (fwd) messages.")
-(defvar mu4e-headers-replied-mark   (purecopy '("R" . "❮")) "Mark for replied messages.")
-(defvar mu4e-headers-seen-mark      (purecopy '("S" . "✔")) "Mark for seen messages.")
-(defvar mu4e-headers-trashed-mark   (purecopy '("T" . "♻")) "Mark for trashed messages.")
-(defvar mu4e-headers-attach-mark    (purecopy '("a" . "⚓")) "Mark for messages w/ attachments.")
-(defvar mu4e-headers-encrypted-mark (purecopy '("x" . "⚴")) "Mark for encrypted messages.")
-(defvar mu4e-headers-signed-mark    (purecopy '("s" . "☡")) "Mark for signed messages.")
-(defvar mu4e-headers-unread-mark    (purecopy '("u" . "☐")) "Mark for unread messages.")
+(defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Draft.")
+(defvar mu4e-headers-flagged-mark   (purecopy '("F" . "⚑")) "Flagged.")
+(defvar mu4e-headers-new-mark       (purecopy '("N" . "⭑")) "New.")
+(defvar mu4e-headers-passed-mark    (purecopy '("P" . "❯")) "Passed (fwd).")
+(defvar mu4e-headers-replied-mark   (purecopy '("R" . "❮")) "Replied.")
+(defvar mu4e-headers-seen-mark      (purecopy '("S" . "✔")) "Seen.")
+(defvar mu4e-headers-trashed-mark   (purecopy '("T" . "♻")) "Trashed.")
+(defvar mu4e-headers-attach-mark    (purecopy '("a" . "⚓")) "W/ attachments.")
+(defvar mu4e-headers-encrypted-mark (purecopy '("x" . "⚴")) "Encrypted.")
+(defvar mu4e-headers-signed-mark    (purecopy '("s" . "☡")) "Signed.")
+(defvar mu4e-headers-unread-mark    (purecopy '("u" . "☐")) "Unread.")
 
 ;; thread prefix marks
-(defvar mu4e-headers-has-child-prefix    (purecopy '("+"  . "◼"))  "Thread with child(ren).")
-(defvar mu4e-headers-empty-parent-prefix (purecopy '("-"  . "◽"))  "Thread without parent.")
-(defvar mu4e-headers-first-child-prefix  (purecopy '("\\" . "┗▶")) "The first child.")
-(defvar mu4e-headers-duplicate-prefix    (purecopy '("="  . "⚌")) "Duplicate message.")
-(defvar mu4e-headers-default-prefix       (purecopy '("|"  . "┃")) "Default prefix.")
+(defvar mu4e-headers-has-child-prefix    (purecopy '("+"  . "◼"))  "Parent.")
+(defvar mu4e-headers-empty-parent-prefix (purecopy '("-"  . "◽"))  "Orphan.")
+(defvar mu4e-headers-first-child-prefix  (purecopy '("\\" . "┗▶")) "First child.")
+(defvar mu4e-headers-duplicate-prefix    (purecopy '("="  . "⚌"))  "Duplicate.")
+(defvar mu4e-headers-default-prefix       (purecopy '("|"  . "┃")) "Default.")
 
 
 (defvar mu4e-headers-actions
@@ -476,8 +476,8 @@ after the end of the search results."
       (define-key map (kbd "m")            'mu4e-headers-mark-for-move)
       (define-key map (kbd "r")            'mu4e-headers-mark-for-refile)
 				            
-      (define-key map (kbd "o")            'mu4e-headers-mark-for-unread)
-      (define-key map (kbd "s")            'mu4e-headers-mark-for-read)
+      (define-key map (kbd "?")            'mu4e-headers-mark-for-unread)
+      (define-key map (kbd "!")            'mu4e-headers-mark-for-read)
       				            
       (define-key map (kbd "u")            'mu4e-headers-mark-for-unmark)
       (define-key map (kbd "+")            'mu4e-headers-mark-for-flag)
