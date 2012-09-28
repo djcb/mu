@@ -1121,11 +1121,10 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	if (!maildir) {
 		maildir = mu_msg_get_maildir (msg);
 		different_mdir = FALSE;
-	} else {
+	} else
 		/* are we moving to a different mdir, or is it just flags? */
 		different_mdir =
 			(g_strcmp0 (maildir, mu_msg_get_maildir(msg)) != 0);
-	}
 
 	if (!mu_msg_move_to_maildir (msg, maildir, flags, TRUE, err))
 		return MU_G_ERROR_CODE (err);
@@ -1136,7 +1135,7 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	rv = mu_store_update_msg (store, docid, msg, err);
 	if (rv == MU_STORE_INVALID_DOCID) {
 		mu_util_g_set_error (err, MU_ERROR_XAPIAN,
-				"failed to store updated message");
+				     "failed to store updated message");
 		print_and_clear_g_error (err);
 	}
 
@@ -1150,16 +1149,14 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	return MU_OK;
 }
 
-static gboolean
+static MuError
 move_msgid (MuStore *store, unsigned docid, const char* flagstr, GError **err)
 {
 	MuMsg *msg;
-	gboolean rv;
+	MuError rv;
 	MuFlags flags;
 
-	err = NULL;
-	rv  = FALSE;
-
+	rv  = MU_ERROR;
 	msg = mu_store_get_msg (store, docid, err);
 
 	if (!msg)
@@ -1178,11 +1175,10 @@ move_msgid (MuStore *store, unsigned docid, const char* flagstr, GError **err)
 leave:
 	if (msg)
 		mu_msg_unref (msg);
-
-	print_and_clear_g_error (err);
+	if (rv != MU_OK)
+		print_and_clear_g_error (err);
 
 	return rv;
-
 }
 
 
@@ -1209,8 +1205,8 @@ move_msgid_maybe (ServerContext *ctx, GSList *args, GError **err)
 	}
 
 	for (cur = docids; cur; cur = g_slist_next(cur))
-		if (!move_msgid (ctx->store, GPOINTER_TO_SIZE(cur->data),
-				 flagstr, err))
+		if (move_msgid (ctx->store, GPOINTER_TO_SIZE(cur->data),
+				 flagstr, err) != MU_OK)
 			break;
 
 	g_slist_free (docids);
@@ -1508,7 +1504,7 @@ handle_args (ServerContext *ctx, GSList *args, GError **err)
 	cmd = (const char*) args->data;
 
 	/* ignore empty */
-	if (strlen (cmd) == 0)
+	if (mu_str_is_empty (cmd))
 		return MU_OK;
 
 	for (u = 0; u != G_N_ELEMENTS (cmd_map); ++u)
@@ -1517,6 +1513,7 @@ handle_args (ServerContext *ctx, GSList *args, GError **err)
 
 	mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 			     "unknown command '%s'", cmd ? cmd : "");
+
 	return MU_G_ERROR_CODE (err);
 }
 
