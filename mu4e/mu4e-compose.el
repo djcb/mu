@@ -56,13 +56,12 @@ the From: address.)"
 
 (defcustom mu4e-sent-messages-behavior 'sent
   "Determines what mu4e does with sent messages - this is a symbol
-which can be either:
-'sent   --> move the sent message to the Sent-folder (`mu4e-sent-folder')
-'trash  --> move the sent message to the Trash-folder (`mu4e-trash-folder')
-'delete --> delete the sent message.
-Note, when using GMail/IMAP, you should set this to either 'trash
-or 'delete, since GMail already takes care of keeping copies in the
-sent folder."
+which can be either: 'sent --> move the sent message to the
+Sent-folder (`mu4e-sent-folder') 'trash --> move the sent message
+to the Trash-folder (`mu4e-trash-folder') 'delete --> delete the
+sent message.  Note, when using GMail/IMAP, you should set this to
+either 'trash or 'delete, since GMail already takes care of keeping
+copies in the sent folder."
   :type 'symbol
   :safe 'symbolp
   :group 'mu4e-compose)
@@ -401,7 +400,7 @@ Also sets `mu4e~compose-trash-folder',
 buffer-local, permanent variables."
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
   (if (eq compose-type 'edit)
-    (find-file (mu4e-message-field msg :path))  
+    (find-file (mu4e-message-field msg :path))
     (let* ((draftdir (mu4e-get-drafts-folder msg))
 	    (draftfile (mu4e~compose-message-filename-construct "DS"))
 	    (draftpath (concat mu4e-maildir draftdir "/cur/" draftfile)))
@@ -418,7 +417,7 @@ buffer-local, permanent variables."
   (mu4e~compose-setup-folder 'mu4e~compose-drafts-folder mu4e-get-drafts-folder msg)
   (mu4e~compose-setup-folder 'mu4e~compose-sent-folder   mu4e-get-sent-folder msg))
 
-  
+
 
 ;; 'fcc' refers to saving a copy of a sent message to a certain folder. that's
 ;; what these 'Sent mail' folders are for!
@@ -578,7 +577,7 @@ needed, set the Fcc header, and register the handler function."
   '("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
      "^User-Agent:" "^In-Reply-To:")
   "List of regexps with message headers that are to be hidden.")
- 
+
 (defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
@@ -615,7 +614,7 @@ tempfile)."
     (message-insert-signature))
   ;; hide some headers
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
-    (message-hide-headers)) 
+    (message-hide-headers))
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
@@ -701,7 +700,7 @@ for draft messages."
     (unless (or msg (eq compose-type 'new))
       (mu4e-warn "No message at point"))
     (unless (member compose-type '(reply forward edit new))
-      (mu4e-error "Invalid compose type '%S'" compose-type))   
+      (mu4e-error "Invalid compose type '%S'" compose-type))
     (when (and (eq compose-type 'edit)
 	    (not (member 'draft (mu4e-message-field msg :flags))))
       (mu4e-warn "Editing is only allowed for draft messages"))

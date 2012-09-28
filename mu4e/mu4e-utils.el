@@ -100,7 +100,7 @@ parameter (which may be `nil'), and return the result."
   (mu4e~get-folder 'mu4e-trash-folder msg))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
- 
+
 
 
 
@@ -385,7 +385,7 @@ http://cr.yp.to/proto/maildir.html "
       (format "%2.1fK" (/ size 1000.0)))
     ((< size 1000) (format "%d" size))
     (t (propertize "?" 'face 'mu4e-system-face))))
- 
+
 
 (defun mu4e-display-manual ()
   "Display the mu4e manual page for the current mode, or go to the
@@ -521,10 +521,7 @@ This is used by the completion function in mu4e-compose."
 	    (and mu4e-compose-complete-ignore-address-regexp
 	      (string-match mu4e-compose-complete-ignore-address-regexp mail))
 	  (add-to-list 'lst
-	    (if name (format "\"%s\" <%s>"
-		       ;; hack so we don't get ',' in e-mail addresses...
-		       (replace-regexp-in-string "," "" name)
-		       mail) mail))))))
+	    (if name (format "\"%s\" <%s>" name mail) mail))))))
     (setq mu4e~contacts-for-completion lst)
     (mu4e-message "Contacts received: %d"
       (length mu4e~contacts-for-completion))))
@@ -538,7 +535,7 @@ This is used by the completion function in mu4e-compose."
     (let ((version (plist-get mu4e~server-props :version)))
       (unless (string= version mu4e-mu-version)
 	(mu4e-error "mu server has version %s, but we need %s"
-	  version mu4e-mu-version))))  
+	  version mu4e-mu-version))))
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error "Please set `mu4e-mu-binary' to the full path to the mu
     binary."))
@@ -572,11 +569,11 @@ FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
   (if (mu4e~proc-is-running)   ;; already running?
     (when func                 ;; yes! run func if defined
-      (funcall func)) 
+      (funcall func))
     (progn
       ;; no! do some checks, set up pong handler and ping the server
 
-      (lexical-let ((func func)) 
+      (lexical-let ((func func))
 	(mu4e~check-requirements)
 	;; set up the 'pong' handler func
 	(setq mu4e-pong-func
@@ -604,7 +601,7 @@ FUNC (if non-nil) afterwards."
 	  (when mu4e-compose-complete-only-after
 	    (float-time
 	      (apply 'encode-time
-		(mu4e-parse-time-string mu4e-compose-complete-only-after))))))))) 
+		(mu4e-parse-time-string mu4e-compose-complete-only-after)))))))))
 
 
 (defun mu4e~stop ()

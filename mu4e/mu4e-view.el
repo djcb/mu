@@ -336,7 +336,8 @@ at POINT, or if nil, at (point)."
   (let* ((parts (mu4e-message-field msg :parts))
 	  (verdicts
 	    (remove-if 'null
-	      (mapcar (lambda (part) (mu4e-message-part-field part :signature)) parts)))
+	      (mapcar (lambda (part) (mu4e-message-part-field part :signature))
+		parts)))
 	  (val (when verdicts
 		 (mapconcat
 		   (lambda (v)
@@ -382,7 +383,8 @@ at POINT, or if nil, at (point)."
 	    (remove-if-not
 	      (lambda (part)
 		(let ((mtype (mu4e-message-part-field part :mime-type))
-		       (isattach  (member 'attachment (mu4e-message-part-field part :type))))
+		       (isattach  (member 'attachment
+				    (mu4e-message-part-field part :type))))
 		  (or ;; remove if it's not an attach *or* if it's an
 		      ;; image/audio/application type (but not a signature)
 		    isattach
@@ -1087,11 +1089,12 @@ user that unmarking only works in the header list."
 (defmacro mu4e~view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for-MARK."
   (let ((funcname (intern (concat "mu4e-view-mark-for-" (symbol-name mark))))	
-	 (docstring (concat "Mark the current message for " (symbol-name mark) ".")))
+	 (docstring (format "Mark the current message for %s."
+		      (symbol-name mark)))) 
     `(defun ,funcname () ,docstring
        (interactive)
        (mu4e~view-in-headers-context
-	 (mu4e-headers-mark-and-next (quote mark))))))
+	 (mu4e-headers-mark-and-next (quote ,mark))))))
 
 ;; would be cool to do something like the following, but somehow, I can't get
 ;; the quoting right...
@@ -1208,6 +1211,6 @@ ensure we don't disturb other windows."
 	(kill-buffer)
 	(when (buffer-live-p mu4e~view-headers-buffer)
 	  (switch-to-buffer mu4e~view-headers-buffer))))))
-
+ 
 (provide 'mu4e-view)
 ;; end of mu4e-view
