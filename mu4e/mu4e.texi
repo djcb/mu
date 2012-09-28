@@ -6,17 +6,9 @@
 @c %**end of header
 @include version.texi
 
-@titlepage
-@title @t{mu4e} - an e-mail client for emacs
-@author{Dirk-Jan C. Binnema}
-@end titlepage
-
-
-@dircategory Emacs
-@direntry
-* mu4e: (mu4e).        An email client for emacs based on mu.
-@end direntry
 @copying
+This manual is for @t{mu4e} version @value{mu4e-version}.
+
 Copyright @copyright{} 2012 Dirk-Jan C. Binnema
 
 @quotation
@@ -29,23 +21,41 @@ Documentation License.''
 @end quotation
 @end copying
 
+@titlepage
+@title @t{mu4e} - an e-mail client for emacs
+@subtitle{version  @value{mu4e-version}}
+@author by Dirk-Jan C. Binnema
+@end titlepage
+
+
+@dircategory Emacs
+@direntry
+* mu4e: (mu4e).        An email client for emacs.
+@end direntry
+
+@insertcopying
+
+@contents
+
 @node Top
-@top mu4e Manual
+@top Welcome to mu4e
 
 Welcome to @t{mu4e}!
 
-@t{mu4e} (mu-for-emacs) is an e-mail client for GNU-Emacs, version 23 and
-later, built on top of the @t{mu} e-mail search engine. @t{mu4e} is optimized
-for fast handling of large amounts of e-mail.
+@t{mu4e} (mu-for-emacs) is an e-mail client for GNU-Emacs version 23 and
+later, built on top of the
+@t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
+engine. @t{mu4e} is optimized for fast handling of large amounts of e-mail.
 
-Some of the features include:
+Some of its features include:
 
 @itemize
 @item Fully search-based: there are no folders, only queries
 @item Fully documented, with example configurations
 @item UI optimized for speed with quick key strokes for common actions
 @item Asynchronous: heavy actions never block @t{emacs}
-@item Rich-text e-mails using @t{org-mode} (experimental)
+@item Support for crypto
+@item Writing rich-text e-mails using @t{org-mode} (experimental)
 @item Address auto-completion based on your messages
 @item Extendable using your own custom actions
 @end itemize
@@ -56,7 +66,8 @@ configuration, and explains its daily use. It also shows how you can customize
 configurations, which should help you to get up to speed quickly.
 
 Also note the @xref{FAQ - Frequently Anticipated Questions}, and the section
-on @xref{Known issues / missing features}, which may save you some time.
+on @xref{Known issues / missing features}, which may save you some time, and
+the appendices that try the shed some light on @t{mu4e}'s internals.
 
 This manual has been updated for @t{mu}/@t{mu4e} version
 @emph{@value{mu4e-version}}.
@@ -86,8 +97,6 @@ Appendices
 @node Introduction
 @chapter Introduction
 
-Welcome to @t{mu4e}!
-
 @menu
 * Why another e-mail client?::
 * Other mail clients::
@@ -99,18 +108,18 @@ Welcome to @t{mu4e}!
 
 Fair question.
 
-I'm not sure the world @emph{needs} yet another e-mail client, but perhaps
-@emph{I} do! I (the author) spend a @emph{lot} of time, professionally and
-privately, dealing with e-mail messdae and therefore, having an efficient
-e-mail client is essential for me. Since none of the existing ones worked the
-way I wanted, I created my own.
+I'm not sure the world needs yet another e-mail client, but perhaps @emph{I}
+do! I (the author) spend a @emph{lot} of time dealing with e-mail, both
+professionally and privately. Having an efficient e-mail client is essential
+for me. Since none of the existing ones worked the way I wanted, I created my
+own.
 
 As @t{emacs} is such an integral part of my workflow, it made a lot of sense
-to integrate my e-mail client with it. And as I already had written an e-mail
-search engine (@t{mu}), it seemed only logical to use that as a basis.
+to use it for e-mail as well. And as I already had written an e-mail search
+engine (@t{mu}), it seemed only logical to use that as a basis.
 
 Even though I created @t{mu4e} for such selfish reasons, @t{mu4e} tries hard
-to be as useful as possible for @emph{all} its users - suggestions are very
+to be as useful as possible for all its users - suggestions are very
 welcome and many have already made it to @t{mu4e}.
 
 @node Other mail clients
@@ -167,7 +176,7 @@ After these steps, @t{mu4e} should be ready to go.
 * Basic configuration:: Settings for @t{mu4e}
 * Folders::  Setting up standard folders
 * Sending mail:: How to send mail
-* Running mu4e:: Overview of the @t{mu4e} views 
+* Running mu4e:: Overview of the @t{mu4e} views
 
 @end menu
 
@@ -326,10 +335,10 @@ details.}:
 @lisp
   (setq
     mu4e-maildir       "~/Maildir"   ;; top-level Maildir
-    mu4e-sent-folder   "/sent"       ;; where do I keep sent mail?
-    mu4e-drafts-folder "/drafts"     ;; where do I keep half-written mail?
-    mu4e-trash-folder  "/trash"      ;; where do I move deleted mail?
-    mu4e-refile-folder "/archive")   ;; where do I move message after completion?
+    mu4e-sent-folder   "/sent"       ;; folder for sent messages
+    mu4e-drafts-folder "/drafts"     ;; unfinished messages
+    mu4e-trash-folder  "/trash"      ;; trashed messages
+    mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
 @code{mu4e-maildir} takes an actual filesystem-path, the other folder names
@@ -399,10 +408,10 @@ chapter we go through all of them:
 @end menu
 
 For your orientation, the diagram below shows how the views relate to each
-other, and the default key-bindings to get from one view to the next. 
+other, and the default key-bindings to get from one view to the next.
 
 @example
-----------------------------------------------------------------------------
+-----------------------------------------------------------
 
         [C]     +--------+   [RFCE]
       --------> | editor | <--------
@@ -426,7 +435,7 @@ F: Forward    j: jump-to-maildir   q: quit
 C: Compose    b: bookmark-search
 E: Edit       B: edit bookmark-search
 
-----------------------------------------------------------------------------
+-----------------------------------------------------------
 @end example
 
 @node Main view
@@ -522,19 +531,19 @@ matching message, showing information about it. It looks something like the
 following:
 
 @verbatim
-----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
   Date              Flgs   From/To             Subject
-  2011-12-16 18:38  S      To Edmund Dantès    + Re: Extension security?
-  2011-12-16 21:44  S      Abbé Busoni             + Re: Extension security?
-  2011-12-17 03:14  SR     Pierre Morrel           + Re: Extension security?
-  2011-12-17 04:04  uN     Jacopo                    + Re: Extension security?
-  2011-12-17 14:36  uN     Mercédès                    + Re: Extension security?
-  2011-12-18 06:05  uN     Beachamp                      \ Re: Extension security?
-  2011-12-16 18:23  Ss     Albert de Moncerf   + Re: [O] A presentation tool
-  2011-12-17 01:53  Sa     Gaspard Caderousse    \ Re: [O] A presentation tool
+  2011-12-16 18:38  S      To Edmund Dantès    + Re: Extensions?
+  2011-12-16 21:44  S      Abbé Busoni             + Re: Extensions?
+  2011-12-17 03:14  SR     Pierre Morrel           + Re: Extensions?
+  2011-12-17 04:04  uN     Jacopo                    + Re: Extensions?
+  2011-12-17 14:36  uN     Mercédès                    + Re: Extensions?
+  2011-12-18 06:05  uN     Beachamp                      \ Re: Extensions?
+  2011-12-16 18:23  Ss     Albert de Moncerf   + Re: [O] A cool tool
+  2011-12-17 01:53  Sa     Gaspard Caderousse    \ Re: [O] A cool tool
   2011-12-16 16:31  uN     Baron Danglars      | [O] imaxima?
 End of search results
-----------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 @end verbatim
 
 @subsection Some notes
@@ -599,7 +608,7 @@ DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
 +,-          mark for flagging/unflagging
-o,s          mark message as unread, read (seen)
+?,!          mark message as unread, read
 
 u            unmark message at point
 U            unmark *all* messages
@@ -1122,7 +1131,7 @@ you can define a @emph{hook function}. @t{mu4e} offers two hooks:
 starts; if you are composing a @emph{reply}, @emph{forward} a message, or
 @emph{edit} an existing message, the variable
 @code{mu4e-compose-parent-message} points to the message being replied to,
-forwarded or edit, and you can use @code{mu4e-msg-field} to get the value of
+forwarded or edit, and you can use @code{mu4e-message-field} to get the value of
 various properties (and see @ref{The message s-expression}).
 @item @code{mu4e-compose-mode-hook}: this hook is run just before composition
 starts, when the whole buffer has already been set up. This is a good place
@@ -1141,7 +1150,7 @@ on the receiver of the original:
 (add-hook 'mu4e-compose-pre-hook
   (defun my-set-from-address ()
     "Set the From address based on the To address of the original."
-    (let ((orig-to (cdar (mu4e-msg-field mu4e-compose-parent-message :to))))
+    (let ((orig-to (cdar (mu4e-message-field mu4e-compose-parent-message :to))))
       (setq user-mail-address
 	(cond
 	  ((string= "me@@foo.com" orig-to) "me@@foo.com")
@@ -1489,19 +1498,19 @@ respectively
 apply to messages:
 
 @verbatim
-| mark for     | keybinding  | description              |
+| mark for/as  | keybinding  | description              |
 |--------------+-------------+--------------------------|
 | deferred     | *           | mark now, decide later   |
 | delete       | D, <delete> | delete                   |
 | flag         | +           | mark as 'flagged'        |
 | move         | m           | move to some maildir     |
-| read         | s           | mark as read (seen)      |
+| read         | !           | mark as read             |
 | refile       | r           | mark for refiling        |
 | trash        | d           | move to the trash folder |
 | unflag       | -           | remove 'flagged' mark    |
 | unmark       | u           | remove mark at point     |
 | unmark all   | U           | remove all marks         |
-| unread       | o           | marks as unread          |
+| unread       | ?           | marks as unread          |
 @end verbatim
 
 After marking a header for something, the left-most columns shows a character
@@ -1560,8 +1569,8 @@ more than @emph{n} recipients. We could do it like this:
 @lisp
 (add-to-list 'mu4e-headers-custom-markers
   '("More than n recipients"
-      (lambda (msg n) (> (+ (length (mu4e-msg-field msg :to))
-                            (length (mu4e-msg-field msg :cc))) n))
+      (lambda (msg n) (> (+ (length (mu4e-message-field msg :to))
+                            (length (mu4e-message-field msg :cc))) n))
       (lambda () (read-number "Match messages with more recipients than: "))) t)
 @end lisp
 
@@ -1586,49 +1595,65 @@ press @key{% + s hello RET}. Note, the menu system helps you here; all you
 need to remember is @key{%} for @code{mu4e-headers-mark-pattern}.
 @end itemize
 
-
 @node Dynamic folders
 @chapter Dynamic folders
 
 In @ref{Folders} we gave an example of setting the standard folders:
 @lisp
   (setq
-    mu4e-sent-folder   "/sent"       ;; where do I keep sent mail?
-    mu4e-drafts-folder "/drafts"     ;; where do I keep half-written mail?
-    mu4e-trash-folder  "/trash"      ;; where do I move deleted mail?
-    mu4e-refile-folder "/archive")   ;; where do I move message after completion?
+    mu4e-sent-folder   "/sent"       ;; folder for sent messages
+    mu4e-drafts-folder "/drafts"     ;; unfinished messages
+    mu4e-trash-folder  "/trash"      ;; trashed messages
+    mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
 In some case, these static folders may not suffice, and you might want to
-change the folders depending on the context; for example, we may have
+change the folders depending on the context. For example, we may have
 different folders for refiling, based on the sender of the message.
 
 To enable this, instead of setting the standard folders to constant strings,
 you can set them to be a @emph{function} that takes a message as parameter,
 and returns the desired folder name.
 
-For example, for the refile folder you could put something like the following
-in your setup:
+@menu
+* Smart refiling::
+* Other dynamic folders::
+@end menu
+
+
+@node Smart refiling
+@section Smart refiling
+
+It is sometimes convenient to move messages to some specific folder, based on
+some of the message details -- @emph{refiling}(@key{r}).
+
+We can make this 'smart' with a dynamic refiling folder - each message
+automatically figures out the right folder to move to. For example, you could
+put something like the following in your setup:
+
 @lisp
 (setq mu4e-refile-folder
   (lambda (msg)
     (cond
       ;; messages to the mu mailing list go to the /mu folder
-      ((mu4e-message-contact-field-matches msg :to  "mu-discuss@@googlegroups.com")
-	"/mu")     
+      ((mu4e-message-contact-field-matches msg :to
+	 "mu-discuss@@googlegroups.com")
+      	"/mu")
       ;; messages sent directly to me go to /archive
       ;; also `mu4e-user-mail-address-regexp' can be used
-      ((mu4e-message-contact-field-matches msg :to "me@@example.com")
+      ((mu4e-message-contact-field-matches msg :to
+	 "me@@example.com")
 	"/private")
-      ;; message with football or soccer in the subject go to /football  
-      ((string-match "football\\|soccer" (mu4e-message-field msg :subject))
-       "/football)
+      ;; messages with football or soccer in the subject go to /football
+      ((string-match "football\\|soccer"
+	 (mu4e-message-field msg :subject))
+	"/football")
       ;; everything else goes to /archive
-      (t 
-	"/archive"))))
+      ;; important to have a catch-all at the end!
+      (t  "/archive"))))
 @end lisp
 
-Let's look at this example a bit:
+Some notes:
 @itemize
 @item we set @code{mu4e-refile-folder} to an anonymous (@t{lambda}) function. This
 function takes one argument, a message.  @file{mu4e-message.el} contains
@@ -1636,14 +1661,19 @@ various convenience functions to deal which such messages
 @item In this function, we use a @t{cond} control structure; the function
 returns the first of the clauses that matches
 @item Especially useful are the function @file{mu4e-message.el}; here we use
-the convenience function @code{mu4e-message-contact-field-matches}, which 
+the convenience function @code{mu4e-message-contact-field-matches}, which
+evaluates to @code{t} if any of the names or e-mail addresses in the @t{To:}
+matches the regular expression.
 @end itemize
 
+@node Other dynamic folders
+@section Other dynamic folders
+
 Using the same mechanism, you can set special sent-, trash-, and draft-folders
-for messages. Note that the message-parameter you receive for sent and draft
-folder is the @emph{original} message, that is, the message you reply to or
-forward. If there is not such message (for example when composing a new
-message) the message parameter will be @t{nil}.
+for messages. The message-parameter you receive for sent and draft folder is
+the @emph{original} message, that is, the message you reply to or forward. If
+there is not such message (for example when composing a new message) the
+message parameter will be @t{nil}.
 
 @node Actions
 @chapter Actions
@@ -1701,7 +1731,8 @@ Suppose we would like to inspect the number of recipients for a message in the
 (defun show-number-of-recipients (msg)
   "Display the number of recipients for this message."
   (message "Number of recipients: %d"
-     (+ (length (mu4e-msg-field msg :to)) (length (mu4e-msg-field msg :cc)))))
+     (+ (length (mu4e-message-field msg :to))
+        (length (mu4e-message-field msg :cc)))))
 
 ;; define 'N' (the first letter of the description) as the shortcut
 (add-to-list 'mu4e-headers-actions
@@ -1719,7 +1750,8 @@ of this message.
 @lisp
 (defun search-for-sender (msg)
   "Search for messages sent by the sender of the current one."
-  (mu4e-headers-search (concat "from:" (cdar (mu4e-msg-field msg :from)))))
+  (mu4e-headers-search
+     (concat "from:" (cdar (mu4e-message-field msg :from)))))
 
 ;; define 'x' as the shortcut
 (add-to-list 'mu4e-view-actions
@@ -1767,10 +1799,6 @@ body-text using text-to-speech.
 
 If you have come up with any interesting actions that may be useful for
 others, you are invited to contribute those.
-
-
-
-
 
 
 @node Interaction with other tools
@@ -2564,8 +2592,10 @@ A typical message s-expression looks something like the following:
  :priority normal
  :flags (seen)
  :parts ( (:index 1 :mime-type "text/plain" :size 12345 :attachment nil)
-          (:index 2 :name "photo.jpg" :mime-type "image/jpeg" :size 147331 :attachment t)
-          (:index 3 :name "book.pdf" :mime-type "application/pdf" :size 192220 :attachment t))
+          (:index 2 :name "photo.jpg" :mime-type "image/jpeg"
+           :size 147331 :attachment t)
+          (:index 3 :name "book.pdf" :mime-type "application/pdf"
+           :size 192220 :attachment t))
  :references  ("6BDC23465F79238C8384574032D81EE81AF0114E4E74@@123213.mail.example.com"
  "6BDC23465F79238203498230942D81EE81AF0114E4E74@@123213.mail.example.com")
  :in-reply-to "6BDC23465F79238203498230942D81EE81AF0114E4E74@@123213.mail.example.com"
@@ -2577,8 +2607,9 @@ A typical message s-expression looks something like the following:
 This s-expression forms a property list (@t{plist}), and we can get values
 from it using @t{plist-get}; for example @code{(plist-get msg :subject)} would
 get you the message subject. However, it's better to use the function
-@code{mu4e-msg-field} to shield you from some of the implementation details
-that are subject to change.
+@code{mu4e-message-field} to shield you from some of the implementation
+details that are subject to change; and see the other convenience functions in
+@file{mu4e-message.el}.
 
 Some notes on the format:
 @itemize
