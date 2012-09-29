@@ -53,7 +53,8 @@ Some of its features include:
 @item Fully search-based: there are no folders, only queries
 @item Fully documented, with example configurations
 @item UI optimized for speed with quick key strokes for common actions
-@item Asynchronous: heavy actions never block @t{emacs}
+@item Asynchronous: heavy actions don't block @t{emacs}@footnote{currently,
+the only exception to this is @emph{sending mail}}
 @item Support for crypto
 @item Writing rich-text e-mails using @t{org-mode} (experimental)
 @item Address auto-completion based on your messages
@@ -202,7 +203,7 @@ sudo apt-get install guile-2.0-dev html2text xdg-utils
 sudo apt-get install libwebkit-dev
 @end example
 
-Using a release-tarball (as avaiable from
+Using a release-tarball (as available from
 GoogleCode@footnote{@url{http://code.google.com/p/mu0/downloads/list}},
 Installation follows the normal sequence:
 
@@ -1212,7 +1213,8 @@ on the receiver of the original:
   (defun my-set-from-address ()
     "Set the From address based on the To address of the original."
     (let ((orig-to
-            (cdar (mu4e-message-field mu4e-compose-parent-message :to))))
+            (cdar
+               (mu4e-message-field mu4e-compose-parent-message :to))))
       (setq user-mail-address
 	(cond
 	  ((string= "me@@foo.com" orig-to) "me@@foo.com")
@@ -1273,7 +1275,7 @@ this. For example:
       smtpmail-queue-dir   "~/Maildir/queue/cur")
 @end lisp
 
-For convenience, we locate the queue directory somewhere in our normal
+For convenience, we put the queue directory somewhere in our normal
 maildir. If you want to use queued mail, you should create this directory
 before starting @t{mu4e}. The @command{mu mkdir} command may be useful here,
 so for example:
