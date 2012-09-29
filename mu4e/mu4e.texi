@@ -66,8 +66,8 @@ configuration, and explains its daily use. It also shows how you can customize
 configurations, which should help you to get up to speed quickly.
 
 Also note the @xref{FAQ - Frequently Anticipated Questions}, and the section
-on @xref{Known issues / missing features}, which may save you some time, and
-the appendices that try the shed some light on @t{mu4e}'s internals.
+on @xref{Known issues}, which may save you some time, and the appendices that
+try the shed some light on @t{mu4e}'s internals.
 
 This manual has been updated for @t{mu}/@t{mu4e} version
 @emph{@value{mu4e-version}}.
@@ -86,7 +86,6 @@ This manual has been updated for @t{mu}/@t{mu4e} version
 * Interaction with other tools:: mu4e and the rest of the world
 * Example configuration:: Some examples to set you up quickly
 * FAQ - Frequently Anticipated Questions:: Common questions and answers
-* Known issues / missing features:: mu4e is not perfect yet
 
 Appendices
 * How it works:: Some notes about the implementation of @t{mu4e}
@@ -98,12 +97,12 @@ Appendices
 @chapter Introduction
 
 @menu
-* Why another e-mail client?::
+* Why another e-mail client::
 * Other mail clients::
 * What mu4e does not do::
 @end menu
 
-@node Why another e-mail client?
+@node Why another e-mail client
 @section Why another e-mail client?
 
 Fair question.
@@ -328,10 +327,9 @@ So, add to your @file{~/.emacs} (or its moral equivalent, such as
 The next step is to tell @t{mu4e} where it can find your Maildir, and some
 special folders. So, for example@footnote{Note that the folders
 (@t{mu4e-sent-folder}, @t{mu4e-drafts-folder}, @t{mu4e-trash-folder} and
-@t{mu4e-refile-folder}), instead of simple strings like the example above, can
-actually be @emph{functions}, that can be evaluated a runtime. This allows for
-dynamically changing them depending on context. See @ref{Dynamic folders} for
-details.}:
+@t{mu4e-refile-folder}) can also be @emph{functions} that are evaluated at
+runtime. This allows for dynamically changing them depending on context. See
+@ref{Dynamic folders} for details.}:
 @lisp
   (setq
     mu4e-maildir       "~/Maildir"   ;; top-level Maildir
@@ -442,10 +440,20 @@ E: Edit       B: edit bookmark-search
 @chapter Main view
 
 After you have installed @t{mu4e} (@pxref{Getting started}), you can start it
-with @code{M-x mu4e}. @t{mu4e} wil do some checks to ensure everything is set
-up correctly, and then show you the @t{mu4e} main view.
+with @code{M-x mu4e}. @t{mu4e} does some checks to ensure everything is set up
+correctly, and then show you the @t{mu4e} main view.
 
-This looks something like the following:
+@menu
+* MV Overview::
+* Basic actions::
+* MV Bookmarks::
+* Miscellaneous::
+@end menu
+
+@node MV Overview
+@section Overview
+
+The main view looks something like the following:
 
 @verbatim
 ----------------------------------------------------------------------------
@@ -480,10 +488,11 @@ has support for decryption of encrypted messages, and verifying
 signatures. See @ref{Decryption} and @ref{Verifying signatures} in the
 @ref{Message view}.
 
-Below, we assume the default key bindings. If you've changed those, well,
-@emph{mutatis mutandis}.
+Below, we assume the default key bindings.
 
-@subsection Basic actions
+
+@node Basic actions
+@section Basic actions
 
 First, the @emph{Basics}:
 @itemize
@@ -498,7 +507,8 @@ shown. @xref{Searching}.
 will be thrown in a message-editing buffer, where you can compose a new message.
 @end itemize
 
-@subsection Bookmarks
+@node MV Bookmarks
+@section Bookmarks
 
 Next come @emph{Bookmarks}. These are set with the variable
 @code{mu4e-bookmarks}; what you see in the above example are the
@@ -507,7 +517,8 @@ ones; @xref{Bookmarks}. In short, you can view the list of messages matching a
 certain bookmark by pressing @key{b} followed by the shortcut for this
 bookmark. If you'd like to edit the bookmarked query first, use @key{B}.
 
-@subsection Miscellaneous
+@node Miscellaneous
+@section Miscellaneous
 
 Finally, there are some @emph{Misc} (miscellaneous) actions:
 @itemize
@@ -527,11 +538,22 @@ if you have actually set up mail-queuing. @ref{Queuing mail}.
 @chapter Headers view
 
 The headers view shows the results of a search query. There is a line for each
-matching message, showing information about it. It looks something like the
-following:
+matching message, showing information about it.
+
+@menu
+* HV Overview::
+* Keybindings::
+* Marking messages::
+* Sort order and threading::
+* HV Actions::
+* Split view::
+@end menu
+
+@node HV Overview
+@section Overview
 
 @verbatim
-------------------------------------------------------------------------------
+---------------------------------------------------------------------------
   Date              Flgs   From/To             Subject
   2011-12-16 18:38  S      To Edmund Dantès    + Re: Extensions?
   2011-12-16 21:44  S      Abbé Busoni             + Re: Extensions?
@@ -543,10 +565,8 @@ following:
   2011-12-17 01:53  Sa     Gaspard Caderousse    \ Re: [O] A cool tool
   2011-12-16 16:31  uN     Baron Danglars      | [O] imaxima?
 End of search results
-------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 @end verbatim
-
-@subsection Some notes
 
 Some notes to explain what you see in the example:
 
@@ -567,13 +587,14 @@ be a regular expression matching all the e-mail addresses that you use.
 F=flagged, N=new, P=passed (i.e.., forwarded), R=replied, S=seen, T=trashed,
 a=has-attachment, x=encrypted, s=signed, u=unread. The tooltip for this field
 also contains this information.
-@item You can change the date format by customizing the variable
+@item You can customize the date format with the variable
 @t{mu4e-headers-date-format}
 @item The subject field displays the discussion threads according to the @emph{JWZ mail
 threading algorithm}@footnote{@url{http://www.jwz.org/doc/threading.html}}.
 @end itemize
 
-@subsection Keybindings
+@node Keybindings
+@section Keybindings
 
 Using the default key bindings, you can do various things with these messages;
 these actions are also listed in the @t{Headers} menu in the Emacs menu bar.
@@ -636,8 +657,9 @@ H            get help
 q,z          leave the headers buffer
 @end verbatim
 
-@subsection Marking messages
-@anchor{Marking messages}
+
+@node Marking messages
+@section Marking messages
 
 When working with messages, usually the first step is @emph{marking} them for
 a certain action, such as deleting them or moving them. Then, after one or
@@ -663,8 +685,8 @@ behavior can be influenced with the variable
 
 For more information about marking, @xref{Marking}.
 
-@subsection Sort order and threading
-@anchor{Sort order and threading}
+@node Sort order and threading
+@section Sort order and threading
 
 By default, @t{mu4e} sorts messages by date, in descending order: the most
 recent messages are shown at the top. In addition, the messages are
@@ -694,7 +716,8 @@ sorting by subject in ascending order with threads enabled, and it's a full
 search. The corresponding mode-line string then is: @t{subject:foo
 maildir:/bar(saTF)}.
 
-@subsection Actions
+@node HV Actions
+@section Actions
 
 @code{mu4e-headers-action} (@key{a}) lets you pick custom actions to perform
 on the message at point. You can specify these actions using the variable
@@ -709,7 +732,8 @@ previously captured message as an attachment, using
 The file @file{mu4e-actions.el} in the @t{mu4e} source distribution contains a
 number of example actions.
 
-@subsection Split view
+@node Split view
+@section Split view
 
 Using the @emph{Split view}, we can see the @ref{Headers view} and the
 @ref{Message view} next to each other, with the message that is selected in
@@ -742,6 +766,19 @@ and vice-versa with @code{mu4e-select-other-view}, bound to @key{y}.
 
 @node Message view
 @chapter Message view
+
+@menu
+* MSGV Overview::
+* MSGV Keybindings::
+* Opening and saving attachments::
+* Viewing images inline::
+* Displaying rich-text messages::
+* MSGV Crypto::
+* MSGV Actions::
+@end menu
+
+@node MSGV Overview
+@section Overview
 
 After selecting a message in the @ref{Headers view}, it will be shown in the
 message view, for example:
@@ -795,7 +832,8 @@ automatically for every message, invoke the function in your
 @item For search-related operations, see @ref{Searching}.
 @end itemize
 
-@subsection Keybindings
+@node MSGV Keybindings
+@section Keybindings
 
 You can find most things you can do with this message in the @emph{View} menu,
 or by using the keyboard; the default bindings are:
@@ -873,7 +911,8 @@ q,z          leave the message view
 
 For the marking commands, please refer to @ref{Marking messages}.
 
-@subsection Opening and saving attachments
+@node Opening and saving attachments
+@section Opening and saving attachments
 
 By default, when opening attachments, @t{mu4e} uses the the
 @t{xdg-open}-program @footnote{@url{http://portland.freedesktop.org/wiki/}} or
@@ -893,8 +932,8 @@ prefixing the extracting command by @key{C-u}; so @key{C-u e} will ask you for
 a range of attachments to extract (for example, 1 3-6 8). Range @t{a} is a
 shortcut for @emph{all} attachments.
 
-@subsection Viewing images inline
-@anchor{Viewing images inline}
+@node Viewing images inline
+@section Viewing images inline
 
 It is possible to show images inline in the message view buffer if you run
 emacs in GUI-mode. You can enable this by setting the variable
@@ -914,38 +953,8 @@ configuration, so it is used for images.
    (imagemagick-register-types))
 @end lisp
 
-@subsection Actions
-
-@code{mu4e-view-action} (@key{a}) lets you pick some custom action to perform
-on the current message. You can specify these actions using the variable
-@code{mu4e-view-actions}.
-
-Similarly, there is @code{mu4e-view-attachment-action} (@key{A}) for actions
-on attachments, which you can specify with
-@code{mu4e-view-attachment-actions}.
-
-By default, @t{mu4e} already offers a few useful actions for attachments:
-
-@itemize
-@item @t{open-with} (@key{w}): open the attachment with some arbitrary
-program. For example, suppose you have received a message with a picture
-attachment; then, @t{A w 1 RET gimp RET} will open that attachment in The
-Gimp.
-@item @t{pipe} (@key{|}: process the attachment with some Unix shell-pipe and
-see the results. Suppose you receive a patch file, and would like to get an
-overview of the changes, using the @t{diffstat} program. You can use something
-like: @t{A | 1 RET diffstat -b RET}.
-@item @t{emacs} (@key{e}): open the attachment in your running @t{emacs}. For
-example, if you receive some text file you'd like to open in @t{emacs}:
-@t{A e 1 RET}.
-@end itemize
-
-These actions all work on a @emph{temporary copy} of the attachment.
-
-For more information on setting up actions and how to define them, see
-@ref{Actions}.
-
-@subsection Displaying rich-text messages
+@node Displaying rich-text messages
+@section Displaying rich-text messages
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
 messages consisting of both a plain-text and an html (rich-text) version of
@@ -971,12 +980,16 @@ An alternative to this is to use the Python @t{python-html2text} package;
 after installing that, you can tell @t{mu4e} to use it with something like:
 
 @lisp
-(setq mu4e-html2text-command "html2markdown | grep -v '&nbsp_place_holder;'")
+(setq mu4e-html2text-command
+   "html2markdown | grep -v '&nbsp_place_holder;'")
 @end lisp
 
 As mentioned, by default @t{mu4e} prefers the text-version of an e-mail
 message over the html version. You can change this by setting
 @code{mu4e-view-prefer-html} to @t{t}.
+
+@node MSGV Crypto
+@section Crypto
 
 @subsection Decryption
 @anchor{Decryption}
@@ -1021,11 +1034,57 @@ details of the signatures found and whether they could be verified or not.
 
 For more information, please see the @t{mu-verify} manual page.
 
+@node MSGV Actions
+@section Actions
+
+@code{mu4e-view-action} (@key{a}) lets you pick some custom action to perform
+on the current message. You can specify these actions using the variable
+@code{mu4e-view-actions}.
+
+Similarly, there is @code{mu4e-view-attachment-action} (@key{A}) for actions
+on attachments, which you can specify with
+@code{mu4e-view-attachment-actions}.
+
+By default, @t{mu4e} already offers a few useful actions for attachments:
+
+@itemize
+@item @t{open-with} (@key{w}): open the attachment with some arbitrary
+program. For example, suppose you have received a message with a picture
+attachment; then, @t{A w 1 RET gimp RET} will open that attachment in The
+Gimp.
+@item @t{pipe} (@key{|}: process the attachment with some Unix shell-pipe and
+see the results. Suppose you receive a patch file, and would like to get an
+overview of the changes, using the @t{diffstat} program. You can use something
+like: @t{A | 1 RET diffstat -b RET}.
+@item @t{emacs} (@key{e}): open the attachment in your running @t{emacs}. For
+example, if you receive some text file you'd like to open in @t{emacs}:
+@t{A e 1 RET}.
+@end itemize
+
+These actions all work on a @emph{temporary copy} of the attachment.
+
+For more information on setting up actions and how to define them, see
+@ref{Actions}.
+
+
 @node Editor view
 @chapter Editor view
 
-For its editor, @t{mu4e} re-uses Gnu's @t{message-mode}. For example, when
-replying to a message, the editor view looks something like the following:
+Writing e-mail messages takes place in the Editor View. @t{mu4e}'s editor view
+builds on top of Gnu's @t{message-mode}. Most of the @t{message-mode}
+functionality is available, as well some @t{mu4e}-specifics.
+
+@menu
+* EV Overview::
+* Some useful keybindings::
+* Address autocompletion::
+* Compose hooks::
+* Signing and encrypting::
+* Queuing mail::
+@end menu
+
+@node EV Overview
+@section Overview
 
 @verbatim
 ----------------------------------------------------------------------------
@@ -1046,12 +1105,15 @@ On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
 ----------------------------------------------------------------------------
 @end verbatim
 
+
+@node Some useful keybindings
+@section Some useful keybindings
+
 Since @t{mu4e} uses @t{gnu}'s message editor, for documentation
 @inforef{Message}. Also, @pxref{Sending mail}. There are many key-bindings
 available, here are some of the essential ones (you can use the menu to find
 more):
 
-@subsection Some useful keybindings
 
 @verbatim
 key          description
@@ -1075,8 +1137,8 @@ configuration:
 (setq message-kill-buffer-on-exit t)
 @end lisp
 
-@subsection Address autocompletion
-@anchor{Address autocompletion}
+@node Address autocompletion
+@section Address autocompletion
 
 Since @t{mu}/@t{mu4e} version 0.9.8.5, there is support for autocompleting
 addresses using @key{TAB} when composing e-mail messages. As the source for
@@ -1084,8 +1146,8 @@ the addresses to complete, @t{mu4e} uses the e-mail addresses in its database
 -- addresses you sent messages to or received messages from. @emph{Note:}
 auto-completion should work with emacs versions 23.2 and later.
 
-Address auto-completion is enabled by default, using the variable
-@t{mu4e-compose-complete-addresses}. Set it to @t{nil} to disable it.
+Address auto-completion is enabled by default. If you want to disable it for
+some reason, set @t{mu4e-compose-complete-addresses} to @t{nil}.
 
 Emacs 24 also supports cycling through the alternatives. When there are more
 than @emph{5} matching addresses, they are shown in a @t{*Completions*}
@@ -1093,12 +1155,11 @@ buffer. Once the number of matches gets below this number, one is selected
 (put in the address field) and you can cycle through the alternatives using
 @key{TAB}.
 
-@subsection Limiting the number of addresses for autocompletion
+@subsection Limiting the number of addresses
 
 If you have a lot of mail, especially from mailing lists and the like, there
 will be @emph{many} e-mail adresses, most of which are unlikely to be useful
-when auto-completing. For example, consider e-mail addresses in five year old
-mailing lists posts.
+when auto-completing.
 
 So, @t{mu4e} attempts to limit the number of e-mail addresses in the
 completion pool by filter the ones that are most likely to be relevant. The
@@ -1121,8 +1182,8 @@ the start of 2010.
 filter out other 'junk' e-mail addresses; defaults to @t{noreply}.
 @end itemize
 
-@subsection Compose hooks
-@anchor{Compose hooks}
+@node Compose hooks
+@section Compose hooks
 
 If you want to execute some custom action before message composition starts,
 you can define a @emph{hook function}. @t{mu4e} offers two hooks:
@@ -1144,13 +1205,14 @@ Let's look at some examples.
 First, suppose we want to set the @t{From:}-address for a reply message based
 on the receiver of the original:
 @lisp
-;; messages sent to me@@foo.com should be replied with me@@foo.com as From:
-;; address; messages sent to me@@bar.com should be replied with me@@bar.com as From:
-;; address; all other mail should use me@@cuux.com as From: address
+;; 1) messages to me@@foo.com should be replied with From:me@@foo.com
+;; 2) messages to me@@bar.com should be replied with From:me@@bar.com
+;; 3) all other mail should use From:me@@cuux.com
 (add-hook 'mu4e-compose-pre-hook
   (defun my-set-from-address ()
     "Set the From address based on the To address of the original."
-    (let ((orig-to (cdar (mu4e-message-field mu4e-compose-parent-message :to))))
+    (let ((orig-to
+            (cdar (mu4e-message-field mu4e-compose-parent-message :to))))
       (setq user-mail-address
 	(cond
 	  ((string= "me@@foo.com" orig-to) "me@@foo.com")
@@ -1179,8 +1241,8 @@ message is fully formed when this hook runs. For example, to add a
     (message-add-header "Bcc: me@@example.com\n")))
 @end lisp
 
-@subsection Signing and encrypting
-@anchor{Signing and encrypting}
+@node Signing and encrypting
+@section Signing and encrypting
 
 Signing and encrypting of messages is possible using @ref{(emacs-mime)
 Composing}, most easily accessed through the @t{Attachments}-menu while
@@ -1195,8 +1257,8 @@ messages.
 Note however that decryption and signature verification only works for
 PGP/MIME; inline-PGP and S/MIME are currently not supported.
 
-@subsection Queuing mail
-@anchor{Queuing mail}
+@node Queuing mail
+@section Queuing mail
 
 If you cannot send mail directly, for example because you are currently
 offline, you can @emph{queue} the mail, and send it when you have restored
@@ -1297,18 +1359,18 @@ date:today..now
 date:2w..now emacs
 
 # get mails with a subject soccer, Socrates, society...
-# note: the '*' wildcard can only appear as the rightmost character in the term
+# note: the '*' wildcard can only appear as the term's rightmost character
 subject:soc*
 
 # get all mails with attachment with filenames starting with 'pic'
-# note: the '*' wildcard can only appear as the rightmost character in the term
+# note: the '*' wildcard can only appear as the term's rightmost character
 file:pic*
 
 # get all messages with PDF attachments:
 mime:application/pdf
 
 # get all messages with image attachments:
-# note: the '*' wildcard can only appear as the rightmost character in the term
+# note: the '*' wildcard can only appear as the term's rightmost character
 mime:image/*
 @end verbatim
 
@@ -1571,7 +1633,8 @@ more than @emph{n} recipients. We could do it like this:
   '("More than n recipients"
       (lambda (msg n) (> (+ (length (mu4e-message-field msg :to))
                             (length (mu4e-message-field msg :cc))) n))
-      (lambda () (read-number "Match messages with more recipients than: "))) t)
+      (lambda ()
+        (read-number "Match messages with more recipients than: "))) t)
 @end lisp
 
 After evaluating this, pressing @key{&} should let you choose the custom
@@ -1688,16 +1751,17 @@ You can invoke the actions with @key{a} for actions on messages, and @key{A}
 for actions on attachments. In the following, we'll gives some examples of
 defining actions.
 
-Note, the format of the actions has changed since version 0.9.8.4, and you
-must change your configuration to use the new format; @t{mu4e} warns you when
-you are using the old format.
+@menu
+* Defining actions::
+* Adding an action in the headers view::
+* Adding an action in the message view::
+* Adding an attachment action::
+* What functions are available?::
+* More example actions::
+@end menu
 
-The older format was: @code{(DESCRIPTION SHORTCUT [VALUE])}, while the new
-format is a cons-cell, @code{(DESCRIPTION . VALUE)}; see below for some
-examples. If your shortcut is not also the first character of the description,
-simply prefix the description with that character.
-
-@subsection Functions for actions
+@node Defining actions
+@section Defining actions
 
 Defining a new custom action means that you need to write an elisp-function to
 do the work. Functions that operate on messages look like:
@@ -1720,9 +1784,19 @@ After you have defined your function, you can add it to the list of actions,
 either @code{mu4e-headers-actions}, @code{mu4e-view-actions} or
 @code{mu4e-view-attachment-actions}.
 
+Note, the format of the actions has changed since version 0.9.8.4, and you
+must change your configuration to use the new format; @t{mu4e} warns you when
+you are using the old format.
+
+The older format was: @code{(DESCRIPTION SHORTCUT [VALUE])}, while the new
+format is a cons-cell, @code{(DESCRIPTION . VALUE)}; see below for some
+examples. If your shortcut is not also the first character of the description,
+simply prefix the description with that character.
+
 Let's take a at some simple examples.
 
-@subsection Example: adding an action in the headers view
+@node Adding an action in the headers view
+@section Adding an action in the headers view
 
 Suppose we would like to inspect the number of recipients for a message in the
 @ref{Headers view}.  We could define the following function in our configuration:
@@ -1742,7 +1816,8 @@ Suppose we would like to inspect the number of recipients for a message in the
 After activating this, @key{a n} in the headers view will show the number of
 recipients for the message at point.
 
-@subsection Example: adding an action in the message view
+@node Adding an action in the message view
+@section Adding an action in the message view
 
 As another example, suppose we would like to search for messages by the sender
 of this message.
@@ -1758,7 +1833,8 @@ of this message.
    '("xsearch for sender" . search-for-sender) t)
 @end lisp
 
-@subsection Example: adding an attachment action
+@node Adding an attachment action
+@section Adding an attachment action
 
 Finally, let's define an action for an attachment. As mentioned,
 attachment-action function take @emph{2} arguments, the message and the
@@ -1775,7 +1851,8 @@ The following will count the number of lines in an attachment, and define
    '("ncount lines" . count-lines-in-attachment) t)
 @end lisp
 
-@subsection What functions are available?
+@node What functions are available?
+@section What functions are available?
 
 @t{elisp} does not have a module-system, so it can be hard to see what
 functions are internal, and which are usable for others as well.
@@ -1790,7 +1867,8 @@ Functions that start with @t{mu4e-view-} and @t{mu4e-headers-} should be
 called only from that particular context (the message view and the headers
 view, respectively).
 
-@subsection Example actions
+@node More example actions
+@section More example actions
 
 @t{mu4e} includes a number of example actions in @file{mu4e-actions.el} in the
 source distribution (see @key{C-h f mu4e-action-TAB}). For example, for
@@ -1799,7 +1877,6 @@ body-text using text-to-speech.
 
 If you have come up with any interesting actions that may be useful for
 others, you are invited to contribute those.
-
 
 @node Interaction with other tools
 @chapter Interaction with other tools
@@ -2347,14 +2424,21 @@ default for various reasons.
   mu4e-view-image-max-width 800)
 @end lisp
 
-
 @node FAQ - Frequently Anticipated Questions
 @chapter FAQ - Frequently Anticipated Questions
 
 In this chapter we list a number of actual and anticipated questions and their
 answers.
 
-@subsection General
+@menu
+* General::
+* Reading messages::
+* Writing messages::
+* Known issues::
+@end menu
+
+@node General
+@section General
 
 @itemize
 @item @emph{How can I quickly delete/move/trash a lot of messages?} You can
@@ -2411,7 +2495,8 @@ boring plain-ASCII ones?} Glad you asked! Yes, you can set
 characters in a number of places.
 @end itemize
 
-@subsection Reading messages
+@node Reading messages
+@section Reading messages
 
 @itemize
 @item @emph{How can I show attached images in my message view buffers?} See
@@ -2430,8 +2515,8 @@ version. See @ref{Decryption} and @ref{Verifying signatures}. For encryption
 and signing messages, see the below.
 @end itemize
 
-
-@subsection Writing messages
+@node Writing messages
+@section Writing messages
 
 @itemize
 @item @emph{How can I use @t{BBDB}?} Currently, there is no built-in for
@@ -2455,12 +2540,13 @@ MIME-support (check the @t{Attachments}-menu while composing a message. Also
 see @ref{Signing and encrypting}.
 @end itemize
 
-@node Known issues / missing features
-@chapter Known issues / missing features
+@node Known issues
+@section Known issues
 
-In this chapter we list a number of known issue and/or missing features in
-@t{mu4e}. Thus, users won't have to search in vain for things that are not
-there (yet), and the author can use it as a todo-list.
+Although they are not really @emph{questions}, we end this chapter with a list
+of known issue and/or missing features in @t{mu4e}. Thus, users won't have to
+search in vain for things that are not there (yet), and the author can use it
+as a todo-list.
 
 @itemize
 @item @emph{mu4e does not work well if the emacs language environment is not
