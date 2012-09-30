@@ -181,11 +181,7 @@ plist."
 	    (t (mu4e-error "Unsupported field: %S" field)))))
       mu4e-view-fields "")
     "\n"
-    (mu4e-message-body-text msg)
-    ;; ;; decrypt maybe; depends on whether there are any such parts
-    ;; ;; and the value of `mu4e-view-decrypt-parts'
-    ;; (mu4e~decrypt-parts-maybe msg)
-    ))
+    (mu4e-message-body-text msg)))
 
  (defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
@@ -204,7 +200,8 @@ REFRESH is for re-showing an already existing message.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let* ((embedded ;; is it registered as an embedded msg?
+  (let* ((embedded ;; is it registered as an embedded msg (ie. message/rfc822
+		   ;; att)?
 	   (when (gethash (mu4e-message-field msg :path)
 		   mu4e~path-parent-docid-map) t))
 	  (buf
@@ -213,12 +210,10 @@ marking if it still had that."
 	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (mu4e-view-mode)
-
       (let ((inhibit-read-only t))
 	(setq ;; buffer local
 	  mu4e~view-msg msg
 	  mu4e~view-headers-buffer headersbuf)
-
 	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
 	(switch-to-buffer buf)
@@ -656,12 +651,7 @@ at POINT, or if nil, at (point)."
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t))
 
-  ;; filladapt is much better than the built-in filling
-  ;; esp. with '>' cited parts
-  (when (fboundp 'filladapt-mode)
-    (filladapt-mode))
   (setq truncate-lines t))
-
 
 ;; we mark messages are as read when we leave the message; i.e., when skipping
 ;; to the next/previous one, or leaving the view buffer altogether.
@@ -768,7 +758,6 @@ number them so they can be opened using `mu4e-view-go-to-url'."
 		'face 'mu4e-view-url-number-face))))))))
 
 
-
 (defun mu4e~view-hide-cited ()
   "Toggle hiding of cited lines in the message body."
   (save-excursion
@@ -842,34 +831,29 @@ if nil), then do it. The actions are specified in
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
-  (mu4e~view-in-headers-context
-    (mu4e-headers-mark-pattern)))
+  (mu4e~view-in-headers-context (mu4e-headers-mark-pattern)))
 
 (defun mu4e-view-mark-thread ()
   "Ask user for a kind of mark (move, delete etc.), and apply it to
 all messages in the thread at point in the headers view."
   (interactive)
-  (mu4e~view-in-headers-context
-    (mu4e-headers-mark-thread)))
+  (mu4e~view-in-headers-context (mu4e-headers-mark-thread)))
 
 (defun mu4e-view-mark-subthread ()
   "Ask user for a kind of mark (move, delete etc.), and apply it to
-all messages in the thread at point in the headers view."
+all messages in the subthread at point in the headers view."
   (interactive)
-  (mu4e~view-in-headers-context
-    (mu4e-headers-mark-subthread)))
+  (mu4e~view-in-headers-context (mu4e-headers-mark-subthread)))
 
 (defun mu4e-view-search-narrow ()
   "Run `mu4e-headers-search-narrow' in the headers buffer."
   (interactive)
-  (mu4e~view-in-headers-context
-    (mu4e-headers-search-narrow nil)))
+  (mu4e~view-in-headers-context (mu4e-headers-search-narrow nil)))
 
 (defun mu4e-view-search-edit ()
   "Run `mu4e-headers-search-edit' in the headers buffer."
   (interactive)
-  (mu4e~view-in-headers-context
-    (mu4e-headers-search-edit)))
+  (mu4e~view-in-headers-context (mu4e-headers-search-edit)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
@@ -982,8 +966,7 @@ ACTION."
   (interactive)
   (mu4e~proc-extract 'temp docid index nil what param))
 
-(defvar mu4e~view-open-with-hist nil
-  "History list for the open-with argument.")
+(defvar mu4e~view-open-with-hist nil "History list for the open-with argument.")
 
 (defun mu4e-view-open-attachment-with (msg attachnum &optional cmd)
   "Open MSG's attachment ATTACHNUM with CMD; if CMD is nil, ask
@@ -1088,9 +1071,9 @@ user that unmarking only works in the header list."
 
 (defmacro mu4e~view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for-MARK."
-  (let ((funcname (intern (concat "mu4e-view-mark-for-" (symbol-name mark))))	
+  (let ((funcname (intern (concat "mu4e-view-mark-for-" (symbol-name mark))))
 	 (docstring (format "Mark the current message for %s."
-		      (symbol-name mark)))) 
+		      (symbol-name mark))))
     `(defun ,funcname () ,docstring
        (interactive)
        (mu4e~view-in-headers-context
@@ -1211,6 +1194,6 @@ ensure we don't disturb other windows."
 	(kill-buffer)
 	(when (buffer-live-p mu4e~view-headers-buffer)
 	  (switch-to-buffer mu4e~view-headers-buffer))))))
- 
+
 (provide 'mu4e-view)
 ;; end of mu4e-view
