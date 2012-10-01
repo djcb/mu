@@ -549,8 +549,8 @@ at POINT, or if nil, at (point)."
       (define-key map (kbd "+") 'mu4e-view-mark-flag)
       (define-key map (kbd "-") 'mu4e-view-mark-unflag)
 
-      (define-key map (kbd "*")             'mu4e-view-mark-deferred)
-      (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-deferred)
+      (define-key map (kbd "*")             'mu4e-view-mark-for-deferred)
+      (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-for-deferred)
       (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
 
       ;; misc
