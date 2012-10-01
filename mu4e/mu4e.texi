@@ -166,7 +166,7 @@ a mail server. That task is delegated to other tools, such as
 @t{offlineimap}@footnote{@url{http://offlineimap.org/}},
 @t{isync}@footnote{@url{http://isync.sourceforge.net/}} or
 @t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}. As long as the
-messages end up in a Maildir, @t{mu4e} and @t{mu} are happy to deal with them.
+messages end up in a maildir, @t{mu4e} and @t{mu} are happy to deal with them.
 
 @t{mu4e} also does @emph{not} implement sending of messages; instead, it
 depends on @t{smptmail} (@inforef{Top,smtpmail,smtpmail}), which is part of
@@ -209,26 +209,26 @@ yourself. However, if there are no packages for your distribution, or if you
 want to use the latest development versions, you can follow the steps below.
 
 First, you need make sure you have the necessary dependencies. On a Debian or
-Ubuntu system, you can get these with:
+Ubuntu system, you can get these with the following commands:
 
 @example
-sudo apt-get install libgmime-2.6-dev libxapian-dev
+$ sudo apt-get install libgmime-2.6-dev libxapian-dev
 # if libgmime-2.6-dev is not available, try libgmime-2.4-dev
 
 # get macs if you don't have it yet, mu4e works with GNU-Emacs 23 and 24
 # emacs 24 works better; it may be available as 'emacs-snapshot'
-sudo apt-get install emacs23
+$ sudo apt-get install emacs23
 
 # optional
-sudo apt-get install guile-2.0-dev html2text xdg-utils
+$ sudo apt-get install guile-2.0-dev html2text xdg-utils
 
 # optional: only needed for msg2pdf and mug (toy gtk+ frontend)
-sudo apt-get install libwebkit-dev
+$ sudo apt-get install libwebkit-dev
 @end example
 
 Using a release-tarball (as available from
 GoogleCode@footnote{@url{http://code.google.com/p/mu0/downloads/list}},
-Installation follows the normal sequence:
+installation follows the normal steps:
 
 @example
 $ tar xvfz mu-<version>.tar.gz  # use the specific version
@@ -238,14 +238,14 @@ $ sudo make install
 @end example
 
 Alternatively, if you build from the git repository or use a tarball like the
-ones that @t{github} produces, the instructions are slightly different (and
-require you to have @t{autotools} installed):
+ones that @t{github} produces, the instructions are slightly different, and
+require you to have @t{autotools} installed:
 
 @example
-# get from git, or from a github tarball
-# git clone git://github.com/djcb/mu.git 
+# get from git (alternatively, use a github tarball)
+$ git clone git://github.com/djcb/mu.git 
 
-$ cd mu-<version>
+$ cd mu
 $ autoreconf -i && ./configure && make
 $ sudo make install
 @end example
@@ -260,51 +260,56 @@ You may need to restart @t{emacs}, so it can find @t{mu4e} in its
 
 @subsection mu4e and emacs customization
 
-There is @emph{experimental} support for using the @t{emacs} customization
-system in @t{mu4e}, but for now, we recommend setting the values
-manually. Please refer to @ref{Example configuration} for a couple of examples
-of this.
+There is some support for using the @t{emacs} customization system in
+@t{mu4e}, but for now, we recommend setting the values manually. Please refer
+to @ref{Example configuration} for a couple of examples of this; here we go
+through things step-by-step.
 
 @node Getting mail
 @section Getting mail
 
 In order for @t{mu} (and, by extension, @t{mu4e}) to work, you need to have
-your e-mail messages stored in a Maildir - a specific directory structure with
-one-file-per-message. If you are already using Maildirs, you are lucky;
-otherwise, you need to get your mail there in some way.
+your e-mail messages stored in a
+@emph{maildir}@footnote{@url{http://en.wikipedia.org/wiki/Maildir}} - a
+specific directory structure with one-file-per-message. If you are already
+using a maildirs, you are lucky; otherwise, you need to get your mail there in
+some way.
 
 If you are using an @abbr{IMAP} or @abbr{POP} server, you can use tools like
 @t{getmail}, @t{fetchmail}, @t{offlineimap} or @t{isync} to download your
-message into a maildir (@file{~/Maildir}, usually). If you are using a local
-mail-server (such as @emph{Postfix} or @t{qmail}), you can teach them to
-deliver into a maildir as well, maybe in combination with @t{procmail}. A bit
-of googling should be able to provide you with the detail. Because it is a
-rather common case, there is a full example of setting @t{mu4e} up with
-@t{offlineimap} and Gmail; @pxref{Gmail configuration}.
+messages into a maildir (@file{~/Maildir}, often). Because it is such a common
+case, there is a full example of setting @t{mu4e} up with @t{offlineimap} and
+Gmail; @pxref{Gmail configuration}.
+
+If you are using a local mail-server (such as @emph{Postfix} or @t{qmail}),
+you can teach them to deliver into a maildir as well, maybe in combination
+with @t{procmail}. A bit of googling should be able to provide you with the
+details.
 
 @node Indexing your messages
 @section Indexing your messages
 
 After you have succeeded in @ref{Getting mail}, we need to @emph{index} the
-messages. That is - we need to scan the Maildir and store the information
-about the mails into a special database. We can do that from @code{mu4e} --
-@ref{Main view}, but the first time, it is a good idea to run it from the
-command line, as it is easier to recognize potential problems.
+messages. That is - we need to scan the message in the maildir and store the
+information about the mails into a special database. We can do that from
+@code{mu4e} -- @ref{Main view}, but the first time, it is a good idea to run
+it from the command line, to make sure everything works correctly.
 
-Assuming that your Maildir is at @file{~/Maildir}, you should give the
-following command:
+Assuming that your maildir is at @file{~/Maildir}, we give the following
+command:
 @example
   $ mu index --maildir=~/Maildir
 @end example
 
 This should scan your @file{~/Maildir}@footnote{In most cases, you do not even
-need to provide the @t{--maildir=~/Maildir}; see the @t{mu-index} man-page for
-details} and fill the database, and give progress information while doing so.
+need to provide the @t{--maildir=~/Maildir} since it is the default; see the
+@t{mu-index} man-page for details} and fill the database, and give progress
+information while doing so.
 
 The indexing process may take a few minutes the first time you do it (for
-thousands of e-mails); afterwards it is much faster, since @t{mu} only has to
-scan the differences. Indexing is discussed in more detail in the @t{mu-index}
-man page.
+thousands of e-mails); afterwards it is much faster, since @t{mu} only scans
+messages that are new or have changed. Indexing is discussed in full detail in
+the @t{mu-index} man page.
 
 After the indexing process has finished, you can quickly test if everything
 worked, by trying some command line searches, for example
@@ -316,22 +321,22 @@ worked, by trying some command line searches, for example
 which should list all messages that match @t{hello}. For more examples of
 searches @xref{Queries}, or check the @t{mu-find} and @t{mu-easy} man pages.
 
-If all of this worked well, we are well on our way setting up @t{mu4e}; the
-next step is to do some basic configuration.
+If all of this worked well, we are well on our way setting up @t{mu}; the next
+step is to do some basic configuration for @t{mu4e}.
 
 @node Basic configuration
 @section Basic configuration
 
 The first thing we need to do before we can start using @t{mu4e} is to tell
-@t{emacs} to load @t{mu4e}, and tell @t{mu4e} where it can find specific
-maildir folders.
+@t{emacs} to load it, and tell @t{mu4e} where it can find specific maildir
+folders.
 
 So, add to your @file{~/.emacs} (or its moral equivalent, such as
 @file{~/.emacs.d/init.el}) something like:
 
-@example
+@lisp
 (require 'mu4e)
-@end example
+@end lisp
 
 @node Folders
 @section Folders
@@ -352,8 +357,9 @@ runtime. This allows for dynamically changing them depending on context. See
 @end lisp
 
 @code{mu4e-maildir} takes an actual filesystem-path, the other folder names
-are all relative to @code{mu4e-maildir}. The next step is telling @t{mu4e} how
-we want to send mail.
+are all relative to @code{mu4e-maildir}. The ones above are also the defaults.
+
+Now, let's see how we can get the messages into our system.
 
 @node Retrieval and indexing
 @section Retrieval and indexing
@@ -372,7 +378,7 @@ these updates. If set to @code{nil}, it won't update at all. If you make
 changes to @code{mu4e-update-interval}, @code{mu4e} must be restarted before
 the changes take effect.
 
-A simple setup may look something like:
+A simple setup could look something like:
 
 @lisp
 (setq 
@@ -384,15 +390,18 @@ It is possible to get notifications when the indexing process does any updates
 - for example when receiving new mail. See @code{mu4e-index-updated-hook} and
 the tips on its use in the @ref{FAQ - Frequently Anticipated Questions}.
 
+Now that we have setup 
+The next step is telling @t{mu4e} how we want to send mail.
+
 @node Sending mail
 @section Sending mail
 
-@t{mu4e} re-uses Gnu's @inforef{Top,,message} for writing mail and inherits
-the setup for @emph{sending} mail from that.
+@t{mu4e} re-uses Gnu's @t{message-mode} (@inforef{Top,,message}) for writing
+mail and inherits the setup for @emph{sending} mail as well.
 
-For sending mail using @abbr{SMTP}, @t{mu4e} uses
-@inforef{Top,,smtpmail}. This package support many different ways to send
-mail, please refer to its documentation for the details.
+For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
+(@inforef{Top,,smtpmail}). This package support many different ways to send
+mail; please refer to its documentation for the details.
 
 Here, we only provide some simple examples - for more, @ref{Example
 configuration}.
@@ -409,6 +418,8 @@ A very minimal setup could look something like:
 
 Since @t{mu4e} (re)uses the same @t{message mode} and @t{smtpmail} that Gnus
 uses, many settings for those also apply to @t{mu4e}.
+
+@subsection Dealing with sent messages
 
 By default, @t{mu4e} puts a copy of any messages you sent in the folder you
 set for @code{mu4e-sent-folder}.  some case, this may not be what you want -
@@ -431,21 +442,22 @@ For Gmail-IMAP, you could add the following to your settings:
 (setq mu4e-sent-messages-behavior 'trash)
 @end verbatim
 
-And that's it! We should now be ready to go now.
+And that's it! We should now be ready to go.
 
 @node Running mu4e
 @section Running mu4e
 
-After the following the steps in this chapter, we now hopefully have a working
-@t{mu4e} setup. @t{mu4e} consists of a number of views, and in the next
-chapter we go through all of them:
+After following the steps in this chapter, we should now have a working
+@t{mu4e} setup. Great! 
 
-@menu
-* Main view:: This is where we start
-* Headers view:: Lists of message headers
-* Message view:: Viewing specific messages
-* Editor view:: Creating / editing messages
-@end menu
+In the next chapters, we walk through the various views in @t{mu4e}.
+ 
+@c @menu
+@c * Main view:: This is where we start
+@c * Headers view:: Lists of message headers
+@c * Message view:: Viewing specific messages
+@c * Editor view:: Creating / editing messages
+@c @end menu
 
 For your orientation, the diagram below shows how the views relate to each
 other, and the default key-bindings to get from one view to the next.
@@ -483,7 +495,7 @@ E: Edit       B: edit bookmark-search
 
 After you have installed @t{mu4e} (@pxref{Getting started}), you can start it
 with @code{M-x mu4e}. @t{mu4e} does some checks to ensure everything is set up
-correctly, and then show you the @t{mu4e} main view.
+correctly, and then show you the glorious @t{mu4e} main view.
 
 @menu
 * MV Overview::
@@ -499,7 +511,7 @@ The main view looks something like the following:
 
 @verbatim
 ----------------------------------------------------------------------------
-* mu4e - mu for emacs version x.x
+* mu4e - mu for emacs version x.x C
 
   Basics
 
@@ -1722,7 +1734,7 @@ messages. There are some more examples in the defaults for
     mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
-In some cases having such static folders may not suffice - you might want to
+In some cases, having such static folders may not suffice - you may want to
 change the folders depending on the context. For example, the folder for
 refiling could vary, based on the sender of the message.
 
@@ -1730,7 +1742,7 @@ For this, instead of setting the standard folders to a string, you can set
 them to be a @emph{function} that takes a message as parameter, and returns
 the desired folder name.
 
-In this chapter we show how to do that.
+This chapter shows how to do that.
 
 @menu
 * Smart refiling::
@@ -1771,14 +1783,14 @@ put something like the following in your setup:
 @end lisp
 
 This can be very powerful; you can mark (select) all the messages in the
-headers view, then press @key{r}, and have them all sent to their particular
-refile folders.
+headers view, then press @key{r}, and have them all marked for refiling to
+their particular folders.
 
 Some notes:
 @itemize
 @item we set @code{mu4e-refile-folder} to an anonymous (@t{lambda}) function. This
 function takes one argument, a message.  @file{mu4e-message.el} contains
-various convenience functions to deal which such messages
+various convenience functions to deal which such messages.
 @item In this function, we use a @t{cond} control structure; the function
 returns the first of the clauses that matches
 @item Especially useful are the function @file{mu4e-message.el}; here we use
@@ -1792,19 +1804,20 @@ matches the regular expression.
 
 Using the same mechanism, you can set special sent-, trash-, and draft-folders
 for messages. The message-parameter you receive for sent and draft folder is
-qthe @emph{original} message, that is, the message you reply to, or forward. If
-there is no such message (for example when composing a new message) the
+the @emph{original} message, that is, the message you reply to, forward. If
+there is no such message (for example when composing a brand new message) the
 message parameter is @t{nil}.
 
-Let's look at another example. Suppose you want a different trash folder for
-work-email. You can do so with something like the following:
+Let's look at an example of this. Suppose you want a different trash folder
+for work-email. You can do so with something like the following:
 
 @lisp
  (setq mu4e-sent-folder
     (lambda (msg)
-       (if (mu4e-message-contact-field-matches msg :to "me@@work.com")
+       ;; the 'and msg' is to handle the case where there msg is nil
+       (if (and msg (mu4e-message-contact-field-matches msg :to "me@@work.com"))
 	"/trash-work"
-        "/trash-private")))
+        "/trash")))
 @end lisp
 
 Good to remember:
@@ -1815,11 +1828,6 @@ forwarded. When re-editing a message, it refers to the message being
 edited. When you compose a totally new message, the @code{msg} parameter is
 @code{nil}.
 @item When re-editing messages, the value of @code{mu4e-drafts-folder} is ignored.
-@item When composing messages, @code{mu4e-sent-folder},
-@code{mu4e-drafts-folder} and @code{mu4e-trash-folder}@footnote{if you wonder
-why we would need @code{mu4e-trash-folder} when composing a message, see
-@code{mu4e-sent-messages-behavior}} evaluated only once, just before message
-composition starts. Afterwards, the value it got at that time is used.
 @end itemize
 
 
