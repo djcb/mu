@@ -395,9 +395,10 @@ contents will be created from either
 `mu4e~compose-reply-construct', or `mu4e~compose-forward-construct'
 or `mu4e~compose-newmsg-construct'.
 
-Also sets `mu4e~compose-trash-folder',
-`mu4e~compose-drafts-folder' and `mu4e~compose-sent-folder' as
-buffer-local, permanent variables."
+Also sets `mu4e~compose-trash-folder', `mu4e~compose-drafts-folder'
+and `mu4e~compose-sent-folder' as buffer-local, permanent
+variables. Note that when re-editing messages, the value of
+mu4e-drafts-folder is ignored."
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
   (if (eq compose-type 'edit)
     (find-file (mu4e-message-field msg :path))
@@ -595,6 +596,13 @@ Optionally (when forwarding) INCLUDES contains a list of
 for the attachements to include; file-name refers to
 a file which our backend has conveniently saved for us (as a
 tempfile)."
+
+  ;; Run the hooks defined for `mu4e-compose-pre-hook'. If compose-type is
+  ;; `reply', `forward' or `edit', `mu4e-compose-parent-message' points to the
+  ;; message being forwarded or replied to, otherwise it is nil.
+  (setq mu4e-compose-parent-message original-msg)
+  (run-hooks 'mu4e-compose-pre-hook) 
+ 
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (mu4e~compose-open-draft compose-type original-msg)
   ;; insert mail-header-separator, which is needed by message mode to separate
@@ -679,17 +687,7 @@ buffer."
 	    (mu4e~proc-move (match-string 1 in-reply-to) nil "+R"))
 	  (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
 	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P")))))))
-
-(defun mu4e~compose-run-hooks (compose-type)
-  "Run the hooks defined for `mu4e-compose-pre-hook'. If
-compose-type is `reply', `forward' or `edit',
-`mu4e-compose-parent-message' points to the message being forwarded
-or replied to, otherwise it is nil."
-  (setq mu4e-compose-parent-message
-    (when (member compose-type '(reply forward edit))
-      (mu4e-message-at-point)))
-  (run-hooks 'mu4e-compose-pre-hook))
-
+ 
 (defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
@@ -704,12 +702,9 @@ for draft messages."
     (when (and (eq compose-type 'edit)
 	    (not (member 'draft (mu4e-message-field msg :flags))))
       (mu4e-warn "Editing is only allowed for draft messages"))
-
-    ;; run the hooks
-    (mu4e~compose-run-hooks compose-type)
-
-    ;; 'new is special, since it takes no existing message as arg therefore,
-    ;; we don't need to call thec backend, and call the handler *directly*
+  
+    ;; 'new is special, since it takes no existing message as arg; therefore, we
+    ;; don't need to involve the backend, and call the handler *directly*
     (if (eq compose-type 'new)
       (mu4e~compose-handler 'new)
       ;; otherwise, we need the doc-id
@@ -779,9 +774,7 @@ message."
 (defun mu4e~compose-mail (&optional to subject other-headers continue
 			   switch-function yank-action send-actions return-action)
   "This is mu4e's implementation of `compose-mail'."
-
-  (mu4e~compose-run-hooks 'new)
-
+  
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
   (mu4e~compose-handler 'new)
