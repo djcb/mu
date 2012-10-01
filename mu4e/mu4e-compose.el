@@ -56,12 +56,15 @@ the From: address.)"
 
 (defcustom mu4e-sent-messages-behavior 'sent
   "Determines what mu4e does with sent messages - this is a symbol
-which can be either: 'sent --> move the sent message to the
-Sent-folder (`mu4e-sent-folder') 'trash --> move the sent message
-to the Trash-folder (`mu4e-trash-folder') 'delete --> delete the
-sent message.  Note, when using GMail/IMAP, you should set this to
-either 'trash or 'delete, since GMail already takes care of keeping
-copies in the sent folder."
+which can be either:
+
+ * 'sent --> move the sent message to the Sent-folder (`mu4e-sent-folder')
+ * 'trash --> move the sent message to the Trash-folder (`mu4e-trash-folder')
+ * 'delete --> delete the sent message.
+
+Note, when using GMail/IMAP, you should set this to either 'trash
+or 'delete, since GMail already takes care of keeping copies in the
+sent folder."
   :type 'symbol
   :safe 'symbolp
   :group 'mu4e-compose)
@@ -79,8 +82,9 @@ compose-type is either /reply/ or /forward/, the variable
 being forwarded / edited.")
 
 (defvar mu4e-compose-parent-message nil
-  "The parent message plist (ie., the message being replied to,
-forwarded or edited) in `mu4e-compose-pre-hook.")
+  "The parent message plist -- the message being replied to,
+forwarded or edited; used in `mu4e-compose-pre-hook. For new
+messages, it is nil.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -355,7 +359,6 @@ You can append flags."
       "\n\n"
       (mu4e~compose-cite-original origmsg))))
 
-
 (defun mu4e~compose-newmsg-construct ()
   "Create a new message."
   (concat
@@ -365,22 +368,9 @@ You can append flags."
     (mu4e~compose-header "Subject" "")
     (mu4e~compose-common-construct)))
 
-
-(defvar mu4e~compose-trash-folder nil
-  "The trash-folder for this compose buffer, based on
-`mu4e-trash-folder', which will be evaluated once.")
-(defvar mu4e~compose-sent-folder nil
-  "The sent-folder for this compose buffer, based on
-`mu4e-sent-folder', which will be evaluated once.")
 (defvar mu4e~compose-drafts-folder nil
   "The drafts-folder for this compose buffer, based on
-`mu4e-drafts-folder', which will be evaluated once.")
-
-(defmacro mu4e~compose-setup-folder (var func msg)
-  "Create a buffer-permanent local folder variable."
-  `(progn
-     (set (make-local-variable ,var) (,func ,msg))
-     (put ,var 'permanent-local t)))
+ mu4e-drafts-folder', which will be evaluated once.")
 
 (defun mu4e~compose-open-draft (compose-type &optional msg)
   "Open a draft file for a new message (when COMPOSE-TYPE is reply, forward or new),
@@ -388,38 +378,32 @@ or open an existing draft (when COMPOSE-TYPE is edit).
 
 The name of the draft folder is constructed from the concatenation
 of `mu4e-maildir' and `mu4e-drafts-folder' (the latter will be
-evaluated, and its value will be available through
-`mu4e~compose-drafts-folder'). The message file name is a unique
-name determined by `mu4e-send-draft-file-name'. The initial
-contents will be created from either
-`mu4e~compose-reply-construct', or `mu4e~compose-forward-construct'
-or `mu4e~compose-newmsg-construct'.
-
-Also sets `mu4e~compose-trash-folder', `mu4e~compose-drafts-folder'
-and `mu4e~compose-sent-folder' as buffer-local, permanent
-variables. Note that when re-editing messages, the value of
-mu4e-drafts-folder is ignored."
+evaluated). The message file name is a unique name determined by
+`mu4e-send-draft-file-name'. The initial contents will be created
+from either `mu4e~compose-reply-construct', or
+`mu4e~compose-forward-construct' or
+`mu4e~compose-newmsg-construct'."
+  ;; evaluate mu4e-drafts-folder once, here, and use that value throughout.
+  (set (make-local-variable 'mu4e~compose-drafts-folder)
+    (mu4e-get-drafts-folder msg))
+  (put 'mu4e~compose-drafts-folder 'permanent-local t)
+  
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
   (if (eq compose-type 'edit)
     (find-file (mu4e-message-field msg :path))
-    (let* ((draftdir (mu4e-get-drafts-folder msg))
-	    (draftfile (mu4e~compose-message-filename-construct "DS"))
-	    (draftpath (concat mu4e-maildir draftdir "/cur/" draftfile)))
+    (let ((draftpath
+	     (format "%s/%s/cur/%s"
+	       mu4e-maildir
+	       mu4e~compose-drafts-folder
+	       (mu4e~compose-message-filename-construct "DS"))))
       (find-file draftpath)
       (insert
 	(case compose-type
 	  (reply   (mu4e~compose-reply-construct msg))
 	  (forward (mu4e~compose-forward-construct msg))
 	  (new     (mu4e~compose-newmsg-construct))
-	  (t (mu4e-error "unsupported compose-type %S" compose-type))))))
-
-  ;; now, or draft file has been setup. setup the buffer-local special dirs.
-  (mu4e~compose-setup-folder 'mu4e~compose-trash-folder  mu4e-get-trash-folder msg)
-  (mu4e~compose-setup-folder 'mu4e~compose-drafts-folder mu4e-get-drafts-folder msg)
-  (mu4e~compose-setup-folder 'mu4e~compose-sent-folder   mu4e-get-sent-folder msg))
-
-
-
+	  (t (mu4e-error "unsupported compose-type %S" compose-type)))))))
+ 
 ;; 'fcc' refers to saving a copy of a sent message to a certain folder. that's
 ;; what these 'Sent mail' folders are for!
 ;;
@@ -439,8 +423,8 @@ needed, set the Fcc header, and register the handler function."
   (let* ((mdir
 	   (case mu4e-sent-messages-behavior
 	     (delete nil)
-	     (trash mu4e~compose-trash-folder)
-	     (sent  mu4e~compose-sent-folder)
+	     (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
+	     (sent  (mu4e-get-sent-folder mu4e-compose-parent-message))
 	     (otherwise
 	       (mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
 		 mu4e-sent-messages-behavior))))
@@ -596,11 +580,12 @@ Optionally (when forwarding) INCLUDES contains a list of
 for the attachements to include; file-name refers to
 a file which our backend has conveniently saved for us (as a
 tempfile)."
-
+   
   ;; Run the hooks defined for `mu4e-compose-pre-hook'. If compose-type is
   ;; `reply', `forward' or `edit', `mu4e-compose-parent-message' points to the
   ;; message being forwarded or replied to, otherwise it is nil.
-  (setq mu4e-compose-parent-message original-msg)
+  (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
+  (put 'mu4e-compose-parent-message 'permanent-local t)
   (run-hooks 'mu4e-compose-pre-hook) 
  
   ;; this opens (or re-opens) a messages with all the basic headers set.
