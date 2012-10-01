@@ -171,26 +171,22 @@ provided, function asks for it."
 (defun mu4e-mark-set (mark &optional target)
   "Mark the header at point, or, if region is active, mark all
 headers in the region. Optionally, provide TARGET (for moves)."
-  (let ((target ;; ask or check the target if it's a move
-	  (or target
-	    (case mark
-	      (refile   (mu4e-get-refile-folder (mu4e-message-at-point)))
-	      (move     (mu4e~mark-get-move-target target))
-	      (trash    (mu4e-get-trash-folder (mu4e-message-at-point))) )))) 
+  (let ((get-target
+	  (lambda (target)
+	    (or target ;; ask or check the target if it's a move
+	      (case mark
+		(refile   (mu4e-get-refile-folder (mu4e-message-at-point)))
+		(move     (mu4e~mark-get-move-target target))
+		(trash    (mu4e-get-trash-folder (mu4e-message-at-point)))))))) 
     (if (not (use-region-p))
       ;; single message
-      (mu4e-mark-at-point mark target)
+      (mu4e-mark-at-point mark (funcall get-target target))
       ;; mark all messages in the region.
       (save-excursion
 	(let ((b (region-beginning)) (e (region-end)))
 	  (goto-char b)
 	  (while (<= (line-beginning-position) e)
-	    (setq target ;; refile/trash targets are determined per-message
-	      (case mark
-		(refile  (mu4e-get-refile-folder (mu4e-message-at-point)))
-		(trash   (mu4e-get-trash-folder (mu4e-message-at-point)))
-		(t       target)))
-	    (mu4e-mark-at-point mark target)
+	    (mu4e-mark-at-point mark (funcall get-target target))
 	    (forward-line 1)))))))
       
 (defun mu4e-mark-restore (docid)
