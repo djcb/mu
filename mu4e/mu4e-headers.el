@@ -1213,25 +1213,19 @@ maildir)."
 N; in vertical split-view, increase the number of columns shown by
 N. Otherwise, don't do anything."
   (interactive "P")
-   (when (buffer-live-p mu4e~view-buffer)
-    (case mu4e-split-view
-	(horizontal
-	  (let ((newval (+ (or n 1) mu4e-headers-visible-lines)))
-	    (unless (> newval 0)
-	      (mu4e-warn
-		"Cannot make the number of visible lines any smaller"))
-	    (setq mu4e-headers-visible-lines newval)))
-	(vertical
-	  (let ((newval (+ (or n 1) mu4e-headers-visible-columns)))
-	    (unless (> newval 0)
-	      (mu4e-warn
-		"Cannot make the number of visible columns any smaller"))
-	    (setq mu4e-headers-visible-columns newval))))
-      (let ((viewwin (mu4e~headers-redraw-get-view-window)))
-	(when (window-live-p viewwin)
-	  (select-window viewwin)
-	  (switch-to-buffer mu4e~view-buffer)))))
-
+  (let ((n (or n 1))
+	 (hwin (get-buffer-window mu4e~headers-buffer)))
+  (when (and (buffer-live-p mu4e~view-buffer) (window-live-p hwin))
+     (let ((n (or n 1)))
+       (case mu4e-split-view
+	 ;; emacs has weird ideas about what horizontal, vertical means...
+	 (horizontal
+	   (window-resize hwin n nil)
+	   (incf mu4e-headers-visible-lines n)) 
+	 (vertical
+	   (window-resize hwin n t)
+	   (incf mu4e-headers-visible-columns n))))))) 
+ 
 (defun mu4e-headers-action ()
   "Ask user what to do with message-at-point, then do it. The
 actions are specified in `mu4e-headers-actions'."
