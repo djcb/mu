@@ -501,12 +501,12 @@ at POINT, or if nil, at (point)."
       (define-key map "a" 'mu4e-view-action)
 
       ;; change the number of headers
-      (define-key map (kbd "C-+") 'mu4e~view-split-view-resize)
+      (define-key map (kbd "C-+") 'mu4e-headers-split-view-resize)
       (define-key map (kbd "C--")
-	(lambda () (interactive) (mu4e~view-split-view-resize -1)))
-      (define-key map (kbd "<C-kp-add>") 'mu4e~view-split-view-resize)
+	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
+      (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-resize)
       (define-key map (kbd "<C-kp-subtract>")
-	(lambda () (interactive) (mu4e~view-split-view-resize -1)))
+	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'scroll-up)
@@ -1053,15 +1053,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
 (defun mu4e~view-split-view-p ()
   "Return t if we're in split-view, nil otherwise."
   (member mu4e-split-view '(horizontal vertical)))
-
-(defun mu4e~view-split-view-resize (n)
-  "In horizontal split-view, increase the number of lines shown by
-N; in vertical split-view, increase the number of columns shown by
-N. Otherwise, don't do anything."
-  (interactive "P")
-  (mu4e~view-in-headers-context
-    (mu4e-headers-split-view-resize n))) 
- 
+  
 (defun mu4e-view-unmark-all ()
   "If we're in split-view, unmark all messages. Otherwise, warn
 user that unmarking only works in the header list."

@@ -87,7 +87,9 @@ Some  notes on the format:
   :attachments. :body-txt or :body-html fields. Message in the
   Message view use the actual message file, and do include these fields."
   ;; after all this documentation, the spectacular implementation
-  (plist-get msg field))
+  (if msg
+    (plist-get msg field)
+    (mu4e-error "message must be non-nil")))
   
 (defsubst mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point in either
