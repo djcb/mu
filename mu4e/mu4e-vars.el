@@ -211,36 +211,56 @@ regexp."
 
 (defcustom mu4e-drafts-folder "/drafts"
   "Your folder for draft messages, relative to `mu4e-maildir',
-  e.g. \"/drafts\". Instead of a string, may also be a function
-  that takes a msg (see `mu4e-message-get-field'), and returns a
-  folder."
+e.g. \"/drafts\". Instead of a string, may also be a function that
+takes a message (a msg plist, see `mu4e-message-get-field'), and
+returns a folder.
+Note, the message parameter refers to the
+original message being replied to / being forwarded / re-edited and is nil
+otherwise.
+`mu4e-drafts-folder' is evaluated once when composing the message,
+and the value is used throughout the message composition. When re-editing messages,
+the value of `mu4e-drafts-folder' is ignored."
   :type 'string
   :safe 'stringp
   :group 'mu4e-folders)
 
 (defcustom mu4e-refile-folder "/archive"
   "Your folder for refiling messages, relative to `mu4e-maildir',
-  e.g. \"/Archive\". Instead of a string, may also be a function
-  that takes a msg (see `mu4e-message-get-field'), and returns a
-  folder."
+e.g. \"/Archive\". Instead of a string, may also be a function that
+takes a message (a msg plist, see `mu4e-message-get-field'), and
+returns a folder.
+Note, the message parameter refers to the message-at-point."
   :type 'string
   :safe 'stringp
   :group 'mu4e-folders)
 
 (defcustom mu4e-sent-folder "/sent"
   "Your folder for sent messages, relative to `mu4e-maildir',
-  e.g. \"/Sent Items\". Instead of a string, may also be a function
-  that takes a msg (see `mu4e-message-get-field'), and returns a
-  folder."
+e.g. \"/Sent Items\". Instead of a string, may also be a function
+that takes a message (a msg plist, see `mu4e-message-get-field'),
+and returns a folder.
+Note, the message parameter refers to the
+original message being replied to / being forwarded / re-edited, and is nil
+otherwise.
+`mu4e-sent-folder' is evaluated once when composing the message,
+and the value is used throughout the message composition."
   :type 'string
   :safe 'stringp
   :group 'mu4e-folders)
 
 (defcustom mu4e-trash-folder "/trash"
   "Your folder for trashed messages, relative to `mu4e-maildir',
-  e.g. \"/trash\". Instead of a string, may also be a function that
-  takes a msg (see `mu4e-message-get-field'), and returns a
-  folder."
+e.g. \"/trash\". Instead of a string, may also be a function that
+takes a message (a msg plist, see `mu4e-message-get-field'), and
+returns a folder.  When using `mu4e-trash-folder' in the headers
+view (when marking messages for trash).
+Note, the message parameter
+refers to the message-at-point. When using it when composing a
+message (see `mu4e-sent-messages-behavior'), this refers to the
+original message being replied to / being forwarded / re-edited, and is nil
+otherwise.
+`mu4e-trash-folder' is evaluated once when composing the message,
+and the value is used throughout the message composition."
   :type 'string
   :safe 'stringp
   :group 'mu4e-folders)
