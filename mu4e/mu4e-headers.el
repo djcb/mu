@@ -133,12 +133,12 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
 (defvar mu4e-headers-sortfield :date
   "Field to sort the headers by. Field must be a symbol, one of:
-     date, subject, size, prio, from, to.")
+date, subject, size, prio, from, to.")
 
 (defvar mu4e-headers-sort-revert t
   "Whether to revert the sort-order, i.e. Z->A instead of A-Z. When
-  sorting by date, it's useful to go from biggest to smallest, so
-  newest messages come first.")
+sorting by date, it's useful to go from biggest to smallest, so
+newest messages come first.")
 
 (defvar mu4e-headers-show-threads t
   "Whether to show threads in the headers list.")
