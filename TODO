@@ -9,7 +9,6 @@ f#+STARTUP: showall
   - put threading information in the database, and enable getting the complete
      threads when searching
   - refactor fill_database function in test cases
-  - handle attached messages with attachments
   - add 'contact:' as alias for to: or cc: or bcc: or from:
 
 *** mu-guile
@@ -29,6 +28,7 @@ f#+STARTUP: showall
     - statistics
   - check if we can speed up mu4e-proc parsing by using search rather than
     regexp search
+     ==> probably not
   - show maildirs as a tree, not a list in speed bar
   - review emacs menus
   - re-factor / separate window/buffer management
@@ -45,7 +45,6 @@ f#+STARTUP: showall
     - open links to mails through headers-mode somehow (i.e..,
      mu4e-view-message-with-msgid)
   - improve mouse interaction (i.e., cursor vs point)
-  - add example 'run shellscript on message'
   - check move + create new dir
   - show counts of messages in searches (in main view)
   - show flush only if there's something to flush (and # of flushables)
@@ -105,7 +104,7 @@ f#+STARTUP: showall
   - better help
   - threading optimizations
   - actions for /all/ headers, actions for /all/ attachment
-
+  - handle attached messages with attachments
 
 * Done
   :PROPERTIES:
