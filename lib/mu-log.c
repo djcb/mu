@@ -224,16 +224,16 @@ mu_log_uninit (void)
 
 
 static const char*
-pfx (GLogLevelFlags level)
+levelstr (GLogLevelFlags level)
 {
 	switch (level) {
-	case G_LOG_LEVEL_WARNING:  return  "WARN";
-	case G_LOG_LEVEL_ERROR :   return  "ERR ";
-	case G_LOG_LEVEL_DEBUG:	   return  "DBG ";
-	case G_LOG_LEVEL_CRITICAL: return  "CRIT";
-	case G_LOG_LEVEL_MESSAGE:  return  "MSG ";
-	case G_LOG_LEVEL_INFO :	   return  "INFO";
-	default:		   return  "LOG ";
+	case G_LOG_LEVEL_WARNING:  return  " [WARN] ";
+	case G_LOG_LEVEL_ERROR :   return  " [ERR ] ";
+	case G_LOG_LEVEL_DEBUG:	   return  " [DBG ] ";
+	case G_LOG_LEVEL_CRITICAL: return  " [CRIT] ";
+	case G_LOG_LEVEL_MESSAGE:  return  " [MSG ] ";
+	case G_LOG_LEVEL_INFO :	   return  " [INFO] ";
+	default:		   return  " [LOG ] ";
 	}
 }
 
@@ -250,24 +250,32 @@ static void
 log_write_fd (GLogLevelFlags level, const gchar *msg)
 {
 	time_t now;
-	ssize_t len;
-
-	/* truncate at 768-1 chars */
-	char buf [768], timebuf [22];
+	char timebuf [22];
+	const char *mylevel;
 
 	/* get the time/date string */
 	now = time(NULL);
 	strftime (timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S",
 		  localtime(&now));
 
-	/* now put it all together */
-	len = snprintf (buf, sizeof(buf), "%s [%s] %s\n", timebuf,
-			pfx(level), msg);
+	if (write (MU_LOG->_fd, timebuf, strlen (timebuf)) < 0)
+		goto err;
 
+	mylevel = levelstr (level);
+	if (write (MU_LOG->_fd, mylevel, strlen (mylevel)) < 0)
+		goto err;
 
-	if (write (MU_LOG->_fd, buf, (size_t)len) < 0)
-		fprintf (stderr, "%s: failed to write to log: %s\n",
-			 __FUNCTION__,  strerror(errno));
+	if (write (MU_LOG->_fd, msg, strlen (msg)) < 0)
+		goto err;
+
+	if (write (MU_LOG->_fd, "\n", strlen ("\n")) < 0)
+		goto err;
+
+	return; /* all went well */
+
+err:
+	fprintf (stderr, "%s: failed to write to log: %s\n",
+		 __FUNCTION__,  strerror(errno));
 }
 
 
