@@ -80,7 +80,7 @@ the only exception to this is @emph{sending mail}}
 
 This manual goes through the installation of @t{mu4e}, discusses the basic
 configuration, and explains its daily use. It also shows you how you can
-customize @t{mu4e} for your needs. 
+customize @t{mu4e} for your needs.
 
 At the end of the manual, there are some example configurations, which should
 help you to get up to speed quickly.
@@ -243,7 +243,7 @@ require you to have @t{autotools} installed:
 
 @example
 # get from git (alternatively, use a github tarball)
-$ git clone git://github.com/djcb/mu.git 
+$ git clone git://github.com/djcb/mu.git
 
 $ cd mu
 $ autoreconf -i && ./configure && make
@@ -381,7 +381,7 @@ the changes take effect.
 A simple setup could look something like:
 
 @lisp
-(setq 
+(setq
    mu4e-get-mail-command "offlineimap"   ;; or fetchmail, or ...
    mu4e-update-interval 300)             ;; update every 5 minutes
 @end lisp
@@ -390,7 +390,7 @@ It is possible to get notifications when the indexing process does any updates
 - for example when receiving new mail. See @code{mu4e-index-updated-hook} and
 the tips on its use in the @ref{FAQ - Frequently Anticipated Questions}.
 
-Now that we have setup 
+Now that we have setup
 The next step is telling @t{mu4e} how we want to send mail.
 
 @node Sending mail
@@ -448,10 +448,10 @@ And that's it! We should now be ready to go.
 @section Running mu4e
 
 After following the steps in this chapter, we should now have a working
-@t{mu4e} setup. Great! 
+@t{mu4e} setup. Great!
 
 In the next chapters, we walk through the various views in @t{mu4e}.
- 
+
 @c @menu
 @c * Main view:: This is where we start
 @c * Headers view:: Lists of message headers
@@ -969,17 +969,34 @@ For the marking commands, please refer to @ref{Marking messages}.
 @node Opening and saving attachments
 @section Opening and saving attachments
 
-By default, when opening attachments, @t{mu4e} uses the the
-@t{xdg-open}-program @footnote{@url{http://portland.freedesktop.org/wiki/}} or
-(on MacOS) the @t{open} program. If you want to use another program, you can
-specify this by setting the @t{MU_PLAY_PROGRAM} environment variable.
+By default, @t{mu4e} uses the @t{xdg-open}-program
+@footnote{@url{http://portland.freedesktop.org/wiki/}} or (on MacOS) the
+@t{open} program for opening attachments. If you want to use another program,
+you do so by setting the @t{MU_PLAY_PROGRAM} environment variable to the
+program to be used.
 
 When extracting (saving) attachments (with @key{e}), the default directory for
 saving them is your home directory (@file{~/}); you can change this using the
 variable @code{mu4e-attachment-dir}, for example:
 
 @lisp
-(setq mu4e-attachment-dir (file-name-expand "~/Downloads"))
+(setq mu4e-attachment-dir  "~/Downloads")
+@end lisp
+
+For more flexibility, @code{mu4e-attachment-dir} can also be a user-provided
+function. This function receives two parameters: the file-name and the
+mime-type@footnote{sadly, often @t{application/octet-stream} is used for the
+mime-type, even if a better type is available} of the attachment, either or
+both of which can be @t{nil}. For example:
+
+@lisp
+(setq mu4e-attachment-dir
+  (lambda (fname mtype)
+    (cond
+      ;; docfiles go to ~/Desktop
+      ((and fname (string-match "\\.doc$" fname))  "~/Desktop")
+;; other cases ...
+      (t "~/Downloads")))) ;; everything else
 @end lisp
 
 If you want to extract multiple attachments at once, you can do so by
@@ -991,13 +1008,13 @@ shortcut for @emph{all} attachments.
 @section Viewing images inline
 
 It is possible to show images inline in the message view buffer if you run
-emacs in GUI-mode. You can enable this by setting the variable
+@t{emacs} in GUI-mode. You can enable this by setting the variable
 @code{mu4e-view-show-images} to @t{t}.
 
-Since emacs does not always handle images correctly, this is not enabled by
-default. Note, if you are using a (pre-) release of emacs 24 and build it
-yourself, you probable want to build it with @emph{Imagemagick} support -- in
-that case, also make sure you call @code{imagemagick-register-types} in your
+Since @t{emacs} does not always handle images correctly, this is not enabled
+by default. Note, if you are using @t{emacs} 24 and build it yourself, you
+probable want to build it with @emph{Imagemagick} support -- in that case,
+also make sure you call @code{imagemagick-register-types} in your
 configuration, so it is used for images.
 
 @lisp
@@ -1017,22 +1034,22 @@ its body-text.
 
 If there is only an html-version, or if the plain-text version is too short in
 comparison with the html part, @t{mu4e} tries to convert the html into
-plain-text for display. The default way to do that is to use the Emacs
-built-in @code{html2text} function, but if you set the variable
-@code{mu4e-html2text-command} to some external program, that program is
-used. This program is expected to take html from standard input and write
+plain-text for display. The default way to do that is to use the @t{emacs}
+built-in @code{html2text} function. However, you can set the variable
+@code{mu4e-html2text-command} to some external program, which is then used
+instead. This program is expected to take html from standard input and write
 plain text in @t{utf-8} encoding on standard output.
 
 An obvious choice for this is the program that is actually @emph{called}
-@t{html2text}@footnote{@url{http://www.mbayer.de/html2text/}}, which you could
+@t{html2text}@footnote{@url{http://www.mbayer.de/html2text/}}, which you can
 set up with something like the following in your initialization files:
 
 @lisp
 (setq mu4e-html2text-command "html2text -utf8 -width 72")
 @end lisp
 
-An alternative to this is to use the Python @t{python-html2text} package;
-after installing that, you can tell @t{mu4e} to use it with something like:
+An alternative to this is the Python @t{python-html2text} package; after
+installing that, you can tell @t{mu4e} to use it with something like:
 
 @lisp
 (setq mu4e-html2text-command
@@ -1461,7 +1478,7 @@ definition of the default bookmarks is instructive here:
   "A list of pre-defined queries; these show up in the main
 screen. Each of the list elements is a three-element list of the
 form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
-query, DESCRIPTION is a short description of the query (this 
+query, DESCRIPTION is a short description of the query (this
 shows up in the UI), and KEY is a shortcut key for the query.")
 @end lisp
 
@@ -2884,4 +2901,4 @@ Note, @t{mu} itself keeps a log as well, you can find this it in
 
 @include fdl.texi
 
-@bye 
+@bye
