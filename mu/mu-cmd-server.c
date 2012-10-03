@@ -886,9 +886,9 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 		return MU_OK;
 	}
 
-	/* note: when we're threading, we get *all* messages, and then
-	 * only return maxnum; this is so that we maximimize the
-	 * change of all messages in a thread showing up */
+	/* note: when we're threading, we get *all* matching messages,
+	 * and then only return maxnum; this is so that we maximimize
+	 * the change of all messages in a thread showing up */
 	iter = mu_query_run (ctx->query, querystr, threads,
 			     sortfield, reverse,
 			     threads ? -1 : maxnum, err);
