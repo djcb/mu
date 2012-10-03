@@ -103,11 +103,12 @@ This manual has been updated for @t{mu}/@t{mu4e} version
 * Marking:: Marking messages and performing actions
 * Dynamic folders:: Folders that depend on the context
 * Actions:: Defining and using custom actions
-* Interaction with other tools:: mu4e and the rest of the world
-* Example configuration:: Some examples to set you up quickly
-* FAQ - Frequently Anticipated Questions:: Common questions and answers
 
 Appendices
+* Interaction with other tools:: mu4e and the rest of the world
+* Example configurations:: Some examples to set you up quickly
+* FAQ - Frequently Anticipated Questions:: Common questions and answers
+* Extending mu4e:: Writing code for @t{mu4e}
 * How it works:: Some notes about the implementation of @t{mu4e}
 * Logging and debugging:: How to debug problems in @t{mu4e}
 * GNU Free Documentation License::  The license of this manual
@@ -262,7 +263,7 @@ You may need to restart @t{emacs}, so it can find @t{mu4e} in its
 
 There is some support for using the @t{emacs} customization system in
 @t{mu4e}, but for now, we recommend setting the values manually. Please refer
-to @ref{Example configuration} for a couple of examples of this; here we go
+to @ref{Example configurations} for a couple of examples of this; here we go
 through things step-by-step.
 
 @node Getting mail
@@ -404,7 +405,7 @@ For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
 mail; please refer to its documentation for the details.
 
 Here, we only provide some simple examples - for more, @ref{Example
-configuration}.
+configurations}.
 
 A very minimal setup could look something like:
 
@@ -1376,14 +1377,15 @@ accidentally.
 @chapter Searching
 
 @t{mu4e} is fully search-based; this means that all the lists of messages you
-see, are the result of some query. Even if you 'jump to a folder', in fact you
-are executing a search query for messages that happen to have the property of
+see, are the result of some query. Even if you 'jump to a folder', you are
+actually executing a query for messages that happen to have the property of
 being in a certain folder.
 
 By default, queries return up to @code{mu4e-search-results-limit} (default:
-500) results. That's usually more than enough, and helps performance quite a
-bit. Sometimes, you may want to show @emph{all} results; you can enable this
-with @t{M-x mu4e-headers-toggle-full-search}, or by customizing the variable
+500) results. That is usually more than enough, and it helps performance quite
+a bit to limit the number of results. However, sometimes you may want to show
+@emph{all} results; you can enable this with @t{M-x
+mu4e-headers-toggle-full-search}, or by customizing the variable
 @code{mu4e-headers-full-search}. This applies to all search commands.
 
 You can also influence the sort order and whether threads are shown or not;
@@ -1400,8 +1402,9 @@ see @ref{Sort order and threading}.
 @section Queries
 
 The queries you can execute are the same ones that @code{mu find}
-understands. Please refer to the @code{mu-find} and @code{mu-easy} man pages
-for details and more examples.
+understands@footnote{with the caveat that command-line queries are subject to
+the shell's interpretation before @t{mu} sees them}. Please refer to the
+@code{mu-find} and @code{mu-easy} man pages for details and more examples.
 
 @verbatim
 # get all messages about bananas
@@ -1988,7 +1991,7 @@ If you have come up with any interesting actions that may be useful for
 others, you are invited to contribute those.
 
 @node Interaction with other tools
-@chapter Interaction with other tools
+@appendix Interaction with other tools
 
 In this chapter we discuss some ways in ways in which @t{mu4e} can cooperate
 with other tools.
@@ -2241,10 +2244,12 @@ RET C-a}, and you'll be asked whether to attach them to an existing message,
 or create a new one.
 
 
-@node Example configuration
-@chapter Example configuration
+@node Example configurations
+@appendix Example configurations
 
-In this chapter, we show some example configurations.
+In this chapter, we show some example configurations. While it is very useful
+to see some working settings, we'd like to warn against blindly copying such
+things.
 
 @menu
 * Minimal configuration::
@@ -2258,15 +2263,14 @@ In this chapter, we show some example configurations.
 @node Minimal configuration
 @section Minimal configuration
 
-An (almost) minimal configuration for @t{mu4e} might look something like this:
+An (almost) minimal configuration for @t{mu4e} could look something like this
+- as you see most is commented-out.
 
 @lisp
 ;; example configuration for mu-for-emacs (mu4e)
 
-make sure mu4e is in your load-path
+;; make sure mu4e is in your load-path
 (require 'mu4e)
-
-;; happily, below settings are all /optional/
 
 ;; Only needed if your maildir is _not_ ~/Maildir
 ;;(setq mu4e-maildir "/home/user/Maildir")
@@ -2277,17 +2281,17 @@ make sure mu4e is in your load-path
 ;; already exist
 
 ;; below are the defaults; if they do not exist yet, mu4e offers to
-;; create them
+;; create them. they can also functions; see their docstrings.
 ;; (setq mu4e-sent-folder   "/sent")
 ;; (setq mu4e-drafts-folder "/drafts")
 ;; (setq mu4e-trash-folder  "/trash")
 
-;; smtp mail setting
+;; smtp mail setting; these are the same that `gnus' uses.
 (setq
-   message-send-mail-function 'smtpmail-send-it
+   message-send-mail-function   'smtpmail-send-it
    smtpmail-default-smtp-server "smtp.example.com"
-   smtpmail-smtp-server ""smtp.example.com"
-   smtpmail-local-domain "example.com")
+   smtpmail-smtp-server         "smtp.example.com"
+   smtpmail-local-domain        "example.com")
 @end lisp
 
 
@@ -2295,65 +2299,64 @@ make sure mu4e is in your load-path
 @section Longer configuration
 
 @lisp
-;; example configuration for mu-for-emacs (mu4e)
+;; example configuration mu4e
 (require 'mu4e)
 
-(setq
-   ;; a regular expression that matches all email address uses by
-   ;; the user; this allows us to correctly determine if user
-   ;; is the sender / direct recipient of some message
-   mu4e-user-mail-address-regexp
-      "foo@@bar\.com\\|cuux@@example\.com"
 
-   ;; path to our Maildir directory
-   mu4e-maildir       "/home/user/Maildir"
+;; a regular expression that matches all email address uses by
+;; the user; this allows us to correctly determine if user
+;; is the sender / direct recipient of some message
+(setq mu4e-user-mail-address-regexp
+      "foo@@bar\.com\\|cuux@@example\.com")
 
-   ;; the next are relative to `mu4e-maildir'
-   ;; instead of strings, they can be functions too, see
-   ;; chapter 'Dynamic folders'
-   mu4e-sent-folder   "/sent"
-   mu4e-drafts-folder "/drafts"
-   mu4e-trash-folder  "/trash"
+;; path to our Maildir directory
+(setq mu4e-maildir "/home/user/Maildir")
 
-   ;; the maildirs you use frequently; access them with 'j' ('jump')
-   mu4e-maildir-shortcuts
-    '( ("/archive"     . ?a)
-       ("/inbox"       . ?i)
-       ("/work"        . ?w)
-       ("/sent"        . ?s))
+;; the next are relative to `mu4e-maildir'
+;; instead of strings, they can be functions too, see
+;; their docstring or the chapter 'Dynamic folders'
+(setq mu4e-sent-folder   "/sent"
+      mu4e-drafts-folder "/drafts"
+      mu4e-trash-folder  "/trash")
 
-   ;; when you want to use some external command for text->html
-   ;; conversion, e.g. the 'html2text' program
-   mu4e-html2text-command "html2text"
+;; the maildirs you use frequently; access them with 'j' ('jump')
+(setq   mu4e-maildir-shortcuts
+    '(("/archive"     . ?a)
+      ("/inbox"       . ?i)
+      ("/work"        . ?w)
+      ("/sent"        . ?s)))
 
-   ;; the headers to show in the headers list -- a pair of the field
-   ;; and its width, with `nil' meaning 'unlimited'
-   ;; (better only use that for the last field.
-   ;; These are the defaults:
-   mu4e-headers-fields
+;; when you want to use some external command for text->html
+;; conversion, e.g. the 'html2text' program
+;; (setq mu4e-html2text-command "html2text")
+
+;; the headers to show in the headers list -- a pair of the field
+;; and its width, with `nil' meaning 'unlimited'
+;; (better only use that for the last field.
+;; These are the defaults:
+(setq mu4e-headers-fields
     '( (:date          .  25)
        (:flags         .   6)
        (:from          .  22)
-       (:subject       .  nil))
+       (:subject       .  nil)))
 
-   ;; program to get mail; alternatives are 'fetchmail', 'getmail'
-   ;; isync or your own shellscript. called when 'U' is pressed in
-   ;; main view. Note: if you get your mail without an explicit command,
-   ;; but "true" for the command (also the default)
-   mu4e-get-mail-command "offlineimap"
+;; program to get mail; alternatives are 'fetchmail', 'getmail'
+;; isync or your own shellscript. called when 'U' is pressed in
+;; main view. Note: if you get your mail without an explicit command,
+;; but "true" for the command (also the default)
+(setq mu4e-get-mail-command "offlineimap")
 
-   ;; general emacs mail settings; used when composing e-mail
-   mu4e-reply-to-address "foo@@bar.com"
-   user-mail-address "foo@@bar.com"
-   user-full-name  "Foo X. Bar"
-
+;; general emacs mail settings; used when composing e-mail
+;; the non-mu4e-* stuff is inherited from emacs/message-mode
+(setq mu4e-reply-to-address "foo@@bar.com"
+      user-mail-address "foo@@bar.com"
+      user-full-name  "Foo X. Bar")
    ;; include in message with C-c C-w
-   message-signature
-    (concat
-      "Foo X. Bar\n"
-      "http://www.example.com\n")
+(setq message-signature
+   "Foo X. Bar\nhttp://www.example.com\n")
 
    ;; smtp mail setting
+(setq
    message-send-mail-function 'smtpmail-send-it
    smtpmail-default-smtp-server "smtp.example.com"
    smtpmail-smtp-server ""smtp.example.com"
@@ -2364,8 +2367,8 @@ make sure mu4e is in your load-path
    smtpmail-queue-mail  nil
    smtpmail-queue-dir  "/home/user/Maildir/queue/cur")
 
-   ;; don't keep message buffers around
-   (setq message-kill-buffer-on-exit t)
+;; don't keep message buffers around
+(setq message-kill-buffer-on-exit t)
 @end lisp
 
 
@@ -2373,17 +2376,26 @@ make sure mu4e is in your load-path
 @section Gmail configuration
 
 @emph{Gmail} is a popular e-mail provider; let's see how we can make it work
-with @t{mu4e}.
+with @t{mu4e}. Since we are using @abbr{IMAP}, you must enable that in the
+Gmail web interface (in the settings, under the ``Forwarding and
+POP/IMAP''-tab).
+
+@subsection Setting up offlineimap
 
 First of all, we need a program to get the e-mail from Gmail to our local
 machine; for this we use @t{offlineimap}; on Debian (and derivatives like
 Ubuntu), this is as easy as:
+
 @verbatim
-sudo apt-get install offlineimap
+$ sudo apt-get install offlineimap
 @end verbatim
 
-Then, we need to create a configuration for @t{offlineimap}, i.e. a file
-@file{~/.offlineimaprc}:
+while on Fedora (and similar) you need:
+@verbatim
+$ sudo yum install offlineimap
+@end verbatim
+
+Then, we can configure @t{offlineimap} by editing @file{~/.offlineimaprc}:
 
 @verbatim
 [general]
@@ -2408,10 +2420,11 @@ maxconnections = 1
 realdelete = no
 @end verbatim
 
-Obviously, you need to replace @t{USERNAME} and @t{PASSWORD} with your actual
-Gmail username and password.
+You need to replace @t{USERNAME} and @t{PASSWORD} with your actual Gmail
+username and password.
 
 After this, you should be able to download your mail:
+
 @verbatim
 $ offlineimap
  OfflineIMAP 6.3.4
@@ -2449,6 +2462,8 @@ mu: elapsed: 0 second(s)
 Note that we can run both the @t{offlineimap} and the @t{mu index} from within
 @t{mu4e}, but running it from the command line makes it a bit easier to see
 what is going on.
+
+@subsection Settings
 
 Now, let's make a @t{mu4e} configuration for this:
 
@@ -2537,7 +2552,7 @@ default for various reasons.
 @end lisp
 
 @node FAQ - Frequently Anticipated Questions
-@chapter FAQ - Frequently Anticipated Questions
+@appendix FAQ - Frequently Anticipated Questions
 
 In this chapter we list a number of actual and anticipated questions and their
 answers.
@@ -2579,8 +2594,9 @@ and some soundfile, change as needed):
 @end lisp
 @item @emph{I don't use @t{offlineimap}, @t{fetchmail} etc., I get my mail
 through my own mailserver. What should I use for
-@code{mu4e-get-mail-command}}? Use @t{"true"}. This makes getting mail
-a no-op, but the messages are reindexed.
+@code{mu4e-get-mail-command}}? Use @t{"true"} (or don't do anything, it's the
+default). This makes getting mail a no-op, but the messages are still
+re-indexed.
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like @t{mu: mu_store_new_writable: xapian error 'Unable to get write
 lock on ~/.mu/xapian: already locked'}. What can I do about this?} You get
@@ -2613,10 +2629,13 @@ number of places.
 @itemize
 @item @emph{How can I show attached images in my message view buffers?} See
 @ref{Viewing images inline}.
-@item @emph{How can I automatically apply word-wrapping (and hiding cited
-parts) when viewing a message?} See the documentation on
-@t{mu4e-view-wrap-lines} (and @t{mu4e-view-hide-cited}). You can always toggle
-between the two states with @key{w} and @key{h}, respectively.
+@item @emph{How can I word-wrap long lines in when viewing a
+message?} You can toggle between wrapped and non-wrapped states using
+@key{w}. If you want to do this for every message, invoke
+@code{longlines-mode} in your @code{mu4e-view-mode-hook}.
+@item @emph{What about hiding cited parts?} Toggle between hiding and showing
+of cited parts with @key{h}. If you want to hide parts automatically, call
+@code{mu4e-view-toggle-hide-cited} in your @code{mu4e-view-mode-hook}.
 @item @emph{How can I perform custom actions on messages and attachments?} See
 @ref{Actions}.
 @item @emph{Does @t{mu4e} support crypto (i.e., decrypting messages and verifying signatures)?}
@@ -2669,6 +2688,93 @@ visible in the headers buffer, you can not collapse/open them.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @end itemize
+
+@node Extending mu4e
+@appendix Extending mu4e
+
+@t{mu4e} is designed to be easily extendible - that is, write your own pieces
+of emacs-lisp to make @t{mu4e} is a specific way. Here, we provide some notes
+/ tips for doing so.
+
+@menu
+* What functions are available::
+* Message functions::
+* Utility functions::
+@end menu
+
+@c @node What are good places to extend mu4e
+@c @section What are good places to extend mu4e?
+
+@node What functions are available
+@section What functions are (not) available?
+
+The whole of @t{mu4e} consists of hundreds of elisp functions. However, many
+of those (more than 50%) are for @emph{internal} use; you can recognize them
+easily, because they all start with @code{mu4e~}. They make all kinds of
+assumptions, and they are subject to change. The same is true for
+@emph{variables} that start with @code{mu4e~}; don't touch them.
+Let me repeat that:
+@verbatim
+    Do not use mu4e~* functions or variables!
+@end verbatim
+
+In addition, you should use functions in the right context; functions that
+start with @t{mu4e-view-} are only applicable to the message-view, while
+functions starting with @t{mu4e-headers-} are only applicable to the headers
+view. Functions without such prefixes are applicable everywhere.
+
+@node Message functions
+@section Message functions
+
+Many functions in @t{mu4e} deal with message plist (property lists). They
+contain information about messages, such as sender and recipient, subject,
+date and so on. To deal with these message plists, there are a number of
+@code{mu4e-message-} functions (in @file{mu4e-message.el}), such as
+@code{mu4e-message-field} and @code{mu4e-message-at-point}
+
+For example, to get the subject of the 'message-at-point' in either the
+headers view or the message view, you could write:
+@lisp
+(mu4e-message-field (mu4e-message-at-point) :subject)
+@end lisp
+Check the docstrings for these functions for the details; some notes:
+@itemize
+@item The contact fields (To, From, Cc, Bcc) they are lists of cons-pairs
+@code{(name . email)}; @code{name} may be @code{nil}. If you are only looking
+for a match in this list (e.g., ``Is Jack one of the recipients of the
+message?''), there is the convenience function
+@code{mu4e-message-contact-field-matches} to make this easy.
+@item The message body is only available in the message view, not in the
+headers view.
+@end itemize
+
+@node Utility functions
+@section Utility functions
+
+@file{mu4e-utils} contains a number of utility functions that can be
+quite useful; we list a number here; see their docstrings for the details.
+@itemize
+@item @code{mu4e-read-option}: read one option from a list. For example:
+@lisp
+ (mu4e-read-option \"Choose an animal: \"
+    '((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
+@end lisp
+The user is now presented with:
+@example
+ Choose an animal: [M]onkey, [G]nu, [x]Moose
+@end example
+@item @code{mu4e-ask-maildir}: ask for a maildir; try one of the
+shortcuts (@code{mu4e-maildir-shortcuts}), or the full set of available
+maildirs.
+@item @code{mu4e-log} logs to the @t{mu4e} debugging log if it is enabled; see @code{mu4e-toggle-logging}.
+@item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
+@t{mu4e} smart equivalents of the normal @t{elisp} @code{message},
+@code{user-error}@footnote{@code{user-error} only appears in @t{emacs} 24.2
+and later; in older versions it falls back to @code{error}} and @code{error}
+functions.
+@end itemize
+
+
 
 @node How it works
 @appendix How it works
