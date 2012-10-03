@@ -546,8 +546,8 @@ at POINT, or if nil, at (point)."
 
       (define-key map (kbd "&") 'mu4e-view-mark-custom)
 
-      (define-key map (kbd "+") 'mu4e-view-mark-flag)
-      (define-key map (kbd "-") 'mu4e-view-mark-unflag)
+      (define-key map (kbd "+") 'mu4e-view-mark-for-flag)
+      (define-key map (kbd "-") 'mu4e-view-mark-for-unflag)
 
       (define-key map (kbd "*")             'mu4e-view-mark-for-deferred)
       (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-for-deferred)
@@ -978,7 +978,8 @@ user for it."
 		   (mu4e-format "Shell command to open it with: ")
 		   nil 'mu4e~view-open-with-hist)))
 	  (index (plist-get att :index)))
-    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "open-with" cmd)))
+    (mu4e~view-temp-action
+      (mu4e-message-field msg :docid) index "open-with" cmd)))
 
 (defvar mu4e~view-pipe-hist nil
   "History list for the pipe argument.")
@@ -994,7 +995,8 @@ PIPECMD is nil, ask user for it."
 		       nil
 		       'mu4e~view-pipe-hist)))
 	  (index (plist-get att :index)))
-    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "pipe" pipecmd)))
+    (mu4e~view-temp-action
+      (mu4e-message-field msg :docid) index "pipe" pipecmd)))
 
 
 (defun mu4e-view-open-attachment-emacs (msg attachnum)

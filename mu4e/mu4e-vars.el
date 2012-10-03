@@ -560,6 +560,7 @@ mu4e starts.")
 
 (defvar mu4e~headers-last-query nil
   "The present (most recent) query.")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; our handlers funcs
