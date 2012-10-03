@@ -73,7 +73,10 @@ mu4e."
   :safe 'integerp)
 
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
-  "Default directory for saving attachments."
+  "Default directory for saving attachments. This can be either a
+string, or a function that takes a filename FNAME and MIMETYPE as
+arguments, and returns the attachment dir. Note, either or both of
+the arguments may be `nil'."
   :type 'directory
   :group 'mu4e
   :safe 'stringp)

@@ -80,26 +80,47 @@ parameter (which may be `nil'), and return the result."
 	    (cond
 	      ((stringp   folder) folder)
 	      ((functionp folder) (funcall folder msg))
-	      (t (error "unsupported type for %S" folder)))))
+	      (t (mu4e-error "unsupported type for %S" folder)))))
     (or val (mu4e-error "%S evaluates to nil" foldervar))))
 
-(defun mu4e-get-drafts-folder (msg)
+(defun mu4e-get-drafts-folder (&optional msg)
   "Get the sent folder. See `mu4e-drafts-folder'."
   (mu4e~get-folder 'mu4e-drafts-folder msg))
 
-(defun mu4e-get-refile-folder (msg)
+(defun mu4e-get-refile-folder (&optional msg)
   "Get the folder for refiling. See `mu4e-refile-folder'."
   (mu4e~get-folder 'mu4e-refile-folder msg))
 
-(defun mu4e-get-sent-folder (msg)
+(defun mu4e-get-sent-folder (&optional msg)
   "Get the sent folder. See `mu4e-sent-folder'."
   (mu4e~get-folder 'mu4e-sent-folder msg))
 
-(defun mu4e-get-trash-folder (msg)
+(defun mu4e-get-trash-folder (&optional msg)
   "Get the sent folder. See `mu4e-trash-folder'."
   (mu4e~get-folder 'mu4e-trash-folder msg))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; mu4e-attachment-dir is either a string or a function that takes a filename
+;; and the mime-type as argument, either (or both) which can be nil
+(defun mu4e~get-attachment-dir (&optional fname mimetype)
+  "Get the directory for saving attachments from
+`mu4e-attachment-dir' (which can be either a string or a function,
+see its docstring)."
+  (let
+    ((dir
+       (cond
+	 ((stringp mu4e-attachment-dir)
+	   mu4e-attachment-dir)
+	 ((functionp mu4e-attachment-dir)
+	   (funcall mu4e-attachment-dir fname mimetype))
+	 (t
+	   (mu4e-error "unsupported type for mu4e-attachment-dir" )))))
+    (if dir
+      (expand-file-name dir)
+      (mu4e-error (mu4e-error "mu4e-attachment-dir evaluates to nil")))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -543,13 +564,10 @@ This is used by the completion function in mu4e-compose."
     (mu4e-error "Please set `mu4e-maildir' to the full path to your
     Maildir directory."))
   ;; expand mu4e-maildir, mu4e-attachment-dir
-  (setq
-    mu4e-maildir (expand-file-name mu4e-maildir)
-    mu4e-attachment-dir (expand-file-name mu4e-attachment-dir))
+  (setq mu4e-maildir (expand-file-name mu4e-maildir))
   (unless (mu4e-create-maildir-maybe mu4e-maildir)
     (mu4e-error "%s is not a valid maildir directory" mu4e-maildir))
-  (dolist (var '(mu4e-sent-folder
-		  mu4e-drafts-folder
+  (dolist (var '(mu4e-sent-folder mu4e-drafts-folder
 		  mu4e-trash-folder))
     (unless (and (boundp var) (symbol-value var))
       (mu4e-error "Please set %S" var))

@@ -891,14 +891,14 @@ number ATTNUM."
   "Save attachment number ATTNUM (or ask if nil) from MSG (or
 message-at-point if nil) to disk."
   (interactive)
-  (unless mu4e-attachment-dir
-    (mu4e-error "`mu4e-attachment-dir' is not set"))
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (attnum (or attnum
 		    (mu4e~view-get-attach-num "Attachment to save" msg)))
 	  (att (mu4e~view-get-attach msg attnum))
-	  (path (concat mu4e-attachment-dir "/"))
 	  (fname  (plist-get att :name))
+	  (mtype  (plist-get att :mime-type))
+	  (path (concat
+		  (mu4e~get-attachment-dir fname mtype) "/"))
 	  (index (plist-get att :index))
 	  (retry t))
     (while retry
@@ -1053,7 +1053,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
 (defun mu4e~view-split-view-p ()
   "Return t if we're in split-view, nil otherwise."
   (member mu4e-split-view '(horizontal vertical)))
-  
+
 (defun mu4e-view-unmark-all ()
   "If we're in split-view, unmark all messages. Otherwise, warn
 user that unmarking only works in the header list."
