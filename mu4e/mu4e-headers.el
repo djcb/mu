@@ -402,7 +402,7 @@ after the end of the search results."
 ;; since `mu4e~headers-defun-mark-func' is a macro, the argument must be a
 ;; literal value.
 (mu4e~headers-defun-mark-for refile)
-(mu4e~headers-defun-mark-for deferred)
+(mu4e~headers-defun-mark-for something)
 (mu4e~headers-defun-mark-for delete)
 (mu4e~headers-defun-mark-for flag)
 (mu4e~headers-defun-mark-for move)
@@ -484,8 +484,13 @@ after the end of the search results."
       (define-key map (kbd "-")            'mu4e-headers-mark-for-unflag)
       (define-key map (kbd "&")            'mu4e-headers-mark-for-custom)
 
-      (define-key map (kbd "*")              'mu4e-headers-mark-for-deferred)
-      (define-key map (kbd "<kp-multiply>")  'mu4e-headers-mark-for-deferred)
+      ;; (define-key map (kbd "*")              'mu4e-headers-mark-for-something)
+      ;; (define-key map (kbd "<kp-multiply>")  'mu4e-headers-mark-for-something)
+
+      (define-key map (kbd "<insertchar>")   'mu4e-headers-mark-for-something)
+      (define-key map (kbd "<insert>")       'mu4e-headers-mark-for-something)
+
+      
       (define-key map (kbd "#")   'mu4e-mark-resolve-deferred-marks)
 
       (define-key map "U" 'mu4e-mark-unmark-all)

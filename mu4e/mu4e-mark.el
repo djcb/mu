@@ -93,16 +93,16 @@ The following marks are available, and the corresponding props:
 
    MARK       TARGET    description
    ----------------------------------------------------------
-   `refile'  y		mark this message for archiving
-   `deferred' n         mark this message for *something* (decided later)
-   `delete'   n         remove the message
-   `flag'     n         mark this message for flagging
-   `move'     y         move the message to some folder
-   `read'     n         mark the message as read
-   `trash'    y         thrash the message to some folder
-   `unflag'   n         mark this message for unflagging
-   `unmark'   n         unmark this message
-   `unread'   n         mark the message as unread"
+   `refile'    y	mark this message for archiving
+   `something' n	mark this message for *something* (decided later)
+   `delete'    n	remove the message
+   `flag'      n	mark this message for flagging
+   `move'      y	move the message to some folder
+   `read'      n	mark the message as read
+   `trash'     y	thrash the message to some folder
+   `unflag'    n	mark this message for unflagging
+   `unmark'    n	unmark this message
+   `unread'    n	mark the message as unread"
   (interactive)
   (let* ((msg (mu4e-message-at-point))
 	  (docid (mu4e-message-field msg :docid))
@@ -112,7 +112,7 @@ The following marks are available, and the corresponding props:
 	  (markcell
 	    (case mark
 	      (refile    `("r" . ,target))
-	      (deferred  '("*" . "deferred"))
+	      (something '("*" . ""))
 	      (delete    '("D" . "delete"))
 	      (flag      '("+" . "flag"))
 	      (move      `("m" . ,target))
@@ -197,9 +197,9 @@ headers in the region. Optionally, provide TARGET (for moves)."
 	(when (mu4e~headers-goto-docid docid)
 	  (mu4e-mark-at-point (car markcell) (cdr markcell)))))))
 
-(defun mu4e~mark-get-markpair (prompt &optional allow-deferred)
-  "Ask user for a mark; return (MARK . TARGET). If ALLOW-DEFERRED
-is non-nil, allow the 'deferred' pseudo mark as well."
+(defun mu4e~mark-get-markpair (prompt &optional allow-something)
+  "Ask user for a mark; return (MARK . TARGET). If ALLOW-SOMETHING
+is non-nil, allow the 'something' pseudo mark as well."
   (let* ((marks '( ("refile"   . refile)
 		   ("move"	. move)
 		   ("dtrash"	. trash)
@@ -210,8 +210,8 @@ is non-nil, allow the 'deferred' pseudo mark as well."
 		   ("-unflag"	. unflag)
 		   ("unmark"	. unmark)))
 	  (marks
-	    (if allow-deferred
-	      (append marks (list '("*deferred" . deferred)))
+	    (if allow-something
+	      (append marks (list '("something" . something)))
 	      marks))
 	  (mark (mu4e-read-option prompt marks))
 	  (target
@@ -221,14 +221,14 @@ is non-nil, allow the 'deferred' pseudo mark as well."
 
 
 (defun mu4e-mark-resolve-deferred-marks ()
-  "Check if there are any deferred marks. If there are such marks,
+  "Check if there are any deferred ('something') marks. If there are such marks,
 replace them with a _real_ mark (ask the user which one)."
   (interactive)
   (let ((markpair))
     (maphash
       (lambda (docid val)
 	(let ((mark (car val)) (target (cdr val)))
-	  (when (eql mark 'deferred)
+	  (when (eql mark 'something)
 	    (unless markpair
 	      (setq markpair
 		(mu4e~mark-get-markpair "Set deferred mark to: " nil)))

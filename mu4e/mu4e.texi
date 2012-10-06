@@ -693,8 +693,8 @@ U            unmark *all* messages
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
-*            deferred mark (decide what to mark for later)
-#            resolve deferred marks
+<insert>     mark for 'something' (decide later)
+#            resolve deferred 'something' marks
 
 x            execute actions for the marked messages
 
@@ -929,8 +929,8 @@ U            unmark *all* messages
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
-SPC          deferred mark (decide what to mark for later)
-*            resolve deferred marks
+<insert>     mark for 'something' (decide later)
+#            resolve deferred 'something' marks
 
 x            execute actions for the marked messages
 
@@ -1644,7 +1644,7 @@ apply to messages:
 @verbatim
 | mark for/as  | keybinding  | description              |
 |--------------+-------------+--------------------------|
-| deferred     | *           | mark now, decide later   |
+| 'something'  | <insert>    | mark now, decide later   |
 | delete       | D, <delete> | delete                   |
 | flag         | +           | mark as 'flagged'        |
 | move         | m           | move to some maildir     |
@@ -1665,11 +1665,14 @@ may slow down things significantly@footnote{this uses an emacs feature called
 @emph{overlays}, which are slow when used a lot in a buffer}. For this reason,
 you can disable this by setting @code{mu4e-headers-show-target} to @code{nil}.
 
-@t{deferred} is a special kind of mark; you can use it to mark some messages,
-and then decide later what mark to use for them. At any time, you can set the
-actual mark with @code{mu4e-mark-resolve-deferred-marks} (@key{#}), or
-@t{mu4e} asks you for it when you execute the marks (@key{x}).
-
+@t{something} is a special kind of mark; you can use it to mark messages for
+'something', and then decide later what the 'something' should
+be@footnote{This kind of 'deferred marking' is similar to the facility in
+@t{midnight commander} (@url{http://www.midnight-commander.org/}) and the
+like, and uses the same key binding (@key{insert}).}  , using @t{M-x
+mu4e-mark-resolve-deferred-marks} (@key{#}). Alternatively, @t{mu4e} will ask
+you when you execute the marks (@key{x}).
+ 
 @node Executing the marks
 @section Executing the marks
 
