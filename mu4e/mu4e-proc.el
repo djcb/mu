@@ -90,13 +90,12 @@ the length (in hex).")
     mu4e~proc-process nil
     mu4e~proc-buf nil))
 
-(defun mu4e~proc-is-running ()
+(defun mu4e~proc-running-p  ()
   "Whether the mu process is running."
   (when (and mu4e~proc-process
 	  (memq (process-status mu4e~proc-process)
 	    '(run open listen connect stop)))
     t))
-
 
 (defsubst mu4e~proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e~proc-buf'. Note: this is a string,
@@ -293,7 +292,7 @@ terminates."
 
 (defsubst mu4e~proc-send-command (frm &rest args)
   "Send as command to the mu server process; start the process if needed."
-  (unless (mu4e~proc-is-running)
+  (unless (mu4e~proc-running-p)
     (mu4e~proc-start))
   (let ((cmd (apply 'format frm args)))
     (mu4e-log 'to-server "%s" cmd)

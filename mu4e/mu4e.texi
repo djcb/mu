@@ -1030,16 +1030,17 @@ configuration, so it is used for images.
 @section Displaying rich-text messages
 
 For displaying messages, @t{mu4e} normally prefers the plain-text version for
-messages consisting of both a plain-text and an html (rich-text) version of
+messages that consist of both a plain-text and an html (rich-text) version of
 its body-text.
 
 If there is only an html-version, or if the plain-text version is too short in
-comparison with the html part, @t{mu4e} tries to convert the html into
-plain-text for display. The default way to do that is to use the @t{emacs}
-built-in @code{html2text} function. However, you can set the variable
-@code{mu4e-html2text-command} to some external program, which is then used
-instead. This program is expected to take html from standard input and write
-plain text in @t{utf-8} encoding on standard output.
+comparison with the html part@footnote{this is for the case where the
+text-part only says that all the content is in the html-part}, @t{mu4e} tries
+to convert the html into plain-text for display. The default way to do that is
+to use the @t{emacs} built-in @code{html2text} function. However, you can set
+the variable @code{mu4e-html2text-command} to some external program, which is
+then used instead. This program is expected to take html from standard input
+and write plain text in @t{utf-8} encoding on standard output.
 
 An obvious choice for this is the program that is actually @emph{called}
 @t{html2text}@footnote{@url{http://www.mbayer.de/html2text/}}, which you can
@@ -2769,6 +2770,8 @@ The user is now presented with:
 @item @code{mu4e-ask-maildir}: ask for a maildir; try one of the
 shortcuts (@code{mu4e-maildir-shortcuts}), or the full set of available
 maildirs.
+@item @code{mu4e-running-p}: return @code{t} if the @t{mu4e} process is
+running, @code{nil} otherwise.
 @item @code{mu4e-log} logs to the @t{mu4e} debugging log if it is enabled; see @code{mu4e-toggle-logging}.
 @item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
 @t{mu4e} smart equivalents of the normal @t{elisp} @code{message},
@@ -2782,8 +2785,8 @@ functions.
 @node How it works
 @appendix How it works
 
-While not necessarily interesting for all users of @t{mu4e}, for some it may
-be interesting to know how @t{mu4e} does its job.
+While perhaps not interesting for all users of @t{mu4e}, some curious souls
+may want to know how @t{mu4e} does its job.
 
 @menu
 * High-level overview::
@@ -2795,7 +2798,7 @@ be interesting to know how @t{mu4e} does its job.
 @node High-level overview
 @section High-level overview
 
-On a high level, we can summarize the structure of the @t{mu4e} system using
+At a high level, we can summarize the structure of the @t{mu4e} system using
 some ascii-art:
 
 @example

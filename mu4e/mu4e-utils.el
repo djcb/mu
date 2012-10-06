@@ -580,17 +580,20 @@ This is used by the completion function in mu4e-compose."
 	  (mu4e-error "%s (%S) does not exist" path var))))))
 
 
+(defun mu4e-running-p ()
+  "Whether mu4e is running -- that is, the server process is live."
+  (mu4e~proc-running-p))
+
 (defun mu4e~start (&optional func)
   "If mu4e is already running, execute function FUNC (if non-nil). Otherwise,
 check various requirements, then start mu4e. When succesful, call
 FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
-  (if (mu4e~proc-is-running)   ;; already running?
+  (if (mu4e-running-p)   ;; already running?
     (when func                 ;; yes! run func if defined
       (funcall func))
     (progn
       ;; no! do some checks, set up pong handler and ping the server
-
       (lexical-let ((func func))
 	(mu4e~check-requirements)
 	;; set up the 'pong' handler func
@@ -635,7 +638,8 @@ FUNC (if non-nil) afterwards."
   (mapcar
     (lambda (buf)
       (with-current-buffer buf
-	(when (member major-mode '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
+	(when (member major-mode
+		'(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
 	  (kill-buffer))))
     (buffer-list)))
 
@@ -667,7 +671,7 @@ into the process buffer."
                                        (read-passwd mu4e~get-mail-ask-password)
                                        "\n"))
            ;; TODO kill process?
-          (error "Get-mail process requires a password but was not called interactively")))
+          (error "Get-mail process requires a password")))
       (when (process-buffer proc)
         (insert msg)))))
 
