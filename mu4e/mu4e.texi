@@ -1393,25 +1393,26 @@ You can also influence the sort order and whether threads are shown or not;
 see @ref{Sort order and threading}.
 
 @menu
-* Queries::
-* Bookmarks::
-* Maildir searches::
-* Other search functionality::
+* Queries::Searching for messages
+* Bookmarks::Remembering queries
+* Maildir searches::Queries for maildirs
+* Other search functionality::Some more tricks
 @end menu
 
 @node Queries
 @section Queries
 
-The queries you can execute are the same ones that @code{mu find}
+@t{mu4e} queries are the same as the ones that @t{mu find}
 understands@footnote{with the caveat that command-line queries are subject to
-the shell's interpretation before @t{mu} sees them}. Please refer to the
-@code{mu-find} and @code{mu-easy} man pages for details and more examples.
+the shell's interpretation before @t{mu} sees them}.  We give some examples
+here, please refer to the @code{mu-find} and @code{mu-easy} man pages for
+details and more examples.
 
 @verbatim
-# get all messages about bananas
+# get all messages about bananas:
 bananas
 
-# get all messages about bananas from john with an attachment
+# get all messages about bananas from John with an attachment:
 from:john flag:attach bananas
 
 # get all messages with subject wombat in June 2009
@@ -1421,8 +1422,8 @@ subject:wombat date:20090601..20090630
 maildir:/projects mime:application/pdf
 
 # get all messages about Rupert in the Sent Items folder
-# note that terms with spaces need quotes
 maildir:"/Sent Items" rupert
+# note: terms with spaces need quoting
 
 # get all important messages which are signed:
 flag:signed prio:high
@@ -1430,32 +1431,33 @@ flag:signed prio:high
 # get all messages from Jim without an attachment:
 from:jim AND NOT flag:attach
 
-# get all unread messages where the subject mentions Ångström:
+# get all unread messages where the subject mentions Angstrom:
+# (search is case-insensitive and accent-insensitive)
 subject:angstrom flag:unread
 
-# get all unread messages between Mar-2002 and Aug-2003 about some bird
+# get all unread messages between Mar-2002 and Aug-2003 about some bird:
 date:20020301..20030831 nightingale flag:unread
 
-# get today's messages
+# get today's messages:
 date:today..now
 
-# get all messages we got in the last two weeks regarding emacs
+# get all messages we got in the last two weeks regarding emacs:
 date:2w..now emacs
 
-# get mails with a subject soccer, Socrates, society...
-# note: the '*' wildcard can only appear as the term's rightmost character
+# get mails with a subject soccer, Socrates, society...:
 subject:soc*
-
-# get all mails with attachment with filenames starting with 'pic'
 # note: the '*' wildcard can only appear as the term's rightmost character
+
+# get all mails with attachment with filenames starting with 'pic':
 file:pic*
+# note: the '*' wildcard can only appear as the term's rightmost character
 
 # get all messages with PDF attachments:
 mime:application/pdf
 
 # get all messages with image attachments:
-# note: the '*' wildcard can only appear as the term's rightmost character
 mime:image/*
+# note: the '*' wildcard can only appear as the term's rightmost character
 @end verbatim
 
 @node Bookmarks
@@ -1718,7 +1720,7 @@ Custom mark functions should be appended to the list
 first character of this string determines its shortcut, so these should be
 unique. If necessary, simply prefix the name with a unique character.
 @item a predicate function taking two arguments @t{msg} and @t{param}. @t{msg} is the message
-plist (see @ref{The message s-expression} and @t{param} is a parameter
+plist (see @ref{Message functions} and @t{param} is a parameter
 provided by the third of the marker elements (see the next item). The
 predicate function should return non-nil if the message matches.
 @item (optionally) a function that is evaluated once, and the result is passed as a
@@ -1726,7 +1728,7 @@ parameter to the predicate function. This is useful when user-input is needed.
 @end itemize
 
 So, let's look at an example: suppose we want to match all messages that have
-more than @emph{n} recipients. We could do it like this:
+more than @emph{n} recipients -- we could do this with the following recipe:
 
 @lisp
 (add-to-list 'mu4e-headers-custom-markers
@@ -1738,24 +1740,26 @@ more than @emph{n} recipients. We could do it like this:
         (read-number "Match messages with more recipients than: "))) t)
 @end lisp
 
-After evaluating this, pressing @key{&} lets you choose the custom marker
-function, and ask you for the parameters.
-
+After evaluating this expression, you can use it by pressing @key{&} in the
+headers buffer to select a custom marker function, and then @key{M} to choose
+this particular one (@t{M} because it is the first character of the
+description).
+ 
 As you can see, it's not very hard to define simple functions to match
-messages. There are some more examples in the defaults for
-`mu4e-headers-custom-markers'; see @file{mu4e-headers.el}.
-
+messages. There are more examples in the defaults for
+@code{mu4e-headers-custom-markers}; see @file{mu4e-headers.el} and see
+@ref{Extending mu4e} for general information about writing your own functions.
 
 @node Dynamic folders
 @chapter Dynamic folders
 
-@ref{Folders} showed how to set the standard folders:
+@ref{Folders} explained how we can set @t{mu4e}'s special folders:
 @lisp
-  (setq
-    mu4e-sent-folder   "/sent"       ;; folder for sent messages
-    mu4e-drafts-folder "/drafts"     ;; unfinished messages
-    mu4e-trash-folder  "/trash"      ;; trashed messages
-    mu4e-refile-folder "/archive")   ;; saved messages
+(setq
+  mu4e-sent-folder   "/sent"       ;; sent messages
+  mu4e-drafts-folder "/drafts"     ;; unfinished messages
+  mu4e-trash-folder  "/trash"      ;; trashed messages
+  mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
 In some cases, having such static folders may not suffice - you may want to
@@ -1766,22 +1770,23 @@ For this, instead of setting the standard folders to a string, you can set
 them to be a @emph{function} that takes a message as parameter, and returns
 the desired folder name.
 
-This chapter shows how to do that.
+This chapter shows you how to do that. For a more general discussion of how to
+extend @t{mu4e} and writing your own functions, see @ref{Extending mu4e}.
 
 @menu
-* Smart refiling::
-* Other dynamic folders::
+* Smart refiling:: Automatically choose the target folder
+* Other dynamic folders:: Flexible sent, trash, drafts
 @end menu
 
 
 @node Smart refiling
 @section Smart refiling
 
-It is sometimes convenient to move messages to some specific folder, based on
-some of the message details -- @emph{refiling}(@key{r}).
+It is sometimes convenient to move messages to a specific folder, based on
+some of the message properties -- @emph{refiling}(@key{r}).
 
-We can make this 'smart' with a dynamic refiling folder - each message
-automatically figures out the right folder to move to. For example, you could
+We can make this 'smart' with a dynamic refiling folder, and a little bit of
+code to determine the target folder for each message. For example, you could
 put something like the following in your setup:
 
 @lisp
@@ -1826,11 +1831,11 @@ matches the regular expression.
 @node Other dynamic folders
 @section Other dynamic folders
 
-Using the same mechanism, you can set special sent-, trash-, and draft-folders
-for messages. The message-parameter you receive for sent and draft folder is
-the @emph{original} message, that is, the message you reply to, forward. If
-there is no such message (for example when composing a brand new message) the
-message parameter is @t{nil}.
+Using the same mechanism, you can set special sent-, trash-, and
+drafts-folders for messages. The message-parameter you receive for the sent
+and drafts folder is the @emph{original} message, that is, the message you
+reply to, forward. If there is no such message (for example when composing a
+brand new message) the message parameter is @t{nil}.
 
 Let's look at an example of this. Suppose you want a different trash folder
 for work-email. You can do so with something like the following:
@@ -1868,12 +1873,14 @@ You can invoke the actions with @key{a} for actions on messages, and @key{A}
 for actions on attachments. In the following, we'll gives some examples of
 defining actions.
 
+For some general notes on extending @t{mu4e} and writing your own functions,
+see @ref{Extending mu4e}.
+
 @menu
 * Defining actions::
 * Adding an action in the headers view::
 * Adding an action in the message view::
 * Adding an attachment action::
-* What functions are available?::
 * More example actions::
 @end menu
 
@@ -1916,7 +1923,8 @@ Let's take a at some simple examples.
 @section Adding an action in the headers view
 
 Suppose we would like to inspect the number of recipients for a message in the
-@ref{Headers view}.  We could define the following function in our configuration:
+@ref{Headers view}.  We could define the following function in our
+configuration:
 
 @lisp
 (defun show-number-of-recipients (msg)
@@ -1967,22 +1975,7 @@ The following counts the number of lines in an attachment, and define
 (add-to-list 'mu4e-view-attachment-actions
    '("ncount lines" . count-lines-in-attachment) t)
 @end lisp
-
-@node What functions are available?
-@section What functions are available?
-
-@t{elisp} does not have a module-system, so it can be hard to see what
-functions are internal, and which are usable for others as well.
-
-To help a bit with this, all functions and variables in @t{mu4e} marked for
-@emph{internal} use have the prefix @t{mu4e~}, while all the public ones use
-@t{mu4e-}. The @t{~} was chosen because its ascii-code is after all the
-letters, so they appear only at the end of completion buffers and the like.
-
-Functions that start with @t{mu4e-view-} and @t{mu4e-headers-} should be
-called only from that particular context (the message view and the headers
-view, respectively).
-
+ 
 @node More example actions
 @section More example actions
 
@@ -1990,10 +1983,7 @@ view, respectively).
 source distribution (see @key{C-h f mu4e-action-TAB}). For example, for
 viewing messages in an external web browser, or listening to a message's
 body-text using text-to-speech.
-
-If you have come up with any interesting actions that may be useful for
-others, you are invited to contribute those.
-
+ 
 @node Interaction with other tools
 @appendix Interaction with other tools
 
@@ -2696,13 +2686,22 @@ menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @node Extending mu4e
 @appendix Extending mu4e
 
-@t{mu4e} is designed to be easily extendible - that is, write your own pieces
-of emacs-lisp to make @t{mu4e} is a specific way. Here, we provide some notes
-/ tips for doing so.
+@t{mu4e} is designed to be easily extendible - that is, write your own
+emacs-lisp to make @t{mu4e} behave ins a specific way. Here, we provide some
+guidelines / tips for doing so.
+
+The typical places for extending @t{mu4e} are:
+@itemize
+@item writing your own mark functions: see @ref{Custom mark functions}
+@item defining @emph{actions} for headers, messages and attachments: see
+@ref{Actions}
+@item setting up dynamic folders: see @ref{Dynamic folders}
+@end itemize
+
 
 @menu
 * What functions are available::
-* Message functions::
+* Message functions:: 
 * Utility functions::
 @end menu
 
@@ -2711,6 +2710,9 @@ of emacs-lisp to make @t{mu4e} is a specific way. Here, we provide some notes
 
 @node What functions are available
 @section What functions are (not) available?
+
+@t{elisp} does not have a module-system, so it can be hard to see what
+functions are internal, and which are usable for others as well.
 
 The whole of @t{mu4e} consists of hundreds of elisp functions. However, many
 of those (more than 50%) are for @emph{internal} use; you can recognize them
