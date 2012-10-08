@@ -237,7 +237,14 @@ replace them with a _real_ mark (ask the user which one)."
 		(mu4e-mark-set (car markpair) (cdr markpair)))))))
       mu4e~mark-map)))
 
- 
+
+(defun mu4e~mark-check-target (target)
+  "Check if the target exists if not, offer to create it."
+  (let ((fulltarget (concat mu4e-maildir target)))
+    (if (not (mu4e-create-maildir-maybe fulltarget))
+      (mu4e-error "Target dir %s does not exist " fulltarget)
+      target)))
+
 
 (defun mu4e-mark-execute-all (&optional no-confirmation)
   "Execute the actions for all marked messages in this
@@ -262,20 +269,16 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 		  marknum (if (> marknum 1) "s" ""))))
 	(maphash
 	  (lambda (docid val)
-	    (let* ((mark (car val)) (target (cdr val))
-		    (fulltarget (concat mu4e-maildir target)))
-	      ;; check if the target exists; if not, offer to create it
-	      (unless (mu4e-create-maildir-maybe fulltarget)
-		(mu4e-error "Target dir %s does not exist" fulltarget))
+	    (let ((mark (car val)) (target (cdr val)))
 	      ;; note: whenever you do something with the message,
 	      ;; it looses its N (new) flag
 	      (case mark
-		(refile (mu4e~proc-move docid target "-N"))
+		(refile  (mu4e~proc-move docid (mu4e~mark-check-target target) "-N"))
 		(delete  (mu4e~proc-remove docid))
 		(flag    (mu4e~proc-move docid nil    "+F-u-N"))
-		(move    (mu4e~proc-move docid target "-N"))
+		(move    (mu4e~proc-move docid (mu4e~mark-check-target target) "-N"))
 		(read    (mu4e~proc-move docid nil    "+S-u-N"))
-		(trash   (mu4e~proc-move docid target "+T-N"))
+		(trash   (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N"))
 		(unflag  (mu4e~proc-move docid nil    "-F-N"))
 		(unread  (mu4e~proc-move docid nil    "-S+u-N"))
 		(otherwise (mu4e-error "Unrecognized mark %S" mark)))))
