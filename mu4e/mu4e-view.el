@@ -209,7 +209,6 @@ marking if it still had that."
 	      (mu4e~view-embedded-winbuf)
 	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
-      (mu4e-view-mode)
       (let ((inhibit-read-only t))
 	(setq ;; buffer local
 	  mu4e~view-msg msg
@@ -227,6 +226,7 @@ marking if it still had that."
 	  (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf))
 
+	(mu4e-view-mode)
 	(unless (or refresh embedded)
 	  ;; no use in trying to set flags again, or when it's an embedded
 	  ;; message
