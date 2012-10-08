@@ -361,6 +361,8 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 `mu4e-error-func', respectively."
   (unless (or maildir flags)
     (mu4e-error "At least one of maildir and flags must be specified"))
+  (unless (or (not maildir) (file-exists-p (concat mu4e-maildir "/" maildir "/")))
+    (mu4e-error "Target dir does not exist"))
   (let* ((idparam (mu4e--docid-msgid-param docid-or-msgid))
 	  (flagstr
 	    (when flags

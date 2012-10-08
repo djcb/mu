@@ -237,6 +237,8 @@ replace them with a _real_ mark (ask the user which one)."
 		(mu4e-mark-set (car markpair) (cdr markpair)))))))
       mu4e~mark-map)))
 
+ 
+
 (defun mu4e-mark-execute-all (&optional no-confirmation)
   "Execute the actions for all marked messages in this
 buffer. After the actions have been executed succesfully, the
@@ -260,7 +262,11 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 		  marknum (if (> marknum 1) "s" ""))))
 	(maphash
 	  (lambda (docid val)
-	    (let ((mark (car val)) (target (cdr val)))
+	    (let* ((mark (car val)) (target (cdr val))
+		    (fulltarget (concat mu4e-maildir target)))
+	      ;; check if the target exists; if not, offer to create it
+	      (unless (mu4e-create-maildir-maybe fulltarget)
+		(mu4e-error "Target dir %s does not exist" fulltarget))
 	      ;; note: whenever you do something with the message,
 	      ;; it looses its N (new) flag
 	      (case mark

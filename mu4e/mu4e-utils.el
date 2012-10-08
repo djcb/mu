@@ -127,8 +127,9 @@ see its docstring)."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-create-maildir-maybe (dir)
-  "Offer to create DIR if it does not exist yet. Return t if the
-dir already existed, or has been created, nil otherwise."
+  "Offer to create maildir DIR (full filesystem path) if it does
+not exist yet. Return t if the dir already existed, or has been
+created, nil otherwise."
   (if (and (file-exists-p dir) (not (file-directory-p dir)))
     (mu4e-error "%s exists, but is not a directory." dir))
   (cond
