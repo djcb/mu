@@ -226,11 +226,12 @@ marking if it still had that."
 	  (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf))
 
-	(mu4e-view-mode)
 	(unless (or refresh embedded)
 	  ;; no use in trying to set flags again, or when it's an embedded
 	  ;; message
-	  (mu4e~view-mark-as-read-maybe))))))
+	  (mu4e~view-mark-as-read-maybe))
+
+	(mu4e-view-mode)))))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -664,12 +665,12 @@ at POINT, or if nil, at (point)."
   "Clear the current message's New/Unread status and set it to
 Seen; if the message is not New/Unread, do nothing."
   (when mu4e~view-msg
-    (let ((flags (plist-get mu4e~view-msg :flags))
-	   (docid (plist-get mu4e~view-msg :docid)))
-      (when docid ;; attached (embedded) messages don't have docids; leave them alone
-	;; is it a new message
-	(when (or (member 'unread flags) (member 'new flags))
-	  (mu4e~proc-move docid nil "+S-u-N"))))))
+    (let ((flags (mu4e-message-field mu4e~view-msg :flags))
+	   (docid (mu4e-message-field mu4e~view-msg :docid)))
+      ;; attached (embedded) messages don't have docids; leave them alone
+      ;; is it a new message
+      (when (and docid (or (member 'unread flags) (member 'new flags))) 
+	(mu4e~proc-move docid nil "+S-u-N")))))
 
 (defun mu4e~view-fontify-cited ()
   "Colorize message content based on the citation level."
