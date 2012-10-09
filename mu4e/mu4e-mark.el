@@ -52,7 +52,6 @@ particularly fast).")
 (defvar mu4e~mark-map nil
   "Map (hash) of docid->markinfo; when a message is marked, the
 information is added here.
-
 markinfo is a cons cell consisting of the following:
 \(mark . target)
 where
@@ -75,8 +74,7 @@ where
 
 (defun mu4e~mark-initialize ()
   "Initialize the marks subsystem."
-  (make-local-variable 'mu4e~mark-map)
-  (setq mu4e~mark-map (make-hash-table :size 16)))
+  (set (make-local-variable 'mu4e~mark-map) (make-hash-table)))
 
 (defun mu4e~mark-clear ()
   "Clear the marks subsystem."
@@ -116,11 +114,11 @@ The following marks are available, and the corresponding props:
 	      (delete    '("D" . "delete"))
 	      (flag      '("+" . "flag"))
 	      (move      `("m" . ,target))
-	      (read      '("r" . "read"))
+	      (read      '("!" . "read"))
 	      (trash     `("d" . ,target))
 	      (unflag    '("-" . "unflag"))
 	      (unmark    '(" " . nil))
-	      (unread    '("o" . "unread")) 
+	      (unread    '("?" . "unread")) 
 	      (otherwise (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (car markcell))
 	  (target (cdr markcell)))
@@ -183,12 +181,12 @@ headers in the region. Optionally, provide TARGET (for moves)."
       (mu4e-mark-at-point mark (funcall get-target target))
       ;; mark all messages in the region.
       (save-excursion
-	(let ((b (region-beginning)) (e (region-end)))
-	  (goto-char b)
-	  (while (<= (line-beginning-position) e)
+	(let ((cant-go-further) (eor (region-end)))
+	  (goto-char (region-beginning)) 
+	  (while (and (<= (point) eor) (not cant-go-further))
 	    (mu4e-mark-at-point mark (funcall get-target target))
-	    (forward-line 1)))))))
-      
+	    (setq cant-go-further (not (mu4e-headers-next)))))))))
+       
 (defun mu4e-mark-restore (docid)
   "Restore the visual mark for the message with DOCID."
   (let ((markcell (gethash docid mu4e~mark-map)))
