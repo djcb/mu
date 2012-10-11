@@ -404,25 +404,22 @@ A simple setup could look something like:
 
 It is possible to get notifications when the indexing process does any updates
 - for example when receiving new mail. See @code{mu4e-index-updated-hook} and
-the tips on its use in the @ref{FAQ - Frequently Anticipated Questions}.
-
-Now that we have setup
-The next step is telling @t{mu4e} how we want to send mail.
-
+some tips on its usage in the @ref{FAQ - Frequently Anticipated Questions}.
+ 
 @node Sending mail
 @section Sending mail
 
-@t{mu4e} re-uses Gnu's @code{message-mode} (@inforef{Top,,message}) for writing
-mail and inherits the setup for @emph{sending} mail as well.
+@t{mu4e} re-uses Gnu's @code{message-mode} (@inforef{Top,,message}) for
+writing mail and inherits the setup for sending mail as well.
 
 For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
 (@inforef{Top,,smtpmail}). This package support many different ways to send
 mail; please refer to its documentation for the details.
 
-Here, we only provide some simple examples - for more, @ref{Example
+Here, we only provide some simple examples - for more, see @ref{Example
 configurations}.
 
-A very minimal setup could look something like:
+A very minimal setup:
 
 @lisp
 ;; tell message-mode how to send mail
@@ -437,9 +434,9 @@ uses, many settings for those also apply to @t{mu4e}.
 
 @subsection Dealing with sent messages
 
-By default, @t{mu4e} puts a copy of any messages you sent in the folder you
-set for @option{mu4e-sent-folder}.  In some cases, this may not be what you want
-- for example, when using Gmail-over-@abbr{IMAP}, this interferes with Gmail's
+By default, @t{mu4e} puts a copy of messages you sent in the folder determined
+by @option{mu4e-sent-folder}.  In some cases, this may not be what you want -
+for example, when using Gmail-over-@abbr{IMAP}, this interferes with Gmail's
 handling of the sent messages folder, and you may end up with duplicate
 messages.
 
@@ -450,7 +447,7 @@ folder. Other possible values are the symbols @code{trash} (the sent message
 is moved to the trash-folder (@option{mu4e-trash-folder}), and @code{delete} to
 simply discard the sent message altogether (so GMail can deal with it).
 
-For Gmail-IMAP, you could add the following to your settings:
+For Gmail-over-@abbr{IMAP}, you could add the following to your settings:
 
 @verbatim
 ;; don't save messages to Sent Messages, Gmail/IMAP takes care of this
