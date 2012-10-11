@@ -1,5 +1,41 @@
 * NEWS (user visible changes)
 
+** Release 0.9.9 <unreleased>
+
+*** mu4e
+    - view: address can be toggled long/short, compose message
+    - sanitize opening urls (mouse-1, and not too eager)
+    - tooltips for header labels, flags
+    - add sort buttons to header-labels
+    - support signing / decryption of messages
+    - improve address-autocompletion (e.g., ensure it's case-insensitive)
+    - much faster when there are many maildirs
+    - improved line wrapping  
+    - better handle attached messages
+    - improved URL-matching
+    - improved messages to user (mu4e-(warn|error|message))
+    - add refiling functionality
+    - support fancy non-ascii in the UI
+    - dynamic folders (i.e.., allow mu4e-(sent|draft|trash|refile)-folder) to
+      be a function
+    - dynamic attachment download folder (can be a function now)
+    - much improved manual
+
+*** mu
+    - remove --summary (use --summary-len instead)
+    - add --after for mu find, to limit to messages after T
+    - add new command `mu verify', to verify signatures
+    - fix iso-2022-jp decoding (and other 7-bit clean non-ascii)
+    - add support for X-keywords
+    - performance improvements for threaded display (~ 25% for 23K msgs)
+    - mu improved user-help (and the 'mu help' command)
+    - toys/mug2 replaces toys/mug
+
+*** mu-guile
+    - automated tests
+    - add mu:timestamp, mu:count
+    - handle db reopenings in the background
+
 ** Release 0.9.8.5 <2012-07-01>
 
 *** mu4e

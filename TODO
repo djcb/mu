@@ -70,7 +70,6 @@ f#+STARTUP: showall
   - add 'mu verify'
     - automated tests
     - handle verbose/quiet/normal output 'mu verify'
-    - handle pkcs signatures
     - check gmime 2.4 does not break
   - hook up mu4e with 'mu verify'
   - add 'help' command
