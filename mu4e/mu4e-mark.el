@@ -118,7 +118,7 @@ The following marks are available, and the corresponding props:
 	      (trash     `("d" . ,target))
 	      (unflag    '("-" . "unflag"))
 	      (unmark    '(" " . nil))
-	      (unread    '("?" . "unread")) 
+	      (unread    '("?" . "unread"))
 	      (otherwise (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (car markcell))
 	  (target (cdr markcell)))
@@ -153,7 +153,7 @@ The following marks are available, and the corresponding props:
 the region, for moving to maildir TARGET. If target is not
 provided, function asks for it."
   (interactive)
-  (mu4e-message-at-point) ;; raises error if there is none 
+;;  (mu4e-message-at-point) ;; raises error if there is none
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
 	  (target (if (string= (substring target 0 1) "/")
 		    target
@@ -165,28 +165,29 @@ provided, function asks for it."
 	      (mu4e~proc-mkdir fulltarget)))
       target)))
 
+(defun mu4e~mark-get-target (mark &optional target)
+  "Get the target for MARK, if it is a mark that has a target;
+otherwise return nil."
+  (case mark
+    (refile (mu4e-get-refile-folder (mu4e-message-at-point)))
+    (move   (mu4e~mark-get-move-target target))
+    (trash  (mu4e-get-trash-folder (mu4e-message-at-point)))))
+
 
 (defun mu4e-mark-set (mark &optional target)
   "Mark the header at point, or, if region is active, mark all
 headers in the region. Optionally, provide TARGET (for moves)."
-  (let ((get-target
-	  (lambda (target)
-	    (or target ;; ask or check the target if it's a move
-	      (case mark
-		(refile   (mu4e-get-refile-folder (mu4e-message-at-point)))
-		(move     (mu4e~mark-get-move-target target))
-		(trash    (mu4e-get-trash-folder (mu4e-message-at-point)))))))) 
-    (if (not (use-region-p))
-      ;; single message
-      (mu4e-mark-at-point mark (funcall get-target target))
-      ;; mark all messages in the region.
-      (save-excursion
-	(let ((cant-go-further) (eor (region-end)))
-	  (goto-char (region-beginning)) 
-	  (while (and (<= (point) eor) (not cant-go-further))
-	    (mu4e-mark-at-point mark (funcall get-target target))
-	    (setq cant-go-further (not (mu4e-headers-next)))))))))
-       
+  (if (not (use-region-p))
+    ;; single message
+    (mu4e-mark-at-point mark (or target (mu4e~mark-get-target mark target)))
+    ;; mark all messages in the region.
+    (save-excursion
+      (let ((cant-go-further) (eor (region-end)))
+	(goto-char (region-beginning))
+	(while (and (<= (point) eor) (not cant-go-further))
+	  (mu4e-mark-at-point mark (or target (mu4e~mark-get-target mark target)))
+	  (setq cant-go-further (not (mu4e-headers-next))))))))
+
 (defun mu4e-mark-restore (docid)
   "Restore the visual mark for the message with DOCID."
   (let ((markcell (gethash docid mu4e~mark-map)))
@@ -198,7 +199,7 @@ headers in the region. Optionally, provide TARGET (for moves)."
 (defun mu4e~mark-get-markpair (prompt &optional allow-something)
   "Ask user for a mark; return (MARK . TARGET). If ALLOW-SOMETHING
 is non-nil, allow the 'something' pseudo mark as well."
-  (let* ((marks '( ("refile"   . refile)
+  (let* ((marks '( ("refile"    . refile)
 		   ("move"	. move)
 		   ("dtrash"	. trash)
 		   ("Delete"	. delete)
@@ -212,9 +213,7 @@ is non-nil, allow the 'something' pseudo mark as well."
 	      (append marks (list '("something" . something)))
 	      marks))
 	  (mark (mu4e-read-option prompt marks))
-	  (target
-	    (when (eq mark 'move)
-	      (mu4e-ask-maildir-check-exists "Move message to: "))))
+	  (target (mu4e~mark-get-target mark)))
     (cons mark target)))
 
 
@@ -297,7 +296,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
     mu4e~mark-map)
   ;; in any case, clear the marks map
   (mu4e~mark-clear))
- 
+
 (defun mu4e-mark-docid-marked-p (docid)
   "Is the given docid marked?"
   (when (gethash docid mu4e~mark-map) t))
