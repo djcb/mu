@@ -674,7 +674,7 @@ adding a lot of new headers looks really choppy."
 at the beginning of lines to identify headers."
   (propertize (format "%s%d%s"
 		mu4e~headers-docid-pre docid mu4e~headers-docid-post)
-    'docid docid 'invisible t))
+    'docid docid 'invisible t));; 
 
 (defsubst mu4e~headers-docid-at-point (&optional point)
   "Get the docid for the header at POINT, or at current (point) if

@@ -100,27 +100,7 @@ there is no message at point."
     (if msg
       msg
       (unless noerror (mu4e-warn "No message at point")))))
-
-
-;; (defun mu4e-message-for-each (msg field func)
-;;   "Call FUNC for each element in the field FIELD (which must be a
-;; lists-type field). FUNC takes the element as its arg."
-;;   (let ((lst (mu4e-message-field msg field)))
-;;     (unless (listp lst)
-;;       (error "Not a list type"))
-;;     (dolist (elm (mu4e-message-field msg field))
-;;       (funcall func elm))))
-
-;; (defun mu4e-message-for-each-contact-field (msg field func)
-;;   "Call FUNC for each element of contact
-;; FIELD (:to, :cc, :bcc, :from). FUNC takes two args, strings
-;; name (possibly nil) and an email address."
-;;   (unless (member field '(:to :from :bcc :cc))
-;;     (error "Not a contacts field"))
-;;   (mu4e-message-for-each msg field
-;;     (lambda (contact)
-;;       (funcall func (car contact) (cdr contact)))))
-
+ 
 (defun mu4e-message-body-text (msg)
   "Get the body in text form for this message, which is either :body-txt,
 or if not available, :body-html converted to text. By default, it
