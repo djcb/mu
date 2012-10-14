@@ -1,4 +1,4 @@
-f#+STARTUP: showall
+#+STARTUP: showall
 
 * TODO (fixes, ideas, etc.)
 
@@ -152,3 +152,4 @@ f#+STARTUP: showall
 # Local Variables:
 # mode: org
 # End:
+   

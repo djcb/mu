@@ -1,6 +1,8 @@
+#+STARTUP:showall
+
 * NEWS (user visible changes)
 
-** Release 0.9.9 <unreleased>
+** Release 0.9.9 <2012-10-14>
 
 *** mu4e
     - view: address can be toggled long/short, compose message
@@ -35,6 +37,13 @@
     - automated tests
     - add mu:timestamp, mu:count
     - handle db reopenings in the background
+
+
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
+
 
 ** Release 0.9.8.5 <2012-07-01>
 
