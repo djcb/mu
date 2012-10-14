@@ -1862,7 +1862,7 @@ Let's look at an example. Suppose you want a different trash folder for
 work-email. You can achieve this with something like:
 
 @lisp
- (setq mu4e-sent-folder
+ (setq mu4e-trash-folder
     (lambda (msg)
        ;; the 'and msg' is to handle the case where msg is nil
        (if (and msg 
