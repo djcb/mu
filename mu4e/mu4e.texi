@@ -238,7 +238,7 @@ OS), the below at least be helpful in identifying the packages to install.
 
 We provide some instructions for Debian, Ubuntu and Fedora; if those do not
 apply to you, you can follow either @ref{Building from a release tarball} or
-@ref{Building from git}.
+@ref{Building from git}. 
 
 @subsection Dependencies for Debian/Ubuntu
 
@@ -284,7 +284,8 @@ installation follows the normal steps:
 @example
 $ tar xvfz mu-<version>.tar.gz  # use the specific version
 $ cd mu-<version>
-$./configure && make
+# On the BSDs: use gmake instead of make
+$ ./configure && make
 $ sudo make install
 @end example
 
@@ -303,6 +304,7 @@ $ git clone git://github.com/djcb/mu.git
 
 $ cd mu
 $ autoreconf -i && ./configure && make
+# On the BSDs: use gmake instead of make
 $ sudo make install
 @end example
 
@@ -314,7 +316,14 @@ different versions} on your system, and be available from the command line
 in @command{emacs}.
 
 You may need to restart @command{emacs}, so it can find @t{mu4e} in its
-@code{load-path}.
+@code{load-path}. If, even after restarting, @command{emacs} cannot find
+@t{mu4e}, you may need to add to your @code{load-path} explicitly; check where
+@t{mu4e} is installed, and add something like the following to your
+configuration before trying again:
+@lisp
+;; the exact path may differ -- check it
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
+@end lisp
 
 @subsection mu4e and emacs customization
 
