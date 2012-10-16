@@ -835,10 +835,10 @@ header."
 	(when msg
 	  (funcall func msg))))))
 
- (defvar mu4e~headers-regexp-hist nil
+(defvar mu4e~headers-regexp-hist nil
   "History list of regexps used.")
 
- (defun mu4e~headers-mark-for-each-if (markpair mark-pred &optional param)
+(defun mu4e~headers-mark-for-each-if (markpair mark-pred &optional param)
   "Mark all headers for with predicate function MARK-PRED return
 non-nil with MARKPAIR. MARK-PRED is function that takes two
 arguments, MSG (the message at point) and PARAM (a user-specified
@@ -1005,7 +1005,6 @@ history stack."
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr
       ignore-history)))
-
 
 (defun mu4e-headers-search-edit ()
   "Edit the last search expression."

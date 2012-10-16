@@ -344,15 +344,16 @@ one-file-per-message. If you are already using a maildir, you are lucky. If
 not, some setup is required:
 
 @itemize
-@item @emph{Using an external IMAP or POP server} - if you are using an @abbr{IMAP} or @abbr{POP} server, you can use tools like
-@t{getmail}, @t{fetchmail}, @t{offlineimap} or @t{isync} to download your
-messages into a maildir (@file{~/Maildir}, often). Because it is such a common
-case, there is a full example of setting @t{mu4e} up with @t{offlineimap} and
-Gmail; @pxref{Gmail configuration}.
-@item @emph{Using a local mail server} - if you are using a local mail-server (such as @t{postfix} or @t{qmail}),
-you can teach them to deliver into a maildir as well, maybe in combination
-with @t{procmail}. A bit of googling should be able to provide you with the
-details.
+@item @emph{Using an external IMAP or POP server} - if you are using an
+@abbr{IMAP} or @abbr{POP} server, you can use tools like @t{getmail},
+@t{fetchmail}, @t{offlineimap} or @t{isync} to download your messages into a
+maildir (@file{~/Maildir}, often). Because it is such a common case, there is
+a full example of setting @t{mu4e} up with @t{offlineimap} and Gmail;
+@pxref{Gmail configuration}.
+@item @emph{Using a local mail server} - if you are using a local mail-server 
+(such as @t{postfix} or @t{qmail}), you can teach them to deliver into a
+maildir as well, maybe in combination with @t{procmail}. A bit of googling
+should be able to provide you with the details.
 @end itemize
 
 @node Indexing your messages
@@ -705,10 +706,10 @@ in the example above). To determine whether a message was sent by you,
 @t{mu4e} uses the variable @code{mu4e-user-mail-address-regexp}, a regular
 expression matching all your e-mail addresses.
 @item The letters in the 'Flags' field correspond to the following: D=@emph{draft},
-F=@emph{flagged}, N=@emph{new}, P=@emph{passed} (i.e.., forwarded),
-R=@emph{replied}, S=@emph{seen}, T=@emph{trashed}, a=@emph{has-attachment},
-x=@emph{encrypted}, s=@emph{signed}, u=@emph{unread}. The tooltip for this
-field also contains this information.
+F=@emph{flagged} (i.e., 'starred'), N=@emph{new}, P=@emph{passed} (i.e.,
+forwarded), R=@emph{replied}, S=@emph{seen}, T=@emph{trashed},
+a=@emph{has-attachment}, x=@emph{encrypted}, s=@emph{signed},
+u=@emph{unread}. The tooltip for this field also contains this information.
 @item You can customize the date format with the variable
 @t{mu4e-headers-date-format}
 @item The subject field also indicates the discussion threads @footnote{using
@@ -1111,9 +1112,10 @@ installing that, you can tell @t{mu4e} to use it with something like:
 @section Crypto
 
 The @t{mu4e} message view supports@footnote{Crypto-support in @t{mu4e}
-requires @t{mu} to have been build with crypto-support; see the @ref{FAQ}} decryption of encrypted messages, as well
-as verification of signatures. For signing/encrypting messages your outgoing
-messages, see @ref{Signing and encrypting}.
+requires @t{mu} to have been build with crypto-support; see the @ref{FAQ}}
+decryption of encrypted messages, as well as verification of signatures. For
+signing/encrypting messages your outgoing messages, see @ref{Signing and
+encrypting}.
 
 Currently, only PGP/MIME is supported; PGP-inline and S/MIME are not.
 
@@ -1678,7 +1680,7 @@ apply to messages:
  --------------+-------------+--------------------------
   'something'  | <insert>    | mark now, decide later   
   delete       | D, <delete> | delete                   
-  flag         | +           | mark as 'flagged'        
+  flag         | +           | mark as 'flagged' (``starred'')        
   move         | m           | move to some maildir     
   read         | !           | mark as read             
   refile       | r           | mark for refiling        
@@ -1747,10 +1749,11 @@ Custom mark functions are to be appended to the list
 @item The name of the marker - a short string describing this marker. The
 first character of this string determines its shortcut, so these should be
 unique. If necessary, simply prefix the name with a unique character.
-@item a predicate function, taking two arguments @var{msg} and @var{param}. @var{msg} is the message
-plist (see @ref{Message functions} and @var{param} is a parameter provided by
-the third of the marker elements (see the next item). The predicate function
-should return non-@t{nil} if the message matches.
+@item a predicate function, taking two arguments @var{msg} and @var{param}. 
+@var{msg} is the message plist (see @ref{Message functions} and @var{param} is
+a parameter provided by the third of the marker elements (see the next
+item). The predicate function should return non-@t{nil} if the message
+matches.
 @item (optionally) a function that is evaluated once, and the result is passed as a
 parameter to the predicate function. This is useful when user-input is needed.
 @end enumerate
@@ -2812,12 +2815,13 @@ of cited parts with @key{h}. If you want to hide parts automatically, call
 @code{mu4e-view-toggle-hide-cited} in your @code{mu4e-view-mode-hook}.
 @item @emph{How can I perform custom actions on messages and attachments?} See
 @ref{Actions}.
-@item @emph{Does @t{mu4e} support crypto (i.e., decrypting messages and verifying signatures)?}
-Yes -- if @t{mu} was built with @t{GMime} 2.6 or later, it is possible to do
-both (note, only PGP/MIME is supported). In the @ref{Main view} the support is
-indicated by a big letter @t{C} on the right hand side of the @t{mu4e}
-version. See @ref{Decryption} and @ref{Verifying signatures}. For encryption
-and signing messages, see the @ref{Writing messages}.
+@item @emph{Does @t{mu4e} support crypto (i.e., decrypting messages and
+verifying signatures)?}  Yes -- if @t{mu} was built with @t{GMime} 2.6 or
+later, it is possible to do both (note, only PGP/MIME is supported). In the
+@ref{Main view} the support is indicated by a big letter @t{C} on the right
+hand side of the @t{mu4e} version. See @ref{Decryption} and @ref{Verifying
+signatures}. For encryption and signing messages, see the @ref{Writing
+messages}.
 @end enumerate
 
 @node Writing messages
@@ -2914,8 +2918,10 @@ some ascii-art:
 
 In words:
 @itemize
-@item Your e-mail messages are stored in a Maildir-directory (typically, @file{~/Maildir} and its subdirectories), and new mail comes in using tools
-like @t{fetchmail}, @t{offlineimap}, or through a local mail server.
+@item Your e-mail messages are stored in a Maildir-directory 
+(typically, @file{~/Maildir} and its subdirectories), and new mail comes in
+using tools like @t{fetchmail}, @t{offlineimap}, or through a local mail
+server.
 @item @t{mu} indexes these messages periodically, so you can quickly search for
 them. @t{mu} can run in a special @t{server}-mode, where it provides services
  to client software.  
