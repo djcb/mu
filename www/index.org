@@ -17,8 +17,8 @@
   cheatsheet]] for some examples. Mu's source code is available [[https://github.com/djcb/mu][in github]], and
   there is the [[http://groups.google.com/group/mu-discuss][mu-discuss]] mailing list.
 
-  *mu* now comes with an emacs-based e-mail client (=mu4e=), a simple GUI
-  (=mug=) and bindings for the Guile/Scheme programming language.
+  *mu* includes an emacs-based e-mail client (=mu4e=), a simple GUI (=mug=) and
+  bindings for the Guile/Scheme programming language.
 
 ** Features
 
@@ -27,6 +27,7 @@
      size, priority, words in message, flags (signed, encrypted, new, replied,
      has-attachment,...), message-id, maildir, tags, attachment (name,
      mime-type, text) and more
+   - support for encrypted and signed messages
    - command-line tools for indexing, searching, viewing, adding/removing
      messages, extracting attachments, exporting/searching address lists,
      creating maildirs, ...
@@ -39,7 +40,9 @@
 
 
 ** News
-   
+
+   - 2012-10-14: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.9.tar.gz][mu-0.9.9]]; a new barrage of fixes and improvements –
+     check the link and [[https://github.com/djcb/mu/blob/master/NEWS][NEWS]]. Also, note the [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu4e-manual-0.9.9.pdf][mu4e-manual]] (PDF).
    - 2012-07-01: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.5.tar.gz][mu-0.9.8.5]]; more fixes, improvements (see the link).
    - 2012-05-08: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.4.tar.gz][mu-0.9.8.4]] with even more improvements (the link has
      all the details) 
