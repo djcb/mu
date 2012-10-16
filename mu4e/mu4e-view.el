@@ -654,9 +654,7 @@ at POINT, or if nil, at (point)."
   ;; autopair mode gives error when pressing RET
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
-    (setq autopair-dont-activate t))
-
-  (setq truncate-lines t))
+    (setq autopair-dont-activate t)))
 
 ;; we mark messages are as read when we leave the message; i.e., when skipping
 ;; to the next/previous one, or leaving the view buffer altogether.
