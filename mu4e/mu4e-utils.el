@@ -28,7 +28,7 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
-(eval-when-compile (require 'org))
+(eval-when-compile (require 'org nil 'noerror))
 
 (require 'mu4e-vars)
 (require 'mu4e-about)
