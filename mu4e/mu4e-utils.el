@@ -28,6 +28,8 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
+(eval-when-compile (require 'org))
+
 (require 'mu4e-vars)
 (require 'mu4e-about)
 (require 'doc-view)
