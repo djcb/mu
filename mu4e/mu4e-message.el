@@ -51,10 +51,12 @@ e-mail message (if there is any."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defsubst mu4e-message-field (msg field)
+(defsubst mu4e-message-field-raw (msg field)
   "Retrieve FIELD from message plist MSG. FIELD is one
 of :from, :to, :cc, :bcc, :subject, :data, :message-id, :path, :maildir,
 :priority, :attachments, :references, :in-reply-to, :body-txt, :body-html
+
+Returns `nil' if the field does not exist.
 
 A message plist looks something like:
 \(:docid 32461
@@ -77,20 +79,39 @@ A message plist looks something like:
  :in-reply-to \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\"
  :body-txt \"Hi Tom, ...\"
 \)).
-Some  notes on the format:
+Some notes on the format:
 - The address fields are lists of pairs (NAME . EMAIL), where NAME can be nil.
 - The date is in format emacs uses in `current-time'
 - Attachments are a list of elements with fields :index (the number of
   the MIME-part), :name (the file name, if any), :mime-type (the
   MIME-type, if any) and :size (the size in bytes, if any).
 - Messages in the Headers view come from the database and do not have
-  :attachments. :body-txt or :body-html fields. Message in the
+  :attachments, :body-txt or :body-html fields. Message in the
   Message view use the actual message file, and do include these fields."
   ;; after all this documentation, the spectacular implementation
   (if msg
     (plist-get msg field)
     (mu4e-error "message must be non-nil")))
-  
+
+(defsubst mu4e-message-field (msg field)
+  "Retrieve FIELD from message plist MSG.
+Like `mu4e-message-field-nil', but will sanitize `nil' values:
+- all string field except body-txt/body-html: nil -> \"\"
+- numeric fields + dates                    : nil -> 0
+- all others                                : return the value
+Thus, function will return nil for empty lists, non-existing body-txt or body-html."
+  (let ((val (mu4e-message-field-raw msg field)))
+    (cond
+      (val
+	val)   ;; non-nil -> just return it
+      ((member field '(:from :to :cc :bcc :subject :message-id
+			:path :maildir :in-reply-to))
+	"")    ;; string fields except body-txt, body-html: nil -> ""
+      ((member field '(:docid :size))
+	0)     ;; numeric type: nil -> 0
+      (t
+	val)))) ;; otherwise, just return nil
+
 (defsubst mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point in either
 the headers buffer or the view buffer, or nil if there is no such
