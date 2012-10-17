@@ -428,17 +428,18 @@ cmd_from_string (const char *str)
 		const gchar*	name;
 		MuConfigCmd	cmd;
 	} cmd_map[] = {
-		{ "add",     MU_CONFIG_CMD_ADD },
-		{ "cfind",   MU_CONFIG_CMD_CFIND },
+		{ "add",     MU_CONFIG_CMD_ADD     },
+		{ "cfind",   MU_CONFIG_CMD_CFIND   },
 		{ "extract", MU_CONFIG_CMD_EXTRACT },
-		{ "find",    MU_CONFIG_CMD_FIND },
-		{ "help",    MU_CONFIG_CMD_HELP },
-		{ "index",   MU_CONFIG_CMD_INDEX },
-		{ "mkdir",   MU_CONFIG_CMD_MKDIR },
-		{ "remove",  MU_CONFIG_CMD_REMOVE },
-		{ "server",  MU_CONFIG_CMD_SERVER },
-		{ "verify",  MU_CONFIG_CMD_VERIFY },
-		{ "view",    MU_CONFIG_CMD_VIEW }
+		{ "find",    MU_CONFIG_CMD_FIND    },
+		{ "help",    MU_CONFIG_CMD_HELP    },
+		{ "index",   MU_CONFIG_CMD_INDEX   },
+		{ "mkdir",   MU_CONFIG_CMD_MKDIR   },
+		{ "remove",  MU_CONFIG_CMD_REMOVE  },
+		{ "server",  MU_CONFIG_CMD_SERVER  },
+		{ "stats",   MU_CONFIG_CMD_STATS   },
+		{ "verify",  MU_CONFIG_CMD_VERIFY  },
+		{ "view",    MU_CONFIG_CMD_VIEW    }
 	};
 
 	if (!str)
@@ -478,22 +479,22 @@ static GOptionGroup*
 get_option_group (MuConfigCmd cmd)
 {
 	switch (cmd) {
-	case MU_CONFIG_CMD_INDEX:
-		return config_options_group_index();
-	case MU_CONFIG_CMD_FIND:
-		return config_options_group_find();
-	case MU_CONFIG_CMD_MKDIR:
-		return config_options_group_mkdir();
-	case MU_CONFIG_CMD_EXTRACT:
-		return config_options_group_extract();
 	case MU_CONFIG_CMD_CFIND:
 		return config_options_group_cfind();
-	case MU_CONFIG_CMD_VERIFY:
-		return config_options_group_verify ();
-	case MU_CONFIG_CMD_VIEW:
-		return config_options_group_view();
+	case MU_CONFIG_CMD_EXTRACT:
+		return config_options_group_extract();
+	case MU_CONFIG_CMD_FIND:
+		return config_options_group_find();
+	case MU_CONFIG_CMD_INDEX:
+		return config_options_group_index();
+	case MU_CONFIG_CMD_MKDIR:
+		return config_options_group_mkdir();
 	case MU_CONFIG_CMD_SERVER:
 		return config_options_group_server();
+	case MU_CONFIG_CMD_VERIFY:
+		return config_options_group_verify();
+	case MU_CONFIG_CMD_VIEW:
+		return config_options_group_view();
 	default:
 		return NULL; /* no group to add */
 	}

@@ -25,7 +25,8 @@ INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic -Wno-variadic-macros
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement \
+	-pedantic -Wno-variadic-macros
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 bin_PROGRAMS=				\
@@ -40,6 +41,7 @@ mu_SOURCES=				\
 	mu-config.h			\
 	mu-cmd-extract.c		\
 	mu-cmd-find.c			\
+	mu-cmd-guile.c			\
 	mu-cmd-index.c			\
 	mu-cmd-server.c			\
 	mu-cmd.c			\

@@ -103,6 +103,18 @@ MuError mu_cmd_extract (MuConfig *opts, GError **err);
  */
 MuError mu_cmd_mv (MuConfig *opts, GError **err);
 
+
+/**
+ * execute the 'stats' command
+ *
+ * @param opts configuration options
+ * @param err receives error information, or NULL
+ *
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
+ */
+MuError mu_cmd_stats (MuConfig *opts, GError **err);
+
 /**
  * execute the cfind command
  *
