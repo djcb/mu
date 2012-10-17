@@ -1068,11 +1068,12 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
   "Scroll-up the current message; if mu4e-view-scroll-to-next is
 non-nil, and we can't scroll-up anymore, go the next message."
   (interactive)
-  (if (and mu4e-view-scroll-to-next
-	(zerop (- (point-max) (window-end nil t))))
-    (mu4e-view-headers-next)
-    (scroll-up)))
-    
+  (condition-case nil
+    (scroll-up)
+    (error
+      (when mu4e-view-scroll-to-next
+	(mu4e-view-headers-next)))))
+     
 (defun mu4e-view-unmark-all ()
   "If we're in split-view, unmark all messages. Otherwise, warn
 user that unmarking only works in the header list."
