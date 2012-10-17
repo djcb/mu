@@ -1,4 +1,4 @@
-.TH MU FIND 1 "August 2012" "User Manuals"
+.TH MU FIND 1 "October 2012" "User Manuals"
 
 .SH NAME
 
@@ -105,8 +105,8 @@ search fields and their abbreviations:
 	cc,c            Cc (carbon-copy) recipient(s)
 	bcc,h           Bcc (blind-carbon-copy) recipient(s)
 	from,f          Message sender
-	subject,s       Message subject
 	to,t            To: recipient(s)
+	subject,s       Message subject
 	maildir,m       Maildir
 	msgid,i         Message-ID
 	prio,p          Message priority ('low', 'normal' or 'high')
@@ -119,9 +119,10 @@ search fields and their abbreviations:
 	tag,x           Tags for the message (\fIX-Label\fR and/or \fIX-Keywords\fR)
 .fi
 
-For clarity, this man-page uses the longer versions.
+There is also the special field \fBcontact\fR, which matches all
+contact-fields (\fBfrom\fR, \fBto\fR, \fBcc\fR and \fBbcc\fR).
 
-`The meaning of most of these fields should be clear, but some require some
+The meaning of most of these fields should be clear, but some require some
 extra discusion.
 
 First, the message flags field describes certain properties of the message, as

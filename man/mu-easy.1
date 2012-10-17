@@ -1,4 +1,4 @@
-.TH MU-EASY 1 "July 2012" "User Manuals"
+.TH MU-EASY 1 "October 2012" "User Manuals"
 
 .SH NAME
 
@@ -143,6 +143,13 @@ Get all messages from Jim without an attachment:
 .nf
   \fB$ mu find from:jim AND NOT flag:attach\fR
 .fi
+
+Get all messages where Jack is in one of the contact fields:
+.nf
+  \fB$ mu find contact:jack\fR
+.fi
+This uses the special contact: pseudo-field which matches (\fBfrom\fR,
+\fBto\fR, \fBcc\fR and \fBbcc\fR).
 
 Get all messages in the Sent Items folder about yoghurt:
 .nf

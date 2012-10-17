@@ -166,6 +166,9 @@ public:
 
 		mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_prefix,
 				      &_qparser);
+
+		/* add some convenient special prefixes */
+		add_special_prefixes ();
 	}
 
 	~_MuQuery () { mu_store_unref (_store); }
@@ -181,6 +184,21 @@ public:
 	Xapian::QueryParser& query_parser () { return _qparser; }
 
 private:
+	void add_special_prefixes () {
+		char pfx[] = { '\0', '\0' };
+
+		/* add 'contact' as a shortcut for
+		 * From/Cc/Bcc/To: */
+		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_FROM);
+		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
+		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO);
+		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
+		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_CC);
+		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
+		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_BCC);
+		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
+	}
+
 	Xapian::QueryParser	_qparser;
 	MuDateRangeProcessor	_date_range_processor;
 	MuSizeRangeProcessor	_size_range_processor;

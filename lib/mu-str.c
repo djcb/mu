@@ -437,6 +437,10 @@ check_for_field (const char *str, gboolean *is_field,
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)each_check_prefix,
 			      &pfx);
+	/* also check special prefixes... */
+	if (!pfx.match)
+		pfx.match = g_str_has_prefix
+			(str, MU_MSG_FIELD_PSEUDO_CONTACT ":");
 
 	*is_field	= pfx.match;
 	*is_range_field = pfx.range_field;

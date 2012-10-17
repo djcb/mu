@@ -63,6 +63,10 @@ typedef guint8 MuMsgFieldId;
 static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
 #define MU_MSG_STRING_FIELD_ID_NUM (MU_MSG_FIELD_ID_UID + 1)
 
+/* this is a shortcut for To/From/Cc/Bcc in queries; handled specially
+ * in mu-query.cc and mu-str.c */
+#define MU_MSG_FIELD_PSEUDO_CONTACT "contact"
+
 #define mu_msg_field_id_is_valid(MFID) \
 	((MFID) < MU_MSG_FIELD_ID_NUM)
 

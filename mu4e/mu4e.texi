@@ -7,7 +7,7 @@
 @c Cf. Texinfo manual 14.2
 @set txicodequoteundirected
 @set txicodequotebacktick
- 
+
 @documentencoding UTF-8
 @c %**end of header
 @include version.texi
@@ -85,7 +85,7 @@ At the end of the manual, there are some example configurations, to get up to
 speed quickly - @ref{Example configurations}. There's also a section of
 @ref{FAQ}, which should help you with some
 common questions.
- 
+
 @menu
 * Introduction:: How it all began
 * Getting started:: Setting things up
@@ -130,7 +130,7 @@ Since none of the existing ones worked the way I wanted, I created my
 own. @command{emacs} is an integral part of my workflow, so it made a lot of
 sense to use it for e-mail as well. And as I already had written an e-mail
 search engine (@t{mu}), it seemed only logical to use that as a basis.
- 
+
 @node Other mail clients
 @section Other mail clients
 
@@ -238,7 +238,7 @@ OS), the below at least be helpful in identifying the packages to install.
 
 We provide some instructions for Debian, Ubuntu and Fedora; if those do not
 apply to you, you can follow either @ref{Building from a release tarball} or
-@ref{Building from git}. 
+@ref{Building from git}.
 
 @subsection Dependencies for Debian/Ubuntu
 
@@ -312,7 +312,7 @@ $ sudo make install
 
 After this, @t{mu} and @t{mu4e} should be installed @footnote{there's a hard
 dependency between versions of @t{mu4e} and @t{mu} - you cannot combine
-different versions} on your system, and be available from the command line 
+different versions} on your system, and be available from the command line
 in @command{emacs}.
 
 You may need to restart @command{emacs}, so it can find @t{mu4e} in its
@@ -350,7 +350,7 @@ not, some setup is required:
 maildir (@file{~/Maildir}, often). Because it is such a common case, there is
 a full example of setting @t{mu4e} up with @t{offlineimap} and Gmail;
 @pxref{Gmail configuration}.
-@item @emph{Using a local mail server} - if you are using a local mail-server 
+@item @emph{Using a local mail server} - if you are using a local mail-server
 (such as @t{postfix} or @t{qmail}), you can teach them to deliver into a
 maildir as well, maybe in combination with @t{procmail}. A bit of googling
 should be able to provide you with the details.
@@ -436,7 +436,7 @@ runtime. This allows for dynamically changing them depending on context. See
 
 @code{mu4e-maildir} takes an actual filesystem-path, the other folder names
 are all relative to @code{mu4e-maildir}.
- 
+
 @node Retrieval and indexing
 @section Retrieval and indexing
 
@@ -465,7 +465,7 @@ A simple setup could look something like:
 It is possible to get notifications when the indexing process does any updates
 - for example when receiving new mail. See @code{mu4e-index-updated-hook} and
 some tips on its usage in the @ref{FAQ}.
- 
+
 @node Sending mail
 @section Sending mail
 
@@ -526,7 +526,7 @@ other, and the default key-bindings to navigate between them.
 
 @cartouche
 @verbatim
-     
+
             [C]     +--------+   [RFCE]
           --------> | editor | <--------
          /          +--------+          \
@@ -541,7 +541,7 @@ other, and the default key-bindings to navigate between them.
                                           +-----+
                                           | raw |
                                           +-----+
-     
+
     Default bindings
     ----------------
     R: Reply      s: search            .: raw view (toggle)
@@ -575,25 +575,25 @@ The main view looks something like the following:
 @cartouche
 @verbatim
     * mu4e - mu for emacs version x.x C
-     
+
       Basics
-     
+
             * [j]ump to some maildir
             * enter a [s]earch query
             * [C]ompose a new message
-     
+
       Bookmarks
-     
+
             * [bu] Unread messages
             * [bt] Today's messages
             * [bw] Last 7 days
             * [bp] Messages with images
       Misc
-     
+
             * [U]pdate email & database
             * toggle [m]ail sending mode (direct)
             * [f]lush queued mail
-     
+
             * [A]bout mu4e
             * [H]elp
             * [q]uit mu4e
@@ -793,7 +793,7 @@ q,z          leave the headers buffer
 
 @node Marking messages
 @section Marking messages
- 
+
 When processing messages, the first step is to @emph{mark} them for a certain
 action, such as deletion or move. Then, after one or more messages are marked,
 you execute (@code{mu4e-mark-execute-all}, @key{x}) these actions. This
@@ -826,7 +826,7 @@ affects the sort order.
 The header field used for sorting is indicated by ``@t{V}'' or
 ``@t{^}''@footnote{or you can use little graphical triangles; see variable
 @code{mu4e-use-fancy-chars}}, indicating the sort order (descending or
-ascending, respectively).  
+ascending, respectively).
 
 You can change the sort order by clicking the corresponding field with the
 mouse, or with @kbd{M-x mu4e-headers-change-sorting} (@key{O}); note that not
@@ -838,7 +838,7 @@ updated immediately using the new parameters. You can toggle full-search
 
 If you want to change the defaults for these settings, you can use the
 variables @code{mu4e-headers-sortfield} and @code{mu4e-headers-show-threads}.
- 
+
 @node HV Actions
 @section Actions
 
@@ -912,16 +912,16 @@ An example message view:
     Date: Mon 19 Jan 2004 09:39:42 AM EET
     Maildir: /inbox
     Attachments(2): [1]DSCN4961.JPG(1.3M), [2]DSCN4962.JPG(1.4M)
-     
+
     Hi Julia,
 
-    Some pics from our trip to Cerin Amroth. Enjoy! 
+    Some pics from our trip to Cerin Amroth. Enjoy!
 
     All the best,
     Randy.
-     
+
     On Sun 21 Dec 2003 09:06:34 PM EET, Julia wrote:
-     
+
     [....]
 @end verbatim
 @end cartouche
@@ -945,8 +945,8 @@ using @code{mu4e-view-hide-cited}, bound to @key{h}. If you want to do this
 automatically for every message, invoke the function in your
 @code{mu4e-view-mode-hook}.
 @item For search-related operations, see @ref{Searching}.
-@item You can scroll down the message using @key{SPC}; if you do this at the 
-end of a message,it automatically takes you to the next one. If you want to 
+@item You can scroll down the message using @key{SPC}; if you do this at the
+end of a message,it automatically takes you to the next one. If you want to
 prevent this behavior, set @code{mu4e-view-scroll-to-next} to @code{nil}.
 @end itemize
 
@@ -1319,7 +1319,7 @@ for editing-related settings. @code{mu4e-compose-parent-message} (see above)
 is also at your disposal.
 @end itemize
 
-@noindent        
+@noindent
 Let's look at some examples. First, let's suppose we want to set the
 @t{From:}-address for a reply message based on the receiver of the original:
 @lisp
@@ -1420,7 +1420,7 @@ do this accidentally!
 
 @itemize
 @item If you want use @t{mu4e} as @command{emacs}' default program for sending mail,
-see @ref{Setting the default emacs mail program}.   
+see @ref{Setting the default emacs mail program}.
 @item Normally, @t{mu4e} @emph{buries} the message buffer after sending; if you want
 to kill the buffer instead, add something like the following to your
 configuration:
@@ -1484,6 +1484,10 @@ flag:signed prio:high
 
 # get all messages from Jim without an attachment:
 from:jim AND NOT flag:attach
+
+# get all message with Alice in one of the contacts fields (to, from, cc,
+# bcc):
+contact:alice
 
 # get all unread messages where the subject mentions Angstrom:
 # (search is case-insensitive and accent-insensitive)
@@ -1689,19 +1693,19 @@ apply to messages:
 
 @cartouche
 @verbatim
-  mark for/as  | keybinding  | description              
+  mark for/as  | keybinding  | description
  --------------+-------------+--------------------------
-  'something'  | <insert>    | mark now, decide later   
-  delete       | D, <delete> | delete                   
-  flag         | +           | mark as 'flagged' (``starred'')        
-  move         | m           | move to some maildir     
-  read         | !           | mark as read             
-  refile       | r           | mark for refiling        
-  trash        | d           | move to the trash folder 
-  unflag       | -           | remove 'flagged' mark    
-  unmark       | u           | remove mark at point     
-  unmark all   | U           | remove all marks         
-  unread       | ?           | marks as unread          
+  'something'  | <insert>    | mark now, decide later
+  delete       | D, <delete> | delete
+  flag         | +           | mark as 'flagged' (``starred'')
+  move         | m           | move to some maildir
+  read         | !           | mark as read
+  refile       | r           | mark for refiling
+  trash        | d           | move to the trash folder
+  unflag       | -           | remove 'flagged' mark
+  unmark       | u           | remove mark at point
+  unmark all   | U           | remove all marks
+  unread       | ?           | marks as unread
 @end verbatim
 @end cartouche
 
@@ -1719,7 +1723,7 @@ be@footnote{This kind of 'deferred marking' is similar to the facility in
 like, and uses the same key binding (@key{insert}).}  , using @kbd{M-x
 mu4e-mark-resolve-deferred-marks} (@key{#}). Alternatively, @t{mu4e} will ask
 you when you execute the marks (@key{x}).
- 
+
 @node Executing the marks
 @section Executing the marks
 
@@ -1762,7 +1766,7 @@ Custom mark functions are to be appended to the list
 @item The name of the marker - a short string describing this marker. The
 first character of this string determines its shortcut, so these should be
 unique. If necessary, simply prefix the name with a unique character.
-@item a predicate function, taking two arguments @var{msg} and @var{param}. 
+@item a predicate function, taking two arguments @var{msg} and @var{param}.
 @var{msg} is the message plist (see @ref{Message functions} and @var{param} is
 a parameter provided by the third of the marker elements (see the next
 item). The predicate function should return non-@t{nil} if the message
@@ -1788,7 +1792,7 @@ After evaluating this expression, you can use it by pressing @key{&} in the
 headers buffer to select a custom marker function, and then @key{M} to choose
 this particular one (@t{M} because it is the first character of the
 description).
- 
+
 As you can see, it's not very hard to define simple functions to match
 messages. There are more examples in the defaults for
 @code{mu4e-headers-custom-markers}; see @file{mu4e-headers.el} and see
@@ -1808,7 +1812,7 @@ In @ref{Folders}, we explained how you can set up @t{mu4e}'s special folders:
 
 In some cases, having such static folders may not suffice - perhaps you want
 to change the folders depending on the context. For example, the folder for
-refiling could vary, based on the sender of the message. 
+refiling could vary, based on the sender of the message.
 
 To make this possible, instead of setting the standard folders to a string,
 you can set them to be a @emph{function} that takes a message as its
@@ -1890,7 +1894,7 @@ work-email. You can achieve this with something like:
  (setq mu4e-trash-folder
     (lambda (msg)
        ;; the 'and msg' is to handle the case where msg is nil
-       (if (and msg 
+       (if (and msg
              (mu4e-message-contact-field-matches msg :to "me@@work.com"))
         "/trash-work"
         "/trash")))
@@ -2036,7 +2040,7 @@ description).
 (add-to-list 'mu4e-view-attachment-actions
    '("ncount lines" . count-lines-in-attachment) t)
 @end lisp
- 
+
 @node More example actions
 @section More example actions
 
@@ -2051,11 +2055,11 @@ browser, or listening to a message's body-text using text-to-speech.
 @t{mu4e} is designed to be easily extendible - that is, write your own
 emacs-lisp to make @t{mu4e} behave exactly as you want. Here, we provide some
 guidelines for doing so.
- 
+
 @menu
 * Extension points::
 * Available functions::
-* Message functions:: 
+* Message functions::
 * Utility functions::
 @end menu
 
@@ -2089,7 +2093,7 @@ its docstring).
 
 @node Available functions
 @section Available functions
- 
+
 The whole of @t{mu4e} consists of hundreds of elisp functions. However, the
 majority of those are for @emph{internal} use only; you can recognize them
 easily, because they all start with @code{mu4e~}. These function make all
@@ -2156,7 +2160,7 @@ shortcuts (@code{mu4e-maildir-shortcuts}), or the full set of available
 maildirs.
 @item @code{mu4e-running-p}: return @code{t} if the @t{mu4e} process is
 running, @code{nil} otherwise.
-@item @code{mu4e-log} logs to the @t{mu4e} debugging log if it is enabled; 
+@item @code{mu4e-log} logs to the @t{mu4e} debugging log if it is enabled;
       see @code{mu4e-toggle-logging}.
 @item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
 @t{mu4e} equivalents of the normal @t{elisp} @code{message},
@@ -2165,7 +2169,7 @@ running, @code{nil} otherwise.
 @code{error} functions.
 @end itemize
 
- 
+
 @node Interaction with other tools
 @appendix Interaction with other tools
 
@@ -2406,7 +2410,7 @@ well; so put in your configuration:
 
 @lisp
 (require 'gnus-dired)
-;; make the `gnus-dired-mail-buffers' function also work on 
+;; make the `gnus-dired-mail-buffers' function also work on
 ;; message-mode derived modes, such as mu4e-compose-mode
 (defun gnus-dired-mail-buffers ()
   "Return a list of active message buffers."
@@ -2527,7 +2531,7 @@ customize.
 
 ;; program to get mail; alternatives are 'fetchmail', 'getmail'
 ;; isync or your own shellscript. called when 'U' is pressed in
-;; main view. 
+;; main view.
 
 ;; If you get your mail without an explicit command,
 ;; use "true" for the command (this is the default)
@@ -2784,8 +2788,8 @@ default). This makes getting mail a no-op, but the messages are still
 re-indexed.
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like:}
-@verbatim 
-mu: mu_store_new_writable: xapian error 
+@verbatim
+mu: mu_store_new_writable: xapian error
   'Unable to get write lock on ~/.mu/xapian: already locked
 @end verbatim
 @emph{What to do about this?}  You get this error because the underlying
@@ -2865,7 +2869,7 @@ see @ref{Signing and encrypting}.
 there is no built-in support. Instead, we recommend using @t{mu4e}'s
 @ref{Address autocompletion}.
 @item @emph{After sending some messages, it seems the buffer for these
-messages stay around. How can I get rid of those?} 
+messages stay around. How can I get rid of those?}
 @lisp
 (setq message-kill-buffer-on-exit t)
 @end lisp
@@ -2931,16 +2935,16 @@ some ascii-art:
 
 In words:
 @itemize
-@item Your e-mail messages are stored in a Maildir-directory 
+@item Your e-mail messages are stored in a Maildir-directory
 (typically, @file{~/Maildir} and its subdirectories), and new mail comes in
 using tools like @t{fetchmail}, @t{offlineimap}, or through a local mail
 server.
 @item @t{mu} indexes these messages periodically, so you can quickly search for
 them. @t{mu} can run in a special @t{server}-mode, where it provides services
- to client software.  
+ to client software.
 @item @t{mu4e}, which runs inside @command{emacs} is
  such a client; it communicates with @command{mu} (in its @t{server}-mode to search
- for messages, and manipulate them.  
+ for messages, and manipulate them.
 @item @t{mu4e} uses the facilities
  offered by @command{emacs} (the Gnus message editor and @t{smtpmail}) to send
  messages.
