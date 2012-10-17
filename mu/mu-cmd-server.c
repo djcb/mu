@@ -1292,6 +1292,9 @@ cmd_ping (ServerContext *ctx, GSList *args, GError **err)
 #ifdef BUILD_CRYPTO
 		    "  :crypto t "
 #endif /*BUILD_CRYPTO*/
+#ifdef BUILD_GUILE
+		    " :guile t "
+#endif /*BUILD_GUILE*/
 		    "  :version \"" VERSION "\" "
 		    "  :doccount %u))",doccount);
 

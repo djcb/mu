@@ -103,11 +103,13 @@ clicked."
 	(propertize  mu4e-mu-version 'face 'mu4e-view-header-key-face)
 
 	;; show some server properties; in this case; a big C when there's
-	;; crypto support
+	;; crypto support, a big G when there's Guile support
 	" "
-	(if (plist-get mu4e~server-props :crypto)
-	  (propertize "C" 'face 'mu4e-title-face)
-	  "")
+	(propertize
+	  (concat
+	    (when (plist-get mu4e~server-props :crypto) "C")
+	    (when (plist-get mu4e~server-props :guile)  "G"))
+	  'face 'mu4e-title-face)
 	"\n\n"
 	(propertize "  Basics\n\n" 'face 'mu4e-title-face)
 	(mu4e~main-action-str "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)

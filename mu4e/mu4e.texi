@@ -574,7 +574,7 @@ The main view looks something like the following:
 
 @cartouche
 @verbatim
-    * mu4e - mu for emacs version x.x C
+    * mu4e - mu for emacs version x.x CG
 
       Basics
 
@@ -601,13 +601,17 @@ The main view looks something like the following:
 @end verbatim
 @end cartouche
 
-If you see a @t{C} at the right-hand side of @t{version x.x}, your @t{mu4e}
-has support for decryption of encrypted messages, and verifying
-signatures. See @ref{Decryption} and @ref{Verifying signatures} in the
-@ref{Message view}.
+In the example above, you can see the letters ``@t{CG}'', which indicate:
+@itemize
+@item @t{C}: support for decryption of encrypted messages, and verifying
+signatures. See @ref{MSGV Crypto} in the @ref{Message view} for details.
+@item @t{G}: support for the Guile 2.0 programming language
+@end itemize
+Whether you see both, one or none of these letters depends on the way @t{mu}
+is built.
 
-Now, let's go through menu items, assuming the default key bindings.
-
+Let's walk through the menu.
+ 
 @node Basic actions
 @section Basic actions
 
