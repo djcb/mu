@@ -405,7 +405,15 @@ it. So, add to your @file{~/.emacs} (or its moral equivalent, such as
 @end lisp
 
 If @command{emacs} complains that it cannot find @t{mu4e}, check your
-@code{load-path}.
+@code{load-path} and make sure that @t{mu4e}'s installation directory is part
+of it. If not, you can add it:
+
+@lisp
+(add-to-list 'load-path MU4E-PATH)
+@end lisp
+
+with @t{MU4E-PATH} replaced with the actual path.
+
 
 @node Folders
 @section Folders
