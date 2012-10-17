@@ -57,6 +57,9 @@ public:
 
 		_matches = _enq.get_mset (0, maxnum);
 
+		/* when threading, we calculate the threads for the
+		 * set of matches, then requery/sort based on the
+		 * threading */
 		if (threads && !_matches.empty()) {
 
 			_matches.fetch();

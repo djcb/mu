@@ -48,12 +48,12 @@
  *
  */
 
-
 /* step 1 */ static GHashTable* create_containers (MuMsgIter *iter);
 /* step 2 */ static MuContainer *find_root_set (GHashTable *ids);
 static MuContainer* prune_empty_containers (MuContainer *root);
 /* static void group_root_set_by_subject (GSList *root_set); */
-GHashTable* create_doc_id_thread_path_hash (MuContainer *root, size_t match_num);
+GHashTable* create_doc_id_thread_path_hash (MuContainer *root,
+					    size_t match_num);
 
 /* msg threading algorithm, based on JWZ's algorithm,
  * http://www.jwz.org/doc/threading.html */
@@ -125,9 +125,8 @@ assert_no_duplicates (GHashTable *ids)
 }
 
 
-
-
-/* a referred message is a message that is refered by some other message */
+/* a referred message is a message that is refered by some other
+ * message */
 static MuContainer*
 find_or_create_referred (GHashTable *id_table, const char *msgid,
 			 gboolean *created)
@@ -297,8 +296,7 @@ static GHashTable*
 create_containers (MuMsgIter *iter)
 {
 	GHashTable *id_table;
-	id_table = g_hash_table_new_full (g_str_hash,
-					  g_str_equal,
+	id_table = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  NULL,
 					  (GDestroyNotify)mu_container_destroy);
 

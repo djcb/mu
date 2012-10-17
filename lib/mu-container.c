@@ -548,10 +548,10 @@ thread_info_destroy (MuMsgIterThreadInfo *ti)
 
 
 struct _ThreadInfo {
-	GHashTable		*hash;
-	const char*		 format;
+	GHashTable *hash;
+	const char *format;
 };
-typedef struct _ThreadInfo	 ThreadInfo;
+typedef struct _ThreadInfo ThreadInfo;
 
 
 static void
@@ -589,7 +589,7 @@ thread_segment_format_string (size_t matchnum)
 	/* get the number of digits needed in a hex-representation of
 	 * matchnum */
 	digitnum = (unsigned) (ceil (log(matchnum)/log(16)));
-	snprintf (frmt, sizeof(frmt),"%%0%ux", digitnum);
+	snprintf (frmt, sizeof(frmt), "%%0%ux", digitnum);
 
 	return frmt;
 }
