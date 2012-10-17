@@ -945,6 +945,9 @@ using @code{mu4e-view-hide-cited}, bound to @key{h}. If you want to do this
 automatically for every message, invoke the function in your
 @code{mu4e-view-mode-hook}.
 @item For search-related operations, see @ref{Searching}.
+@item You can scroll down the message using @key{SPC}; if you do this at the 
+end of a message,it automatically takes you to the next one. If you want to 
+prevent this behavior, set @code{mu4e-view-scroll-to-next} to @code{nil}.
 @end itemize
 
 @node MSGV Keybindings
@@ -961,6 +964,8 @@ y            select the headers view (if it's visible)
 
 RET          scroll down
 M-RET        open URL at point / attachment at point
+
+SPC          scroll down, if at end, move to next message
 
 searching
 ---------

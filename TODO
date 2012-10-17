@@ -45,70 +45,75 @@
     - open links to mails through headers-mode somehow (i.e..,
      mu4e-view-message-with-msgid)
   - improve mouse interaction (i.e., cursor vs point)
-  - check move + create new dir
   - show counts of messages in searches (in main view)
   - show flush only if there's something to flush (and # of flushables)
   - fix unsafe temp-file handling
 
+* Done (0.9.9.x)
+  
+  - mu4e: scroll down –> go to next message
 
-* Done (0.9.9)
 
-  - make contacts in the view clickable (toggle long/short display, compose message)
-  - opening urls is too eager (now use M-RET for opening url at point, not just
-    RET, which conflicted with using RET for scrolling)
-  - document quoting of queries
-  - use mu-error
-  - tooltips in header labels
-  - tooltip for flags field
-  - remove --summary option (for mu find, mu view); use --summary-len instead
-  - add sort buttons to header labels (and do the sorting)
-  - cleanup mu-cmd-find
-  - implement --after for mu find, to only show message files changed after a
-    certain time (mtime)
-  - add mu:timestamp for guile (referring to the message file's mtime)
-  - guile automated tests
-  - add 'mu verify'
-    - automated tests
-    - handle verbose/quiet/normal output 'mu verify'
-    - check gmime 2.4 does not break
-  - hook up mu4e with 'mu verify'
-  - add 'help' command
-  - refactor mu-msg-part
-  - move widgets/ into toys/mug2, remove toys/mug/, rename toys/mug2 -> toys/mug
-  - add guile mu:count
-  - don't show GPG/PKCS7 sigs as attachments
-  - fix address completion (quote names)
-  - add support for X-Keywords (in addition to X-Label)
-  - guile: add stats test cases
-  - fixed iso-2022-jp (japanese) decoding
-  - make address completion case-insensitive
-  - recognize '*' in urls
-  - handle exception 'The revision being read has been discarded - you should
-    call Xapian::Database::reopen() and retry the operation'
-  - handle passwords from get-mail shell command
-  - support fancy (non-ascii) chars for header flags, thread prefix strings
-  - improve performance of getting the list of maildirs
-  - fix setting wrapped/hide state in viewer
-  - fix ' realpath() failed for...' stuff
-  - allow for fancy chars (> ascii), make it configurable (mu4e-use-fancy-chars)
-  - don't user `error' for user-errors
-  - better echo-area reporting
-  - improve help feedback for user (command line)
-  - handling of encrypted messages
-  - improved checked for gmime-2.6 crypto funcs
-  - handling of command line options / help
-  - fix / add support for :size
-  - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
-    mail)
-  - better help
-  - threading optimizations
-  - actions for /all/ headers, actions for /all/ attachment
-  - handle attached messages with attachments
 
 * Done
   :PROPERTIES:
   :VISIBILITY: folded
   :END:
+
+
+** Done (0.9.9)
+
+   - make contacts in the view clickable (toggle long/short display, compose message)
+   - opening urls is too eager (now use M-RET for opening url at point, not just
+     RET, which conflicted with using RET for scrolling)
+   - document quoting of queries
+   - use mu-error
+   - tooltips in header labels
+   - tooltip for flags field
+   - remove --summary option (for mu find, mu view); use --summary-len instead
+   - add sort buttons to header labels (and do the sorting)
+   - cleanup mu-cmd-find
+   - implement --after for mu find, to only show message files changed after a
+     certain time (mtime)
+   - add mu:timestamp for guile (referring to the message file's mtime)
+   - guile automated tests
+   - add 'mu verify'
+     - automated tests
+     - handle verbose/quiet/normal output 'mu verify'
+     - check gmime 2.4 does not break
+   - hook up mu4e with 'mu verify'
+   - add 'help' command
+   - refactor mu-msg-part
+   - move widgets/ into toys/mug2, remove toys/mug/, rename toys/mug2 -> toys/mug
+   - add guile mu:count
+   - don't show GPG/PKCS7 sigs as attachments
+   - fix address completion (quote names)
+   - add support for X-Keywords (in addition to X-Label)
+   - guile: add stats test cases
+   - fixed iso-2022-jp (japanese) decoding
+   - make address completion case-insensitive
+   - recognize '*' in urls
+   - handle exception 'The revision being read has been discarded - you should
+     call Xapian::Database::reopen() and retry the operation'
+   - handle passwords from get-mail shell command
+   - support fancy (non-ascii) chars for header flags, thread prefix strings
+   - improve performance of getting the list of maildirs
+   - fix setting wrapped/hide state in viewer
+   - fix ' realpath() failed for...' stuff
+   - allow for fancy chars (> ascii), make it configurable (mu4e-use-fancy-chars)
+   - don't user `error' for user-errors
+   - better echo-area reporting
+   - improve help feedback for user (command line)
+   - handling of encrypted messages
+   - improved checked for gmime-2.6 crypto funcs
+   - handling of command line options / help
+   - fix / add support for :size
+   - mu4e~view-wrap-lines (use visual-line-mode? see Jacek's mu4e~view-wrap-lines
+     mail)
+   - better help
+   - threading optimizations
+   - actions for /all/ headers, actions for /all/ attachment
+   - handle attached messages with attachments
 
 ** Done (0.8.9.5)
 

@@ -79,6 +79,11 @@ contact."
   `mu4e-show-image' is non-nil."
   :group 'mu4e-view)
 
+(defcustom mu4e-view-scroll-to-next t
+  "If non-nil, move to the next message when calling
+`mu4e-view-scroll-up-or-next' (typically bound to SPC) when at the
+end of a message. Otherwise, don't move to the next message.")
+
 (defvar mu4e-view-actions
   '( ("capture message" . mu4e-action-capture-message)
      ("view as pdf"     . mu4e-action-view-as-pdf))
@@ -510,7 +515,7 @@ at POINT, or if nil, at (point)."
 	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
 
       ;; intra-message navigation
-      (define-key map (kbd "SPC") 'scroll-up)
+      (define-key map (kbd "SPC") 'mu4e-view-scroll-up-or-next)
       (define-key map (kbd "<home>")
 	#'(lambda () (interactive) (goto-char (point-min))))
       (define-key map (kbd "<end>")
@@ -1059,6 +1064,15 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
   "Return t if we're in split-view, nil otherwise."
   (member mu4e-split-view '(horizontal vertical)))
 
+(defun mu4e-view-scroll-up-or-next ()
+  "Scroll-up the current message; if mu4e-view-scroll-to-next is
+non-nil, and we can't scroll-up anymore, go the next message."
+  (interactive)
+  (if (and mu4e-view-scroll-to-next
+	(zerop (- (point-max) (window-end nil t))))
+    (mu4e-view-headers-next)
+    (scroll-up)))
+    
 (defun mu4e-view-unmark-all ()
   "If we're in split-view, unmark all messages. Otherwise, warn
 user that unmarking only works in the header list."

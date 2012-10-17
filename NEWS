@@ -2,6 +2,18 @@
 
 * NEWS (user visible changes)
 
+** Release 0.9.9.x
+
+*** mu4e
+    - scroll down in message view takes you to next message (but see
+      `mu4e-view-scroll-to-next')
+
+
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
+
 ** Release 0.9.9 <2012-10-14>
 
 *** mu4e
@@ -37,12 +49,6 @@
     - automated tests
     - add mu:timestamp, mu:count
     - handle db reopenings in the background
-
-
-* Old news
-  :PROPERTIES:
-  :VISIBILITY: folded
-  :END:
 
 
 ** Release 0.9.8.5 <2012-07-01>
