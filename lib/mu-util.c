@@ -310,6 +310,44 @@ mu_util_is_local_file (const char* path)
 }
 
 
+gboolean
+mu_util_supports (MuFeature feature)
+{
+
+	/* check for Guile support */
+#ifndef BUILD_GUILE
+	if (feature & MU_FEATURE_GUILE)
+		return FALSE;
+#endif /*BUILD_GUILE*/
+
+	/* check for crypto support */
+#ifndef BUILD_CRYPTO
+	if (feature & MU_FEATURE_CRYPTO)
+		return FALSE;
+#endif /*BUILD_CRYPTO*/
+
+	/* check for Gnuplot */
+	if (feature & MU_FEATURE_GNUPLOT)
+		if (!mu_util_program_in_path ("gnuplot"))
+			return FALSE;
+
+	return TRUE;
+}
+
+
+gboolean
+mu_util_program_in_path (const char *prog)
+{
+	gchar *path;
+
+	g_return_val_if_fail (prog, FALSE);
+
+	path = g_find_program_in_path (prog);
+	g_free (path);
+
+	return (path != NULL) ? TRUE : FALSE;
+}
+
 
 
 gboolean
@@ -335,16 +373,19 @@ mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
 #endif /*!__APPLE__*/
 	}
 
+	if (!mu_util_program_in_path (prog)) {
+		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_EXECUTE,
+				     "cannot find '%s' in path", prog);
+		return FALSE;
+	}
+
 	argv[0] = prog;
 	argv[1] = path;
 	argv[2] = NULL;
 
 	err = NULL;
-	rv = g_spawn_async (NULL,
-			    (gchar**)&argv,
-			    NULL,
-			    G_SPAWN_SEARCH_PATH,
-			    NULL, NULL, NULL,
+	rv = g_spawn_async (NULL, (gchar**)&argv, NULL,
+			    G_SPAWN_SEARCH_PATH, NULL, NULL, NULL,
 			    err);
 	return rv;
 }

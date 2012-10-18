@@ -196,6 +196,45 @@ test_mu_util_get_dtype_with_lstat (void)
 }
 
 
+static void
+test_mu_util_supports (void)
+{
+	gboolean has_guile, has_crypto;
+	gchar *path;
+
+	has_guile = FALSE;
+#ifdef BUILD_GUILE
+	has_guile = TRUE;
+#endif /*BUILD_GUILE*/
+
+	g_assert_cmpuint (mu_util_supports (MU_FEATURE_GUILE),==,has_guile);
+
+	has_crypto = FALSE;
+#ifdef BUILD_CRYPTO
+	has_crypto = TRUE;
+#endif /*BUILD_CRYPTO*/
+
+	g_assert_cmpuint (mu_util_supports (MU_FEATURE_CRYPTO),==,has_crypto);
+
+	path = g_find_program_in_path ("gnuplot");
+	g_free (path);
+
+	g_assert_cmpuint (mu_util_supports (MU_FEATURE_GNUPLOT),==,path ? TRUE : FALSE);
+
+	g_assert_cmpuint (
+		mu_util_supports (MU_FEATURE_GNUPLOT|MU_FEATURE_GUILE|MU_FEATURE_CRYPTO),
+		==,
+		has_guile && has_crypto && path ? TRUE : FALSE);
+}
+
+
+static void
+test_mu_util_program_in_path (void)
+{
+	g_assert_cmpuint (mu_util_program_in_path("ls"),==,TRUE);
+}
+
+
 
 int
 main (int argc, char *argv[])
@@ -228,6 +267,10 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/mu-util/mu-util-get-dtype-with-lstat",
 			 test_mu_util_get_dtype_with_lstat);
+
+	g_test_add_func ("/mu-util/mu-util-supports", test_mu_util_supports);
+	g_test_add_func ("/mu-util/mu-util-program-in-path", test_mu_util_program_in_path);
+
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_DEBUG|
