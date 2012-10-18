@@ -1288,15 +1288,13 @@ cmd_ping (ServerContext *ctx, GSList *args, GError **err)
 		return print_and_clear_g_error (err);
 
 	print_expr ("(:pong \"" PACKAGE_NAME "\" "
-		    " :props ("
-#ifdef BUILD_CRYPTO
-		    "  :crypto t "
-#endif /*BUILD_CRYPTO*/
-#ifdef BUILD_GUILE
-		    " :guile t "
-#endif /*BUILD_GUILE*/
+		    " :props (:crypto %s :guile %s "
 		    "  :version \"" VERSION "\" "
-		    "  :doccount %u))",doccount);
+		    "  :doccount %u))",
+		    mu_util_supports (MU_FEATURE_CRYPTO) ? "t" : "nil",
+		    mu_util_supports (MU_FEATURE_GUILE|MU_FEATURE_GNUPLOT)
+		    ? "t" : "nil",
+		    doccount);
 
 	return MU_OK;
 }
