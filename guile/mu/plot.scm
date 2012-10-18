@@ -33,18 +33,18 @@ return the file name."
     (close output)
     datafile))
 
-(define* (mu:plot data title x-label y-label #:optional (ascii #f))
-  "Plot DATA with TITLE, X-LABEL and X-LABEL. If ASCII is true, display
-using raw text, otherwise, use a graphical window."
+(define* (mu:plot data title x-label y-label #:optional (text-only #f))
+  "Plot DATA with TITLE, X-LABEL and X-LABEL. If TEXT-ONLY is true,
+display using raw text, otherwise, use a graphical window."
   (let ((datafile (export-pairs data))
 	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
     (display (string-append
 	       "reset\n"
-	       "set term " (if ascii "dumb" "wxt") "\n"
+	       "set term " (if text-only "dumb" "wxt") "\n"
 	       "set title \"" title "\"\n"
 	       "set xlabel \"" x-label "\"\n"
 	       "set ylabel \"" y-label "\"\n"
 	       "set boxwidth 0.9\n"
 	       "plot \"" datafile "\" using 2:xticlabels(1) with boxes fs solid\n")
       gnuplot)
-  (close-pipe gnuplot)))
+    (close-pipe gnuplot)))

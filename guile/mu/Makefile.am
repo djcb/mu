@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,6 +19,10 @@ include $(top_srcdir)/gtest.mk
 # FIXME: GUILE_SITEDIR would be better, but that
 # breaks 'make distcheck'
 scmdir=${prefix}/share/guile/site/2.0/mu/
-scm_DATA=stats.scm plot.scm
+
+scm_DATA=		\
+	stats.scm	\
+	plot.scm	\
+	script.scm
 
 EXTRA_DIST=$(scm_DATA)
