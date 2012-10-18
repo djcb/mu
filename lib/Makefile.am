@@ -92,6 +92,7 @@ libmu_la_SOURCES=			\
 libmu_la_LIBADD=			\
 	$(XAPIAN_LIBS)			\
 	$(GMIME_LIBS)			\
-	$(GLIB_LIBS)
+	$(GLIB_LIBS)			\
+	$(GUILE_LIBS)
 
 EXTRA_DIST=mu-msg-crypto.c

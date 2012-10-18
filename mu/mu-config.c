@@ -290,6 +290,31 @@ config_options_group_cfind (void)
 }
 
 
+
+static GOptionGroup *
+config_options_group_stats (void)
+{
+	GOptionGroup *og;
+	GOptionEntry entries[] = {
+		{"stat", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.stat,
+		 "statistic to show (see `mu help stats')", "<statistic>"},
+		{"list", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.list,
+		 "list available statistics", NULL},
+		{"textonly", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.textonly,
+		 "use text-only output", NULL},
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
+	};
+
+	og = g_option_group_new("stats", "Options for the 'stats' command",
+				"", NULL, NULL);
+	g_option_group_add_entries(og, entries);
+
+	return og;
+}
+
+
+
+
 static void
 set_group_view_defaults (void)
 {
@@ -491,6 +516,8 @@ get_option_group (MuConfigCmd cmd)
 		return config_options_group_mkdir();
 	case MU_CONFIG_CMD_SERVER:
 		return config_options_group_server();
+	case MU_CONFIG_CMD_STATS:
+		return config_options_group_stats();
 	case MU_CONFIG_CMD_VERIFY:
 		return config_options_group_verify();
 	case MU_CONFIG_CMD_VIEW:

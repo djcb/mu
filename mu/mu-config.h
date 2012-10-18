@@ -98,7 +98,7 @@ struct _MuConfig {
 	/* general options */
 	gboolean	quiet;		/* don't give any output */
 	gboolean	debug;		/* spew out debug info */
-	char		*muhome;	/* the House of Mu */
+	gchar		*muhome;	/* the House of Mu */
 	gboolean	version;	/* request mu version */
 	gboolean	log_stderr;	/* log to stderr (not logfile) */
 	gchar**	        params;		/* parameters (for querying) */
@@ -107,7 +107,7 @@ struct _MuConfig {
 	gboolean	verbose;	/* verbose output */
 
 	/* options for indexing */
-	char	        *maildir;	/* where the mails are */
+	gchar	        *maildir;	/* where the mails are */
 	gboolean        nocleanup;	/* don't cleanup del'd mails from db */
 	gboolean        reindex;	/* re-index existing mails */
 	gboolean        rebuild;	/* empty the database before indexing */
@@ -122,21 +122,21 @@ struct _MuConfig {
 					 * times */
 
 	/* options for querying 'find' (and view-> 'summary') */
-	char		*fields;	/* fields to show in output */
-	char	        *sortfield;	/* field to sort by (string) */
+	gchar		*fields;	/* fields to show in output */
+	gchar	        *sortfield;	/* field to sort by (string) */
 	gboolean	 reverse;	/* sort in revers order (z->a) */
 	gboolean	 threads;       /* show message threads */
 
 	gboolean	 summary;	/* OBSOLETE: use summary_len */
 	int	         summary_len;   /* max # of lines for summary */
 
-	char            *bookmark;	/* use bookmark */
-	char		*formatstr;     /* output type for find
+	gchar            *bookmark;	/* use bookmark */
+	gchar		*formatstr;     /* output type for find
 					 * (plain,links,xml,json,sexp)
 					 * and view (plain, sexp) and cfind
 					 */
 	MuConfigFormat   format;        /* the decoded formatstr */
-	char		*exec;		/* command to execute on the
+	gchar		*exec;		/* command to execute on the
 					 * files for the matched
 					 * messages */
 	/* for find and cind */
@@ -163,7 +163,7 @@ struct _MuConfig {
 	/* also 'after' --> see above */
 
 	/* output to a maildir with symlinks */
-	char            *linksdir;	/* maildir to output symlinks */
+	gchar            *linksdir;	/* maildir to output symlinks */
 	gboolean	 clearlinks;	/* clear a linksdir before filling */
 	mode_t		 dirmode;	/* mode for the created maildir */
 
@@ -172,10 +172,15 @@ struct _MuConfig {
 	gboolean	*save_attachments; /* extract all attachment parts */
 	gchar		*parts;		/* comma-sep'd list of parts
 					 * to save /  open */
-	char		*targetdir;	/* where to save the attachments */
+	gchar		*targetdir;	/* where to save the attachments */
 	gboolean	 overwrite;	/* should we overwrite same-named files */
 	gboolean         play;          /* after saving, try to 'play'
 					 * (open) the attmnt using xdgopen */
+	/* options for mu-stats */
+	gboolean         textonly;      /* no non-textual graphs */
+	gchar           *stat;          /* statistic to show */
+	gboolean	 list;	        /* list available stats */
+
 };
 typedef struct _MuConfig MuConfig;
 

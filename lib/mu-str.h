@@ -359,6 +359,17 @@ gchar* mu_str_guess_first_name (const char* name)
 gchar* mu_str_guess_last_name (const char* name)
         G_GNUC_WARN_UNUSED_RESULT;
 
+
+/**
+ * take a list of strings, and turn them in into their quoted
+ * concatenation
+ *
+ * @param params NULL-terminated array of strings
+ *
+ * @return the quoted concatenation of the strings
+ */
+gchar* mu_str_quoted_from_strv (const gchar **params);
+
 G_END_DECLS
 
 #endif /*__MU_STR_H__*/

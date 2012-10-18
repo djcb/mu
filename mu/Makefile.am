@@ -20,13 +20,14 @@ include $(top_srcdir)/gtest.mk
 # before decending into tests/
 SUBDIRS= . tests
 
-INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS)
+INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS) $(GUILE_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement \
-	-pedantic -Wno-variadic-macros
+	-pedantic -Wno-variadic-macros \
+        -DMU_STATSDIR="\"$(pkgdatadir)/scripts/stats\""
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 bin_PROGRAMS=				\

@@ -96,6 +96,16 @@ mu4e e-mail client.
 #END
 
 
+#BEGIN MU_CONFIG_CMD_STATS
+#STRING
+mu stats [options] --list|--stats=<statistic> [<query>]
+#STRING
+Run some statistics on the mu database. Option '--stats=' selects the statistic to
+show, optionally limited to the messages matching <query>.
+Option '--list' lists the available statistics
+#END
+
+
 #BEGIN MU_CONFIG_CMD_VERIFY
 #STRING
 mu verify [options] <msgfile>
