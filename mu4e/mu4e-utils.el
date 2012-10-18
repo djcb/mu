@@ -219,7 +219,7 @@ Function will return the cdr of the list element."
 	  (response
 	    (mu4e~read-char-choice
 	      (concat prompt optionsstr
-		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to quit]")
+		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to cancel]")
 	      ;; the allowable chars
 	      (map 'list (lambda(elm) (string-to-char (car elm))) options)))
 	  (chosen
