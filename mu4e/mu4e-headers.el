@@ -319,12 +319,12 @@ display may be different)."
   being the From: prefix, the cdr element the To: prefix.")
 
 (defsubst mu4e~headers-from-or-to (msg)
-  "When the from address for message MSG matches
-`mu4e-user-mail-address-regexp', show the To address; otherwise
-show the from address; prefixed with the appropriate
+  "When the from address for message MSG is one of the the user's addresses,
+ (as per `mu4e-user-mail-address-list'), show the To address;
+otherwise ; show the from address; prefixed with the appropriate
 `mu4e-headers-from-or-to-prefix'."
   (let ((addr (cdr-safe (car-safe (mu4e-message-field msg :from)))))
-    (if (and addr (string-match mu4e-user-mail-address-regexp addr))
+    (if (mu4e-user-mail-address-p addr)
       (concat (cdr mu4e-headers-from-or-to-prefix)
 	(mu4e~headers-contact-str (mu4e-message-field msg :to)))
       (concat (car mu4e-headers-from-or-to-prefix)

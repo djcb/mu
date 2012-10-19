@@ -62,6 +62,14 @@ hour and minute fields will be nil if not given."
 	    (string-to-number (match-string 2 s))
 	    nil nil nil)
     (mu4e-error "Not a standard mu4e time string: %s" s)))
+
+
+(defun mu4e-user-mail-address-p (addr)
+  "If ADDR is one of user's e-mail addresses (as per
+`mu4e-user-mail-address-list') return t, otherwise return nil."
+  (when (and addr mu4e-user-mail-address-list
+	  (find addr mu4e-user-mail-address-list :test 'string=))
+    t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -627,7 +635,6 @@ FUNC (if non-nil) afterwards."
 	      (apply 'encode-time
 		(mu4e-parse-time-string mu4e-compose-complete-only-after)))))))))
 
-
 (defun mu4e~stop ()
   "Stop the mu4e session."
   (when mu4e~update-timer
@@ -705,7 +712,7 @@ password."
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error
 	    (sit-for 5))
-	  (mu4e~proc-index mu4e-maildir mu4e-my-email-addresses)
+	  (mu4e~proc-index mu4e-maildir mu4e-user-mail-address-list)
 	  (when (buffer-live-p buf)
 	    (kill-buffer buf)))))
     (process-put proc 'x-interactive interactive)

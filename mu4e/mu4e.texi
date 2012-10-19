@@ -10,7 +10,7 @@
 
 @documentencoding UTF-8
 @c %**end of header
-@include version.texi
+@include ../texi/version.texi
 
 @copying
 Copyright @copyright{} 2012 Dirk-Jan C. Binnema
@@ -27,7 +27,7 @@ Documentation License.''
 
 @titlepage
 @title @t{mu4e} - an e-mail client for emacs
-@subtitle{version  @value{mu4e-version}}
+@subtitle{version  @value{mu-version}}
 @author Dirk-Jan C. Binnema
 
 @c The following two commands start the copyright page.
@@ -721,8 +721,8 @@ compact way to convey the most important information: it shows @t{From:}
 it shows @t{To:} (prefixed by @t{To}@footnote{You can customize this by
 changing the variable @code{mu4e-headers-from-or-to-prefix} (a cons cell)}, as
 in the example above). To determine whether a message was sent by you,
-@t{mu4e} uses the variable @code{mu4e-user-mail-address-regexp}, a regular
-expression matching all your e-mail addresses.
+@t{mu4e} uses the variable @code{mu4e-user-mail-address-list}, a list of
+your e-mail addresses.
 @item The letters in the 'Flags' field correspond to the following: D=@emph{draft},
 F=@emph{flagged} (i.e., 'starred'), N=@emph{new}, P=@emph{passed} (i.e.,
 forwarded), R=@emph{replied}, S=@emph{seen}, T=@emph{trashed},
@@ -1296,9 +1296,10 @@ this:
 only consider addresses that were seen in @emph{personal} messages -- that is,
 messages in which one of my e-mail addresses was seen in one of the address
 fields. This is to exclude mailing list posts. You can define what is
-considered 'my e-mail address' using @code{mu4e-my-email-addresses}, a list
-of e-mail address (defaults to @code{user-mail-address}, and when indexing
-from the command line, the @t{--my-address} parameter for @t{mu index}.
+considered 'my e-mail address' using @code{mu4e-user-mail-address-list}, a
+list of e-mail address (defaults to @code{user-mail-address}, and when
+indexing from the command line, the @t{--my-address} parameter for @t{mu
+index}.
 @item @code{mu4e-compose-complete-only-after} - only consider e-mail
 addresses last seen after some date. Parameter is a string, parseable by
 @code{org-parse-time-string}. This excludes old e-mail addresses. The default
@@ -1854,7 +1855,7 @@ message. An example should clarify this:
         "mu-discuss@@googlegroups.com")
       	"/mu")
       ;; messages sent directly to me go to /archive
-      ;; also `mu4e-user-mail-address-regexp' can be used
+      ;; also `mu4e-user-mail-address-p' can be used
       ((mu4e-message-contact-field-matches msg :to "me@@example.com")
         "/private")
       ;; messages with football or soccer in the subject go to /football
@@ -2168,6 +2169,8 @@ shortcuts (@code{mu4e-maildir-shortcuts}), or the full set of available
 maildirs.
 @item @code{mu4e-running-p}: return @code{t} if the @t{mu4e} process is
 running, @code{nil} otherwise.
+@item @code{(mu4e-user-mail-address-p addr)}: return @code{t} if @var{addr} is
+one of the user's e-mail addresses (as per @code{mu4e-user-mail-address-list}).
 @item @code{mu4e-log} logs to the @t{mu4e} debugging log if it is enabled;
       see @code{mu4e-toggle-logging}.
 @item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
@@ -2517,11 +2520,8 @@ customize.
       ("/work"        . ?w)
       ("/sent"        . ?s)))
 
-;; a regular expression that matches all email addresses used by
-;; the user; this allows us to correctly determine if user
-;; is the sender / direct recipient of some message
-(setq mu4e-user-mail-address-regexp
-      "foo@@bar\.com\\|cuux@@example\.com")
+;; a  list of user's e-mail addresses 
+(setq mu4e-user-mail-address-list '("foo@@bar.com" "cuux@@example.com")
 
 ;; when you want to use some external command for text->html
 ;; conversion, e.g. the 'html2text' program
@@ -3127,6 +3127,6 @@ lines. @t{mu} itself keeps a log as well, you can find this it in
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
 
-@include fdl.texi
+@include ../texi/fdl.texi
 
 @bye

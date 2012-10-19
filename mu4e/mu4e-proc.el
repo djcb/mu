@@ -376,8 +376,8 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 
 (defun mu4e~proc-index (path my-addresses)
   "Update the message database for filesystem PATH, which should
-point to some maildir directory structure. MY-ADDRESSES is a
-list of my email addresses (see e.g. `mu4e-my-email-addresses')."
+point to some maildir directory structure. MY-ADDRESSES is a list
+of 'my' email addresses (see `mu4e-user-mail-address-list')."
   (let ((addrs
 	  (when my-addresses
 	    (mapconcat 'identity my-addresses ","))))

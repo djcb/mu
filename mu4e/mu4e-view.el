@@ -167,7 +167,7 @@ plist."
 	    (:from-or-to
 	      (let* ((from (mu4e-message-field msg :from))
 		      (from (and from (cdar from))))
-		(if (and from (string-match mu4e-user-mail-address-regexp from))
+		(if (mu4e-user-mail-address-p from)
 		  (mu4e~view-construct-contacts-header msg :to)
 		  (mu4e~view-construct-contacts-header msg :from))))
 	    ;; date
