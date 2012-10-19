@@ -47,7 +47,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-headers-fields
-  '( (:date          .  25)
+  '( (:human-date    .  25)
      (:flags         .   6)
      (:from          .  22)
      (:subject       .  nil))
@@ -59,8 +59,14 @@ field. For the complete list of available headers, see
   :type (list 'symbol)
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-date-format "%x %X"
+(defcustom mu4e-headers-date-format "%x"
   "Date format to use in the headers view, in the format of
+  `format-time-string'."
+  :type  'string
+  :group 'mu4e-headers)
+
+(defcustom mu4e-headers-time-format "%X"
+  "Time format to use in the headers view, in the format of
   `format-time-string'."
   :type  'string
   :group 'mu4e-headers)
@@ -133,7 +139,7 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
 (defvar mu4e-headers-sortfield :date
   "Field to sort the headers by. Field must be a symbol, one of:
-date, subject, size, prio, from, to.")
+:date, :subject, :size, :prio, :from, :to.")
 
 (defvar mu4e-headers-sort-revert t
   "Whether to revert the sort-order, i.e. Z->A instead of A-Z. When
@@ -324,48 +330,57 @@ show the from address; prefixed with the appropriate
       (concat (car mu4e-headers-from-or-to-prefix)
 	(mu4e~headers-contact-str (mu4e-message-field msg :from))))))
 
-;; note: this function is very performance-sensitive
+(defsubst mu4e~headers-human-date (msg)
+  "Show a 'human' date -- that is, if the date is today, show the
+date, otherwise, show the time."
+  (let ((date (mu4e-msg-field msg :date)))
+    (if (= (nth 3 (decode-time date)) (nth 3 (decode-time (current-time))))
+      (format-time-string mu4e-headers-time-format date)
+      (format-time-string mu4e-headers-date-format date))))
+
+  ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
-  "Create a one line description of MSG in this buffer, at POINT,
+    "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (let ((docid (mu4e-message-field msg :docid)) (line ""))
-    (dolist (f-w mu4e-headers-fields)
-      (let ((field (car f-w)) (width (cdr f-w))
-	     (val (mu4e-message-field msg (car f-w))) (str))
-	(setq str
-	  (case field
-	    (:subject
-	      (concat ;; prefix subject with a thread indicator
-		(mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
-		;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
-		val))
-	    ((:maildir :path) val)
-	    ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
-	    ;; if we (ie. `user-mail-address' is the 'From', show
-	    ;; 'To', otherwise show From
-	    (:from-or-to (mu4e~headers-from-or-to msg))
-	    (:date (format-time-string mu4e-headers-date-format val))
-	    (:flags (propertize (mu4e~headers-flags-str val)
-		      'help-echo (format "%S" val)))
-	    (:size (mu4e-display-size val))
-	    (t (mu4e-error "Unsupported header field (%S)" field))))
-	(when str
-	  (setq line
-	    (concat line
-	      (if (not width)
-		str
-		(truncate-string-to-width str width 0 ?\s t)) " ")))))
-    ;; now, propertize it.
-    (setq line (propertize line 'face
-		 (case (car-safe (mu4e-message-field msg :flags))
-		   ('draft           'mu4e-draft-face)
-		   ('trash           'mu4e-trashed-face)
-		   ((unread new)     'mu4e-unread-face)
-		   ('flagged         'mu4e-flagged-face)
-		   ((replied passed) 'mu4e-replied-face)
-		   (t                'mu4e-header-face))))
-    ;; now, append the header line
-    (mu4e~headers-add-header line docid point msg)))
+    (let ((docid (mu4e-message-field msg :docid)) (line ""))
+      (dolist (f-w mu4e-headers-fields)
+	(let ((field (car f-w)) (width (cdr f-w))
+	       (val (mu4e-message-field msg (car f-w))) (str))
+	  (setq str
+	    (case field
+	      (:subject
+		(concat ;; prefix subject with a thread indicator
+		  (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
+		  ;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
+		  val))
+	      ((:maildir :path) val)
+	      ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
+	      ;; if we (ie. `user-mail-address' is the 'From', show
+	      ;; 'To', otherwise show From
+	      (:from-or-to (mu4e~headers-from-or-to msg))
+	      (:date (format-time-string mu4e-headers-date-format val))
+	      (:human-date (mu4e~headers-human-date msg))
+	      (:flags (propertize (mu4e~headers-flags-str val)
+			'help-echo (format "%S" val)))
+	      (:size (mu4e-display-size val))
+	      (t (mu4e-error "Unsupported header field (%S)" field))))
+	  (when str
+	    (setq line
+	      (concat line
+		(if (not width)
+		  str
+		  (truncate-string-to-width str width 0 ?\s t)) " ")))))
+      ;; now, propertize it.
+      (setq line (propertize line 'face
+		   (case (car-safe (mu4e-message-field msg :flags))
+		     ('draft           'mu4e-draft-face)
+		     ('trash           'mu4e-trashed-face)
+		     ((unread new)     'mu4e-unread-face)
+		     ('flagged         'mu4e-flagged-face)
+		     ((replied passed) 'mu4e-replied-face)
+		     (t                'mu4e-header-face))))
+      ;; now, append the header line
+      (mu4e~headers-add-header line docid point msg))) 
 
 (defconst mu4e~no-matches     (purecopy "No matching messages found"))
 (defconst mu4e~end-of-results (purecopy "End of search results"))

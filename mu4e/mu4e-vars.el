@@ -460,6 +460,11 @@ headers)."
 	 :shortname "Date"
 	 :help "Date/time when the message was written"
 	 :sortable t))
+     (:human-date .
+       ( :name "Date"
+	 :shortname "Date"
+	 :help "Date/time when the message was written."
+	 :sortable t))
      (:flags .
        ( :name "Flags"
 	 :shortname "Flgs"

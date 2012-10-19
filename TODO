@@ -22,12 +22,6 @@
   - new-mail warning
     ==> [ workaround available, using mu4e-index-updated-hook ]
   - custom header fields in headers-view, message-view
-    - 'human' dates
-  - guile integration
-    - statistics
-  - check if we can speed up mu4e-proc parsing by using search rather than
-    regexp search
-     ==> probably not
   - show maildirs as a tree, not a list in speed bar
   - review emacs menus
   - re-factor / separate window/buffer management
@@ -52,7 +46,9 @@
 
   - mu4e: scroll down –> go to next message
   - mu: add contact: as a shortcut for matching from/to/cc/bcc:
-
+  - guile integration
+    - statistics
+  - 'human' dates in the headers view
 
 * Done
   :PROPERTIES:

@@ -4,10 +4,15 @@
 
 ** Release 0.9.9.x
 
+*** mu
+     - add 'mu stats' command to show statistics about your messages. Requires
+       guile 2.0, gnuplot
+
 *** mu4e
     - scroll down in message view takes you to next message (but see
       `mu4e-view-scroll-to-next')
-
+    - support 'human dates', that is, show the time for today's messages, and
+      the date for older messages in the headers view 
 
 * Old news
   :PROPERTIES:
@@ -24,7 +29,7 @@
     - support signing / decryption of messages
     - improve address-autocompletion (e.g., ensure it's case-insensitive)
     - much faster when there are many maildirs
-    - improved line wrapping  
+    - improved line wrapping
     - better handle attached messages
     - improved URL-matching
     - improved messages to user (mu4e-(warn|error|message))
@@ -76,8 +81,8 @@
     - fix sorting by subject (disregarding Re:, Fwd: etc.)
     - much faster handling when there are many maildirs (speedbar)
     - handle mailto: links
-    - improved, extended documentation  
-      
+    - improved, extended documentation
+
 *** mu
 
     - support .noupdate files (parallel to .noindex, dir is ignored unless we're

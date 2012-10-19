@@ -703,6 +703,12 @@ Some notes to explain what you see in the example:
 @item The fields shown in the headers view can be influenced by customizing
 the variable @code{mu4e-headers-fields}; see @code{mu4e-header-info} for the
 list of available fields.
+@item By default, the date is shown with the @t{:human-date} field, which
+shows the @emph{time} for today's messages, and the @emph{date} for older
+messages. If you want to distinguish between 'today' and 'older', you can use
+the @t{:date} field instead.
+@item You can customize the date and time formats with the variable
+@t{mu4e-headers-date-format} and @t{mu4e-headers-time-format}, respectively.
 @item The header field used for sorting is indicated by ``@t{V}'' or
 ``@t{^}''@footnote{or you can use little graphical triangles; see variable
 @code{mu4e-use-fancy-chars}}, indicating the sort order (descending or
@@ -722,8 +728,6 @@ F=@emph{flagged} (i.e., 'starred'), N=@emph{new}, P=@emph{passed} (i.e.,
 forwarded), R=@emph{replied}, S=@emph{seen}, T=@emph{trashed},
 a=@emph{has-attachment}, x=@emph{encrypted}, s=@emph{signed},
 u=@emph{unread}. The tooltip for this field also contains this information.
-@item You can customize the date format with the variable
-@t{mu4e-headers-date-format}
 @item The subject field also indicates the discussion threads @footnote{using
 Jamie Zawinski's mail threading algorithm,
 @url{http://www.jwz.org/doc/threading.html}}.
