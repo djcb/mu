@@ -303,16 +303,15 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 ],[have_pmccabe="yes"])
 ###############################################################################
 
-
 AC_CONFIG_FILES([
 Makefile
+texi/version.texi
 mu/Makefile
 mu/tests/Makefile
 lib/Makefile
 lib/tests/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el
-mu4e/version.texi
 guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile

@@ -2,13 +2,15 @@
 @c %**start of header
 @setfilename mu-guile.info
 @settitle mu-guile user manual
-@documentencoding utf-8
-@c %**end of header
 
-@dircategory The Algorithmic Language Scheme
-@direntry
-* mu-guile manual: (mu-guile).  Guile bindings for the @t{mu} e-mail indexer/searcher.
-@end direntry
+@c Use proper quote and backtick for code sections in PDF output
+@c Cf. Texinfo manual 14.2
+@set txicodequoteundirected
+@set txicodequotebacktick
+
+@documentencoding UTF-8
+@c %**end of header
+@include ../texi/version.texi
 
 @copying
 Copyright @copyright{} 2012 Dirk-Jan C. Binnema
@@ -23,14 +25,39 @@ Documentation License.''
 @end quotation
 @end copying
 
+@titlepage
+@title @t{mu-guile} - extending @t{mu} with Guile Scheme
+@subtitle{version  @value{mu-version}}
+@author Dirk-Jan C. Binnema
+
+@c The following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@dircategory The Algorithmic Language Scheme
+@direntry
+* Mu-guile: (mu-guile).        Guile-bindings for the mu e-mail indexer/searcher
+@end direntry
+
+@contents
+
+@ifnottex
 @node Top
-@top mu4e Manual
+@top mu-guile manual
+@end ifnottex
+
+@iftex
+@node Welcome to mu-guile
+@unnumbered Welcome to mu-guile
+@end iftex
 
 Welcome to @t{mu-guile}!
 
-@t{mu-guile} is a binding of the @t{mu} email search engine for the @t{guile}
-programming language. That means that you can write simple (and not so simple)
-programs to data-mine your e-mail database.
+@t{mu-guile} is a binding of the @t{mu} email search-engine for the @t{guile}
+programming language. Using this binding, you can write simple (and not so
+simple) programs/scripts to data-mine your e-mail corpus.
 
 @menu
 * Introduction::
@@ -50,7 +77,7 @@ Appendices
 @node Introduction
 @chapter Introduction
 
-@t{mu} is a program for indexing / searching e-mails stored in Maildirs.
+@t{mu} is a program for indexing and searching e-mails stored in maildirs.
 
 @t{guile} is the @emph{GNU Ubiquitous Intelligent Language for Extensions} - a
 version of the @emph{Scheme} programming language and the official GNU
@@ -185,24 +212,25 @@ Geiser@footnote{@url{http://www.nongnu.org/geiser/}}.
 @node Initializing mu-guile
 @chapter Initializing mu-guile
 
-It is of course possible to write separate programs with @t{mu-guile}, but for
-now we'll do things @emph{interactively}, i.e., from the Guile-prompt
-(``@abbr{REPL}'').
+It is possible to write separate programs with @t{mu-guile}, but for now we'll
+do things @emph{interactively}, i.e., from the Guile-prompt (``@abbr{REPL}'').
 
 We start our @t{mu-guile} session by starting @t{guile}:
 
+@cartouche
 @verbatim
 $ guile
-GNU Guile 2.0.3.82-a2c66
-Copyright (C) 1995-2011 Free Software Foundation, Inc.
+GNU Guile 2.0.5.123-4bd53
+Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
 Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
 This program is free software, and you are welcome to redistribute it
 under certain conditions; type `,show c' for details.
 
 Enter `,help' for help.
-scheme@(guile-user)>
+scheme@(guile-user)> 
 @end verbatim
+@end cartouche
 
 The first thing we need to do is loading the modules. All the basics are in
 the @t{(mu)} module, with some statistical extras in @t{(mu stats)}, and some
@@ -739,33 +767,35 @@ exec guile -s $0 $@
 (mu:plot (mail-per-hour-table) "Mail per hour" "Hour" "Frequency" #t)
 @end lisp
 
+@cartouche
 @verbatim
-                                  Mail per hour
- Frequency
-   1200 ++--+--+--+--+-+--+--+--+--+-+--+--+--+-+--+--+--+--+-+--+--+--+--++
-        |+  +  +  +  + +  + "/tmp/fileHz7D2u" using 2:xticlabels(1) ********
-   1100 ++                                                            *** +*
-        ****                                                          * *  *
-   1000 *+ *                                                       **** * +*
-        *  *                           ******  ****                * ** *  *
-    900 *+ *                           * ** ****  *             **** ** * +*
-        *  *                           * ** *  *  *********     * ** ** *  *
-    800 *+ *                        **** ** *  *  *  * ** *     * ** ** * +*
-    700 *+ ***                   ****  * ** *  *  *  * ** ****  * ** ** * +*
-        *  * *                ****  *  * ** *  *  *  * ** *  **** ** ** *  *
-    600 *+ * ****             *  *  *  * ** *  *  *  * ** *  *  * ** ** * +*
-        *  * ** *             *  *  *  * ** *  *  *  * ** *  *  * ** ** *  *
-    500 *+ * ** *             *  *  *  * ** *  *  *  * ** *  *  * ** ** * +*
-        *  * ** ****        ***  *  *  * ** *  *  *  * ** *  *  * ** ** *  *
-    400 *+ * ** ** ****     * *  *  *  * ** *  *  *  * ** *  *  * ** ** * +*
-        *+ *+**+**+* +*******+* +* +*+ *+**+* +*+ *+ *+**+* +*+ *+**+**+* +*
-    300 ********************************************************************
-         0  1  2  3  4 5  6  7  8  910 11 12 1314 15 16 17 1819 20 21 22 23
+				 Mail per hour
+Frequency
+  1200 ++--+--+--+--+-+--+--+--+--+-+--+--+--+-+--+--+--+--+-+--+--+--+--++
+       |+  +  +	 +  + +	 + "/tmp/fileHz7D2u" using 2:xticlabels(1) ********
+  1100 ++							     *** +*
+       ****							     * *  *
+  1000 *+ *							  **** * +*
+       *  *			      ******  ****		  * ** *  *
+   900 *+ *			      * ** ****	 *	       **** ** * +*
+       *  *			      * ** *  *	 *********     * ** ** *  *
+   800 *+ *			   **** ** *  *	 *  * ** *     * ** ** * +*
+   700 *+ ***			****  * ** *  *	 *  * ** ****  * ** ** * +*
+       *  * *		     ****  *  * ** *  *	 *  * ** *  **** ** ** *  *
+   600 *+ * ****	     *	*  *  * ** *  *	 *  * ** *  *  * ** ** * +*
+       *  * ** *	     *	*  *  * ** *  *	 *  * ** *  *  * ** ** *  *
+   500 *+ * ** *	     *	*  *  * ** *  *	 *  * ** *  *  * ** ** * +*
+       *  * ** ****	   ***	*  *  * ** *  *	 *  * ** *  *  * ** ** *  *
+   400 *+ * ** ** ****	   * *	*  *  * ** *  *	 *  * ** *  *  * ** ** * +*
+       *+ *+**+**+* +*******+* +* +*+ *+**+* +*+ *+ *+**+* +*+ *+**+**+* +*
+   300 ********************************************************************
+	0  1  2	 3  4 5	 6  7  8  910 11 12 1314 15 16 17 1819 20 21 22 23
                                        Hour
 @end verbatim
+@end cartouche
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
 
-@include fdl.texi
+@include ../texi/fdl.texi
 @bye

@@ -19,7 +19,6 @@ include $(top_srcdir)/gtest.mk
 SUBDIRS=
 
 info_TEXINFOS=mu4e.texi
-mu4e_TEXINFOS=fdl.texi
 
 lispdir=${prefix}/share/emacs/site-lisp/mu4e/
 
@@ -39,10 +38,7 @@ dist_lisp_LISP=			\
 	mu4e-view.el		\
 	mu4e.el			\
 	org-mu4e.el
-
-# BUILT_SOURCES=			\
-# 	mu4e-about.el
-
+ 
 mu4e-about.el: mu4e-about.org
 	@echo ";; auto-generated"           >   mu4e-about.el
 	@echo "(defconst mu4e-about \""     >>  mu4e-about.el

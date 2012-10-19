@@ -1,0 +1,3 @@
+@c the version for mu for including in texinfo docs
+@set mu-version @VERSION@
+

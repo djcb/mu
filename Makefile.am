@@ -28,7 +28,7 @@ else
 mu4e=
 endif
 
-SUBDIRS=m4 man lib $(guile) mu $(mu4e) contrib toys
+SUBDIRS=m4 texi man lib $(guile) mu $(mu4e) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 
