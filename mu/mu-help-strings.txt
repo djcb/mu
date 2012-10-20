@@ -98,11 +98,11 @@ mu4e e-mail client.
 
 #BEGIN MU_CONFIG_CMD_STATS
 #STRING
-mu stats [options] --list|--stats=<statistic> [<query>]
+mu stats [options] [--stat=<statistic>] [<query>]
 #STRING
-Run some statistics on the mu database. Option '--stats=' selects the statistic to
-show, optionally limited to the messages matching <query>.
-Option '--list' lists the available statistics
+Run some statistics on the mu database. Option '--stat=' selects the statistic to
+show, optionally limited to the messages matching <query>. Without '--stat',
+lists the available statistics.
 #END
 
 

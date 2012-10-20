@@ -298,8 +298,6 @@ config_options_group_stats (void)
 	GOptionEntry entries[] = {
 		{"stat", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.stat,
 		 "statistic to show (see `mu help stats')", "<statistic>"},
-		{"list", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.list,
-		 "list available statistics", NULL},
 		{"textonly", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.textonly,
 		 "use text-only output", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}

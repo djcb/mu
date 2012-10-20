@@ -6,7 +6,7 @@ mu stats\- run statistic on the mu database
 
 .SH SYNOPSIS
 
-.B mu stats [options] --stat=<statistic>|--list [<query>]
+.B mu stats [options] [--stat=<statistic>] [<query>]
 
 .SH DESCRIPTION
 
@@ -15,14 +15,14 @@ database. The statistics are implement in the Guile programming language, and
 thus only work if your \fBmu\fR is built with support for Guile. In addition,
 you need to have \fBgnuplot\fR installed.
 
+\fBmu stats\fR supports a number of different statistics; running \fBmu
+stats\fR without any options, lists the available statistics.
+
 .SH OPTIONS
 
 .TP
-\fB\-\-list\fR
-list the available statistics
-
 \fB\-\-stat=\fR\fI<statistic>\fR
-run the given statistic; \fB--list\fR shows the available statistics
+show the results for the given statistic
 
 \fB\-\-textonly\fR
 show the statistics in text-only format, even if the environment is

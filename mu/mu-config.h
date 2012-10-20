@@ -179,8 +179,6 @@ struct _MuConfig {
 	/* options for mu-stats */
 	gboolean         textonly;      /* no non-textual graphs */
 	gchar           *stat;          /* statistic to show */
-	gboolean	 list;	        /* list available stats */
-
 };
 typedef struct _MuConfig MuConfig;
 

@@ -214,7 +214,8 @@ list_stats (GError **err)
 		g_print ("No statistics available\n");
 	else {
 		GSList *cur;
-		g_print ("Available statistics:\n");
+		g_print ("Available statistics "
+			 "(use with --stat=<stastistic):\n");
 		for (cur = scripts; cur; cur = g_slist_next (cur))
 			g_print ("\t%s\n", ((NamePath*)cur->data)->name);
 	}
@@ -235,13 +236,6 @@ check_params (MuConfig *opts, GError **err)
 		return FALSE;
 	}
 
-	if (!opts->list && !opts->stat) {
-		mu_util_g_set_error
-			(err,MU_ERROR_IN_PARAMETERS,
-			 "--stat=<statistic> or --list is required");
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -256,7 +250,7 @@ mu_cmd_stats (MuConfig *opts, GError **err)
 	if (!check_params (opts, err))
 		return MU_ERROR;
 
-	if (opts->list)
+	if (!opts->stat)
 		return list_stats (err);
 
 	run_guile_script (opts, err);
