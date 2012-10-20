@@ -55,12 +55,23 @@ Documentation License.''
 
 Welcome to @t{mu-guile}!
 
-@t{mu-guile} is a binding of the @t{mu} email search-engine for the @t{guile}
-programming language. Using this binding, you can write simple (and not so
-simple) programs/scripts to data-mine your e-mail corpus.
+@t{mu} is a program for indexing and searching your e-mails. It can search
+your messages in many different ways, but sometimes that may not be
+enough. If you have very specific queries, or want do generate some
+statistics, you need some more power. 
+
+@t{mu-guile} is made for those cases. @t{mu-guile} exposes the internals of
+@t{mu} and its database to the @t{guile} programming language. Guile is the
+@emph{GNU Ubiquitous Intelligent Language for Extensions} - a version of the
+@emph{Scheme} programming language and the official GNU extension language.
+
+Guile/Scheme is a member of the @emph{Lisp} family of programming languages --
+like emacs-lisp, @emph{Racket}, Common Lisp. If you're not familiar with
+Scheme, @t{mu-guile} is an excellent opportunity to learn a bit about!
+
+Trust me, it's not very hard -- and it it's @emph{fun}!
 
 @menu
-* Introduction::
 * Getting started::
 * Initializing mu-guile::
 * Messages::
@@ -74,44 +85,65 @@ Appendices
 * GNU Free Documentation License::  The license of this manual.
 @end menu
 
-@node Introduction
-@chapter Introduction
-
-@t{mu} is a program for indexing and searching e-mails stored in maildirs.
-
-@t{guile} is the @emph{GNU Ubiquitous Intelligent Language for Extensions} - a
-version of the @emph{Scheme} programming language and the official GNU
-extension language.
-
-@t{mu-guile} connects @t{mu} and @t{guile}, and allows you to easily write
-programs for your specific needs.
-
 @node Getting started
 @chapter Getting started
 
 @menu
 * Installation::
-* First steps::
+* Making sure it works::
 @end menu
 
-This chapter walks you through the installation and some basic steps to ensure
-things work correctly.
+This chapter walks you through the installation and the basic setup. 
 
 @node Installation
 @section Installation
 
-@t{mu-guile} is part of @t{mu} - by installing the latter, the former will be
-installed as well, provided that you have @t{guile} version 2.0 installed.
+@t{mu-guile} is part of @t{mu} - by installing the latter, the former is
+installed as well. At the time of writing, there are no distribution-provided
+packaged versions of @t{mu-guile}; so for now, you need to follow the steps
+below.
+
+@subsection Guile 2.x
+
+@t{mu-guile} is built automatically when @t{mu} is built, if you have
+@t{guile} installed (@t{mu} checks for this during @t{configure}). Thus, the
+first step is to ensure you have @t{guile} installed.
+
+On Debian/Ubuntu you can install @t{guile} 2.x using the @t{guile-2.0-dev}
+package (and its dependencies):
+@example
+$ sudo apt-get install guile-2.0-dev
+@end example
+
+At the time of write, there are no official packages for
+Fedora@footnote{@url{https://bugzilla.redhat.com/show_bug.cgi?id=678238}}.  If
+you are using Fedora or any other system that does not have packages, you need
+to compile @t{guile} from
+source@footnote{@url{http://www.gnu.org/software/guile/manual/html_node/Obtaining-and-Installing-Guile.html#Obtaining-and-Installing-Guile}}.
+
+@subsection gnuplot
+
+For creating graphs with @t{mu-guile}, you need the @t{gnuplot} program --
+most likely, there is a package available for your system; for example:
+
+@example
+$ sudo apt-get install gnuplot
+@end example
+
+and in Fedora:
+
+@example
+$ sudo yum install gnuplot
+@end example
+
+@subsection mu
 
 At the time of writing, there are no distribution packages for @t{mu-guile},
 so we are assuming installation from source packages.
 
-Installation follows the normal sequence of:
-@example
-$ tar xvfz mu-<version>.tar.gz  # use the specific version
-$ cd mu-<version>
-$./configure
-@end example
+Assuming @t{guile} 2.x is installed correctly, @t{mu} finds it during its
+@t{configure}-stage, and creates @t{mu-guile}. Building @t{mu} follows the
+normal steps -- please see the @t{mu} documentation for the details.
 
 The output of @t{./configure} should end with a little text describing the
 detected versions of various libraries @t{mu} depends on. In particular, it
@@ -122,27 +154,25 @@ Guile version                        : 2.0.3.82-a2c66
 @end example
 
 If you don't see any line referring to @t{guile}, please install it, and run
-@t{configure} again. Note once more, @t{mu-guile} requires @t{guile} version
-2.0.
-
-After a succesfull @t{./configure}, we can make and install the package:
+@t{configure} again. After a succesfull @t{./configure}, we can make and
+install the package:
 
 @example
 $ make && sudo make install
 @end example
 
-After this, @t{mu} and @t{mu-guile} should be installed. Note that the above
-instructions will normally install things under @t{/usr/local}; you may need
-to update @t{guile}'s @t{%load-path} to find it there.
+@subsection mu-guile
 
-You can check the current load-path with the following:
+After this, @t{mu} and @t{mu-guile} are installed -- usually somewhere under
+@t{/usr/local}.You may need to update @t{guile}'s @code{%load-path} to find it
+there. You can check the current @code{%load-path} with the following:
 
 @example
 guile -c '(display %load-path)(newline)'
 @end example
 
-If necessary, you can add the @t{%load-path} by adding something like the
-following to your @file{~/.guile}:
+If necessary, you can add the @t{%load-path} by adding to your
+@file{~/.guile}:
 
 @lisp
 (set! %load-path (cons "/usr/local/share/guile/site/2.0" %load-path))
@@ -153,24 +183,23 @@ Or, alternatively, you can set @t{GUILE_LOAD_PATH}:
 export GUILE_LOAD_PATH="/usr/local/share/guile/site/2.0"
 @end example
 
-Note, in both cases the directory should be the directory that contains the
-installed @t{mu.scm}; so if you installed @t{mu} under a different prefix, you
-must change the load-path accordingly.
+In both cases the directory should be the directory that contains the
+installed @t{mu.scm}; if you installed @t{mu} under a different prefix, you
+must change the @code{%load-path} accordingly. After this, you should be ready
+to go!
 
-After this, you should be ready to go.
-
-@node First steps
-@section First steps
+@node Making sure it works
+@section Making sure it works
 
 Assuming @t{mu-guile} has been installed correctly (@ref{Installation}), and
 also assuming that you have already indexed your e-mail messages (if
 necessary, see the @t{mu-index} man-page), we are ready to start @t{mu-guile};
 a session may look something like this:
 
+@cartouche
 @verbatim
-$ guile
-GNU Guile 2.0.3.82-a2c66
-Copyright (C) 1995-2011 Free Software Foundation, Inc.
+GNU Guile 2.0.5.123-4bd53
+Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
 Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
 This program is free software, and you are welcome to redistribute it
@@ -179,47 +208,58 @@ under certain conditions; type `,show c' for details.
 Enter `,help' for help.
 scheme@(guile-user)>
 @end verbatim
+@end cartouche
 
-Now, we need to load some of the @t{mu-guile} modules:
+@noindent
+Now, copy-paste the following after the prompt:
+
+@cartouche
+@lisp
+(use-modules (mu))
+(mu:initialize)
+(for-each
+    (lambda(msg)
+       (format #t "Subject: ~a\n" (mu:subject msg)))
+        (mu:message-list "hello"))
+@end lisp
+@end cartouche
+
+@noindent
+After pressing @key{Enter}, you should get a list of all subjects of messages
+that match @t{hello}: 
 
 @verbatim
-scheme@(guile-user)> (use-modules (mu) (mu message))
+...
+Subject: RE: The Bird Serpent War Cataclysm
+Subject: Hello!
+Subject: Re: post-run tomorrow
+Subject: When all is lost
+...
 @end verbatim
 
-This will load the basic modules for dealing with messages. After we have
-loaded the modules, we need to initialize the @t{mu-guile} system:
-
-@verbatim
-scheme@(guile-user)> (mu:initialize)
-@end verbatim
-
-When this is done, we can start querying the database. We discuss various
-methods and functions later in this manual, but just to give an example, let's
-get a list of the subjects of all messages that mention @emph{hello}:
-
-@verbatim
-scheme@(guile-user)> (for-each
-                        (lambda(msg)
-                          (format #t "Subject: ~a\n" (mu:subject msg)))
-                        (mu:message-list "hello"))
-@end verbatim
-
-Note, the multi-lines in the example are only for readability; since it can be
-a bit uncomfortable to type long sequences at the 'REPL' (the Guile
-command-line), we recommend using a tool like
-Geiser@footnote{@url{http://www.nongnu.org/geiser/}}.
+@noindent
+If all this works, congratulations! @t{mu-guile} is installed now, ready to
+serve your every whim!
 
 @node Initializing mu-guile
 @chapter Initializing mu-guile
 
+In the previous, we have installed @t{mu-guile}, and in @ref{Making sure it works}
+tried some simple script, to make sure everything works as expected. In this
+and the following chapters, we take a closer look programming with
+@t{mu-guile}.
+
 It is possible to write separate programs with @t{mu-guile}, but for now we'll
 do things @emph{interactively}, i.e., from the Guile-prompt (``@abbr{REPL}'').
 
-We start our @t{mu-guile} session by starting @t{guile}:
+As we have seen, we start our @t{mu-guile} session by starting @t{guile}:
+
+@verbatim
+$ guile
+@end verbatim
 
 @cartouche
 @verbatim
-$ guile
 GNU Guile 2.0.5.123-4bd53
 Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
@@ -234,27 +274,28 @@ scheme@(guile-user)>
 
 The first thing we need to do is loading the modules. All the basics are in
 the @t{(mu)} module, with some statistical extras in @t{(mu stats)}, and some
-graph plotting functionality in @t{(mu plot)}.
+graph plotting functionality in @t{(mu plot)}@footnote{@code{(mu plot)}
+requires the @t{gnuplot} program}.
 
-Let's simply load all of them:
+Let's load all of them:
 
 @verbatim
 scheme@(guile-user)> (use-modules (mu) (mu stats) (mu plot))
 @end verbatim
 
-Assuming you have installed everything correctly, the first time you do this,
-@t{guile} will probably respond by showing some message about compiling the
-modules, and then return to you with another prompt.
-
-Before we can do anything with @t{mu guile}, we need to initialize the
+The first time you do this, @t{guile} will probably respond by showing some
+messages about compiling the modules, and then return to you with another
+prompt. Before we can do anything with @t{mu guile}, we need to initialize the
 system. This goes like this:
 
 @verbatim
 scheme@(guile-user)> (mu:initialize)
 @end verbatim
 
-Which will use the default location of @file{~/.mu}. Or, instead, if you keep
-your @t{mu} data in a non-standard place:
+This opens the database for reading, using the default location of
+@file{~/.mu}. 
+
+If you keep your @t{mu} database in a non-standard place:
 
 @verbatim
 scheme@(guile-user)> (mu:initialize "/path/to/my/mu/")
