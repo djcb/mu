@@ -104,8 +104,7 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
     (cond
       (val
 	val)   ;; non-nil -> just return it
-      ((member field '(:from :to :cc :bcc :subject :message-id
-			:path :maildir :in-reply-to))
+      ((member field '(:subject :message-id :path :maildir :in-reply-to))
 	"")    ;; string fields except body-txt, body-html: nil -> ""
       ((member field '(:docid :size))
 	0)     ;; numeric type: nil -> 0
