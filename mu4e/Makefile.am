@@ -19,6 +19,7 @@ include $(top_srcdir)/gtest.mk
 SUBDIRS=
 
 info_TEXINFOS=mu4e.texi
+mu4e_TEXINFOS=fdl.texi
 
 lispdir=${prefix}/share/emacs/site-lisp/mu4e/
 

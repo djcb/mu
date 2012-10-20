@@ -305,7 +305,6 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 
 AC_CONFIG_FILES([
 Makefile
-texi/Makefile
 mu/Makefile
 mu/tests/Makefile
 lib/Makefile

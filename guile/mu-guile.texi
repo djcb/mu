@@ -839,5 +839,5 @@ Frequency
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
 
-@include @value{texidir}/fdl.texi
+@include fdl.texi
 @bye
