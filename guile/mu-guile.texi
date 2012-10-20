@@ -10,7 +10,8 @@
 
 @documentencoding UTF-8
 @c %**end of header
-@include ../texi/version.texi
+
+@include texi.texi
 
 @copying
 Copyright @copyright{} 2012 Dirk-Jan C. Binnema
@@ -838,5 +839,5 @@ Frequency
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
 
-@include ../texi/fdl.texi
+@include @value{texidir}/fdl.texi
 @bye
