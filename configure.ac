@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.9.x],[http://code.google.com/p/mu0/issues/list],[mu])
+AC_INIT([mu],[0.9.9.5-dev1],[http://code.google.com/p/mu0/issues/list],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -313,7 +313,7 @@ mu4e/Makefile
 mu4e/mu4e-meta.el
 mu4e/texi.texi
 guile/Makefile
-guile/texi.texi	
+guile/texi.texi
 guile/mu/Makefile
 guile/examples/Makefile
 guile/tests/Makefile
