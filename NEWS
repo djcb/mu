@@ -13,6 +13,8 @@
       `mu4e-view-scroll-to-next')
     - support 'human dates', that is, show the time for today's messages, and
       the date for older messages in the headers view 
+    - replace `mu4e-user-mail-address-regexp' and `mu4e-my-mail-addresses' with
+      `mu4e-user-mail-address-list'
 
 * Old news
   :PROPERTIES:
