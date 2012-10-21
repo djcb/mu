@@ -37,43 +37,73 @@
 #define MU_GUILE_EXT          ".scm"
 #define MU_GUILE_DESCR_PREFIX ";; DESCRIPTION: "
 
-static MuError
-list_stats (GError **err)
+static void
+print_stats (GSList *scripts)
 {
-	GSList *scripts;
-	scripts = mu_script_get_script_info_list (MU_STATSDIR,
-						  MU_GUILE_EXT,
+	GSList *cur;
+
+	if (!scripts) {
+		g_print ("No statistics available\n");
+		return;
+	}
+
+	g_print ("Available statistics "
+		 "(use with --stat=<stastistic>):\n");
+	for (cur = scripts; cur; cur = g_slist_next (cur)) {
+
+		MuScriptInfo *msi;
+		const char* descr;
+
+		msi   = (MuScriptInfo*)cur->data;
+		descr = mu_script_info_description (msi);
+
+		g_print ("\t%s%s%s\n",
+			 mu_script_info_name (msi),
+			 descr ? ": " : "",
+			 descr ? descr : "");
+	}
+}
+
+
+static GSList*
+get_script_info_list (const char *muhome, GError **err)
+{
+	GSList *scripts, *userscripts, *last;
+	char *userpath;
+
+	scripts = mu_script_get_script_info_list (MU_STATSDIR, MU_GUILE_EXT,
 						  MU_GUILE_DESCR_PREFIX,
 						  err);
 	if (err && *err)
-		return MU_ERROR;
+		return NULL;
 
-	if (!scripts)
-		g_print ("No statistics available\n");
-	else {
-		GSList *cur;
-		g_print ("Available statistics "
-			 "(use with --stat=<stastistic>):\n");
-		for (cur = scripts; cur; cur = g_slist_next (cur)) {
+	userpath = g_strdup_printf ("%s%c%s",
+				    muhome, G_DIR_SEPARATOR,
+				    "scripts" G_DIR_SEPARATOR_S "stats");
 
-			MuScriptInfo *msi;
-			const char* descr;
+	/* is there are userdir for scripts? */
+	if (!mu_util_check_dir (userpath, TRUE, FALSE))
+		return scripts;
 
-			msi   = (MuScriptInfo*)cur->data;
-			descr = mu_script_info_description (msi);
-
-			g_print ("\t%s%s%s\n",
-				 mu_script_info_name (msi),
-				 descr ? ": " : "",
-				 descr ? descr : "");
-		}
+	/* append it to the list we already have */
+	userscripts = mu_script_get_script_info_list (userpath, MU_GUILE_EXT,
+						      MU_GUILE_DESCR_PREFIX,
+						      err);
+	/* some error, return nothing */
+	if (err && *err) {
+		mu_script_info_list_destroy (scripts);
+		return NULL;
 	}
 
-	mu_script_info_list_destroy (scripts);
-
-	return MU_OK;
-
+	/* append the user scripts */
+	last = g_slist_last (scripts);
+	if (last) {
+		last->next = userscripts;
+		return scripts;
+	} else
+		return userscripts; /* apparently, scripts was NULL */
 }
+
 
 
 static gboolean
@@ -100,40 +130,38 @@ mu_cmd_stats (MuConfig *opts, GError **err)
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_STATS,
 			      MU_ERROR_INTERNAL);
 
+	query = NULL;
+
 	if (!check_params (opts, err))
 		return MU_ERROR;
 
-	if (!opts->stat)
-		return list_stats (err);
-
-	scripts = mu_script_get_script_info_list (MU_STATSDIR,
-						  MU_GUILE_EXT,
-						  MU_GUILE_DESCR_PREFIX,
-						  err);
+	scripts = get_script_info_list (opts->muhome, err);
 	if (err && *err)
-		return MU_ERROR;
+		goto leave;
+
+	if (!opts->stat) {
+		print_stats (scripts);
+		goto leave;
+	}
 
 	msi = mu_script_find_script_with_name (scripts, opts->stat);
 	if (!msi) {
-		mu_script_info_list_destroy (scripts);
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "script not found");
-		return MU_ERROR_IN_PARAMETERS;
+		goto leave;
 	}
 
-	if (opts->params[1])
-		query = mu_str_quoted_from_strv
-			((const gchar**)&opts->params[1]);
-	else
-		query = NULL;
+	query =  (opts->params[1]) ?
+		mu_str_quoted_from_strv ((const gchar**)&opts->params[1]) :
+		NULL;
 
 	/* do it! */
 	mu_script_guile_run (msi, opts->muhome, query ? query : "",
 			     opts->textonly, err);
-
+leave:
 	/* this won't be reached, unless there is some error */
 	mu_script_info_list_destroy (scripts);
 	g_free (query);
 
-	return MU_ERROR;
+	return (err && *err) ? MU_ERROR : MU_OK;
 }
