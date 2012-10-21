@@ -1,4 +1,4 @@
-.TH MU CFIND 1 "July 2012" "User Manuals"
+.TH MU CFIND 1 "October 2012" "User Manuals"
 
 .SH NAME
 
@@ -12,9 +12,9 @@ database and export them for use in other programs.
 .SH DESCRIPTION
 
 \fBmu cfind\fR is the \fBmu\fR command for finding \fIcontacts\fR (name and
-e-mail address of people who were either sender or receiver of mail). There
-are different output formats available, for importing the contacts into
-other programs.
+e-mail address of people who were either an e-mail's sender or
+receiver). There are different output formats available, for importing the
+contacts into other programs.
 
 .SH SEARCHING CONTACTS
 
@@ -36,12 +36,12 @@ would find all contacts with a gmail-address, while
    $ mu cfind Mary
 .fi
 
-would find all contact with Mary in either name or e-mail address.
+lists all contacts with Mary in either name or e-mail address.
 
-If you do not specify any search expression, \fBmu cfind\fR will return the
-full list of contacts. Note, \fBmu cfind\fR uses does not directly use the
-database, but uses a cache file with e-mail addresses that is populated during
-the indexing process.
+If you do not specify any search expression, \fBmu cfind\fR returns the full
+list of contacts. Note, \fBmu cfind\fR uses does not directly use the
+database, but uses a cache file with e-mail addresses, which is populated
+during the indexing process.
 
 The regular expressions are Perl-compatible (as per the PCRE-library).
 
@@ -100,18 +100,18 @@ example:
 You can use \fBmu cfind\fR as an external address book server for
 \fBmutt\fR. For this to work, add the following to your \fImuttrc\fR:
 
-.sh
+.nf
 set query_command = "mu cfind --format=mutt-ab '%s'"
-.si
+.fi
 
-Now, in mutt, you can easily search for e-mail address using the
+Now, in mutt, you can easily search for e-mail addresses using the
 \fBquery\fR-command, which is (by default) accessible by pressing \fBQ\fR.
 
 .SH ENCODING
 
 \fBmu cfind\fR output is encoded according to the current locale except for
 \fI--format=bbdb\fR. This is hard-coded to UTF-8, and as such specified in the
-output-file, so emacs/bbdb can handle it correctly without guessing.
+output-file, so emacs/bbdb can handle things correctly, without guessing.
 
 .SH BUGS
 

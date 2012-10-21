@@ -134,7 +134,7 @@ existing database, and a maildir with 27273 messages:
  $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
  $ time mu index --quiet
  66,65s user 6,05s system 27% cpu 4:24,20 total
-.si
+.fi
 (about 103 messages per second)
 
 A second run, which is the more typical use case when there is a database
@@ -144,7 +144,7 @@ already, goes much faster:
  $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
  $ time mu index --quiet
  0,48s user 0,76s system 10% cpu 11,796 total
-.si
+.fi
 (more than 56818 messages per second)
 
 Note that each of test flushes the caches first; a more common use case might
@@ -153,8 +153,8 @@ quite 'warm' in that case:
 
 .nf
  $ time mu index --quiet
-0,33s user 0,40s system 80% cpu 0,905 total
-.si
+ 0,33s user 0,40s system 80% cpu 0,905 total
+.fi
 which is more than 30000 messages per second.
 
 
@@ -167,7 +167,7 @@ messages.
  $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
  $ time mu index --quiet
  27,79s user 2,17s system 48% cpu 1:01,47 total
-.si
+.fi
 (about 813 messages per second)
 
 A second run, which is the more typical use case when there is a database
@@ -177,7 +177,7 @@ already, goes much faster:
  $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
  $ time mu index --quiet
  0,13s user 0,30s system 19% cpu 2,162 total
-.si
+.fi
 (more than 173000 messages per second)
 
 
