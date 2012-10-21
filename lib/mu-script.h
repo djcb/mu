@@ -63,12 +63,14 @@ const char* mu_script_info_description (MuScriptInfo *msi);
  *
  * @param path a file system path
  * @param ext an extension (e.g., ".scm"), or NULL
+ * @param prefix for the one-line description
+ *        (e.g., ";; DESCRIPTION: "), or NULL
  * @param err receives error information, if any
  *
  * @return a list of Mu
  */
 GSList *mu_script_get_script_info_list (const char *path, const char *ext,
-					GError **err);
+					const char *descprefix, GError **err);
 
 /**
  * destroy a list of MuScriptInfo* objects

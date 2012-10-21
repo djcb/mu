@@ -34,12 +34,17 @@
 #include "mu-str.h"
 #include "mu-script.h"
 
+#define MU_GUILE_EXT          ".scm"
+#define MU_GUILE_DESCR_PREFIX ";; DESCRIPTION: "
+
 static MuError
 list_stats (GError **err)
 {
 	GSList *scripts;
-
-	scripts = mu_script_get_script_info_list (MU_STATSDIR, ".scm", err);
+	scripts = mu_script_get_script_info_list (MU_STATSDIR,
+						  MU_GUILE_EXT,
+						  MU_GUILE_DESCR_PREFIX,
+						  err);
 	if (err && *err)
 		return MU_ERROR;
 
@@ -49,10 +54,19 @@ list_stats (GError **err)
 		GSList *cur;
 		g_print ("Available statistics "
 			 "(use with --stat=<stastistic>):\n");
-		for (cur = scripts; cur; cur = g_slist_next (cur))
-			g_print ("\t%s\n",
-				 mu_script_info_name
-				 ((MuScriptInfo*)cur->data));
+		for (cur = scripts; cur; cur = g_slist_next (cur)) {
+
+			MuScriptInfo *msi;
+			const char* descr;
+
+			msi   = (MuScriptInfo*)cur->data;
+			descr = mu_script_info_description (msi);
+
+			g_print ("\t%s%s%s\n",
+				 mu_script_info_name (msi),
+				 descr ? ": " : "",
+				 descr ? descr : "");
+		}
 	}
 
 	mu_script_info_list_destroy (scripts);
@@ -92,7 +106,9 @@ mu_cmd_stats (MuConfig *opts, GError **err)
 	if (!opts->stat)
 		return list_stats (err);
 
-	scripts = mu_script_get_script_info_list (MU_STATSDIR, ".scm",
+	scripts = mu_script_get_script_info_list (MU_STATSDIR,
+						  MU_GUILE_EXT,
+						  MU_GUILE_DESCR_PREFIX,
 						  err);
 	if (err && *err)
 		return MU_ERROR;

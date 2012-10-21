@@ -62,6 +62,10 @@ script_info_destroy (MuScriptInfo *msi)
 	if (!msi)
 		return;
 
+	g_free (msi->_name);
+	g_free (msi->_path);
+	g_free (msi->_descr);
+
 	g_slice_free (MuScriptInfo, msi);
 }
 
@@ -101,10 +105,45 @@ mu_script_info_list_destroy (GSList *lst)
 	g_slist_free    (lst);
 }
 
+static gchar*
+get_description (const char *path, const char *prefix)
+{
+	FILE *script;
+	char *line, *descr;
+	size_t n;
+
+	if (!prefix)
+		return NULL; /* not an error */
+
+	script = fopen (path, "r");
+	if (!script) {
+		g_warning ("failed to open %s: %s",
+			   path, strerror(errno));
+		return NULL;
+	}
+
+	descr = NULL;
+	line  = NULL;
+	while (!descr && getline (&line, &n, script) != -1) {
+		if (g_str_has_prefix(line, prefix)) {
+			descr = g_strdup (line + strlen(prefix));
+			/* remove trailing '\n' */
+			descr[strlen(descr) - 1] = '\0';
+		}
+		free (line);
+		line = NULL;
+	}
+
+	fclose (script);
+
+	return descr;
+}
+
+
 
 GSList*
 mu_script_get_script_info_list (const char *path, const char *ext,
-			   GError **err)
+				const char *descprefix, GError **err)
 {
 	DIR *dir;
 	GSList *lst;
@@ -133,9 +172,9 @@ mu_script_get_script_info_list (const char *path, const char *ext,
 		msi->_name = g_strdup (dentry->d_name);
 		if (ext) /* strip the extension */
 			msi->_name[strlen(msi->_name) - strlen(ext)] = '\0';
-
 		msi->_path = g_strdup_printf ("%s%c%s", path, G_DIR_SEPARATOR,
 					      dentry->d_name);
+		msi->_descr = get_description (msi->_path, descprefix);
 		lst = g_slist_prepend (lst, msi);
 	}
 
