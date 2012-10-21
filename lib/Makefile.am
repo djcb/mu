@@ -26,7 +26,7 @@ else
 crypto=
 endif
 
-INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS)
+INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS) $(GUILE_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -76,6 +76,8 @@ libmu_la_SOURCES=			\
 	mu-query.h			\
 	mu-runtime.c			\
 	mu-runtime.h			\
+	mu-script.c			\
+	mu-script.h			\
 	mu-store.cc			\
 	mu-store.h			\
 	mu-store-read.cc		\

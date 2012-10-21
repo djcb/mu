@@ -20,7 +20,7 @@ include $(top_srcdir)/gtest.mk
 # before decending into tests/
 SUBDIRS= . tests
 
-INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS) $(GUILE_CFLAGS)
+INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -42,9 +42,9 @@ mu_SOURCES=				\
 	mu-config.h			\
 	mu-cmd-extract.c		\
 	mu-cmd-find.c			\
-	mu-cmd-guile.c			\
 	mu-cmd-index.c			\
 	mu-cmd-server.c			\
+	mu-cmd-script.c			\
 	mu-cmd.c			\
 	mu-cmd.h
 
