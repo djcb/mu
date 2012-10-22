@@ -50,7 +50,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-fields
-  '(:from :to  :cc :subject :flags :date :maildir :attachments :signature)
+  '(:from :to  :cc :subject :flags :date :maildir :tags :attachments :signature)
   "Header fields to display in the message view buffer. For the
 complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
@@ -155,7 +155,8 @@ plist."
 	    (:subject  (mu4e~view-construct-header field fieldval))
 	    (:path     (mu4e~view-construct-header field fieldval))
 	    (:maildir  (mu4e~view-construct-header field fieldval))
-	    (:flags    (mu4e~view-construct-flags-header fieldval))
+	    ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
+
 	    ;; contact fields
 	    (:to       (mu4e~view-construct-contacts-header msg field))
 	    (:from     (mu4e~view-construct-contacts-header msg field))
@@ -321,15 +322,18 @@ at POINT, or if nil, at (point)."
       (mu4e-message-field msg field) ", ") t))
 
 
-(defun mu4e~view-construct-flags-header (flags)
+(defun mu4e~view-construct-flags-tags-header (field val)
   "Construct a Flags: header."
   (mu4e~view-construct-header
-    :flags
+    field
     (mapconcat
       (lambda (flag)
-	(propertize (symbol-name flag)
+	(propertize
+	  (if (symbolp flag)
+	    (symbol-name flag)
+	    flag)
 	  'face 'mu4e-view-special-header-value-face))
-      flags
+      val
       (propertize ", " 'face 'mu4e-view-header-value-face)) t))
 
 (defun mu4e~view-construct-signature-header (msg)
@@ -560,7 +564,7 @@ at POINT, or if nil, at (point)."
 
       (define-key map (kbd "<insert>")     'mu4e-view-mark-for-something)
       (define-key map (kbd "<insertchar>") 'mu4e-view-mark-for-something)
-      
+
       (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
 
       ;; misc
@@ -672,7 +676,7 @@ Seen; if the message is not New/Unread, do nothing."
 	   (docid (mu4e-message-field mu4e~view-msg :docid)))
       ;; attached (embedded) messages don't have docids; leave them alone
       ;; is it a new message
-      (when (and docid (or (member 'unread flags) (member 'new flags))) 
+      (when (and docid (or (member 'unread flags) (member 'new flags)))
 	(mu4e~proc-move docid nil "+S-u-N")))))
 
 (defun mu4e~view-fontify-cited ()
@@ -1073,7 +1077,7 @@ non-nil, and we can't scroll-up anymore, go the next message."
     (error
       (when mu4e-view-scroll-to-next
 	(mu4e-view-headers-next)))))
-     
+
 (defun mu4e-view-unmark-all ()
   "If we're in split-view, unmark all messages. Otherwise, warn
 user that unmarking only works in the header list."

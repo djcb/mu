@@ -522,6 +522,11 @@ headers)."
 	 :shortname "Subject"
 	 :help "Subject of the message"
 	 :sortable t))
+     (:tags .
+       ( :name "Tags"
+	 :shortname "Tags"
+	 :help "Tags for the message"
+	 :sortable nil))
      (:to .
        ( :name "To"
 	 :shortname "T"

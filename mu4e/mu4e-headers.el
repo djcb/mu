@@ -363,6 +363,7 @@ if provided, or at the end of the buffer otherwise."
 	      (:human-date (mu4e~headers-human-date msg))
 	      (:flags (propertize (mu4e~headers-flags-str val)
 			'help-echo (format "%S" val)))
+	      (:tags (propertize (mapconcat 'identity val ", ")))
 	      (:size (mu4e-display-size val))
 	      (t (mu4e-error "Unsupported header field (%S)" field))))
 	  (when str
