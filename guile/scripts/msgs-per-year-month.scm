@@ -19,11 +19,11 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-;; DESCRIPTION: graph the number of messages per year-month
-;; DESCRIPTION: options:
-;; DESCRIPTION:   --query=<query>:   limit to messages matching query
-;; DESCRIPTION:   --muhome=<muhome>: path to mu home dir
-;; DESCRIPTION:   --textonly:        output in text-only format
+;; INFO: graph the number of messages per year-month
+;; INFO: options:
+;; INFO:   --query=<query>:   limit to messages matching query
+;; INFO:   --muhome=<muhome>: path to mu home dir
+;; INFO:   --textonly:        output in text-only format
 
 (use-modules (mu) (mu script) (mu stats) (mu plot))
 
