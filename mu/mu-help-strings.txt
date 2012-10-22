@@ -96,13 +96,16 @@ mu4e e-mail client.
 #END
 
 
-#BEGIN MU_CONFIG_CMD_STATS
+#BEGIN MU_CONFIG_CMD_SCRIPT
 #STRING
-mu stats [options] [--stat=<statistic>] [<query>]
+mu script [--script=<script>] [<pattern>] [-v] -- [script-options]
 #STRING
-Run some statistics on the mu database. Option '--stat=' selects the statistic to
-show, optionally limited to the messages matching <query>. Without '--stat',
-lists the available statistics.
+Without any parameter, list the available scripts. With <pattern>,
+list only those scripts whose name or one-line description matches it.
+With -v, give longer descriptions of each script.
+
+With --script=<script>, run the script whose name is <script>; pass
+any arguments to the script after the "--" double-dash.
 #END
 
 

@@ -1,0 +1,83 @@
+.TH MU SCRIPT 1 "October 2012" "User Manuals"
+
+.SH NAME
+
+mu script\- run a mu script
+
+.SH SYNOPSIS
+
+.B mu script [options] [--script=<script>] [<pattern>] [-- [script-options]]
+
+.SH DESCRIPTION
+
+\fBmu script\fR is the \fBmu\fR command to list available \fBmu\fR scripts,
+and run them. The scripts are implemented in the Guile programming language,
+and thus only work if your \fBmu\fR is built with support for Guile. In
+addition, many scripts require you to have \fBgnuplot\fR installed.
+
+Without any parameters, \fBmu script\fR lists the available scripts. If you
+provide a pattern (regular expression), only the scripts whose name or
+one-line description match this pattern, are listed. See the examples below.
+
+\fBmu\fR ships with a number of scripts.
+
+.SH OPTIONS
+
+.TP
+\fB\-\-script=\fR\fI<script>\fR
+run the given script.
+
+\fB\-\-verbose\fR,\fB\-v\fR
+when listing the available scripts, show the long descriptions.
+
+\fB\-\-\fR
+all options on the right side of the \fB\-\-\fR are passed to the script.
+
+.SH EXAMPLES
+
+List all available scripts (one-line descriptions):
+.nf
+  $ mu script
+.fi
+
+List all available scripts matching \fImonth\fR (long descriptions):
+.nf
+  $ mu script -v month
+.fi
+
+Run the \fImsgs-per-month\fR script, and pass it the \fI--textonly\fR
+parameter:
+.nf
+  $ mu script --script=msgs-per-month -- --textonly
+.fi
+
+.SH RETURN VALUE
+
+\fBmu script\fR returns 0 when all went well, and returns some non-zero error
+code when this is not the case.
+
+.SH FILES
+
+You can make your own Scheme scripts accessible throught \fBmu script\fR by
+putting them in \fI<muhome>/scripts\fR (which is typically
+\fI~/.mu/scripts\fR). It is a good idea to document it using some special
+comments in the source code:
+.nf
+;; INFO: this is my script -- one-line description
+;; INFO: (longer description)
+;; INFO: --option1=<foo> (describe option1)
+;; INFO: etc.
+.fi
+
+.SH BUGS
+
+Please report bugs if you find them:
+.BR http://code.google.com/p/mu0/issues/list
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR mu(1)

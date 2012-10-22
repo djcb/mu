@@ -28,7 +28,7 @@ dist_man_MANS =		\
 	mu-mkdir.1	\
 	mu-remove.1	\
 	mu-server.1	\
-	mu-stats.1	\
+	mu-script.1	\
 	mu-verify.1     \
 	mu-view.1	\
 	mu.1		\
