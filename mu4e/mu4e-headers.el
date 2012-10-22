@@ -47,7 +47,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-headers-fields
-  '( (:human-date    .  25)
+  '( (:human-date    .  12)
      (:flags         .   6)
      (:from          .  22)
      (:subject       .  nil))
@@ -332,7 +332,8 @@ otherwise ; show the from address; prefixed with the appropriate
 
 (defsubst mu4e~headers-human-date (msg)
   "Show a 'human' date -- that is, if the date is today, show the
-date, otherwise, show the time."
+date, otherwise, show the time. The formats used for date and time
+are `mu4e-headers-date-format' and `mu4e-headers-time-format'."
   (let ((date (mu4e-msg-field msg :date)))
     (if (= (nth 3 (decode-time date)) (nth 3 (decode-time (current-time))))
       (format-time-string mu4e-headers-time-format date)
@@ -380,7 +381,7 @@ if provided, or at the end of the buffer otherwise."
 		     ((replied passed) 'mu4e-replied-face)
 		     (t                'mu4e-header-face))))
       ;; now, append the header line
-      (mu4e~headers-add-header line docid point msg))) 
+      (mu4e~headers-add-header line docid point msg)))
 
 (defconst mu4e~no-matches     (purecopy "No matching messages found"))
 (defconst mu4e~end-of-results (purecopy "End of search results"))
@@ -490,10 +491,10 @@ after the end of the search results."
       (define-key map (kbd "D")            'mu4e-headers-mark-for-delete)
       (define-key map (kbd "m")            'mu4e-headers-mark-for-move)
       (define-key map (kbd "r")            'mu4e-headers-mark-for-refile)
-				            
+
       (define-key map (kbd "?")            'mu4e-headers-mark-for-unread)
       (define-key map (kbd "!")            'mu4e-headers-mark-for-read)
-      				            
+
       (define-key map (kbd "u")            'mu4e-headers-mark-for-unmark)
       (define-key map (kbd "+")            'mu4e-headers-mark-for-flag)
       (define-key map (kbd "-")            'mu4e-headers-mark-for-unflag)
@@ -505,7 +506,7 @@ after the end of the search results."
       (define-key map (kbd "<insertchar>")   'mu4e-headers-mark-for-something)
       (define-key map (kbd "<insert>")       'mu4e-headers-mark-for-something)
 
-      
+
       (define-key map (kbd "#")   'mu4e-mark-resolve-deferred-marks)
 
       (define-key map "U" 'mu4e-mark-unmark-all)
@@ -689,7 +690,7 @@ adding a lot of new headers looks really choppy."
 at the beginning of lines to identify headers."
   (propertize (format "%s%d%s"
 		mu4e~headers-docid-pre docid mu4e~headers-docid-post)
-    'docid docid 'invisible t));; 
+    'docid docid 'invisible t));;
 
 (defsubst mu4e~headers-docid-at-point (&optional point)
   "Get the docid for the header at POINT, or at current (point) if
@@ -1129,7 +1130,7 @@ current window. "
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((msg (mu4e-message-at-point))
 	  (docid (or (mu4e-message-field msg :docid)
-		   (mu4e-warn "No message at point"))) 
+		   (mu4e-warn "No message at point")))
 	  ;; decrypt (or not), based on `mu4e-decryption-policy'.
 	  (decrypt
 	    (and (member 'encrypted (mu4e-message-field msg :flags))
@@ -1240,11 +1241,11 @@ N. Otherwise, don't do anything."
 	 ;; emacs has weird ideas about what horizontal, vertical means...
 	 (horizontal
 	   (window-resize hwin n nil)
-	   (incf mu4e-headers-visible-lines n)) 
+	   (incf mu4e-headers-visible-lines n))
 	 (vertical
 	   (window-resize hwin n t)
-	   (incf mu4e-headers-visible-columns n))))))) 
- 
+	   (incf mu4e-headers-visible-columns n)))))))
+
 (defun mu4e-headers-action ()
   "Ask user what to do with message-at-point, then do it. The
 actions are specified in `mu4e-headers-actions'."
@@ -1259,7 +1260,7 @@ region if there is a region, then move to the next message."
   (interactive)
   (mu4e-mark-set mark)
   (mu4e-headers-next))
- 
+
 (defun mu4e~headers-quit-buffer ()
   "Quit the mu4e-headers buffer. This is a rather complex function,
 to ensure we don't disturb other windows."
