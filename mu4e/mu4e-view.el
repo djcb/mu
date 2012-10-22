@@ -545,7 +545,7 @@ at POINT, or if nil, at (point)."
       (define-key map "A" 'mu4e-view-attachment-action)
 
       ;; marking/unmarking
-      (define-key map (kbd "<backspace>") 'mu4e-mark-for-trash)
+      (define-key map (kbd "<backspace>") 'mu4e-view-mark-for-trash)
       (define-key map "d" 'mu4e-view-mark-for-trash)
 
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
