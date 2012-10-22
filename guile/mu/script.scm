@@ -15,7 +15,7 @@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 (define-module (mu script)
-  :export (mu:run mu:text-only))
+  :export (mu:run-stats))
 
 (use-modules (ice-9 getopt-long) (ice-9 optargs) (ice-9 popen) (ice-9 format))
 (use-modules (mu) (mu stats) (mu plot))
@@ -23,11 +23,12 @@
 (define (help-and-exit)
   "Show some help."
   (format #t "usage: script [--help] [--textonly] "
-    "[--muhome=<muhome>] [searchexpr]\n")
+    "[--muhome=<muhome>] [--query=<query>\n")
   (exit 0))
 
-(define (mu:run args func)
-  "Interpret argument-list ARGS (like command-line
+(define (mu:run-stats args func)
+  "Run some statistics function.
+Interpret argument-list ARGS (like command-line
 arguments). Possible arguments are:
   --help (show some help and exit)
   --muhome (path to alternative mu home directory)
@@ -36,18 +37,18 @@ arguments). Possible arguments are:
 then call FUNC with args SEARCHEXPR and TEXTONLY."
   (setlocale LC_ALL "")
   (let* ((optionspec   '( (muhome     (value #t))
-			  (what       (value #t))
+			  (query      (value #t))
 			  (textonly   (value #f))
 			  (help       (single-char #\h) (value #f))))
 	  (options (getopt-long args optionspec))
+	  (query (option-ref options 'query #f))
 	  (help (option-ref options 'help #f))
 	  (textonly (option-ref options 'textonly #f))
 	  (muhome (option-ref options 'muhome #f))
-	  (restargs (option-ref options '() #f))
-	  (expr (if restargs (string-join restargs) "")))
+	  (restargs (option-ref options '() #f)))
     (if help (help-and-exit))
     (mu:initialize muhome)
-    (func expr textonly)))
+    (func (or query "") textonly)))
 
 ;; Local Variables:
 ;; mode: scheme
