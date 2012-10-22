@@ -420,6 +420,32 @@ append_sexp_date_and_size (GString *gstr, MuMsg *msg)
 }
 
 
+static void
+append_sexp_tags (GString *gstr, MuMsg *msg)
+{
+	const GSList *tags, *t;
+	gchar *tagesc;
+	GString *tagstr = g_string_new("");
+
+	tags = mu_msg_get_tags (msg);
+
+	for(t = tags; t; t = t->next) {
+		if (t != tags)
+			g_string_append(tagstr, " ");
+
+		tagesc = mu_str_escape_c_literal((const gchar *)t->data, TRUE);
+		g_string_append(tagstr, tagesc);
+
+		g_free(tagesc);
+	}
+
+	if (tagstr->len > 0)
+		g_string_append_printf (gstr, "\t:tags (%s)\n",
+					tagstr->str);
+	g_string_free (tagstr, TRUE);
+}
+
+
 char*
 mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 		MuMsgOptions opts)
@@ -456,6 +482,7 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	g_string_append_printf (gstr, "\t:priority %s\n",
 				mu_msg_prio_name(mu_msg_get_prio(msg)));
 	append_sexp_flags (gstr, msg);
+	append_sexp_tags  (gstr, msg);
 
 	/* headers are retrieved from the database, views from the
 	 * message file file attr things can only be gotten from the
