@@ -95,7 +95,7 @@ config_options_group_mu (void)
 		 "print debug output to standard error (false)", NULL},
 		{"quiet", 'q', 0, G_OPTION_ARG_NONE, &MU_CONFIG.quiet,
 		 "don't give any progress information (false)", NULL},
-		{"version", 'v', 0, G_OPTION_ARG_NONE, &MU_CONFIG.version,
+		{"version", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.version,
 		 "display version and copyright information (false)", NULL},
 		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.muhome,
 		 "specify an alternative mu directory", "<dir>"},
@@ -292,18 +292,16 @@ config_options_group_cfind (void)
 
 
 static GOptionGroup *
-config_options_group_stats (void)
+config_options_group_script (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"stat", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.stat,
-		 "statistic to show (see `mu help stats')", "<statistic>"},
-		{"textonly", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.textonly,
-		 "use text-only output", NULL},
+		{"script", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.script,
+		 "script to run (see `mu help script')", "<script>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
-	og = g_option_group_new("stats", "Options for the 'stats' command",
+	og = g_option_group_new("script", "Options for the 'script' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 
@@ -459,8 +457,8 @@ cmd_from_string (const char *str)
 		{ "index",   MU_CONFIG_CMD_INDEX   },
 		{ "mkdir",   MU_CONFIG_CMD_MKDIR   },
 		{ "remove",  MU_CONFIG_CMD_REMOVE  },
+		{ "script",  MU_CONFIG_CMD_SCRIPT   },
 		{ "server",  MU_CONFIG_CMD_SERVER  },
-		{ "stats",   MU_CONFIG_CMD_STATS   },
 		{ "verify",  MU_CONFIG_CMD_VERIFY  },
 		{ "view",    MU_CONFIG_CMD_VIEW    }
 	};
@@ -514,8 +512,8 @@ get_option_group (MuConfigCmd cmd)
 		return config_options_group_mkdir();
 	case MU_CONFIG_CMD_SERVER:
 		return config_options_group_server();
-	case MU_CONFIG_CMD_STATS:
-		return config_options_group_stats();
+	case MU_CONFIG_CMD_SCRIPT:
+		return config_options_group_script();
 	case MU_CONFIG_CMD_VERIFY:
 		return config_options_group_verify();
 	case MU_CONFIG_CMD_VIEW:
@@ -628,25 +626,31 @@ parse_params (int *argcp, char ***argvp)
 {
 	GError *err;
 	GOptionContext *context;
+	GOptionGroup *group;
 	gboolean rv;
 
 	context = g_option_context_new("- mu general options");
-	g_option_context_set_main_group(context, config_options_group_mu());
 	g_option_context_set_help_enabled (context, TRUE);
 
 	err = NULL;
+	rv  = TRUE;
 
-	if (MU_CONFIG.cmd == MU_CONFIG_CMD_NONE) {
-		show_usage ();
-		return TRUE;
-	}
-
-	/* help is special */
-	if (MU_CONFIG.cmd == MU_CONFIG_CMD_HELP) {
+	switch (MU_CONFIG.cmd) {
+	case MU_CONFIG_CMD_NONE: show_usage(); break;
+	case MU_CONFIG_CMD_HELP:
+		/* 'help' is special; sucks in the options of the
+		 * command after it */
 		rv = g_option_context_parse (context, argcp, argvp, &err) &&
 			cmd_help ();
-	} else {
-		GOptionGroup *group;
+		break;
+	case MU_CONFIG_CMD_SCRIPT:
+		/* script feeds the rest of the options to the script, so
+		 * we accept all of them */
+		g_option_context_set_ignore_unknown_options (context, TRUE);
+		/* fall through */
+	default:
+		g_option_context_set_main_group(context,
+						config_options_group_mu());
 		group = get_option_group (MU_CONFIG.cmd);
 		if (group)
 			g_option_context_add_group(context, group);
@@ -654,14 +658,14 @@ parse_params (int *argcp, char ***argvp)
 	}
 
 	g_option_context_free (context);
-	if (!rv) {
-		g_printerr ("mu: error in options: %s\n",
-			    err ? err->message : "?");
-		g_clear_error (&err);
-		return FALSE;
-	}
 
-	return TRUE;
+	if (rv)
+		return TRUE;
+
+	/* something when wrong */
+	g_printerr ("mu: option error: %s\n", err ? err->message : "?");
+	g_clear_error (&err);
+	return FALSE;
 }
 
 

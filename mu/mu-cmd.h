@@ -105,7 +105,7 @@ MuError mu_cmd_mv (MuConfig *opts, GError **err);
 
 
 /**
- * execute the 'stats' command
+ * execute the 'script' command
  *
  * @param opts configuration options
  * @param err receives error information, or NULL
@@ -113,7 +113,7 @@ MuError mu_cmd_mv (MuConfig *opts, GError **err);
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_stats (MuConfig *opts, GError **err);
+MuError mu_cmd_script (MuConfig *opts, GError **err);
 
 /**
  * execute the cfind command

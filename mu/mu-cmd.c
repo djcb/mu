@@ -609,11 +609,11 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		/* already handled in mu-config.c */
 	case MU_CONFIG_CMD_HELP: return MU_OK;
 
-	case MU_CONFIG_CMD_CFIND:   merr = mu_cmd_cfind (opts, err);   break;
-	case MU_CONFIG_CMD_MKDIR:   merr = mu_cmd_mkdir (opts, err);   break;
-	case MU_CONFIG_CMD_STATS:   merr = mu_cmd_stats (opts, err);   break;
-	case MU_CONFIG_CMD_VIEW:    merr = mu_cmd_view (opts, err);    break;
-	case MU_CONFIG_CMD_VERIFY:  merr = mu_cmd_verify (opts, err);  break;
+	case MU_CONFIG_CMD_CFIND:   merr = mu_cmd_cfind   (opts, err); break;
+	case MU_CONFIG_CMD_MKDIR:   merr = mu_cmd_mkdir   (opts, err); break;
+	case MU_CONFIG_CMD_SCRIPT:  merr = mu_cmd_script  (opts, err); break;
+	case MU_CONFIG_CMD_VIEW:    merr = mu_cmd_view    (opts, err); break;
+	case MU_CONFIG_CMD_VERIFY:  merr = mu_cmd_verify  (opts, err); break;
 	case MU_CONFIG_CMD_EXTRACT: merr = mu_cmd_extract (opts, err); break;
 
 	case MU_CONFIG_CMD_FIND:

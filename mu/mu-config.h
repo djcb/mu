@@ -72,8 +72,8 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_INDEX,
 	MU_CONFIG_CMD_MKDIR,
 	MU_CONFIG_CMD_REMOVE,
+	MU_CONFIG_CMD_SCRIPT,
 	MU_CONFIG_CMD_SERVER,
-	MU_CONFIG_CMD_STATS,
 	MU_CONFIG_CMD_VERIFY,
 	MU_CONFIG_CMD_VIEW,
 
@@ -176,9 +176,8 @@ struct _MuConfig {
 	gboolean	 overwrite;	/* should we overwrite same-named files */
 	gboolean         play;          /* after saving, try to 'play'
 					 * (open) the attmnt using xdgopen */
-	/* options for mu-stats */
-	gboolean         textonly;      /* no non-textual graphs */
-	gchar           *stat;          /* statistic to show */
+	/* options for mu-script */
+	gchar           *script;        /* script to run */
 };
 typedef struct _MuConfig MuConfig;
 

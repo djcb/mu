@@ -27,7 +27,7 @@ INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # really need all the params they get
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement \
 	-pedantic -Wno-variadic-macros \
-        -DMU_STATSDIR="\"$(pkgdatadir)/scripts/stats\""
+        -DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 bin_PROGRAMS=				\

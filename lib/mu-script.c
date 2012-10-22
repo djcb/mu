@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "mu-str.h"
 #include "mu-script.h"
 #include "mu-util.h"
 
@@ -42,9 +43,10 @@
  * the values will be *freed* when MuScriptInfo is freed
  */
 struct _MuScriptInfo {
-	char *_name;  /* filename-sans-extension */
-	char *_path;  /* full path to script */
-	char *_descr; /* one-line description */
+	char *_name;    /* filename-sans-extension */
+	char *_path;    /* full path to script */
+	char *_oneline; /* one-line description */
+	char *_descr;   /* longer description */
 };
 
 
@@ -64,6 +66,7 @@ script_info_destroy (MuScriptInfo *msi)
 
 	g_free (msi->_name);
 	g_free (msi->_path);
+	g_free (msi->_oneline);
 	g_free (msi->_descr);
 
 	g_slice_free (MuScriptInfo, msi);
@@ -92,10 +95,41 @@ mu_script_info_path (MuScriptInfo *msi)
 }
 
 const char*
+mu_script_info_one_line (MuScriptInfo *msi)
+{
+	g_return_val_if_fail (msi, NULL);
+	return msi->_oneline;
+}
+
+const char*
 mu_script_info_description (MuScriptInfo *msi)
 {
 	g_return_val_if_fail (msi, NULL);
 	return msi->_descr;
+}
+
+
+gboolean
+mu_script_info_matches_regex (MuScriptInfo *msi, const char *rxstr,
+			      GError **err)
+{
+	GRegex *rx;
+	gboolean match;
+
+	g_return_val_if_fail (msi, FALSE);
+	g_return_val_if_fail (rxstr, FALSE);
+
+	rx = g_regex_new (rxstr, G_REGEX_CASELESS|G_REGEX_OPTIMIZE, 0, err);
+	if (!rx)
+		return FALSE;
+
+	match = FALSE;
+	if (msi->_name)
+		match = g_regex_match (rx, msi->_name, 0, NULL);
+	if (!match && msi->_oneline)
+		match = g_regex_match (rx, msi->_oneline, 0, NULL);
+
+	return match;
 }
 
 void
@@ -105,38 +139,53 @@ mu_script_info_list_destroy (GSList *lst)
 	g_slist_free    (lst);
 }
 
-static gchar*
-get_description (const char *path, const char *prefix)
+static gboolean
+get_descriptions (MuScriptInfo *msi, const char *prefix)
 {
 	FILE *script;
-	char *line, *descr;
+	char *line, *descr, *oneline;
 	size_t n;
 
 	if (!prefix)
-		return NULL; /* not an error */
+		return TRUE; /* not an error */
 
-	script = fopen (path, "r");
+	script = fopen (msi->_path, "r");
 	if (!script) {
 		g_warning ("failed to open %s: %s",
-			   path, strerror(errno));
-		return NULL;
+			   msi->_path, strerror(errno));
+		return FALSE;
 	}
 
-	descr = NULL;
+	descr = oneline = NULL;
 	line  = NULL;
-	while (!descr && getline (&line, &n, script) != -1) {
-		if (g_str_has_prefix(line, prefix)) {
-			descr = g_strdup (line + strlen(prefix));
-			/* remove trailing '\n' */
-			descr[strlen(descr) - 1] = '\0';
+	while (getline (&line, &n, script) != -1) {
+
+		if (!g_str_has_prefix(line, prefix)) {
+			free (line);
+			line = NULL;
+			continue;
 		}
+
+		if (!oneline)
+			oneline = g_strdup (line + strlen (prefix));
+		else {
+			char *tmp;
+			tmp = descr;
+			descr = g_strdup_printf (
+				"%s%s",	descr ? descr : "",
+				line + strlen(prefix));
+			g_free (tmp);
+		}
+
 		free (line);
 		line = NULL;
 	}
-
 	fclose (script);
 
-	return descr;
+	msi->_oneline = oneline;
+	msi->_descr   = descr;
+
+	return TRUE;
 }
 
 
@@ -163,7 +212,6 @@ mu_script_get_script_info_list (const char *path, const char *ext,
 	lst = NULL;
 	while ((dentry = readdir (dir))) {
 		MuScriptInfo *msi;
-
 		/* only consider files with certain extensions,
 		 * if ext != NULL */
 		if (ext && !g_str_has_suffix (dentry->d_name, ext))
@@ -174,7 +222,8 @@ mu_script_get_script_info_list (const char *path, const char *ext,
 			msi->_name[strlen(msi->_name) - strlen(ext)] = '\0';
 		msi->_path = g_strdup_printf ("%s%c%s", path, G_DIR_SEPARATOR,
 					      dentry->d_name);
-		msi->_descr = get_description (msi->_path, descprefix);
+		/* set the one-line and long description */
+		get_descriptions (msi, descprefix);
 		lst = g_slist_prepend (lst, msi);
 	}
 
@@ -214,32 +263,35 @@ guile_shell (void *closure, int argc, char **argv)
 
 gboolean
 mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
-		     const char *query, gboolean textonly, GError **err)
-{
-	char *expr;
-	char *argv[] = {
-		"guile", "-l", NULL, "-c", NULL, NULL
-	};
+		     const char **args, GError **err)
+ {
+	 char *mainargs, *expr;
+	 char *argv[] = {
+		 "guile", "-l", NULL, "-c", NULL, NULL
+	 };
 
-	g_return_val_if_fail (msi, FALSE);
-	g_return_val_if_fail (muhome, FALSE);
+	 g_return_val_if_fail (msi, FALSE);
+	 g_return_val_if_fail (muhome, FALSE);
 
-	if (access (mu_script_info_path (msi), R_OK) != 0) {
-		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
-				     strerror(errno));
-		return FALSE;
-	}
-	argv[2] = (char*)mu_script_info_path (msi);
+	 if (access (mu_script_info_path (msi), R_OK) != 0) {
+		 mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
+				      strerror(errno));
+		 return FALSE;
+	 }
+	 argv[2] = (char*)mu_script_info_path (msi);
 
-	expr = g_strdup_printf (
-		"(main '(\"%s\" \"--muhome=%s\" %s %s))",
-		mu_script_info_name (msi),
-		muhome,
-		textonly ? "\"--textonly\"" : "",
-		query ? query : "");
-	argv[4] = expr;
+	 mainargs = mu_str_quoted_from_strv (args);
+	 expr = g_strdup_printf (
+		 "(main '(\"%s\" \"--muhome=%s\" %s))",
+		 mu_script_info_name (msi),
+		 muhome,
+		 mainargs ? mainargs : "");
+	 g_print ("[%s]\n", mainargs);
 
-	scm_boot_guile (5, argv, guile_shell, NULL);
+	 g_free (mainargs);
+	 argv[4] = expr;
+
+	 scm_boot_guile (5, argv, guile_shell, NULL);
 
 	/* never reached but let's be correct(TM)*/
 	g_free (expr);

@@ -55,8 +55,29 @@ const char* mu_script_info_path (MuScriptInfo *msi);
  *
  * @return the description, or NULL if there was none
  */
+const char* mu_script_info_one_line (MuScriptInfo *msi);
+
+/**
+ * get a full description for the script
+ *
+ * @param msi a MuScriptInfo structure
+ *
+ * @return the description, or NULL if there was none
+ */
 const char* mu_script_info_description (MuScriptInfo *msi);
 
+/**
+ * check whether either the name or one-line description of a
+ * MuScriptInfo matches regular expression rxstr
+ *
+ * @param msi a MuScriptInfo
+ * @param rxstr a regular expression string
+ * @param err receives error information
+ *
+ * @return TRUE if it matches, FALSE if not or in case of error
+ */
+gboolean mu_script_info_matches_regex (MuScriptInfo *msi, const char *rxstr,
+				       GError **err);
 
 /**
  * Get the list of all scripts in path with extension ext
@@ -96,17 +117,15 @@ MuScriptInfo* mu_script_find_script_with_name (GSList *lst, const char *name);
  * run the guile script at path
  *
  * @param msi MuScriptInfo object for the script
- * @param muhome mu home directory
- * @param query query for this script (or NULL)
- * @param textonly whether to not use a graphical display
+ * @param muhome path to the mu home dir
+ * @param args NULL-terminated array of strings (argv for the script)
  * @param err receives error information
  *
  * @return FALSE in case of error -- otherwise, this function will
  * _not return_
  */
 gboolean mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
-			      const char* query, gboolean textonly,
-			      GError **err);
+			      const char **args, GError **err);
 
 G_END_DECLS
 

@@ -35,33 +35,56 @@
 #include "mu-script.h"
 
 #define MU_GUILE_EXT          ".scm"
-#define MU_GUILE_DESCR_PREFIX ";; DESCRIPTION: "
+#define MU_GUILE_DESCR_PREFIX ";; INFO: "
 
-static void
-print_stats (GSList *scripts)
+static gboolean
+print_scripts (GSList *scripts, gboolean verbose, const char *rxstr,
+	       GError **err)
 {
 	GSList *cur;
+	gboolean first;
 
 	if (!scripts) {
-		g_print ("No statistics available\n");
-		return;
+		g_print ("No scripts available\n");
+		return TRUE; /* not an error */
 	}
 
-	g_print ("Available statistics "
-		 "(use with --stat=<stastistic>):\n");
-	for (cur = scripts; cur; cur = g_slist_next (cur)) {
+	if (rxstr)
+		g_print ("Available scripts matching '%s':\n", rxstr);
+	else
+		g_print ("Available scripts:\n");
+
+	for (cur = scripts, first = TRUE; cur; cur = g_slist_next (cur)) {
 
 		MuScriptInfo *msi;
-		const char* descr;
+		const char* descr, *oneline, *name;
 
-		msi   = (MuScriptInfo*)cur->data;
-		descr = mu_script_info_description (msi);
+		msi     = (MuScriptInfo*)cur->data;
+		name    = mu_script_info_name (msi);
+		oneline = mu_script_info_one_line (msi);
+		descr   = mu_script_info_description (msi);
 
-		g_print ("\t%s%s%s\n",
-			 mu_script_info_name (msi),
-			 descr ? ": " : "",
-			 descr ? descr : "");
+		/* if rxstr is provide, only consider matching scriptinfos */
+		if (rxstr && !mu_script_info_matches_regex (msi, rxstr, err)) {
+			if (err && *err)
+				return FALSE;
+			continue;
+		}
+
+		/* whitespace between */
+		if (verbose && !first)
+			g_print ("\n");
+		first = FALSE;
+
+		g_print ("%s%s%s", name,
+			 oneline ? ": " : "",
+			 oneline ? oneline :"");
+
+		if (verbose && descr)
+			g_print ("%s", descr);
 	}
+
+	return TRUE;
 }
 
 
@@ -71,9 +94,11 @@ get_script_info_list (const char *muhome, GError **err)
 	GSList *scripts, *userscripts, *last;
 	char *userpath;
 
-	scripts = mu_script_get_script_info_list (MU_STATSDIR, MU_GUILE_EXT,
-						  MU_GUILE_DESCR_PREFIX,
-						  err);
+	scripts = mu_script_get_script_info_list
+		(MU_SCRIPTS_DIR, MU_GUILE_EXT,
+		 MU_GUILE_DESCR_PREFIX,
+		 err);
+
 	if (err && *err)
 		return NULL;
 
@@ -111,7 +136,7 @@ check_params (MuConfig *opts, GError **err)
 {
 	if (!mu_util_supports (MU_FEATURE_GUILE | MU_FEATURE_GNUPLOT)) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "the 'stats' command is not supported");
+				     "the 'script' command is not supported");
 		return FALSE;
 	}
 
@@ -120,17 +145,14 @@ check_params (MuConfig *opts, GError **err)
 
 
 MuError
-mu_cmd_stats (MuConfig *opts, GError **err)
+mu_cmd_script (MuConfig *opts, GError **err)
 {
 	MuScriptInfo *msi;
 	GSList *scripts;
-	gchar *query;
 
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_STATS,
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_SCRIPT,
 			      MU_ERROR_INTERNAL);
-
-	query = NULL;
 
 	if (!check_params (opts, err))
 		return MU_ERROR;
@@ -139,29 +161,24 @@ mu_cmd_stats (MuConfig *opts, GError **err)
 	if (err && *err)
 		goto leave;
 
-	if (!opts->stat) {
-		print_stats (scripts);
+	if (!opts->script) {
+		print_scripts (scripts, opts->verbose,
+			       opts->params[1], err);
 		goto leave;
 	}
 
-	msi = mu_script_find_script_with_name (scripts, opts->stat);
+	msi = mu_script_find_script_with_name (scripts, opts->script);
 	if (!msi) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "script not found");
 		goto leave;
 	}
 
-	query =  (opts->params[1]) ?
-		mu_str_quoted_from_strv ((const gchar**)&opts->params[1]) :
-		NULL;
-
 	/* do it! */
-	mu_script_guile_run (msi, opts->muhome, query ? query : "",
-			     opts->textonly, err);
+	mu_script_guile_run (msi, opts->muhome,
+			     (const gchar**)&opts->params[1], err);
 leave:
 	/* this won't be reached, unless there is some error */
 	mu_script_info_list_destroy (scripts);
-	g_free (query);
-
 	return (err && *err) ? MU_ERROR : MU_OK;
 }
