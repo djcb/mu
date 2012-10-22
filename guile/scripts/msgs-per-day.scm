@@ -19,26 +19,29 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-;; DESCRIPTION: number of messages per month
+;; DESCRIPTION: graph the number of messages per day
+;; DESCRIPTION: options:
+;; DESCRIPTION:   --query=<query>:   limit to messages matching query
+;; DESCRIPTION:   --muhome=<muhome>: path to mu home dir
+;; DESCRIPTION:   --textonly:        output in text-only format
 
 (use-modules (mu) (mu script) (mu stats) (mu plot))
 
-(define (per-month expr text-only)
+(define (per-day expr text-only)
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
 display, otherwise, use a graphical window."
   (mu:plot
-    (mu:month-numbers->names
-      (sort
-	(mu:tabulate
-	  (lambda (msg)
-	    (tm:mon (localtime (mu:date msg)))) expr)
+    (mu:weekday-numbers->names
+      (sort (mu:tabulate
+	      (lambda (msg)
+		(tm:wday (localtime (mu:date msg)))) expr)
 	(lambda (x y) (< (car x) (car y)))))
-    (format #f "Messages per month matching ~a" expr)
-    "Month" "Messages" text-only))
+    (format #f "Messages per weekday matching ~a" expr)
+    "Day" "Messages" text-only))
 
 (define (main args)
-  (mu:run args per-month))
+  (mu:run-stats args per-day))
 
 ;; Local Variables:
 ;; mode: scheme

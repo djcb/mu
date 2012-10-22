@@ -16,4 +16,12 @@
 
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS=stats
+EXTRA_DIST=			\
+	msgs-per-year.scm	\
+	msgs-per-hour.scm	\
+	msgs-per-month.scm	\
+	msgs-per-day.scm	\
+	msgs-per-year-month.scm
+
+muguiledistscriptdir      = $(pkgdatadir)/scripts/
+muguiledistscript_SCRIPTS = $(EXTRA_DIST)

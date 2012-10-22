@@ -19,10 +19,13 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-;; DESCRIPTION: number of messages per hour of the day
+;; DESCRIPTION: graph the number of messages per hour
+;; DESCRIPTION: options:
+;; DESCRIPTION:   --query=<query>:   limit to messages matching query
+;; DESCRIPTION:   --muhome=<muhome>: path to mu home dir
+;; DESCRIPTION:   --textonly:        output in text-only format
 
 (use-modules (mu) (mu script) (mu stats) (mu plot))
-
 
 (define (per-hour expr text-only)
   "Count the total number of messages for each weekday (0-6 for
@@ -37,9 +40,8 @@ display, otherwise, use a graphical window."
     (format #f "Messages per hour matching ~a" expr)
     "Hour" "Messages" text-only))
 
-
 (define (main args)
-  (mu:run args per-hour))
+  (mu:run-stats args per-hour))
 
 ;; Local Variables:
 ;; mode: scheme

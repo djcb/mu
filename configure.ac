@@ -318,7 +318,6 @@ guile/mu/Makefile
 guile/examples/Makefile
 guile/tests/Makefile
 guile/scripts/Makefile
-guile/scripts/stats/Makefile
 toys/Makefile
 toys/mug/Makefile
 toys/msg2pdf/Makefile
