@@ -126,12 +126,14 @@ get_values (GKeyFile *kfile, const gchar *group,
 		if (!*email)
 			break;
 
-		*tstamp = (time_t)g_key_file_get_integer (kfile, group, TSTAMP_KEY, &err);
+		*tstamp = (time_t)g_key_file_get_integer (kfile, group,
+							  TSTAMP_KEY, &err);
 		if (err)
 			break;
-
-		*personal = g_key_file_get_boolean (kfile, group, PERSONAL_KEY, NULL);
+		*personal = g_key_file_get_boolean (kfile, group,
+						    PERSONAL_KEY, NULL);
 		*name = g_key_file_get_value (kfile, group, NAME_KEY, NULL);
+
 
 		return TRUE;
 

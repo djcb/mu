@@ -345,8 +345,6 @@ gchar* mu_str_guess_nick (const char* name)
 gchar* mu_str_guess_first_name (const char* name)
         G_GNUC_WARN_UNUSED_RESULT;
 
-
-
 /**
  * guess the last name for the given name; clearly,
  * this is just a rough guess for setting an initial value.
@@ -361,8 +359,8 @@ gchar* mu_str_guess_last_name (const char* name)
 
 
 /**
- * take a list of strings, and turn them in into their quoted
- * concatenation
+ * take a list of strings, and return the concatenation of their
+ * quoted forms
  *
  * @param params NULL-terminated array of strings
  *
