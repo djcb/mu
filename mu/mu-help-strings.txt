@@ -105,7 +105,7 @@ list only those scripts whose name or one-line description matches it.
 With -v, give longer descriptions of each script.
 
 With --script=<script>, run the script whose name is <script>; pass
-any arguments to the script after the "--" double-dash.
+any arguments to the script after the '--' double-dash.
 #END
 
 

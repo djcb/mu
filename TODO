@@ -49,6 +49,7 @@
   - guile integration
     - statistics
   - 'human' dates in the headers view
+  - :tags in headers, message view
 
 * Done
   :PROPERTIES:

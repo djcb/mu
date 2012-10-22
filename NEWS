@@ -5,8 +5,8 @@
 ** Release 0.9.9.x
 
 *** mu
-     - add 'mu stats' command to show statistics about your messages. Requires
-       guile 2.0, gnuplot
+     - add 'mu script' command to run mu script, for example to do statistics on
+       your message corpus
 
 *** mu4e
     - scroll down in message view takes you to next message (but see
@@ -15,6 +15,12 @@
       the date for older messages in the headers view 
     - replace `mu4e-user-mail-address-regexp' and `mu4e-my-mail-addresses' with
       `mu4e-user-mail-address-list'
+    - support tags (i.e.., X-Keywords and friends) in the headers-view, and the
+      message view. Thanks to Abdó Roig-Maranges. New field ":tags".
+
+
+
+
 
 * Old news
   :PROPERTIES:
