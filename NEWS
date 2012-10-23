@@ -5,22 +5,22 @@
 ** Release 0.9.9.x
 
 *** mu
+
      - add 'mu script' command to run mu script, for example to do statistics on
        your message corpus
+     - allow 'contact:' as a shortcut in queries for 'from:foo OR to:foo OR
+       cc:foo OR bcc:foo'
 
 *** mu4e
+
     - scroll down in message view takes you to next message (but see
       `mu4e-view-scroll-to-next')
     - support 'human dates', that is, show the time for today's messages, and
-      the date for older messages in the headers view 
+      the date for older messages in the headers view
     - replace `mu4e-user-mail-address-regexp' and `mu4e-my-mail-addresses' with
       `mu4e-user-mail-address-list'
     - support tags (i.e.., X-Keywords and friends) in the headers-view, and the
       message view. Thanks to Abdó Roig-Maranges. New field ":tags".
-
-
-
-
 
 * Old news
   :PROPERTIES:
