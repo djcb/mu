@@ -156,30 +156,23 @@ get_descriptions (MuScriptInfo *msi, const char *prefix)
 		return FALSE;
 	}
 
-	descr = oneline = NULL;
-	line  = NULL;
-	while (getline (&line, &n, script) != -1) {
+	for (descr = oneline = NULL, line = NULL;
+	     getline (&line, &n, script) != -1; free (line), line = NULL) {
 
-		if (!g_str_has_prefix(line, prefix)) {
-			free (line);
-			line = NULL;
+		if (!g_str_has_prefix(line, prefix))
 			continue;
-		}
 
 		if (!oneline)
 			oneline = g_strdup (line + strlen (prefix));
 		else {
 			char *tmp;
 			tmp = descr;
-			descr = g_strdup_printf (
-				"%s%s",	descr ? descr : "",
-				line + strlen(prefix));
+			descr = g_strdup_printf ("%s%s", descr ? descr : "",
+						 line + strlen(prefix));
 			g_free (tmp);
 		}
-
-		free (line);
-		line = NULL;
 	}
+
 	fclose (script);
 
 	msi->_oneline = oneline;
@@ -286,7 +279,6 @@ mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 		 mu_script_info_name (msi),
 		 muhome,
 		 mainargs ? mainargs : "");
-	 g_print ("[%s]\n", mainargs);
 
 	 g_free (mainargs);
 	 argv[4] = expr;

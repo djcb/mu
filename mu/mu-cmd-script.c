@@ -38,12 +38,26 @@
 #define MU_GUILE_EXT          ".scm"
 #define MU_GUILE_DESCR_PREFIX ";; INFO: "
 
+static void
+print_script (const char *name, const char *oneline, const char *descr,
+	      gboolean verbose)
+{
+	g_print ("%s%s%s%s",
+		 verbose ? "\n" : "  * ",
+		 name,
+		 oneline ? ": " : "",
+		 oneline ? oneline :"");
+
+	if (verbose && descr)
+		g_print ("%s", descr);
+}
+
+
 static gboolean
 print_scripts (GSList *scripts, gboolean verbose, const char *rxstr,
 	       GError **err)
 {
 	GSList *cur;
-	gboolean first;
 
 	if (!scripts) {
 		g_print ("No scripts available\n");
@@ -55,7 +69,7 @@ print_scripts (GSList *scripts, gboolean verbose, const char *rxstr,
 	else
 		g_print ("Available scripts:\n");
 
-	for (cur = scripts, first = TRUE; cur; cur = g_slist_next (cur)) {
+	for (cur = scripts; cur; cur = g_slist_next (cur)) {
 
 		MuScriptInfo *msi;
 		const char* descr, *oneline, *name;
@@ -72,19 +86,7 @@ print_scripts (GSList *scripts, gboolean verbose, const char *rxstr,
 			continue;
 		}
 
-		/* whitespace between */
-		if (verbose && !first)
-			g_print ("\n");
-		first = FALSE;
-
-		g_print ("%s%s%s%s",
-			 verbose ? "" : "  * ",
-			 name,
-			 oneline ? ": " : "",
-			 oneline ? oneline :"");
-
-		if (verbose && descr)
-			g_print ("%s", descr);
+		print_script (name, oneline, descr, verbose);
 	}
 
 	return TRUE;

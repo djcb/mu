@@ -640,13 +640,14 @@ parse_params (int *argcp, char ***argvp)
 	err = NULL;
 	rv  = TRUE;
 
+	g_option_context_set_main_group(context,
+					config_options_group_mu());
+
 	switch (MU_CONFIG.cmd) {
 	case MU_CONFIG_CMD_NONE: show_usage(); break;
 	case MU_CONFIG_CMD_HELP:
 		/* 'help' is special; sucks in the options of the
 		 * command after it */
-		g_option_context_set_main_group(context,
-						config_options_group_mu());
 		rv = g_option_context_parse (context, argcp, argvp, &err) &&
 			cmd_help ();
 		break;
@@ -656,8 +657,6 @@ parse_params (int *argcp, char ***argvp)
 		g_option_context_set_ignore_unknown_options (context, TRUE);
 		/* fall through */
 	default:
-		g_option_context_set_main_group(context,
-						config_options_group_mu());
 		group = get_option_group (MU_CONFIG.cmd);
 		if (group)
 			g_option_context_add_group(context, group);
