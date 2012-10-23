@@ -65,7 +65,20 @@ See the `mu-find' and `mu-easy' man-pages for more information.
 #STRING
 mu help <command>
 #STRING
-mu find is the mu command to get help about <command>.
+mu find is the mu command to get help about <command>, where <command>
+is one of:
+  add     - add message to database
+  cfind   - find a contact
+  extract - extract parts/attachments from messages
+  find    - query the message database
+  help    - get help
+  index   - index messages
+  mkdir   - create a maildir
+  remove  - remove a message from the database
+  script  - run a script
+  server  - start mu server
+  verify  - verify signatures of a message
+  view    - view a specific message
 #END
 
 #BEGIN MU_CONFIG_CMD_INDEX
