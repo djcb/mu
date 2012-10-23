@@ -22,8 +22,10 @@
 
 (define (help-and-exit)
   "Show some help."
-  (format #t "usage: script [--help] [--textonly] "
-    "[--muhome=<muhome>] [--query=<query>\n")
+  (display
+    (string-append "usage: script [--help] [--textonly] "
+      "[--muhome=<muhome>] [--query=<query>")
+    (newline))
   (exit 0))
 
 (define (mu:run-stats args func)
