@@ -296,8 +296,9 @@ SCM_DEFINE (get_contacts, "mu:c:get-contacts", 2, 0, 0,
 		else if (scm_is_eq (CONTACT_TYPE, SYMB_CONTACT_FROM))
 			ecdata.ctype = MU_MSG_CONTACT_TYPE_FROM;
 		else
-			/* FIXME: raise error */
-			g_return_val_if_reached (SCM_UNDEFINED);
+			return mu_guile_error (FUNC_NAME, 0,
+					       "invalid contact type",
+					       SCM_UNDEFINED);
 	}
 
 	ecdata.lst = SCM_EOL;

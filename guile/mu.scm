@@ -60,7 +60,6 @@
     mu:contact->string
     ;;
     mu:for-each-contact
-
     ;;
     mu:contacts
     ;;
@@ -180,9 +179,11 @@ store. MAXRESULTS specifies the maximum of messages to return, or
 
 (define-method (mu:contacts (msg <mu:message>) contact-type)
   "Get all contacts for MSG of the given CONTACT-TYPE. MSG is of type <mu-message>,
-while contact type is either `mu:to', `mu:cc', `mu:from' or `mu:bcc'
-to get the corresponding type of contacts, or #t to get all. Returns a
-list of <mu-contact> objects."
+while contact type is either `mu:contact:to', `mu:contact:cc',
+`mu:contact:from' or `mu:contact:bcc' to get the corresponding type of
+contacts, or #t to get all.
+
+Returns a list of <mu-contact> objects."
   (map (lambda (pair) ;; a pair (na . addr)
 	 (make <mu:contact>  #:name (car pair) #:email (cdr pair)))
     (mu:c:get-contacts (slot-ref msg 'msg) contact-type)))

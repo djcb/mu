@@ -132,7 +132,6 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 				      sortfield, revert ? true : false);
 
 	} catch (const Xapian::DatabaseModifiedError &dbmex) {
-
 		mu_util_g_set_error (err, MU_ERROR_XAPIAN_MODIFIED,
 				     "database was modified; please reopen");
 		return 0;
@@ -161,7 +160,8 @@ mu_msg_iter_get_msg_floating (MuMsgIter *iter)
 		docp = new Xapian::Document(iter->cursor().get_document());
 
 		err = NULL;
-		msg = iter->set_msg (mu_msg_new_from_doc((XapianDocument*)docp, &err));
+		msg = iter->set_msg (mu_msg_new_from_doc((XapianDocument*)docp,
+							 &err));
 		if (!msg)
 			MU_HANDLE_G_ERROR(err);
 
