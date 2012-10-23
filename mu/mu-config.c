@@ -601,13 +601,18 @@ cmd_help (void)
 {
 	MuConfigCmd cmd;
 
-	cmd = cmd_from_string (MU_CONFIG.params[1]);
+	if (!MU_CONFIG.params)
+		cmd = MU_CONFIG_CMD_UNKNOWN;
+	else
+		cmd = cmd_from_string (MU_CONFIG.params[1]);
+
 	if (cmd == MU_CONFIG_CMD_UNKNOWN) {
 		mu_config_show_help (MU_CONFIG_CMD_HELP);
 		return TRUE;
 	}
 
 	mu_config_show_help (cmd);
+
 	return TRUE;
 }
 
@@ -640,6 +645,8 @@ parse_params (int *argcp, char ***argvp)
 	case MU_CONFIG_CMD_HELP:
 		/* 'help' is special; sucks in the options of the
 		 * command after it */
+		g_option_context_set_main_group(context,
+						config_options_group_mu());
 		rv = g_option_context_parse (context, argcp, argvp, &err) &&
 			cmd_help ();
 		break;

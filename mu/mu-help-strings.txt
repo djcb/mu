@@ -21,9 +21,8 @@
 #STRING
 mu add <file> [<files>]
 #STRING
-mu add is the command to add specific measage files to the
-database. Each of the files must be specified with an
-absolute path
+mu add is the command to add specific measage files to the database. Each of the
+files must be specified with an absolute path.
 #END
 
 #BEGIN MU_CONFIG_CMD_CFIND
@@ -48,8 +47,19 @@ mu find [options] <search expression>
 #STRING
 mu find is the mu command for searching e-mail message that were
 stored earlier using mu index(1).
-#END
 
+Some examples:
+ # get all messages with 'bananas' in body, subject or recipient fields:
+ $ mu find bananas
+
+ # get all messages regarding bananas from John with an attachment:
+ $ mu find from:john flag:attach bananas
+
+ # get all messages with subject wombat in June 2009
+ $ mu find subject:wombat date:20090601..20090630
+
+See the `mu-find' and `mu-easy' man-pages for more information.
+#END
 
 #BEGIN MU_CONFIG_CMD_HELP
 #STRING
@@ -106,6 +116,17 @@ With -v, give longer descriptions of each script.
 
 With --script=<script>, run the script whose name is <script>; pass
 any arguments to the script after the '--' double-dash.
+
+Some examples:
+List all available scripts (one-line descriptions):
+  $ mu script
+
+List all available scripts matching 'month' (long descriptions):
+  $ mu script -v month
+
+Run the 'msgs-per-month' script, and pass it the '--textonly' parameter:
+  $ mu script --script=msgs-per-month -- --textonly
+(as mentioned, parameters to the script follow the '--')
 #END
 
 

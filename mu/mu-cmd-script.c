@@ -1,3 +1,4 @@
+
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
@@ -76,7 +77,9 @@ print_scripts (GSList *scripts, gboolean verbose, const char *rxstr,
 			g_print ("\n");
 		first = FALSE;
 
-		g_print ("%s%s%s", name,
+		g_print ("%s%s%s%s",
+			 verbose ? "" : "  * ",
+			 name,
 			 oneline ? ": " : "",
 			 oneline ? oneline :"");
 
