@@ -655,7 +655,9 @@ after the end of the search results."
       "Update the current headers buffer after indexing has brought
 some changes, `mu4e-headers-auto-update' is non-nil and there is no
 user-interaction ongoing."
-      (when (and mu4e-headers-auto-update (not (active-minibuffer-window)))
+      (when (and mu4e-headers-auto-update       ;; must be set
+	      (zerop (mu4e-mark-marks-num))     ;; non active marks
+	      (not (active-minibuffer-window))) ;; no user input
 	(with-current-buffer mu4e~headers-buffer
 	  (mu4e-headers-rerun-search)))) nil t)
 

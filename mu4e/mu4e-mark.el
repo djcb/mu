@@ -302,6 +302,9 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (when (gethash docid mu4e~mark-map) t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mu4e-mark-marks-num ()
+  "Return the number of marks in the current buffer."
+  (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0))
 
 (defun mu4e-mark-handle-when-leaving ()
   "If there are any marks in the current buffer, handle those
@@ -309,12 +312,12 @@ according to the value of `mu4e-headers-leave-behavior'. This
 function is to be called before any further action (like searching,
 quiting the buffer) is taken; returning t means 'take the following
 action', return nil means 'don't do anything'"
-  (let ((marknum (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0))
+  (let ((marknum (mu4e-mark-marks-num))
 	 (what mu4e-headers-leave-behavior))
     (unless (zerop marknum) ;; nothing to do?
       (when (eq what 'ask)
 	(setq what (mu4e-read-option
-		     "There are existing marks; should we: "
+		     (format  "There are %d existing mark(s); should we: " marknum)
 		     '( ("apply marks"   . apply)
 			("ignore marks?" . ignore)))))
       ;; we determined what to do... now do it
