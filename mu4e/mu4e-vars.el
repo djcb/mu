@@ -81,21 +81,6 @@ the arguments may be `nil'."
   :group 'mu4e
   :safe 'stringp)
 
-;; (defcustom mu4e-user-mail-address-regexp "$^"
-;;   "Regular expression matching the user's mail address(es). This is
-;; used to distinguish ourselves from others, e.g. when replying and
-;; in :from-or-to headers. By default, match nothing."
-;;   :type 'regexp
-;;   :group 'mu4e
-;;   :safe 'stringp)
-
-;; (defcustom mu4e-my-email-addresses `(,user-mail-address)
-;;   "List of e-mail addresses to consider 'my email addresses',
-;; ie. addresses whose presence in an email imply that it is a
-;; personal message. This is used when indexing messages."
-;;   :type '(repeat (string :tag "Address"))
-;;   :group 'mu4e)
-
 (defcustom mu4e-user-mail-address-list `(,user-mail-address)
   "List of e-mail addresses to consider 'my email addresses',
 ie. addresses whose presence in an email imply that it is a
@@ -110,16 +95,16 @@ personal message. This is used when indexing messages."
 (make-obsolete-variable 'mu4e-my-email-addresses
   'mu4e-user-mail-address-list "0.9.9.x")
 
-
 (defcustom mu4e-use-fancy-chars nil
   "Whether to use fancy (non-ascii) characters."
   :type 'boolean
   :group 'mu4e)
 
-
-(defvar mu4e-date-format-long "%c"
+(defcustom mu4e-date-format-long "%c"
   "Date format to use in the message view, in the format of
-  `format-time-string'.")
+  `format-time-string'."
+  :type 'string
+  :group 'mu4e)
 
 (defcustom mu4e-search-results-limit 500
   "Maximum number of search results (or -1 for unlimited). Since
@@ -235,8 +220,9 @@ takes a message (a msg plist, see `mu4e-message-get-field'), and
 returns a folder.  Note, the message parameter refers to the
 original message being replied to / being forwarded / re-edited and
 is nil otherwise. `mu4e-drafts-folder' is only evaluated once."
-  :type 'string
-  :safe 'stringp
+  :type '(choice
+	   (string :tag "Folder name")
+	   (function :tag "Function return folder name"))
   :group 'mu4e-folders)
 
 (defcustom mu4e-refile-folder "/archive"
@@ -245,8 +231,9 @@ e.g. \"/Archive\". Instead of a string, may also be a function that
 takes a message (a msg plist, see `mu4e-message-get-field'), and
 returns a folder. Note that the message parameter refers to the
 message-at-point."
-  :type 'string
-  :safe 'stringp
+  :type '(choice
+	   (string :tag "Folder name")
+	   (function :tag "Function return folder name"))
   :group 'mu4e-folders)
 
 (defcustom mu4e-sent-folder "/sent"
@@ -256,8 +243,9 @@ that takes a message (a msg plist, see `mu4e-message-get-field'),
 and returns a folder.  Note that the message parameter refers to
 the original message being replied to / being forwarded /
 re-edited, and is nil otherwise."
-  :type 'string
-  :safe 'stringp
+  :type '(choice
+	   (string :tag "Folder name")
+	   (function :tag "Function return folder name"))
   :group 'mu4e-folders)
 
 (defcustom mu4e-trash-folder "/trash"
@@ -270,8 +258,9 @@ parameter refers to the message-at-point. When using it when
 composing a message (see `mu4e-sent-messages-behavior'), this
 refers to the original message being replied to / being forwarded /
 re-edited, and is nil otherwise."
-  :type 'string
-  :safe 'stringp
+  :type '(choice
+	   (string :tag "Folder name")
+	   (function :tag "Function return folder name"))
   :group 'mu4e-folders)
 
 
@@ -285,8 +274,6 @@ this, in the header buffer and view buffer you can execute
 `mu4e-mark-for-move-quick' (or 'm', by default) or
 `mu4e-jump-to-maildir' (or 'j', by default), followed by the
 designated shortcut character for the maildir.")
-
-
 
 ;; Faces
 (defgroup mu4e-faces nil
