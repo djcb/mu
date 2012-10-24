@@ -84,6 +84,12 @@ vertical split-view."
   :type 'integer
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-auto-update t
+  "Whether to automatically update the current headers buffer if an
+indexing operation showed changes."
+  :type 'boolean
+  :group 'mu4e-headers)
+
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
@@ -642,6 +648,16 @@ after the end of the search results."
   (make-local-variable 'mu4e~highlighted-docid)
   (make-local-variable 'global-mode-string)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
+
+  ;; maybe update the current headers upon indexing changes
+  (add-hook 'mu4e-index-updated-hook
+    (defun mu4e~headers-auto-update ()
+      "Update the current headers buffer after indexing has brought
+some changes, `mu4e-headers-auto-update' is non-nil and there is no
+user-interaction ongoing."
+      (when (and mu4e-headers-auto-update (not (active-minibuffer-window)))
+	(with-current-buffer mu4e~headers-buffer
+	  (mu4e-headers-rerun-search)))) nil t)
 
   (setq
     truncate-lines t

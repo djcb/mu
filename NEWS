@@ -21,6 +21,8 @@
       `mu4e-user-mail-address-list'
     - support tags (i.e.., X-Keywords and friends) in the headers-view, and the
       message view. Thanks to Abdó Roig-Maranges. New field ":tags".
+    - automatically update the headers buffer when new messages are found during
+      indexing; set `mu4e-headers-auto-update' to nil to disable this.
 
 * Old news
   :PROPERTIES:

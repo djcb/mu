@@ -733,6 +733,10 @@ u=@emph{unread}. The tooltip for this field also contains this information.
 @item The subject field also indicates the discussion threads @footnote{using
 Jamie Zawinski's mail threading algorithm,
 @url{http://www.jwz.org/doc/threading.html}}.
+@item The headers view is @emph{automatically updated} if any changes are
+found during the indexing process, and if there is not current
+user-interaction. If you do not want such automatic updates, set
+@code{mu4e-headers-auto-update} to @code{nil}.
 @end itemize
 
 @node Keybindings
@@ -2791,6 +2795,9 @@ some soundfile, change as needed):
   (defun new-mail-sound ()
     (shell-command "aplay ~/Sounds/boing.wav&")))
 @end lisp
+@item @emph{It seems my headers-buffer is automatically updated when new
+  messages are found during the indexing process -- can I disable this
+  somehow?} Yes - set @code{mu4e-headers-auto-update} to @code{nil}.
 @item @emph{I don't use @t{offlineimap}, @t{fetchmail} etc., I get my mail
 through my own mailserver. What should I use for
 @code{mu4e-get-mail-command}}? Use @t{"true"} (or don't do anything, it's the
