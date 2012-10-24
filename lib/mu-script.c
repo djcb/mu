@@ -246,54 +246,51 @@ mu_script_find_script_with_name (GSList *lst, const char *name)
 }
 
 #ifdef BUILD_GUILE
-
 static void
 guile_shell (void *closure, int argc, char **argv)
 {
 	scm_shell (argc, argv);
 }
 
-
 gboolean
 mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 		     const char **args, GError **err)
- {
-	 char *mainargs, *expr;
-	 char *argv[] = {
-		 "guile", "-l", NULL, "-c", NULL, NULL
-	 };
+{
+	char *mainargs, *expr;
+	char *argv[] = {
+	"guile", "-l", NULL, "-c", NULL, NULL
+		};
 
-	 g_return_val_if_fail (msi, FALSE);
-	 g_return_val_if_fail (muhome, FALSE);
+	g_return_val_if_fail (msi, FALSE);
+	g_return_val_if_fail (muhome, FALSE);
 
-	 if (access (mu_script_info_path (msi), R_OK) != 0) {
-		 mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
+	if (access (mu_script_info_path (msi), R_OK) != 0) {
+	mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
 				      strerror(errno));
 		 return FALSE;
 	 }
-	 argv[2] = (char*)mu_script_info_path (msi);
+	argv[2] = (char*)mu_script_info_path (msi);
 
-	 mainargs = mu_str_quoted_from_strv (args);
-	 expr = g_strdup_printf (
-		 "(main '(\"%s\" \"--muhome=%s\" %s))",
-		 mu_script_info_name (msi),
-		 muhome,
-		 mainargs ? mainargs : "");
+	mainargs = mu_str_quoted_from_strv (args);
+	expr = g_strdup_printf (
+	"(main '(\"%s\" \"--muhome=%s\" %s))",
+		mu_script_info_name (msi),
+		muhome,
+		mainargs ? mainargs : "");
 
-	 g_free (mainargs);
-	 argv[4] = expr;
+	g_free (mainargs);
+	argv[4] = expr;
 
-	 scm_boot_guile (5, argv, guile_shell, NULL);
+	scm_boot_guile (5, argv, guile_shell, NULL);
 
 	/* never reached but let's be correct(TM)*/
 	g_free (expr);
 	return TRUE;
 }
-
-#else
+#else /*!BUILD_GUILE*/
 gboolean
 mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
-		     const char *query, gboolean textonly, GError **err)
+		     const char **args, GError **err)
 {
 	mu_util_g_set_error (err, MU_ERROR_INTERNAL,
 			     "this mu does not have guile support");
