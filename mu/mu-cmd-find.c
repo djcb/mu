@@ -44,7 +44,8 @@
 #include "mu-cmd.h"
 #include "mu-threader.h"
 
-typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err);
+typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter,
+			       MuConfig *opts, GError **err);
 
 static gboolean
 print_xapian_query (MuQuery *xapian, const gchar *query, GError **err)
