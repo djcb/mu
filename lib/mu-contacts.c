@@ -55,30 +55,6 @@ struct _MuContacts {
 };
 
 
-/*
- * we use the e-mail address to create a key in the GKeyFile, but we
- * have to mutilate a bit so that it's (a) *cough* practically-unique
- * and (b) valid as a GKeyFile group name (ie., valid utf8, no control
- * chars, no '[' or ']')
- */
-static const char*
-encode_email_address (const char *addr)
-{
-	static char enc[254 + 1]; /* max size for an e-mail addr */
-	char *cur;
-
-	if (!addr)
-		return FALSE;
-
-	/* make sure chars are with {' ' .. '~'}, and not '[' ']' */
-	for (cur = strncpy(enc, addr, sizeof(enc)); *cur != '\0'; ++cur)
-		if (!isalnum(*cur)) {
-			*cur = 'A' +  (*cur % ('Z' - 'A'));
-		} else
-			*cur = tolower(*cur);
-
-	return enc;
-}
 
 static GKeyFile*
 load_key_file (const char *path)
@@ -235,31 +211,53 @@ mu_contacts_clear (MuContacts *self)
 }
 
 
+/*
+ * we use the e-mail address to create a key in the GKeyFile, but we
+ * have to mutilate a bit so that it's (a) *cough* practically-unique
+ * and (b) valid as a GKeyFile group name (ie., valid utf8, no control
+ * chars, no '[' or ']')
+ */
+static const char*
+encode_email_address (const char *addr)
+{
+	static char enc[254 + 1]; /* max size for an e-mail addr */
+	char *cur;
+
+	if (!addr)
+		return FALSE;
+
+	/* make sure chars are with {' ' .. '~'}, and not '[' ']' */
+	for (cur = strncpy(enc, addr, sizeof(enc)); *cur != '\0'; ++cur)
+		if (!isalnum(*cur)) {
+			*cur = 'A' +  (*cur % ('Z' - 'A'));
+		} else
+			*cur = tolower(*cur);
+
+	return enc;
+}
 
 gboolean
-mu_contacts_add (MuContacts *self, const char *email, const char *name,
+mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 		 gboolean personal, time_t tstamp)
 {
 	ContactInfo *cinfo;
-	const char* group;
+	const char *group;
 
 	g_return_val_if_fail (self, FALSE);
-	g_return_val_if_fail (email, FALSE);
+	g_return_val_if_fail (addr, FALSE);
 
 	/* add the info, if either there is no info for this email
 	 * yet, *OR* the new one is more recent and does not have an
 	 * empty name */
-	group = encode_email_address (email);
+	group = encode_email_address (addr);
 
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, group);
 	if (!cinfo || (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
 		ContactInfo *ci;
-		ci = contact_info_new (g_strdup(email),
+		ci = contact_info_new (g_strdup(addr),
 				       name ? g_strdup(name) : NULL, personal,
 				       tstamp);
-
 		g_hash_table_insert (self->_hash, g_strdup(group), ci);
-
 		return self->_dirty = TRUE;
 	}
 

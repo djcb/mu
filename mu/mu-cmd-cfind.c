@@ -23,6 +23,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "mu-cmd.h"
 #include "mu-util.h"
@@ -30,6 +32,127 @@
 #include "mu-date.h"
 #include "mu-contacts.h"
 #include "mu-runtime.h"
+
+/**
+ * guess the last name for the given name; clearly,
+ * this is just a rough guess for setting an initial value.
+ *
+ * @param name a name
+ *
+ * @return the last name, as a newly allocated string (free with
+ * g_free)
+ */
+static gchar*
+guess_last_name (const char *name)
+{
+	const gchar *lastsp;
+
+	if (!name)
+		return g_strdup ("");
+
+	lastsp = g_strrstr (name, " ");
+
+	return g_strdup (lastsp ? lastsp + 1 : "");
+}
+
+/**
+ * guess the first name for the given name; clearly,
+ * this is just a rough guess for setting an initial value.
+ *
+ * @param name a name
+ *
+ * @return the first name, as a newly allocated string (free with
+ * g_free)
+ */
+static gchar*
+guess_first_name (const char *name)
+{
+	const gchar *lastsp;
+
+	if (!name)
+		return g_strdup ("");
+
+	lastsp = g_strrstr (name, " ");
+
+	if (lastsp)
+		return g_strndup (name, lastsp - name);
+	else
+		return g_strdup (name);
+}
+
+/**
+ * guess some nick name for the given name; if we can determine an
+ * first name, last name, the nick will be first name + the first char
+ * of the last name. otherwise, it's just the first name. clearly,
+ * this is just a rough guess for setting an initial value for nicks.
+ *
+ * @param name a name
+ *
+ * @return the guessed nick, as a newly allocated string (free with g_free)
+ */
+static gchar*
+cleanup_str (const char* str)
+{
+	gchar *s;
+	const gchar *cur;
+	unsigned i;
+
+	if (mu_str_is_empty(str))
+		return g_strdup ("");
+
+	s = g_new0 (char, strlen(str) + 1);
+
+	for (cur = str, i = 0; *cur; ++cur) {
+		if (ispunct(*cur) || isspace(*cur))
+			continue;
+		else
+			s[i++] = *cur;
+	}
+
+	return s;
+}
+
+
+static gchar*
+guess_nick (const char* name)
+{
+	gchar *fname, *lname, *nick;
+	gchar initial[7];
+
+	fname	  = guess_first_name (name);
+	lname	  = guess_last_name (name);
+
+	/* if there's no last name, use first name as the nick */
+	if (mu_str_is_empty(fname) || mu_str_is_empty(lname)) {
+		g_free (lname);
+		nick = fname;
+		goto leave;
+	}
+
+	memset (initial, 0, sizeof(initial));
+	/* couldn't we get an initial for the last name? */
+	if (g_unichar_to_utf8 (g_utf8_get_char (lname), initial) == 0) {
+		g_free (lname);
+		nick = fname;
+		goto leave;
+	}
+
+	nick = g_strdup_printf ("%s%s", fname, initial);
+	g_free (fname);
+	g_free (lname);
+
+leave:
+	{
+		gchar *tmp;
+		tmp = cleanup_str (nick);
+		g_free (nick);
+		nick = tmp;
+	}
+
+	return nick;
+}
+
+
 
 static void
 print_header (MuConfigFormat format)
@@ -52,8 +175,8 @@ each_contact_bbdb (const char *email, const char *name, time_t tstamp)
 {
 	char *fname, *lname, *now, *timestamp;
 
-	fname	  = mu_str_guess_first_name (name);
-	lname	  = mu_str_guess_last_name (name);
+	fname	  = guess_first_name (name);
+	lname	  = guess_last_name (name);
 	now	  = mu_date_str ("%Y-%m-%d", time(NULL));
 	timestamp = mu_date_str ("%Y-%m-%d", tstamp);
 
@@ -76,7 +199,7 @@ each_contact_mutt_alias (const char *email, const char *name)
 	if (!name)
 		return;
 
-	nick = mu_str_guess_nick (name);
+	nick = guess_nick (name);
 	mu_util_print_encoded ("alias %s %s <%s>\n",
 			       nick, name, email);
 	g_free (nick);
@@ -92,7 +215,7 @@ each_contact_wl (const char *email, const char *name)
 	if (!name)
 		return;
 
-	nick = mu_str_guess_nick (name);
+	nick = guess_nick (name);
 	mu_util_print_encoded ("%s \"%s\" \"%s\"\n",
 			       email, nick, name);
 	g_free (nick);

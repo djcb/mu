@@ -27,10 +27,18 @@ files must be specified with an absolute path.
 
 #BEGIN MU_CONFIG_CMD_CFIND
 #STRING
-mu cfind [options] [<pattern>]
+mu cfind [options] [--format=<format>] [<pattern>]
 #STRING
 mu cfind is the mu command to find contacts in the mu database and export them
 for use in other programs.
+
+<format> is one of:
+ mutt-alias
+ mutt-ab
+ wl
+ csv
+ org-contact
+ bbdb
 #END
 
 #BEGIN MU_CONFIG_CMD_EXTRACT

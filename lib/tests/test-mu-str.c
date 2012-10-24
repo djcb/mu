@@ -368,77 +368,77 @@ test_mu_str_to_list_strip (void)
 
 
 
-static void
-test_mu_str_guess_first_name (void)
-{
-	int i;
+/* static void */
+/* test_mu_str_guess_first_name (void) */
+/* { */
+/* 	int i; */
 
-	struct {
-		char *src, *exp;
-	} tests[] = {
-		{ "Richard M. Stallman", "Richard M." },
-		{ "John Rambo", "John" },
-		{ "Ivanhoe", "Ivanhoe" },
-		{ "", "" }
-	};
+/* 	struct { */
+/* 		char *src, *exp; */
+/* 	} tests[] = { */
+/* 		{ "Richard M. Stallman", "Richard M." }, */
+/* 		{ "John Rambo", "John" }, */
+/* 		{ "Ivanhoe", "Ivanhoe" }, */
+/* 		{ "", "" } */
+/* 	}; */
 
-	for (i = 0; i != G_N_ELEMENTS(tests); ++i) {
-		gchar *s;
+/* 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) { */
+/* 		gchar *s; */
 
-		s  = mu_str_guess_first_name (tests[i].src);
-		g_assert_cmpstr (s, ==, tests[i].exp);
-		g_free (s);
-	}
-}
-
-
-static void
-test_mu_str_guess_last_name (void)
-{
-	int i;
-
-	struct {
-		char *src, *exp;
-	} tests[] = {
-		{ "Richard M. Stallman", "Stallman" },
-		{ "John Rambo", "Rambo" },
-		{ "Ivanhoe", "" },
-		{ "", "" }
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(tests); ++i) {
-		gchar *s;
-
-		s  = mu_str_guess_last_name (tests[i].src);
-		g_assert_cmpstr (s, ==, tests[i].exp);
-		g_free (s);
-	}
-}
+/* 		s  = mu_str_guess_first_name (tests[i].src); */
+/* 		g_assert_cmpstr (s, ==, tests[i].exp); */
+/* 		g_free (s); */
+/* 	} */
+/* } */
 
 
+/* static void */
+/* test_mu_str_guess_last_name (void) */
+/* { */
+/* 	int i; */
 
-static void
-test_mu_str_guess_nick (void)
-{
-	int i;
+/* 	struct { */
+/* 		char *src, *exp; */
+/* 	} tests[] = { */
+/* 		{ "Richard M. Stallman", "Stallman" }, */
+/* 		{ "John Rambo", "Rambo" }, */
+/* 		{ "Ivanhoe", "" }, */
+/* 		{ "", "" } */
+/* 	}; */
 
-	struct {
-		char *src, *exp;
-	} tests[] = {
-		{ "Richard M. Stallman", "RichardMS" },
-		{ "John Rambo", "JohnR" },
-		{ "Ivanhoe", "Ivanhoe" },
-		{ "", "" }
-	};
+/* 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) { */
+/* 		gchar *s; */
 
-	for (i = 0; i != G_N_ELEMENTS(tests); ++i) {
-		gchar *s;
+/* 		s  = mu_str_guess_last_name (tests[i].src); */
+/* 		g_assert_cmpstr (s, ==, tests[i].exp); */
+/* 		g_free (s); */
+/* 	} */
+/* } */
 
-		s  = mu_str_guess_nick (tests[i].src);
-		g_assert_cmpstr (s, ==, tests[i].exp);
-		g_free (s);
-	}
-}
+
+
+/* static void */
+/* test_mu_str_guess_nick (void) */
+/* { */
+/* 	int i; */
+
+/* 	struct { */
+/* 		char *src, *exp; */
+/* 	} tests[] = { */
+/* 		{ "Richard M. Stallman", "RichardMS" }, */
+/* 		{ "John Rambo", "JohnR" }, */
+/* 		{ "Ivanhoe", "Ivanhoe" }, */
+/* 		{ "", "" } */
+/* 	}; */
+
+/* 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) { */
+/* 		gchar *s; */
+
+/* 		s  = mu_str_guess_nick (tests[i].src); */
+/* 		g_assert_cmpstr (s, ==, tests[i].exp); */
+/* 		g_free (s); */
+/* 	} */
+/* } */
 
 
 
@@ -509,12 +509,12 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-esc-to-list",
 			 test_mu_str_esc_to_list);
 
-	g_test_add_func ("/mu-str/mu_str_guess_first_name",
-			 test_mu_str_guess_first_name);
-	g_test_add_func ("/mu-str/mu_str_guess_last_name",
-			 test_mu_str_guess_last_name);
-	g_test_add_func ("/mu-str/mu_str_guess_nick",
-			 test_mu_str_guess_nick);
+	/* g_test_add_func ("/mu-str/mu_str_guess_first_name", */
+	/* 		 test_mu_str_guess_first_name); */
+	/* g_test_add_func ("/mu-str/mu_str_guess_last_name", */
+	/* 		 test_mu_str_guess_last_name); */
+	/* g_test_add_func ("/mu-str/mu_str_guess_nick", */
+	/* 		 test_mu_str_guess_nick); */
 
 	g_test_add_func ("/mu-str/mu_str_subject_normalize",
 			 test_mu_str_subject_normalize);

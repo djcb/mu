@@ -188,12 +188,14 @@ typedef struct _MuConfig MuConfig;
  * mu_config_init, you should also call mu_config_uninit when the data
  * is no longer needed.
  *
- * Note that is _static_ data, ie., mu_config_init will always return
- * the same pointer
+ * Note that this is _static_ data, ie., mu_config_init will always
+ * return the same pointer
  *
- * @param opts options
+ * @param argcp: pointer to argc
+ * @param argvp: pointer to argv
+ * @param err: receives error information
  */
-MuConfig *mu_config_init (int *argcp, char ***argvp)
+MuConfig *mu_config_init (int *argcp, char ***argvp, GError **err)
       G_GNUC_WARN_UNUSED_RESULT;
 /**
  * free the MuConfig structure

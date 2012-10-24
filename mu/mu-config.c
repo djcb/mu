@@ -273,7 +273,7 @@ config_options_group_cfind (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
-		 "output format ('plain'(*), 'mutt', 'wanderlust',"
+		 "output format ('plain'(*), 'mutt', 'wl',"
 		 "'org-contact', 'csv')", "<format>"},
 		{"personal", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.personal,
 		 "whether to only get 'personal' contacts", NULL},
@@ -476,7 +476,7 @@ cmd_from_string (const char *str)
 
 
 static gboolean
-parse_cmd (int *argcp, char ***argvp)
+parse_cmd (int *argcp, char ***argvp, GError **err)
 {
 	MU_CONFIG.cmd	 = MU_CONFIG_CMD_NONE;
 	MU_CONFIG.cmdstr = NULL;
@@ -491,6 +491,23 @@ parse_cmd (int *argcp, char ***argvp)
 
 	MU_CONFIG.cmdstr = (*argvp)[1];
 	MU_CONFIG.cmd    = cmd_from_string (MU_CONFIG.cmdstr);
+
+#ifndef BUILD_GUILE
+	if (MU_CONFIG.cmd == MU_CONFIG_CMD_SCRIPT) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "command 'script' not supported");
+		return FALSE;
+	}
+#endif /*!BUILD_GUILE*/
+
+#ifndef BUILD_CRYPTO
+	if (MU_CONFIG.cmd == MU_CONFIG_CMD_VERIFIY) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "command 'verify' not supported");
+		return FALSE;
+	}
+#endif /*!BUILD_CRYPTO */
+
 
 	return TRUE;
 }
@@ -627,9 +644,8 @@ show_usage (void)
 
 
 static gboolean
-parse_params (int *argcp, char ***argvp)
+parse_params (int *argcp, char ***argvp, GError **err)
 {
-	GError *err;
 	GOptionContext *context;
 	GOptionGroup *group;
 	gboolean rv;
@@ -648,44 +664,32 @@ parse_params (int *argcp, char ***argvp)
 	case MU_CONFIG_CMD_HELP:
 		/* 'help' is special; sucks in the options of the
 		 * command after it */
-		rv = g_option_context_parse (context, argcp, argvp, &err) &&
+		rv = g_option_context_parse (context, argcp, argvp, err) &&
 			cmd_help ();
 		break;
-	case MU_CONFIG_CMD_SCRIPT:
-		/* script feeds the rest of the options to the script, so
-		 * we accept all of them */
-		g_option_context_set_ignore_unknown_options (context, TRUE);
-		/* fall through */
 	default:
 		group = get_option_group (MU_CONFIG.cmd);
 		if (group)
 			g_option_context_add_group(context, group);
-		rv = g_option_context_parse (context, argcp, argvp, &err);
+		rv = g_option_context_parse (context, argcp, argvp, err);
 	}
-
 	g_option_context_free (context);
 
-	if (rv)
-		return TRUE;
-
-	/* something when wrong */
-	g_printerr ("mu: option error: %s\n", err ? err->message : "?");
-	g_clear_error (&err);
-	return FALSE;
+	return rv ? TRUE : FALSE;
 }
 
 
 MuConfig*
-mu_config_init (int *argcp, char ***argvp)
+mu_config_init (int *argcp, char ***argvp, GError **err)
 {
 	g_return_val_if_fail (argcp && argvp, NULL);
 
 	memset (&MU_CONFIG, 0, sizeof(MU_CONFIG));
 
-	if (!parse_cmd (argcp, argvp))
+	if (!parse_cmd (argcp, argvp, err))
 		goto errexit;
 
-	if (!parse_params(argcp, argvp))
+	if (!parse_params(argcp, argvp, err))
 		goto errexit;
 
 	/* fill in the defaults if user did not specify */
