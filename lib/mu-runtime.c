@@ -131,7 +131,8 @@ runtime_free (void)
 void
 mu_runtime_uninit (void)
 {
-	g_return_if_fail (_initialized);
+	if (!_initialized)
+		return;
 
 	runtime_free ();
 
