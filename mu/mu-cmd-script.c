@@ -1,4 +1,3 @@
-
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
@@ -38,24 +37,27 @@
 #define MU_GUILE_EXT          ".scm"
 #define MU_GUILE_DESCR_PREFIX ";; INFO: "
 
+#define COL(C) ((color)?C:"")
+
 static void
 print_script (const char *name, const char *oneline, const char *descr,
-	      gboolean verbose)
+	      gboolean color, gboolean verbose)
 {
-	g_print ("%s%s%s%s",
+	g_print ("%s%s%s%s%s%s%s%s",
 		 verbose ? "\n" : "  * ",
-		 name,
+		 COL(MU_COLOR_GREEN),name,COL(MU_COLOR_DEFAULT),
 		 oneline ? ": " : "",
-		 oneline ? oneline :"");
+		 COL(MU_COLOR_BLUE),oneline ? oneline :"",MU_COLOR_DEFAULT);
 
 	if (verbose && descr)
-		g_print ("%s", descr);
+		g_print ("%s%s%s",
+			 COL(MU_COLOR_MAGENTA),descr,COL(MU_COLOR_DEFAULT));
 }
 
 
 static gboolean
-print_scripts (GSList *scripts, gboolean verbose, const char *rxstr,
-	       GError **err)
+print_scripts (GSList *scripts, gboolean color,
+	       gboolean verbose, const char *rxstr, GError **err)
 {
 	GSList *cur;
 
@@ -86,7 +88,7 @@ print_scripts (GSList *scripts, gboolean verbose, const char *rxstr,
 			continue;
 		}
 
-		print_script (name, oneline, descr, verbose);
+		print_script (name, oneline, descr, color, verbose);
 	}
 
 	return TRUE;
@@ -167,7 +169,7 @@ mu_cmd_script (MuConfig *opts, GError **err)
 		goto leave;
 
 	if (!opts->script) {
-		print_scripts (scripts, opts->verbose,
+		print_scripts (scripts, !opts->nocolor, opts->verbose,
 			       opts->params[1], err);
 		goto leave;
 	}
