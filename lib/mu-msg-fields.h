@@ -67,6 +67,10 @@ static const MuMsgFieldId MU_MSG_FIELD_ID_NONE = (MuMsgFieldId)-1;
  * in mu-query.cc and mu-str.c */
 #define MU_MSG_FIELD_PSEUDO_CONTACT "contact"
 
+/* this is a shortcut for To/Cc/Bcc in queries; handled specially in
+ * mu-query.cc and mu-str.c */
+#define MU_MSG_FIELD_PSEUDO_RECIP "recip"
+
 #define mu_msg_field_id_is_valid(MFID) \
 	((MFID) < MU_MSG_FIELD_ID_NUM)
 

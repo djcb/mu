@@ -187,8 +187,7 @@ private:
 	void add_special_prefixes () {
 		char pfx[] = { '\0', '\0' };
 
-		/* add 'contact' as a shortcut for
-		 * From/Cc/Bcc/To: */
+		/* add 'contact' as a shortcut for From/Cc/Bcc/To: */
 		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_FROM);
 		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
 		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO);
@@ -197,6 +196,14 @@ private:
 		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
 		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_BCC);
 		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
+
+		/* add 'recip' as a shortcut for Cc/Bcc/To: */
+		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO);
+		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_RECIP, pfx);
+		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_CC);
+		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_RECIP, pfx);
+		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_BCC);
+		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_RECIP, pfx);
 	}
 
 	Xapian::QueryParser	_qparser;

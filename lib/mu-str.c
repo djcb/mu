@@ -439,8 +439,11 @@ check_for_field (const char *str, gboolean *is_field,
 			      &pfx);
 	/* also check special prefixes... */
 	if (!pfx.match)
-		pfx.match = g_str_has_prefix
-			(str, MU_MSG_FIELD_PSEUDO_CONTACT ":");
+		pfx.match =
+			g_str_has_prefix
+			(str, MU_MSG_FIELD_PSEUDO_CONTACT ":") ||
+			g_str_has_prefix
+			(str, MU_MSG_FIELD_PSEUDO_RECIP ":");
 
 	*is_field	= pfx.match;
 	*is_range_field = pfx.range_field;

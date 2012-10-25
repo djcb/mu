@@ -9,6 +9,7 @@
      - add 'mu script' command to run mu script, for example to do statistics on
        your message corpus
      - allow 'contact:' as a shortcut in queries for 'from:foo OR to:foo OR
+       cc:foo OR bcc:foo', and 'recip:' as a shortcut for 'to:foo OR
        cc:foo OR bcc:foo'
 
 *** mu4e
@@ -23,6 +24,11 @@
       message view. Thanks to Abdó Roig-Maranges. New field ":tags".
     - automatically update the headers buffer when new messages are found during
       indexing; set `mu4e-headers-auto-update' to nil to disable this.
+    - update mail/index with M-x mu4e-update-mail-and-index; which everywhere in
+      mu4e is available with key C-S-u. Use prefix argument to run in
+      background.
+    - add function `mu4e-update-index' to only update the index
+
 
 * Old news
   :PROPERTIES:
