@@ -2812,7 +2812,7 @@ through my own mailserver. What should I use for
 default). This makes getting mail a no-op, but the messages are still
 re-indexed.
 @item @emph{How can I re-index my messages without getting new mail?}
-{@tkbd{M-x mu4e-update-index}}
+Use @kbd{M-x mu4e-update-index}
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like:}
 @verbatim
