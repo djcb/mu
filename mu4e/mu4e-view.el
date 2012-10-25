@@ -475,6 +475,8 @@ at POINT, or if nil, at (point)."
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
 
+      (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
+      
       (define-key map "q" 'mu4e~view-quit-buffer)
 
       ;; note, 'z' is by-default bound to 'bury-buffer'

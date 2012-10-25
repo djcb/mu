@@ -44,8 +44,12 @@
 
     (define-key map "m" 'mu4e~main-toggle-mail-sending-mode)
     (define-key map "f" 'smtpmail-send-queued-mail)
-    (define-key map "U" 'mu4e-update-mail-show-window)
 
+    ;;
+    (define-key map "U" 'mu4e-update-mail-and-index)
+    (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
+    
+    
     (define-key map "$" 'mu4e-show-log)
     (define-key map "A" 'mu4e-about)
     (define-key map "H" 'mu4e-display-manual)

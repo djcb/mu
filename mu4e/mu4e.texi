@@ -389,10 +389,9 @@ worked, by trying some command-line searches, for example
 @end example
 
 which should list all messages that match @t{hello}. For more examples of
-searches, see @ref{Queries}, or check the @t{mu-find} and @t{mu-easy} man pages.
-
-If all of this worked well, we are well on our way setting up @t{mu}; the next
-step is to do some basic configuration for @t{mu4e}.
+searches, see @ref{Queries}, or check the @t{mu-find} and @t{mu-easy} man
+pages. If all of this worked well, we are well on our way setting up @t{mu};
+the next step is to do some basic configuration for @t{mu4e}.
 
 @node Basic configuration
 @section Basic configuration
@@ -445,14 +444,18 @@ As we have seen, we can do all of the mail retrieval @emph{outside} of
 @command{emacs}/@t{mu4e}. However, you can also do it from within
 @t{mu4e}. For that, set the variable @code{mu4e-get-mail-command} to the
 program or shell command you want to use for retrieving mail. You can then
-retrieve your e-mail from the @ref{Main view}. You can also set
-@code{mu4e-get-mail-command} to @t{"true"}, in which case @t{mu4e} won't try
-to get new mail, but still re-index your messages.
+retrieve your e-mail using @kbd{M-x mu4e-update-mail-and-index}, or
+@kbd{C-S-u} in all @t{mu4e}-views.
 
-You can also have this command run periodically in the background, by setting
-the variable @code{mu4e-update-interval} to the number of seconds between
-these updates. If set to @code{nil}, it won't update at all. After you make
-changes to @code{mu4e-update-interval}, @t{mu4e} must be restarted before
+If you don't have a specific command for getting mail, for example because you
+are running your own mail-server, you can set @code{mu4e-get-mail-command} to
+@t{"true"}, in which case @t{mu4e} won't try to get new mail, but still
+re-index your messages.
+
+You can also update your mail and index periodically in the background, by
+setting the variable @code{mu4e-update-interval} to the number of seconds
+between these updates. If set to @code{nil}, it won't update at all. After you
+make changes to @code{mu4e-update-interval}, @t{mu4e} must be restarted before
 the changes take effect.
 
 A simple setup could look something like:
@@ -650,7 +653,7 @@ Finally, there are some @emph{Misc} (miscellaneous) actions:
 @itemize
 @item @t{[U]pdate email & database} executes the shell-command in the variable
  @code{mu4e-get-mail-command}, and afterwards updates the @t{mu} database;
-see @ref{Indexing your messages} and @ref{Getting mail} for details
+see @ref{Indexing your messages} and @ref{Getting mail} for details.
 @item @t{toggle [m]ail sending mode (direct)} toggles between sending
 mail directly, and queuing it first (for example, when you are offline), and
 @t{[f]lush queued mail} flushes any queued mail. This item is visible only
@@ -801,6 +804,7 @@ a            execute some custom action on a header
 |            pipe message through shell command
 C-+,C--      increase / decrease the number of headers shown
 H            get help
+C-S-u        update mail & reindex
 q,z          leave the headers buffer
 @end verbatim
 
@@ -1040,6 +1044,7 @@ v            show details about the cryptographic signature
 .            show the raw message view. 'q' takes you back.
 C-+,C--      increase / decrease the number of headers shown
 H            get help
+C-S-u        update mail & reindex
 q,z          leave the message view
 @end verbatim
 
@@ -1272,6 +1277,9 @@ C-c C-c      send message
 C-c C-d      save to drafts and leave
 C-c C-k      kill the message
 C-c C-a      attach a file (pro-tip: drag & drop works as well)
+
+(mu4e-specific)
+C-S-u        update mail & reindex
 @end verbatim
 
 @node Address autocompletion
@@ -2803,6 +2811,8 @@ through my own mailserver. What should I use for
 @code{mu4e-get-mail-command}}? Use @t{"true"} (or don't do anything, it's the
 default). This makes getting mail a no-op, but the messages are still
 re-indexed.
+@item @emph{How can I re-index my messages without getting new mail?}
+{@tkbd{M-x mu4e-update-index}}
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
 errors like:}
 @verbatim

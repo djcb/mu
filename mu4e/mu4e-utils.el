@@ -505,35 +505,6 @@ process."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(defconst mu4e~update-buffer-name "*mu4e-update*"
-  "Name of the buffer for message retrieval/database updating.")
-
-(defconst mu4e~update-buffer-height 8
-  "Height of the mu4e message retrieval/update buffer.")
-
-(defun mu4e-update-mail-show-window ()
-  "Try to retrieve mail (using the user-provided shell command),
-and update the database afterwards, and show the progress in a
-split-window."
-  (interactive)
-  (unless mu4e-get-mail-command
-    (mu4e-error "`mu4e-get-mail-command' is not defined"))
-  ;; delete any old update buffer
-  (when (buffer-live-p mu4e~update-buffer-name)
-    (with-current-buffer mu4e~update-buffer-name
-      (kill-buffer-and-window)))
-  ;; create a new one
-  (let ((buf (get-buffer-create mu4e~update-buffer-name))
-	 (win (split-window (selected-window)
-	     (- (window-height (selected-window)) 8))))
-    (with-selected-window win
-      (switch-to-buffer buf)
-      (set-window-dedicated-p win t)
-      (erase-buffer)
-      (insert "\n") ;; FIXME -- needed so output starts
-      (mu4e-update-mail buf t))))
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start and stopping
@@ -618,7 +589,8 @@ FUNC (if non-nil) afterwards."
 	      (when (and mu4e-update-interval (null mu4e~update-timer))
 		(setq mu4e~update-timer
 		  (run-at-time
-		    0 mu4e-update-interval 'mu4e-update-mail)))
+		    0 mu4e-update-interval
+		    (lambda () (mu4e-update-mail-and-index t)))))
 	      (mu4e-message "Started mu4e with %d message%s in store"
 		doccount (if (= doccount 1) "" "s"))))))
 
@@ -653,23 +625,28 @@ FUNC (if non-nil) afterwards."
 	  (kill-buffer))))
     (buffer-list)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getting mail / updating the index 
+;;
+;;
 (defvar mu4e~update-timer nil
   "The mu4e update timer.")
-
-(defconst mu4e~update-mail-name "*mu4e-update-mail*"
-  "Name of the process to update mail.")
+(defconst mu4e~update-name "*mu4e-update*"
+  "Name of the process and buffer to update mail.")
+(defconst mu4e~update-buffer-height 8
+  "Height of the mu4e message retrieval/update buffer.")
 
 (defvar mu4e~get-mail-ask-password "mu4e get-mail: Enter password: "
   "Query string for `mu4e-get-mail-command' password.")
-
 (defvar mu4e~get-mail-password-regexp "^Remote: Enter password: $"
   "Regexp to match a password query in the `mu4e-get-mail-command' output.")
 
-(defun mu4e~process-filter (proc msg)
+(defun mu4e~get-mail-process-filter (proc msg)
   "Filter the output of `mu4e-get-mail-command'.
-Currently the filter only checks if the command asks for a password by matching
-the output against `mu4e~get-mail-password-regexp'.  The messages are inserted
-into the process buffer."
+Currently the filter only checks if the command asks for a password
+by matching the output against `mu4e~get-mail-password-regexp'.
+The messages are inserted into the process buffer."
   (save-current-buffer
     (when (process-buffer proc)
       (set-buffer (process-buffer proc)))
@@ -677,28 +654,46 @@ into the process buffer."
       ;; Check whether process asks for a password and query user
       (when (string-match mu4e~get-mail-password-regexp msg)
         (if (process-get proc 'x-interactive)
-            (process-send-string proc (concat
-                                       (read-passwd mu4e~get-mail-ask-password)
-                                       "\n"))
-           ;; TODO kill process?
-          (error "Get-mail process requires a password")))
+            (process-send-string proc
+	      (concat (read-passwd mu4e~get-mail-ask-password) "\n"))
+	  ;; TODO kill process?
+          (mu4e-error "Unrecognized password request")))
       (when (process-buffer proc)
         (insert msg)))))
 
-(defun mu4e-update-mail (&optional buf interactive)
-  "Update mail (retrieve using `mu4e-get-mail-command' and update
-the database afterwards), with output going to BUF if not nil, or
-discarded if nil. After retrieving mail, update the database. Note,
-function is asynchronous, returns (almost) immediately, and all the
-processing takes part in the background, unless buf is non-nil.
-If INTERACTIVE is not nil then the user might be asked for a
-password."
+(defun  mu4e-update-index ()
+  "Update the mu4e index."
+  (interactive)
+  (unless mu4e-maildir
+    (mu4e-error "`mu4e-maildir' is not defined"))
+  (mu4e~proc-index mu4e-maildir mu4e-user-mail-address-list))
+
+;; complicated function, as it:
+;;   - needs to check for errors
+;;   - (optionally) pop-up a window
+;;   - (optionally) check password requests
+(defun mu4e-update-mail-and-index (run-in-background)
+  "Get a new mail by running `mu4e-get-mail-command'. If
+run-in-background is non-nil (or functional called with
+prefix-argument), run in the background; otherwise, pop up a
+window."
+  (interactive "P")
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
-  (let* ((process-connection-type t)
+  (let* ((buf (unless run-in-background
+		(get-buffer-create mu4e~update-name)))
+	  (win (and buf (split-window (selected-window)
+			  (- (window-height (selected-window)) 8))))
+	  (process-connection-type t)
 	  (proc (start-process-shell-command
-		 mu4e~update-mail-name buf mu4e-get-mail-command)))
+		  mu4e~update-name buf mu4e-get-mail-command)))
     (mu4e-message "Retrieving mail...")
+    (when (window-live-p win)
+      (with-selected-window win
+	(switch-to-buffer buf)
+	(set-window-dedicated-p win t)
+	(erase-buffer)
+	(insert "\n"))) ;; FIXME -- needed so output starts   
     (set-process-sentinel proc
       (lambda (proc msg)
 	(let* ((status (process-status proc))
@@ -710,14 +705,15 @@ password."
 		(buf (process-buffer proc)))
 	  (message nil)
 	  ;; there may be an error, give the user up to 5 seconds to check
-	  (when maybe-error
-	    (sit-for 5))
-	  (mu4e~proc-index mu4e-maildir mu4e-user-mail-address-list)
-	  (when (buffer-live-p buf)
-	    (kill-buffer buf)))))
-    (process-put proc 'x-interactive interactive)
-    (set-process-filter proc 'mu4e~process-filter)))
-
+	  (when maybe-error (sit-for 5))
+	  (mu4e-update-index)
+	  (when (buffer-live-p buf) (kill-buffer buf)))))
+    ;; if we're running in the foreground, handle password requests
+    (unless run-in-background
+      (process-put proc 'x-interactive (not run-in-background))
+      (set-process-filter proc 'mu4e~get-mail-process-filter))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -443,6 +443,8 @@ after the end of the search results."
   (setq mu4e-headers-mode-map
     (let ((map (make-sparse-keymap)))
 
+      (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
+      
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-headers-search-edit)
 

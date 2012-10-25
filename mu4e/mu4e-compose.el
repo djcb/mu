@@ -528,6 +528,8 @@ needed, set the Fcc header, and register the handler function."
 	    (boundp 'completion-at-point-functions))
       (mu4e~compose-setup-completion))
 
+    (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
+    
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda ()
