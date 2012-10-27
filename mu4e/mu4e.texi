@@ -1355,9 +1355,9 @@ Let's look at some examples. First, suppose we want to set the
     (let ((msg mu4e-compose-parent-message) ;; msg is shorter...
       (setq user-mail-address
 	(cond
-          ((mu4e-contact-field-matches msg :to "me@@foo.com")
+          ((mu4e-message-contact-field-matches msg :to "me@@foo.com")
            "me@@foo.com")
-          ((mu4e-contact-field-matches msg :to "me@@bar.com")
+          ((mu4e-message-contact-field-matches msg :to "me@@bar.com")
            "me@@bar.com")
 	  (t "me@@cuux.com")))))))
 @end lisp
