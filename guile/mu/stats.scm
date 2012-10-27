@@ -23,6 +23,7 @@
   :use-module (ice-9 i18n)
   :use-module (ice-9 r5rs)
   :export ( mu:tabulate
+	    mu:top-n-most-frequent
 	    mu:count
 	    mu:average
 	    mu:stddev
@@ -35,22 +36,38 @@
 
 (define* (mu:tabulate func #:optional (expr #t))
   "Execute FUNC for each message matching EXPR, and return an alist
-with maps each result of FUNC to its frequency. FUNC is a function
-takes a <mu-message> instance as its argument. For example, to
-tabulate messages by weekday, one could use:
+with maps each result of FUNC to its frequency. If the result of FUNC
+is a list, add each of its values separately.
+ FUNC is a function takes a <mu-message> instance as its argument. For
+example, to tabulate messages by weekday, one could use:
    (mu:tabulate (lambda(msg) (tm:wday (localtime (date msg))))), and
 get back a list like
    ((1 . 2) (2 . 5)(3 . 4)(4 . 4)(5 . 12)(6 . 7)(7. 2))."
-  (let ((table '()))
+  (let* ((table '())
+	 ;; func to add a value to our table
+	 (update-table
+	   (lambda (val)
+	     (let ((old-freq (or (assoc-ref table val) 0))) 
+	       (set! table (assoc-set! table val (1+ old-freq)))))))
     (mu:for-each-message
       (lambda(msg)
-	(let* ((val (func msg))
-		(old-freq (or (assoc-ref table val) 0)))
-	  (set! table (assoc-set! table val (1+ old-freq)))))
+	(let ((val (func msg)))
+	  (if (list? val)
+	    (for-each update-table val)
+	    (update-table val))))
       expr)
     table))
 
+(define* (top-n func less n #:optional (expr #t))
+  "Take the results of (mu:tabulate FUNC EXPR), sort using LESS (a
+function taking two arguments A and B (cons cells, (VAL . FREQ)), and
+returns #t if A < B, #f otherwise), and then take the first N."
+  (take (sort (mu:tabulate func expr) less) n))
 
+(define* (mu:top-n-most-frequent func n #:optional (expr #t))
+  "Take the results of (mu:tabulate FUNC EXPR), and return the N items with the higest frequency."
+  (top-n func (lambda (a b) (> (cdr a) (cdr b))) n expr))
+ 
 (define* (mu:count #:optional (expr #t))
   "Count the number of messages matching EXPR. If EXPR is not
 provided, match /all/ messages."
