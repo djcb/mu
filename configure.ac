@@ -48,7 +48,6 @@ AC_CHECK_HEADERS([locale.h langinfo.h wordexp.h])
 # use the 64-bit versions
 AC_SYS_LARGEFILE
 
-
 # check for makeinfo
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
@@ -308,6 +307,7 @@ Makefile
 mu/Makefile
 mu/tests/Makefile
 lib/Makefile
+lib/doxyfile
 lib/tests/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el

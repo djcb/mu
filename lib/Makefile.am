@@ -97,4 +97,6 @@ libmu_la_LIBADD=			\
 	$(GLIB_LIBS)			\
 	$(GUILE_LIBS)
 
-EXTRA_DIST=mu-msg-crypto.c
+EXTRA_DIST=				\
+	mu-msg-crypto.c			\
+	doxyfile.in
