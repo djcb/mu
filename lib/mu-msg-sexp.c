@@ -345,8 +345,7 @@ append_sexp_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 
 	if (!mu_msg_part_foreach (msg, opts, (MuMsgPartForeachFunc)each_part,
 				  &pinfo)) {
-		/* if decryption failed, mark this message as encrypted */
-		g_string_append (gstr, "\t:encrypted t\n");
+		/* do nothing */
 	} else if (pinfo.parts) {
 		g_string_append_printf (gstr, "\t:parts (%s)\n", pinfo.parts);
 		g_free (pinfo.parts);

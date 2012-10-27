@@ -434,10 +434,11 @@ at POINT, or if nil, at (point)."
     (when attachments
       (mu4e~view-construct-header :attachments attstr t))))
 
-;; (defun mu4e~decrypt-parts-maybe (msg)
+;; (defun mu4e~decrypt-parts-maybe ()
 ;;   "Decrypt maybe; depends on whether there are any such parts
 ;; and the value of `mu4e-view-decrypt-parts'."
-;;   (let ((str ""))
+;;   (interactive)
+;;   (let ((str "") (msg (mu4e-message-at-point)))
 ;;     (mu4e-view-for-each-part msg
 ;;       (lambda (msg part)
 ;; 	(when (member 'encrypted (mu4e-message-part-field part :type))
@@ -452,11 +453,11 @@ at POINT, or if nil, at (point)."
 ;; 			 (err (mu4e-error "Decryption failed: %S" err))))
 ;; 		      (decr
 ;; 			(if (and decr (plist-get mu4e~server-props :crypto))
-;;
+
 ;; 			  )))) ;; TODO: reload message
 ;; 			 ;; otherwise, we try to handle it here.
 ;; 			 )
-;; 		decr))))))))
+;; 		decr))))))
 
 (defun mu4e-view-for-each-part (msg func)
   "Apply FUNC to each part in MSG. FUNC should be a function taking
@@ -476,7 +477,7 @@ at POINT, or if nil, at (point)."
     (let ((map (make-sparse-keymap)))
 
       (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
-      
+
       (define-key map "q" 'mu4e~view-quit-buffer)
 
       ;; note, 'z' is by-default bound to 'bury-buffer'

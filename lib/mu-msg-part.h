@@ -245,6 +245,7 @@ typedef void (*MuMsgPartForeachFunc) (MuMsg *msg, MuMsgPart*, gpointer);
  * @param user_data a user-provide pointer that will be passed to the callback
  * @param options, bit-wise OR'ed
  *
+ * @return FALSE in case of error, TRUE otherwise
  */
 gboolean mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 			      MuMsgPartForeachFunc func, gpointer user_data);

@@ -30,6 +30,10 @@
 
 G_BEGIN_DECLS
 
+/**
+ * @addtogroup MuStr
+ * @{
+ */
 
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
@@ -328,6 +332,8 @@ const gchar* mu_str_subject_normalize (const gchar* str);
  * @return the quoted concatenation of the strings
  */
 gchar* mu_str_quoted_from_strv (const gchar **params);
+
+/** @} */
 
 G_END_DECLS
 
