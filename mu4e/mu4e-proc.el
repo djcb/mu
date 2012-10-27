@@ -48,7 +48,7 @@ the backend.")
     "Each expression we get from the backend (mu server) starts with
    a length cookie:
    <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>.")
-(defconst mu4e~cookie-matcher-rx 
+(defconst mu4e~cookie-matcher-rx
   (purecopy (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post))
   "Regular expression matching the length cookie. Match 1 will be
 the length (in hex).")
@@ -466,7 +466,7 @@ images attached to the message, and return them as temp files.  The
 result will be delivered to the function registered as
 `mu4e-message-func'."
   (mu4e~proc-send-command
-    "view %s extract-images:%s extract-encrypted:%s"
+    "view %s extract-images:%s extract-encrypted:%s use-agent:true"
     (mu4e--docid-msgid-param docid-or-msgid)
     (if images "true" "false")
     (if decrypt "true" "false")))
@@ -478,7 +478,7 @@ images attached to the message, and return them as temp files.  The
 result will be delivered to the function registered as
 `mu4e-message-func'."
   (mu4e~proc-send-command
-    "view path:\"%s\" extract-images:%s extract-encrypted:%s"
+    "view path:\"%s\" extract-images:%s extract-encrypted:%s use-agent:true"
     path
     (if images "true" "false")
     (if decrypt "true" "false")))
