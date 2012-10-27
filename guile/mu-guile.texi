@@ -245,13 +245,13 @@ serve your every whim!
 @node Initializing mu-guile
 @chapter Initializing mu-guile
 
-In the previous, we have installed @t{mu-guile}, and in @ref{Making sure it works}
-tried some simple script, to make sure everything works as expected. In this
-and the following chapters, we take a closer look programming with
-@t{mu-guile}.
+We now have installed @t{mu-guile}, and in @ref{Making sure it works}
+confirmed that things work by trying some simple script. In this and the
+following chapters, we take a closer look at programming with @t{mu-guile}.
 
 It is possible to write separate programs with @t{mu-guile}, but for now we'll
-do things @emph{interactively}, i.e., from the Guile-prompt (``@abbr{REPL}'').
+do things @emph{interactively}, that is, from the Guile-prompt
+(``@abbr{REPL}'').
 
 As we have seen, we start our @t{mu-guile} session by starting @t{guile}:
 
@@ -276,10 +276,7 @@ scheme@(guile-user)>
 The first thing we need to do is loading the modules. All the basics are in
 the @t{(mu)} module, with some statistical extras in @t{(mu stats)}, and some
 graph plotting functionality in @t{(mu plot)}@footnote{@code{(mu plot)}
-requires the @t{gnuplot} program}.
-
-Let's load all of them:
-
+requires the @t{gnuplot} program}. Let's load all of them:
 @verbatim
 scheme@(guile-user)> (use-modules (mu) (mu stats) (mu plot))
 @end verbatim
@@ -287,34 +284,28 @@ scheme@(guile-user)> (use-modules (mu) (mu stats) (mu plot))
 The first time you do this, @t{guile} will probably respond by showing some
 messages about compiling the modules, and then return to you with another
 prompt. Before we can do anything with @t{mu guile}, we need to initialize the
-system. This goes like this:
+system:
 
 @verbatim
 scheme@(guile-user)> (mu:initialize)
 @end verbatim
 
 This opens the database for reading, using the default location of
-@file{~/.mu}. 
-
-If you keep your @t{mu} database in a non-standard place:
-
-@verbatim
-scheme@(guile-user)> (mu:initialize "/path/to/my/mu/")
-@end verbatim
-
-If all worked up until here, we're ready to go with @t{mu-guile} - hurray! In
-the next chapters we'll walk through all the modules.
+@file{~/.mu}@footnote{If you keep your @t{mu} database in a non-standard
+place, use @code{(mu:initialize "/path/to/my/mu/")}}
+ 
+Now, @t{mu-guile} is ready to go. In the next chapter, we go through the
+modules and show what you can do with them.
 
 @node Messages
 @chapter Messages
 
-In this chapter, we discuss how to find messages and how to do various things
-with them.
+In this chapter, we discuss searching messages and doing things with them.
 
 @menu
-* Finding messages::
-* Message methods::
-* Example - the longest subject::
+* Finding messages:: query for messages in the databse
+* Message methods::  what methods are available for messages?
+* Example - the longest subject:: find the messages with the longest subject
 @end menu
 
 @node Finding messages
@@ -327,12 +318,11 @@ functions to do this:
 @item @code{(mu:for-each-message <function> [<search-expression>])}
 @end itemize
 
+@noindent
 The first function, @code{mu:message-list} returns a list of all messages
 matching @t{<search-expression>}; if you leave @t{<search-expression>} out, it
-returns @emph{all} messages.
-
-For example, to get all messages with @emph{coffee} in the subject line, you
-could do:
+returns @emph{all} messages. For example, to get all messages with @t{coffee}
+in the subject line:
 
 @verbatim
 scheme@(guile-user)> (mu:message-list "subject:coffee")
@@ -340,10 +330,11 @@ $1 = (#<<mu:message> 9040640> #<<mu:message> 9040630>
       #<<mu:message> 9040570>)
 @end verbatim
 
-So, since apparently we have three messages matching @t{subject:coffee}, we
-get a list of three @t{<mu:message>} objects. Let's just use the
-@code{mu:subject} function ('method') provided by @t{<mu:message>} objects to
-retrieve the subject-field (more about methods in the next section).
+@noindent
+Apparently, we have three messages matching @t{subject:coffee}, so we get a
+list of three @code{<mu:message>} objects. Let's just use the
+@code{mu:subject} function ('method') provided by @code{<mu:message>} objects
+to retrieve the subject-field (more about methods in the next section).
 
 For your convenience, @t{guile} has saved the result of our last query in a
 variable called @t{$1}, so to get the subject of the first message in the
@@ -354,9 +345,10 @@ scheme@(guile-user)> (mu:subject (car $1))
 $2 = "Re: best coffee ever!"
 @end verbatim
 
+@noindent
 The second function we mentioned, @code{mu:for-each-message}, executes some
 function for each message matched by the search expression (or @emph{all}
-messages if the search expression is omitted).
+messages if the search expression is omitted):
 
 @verbatim
 scheme@(guile-user)> (mu:for-each-message
@@ -370,6 +362,7 @@ Coffee beans
 scheme@(guile-user)>
 @end verbatim
 
+@noindent
 Using @code{mu:message-list} and/or
 @code{mu:for-each-message}@footnote{Implementation node:
 @code{mu:message-list} is implemented in terms of @code{mu:for-each-message},
@@ -713,13 +706,25 @@ probably be a bit more elegant.
 @t{mu-guile} offers some convenience functions to determine various statistics
 about the messages in the database.
 
-@code{(mu:tabulate <function> [<search-expr>])} applies
-@t{<function>} to each message matching @t{<search-expr>} (leave empty to
-match @emph{all} messages), and returns a associative list (a list of pairs)
-with each of the different results of @t{<function>} and their frequencies.
+@menu
+* Tabulating values:: @code{mu:tabulate}
+* Most frequent values:: @code{mu:top-n-most-frequent}
+@end menu
 
-This can best be demonstrated with a little example. Suppose we want to know
-how many messages we receive per weekday:
+@node Tabulating values
+@section Tabulating values
+
+@code{(mu:tabulate <function> [<search-expr>])} applies @t{<function>} to each
+message matching @t{<search-expr>} (leave empty to match @emph{all} messages),
+and returns a associative list (a list of pairs) with each of the different
+results of @t{<function>} and their frequencies. For fields that contain lists
+of values (such as address-fields), each of the values in the list is added
+separately.
+
+@subsection Example: messages per weekday
+
+We demonstrate @code{mu:tabulate} with an example. Suppose we want to know how
+many messages we receive per weekday:
 
 @lisp
 #!/bin/sh
@@ -743,6 +748,7 @@ exec guile -s $0 $@
     (format #t "~a: ~a\n" (car elm) (cdr elm)))
   weekday-table)
 @end lisp
+
 
 The function @code{weekday-table} uses @code{mu:tabulate-message} to get the
 frequencies per hour -- this returns a list of pairs:
@@ -769,6 +775,36 @@ Sat: 1856
 
 Clearly, Saturday is a slow day for e-mail...
 
+@node Most frequent values
+@section Most frequent values
+
+In the above example, the number of values is small (the seven weekdays);
+however, in many cases there can be many different values (for example, all
+different message subjects), many of which may not be very interesting -- all
+we need to know is the top-10 of most frequently seen values.
+
+This is fairly easy to achieve using @code{mu:tabulate} -- to get the top-10
+subjects@footnote{this requires the @code{(srfi srfi-1)}-module}, we can use
+something like this:
+@lisp
+(take
+  (sort
+    (mu:tabulate mu:subject)
+    (lambda (a b) (> (cdr a) (cdr b))))
+  10) 
+@end lisp
+
+If this is not short enough, @t{mu-guile} offers a convenience function to do
+this: @code{mu:top-n-most-frequent}. For example, to get the top-10 people we
+sent mail to most often:
+
+@lisp
+(mu:top-n-most-frequent mu:to 10 "maildir:/sent")
+@end lisp
+
+Can't make it much easier than that!
+
+
 @node Plotting data
 @chapter Plotting data
 
@@ -777,9 +813,9 @@ You can plot the results in the format produced by @code{mu:tabulate} with the
 @t{gnuplot}@footnote{@url{http://www.gnuplot.info/}} program to be installed
 on your system.
 
-The @code{mu:plot} function takes the following arguments:
+The @code{mu:plot-histogram} function takes the following arguments:
 
-@code{(mu:plot <data> <title> <x-label> <y-label> [<want-ascii>])}
+@code{(mu:plot-histogram <data> <title> <x-label> <y-label> [<want-ascii>])}
 
 Here, @code{<data>} is a table of data in the format that @code{mu:tabulate}
 produces. @code{<title>}, @code{<x-label>} and @code{<y-lablel>} are,
@@ -806,7 +842,8 @@ exec guile -s $0 $@
 	(tm:hour (localtime (mu:date msg)))))
     (lambda (x y) (< (car x) (car y)))))
 
-(mu:plot (mail-per-hour-table) "Mail per hour" "Hour" "Frequency" #t)
+(mu:plot-histogram (mail-per-hour-table) "Mail per hour" "Hour" "Frequency"
+#t)
 @end lisp
 
 @cartouche
