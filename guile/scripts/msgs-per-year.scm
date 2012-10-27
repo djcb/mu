@@ -31,7 +31,7 @@ exec guile -e main -s $0 $@
   "Count the total number of messages for each weekday (0-6 for
 Sun..Sat) that match EXPR. If TEXT-ONLY is true, use a plain-text
 display, otherwise, use a graphical window."
-  (mu:plot
+  (mu:plot-histogram
     (sort (mu:tabulate
 	    (lambda (msg)
 	      (+ 1900 (tm:year (localtime (mu:date msg))))) expr)

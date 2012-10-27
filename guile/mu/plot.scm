@@ -19,7 +19,9 @@
 (define-module (mu plot)
   :use-module (mu)
   :use-module (ice-9 popen)
-  :export (mu:plot))
+  :export ( mu:plot ;; alias for mu:plot-histogram
+	    mu:plot-histogram
+	    ))
 
 (define (export-pairs pairs)
   "Write a temporary file with the list of PAIRS in table format, and
@@ -33,9 +35,26 @@ return the file name."
     (close output)
     datafile))
 
-(define* (mu:plot data title x-label y-label #:optional (text-only #f))
+(define (find-program-in-path prog)
+  "Find exutable program PROG in PATH; return the full path, or #f if
+not found."
+  (let* ((path (getenv "PATH"))
+	  (progdir (search-path path prog)))
+    (if (not prog)
+      #f
+      (let ((fullpath (string-append progdir "/" prog)))
+	(if (access? fullpath X_OK) ;; is
+	  fullpath
+	  #f)))))
+
+
+(define* (mu:plot-histogram data title x-label y-label #:optional (text-only #f))
   "Plot DATA with TITLE, X-LABEL and X-LABEL. If TEXT-ONLY is true,
-display using raw text, otherwise, use a graphical window."
+display using raw text, otherwise, use a graphical window. DATA is a
+list of cons-pairs (X . Y)."
+  (if (not (find-program-in-path "gnuplot"))
+    (error "cannot find 'gnuplot' in path"))
+ 
   (let ((datafile (export-pairs data))
 	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
     (display (string-append
@@ -48,3 +67,6 @@ display using raw text, otherwise, use a graphical window."
 	       "plot \"" datafile "\" using 2:xticlabels(1) with boxes fs solid\n")
       gnuplot)
     (close-pipe gnuplot)))
+
+;; backward compatibility
+(define mu-plot mu:plot-histogram)
