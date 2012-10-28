@@ -216,9 +216,6 @@ marking if it still had that."
 	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
-	(setq ;; buffer local
-	  mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf)
 	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
 	(switch-to-buffer buf)
@@ -237,7 +234,10 @@ marking if it still had that."
 	  ;; message
 	  (mu4e~view-mark-as-read-maybe))
 
-	(mu4e-view-mode)))))
+	(mu4e-view-mode)
+	(setq ;; buffer local
+	  mu4e~view-msg msg
+	  mu4e~view-headers-buffer headersbuf)))))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -1140,9 +1140,8 @@ user that unmarking only works in the header list."
 (defun mu4e-view-raw-message ()
   "Display the raw contents of message at point in a new buffer."
   (interactive)
-  (let* ((msg (mu4e-message-at-point))
-	  (path (mu4e-message-field msg :path))
-	  (buf (get-buffer-create mu4e~view-raw-buffer-name)))
+  (let ((path (mu4e-message-field-at-point :path))
+	 (buf (get-buffer-create mu4e~view-raw-buffer-name)))
     (unless (and path (file-readable-p path))
       (mu4e-error "Not a readable file: %S" path))
     (with-current-buffer buf
