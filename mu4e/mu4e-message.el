@@ -106,10 +106,16 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
 	val)   ;; non-nil -> just return it
       ((member field '(:subject :message-id :path :maildir :in-reply-to))
 	"")    ;; string fields except body-txt, body-html: nil -> ""
+      ((member field '(:body-html :body-txt))
+	val)
       ((member field '(:docid :size))
 	0)     ;; numeric type: nil -> 0
-      (t
+      (t 
 	val)))) ;; otherwise, just return nil
+
+(defsubst mu4e-message-has-field (msg field)
+  "Return t if MSG contains FIELD, nil otherwise."
+  (plist-member msg field))
 
 (defsubst mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point in either
@@ -120,7 +126,12 @@ there is no message at point."
     (if msg
       msg
       (unless noerror (mu4e-warn "No message at point")))))
- 
+
+(defsubst mu4e-message-field-at-point (field)
+  "Get the field FIELD from the message at point; equivalent to
+    (mu4e-message-field (mu4e-message-at-point FIELD))."
+  (mu4e-message-field (mu4e-message-at-point) field))
+
 (defun mu4e-message-body-text (msg)
   "Get the body in text form for this message, which is either :body-txt,
 or if not available, :body-html converted to text. By default, it
