@@ -25,8 +25,48 @@
 ;; In this file, various functions to compose/send messages, piggybacking on
 ;; gnus' message mode
 
+
+;; Magic / Rupe Goldberg
+
+;; 1) When we reply/forward a message, we get it from the backend, ie:
+;; we send to the backend (mu4e-compose):
+;;     compose type:reply docid:30935
+;; backend responds with:
+;;      (:compose reply :original ( .... <original message> ))
+
+
+;; 2) When we compose a message, message and headers are separated by
+;; `mail-header-separator', ie. '--text follows this line--. We use
+;; before-save-hook and after-save-hook to remove/re-add this special line, so
+;; it stays in the buffer, but never hits the disk.
+;; see:
+;;     mu4e~compose-insert-mail-header-separator
+;;     mu4e~compose-remove-mail-header-separator
+;;
+;; (maybe we can get away with remove it only just before sending? what does
+;; gnus do?)
+
+;; 3) When sending a message, we want to do a few things:
+;;   a) move the message from drafts to the sent folder (maybe; depends on
+;;      `mu4e-sent-messages-behavior')
+;;   b) if it's a reply, mark the replied-to message as "R", i.e. replied
+;;      if it's a forward, mark the forwarded message as "P", i.e. passed (forwarded)
+;;   c) kill all buffers looking at the sent message
+
+;;  a) is dealt with by message-mode, but we need to tell it where to move the
+;;     sent message. We do this by adding an Fcc: header with the target folder,
+;;     see `mu4e~setup-fcc-maybe'. Since message-mode does not natively
+;;     understand maildirs, we also need to tell it what to do, so we also set
+;;     `message-fcc-handler-function' there. Finally, we add the the message in
+;;     the sent-folder to the database.
+;;
+;;   b) this is handled in `mu4e~compose-set-parent-flag'
+;;
+;;   c) this is handled in our handler for the `sent'-message from the backend
+;;   (`mu4e-sent-handler')
+;;
+
 ;;; Code:
-;; we use some stuff from gnus..
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
@@ -246,7 +286,7 @@ nil, function returns nil."
 message. message-mode needs this line to know where the headers end
 and the body starts. Note, in `mu4e-compose-mode, we use
 `before-save-hook' and `after-save-hook' to ensure that this
-separator is never written to file. Also see
+separator is never written to the message file. Also see
 `mu4e-remove-mail-header-separator'."
   (save-excursion
     (let ((sepa (propertize mail-header-separator
@@ -264,7 +304,7 @@ separator is never written to file. Also see
 
 (defun mu4e~compose-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
-file (and restore it afterwardds), to ensure that the separator
+file (and restore it afterwards), to ensure that the separator
 never hits the disk. Also see `mu4e~compose-insert-mail-header-separator."
   (save-excursion
     (goto-char (point-min))
@@ -387,23 +427,31 @@ from either `mu4e~compose-reply-construct', or
   (set (make-local-variable 'mu4e~compose-drafts-folder)
     (mu4e-get-drafts-folder msg))
   (put 'mu4e~compose-drafts-folder 'permanent-local t)
-  
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
   (if (eq compose-type 'edit)
+    ;; case-1: re-editing a draft messages. in this case, we do know the full
+    ;; path, but we cannot really now 'drafts folder'
     (find-file (mu4e-message-field msg :path))
-    (let ((draftpath
-	     (format "%s/%s/cur/%s"
-	       mu4e-maildir
-	       mu4e~compose-drafts-folder
-	       (mu4e~compose-message-filename-construct "DS"))))
+    ;; case-2: creating a new message; in this case, we can determing
+    ;; mu4e-get-drafts-folder
+    (let* ((draftsfolder (mu4e-get-drafts-folder msg))
+	    (draftpath
+	      (format "%s/%s/cur/%s"
+		mu4e-maildir
+		draftsfolder
+		(mu4e~compose-message-filename-construct "DS"))))
       (find-file draftpath)
       (insert
 	(case compose-type
 	  (reply   (mu4e~compose-reply-construct msg))
 	  (forward (mu4e~compose-forward-construct msg))
 	  (new     (mu4e~compose-newmsg-construct))
-	  (t (mu4e-error "unsupported compose-type %S" compose-type)))))))
- 
+	  (t (mu4e-error "unsupported compose-type %S" compose-type))))
+      ;; save the drafts folder 'permanently' for this buffer
+      (set (make-local-variable 'mu4e~compose-drafts-folder) draftsfolder)
+      (put 'mu4e~compose-drafts-folder 'permanent-local t))))
+
+
 ;; 'fcc' refers to saving a copy of a sent message to a certain folder. that's
 ;; what these 'Sent mail' folders are for!
 ;;
@@ -529,19 +577,22 @@ needed, set the Fcc header, and register the handler function."
       (mu4e~compose-setup-completion))
 
     (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
-    
+
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
-      (lambda ()
+      (defun mu4e~compose-save-before-sending ()
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
 	(mu4e~setup-fcc-maybe)) nil t)
     ;; when the message has been sent.
     (add-hook 'message-sent-hook
-      (lambda ()
+      (defun mu4e~compose-mark-after-sending ()
 	(setq mu4e-sent-func 'mu4e-sent-handler)
-	(mu4e~proc-sent (buffer-file-name) mu4e~compose-drafts-folder)) nil)))
+	(mu4e~proc-sent (buffer-file-name) mu4e~compose-drafts-folder)) nil))
+  ;; mark these two hooks as permanent-local, so they'll survive mode-changes
+;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
+  (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
 
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
@@ -582,16 +633,17 @@ Optionally (when forwarding) INCLUDES contains a list of
 for the attachements to include; file-name refers to
 a file which our backend has conveniently saved for us (as a
 tempfile)."
-   
+
   ;; Run the hooks defined for `mu4e-compose-pre-hook'. If compose-type is
   ;; `reply', `forward' or `edit', `mu4e-compose-parent-message' points to the
   ;; message being forwarded or replied to, otherwise it is nil.
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
-  (run-hooks 'mu4e-compose-pre-hook) 
- 
+  (run-hooks 'mu4e-compose-pre-hook)
+
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (mu4e~compose-open-draft compose-type original-msg)
+
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~compose-insert-mail-header-separator)
@@ -674,7 +726,7 @@ buffer."
 	    (mu4e~proc-move (match-string 1 in-reply-to) nil "+R"))
 	  (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
 	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P")))))))
- 
+
 (defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
@@ -689,7 +741,7 @@ for draft messages."
     (when (and (eq compose-type 'edit)
 	    (not (member 'draft (mu4e-message-field msg :flags))))
       (mu4e-warn "Editing is only allowed for draft messages"))
-  
+
     ;; 'new is special, since it takes no existing message as arg; therefore, we
     ;; don't need to involve the backend, and call the handler *directly*
     (if (eq compose-type 'new)
@@ -702,7 +754,6 @@ for draft messages."
 	(let ((viewwin (get-buffer-window mu4e~view-buffer)))
 	  (when (window-live-p viewwin)
 	    (select-window viewwin)))
-
 	;; talk to the backend
 	(mu4e~proc-compose compose-type docid)))))
 
@@ -727,7 +778,6 @@ message."
   "Start writing a new message."
   (interactive)
   (mu4e-compose 'new))
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -761,7 +811,7 @@ message."
 (defun mu4e~compose-mail (&optional to subject other-headers continue
 			   switch-function yank-action send-actions return-action)
   "This is mu4e's implementation of `compose-mail'."
-  
+
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
   (mu4e~compose-handler 'new)
