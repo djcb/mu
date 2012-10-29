@@ -501,7 +501,7 @@ parse_cmd (int *argcp, char ***argvp, GError **err)
 #endif /*!BUILD_GUILE*/
 
 #ifndef BUILD_CRYPTO
-	if (MU_CONFIG.cmd == MU_CONFIG_CMD_VERIFIY) {
+	if (MU_CONFIG.cmd == MU_CONFIG_CMD_VERIFY) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "command 'verify' not supported");
 		return FALSE;
