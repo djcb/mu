@@ -180,7 +180,8 @@ test_mu_query_01 (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
@@ -220,7 +221,8 @@ test_mu_query_03 (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
@@ -247,7 +249,8 @@ test_mu_query_04 (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
@@ -268,7 +271,8 @@ test_mu_query_logic (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
@@ -305,8 +309,10 @@ test_mu_query_accented_chars_01 (void)
 			 "Greetings from Lothlórien");
 	/* TODO: fix this again */
 
-	summ = mu_str_summarize (mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE), 5);
-	g_assert_cmpstr (summ,==, "Let's write some fünkÿ text using umlauts. Foo.");
+	summ = mu_str_summarize (mu_msg_get_body_text
+				 (msg, MU_MSG_OPTION_NONE), 5);
+	g_assert_cmpstr (summ,==,
+			 "Let's write some fünkÿ text using umlauts. Foo.");
 	g_free (summ);
 
 	mu_msg_iter_destroy (iter);
@@ -329,7 +335,8 @@ test_mu_query_accented_chars_02 (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
@@ -348,7 +355,8 @@ test_mu_query_wildcards (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 }
 
@@ -374,7 +382,8 @@ test_mu_query_dates_helsinki (void)
 	g_assert (xpath != NULL);
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches
+				  (xpath, queries[i].query),
 				  ==, queries[i].count);
 
 	g_free (xpath);
@@ -403,7 +412,8 @@ test_mu_query_dates_sydney (void)
 	g_assert (xpath != NULL);
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches
+				  (xpath, queries[i].query),
 				  ==, queries[i].count);
 
 	g_free (xpath);
@@ -432,7 +442,8 @@ test_mu_query_dates_la (void)
 	g_assert (xpath != NULL);
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (xpath, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches
+				  (xpath, queries[i].query),
 				  ==, queries[i].count);
 
 	g_free (xpath);
@@ -453,7 +464,8 @@ test_mu_query_sizes (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
-		g_assert_cmpuint (run_and_count_matches (DB_PATH1, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
 				  ==, queries[i].count);
 
 }
@@ -472,7 +484,8 @@ test_mu_query_attach (void)
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		if (g_test_verbose())
 			g_print ("query: %s\n", queries[i].query);
-		g_assert_cmpuint (run_and_count_matches (DB_PATH2, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
+							 queries[i].query),
 				  ==, queries[i].count);
 	}
 }
@@ -526,7 +539,8 @@ test_mu_query_tags_02 (void)
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
-		g_assert_cmpuint (run_and_count_matches (DB_PATH2, queries[i].query),
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
+							 queries[i].query),
 				  ==, queries[i].count);
 	}
 }
@@ -607,7 +621,8 @@ main (int argc, char *argv[])
 
 	if (!g_test_verbose())
 	    g_log_set_handler (NULL,
-			       G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			       G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+			       G_LOG_FLAG_RECURSION,
 			       (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();
