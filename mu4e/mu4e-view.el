@@ -229,15 +229,17 @@ marking if it still had that."
 	  (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf))
 
+	(setq ;; buffer local
+	  mu4e~view-msg msg
+	  mu4e~view-headers-buffer headersbuf))
+	
 	(unless (or refresh embedded)
 	  ;; no use in trying to set flags again, or when it's an embedded
 	  ;; message
 	  (mu4e~view-mark-as-read-maybe))
 
-	(mu4e-view-mode)
-	(setq ;; buffer local
-	  mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf)))))
+      ;; and switch!
+      (mu4e-view-mode))))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -667,10 +669,7 @@ at POINT, or if nil, at (point)."
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t)))
-
-;; we mark messages are as read when we leave the message; i.e., when skipping
-;; to the next/previous one, or leaving the view buffer altogether.
-
+ 
 (defun mu4e~view-mark-as-read-maybe ()
   "Clear the current message's New/Unread status and set it to
 Seen; if the message is not New/Unread, do nothing."
