@@ -167,5 +167,16 @@ store your org-contacts."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-action-git-apply-patch (msg)
+  "Apply the git [patch] message."
+  (let ((path (read-directory-name "Target directory: " nil "~/" t) ))    
+    (shell-command
+      (format "cd %s; git apply %s"
+	path
+	(mu4e-message-field msg :path)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (provide 'mu4e-actions)
