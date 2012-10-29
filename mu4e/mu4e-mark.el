@@ -177,15 +177,17 @@ otherwise return nil."
 (defun mu4e-mark-set (mark &optional target)
   "Mark the header at point, or, if region is active, mark all
 headers in the region. Optionally, provide TARGET (for moves)."
+  (unless target
+    (setq target (mu4e~mark-get-target mark target)))
   (if (not (use-region-p))
     ;; single message
-    (mu4e-mark-at-point mark (or target (mu4e~mark-get-target mark target)))
+    (mu4e-mark-at-point mark target)
     ;; mark all messages in the region.
     (save-excursion
       (let ((cant-go-further) (eor (region-end)))
 	(goto-char (region-beginning))
 	(while (and (<= (point) eor) (not cant-go-further))
-	  (mu4e-mark-at-point mark (or target (mu4e~mark-get-target mark target)))
+	  (mu4e-mark-at-point mark target)
 	  (setq cant-go-further (not (mu4e-headers-next))))))))
 
 (defun mu4e-mark-restore (docid)
