@@ -27,6 +27,7 @@ dist_lisp_LISP=			\
 	mu4e-about.el		\
 	mu4e-actions.el		\
 	mu4e-compose.el		\
+	mu4e-draft.el		\
 	mu4e-headers.el		\
 	mu4e-main.el		\
 	mu4e-mark.el		\
@@ -39,7 +40,7 @@ dist_lisp_LISP=			\
 	mu4e-view.el		\
 	mu4e.el			\
 	org-mu4e.el
- 
+
 mu4e-about.el: mu4e-about.org
 	@echo ";; auto-generated"           >   mu4e-about.el
 	@echo "(defconst mu4e-about \""     >>  mu4e-about.el
