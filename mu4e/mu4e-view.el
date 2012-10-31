@@ -396,6 +396,7 @@ at POINT, or if nil, at (point)."
 		      ;; image/audio/application type (but not a signature)
 		    isattach
 		    (string-match "^\\(image\\|audio\\)" mtype)
+		    (string= "message/rfc822" mtype)
 		    (and (string-match "^application" mtype)
 		      (not (string-match "signature" mtype))))))
 	      (mu4e-message-field msg :parts)))
