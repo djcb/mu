@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 
 /**
  * @addtogroup MuStr
+ * Various string utilities
  * @{
  */
 
@@ -48,7 +49,8 @@ G_BEGIN_DECLS
  *   returns a newly allocated string that you must free with g_free
  *   when done with it.
  *
- * @param str a 'contact str' (ie., what is in the To/Cc/Bcc/From fields), or NULL
+ * @param str a 'contact str' (ie., what is in the To/Cc/Bcc/From
+ * fields), or NULL
  *
  * @return a newly allocated string with a display contact
  */
