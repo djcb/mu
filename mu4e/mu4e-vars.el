@@ -207,6 +207,26 @@ regexp."
   :type 'string
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-reply-to-address nil
+  "The Reply-To address (if this, for some reason, is not equal to
+the From: address.)"
+  :type 'string
+  :group 'mu4e-compose)
+
+;; backward compatibility
+(defalias 'mu4e-reply-to-address 'mu4e-compose-reply-to-address
+  "The old name for `mu4e-compose-reply-to-address'.")
+
+(defcustom mu4e-compose-keep-self-cc nil
+  "Non-nil means your e-mail address is kept on the CC list when
+replying to messages."
+  :type 'boolean
+  :group 'mu4e-compose)
+
+(defvar mu4e-compose-parent-message nil
+  "The parent message plist -- the message being replied to,
+forwarded or edited; used in `mu4e-compose-pre-hook. For new
+messages, it is nil.")
 
 ;; Folders
 (defgroup mu4e-folders nil
@@ -573,6 +593,7 @@ mu4e starts.")
 
 (defvar mu4e~headers-last-query nil
   "The present (most recent) query.")
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
