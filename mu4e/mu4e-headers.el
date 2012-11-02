@@ -444,7 +444,7 @@ after the end of the search results."
     (let ((map (make-sparse-keymap)))
 
       (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
-      
+
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-headers-search-edit)
 
@@ -805,7 +805,6 @@ non-nill, don't raise an error when the docid is not found."
       (unless ignore-missing
 	(mu4e-error "Cannot find message with docid %S" docid)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If IGNORE-HISTORY is true, do *not* update
@@ -829,7 +828,7 @@ the query history stack."
 			     'face 'mu4e-title-face)))
     (switch-to-buffer buf)
     (mu4e~proc-find
-      (replace-regexp-in-string "\"" "\\\\\"" expr) ;; escape "\"
+      expr
       mu4e-headers-show-threads
       mu4e-headers-sortfield
       mu4e-headers-sort-revert

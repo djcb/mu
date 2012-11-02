@@ -312,6 +312,12 @@ The results are reporter through either (:update ... ) or (:error)
 sexp, which are handled my `mu4e-error-func', respectively."
   (mu4e~proc-send-command "remove docid:%d" docid))
 
+(defun mu4e~proc-escape-query (query)
+  "Escape the query QUERY for transport, in particular, backslashes
+and double-quotes."
+  (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" query)))
+    (replace-regexp-in-string "\"" "\\\\\"" esc)))
+
 (defun mu4e~proc-find (query threads sortfield revert maxnum)
   "Start a database query for QUERY. If THREADS is non-nil, show
 results in threaded fasion, SORTFIELD is a symbol describing the
@@ -323,7 +329,7 @@ result. The variables `mu4e-error-func' contain the function that
 will be called for, resp., a message (header row) or an error."
   (mu4e~proc-send-command
     "find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d"
-    query
+    (mu4e~proc-escape-query query)
     (if threads "true" "false")
     ;; sortfield is e.g. ':subject'; this removes the ':'
     (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
