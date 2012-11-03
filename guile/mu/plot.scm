@@ -38,16 +38,14 @@ return the file name."
 (define (find-program-in-path prog)
   "Find exutable program PROG in PATH; return the full path, or #f if
 not found."
-  (let* ((path (getenv "PATH"))
-	  (progdir (search-path path prog)))
-    (if (not prog)
+  (let* ((path (parse-path (getenv "PATH")))
+	  (progpath (search-path path prog)))
+    (if (not progpath)
       #f
-      (let ((fullpath (string-append progdir "/" prog)))
-	(if (access? fullpath X_OK) ;; is
-	  fullpath
-	  #f)))))
-
-
+      (if (access? progpath X_OK) ;; is
+	progpath
+	#f))))
+2
 (define* (mu:plot-histogram data title x-label y-label #:optional (text-only #f))
   "Plot DATA with TITLE, X-LABEL and X-LABEL. If TEXT-ONLY is true,
 display using raw text, otherwise, use a graphical window. DATA is a
