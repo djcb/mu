@@ -180,6 +180,11 @@ and the body starts. Note, in `mu4e-compose-mode, we use
 `before-save-hook' and `after-save-hook' to ensure that this
 separator is never written to the message file. Also see
 `mu4e-remove-mail-header-separator'."
+  ;; we set this here explicitly, since (as it has happened) a wrong
+  ;; value for this (such as "") breaks address completion and other things
+  (set (make-local-variable 'mail-header-separator)
+    (purecopy "--text follows this line--"))
+
   (save-excursion
     (let ((sepa (propertize mail-header-separator
 		  'intangible t
