@@ -35,10 +35,9 @@
 
 (defcustom mu4e-mu-home nil
   "Location of the mu homedir, or nil for the default."
-  :type 'directory
   :group 'mu4e
   :type '(choice (const :tag "Default location" nil)
-                 (const :tag "Specify location" string))
+                 (directory :tag "Specify location"))
   :safe 'stringp)
 
 (defcustom mu4e-mu-binary (executable-find "mu")
@@ -49,15 +48,14 @@ PATH, you can specify the full path."
   :safe 'stringp)
 
 (defcustom mu4e-maildir (expand-file-name "~/Maildir")
-  "Your Maildir directory; by default, mu4e assumes
-~/Maildir."
+  "Your Maildir directory."
   :type 'directory
   :safe 'stringp
   :group 'mu4e)
 
 (defcustom mu4e-get-mail-command "true"
-  "Shell command to run to retrieve new mail; e.g. 'offlineimap' or
-'fetchmail'."
+  "Shell command to run to retrieve new mail.
+Common values are \"offlineimap\" and \"fetchmail\"."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
@@ -107,10 +105,11 @@ personal message. This is used when indexing messages."
   :group 'mu4e)
 
 (defcustom mu4e-search-results-limit 500
-  "Maximum number of search results (or -1 for unlimited). Since
-limiting search results speeds up searches significantly, it's
-useful to limit this. Note, to ignore the limit, use a prefix
-argument (C-u) before invoking the search."
+  "Maximum number of search results.
+Use -1 for no limit.  Since limiting search results speeds up
+searches significantly, it's useful to limit this. Note, to
+ignore the limit, use a prefix argument (C-u) before invoking the
+search."
   :type '(choice (const :tag "Unlimited" -1)
                  (integer :tag "Limit"))
   :group 'mu4e)

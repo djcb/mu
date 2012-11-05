@@ -90,17 +90,19 @@
   :group 'mu4e)
 
 (defcustom mu4e-sent-messages-behavior 'sent
-  "Determines what mu4e does with sent messages - this is a symbol
-which can be either:
+  "Determines what mu4e does with sent messages.
 
- * 'sent --> move the sent message to the Sent-folder (`mu4e-sent-folder')
- * 'trash --> move the sent message to the Trash-folder (`mu4e-trash-folder')
- * 'delete --> delete the sent message.
+This is one of the symbols:
+* `sent'    move the sent message to the Sent-folder (`mu4e-sent-folder')
+* `trash'   move the sent message to the Trash-folder (`mu4e-trash-folder')
+* `delete'  delete the sent message.
 
 Note, when using GMail/IMAP, you should set this to either 'trash
 or 'delete, since GMail already takes care of keeping copies in the
 sent folder."
-  :type 'symbol
+  :type '(choice (const sent :tag "move message to mu4e-sent-folder")
+		 (const sent :tag "move message to mu4e-trash-folder")
+		 (const sent :tag "delete message"))
   :safe 'symbolp
   :group 'mu4e-compose)
 

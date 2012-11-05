@@ -51,8 +51,8 @@
 
 (defcustom mu4e-view-fields
   '(:from :to  :cc :subject :flags :date :maildir :tags :attachments :signature)
-  "Header fields to display in the message view buffer. For the
-complete list of available headers, see `mu4e-header-info'."
+  "Header fields to display in the message view buffer.
+For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
   :group 'mu4e-view)
 
@@ -69,14 +69,14 @@ contact."
 
 (defcustom mu4e-view-date-format "%c"
   "Date format to use in the message view, in the format of
-  `format-time-string'."
+`format-time-string'."
   :type 'string
   :group 'mu4e-view)
 
 (defcustom mu4e-view-image-max-width 800
-  "The maximum width for images to display; this is only effective
-  if you're using an emacs with Imagemagick support, and
-  `mu4e-show-image' is non-nil."
+  "The maximum width for images to display.
+This is only effective if you're using an emacs with Imagemagick
+support, and `mu4e-show-image' is non-nil."
   :group 'mu4e-view)
 
 (defcustom mu4e-view-scroll-to-next t
