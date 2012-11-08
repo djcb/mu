@@ -164,7 +164,7 @@ test_mu_maildir_mkdir_04 (void)
 
 	/* this should fail now, because cur is not read/writable  */
 	g_assert_cmpuint (mu_maildir_mkdir (mdir, 0755, FALSE, NULL),
-			  ==, FALSE);
+			  ==, (geteuid()==0 ? TRUE : FALSE));
 	g_free (tmpdir);
 	g_free (mdir);
 }
