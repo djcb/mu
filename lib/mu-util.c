@@ -28,7 +28,7 @@
 
 #ifdef HAVE_WORDEXP_H
 #include <wordexp.h> /* for shell-style globbing */
-q#endif /*HAVE_WORDEXP_H*/
+#endif /*HAVE_WORDEXP_H*/
 
 #include <stdlib.h>
 
