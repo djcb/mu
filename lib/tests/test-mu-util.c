@@ -34,6 +34,7 @@
 static void
 test_mu_util_dir_expand_00 (void)
 {
+#ifdef HAVE_WORDEXP_H
 	gchar *got, *expected;
 
 	got = mu_util_dir_expand ("~/IProbablyDoNotExist");
@@ -44,12 +45,13 @@ test_mu_util_dir_expand_00 (void)
 
 	g_free (got);
 	g_free (expected);
-
+#endif /*HAVE_WORDEXP_H*/
 }
 
 static void
 test_mu_util_dir_expand_01 (void)
 {
+#ifdef HAVE_WORDEXP_H
 	gchar *got, *expected;
 
 	got = mu_util_dir_expand ("~/Desktop");
@@ -60,7 +62,7 @@ test_mu_util_dir_expand_01 (void)
 
 	g_free (got);
 	g_free (expected);
-
+#endif /*HAVE_WORDEXP_H*/
 }
 
 

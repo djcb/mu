@@ -24,9 +24,12 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include "mu-util.h"
-
 #define _XOPEN_SOURCE 500
+
+#ifdef HAVE_WORDEXP_H
 #include <wordexp.h> /* for shell-style globbing */
+q#endif /*HAVE_WORDEXP_H*/
+
 #include <stdlib.h>
 
 #include <string.h>
@@ -43,9 +46,11 @@
 
 #include <langinfo.h>
 
+
 static char*
 do_wordexp (const char *path)
 {
+#ifdef HAVE_WORDEXP_H
 	wordexp_t wexp;
 	char *dir;
 
@@ -69,10 +74,13 @@ do_wordexp (const char *path)
 #ifndef __APPLE__
 	wordfree (&wexp);
 #endif /*__APPLE__*/
-
 	return dir;
-}
 
+# else /*!HAVE_WORDEXP_H*/
+/* E.g. OpenBSD does not have wordexp.h, so we ignore it */
+	return path ? g_strdup (path) : NULL;
+#endif /*HAVE_WORDEXP_H*/
+}
 
 
 /* note, the g_debugs are commented out because this function may be

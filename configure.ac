@@ -43,8 +43,8 @@ AM_PROG_LIBTOOL
 
 AC_PROG_AWK
 AC_CHECK_PROG(SORT,sort,sort)
- 
-AC_CHECK_HEADERS([locale.h langinfo.h wordexp.h])
+
+AC_CHECK_HEADERS([wordexp.h])
 
 # use the 64-bit versions
 AC_SYS_LARGEFILE
@@ -365,6 +365,7 @@ echo "Emacs version                        : $emacs_version"
 fi
 
 echo
+echo "Have wordexp                         : $ac_cv_header_wordexp_h"
 echo "Build mu4e emacs frontend            : $build_mu4e"
 echo "Build crypto support (gmime >= 2.6)  : $have_gmime_26"
 echo "Build 'mug' toy-ui (gtk+/webkit)     : $buildgui"
@@ -376,31 +377,38 @@ echo "Have direntry->d_type                : $use_dirent_d_type"
 echo "------------------------------------------------"
 echo
 
+#
+# Warnings / notes
+#
+
+# makeinfo
 if test "x$have_makeinfo" != "xyes"; then
-    echo "You do not seem to have the makeinfo program; if you are building from git"
-    echo "you need that to create documentation for guile and emacs. It is in the"
-    echo "texinfo package in debian/ubuntu (ie., apt-get install texinfo)"
+    echo "* You do not seem to have the makeinfo program; if you are building from git"
+    echo "  you need that to create documentation for guile and emacs. It is in the"
+    echo "  texinfo package in debian/ubuntu (ie., apt-get install texinfo)"
+    echo
 fi
 
-
+# gui
 if test "x$buildgui" = "xyes"; then
-     echo "The demo UIs are in toys/mug and toys/mug2"
-     if test "x$gui" = "xgtk3"; then
-     	echo "Note that mug2 will *not* work with gtk+3, because it depends"
-    	echo "on libraries that use gtk+2, and the two can't be in one process"
-     fi
+     echo "* The demo UI will be built in toys/mug"
+     echo
 fi
 
-if test "x$GUILE_MAJOR_VERSION" = "x1"; then
-   echo
-   echo "NOTE: If you have troubles with linking the guile-related stuff, it"
-   echo "might help to move .la-files out of the way"
-   echo
-   echo "See e.g: http://blog.flameeyes.eu/2008/04/14/what-about-those-la-files"
+# the unit tests
+echo "* You can run 'make check' to run the unit tests"
+echo
+
+# wordexp
+if test "x$ac_cv_header_wordexp_h" != "xyes"; then
+   echo "* Your system does not seem to have the 'wordexp' function."
+   echo "  This means that you cannot use shell-like expansion in options and "
+   echo "  some other places. So, for example, instead of"
+   echo "    --maildir=~/Maildir"
+   echo "  you should use the complete path, something like:"
+   echo "    --maildir=/home/user/Maildir"
 fi
 
 echo
 echo "Now, type 'make' to build mu."
 echo
-echo "If unit tests are built (see above), you can run 'make check'"
-echo "for some basic testing of mu functionality."
