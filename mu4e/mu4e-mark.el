@@ -31,13 +31,15 @@
 (require 'mu4e-message)
 
 (defcustom mu4e-headers-leave-behavior 'ask
-  "What to do when user leaves the headers view (e.g. quits,
-  refreshes or does a new search). Value is one of the following
-  symbols:
-- ask (ask the user whether to ignore the marks)
-- apply (automatically apply the marks before doing anything else)
-- ignore (automatically ignore the marks without asking)."
-  :type 'symbol
+  "What to do when user leaves the headers view.
+That is when he e.g. quits, refreshes or does a new search.
+Value is one of the following symbols:
+- `ask'     ask user whether to ignore the marks
+- `apply'   automatically apply the marks before doing anything else
+- `ignore'  automatically ignore the marks without asking"
+  :type '(choice (const ask    :tag "ask user whether to ignore marks")
+		 (const apply  :tag "apply marks without asking")
+		 (const ignore :tag "ignore marks without asking"))
   :group 'mu4e-headers)
 
 (defvar mu4e-headers-show-target t

@@ -51,12 +51,19 @@
      (:flags         .   6)
      (:from          .  22)
      (:subject       .  nil))
-  "A list of header fields to show in the headers buffer, and their
-respective widths in characters. A width of `nil' means
-'unrestricted', and this is best reserved fo the rightmost (last)
-field. For the complete list of available headers, see
-`mu4e-header-info'."
-  :type (list 'symbol)
+  "A list of header fields to show in the headers buffer.
+Each element has the form (HEADER . WIDTH), where HEADER is one
+of the available headers (see `mu4e-header-info') and WIDTH is
+the respective width in characters.  A width of `nil' means
+'unrestricted', and this is best reserved for the
+rightmost (last) field."
+  :type `(repeat (cons (choice ,@(mapcar (lambda (h)
+					   (list 'const :tag
+						 (plist-get (cdr h) :help)
+						 (car h)))
+					 mu4e-header-info))
+		       (choice (integer :tag "width")
+			       (const :tag "unrestricted width" nil))))
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-date-format "%x"
