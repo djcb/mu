@@ -500,8 +500,7 @@ headers)."
      (:from-or-to .
        ( :name "From/To"
 	 :shortname "From/To"
-	 :help "Sender of the message if it's not me; otherwise
-	 the recipient"
+	 :help "Sender of the message if it's not me; otherwise the recipient"
 	 :sortable nil))
      (:maildir .
        ( :name "Maildir"
@@ -538,13 +537,14 @@ headers)."
 	 :shortname "T"
 	 :help "Recipient of the message"
 	 :sortable t)))
-  "An alist of all possible header fields and information about
-them.; this is used in the UI (the column headers in the header
-list, and the fields the message view). Most fields should be
-self-explanatory. A special one is `:from-or-to', which is equal to
-`:from' unless `:from' matches `mu4e-user-mail-address-regexp', in
-which case it will be equal to `:to'.")
+  "An alist of all possible header fields and information about them.
+This is used in the UI (the column headers in the header list,
+and the fields the message view).
 
+Most fields should be self-explanatory. A special one is
+`:from-or-to', which is equal to `:from' unless `:from' matches
+`mu4e-user-mail-address-regexp', in which case it will be equal
+to `:to'.")
 
 (defvar mu4e-custom-header-info nil
   "A list like `mu4e-custom-header-info', but for
