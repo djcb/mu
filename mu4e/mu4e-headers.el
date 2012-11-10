@@ -638,7 +638,7 @@ after the end of the search results."
 	      (if width
 		(truncate-string-to-width name width 0 ?\s t)
 		name)
-	      'face (if arrow 'bold 'fixed-pitch)
+	      'face (when arrow 'bold)
 	      'help-echo help
 	      'mouse-face (when sortable 'highlight)
 	      'keymap (when sortable map)
