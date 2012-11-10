@@ -117,16 +117,21 @@ search."
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
-(defvar mu4e-bookmarks
+(defcustom mu4e-bookmarks
   '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
      ("date:today..now"                  "Today's messages"     ?t)
      ("date:7d..now"                     "Last 7 days"          ?w)
      ("mime:image/*"                     "Messages with images" ?p))
-  "A list of pre-defined queries; these will show up in the main
-screen. Each of the list elements is a three-element list of the
-form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
-query, DESCRIPTION is a short description of the query (this will
-show up in the UI), and KEY is a shortcut key for the query.")
+  "A list of pre-defined queries.
+These will show up in the main screen. Each of the list elements
+is a three-element list of the form (QUERY DESCRIPTION KEY),
+where QUERY is a string with a mu query, DESCRIPTION is a short
+description of the query (this will show up in the UI), and KEY
+is a shortcut key for the query."
+  :type '(repeat (list (string :tag "Query")
+		       (string :tag "Description")
+		       character))
+  :group 'mu4e)
 
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers; a symbol which is either: * a
@@ -137,7 +142,8 @@ see `mu4e-headers-visible-lines' and
 `mu4e-headers-visible-columns'."
   :type '(choice (const :tag "Split horizontally" horizontal)
                  (const :tag "Split vertically" vertical)
-                 (const :tag "Don't split" nil)))
+                 (const :tag "Don't split" nil))
+  :group 'mu4e-headers)
 
 (defcustom mu4e-show-images nil
   "Whether to automatically display attached images in the message
