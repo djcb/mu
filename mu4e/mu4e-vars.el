@@ -344,7 +344,7 @@ flag set)."
   :group 'mu4e-faces)
 
 (defface mu4e-header-highlight-face
-  '((t :inherit default :weight bold :underline t))
+  '((t :inherit region :weight bold :underline t))
   "Face for the header at point."
   :group 'mu4e-faces)
 
