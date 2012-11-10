@@ -67,9 +67,7 @@ test-mu-util
 mu4e-meta.el
 mu4e.pdf
 texinfo.tex
-/emacs/mdate-sh
-/emacs/stamp-vti
-/emacs/version.texi
+texi.texi
 *.tex
 *.pdf
 /www/auto/*
@@ -80,3 +78,4 @@ configure.lineno
 /mu4e/stamp-vti
 /mu4e/version.texi
 /guile/tests/test-mu-guile
+/lib/doxyfile
