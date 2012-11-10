@@ -83,11 +83,11 @@ where
   (clrhash mu4e~mark-map))
 
 (defun mu4e-mark-at-point (mark &optional target)
-  "Mark (or unmark) message at point. MARK specifies the
-mark-type. For `move'-marks and `trash'-marks there is also the
-TARGET argument, which specifies to which maildir the message is to
-be moved/trashed. The function works in both headers buffers and
-message buffers.
+  "Mark (or unmark) message at point.
+MARK specifies the mark-type. For `move'-marks and `trash'-marks
+there is also the TARGET argument, which specifies to which
+maildir the message is to be moved/trashed. The function works in
+both headers buffers and message buffers.
 
 The following marks are available, and the corresponding props:
 
@@ -201,8 +201,9 @@ headers in the region. Optionally, provide TARGET (for moves)."
 	  (mu4e-mark-at-point (car markcell) (cdr markcell)))))))
 
 (defun mu4e~mark-get-markpair (prompt &optional allow-something)
-  "Ask user for a mark; return (MARK . TARGET). If ALLOW-SOMETHING
-is non-nil, allow the 'something' pseudo mark as well."
+  "Ask user for a mark; return (MARK . TARGET).
+If ALLOW-SOMETHING is non-nil, allow the 'something' pseudo mark
+as well."
   (let* ((marks '( ("refile"    . refile)
 		   ("move"	. move)
 		   ("dtrash"	. trash)
@@ -222,8 +223,9 @@ is non-nil, allow the 'something' pseudo mark as well."
 
 
 (defun mu4e-mark-resolve-deferred-marks ()
-  "Check if there are any deferred ('something') marks. If there are such marks,
-replace them with a _real_ mark (ask the user which one)."
+  "Check if there are any deferred ('something') marks.
+If there are such marks, replace them with a _real_ mark (ask the
+user which one)."
   (interactive)
   (let ((markpair))
     (maphash
@@ -248,11 +250,11 @@ replace them with a _real_ mark (ask the user which one)."
 
 
 (defun mu4e-mark-execute-all (&optional no-confirmation)
-  "Execute the actions for all marked messages in this
-buffer. After the actions have been executed succesfully, the
-affected messages are *hidden* from the current header list. Since
-the headers are the result of a search, we cannot be certain that
-the messages no longer matches the current one - to get that
+  "Execute the actions for all marked messages in this buffer.
+After the actions have been executed succesfully, the affected
+messages are *hidden* from the current header list. Since the
+headers are the result of a search, we cannot be certain that the
+messages no longer matches the current one - to get that
 certainty, we need to rerun the search, but we don't want to do
 that automatically, as it may be too slow and/or break the users
 flow. Therefore, we hide the message, which in practice seems to

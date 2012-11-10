@@ -42,18 +42,17 @@
 (defcustom org-mu4e-link-desc-func
   (lambda (msg) (or (plist-get msg :subject) "No subject"))
   "Function that takes a msg and returns a string for the
-   description part of an org-mode link.
+description part of an org-mode link.
 
-   Example usage:
+Example usage:
 
-   (defun my-link-descr (msg)
-     (let
-         ((subject (or (plist-get msg :subject)
-                      \"No subject\"))
+  (defun my-link-descr (msg)
+    (let ((subject (or (plist-get msg :subject)
+                       \"No subject\"))
           (date (or (format-time-string mu4e-headers-date-format
-                      (mu4e-msg-field msg :date))
-                   \"No date\")))
-       (concat subject \" \" date)))
+                    (mu4e-msg-field msg :date))
+                    \"No date\")))
+      (concat subject \" \" date)))
 
   (setq org-mu4e-link-desc-func 'my-link-descr)"
   :type 'function
@@ -201,8 +200,8 @@ and images in a multipart/related part."
 	(overlay-put olay 'face 'font-lock-comment-face)))))
 
 (defun org~mu4e-mime-undecorate-headers ()
-  "Don't make the headers visually distinctive (well,
-mu4e-compose-mode will take care of that)."
+  "Don't make the headers visually distinctive.
+\(well, mu4e-compose-mode will take care of that)."
   (save-excursion
     (goto-char (point-min))
     (let* ((eoh (when (search-forward mail-header-separator)
@@ -210,14 +209,14 @@ mu4e-compose-mode will take care of that)."
       (remove-overlays (point-min) eoh))))
 
 (defvar org-mu4e-convert-to-html nil
-  "Whether to do automatic org-mode => html conversion when sending
-  messages.")
+  "Whether to do automatic org-mode => html conversion when sending messages.")
 
 (defun org~mu4e-mime-convert-to-html-maybe ()
-  "Convert to html if `org-mu4e-convert-to-html' is non-nil. This
-function is called when sending a message (from
-`message-send-hook') and, if non-nil, will send the message as the
-rich-text version of the what is assumed to be an org-mode body."
+  "Convert to html if `org-mu4e-convert-to-html' is non-nil.
+This function is called when sending a message (from
+`message-send-hook') and, if non-nil, will send the message as
+the rich-text version of the what is assumed to be an org-mode
+body."
   (when org-mu4e-convert-to-html
     (mu4e-message "Converting to html")
     (org~mu4e-mime-convert-to-html)))
@@ -261,7 +260,7 @@ or org-mode (when in the body)."
 
 (defun org-mu4e-compose-org-mode ()
   "Pseudo-Minor mode for mu4e-compose-mode, to edit the message
-    body using org-mode."
+body using org-mode."
   (interactive)
   (unless (member major-mode '(org-mode mu4e-compose-mode))
     (mu4e-error "Need org-mode or mu4e-compose-mode"))

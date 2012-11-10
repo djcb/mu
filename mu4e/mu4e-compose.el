@@ -107,16 +107,16 @@ sent folder."
   :group 'mu4e-compose)
 
 (defvar mu4e-compose-pre-hook nil
-  "Hook run just *before* message composition starts. If the
-compose-type is either /reply/ or /forward/, the variable
+  "Hook run just *before* message composition starts.
+If the compose-type is either /reply/ or /forward/, the variable
 `mu4e-compose-parent-message' points to the message replied to /
 being forwarded / edited.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun mu4e-compose-attach-captured-message ()
-  "Insert the last captured message (through
-`mu4e-action-capture-message') file as an attachment."
+  "Insert the last captured message file as an attachment.
+Messages are captured with `mu4e-action-capture-message'."
     (interactive)
   (unless mu4e-captured-message
     (mu4e-warn "No message has been captured"))
@@ -145,8 +145,8 @@ being forwarded / edited.")
 ;; `mu4e-sent-messages-behavior'.
 
 (defun mu4e~compose-setup-fcc-maybe ()
-  "Maybe setup Fcc, based on `mu4e-sent-messages-behavior'. If
-needed, set the Fcc header, and register the handler function."
+  "Maybe setup Fcc, based on `mu4e-sent-messages-behavior'.
+If needed, set the Fcc header, and register the handler function."
   (let* ((mdir
 	   (case mu4e-sent-messages-behavior
 	     (delete nil)
@@ -174,8 +174,8 @@ needed, set the Fcc header, and register the handler function."
 
 (defun mu4e~compose-register-message-save-hooks ()
   "Just before saving, we remove the mail-header-separator; just
-  after saving we restore it; thus, the separator should never
-  appear on disk."
+after saving we restore it; thus, the separator should never
+appear on disk."
   (add-hook 'before-save-hook
     'mu4e~draft-remove-mail-header-separator nil t)
   (add-hook 'after-save-hook
@@ -442,9 +442,9 @@ for draft messages."
   (mu4e-compose 'forward))
 
 (defun mu4e-compose-edit ()
-  "Edit the draft message at point in the headers buffer. This is
-only possible if the message at point is, in fact, a draft
-message."
+  "Edit the draft message at point in the headers buffer.
+This is only possible if the message at point is, in fact, a
+draft message."
   (interactive)
   (mu4e-compose 'edit))
 
@@ -457,8 +457,8 @@ message."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; address completion; inspired by org-contacts.el
 (defun mu4e~compose-complete-contact (&optional start)
-  "Complete the text at START with a contact (ie. either 'name
-<email>' or 'email')."
+  "Complete the text at START with a contact.
+Ie. either 'name <email>' or 'email')."
   (interactive)
   (let ((mail-abbrev-mode-regexp mu4e~compose-address-fields-regexp)
 	 (eoh ;; end-of-headers

@@ -37,8 +37,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-count-lines (msg)
-  "Count the number of lines in the e-mail message. Works for
-headers view and message-view."
+  "Count the number of lines in the e-mail message.
+Works for headers view and message-view."
   (message "Number of lines: %s"
     (shell-command-to-string
       (concat "wc -l < " (shell-quote-argument (mu4e-message-field msg :path))))))
@@ -53,8 +53,8 @@ headers view and message-view."
   "Path to the msg2pdf toy.")
 
 (defun mu4e-action-view-as-pdf (msg)
-  "Convert the message to pdf, then show it. Works for the message
-view."
+  "Convert the message to pdf, then show it.
+Works for the message view."
   (unless (file-executable-p mu4e-msg2pdf)
     (mu4e-error "msg2pdf not found; please set `mu4e-msg2pdf'"))
   (let* ((pdf
@@ -74,8 +74,9 @@ view."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-view-in-browser (msg)
-  "View the body of the message in a web browser. You can influence
-the browser to use with the variable `browse-url-generic-program'."
+  "View the body of the message in a web browser.
+You can influence the browser to use with the variable
+`browse-url-generic-program'."
   (let* ((html (mu4e-message-field msg :body-html))
 	  (txt (mu4e-message-field msg :body-txt))
 	  (tmpfile (format "%s%x.html" temporary-file-directory (random t))))
@@ -127,8 +128,8 @@ with `mu4e-compose-attach-captured-message'."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-org-contacts-file nil
-  "File to store contact information for org-contacts. Needed by
-  `mu4e-action-add-org-contact'.")
+  "File to store contact information for org-contacts.
+Needed by `mu4e-action-add-org-contact'.")
 
 (eval-when-compile ;; silence compiler warning about free variable
   (unless (require 'org-capture nil 'noerror)
