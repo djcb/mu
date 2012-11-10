@@ -35,26 +35,29 @@
 
 
 (defcustom mu4e-html2text-command nil
-  "Shell command that converts HTML from stdin into plain text on
-stdout. If this is not defined, the emacs `html2text' tool will be
-used when faced with html-only message. If you use htmltext, it's
-recommended you use \"html2text -utf8 -width 72\"."
+  "Shell command that converts from html to plain text.
+The command has to read html from stdin and output plain text on
+stdout. If this is not defined, the emacs `html2text' tool will
+be used when faced with html-only message. If you use htmltext,
+it's recommended you use \"html2text -utf8 -width 72\"."
   :type 'string
   :group 'mu4e-view
   :safe 'stringp)
 
 (defcustom mu4e-view-prefer-html nil
-  "Whether to base the body display on the HTML-version of the
-e-mail message (if there is any."
+  "Whether to base the body display on the html-version.
+If the e-mail message has no html-version the plain-text version
+is always used."
   :type 'boolean
   :group 'mu4e-view)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e-message-field-raw (msg field)
-  "Retrieve FIELD from message plist MSG. FIELD is one
-of :from, :to, :cc, :bcc, :subject, :data, :message-id, :path, :maildir,
-:priority, :attachments, :references, :in-reply-to, :body-txt, :body-html
+  "Retrieve FIELD from message plist MSG.
+FIELD is one of :from, :to, :cc, :bcc, :subject, :data,
+:message-id, :path, :maildir, :priority, :attachments,
+:references, :in-reply-to, :body-txt, :body-html
 
 Returns `nil' if the field does not exist.
 
@@ -128,16 +131,18 @@ there is no message at point."
       (unless noerror (mu4e-warn "No message at point")))))
 
 (defsubst mu4e-message-field-at-point (field)
-  "Get the field FIELD from the message at point; equivalent to
-    (mu4e-message-field (mu4e-message-at-point FIELD))."
+  "Get the field FIELD from the message at point.
+This is equivalent to:
+  (mu4e-message-field (mu4e-message-at-point) FIELD)."
   (mu4e-message-field (mu4e-message-at-point) field))
 
 (defun mu4e-message-body-text (msg)
-  "Get the body in text form for this message, which is either :body-txt,
-or if not available, :body-html converted to text. By default, it
-uses the emacs built-in `html2text'. Alternatively, if
-`mu4e-html2text-command' is non-nil, it will use that. Normally,
-function prefers the text part, but this can be changed by setting
+  "Get the body in text form for this message.
+This is either :body-txt, or if not available, :body-html
+converted to text. By default, it uses the emacs built-in
+`html2text'. Alternatively, if `mu4e-html2text-command' is
+non-nil, it will use that. Normally, function prefers the text
+part, but this can be changed by setting
 `mu4e-view-prefer-html'."
   (let* ((txt (mu4e-message-field msg :body-txt))
 	  (html (mu4e-message-field msg :body-html))
@@ -203,7 +208,7 @@ match."
 
 (defsubst mu4e-message-part-field  (msgpart field)
   "Get some field in a message part; a part would look something like:
-   (:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)."
+  (:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)."
   (plist-get msgpart field))
 
 

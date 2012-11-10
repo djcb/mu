@@ -49,8 +49,8 @@ used on a string that terminates immediately after the date.")
 (defun mu4e-parse-time-string (s &optional nodefault)
   "Parse the standard Org-mode time string.
 This should be a lot faster than the normal `parse-time-string'.
-If time is not given, defaults to 0:00.  However, with optional NODEFAULT,
-hour and minute fields will be nil if not given."
+If time is not given, defaults to 0:00.  However, with optional
+NODEFAULT, hour and minute fields will be nil if not given."
   (if (string-match mu4e~ts-regexp0 s)
       (list 0
 	    (if (or (match-beginning 8) (not nodefault))
@@ -65,8 +65,8 @@ hour and minute fields will be nil if not given."
 
 
 (defun mu4e-user-mail-address-p (addr)
-  "If ADDR is one of user's e-mail addresses (as per
-`mu4e-user-mail-address-list') return t, otherwise return nil."
+  "If ADDR is one of user's e-mail addresses return t, nil otherwise.
+User's addresses are set in `mu4e-user-mail-address-list')."
   (when (and addr mu4e-user-mail-address-list
 	  (find addr mu4e-user-mail-address-list :test 'string=))
     t))
@@ -78,9 +78,10 @@ hour and minute fields will be nil if not given."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the standard folders can be functions too
 (defun mu4e~get-folder (foldervar msg)
-  "Get message folder FOLDER. If FOLDER is a string, return it, if
-it is a function, evaluate this function with MSG as
-parameter (which may be `nil'), and return the result."
+  "Get message folder FOLDER.
+If FOLDER is a string, return it, if it is a function, evaluate
+this function with MSG as parameter (which may be `nil'), and
+return the result."
   (unless (member foldervar '(mu4e-sent-folder mu4e-drafts-folder
 			       mu4e-trash-folder mu4e-refile-folder))
     (mu4e-error "Folder must be either mu4e-sent-folder,
@@ -137,9 +138,9 @@ see its docstring)."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-create-maildir-maybe (dir)
-  "Offer to create maildir DIR (full filesystem path) if it does
-not exist yet. Return t if the dir already existed, or has been
-created, nil otherwise."
+  "Offer to create maildir DIR if it does not exist yet.
+Return t if the dir already existed, or has been created, nil
+otherwise. DIR has to be an absolute path."
   (if (and (file-exists-p dir) (not (file-directory-p dir)))
     (mu4e-error "%s exists, but is not a directory." dir))
   (cond
@@ -155,31 +156,31 @@ created, nil otherwise."
     (apply 'format frm args)))
 
 (defun mu4e-message (frm &rest args)
-  "Like `message', but prefixed with mu4e. If we're waiting for
-user-input, don't show anyhting."
+  "Like `message', but prefixed with mu4e.
+If we're waiting for user-input, don't show anyhting."
   (unless (active-minibuffer-window)
     (message "%s" (apply 'mu4e-format frm args))
     nil))
 
 (defun mu4e-error (frm &rest args)
-  "Create [mu4e]-prefixed error based on format FRM and ARGS. Does
-a local-exit and does not return, and raises a
+  "Create [mu4e]-prefixed error based on format FRM and ARGS.
+Does a local-exit and does not return, and raises a
 debuggable (backtrace) error."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e-warn (frm &rest args)
-  "Create [mu4e]-prefixed warning based on format FRM and
-ARGS. Does a local-exit and does not return. In emacs versions
-below 24.2, the functions is the same as `mu4e-error'."
+  "Create [mu4e]-prefixed warning based on format FRM and ARGS.
+Does a local-exit and does not return. In emacs versions below
+24.2, the functions is the same as `mu4e-error'."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (if (fboundp 'user-error)
     (user-error "%s" (apply 'mu4e-format frm args)) ;; only in emacs-trunk
     (error "%s" (apply 'mu4e-format frm args))))
 
 (defun mu4e~read-char-choice (prompt choices)
-  "Compatiblity wrapper for `read-char-choice', which is emacs-24
-only."
+  "Compatiblity wrapper for `read-char-choice'.
+That function is available which emacs-24 only."
   (let ((choice) (ok) (inhibit-quit nil))
     (while (not ok)
       (message nil);; this seems needed...
@@ -188,17 +189,17 @@ only."
     choice))
 
 (defun mu4e-read-option (prompt options)
-  "Ask user for an option from a list on the input area. PROMPT
-describes a multiple-choice question to the user, OPTIONS describe
-the options, and is a list of cells describing particular
-options. Cells have the following structure:
+  "Ask user for an option from a list on the input area.
+PROMPT describes a multiple-choice question to the user.
+OPTIONS describe the options, and is a list of cells describing
+particular options. Cells have the following structure:
 
    (OPTIONSTRING . RESULT)
 
- where OPTIONSTRING is a non-empty string describing the
- option. The first character of OPTIONSTRING is used as the
- shortcut, and obviously all shortcuts must be different, so you
- can prefix the string with an uniquifying character.
+where OPTIONSTRING is a non-empty string describing the
+option. The first character of OPTIONSTRING is used as the
+shortcut, and obviously all shortcuts must be different, so you
+can prefix the string with an uniquifying character.
 
 The options are provided as a list for the user to choose from;
 user can then choose by typing CHAR.  Example:
@@ -240,8 +241,7 @@ Function will return the cdr of the list element."
 
 
 (defun mu4e~get-maildirs-1 (path mdir)
-  "Get maildirs under path, recursively, as a list of relative
-paths."
+  "Get maildirs under path, recursively, as a list of relative paths."
   (let ((dirs)
 	 (dentries
 	   (ignore-errors
@@ -397,7 +397,7 @@ Also see `mu4e-flags-to-string'.
 	(mu4e~string-to-flags-1 (substring str 1))))))
 
 (defun mu4e-string-to-flags (str)
-"Convert a string with message flags as seen in Maildir messages
+  "Convert a string with message flags as seen in Maildir messages
 into a list of flags in; flags are symbols draft, flagged, new,
 passed, replied, seen, trashed and the string is the concatenation
 of the uppercased first letters of these flags, as per [1]. Other
@@ -420,8 +420,8 @@ http://cr.yp.to/proto/maildir.html "
 
 
 (defun mu4e-display-manual ()
-  "Display the mu4e manual page for the current mode, or go to the
-top level if there is none."
+  "Display the mu4e manual page for the current mode.
+Or go to the top level if there is none."
   (interactive)
   (info (case major-mode
 	  ('mu4e-main-mode "(mu4e)Main view")
@@ -469,10 +469,10 @@ that has a live window), and vice versa."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar mu4e-index-updated-hook nil
-  "Hook run when the indexing process had one or more updated
-messages. This can be used as a simple way to invoke some action
-when new messages appear, but note that an update in the index does
-not necessarily mean a new message.")
+  "Hook run when the indexing process had one or more updated messages.
+This can be used as a simple way to invoke some action when new
+messages appear, but note that an update in the index does not
+necessarily mean a new message.")
 
 ;; some handler functions for server messages
 ;;
@@ -510,10 +510,10 @@ process."
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
   "We receive a list of contacts, which each contact of the form
-     (:name NAME :mail EMAIL)
+  (:name NAME :mail EMAIL)
 and fill the list `mu4e~contacts-for-completion' with it, with
 each element looking like
-    name <email>
+  name <email>
 This is used by the completion function in mu4e-compose."
   (let ((lst))
     (dolist (contact contacts)
@@ -563,13 +563,14 @@ This is used by the completion function in mu4e-compose."
 
 
 (defun mu4e-running-p ()
-  "Whether mu4e is running -- that is, the server process is live."
+  "Whether mu4e is running.
+Checks whether the server process is live."
   (mu4e~proc-running-p))
 
 (defun mu4e~start (&optional func)
-  "If mu4e is already running, execute function FUNC (if non-nil). Otherwise,
-check various requirements, then start mu4e. When succesful, call
-FUNC (if non-nil) afterwards."
+  "If mu4e is already running, execute function FUNC (if non-nil).
+Otherwise, check various requirements, then start mu4e. When
+successful, call FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
   (if (mu4e-running-p)   ;; already running?
     (when func                 ;; yes! run func if defined
