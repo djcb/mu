@@ -317,23 +317,24 @@ In particular, backslashes and double-quotes."
   (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" query)))
     (replace-regexp-in-string "\"" "\\\\\"" esc)))
 
-(defun mu4e~proc-find (query threads sortfield revert maxnum)
+(defun mu4e~proc-find (query threads sortfield sortdir maxnum)
   "Start a database query for QUERY.
 If THREADS is non-nil, show results in threaded fasion, SORTFIELD
 is a symbol describing the field to sort by (or nil); see
-`mu4e~headers-sortfield-choices'. If REVERT is non-nil, sort Z->A
-instead of A->Z. MAXNUM determines the maximum number of results
-to return, or nil for 'unlimited'. For each result found, a
-function is called, depending on the kind of result. The
-variables `mu4e-error-func' contain the function that will be
-called for, resp., a message (header row) or an error."
+`mu4e~headers-sortfield-choices'. If SORT is `descending', sort
+Z->A, if it's `ascending', sort A->Z. MAXNUM determines the maximum
+number of results to return, or nil for 'unlimited'. For each
+result found, a function is called, depending on the kind of
+result. The variables `mu4e-error-func' contain the function that
+will be called for, resp., a message (header row) or an error."
   (mu4e~proc-send-command
     "find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d"
     (mu4e~proc-escape-query query)
     (if threads "true" "false")
     ;; sortfield is e.g. ':subject'; this removes the ':'
     (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
-    (if revert "true" "false")
+    ;; TODO: use ascending/descending in backend too (it's clearer than 'reverse'
+    (if (eq sortdir 'descending) "true" "false") 
     (if maxnum maxnum -1)))
 
 (defun mu4e~proc-move (docid-or-msgid &optional maildir flags)

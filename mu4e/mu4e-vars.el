@@ -492,7 +492,7 @@ I.e. a message with the draft flag set."
        ( :name "Date"
 	 :shortname "Date"
 	 :help "Date/time when the message was written."
-	 :sortable t))
+	 :sortable :date))
      (:flags .
        ( :name "Flags"
 	 :shortname "Flgs"
@@ -544,13 +544,19 @@ I.e. a message with the draft flag set."
 	 :help "Recipient of the message"
 	 :sortable t)))
   "An alist of all possible header fields and information about them.
-This is used in the UI (the column headers in the header list,
-and the fields the message view).
+This is used in the user-interface (the column headers in the header list, and
+the fields the message view).
 
 Most fields should be self-explanatory. A special one is
 `:from-or-to', which is equal to `:from' unless `:from' matches
-`mu4e-user-mail-address-regexp', in which case it will be equal
-to `:to'.")
+`mu4e-user-mail-address-regexp', in which case it will be equal to
+`:to'.
+
+Furthermore, the property `:sortable' determines whether we can
+sort by this field.  This can be either a boolean (nil or t), or a
+symbol for /another/ field. For example, the `:human-date' field
+uses `:date' for that.
+")
 
 (defvar mu4e-custom-header-info nil
   "A list like `mu4e-custom-header-info', but for custom headers.

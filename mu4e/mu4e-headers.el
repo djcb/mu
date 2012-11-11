@@ -149,16 +149,6 @@ match.
 * PARAM-FUNC is function that is evaluated once, and its value is then passed to
 PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
-(defvar mu4e-headers-sortfield :date
-  "Field to sort the headers by.
-Field must be a symbol, one of: :date, :subject, :size, :prio,
-:from, :to.")
-
-(defvar mu4e-headers-sort-revert t
-  "Whether to revert the sort-order.
-i.e. Z>A instead of A>Z. When sorting by date, it's useful to go
-from biggest to smallest, so newest messages come first.")
-
 (defvar mu4e-headers-show-threads t
   "Whether to show threads in the headers list.")
 
@@ -181,7 +171,7 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 (defvar mu4e~headers-view-win nil
   "The view window connected to this headers view.")
 
-(defvar mu4e~headers-sortfield-choices
+(defvar mu4e~headers-sort-field-choices
   '( ("date"	. :date)
      ("from"	. :from)
      ("prio"	. :prio)
@@ -352,6 +342,8 @@ date. The formats used for date and time are
     (if (= (nth 3 (decode-time date)) (nth 3 (decode-time (current-time))))
       (format-time-string mu4e-headers-time-format date)
       (format-time-string mu4e-headers-date-format date))))
+
+
 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
@@ -599,8 +591,8 @@ after the end of the search results."
 	(define-key menumap [previous]  '("Previous" . mu4e-headers-prev))
 	(define-key menumap [sepa4] '("--")))
       map)))
-
 (fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
+
 
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
@@ -617,8 +609,8 @@ after the end of the search results."
 		(downarrow (if mu4e-use-fancy-chars " ▼" " V"))
 		;; triangle to mark the sorted-by column
 		(arrow
-		  (when (and sortable (eq (car item) mu4e-headers-sortfield))
-		    (if mu4e-headers-sort-revert downarrow uparrow)))
+		  (when (and sortable (eq (car item) mu4e~headers-sort-field))
+		    (if (eq mu4e~headers-sort-direction 'descending) downarrow uparrow)))
 		(name (concat (plist-get info :shortname) arrow))
 		(map (make-sparse-keymap)))
 	  (when sortable
@@ -629,10 +621,9 @@ after the end of the search results."
 		(let* ((obj (posn-object (event-start e)))
 			(field
 			  (and obj (get-text-property 0 'field (car obj)))))
-		  (if (eq field mu4e-headers-sortfield)
-		    (setq mu4e-headers-sort-revert (not mu4e-headers-sort-revert))
-		    (setq mu4e-headers-sortfield field)))
-		(mu4e-headers-rerun-search))))
+		  ;; "t": if we're already sorted by field, the sort-order is
+		  ;; changed
+		  (mu4e-headers-change-sorting field t)))))
 	  (concat
 	    (propertize
 	      (if width
@@ -812,6 +803,10 @@ docid is not found."
 	(delete-region (line-beginning-position) (line-beginning-position 2)))
       (unless ignore-missing
 	(mu4e-error "Cannot find message with docid %S" docid)))))
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
@@ -838,8 +833,8 @@ the query history stack."
     (mu4e~proc-find
       expr
       mu4e-headers-show-threads
-      mu4e-headers-sortfield
-      mu4e-headers-sort-revert
+      mu4e~headers-sort-field
+      mu4e~headers-sort-direction
       (unless mu4e-headers-full-search mu4e-search-results-limit))))
 
 (defun mu4e~headers-redraw-get-view-window ()
@@ -1088,26 +1083,50 @@ the last search expression."
     (format "(%s) AND %s" mu4e~headers-last-query filter)))
 
 
-(defun mu4e-headers-change-sorting (&optional dont-refresh)
-  "Interactively change the sorting/threading parameters.
-With prefix-argument, do _not_ refresh the last search with the
-new parameters."
-  (interactive "P")
-  (let* ((sortfield
-	   (mu4e-read-option "Sortfield: " mu4e~headers-sortfield-choices))
-	  (revert
-	    (mu4e-read-option "Direction: "
-	      '(("ascending" . nil) ("descending" . t)))))
+(defvar mu4e~headers-sort-field :date
+  "Field to sort the headers by.
+Field must be a symbol, one of: :date, :subject, :size, :prio,
+:from, :to.")
+
+(defvar mu4e~headers-sort-direction 'descending
+  "Direction to sort by; a symbol either `descending' (sorting
+  Z->A) or `ascending' (sorting A->Z).")
+
+(defun mu4e-headers-change-sorting (&optional field dir)
+  "Change the sorting/threading parameters.
+FIELD is the field to sort by; DIR is a symbol: either 'ascending,
+'descending, 't (meaning: if FIELD is the same as the current
+sortfield, change the sort-order) or nil (ask the user)."
+  (interactive)
+  (let* ((field
+	   (or field
+	     (mu4e-read-option "Sortfield: " mu4e~headers-sort-field-choices)))
+	  ;; note: 'sortable' is either a boolean (meaning: if non-nil, this is
+	  ;; sortable field), _or_ another field (meaning: sort by this other field).
+	  (sortable (plist-get (cdr (assoc field mu4e-header-info)) :sortable))
+	  ;; error check
+	  (sortable
+	    (if sortable
+	      sortable
+	      (mu4e-error "Not a sortable field")))
+	  (sortfield (if (booleanp sortable) field sortable))
+	  (dir
+	    (case dir
+	      ((ascending descending) dir)
+	      ;; change the sort order if field = curfield
+	      (t
+		(if (eq sortfield mu4e~headers-sort-field)
+		  (if (eq mu4e~headers-sort-direction 'ascending)
+		    'descending 'ascending)))
+	      (mu4e-read-option "Direction: "
+		'(("ascending" . 'ascending) ("descending" . 'descending))))))
     (setq
-      mu4e-headers-sortfield sortfield
-      mu4e-headers-sort-revert revert) ;; "descending" means "revert"
-    (mu4e-message "Sorting by %s (%s)%s"
+      mu4e~headers-sort-field sortfield
+      mu4e~headers-sort-direction dir)
+    (mu4e-message "Sorting by %s (%s)"
       (symbol-name sortfield)
-      (if revert "descending" "ascending")
-      (if dont-refresh
-	" (press 'g' to refresh)" ""))
-    (unless dont-refresh
-      (mu4e-headers-rerun-search))))
+      (symbol-name mu4e~headers-sort-direction))
+    (mu4e-headers-rerun-search)))
 
 (defun mu4e-headers-toggle-threading (&optional dont-refresh)
   "Toggle threading on/off for the search results.
