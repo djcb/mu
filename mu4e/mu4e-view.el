@@ -524,14 +524,10 @@ at POINT, or if nil, at (point)."
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'mu4e-view-scroll-up-or-next)
-      (define-key map (kbd "<home>")
-	#'(lambda () (interactive) (goto-char (point-min))))
-      (define-key map (kbd "<end>")
-	#'(lambda () (interactive) (goto-char (point-max))))
-      (define-key map (kbd "RET")
-	#'(lambda () (interactive) (scroll-up 1)))
-      (define-key map (kbd "<backspace>")
-	#'(lambda () (interactive) (scroll-up -1)))
+      (define-key map (kbd "<home>") 'beginning-of-buffer)
+      (define-key map (kbd "<end>") 'end-of-buffer)
+      (define-key map (kbd "RET") 'mu4e-scroll-up)
+      (define-key map (kbd "<backspace>") 'mu4e-scroll-up)
 
       ;; navigation between messages
       (define-key map "p" 'mu4e-view-headers-prev)
@@ -1078,6 +1074,16 @@ non-nil, and we can't scroll-up anymore, go the next message."
     (error
       (when mu4e-view-scroll-to-next
 	(mu4e-view-headers-next)))))
+
+(defun mu4e-scroll-up ()
+  "Scroll text of selected window up one line."
+  (interactive)
+  (scroll-up 1))
+
+(defun mu4e-scroll-down ()
+  "Scroll text of selected window down one line."
+  (interactive)
+  (scroll-down 1))
 
 (defun mu4e-view-unmark-all ()
   "If we're in split-view, unmark all messages. Otherwise, warn
