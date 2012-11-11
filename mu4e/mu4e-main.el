@@ -69,10 +69,10 @@
 
 
 (defun mu4e~main-action-str (str &optional func-or-shortcut)
-  "Highlight the first occurence of [..] in STR. If
-FUNC-OR-SHORTCUT is non-nil and if it is a function, call it when
-STR is clicked (using RET or mouse-2); if FUNC-OR-SHORTCUT is a
-string, execute the corresponding keyboard action when it is
+  "Highlight the first occurence of [..] in STR.
+If FUNC-OR-SHORTCUT is non-nil and if it is a function, call it
+when STR is clicked (using RET or mouse-2); if FUNC-OR-SHORTCUT
+is a string, execute the corresponding keyboard action when it is
 clicked."
   (let ((newstr
 	  (replace-regexp-in-string

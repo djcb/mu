@@ -41,8 +41,9 @@
   :safe 'stringp)
 
 (defcustom mu4e-mu-binary (executable-find "mu")
-  "Name of the mu-binary to use; if it cannot be found in your
-PATH, you can specify the full path."
+  "Name of the mu-binary to use.
+If it cannot be found in your PATH, you can specify the full
+path."
   :type 'file
   :group 'mu4e
   :safe 'stringp)
@@ -71,17 +72,17 @@ mu4e."
   :safe 'integerp)
 
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
-  "Default directory for saving attachments. This can be either a
-string, or a function that takes a filename FNAME and MIMETYPE as
-arguments, and returns the attachment dir. Note, either or both of
-the arguments may be `nil'."
+  "Default directory for saving attachments.
+This can be either a string, or a function that takes a filename
+FNAME and MIMETYPE as arguments, and returns the attachment
+dir. Note, either or both of the arguments may be `nil'."
   :type 'directory
   :group 'mu4e
   :safe 'stringp)
 
 (defcustom mu4e-user-mail-address-list `(,user-mail-address)
-  "List of e-mail addresses to consider 'my email addresses',
-ie. addresses whose presence in an email imply that it is a
+  "List of e-mail addresses to consider 'my email addresses'.
+I.e. addresses whose presence in an email imply that it is a
 personal message. This is used when indexing messages."
   :type '(repeat (string :tag "Address"))
   :group 'mu4e)
@@ -122,19 +123,22 @@ search."
      ("date:today..now"                  "Today's messages"     ?t)
      ("date:7d..now"                     "Last 7 days"          ?w)
      ("mime:image/*"                     "Messages with images" ?p))
-  "A list of pre-defined queries; these will show up in the main
-screen. Each of the list elements is a three-element list of the
-form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
-query, DESCRIPTION is a short description of the query (this will
-show up in the UI), and KEY is a shortcut key for the query.")
+  "A list of pre-defined queries.
+These will show up in the main screen. Each of the list elements
+is a three-element list of the form (QUERY DESCRIPTION KEY),
+where QUERY is a string with a mu query, DESCRIPTION is a short
+description of the query (this will show up in the UI), and KEY
+is a shortcut key for the query.")
 
 (defcustom mu4e-split-view 'horizontal
-  "How to show messages / headers; a symbol which is either: * a
-symbol 'horizontal: split horizontally (headers on top) * a symbol
-'vertical: split vertically (headers on the left).  * anything
-else: don't split (show either headers or messages, not both) Also
-see `mu4e-headers-visible-lines' and
-`mu4e-headers-visible-columns'."
+  "How to show messages / headers.
+A symbol which is either:
+ * `horizontal':   split horizontally (headers on top)
+ * `vertical':     split vertically (headers on the left).
+ * anything else:  don't split (show either headers or messages,
+                  not both)
+Also see `mu4e-headers-visible-lines'
+and `mu4e-headers-visible-columns'."
   :type '(choice (const :tag "Split horizontally" horizontal)
                  (const :tag "Split vertically" vertical)
                  (const :tag "Don't split" nil)))
@@ -161,7 +165,8 @@ view buffer."
   :group 'mu4e-crypto)
 
 (defcustom mu4e-decryption-policy t
-  "Policy for dealing with encrypted parts. The setting is a symbol:
+  "Policy for dealing with encrypted parts.
+The setting is a symbol:
  * t:     try to decrypt automatically
  * `ask': ask before decrypting anything
  * nil:   don't try to decrypt anything."
@@ -193,16 +198,15 @@ details (in particular, how to define your own e-mail addresses)."
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-complete-only-after "2010-01-01"
-  "Consider only contacts last seen after this date. Date must be a
-  string, in a format parseable by `org-parse-time-string'. This
-  excludes really old contacts. Set to nil to not have any
-  time-based restriction."
+  "Consider only contacts last seen after this date.
+Date must be a string, in a format parseable by
+`org-parse-time-string'. This excludes really old contacts.
+Set to nil to not have any time-based restriction."
   :type 'string
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-complete-ignore-address-regexp "no-?reply"
-  "Ignore any e-mail addresses for completion if they match this
-regexp."
+  "Ignore any e-mail addresses for completion if they match this regexp."
   :type 'string
   :group 'mu4e-compose)
 
@@ -223,9 +227,9 @@ replying to messages."
   :group 'mu4e-compose)
 
 (defvar mu4e-compose-parent-message nil
-  "The parent message plist -- the message being replied to,
-forwarded or edited; used in `mu4e-compose-pre-hook. For new
-messages, it is nil.")
+  "The parent message plist.
+This is the message being replied to, forwarded or edited; used
+in `mu4e-compose-pre-hook'. For new messages, it is nil.")
 
 ;; Folders
 (defgroup mu4e-folders nil
@@ -233,7 +237,7 @@ messages, it is nil.")
   :group 'mu4e)
 
 (defcustom mu4e-drafts-folder "/drafts"
-  "Your folder for draft messages, relative to `mu4e-maildir',
+  "Your folder for draft messages, relative to `mu4e-maildir'.
 e.g. \"/drafts\". Instead of a string, may also be a function that
 takes a message (a msg plist, see `mu4e-message-get-field'), and
 returns a folder.  Note, the message parameter refers to the
@@ -285,9 +289,9 @@ re-edited, and is nil otherwise."
 
 (defcustom mu4e-maildir-shortcuts nil
   "A list of maildir shortcuts to enable quickly going to the
- particular for, or quickly moving messages towards them (i.e.,
- archiving or refiling). The list contains elements of the form
- (maildir . shortcut), where MAILDIR is a maildir (such as
+particular for, or quickly moving messages towards them (i.e.,
+archiving or refiling). The list contains elements of the form
+\(maildir . shortcut), where MAILDIR is a maildir (such as
 \"/archive/\"), and shortcut a single shortcut character. With
 this, in the header buffer and view buffer you can execute
 `mu4e-mark-for-move-quick' (or 'm', by default) or
@@ -307,8 +311,8 @@ designated shortcut character for the maildir.")
 
 (defface mu4e-moved-face
   '((t :inherit font-lock-comment-face :slant italic))
-  "Face for a message header that has been moved to some
-folder (it's still visible in the search results, since we cannot
+  "Face for a message header that has been moved to some folder.
+\(It's still visible in the search results, since we cannot
 be sure it no longer matches)."
   :group 'mu4e-faces)
 
@@ -319,8 +323,8 @@ be sure it no longer matches)."
 
 (defface mu4e-draft-face
   '((t :inherit font-lock-string-face))
-  "Face for a draft message header (i.e., a message with the draft
-flag set)."
+  "Face for a draft message header
+I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-flagged-face
@@ -361,8 +365,7 @@ flag set)."
 
 (defface mu4e-view-header-value-face
   '((t :inherit font-lock-doc-face))
-  "Face for a header value (such as \"Re: Hello!\") in the message
-  view."
+  "Face for a header value (such as \"Re: Hello!\") in the message view."
   :group 'mu4e-faces)
 
 (defface mu4e-view-special-header-value-face
@@ -444,8 +447,7 @@ flag set)."
 
 (defface mu4e-system-face
   '((t :inherit font-lock-comment-face :slant italic))
-  "Face for system message (such as the footers for message
-headers)."
+  "Face for system message (such as the footers for message headers)."
   :group 'mu4e-faces)
 
 (defface mu4e-ok-face
@@ -547,10 +549,10 @@ Most fields should be self-explanatory. A special one is
 to `:to'.")
 
 (defvar mu4e-custom-header-info nil
-  "A list like `mu4e-custom-header-info', but for
-custom (user-specified) headers. Each of the list items is a
-property list with :name (the full-name, as displayed in the
-message view), :shortname (the name as displayed in the headers
+  "A list like `mu4e-custom-header-info', but for custom headers.
+I.e. user-specified headers. Each of the list items is a property
+list with :name (the full-name, as displayed in the message
+view), :shortname (the name as displayed in the headers
 view), :help (some help information, which shows up in the
 tooltip). Furthermore, there are two special fields:
 :headers-func and :message-func, and the values should be functions
@@ -582,13 +584,13 @@ Note, :sortable does not work for custom header fields.")
 (defvar mu4e~view-msg nil "The message being viewed in view mode.")
 
 (defvar mu4e~contacts-for-completion nil
-  "List of contacts (ie. 'name <e-mail>'),
-used by the completion functions in mu4e-compose, and filled when
-mu4e starts.")
+  "List of contacts (ie. 'name <e-mail>').
+This is used by the completion functions in mu4e-compose, and
+filled when mu4e starts.")
 
 (defvar mu4e~server-props nil
-  "Properties we receive from the mu4e server process (in the
-  'pong-handler').")
+  "Properties we receive from the mu4e server process.
+\(in the 'pong-handler').")
 
 (defvar mu4e~headers-last-query nil
   "The present (most recent) query.")

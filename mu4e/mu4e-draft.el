@@ -38,16 +38,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~draft-user-agent-construct ()
-  "Return the User-Agent string for mu4e. This is either the value
-of `mu4e-user-agent', or, if not set, a string based on the versions
-of mu4e and emacs."
+  "Return the User-Agent string for mu4e.
+This is either the value of `mu4e-user-agent', or, if not set, a
+string based on the versions of mu4e and emacs."
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version))
 
 
 (defun mu4e~draft-cite-original (msg)
-  "Return a cited version of the original message MSG (ie., the
-plist). This function use gnus' `message-cite-function', and as
-such all its settings apply."
+  "Return a cited version of the original message MSG as a plist.
+This function use gnus' `message-cite-function', and as such all
+its settings apply."
   (with-temp-buffer
     (when (fboundp 'mu4e-view-message-text) ;; keep bytecompiler happy
       (insert (mu4e-view-message-text msg))
@@ -61,8 +61,8 @@ such all its settings apply."
       (buffer-string))))
 
 (defun mu4e~draft-header (hdr val)
-  "Return a header line of the form HDR: VAL\n. If VAL is nil,
-return nil."
+  "Return a header line of the form \"HDR: VAL\".
+If VAL is nil, return nil."
   (when val (format "%s: %s\n" hdr val)))
 
 (defun mu4e~draft-references-construct (msg)
@@ -97,9 +97,10 @@ e-mail addresses. If LST is nil, returns nil."
       lst ", ")))
 
 (defun mu4e~draft-address-cell-equal (cell1 cell2)
-  "Return t if cell1 and cell2 have the same e-mail
-  address (case-insensitively), nil otherwise. cell1 and cell2 are
-  cons cells (NAME . EMAIL)."
+  "Return t if CELL1 and CELL2 have the same e-mail address.
+The comparison is done case-insensitively. If the cells done
+match return nil. CELL1 and CELL2 are cons cells of the
+form (NAME . EMAIL)."
   (string=
     (downcase (or (cdr cell1) ""))
     (downcase (or (cdr cell2) ""))))
@@ -174,9 +175,9 @@ nil, function returns nil."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~draft-insert-mail-header-separator ()
-  "Insert `mail-header-separator' in the first empty line of the
-message. message-mode needs this line to know where the headers end
-and the body starts. Note, in `mu4e-compose-mode, we use
+  "Insert `mail-header-separator' in the first empty line of the message.
+`message-mode' needs this line to know where the headers end and
+the body starts. Note, in `mu4e-compose-mode', we use
 `before-save-hook' and `after-save-hook' to ensure that this
 separator is never written to the message file. Also see
 `mu4e-remove-mail-header-separator'."
@@ -211,8 +212,8 @@ never hits the disk. Also see `mu4e~draft-insert-mail-header-separator."
 	(replace-match "")))))
 
 (defun mu4e~draft-user-wants-reply-all (origmsg)
-  "Ask user whether she wants to reply to *all* recipients if there
-are more than 1 (based on ORIGMSG)."
+  "Ask user whether she wants to reply to *all* recipients.
+If there is just one recipient of ORIGMSG do nothing."
   (let* ((recipnum
 	   (+ (length (mu4e~draft-create-to-lst origmsg))
 	     (length (mu4e~draft-create-cc-lst origmsg t))))
@@ -226,8 +227,8 @@ are more than 1 (based on ORIGMSG)."
     (eq response 'all)))
 
 (defun mu4e~draft-message-filename-construct (&optional flagstr)
-  "Construct a randomized name for a message file with flags FLAGSTR; it looks
-something like
+  "Construct a randomized name for a message file with flags FLAGSTR.
+It looks something like
   <time>-<random>.<hostname>:2,
 You can append flags."
   (let* ((hostname
@@ -307,7 +308,7 @@ You can append flags."
 
 (defvar mu4e~draft-drafts-folder nil
   "The drafts-folder for this compose buffer, based on
- mu4e-drafts-folder', which will be evaluated once.")
+mu4e-drafts-folder', which will be evaluated once.")
 
 (defun mu4e-draft-open (compose-type &optional msg)
   "Open a draft file for a new message (when COMPOSE-TYPE is reply, forward or new),

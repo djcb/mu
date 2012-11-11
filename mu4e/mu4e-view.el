@@ -68,8 +68,8 @@ contact."
 (make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
 
 (defcustom mu4e-view-date-format "%c"
-  "Date format to use in the message view, in the format of
-`format-time-string'."
+  "Date format to use in the message view.
+In the format of `format-time-string'."
   :type 'string
   :group 'mu4e-view)
 
@@ -87,9 +87,9 @@ end of a message. Otherwise, don't move to the next message.")
 (defvar mu4e-view-actions
   '( ("capture message" . mu4e-action-capture-message)
      ("view as pdf"     . mu4e-action-view-as-pdf))
-  "List of actions to perform on messages in view mode. The actions
-are of the form:
-   (NAME FUNC)
+  "List of actions to perform on messages in view mode.
+The actions are of the form:
+  (NAME FUNC)
 where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives a message plist as an argument.
@@ -100,13 +100,13 @@ The first letter of NAME is used as a shortcut character.")
   '( ("wopen-with" . mu4e-view-open-attachment-with)
      ("ein-emacs"  . mu4e-view-open-attachment-emacs)
      ("|pipe"      . mu4e-view-pipe-attachment))
-  "List of actions to perform on message attachments. The actions
-are of the form:
-   (NAME  FUNC)
+  "List of actions to perform on message attachments.
+The actions are of the form:
+ (NAME  FUNC)
 where:
-    * NAME is the name of the action (e.g. \"Count lines\")
-     * FUNC is a function which receives two arguments: the message
-      plist and the attachment number.
+* NAME is the name of the action (e.g. \"Count lines\")
+* FUNC is a function which receives two arguments: the message
+  plist and the attachment number.
 
 The first letter of NAME is used as a shortcut character.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,21 +121,23 @@ The first letter of NAME is used as a shortcut character.")
   "A map of some number->url so we can jump to url by number.")
 
 (defvar mu4e~path-parent-docid-map (make-hash-table :test 'equal)
-  "A map of msg paths --> parent-docids.  This is to determine what
-  is the parent docid for embedded message extracted at some path.")
+  "A map of msg paths --> parent-docids.
+This is to determine what is the parent docid for embedded
+message extracted at some path.")
 
 (defconst mu4e~view-url-regexp
   "\\(\\(https?\\://\\|mailto:\\)[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=/()]+\\)"
   "Regexp that matches http:/https:/mailto: URLs; match-string 1
-  will contain the matched URL, if any.")
+will contain the matched URL, if any.")
 
 (defvar mu4e~view-attach-map nil
   "A mapping of user-visible attachment number to the actual part index.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e-view-message-with-msgid (msgid)
-  "View message with MSGID. This is meant for external programs
-wanting to show specific messages - for example, `mu4e-org'."
+  "View message with MSGID.
+This is meant for external programs wanting to show specific
+messages - for example, `mu4e-org'."
   ;; note: hackish; if mu4e-decryption-policy is non-nil (ie., t or 'ask), we
   ;; decrpt the message. Since here we don't know if message is encrypted or
   ;; not, when the policy is 'ask'. we simply assume the user said yes...  the
@@ -145,8 +147,7 @@ wanting to show specific messages - for example, `mu4e-org'."
 
 
 (defun mu4e-view-message-text (msg)
-  "Return the message to display (as a string), based on the MSG
-plist."
+  "Return the message to display (as a string), based on the MSG plist."
   (concat
     (mapconcat
       (lambda (field)
@@ -463,8 +464,8 @@ at POINT, or if nil, at (point)."
 ;; 		decr))))))
 
 (defun mu4e-view-for-each-part (msg func)
-  "Apply FUNC to each part in MSG. FUNC should be a function taking
-  two arguments:
+  "Apply FUNC to each part in MSG.
+FUNC should be a function taking two arguments:
  1. the message MSG, and
  2. a plist describing the attachment. The plist looks like:
     	 (:index 1 :name \"test123.doc\"
@@ -672,8 +673,8 @@ at POINT, or if nil, at (point)."
     (setq autopair-dont-activate t)))
  
 (defun mu4e~view-mark-as-read-maybe ()
-  "Clear the current message's New/Unread status and set it to
-Seen; if the message is not New/Unread, do nothing."
+  "Clear the current message's New/Unread status and set it to Seen.
+If the message is not New/Unread, do nothing."
   (when mu4e~view-msg
     (let ((flags (mu4e-message-field mu4e~view-msg :flags))
 	   (docid (mu4e-message-field mu4e~view-msg :docid)))
@@ -720,9 +721,9 @@ Seen; if the message is not New/Unread, do nothing."
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 
 (defun mu4e~view-browse-url-func (url)
-  "Return a function that executes `browse-url' with URL. What
-browser is called is depending on `browse-url-browser-function' and
-`browse-url-mailto-function'."
+  "Return a function that executes `browse-url' with URL.
+What browser is called is depending on
+`browse-url-browser-function' and `browse-url-mailto-function'."
   (save-match-data
     (if (string-match "^mailto:" url)
       (lexical-let ((url url))
@@ -748,8 +749,8 @@ browser is called is depending on `browse-url-browser-function' and
 
 ;; this is fairly simplistic...
 (defun mu4e~view-make-urls-clickable ()
-  "Turn things that look like URLs into clickable things, and
-number them so they can be opened using `mu4e-view-go-to-url'."
+  "Turn things that look like URLs into clickable things.
+Also number them so they can be opened using `mu4e-view-go-to-url'."
   (let ((num 0))
     (save-excursion
       (setq mu4e~view-link-map ;; buffer local
@@ -833,8 +834,9 @@ N (prefix argument), to the Nth previous header."
   (setq mu4e~view-cited-hidden nil))
 
 (defun mu4e-view-action (&optional msg)
-  "Ask user for some action to apply on MSG (or message-at-point,
-if nil), then do it. The actions are specified in
+  "Ask user for some action to apply on MSG, then do it.
+If MSG is nil apply action to message returned
+bymessage-at-point.  The actions are specified in
 `mu4e-view-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
@@ -874,11 +876,11 @@ all messages in the subthread at point in the headers view."
 ;; attachment handling
 (defun mu4e~view-get-attach-num (prompt msg &optional multi)
   "Ask the user with PROMPT for an attachment number for MSG, and
-  ensure it is valid. The number is [1..n] for attachments
-  [0..(n-1)] in the message. If MULTI is nil, return the number for
-  the attachment; otherwise (MULTI is non-nil), accept ranges of
-  attachment numbers, as per `mu4e-split-ranges-to-numbers', and
-  return the corresponding string."
+ensure it is valid. The number is [1..n] for attachments
+\[0..(n-1)] in the message. If MULTI is nil, return the number for
+the attachment; otherwise (MULTI is non-nil), accept ranges of
+attachment numbers, as per `mu4e-split-ranges-to-numbers', and
+return the corresponding string."
   (let* ((count (hash-table-count mu4e~view-attach-map)) (def))
     (when (zerop count) (mu4e-error "No attachments for this message"))
     (if (not multi)
@@ -903,8 +905,9 @@ number ATTNUM."
 
 
 (defun mu4e-view-save-attachment-single (&optional msg attnum)
-  "Save attachment number ATTNUM (or ask if nil) from MSG (or
-message-at-point if nil) to disk."
+  "Save attachment number ATTNUM from MSG.
+If MSG is nil use the message returned by `message-at-point'.
+If ATTNUM is nil ask for the attachment number."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (attnum (or attnum
@@ -945,17 +948,18 @@ attachments, but as this is the default, you may not need it."
       (mu4e-view-save-attachment-single msg num))))
 
 (defun mu4e-view-save-attachment (&optional multi)
-  "Offer to save attachment(s). If MULTI (prefix-argument) is nil,
-save a single one, otherwise, offer to save a range of
-attachments."
+  "Offer to save attachment(s).
+If MULTI (prefix-argument) is nil, save a single one, otherwise,
+offer to save a range of attachments."
   (interactive "P")
   (if multi
     (mu4e-view-save-attachment-multi)
     (mu4e-view-save-attachment-single)))
 
 (defun mu4e-view-open-attachment (&optional msg attnum)
-  "Open attachment number ATTNUM (or ask if nil) from MSG (or
-message-at-point if nil)."
+  "Open attachment number ATTNUM from MSG.
+If MSG is nil use the message returned by `message-at-point'.
+If ATTNUM is nil ask for the attachment number."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (attnum (or attnum
@@ -976,16 +980,15 @@ message-at-point if nil)."
 
 
 (defun mu4e~view-temp-action (docid index what &optional param)
-  "Open attachment INDEX for message with DOCID, and invoke
-ACTION."
+  "Open attachment INDEX for message with DOCID, and invoke ACTION."
   (interactive)
   (mu4e~proc-extract 'temp docid index nil what param))
 
 (defvar mu4e~view-open-with-hist nil "History list for the open-with argument.")
 
 (defun mu4e-view-open-attachment-with (msg attachnum &optional cmd)
-  "Open MSG's attachment ATTACHNUM with CMD; if CMD is nil, ask
-user for it."
+  "Open MSG's attachment ATTACHNUM with CMD.
+If CMD is nil, ask user for it."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
 	  (cmd (or cmd
@@ -1000,8 +1003,8 @@ user for it."
   "History list for the pipe argument.")
 
 (defun mu4e-view-pipe-attachment (msg attachnum &optional pipecmd)
-  "Feed MSG's attachment ATTACHNUM through pipe PIPECMD; if
-PIPECMD is nil, ask user for it."
+  "Feed MSG's attachment ATTACHNUM through pipe PIPECMD.
+If PIPECMD is nil, ask user for it."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
 	  (pipecmd (or pipecmd
@@ -1023,9 +1026,9 @@ PIPECMD is nil, ask user for it."
 
 
 (defun mu4e-view-attachment-action (&optional msg)
-  "Ask user what to do with attachments in MSG (or nil to use
-message-at-point, then do it. The actions are specified in
-`mu4e-view-attachment-actions'."
+  "Ask user what to do with attachments in MSG
+If MSG is nil use the message returned by `message-at-point'.
+The actions are specified in `mu4e-view-attachment-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (actionfunc (mu4e-read-option
@@ -1072,8 +1075,9 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
   (member mu4e-split-view '(horizontal vertical)))
 
 (defun mu4e-view-scroll-up-or-next ()
-  "Scroll-up the current message; if mu4e-view-scroll-to-next is
-non-nil, and we can't scroll-up anymore, go the next message."
+  "Scroll-up the current message.
+If `mu4e-view-scroll-to-next' is non-nil, and we can't scroll-up
+anymore, go the next message."
   (interactive)
   (condition-case nil
     (scroll-up)
@@ -1082,16 +1086,18 @@ non-nil, and we can't scroll-up anymore, go the next message."
 	(mu4e-view-headers-next)))))
 
 (defun mu4e-view-unmark-all ()
-  "If we're in split-view, unmark all messages. Otherwise, warn
-user that unmarking only works in the header list."
+  "If we're in split-view, unmark all messages.
+Otherwise, warn user that unmarking only works in the header
+list."
   (interactive)
   (if (mu4e~view-split-view-p)
     (mu4e~view-in-headers-context (mu4e-mark-unmark-all))
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-unmark ()
-  "If we're in split-view, unmark message at point. Otherwise, warn
-user that unmarking only works in the header list."
+  "If we're in split-view, unmark message at point.
+Otherwise, warn user that unmarking only works in the header
+list."
   (interactive)
   (if (mu4e~view-split-view-p)
     (mu4e-view-mark-for-unmark)
@@ -1188,8 +1194,9 @@ or message-at-point."
 
 
 (defun mu4e~view-quit-buffer ()
-  "Quit the mu4e-view buffer. This is a rather complex function, to
-ensure we don't disturb other windows."
+  "Quit the mu4e-view buffer.
+This is a rather complex function, to ensure we don't disturb
+other windows."
   (interactive)
   (unless (eq major-mode 'mu4e-view-mode)
     (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
