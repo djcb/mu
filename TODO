@@ -16,7 +16,8 @@
   - fix logging
 
 *** mu4e
-
+    
+  - special-case replying to messages sent by self
   - identities (see Jacek's 'mu4e: From field in replies' mail)
     ==> [ workaround available, using mu4e-pre-compose-hook, dynamic folders ]
   - new-mail warning
