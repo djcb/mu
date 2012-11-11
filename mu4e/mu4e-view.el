@@ -518,11 +518,9 @@ at POINT, or if nil, at (point)."
 
       ;; change the number of headers
       (define-key map (kbd "C-+") 'mu4e-headers-split-view-resize)
-      (define-key map (kbd "C--")
-	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
-      (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-resize)
-      (define-key map (kbd "<C-kp-subtract>")
-	(lambda () (interactive) (mu4e-headers-split-view-resize -1)))
+      (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
+      (define-key map (kbd "<C-kp-add>")      'mu4e-headers-split-view-resize)
+      (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
 
       ;; intra-message navigation
       (define-key map (kbd "SPC") 'mu4e-view-scroll-up-or-next)
