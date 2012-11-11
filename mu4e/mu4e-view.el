@@ -1099,18 +1099,14 @@ user that unmarking only works in the header list."
 
 (defmacro mu4e~view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for-MARK."
-  (let ((funcname (intern (concat "mu4e-view-mark-for-" (symbol-name mark))))
-	 (docstring (format "Mark the current message for %s."
-		      (symbol-name mark))))
-    `(defun ,funcname () ,docstring
-       (interactive)
-       (mu4e~view-in-headers-context
-	 (mu4e-headers-mark-and-next (quote ,mark))))))
-
-;; would be cool to do something like the following, but somehow, I can't get
-;; the quoting right...
-;; (dolist (mark '(move trash refile delete flag unflag unmark deferred))
-;;   (mu4e~view-defun-mark-for mark))
+  (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
+	(docstring (format "Mark the current message for %s." mark)))
+    `(progn
+       (defun ,funcname () ,docstring
+	 (interactive)
+	 (mu4e~view-in-headers-context
+	  (mu4e-headers-mark-and-next ',mark)))
+       (put ',funcname 'definition-name ',mark))))
 
 (mu4e~view-defun-mark-for move)
 (mu4e~view-defun-mark-for trash)
