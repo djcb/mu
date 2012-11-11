@@ -118,7 +118,7 @@ search."
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
-(defvar mu4e-bookmarks
+(defcustom mu4e-bookmarks
   '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
      ("date:today..now"                  "Today's messages"     ?t)
      ("date:7d..now"                     "Last 7 days"          ?w)
@@ -128,7 +128,11 @@ These will show up in the main screen. Each of the list elements
 is a three-element list of the form (QUERY DESCRIPTION KEY),
 where QUERY is a string with a mu query, DESCRIPTION is a short
 description of the query (this will show up in the UI), and KEY
-is a shortcut key for the query.")
+is a shortcut key for the query."
+  :type '(repeat (list (string :tag "Query")
+		   (string :tag "Description")
+		   character))
+  :group 'mu4e)
 
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
