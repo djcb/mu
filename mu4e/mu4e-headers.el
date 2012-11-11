@@ -423,15 +423,14 @@ after the end of the search results."
 
 (defmacro mu4e~headers-defun-mark-for (mark)
   "Define a function mu4e~headers-mark-MARK."
-  (let ((funcname (intern (concat "mu4e-headers-mark-for-" (symbol-name mark))))
-	 (docstring (concat "Mark header at point with " (symbol-name mark) ".")))
-     `(defun ,funcname () ,docstring
-	(interactive)
-	(mu4e-headers-mark-and-next (quote ,mark)))))
+  (let ((funcname (intern (format "mu4e-headers-mark-for-%s" mark)))
+	(docstring (format "Mark header at point with %s." mark)))
+    `(progn
+       (defun ,funcname () ,docstring
+	 (interactive)
+	 (mu4e-headers-mark-and-next ',mark))
+       (put ',funcname 'definition-name ',mark))))
 
-;; define our mark functions; there must be some way to do this in a loop but
-;; since `mu4e~headers-defun-mark-func' is a macro, the argument must be a
-;; literal value.
 (mu4e~headers-defun-mark-for refile)
 (mu4e~headers-defun-mark-for something)
 (mu4e~headers-defun-mark-for delete)
@@ -639,7 +638,7 @@ after the end of the search results."
 	      (if width
 		(truncate-string-to-width name width 0 ?\s t)
 		name)
-	      'face (if arrow 'bold 'fixed-pitch)
+	      'face (when arrow 'bold)
 	      'help-echo help
 	      'mouse-face (when sortable 'highlight)
 	      'keymap (when sortable map)
