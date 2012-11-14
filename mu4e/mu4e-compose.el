@@ -520,6 +520,13 @@ Ie. either 'name <email>' or 'email')."
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)
+;; Without this `mail-user-agent' cannot be set to `mu4e-user-agent'
+;; through customize, as the custom type expects a function.  Not
+;; sure whether this function is actually ever used; if it is then
+;; returning the symbol is probably the correct thing to do, as other
+;; such functions suggest.
+(defun mu4e-user-agent ()
+  'mu4e-user-agent)
 
 (defun mu4e~compose-browse-url-mail (url &optional ignored)
   "Adapter for `browse-url-mailto-function."
