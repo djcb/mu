@@ -145,7 +145,8 @@ Also see `mu4e-headers-visible-lines'
 and `mu4e-headers-visible-columns'."
   :type '(choice (const :tag "Split horizontally" horizontal)
                  (const :tag "Split vertically" vertical)
-                 (const :tag "Don't split" nil)))
+                 (const :tag "Don't split" nil))
+  :group 'mu4e-headers)
 
 (defcustom mu4e-show-images nil
   "Whether to automatically display attached images in the message
