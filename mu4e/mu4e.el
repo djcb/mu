@@ -52,7 +52,7 @@
 (setq mu4e-remove-func  'mu4e~headers-remove-handler)
 (setq mu4e-erase-func   'mu4e~headers-clear)
 
-;; these ones are define in mu4e-utils
+;; these ones are defined in mu4e-utils
 (setq mu4e-info-func    'mu4e-info-handler)
 (setq mu4e-error-func   'mu4e-error-handler)
 ;; note: mu4e-utils also dynamically (temporarily)
@@ -71,6 +71,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;###autoload
 (defun mu4e ()
   "Start mu4e."
   (interactive)
