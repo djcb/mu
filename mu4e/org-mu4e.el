@@ -37,7 +37,8 @@
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
-  :group 'org-mu4e)
+  :group 'mu4e
+  :group 'org)
 
 (defcustom org-mu4e-link-desc-func
   (lambda (msg) (or (plist-get msg :subject) "No subject"))

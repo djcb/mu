@@ -31,7 +31,7 @@
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"
-  :group 'local)
+  :group 'mail)
 
 (defcustom mu4e-mu-home nil
   "Location of the mu homedir, or nil for the default."
@@ -145,7 +145,8 @@ Also see `mu4e-headers-visible-lines'
 and `mu4e-headers-visible-columns'."
   :type '(choice (const :tag "Split horizontally" horizontal)
                  (const :tag "Split vertically" vertical)
-                 (const :tag "Don't split" nil)))
+                 (const :tag "Don't split" nil))
+  :group 'mu4e-headers)
 
 (defcustom mu4e-show-images nil
   "Whether to automatically display attached images in the message
