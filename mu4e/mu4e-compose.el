@@ -482,6 +482,7 @@ Ie. either 'name <email>' or 'email')."
 ;; mu4e-compose-func and mu4e-send-func are wrappers so we can set ourselves
 ;; as default emacs mailer (define-mail-user-agent etc.)
 
+;;;###autoload
 (defun mu4e~compose-mail (&optional to subject other-headers continue
 			   switch-function yank-action send-actions return-action)
   "This is mu4e's implementation of `compose-mail'."
@@ -515,11 +516,19 @@ Ie. either 'name <email>' or 'email')."
       (message-goto-body))))
 
 ;; happily, we can re-use most things from message mode
+;;;###autoload
 (define-mail-user-agent 'mu4e-user-agent
   'mu4e~compose-mail
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)
+;; Without this `mail-user-agent' cannot be set to `mu4e-user-agent'
+;; through customize, as the custom type expects a function.  Not
+;; sure whether this function is actually ever used; if it is then
+;; returning the symbol is probably the correct thing to do, as other
+;; such functions suggest.
+(defun mu4e-user-agent ()
+  'mu4e-user-agent)
 
 (defun mu4e~compose-browse-url-mail (url &optional ignored)
   "Adapter for `browse-url-mailto-function."
@@ -540,3 +549,7 @@ Ie. either 'name <email>' or 'email')."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-compose)
+
+;; Load mu4e completely even when this file was loaded through
+;; autoload.
+(require 'mu4e)
