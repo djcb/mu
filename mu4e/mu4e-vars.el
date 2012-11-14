@@ -31,7 +31,7 @@
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"
-  :group 'local)
+  :group 'mail)
 
 (defcustom mu4e-mu-home nil
   "Location of the mu homedir, or nil for the default."
