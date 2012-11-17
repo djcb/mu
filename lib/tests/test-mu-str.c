@@ -465,6 +465,36 @@ test_mu_str_subject_normalize (void)
 
 
 
+static void
+test_mu_term_fixups (void)
+{
+	unsigned u;
+	struct {
+		const gchar *expr, *expected;
+	} testcases [] = {
+		{ "date:19700101", "date:19700101..19700101" },
+		{ "date:19700101..19700101", "date:19700101..19700101" },
+		{ "(date:20121107))", "(date:20121107..20121107))" },
+		{ "maildir:/somepath", "maildir:/somepath" },
+		{ "([maildir:/somepath]", "([maildir:/somepath]" },
+		/* add more */
+		{ "({", "({" },
+		{ "({abc", "({abc" },
+		{ "abc)}", "abc)}" },
+		{ "", "" }
+	};
+
+ 	for (u = 0; u != G_N_ELEMENTS(testcases); ++u) {
+		gchar *prep;
+		prep = mu_str_xapian_fixup_terms (testcases[u].expr);
+		g_assert_cmpstr (prep, ==, testcases[u].expected);
+		g_free (prep);
+	}
+}
+
+
+
+
 
 
 int
@@ -518,6 +548,10 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/mu-str/mu_str_subject_normalize",
 			 test_mu_str_subject_normalize);
+
+	/* mu_str_xapian_fixup_terms */
+	g_test_add_func ("/mu-str/mu_term_fixups",
+			 test_mu_term_fixups);
 
 
 	/* FIXME: add tests for mu_str_flags; but note the

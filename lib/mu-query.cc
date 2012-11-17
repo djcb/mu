@@ -325,6 +325,10 @@ mu_query_preprocess (const char *query, GError **err)
 		 * xapian-pfx with '_' */
 		cur->data = mu_str_xapian_escape (data, TRUE, NULL);
 		g_free (data);
+		/* run term fixups */
+		data = (gchar*)cur->data;
+		cur->data = mu_str_xapian_fixup_terms (data);
+		g_free (data);
 	}
 
 	myquery = mu_str_from_list (parts, ' ');

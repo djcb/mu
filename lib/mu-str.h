@@ -178,6 +178,17 @@ char* mu_str_xapian_escape (const char *query, gboolean esc_space,
 			    GStringChunk *strchunk)  G_GNUC_WARN_UNUSED_RESULT;
 
 
+/**
+ * Fixup values for some fields in the DWIM manner:
+ * - if term is date:YYYYMMDD, replace it with the range
+ *   date:YYYYMMDD..YYYYMMDD.
+ *
+ * @param query a query string
+ *
+ * @return the fixup'd string that must be g_free()d
+ * after use or NULL in case of error.
+ */
+gchar* mu_str_xapian_fixup_terms (const gchar *term);
 
 /**
  * parse a byte size; a size is a number, with optionally a
