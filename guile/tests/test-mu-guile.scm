@@ -97,9 +97,9 @@ exec guile -e main -s $0 $@
 (define (test-stats)
   "Test statistical functions."
   ;; average
-  (num-equal-or-exit (mu:average mu:size) 81709/12)
+  (num-equal-or-exit (mu:average mu:size) 40859/6)
   (num-equal-or-exit (floor (mu:stddev mu:size))
-    (floor 13414.7101616927))
+    (floor 13413.7101616927))
   (num-equal-or-exit (mu:max mu:size) 46230)
   (num-equal-or-exit (mu:min mu:size) 111))
 

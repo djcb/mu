@@ -459,6 +459,19 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 			     (MuMsgPartForeachFunc)each_part, &pdata);
 }
 
+/* escape the body -- for now, only replace '-' with '_' */
+static void
+body_escape_in_place (char *body)
+{
+	while (*body) {
+		switch (*body) {
+		case '-': *body = '_';
+		default: break;
+		}
+		++body;
+	}
+}
+
 
 static void
 add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
@@ -482,6 +495,8 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 
 	/* norm is allocated on strchunk, no need for freeing */
 	norm = mu_str_normalize (str, TRUE, strchunk);
+	body_escape_in_place (norm);
+
 	termgen.index_text_without_positions (norm, 1, prefix(mfid));
 }
 
