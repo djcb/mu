@@ -27,7 +27,7 @@
    4. source files should not exceed 1000 lines
 
    5. a function's cyclomatic complexity should not exceed 10 (there could be
-      rare exceptions, currently there are none in mu). You can test the
+      rare exceptions, see the toplevel Makefile.am). You can test the
       cyclomatic complexity with the pmccabe tool; if you installed that, you
       can use 'make cc10' to list all functions that violate this rule; there
       should be none.
@@ -45,7 +45,7 @@
       name, so:
 
       int
-      foo (const char* bar)
+      foo (const char *bar)
       {
 	....
       }
@@ -54,9 +54,11 @@
 
    10. in C code, variable-declarations are at the beginning of a block; in
        principle, C++ follows that same guideline, unless for heavy yet
-       uncertain initializations following RAII. In C code, the declaration does
-       *not* initialize the variable. This will give the compiler a chance to
-       warn us if the variable is not initialized in a certain code path.
+       uncertain initializations following RAII. 
+       
+       In C code, the declaration does *not* initialize the variable. This will
+       give the compiler a chance to warn us if the variable is not initialized
+       in a certain code path.
 
    11. returned strings of type char* must be freed by the caller; if they are
        not to be freed, 'const char*' should be used instead
