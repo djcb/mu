@@ -233,7 +233,7 @@ marking if it still had that."
 	(setq ;; buffer local
 	  mu4e~view-msg msg
 	  mu4e~view-headers-buffer headersbuf))
-	
+
 	(unless (or refresh embedded)
 	  ;; no use in trying to set flags again, or when it's an embedded
 	  ;; message
@@ -390,9 +390,12 @@ at POINT, or if nil, at (point)."
 	    ;; user-visible numbers and the part indices
 	    (remove-if-not
 	      (lambda (part)
-		(let ((mtype (mu4e-message-part-field part :mime-type))
-		       (isattach  (member 'attachment
-				    (mu4e-message-part-field part :type))))
+		(let* ((mtype (mu4e-message-part-field part :mime-type))
+			(attachtype (mu4e-message-part-field part :type))
+			(isattach (or ;; we lost parts marked either
+				      ;; "attachment" or "inline" as attachment.
+				    (member 'attachment attachtype)
+				    (member 'inline attachtype))))
 		  (or ;; remove if it's not an attach *or* if it's an
 		      ;; image/audio/application type (but not a signature)
 		    isattach
@@ -671,7 +674,7 @@ FUNC should be a function taking two arguments:
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t)))
- 
+
 (defun mu4e~view-mark-as-read-maybe ()
   "Clear the current message's New/Unread status and set it to Seen.
 If the message is not New/Unread, do nothing."
