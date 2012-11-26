@@ -430,7 +430,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-4-face
-  '((t :inherit font-lock-pseudo-keyword-face :bold nil :italic t))
+  '((t :inherit font-lock-keyword-face :bold nil :italic t))
   "Face for cited message parts (level 4)."
   :group 'mu4e-faces)
 
