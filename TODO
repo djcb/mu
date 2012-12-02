@@ -9,6 +9,7 @@
   - put threading information in the database, and enable getting the complete
      threads when searching
   - refactor fill_database function in test cases
+  - don't show duplicate e-mails (i.e.. for Gmail); check the message-id
 
 *** mu-guile
 
@@ -42,6 +43,8 @@
   - show counts of messages in searches (in main view)
   - show flush only if there's something to flush (and # of flushables)
   - fix unsafe temp-file handling
+  - make copy paste name/address in mu4e-view possible
+
 
 * Done (0.9.9.x)
 
