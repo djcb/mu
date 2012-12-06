@@ -380,7 +380,6 @@ typedef struct _ServerContext ServerContext;
 
 typedef MuError (*CmdFunc) (ServerContext*,GSList*,GError**);
 
-
 /* 'add' adds a message to the database, and takes two parameters:
  * 'path', which is the full path to the message, and 'maildir', which
  * is the maildir this message lives in (e.g. "/inbox"). response with
@@ -392,6 +391,8 @@ cmd_add (ServerContext *ctx, GSList *args, GError **err)
 {
 	unsigned docid;
 	const char *maildir, *path;
+	MuMsg *msg;
+	gchar *sexp;
 
 	GET_STRING_OR_ERROR_RETURN (args, "path", &path, err);
 	GET_STRING_OR_ERROR_RETURN (args, "maildir", &maildir, err);
@@ -403,6 +404,15 @@ cmd_add (ServerContext *ctx, GSList *args, GError **err)
 		gchar *escpath;
 		escpath = mu_str_escape_c_literal (path, TRUE);
 		print_expr ("(:info add :path %s :docid %u)", escpath, docid);
+
+		msg = mu_store_get_msg (ctx->store, docid, err);
+		if (msg) {
+			sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY);
+			print_expr ("(:update %s :move nil)", sexp);
+
+			mu_msg_unref(msg);
+			g_free (sexp);
+		}
 		g_free (escpath);
 	}
 
