@@ -169,14 +169,16 @@ debuggable (backtrace) error."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (error "%s" (apply 'mu4e-format frm args)))
 
+;; the user-error function is only available in emacs-trunk
+(unless (fboundp 'user-error)
+  (defalias 'user-error 'error))
+
 (defun mu4e-warn (frm &rest args)
   "Create [mu4e]-prefixed warning based on format FRM and ARGS.
 Does a local-exit and does not return. In emacs versions below
 24.2, the functions is the same as `mu4e-error'."
   (mu4e-log 'error (apply 'mu4e-format frm args))
-  (if (fboundp 'user-error)
-    (user-error "%s" (apply 'mu4e-format frm args)) ;; only in emacs-trunk
-    (error "%s" (apply 'mu4e-format frm args))))
+  (user-error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e~read-char-choice (prompt choices)
   "Compatiblity wrapper for `read-char-choice'.
@@ -218,7 +220,7 @@ Function will return the cdr of the list element."
 		;; try to detect old-style options, and warn
 		(when (characterp (car-safe (cdr-safe option)))
 		  (mu4e-error (concat "Please use the new format for options/actions; "
-			   "see the manual")))
+				"see the manual")))
 		(let* ((kar (substring (car option) 0 1))
 			(val (cdr option)))
 		  (concat
@@ -628,7 +630,7 @@ successful, call FUNC (if non-nil) afterwards."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; getting mail / updating the index 
+;; getting mail / updating the index
 ;;
 ;;
 (defvar mu4e~update-timer nil
@@ -694,7 +696,7 @@ window."
 	(switch-to-buffer buf)
 	(set-window-dedicated-p win t)
 	(erase-buffer)
-	(insert "\n"))) ;; FIXME -- needed so output starts   
+	(insert "\n"))) ;; FIXME -- needed so output starts
     (set-process-sentinel proc
       (lambda (proc msg)
 	(let* ((status (process-status proc))
@@ -714,7 +716,7 @@ window."
       (process-put proc 'x-interactive (not run-in-background))
       (set-process-filter proc 'mu4e~get-mail-process-filter))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -889,6 +891,11 @@ displaying it). Do _not_ bury the current buffer, though."
   (goto-char (point-min)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mu4e-refresh-message (path maildir)
+  "Re-parse message at PATH and MAILDIR; if this works, we will
+receive (:info add :path <path> :docid <docid>) as well as (:update
+<msg-sexp>)."
+  (mu4e~proc-add path maildir))
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

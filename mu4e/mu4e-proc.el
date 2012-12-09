@@ -334,7 +334,7 @@ will be called for, resp., a message (header row) or an error."
     ;; sortfield is e.g. ':subject'; this removes the ':'
     (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
     ;; TODO: use ascending/descending in backend too (it's clearer than 'reverse'
-    (if (eq sortdir 'descending) "true" "false") 
+    (if (eq sortdir 'descending) "true" "false")
     (if maxnum maxnum -1)))
 
 (defun mu4e~proc-move (docid-or-msgid &optional maildir flags)
@@ -397,7 +397,7 @@ of 'my' email addresses (see `mu4e-user-mail-address-list')."
   "Add the message at PATH to the database.
 With MAILDIR set to the maildir this message resides in,
 e.g. '/drafts'; if this works, we will receive (:info add :path
-<path> :docid <docid>)."
+<path> :docid <docid>) as well as (:update <msg-sexp>)."
   (mu4e~proc-send-command "add path:\"%s\" maildir:\"%s\""
     path maildir))
 

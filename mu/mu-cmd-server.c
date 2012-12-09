@@ -407,7 +407,8 @@ cmd_add (ServerContext *ctx, GSList *args, GError **err)
 
 		msg = mu_store_get_msg (ctx->store, docid, err);
 		if (msg) {
-			sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY);
+			sexp = mu_msg_to_sexp (msg, docid, NULL,
+					       MU_MSG_OPTION_VERIFY);
 			print_expr ("(:update %s :move nil)", sexp);
 
 			mu_msg_unref(msg);
