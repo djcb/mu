@@ -142,11 +142,15 @@ the original message ORIGMSG, and whether it's a reply-all."
 	      (if (or mu4e-compose-keep-self-cc (null user-mail-address))
 		cc-lst
 		(delete-if
-		  (lambda (cc-cell)
-		    (mu4e~draft-address-cell-equal cc-cell
-		      (cons nil user-mail-address)))
-		  cc-lst))))
+		 (lambda (cc-cell)
+		   (car (memq t (mapcar
+				 (lambda (is-me)
+				   (mu4e~draft-address-cell-equal cc-cell
+								  (cons nil is-me)))
+				 mu4e-user-mail-address-list))))
+		 cc-lst))))
       cc-lst)))
+
 
 (defun mu4e~draft-recipients-construct (field origmsg &optional reply-all)
   "Create value (a string) for the recipient field FIELD (a
