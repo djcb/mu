@@ -331,7 +331,7 @@ test_mu_query_accented_chars_02 (void)
 		{ "t:Kröger", 1},
 		{ "s:MotorHeäD", 1},
 		{ "queensryche", 1},
-		{ "Queensrÿche", 1},
+		{ "Queensrÿche", 1}
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
@@ -339,6 +339,35 @@ test_mu_query_accented_chars_02 (void)
 							 queries[i].query),
 				  ==, queries[i].count);
 }
+
+
+static void
+test_mu_query_accented_chars_fraiche (void)
+{
+	int i;
+
+	QResults queries[] = {
+		{ "crème fraîche", 1},
+		{ "creme fraiche", 1},
+		{ "fraîche crème", 1},
+		{ "будланула", 1},
+		{ "БУДЛАНУЛА", 1},
+		{ "CRÈME FRAÎCHE", 1},
+		{ "CREME FRAICHE", 1}
+	};
+
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+
+		if (g_test_verbose ())
+			g_print ("'%s'\n", queries[i].query);
+
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
+							 queries[i].query),
+				  ==, queries[i].count);
+	}
+}
+
+
 
 
 static void
@@ -600,6 +629,9 @@ main (int argc, char *argv[])
 			 test_mu_query_accented_chars_01);
 	g_test_add_func ("/mu-query/test-mu-query-accented-chars-2",
 			 test_mu_query_accented_chars_02);
+	g_test_add_func ("/mu-query/test-mu-query-accented-chars-fraiche",
+			 test_mu_query_accented_chars_fraiche);
+
 	g_test_add_func ("/mu-query/test-mu-query-wildcards",
 			 test_mu_query_wildcards);
 	g_test_add_func ("/mu-query/test-mu-query-sizes",

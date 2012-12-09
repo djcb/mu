@@ -120,6 +120,7 @@ EXTRA_DIST=						\
 	testdir2/bar/new/.noindex			\
 	testdir2/Foo/cur/mail5				\
 	testdir2/Foo/cur/arto.eml			\
+	testdir2/Foo/cur/fraiche.eml			\
 	testdir2/Foo/tmp/.noindex			\
 	testdir2/Foo/new/.noindex			\
 	testdir2/wom_bat/cur/atomic			\

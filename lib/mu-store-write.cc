@@ -314,7 +314,7 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 
 	/* now, let's create some search terms... */
 	if (mu_msg_field_normalize (mfid))
-		val = mu_str_normalize_in_place_try (val, TRUE, strchunk);
+		val = mu_str_normalize_in_place (val, TRUE, strchunk);
 
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;

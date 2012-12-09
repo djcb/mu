@@ -123,7 +123,7 @@ test_mu_index (void)
 	store = mu_store_new_read_only (xpath, NULL);
 	g_assert (store);
 
-	g_assert_cmpuint (mu_store_count (store, NULL), ==, 12);
+	g_assert_cmpuint (mu_store_count (store, NULL), ==, 13);
 	mu_store_unref (store);
 
 	g_free (xpath);
@@ -133,10 +133,8 @@ test_mu_index (void)
 static void
 test_mu_find_empty_query (void)
 {
-	search ("\"\"", 12);
+	search ("\"\"", 13);
 }
-
-
 
 
 static void
@@ -185,8 +183,8 @@ static void
 test_mu_find_mime (void)
 {
 	search ("mime:image/jpeg", 1);
-	search ("mime:text/plain", 12);
-	search ("y:text*", 12);
+	search ("mime:text/plain", 13);
+	search ("y:text*", 13);
 	search ("y:image*", 1);
 	search ("mime:message/rfc822", 2);
 }

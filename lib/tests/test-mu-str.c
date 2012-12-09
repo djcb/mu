@@ -149,6 +149,9 @@ test_mu_str_normalize_02 (void)
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *str;
+		if (g_test_verbose())
+			g_print ("[%s] <=> [%s] <=> [%s]\n", words[i].word, words[i].norm,
+				 mu_str_normalize (words[i].word, FALSE, NULL));
 		str = mu_str_normalize (words[i].word, FALSE, NULL);
 		g_assert_cmpstr (str, ==, words[i].norm);
 		g_free (str);
@@ -357,89 +360,11 @@ test_mu_str_to_list (void)
 static void
 test_mu_str_to_list_strip (void)
 {
-	{
-		const char *items[]= {"foo", "bar", "cuux", NULL};
-		GSList *lst = mu_str_to_list ("foo@bar @cuux",'@', TRUE);
-		assert_cmplst (lst, items);
+	const char *items[]= {"foo", "bar", "cuux", NULL};
+	GSList *lst = mu_str_to_list ("foo@bar @cuux",'@', TRUE);
+	assert_cmplst (lst, items);
 		mu_str_free_list (lst);
-	}
 }
-
-
-
-
-/* static void */
-/* test_mu_str_guess_first_name (void) */
-/* { */
-/* 	int i; */
-
-/* 	struct { */
-/* 		char *src, *exp; */
-/* 	} tests[] = { */
-/* 		{ "Richard M. Stallman", "Richard M." }, */
-/* 		{ "John Rambo", "John" }, */
-/* 		{ "Ivanhoe", "Ivanhoe" }, */
-/* 		{ "", "" } */
-/* 	}; */
-
-/* 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) { */
-/* 		gchar *s; */
-
-/* 		s  = mu_str_guess_first_name (tests[i].src); */
-/* 		g_assert_cmpstr (s, ==, tests[i].exp); */
-/* 		g_free (s); */
-/* 	} */
-/* } */
-
-
-/* static void */
-/* test_mu_str_guess_last_name (void) */
-/* { */
-/* 	int i; */
-
-/* 	struct { */
-/* 		char *src, *exp; */
-/* 	} tests[] = { */
-/* 		{ "Richard M. Stallman", "Stallman" }, */
-/* 		{ "John Rambo", "Rambo" }, */
-/* 		{ "Ivanhoe", "" }, */
-/* 		{ "", "" } */
-/* 	}; */
-
-/* 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) { */
-/* 		gchar *s; */
-
-/* 		s  = mu_str_guess_last_name (tests[i].src); */
-/* 		g_assert_cmpstr (s, ==, tests[i].exp); */
-/* 		g_free (s); */
-/* 	} */
-/* } */
-
-
-
-/* static void */
-/* test_mu_str_guess_nick (void) */
-/* { */
-/* 	int i; */
-
-/* 	struct { */
-/* 		char *src, *exp; */
-/* 	} tests[] = { */
-/* 		{ "Richard M. Stallman", "RichardMS" }, */
-/* 		{ "John Rambo", "JohnR" }, */
-/* 		{ "Ivanhoe", "Ivanhoe" }, */
-/* 		{ "", "" } */
-/* 	}; */
-
-/* 	for (i = 0; i != G_N_ELEMENTS(tests); ++i) { */
-/* 		gchar *s; */
-
-/* 		s  = mu_str_guess_nick (tests[i].src); */
-/* 		g_assert_cmpstr (s, ==, tests[i].exp); */
-/* 		g_free (s); */
-/* 	} */
-/* } */
-
 
 
 static void
