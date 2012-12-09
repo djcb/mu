@@ -200,8 +200,8 @@ mu_container_remove_child (MuContainer *c, MuContainer *child)
 	g_return_val_if_fail (c, NULL);
 	g_return_val_if_fail (child, NULL);
 
-	g_assert (!child->child);
-	g_return_val_if_fail (!child->child, NULL);
+	/* g_assert (!child->child); */
+	/* g_return_val_if_fail (!child->child, NULL); */
 	g_return_val_if_fail (c != child, NULL);
 
 	c->child = mu_container_remove_sibling (c->child, child);

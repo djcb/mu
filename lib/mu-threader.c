@@ -285,8 +285,18 @@ handle_references (GHashTable *id_table, MuContainer *c)
 
            /* optimization: if the the message was newly added, it's by
 	    * definition not reachable yet */
-	if (child_elligible (parent, c, created))
+
+	if (parent && c && !(c->child && mu_container_reachable (c->child, parent))) {
+
+		/* if c already has a parent, remove c from its parent children
+		   and reparent it, as now we know who is c's parent reliably */
+		if (c->parent) {
+			mu_container_remove_child(c->parent, c);
+			c->next = c->last = c->parent = NULL;
+		}
+
 		parent = mu_container_append_children (parent, c);
+	}
 }
 
 
