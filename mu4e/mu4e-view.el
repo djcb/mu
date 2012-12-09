@@ -228,19 +228,19 @@ marking if it still had that."
 
 	(if embedded
 	  (local-set-key "q" 'kill-buffer-and-window)
-	  (setq mu4e~view-buffer buf))
+	  (setq mu4e~view-buffer buf)))
+
+    (unless (eq major-mode 'mu4e-view-mode)
+      (mu4e-view-mode))
 
 	(setq ;; buffer local
-	  mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf))
+      mu4e~view-msg msg
+	  mu4e~view-headers-buffer headersbuf)
 
-	(unless (or refresh embedded)
+    (unless (or refresh embedded)
 	  ;; no use in trying to set flags again, or when it's an embedded
 	  ;; message
-	  (mu4e~view-mark-as-read-maybe))
-
-      ;; and switch!
-      (mu4e-view-mode))))
+	  (mu4e~view-mark-as-read-maybe)))))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)

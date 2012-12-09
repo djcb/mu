@@ -172,11 +172,52 @@ store your org-contacts."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-git-apply-patch (msg)
   "Apply the git [patch] message."
-  (let ((path (read-directory-name "Target directory: " nil "~/" t) ))    
+  (let ((path (read-directory-name "Target directory: " nil "~/" t) ))
     (shell-command
       (format "cd %s; git apply %s"
 	path
 	(mu4e-message-field msg :path)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mu4e-action-tags-header "X-Keywords"
+  "Header where tags are stored.")
+
+(defun mu4e-action-retag-message (msg)
+  "Change tags of a message. Example: +tag \"+long tag\" -oldtag
+   adds 'tag' and 'long tag', and removes oldtag."
+  (let* ((retag (read-string "Tags: "))
+         (path (mu4e-message-field msg :path))
+         (maildir (mu4e-message-field msg :maildir))
+         (oldtags (mu4e-message-field msg :tags))
+         (header  mu4e-action-tags-header)
+         (sep     (cond ((string= header "Keywords") " ")
+                        ((string= header "X-Label") " ")
+                        ((string= header "X-Keywords") ", ")
+                        (t ", ")))
+         (taglist (if oldtags (copy-sequence oldtags) '()))
+         tagstr)
+
+    (dolist (tag (split-string-and-unquote retag) taglist)
+            (cond ((string-match "\\+\\(.+\\)" tag)
+                   (setq taglist (push (match-string 1 tag) taglist)))
+                  ((string-match "\\-\\(.+\\)" tag)
+                   (setq taglist (delete (match-string 1 tag) taglist)))
+                  (t
+                   (setq taglist (push tag taglist)))))
+
+    (setq taglist (sort (delete-dups taglist) 'string<))
+    (setq tagstr (mapconcat 'identity taglist sep))
+    (setq tagstr (replace-regexp-in-string "[\\/&]" "\\\\\\&" tagstr))
+
+    ;; replaces keywords with sed, restricted to the header
+    (call-process "sed" nil nil nil "-ine"
+                  (format "1,/^$/s/^%s:.*$/%s: %s/" header header tagstr) path)
+
+    (message (concat "tagging: " (mapconcat 'identity taglist " ")))
+    (mu4e~proc-add path maildir)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
