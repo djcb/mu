@@ -1391,7 +1391,7 @@ message is fully formed when this hook runs. For example, to add a
 (add-hook 'mu4e-compose-mode-hook
   (defun my-add-bcc ()
     "Add a Bcc: header."
-    (message-add-header "Bcc: me@@example.com\n")))
+    (save-excursion (message-add-header "Bcc: me@@example.com\n"))))
 @end lisp
 
 @noindent
