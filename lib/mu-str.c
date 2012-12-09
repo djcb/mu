@@ -501,7 +501,7 @@ mu_str_xapian_escape_in_place_try (char *term, gboolean esc_space, GStringChunk 
 	}
 
 	/* downcase try to remove accents etc. */
-	return mu_str_normalize_in_place_try (term, TRUE, strchunk);
+	return mu_str_normalize_in_place (term, TRUE, strchunk);
 }
 
 char*

@@ -137,8 +137,8 @@ char* mu_str_normalize (const char *str, gboolean downcase,
  * NULL. User only needs to free the returned string if a) return
  * value != str and b) strchunk was not provided.
  */
-char* mu_str_normalize_in_place_try (char *str, gboolean downcase,
-				     GStringChunk *strchunk);
+char* mu_str_normalize_in_place (char *str, gboolean downcase,
+				 GStringChunk *strchunk);
 
 /**
  * escape the string for use with xapian matching. in practice, if the

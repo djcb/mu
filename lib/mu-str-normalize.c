@@ -41,39 +41,9 @@ mu_str_normalize (const char *str, gboolean downcase, GStringChunk *strchunk)
 	else
 		mystr = g_strdup (str);
 
-	return mu_str_normalize_in_place_try (mystr, downcase, strchunk);
+	return mu_str_normalize_in_place (mystr, downcase, strchunk);
 }
 
-
-/* this implementation should work for _all_ locales. */
-static char*
-mu_str_normalize_in_place_generic (char *str, gboolean downcase, GStringChunk *strchunk)
-{
-
-	char *norm;
-	size_t len;
-
-	/* FIXME: add accent-folding etc. */
-	if (!downcase)
-		return str; /* nothing to do */
-
-	len  = strlen (str);
-	norm = g_utf8_strdown (str, len);
-
-
-	if (strlen (norm) > len) {
-		/* this case is rare, but does happen */
-		char *copy;
-		if (!strchunk)
-			return norm;
-		copy = g_string_chunk_insert (strchunk, norm);
-		g_free (norm);
-		return copy;
-	}
-
-	memcpy (str, norm, len);
-	return str;
-}
 
 
 /*
@@ -94,7 +64,7 @@ mu_str_normalize_in_place_generic (char *str, gboolean downcase, GStringChunk *s
  * note-to-self: http://www.geertvanderploeg.com/unicode-gen/
  */
 char*
-mu_str_normalize_in_place_try (char *str, gboolean downcase, GStringChunk *strchunk)
+mu_str_normalize_in_place (char *str, gboolean downcase, GStringChunk *strchunk)
 {
 	const guchar *cur;
 	int i;
@@ -398,12 +368,32 @@ mu_str_normalize_in_place_try (char *str, gboolean downcase, GStringChunk *strch
 
 			default:   str[i++] = *cur; break;
 			}
+
 		} else {
-			/* our fast-path for latin-utf8 does not work -- bummer!
-			 * use something more generic (but a bit slower)
-			 */
-			return mu_str_normalize_in_place_generic (str, downcase, strchunk);
+			/* our fast-path for latin-utf8 does not work
+			 * -- bummer! just append the character then
+			 * */
+			gunichar uc;
+			char buf[7];
+			size_t len1, len2;
+
+			len1 = g_utf8_next_char ((char*)cur) - (char*)cur;
+			uc = g_utf8_get_char ((char*)cur);
+
+			if (downcase)
+				uc = g_unichar_tolower (uc);
+
+			len2 = g_unichar_to_utf8 (uc, buf);
+
+			/* if the new char fits where the old char was,
+			 * change it. otherwise, don't bother. */
+
+			if (len1 == len2) {
+				memcpy (str + i, buf, len2);
+				i += len2;
+			}
 		}
+
 	}
 
 	str[i] = '\0';
