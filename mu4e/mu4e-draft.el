@@ -113,7 +113,7 @@ that, otherwise use the From address. Note, whatever was in the To:
 field before, goes to the Cc:-list (if we're doing a reply-to-all)."
   (let ((reply-to
 	   (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
-    (delete-duplicates reply-to  :test #'mu4e~draft-address-cell-equal)))
+    (delete-duplicates reply-to :test #'mu4e~draft-address-cell-equal)))
 
 
 (defun mu4e~draft-create-cc-lst (origmsg reply-all)
@@ -143,8 +143,10 @@ the original message ORIGMSG, and whether it's a reply-all."
 		cc-lst
 		(delete-if
 		  (lambda (cc-cell)
-		    (mu4e~draft-address-cell-equal cc-cell
-		      (cons nil user-mail-address)))
+		    (member-if
+		      (lambda (addr)
+			(string= (downcase addr) (downcase (cdr cc-cell))))
+		      mu4e-user-mail-address-list))
 		  cc-lst))))
       cc-lst)))
 
