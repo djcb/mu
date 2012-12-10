@@ -213,7 +213,7 @@ store your org-contacts."
     (setq tagstr (replace-regexp-in-string "[\\/&]" "\\\\\\&" tagstr))
 
     ;; replaces keywords with sed, restricted to the header
-    (call-process "sed" nil nil nil "-ine"
+    (call-process "sed" nil nil nil "-i"
       (format "1,/^$/s/^%s:.*$/%s: %s/" header header tagstr) path)
 
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist " ")))
