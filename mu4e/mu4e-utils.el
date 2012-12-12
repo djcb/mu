@@ -280,8 +280,8 @@ the list of maildirs will not change until you restart mu4e."
   "Ask the user for a shortcut (using PROMPT) as defined in
 `mu4e-maildir-shortcuts', then return the corresponding folder
 name. If the special shortcut 'o' (for _o_ther) is used, or if
-`mu4e-maildir-shortcuts is not defined, let user choose from all
-maildirs under `mu4e-maildir."
+`mu4e-maildir-shortcuts' is not defined, let user choose from all
+maildirs under `mu4e-maildir'."
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not mu4e-maildir-shortcuts)
       (ido-completing-read prompt (mu4e-get-maildirs))
