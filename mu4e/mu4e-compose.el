@@ -97,12 +97,12 @@ This is one of the symbols:
 * `trash'   move the sent message to the Trash-folder (`mu4e-trash-folder')
 * `delete'  delete the sent message.
 
-Note, when using GMail/IMAP, you should set this to either 'trash
-or 'delete, since GMail already takes care of keeping copies in the
-sent folder."
-  :type '(choice (const sent :tag "move message to mu4e-sent-folder")
-		 (const sent :tag "move message to mu4e-trash-folder")
-		 (const sent :tag "delete message"))
+Note, when using GMail/IMAP, you should set this to either
+`trash' or `delete', since GMail already takes care of keeping
+copies in the sent folder."
+  :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
+		 (const :tag "move message to mu4e-trash-folder" trash)
+		 (const :tag "delete message" delete))
   :safe 'symbolp
   :group 'mu4e-compose)
 
