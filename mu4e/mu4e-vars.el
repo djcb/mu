@@ -293,15 +293,17 @@ re-edited, and is nil otherwise."
 
 
 (defcustom mu4e-maildir-shortcuts nil
-  "A list of maildir shortcuts to enable quickly going to the
-particular for, or quickly moving messages towards them (i.e.,
-archiving or refiling). The list contains elements of the form
-\(maildir . shortcut), where MAILDIR is a maildir (such as
-\"/archive/\"), and shortcut a single shortcut character. With
-this, in the header buffer and view buffer you can execute
-`mu4e-mark-for-move-quick' (or 'm', by default) or
-`mu4e-jump-to-maildir' (or 'j', by default), followed by the
-designated shortcut character for the maildir.")
+  "A list of maildir shortcuts.
+This enables quickly going to the particular for, or quickly
+moving messages towards them (i.e., archiving or refiling). The
+list contains elements of the form (maildir . shortcut), where
+MAILDIR is a maildir (such as \"/archive/\"), and shortcut a
+single shortcut character. With this, in the header buffer and
+view buffer you can execute `mu4e-mark-for-move-quick' (or 'm',
+by default) or `mu4e-jump-to-maildir' (or 'j', by default),
+followed by the designated shortcut character for the maildir."
+  :type '(repeat (cons (string :tag "Maildir") character))
+  :group 'mu4e-folders)
 
 ;; Faces
 (defgroup mu4e-faces nil

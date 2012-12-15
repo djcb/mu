@@ -656,6 +656,12 @@ FUNC should be a function taking two arguments:
 
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
 
+(defcustom mu4e-view-mode-hook nil
+  "Hook run when entering Mu4e-View mode."
+  :options '(turn-on-visual-line-mode)
+  :type 'hook
+  :group 'mu4e-view)
+
 (defvar mu4e-view-mode-abbrev-table nil)
 (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
   "Major mode for viewing an e-mail message in mu4e.
