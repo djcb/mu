@@ -183,12 +183,16 @@ store your org-contacts."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-action-tags-header "X-Keywords"
-  "Header where tags are stored.")
+  "Header where tags are stored. Used by `mu4e-action-retag-message'.
+   Make sure it is one of the headers mu recognizes for storing
+   tags: X-Keywords, X-Label, Keywords. Also note that changing
+   this setting on already tagged messages can lead to messages
+   with multiple tags headers")
 
-(defun mu4e-action-retag-message (msg)
+(defun mu4e-action-retag-message (msg &optional retag-arg)
   "Change tags of a message. Example: +tag \"+long tag\" -oldtag
    adds 'tag' and 'long tag', and removes oldtag."
-  (let* ((retag (read-string "Tags: "))
+  (let* ((retag (or retag-arg (read-string "Tags: ")))
 	  (path (mu4e-message-field msg :path))
 	  (maildir (mu4e-message-field msg :maildir))
 	  (oldtags (mu4e-message-field msg :tags))
@@ -212,11 +216,17 @@ store your org-contacts."
     (setq tagstr (mapconcat 'identity taglist sep))
     (setq tagstr (replace-regexp-in-string "[\\/&]" "\\\\\\&" tagstr))
 
-    ;; replaces keywords with sed, restricted to the header
-    (call-process "sed" nil nil nil "-i"
-      (format "1,/^$/s/^%s:.*$/%s: %s/" header header tagstr) path)
+    (if (string= (shell-command-to-string (format "sed -n '1,/^$/ {/^%s:/I p}' \"%s\""
+      mu4e-action-tags-header path)) "")
+        ;; Add tags header just before the content
+        (call-process "sed" nil nil nil "-i"
+          (format "1,/^$/s/^$/%s: %s\\n/I" header tagstr) path)
 
-    (mu4e-message (concat "tagging: " (mapconcat 'identity taglist " ")))
+      ;; replaces keywords with sed, restricted to the header
+      (call-process "sed" nil nil nil "-i"
+        (format "1,/^$/s/^%s:.*$/%s: %s/I" header header tagstr) path))
+
+    (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
     (mu4e-refresh-message path maildir)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
