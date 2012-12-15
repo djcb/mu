@@ -259,8 +259,7 @@ You can append flags."
 	  (subject
 	    (concat mu4e~draft-reply-prefix
 	      (message-strip-subject-re (or (plist-get origmsg :subject) "")))))
-    (message "S:%s" subject)
-    (concat
+     (concat
       (mu4e~draft-header "From" (or (mu4e~draft-from-construct) ""))
       (mu4e~draft-header "Reply-To" mu4e-compose-reply-to-address)
       (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
