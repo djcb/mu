@@ -312,7 +312,7 @@ mu_container_from_list (GSList *lst)
 
 struct _SortFuncData {
 	MuMsgFieldId         mfid;
-	gboolean             revert;
+	gboolean             descending;
 	gpointer             user_data;
 };
 typedef struct _SortFuncData SortFuncData;
@@ -335,7 +335,7 @@ sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
 	else if (!b1->msg)
 		return -1;
 
-	if (data->revert)
+	if (data->descending)
 		return mu_msg_cmp (b1->msg, a1->msg, data->mfid);
 	else
 		return mu_msg_cmp (a1->msg, b1->msg, data->mfid);
@@ -367,14 +367,14 @@ container_sort_real (MuContainer *c, SortFuncData *sfdata)
 
 
 MuContainer*
-mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean revert,
+mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean descending,
 		   gpointer user_data)
 {
 	SortFuncData sfdata;
 
-	sfdata.mfid	 = mfid;
-	sfdata.revert	 = revert;
-	sfdata.user_data = user_data;
+	sfdata.mfid	  = mfid;
+	sfdata.descending = descending;
+	sfdata.user_data  = user_data;
 
 	g_return_val_if_fail (c, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);

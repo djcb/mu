@@ -113,6 +113,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 {
 	MuMsgIter *iter;
 	MuMsgFieldId sortid;
+	MuQueryFlags qflags;
 
 	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
@@ -121,8 +122,13 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 			return FALSE;
 	}
 
-	iter = mu_query_run (xapian, query, opts->threads, sortid,
-			     opts->reverse, -1, err);
+	qflags = MU_QUERY_FLAG_NONE;
+	if (opts->threads)
+		qflags |= MU_QUERY_FLAG_THREADS;
+	if (opts->reverse)
+		qflags |= MU_QUERY_FLAG_DESCENDING;
+
+	iter = mu_query_run (xapian, query, sortid, -1, qflags, err);
 	return iter;
 }
 

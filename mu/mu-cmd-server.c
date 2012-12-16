@@ -266,8 +266,9 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 	MuMsgIter *iter;
 
 	querystr = g_strdup_printf ("msgid:%s", str);
-	iter = mu_query_run (query, querystr, FALSE,
-			     MU_MSG_FIELD_ID_NONE, FALSE, 1, err);
+	iter = mu_query_run (query, querystr,
+			     MU_MSG_FIELD_ID_NONE,
+			     1, MU_QUERY_FLAG_NONE, err);
 	g_free (querystr);
 
 	docid = MU_STORE_INVALID_DOCID;
@@ -300,8 +301,8 @@ get_docids_from_msgids (MuQuery *query, const char *str, GError **err)
 	GSList *lst;
 
 	querystr = g_strdup_printf ("msgid:%s", str);
-	iter = mu_query_run (query, querystr, FALSE,
-			     MU_MSG_FIELD_ID_NONE, FALSE,-1 /*unlimited*/,
+	iter = mu_query_run (query, querystr, MU_MSG_FIELD_ID_NONE,
+			     -1 /*unlimited*/, MU_QUERY_FLAG_NONE,
 			     err);
 	g_free (querystr);
 
@@ -889,6 +890,7 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 	gboolean threads, reverse;
 	MuMsgFieldId sortfield;
 	const char *querystr;
+	MuQueryFlags qflags;
 
 	GET_STRING_OR_ERROR_RETURN (args, "query", &querystr, err);
 	if (get_find_params (args, &threads, &sortfield,
@@ -900,9 +902,14 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 	/* note: when we're threading, we get *all* matching messages,
 	 * and then only return maxnum; this is so that we maximimize
 	 * the change of all messages in a thread showing up */
-	iter = mu_query_run (ctx->query, querystr, threads,
-			     sortfield, reverse,
-			     threads ? -1 : maxnum, err);
+	qflags = MU_QUERY_FLAG_NONE;
+	if (threads)
+		qflags |= MU_QUERY_FLAG_THREADS;
+	if (reverse)
+		qflags |= MU_QUERY_FLAG_DESCENDING;
+
+	iter = mu_query_run (ctx->query, querystr, sortfield,
+			     threads ? -1 : maxnum, qflags, err);
 	if (!iter) {
 		print_and_clear_g_error (err);
 		return MU_OK;

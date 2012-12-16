@@ -327,6 +327,7 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	MuQuery *xapian;
 	MuMsgIter *iter;
 	MuStore *store;
+	MuQueryFlags qflags;
 
 	err = NULL;
 	if (! (store = mu_store_new_read_only (xpath, &err)) ||
@@ -342,8 +343,13 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	}
 	mu_store_unref (store);
 
-	iter = mu_query_run (xapian, query, TRUE, MU_MSG_FIELD_ID_DATE,
-			     TRUE, -1, &err);
+	qflags = MU_QUERY_FLAG_THREADS            |
+		 MU_QUERY_FLAG_DESCENDING         |
+		 MU_QUERY_FLAG_SKIP_UNREADABLE    |
+		 MU_QUERY_FLAG_SKIP_MSGID_DUPS;
+
+	iter = mu_query_run (xapian, query, MU_MSG_FIELD_ID_DATE,
+			     -1, qflags, &err);
 	mu_query_destroy (xapian);
 	if (!iter) {
 		g_warning ("Error: %s", err->message);

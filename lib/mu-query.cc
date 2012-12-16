@@ -342,38 +342,38 @@ mu_query_preprocess (const char *query, GError **err)
  * exception is raised. We try to reopen the database, and run the
  * query again. */
 static MuMsgIter *
-try_requery (MuQuery *self, const char* searchexpr, gboolean threads,
-	     MuMsgFieldId sortfieldid, gboolean revert, int maxnum,
-	     GError **err)
+try_requery (MuQuery *self, const char* searchexpr, MuMsgFieldId sortfieldid,
+	     int maxnum, MuQueryFlags flags, GError **err)
 {
 	try {
 		/* let's assume that infinite regression is
 		 * impossible */
 		self->db().reopen();
 		MU_WRITE_LOG ("reopening db after modification");
-		return mu_query_run (self, searchexpr, threads, sortfieldid,
-				     revert, maxnum, err);
+		return mu_query_run (self, searchexpr, sortfieldid,
+				     maxnum, flags, err);
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }
 
 
 static Xapian::Enquire
-get_enquire (MuQuery *self, const char *searchexpr, gboolean threads,
-	     MuMsgFieldId sortfieldid, gboolean revert, GError **err)
+get_enquire (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
+	     MuQueryFlags flags, GError **err)
 {
 	Xapian::Enquire enq (self->db());
 
 	if (sortfieldid != MU_MSG_FIELD_ID_NONE)
-		enq.set_sort_by_value ((Xapian::valueno)sortfieldid,
-				       revert ? true : false);
+		enq.set_sort_by_value
+			((Xapian::valueno)sortfieldid,
+			 (flags & MU_QUERY_FLAG_DESCENDING) ? true : false);
 
 	/* empty or "" means "matchall" */
 	if (!mu_str_is_empty(searchexpr) &&
 	    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
-			enq.set_query(get_query (self, searchexpr, err));
-		else
-			enq.set_query(Xapian::Query::MatchAll);
+		enq.set_query(get_query (self, searchexpr, err));
+	else
+		enq.set_query(Xapian::Query::MatchAll);
 
 	enq.set_cutoff(0,0);
 
@@ -381,10 +381,29 @@ get_enquire (MuQuery *self, const char *searchexpr, gboolean threads,
 }
 
 
+static MuMsgIterFlags
+msg_iter_flags (MuQueryFlags flags)
+{
+	MuMsgIterFlags iflags;
+
+	iflags = MU_MSG_ITER_FLAG_NONE;
+
+	if (flags & MU_QUERY_FLAG_THREADS)
+		iflags |= MU_MSG_ITER_FLAG_THREADS;
+	if (flags & MU_QUERY_FLAG_DESCENDING)
+		iflags |= MU_MSG_ITER_FLAG_DESCENDING;
+	if (flags & MU_QUERY_FLAG_SKIP_UNREADABLE)
+		iflags |= MU_MSG_ITER_FLAG_SKIP_UNREADABLE;
+	if (flags & MU_QUERY_FLAG_SKIP_MSGID_DUPS)
+		iflags |= MU_MSG_ITER_FLAG_SKIP_MSGID_DUPS;
+
+	return iflags;
+}
+
+
 MuMsgIter*
-mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
-	      MuMsgFieldId sortfieldid, gboolean revert, int maxnum,
-	      GError **err)
+mu_query_run (MuQuery *self, const char* searchexpr, MuMsgFieldId sortfieldid,
+	      int maxnum, MuQueryFlags flags, GError **err)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);
@@ -393,16 +412,8 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			      NULL);
 	try {
 		MuMsgIter *iter;
-		Xapian::Enquire enq (get_enquire(self, searchexpr, threads,
-						 sortfieldid, revert, err));
-		MuMsgIterFlags flags;
-
-		flags = MU_MSG_ITER_FLAG_NONE;
-		if (threads)
-			flags |= MU_MSG_ITER_FLAG_THREADS;
-		if (revert)
-			flags |= MU_MSG_ITER_FLAG_REVERT;
-
+		Xapian::Enquire enq (get_enquire(self, searchexpr, sortfieldid, flags,
+						 err));
 
 		/* get the 'real' maxnum if it was specified as < 0 */
 		maxnum <= 0 ? self->db().get_doccount() : maxnum;
@@ -412,15 +423,14 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 			maxnum,
 			/* in we were *not* using threads, no further sorting
 			 * is needed since Xapian already sorted */
-			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE,
-			flags,
+			(flags & MU_QUERY_FLAG_THREADS) ? sortfieldid : MU_MSG_FIELD_ID_NONE,
+			msg_iter_flags (flags),
 			err);
 
 		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
 			g_clear_error (err);
-			return try_requery (self, searchexpr, threads,
-					    sortfieldid,
-					    revert, maxnum, err);
+			return try_requery (self, searchexpr, sortfieldid,
+					    maxnum, flags, err);
 		} else
 			return iter;
 

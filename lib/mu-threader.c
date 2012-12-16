@@ -59,7 +59,7 @@ GHashTable* create_doc_id_thread_path_hash (MuContainer *root,
  * http://www.jwz.org/doc/threading.html */
 GHashTable*
 mu_threader_calculate (MuMsgIter *iter, size_t matchnum,
-		       MuMsgFieldId sortfield, gboolean revert)
+		       MuMsgFieldId sortfield, gboolean descending)
 {
 	GHashTable *id_table, *thread_ids;
 	MuContainer *root_set;
@@ -82,7 +82,7 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum,
 
 	/* sort root set */
 	if (sortfield != MU_MSG_FIELD_ID_NONE)
-		root_set = mu_container_sort (root_set, sortfield, revert,
+		root_set = mu_container_sort (root_set, sortfield, descending,
 					      NULL);
 
 	/* step 5: group root set by subject */

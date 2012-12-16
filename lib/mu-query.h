@@ -64,19 +64,28 @@ void mu_query_destroy  (MuQuery *self);
 char* mu_query_version (MuQuery *store)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
+
+enum _MuQueryFlags {
+	MU_QUERY_FLAG_NONE            = 0,
+
+	MU_QUERY_FLAG_THREADS	      = 1 << 0, /* <** add threading info */
+	MU_QUERY_FLAG_DESCENDING      = 1 << 1, /* <** sort z->a */
+	MU_QUERY_FLAG_SKIP_UNREADABLE = 1 << 2, /* <** skip unreadable msgs */
+	MU_QUERY_FLAG_SKIP_MSGID_DUPS = 1 << 3  /* <** skip msgid dups */
+};
+typedef enum _MuQueryFlags MuQueryFlags;
+
 /**
  * run a Xapian query; for the syntax, please refer to the mu-find
  * manpage, or http://xapian.org/docs/queryparser.html
  *
  * @param self a valid MuQuery instance
  * @param expr the search expression; use "" to match all messages
- * @param threads calculate message-threads
  * @param sortfield the field id to sort by or MU_MSG_FIELD_ID_NONE if
  * sorting is not desired
- * @param reverse if TRUE, sort in descending (Z-A) order, otherwise,
- * sort in descending (A-Z) order
  * @param maxnum maximum number of search results to return, or <= 0 for
  * unlimited
+ * @param flags bitwise OR'd flags to influence the query (see MuQueryFlags)
  * @param err receives error information (if there is any); if
  * function returns non-NULL, err will _not_be set. err can be NULL
  * possible error (err->code) is MU_ERROR_QUERY,
@@ -84,9 +93,8 @@ char* mu_query_version (MuQuery *store)
  * @return a MuMsgIter instance you can iterate over, or NULL in
  * case of error
  */
-MuMsgIter* mu_query_run (MuQuery *self, const char* expr, gboolean threads,
-			 MuMsgFieldId sortfieldid, gboolean ascending, int maxnum,
-			 GError **err)
+MuMsgIter* mu_query_run (MuQuery *self, const char* expr, MuMsgFieldId sortfieldid, int maxnum,
+			 MuQueryFlags flags, GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 

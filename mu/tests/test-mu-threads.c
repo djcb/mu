@@ -70,8 +70,8 @@ run_and_get_iter (const char *xpath, const char *query)
 	mu_store_unref (store);
 	g_assert (query);
 
-	iter = mu_query_run (mquery, query, TRUE, MU_MSG_FIELD_ID_DATE,
-			     FALSE, -1, NULL);
+	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_DATE,
+			     -1, MU_QUERY_FLAG_THREADS, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 

@@ -130,8 +130,8 @@ run_and_count_matches (const char *xpath, const char *query)
 	}
 
 
-	iter = mu_query_run (mquery, query, FALSE, MU_MSG_FIELD_ID_NONE,
-			     FALSE, -1, NULL);
+	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE, -1,
+			     MU_QUERY_FLAG_NONE, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
@@ -295,8 +295,8 @@ test_mu_query_accented_chars_01 (void)
 	query = mu_query_new (store, NULL);
 	mu_store_unref (store);
 
-	iter = mu_query_run (query, "fünkÿ", FALSE, MU_MSG_FIELD_ID_NONE,
-			     FALSE, -1, NULL);
+	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
+			     -1, MU_QUERY_FLAG_NONE, NULL);
 	err = NULL;
 	msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
 	if (!msg) {

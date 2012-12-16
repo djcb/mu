@@ -432,8 +432,8 @@ get_query_iter (MuQuery *query, const char* expr, int maxnum)
 	GError *err;
 
 	err = NULL;
-	iter = mu_query_run (query, expr,
-			     FALSE, MU_MSG_FIELD_ID_NONE, TRUE, maxnum, &err);
+	iter = mu_query_run (query, expr, MU_MSG_FIELD_ID_NONE, maxnum,
+			     MU_QUERY_FLAG_NONE, &err);
 	if (!iter) {
 		mu_guile_g_error ("<internal error>", err);
 		g_clear_error (&err);
