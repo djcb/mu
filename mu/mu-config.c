@@ -213,6 +213,10 @@ config_options_group_find (void)
 		 "use a bookmarked query", "<bookmark>"},
 		{"reverse", 'z', 0, G_OPTION_ARG_NONE, &MU_CONFIG.reverse,
 		 "sort in reverse (descending) order (z -> a)", NULL},
+		{"no-msgid-dups", 'u', 0, G_OPTION_ARG_NONE,
+		 &MU_CONFIG.no_msgid_dups,
+		 "only show the first of multiple messages with the same "
+		 "message-id (false)", NULL},
 		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.linksdir,
 		 "output as symbolic links to a target maildir", "<dir>"},
 		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.clearlinks,

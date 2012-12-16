@@ -1,4 +1,4 @@
-.TH MU FIND 1 "October 2012" "User Manuals"
+.TH MU FIND 1 "December 2012" "User Manuals"
 
 .SH NAME
 
@@ -426,6 +426,13 @@ which is roughly equivalent to:
 use a bookmarked search query. Using this option, a query from your bookmark
 file will be prepended to other search queries. See mu-bookmarks(1) for the
 details of the bookmarks file.
+
+
+.TP
+\fB\-\-no\-msgid\-dups\fR
+whenever there are multiple messages with the same name, only show the first
+one. This is useful if you have copies of the same message, which is a common
+occurence when using e.g. Gmail together with \fBofflineimap\fR.
 
 .TP
 \fB\-t\fR, \fB\-\-threads\fR

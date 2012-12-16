@@ -127,6 +127,8 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 		qflags |= MU_QUERY_FLAG_THREADS;
 	if (opts->reverse)
 		qflags |= MU_QUERY_FLAG_DESCENDING;
+	if (opts->no_msgid_dups)
+		qflags |= MU_QUERY_FLAG_SKIP_MSGID_DUPS;
 
 	iter = mu_query_run (xapian, query, sortid, -1, qflags, err);
 	return iter;

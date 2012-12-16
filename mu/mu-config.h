@@ -139,6 +139,10 @@ struct _MuConfig {
 	gchar		*exec;		/* command to execute on the
 					 * files for the matched
 					 * messages */
+	gboolean        no_msgid_dups;  /* if there are multiple
+					 * messages with the same
+					 * msgid, show only the first
+					 * one */
 	/* for find and cind */
 	time_t            after;          /* only show messages or
 					   * adresses last seen after
