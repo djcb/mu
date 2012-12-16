@@ -127,8 +127,6 @@ gboolean mu_msg_load_msg_file (MuMsg *msg, GError **err);
  */
 void mu_msg_unload_msg_file (MuMsg *msg);
 
-
-
 /**
  * increase the reference count for this message
  *
