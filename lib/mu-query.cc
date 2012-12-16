@@ -395,17 +395,26 @@ mu_query_run (MuQuery *self, const char* searchexpr, gboolean threads,
 		MuMsgIter *iter;
 		Xapian::Enquire enq (get_enquire(self, searchexpr, threads,
 						 sortfieldid, revert, err));
+		MuMsgIterFlags flags;
+
+		flags = MU_MSG_ITER_FLAG_NONE;
+		if (threads)
+			flags |= MU_MSG_ITER_FLAG_THREADS;
+		if (revert)
+			flags |= MU_MSG_ITER_FLAG_REVERT;
+
 
 		/* get the 'real' maxnum if it was specified as < 0 */
 		maxnum <= 0 ? self->db().get_doccount() : maxnum;
 
 		iter = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
-			maxnum,	threads,
+			maxnum,
 			/* in we were *not* using threads, no further sorting
 			 * is needed since Xapian already sorted */
 			threads ? sortfieldid : MU_MSG_FIELD_ID_NONE,
-			revert,	err);
+			flags,
+			err);
 
 		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
 			g_clear_error (err);
