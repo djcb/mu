@@ -37,26 +37,43 @@ struct _MuMsgIter;
 typedef struct _MuMsgIter MuMsgIter;
 
 
+enum _MuMsgIterFlags {
+	MU_MSG_ITER_FLAG_NONE          = 0,
+	/*calculate the threads? */
+	MU_MSG_ITER_FLAG_THREADS       = 1 << 0,
+	/* revert the sort order (only for threads) */
+	MU_MSG_ITER_FLAG_REVERT        = 1 << 1,
+	/* ignore results for which there is no existing
+	 * readable message-file? */
+	MU_MSG_ITER_FLAG_MSG_READABLE = 1 << 2,
+	/* ignore result which have a message id already seen in these
+	 * results? */
+	MU_MSG_ITER_FLAG_NO_MSGID_DUPS = 1 << 3
+};
+typedef unsigned MuMsgIterFlags;
+
+
+
 /**
  * create a new MuMsgIter -- basically, an iterator over the search
  * results
  *
  * @param enq a Xapian::Enquire* cast to XapianEnquire* (because this
  * is C, not C++),providing access to search results
- * @param batchsize how many results to retrieve at once
- * @param threads whether to calculate threads
- * @param sorting field when using threads; note, when 'threads' is
- * FALSE, this should be MU_MSG_FIELD_ID_NONE
- * @param if TRUE, revert the sorting order
- * @param err receives error information. if the error is MU_ERROR_XAPIAN_MODIFIED,
- * the database should be reloaded.
+ * @param maxnum the maximum number of results
+ * @param sorting field for threads; when threads are not wanted, set it to
+ * MU_MSG_FIELD_ID_NONE
+ * @param flags flags for this iterator (see MsgIterFlags)
+
+ * @param err receives error information. if the error is
+ * MU_ERROR_XAPIAN_MODIFIED, the database should be reloaded.
  *
  * @return a new MuMsgIter, or NULL in case of error
  */
 MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
-			    size_t batchsize, gboolean threads,
+			    size_t maxnum,
 			    MuMsgFieldId threadsortfield,
-			    gboolean revert,
+			    MuMsgIterFlags flags,
 			    GError **err) G_GNUC_WARN_UNUSED_RESULT;
 
 /**

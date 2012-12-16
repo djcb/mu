@@ -19,12 +19,17 @@
 */
 
 #include <stdlib.h>
+#include <unistd.h>
+
 #include <iostream>
+
 #include <string.h>
 #include <errno.h>
 #include <algorithm>
 #include <xapian.h>
+
 #include <string>
+#include <set>
 
 #include "mu-util.h"
 #include "mu-msg.h"
@@ -52,8 +57,14 @@ private:
 struct _MuMsgIter {
 public:
 	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum,
-		    gboolean threads, MuMsgFieldId sortfield, bool revert):
-		   _enq(enq), _thread_hash (0), _msg(0) {
+		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
+		_enq(enq), _thread_hash (0), _msg(0), _flags(flags) {
+
+		bool threads, revert;
+
+		threads = (flags & MU_MSG_ITER_FLAG_THREADS);
+		revert  = (flags & MU_MSG_ITER_FLAG_REVERT);
+
 
 		_matches = _enq.get_mset (0, maxnum);
 
@@ -97,11 +108,18 @@ public:
 
 	GHashTable *thread_hash () { return _thread_hash; }
 
-	MuMsg *msg() { return _msg; }
+	MuMsg *msg() const { return _msg; }
 	MuMsg *set_msg (MuMsg *msg) {
 		if (_msg)
 			mu_msg_unref (_msg);
 		return _msg = msg;
+	}
+
+	MuMsgIterFlags flags() const { return _flags; }
+
+	void remember_msgid  (const std::string& msgid) { _msgid_set.insert (msgid); }
+	bool msgid_seen (const std::string& msgid) const {
+		return _msgid_set.find (msgid) != _msgid_set.end();
 	}
 
 private:
@@ -111,25 +129,31 @@ private:
 
 	GHashTable      *_thread_hash;
 	MuMsg		*_msg;
+
+	MuMsgIterFlags _flags;
+	std::set <std::string> _msgid_set;
 };
 
 
 
-MuMsgIter*
+MuMsgIter *
 mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
-		 gboolean threads, MuMsgFieldId sortfield, gboolean revert,
+		 MuMsgFieldId sortfield, MuMsgIterFlags flags,
 		 GError **err)
 {
 	g_return_val_if_fail (enq, NULL);
 	/* sortfield should be set to .._NONE when we're not threading */
-	g_return_val_if_fail (threads || sortfield == MU_MSG_FIELD_ID_NONE,
+	g_return_val_if_fail ((flags & MU_MSG_ITER_FLAG_THREADS)
+			      || sortfield == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfield) ||
 			      sortfield == MU_MSG_FIELD_ID_NONE,
 			      FALSE);
 	try {
-		return new MuMsgIter ((Xapian::Enquire&)*enq, maxnum, threads,
-				      sortfield, revert ? true : false);
+		return new MuMsgIter ((Xapian::Enquire&)*enq,
+				      maxnum,
+				      sortfield,
+				      flags);
 
 	} catch (const Xapian::DatabaseModifiedError &dbmex) {
 		mu_util_g_set_error (err, MU_ERROR_XAPIAN_MODIFIED,
@@ -185,6 +209,32 @@ mu_msg_iter_reset (MuMsgIter *iter)
 	return TRUE;
 }
 
+static gboolean
+is_msg_file_readable (MuMsgIter *iter)
+{
+	std::string path
+		(iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_PATH));
+
+	if (path.empty())
+		return FALSE;
+
+	return (access (path.c_str(), R_OK) == 0) ? TRUE : FALSE;
+}
+
+static gboolean
+has_duplicate_msgid (MuMsgIter *iter)
+{
+	std::string msgid
+		(iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID));
+	if (msgid.empty())
+		return FALSE;
+	else if (iter->msgid_seen (msgid))
+		return TRUE;
+
+	iter->remember_msgid (msgid);
+	return FALSE;
+}
+
 
 gboolean
 mu_msg_iter_next (MuMsgIter *iter)
@@ -198,7 +248,20 @@ mu_msg_iter_next (MuMsgIter *iter)
 
 	try {
 		iter->cursor_next();
-		return iter->cursor() == iter->matches().end() ? FALSE:TRUE;
+
+		if (iter->cursor() == iter->matches().end())
+			return FALSE;
+
+		/* filter out non-existing messages? */
+		else if ((iter->flags() & MU_MSG_ITER_FLAG_MSG_READABLE) &&
+			 is_msg_file_readable (iter))
+			return mu_msg_iter_next (iter); /*skip!*/
+		/* filter out msgid duplicates? */
+		else if ((iter->flags() & MU_MSG_ITER_FLAG_NO_MSGID_DUPS) &&
+			 has_duplicate_msgid (iter))
+			return mu_msg_iter_next (iter); /*skip!*/
+		else
+			return TRUE;
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
