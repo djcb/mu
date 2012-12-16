@@ -60,10 +60,10 @@ public:
 		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
 		_enq(enq), _thread_hash (0), _msg(0), _flags(flags) {
 
-		bool threads, revert;
+		bool threads, descending;
 
-		threads = (flags & MU_MSG_ITER_FLAG_THREADS);
-		revert  = (flags & MU_MSG_ITER_FLAG_REVERT);
+		threads     = (flags & MU_MSG_ITER_FLAG_THREADS);
+		descending  = (flags & MU_MSG_ITER_FLAG_DESCENDING);
 
 
 		_matches = _enq.get_mset (0, maxnum);
@@ -76,7 +76,7 @@ public:
 			_matches.fetch();
 			_thread_hash = mu_threader_calculate
 				(this, _matches.size(), sortfield,
-				 revert ? TRUE: FALSE);
+				 descending ? TRUE: FALSE);
 
 			ThreadKeyMaker keymaker(_thread_hash);
 
@@ -232,6 +232,7 @@ has_duplicate_msgid (MuMsgIter *iter)
 		return TRUE;
 
 	iter->remember_msgid (msgid);
+
 	return FALSE;
 }
 
@@ -253,11 +254,13 @@ mu_msg_iter_next (MuMsgIter *iter)
 			return FALSE;
 
 		/* filter out non-existing messages? */
-		else if ((iter->flags() & MU_MSG_ITER_FLAG_MSG_READABLE) &&
-			 is_msg_file_readable (iter))
+		else if ((iter->flags() &
+			  MU_MSG_ITER_FLAG_SKIP_UNREADABLE) &&
+			 !is_msg_file_readable (iter))
 			return mu_msg_iter_next (iter); /*skip!*/
 		/* filter out msgid duplicates? */
-		else if ((iter->flags() & MU_MSG_ITER_FLAG_NO_MSGID_DUPS) &&
+		else if ((iter->flags() &
+			  MU_MSG_ITER_FLAG_SKIP_MSGID_DUPS) &&
 			 has_duplicate_msgid (iter))
 			return mu_msg_iter_next (iter); /*skip!*/
 		else

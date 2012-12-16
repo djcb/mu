@@ -38,17 +38,17 @@ typedef struct _MuMsgIter MuMsgIter;
 
 
 enum _MuMsgIterFlags {
-	MU_MSG_ITER_FLAG_NONE          = 0,
+	MU_MSG_ITER_FLAG_NONE                 = 0,
 	/*calculate the threads? */
-	MU_MSG_ITER_FLAG_THREADS       = 1 << 0,
-	/* revert the sort order (only for threads) */
-	MU_MSG_ITER_FLAG_REVERT        = 1 << 1,
+	MU_MSG_ITER_FLAG_THREADS              = 1 << 0,
+	/* sort Z->A (only for threads) */
+	MU_MSG_ITER_FLAG_DESCENDING           = 1 << 1,
 	/* ignore results for which there is no existing
 	 * readable message-file? */
-	MU_MSG_ITER_FLAG_MSG_READABLE = 1 << 2,
+	MU_MSG_ITER_FLAG_SKIP_UNREADABLE      = 1 << 2,
 	/* ignore result which have a message id already seen in these
 	 * results? */
-	MU_MSG_ITER_FLAG_NO_MSGID_DUPS = 1 << 3
+	MU_MSG_ITER_FLAG_SKIP_MSGID_DUPS      = 1 << 3
 };
 typedef unsigned MuMsgIterFlags;
 
