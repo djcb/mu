@@ -842,18 +842,10 @@ cmd_extract (ServerContext *ctx, GSList *args, GError **err)
 
 /* parse the find parameters, and return the values as out params */
 static MuError
-get_find_params (GSList *args, gboolean *threads, MuMsgFieldId *sortfield,
-		 gboolean *reverse, int *maxnum, GError **err)
+get_find_params (GSList *args, MuMsgFieldId *sortfield,
+		 int *maxnum, MuQueryFlags *qflags, GError **err)
 {
 	const char *maxnumstr, *sortfieldstr;
-
-	/* maximum number of results */
-	maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
-	*maxnum = maxnumstr ? atoi (maxnumstr) : 0;
-
-	/* whether to show threads or not */
-	*threads = get_bool_from_args (args, "threads", TRUE, NULL);
-	*reverse = get_bool_from_args (args, "reverse", TRUE, NULL);
 
 	/* field to sort by */
 	sortfieldstr = get_string_from_args (args, "sortfield", TRUE, NULL);
@@ -867,6 +859,23 @@ get_find_params (GSList *args, gboolean *threads, MuMsgFieldId *sortfield,
 		}
 	} else
 		*sortfield = MU_MSG_FIELD_ID_DATE;
+
+	/* flags */
+	*qflags = MU_QUERY_FLAG_NONE;
+
+	if (get_bool_from_args (args, "threads", TRUE, NULL)) {
+		*qflags |= MU_QUERY_FLAG_THREADS;
+		*maxnum = -1;
+	} else {
+		/* maximum number of results */
+		maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
+		*maxnum = maxnumstr ? atoi (maxnumstr) : 0;
+	}
+
+	if (get_bool_from_args (args, "reverse", TRUE, NULL))
+		*qflags |= MU_QUERY_FLAG_DESCENDING;
+	if (get_bool_from_args (args, "skip-dups", TRUE, NULL))
+		*qflags |= MU_QUERY_FLAG_SKIP_DUPS;
 
 	return MU_OK;
 }
@@ -887,14 +896,13 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 	MuMsgIter *iter;
 	unsigned foundnum;
 	int maxnum;
-	gboolean threads, reverse;
 	MuMsgFieldId sortfield;
 	const char *querystr;
 	MuQueryFlags qflags;
 
 	GET_STRING_OR_ERROR_RETURN (args, "query", &querystr, err);
-	if (get_find_params (args, &threads, &sortfield,
-			     &reverse, &maxnum, err) != MU_OK) {
+	if (get_find_params (args, &sortfield, &maxnum, &qflags, err)
+	    != MU_OK) {
 		print_and_clear_g_error (err);
 		return MU_OK;
 	}
@@ -902,14 +910,9 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 	/* note: when we're threading, we get *all* matching messages,
 	 * and then only return maxnum; this is so that we maximimize
 	 * the change of all messages in a thread showing up */
-	qflags = MU_QUERY_FLAG_NONE;
-	if (threads)
-		qflags |= MU_QUERY_FLAG_THREADS;
-	if (reverse)
-		qflags |= MU_QUERY_FLAG_DESCENDING;
 
 	iter = mu_query_run (ctx->query, querystr, sortfield,
-			     threads ? -1 : maxnum, qflags, err);
+			     maxnum, qflags, err);
 	if (!iter) {
 		print_and_clear_g_error (err);
 		return MU_OK;
@@ -920,7 +923,8 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 	 * will ensure that the output of two finds will not be
 	 * mixed. */
 	print_expr ("(:erase t)");
-	foundnum = print_sexps (iter, threads,
+	foundnum = print_sexps (iter,
+				qflags & MU_QUERY_FLAG_THREADS,
 				maxnum > 0 ? maxnum : G_MAXINT32);
 	print_expr ("(:found %u)", foundnum);
 	mu_msg_iter_destroy (iter);
