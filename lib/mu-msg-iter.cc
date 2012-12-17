@@ -65,7 +65,6 @@ public:
 		threads     = (flags & MU_MSG_ITER_FLAG_THREADS);
 		descending  = (flags & MU_MSG_ITER_FLAG_DESCENDING);
 
-
 		_matches = _enq.get_mset (0, maxnum);
 
 		/* when threading, we calculate the threads for the
@@ -117,9 +116,11 @@ public:
 
 	MuMsgIterFlags flags() const { return _flags; }
 
-	void remember_msgid  (const std::string& msgid) { _msgid_set.insert (msgid); }
-	bool msgid_seen (const std::string& msgid) const {
-		return _msgid_set.find (msgid) != _msgid_set.end();
+	bool msg_uid_seen_before (const std::string& msg_uid) {
+		if (_msg_uid_set.count (msg_uid) > 0)
+			return true;
+		_msg_uid_set.insert (msg_uid);
+		return false;
 	}
 
 private:
@@ -131,8 +132,27 @@ private:
 	MuMsg		*_msg;
 
 	MuMsgIterFlags _flags;
-	std::set <std::string> _msgid_set;
+
+	struct ltstr {
+		bool operator () (const std::string &s1, const std::string &s2) const {
+			return g_strcmp0 (s1.c_str(), s2.c_str());
+		}
+	};
+	std::set <std::string, ltstr> _msg_uid_set;
 };
+
+
+static gboolean
+is_msg_file_readable (MuMsgIter *iter)
+{
+	std::string path
+		(iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_PATH));
+
+	if (path.empty())
+		return FALSE;
+
+	return (access (path.c_str(), R_OK) == 0) ? TRUE : FALSE;
+}
 
 
 
@@ -150,10 +170,16 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 			      sortfield == MU_MSG_FIELD_ID_NONE,
 			      FALSE);
 	try {
-		return new MuMsgIter ((Xapian::Enquire&)*enq,
+		MuMsgIter *iter;
+		iter = new MuMsgIter ((Xapian::Enquire&)*enq,
 				      maxnum,
 				      sortfield,
 				      flags);
+		if ((flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE) &&
+		    !is_msg_file_readable (iter))
+			mu_msg_iter_next (iter);
+
+		return iter;
 
 	} catch (const Xapian::DatabaseModifiedError &dbmex) {
 		mu_util_g_set_error (err, MU_ERROR_XAPIAN_MODIFIED,
@@ -210,30 +236,18 @@ mu_msg_iter_reset (MuMsgIter *iter)
 }
 
 static gboolean
-is_msg_file_readable (MuMsgIter *iter)
+msg_seen_before (MuMsgIter *iter)
 {
-	std::string path
-		(iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_PATH));
-
-	if (path.empty())
-		return FALSE;
-
-	return (access (path.c_str(), R_OK) == 0) ? TRUE : FALSE;
-}
-
-static gboolean
-has_duplicate_msgid (MuMsgIter *iter)
-{
-	std::string msgid
+	// we *only* consider the msgid; we could also look eg. the
+	// date, but it seems that Gmail may change the date / time
+	// zone etc. with still being the same message.
+	const std::string msg_uid
 		(iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID));
-	if (msgid.empty())
+		 // (iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_DATE)));
+	if (msg_uid.empty())
 		return FALSE;
-	else if (iter->msgid_seen (msgid))
-		return TRUE;
-
-	iter->remember_msgid (msgid);
-
-	return FALSE;
+	else
+		return iter->msg_uid_seen_before (msg_uid);
 }
 
 
@@ -252,16 +266,14 @@ mu_msg_iter_next (MuMsgIter *iter)
 
 		if (iter->cursor() == iter->matches().end())
 			return FALSE;
-
 		/* filter out non-existing messages? */
 		else if ((iter->flags() &
 			  MU_MSG_ITER_FLAG_SKIP_UNREADABLE) &&
 			 !is_msg_file_readable (iter))
 			return mu_msg_iter_next (iter); /*skip!*/
 		/* filter out msgid duplicates? */
-		else if ((iter->flags() &
-			  MU_MSG_ITER_FLAG_SKIP_MSGID_DUPS) &&
-			 has_duplicate_msgid (iter))
+		else if ((iter->flags() & MU_MSG_ITER_FLAG_SKIP_DUPS) &&
+			 msg_seen_before (iter))
 			return mu_msg_iter_next (iter); /*skip!*/
 		else
 			return TRUE;

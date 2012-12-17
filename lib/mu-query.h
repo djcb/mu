@@ -71,7 +71,7 @@ enum _MuQueryFlags {
 	MU_QUERY_FLAG_THREADS	      = 1 << 0, /* <** add threading info */
 	MU_QUERY_FLAG_DESCENDING      = 1 << 1, /* <** sort z->a */
 	MU_QUERY_FLAG_SKIP_UNREADABLE = 1 << 2, /* <** skip unreadable msgs */
-	MU_QUERY_FLAG_SKIP_MSGID_DUPS = 1 << 3  /* <** skip msgid dups */
+	MU_QUERY_FLAG_SKIP_DUPS       = 1 << 3  /* <** skip duplicate msgs */
 };
 typedef enum _MuQueryFlags MuQueryFlags;
 

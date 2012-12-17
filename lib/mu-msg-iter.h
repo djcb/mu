@@ -46,9 +46,8 @@ enum _MuMsgIterFlags {
 	/* ignore results for which there is no existing
 	 * readable message-file? */
 	MU_MSG_ITER_FLAG_SKIP_UNREADABLE      = 1 << 2,
-	/* ignore result which have a message id already seen in these
-	 * results? */
-	MU_MSG_ITER_FLAG_SKIP_MSGID_DUPS      = 1 << 3
+	/* ignore duplicate messages? */
+	MU_MSG_ITER_FLAG_SKIP_DUPS            = 1 << 3
 };
 typedef unsigned MuMsgIterFlags;
 

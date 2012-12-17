@@ -394,8 +394,8 @@ msg_iter_flags (MuQueryFlags flags)
 		iflags |= MU_MSG_ITER_FLAG_DESCENDING;
 	if (flags & MU_QUERY_FLAG_SKIP_UNREADABLE)
 		iflags |= MU_MSG_ITER_FLAG_SKIP_UNREADABLE;
-	if (flags & MU_QUERY_FLAG_SKIP_MSGID_DUPS)
-		iflags |= MU_MSG_ITER_FLAG_SKIP_MSGID_DUPS;
+	if (flags & MU_QUERY_FLAG_SKIP_DUPS)
+		iflags |= MU_MSG_ITER_FLAG_SKIP_DUPS;
 
 	return iflags;
 }
