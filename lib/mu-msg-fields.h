@@ -55,6 +55,10 @@ enum _MuMsgFieldId {
 	MU_MSG_FIELD_ID_PRIO,
 	MU_MSG_FIELD_ID_SIZE,
 
+	/* add new ones here... */
+	MU_MSG_FIELD_ID_LIST, /* mailing list */
+
+
 	MU_MSG_FIELD_ID_NUM
 };
 typedef guint8 MuMsgFieldId;

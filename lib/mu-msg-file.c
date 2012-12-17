@@ -198,6 +198,29 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 	return recip;
 }
 
+static gchar*
+get_mailing_list (MuMsgFile *self)
+{
+	const char *hdr, *b, *e;
+
+	hdr = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
+					"List-Id");
+	if (mu_str_is_empty (hdr))
+		return NULL;
+
+	e = NULL;
+	b = strchr (hdr, '<');
+	if (b)
+		e = strchr (b, '>');
+
+	if (b && e)
+		return g_strndup (b + 1, e - b - 1);
+	else
+		return NULL;
+}
+
+
+
 
 static gboolean
 looks_like_attachment (GMimeObject *part)
@@ -500,6 +523,9 @@ get_references  (MuMsgFile *self)
 	return g_slist_reverse (msgids);
 }
 
+
+
+
 /* see: http://does-not-exist.org/mail-archives/mutt-dev/msg08249.html */
 static GSList*
 get_tags (MuMsgFile *self)
@@ -591,6 +617,10 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 			 self->_path, do_free);
 
 	case MU_MSG_FIELD_ID_PATH: return self->_path;
+
+	case MU_MSG_FIELD_ID_LIST:
+		*do_free = TRUE;
+		return (char*)get_mailing_list (self);
 
 	case MU_MSG_FIELD_ID_SUBJECT:
 		return (char*)maybe_cleanup
