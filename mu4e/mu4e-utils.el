@@ -764,8 +764,6 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 	      (beginning-of-line)
 	      (delete-region (point-min) (point)))))))))
 
-
-
 (defun mu4e-toggle-logging ()
   "Toggle between enabling/disabling debug-mode (in debug-mode,
 mu4e logs some of its internal workings to a log-buffer. See
