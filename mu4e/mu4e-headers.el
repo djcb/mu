@@ -47,10 +47,11 @@
   :group 'mu4e)
 
 (defcustom mu4e-headers-fields
-  '( (:human-date    .  12)
-     (:flags         .   6)
-     (:from          .  22)
-     (:subject       .  nil))
+  '( (:human-date    .   12)
+     (:flags         .    6)
+     (:mailing-list  .   10)
+     (:from          .   22)
+     (:subject       .   nil))
   "A list of header fields to show in the headers buffer.
 Each element has the form (HEADER . WIDTH), where HEADER is one
 of the available headers (see `mu4e-header-info') and WIDTH is
@@ -356,6 +357,13 @@ date. The formats used for date and time are
       (format-time-string mu4e-headers-time-format date)
       (format-time-string mu4e-headers-date-format date))))
 
+
+(defsubst mu4e~headers-mailing-list (list)
+  "Get some identifier for the mailing list."
+  (let* ((short (and list (mu4e-get-mailing-list-shortname list))))
+    (if short
+      (propertize (or short "List") 'help-echo list) "")))    
+ 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
     "Create a one line description of MSG in this buffer, at POINT,
@@ -377,6 +385,7 @@ if provided, or at the end of the buffer otherwise."
 	      ;; 'To', otherwise show From
 	      (:from-or-to (mu4e~headers-from-or-to msg))
 	      (:date (format-time-string mu4e-headers-date-format val))
+	      (:mailing-list (mu4e~headers-mailing-list val))
 	      (:human-date (mu4e~headers-human-date msg))
 	      (:flags (propertize (mu4e~headers-flags-str val)
 			'help-echo (format "%S" val)))

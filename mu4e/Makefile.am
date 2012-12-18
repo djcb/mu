@@ -29,6 +29,7 @@ dist_lisp_LISP=			\
 	mu4e-compose.el		\
 	mu4e-draft.el		\
 	mu4e-headers.el		\
+	mu4e-lists.el		\
 	mu4e-main.el		\
 	mu4e-mark.el		\
 	mu4e-message.el         \

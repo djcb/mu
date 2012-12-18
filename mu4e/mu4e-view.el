@@ -50,7 +50,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-fields
-  '(:from :to  :cc :subject :flags :date :maildir :tags :attachments :signature)
+  '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags :attachments :signature)
   "Header fields to display in the message view buffer.
 For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
@@ -157,7 +157,7 @@ messages - for example, `mu4e-org'."
 	    (:path     (mu4e~view-construct-header field fieldval))
 	    (:maildir  (mu4e~view-construct-header field fieldval))
 	    ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
-
+     
 	    ;; contact fields
 	    (:to       (mu4e~view-construct-contacts-header msg field))
 	    (:from     (mu4e~view-construct-contacts-header msg field))
@@ -181,6 +181,8 @@ messages - for example, `mu4e-org'."
 	    ;; size
 	    (:size
 	      (mu4e~view-construct-header field (mu4e-display-size fieldval)))
+	    (:mailing-list
+	      (mu4e~view-construct-header field fieldval))
 	    ;; attachments
 	    (:attachments (mu4e~view-construct-attachments-header msg))
 	    ;; pgp-signatures

@@ -32,6 +32,7 @@
 
 (require 'mu4e-vars)
 (require 'mu4e-about)
+(require 'mu4e-lists)
 (require 'doc-view)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -467,7 +468,19 @@ that has a live window), and vice versa."
 	(view-mode)))
     (switch-to-buffer buf)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mu4e~lists-hash nil
+  "Hashtable of mailing-list-id => shortname, based on `mu4e~mailing-lists'
+  and `mu4e-user-mailing-lists'.")
 
+(defun mu4e-get-mailing-list-shortname (list-id)
+  "Get the shortname for a mailing-list with list-id LIST-ID. based on `mu4e~mailing-lists'
+  and `mu4e-user-mailing-lists'."
+  (unless mu4e~lists-hash
+    (setq mu4e~lists-hash (make-hash-table :test 'equal))
+    (dolist (cell mu4e~mailing-lists) (puthash (car cell) (cdr cell) mu4e~lists-hash))
+    (dolist (cell mu4e-user-mailing-lists) (puthash (car cell) (cdr cell) mu4e~lists-hash)))
+  (gethash list-id mu4e~lists-hash))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar mu4e-index-updated-hook nil

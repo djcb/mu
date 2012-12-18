@@ -516,6 +516,11 @@ I.e. a message with the draft flag set."
 	 :shortname "Maildir"
 	 :help "Maildir for this message"
 	 :sortable t))
+     (:mailing-list .
+       ( :name "List"
+	 :shortname "List"
+	 :help "Mailing list for this message"
+	 :sortable t))
      (:path .
        ( :name "Path"
 	 :shortname "Path"
