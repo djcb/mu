@@ -362,8 +362,8 @@ date. The formats used for date and time are
   "Get some identifier for the mailing list."
   (let* ((short (and list (mu4e-get-mailing-list-shortname list))))
     (if short
-      (propertize (or short "List") 'help-echo list) "")))    
- 
+      (propertize (or short "List") 'help-echo list) "")))
+
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
     "Create a one line description of MSG in this buffer, at POINT,
