@@ -863,14 +863,12 @@ get_find_params (GSList *args, MuMsgFieldId *sortfield,
 	/* flags */
 	*qflags = MU_QUERY_FLAG_NONE;
 
-	if (get_bool_from_args (args, "threads", TRUE, NULL)) {
+	if (get_bool_from_args (args, "threads", TRUE, NULL))
 		*qflags |= MU_QUERY_FLAG_THREADS;
-		*maxnum = -1;
-	} else {
-		/* maximum number of results */
-		maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
-		*maxnum = maxnumstr ? atoi (maxnumstr) : 0;
-	}
+
+	/* maximum number of results */
+	maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
+	*maxnum = maxnumstr ? atoi (maxnumstr) : 0;
 
 	if (get_bool_from_args (args, "reverse", TRUE, NULL))
 		*qflags |= MU_QUERY_FLAG_DESCENDING;
