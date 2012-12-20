@@ -476,6 +476,8 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	append_sexp_date_and_size (gstr, msg);
 
 	append_sexp_attr (gstr, "message-id", mu_msg_get_msgid (msg));
+	append_sexp_attr (gstr, "mailing-list",
+			  mu_msg_get_mailing_list (msg));
 	append_sexp_attr (gstr, "path",	 mu_msg_get_path (msg));
 	append_sexp_attr (gstr, "maildir", mu_msg_get_maildir (msg));
 	g_string_append_printf (gstr, "\t:priority %s\n",
