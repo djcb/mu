@@ -299,7 +299,7 @@ maildirs under `mu4e-maildir'."
 		  mlist ", "))
 	      (kar (read-char (concat prompt fnames))))
 	(if (member kar '(?/ ?o)) ;; user chose 'other'?
-	  (ido-completing-read prompt (mu4e-get-maildirs))
+	  (ido-completing-read prompt (mu4e-get-maildirs) nil nil "/")
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))))))
