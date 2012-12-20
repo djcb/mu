@@ -373,6 +373,16 @@ mu_msg_get_msgid  (MuMsg *self)
 	return get_str_field (self, MU_MSG_FIELD_ID_MSGID);
 }
 
+
+
+const char*
+mu_msg_get_mailing_list (MuMsg *self)
+{
+	g_return_val_if_fail (self, NULL);
+	return get_str_field (self, MU_MSG_FIELD_ID_MAILING_LIST);
+}
+
+
 const char*
 mu_msg_get_maildir (MuMsg *self)
 {

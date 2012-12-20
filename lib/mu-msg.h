@@ -261,11 +261,24 @@ const char*     mu_msg_get_subject         (MuMsg *msg);
  *
  * @param msg a valid MuMsg* instance
  *
- * @return the Message-Id of this Message (without the enclosing <>)
+ * @return the Message-Id of this message (without the enclosing <>)
  * or NULL in case of error or if there is none. the returned string
  * should *not* be modified or freed.
  */
 const char*     mu_msg_get_msgid           (MuMsg *msg);
+
+
+/**
+ * get the mailing list for a message, i.e. the mailing-list
+ * identifier in the List-Id header.
+ *
+ * @param msg a valid MuMsg* instance
+ *
+ * @return the mailing list id for this message (without the enclosing <>)
+ * or NULL in case of error or if there is none. the returned string
+ * should *not* be modified or freed.
+ */
+const char*     mu_msg_get_mailing_list            (MuMsg *msg);
 
 
 /**

@@ -618,7 +618,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 
 	case MU_MSG_FIELD_ID_PATH: return self->_path;
 
-	case MU_MSG_FIELD_ID_LIST:
+	case MU_MSG_FIELD_ID_MAILING_LIST:
 		*do_free = TRUE;
 		return (char*)get_mailing_list (self);
 
