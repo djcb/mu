@@ -156,7 +156,7 @@ into a list of pairs
 				     (if (string? (cdr addr))
 				       (format #f "\"email\": \"~a\""
 					 (string->json (cdr addr))) "")))
-			expr " ")
+			expr ", ")
 		      "]"))
 		  ((string= parent "parts") "[]") ;; todo 
 		  ;; convert the crazy emacs time thingy to time_t...
