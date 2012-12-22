@@ -213,8 +213,8 @@ config_options_group_find (void)
 		 "use a bookmarked query", "<bookmark>"},
 		{"reverse", 'z', 0, G_OPTION_ARG_NONE, &MU_CONFIG.reverse,
 		 "sort in reverse (descending) order (z -> a)", NULL},
-		{"no-dups", 'u', 0, G_OPTION_ARG_NONE,
-		 &MU_CONFIG.no_dups,
+		{"skip-dups", 'u', 0, G_OPTION_ARG_NONE,
+		 &MU_CONFIG.skip_dups,
 		 "show only the first of messages duplicates (false)", NULL},
 		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.linksdir,
 		 "output as symbolic links to a target maildir", "<dir>"},
@@ -596,7 +596,7 @@ mu_config_show_help (MuConfigCmd cmd)
 
 	g_return_if_fail (mu_config_cmd_is_valid(cmd));
 
-	ctx = g_option_context_new ("");
+	ctx = g_option_context_new ("- mu help");
 	g_option_context_set_main_group	(ctx, config_options_group_mu());
 
 	group = get_option_group (cmd);
@@ -654,6 +654,7 @@ parse_params (int *argcp, char ***argvp, GError **err)
 	gboolean rv;
 
 	context = g_option_context_new("- mu general options");
+
 	g_option_context_set_help_enabled (context, TRUE);
 
 	err = NULL;
@@ -663,7 +664,9 @@ parse_params (int *argcp, char ***argvp, GError **err)
 					config_options_group_mu());
 
 	switch (MU_CONFIG.cmd) {
-	case MU_CONFIG_CMD_NONE: show_usage(); break;
+	case MU_CONFIG_CMD_NONE:
+		show_usage();
+		break;
 	case MU_CONFIG_CMD_HELP:
 		/* 'help' is special; sucks in the options of the
 		 * command after it */
@@ -675,6 +678,7 @@ parse_params (int *argcp, char ***argvp, GError **err)
 		if (group)
 			g_option_context_add_group(context, group);
 		rv = g_option_context_parse (context, argcp, argvp, err);
+		break;
 	}
 	g_option_context_free (context);
 

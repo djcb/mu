@@ -49,12 +49,15 @@ show_version (void)
 
 
 static void
-handle_error (MuConfig *conf, GError *err)
+handle_error (MuConfig *conf, MuError merr, GError **err)
 {
-	if (!err)
-		return; /* nothing to do */
+	if (merr != MU_OK && !(err && *err)) {
+		g_printerr ("mu: something went wrong\n");
+		return;
+	} else if (!(err && *err))
+		return;
 
-	switch (err->code) {
+	switch ((*err)->code) {
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
 		g_printerr ("maybe mu is already running?\n");
 		break;
@@ -74,8 +77,8 @@ handle_error (MuConfig *conf, GError *err)
 		break; /* nothing to do */
 	}
 
-	if (err)
-		g_printerr ("mu: %s\n", err->message);
+	if (*err)
+		g_printerr ("mu: %s\n", (*err)->message);
 }
 
 
@@ -113,7 +116,7 @@ main (int argc, char *argv[])
 	rv = mu_cmd_execute (conf, &err);
 
 cleanup:
-	handle_error (conf, err);
+	handle_error (conf, rv, &err);
 	g_clear_error (&err);
 
 	mu_config_uninit (conf);

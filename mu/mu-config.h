@@ -139,7 +139,7 @@ struct _MuConfig {
 	gchar		*exec;		/* command to execute on the
 					 * files for the matched
 					 * messages */
-	gboolean        no_dups;        /* if there are multiple
+	gboolean        skip_dups;        /* if there are multiple
 					 * messages with the same
 					 * msgid, show only the first
 					 * one */
