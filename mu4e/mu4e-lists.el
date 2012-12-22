@@ -27,8 +27,7 @@
 
 
 (defvar mu4e~mailing-lists
-  '( 
-     ("bbdb-info.lists.sourceforge.net"                       . "BBDB")
+  '( ("bbdb-info.lists.sourceforge.net"                       . "BBDB")
      ("boost-announce.lists.boost.org"                        . "BoostA")
      ("boost-interest.lists.boost.org"                        . "BoostI")
      ("conkeror.mozdev.org"                                   . "Conkeror")
@@ -66,6 +65,7 @@
      ("notmuch.notmuchmail.org"                               . "Notmuch")
      ("orbit-list.gnome.org"                                  . "ORBit")
      ("pulseaudio-discuss.lists.freedesktop.org"              . "PulseA")
+     ("sqlite-announce.sqlite.org"                            . "SQliteAnn")
      ("sqlite-dev.sqlite.org"                                 . "SQLiteDev")
      ("sup-talk.rubyforge.org"                                . "Sup")
      ("sylpheed-claws-users.lists.sourceforge.net"            . "Sylpheed")
@@ -73,6 +73,7 @@
      ("unicode.sarasvati.unicode.org"                         . "Unicode")
      ("xapian-discuss.lists.xapian.org"                       . "Xapian")
      ("xdg.lists.freedesktop.org"                             . "XDG")
+     ("wl-en.ml.gentei.org"                                   . "WL")
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
   "AList of mailing lists id -> shortname")
 

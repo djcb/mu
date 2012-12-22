@@ -470,8 +470,8 @@ that has a live window), and vice versa."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e~lists-hash nil
-  "Hashtable of mailing-list-id => shortname, based on `mu4e~mailing-lists'
-  and `mu4e-user-mailing-lists'.")
+  "Hashtable of mailing-list-id => shortname, based on
+  `mu4e~mailing-lists' and `mu4e-user-mailing-lists'.")
 
 (defun mu4e-get-mailing-list-shortname (list-id)
   "Get the shortname for a mailing-list with list-id LIST-ID. based on `mu4e~mailing-lists'
@@ -480,7 +480,12 @@ that has a live window), and vice versa."
     (setq mu4e~lists-hash (make-hash-table :test 'equal))
     (dolist (cell mu4e~mailing-lists) (puthash (car cell) (cdr cell) mu4e~lists-hash))
     (dolist (cell mu4e-user-mailing-lists) (puthash (car cell) (cdr cell) mu4e~lists-hash)))
-  (gethash list-id mu4e~lists-hash))
+  (or
+    (gethash list-id mu4e~lists-hash)
+    ;; if it's not in the db, take the part until the first dot.
+    (when (string-match "\\([^.]*\\)\\." list-id)
+      (match-string 1 list-id))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar mu4e-index-updated-hook nil
