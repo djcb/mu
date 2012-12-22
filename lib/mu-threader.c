@@ -283,20 +283,11 @@ handle_references (GHashTable *id_table, MuContainer *c)
 	   Note that at all times, the various ``parent'' and ``child'' fields
 	   must be kept inter-consistent. */
 
-           /* optimization: if the the message was newly added, it's by
-	    * definition not reachable yet */
+	/* optimization: if the the message was newly added, it's by
+	 * definition not reachable yet */
 
-	if (parent && c && !(c->child && mu_container_reachable (c->child, parent))) {
-
-		/* if c already has a parent, remove c from its parent children
-		   and reparent it, as now we know who is c's parent reliably */
-		if (c->parent) {
-			mu_container_remove_child(c->parent, c);
-			c->next = c->last = c->parent = NULL;
-		}
-
+	if (child_elligible (parent, c, created))
 		parent = mu_container_append_children (parent, c);
-	}
 }
 
 
