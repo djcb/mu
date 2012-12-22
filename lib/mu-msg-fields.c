@@ -52,17 +52,12 @@ enum _FieldFlags {
 					    * for Xapian queries;
 					    * wildcards do NOT WORK
 					    * for such fields */
-	FLAG_XAPIAN_PREFIX_ONLY  = 1 << 7, /* whether this fields
-					    * matches only when the
-					    * prefix is explicitly
-					    * included in the search
-					    * query -- e.g., the text
-					    * body */
-	FLAG_NORMALIZE	         = 1 << 8, /* field needs flattening for
+
+	FLAG_NORMALIZE	         = 1 << 7, /* field needs flattening for
 					    * case/accents */
-	FLAG_DONT_CACHE          = 1 << 9,  /* don't cache this field in
+	FLAG_DONT_CACHE          = 1 << 8,  /* don't cache this field in
 					    * the MuMsg cache */
-	FLAG_RANGE_FIELD         = 1 << 10  /* whether this is a range field */
+	FLAG_RANGE_FIELD         = 1 << 9  /* whether this is a range field */
 
 };
 typedef enum _FieldFlags	FieldFlags;
@@ -124,7 +119,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"date", 'd', 'D',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_PREFIX_ONLY | FLAG_RANGE_FIELD
+		FLAG_XAPIAN_BOOLEAN  | FLAG_RANGE_FIELD
 	},
 
 	{
@@ -140,7 +135,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"file" , 'j', 'J',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE |
-		FLAG_DONT_CACHE | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_DONT_CACHE
 	},
 
 
@@ -148,8 +143,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_FLAGS,
 		MU_MSG_FIELD_TYPE_INT,
 		"flag", 'g', 'G',  /* flaGs */
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
 	},
 
 	{
@@ -165,7 +159,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"maildir", 'm', 'M',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_XAPIAN_ESCAPE
 	},
 
 
@@ -181,7 +175,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_MIME,
 		MU_MSG_FIELD_TYPE_STRING,
 		"mime" , 'y', 'Y',
-		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE
 	},
 
 
@@ -190,7 +184,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"msgid", 'i', 'I',  /* 'i' for Id */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_ESCAPE | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_XAPIAN_ESCAPE
 	},
 
 
@@ -199,8 +193,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"path", 'l', 'L',   /* 'l' for location */
 		FLAG_GMIME | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_BOOLEAN  | FLAG_XAPIAN_PREFIX_ONLY |
-		FLAG_XAPIAN_ESCAPE
+		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_ESCAPE
 	},
 
 
@@ -208,8 +201,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_PRIO,
 		MU_MSG_FIELD_TYPE_INT,
 		"prio", 'p', 'P',
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE
 	},
 
 
@@ -217,7 +209,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_REFS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		"refs", 'r', 'R',
-		FLAG_GMIME | FLAG_XAPIAN_VALUE | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_GMIME | FLAG_XAPIAN_VALUE
 	},
 
 
@@ -226,7 +218,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_BYTESIZE,
 		"size", 'z', 'Z', /* siZe */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_PREFIX_ONLY | FLAG_RANGE_FIELD
+		FLAG_RANGE_FIELD
 	},
 
 	{
@@ -241,8 +233,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_TAGS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		"tag", 'x', 'X',
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_PREFIX_ONLY |
-		FLAG_XAPIAN_ESCAPE
+		FLAG_GMIME | FLAG_XAPIAN_TERM |	FLAG_XAPIAN_ESCAPE
 	},
 
 	{
@@ -256,7 +247,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_UID,
 		MU_MSG_FIELD_TYPE_STRING,
 		"uid", 0, 'U',
-		FLAG_XAPIAN_TERM | FLAG_XAPIAN_PREFIX_ONLY
+		FLAG_XAPIAN_TERM
 	}
 
 	/* note, mu-store also use the 'Q' internal prefix for its uids */
@@ -370,14 +361,6 @@ mu_msg_field_uses_boolean_prefix (MuMsgFieldId id)
 	return mu_msg_field(id)->_flags & FLAG_XAPIAN_BOOLEAN?TRUE:FALSE;
 }
 
-
-gboolean
-mu_msg_field_needs_prefix (MuMsgFieldId id)
-{
-	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags &
-		FLAG_XAPIAN_PREFIX_ONLY ? TRUE: FALSE;
-}
 
 
 gboolean
