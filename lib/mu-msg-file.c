@@ -216,7 +216,7 @@ get_mailing_list (MuMsgFile *self)
 	if (b && e)
 		return g_strndup (b + 1, e - b - 1);
 	else
-		return NULL;
+		return g_strdup (hdr);
 }
 
 

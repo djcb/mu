@@ -520,7 +520,7 @@ I.e. a message with the draft flag set."
        ( :name "List"
 	 :shortname "List"
 	 :help "Mailing list for this message"
-	 :sortable t))
+	 :sortable nil))
      (:path .
        ( :name "Path"
 	 :shortname "Path"
