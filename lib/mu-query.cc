@@ -253,7 +253,6 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 	    !mu_msg_field_xapian_term(mfid) &&
 	    !mu_msg_field_xapian_contact(mfid))
 		return;
-
 	try {
 		const std::string  pfx
 			(1, mu_msg_field_xapian_prefix (mfid));
@@ -270,8 +269,9 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 		 	qparser->add_prefix (shortcut, pfx);
 		}
 
-		if (!mu_msg_field_needs_prefix(mfid))
-			qparser->add_prefix ("", pfx);
+		// all fiels are also matched implicitly, withouth
+		// an
+		qparser->add_prefix ("", pfx);
 
 	} MU_XAPIAN_CATCH_BLOCK;
 }
