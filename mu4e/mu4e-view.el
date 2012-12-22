@@ -157,7 +157,7 @@ messages - for example, `mu4e-org'."
 	    (:path     (mu4e~view-construct-header field fieldval))
 	    (:maildir  (mu4e~view-construct-header field fieldval))
 	    ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
-     
+
 	    ;; contact fields
 	    (:to       (mu4e~view-construct-contacts-header msg field))
 	    (:from     (mu4e~view-construct-contacts-header msg field))
@@ -442,31 +442,6 @@ at POINT, or if nil, at (point)."
 	      attachments ", ")))
     (when attachments
       (mu4e~view-construct-header :attachments attstr t))))
-
-;; (defun mu4e~decrypt-parts-maybe ()
-;;   "Decrypt maybe; depends on whether there are any such parts
-;; and the value of `mu4e-view-decrypt-parts'."
-;;   (interactive)
-;;   (let ((str "") (msg (mu4e-message-at-point)))
-;;     (mu4e-view-for-each-part msg
-;;       (lambda (msg part)
-;; 	(when (member 'encrypted (mu4e-message-part-field part :type))
-;; 	  (let ((file (mu4e-message-part-field part :temp)))
-;; 	    (when (and file (file-exists-p file))
-;; 	      ;; if our mu-server was build with crypto support, we only use EPA
-;; 	      ;; to push the password into gpg's memory
-;; 	      (let* ((decr
-;; 		       (condition-case nil
-;; 			 (epg-decrypt-file (epg-make-context epa-protocol)
-;;                                         file nil)
-;; 			 (err (mu4e-error "Decryption failed: %S" err))))
-;; 		      (decr
-;; 			(if (and decr (plist-get mu4e~server-props :crypto))
-
-;; 			  )))) ;; TODO: reload message
-;; 			 ;; otherwise, we try to handle it here.
-;; 			 )
-;; 		decr))))))
 
 (defun mu4e-view-for-each-part (msg func)
   "Apply FUNC to each part in MSG.
