@@ -432,8 +432,10 @@ mu_container_dump (MuContainer *c, gboolean recursive)
 	if (!recursive)
 		dump_container (c);
 	else
-		mu_container_foreach (c, (MuContainerForeachFunc)dump_container,
-				   NULL);
+		mu_container_foreach
+			(c,
+			 (MuContainerForeachFunc)dump_container,
+			 NULL);
 }
 
 

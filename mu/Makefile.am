@@ -20,7 +20,7 @@ include $(top_srcdir)/gtest.mk
 # before decending into tests/
 SUBDIRS= . tests
 
-INCLUDES=-I${top_srcdir}/lib $(GLIB_CFLAGS)
+AM_CPPFLAGS=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not

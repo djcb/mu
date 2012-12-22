@@ -20,7 +20,7 @@ include $(top_srcdir)/gtest.mk
 SUBDIRS= .
 
 
-INCLUDES=-I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"'
+AM_CPPFLAGS=-I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"'
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not

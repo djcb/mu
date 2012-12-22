@@ -26,7 +26,7 @@ else
 crypto=
 endif
 
-INCLUDES=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS) $(GUILE_CFLAGS)
+AM_CPPFLAGS=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS) $(GUILE_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not

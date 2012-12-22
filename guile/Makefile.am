@@ -20,7 +20,7 @@ include $(top_srcdir)/gtest.mk
 # with separate builddir)
 SUBDIRS= . mu scripts examples tests
 
-INCLUDES=-I. -I${top_builddir} -I${top_srcdir}/lib ${GUILE_CFLAGS} ${GLIB_CFLAGS}
+AM_CPPFLAGS=-I. -I${top_builddir} -I${top_srcdir}/lib ${GUILE_CFLAGS} ${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -54,7 +54,7 @@ mu_guile_TEXINFOS=			\
 
 BUILT_SOURCES=$(XFILES)
 
-snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS) $(INCLUDES)
+snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS) $(AM_CPPFLAGS)
 SUFFIXES = .x .doc
 .c.x:
 	$(GUILE_SNARF) -o $@ $< $(snarfcppopts)

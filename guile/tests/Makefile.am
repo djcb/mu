@@ -16,7 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-INCLUDES=$(XAPIAN_CXXFLAGS)					\
+AM_CPPFLAGS=$(XAPIAN_CXXFLAGS)					\
 	 $(GMIME_CFLAGS)					\
 	 $(GLIB_CFLAGS)						\
 	-I ${top_srcdir}					\
