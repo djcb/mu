@@ -117,10 +117,13 @@ public:
 	MuMsgIterFlags flags() const { return _flags; }
 
 	bool msg_uid_seen_before (const std::string& msg_uid) {
-		if (_msg_uid_set.count (msg_uid) > 0)
+		// g_printerr ("%s\n", msg_uid.c_str());
+		if (_msg_uid_set.find (msg_uid) != _msg_uid_set.end())
 			return true;
-		_msg_uid_set.insert (msg_uid);
-		return false;
+		else {
+			_msg_uid_set.insert (msg_uid);
+			return false;
+		}
 	}
 
 private:
@@ -135,7 +138,7 @@ private:
 
 	struct ltstr {
 		bool operator () (const std::string &s1, const std::string &s2) const {
-			return g_strcmp0 (s1.c_str(), s2.c_str());
+			return g_strcmp0 (s1.c_str(), s2.c_str()) < 0;
 		}
 	};
 	std::set <std::string, ltstr> _msg_uid_set;
@@ -266,17 +269,19 @@ mu_msg_iter_next (MuMsgIter *iter)
 
 		if (iter->cursor() == iter->matches().end())
 			return FALSE;
+
 		/* filter out non-existing messages? */
-		else if ((iter->flags() &
-			  MU_MSG_ITER_FLAG_SKIP_UNREADABLE) &&
-			 !is_msg_file_readable (iter))
+		if ((iter->flags() &
+		     MU_MSG_ITER_FLAG_SKIP_UNREADABLE)
+		    && !is_msg_file_readable (iter))
 			return mu_msg_iter_next (iter); /*skip!*/
+
 		/* filter out msgid duplicates? */
-		else if ((iter->flags() & MU_MSG_ITER_FLAG_SKIP_DUPS) &&
+		if ((iter->flags() & MU_MSG_ITER_FLAG_SKIP_DUPS) &&
 			 msg_seen_before (iter))
 			return mu_msg_iter_next (iter); /*skip!*/
-		else
-			return TRUE;
+
+		return TRUE;
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
