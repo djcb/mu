@@ -53,7 +53,6 @@ private:
 	GHashTable *_threadinfo;
 };
 
-
 struct _MuMsgIter {
 public:
 	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum,
@@ -65,7 +64,11 @@ public:
 		threads     = (flags & MU_MSG_ITER_FLAG_THREADS);
 		descending  = (flags & MU_MSG_ITER_FLAG_DESCENDING);
 
-		_matches = _enq.get_mset (0, maxnum);
+		/* if we need to calculate threads, initialy get /all/
+		 * matches, calculate threads based on that, and then
+		 * return maxnum messages
+		 */
+		_matches = _enq.get_mset (0, threads ? G_MAXINT: maxnum);
 
 		/* when threading, we calculate the threads for the
 		 * set of matches, then requery/sort based on the
@@ -137,7 +140,8 @@ private:
 	MuMsgIterFlags _flags;
 
 	struct ltstr {
-		bool operator () (const std::string &s1, const std::string &s2) const {
+		bool operator () (const std::string &s1,
+				  const std::string &s2) const {
 			return g_strcmp0 (s1.c_str(), s2.c_str()) < 0;
 		}
 	};
