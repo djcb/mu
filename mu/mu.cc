@@ -51,10 +51,7 @@ show_version (void)
 static void
 handle_error (MuConfig *conf, MuError merr, GError **err)
 {
-	if (merr != MU_OK && !(err && *err)) {
-		g_printerr ("mu: something went wrong\n");
-		return;
-	} else if (!(err && *err))
+	if (!(err && *err))
 		return;
 
 	switch ((*err)->code) {
