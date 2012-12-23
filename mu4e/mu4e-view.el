@@ -34,7 +34,6 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 
-(require 'longlines)
 (require 'comint)
 (require 'browse-url)
 (require 'button)
@@ -43,6 +42,7 @@
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
+
 
 ;; the message view
 (defgroup mu4e-view nil
@@ -549,7 +549,7 @@ FUNC should be a function taking two arguments:
       (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
 
       ;; misc
-      (define-key map "w" 'longlines-mode)
+      (define-key map "w" 'visual-line-mode)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
 
       ;; next 3 only warn user when attempt in the message view
@@ -571,7 +571,7 @@ FUNC should be a function taking two arguments:
 
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
-	  '("Toggle wrap lines" . longlines-mode))
+	  '("Toggle wrap lines" . visual-line-mode))
 	(define-key menumap [hide-cited]
 	  '("Toggle hide cited" . mu4e-view-toggle-hide-cited))
 	(define-key menumap [raw-view]
