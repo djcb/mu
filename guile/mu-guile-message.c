@@ -473,7 +473,6 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 	iter = get_query_iter (mu_guile_instance()->query, expr,
 			       scm_to_int(MAXNUM));
 	free (expr);
-
 	if (!iter)
 		return SCM_UNSPECIFIED;
 
@@ -481,6 +480,8 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 		call_func (FUNC, iter, FUNC_NAME);
 		mu_msg_iter_next (iter);
 	}
+
+	mu_msg_iter_destroy (iter);
 
 	return SCM_UNSPECIFIED;
 }
