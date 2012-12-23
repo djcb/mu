@@ -114,15 +114,20 @@ get_script_info_list (const char *muhome, GError **err)
 				    "scripts" G_DIR_SEPARATOR_S "stats");
 
 	/* is there are userdir for scripts? */
-	if (!mu_util_check_dir (userpath, TRUE, FALSE))
+	if (!mu_util_check_dir (userpath, TRUE, FALSE)) {
+		g_free (userpath);
 		return scripts;
+	}
 
 	/* append it to the list we already have */
 	userscripts = mu_script_get_script_info_list (userpath, MU_GUILE_EXT,
 						      MU_GUILE_DESCR_PREFIX,
 						      err);
+	g_free (userpath);
+
 	/* some error, return nothing */
 	if (err && *err) {
+		mu_script_info_list_destroy (userscripts);
 		mu_script_info_list_destroy (scripts);
 		return NULL;
 	}
