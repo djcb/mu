@@ -500,9 +500,9 @@ after the end of the search results."
       (define-key map (kbd "<M-down>") 'mu4e-headers-next)
 
       ;; change the number of headers
-      (define-key map (kbd "C-+") 'mu4e-headers-split-view-resize)
+      (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
-      (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-resize)
+      (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
 
 
@@ -1301,12 +1301,12 @@ maildir)."
     (mu4e-mark-handle-when-leaving)
     (mu4e-headers-search (concat "\"maildir:" maildir "\""))))
 
-(defun mu4e-headers-split-view-resize (n)
-  "In split-view grow the headers window.
+(defun mu4e-headers-split-view-grow (n)
+  "In split-view, grow the headers window.
 In horizontal split-view, increase the number of lines shown by N.
 In vertical split-view, increase the number of columns shown by N.
-If N is negative shrink the headers window.
-When not in split-view do nothing."
+If N is negative shrink the headers window.  When not in split-view
+do nothing."
   (interactive "P")
   (let ((n (or n 1))
 	 (hwin (get-buffer-window mu4e~headers-buffer)))
@@ -1322,13 +1322,13 @@ When not in split-view do nothing."
 	   (incf mu4e-headers-visible-columns n)))))))
 
 (defun mu4e-headers-split-view-shrink (n)
-  "In split-view shrink the headers window.
+  "In split-view, shrink the headers window.
 In horizontal split-view, decrease the number of lines shown by N.
 In vertical split-view, decrease the number of columns shown by N.
 If N is negative grow the headers window.
 When not in split-view do nothing."
   (interactive "P")
-  (mu4e-headers-split-view-resize (- n)))
+  (mu4e-headers-split-view-grow (- n)))
 
 (defun mu4e-headers-action ()
   "Ask user what to do with message-at-point, then do it.

@@ -498,9 +498,9 @@ FUNC should be a function taking two arguments:
       (define-key map "a" 'mu4e-view-action)
 
       ;; change the number of headers
-      (define-key map (kbd "C-+") 'mu4e-headers-split-view-resize)
+      (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
-      (define-key map (kbd "<C-kp-add>")      'mu4e-headers-split-view-resize)
+      (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
 
       ;; intra-message navigation
