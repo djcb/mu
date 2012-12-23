@@ -175,10 +175,10 @@ part, but this can be changed by setting
     (with-temp-buffer
       (insert body)
       (goto-char (point-min))
-      (while (re-search-forward "[Â Â’]" nil t)
+      (while (re-search-forward "[ ’]" nil t)
 	(replace-match
 	  (cond
-	    ((string= (match-string 0) "Â’") "'")
+	    ((string= (match-string 0) "’") "'")
 	    (t		                       ""))))
       (buffer-string))))
 
