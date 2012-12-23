@@ -139,27 +139,72 @@ mu_script_info_list_destroy (GSList *lst)
 	g_slist_free    (lst);
 }
 
+
+static GIOChannel *
+open_channel (const char *path)
+{
+	GError *err;
+	GIOChannel *io_chan;
+
+	err = NULL;
+
+	io_chan = g_io_channel_new_file (path, "r", &err);
+	if (!io_chan) {
+		g_warning ("failed to open '%s': %s", path,
+			   err ? err->message : "something went wrong");
+		g_clear_error (&err);
+		return NULL;
+	}
+
+	return io_chan;
+}
+
+static void
+end_channel (GIOChannel *io_chan)
+{
+	GIOStatus status;
+	GError *err;
+
+	err    = NULL;
+	status = g_io_channel_shutdown (io_chan, FALSE,
+					&err);
+	if (status != G_IO_STATUS_NORMAL) {
+		g_warning ("failed to shutdown io-channel: %s",
+			   err ? err->message : "something went wrong");
+		g_clear_error (&err);
+	}
+
+	g_io_channel_unref (io_chan);
+}
+
+
+
 static gboolean
 get_descriptions (MuScriptInfo *msi, const char *prefix)
 {
-	FILE *script;
+	GIOStatus  io_status;
+	GIOChannel *script_io;
+	GError *err;
+
 	char *line, *descr, *oneline;
-	size_t n;
 
 	if (!prefix)
 		return TRUE; /* not an error */
 
-	script = fopen (msi->_path, "r");
-	if (!script) {
-		g_warning ("failed to open %s: %s",
-			   msi->_path, strerror(errno));
+	if (!(script_io = open_channel (msi->_path)))
 		return FALSE;
-	}
 
-	for (descr = oneline = NULL, line = NULL;
-	     getline (&line, &n, script) != -1; free (line), line = NULL) {
+	err  = NULL;
+	line = descr = oneline = NULL;
 
-		if (!g_str_has_prefix(line, prefix))
+	do {
+		g_free (line);
+		io_status = g_io_channel_read_line (script_io, &line,
+						    NULL, NULL, &err);
+		if (io_status != G_IO_STATUS_NORMAL)
+			break;
+
+		if (!g_str_has_prefix (line, prefix))
 			continue;
 
 		if (!oneline)
@@ -167,14 +212,21 @@ get_descriptions (MuScriptInfo *msi, const char *prefix)
 		else {
 			char *tmp;
 			tmp = descr;
-			descr = g_strdup_printf ("%s%s", descr ? descr : "",
-						 line + strlen(prefix));
-			g_free (tmp);
+			descr = g_strdup_printf
+				("%s%s", descr ? descr : "",
+				 line + strlen(prefix));
+				g_free (tmp);
 		}
+
+	} while (TRUE);
+
+	if (io_status != G_IO_STATUS_EOF) {
+		g_warning ("error reading %s: %s", msi->_path,
+			   err ? err->message : "something went wrong");
+		g_clear_error (&err);
 	}
 
-	fclose (script);
-
+	end_channel (script_io);
 	msi->_oneline = oneline;
 	msi->_descr   = descr;
 
