@@ -656,12 +656,11 @@ parse_params (int *argcp, char ***argvp, GError **err)
 	context = g_option_context_new("- mu general options");
 
 	g_option_context_set_help_enabled (context, TRUE);
-
-	err = NULL;
 	rv  = TRUE;
 
 	g_option_context_set_main_group(context,
 					config_options_group_mu());
+	g_option_context_set_ignore_unknown_options (context, FALSE);
 
 	switch (MU_CONFIG.cmd) {
 	case MU_CONFIG_CMD_NONE:
@@ -676,10 +675,12 @@ parse_params (int *argcp, char ***argvp, GError **err)
 	default:
 		group = get_option_group (MU_CONFIG.cmd);
 		if (group)
-			g_option_context_add_group(context, group);
+			g_option_context_add_group (context, group);
+
 		rv = g_option_context_parse (context, argcp, argvp, err);
 		break;
 	}
+
 	g_option_context_free (context);
 
 	return rv ? TRUE : FALSE;
