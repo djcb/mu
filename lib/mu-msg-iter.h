@@ -177,6 +177,33 @@ typedef struct _MuMsgIterThreadInfo MuMsgIterThreadInfo;
  */
 const MuMsgIterThreadInfo* mu_msg_iter_get_thread_info (MuMsgIter *iter);
 
+
+
+/**
+ * get a the message-id for this message
+ *
+ * @param iter a valid MuMsgIter iterator
+ *
+ * @return the message-id; this only stays valid as long as the
+ * current iter stays valid.
+ */
+const char* mu_msg_iter_get_msgid (MuMsgIter *iter);
+
+/**
+ * get the list of references for this messages as a NULL-terminated
+ * string array
+ *
+ * @param iter a valid MuMsgIter iterator
+ *
+ * @return a NULL-terminated string array. free with g_strfreev when
+ * it's no longer needed.
+ */
+char** mu_msg_iter_get_refs (MuMsgIter *iter);
+
+
+
+
+
 /* FIXME */
 const char* mu_msg_iter_get_path (MuMsgIter *iter);
 

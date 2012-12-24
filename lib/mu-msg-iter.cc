@@ -137,6 +137,7 @@ public:
 		}
 	}
 
+
 	bool skip_dups ()       const { return _skip_dups; }
 	bool skip_unreadable () const { return _skip_unreadable; }
 
@@ -300,12 +301,43 @@ mu_msg_iter_is_done (MuMsgIter *iter)
 unsigned int
 mu_msg_iter_get_docid (MuMsgIter *iter)
 {
+	g_return_val_if_fail (iter, (unsigned int)-1);
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter),
 			      (unsigned int)-1);
 	try {
 		return iter->cursor().get_document().get_docid();
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN (0);
+	} MU_XAPIAN_CATCH_BLOCK_RETURN ((unsigned int)-1);
+}
+
+
+
+const char*
+mu_msg_iter_get_msgid (MuMsgIter *iter)
+{
+	g_return_val_if_fail (iter, NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+
+	try {
+		return iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID).c_str();
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
+}
+
+
+char**
+mu_msg_iter_get_refs (MuMsgIter *iter)
+{
+	g_return_val_if_fail (iter, NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+
+	try {
+		std::string refs (
+			iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_REFS));
+		if (refs.empty())
+			return NULL;
+		return g_strsplit (refs.c_str(),",", -1);
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
 
 
