@@ -28,7 +28,7 @@ Documentation License.''
 
 @titlepage
 @title @t{mu4e} - an e-mail client for emacs
-@subtitle{version  @value{mu-version}}
+@subtitle version  @value{mu-version}
 @author Dirk-Jan C. Binnema
 
 @c The following two commands start the copyright page.
