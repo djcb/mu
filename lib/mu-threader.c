@@ -71,6 +71,8 @@ mu_threader_calculate (MuMsgIter *iter, size_t matchnum,
 
 	/* step 1 */
 	id_table = create_containers (iter);
+	if (matchnum == 0)
+		return id_table; /* just return an empty table */
 
 	/* step 2 -- the root_set is the list of children without parent */
 	root_set = find_root_set (id_table);

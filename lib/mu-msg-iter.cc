@@ -71,6 +71,11 @@ public:
 		_matches         = _enq.get_mset (0, G_MAXINT);
 
 		_matches.fetch();
+		_cursor	   = _matches.begin();
+
+		if (_matches.empty())
+			return;
+
 		_skip_dups       = false;
 		_thread_hash = mu_threader_calculate
 			(this, _matches.size(), sortfield, descending);
@@ -85,6 +90,7 @@ public:
 		 * non-scientific testing suggests. 5-10% or so */
 		if (_matches.size() <= MAX_FETCH_SIZE)
 			_matches.fetch ();
+
 	}
 
 	~_MuMsgIter () {
@@ -182,11 +188,10 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 			      sortfield == MU_MSG_FIELD_ID_NONE,
 			      FALSE);
 	try {
-		MuMsgIter *iter;
-		iter = new MuMsgIter ((Xapian::Enquire&)*enq,
-				      maxnum,
-				      sortfield,
-				      flags);
+		MuMsgIter *iter (new MuMsgIter ((Xapian::Enquire&)*enq,
+						maxnum,
+						sortfield,
+						flags));
 		// note: we check if it's a dup even for the first message,
 		// since we need its uid in the set for checking later messages
 		if ((iter->skip_unreadable() && !is_msg_file_readable (iter)) ||
