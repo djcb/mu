@@ -123,8 +123,6 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 	}
 
 	qflags = MU_QUERY_FLAG_NONE;
-	if (opts->threads)
-		qflags |= MU_QUERY_FLAG_THREADS;
 	if (opts->reverse)
 		qflags |= MU_QUERY_FLAG_DESCENDING;
 	if (opts->skip_dups)
@@ -574,7 +572,12 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 		msg = get_message (iter, opts->after);
 		if (!msg)
 			break;
+		/* { */
+		/* 	const char* thread_id; */
+		/* 	thread_id = mu_msg_iter_get_thread_id (iter); */
+		/* 	g_print ("%s ", thread_id ? thread_id : "<none>"); */
 
+		/* } */
 		rv = output_func (msg, iter, opts, err);
 		if (!rv)
 			break;

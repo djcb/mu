@@ -71,7 +71,7 @@ run_and_get_iter (const char *xpath, const char *query)
 	g_assert (query);
 
 	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_DATE,
-			     -1, MU_QUERY_FLAG_THREADS, NULL);
+			     -1, MU_QUERY_FLAG_NONE, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 

@@ -652,7 +652,7 @@ cmd_contacts (ServerContext *ctx, GSList *args, GError **err)
 
 
 static unsigned
-print_sexps (MuMsgIter *iter, gboolean threads, unsigned maxnum)
+print_sexps (MuMsgIter *iter, unsigned maxnum)
 {
 	unsigned u;
 	u = 0;
@@ -665,8 +665,7 @@ print_sexps (MuMsgIter *iter, gboolean threads, unsigned maxnum)
 		if (mu_msg_is_readable (msg)) {
 			char *sexp;
 			const MuMsgIterThreadInfo* ti;
-
-			ti = threads ? mu_msg_iter_get_thread_info (iter) : NULL;
+			ti   = mu_msg_iter_get_thread_info (iter);
 			sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
 					       ti, MU_MSG_OPTION_HEADERS_ONLY);
 			print_expr ("%s", sexp);
@@ -863,9 +862,6 @@ get_find_params (GSList *args, MuMsgFieldId *sortfield,
 	/* flags */
 	*qflags = MU_QUERY_FLAG_NONE;
 
-	if (get_bool_from_args (args, "threads", TRUE, NULL))
-		*qflags |= MU_QUERY_FLAG_THREADS;
-
 	/* maximum number of results */
 	maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
 	*maxnum = maxnumstr ? atoi (maxnumstr) : 0;
@@ -923,9 +919,7 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 	 * will ensure that the output of two finds will not be
 	 * mixed. */
 	print_expr ("(:erase t)");
-	foundnum = print_sexps (iter,
-				qflags & MU_QUERY_FLAG_THREADS,
-				maxnum > 0 ? maxnum : G_MAXINT32);
+	foundnum = print_sexps (iter, maxnum);
 	print_expr ("(:found %u)", foundnum);
 	mu_msg_iter_destroy (iter);
 
