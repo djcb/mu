@@ -127,7 +127,7 @@ sent messages into message threads."
   :type 'boolean
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-include-related-maxnum 500
+(defcustom mu4e-headers-include-related-maxnum 800
   "Ignore `mu4e-headers-includer-related' when
 `mu4e-headers-results-limit' is greater than this value (including
 'unlimited')"
@@ -863,7 +863,7 @@ the query history stack."
 	 (inhibit-read-only t)
 	  (maxnum (unless mu4e-headers-full-search mu4e-headers-results-limit))
 	  (include-related
-	    (when (and maxnum (< maxnum mu4e-headers-include-related-maxnum))
+	    (when (and maxnum (<= maxnum mu4e-headers-include-related-maxnum))
 	      mu4e-headers-include-related)))
     (with-current-buffer buf
       (mu4e-headers-mode)
