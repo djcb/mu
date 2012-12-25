@@ -486,6 +486,9 @@ contains (GSList *lst, const char *str)
 }
 
 
+/*
+ * NOTE: this will get the list of references with the oldest parent
+ * at the beginning */
 static GSList*
 get_references  (MuMsgFile *self)
 {
@@ -520,6 +523,8 @@ get_references  (MuMsgFile *self)
 		g_mime_references_free (mime_refs);
 	}
 
+	/* reverse, because we used g_slist_prepend for performance
+	 * reasons */
 	return g_slist_reverse (msgids);
 }
 

@@ -390,12 +390,11 @@ time_t     mu_msg_get_timestamp       (MuMsg *msg);
 const char* mu_msg_get_header (MuMsg *self, const char *header);
 
 
-
 /**
- * get the list of references, with the direct parent as the final
- * one; this final one is typically the 'In-reply-to' field. Note, any
- * reference (message-id) will appear at most once, duplicates are
- * filtered out.
+ * get the list of references (consisting of both the References and
+ * In-Reply-To fields), with the oldest first and the direct parent as
+ * the last one. Note, any reference (message-id) will appear at most
+ * once, duplicates are filtered out.
  *
  * @param msg a valid MuMsg
  *
