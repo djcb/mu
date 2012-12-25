@@ -66,7 +66,9 @@ public:
 		// set _skip_dups to false, so we'll calculate threadinfo
 		// for all, and then skip some after sorting
 		_skip_dups       = false;
-		_matches         = _enq.get_mset (0, maxnum);
+		// first, we get _all_ matches (G_MAXINT), based the threads
+		// on that, then return <maxint> of those
+		_matches         = _enq.get_mset (0, G_MAXINT);
 
 		_matches.fetch();
 		_skip_dups       = false;
