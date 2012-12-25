@@ -59,37 +59,25 @@ public:
 		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
 		_enq(enq), _thread_hash (0), _msg(0), _flags(flags) {
 
-		bool threads, descending;
+		bool descending;
 
-		threads          = (flags & MU_MSG_ITER_FLAG_THREADS);
 		descending       = (flags & MU_MSG_ITER_FLAG_DESCENDING);
-
 		_skip_unreadable = (flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE);
-		_skip_dups       = (flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
+		// set _skip_dups to false, so we'll calculate threadinfo
+		// for all, and then skip some after sorting
+		_skip_dups       = false;
+		_matches         = _enq.get_mset (0, maxnum);
 
-		/* if we need to calculate threads, initialy get /all/
-		 * matches, calculate threads based on that, and then
-		 * return maxnum messages
-		 */
-		_matches = _enq.get_mset (0, threads ? G_MAXINT: maxnum);
+		_matches.fetch();
+		_skip_dups       = false;
+		_thread_hash = mu_threader_calculate
+			(this, _matches.size(), sortfield, descending);
 
-		/* when threading, we calculate the threads for the
-		 * set of matches, then requery/sort based on the
-		 * threading */
-		if (threads && !_matches.empty()) {
-
-			_matches.fetch();
-			_thread_hash = mu_threader_calculate
-				(this, _matches.size(), sortfield,
-				 descending ? TRUE: FALSE);
-
-			ThreadKeyMaker keymaker(_thread_hash);
-
-			enq.set_sort_by_key (&keymaker, false);
-			_matches = _enq.get_mset (0, maxnum);
-		}
-
-		_cursor	 = _matches.begin();
+		ThreadKeyMaker	keymaker(_thread_hash);
+		enq.set_sort_by_key (&keymaker, false);
+		_matches   = _enq.get_mset (0, maxnum);
+		_skip_dups = (flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
+		_cursor	   = _matches.begin();
 
 		/* this seems to make search slightly faster, some
 		 * non-scientific testing suggests. 5-10% or so */
@@ -126,9 +114,11 @@ public:
 		try {
 			const std::string msg_uid
 				(cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID));
-			if (_msg_uid_set.find (msg_uid) != _msg_uid_set.end())
+			if (_msg_uid_set.find (msg_uid) != _msg_uid_set.end()) {
+				// std::cerr << "dup: " << msg_uid << std::endl;
 				return true;
-			else {
+			} else {
+				// std::cerr << "no dup: " << msg_uid << std::endl;
 				_msg_uid_set.insert (msg_uid);
 				return false;
 			}
@@ -166,13 +156,15 @@ private:
 static gboolean
 is_msg_file_readable (MuMsgIter *iter)
 {
+	gboolean readable;
 	std::string path
 		(iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_PATH));
 
 	if (path.empty())
 		return FALSE;
 
-	return (access (path.c_str(), R_OK) == 0) ? TRUE : FALSE;
+	readable = (access (path.c_str(), R_OK) == 0) ? TRUE : FALSE;
+	return readable;
 }
 
 
@@ -184,9 +176,6 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 {
 	g_return_val_if_fail (enq, NULL);
 	/* sortfield should be set to .._NONE when we're not threading */
-	g_return_val_if_fail ((flags & MU_MSG_ITER_FLAG_THREADS)
-			      || sortfield == MU_MSG_FIELD_ID_NONE,
-			      NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfield) ||
 			      sortfield == MU_MSG_FIELD_ID_NONE,
 			      FALSE);
@@ -319,7 +308,11 @@ mu_msg_iter_get_msgid (MuMsgIter *iter)
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 
 	try {
-		return iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID).c_str();
+		const std::string msgid (
+			iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID).c_str());
+
+		return msgid.empty() ? NULL : msgid.c_str();
+
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
 
@@ -339,6 +332,22 @@ mu_msg_iter_get_refs (MuMsgIter *iter)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
+
+const char*
+mu_msg_iter_get_thread_id (MuMsgIter *iter)
+{
+	g_return_val_if_fail (iter, NULL);
+	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
+
+	try {
+		const std::string thread_id (
+			iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_THREAD_ID).c_str());
+		return thread_id.empty() ? NULL : thread_id.c_str();
+
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
+}
+
 
 
 

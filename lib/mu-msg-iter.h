@@ -39,15 +39,13 @@ typedef struct _MuMsgIter MuMsgIter;
 
 enum _MuMsgIterFlags {
 	MU_MSG_ITER_FLAG_NONE                 = 0,
-	/*calculate the threads? */
-	MU_MSG_ITER_FLAG_THREADS              = 1 << 0,
 	/* sort Z->A (only for threads) */
-	MU_MSG_ITER_FLAG_DESCENDING           = 1 << 1,
+	MU_MSG_ITER_FLAG_DESCENDING           = 1 << 0,
 	/* ignore results for which there is no existing
 	 * readable message-file? */
-	MU_MSG_ITER_FLAG_SKIP_UNREADABLE      = 1 << 2,
+	MU_MSG_ITER_FLAG_SKIP_UNREADABLE      = 1 << 1,
 	/* ignore duplicate messages? */
-	MU_MSG_ITER_FLAG_SKIP_DUPS            = 1 << 3
+	MU_MSG_ITER_FLAG_SKIP_DUPS            = 1 << 2
 };
 typedef unsigned MuMsgIterFlags;
 
@@ -60,8 +58,7 @@ typedef unsigned MuMsgIterFlags;
  * @param enq a Xapian::Enquire* cast to XapianEnquire* (because this
  * is C, not C++),providing access to search results
  * @param maxnum the maximum number of results
- * @param sorting field for threads; when threads are not wanted, set it to
- * MU_MSG_FIELD_ID_NONE
+ * @param sortfield field to sort by
  * @param flags flags for this iterator (see MsgIterFlags)
 
  * @param err receives error information. if the error is
@@ -71,7 +68,7 @@ typedef unsigned MuMsgIterFlags;
  */
 MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
 			    size_t maxnum,
-			    MuMsgFieldId threadsortfield,
+			    MuMsgFieldId sortfield,
 			    MuMsgIterFlags flags,
 			    GError **err) G_GNUC_WARN_UNUSED_RESULT;
 
@@ -180,7 +177,7 @@ const MuMsgIterThreadInfo* mu_msg_iter_get_thread_info (MuMsgIter *iter);
 
 
 /**
- * get a the message-id for this message
+ * get the message-id for this message
  *
  * @param iter a valid MuMsgIter iterator
  *
@@ -199,6 +196,19 @@ const char* mu_msg_iter_get_msgid (MuMsgIter *iter);
  * it's no longer needed.
  */
 char** mu_msg_iter_get_refs (MuMsgIter *iter);
+
+
+/**
+ * get the thread-id for this message
+ *
+ * @param iter a valid MuMsgIter iterator
+ *
+ * @return the thread-id; this only stays valid as long as the
+ * current iter stays valid.
+ */
+const char* mu_msg_iter_get_thread_id (MuMsgIter *iter);
+
+
 
 
 
