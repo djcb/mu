@@ -429,10 +429,18 @@ details of the bookmarks file.
 
 
 .TP
-\fB\-\-no\-dups\fR,\fB-u\fR
-whenever there are multiple messages with the same name, only show the first
-one. This is useful if you have copies of the same message, which is a common
-occurence when using e.g. Gmail together with \fBofflineimap\fR.
+\fB\-\-skip\-dups\fR,\fB-u\fR whenever there are multiple messages with the
+same name, only show the first one. This is useful if you have copies of the
+same message, which is a common occurence when using e.g. Gmail together with
+\fBofflineimap\fR.
+
+.TP
+\fB\-\-include\-related\fR,\fB-u\fR also include messages being refered to by
+the matched messages -- that is, they are part of the same message
+thread. This is useful if you want Gmail-style 'conversations'. Note that
+calculating the related messages can take a bit of time if there are many
+matches, so it works best if the number of initial matches are not beyond
+1000-2000.
 
 .TP
 \fB\-t\fR, \fB\-\-threads\fR

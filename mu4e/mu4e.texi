@@ -1149,7 +1149,7 @@ decryption of encrypted messages, as well as verification of signatures. For
 signing/encrypting messages your outgoing messages, see @ref{Signing and
 encrypting}.
 
-Currently, only PGP/MIME is supported; PGP-inline and S/MIME are not. 
+Currently, only PGP/MIME is supported; PGP-inline and S/MIME are not.
 
 For all of this to work, @command{gpg-agent} must be running, and it must set
 the environment variable @t{GPG_AGENT_INFO}. You can check from
@@ -1159,7 +1159,7 @@ In many mainstream Linux/Unix desktop environments, everything works
 out-of-the-box, but if your environment does not automatically start
 @command{gpg-agent}, you can do so by hand:
 @verbatim
-$ eval $(gpg-agent --daemon) 
+$ eval $(gpg-agent --daemon)
 @end verbatim
 
 @noindent
@@ -1469,7 +1469,7 @@ configuration:
 executing a query for messages that happen to have the property of being in a
 certain folder.
 
-By default, queries return up to @code{mu4e-search-results-limit} (default:
+Normally, queries return up to @code{mu4e-headers-results-limit} (default:
 500) results. That is usually more than enough, and makes things significantly
 faster. Sometimes, however, you may want to show @emph{all} results; you can
 enable this with @kbd{M-x mu4e-headers-toggle-full-search}, or by customizing
@@ -1682,7 +1682,31 @@ query, so, effectively 'widens' the search. Technically, narrowing the results
 of query @t{x} with expression @t{y} implies doing a search @t{(x) AND y}.
 
 Note, messages that were not in your in your original search results because
-of @code{mu4e-search-results-limit}, may show up in the narrowed query.
+of @code{mu4e-headers-results-limit}, may show up in the narrowed query.
+
+@subsection Including related messages
+@anchor{Including related messages}
+
+It can be useful to include @emph{related} messages in your search results --
+that is, messages that belong to the message threads that one or more of the
+matched messages belong to, too. With this option, results are somewhat like
+the discussion threads in Gmail.
+
+To enable this, set @code{mu4e-headers-include-related} to @code{t}. Since
+this can significanlty affect performance when there are many results,
+@code{mu4e-headers-include-related} is automatically disabled (for the next
+query) when the @code{mu4e-headers-results-limit} exceeds
+@code{mu4e-headers-include-related-maxnum}.
+
+@subsection Skipping duplicates
+@anchor{Skipping duplicates}
+
+It is possible to show only one of multiple, duplicate messages (messages with
+the same Message-ID). This can be useful when you have copies of the same
+message, which is a common case, for example, when using Gmail and
+@t{offlineimap}.
+
+To skip duplicates, set @code{mu4e-headers-skip-duplicates} to @code{t}.
 
 @node Marking
 @chapter Marking
@@ -2876,6 +2900,10 @@ later, it is possible to do both (note, only PGP/MIME is supported). In the
 hand side of the @t{mu4e} version. See @ref{Decryption} and @ref{Verifying
 signatures}. For encryption and signing messages, see the @ref{Writing
 messages}.
+@item @emph{Does @t{mu4e} support including all related messages in a thread,
+like Gmail does?} Yes -- see @ref{Including related messages}.
+@item @emph{There seem to be a lot of duplicate messages -- how can I get rid
+of them?} See @ref{Skipping duplicates}.
 @end enumerate
 
 @node Writing messages
