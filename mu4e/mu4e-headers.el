@@ -106,6 +106,15 @@ and offlineimap."
   :type 'boolean
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-include-related nil
+  "With this option set to non-nil, not just return the matches for
+a searches, but also messages that are related (through their
+references) to these messages. This can be useful e.g. to include
+sent messages into message threads."
+  :type 'boolean
+  :group 'mu4e-headers)
+
+
 
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
@@ -854,7 +863,8 @@ the query history stack."
       mu4e~headers-sort-field
       mu4e~headers-sort-direction
       (unless mu4e-headers-full-search mu4e-search-results-limit)
-      mu4e-headers-skip-duplicates)))
+      mu4e-headers-skip-duplicates
+      mu4e-headers-include-related)))
 
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value

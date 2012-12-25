@@ -317,29 +317,36 @@ In particular, backslashes and double-quotes."
   (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" query)))
     (replace-regexp-in-string "\"" "\\\\\"" esc)))
 
-(defun mu4e~proc-find (query threads sortfield sortdir maxnum skip-dups)
+(defun mu4e~proc-find (query threads sortfield sortdir maxnum skip-dups include-related)
   "Start a database query for QUERY.
 If THREADS is non-nil, show results in threaded fasion, SORTFIELD
 is a symbol describing the field to sort by (or nil); see
 `mu4e~headers-sortfield-choices'. If SORT is `descending', sort
 Z->A, if it's `ascending', sort A->Z. MAXNUM determines the maximum
-number of results to return, or nil for 'unlimited'. If
-SKIP-DUPS is non-nil, show only one of duplicate messages.
+number of results to return, or nil for 'unlimited'. If SKIP-DUPS
+is non-nil, show only one of duplicate messages (see
+`mu4e-headers-skip-duplicates').  If INCLUDE-RELATED is non-nil,
+include messages related to the messages matching the search
+query (see `mu4e-headers-include-related').
 
 For each
 result found, a function is called, depending on the kind of
 result. The variables `mu4e-error-func' contain the function that
 will be called for, resp., a message (header row) or an error."
   (mu4e~proc-send-command
-    "find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d skip-dups:%s"
-    (mu4e~proc-escape-query query)
-    (if threads "true" "false")
-    ;; sortfield is e.g. ':subject'; this removes the ':'
-    (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
-    ;; TODO: use ascending/descending in backend too (it's clearer than 'reverse'
-    (if (eq sortdir 'descending) "true" "false")
-    (if maxnum maxnum -1)
-    (if skip-dups "true" "false")))
+    (format 
+      (concat
+	"find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d "
+	"skip-dups:%s include-related:%s")
+      (mu4e~proc-escape-query query)
+      (if threads "true" "false")
+      ;; sortfield is e.g. ':subject'; this removes the ':'
+      (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
+      ;; TODO: use ascending/descending in backend too (it's clearer than 'reverse'
+      (if (eq sortdir 'descending) "true" "false")
+      (if maxnum maxnum -1)
+      (if skip-dups "true" "false")
+      (if include-related "true" "false"))))
 
 (defun mu4e~proc-move (docid-or-msgid &optional maildir flags)
   "Move message identified by DOCID-OR-MSGID.

@@ -129,6 +129,8 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 		qflags |= MU_QUERY_FLAG_DESCENDING;
 	if (opts->skip_dups)
 		qflags |= MU_QUERY_FLAG_SKIP_DUPS;
+	if (opts->include_related)
+		qflags |= MU_QUERY_FLAG_INCLUDE_RELATED;
 
 	iter = mu_query_run (xapian, query, sortid, -1, qflags, err);
 	return iter;

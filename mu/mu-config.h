@@ -143,6 +143,8 @@ struct _MuConfig {
 					 * messages with the same
 					 * msgid, show only the first
 					 * one */
+	gboolean        include_related; /* included related messages
+					  * in results */
 	/* for find and cind */
 	time_t            after;          /* only show messages or
 					   * adresses last seen after
