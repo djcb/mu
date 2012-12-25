@@ -98,6 +98,19 @@ indexing operation showed changes."
   :type 'boolean
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-results-limit 500
+  "Maximum number of results to show; this affects performance
+quite a bit, especially when `mu4e-headers-include-related' is
+non-nil. Set to -1 for no limits, and you temporarily (for one
+query) ignore the limit by pressing a C-u before invoking the
+search."
+  :type '(choice (const :tag "Unlimited" -1)
+	   (integer :tag "Limit"))
+  :group 'mu4e-headers)
+
+(make-obsolete-variable 'mu4e-search-results-limit
+  'mu4e-headers-results-limit "0.9.9.5-dev6")
+
 (defcustom mu4e-headers-skip-duplicates nil
   "With this option set to non-nil, show only one of duplicate
 messages. This is useful when you have multiple copies of the same
@@ -114,7 +127,12 @@ sent messages into message threads."
   :type 'boolean
   :group 'mu4e-headers)
 
-
+(defcustom mu4e-headers-include-related-maxnum 500
+  "Ignore `mu4e-headers-includer-related' when
+`mu4e-headers-results-limit' is greater than this value (including
+'unlimited')"
+  :type 'boolean
+  :group 'mu4e-headers)
 
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
@@ -833,7 +851,6 @@ docid is not found."
 
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
@@ -842,8 +859,12 @@ the query history stack."
   ;; note: we don't want to update the history if this query comes from
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'.
   (mu4e-hide-other-mu4e-buffers)
-  (let ((buf (get-buffer-create mu4e~headers-buffer-name))
-	 (inhibit-read-only t))
+  (let* ((buf (get-buffer-create mu4e~headers-buffer-name))
+	 (inhibit-read-only t)
+	  (maxnum (unless mu4e-headers-full-search mu4e-headers-results-limit))
+	  (include-related
+	    (when (and maxnum (< maxnum mu4e-headers-include-related-maxnum))
+	      mu4e-headers-include-related)))
     (with-current-buffer buf
       (mu4e-headers-mode)
       (unless ignore-history
@@ -862,9 +883,9 @@ the query history stack."
       mu4e-headers-show-threads
       mu4e~headers-sort-field
       mu4e~headers-sort-direction
-      (unless mu4e-headers-full-search mu4e-search-results-limit)
+      maxnum
       mu4e-headers-skip-duplicates
-      mu4e-headers-include-related)))
+      include-related)))
 
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value

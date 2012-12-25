@@ -105,15 +105,6 @@ personal message. This is used when indexing messages."
   :type 'string
   :group 'mu4e)
 
-(defcustom mu4e-search-results-limit 500
-  "Maximum number of search results.
-Use -1 for no limit.  Since limiting search results speeds up
-searches significantly, it's useful to limit this. Note, to
-ignore the limit, use a prefix argument (C-u) before invoking the
-search."
-  :type '(choice (const :tag "Unlimited" -1)
-                 (integer :tag "Limit"))
-  :group 'mu4e)
 
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
