@@ -560,6 +560,7 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 		break;
 	///////////////////////////////////////////
 
+	case MU_MSG_FIELD_ID_THREAD_ID:
 	case MU_MSG_FIELD_ID_UID:
 		break; /* already taken care of elsewhere */
 	default:
@@ -682,9 +683,33 @@ new_doc_from_message (MuStore *store, MuMsg *msg)
 	return doc;
 }
 
+static void
+update_threading_info (Xapian::WritableDatabase* db,
+		       MuMsg *msg, Xapian::Document& doc)
+{
+	const GSList *refs;
+
+	// refs contains a list of parent messages, with the oldest
+	// one first until the last one, which is the direct parent of
+	// the current message. of course, it may be empty.
+	//
+	// NOTE: there may be cases where the the list is truncated;
+	// we happily ignore that case.
+	refs  = mu_msg_get_references (msg);
+
+	std::string thread_id;
+	if (refs)
+		thread_id = mu_util_get_hash ((const char*)refs->data);
+	else
+		thread_id = mu_util_get_hash (mu_msg_get_msgid (msg));
+
+	doc.add_term (prefix(MU_MSG_FIELD_ID_THREAD_ID) + thread_id);
+	doc.add_value((Xapian::valueno)MU_MSG_FIELD_ID_THREAD_ID, thread_id);
+}
+
 
 unsigned
-mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
+add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 {
 	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
 	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
@@ -692,18 +717,23 @@ mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
 	try {
 		Xapian::docid id;
 		Xapian::Document doc (new_doc_from_message(store, msg));
-		const std::string term (store->get_uid_term
-					(mu_msg_get_path(msg)));
+		const std::string term (store->get_uid_term (mu_msg_get_path(msg)));
 
 		if (!store->in_transaction())
 			store->begin_transaction();
 
 		doc.add_term (term);
 
-		// MU_WRITE_LOG ("adding: %s", term.c_str());
+		// update the threading info if this message has a message id
+		if (mu_msg_get_msgid (msg))
+			update_threading_info (store->db_writable(), msg, doc);
 
-		/* note, this will replace any other messages for this path */
-		id = store->db_writable()->replace_document (term, doc);
+		if (docid == 0)
+			id = store->db_writable()->replace_document (term, doc);
+		else {
+			store->db_writable()->replace_document (docid, doc);
+			id = docid;
+		}
 
 		if (store->inc_processed() % store->batch_size() == 0)
 			store->commit_transaction();
@@ -719,6 +749,16 @@ mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
 }
 
 
+
+unsigned
+mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
+{
+	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
+	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
+
+	return add_or_update_msg (store, 0, msg, err);
+}
+
 unsigned
 mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 {
@@ -726,32 +766,8 @@ mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
 	g_return_val_if_fail (docid != 0, MU_STORE_INVALID_DOCID);
 
-	try {
-		Xapian::Document doc (new_doc_from_message(store, msg));
-
-		if (!store->in_transaction())
-			store->begin_transaction();
-
-		const std::string term
-			(store->get_uid_term(mu_msg_get_path(msg)));
-		doc.add_term (term);
-
-		store->db_writable()->replace_document (docid, doc);
-
-		if (store->inc_processed() % store->batch_size() == 0)
-			store->commit_transaction();
-
-		return docid;
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
-
-	if (store->in_transaction())
-		store->rollback_transaction();
-
-	return MU_STORE_INVALID_DOCID;
+	return add_or_update_msg (store, docid, msg, err);
 }
-
-
 
 unsigned
 mu_store_add_path (MuStore *store, const char *path, const char *maildir,
@@ -767,7 +783,7 @@ mu_store_add_path (MuStore *store, const char *path, const char *maildir,
 	if (!msg)
 		return MU_STORE_INVALID_DOCID;
 
-	docid = mu_store_add_msg (store, msg, err);
+	docid = add_or_update_msg (store, 0, msg, err);
 	mu_msg_unref (msg);
 
 	return docid;

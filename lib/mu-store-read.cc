@@ -44,18 +44,13 @@
 
 
 // note: not re-entrant
-const char*
+std::string
 _MuStore::get_uid_term (const char* path)
 {
-	// combination of DJB, BKDR hash functions to get a 64 bit
-	// value
-	unsigned djbhash, bkdrhash, bkdrseed;
-	unsigned u;
-
 	char real_path[PATH_MAX + 1];
-	static char hex[18];
-	static const char uid_prefix =
-		mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID);
+
+	static const std::string uid_prefix (
+		1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID));
 
 	/* check profile to see if realpath is expensive; we need
 	 * realpath here (and in mu-msg-file) to ensure that the same
@@ -66,19 +61,7 @@ _MuStore::get_uid_term (const char* path)
 	if (!realpath (path, real_path))
 		strcpy (real_path, path);
 
-	djbhash  = 5381;
-	bkdrhash = 0;
-	bkdrseed = 1313;
-
-	for(u = 0; real_path[u]; ++u) {
-		djbhash  = ((djbhash << 5) + djbhash) + real_path[u];
-		bkdrhash = bkdrhash * bkdrseed + real_path[u];
-	}
-
-	snprintf (hex, sizeof(hex), "%c%08x%08x",
-		  uid_prefix, djbhash, bkdrhash);
-
-	return hex;
+	return std::string (uid_prefix + mu_util_get_hash (real_path));
 }
 
 

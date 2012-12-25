@@ -57,6 +57,7 @@ enum _MuMsgFieldId {
 
 	/* add new ones here... */
 	MU_MSG_FIELD_ID_MAILING_LIST, /* mailing list */
+	MU_MSG_FIELD_ID_THREAD_ID,
 
 
 	MU_MSG_FIELD_ID_NUM

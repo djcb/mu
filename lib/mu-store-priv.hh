@@ -165,9 +165,7 @@ public:
 			mu_contacts_clear (_contacts);
 	}
 
-	/* get a unique id for this message; note, this function returns a
-	 * static buffer -- not reentrant */
-	const char *get_uid_term (const char *path);
+	std::string get_uid_term (const char *path);
 
 	MuContacts* contacts() { return _contacts; }
 

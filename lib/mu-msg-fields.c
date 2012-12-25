@@ -103,7 +103,7 @@ static const MuMsgField FIELD_DATA[] = {
 	{
 		MU_MSG_FIELD_ID_BODY_HTML,
 		MU_MSG_FIELD_TYPE_STRING,
-		"bodyhtml", 'h', 0,
+		"bodyhtml", 0, 0,
 		FLAG_GMIME | FLAG_DONT_CACHE
 	},
 
@@ -234,6 +234,14 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		"tag", 'x', 'X',
 		FLAG_GMIME | FLAG_XAPIAN_TERM |	FLAG_XAPIAN_ESCAPE
+	},
+
+
+	{	/* remember which thread this message is in */
+		MU_MSG_FIELD_ID_THREAD_ID,
+		MU_MSG_FIELD_TYPE_STRING,
+		"thread", 0, 'W',
+		FLAG_XAPIAN_TERM
 	},
 
 	{
