@@ -502,6 +502,20 @@ gboolean mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ..
 	G_GNUC_PRINTF(3,4);
 
 
+/**
+ * calculate a 64-bit hash for the given string, based on a
+ * combination of the DJB and BKDR hash functions
+ *
+ * @param a string
+ *
+ * @return the hash as a static string, which stays valid until this
+ * function is called again.
+ */
+const char* mu_util_get_hash (const char* str);
+
+
+
+
 #define MU_COLOR_RED		"\x1b[31m"
 #define MU_COLOR_GREEN		"\x1b[32m"
 #define MU_COLOR_YELLOW		"\x1b[33m"
