@@ -357,16 +357,30 @@ try_requery (MuQuery *self, const char* searchexpr, MuMsgFieldId sortfieldid,
 }
 
 
+static MuMsgIterFlags
+msg_iter_flags (MuQueryFlags flags)
+{
+	MuMsgIterFlags iflags;
+
+	iflags = MU_MSG_ITER_FLAG_NONE;
+
+	if (flags & MU_QUERY_FLAG_DESCENDING)
+		iflags |= MU_MSG_ITER_FLAG_DESCENDING;
+	if (flags & MU_QUERY_FLAG_SKIP_UNREADABLE)
+		iflags |= MU_MSG_ITER_FLAG_SKIP_UNREADABLE;
+	if (flags & MU_QUERY_FLAG_SKIP_DUPS)
+		iflags |= MU_MSG_ITER_FLAG_SKIP_DUPS;
+
+	return iflags;
+}
+
+
+
 static Xapian::Enquire
 get_enquire (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
-	     MuQueryFlags flags, GError **err)
+	     bool descending, GError **err)
 {
 	Xapian::Enquire enq (self->db());
-
-	if (sortfieldid != MU_MSG_FIELD_ID_NONE)
-		enq.set_sort_by_value
-			((Xapian::valueno)sortfieldid,
-			 (flags & MU_QUERY_FLAG_DESCENDING) ? true : false);
 
 	/* empty or "" means "matchall" */
 	if (!mu_str_is_empty(searchexpr) &&
@@ -380,29 +394,88 @@ get_enquire (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 	return enq;
 }
 
-
-static MuMsgIterFlags
-msg_iter_flags (MuQueryFlags flags)
+/*
+ * record all threadids for the messages
+ */
+static GHashTable*
+get_thread_ids (MuMsgIter *iter)
 {
-	MuMsgIterFlags iflags;
+	GHashTable *ids;
 
-	iflags = MU_MSG_ITER_FLAG_NONE;
+	ids = g_hash_table_new_full (g_str_hash, g_str_equal,
+				     (GDestroyNotify)g_free, NULL);
 
-	if (flags & MU_QUERY_FLAG_THREADS)
-		iflags |= MU_MSG_ITER_FLAG_THREADS;
-	if (flags & MU_QUERY_FLAG_DESCENDING)
-		iflags |= MU_MSG_ITER_FLAG_DESCENDING;
-	if (flags & MU_QUERY_FLAG_SKIP_UNREADABLE)
-		iflags |= MU_MSG_ITER_FLAG_SKIP_UNREADABLE;
-	if (flags & MU_QUERY_FLAG_SKIP_DUPS)
-		iflags |= MU_MSG_ITER_FLAG_SKIP_DUPS;
+	while (!mu_msg_iter_is_done (iter)) {
+		const char *thread_id;
+		if ((thread_id = mu_msg_iter_get_thread_id (iter)))
+			g_hash_table_insert (ids, g_strdup (thread_id),
+					     GSIZE_TO_POINTER(TRUE));
+		// g_print ("tid:'%s'\n", thread_id ? thread_id : "<none>");
 
-	return iflags;
+		if (!mu_msg_iter_next (iter))
+			break;
+	}
+
+	return ids;
+}
+
+
+static Xapian::Query
+get_related_query (MuMsgIter *iter)
+{
+	GHashTable *hash;
+	GList *id_list, *cur;
+	Xapian::Query query;
+	static std::string pfx (1, mu_msg_field_xapian_prefix
+				(MU_MSG_FIELD_ID_THREAD_ID));
+
+	hash = get_thread_ids (iter);
+	/* id_list now gets a list of all thread-ids seen in the query
+	 * results; either in the Message-Id field or in
+	 * References. */
+	id_list = g_hash_table_get_keys (hash);
+
+	/* now, let's create a new query matching all of those */
+	// g_print ("list: %u\n", (unsigned) g_list_length (id_list));
+	for (cur = id_list; cur; cur = g_list_next(cur)) {
+		query = Xapian::Query (Xapian::Query::OP_OR,
+				       query,
+				       Xapian::Query((std::string
+						      (pfx + (char*)cur->data))));
+	}
+
+	g_hash_table_destroy (hash);
+	g_list_free (id_list);
+
+	/* now, `query' should match all related messages */
+	return query;
+}
+
+
+static void
+include_related (MuQuery *self, MuMsgIter **iter, int maxnum,
+		 MuMsgFieldId sortfieldid, MuQueryFlags flags)
+{
+	Xapian::Enquire enq (self->db());
+	MuMsgIter *rel_iter;
+
+	enq.set_query(get_related_query (*iter));
+	enq.set_cutoff(0,0);
+
+	rel_iter= mu_msg_iter_new (
+		reinterpret_cast<XapianEnquire*>(&enq),
+		maxnum,
+		sortfieldid,
+		msg_iter_flags (flags),
+		NULL);
+
+	mu_msg_iter_destroy (*iter);
+	*iter = rel_iter;
 }
 
 
 MuMsgIter*
-mu_query_run (MuQuery *self, const char* searchexpr, MuMsgFieldId sortfieldid,
+mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 	      int maxnum, MuQueryFlags flags, GError **err)
 {
 	g_return_val_if_fail (self, NULL);
@@ -412,21 +485,24 @@ mu_query_run (MuQuery *self, const char* searchexpr, MuMsgFieldId sortfieldid,
 			      NULL);
 	try {
 		MuMsgIter *iter;
+		bool descending = flags & MU_QUERY_FLAG_DESCENDING;
 		Xapian::Enquire enq (get_enquire(self, searchexpr, sortfieldid,
-						 flags, err));
+						 descending, err));
 
 		/* get the 'real' maxnum if it was specified as < 0 */
 		maxnum = maxnum <= 0 ? self->db().get_doccount() : maxnum;
-
-		iter = mu_msg_iter_new (
+		iter   = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum,
-			/* in we were *not* using threads, no further sorting
-			 * is needed since Xapian already sorted */
-			(flags & MU_QUERY_FLAG_THREADS)
-			? sortfieldid : MU_MSG_FIELD_ID_NONE,
+			sortfieldid,
 			msg_iter_flags (flags),
 			err);
+		/*
+		 * if we want related messages, do a second query,
+		 * based on the message ids / refs of the first one
+		 * */
+		if (flags & MU_QUERY_FLAG_INCLUDE_RELATED)
+			include_related (self, &iter, maxnum, sortfieldid, flags);
 
 		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
 			g_clear_error (err);

@@ -68,11 +68,10 @@ char* mu_query_version (MuQuery *store)
 enum _MuQueryFlags {
 	MU_QUERY_FLAG_NONE            = 0,
 
-	MU_QUERY_FLAG_THREADS	      = 1 << 0,	/**< add threading info */
-	MU_QUERY_FLAG_DESCENDING      = 1 << 1,	/**< sort z->a */
-	MU_QUERY_FLAG_SKIP_UNREADABLE = 1 << 2,	/**< skip unreadable msgs */
-	MU_QUERY_FLAG_SKIP_DUPS       = 1 << 3,	/**< skip duplicate msgs */
-	MU_QUERY_FLAG_INCLUDE_RELATED = 1 << 4  /**< include related msgs */
+	MU_QUERY_FLAG_DESCENDING      = 1 << 0,	/**< sort z->a */
+	MU_QUERY_FLAG_SKIP_UNREADABLE = 1 << 1,	/**< skip unreadable msgs */
+	MU_QUERY_FLAG_SKIP_DUPS       = 1 << 2,	/**< skip duplicate msgs */
+	MU_QUERY_FLAG_INCLUDE_RELATED = 1 << 3  /**< include related msgs */
 };
 typedef enum _MuQueryFlags	MuQueryFlags;
 
