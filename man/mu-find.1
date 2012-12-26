@@ -435,17 +435,16 @@ same message, which is a common occurence when using e.g. Gmail together with
 \fBofflineimap\fR.
 
 .TP
-\fB\-\-include\-related\fR,\fB-u\fR also include messages being refered to by
-the matched messages -- that is, they are part of the same message
-thread. This is useful if you want Gmail-style 'conversations'. Note that
-calculating the related messages can take a bit of time if there are many
-matches, so it works best if the number of initial matches are not beyond
-1000-2000.
+\fB\-\-include\-related\fR,\fB-r\fR also include messages being refered to by
+the matched messages -- i.e.. include messages that are part of the same
+message thread as some matched messages. This is useful if you want
+Gmail-style 'conversations'. Note, finding these related messages can take a
+bit of time if there are more than a thousand matches.
 
 .TP
-\fB\-t\fR, \fB\-\-threads\fR
-show messages in 'threaded' format -- that is, with indentation and arrows
-showing the conversation threads in the list of matching messages.
+\fB\-t\fR, \fB\-\-threads\fR show messages in a 'threaded' format -- that is,
+with indentation and arrows showing the conversation threads in the list of
+matching messages.
 
 Messages in the threaded list are indented based on the depth in the
 discussion, and are prefix with a kind of arrow with thread-related
