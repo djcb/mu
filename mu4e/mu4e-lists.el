@@ -73,7 +73,8 @@
      ("unicode.sarasvati.unicode.org"                         . "Unicode")
      ("xapian-discuss.lists.xapian.org"                       . "Xapian")
      ("xdg.lists.freedesktop.org"                             . "XDG")
-     ("wl-en.ml.gentei.org"                                   . "WL")
+     ("wl-en.lists.airs.net"                                  . "Wdrlust")
+     ("wl-en.ml.gentei.org"                                   . "WdrLust")
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
   "AList of mailing lists id -> shortname")
 
@@ -82,4 +83,3 @@
 addition to the 'built-in' list `mu4e~user-lists'.")
 
 (provide 'mu4e-lists)
-

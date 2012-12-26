@@ -482,9 +482,11 @@ that has a live window), and vice versa."
     (dolist (cell mu4e-user-mailing-lists) (puthash (car cell) (cdr cell) mu4e~lists-hash)))
   (or
     (gethash list-id mu4e~lists-hash)
-    ;; if it's not in the db, take the part until the first dot.
-    (when (string-match "\\([^.]*\\)\\." list-id)
-      (match-string 1 list-id))))
+    ;; if it's not in the db, take the part until the first dot if there is one;
+    ;; otherwise just return the whole thing
+    (if (string-match "\\([^.]*\\)\\." list-id)
+      (match-string 1 list-id)
+      list-id)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

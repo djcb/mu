@@ -387,9 +387,9 @@ date. The formats used for date and time are
 
 (defsubst mu4e~headers-mailing-list (list)
   "Get some identifier for the mailing list."
-  (let* ((short (and list (mu4e-get-mailing-list-shortname list))))
-    (if short
-      (propertize (or short "List") 'help-echo list) "")))
+  (if list
+    (propertize (mu4e-get-mailing-list-shortname list) 'help-echo list)
+    ""))
 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
