@@ -422,7 +422,7 @@ get_related_query (MuMsgIter *iter)
 {
 	GHashTable *hash;
 	GList *id_list, *cur;
-	Xapian::Query query;
+	std::vector<Xapian::Query> qvec;
 	static std::string pfx (1, mu_msg_field_xapian_prefix
 				(MU_MSG_FIELD_ID_THREAD_ID));
 
@@ -432,20 +432,16 @@ get_related_query (MuMsgIter *iter)
 	 * References. */
 	id_list = g_hash_table_get_keys (hash);
 
-	/* now, let's create a new query matching all of those */
-	// g_print ("list: %u\n", (unsigned) g_list_length (id_list));
-	for (cur = id_list; cur; cur = g_list_next(cur)) {
-		query = Xapian::Query (Xapian::Query::OP_OR,
-				       query,
-				       Xapian::Query((std::string
-						      (pfx + (char*)cur->data))));
-	}
+	// now, we create a vector with queries for each of the
+	// thread-ids, which we combine below. This is /much/ faster
+	// than creating the query as 'query = Query (OR, query)'...
+	for (cur = id_list; cur; cur = g_list_next(cur))
+		qvec.push_back (Xapian::Query((std::string (pfx + (char*)cur->data))));
 
 	g_hash_table_destroy (hash);
 	g_list_free (id_list);
 
-	/* now, `query' should match all related messages */
-	return query;
+	return Xapian::Query (Xapian::Query::OP_OR, qvec.begin(), qvec.end());
 }
 
 
