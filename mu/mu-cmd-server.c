@@ -846,6 +846,11 @@ get_find_params (GSList *args, MuMsgFieldId *sortfield,
 {
 	const char *maxnumstr, *sortfieldstr;
 
+	/* defaults */
+	*maxnum	   = 500;
+	*qflags	   = MU_QUERY_FLAG_NONE;
+	*sortfield = MU_MSG_FIELD_ID_NONE;
+
 	/* field to sort by */
 	sortfieldstr = get_string_from_args (args, "sortfield", TRUE, NULL);
 	if (sortfieldstr) {
@@ -853,14 +858,13 @@ get_find_params (GSList *args, MuMsgFieldId *sortfield,
 		/* note: shortcuts are not allowed here */
 		if (*sortfield == MU_MSG_FIELD_ID_NONE) {
 			mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "not a valid sort field: '%s'", sortfield);
+				     "not a valid sort field: '%s'",
+					     sortfield);
 			return MU_G_ERROR_CODE(err);
 		}
 	} else
 		*sortfield = MU_MSG_FIELD_ID_DATE;
 
-	/* flags */
-	*qflags = MU_QUERY_FLAG_NONE;
 
 	/* maximum number of results */
 	maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
