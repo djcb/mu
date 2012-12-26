@@ -343,8 +343,7 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	}
 	mu_store_unref (store);
 
-	qflags = MU_QUERY_FLAG_THREADS            |
-		 MU_QUERY_FLAG_DESCENDING         |
+	qflags = MU_QUERY_FLAG_DESCENDING         |
 		 MU_QUERY_FLAG_SKIP_UNREADABLE    |
 		 MU_QUERY_FLAG_SKIP_DUPS;
 
