@@ -198,6 +198,33 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 	return recip;
 }
 
+/*
+ * let's try to guess the mailing list from some other
+ * headers in the mail
+ */
+static gchar*
+get_fake_mailing_list (MuMsgFile *self)
+{
+	const char* hdr;
+
+	hdr = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
+					"X-Feed2Imap-Version");
+	if (!hdr)
+		return NULL;
+
+	/* looks like a feed2imap header; guess the source-blog
+	 * from the msgid */
+	{
+		const char *msgid, *e;
+		msgid = g_mime_message_get_message_id (self->_mime_msg);
+		if (msgid && (e = strchr (msgid, '-')))
+			return g_strndup (msgid, e - msgid);
+	}
+
+	return NULL;
+}
+
+
 static gchar*
 get_mailing_list (MuMsgFile *self)
 {
@@ -206,7 +233,7 @@ get_mailing_list (MuMsgFile *self)
 	hdr = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
 					"List-Id");
 	if (mu_str_is_empty (hdr))
-		return NULL;
+		return get_fake_mailing_list (self);
 
 	e = NULL;
 	b = strchr (hdr, '<');
