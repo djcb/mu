@@ -127,14 +127,6 @@ sent messages into message threads."
   :type 'boolean
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-include-related-maxnum 800
-  "Ignore `mu4e-headers-includer-related' when
-`mu4e-headers-results-limit' is greater than this value (including
-'unlimited')"
-  :type 'boolean
-  :group 'mu4e-headers)
-
-
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
 (defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Draft.")
@@ -508,17 +500,17 @@ after the end of the search results."
       (define-key map "O" 'mu4e-headers-change-sorting)
       (define-key map "P" 'mu4e-headers-toggle-threading)
       (define-key map "Q" 'mu4e-headers-toggle-full-search)
+      (define-key map "W" 'mu4e-headers-toggle-include-related)
+      (define-key map "V" 'mu4e-headers-toggle-skip-duplicates)
 
       (define-key map "q" 'mu4e~headers-quit-buffer)
       (define-key map "z" 'mu4e~headers-quit-buffer)
 
-      (define-key map "r" 'mu4e-headers-rerun-search)
       (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
 
       (define-key map "%" 'mu4e-headers-mark-pattern)
       (define-key map "t" 'mu4e-headers-mark-subthread)
       (define-key map "T" 'mu4e-headers-mark-thread)
-
 
       ;; navigation between messages
       (define-key map "p" 'mu4e-headers-prev)
@@ -861,10 +853,7 @@ the query history stack."
   (mu4e-hide-other-mu4e-buffers)
   (let* ((buf (get-buffer-create mu4e~headers-buffer-name))
 	 (inhibit-read-only t)
-	  (maxnum (unless mu4e-headers-full-search mu4e-headers-results-limit))
-	  (include-related
-	    (when (and maxnum (<= maxnum mu4e-headers-include-related-maxnum))
-	      mu4e-headers-include-related)))
+	  (maxnum (unless mu4e-headers-full-search mu4e-headers-results-limit)))
     (with-current-buffer buf
       (mu4e-headers-mode)
       (unless ignore-history
@@ -885,7 +874,7 @@ the query history stack."
       mu4e~headers-sort-direction
       maxnum
       mu4e-headers-skip-duplicates
-      include-related)))
+      mu4e-headers-include-related)))
 
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value
@@ -1178,31 +1167,45 @@ sortfield, change the sort-order) or nil (ask the user)."
       (symbol-name mu4e~headers-sort-direction))
     (mu4e-headers-rerun-search)))
 
-(defun mu4e-headers-toggle-threading (&optional dont-refresh)
-  "Toggle threading on/off for the search results.
-With prefix-argument, do _not_ refresh the last search with the
-new setting for threading."
-  (interactive "P")
-  (setq mu4e-headers-show-threads (not mu4e-headers-show-threads))
-  (mu4e-message "Threading turned %s%s"
-    (if mu4e-headers-show-threads "on" "off")
+(defun mu4e~headers-toggle (name togglevar dont-refresh)
+  "Toggle variable TOGGLEVAR for feature NAME. Unless DONT-REFRESH is non-nil,
+re-run the last search."
+  (set togglevar (not (symbol-value togglevar)))
+  (mu4e-message "%s turned %s%s"
+    name
+    (if (symbol-value togglevar) "on" "off")
     (if dont-refresh
-	" (press 'g' to refresh)" ""))
+      " (press 'g' to refresh)" ""))
   (unless dont-refresh
     (mu4e-headers-rerun-search)))
 
-(defun mu4e-headers-toggle-full-search (&optional dont-refresh)
-  "Toggle full-search on/off for the search results.
-With prefix-argument, do _not_ refresh the last search with the
-new setting for threading."
+(defun mu4e-headers-toggle-threading (&optional dont-refresh)
+  "Toggle `mu4e-headers-show-threads'. With prefix-argument, do
+_not_ refresh the last search with the new setting for threading."
   (interactive "P")
-  (setq mu4e-headers-full-search (not mu4e-headers-full-search))
-  (mu4e-message "Full search turned %s%s"
-    (if mu4e-headers-full-search "on" "off")
-    (if dont-refresh
-	" (press 'g' to refresh)" ""))
-  (unless dont-refresh
-    (mu4e-headers-rerun-search)))
+  (mu4e~headers-toggle "Threading" 'mu4e-headers-show-threads dont-refresh))
+
+(defun mu4e-headers-toggle-full-search (&optional dont-refresh)
+  "Toggle `mu4e-headers-full-search'. With prefix-argument, do
+_not_ refresh the last search with the new setting for threading."
+  (interactive "P")
+  (mu4e~headers-toggle "Full-search"
+    'mu4e-headers-full-search dont-refresh))
+
+(defun mu4e-headers-toggle-include-related (&optional dont-refresh)
+  "Toggle `mu4e-headers-include-related'. With prefix-argument, do
+_not_ refresh the last search with the new setting for threading."
+  (interactive "P")
+  (mu4e~headers-toggle "Include-related"
+    'mu4e-headers-include-related dont-refresh))
+
+(defun mu4e-headers-toggle-skip-duplicates (&optional dont-refresh)
+  "Toggle `mu4e-headers-skip-duplicates'. With prefix-argument, do
+_not_ refresh the last search with the new setting for threading."
+  (interactive "P")
+  (mu4e~headers-toggle "Skip-duplicates"
+  'mu4e-headers-duplicates dont-refresh))
+
 
 (defvar mu4e~headers-loading-buf nil
   "A buffer for loading a message view.")

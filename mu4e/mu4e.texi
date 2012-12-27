@@ -770,7 +770,8 @@ M-right      next query
 O            change sort order
 P            toggle threading
 Q            toggle full-search
-
+V            toggle skip-duplicates
+W            toggle include-related
 
 marking
 -------
@@ -1673,7 +1674,7 @@ jumping to a maildir (@kbd{M-x mu4e-headers-jump-to-maildir}, @key{j}) or
 because you followed some bookmark (@kbd{M-x mu4e-headers-search-bookmark},
 @key{b}). Now, you want to narrow things down to only those messages that have
 attachments.
-
+1
 This is when @kbd{M-x mu4e-headers-search-narrow} (@key{/}) comes in handy. It
 asks for an additional search pattern, which is appended to the current search
 query, in effect getting you the subset of the currently shown headers that
@@ -1687,26 +1688,26 @@ of @code{mu4e-headers-results-limit}, may show up in the narrowed query.
 @subsection Including related messages
 @anchor{Including related messages}
 
-It can be useful to include @emph{related} messages in your search results --
-that is, messages that belong to the message threads that one or more of the
-matched messages belong to, too. With this option, results are somewhat like
-the discussion threads in Gmail.
-
-To enable this, set @code{mu4e-headers-include-related} to @code{t}. Since
-this can significanlty affect performance when there are many results,
-@code{mu4e-headers-include-related} is automatically disabled (for the next
-query) when the @code{mu4e-headers-results-limit} exceeds
-@code{mu4e-headers-include-related-maxnum}.
+It can be useful to not only show the messages that directly match a certain
+query, but also include messages that are related to these messages. That is,
+messages that belong to the same discussion thread are included in the
+results, just like e.g. Gmail does it. You can enable this behavior by setting
+@code{mu4e-headers-include-related} to @code{t}, and you can toggle between
+including/not-including with @key{W}.
 
 @subsection Skipping duplicates
 @anchor{Skipping duplicates}
 
-It is possible to show only one of multiple, duplicate messages (messages with
-the same Message-ID). This can be useful when you have copies of the same
-message, which is a common case, for example, when using Gmail and
-@t{offlineimap}.
+Another useful features is skipping duplicate messages. When you have copies
+of messages, there's usually little value in including more than one in search
+results. A common reason for having multiple copies of messages in the
+combination of Gmail and @t{offlineimap}, since that is the way the labels /
+virtual folders in Gmail are represented. You can enable skipping duplicates
+by setting @code{mu4e-headers-skip-duplicates} to @code{t}, and you can toggle
+between the skipping/not skipping with @key{V}.
 
-To skip duplicates, set @code{mu4e-headers-skip-duplicates} to @code{t}.
+Note, messages are considered duplicates when they have the same
+@t{Message-Id}.
 
 @node Marking
 @chapter Marking
@@ -2626,6 +2627,9 @@ customize.
 with @t{mu4e}. Since we are using @abbr{IMAP}, you must enable that in the
 Gmail web interface (in the settings, under the ``Forwarding and
 POP/IMAP''-tab).
+
+Gmail users may also be interested in @ref{Including related messages,
+skipping duplicates}.
 
 @subsection Setting up offlineimap
 
