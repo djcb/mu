@@ -71,12 +71,16 @@ public:
 		if (threads) {
 			_matches.fetch();
 			_cursor = _matches.begin();
+			_skip_dups = FALSE;
 			_thread_hash = mu_threader_calculate
 				(this, _matches.size(), sortfield, descending);
+			_skip_dups =
+				(flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
 
 			ThreadKeyMaker	keymaker(_thread_hash);
 			enq.set_sort_by_key (&keymaker, false);
 			_matches   = _enq.get_mset (0, maxnum);
+
 
 		} else if (sortfield != MU_MSG_FIELD_ID_NONE) {
 			enq.set_sort_by_value ((Xapian::valueno)sortfield,
