@@ -499,14 +499,15 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 		 * query since we can do it in the second one
 		 */
 		first_flags = inc_related ? (flags & ~MU_QUERY_FLAG_THREADS) : flags;
-
 		iter   = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum,
-			sortfieldid,
+			/* with inc_related, we do the sorting in the
+			 * second query
+			 */
+			inc_related ? MU_MSG_FIELD_ID_NONE : sortfieldid,
 			msg_iter_flags (first_flags),
 			err);
-
 		/*
 		 * if we want related messages, do a second query,
 		 * based on the message ids / refs of the first one
