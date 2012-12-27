@@ -43,7 +43,8 @@ fill_database (const char *testdir)
 	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
 				   " --quiet",
 				   MU_PROGRAM, tmpdir, testdir);
-	/* g_print ("%s\n", cmdline);  */
+	if (g_test_verbose())
+		g_print ("%s\n", cmdline);
 
 	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
 					     NULL, NULL));
@@ -71,7 +72,7 @@ run_and_get_iter (const char *xpath, const char *query)
 	g_assert (query);
 
 	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_DATE,
-			     -1, MU_QUERY_FLAG_NONE, NULL);
+			     -1, MU_QUERY_FLAG_THREADS, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
@@ -127,10 +128,11 @@ test_mu_threads_01 (void)
 
 		msg = mu_msg_iter_get_msg_floating (iter);
 		g_assert (msg);
-		/* g_print ("%s %s %s\n", ti->threadpath, */
-		/* 	 mu_msg_get_msgid(msg), */
-		/* 	 mu_msg_get_path (msg) */
-		/* 	); */
+
+		if (g_test_verbose())
+			g_print ("%s %s %s\n", ti->threadpath,
+				 mu_msg_get_msgid(msg),
+				 mu_msg_get_path (msg));
 
 		g_assert (u < G_N_ELEMENTS(items));
 
