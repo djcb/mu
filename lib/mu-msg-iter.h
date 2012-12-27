@@ -45,7 +45,9 @@ enum _MuMsgIterFlags {
 	 * readable message-file? */
 	MU_MSG_ITER_FLAG_SKIP_UNREADABLE      = 1 << 1,
 	/* ignore duplicate messages? */
-	MU_MSG_ITER_FLAG_SKIP_DUPS            = 1 << 2
+	MU_MSG_ITER_FLAG_SKIP_DUPS            = 1 << 2,
+	/* calculate threads? */
+	MU_MSG_ITER_FLAG_THREADS              = 1 << 3
 };
 typedef unsigned MuMsgIterFlags;
 

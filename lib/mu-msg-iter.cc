@@ -36,9 +36,6 @@
 #include "mu-msg-iter.h"
 #include "mu-threader.h"
 
-/* just a guess... */
-#define MAX_FETCH_SIZE 10000
-
 class ThreadKeyMaker: public Xapian::KeyMaker {
 public:
 	ThreadKeyMaker (GHashTable *threadinfo): _threadinfo(threadinfo) {}
@@ -57,40 +54,38 @@ struct _MuMsgIter {
 public:
 	_MuMsgIter (Xapian::Enquire &enq, size_t maxnum,
 		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
-		_enq(enq), _thread_hash (0), _msg(0), _flags(flags) {
+		_enq(enq), _thread_hash (0), _msg(0), _flags(flags),
+		_skip_unreadable(flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE),
+		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS)	{
 
-		bool descending;
+		bool descending       = (flags & MU_MSG_ITER_FLAG_DESCENDING);
+		bool threads          = (flags & MU_MSG_ITER_FLAG_THREADS);
 
-		descending       = (flags & MU_MSG_ITER_FLAG_DESCENDING);
-		_skip_unreadable = (flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE);
-		// set _skip_dups to false, so we'll calculate threadinfo
-		// for all, and then skip some after sorting
-		_skip_dups       = false;
 		// first, we get _all_ matches (G_MAXINT), based the threads
 		// on that, then return <maxint> of those
 		_matches         = _enq.get_mset (0, G_MAXINT);
 
-		_matches.fetch();
-		_cursor	   = _matches.begin();
-
 		if (_matches.empty())
 			return;
 
-		_skip_dups       = false;
-		_thread_hash = mu_threader_calculate
-			(this, _matches.size(), sortfield, descending);
+		if (threads) {
+			_matches.fetch();
+			_cursor = _matches.begin();
+			_thread_hash = mu_threader_calculate
+				(this, _matches.size(), sortfield, descending);
 
-		ThreadKeyMaker	keymaker(_thread_hash);
-		enq.set_sort_by_key (&keymaker, false);
-		_matches   = _enq.get_mset (0, maxnum);
-		_skip_dups = (flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
+			ThreadKeyMaker	keymaker(_thread_hash);
+			enq.set_sort_by_key (&keymaker, false);
+			_matches   = _enq.get_mset (0, maxnum);
+
+		} else if (sortfield != MU_MSG_FIELD_ID_NONE) {
+			enq.set_sort_by_value ((Xapian::valueno)sortfield,
+					       descending);
+			_matches   = _enq.get_mset (0, maxnum);
+			_cursor	   = _matches.begin();
+		}
+
 		_cursor	   = _matches.begin();
-
-		/* this seems to make search slightly faster, some
-		 * non-scientific testing suggests. 5-10% or so */
-		if (_matches.size() <= MAX_FETCH_SIZE)
-			_matches.fetch ();
-
 	}
 
 	~_MuMsgIter () {
