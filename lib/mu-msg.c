@@ -257,7 +257,7 @@ get_str_list_field (MuMsg *self, MuMsgFieldId mfid)
 
 	if (self->_doc && mu_msg_field_xapian_value (mfid))
 		val = mu_msg_doc_get_str_list_field (self->_doc, mfid);
-	if (!val) {
+	if (!val && !self->_doc) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
 		if (!mu_msg_load_msg_file (self, NULL))
