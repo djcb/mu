@@ -370,6 +370,8 @@ msg_iter_flags (MuQueryFlags flags)
 		iflags |= MU_MSG_ITER_FLAG_SKIP_UNREADABLE;
 	if (flags & MU_QUERY_FLAG_SKIP_DUPS)
 		iflags |= MU_MSG_ITER_FLAG_SKIP_DUPS;
+	if (flags & MU_QUERY_FLAG_THREADS)
+		iflags |= MU_MSG_ITER_FLAG_THREADS;
 
 	return iflags;
 }
@@ -478,23 +480,38 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 			      NULL);
 	try {
 		MuMsgIter *iter;
-		bool descending = flags & MU_QUERY_FLAG_DESCENDING;
+		MuQueryFlags first_flags;
+		bool	inc_related = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
+		bool	descending  = flags & MU_QUERY_FLAG_DESCENDING;
 		Xapian::Enquire enq (get_enquire(self, searchexpr, sortfieldid,
 						 descending, err));
 
+		/* when we're doing a 'include-related query', we're
+		 * actually doing /two/ queries; one to get the
+		 * initial matches, and based on that one to get all
+		 * messages in threads in those matches.
+		 */
+
 		/* get the 'real' maxnum if it was specified as < 0 */
-		maxnum = maxnum <= 0 ? self->db().get_doccount() : maxnum;
+		maxnum = maxnum < 0 ? self->db().get_doccount() : maxnum;
+		/* if we do a include-related query, it's wasted
+		 * effort to calculate threads already in the first
+		 * query since we can do it in the second one
+		 */
+		first_flags = inc_related ? (flags & ~MU_QUERY_FLAG_THREADS) : flags;
+
 		iter   = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum,
 			sortfieldid,
-			msg_iter_flags (flags),
+			msg_iter_flags (first_flags),
 			err);
+
 		/*
 		 * if we want related messages, do a second query,
 		 * based on the message ids / refs of the first one
 		 * */
-		if (flags & MU_QUERY_FLAG_INCLUDE_RELATED)
+		if (inc_related)
 			include_related (self, &iter, maxnum, sortfieldid, flags);
 
 		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
