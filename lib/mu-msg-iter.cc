@@ -56,7 +56,7 @@ public:
 		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
 		_enq(enq), _thread_hash (0), _msg(0), _flags(flags),
 		_skip_unreadable(flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE),
-		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS)	{
+		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS) {
 
 		bool descending       = (flags & MU_MSG_ITER_FLAG_DESCENDING);
 		bool threads          = (flags & MU_MSG_ITER_FLAG_THREADS);
@@ -71,12 +71,12 @@ public:
 		if (threads) {
 			_matches.fetch();
 			_cursor = _matches.begin();
-			_skip_dups = FALSE;
-			_thread_hash = mu_threader_calculate
-				(this, _matches.size(), sortfield, descending);
-			_skip_dups =
-				(flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
-
+			{ // temporarily turn-off skipping dups
+				_skip_dups = FALSE;
+				_thread_hash = mu_threader_calculate
+					(this, _matches.size(), sortfield, descending);
+				_skip_dups = (flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
+			}
 			ThreadKeyMaker	keymaker(_thread_hash);
 			enq.set_sort_by_key (&keymaker, false);
 			_matches   = _enq.get_mset (0, maxnum);
@@ -89,7 +89,7 @@ public:
 			_cursor	   = _matches.begin();
 		}
 
-		_cursor	   = _matches.begin();
+		_cursor	= _matches.begin();
 	}
 
 	~_MuMsgIter () {
@@ -119,13 +119,12 @@ public:
 
 	bool looks_like_dup () const {
 		try {
+			const Xapian::Document doc (cursor().get_document());
 			const std::string msg_uid
-				(cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID));
+				(doc.get_value(MU_MSG_FIELD_ID_MSGID));
 			if (_msg_uid_set.find (msg_uid) != _msg_uid_set.end()) {
-				// std::cerr << "dup: " << msg_uid << std::endl;
 				return true;
 			} else {
-				// std::cerr << "no dup: " << msg_uid << std::endl;
 				_msg_uid_set.insert (msg_uid);
 				return false;
 			}
@@ -207,12 +206,26 @@ mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }
 
-
 void
 mu_msg_iter_destroy (MuMsgIter *iter)
 {
 	try { delete iter; } MU_XAPIAN_CATCH_BLOCK;
 }
+
+void
+mu_msg_iter_set_skip_duplicates (MuMsgIter *iter, gboolean skip_duplicates,
+				 GHashTable *preferred_set)
+{
+	g_return_if_fail (iter);
+	g_return_if_fail (!skip_duplicates && preferred_set);
+
+
+
+
+}
+
+
+
 
 MuMsg*
 mu_msg_iter_get_msg_floating (MuMsgIter *iter)
