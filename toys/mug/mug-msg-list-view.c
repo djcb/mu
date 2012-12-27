@@ -343,9 +343,11 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	}
 	mu_store_unref (store);
 
-	qflags = MU_QUERY_FLAG_DESCENDING         |
-		 MU_QUERY_FLAG_SKIP_UNREADABLE    |
-		 MU_QUERY_FLAG_SKIP_DUPS;
+	qflags =
+		MU_QUERY_FLAG_DESCENDING         |
+		MU_QUERY_FLAG_SKIP_UNREADABLE    |
+		MU_QUERY_FLAG_SKIP_DUPS          |
+		MU_QUERY_FLAG_THREADS;
 
 	iter = mu_query_run (xapian, query, MU_MSG_FIELD_ID_DATE,
 			     -1, qflags, &err);
