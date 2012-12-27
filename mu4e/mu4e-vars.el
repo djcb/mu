@@ -213,8 +213,8 @@ the From: address.)"
   :group 'mu4e-compose)
 
 ;; backward compatibility
-(defalias 'mu4e-reply-to-address 'mu4e-compose-reply-to-address
-  "The old name for `mu4e-compose-reply-to-address'.")
+(make-obsolete-variable 'mu4e-reply-to-address 'mu4e-compose-reply-to-address
+  "v0.9.9")
 
 (defcustom mu4e-compose-keep-self-cc nil
   "Non-nil means your e-mail address is kept on the CC list when

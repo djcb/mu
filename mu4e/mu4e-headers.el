@@ -217,7 +217,7 @@ In the format needed for `mu4e-read-option'.")
     (let ((inhibit-read-only t))
       (with-current-buffer mu4e~headers-buffer
 	(erase-buffer)
-(mu4e~mark-clear)))))
+	(mu4e~mark-clear)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
