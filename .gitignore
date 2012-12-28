@@ -79,3 +79,4 @@ configure.lineno
 /mu4e/version.texi
 /guile/tests/test-mu-guile
 /lib/doxyfile
+/version.texi
