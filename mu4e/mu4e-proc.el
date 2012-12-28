@@ -282,6 +282,8 @@ The server output is as follows:
 	    (message nil)) ;; don't do anything
 	  ((eq code 11)
 	    (error "Database is locked by another process"))
+	  ((eq code 15)
+	    (error "Database needs upgrade; try `mu index --rebuild' from the command line"))
 	  ((eq code 19)
 	    (error "Database empty; try indexing some messages"))
 	  (t (error "mu server process ended with exit code %d" code))))
