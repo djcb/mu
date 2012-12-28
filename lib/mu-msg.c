@@ -257,7 +257,7 @@ get_str_list_field (MuMsg *self, MuMsgFieldId mfid)
 
 	if (self->_doc && mu_msg_field_xapian_value (mfid))
 		val = mu_msg_doc_get_str_list_field (self->_doc, mfid);
-	if (!val && !self->_doc) {
+	else if (mu_msg_field_gmime (mfid)) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
 		if (!mu_msg_load_msg_file (self, NULL))
@@ -287,10 +287,8 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 		if (!mu_msg_load_msg_file (self, NULL))
 			return NULL;
 		val = mu_msg_file_get_str_field (self->_file, mfid, &do_free);
-	} else {
-		g_warning ("%s: cannot retrieve field", __FUNCTION__);
+	} else
 		val = NULL;
-	}
 
 	return do_free ? free_later_str (self, val) : val;
 }

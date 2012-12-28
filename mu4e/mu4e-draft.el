@@ -71,13 +71,21 @@ comma-separated string. Normally, this the concatenation of the
 existing References (which may be empty) and the message-id. If the
 message-id is empty, returns the old References. If both are empty,
 return nil."
-  (let ((refs (mu4e-message-field msg :references))
-	 (old-msgid (mu4e-message-field msg :message-id)))
-    (when old-msgid
-      (setq refs (append refs (list old-msgid)))
-      (mapconcat
-	(lambda (msgid) (format "<%s>" msgid))
-	refs ","))))
+  (message "REF %S"(mu4e-message-field msg :references))
+  (message "IRT %S"(mu4e-message-field msg :in-reply-to))
+  (message "MID %S"(mu4e-message-field msg :message-id))
+  (let* ( ;; these are the ones from the message being replied to / forwarded
+	  (refs (mu4e-message-field msg :references))
+	  (in-reply-to (mu4e-message-field msg :in-reply-to))
+	  (msgid (mu4e-message-field msg :message-id))
+	  ;; now, append in
+	  (refs (if (and in-reply-to (not (string= in-reply-to "")))
+		  (append refs (list in-reply-to)) refs))
+	  (refs (if (and msgid (not (string= msgid "")))
+		  (append refs (list msgid)) refs))
+	  ;; no doubles
+	  (refs (delete-duplicates refs :test #'equal)))
+    (mapconcat (lambda (id) (format "<%s>" id)) refs " ")))
 
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
