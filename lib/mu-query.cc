@@ -397,20 +397,34 @@ get_enquire (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 }
 
 /*
- * record all threadids for the messages
+ * record all threadids for the messages; also 'orig_set' receives all
+ * original matches (a map msgid-->docid), so we can make sure the
+ * originals are not seen as 'duplicates' later (when skipping
+ * duplicates).  We want to favor the originals over the related
+ * messages, when skipping duplicates.
  */
 static GHashTable*
-get_thread_ids (MuMsgIter *iter)
+get_thread_ids (MuMsgIter *iter, GHashTable **orig_set)
 {
 	GHashTable *ids;
-	ids = g_hash_table_new_full (g_str_hash, g_str_equal,
-				     (GDestroyNotify)g_free, NULL);
+	ids	  = g_hash_table_new_full (g_str_hash, g_str_equal,
+					   (GDestroyNotify)g_free, NULL);
+	*orig_set = g_hash_table_new_full (g_str_hash, g_str_equal,
+					   (GDestroyNotify)g_free, NULL);
 
 	while (!mu_msg_iter_is_done (iter)) {
-		const char *thread_id;
+		const char *thread_id, *msgid;
+		unsigned docid;
+		/* record the thread id for the message */
 		if ((thread_id = mu_msg_iter_get_thread_id (iter)))
 			g_hash_table_insert (ids, g_strdup (thread_id),
 					     GSIZE_TO_POINTER(TRUE));
+		/* record the original set */
+		docid = mu_msg_iter_get_docid(iter);
+		if (docid != 0 && (msgid = mu_msg_iter_get_msgid (iter)))
+			g_hash_table_insert (*orig_set, g_strdup (msgid),
+					     GSIZE_TO_POINTER(docid));
+
 		if (!mu_msg_iter_next (iter))
 			break;
 	}
@@ -420,7 +434,7 @@ get_thread_ids (MuMsgIter *iter)
 
 
 static Xapian::Query
-get_related_query (MuMsgIter *iter)
+get_related_query (MuMsgIter *iter, GHashTable **orig_set)
 {
 	GHashTable *hash;
 	GList *id_list, *cur;
@@ -428,7 +442,9 @@ get_related_query (MuMsgIter *iter)
 	static std::string pfx (1, mu_msg_field_xapian_prefix
 				(MU_MSG_FIELD_ID_THREAD_ID));
 
-	hash = get_thread_ids (iter);
+	/* orig_set receives the hash msgid->docid of the set of
+	 * original matches */
+	hash = get_thread_ids (iter, orig_set);
 	/* id_list now gets a list of all thread-ids seen in the query
 	 * results; either in the Message-Id field or in
 	 * References. */
@@ -451,10 +467,12 @@ static void
 include_related (MuQuery *self, MuMsgIter **iter, int maxnum,
 		 MuMsgFieldId sortfieldid, MuQueryFlags flags)
 {
+	GHashTable *orig_set;
 	Xapian::Enquire enq (self->db());
 	MuMsgIter *rel_iter;
 
-	enq.set_query(get_related_query (*iter));
+	orig_set = NULL;
+	enq.set_query(get_related_query (*iter, &orig_set));
 	enq.set_cutoff(0,0);
 
 	rel_iter= mu_msg_iter_new (
@@ -465,6 +483,12 @@ include_related (MuQuery *self, MuMsgIter **iter, int maxnum,
 		NULL);
 
 	mu_msg_iter_destroy (*iter);
+
+	// set the preferred set for the iterator (ie., the set not
+	// consider to be duplicates) to be the original matches
+	mu_msg_iter_set_preferred (rel_iter, orig_set);
+	g_hash_table_destroy (orig_set);
+
 	*iter = rel_iter;
 }
 

@@ -30,11 +30,21 @@
 
 #include <string>
 #include <set>
+#include <map>
 
 #include "mu-util.h"
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-threader.h"
+
+
+struct ltstr {
+	bool operator () (const std::string &s1,
+			  const std::string &s2) const {
+		return g_strcmp0 (s1.c_str(), s2.c_str()) < 0;
+	}
+};
+typedef std::map <std::string, unsigned, ltstr> msgid_docid_map;
 
 class ThreadKeyMaker: public Xapian::KeyMaker {
 public:
@@ -56,7 +66,7 @@ public:
 		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
 		_enq(enq), _thread_hash (0), _msg(0), _flags(flags),
 		_skip_unreadable(flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE),
-		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS) {
+		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS){
 
 		bool descending       = (flags & MU_MSG_ITER_FLAG_DESCENDING);
 		bool threads          = (flags & MU_MSG_ITER_FLAG_THREADS);
@@ -71,16 +81,15 @@ public:
 		if (threads) {
 			_matches.fetch();
 			_cursor = _matches.begin();
-			{ // temporarily turn-off skipping dups
-				_skip_dups = FALSE;
-				_thread_hash = mu_threader_calculate
-					(this, _matches.size(), sortfield, descending);
-				_skip_dups = (flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
-			}
+			// NOTE: temporarily turn-off skipping duplicates, since we
+			// need threadinfo for *all*
+			_skip_dups = false;
+			_thread_hash = mu_threader_calculate
+				(this, _matches.size(), sortfield, descending);
+			_skip_dups = (flags & MU_MSG_ITER_FLAG_SKIP_DUPS);
 			ThreadKeyMaker	keymaker(_thread_hash);
 			enq.set_sort_by_key (&keymaker, false);
 			_matches   = _enq.get_mset (0, maxnum);
-
 
 		} else if (sortfield != MU_MSG_FIELD_ID_NONE) {
 			enq.set_sort_by_value ((Xapian::valueno)sortfield,
@@ -88,7 +97,6 @@ public:
 			_matches   = _enq.get_mset (0, maxnum);
 			_cursor	   = _matches.begin();
 		}
-
 		_cursor	= _matches.begin();
 	}
 
@@ -120,12 +128,30 @@ public:
 	bool looks_like_dup () const {
 		try {
 			const Xapian::Document doc (cursor().get_document());
-			const std::string msg_uid
-				(doc.get_value(MU_MSG_FIELD_ID_MSGID));
-			if (_msg_uid_set.find (msg_uid) != _msg_uid_set.end()) {
+			const std::string msgid	(doc.get_value(MU_MSG_FIELD_ID_MSGID));
+			unsigned docid (doc.get_docid());
+
+			if (msgid.empty())
+				return false;
+
+			// is this message in the preferred map? if
+			// so, it's not a duplicate, otherwise, it
+			// isn't
+			msgid_docid_map::const_iterator pref_iter (_preferred_map.find (msgid));
+			if (pref_iter != _preferred_map.end()) {
+				//std::cerr << "in the set!" << std::endl;
+				if ((*pref_iter).second == docid)
+					return false; // in the set: not a dup!
+				else
+					return true;
+			}
+
+			// otherwise, simply check if we've already seen this message-id,
+			// and, if so, it's considered a dup
+			if (_msg_uid_set.find (msgid) != _msg_uid_set.end()) {
 				return true;
 			} else {
-				_msg_uid_set.insert (msg_uid);
+				_msg_uid_set.insert (msgid);
 				return false;
 			}
 		} catch (...) {
@@ -133,6 +159,17 @@ public:
 		}
 	}
 
+	static void each_preferred (const char *msgid, gpointer docidp, msgid_docid_map *preferred_map) {
+		(*preferred_map)[msgid] = GPOINTER_TO_SIZE(docidp);
+	}
+
+	void set_preferred_map (GHashTable *preferred_hash) {
+		if (!preferred_hash)
+			_preferred_map.clear();
+		else
+			g_hash_table_foreach (preferred_hash,
+					      (GHFunc)each_preferred, &_preferred_map);
+	}
 
 	bool skip_dups ()       const { return _skip_dups; }
 	bool skip_unreadable () const { return _skip_unreadable; }
@@ -147,15 +184,15 @@ private:
 
 	MuMsgIterFlags _flags;
 
-	struct ltstr {
-		bool operator () (const std::string &s1,
-				  const std::string &s2) const {
-			return g_strcmp0 (s1.c_str(), s2.c_str()) < 0;
-		}
-	};
 	mutable std::set <std::string, ltstr> _msg_uid_set;
+	bool _skip_unreadable;
 
-	bool _skip_unreadable, _skip_dups;
+	// the 'preferred map' (msgid->docid) is used when checking
+	// for duplicates; if a message is in the preferred map, it
+	// will not be excluded (but other messages with the same
+	// msgid will)
+	msgid_docid_map _preferred_map;
+	bool _skip_dups;
 };
 
 
@@ -212,18 +249,14 @@ mu_msg_iter_destroy (MuMsgIter *iter)
 	try { delete iter; } MU_XAPIAN_CATCH_BLOCK;
 }
 
+
+
 void
-mu_msg_iter_set_skip_duplicates (MuMsgIter *iter, gboolean skip_duplicates,
-				 GHashTable *preferred_set)
+mu_msg_iter_set_preferred (MuMsgIter *iter, GHashTable *preferred_hash)
 {
 	g_return_if_fail (iter);
-	g_return_if_fail (!skip_duplicates && preferred_set);
-
-
-
-
+	iter->set_preferred_map (preferred_hash);
 }
-
 
 
 
@@ -306,7 +339,7 @@ mu_msg_iter_is_done (MuMsgIter *iter)
 
 
 /* hmmm.... is it impossible to get a 0 docid, or just very improbable? */
-unsigned int
+unsigned
 mu_msg_iter_get_docid (MuMsgIter *iter)
 {
 	g_return_val_if_fail (iter, (unsigned int)-1);
@@ -368,8 +401,6 @@ mu_msg_iter_get_thread_id (MuMsgIter *iter)
 }
 
 
-
-
 const MuMsgIterThreadInfo*
 mu_msg_iter_get_thread_info (MuMsgIter *iter)
 {
@@ -385,7 +416,7 @@ mu_msg_iter_get_thread_info (MuMsgIter *iter)
 			(iter->thread_hash(), GUINT_TO_POINTER(docid));
 
 		if (!ti)
-			g_printerr ("no ti for %u\n", docid);
+			g_warning ("no ti for %u\n", docid);
 
 		return ti;
 

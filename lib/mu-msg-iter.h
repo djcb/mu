@@ -51,8 +51,6 @@ enum _MuMsgIterFlags {
 };
 typedef unsigned MuMsgIterFlags;
 
-
-
 /**
  * create a new MuMsgIter -- basically, an iterator over the search
  * results
@@ -125,6 +123,18 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
  */
 MuMsg* mu_msg_iter_get_msg_floating (MuMsgIter *iter)
           G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+
+/**
+ * Provide a preferred_hash, which is a hashtable msgid->docid to
+ * indicate the messages which should /not/ be seen as duplicates.
+ *
+ * @param iter a valid MuMsgIter iterator
+ * @param preferred_hash a hashtable msgid->docid of message /not/ to
+ * mark as duplicates, or NULL
+ */
+void mu_msg_iter_set_preferred (MuMsgIter *iter, GHashTable *preferred_hash);
 
 
 
