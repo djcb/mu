@@ -368,6 +368,49 @@ test_mu_msg_references_dups (void)
 	mu_msg_unref (msg);
 }
 
+
+static void
+test_mu_msg_references_many (void)
+{
+	MuMsg *msg;
+	unsigned u;
+	const GSList *refs, *cur;
+	const char* expt_refs[] = {
+		"e9065dac-13c1-4103-9e31-6974ca232a89@t15g2000prt.googlegroups.com",
+		"87hbblwelr.fsf@sapphire.mobileactivedefense.com",
+		"pql248-4va.ln1@wilbur.25thandClement.com",
+		"ikns6r$li3$1@Iltempo.Update.UU.SE",
+		"8762s0jreh.fsf@sapphire.mobileactivedefense.com",
+		"ikqqp1$jv0$1@Iltempo.Update.UU.SE",
+		"87hbbjc5jt.fsf@sapphire.mobileactivedefense.com",
+		"ikr0na$lru$1@Iltempo.Update.UU.SE",
+		"tO8cp.1228$GE6.370@news.usenetserver.com",
+		"ikr6ks$nlf$1@Iltempo.Update.UU.SE",
+		"8ioh48-8mu.ln1@leafnode-msgid.gclare.org.uk"
+	};
+
+	msg = get_msg (MU_TESTMAILDIR2 "/bar/cur/181736.eml");
+	refs = mu_msg_get_references(msg);
+
+	g_assert_cmpuint (G_N_ELEMENTS(expt_refs), ==,
+			  g_slist_length((GSList*)refs));
+
+	for (cur = refs, u = 0; cur; cur = g_slist_next(cur), ++u) {
+		if (g_test_verbose())
+			g_print ("%u. '%s' =? '%s'\n",
+				 u, (char*)cur->data,
+				 expt_refs[u]);
+
+		g_assert_cmpstr ((char*)cur->data, ==, expt_refs[u]);
+	}
+
+	mu_msg_unref (msg);
+}
+
+
+
+
+
 static void
 test_mu_msg_tags (void)
 {
@@ -468,6 +511,9 @@ main (int argc, char *argv[])
 			 test_mu_msg_references);
 	g_test_add_func ("/mu-msg/mu-msg-references_dups",
 			 test_mu_msg_references_dups);
+	g_test_add_func ("/mu-msg/mu-msg-references_many",
+			 test_mu_msg_references_many);
+
 	g_test_add_func ("/mu-msg/mu-msg-umlaut",
 			 test_mu_msg_umlaut);
 	g_test_add_func ("/mu-msg/mu-msg-comp-unix-programmer",
