@@ -249,6 +249,11 @@ handle_references (GHashTable *id_table, MuContainer *c)
 		child = find_or_create_referred (id_table, (gchar*)cur->data,
 						 &created);
 
+		/* if we find the current message in their own refs, break now
+		   so that parent != c in next step */
+		if (child == c)
+			break;
+
 		/*Link the References field's MuContainers together in
 		 * the order implied by the References header.
 
@@ -285,11 +290,25 @@ handle_references (GHashTable *id_table, MuContainer *c)
 	   Note that at all times, the various ``parent'' and ``child'' fields
 	   must be kept inter-consistent. */
 
-	/* optimization: if the the message was newly added, it's by
-	 * definition not reachable yet */
+        /* optimization: if the the message was newly added, it's by
+   	   definition not reachable yet */
 
-	if (child_elligible (parent, c, created))
+	/* So, we move c and its descendants to become a child of parent if:
+	   * both are not NULL
+	   * parent is not a descendant of c.
+	   * both are different from each other (guaranteed in last loop) */
+
+	if (parent && c && !(c->child && mu_container_reachable (c->child, parent))) {
+
+		/* if c already has a parent, remove c from its parent children
+		   and reparent it, as now we know who is c's parent reliably */
+		if (c->parent) {
+			mu_container_remove_child(c->parent, c);
+			c->next = c->last = c->parent = NULL;
+		}
+
 		parent = mu_container_append_children (parent, c);
+	}
 }
 
 
