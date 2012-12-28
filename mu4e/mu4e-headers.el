@@ -916,11 +916,12 @@ corresponding header."
 (defvar mu4e~headers-regexp-hist nil
   "History list of regexps used.")
 
-(defun mu4e~headers-mark-for-each-if (markpair mark-pred &optional param)
-  "Mark all headers for with predicate function MARK-PRED return
+(defun mu4e-headers-mark-for-each-if (markpair mark-pred &optional param)
+  "Mark all headers for which predicate function MARK-PRED returns
 non-nil with MARKPAIR. MARK-PRED is function that takes two
 arguments, MSG (the message at point) and PARAM (a user-specified
-parameter). MARKPAIR is a cell (MARK . TARGET)."
+parameter). MARKPAIR is a cell (MARK . TARGET); see
+`mu4e-mar-at-point' for details about marks."
   (mu4e-headers-for-each
     (lambda (msg)
       (when (funcall mark-pred msg param)
@@ -939,7 +940,7 @@ matching messages with that mark."
 	  (pattern (read-string
 		     (mu4e-format "Regexp:")
 		     nil 'mu4e~headers-regexp-hist)))
-    (mu4e~headers-mark-for-each-if
+    (mu4e-headers-mark-for-each-if
       markpair
       (lambda (msg param)
 	(let* ((do-mark) (value (mu4e-msg-field msg field)))
@@ -958,7 +959,7 @@ matching messages with that mark."
 		 mu4e-headers-custom-markers))
 	  (param (when (cdr pred) (eval (cdr pred))))
 	  (markpair (mu4e~mark-get-markpair "Mark matched messages with: " t)))
-    (mu4e~headers-mark-for-each-if markpair (car pred) param)))
+    (mu4e-headers-mark-for-each-if markpair (car pred) param)))
 
 (defun mu4e~headers-get-thread-info (msg what)
   "Get WHAT (a symbol, either path or thread-id) for MSG."
