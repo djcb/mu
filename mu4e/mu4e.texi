@@ -1911,6 +1911,12 @@ message. An example should clarify this:
       ((string-match "football\\|soccer"
         (mu4e-message-field msg :subject))
         "/football")
+      ;; messages sent by me go to the sent folder
+      ((find-if 
+	 (lambda (addr)
+	   (mu4e-message-contact-field-matches msg :from addr))
+	 mu4e-user-mail-address-list)
+	mu4e-sent-folder)       
       ;; everything else goes to /archive
       ;; important to have a catch-all at the end!
       (t  "/archive"))))
