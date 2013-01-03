@@ -921,7 +921,7 @@ corresponding header."
 non-nil with MARKPAIR. MARK-PRED is function that takes two
 arguments, MSG (the message at point) and PARAM (a user-specified
 parameter). MARKPAIR is a cell (MARK . TARGET); see
-`mu4e-mar-at-point' for details about marks."
+`mu4e-mark-at-point' for details about marks."
   (mu4e-headers-for-each
     (lambda (msg)
       (when (funcall mark-pred msg param)
