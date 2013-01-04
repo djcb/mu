@@ -363,6 +363,13 @@ the appropriate flag at the message forwarded or replied-to."
     (when (and (buffer-file-name buf)
 	    (string= (buffer-file-name buf) path))
       (kill-buffer buf)))
+  ;; now, try to go back to some previous buffer, in the order
+  ;; view->headers->main
+  (if (buffer-live-p mu4e~view-buffer)
+    (switch-to-buffer mu4e~view-buffer)
+    (if (buffer-live-p mu4e~headers-buffer)
+      (switch-to-buffer mu4e~headers-buffer)
+      (mu4e))) ;; if all else fails, back to the main view
   (mu4e-message "Message sent"))
 
 (defun mu4e~compose-set-parent-flag (path)
