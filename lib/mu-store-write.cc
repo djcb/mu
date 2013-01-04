@@ -307,11 +307,6 @@ static void
 add_terms_values_str (Xapian::Document& doc, char *val,
 		      MuMsgFieldId mfid, GStringChunk *strchunk)
 {
-	/* the value is what we display in search results; the
-	 * unchanged original */
-	if (mu_msg_field_xapian_value(mfid))
-		doc.add_value ((Xapian::valueno)mfid, val);
-
 	/* now, let's create some search terms... */
 	if (mu_msg_field_normalize (mfid))
 		val = mu_str_normalize_in_place (val, TRUE, strchunk);
@@ -341,6 +336,12 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg,
 		return; /* nothing to do */
 
 	val = g_string_chunk_insert (strchunk, orig);
+
+	/* the value is what we display in search results; the
+	 * unchanged original */
+	if (mu_msg_field_xapian_value(mfid))
+		doc.add_value ((Xapian::valueno)mfid, val);
+
 	add_terms_values_str (doc, val, mfid, strchunk);
 }
 
