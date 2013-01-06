@@ -234,9 +234,9 @@ get_query_obj (MuStore *store, GError **err)
 		return NULL;
 	}
 
-	if (mu_store_needs_upgrade (store)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
-			     "the database is not up-to-date");
+	if (!mu_store_versions_match (store)) {
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_VERSION_MISMATCH,
+			     "the database needs a rebuild");
 		return NULL;
 	}
 

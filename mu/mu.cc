@@ -59,8 +59,8 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 		g_printerr ("maybe mu is already running?\n");
 		break;
 	case MU_ERROR_XAPIAN_CORRUPTION:
-	case MU_ERROR_XAPIAN_NOT_UP_TO_DATE:
-		g_printerr ("database needs update; "
+	case MU_ERROR_XAPIAN_VERSION_MISMATCH:
+		g_printerr ("database needs a rebuild; "
 			    "try 'mu index --rebuild'\n");
 		break;
 	case MU_ERROR_XAPIAN_IS_EMPTY:

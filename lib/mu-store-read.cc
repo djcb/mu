@@ -118,17 +118,12 @@ mu_store_version (const MuStore *store)
 
 
 gboolean
-mu_store_needs_upgrade (const MuStore *store)
+mu_store_versions_match (const MuStore *store)
 {
 	g_return_val_if_fail (store, TRUE);
 
-	MU_WRITE_LOG ("'%s' '%s'\n", mu_store_version(store), MU_STORE_SCHEMA_VERSION);
-
-	if (g_strcmp0 (mu_store_version (store),
-		       MU_STORE_SCHEMA_VERSION) == 0)
-		return FALSE;
-	else
-		return TRUE;
+	return g_strcmp0 (mu_store_version (store),
+			  MU_STORE_SCHEMA_VERSION) == 0;
 }
 
 

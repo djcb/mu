@@ -203,7 +203,7 @@ database_version_check_and_update (MuStore *store, MuConfig *opts,
 		return mu_store_clear (store, err);
 	}
 
-	if (!mu_store_needs_upgrade (store))
+	if (mu_store_versions_match (store))
 		return TRUE; /* ok, nothing to do */
 
 	/* ok, database is not up to date */

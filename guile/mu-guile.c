@@ -89,8 +89,9 @@ mu_guile_init_instance (const char *muhome)
 		return FALSE;
 
 	err = NULL;
-	store = mu_store_new_read_only (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-					&err);
+	store = mu_store_new_read_only
+		(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+		 &err);
 	if (!store)
 		goto errexit;
 

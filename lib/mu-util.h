@@ -437,7 +437,7 @@ enum _MuError {
 	/* xapian dir is not accessible */
 	MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE    = 14,
 	/* database version is not up-to-date */
-	MU_ERROR_XAPIAN_NOT_UP_TO_DATE        = 15,
+	MU_ERROR_XAPIAN_VERSION_MISMATCH      = 15,
 	/* missing data for a document */
 	MU_ERROR_XAPIAN_MISSING_DATA          = 16,
 	/* database corruption */

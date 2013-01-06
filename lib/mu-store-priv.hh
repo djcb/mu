@@ -36,7 +36,7 @@
 
 class MuStoreError {
 public:
-	MuStoreError (MuError err, const std::string& what) :
+	MuStoreError (MuError err, const std::string& what):
 		_err (err), _what(what) {}
 	MuError mu_error () const { return _err; }
 	const std::string& what() const { return _what; }
@@ -79,10 +79,18 @@ public:
 
 		init (path, NULL, false, false);
 		_db = new Xapian::Database (path);
-		if (mu_store_needs_upgrade(this))
-			throw MuStoreError (MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
-					    ("store needs an upgrade"));
 
+		if (!mu_store_versions_match(this)) {
+			char *errstr =
+				g_strdup_printf ("db version: %s, but we need %s; "
+						 "database rebuild is required",
+						 mu_store_version (this),
+						 MU_STORE_SCHEMA_VERSION);
+
+			MuStoreError exc (MU_ERROR_XAPIAN_VERSION_MISMATCH, errstr);
+			g_free (errstr);
+			throw exc;
+		}
 		MU_WRITE_LOG ("%s: opened %s read-only", __FUNCTION__, this->path());
 	}
 
@@ -122,8 +130,8 @@ public:
 					       MU_STORE_SCHEMA_VERSION, NULL);
 		else if (g_strcmp0 (version, MU_STORE_SCHEMA_VERSION) != 0) {
 			g_free (version);
-			throw MuStoreError (MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
-					    "store needs an upgrade");
+			throw MuStoreError (MU_ERROR_XAPIAN_VERSION_MISMATCH,
+					    "the database needs a rebuild");
 		} else
 			g_free (version);
 	}

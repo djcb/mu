@@ -353,14 +353,15 @@ gchar* mu_store_database_version (const gchar *xpath) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
- * check whether the database needs to be upgraded, e.g., when it was
- * created with a different version of mu
+ * check whether the database schema's version is the same as the one
+ * that the current mu uses. If they are not the same, we'll need a
+ * database rebuild.
  *
  * @param store a MuStore instance
  *
- * @return TRUE if the database needs upgrading, FALSE otherwise
+ * @return TRUE if the versions are the same, FALSE otherwise.
  */
-gboolean mu_store_needs_upgrade (const MuStore *store);
+gboolean mu_store_versions_match (const MuStore *store);
 
 /**
  * clear the database, ie., remove all of the contents. This is a
