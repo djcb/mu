@@ -45,7 +45,7 @@
 
 // note: not re-entrant
 std::string
-_MuStore::get_uid_term (const char* path)
+_MuStore::get_uid_term (const char* path) const
 {
 	char real_path[PATH_MAX + 1];
 
@@ -84,7 +84,7 @@ mu_store_new_read_only (const char* xpath, GError **err)
 
 
 gboolean
-mu_store_is_read_only (MuStore *store)
+mu_store_is_read_only (const MuStore *store)
 {
 	g_return_val_if_fail (store, FALSE);
 
@@ -97,7 +97,7 @@ mu_store_is_read_only (MuStore *store)
 
 
 unsigned
-mu_store_count (MuStore *store, GError **err)
+mu_store_count (const MuStore *store, GError **err)
 {
 	g_return_val_if_fail (store, (unsigned)-1);
 
@@ -110,25 +110,30 @@ mu_store_count (MuStore *store, GError **err)
 
 
 const char*
-mu_store_version (MuStore *store)
+mu_store_version (const MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
-	return store->version ();
+	return store->version().c_str();
 }
 
 
 gboolean
-mu_store_needs_upgrade (MuStore *store)
+mu_store_needs_upgrade (const MuStore *store)
 {
 	g_return_val_if_fail (store, TRUE);
 
-	return  (g_strcmp0 (mu_store_version (store),
-			    MU_STORE_SCHEMA_VERSION) == 0) ? FALSE : TRUE;
+	MU_WRITE_LOG ("'%s' '%s'\n", mu_store_version(store), MU_STORE_SCHEMA_VERSION);
+
+	if (g_strcmp0 (mu_store_version (store),
+		       MU_STORE_SCHEMA_VERSION) == 0)
+		return FALSE;
+	else
+		return TRUE;
 }
 
 
 char*
-mu_store_get_metadata (MuStore *store, const char *key, GError **err)
+mu_store_get_metadata (const MuStore *store, const char *key, GError **err)
 {
 	g_return_val_if_fail (store, NULL);
 	g_return_val_if_fail (key, NULL);
@@ -151,7 +156,7 @@ mu_store_get_read_only_database (MuStore *store)
 
 
 gboolean
-mu_store_contains_message (MuStore *store, const char* path, GError **err)
+mu_store_contains_message (const MuStore *store, const char* path, GError **err)
 {
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (path, FALSE);
@@ -166,7 +171,7 @@ mu_store_contains_message (MuStore *store, const char* path, GError **err)
 
 
 unsigned
-mu_store_get_docid_for_path (MuStore *store, const char* path, GError **err)
+mu_store_get_docid_for_path (const MuStore *store, const char* path, GError **err)
 {
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (path, FALSE);
@@ -192,7 +197,7 @@ mu_store_get_docid_for_path (MuStore *store, const char* path, GError **err)
 
 
 time_t
-mu_store_get_timestamp (MuStore *store, const char *msgpath, GError **err)
+mu_store_get_timestamp (const MuStore *store, const char *msgpath, GError **err)
 {
 	char *stampstr;
 	time_t rv;
@@ -248,7 +253,7 @@ mu_store_foreach (MuStore *self,
 
 
 MuMsg*
-mu_store_get_msg (MuStore *self, unsigned docid, GError **err)
+mu_store_get_msg (const MuStore *self, unsigned docid, GError **err)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (docid != 0, NULL);

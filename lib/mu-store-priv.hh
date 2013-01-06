@@ -97,7 +97,6 @@ public:
 		_processed	= 0;
 		_read_only      = read_only;
 		_ref_count      = 1;
-		_version        = NULL;
 	}
 
 	void set_my_addresses (const char **my_addresses) {
@@ -124,7 +123,7 @@ public:
 		else if (g_strcmp0 (version, MU_STORE_SCHEMA_VERSION) != 0) {
 			g_free (version);
 			throw MuStoreError (MU_ERROR_XAPIAN_NOT_UP_TO_DATE,
-					    ("store needs an upgrade"));
+					    "store needs an upgrade");
 		} else
 			g_free (version);
 	}
@@ -133,8 +132,6 @@ public:
 		try {
 			if (_ref_count != 0)
 				g_warning ("ref count != 0");
-
-			g_free (_version);
 
 			mu_contacts_destroy (_contacts);
 			if (!_read_only)
@@ -165,14 +162,15 @@ public:
 			mu_contacts_clear (_contacts);
 	}
 
-	std::string get_uid_term (const char *path);
+	std::string get_uid_term (const char *path) const;
 
 	MuContacts* contacts() { return _contacts; }
 
-	const char* version ()  {
-		g_free (_version);
-		return _version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY,
-							 NULL);
+	const std::string version () const {
+		char *v = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
+		_version = v;
+		g_free (v);
+		return _version;
 	}
 
 	void set_version (const char *version)  {
@@ -233,7 +231,7 @@ private:
 	MuContacts *_contacts;
 
 	std::string _path;
-	gchar *_version;
+	mutable std::string _version;
 
 	Xapian::Database *_db;
 	bool _read_only;
