@@ -317,8 +317,9 @@ mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 	g_return_val_if_fail (muhome, FALSE);
 
 	if (access (mu_script_info_path (msi), R_OK) != 0) {
-	mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
-				      strerror(errno));
+		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
+				     "failed to read script: %s",
+				     strerror(errno));
 		 return FALSE;
 	 }
 	argv[2] = (char*)mu_script_info_path (msi);

@@ -166,7 +166,7 @@ char* mu_str_xapian_escape_in_place_try (char *query, gboolean esc_space,
  * replace ':' with '_', if it's not following a xapian-prefix (such
  * as 'subject:', 't:' etc, as defined in mu-msg-fields.[ch]).
  *
- * @param query a query string
+ * @param str a string
  * @param esc_space escape space characters as well
  * @param strchunk (optional) if non-NULL, allocate strings on strchunk
  *
@@ -174,7 +174,7 @@ char* mu_str_xapian_escape_in_place_try (char *query, gboolean esc_space,
  * Unless strchunk was provided, user must g_free the string when
  * no longer needed
  */
-char* mu_str_xapian_escape (const char *query, gboolean esc_space,
+char* mu_str_xapian_escape (const char *str, gboolean esc_space,
 			    GStringChunk *strchunk)  G_GNUC_WARN_UNUSED_RESULT;
 
 
