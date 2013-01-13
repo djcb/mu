@@ -594,6 +594,31 @@ xapian_pfx (MuMsgContact *contact)
 
 
 static void
+add_address_subfields (Xapian::Document& doc, const char *addr,
+		       const std::string& pfx, GStringChunk *strchunk)
+{
+	const char *at;
+	char *p1, *p2;
+
+	/* add "foo" and "bar.com" as terms as well for
+	 * "foo@bar.com" */
+	if (G_UNLIKELY(!(at = (g_strstr_len (addr, -1, "@")))))
+		return;
+
+	p1 = g_strndup(addr, at - addr); // foo
+	p2 = g_strdup (at + 1);
+
+	p1 = mu_str_xapian_escape_in_place_try (p1, TRUE, strchunk);
+	p2 = mu_str_xapian_escape_in_place_try (p2, TRUE, strchunk);
+
+	doc.add_term (pfx + p1);
+	doc.add_term (pfx + p2);
+
+	g_free (p1);
+	g_free (p2);
+}
+
+static void
 each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 {
 	/* for now, don't store reply-to addresses */
@@ -615,15 +640,14 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 
 	/* don't normalize e-mail address, but do lowercase it */
 	if (!mu_str_is_empty(contact->address)) {
-
 		char *escaped;
 		/* note: escaped is added to stringchunk, no need for
 		 * freeing */
-		escaped = mu_str_xapian_escape (contact->address,
-						FALSE /*dont esc space*/,
+		escaped = mu_str_xapian_escape (contact->address, FALSE,
 						msgdoc->_strchunk);
-		msgdoc->_doc->add_term
-			(std::string  (pfx + escaped, 0, MuStore::MAX_TERM_LENGTH));
+		msgdoc->_doc->add_term (pfx + escaped);
+		add_address_subfields (*msgdoc->_doc, contact->address, pfx,
+				       msgdoc->_strchunk);
 
 		/* store it also in our contacts cache */
 		if (msgdoc->_store->contacts())
