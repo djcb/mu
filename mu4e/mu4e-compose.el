@@ -369,7 +369,8 @@ the appropriate flag at the message forwarded or replied-to."
     (switch-to-buffer mu4e~view-buffer)
     (if (buffer-live-p mu4e~headers-buffer)
       (switch-to-buffer mu4e~headers-buffer)
-      (mu4e))) ;; if all else fails, back to the main view
+      ;; if all else fails, back to the main view
+      (when (fboundp 'mu4e) (mu4e)))) 
   (mu4e-message "Message sent"))
 
 (defun mu4e~compose-set-parent-flag (path)
