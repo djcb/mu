@@ -139,11 +139,14 @@ and `mu4e-headers-visible-columns'."
                  (const :tag "Don't split" nil))
   :group 'mu4e-headers)
 
-(defcustom mu4e-show-images nil
+(defcustom mu4e-view-show-images nil
   "Whether to automatically display attached images in the message
 view buffer."
   :type 'boolean
   :group 'mu4e-view)
+
+(make-obsolete-variable 'mu4e-show-images
+  'mu4e-view-show-images "0.9.9.x")
 
 (defcustom mu4e-confirm-quit t
   "Whether to confirm to quit mu4e."

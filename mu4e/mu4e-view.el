@@ -56,6 +56,7 @@ For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
   :group 'mu4e-view)
 
+
 (defcustom mu4e-view-show-addresses nil
   "Whether to initially show full e-mail addresses for contacts in
 address fields, rather than only their names. Note that you can
@@ -76,7 +77,7 @@ In the format of `format-time-string'."
 (defcustom mu4e-view-image-max-width 800
   "The maximum width for images to display.
 This is only effective if you're using an emacs with Imagemagick
-support, and `mu4e-show-image' is non-nil."
+support, and `mu4e-view-show-images' is non-nil."
   :group 'mu4e-view)
 
 (defcustom mu4e-view-scroll-to-next t
@@ -143,7 +144,7 @@ messages - for example, `mu4e-org'."
   ;; not, when the policy is 'ask'. we simply assume the user said yes...  the
   ;; alternative would be to ask for each message, encrypted or not.  maybe we
   ;; need an extra policy...
-  (mu4e~proc-view msgid mu4e-show-images mu4e-decryption-policy))
+  (mu4e~proc-view msgid mu4e-view-show-images mu4e-decryption-policy))
 
 
 (defun mu4e-view-message-text (msg)
@@ -497,6 +498,12 @@ FUNC should be a function taking two arguments:
       (define-key map "|" 'mu4e-view-pipe)
       (define-key map "a" 'mu4e-view-action)
 
+      ;; toggle header settings
+      (define-key map "O" 'mu4e-headers-change-sorting)
+      (define-key map "P" 'mu4e-headers-toggle-threading)
+      (define-key map "Q" 'mu4e-headers-toggle-full-search)
+      (define-key map "W" 'mu4e-headers-toggle-include-related)
+     
       ;; change the number of headers
       (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
@@ -717,7 +724,7 @@ What browser is called is depending on
 
 (defun mu4e~view-show-images-maybe (msg)
   "Show attached images, if `mu4e-show-images' is non-nil."
-  (when (and (display-images-p) mu4e-show-images)
+  (when (and (display-images-p) mu4e-view-show-images)
     (mu4e-view-for-each-part msg
       (lambda (msg part)
 	(when (string-match "^image/" (mu4e-message-part-field part :mime-type))
@@ -1036,7 +1043,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
       ;; remember the mapping path->docid, which maps the path of the embedded
       ;; message to the docid of its parent
       (puthash path docid mu4e~path-parent-docid-map)
-      (mu4e~proc-view-path path mu4e-show-images mu4e-decryption-policy))
+      (mu4e~proc-view-path path mu4e-view-show-images mu4e-decryption-policy))
     ((string= what "emacs")
       (find-file path)
       ;; make the buffer read-only since it usually does not make
