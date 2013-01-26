@@ -543,7 +543,7 @@ after the end of the search results."
       (define-key map (kbd "u")            'mu4e-headers-mark-for-unmark)
       (define-key map (kbd "+")            'mu4e-headers-mark-for-flag)
       (define-key map (kbd "-")            'mu4e-headers-mark-for-unflag)
-      (define-key map (kbd "&")            'mu4e-headers-mark-for-custom)
+      (define-key map (kbd "&")            'mu4e-headers-mark-custom)
 
       ;; (define-key map (kbd "*")              'mu4e-headers-mark-for-something)
       ;; (define-key map (kbd "<kp-multiply>")  'mu4e-headers-mark-for-something)
@@ -1248,7 +1248,7 @@ window. "
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
-    (mu4e~proc-view docid mu4e-show-images decrypt)))
+    (mu4e~proc-view docid mu4e-view-show-images decrypt)))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
