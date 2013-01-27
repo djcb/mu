@@ -17,6 +17,7 @@
 include $(top_srcdir)/gtest.mk
 
 EXTRA_DIST=			\
+	msgs-count.scm		\
 	msgs-per-year.scm	\
 	msgs-per-hour.scm	\
 	msgs-per-month.scm	\

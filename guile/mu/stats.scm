@@ -77,7 +77,6 @@ provided, match /all/ messages."
       expr)
     num))
 
-
 (define (average lst)
   "Calculate the average of a list LST of numbers, or #f if undefined."
   (if (null? lst)

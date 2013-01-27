@@ -707,9 +707,44 @@ probably be a bit more elegant.
 about the messages in the database.
 
 @menu
+* Basics:: @code{mu:count}, @code{mu:average}, ...
 * Tabulating values:: @code{mu:tabulate}
 * Most frequent values:: @code{mu:top-n-most-frequent}
 @end menu
+
+@node Basics
+@section Basics
+
+Let's look at some of the basic statistical operations available, in an
+interactive session:
+@example
+GNU Guile 2.0.5.123-4bd53
+Copyright (C) 1995-2012 Free Software Foundation, Inc.
+
+Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
+This program is free software, and you are welcome to redistribute it
+under certain conditions; type `,show c' for details.
+
+Enter `,help' for help.
+scheme@@(guile-user)> ;; load modules, initialize mu
+scheme@@(guile-user)> (use-modules (mu) (mu stats))
+scheme@@(guile-user)> (mu:initialize)
+scheme@@(guile-user)>
+scheme@@(guile-user)> ;; count the number of messages with 'hello' in their subject
+scheme@@(guile-user)> (mu:count "subject:hello")
+$1 = 162
+scheme@@(guile-user)> ;; average the size of messages with hello in their subject
+scheme@@(guile-user)> (mu:average mu:size "subject:hello")
+$2 = 34597733/81
+scheme@@(guile-user)> (exact->inexact $2)
+$3 = 427132.506172839
+scheme@@(guile-user)> ;; calculate the correlation between message size and
+scheme@@(guile-user)> ;; subject length
+scheme@@(guile-user)> (mu:correl mu:size (lambda (msg)
+                        (string-length (mu:subject msg))) "subject:hello")
+$5 = -0.10804368622292
+scheme@@(guile-user)> 
+@end example
 
 @node Tabulating values
 @section Tabulating values
