@@ -158,7 +158,7 @@ clicked."
   "Toggle sending mail mode, either queued or direct."
   (interactive)
   (unless (file-directory-p smtpmail-queue-dir)
-    (mu4e-error "`smtp-queue-dir' does not exist"))
+    (mu4e-error "`smtpmail-queue-dir' does not exist"))
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
   (message
     (concat "Outgoing mail will now be "
