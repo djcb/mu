@@ -34,6 +34,9 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 
+(require 'coolj) ;; wrap functions
+(require 'wid-edit)
+
 (require 'comint)
 (require 'browse-url)
 (require 'button)
@@ -118,6 +121,10 @@ where:
   plist and the attachment number.
 
 The first letter of NAME is used as a shortcut character.")
+
+(defvar mu4e-wash-wrap-lines-length nil)
+(defvar mu4e~view-has-rendered-html nil)
+(make-variable-buffer-local 'mu4e~view-has-rendered-html)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -211,6 +218,7 @@ messages - for example, `mu4e-org'."
     (switch-to-buffer buf)))
 
 
+(defvar mu4e-view-mode-post-hook nil)
 (defun mu4e-view (msg headersbuf &optional refresh)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
@@ -245,15 +253,19 @@ marking if it still had that."
 	  (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf)))
 
-
       (setq ;; buffer local
        mu4e~view-msg msg
        mu4e~view-headers-buffer headersbuf)
 
+      (widget-setup)
+
     (unless (or refresh embedded)
 	  ;; no use in trying to set flags again, or when it's an embedded
 	  ;; message
-	  (mu4e~view-mark-as-read-maybe)))))
+      (mu4e~view-mark-as-read-maybe))
+
+    (run-hooks 'mu4e-view-mode-post-hook)
+    )))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -336,7 +348,6 @@ at POINT, or if nil, at (point)."
 	      "[mouse-1] or [M-RET] to toggle long/short display"
 	      "[mouse-2] or C to compose a mail for this recipient"))))
       (mu4e-message-field msg field) ", ") t))
-
 
 (defun mu4e~view-construct-flags-tags-header (field val)
   "Construct a Flags: header."
@@ -640,6 +651,8 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [next]  '("Next" . mu4e-view-headers-next))
 	(define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
       map)))
+(set-keymap-parent mu4e-view-mode-map widget-keymap)
+(define-key mu4e-view-mode-map (kbd "M-<return>") 'widget-button-press)
 
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
 
@@ -744,6 +757,40 @@ What browser is called is depending on
 		(mu4e-display-image imgfile mu4e-view-image-max-width)))))))))
 
 ;; this is fairly simplistic...
+;; (defun mu4e~view-make-urls-clickable ()
+;;   "Turn things that look like URLs into clickable things.
+;; Also number them so they can be opened using `mu4e-view-go-to-url'."
+;;   (let ((num 0))
+;;     (save-excursion
+;;       (setq mu4e~view-link-map ;; buffer local
+;; 	(make-hash-table :size 32 :weakness nil))
+;;       (goto-char (point-min))
+;;       (while (re-search-forward mu4e~view-url-regexp nil t)
+;; 	(let ((url (match-string 0))
+;; 	       (map (make-sparse-keymap)))
+;; 	  (define-key map [mouse-1] (mu4e~view-browse-url-func url))
+;; 	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
+;; 	  (puthash (incf num) url mu4e~view-link-map)
+;; 	  (add-text-properties 0 (length url)
+;; 	    `(face mu4e-view-link-face
+;; 	       mouse-face highlight
+;; 	       keymap ,map
+;; 	       help-echo
+;; 	       ("[mouse-1] or [M-RET] to open the link")) url)
+;; 	  (replace-match
+;; 	    (concat url
+;; 	      (propertize (format "[%d]" num)
+;; 		'face 'mu4e-view-url-number-face))))))))
+
+(defun mu4e~view-shorten-url (url)
+  "Function to extract top level of urls and remove mailto labels
+from email links"
+  (save-match-data
+    (let ((matchp (string-match "\\(https?\\://\\|mailto:\\)\\([-+.a-zA-Z0-9@_]+\\)" url)))
+      (if matchp
+          (substring url (match-end 1) (match-end 0))
+        url))))
+
 (defun mu4e~view-make-urls-clickable ()
   "Turn things that look like URLs into clickable things.
 Also number them so they can be opened using `mu4e-view-go-to-url'."
@@ -753,21 +800,19 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	(make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
       (while (re-search-forward mu4e~view-url-regexp nil t)
-	(let ((url (match-string 0))
-	       (map (make-sparse-keymap)))
-	  (define-key map [mouse-1] (mu4e~view-browse-url-func url))
-	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
+	(let ((url (match-string 0)))
 	  (puthash (incf num) url mu4e~view-link-map)
-	  (add-text-properties 0 (length url)
-	    `(face mu4e-view-link-face
-	       mouse-face highlight
-	       keymap ,map
-	       help-echo
-	       ("[mouse-1] or [M-RET] to open the link")) url)
-	  (replace-match
-	    (concat url
-	      (propertize (format "[%d]" num)
-		'face 'mu4e-view-url-number-face))))))))
+          (replace-match "")
+          (widget-create 'link
+                         :notify (lambda (btn &rest ignore) (funcall (mu4e~view-browse-url-func (widget-value btn))))
+                         :button-face 'mu4e-view-link-face
+                         :button-prefix ""
+                         :button-suffix ""
+                         :help-echo url
+                         :sample-face 'mu4e-view-url-number-face
+                         :format (concat "%[%t%]%{" (format "[%d]" num) "%}")
+                         :tag (mu4e~view-shorten-url url)
+                         url))))))
 
 
 (defun mu4e~view-hide-cited ()
@@ -1477,28 +1522,41 @@ at POINT, or if nil, at (point)."
      ((and (> (* 10 (length txt)) (length html))
            (or (not mu4e-view-prefer-html) (not html)))
       (let ((beg (point)))
-        (let* ((rtxt (with-temp-buffer
-                      (insert txt)
-                      (buffer-substring-no-properties (point-min) (point-max))))
-               (coding-guess (detect-coding-string rtxt t)))
-          (decode-coding-string rtxt coding-guess t (current-buffer)))
+        (insert txt)
         (dolist (func mu4e-view-text-filters)
                 (apply func (list beg)))
         ))
      (html
-      (cond ((and (featurep 'w3m)
+      (cond ((and (require 'w3m nil t)
                   (equal mu4e-html-renderer 'w3m))
              (progn
                (let ((beg (point)))
                  (insert html)
+                 ;; set up w3m minor mode
                  (w3m-minor-mode t)
-                 (make-variable-buffer-local 'w3m-minor-mode-map)
+                 (make-local-variable 'w3m-minor-mode-map)
                  (define-key w3m-minor-mode-map "\r" (lambda () (interactive)
-                                                       (funcall (mu4e~view-browse-url-func
-                                                                 (w3m-anchor (point))))))
+                                                       (let ((url (w3m-anchor (point))))
+                                                       (if url
+                                                           (funcall (mu4e~view-browse-url-func
+                                                                     (w3m-anchor (point))))
+                                                         (mu4e-scroll-up)))))
                  (define-key w3m-minor-mode-map "u" nil)
+                 (define-key w3m-minor-mode-map "j" nil)
+
+                 ;; render html
                  (w3m-region beg (point))
                  )))
+            ((and (require 'shr nil t)
+                  (equal mu4e-html-renderer 'shr))
+             (let* ((beg (point))
+                    (shr-inhibit-images t)
+                    (dom (with-temp-buffer
+                           (insert html)
+                           (libxml-parse-html-region (point-min) (point-max)))))
+               (shr-insert-document dom)
+               (setq mu4e~view-has-rendered-html t)
+               ))
             ((stringp mu4e-html2text-command)
              (let ((beg (point)))
                (insert html)
@@ -1518,7 +1576,7 @@ at POINT, or if nil, at (point)."
                  (mu4e~view-fontify-footer)
                  (mu4e~view-make-urls-clickable))))
 
-(defun mu4e~view-remove-cr (pos)
+(defun mu4e~view-wash-cr (pos)
   (save-excursion
     (let ((inhibit-read-only t))
       (goto-char pos)
@@ -1527,56 +1585,97 @@ at POINT, or if nil, at (point)."
       (goto-char pos)
       (while (re-search-forward "\r" nil t)
         (replace-match "\n" t t)))))
-(add-to-list 'mu4e-view-text-filters 'mu4e~view-remove-cr t)
+(add-to-list 'mu4e-view-text-filters 'mu4e~view-wash-cr t)
 
-(defun mu4e~view-treat-ansi (pos)
+(defun mu4e~view-wash-ansi (pos)
   (save-excursion
     (ansi-color-apply-on-region pos (point-max))))
-(add-to-list 'mu4e-view-text-filters 'mu4e~view-treat-ansi t)
+(add-to-list 'mu4e-view-text-filters 'mu4e~view-wash-ansi t)
+
+(defun mu4e~view-wash-elide-blank-lines (pos)
+  
+  ;; Make all blank lines empty.
+  (goto-char pos)
+  (while (re-search-forward "^[[:space:]\t]+$" nil t)
+    (replace-match "" nil t))
+
+  ;; Replace multiple empty lines with a single empty line.
+  (goto-char pos)
+  (while (re-search-forward "^\n\\(\n+\\)" nil t)
+    (delete-region (match-beginning 1) (match-end 1)))
+
+  ;; Remove a leading blank line.
+  (goto-char pos)
+  (if (looking-at "\n")
+      (delete-region (match-beginning 0) (match-end 0)))
+
+  ;; Remove a trailing blank line.
+  (goto-char (point-max))
+  (if (looking-at "\n")
+      (delete-region (match-beginning 0) (match-end 0))))
+(add-to-list 'mu4e-view-text-filters 'mu4e~view-wash-elide-blank-lines t)
+
+(defun mu4e~view-wash-tidy-citations (pos)
+  "(from notmuch) Improve the display of cited regions of a message.
+
+Perform several transformations on the message body:
+
+- Remove lines of repeated citation leaders with no other
+  content,
+- Remove citation leaders standing alone before a block of cited
+  text,
+- Remove citation trailers standing alone after a block of cited
+  text."
+
+  ;; Remove lines of repeated citation leaders with no other content.
+  (goto-char pos)
+  (while (re-search-forward "\\(^>[> ]*\n\\)\\{2,\\}" nil t)
+    (replace-match "\\1"))
+
+  ;; Remove citation leaders standing alone before a block of cited
+  ;; text.
+  (goto-char pos)
+  (while (re-search-forward "\\(\n\\|^[^>].*\\)\n\\(^>[> ]*\n\\)" nil t)
+    (replace-match "\\1\n"))
+
+  ;; Remove citation trailers standing alone after a block of cited
+  ;; text.
+  (goto-char pos)
+  (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
+    (replace-match "\\2")))
+(add-to-list 'mu4e-view-text-filters 'mu4e~view-wash-tidy-citations t)
+
+(defun mu4e~view-wash-wrap-long-lines (pos)
+  "(from notmuch) Wrap long lines in the message.
+
+If `mu4e-wash-wrap-lines-length' is a number, this will wrap
+the message lines to the minimum of the width of the window or
+its value. Otherwise, this function will wrap long lines in the
+message at the window width. When doing so, citation leaders in
+the wrapped text are maintained."
+
+  (let* ((coolj-wrap-follows-window-size nil)
+	 (limit (if (numberp mu4e-wash-wrap-lines-length)
+		    (min mu4e-wash-wrap-lines-length
+			 (window-width))
+		  (window-width)))
+	 (fill-column (- limit
+			 ;; 2 to avoid poor interaction with
+			 ;; `word-wrap'.
+			 2)))
+    (coolj-wrap-region pos (point-max))))
+(add-to-list 'mu4e-view-text-filters 'mu4e~view-wash-wrap-long-lines t)
+
+(defun mu4e~view-wash-microsoft (pos)
+  (save-excursion
+      (when (string-match-p "[]"
+                            (buffer-substring-no-properties pos (point-max)))
+        (recode-region pos (point-max) 'windows-1252 'iso-8859-1))))
+(add-to-list 'mu4e-view-text-filters 'mu4e~view-wash-microsoft t)
 
 
 ;; CODE TO BUTTONIZE LINKS
 
-(define-key mu4e-view-mode-map (kbd "<tab>") 'forward-button)
-(define-key mu4e-view-mode-map (kbd "S-<tab>") 'backward-button)
-(fset 'mu4e-view-mode-map mu4e-view-mode-map)
-
-(defun mu4e~view-push-link-button (btn &rest ignore)
-  (funcall (mu4e~view-browse-url-func (button-get btn 'url))))
-
-(define-button-type 'mu4e~view-link-button
-  'action #'mu4e~view-push-link-button
-  'follow-link t
-  'face 'mu4e-view-link-face
-  'mouse-face 'highlight)
-
-(defun mu4e~view-shorten-url (url)
-  "Function to extract top level of urls and remove mailto labels
-from email links"
-  (save-match-data
-    (let ((matchp (string-match "\\(https?\\://\\|mailto:\\)\\([-+.a-zA-Z0-9@_]+\\)" url)))
-      (if matchp
-          (substring url (match-end 1) (match-end 0))
-        url))))
-
-(defun mu4e~view-shorten-urls (pos)
-  (interactive)
-  (save-excursion
-    (goto-char pos)
-    (let
-        ((rx "\\(https?\\://[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=]+[^[]\\|mailto:[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=/()]+\\)"))
-      (while (re-search-forward rx nil t)
-        (let* ((url (match-string 0))
-               (beg (match-beginning 0))
-               (ovl (make-overlay beg (match-end 0)))
-               (short-url (mu4e~view-shorten-url url))
-               )
-          (overlay-put ovl 'invisible t)
-          (insert-button short-url
-                         :type 'mu4e~view-link-button
-                         'url url
-                         'help-echo url))))))
-(add-to-list 'mu4e-view-text-filters 'mu4e~view-shorten-urls t)
 
 (provide 'mu4e-view)
 ;; end of mu4e-view
