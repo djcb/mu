@@ -902,8 +902,8 @@ of `mu4e-split-view', and return a window for the message view."
 
 (defun mu4e-headers-for-each (func)
   "Call FUNC for each header, moving point to the header.
-FUNC takes one argument, the msg s-expression for the
-corresponding header."
+FUNC takes one argument, the msg s-expression for the corresponding
+header."
   (save-excursion
     (goto-char (point-min))
     (while (search-forward mu4e~headers-docid-pre nil t)
