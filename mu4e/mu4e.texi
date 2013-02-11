@@ -14,7 +14,7 @@
 @include texi.texi
 
 @copying
-Copyright @copyright{} 2012 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012, 2013 Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -84,8 +84,7 @@ customize @t{mu4e} for your needs.
 
 At the end of the manual, there are some example configurations, to get up to
 speed quickly - @ref{Example configurations}. There's also a section of
-@ref{FAQ}, which should help you with some
-common questions.
+@ref{FAQ}, which should help you with some common questions.
 
 @menu
 * Introduction:: How it all began
@@ -104,6 +103,7 @@ Appendices
 * Interaction with other tools:: mu4e and the rest of the world
 * Example configurations:: Some examples to set you up quickly
 * FAQ:: Common questions and answers
+* Tips and Tricks:: Useful tips
 * How it works:: Some notes about the implementation of @t{mu4e}
 * Logging and debugging:: How to debug problems in @t{mu4e}
 * GNU Free Documentation License::  The license of this manual
@@ -1912,11 +1912,11 @@ message. An example should clarify this:
         (mu4e-message-field msg :subject))
         "/football")
       ;; messages sent by me go to the sent folder
-      ((find-if 
+      ((find-if
 	 (lambda (addr)
 	   (mu4e-message-contact-field-matches msg :from addr))
 	 mu4e-user-mail-address-list)
-	mu4e-sent-folder)       
+	mu4e-sent-folder)
       ;; everything else goes to /archive
       ;; important to have a catch-all at the end!
       (t  "/archive"))))
@@ -2967,6 +2967,251 @@ visible in the headers buffer, you can not collapse/open them.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded.} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
 @end itemize
+
+
+@node Tips and Tricks
+@appendix Tips and Tricks
+
+@menu
+* Multiple accounts::
+* Refiling message::
+* Saving outgoing messages::
+@end menu
+
+@node Multiple accounts
+@section Multiple accounts
+
+Using mu4e with multiple email accounts is fairly easy. Although
+variables such as @code{user-mail-address}, @code{mu4e-sent-folder},
+@code{message-*}, @code{smtpmail-*}, etc. typically only take one value,
+it is easy to change their values using @code{mu4e-compose-pre-hook}.
+The setup described here is one way of doing this (though certainly not
+the only way).
+
+This setup assumes that you have multiple mail accounts under
+@code{mu4e-maildir}. As an example, we'll use @t{~/Maildir/Account1}
+and @t{~/Maildir/Account2}, but the setup works just as well if
+@code{mu4e-maildir} points to something else.
+
+First, you need to make sure that all variables that you wish to change
+based on user account are set to some initial value. So set up your
+environment with e.g., your main account:
+
+@lisp
+(setq mu4e-sent-folder "/Account1/Saved Items"
+      mu4e-drafts-folder "/Account1/Drafts"
+      user-mail-address "my.address@@account1.tld"
+      message-signature-file ".Signature1.txt"
+      smtpmail-default-smtp-server "smtp.account1.tld"
+      smtpmail-local-domain "account1.tld"
+      smtpmail-smtp-server "smtp.account1.tld"
+      smtpmail-stream-type starttls
+      smtpmail-smtp-service 25)
+@end lisp
+
+Then create a variable @code{my-mu4e-account-alist}, which should
+contain a list for each of your accounts. Each list should start with
+the account name, (which @emph{must} be identical to the account's
+directory name under @t{~/Maildir}), followed by @code{(variable
+value)} pairs:
+
+@lisp
+(defvar my-mu4e-account-alist
+  '(("Account1"
+     (mu4e-sent-folder "/Account1/Saved Items")
+     (mu4e-drafts-folder "/Account1/Drafts")
+     (user-mail-address "my.address@@account1.tld")
+     (message-signature-file ".Signature1.txt")
+     (smtpmail-default-smtp-server "smtp.account1.tld")
+     (smtpmail-local-domain "account1.tld")
+     (smtpmail-smtp-server "smtp.account1.tld")
+     (smtpmail-stream-type starttls)
+     (smtpmail-smtp-service 25))
+    ("Account2"
+     (mu4e-sent-folder "/Account2/Saved Items")
+     (mu4e-drafts-folder "/Account2/Drafts")
+     (user-mail-address "my.address@@account2.tld)
+     (message-signature-file ".Signature2.txt")
+     (smtpmail-default-smtp-server "smtp.account2.tld)
+     (smtpmail-local-domain "account2.tld")
+     (smtpmail-smtp-server "smtp.account2.tld)
+     (smtpmail-stream-type starttls)
+     (smtpmail-smtp-service 587))))
+@end lisp
+
+You can put any variables you want in the account lists, just make sure
+that you put in @emph{all} the variables that differ for each account.
+Variables that do not differ do not be included. For example, if you use
+the same smtp server for both accounts, you don't need to include the
+smtp-related variables in @code{my-mu4e-account-alist}.
+
+Now, the following function can be used to select an account and set the
+variables in @code{my-mu4e-account-alist} to the correct values:
+
+@lisp
+(defun my-mu4e-set-account ()
+  "Set the account for composing a message."
+  (let* ((account
+          (if mu4e-compose-parent-message
+              (let ((maildir (mu4e-message-field mu4e-compose-parent-message :maildir)))
+                (string-match "/\\(.*?\\)/" maildir)
+                (match-string 1 maildir))
+            (completing-read (format "Compose with account: (%s) "
+                                     (mapconcat #'(lambda (var) (car var)) my-mu4e-account-alist "/"))
+                             (mapcar #'(lambda (var) (car var)) my-mu4e-account-alist)
+                             nil t nil nil (caar my-mu4e-account-alist))))
+         (account-vars (cdr (assoc account my-mu4e-account-alist))))
+    (if account-vars
+        (mapc #'(lambda (var)
+                  (set (car var) (cadr var)))
+              account-vars)
+      (error "No email account found"))))
+@end lisp
+
+This function then needs to be added to @code{mu4e-compose-pre-hook}:
+
+@lisp
+(add-hook 'mu4e-compose-pre-hook 'my-mu4e-set-account)
+@end lisp
+
+This way, @code{my-mu4e-set-account} will be called every time you edit
+a message. If you compose a new message, it simply asks you for the
+account you wish to send the message from (TAB completion works). If
+you're replying or forwarding a message, or editing an existing draft,
+the account is chosen automatically, based on the first component of the
+maildir of the message being replied to, forwarded or edited (i.e., the
+directory under @t{~/Maildir}).
+
+@node Refiling message
+@section Refiling message
+
+By setting @code{mu4e-refile-folder} to a function, you can dynamically
+determine where messages are to be refiled. If you want to do this based
+on the subject of a message, you can use a function that matches the
+subject against a list of regexes in the following way. First, set up a
+variable @code{my-mu4e-subject-alist} containing regexes plus associated
+mail folders:
+
+@lisp
+(defvar my-mu4e-subject-alist '(("kolloqui\\(um\\|a\\)" . "/Kolloquium")
+                                ("Calls" . "/Calls")
+                                ("Lehr" . "/Lehre")
+                                ("webseite\\|homepage\\|website" . "/Webseite"))
+  "List of subjects and their respective refile folders.")
+@end lisp
+
+Now you can use the following function to automatically refile messages
+based on their subject line:
+
+@lisp
+(defun my-mu4e-refile-folder-function (msg)
+  "Set the refile folder for MSG."
+  (let ((subject (mu4e-message-field msg :subject))
+        (folder (or (cdar (member* subject my-mu4e-subject-alist
+                                   :test #'(lambda (x y)
+                                             (string-match (car y) x))))
+                    "/General")))
+    folder))
+@end lisp
+
+Note the @t{"/General"} folder: it is the default folder in case the
+subject does not match any of the regexes in
+@code{my-mu4e-subject-alist}.
+
+In order to make this work, you'll of course need to set
+@code{mu4e-refile-folder} to this function:
+
+@lisp
+(setq mu4e-refile-folder 'my-mu4e-refile-folder-function)
+@end lisp
+
+If you have multiple accounts, you can accommodate them as well:
+
+@lisp
+(defun my-mu4e-refile-folder-function (msg)
+  "Set the refile folder for MSG."
+  (let ((maildir (mu4e-message-field msg :maildir))
+        (subject (mu4e-message-field msg :subject))
+        folder)
+    (cond
+     ((string-match "Account1" maildir)
+      (setq folder (or (catch 'found
+                         (dolist (mailing-list my-mu4e-mailing-lists)
+                           (if (mu4e-message-contact-field-matches msg :to (car mailing-list))
+                               (throw 'found (cdr mailing-list)))))
+                       "/Account1/General")))
+     ((string-match "Gmail" maildir)
+      (setq folder "/Gmail/All Mail"))
+     ((string-match "Account2" maildir)
+      (setq folder (or (cdar (member* subject my-mu4e-subject-alist
+                                      :test #'(lambda (x y)
+                                                (string-match (car y) x))))
+                       "/Account2/General"))))
+    folder))
+@end lisp
+
+This function actually uses different methods to determine the refile
+folder, depending on the account: For Account2, it uses
+@code{my-mu4e-subject-alist}, for the Gmail account it simply uses the
+folder "All Mail". For Account1, it uses another method: it files the
+message based on the mailing list to which it was sent. This requires
+another variable:
+
+@lisp
+(defvar my-mu4e-mailing-lists '(("mu-discuss@@googlegroups.com" . "/Account1/mu4e")
+                                ("pandoc-discuss@@googlegroups.com" . "/Account1/Pandoc")
+                                ("auctex@@gnu.org" . "/Account1/AUCTeX"))
+  "List of mailing list addresses and folders where their messages are saved.")
+@end lisp
+
+@node Saving outgoing messages
+@section Saving outgoing messages
+
+Like @code{mu4e-refile-folder}, the variable @code{mu4e-sent-folder} can
+also be set to a function, in order to dynamically determine the save
+folder. One might, for example, wish to automatically put messages going
+to mailing lists into the trash (because you'll receive them back from
+the list). If you have set up the variable @code{my-mu4e-mailing-lists}
+as above, you can use the following function to determine a save folder:
+
+@lisp
+(defun my-mu4e-sent-folder-function (msg)
+  "Set the sent folder for the current message."
+  (let ((from-address (message-field-value "From"))
+        (to-address (message-field-value "To")))
+    (cond
+     ((string-match "my.address@@account1.tld" from-address)
+      (if (member* to-address my-mu4e-mailing-lists
+                   :test #'(lambda (x y)
+                             (string-match (car y) x)))
+          "/Trash"
+        "/Account1/Sent"))
+     ((string-match "my.address@@gmail.com" from-address)
+      "/Gmail/Sent Mail")
+     (t (mu4e-ask-maildir-check-exists "Save message to maildir: ")))))
+@end lisp
+
+Note that this function doesn't use @code{(mu4e-message-field msg
+:maildir)} to determine which account the message is being sent from.
+The reason is that that the function in @code{mu4e-sent-folder} is
+called when you send the message, but before mu4e has created the
+message struct from the compose buffer, so that
+@code{mu4e-message-field} cannot be used. Instead, the function uses
+@code{message-field-value}, which extracts the values of the headers in
+the compose buffer. This means that it is not possible to extract the
+account name from the message's maildir, so instead the from address is
+used to determine the account.
+
+Again, the function shows three different possibilities: for the first
+account (@t{my.address@@account1.tld}) it uses
+@code{my-mu4e-mailing-lists} again to determine if the message goes to a
+mailing list. If so, the message is put in the trash folder, if not, it
+is saved in @t{/Account1/Sent}. For the second (Gmail) account, sent
+mail is simply saved in the Sent Mail folder.
+
+If the from address is not associated with Account1 or with the Gmail
+account, the function uses @code{mu4e-ask-maildir-check-exists} to ask
+the user for a maildir to save the message in.
 
 
 @node How it works
