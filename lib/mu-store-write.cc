@@ -645,7 +645,8 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		 * freeing */
 		escaped = mu_str_xapian_escape (contact->address, FALSE,
 						msgdoc->_strchunk);
-		msgdoc->_doc->add_term (pfx + escaped);
+		msgdoc->_doc->add_term
+			(std::string  (pfx + escaped, 0, MuStore::MAX_TERM_LENGTH));
 		add_address_subfields (*msgdoc->_doc, contact->address, pfx,
 				       msgdoc->_strchunk);
 

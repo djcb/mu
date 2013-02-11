@@ -216,7 +216,7 @@ test_mu_query_03 (void)
 		{ "subject:Re: Learning LISP; Scheme vs elisp.", 0},
 		{ "subject:\"Re: Learning LISP; Scheme vs elisp.\"", 1},
 		{ "to:help-gnu-emacs@gnu.org", 4},
-		{ "t:help-gnu-emacs", 0},
+		{ "t:help-gnu-emacs", 4},
 		{ "flag:flagged", 1}
 	};
 
