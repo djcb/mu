@@ -503,7 +503,7 @@ FUNC should be a function taking two arguments:
       (define-key map "P" 'mu4e-headers-toggle-threading)
       (define-key map "Q" 'mu4e-headers-toggle-full-search)
       (define-key map "W" 'mu4e-headers-toggle-include-related)
-     
+
       ;; change the number of headers
       (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
@@ -1118,7 +1118,7 @@ list."
 (mu4e~view-defun-mark-for flag)
 (mu4e~view-defun-mark-for unflag)
 (mu4e~view-defun-mark-for unmark)
-(mu4e~view-defun-mark-for deferred)
+(mu4e~view-defun-mark-for something)
 
  (defun mu4e-view-marked-execute ()
   "Execute the marks."
