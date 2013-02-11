@@ -310,8 +310,8 @@ mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 {
 	char *mainargs, *expr;
 	char *argv[] = {
-	"guile", "-l", NULL, "-c", NULL, NULL
-		};
+		"guile", "-l", NULL, "-c", NULL, NULL
+	};
 
 	g_return_val_if_fail (msi, FALSE);
 	g_return_val_if_fail (muhome, FALSE);
