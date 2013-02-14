@@ -652,7 +652,6 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
       map)))
 (set-keymap-parent mu4e-view-mode-map widget-keymap)
-(define-key mu4e-view-mode-map (kbd "M-<return>") 'widget-button-press)
 
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
 
@@ -808,6 +807,9 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
                          :button-face 'mu4e-view-link-face
                          :button-prefix ""
                          :button-suffix ""
+                         :keymap (let ((map (copy-keymap widget-keymap)))
+                                   (define-key map (kbd "M-<return>") 'widget-button-press)
+                                   map)
                          :help-echo url
                          :sample-face 'mu4e-view-url-number-face
                          :format (concat "%[%t%]%{" (format "[%d]" num) "%}")
@@ -1333,77 +1335,105 @@ other windows."
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
 add text-properties to VAL."
-  (insert
-   (let* ((info (cdr (assoc field mu4e-header-info)))
-	  (key (plist-get info :name))
-	  (help (plist-get info :help)))
-     (if (and val (> (length val) 0))
-         (with-temp-buffer
+  (let* ((beg (point))
+         (info (cdr (assoc field mu4e-header-info)))
+         (key (plist-get info :name))
+         (help (plist-get info :help))
+         end)
+    (cond ((functionp val)
+           (insert (propertize key
+                               'face 'mu4e-view-header-key-face
+                               'help-echo help) ": ")
+           (funcall val)
+           (insert "\n"))
+          ((and val
+                (stringp val)
+                (> (length val) 0))
            (insert (propertize key
                                'face 'mu4e-view-header-key-face
                                'help-echo help) ": "
                                (if dont-propertize-val
                                    val
                                  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
-           ;; temporarily set the fill column <margin> positions to the right, so
-           ;; we can indent the following lines correctly
-           (let*((margin 1) (fill-column (- fill-column margin)))
-             (fill-region (point-min) (point-max))
-             (goto-char (point-min))
-             (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
-               (indent-to-column margin)))
-           (buffer-string))
-       ""))))
+           )
+          (t nil))
+    (setq end (point))
+    (unless (equal beg end)
+      (narrow-to-region beg end)
+      ;; temporarily set the fill column <margin> positions to the right, so
+      ;; we can indent the following lines correctly
+      (let*((margin 1) (fill-column (- fill-column margin)))
+        (fill-region (point-min) (point-max))
+        (goto-char (point-min))
+        (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
+          (indent-to-column margin)))
+      (widen))))
+
+(defvar mu4e~view-contact-button-keymap nil)
+(let ((map (copy-keymap widget-keymap)))
+  (define-key map [down-mouse-2] 'mouse-set-point)
+  (define-key map [mouse-2] 'mu4e~view-compose-button)
+  (define-key map "C" 'mu4e~view-compose-button)
+  (setq mu4e~view-contact-button-keymap map))
+
+(define-widget 'mu4e-view-contact-button 'link
+  "Mu4e contact button"
+  ;; :convert-widget 'identity
+  :notify 'mu4e~view-toggle-contact-display
+  :button-face 'mu4e-view-contact-face
+  :button-prefix ""
+  :button-suffix ""
+  :format "%[%v%]"
+  :follow-link t
+  :intangible nil
+  :keymap mu4e~view-contact-button-keymap
+  :mouse-face 'highlight
+  :help-echo (format "%s\n%s" "[mouse-1] or [RET] to toggle long/short display"
+                     "[mouse-2] or C to compose a mail for this recipient")
+  )
 
 (defun mu4e~view-display-contacts-header (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
-  (mu4e~view-display-header
-   field
-   (mapconcat
-    (lambda(c)
-      (let* ((name (car c))
-             (email (cdr c))
-             (short (or name email)) ;; name may be nil
-             (long (if name (format "%s <%s>" name email) email))
-             (map (make-sparse-keymap)))
-        (define-key map [mouse-1] 'mu4e~view-toggle-contact)
-        (define-key map [?\M-\r]  'mu4e~view-toggle-contact)
-        (define-key map [mouse-2] 'mu4e~view-compose-contact)
-        (define-key map "C"  'mu4e~view-compose-contact)
-        (propertize
-         (if mu4e-view-show-addresses long short)
-         'long long
-         'short short
-         'email email
-         'display (if mu4e-view-show-addresses long short)
-         'keymap map
-         'face 'mu4e-view-contact-face
-         'mouse-face 'highlight
-         'help-echo
-         (format "<%s>\n%s\n%s" email
-                 "[mouse-1] or [M-RET] to toggle long/short display"
-                 "[mouse-2] or C to compose a mail for this recipient"))))
-    (mu4e-message-field msg field) ", ") t))
+  (let ((contacts (mu4e-message-field msg field)))
+    (when contacts
+      (mu4e~view-display-header
+       field
+       (lambda ()
+         (loop for (c . rest) on contacts
+               do (let* ((name (car c))
+                         (email (cdr c))
+                         (short (or name email)) ;; name may be nil
+                         (long (if name (format "%s <%s>" name email) email))
+                         (map (make-sparse-keymap)))
+                    (widget-create 'mu4e-view-contact-button
+                                   :long long
+                                   :short short
+                                   :email email
+                                   (if mu4e-view-show-addresses long short))
+                    (when rest
+                      (insert (propertize ", " 'face 'mu4e-view-contact-face)))
+              )))))))
 
-(defun mu4e~view-toggle-contact-display (&optional point)
+(defun mu4e~view-compose-button (&optional point)
+  (interactive)
+  (let* ((pos (or point (point)))
+         (wid (widget-at pos))
+         (eml (when wid (widget-get wid :email))))
+    (when eml (mu4e~compose-mail eml))))
+
+(defun mu4e~view-toggle-contact-display (wid &rest ignore)
   "Toggle between the long and short versions of long/short string
 at POINT, or if nil, at (point)."
-  (interactive)
-  (unless (get-text-property (or point (point)) 'long)
+  (unless (widget-get wid :long)
     (error "point is not toggleable"))
-  (let* ((point (or point (point)))
-         ;; find the first pos part of the button
-         (start (previous-property-change point))
-         (start (if start (next-property-change start) (point-min)))
-         ;; find the first pos not part of the button (possibly nil)
-         (end (next-property-change point))
-         (end (or end (1+ (point-max)))) ;; one beyond
-         (longtext (get-text-property point 'long))
-         (shorttext (get-text-property point 'short))
-         (inhibit-read-only t))
-    (if (string= (get-text-property point 'display) longtext)
-        (add-text-properties start end `(display ,shorttext))
-      (add-text-properties start end `(display ,longtext)))))
+  (let* ((long (widget-get wid :long))
+         (short (widget-get wid :short))
+         (val (widget-value wid)))
+    (if (and short
+             (equal val long))
+        (widget-value-set wid short)
+      (widget-value-set wid long)))
+  )
 
 (defun mu4e~view-display-flags-tags-header (field val)
   "Construct a Flags: header."
@@ -1443,6 +1473,46 @@ at POINT, or if nil, at (point)."
          (val (when val (concat val " (" btn ")"))))
     (mu4e~view-display-header :signature val t)))
 
+(define-widget 'mu4e~view-attachment-button 'link
+  "Button for attachments in mu4e-view"
+  :notify 'mu4e~view-attachment-button-save
+  :button-face 'mu4e-view-link-face
+  :sample-face 'mu4e-view-attach-number-face
+  :format "%{%t%}%[%v%]"
+  :button-prefix ""
+  :button-suffix ""
+  :follow-link t
+  :keymap (let ((map (copy-keymap widget-keymap)))
+            (define-key map [down-mouse-2] 'mouse-set-point)
+            (define-key map [mouse-2]
+              (lambda (&optional point)
+                (interactive)
+                (let* ((pos (or point (point)))
+                       (wid (widget-at pos))
+                       (msg mu4e~view-msg)
+                       (id (when wid (widget-get wid :id))))
+                  (when id
+                    (funcall (mu4e~view-open-attach-func msg id))))))
+            (define-key map (kbd "S-<return>")
+              (lambda (&optional point)
+                (interactive)
+                (let* ((pos (or point (point)))
+                       (wid (widget-at pos))
+                       (msg mu4e~view-msg)
+                       (id (when wid (widget-get wid :id))))
+                  (when id
+                    (funcall (mu4e~view-open-attach-func msg id))))))
+            map)
+  :help-echo (concat "[RET] or [mouse-1] to save attachment\n"
+                     "[S-RET] or [mouse-2] to open attachment")
+  )
+
+(defun mu4e~view-attachment-button-save (wid &rest ignore)
+  (interactive)
+  (let ((msg mu4e~view-msg)
+        (id (widget-get wid :id)))
+    (funcall (mu4e~view-save-attach-func msg id))))
+
 (defun mu4e~view-display-attachments-header (msg)
   "Display attachment information; the field looks like something like:
    	:parts ((:index 1 :name \"1.part\" :mime-type \"text/plain\"
@@ -1452,63 +1522,58 @@ at POINT, or if nil, at (point)."
                  :type (leaf attachment) :attachment nil :size 605196))"
   (setq mu4e~view-attach-map ;; buffer local
     (make-hash-table :size 64 :weakness nil))
-  (let* ((id 0)
-	  (attachments
-	    ;; we only list parts that look like attachments, ie. that have a
-	    ;; non-nil :attachment property; we record a mapping between
-	    ;; user-visible numbers and the part indices
-	    (remove-if-not
-	      (lambda (part)
-		(let* ((mtype (mu4e-message-part-field part :mime-type))
-			(attachtype (mu4e-message-part-field part :type))
-			(isattach (or ;; we lost parts marked either
-				      ;; "attachment" or "inline" as attachment.
-				    (member 'attachment attachtype)
-				    (member 'inline attachtype))))
-		  (or ;; remove if it's not an attach *or* if it's an
-		      ;; image/audio/application type (but not a signature)
-		    isattach
-		    (string-match "^\\(image\\|audio\\)" mtype)
-		    (string= "message/rfc822" mtype)
-		    (and (string-match "^application" mtype)
-		      (not (string-match "signature" mtype))))))
-	      (mu4e-message-field msg :parts)))
-	  (attstr
-	    (mapconcat
-	      (lambda (part)
-		(let ((index (mu4e-message-part-field part :index))
-		       (name (mu4e-message-part-field part :name))
-		       (size (mu4e-message-part-field part :size))
-		       (map (make-sparse-keymap)))
-		  (incf id)
-		  (puthash id index mu4e~view-attach-map)
-
-		  (define-key map [mouse-1]
-		    (mu4e~view-open-attach-func msg id))
-		  (define-key map  [?\M-\r]
-		    (mu4e~view-open-attach-func msg id))
-		  (define-key map [mouse-2]
-		    (mu4e~view-save-attach-func msg id))
-		  (define-key map (kbd "<S-return>")
-		    (mu4e~view-save-attach-func msg id))
-
-		  (concat
-		    (propertize (format "[%d]" id)
-		      'face 'mu4e-view-attach-number-face)
-		    (propertize name 'face 'mu4e-view-link-face
-		      'keymap map
-		      'mouse-face 'highlight
-		      'help-echo
-		      (concat
-			"[mouse-1] or [M-RET] opens the attachment\n"
-			"[mouse-2] or [S-RET] offers to save it"))
-		    (when (and size (> size 0))
-		      (concat (format "(%s)"
-				(propertize (mu4e-display-size size)
-				  'face 'mu4e-view-header-key-face)))))))
-	      attachments ", ")))
+  (let ((attachments
+         ;; we only list parts that look like attachments, ie. that have a
+         ;; non-nil :attachment property; we record a mapping between
+         ;; user-visible numbers and the part indices
+         (remove-if-not
+          (lambda (part)
+            (let* ((mtype (mu4e-message-part-field part :mime-type))
+                   (attachtype (mu4e-message-part-field part :type))
+                   (isattach (or ;; we lost parts marked either
+                              ;; "attachment" or "inline" as attachment.
+                              (member 'attachment attachtype)
+                              (member 'inline attachtype))))
+              (or ;; remove if it's not an attach *or* if it's an
+               ;; image/audio/application type (but not a signature)
+               isattach
+               (string-match "^\\(image\\|audio\\)" mtype)
+               (string= "message/rfc822" mtype)
+               (and (string-match "^application" mtype)
+                    (not (string-match "signature" mtype))))))
+          (mu4e-message-field msg :parts))))
     (when attachments
-      (mu4e~view-display-header :attachments attstr t))))
+      (mu4e~view-display-header
+       :attachments
+       (lambda ()
+         (loop for (part . rest) on attachments
+               with id = 0
+               do 
+               (let ((index (mu4e-message-part-field part :index))
+                     (name (mu4e-message-part-field part :name))
+                     (size (mu4e-message-part-field part :size)))
+                 (incf id)
+                 (puthash id index mu4e~view-attach-map)
+                 
+                 ;; (define-key map [mouse-1]
+                 ;;   (mu4e~view-open-attach-func msg id))
+                 ;; (define-key map  [?\M-\r]
+                 ;;   (mu4e~view-open-attach-func msg id))
+                 ;; (define-key map [mouse-2]
+                 ;;   (mu4e~view-save-attach-func msg id))
+                 ;; (define-key map (kbd "<S-return>")
+                 ;;   (mu4e~view-save-attach-func msg id))
+                 
+                 (widget-create 'mu4e~view-attachment-button
+                                :tag (format "[%d]" id)
+                                :id id
+                                name)
+                 (when (and size (> size 0))
+                   (insert (format "(%s)"
+                                   (propertize (mu4e-display-size size)
+                                               'face 'mu4e-view-header-key-face))))
+                 (when rest (insert ", "))
+                 )))))))
 
 (defvar mu4e-view-text-filters nil)
 (setq mu4e-view-text-filters nil)
@@ -1535,14 +1600,23 @@ at POINT, or if nil, at (point)."
                  ;; set up w3m minor mode
                  (w3m-minor-mode t)
                  (make-local-variable 'w3m-minor-mode-map)
-                 (define-key w3m-minor-mode-map "\r" (lambda () (interactive)
-                                                       (let ((url (w3m-anchor (point))))
-                                                       (if url
-                                                           (funcall (mu4e~view-browse-url-func
-                                                                     (w3m-anchor (point))))
-                                                         (mu4e-scroll-up)))))
-                 (define-key w3m-minor-mode-map "u" nil)
-                 (define-key w3m-minor-mode-map "j" nil)
+                 (let ((map (copy-keymap w3m-minor-mode-map)))
+                   
+                   (define-key map (kbd "M-<return>")
+                     (lambda () (interactive)
+                       (let ((url (w3m-anchor (point))))
+                         (if url
+                             (funcall (mu4e~view-browse-url-func
+                                       (w3m-anchor (point))))
+                           (mu4e-scroll-up)))))
+                   (define-key map "u" nil)
+                   (define-key map "j" nil)
+                   (define-key map "\t" nil)
+                   (define-key map (kbd "<tab>") nil)
+                   (define-key map (kbd "<backtab>") nil)
+                   (define-key map (kbd "S-<tab>") nil)
+
+                   (setq w3m-minor-mode-map map))
 
                  ;; render html
                  (w3m-region beg (point))
@@ -1672,10 +1746,6 @@ the wrapped text are maintained."
                             (buffer-substring-no-properties pos (point-max)))
         (recode-region pos (point-max) 'windows-1252 'iso-8859-1))))
 (add-to-list 'mu4e-view-text-filters 'mu4e~view-wash-microsoft t)
-
-
-;; CODE TO BUTTONIZE LINKS
-
 
 (provide 'mu4e-view)
 ;; end of mu4e-view
