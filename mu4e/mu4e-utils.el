@@ -670,19 +670,23 @@ successful, call FUNC (if non-nil) afterwards."
 Currently the filter only checks if the command asks for a password
 by matching the output against `mu4e~get-mail-password-regexp'.
 The messages are inserted into the process buffer."
-  (save-current-buffer
-    (when (process-buffer proc)
-      (set-buffer (process-buffer proc)))
-    (let ((inhibit-read-only t))
-      ;; Check whether process asks for a password and query user
-      (when (string-match mu4e~get-mail-password-regexp msg)
-        (if (process-get proc 'x-interactive)
-            (process-send-string proc
-	      (concat (read-passwd mu4e~get-mail-ask-password) "\n"))
-	  ;; TODO kill process?
-          (mu4e-error "Unrecognized password request")))
-      (when (process-buffer proc)
-        (insert msg)))))
+  (when (string-match mu4e~get-mail-password-regexp msg)
+    (if (process-get proc 'x-interactive)
+        (process-send-string proc
+                             (concat (read-passwd mu4e~get-mail-ask-password) "\n"))
+      ;; TODO kill process?
+      (mu4e-error "Unrecognized password request")))
+  (when (process-buffer proc)
+    (let ((inhibit-read-only t)
+          (process-window (get-buffer-window (process-buffer proc))))
+      ;; Insert at end of buffer. Leave point alone.
+      (with-current-buffer (process-buffer proc)
+        (goto-char (point-max))
+        (insert msg))
+      ;; Auto-scroll unless user is interacting with the window.
+      (when (not (eq (selected-window) process-window))
+        (with-selected-window process-window
+          (goto-char (point-max)))))))
 
 (defun  mu4e-update-index ()
   "Update the mu4e index."
