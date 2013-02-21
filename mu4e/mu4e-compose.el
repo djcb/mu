@@ -55,7 +55,7 @@
 
 ;;  a) is dealt with by message-mode, but we need to tell it where to move the
 ;;     sent message. We do this by adding an Fcc: header with the target folder,
-;;     see `mu4e~setup-fcc-maybe'. Since message-mode does not natively
+;;     see `mu4e~compose-setup-fcc-maybe'. Since message-mode does not natively
 ;;     understand maildirs, we also need to tell it what to do, so we also set
 ;;     `message-fcc-handler-function' there. Finally, we add the the message in
 ;;     the sent-folder to the database.
