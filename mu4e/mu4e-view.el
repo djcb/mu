@@ -255,9 +255,9 @@ add text-properties to VAL."
 	  (help (plist-get info :help)))
     (if (and val (> (length val) 0))
     (with-temp-buffer
-      (insert (propertize key
+      (insert (propertize (concat key ":")
 		'face 'mu4e-view-header-key-face
-		'help-echo help) ": "
+		'help-echo help) " "
 	(if dont-propertize-val
 	  val
 	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
