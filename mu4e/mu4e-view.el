@@ -255,9 +255,9 @@ add text-properties to VAL."
 	  (help (plist-get info :help)))
     (if (and val (> (length val) 0))
     (with-temp-buffer
-      (insert (propertize key
+      (insert (propertize (concat key ":")
 		'face 'mu4e-view-header-key-face
-		'help-echo help) ": "
+		'help-echo help) " "
 	(if dont-propertize-val
 	  val
 	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
@@ -437,9 +437,8 @@ at POINT, or if nil, at (point)."
 			"[mouse-1] or [M-RET] opens the attachment\n"
 			"[mouse-2] or [S-RET] offers to save it"))
 		    (when (and size (> size 0))
-		      (concat (format "(%s)"
-				(propertize (mu4e-display-size size)
-				  'face 'mu4e-view-header-key-face)))))))
+		      (propertize (format "(%s)" (mu4e-display-size size))
+                                  'face 'mu4e-view-header-key-face)))))
 	      attachments ", ")))
     (when attachments
       (mu4e~view-construct-header :attachments attstr t))))
