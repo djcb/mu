@@ -127,7 +127,7 @@ This is to determine what is the parent docid for embedded
 message extracted at some path.")
 
 (defconst mu4e~view-url-regexp
-  "\\(\\(https?\\://\\|mailto:\\)[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=/()]+\\)"
+  "\\(\\(https?\\://\\|mailto:\\)[-+\[:alnum:\].?_$%/+&#@!*~,:;=/()]+\\)"
   "Regexp that matches http:/https:/mailto: URLs; match-string 1
 will contain the matched URL, if any.")
 
