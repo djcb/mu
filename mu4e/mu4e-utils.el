@@ -149,7 +149,7 @@ an absolute path."
   (cond
     ((file-directory-p dir) t)
     ((yes-or-no-p (mu4e-format "%s does not exist yes. Create now?" dir))
-      (mu4e~proc-mkdir dir))
+      (mu4e~proc-mkdir dir) t)
     (t nil)))
 
 (defun mu4e-format (frm &rest args)
@@ -680,14 +680,15 @@ The messages are inserted into the process buffer."
       (mu4e-error "Unrecognized password request")))
   (when (process-buffer proc)
     (let ((inhibit-read-only t)
-          (process-window (get-buffer-window (process-buffer proc))))
+          (procwin (get-buffer-window (process-buffer proc))))
       ;; Insert at end of buffer. Leave point alone.
       (with-current-buffer (process-buffer proc)
         (goto-char (point-max))
         (insert msg))
       ;; Auto-scroll unless user is interacting with the window.
-      (when (not (eq (selected-window) process-window))
-        (with-selected-window process-window
+      (when (and (window-live-p procwin)
+	      (not (eq (selected-window) procwin)))
+        (with-selected-window procwin
           (goto-char (point-max)))))))
 
 (defun  mu4e-update-index ()
