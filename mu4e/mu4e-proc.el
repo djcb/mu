@@ -218,7 +218,8 @@ The server output is as follows:
 	      (plist-get sexp :props)))
 
 	  ;; received a contacts message
-	  ((plist-get sexp :contacts)
+	  ;; note: we use 'member', to match (:contacts nil)
+	  ((plist-member sexp :contacts)
 	    (funcall mu4e-contacts-func
 	      (plist-get sexp :contacts)))
 
@@ -256,7 +257,7 @@ The server output is as follows:
 	    (funcall mu4e-error-func
 	      (plist-get sexp :error)
 	      (plist-get sexp :message)))
-
+	  
 	  (t (mu4e-message "Unexpected data from server [%S]" sexp)))
 
 	(setq sexp (mu4e~proc-eat-sexp-from-buf))))))
