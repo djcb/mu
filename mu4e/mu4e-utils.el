@@ -1,6 +1,7 @@
 ;;; mu4e-utils.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2013 Tibor Simko
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -900,6 +901,10 @@ displaying it). Do _not_ bury the current buffer, though."
 (defconst mu4e~main-about-buffer-name "*mu4e-about*"
   "Name for the mu4e-about buffer.")
 
+(define-derived-mode mu4e-about-mode org-mode "mu4e:about"
+  "Major mode for the mu4e About page, derived from `org-mode'.")
+(define-key mu4e-about-mode-map (kbd "q") 'bury-buffer)
+
 (defun mu4e-about ()
   "Show a buffer with the mu4e-about text."
   (interactive)
@@ -908,11 +913,10 @@ displaying it). Do _not_ bury the current buffer, though."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert mu4e-about)
-      (org-mode)
+      (mu4e-about-mode)
       (show-all)))
   (switch-to-buffer mu4e~main-about-buffer-name)
   (setq buffer-read-only t)
-  (local-set-key "q" 'bury-buffer)
   (goto-char (point-min)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
