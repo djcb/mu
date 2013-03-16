@@ -1,6 +1,6 @@
 #-*-mode:org-*-
 #
-# Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+# Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ is one of:
   index   - index messages
   mkdir   - create a maildir
   remove  - remove a message from the database
-  script  - run a script (available only whne mu was built with guile-support)
+  script  - run a script (available only when mu was built with guile-support)
   server  - start mu server
   verify  - verify signatures of a message
   view    - view a specific message
