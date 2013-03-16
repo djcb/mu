@@ -189,7 +189,7 @@ store your org-contacts."
    this setting on already tagged messages can lead to messages
    with multiple tags headers")
 
-(defun mu4e-contains-line-matching (regexp path)
+(defun mu4e~contains-line-matching (regexp path)
   "Determine whether the file at path contains a line matching
    the given regexp."
   (with-temp-buffer
@@ -199,7 +199,7 @@ store your org-contacts."
                         t
                       nil))))
 
-(defun mu4e-replace-first-line-matching (regexp to-string path)
+(defun mu4e~replace-first-line-matching (regexp to-string path)
   "Replace the first line in the file at path that matches regexp
    with the string replace"
   (with-temp-file path
@@ -237,12 +237,12 @@ store your org-contacts."
     (setq tagstr (replace-regexp-in-string "[\\&]" "\\\\\\&" tagstr))
     (setq tagstr (replace-regexp-in-string "[/]"   "\\&" tagstr))
 
-    (if (not (mu4e-contains-line-matching (concat header ":.*") path))
+    (if (not (mu4e~contains-line-matching (concat header ":.*") path))
         ;; Add tags header just before the content
-        (mu4e-replace-first-line-matching "^$" (concat header ": " tagstr "\n") path)
+        (mu4e~replace-first-line-matching "^$" (concat header ": " tagstr "\n") path)
 
       ;; replaces keywords, restricted to the header
-      (mu4e-replace-first-line-matching
+      (mu4e~replace-first-line-matching
        (concat header ":.*")
        (concat header ": " tagstr)
        path))
