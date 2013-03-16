@@ -83,7 +83,7 @@ is one of:
   index   - index messages
   mkdir   - create a maildir
   remove  - remove a message from the database
-  script  - run a script
+  script  - run a script (available only whne mu was built with guile-support)
   server  - start mu server
   verify  - verify signatures of a message
   view    - view a specific message
