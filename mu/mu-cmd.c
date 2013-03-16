@@ -529,7 +529,7 @@ show_usage (void)
 {
 	g_print ("usage: mu command [options] [parameters]\n");
 	g_print ("where command is one of index, find, cfind, view, mkdir, "
-		   "extract, add, remove, stats, verify or server\n");
+		   "extract, add, remove, script, verify or server\n");
 	g_print ("see the mu, mu-<command> or mu-easy manpages for "
 		   "more information\n");
 }
