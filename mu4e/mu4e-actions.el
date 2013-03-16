@@ -207,7 +207,7 @@ store your org-contacts."
     (dolist (tag (split-string-and-unquote retag) taglist)
       (cond ((string-match "\\+\\(.+\\)" tag)
 	      (setq taglist (push (match-string 1 tag) taglist)))
-	((string-match "\\-\\(.+\\)" tag)
+	((string-match "^\\-\\(.+\\)" tag)
 	  (setq taglist (delete (match-string 1 tag) taglist)))
 	(t
 	  (setq taglist (push tag taglist)))))
