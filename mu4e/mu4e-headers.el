@@ -586,21 +586,21 @@ after the end of the search results."
 	(define-key menumap [execute-marks]  '("Execute marks"
 						. mu4e-mark-execute-all))
 	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-mark-unmark-all))
-	(define-key menumap [unmark]      '("Unmark" . mu4e~headers-mark-unmark))
+	(define-key menumap [unmark]      '("Unmark" . mu4e-headers-mark-for-unmark))
 
 	(define-key menumap [mark-pattern]  '("Mark pattern" .
 					       mu4e-headers-mark-pattern))
 	(define-key menumap [mark-as-read]  '("Mark as read" .
-					       mu4e~headers-mark-read))
+					       mu4e-headers-mark-for-read))
 	(define-key menumap [mark-as-unread]
-	  '("Mark as unread" .  mu4e~headers-mark-unread))
+	  '("Mark as unread" .  mu4e-headers-mark-for-unread))
 
 	(define-key menumap [mark-delete]
-	  '("Mark for deletion" . mu4e~headers-mark-delete))
+	  '("Mark for deletion" . mu4e-headers-mark-for-delete))
 	(define-key menumap [mark-trash]
-	  '("Mark for trash" .  mu4e~headers-mark-trash))
+	  '("Mark for trash" .  mu4e-headers-mark-for-trash))
 	(define-key menumap [mark-move]
-	  '("Mark for move" . mu4e~headers-mark-move))
+	  '("Mark for move" . mu4e-headers-mark-for-move))
 	(define-key menumap [sepa1] '("--"))
 
 	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
