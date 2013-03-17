@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -252,8 +252,8 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 
 	pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type (ctype, 16);
 	if (!pixbuf) {
-		g_warning ("%s: could not get icon pixbuf for '%s'",
-			   __FUNCTION__, ctype);
+		g_debug ("%s: could not get icon pixbuf for '%s'",
+			 __FUNCTION__, ctype);
 		pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type
 			("application/octet-stream", 16);
 	}
