@@ -189,6 +189,25 @@ store your org-contacts."
    this setting on already tagged messages can lead to messages
    with multiple tags headers")
 
+(defun mu4e~contains-line-matching (regexp path)
+  "Determine whether the file at path contains a line matching
+   the given regexp."
+  (with-temp-buffer
+    (insert-file-contents path)
+    (save-excursion (beginning-of-buffer)
+                    (if (re-search-forward regexp nil t)
+                        t
+                      nil))))
+
+(defun mu4e~replace-first-line-matching (regexp to-string path)
+  "Replace the first line in the file at path that matches regexp
+   with the string replace"
+  (with-temp-file path
+    (insert-file-contents path)
+    (save-excursion (beginning-of-buffer)
+                    (if (re-search-forward regexp nil t)
+                        (replace-match to-string nil nil)))))
+
 (defun mu4e-action-retag-message (msg &optional retag-arg)
   "Change tags of a message. Example: +tag \"+long tag\" -oldtag
    adds 'tag' and 'long tag', and removes oldtag."
@@ -215,17 +234,19 @@ store your org-contacts."
 
     (setq taglist (sort (delete-dups taglist) 'string<))
     (setq tagstr (mapconcat 'identity taglist sep))
-    (setq tagstr (replace-regexp-in-string "[\\/&]" "\\\\\\&" tagstr))
 
-    (if (string= (shell-command-to-string (format "sed -n '1,/^$/ {/^%s:/I p}' \"%s\""
-      mu4e-action-tags-header path)) "")
+    (setq tagstr (replace-regexp-in-string "[\\&]" "\\\\\\&" tagstr))
+    (setq tagstr (replace-regexp-in-string "[/]"   "\\&" tagstr))
+
+    (if (not (mu4e~contains-line-matching (concat header ":.*") path))
         ;; Add tags header just before the content
-        (call-process "sed" nil nil nil "-i"
-          (format "1,/^$/s/^$/%s: %s\\n/I" header tagstr) path)
+        (mu4e~replace-first-line-matching "^$" (concat header ": " tagstr "\n") path)
 
-      ;; replaces keywords with sed, restricted to the header
-      (call-process "sed" nil nil nil "-i"
-        (format "1,/^$/s/^%s:.*$/%s: %s/I" header header tagstr) path))
+      ;; replaces keywords, restricted to the header
+      (mu4e~replace-first-line-matching
+       (concat header ":.*")
+       (concat header ": " tagstr)
+       path))
 
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
     (mu4e-refresh-message path maildir)))
