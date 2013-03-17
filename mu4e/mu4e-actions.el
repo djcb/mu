@@ -187,7 +187,7 @@ store your org-contacts."
    Make sure it is one of the headers mu recognizes for storing
    tags: X-Keywords, X-Label, Keywords. Also note that changing
    this setting on already tagged messages can lead to messages
-   with multiple tags headers")
+   with multiple tags headers.")
 
 (defun mu4e~contains-line-matching (regexp path)
   "Determine whether the file at path contains a line matching
@@ -201,12 +201,12 @@ store your org-contacts."
 
 (defun mu4e~replace-first-line-matching (regexp to-string path)
   "Replace the first line in the file at path that matches regexp
-   with the string replace"
+   with the string replace."
   (with-temp-file path
     (insert-file-contents path)
     (save-excursion (beginning-of-buffer)
-                    (if (re-search-forward regexp nil t)
-                        (replace-match to-string nil nil)))))
+      (if (re-search-forward regexp nil t)
+	(replace-match to-string nil nil)))))
 
 (defun mu4e-action-retag-message (msg &optional retag-arg)
   "Change tags of a message. Example: +tag \"+long tag\" -oldtag
@@ -222,7 +222,6 @@ store your org-contacts."
 		     (t ", ")))
 	  (taglist (if oldtags (copy-sequence oldtags) '()))
 	  tagstr)
-
     (dolist (tag (split-string-and-unquote retag) taglist)
       (cond
 	((string-match "^\\+\\(.+\\)" tag)
@@ -231,23 +230,24 @@ store your org-contacts."
 	  (setq taglist (delete (match-string 1 tag) taglist)))
 	(t
 	  (setq taglist (push tag taglist)))))
-
+    
     (setq taglist (sort (delete-dups taglist) 'string<))
     (setq tagstr (mapconcat 'identity taglist sep))
-
+    
     (setq tagstr (replace-regexp-in-string "[\\&]" "\\\\\\&" tagstr))
     (setq tagstr (replace-regexp-in-string "[/]"   "\\&" tagstr))
-
+    
     (if (not (mu4e~contains-line-matching (concat header ":.*") path))
-        ;; Add tags header just before the content
-        (mu4e~replace-first-line-matching "^$" (concat header ": " tagstr "\n") path)
-
+      ;; Add tags header just before the content
+      (mu4e~replace-first-line-matching
+	"^$" (concat header ": " tagstr "\n") path)
+      
       ;; replaces keywords, restricted to the header
       (mu4e~replace-first-line-matching
-       (concat header ":.*")
-       (concat header ": " tagstr)
+	(concat header ":.*")
+	(concat header ": " tagstr)
        path))
-
+    
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
     (mu4e-refresh-message path maildir)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
