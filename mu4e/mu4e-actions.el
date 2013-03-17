@@ -194,17 +194,19 @@ store your org-contacts."
    the given regexp."
   (with-temp-buffer
     (insert-file-contents path)
-    (save-excursion (beginning-of-buffer)
-                    (if (re-search-forward regexp nil t)
-                        t
-                      nil))))
+    (save-excursion
+      (goto-char (point-min))
+      (if (re-search-forward regexp nil t)
+	t
+	nil))))
 
 (defun mu4e~replace-first-line-matching (regexp to-string path)
   "Replace the first line in the file at path that matches regexp
    with the string replace."
   (with-temp-file path
     (insert-file-contents path)
-    (save-excursion (beginning-of-buffer)
+    (save-excursion
+      (goto-char (point-min))
       (if (re-search-forward regexp nil t)
 	(replace-match to-string nil nil)))))
 
@@ -230,24 +232,24 @@ store your org-contacts."
 	  (setq taglist (delete (match-string 1 tag) taglist)))
 	(t
 	  (setq taglist (push tag taglist)))))
-    
+
     (setq taglist (sort (delete-dups taglist) 'string<))
     (setq tagstr (mapconcat 'identity taglist sep))
-    
+
     (setq tagstr (replace-regexp-in-string "[\\&]" "\\\\\\&" tagstr))
     (setq tagstr (replace-regexp-in-string "[/]"   "\\&" tagstr))
-    
+
     (if (not (mu4e~contains-line-matching (concat header ":.*") path))
       ;; Add tags header just before the content
       (mu4e~replace-first-line-matching
 	"^$" (concat header ": " tagstr "\n") path)
-      
+
       ;; replaces keywords, restricted to the header
       (mu4e~replace-first-line-matching
 	(concat header ":.*")
 	(concat header ": " tagstr)
        path))
-    
+
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
     (mu4e-refresh-message path maildir)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
