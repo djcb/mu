@@ -263,14 +263,8 @@ mug_query_area (MugData * mugdata)
 {
 	GtkWidget *queryarea, *paned, *scrolled;
 
-#ifdef HAVE_GTK3
 	queryarea = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
 	paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
-#else
-	queryarea = gtk_vbox_new (FALSE, 2);
-	paned = gtk_vpaned_new ();
-#endif /*!HAVE_GTK3*/
-
 
 	mugdata->mlist = mug_msg_list_view_new
 		(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB));
@@ -310,11 +304,7 @@ mug_main_area (MugData * mugdata)
 {
 	GtkWidget *mainarea, *w;
 
-#ifdef HAVE_GTK3
 	mainarea = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 5);
-#else
-	mainarea = gtk_hbox_new (FALSE, 5);
-#endif /*!HAVE_GTK3*/
 
 	w = mug_shortcuts_bar (mugdata);
 	gtk_box_pack_start (GTK_BOX (mainarea), w, FALSE, FALSE, 0);
@@ -335,11 +325,7 @@ mug_shell (MugData * mugdata)
 	mugdata->win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title (GTK_WINDOW (mugdata->win), "Mug Mail Search");
 
-#ifdef HAVE_GTK3
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
-#else
-	vbox = gtk_vbox_new (FALSE, 2);
-#endif /*!HAVE_GTK3*/
 
 	mugdata->toolbar = mug_toolbar (mugdata);
 	gtk_box_pack_start (GTK_BOX (vbox), mugdata->toolbar, FALSE, FALSE, 2);
@@ -370,11 +356,6 @@ mug_shell (MugData * mugdata)
 static gint
 on_focus_query_bar (GtkWidget* ignored, GdkEventKey *event, MugData* mugdata)
 {
-/* gtk2: GDK_Escape; gtk3: GDK_Key_Escape */
-#ifndef GDK_KEY_Escape
-#define GDK_KEY_Escape GDK_Escape
-#endif /* GDK_KEY_Escape */
-
 	if (event->type==GDK_KEY_RELEASE && event->keyval==GDK_KEY_Escape) {
 		mug_query_bar_grab_focus (MUG_QUERY_BAR (mugdata->querybar));
 		return 1;
