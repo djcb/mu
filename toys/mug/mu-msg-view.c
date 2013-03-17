@@ -157,6 +157,7 @@ mu_msg_view_init (MuMsgView *self)
 	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
 
 	self->_priv->_msg     = NULL;
+
 	self->_priv->_headers = mu_msg_header_view_new ();
 
 	self->_priv->_attach  = mu_msg_attach_view_new ();
@@ -178,6 +179,10 @@ mu_msg_view_init (MuMsgView *self)
 			    FALSE, FALSE, 2);
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_attachexpander,
 			    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(self),
+			    gtk_separator_new(GTK_ORIENTATION_HORIZONTAL),
+			    TRUE,TRUE,0);
+
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_body,
 			    TRUE, TRUE, 2);
 }
