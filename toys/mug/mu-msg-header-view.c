@@ -45,21 +45,12 @@ struct _MuMsgHeaderViewPrivate {
                                                 MU_TYPE_MSG_HEADER_VIEW, \
                                                 MuMsgHeaderViewPrivate))
 /* globals */
-#ifdef HAVE_GTK3
 static GtkBoxClass *parent_class = NULL;
-#else
-static GtkVBoxClass *parent_class = NULL;
-#endif /*!HAVE_GTK3*/
-
 
 /* uncomment the following if you have defined any signals */
 /* static guint signals[LAST_SIGNAL] = {0}; */
 
-#ifdef HAVE_GTK3
 G_DEFINE_TYPE (MuMsgHeaderView, mu_msg_header_view, GTK_TYPE_BOX);
-#else
-G_DEFINE_TYPE (MuMsgHeaderView, mu_msg_header_view, GTK_TYPE_VBOX);
-#endif /*!HAVE_GTK3*/
 
 
 static void
@@ -85,11 +76,7 @@ static void
 mu_msg_header_view_init (MuMsgHeaderView *obj)
 {
 
-/* #ifdef HAVE_GTK3 */
 /* 	static GtkBoxClass *parent_class = NULL; */
-/* #endif /\*!HAVE_GTK3*\/ */
-
-
 	obj->_priv = MU_MSG_HEADER_VIEW_GET_PRIVATE(obj);
 	obj->_priv->_grid = NULL;
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -23,9 +23,6 @@
 #include <gtk/gtk.h>
 /* other include files */
 
-
-
-
 G_BEGIN_DECLS
 /* convenience macros */
 #define MUG_TYPE_MSG_VIEW             (mug_msg_view_get_type())
@@ -38,20 +35,11 @@ typedef struct _MugMsgView MugMsgView;
 typedef struct _MugMsgViewClass MugMsgViewClass;
 
 struct _MugMsgView {
-#ifdef HAVE_GTK3
 	GtkBox parent;
-#else
-	GtkVBox parent;
-#endif /*!HAVE_GTK3*/
 };
 
 struct _MugMsgViewClass {
-#ifdef HAVE_GTK3
 	GtkBoxClass parent_class;
-#else
-	GtkVBoxClass parent_class;
-#endif /*!HAVE_GTK3*/
-
 	/* insert signal callback declarations, e.g. */
 	/* void (* my_event) (MugMsg* obj); */
 };
@@ -66,4 +54,5 @@ gboolean mug_msg_view_set_msg (MugMsgView * self, const char *msgpath);
 void mug_msg_view_set_note (MugMsgView * self, const char* html);
 
 G_END_DECLS
-#endif				/* __MUG_MSG_VIEW_H__ */
+
+#endif	/* __MUG_MSG_VIEW_H__ */
