@@ -1214,10 +1214,12 @@ other windows."
       ;; headers are visible
       (progn
 	(kill-buffer-and-window) ;; kill the view win
+        (setq mu4e~headers-view-win nil)
 	(select-window headers-win)) ;; and switch to the headers win...
       ;; headers are not visible...
       (progn
 	(kill-buffer)
+        (setq mu4e~headers-view-win nil)
 	(when (buffer-live-p mu4e~view-headers-buffer)
 	  (switch-to-buffer mu4e~view-headers-buffer))))))
 
