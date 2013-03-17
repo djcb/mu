@@ -166,8 +166,9 @@ static const MuMsgField FIELD_DATA[] = {
 	{
 		MU_MSG_FIELD_ID_MAILING_LIST,
 		MU_MSG_FIELD_TYPE_STRING,
-		"list", 'v', 'L',
-		FLAG_GMIME | FLAG_XAPIAN_VALUE
+		"list", 'v', 'V',
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
+		FLAG_XAPIAN_ESCAPE
 	},
 
 
