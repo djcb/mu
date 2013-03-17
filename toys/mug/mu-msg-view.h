@@ -42,22 +42,13 @@ typedef struct _MuMsgViewClass MuMsgViewClass;
 typedef struct _MuMsgViewPrivate         MuMsgViewPrivate;
 
 struct _MuMsgView {
-#ifdef HAVE_GTK3
 	GtkBox parent;
-#else
-	GtkVBox parent;
-#endif /*!HAVE_GTK3*/
-
 	/* private */
 	MuMsgViewPrivate *_priv;
 };
 
 struct _MuMsgViewClass {
-#ifdef HAVE_GTK3
 	GtkBoxClass parent_class;
-#else
-	GtkVBoxClass parent_class;
-#endif /*!HAVE_GTK3*/
 	/* void (* my_event) (MuMsgView* obj); */
 };
 

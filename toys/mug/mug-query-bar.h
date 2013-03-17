@@ -22,22 +22,12 @@ typedef struct _MugQueryBar MugQueryBar;
 typedef struct _MugQueryBarClass MugQueryBarClass;
 
 struct _MugQueryBar {
-#ifdef HAVE_GTK3
 	GtkBox parent;
-#else
-	GtkHBox parent;
-#endif /*!HAVE_GTK3*/
 };
 
 struct _MugQueryBarClass {
-#ifdef HAVE_GTK3
 	GtkBox parent;
 	GtkBoxClass parent_class;
-#else
-	GtkHBox parent;
-	GtkHBoxClass parent_class;
-#endif /*!HAVE_GTK3*/
-
 	/* insert signal callback declarations, e.g. */
 	void (*query_changed) (MugQueryBar * obj, const char *query);
 };

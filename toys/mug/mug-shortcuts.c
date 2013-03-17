@@ -49,13 +49,8 @@ struct _MugShortcutsPrivate {
 static guint signals[LAST_SIGNAL] = { 0 };
 
 
-#ifdef HAVE_GTK3
 static GtkBoxClass *parent_class = NULL;
 G_DEFINE_TYPE (MugShortcuts, mug_shortcuts, GTK_TYPE_BOX);
-#else
-static GtkVBoxClass *parent_class = NULL;
-G_DEFINE_TYPE (MugShortcuts, mug_shortcuts, GTK_TYPE_VBOX);
-#endif /*!HAVE_GTK3*/
 
 static void
 mug_shortcuts_class_init (MugShortcutsClass * klass)
@@ -87,12 +82,7 @@ static void
 mug_shortcuts_init (MugShortcuts * obj)
 {
 	obj->_priv = MUG_SHORTCUTS_GET_PRIVATE (obj);
-
-#ifdef HAVE_GTK3
 	obj->_priv->_bbox = gtk_button_box_new (GTK_ORIENTATION_VERTICAL);
-#else
-	obj->_priv->_bbox = gtk_vbutton_box_new ();
-#endif /*!HAVE_GTK3*/
 
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (obj->_priv->_bbox),
 				   GTK_BUTTONBOX_START);

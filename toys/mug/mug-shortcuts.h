@@ -41,30 +41,18 @@ typedef struct _MugShortcutsClass MugShortcutsClass;
 typedef struct _MugShortcutsPrivate MugShortcutsPrivate;
 
 struct _MugShortcuts {
-#ifdef HAVE_GTK3
 	GtkBox parent;
-#else
-	GtkVBox parent;
-#endif /*!HAVE_GTK3*/
-
 	/* private */
 	MugShortcutsPrivate *_priv;
 };
 
 struct _MugShortcutsClass {
-#ifdef HAVE_GTK3
 	GtkBoxClass parent_class;
-#else
-	GtkVBoxClass parent_class;
-#endif /*!HAVE_GTK3*/
-
 	void (*clicked) (MugShortcuts * obj, const char *query);
 };
 
 /* member functions */
-GType
-mug_shortcuts_get_type (void)
-    G_GNUC_CONST;
+GType mug_shortcuts_get_type (void) G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
@@ -76,4 +64,5 @@ mug_shortcuts_new (const char *bmpath);
 /* 	gboolean   mug_shortcuts_has_foo      (MugShortcuts *self, gint value); */
 
 G_END_DECLS
-#endif				/* __MUG_SHORTCUTS_H__ */
+
+#endif	/* __MUG_SHORTCUTS_H__ */

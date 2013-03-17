@@ -405,7 +405,10 @@ const MuMsgIterThreadInfo*
 mu_msg_iter_get_thread_info (MuMsgIter *iter)
 {
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
-	g_return_val_if_fail (iter->thread_hash(), NULL);
+
+	/* maybe we don't have thread info */
+	if (!iter->thread_hash())
+		return NULL;
 
 	try {
 		const MuMsgIterThreadInfo *ti;

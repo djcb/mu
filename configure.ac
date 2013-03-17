@@ -110,6 +110,11 @@ AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`$PKG_CONFIG --modversion glib-2.0`"
 
+PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
+AC_SUBST(GIO_CFLAGS)
+AC_SUBST(GIO_LIBS)
+gio_version="`$PKG_CONFIG --modversion gio-2.0`"
+
 # gmime 2.4 or 2.6?
 PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
 AS_IF([test "x$have_gmime_26" = "xno"],[
@@ -169,82 +174,28 @@ AC_DEFINE(MU_STORE_SCHEMA_VERSION,["9.9"], ['Schema' version of the database])
 
 
 ###############################################################################
-# we need gtk (2 or 3) for some of the graphical tools
-#
-AC_ARG_WITH([gui],
-   [AS_HELP_STRING([--with-gui=gtk2|gtk3|none])],
-   [gui=$withval],[gui=auto])
-
-AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" \
-	-a "x$gui" != "xauto"],
-      AC_MSG_ERROR([the argument for --with-gui= must be either \
-      			gtk2|gtk3|auto|no ($gui)]))
-AS_IF([test "x$gui" != "xnone"],[
-   # check for gtk3
-   AS_IF([test "x$gui" = "xgtk3"],[
-     PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
+# we need GTK+3 for some of the graphical tools
+# use --without-gtk to disable it
+AC_ARG_ENABLE([gtk],AS_HELP_STRING([--disable-gtk],[Disable GTK+]))
+AS_IF([test "x$enable_gtk" != "xno"],[
+     PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk=yes],[have_gtk=no])
      AC_SUBST(GTK_CFLAGS)
      AC_SUBST(GTK_LIBS)
-     gtk_version="`$PKG_CONFIG --modversion gtk+-3.0`"
-   ])
-   AS_IF([test "x$gui"="gtk3" -a "x$have_gtk3" = "xno"],
-      AC_MSG_ERROR([GTK+ 3.x not found]))
-
-   # check for gtk2 if we did not find gtk3 already
-   # (gtk3 is only sought if asked for it explicitly)
-   AS_IF([test "x$gui" != "xno" -a "x$have_gtk3" != "xyes"],[
-     PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
-     AC_SUBST(GTK_CFLAGS)
-     AC_SUBST(GTK_LIBS)
-     gtk_version="`$PKG_CONFIG --modversion gtk+-2.0`"
-   ])
-   # only an error if we explicitly asked for it
-   AS_IF([test "x$have_gtk2" = "xno" -a "x$gui" != "xauto"],
-      AC_MSG_ERROR([GTK+ 2.x not found]))
-])
-
-AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ])
-AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],
-    	    [buildgui=no])
-AS_IF([test "x$have_gtk3" = "xyes"],
-    [AC_DEFINE_UNQUOTED([HAVE_GTK3],1,[Whether we have GTK+ 3.x])])
+     gtk_version="`$PKG_CONFIG --modversion gtk+-3.0`"])
+AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk" = "xyes"])
 
 # webkit? needed for the fancy web widget
 # use --disable-webkit to disable it, even if you have it
-# note; gtk2 and gtk3 imply different webkit versions
-build_webkit=no
-AC_ARG_ENABLE([webkit],
-   AS_HELP_STRING([--disable-webkit],[Disable webkit]))
-AS_IF([test "x$enable_webkit" != "xno"], [
-   AS_IF([test "x$have_gtk2" = "xyes"],[
-       PKG_CHECK_MODULES(WEBKIT,webkit-1.0 >= 1.0.3,[build_webkit=yes],[build_webkit=no])
-       AS_IF([test "x$build_webkit" = "xyes"],[
-	    webkit_version="`$PKG_CONFIG --modversion webkit-1.0`"])
-       AC_SUBST(WEBKIT_CFLAGS)
-       AC_SUBST(WEBKIT_LIBS)])
-
-   AS_IF([test "x$have_gtk3" = "xyes"],[
-       PKG_CHECK_MODULES(WEBKIT,webkitgtk-3.0 >= 1.8.0, [build_webkit=yes],[build_webkit=no])
-       AS_IF([test "x$build_webkit" = "xyes"],[
+AC_ARG_ENABLE([webkit],AS_HELP_STRING([--disable-webkit],[Disable webkit]))
+AS_IF([test "x$enable_webkit" != "xno"],[
+       PKG_CHECK_MODULES(WEBKIT,webkitgtk-3.0 >= 1.8.0,[have_webkit=yes],[have_webkit=no])
+       AS_IF([test "x$have_webkit" = "xyes"],[
 	    webkit_version="`$PKG_CONFIG --modversion webkitgtk-3.0`"])
        AC_SUBST(WEBKIT_CFLAGS)
-       AC_SUBST(WEBKIT_LIBS)])
+       AC_SUBST(WEBKIT_LIBS)
 ])
-AM_CONDITIONAL(BUILD_WEBKIT, [test "x$build_webkit" = "xyes"])
-
-
-# gio is needed for some widget/ things
-AS_IF([test "x$buildgui"="xyes"],[
-   PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
-   AS_IF([test "x$have_gio" = "xyes"],[
-	    gio_version="`$PKG_CONFIG --modversion gio-2.0`"])
-   AC_SUBST(GIO_CFLAGS)
-   AC_SUBST(GIO_LIBS)
-])
-AM_CONDITIONAL(HAVE_GIO, [test "x$have_gio" = "xyes"])
-
-# should we build the gui toys?
-AM_CONDITIONAL(BUILD_GUI, [test "x$build_webkit" = "xyes" -a "x$have_gio" = "xyes"])
+AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
+AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"])
 ###############################################################################
 
 
@@ -344,21 +295,10 @@ echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version"
 echo "GMime version                        : $gmime_version"
 
-if test "x$buildgui" = "xyes"; then
+AM_COND_IF([BUILD_GUI],[
 echo "GTK+ version                         : $gtk_version"
-fi
-
-if test "x$have_gio" = "xyes"; then
-echo "GIO version                          : $gio_version"
-fi
-
-if test "x$build_webkit" = "xyes"; then
 echo "Webkit version                       : $webkit_version"
-fi
-
-if test "x$build_guile" = "xyes"; then
-echo "Guile version                        : $guile_version"
-fi
+])
 
 if test "x$build_mu4e" = "xyes"; then
 echo "Emacs version                        : $emacs_version"
@@ -368,7 +308,11 @@ echo
 echo "Have wordexp                         : $ac_cv_header_wordexp_h"
 echo "Build mu4e emacs frontend            : $build_mu4e"
 echo "Build crypto support (gmime >= 2.6)  : $have_gmime_26"
-echo "Build 'mug' toy-ui (gtk+/webkit)     : $buildgui"
+AM_COND_IF([BUILD_GUI],[
+echo "Build 'mug' toy-ui (gtk+/webkit)     : yes"],[
+echo "Build 'mug' toy-ui (gtk+/webkit)     : no"
+])
+
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
 
@@ -395,10 +339,6 @@ if test "x$buildgui" = "xyes"; then
      echo
 fi
 
-# the unit tests
-echo "* You can run 'make check' to run the unit tests"
-echo
-
 # wordexp
 if test "x$ac_cv_header_wordexp_h" != "xyes"; then
    echo "* Your system does not seem to have the 'wordexp' function."
@@ -410,5 +350,5 @@ if test "x$ac_cv_header_wordexp_h" != "xyes"; then
 fi
 
 echo
-echo "Now, type 'make' to build mu."
+echo "Now, type 'make' to build mu (or 'make check' to run the unit tests, too)"
 echo

@@ -48,24 +48,12 @@ struct _MuMsgViewPrivate {
                                          MU_TYPE_MSG_VIEW, \
                                          MuMsgViewPrivate))
 /* globals */
-#ifdef HAVE_GTK3
 static GtkBoxClass *parent_class = NULL;
-#else
-static GtkVBoxClass *parent_class = NULL;
-#endif /*!HAVE_GTK3*/
-
 
 /* uncomment the following if you have defined any signals */
 /* static guint signals[LAST_SIGNAL] = {0}; */
 
-#ifdef HAVE_GTK3
 G_DEFINE_TYPE (MuMsgView, mu_msg_view, GTK_TYPE_BOX);
-#else
-G_DEFINE_TYPE (MuMsgView, mu_msg_view, GTK_TYPE_VBOX);
-#endif /*HAVE_GTK3*/
-
-
-
 
 static void
 set_message (MuMsgView *self, MuMsg *msg)
@@ -154,11 +142,12 @@ on_attach_activated (GtkWidget *w, guint partnum, MuMsg *msg)
 static void
 mu_msg_view_init (MuMsgView *self)
 {
-	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
+	gtk_orientable_set_orientation (GTK_ORIENTABLE(self),
+					GTK_ORIENTATION_VERTICAL);
 
+	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
 	self->_priv->_msg     = NULL;
 	self->_priv->_headers = mu_msg_header_view_new ();
-
 	self->_priv->_attach  = mu_msg_attach_view_new ();
 	self->_priv->_attachexpander =  gtk_expander_new_with_mnemonic
 		("_Attachments");
@@ -178,6 +167,10 @@ mu_msg_view_init (MuMsgView *self)
 			    FALSE, FALSE, 2);
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_attachexpander,
 			    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(self),
+			    gtk_separator_new(GTK_ORIENTATION_HORIZONTAL),
+			    TRUE,TRUE,0);
+
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_body,
 			    TRUE, TRUE, 2);
 }

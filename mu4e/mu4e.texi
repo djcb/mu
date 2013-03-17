@@ -27,7 +27,7 @@ Documentation License.''
 @end copying
 
 @titlepage
-@title @t{mu4e} - an e-mail client for emacs
+@title @t{mu4e} - an e-mail client for Emacs
 @subtitle version  @value{mu-version}
 @author Dirk-Jan C. Binnema
 
@@ -39,7 +39,7 @@ Documentation License.''
 
 @dircategory Emacs
 @direntry
-* mu4e: (mu4e).        An email client for emacs.
+* mu4e: (mu4e).        An email client for Emacs.
 @end direntry
 
 @contents
@@ -56,12 +56,12 @@ Documentation License.''
 
 Welcome to @t{mu4e}!
 
-@t{mu4e} (@t{mu}-for-@command{emacs}) is an e-mail client for GNU-Emacs version 23
-and later, built on top of the
+@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 23 and
+later, built on top of the
 @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
 engine. @t{mu4e} is optimized for fast handling of large amounts of e-mail.
 
-Some of its key characteristics include:
+Some of mu4e's highlights:
 
 @itemize
 @item Fully search-based: there are no folders@footnote{that is, instead of
@@ -71,20 +71,21 @@ queries
 @item User-interface optimized for speed, with quick key strokes for common actions
 @item Support for non-English languages (so ``angstrom'' will match ``Ångström'')
 @item Asynchronous; heavy actions don't block @command{emacs}@footnote{currently,
-the only exception to this is @emph{sending mail}}
+the only exception to this is @emph{sending mail}; there are solutions for
+that though - see the @ref{FAQ}}
 @item Support for crypto
 @item Writing rich-text e-mails using @t{org-mode}
-@item Address auto-completion based on your messages
-@item Extendable with your own code
+@item Address auto-completion based on the contacts in your messages
+@item Extendable with your own snippets of elisp
 @end itemize
 
 In this manual, we go through the installation of @t{mu4e}, do some basic
 configuration and explain its daily use. We also show you how you can
 customize @t{mu4e} for your needs.
 
-At the end of the manual, there are some example configurations, to get up to
-speed quickly - @ref{Example configurations}. There's also a section of
-@ref{FAQ}, which should help you with some common questions.
+At the end of the manual, there are some example configurations, to get you up
+to speed quickly: @ref{Example configurations}. There's also an @ref{FAQ},
+which should help you with some common questions.
 
 @menu
 * Introduction:: How it all began
@@ -176,24 +177,26 @@ efficiently as possible.
 
 If @t{mu4e} looks like something for you, give it a shot! We've been trying
 hard to make it as easy as possible to set up and use; and while you can use
-elisp is various places to augment @t{mu4e}, programming is by no mean required.
+elisp in various places to augment @t{mu4e}, a lot of knowledge about
+programming or elisp shouldn't be required.
 
 When you take @t{mu4e} into use, it's a good idea to subscribe to the
 @t{mu}/@t{mu4e}-mailing
-list@footnote{@url{http://groups.google.com/group/mu-discuss}}. If you have
-suggestions for improvements or bug reports, please use the GitHub issues
-list@footnote{@url{https://github.com/djcb/mu/issues}}. In bug reports, please
-clearly specify the versions of @t{mu}/@t{mu4e} and @command{emacs} you are
-using, as well as any other relevant details. If you are new to all this, the
-somewhat paternalistic @emph{``How to ask questions the smart
-way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}} can be
-a good read.
+list@footnote{@url{http://groups.google.com/group/mu-discuss}}.
+
+If you have suggestions for improvements or bug reports, please use the GitHub
+issues list@footnote{@url{https://github.com/djcb/mu/issues}}. In bug reports,
+please clearly specify the versions of @t{mu}/@t{mu4e} and @command{emacs} you
+are using, as well as any other relevant details. If you are new to all this,
+the somewhat paternalistic @emph{``How to ask questions the smart
+way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}} can
+be a good read.
 
 @node Getting started
 @chapter Getting started
 
 In this chapter, we go through the installation of @t{mu4e} and its basic
-setup. After we have succeeded in @ref{Getting mail}, and @ref{Indexing your
+setup. After we have succeeded in @ref{Getting mail}, and @pxref{Indexing your
 messages}, we discuss @ref{Basic configuration}.
 
 After these steps, @t{mu4e} should be ready to go!
@@ -218,10 +221,16 @@ After these steps, @t{mu4e} should be ready to go!
 systems, including many Linux distributions, MacOS and
 FreeBSD. @command{emacs} 23 or 24 is required, as well as
 Xapian@footnote{@url{http://xapian.org/}} and
-GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}. If you intend to
-compile yourself, you need to have the typical development tools, such as C
-and C++ compilers (both @command{gcc} and @command{clang} should work) and
-@command{make}.
+GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
+
+@t{mu} has optional support the Guile 2.x (Scheme) programming language. There
+are also some GUI-tools, which require GTK+ and Webkit; either the GTK+2 or
+GTK+3-versions.
+
+If you intend to compile it yourself, you need to have the typical development
+tools, such as C and C++ compilers (both @command{gcc} and @command{clang}
+should work), GNU Autotools and @command{make}, and (if you use them) the
+development packages for GTK+, Webkit and Guile.
 
 @node Installation
 @section Installation
@@ -1536,7 +1545,10 @@ date:today..now
 # get all messages we got in the last two weeks regarding emacs:
 date:2w..now emacs
 
-# get mails with a subject soccer, Socrates, society...:
+# get messages from the the Mu mailing list:
+mu find list:mu-discuss.googlegroups.com
+
+# get messages with a subject soccer, Socrates, society...:
 subject:soc*
 # note: the '*' wildcard can only appear as the term's rightmost character
 
@@ -1549,7 +1561,8 @@ mime:application/pdf
 
 # get all messages with image attachments:
 mime:image/*
-# note: the '*' wildcard can only appear as the term's rightmost character
+# note: the '*' wildcard can only appear as the term's @emph{rightmost}
+# character
 @end verbatim
 
 @node Bookmarks
@@ -2914,6 +2927,19 @@ messages}.
 like Gmail does?} Yes -- see @ref{Including related messages}.
 @item @emph{There seem to be a lot of duplicate messages -- how can I get rid
 of them?} See @ref{Skipping duplicates}.
+@item @emph{Some messages are almost unreadable in emacs - can I view them in
+an external web browser?} Indeed, airlines often send messages that heavily
+depend on html and are hard to digest inside emacs. Fortunately, there's an
+@emph{action} (@ref{Adding an action in the message view}) defined for
+this. Simply add to your configuration:
+@lisp
+(add-to-list 'mu4e-view-actions
+  '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+@end lisp
+Now, when viewing such a difficult message, type @kbd{aV}, and the message
+opens inside a webbrowser. You can influence the browser with
+@code{browse-url-generic-program}.
+
 @end enumerate
 
 @node Writing messages
@@ -2948,6 +2974,17 @@ messages stay around. How can I get rid of those?}
 @lisp
 (setq message-kill-buffer-on-exit t)
 @end lisp
+@item @emph{Sending big messages is slow and blocks emacs - what can I do
+about it?} For this, there's @url{https://github.com/jwiegley/emacs-async}
+(also available from the Emacs package repository); add the following snippet
+to your configuration:
+@lisp
+(require 'smtpmail-async)
+(setq
+  send-mail-function 'async-smtpmail-send-it
+  message-send-mail-function 'async-smtpmail-send-it)
+@end lisp
+With this, messages are sent using background emacs-instance.
 @end enumerate
 
 @node Known issues
