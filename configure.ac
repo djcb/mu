@@ -181,7 +181,7 @@ AS_IF([test "x$gui" != "xgtk2" -a "x$gui" != "xgtk3" -a "x$gui" != "xnone" \
       			gtk2|gtk3|auto|no ($gui)]))
 AS_IF([test "x$gui" != "xnone"],[
    # check for gtk3
-   AS_IF([test "x$gui" = "xgtk3"],[
+   AS_IF([test "x$gui" != "xgtk2"],[
      PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk3=yes],[have_gtk3=no])
      AC_SUBST(GTK_CFLAGS)
      AC_SUBST(GTK_LIBS)
@@ -192,7 +192,7 @@ AS_IF([test "x$gui" != "xnone"],[
 
    # check for gtk2 if we did not find gtk3 already
    # (gtk3 is only sought if asked for it explicitly)
-   AS_IF([test "x$gui" != "xno" -a "x$have_gtk3" != "xyes"],[
+   AS_IF([test "x$gui" != "xnone" -a "x$have_gtk3" != "xyes"],[
      PKG_CHECK_MODULES(GTK,gtk+-2.0,[have_gtk2=yes],[have_gtk2=no])
      AC_SUBST(GTK_CFLAGS)
      AC_SUBST(GTK_LIBS)
@@ -203,7 +203,7 @@ AS_IF([test "x$gui" != "xnone"],[
       AC_MSG_ERROR([GTK+ 2.x not found]))
 ])
 
-AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes" ])
+AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"])
 AS_IF([test "x$have_gtk2" = "xyes" -o "x$have_gtk3" = "xyes"],[buildgui=yes],
     	    [buildgui=no])
 AS_IF([test "x$have_gtk3" = "xyes"],
