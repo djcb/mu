@@ -1,4 +1,4 @@
-.TH MU 1 "January 2012" "User Manuals"
+.TH MU 1 "March 2013" "User Manuals"
 
 .SH NAME
 
@@ -7,19 +7,41 @@ index and search e-mail messages.
 
 .SH SYNOPSIS
 
+In alphabetical order:
+
 .B mu [options]
+general mu command
 
-.B mu index [options]
-
-.B mu find [options] <search expression>
-
-.B mu view <file> [<files>]
-
-.B mu mkdir [options] <dir> [<dirs>]
-
-.B mu extract [options] <file> [<parts>] [<regexp>]
+.B mu add
+add specific messages to the database
 
 .B mu cfind [options] [<regexp>]
+find contacts
+
+.B mu extract [options] <file> [<parts>] [<regexp>]
+extract attachments and other MIME-parts
+
+.B mu find [options] <search expression>
+find messages
+
+.B mu index [options]
+(re)index the messages in a Maildir
+
+.B mu mkdir [options] <dir> [<dirs>]
+create a new Maildir
+
+.B mu remove [options]
+remove specific messages from the database
+
+.B mu script [options]
+run a mu (Guile) script
+
+.B mu server [options]
+start a server process (for \fBmu4e\fR-internal use)
+
+.B mu view <file> [<files>]
+view a specific message
+
 
 
 .SH DESCRIPTION
@@ -176,34 +198,34 @@ non-zero when some error occured. The table lists the various error codes.
 .nf
 exit code |  error
 ----------+-------------------------------------------
-     1	  |  MU_ERROR
-     2	  |  MU_ERROR_IN_PARAMETERS
-     3	  |  MU_ERROR_INTERNAL
-     4	  |  MU_ERROR_NO_MATCHES
-	  |
-     11	  |  MU_ERROR_XAPIAN
-	  |
-     13	  |  MU_ERROR_XAPIAN_QUERY
-     14	  |  MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE
-     15	  |  MU_ERROR_XAPIAN_NOT_UP_TO_DATE
-     16	  |  MU_ERROR_XAPIAN_MISSING_DATA
-     17	  |  MU_ERROR_XAPIAN_CORRUPTION
-     18	  |  MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK
-     30	  |  MU_ERROR_GMIME
-	  |
-     50	  |  MU_ERROR_CONTACTS
-     51	  |  MU_ERROR_CONTACTS_CANNOT_RETRIEVE
-	  |
-     70	  |  MU_ERROR_FILE
-     71	  |  MU_ERROR_FILE_INVALID_NAME
-     72	  |  MU_ERROR_FILE_CANNOT_LINK
-     73	  |  MU_ERROR_FILE_CANNOT_OPEN
-     74	  |  MU_ERROR_FILE_CANNOT_READ
-     75	  |  MU_ERROR_FILE_CANNOT_CREATE
-     76	  |  MU_ERROR_FILE_CANNOT_MKDIR
-     77	  |  MU_ERROR_FILE_STAT_FAILED
-     78	  |  MU_ERROR_FILE_READDIR_FAILED
-     79	  |  MU_ERROR_FILE_INVALID_SOURCE
+     1    |  MU_ERROR
+     2    |  MU_ERROR_IN_PARAMETERS
+     3    |  MU_ERROR_INTERNAL
+     4    |  MU_ERROR_NO_MATCHES
+          |
+     11   |  MU_ERROR_XAPIAN
+          |
+     13   |  MU_ERROR_XAPIAN_QUERY
+     14   |  MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE
+     15   |  MU_ERROR_XAPIAN_NOT_UP_TO_DATE
+     16   |  MU_ERROR_XAPIAN_MISSING_DATA
+     17   |  MU_ERROR_XAPIAN_CORRUPTION
+     18   |  MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK
+     30   |  MU_ERROR_GMIME
+          |
+     50   |  MU_ERROR_CONTACTS
+     51   |  MU_ERROR_CONTACTS_CANNOT_RETRIEVE
+          |
+     70   |  MU_ERROR_FILE
+     71   |  MU_ERROR_FILE_INVALID_NAME
+     72   |  MU_ERROR_FILE_CANNOT_LINK
+     73   |  MU_ERROR_FILE_CANNOT_OPEN
+     74   |  MU_ERROR_FILE_CANNOT_READ
+     75   |  MU_ERROR_FILE_CANNOT_CREATE
+     76   |  MU_ERROR_FILE_CANNOT_MKDIR
+     77   |  MU_ERROR_FILE_STAT_FAILED
+     78   |  MU_ERROR_FILE_READDIR_FAILED
+     79   |  MU_ERROR_FILE_INVALID_SOURCE
 .fi
 
 .SH BUGS
