@@ -57,7 +57,7 @@ list of cons-pairs (X . Y)."
 	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
     (display (string-append
 	       "reset\n"
-	       "set term " (if text-only "dumb" "qt") "\n"
+	       "set term " (if text-only "dumb" "wxt") "\n"
 	       "set title \"" title "\"\n"
 	       "set xlabel \"" x-label "\"\n"
 	       "set ylabel \"" y-label "\"\n"
