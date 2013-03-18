@@ -46,7 +46,7 @@ not found."
 	progpath
 	#f))))
 2
-(define* (mu:plot-histogram data title x-label y-label #:optional (text-only #f))
+(define* (mu:plot-histogram data title x-label y-label #:optional (text-only #f) (extra-gnuplot-opts '()))
   "Plot DATA with TITLE, X-LABEL and X-LABEL. If TEXT-ONLY is true,
 display using raw text, otherwise, use a graphical window. DATA is a
 list of cons-pairs (X . Y)."
@@ -57,11 +57,12 @@ list of cons-pairs (X . Y)."
 	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
     (display (string-append
 	       "reset\n"
-	       "set term " (if text-only "dumb" "wxt") "\n"
+	       "set term " (if text-only "dumb" "qt") "\n"
 	       "set title \"" title "\"\n"
 	       "set xlabel \"" x-label "\"\n"
 	       "set ylabel \"" y-label "\"\n"
 	       "set boxwidth 0.9\n"
+           (string-join extra-gnuplot-opts "\n")
 	       "plot \"" datafile "\" using 2:xticlabels(1) with boxes fs solid\n")
       gnuplot)
     (close-pipe gnuplot)))
