@@ -693,19 +693,18 @@ message, followed by a footer line. The major-mode for the the headers view is
 @section Overview
 
 An example headers view:
-
 @cartouche
 @verbatim
-  Date V            Flgs   From/To             Subject
-  2011-12-16 18:38  S      To Edmund Dantès    + Re: Extensions?
-  2011-12-16 21:44  S      Abbé Busoni             + Re: Extensions?
-  2011-12-17 03:14  SR     Pierre Morrel           + Re: Extensions?
-  2011-12-17 04:04  uN     Jacopo                    + Re: Extensions?
-  2011-12-17 14:36  uN     Mercédès                    + Re: Extensions?
-  2011-12-18 06:05  uN     Beachamp                      \ Re: Extensions?
-  2011-12-16 18:23  Ss     Albert de Moncerf   + Re: [O] A cool tool
-  2011-12-17 01:53  Sa     Gaspard Caderousse    \ Re: [O] A cool tool
-  2011-12-16 16:31  uN     Baron Danglars      | [O] imaxima?
+Date V       Flgs  From/To             List       Subject
+06:32        Nu    To Edmund Dantès    GstDev       + Re: Gstreamer-V4L... 
+15:08        Nu    Abbé Busoni         GstDev         + Re: Gstreamer-V... 
+18:20        Nu    Pierre Morrel       GstDev           \ Re: Gstreamer... 
+2013-03-18   S     Jacopo              EmacsUsr   + emacs server on win... 
+2013-03-18   S     Mercédès            EmacsUsr     \ RE: emacs server ... 
+2013-03-18   S     Beachamp            EmacsUsr   + Re: Copying a whole... 
+22:07        Nu    Albert de Moncerf   EmacsUsr     \ Re: Copying a who... 
+2013-03-18   S     Gaspard Caderousse  GstDev     | Issue with GESSimpl... 
+2013-03-18   Ss    Baron Danglars      GuileUsr   | Guile-SDL 0.4.2 ava... 
 End of search results
 @end verbatim
 @end cartouche
@@ -722,7 +721,8 @@ messages. If you want to distinguish between 'today' and 'older', you can use
 the @t{:date} field instead.
 @item You can customize the date and time formats with the variable
 @code{mu4e-headers-date-format} and @code{mu4e-headers-time-format},
-respectively.
+respectively. In the example, we use @code{:human-date}, which shows when the
+time when the message was sent today, and the date otherwise.
 @item The header field used for sorting is indicated by ``@t{V}'' or
 ``@t{^}''@footnote{or you can use little graphical triangles; see variable
 @code{mu4e-use-fancy-chars}}, indicating the sort order (descending or
@@ -737,6 +737,10 @@ changing the variable @code{mu4e-headers-from-or-to-prefix} (a cons cell)}, as
 in the example above). To determine whether a message was sent by you,
 @t{mu4e} uses the variable @code{mu4e-user-mail-address-list}, a list of
 your e-mail addresses.
+@item The 'List' field shows the mailing-list a message is sent to;
+@code{mu4e} tries to create a convenient shortcut for the mailing-list name;
+the variable @code{mu4e-user-mailing-lists} can be used to add your own
+shortcuts.
 @item The letters in the 'Flags' field correspond to the following: D=@emph{draft},
 F=@emph{flagged} (i.e., 'starred'), N=@emph{new}, P=@emph{passed} (i.e.,
 forwarded), R=@emph{replied}, S=@emph{seen}, T=@emph{trashed},
@@ -2845,11 +2849,10 @@ can also use functions like @code{mu4e-headers-mark-thread} (@key{T}),
 time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
 matching a certain regular expression.
 @item @emph{@t{mu4e} seems to return a subset of all matches - how can I get
-all?} For speed reasons, @t{mu4e} returns only up to the value of the
-variable @code{m4ue-search-result-limit} (default: 500) matches. To show
-@emph{all}, use @kbd{M-x mu4e-headers-toggle-full-search}, or customize
-the variable @code{mu4e-headers-full-search}. This applies to all search
-commands.
+all?} For speed reasons, @t{mu4e} returns only up to the value of the variable
+@code{m4ue-search-result-limit} (default: 500) matches. To show @emph{all},
+use @kbd{M-x mu4e-headers-toggle-full-search} (@key{Q}), or customize the
+variable @code{mu4e-headers-full-search}. This applies to all search commands.
 @item @emph{How can I get notifications when receiving mail?} There is
 @code{mu4e-index-updated-hook}, which gets triggered when the indexing process
 triggered sees an update (not just new mail though). To use this hook, put
