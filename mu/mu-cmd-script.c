@@ -110,8 +110,7 @@ get_script_info_list (const char *muhome, GError **err)
 		return NULL;
 
 	userpath = g_strdup_printf ("%s%c%s",
-				    muhome, G_DIR_SEPARATOR,
-				    "scripts" G_DIR_SEPARATOR_S "stats");
+				    muhome, G_DIR_SEPARATOR, "scripts");
 
 	/* is there are userdir for scripts? */
 	if (!mu_util_check_dir (userpath, TRUE, FALSE)) {
