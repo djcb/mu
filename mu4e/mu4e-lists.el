@@ -23,7 +23,7 @@
 ;;; Commentary:
 
 ;; In this file, we create a table of list-id -> shortname for mailing lists.
-
+;; The shortname (friendly) should a at most 8 characters, camel-case
 
 
 (defvar mu4e~mailing-lists
@@ -41,6 +41,7 @@
      ("erlang-questions.erlang.org"                           . "Erlang")
      ("evolution-hackers.lists.ximian.com"                    . "EvoDev")
      ("farsight-devel.lists.sourceforge.net"                  . "Farsight")
+     ("mailman.lists.freedesktop.org"                         . "FDeskTop")
      ("gcc-help.gcc.gnu.org"                                  . "Gcc")
      ("gmime-devel-list.gnome.org"                            . "GMimeDev")
      ("gnome-shell-list.gnome.org"                            . "GnomeSh")
@@ -58,7 +59,6 @@
      ("lggdh-algemeen.vvtp.tudelft.nl"                        . "LGGDH")
      ("maemo-developers.maemo.org"                            . "MaemoDev")
      ("maemo-users.maemo.org"                                 . "MaemoUsr")
-     ("mailman.lists.freedesktop.org"                         . "Mailman")
      ("monit-general.nongnu.org"                              . "Monit")
      ("mu-discuss.googlegroups.com"                           . "Mu")
      ("nautilus-list.gnome.org"                               . "Nautilus")
@@ -79,7 +79,7 @@
   "AList of mailing lists id -> shortname")
 
 (defvar mu4e-user-mailing-lists nil
-  "A list of (MAILING-LIST-ID . SHORTNAME); these are uses in
+  "A list of (MAILING-LIST-ID . SHORTNAME); these are used in
 addition to the 'built-in' list `mu4e~user-lists'.")
 
 (provide 'mu4e-lists)
