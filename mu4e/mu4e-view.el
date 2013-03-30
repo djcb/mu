@@ -219,10 +219,10 @@ marking if it still had that."
 	      (mu4e~view-embedded-winbuf)
 	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
+      (switch-to-buffer buf)
       (let ((inhibit-read-only t))
 	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
-	(switch-to-buffer buf)
 	(goto-char (point-min))
 	(mu4e~view-fontify-cited)
 	(mu4e~view-fontify-footer)
