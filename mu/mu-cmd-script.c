@@ -60,16 +60,20 @@ print_scripts (GSList *scripts, gboolean color,
 	       gboolean verbose, const char *rxstr, GError **err)
 {
 	GSList *cur;
+	const char *verb;
 
 	if (!scripts) {
 		g_print ("No scripts available\n");
 		return TRUE; /* not an error */
 	}
 
+	verb = verbose ? "" : " (use --verbose for details)";
+
 	if (rxstr)
-		g_print ("Available scripts matching '%s':\n", rxstr);
+		g_print ("Available scripts matching '%s'%s:\n",
+			 rxstr, verb);
 	else
-		g_print ("Available scripts:\n");
+		g_print ("Available scripts%s:\n", verb);
 
 	for (cur = scripts; cur; cur = g_slist_next (cur)) {
 
