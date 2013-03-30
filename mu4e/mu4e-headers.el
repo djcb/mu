@@ -1207,7 +1207,6 @@ _not_ refresh the last search with the new setting for threading."
   (mu4e~headers-toggle "Skip-duplicates"
   'mu4e-headers-skip-duplicates dont-refresh))
 
-
 (defvar mu4e~headers-loading-buf nil
   "A buffer for loading a message view.")
 
