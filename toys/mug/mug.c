@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2012 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2013 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -57,7 +57,7 @@ about_mug (MugData * mugdata)
 	     GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
 	     "Mug version %s\n"
 	     "A graphical frontend to the 'mu' e-mail search engine\n\n"
-	     "(c) 2010-2011 Dirk-Jan C. Binnema\n"
+	     "(c) 2010-2013 Dirk-Jan C. Binnema\n"
 	     "Released under the terms of the GPLv3+", VERSION);
 
 	gtk_dialog_run (GTK_DIALOG (about));
