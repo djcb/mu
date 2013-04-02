@@ -127,6 +127,25 @@ sent messages into message threads."
   :type 'boolean
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-visible-flags
+  '(draft flagged new passed replied seen trashed attach encrypted signed unread)
+  "An ordered list of flags to show in the headers buffer. Each
+element is a symbol in the list (DRAFT FLAGGED NEW PASSED
+REPLIED SEEN TRASHED ATTACH ENCRYPTED SIGNED UNREAD)."
+  :type '(set
+          (const :tag "Draft" draft)
+          (const :tag "Flagged" flagged)
+          (const :tag "New" new)
+          (const :tag "Passed" passed)
+          (const :tag "Replied" replied)
+          (const :tag "Seen" seen)
+          (const :tag "Trashed" trashed)
+          (const :tag "Attach" attach)
+          (const :tag "Encrypted" encrypted)
+          (const :tag "Signed" signed)
+          (const :tag "Unread" unread))
+  :group 'mu4e-headers)
+
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
 (defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Draft.")
@@ -322,25 +341,26 @@ Note that `mu4e-flags-to-string' is for internal use only; this
 function is for display. (This difference is significant, since
 internally, the Maildir spec determines what the flags look like,
 while our display may be different)."
-  (let ((str)
-	 (get-prefix
-	   (lambda (cell) (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
-    (dolist (flag flags)
-      (setq str
-	(concat str
-	  (case flag
-	    ('draft     (funcall get-prefix mu4e-headers-draft-mark))
-	    ('flagged   (funcall get-prefix mu4e-headers-flagged-mark))
-	    ('new       (funcall get-prefix mu4e-headers-new-mark))
-	    ('passed    (funcall get-prefix mu4e-headers-passed-mark))
-	    ('replied   (funcall get-prefix mu4e-headers-replied-mark))
-	    ('seen      (funcall get-prefix mu4e-headers-seen-mark))
-	    ('trashed   (funcall get-prefix mu4e-headers-trashed-mark))
-	    ('attach    (funcall get-prefix mu4e-headers-attach-mark))
-	    ('encrypted (funcall get-prefix mu4e-headers-encrypted-mark))
-	    ('signed    (funcall get-prefix mu4e-headers-signed-mark))
-	    ('unread    (funcall get-prefix mu4e-headers-unread-mark))))))
-	   str))
+  (let ((str "")
+        (get-prefix
+         (lambda (cell) (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
+    (dolist (flag mu4e-headers-visible-flags)
+      (when (member flag flags)
+        (setq str
+          (concat str
+            (case flag
+              ('draft     (funcall get-prefix mu4e-headers-draft-mark))
+              ('flagged   (funcall get-prefix mu4e-headers-flagged-mark))
+              ('new       (funcall get-prefix mu4e-headers-new-mark))
+              ('passed    (funcall get-prefix mu4e-headers-passed-mark))
+              ('replied   (funcall get-prefix mu4e-headers-replied-mark))
+              ('seen      (funcall get-prefix mu4e-headers-seen-mark))
+              ('trashed   (funcall get-prefix mu4e-headers-trashed-mark))
+              ('attach    (funcall get-prefix mu4e-headers-attach-mark))
+              ('encrypted (funcall get-prefix mu4e-headers-encrypted-mark))
+              ('signed    (funcall get-prefix mu4e-headers-signed-mark))
+              ('unread    (funcall get-prefix mu4e-headers-unread-mark)))))))
+    str))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
