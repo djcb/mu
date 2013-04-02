@@ -245,7 +245,6 @@ Function will return the cdr of the list element."
       (cdr chosen)
       (mu4e-warn "Unknown shortcut '%c'" response))))
 
-
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative paths."
   (let ((dirs)
@@ -258,8 +257,11 @@ Function will return the cdr of the list element."
       (when (and (booleanp (cadr dentry)) (cadr dentry))
 	(if (file-accessible-directory-p
 	      (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))
-	  (setq dirs (cons (concat mdir (car dentry)) dirs))
-	  (setq dirs (append dirs (mu4e~get-maildirs-1 path
+	  (setq dirs (cons (concat mdir (car dentry)) dirs)))
+    (if (not (or (string-equal "cur" (car dentry))
+                 (string-equal "new" (car dentry))
+                 (string-equal "tmp" (car dentry))))
+        (setq dirs (append dirs (mu4e~get-maildirs-1 path
 				    (concat mdir (car dentry) "/")))))))
     dirs))
 
