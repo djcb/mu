@@ -413,11 +413,10 @@ convert_to_utf8 (GMimePart *part, char *buffer)
 	charset = g_mime_content_type_get_parameter (ctype, "charset");
 	if (charset) {
 		char *utf8;
-		utf8 = mu_str_convert_to_utf8
-		         (buffer,  g_mime_charset_iconv_name (charset));
-		if (utf8) {
+		if ((utf8 = mu_str_convert_to_utf8
+		     (buffer, g_mime_charset_iconv_name (charset)))) {
 			g_free (buffer);
-			return utf8;
+			buffer = utf8;
 		}
 	} else if (!g_utf8_validate (buffer, -1, NULL)) {
 		/* if it's already utf8, nothing to do otherwise: no
@@ -492,7 +491,7 @@ mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 
 	/* convert_to_utf8 will free the old 'buffer' if needed */
 	buffer = convert_to_utf8 (part, buffer);
-	*err = FALSE;
+	*err   = FALSE;
 
 cleanup:
 	if (G_IS_OBJECT(stream))
