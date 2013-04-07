@@ -779,8 +779,9 @@ mu_str_convert_to_utf8 (const char* buffer, const char *charset)
 	if (!utf8) {
 		g_warning ("%s: conversion failed from %s: %s",
 			 __FUNCTION__, charset, err ? err->message : "");
-		g_clear_error (&err);
 	}
+
+	g_clear_error (&err);
 
 	return utf8;
 }
