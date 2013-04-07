@@ -470,6 +470,7 @@ accumulate_body (MuMsg *msg, MuMsgPart *mpart, BodyData *bdata)
 		return;
 
 	txt = NULL;
+	err = TRUE;
 
 	if (!bdata->want_html &&
 	    (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
