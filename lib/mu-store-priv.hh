@@ -29,6 +29,7 @@
 #include <xapian.h>
 #include <cstring>
 #include <stdexcept>
+#include <unistd.h>
 
 #include "mu-store.h"
 #include "mu-contacts.h"
@@ -64,6 +65,11 @@ public:
 		check_set_version ();
 
 		if (contacts_path) {
+			/* when rebuilding, attempt to clear the
+			 * contacts path */
+			if (rebuild && access (contacts_path, W_OK) == 0)
+				(void)unlink (contacts_path);
+
 			_contacts = mu_contacts_new (contacts_path);
 			if (!_contacts)
 				throw MuStoreError (MU_ERROR_FILE,
