@@ -611,8 +611,8 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 	p1 = mu_str_xapian_escape_in_place_try (p1, TRUE, strchunk);
 	p2 = mu_str_xapian_escape_in_place_try (p2, TRUE, strchunk);
 
-	doc.add_term (pfx + p1);
-	doc.add_term (pfx + p2);
+	doc.add_term (pfx + std::string(p1, 0, _MuStore::MAX_TERM_LENGTH));
+	doc.add_term (pfx + std::string(p2, 0, _MuStore::MAX_TERM_LENGTH));
 
 	g_free (p1);
 	g_free (p2);
