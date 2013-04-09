@@ -460,6 +460,7 @@ add_terms_values_attach (Xapian::Document& doc, MuMsg *msg,
 			     (MuMsgPartForeachFunc)each_part, &pdata);
 }
 
+
 /* escape the body -- for now, only replace '-' with '_' */
 static void
 body_escape_in_place (char *body)
@@ -559,7 +560,6 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 	case MU_MSG_FIELD_ID_MIME:
 	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
 		break;
-	///////////////////////////////////////////
 
 	case MU_MSG_FIELD_ID_THREAD_ID:
 	case MU_MSG_FIELD_ID_UID:

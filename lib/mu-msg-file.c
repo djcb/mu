@@ -541,8 +541,8 @@ get_references  (MuMsgFile *self)
 			msgid = g_mime_references_get_message_id (cur);
 			/* don't include duplicates */
 			if (msgid && !contains (msgids, msgid))
-				/* explicitly ensure it's utf8-safe, as GMime
-				 * does not ensure that */
+				/* explicitly ensure it's utf8-safe,
+				 * as GMime does not ensure that */
 				msgids = g_slist_prepend (msgids,
 							  g_strdup((msgid)));
 		}
@@ -625,6 +625,22 @@ recipient_type (MuMsgFieldId mfid)
 	}
 }
 
+static gchar*
+get_msgid (MuMsgFile *self, gboolean *do_free)
+{
+	const char *msgid;
+
+	msgid = g_mime_message_get_message_id (self->_mime_msg);
+	if (msgid)
+		return (char*)msgid;
+	else { /* if there is none, fake it */
+		*do_free = TRUE;
+		return g_strdup_printf (
+			"%s@fake-msgid",
+			mu_util_get_hash (self->_path));
+	}
+}
+
 
 char*
 mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
@@ -659,7 +675,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 			 self->_path, do_free);
 
 	case MU_MSG_FIELD_ID_MSGID:
-		return (char*)g_mime_message_get_message_id (self->_mime_msg);
+		return get_msgid (self, do_free);
 
 	case MU_MSG_FIELD_ID_MAILDIR: return self->_maildir;
 

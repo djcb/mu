@@ -261,9 +261,9 @@ const char*     mu_msg_get_subject         (MuMsg *msg);
  *
  * @param msg a valid MuMsg* instance
  *
- * @return the Message-Id of this message (without the enclosing <>)
- * or NULL in case of error or if there is none. the returned string
- * should *not* be modified or freed.
+ * @return the Message-Id of this message (without the enclosing <>),
+ * or a fake message-id for messages that don't have them, or NULL in
+ * case of error.
  */
 const char*     mu_msg_get_msgid           (MuMsg *msg);
 
