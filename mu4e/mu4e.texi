@@ -1050,6 +1050,7 @@ A            execute some custom action on an attachment
 
 misc
 ----
+c            copy address at point (with C-u copy long version)
 w            toggle line wrapping
 h            toggle showing cited parts
 

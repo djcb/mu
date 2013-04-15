@@ -295,9 +295,18 @@ at POINT, or if nil, at (point)."
   "Compose a message for the address at point."
   (interactive)
   (unless (get-text-property (or point (point)) 'email)
-    (error "No address at point"))
+    (mu4e-error "No address at point"))
   (mu4e~compose-mail (get-text-property (or point (point)) 'email)))
 
+(defun mu4e~view-copy-contact (&optional full)
+  "Compose a message for the address at (point)."
+  (interactive "P")
+  (let ((email (get-text-property (point) 'email))
+	 (long (get-text-property (point) 'long))) 
+    (unless email (mu4e-error "No address at point"))
+    (kill-new (if full long email))
+    (mu4e-message "Address copied.")))
+   
 (defun mu4e~view-construct-contacts-header (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
   (mu4e~view-construct-header field
@@ -312,6 +321,7 @@ at POINT, or if nil, at (point)."
 	  (define-key map [?\M-\r]  'mu4e~view-toggle-contact)
 	  (define-key map [mouse-2] 'mu4e~view-compose-contact)
 	  (define-key map "C"  'mu4e~view-compose-contact)
+	  (define-key map "c"  'mu4e~view-copy-contact)
 	  (propertize
 	    (if mu4e-view-show-addresses long short)
 	    'long long
