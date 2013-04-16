@@ -2903,6 +2903,9 @@ See @ref{Setting the default emacs mail program}.
 boring plain-ASCII ones?} Glad you asked! Yes, if you set
 @code{mu4e-use-fancy-chars} to @t{t}, @t{mu4e} uses such fancy characters in a
 number of places.
+@item @emph{Can I start @t{mu4e} in the background?} Yes - if you provide a
+prefix-argument (@key{C-u}), @t{mu4e} starts, but does not show the
+main-window.
 @end enumerate
 
 @node Reading messages
