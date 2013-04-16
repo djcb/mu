@@ -599,6 +599,7 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 		       const std::string& pfx, GStringChunk *strchunk)
 {
 	const char *at;
+	char *s1, *s2;
 	const char *p1, *p2;
 
 	/* add "foo" and "bar.com" as terms as well for
@@ -606,11 +607,14 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 	if (G_UNLIKELY(!(at = (g_strstr_len (addr, -1, "@")))))
 		return;
 
-	p1 = g_strndup(addr, at - addr); // foo
-	p2 = g_strdup (at + 1);
+	s1 = g_strndup(addr, at - addr); // foo
+	s2 = g_strdup (at + 1);
 
-	p1 = mu_str_xapian_escape_term (p1, strchunk);
-	p2 = mu_str_xapian_escape_term (p2, strchunk);
+	p1 = mu_str_xapian_escape_term (s1, strchunk);
+	p2 = mu_str_xapian_escape_term (s2, strchunk);
+
+	g_free (s1);
+	g_free (s2);
 
 	doc.add_term (pfx + std::string(p1, 0, _MuStore::MAX_TERM_LENGTH));
 	doc.add_term (pfx + std::string(p2, 0, _MuStore::MAX_TERM_LENGTH));
