@@ -610,7 +610,7 @@ write_part_to_fd (GMimePart *part, int fd, GError **err)
 	} else
 		rv = TRUE;
 
-	g_object_unref (wrapper);
+	/* g_object_unref (wrapper); we don't own it */
 	g_object_unref (stream);
 
 	return rv;
