@@ -578,7 +578,7 @@ after the end of the search results."
       (define-key map "x" 'mu4e-mark-execute-all)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-      (define-key map "A" 'mu4e-headers-action)
+      (define-key map "a" 'mu4e-headers-action)
 
       ;; message composition
       (define-key map "R" 'mu4e-compose-reply)
