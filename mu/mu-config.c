@@ -376,6 +376,9 @@ config_options_group_view (void)
 static void
 set_group_extract_defaults (void)
 {
+	if (!MU_CONFIG.targetdir)
+		MU_CONFIG.targetdir = g_strdup (".");
+
 	expand_dir (MU_CONFIG.targetdir);
 }
 
@@ -402,9 +405,6 @@ config_options_group_extract (void)
 		 "try to 'play' (open) the extracted parts", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
-
-	MU_CONFIG.targetdir = g_strdup("."); /* default is the current dir */
-
 	og = g_option_group_new("extract",
 				"Options for the 'extract' command",
 				"", NULL, NULL);
