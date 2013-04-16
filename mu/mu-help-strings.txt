@@ -27,7 +27,7 @@ files must be specified with an absolute path.
 
 #BEGIN MU_CONFIG_CMD_CFIND
 #STRING
-mu cfind [options] [--format=<format>] [<pattern>]
+mu cfind [options] [--format=<format>] [--personal] [--after=<T>] [<pattern>]
 #STRING
 mu cfind is the mu command to find contacts in the mu database and export them
 for use in other programs.
@@ -39,6 +39,16 @@ for use in other programs.
  csv
  org-contact
  bbdb
+
+If you specify '--personal', only addresses that were found in mails that include
+'my' e-mail addres will be listed - so to exclude e.g. mailing-list posts. Use
+the --my-address= option in 'mu index' to specify what addresses are considered
+'my' address.
+
+With '--after=T' you can tell mu to only show addresses that were seen after
+T. T is a Unix timestamp. For example, to get only addresses seen after the
+beginning of 2012, you could use
+         --after=`date +%%s -d 2012-01-01`
 #END
 
 #BEGIN MU_CONFIG_CMD_EXTRACT
