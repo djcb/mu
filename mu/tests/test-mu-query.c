@@ -213,7 +213,7 @@ test_mu_query_03 (void)
 		{ "s:LISP", 1},
 
 		{ "s:\"Re: Learning LISP; Scheme vs elisp.\"", 1},
-		{ "subject:Re: Learning LISP; Scheme vs elisp.", 0},
+		{ "subject:Re: Learning LISP; Scheme vs elisp.", 1},
 		{ "subject:\"Re: Learning LISP; Scheme vs elisp.\"", 1},
 		{ "to:help-gnu-emacs@gnu.org", 4},
 		{ "t:help-gnu-emacs", 4},
@@ -530,7 +530,7 @@ test_mu_query_tags (void)
 		{ "tag:lost tag:paradise", 1},
 		{ "tag:lost tag:horizon", 0},
 		{ "tag:lost OR tag:horizon", 1},
-		{ "x:paradise,lost", 0},
+		{ "x:paradise,lost", 1},
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)

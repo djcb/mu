@@ -197,15 +197,15 @@ test_mu_str_xapian_escape (void)
 		{ "aap@noot.mies", "aap_noot_mies"},
 		{ "Foo..Bar", "foo__bar" },
 		{ "Foo.Bar", "foo_bar" },
-		{ "Foo. Bar", "foo__bar" },
+		{ "Foo. Bar", "foo  bar" },
 		{ "subject:test@foo", "subject:test_foo" },
-		{ "xxx:test@bar", "xxx_test_bar" },
-		{ "aa$bb$cc", "aa_bb_cc" },
+		{ "xxx:test@bar", "xxx test_bar" },
+		{ "aa$bb$cc", "aa bb cc" },
 		{ "date:2010..2012", "date:2010..2012"},
 		{ "d:2010..2012", "d:2010..2012"},
 		{ "size:10..20", "size:10..20"},
 		{ "x:2010..2012", "x:2010__2012"},
-		{ "q:2010..2012", "q_2010__2012"},
+		{ "q:2010..2012", "q 2010__2012"},
 		{ "subject:2010..2012", "subject:2010__2012"},
 		{ "(maildir:foo)", "(maildir:foo)"},
 		{ "￡300", "￡300" }
@@ -233,10 +233,10 @@ test_mu_str_xapian_escape_non_ascii (void)
 		const char*	word;
 		const char*	esc;
 	} words [] = {
-		{ "Тесла, Никола", "тесла__никола"},
+		{ "Тесла, Никола", "тесла  никола"},
 		{ "Masha@Аркона.ru", "masha_аркона_ru" },
-		{ "foo:ελληνικά", "foo_ελληνικά" },
-		{ "日本語!!", "日本語__" },
+		{ "foo:ελληνικά", "foo ελληνικά" },
+		{ "日本語!!", "日本語  " },
 		{ "￡", "￡" }
 	};
 

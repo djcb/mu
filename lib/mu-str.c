@@ -449,6 +449,35 @@ check_for_field (const char *str, gboolean *is_field,
 	*is_range_field = pfx.range_field;
 }
 
+
+static gboolean
+is_xapian_special_char (char c)
+{
+	switch (c) {
+
+	case '@':
+	case '.':
+	case ',':
+	case '/':
+	case '[':
+	case ']':
+	case '+':
+	case '-':
+	case ' ':
+	case ':':
+	case '(':
+	case ')':
+	case '"':
+	case '\'':
+	case '*':
+		return TRUE;
+	default:
+		return FALSE;
+	}
+}
+
+#define ESC_CHAR '_'
+
 /*
  * Xapian treats various characters such as '@', '-', ':' and '.'
  * specially; function below is an ugly hack to make it DWIM in most
@@ -460,44 +489,68 @@ char*
 mu_str_xapian_escape_in_place_try (char *term, gboolean esc_space, GStringChunk *strchunk)
 {
 	unsigned char *cur;
-	const char escchar = '_';
-	gboolean is_field, is_range_field;
+	char lookback;
+	gboolean is_field, is_range_field, quoted;
 	unsigned colon;
 
 	g_return_val_if_fail (term, NULL);
 
 	check_for_field (term, &is_field, &is_range_field);
 
-	for (colon = 0, cur = (unsigned char*)term; *cur; ++cur) {
+	for (colon = 0, lookback = 0, quoted=FALSE, cur = (unsigned char*)term;
+	     *cur; ++cur) {
+
+		if (*cur == '\\')
+			quoted = !quoted;
 
 		switch (*cur) {
 
-		case '.': /* escape '..' if it's not a range field*/
-			if (is_range_field && cur[1] == '.')
-				cur += 1;
+		case '.': /* escape '..' if it's not a range field */
+			if (cur[1] == '.') {
+				if (!is_range_field) {
+					*cur	   = ESC_CHAR;
+					*(cur + 1) = ESC_CHAR;
+				}
+				++cur;
+			} else if (isblank(lookback) || isblank(cur[1]) ||
+				   cur[1] == '\0')
+				*cur = ' ';
 			else
-				*cur = escchar;
+				*cur = ESC_CHAR;
 			break;
 		case ':':
 			/* if there's a registered xapian prefix
 			 * before the *first* ':', don't touch
-			 * it. Otherwise replace ':' with '_'... ugh
+			 * it. Otherwise replace ':' with ' '... ugh
 			 * yuck ugly...
 			 */
 			if (colon != 0 || !is_field)
-				*cur = escchar;
+				*cur = ' ';
 			++colon;
 			break;
+		case '@':
+		case '/':
+		case '[':
+		case ']':
+		case '+':
+		case '-':
+			*cur = ESC_CHAR;
+			break;
+		case ' ':
+		case '_':
 		case '(':
 		case ')':
+		case '"':
 		case '\'':
 		case '*':   /* wildcard */
-			break;
+			break; /* leave as they are */
 		default:
-			/* escape all other special stuff */
+			/* turn other stuff into spaces */
 			if (*cur < 0x80 && !isalnum (*cur))
-				*cur = escchar;
+				*cur = ' ';
 		}
+
+		lookback = *cur;
 	}
 
 	/* downcase try to remove accents etc. */
@@ -519,6 +572,26 @@ mu_str_xapian_escape (const char *query, gboolean esc_space, GStringChunk *strch
 	return mu_str_xapian_escape_in_place_try (mystr, esc_space, strchunk);
 }
 
+
+char*
+mu_str_xapian_escape_term (const char *term, GStringChunk *strchunk)
+{
+	char *cur, *esc;
+
+	g_return_val_if_fail (term, NULL);
+	g_return_val_if_fail (strchunk, NULL);
+
+	for (cur = esc = mu_str_normalize (term, TRUE, strchunk);
+	     *cur; ++cur) {
+		if (is_xapian_special_char (*cur))
+			*cur = ESC_CHAR;
+	}
+
+	return esc;
+}
+
+
+
 /*
  * Split simple search term into prefix, expression and suffix.
  * Meant to handle cases like "(maildir:/abc)", prefix and
@@ -533,7 +606,7 @@ mu_str_xapian_escape (const char *query, gboolean esc_space, GStringChunk *strch
  */
 static gboolean
 split_term (const gchar *term,
-  const gchar **pfx, const gchar **cond, const gchar **sfx)
+	    const gchar **pfx, const gchar **cond, const gchar **sfx)
 {
 	size_t l;
 	const gchar *start, *tail;

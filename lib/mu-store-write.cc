@@ -302,6 +302,8 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 }
 
 
+
+
 /* for string and string-list */
 static void
 add_terms_values_str (Xapian::Document& doc, char *val,
@@ -317,11 +319,11 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 		termgen.index_text_without_positions (val, 1, prefix(mfid));
 	}
 	if (mu_msg_field_xapian_escape (mfid))
-		val= mu_str_xapian_escape_in_place_try (val, TRUE /*esc_space*/,
-							strchunk);
+		val = mu_str_xapian_escape_term (val, strchunk);
 	if (mu_msg_field_xapian_term(mfid))
 		doc.add_term (prefix(mfid) +
-			      std::string(val, 0, _MuStore::MAX_TERM_LENGTH));
+			      std::string(val, 0,
+					  _MuStore::MAX_TERM_LENGTH));
 }
 
 
@@ -440,8 +442,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	 * on strchunk, no need to free*/
 	if ((fname = mu_msg_part_get_filename (part, FALSE))) {
 		char *val;
-		val = mu_str_xapian_escape (fname, TRUE /*esc space*/,
-					    pdata->_strchunk);
+		val = mu_str_xapian_escape_term (fname, pdata->_strchunk);
 		g_free (fname);
 		pdata->_doc.add_term
 			(file + std::string(val, 0, MuStore::MAX_TERM_LENGTH));
@@ -598,7 +599,7 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 		       const std::string& pfx, GStringChunk *strchunk)
 {
 	const char *at;
-	char *p1, *p2;
+	const char *p1, *p2;
 
 	/* add "foo" and "bar.com" as terms as well for
 	 * "foo@bar.com" */
@@ -608,14 +609,11 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 	p1 = g_strndup(addr, at - addr); // foo
 	p2 = g_strdup (at + 1);
 
-	p1 = mu_str_xapian_escape_in_place_try (p1, TRUE, strchunk);
-	p2 = mu_str_xapian_escape_in_place_try (p2, TRUE, strchunk);
+	p1 = mu_str_xapian_escape_term (p1, strchunk);
+	p2 = mu_str_xapian_escape_term (p2, strchunk);
 
 	doc.add_term (pfx + std::string(p1, 0, _MuStore::MAX_TERM_LENGTH));
 	doc.add_term (pfx + std::string(p2, 0, _MuStore::MAX_TERM_LENGTH));
-
-	g_free (p1);
-	g_free (p2);
 }
 
 static void
@@ -643,8 +641,8 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		char *escaped;
 		/* note: escaped is added to stringchunk, no need for
 		 * freeing */
-		escaped = mu_str_xapian_escape (contact->address, FALSE,
-						msgdoc->_strchunk);
+		escaped = mu_str_xapian_escape_term (contact->address,
+						     msgdoc->_strchunk);
 		msgdoc->_doc->add_term
 			(std::string  (pfx + escaped, 0, MuStore::MAX_TERM_LENGTH));
 		add_address_subfields (*msgdoc->_doc, contact->address, pfx,

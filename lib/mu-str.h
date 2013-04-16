@@ -177,6 +177,15 @@ char* mu_str_xapian_escape_in_place_try (char *query, gboolean esc_space,
 char* mu_str_xapian_escape (const char *str, gboolean esc_space,
 			    GStringChunk *strchunk)  G_GNUC_WARN_UNUSED_RESULT;
 
+/**
+ * escape the xapian term
+ *
+ * @param str a string
+ * @param strchunk allocate strings on strchunk
+ *
+ * @return the escaped string, which is allocated in the strchunk
+ */
+char* mu_str_xapian_escape_term (const char *term, GStringChunk *strchunk);
 
 /**
  * Fixup values for some fields in the DWIM manner:
