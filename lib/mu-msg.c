@@ -469,6 +469,9 @@ accumulate_body (MuMsg *msg, MuMsgPart *mpart, BodyData *bdata)
 	if (mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT)
 		return;
 
+	if (!GMIME_IS_PART(mpart->data))
+		return;
+
 	txt = NULL;
 	err = TRUE;
 
@@ -493,7 +496,7 @@ get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 	BodyData bdata;
 
 	bdata.want_html = want_html;
-	bdata.gstr = g_string_sized_new (4096);
+	bdata.gstr	= g_string_sized_new (4096);
 
 	mu_msg_part_foreach (self, opts,
 			     (MuMsgPartForeachFunc)accumulate_body,

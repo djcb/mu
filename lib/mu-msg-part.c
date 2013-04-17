@@ -174,7 +174,8 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 	gboolean err;
 
 	g_return_val_if_fail (msg, NULL);
-	g_return_val_if_fail (self && self->data, NULL);
+	g_return_val_if_fail (self && GMIME_IS_OBJECT(self->data),
+			      NULL);
 
 	mobj = (GMimeObject*)self->data;
 
