@@ -1,7 +1,7 @@
 \input texinfo.tex    @c -*-texinfo-*-
 @c %**start of header
 @setfilename mu4e.info
-@settitle mu4e user manual
+@settitle mu4e @value{mu-version} user manual
 
 @c Use proper quote and backtick for code sections in PDF output
 @c Cf. Texinfo manual 14.2
@@ -54,7 +54,7 @@ Documentation License.''
 @unnumbered Welcome to mu4e
 @end iftex
 
-Welcome to @t{mu4e}!
+Welcome to @t{mu4e} @value{mu-version}!
 
 @t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 23 and
 later, built on top of the
@@ -3413,7 +3413,7 @@ A typical message s-expression looks something like the following:
  :in-reply-to "38203498230942D81EE81AF0114E4E74@@123213.mail.example.com"
  :body-txt "Hi Tom,
  ....
-"))
+")
 @end lisp
 
 This s-expression forms a property list (@t{plist}), and we can get values

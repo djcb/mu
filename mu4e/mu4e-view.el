@@ -102,8 +102,8 @@ The first letter of NAME is used as a shortcut character.")
      ("ein-emacs"  . mu4e-view-open-attachment-emacs)
      ("|pipe"      . mu4e-view-pipe-attachment))
   "List of actions to perform on message attachments.
-The actions are of the form:
- (NAME  FUNC)
+The actions are cons-cells of the form:
+ (NAME . FUNC)
 where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives two arguments: the message
@@ -302,11 +302,11 @@ at POINT, or if nil, at (point)."
   "Compose a message for the address at (point)."
   (interactive "P")
   (let ((email (get-text-property (point) 'email))
-	 (long (get-text-property (point) 'long))) 
+	 (long (get-text-property (point) 'long)))
     (unless email (mu4e-error "No address at point"))
     (kill-new (if full long email))
     (mu4e-message "Address copied.")))
-   
+
 (defun mu4e~view-construct-contacts-header (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
   (mu4e~view-construct-header field
