@@ -468,6 +468,7 @@ is_xapian_special_char (char c)
 	case '(':
 	case ')':
 	case '"':
+	case '\\':
 	case '\'':
 	case '*':
 		return TRUE;
@@ -533,6 +534,7 @@ mu_str_xapian_escape_in_place_try (char *term, gboolean esc_space, GStringChunk 
 		case '[':
 		case ']':
 		case '+':
+		case '\\':
 		case '-':
 			*cur = ESC_CHAR;
 			break;
