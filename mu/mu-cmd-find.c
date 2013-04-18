@@ -325,6 +325,28 @@ ansi_reset_maybe (MuMsgFieldId mfid, gboolean color)
 
 }
 
+static const char*
+field_string_list (MuMsg *msg, MuMsgFieldId mfid)
+{
+	char *str;
+	const GSList *lst;
+	static char buf[80];
+
+	lst = mu_msg_get_field_string_list (msg, mfid);
+	if (!lst)
+		return NULL;
+
+	str = mu_str_from_list (lst, ',');
+	if (str) {
+		strncpy (buf, str, sizeof(buf));
+		g_free (str);
+		return buf;
+	}
+
+	return NULL;
+}
+
+
 
 static const char*
 display_field (MuMsg *msg, MuMsgFieldId mfid)
@@ -355,6 +377,11 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 	case MU_MSG_FIELD_TYPE_BYTESIZE:
 		val = mu_msg_get_field_numeric (msg, mfid);
 		return mu_str_size_s ((unsigned)val);
+	case MU_MSG_FIELD_TYPE_STRING_LIST: {
+		const char *str;
+		str = field_string_list (msg, mfid);
+		return str ? str : "";
+	}
 	default:
 		g_return_val_if_reached (NULL);
 	}
