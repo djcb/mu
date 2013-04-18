@@ -318,12 +318,19 @@ add_terms_values_str (Xapian::Document& doc, char *val,
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (val, 1, prefix(mfid));
 	}
-	if (mu_msg_field_xapian_escape (mfid))
-		val = mu_str_xapian_escape_term (val, strchunk);
-	if (mu_msg_field_xapian_term(mfid))
+
+	if (mu_msg_field_xapian_term(mfid)) {
+
+		if (mu_msg_field_xapian_escape (mfid))
+			val = mu_str_xapian_escape_term (val, strchunk);
+
+		// if (mfid == MU_MSG_FIELD_ID_TAGS)
+		// 	g_print ("tag:'%s'\n", val);
+
 		doc.add_term (prefix(mfid) +
 			      std::string(val, 0,
 					  _MuStore::MAX_TERM_LENGTH));
+	}
 }
 
 
