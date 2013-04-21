@@ -99,8 +99,19 @@ This is one of the symbols:
 
 Note, when using GMail/IMAP, you should set this to either
 `trash' or `delete', since GMail already takes care of keeping
-copies in the sent folder."
-  :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
+copies in the sent folder.
+
+Alternatively, `mu4e-sent-messages-behavior' can be a function
+which takes no arguments, and which should return on of the mentioned symbols,
+for example:
+
+  (setq mu4e-sent-messages-behavior (lambda ()
+        (if (string= (message-sendmail-envelope-from) \"foo@example.com\")
+                   'delete 'sent)))
+
+The various `message-' functions from `message-mode' are available
+for quering the message information."
+    :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
 		 (const :tag "move message to mu4e-trash-folder" trash)
 		 (const :tag "delete message" delete))
   :safe 'symbolp
@@ -147,8 +158,12 @@ Messages are captured with `mu4e-action-capture-message'."
 (defun mu4e~compose-setup-fcc-maybe ()
   "Maybe setup Fcc, based on `mu4e-sent-messages-behavior'.
 If needed, set the Fcc header, and register the handler function."
-  (let* ((mdir
-	   (case mu4e-sent-messages-behavior
+  (let* ((sent-behavior
+          (if (functionp mu4e-sent-messages-behavior)
+              (funcall mu4e-sent-messages-behavior)
+            mu4e-sent-messages-behavior))
+	  (mdir
+	   (case sent-behavior
 	     (delete nil)
 	     (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
 	     (sent  (mu4e-get-sent-folder mu4e-compose-parent-message))
@@ -251,7 +266,8 @@ appear on disk."
       (mu4e~compose-setup-completion))
 
     (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
-
+    (define-key mu4e-compose-mode-map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
+    
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (defun mu4e~compose-save-before-sending ()
