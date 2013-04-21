@@ -109,7 +109,6 @@ struct _MuConfig {
 	/* options for indexing */
 	gchar	        *maildir;	/* where the mails are */
 	gboolean        nocleanup;	/* don't cleanup del'd mails from db */
-	gboolean        reindex;	/* re-index existing mails */
 	gboolean        rebuild;	/* empty the database before indexing */
 	gboolean        autoupgrade;    /* automatically upgrade db
 					 * when needed */

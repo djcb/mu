@@ -77,23 +77,17 @@ found in the address fields of a message which also has
 messages.
 
 .TP
-\fB\-\-reindex\fR re-index all mails, even ones that are already in the
-database.
-
-.TP
 \fB\-\-nocleanup\fR
 disables the database cleanup that \fBmu\fR does by default after indexing.
 
 .TP
 \fB\-\-rebuild\fR
-clear all messages from the database before
-indexing. This is effectively the same as removing the database. The
-difference with \fB\-\-reindex\fR is that \fB\-\-rebuild\fR guarantees that
-after the indexing has finished, there are no 'old' messages in the database
-anymore, which is not true with \fB\-\-reindex\fR when indexing only a part of
-messages (using \fB\-\-maildir\fR). For this reason, it is necessary to run
-\fBmu index \-\-rebuild\fR when there is an upgrade in the database
-format. \fBmu index\fR will issue a warning about this.
+clear all messages from the database before indexing. \fB\-\-rebuild\fR
+guarantees that after the indexing has finished, there are no 'old' messages
+in the database anymore, which is not true with \fB\-\-reindex\fR when
+indexing only a part of messages (using \fB\-\-maildir\fR). For this reason,
+it is necessary to run \fBmu index \-\-rebuild\fR when there is an upgrade in
+the database format. \fBmu index\fR will issue a warning about this.
 
 .TP
 \fB\-\-autoupgrade\fR
