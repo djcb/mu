@@ -471,6 +471,7 @@ FUNC should be a function taking two arguments:
     (let ((map (make-sparse-keymap)))
 
       (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
+      (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
 
       (define-key map "q" 'mu4e~view-quit-buffer)
 
