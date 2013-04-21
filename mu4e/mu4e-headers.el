@@ -1,6 +1,7 @@
 ;;; mu4e-headers.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2013 Tibor Simko
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -439,7 +440,7 @@ if provided, or at the end of the buffer otherwise."
 		  (truncate-string-to-width str width 0 ?\s t)) " ")))))
       ;; now, propertize it.
       (setq line (propertize line 'face
-		   (case (car-safe (mu4e-message-field msg :flags))
+		   (case (car-safe (reverse (mu4e-message-field msg :flags)))
 		     ('draft           'mu4e-draft-face)
 		     ('trash           'mu4e-trashed-face)
 		     ((unread new)     'mu4e-unread-face)
