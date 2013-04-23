@@ -159,24 +159,28 @@ Messages are captured with `mu4e-action-capture-message'."
   "Maybe setup Fcc, based on `mu4e-sent-messages-behavior'.
 If needed, set the Fcc header, and register the handler function."
   (let* ((sent-behavior
-          (if (functionp mu4e-sent-messages-behavior)
-              (funcall mu4e-sent-messages-behavior)
-            mu4e-sent-messages-behavior))
+	   ;; Note; we cannot simply use functionp here, since at least
+	   ;; delete is a function, too...
+	   (if (member mu4e-sent-messages-behavior '(delete trash sent))
+	     mu4e-sent-messages-behavior
+	     (if (functionp mu4e-sent-messages-behavior)
+	       (funcall mu4e-sent-messages-behavior)
+	       mu4e-sent-messages-behavior)))
 	  (mdir
-	   (case sent-behavior
-	     (delete nil)
-	     (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
-	     (sent  (mu4e-get-sent-folder mu4e-compose-parent-message))
-	     (otherwise
-	       (mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
-		 mu4e-sent-messages-behavior))))
+	    (case sent-behavior
+	      (delete nil)
+	      (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
+	      (sent (mu4e-get-sent-folder mu4e-compose-parent-message))
+	      (otherwise
+		(mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
+		  mu4e-sent-messages-behavior)))) 
 	  (fccfile (and mdir
 		     (concat mu4e-maildir mdir "/cur/"
 		       (mu4e~draft-message-filename-construct "S")))))
     ;; if there's an fcc header, add it to the file
-     (when fccfile
-       (message-add-header (concat "Fcc: " fccfile "\n"))
-       ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
+    (when fccfile
+      (message-add-header (concat "Fcc: " fccfile "\n"))
+      ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
        ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
        ;; handler after we've done our thing.
       (setq message-fcc-handler-function
