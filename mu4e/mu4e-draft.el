@@ -37,6 +37,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defcustom mu4e-compose-dont-reply-to-self nil
+  "If non-nil, don't include self (that is, any member of
+`mu4e-user-mail-address-list') in replies."
+  :type 'boolean
+  :group 'mu4e-compose)
+
 (defun mu4e~draft-user-agent-construct ()
   "Return the User-Agent string for mu4e.
 This is either the value of `mu4e-user-agent', or, if not set, a
@@ -116,8 +122,17 @@ the original message ORIGMSG. If the Reply-To address is set, use
 that, otherwise use the From address. Note, whatever was in the To:
 field before, goes to the Cc:-list (if we're doing a reply-to-all)."
   (let ((reply-to
-	   (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
-    (delete-duplicates reply-to :test #'mu4e~draft-address-cell-equal)))
+	  (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
+    (delete-duplicates reply-to :test #'mu4e~draft-address-cell-equal)
+    (if mu4e-compose-dont-reply-to-self
+      (delete-if
+	(lambda (to-cell)
+	  (member-if
+	    (lambda (addr)
+	      (string= (downcase addr) (downcase (cdr to-cell))))
+	    mu4e-user-mail-address-list))
+	reply-to)
+      reply-to)))
 
 
 (defun mu4e~draft-create-cc-lst (origmsg reply-all)
@@ -264,19 +279,25 @@ You can append flags."
 	    (concat mu4e~draft-reply-prefix
 	      (message-strip-subject-re (or (plist-get origmsg :subject) "")))))
      (concat
-      (mu4e~draft-header "From" (or (mu4e~draft-from-construct) ""))
-      (mu4e~draft-header "Reply-To" mu4e-compose-reply-to-address)
-      (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-      (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg
-				  reply-all))
-      (mu4e~draft-header "Subject" subject)
-      (mu4e~draft-header "References"
-	(mu4e~draft-references-construct origmsg))
-      (mu4e~draft-common-construct)
-      (when old-msgid
-	(mu4e~draft-header "In-reply-to" (format "<%s>" old-msgid)))
-      "\n\n"
-      (mu4e~draft-cite-original origmsg))))
+       (mu4e~draft-header "From" (or (mu4e~draft-from-construct) ""))
+       (mu4e~draft-header "Reply-To" mu4e-compose-reply-to-address)
+       ;; if there's no-one in To, copy the CC-list
+       (if (zerop (length (mu4e~draft-create-to-lst origmsg)))
+	 (mu4e~draft-header "To" (mu4e~draft-recipients-construct :cc origmsg reply-all))
+	 ;; otherwise...
+	 (concat
+           (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
+           (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg
+				     reply-all))))
+       
+       (mu4e~draft-header "Subject" subject)
+       (mu4e~draft-header "References"
+	 (mu4e~draft-references-construct origmsg))
+       (mu4e~draft-common-construct)
+       (when old-msgid
+	 (mu4e~draft-header "In-reply-to" (format "<%s>" old-msgid)))
+       "\n\n"
+       (mu4e~draft-cite-original origmsg))))
 
 (defconst mu4e~draft-forward-prefix "Fwd: "
   "String to prefix replies with.")
