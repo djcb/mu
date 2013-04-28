@@ -200,7 +200,7 @@ test_mu_str_xapian_escape (void)
 		{ "Foo. Bar", "foo  bar" },
 		{ "subject:test@foo", "subject:test_foo" },
 		{ "xxx:test@bar", "xxx test_bar" },
-		{ "aa$bb$cc", "aa bb cc" },
+		{ "aa$bb$cc", "aa_bb_cc" },
 		{ "date:2010..2012", "date:2010..2012"},
 		{ "d:2010..2012", "d:2010..2012"},
 		{ "size:10..20", "size:10..20"},

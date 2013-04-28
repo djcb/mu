@@ -176,7 +176,9 @@ test_mu_query_01 (void)
 		{ "foo:pepernoot",      0 },
 		{ "funky",              1 },
 		{ "fünkÿ",              1 },
-		{ "",                   18 }
+		{ "",                   18 },
+		{ "msgid:abcd$efgh@example.com", 1},
+		{ "i:abcd$efgh@example.com", 1},
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
