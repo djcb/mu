@@ -24,7 +24,7 @@
 ;; Contributed by sabof
 
 (defun mu4e-headers-mark-all-unread-read ()
-  "Put a ! \(read) mark on all visible unread messages"
+  "Put a ! \(read) mark on all visible unread messages."
   (interactive)
   (mu4e-headers-mark-for-each-if
    (cons 'read nil)
@@ -32,7 +32,7 @@
      (memq 'unread (mu4e-msg-field msg :flags)))))
 
 (defun mu4e-headers-flag-all-read ()
-  "Flag all visible messages as \"read\""
+  "Flag all visible messages as \"read\"."
   (interactive)
   (mu4e-headers-mark-all-unread-read)
   (mu4e-mark-execute-all t))
