@@ -66,7 +66,7 @@ public:
 		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
 		_enq(enq), _thread_hash (0), _msg(0), _flags(flags),
 		_skip_unreadable(flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE),
-		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS){
+		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS) {
 
 		bool descending       = (flags & MU_MSG_ITER_FLAG_DESCENDING);
 		bool threads          = (flags & MU_MSG_ITER_FLAG_THREADS);
@@ -127,7 +127,7 @@ public:
 
 	const std::string msgid () const {
 		const Xapian::Document doc (cursor().get_document());
-		return doc.get_value(MU_MSG_FIELD_ID_PATH);
+		return doc.get_value(MU_MSG_FIELD_ID_MSGID);
 	}
 
 	unsigned docid () const {
