@@ -175,10 +175,11 @@ part, but this can be changed by setting
     (with-temp-buffer
       (insert body)
       (goto-char (point-min))
-      (while (re-search-forward "[ ’]" nil t)
+      (while (re-search-forward "[
+ï¿½ï¿½]" nil t)
 	(replace-match
 	  (cond
-	    ((string= (match-string 0) "’") "'")
+	    ((string= (match-string 0) "ï¿½") "'")
 	    (t		                       ""))))
       (buffer-string))))
 
@@ -189,7 +190,7 @@ their name or e-mail address) regular expressions RX. If there is a
 match, return non-nil; otherwise return nil. RX can also be a list
 of regular expressions, in which case any of those are tried for a
 match."
-  (unless (member cfield '(:to :from :bcc :cc))
+  (unless (member cfield '(:to :from :bcc :cc :x-original-to))
     (mu4e-error "Not a contacts field (%S)" cfield))
   (if (listp rx)
     ;; if rx is a list, try each one of them for a match
