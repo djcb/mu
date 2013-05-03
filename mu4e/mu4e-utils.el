@@ -149,7 +149,7 @@ an absolute path."
     (mu4e-error "%s exists, but is not a directory." dir))
   (cond
     ((file-directory-p dir) t)
-    ((yes-or-no-p (mu4e-format "%s does not exist yes. Create now?" dir))
+    ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
       (mu4e~proc-mkdir dir) t)
     (t nil)))
 
