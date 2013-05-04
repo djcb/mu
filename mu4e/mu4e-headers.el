@@ -441,7 +441,7 @@ if provided, or at the end of the buffer otherwise."
       (setq line (propertize line 'face
 		   (case (car-safe (mu4e-message-field msg :flags))
 		     ('draft           'mu4e-draft-face)
-		     ('trash           'mu4e-trashed-face)
+		     ('trashed         'mu4e-trashed-face)
 		     ((unread new)     'mu4e-unread-face)
 		     ('flagged         'mu4e-flagged-face)
 		     ((replied passed) 'mu4e-replied-face)
@@ -1000,9 +1000,8 @@ matching messages with that mark."
 
 
 (defun mu4e-headers-mark-thread (&optional subthread)
-  "Mark the thread at point.
-If SUBTHREAD is non-nil, marking is limited to the message at
-point and its descendants."
+  "Mark the thread at point. If SUBTHREAD is non-nil, marking is
+limited to the message at point and its descendants."
   ;; the tread id is shared by all messages in a thread
   (interactive "P")
   (let* ((msg (mu4e-message-at-point))
