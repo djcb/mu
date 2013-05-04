@@ -484,8 +484,10 @@ include_related (MuQuery *self, MuMsgIter **iter, int maxnum,
 
 	mu_msg_iter_destroy (*iter);
 
-	// set the preferred set for the iterator (ie., the set not
-	// consider to be duplicates) to be the original matches
+	// set the preferred set for the iterator (ie., the set of
+	// messages not considered to be duplicates) to be the
+	// original matches -- the matches without considering
+	// 'related'
 	mu_msg_iter_set_preferred (rel_iter, orig_set);
 	g_hash_table_destroy (orig_set);
 
