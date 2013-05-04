@@ -1110,6 +1110,7 @@ list."
     (mu4e-view-mark-for-unmark)
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
+ 
 (defmacro mu4e~view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for-MARK."
   (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
@@ -1130,7 +1131,7 @@ list."
 (mu4e~view-defun-mark-for unmark)
 (mu4e~view-defun-mark-for something)
 
- (defun mu4e-view-marked-execute ()
+(defun mu4e-view-marked-execute ()
   "Execute the marks."
   (interactive)
   (mu4e~view-in-headers-context
