@@ -439,13 +439,17 @@ if provided, or at the end of the buffer otherwise."
 		  (truncate-string-to-width str width 0 ?\s t)) " ")))))
       ;; now, propertize it.
       (setq line (propertize line 'face
-		   (case (car-safe (mu4e-message-field msg :flags))
-		     ('draft           'mu4e-draft-face)
-		     ('trashed         'mu4e-trashed-face)
-		     ((unread new)     'mu4e-unread-face)
-		     ('flagged         'mu4e-flagged-face)
-		     ((replied passed) 'mu4e-replied-face)
-		     (t                'mu4e-header-face))))
+		   (let ((flags (mu4e-message-field msg :flags)))
+		     (cond
+		       ((memq 'trashed flags) 'mu4e-trashed-face)
+		       ((memq 'draft flags)   'mu4e-draft-face)
+		       ((or
+			  (memq 'unread flags)
+			  (memq 'new flags))  'mu4e-unread-face)
+		       ((memq 'flagged flags) 'mu4e-flagged-face)
+		       ((memq 'replied flags) 'mu4e-replied-face)
+		       ((memq 'passed flags)  'mu4e-forwarded-face)
+		       (t                     'mu4e-header-face)))))
       ;; now, append the header line
       (mu4e~headers-add-header line docid point msg)))
 

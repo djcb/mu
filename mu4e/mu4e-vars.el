@@ -335,7 +335,12 @@ I.e. a message with the draft flag set."
 
 (defface mu4e-replied-face
   '((t :inherit font-lock-builtin-face :bold nil))
-  "Face for a replied (or passed) message header."
+  "Face for a replied message header."
+  :group 'mu4e-faces)
+
+(defface mu4e-forwarded-face
+  '((t :inherit font-lock-builtin-face :bold nil))
+  "Face for a passed (forwarded) message header."
   :group 'mu4e-faces)
 
 (defface mu4e-header-face
