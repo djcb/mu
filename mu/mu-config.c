@@ -277,8 +277,8 @@ config_options_group_cfind (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
-		 "output format ('plain'(*), 'mutt', 'wl',"
-		 "'org-contact', 'csv')", "<format>"},
+		 "output format (plain(*), mutt-alias, mutt-ab, wl, "
+		 "org-contact, bbdb, csv)", "<format>"},
 		{"personal", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.personal,
 		 "whether to only get 'personal' contacts", NULL},
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,

@@ -33,6 +33,7 @@ mu cfind is the mu command to find contacts in the mu database and export them
 for use in other programs.
 
 <format> is one of:
+ plain
  mutt-alias
  mutt-ab
  wl
@@ -40,10 +41,12 @@ for use in other programs.
  org-contact
  bbdb
 
-If you specify '--personal', only addresses that were found in mails that include
-'my' e-mail addres will be listed - so to exclude e.g. mailing-list posts. Use
-the --my-address= option in 'mu index' to specify what addresses are considered
-'my' address.
+'plain' is the default.
+
+If you specify '--personal', only addresses that were found in mails
+that include 'my' e-mail addres will be listed - so to exclude e.g.
+mailing-list posts. Use the --my-address= option in 'mu index' to
+specify what addresses are considered 'my' address.
 
 With '--after=T' you can tell mu to only show addresses that were seen after
 T. T is a Unix timestamp. For example, to get only addresses seen after the
