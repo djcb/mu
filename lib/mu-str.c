@@ -275,6 +275,9 @@ mu_str_esc_to_list (const char *strings)
 		char kar;
 		kar = strings[u];
 
+		if (kar == '\\')
+			continue;
+
 		if (quoted && kar != '"') {
 			g_string_append_c (part, kar);
 			continue;
@@ -283,7 +286,6 @@ mu_str_esc_to_list (const char *strings)
 		switch (kar) {
 		case '"':
 			quoted = !quoted;
-			g_string_append_c (part, kar);
 			continue;
 		case ' ':
  			if (part->len > 0) {
