@@ -190,7 +190,7 @@ read_line_as_list (GError **err)
 	} while (1);
 
 	line = g_string_free (gstr, FALSE);
-	lst = mu_str_esc_to_list (line, err);
+	lst = mu_str_esc_to_list (line);
 
 	g_free (line);
 

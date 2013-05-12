@@ -313,17 +313,14 @@ mu_query_preprocess (const char *query, GError **err)
 
 	/* convert the query to a list of query terms, and escape them
 	 * separately */
-	parts = mu_str_esc_to_list (query, err);
+	parts = mu_str_esc_to_list (query);
 	if (!parts)
 		return NULL;
 
 	for (cur = parts; cur; cur = g_slist_next(cur)) {
 		char *data;
 		data = (gchar*)cur->data;
-		/* remove accents and turn to lower-case */
-		/* escape '@', single '_' and ':' if it's not following a
-		 * xapian-pfx with '_' */
-		cur->data = mu_str_xapian_escape (data, TRUE, NULL);
+		cur->data = mu_str_process_query_term (data);
 		g_free (data);
 		/* run term fixups */
 		data = (gchar*)cur->data;
@@ -334,7 +331,7 @@ mu_query_preprocess (const char *query, GError **err)
 	myquery = mu_str_from_list (parts, ' ');
 	mu_str_free_list (parts);
 
-	return myquery;
+	return myquery ? myquery : g_strdup ("");
 }
 
 
