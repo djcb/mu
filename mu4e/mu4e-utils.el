@@ -161,7 +161,7 @@ an absolute path."
 
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e.
-If we're waiting for user-input, don't show anyhting."
+If we're waiting for user-input, don't show anything."
   (unless (active-minibuffer-window)
     (message "%s" (apply 'mu4e-format frm args))
     nil))

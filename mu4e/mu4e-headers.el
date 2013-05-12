@@ -1073,7 +1073,7 @@ stack size."
 	(future (setq mu4e~headers-query-future stack))))))
 
 (defun mu4e~headers-pop-query (whence)
-    "Pop a query from the stack.
+  "Pop a query from the stack.
 WHENCE is a symbol telling us where to get it from; it's a
 symbol, either 'future or 'past."
   (case whence
@@ -1136,7 +1136,8 @@ the search."
 
 (defun mu4e-headers-search-narrow (filter )
   "Narrow the last search by appending search expression FILTER to
-the last search expression."
+the last search expression. Note that you can go back to previous
+query (effectively, 'widen' it), with `mu4e-headers-query-prev'."
   (interactive
     (let ((filter
   	    (read-string (mu4e-format "Narrow down to: ")
