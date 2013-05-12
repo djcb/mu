@@ -146,7 +146,7 @@ test_mu_find_01 (void)
 	search ("f:soc@example.com", 1);
 	search ("t:alki@example.com", 1);
 	search ("t:alcibiades", 1);
-	search ("http-emacs", 1);
+	search ("http emacs", 1);
 	search ("f:soc@example.com OR f:john", 2);
 	search ("f:soc@example.com OR f:john OR t:edmond", 3);
 	search ("t:julius", 1);
