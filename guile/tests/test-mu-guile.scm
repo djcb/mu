@@ -72,8 +72,8 @@ exec guile -e main -s $0 $@
 
   (let ((msg (car (mu:message-list "hello"))))
     (str-equal-or-exit (mu:subject msg) "Fwd: rfc822")
-    (str-equal-or-exit (mu:to      msg) "martin")
-    (str-equal-or-exit (mu:from    msg) "foobar <foo@example.com>")
+    (str-equal-or-exit (mu:to msg) "martin")
+    (str-equal-or-exit (mu:from msg) "foobar <foo@example.com>")
     (str-equal-or-exit (mu:header msg "X-Mailer") "Ximian Evolution 1.4.5")
 
     (if (not (equal? (mu:priority msg) mu:prio:normal))

@@ -122,7 +122,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/guile/message",  test_mu_guile_messages);
 	g_test_add_func ("/guile/stats",    test_mu_guile_stats);
 
-
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|
 			   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
