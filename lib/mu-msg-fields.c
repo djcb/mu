@@ -44,20 +44,15 @@ enum _FieldFlags {
 			          	    * retrieved) */
 	FLAG_XAPIAN_CONTACT      = 1 << 4, /* field contains one or more
 					    * e-mail-addresses */
-	FLAG_XAPIAN_ESCAPE       = 1 << 5, /* field needs escaping for
-					    * xapian (so the xapian
-					    * query does not get
-					    * confused) */
-	FLAG_XAPIAN_BOOLEAN      = 1 << 6, /* use 'add_boolean_prefix'
+	FLAG_XAPIAN_BOOLEAN      = 1 << 5, /* use 'add_boolean_prefix'
 					    * for Xapian queries;
 					    * wildcards do NOT WORK
 					    * for such fields */
-
-	FLAG_NORMALIZE	         = 1 << 7, /* field needs flattening for
+	FLAG_PREPROCESS	         = 1 << 6, /* field needs flattening for
 					    * case/accents */
-	FLAG_DONT_CACHE          = 1 << 8,  /* don't cache this field in
+	FLAG_DONT_CACHE          = 1 << 7,  /* don't cache this field in
 					    * the MuMsg cache */
-	FLAG_RANGE_FIELD         = 1 << 9  /* whether this is a range field */
+	FLAG_RANGE_FIELD         = 1 << 8  /* whether this is a range field */
 
 };
 typedef enum _FieldFlags	FieldFlags;
@@ -89,14 +84,14 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"bcc" , 'h', 'H',  /* 'hidden */
 		FLAG_GMIME | FLAG_XAPIAN_CONTACT |
-		FLAG_XAPIAN_VALUE
+		FLAG_XAPIAN_VALUE | FLAG_PREPROCESS
 	},
 
 	{
 		MU_MSG_FIELD_ID_BODY_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"body", 'b', 'B',
-		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE |
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_PREPROCESS |
 		FLAG_DONT_CACHE
 	},
 
@@ -111,7 +106,8 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_CC,
 		MU_MSG_FIELD_TYPE_STRING,
 		"cc", 'c', 'C',
-		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE |
+		FLAG_PREPROCESS
 	},
 
 	{
@@ -126,7 +122,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_EMBEDDED_TEXT,
 		MU_MSG_FIELD_TYPE_STRING,
 		"embed", 'e', 'E',
-		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_NORMALIZE |
+		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_PREPROCESS |
 		FLAG_DONT_CACHE
 	},
 
@@ -134,7 +130,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_FILE,
 		MU_MSG_FIELD_TYPE_STRING,
 		"file" , 'j', 'J',
-		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE |
+		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_PREPROCESS |
 		FLAG_DONT_CACHE
 	},
 
@@ -150,7 +146,8 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_FROM,
 		MU_MSG_FIELD_TYPE_STRING,
 		"from", 'f', 'F',
-		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE |
+		FLAG_PREPROCESS
 	},
 
 
@@ -159,7 +156,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"maildir", 'm', 'M',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_ESCAPE
+		FLAG_PREPROCESS
 	},
 
 
@@ -168,7 +165,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"list", 'v', 'V',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_ESCAPE
+		FLAG_PREPROCESS
 	},
 
 
@@ -176,7 +173,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_MIME,
 		MU_MSG_FIELD_TYPE_STRING,
 		"mime" , 'y', 'Y',
-		FLAG_XAPIAN_TERM | FLAG_XAPIAN_ESCAPE
+		FLAG_XAPIAN_TERM | FLAG_PREPROCESS
 	},
 
 
@@ -185,7 +182,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"msgid", 'i', 'I',  /* 'i' for Id */
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_ESCAPE
+		FLAG_PREPROCESS
 	},
 
 
@@ -194,7 +191,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"path", 'l', 'L',   /* 'l' for location */
 		FLAG_GMIME | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_BOOLEAN | FLAG_XAPIAN_ESCAPE
+		FLAG_XAPIAN_BOOLEAN | FLAG_PREPROCESS
 	},
 
 
@@ -227,14 +224,14 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"subject", 's', 'S',
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_TERM  | FLAG_XAPIAN_ESCAPE
+		FLAG_XAPIAN_TERM  | FLAG_PREPROCESS
 	},
 
 	{
 		MU_MSG_FIELD_ID_TAGS,
 		MU_MSG_FIELD_TYPE_STRING_LIST,
 		"tag", 'x', 'X',
-		FLAG_GMIME | FLAG_XAPIAN_TERM |	FLAG_XAPIAN_ESCAPE |
+		FLAG_GMIME | FLAG_XAPIAN_TERM |	FLAG_PREPROCESS |
 		FLAG_XAPIAN_VALUE
 	},
 
@@ -250,7 +247,8 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_ID_TO,
 		MU_MSG_FIELD_TYPE_STRING,
 		"to", 't', 'T',
-		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE
+		FLAG_GMIME | FLAG_XAPIAN_CONTACT | FLAG_XAPIAN_VALUE |
+		FLAG_PREPROCESS
 	},
 
 	{	/* special, internal field, to get a unique key */
@@ -269,7 +267,9 @@ static const MuMsgField FIELD_DATA[] = {
 static MuMsgField* _msg_field_data[MU_MSG_FIELD_ID_NUM];
 static const MuMsgField* mu_msg_field (MuMsgFieldId id)
 {
-	static gboolean _initialized = FALSE;
+	static gboolean _initialized;
+
+	_initialized = FALSE;
 
 	/* initialize the array, but only once... */
 	if (G_UNLIKELY(!_initialized)) {
@@ -390,17 +390,10 @@ mu_msg_field_xapian_contact (MuMsgFieldId id)
 
 
 gboolean
-mu_msg_field_normalize (MuMsgFieldId id)
+mu_msg_field_preprocess (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_NORMALIZE  ? TRUE: FALSE;
-}
-
-gboolean
-mu_msg_field_xapian_escape (MuMsgFieldId id)
-{
-	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_XAPIAN_ESCAPE  ? TRUE: FALSE;
+	return mu_msg_field(id)->_flags & FLAG_PREPROCESS  ? TRUE: FALSE;
 }
 
 
