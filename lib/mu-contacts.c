@@ -281,7 +281,6 @@ mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 	 * empty name */
 	group	= encode_email_address (addr);
 
-
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, group);
 	if (!cinfo || (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
 		char *addr_dc;

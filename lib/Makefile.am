@@ -83,7 +83,6 @@ libmu_la_SOURCES=			\
 	mu-store-read.cc		\
 	mu-store-write.cc		\
 	mu-store-priv.hh		\
-	mu-str-normalize.c		\
 	mu-str.c			\
 	mu-str.h			\
 	mu-threader.c			\

@@ -511,28 +511,6 @@ struct _MuMsgContact {
 };
 typedef struct _MuMsgContact	 MuMsgContact;
 
-/**
- * create a new MuMsgContact object; note, in many case, this is not
- * needed, any a stack-allocated struct can be uses.
- *
- * @param name the name of the contact
- * @param address the e-mail address of the contact
- * @param type the type of contact: cc, bcc, from, to
- *
- * @return a newly allocated MuMsgConcact or NULL in case of
- * error. use mu_msg_contact_destroy to destroy it when it's no longer
- * needed.
- */
-MuMsgContact *mu_msg_contact_new (const char *name, const char *address,
-				  MuMsgContactType type)
-				  G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * destroy a MuMsgConcact object
- *
- * @param contact a contact object, or NULL
- */
-void mu_msg_contact_destroy (MuMsgContact *contact);
 
 /**
  * macro to get the name of a contact

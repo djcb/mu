@@ -567,40 +567,6 @@ mu_msg_get_field_numeric (MuMsg *self, MuMsgFieldId mfid)
 }
 
 
-
-MuMsgContact *
-mu_msg_contact_new (const char *name, const char *address,
-		    MuMsgContactType type)
-{
-	MuMsgContact *self;
-
-	g_return_val_if_fail (name, NULL);
-	g_return_val_if_fail (address, NULL);
-	g_return_val_if_fail (!mu_msg_contact_type_is_valid(type),
-			      NULL);
-
-	self = g_slice_new (MuMsgContact);
-
-	self->name    = g_strdup (name);
-	self->address = g_strdup (address);
-	self->type    = type;
-
-	return self;
-}
-
-
-void
-mu_msg_contact_destroy (MuMsgContact *self)
-{
-	if (!self)
-		return;
-
-	g_free ((void*)self->name);
-	g_free ((void*)self->address);
-	g_slice_free (MuMsgContact, self);
-}
-
-
 static gboolean
 fill_contact (MuMsgContact *self, InternetAddress *addr,
 	      MuMsgContactType ctype)
@@ -619,6 +585,11 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 			(INTERNET_ADDRESS_MAILBOX(addr));
 	else
 		self->address  = NULL;
+
+	/* if there's no address, just a name, it's probably a local
+	 * address (without @) */
+	if (self->name && !self->address)
+		self->address = self->name;
 
 	/* note, the address could NULL e.g. when the recipient is something like
 	 * 'Undisclosed recipients'
