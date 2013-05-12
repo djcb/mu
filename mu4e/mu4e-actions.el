@@ -119,7 +119,6 @@ You can influence the browser to use with the variable
 (defun mu4e-action-capture-message (msg)
   "Remember MSG; we can create a an attachment based on this msg
 with `mu4e-compose-attach-captured-message'."
-  (interactive)
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
