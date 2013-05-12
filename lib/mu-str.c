@@ -257,76 +257,51 @@ mu_str_to_list (const char *str, char sepa, gboolean strip)
 	return lst;
 }
 
-
-static gchar*
-eat_esc_string (char **strlst, GError **err)
-{
-	char *str;
-	gboolean quoted;
-	GString *gstr;
-
-	str  = g_strchug (*strlst);
-	gstr = g_string_sized_new (strlen(str));
-
-	for (quoted = FALSE; *str; ++str) {
-
-		if (*str == '"') {
-			quoted = !quoted;
-			continue;
-		} else if (*str == '\\') {
-			if (str[1] != ' ' && str[1] != '"' && str[1] != '\\')
-				goto err; /* invalid escaping */
-			g_string_append_c (gstr, str[1]);
-			++str;
-			continue;
-		} else if (*str == ' ' && !quoted) {
-			++str;
-			goto leave;
-		} else
-			g_string_append_c (gstr, *str);
-	}
-leave:
-	*strlst = str;
-	return g_string_free (gstr, FALSE);
-err:
-	g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-		     "error parsing string '%s'", g_strchug(*strlst));
-	*strlst = NULL;
-	return g_string_free (gstr, TRUE);
-}
-
-
 GSList*
-mu_str_esc_to_list (const char *strings, GError **err)
+mu_str_esc_to_list (const char *strings)
 {
 	GSList *lst;
-	char *mystrings, *freeme;
-	const char* cur;
+	GString *part;
+	unsigned u;
+	gboolean quoted;
 
 	g_return_val_if_fail (strings, NULL);
 
-	for (cur = strings; *cur && (*cur == ' ' || *cur == '\t'); ++cur);
-	freeme = mystrings = g_strdup (cur);
+	part = g_string_new (NULL);
 
-	lst = NULL;
-	do {
-		gchar *str;
-		str = eat_esc_string (&mystrings, err);
-		if (str)
-			lst = g_slist_prepend (lst, str);
-		else {
-			g_free (freeme);
-			mu_str_free_list (lst);
-			return NULL;
+	for (u = 0, lst = NULL, quoted = FALSE;
+	     u != strlen (strings); ++u) {
+
+		char kar;
+		kar = strings[u];
+
+		if (quoted && kar != '"') {
+			g_string_append_c (part, kar);
+			continue;
 		}
 
-	} while (mystrings && *mystrings);
+		switch (kar) {
+		case '"':
+			quoted = !quoted;
+			g_string_append_c (part, kar);
+			continue;
+		case ' ':
+ 			if (part->len > 0) {
+				lst = g_slist_prepend
+					(lst, g_string_free (part, FALSE));
+				part = g_string_new (NULL);
+			}
+			continue;
+		default:
+			g_string_append_c (part, kar);
+		}
+	}
 
-	g_free (freeme);
+	if (part->len)
+		lst = g_slist_prepend (lst, g_string_free (part, FALSE));
+
 	return g_slist_reverse (lst);
 }
-
-
 
 
 void
@@ -451,147 +426,105 @@ check_for_field (const char *str, gboolean *is_field,
 
 
 static gboolean
-is_xapian_special_char (char c)
+handle_esc_maybe (GString *gstr, char **cur, gunichar uc,
+		  gboolean query_esc)
 {
-	switch (c) {
+	char kar;
 
-	case '@':
-	case '.':
-	case ',':
-	case '/':
-	case '[':
-	case ']':
-	case '+':
-	case '-':
-	case ' ':
-	case ':':
-	case '(':
-	case ')':
-	case '$':
-	case '"':
-	case '\\':
-	case '\'':
-	case '*':
-		return TRUE;
-	default:
-		return FALSE;
-	}
-}
+	kar = *cur[0];
 
-#define ESC_CHAR '_'
-
-/*
- * Xapian treats various characters such as '@', '-', ':' and '.'
- * specially; function below is an ugly hack to make it DWIM in most
- * cases...
- *
- * function expects search terms (not complete queries)
- * */
-char*
-mu_str_xapian_escape_in_place_try (char *term, gboolean esc_space, GStringChunk *strchunk)
-{
-	unsigned char *cur;
-	char lookback;
-	gboolean is_field, is_range_field, quoted;
-	unsigned colon;
-
-	g_return_val_if_fail (term, NULL);
-
-	check_for_field (term, &is_field, &is_range_field);
-
-	for (colon = 0, lookback = 0, quoted=FALSE, cur = (unsigned char*)term;
-	     *cur; ++cur) {
-
-		if (*cur == '\\')
-			quoted = !quoted;
-
-		switch (*cur) {
-
-		case '.': /* escape '..' if it's not a range field */
-			if (cur[1] == '.') {
-				if (!is_range_field) {
-					*cur	   = ESC_CHAR;
-					*(cur + 1) = ESC_CHAR;
-				}
-				++cur;
-			} else if (isblank(lookback) || isblank(cur[1]) ||
-				   cur[1] == '\0')
-				*cur = ' ';
-			else
-				*cur = ESC_CHAR;
-			break;
+	if (query_esc) {
+		switch (kar) {
 		case ':':
-			/* if there's a registered xapian prefix
-			 * before the *first* ':', don't touch
-			 * it. Otherwise replace ':' with ' '... ugh
-			 * yuck ugly...
-			 */
-			if (colon != 0 || !is_field)
-				*cur = ' ';
-			++colon;
-			break;
-		case '@':
-		case '/':
-		case '[':
-		case ']':
-		case '+':
-		case '$':
-		case '\\':
-		case '-':
-			*cur = ESC_CHAR;
-			break;
-		case ' ':
-		case '_':
 		case '(':
 		case ')':
+		case '*':
 		case '"':
-		case '\'':
-		case '*':   /* wildcard */
-			break; /* leave as they are */
-		default:
-			/* turn other stuff into spaces */
-			if (*cur < 0x80 && !isalnum (*cur))
-				*cur = ' ';
+			g_string_append_c (gstr, kar);
+			return TRUE;
+		case '.':
+			if ((*cur)[1] == '.' && (*cur)[2] != '.') {
+				g_string_append (gstr, "..");
+				*cur = g_utf8_next_char (*cur);
+				return TRUE;
+			}
+		default: break;
 		}
-
-		lookback = *cur;
 	}
 
-	/* downcase try to remove accents etc. */
-	return mu_str_normalize_in_place (term, TRUE, strchunk);
-}
+	if (g_unichar_ispunct(uc) || isblank(kar)) {
+		g_string_append_c (gstr, '_');
+		return TRUE;
+	}
 
-char*
-mu_str_xapian_escape (const char *query, gboolean esc_space, GStringChunk *strchunk)
-{
-	char *mystr;
-
-	g_return_val_if_fail (query, NULL);
-
-	if (strchunk)
-		mystr = g_string_chunk_insert (strchunk, query);
-	else
-		mystr = g_strdup (query);
-
-	return mu_str_xapian_escape_in_place_try (mystr, esc_space, strchunk);
+	return FALSE;
 }
 
 
-char*
-mu_str_xapian_escape_term (const char *term, GStringChunk *strchunk)
+static char*
+process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
 {
-	char *cur, *esc;
+	GString *gstr;
+	char *norm, *cur;
 
-	g_return_val_if_fail (term, NULL);
-	g_return_val_if_fail (strchunk, NULL);
+	norm = g_utf8_normalize (str, -1, G_NORMALIZE_ALL);
+	gstr = g_string_sized_new (strlen (norm));
 
-	for (cur = esc = mu_str_normalize (term, TRUE, strchunk);
-	     *cur; ++cur) {
-		if (is_xapian_special_char (*cur))
-			*cur = ESC_CHAR;
+	for (cur = norm; cur && *cur; cur = g_utf8_next_char (cur)) {
+
+		gunichar uc;
+
+		uc = g_utf8_get_char (cur);
+
+		if (xapian_esc)
+			if (handle_esc_maybe (gstr, &cur, uc, query_esc))
+				continue;
+
+		if (g_unichar_ismark(uc))
+			continue;
+
+		/* maybe add some special cases, such as Spaß->spass ?
+		 */
+
+		uc = g_unichar_tolower (uc);
+		g_string_append_unichar (gstr, uc);
 	}
 
-	return esc;
+	g_free (norm);
+
+	/* g_print ("-->%s\n", gstr->str); */
+
+	return g_string_free (gstr, FALSE);
+}
+
+
+char*
+mu_str_process_text (const char *str)
+{
+	g_return_val_if_fail (str, NULL);
+
+	return process_str (str, FALSE, FALSE);
+
+}
+
+
+char*
+mu_str_process_term (const char *str)
+{
+	g_return_val_if_fail (str, NULL);
+
+	return process_str (str, TRUE, FALSE);
+
+}
+
+
+char*
+mu_str_process_query_term (const char *str)
+{
+	g_return_val_if_fail (str, NULL);
+
+	return process_str (str, TRUE, TRUE);
+
 }
 
 

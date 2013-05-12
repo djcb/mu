@@ -106,86 +106,42 @@ char*       mu_str_flags    (MuFlags flags)
 char* mu_str_summarize (const char* str, size_t max_lines)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
-/**
- * normalize a string (ie., collapse accented characters etc.), and
- * optionally, downcase it. Works for accented chars in Unicode Blocks
- * 'Latin-1 Supplement' and 'Latin Extended-A'
- *
- * @param str a valid utf8 string or NULL
- * @param downcase if TRUE, convert the string to lowercase
- * @param strchunk (optional) if non-NULL, allocate strings on strchunk
- *
- * @return the normalized string, or NULL in case of error or str was
- * NULL. Unless strchunk was provided, user must g_free the string when
- * no longer needed
- */
-char* mu_str_normalize (const char *str, gboolean downcase,
-			GStringChunk *strchunk)
-    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
- * normalize a string (ie., collapse accented characters etc.), and
- * optionally, downcase it. this happen by changing the string; if
- * that is not desired, use mu_str_normalize. Works for accented chars
- * in Unicode Blocks 'Latin-1 Supplement' and 'Latin Extended-A'
+ * Process some text (e.g. message bodies) -- flatten (remove accents
+ * etc.), and remove some punctuation.
  *
- * @param str a valid utf8 string or NULL
- * @param downcase if TRUE, convert the string to lowercase
- * @param strchunk (optional) if non-NULL, allocate strings on strchunk
+ * @param text some text
  *
- * @return the normalized string, or NULL in case of error or str was
- * NULL. User only needs to free the returned string if a) return
- * value != str and b) strchunk was not provided.
+ * @return the processed text, free with g_free
  */
-char* mu_str_normalize_in_place (char *str, gboolean downcase,
-				 GStringChunk *strchunk);
+char* mu_str_process_text (const char *text)
+	 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
- * escape the string for use with xapian matching. in practice, if the
- * string contains an '@', replace '@', single-'.' with '_'. Also,
- * replace ':' with '_', if it's not following a xapian-prefix (such
- * as 'subject:', 't:' etc, as defined in mu-msg-fields.[ch]).
- * changing is done in-place (by changing the argument string). in any
- * case, the string will be downcased.
+ * Process some term (e.g., an e-mail address, subject field):
+ * remove accents, replace some punctuation by _
  *
- * @param query a query string
- * @param esc_space escape space characters as well
- * @param strchunk (optional) if non-NULL, allocate strings on strchunk
+ * @param term some term
  *
- * @return the escaped string or NULL in case of error. User only
- * needs to free the returned string if a) return value != query and b)
- * strchunk was not provided.
- *
+ * @return the processed text, free with g_free
  */
-char* mu_str_xapian_escape_in_place_try (char *query, gboolean esc_space,
-					 GStringChunk *strchunk);
+char* mu_str_process_term (const char *term)
+	 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
 
 /**
- * escape the string for use with xapian matching. in practice, if the
- * string contains an '@', replace '@', single-'.' with '_'. Also,
- * replace ':' with '_', if it's not following a xapian-prefix (such
- * as 'subject:', 't:' etc, as defined in mu-msg-fields.[ch]).
+ * Process some query term (e.g., an e-mail address, subject field):
+ * remove accents, replace some punctuation by _, but leave some query
+ * metachars alone.
  *
- * @param str a string
- * @param esc_space escape space characters as well
- * @param strchunk (optional) if non-NULL, allocate strings on strchunk
+ * @param qterm some query term
  *
- * @return the escaped string (free with g_free) or NULL in case of error
- * Unless strchunk was provided, user must g_free the string when
- * no longer needed
+ * @return the processed text, free with g_free
  */
-char* mu_str_xapian_escape (const char *str, gboolean esc_space,
-			    GStringChunk *strchunk)  G_GNUC_WARN_UNUSED_RESULT;
+char* mu_str_process_query_term (const char *qterm)
+	 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
-/**
- * escape the xapian term
- *
- * @param str a string
- * @param strchunk allocate strings on strchunk
- *
- * @return the escaped string, which is allocated in the strchunk
- */
-char* mu_str_xapian_escape_term (const char *term, GStringChunk *strchunk);
 
 /**
  * Fixup values for some fields in the DWIM manner:
@@ -315,14 +271,14 @@ GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
 /**
  * convert a string (with possible escaping) to a list. list items are
  * separated by one or more spaces. list items can be quoted (using
- * '"'), and '"', ' ' and '\' use their special meaning when prefixed
- * with \.
+ * '"').
  *
  * @param str a string
  *
- * @return a list of elements or NULL in case of error
+ * @return a list of elements or NULL in case of error, free with
+ * mu_str_free_list
  */
-GSList* mu_str_esc_to_list (const char *str, GError **err);
+GSList* mu_str_esc_to_list (const char *str);
 
 
 /**
