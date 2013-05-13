@@ -81,7 +81,10 @@ mu_runtime_init (const char* muhome_arg, const char *name)
 	g_return_val_if_fail (name, FALSE);
 
 	setlocale (LC_ALL, "");
+
+#ifndef GLIB_VERSION_2_36
 	g_type_init ();
+#endif /*GLIB_VERSION_2_36*/
 
 	if (muhome_arg)
 		muhome = g_strdup (muhome_arg);

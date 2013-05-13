@@ -805,6 +805,8 @@ cmd_extract (ServerContext *ctx, GSList *args, GError **err)
 	MuError rv;
 	const char* actionstr, *indexstr;
 
+	rv = MU_ERROR;
+
 	/* read parameters */
 	GET_STRING_OR_ERROR_RETURN (args, "action", &actionstr, err);
 	GET_STRING_OR_ERROR_RETURN (args, "index",  &indexstr, err);

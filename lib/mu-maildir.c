@@ -14,7 +14,7 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software Foundation,
+** along with this program; if not, write to 59the Free Software Foundation,
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
@@ -655,6 +655,8 @@ mu_maildir_get_flags_from_path (const char *path)
 
 		dir  = g_path_get_dirname (path);
 		dir2 = g_path_get_basename (dir);
+
+		flags = MU_FLAG_NONE;
 
 		if (g_strcmp0 (dir2, "new") == 0)
 			flags = MU_FLAG_NEW;

@@ -87,7 +87,10 @@ main (int argc, char *argv[])
 	MuConfig *conf;
 
 	setlocale (LC_ALL, "");
+
+#ifndef GLIB_VERSION_2_36
 	g_type_init ();
+#endif /*GLIB_VERSION_2_36*/
 
 	err = NULL;
 	rv  = MU_OK;
