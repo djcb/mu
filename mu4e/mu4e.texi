@@ -1721,9 +1721,9 @@ including/not-including with @key{W}.
 @subsection Skipping duplicates
 @anchor{Skipping duplicates}
 
-Another useful features is skipping duplicate messages. When you have copies
-of messages, there's usually little value in including more than one in search
-results. A common reason for having multiple copies of messages in the
+Another useful feature is skipping of @emph{duplicate messages}. When you have
+copies of messages, there's usually little value in including more than one in
+search results. A common reason for having multiple copies of messages is the
 combination of Gmail and @t{offlineimap}, since that is the way the labels /
 virtual folders in Gmail are represented. You can enable skipping duplicates
 by setting @code{mu4e-headers-skip-duplicates} to @code{t}, and you can toggle
