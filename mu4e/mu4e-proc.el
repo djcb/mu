@@ -257,7 +257,7 @@ The server output is as follows:
 	    (funcall mu4e-error-func
 	      (plist-get sexp :error)
 	      (plist-get sexp :message)))
-	  
+
 	  (t (mu4e-message "Unexpected data from server [%S]" sexp)))
 
 	(setq sexp (mu4e~proc-eat-sexp-from-buf))))))
@@ -314,7 +314,7 @@ The results are reporter through either (:update ... ) or (:error)
 sexp, which are handled my `mu4e-error-func', respectively."
   (mu4e~proc-send-command "remove docid:%d" docid))
 
-(defun mu4e~proc-escape-query (query)
+(defun mu4e~proc-escape (query)
   "Escape the query QUERY for transport.
 In particular, backslashes and double-quotes."
   (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" query)))
@@ -340,7 +340,7 @@ will be called for, resp., a message (header row) or an error."
     (concat
       "find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d "
       "skip-dups:%s include-related:%s")
-    (mu4e~proc-escape-query query)
+    (mu4e~proc-escape query)
     (if threads "true" "false")
     ;; sortfield is e.g. ':subject'; this removes the ':'
     (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
@@ -390,7 +390,7 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 		(if (stringp flags) flags (mu4e-flags-to-string flags)))))
 	  (path
 	    (when maildir
-	      (format " maildir:\"%s\"" maildir))))
+	      (format " maildir:\"%s\"" (mu4e~proc-escape maildir)))))
     (mu4e~proc-send-command "move %s %s %s"
       idparam (or flagstr "") (or path ""))))
 
@@ -398,12 +398,10 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
   "Update the message database for filesystem PATH, which should
 point to some maildir directory structure. MY-ADDRESSES is a list
 of 'my' email addresses (see `mu4e-user-mail-address-list')."
-  (let ((addrs
-	  (when my-addresses
-	    (mapconcat 'identity my-addresses ","))))
+  (let ((path (mu4e~proc-escape path))
+	 (addrs (when my-addresses (mapconcat 'identity my-addresses ","))))
     (if addrs
-      (mu4e~proc-send-command "index path:\"%s\" my-addresses:%s"
-	path addrs)
+      (mu4e~proc-send-command "index path:\"%s\" my-addresses:%s" path addrs)
       (mu4e~proc-send-command "index path:\"%s\"" path))))
 
 (defun mu4e~proc-add (path maildir)
@@ -412,7 +410,7 @@ With MAILDIR set to the maildir this message resides in,
 e.g. '/drafts'; if this works, we will receive (:info add :path
 <path> :docid <docid>) as well as (:update <msg-sexp>)."
   (mu4e~proc-send-command "add path:\"%s\" maildir:\"%s\""
-    path maildir))
+    (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
 
 (defun mu4e~proc-sent (path maildir)
   "Add the message at PATH to the database.
@@ -422,7 +420,8 @@ e.g. '/drafts'.
  if this works, we will receive (:info add :path <path> :docid
 <docid> :fcc <path>)."
   (mu4e~proc-send-command "sent path:\"%s\" maildir:\"%s\""
-    path maildir))
+    (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
+
 
 (defun mu4e~proc-compose (type &optional docid)
   "Start composing a message of certain TYPE (a symbol, either
@@ -500,7 +499,7 @@ result will be delivered to the function registered as
 `mu4e-message-func'."
   (mu4e~proc-send-command
     "view path:\"%s\" extract-images:%s extract-encrypted:%s use-agent:true"
-    path
+    (shell-quote-argument path)
     (if images "true" "false")
     (if decrypt "true" "false")))
 
