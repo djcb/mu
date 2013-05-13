@@ -263,20 +263,22 @@ mu_str_esc_to_list (const char *strings)
 	GSList *lst;
 	GString *part;
 	unsigned u;
-	gboolean quoted;
+	gboolean quoted, escaped;
 
 	g_return_val_if_fail (strings, NULL);
 
 	part = g_string_new (NULL);
 
-	for (u = 0, lst = NULL, quoted = FALSE;
+	for (u = 0, lst = NULL, quoted = FALSE, escaped = FALSE;
 	     u != strlen (strings); ++u) {
 
 		char kar;
 		kar = strings[u];
 
-		if (kar == '\\')
+		if (kar == '\\') {
+			escaped = !escaped;
 			continue;
+		}
 
 		if (quoted && kar != '"') {
 			g_string_append_c (part, kar);
@@ -285,7 +287,10 @@ mu_str_esc_to_list (const char *strings)
 
 		switch (kar) {
 		case '"':
-			quoted = !quoted;
+			if (!escaped)
+				quoted = !quoted;
+			else
+				g_string_append_c (part, kar);
 			continue;
 		case ' ':
  			if (part->len > 0) {

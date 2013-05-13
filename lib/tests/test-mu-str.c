@@ -35,16 +35,6 @@
 #include "mu-msg-prio.h"
 
 
-#define ASSERT_EQL(S1,S2)					\
-do {								\
-	const char *s1 = (S1);					\
-	const char *s2 = (S2);					\
-	if (g_strcmp0 (s1,s2) != 0) {				\
-		g_printerr ("error: '%s' != '%s'\n", s1, s2);	\
-		g_assert (0);					\
-	}							\
-} while (0)
-
 
 
 static void
@@ -154,7 +144,7 @@ test_mu_str_esc_to_list (void)
 		{ "maildir:sent items",
 		  {"maildir:sent", "items", NULL}},
 		{ "\"maildir:sent items\"",
-		  {"\"maildir:sent items\"", NULL, NULL}},
+		  {"maildir:sent items", NULL, NULL}},
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(strings); ++i) {
@@ -162,7 +152,8 @@ test_mu_str_esc_to_list (void)
 		unsigned u;
 		lst = mu_str_esc_to_list (strings[i].str);
 		for (cur = lst, u = 0; cur; cur = g_slist_next(cur), ++u)
-			g_assert_cmpstr ((const char*)cur->data,==,strings[i].strs[u]);
+			g_assert_cmpstr ((const char*)cur->data,==,
+					 strings[i].strs[u]);
 		mu_str_free_list (lst);
 	}
 }
