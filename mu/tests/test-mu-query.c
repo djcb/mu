@@ -522,6 +522,31 @@ test_mu_query_attach (void)
 }
 
 
+
+
+
+static void
+test_mu_query_msgid (void)
+{
+	int i;
+	QResults queries[] = {
+		{ "i:CAHSaMxZ9rk5ASjqsbXizjTQuSk583=M6TORHz"
+		  "=bfogtmbGGs5A@mail.gmail.com", 1},
+		{ "msgid:CAHSaMxZ9rk5ASjqsbXizjTQuSk583=M6TORHz="
+		  "bfogtmbGGs5A@mail.gmail.com", 1},
+
+	};
+
+ 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+		if (g_test_verbose())
+			g_print ("query: %s\n", queries[i].query);
+		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
+							 queries[i].query),
+				  ==, queries[i].count);
+	}
+}
+
+
 static void
 test_mu_query_tags (void)
 {
@@ -655,6 +680,9 @@ main (int argc, char *argv[])
 			 test_mu_query_accented_chars_02);
 	g_test_add_func ("/mu-query/test-mu-query-accented-chars-fraiche",
 			 test_mu_query_accented_chars_fraiche);
+
+	g_test_add_func ("/mu-query/test-mu-query-msgid",
+			 test_mu_query_msgid);
 
 	g_test_add_func ("/mu-query/test-mu-query-wom-bat",
 			 test_mu_query_wom_bat);
