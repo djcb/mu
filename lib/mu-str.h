@@ -201,7 +201,7 @@ char* mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
 
 /**
  * turn a string into plain ascii by replacing each non-ascii
- * character with a dot ('.'). replacement is done in-place.
+ * character with a dot ('.'). Replacement is done in-place.
  *
  * @param buf a buffer to asciify
  *

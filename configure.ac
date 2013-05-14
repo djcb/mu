@@ -60,7 +60,8 @@ AC_ARG_ENABLE([mu4e],
    AS_HELP_STRING([--disable-mu4e],[Disable building mu4e]))
 AS_IF([test "x$enable_mu4e" != "xno"], [
   AM_PATH_LISPDIR
-  AS_IF([test "x$lispdir" != "xno"], [emacs_version="`$EMACS --version | head -1`"])
+  AS_IF([test "x$lispdir" != "xno"],
+  	      [emacs_version="`$EMACS --version | head -1`"])
   AS_CASE([$emacs_version],[*23*|*24*|*25*],[build_mu4e=yes],
           [AC_WARN([emacs is too old to build mu4e (need emacs >= 23.x)])])
 ])
@@ -164,7 +165,7 @@ AC_SUBST(XAPIAN_LIBS)
 ###############################################################################
 # we set the set the version of the MuStore (Xapian database) layout
 # here; it will become part of the db name, so we can automatically
-# recreate the database when we incompatible have changes.
+# recreate the database when we have incompatible changes.
 #
 # note that MU_STORE_SCHEMA_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;

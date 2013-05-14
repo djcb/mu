@@ -748,9 +748,10 @@ mu_str_asciify_in_place (char *buf)
 
 	g_return_val_if_fail (buf, NULL);
 
-	for (c = buf; c && *c; ++c)
-		if (!isascii(*c))
-			c[0] = '.';
+	for (c = buf; c && *c; ++c) {
+		if (!isascii(*c) || *c < ' ')
+			*c = '.';
+	}
 
 	return buf;
 }
@@ -765,7 +766,7 @@ mu_str_utf8ify (const char *buf)
 	utf8 = g_strdup (buf);
 
 	if (!g_utf8_validate (buf, -1, NULL))
-	    mu_str_asciify_in_place (utf8);
+		mu_str_asciify_in_place (utf8);
 
 	return utf8;
 }
