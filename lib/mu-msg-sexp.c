@@ -47,6 +47,8 @@ append_sexp_attr_list (GString *gstr, const char* elm, const GSList *lst)
 }
 
 
+
+
 static void
 append_sexp_attr (GString *gstr, const char* elm, const char *str)
 {
@@ -55,7 +57,9 @@ append_sexp_attr (GString *gstr, const char* elm, const char *str)
 	if (!str || strlen(str) == 0)
 		return; /* empty: don't include */
 
+
 	utf8 = mu_str_utf8ify (str);
+
 	for (cur = utf8; *cur; ++cur)
 		if (iscntrl(*cur))
 			*cur = ' ';
@@ -66,6 +70,25 @@ append_sexp_attr (GString *gstr, const char* elm, const char *str)
 	g_string_append_printf (gstr, "\t:%s %s\n", elm, esc);
 	g_free (esc);
 }
+
+
+static void
+append_sexp_body_attr (GString *gstr, const char* elm, const char *str)
+{
+	gchar *esc;
+
+	if (!str || strlen(str) == 0)
+		return; /* empty: don't include */
+
+	esc = mu_str_escape_c_literal (str, TRUE);
+
+	g_string_append_printf (gstr, "\t:%s %s\n", elm, esc);
+	g_free (esc);
+}
+
+
+
+
 
 
 struct _ContactData {
@@ -397,9 +420,9 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 			       mu_msg_get_references (msg));
 	append_sexp_attr (gstr, "in-reply-to",
 			  mu_msg_get_header (msg, "In-Reply-To"));
-	append_sexp_attr (gstr, "body-txt",
+	append_sexp_body_attr (gstr, "body-txt",
 			  mu_msg_get_body_text(msg, opts));
-	append_sexp_attr (gstr, "body-html",
+	append_sexp_body_attr (gstr, "body-html",
 			  mu_msg_get_body_html(msg, opts));
 }
 
