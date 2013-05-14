@@ -592,26 +592,32 @@ get_tags (MuMsgFile *self)
 }
 
 
-/* wrongly encoded messages may cause GMime to return invalid
- * UTF8... we double check, and ensure our output is always correct
- * utf8 */
-gchar *
-maybe_cleanup (const char* str, const char *path, gboolean *do_free)
+static char*
+cleanup_maybe (const char *str, gboolean *do_free)
 {
-	if (!str || G_LIKELY(g_utf8_validate(str, -1, NULL)))
-		return (char*)str;
+	char *cur, *s;
 
-	g_debug ("invalid utf8 in %s", path);
+	if (!str)
+		return NULL;
 
-	if (*do_free)
-		return mu_str_asciify_in_place ((char*)str);
-	else {
-		gchar *ascii;
-		ascii = mu_str_asciify_in_place(g_strdup (str));
-		*do_free = TRUE;
-		return ascii;
-	}
+	if (!g_utf8_validate(str, -1, NULL)) {
+		if (*do_free)
+			s = mu_str_asciify_in_place ((char*)str);
+		else {
+			*do_free = TRUE;
+			s = mu_str_asciify_in_place(g_strdup (str));
+		}
+	} else
+		s = (char*)str;
+
+	/* strip control chars */
+	for (cur = s; *cur; ++cur)
+		if (iscntrl(*cur))
+			*cur = ' ';
+
+	return s;
 }
+
 
 
 G_GNUC_CONST static GMimeRecipientType
@@ -659,9 +665,8 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 		return get_recipient (self, recipient_type(mfid));
 
 	case MU_MSG_FIELD_ID_FROM:
-		return (char*)maybe_cleanup
-			(g_mime_message_get_sender (self->_mime_msg),
-			 self->_path, do_free);
+		return (char*)cleanup_maybe
+			(g_mime_message_get_sender (self->_mime_msg), do_free);
 
 	case MU_MSG_FIELD_ID_PATH: return self->_path;
 
@@ -670,9 +675,8 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 		return (char*)get_mailing_list (self);
 
 	case MU_MSG_FIELD_ID_SUBJECT:
-		return (char*)maybe_cleanup
-			(g_mime_message_get_subject (self->_mime_msg),
-			 self->_path, do_free);
+		return (char*)cleanup_maybe
+			(g_mime_message_get_subject (self->_mime_msg), do_free);
 
 	case MU_MSG_FIELD_ID_MSGID:
 		return get_msgid (self, do_free);

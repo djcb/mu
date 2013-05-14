@@ -17,6 +17,7 @@
 **
 */
 #include <string.h>
+#include <ctype.h>
 
 #include "mu-str.h"
 #include "mu-msg.h"
@@ -49,12 +50,18 @@ append_sexp_attr_list (GString *gstr, const char* elm, const GSList *lst)
 static void
 append_sexp_attr (GString *gstr, const char* elm, const char *str)
 {
-	gchar *esc;
+	gchar *esc, *utf8, *cur;
 
 	if (!str || strlen(str) == 0)
 		return; /* empty: don't include */
 
-	esc = mu_str_escape_c_literal (str, TRUE);
+	utf8 = mu_str_utf8ify (str);
+	for (cur = utf8; *cur; ++cur)
+		if (iscntrl(*cur))
+			*cur = ' ';
+
+	esc = mu_str_escape_c_literal (utf8, TRUE);
+	g_free (utf8);
 
 	g_string_append_printf (gstr, "\t:%s %s\n", elm, esc);
 	g_free (esc);
