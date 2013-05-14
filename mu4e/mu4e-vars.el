@@ -379,7 +379,6 @@ I.e. a message with the draft flag set."
   "Face for special header values in the message view."
   :group 'mu4e-faces)
 
-
 (defface mu4e-view-link-face
   '((t :inherit link))
   "Face for showing URLs and attachments in the message view."
@@ -449,7 +448,6 @@ I.e. a message with the draft flag set."
   '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
   "Face for cited message parts (level 7)."
   :group 'mu4e-faces)
-
 
 (defface mu4e-system-face
   '((t :inherit font-lock-comment-face :slant italic))
