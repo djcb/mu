@@ -221,7 +221,9 @@ test_mu_str_process_term (void)
 		{ "Masha@Аркона.ru", "masha_аркона_ru" },
 		{ "foo:ελληνικά", "foo_ελληνικα" },
 		{ "日本語!!", "日本語__" },
-		{ "￡", "_" }
+		{ "￡", "_" },
+		/* invalid utf8 */
+		{ "Hello\xC3\x2EWorld", "hello__world" }
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {

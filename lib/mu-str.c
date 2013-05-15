@@ -475,6 +475,16 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
 	char *norm, *cur;
 
 	norm = g_utf8_normalize (str, -1, G_NORMALIZE_ALL);
+	if (G_UNLIKELY(!norm)) {  /* not valid utf8? */
+		char *u8;
+		u8 = mu_str_utf8ify (str);
+		norm = g_utf8_normalize (u8, -1, G_NORMALIZE_ALL);
+		g_free (u8);
+	}
+
+ 	if (!norm)
+		return NULL;
+
 	gstr = g_string_sized_new (strlen (norm));
 
 	for (cur = norm; cur && *cur; cur = g_utf8_next_char (cur)) {
