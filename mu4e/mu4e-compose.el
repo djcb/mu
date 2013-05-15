@@ -173,7 +173,7 @@ If needed, set the Fcc header, and register the handler function."
 	      (sent (mu4e-get-sent-folder mu4e-compose-parent-message))
 	      (otherwise
 		(mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
-		  mu4e-sent-messages-behavior)))) 
+		  mu4e-sent-messages-behavior))))
 	  (fccfile (and mdir
 		     (concat mu4e-maildir mdir "/cur/"
 		       (mu4e~draft-message-filename-construct "S")))))
@@ -234,6 +234,9 @@ appear on disk."
     (when (boundp 'completion-cycle-threshold)
       (make-local-variable 'completion-cycle-threshold)
       (setq completion-cycle-threshold mu4e~completion-cycle-treshold))
+    ;; disable org-contacts support, since it prevents our autocompletion
+    (make-local-variable 'completion-at-point-functions)
+    (remove 'org-contacts-message-complete-function completion-at-point-functions)
     (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
     ;; needed for emacs 23...
     (when (= emacs-major-version 23)
@@ -271,7 +274,7 @@ appear on disk."
 
     (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
     (define-key mu4e-compose-mode-map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
-    
+
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (defun mu4e~compose-save-before-sending ()
@@ -390,7 +393,7 @@ the appropriate flag at the message forwarded or replied-to."
     (if (buffer-live-p mu4e~headers-buffer)
       (switch-to-buffer mu4e~headers-buffer)
       ;; if all else fails, back to the main view
-      (when (fboundp 'mu4e) (mu4e)))) 
+      (when (fboundp 'mu4e) (mu4e))))
   (mu4e-message "Message sent"))
 
 (defun mu4e~compose-set-parent-flag (path)
