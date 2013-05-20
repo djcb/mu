@@ -386,15 +386,17 @@ otherwise ; show the from address; prefixed with the appropriate
 If the date is today, show the time, otherwise, show the
 date. The formats used for date and time are
 `mu4e-headers-date-format' and `mu4e-headers-time-format'."
-  (let* ((date (mu4e-msg-field msg :date))
-	  (day1 (decode-time date))
-	  (day2 (decode-time (current-time))))
-    (if (and
-	  (eq (nth 3 day1) (nth 3 day2))     ;; day
-	  (eq (nth 4 day1) (nth 4 day2))     ;; month
-	  (eq (nth 5 day1) (nth 5 day2)))    ;; year
-      (format-time-string mu4e-headers-time-format date)
-      (format-time-string mu4e-headers-date-format date))))
+  (let ((date (mu4e-msg-field msg :date)))
+    (if (equal date '(0 0 0))
+      "None"
+      (let ((day1 (decode-time date))
+	     (day2 (decode-time (current-time))))
+	(if (and
+	      (eq (nth 3 day1) (nth 3 day2))     ;; day
+	      (eq (nth 4 day1) (nth 4 day2))     ;; month
+	      (eq (nth 5 day1) (nth 5 day2)))    ;; year
+	  (format-time-string mu4e-headers-time-format date)
+	  (format-time-string mu4e-headers-date-format date))))))
 
 
 (defsubst mu4e~headers-mailing-list (list)
