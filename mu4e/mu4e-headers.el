@@ -1362,7 +1362,7 @@ maildir)."
   (when maildir
     (mu4e-mark-handle-when-leaving)
     (mu4e-headers-search
-      (format "\\\"maildir:%s\\\"\"" maildir))))
+      (format "maildir:\"%s\"" maildir))))
 
 (defun mu4e-headers-split-view-grow (&optional n)
   "In split-view, grow the headers window.
