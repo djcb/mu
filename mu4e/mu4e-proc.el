@@ -312,7 +312,7 @@ Start the process if needed."
   "Remove message identified by docid.
 The results are reporter through either (:update ... ) or (:error)
 sexp, which are handled my `mu4e-error-func', respectively."
-  (mu4e~proc-send-command "remove docid:%d" docid))
+  (mu4e~proc-send-command "cmd:remove docid:%d" docid))
 
 (defun mu4e~proc-escape (str)
   "Escape STRING for transport -- put it in quotes, and escape existing quotation.
