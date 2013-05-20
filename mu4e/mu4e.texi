@@ -3457,7 +3457,7 @@ started). It calls @t{mu4e-proc-ping}, and registers a (lambda) function for
 @t{mu4e-proc-pong-func}, to handle the response.
 
 @verbatim
--> ping
+-> cmd:ping
 <- (pong "mu" :version "x.x.x" :doccount 10000)
 @end verbatim
 
