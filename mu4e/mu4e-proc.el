@@ -314,11 +314,11 @@ The results are reporter through either (:update ... ) or (:error)
 sexp, which are handled my `mu4e-error-func', respectively."
   (mu4e~proc-send-command "remove docid:%d" docid))
 
-(defun mu4e~proc-escape (query)
-  "Escape the query QUERY for transport.
+(defun mu4e~proc-escape (str)
+  "Escape STRING for transport -- put it in quotes, and escape existing quotation.
 In particular, backslashes and double-quotes."
-  (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" query)))
-    (replace-regexp-in-string "\"" "\\\\\"" esc)))
+  (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" str)))
+    (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" esc))))
 
 (defun mu4e~proc-find (query threads sortfield sortdir maxnum skip-dups include-related)
   "Start a database query for QUERY.
@@ -338,7 +338,7 @@ result. The variables `mu4e-error-func' contain the function that
 will be called for, resp., a message (header row) or an error."
   (mu4e~proc-send-command
     (concat
-      "find query:\"%s\" threads:%s sortfield:%s reverse:%s maxnum:%d "
+      "cmd:find query:%s threads:%s sortfield:%s reverse:%s maxnum:%d "
       "skip-dups:%s include-related:%s")
     (mu4e~proc-escape query)
     (if threads "true" "false")
@@ -390,8 +390,8 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 		(if (stringp flags) flags (mu4e-flags-to-string flags)))))
 	  (path
 	    (when maildir
-	      (format " maildir:\"%s\"" (mu4e~proc-escape maildir)))))
-    (mu4e~proc-send-command "move %s %s %s"
+	      (format " maildir:%s" (mu4e~proc-escape maildir)))))
+    (mu4e~proc-send-command "cmd:move %s %s %s"
       idparam (or flagstr "") (or path ""))))
 
 (defun mu4e~proc-index (path my-addresses)
@@ -401,15 +401,15 @@ of 'my' email addresses (see `mu4e-user-mail-address-list')."
   (let ((path (mu4e~proc-escape path))
 	 (addrs (when my-addresses (mapconcat 'identity my-addresses ","))))
     (if addrs
-      (mu4e~proc-send-command "index path:\"%s\" my-addresses:%s" path addrs)
-      (mu4e~proc-send-command "index path:\"%s\"" path))))
+      (mu4e~proc-send-command "cmd:index path:%s my-addresses:%s" path addrs)
+      (mu4e~proc-send-command "cmd:index path:%s" path))))
 
 (defun mu4e~proc-add (path maildir)
   "Add the message at PATH to the database.
 With MAILDIR set to the maildir this message resides in,
 e.g. '/drafts'; if this works, we will receive (:info add :path
 <path> :docid <docid>) as well as (:update <msg-sexp>)."
-  (mu4e~proc-send-command "add path:\"%s\" maildir:\"%s\""
+  (mu4e~proc-send-command "cmd:add path:%s maildir:%s"
     (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
 
 (defun mu4e~proc-sent (path maildir)
@@ -419,7 +419,7 @@ e.g. '/drafts'.
 
  if this works, we will receive (:info add :path <path> :docid
 <docid> :fcc <path>)."
-  (mu4e~proc-send-command "sent path:\"%s\" maildir:\"%s\""
+  (mu4e~proc-send-command "cmd:sent path:%s maildir:%s"
     (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
 
 
@@ -435,12 +435,12 @@ The result will be delivered to the function registered as
     (mu4e-error "Unsupported compose-type %S" type))
   (unless (eq (null docid) (eq type 'new))
     (mu4e-error "`new' implies docid not-nil, and vice-versa"))
-  (mu4e~proc-send-command "compose type:%s docid:%d"
+  (mu4e~proc-send-command "cmd:compose type:%s docid:%d"
     (symbol-name type) docid))
 
 (defun mu4e~proc-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."
-  (mu4e~proc-send-command "mkdir path:\"%s\"" path))
+  (mu4e~proc-send-command "cmd:mkdir path:%s"  (mu4e~proc-escape path)))
 
 (defun mu4e~proc-extract (action docid partidx &optional path what param)
   "Extract an attachment with index PARTIDX from message with DOCID
@@ -451,16 +451,16 @@ mean:
   * temp: save to a temporary file, then respond with
              (:temp <path> :what <what> :param <param>)."
   (let ((cmd
-	  (concat "extract "
+	  (concat "cmd:extract "
 	    (case action
 	      (save
-		(format "action:save docid:%d index:%d path:\"%s\""
-		      docid partidx path))
+		(format "action:save docid:%d index:%d path:%s"
+		  docid partidx (mu4e~proc-escape path)))
 	      (open (format "action:open docid:%d index:%d" docid partidx))
 	      (temp
 		(format "action:temp docid:%d index:%d what:%s%s"
 		  docid partidx what
-		  (if param (format " param:\"%s\"" param) "")))
+		  (if param (format " param:%s" (mu4e~proc-escape param)) "")))
 	      (otherwise (mu4e-error "Unsupported action %S" action))))))
     (mu4e~proc-send-command "%s" cmd)))
 
@@ -475,7 +475,7 @@ A (:contacts (<list>)) is expected in response. If PERSONAL is
 non-nil, only get personal contacts, if AFTER is non-nil, get
 only contacts seen AFTER (the time_t value)."
   (mu4e~proc-send-command
-    "contacts personal:%s after:%d"
+    "cmd:contacts personal:%s after:%d"
     (if personal "true" "false")
     (or after 0)))
 
@@ -486,7 +486,7 @@ attached to the message, and return them as temp files.
 The result will be delivered to the function registered as
 `mu4e-message-func'."
   (mu4e~proc-send-command
-    "view %s extract-images:%s extract-encrypted:%s use-agent:true"
+    "cmd:view %s extract-images:%s extract-encrypted:%s use-agent:true"
     (mu4e--docid-msgid-param docid-or-msgid)
     (if images "true" "false")
     (if decrypt "true" "false")))
@@ -498,8 +498,8 @@ attached to the message, and return them as temp files. The
 result will be delivered to the function registered as
 `mu4e-message-func'."
   (mu4e~proc-send-command
-    "view path:\"%s\" extract-images:%s extract-encrypted:%s use-agent:true"
-    (shell-quote-argument path)
+    "cmd:view path:%s extract-images:%s extract-encrypted:%s use-agent:true"
+    (mu4e~proc-escape path)
     (if images "true" "false")
     (if decrypt "true" "false")))
 
