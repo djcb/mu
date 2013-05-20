@@ -410,7 +410,8 @@ serialize_cache (MuContacts *self)
 			g_error_free (err);
 		}
 		g_free (data);
-	}
+	} else
+		rv = TRUE;
 
 	return rv;
 }
