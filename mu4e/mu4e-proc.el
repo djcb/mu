@@ -81,7 +81,7 @@ Match 1 will be the length (in hex).")
     (when proc
       (let ((delete-exited-processes t))
 	;; the mu server signal handler will make it quit after 'quit'
-	(mu4e~proc-send-command "quit"))
+	(mu4e~proc-send-command "cmd:quit"))
 	;; try sending SIGINT (C-c) to process, so it can exit gracefully
       (ignore-errors
 	(signal-process proc 'SIGINT))))
@@ -467,7 +467,7 @@ mean:
 
 (defun mu4e~proc-ping ()
   "Sends a ping to the mu server, expecting a (:pong ...) in response."
-  (mu4e~proc-send-command "ping"))
+  (mu4e~proc-send-command "cmd:ping"))
 
 (defun mu4e~proc-contacts (personal after)
   "Sends the contacts command to the mu server.
