@@ -340,7 +340,6 @@ tempfile)."
 
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (mu4e-draft-open compose-type original-msg)
-
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)
@@ -356,9 +355,6 @@ tempfile)."
   ;; existing message.
   (unless (eq compose-type 'edit)
     (message-insert-signature))
-  ;; hide some headers
-  (let ((message-hidden-headers mu4e~compose-hidden-headers))
-    (message-hide-headers))
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
@@ -369,6 +365,10 @@ tempfile)."
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
+
+    ;; hide some headers
+  (let ((message-hidden-headers mu4e~compose-hidden-headers))
+    (message-hide-headers))
   ;; switch on the mode
   (mu4e-compose-mode))
 

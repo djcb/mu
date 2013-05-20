@@ -213,24 +213,29 @@ separator is never written to the message file. Also see
 		  'read-only "Can't touch this"
 		  'rear-nonsticky t
 		  'font-lock-face 'mu4e-system-face)))
+      (widen)
       (goto-char (point-min))
       ;; search for the first empty line
-      (if (search-forward-regexp "^$" nil t)
-	(replace-match (concat sepa))
-	(progn 	;; no empty line? then prepend one
-	  (goto-char (point-max))
-	  (insert "\n" sepa))))))
+      (unless (search-forward sepa nil t)
+	(goto-char (point-min))
+	(if (search-forward-regexp "^$" nil t)
+	  (replace-match (concat sepa))
+	  (progn ;; no empty line? then prepend one
+	    (goto-char (point-max))
+	    (insert "\n" sepa)))))))
 
 (defun mu4e~draft-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
 file (and restore it afterwards), to ensure that the separator
 never hits the disk. Also see `mu4e~draft-insert-mail-header-separator."
   (save-excursion
+    (widen)
     (goto-char (point-min))
     ;; remove the --text follows this line-- separator
     (when (search-forward-regexp (concat "^" mail-header-separator))
       (let ((inhibit-read-only t))
 	(replace-match "")))))
+
 
 (defun mu4e~draft-user-wants-reply-all (origmsg)
   "Ask user whether she wants to reply to *all* recipients.
@@ -289,7 +294,7 @@ You can append flags."
            (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
            (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg
 				     reply-all))))
-       
+
        (mu4e~draft-header "Subject" subject)
        (mu4e~draft-header "References"
 	 (mu4e~draft-references-construct origmsg))
@@ -354,7 +359,7 @@ from either `mu4e~draft-reply-construct', or
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
   (if (eq compose-type 'edit)
     ;; case-1: re-editing a draft messages. in this case, we do know the full
-    ;; path, but we cannot really now 'drafts folder'
+    ;; path, but we cannot really know 'drafts folder'
     (find-file (mu4e-message-field msg :path))
     ;; case-2: creating a new message; in this case, we can determing
     ;; mu4e-get-drafts-folder
