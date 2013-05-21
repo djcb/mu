@@ -255,7 +255,9 @@ If there is just one recipient of ORIGMSG do nothing."
 (defun mu4e~draft-message-filename-construct (&optional flagstr)
   "Construct a randomized name for a message file with flags FLAGSTR.
 It looks something like
+
   <time>-<random>.<hostname>:2,
+
 You can append flags."
   (let* ((hostname
 	   (downcase
@@ -379,7 +381,7 @@ from either `mu4e~draft-reply-construct', or
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)
     (put 'mu4e~draft-drafts-folder 'permanent-local t)
     (unless mu4e~draft-drafts-folder
-      (mu4e-error "failed to determine drafts folder")))) 
+      (mu4e-error "failed to determine drafts folder"))))
 
 
 
