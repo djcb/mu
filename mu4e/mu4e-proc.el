@@ -409,18 +409,21 @@ of 'my' email addresses (see `mu4e-user-mail-address-list')."
 With MAILDIR set to the maildir this message resides in,
 e.g. '/drafts'; if this works, we will receive (:info add :path
 <path> :docid <docid>) as well as (:update <msg-sexp>)."
-  (mu4e~proc-send-command "cmd:add path:%s maildir:%s"
-    (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
+  (mu4e~proc-send-command "cmd:add path:%s %s"
+    (mu4e~proc-escape path)
+    (if maildir
+      (format "maildir:%s" (mu4e~proc-escape maildir))
+      "")))
 
 (defun mu4e~proc-sent (path maildir)
-  "Add the message at PATH to the database.
+    "Add the message at PATH to the database.
 With MAILDIR set to the maildir this message resides in,
 e.g. '/drafts'.
 
  if this works, we will receive (:info add :path <path> :docid
 <docid> :fcc <path>)."
-  (mu4e~proc-send-command "cmd:sent path:%s maildir:%s"
-    (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
+    (mu4e~proc-send-command "cmd:sent path:%s maildir:%s"
+      (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
 
 
 (defun mu4e~proc-compose (type &optional docid)

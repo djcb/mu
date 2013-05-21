@@ -138,6 +138,20 @@ see its docstring)."
 
 
 
+
+
+(defun mu4e~guess-maildir (path)
+  "Guess the maildir for some path, or nil if cannot find it."
+  (when (zerop (string-match mu4e-maildir path))
+    (replace-regexp-in-string
+      mu4e-maildir
+      ""
+      (expand-file-name
+	(concat path "/../..")))))
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create maildir DIR if it does not exist yet.

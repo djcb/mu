@@ -188,7 +188,7 @@ If needed, set the Fcc header, and register the handler function."
 	  (lambda (file)
 	    (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
 	    (write-file file)		       ;; writing maildirs files is easy
-	    (mu4e~proc-add file maildir))))))) ;; update the database
+	    (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
 
 
 (defun mu4e~compose-register-message-save-hooks ()
@@ -365,8 +365,7 @@ tempfile)."
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
-
-    ;; hide some headers
+   ;; hide some headers
   (let ((message-hidden-headers mu4e~compose-hidden-headers))
     (message-hide-headers))
   ;; switch on the mode
