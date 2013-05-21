@@ -3312,8 +3312,8 @@ server.
 them. @t{mu} can run in a special @t{server}-mode, where it provides services
  to client software.
 @item @t{mu4e}, which runs inside @command{emacs} is
- such a client; it communicates with @command{mu} (in its @t{server}-mode to search
- for messages, and manipulate them.
+ such a client; it communicates with @command{mu} (in its @t{server}-mode to
+ search for messages, and manipulate them.
 @item @t{mu4e} uses the facilities
  offered by @command{emacs} (the Gnus message editor and @t{smtpmail}) to send
  messages.
