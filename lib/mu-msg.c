@@ -816,7 +816,7 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 	rootmaildir = mu_maildir_get_maildir_from_path (mu_msg_get_path(msg));
 	if (!rootmaildir) {
 		mu_util_g_set_error (err, MU_ERROR_GMIME,
-				     "cannot determinex maildir");
+				     "cannot determine maildir");
 		return NULL;
 	}
 
