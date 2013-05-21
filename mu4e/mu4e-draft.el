@@ -264,9 +264,9 @@ You can append flags."
 	     (save-match-data
 	       (substring system-name
 		 (string-match "^[^.]+" system-name) (match-end 0))))))
-    (format "%s-%x%x.%s:2,%s"
+    (format "%s-%02x%04x-%s:2,%s"
       (format-time-string "%Y%m%d" (current-time))
-      (emacs-pid) (random t) hostname (or flagstr ""))))
+      (random 255) (random 65535) hostname (or flagstr ""))))
 
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
