@@ -190,7 +190,12 @@ read_command_line (GError **err)
 	} while (1);
 
 	line = g_string_free (gstr, FALSE);
-	hash = mu_str_parse_arglist (line, err);
+
+	if (!mu_str_is_empty (line))
+		hash = mu_str_parse_arglist (line, err);
+	else
+		hash = NULL;
+
 	g_free (line);
 
 	return hash;
@@ -1560,7 +1565,11 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err)
 		 * strings. returning NULL indicates an error */
 		my_err = NULL;
 		args   = read_command_line (&my_err);
-		if (!args || my_err) {
+		if ((!args || g_hash_table_size(args) == 0) && !my_err) {
+			if (args)
+				g_hash_table_destroy (args);
+			continue;
+		} else if (my_err) {
 			print_and_clear_g_error (&my_err);
 			continue;
 		}
