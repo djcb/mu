@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 #include <string.h>
 #include <errno.h>
@@ -745,12 +746,29 @@ mu_maildir_get_maildir_from_path (const char* path)
 }
 
 
+static char*
+get_new_basename (void)
+{
+	char date[9]; /* YYYYMMDD */
+	char hostname[32]; /* should be enough...*/
+	long int rnd;
+	time_t now;
+
+	now = time(NULL);
+	strftime (date, sizeof(date), "%Y%m%d", localtime(&now));
+	if (gethostname (hostname, sizeof(hostname)) != 0)
+		memcpy (hostname, "hostname", strlen("hostname"));
+	rnd = random ();
+
+	return g_strdup_printf ("%s-%06x-%s", date, (unsigned)rnd, hostname);
+}
+
 
 char*
 mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 			 MuFlags newflags)
 {
-	char *mfile, *mdir, *custom_flags, *newpath, *cur;
+	char *mfile, *mdir, *custom_flags, *newpath;/**cur;q*/
 
 	g_return_val_if_fail (oldpath, NULL);
 
@@ -763,16 +781,19 @@ mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 
 	/* determine the name of the mailfile, stripped of its flags, as well
 	 * as any custom (non-standard) flags */
-	mfile = g_path_get_basename (oldpath);
-	for (cur = &mfile[strlen(mfile)-1]; cur > mfile; --cur) {
-		if ((*cur == ':' || *cur == '!') &&
-		    (cur[1] == '2' && cur[2] == ',')) {
-			/* get the custom flags (if any) */
-			custom_flags = mu_flags_custom_from_str (cur + 3);
-			cur[0] = '\0'; /* strip the flags */
-			break;
-		}
-	}
+	/* /\* mfile = g_path_get_basename (oldpath); *\/ */
+
+	/* for (cur = &mfile[strlen(mfile)-1]; cur > mfile; --cur) { */
+	/* 	if ((*cur == ':' || *cur == '!') && */
+	/* 	    (cur[1] == '2' && cur[2] == ',')) { */
+	/* 		/\* get the custom flags (if any) *\/ */
+	/* 		custom_flags = mu_flags_custom_from_str (cur + 3); */
+	/* 		cur[0] = '\0'; /\* strip the flags *\/ */
+	/* 		break; */
+	/* 	} */
+	/* } */
+
+	mfile = get_new_basename ();
 
 	newpath = get_new_path (new_mdir ? new_mdir : mdir,
 				mfile, newflags, custom_flags);
