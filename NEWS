@@ -11,7 +11,11 @@
       the domain is in ascii
     - give messages without msgids fake-message-ids; this fixes the problem
       where such messages were not found in --include-related queries
+    - cleanup of the query parser
 
+*** mu4e
+
+    - update the emacs <-> backend protocol; documented in the mu-server man page
 
 ** Release 0.9.9.5
 
