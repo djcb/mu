@@ -201,6 +201,9 @@ appear on disk."
     (lambda ()
       (mu4e~compose-set-friendly-buffer-name)
       (mu4e~draft-insert-mail-header-separator)
+      ;; hide some headers again
+      (let ((message-hidden-headers mu4e~compose-hidden-headers))
+	(message-hide-headers))
       (set-buffer-modified-p nil)
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
