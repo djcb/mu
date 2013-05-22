@@ -449,7 +449,7 @@ The result will be delivered to the function registered as
   "Extract an attachment with index PARTIDX from message with DOCID
 and perform ACTION on it (as symbol, either `save', `open', `temp') which
 mean:
-  * save: save the part to PARAM1 (a path) (non-optional for save)
+  * save: save the part to PARAM1 (a path) (non-optional for save)$
   * open: open the part with the default application registered for doing so
   * temp: save to a temporary file, then respond with
              (:temp <path> :what <what> :param <param>)."
@@ -463,7 +463,10 @@ mean:
 	      (temp
 		(format "action:temp docid:%d index:%d what:%s%s"
 		  docid partidx what
-		  (if param (format " param:%s" (mu4e~proc-escape param)) "")))
+		  (if param
+		    (if (stringp param)
+		      (format " param:%s" (mu4e~proc-escape param))
+		      (format " param:%S" param)) "")))
 	      (otherwise (mu4e-error "Unsupported action %S" action))))))
     (mu4e~proc-send-command "%s" cmd)))
 
