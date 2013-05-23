@@ -945,7 +945,7 @@ mu_str_parse_arglist (const char *args, GError **err)
 		if (!val)
 			goto errexit;
 
-		g_print ("%s->%s\n", key, val);
+		/* g_print ("%s->%s\n", key, val); */
 		g_hash_table_insert (hash, key, val);
 
 		cur = valend;
