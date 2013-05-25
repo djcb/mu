@@ -160,12 +160,14 @@ MuFlags mu_maildir_get_flags_from_path (const char* pathname);
  * it in the current one. The maildir is the absolute file system
  * path, without the 'cur' or 'new'
  * @param new_flags the new flags for this message
+ * @param new_name whether to create a new unique name, or keep the
+ * old one
  *
  * @return a new path name; use g_free when done with. NULL in case of
  * error.
  */
 char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
-			       MuFlags new_flags);
+			       MuFlags new_flags, gboolean new_name);
 
 /**
  * get the maildir for a certain message path, ie, the path *before*
@@ -192,16 +194,16 @@ char* mu_maildir_get_maildir_from_path (const char* path);
  * moved to another directory (say, from new/ to cur/)
  * @param flags to set for the target (influences the filename, path)
  * @param ignore_dups whether to silent ignore the src=target case (and return TRUE)
- * @param err (may be NULL) may contain error information; note if the
- * function return FALSE, err is not set for all error condition
- * (ie. not for parameter errors)
+ * @param new_name whether to create a new unique name, or keep the
+ * old one
+ * @param err receives error information
  *
  * @return return the full path name of the target file (g_free) if
  * the move succeeded, NULL otherwise
  */
 gchar* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 				MuFlags newflags, gboolean ignore_dups,
-				GError **err);
+				gboolean new_name, GError **err);
 
 G_END_DECLS
 

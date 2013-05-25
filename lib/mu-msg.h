@@ -475,6 +475,8 @@ char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
  * rootmaildir. e.g. "/archive"
  * @param flags to set for the target (influences the filename, path)
  * @param silently ignore the src=target case (return TRUE)
+ * @param new_name whether to create a new unique name, or keep the
+ * old one
  * @param err (may be NULL) may contain error information; note if the
  * function return FALSE, err is not set for all error condition
  * (ie. not for parameter error
@@ -483,6 +485,7 @@ char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
  */
 gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
 				 MuFlags flags, gboolean ignore_dups,
+				 gboolean new_name,
 				 GError **err);
 
 
