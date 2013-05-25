@@ -61,7 +61,7 @@ later, built on top of the
 @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
 engine. @t{mu4e} is optimized for fast handling of large amounts of e-mail.
 
-Some of mu4e's highlights:
+Some of @t{mu4e}'s highlights:
 
 @itemize
 @item Fully search-based: there are no folders@footnote{that is, instead of
@@ -155,7 +155,7 @@ and so on. If you delete the database, you won't lose any information.
 
 There are a number of things that @t{mu4e} does @emph{not} do:
 @itemize
-@item @t{mu}/@t{mu4e} do @emph{not} deal with getting your e-mail messages from
+@item @t{mu}/@t{mu4e} do @emph{not} get your e-mail messages from
 a mail server. That task is delegated to other tools, such as
 @t{offlineimap}@footnote{@url{http://offlineimap.org/}},
 @t{isync}@footnote{@url{http://isync.sourceforge.net/}} or
@@ -178,7 +178,8 @@ efficiently as possible.
 If @t{mu4e} looks like something for you, give it a shot! We've been trying
 hard to make it as easy as possible to set up and use; and while you can use
 elisp in various places to augment @t{mu4e}, a lot of knowledge about
-programming or elisp shouldn't be required.
+programming or elisp shouldn't be required. The idea is always to provide
+sensible defaults.
 
 When you take @t{mu4e} into use, it's a good idea to subscribe to the
 @t{mu}/@t{mu4e}-mailing
@@ -187,8 +188,13 @@ list@footnote{@url{http://groups.google.com/group/mu-discuss}}.
 If you have suggestions for improvements or bug reports, please use the GitHub
 issues list@footnote{@url{https://github.com/djcb/mu/issues}}. In bug reports,
 please clearly specify the versions of @t{mu}/@t{mu4e} and @command{emacs} you
-are using, as well as any other relevant details. If you are new to all this,
-the somewhat paternalistic @emph{``How to ask questions the smart
+are using, as well as any other relevant details. Also, if it is about the
+behavior for specific messages, please attach the raw message (that is, the
+message file as it exists in your maildir); you can of course strip it of any
+personal informatiion.
+
+If you are new to all this, the somewhat paternalistic @emph{``How to ask
+questions the smart
 way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}} can
 be a good read.
 
@@ -219,18 +225,18 @@ After these steps, @t{mu4e} should be ready to go!
 
 @t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and Unix-like
 systems, including many Linux distributions, MacOS and
-FreeBSD. @command{emacs} 23 or 24 is required, as well as
+FreeBSD. @command{emacs} 23 or 24 (recommended) is required, as well as
 Xapian@footnote{@url{http://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
-@t{mu} has optional support the Guile 2.x (Scheme) programming language. There
-are also some GUI-tools, which require GTK+ and Webkit; either the GTK+2 or
-GTK+3-versions.
+@t{mu} has optional support for the Guile 2.x (Scheme) programming
+language. There are also some GUI-tools, which require GTK+ 3.x and Webkit.
 
-If you intend to compile it yourself, you need to have the typical development
-tools, such as C and C++ compilers (both @command{gcc} and @command{clang}
-should work), GNU Autotools and @command{make}, and (if you use them) the
-development packages for GTK+, Webkit and Guile.
+If you intend to compile @t{mu} yourself, you need to have the typical
+development tools, such as C and C++ compilers (both @command{gcc} and
+@command{clang} should work), GNU Autotools and @command{make}, and the
+development packages for GMime, GLib and Xapian. Optionally (if you use them),
+you also need the development packages for GTK+, Webkit and Guile.
 
 @node Installation
 @section Installation
@@ -257,8 +263,7 @@ $ sudo apt-get install libgmime-2.6-dev libxapian-dev
 # if libgmime-2.6-dev is not available, try libgmime-2.4-dev
 
 # get emacs 23 or 24 if you don't have it yet
-# emacs 24 works better; it may be available as 'emacs-snapshot'
-$ sudo apt-get install emacs23
+$ sudo apt-get install emacs24
 
 # optional
 $ sudo apt-get install guile-2.0-dev html2text xdg-utils
@@ -279,8 +284,6 @@ $ sudo yum install emacs
 $ sudo yum install html2text xdg-utils
 
 # optional: only needed for msg2pdf and mug (toy gtk+ frontend)
-$ sudo apt-get install webkitgtk-devel
-#   or:
 $ sudo apt-get install webkitgtk3-devel
 @end example
 
@@ -289,7 +292,7 @@ $ sudo apt-get install webkitgtk3-devel
 
 Using a release-tarball (as available from
 GoogleCode@footnote{@url{http://code.google.com/p/mu0/downloads/list}},
-installation follows the normal steps:
+installation follows the typical steps:
 
 @example
 $ tar xvfz mu-<version>.tar.gz  # use the specific version
@@ -1252,7 +1255,6 @@ example, if you receive some text file you'd like to open in @command{emacs}:
 @end itemize
 
 These actions all work on a @emph{temporary copy} of the attachment.
-
 
 @node Editor view
 @chapter The editor view
@@ -2996,7 +2998,9 @@ to your configuration:
   send-mail-function 'async-smtpmail-send-it
   message-send-mail-function 'async-smtpmail-send-it)
 @end lisp
-With this, messages are sent using background emacs-instance.
+With this, messages are sent using background emacs-instance. A word of
+warning though, this tends to not be as reliable as sending the message in the
+normal, synchronous fashion.
 @end enumerate
 
 @node Known issues
@@ -3106,7 +3110,8 @@ variables in @code{my-mu4e-account-alist} to the correct values:
                 (string-match "/\\(.*?\\)/" maildir)
                 (match-string 1 maildir))
             (completing-read (format "Compose with account: (%s) "
-                                     (mapconcat #'(lambda (var) (car var)) my-mu4e-account-alist "/"))
+                                     (mapconcat #'(lambda (var) (car var))
+                                                my-mu4e-account-alist "/"))
                              (mapcar #'(lambda (var) (car var)) my-mu4e-account-alist)
                              nil t nil nil (caar my-mu4e-account-alist))))
          (account-vars (cdr (assoc account my-mu4e-account-alist))))
@@ -3200,8 +3205,8 @@ If you have multiple accounts, you can accommodate them as well:
 @end lisp
 
 This function actually uses different methods to determine the refile
-folder, depending on the account: For Account2, it uses
-@code{my-mu4e-subject-alist}, for the Gmail account it simply uses the
+folder, depending on the account: For @emph{Account2}, it uses
+@code{my-mu4e-subject-alist}, for the @emph{Gmail} account it simply uses the
 folder "All Mail". For Account1, it uses another method: it files the
 message based on the mailing list to which it was sent. This requires
 another variable:
