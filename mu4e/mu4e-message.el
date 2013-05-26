@@ -51,6 +51,13 @@ is always used."
   :type 'boolean
   :group 'mu4e-view)
 
+(defcustom mu4e-view-html-plaintext-ratio-heuristic 10
+  "Ratio between the length of the html and the plain text part
+under which mu4e will consider the plain text part to be
+'This messages requires html' text bodies."
+  :type 'integer
+  :group 'mu4e-view)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e-message-field-raw (msg field)
@@ -148,10 +155,13 @@ part, but this can be changed by setting
 	  (html (mu4e-message-field msg :body-html))
 	  (body
 	    (cond
-	      ;; does it look like some text? ie., 10x the length of the text
-	      ;; should be longer than the html, an heuristic to guard against
-	      ;; 'This messages requires html' text bodies.
-	      ((and (> (* 10 (length txt)) (length html))
+	      ;; does it look like some text? ie., if the text part is more than
+          ;; mu4e-view-html-plaintext-ratio-heuristic times shorter than the
+          ;; html part, it should't be used
+          ;; This is an heuristic to guard against 'This messages requires
+          ;; html' text bodies.
+	      ((and (> (* mu4e-view-html-plaintext-ratio-heuristic
+                      (length txt)) (length html))
 		 ;; use html if it's prefered, unless there is no html
 		 (or (not mu4e-view-prefer-html) (not html)))
 		txt)
