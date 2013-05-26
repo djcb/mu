@@ -75,6 +75,21 @@ char *mu_str_display_contact (const char *str) G_GNUC_WARN_UNUSED_RESULT;
 const char* mu_str_size_s  (size_t s) G_GNUC_CONST;
 char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
 
+
+
+
+/**
+ * Replace all occurences of substr in str with repl
+ *
+ * @param str a string
+ * @param substr some string to replace
+ * @param repl a replacement string
+ *
+ * @return a newly allocated string with the substr replaced by repl; free with g_free
+ */
+char *mu_str_replace (const char *str, const char *substr, const char *repl);
+
+
 /**
  * get a display string for a given set of flags, OR'ed in
  * @param flags; one character per flag:
@@ -325,6 +340,7 @@ const gchar* mu_str_subject_normalize (const gchar* str);
  * @return the quoted concatenation of the strings
  */
 gchar* mu_str_quoted_from_strv (const gchar **params);
+
 
 /** @} */
 
