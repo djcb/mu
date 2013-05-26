@@ -191,6 +191,15 @@ If needed, set the Fcc header, and register the handler function."
 	    (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
 
 
+
+(defconst mu4e~compose-hidden-headers
+  `("^References:" "^Face:" "^X-Face:"
+     "^X-Draft-From:" "^User-agent:")
+  "Hidden headers when composing.")
+
+(defconst mu4e~compose-address-fields-regexp
+  "^\\(To\\|B?Cc\\|Reply-To\\|From\\):")
+
 (defun mu4e~compose-register-message-save-hooks ()
   "Just before saving, we remove the mail-header-separator; just
 after saving we restore it; thus, the separator should never
@@ -208,13 +217,6 @@ appear on disk."
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
 
-(defconst mu4e~compose-hidden-headers
-  `("^References:" "^Face:" "^X-Face:"
-     "^X-Draft-From:" "^User-agent:")
-  "Hidden headers when composing.")
-
-(defconst mu4e~compose-address-fields-regexp
-  "^\\(To\\|B?Cc\\|Reply-To\\|From\\):")
 
 (defun mu4e~compose-find-completion-style (some-style)
   "Find completion style SOME-STYLE in completion-styles-alist, or return nil."
