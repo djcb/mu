@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -236,6 +236,36 @@ encode_email_address (const char *addr)
 	return enc;
 }
 
+
+/* downcase the domain-part of the email address, but only if it
+ * consists of ascii (to prevent screwing up idna addresses)
+ */
+char*
+downcase_domain_maybe (const char *addr)
+{
+	char *addr_conv, *at, *cur;
+
+	addr_conv = g_strdup (addr);
+
+	if (!(at = strchr (addr_conv, '@'))) {	/*huh?*/
+		g_free (addr_conv);
+		return NULL;
+	}
+
+	for (cur = at + 1; *cur; ++cur) {
+		if (isascii(*cur))
+			*cur = g_ascii_tolower (*cur);
+		else { /* non-ascii; return the unchanged original */
+			g_free (addr_conv);
+			return g_strdup (addr);
+		}
+
+	}
+
+	return addr_conv;
+}
+
+
 gboolean
 mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 		 gboolean personal, time_t tstamp)
@@ -249,12 +279,17 @@ mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 	/* add the info, if either there is no info for this email
 	 * yet, *OR* the new one is more recent and does not have an
 	 * empty name */
-	group = encode_email_address (addr);
+	group	= encode_email_address (addr);
 
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, group);
 	if (!cinfo || (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
+		char *addr_dc;
 		ContactInfo *ci;
-		ci = contact_info_new (g_strdup(addr),
+
+		if (!(addr_dc = downcase_domain_maybe (addr)))
+			return FALSE;
+
+		ci = contact_info_new (addr_dc,
 				       name ? g_strdup(name) : NULL, personal,
 				       tstamp);
 		g_hash_table_insert (self->_hash, g_strdup(group), ci);
@@ -375,7 +410,8 @@ serialize_cache (MuContacts *self)
 			g_error_free (err);
 		}
 		g_free (data);
-	}
+	} else
+		rv = TRUE;
 
 	return rv;
 }

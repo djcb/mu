@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -121,7 +121,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/guile/queries",  test_mu_guile_queries);
 	g_test_add_func ("/guile/message",  test_mu_guile_messages);
 	g_test_add_func ("/guile/stats",    test_mu_guile_stats);
-
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|

@@ -55,7 +55,7 @@
 
 ;;  a) is dealt with by message-mode, but we need to tell it where to move the
 ;;     sent message. We do this by adding an Fcc: header with the target folder,
-;;     see `mu4e~setup-fcc-maybe'. Since message-mode does not natively
+;;     see `mu4e~compose-setup-fcc-maybe'. Since message-mode does not natively
 ;;     understand maildirs, we also need to tell it what to do, so we also set
 ;;     `message-fcc-handler-function' there. Finally, we add the the message in
 ;;     the sent-folder to the database.
@@ -99,8 +99,19 @@ This is one of the symbols:
 
 Note, when using GMail/IMAP, you should set this to either
 `trash' or `delete', since GMail already takes care of keeping
-copies in the sent folder."
-  :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
+copies in the sent folder.
+
+Alternatively, `mu4e-sent-messages-behavior' can be a function
+which takes no arguments, and which should return on of the mentioned symbols,
+for example:
+
+  (setq mu4e-sent-messages-behavior (lambda ()
+        (if (string= (message-sendmail-envelope-from) \"foo@example.com\")
+                   'delete 'sent)))
+
+The various `message-' functions from `message-mode' are available
+for quering the message information."
+    :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
 		 (const :tag "move message to mu4e-trash-folder" trash)
 		 (const :tag "delete message" delete))
   :safe 'symbolp
@@ -147,21 +158,29 @@ Messages are captured with `mu4e-action-capture-message'."
 (defun mu4e~compose-setup-fcc-maybe ()
   "Maybe setup Fcc, based on `mu4e-sent-messages-behavior'.
 If needed, set the Fcc header, and register the handler function."
-  (let* ((mdir
-	   (case mu4e-sent-messages-behavior
-	     (delete nil)
-	     (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
-	     (sent  (mu4e-get-sent-folder mu4e-compose-parent-message))
-	     (otherwise
-	       (mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
-		 mu4e-sent-messages-behavior))))
+  (let* ((sent-behavior
+	   ;; Note; we cannot simply use functionp here, since at least
+	   ;; delete is a function, too...
+	   (if (member mu4e-sent-messages-behavior '(delete trash sent))
+	     mu4e-sent-messages-behavior
+	     (if (functionp mu4e-sent-messages-behavior)
+	       (funcall mu4e-sent-messages-behavior)
+	       mu4e-sent-messages-behavior)))
+	  (mdir
+	    (case sent-behavior
+	      (delete nil)
+	      (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
+	      (sent (mu4e-get-sent-folder mu4e-compose-parent-message))
+	      (otherwise
+		(mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
+		  mu4e-sent-messages-behavior))))
 	  (fccfile (and mdir
 		     (concat mu4e-maildir mdir "/cur/"
 		       (mu4e~draft-message-filename-construct "S")))))
     ;; if there's an fcc header, add it to the file
-     (when fccfile
-       (message-add-header (concat "Fcc: " fccfile "\n"))
-       ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
+    (when fccfile
+      (message-add-header (concat "Fcc: " fccfile "\n"))
+      ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
        ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
        ;; handler after we've done our thing.
       (setq message-fcc-handler-function
@@ -169,7 +188,7 @@ If needed, set the Fcc header, and register the handler function."
 	  (lambda (file)
 	    (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
 	    (write-file file)		       ;; writing maildirs files is easy
-	    (mu4e~proc-add file maildir))))))) ;; update the database
+	    (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
 
 
 (defun mu4e~compose-register-message-save-hooks ()
@@ -182,6 +201,9 @@ appear on disk."
     (lambda ()
       (mu4e~compose-set-friendly-buffer-name)
       (mu4e~draft-insert-mail-header-separator)
+      ;; hide some headers again
+      (let ((message-hidden-headers mu4e~compose-hidden-headers))
+	(message-hide-headers))
       (set-buffer-modified-p nil)
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
@@ -215,6 +237,9 @@ appear on disk."
     (when (boundp 'completion-cycle-threshold)
       (make-local-variable 'completion-cycle-threshold)
       (setq completion-cycle-threshold mu4e~completion-cycle-treshold))
+    ;; disable org-contacts support, since it prevents our autocompletion
+    (make-local-variable 'completion-at-point-functions)
+    (remove 'org-contacts-message-complete-function completion-at-point-functions)
     (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
     ;; needed for emacs 23...
     (when (= emacs-major-version 23)
@@ -251,6 +276,7 @@ appear on disk."
       (mu4e~compose-setup-completion))
 
     (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
+    (define-key mu4e-compose-mode-map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
 
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
@@ -317,7 +343,6 @@ tempfile)."
 
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (mu4e-draft-open compose-type original-msg)
-
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)
@@ -333,9 +358,6 @@ tempfile)."
   ;; existing message.
   (unless (eq compose-type 'edit)
     (message-insert-signature))
-  ;; hide some headers
-  (let ((message-hidden-headers mu4e~compose-hidden-headers))
-    (message-hide-headers))
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
@@ -346,6 +368,9 @@ tempfile)."
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
+   ;; hide some headers
+  (let ((message-hidden-headers mu4e~compose-hidden-headers))
+    (message-hide-headers))
   ;; switch on the mode
   (mu4e-compose-mode))
 
@@ -370,7 +395,7 @@ the appropriate flag at the message forwarded or replied-to."
     (if (buffer-live-p mu4e~headers-buffer)
       (switch-to-buffer mu4e~headers-buffer)
       ;; if all else fails, back to the main view
-      (when (fboundp 'mu4e) (mu4e)))) 
+      (when (fboundp 'mu4e) (mu4e))))
   (mu4e-message "Message sent"))
 
 (defun mu4e~compose-set-parent-flag (path)

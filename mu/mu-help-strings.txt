@@ -1,6 +1,6 @@
 #-*-mode:org-*-
 #
-# Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+# Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,18 +27,31 @@ files must be specified with an absolute path.
 
 #BEGIN MU_CONFIG_CMD_CFIND
 #STRING
-mu cfind [options] [--format=<format>] [<pattern>]
+mu cfind [options] [--format=<format>] [--personal] [--after=<T>] [<pattern>]
 #STRING
 mu cfind is the mu command to find contacts in the mu database and export them
 for use in other programs.
 
 <format> is one of:
+ plain
  mutt-alias
  mutt-ab
  wl
  csv
  org-contact
  bbdb
+
+'plain' is the default.
+
+If you specify '--personal', only addresses that were found in mails
+that include 'my' e-mail addres will be listed - so to exclude e.g.
+mailing-list posts. Use the --my-address= option in 'mu index' to
+specify what addresses are considered 'my' address.
+
+With '--after=T' you can tell mu to only show addresses that were seen after
+T. T is a Unix timestamp. For example, to get only addresses seen after the
+beginning of 2012, you could use
+         --after=`date +%%s -d 2012-01-01`
 #END
 
 #BEGIN MU_CONFIG_CMD_EXTRACT
@@ -83,7 +96,7 @@ is one of:
   index   - index messages
   mkdir   - create a maildir
   remove  - remove a message from the database
-  script  - run a script
+  script  - run a script (available only when mu was built with guile-support)
   server  - start mu server
   verify  - verify signatures of a message
   view    - view a specific message

@@ -1,6 +1,7 @@
 ;;; mu4e-utils.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2013 Tibor Simko
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -136,18 +137,33 @@ see its docstring)."
 
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e~guess-maildir (path)
+  "Guess the maildir for some path, or nil if cannot find it."
+  (when (zerop (string-match mu4e-maildir path))
+    (replace-regexp-in-string
+      mu4e-maildir
+      ""
+      (expand-file-name
+	(concat path "/../..")))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create maildir DIR if it does not exist yet.
-Return t if the dir already existed, or has been created, nil
-otherwise. DIR has to be an absolute path."
+Return t if the dir already existed, or an attempt has been made to
+create it -- we cannot be sure creation succeeded here, since this
+is done asynchronously. Otherwise, return nil. NOte, DIR has to be
+an absolute path."
   (if (and (file-exists-p dir) (not (file-directory-p dir)))
     (mu4e-error "%s exists, but is not a directory." dir))
   (cond
     ((file-directory-p dir) t)
-    ((yes-or-no-p (mu4e-format "%s does not exist yes. Create now?" dir))
-      (mu4e~proc-mkdir dir))
+    ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
+      (mu4e~proc-mkdir dir) t)
     (t nil)))
 
 (defun mu4e-format (frm &rest args)
@@ -158,7 +174,7 @@ otherwise. DIR has to be an absolute path."
 
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e.
-If we're waiting for user-input, don't show anyhting."
+If we're waiting for user-input, don't show anything."
   (unless (active-minibuffer-window)
     (message "%s" (apply 'mu4e-format frm args))
     nil))
@@ -242,7 +258,6 @@ Function will return the cdr of the list element."
       (cdr chosen)
       (mu4e-warn "Unknown shortcut '%c'" response))))
 
-
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative paths."
   (let ((dirs)
@@ -255,7 +270,8 @@ Function will return the cdr of the list element."
       (when (and (booleanp (cadr dentry)) (cadr dentry))
 	(if (file-accessible-directory-p
 	      (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))
-	  (setq dirs (cons (concat mdir (car dentry)) dirs))
+	  (setq dirs (cons (concat mdir (car dentry)) dirs)))
+	(unless (member (car dentry) '("cur" "new" "tmp")) 
 	  (setq dirs (append dirs (mu4e~get-maildirs-1 path
 				    (concat mdir (car dentry) "/")))))))
     dirs))
@@ -670,19 +686,24 @@ successful, call FUNC (if non-nil) afterwards."
 Currently the filter only checks if the command asks for a password
 by matching the output against `mu4e~get-mail-password-regexp'.
 The messages are inserted into the process buffer."
-  (save-current-buffer
-    (when (process-buffer proc)
-      (set-buffer (process-buffer proc)))
-    (let ((inhibit-read-only t))
-      ;; Check whether process asks for a password and query user
-      (when (string-match mu4e~get-mail-password-regexp msg)
-        (if (process-get proc 'x-interactive)
-            (process-send-string proc
-	      (concat (read-passwd mu4e~get-mail-ask-password) "\n"))
-	  ;; TODO kill process?
-          (mu4e-error "Unrecognized password request")))
-      (when (process-buffer proc)
-        (insert msg)))))
+  (when (string-match mu4e~get-mail-password-regexp msg)
+    (if (process-get proc 'x-interactive)
+        (process-send-string proc
+                             (concat (read-passwd mu4e~get-mail-ask-password) "\n"))
+      ;; TODO kill process?
+      (mu4e-error "Unrecognized password request")))
+  (when (process-buffer proc)
+    (let ((inhibit-read-only t)
+          (procwin (get-buffer-window (process-buffer proc))))
+      ;; Insert at end of buffer. Leave point alone.
+      (with-current-buffer (process-buffer proc)
+        (goto-char (point-max))
+        (insert msg))
+      ;; Auto-scroll unless user is interacting with the window.
+      (when (and (window-live-p procwin)
+	      (not (eq (selected-window) procwin)))
+        (with-selected-window procwin
+          (goto-char (point-max)))))))
 
 (defun  mu4e-update-index ()
   "Update the mu4e index."
@@ -893,6 +914,10 @@ displaying it). Do _not_ bury the current buffer, though."
 (defconst mu4e~main-about-buffer-name "*mu4e-about*"
   "Name for the mu4e-about buffer.")
 
+(define-derived-mode mu4e-about-mode org-mode "mu4e:about"
+  "Major mode for the mu4e About page, derived from `org-mode'.")
+(define-key mu4e-about-mode-map (kbd "q") 'bury-buffer)
+
 (defun mu4e-about ()
   "Show a buffer with the mu4e-about text."
   (interactive)
@@ -901,11 +926,10 @@ displaying it). Do _not_ bury the current buffer, though."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert mu4e-about)
-      (org-mode)
+      (mu4e-about-mode)
       (show-all)))
   (switch-to-buffer mu4e~main-about-buffer-name)
   (setq buffer-read-only t)
-  (local-set-key "q" 'bury-buffer)
   (goto-char (point-min)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

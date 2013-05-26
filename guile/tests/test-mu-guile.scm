@@ -2,7 +2,7 @@
 exec guile -e main -s $0 $@
 !#
 
-;; Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -72,8 +72,8 @@ exec guile -e main -s $0 $@
 
   (let ((msg (car (mu:message-list "hello"))))
     (str-equal-or-exit (mu:subject msg) "Fwd: rfc822")
-    (str-equal-or-exit (mu:to      msg) "martin")
-    (str-equal-or-exit (mu:from    msg) "foobar <foo@example.com>")
+    (str-equal-or-exit (mu:to msg) "martin")
+    (str-equal-or-exit (mu:from msg) "foobar <foo@example.com>")
     (str-equal-or-exit (mu:header msg "X-Mailer") "Ximian Evolution 1.4.5")
 
     (if (not (equal? (mu:priority msg) mu:prio:normal))
@@ -97,9 +97,9 @@ exec guile -e main -s $0 $@
 (define (test-stats)
   "Test statistical functions."
   ;; average
-  (num-equal-or-exit (mu:average mu:size) 82054/13)
-  (num-equal-or-exit (floor (mu:stddev mu:size)) 13002.0)
-  (num-equal-or-exit (mu:max mu:size) 46230)
+  (num-equal-or-exit (mu:average mu:size) 82132/13)
+  (num-equal-or-exit (floor (mu:stddev mu:size)) 13020.0)
+  (num-equal-or-exit (mu:max mu:size) 46308)
   (num-equal-or-exit (mu:min mu:size) 111))
 
 (define (main args)

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -39,27 +39,18 @@ enum {
 };
 
 struct _MuMsgHeaderViewPrivate {
-	GtkWidget *_table;
+	GtkWidget *_grid;
 };
 #define MU_MSG_HEADER_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                                 MU_TYPE_MSG_HEADER_VIEW, \
                                                 MuMsgHeaderViewPrivate))
 /* globals */
-#ifdef HAVE_GTK3
 static GtkBoxClass *parent_class = NULL;
-#else
-static GtkVBoxClass *parent_class = NULL;
-#endif /*!HAVE_GTK3*/
-
 
 /* uncomment the following if you have defined any signals */
 /* static guint signals[LAST_SIGNAL] = {0}; */
 
-#ifdef HAVE_GTK3
 G_DEFINE_TYPE (MuMsgHeaderView, mu_msg_header_view, GTK_TYPE_BOX);
-#else
-G_DEFINE_TYPE (MuMsgHeaderView, mu_msg_header_view, GTK_TYPE_VBOX);
-#endif /*!HAVE_GTK3*/
 
 
 static void
@@ -85,13 +76,9 @@ static void
 mu_msg_header_view_init (MuMsgHeaderView *obj)
 {
 
-/* #ifdef HAVE_GTK3 */
 /* 	static GtkBoxClass *parent_class = NULL; */
-/* #endif /\*!HAVE_GTK3*\/ */
-
-
 	obj->_priv = MU_MSG_HEADER_VIEW_GET_PRIVATE(obj);
-	obj->_priv->_table = NULL;
+	obj->_priv->_grid = NULL;
 }
 
 static void
@@ -129,7 +116,7 @@ get_label (const gchar *txt, gboolean istitle)
 }
 
 static gboolean
-add_row (GtkWidget *table, guint row, const char* fieldname, const char *value,
+add_row (GtkWidget *grid, guint row, const char* fieldname, const char *value,
 	 gboolean showempty)
 {
 	GtkWidget *label, *al;
@@ -137,52 +124,49 @@ add_row (GtkWidget *table, guint row, const char* fieldname, const char *value,
 	if (!value && !showempty)
 		return FALSE;
 
+	gtk_grid_insert_row (GTK_GRID(grid), row);
+
 	label = get_label (fieldname, TRUE);
 	al = gtk_alignment_new (0.0, 0.0, 0.0, 0.0);
 	gtk_container_add (GTK_CONTAINER (al), label);
 
-	gtk_table_attach (
-		GTK_TABLE(table), al,
-		0, 1, row, row + 1, GTK_FILL, 0, 0, 0);
+	gtk_grid_attach (GTK_GRID(grid), al, 0, row, 1, 1);
 
 	al = gtk_alignment_new (0.0, 1.0, 0.0, 0.0);
 
 	label = get_label (value, FALSE);
 	gtk_container_add (GTK_CONTAINER (al), label);
-
-	gtk_table_attach (
-		GTK_TABLE(table), al, 1, 2, row, row + 1, GTK_FILL,
-		0, 0, 0);
+	gtk_grid_attach (GTK_GRID(grid), al, 1, row, 1, 1);
 
 	return TRUE;
 }
 
 
 GtkWidget *
-get_table (MuMsg *msg)
+get_grid (MuMsg *msg)
 {
-	GtkWidget *table;
+	GtkWidget *grid;
 	int row;
 
 	row = 0;
+	grid = gtk_grid_new (); /* 5 2 */
 
-	table = gtk_table_new (5, 2, FALSE);
+	gtk_grid_insert_column (GTK_GRID(grid), 0);
+	gtk_grid_insert_column (GTK_GRID(grid), 1);
 
-	if (add_row (table, row, "From", mu_msg_get_from (msg), TRUE))
+	if (add_row (grid, row, "From", mu_msg_get_from (msg), TRUE))
 		++row;
-	if (add_row (table, row, "To", mu_msg_get_to (msg), FALSE))
+	if (add_row (grid, row, "To", mu_msg_get_to (msg), FALSE))
 		++row;
-	if (add_row (table, row, "Cc", mu_msg_get_cc (msg), FALSE))
+	if (add_row (grid, row, "Cc", mu_msg_get_cc (msg), FALSE))
 		++row;
-	if (add_row (table, row, "Subject", mu_msg_get_subject (msg), TRUE))
+	if (add_row (grid, row, "Subject", mu_msg_get_subject (msg), TRUE))
 		++row;
-	if (add_row (table, row, "Date", mu_date_str_s
+	if (add_row (grid, row, "Date", mu_date_str_s
 			  ("%c", mu_msg_get_date (msg)),TRUE))
 		++row;
 
-	gtk_table_resize (GTK_TABLE(table), row, 2);
-
-	return table;
+	return grid;
 }
 
 void
@@ -190,15 +174,15 @@ mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg)
 {
 	g_return_if_fail (MU_IS_MSG_HEADER_VIEW(self));
 
-	if (self->_priv->_table) {
-		gtk_container_remove (GTK_CONTAINER(self), self->_priv->_table);
-		self->_priv->_table = NULL;
+	if (self->_priv->_grid) {
+		gtk_container_remove (GTK_CONTAINER(self), self->_priv->_grid);
+		self->_priv->_grid = NULL;
 	}
 
 	if (msg) {
-		self->_priv->_table = get_table (msg);
-		gtk_box_pack_start (GTK_BOX(self), self->_priv->_table,
+		self->_priv->_grid = get_grid (msg);
+		gtk_box_pack_start (GTK_BOX(self), self->_priv->_grid,
 				    TRUE, TRUE, 0);
-		gtk_widget_show_all (self->_priv->_table);
+		gtk_widget_show_all (self->_priv->_grid);
 	}
 }

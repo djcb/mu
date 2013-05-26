@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -166,11 +166,11 @@ print_and_clear_g_error (GError **err)
 }
 
 
-static GSList*
-read_line_as_list (GError **err)
+static GHashTable*
+read_command_line (GError **err)
 {
 	char *line;
-	GSList *lst;
+	GHashTable *hash;
 	GString *gstr;
 
 	line = NULL;
@@ -190,43 +190,33 @@ read_line_as_list (GError **err)
 	} while (1);
 
 	line = g_string_free (gstr, FALSE);
-	lst = mu_str_esc_to_list (line, err);
+
+	if (!mu_str_is_empty (line))
+		hash = mu_str_parse_arglist (line, err);
+	else
+		hash = NULL;
 
 	g_free (line);
 
-	return lst;
+	return hash;
 }
 
 
 static const char*
-get_string_from_args (GSList *args, const char *param, gboolean optional,
+get_string_from_args (GHashTable *args, const char *param, gboolean optional,
 		      GError **err)
 {
-	size_t param_len;
+	const char *str;
 
-	param_len = strlen (param);
-
-	while (args) {
-
-		const char *arg;
-		arg = (const char*)args->data;
-
-		/* do we have this param */
-		if (arg && g_str_has_prefix (arg, param) &&
-		    arg[param_len] == ':')
-			return (const char*) arg + param_len + 1;
-
-		args = g_slist_next (args);
-	}
-
-	if (!optional)
+	str = g_hash_table_lookup (args, param);
+	if (!str && !optional)
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "parameter '%s' not found", param);
-	return NULL;
+	return str;
 }
 
 static gboolean
-get_bool_from_args (GSList *args, const char *param, gboolean optional, GError **err)
+get_bool_from_args (GHashTable *args, const char *param, gboolean optional, GError **err)
 {
 	const char *val;
 
@@ -330,7 +320,7 @@ get_docids_from_msgids (MuQuery *query, const char *str, GError **err)
  * locale the message with message-id in the database, and return its
  * docid */
 static unsigned
-determine_docid (MuQuery *query, GSList *args, GError **err)
+determine_docid (MuQuery *query, GHashTable *args, GError **err)
 {
 	const char* docidstr, *msgidstr;
 
@@ -379,7 +369,7 @@ typedef struct _ServerContext ServerContext;
  * if function return non-MU_OK, the repl will print the error instead
  */
 
-typedef MuError (*CmdFunc) (ServerContext*,GSList*,GError**);
+typedef MuError (*CmdFunc) (ServerContext*,GHashTable*,GError**);
 
 /* 'add' adds a message to the database, and takes two parameters:
  * 'path', which is the full path to the message, and 'maildir', which
@@ -388,7 +378,7 @@ typedef MuError (*CmdFunc) (ServerContext*,GSList*,GError**);
  * message (details: see code below)
  */
 static MuError
-cmd_add (ServerContext *ctx, GSList *args, GError **err)
+cmd_add (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	unsigned docid;
 	const char *maildir, *path;
@@ -507,7 +497,7 @@ compose_type (const char *typestr)
  * Note ':include' t or nil determines whether to include attachments
  */
 static MuError
-cmd_compose (ServerContext *ctx, GSList *args, GError **err)
+cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	const gchar *typestr;
 	char *sexp, *atts;
@@ -620,7 +610,7 @@ contacts_to_sexp (MuContacts *contacts, gboolean personal, time_t after)
 
 
 static MuError
-cmd_contacts (ServerContext *ctx, GSList *args, GError **err)
+cmd_contacts (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	MuContacts *contacts;
 	char *sexp;
@@ -680,7 +670,7 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 
 static MuError
 save_part (MuMsg *msg, unsigned docid,
-	   unsigned index, GSList *args, GError **err)
+	   unsigned index, GHashTable *args, GError **err)
 {
 	gboolean rv;
 	const gchar *path;
@@ -740,7 +730,7 @@ leave:
 
 
 static MuError
-temp_part (MuMsg *msg, unsigned docid, unsigned index, GSList *args,
+temp_part (MuMsg *msg, unsigned docid, unsigned index, GHashTable *args,
 	   GError **err)
 {
 	const char *what, *param;
@@ -798,12 +788,14 @@ action_type (const char *actionstr)
 
 /* 'extract' extracts some mime part from a message */
 static MuError
-cmd_extract (ServerContext *ctx, GSList *args, GError **err)
+cmd_extract (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	MuMsg *msg;
 	int docid, index, action;
 	MuError rv;
 	const char* actionstr, *indexstr;
+
+	rv = MU_ERROR;
 
 	/* read parameters */
 	GET_STRING_OR_ERROR_RETURN (args, "action", &actionstr, err);
@@ -841,7 +833,7 @@ cmd_extract (ServerContext *ctx, GSList *args, GError **err)
 
 /* parse the find parameters, and return the values as out params */
 static MuError
-get_find_params (GSList *args, MuMsgFieldId *sortfield,
+get_find_params (GHashTable *args, MuMsgFieldId *sortfield,
 		 int *maxnum, MuQueryFlags *qflags, GError **err)
 {
 	const char *maxnumstr, *sortfieldstr;
@@ -895,7 +887,7 @@ get_find_params (GSList *args, MuMsgFieldId *sortfield,
  * (:found <number of found messages>)
  */
 static MuError
-cmd_find (ServerContext *ctx, GSList *args, GError **err)
+cmd_find (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	MuMsgIter *iter;
 	unsigned foundnum;
@@ -947,7 +939,7 @@ cmd_find (ServerContext *ctx, GSList *args, GError **err)
 
 #ifdef BUILD_GUILE
 static MuError
-cmd_guile (ServerContext *ctx, GSList *args, GError **err)
+cmd_guile (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	const char *script, *file;
 
@@ -964,7 +956,7 @@ cmd_guile (ServerContext *ctx, GSList *args, GError **err)
 }
 #else /*!BUILD_GUILE*/
 static MuError
-cmd_guile (ServerContext *ctx, GSList *args, GError **err)
+cmd_guile (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	print_error (MU_ERROR_INTERNAL,
 		     "this mu does not have guile support");
@@ -1061,7 +1053,7 @@ index_and_cleanup (MuIndex *index, const char *path, GError **err)
  * index ... ) messages while doing so (see the code)
  */
 static MuError
-cmd_index (ServerContext *ctx, GSList *args, GError **err)
+cmd_index (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	MuIndex *index;
 	const char *argpath;
@@ -1097,7 +1089,7 @@ leave:
 /* 'mkdir' attempts to create a maildir directory at 'path:'; sends an
  * (:info mkdir ...) message when it succeeds */
 static MuError
-cmd_mkdir (ServerContext *ctx, GSList *args, GError **err)
+cmd_mkdir (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	const char *path;
 
@@ -1212,7 +1204,7 @@ leave:
  * would a message in inbox and sentbox with the same id. we set the
  * flag on both */
 static gboolean
-move_msgid_maybe (ServerContext *ctx, GSList *args, GError **err)
+move_msgid_maybe (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	GSList *docids, *cur;
 	const char *maildir = get_string_from_args (args, "maildir", TRUE, err);
@@ -1250,7 +1242,7 @@ move_msgid_maybe (ServerContext *ctx, GSList *args, GError **err)
  *
  */
 static MuError
-cmd_move (ServerContext *ctx, GSList *args, GError **err)
+cmd_move (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	unsigned docid;
 	MuMsg *msg;
@@ -1303,7 +1295,7 @@ leave:
  * server using a (:pong ...) message (details: see code below)
  */
 static MuError
-cmd_ping (ServerContext *ctx, GSList *args, GError **err)
+cmd_ping (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	unsigned doccount;
 	doccount = mu_store_count (ctx->store, err);
@@ -1326,7 +1318,7 @@ cmd_ping (ServerContext *ctx, GSList *args, GError **err)
 
 /* 'quit' takes no parameters, terminates this mu server */
 static MuError
-cmd_quit (ServerContext *ctx, GSList *args , GError **err)
+cmd_quit (ServerContext *ctx, GHashTable *args , GError **err)
 {
 	print_expr (";; quiting");
 
@@ -1370,7 +1362,7 @@ get_path_from_docid (MuStore *store, unsigned docid, GError **err)
  * (:remove ...) message when it succeeds
  */
 static MuError
-cmd_remove (ServerContext *ctx, GSList *args, GError **err)
+cmd_remove (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	unsigned docid;
 	const char *path;
@@ -1411,7 +1403,7 @@ cmd_remove (ServerContext *ctx, GSList *args, GError **err)
  * message (details: see code below)
  */
 static MuError
-cmd_sent (ServerContext *ctx, GSList *args, GError **err)
+cmd_sent (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	unsigned docid;
 	const char *maildir, *path;
@@ -1434,7 +1426,7 @@ cmd_sent (ServerContext *ctx, GSList *args, GError **err)
 }
 
 static MuMsgOptions
-get_view_msg_opts (GSList *args)
+get_view_msg_opts (GHashTable *args)
 {
 	MuMsgOptions opts;
 
@@ -1456,7 +1448,7 @@ get_view_msg_opts (GSList *args)
  * identified by either docid: or msgid:; return a (:view <sexp>)
  */
 static MuError
-cmd_view (ServerContext *ctx, GSList *args, GError **err)
+cmd_view (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	MuMsg *msg;
 	const gchar *path;
@@ -1502,7 +1494,7 @@ cmd_view (ServerContext *ctx, GSList *args, GError **err)
 /*************************************************************************/
 
 static MuError
-handle_args (ServerContext *ctx, GSList *args, GError **err)
+handle_args (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	unsigned u;
 	const char *cmd;
@@ -1526,7 +1518,8 @@ handle_args (ServerContext *ctx, GSList *args, GError **err)
 		{ "view",	cmd_view }
 	};
 
-	cmd = (const char*) args->data;
+
+	cmd = g_hash_table_lookup (args, "cmd");
 
 	/* ignore empty */
 	if (mu_str_is_empty (cmd))
@@ -1534,7 +1527,7 @@ handle_args (ServerContext *ctx, GSList *args, GError **err)
 
 	for (u = 0; u != G_N_ELEMENTS (cmd_map); ++u)
 		if (g_strcmp0(cmd, cmd_map[u].cmd) == 0)
-			return cmd_map[u].func (ctx, g_slist_next(args), err);
+			return cmd_map[u].func (ctx, args, err);
 
 	mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 			     "unknown command '%s'", cmd ? cmd : "");
@@ -1565,13 +1558,18 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err)
 	do_quit = FALSE;
 	while (!MU_TERMINATE && !do_quit) {
 
-		GSList *args;
-		GError *my_err = NULL;
+		GHashTable	*args;
+		GError		*my_err;
 
 		/* args will receive a the command as a list of
 		 * strings. returning NULL indicates an error */
-		args   = read_line_as_list (&my_err);
-		if (!args || my_err) {
+		my_err = NULL;
+		args   = read_command_line (&my_err);
+		if ((!args || g_hash_table_size(args) == 0) && !my_err) {
+			if (args)
+				g_hash_table_destroy (args);
+			continue;
+		} else if (my_err) {
 			print_and_clear_g_error (&my_err);
 			continue;
 		}
@@ -1585,7 +1583,7 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err)
 			print_and_clear_g_error (&my_err);
 		}
 
-		mu_str_free_list (args);
+		g_hash_table_destroy (args);
 	}
 
 	mu_store_flush   (ctx.store);

@@ -1,5 +1,5 @@
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -46,7 +46,7 @@ not found."
 	progpath
 	#f))))
 2
-(define* (mu:plot-histogram data title x-label y-label #:optional (text-only #f))
+(define* (mu:plot-histogram data title x-label y-label #:optional (text-only #f) (extra-gnuplot-opts '()))
   "Plot DATA with TITLE, X-LABEL and X-LABEL. If TEXT-ONLY is true,
 display using raw text, otherwise, use a graphical window. DATA is a
 list of cons-pairs (X . Y)."
@@ -62,6 +62,7 @@ list of cons-pairs (X . Y)."
 	       "set xlabel \"" x-label "\"\n"
 	       "set ylabel \"" y-label "\"\n"
 	       "set boxwidth 0.9\n"
+           (string-join extra-gnuplot-opts "\n")
 	       "plot \"" datafile "\" using 2:xticlabels(1) with boxes fs solid\n")
       gnuplot)
     (close-pipe gnuplot)))

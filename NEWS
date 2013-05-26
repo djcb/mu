@@ -2,15 +2,33 @@
 
 * NEWS (user visible changes)
 
-** Release 0.9.9.x
+** Development
 
 *** mu
 
-     - add 'mu script' command to run mu script, for example to do statistics on
-       your message corpus
+    - truncate /all/ terms the go beyond xapian's max term length
+    - lowercase the domain-part of email addresses in mu cfind (and mu4e), if
+      the domain is in ascii
+    - give messages without msgids fake-message-ids; this fixes the problem
+      where such messages were not found in --include-related queries
+    - cleanup of the query parser
+
+*** mu4e
+
+    - update the emacs <-> backend protocol; documented in the mu-server man page
+
+** Release 0.9.9.5
+
+*** mu
+
      - allow 'contact:' as a shortcut in queries for 'from:foo OR to:foo OR
        cc:foo OR bcc:foo', and 'recip:' as a shortcut for 'to:foo OR
        cc:foo OR bcc:foo'
+     - support getting related messages (--include-related), which includes
+       messages that may not match the query, but that are in the same threads
+       as messages that were
+     - support "list:"/"v:" for matching mailing list names, and the "v"
+       format-field to show them. E.g 'mu find list:emacs-orgmode.gnu.org'
 
 *** mu4e
 
@@ -28,6 +46,18 @@
       mu4e is available with key C-S-u. Use prefix argument to run in
       background.
     - add function `mu4e-update-index' to only update the index
+    - add 'friendly-names' for mailing lists, so they should up nicely in the
+      headers view
+
+*** guile
+
+    - add 'mu script' command to run mu script, for example to do statistics on
+      your message corpus. See the mu-script man-page.
+
+*** mug
+
+    - ported to gtk+ 3; remove gtk+ 2.x code
+
 
 
 * Old news

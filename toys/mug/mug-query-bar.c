@@ -29,13 +29,7 @@ static GtkContainerClass *parent_class = NULL;
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-
-#ifdef HAVE_GTK3
 G_DEFINE_TYPE (MugQueryBar, mug_query_bar, GTK_TYPE_BOX);
-#else
-G_DEFINE_TYPE (MugQueryBar, mug_query_bar, GTK_TYPE_HBOX);
-#endif /*!HAVE_GTK3*/
-
 
 static void
 mug_query_bar_class_init (MugQueryBarClass * klass)

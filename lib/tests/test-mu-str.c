@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -33,6 +33,7 @@
 #include "test-mu-common.h"
 #include "mu-str.h"
 #include "mu-msg-prio.h"
+
 
 
 
@@ -105,7 +106,7 @@ test_mu_str_prio_02 (void)
 
 
 static void
-test_mu_str_normalize_01 (void)
+test_mu_str_flatten (void)
 {
 	int			i;
 	struct {
@@ -116,47 +117,45 @@ test_mu_str_normalize_01 (void)
 		{ "foo", "foo" },
 		{ "Föö", "foo" },
 		{ "číslo", "cislo" },
-		{ "hÆvý mëÐal ümláõt", "haevy medal umlaot"}
+		{ "hÆvý mëÐal ümláõt", "hævy_meðal_umlaot"}
 	};
 
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *str;
-		str = mu_str_normalize (words[i].word, TRUE, NULL);
+		str = mu_str_process_term (words[i].word);
 		g_assert_cmpstr (str, ==, words[i].norm);
 		g_free (str);
 	}
 }
-
 
 static void
-test_mu_str_normalize_02 (void)
+test_parse_arglist (void)
 {
-	int			i;
-	struct {
-		const char*	word;
-		const char*	norm;
-	} words [] = {
-		{ "DantèS", "DanteS"},
-		{ "foo", "foo" },
-		{ "Föö", "Foo" },
-		{ "číslO", "cislO" },
-		{ "hÆvý mëÐal ümláõt", "hAevy meDal umlaot"},
-		{ "￡300", "￡300" }
+	const char *args;
+	GHashTable *hash;
+	GError *err;
 
-	};
+	args = "cmd:find query:\"maildir:\\\"/sent items\\\"\" maxnum:500";
 
+	err  = NULL;
+	hash = mu_str_parse_arglist (args, &err);
+	g_assert_no_error (err);
+	g_assert (hash);
 
-	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
-		gchar *str;
-		if (g_test_verbose())
-			g_print ("[%s] <=> [%s] <=> [%s]\n", words[i].word, words[i].norm,
-				 mu_str_normalize (words[i].word, FALSE, NULL));
-		str = mu_str_normalize (words[i].word, FALSE, NULL);
-		g_assert_cmpstr (str, ==, words[i].norm);
-		g_free (str);
-	}
+	g_assert_cmpstr (g_hash_table_lookup (hash, "cmd"), ==,
+			 "find");
+	g_assert_cmpstr (g_hash_table_lookup (hash, "query"), ==,
+			 "maildir:\"/sent items\"");
+	g_assert_cmpstr (g_hash_table_lookup (hash, "maxnum"), ==,
+			 "500");
+
+	g_hash_table_destroy (hash);
 }
+
+
+
+
 
 
 
@@ -179,77 +178,90 @@ test_mu_str_esc_to_list (void)
 	for (i = 0; i != G_N_ELEMENTS(strings); ++i) {
 		GSList *lst, *cur;
 		unsigned u;
-		lst = mu_str_esc_to_list (strings[i].str, NULL);
+		lst = mu_str_esc_to_list (strings[i].str);
 		for (cur = lst, u = 0; cur; cur = g_slist_next(cur), ++u)
-			g_assert_cmpstr ((const char*)cur->data,==,strings[i].strs[u]);
+			g_assert_cmpstr ((const char*)cur->data,==,
+					 strings[i].strs[u]);
 		mu_str_free_list (lst);
 	}
 }
 
 static void
-test_mu_str_xapian_escape (void)
+test_mu_str_process_query_term (void)
 {
 	int			i;
 	struct {
 		const char*	word;
 		const char*	esc;
 	} words [] = {
-		{ "aap@noot.mies", "aap_noot_mies"},
-		{ "Foo..Bar", "foo__bar" },
+		{ "aap@noot.mies", "aap_noot_mies" },
+		{ "Foo..Bar", "foo..bar" },
 		{ "Foo.Bar", "foo_bar" },
-		{ "Foo. Bar", "foo__bar" },
+		{ "Foo Bar", "foo_bar" },
 		{ "subject:test@foo", "subject:test_foo" },
-		{ "xxx:test@bar", "xxx_test_bar" },
+		{ "xxx:test@bar", "xxx:test_bar" },
 		{ "aa$bb$cc", "aa_bb_cc" },
 		{ "date:2010..2012", "date:2010..2012"},
 		{ "d:2010..2012", "d:2010..2012"},
 		{ "size:10..20", "size:10..20"},
-		{ "x:2010..2012", "x:2010__2012"},
-		{ "q:2010..2012", "q_2010__2012"},
-		{ "subject:2010..2012", "subject:2010__2012"},
+		{ "x:2010..2012", "x:2010..2012"},
+		{ "q:2010..2012", "q:2010..2012"},
+		{ "subject:2010..2012", "subject:2010..2012"},
 		{ "(maildir:foo)", "(maildir:foo)"},
-		{ "￡300", "￡300" }
+		{ "Тесла, Никола", "тесла__никола"},
+		{ "Masha@Аркона.ru", "masha_аркона_ru" },
+		{ "foo:ελληνικά", "foo:ελληνικα" },
+		{ "日本語!!", "日本語__" },
+		{ "￡", "_" }
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
-		gchar *a = g_strdup (words[i].word);
-		mu_str_xapian_escape_in_place_try (a, FALSE, NULL);
-
+		gchar *s;
+		s = mu_str_process_query_term (words[i].word);
 		if (g_test_verbose())
 			g_print ("expected: '%s' <=> got: '%s'\n",
-				 words[i].esc, a);
-
-		g_assert_cmpstr (a, ==, words[i].esc);
-		g_free (a);
+				 words[i].esc, s);
+		g_assert_cmpstr (s, ==, words[i].esc);
+		g_free (s);
 	}
 }
 
 
 static void
-test_mu_str_xapian_escape_non_ascii (void)
+test_mu_str_process_term (void)
 {
 	int			i;
 	struct {
 		const char*	word;
 		const char*	esc;
 	} words [] = {
+		{ "aap@noot.mies", "aap_noot_mies" },
+		{ "Foo..Bar", "foo__bar" },
+		{ "Foo.Bar", "foo_bar" },
+		{ "Foo Bar", "foo_bar" },
+		{ "subject:test@foo", "subject_test_foo" },
+		{ "xxx:test@bar", "xxx_test_bar" },
+		{ "aa$bb$cc", "aa_bb_cc" },
+		{ "date:2010..2012", "date_2010__2012"},
+		{ "subject:2010..2012", "subject_2010__2012"},
+		{ "(maildir:foo)", "_maildir_foo_"},
 		{ "Тесла, Никола", "тесла__никола"},
 		{ "Masha@Аркона.ru", "masha_аркона_ru" },
-		{ "foo:ελληνικά", "foo_ελληνικά" },
+		{ "foo:ελληνικά", "foo_ελληνικα" },
 		{ "日本語!!", "日本語__" },
-		{ "￡", "￡" }
+		{ "￡", "_" },
+		/* invalid utf8 */
+		{ "Hello\xC3\x2EWorld", "hello__world" }
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
-		gchar *a = g_strdup (words[i].word);
-		mu_str_xapian_escape_in_place_try (a, FALSE, NULL);
-
+		gchar *s;
+		s = mu_str_process_term (words[i].word);
 		if (g_test_verbose())
-			g_print ("(%s) expected: '%s' <=> got: '%s'\n",
-				 words[i].word, words[i].esc, a);
-
-		g_assert_cmpstr (a, ==, words[i].esc);
-		g_free (a);
+			g_print ("expected: '%s' <=> got: '%s'\n",
+				 words[i].esc, s);
+		g_assert_cmpstr (s, ==, words[i].esc);
+		g_free (s);
 	}
 }
 
@@ -419,14 +431,12 @@ test_mu_term_fixups (void)
 
 
 
-
-
-
 int
 main (int argc, char *argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+	setlocale (LC_ALL, "");
 
+	g_test_init (&argc, &argv, NULL);
 
 	/* mu_str_size */
 	g_test_add_func ("/mu-str/mu-str-size-01",
@@ -440,16 +450,13 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-prio-02",
 			 test_mu_str_prio_02);
 
-	/* mu_str_normalize */
-	g_test_add_func ("/mu-str/mu-str-normalize-01",
-			 test_mu_str_normalize_01);
-	g_test_add_func ("/mu-str/mu-str-normalize-02",
-			 test_mu_str_normalize_02);
+	g_test_add_func ("/mu-str/mu-str-flatten",
+			 test_mu_str_flatten);
 
-	g_test_add_func ("/mu-str/mu-str-xapian-escape",
-			 test_mu_str_xapian_escape);
-	g_test_add_func ("/mu-str/mu-str-xapian-escape-non-ascii",
-			 test_mu_str_xapian_escape_non_ascii);
+	g_test_add_func ("/mu-str/process-query-term",
+			 test_mu_str_process_query_term);
+	g_test_add_func ("/mu-str/process-term",
+			 test_mu_str_process_term);
 
 	g_test_add_func ("/mu-str/mu-str-display_contact",
 			 test_mu_str_display_contact);
@@ -462,14 +469,10 @@ main (int argc, char *argv[])
 			 test_mu_str_to_list_strip);
 
 	g_test_add_func ("/mu-str/mu-str-esc-to-list",
-			 test_mu_str_esc_to_list);
+			 test_parse_arglist);
 
-	/* g_test_add_func ("/mu-str/mu_str_guess_first_name", */
-	/* 		 test_mu_str_guess_first_name); */
-	/* g_test_add_func ("/mu-str/mu_str_guess_last_name", */
-	/* 		 test_mu_str_guess_last_name); */
-	/* g_test_add_func ("/mu-str/mu_str_guess_nick", */
-	/* 		 test_mu_str_guess_nick); */
+	g_test_add_func ("/mu-str/mu-str-esc-to-list",
+			 test_mu_str_esc_to_list);
 
 	g_test_add_func ("/mu-str/mu_str_subject_normalize",
 			 test_mu_str_subject_normalize);

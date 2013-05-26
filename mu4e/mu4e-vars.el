@@ -335,7 +335,12 @@ I.e. a message with the draft flag set."
 
 (defface mu4e-replied-face
   '((t :inherit font-lock-builtin-face :bold nil))
-  "Face for a replied (or passed) message header."
+  "Face for a replied message header."
+  :group 'mu4e-faces)
+
+(defface mu4e-forwarded-face
+  '((t :inherit font-lock-builtin-face :bold nil))
+  "Face for a passed (forwarded) message header."
   :group 'mu4e-faces)
 
 (defface mu4e-header-face
@@ -373,7 +378,6 @@ I.e. a message with the draft flag set."
   '((t :inherit font-lock-variable-name-face))
   "Face for special header values in the message view."
   :group 'mu4e-faces)
-
 
 (defface mu4e-view-link-face
   '((t :inherit link))
@@ -444,7 +448,6 @@ I.e. a message with the draft flag set."
   '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
   "Face for cited message parts (level 7)."
   :group 'mu4e-faces)
-
 
 (defface mu4e-system-face
   '((t :inherit font-lock-comment-face :slant italic))

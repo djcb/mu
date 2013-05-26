@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2010-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -261,9 +261,9 @@ const char*     mu_msg_get_subject         (MuMsg *msg);
  *
  * @param msg a valid MuMsg* instance
  *
- * @return the Message-Id of this message (without the enclosing <>)
- * or NULL in case of error or if there is none. the returned string
- * should *not* be modified or freed.
+ * @return the Message-Id of this message (without the enclosing <>),
+ * or a fake message-id for messages that don't have them, or NULL in
+ * case of error.
  */
 const char*     mu_msg_get_msgid           (MuMsg *msg);
 
@@ -511,28 +511,6 @@ struct _MuMsgContact {
 };
 typedef struct _MuMsgContact	 MuMsgContact;
 
-/**
- * create a new MuMsgContact object; note, in many case, this is not
- * needed, any a stack-allocated struct can be uses.
- *
- * @param name the name of the contact
- * @param address the e-mail address of the contact
- * @param type the type of contact: cc, bcc, from, to
- *
- * @return a newly allocated MuMsgConcact or NULL in case of
- * error. use mu_msg_contact_destroy to destroy it when it's no longer
- * needed.
- */
-MuMsgContact *mu_msg_contact_new (const char *name, const char *address,
-				  MuMsgContactType type)
-				  G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * destroy a MuMsgConcact object
- *
- * @param contact a contact object, or NULL
- */
-void mu_msg_contact_destroy (MuMsgContact *contact);
 
 /**
  * macro to get the name of a contact

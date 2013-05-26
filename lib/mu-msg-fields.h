@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -235,24 +235,15 @@ gboolean mu_msg_field_uses_boolean_prefix (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * should this field be escaped for xapian? in practice, should
- * word-breaking chars be replaced with '_'?
+ * word-breaking chars be replaced with '_'? Also, flatten accents,
+ * downcase?
  *
  * @param field a MuMsgField
  *
- * @return TRUE if the field is Xapian-escaped, FALSE otherwise
+ * @return TRUE if the field is to be preprocessed, FALSE otherwise
  */
-gboolean mu_msg_field_xapian_escape (MuMsgFieldId id) G_GNUC_PURE;
+gboolean mu_msg_field_preprocess (MuMsgFieldId id) G_GNUC_PURE;
 
-
-/**
- * should this field be normalized? ie. should it be downcased and
- * accents removed when storing as Xapian term?
- *
- * @param field a MuMsgField
- *
- * @return TRUE if the field is to be normalized, FALSE otherwise
- */
-gboolean mu_msg_field_normalize (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * is this a range-field? ie. date, or size

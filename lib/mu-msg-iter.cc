@@ -1,6 +1,6 @@
 /* -*- mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ public:
 		    MuMsgFieldId sortfield, MuMsgIterFlags flags):
 		_enq(enq), _thread_hash (0), _msg(0), _flags(flags),
 		_skip_unreadable(flags & MU_MSG_ITER_FLAG_SKIP_UNREADABLE),
-		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS){
+		_skip_dups (flags & MU_MSG_ITER_FLAG_SKIP_DUPS) {
 
 		bool descending       = (flags & MU_MSG_ITER_FLAG_DESCENDING);
 		bool threads          = (flags & MU_MSG_ITER_FLAG_THREADS);
@@ -125,22 +125,27 @@ public:
 
 	MuMsgIterFlags flags() const { return _flags; }
 
+	const std::string msgid () const {
+		const Xapian::Document doc (cursor().get_document());
+		return doc.get_value(MU_MSG_FIELD_ID_MSGID);
+	}
+
+	unsigned docid () const {
+		const Xapian::Document doc (cursor().get_document());
+		return doc.get_docid();
+	}
+
+
 	bool looks_like_dup () const {
 		try {
 			const Xapian::Document doc (cursor().get_document());
-			const std::string msgid	(doc.get_value(MU_MSG_FIELD_ID_MSGID));
-			unsigned docid (doc.get_docid());
-
-			if (msgid.empty())
-				return false;
-
 			// is this message in the preferred map? if
 			// so, it's not a duplicate, otherwise, it
 			// isn't
-			msgid_docid_map::const_iterator pref_iter (_preferred_map.find (msgid));
+			msgid_docid_map::const_iterator pref_iter (_preferred_map.find (msgid()));
 			if (pref_iter != _preferred_map.end()) {
 				//std::cerr << "in the set!" << std::endl;
-				if ((*pref_iter).second == docid)
+				if ((*pref_iter).second == docid())
 					return false; // in the set: not a dup!
 				else
 					return true;
@@ -148,10 +153,10 @@ public:
 
 			// otherwise, simply check if we've already seen this message-id,
 			// and, if so, it's considered a dup
-			if (_msg_uid_set.find (msgid) != _msg_uid_set.end()) {
+			if (_msg_uid_set.find (msgid()) != _msg_uid_set.end()) {
 				return true;
 			} else {
-				_msg_uid_set.insert (msgid);
+				_msg_uid_set.insert (msgid());
 				return false;
 			}
 		} catch (...) {
@@ -159,7 +164,8 @@ public:
 		}
 	}
 
-	static void each_preferred (const char *msgid, gpointer docidp, msgid_docid_map *preferred_map) {
+	static void each_preferred (const char *msgid, gpointer docidp,
+				    msgid_docid_map *preferred_map) {
 		(*preferred_map)[msgid] = GPOINTER_TO_SIZE(docidp);
 	}
 
@@ -346,7 +352,7 @@ mu_msg_iter_get_docid (MuMsgIter *iter)
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter),
 			      (unsigned int)-1);
 	try {
-		return iter->cursor().get_document().get_docid();
+		return iter->docid();
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN ((unsigned int)-1);
 }
@@ -360,10 +366,7 @@ mu_msg_iter_get_msgid (MuMsgIter *iter)
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 
 	try {
-		const std::string msgid (
-			iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_MSGID).c_str());
-
-		return msgid.empty() ? NULL : msgid.c_str();
+		return iter->msgid().c_str();
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
@@ -405,7 +408,10 @@ const MuMsgIterThreadInfo*
 mu_msg_iter_get_thread_info (MuMsgIter *iter)
 {
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
-	g_return_val_if_fail (iter->thread_hash(), NULL);
+
+	/* maybe we don't have thread info */
+	if (!iter->thread_hash())
+		return NULL;
 
 	try {
 		const MuMsgIterThreadInfo *ti;

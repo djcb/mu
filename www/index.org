@@ -40,7 +40,10 @@
 
 
 ** News
-
+   
+   - 2013-03-30: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.9.5.tar.gz][mu-0.9.9.5]]; full with new features and bug fixes – see
+     the download link for some of the details. Many thanks to all who
+     contributed!
    - 2012-10-14: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.9.tar.gz][mu-0.9.9]]; a new barrage of fixes and improvements –
      check the link and [[https://github.com/djcb/mu/blob/master/NEWS][NEWS]]. Also, note the [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu4e-manual-0.9.9.pdf][mu4e-manual]] (PDF).
    - 2012-07-01: released [[http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.8.5.tar.gz][mu-0.9.8.5]]; more fixes, improvements (see the link).

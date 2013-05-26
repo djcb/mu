@@ -1,4 +1,4 @@
-## Copyright (C) 2010-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -83,7 +83,6 @@ libmu_la_SOURCES=			\
 	mu-store-read.cc		\
 	mu-store-write.cc		\
 	mu-store-priv.hh		\
-	mu-str-normalize.c		\
 	mu-str.c			\
 	mu-str.h			\
 	mu-threader.c			\

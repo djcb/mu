@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2010-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -529,7 +529,7 @@ show_usage (void)
 {
 	g_print ("usage: mu command [options] [parameters]\n");
 	g_print ("where command is one of index, find, cfind, view, mkdir, "
-		   "extract, add, remove, stats, verify or server\n");
+		   "extract, add, remove, script, verify or server\n");
 	g_print ("see the mu, mu-<command> or mu-easy manpages for "
 		   "more information\n");
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -46,13 +46,8 @@ struct _MugMsgViewPrivate {
 #define MUG_MSG_VIEW_GET_PRIVATE(o)(G_TYPE_INSTANCE_GET_PRIVATE((o),MUG_TYPE_MSG_VIEW, MugMsgViewPrivate))
 /* globals */
 
-#ifdef HAVE_GTK3
 static GtkBoxClass *parent_class = NULL;
 G_DEFINE_TYPE (MugMsgView, mug_msg_view, GTK_TYPE_BOX);
-#else
-static GtkVBoxClass *parent_class = NULL;
-G_DEFINE_TYPE (MugMsgView, mug_msg_view, GTK_TYPE_VBOX);
-#endif /*!HAVE_GTK3*/
 
 /* uncomment the following if you have defined any signals */
 /* static guint signals[LAST_SIGNAL] = {0}; */

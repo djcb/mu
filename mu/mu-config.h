@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -109,7 +109,6 @@ struct _MuConfig {
 	/* options for indexing */
 	gchar	        *maildir;	/* where the mails are */
 	gboolean        nocleanup;	/* don't cleanup del'd mails from db */
-	gboolean        reindex;	/* re-index existing mails */
 	gboolean        rebuild;	/* empty the database before indexing */
 	gboolean        autoupgrade;    /* automatically upgrade db
 					 * when needed */

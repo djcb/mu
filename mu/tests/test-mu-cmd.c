@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -24,6 +24,8 @@
 
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <string.h>
+#include <errno.h>
 
 #include "../mu-query.h"
 
@@ -144,7 +146,7 @@ test_mu_find_01 (void)
 	search ("f:soc@example.com", 1);
 	search ("t:alki@example.com", 1);
 	search ("t:alcibiades", 1);
-	search ("http-emacs", 1);
+	search ("http emacs", 1);
 	search ("f:soc@example.com OR f:john", 2);
 	search ("f:soc@example.com OR f:john OR t:edmond", 3);
 	search ("t:julius", 1);
@@ -298,12 +300,11 @@ test_mu_find_links (void)
 static void
 test_mu_find_maildir_special (void)
 {
-	/* ensure that maldirs with spaces in their names work... */
-	search ("\"maildir:/wom bat\" subject:atoms", 1);
+	search ("\"maildir:/wom_bat\" subject:atoms", 1);
 	search ("\"maildir:/wOm_bàT\"", 3);
 	search ("\"maildir:/wOm*\"", 3);
-	search ("\"maildir:/wOm *\"", 3);
-	search ("\"maildir:wom bat\"", 0);
+	search ("\"maildir:/wOm_*\"", 3);
+	search ("\"maildir:wom_bat\"", 0);
 	search ("\"maildir:/wombat\"", 0);
 	search ("subject:atoms", 1);
 }
@@ -366,8 +367,10 @@ get_file_size (const char* path)
 	struct stat statbuf;
 
 	rv = stat (path, &statbuf);
-	if (rv != 0)
+	if (rv != 0) {
+		/* g_warning ("error: %s", strerror (errno)); */
 		return -1;
+	}
 
 	return (gint64)statbuf.st_size;
 }

@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -174,7 +174,8 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 	gboolean err;
 
 	g_return_val_if_fail (msg, NULL);
-	g_return_val_if_fail (self && self->data, NULL);
+	g_return_val_if_fail (self && GMIME_IS_OBJECT(self->data),
+			      NULL);
 
 	mobj = (GMimeObject*)self->data;
 
@@ -610,7 +611,7 @@ write_part_to_fd (GMimePart *part, int fd, GError **err)
 	} else
 		rv = TRUE;
 
-	g_object_unref (wrapper);
+	/* g_object_unref (wrapper); we don't own it */
 	g_object_unref (stream);
 
 	return rv;

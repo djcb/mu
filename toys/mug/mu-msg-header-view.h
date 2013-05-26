@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -42,24 +42,14 @@ typedef struct _MuMsgHeaderViewClass MuMsgHeaderViewClass;
 typedef struct _MuMsgHeaderViewPrivate         MuMsgHeaderViewPrivate;
 
 struct _MuMsgHeaderView {
-#ifdef HAVE_GTK3
 	GtkBox parent;
-#else
-	GtkVBox parent;
-#endif /*!HAVE_GTK3*/
-
 	/* insert public members, if any */
-
 	/* private */
 	MuMsgHeaderViewPrivate *_priv;
 };
 
 struct _MuMsgHeaderViewClass {
-#ifdef HAVE_GTK3
 	GtkBoxClass parent_class;
-#else
-	GtkVBoxClass parent_class;
-#endif /*!HAVE_GTK3*/
 	/* insert signal callback declarations, e.g. */
 	/* void (* my_event) (MuMsgHeaderView* obj); */
 };

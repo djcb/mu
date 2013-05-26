@@ -1,7 +1,7 @@
 /* -*-Mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -146,8 +146,6 @@ config_options_group_index (void)
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
 		 "top of the maildir", "<maildir>"},
-		{"reindex", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.reindex,
-		 "index even already indexed messages (false)", NULL},
 		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.rebuild,
 		 "rebuild the database from scratch (false)", NULL},
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
@@ -279,8 +277,8 @@ config_options_group_cfind (void)
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
-		 "output format ('plain'(*), 'mutt', 'wl',"
-		 "'org-contact', 'csv')", "<format>"},
+		 "output format (plain(*), mutt-alias, mutt-ab, wl, "
+		 "org-contact, bbdb, csv)", "<format>"},
 		{"personal", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.personal,
 		 "whether to only get 'personal' contacts", NULL},
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
@@ -376,6 +374,9 @@ config_options_group_view (void)
 static void
 set_group_extract_defaults (void)
 {
+	if (!MU_CONFIG.targetdir)
+		MU_CONFIG.targetdir = g_strdup (".");
+
 	expand_dir (MU_CONFIG.targetdir);
 }
 
@@ -402,9 +403,6 @@ config_options_group_extract (void)
 		 "try to 'play' (open) the extracted parts", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
-
-	MU_CONFIG.targetdir = g_strdup("."); /* default is the current dir */
-
 	og = g_option_group_new("extract",
 				"Options for the 'extract' command",
 				"", NULL, NULL);

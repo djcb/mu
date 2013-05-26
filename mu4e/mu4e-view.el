@@ -113,8 +113,8 @@ The first letter of NAME is used as a shortcut character.")
      ("ein-emacs"  . mu4e-view-open-attachment-emacs)
      ("|pipe"      . mu4e-view-pipe-attachment))
   "List of actions to perform on message attachments.
-The actions are of the form:
- (NAME  FUNC)
+The actions are cons-cells of the form:
+ (NAME . FUNC)
 where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives two arguments: the message
@@ -143,7 +143,6 @@ message extracted at some path.")
 
 (defconst mu4e~view-url-regexp
   "\\(https?\\://[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=]+\\|mailto:[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=/()]+\\)"
-  ;; "\\(\\(https?\\://\\|mailto:\\)[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=/()]+\\)"
   "Regexp that matches http:/https:/mailto: URLs; match-string 1
 will contain the matched URL, if any.")
 
@@ -277,9 +276,9 @@ add text-properties to VAL."
 	  (help (plist-get info :help)))
     (if (and val (> (length val) 0))
     (with-temp-buffer
-      (insert (propertize key
+      (insert (propertize (concat key ":")
 		'face 'mu4e-view-header-key-face
-		'help-echo help) ": "
+		'help-echo help) " "
 	(if dont-propertize-val
 	  val
 	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
@@ -317,8 +316,17 @@ at POINT, or if nil, at (point)."
   "Compose a message for the address at point."
   (interactive)
   (unless (get-text-property (or point (point)) 'email)
-    (error "No address at point"))
+    (mu4e-error "No address at point"))
   (mu4e~compose-mail (get-text-property (or point (point)) 'email)))
+
+(defun mu4e~view-copy-contact (&optional full)
+  "Compose a message for the address at (point)."
+  (interactive "P")
+  (let ((email (get-text-property (point) 'email))
+	 (long (get-text-property (point) 'long)))
+    (unless email (mu4e-error "No address at point"))
+    (kill-new (if full long email))
+    (mu4e-message "Address copied.")))
 
 (defun mu4e~view-construct-contacts-header (msg field)
   "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
@@ -334,6 +342,7 @@ at POINT, or if nil, at (point)."
 	  (define-key map [?\M-\r]  'mu4e~view-toggle-contact)
 	  (define-key map [mouse-2] 'mu4e~view-compose-contact)
 	  (define-key map "C"  'mu4e~view-compose-contact)
+	  (define-key map "c"  'mu4e~view-copy-contact)
 	  (propertize
 	    (if mu4e-view-show-addresses long short)
 	    'long long
@@ -458,9 +467,8 @@ at POINT, or if nil, at (point)."
 			"[mouse-1] or [M-RET] opens the attachment\n"
 			"[mouse-2] or [S-RET] offers to save it"))
 		    (when (and size (> size 0))
-		      (concat (format "(%s)"
-				(propertize (mu4e-display-size size)
-				  'face 'mu4e-view-header-key-face)))))))
+		      (propertize (format "(%s)" (mu4e-display-size size))
+                                  'face 'mu4e-view-header-key-face)))))
 	      attachments ", ")))
     (when attachments
       (mu4e~view-construct-header :attachments attstr t))))
@@ -482,6 +490,7 @@ FUNC should be a function taking two arguments:
   (setq mu4e-view-mode-map
     (let ((map (make-sparse-keymap)))
       (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
+      (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
 
       (define-key map "q" 'mu4e~view-quit-buffer)
 
@@ -1189,6 +1198,7 @@ list."
     (mu4e-view-mark-for-unmark)
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
+ 
 (defmacro mu4e~view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for-MARK."
   (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
@@ -1209,7 +1219,7 @@ list."
 (mu4e~view-defun-mark-for unmark)
 (mu4e~view-defun-mark-for something)
 
- (defun mu4e-view-marked-execute ()
+(defun mu4e-view-marked-execute ()
   "Execute the marks."
   (interactive)
   (mu4e~view-in-headers-context
@@ -1304,10 +1314,12 @@ other windows."
       ;; headers are visible
       (progn
 	(kill-buffer-and-window) ;; kill the view win
+        (setq mu4e~headers-view-win nil)
 	(select-window headers-win)) ;; and switch to the headers win...
       ;; headers are not visible...
       (progn
 	(kill-buffer)
+        (setq mu4e~headers-view-win nil)
 	(when (buffer-live-p mu4e~view-headers-buffer)
 	  (switch-to-buffer mu4e~view-headers-buffer))))))
 

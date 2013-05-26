@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -179,6 +179,7 @@ typedef struct _MuMsgIterThreadInfo MuMsgIterThreadInfo;
 /**
  * get a the MuMsgThreaderInfo struct for this message; this only
  * works when you created the mu-msg-iter with threading enabled
+ * (otherwise, return NULL)
  *
  * @param iter a valid MuMsgIter iterator
  *

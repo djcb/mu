@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -311,10 +311,12 @@ run_cmd_cfind (const char* pattern,
 	ecdata.format	= format;
 	ecdata.color	= color;
 
-	contacts = mu_contacts_new (mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
+	contacts = mu_contacts_new
+		(mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
 	if (!contacts) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_CONTACTS_CANNOT_RETRIEVE,
-				     "could not retrieve contacts");
+		g_set_error (err, MU_ERROR_DOMAIN,
+			     MU_ERROR_CONTACTS_CANNOT_RETRIEVE,
+			     "could not retrieve contacts");
 		return MU_ERROR_CONTACTS_CANNOT_RETRIEVE;
 	}
 

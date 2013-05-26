@@ -1,4 +1,4 @@
-;;; mu4e-mark.el -- part of mu4e, the mu mail user agent
+;; mu4e-mark.el -- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
 

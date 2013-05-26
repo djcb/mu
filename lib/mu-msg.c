@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
-** Copyright (C) 2008-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -469,7 +469,11 @@ accumulate_body (MuMsg *msg, MuMsgPart *mpart, BodyData *bdata)
 	if (mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT)
 		return;
 
+	if (!GMIME_IS_PART(mpart->data))
+		return;
+
 	txt = NULL;
+	err = TRUE;
 
 	if (!bdata->want_html &&
 	    (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
@@ -492,7 +496,7 @@ get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 	BodyData bdata;
 
 	bdata.want_html = want_html;
-	bdata.gstr = g_string_sized_new (4096);
+	bdata.gstr	= g_string_sized_new (4096);
 
 	mu_msg_part_foreach (self, opts,
 			     (MuMsgPartForeachFunc)accumulate_body,
@@ -563,40 +567,6 @@ mu_msg_get_field_numeric (MuMsg *self, MuMsgFieldId mfid)
 }
 
 
-
-MuMsgContact *
-mu_msg_contact_new (const char *name, const char *address,
-		    MuMsgContactType type)
-{
-	MuMsgContact *self;
-
-	g_return_val_if_fail (name, NULL);
-	g_return_val_if_fail (address, NULL);
-	g_return_val_if_fail (!mu_msg_contact_type_is_valid(type),
-			      NULL);
-
-	self = g_slice_new (MuMsgContact);
-
-	self->name    = g_strdup (name);
-	self->address = g_strdup (address);
-	self->type    = type;
-
-	return self;
-}
-
-
-void
-mu_msg_contact_destroy (MuMsgContact *self)
-{
-	if (!self)
-		return;
-
-	g_free ((void*)self->name);
-	g_free ((void*)self->address);
-	g_slice_free (MuMsgContact, self);
-}
-
-
 static gboolean
 fill_contact (MuMsgContact *self, InternetAddress *addr,
 	      MuMsgContactType ctype)
@@ -615,6 +585,11 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 			(INTERNET_ADDRESS_MAILBOX(addr));
 	else
 		self->address  = NULL;
+
+	/* if there's no address, just a name, it's probably a local
+	 * address (without @) */
+	if (self->name && !self->address)
+		self->address = self->name;
 
 	/* note, the address could NULL e.g. when the recipient is something like
 	 * 'Undisclosed recipients'
@@ -841,7 +816,7 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 	rootmaildir = mu_maildir_get_maildir_from_path (mu_msg_get_path(msg));
 	if (!rootmaildir) {
 		mu_util_g_set_error (err, MU_ERROR_GMIME,
-				     "cannot determinex maildir");
+				     "cannot determine maildir");
 		return NULL;
 	}
 

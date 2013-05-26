@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -60,16 +60,20 @@ print_scripts (GSList *scripts, gboolean color,
 	       gboolean verbose, const char *rxstr, GError **err)
 {
 	GSList *cur;
+	const char *verb;
 
 	if (!scripts) {
 		g_print ("No scripts available\n");
 		return TRUE; /* not an error */
 	}
 
+	verb = verbose ? "" : " (use --verbose for details)";
+
 	if (rxstr)
-		g_print ("Available scripts matching '%s':\n", rxstr);
+		g_print ("Available scripts matching '%s'%s:\n",
+			 rxstr, verb);
 	else
-		g_print ("Available scripts:\n");
+		g_print ("Available scripts%s:\n", verb);
 
 	for (cur = scripts; cur; cur = g_slist_next (cur)) {
 
@@ -110,8 +114,7 @@ get_script_info_list (const char *muhome, GError **err)
 		return NULL;
 
 	userpath = g_strdup_printf ("%s%c%s",
-				    muhome, G_DIR_SEPARATOR,
-				    "scripts" G_DIR_SEPARATOR_S "stats");
+				    muhome, G_DIR_SEPARATOR, "scripts");
 
 	/* is there are userdir for scripts? */
 	if (!mu_util_check_dir (userpath, TRUE, FALSE)) {
@@ -148,7 +151,8 @@ check_params (MuConfig *opts, GError **err)
 {
 	if (!mu_util_supports (MU_FEATURE_GUILE | MU_FEATURE_GNUPLOT)) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "the 'script' command is not supported");
+				     "the 'script' command is not available "
+				     "in this version of mu");
 		return FALSE;
 	}
 

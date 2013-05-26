@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,6 +17,7 @@
 **
 */
 #include <string.h>
+#include <ctype.h>
 
 #include "mu-str.h"
 #include "mu-msg.h"
@@ -46,8 +47,33 @@ append_sexp_attr_list (GString *gstr, const char* elm, const GSList *lst)
 }
 
 
+
+
 static void
 append_sexp_attr (GString *gstr, const char* elm, const char *str)
+{
+	gchar *esc, *utf8, *cur;
+
+	if (!str || strlen(str) == 0)
+		return; /* empty: don't include */
+
+
+	utf8 = mu_str_utf8ify (str);
+
+	for (cur = utf8; *cur; ++cur)
+		if (iscntrl(*cur))
+			*cur = ' ';
+
+	esc = mu_str_escape_c_literal (utf8, TRUE);
+	g_free (utf8);
+
+	g_string_append_printf (gstr, "\t:%s %s\n", elm, esc);
+	g_free (esc);
+}
+
+
+static void
+append_sexp_body_attr (GString *gstr, const char* elm, const char *str)
 {
 	gchar *esc;
 
@@ -59,6 +85,10 @@ append_sexp_attr (GString *gstr, const char* elm, const char *str)
 	g_string_append_printf (gstr, "\t:%s %s\n", elm, esc);
 	g_free (esc);
 }
+
+
+
+
 
 
 struct _ContactData {
@@ -390,9 +420,9 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 			       mu_msg_get_references (msg));
 	append_sexp_attr (gstr, "in-reply-to",
 			  mu_msg_get_header (msg, "In-Reply-To"));
-	append_sexp_attr (gstr, "body-txt",
+	append_sexp_body_attr (gstr, "body-txt",
 			  mu_msg_get_body_text(msg, opts));
-	append_sexp_attr (gstr, "body-html",
+	append_sexp_body_attr (gstr, "body-html",
 			  mu_msg_get_body_html(msg, opts));
 }
 

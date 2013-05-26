@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2011 Dirk-Jan C. Binnema <djcb@cthulhu>
+** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@cthulhu>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
