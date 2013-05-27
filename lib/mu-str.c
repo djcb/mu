@@ -303,6 +303,8 @@ mu_str_esc_to_list (const char *strings)
 		kar = strings[u];
 
 		if (kar == '\\') {
+			if (escaped)
+				g_string_append_c (part, '\\');
 			escaped = !escaped;
 			continue;
 		}
