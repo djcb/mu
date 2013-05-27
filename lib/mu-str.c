@@ -199,6 +199,33 @@ mu_str_size_parse_bkm (const char* str)
 }
 
 
+char*
+mu_str_replace (const char *str, const char *substr, const char *repl)
+{
+	GString		*gstr;
+	const char	*cur;
+
+	g_return_val_if_fail (str, NULL);
+	g_return_val_if_fail (substr, NULL);
+	g_return_val_if_fail (repl, NULL);
+
+	gstr = g_string_sized_new (2 * strlen (str));
+
+	for (cur = str; *cur; ++cur) {
+		if (g_str_has_prefix (cur, substr)) {
+			g_string_append (gstr, repl);
+			cur += strlen (substr) - 1;
+		} else
+			g_string_append_c (gstr, *cur);
+	}
+
+	return g_string_free (gstr, FALSE);
+}
+
+
+
+
+
 
 char*
 mu_str_from_list (const GSList *lst, char sepa)
@@ -276,6 +303,8 @@ mu_str_esc_to_list (const char *strings)
 		kar = strings[u];
 
 		if (kar == '\\') {
+			if (escaped)
+				g_string_append_c (part, '\\');
 			escaped = !escaped;
 			continue;
 		}

@@ -198,6 +198,7 @@ test_mu_str_process_query_term (void)
 		{ "Foo..Bar", "foo..bar" },
 		{ "Foo.Bar", "foo_bar" },
 		{ "Foo Bar", "foo_bar" },
+		{ "\\foo", "_foo" },
 		{ "subject:test@foo", "subject:test_foo" },
 		{ "xxx:test@bar", "xxx:test_bar" },
 		{ "aa$bb$cc", "aa_bb_cc" },
@@ -239,6 +240,7 @@ test_mu_str_process_term (void)
 		{ "Foo..Bar", "foo__bar" },
 		{ "Foo.Bar", "foo_bar" },
 		{ "Foo Bar", "foo_bar" },
+		{ "\\foo", "_foo" },
 		{ "subject:test@foo", "subject_test_foo" },
 		{ "xxx:test@bar", "xxx_test_bar" },
 		{ "aa$bb$cc", "aa_bb_cc" },
@@ -431,6 +433,35 @@ test_mu_term_fixups (void)
 
 
 
+
+
+static void
+test_mu_str_replace (void)
+{
+	unsigned u;
+	struct {
+		const char*  str;
+		const char* sub;
+		const char *repl;
+		const char *exp;
+	} strings [] = {
+		{ "hello", "ll", "xx", "hexxo" },
+		{ "hello", "hello", "hi", "hi" },
+		{ "hello", "foo", "bar", "hello" }
+	};
+
+	for (u = 0; u != G_N_ELEMENTS(strings); ++u) {
+		char *res;
+		res = mu_str_replace (strings[u].str,
+				      strings[u].sub,
+				      strings[u].repl);
+		g_assert_cmpstr (res,==,strings[u].exp);
+		g_free (res);
+	}
+}
+
+
+
 int
 main (int argc, char *argv[])
 {
@@ -470,6 +501,9 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/mu-str/mu-str-esc-to-list",
 			 test_parse_arglist);
+
+	g_test_add_func ("/mu-str/mu-str-replace",
+			 test_mu_str_replace);
 
 	g_test_add_func ("/mu-str/mu-str-esc-to-list",
 			 test_mu_str_esc_to_list);

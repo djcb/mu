@@ -855,7 +855,8 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
  */
 gboolean
 mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
-			MuFlags flags, gboolean ignore_dups, GError **err)
+			MuFlags flags, gboolean ignore_dups, gboolean new_name,
+			GError **err)
 {
 	char *newfullpath;
 	char *targetmdir;
@@ -871,7 +872,7 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 
 	newfullpath = mu_maildir_move_message (mu_msg_get_path (self),
 					       targetmdir, flags,
-					       ignore_dups, err);
+					       ignore_dups, new_name, err);
 	/* update the message path and the flags; they may have
 	 * changed */
 	if (!newfullpath) {

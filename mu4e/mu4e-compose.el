@@ -191,6 +191,15 @@ If needed, set the Fcc header, and register the handler function."
 	    (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
 
 
+
+(defconst mu4e~compose-hidden-headers
+  `("^References:" "^Face:" "^X-Face:"
+     "^X-Draft-From:" "^User-agent:")
+  "Hidden headers when composing.")
+
+(defconst mu4e~compose-address-fields-regexp
+  "^\\(To\\|B?Cc\\|Reply-To\\|From\\):")
+
 (defun mu4e~compose-register-message-save-hooks ()
   "Just before saving, we remove the mail-header-separator; just
 after saving we restore it; thus, the separator should never
@@ -208,13 +217,6 @@ appear on disk."
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
 
-(defconst mu4e~compose-hidden-headers
-  `("^References:" "^Face:" "^X-Face:"
-     "^X-Draft-From:" "^User-agent:")
-  "Hidden headers when composing.")
-
-(defconst mu4e~compose-address-fields-regexp
-  "^\\(To\\|B?Cc\\|Reply-To\\|From\\):")
 
 (defun mu4e~compose-find-completion-style (some-style)
   "Find completion style SOME-STYLE in completion-styles-alist, or return nil."
@@ -411,7 +413,8 @@ corresponding with the /last/ message-id in the references header.
 Now, if the message has been determined to be either a forwarded
 message or a reply, we instruct the server to update that message
 with resp. the 'P' (passed) flag for a forwarded message, or the
-'R' flag for a replied message.
+'R' flag for a replied message. The original messages are also
+marked as Seen.
 
 Function assumes that it's executed in the context of the message
 buffer."
@@ -433,9 +436,9 @@ buffer."
 		  (setq forwarded-from (first refs))))))
 	  ;; remove the <>
 	  (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-	    (mu4e~proc-move (match-string 1 in-reply-to) nil "+R"))
+	    (mu4e~proc-move (match-string 1 in-reply-to) nil "+R-N"))
 	  (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P")))))))
+	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P-N")))))))
 
 (defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is

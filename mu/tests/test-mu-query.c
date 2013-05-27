@@ -559,6 +559,7 @@ test_mu_query_tags (void)
 		{ "tag:lost OR tag:horizon", 1},
 		{ "x:paradise,lost", 0},
 		{ "x:paradise AND x:lost", 1},
+		{ "x:\\\\backslash", 1},
 	};
 
  	for (i = 0; i != G_N_ELEMENTS(queries); ++i)

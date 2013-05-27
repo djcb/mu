@@ -334,8 +334,6 @@ test_mu_maildir_walk_with_noupdate (void)
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
 
-
-
 	/* again, full update. results should be the same, since there
 	 * is no noupdate yet */
 	memset (&data, 0, sizeof(WalkData));
@@ -431,6 +429,67 @@ test_mu_maildir_get_flags_from_path (void)
 	}
 }
 
+
+
+static void
+assert_matches_regexp (const char *str, const char *rx)
+{
+	if (!g_regex_match_simple (rx, str, 0, 0)) {
+		if (g_test_verbose ())
+			g_print ("%s does not match %s", str, rx);
+		g_assert (0);
+	}
+}
+
+
+
+static void
+test_mu_maildir_get_new_path_new (void)
+{
+	int i;
+
+	struct {
+		const char *oldpath;
+		MuFlags flags;
+		const char *newpath;
+	} paths[] = {
+		{
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			MU_FLAG_REPLIED,
+			"/home/foo/Maildir/test/cur/123456:2,R"
+		}, {
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			MU_FLAG_NEW,
+			"/home/foo/Maildir/test/new/123456"
+		}, {
+			"/home/foo/Maildir/test/new/123456:2,FR",
+			MU_FLAG_SEEN | MU_FLAG_REPLIED,
+			"/home/foo/Maildir/test/cur/123456:2,RS"
+		}, {
+			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
+			MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED,
+			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"
+		}, {
+			"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
+			MU_FLAG_SEEN,
+			"/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"
+		}
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		char	*str, *newbase;
+		str	= mu_maildir_get_new_path (paths[i].oldpath, NULL,
+						   paths[i].flags, TRUE);
+		newbase = g_path_get_basename (str);
+		assert_matches_regexp (newbase, "\\d{8}-[[:xdigit:]]{8}-[[:alpha:]]+(:2,.*)?");
+		g_free (newbase);
+		g_free(str);
+	}
+}
+
+
+
+
 static void
 test_mu_maildir_get_new_path_01 (void)
 {
@@ -467,7 +526,7 @@ test_mu_maildir_get_new_path_01 (void)
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
 		gchar *str;
 		str = mu_maildir_get_new_path(paths[i].oldpath, NULL,
-					      paths[i].flags);
+					      paths[i].flags, FALSE);
 		g_assert_cmpstr(str, ==, paths[i].newpath);
 		g_free(str);
 	}
@@ -510,7 +569,7 @@ test_mu_maildir_get_new_path_02 (void)
 		gchar *str;
 		str = mu_maildir_get_new_path(paths[i].oldpath,
 					      paths[i].targetdir,
-					      paths[i].flags);
+					      paths[i].flags, FALSE);
 		g_assert_cmpstr(str, ==, paths[i].newpath);
 		g_free(str);
 	}
@@ -547,7 +606,7 @@ test_mu_maildir_get_new_path_custom (void)
 		gchar *str;
 		str = mu_maildir_get_new_path(paths[i].oldpath,
 					      paths[i].targetdir,
-					      paths[i].flags);
+					      paths[i].flags, FALSE);
 		g_assert_cmpstr(str, ==, paths[i].newpath);
 		g_free(str);
 	}
@@ -606,6 +665,9 @@ main (int argc, char *argv[])
 			 test_mu_maildir_walk_with_noupdate);
 
 	/* get/set flags */
+	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-new",
+			test_mu_maildir_get_new_path_new);
+
 	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01",
 			test_mu_maildir_get_new_path_01);
 	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02",
