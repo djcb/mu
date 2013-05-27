@@ -271,7 +271,7 @@ Function will return the cdr of the list element."
 	(if (file-accessible-directory-p
 	      (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))
 	  (setq dirs (cons (concat mdir (car dentry)) dirs)))
-	(unless (member (car dentry) '("cur" "new" "tmp")) 
+	(unless (member (car dentry) '("cur" "new" "tmp"))
 	  (setq dirs (append dirs (mu4e~get-maildirs-1 path
 				    (concat mdir (car dentry) "/")))))))
     dirs))
@@ -542,8 +542,41 @@ process."
     (t (error "Error %d: %s" errcode errmsg))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; RFC2822 handling of phrases in mail-addresses ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; The optional display-name contains a phrase, it sits before the angle-addr ;;;;;;;
+;;; as specified in RFC2822 for email-addresses in header fields. ;;;;;;;;;;;;;;;;;;;;
+;;; contributed by jhelberg
+
+(defun mu4e~rfc822-phrase-type (ph)
+  "Return either atom, quoted-string, a corner-case or nil. This
+  checks for quotes around the phrase first
+   (returning 'rfc822-quoted-string). Then whether there is a quote
+   inside the phrase (returning 'rfc822-containing-quote).
+   The reverse of the RFC atext definition is then tested.
+   If it matches, nil is returned, if not, it is an 'rfc822-atom, which
+   is returned."
+     (cond
+       ((= (aref ph 0) ?\")
+	 (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
+	   'rfc822-quoted-string
+	   'rfc822-containing-quote)) ; starts with quote, but doesn't end with one
+       ((string-match-p "[\"]" ph) 'rfc822-containing-quote)
+       ((string-match-p "[\000-\037()\*<>@,;:\\\.]+" ph) nil)
+       (t 'rfc822-atom)))
+
+(defun mu4e~rfc822-quoteit (ph)
+  "Quote RFC822 phrase only if necessary.
+   Atoms and quoted strings don't need quotes. The rest do.  In
+   case a phrase contains a quote, it will be escaped."
+  (let ((type (mu4e~rfc822-phrase-type ph)))
+    (cond
+      ((eq type 'rfc822-atom) ph)
+      ((eq type 'rfc822-quoted-string) ph)
+      ((eq type 'rfc822-containing-quote) (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" ph)))
+      (t (format "\"%s\"" ph)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
@@ -562,7 +595,7 @@ This is used by the completion function in mu4e-compose."
 	    (and mu4e-compose-complete-ignore-address-regexp
 	      (string-match mu4e-compose-complete-ignore-address-regexp mail))
 	  (add-to-list 'lst
-	    (if name (format "\"%s\" <%s>" name mail) mail))))))
+	    (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail))))))
     (setq mu4e~contacts-for-completion lst)
     (mu4e-message "Contacts received: %d"
       (length mu4e~contacts-for-completion))))
