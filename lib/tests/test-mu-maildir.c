@@ -435,7 +435,8 @@ static void
 assert_matches_regexp (const char *str, const char *rx)
 {
 	if (!g_regex_match_simple (rx, str, 0, 0)) {
-		g_warning ("%s does not match %s", str, rx);
+		if (g_test_verbose ())
+			g_print ("%s does not match %s", str, rx);
 		g_assert (0);
 	}
 }
@@ -477,10 +478,10 @@ test_mu_maildir_get_new_path_new (void)
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
 		char	*str, *newbase;
-		str	= mu_maildir_get_new_path(paths[i].oldpath, NULL,
-					      paths[i].flags, TRUE);
+		str	= mu_maildir_get_new_path (paths[i].oldpath, NULL,
+						   paths[i].flags, TRUE);
 		newbase = g_path_get_basename (str);
-		assert_matches_regexp (newbase, "\\d{6}-[[:xdigit:]]{6}-[[:alpha:]]+:2,.*");
+		assert_matches_regexp (newbase, "\\d{8}-[[:xdigit:]]{8}-[[:alpha:]]+(:2,.*)?");
 		g_free (newbase);
 		g_free(str);
 	}
