@@ -64,7 +64,6 @@ For the complete list of available headers, see `mu4e-header-info'."
   :type '(choice (cons :tag "Render HTML with emacs-w3m" w3m)
                  (cons :tag "Render using `mu4e-html2text-program'" nil))
   :safe 'symbolp
-  :require 'w3m
   :group 'mu4e-view)
 
 
@@ -242,6 +241,7 @@ marking if it still had that."
 	(erase-buffer)
 	;; (insert (mu4e-view-message-text msg))
         (mu4e-view-display-message msg)
+	(when w3m-minor-mode (use-local-map mu4e-view-mode-map))
 	(switch-to-buffer buf)
 	(goto-char (point-min))
 	(mu4e~view-show-images-maybe msg)
@@ -488,7 +488,7 @@ FUNC should be a function taking two arguments:
   "Keymap for \"*mu4e-view*\" buffers.")
 (unless mu4e-view-mode-map
   (setq mu4e-view-mode-map
-    (let ((map (make-sparse-keymap)))
+    (let ((map (copy-keymap widget-minor-mode-map)))
       (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
       (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
 
@@ -954,6 +954,7 @@ all messages in the subthread at point in the headers view."
 (defun mu4e-view-toggle-html ()
   "Toggle `mu4e-view-prefer-html' and refresh buffer"
   (interactive)
+  (make-local-variable 'mu4e-view-prefer-html)
   (setq mu4e-view-prefer-html (not mu4e-view-prefer-html))
   (mu4e-view-refresh))
 
@@ -1616,18 +1617,20 @@ open attachment, other to save"
                  (when rest (insert ", "))
                  )))))))
 
-(defvar mu4e-view-wash-text-functions nil)
-(setq mu4e-view-wash-text-functions
-      '(mu4e~wash-fix-microsoft
-        mu4e~wash-cr
-        mu4e~view-fontify-cited
-        mu4e~view-fontify-footer
-        mu4e~view-make-urls-clickable
-        mu4e~wash-ansi-colors
-        mu4e~wash-elide-blank-lines
-        mu4e~wash-tidy-citations
-        ;; mu4e~wash-wrap-long-lines
-        ))
+(defcustom mu4e-view-wash-text-functions nil
+  "Functions to clean up displayed messages.  These are functions that do not take arguments, and they are run in a temporary buffer containing the body of the message before being inserted into the view buffer"
+  :type 'hook
+  :options '(mu4e~wash-fix-microsoft
+	     mu4e~wash-cr
+	     mu4e~view-fontify-cited
+	     mu4e~view-fontify-footer
+	     mu4e~view-make-urls-clickable
+	     mu4e~wash-ansi-colors
+	     mu4e~wash-elide-blank-lines
+	     mu4e~wash-tidy-citations
+	     mu4e~wash-wrap-long-lines
+	     )
+  :group 'mu4e-view)
 
 (defun mu4e~view-display-message-body (msg)
   "Display body of message, using w3m to render html"
