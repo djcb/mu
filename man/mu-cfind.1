@@ -1,4 +1,4 @@
-.TH MU CFIND 1 "October 2012" "User Manuals"
+.TH MU CFIND 1 "May 2013" "User Manuals"
 
 .SH NAME
 
@@ -43,7 +43,8 @@ list of contacts. Note, \fBmu cfind\fR uses does not directly use the
 database, but uses a cache file with e-mail addresses, which is populated
 during the indexing process.
 
-The regular expressions are Perl-compatible (as per the PCRE-library).
+The regular expressions are Perl-compatible (as per the PCRE-library used by
+GRegex).
 
 .SH OPTIONS
 
@@ -60,8 +61,14 @@ sets the output format to the given value. The following are available:
 | wl          | wanderlust addressbook format     |
 | org-contact | org-mode org-contact format       |
 | bbdb        | BBDB format                       |
-| csv         | comma-separated values            |
+| csv         | comma-separated values (*)	  |
 .fi
+
+
+(*) CSV is not really standardized, but \fBmu cfind\fR follows some common
+practices: any double-quote is replaced by a double-double quote (thus,
+"hello" become ""hello"", and fields with commas are put in
+double-quotes. Normally, this should only apply to name fields.
 
 .TP
 \fB\-\-personal\fR only show addresses seen in messages where one of 'my'

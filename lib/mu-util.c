@@ -456,7 +456,7 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 		if (!conv || err) {
 			/* conversion failed; this happens because is
 			 * some cases GMime may gives us non-UTF-8
-			 * string from e.g. wrongly encoded
+			 * strings from e.g. wrongly encoded
 			 * message-subjects; if so, we escape the
 			 * string */
 			g_warning ("%s: g_locale_from_utf8 failed: %s",

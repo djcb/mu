@@ -231,6 +231,38 @@ each_contact_org_contact (const char *email, const char *name)
 			name, email);
 }
 
+
+
+
+
+static void
+print_csv_field (const char *str)
+{
+	char *s;
+
+	if (!str)
+		return;
+
+	s = mu_str_replace (str, "\"", "\"\"");
+	if (strchr (s, ','))
+		mu_util_print_encoded ("\"%s\"", s);
+	else
+		mu_util_print_encoded ("%s", s);
+
+	g_free (s);
+}
+
+static void
+each_contact_csv (const char *email, const char *name)
+{
+	print_csv_field (name);
+	mu_util_print_encoded (",");
+	print_csv_field (email);
+	mu_util_print_encoded ("\n");
+}
+
+
+
 static void
 print_plain (const char *email, const char *name, gboolean color)
 {
@@ -257,6 +289,7 @@ struct _ECData {
 	time_t after;
 };
 typedef struct _ECData ECData;
+
 
 
 static void
@@ -287,7 +320,7 @@ each_contact (const char *email, const char *name, gboolean personal,
 		each_contact_bbdb (email, name, tstamp);
 		break;
         case MU_CONFIG_FORMAT_CSV:
-		mu_util_print_encoded ("%s,%s\n", name ? name : "", email);
+		each_contact_csv (email, name);
 		break;
 	default:
 		print_plain (email, name, ecdata->color);
