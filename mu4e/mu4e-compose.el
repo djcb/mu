@@ -413,7 +413,8 @@ corresponding with the /last/ message-id in the references header.
 Now, if the message has been determined to be either a forwarded
 message or a reply, we instruct the server to update that message
 with resp. the 'P' (passed) flag for a forwarded message, or the
-'R' flag for a replied message.
+'R' flag for a replied message. The original messages are also
+marked as Seen.
 
 Function assumes that it's executed in the context of the message
 buffer."
@@ -435,9 +436,9 @@ buffer."
 		  (setq forwarded-from (first refs))))))
 	  ;; remove the <>
 	  (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-	    (mu4e~proc-move (match-string 1 in-reply-to) nil "+R"))
+	    (mu4e~proc-move (match-string 1 in-reply-to) nil "+R-N"))
 	  (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P")))))))
+	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P-N")))))))
 
 (defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
