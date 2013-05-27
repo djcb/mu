@@ -725,11 +725,10 @@ user-interaction ongoing."
 	      (not (active-minibuffer-window))) ;; no user input
 	(with-current-buffer mu4e~headers-buffer
 	  (mu4e-headers-rerun-search)))) nil t)
-
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
-    overwrite-mode 'overwrite-mode-binary
+    overwrite-mode nil
     header-line-format (mu4e~header-line-format))
 
   (mu4e~mark-initialize) ;; initialize the marking subsystem
