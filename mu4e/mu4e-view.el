@@ -35,6 +35,7 @@
 (require 'mu4e-message)
 (require 'mu4e-wash)
 
+(require 'wid-browse)
 (require 'wid-edit)
 
 (require 'comint)

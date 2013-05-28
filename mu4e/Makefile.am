@@ -24,6 +24,7 @@ mu4e_TEXINFOS=fdl.texi
 lispdir=${prefix}/share/emacs/site-lisp/mu4e/
 
 dist_lisp_LISP=			\
+	coolj.el		\
 	mu4e-about.el		\
 	mu4e-actions.el		\
 	mu4e-compose.el		\
@@ -40,6 +41,7 @@ dist_lisp_LISP=			\
 	mu4e-utils.el		\
 	mu4e-vars.el		\
 	mu4e-view.el		\
+	mu4e-wash.el		\
 	mu4e.el			\
 	org-mu4e.el
 
