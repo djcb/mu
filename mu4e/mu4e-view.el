@@ -1641,6 +1641,8 @@ open attachment, other to save"
      ((and (> (* 10 (length txt)) (length html))
            (or (not mu4e-view-prefer-html) (not html)))
       (let ((beg (point)))
+	(when (require 'w3m)
+	  (w3m-minor-mode -1))
         (insert txt)
         (dolist (func mu4e-view-wash-text-functions)
           (save-restriction
