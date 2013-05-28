@@ -48,7 +48,7 @@ see:
 One special feature of \fBmu\fR is that is does not distinguish between
 uppercase and lowercase, nor the accented or unaccented versions of
 characters. All match. In general, \fBmu\fR tries to be 'eager' in matching,
-as filtering out unwanted results is usually preferrable over non matching
+as filtering out unwanted results is usually preferable over non matching
 messages.
 
 A wildcard search is a search where a \fB*\fR matches the last \fIn\fR
@@ -126,7 +126,7 @@ contact-fields (\fBfrom\fR, \fBto\fR, \fBcc\fR and \fBbcc\fR), and
 \fBbcc\fR).
 
 The meaning of most of the above fields should be clear, but some require some
-extra discusion. First, the message flags field describes certain properties
+extra discussion. First, the message flags field describes certain properties
 of the message, as listed in the following table:
 
 .nf
@@ -209,7 +209,7 @@ another example would be:
   $ mu find date:2009-05-05/12:23..2010-06-02/17:18
 .fi
 
-\fBmu\fR also understand relative dates, in the form of a posiive number
+\fBmu\fR also understand relative dates, in the form of a positive number
 followed by h (hour), d (day), w (week), m (30 days) or y (365 days). Some
 examples to explain this:
 
@@ -228,7 +228,7 @@ weeks old:
 .fi
 
 There are some special keywords for dates, namely 'now', meaning the
-prsent moment and 'today' for the beginning of today. So to get all messages
+present moment and 'today' for the beginning of today. So to get all messages
 sent or received today, you could use:
 
 .nf
@@ -379,7 +379,7 @@ information). \fBmu\fR will create the maildir if it does not exist yet.
 If you specify \fB\-\-clearlinks\fR, all existing symlinks will be cleared
 from the target maildir; this allows for re-use of the same directory. An
 alternative would be to delete the target directory before, but this has a big
-chance of accidentaly removing something that should not be removed.
+chance of accidentally removing something that should not be removed.
 
 .nf
   $ mu find grolsch --linksdir=~/Maildir/search --clearlinks
@@ -430,7 +430,7 @@ details of the bookmarks file.
 .TP
 \fB\-\-skip\-dups\fR,\fB-u\fR whenever there are multiple messages with the
 same name, only show the first one. This is useful if you have copies of the
-same message, which is a common occurence when using e.g. Gmail together with
+same message, which is a common occurrence when using e.g. Gmail together with
 \fBofflineimap\fR.
 
 .TP
@@ -461,7 +461,7 @@ matches), and a duplicate is a message whose message-id was already seen
 before; not this may not really be the same message, if the message-id was
 copied.
 
-The algorithm used for determining the threads is based on Jamie Zawinksy's
+The algorithm used for determining the threads is based on Jamie Zawinksi's
 description:
 .BR http://www.jwz.org/doc/threading.html
 
@@ -551,7 +551,7 @@ macro index <F9> "<change-folder-readonly>~/Maildir/search" \\
 \fBWanderlust\fR
 
 \fBSam B\fR suggested the following on the \fBmu\fR-mailing list. First add
-the following to your Wanderlust configuraiton file:
+the following to your Wanderlust configuration file:
 
 .nf
 (require 'elmo-search)
@@ -584,7 +584,7 @@ After restarting Wanderlust, the virtual folders should appear.
 
 \fBWanderlust (old)\fR
 
-Another way to intergrate \fBmu\fR and \fBwanderlust\fR is shown below; the
+Another way to integrate \fBmu\fR and \fBwanderlust\fR is shown below; the
 aforementioned method is recommended, but if that does not work for some
 reason, the below can be an alternative.
 
