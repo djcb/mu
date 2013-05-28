@@ -2913,6 +2913,11 @@ number of places.
 @item @emph{Can I start @t{mu4e} in the background?} Yes - if you provide a
 prefix-argument (@key{C-u}), @t{mu4e} starts, but does not show the
 main-window.
+@item @emph{Some IMAP-synchronization programs such as @t{mbsync} (but not
+@t{offlineimap}) don't like it when message files do not change their names
+when they are moved to different folders. Can @t{mu4e} somehow accomodate
+this?} Yes - you can set the variable @code{mu4e-change-filenames-when-moving}
+to non-nil.
 @end enumerate
 
 @node Reading messages

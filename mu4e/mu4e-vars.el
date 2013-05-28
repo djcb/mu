@@ -71,6 +71,19 @@ mu4e."
   :group 'mu4e
   :safe 'integerp)
 
+
+(defcustom mu4e-change-filenames-when-moving nil
+  "When moving messages to different folders, normally mu/mu4e keep
+the the base filename the same (the flags-part of the filename may
+change still). With this option set to non-nil, mu4e instead
+changes the filename. This latter behavior works better with some
+IMAP-synchronization programs such as mbsync; the default works
+better with e.g. offlineimap."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
+
+
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
   "Default directory for saving attachments.
 This can be either a string, or a function that takes a filename
@@ -214,6 +227,7 @@ Set to nil to not have any time-based restriction."
 the From: address.)"
   :type 'string
   :group 'mu4e-compose)
+
 
 ;; backward compatibility
 (make-obsolete-variable 'mu4e-reply-to-address 'mu4e-compose-reply-to-address

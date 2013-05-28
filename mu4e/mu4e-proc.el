@@ -376,6 +376,11 @@ The flags are any of `deleted', `flagged', `new', `passed', `replied' `seen' or
 `mu4e-string-to-flags' and `mu4e-flags-to-string'.
 The server reports the results for the operation through
 `mu4e-update-func'.
+
+If the the variable `mu4e-change-filenames-when-moving' is non-nil,
+the move generates new names for the target files; this helps
+certain tools (such as mbsync).
+
 The results are reported through either (:update ... )
 or (:error ) sexp, which are handled my `mu4e-update-func' and
 `mu4e-error-func', respectively."
@@ -391,8 +396,9 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 	  (path
 	    (when maildir
 	      (format " maildir:%s" (mu4e~proc-escape maildir)))))
-    (mu4e~proc-send-command "cmd:move %s %s %s"
-      idparam (or flagstr "") (or path ""))))
+    (mu4e~proc-send-command "cmd:move %s %s %s %s"
+      idparam (or flagstr "") (or path "")
+      (format "newname:%s" (if mu4e-change-filenames-when-moving "true" "false")))))
 
 (defun mu4e~proc-index (path my-addresses)
   "Update the message database for filesystem PATH, which should
