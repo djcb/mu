@@ -318,7 +318,10 @@ add_terms_values_str (Xapian::Document& doc, const char *val, MuMsgFieldId mfid)
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
-		termgen.index_text_without_positions (val, 1, prefix(mfid));
+		termgen.index_text_without_positions (str, 1, prefix(mfid));
+		if (g_strcmp0 (val, str) != 0)
+			termgen.index_text_without_positions (val, 1, prefix(mfid));
+		// g_print ("%s --> '%s' (%s)\n", mu_msg_field_name (mfid), val, str);
 	}
 
 	// g_print ("%s --> '%s'\n", mu_msg_field_name (mfid), str);

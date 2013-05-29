@@ -91,8 +91,6 @@ private:
 		} else
 			return false;
 	}
-
-
 };
 
 
@@ -229,8 +227,8 @@ get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 			(preprocessed,
 			 Xapian::QueryParser::FLAG_BOOLEAN          |
 			 Xapian::QueryParser::FLAG_PURE_NOT         |
-			 Xapian::QueryParser::FLAG_WILDCARD	    |
 			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
+			 Xapian::QueryParser::FLAG_WILDCARD	    |
 			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE
 			 );
 		g_free (preprocessed);
@@ -269,8 +267,8 @@ add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
 		 	qparser->add_prefix (shortcut, pfx);
 		}
 
-		// all fiels are also matched implicitly, withouth
-		// an
+		// all fields are also matched implicitly, without
+		// any prefix
 		qparser->add_prefix ("", pfx);
 
 	} MU_XAPIAN_CATCH_BLOCK;
