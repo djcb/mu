@@ -237,6 +237,7 @@ test_mu_str_process_term (void)
 		const char*	esc;
 	} words [] = {
 		{ "aap@noot.mies", "aap_noot_mies" },
+		{ "A&B", "a_b" },
 		{ "Foo..Bar", "foo__bar" },
 		{ "Foo.Bar", "foo_bar" },
 		{ "Foo Bar", "foo_bar" },
@@ -259,6 +260,46 @@ test_mu_str_process_term (void)
 	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
 		gchar *s;
 		s = mu_str_process_term (words[i].word);
+		if (g_test_verbose())
+			g_print ("expected: '%s' <=> got: '%s'\n",
+				 words[i].esc, s);
+		g_assert_cmpstr (s, ==, words[i].esc);
+		g_free (s);
+	}
+}
+
+
+
+
+static void
+test_mu_str_process_text (void)
+{
+	int			i;
+	struct {
+		const char*	word;
+		const char*	esc;
+	} words [] = {
+		{ "aap@noot.mies", "aap@noot.mies" },
+		{ "A&B", "a&b" },
+		{ "Foo..Bar", "foo..bar" },
+		{ "Foo.Bar", "foo.bar" },
+		{ "Foo Bar", "foo bar" },
+		{ "\\foo", "\\foo" },
+		{ "subject:test@foo", "subject:test@foo" },
+		{ "xxx:test@bar", "xxx:test@bar" },
+		{ "aa$bb$cc", "aa$bb$cc" },
+		{ "date:2010..2012", "date:2010..2012"},
+		{ "subject:2010..2012", "subject:2010..2012"},
+		{ "(maildir:foo)", "(maildir:foo)"},
+		{ "Тесла, Никола", "тесла, никола"},
+		{ "Masha@Аркона.ru", "masha@аркона.ru" },
+		{ "foo:ελληνικά", "foo:ελληνικα" },
+		{ "日本語!!", "日本語!!" }
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
+		gchar *s;
+		s = mu_str_process_text (words[i].word);
 		if (g_test_verbose())
 			g_print ("expected: '%s' <=> got: '%s'\n",
 				 words[i].esc, s);
@@ -488,6 +529,9 @@ main (int argc, char *argv[])
 			 test_mu_str_process_query_term);
 	g_test_add_func ("/mu-str/process-term",
 			 test_mu_str_process_term);
+	g_test_add_func ("/mu-str/process-text",
+			 test_mu_str_process_text);
+
 
 	g_test_add_func ("/mu-str/mu-str-display_contact",
 			 test_mu_str_display_contact);
