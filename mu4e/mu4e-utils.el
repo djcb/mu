@@ -174,10 +174,10 @@ an absolute path."
 
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e.
-If we're waiting for user-input, don't show anything."
-  (unless (active-minibuffer-window)
-    (message "%s" (apply 'mu4e-format frm args))
-    nil))
+If we're waiting for user-input or if there's some message in the
+echo area, don't show anything."
+  (unless (or (active-minibuffer-window) (current-message))
+    (message "%s" (apply 'mu4e-format frm args))))
 
 (defun mu4e-error (frm &rest args)
   "Create [mu4e]-prefixed error based on format FRM and ARGS.

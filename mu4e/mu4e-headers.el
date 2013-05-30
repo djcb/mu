@@ -934,8 +934,8 @@ header."
   (save-excursion
     (goto-char (point-min))
     (while (search-forward mu4e~headers-docid-pre nil t)
-      ;; not really sure why we need to jump to bol; we we need
-      ;; to, otherwise we miss lines sometimes...
+      ;; not really sure why we need to jump to bol; we do need to, otherwise we
+      ;; miss lines sometimes...
       (let ((msg (get-text-property (line-beginning-position) 'msg)))
 	(when msg
 	  (funcall func msg))))))
