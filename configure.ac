@@ -301,6 +301,11 @@ echo "GTK+ version                         : $gtk_version"
 echo "Webkit version                       : $webkit_version"
 ])
 
+AM_COND_IF([BUILD_GUILE],[
+echo "Guile version                        : $guile_version"
+])
+
+
 if test "x$build_mu4e" = "xyes"; then
 echo "Emacs version                        : $emacs_version"
 fi
@@ -313,6 +318,7 @@ AM_COND_IF([BUILD_GUI],[
 echo "Build 'mug' toy-ui (gtk+/webkit)     : yes"],[
 echo "Build 'mug' toy-ui (gtk+/webkit)     : no"
 ])
+
 
 echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
