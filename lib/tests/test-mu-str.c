@@ -195,7 +195,7 @@ test_mu_str_process_query_term (void)
 		const char*	esc;
 	} words [] = {
 		{ "aap@noot.mies", "aap_noot_mies" },
-		{ "Foo..Bar", "foo..bar" },
+		{ "Foo..Bar", "foo__bar" },
 		{ "Foo.Bar", "foo_bar" },
 		{ "Foo Bar", "foo_bar" },
 		{ "\\foo", "_foo" },
@@ -205,9 +205,9 @@ test_mu_str_process_query_term (void)
 		{ "date:2010..2012", "date:2010..2012"},
 		{ "d:2010..2012", "d:2010..2012"},
 		{ "size:10..20", "size:10..20"},
-		{ "x:2010..2012", "x:2010..2012"},
-		{ "q:2010..2012", "q:2010..2012"},
-		{ "subject:2010..2012", "subject:2010..2012"},
+		{ "x:2010..2012", "x:2010__2012"},
+		{ "q:2010..2012", "q:2010__2012"},
+		{ "subject:2010..2012", "subject:2010__2012"},
 		{ "(maildir:foo)", "(maildir:foo)"},
 		{ "Тесла, Никола", "тесла__никола"},
 		{ "Masha@Аркона.ru", "masha_аркона_ru" },

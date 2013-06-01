@@ -463,7 +463,7 @@ check_for_field (const char *str, gboolean *is_field,
 
 static gboolean
 handle_esc_maybe (GString *gstr, char **cur, gunichar uc,
-		  gboolean query_esc)
+		  gboolean query_esc, gboolean range_field)
 {
 	char kar;
 
@@ -480,6 +480,9 @@ handle_esc_maybe (GString *gstr, char **cur, gunichar uc,
 			g_string_append_c (gstr, kar);
 			return TRUE;
 		case '.':
+			if (!range_field)
+				break;
+
 			if ((*cur)[1] == '.' && (*cur)[2] != '.') {
 				g_string_append (gstr, "..");
 				*cur = g_utf8_next_char (*cur);
@@ -503,6 +506,7 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
 {
 	GString *gstr;
 	char *norm, *cur;
+	gboolean is_field, is_range_field;
 
 	norm = g_utf8_normalize (str, -1, G_NORMALIZE_ALL);
 	if (G_UNLIKELY(!norm)) {  /* not valid utf8? */
@@ -515,6 +519,8 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
  	if (!norm)
 		return NULL;
 
+	check_for_field (str, &is_field, &is_range_field);
+
 	gstr = g_string_sized_new (strlen (norm));
 
 	for (cur = norm; cur && *cur; cur = g_utf8_next_char (cur)) {
@@ -524,7 +530,8 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
 		uc = g_utf8_get_char (cur);
 
 		if (xapian_esc)
-			if (handle_esc_maybe (gstr, &cur, uc, query_esc))
+			if (handle_esc_maybe (gstr, &cur, uc, query_esc,
+					      is_range_field))
 				continue;
 
 		if (g_unichar_ismark(uc))
