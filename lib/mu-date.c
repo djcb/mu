@@ -23,6 +23,7 @@
 
 #include "mu-util.h"
 #include "mu-date.h"
+#include "mu-str.h"
 
 const char*
 mu_date_str_s (const char* frm, time_t t)
@@ -174,9 +175,12 @@ const char*
 mu_date_interpret_s (const char *datespec, gboolean is_begin)
 {
 	static char fulldate[14 + 1];
-	time_t now;
+	time_t now, t;
 
 	g_return_val_if_fail (datespec, NULL);
+
+	if (mu_str_is_empty (datespec) && is_begin)
+		return "000000000000"; /* beginning of time*/
 
 	now = time(NULL);
 	if (strcmp (datespec, "today") == 0) {
@@ -186,20 +190,17 @@ mu_date_interpret_s (const char *datespec, gboolean is_begin)
 		return fulldate;
 	}
 
-	if (strcmp (datespec, "now") == 0) {
+	if (mu_str_is_empty (datespec) || strcmp (datespec, "now") == 0) {
 		strftime(fulldate, sizeof(fulldate), "%Y%m%d%H%M%S",
 			 localtime(&now));
 		return fulldate;
 	}
 
-	{
-		time_t t;
-		t = mu_date_parse_hdwmy (datespec);
-		if (t != (time_t)-1) {
-			strftime(fulldate, sizeof(fulldate), "%Y%m%d%H%M%S",
-				 localtime(&t));
-			return fulldate;
-		}
+	t = mu_date_parse_hdwmy (datespec);
+	if (t != (time_t)-1) {
+		strftime(fulldate, sizeof(fulldate), "%Y%m%d%H%M%S",
+			 localtime(&t));
+		return fulldate;
 	}
 
 	return datespec; /* nothing changed */
