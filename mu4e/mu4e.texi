@@ -1,4 +1,5 @@
 \input texinfo.tex    @c -*-texinfo-*-
+@include texi.texi
 @c %**start of header
 @setfilename mu4e.info
 @settitle mu4e @value{mu-version} user manual
@@ -10,8 +11,6 @@
 
 @documentencoding UTF-8
 @c %**end of header
-
-@include texi.texi
 
 @copying
 Copyright @copyright{} 2012, 2013 Dirk-Jan C. Binnema

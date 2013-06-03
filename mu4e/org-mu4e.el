@@ -33,12 +33,12 @@
 (require 'org-exp nil 'noerror)
 
 (eval-when-compile (require 'cl))
-(eval-when-compile (require 'mu4e))
+(require 'mu4e)
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
   :group 'mu4e
-  :group 'org)
+  :group 'org) 
 
 (defcustom org-mu4e-link-desc-func
   (lambda (msg) (or (plist-get msg :subject) "No subject"))

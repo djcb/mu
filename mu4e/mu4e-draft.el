@@ -31,7 +31,7 @@
 
 (require 'mu4e-vars)
 (require 'mu4e-utils)
-
+(require 'mu4e-message)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

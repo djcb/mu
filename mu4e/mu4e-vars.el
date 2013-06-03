@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2013 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -632,7 +632,7 @@ filled when mu4e starts.")
 ;; from the server
 (defun mu4e~default-handler (&rest args)
   "*internal* Dummy handler function."
-  (mu4e-error "Not handled: %S" args))
+  (error "Not handled: %S" args))
 
 (defvar mu4e-error-func 'mu4e~default-handler
   "A function called for each error returned from the server

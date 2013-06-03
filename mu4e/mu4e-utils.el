@@ -34,7 +34,9 @@
 (require 'mu4e-vars)
 (require 'mu4e-about)
 (require 'mu4e-lists)
+;;(require 'mu4e-proc)
 (require 'doc-view)
+(require 'org)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the following is taken from org.el; we copy it here since we don't want to
@@ -638,6 +640,23 @@ This is used by the completion function in mu4e-compose."
 Checks whether the server process is live."
   (mu4e~proc-running-p))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; starting / getting mail / updating the index
+;;
+;;
+(defvar mu4e~update-timer nil
+  "The mu4e update timer.")
+(defconst mu4e~update-name "*mu4e-update*"
+  "Name of the process and buffer to update mail.")
+(defconst mu4e~update-buffer-height 8
+  "Height of the mu4e message retrieval/update buffer.")
+
+(defvar mu4e~get-mail-ask-password "mu4e get-mail: Enter password: "
+  "Query string for `mu4e-get-mail-command' password.")
+(defvar mu4e~get-mail-password-regexp "^Remote: Enter password: $"
+  "Regexp to match a password query in the `mu4e-get-mail-command' output.")
+
+
 (defun mu4e~start (&optional func)
   "If mu4e is already running, execute function FUNC (if non-nil).
 Otherwise, check various requirements, then start mu4e. When
@@ -698,21 +717,7 @@ successful, call FUNC (if non-nil) afterwards."
     (buffer-list)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; getting mail / updating the index
-;;
-;;
-(defvar mu4e~update-timer nil
-  "The mu4e update timer.")
-(defconst mu4e~update-name "*mu4e-update*"
-  "Name of the process and buffer to update mail.")
-(defconst mu4e~update-buffer-height 8
-  "Height of the mu4e message retrieval/update buffer.")
 
-(defvar mu4e~get-mail-ask-password "mu4e get-mail: Enter password: "
-  "Query string for `mu4e-get-mail-command' password.")
-(defvar mu4e~get-mail-password-regexp "^Remote: Enter password: $"
-  "Regexp to match a password query in the `mu4e-get-mail-command' output.")
 
 (defun mu4e~get-mail-process-filter (proc msg)
   "Filter the output of `mu4e-get-mail-command'.

@@ -127,7 +127,7 @@ removed."
 	    (car objcons)))))))
 
 
-(defsubst mu4e~proc-filter (proc str)
+(defun mu4e~proc-filter (proc str)
   "A process-filter for the 'mu server' output.
 It accumulates the strings into valid sexps by checking of the
 ';;eox' end-of-sexp marker, and then evaluating them.
@@ -263,7 +263,7 @@ The server output is as follows:
 	(setq sexp (mu4e~proc-eat-sexp-from-buf))))))
 
 
-;; error codes are defined in src/mu-util.h
+;; error codes are defined in src/mu-util
 ;;(defconst mu4e-xapian-empty 19 "Error code: xapian is empty/non-existent")
 
 (defun mu4e~proc-sentinel (proc msg)
@@ -291,6 +291,14 @@ The server output is as follows:
       (t
 	(error "Something bad happened to the mu server process")))))
 
+(defsubst mu4e--docid-msgid-param (docid-or-msgid)
+  "Construct a backend parameter based on DOCID-OR-MSGID."
+  (format
+    (if (stringp docid-or-msgid)
+      "msgid:\"%s\""
+      "docid:%d")
+    docid-or-msgid))
+
 (defsubst mu4e~proc-send-command (frm &rest args)
   "Send as command to the mu server process.
 Start the process if needed."
@@ -299,14 +307,6 @@ Start the process if needed."
   (let ((cmd (apply 'format frm args)))
     (mu4e-log 'to-server "%s" cmd)
     (process-send-string mu4e~proc-process (concat cmd "\n"))))
-
-(defsubst mu4e--docid-msgid-param (docid-or-msgid)
-  "Construct a backend parameter based on DOCID-OR-MSGID."
-  (format
-    (if (stringp docid-or-msgid)
-      "msgid:\"%s\""
-      "docid:%d")
-    docid-or-msgid))
 
 (defun mu4e~proc-remove (docid)
   "Remove message identified by docid.

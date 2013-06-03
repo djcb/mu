@@ -23,6 +23,8 @@
 
 ;; Contributed by sabof
 
+(require 'mu4e)
+
 (defun mu4e-headers-mark-all-unread-read ()
   "Put a ! \(read) mark on all visible unread messages."
   (interactive)
