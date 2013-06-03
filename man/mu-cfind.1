@@ -38,8 +38,8 @@ would find all contacts with a gmail-address, while
 
 lists all contacts with Mary in either name or e-mail address.
 
-If you do not specify any search expression, \fBmu cfind\fR returns the full
-list of contacts. Note, \fBmu cfind\fR uses does not directly use the
+If you do not specify a search expression, \fBmu cfind\fR returns the full
+list of contacts. Note, \fBmu cfind\fR does not use the
 database, but uses a cache file with e-mail addresses, which is populated
 during the indexing process.
 
@@ -91,8 +91,7 @@ could specify
 .SH RETURN VALUE
 
 \fBmu cfind\fR returns 0 upon successful completion -- that is, at least one
-contact was found. Anything else leads to a non-zero return value, for
-example:
+contact was found. Anything else leads to a non-zero return value:
 
 .nf
 | code | meaning                        |

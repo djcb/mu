@@ -49,7 +49,7 @@ view a specific message
 \fBmu\fR is a set of tools for dealing with Maildirs and the e-mail messages
 in them.
 
-\fBmu\fRs main function is to enable searching of e-mail messages. It does so
+\fBmu\fR's main function is to enable searching of e-mail messages. It does so
 by periodically scanning a Maildir directory tree and analyzing the e-mail
 messages found ('indexing'). The results of this analysis are stored in a
 database, which can then be queried.
@@ -62,8 +62,8 @@ and exporting contact information.
 e-mail clients.
 
 This manpage gives a general overview of the available commands
-(\fBindex\fR, \fBfind\fR, etc.); each of the \fBmu\fR commands has its
-own man-page as well.
+(\fBindex\fR, \fBfind\fR, etc.); each \fBmu\fR command has its own
+man-page as well.
 
 .SH COMMANDS
 
@@ -113,7 +113,7 @@ for extract MIME-parts (such as attachments) from messages. See
 
 Some \fBmu\fR sub-commands support colorized output. If you don't want this,
 you can use the \fI--nocolor\fR/ option to disable it. Even then, colors will
-only shown when output goes to a sufficiently capable terminal (this roughly
+only be shown when output goes to a sufficiently capable terminal (this roughly
 mirrors the \fI--color=auto\fR of the GNU-version of the \fBls\fR-command).
 
 Instead of the \fI--color\fR/, you can also set the \fBMU_NOCOLOR\fR
@@ -143,7 +143,7 @@ For \fBfind\fR the output is encoded according the locale for
 .SH DATABASE AND FILE
 
 Commands \fBmu index\fR and \fBfind\fR and \fBcfind\fR work with the database,
-while the other ones work on invidual mail files. Hence, running \fview\fR,
+while the other ones work on invidual mail files. Hence, running \fBview\fR,
 \fBmkdir\fR and \fBextract\fR does not require the mu database.
 
 The various commands are discussed in more detail in their own separate
@@ -151,7 +151,7 @@ man-pages; here the general options are discussed.
 
 .SH OPTIONS
 
-\fBmu\fR offers a number of general options that apply to all commands,
+\fBmu\fR offers several general options that apply to all commands,
 including \fBmu\fR without any command.
 
 .TP
@@ -163,7 +163,7 @@ store and read its database and logs. By default, \fI~/.mu\fR is used.
 \fB\-d\fR, \fB\-\-debug\fR
 makes \fBmu\fR generate extra debug information,
 useful for debugging the program itself. By default, debug information goes to
-the log file, \fI~/.mu/mu.log\fR. It can safely be deleted when \fBmu\fR is
+the log file, \fI~/.mu/log/mu.log\fR. It can safely be deleted when \fBmu\fR is
 not running. When running with \fB--debug\fR option, the log file can grow
 rather quickly. See the note on logging below.
 
@@ -193,7 +193,7 @@ respectively the specified command or for all commands.
 .SH ERROR CODES
 
 The various mu subcommands typically exit with 0 (zero) upon success, and
-non-zero when some error occured. The table lists the various error codes.
+non-zero when some error occurred. The table lists the various error codes.
 
 .nf
 exit code |  error
