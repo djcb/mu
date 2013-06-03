@@ -44,7 +44,7 @@ dist_lisp_LISP=			\
 	org-mu4e.el
 
 mu4e-about.el: mu4e-about.org
-	@echo ";; auto-generated"           >   qmu4e-about.el
+	@echo ";; auto-generated"           >   mu4e-about.el
 	@echo "(defconst mu4e-about \""     >>  mu4e-about.el
 	@sed 's/"/\\"/g' < mu4e-about.org   >>  mu4e-about.el
 	@echo "\" \"About mu4e.\")"         >>  mu4e-about.el
