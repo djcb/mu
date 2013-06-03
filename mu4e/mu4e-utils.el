@@ -178,7 +178,7 @@ an absolute path."
   "Like `message', but prefixed with mu4e.
 If we're waiting for user-input or if there's some message in the
 echo area, don't show anything."
-  (unless (or (active-minibuffer-window) (current-message))
+  (unless (or (active-minibuffer-window))
     (message "%s" (apply 'mu4e-format frm args))))
 
 (defun mu4e-error (frm &rest args)
@@ -920,9 +920,9 @@ is ignored."
 		   (create-image imgpath 'imagemagick))
 		 (create-image imgpath))))
     ;;(message "DISPLAY: %S %S" imgpath img)
-    (when img
+    (when img 
       (newline)
-      (insert-image img imgpath nil t))))
+      (insert-image img))))
 
 
 (defun mu4e-hide-other-mu4e-buffers ()
