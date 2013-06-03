@@ -186,7 +186,10 @@ depending on whether this is the beginning or end of the date interval. For
 example, for the beginning of the interval "201012" would be interpreted as
 "20101201010000", or December 1, 2010 at 00:00, while for the end of the
 interval, this would be interpreted as "20101231122359", or December 31, 2010
-at 23:59.
+at 23:59. If you omit the left part completely, the beginning date is
+assumed to be January 1, year 0 at 00:00.  Likewise, if you omit the
+right part, the end data is assumed to be to the last second of the
+year 9999.
 
 To get all messages between (inclusive) the 5th of May 2009 and the 2nd of
 June 2010, you could use:
