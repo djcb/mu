@@ -367,7 +367,7 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
 			      MU_ERROR_INTERNAL);
 
-	/* note: params[0] will be 'add' */
+	/* note: params[0] will be 'remove' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu remove <file> [<files>]");
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
