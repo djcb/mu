@@ -553,13 +553,14 @@ process."
 
 (defun mu4e~rfc822-phrase-type (ph)
   "Return either atom, quoted-string, a corner-case or nil. This
-  checks for quotes around the phrase first
+   checks for empty string first. Then quotes around the phrase 
    (returning 'rfc822-quoted-string). Then whether there is a quote
    inside the phrase (returning 'rfc822-containing-quote).
    The reverse of the RFC atext definition is then tested.
    If it matches, nil is returned, if not, it is an 'rfc822-atom, which
    is returned."
      (cond
+       ((= (length ph) 0) 'rfc822-empty)
        ((= (aref ph 0) ?\")
 	 (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
 	   'rfc822-quoted-string
