@@ -102,7 +102,7 @@ e-mail addresses. If LST is nil, returns nil."
 	(let ((name (car addrcell))
 	       (email (cdr addrcell)))
 	  (if name
-	    (format "\"%s\" <%s>" name email)
+	    (format "%s <%s>" (rfc822-quoteit name) email)
 	    (format "%s" email))))
       lst ", ")))
 
