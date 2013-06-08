@@ -1,6 +1,6 @@
 ;; mu4e-mark.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2013 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -81,6 +81,24 @@ where
 (defun mu4e~mark-clear ()
   "Clear the marks subsystem."
   (clrhash mu4e~mark-map))
+
+
+(defmacro mu4e~mark-in-context (&rest body)
+  "Evaluate BODY in the context of the headers buffer in case this
+is either a headers or view buffer, and "
+  `(cond
+     ((eq major-mode 'mu4e-headers-mode) ,@body)
+     ((eq major-mode 'mu4e-view-mode)
+       (if (buffer-live-p mu4e~view-headers-buffer)
+	 (let* ((msg (mu4e-message-at-point))
+		 (docid (mu4e-message-field msg :docid)))
+	   (with-current-buffer mu4e~view-headers-buffer
+	     (if (mu4e~headers-goto-docid docid)
+	       ,@body
+	       (mu4e-error "cannot find message in headers buffer."))))
+	 (mu4e-error "no headers buffer connected to view")))
+     (t (progn (mu4e-message "%S" major-mode) ,@body)))) 
+     
 
 (defun mu4e-mark-at-point (mark &optional target)
   "Mark (or unmark) message at point.
@@ -229,18 +247,19 @@ as well."
 If there are such marks, replace them with a _real_ mark (ask the
 user which one)."
   (interactive)
-  (let ((markpair))
-    (maphash
-      (lambda (docid val)
-	(let ((mark (car val)) (target (cdr val)))
-	  (when (eql mark 'something)
-	    (unless markpair
-	      (setq markpair
-		(mu4e~mark-get-markpair "Set deferred mark to: " nil)))
-	    (save-excursion
-	      (when (mu4e~headers-goto-docid docid)
-		(mu4e-mark-set (car markpair) (cdr markpair)))))))
-      mu4e~mark-map)))
+  (mu4e~mark-in-context
+    (let ((markpair))
+      (maphash
+	(lambda (docid val)
+	  (let ((mark (car val)) (target (cdr val)))
+	    (when (eql mark 'something)
+	      (unless markpair
+		(setq markpair
+		  (mu4e~mark-get-markpair "Set deferred mark to: " nil)))
+	      (save-excursion
+		(when (mu4e~headers-goto-docid docid)
+		  (mu4e-mark-set (car markpair) (cdr markpair)))))))
+	mu4e~mark-map))))
 
 
 (defun mu4e~mark-check-target (target)
@@ -264,46 +283,48 @@ work well.
 
 If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (interactive)
-  (let ((marknum (hash-table-count mu4e~mark-map)))
-    (if (zerop marknum)
-      (message "Nothing is marked")
-      (mu4e-mark-resolve-deferred-marks)
-      (when (or no-confirmation
-	      (y-or-n-p
-		(format "Are you sure you want to execute %d mark%s?"
-		  marknum (if (> marknum 1) "s" ""))))
-	(maphash
-	  (lambda (docid val)
-	    (let ((mark (car val)) (target (cdr val)))
-	      ;; note: whenever you do something with the message,
-	      ;; it looses its N (new) flag
-	      (case mark
-		(refile  (mu4e~proc-move docid (mu4e~mark-check-target target) "-N"))
-		(delete  (mu4e~proc-remove docid))
-		(flag    (mu4e~proc-move docid nil    "+F-u-N"))
-		(move    (mu4e~proc-move docid (mu4e~mark-check-target target) "-N"))
-		(read    (mu4e~proc-move docid nil    "+S-u-N"))
-		(trash   (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N"))
-		(unflag  (mu4e~proc-move docid nil    "-F-N"))
-		(unread  (mu4e~proc-move docid nil    "-S+u-N"))
-		(otherwise (mu4e-error "Unrecognized mark %S" mark)))))
-	  mu4e~mark-map))
-      (mu4e-mark-unmark-all)
-      (message nil))))
+  (mu4e~mark-in-context
+    (let ((marknum (hash-table-count mu4e~mark-map)))
+      (if (zerop marknum)
+	(message "Nothing is marked")
+	(mu4e-mark-resolve-deferred-marks)
+	(when (or no-confirmation
+		(y-or-n-p
+		  (format "Are you sure you want to execute %d mark%s?"
+		    marknum (if (> marknum 1) "s" ""))))
+	  (maphash
+	    (lambda (docid val)
+	      (let ((mark (car val)) (target (cdr val)))
+		;; note: whenever you do something with the message,
+		;; it looses its N (new) flag
+		(case mark
+		  (refile  (mu4e~proc-move docid (mu4e~mark-check-target target) "-N"))
+		  (delete  (mu4e~proc-remove docid))
+		  (flag    (mu4e~proc-move docid nil    "+F-u-N"))
+		  (move    (mu4e~proc-move docid (mu4e~mark-check-target target) "-N"))
+		  (read    (mu4e~proc-move docid nil    "+S-u-N"))
+		  (trash   (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N"))
+		  (unflag  (mu4e~proc-move docid nil    "-F-N"))
+		  (unread  (mu4e~proc-move docid nil    "-S+u-N"))
+		  (otherwise (mu4e-error "Unrecognized mark %S" mark)))))
+	    mu4e~mark-map))
+	(mu4e-mark-unmark-all)
+	(message nil)))))
 
 (defun mu4e-mark-unmark-all ()
   "Unmark all marked messages."
   (interactive)
-  (when (or (null mu4e~mark-map) (zerop (hash-table-count mu4e~mark-map)))
-    (mu4e-warn "Nothing is marked"))
-  (maphash
-    (lambda (docid val)
-      (save-excursion
-	(when (mu4e~headers-goto-docid docid)
-	  (mu4e-mark-set 'unmark))))
-    mu4e~mark-map)
-  ;; in any case, clear the marks map
-  (mu4e~mark-clear))
+  (mu4e~mark-in-context
+    (when (or (null mu4e~mark-map) (zerop (hash-table-count mu4e~mark-map)))
+      (mu4e-warn "Nothing is marked"))
+    (maphash
+      (lambda (docid val)
+	(save-excursion
+	  (when (mu4e~headers-goto-docid docid)
+	    (mu4e-mark-set 'unmark))))
+      mu4e~mark-map)
+    ;; in any case, clear the marks map
+    (mu4e~mark-clear)))
 
 (defun mu4e-mark-docid-marked-p (docid)
   "Is the given docid marked?"
@@ -313,25 +334,27 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 (defun mu4e-mark-marks-num ()
   "Return the number of marks in the current buffer."
   (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0))
+ 
 
 (defun mu4e-mark-handle-when-leaving ()
   "If there are any marks in the current buffer, handle those
 according to the value of `mu4e-headers-leave-behavior'. This
 function is to be called before any further action (like searching,
 quiting the buffer) is taken; returning t means 'take the following
-action', return nil means 'don't do anything'"
-  (let ((marknum (mu4e-mark-marks-num))
-	 (what mu4e-headers-leave-behavior))
-    (unless (zerop marknum) ;; nothing to do?
-      (when (eq what 'ask)
-	(setq what (mu4e-read-option
-		     (format  "There are %d existing mark(s); should we: " marknum)
-		     '( ("apply marks"   . apply)
-			("ignore marks?" . ignore)))))
-      ;; we determined what to do... now do it
-      (when (eq what 'apply)
-	(mu4e-mark-execute-all t)))))
-
+action', return nil means 'don't do anything'."
+  (mu4e~mark-in-context 
+    (let ((marknum (mu4e-mark-marks-num))
+	   (what mu4e-headers-leave-behavior))
+      (unless (zerop marknum) ;; nothing to do?
+	(when (eq what 'ask)
+	  (setq what (mu4e-read-option
+		       (format  "There are %d existing mark(s); should we: " marknum)
+		       '( ("apply marks"   . apply)
+			  ("ignore marks?" . ignore)))))
+	;; we determined what to do... now do it
+	  (when (eq what 'apply)
+	    (mu4e-mark-execute-all t))))))
+    
 
 (provide 'mu4e-mark)
 ;; End of mu4e-mark.el
