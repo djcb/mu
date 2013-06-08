@@ -1,4 +1,4 @@
-.TH MU FIND 1 "December 2012" "User Manuals"
+.TH MU FIND 1 "June 2013" "User Manuals"
 
 .SH NAME
 
@@ -53,9 +53,9 @@ messages.
 
 A wildcard search is a search where a \fB*\fR matches the last \fIn\fR
 character(s) in some string. The string must always start with one or more
-characters before the wildcards. Since version 0.9.6, \fBmu\fR also supports
-wildcard searches for all fields except maildirs and paths. So, to get all
-mails with a subject containing a word starting with \fBcom\fR, you can use:
+characters before the wildcard. \fBmu\fR supports wildcard searches for all
+fields except maildirs and paths. To get all mails with a subject containing a
+word starting with \fBcom\fR, you can use:
 
 .nf
   $ mu find 'subject:com*'
@@ -67,9 +67,6 @@ otherwise the shell would interpret the '*'. It is equally important to
 remember that the '*' invokes the wildcard search only when used as the
 rightmost character of a search term. Furthermore, it is \fBnot\fR a regular
 expression.
-
-In older versions of mu, queries were logged in \fI<mu-home>/mu.log\fR;
-however, since version 0.9, mu no longer does this.
 
 The basic way to search a message is to type some words matching it, as you
 would do in an internet search engine. For example,
@@ -656,7 +653,7 @@ non-zero return value, for example:
 Please report bugs if you find them:
 .BR http://code.google.com/p/mu0/issues/list
 If you have specific messages which are not matched correctly, please attach
-them (appropriately censored of course).
+them (appropriately censored if needed).
 
 .SH AUTHOR
 
