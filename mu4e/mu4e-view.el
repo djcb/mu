@@ -781,10 +781,10 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 
 
 (defmacro mu4e~view-in-headers-context (&rest body)
-  "Evaluate BODY in the current headers buffer, with moved to the
-current message."
+  "Evaluate BODY in the context of the headers buffer connected to
+this view."
   `(progn
-     (unless '(buffer-live-p mu4e~view-headers-buffer)
+     (unless (buffer-live-p mu4e~view-headers-buffer)
        (mu4e-error "no headers-buffer connected"))
      (let* ((msg (mu4e-message-at-point))
 	     (docid (mu4e-message-field msg :docid)))
