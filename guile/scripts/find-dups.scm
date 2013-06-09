@@ -20,6 +20,7 @@ exec guile -e main -s $0 $@
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 ;; INFO: find duplicate messages
+;; INFO: options:
 ;; INFO:   --muhome=<muhome>: path to mu home dir
 
 (use-modules (mu) (mu script) (mu stats))
