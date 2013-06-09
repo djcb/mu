@@ -183,6 +183,7 @@ struct _MuConfig {
 					 * (open) the attmnt using xdgopen */
 	/* options for mu-script */
 	gchar           *script;        /* script to run */
+	const char      **script_params; /* parameters for scripts */
 };
 typedef struct _MuConfig MuConfig;
 

@@ -593,6 +593,8 @@ set_log_options (MuConfig *opts)
 		logopts |= MU_LOG_OPTIONS_DEBUG;
 }
 
+
+
 MuError
 mu_cmd_execute (MuConfig *opts, GError **err)
 {
@@ -627,10 +629,7 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	case MU_CONFIG_CMD_SERVER:
 		merr = with_store (mu_cmd_server, opts, FALSE, err);   break;
 	default:
-		show_usage ();
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "unknown command '%s'", opts->cmdstr);
-		return MU_ERROR_IN_PARAMETERS;
+		merr = MU_ERROR_IN_PARAMETERS; break;
 	}
 
 	return merr;
