@@ -2403,16 +2403,17 @@ shortcut character @key{o} is due to the first character of
 The @command{emacs}-package @t{sauron}@footnote{Sauron can be found at
 @url{https://github.com/djcb/sauron}, or in the Marmalade package-repository
 at @url{http://http://marmalade-repo.org/}} (by the same author) can be used
-to get notifications about new mails. If you put something like the below
-script in your @t{crontab} (or have some other way of having it execute every
-@emph{n} minutes) you receive notifications in the sauron-buffer when new
-messages arrive.
+to get notifications about new mails. If you run something like the below
+script from your @t{crontab} (or have some other way of having it execute
+every @emph{n} minutes), you receive notifications in the @t{sauron}-buffer
+when new messages arrive.
 
 @verbatim
 #!/bin/sh
-# put the path to your Inbox folder here
 
+# put the path to your Inbox folder here
 CHECKDIR="/home/$LOGNAME/Maildir/Inbox"
+
 sauron-msg () {
     DBUS_COOKIE="/home/$LOGNAME/.sauron-dbus"
     if test "x$DBUS_SESSION_BUS_ADDRESS" = "x"; then
@@ -3023,6 +3024,16 @@ utf-8}; so, if you problems with encodings, be sure to have
 visible in the headers buffer, you can not collapse/open them.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded.} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
+@item @emph{The @t{emacs} front-end of the @t{notmuch} e-mail indexer
+@t{notmuch} conflicts with @t{mu4e}}. @t{notmuch} running in parallel with
+@t{mu4e} leads to
+@verbatim
+error in process filter: mu4e-error-handler: Error 70: cannot read
+~/Maildir/...
+@end verbatim
+when sending a reply to a new e-mail. This seems to be caused by @t{notmuch}
+changing the name of the original message file while @t{mu4e} is working in on
+it. To prevent this, deactivate @t{notmuch} in your Emacs setup.
 @end itemize
 
 
