@@ -573,9 +573,8 @@ after the end of the search results."
       (define-key map (kbd "-")            'mu4e-headers-mark-for-unflag)
       (define-key map (kbd "&")            'mu4e-headers-mark-custom)
 
-      ;; (define-key map (kbd "*")              'mu4e-headers-mark-for-something)
-      ;; (define-key map (kbd "<kp-multiply>")  'mu4e-headers-mark-for-something)
-
+      (define-key map (kbd "*")              'mu4e-headers-mark-for-something)
+      (define-key map (kbd "<kp-multiply>")  'mu4e-headers-mark-for-something)
       (define-key map (kbd "<insertchar>")   'mu4e-headers-mark-for-something)
       (define-key map (kbd "<insert>")       'mu4e-headers-mark-for-something)
 

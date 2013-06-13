@@ -236,7 +236,7 @@ user which one)."
 	  (when (eql mark 'something)
 	    (unless markpair
 	      (setq markpair
-		(mu4e~mark-get-markpair "Set deferred mark to: " nil)))
+		(mu4e~mark-get-markpair "Set deferred mark(s) to: " nil)))
 	    (save-excursion
 	      (when (mu4e~headers-goto-docid docid)
 		(mu4e-mark-set (car markpair) (cdr markpair)))))))
