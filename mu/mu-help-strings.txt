@@ -142,25 +142,21 @@ mu4e e-mail client.
 
 #BEGIN MU_CONFIG_CMD_SCRIPT
 #STRING
-mu script [--script=<script>] [<pattern>] [-v] -- [script-options]
+mu script [<pattern>] [-v]
+mu <script-name> [<script options>]
 #STRING
-Without any parameter, list the available scripts. With <pattern>,
-list only those scripts whose name or one-line description matches it.
-With -v, give longer descriptions of each script.
 
-With --script=<script>, run the script whose name is <script>; pass
-any arguments to the script after the '--' double-dash.
+List the available scripts and/or run them (if mu was built with support for
+scripts). With <pattern>, list only those scripts whose name or one-line
+description matches it.  With -v, get a longer description for each script.
 
 Some examples:
-List all available scripts (one-line descriptions):
-  $ mu script
 
 List all available scripts matching 'month' (long descriptions):
   $ mu script -v month
 
 Run the 'msgs-per-month' script, and pass it the '--textonly' parameter:
-  $ mu script --script=msgs-per-month -- --textonly
-(as mentioned, parameters to the script follow the '--')
+  $ mu msgs-per-month --textonly
 #END
 
 

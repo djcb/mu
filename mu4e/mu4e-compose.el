@@ -192,10 +192,15 @@ If needed, set the Fcc header, and register the handler function."
 
 
 
-(defconst mu4e~compose-hidden-headers
+(defvar mu4e-compose-hidden-headers
   `("^References:" "^Face:" "^X-Face:"
      "^X-Draft-From:" "^User-agent:")
   "Hidden headers when composing.")
+
+(defun mu4e~compose-hide-headers ()
+  "Hide the headers as per `mu4e-compose-hidden-headers'."
+  (let ((message-hidden-headers mu4e-compose-hidden-headers))
+    (message-hide-headers)))
 
 (defconst mu4e~compose-address-fields-regexp
   "^\\(To\\|B?Cc\\|Reply-To\\|From\\):")
@@ -211,8 +216,7 @@ appear on disk."
       (mu4e~compose-set-friendly-buffer-name)
       (mu4e~draft-insert-mail-header-separator)
       ;; hide some headers again
-      (let ((message-hidden-headers mu4e~compose-hidden-headers))
-	(message-hide-headers))
+      (mu4e~compose-hide-headers)
       (set-buffer-modified-p nil)
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
@@ -255,7 +259,7 @@ appear on disk."
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
 \\{message-mode-map}."
-  (let ((message-hidden-headers mu4e~compose-hidden-headers))
+  (progn 
     (use-local-map mu4e-compose-mode-map)
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
@@ -279,7 +283,7 @@ appear on disk."
 
     (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
     (define-key mu4e-compose-mode-map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
-
+    
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (defun mu4e~compose-save-before-sending ()
@@ -293,7 +297,7 @@ appear on disk."
 	(setq mu4e-sent-func 'mu4e-sent-handler)
 	(mu4e~proc-sent (buffer-file-name) mu4e~draft-drafts-folder)) nil))
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
-;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
+  ;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
 
 (defconst mu4e~compose-buffer-max-name-length 30
@@ -312,12 +316,7 @@ appear on disk."
 		     (truncate-string-to-width str
 		       mu4e~compose-buffer-max-name-length
 		       nil nil t)))))
-
-(defconst mu4e~compose-hidden-headers
-  '("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"
-     "^User-Agent:" "^In-Reply-To:")
-  "List of regexps with message headers that are to be hidden.")
-
+ 
 (defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
@@ -371,8 +370,7 @@ tempfile)."
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
    ;; hide some headers
-  (let ((message-hidden-headers mu4e~compose-hidden-headers))
-    (message-hide-headers))
+  (mu4e~compose-hide-headers)
   ;; switch on the mode
   (mu4e-compose-mode))
 

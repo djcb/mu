@@ -28,7 +28,7 @@ Documentation License.''
 
 @titlepage
 @title @t{mu-guile} - extending @t{mu} with Guile Scheme
-@subtitle{version  @value{mu-version}}
+@subtitle version  @value{mu-version}
 @author Dirk-Jan C. Binnema
 
 @c The following two commands start the copyright page.
@@ -59,7 +59,7 @@ Welcome to @t{mu-guile}!
 @t{mu} is a program for indexing and searching your e-mails. It can search
 your messages in many different ways, but sometimes that may not be
 enough. If you have very specific queries, or want do generate some
-statistics, you need some more power. 
+statistics, you need some more power.
 
 @t{mu-guile} is made for those cases. @t{mu-guile} exposes the internals of
 @t{mu} and its database to the @t{guile} programming language. Guile is the
@@ -80,6 +80,7 @@ Trust me, it's not very hard -- and it it's @emph{fun}!
 * Attachments and other parts::
 * Statistics::
 * Plotting data::
+* Writing scripts::
 
 Appendices
 
@@ -94,21 +95,22 @@ Appendices
 * Making sure it works::
 @end menu
 
-This chapter walks you through the installation and the basic setup. 
+This chapter walks you through the installation and the basic setup.
 
 @node Installation
 @section Installation
 
 @t{mu-guile} is part of @t{mu} - by installing the latter, the former is
-installed as well. At the time of writing, there are no distribution-provided
-packaged versions of @t{mu-guile}; so for now, you need to follow the steps
-below.
+necessarily installed as well. At the time of writing, there are no
+distribution-provided packaged versions of @t{mu-guile}; so for now, you need
+to follow the steps below.
 
 @subsection Guile 2.x
 
 @t{mu-guile} is built automatically when @t{mu} is built, if you have
-@t{guile} installed (@t{mu} checks for this during @t{configure}). Thus, the
-first step is to ensure you have @t{guile} installed.
+@t{guile} version 2 or higher. (@t{mu} checks for this during
+@t{configure}). Thus, the first step is to ensure you have @t{guile}
+installed.
 
 On Debian/Ubuntu you can install @t{guile} 2.x using the @t{guile-2.0-dev}
 package (and its dependencies):
@@ -116,7 +118,7 @@ package (and its dependencies):
 $ sudo apt-get install guile-2.0-dev
 @end example
 
-At the time of write, there are no official packages for
+At the time of writing, there are no official packages for
 Fedora@footnote{@url{https://bugzilla.redhat.com/show_bug.cgi?id=678238}}.  If
 you are using Fedora or any other system that does not have packages, you need
 to compile @t{guile} from
@@ -138,9 +140,6 @@ $ sudo yum install gnuplot
 @end example
 
 @subsection mu
-
-At the time of writing, there are no distribution packages for @t{mu-guile},
-so we are assuming installation from source packages.
 
 Assuming @t{guile} 2.x is installed correctly, @t{mu} finds it during its
 @t{configure}-stage, and creates @t{mu-guile}. Building @t{mu} follows the
@@ -227,7 +226,7 @@ Now, copy-paste the following after the prompt:
 
 @noindent
 After pressing @key{Enter}, you should get a list of all subjects of messages
-that match @t{hello}: 
+that match @t{hello}:
 
 @verbatim
 ...
@@ -240,7 +239,7 @@ Subject: When all is lost
 
 @noindent
 If all this works, congratulations! @t{mu-guile} is installed now, ready to
-serve your every whim!
+serve your every searching need!
 
 @node Initializing mu-guile
 @chapter Initializing mu-guile
@@ -269,7 +268,7 @@ This program is free software, and you are welcome to redistribute it
 under certain conditions; type `,show c' for details.
 
 Enter `,help' for help.
-scheme@(guile-user)> 
+scheme@(guile-user)>
 @end verbatim
 @end cartouche
 
@@ -293,7 +292,7 @@ scheme@(guile-user)> (mu:initialize)
 This opens the database for reading, using the default location of
 @file{~/.mu}@footnote{If you keep your @t{mu} database in a non-standard
 place, use @code{(mu:initialize "/path/to/my/mu/")}}
- 
+
 Now, @t{mu-guile} is ready to go. In the next chapter, we go through the
 modules and show what you can do with them.
 
@@ -311,15 +310,15 @@ In this chapter, we discuss searching messages and doing things with them.
 @node Finding messages
 @section Finding messages
 Now we are ready to retrieve some messages from the system. There are two main
-functions to do this:
+procedures to do this:
 
 @itemize
 @item @code{(mu:message-list [<search-expression>])}
-@item @code{(mu:for-each-message <function> [<search-expression>])}
+@item @code{(mu:for-each-message <procedure> [<search-expression>])}
 @end itemize
 
 @noindent
-The first function, @code{mu:message-list} returns a list of all messages
+The first procedure, @code{mu:message-list} returns a list of all messages
 matching @t{<search-expression>}; if you leave @t{<search-expression>} out, it
 returns @emph{all} messages. For example, to get all messages with @t{coffee}
 in the subject line:
@@ -333,7 +332,7 @@ $1 = (#<<mu:message> 9040640> #<<mu:message> 9040630>
 @noindent
 Apparently, we have three messages matching @t{subject:coffee}, so we get a
 list of three @code{<mu:message>} objects. Let's just use the
-@code{mu:subject} function ('method') provided by @code{<mu:message>} objects
+@code{mu:subject} procedure ('method') provided by @code{<mu:message>} objects
 to retrieve the subject-field (more about methods in the next section).
 
 For your convenience, @t{guile} has saved the result of our last query in a
@@ -346,8 +345,8 @@ $2 = "Re: best coffee ever!"
 @end verbatim
 
 @noindent
-The second function we mentioned, @code{mu:for-each-message}, executes some
-function for each message matched by the search expression (or @emph{all}
+The second procedure we mentioned, @code{mu:for-each-message}, executes some
+procedure for each message matched by the search expression (or @emph{all}
 messages if the search expression is omitted):
 
 @verbatim
@@ -380,7 +379,7 @@ Now that we've seen how to retrieve lists of message objects
 
 @code{<mu:message>} defines the following methods that all take a single
 @code{<mu:message>} object as a parameter. We won't go into the exact meanings
-for all of these functions here - for the details about various flags /
+for all of these procedures here - for the details about various flags /
 properties, please refer to the @t{mu-find} man-page.
 
 @itemize
@@ -472,19 +471,19 @@ e-mail corpus.
 
 We can retrieve the sender and recipients of an e-mail message using methods
 like @code{mu:from}, @code{mu:to} etc.; @xref{Message methods}. These
-functions return the list of recipients as a single string; however, often it
+procedures return the list of recipients as a single string; however, often it
 is more useful to deal with recipients as separate objects.
 
 @menu
-* Contact functions and objects::
+* Contact procedures and objects::
 * All contacts::
-* Utility functions::
+* Utility procedures::
 * Example - mutt export::
 @end menu
 
 
-@node Contact functions and objects
-@section Contact functions and objects
+@node Contact procedures and objects
+@section Contact procedures and objects
 
 Message objects (@pxref{Messages}) have a method @t{mu:contacts}:
 
@@ -529,17 +528,17 @@ Sometimes you may want to inspect @emph{all} the different contacts in the
 @t{mu} database. This is useful, for instance, when exporting contacts to some
 external format that can then be important in an e-mail program.
 
-To enable this, there is the function @code{mu:for-each-contact}, defined as
+To enable this, there is the procedure @code{mu:for-each-contact}, defined as
 
-   @code{(mu:for-each-contact function [search-expression])}.
+   @code{(mu:for-each-contact procedure [search-expression])}.
 
 This will aggregate the unique contacts from @emph{all} messages matching
 @t{<search-expression>} (when it is left empty, it will match all messages in
-the database), and execute @t{function} for each of them.
+the database), and execute @t{procedure} for each of them.
 
-The @t{function} receives an object of the type @t{<mu:contact-with-stats>},
+The @t{procedure} receives an object of the type @t{<mu:contact-with-stats>},
 which is a @emph{subclass} of the @t{<mu:contact>} class discussed in
-@xref{Contact functions and objects}. @t{<mu:contact-with-stats>} objects
+@xref{Contact procedures and objects}. @t{<mu:contact-with-stats>} objects
 expose the following additional methods:
 
 @itemize
@@ -553,11 +552,11 @@ The method assumes an e-mail address is unique for a certain contact; if a
 certain e-mail address occurs with different names, it uses the most recent
 non-empty name.
 
-@node Utility functions
-@section Utility functions
+@node Utility procedures
+@section Utility procedures
 
 To make dealing with contacts even easier, there are a number of utility
-functions that can save you a bit of typing.
+procedures that can save you a bit of typing.
 
 For converting contacts to some textual form, there is @code{(mu:contact->string
 <mu:contact> format)}, which takes a contact and returns a text string with
@@ -578,8 +577,8 @@ something like:
 alias <nick> [<name>] "<" <email> ">"
 @end verbatim
 
-Anyway, there is the function @code{(mu:contact->string <mu:contact> format)}
-that we can use to do the conversion.
+@t{mu guile} provides the procedure @code{(mu:contact->string <mu:contact>
+format)} that we can use to do the conversion.
 
 We may want to focus on people with whom we have frequent correspondence; so
 we may want to limit ourselves to people we have seen at least 10 times in the
@@ -654,7 +653,7 @@ if there is none.
 Then, we may want to save the part to a file; this can be done using either:
 @itemize
 @item @code{(mu:save part <part>)} - save a part to a temporary file, return the file
-name@footnote{the temporary filename is a predictable function of (user-id,
+name@footnote{the temporary filename is a predictable procedure of (user-id,
 msg-path, part-index)}
 @item @code{(mu:save-as <part> <path>)} - save part to file at path
 @end itemize
@@ -703,7 +702,7 @@ probably be a bit more elegant.
 @node Statistics
 @chapter Statistics
 
-@t{mu-guile} offers some convenience functions to determine various statistics
+@t{mu-guile} offers some convenience procedures to determine various statistics
 about the messages in the database.
 
 @menu
@@ -743,16 +742,16 @@ scheme@@(guile-user)> ;; subject length
 scheme@@(guile-user)> (mu:correl mu:size (lambda (msg)
                         (string-length (mu:subject msg))) "subject:hello")
 $5 = -0.10804368622292
-scheme@@(guile-user)> 
+scheme@@(guile-user)>
 @end example
 
 @node Tabulating values
 @section Tabulating values
 
-@code{(mu:tabulate <function> [<search-expr>])} applies @t{<function>} to each
+@code{(mu:tabulate <procedure> [<search-expr>])} applies @t{<procedure>} to each
 message matching @t{<search-expr>} (leave empty to match @emph{all} messages),
 and returns a associative list (a list of pairs) with each of the different
-results of @t{<function>} and their frequencies. For fields that contain lists
+results of @t{<procedure>} and their frequencies. For fields that contain lists
 of values (such as address-fields), each of the values in the list is added
 separately.
 
@@ -785,7 +784,7 @@ exec guile -s $0 $@
 @end lisp
 
 
-The function @code{weekday-table} uses @code{mu:tabulate-message} to get the
+The procedure @code{weekday-table} uses @code{mu:tabulate-message} to get the
 frequencies per hour -- this returns a list of pairs:
 @verbatim
 ((5 . 2339) (0 . 2278) (4 . 2800) (2 . 3184) (6 . 1856) (3 . 2833) (1 . 2993))
@@ -826,10 +825,10 @@ something like this:
   (sort
     (mu:tabulate mu:subject)
     (lambda (a b) (> (cdr a) (cdr b))))
-  10) 
+  10)
 @end lisp
 
-If this is not short enough, @t{mu-guile} offers a convenience function to do
+If this is not short enough, @t{mu-guile} offers a convenience procedure to do
 this: @code{mu:top-n-most-frequent}. For example, to get the top-10 people we
 sent mail to most often:
 
@@ -848,7 +847,7 @@ You can plot the results in the format produced by @code{mu:tabulate} with the
 @t{gnuplot}@footnote{@url{http://www.gnuplot.info/}} program to be installed
 on your system.
 
-The @code{mu:plot-histogram} function takes the following arguments:
+The @code{mu:plot-histogram} procedure takes the following arguments:
 
 @code{(mu:plot-histogram <data> <title> <x-label> <y-label> [<want-ascii>])}
 
@@ -907,6 +906,57 @@ Frequency
                                        Hour
 @end verbatim
 @end cartouche
+
+@node Writing scripts
+@chapter Writing scripts
+
+The @t{mu} program has built-in support for running guile-scripts, and comes
+with a number of examples.
+
+You can get a list of all scripts with the @t{mu script} command:
+@verbatim
+$ mu script
+Available scripts (use --verbose for details):
+  * find-dups: find duplicate messages
+  * msgs-count: count the number of messages matching some query
+  * msgs-per-day: graph the number of messages per day
+  * msgs-per-hour: graph the number of messages per hour
+  * msgs-per-month: graph the number of messages per month
+  * msgs-per-year: graph the number of messages per year
+  * msgs-per-year-month: graph the number of messages per year-month
+@end verbatim
+
+You can then execute such a script by its name:
+@verbatim
+$ mu msgs-per-month --textonly --query=hello
+
+
+                        Messages per month matching hello
+
+  240 ++-+-----+----+-----+-----+-----+----+-----+-----+-----+----+-----+-++
+      |  +     +    +     + "/tmp/filewi9H0N" using 2:xticlabels(1) ****** |
+  220 ++                                       *    *                 ******
+      |                                        *    *                 *    *
+  200 ++                                       *    *                 *   +*
+      |                                        *    *                 *    *
+  180 ++                     ******            *    *                 *   +*
+      |                      *    *            *    *                 *    *
+  160 ******                 *    *            *    *                 *   +*
+      *    *                 *    *            *    *                 *    *
+      *    *******           *    *            *    *     ******      *    *
+  140 *+   **    *           *    *            *    *     *    ********   +*
+      *    **    *******     *    *            *    *     *    **    **    *
+  120 *+   **    **    *******    *            *    *     *    **    **   +*
+      *    **    **    **    *    *            *    *******    **    **    *
+  100 *+   **    **    **    *    *            *    *    **    **    **   +*
+      *  + **  + ** +  ** +  *  + *   +    +   * +  *  + **  + ** +  ** +  *
+   80 **********************************************************************
+        Jan   Feb  Mar   Apr   May   Jun  Jul   Aug   Sep   Oct  Nov   Dec
+                                      Month
+@end verbatim
+
+Please refer to the @t{mu-script} man-page for some details on writing your
+own scripts.
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License

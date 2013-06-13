@@ -177,9 +177,9 @@ mu_cmd_script (MuConfig *opts, GError **err)
 	if (err && *err)
 		goto leave;
 
-	if (!opts->script) {
+	if (g_strcmp0 (opts->cmdstr, "script") == 0) {
 		print_scripts (scripts, !opts->nocolor, opts->verbose,
-			       opts->params[1], err);
+			       opts->script_params[0], err);
 		goto leave;
 	}
 
@@ -191,8 +191,7 @@ mu_cmd_script (MuConfig *opts, GError **err)
 	}
 
 	/* do it! */
-	mu_script_guile_run (msi, opts->muhome,
-			     (const gchar**)&opts->params[1], err);
+	mu_script_guile_run (msi, opts->muhome, opts->script_params, err);
 leave:
 	/* this won't be reached, unless there is some error */
 	mu_script_info_list_destroy (scripts);

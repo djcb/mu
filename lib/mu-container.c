@@ -520,7 +520,7 @@ count_colons (const char *str)
 
 
 static MuMsgIterThreadInfo*
-thread_info_new (gchar *threadpath, gboolean root, gboolean child,
+thread_info_new (gchar *threadpath, gboolean root, gboolean first_child,
 		 gboolean empty_parent, gboolean has_child, gboolean is_dup)
 {
 	MuMsgIterThreadInfo *ti;
@@ -529,9 +529,9 @@ thread_info_new (gchar *threadpath, gboolean root, gboolean child,
 	ti->threadpath	     = threadpath;
 	ti->level            = count_colons (threadpath); /* hacky... */
 
-	ti->prop  = 0;
+	ti->prop  = MU_MSG_ITER_THREAD_PROP_NONE;
 	ti->prop |= root         ? MU_MSG_ITER_THREAD_PROP_ROOT         : 0;
-	ti->prop |= child        ? MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  : 0;
+	ti->prop |= first_child  ? MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  : 0;
 	ti->prop |= empty_parent ? MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT : 0;
 	ti->prop |= is_dup       ? MU_MSG_ITER_THREAD_PROP_DUP          : 0;
 	ti->prop |= has_child    ? MU_MSG_ITER_THREAD_PROP_HAS_CHILD    : 0;

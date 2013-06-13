@@ -22,7 +22,8 @@ EXTRA_DIST=			\
 	msgs-per-hour.scm	\
 	msgs-per-month.scm	\
 	msgs-per-day.scm	\
-	msgs-per-year-month.scm
+	msgs-per-year-month.scm \
+	find-dups.scm
 
 muguiledistscriptdir      = $(pkgdatadir)/scripts/
 muguiledistscript_SCRIPTS = $(EXTRA_DIST)

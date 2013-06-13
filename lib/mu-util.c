@@ -438,7 +438,6 @@ mu_util_locale_is_utf8 (void)
 gboolean
 mu_util_fputs_encoded (const char *str, FILE *stream)
 {
-	char *conv;
 	int rv;
 
 	g_return_val_if_fail (str, FALSE);
@@ -449,10 +448,14 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 		rv = fputs (str, stream);
 	else { /* charset is _not_ utf8, so we actually have to
 		* convert it..*/
-		GError *err;
-		unsigned bytes;
-		err = NULL;
+
+		GError		*err;
+		unsigned	 bytes;
+		char		*conv;
+
+		err  = NULL;
 		conv = g_locale_from_utf8 (str, -1, (gsize*)&bytes, NULL, &err);
+
 		if (!conv || err) {
 			/* conversion failed; this happens because is
 			 * some cases GMime may gives us non-UTF-8
@@ -462,14 +465,15 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 			g_warning ("%s: g_locale_from_utf8 failed: %s",
 				   __FUNCTION__,
 				   err ? err->message : "conversion failed");
-			g_clear_error (&err);
 			g_free (conv);
 			conv = g_strescape (str, NULL);
 		}
+		g_clear_error (&err);
+
 		rv = fputs (conv, stream);
 		g_free (conv);
-	}
 
+	}
 	return (rv == EOF) ? FALSE : TRUE;
 }
 

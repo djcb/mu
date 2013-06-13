@@ -277,7 +277,6 @@ either \"org-contact\", \"mutt-alias\", \"mutt-ab\",
 	      "\""))
       (else (error "Unsupported format")))))
 
-
 ;; message parts
 
 

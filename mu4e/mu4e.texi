@@ -732,7 +732,7 @@ respectively. In the example, we use @code{:human-date}, which shows when the
 time when the message was sent today, and the date otherwise.
 @item The header field used for sorting is indicated by ``@t{V}'' or
 ``@t{^}''@footnote{or you can use little graphical triangles; see variable
-@code{mu4e-use-fancy-chars}}, indicating the sort order (descending or
+@code{mu4e-use-fancy-chars}}, corresponding to the sort order (descending or
 ascending, respectively). You can influence this by a mouse click, or
 @key{O}. Not all fields allow sorting.
 @item Instead of showing the @t{From:} and @t{To:} fields separately, you
@@ -757,7 +757,7 @@ u=@emph{unread}. The tooltip for this field also contains this information.
 Jamie Zawinski's mail threading algorithm,
 @url{http://www.jwz.org/doc/threading.html}}.
 @item The headers view is @emph{automatically updated} if any changes are
-found during the indexing process, and if there is not current
+found during the indexing process, and if there is no current
 user-interaction. If you do not want such automatic updates, set
 @code{mu4e-headers-auto-update} to @code{nil}.
 @end itemize
@@ -1134,8 +1134,8 @@ is used for images.
 @section Displaying rich-text messages
 
 @t{mu4e} normally prefers the plain-text version for messages that consist of
-both a plain-text and html (rich-text) versions of the body-text. You change
-this by setting @code{mu4e-view-prefer-html} to @t{t}.
+both a plain-text and html (rich-text) versions of the body-text. You can
+change this by setting @code{mu4e-view-prefer-html} to @t{t}.
 
 If there is only an html-version, or if the plain-text version is too short in
 comparison with the html part@footnote{this is for the case where the
@@ -1225,7 +1225,8 @@ For more information, see the @command{mu-verify} manual page.
 @section Actions
 
 You can perform custom functions (``actions'') on messages and their
-attachments. For a general discussion on how to define your own, see see @ref{Actions}.
+attachments. For a general discussion on how to define your own, see see
+@ref{Actions}.
 
 @subsection Message actions
 
@@ -2403,16 +2404,17 @@ shortcut character @key{o} is due to the first character of
 The @command{emacs}-package @t{sauron}@footnote{Sauron can be found at
 @url{https://github.com/djcb/sauron}, or in the Marmalade package-repository
 at @url{http://http://marmalade-repo.org/}} (by the same author) can be used
-to get notifications about new mails. If you put something like the below
-script in your @t{crontab} (or have some other way of having it execute every
-@emph{n} minutes) you receive notifications in the sauron-buffer when new
-messages arrive.
+to get notifications about new mails. If you run something like the below
+script from your @t{crontab} (or have some other way of having it execute
+every @emph{n} minutes), you receive notifications in the @t{sauron}-buffer
+when new messages arrive.
 
 @verbatim
 #!/bin/sh
-# put the path to your Inbox folder here
 
+# put the path to your Inbox folder here
 CHECKDIR="/home/$LOGNAME/Maildir/Inbox"
+
 sauron-msg () {
     DBUS_COOKIE="/home/$LOGNAME/.sauron-dbus"
     if test "x$DBUS_SESSION_BUS_ADDRESS" = "x"; then
@@ -3011,7 +3013,7 @@ normal, synchronous fashion.
 @section Known issues
 
 Although they are not really @emph{questions}, we end this chapter with a list
-of known issue and/or missing features in @t{mu4e}. Thus, users won't have to
+of known issues and/or missing features in @t{mu4e}. Thus, users won't have to
 search in vain for things that are not there (yet), and the author can use it
 as a todo-list.
 
@@ -3020,10 +3022,23 @@ as a todo-list.
 utf-8}; so, if you problems with encodings, be sure to have
 @code{(set-language-environment "UTF-8")} in your @file{~/.emacs}.
 @item @emph{Thread handling is incomplete.} While threads are calculated and are
-visible in the headers buffer, you can not collapse/open them.
+visible in the headers buffer, you cannot collapse/open them.
 @item @emph{The key-bindings are @emph{somewhat} hard-coded.} That is, the main
 menu assumes the default key-bindings, as do the clicks-on-bookmarks.
+@item @emph{The @t{emacs} front-end of the @t{notmuch} e-mail indexer
+conflicts with @t{mu4e}}. @t{notmuch} running in parallel with
+@t{mu4e} leads to
+@verbatim
+error in process filter: mu4e-error-handler: Error 70: cannot read
+~/Maildir/...
+@end verbatim
+when sending a reply to a new e-mail. This seems to be caused by @t{notmuch}
+changing the name of the original message file while @t{mu4e} is working in on
+it. To prevent this, deactivate @t{notmuch} in your Emacs setup.
 @end itemize
+
+For a more complete list, please refer to the issues-list in the
+github-repository.
 
 
 @node Tips and Tricks
@@ -3195,7 +3210,8 @@ If you have multiple accounts, you can accommodate them as well:
      ((string-match "Account1" maildir)
       (setq folder (or (catch 'found
                          (dolist (mailing-list my-mu4e-mailing-lists)
-                           (if (mu4e-message-contact-field-matches msg :to (car mailing-list))
+                           (if (mu4e-message-contact-field-matches
+                             msg :to (car mailing-list))
                                (throw 'found (cdr mailing-list)))))
                        "/Account1/General")))
      ((string-match "Gmail" maildir)
@@ -3203,7 +3219,8 @@ If you have multiple accounts, you can accommodate them as well:
      ((string-match "Account2" maildir)
       (setq folder (or (cdar (member* subject my-mu4e-subject-alist
                                       :test #'(lambda (x y)
-                                                (string-match (car y) x))))
+                                                (string-match
+                                                   (car y) x))))
                        "/Account2/General"))))
     folder))
 @end lisp
@@ -3216,10 +3233,12 @@ message based on the mailing list to which it was sent. This requires
 another variable:
 
 @lisp
-(defvar my-mu4e-mailing-lists '(("mu-discuss@@googlegroups.com" . "/Account1/mu4e")
-                                ("pandoc-discuss@@googlegroups.com" . "/Account1/Pandoc")
-                                ("auctex@@gnu.org" . "/Account1/AUCTeX"))
-  "List of mailing list addresses and folders where their messages are saved.")
+(defvar my-mu4e-mailing-lists
+  '(("mu-discuss@@googlegroups.com" . "/Account1/mu4e")
+    ("pandoc-discuss@@googlegroups.com" . "/Account1/Pandoc")
+    ("auctex@@gnu.org" . "/Account1/AUCTeX"))
+  "List of mailing list addresses and folders where
+   their messages are saved.")
 @end lisp
 
 @node Saving outgoing messages

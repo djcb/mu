@@ -159,6 +159,8 @@ gboolean mu_msg_iter_calculate_threads (MuMsgIter *iter);
 
 
 enum _MuMsgIterThreadProp {
+	MU_MSG_ITER_THREAD_PROP_NONE           = 0 << 0,
+
 	MU_MSG_ITER_THREAD_PROP_ROOT           = 1 << 0,
 	MU_MSG_ITER_THREAD_PROP_FIRST_CHILD    = 1 << 1,
 	MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT   = 1 << 2,

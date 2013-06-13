@@ -300,13 +300,14 @@ config_options_group_script (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"script", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.script,
-		 "script to run (see `mu help script')", "<script>"},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{G_OPTION_REMAINING, 0,0, G_OPTION_ARG_STRING_ARRAY,
+		 &MU_CONFIG.params, "script parameters", NULL},
+                {NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("script", "Options for the 'script' command",
 				"", NULL, NULL);
+
 	g_option_group_add_entries(og, entries);
 
 	return og;
@@ -461,7 +462,7 @@ cmd_from_string (const char *str)
 		{ "index",   MU_CONFIG_CMD_INDEX   },
 		{ "mkdir",   MU_CONFIG_CMD_MKDIR   },
 		{ "remove",  MU_CONFIG_CMD_REMOVE  },
-		{ "script",  MU_CONFIG_CMD_SCRIPT   },
+		{ "script",  MU_CONFIG_CMD_SCRIPT  },
 		{ "server",  MU_CONFIG_CMD_SERVER  },
 		{ "verify",  MU_CONFIG_CMD_VERIFY  },
 		{ "view",    MU_CONFIG_CMD_VIEW    }
@@ -474,7 +475,8 @@ cmd_from_string (const char *str)
 		if (strcmp (str, cmd_map[i].name) == 0)
 			return cmd_map[i].cmd;
 
-	return MU_CONFIG_CMD_UNKNOWN;
+	/* if we don't recognize it, it may be some script */
+	return MU_CONFIG_CMD_SCRIPT;
 }
 
 
@@ -673,6 +675,17 @@ parse_params (int *argcp, char ***argvp, GError **err)
 		rv = g_option_context_parse (context, argcp, argvp, err) &&
 			cmd_help ();
 		break;
+	case MU_CONFIG_CMD_SCRIPT:
+		/* all unknown commands are passed to 'script' */
+		g_option_context_set_ignore_unknown_options (context, TRUE);
+		group = get_option_group (MU_CONFIG.cmd);
+		g_option_context_add_group (context, group);
+		rv  = g_option_context_parse (context, argcp, argvp, err);
+		MU_CONFIG.script = g_strdup (MU_CONFIG.cmdstr);
+		/* argvp contains the script parameters */
+		MU_CONFIG.script_params = (const char**)&((*argvp)[1]);
+		break;
+
 	default:
 		group = get_option_group (MU_CONFIG.cmd);
 		if (group)

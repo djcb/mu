@@ -367,7 +367,7 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
 			      MU_ERROR_INTERNAL);
 
-	/* note: params[0] will be 'add' */
+	/* note: params[0] will be 'remove' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_warning ("usage: mu remove <file> [<files>]");
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
@@ -593,6 +593,8 @@ set_log_options (MuConfig *opts)
 		logopts |= MU_LOG_OPTIONS_DEBUG;
 }
 
+
+
 MuError
 mu_cmd_execute (MuConfig *opts, GError **err)
 {
@@ -627,10 +629,7 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	case MU_CONFIG_CMD_SERVER:
 		merr = with_store (mu_cmd_server, opts, FALSE, err);   break;
 	default:
-		show_usage ();
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "unknown command '%s'", opts->cmdstr);
-		return MU_ERROR_IN_PARAMETERS;
+		merr = MU_ERROR_IN_PARAMETERS; break;
 	}
 
 	return merr;
