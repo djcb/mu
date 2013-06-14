@@ -190,8 +190,6 @@ If needed, set the Fcc header, and register the handler function."
 	    (write-file file)		       ;; writing maildirs files is easy
 	    (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
 
-
-
 (defvar mu4e-compose-hidden-headers
   `("^References:" "^Face:" "^X-Face:"
      "^X-Draft-From:" "^User-agent:")
@@ -286,14 +284,15 @@ appear on disk."
     
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
-      (defun mu4e~compose-save-before-sending ()
+      (lambda () ;; mu4e~compose-save-before-sending 
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
-	(mu4e~compose-setup-fcc-maybe)) nil t)
+	(mu4e~compose-setup-fcc-maybe)
+	(widen)) nil t)
     ;; when the message has been sent.
     (add-hook 'message-sent-hook
-      (defun mu4e~compose-mark-after-sending ()
+      (lambda () ;;  mu4e~compose-mark-after-sending 
 	(setq mu4e-sent-func 'mu4e-sent-handler)
 	(mu4e~proc-sent (buffer-file-name) mu4e~draft-drafts-folder)) nil))
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
