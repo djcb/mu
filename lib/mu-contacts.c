@@ -31,37 +31,36 @@
 #define NAME_KEY	"name"
 #define TSTAMP_KEY	"tstamp"
 #define PERSONAL_KEY	"personal"
-
+#define FREQ_KEY	"frequency"
 
 /* note: 'personal' here means a mail where my e-mail addresses is explicitly
  * in one of the address fields, ie., it's not some mailing list message */
 struct _ContactInfo {
-	gchar *  _name, *_email;
-	gboolean _personal;
-	time_t   _tstamp;
+	gchar          *_name, *_email;
+	gboolean	_personal;
+	time_t		_tstamp;
+	unsigned	_freq;
 };
 typedef struct _ContactInfo ContactInfo;
 
 static void contact_info_destroy (ContactInfo *cinfo);
 static ContactInfo *contact_info_new (char *email, char *name,
-				      gboolean personal, time_t tstamp);
+				      gboolean personal, time_t tstamp, unsigned freq);
 
 struct _MuContacts {
-        GKeyFile      *_ccache;
-	gchar         *_path;
+        GKeyFile	*_ccache;
+	gchar		*_path;
 
-	GHashTable    *_hash;
-	gboolean       _dirty;
+	GHashTable	*_hash;
+	gboolean	 _dirty;
 };
-
-
 
 static GKeyFile*
 load_key_file (const char *path)
 {
-	GError *err;
-	GKeyFile *keyfile;
-	gboolean file_exists;
+	GError		*err;
+	GKeyFile	*keyfile;
+	gboolean	 file_exists;
 
 	err	    = NULL;
 
@@ -92,12 +91,15 @@ load_key_file (const char *path)
 
 static gboolean
 get_values (GKeyFile *kfile, const gchar *group,
-	    gchar **email, gchar **name, gboolean *personal, size_t *tstamp)
+	    gchar **email, gchar **name, gboolean *personal, size_t *tstamp,
+	    unsigned *freq)
 {
 	GError *err;
 	err = NULL;
 
 	do {
+		int i;
+
 		*email = g_key_file_get_value (kfile, group, EMAIL_KEY, &err);
 		if (!*email)
 			break;
@@ -110,6 +112,8 @@ get_values (GKeyFile *kfile, const gchar *group,
 						    PERSONAL_KEY, NULL);
 		*name = g_key_file_get_value (kfile, group, NAME_KEY, NULL);
 
+		i = g_key_file_get_integer (kfile, group, FREQ_KEY, NULL);
+		*freq = (unsigned)(i >= 0) ? i : 1;
 
 		return TRUE;
 
@@ -135,11 +139,12 @@ deserialize_cache (MuContacts *self)
 		char *name, *email;
 		size_t tstamp;
 		gboolean personal;
+		unsigned freq;
 		if (!get_values (self->_ccache, groups[i],
-				 &email, &name, &personal, &tstamp))
+				 &email, &name, &personal, &tstamp, &freq))
 			continue; /* ignore this one... */
 
-		cinfo = contact_info_new (email, name, personal, tstamp);
+		cinfo = contact_info_new (email, name, personal, tstamp, freq);
 
 		/* note, we're using the groups[i], so don't free with g_strfreev */
 		g_hash_table_insert (self->_hash, groups[i],
@@ -276,27 +281,34 @@ mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 	g_return_val_if_fail (self, FALSE);
 	g_return_val_if_fail (addr, FALSE);
 
-	/* add the info, if either there is no info for this email
-	 * yet, *OR* the new one is more recent and does not have an
-	 * empty name */
 	group	= encode_email_address (addr);
 
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, group);
-	if (!cinfo || (cinfo->_tstamp < tstamp && !mu_str_is_empty(name))) {
+	if (!cinfo) {
 		char *addr_dc;
-		ContactInfo *ci;
-
 		if (!(addr_dc = downcase_domain_maybe (addr)))
 			return FALSE;
-
-		ci = contact_info_new (addr_dc,
-				       name ? g_strdup(name) : NULL, personal,
-				       tstamp);
-		g_hash_table_insert (self->_hash, g_strdup(group), ci);
-		return self->_dirty = TRUE;
+		cinfo = contact_info_new (addr_dc,
+					  name ? g_strdup(name) : NULL, personal,
+					  tstamp, 1);
+		g_hash_table_insert (self->_hash, g_strdup(group), cinfo);
+	} else {
+		if (cinfo->_tstamp < tstamp) {
+			if (!mu_str_is_empty(name)) {
+				/* update the name to the last one used, unless it's
+				 * empty*/
+				g_free (cinfo->_name);
+				cinfo->_name = g_strdup (name);
+			}
+			cinfo->_tstamp = tstamp;
+		}
+		++cinfo->_freq;
 	}
 
-	return FALSE;
+
+	self->_dirty = TRUE;
+
+	return TRUE;
 }
 
 struct _EachContactData {
@@ -387,6 +399,8 @@ each_keyval (const char *group, ContactInfo *cinfo, MuContacts *self)
 				cinfo->_personal);
 	g_key_file_set_integer (self->_ccache, group, TSTAMP_KEY,
 				(int)cinfo->_tstamp);
+	g_key_file_set_integer (self->_ccache, group, FREQ_KEY,
+				(int)cinfo->_freq);
 }
 
 static gboolean
@@ -458,7 +472,8 @@ clear_str (char* str)
 /* note, we will *own* the name, email we get, and we'll free them in
  * the end... */
 static ContactInfo *
-contact_info_new (char *email, char *name, gboolean personal, time_t tstamp)
+contact_info_new (char *email, char *name, gboolean personal, time_t tstamp,
+		  unsigned freq)
 {
 	ContactInfo *cinfo;
 
@@ -476,6 +491,7 @@ contact_info_new (char *email, char *name, gboolean personal, time_t tstamp)
 	cinfo->_name     = name;
 	cinfo->_personal = personal;
 	cinfo->_tstamp   = tstamp;
+	cinfo->_freq     = freq;
 
 	return cinfo;
 }
