@@ -302,14 +302,16 @@ re-edited, and is nil otherwise."
 
 (defcustom mu4e-maildir-shortcuts nil
   "A list of maildir shortcuts.
-This enables quickly going to the particular for, or quickly
-moving messages towards them (i.e., archiving or refiling). The
+This enables quickly going to the particular maildir (folder), or
+quickly moving messages to them (i.e., archiving or refiling). The
 list contains elements of the form (maildir . shortcut), where
-MAILDIR is a maildir (such as \"/archive/\"), and shortcut a
-single shortcut character. With this, in the header buffer and
-view buffer you can execute `mu4e-mark-for-move-quick' (or 'm',
-by default) or `mu4e-jump-to-maildir' (or 'j', by default),
-followed by the designated shortcut character for the maildir."
+MAILDIR is a maildir (such as \"/archive/\"), and shortcut a single
+shortcut character. With this, in the header buffer and view buffer
+you can execute `mu4e-mark-for-move-quick' (or 'm', by default) or
+`mu4e-jump-to-maildir' (or 'j', by default), followed by the
+designated shortcut character for the maildir. Unlike in search
+queries, folder names with spaces in them must NOT be quoted, since
+mu4e does this automatically for you."
   :type '(repeat (cons (string :tag "Maildir") character))
   :group 'mu4e-folders)
 

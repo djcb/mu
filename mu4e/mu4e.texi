@@ -1489,7 +1489,7 @@ configuration:
 
 @t{mu4e} is fully search-based: even if you 'jump to a folder', you are
 executing a query for messages that happen to have the property of being in a
-certain folder.
+certain folder (maildir).
 
 Normally, queries return up to @code{mu4e-headers-results-limit} (default:
 500) results. That is usually more than enough, and makes things significantly
@@ -1515,67 +1515,111 @@ see @ref{Sort order and threading}.
 understands@footnote{with the caveat that command-line queries are subject to
 the shell's interpretation before @t{mu} sees them}. Let's look at some
 examples here, please refer to the @code{mu-find} and @code{mu-easy} man pages
-for details and even more examples.
+for details and more examples.
 
+@itemize
+
+@item Get all messages regarding @emph{bananas}:
 @verbatim
-# get all messages regarding bananas:
 bananas
-
-# get all messages regarding bananas from John with an attachment:
-from:john flag:attach bananas
-
-# get all messages with subject wombat in June 2009
-subject:wombat date:20090601..20090630
-
-# get all messages with PDF attachments in the /projects folder
-maildir:/projects mime:application/pdf
-
-# get all messages about Rupert in the Sent Items folder
-maildir:"/Sent Items" rupert
-# note: terms with spaces need quoting
-
-# get all important messages which are signed:
-flag:signed prio:high
-
-# get all messages from Jim without an attachment:
-from:jim AND NOT flag:attach
-
-# get all message with Alice in one of the contacts fields (to, from, cc,
-# bcc):
-contact:alice
-
-# get all unread messages where the subject mentions Angstrom:
-# (search is case-insensitive and accent-insensitive)
-subject:angstrom flag:unread
-
-# get all unread messages between Mar-2002 and Aug-2003 about some bird:
-date:20020301..20030831 nightingale flag:unread
-
-# get today's messages:
-date:today..now
-
-# get all messages we got in the last two weeks regarding emacs:
-date:2w..now emacs
-
-# get messages from the the Mu mailing list:
-mu find list:mu-discuss.googlegroups.com
-
-# get messages with a subject soccer, Socrates, society...:
-subject:soc*
-# note: the '*' wildcard can only appear as the term's rightmost character
-
-# get all mails with attachment with filenames starting with 'pic':
-file:pic*
-# note: the '*' wildcard can only appear as the term's rightmost character
-
-# get all messages with PDF attachments:
-mime:application/pdf
-
-# get all messages with image attachments:
-mime:image/*
-# note: the '*' wildcard can only appear as the term's @emph{rightmost}
-# character
 @end verbatim
+
+@item Get all messages regarding @emph{bananas} from @emph{John} with an attachment:
+@verbatim
+from:john flag:attach bananas
+@end verbatim
+
+@item Get all messages with subject @emph{wombat} in June 2009
+@verbatim
+subject:wombat date:20090601..20090630
+@end verbatim
+
+@item Get all messages with PDF attachments in the @t{/projects} folder
+@verbatim
+maildir:/projects mime:application/pdf
+@end verbatim
+
+@item Get all messages about @emph{Rupert} in the @t{/Sent Items} folder. Note that
+maildirs with spaces must be quoted.
+@verbatim
+maildir:"/Sent Items" rupert
+@end verbatim
+
+@item Get all important messages which are signed:
+@verbatim
+flag:signed prio:high
+@end verbatim
+
+@item Get all messages from @emph{Jim} without an attachment:
+@verbatim
+from:jim AND NOT flag:attach
+@end verbatim
+
+@item Get all messages with Alice in one of the contacts-fields (@t{to}, @t{from},
+@t{cc}, @t{bcc}):
+@verbatim
+contact:alice
+@end verbatim
+
+@item Get all unread messages where the subject mentions Ångström: (search is
+case-insensitive and accent-insensitive, so this matches Ångström, angstrom,
+aNGstrøM, ...)
+@verbatim
+subject:Ångström flag:unread
+@end verbatim
+
+@item Get all unread messages between Mar-2002 and Aug-2003 about some bird:
+@verbatim
+date:20020301..20030831 nightingale flag:unread
+@end verbatim
+
+@item Get today's messages:
+@verbatim
+date:today..now
+@end verbatim
+or, unless you have a really old Xapian
+@verbatim
+date:today
+@end verbatim
+
+@item Get all messages we got in the last two weeks regarding @emph{emacs}:
+@verbatim
+date:2w..now emacs
+@end verbatim
+or, unless you have a really old Xapian
+@verbatim
+date:2w.. emacs
+@end verbatim
+
+@item Get messages from the the @emph{Mu} mailing list:
+@verbatim
+list:mu-discuss.googlegroups.com
+@end verbatim
+
+@item Get messages with a subject soccer, Socrates, society, ...; note that the '*'
+wildcard can only appear as the term's rightmost character:
+@verbatim
+subject:soc*
+@end verbatim
+
+@item Get all mails with attachments with filenames starting with @emph{pic}; note
+that the '*' wildcard can only appear as the term's rightmost character:
+@verbatim
+file:pic*
+@end verbatim
+
+@item Get all messages with PDF-attachments:
+@verbatim
+mime:application/pdf
+@end verbatim
+
+Get all messages with image attachments, and note that the '*' wildcard can
+only appear as the term's rightmost character:
+@verbatim
+mime:image/*
+@end verbatim
+
+@end itemize
 
 @node Bookmarks
 @section Bookmarks
@@ -1671,6 +1715,10 @@ if you keep your mail in @file{~/Maildir}, @file{/inbox} would refer to
 maildirs (folders) very quickly - for example, getting to the @t{/lists}
 folder only requires you to type @kbd{jl}, then change to @t{/work} with
 @kbd{jw}.
+
+While in queries you need to quote folder names (maildirs) with spaces in
+them, you should @emph{not} quote them when used in
+@code{mu4e-maildir-shortcuts}, since @t{mu4e} does that automatically for you.
 
 The very same shortcuts are used by @kbd{M-x mu4e-mark-for-move} (default
 shortcut @key{m}); so, for example, if you want to move a message the
