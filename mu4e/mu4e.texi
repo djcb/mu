@@ -1819,8 +1819,7 @@ mu4e-headers-mark-subthread}, respectively
 @node What to mark for
 @section What to mark for
 
-@t{mu4e} supports a number of different marks - i.e., different actions to
-apply to messages:
+@t{mu4e} supports a number of marks:
 
 @cartouche
 @verbatim
@@ -1828,7 +1827,7 @@ apply to messages:
  --------------+-------------+--------------------------
   'something'  | <insert>    | mark now, decide later
   delete       | D, <delete> | delete
-  flag         | +           | mark as 'flagged' (``starred'')
+  flag         | +           | mark as 'flagged' ('starred')
   move         | m           | move to some maildir
   read         | !           | mark as read
   refile       | r           | mark for refiling
@@ -1840,20 +1839,21 @@ apply to messages:
 @end verbatim
 @end cartouche
 
-After marking a message for something, the left-most columns in the headers
-view show some information to indicate what it is marked. This is informative,
-but if you mark many (thousands) messages, this slows things down
-significantly@footnote{this uses an @command{emacs} feature called
-@emph{overlays}, which are slow when used a lot in a buffer}. For this reason,
-you can disable this by setting @code{mu4e-headers-show-target} to @code{nil}.
+After marking a message, the left-most columns in the headers view indicate
+the kind of mark. This is informative, but if you mark many (say, thousands)
+messages, this slows things down significantly@footnote{this uses an
+@command{emacs} feature called @emph{overlays}, which are slow when used a lot
+in a buffer}. For this reason, you can disable this by setting
+@code{mu4e-headers-show-target} to @code{nil}.
 
 @t{something} is a special kind of mark; you can use it to mark messages for
 'something', and then decide later what the 'something' should
 be@footnote{This kind of 'deferred marking' is similar to the facility in
 @t{midnight commander} (@url{http://www.midnight-commander.org/}) and the
-like, and uses the same key binding (@key{insert}).}  , using @kbd{M-x
-mu4e-mark-resolve-deferred-marks} (@key{#}). Alternatively, @t{mu4e} will ask
-you when you execute the marks (@key{x}).
+like, and uses the same key binding (@key{insert}).}  Later, you can set the
+actual mark using @kbd{M-x mu4e-mark-resolve-deferred-marks}
+(@key{#}). Alternatively, @t{mu4e} will ask you when you try to execute the
+marks (@key{x}).
 
 @node Executing the marks
 @section Executing the marks
@@ -2302,7 +2302,7 @@ one of the user's e-mail addresses (as per @code{mu4e-user-mail-address-list}).
 @item @code{mu4e-log} logs to the @t{mu4e} debugging log if it is enabled;
       see @code{mu4e-toggle-logging}.
 @item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
-@t{mu4e} equivalents of the normal @t{elisp} @code{message},
+@t{mu4e} equivalents of the normal elisp @code{message},
 @code{user-error}@footnote{@code{user-error} only appears in @command{emacs}
 24.2 and later; in older versions it falls back to @code{error}} and
 @code{error} functions.
@@ -2312,7 +2312,7 @@ one of the user's e-mail addresses (as per @code{mu4e-user-mail-address-list}).
 @node Interaction with other tools
 @appendix Interaction with other tools
 
-In this chapter we discuss some ways in ways in which @t{mu4e} can cooperate
+In this chapter, we discuss some ways in ways in which @t{mu4e} can coöperate
 with other tools.
 
 @menu
@@ -2339,7 +2339,7 @@ do so by adding the following to your configuration:
 @end lisp
 
 @noindent
-At the present time, support is experimental.
+At the present time, support is @emph{experimental}.
 
 @node Creating org-mode links
 @section Creating @t{org-mode} links
