@@ -1,3 +1,4 @@
+@documentencoding UTF-8
 \input texinfo.tex    @c -*-texinfo-*-
 @include texi.texi
 @c %**start of header
@@ -8,8 +9,6 @@
 @c Cf. Texinfo manual 14.2
 @set txicodequoteundirected
 @set txicodequotebacktick
-
-@documentencoding UTF-8
 @c %**end of header
 
 @copying
@@ -68,7 +67,7 @@ folders, you can use queries that match all messages in a folder}, only
 queries
 @item Fully documented, with example configurations
 @item User-interface optimized for speed, with quick key strokes for common actions
-@item Support for non-English languages (so ``angstrom'' will match ``Ångström'')
+@item Support for non-English languages (so ``angstrom'' will match ``Angström'')
 @item Asynchronous; heavy actions don't block @command{emacs}@footnote{currently,
 the only exception to this is @emph{sending mail}; there are solutions for
 that though - see the @ref{FAQ}}
@@ -1144,7 +1143,7 @@ convert the html into plain-text for display. The default way to do that is to
 use the @command{emacs} built-in @code{html2text} function. However, you can
 set the variable @code{mu4e-html2text-command} to use some external program
 instead. This program is expected to take html from standard input and write
-plain text in @t{utf-8} encoding on standard output.
+plain text in @t{UTF-8} encoding on standard output.
 
 An example of such a program is the program that is actually @emph{called}
 @t{html2text}@footnote{@url{http://www.mbayer.de/html2text/}}. After
@@ -2967,6 +2966,13 @@ main-window.
 when they are moved to different folders. Can @t{mu4e} somehow accomodate
 this?} Yes - you can set the variable @code{mu4e-change-filenames-when-moving}
 to non-nil.
+@item @emph{@command{offlineimap} uses IMAP's UTF-7 for encoding
+non-ascii folder names, while @t{mu} expects UTF-8 (so, e.g. @t{/まりもえ
+お}@footnote{some Japanese characters, invisible in the UTF-8 version of this
+manual} becomes @t{/&MH4wijCCMEgwSg-}). How can display such folders
+correctly?} This is best solved by telling @command{offlineimap} to use UTF-8
+instead -- see
+@url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
 @end enumerate
 
 @node Reading messages
@@ -3067,7 +3073,7 @@ as a todo-list.
 
 @itemize
 @item @emph{mu4e does not work well if the @command{emacs} language environment is not
-utf-8}; so, if you problems with encodings, be sure to have
+UTF-8}; so, if you problems with encodings, be sure to have
 @code{(set-language-environment "UTF-8")} in your @file{~/.emacs}.
 @item @emph{Thread handling is incomplete.} While threads are calculated and are
 visible in the headers buffer, you cannot collapse/open them.
@@ -3083,6 +3089,9 @@ error in process filter: mu4e-error-handler: Error 70: cannot read
 when sending a reply to a new e-mail. This seems to be caused by @t{notmuch}
 changing the name of the original message file while @t{mu4e} is working in on
 it. To prevent this, deactivate @t{notmuch} in your Emacs setup.
+@item @emph{The PDF-version of the manual does not show any of the non-ASCII
+characters} - this is because, sadly, @t{texi2pdf} documentation system
+does not support those. There is not much we can do about that.
 @end itemize
 
 For a more complete list, please refer to the issues-list in the
