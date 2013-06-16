@@ -257,7 +257,7 @@ appear on disk."
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
 \\{message-mode-map}."
-  (progn 
+  (progn
     (use-local-map mu4e-compose-mode-map)
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
@@ -281,10 +281,10 @@ appear on disk."
 
     (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
     (define-key mu4e-compose-mode-map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
-    
+
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
-      (lambda () ;; mu4e~compose-save-before-sending 
+      (lambda () ;; mu4e~compose-save-before-sending
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
@@ -292,7 +292,7 @@ appear on disk."
 	(widen)) nil t)
     ;; when the message has been sent.
     (add-hook 'message-sent-hook
-      (lambda () ;;  mu4e~compose-mark-after-sending 
+      (lambda () ;;  mu4e~compose-mark-after-sending
 	(setq mu4e-sent-func 'mu4e-sent-handler)
 	(mu4e~proc-sent (buffer-file-name) mu4e~draft-drafts-folder)) nil))
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
@@ -315,7 +315,7 @@ appear on disk."
 		     (truncate-string-to-width str
 		       mu4e~compose-buffer-max-name-length
 		       nil nil t)))))
- 
+
 (defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
@@ -511,7 +511,7 @@ Ie. either 'name <email>' or 'email')."
 		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
 		    (goto-char (match-end 0))
 		    (point)))))
-	  (list start end mu4e~contacts-for-completion)))))
+	(list start end mu4e~contacts-for-completion)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
