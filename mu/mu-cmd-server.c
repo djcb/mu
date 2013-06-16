@@ -547,7 +547,7 @@ typedef struct _SexpData SexpData;
 
 static void
 each_contact_sexp (const char *email, const char *name, gboolean personal,
-		   time_t tstamp, SexpData *sdata)
+		   time_t tstamp, unsigned freq, SexpData *sdata)
 {
 	char *escmail;
 
@@ -569,11 +569,14 @@ each_contact_sexp (const char *email, const char *name, gboolean personal,
 	if (name) {
 		char *escname;
 		escname = mu_str_escape_c_literal (name, TRUE);
-		g_string_append_printf (sdata->gstr, "(:name %s :mail %s)\n",
-					escname, escmail);
+		g_string_append_printf (sdata->gstr,
+					"(:name %s :mail %s :tstamp %u :freq %u)\n",
+					escname, escmail, (unsigned)tstamp, freq);
 		g_free (escname);
 	} else
-		g_string_append_printf (sdata->gstr, "(:mail %s)\n", escmail);
+		g_string_append_printf (sdata->gstr,
+					"(:mail %s :tstamp %u :freq %u)\n",
+					escmail, (unsigned)tstamp, freq);
 
 	g_free (escmail);
 }

@@ -65,7 +65,8 @@ struct _Contact {
 typedef struct _Contact Contact;
 
 static Contact*
-contact_new (const char *email, const char *name, gboolean personal, size_t tstamp)
+contact_new (const char *email, const char *name,
+	     gboolean personal, size_t tstamp)
 {
 	Contact *contact;
 
@@ -92,7 +93,7 @@ contact_destroy (Contact *contact)
 
 static void
 each_contact (const char *email, const char *name, gboolean personal,
-	      time_t tstamp,  GSList **lst)
+	      time_t tstamp, unsigned freq, GSList **lst)
 {
 	Contact *contact;
 

@@ -338,7 +338,7 @@ each_contact (const char *group, ContactInfo *ci, EachContactData *ecdata)
 	}
 
 	ecdata->_func (ci->_email, ci->_name, ci->_personal,
-		       ci->_tstamp, ecdata->_user_data);
+		       ci->_tstamp, ci->_freq, ecdata->_user_data);
 
 	++ecdata->_num;
 }

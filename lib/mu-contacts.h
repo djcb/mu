@@ -97,13 +97,15 @@ size_t mu_contacts_count (MuContacts *self);
 
 /**
  * call called for mu_contacts_foreach; returns the e-mail address,
- * name (which may be NULL) , whether the message is 'personal', and
- * the timestamp for the address
+ * name (which may be NULL) , whether the message is 'personal', the
+ * timestamp for the address (when it was last seen), and the
+ * frequency (in how many message did this contact participate)
  *
  */
 typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
 				       gboolean personal,
-				       time_t tstamp, gpointer user_data);
+				       time_t tstamp, unsigned freq,
+				       gpointer user_data);
 
 /**
  * call a function for either each contact, or each contact satisfying

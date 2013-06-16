@@ -294,7 +294,7 @@ typedef struct _ECData ECData;
 
 static void
 each_contact (const char *email, const char *name, gboolean personal,
-	      time_t tstamp, ECData *ecdata)
+	      time_t tstamp, unsigned freq, ECData *ecdata)
 {
 	if (ecdata->personal && !personal)
 		return;
