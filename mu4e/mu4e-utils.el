@@ -553,7 +553,7 @@ process."
 
 (defun mu4e~rfc822-phrase-type (ph)
   "Return either atom, quoted-string, a corner-case or nil. This
-   checks for empty string first. Then quotes around the phrase 
+   checks for empty string first. Then quotes around the phrase
    (returning 'rfc822-quoted-string). Then whether there is a quote
    inside the phrase (returning 'rfc822-containing-quote).
    The reverse of the RFC atext definition is then tested.
@@ -584,12 +584,24 @@ process."
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
   "We receive a list of contacts, which each contact of the form
-  (:name NAME :mail EMAIL)
+  (:name NAME :mail EMAIL :tstamp TIMESTAMP :freq FREQUENCY)
 and fill the list `mu4e~contacts-for-completion' with it, with
 each element looking like
   name <email>
 This is used by the completion function in mu4e-compose."
-  (let ((lst))
+  (let ((lst)
+	 ;; sort by the frequency (descending), then timestamp (descending)
+	 ;; FIXME: sadly, the emacs completion subsystem re-sorts the list
+	 ;; before showing candidates, so this doesn't do anything useful yet.
+	 (contacts (sort contacts
+		     (lambda (c1 c2)
+		       (let ((freq1 (plist-get c1 :freq))
+			      (tstamp1 (plist-get c1 :tstamp))
+			      (freq2 (plist-get c2 :freq))
+			      (tstamp2 (plist-get c2 :tstamp)))
+			 (if (equal freq1 freq2)
+			   (< tstamp1 tstamp2)
+			   (< freq1 freq2)))))))
     (dolist (contact contacts)
       (let ((name (plist-get contact :name))
 	     (mail (plist-get contact :mail)))
@@ -921,7 +933,7 @@ is ignored."
 		   (create-image imgpath 'imagemagick))
 		 (create-image imgpath))))
     ;;(message "DISPLAY: %S %S" imgpath img)
-    (when img 
+    (when img
       (newline)
       (insert-image img))))
 
