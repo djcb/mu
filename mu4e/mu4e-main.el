@@ -48,8 +48,8 @@
     ;;
     (define-key map "U" 'mu4e-update-mail-and-index)
     (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
-    
-    
+
+
     (define-key map "$" 'mu4e-show-log)
     (define-key map "A" 'mu4e-about)
     (define-key map "H" 'mu4e-display-manual)
@@ -79,7 +79,7 @@ clicked."
 	    "\\[\\(\\w+\\)\\]"
 	    (lambda(m)
 	      (format "[%s]"
-		(propertize (match-string 1 str) 'face 'mu4e-highlight-face)))
+		(propertize (match-string 1 m) 'face 'mu4e-highlight-face)))
 	    str))
 	 (map (make-sparse-keymap))
 	 (func (if (functionp func-or-shortcut)
