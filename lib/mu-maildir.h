@@ -193,7 +193,8 @@ char* mu_maildir_get_maildir_from_path (const char* path);
  * of the message are affected; note that this may still involve a
  * moved to another directory (say, from new/ to cur/)
  * @param flags to set for the target (influences the filename, path)
- * @param ignore_dups whether to silent ignore the src=target case (and return TRUE)
+ * @param ignore_dups whether to silent ignore the src=target case
+ * (and return TRUE)
  * @param new_name whether to create a new unique name, or keep the
  * old one
  * @param err receives error information

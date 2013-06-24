@@ -73,8 +73,7 @@ If VAL is nil, return nil."
 
 (defun mu4e~draft-references-construct (msg)
   "Construct the value of the References: header based on MSG as a
-comma-separated string. Normally, this the concatenation of thedmesg
-q
+comma-separated string. Normally, this the concatenation of the
 existing References + In-Reply-To (which may be empty, an note
 that :references includes the old in-reply-to as well) and the
 message-id. If the message-id is empty, returns the old

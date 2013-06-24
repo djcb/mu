@@ -861,8 +861,8 @@ msg_move (const char* src, const char *dst, GError **err)
 
 gchar*
 mu_maildir_move_message (const char* oldpath, const char* targetmdir,
-			 MuFlags newflags, gboolean ignore_dups, gboolean new_name,
-			 GError **err)
+			 MuFlags newflags, gboolean ignore_dups,
+			 gboolean new_name, GError **err)
 {
 	char *newfullpath;
 	gboolean rv;

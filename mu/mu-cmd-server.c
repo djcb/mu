@@ -1148,9 +1148,8 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 	if (!mu_msg_move_to_maildir (msg, maildir, flags, TRUE, new_name, err))
 		return MU_G_ERROR_CODE (err);
 
-	/* note, after mu_msg_move_to_maildir, path will be the *new*
-	 * path, and flags and maildir fields will be updated as
-	 * wel */
+	/* after mu_msg_move_to_maildir, path will be the *new* path,
+	 * and flags and maildir fields will be updated as wel */
 	rv = mu_store_update_msg (store, docid, msg, err);
 	if (rv == MU_STORE_INVALID_DOCID) {
 		mu_util_g_set_error (err, MU_ERROR_XAPIAN,
@@ -1169,8 +1168,8 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 }
 
 static MuError
-move_msgid (MuStore *store, unsigned docid, const char* flagstr, gboolean new_name,
-	    GError **err)
+move_docid (MuStore *store, unsigned docid, const char* flagstr,
+	    gboolean new_name, GError **err)
 {
 	MuMsg		*msg;
 	MuError		 rv;
@@ -1184,6 +1183,7 @@ move_msgid (MuStore *store, unsigned docid, const char* flagstr, gboolean new_na
 
 	flags = flagstr ? get_flags (mu_msg_get_path(msg), flagstr) :
 		mu_msg_get_flags (msg);
+
 	if (flags == MU_FLAG_INVALID) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "invalid flags");
@@ -1203,18 +1203,21 @@ leave:
 
 
 /* when called with a msgid, we need to take care of possibly multiple
- * message with this message id. this is a common case when sending
+ * messages with this message id. this is a common case when sending
  * messages to ourselves (maybe through a mailing list), where there
- * would a message in inbox and sentbox with the same id. we set the
- * flag on both */
+ * would a message in the inbox and sent folders with the same id. we
+ * set the flag on both */
 static gboolean
 move_msgid_maybe (ServerContext *ctx, GHashTable *args, GError **err)
 {
 	GSList		*docids, *cur;
-	const char	*maildir  = get_string_from_args (args, "maildir", TRUE, err);
-	const char	*msgid	  = get_string_from_args (args, "msgid", TRUE, err);
-	const char	*flagstr  = get_string_from_args (args, "flags", TRUE, err);
-	gboolean	 new_name = get_bool_from_args (args, "newname", TRUE, err);
+	const char*	 maildir, *msgid, *flagstr;
+	gboolean	 new_name;
+
+	maildir	 = get_string_from_args (args, "maildir", TRUE, err);
+	msgid	 = get_string_from_args (args, "msgid", TRUE, err);
+	flagstr	 = get_string_from_args (args, "flags", TRUE, err);
+	new_name = get_bool_from_args (args, "newname", TRUE, err);
 
 	/*  you cannot use 'maildir' for multiple messages at once */
 	if (!msgid || !flagstr || maildir)
@@ -1226,7 +1229,7 @@ move_msgid_maybe (ServerContext *ctx, GHashTable *args, GError **err)
 	}
 
 	for (cur = docids; cur; cur = g_slist_next(cur))
-		if (move_msgid (ctx->store, GPOINTER_TO_SIZE(cur->data),
+		if (move_docid (ctx->store, GPOINTER_TO_SIZE(cur->data),
 				flagstr, new_name, err) != MU_OK)
 			break;
 
