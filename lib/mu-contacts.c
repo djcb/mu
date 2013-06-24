@@ -270,6 +270,17 @@ downcase_domain_maybe (const char *addr)
 	return addr_conv;
 }
 
+static void
+clear_str (char* str)
+{
+	if (str) {
+		mu_str_remove_ctrl_in_place (str);
+		g_strstrip (str);
+	}
+}
+
+
+
 
 gboolean
 mu_contacts_add (MuContacts *self, const char *addr, const char *name,
@@ -299,6 +310,8 @@ mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 				 * empty*/
 				g_free (cinfo->_name);
 				cinfo->_name = g_strdup (name);
+				if (cinfo->_name)
+					mu_str_remove_ctrl_in_place (cinfo->_name);
 			}
 			cinfo->_tstamp = tstamp;
 		}
@@ -453,21 +466,6 @@ mu_contacts_destroy (MuContacts *self)
 	g_free (self);
 }
 
-
-
-static void
-clear_str (char* str)
-{
-	/* replace ctrl chars with '_' */
-	while (str && *str) {
-		if (iscntrl (*str))
-			*str = '_';
-		++str;
-	}
-
-	if (str)
-		g_strstrip (str);
-}
 
 /* note, we will *own* the name, email we get, and we'll free them in
  * the end... */

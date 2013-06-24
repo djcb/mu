@@ -173,12 +173,11 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 	return TRUE;
 }
 
-
 static char*
 get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 {
-	char *recip;
-	InternetAddressList *recips;
+	char			*recip;
+	InternetAddressList	*recips;
 
 	recips = g_mime_message_get_recipients (self->_mime_msg, rtype);
 
@@ -194,6 +193,9 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
 		g_free (recip);
 		return NULL;
 	}
+
+	if (recip)
+		mu_str_remove_ctrl_in_place (recip);
 
 	return recip;
 }
@@ -592,10 +594,11 @@ get_tags (MuMsgFile *self)
 }
 
 
+
 static char*
 cleanup_maybe (const char *str, gboolean *do_free)
 {
-	char *cur, *s;
+	char *s;
 
 	if (!str)
 		return NULL;
@@ -610,10 +613,7 @@ cleanup_maybe (const char *str, gboolean *do_free)
 	} else
 		s = (char*)str;
 
-	/* strip control chars */
-	for (cur = s; *cur; ++cur)
-		if (iscntrl(*cur))
-			*cur = ' ';
+	mu_str_remove_ctrl_in_place (s);
 
 	return s;
 }
