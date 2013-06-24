@@ -342,6 +342,18 @@ const gchar* mu_str_subject_normalize (const gchar* str);
 gchar* mu_str_quoted_from_strv (const gchar **params);
 
 
+
+
+/**
+ * Remove control characters from a string
+ *
+ * @param str a string
+ *
+ * @return the str with control characters removed
+ */
+char* mu_str_remove_ctrl_in_place (char *str);
+
+
 /** @} */
 
 G_END_DECLS

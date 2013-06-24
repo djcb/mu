@@ -996,3 +996,31 @@ errexit:
 	g_hash_table_destroy (hash);
 	return NULL;
 }
+
+
+
+char *
+mu_str_remove_ctrl_in_place (char *str)
+{
+	char *cur;
+
+	g_return_val_if_fail (str, NULL);
+
+	for (cur = str; *cur; ++cur) {
+
+		GString *gstr;
+
+		if (!iscntrl(*cur))
+			continue;
+
+		/* control char detected... */
+		gstr = g_string_sized_new (strlen (str));
+		for (cur = str; *cur; ++cur)
+			if (!iscntrl (*cur))
+				g_string_append_c (gstr, *cur);
+		memcpy (str, gstr->str, gstr->len); /* fits */
+		break;
+	}
+
+	return str;
+}
