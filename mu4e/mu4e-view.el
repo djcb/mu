@@ -312,8 +312,10 @@ at POINT, or if nil, at (point)."
   (mu4e~view-construct-header field
     (mapconcat
       (lambda(c)
-	(let* ((name (car c))
-		(email (cdr c))
+	(let* ((name (when (car c)
+		       (replace-regexp-in-string "[[:cntrl:]]" "" (car c))))
+		(email (when (cdr c)
+			 (replace-regexp-in-string "[[:cntrl:]]" "" (cdr c))))
 		(short (or name email)) ;; name may be nil
 		(long (if name (format "%s <%s>" name email) email))
 		(map (make-sparse-keymap)))
@@ -673,11 +675,14 @@ FUNC should be a function taking two arguments:
 If the message is not New/Unread, do nothing."
   (when mu4e~view-msg
     (let ((flags (mu4e-message-field mu4e~view-msg :flags))
+	   (msgid (mu4e-message-field mu4e~view-msg :message-id))
 	   (docid (mu4e-message-field mu4e~view-msg :docid)))
       ;; attached (embedded) messages don't have docids; leave them alone
       ;; is it a new message
       (when (and docid (or (member 'unread flags) (member 'new flags)))
-	(mu4e~proc-move docid nil "+S-u-N")))))
+	;; mark /all/ messages with this message-id as read, so all copies of
+	;; this message will be marked as read.
+	(mu4e~proc-move msgid nil "+S-u-N")))))
 
 (defun mu4e~view-fontify-cited ()
   "Colorize message content based on the citation level."
@@ -1109,7 +1114,7 @@ list."
     (mu4e-view-mark-for-unmark)
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
- 
+
 (defmacro mu4e~view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for-MARK."
   (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
