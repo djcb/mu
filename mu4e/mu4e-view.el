@@ -558,6 +558,7 @@ FUNC should be a function taking two arguments:
 
       (define-key map (kbd "+") 'mu4e-view-mark-for-flag)
       (define-key map (kbd "-") 'mu4e-view-mark-for-unflag)
+      (define-key map (kbd "=") 'mu4e-view-mark-for-untrash)
 
       (define-key map (kbd "*")             'mu4e-view-mark-for-something)
       (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-for-something)
