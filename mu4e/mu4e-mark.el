@@ -119,6 +119,7 @@ The following marks are available, and the corresponding props:
    `read'      n	mark the message as read
    `trash'     y	thrash the message to some folder
    `unflag'    n	mark this message for unflagging
+   `untrash'   n	remove the 'trashed' flag from a message
    `unmark'    n	unmark this message
    `unread'    n	mark the message as unread"
   (interactive)
@@ -137,6 +138,7 @@ The following marks are available, and the corresponding props:
 	      (read      '("!" . "read"))
 	      (trash     `("d" . ,target))
 	      (unflag    '("-" . "unflag"))
+              (untrash   '("=" . "untrash"))
 	      (unmark    '(" " . nil))
 	      (unread    '("?" . "unread"))
 	      (otherwise (mu4e-error "Invalid mark %S" mark))))
@@ -232,6 +234,7 @@ as well."
 		   ("!read"	. read)
 		   ("+flag"	. flag)
 		   ("-unflag"	. unflag)
+                   ("=untrash"	. untrash)
 		   ("unmark"	. unmark)))
 	  (marks
 	    (if allow-something
@@ -304,6 +307,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 		  (read    (mu4e~proc-move docid nil    "+S-u-N"))
 		  (trash   (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N"))
 		  (unflag  (mu4e~proc-move docid nil    "-F-N"))
+                  (untrash (mu4e~proc-move docid nil    "-T"))
 		  (unread  (mu4e~proc-move docid nil    "-S+u-N"))
 		  (otherwise (mu4e-error "Unrecognized mark %S" mark)))))
 	    mu4e~mark-map))

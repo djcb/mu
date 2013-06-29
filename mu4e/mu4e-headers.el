@@ -496,6 +496,7 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for read)
 (mu4e~headers-defun-mark-for trash)
 (mu4e~headers-defun-mark-for unflag)
+(mu4e~headers-defun-mark-for untrash)
 (mu4e~headers-defun-mark-for unmark)
 (mu4e~headers-defun-mark-for unread)
 
@@ -571,6 +572,7 @@ after the end of the search results."
       (define-key map (kbd "u")            'mu4e-headers-mark-for-unmark)
       (define-key map (kbd "+")            'mu4e-headers-mark-for-flag)
       (define-key map (kbd "-")            'mu4e-headers-mark-for-unflag)
+      (define-key map (kbd "=")            'mu4e-headers-mark-for-untrash)
       (define-key map (kbd "&")            'mu4e-headers-mark-custom)
 
       (define-key map (kbd "*")              'mu4e-headers-mark-for-something)
