@@ -34,7 +34,6 @@
 (require 'mu4e-vars)
 (require 'mu4e-about)
 (require 'mu4e-lists)
-;;(require 'mu4e-proc)
 (require 'doc-view)
  
 ;; keep the byte-compiler happy
@@ -681,6 +680,17 @@ Checks whether the server process is live."
 (defvar mu4e~get-mail-password-regexp "^Remote: Enter password: $"
   "Regexp to match a password query in the `mu4e-get-mail-command' output.")
 
+(defun mu4e~request-contacts ()
+  "If `mu4e-compose-complete-addresses' is non-nil, get/update the
+list of contacts we use for autocompletion; otherwise, do nothing."
+  (when mu4e-compose-complete-addresses
+    (setq mu4e-contacts-func 'mu4e~fill-contacts)
+    (mu4e~proc-contacts
+      mu4e-compose-complete-only-personal
+      (when mu4e-compose-complete-only-after
+	(float-time
+	  (apply 'encode-time
+	    (mu4e-parse-time-string mu4e-compose-complete-only-after)))))))
 
 (defun mu4e~start (&optional func)
   "If mu4e is already running, execute function FUNC (if non-nil).
@@ -709,19 +719,12 @@ successful, call FUNC (if non-nil) afterwards."
 		    (lambda () (mu4e-update-mail-and-index t)))))
 	      (mu4e-message "Started mu4e with %d message%s in store"
 		doccount (if (= doccount 1) "" "s"))))))
-
+      ;; wake up server
       (mu4e~proc-ping)
-
-      ;; get the address list if it's not already set.
-      (when (and mu4e-compose-complete-addresses
-	      (not mu4e~contacts-for-completion))
-	(setq mu4e-contacts-func 'mu4e~fill-contacts)
-	(mu4e~proc-contacts
-	  mu4e-compose-complete-only-personal
-	  (when mu4e-compose-complete-only-after
-	    (float-time
-	      (apply 'encode-time
-		(mu4e-parse-time-string mu4e-compose-complete-only-after)))))))))
+      ;; maybe request the list of contacts, automatically refresh after
+      ;; reindexing
+      (mu4e~request-contacts)
+      (add-hook 'mu4e-index-updated-hook 'mu4e~request-contacts))))
 
 (defun mu4e~stop ()
   "Stop the mu4e session."
@@ -948,7 +951,6 @@ is ignored."
     (when img
       (newline)
       (insert-image img))))
-
 
 (defun mu4e-hide-other-mu4e-buffers ()
   "Bury mu4e-buffers (main, headers, view) (and delete all windows
