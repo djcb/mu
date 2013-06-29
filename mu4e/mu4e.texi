@@ -795,6 +795,7 @@ W            toggle include-related
 marking
 -------
 d            mark for moving to the trash folder
+=            mark for remove thrash flags ('untrash')
 DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
@@ -1020,6 +1021,7 @@ M-right      next query
 marking
 -------
 d            mark for moving to the trash folder
+=            mark for remove thrash flags ('untrash')
 DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
@@ -1831,6 +1833,7 @@ mu4e-headers-mark-subthread}, respectively
   read         | !           | mark as read
   refile       | r           | mark for refiling
   trash        | d           | move to the trash folder
+  untrash      | =           | remove 'trash' flag    
   unflag       | -           | remove 'flagged' mark
   unmark       | u           | remove mark at point
   unmark all   | U           | remove all marks
