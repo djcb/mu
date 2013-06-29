@@ -29,6 +29,12 @@
 (require 'mu4e-proc)
 (require 'mu4e-utils)
 (require 'mu4e-message)
+ 
+;; keep byte-compiler happy
+(declare-function mu4e~headers-mark "mu4e-headers")
+(declare-function mu4e~headers-goto-docid "mu4e-headers")
+(declare-function mu4e-headers-next "mu4e-headers")
+
 
 (defcustom mu4e-headers-leave-behavior 'ask
   "What to do when user leaves the headers view.
@@ -82,23 +88,36 @@ where
   "Clear the marks subsystem."
   (clrhash mu4e~mark-map))
 
-
+(defun mu4e~mark-find-headers-buffer ()
+  "Find the headers buffer, if any."
+  (find-if
+    (lambda (b)
+      (with-current-buffer b
+	(eq major-mode 'mu4e-headers-mode)))
+    (buffer-list)))
+ 
 (defmacro mu4e~mark-in-context (&rest body)
   "Evaluate BODY in the context of the headers buffer in case this
-is either a headers or view buffer, and "
-  `(cond
+is either a headers or view buffer."
+  `(cond     
      ((eq major-mode 'mu4e-headers-mode) ,@body)
-     ((eq major-mode 'mu4e-view-mode)
-       (if (buffer-live-p mu4e~view-headers-buffer)
+     ((eq major-mode 'mu4e-view-mode)  
+       (when (buffer-live-p mu4e~view-headers-buffer)
 	 (let* ((msg (mu4e-message-at-point))
 		 (docid (mu4e-message-field msg :docid)))
 	   (with-current-buffer mu4e~view-headers-buffer
 	     (if (mu4e~headers-goto-docid docid)
 	       ,@body
-	       (mu4e-error "cannot find message in headers buffer."))))
-	 (mu4e-error "no headers buffer connected to view")))
-     (t (progn (mu4e-message "%S" major-mode) ,@body)))) 
-     
+	       (mu4e-error "cannot find message in headers buffer.")))))) 
+     (t
+       ;; even in other modes (e.g. mu4e-main-mode we try to find
+       ;; the headers buffer
+       (let ((hbuf (mu4e~mark-find-headers-buffer)))
+	 (if (buffer-live-p hbuf)
+	   (with-current-buffer hbuf
+	     ,@body)
+	   (progn (mu4e-message "%S" major-mode) ,@body))))))  
+
 
 (defun mu4e-mark-at-point (mark &optional target)
   "Mark (or unmark) message at point.
