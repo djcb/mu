@@ -614,6 +614,9 @@ Note, :sortable does not work for custom header fields.")
 
 (defvar mu4e~view-msg nil "The message being viewed in view mode.")
 
+(defvar mu4e~view-headers-buffer nil
+  "The headers buffer connected to this view.")
+
 (defvar mu4e~contacts-for-completion nil
   "List of contacts (ie. 'name <e-mail>').
 This is used by the completion functions in mu4e-compose, and

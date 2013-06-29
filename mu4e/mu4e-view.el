@@ -113,10 +113,6 @@ The first letter of NAME is used as a shortcut character.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;; some buffer-local variables / constants
-(defvar mu4e~view-headers-buffer nil
-  "The headers buffer connected to this view.")
-
 (defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
 (defvar mu4e~view-link-map nil
   "A map of some number->url so we can jump to url by number.")

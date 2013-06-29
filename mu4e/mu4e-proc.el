@@ -51,8 +51,16 @@ a length cookie:
   (purecopy (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post))
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defsubst mu4e~proc-send-command (frm &rest args)
+  "Send as command to the mu server process.
+Start the process if needed."
+  (unless (mu4e~proc-running-p)
+    (mu4e~proc-start))
+  (let ((cmd (apply 'format frm args)))
+    (mu4e-log 'to-server "%s" cmd)
+    (process-send-string mu4e~proc-process (concat cmd "\n"))))
 
 (defun mu4e~proc-start ()
   "Start the mu server process."
@@ -291,22 +299,13 @@ The server output is as follows:
       (t
 	(error "Something bad happened to the mu server process")))))
 
-(defsubst mu4e--docid-msgid-param (docid-or-msgid)
+(defsubst mu4e~docid-msgid-param (docid-or-msgid)
   "Construct a backend parameter based on DOCID-OR-MSGID."
   (format
     (if (stringp docid-or-msgid)
       "msgid:\"%s\""
       "docid:%d")
     docid-or-msgid))
-
-(defsubst mu4e~proc-send-command (frm &rest args)
-  "Send as command to the mu server process.
-Start the process if needed."
-  (unless (mu4e~proc-running-p)
-    (mu4e~proc-start))
-  (let ((cmd (apply 'format frm args)))
-    (mu4e-log 'to-server "%s" cmd)
-    (process-send-string mu4e~proc-process (concat cmd "\n"))))
 
 (defun mu4e~proc-remove (docid)
   "Remove message identified by docid.
@@ -388,7 +387,7 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
     (mu4e-error "At least one of maildir and flags must be specified"))
   (unless (or (not maildir) (file-exists-p (concat mu4e-maildir "/" maildir "/")))
     (mu4e-error "Target dir does not exist"))
-  (let* ((idparam (mu4e--docid-msgid-param docid-or-msgid))
+  (let* ((idparam (mu4e~docid-msgid-param docid-or-msgid))
 	  (flagstr
 	    (when flags
 	      (concat " flags:"
@@ -499,7 +498,7 @@ The result will be delivered to the function registered as
 `mu4e-message-func'."
   (mu4e~proc-send-command
     "cmd:view %s extract-images:%s extract-encrypted:%s use-agent:true"
-    (mu4e--docid-msgid-param docid-or-msgid)
+    (mu4e~docid-msgid-param docid-or-msgid)
     (if images "true" "false")
     (if decrypt "true" "false")))
 

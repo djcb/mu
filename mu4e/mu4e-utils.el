@@ -36,8 +36,20 @@
 (require 'mu4e-lists)
 ;;(require 'mu4e-proc)
 (require 'doc-view)
-(require 'org)
+ 
+;; keep the byte-compiler happy
+(declare-function mu4e~proc-mkdir     "mu4e-proc")
+(declare-function mu4e~proc-ping      "mu4e-proc")
+(declare-function mu4e~proc-contacts  "mu4e-proc")
+(declare-function mu4e~proc-kill      "mu4e-proc")
+(declare-function mu4e~proc-index     "mu4e-proc")
+(declare-function mu4e~proc-add       "mu4e-proc")
+(declare-function mu4e~proc-mkdir     "mu4e-proc")
+(declare-function mu4e~proc-running-p "mu4e-proc")
 
+(declare-function show-all "org")
+
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the following is taken from org.el; we copy it here since we don't want to
 ;; depend on org-mode directly (it causes byte-compilation errors) TODO: a
