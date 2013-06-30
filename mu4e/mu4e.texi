@@ -72,7 +72,6 @@ queries
 the only exception to this is @emph{sending mail}; there are solutions for
 that though - see the @ref{FAQ}}
 @item Support for crypto
-@item Writing rich-text e-mails using @t{org-mode}
 @item Address auto-completion based on the contacts in your messages
 @item Extendable with your own snippets of elisp
 @end itemize
@@ -2365,63 +2364,14 @@ either @kbd{M-x org-agenda-open-link} in agenda buffers, or @kbd{M-x
 org-open-at-point} elsewhere - both typically bound to @kbd{C-c C-o}.
 
 @node Rich-text messages with org-mode
-@section Rich-text messages with @t{org-mode}
+@section Rich-text messages with @t{org-mode} (deprecated)
 
-@t{org-mode} has some nice facilities for editing texts -- creating lists,
-tables, mathematical formulae etc. In addition, it can convert them to
-@abbr{HTML}.
-
-An @emph{experimental} @t{mu4e} feature lets you edit your messages with
-@t{org-mode}, and (optionally) convert them on the fly (when sending them) to
-messages with an HTML-part containing the rich-text version of your messages.
-
-To enable this, make sure you have
-@lisp
-(require 'org-mu4e)
-@end lisp
-somewhere in your setup, and also make sure that the @t{dvipng} program is
-available in your path.
-
-Then, when composing a message, you can use @kbd{M-x
-org-mu4e-compose-org-mode} to enable this mode.
-
-@code{org-mu4e-compose-org-mode} behaves more or less like a minor-mode. When
-it is active, editing the message body takes place in @t{org-mode}, while
-editing the headers uses the normal message editing mode,
-@code{mu4e-compose-mode}.
-
-If you want to automatically convert the @t{org-mode} markup to rich-text when
-sending messages, you need to set the variable @code{org-mu4e-convert-to-html}
-to non-nil:
-
-@lisp
-(setq org-mu4e-convert-to-html t)
-@end lisp
-
-@noindent
-To send the message or execute other
-@code{mu4e-compose-mode}/@code{message-mode} commands on the message, first
-press @key{M-m}. Thus, for example, to send the message, you'd press @key{M-m
-C-c}.
-
-The code for doing the conversion is based on Eric Schultze's
-@t{org-mime}@footnote{@url{http://orgmode.org/worg/org-contrib/org-mime.php}},
-but has been customized for use with @t{mu4e}. In particular, the
-mode-switching between @code{org-mode} and @code{mu4e-compose-mode} is
-@t{mu4e-specific}.
+Some earlier versions of @t{mu4e} had support for editing e-mail messages
+using @t{org-mode}; since this never worked very well, this has now been
+deprecated; it might be replaced in some future version with something better.
 
 @subsection Some caveats
-
-It is better @emph{not} to put @t{org-mu4e-compose-org-mode} in a mode-hook
-for @t{mu4e-compose-mode}, since that makes it impossible to shut it off again
-for the particular message@footnote{This is because @t{mu4e-compose-mode} in
-invoked again internally when switching, which re-triggers the
-hook-function.}.
-
-In addition, currently the rich-text code does not work well with the
-@abbr{MIME}-functionality, such as adding attachments or signing/encrypting
-messages. If you need any of that, it's better to use plain-text messages.
-
+ 
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
 
