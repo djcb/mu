@@ -1602,6 +1602,11 @@ wildcard can only appear as the term's rightmost character:
 subject:soc*
 @end verbatim
 
+@item Get all messages @emph{not} sent to a mailing-list:
+@verbatim
+NOT flag:list
+@end verbatim
+
 @item Get all mails with attachments with filenames starting with @emph{pic}; note
 that the '*' wildcard can only appear as the term's rightmost character:
 @verbatim
@@ -1832,7 +1837,7 @@ mu4e-headers-mark-subthread}, respectively
   read         | !           | mark as read
   refile       | r           | mark for refiling
   trash        | d           | move to the trash folder
-  untrash      | =           | remove 'trash' flag    
+  untrash      | =           | remove 'trash' flag
   unflag       | -           | remove 'flagged' mark
   unmark       | u           | remove mark at point
   unmark all   | U           | remove all marks
@@ -2371,7 +2376,7 @@ using @t{org-mode}; since this never worked very well, this has now been
 deprecated; it might be replaced in some future version with something better.
 
 @subsection Some caveats
- 
+
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
 
