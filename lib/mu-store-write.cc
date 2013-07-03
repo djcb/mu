@@ -213,8 +213,8 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 	}
 }
 
-/* pre-calculate; optimization */
-G_GNUC_CONST static const std::string&
+G_GNUC_CONST
+static const std::string&
 flag_val (char flagchar)
 {
 	static const std::string
@@ -229,7 +229,8 @@ flag_val (char flagchar)
 		signedstr  (pfx + (char)tolower(mu_flag_char(MU_FLAG_SIGNED))),
 		cryptstr   (pfx + (char)tolower(mu_flag_char(MU_FLAG_ENCRYPTED))),
 		attachstr  (pfx + (char)tolower(mu_flag_char(MU_FLAG_HAS_ATTACH))),
-		unreadstr  (pfx + (char)tolower(mu_flag_char(MU_FLAG_UNREAD)));
+		unreadstr  (pfx + (char)tolower(mu_flag_char(MU_FLAG_UNREAD))),
+		liststr    (pfx + (char)tolower(mu_flag_char(MU_FLAG_LIST)));
 
 	switch (flagchar) {
 
@@ -245,6 +246,7 @@ flag_val (char flagchar)
 	case 'z': return signedstr;
 	case 'x': return cryptstr;
 	case 'a': return attachstr;
+	case 'l': return liststr;
 
 	case 'u': return unreadstr;
 
@@ -320,11 +322,9 @@ add_terms_values_str (Xapian::Document& doc, const char *val, MuMsgFieldId mfid)
 		termgen.set_document (doc);
 		termgen.index_text_without_positions (str, 1, prefix(mfid));
 		if (g_strcmp0 (val, str) != 0)
-			termgen.index_text_without_positions (val, 1, prefix(mfid));
-		// g_print ("%s --> '%s' (%s)\n", mu_msg_field_name (mfid), val, str);
+			termgen.index_text_without_positions (
+				val, 1, prefix(mfid));
 	}
-
-	// g_print ("%s --> '%s'\n", mu_msg_field_name (mfid), str);
 
 	if (mu_msg_field_xapian_term(mfid))
 		doc.add_term (prefix(mfid) +
