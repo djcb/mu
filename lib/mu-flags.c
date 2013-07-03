@@ -45,51 +45,38 @@ static const FlagInfo FLAG_INFO[] = {
 	{ MU_FLAG_SIGNED,     'z', "signed",    MU_FLAG_TYPE_CONTENT  },
 	{ MU_FLAG_ENCRYPTED,  'x', "encrypted", MU_FLAG_TYPE_CONTENT  },
 	{ MU_FLAG_HAS_ATTACH, 'a', "attach",    MU_FLAG_TYPE_CONTENT  },
+	{ MU_FLAG_LIST,       'l', "list",      MU_FLAG_TYPE_CONTENT  },
+
 
 	{ MU_FLAG_UNREAD,     'u', "unread",    MU_FLAG_TYPE_PSEUDO  }
 };
 
-/* does not use FLAG_INFO, optimized */
+
 MuFlagType
 mu_flag_type (MuFlags flag)
 {
-	if (flag >= MU_FLAG_DRAFT && flag <= MU_FLAG_TRASHED)
-		return MU_FLAG_TYPE_MAILFILE;
-	if (flag == MU_FLAG_NEW)
-		return MU_FLAG_TYPE_MAILDIR;
-	if (flag == MU_FLAG_UNREAD)
-		return MU_FLAG_TYPE_PSEUDO;
-	if (flag >= MU_FLAG_SIGNED && flag <= MU_FLAG_HAS_ATTACH)
-		return MU_FLAG_TYPE_CONTENT;
+	unsigned u;
 
+	for (u = 0; u != G_N_ELEMENTS (FLAG_INFO); ++u)
+		if (FLAG_INFO[u].flag == flag)
+			return FLAG_INFO[u].flag_type;
+
+	g_warning ("%s: invalid flag %u", __FUNCTION__, flag);
 	return MU_FLAG_TYPE_INVALID;
 }
 
 
-/* does not use FLAG_INFO, optimized */
 char
 mu_flag_char (MuFlags flag)
 {
-	switch (flag) {
+	unsigned u;
 
-	case MU_FLAG_DRAFT:		return  'D';
-	case MU_FLAG_FLAGGED:		return	'F';
-	case MU_FLAG_PASSED:		return	'P';
-	case MU_FLAG_REPLIED:		return	'R';
-	case MU_FLAG_SEEN:		return	'S';
-	case MU_FLAG_TRASHED:		return	'T';
+	for (u = 0; u != G_N_ELEMENTS (FLAG_INFO); ++u)
+		if (FLAG_INFO[u].flag == flag)
+			return FLAG_INFO[u].kar;
 
-	case MU_FLAG_NEW:		return	'N';
-
-	case MU_FLAG_SIGNED:		return	'z';
-	case MU_FLAG_ENCRYPTED:		return	'x';
-	case MU_FLAG_HAS_ATTACH:	return	'a';
-
-	case MU_FLAG_UNREAD:		return	'u';
-
-	default:
-		return 0;
-	}
+	g_warning ("%s: invalid flag %u", __FUNCTION__, flag);
+	return 0;
 }
 
 
@@ -97,52 +84,28 @@ mu_flag_char (MuFlags flag)
 static MuFlags
 mu_flag_from_char (char kar)
 {
-	switch (kar) {
+	unsigned u;
 
-	case 'D': return MU_FLAG_DRAFT;
-	case 'F': return MU_FLAG_FLAGGED;
-	case 'P': return MU_FLAG_PASSED;
-	case 'R': return MU_FLAG_REPLIED;
-	case 'S': return MU_FLAG_SEEN;
-	case 'T': return MU_FLAG_TRASHED;
+	for (u = 0; u != G_N_ELEMENTS (FLAG_INFO); ++u)
+		if (FLAG_INFO[u].kar == kar)
+			return FLAG_INFO[u].flag;
 
-	case 'N': return MU_FLAG_NEW;
-
-	case 'z': return MU_FLAG_SIGNED;
-	case 'x': return MU_FLAG_ENCRYPTED;
-	case 'a': return MU_FLAG_HAS_ATTACH;
-
-	case 'u': return MU_FLAG_UNREAD;
-
-	default:
-		return MU_FLAG_INVALID;
-	}
+	g_warning ("%s: invalid kar %c", __FUNCTION__, kar);
+	return MU_FLAG_INVALID;
 }
 
 
-/* does not use FLAG_INFO, optimized */
 const char*
 mu_flag_name (MuFlags flag)
 {
-	switch (flag) {
-	case  MU_FLAG_DRAFT:		return  "draft";
-	case  MU_FLAG_FLAGGED:		return	"flagged";
-	case  MU_FLAG_PASSED:		return	"passed";
-	case  MU_FLAG_REPLIED:		return	"replied";
-	case  MU_FLAG_SEEN:		return	"seen";
-	case  MU_FLAG_TRASHED:		return	"trashed";
+	unsigned u;
 
-	case  MU_FLAG_NEW:		return	"new";
+	for (u = 0; u != G_N_ELEMENTS (FLAG_INFO); ++u)
+		if (FLAG_INFO[u].flag == flag)
+			return FLAG_INFO[u].name;
 
-	case  MU_FLAG_SIGNED:		return	"signed";
-	case  MU_FLAG_ENCRYPTED:	return  "encrypted";
-	case  MU_FLAG_HAS_ATTACH:	return	"attach";
-
-	case MU_FLAG_UNREAD:		return  "unread";
-
-	default:
-		return NULL;
-	}
+	g_warning ("%s: invalid flags %u", __FUNCTION__, flag);
+	return NULL;
 }
 
 
@@ -162,13 +125,12 @@ mu_flags_to_str_s (MuFlags flags, MuFlagType types)
 }
 
 
-
 MuFlags
 mu_flags_from_str (const char *str, MuFlagType types,
 		   gboolean ignore_invalid)
 {
-	const char *cur;
-	MuFlags flag;
+	const char	*cur;
+	MuFlags		 flag;
 
 	g_return_val_if_fail (str, MU_FLAG_INVALID);
 
@@ -239,8 +201,8 @@ MuFlags
 mu_flags_from_str_delta (const char *str, MuFlags oldflags,
 			 MuFlagType types)
 {
-	const char *cur;
-	MuFlags newflags;
+	const char	*cur;
+	MuFlags		 newflags;
 
 	g_return_val_if_fail (str, MU_FLAG_INVALID);
 

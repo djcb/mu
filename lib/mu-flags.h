@@ -51,7 +51,10 @@ enum _MuFlags {
 	/* pseudo-flag, only for queries, so we can search for
 	 * flag:unread, which is equivalent to 'flag:new OR NOT
 	 * flag:seen' */
-	MU_FLAG_UNREAD          = 1 << 10
+	MU_FLAG_UNREAD          = 1 << 10,
+
+	/* other content flags */
+	MU_FLAG_LIST            = 1 << 11
 };
 typedef enum _MuFlags MuFlags;
 
