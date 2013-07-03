@@ -1019,6 +1019,8 @@ mu_str_remove_ctrl_in_place (char *str)
 			if (!iscntrl (*cur))
 				g_string_append_c (gstr, *cur);
 		memcpy (str, gstr->str, gstr->len); /* fits */
+		g_string_free (gstr, TRUE);
+
 		break;
 	}
 
