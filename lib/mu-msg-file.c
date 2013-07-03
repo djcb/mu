@@ -36,7 +36,6 @@ static gboolean init_file_metadata (MuMsgFile *self, const char* path,
 				    const char *mdir, GError **err);
 static gboolean init_mime_msg (MuMsgFile *msg, const char *path, GError **err);
 
-
 MuMsgFile*
 mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 {
@@ -205,7 +204,7 @@ get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
  * headers in the mail
  */
 static gchar*
-get_fake_mailing_list (MuMsgFile *self)
+get_fake_mailing_list_maybe (MuMsgFile *self)
 {
 	const char* hdr;
 
@@ -235,7 +234,7 @@ get_mailing_list (MuMsgFile *self)
 	hdr = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
 					"List-Id");
 	if (mu_str_is_empty (hdr))
-		return get_fake_mailing_list (self);
+		return get_fake_mailing_list_maybe (self);
 
 	e = NULL;
 	b = strchr (hdr, '<');
@@ -311,7 +310,8 @@ msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuFlags *flags)
 static MuFlags
 get_content_flags (MuMsgFile *self)
 {
-	MuFlags flags;
+	MuFlags	 flags;
+	char	*ml;
 
 	flags = MU_FLAG_NONE;
 
@@ -320,6 +320,14 @@ get_content_flags (MuMsgFile *self)
 					 FALSE, /* never decrypt for this */
 					 (GMimeObjectForeachFunc)msg_cflags_cb,
 					 &flags);
+
+	ml = get_mailing_list (self);
+	if (ml) {
+		flags |= MU_FLAG_LIST;
+		g_free (ml);
+	}
+
+
 	return flags;
 }
 
