@@ -69,7 +69,8 @@ private:
 		if (s.empty() || g_str_has_suffix (s.c_str(), "..")) {
 			str = mu_date_complete_s ("", is_begin);
 		} else {
-			str = mu_date_interpret_s (s.c_str(), is_begin ? TRUE: FALSE);
+			str = mu_date_interpret_s (s.c_str(),
+						   is_begin ? TRUE: FALSE);
 			str = mu_date_complete_s (str, is_begin ? TRUE: FALSE);
 			t   = mu_date_str_to_time_t (str, TRUE /*local*/);
 			str = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
@@ -455,7 +456,8 @@ get_related_query (MuMsgIter *iter, GHashTable **orig_set)
 	// thread-ids, which we combine below. This is /much/ faster
 	// than creating the query as 'query = Query (OR, query)'...
 	for (cur = id_list; cur; cur = g_list_next(cur))
-		qvec.push_back (Xapian::Query((std::string (pfx + (char*)cur->data))));
+		qvec.push_back (Xapian::Query((std::string
+					       (pfx + (char*)cur->data))));
 
 	g_hash_table_destroy (hash);
 	g_list_free (id_list);
@@ -540,7 +542,8 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 		 * based on the message ids / refs of the first one
 		 * */
 		if (inc_related)
-			include_related (self, &iter, maxnum, sortfieldid, flags);
+			include_related (self, &iter, maxnum, sortfieldid,
+					 flags);
 
 		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
 			g_clear_error (err);
