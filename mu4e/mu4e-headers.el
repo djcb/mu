@@ -1242,13 +1242,13 @@ _not_ refresh the last search with the new setting for threading."
   "Get a buffer to give feedback while loading a message view."
   (unless (buffer-live-p mu4e~headers-loading-buf)
     (setq mu4e~headers-loading-buf
-      (get-buffer-create " *mu4e-loading*"))
-    (with-current-buffer mu4e~headers-loading-buf
+      (get-buffer-create " *mu4e-loading*")))
+  (with-current-buffer mu4e~headers-loading-buf
       (let ((inhibit-read-only t))
 	(erase-buffer)
+	(local-set-key (kbd "q") 'kill-buffer-and-window)
 	(insert (propertize "Waiting for message..."
-		  'face 'mu4e-system-face 'intangible t)))
-      (setq buffer-read-only t)))
+		  'face 'mu4e-system-face 'intangible t)))) 
   mu4e~headers-loading-buf)
 
 (defun mu4e-headers-view-message ()
