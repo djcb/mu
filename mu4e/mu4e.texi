@@ -63,12 +63,12 @@ Some of @t{mu4e}'s highlights:
 
 @itemize
 @item Fully search-based: there are no folders@footnote{that is, instead of
-folders, you can use queries that match all messages in a folder}, only
+folders, you use queries that match messages in a particular folder}, only
 queries
 @item Fully documented, with example configurations
 @item User-interface optimized for speed, with quick key strokes for common actions
 @item Support for non-English languages (so ``angstrom'' will match ``Angström'')
-@item Asynchronous; heavy actions don't block @command{emacs}@footnote{currently,
+@item Asynchronous: heavy actions don't block @command{emacs}@footnote{currently,
 the only exception to this is @emph{sending mail}; there are solutions for
 that though - see the @ref{FAQ}}
 @item Support for crypto
@@ -514,12 +514,12 @@ for example, when using Gmail-over-@abbr{IMAP}, this interferes with Gmail's
 handling of the sent messages folder, and you may end up with duplicate
 messages.
 
-You can use the the variable @code{mu4e-sent-messages-behavior} to customize
-what happens with sent messages. The default is the symbol @code{sent} which,
-as mentioned, causes the message to be copied to your sent-messages
-folder. Other possible values are the symbols @code{trash} (the sent message
-is moved to the trash-folder (@code{mu4e-trash-folder}), and @code{delete} to
-simply discard the sent message altogether (so GMail can deal with it).
+You can use the variable @code{mu4e-sent-messages-behavior} to customize what
+happens with sent messages. The default is the symbol @code{sent} which, as
+mentioned, causes the message to be copied to your sent-messages folder. Other
+possible values are the symbols @code{trash} (the sent message is moved to the
+trash-folder (@code{mu4e-trash-folder}), and @code{delete} to simply discard
+the sent message altogether (so GMail can deal with it).
 
 For Gmail-over-@abbr{IMAP}, you could add the following to your settings:
 @verbatim
@@ -579,9 +579,9 @@ correctly, and then shows you the @t{mu4e} main view. Its major mode is
 @code{mu4e-main-mode}.
 
 @menu
-* MV Overview::
+* Overview:MV Overview.
 * Basic actions::
-* MV Bookmarks::
+* Bookmarks:MV Bookmarks.
 * Miscellaneous::
 @end menu
 
@@ -682,11 +682,11 @@ if you have actually set up mail-queuing. @ref{Queuing mail}
 
 The headers view shows the results of a query. The topline shows the names of
 the fields. Below that, there is a line with those fields, for each matching
-message, followed by a footer line. The major-mode for the the headers view is
+message, followed by a footer line. The major-mode for the headers view is
 @code{mu4e-headers-mode}.
 
 @menu
-* HV Overview::
+* Overview:HV Overview.
 * Keybindings::
 * Marking messages::
 * Sort order and threading::
@@ -927,13 +927,13 @@ view window: the message headers, followed by the message body. Its major
 mode is @code{mu4e-view-mode}.
 
 @menu
-* MSGV Overview::
-* MSGV Keybindings::
+* Overview:MSGV Overview.
+* Keybindings:MSGV Keybindings.
 * Opening and saving attachments::
 * Viewing images inline::
 * Displaying rich-text messages::
-* MSGV Crypto::
-* MSGV Actions::
+* Crypto:MSGV Crypto.
+* Actions:MSGV Actions.
 @end menu
 
 @node MSGV Overview
@@ -1591,13 +1591,12 @@ or, unless you have a really old Xapian
 date:2w.. emacs
 @end verbatim
 
-@item Get messages from the the @emph{Mu} mailing list:
+@item Get messages from the @emph{Mu} mailing list:
 @verbatim
 list:mu-discuss.googlegroups.com
 @end verbatim
 
-@item Get messages with a subject soccer, Socrates, society, ...; note that the '*'
-wildcard can only appear as the term's rightmost character:
+@item Get messages with a subject soccer, Socrates, society, ...; note that the '*'-wildcard can only appear as a term's rightmost character:
 @verbatim
 subject:soc*
 @end verbatim
@@ -2937,7 +2936,7 @@ instead -- see
 @section Reading messages
 
 @enumerate
-@item @emph{How can I show attached images in my message view buffers?} See
+@item @emph{How can I view attached images in my message view buffers?} See
 @ref{Viewing images inline}.
 @item @emph{How can I word-wrap long lines in when viewing a
 message?} You can toggle between wrapped and non-wrapped states using
@@ -3491,7 +3490,7 @@ MIME-type, if any) and @t{:size} (the size in bytes, if any).
 
 As an example of the communication between @t{mu4e} and @command{mu}, let's
 look at the @t{ping-pong}-sequence. When @t{mu4e} starts, it sends a command
-@t{ping} to the the @t{mu server} backend, to learn about its version. @t{mu
+@t{ping} to the @t{mu server} backend, to learn about its version. @t{mu
 server} then responds with a @t{pong} s-expression to provide this information
 (this is implemented in @file{mu-cmd-server.c}).
 

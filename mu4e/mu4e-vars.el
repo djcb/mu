@@ -49,14 +49,21 @@ path."
   :safe 'stringp)
 
 (defcustom mu4e-maildir (expand-file-name "~/Maildir")
-  "Your Maildir directory."
+  "The file system path to your Maildir."
   :type 'directory
   :safe 'stringp
   :group 'mu4e)
 
 (defcustom mu4e-get-mail-command "true"
   "Shell command to run to retrieve new mail.
-Common values are \"offlineimap\" and \"fetchmail\"."
+Common values are \"offlineimap\" and \"fetchmail\", but you use
+arbitrary shell-commands.
+
+If you set it to \"true\" (the default), the command won't don't
+anything, which is useful if you get your mail without the need to
+explicitly run any scripts, for example when running yout own
+mail-server.
+"
   :type 'string
   :group 'mu4e
   :safe 'stringp)
@@ -86,9 +93,10 @@ better with e.g. offlineimap."
 
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
   "Default directory for saving attachments.
-This can be either a string, or a function that takes a filename
-FNAME and MIMETYPE as arguments, and returns the attachment
-dir. Note, either or both of the arguments may be `nil'."
+This can be either a string (a file system path), or a function
+that takes a filename and the mime-type as arguments, and returns
+the attachment dir. See Info node `(mu4e) Opening and saving
+attachments' for details."
   :type 'directory
   :group 'mu4e
   :safe 'stringp)
@@ -301,17 +309,19 @@ re-edited, and is nil otherwise."
 
 
 (defcustom mu4e-maildir-shortcuts nil
-  "A list of maildir shortcuts.
-This enables quickly going to the particular maildir (folder), or
-quickly moving messages to them (i.e., archiving or refiling). The
-list contains elements of the form (maildir . shortcut), where
-MAILDIR is a maildir (such as \"/archive/\"), and shortcut a single
-shortcut character. With this, in the header buffer and view buffer
-you can execute `mu4e-mark-for-move-quick' (or 'm', by default) or
+  "A list of maildir shortcuts. This makes it possible to quickly
+go to a particular maildir (folder), or quickly moving messages to
+them (e.g., for archiving or refiling). The list contains elements
+of the form (maildir . shortcut), where MAILDIR is a maildir (such
+as \"/archive/\"), and shortcut is a single character.
+
+You can use these shortcuts in the headers and view buffers, for
+example with `mu4e-mark-for-move-quick' (or 'm', by default) or
 `mu4e-jump-to-maildir' (or 'j', by default), followed by the
-designated shortcut character for the maildir. Unlike in search
-queries, folder names with spaces in them must NOT be quoted, since
-mu4e does this automatically for you."
+designated shortcut character for the maildir.
+
+Unlike in search queries, folder names with spaces in them must NOT
+be quoted, since mu4e does this automatically for you."
   :type '(repeat (cons (string :tag "Maildir") character))
   :group 'mu4e-folders)
 
@@ -577,23 +587,9 @@ Furthermore, the property `:sortable' determines whether we can
 sort by this field.  This can be either a boolean (nil or t), or a
 symbol for /another/ field. For example, the `:human-date' field
 uses `:date' for that.
-")
 
-(defvar mu4e-custom-header-info nil
-  "A list like `mu4e-custom-header-info', but for custom headers.
-I.e. user-specified headers. Each of the list items is a property
-list with :name (the full-name, as displayed in the message
-view), :shortname (the name as displayed in the headers
-view), :help (some help information, which shows up in the
-tooltip). Furthermore, there are two special fields:
-:headers-func and :message-func, and the values should be functions
-that take a MSG property list as argument, and return a string as
-result.
-Note, :sortable does not work for custom header fields.")
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Note, `:sortable' does not work for custom header fields.")
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -619,8 +615,12 @@ Note, :sortable does not work for custom header fields.")
 
 (defvar mu4e~contacts-for-completion nil
   "List of contacts (ie. 'name <e-mail>').
-This is used by the completion functions in mu4e-compose, and
-filled when mu4e starts.")
+This is used by the completion functions in mu4e-compose, filled
+when mu4e starts.")
+
+(defvar mu4e~contact-list nil
+  "List of contacts, where each contact is a plist
+  (:name NAME :mail EMAIL :tstamp TIMESTAMP :freq FREQUENCY).")
 
 (defvar mu4e~server-props nil
   "Properties we receive from the mu4e server process.
