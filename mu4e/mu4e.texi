@@ -1162,6 +1162,14 @@ installing that, you can tell @t{mu4e} to use it with something like:
    "html2markdown | grep -v '&nbsp_place_holder;'")
 @end lisp
 
+On MacOS, there is a program called @t{textutil} as yet another alternative:
+
+@lisp
+(setq mu4e-html2text-command
+  "textutil -stdin -format html -convert txt -stdout")
+@end lisp
+
+
 @node MSGV Crypto
 @section Crypto
 
@@ -3015,7 +3023,18 @@ to your configuration:
 @end lisp
 With this, messages are sent using background emacs-instance. A word of
 warning though, this tends to not be as reliable as sending the message in the
-normal, synchronous fashion.
+normal, synchronous fashion; however, you can check the progress of the
+background by checking the @t{*Messages*}-buffer, which should show something
+like:
+@verbatim
+Delivering message to "William Shakespeare" <will@example.com>...
+Mark set
+Saving file /home/user/Maildir/sent/cur/20130706-044350-darklady:2,S...
+Wrote /home/djcb/Maildir/sent/cur/20130706-044350-darklady:2,S
+Sending...done
+@end verbatim
+The first and final messages are the most important, and there may be
+considerable time between them, depending on the size of the message.
 @end enumerate
 
 @node Known issues
