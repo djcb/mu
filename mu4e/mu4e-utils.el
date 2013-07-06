@@ -600,6 +600,7 @@ and fill the list `mu4e~contacts-for-completion' with it, with
 each element looking like
   name <email>
 This is used by the completion function in mu4e-compose."
+  (setq mu4e~contact-list contacts)
   (let ((lst)
 	 ;; sort by the frequency (descending), then timestamp (descending)
 	 ;; FIXME: sadly, the emacs completion subsystem re-sorts the list
@@ -929,11 +930,11 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
 (defvar mu4e-imagemagick-identify "identify"
   "Name/path of the Imagemagick 'identify' program.")
 
-(defun mu4e-display-image (imgpath &optional maxwidth)
-  "Display image IMG at point; optionally specify
-MAXWIDTH. Function tries to use imagemagick if available (ie.,
+(defun mu4e-display-image (imgpath &optional maxwidth maxheight)
+  "Display image IMG at point; optionally specify MAXWIDTH and
+MAXHEIGHT. Function tries to use imagemagick if available (ie.,
 emacs was compiled with inmagemagick support); otherwise MAXWIDTH
-is ignored."
+and MAXHEIGHT are ignored."
   (let* ((have-im (and (fboundp 'imagemagick-types)
 		    (imagemagick-types))) ;; hmm, should check for specific type
 	  (identify (and have-im maxwidth
@@ -949,8 +950,12 @@ is ignored."
 		 (create-image imgpath))))
     ;;(message "DISPLAY: %S %S" imgpath img)
     (when img
-      (newline)
-      (insert-image img))))
+      (insert "\n")
+      (let ((size (image-size img))) ;; inspired by gnus..
+	(insert-char ?\n (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
+	(insert-char ?\  (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
+	(insert-image img)))))
+ 
 
 (defun mu4e-hide-other-mu4e-buffers ()
   "Bury mu4e-buffers (main, headers, view) (and delete all windows

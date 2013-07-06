@@ -2831,9 +2831,7 @@ default for various reasons.
 (setq mu4e-attachment-dir "~/Desktop")
 
 ;; attempt to show images when viewing messages
-(setq
-  mu4e-view-show-images t
-  mu4e-view-image-max-width 800)
+(setq mu4e-view-show-images t)
 @end lisp
 
 @node FAQ

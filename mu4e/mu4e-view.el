@@ -80,6 +80,13 @@ This is only effective if you're using an emacs with Imagemagick
 support, and `mu4e-view-show-images' is non-nil."
   :group 'mu4e-view)
 
+(defcustom mu4e-view-image-max-height 600
+  "The maximum height for images to display.
+This is only effective if you're using an emacs with Imagemagick
+support, and `mu4e-view-show-images' is non-nil."
+  :group 'mu4e-view)
+
+
 (defcustom mu4e-view-scroll-to-next t
   "If non-nil, move to the next message when calling
 `mu4e-view-scroll-up-or-next' (typically bound to SPC) when at the
@@ -743,7 +750,9 @@ What browser is called is depending on
 	    (when (and imgfile (file-exists-p imgfile))
 	      (save-excursion
 		(goto-char (point-max))
-		(mu4e-display-image imgfile mu4e-view-image-max-width)))))))))
+		(mu4e-display-image imgfile
+		  mu4e-view-image-max-width
+		  mu4e-view-image-max-height)))))))))
 
 ;; this is fairly simplistic...
 (defun mu4e~view-make-urls-clickable ()
