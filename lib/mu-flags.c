@@ -61,7 +61,6 @@ mu_flag_type (MuFlags flag)
 		if (FLAG_INFO[u].flag == flag)
 			return FLAG_INFO[u].flag_type;
 
-	g_warning ("%s: invalid flag %u", __FUNCTION__, flag);
 	return MU_FLAG_TYPE_INVALID;
 }
 
@@ -74,8 +73,6 @@ mu_flag_char (MuFlags flag)
 	for (u = 0; u != G_N_ELEMENTS (FLAG_INFO); ++u)
 		if (FLAG_INFO[u].flag == flag)
 			return FLAG_INFO[u].kar;
-
-	g_warning ("%s: invalid flag %u", __FUNCTION__, flag);
 	return 0;
 }
 
@@ -90,7 +87,6 @@ mu_flag_from_char (char kar)
 		if (FLAG_INFO[u].kar == kar)
 			return FLAG_INFO[u].flag;
 
-	g_warning ("%s: invalid kar %c", __FUNCTION__, kar);
 	return MU_FLAG_INVALID;
 }
 
@@ -104,7 +100,6 @@ mu_flag_name (MuFlags flag)
 		if (FLAG_INFO[u].flag == flag)
 			return FLAG_INFO[u].name;
 
-	g_warning ("%s: invalid flags %u", __FUNCTION__, flag);
 	return NULL;
 }
 

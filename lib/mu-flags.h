@@ -87,7 +87,7 @@ MuFlagType mu_flag_type (MuFlags flag) G_GNUC_CONST;
  *
  * @param flag a MuFlag (single)
  *
- * @return the character, or 0 in case of error
+ * @return the character, or 0 if it's not a valid flag
  */
 char mu_flag_char (MuFlags flag) G_GNUC_CONST;
 

@@ -175,9 +175,7 @@ test_mu_msg_02 (void)
 				(MuMsgContactForeachFunc)check_contact_02,
 				&i);
 	g_assert_cmpint (i,==,2);
-
-	g_assert_cmpuint (mu_msg_get_flags(msg),
-			  ==, MU_FLAG_SEEN);
+	g_assert_cmpuint (mu_msg_get_flags(msg), ==, MU_FLAG_SEEN|MU_FLAG_LIST);
 
 	mu_msg_unref (msg);
 }
