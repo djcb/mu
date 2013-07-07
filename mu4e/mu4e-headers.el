@@ -320,7 +320,7 @@ into a string."
     (let ((get-prefix
 	    (lambda (cell)  (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
       (concat
-	(make-string (* (if (plist-get thread :empty-parent) 0 2)
+	(make-string (* (if (plist-get thread :empty-parent) 0 1)
 		 (plist-get thread :level)) ?\s)
 	(cond
 	  ((plist-get thread :has-child)
