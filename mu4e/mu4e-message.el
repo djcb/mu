@@ -215,13 +215,24 @@ match."
 	    (and email (string-match rx email)))))
       (mu4e-message-field msg cfield)))) 
 
+(defun mu4e-message-contact-field-matches-me (msg cfield)
+  "Checks whether any of the of the contacts in field
+CFIELD (either :to, :from, :cc or :bcc) of msg MSG matches *me*,
+that is, any of the e-mail address in
+`mu4e-user-mail-address-list'. Returns the contact cell that
+matched, or nil."
+  (find-if
+    (lambda (cc-cell)
+      (member-if
+	(lambda (addr)
+	  (string= (downcase addr) (downcase (cdr cc-cell))))
+	mu4e-user-mail-address-list))
+    (mu4e-message-field msg cfield)))
 
 (defsubst mu4e-message-part-field  (msgpart field)
   "Get some field in a message part; a part would look something like:
   (:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)."
   (plist-get msgpart field))
-
-
 
 ;; backward compatibility ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defalias 'mu4e-msg-field 'mu4e-message-field)
