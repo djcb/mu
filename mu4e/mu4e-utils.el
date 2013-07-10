@@ -262,7 +262,7 @@ Function will return the cdr of the list element."
 	      (concat prompt optionsstr
 		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to cancel]")
 	      ;; the allowable chars
-	      (map 'list (lambda(elm) (string-to-char (car elm))) options)))
+	      (cl-map 'list (lambda(elm) (string-to-char (car elm))) options)))
 	  (chosen
 	    (find-if
 	      (lambda (option) (eq response (string-to-char (car option))))

@@ -33,6 +33,10 @@
 (require 'mu4e-compose)
 (require 'mu4e-actions)
 (require 'mu4e-message)
+(require 'mu4e-wash)
+
+(require 'wid-browse)
+(require 'wid-edit)
 
 (require 'comint)
 (require 'browse-url)
@@ -54,6 +58,13 @@
   "Header fields to display in the message view buffer.
 For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
+  :group 'mu4e-view)
+
+(defcustom mu4e-html-renderer nil
+  "Set to `w3m' to enable `emacs-w3m' rendering"
+  :type '(choice (cons :tag "Render HTML with emacs-w3m" w3m)
+                 (cons :tag "Render using `mu4e-html2text-program'" nil))
+  :safe 'symbolp
   :group 'mu4e-view)
 
 
@@ -117,6 +128,10 @@ where:
   plist and the attachment number.
 
 The first letter of NAME is used as a shortcut character.")
+
+(defvar mu4e-wash-wrap-lines-length nil)
+(defvar mu4e~view-has-rendered-html nil)
+(make-variable-buffer-local 'mu4e~view-has-rendered-html)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -130,7 +145,7 @@ This is to determine what is the parent docid for embedded
 message extracted at some path.")
 
 (defconst mu4e~view-url-regexp
-  "\\(\\(https?\\://\\|mailto:\\)[-+\[:alnum:\].?_$%/+&#@!*~,:;=/()]+\\)"
+  "\\(https?\\://[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=]+\\|mailto:[-+a-zA-Z0-9.?_$%/+&#@!*~,:;=/()]+\\)"
   "Regexp that matches http:/https:/mailto: URLs; match-string 1
 will contain the matched URL, if any.")
 
@@ -196,6 +211,7 @@ messages - for example, `mu4e-org'."
     "\n"
     (mu4e-message-body-text msg)))
 
+
  (defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
   (let* ((buf (get-buffer-create mu4e~view-embedded-buffer-name))
@@ -204,6 +220,7 @@ messages - for example, `mu4e-org'."
     (switch-to-buffer buf)))
 
 
+(defvar mu4e-view-mode-post-hook nil)
 (defun mu4e-view (msg headersbuf &optional refresh)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
@@ -222,31 +239,36 @@ marking if it still had that."
 	      (mu4e~view-embedded-winbuf)
 	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
-      (switch-to-buffer buf)
+      (unless (eq major-mode 'mu4e-view-mode)
+        (mu4e-view-mode))
       (let ((inhibit-read-only t))
 	(erase-buffer)
-	(insert (mu4e-view-message-text msg))
+	;; (insert (mu4e-view-message-text msg))
+        (mu4e-view-display-message msg)
+	(when w3m-minor-mode (use-local-map mu4e-view-mode-map))
+	(switch-to-buffer buf)
 	(goto-char (point-min))
-	(mu4e~view-fontify-cited)
-	(mu4e~view-fontify-footer)
-	(mu4e~view-make-urls-clickable)
 	(mu4e~view-show-images-maybe msg)
+        (when mark-active
+          (deactivate-mark))
 
 	(if embedded
 	  (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf)))
 
-    (unless (eq major-mode 'mu4e-view-mode)
-      (mu4e-view-mode))
+      (setq ;; buffer local
+       mu4e~view-msg msg
+       mu4e~view-headers-buffer headersbuf)
 
-	(setq ;; buffer local
-      mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf)
+      (widget-setup)
 
     (unless (or refresh embedded)
 	  ;; no use in trying to set flags again, or when it's an embedded
 	  ;; message
-	  (mu4e~view-mark-as-read-maybe)))))
+      (mu4e~view-mark-as-read-maybe))
+
+    (run-hooks 'mu4e-view-mode-post-hook)
+    )))
 
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -341,7 +363,6 @@ at POINT, or if nil, at (point)."
 	      "[mouse-1] or [M-RET] to toggle long/short display"
 	      "[mouse-2] or C to compose a mail for this recipient"))))
       (mu4e-message-field msg field) ", ") t))
-
 
 (defun mu4e~view-construct-flags-tags-header (field val)
   "Construct a Flags: header."
@@ -473,8 +494,7 @@ FUNC should be a function taking two arguments:
   "Keymap for \"*mu4e-view*\" buffers.")
 (unless mu4e-view-mode-map
   (setq mu4e-view-mode-map
-    (let ((map (make-sparse-keymap)))
-
+    (let ((map (copy-keymap widget-minor-mode-map)))
       (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
       (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
 
@@ -482,7 +502,7 @@ FUNC should be a function taking two arguments:
 
       ;; note, 'z' is by-default bound to 'bury-buffer'
       ;; but that's not very useful in this case
-      (define-key map "z" 'mu4e~view-quit-buffer)
+      (define-key map "z" 'mu4e-view-toggle-html)
 
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-view-search-edit)
@@ -645,7 +665,13 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [sepa4] '("--"))
 	(define-key menumap [next]  '("Next" . mu4e-view-headers-next))
 	(define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
+
+      ;; widget nav
+      (define-key map (kbd "<tab>") 'widget-forward)
+      (define-key map (kbd "S-<tab>") 'widget-backward)
+      (define-key map (kbd "<backtab>") 'widget-backward)
       map)))
+;; (set-keymap-parent mu4e-view-mode-map widget-keymap)
 
 (fset 'mu4e-view-mode-map mu4e-view-mode-map)
 
@@ -693,7 +719,7 @@ If the message is not New/Unread, do nothing."
   (save-excursion
     (let ((more-lines t))
       (goto-char (point-min))
-      (when (search-forward-regexp "^\n") ;; search the first empty line
+      (when (re-search-forward "^[:space:]*$" nil t) ;; search the first empty line
 	(while more-lines
 	  ;; Get the citation level at point -- i.e., the number of '>'
 	  ;; prefixes, starting with 0 for 'no citation'
@@ -755,6 +781,71 @@ What browser is called is depending on
 		  mu4e-view-image-max-height)))))))))
 
 ;; this is fairly simplistic...
+;; (defun mu4e~view-make-urls-clickable ()
+;;   "Turn things that look like URLs into clickable things.
+;; Also number them so they can be opened using `mu4e-view-go-to-url'."
+;;   (let ((num 0))
+;;     (save-excursion
+;;       (setq mu4e~view-link-map ;; buffer local
+;; 	(make-hash-table :size 32 :weakness nil))
+;;       (goto-char (point-min))
+;;       (while (re-search-forward mu4e~view-url-regexp nil t)
+;; 	(let ((url (match-string 0))
+;; 	       (map (make-sparse-keymap)))
+;; 	  (define-key map [mouse-1] (mu4e~view-browse-url-func url))
+;; 	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
+;; 	  (puthash (incf num) url mu4e~view-link-map)
+;; 	  (add-text-properties 0 (length url)
+;; 	    `(face mu4e-view-link-face
+;; 	       mouse-face highlight
+;; 	       keymap ,map
+;; 	       help-echo
+;; 	       ("[mouse-1] or [M-RET] to open the link")) url)
+;; 	  (replace-match
+;; 	    (concat url
+;; 	      (propertize (format "[%d]" num)
+;; 		'face 'mu4e-view-url-number-face))))))))
+
+(defun mu4e~view-shorten-url (url)
+  "Function to extract top level of urls and remove mailto labels
+from email links"
+  (save-match-data
+    (let ((matchp (string-match "\\(https?\\://\\|mailto:\\)\\([-+.a-zA-Z0-9@_]+\\)" url)))
+      (if matchp
+          (substring url (match-end 1) (match-end 0))
+        url))))
+
+(defvar mu4e~view-link-widget-map nil
+  "Keymap for link widgets")
+(let ((map (make-sparse-keymap)))
+  (define-key map [mouse-2] 'widget-button-click)
+  (define-key map (kbd "S-<return>") 'widget-button-press)
+  (define-key map (kbd "M-<return>") 'widget-button-press)
+  (setq mu4e~view-link-widget-map map))
+
+(define-widget 'mu4e~view-link-widget 'link
+  "Widget type for URIs"
+  :action 'mu4e~view-link-widget-action
+  :button-prefix ""
+  :button-suffix ""
+  :button-face 'mu4e-view-link-face
+  :sample-face 'mu4e-view-url-number-face
+  :format "%[%t%]%{%i%}"
+  :format-handler 'mu4e~view-link-format-handler
+  :keymap mu4e~view-link-widget-map)
+
+(defun mu4e~view-link-widget-action (wid &optional event)
+  (lexical-let ((url (widget-value wid)))
+    (if (string-match-p "^mailto:" url)
+        (mu4e~compose-browse-url-mail url)
+      (browse-url url))))
+
+(defun mu4e~view-link-format-handler (wid esc)
+  "Format handler for link button widget"
+  (if (equal esc ?i)
+      (widget-insert (format "[%d]" (widget-get wid :id)))
+    (widget-default-format-handler wid esc)))
+
 (defun mu4e~view-make-urls-clickable ()
   "Turn things that look like URLs into clickable things.
 Also number them so they can be opened using `mu4e-view-go-to-url'."
@@ -764,23 +855,15 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	(make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
       (while (re-search-forward mu4e~view-url-regexp nil t)
-	(let ((url (match-string 0))
-	       (map (make-sparse-keymap)))
-	  (define-key map [mouse-1] (mu4e~view-browse-url-func url))
-	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
+	(let ((url (match-string 0)))
 	  (puthash (incf num) url mu4e~view-link-map)
-	  (add-text-properties 0 (length url)
-	    `(face mu4e-view-link-face
-	       mouse-face highlight
-	       keymap ,map
-	       help-echo
-	       ("[mouse-1] or [M-RET] to open the link")) url)
-	  (replace-match
-	    (concat url
-	      (propertize (format "[%d]" num)
-		'face 'mu4e-view-url-number-face))))))))
+          (replace-match "")
+          (widget-create 'mu4e~view-link-widget
+                         :help-echo url
+                         :id num
+                         :tag (mu4e~view-shorten-url url)
+                         url))))))
 
-
 (defun mu4e~view-hide-cited ()
   "Toggle hiding of cited lines in the message body."
   (save-excursion
@@ -878,6 +961,13 @@ all messages in the subthread at point in the headers view."
   "Run `mu4e-headers-search-edit' in the headers buffer."
   (interactive)
   (mu4e~view-in-headers-context (mu4e-headers-search-edit)))
+
+(defun mu4e-view-toggle-html ()
+  "Toggle `mu4e-view-prefer-html' and refresh buffer"
+  (interactive)
+  (make-local-variable 'mu4e-view-prefer-html)
+  (setq mu4e-view-prefer-html (not mu4e-view-prefer-html))
+  (mu4e-view-refresh))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
@@ -1244,6 +1334,366 @@ other windows."
         (setq mu4e~headers-view-win nil)
 	(when (buffer-live-p mu4e~view-headers-buffer)
 	  (switch-to-buffer mu4e~view-headers-buffer))))))
+
+;; NEW DISPLAY CODE
+
+(defun mu4e-view-display-message (msg)
+  "Return the message to display (as a string), based on the MSG plist."
+  (mapc
+   (lambda (field)
+     (let ((fieldval (mu4e-message-field msg field)))
+       (case field
+         (:subject  (mu4e~view-display-header field fieldval))
+         (:path     (mu4e~view-display-header field fieldval))
+         (:maildir  (mu4e~view-display-header field fieldval))
+         ((:flags :tags) (mu4e~view-display-flags-tags-header field fieldval))
+
+         ;; contact fields
+         (:to       (mu4e~view-display-contacts-header msg field))
+         (:from     (mu4e~view-display-contacts-header msg field))
+         (:cc       (mu4e~view-display-contacts-header msg field))
+         (:bcc      (mu4e~view-display-contacts-header msg field))
+
+         ;; if we (`user-mail-address' are the From, show To, otherwise,
+         ;; show From
+         (:from-or-to
+          (let* ((from (mu4e-message-field msg :from))
+                 (from (and from (cdar from))))
+            (if (mu4e-user-mail-address-p from)
+                (mu4e~view-display-contacts-header msg :to)
+              (mu4e~view-display-contacts-header msg :from))))
+         ;; date
+         (:date
+          (let ((datestr
+                 (when fieldval (format-time-string mu4e-view-date-format
+                                                    fieldval))))
+            (if datestr (mu4e~view-display-header field datestr) "")))
+         ;; size
+         (:size
+          (mu4e~view-display-header field (mu4e-display-size fieldval)))
+         (:mailing-list
+          (mu4e~view-display-header field fieldval))
+         ;; attachments
+         (:attachments (mu4e~view-display-attachments-header msg))
+         ;; pgp-signatures
+         (:signature   (mu4e~view-display-signature-header msg))
+         (t (mu4e-error "Unsupported field: %S" field)))))
+   mu4e-view-fields)
+  (insert "\n")
+  (mu4e~view-display-message-body msg))
+
+(defun mu4e~view-display-header (field val &optional dont-propertize-val)
+  "Return header field FIELD (as in `mu4e-header-info') with value
+VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
+add text-properties to VAL."
+  (let* ((beg (point))
+         (info (cdr (assoc field mu4e-header-info)))
+         (key (plist-get info :name))
+         (help (plist-get info :help))
+         end)
+    (cond ((functionp val)
+           (insert (propertize key
+                               'face 'mu4e-view-header-key-face
+                               'help-echo help) ": ")
+           (funcall val)
+           (insert "\n"))
+          ((and val
+                (stringp val)
+                (> (length val) 0))
+           (insert (propertize key
+                               'face 'mu4e-view-header-key-face
+                               'help-echo help) ": "
+                               (if dont-propertize-val
+                                   val
+                                 (propertize val 'face 'mu4e-view-header-value-face)) "\n")
+           )
+          (t nil))
+    (setq end (point))
+    (unless (equal beg end)
+      (narrow-to-region beg end)
+      ;; temporarily set the fill column <margin> positions to the right, so
+      ;; we can indent the following lines correctly
+      (let*((margin 1) (fill-column (- fill-column margin)))
+        (fill-region (point-min) (point-max))
+        (goto-char (point-min))
+        (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
+          (indent-to-column margin)))
+      (widen)
+      (goto-char (point-max))
+      )))
+
+(defvar mu4e~view-contact-widget-keymap nil)
+(let ((map (make-sparse-keymap)))
+  (define-key map [mouse-1] 'widget-button-click)
+  (define-key map [mouse-2] 'widget-button-click)
+  (define-key map (kbd "<return>") 'widget-button-press)
+  (define-key map "C" 'mu4e~view-compose-contact-widget)
+  (setq mu4e~view-contact-widget-keymap map))
+
+(define-widget 'mu4e-view-contact-widget 'link
+  "Mu4e contact button"
+  ;; :convert-widget 'identity
+  :action 'mu4e~view-contact-widget-action
+  :button-face 'mu4e-view-contact-face
+  :button-prefix ""
+  :button-suffix ""
+  :format "%[%v%]"
+  :intangible nil
+  :keymap mu4e~view-contact-widget-keymap
+  :mouse-face 'highlight
+  :help-echo (format "%s\n%s" "[mouse-1] or [RET] to toggle long/short display"
+                     "[mouse-2] or C to compose a mail for this recipient")
+  )
+
+(defun mu4e~view-contact-widget-action (wid &optional event)
+  "`mu4e-view' action handler for contact widget"
+  (let ((eml (widget-get wid :email)))
+    (cond ((and event (equal (event-basic-type event) 'mouse-2)) (mu4e~compose-mail eml))
+          (t (mu4e~view-toggle-contact-display wid)))))
+
+(defun mu4e~view-compose-contact-widget (&optional point)
+  (interactive)
+  (let* ((pos (or point (point)))
+         (wid (widget-at pos))
+         (eml (when wid (widget-get wid :email))))
+    (when eml
+      (mu4e~compose-mail eml))))
+
+(defun mu4e~view-display-contacts-header (msg field)
+  "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
+  (let ((contacts (mu4e-message-field msg field)))
+    (when contacts
+      (mu4e~view-display-header
+       field
+       (lambda ()
+         (loop for (c . rest) on contacts
+               do (let* ((name (car c))
+                         (email (cdr c))
+                         (short (or name email)) ;; name may be nil
+                         (long (if name (format "%s <%s>" name email) email))
+                         (map (make-sparse-keymap)))
+                    (widget-create 'mu4e-view-contact-widget
+                                   :long long
+                                   :short short
+                                   :email email
+                                   (if mu4e-view-show-addresses long short))
+                    (when rest
+                      (insert (propertize ", " 'face 'mu4e-view-contact-face)))
+              )))))))
+
+(defun mu4e~view-toggle-contact-display (wid &rest ignore)
+  "Toggle between the long and short versions of long/short string
+at POINT, or if nil, at (point)."
+  (unless (widget-get wid :long)
+    (error "point is not toggleable"))
+  (let* ((long (widget-get wid :long))
+         (short (widget-get wid :short))
+         (val (widget-value wid)))
+    (if (and short
+             (equal val long))
+        (widget-value-set wid short)
+      (widget-value-set wid long)))
+  )
+
+(defun mu4e~view-display-flags-tags-header (field val)
+  "Construct a Flags: header."
+  (mu4e~view-display-header
+   field
+   (mapconcat
+    (lambda (flag)
+      (propertize
+       (if (symbolp flag)
+           (symbol-name flag)
+         flag)
+       'face 'mu4e-view-special-header-value-face))
+    val
+    (propertize ", " 'face 'mu4e-view-header-value-face)) t))
+
+(defun mu4e~view-display-signature-header (msg)
+  "Construct a Signature: header, if there are any signed parts."
+  (let* ((parts (mu4e-message-field msg :parts))
+         (verdicts
+          (remove-if 'null
+                     (mapcar (lambda (part) (mu4e-message-part-field part :signature))
+                             parts)))
+         (val (when verdicts
+                (mapconcat
+                 (lambda (v)
+                   (propertize (symbol-name v)
+                               'face (if (eq v 'verified)
+                                         'mu4e-ok-face 'mu4e-warning-face)))
+                 verdicts ", ")))
+         (btn (when val
+                (with-temp-buffer
+                  (insert-text-button "Details"
+                                      'action (lambda (b)
+                                                (mu4e-view-verify-msg-popup
+                                                 (button-get b 'msg))))
+                  (buffer-string))))
+         (val (when val (concat val " (" btn ")"))))
+    (mu4e~view-display-header :signature val t)))
+
+(defvar mu4e~view-attachment-widget-map nil
+  "Keymap for attachment widget")
+(let ((map (make-sparse-keymap)))
+  ;; (define-key map (kbd "<return>") 'widget-button-press)
+  (define-key map (kbd "S-<return>") 'widget-button-press)
+  (define-key map (kbd "M-<return>") 'mu4e~view-attachment-widget-open)
+  (define-key map [mouse-1] 'widget-button-click)
+  (define-key map [mouse-2] 'widget-button-click)
+  (setq mu4e~view-attachment-widget-map map))
+  
+(defun mu4e~view-attachment-widget-action (wid &optional event)
+  "Action handler for attachment widget; translate [mouse-2] to
+open attachment, other to save"
+  (let ((msg mu4e~view-msg)
+        (id (widget-get wid :id)))
+    (cond ((and event (equal (event-basic-type event) 'mouse-2))
+           (mu4e-view-open-attachment msg id))
+          (t (mu4e-view-save-attachment-single msg id)))))
+
+(defun mu4e~view-attachment-widget-open (&optional point)
+  (interactive)
+  (let* ((pos (or point (point)))
+         (msg mu4e~view-msg)
+         (wid (widget-at pos))
+         (id (when wid (widget-get wid :id))))
+    (when id
+      (mu4e-view-open-attachment msg id))))
+
+(define-widget 'mu4e~view-attachment-widget 'link
+  "Button for attachments in mu4e-view"
+  :action 'mu4e~view-attachment-widget-action
+  :button-face 'mu4e-view-link-face
+  :sample-face 'mu4e-view-attach-number-face
+  :mouse-face 'highlight
+  :format "%{%t%}%[%v%]"
+  :button-prefix ""
+  :button-suffix ""
+  :keymap mu4e~view-attachment-widget-map
+  :help-echo (concat "[S-RET] or [mouse-1] to save attachment\n"
+                     "[M-RET] or [mouse-2] to open attachment")
+  )
+
+(defun mu4e~view-display-attachments-header (msg)
+  "Display attachment information; the field looks like something like:
+   	:parts ((:index 1 :name \"1.part\" :mime-type \"text/plain\"
+                 :type (leaf) :attachment nil :size 228)
+                (:index 2 :name \"analysis.doc\"
+                 :mime-type \"application/msword\"
+                 :type (leaf attachment) :attachment nil :size 605196))"
+  (setq mu4e~view-attach-map ;; buffer local
+    (make-hash-table :size 64 :weakness nil))
+  (let ((attachments
+         ;; we only list parts that look like attachments, ie. that have a
+         ;; non-nil :attachment property; we record a mapping between
+         ;; user-visible numbers and the part indices
+         (remove-if-not
+          (lambda (part)
+            (let* ((mtype (mu4e-message-part-field part :mime-type))
+                   (attachtype (mu4e-message-part-field part :type))
+                   (isattach (or ;; we lost parts marked either
+                              ;; "attachment" or "inline" as attachment.
+                              (member 'attachment attachtype)
+                              (member 'inline attachtype))))
+              (or ;; remove if it's not an attach *or* if it's an
+               ;; image/audio/application type (but not a signature)
+               isattach
+               (string-match "^\\(image\\|audio\\)" mtype)
+               (string= "message/rfc822" mtype)
+               (and (string-match "^application" mtype)
+                    (not (string-match "signature" mtype))))))
+          (mu4e-message-field msg :parts))))
+    (when attachments
+      (mu4e~view-display-header
+       :attachments
+       (lambda ()
+         (loop for (part . rest) on attachments
+               with id = 0
+               do 
+               (let ((index (mu4e-message-part-field part :index))
+                     (name (mu4e-message-part-field part :name))
+                     (size (mu4e-message-part-field part :size)))
+                 (incf id)
+                 (puthash id index mu4e~view-attach-map)
+                 
+                 (widget-create 'mu4e~view-attachment-widget
+                                :tag (format "[%d]" id)
+                                :id id
+                                name)
+                 (when (and size (> size 0))
+                   (insert (format "(%s)"
+                                   (propertize (mu4e-display-size size)
+                                               'face 'mu4e-view-header-key-face))))
+                 (when rest (insert ", "))
+                 )))))))
+
+(defcustom mu4e-view-wash-text-functions nil
+  "Functions to clean up displayed messages.  These are functions that do not take arguments, and they are run in a temporary buffer containing the body of the message before being inserted into the view buffer"
+  :type 'hook
+  :options '(mu4e~wash-fix-microsoft
+	     mu4e~wash-cr
+	     mu4e~view-fontify-cited
+	     mu4e~view-fontify-footer
+	     mu4e~view-make-urls-clickable
+	     mu4e~wash-ansi-colors
+	     mu4e~wash-elide-blank-lines
+	     mu4e~wash-tidy-citations
+	     mu4e~wash-wrap-long-lines
+	     )
+  :group 'mu4e-view)
+
+(defun mu4e~view-display-message-body (msg)
+  "Display body of message, using w3m to render html"
+  (let ((txt (mu4e-message-field msg :body-txt))
+        (html (mu4e-message-field msg :body-html)))
+    (cond
+     ;; test whether it should display text
+     ((and (> (* 10 (length txt)) (length html))
+           (or (not mu4e-view-prefer-html) (not html)))
+      (let ((beg (point)))
+	(when (require 'w3m)
+	  (w3m-minor-mode -1))
+        (insert txt)
+        (dolist (func mu4e-view-wash-text-functions)
+          (save-restriction
+            (narrow-to-region beg (point-max))
+            (funcall func)))
+        ))
+     (html
+      (cond ((and (equal mu4e-html-renderer 'w3m)
+                  (require 'w3m nil t))
+             (progn
+               (let ((beg (point)))
+                 (insert html)
+                 (save-restriction
+                   (narrow-to-region beg (point))
+                   (mu4e~wash-fix-microsoft)
+                   ;; set up w3m minor mode
+                   (w3m-minor-mode t)
+                   (w3m-region (point-min) (point-max)))
+                 )))
+            ((and (equal mu4e-html-renderer 'shr)
+                  (require 'shr nil t))
+             (let* ((beg (point))
+                    (shr-inhibit-images t)
+                    (dom (with-temp-buffer
+                           (insert html)
+                           (libxml-parse-html-region (point-min) (point-max)))))
+               (shr-insert-document dom)
+               (setq mu4e~view-has-rendered-html t)
+               ))
+            ((stringp mu4e-html2text-command)
+             (let ((beg (point)))
+               (insert html)
+               (shell-command-on-region beg (point)
+                                        mu4e-html2text-command nil t)))
+            (t (insert (with-temp-buffer
+                         (insert html)
+                         (html2text)
+                         (buffer-string))))))
+     (t nil))
+    ))
 
 (provide 'mu4e-view)
 ;; end of mu4e-view

@@ -170,7 +170,9 @@ and images in a multipart/related part."
 	    ;; because we probably don't want to export a huge style file
 	    (org-export-htmlize-output-type 'inline-css)
 	    ;; makes the replies with ">"s look nicer
-	    (org-export-preserve-breaks t)
+	    ;; (org-export-preserve-breaks t)
+	    (org-export-preserve-breaks nil)
+            (org-export-with-toc nil)
 	    ;; dvipng for inline latex because MathJax doesn't work in mail
 	    (org-export-with-LaTeX-fragments 'dvipng)
 	    ;; to hold attachments for inline html images
