@@ -2983,6 +2983,11 @@ opens inside a webbrowser. You can influence the browser with
 @section Writing messages
 
 @enumerate
+@item @emph{What's the deal with replies to messages I wrote myself?} Like
+many other mail-clients, @t{mu4e} treats replies to messages you wrote
+yourself as special -- these message keep the same @t{To:} and @t{Cc:} as the
+original message. This is to ease the common case of following up to a message
+you wrote earlier.
 @item @emph{How can I automatically set the @t{From:}-address for a
 reply-message, based on some field in the original?} See @ref{Compose hooks}.
 @item @emph{And what about customizable folders for draft messages, sent

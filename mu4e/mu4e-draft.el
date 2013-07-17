@@ -280,7 +280,7 @@ You can append flags."
   "Create a draft message as a reply to original message
 ORIGMSG. Replying-to-self is a special; in that case, the To and Cc
 fields will be the same as in the original."
-  (let* ((reply-to-self (mu4e-message-contact-field-matches-me msg :from))
+  (let* ((reply-to-self (mu4e-message-contact-field-matches-me origmsg :from))
 	  (recipnum
 	     (+ (length (mu4e~draft-create-to-lst origmsg))
 	       (length (mu4e~draft-create-cc-lst origmsg t))))
@@ -297,8 +297,10 @@ fields will be the same as in the original."
       (if reply-to-self
 	;; When we're replying to ourselves, simply keep the same headers.
 	(concat
-	  (mu4e~draft-header "To" (mu4e-message-field :to origmsg))
-	  (mu4e~draft-header "Cc" (mu4e-message-field :cc origmsg))) 
+	  (mu4e~draft-header "To" (mu4e~draft-recipients-list-to-string
+				    (mu4e-message-field origmsg :to)))
+	  (mu4e~draft-header "Cc" (mu4e~draft-recipients-list-to-string
+				    (mu4e-message-field origmsg :cc)))) 
 	
 	;; if there's no-one in To, copy the CC-list
 	(if (zerop (length (mu4e~draft-create-to-lst origmsg)))
