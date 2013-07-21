@@ -398,8 +398,6 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 
 
 
-#ifdef BUILD_CRYPTO
-
 struct _VData {
 	MuMsgPartSigStatus combined_status;
 	char *report;
@@ -512,16 +510,6 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 	return vdata.combined_status == MU_MSG_PART_SIG_STATUS_GOOD ?
 		MU_OK : MU_ERROR;
 }
-#else
-MuError
-mu_cmd_verify (MuConfig *opts, GError **err)
-{
-	mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-			     "this mu does not support the "
-			     "'verify' command");
-	return MU_ERROR_IN_PARAMETERS;
-}
-#endif /*!BUILD_CRYPTO*/
 
 
 static void

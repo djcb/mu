@@ -106,39 +106,17 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
 
 # glib2?
 # we need 2.14 at least, because we use GRegex
-PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.24 gobject-2.0)
+PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.24 gobject-2.0 gio-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`$PKG_CONFIG --modversion glib-2.0`"
 
-PKG_CHECK_MODULES(GIO,gio-2.0,[have_gio=yes],[have_gio=no])
-AC_SUBST(GIO_CFLAGS)
-AC_SUBST(GIO_LIBS)
-gio_version="`$PKG_CONFIG --modversion gio-2.0`"
-
-# gmime 2.4 or 2.6?
-PKG_CHECK_MODULES(GMIME,gmime-2.6,[have_gmime_26=yes],[have_gmime_26=no])
-AS_IF([test "x$have_gmime_26" = "xno"],[
-   PKG_CHECK_MODULES(GMIME,gmime-2.4,[have_gmime_24=yes],[have_gmime_24=no])
-   AS_IF([test "x$have_gmime_24" = "xno"],[
-      AC_MSG_ERROR([
-      *** neither gmime-2.4 nor gmime-2.6 could be found; please install it
-      *** e.g., in debian/ubuntu the package would be 'libgmime-2.4-dev'
-      *** If you compiled it yourself, you should ensure that the pkgconfig
-      *** installation dir (e.g., /usr/local/lib/pkgconfig) is in your
-      *** PKG_CONFIG_PATH.
-      ])],[
-         gmime_version="`$PKG_CONFIG --modversion gmime-2.4`"
-    ])],[
-      gmime_version="`$PKG_CONFIG --modversion gmime-2.6`"
-   ])
+# gmime
+PKG_CHECK_MODULES(GMIME,gmime-2.6)
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
+gmime_version="`$PKG_CONFIG --modversion gmime-2.6`"
 
-# we need gmime 2.6 for the crypto stuff
-AM_CONDITIONAL(BUILD_CRYPTO,[test "x$have_gmime_26" = "xyes"])
-AS_IF([test "x$have_gmime_26" = "xyes"],
-   AC_DEFINE_UNQUOTED([BUILD_CRYPTO],1,[Whether to build crypto; reqs gmime 2.6]))
 
 # xapian checking - we need 1.2.x at least
 AC_CHECK_PROG(XAPIAN_CONFIG,xapian-config,xapian-config,no)
@@ -313,7 +291,7 @@ fi
 echo
 echo "Have wordexp                         : $ac_cv_header_wordexp_h"
 echo "Build mu4e emacs frontend            : $build_mu4e"
-echo "Build crypto support (gmime >= 2.6)  : $have_gmime_26"
+
 AM_COND_IF([BUILD_GUI],[
 echo "Build 'mug' toy-ui (gtk+/webkit)     : yes"],[
 echo "Build 'mug' toy-ui (gtk+/webkit)     : no"

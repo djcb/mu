@@ -20,18 +20,13 @@ include $(top_srcdir)/gtest.mk
 # before decending into tests/
 SUBDIRS= . tests
 
-if BUILD_CRYPTO
-crypto=mu-msg-crypto.c
-else
-crypto=
-endif
-
 AM_CPPFLAGS=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS) $(GUILE_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic -Wno-variadic-macros
+AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter			\
+-Wdeclaration-after-statement -pedantic -Wno-variadic-macros
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 noinst_LTLIBRARIES=			\
@@ -54,7 +49,7 @@ libmu_la_SOURCES=			\
 	mu-log.h			\
 	mu-maildir.c			\
 	mu-maildir.h			\
-	${crypto}			\
+	mu-msg-crypto.c			\
 	mu-msg-doc.cc			\
 	mu-msg-doc.h			\
 	mu-msg-fields.c			\

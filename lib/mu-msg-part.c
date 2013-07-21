@@ -311,16 +311,6 @@ static gboolean handle_mime_object (MuMsg *msg,
 				    unsigned index, MuMsgPartForeachFunc func,
 				    gpointer user_data);
 
-/* if mu is build without crypto support (i.e, gmime < 2.6), the crypto funcs
- * are no-ops
- */
-#ifndef BUILD_CRYPTO
-
-#define check_signature(A,B,C) (TRUE)
-#define handle_encrypted_part(A,B,C,D,E,F,G) (TRUE)
-
-#else /* BUILD_CRYPTO */
-
 #define SIG_STATUS_REPORT "sig-status-report"
 
 /* call 'func' with information about this MIME-part */
@@ -412,7 +402,7 @@ handle_encrypted_part (MuMsg *msg,
 
 	return TRUE;
 }
-#endif /*BUILD_CRYPTO */
+
 
 
 /* call 'func' with information about this MIME-part */
@@ -442,14 +432,12 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
 	}
 
-#ifdef BUILD_CRYPTO
 	/* put the verification info in the pgp-signature part */
 	msgpart.sig_status_report = NULL;
 	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0)
 		msgpart.sig_status_report =
 			(MuMsgPartSigStatusReport*)
 			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);
-#endif /*BUILD_CRYPTO*/
 
 	msgpart.data    = (gpointer)part;
 	msgpart.index   = index;

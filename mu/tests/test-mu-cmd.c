@@ -888,10 +888,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-cmd/test-mu-view-attach",  test_mu_view_attach);
 	g_test_add_func ("/mu-cmd/test-mu-mkdir-01",  test_mu_mkdir_01);
 
-#ifdef BUILD_CRYPTO
 	g_test_add_func ("/mu-cmd/test-mu-verify-good",  test_mu_verify_good);
 	g_test_add_func ("/mu-cmd/test-mu-verify-bad",  test_mu_verify_bad);
-#endif /*BUILD_CRYPTO*/
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|

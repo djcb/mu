@@ -92,7 +92,6 @@ void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
 			      GMimeObjectForeachFunc func,
 			      gpointer user_data);
 
-#ifdef BUILD_CRYPTO
 /**
  * callback function to retrieve a password from the user
  *
@@ -136,7 +135,6 @@ GMimeObject* mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOpti
 					 MuMsgPartPasswordFunc func, gpointer user_data,
 					 GError **err)
 					G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-#endif /*BUILD_CRYPTO*/
 
 G_END_DECLS
 

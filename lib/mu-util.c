@@ -148,9 +148,6 @@ mu_util_error_quark (void)
 }
 
 
-
-
-
 const char*
 mu_util_cache_dir (void)
 {
@@ -327,12 +324,6 @@ mu_util_supports (MuFeature feature)
 	if (feature & MU_FEATURE_GUILE)
 		return FALSE;
 #endif /*BUILD_GUILE*/
-
-	/* check for crypto support */
-#ifndef BUILD_CRYPTO
-	if (feature & MU_FEATURE_CRYPTO)
-		return FALSE;
-#endif /*BUILD_CRYPTO*/
 
 	/* check for Gnuplot */
 	if (feature & MU_FEATURE_GNUPLOT)

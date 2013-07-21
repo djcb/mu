@@ -24,7 +24,6 @@
 #include <mu-flags.h>
 #include <mu-msg-fields.h>
 #include <mu-msg-prio.h>
-/* #include <mu-msg-part.h> */
 #include <mu-util.h> /* for MuError and XapianDocument */
 
 G_BEGIN_DECLS

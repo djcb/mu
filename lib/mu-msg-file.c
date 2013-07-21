@@ -777,7 +777,6 @@ foreach_cb (GMimeObject *parent, GMimeObject *part, ForeachData *fdata)
 	/* invoke the callback function */
 	fdata->user_func (parent, part, fdata->user_data);
 
-#ifdef BUILD_CRYPTO
 	/* maybe iterate over decrypted parts */
 	if (fdata->decrypt &&
 	    GMIME_IS_MULTIPART_ENCRYPTED (part)) {
@@ -798,8 +797,6 @@ foreach_cb (GMimeObject *parent, GMimeObject *part, ForeachData *fdata)
 
 		g_object_unref (dec);
 	}
-#endif /*BUILD_CRYPTO*/
-
 }
 
 
