@@ -429,6 +429,8 @@ enum _MuError {
 	MU_ERROR_INTERNAL                     = 3,
 	MU_ERROR_NO_MATCHES                   = 4,
 
+	MU_ERROR_SCRIPT_NOT_FOUND             = 8,
+
 	/* general xapian related error */
 	MU_ERROR_XAPIAN                       = 11,
 
