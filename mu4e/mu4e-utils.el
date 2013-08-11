@@ -968,7 +968,7 @@ and MAXHEIGHT are ignored."
       (let ((size (image-size img))) ;; inspired by gnus..
 	(insert-char ?\n
 	  (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
-	(insert-char ?\
+	(insert-char ?\ 
 	  (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
 	(insert-image img)))))
  
