@@ -56,7 +56,8 @@
 (defconst mu4e~ts-regexp0
   (concat
     "\\(\\([0-9]\\{4\\}\\)-\\([0-9]\\{2\\}\\)-\\([0-9]\\{2\\}\\)"
-    "\\( +[^]+0-9>\r\n -]+\\)?\\( +\\([0-9]\\{1,2\\}\\):\\([0-9]\\{2\\}\\)\\)?\\)")
+    "\\( +[^]+0-9>\r\n -]+\\)?\\( +\\([0-9]\\{1,2\\}\\):"
+    "\\([0-9]\\{2\\}\\)\\)?\\)")
   "Regular expression matching time strings for analysis.
 This one does not require the space after the date, so it can be
 used on a string that terminates immediately after the date.")
@@ -503,12 +504,14 @@ that has a live window), and vice versa."
   `mu4e~mailing-lists' and `mu4e-user-mailing-lists'.")
 
 (defun mu4e-get-mailing-list-shortname (list-id)
-  "Get the shortname for a mailing-list with list-id LIST-ID. based on `mu4e~mailing-lists'
-  and `mu4e-user-mailing-lists'."
+  "Get the shortname for a mailing-list with list-id LIST-ID. based
+  on `mu4e~mailing-lists' and `mu4e-user-mailing-lists'."
   (unless mu4e~lists-hash
     (setq mu4e~lists-hash (make-hash-table :test 'equal))
-    (dolist (cell mu4e~mailing-lists) (puthash (car cell) (cdr cell) mu4e~lists-hash))
-    (dolist (cell mu4e-user-mailing-lists) (puthash (car cell) (cdr cell) mu4e~lists-hash)))
+    (dolist (cell mu4e~mailing-lists)
+      (puthash (car cell) (cdr cell) mu4e~lists-hash))
+    (dolist (cell mu4e-user-mailing-lists)
+      (puthash (car cell) (cdr cell) mu4e~lists-hash)))
   (or
     (gethash list-id mu4e~lists-hash)
     ;; if it's not in the db, take the part until the first dot if there is one;
@@ -555,11 +558,12 @@ process."
     (t (error "Error %d: %s" errcode errmsg))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; RFC2822 handling of phrases in mail-addresses ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; The optional display-name contains a phrase, it sits before the angle-addr ;;;;;;;
-;;; as specified in RFC2822 for email-addresses in header fields. ;;;;;;;;;;;;;;;;;;;;
+;;; RFC2822 handling of phrases in mail-addresses
+;;; The optional display-name contains a phrase, it sits before the angle-addr
+;;; as specified in RFC2822 for email-addresses in header fields.
 ;;; contributed by jhelberg
 
 (defun mu4e~rfc822-phrase-type (ph)
@@ -570,15 +574,15 @@ process."
    The reverse of the RFC atext definition is then tested.
    If it matches, nil is returned, if not, it is an 'rfc822-atom, which
    is returned."
-     (cond
-       ((= (length ph) 0) 'rfc822-empty)
-       ((= (aref ph 0) ?\")
-	 (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
-	   'rfc822-quoted-string
-	   'rfc822-containing-quote)) ; starts with quote, but doesn't end with one
-       ((string-match-p "[\"]" ph) 'rfc822-containing-quote)
-       ((string-match-p "[\000-\037()\*<>@,;:\\\.]+" ph) nil)
-       (t 'rfc822-atom)))
+  (cond
+    ((= (length ph) 0) 'rfc822-empty)
+    ((= (aref ph 0) ?\")
+      (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
+	'rfc822-quoted-string
+	'rfc822-containing-quote)) ; starts with quote, but doesn't end with one
+    ((string-match-p "[\"]" ph) 'rfc822-containing-quote)
+    ((string-match-p "[\000-\037()\*<>@,;:\\\.]+" ph) nil)
+    (t 'rfc822-atom)))
 
 (defun mu4e~rfc822-quoteit (ph)
   "Quote RFC822 phrase only if necessary.
@@ -588,7 +592,9 @@ process."
     (cond
       ((eq type 'rfc822-atom) ph)
       ((eq type 'rfc822-quoted-string) ph)
-      ((eq type 'rfc822-containing-quote) (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" ph)))
+      ((eq type 'rfc822-containing-quote)
+	(format "\"%s\""
+	  (replace-regexp-in-string "\"" "\\\\\"" ph)))
       (t (format "\"%s\"" ph)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -756,7 +762,8 @@ The messages are inserted into the process buffer."
   (when (string-match mu4e~get-mail-password-regexp msg)
     (if (process-get proc 'x-interactive)
         (process-send-string proc
-                             (concat (read-passwd mu4e~get-mail-ask-password) "\n"))
+                             (concat (read-passwd mu4e~get-mail-ask-password)
+			       "\n"))
       ;; TODO kill process?
       (mu4e-error "Unrecognized password request")))
   (when (process-buffer proc)
@@ -843,7 +850,8 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
       (view-mode)
       (setq buffer-undo-list t)
       (let* ((inhibit-read-only t)
-	      (tstamp (propertize (format-time-string "%Y-%m-%d %T" (current-time))
+	      (tstamp (propertize (format-time-string "%Y-%m-%d %T"
+				    (current-time))
 			'face 'font-lock-string-face))
 	      (msg-face
 		(case type
@@ -952,8 +960,10 @@ and MAXHEIGHT are ignored."
     (when img
       (insert "\n")
       (let ((size (image-size img))) ;; inspired by gnus..
-	(insert-char ?\n (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
-	(insert-char ?\  (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
+	(insert-char ?\n
+	  (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
+	(insert-char ?\
+	  (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
 	(insert-image img)))))
  
 
