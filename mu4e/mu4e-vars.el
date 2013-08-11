@@ -78,6 +78,9 @@ mu4e."
   :group 'mu4e
   :safe 'integerp)
 
+(defvar mu4e-hide-index-messages nil
+  "If non-nil, mu4e does not show the \"Indexing...\" messages, or
+  any messages relating to updated contacts.")
 
 (defcustom mu4e-change-filenames-when-moving nil
   "When moving messages to different folders, normally mu/mu4e keep
@@ -125,8 +128,7 @@ personal message. This is used when indexing messages."
   `format-time-string'."
   :type 'string
   :group 'mu4e)
-
-
+  
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 

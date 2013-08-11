@@ -193,6 +193,13 @@ echo area, don't show anything."
   (unless (or (active-minibuffer-window))
     (message "%s" (apply 'mu4e-format frm args))))
 
+(defun mu4e-index-message (frm &rest args)
+  "Like `mu4e-message', but specifically for
+index-messages. Doesn't display anything if
+`mu4e-hide-index-messages' is non-nil. "
+  (unless mu4e-hide-index-messages
+    (apply 'mu4e-message frm args))) 
+
 (defun mu4e-error (frm &rest args)
   "Create [mu4e]-prefixed error based on format FRM and ARGS.
 Does a local-exit and does not return, and raises a
@@ -538,21 +545,21 @@ process."
       ((eq type 'add) t) ;; do nothing
       ((eq type 'index)
 	(if (eq (plist-get info :status) 'running)
-	  (mu4e-message "Indexing... processed %d, updated %d"
+	  (mu4e-index-message "Indexing... processed %d, updated %d"
 	    (plist-get info :processed) (plist-get info :updated))
 	  (progn
-	    (mu4e-message
+	    (mu4e-index-message
 	      "Indexing completed; processed %d, updated %d, cleaned-up %d"
 	      (plist-get info :processed) (plist-get info :updated)
 	      (plist-get info :cleaned-up))
 	    (unless (zerop (plist-get info :updated))
 	      (run-hooks 'mu4e-index-updated-hook)))))
       ((plist-get info :message)
-	(mu4e-message "%s" (plist-get info :message))))))
+	(mu4e-index-message "%s" (plist-get info :message))))))
 
 (defun mu4e-error-handler (errcode errmsg)
   "Handler function for showing an error."
-  ;; don't use mu4e-error here; it's running in the process filter ctx
+  ;; don't use mu4e-error here; it's running in the process filter context
   (case errcode
     (4 (user-error "No matches for this search query."))
     (t (error "Error %d: %s" errcode errmsg))))
@@ -630,7 +637,7 @@ This is used by the completion function in mu4e-compose."
 	  (add-to-list 'lst
 	    (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail))))))
     (setq mu4e~contacts-for-completion lst)
-    (mu4e-message "Contacts received: %d"
+    (mu4e-index-message "Contacts received: %d"
       (length mu4e~contacts-for-completion))))
 
 
@@ -792,9 +799,8 @@ The messages are inserted into the process buffer."
 ;;   - (optionally) check password requests
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
-run-in-background is non-nil (or functional called with
-prefix-argument), run in the background; otherwise, pop up a
-window."
+run-in-background is non-nil (or called with prefix-argument), run
+in the background; otherwise, pop up a window."
   (interactive "P")
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
@@ -805,7 +811,7 @@ window."
 	  (process-connection-type t)
 	  (proc (start-process-shell-command
 		  mu4e~update-name buf mu4e-get-mail-command)))
-    (mu4e-message "Retrieving mail...")
+    (mu4e-index-message "Retrieving mail...")
     (when (window-live-p win)
       (with-selected-window win
 	(switch-to-buffer buf)
