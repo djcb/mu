@@ -64,11 +64,15 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 			    "try 'mu index --rebuild'\n");
 		break;
 	case MU_ERROR_XAPIAN_IS_EMPTY:
-		g_printerr ("database is empty; try 'mu index'");
+		g_printerr ("database is empty; try 'mu index'\n");
 		break;
 	case MU_ERROR_IN_PARAMETERS:
 		if (conf && mu_config_cmd_is_valid(conf->cmd))
 			mu_config_show_help (conf->cmd);
+		break;
+	case MU_ERROR_SCRIPT_NOT_FOUND:
+		g_printerr ("see the mu manpage for commands, or "
+			    "'mu script' for the scripts\n");
 		break;
 	default:
 		break; /* nothing to do */

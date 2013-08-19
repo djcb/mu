@@ -2910,6 +2910,9 @@ another @command{mu} instance that is holding the lock, you can ask it to
 @end verbatim
 @t{mu4e} automatically restarts @t{mu} when it needs it. In practice, this
 seems to work quite well.
+@item @emph{I don't like the @t{Indexing...} messages that the indexing process
+gives me. Can I turn them off?}. Yes: set the variable
+@code{mu4e-hide-index-messages} to non-@t{nil}.
 @item @emph{Can I automatically apply the marks on messages when
 leaving the headers buffer?} Yes you can -- see the documentation for the
 variable @t{mu4e-headers-leave-behavior}.

@@ -34,23 +34,23 @@ Interpret argument-list ARGS (like command-line
 arguments). Possible arguments are:
   --help (show some help and exit)
   --muhome (path to alternative mu home directory)
-  --textonly (don't show any graphical windows)
+  --output (a string describing the output, e.g. \"dumb\", \"png\" \"wxt\")
   searchexpr (a search query)
-then call FUNC with args SEARCHEXPR and TEXTONLY."
-  (setlocale LC_ALL "")
-  (let* ((optionspec   '( (muhome     (value #t))
-			  (query      (value #t))
-			  (textonly   (value #f))
-			  (help       (single-char #\h) (value #f))))
+then call FUNC with args SEARCHEXPR and OUTPUT."
+  (setlocale LC_ALL  "")
+  (let* ((optionspec   '((muhome  (value #t))
+			  (query   (value #t))
+			  (output  (value #f))
+			  (help    (single-char #\h) (value #f))))
 	  (options (getopt-long args optionspec))
 	  (query (option-ref options 'query #f))
 	  (help (option-ref options 'help #f))
-	  (textonly (option-ref options 'textonly #f))
+	  (output (option-ref options 'output #f))
 	  (muhome (option-ref options 'muhome #f))
 	  (restargs (option-ref options '() #f)))
     (if help (help-and-exit))
     (mu:initialize muhome)
-    (func (or query "") textonly)))
+    (func (or query "") output)))
 
 ;; Local Variables:
 ;; mode: scheme

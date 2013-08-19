@@ -185,8 +185,8 @@ mu_cmd_script (MuConfig *opts, GError **err)
 
 	msi = mu_script_find_script_with_name (scripts, opts->script);
 	if (!msi) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "script not found");
+		mu_util_g_set_error (err, MU_ERROR_SCRIPT_NOT_FOUND,
+				     "command or script not found");
 		goto leave;
 	}
 

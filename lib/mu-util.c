@@ -458,13 +458,14 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 				   err ? err->message : "conversion failed");
 			g_free (conv);
 			conv = g_strescape (str, NULL);
+			g_clear_error (&err);
 		}
-		g_clear_error (&err);
 
-		rv = fputs (conv, stream);
+		rv  = conv ? fputs (conv, stream) : EOF;
 		g_free (conv);
 
 	}
+
 	return (rv == EOF) ? FALSE : TRUE;
 }
 

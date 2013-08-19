@@ -78,6 +78,9 @@ mu4e."
   :group 'mu4e
   :safe 'integerp)
 
+(defvar mu4e-hide-index-messages nil
+  "If non-nil, mu4e does not show the \"Indexing...\" messages, or
+  any messages relating to updated contacts.")
 
 (defcustom mu4e-change-filenames-when-moving nil
   "When moving messages to different folders, normally mu/mu4e keep
@@ -125,8 +128,7 @@ personal message. This is used when indexing messages."
   `format-time-string'."
   :type 'string
   :group 'mu4e)
-
-
+  
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
@@ -579,9 +581,9 @@ This is used in the user-interface (the column headers in the header list, and
 the fields the message view).
 
 Most fields should be self-explanatory. A special one is
-`:from-or-to', which is equal to `:from' unless `:from' matches
-`mu4e-user-mail-address-regexp', in which case it will be equal to
-`:to'.
+`:from-or-to', which is equal to `:from' unless `:from' matches one
+of the addresses in `mu4e-user-mail-address-list', in which case it
+will be equal to `:to'.
 
 Furthermore, the property `:sortable' determines whether we can
 sort by this field.  This can be either a boolean (nil or t), or a

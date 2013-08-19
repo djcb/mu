@@ -1013,6 +1013,8 @@ limited to the message at point and its descendants."
   (let* ((msg (mu4e-message-at-point))
 	  (thread-id (mu4e~headers-get-thread-info msg 'thread-id))
 	  (path     (mu4e~headers-get-thread-info msg 'path))
+	  ;; FIXME: e.g., for refiling we should evaluate this
+	  ;; for each line separately
 	  (markpair
 	    (mu4e~mark-get-markpair
 	      (if subthread "Mark subthread with: " "Mark whole thread with: ")
@@ -1248,7 +1250,7 @@ _not_ refresh the last search with the new setting for threading."
 	(erase-buffer)
 	(local-set-key (kbd "q") 'kill-buffer-and-window)
 	(insert (propertize "Waiting for message..."
-		  'face 'mu4e-system-face 'intangible t)))) 
+		  'face 'mu4e-system-face 'intangible t))))
   mu4e~headers-loading-buf)
 
 (defun mu4e-headers-view-message ()

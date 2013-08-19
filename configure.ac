@@ -224,7 +224,7 @@ AM_CONDITIONAL(HAVE_MAKEINFO, [test "x$have_makeinfo" = "xyes"])
 
 ###############################################################################
 # check for pmccabe
-AC_PATH_PROG([PMCCABE],[pmccabe],[pmccabe],[no])
+AC_PATH_PROG([PMCCABE],[pmccabe],[no])
 AS_IF([test "x$PMCCABE" = "xno"],[
    have_pmccabe="no"
    AC_MSG_WARN([
