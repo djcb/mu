@@ -176,6 +176,16 @@ view buffer."
   :type 'boolean
   :group 'mu4e)
 
+(defcustom mu4e-use-native-completing-read nil
+  "Whether to use the standard `completing-read' method of
+reading a user response with completion, or the more intuitive
+`ido-completing-read'. Set this if you prefer to use the native
+Emacs completion, or if you want to use a non-ido completion
+method that can take over the standard completion system (such as
+helm)."
+  :type 'boolean
+  :group 'mu4e)
+
 ;; crypto
 (defgroup mu4e-crypto nil
   "Crypto-related settings."
