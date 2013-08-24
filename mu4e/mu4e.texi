@@ -327,8 +327,8 @@ in @command{emacs}.
 
 You may need to restart @command{emacs}, so it can find @t{mu4e} in its
 @code{load-path}. If, even after restarting, @command{emacs} cannot find
-@t{mu4e}, you may need to add to your @code{load-path} explicitly; check where
-@t{mu4e} is installed, and add something like the following to your
+@t{mu4e}, you may need to add it to your @code{load-path} explicitly; check
+where @t{mu4e} is installed, and add something like the following to your
 configuration before trying again:
 @lisp
 ;; the exact path may differ -- check it
@@ -370,12 +370,12 @@ should be able to provide you with the details.
 @section Indexing your messages
 
 After you have succeeded in @ref{Getting mail}, we need to @emph{index} the
-messages. That is - we need to scan the message in the maildir and store the
-information about the mails into a special database. We can do that from
-@t{mu4e} -- @ref{Main view}, but the first time, it is a good idea to run
-it from the command line, to make sure everything works correctly.
+messages. That is - we need to scan the messages in the maildir and store the
+information about them in a special database. We can do that from @t{mu4e} --
+@ref{Main view}, but the first time, it is a good idea to run it from the
+command line, which makes it easier to verify that everything works correctly.
 
-Assuming that your maildir is at @file{~/Maildir}, we give the following
+Assuming that your maildir is at @file{~/Maildir}, we issue the following
 command:
 @example
   $ mu index --maildir=~/Maildir
@@ -389,7 +389,7 @@ information while doing so.
 The indexing process may take a few minutes the first time you do it (for
 thousands of e-mails); afterwards it is much faster, since @t{mu} only scans
 messages that are new or have changed. Indexing is discussed in full detail in
-the @t{mu-index} man page.
+the @t{mu-index} man-page.
 
 After the indexing process has finished, you can quickly test if everything
 worked, by trying some command-line searches, for example
@@ -397,10 +397,10 @@ worked, by trying some command-line searches, for example
   $ mu find hello
 @end example
 
-which should list all messages that match @t{hello}. For more examples of
-searches, see @ref{Queries}, or check the @t{mu-find} and @t{mu-easy} man
-pages. If all of this worked well, we are well on our way setting up @t{mu};
-the next step is to do some basic configuration for @t{mu4e}.
+which lists all messages that match @t{hello}. For more examples of searches,
+see @ref{Queries}, or check the @t{mu-find} and @t{mu-easy} man pages. If all
+of this worked well, we are well on our way setting things up; the next step
+is to do some basic configuration for @t{mu4e}.
 
 @node Basic configuration
 @section Basic configuration
@@ -423,7 +423,6 @@ of it. If not, you can add it:
 
 with @t{MU4E-PATH} replaced with the actual path.
 
-
 @node Folders
 @section Folders
 
@@ -443,8 +442,8 @@ runtime. This allows for dynamically changing them depending on context. See
     mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
-@code{mu4e-maildir} takes an actual filesystem-path, the other folder names
-are all relative to @code{mu4e-maildir}.
+Note, @code{mu4e-maildir} takes an actual filesystem-path, the other folder
+names are all relative to @code{mu4e-maildir}.
 
 @node Retrieval and indexing
 @section Retrieval and indexing
@@ -832,11 +831,11 @@ q,z          leave the headers buffer
 @node Marking messages
 @section Marking messages
 
-When processing messages, the first step is to @emph{mark} them for a certain
-action, such as deletion or move. Then, after one or more messages are marked,
-you execute (@code{mu4e-mark-execute-all}, @key{x}) these actions. This
-two-step mark-execute sequence is similar to what e.g. @t{dired} does. This is
-how @t{mu4e} tries to be as quick as possible, while avoiding accidents.
+You can @emph{mark} messages for a certain action, such as deletion or
+move. After one or more messages are marked, you can then execute
+(@code{mu4e-mark-execute-all}, @key{x}) these actions. This two-step
+mark-execute sequence is similar to what e.g. @t{dired} does. It is how
+@t{mu4e} tries to be as quick as possible, while avoiding accidents.
 
 The mark/unmark commands support the @emph{region} (i.e., ``selection'') --
 so, for example, if you select some messages and press @key{DEL}, all messages
@@ -923,8 +922,8 @@ headers-view to the message-view and vice-versa with
 @chapter The message view
 
 After selecting a message in the @ref{Headers view}, it appears in a message
-view window: the message headers, followed by the message body. Its major
-mode is @code{mu4e-view-mode}.
+view window, which shows the message headers, followed by the message
+body. Its major mode is @code{mu4e-view-mode}.
 
 @menu
 * Overview:MSGV Overview.
@@ -1091,9 +1090,10 @@ directory (@file{~/}); you can change this using the variable
 
 For more flexibility, @code{mu4e-attachment-dir} can also be a user-provided
 function. This function receives two parameters: the file-name and the
-mime-type@footnote{sadly, often @t{application/octet-stream} is used for the
-mime-type, even if a better type is available} of the attachment, either or
-both of which can be @t{nil}. For example:
+mime-type as found in the e-mail message@footnote{sadly, often
+@t{application/octet-stream} is used for the mime-type, even if a better type
+is available} of the attachment, either or both of which can be @t{nil}. For
+example:
 
 @lisp
 (setq mu4e-attachment-dir
@@ -1438,7 +1438,7 @@ mml-secure-message-encrypt-pgp}, @kbd{M-x mml-secure-message-sign-pgp}.
 
 The support for encryption and signing is @emph{independent} of the support
 for their counterparts, decrypting and signature verification (as discussed in
-@ref{MSGV Crypto}). Even if your @t{mu4e} does have support for the latter
+@ref{MSGV Crypto}). Even if your @t{mu4e} does not have support for the latter
 two, you can still sign/encrypt messages.
 
 Currently, decryption and signature verification only works for PGP/MIME;
@@ -1471,8 +1471,8 @@ $ touch ~/Maildir/queue/.noindex
 
 The file created by the @command{touch} command tells @t{mu} to ignore this
 directory for indexing, which makes sense since it contains @t{smtpmail}
-meta-data rather than 'normal' messages; see the @t{mu-mkdir} and @t{mu-index}
-man pages for details.
+meta-data rather than normal messages; see the @t{mu-mkdir} and @t{mu-index}
+man-pages for details.
 
 @emph{Warning}: when you switch on queued-mode, your messages @emph{won't}
 reach their destination until you switch it off again; so, be careful not to
@@ -3283,12 +3283,12 @@ another variable:
 @node Saving outgoing messages
 @section Saving outgoing messages
 
-Like @code{mu4e-refile-folder}, the variable @code{mu4e-sent-folder} can
-also be set to a function, in order to dynamically determine the save
-folder. One might, for example, wish to automatically put messages going
-to mailing lists into the trash (because you'll receive them back from
-the list). If you have set up the variable @code{my-mu4e-mailing-lists}
-as above, you can use the following function to determine a save folder:
+Like @code{mu4e-refile-folder}, the variable @code{mu4e-sent-folder} can also
+be set to a function, in order to dynamically determine the save folder. One
+might, for example, wish to automatically put messages going to mailing lists
+into the trash (because you'll receive them back from the list anyway). If you
+have set up the variable @code{my-mu4e-mailing-lists} as mentioned, you can
+use the following function to determine a save folder:
 
 @lisp
 (defun my-mu4e-sent-folder-function (msg)
