@@ -224,6 +224,9 @@ config_options_group_find (void)
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'links', 'xml',"
 		 "'sexp', 'xquery')", "<format>"},
+		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+		 "use up to <n> lines for the summary, or 0 for none (0)",
+		 "<len>"},
 		{"exec", 'e', 0, G_OPTION_ARG_STRING, &MU_CONFIG.exec,
 		 "execute command on each match message", "<command>"},
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
