@@ -70,10 +70,14 @@ do_wordexp (const char *path)
 	/* strangely, below seems to lead to a crash on MacOS (BSD);
 	   so we have to allow for a tiny leak here on that
 	   platform... maybe instead of __APPLE__ it should be
-	   __BSD__?*/
-#ifndef __APPLE__
+	   __BSD__?
+
+	   Hmmm., cannot reproduce that crash anymore, so commenting
+	   it out for now...
+	   */
+/* #ifndef __APPLE__ */
 	wordfree (&wexp);
-#endif /*__APPLE__*/
+/* #endif /\*__APPLE__*\/ */
 	return dir;
 
 # else /*!HAVE_WORDEXP_H*/
