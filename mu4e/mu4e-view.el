@@ -236,8 +236,8 @@ marking if it still had that."
 	  (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf)))
 
-    (unless (eq major-mode 'mu4e-view-mode)
-      (mu4e-view-mode))
+      (unless (mu4e-view-mode-p)
+        (mu4e-view-mode))
 
 	(setq ;; buffer local
       mu4e~view-msg msg
@@ -654,6 +654,10 @@ FUNC should be a function taking two arguments:
   :options '(turn-on-visual-line-mode)
   :type 'hook
   :group 'mu4e-view)
+
+(defun mu4e-view-mode-p ()
+  (or (eq major-mode 'mu4e-view-mode)
+      (derived-mode-p 'mu4e-view-mode)))
 
 (defvar mu4e-view-mode-abbrev-table nil)
 (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
@@ -1212,7 +1216,7 @@ or message-at-point."
 This is a rather complex function, to ensure we don't disturb
 other windows."
   (interactive)
-  (unless (eq major-mode 'mu4e-view-mode)
+  (unless (mu4e-view-mode-p)
     (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
   (let ((curbuf (current-buffer)) (curwin (selected-window))
 	 (headers-win))

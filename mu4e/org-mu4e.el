@@ -73,7 +73,7 @@ Example usage:
 	(org-add-link-props :link link :description desc)
 	link))
       ;; storing links to messages
-    ((eq major-mode 'mu4e-view-mode)
+    ((mu4e-view-mode-p)
       (let* ((msg  (mu4e-message-at-point))
 	     (msgid   (or (plist-get msg :message-id) "<none>"))
 	     link)
