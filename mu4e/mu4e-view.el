@@ -205,6 +205,14 @@ messages - for example, `mu4e-org'."
     (select-window win)
     (switch-to-buffer buf)))
 
+(defun mu4e-default-render-handler (msg)
+  "Render the given message.  This function is called inside the view buffer."
+  (insert (mu4e-view-message-text msg))
+  (goto-char (point-min))
+  (mu4e~view-fontify-cited)
+  (mu4e~view-fontify-footer)
+  (mu4e~view-make-urls-clickable)
+  (mu4e~view-show-images-maybe msg))
 
 (defun mu4e-view (msg headersbuf &optional refresh)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -215,41 +223,32 @@ REFRESH is for re-showing an already existing message.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let* ((embedded ;; is it registered as an embedded msg (ie. message/rfc822
-		   ;; att)?
-	   (when (gethash (mu4e-message-field msg :path)
-		   mu4e~path-parent-docid-map) t))
-	  (buf
-	    (if embedded
-	      (mu4e~view-embedded-winbuf)
-	      (get-buffer-create mu4e~view-buffer-name))))
+  (let* (;; is it registered as an embedded msg (ie. message/rfc822 att)?
+         (embedded (when (gethash (mu4e-message-field msg :path)
+                                  mu4e~path-parent-docid-map) t))
+         (buf (if embedded
+                  (mu4e~view-embedded-winbuf)
+                (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (switch-to-buffer buf)
       (let ((inhibit-read-only t))
 	(erase-buffer)
-	(insert (mu4e-view-message-text msg))
-	(goto-char (point-min))
-	(mu4e~view-fontify-cited)
-	(mu4e~view-fontify-footer)
-	(mu4e~view-make-urls-clickable)
-	(mu4e~view-show-images-maybe msg)
-
+        (funcall mu4e-view-render-func msg)
 	(if embedded
-	  (local-set-key "q" 'kill-buffer-and-window)
+            (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf)))
 
       (unless (mu4e-view-mode-p)
         (mu4e-view-mode))
 
-	(setq ;; buffer local
-      mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf)
+      (setq ;; buffer local
+       mu4e~view-msg msg
+       mu4e~view-headers-buffer headersbuf)
 
-    (unless (or refresh embedded)
-	  ;; no use in trying to set flags again, or when it's an embedded
-	  ;; message
-	  (mu4e~view-mark-as-read-maybe)))))
-
+      (unless (or refresh embedded)
+        ;; no use in trying to set flags again, or when it's an embedded
+        ;; message
+        (mu4e~view-mark-as-read-maybe)))))
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value

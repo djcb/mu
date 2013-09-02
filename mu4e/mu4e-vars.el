@@ -666,6 +666,11 @@ the docid and the draft-path of the sent message.")
 server process. The function is passed a message sexp as
 argument. See `mu4e~proc-filter' for the format.")
 
+(defvar mu4e-view-render-func 'mu4e-default-render-handler
+  "A function called to render the message into the view buffer.  This
+has a slightly smaller scope than mu4e-view-func.  Useful to change
+the rendering of a message while keeping all other behavior.")
+
 (defvar mu4e-header-func  'mu4e~default-handler
   "A function called for each message returned from the server
 process; the function is passed a msg plist as argument. See
