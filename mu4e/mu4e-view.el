@@ -149,52 +149,54 @@ messages - for example, `mu4e-org'."
   ;; need an extra policy...
   (mu4e~proc-view msgid mu4e-view-show-images mu4e-decryption-policy))
 
+(defun mu4e-view-header-text (msg)
+  "Return the message headers to display (as a string), based on the MSG plist."
+  (mapconcat
+   (lambda (field)
+     (let ((fieldval (mu4e-message-field msg field)))
+       (case field
+         (:subject  (mu4e~view-construct-header field fieldval))
+         (:path     (mu4e~view-construct-header field fieldval))
+         (:maildir  (mu4e~view-construct-header field fieldval))
+         ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
+
+         ;; contact fields
+         (:to       (mu4e~view-construct-contacts-header msg field))
+         (:from     (mu4e~view-construct-contacts-header msg field))
+         (:cc       (mu4e~view-construct-contacts-header msg field))
+         (:bcc      (mu4e~view-construct-contacts-header msg field))
+
+         ;; if we (`user-mail-address' are the From, show To, otherwise,
+         ;; show From
+         (:from-or-to
+          (let* ((from (mu4e-message-field msg :from))
+                 (from (and from (cdar from))))
+            (if (mu4e-user-mail-address-p from)
+                (mu4e~view-construct-contacts-header msg :to)
+              (mu4e~view-construct-contacts-header msg :from))))
+         ;; date
+         (:date
+          (let ((datestr
+                 (when fieldval (format-time-string mu4e-view-date-format
+                                                    fieldval))))
+            (if datestr (mu4e~view-construct-header field datestr) "")))
+         ;; size
+         (:size
+          (mu4e~view-construct-header field (mu4e-display-size fieldval)))
+         (:mailing-list
+          (mu4e~view-construct-header field fieldval))
+         ;; attachments
+         (:attachments (mu4e~view-construct-attachments-header msg))
+         ;; pgp-signatures
+         (:signature   (mu4e~view-construct-signature-header msg))
+         (t (mu4e-error "Unsupported field: %S" field)))))
+   mu4e-view-fields ""))
 
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG plist."
-  (concat
-    (mapconcat
-      (lambda (field)
-	(let ((fieldval (mu4e-message-field msg field)))
-	  (case field
-	    (:subject  (mu4e~view-construct-header field fieldval))
-	    (:path     (mu4e~view-construct-header field fieldval))
-	    (:maildir  (mu4e~view-construct-header field fieldval))
-	    ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
-
-	    ;; contact fields
-	    (:to       (mu4e~view-construct-contacts-header msg field))
-	    (:from     (mu4e~view-construct-contacts-header msg field))
-	    (:cc       (mu4e~view-construct-contacts-header msg field))
-	    (:bcc      (mu4e~view-construct-contacts-header msg field))
-
-	    ;; if we (`user-mail-address' are the From, show To, otherwise,
-	    ;; show From
-	    (:from-or-to
-	      (let* ((from (mu4e-message-field msg :from))
-		      (from (and from (cdar from))))
-		(if (mu4e-user-mail-address-p from)
-		  (mu4e~view-construct-contacts-header msg :to)
-		  (mu4e~view-construct-contacts-header msg :from))))
-	    ;; date
-	    (:date
-	      (let ((datestr
-		      (when fieldval (format-time-string mu4e-view-date-format
-				       fieldval))))
-		(if datestr (mu4e~view-construct-header field datestr) "")))
-	    ;; size
-	    (:size
-	      (mu4e~view-construct-header field (mu4e-display-size fieldval)))
-	    (:mailing-list
-	      (mu4e~view-construct-header field fieldval))
-	    ;; attachments
-	    (:attachments (mu4e~view-construct-attachments-header msg))
-	    ;; pgp-signatures
-	    (:signature   (mu4e~view-construct-signature-header msg))
-	    (t (mu4e-error "Unsupported field: %S" field)))))
-      mu4e-view-fields "")
-    "\n"
-    (mu4e-message-body-text msg)))
+  (concat (mu4e-view-header-text msg)
+          "\n"
+          (mu4e-message-body-text msg)))
 
  (defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
