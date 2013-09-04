@@ -2232,6 +2232,9 @@ action}
 @item Custom function to mark certain messages - see @ref{Custom mark functions}
 @item Using various @emph{mode}-hooks, @code{mu4e-compose-pre-hook} (see
 @ref{Compose hooks}), @code{mu4e-index-updated-hook} (see @ref{FAQ})
+@item Using a different message view function - see @ref{Viewing
+messages with w3m}
+
 @end itemize
 
 @noindent
@@ -3087,6 +3090,7 @@ github-repository.
 * Multiple accounts::
 * Refiling message::
 * Saving outgoing messages::
+* Viewing messages with w3m::
 @end menu
 
 @node Multiple accounts
@@ -3328,6 +3332,28 @@ mail is simply saved in the Sent Mail folder.
 If the from address is not associated with Account1 or with the Gmail
 account, the function uses @code{mu4e-ask-maildir-check-exists} to ask
 the user for a maildir to save the message in.
+
+@node Viewing messages with w3m
+@section Viewing messages with w3m
+
+It is possible to configure @t{mu4e} to use w3m to render html email
+messages while falling back to the usual view mode based on various
+configuration.  To enable w3m view, set @code{mu4e-view-render-func}
+to @code{mu4e-w3m-render-handler}.
+
+The w3m view will still honor @code{mu4e-view-prefer-html} and
+@code{mu4e-view-html-plaintext-ratio-heuristic}. It is probably useful
+to set @code{mu4e-view-prefer-html} to @t{t}, but that is left as
+an option to the user.
+
+Additionally, the option @code{mu4e-w3m-fill-column} can be set to
+force the w3m view to wrap ad the given column rather than attempting
+to fill all of the available space.  If @code{mu4e-w3m-fill-column} is
+set and there are embedded newlines in the message, it is possible
+that the message will render with some lines only a few words long
+while others fill the full width of @code{mu4e-w3m-fill-column}.  The
+default value of @t{-1} indicates that w3m is free to use all the
+available space.
 
 
 @node How it works
