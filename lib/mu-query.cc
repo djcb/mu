@@ -386,15 +386,20 @@ get_enquire (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 {
 	Xapian::Enquire enq (self->db());
 
-	/* empty or "" means "matchall" */
-	if (!mu_str_is_empty(searchexpr) &&
-	    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
-		enq.set_query(get_query (self, searchexpr, err));
-	else
-		enq.set_query(Xapian::Query::MatchAll);
+	try {
+		/* empty or "" means "matchall" */
+		if (!mu_str_is_empty(searchexpr) &&
+		    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
+			enq.set_query(get_query (self, searchexpr, err));
+		else
+			enq.set_query(Xapian::Query::MatchAll);
+	} catch (...) {
+		mu_util_g_set_error (err, MU_ERROR_XAPIAN_QUERY,
+				     "parse error in query");
+		throw;
+	}
 
 	enq.set_cutoff(0,0);
-
 	return enq;
 }
 
@@ -504,14 +509,14 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);
-	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfieldid) ||
-			      sortfieldid == MU_MSG_FIELD_ID_NONE,
+	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfieldid)	||
+			      sortfieldid    == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
-		MuMsgIter *iter;
-		MuQueryFlags first_flags;
-		bool	inc_related = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
-		bool	descending  = flags & MU_QUERY_FLAG_DESCENDING;
+		MuMsgIter	*iter;
+		MuQueryFlags	 first_flags;
+		bool		 inc_related  = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
+		bool		 descending   = flags & MU_QUERY_FLAG_DESCENDING;
 		Xapian::Enquire enq (get_enquire(self, searchexpr, sortfieldid,
 						 descending, err));
 
