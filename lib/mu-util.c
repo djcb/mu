@@ -434,41 +434,35 @@ gboolean
 mu_util_fputs_encoded (const char *str, FILE *stream)
 {
 	int rv;
+	unsigned	 bytes;
+	char		*conv;
 
 	g_return_val_if_fail (str, FALSE);
 	g_return_val_if_fail (stream, FALSE);
 
 	/* g_get_charset return TRUE when the locale is UTF8 */
 	if (mu_util_locale_is_utf8())
-		rv = fputs (str, stream);
-	else { /* charset is _not_ utf8, so we actually have to
-		* convert it..*/
+		return fputs (str, stream) == EOF ? FALSE : TRUE;
 
-		GError		*err;
-		unsigned	 bytes;
-		char		*conv;
+	 /* charset is _not_ utf8, so we actually have to convert
+	  * it
+	  */
+	conv = NULL;
+	if (g_utf8_validate (str, -1, NULL))
+		/* it _seems_ that on the bsds, the final err param
+		 * may receive garbage... so we don't use it */
+		conv = g_locale_from_utf8
+			(str, -1, (gsize*)&bytes, NULL, NULL);
 
-		err  = NULL;
-		conv = g_locale_from_utf8 (str, -1, (gsize*)&bytes, NULL, &err);
+	/* conversion failed; this happens because is some cases GMime
+	 * may gives us non-UTF-8 strings from e.g. wrongly encoded
+	 * message-subjects; if so, we escape the string
+	 */
+	if (!conv)
+		conv = g_strescape (str, "\n\t");
 
-		if (!conv || err) {
-			/* conversion failed; this happens because is
-			 * some cases GMime may gives us non-UTF-8
-			 * strings from e.g. wrongly encoded
-			 * message-subjects; if so, we escape the
-			 * string */
-			g_warning ("%s: g_locale_from_utf8 failed: %s",
-				   __FUNCTION__,
-				   err ? err->message : "conversion failed");
-			g_free (conv);
-			conv = g_strescape (str, NULL);
-			g_clear_error (&err);
-		}
-
-		rv  = conv ? fputs (conv, stream) : EOF;
-		g_free (conv);
-
-	}
+	rv  = conv ? fputs (conv, stream) : EOF;
+	g_free (conv);
 
 	return (rv == EOF) ? FALSE : TRUE;
 }
