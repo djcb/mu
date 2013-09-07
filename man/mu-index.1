@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "June 2012" "User Manuals"
+.TH MU-INDEX 1 "September 2013" "User Manuals"
 
 .SH NAME
 
@@ -206,17 +206,9 @@ been specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If
 \fBMAILDIR\fR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
 
 .SH RETURN VALUE
-\fBmu index\fR return 0 upon successful completion, and any other number
-greater than 0 signals an error:
 
-.nf
-| code | meaning                        |
-|------+--------------------------------|
-|    0 | ok                             |
-|    1 | general error                  |
-|    3 | could not obtain db write lock |
-|    4 | database is corrupted          |
-.fi
+\fBmu index\fR return 0 upon successful completion, and any other number
+greater than 0 signals an error.
 
 .SH BUGS
 
