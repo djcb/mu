@@ -57,6 +57,7 @@
      ("guile-user.gnu.org"                                    . "GuileUsr")
      ("help-gnu-emacs.gnu.org"                                . "EmacsUsr")
      ("lggdh-algemeen.vvtp.tudelft.nl"                        . "LGGDH")
+     ("linux-bluetooth.vger.kernel.org"                       . "Bluez")
      ("maemo-developers.maemo.org"                            . "MaemoDev")
      ("maemo-users.maemo.org"                                 . "MaemoUsr")
      ("monit-general.nongnu.org"                              . "Monit")
@@ -75,6 +76,7 @@
      ("xdg.lists.freedesktop.org"                             . "XDG")
      ("wl-en.lists.airs.net"                                  . "Wdrlust")
      ("wl-en.ml.gentei.org"                                   . "WdrLust")
+     ("xapian-devel.lists.xapian.org"                         . "Xapian")
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
   "AList of mailing lists id -> shortname")
 
