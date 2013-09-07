@@ -80,3 +80,4 @@ configure.lineno
 /guile/tests/test-mu-guile
 /lib/doxyfile
 /version.texi
+/compile
