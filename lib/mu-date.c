@@ -223,13 +223,14 @@ time_t
 mu_date_str_to_time_t (const char* date, gboolean local)
 {
 	struct tm	tm;
-	char		mydate[14 + 1];	/* YYYYMMDDHHMMSS */
+	char		tzbuf[16], mydate[14 + 1]; /* YYYYMMDDHHMMSS */
+	char 		*oldtz;
 	time_t		t;
-	char		oldtz[16];
 
 	memset (&tm, 0, sizeof(struct tm));
 	strncpy (mydate, date, 15);
 	mydate[sizeof(mydate)-1]='\0';
+	oldtz = tzbuf;
 
 	g_return_val_if_fail (date, (time_t)-1);
 
@@ -249,8 +250,9 @@ mu_date_str_to_time_t (const char* date, gboolean local)
 			setenv ("TZ", "", 1);
 			tzset ();
 		} else
-			local = TRUE; /* already */
-	}
+			oldtz = NULL;
+	} else
+		oldtz = NULL;
 
 	t = mktime (&tm);
 
