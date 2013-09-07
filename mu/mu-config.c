@@ -202,6 +202,9 @@ config_options_group_find (void)
 	GOptionEntry entries[] = {
 		{"fields", 'f', 0, G_OPTION_ARG_STRING, &MU_CONFIG.fields,
 		 "fields to display in the output", "<fields>"},
+		{"summary-len", "S", 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+		 "use up to <n> lines for the summary, or 0 for none (0)",
+		 "<len>"},
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING,
 		 &MU_CONFIG.sortfield,
 		 "field to sort on", "<field>"},
@@ -353,7 +356,7 @@ config_options_group_view (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+		{"summary-len", "S", 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
 		 "use up to <n> lines for the summary, or 0 for none (0)",
 		 "<len>"},
 		{"terminate", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.terminator,
