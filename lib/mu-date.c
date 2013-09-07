@@ -222,10 +222,10 @@ mu_date_interpret (const char *datespec, gboolean is_begin)
 time_t
 mu_date_str_to_time_t (const char* date, gboolean local)
 {
-	struct tm	 tm;
-	char		 mydate[14 + 1];	/* YYYYMMDDHHMMSS */
-	time_t		 t;
-	char		*tz;
+	struct tm	tm;
+	char		mydate[14 + 1];	/* YYYYMMDDHHMMSS */
+	time_t		t;
+	char		oldtz[16];
 
 	memset (&tm, 0, sizeof(struct tm));
 	strncpy (mydate, date, 15);
@@ -242,24 +242,25 @@ mu_date_str_to_time_t (const char* date, gboolean local)
 	tm.tm_isdst = -1; /* let mktime figure out the dst */
 
 	if (!local) { /* temporarily switch to UTC */
+		const char *tz;
 		tz = getenv ("TZ");
-		tz = tz ? g_strdup (tz) : NULL;
-		setenv ("TZ", "", 1);
-		tzset ();
-	} else
-		tz = NULL;
+		if (tz && strlen (tz) < sizeof(tz) -1) {
+			strcpy (oldtz, tz);
+			setenv ("TZ", "", 1);
+			tzset ();
+		} else
+			local = TRUE; /* already */
+	}
 
 	t = mktime (&tm);
 
 	if (!local) { /* switch back */
-		if (tz)
-			setenv("TZ", tz, 1);
+		if (oldtz)
+			setenv("TZ", oldtz, 1);
 		else
 			unsetenv("TZ");
 		tzset ();
 	}
-
-	g_free (tz);
 
 	return t;
 }
