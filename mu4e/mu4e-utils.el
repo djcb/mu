@@ -322,7 +322,7 @@ name. If the special shortcut 'o' (for _o_ther) is used, or if
 maildirs under `mu4e-maildir'."
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not mu4e-maildir-shortcuts)
-      (ido-completing-read prompt (mu4e-get-maildirs))
+      (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs))
       (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
 	      (fnames
 		(mapconcat
@@ -336,7 +336,7 @@ maildirs under `mu4e-maildir'."
 		  mlist ", "))
 	      (kar (read-char (concat prompt fnames))))
 	(if (member kar '(?/ ?o)) ;; user chose 'other'?
-	  (ido-completing-read prompt (mu4e-get-maildirs) nil nil "/")
+	  (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs) nil nil "/")
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))))))

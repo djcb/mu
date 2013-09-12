@@ -176,6 +176,19 @@ view buffer."
   :type 'boolean
   :group 'mu4e)
 
+(defcustom mu4e-completing-read-function 'ido-completing-read
+  "Function to be used to receive input from the user with
+completion. This is used to receive the name of the maildir
+to switch to via `mu4e~headers-jump-to-maildir'.
+
+Suggested possible values are:
+ * `completing-read':      built-in completion method
+ * `ido-completing-read':  dynamic completion within the minibuffer
+ * `helm-comp-read':       dynamic completion within popup window"
+  :type 'function
+  :options '(completing-read ido-completing-read helm-comp-read)
+  :group 'mu4e)
+
 ;; crypto
 (defgroup mu4e-crypto nil
   "Crypto-related settings."
