@@ -128,7 +128,7 @@ personal message. This is used when indexing messages."
   `format-time-string'."
   :type 'string
   :group 'mu4e)
-  
+
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
@@ -186,7 +186,6 @@ Suggested possible values are:
  * `ido-completing-read':  dynamic completion within the minibuffer
  * `helm-comp-read':       dynamic completion within popup window"
   :type 'function
-  :options '(completing-read ido-completing-read helm-comp-read)
   :group 'mu4e)
 
 ;; crypto

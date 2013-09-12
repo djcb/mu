@@ -35,7 +35,7 @@
 (require 'mu4e-about)
 (require 'mu4e-lists)
 (require 'doc-view)
- 
+
 ;; keep the byte-compiler happy
 (declare-function mu4e~proc-mkdir     "mu4e-proc")
 (declare-function mu4e~proc-ping      "mu4e-proc")
@@ -48,7 +48,7 @@
 
 (declare-function show-all "org")
 
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the following is taken from org.el; we copy it here since we don't want to
 ;; depend on org-mode directly (it causes byte-compilation errors) TODO: a
@@ -198,7 +198,7 @@ echo area, don't show anything."
 index-messages. Doesn't display anything if
 `mu4e-hide-index-messages' is non-nil. "
   (unless mu4e-hide-index-messages
-    (apply 'mu4e-message frm args))) 
+    (apply 'mu4e-message frm args)))
 
 (defun mu4e-error (frm &rest args)
   "Create [mu4e]-prefixed error based on format FRM and ARGS.
@@ -322,7 +322,7 @@ name. If the special shortcut 'o' (for _o_ther) is used, or if
 maildirs under `mu4e-maildir'."
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not mu4e-maildir-shortcuts)
-      (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs))
+	(funcall mu4e-completing-read-function prompt (mu4e-get-maildirs))
       (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
 	      (fnames
 		(mapconcat
@@ -336,7 +336,7 @@ maildirs under `mu4e-maildir'."
 		  mlist ", "))
 	      (kar (read-char (concat prompt fnames))))
 	(if (member kar '(?/ ?o)) ;; user chose 'other'?
-	  (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs) nil nil "/")
+	    (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs) nil nil "/")
 	  (or (car-safe
 		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))))))
@@ -968,10 +968,10 @@ and MAXHEIGHT are ignored."
       (let ((size (image-size img))) ;; inspired by gnus..
 	(insert-char ?\n
 	  (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
-	(insert-char ?\ 
+	(insert-char ?\
 	  (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
 	(insert-image img)))))
- 
+
 
 (defun mu4e-hide-other-mu4e-buffers ()
   "Bury mu4e-buffers (main, headers, view) (and delete all windows
