@@ -128,7 +128,7 @@ personal message. This is used when indexing messages."
   `format-time-string'."
   :type 'string
   :group 'mu4e)
-  
+
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
@@ -174,6 +174,18 @@ view buffer."
 (defcustom mu4e-confirm-quit t
   "Whether to confirm to quit mu4e."
   :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-completing-read-function 'ido-completing-read
+  "Function to be used to receive input from the user with
+completion. This is used to receive the name of the maildir
+to switch to via `mu4e~headers-jump-to-maildir'.
+
+Suggested possible values are:
+ * `completing-read':      built-in completion method
+ * `ido-completing-read':  dynamic completion within the minibuffer
+ * `helm-comp-read':       dynamic completion within popup window"
+  :type 'function
   :group 'mu4e)
 
 ;; crypto
