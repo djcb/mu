@@ -419,6 +419,7 @@ at POINT, or if nil, at (point)."
 		    isattach
 		    (string-match "^\\(image\\|audio\\)" mtype)
 		    (string= "message/rfc822" mtype)
+		    (string= "text/calendar" mtype)
 		    (and (string-match "^application" mtype)
 		      (not (string-match "signature" mtype))))))
 	      (mu4e-message-field msg :parts)))
