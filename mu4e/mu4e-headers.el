@@ -79,7 +79,7 @@ In the format of `format-time-string'."
   :type  'string
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-long-date-format "%a %e %b %Y %X %Z"
+(defcustom mu4e-headers-long-date-format "%c"
   "Date format to use in the headers view tooltip.
 In the format of `format-time-string'."
   :type  'string
