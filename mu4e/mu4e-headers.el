@@ -79,6 +79,12 @@ In the format of `format-time-string'."
   :type  'string
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-long-date-format "%a %e %b %Y %X %Z"
+  "Date format to use in the headers view tooltip.
+In the format of `format-time-string'."
+  :type  'string
+  :group 'mu4e-headers)
+
 (defcustom mu4e-headers-visible-lines 10
   "Number of lines to display in the header view when using the
 horizontal split-view. This includes the header-line at the top,
@@ -427,7 +433,10 @@ if provided, or at the end of the buffer otherwise."
 	      (:from-or-to (mu4e~headers-from-or-to msg))
 	      (:date (format-time-string mu4e-headers-date-format val))
 	      (:mailing-list (mu4e~headers-mailing-list val))
-	      (:human-date (mu4e~headers-human-date msg))
+	      (:human-date (propertize (mu4e~headers-human-date msg)
+                                       'help-echo (format-time-string
+                                                   mu4e-headers-long-date-format
+                                                   (mu4e-msg-field msg :date))))
 	      (:flags (propertize (mu4e~headers-flags-str val)
 			'help-echo (format "%S" val)))
 	      (:tags (propertize (mapconcat 'identity val ", ")))
