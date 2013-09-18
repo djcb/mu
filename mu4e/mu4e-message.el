@@ -143,6 +143,19 @@ This is equivalent to:
   (mu4e-message-field (mu4e-message-at-point) FIELD)."
   (mu4e-message-field (mu4e-message-at-point) field))
 
+(defun mu4e-message-clean-body-text (body)
+  "either remove some poorly encoded characters, or replace with
+'what-was-meant' (heuristically)"
+  (with-temp-buffer
+    (insert body)
+    (goto-char (point-min))
+    (while (re-search-forward "[ ’]" nil t)
+      (replace-match
+       (cond
+        ((string= (match-string 0) "’") "'")
+        (t ""))))
+      (buffer-string)))
+
 (defun mu4e-message-body-text (msg)
   "Get the body in text form for this message.
 This is either :body-txt, or if not available, :body-html
@@ -152,45 +165,36 @@ non-nil, it will use that. Normally, function prefers the text
 part, but this can be changed by setting
 `mu4e-view-prefer-html'."
   (let* ((txt (mu4e-message-field msg :body-txt))
-	  (html (mu4e-message-field msg :body-html))
-	  (body
-	    (cond
-	      ;; does it look like some text? ie., if the text part is more than
-          ;; mu4e-view-html-plaintext-ratio-heuristic times shorter than the
-          ;; html part, it should't be used
-          ;; This is an heuristic to guard against 'This messages requires
-          ;; html' text bodies.
-	      ((and (> (* mu4e-view-html-plaintext-ratio-heuristic
-                      (length txt)) (length html))
-		 ;; use html if it's prefered, unless there is no html
-		 (or (not mu4e-view-prefer-html) (not html)))
-		txt)
-	      ;; otherwise, it there some html?
-	      (html
-		(with-temp-buffer
-		  (insert html)
-		  ;; if defined, use the external tool
-		  (if mu4e-html2text-command
-		    (shell-command-on-region (point-min) (point-max)
-		      mu4e-html2text-command nil t)
-		    ;; otherwise...
-		    (html2text))
-		  (buffer-string)))
-	      (t ;; otherwise, an empty body
-		""))))
+         (html (mu4e-message-field msg :body-html))
+         (body
+          (cond
+           ;; does it look like some text? ie., if the text part is more than
+           ;; mu4e-view-html-plaintext-ratio-heuristic times shorter than the
+           ;; html part, it should't be used
+           ;; This is an heuristic to guard against 'This messages requires
+           ;; html' text bodies.
+           ((and (> (* mu4e-view-html-plaintext-ratio-heuristic
+                       (length txt)) (length html))
+                 ;; use html if it's prefered, unless there is no html
+                 (or (not mu4e-view-prefer-html) (not html)))
+            txt)
+           ;; otherwise, it there some html?
+           (html
+            (with-temp-buffer
+              (insert html)
+              ;; if defined, use the external tool
+              (if mu4e-html2text-command
+                  (shell-command-on-region (point-min) (point-max)
+                                           mu4e-html2text-command nil t)
+                ;; otherwise...
+                (html2text))
+              (buffer-string)))
+           (t ;; otherwise, an empty body
+            ""))))
     ;; and finally, remove some crap from the remaining string; it seems
     ;; esp. outlook lies about its encoding (ie., it says 'iso-8859-1' but
-    ;; really it's 'windows-1252'), thus giving us these funky chars. here, we
-    ;; either remove them, or replace with 'what-was-meant' (heuristically)
-    (with-temp-buffer
-      (insert body)
-      (goto-char (point-min))
-      (while (re-search-forward "[ ’]" nil t)
-	(replace-match
-	  (cond
-	    ((string= (match-string 0) "’") "'")
-	    (t		                       ""))))
-      (buffer-string))))
+    ;; really it's 'windows-1252'), thus giving us these funky chars.
+    (mu4e-message-clean-body-text body)))
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Checks whether any of the of the contacts in field

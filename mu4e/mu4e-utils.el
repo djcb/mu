@@ -484,7 +484,7 @@ that has a live window), and vice versa."
 	   (cond
 	     ((eq major-mode 'mu4e-headers-mode)
 	       mu4e~view-buffer)
-	     ((eq major-mode 'mu4e-view-mode)
+	     ((mu4e-view-mode-p)
 	       mu4e~headers-buffer)))
 	  (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
@@ -753,8 +753,9 @@ successful, call FUNC (if non-nil) afterwards."
   (mapcar
     (lambda (buf)
       (with-current-buffer buf
-	(when (member major-mode
-		'(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
+	(when (or (member major-mode
+                          '(mu4e-headers-mode mu4e-main-mode))
+                  (mu4e-view-mode-p))
 	  (kill-buffer))))
     (buffer-list)))
 
@@ -984,7 +985,8 @@ displaying it). Do _not_ bury the current buffer, though."
       (dolist (win (window-list frame nil))
 	(with-current-buffer (window-buffer win)
 	  (unless (eq curbuf (current-buffer))
-	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
+	    (when (or (eq major-mode 'mu4e-headers-mode)
+                      (mu4e-view-mode-p))
 	      (unless (one-window-p t)
 		(delete-window win))))))) nil t))
 

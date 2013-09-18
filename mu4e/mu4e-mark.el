@@ -101,7 +101,7 @@ where
 is either a headers or view buffer."
   `(cond     
      ((eq major-mode 'mu4e-headers-mode) ,@body)
-     ((eq major-mode 'mu4e-view-mode)  
+     ((mu4e-view-mode-p)
        (when (buffer-live-p mu4e~view-headers-buffer)
 	 (let* ((msg (mu4e-message-at-point))
 		 (docid (mu4e-message-field msg :docid)))

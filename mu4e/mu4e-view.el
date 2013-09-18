@@ -149,52 +149,54 @@ messages - for example, `mu4e-org'."
   ;; need an extra policy...
   (mu4e~proc-view msgid mu4e-view-show-images mu4e-decryption-policy))
 
+(defun mu4e-view-header-text (msg)
+  "Return the message headers to display (as a string), based on the MSG plist."
+  (mapconcat
+   (lambda (field)
+     (let ((fieldval (mu4e-message-field msg field)))
+       (case field
+         (:subject  (mu4e~view-construct-header field fieldval))
+         (:path     (mu4e~view-construct-header field fieldval))
+         (:maildir  (mu4e~view-construct-header field fieldval))
+         ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
+
+         ;; contact fields
+         (:to       (mu4e~view-construct-contacts-header msg field))
+         (:from     (mu4e~view-construct-contacts-header msg field))
+         (:cc       (mu4e~view-construct-contacts-header msg field))
+         (:bcc      (mu4e~view-construct-contacts-header msg field))
+
+         ;; if we (`user-mail-address' are the From, show To, otherwise,
+         ;; show From
+         (:from-or-to
+          (let* ((from (mu4e-message-field msg :from))
+                 (from (and from (cdar from))))
+            (if (mu4e-user-mail-address-p from)
+                (mu4e~view-construct-contacts-header msg :to)
+              (mu4e~view-construct-contacts-header msg :from))))
+         ;; date
+         (:date
+          (let ((datestr
+                 (when fieldval (format-time-string mu4e-view-date-format
+                                                    fieldval))))
+            (if datestr (mu4e~view-construct-header field datestr) "")))
+         ;; size
+         (:size
+          (mu4e~view-construct-header field (mu4e-display-size fieldval)))
+         (:mailing-list
+          (mu4e~view-construct-header field fieldval))
+         ;; attachments
+         (:attachments (mu4e~view-construct-attachments-header msg))
+         ;; pgp-signatures
+         (:signature   (mu4e~view-construct-signature-header msg))
+         (t (mu4e-error "Unsupported field: %S" field)))))
+   mu4e-view-fields ""))
 
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG plist."
-  (concat
-    (mapconcat
-      (lambda (field)
-	(let ((fieldval (mu4e-message-field msg field)))
-	  (case field
-	    (:subject  (mu4e~view-construct-header field fieldval))
-	    (:path     (mu4e~view-construct-header field fieldval))
-	    (:maildir  (mu4e~view-construct-header field fieldval))
-	    ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
-
-	    ;; contact fields
-	    (:to       (mu4e~view-construct-contacts-header msg field))
-	    (:from     (mu4e~view-construct-contacts-header msg field))
-	    (:cc       (mu4e~view-construct-contacts-header msg field))
-	    (:bcc      (mu4e~view-construct-contacts-header msg field))
-
-	    ;; if we (`user-mail-address' are the From, show To, otherwise,
-	    ;; show From
-	    (:from-or-to
-	      (let* ((from (mu4e-message-field msg :from))
-		      (from (and from (cdar from))))
-		(if (mu4e-user-mail-address-p from)
-		  (mu4e~view-construct-contacts-header msg :to)
-		  (mu4e~view-construct-contacts-header msg :from))))
-	    ;; date
-	    (:date
-	      (let ((datestr
-		      (when fieldval (format-time-string mu4e-view-date-format
-				       fieldval))))
-		(if datestr (mu4e~view-construct-header field datestr) "")))
-	    ;; size
-	    (:size
-	      (mu4e~view-construct-header field (mu4e-display-size fieldval)))
-	    (:mailing-list
-	      (mu4e~view-construct-header field fieldval))
-	    ;; attachments
-	    (:attachments (mu4e~view-construct-attachments-header msg))
-	    ;; pgp-signatures
-	    (:signature   (mu4e~view-construct-signature-header msg))
-	    (t (mu4e-error "Unsupported field: %S" field)))))
-      mu4e-view-fields "")
-    "\n"
-    (mu4e-message-body-text msg)))
+  (concat (mu4e-view-header-text msg)
+          "\n"
+          (mu4e-message-body-text msg)))
 
  (defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
@@ -203,6 +205,14 @@ messages - for example, `mu4e-org'."
     (select-window win)
     (switch-to-buffer buf)))
 
+(defun mu4e-default-render-handler (msg)
+  "Render the given message.  This function is called inside the view buffer."
+  (insert (mu4e-view-message-text msg))
+  (goto-char (point-min))
+  (mu4e~view-fontify-cited)
+  (mu4e~view-fontify-footer)
+  (mu4e~view-make-urls-clickable)
+  (mu4e~view-show-images-maybe msg))
 
 (defun mu4e-view (msg headersbuf &optional refresh)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -213,41 +223,32 @@ REFRESH is for re-showing an already existing message.
 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let* ((embedded ;; is it registered as an embedded msg (ie. message/rfc822
-		   ;; att)?
-	   (when (gethash (mu4e-message-field msg :path)
-		   mu4e~path-parent-docid-map) t))
-	  (buf
-	    (if embedded
-	      (mu4e~view-embedded-winbuf)
-	      (get-buffer-create mu4e~view-buffer-name))))
+  (let* (;; is it registered as an embedded msg (ie. message/rfc822 att)?
+         (embedded (when (gethash (mu4e-message-field msg :path)
+                                  mu4e~path-parent-docid-map) t))
+         (buf (if embedded
+                  (mu4e~view-embedded-winbuf)
+                (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (switch-to-buffer buf)
       (let ((inhibit-read-only t))
 	(erase-buffer)
-	(insert (mu4e-view-message-text msg))
-	(goto-char (point-min))
-	(mu4e~view-fontify-cited)
-	(mu4e~view-fontify-footer)
-	(mu4e~view-make-urls-clickable)
-	(mu4e~view-show-images-maybe msg)
-
+        (funcall mu4e-view-render-func msg)
 	(if embedded
-	  (local-set-key "q" 'kill-buffer-and-window)
+            (local-set-key "q" 'kill-buffer-and-window)
 	  (setq mu4e~view-buffer buf)))
 
-    (unless (eq major-mode 'mu4e-view-mode)
-      (mu4e-view-mode))
+      (unless (mu4e-view-mode-p)
+        (mu4e-view-mode))
 
-	(setq ;; buffer local
-      mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf)
+      (setq ;; buffer local
+       mu4e~view-msg msg
+       mu4e~view-headers-buffer headersbuf)
 
-    (unless (or refresh embedded)
-	  ;; no use in trying to set flags again, or when it's an embedded
-	  ;; message
-	  (mu4e~view-mark-as-read-maybe)))))
-
+      (unless (or refresh embedded)
+        ;; no use in trying to set flags again, or when it's an embedded
+        ;; message
+        (mu4e~view-mark-as-read-maybe)))))
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
@@ -655,6 +656,10 @@ FUNC should be a function taking two arguments:
   :options '(turn-on-visual-line-mode)
   :type 'hook
   :group 'mu4e-view)
+
+(defun mu4e-view-mode-p ()
+  (or (eq major-mode 'mu4e-view-mode)
+      (derived-mode-p 'mu4e-view-mode)))
 
 (defvar mu4e-view-mode-abbrev-table nil)
 (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
@@ -1213,7 +1218,7 @@ or message-at-point."
 This is a rather complex function, to ensure we don't disturb
 other windows."
   (interactive)
-  (unless (eq major-mode 'mu4e-view-mode)
+  (unless (mu4e-view-mode-p)
     (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
   (let ((curbuf (current-buffer)) (curwin (selected-window))
 	 (headers-win))
