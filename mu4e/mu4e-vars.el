@@ -183,8 +183,7 @@ to switch to via `mu4e~headers-jump-to-maildir'.
 
 Suggested possible values are:
  * `completing-read':      built-in completion method
- * `ido-completing-read':  dynamic completion within the minibuffer
- * `helm-comp-read':       dynamic completion within popup window"
+ * `ido-completing-read':  dynamic completion within the minibuffer."
   :type 'function
   :options '(completing-read ido-completing-read helm-comp-read)
   :group 'mu4e)
