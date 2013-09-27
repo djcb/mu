@@ -598,6 +598,8 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 
 		MuMsg *msg;
 
+		if (opts->maxnum > 0 && count == opts->maxnum)
+			break; 
 		msg = get_message (iter, opts->after);
 		if (!msg)
 			break;

@@ -205,6 +205,8 @@ config_options_group_find (void)
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING,
 		 &MU_CONFIG.sortfield,
 		 "field to sort on", "<field>"},
+		{"maxnum", 'n', 0, G_OPTION_ARG_INT, &MU_CONFIG.maxnum,
+		 "number of entries to display in the output", "<number>"},
 		{"threads", 't', 0, G_OPTION_ARG_NONE, &MU_CONFIG.threads,
 		 "show message threads", NULL},
 		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &MU_CONFIG.bookmark,
