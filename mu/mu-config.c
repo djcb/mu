@@ -704,6 +704,8 @@ mu_config_init (int *argcp, char ***argvp, GError **err)
 
 	memset (&MU_CONFIG, 0, sizeof(MU_CONFIG));
 
+	MU_CONFIG.maxnum = -1; /* By default, output all matching entries. */
+
 	if (!parse_cmd (argcp, argvp, err))
 		goto errexit;
 
