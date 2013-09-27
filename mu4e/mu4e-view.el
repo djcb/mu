@@ -775,7 +775,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	       mouse-face highlight
 	       keymap ,map
 	       help-echo
-	       ("[mouse-1] or [M-RET] to open the link")) url)
+	       "[mouse-1] or [M-RET] to open the link") url)
 	  (replace-match
 	    (concat url
 	      (propertize (format "[%d]" num)
