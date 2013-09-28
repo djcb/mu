@@ -187,6 +187,8 @@ messages - for example, `mu4e-org'."
 	      (mu4e~view-construct-header field (mu4e-display-size fieldval)))
 	    (:mailing-list
 	      (mu4e~view-construct-header field fieldval))
+	    (:message-id
+	      (mu4e~view-construct-header field fieldval))
 	    ;; attachments
 	    (:attachments (mu4e~view-construct-attachments-header msg))
 	    ;; pgp-signatures

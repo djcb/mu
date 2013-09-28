@@ -558,6 +558,11 @@ I.e. a message with the draft flag set."
 	 :shortname "List"
 	 :help "Mailing list for this message"
 	 :sortable nil))
+     (:message-id .
+       ( :name "Message-Id"
+	 :shortname "MsgID"
+	 :help "Message-Id for this message"
+	 :sortable nil))
      (:path .
        ( :name "Path"
 	 :shortname "Path"

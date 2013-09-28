@@ -426,7 +426,7 @@ if provided, or at the end of the buffer otherwise."
 		  (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
 		  ;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
 		  val))
-	      ((:maildir :path) val)
+	      ((:maildir :path :message-id) val)
 	      ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
 	      ;; if we (ie. `user-mail-address' is the 'From', show
 	      ;; 'To', otherwise show From
