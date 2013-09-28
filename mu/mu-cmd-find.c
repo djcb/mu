@@ -585,9 +585,9 @@ output_finish (MuConfig *opts)
 static gboolean
 output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 {
-	unsigned count;
-	gboolean rv;
-	OutputFunc *output_func;
+	int		 count;
+	gboolean	 rv;
+	OutputFunc	*output_func;
 
 	output_func = output_prepare (opts, err);
 	if (!output_func)
@@ -599,7 +599,7 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 		MuMsg *msg;
 
 		if (count == opts->maxnum)
-			break; 
+			break;
 		msg = get_message (iter, opts->after);
 		if (!msg)
 			break;
