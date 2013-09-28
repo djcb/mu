@@ -205,6 +205,8 @@ config_options_group_find (void)
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING,
 		 &MU_CONFIG.sortfield,
 		 "field to sort on", "<field>"},
+		{"maxnum", 'n', 0, G_OPTION_ARG_INT, &MU_CONFIG.maxnum,
+		 "number of entries to display in the output", "<number>"},
 		{"threads", 't', 0, G_OPTION_ARG_NONE, &MU_CONFIG.threads,
 		 "show message threads", NULL},
 		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &MU_CONFIG.bookmark,
@@ -701,6 +703,8 @@ mu_config_init (int *argcp, char ***argvp, GError **err)
 	g_return_val_if_fail (argcp && argvp, NULL);
 
 	memset (&MU_CONFIG, 0, sizeof(MU_CONFIG));
+
+	MU_CONFIG.maxnum = -1; /* By default, output all matching entries. */
 
 	if (!parse_cmd (argcp, argvp, err))
 		goto errexit;

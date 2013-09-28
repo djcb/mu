@@ -123,6 +123,7 @@ struct _MuConfig {
 	/* options for querying 'find' (and view-> 'summary') */
 	gchar		*fields;	/* fields to show in output */
 	gchar	        *sortfield;	/* field to sort by (string) */
+	int		 maxnum;	/* max # of entries to print */
 	gboolean	 reverse;	/* sort in revers order (z->a) */
 	gboolean	 threads;       /* show message threads */
 

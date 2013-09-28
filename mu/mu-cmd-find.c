@@ -132,7 +132,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 	if (opts->threads)
 		qflags |= MU_QUERY_FLAG_THREADS;
 
-	iter = mu_query_run (xapian, query, sortid, -1, qflags, err);
+	iter = mu_query_run (xapian, query, sortid, opts->maxnum, qflags, err);
 	return iter;
 }
 
@@ -598,6 +598,8 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 
 		MuMsg *msg;
 
+		if (count == opts->maxnum)
+			break; 
 		msg = get_message (iter, opts->after);
 		if (!msg)
 			break;
