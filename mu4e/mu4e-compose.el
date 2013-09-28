@@ -119,9 +119,15 @@ for quering the message information."
 
 (defvar mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts.
-If the compose-type is either /reply/ or /forward/, the variable
+If the compose-type is either 'reply' or 'forward', the variable
 `mu4e-compose-parent-message' points to the message replied to /
-being forwarded / edited.")
+being forwarded / edited.
+
+Note that there is no draft message yet when this hook runs, it
+is meant for influencing the how mu4e constructs the draft
+message. If you want to do something with the draft messages after
+it has been constructed, `mu4e-compose-mode-hook' would be the
+place to do that.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
