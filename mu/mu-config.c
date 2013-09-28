@@ -479,9 +479,14 @@ cmd_from_string (const char *str)
 	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i)
 		if (strcmp (str, cmd_map[i].name) == 0)
 			return cmd_map[i].cmd;
+#ifdef BUILD_GUILE
+	/* if we don't recognize it and it's not an option, it may be
+	 * some script */
+	if (str[0] == '-')
+		return MU_CONFIG_CMD_SCRIPT;
+#endif /*BUILD_GUILE*/
 
-	/* if we don't recognize it, it may be some script */
-	return MU_CONFIG_CMD_SCRIPT;
+	return MU_CONFIG_CMD_UNKNOWN;
 }
 
 
@@ -510,6 +515,14 @@ parse_cmd (int *argcp, char ***argvp, GError **err)
 		return FALSE;
 	}
 #endif /*!BUILD_GUILE*/
+
+	if (MU_CONFIG.cmdstr && MU_CONFIG.cmdstr[0] != '-' &&
+	    MU_CONFIG.cmd == MU_CONFIG_CMD_UNKNOWN) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "unknown command '%s'",
+				     MU_CONFIG.cmdstr);
+		return FALSE;
+	}
 
 	return TRUE;
 }
