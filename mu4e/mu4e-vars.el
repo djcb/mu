@@ -661,10 +661,13 @@ the docid of the removed message.")
 process, when some message has been sent. The function is passed
 the docid and the draft-path of the sent message.")
 
-(defvar mu4e-view-func  'mu4e~default-handler
-  "A function called for each single message sexp returned from the
-server process. The function is passed a message sexp as
-argument. See `mu4e~proc-filter' for the format.")
+(defvar mu4e-view-render-func-alist
+  '((:body-txt . mu4e-default-render-handler)
+    (:body-html . mu4e-default-render-handler))
+  "An alist mapping the email body type to its rendering function to
+render.  The part chosen for rendering is determined by
+`mu4e-view-html-plaintext-ratio-heuristic' and
+`mu4e-view-prefer-html'.")
 
 (defvar mu4e-view-render-func 'mu4e-default-render-handler
   "A function called to render the message into the view buffer.  This

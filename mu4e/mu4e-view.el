@@ -192,11 +192,30 @@ messages - for example, `mu4e-org'."
          (t (mu4e-error "Unsupported field: %S" field)))))
    mu4e-view-fields ""))
 
+(defun mu4e-view-html-to-txt (html)
+  "Convert the given HTML to text. By default, it uses the emacs
+built-in `html2text'. Alternatively, if `mu4e-html2text-command' is
+non-nil, it will use that. "
+  (with-temp-buffer
+    (insert html)
+    ;; if defined, use the external tool
+    (if mu4e-html2text-command
+        (shell-command-on-region (point-min) (point-max)
+                                 mu4e-html2text-command nil t)
+      ;; otherwise...
+      (html2text))
+    (buffer-string)))
+
 (defun mu4e-view-message-text (msg)
-  "Return the message to display (as a string), based on the MSG plist."
-  (concat (mu4e-view-header-text msg)
-          "\n"
-          (mu4e-message-body-text msg)))
+  "Return the message to display (as a string), based on the MSG
+plist.  If the chosen part is HTML, it will be converted to text via
+`mu4e-view-html-to-txt'"
+  (let* ((part (mu4e-message-body-part msg)))
+    (concat (mu4e-view-header-text msg)
+            "\n"
+            (if (eq :body-txt (car part))
+                (cdr part)
+              (mu4e-view-html-to-txt (cdr part))))))
 
  (defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
@@ -228,15 +247,21 @@ marking if it still had that."
                                   mu4e~path-parent-docid-map) t))
          (buf (if embedded
                   (mu4e~view-embedded-winbuf)
-                (get-buffer-create mu4e~view-buffer-name))))
+                (get-buffer-create mu4e~view-buffer-name)))
+         (part (mu4e-message-body-part msg))
+         (render-func (cdr (assoc (car part) mu4e-view-render-func-alist))))
+    (when (null render-func)
+      (error
+       "No render function found in mu4e-view-render-func-alist for the type %s"
+       (car part)))
     (with-current-buffer buf
       (switch-to-buffer buf)
       (let ((inhibit-read-only t))
-	(erase-buffer)
-        (funcall mu4e-view-render-func msg)
-	(if embedded
+        (erase-buffer)
+        (funcall render-func msg)
+        (if embedded
             (local-set-key "q" 'kill-buffer-and-window)
-	  (setq mu4e~view-buffer buf)))
+          (setq mu4e~view-buffer buf)))
 
       (unless (mu4e-view-mode-p)
         (mu4e-view-mode))

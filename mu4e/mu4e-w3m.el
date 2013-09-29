@@ -65,11 +65,11 @@ the html part is \"too small\", but this can be changed by setting
                  (cons 'txt "")))))
     (cons (car body) (mu4e-message-clean-body-text (cdr body)))))
 
-(defun mu4e-w3m-message-text (msg body-text)
+(defun mu4e-w3m-message-text (msg)
   "Return the message to display (as a string), based on the MSG plist."
   (concat (mu4e-view-header-text msg)
           "\n"
-          body-text))
+          (mu4e-message-body-text msg)))
 
 (defun mu4e-w3m-replace-in-buffer (old-str new-str &optional start-pt)
   "Utility function to replace strings in a buffer, optionally
@@ -96,15 +96,9 @@ body, render the body with w3m but leave the headers alone."
 
 (defun mu4e-w3m-render-handler (msg)
   "Render the given message.  This function is called inside the view buffer."
-  (let* ((body (mu4e-w3m-body-text msg))
-         (type (car body))
-         (body-text (cdr body)))
-    (if (eq 'html type)
-        (progn
-          (mu4e-w3m-view-mode)
-          (insert (mu4e-w3m-message-text msg body-text))
-          (mu4e-w3m-render-body))
-      (mu4e-default-render-handler msg))))
+  (mu4e-w3m-view-mode)
+  (insert (mu4e-w3m-message-text msg))
+  (mu4e-w3m-render-body))
 
 (defun mu4e-w3m-browse-current-url ()
   (interactive)
