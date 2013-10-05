@@ -720,7 +720,9 @@ Some notes to explain what you see in the example:
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
 the variable @code{mu4e-headers-fields}; see @code{mu4e-header-info} for the
-list of available fields.
+list of built-in fields. Apart from the built-in fields, you can also create
+custom fields using @code{mu4e-header-info-custom}; see its documentation for
+the details.
 @item By default, the date is shown with the @t{:human-date} field, which
 shows the @emph{time} for today's messages, and the @emph{date} for older
 messages. If you want to distinguish between 'today' and 'older', you can use
@@ -967,7 +969,10 @@ An example message view:
 
 Some notes:
 @itemize
-@item The variable @code{mu4e-view-fields} determines the header fields to be shown.
+@item The variable @code{mu4e-view-fields} determines the header fields to be
+shown; see @code{mu4e-header-info} for a list of built-in fields. Apart from
+the built-in fields, you can also create custom fields using
+@code{mu4e-header-info-custom}; see its documentation for the details.
 @item You can set the date format with the variable
 @code{mu4e-date-format-long}.
 @item By default, only the names of contacts in address fields are visible

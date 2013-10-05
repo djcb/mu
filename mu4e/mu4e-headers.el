@@ -411,6 +411,16 @@ date. The formats used for date and time are
     (propertize (mu4e-get-mailing-list-shortname list) 'help-echo list)
     ""))
 
+(defun mu4e~headers-custom-field (msg field)
+  "Show some custom header field, or raise an error if it is not
+found."
+  (let* ((item (or (assoc field mu4e-header-info-custom)
+		 (mu4e-error "field %S not found" field)))
+	  (func (or (plist-get (cdr-safe item) :function)
+		  (mu4e-error "no :function defined for field %S %S" field (cdr item)))))
+    (funcall func msg)))
+
+
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
     "Create a one line description of MSG in this buffer, at POINT,
@@ -441,7 +451,7 @@ if provided, or at the end of the buffer otherwise."
 			'help-echo (format "%S" val)))
 	      (:tags (propertize (mapconcat 'identity val ", ")))
 	      (:size (mu4e-display-size val))
-	      (t (mu4e-error "Unsupported header field (%S)" field))))
+	      (t (mu4e~headers-custom-field msg field))))
 	  (when str
 	    (setq line
 	      (concat line
@@ -677,7 +687,8 @@ after the end of the search results."
     (mapcar
       (lambda (item)
 	(let* ((field (car item)) (width (cdr item))
-		(info (cdr (assoc field mu4e-header-info)))
+		(info (cdr (assoc field
+			     (append mu4e-header-info mu4e-header-info-custom))))
 		(sortable (plist-get info :sortable))
 		(help (plist-get info :help))
 		(uparrow   (if mu4e-use-fancy-chars " ▲" " ^"))

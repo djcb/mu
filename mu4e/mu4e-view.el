@@ -149,6 +149,16 @@ messages - for example, `mu4e-org'."
   ;; need an extra policy...
   (mu4e~proc-view msgid mu4e-view-show-images mu4e-decryption-policy))
 
+(defun mu4e~view-custom-field (msg field)
+  "Show some custom header field, or raise an error if it is not
+found."
+  (let* ((item (or (assoc field mu4e-header-info-custom)
+		 (mu4e-error "field %S not found" field)))
+	  (func (or (plist-get (cdr-safe item) :function)
+		  (mu4e-error "no :function defined for field %S %S"
+		    field (cdr item)))))
+    (funcall func msg)))
+
 
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG plist."
@@ -193,7 +203,8 @@ messages - for example, `mu4e-org'."
 	    (:attachments (mu4e~view-construct-attachments-header msg))
 	    ;; pgp-signatures
 	    (:signature   (mu4e~view-construct-signature-header msg))
-	    (t (mu4e-error "Unsupported field: %S" field)))))
+	    (t (mu4e~view-construct-header field
+		 (mu4e~view-custom-field msg field)))))) 
       mu4e-view-fields "")
     "\n"
     (mu4e-message-body-text msg)))
@@ -255,7 +266,8 @@ marking if it still had that."
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
 add text-properties to VAL."
-  (let* ((info (cdr (assoc field mu4e-header-info)))
+  (let* ((info (cdr (assoc field
+		      (append mu4e-header-info mu4e-header-info-custom))))
 	  (key (plist-get info :name))
 	  (help (plist-get info :help)))
     (if (and val (> (length val) 0))

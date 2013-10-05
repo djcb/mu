@@ -505,7 +505,6 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 
-
 ;; headers info
 (defconst mu4e-header-info
   '( (:attachments .
@@ -608,7 +607,26 @@ symbol for /another/ field. For example, the `:human-date' field
 uses `:date' for that.
 
 Note, `:sortable' does not work for custom header fields.")
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defvar mu4e-header-info-custom
+  "A list of custom (user-defined) headerr. The format is similar
+to `mu4e-header-info', but addds a :function property, which should
+point to a function that takes a message p-list as argument, and
+returns a string. See the default value of `mu4e-header-info-custom
+for an example."
+  '( (:recipnum .
+       ( :name "Number of recipients"
+	 :shortname "Recip#"
+	 :help "Number of recipients for this message"
+	 :function
+	 (lambda (msg)
+	   (format "%d"
+	     (+ (length (mu4e-message-field msg :to))
+	       (length (mu4e-message-field msg :cc)))))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
