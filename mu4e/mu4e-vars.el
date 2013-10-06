@@ -610,11 +610,6 @@ Note, `:sortable' does not work for custom header fields.")
 
 
 (defvar mu4e-header-info-custom
-  "A list of custom (user-defined) headerr. The format is similar
-to `mu4e-header-info', but addds a :function property, which should
-point to a function that takes a message p-list as argument, and
-returns a string. See the default value of `mu4e-header-info-custom
-for an example."
   '( (:recipnum .
        ( :name "Number of recipients"
 	 :shortname "Recip#"
@@ -623,7 +618,12 @@ for an example."
 	 (lambda (msg)
 	   (format "%d"
 	     (+ (length (mu4e-message-field msg :to))
-	       (length (mu4e-message-field msg :cc)))))))))
+	       (length (mu4e-message-field msg :cc))))))))
+"A list of custom (user-defined) headerr. The format is similar
+to `mu4e-header-info', but addds a :function property, which should
+point to a function that takes a message p-list as argument, and
+returns a string. See the default value of `mu4e-header-info-custom
+for an example.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
