@@ -75,6 +75,26 @@ get_refs_str (GMimeMessage *msg)
 	return rv;
 }
 
+static void
+print_date (GMimeMessage *msg)
+{
+	time_t		 t;
+	int		 tz;
+	char		 buf[64];
+	size_t		 len;
+	struct  tm	*t_m;
+
+
+	g_mime_message_get_date (msg, &t, &tz);
+	t_m = localtime (&t);
+
+	len = strftime (buf, sizeof(buf) - 1, "%c", t_m);
+
+	if (len > 0)
+		g_print ("Date   : %s (%s%04d)\n",
+			 buf,tz < 0 ? "-" : "+", tz);
+}
+
 static gboolean
 test_message (GMimeMessage *msg)
 {
@@ -97,6 +117,9 @@ test_message (GMimeMessage *msg)
 
 	str = g_mime_message_get_subject (msg);
 	g_print ("Subject: %s\n", str ? str : "<none>");
+
+	print_date (msg);
+
 
 	str = g_mime_message_get_message_id (msg);
 	g_print ("Msg-id : %s\n", str ? str : "<none>");
