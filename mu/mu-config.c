@@ -205,6 +205,8 @@ config_options_group_find (void)
 		{"sortfield", 's', 0, G_OPTION_ARG_STRING,
 		 &MU_CONFIG.sortfield,
 		 "field to sort on", "<field>"},
+		{"maxnum", 'n', 0, G_OPTION_ARG_INT, &MU_CONFIG.maxnum,
+		 "number of entries to display in the output", "<number>"},
 		{"threads", 't', 0, G_OPTION_ARG_NONE, &MU_CONFIG.threads,
 		 "show message threads", NULL},
 		{"bookmark", 'b', 0, G_OPTION_ARG_STRING, &MU_CONFIG.bookmark,
@@ -477,9 +479,14 @@ cmd_from_string (const char *str)
 	for (i = 0; i != G_N_ELEMENTS(cmd_map); ++i)
 		if (strcmp (str, cmd_map[i].name) == 0)
 			return cmd_map[i].cmd;
+#ifdef BUILD_GUILE
+	/* if we don't recognize it and it's not an option, it may be
+	 * some script */
+	if (str[0] == '-')
+		return MU_CONFIG_CMD_SCRIPT;
+#endif /*BUILD_GUILE*/
 
-	/* if we don't recognize it, it may be some script */
-	return MU_CONFIG_CMD_SCRIPT;
+	return MU_CONFIG_CMD_UNKNOWN;
 }
 
 
@@ -508,6 +515,14 @@ parse_cmd (int *argcp, char ***argvp, GError **err)
 		return FALSE;
 	}
 #endif /*!BUILD_GUILE*/
+
+	if (MU_CONFIG.cmdstr && MU_CONFIG.cmdstr[0] != '-' &&
+	    MU_CONFIG.cmd == MU_CONFIG_CMD_UNKNOWN) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "unknown command '%s'",
+				     MU_CONFIG.cmdstr);
+		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -701,6 +716,8 @@ mu_config_init (int *argcp, char ***argvp, GError **err)
 	g_return_val_if_fail (argcp && argvp, NULL);
 
 	memset (&MU_CONFIG, 0, sizeof(MU_CONFIG));
+
+	MU_CONFIG.maxnum = -1; /* By default, output all matching entries. */
 
 	if (!parse_cmd (argcp, argvp, err))
 		goto errexit;

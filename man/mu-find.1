@@ -1,4 +1,4 @@
-.TH MU FIND 1 "June 2013" "User Manuals"
+.TH MU FIND 1 "September 2013" "User Manuals"
 
 .SH NAME
 
@@ -344,14 +344,12 @@ Note, if you specify a sortfield, by default, messages are sorted in reverse
 choice, but for dates it may be more useful to sort in the opposite direction.
 
 .TP
-\fB\-\-summary-len=<number>\fR
-If > 0, use that number of lines of the message to provide a summary.
+\fB\-n\fR, \fB\-\-maxnum=<number>\fR
+If > 0, display maximally that number of entries.  If not specified, all matching entries are displayed.
 
 .TP
-\fB\-\-include\-unreadable\fR normally, \fBmu find\fR does not include
-messages for which the corresponding file is unreadable. With this option even
-such messages are included. Note, for \fB\-\-format=\fRlinks, unreadable
-message are ignored even when this option is set.
+\fB\-\-summary-len=<number>\fR
+If > 0, use that number of lines of the message to provide a summary.
 
 .TP
 \fB\-\-format\fR=\fIplain|links|xquery|xml|sexp\fR
