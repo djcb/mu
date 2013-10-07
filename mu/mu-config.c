@@ -482,7 +482,7 @@ cmd_from_string (const char *str)
 #ifdef BUILD_GUILE
 	/* if we don't recognize it and it's not an option, it may be
 	 * some script */
-	if (str[0] == '-')
+	if (str[0] != '-')
 		return MU_CONFIG_CMD_SCRIPT;
 #endif /*BUILD_GUILE*/
 
