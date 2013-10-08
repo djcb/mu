@@ -797,6 +797,7 @@ The messages are inserted into the process buffer."
 ;;   - needs to check for errors
 ;;   - (optionally) pop-up a window
 ;;   - (optionally) check password requests
+(defvar mu4e--update-buffer-name nil)
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
 run-in-background is non-nil (or called with prefix-argument), run
@@ -804,20 +805,17 @@ in the background; otherwise, pop up a window."
   (interactive "P")
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
-  (let* ((buf (unless run-in-background
-		(get-buffer-create mu4e~update-name)))
-	  (win (and buf (split-window (selected-window)
-			  (- (window-height (selected-window)) 8))))
-	  (process-connection-type t)
-	  (proc (start-process-shell-command
-		  mu4e~update-name buf mu4e-get-mail-command)))
+  (let* ((process-connection-type t)
+         (proc (start-process-shell-command
+                "mu4e-update" mu4e~update-name
+                mu4e-get-mail-command))
+         (buf (process-buffer proc)))
+    (setq mu4e--update-buffer-name (buffer-name buf))
+    (when (not run-in-background)
+      (pop-to-buffer buf)
+      (special-mode)
+      (set-window-dedicated-p (selected-window) t))
     (mu4e-index-message "Retrieving mail...")
-    (when (window-live-p win)
-      (with-selected-window win
-	(switch-to-buffer buf)
-	(set-window-dedicated-p win t)
-	(erase-buffer)
-	(insert "\n"))) ;; FIXME -- needed so output starts
     (set-process-sentinel proc
       (lambda (proc msg)
 	(let* ((status (process-status proc))
@@ -831,7 +829,8 @@ in the background; otherwise, pop up a window."
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error (sit-for 5))
 	  (mu4e-update-index)
-	  (when (buffer-live-p buf) (kill-buffer buf)))))
+	  (when (buffer-live-p buf)
+            (with-selected-window (get-buffer-window buf) (quit-window t))))))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
