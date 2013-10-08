@@ -813,8 +813,7 @@ in the background; otherwise, pop up a window."
     (setq mu4e--update-buffer-name (buffer-name buf))
     (when (not run-in-background)
       (pop-to-buffer buf)
-      (special-mode)
-      (set-window-dedicated-p (selected-window) t))
+      (special-mode))
     (mu4e-index-message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
