@@ -28,6 +28,7 @@
 ;;; Code:
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
+(require 'ido)
 
 (require 'mu4e-message)
 (require 'mu4e-meta)
