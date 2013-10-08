@@ -170,7 +170,10 @@ store your org-contacts."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-git-apply-patch (msg)
   "Apply the git [patch] message."
-  (let ((path (read-directory-name "Target directory: " nil "~/" t) ))
+  (let ((path (ido-read-directory-name "Target directory: "
+                                       (car ido-work-directory-list)
+                                       "~/" t)))
+    (add-to-list 'ido-work-directory-list path)
     (shell-command
       (format "cd %s; git apply %s"
 	path
