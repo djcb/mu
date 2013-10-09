@@ -19,18 +19,19 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-;; INFO: graph the number of messages per month
+;; INFO: graph the number of messages per day (using gnuplot)
 ;; INFO: options:
 ;; INFO:   --query=<query>:   limit to messages matching query
 ;; INFO:   --muhome=<muhome>: path to mu home dir
-;; INFO:   --textonly:        output in text-only format
+;; INFO:   --output:          the output format, such as "png", "wxt"
+;; INFO:                      (depending on the environment)
 
 (use-modules (mu) (mu script) (mu stats) (mu plot))
 
-(define (per-month expr text-only)
+(define (per-month expr output)
   "Count the total number of messages for each weekday (0-6 for
-Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
-display, otherwise, use a graphical window."
+Sun..Sat) that match EXPR. OUTPUT corresponds to the output format, as
+per gnuplot's 'set terminal'."
   (mu:plot-histogram
     (mu:month-numbers->names
       (sort
@@ -39,7 +40,7 @@ display, otherwise, use a graphical window."
 	    (tm:mon (localtime (mu:date msg)))) expr)
 	(lambda (x y) (< (car x) (car y)))))
     (format #f "Messages per month matching ~a" expr)
-    "Month" "Messages" text-only))
+    "Month" "Messages" output))
 
 (define (main args)
   (mu:run-stats args per-month))

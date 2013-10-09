@@ -19,18 +19,18 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-;; INFO: count the number of messages matching some query
+;; INFO: graph the number of messages per day (using gnuplot)
 ;; INFO: options:
 ;; INFO:   --query=<query>:   limit to messages matching query
 ;; INFO:   --muhome=<muhome>: path to mu home dir
 
 (use-modules (mu) (mu script) (mu stats))
 
-(define (count expr text-only)
+(define (count expr)
   "Print the total number of messages matching QUERY."
   (display (mu:count expr))
   (newline))
- 
+
 (define (main args)
   (mu:run-stats args count))
 
