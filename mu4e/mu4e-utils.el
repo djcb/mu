@@ -797,7 +797,8 @@ The messages are inserted into the process buffer."
 ;;   - needs to check for errors
 ;;   - (optionally) pop-up a window
 ;;   - (optionally) check password requests
-(defvar mu4e--update-buffer-name nil)
+(defvar mu4e~update-buffer-name nil
+  "Internal, store the name of the buffer process when updating.")
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
 run-in-background is non-nil (or called with prefix-argument), run
@@ -810,7 +811,7 @@ in the background; otherwise, pop up a window."
                 "mu4e-update" mu4e~update-name
                 mu4e-get-mail-command))
          (buf (process-buffer proc)))
-    (setq mu4e--update-buffer-name (buffer-name buf))
+    (setq mu4e~update-buffer-name (buffer-name buf))
     (when (not run-in-background)
       (pop-to-buffer buf)
       (special-mode))
@@ -834,6 +835,13 @@ in the background; otherwise, pop up a window."
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
       (set-process-filter proc 'mu4e~get-mail-process-filter))))
+
+(defun mu4e~interrupt-update-mail ()
+  "Stop the update process by sending SIGINT to it."
+  (interactive)
+  (interrupt-process (get-buffer-process
+                      (get-buffer mu4e~update-buffer-name)) t))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

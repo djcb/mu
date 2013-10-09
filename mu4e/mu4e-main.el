@@ -154,11 +154,6 @@ clicked."
       (mu4e-main-mode)
       (switch-to-buffer buf))))
 
-(defun mu4e-interrupt-update-mail ()
-  (interactive)
-  (interrupt-process (get-buffer-process
-                      (get-buffer mu4e--update-buffer-name)) t))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
 (defun mu4e~main-toggle-mail-sending-mode ()
