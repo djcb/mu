@@ -185,7 +185,7 @@ Suggested possible values are:
  * `completing-read':      built-in completion method
  * `ido-completing-read':  dynamic completion within the minibuffer."
   :type 'function
-  :options '(completing-read ido-completing-read helm-comp-read)
+  :options '(completing-read ido-completing-read)
   :group 'mu4e)
 
 ;; crypto
