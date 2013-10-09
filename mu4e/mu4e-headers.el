@@ -209,6 +209,20 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 (defvar mu4e-headers-full-search nil
   "Whether to show all results.
 If this is nil show results up to `mu4e-search-results-limit')")
+
+(defvar mu4e-headers-search-terms
+  '("bcc:"
+    "cc:"
+    "date:"
+    "file:"
+    "flag:" "flag:attach" "flag:unread" "flag:seen" "flag:trashed"
+    "from:"
+    "mime:"
+    "subject:"
+    "tag:"
+    "to:")
+  "Header narrow completions")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -1164,8 +1178,12 @@ the last search expression. Note that you can go back to previous
 query (effectively, 'widen' it), with `mu4e-headers-query-prev'."
   (interactive
     (let ((filter
-  	    (read-string (mu4e-format "Narrow down to: ")
-  	      nil 'mu4e~headers-search-hist nil t)))
+  	    (ido-completing-read
+             (mu4e-format "Narrow down to: ")
+             mu4e-headers-search-terms
+             nil nil nil
+             'mu4e~headers-search-hist
+             nil  nil)))
       (list filter)))
   (unless mu4e~headers-last-query
     (mu4e-warn "There's nothing to filter"))
