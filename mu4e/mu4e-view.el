@@ -545,7 +545,7 @@ FUNC should be a function taking two arguments:
       (define-key map (kbd "<home>") 'beginning-of-buffer)
       (define-key map (kbd "<end>") 'end-of-buffer)
       (define-key map (kbd "RET") 'mu4e-scroll-up)
-      (define-key map (kbd "<backspace>") 'mu4e-scroll-up)
+      (define-key map (kbd "<backspace>") 'mu4e-scroll-down)
 
       ;; navigation between messages
       (define-key map "p" 'mu4e-view-headers-prev)
