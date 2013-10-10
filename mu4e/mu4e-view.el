@@ -545,7 +545,7 @@ FUNC should be a function taking two arguments:
       (define-key map (kbd "<home>") 'beginning-of-buffer)
       (define-key map (kbd "<end>") 'end-of-buffer)
       (define-key map (kbd "RET") 'mu4e-scroll-up)
-      (define-key map (kbd "<backspace>") 'mu4e-scroll-up)
+      (define-key map (kbd "<backspace>") 'mu4e-scroll-down)
 
       ;; navigation between messages
       (define-key map "p" 'mu4e-view-headers-prev)
@@ -563,9 +563,7 @@ FUNC should be a function taking two arguments:
       (define-key map "A" 'mu4e-view-attachment-action)
 
       ;; marking/unmarking
-      (define-key map (kbd "<backspace>") 'mu4e-view-mark-for-trash)
       (define-key map "d" 'mu4e-view-mark-for-trash)
-
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
       (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
