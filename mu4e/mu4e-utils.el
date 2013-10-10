@@ -814,7 +814,7 @@ in the background; otherwise, pop up a window."
     (setq mu4e~update-buffer-name (buffer-name buf))
     (when (not run-in-background)
       (pop-to-buffer buf)
-      (special-mode))
+      (mu4e~update-mail-mode))
     (mu4e-index-message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
@@ -841,6 +841,11 @@ in the background; otherwise, pop up a window."
   (interactive)
   (interrupt-process (get-buffer-process
                       (get-buffer mu4e~update-buffer-name)) t))
+
+(define-derived-mode mu4e~update-mail-mode special-mode "Mu4eUpdate" 
+    "Mode used to update emails in `mu4e'.")
+
+(define-key mu4e~update-mail-mode-map (kbd "C-c C-c") 'mu4e~interrupt-update-mail)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
