@@ -819,18 +819,19 @@ in the background; otherwise, pop up a window."
     (set-process-sentinel proc
       (lambda (proc msg)
 	(let* ((status (process-status proc))
-		(code (process-exit-status proc))
-		;; sadly, fetchmail returns '1' when there is no mail; this is
-		;; not really an error of course, but it's hard to distinguish
-		;; from a genuine error
-		(maybe-error (or (not (eq status 'exit)) (/= code 0)))
-		(buf (process-buffer proc)))
+               (code (process-exit-status proc))
+               ;; sadly, fetchmail returns '1' when there is no mail; this is
+               ;; not really an error of course, but it's hard to distinguish
+               ;; from a genuine error
+               (maybe-error (or (not (eq status 'exit)) (/= code 0)))
+               (buf (process-buffer proc))
+               (visible-window (get-buffer-window buf 'visible)))
 	  (message nil)
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error (sit-for 5))
 	  (mu4e-update-index)
-	  (when (buffer-live-p buf)
-            (with-selected-window (get-buffer-window buf) (quit-window t))))))
+	  (when (and (buffer-live-p buf) visible-window)
+            (with-selected-window visible-window (quit-window t))))))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
