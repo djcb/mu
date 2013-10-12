@@ -64,7 +64,7 @@ Some of @t{mu4e}'s highlights:
 @itemize
 @item Fully search-based: there are no folders@footnote{that is, instead of
 folders, you use queries that match messages in a particular folder}, only
-queries
+queries.
 @item Fully documented, with example configurations
 @item User-interface optimized for speed, with quick key strokes for common actions
 @item Support for non-English languages (so ``angstrom'' will match ``Angström'')
@@ -192,7 +192,7 @@ personal informatiion.
 
 If you are new to all this, the somewhat paternalistic @emph{``How to ask
 questions the smart
-way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}} can
+way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}} may
 be a good read.
 
 @node Getting started
@@ -461,6 +461,8 @@ are running your own mail-server, you can set @code{mu4e-get-mail-command} to
 @t{"true"}, in which case @t{mu4e} won't try to get new mail, but still
 re-index your messages.
 
+You can interrupt the (foreground) update process with @kbd{q}.
+
 You can also update your mail and index periodically in the background, by
 setting the variable @code{mu4e-update-interval} to the number of seconds
 between these updates. If set to @code{nil}, it won't update at all. After you
@@ -691,6 +693,7 @@ message, followed by a footer line. The major-mode for the headers view is
 * Keybindings::
 * Marking messages::
 * Sort order and threading::
+* HV Custom headers::
 * HV Actions::
 * Split view::
 @end menu
@@ -721,8 +724,8 @@ Some notes to explain what you see in the example:
 @item The fields shown in the headers view can be influenced by customizing
 the variable @code{mu4e-headers-fields}; see @code{mu4e-header-info} for the
 list of built-in fields. Apart from the built-in fields, you can also create
-custom fields using @code{mu4e-header-info-custom}; see its documentation for
-the details.
+custom fields using @code{mu4e-header-info-custom}; see @ref{HV Custom
+headers} for details.
 @item By default, the date is shown with the @t{:human-date} field, which
 shows the @emph{time} for today's messages, and the @emph{date} for older
 messages. If you want to distinguish between 'today' and 'older', you can use
@@ -880,6 +883,42 @@ updated immediately using the new parameters. You can toggle full-search
 If you want to change the defaults for these settings, you can use the
 variables @code{mu4e-headers-sortfield} and @code{mu4e-headers-show-threads}.
 
+@node HV Custom headers
+@section Custom headers
+
+Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject
+etc.) may not be enough. For these cases, @t{mu4e} offers @emph{custom
+headers} in both the headers-view and the message-view.
+
+You can do so by adding a description of your custom header to
+@code{mu4e-header-info-custom}, which is a list of custom headers.
+
+Let's look at an example -- suppose we want to add a custom header that shows
+the number of recipients for a message, i.e., the sum of the number of
+recipients in the To: and Cc: fields. Let's further suppose that our function
+takes a message-plist as its argument (@ref{Message functions}).
+
+@lisp
+(add-to-list 'mu4e-header-info-custom
+  '(:recipnum .
+    ( :name "Number of recipients"  ;; long name, as seen in the message-view
+      :shortname "Recip#"           ;; short name, as seen in the headers view
+      :help "Number of recipients for this message" ;; tooltip
+      :function
+      (lambda (msg)
+	(format "%d"
+	  (+ (length (mu4e-message-field msg :to))
+	    (length (mu4e-message-field msg :cc))))))))
+@end lisp
+
+You can now add this custom header to your @code{mu4e-headers-fields} just
+like the built-in headers. After evaluating, you headers-view should now
+include a new header @t{Recip#} with the number of recipients.
+
+Note that this function can be used in both the headers-view and the
+message-view; if you need something specific for one of these, you can check
+for the mode in your function. 
+
 @node HV Actions
 @section Actions
 
@@ -936,6 +975,7 @@ body. Its major mode is @code{mu4e-view-mode}.
 * Viewing images inline::
 * Displaying rich-text messages::
 * Crypto: MSGV Crypto.
+* Custom headers: MSGV Custom headers
 * Actions: MSGV Actions.
 @end menu
 
@@ -972,7 +1012,7 @@ Some notes:
 @item The variable @code{mu4e-view-fields} determines the header fields to be
 shown; see @code{mu4e-header-info} for a list of built-in fields. Apart from
 the built-in fields, you can also create custom fields using
-@code{mu4e-header-info-custom}; see its documentation for the details.
+@code{mu4e-header-info-custom}; see @ref{MSGV Custom headers}.
 @item You can set the date format with the variable
 @code{mu4e-date-format-long}.
 @item By default, only the names of contacts in address fields are visible
@@ -1236,6 +1276,17 @@ details of the signatures found and whether they could be verified or not.
 
 For more information, see the @command{mu-verify} manual page.
 
+@node MSGV Custom headers
+@section Custom headers
+
+Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject
+etc.) may not be enough. For these cases, @t{mu4e} offers @emph{custom
+headers} in both the headers-view and the message-view. 
+
+See @ref{HV Custom headers} for an example of this; the difference for the
+message-view is that you should add your custom header to
+@code{mu4e-view-fields} rather than @code{mu4e-headers-fields}.
+ 
 @node MSGV Actions
 @section Actions
 
@@ -1244,7 +1295,6 @@ attachments. For a general discussion on how to define your own, see see
 @ref{Actions}.
 
 @subsection Message actions
-
 @code{mu4e-view-action} (@key{a}) lets you pick some custom action to perform
 on the current message. You can specify these actions using the variable
 @code{mu4e-view-actions}; @t{mu4e} defines a number of example actions.
@@ -1782,10 +1832,13 @@ of @code{mu4e-headers-results-limit}, may show up in the narrowed query.
 
 It can be useful to not only show the messages that directly match a certain
 query, but also include messages that are related to these messages. That is,
-messages that belong to the same discussion thread are included in the
+messages that belong to the same discussion threads are included in the
 results, just like e.g. Gmail does it. You can enable this behavior by setting
 @code{mu4e-headers-include-related} to @code{t}, and you can toggle between
 including/not-including with @key{W}.
+
+Be careful though when e.g. deleting ranges of messages from a certain folder
+-- the list may now also include messages from @emph{other} folders.
 
 @subsection Skipping duplicates
 @anchor{Skipping duplicates}
@@ -2215,7 +2268,7 @@ guidelines for doing so.
 
 @menu
 * Extension points::
-* Available functions::
+* Available functions:: 
 * Message functions::
 * Utility functions::
 @end menu
@@ -2226,6 +2279,8 @@ guidelines for doing so.
 There are a number of places where @t{mu4e} lets you plug in your own
 functions:
 @itemize
+@item Custom functions for for message headers in the message-view and
+headers-view - see @ref{HV Custom headers}, @ref{MSGV Custom headers}
 @item Using message-specific folders for drafts, trash, sent messages and
 refiling, based on a function - see @ref{Dynamic folders}
 @item Using an attachment-specific download-directory - see the
@@ -2856,8 +2911,8 @@ In this chapter we list a number of actual and anticipated questions and their
 answers.
 
 @menu
-* General::
-* Reading messages::
+* General:: 
+* Reading messages:: 
 * Writing messages::
 * Known issues::
 @end menu
