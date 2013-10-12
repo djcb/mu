@@ -829,24 +829,28 @@ in the background; otherwise, pop up a window."
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error (sit-for 5))
 	  (mu4e-update-index)
-	  (when (buffer-live-p buf)
-            (with-selected-window (get-buffer-window buf) (quit-window t))))))
+	  (ignore-errors
+	    ;; XXXX something goes wrong here, perhaps we're trying to quit
+	    ;; while we're in the echo area? the ignore-errors silences the
+	    ;; problem for now...
+	    (when (buffer-live-p buf)
+	      (with-selected-window (get-buffer-window buf) (quit-window t)))))))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
       (set-process-filter proc 'mu4e~get-mail-process-filter))))
 
-(defun mu4e~interrupt-update-mail ()
+(defun mu4e-interrupt-update-mail ()
   "Stop the update process by sending SIGINT to it."
   (interactive)
-  (interrupt-process (get-buffer-process
-                      (get-buffer mu4e~update-buffer-name)) t))
+  (let* ((buf (get-buffer mu4e~update-buffer-name))
+	  (proc (and buf (get-buffer-process buf))))
+    (when proc (interrupt-process proc t))))
 
-(define-derived-mode mu4e~update-mail-mode special-mode "Mu4eUpdate" 
-    "Mode used to update emails in `mu4e'.")
+(define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update" 
+    "Major mode used for retrieving new e-mail messages in `mu4e'.")
 
-(define-key mu4e~update-mail-mode-map (kbd "C-c C-c") 'mu4e~interrupt-update-mail)
-
+(define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-interrupt-update-mail)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
