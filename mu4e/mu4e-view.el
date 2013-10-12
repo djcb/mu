@@ -940,14 +940,14 @@ If ATTNUM is nil ask for the attachment number."
 	  (index (plist-get att :index))
 	  (retry t))
     (while retry
-      (setq path (expand-file-name
+      (setq fpath (expand-file-name
 		   (read-directory-name
 		     (mu4e-format "Save as ") path nil nil fname)))
       (setq retry
-	(and (file-exists-p path)
-	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" path))))))
+	(and (file-exists-p fpath)
+	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" fpath))))))
     (mu4e~proc-extract
-      'save (mu4e-message-field msg :docid) index path)))
+      'save (mu4e-message-field msg :docid) index fpath)))
 
 (defun mu4e-view-save-attachment-multi (&optional msg)
   "Offer to save multiple email attachments from the current message.
