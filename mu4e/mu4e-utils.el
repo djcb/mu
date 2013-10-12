@@ -786,7 +786,7 @@ The messages are inserted into the process buffer."
         (with-selected-window procwin
           (goto-char (point-max)))))))
 
-(defun  mu4e-update-index ()
+(defun mu4e-update-index ()
   "Update the mu4e index."
   (interactive)
   (unless mu4e-maildir
