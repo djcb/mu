@@ -799,6 +799,7 @@ The messages are inserted into the process buffer."
 ;;   - (optionally) check password requests
 (defvar mu4e~update-buffer-name nil
   "Internal, store the name of the buffer process when updating.")
+
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
 run-in-background is non-nil (or called with prefix-argument), run

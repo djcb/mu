@@ -135,8 +135,7 @@ clicked."
 
 	(mu4e~main-action-str "\t* [U]pdate email & database\n"
 	  'mu4e-update-mail-show-window)
-        (mu4e~main-action-str "\t* [S]top update email\n"
-	  'mu4e-interrupt-update-mail)
+
 	;; show the queue functions if `smtpmail-queue-dir' is defined
 	(if (file-directory-p smtpmail-queue-dir)
 	  (concat

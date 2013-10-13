@@ -482,9 +482,6 @@ if provided, or at the end of the buffer otherwise."
 (defconst mu4e~no-matches     (purecopy "No matching messages found"))
 (defconst mu4e~end-of-results (purecopy "End of search results"))
 
-
-
-
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
@@ -497,11 +494,11 @@ after the end of the search results."
 		    mu4e~no-matches
 		    mu4e~end-of-results)))
 	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
-	(unless (= 0 count)
+	(unless (zerop count)
 	  (mu4e-message "Found %d matching message%s"
-	    count (if (= 1 count) "" "s"))))
-      ;; highlight the first message
-      (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))
+	    count (if (= 1 count) "" "s"))
+	  ;; highlight the first message
+	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))
       ;; run-hooks
       (run-hooks 'mu4e-headers-found-hook)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -732,8 +729,18 @@ after the end of the search results."
 	      'field field) " ")))
       mu4e-headers-fields)))
 
-
 (defvar mu4e-headers-mode-abbrev-table nil)
+
+(defun mu4e~headers-auto-update ()
+  "Update the current headers buffer after indexing has brought
+some changes, `mu4e-headers-auto-update' is non-nil and there is no
+user-interaction ongoing."
+  (when (and mu4e-headers-auto-update       ;; must be set
+	  (zerop (mu4e-mark-marks-num))     ;; non active marks
+	  (not (active-minibuffer-window))) ;; no user input
+    (with-current-buffer mu4e~headers-buffer
+      (mu4e-headers-rerun-search))))
+
 (define-derived-mode mu4e-headers-mode special-mode
     "mu4e:headers"
   "Major mode for displaying mu4e search results.
@@ -746,16 +753,7 @@ after the end of the search results."
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; maybe update the current headers upon indexing changes
-  (add-hook 'mu4e-index-updated-hook
-    (defun mu4e~headers-auto-update ()
-      "Update the current headers buffer after indexing has brought
-some changes, `mu4e-headers-auto-update' is non-nil and there is no
-user-interaction ongoing."
-      (when (and mu4e-headers-auto-update       ;; must be set
-	      (zerop (mu4e-mark-marks-num))     ;; non active marks
-	      (not (active-minibuffer-window))) ;; no user input
-	(with-current-buffer mu4e~headers-buffer
-	  (mu4e-headers-rerun-search)))) nil t)
+  (add-hook 'mu4e-index-updated-hook 'mu4~headers-auto-update nil t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
