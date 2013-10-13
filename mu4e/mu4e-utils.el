@@ -975,15 +975,15 @@ and MAXHEIGHT are ignored."
 		   (create-image imgpath 'imagemagick nil :width maxwidth)
 		   (create-image imgpath 'imagemagick))
 		 (create-image imgpath))))
-    ;;(message "DISPLAY: %S %S" imgpath img)
     (when img
-      (insert "\n")
-      (let ((size (image-size img))) ;; inspired by gnus..
-	(insert-char ?\n
-	  (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
-	(insert-char ?\
-	  (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
-	(insert-image img)))))
+      (save-excursion
+	(insert "\n")
+	(let ((size (image-size img))) ;; inspired by gnus..
+	  (insert-char ?\n
+	    (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
+	  (insert-char ?\.
+	    (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
+	  (insert-image img))))))
 
 
 (defun mu4e-hide-other-mu4e-buffers ()

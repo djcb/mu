@@ -239,13 +239,13 @@ marking if it still had that."
     (with-current-buffer buf
       (switch-to-buffer buf)
       (let ((inhibit-read-only t))
-	(erase-buffer)
+ 	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
 	(goto-char (point-min))
 	(mu4e~view-fontify-cited)
 	(mu4e~view-fontify-footer)
 	(mu4e~view-make-urls-clickable)
-	(mu4e~view-show-images-maybe msg)
+ 	(mu4e~view-show-images-maybe msg)
 
 	(if embedded
 	  (local-set-key "q" 'kill-buffer-and-window)
@@ -253,8 +253,7 @@ marking if it still had that."
 
     (unless (eq major-mode 'mu4e-view-mode)
       (mu4e-view-mode))
-
-	(setq ;; buffer local
+      (setq ;; buffer local
       mu4e~view-msg msg
 	  mu4e~view-headers-buffer headersbuf)
 
@@ -283,7 +282,8 @@ add text-properties to VAL."
       (when mu4e-view-fill-headers
 	;; temporarily set the fill column <margin> positions to the right, so
 	;; we can indent the following lines correctly
-	(let*((margin 1) (fill-column (- fill-column margin)))
+	(let* ((margin 1)
+		(fill-column (max (- fill-column margin) 0)))
 	  (fill-region (point-min) (point-max))
 	  (goto-char (point-min))
 	  (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
@@ -764,7 +764,7 @@ What browser is called is depending on
 	(when (string-match "^image/" (mu4e-message-part-field part :mime-type))
 	  (let ((imgfile (mu4e-message-part-field part :temp)))
 	    (when (and imgfile (file-exists-p imgfile))
-	      (save-excursion
+ 	      (save-excursion
 		(goto-char (point-max))
 		(mu4e-display-image imgfile
 		  mu4e-view-image-max-width
