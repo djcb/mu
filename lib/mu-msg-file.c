@@ -155,8 +155,7 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 	g_object_unref (stream);
 	if (!parser) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
-			     "%s: cannot create mime parser for %s",
-			     __FUNCTION__, path);
+			     "cannot create mime parser for %s", path);
 		return FALSE;
 	}
 
@@ -164,8 +163,7 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 	g_object_unref (parser);
 	if (!self->_mime_msg) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
-			     "%s: cannot construct mime message for %s",
-			     __FUNCTION__, path);
+			     "message seems invalid, ignoring (%s)", path);
 		return FALSE;
 	}
 
