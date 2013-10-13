@@ -799,11 +799,17 @@ The messages are inserted into the process buffer."
 ;;   - (optionally) check password requests
 (defvar mu4e~update-buffer-name nil
   "Internal, store the name of the buffer process when updating.")
+(defvar mu4e-pre-update-mail-hook nil
+  "Hook run immediately prior to mail collection by
+`mu4e-update-mail-and-index'. This can be used to configure the
+mail fetching and indexing process each time, for example to
+periodically change the scope of mail collection.")
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
 run-in-background is non-nil (or called with prefix-argument), run
 in the background; otherwise, pop up a window."
   (interactive "P")
+  (run-hooks 'mu4e-pre-update-mail-hook)
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
   (let* ((process-connection-type t)
