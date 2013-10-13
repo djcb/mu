@@ -35,7 +35,7 @@
 (require 'mu4e-about)
 (require 'mu4e-lists)
 (require 'doc-view)
- 
+
 ;; keep the byte-compiler happy
 (declare-function mu4e~proc-mkdir     "mu4e-proc")
 (declare-function mu4e~proc-ping      "mu4e-proc")
@@ -48,7 +48,7 @@
 
 (declare-function show-all "org")
 
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the following is taken from org.el; we copy it here since we don't want to
 ;; depend on org-mode directly (it causes byte-compilation errors) TODO: a
@@ -198,7 +198,7 @@ echo area, don't show anything."
 index-messages. Doesn't display anything if
 `mu4e-hide-index-messages' is non-nil. "
   (unless mu4e-hide-index-messages
-    (apply 'mu4e-message frm args))) 
+    (apply 'mu4e-message frm args)))
 
 (defun mu4e-error (frm &rest args)
   "Create [mu4e]-prefixed error based on format FRM and ARGS.
@@ -824,17 +824,14 @@ in the background; otherwise, pop up a window."
 		;; not really an error of course, but it's hard to distinguish
 		;; from a genuine error
 		(maybe-error (or (not (eq status 'exit)) (/= code 0)))
-		(buf (process-buffer proc)))
+		(buf (process-buffer proc))
+		(visible-window (get-buffer-window buf 'visible)))
 	  (message nil)
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error (sit-for 5))
 	  (mu4e-update-index)
-	  (ignore-errors
-	    ;; XXXX something goes wrong here, perhaps we're trying to quit
-	    ;; while we're in the echo area? the ignore-errors silences the
-	    ;; problem for now...
-	    (when (buffer-live-p buf)
-	      (with-selected-window (get-buffer-window buf) (quit-window t)))))))
+	  (when (and (buffer-live-p buf) visible-window)
+	    (with-selected-window (get-buffer-window buf) (quit-window t))))))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
@@ -847,7 +844,7 @@ in the background; otherwise, pop up a window."
 	  (proc (and buf (get-buffer-process buf))))
     (when proc (interrupt-process proc t))))
 
-(define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update" 
+(define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update"
     "Major mode used for retrieving new e-mail messages in `mu4e'.")
 
 (define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-interrupt-update-mail)
@@ -983,10 +980,10 @@ and MAXHEIGHT are ignored."
       (let ((size (image-size img))) ;; inspired by gnus..
 	(insert-char ?\n
 	  (max 0 (round (- (window-height) (or maxheight (cdr size)) 1) 2)))
-	(insert-char ?\ 
+	(insert-char ?\
 	  (max 0 (round (- (window-width)  (or maxwidth (car size))) 2)))
 	(insert-image img)))))
- 
+
 
 (defun mu4e-hide-other-mu4e-buffers ()
   "Bury mu4e-buffers (main, headers, view) (and delete all windows
