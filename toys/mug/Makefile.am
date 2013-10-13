@@ -21,7 +21,9 @@ SUBDIRS= .
 
 AM_CPPFLAGS=-I${top_srcdir} -I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) \
 	-DICONDIR='"$(icondir)"' -DMUGDIR='"$(abs_srcdir)"' \
-	-DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE
+	-DGSEAL_ENABLE
+
+# remove -DGTK_DISABLE_DEPRECATED for now, since it breaks 3.10+ compilation
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
