@@ -115,8 +115,10 @@ where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives two arguments: the message
   plist and the attachment number.
-
 The first letter of NAME is used as a shortcut character.")
+
+(defvar mu4e-view-fill-headers t
+  "If non-nil, automatically fill the headers when viewing them.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -204,7 +206,7 @@ found."
 	    ;; pgp-signatures
 	    (:signature   (mu4e~view-construct-signature-header msg))
 	    (t (mu4e~view-construct-header field
-		 (mu4e~view-custom-field msg field)))))) 
+		 (mu4e~view-custom-field msg field))))))
       mu4e-view-fields "")
     "\n"
     (mu4e-message-body-text msg)))
@@ -278,13 +280,14 @@ add text-properties to VAL."
 	(if dont-propertize-val
 	  val
 	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
-      ;; temporarily set the fill column <margin> positions to the right, so
-      ;; we can indent the following lines correctly
-      (let*((margin 1) (fill-column (- fill-column margin)))
-	(fill-region (point-min) (point-max))
-	(goto-char (point-min))
-	(while (and (zerop (forward-line 1)) (not (looking-at "^$")))
-	  (indent-to-column margin)))
+      (when mu4e-view-fill-headers
+	;; temporarily set the fill column <margin> positions to the right, so
+	;; we can indent the following lines correctly
+	(let*((margin 1) (fill-column (- fill-column margin)))
+	  (fill-region (point-min) (point-max))
+	  (goto-char (point-min))
+	  (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
+	    (indent-to-column margin))))
       (buffer-string))
     "")))
 
