@@ -159,6 +159,18 @@ char* mu_str_process_query_term (const char *qterm)
 
 
 /**
+ * Handle the message-id in a special way
+ *
+ * @param str the message-id str
+ * @param query is this a query?
+ *
+ * @return the massaged message-id
+ */
+char* mu_str_process_msgid (const char *str, gboolean query);
+
+
+
+/**
  * Fixup values for some fields in the DWIM manner:
  * - if term is date:YYYYMMDD, replace it with the range
  *   date:YYYYMMDD..YYYYMMDD.

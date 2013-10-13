@@ -429,6 +429,54 @@ each_check_prefix (MuMsgFieldId mfid, CheckPrefix *cpfx)
 	}
 }
 
+/* check if it looks like either i:<msgid> or msgid:<msgid> */
+static gboolean
+is_msgid_field (const char *str)
+{
+	const char *name;
+
+	if (!str || strlen(str) < 3)
+		return FALSE;
+
+	if (str[0] == mu_msg_field_shortcut (MU_MSG_FIELD_ID_MSGID) &&
+	    str[1] == ':')
+		return TRUE;
+
+	name = mu_msg_field_name (MU_MSG_FIELD_ID_MSGID);
+	if (g_str_has_prefix (str, name) && str[strlen(name)] == ':')
+		return TRUE;
+
+	return FALSE;
+}
+
+/* message-ids need a bit more massaging -- we replace all
+ * non-alphanum with '_'. Note, this function assumes we're looking at
+ * a msg-id field, ie. i:<msgid> or msgid:<msgid> */
+char*
+mu_str_process_msgid (const char *str, gboolean query)
+{
+	char *s, *c;
+
+	g_return_val_if_fail (str, NULL);
+	g_return_val_if_fail (!query || strchr(str, ':'), NULL);
+
+	if (!str)
+		return NULL;
+
+	s = g_strdup (str);
+
+	if (query)
+		c = strchr (s, ':') + 1;
+	else
+		c = s;
+
+	for (; *c; ++c)
+		*c = isalnum (*c) ? tolower (*c) : '_';
+
+	return s;
+}
+
+
 
 static void
 check_for_field (const char *str, gboolean *is_field,
@@ -519,16 +567,17 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
  	if (!norm)
 		return NULL;
 
-	check_for_field (str, &is_field, &is_range_field);
+	/* msg-id needs some special care in queries */
+	if (query_esc && is_msgid_field (str))
+		return mu_str_process_msgid (str, TRUE);
 
+	check_for_field (str, &is_field, &is_range_field);
 	gstr = g_string_sized_new (strlen (norm));
 
 	for (cur = norm; cur && *cur; cur = g_utf8_next_char (cur)) {
 
 		gunichar uc;
-
 		uc = g_utf8_get_char (cur);
-
 		if (xapian_esc)
 			if (handle_esc_maybe (gstr, &cur, uc, query_esc,
 					      is_range_field))
@@ -537,17 +586,11 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
 		if (g_unichar_ismark(uc))
 			continue;
 
-		/* maybe add some special cases, such as Spaß->spass ?
-		 */
-
 		uc = g_unichar_tolower (uc);
 		g_string_append_unichar (gstr, uc);
 	}
 
 	g_free (norm);
-
-	/* g_print ("-->%s\n", gstr->str); */
-
 	return g_string_free (gstr, FALSE);
 }
 

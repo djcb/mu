@@ -208,6 +208,9 @@ test_mu_query_03 (void)
 		{ "ploughed", 1},
 		{ "i:3BE9E6535E3029448670913581E7A1A20D852173@"
 		  "emss35m06.us.lmco.com", 1},
+		{ "i:!&!AAAAAAAAAYAAAAAAAAAOH1+8mkk+lLn7Gg5fke7"
+		  "FbCgAAAEAAAAJ7eBDgcactKhXL6r8cEnJ8BAAAAAA==@"
+		  "example.com", 1},
 
 		/* subsets of the words in the subject should match */
 		{ "s:gcc include search order" , 1},
@@ -646,9 +649,6 @@ test_mu_query_preprocess (void)
 		g_free (prep);
 	}
 }
-
-
-
 
 
 int

@@ -5,13 +5,13 @@ Received: from localhost.example.com ([127.0.0.1] helo=borealis)
 	by borealis with esmtp (Exim 4.77)
 	id 1SSpnB-00038a-Ux
 	for djcb@localhost; Fri, 11 May 2012 16:21:58 +0300
-Delivered-To: peter@example.com 
+Delivered-To: peter@example.com
 From: Brian <brian@example.com>
 To: Peter <peter@example.com>
 Subject: encrypted
 User-agent: mu4e 0.9.8.5-dev1; emacs 24.1.50.8
 Date: Fri, 11 May 2012 16:21:42 +0300
-Message-ID: <877gwi97kp.fsf@example.com>
+Message-ID: <!&!AAAAAAAAAYAAAAAAAAAOH1+8mkk+lLn7Gg5fke7FbCgAAAEAAAAJ7eBDgcactKhXL6r8cEnJ8BAAAAAA==@example.com>
 MIME-Version: 1.0
 Content-Type: multipart/encrypted; boundary="=-=-=";
 	protocol="application/pgp-encrypted"
@@ -54,4 +54,3 @@ IWiH5wMxkWFpzjE+GHiJ09vSbTTL4JY9eu2n5nxQmtjYMBVxQm7S7qwH
 =0Paa
 -----END PGP MESSAGE-----
 --=-=-=--
-

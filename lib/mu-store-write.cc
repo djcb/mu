@@ -303,6 +303,25 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 		doc.add_term (prio_val((MuMsgPrio)num));
 }
 
+/* for string and string-list */
+static void
+add_terms_values_msgid (Xapian::Document& doc, MuMsg *msg)
+{
+	char *str;
+	const char *orig;
+
+	if (!(orig = mu_msg_get_field_string (
+		      msg, MU_MSG_FIELD_ID_MSGID)))
+		return; /* nothing to do */
+
+	str = mu_str_process_msgid (orig, FALSE);
+
+	doc.add_value ((Xapian::valueno)MU_MSG_FIELD_ID_MSGID, orig);
+	doc.add_term (prefix(MU_MSG_FIELD_ID_MSGID) +
+		      std::string(str, 0, _MuStore::MAX_TERM_LENGTH));
+
+	g_free (str);
+}
 
 
 
@@ -541,6 +560,10 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 		break;
 	case MU_MSG_FIELD_ID_MIME:
 	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
+		break;
+
+	case MU_MSG_FIELD_ID_MSGID:
+		add_terms_values_msgid (*msgdoc->_doc, msgdoc->_msg);
 		break;
 
 	case MU_MSG_FIELD_ID_THREAD_ID:
