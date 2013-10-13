@@ -804,6 +804,7 @@ The messages are inserted into the process buffer."
 run-in-background is non-nil (or called with prefix-argument), run
 in the background; otherwise, pop up a window."
   (interactive "P")
+  (run-hooks 'mu4e-update-pre-hook)
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
   (let* ((process-connection-type t)
@@ -827,7 +828,7 @@ in the background; otherwise, pop up a window."
 		(buf (process-buffer proc))
 		(visible-window (get-buffer-window buf 'visible)))
 	  (message nil)
-	  ;; there may be an error, give the user up to 5 seconds to check
+	  ;; there may be an erro, give the user up to 5 seconds to check
 	  (when maybe-error (sit-for 5))
 	  (mu4e-update-index)
 	  (when (and (buffer-live-p buf) visible-window)

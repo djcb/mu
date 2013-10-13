@@ -78,6 +78,11 @@ mu4e."
   :group 'mu4e
   :safe 'integerp)
 
+(defvar mu4e-update-pre-hook nil
+  "Hook run just *before* the mail-retrieval / database updating process starts.
+ You can use this hook for example to `mu4e-get-mail-command' with
+ some specific setting.")
+
 (defvar mu4e-hide-index-messages nil
   "If non-nil, mu4e does not show the \"Indexing...\" messages, or
   any messages relating to updated contacts.")
@@ -128,7 +133,7 @@ personal message. This is used when indexing messages."
   `format-time-string'."
   :type 'string
   :group 'mu4e)
-  
+
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 

@@ -477,6 +477,11 @@ A simple setup could look something like:
    mu4e-update-interval 300)             ;; update every 5 minutes
 @end lisp
 
+A hook @code{mu4e-update-pre-hook} is available which is run right before
+starting the process, which you can for example to influence
+@code{mu4e-get-mail-command} based on the the current situation (location,
+time of day, ...).
+
 It is possible to get notifications when the indexing process does any updates
 - for example when receiving new mail. See @code{mu4e-index-updated-hook} and
 some tips on its usage in the @ref{FAQ}.
@@ -582,7 +587,7 @@ correctly, and then shows you the @t{mu4e} main view. Its major mode is
 
 
 @menu
-* Overview: MV Overview. 
+* Overview: MV Overview.
 * Basic actions::
 * Bookmarks: MV Bookmarks.
 * Miscellaneous::
@@ -764,6 +769,9 @@ Jamie Zawinski's mail threading algorithm,
 found during the indexing process, and if there is no current
 user-interaction. If you do not want such automatic updates, set
 @code{mu4e-headers-auto-update} to @code{nil}.
+@item There is a hook-function @code{mu4e-headers-found-hook} available which
+is invoked just after @t{mu4e} has completed showing the messages in the
+headers-view.
 @end itemize
 
 @node Keybindings
@@ -917,7 +925,7 @@ include a new header @t{Recip#} with the number of recipients.
 
 Note that this function can be used in both the headers-view and the
 message-view; if you need something specific for one of these, you can check
-for the mode in your function. 
+for the mode in your function.
 
 @node HV Actions
 @section Actions
@@ -1281,12 +1289,12 @@ For more information, see the @command{mu-verify} manual page.
 
 Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject
 etc.) may not be enough. For these cases, @t{mu4e} offers @emph{custom
-headers} in both the headers-view and the message-view. 
+headers} in both the headers-view and the message-view.
 
 See @ref{HV Custom headers} for an example of this; the difference for the
 message-view is that you should add your custom header to
 @code{mu4e-view-fields} rather than @code{mu4e-headers-fields}.
- 
+
 @node MSGV Actions
 @section Actions
 
@@ -2268,7 +2276,7 @@ guidelines for doing so.
 
 @menu
 * Extension points::
-* Available functions:: 
+* Available functions::
 * Message functions::
 * Utility functions::
 @end menu
@@ -2911,8 +2919,8 @@ In this chapter we list a number of actual and anticipated questions and their
 answers.
 
 @menu
-* General:: 
-* Reading messages:: 
+* General::
+* Reading messages::
 * Writing messages::
 * Known issues::
 @end menu

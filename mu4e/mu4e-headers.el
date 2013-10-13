@@ -209,6 +209,11 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 (defvar mu4e-headers-full-search nil
   "Whether to show all results.
 If this is nil show results up to `mu4e-search-results-limit')")
+
+(defvar mu4e-headers-found-hook nil
+  "Hook run just *after* all of the headers for the last search
+query have been received and are displayed.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -477,6 +482,9 @@ if provided, or at the end of the buffer otherwise."
 (defconst mu4e~no-matches     (purecopy "No matching messages found"))
 (defconst mu4e~end-of-results (purecopy "End of search results"))
 
+
+
+
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
@@ -491,9 +499,11 @@ after the end of the search results."
 	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
 	(unless (= 0 count)
 	  (mu4e-message "Found %d matching message%s"
-	    count (if (= 1 count) "" "s"))
-	  ;; highlight the first message
-	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))))))
+	    count (if (= 1 count) "" "s"))))
+      ;; highlight the first message
+      (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))
+      ;; run-hooks
+      (run-hooks 'mu4e-headers-found-hook)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
