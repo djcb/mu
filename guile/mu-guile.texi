@@ -876,8 +876,7 @@ exec guile -s $0 $@
 	(tm:hour (localtime (mu:date msg)))))
     (lambda (x y) (< (car x) (car y)))))
 
-(mu:plot-histogram (mail-per-hour-table) "Mail per hour" "Hour" "Frequency"
-#t)
+(mu:plot-histogram (mail-per-hour-table) "Mail per hour" "Hour" "Frequency")
 @end lisp
 
 @cartouche
