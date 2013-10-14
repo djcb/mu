@@ -1197,7 +1197,7 @@ comparison with the html part@footnote{this is for the case where the
 text-part only warns that you should use the html-version}, @t{mu4e} tries to
 convert the html into plain-text for display. The default way to do that is to
 use the @command{emacs} built-in @code{html2text} function. However, you can
-set the variable @code{mu4e-html2text-command} to use some external program
+set the variable @code{mu4e-html2text-command} to some external program
 instead. This program is expected to take html from standard input and write
 plain text in @t{UTF-8} encoding on standard output.
 
@@ -1223,7 +1223,6 @@ On MacOS, there is a program called @t{textutil} as yet another alternative:
 (setq mu4e-html2text-command
   "textutil -stdin -format html -convert txt -stdout")
 @end lisp
-
 
 @node MSGV Crypto
 @section Crypto
