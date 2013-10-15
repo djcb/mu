@@ -753,7 +753,7 @@ user-interaction ongoing."
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; maybe update the current headers upon indexing changes
-  (add-hook 'mu4e-index-updated-hook 'mu4~headers-auto-update nil t)
+  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-auto-update nil t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
