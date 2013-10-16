@@ -731,7 +731,7 @@ after the end of the search results."
 
 (defvar mu4e-headers-mode-abbrev-table nil)
 
-(defun mu4e~headers-auto-update ()
+(defun mu4e~headers-do-auto-update ()
   "Update the current headers buffer after indexing has brought
 some changes, `mu4e-headers-auto-update' is non-nil and there is no
 user-interaction ongoing."
@@ -753,7 +753,7 @@ user-interaction ongoing."
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; maybe update the current headers upon indexing changes
-  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-auto-update nil t)
+  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-do-auto-update nil t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information

@@ -427,12 +427,17 @@ at POINT, or if nil, at (point)."
 	      (lambda (part)
 		(let* ((mtype (mu4e-message-part-field part :mime-type))
 			(attachtype (mu4e-message-part-field part :type))
-			(isattach (or ;; we lost parts marked either
-				      ;; "attachment" or "inline" as attachment.
-				    (member 'attachment attachtype)
-				    (member 'inline attachtype))))
+			(isattach
+			  (or ;; we consider parts marked either
+			    ;; "attachment" or "inline" as attachment.
+			    (member 'attachment attachtype)
+			    ;; list inline parts as attachment (so they can be
+			    ;; saved), unless they are text/plain, which are
+			    ;; usually just message footers in mailing lists
+			    (and (member 'inline attachtype)
+			      (not (string-match "^text/plain" mtype))))))
 		  (or ;; remove if it's not an attach *or* if it's an
-		      ;; image/audio/application type (but not a signature)
+		    ;; image/audio/application type (but not a signature)
 		    isattach
 		    (string-match "^\\(image\\|audio\\)" mtype)
 		    (string= "message/rfc822" mtype)

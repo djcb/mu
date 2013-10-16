@@ -1016,18 +1016,24 @@ displaying it). Do _not_ bury the current buffer, though."
 
 (define-derived-mode mu4e-about-mode org-mode "mu4e:about"
   "Major mode for the mu4e About page, derived from `org-mode'.")
-(define-key mu4e-about-mode-map (kbd "q") 'bury-buffer)
 
 (defun mu4e-about ()
   "Show a buffer with the mu4e-about text."
   (interactive)
-  (with-current-buffer
-    (get-buffer-create mu4e~main-about-buffer-name)
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert mu4e-about)
-      (mu4e-about-mode)
-      (show-all)))
+  (lexical-let ((oldbuf (current-buffer)))
+    (with-current-buffer
+      (get-buffer-create mu4e~main-about-buffer-name)
+      (define-key mu4e-about-mode-map (kbd "q")
+	(lambda () ;; XXX it seems unnecessarily hard to do this... 
+	  (interactive)
+	  (bury-buffer)
+	  (when (buffer-live-p oldbuf)
+	    (switch-to-buffer oldbuf))))
+      (let ((inhibit-read-only t))
+	(erase-buffer)
+	(insert mu4e-about)
+	(mu4e-about-mode)
+	(show-all))))
   (switch-to-buffer mu4e~main-about-buffer-name)
   (setq buffer-read-only t)
   (goto-char (point-min)))

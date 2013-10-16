@@ -134,7 +134,7 @@ clicked."
 	(propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
 	(mu4e~main-action-str "\t* [U]pdate email & database\n"
-	  'mu4e-update-mail-show-window)
+	  'mu4e-update-mail-and-index)
 
 	;; show the queue functions if `smtpmail-queue-dir' is defined
 	(if (file-directory-p smtpmail-queue-dir)

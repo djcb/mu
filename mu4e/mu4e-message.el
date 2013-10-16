@@ -37,9 +37,12 @@
 (defcustom mu4e-html2text-command nil
   "Shell command that converts from html to plain text.
 The command has to read html from stdin and output plain text on
-stdout. If this is not defined, the emacs `html2text' tool will
-be used when faced with html-only message. If you use htmltext,
-it's recommended you use \"html2text -utf8 -width 72\"."
+stdout. If this is not defined, the emacs `html2text' tool will be
+used when faced with html-only messages. If you use htmltext, it's
+recommended you use \"html2text -utf8 -width 72\".
+
+Alternatives are the python-based html2markdown, w3m and on MacOS
+you may want to use textutil."
   :type 'string
   :group 'mu4e-view
   :safe 'stringp)
@@ -53,8 +56,8 @@ is always used."
 
 (defcustom mu4e-view-html-plaintext-ratio-heuristic 10
   "Ratio between the length of the html and the plain text part
-under which mu4e will consider the plain text part to be
-'This messages requires html' text bodies."
+below which mu4e will consider the plain text part to be 'This
+messages requires html' text bodies."
   :type 'integer
   :group 'mu4e-view)
 
@@ -120,7 +123,7 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
 	val)
       ((member field '(:docid :size))
 	0)     ;; numeric type: nil -> 0
-      (t 
+      (t
 	val)))) ;; otherwise, just return nil
 
 (defsubst mu4e-message-has-field (msg field)
@@ -132,7 +135,7 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
 the headers buffer or the view buffer, or nil if there is no such
 message. If optional NOERROR is non-nil, do not raise an error when
 there is no message at point."
-  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-msg))) 
+  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-msg)))
     (if msg
       msg
       (unless noerror (mu4e-warn "No message at point")))))
@@ -213,7 +216,7 @@ match."
 	  (or
 	    (and name  (string-match rx name))
 	    (and email (string-match rx email)))))
-      (mu4e-message-field msg cfield)))) 
+      (mu4e-message-field msg cfield))))
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
   "Checks whether any of the of the contacts in field

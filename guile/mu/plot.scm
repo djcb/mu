@@ -46,16 +46,20 @@ not found."
 	progpath
 	#f))))
 
-(define* (mu:plot-histogram data title x-label y-label output
-	   #:optional (extra-gnuplot-opts '()))
+(define* (mu:plot-histogram data title x-label y-label
+	   #:optional (output "dumb") (extra-gnuplot-opts '()))
   "Plot DATA with TITLE, X-LABEL and X-LABEL using the gnuplot
-program. DATA is a list of cons-pairs (X . Y).  OUTPUT is a string
+program. DATA is a list of cons-pairs (X . Y).
+
+ OUTPUT is a string
 that determines the type of output that gnuplot produces, depending on
 the system. Which options are available depends on the particulars for
 the gnuplot installation, but typical examples would be \"dumb\" for
 text-only display, \"wxterm\" to write to a graphical window, or
-\"png\" to write a PNG-image to stdout. EXTRA-GNUPLOT-OPTS are any
-additional options for gnuplot."
+\"png\" to write a PNG-image to stdout.
+
+EXTRA-GNUPLOT-OPTS is a list
+of any additional options for gnuplot."
   (if (not (find-program-in-path "gnuplot"))
     (error "cannot find 'gnuplot' in path"))
   (let ((datafile (export-pairs data))
