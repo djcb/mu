@@ -805,6 +805,10 @@ The messages are inserted into the process buffer."
 run-in-background is non-nil (or called with prefix-argument), run
 in the background; otherwise, pop up a window."
   (interactive "P")
+  (when (and mu4e~update-buffer-name
+             (get-buffer-process
+              (get-buffer mu4e~update-buffer-name)))
+    (mu4e-error "Update process is already running"))
   (run-hooks 'mu4e-update-pre-hook)
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
