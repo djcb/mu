@@ -172,12 +172,16 @@ part, but this can be changed by setting
 	      (html
 		(with-temp-buffer
 		  (insert html)
-		  ;; if defined, use the external tool
-		  (if mu4e-html2text-command
-		    (shell-command-on-region (point-min) (point-max)
-		      mu4e-html2text-command nil t)
-		    ;; otherwise...
-		    (html2text))
+		  (cond
+		     ;; use shell command:
+		     ((stringp mu4e-html2text-command)
+			(shell-command-on-region (point-min) (point-max)
+			  mu4e-html2text-command nil t))
+		     ;; use user-defined function:
+		     ((functionp mu4e-html2text-command)
+			(funcall mu4e-html2text-command))
+		     ;; use emacs' html2text tool:
+		     (t (html2text)))
 		  (buffer-string)))
 	      (t ;; otherwise, an empty body
 		""))))
