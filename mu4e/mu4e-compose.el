@@ -377,7 +377,7 @@ tempfile)."
    ;; hide some headers
   (mu4e~compose-hide-headers)
   ;; switch on the mode
-  (mu4e-compose-mode))
+  (run-with-timer 0.01 nil #'(lambda () (mu4e-compose-mode))))
 
 
 (defun mu4e-sent-handler (docid path)
