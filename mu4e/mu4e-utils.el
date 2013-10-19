@@ -800,6 +800,22 @@ The messages are inserted into the process buffer."
 (defvar mu4e~update-buffer-name nil
   "Internal, store the name of the buffer process when updating.")
 
+(define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update"
+    "Major mode used for retrieving new e-mail messages in `mu4e'.")
+
+(define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-interrupt-update-mail)
+
+(defun mu4e~temp-window (height buf)
+  "Create a temporary window with HEIGHT at the bottom of the
+screen to display buffer BUF."
+  (let ((win 
+	  (split-window
+	    (frame-root-window)
+	    (- (window-height (frame-root-window)) height))))
+    (set-window-buffer win buf)
+    (set-window-dedicated-p win t)
+    win))
+ 
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
 run-in-background is non-nil (or called with prefix-argument), run
@@ -816,20 +832,17 @@ in the background; otherwise, pop up a window."
          (proc (start-process-shell-command
                 "mu4e-update" mu4e~update-name
                 mu4e-get-mail-command))
+	  (buf (process-buffer proc))
 	  (win (or run-in-background
-		 (split-window (selected-window)
-		   (- (window-height (selected-window))
-		     mu4e~update-buffer-height))))
-	  (buf (process-buffer proc)))
+		 (mu4e~temp-window mu4e~update-buffer-height buf))))
     (setq mu4e~update-buffer-name (buffer-name buf))
     (when (window-live-p win)
-      (with-selected-window win
-	(switch-to-buffer buf)
-	(set-window-dedicated-p win t)
-	(erase-buffer)
-	(insert "\n"))) ;; FIXME -- needed so output start
-    (pop-to-buffer buf)
-    (mu4e~update-mail-mode)
+       (with-selected-window win
+	 ;; ;;(switch-to-buffer buf)
+	 ;; (set-window-dedicated-p win t)
+	 (erase-buffer)
+	 (insert "\n") ;; FIXME -- needed so output start
+	 (mu4e~update-mail-mode)))  
     (mu4e-index-message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
@@ -844,9 +857,8 @@ in the background; otherwise, pop up a window."
 	  (message nil)
 	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error (sit-for 5))
-	  (mu4e-update-index)
-	  (when (buffer-live-p buf)
-	    (with-buffer buf (kill-buffer-and-window))))))
+	  (when (window-live-p win) (delete-window win))
+	  (mu4e-update-index))))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
@@ -858,11 +870,6 @@ in the background; otherwise, pop up a window."
   (let* ((buf (get-buffer mu4e~update-buffer-name))
 	  (proc (and buf (get-buffer-process buf))))
     (when proc (interrupt-process proc t))))
-
-(define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update"
-    "Major mode used for retrieving new e-mail messages in `mu4e'.")
-
-(define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-interrupt-update-mail)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
