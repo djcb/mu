@@ -86,7 +86,6 @@ This is only effective if you're using an emacs with Imagemagick
 support, and `mu4e-view-show-images' is non-nil."
   :group 'mu4e-view)
 
-
 (defcustom mu4e-view-scroll-to-next t
   "If non-nil, move to the next message when calling
 `mu4e-view-scroll-up-or-next' (typically bound to SPC) when at the
@@ -274,11 +273,11 @@ add text-properties to VAL."
     (if (and val (> (length val) 0))
     (with-temp-buffer
       (insert (propertize (concat key ":")
-		'face 'mu4e-view-header-key-face
+		'face 'mu4e-header-key-face
 		'help-echo help) " "
 	(if dont-propertize-val
 	  val
-	  (propertize val 'face 'mu4e-view-header-value-face)) "\n")
+	  (propertize val 'face 'mu4e-header-value-face)) "\n")
       (when mu4e-view-fill-headers
 	;; temporarily set the fill column <margin> positions to the right, so
 	;; we can indent the following lines correctly
@@ -351,7 +350,7 @@ at POINT, or if nil, at (point)."
 	    'email email
 	    'display (if mu4e-view-show-addresses long short)
 	    'keymap map
-	    'face 'mu4e-view-contact-face
+	    'face 'mu4e-contact-face
 	    'mouse-face 'highlight
 	    'help-echo
 	    (format "<%s>\n%s\n%s" email
@@ -370,9 +369,9 @@ at POINT, or if nil, at (point)."
 	  (if (symbolp flag)
 	    (symbol-name flag)
 	    flag)
-	  'face 'mu4e-view-special-header-value-face))
+	  'face 'mu4e-special-header-value-face))
       val
-      (propertize ", " 'face 'mu4e-view-header-value-face)) t))
+      (propertize ", " 'face 'mu4e-header-value-face)) t))
 
 (defun mu4e~view-construct-signature-header (msg)
   "Construct a Signature: header, if there are any signed parts."
@@ -466,8 +465,8 @@ at POINT, or if nil, at (point)."
 
 		  (concat
 		    (propertize (format "[%d]" id)
-		      'face 'mu4e-view-attach-number-face)
-		    (propertize name 'face 'mu4e-view-link-face
+		      'face 'mu4e-attach-number-face)
+		    (propertize name 'face 'mu4e-link-face
 		      'keymap map
 		      'mouse-face 'highlight
 		      'help-echo
@@ -476,7 +475,7 @@ at POINT, or if nil, at (point)."
 			"[mouse-2] or [S-RET] offers to save it"))
 		    (when (and size (> size 0))
 		      (propertize (format "(%s)" (mu4e-display-size size))
-                                  'face 'mu4e-view-header-key-face)))))
+                                  'face 'mu4e-header-key-face)))))
 	      attachments ", ")))
     (when attachments
       (mu4e~view-construct-header :attachments attstr t))))
@@ -791,7 +790,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
 	  (puthash (incf num) url mu4e~view-link-map)
 	  (add-text-properties 0 (length url)
-	    `(face mu4e-view-link-face
+	    `(face mu4e-link-face
 	       mouse-face highlight
 	       keymap ,map
 	       help-echo
@@ -799,7 +798,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	  (replace-match
 	    (concat url
 	      (propertize (format "[%d]" num)
-		'face 'mu4e-view-url-number-face))))))))
+		'face 'mu4e-url-number-face))))))))
 
 
 (defun mu4e~view-hide-cited ()

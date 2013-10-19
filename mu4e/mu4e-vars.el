@@ -408,28 +408,27 @@ I.e. a message with the draft flag set."
   "Face for the mark in the headers list."
   :group 'mu4e-faces)
 
-(defface mu4e-view-header-key-face
+(defface mu4e-header-key-face
   '((t :inherit message-header-name :bold t))
-  "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\") in
-  the message view."
+  "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\")."
   :group 'mu4e-faces)
 
-(defface mu4e-view-header-value-face
+(defface mu4e-header-value-face
   '((t :inherit font-lock-doc-face))
-  "Face for a header value (such as \"Re: Hello!\") in the message view."
+  "Face for a header value (such as \"Re: Hello!\")."
   :group 'mu4e-faces)
 
-(defface mu4e-view-special-header-value-face
+(defface mu4e-special-header-value-face
   '((t :inherit font-lock-variable-name-face))
-  "Face for special header values in the message view."
+  "Face for special header values."
   :group 'mu4e-faces)
 
-(defface mu4e-view-link-face
+(defface mu4e-link-face
   '((t :inherit link))
   "Face for showing URLs and attachments in the message view."
   :group 'mu4e-faces)
 
-(defface mu4e-view-contact-face
+(defface mu4e-contact-face
   '((t :inherit font-lock-variable-name-face))
   "Face for showing URLs and attachments in the message view."
   :group 'mu4e-faces)
@@ -449,12 +448,12 @@ I.e. a message with the draft flag set."
   "Face for message footers (signatures)."
   :group 'mu4e-faces)
 
-(defface mu4e-view-url-number-face
+(defface mu4e-url-number-face
   '((t :inherit font-lock-reference-face :bold t))
   "Face for the number tags for URLs."
   :group 'mu4e-faces)
 
-(defface mu4e-view-attach-number-face
+(defface mu4e-attach-number-face
   '((t :inherit font-lock-variable-name-face :bold t))
   "Face for the number tags for attachments."
   :group 'mu4e-faces)
@@ -509,7 +508,18 @@ I.e. a message with the draft flag set."
   "Face for warnings / error."
   :group 'mu4e-faces)
 
+(defface mu4e-compose-separator-face
+  '((t :inherit message-separator :slant italic))
+  "Face for the separator between headers / message in
+mu4e-compose-mode."
+  :group 'mu4e-faces)
 
+(defface mu4e-compose-header-face
+  '((t :inherit message-separator :slant italic))
+  "Face for the separator between headers / message in
+mu4e-compose-mode."
+  :group 'mu4e-faces)
+ 
 ;; headers info
 (defconst mu4e-header-info
   '( (:attachments .
