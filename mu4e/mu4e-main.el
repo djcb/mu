@@ -105,7 +105,7 @@ clicked."
       (insert
 	"* "
 	(propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
-	(propertize  mu4e-mu-version 'face 'mu4e-view-header-key-face)
+	(propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
 
 	;; show some server properties; in this case; a big C when there's
 	;; crypto support, a big G when there's Guile support
@@ -142,7 +142,7 @@ clicked."
 	    (mu4e~main-action-str "\t* toggle [m]ail sending mode "
 	      'mu4e~main-toggle-mail-sending-mode)
 	    "(" (propertize (if smtpmail-queue-mail "queued" "direct")
-		  'face 'mu4e-view-header-key-face) ")\n"
+		  'face 'mu4e-header-key-face) ")\n"
 	    (mu4e~main-action-str "\t* [f]lush queued mail\n"
 	      'smtpmail-send-queued-mail))
 	  "")
