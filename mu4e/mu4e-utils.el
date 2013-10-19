@@ -760,12 +760,19 @@ successful, call FUNC (if non-nil) afterwards."
 
 
 
+(defvar mu4e~progress-reporter nil
+  "Internal, the progress reporter object.")
 
 (defun mu4e~get-mail-process-filter (proc msg)
   "Filter the output of `mu4e-get-mail-command'.
 Currently the filter only checks if the command asks for a password
 by matching the output against `mu4e~get-mail-password-regexp'.
-The messages are inserted into the process buffer."
+The messages are inserted into the process buffer.
+
+Also scrolls to the final line, and update the progress throbber."
+  (when mu4e~progress-reporter
+    (progress-reporter-update mu4e~progress-reporter))
+  
   (when (string-match mu4e~get-mail-password-regexp msg)
     (if (process-get proc 'x-interactive)
         (process-send-string proc
@@ -793,19 +800,16 @@ The messages are inserted into the process buffer."
     (mu4e-error "`mu4e-maildir' is not defined"))
   (mu4e~proc-index mu4e-maildir mu4e-user-mail-address-list))
 
-;; complicated function, as it:
-;;   - needs to check for errors
-;;   - (optionally) pop-up a window
-;;   - (optionally) check password requests
-(defvar mu4e~update-buffer-name nil
-  "Internal, store the name of the buffer process when updating.")
+(defvar mu4e~update-buffer nil
+  "Internal, store the buffer of the update process when
+  updating.")
 
 (define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update"
     "Major mode used for retrieving new e-mail messages in `mu4e'.")
 
 (define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-interrupt-update-mail)
 
-(defun mu4e~temp-window (height buf)
+(defun mu4e~temp-window (buf height)
   "Create a temporary window with HEIGHT at the bottom of the
 screen to display buffer BUF."
   (let ((win 
@@ -815,50 +819,61 @@ screen to display buffer BUF."
     (set-window-buffer win buf)
     (set-window-dedicated-p win t)
     win))
- 
+
+(defun mu4e~update-sentinel-func (proc msg)
+  "Sentinel function for the update process."
+  (when mu4e~progress-reporter
+    (progress-reporter-done mu4e~progress-reporter)
+    (setq mu4e~progress-reporter nil))
+  (let* ((status (process-status proc))
+	  (code (process-exit-status proc))
+ 	  (maybe-error (or (not (eq status 'exit)) (/= code 0)))
+	  (buf (and (buffer-live-p mu4e~update-buffer) mu4e~update-buffer))
+	  (win (and buf (get-buffer-window buf))))
+    ;; there may be an error, give the user up to 5 seconds to check
+    (message nil)
+    (if maybe-error
+      (sit-for 5)
+      (mu4e-update-index))
+    (if (window-live-p win)
+      (with-selected-window win (kill-buffer-and-window))
+      (when (buffer-live-p buf) (kill-buffer buf)))))
+     
+;; complicated function, as it:
+;;   - needs to check for errors
+;;   - (optionally) pop-up a window
+;;   - (optionally) check password requests 
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
 run-in-background is non-nil (or called with prefix-argument), run
 in the background; otherwise, pop up a window."
   (interactive "P")
-  (when (and mu4e~update-buffer-name
-             (get-buffer-process
-              (get-buffer mu4e~update-buffer-name)))
+  (when (and (buffer-live-p mu4e~update-buffer)
+	  (process-live-p (get-buffer-process mu4e~update-buffer)))
     (mu4e-error "Update process is already running"))
   (run-hooks 'mu4e-update-pre-hook)
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
   (let* ((process-connection-type t)
-         (proc (start-process-shell-command
-                "mu4e-update" mu4e~update-name
-                mu4e-get-mail-command))
+	  (proc (start-process-shell-command
+		  "mu4e-update" "mu4e-update"
+		  mu4e-get-mail-command))
 	  (buf (process-buffer proc))
 	  (win (or run-in-background
-		 (mu4e~temp-window mu4e~update-buffer-height buf))))
-    (setq mu4e~update-buffer-name (buffer-name buf))
+		 (mu4e~temp-window buf mu4e~update-buffer-height))))
+    (setq mu4e~update-buffer buf)
     (when (window-live-p win)
-       (with-selected-window win
+      (with-selected-window win
 	 ;; ;;(switch-to-buffer buf)
 	 ;; (set-window-dedicated-p win t)
 	 (erase-buffer)
 	 (insert "\n") ;; FIXME -- needed so output start
-	 (mu4e~update-mail-mode)))  
-    (mu4e-index-message "Retrieving mail...")
-    (set-process-sentinel proc
-      (lambda (proc msg)
-	(let* ((status (process-status proc))
-		(code (process-exit-status proc))
-		;; sadly, fetchmail returns '1' when there is no mail; this is
-		;; not really an error of course, but it's hard to distinguish
-		;; from a genuine error
-		(maybe-error (or (not (eq status 'exit)) (/= code 0)))
-		(buf (process-buffer proc))
-		(win (get-buffer-window buf 'visible)))
-	  (message nil)
-	  ;; there may be an error, give the user up to 5 seconds to check
-	  (when maybe-error (sit-for 5))
-	  (when (window-live-p win) (delete-window win))
-	  (mu4e-update-index))))
+	 (mu4e~update-mail-mode)))
+    (setq mu4e~progress-reporter
+      (unless mu4e-hide-index-messages
+	(make-progress-reporter
+	  (mu4e-format "Retrieving mail..."))))
+    (set-process-sentinel proc 'mu4e~update-sentinel-func) 
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
@@ -867,9 +882,10 @@ in the background; otherwise, pop up a window."
 (defun mu4e-interrupt-update-mail ()
   "Stop the update process by sending SIGINT to it."
   (interactive)
-  (let* ((buf (get-buffer mu4e~update-buffer-name))
-	  (proc (and buf (get-buffer-process buf))))
-    (when proc (interrupt-process proc t))))
+  (let* ((proc (and (buffer-live-p mu4e~update-buffer)
+		 (get-buffer-process mu4e~update-buffer))))
+    (when (process-live-p proc)
+      (interrupt-process proc t))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
