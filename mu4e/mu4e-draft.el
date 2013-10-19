@@ -69,7 +69,11 @@ its settings apply."
 (defun mu4e~draft-header (hdr val)
   "Return a header line of the form \"HDR: VAL\".
 If VAL is nil, return nil."
-  (when val (format "%s: %s\n" hdr val)))
+  ;; note: the propertize here is currently useless, since gnus sets its own
+  ;; later.
+  (when val (format "%s: %s\n"
+	      (propertize hdr 'face 'mu4e-header-key-face)
+	      (propertize val 'face 'mu4e-header-val-face))))
 
 (defun mu4e~draft-references-construct (msg)
   "Construct the value of the References: header based on MSG as a
@@ -215,7 +219,7 @@ separator is never written to the message file. Also see
 		  'intangible t
 		  'read-only "Can't touch this"
 		  'rear-nonsticky t
-		  'font-lock-face 'mu4e-system-face)))
+		  'font-lock-face 'mu4e-separator-face)))
       (widen)
       ;; search for the first empty line
       (goto-char (point-min))
