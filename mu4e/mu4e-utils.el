@@ -816,11 +816,20 @@ in the background; otherwise, pop up a window."
          (proc (start-process-shell-command
                 "mu4e-update" mu4e~update-name
                 mu4e-get-mail-command))
-         (buf (process-buffer proc)))
+	  (win (or run-in-background
+		 (split-window (selected-window)
+		   (- (window-height (selected-window))
+		     mu4e~update-buffer-height))))
+	  (buf (process-buffer proc)))
     (setq mu4e~update-buffer-name (buffer-name buf))
-    (when (not run-in-background)
-      (pop-to-buffer buf)
-      (mu4e~update-mail-mode))
+    (when (window-live-p win)
+      (with-selected-window win
+	(switch-to-buffer buf)
+	(set-window-dedicated-p win t)
+	(erase-buffer)
+	(insert "\n"))) ;; FIXME -- needed so output start
+    (pop-to-buffer buf)
+    (mu4e~update-mail-mode)
     (mu4e-index-message "Retrieving mail...")
     (set-process-sentinel proc
       (lambda (proc msg)
@@ -831,13 +840,13 @@ in the background; otherwise, pop up a window."
 		;; from a genuine error
 		(maybe-error (or (not (eq status 'exit)) (/= code 0)))
 		(buf (process-buffer proc))
-		(visible-window (get-buffer-window buf 'visible)))
+		(win (get-buffer-window buf 'visible)))
 	  (message nil)
-	  ;; there may be an erro, give the user up to 5 seconds to check
+	  ;; there may be an error, give the user up to 5 seconds to check
 	  (when maybe-error (sit-for 5))
 	  (mu4e-update-index)
-	  (when (and (buffer-live-p buf) visible-window)
-	    (with-selected-window (get-buffer-window buf) (quit-window t))))))
+	  (when (buffer-live-p buf)
+	    (with-buffer buf (kill-buffer-and-window))))))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
