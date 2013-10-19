@@ -34,18 +34,25 @@
 (require 'html2text)
 
 
-(defcustom mu4e-html2text-command nil
-  "Shell command that converts from html to plain text.
-The command has to read html from stdin and output plain text on
-stdout. If this is not defined, the emacs `html2text' tool will be
-used when faced with html-only messages. If you use htmltext, it's
-recommended you use \"html2text -utf8 -width 72\".
+(defcustom mu4e-html2text-command 'html2text
+  "Either a shell command or a function that converts from html to plain text.
 
-Alternatives are the python-based html2markdown, w3m and on MacOS
-you may want to use textutil."
-  :type 'string
-  :group 'mu4e-view
-  :safe 'stringp)
+If it is a shell-command, the command has to read html from stdin
+and output plain text on stdout. If this is not defined, the emacs
+`html2text' tool will be used when faced with html-only
+messages. If you use htmltext, it's recommended you use \"html2text
+-utf8 -width 72\". Alternatives are the python-based html2markdown,
+w3m and on MacOS you may want to use textutil.
+
+It can also be a function, which takes the current buffer in html
+as input, and transforms it into html (like the `html2text'
+function).
+
+In both cases, the output is expected to be in utf-8 encoding.
+
+The default is emacs' built-in `html2text' function."
+  :type '(choice string function)
+  :group 'mu4e-view)
 
 (defcustom mu4e-view-prefer-html nil
   "Whether to base the body display on the html-version.
@@ -148,12 +155,10 @@ This is equivalent to:
 
 (defun mu4e-message-body-text (msg)
   "Get the body in text form for this message.
-This is either :body-txt, or if not available, :body-html
-converted to text. By default, it uses the emacs built-in
-`html2text'. Alternatively, if `mu4e-html2text-command' is
-non-nil, it will use that. Normally, function prefers the text
-part, but this can be changed by setting
-`mu4e-view-prefer-html'."
+This is either :body-txt, or if not available, :body-html converted
+to text, using `mu4e-html2text-command' is non-nil, it will use
+that. Normally, thiss function prefers the text part, but this can
+be changed by setting `mu4e-view-prefer-html'."
   (let* ((txt (mu4e-message-field msg :body-txt))
 	  (html (mu4e-message-field msg :body-html))
 	  (body
@@ -172,12 +177,13 @@ part, but this can be changed by setting
 	      (html
 		(with-temp-buffer
 		  (insert html)
-		  ;; if defined, use the external tool
-		  (if mu4e-html2text-command
-		    (shell-command-on-region (point-min) (point-max)
-		      mu4e-html2text-command nil t)
-		    ;; otherwise...
-		    (html2text))
+		  (cond
+		    ((stringp mu4e-html2text-command)
+		      (shell-command-on-region (point-min) (point-max)
+			mu4e-html2text-command nil t))
+		    ((functionp mu4e-html2text-command)
+		      (funcall mu4e-html2text-command))
+		    (t (mu4e-error "Invalid `mu4e-html2text-command'")))
 		  (buffer-string)))
 	      (t ;; otherwise, an empty body
 		""))))
