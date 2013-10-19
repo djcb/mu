@@ -152,6 +152,13 @@ REPLIED SEEN TRASHED ATTACH ENCRYPTED SIGNED UNREAD)."
           (const :tag "Unread" unread))
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-found-hook nil
+  "Hook run just *after* all of the headers for the last search
+query have been received and are displayed."
+  :type 'hook
+  :group 'mu4e-headers)
+
+
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
 (defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Draft.")
@@ -209,10 +216,6 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 (defvar mu4e-headers-full-search nil
   "Whether to show all results.
 If this is nil show results up to `mu4e-search-results-limit')")
-
-(defvar mu4e-headers-found-hook nil
-  "Hook run just *after* all of the headers for the last search
-query have been received and are displayed.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
