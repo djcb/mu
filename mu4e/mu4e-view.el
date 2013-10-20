@@ -216,52 +216,41 @@ found."
 	  (win (or (get-buffer-window buf) (split-window-vertically))))
     (select-window win)
     (switch-to-buffer buf)))
-
-
-(defun mu4e-view (msg headersbuf &optional refresh)
+ 
+(defun mu4e-view (msg headersbuf)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
 the the message view affects HDRSBUF, as does marking etc.
-
-REFRESH is for re-showing an already existing message.
-
+ 
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
-  (let* ((embedded ;; is it registered as an embedded msg (ie. message/rfc822
-		   ;; att)?
+  (let* ((embedded ;; is it as an embedded msg (ie. message/rfc822 att)?
 	   (when (gethash (mu4e-message-field msg :path)
 		   mu4e~path-parent-docid-map) t))
 	  (buf
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
 	      (get-buffer-create mu4e~view-buffer-name))))
+    ;; note: mu4e~view-mark-as-read will pseudo-recursively call mu4e-view again
+    ;; by triggering mu4e~view again as it marks the message as read
     (with-current-buffer buf
       (switch-to-buffer buf)
-      (let ((inhibit-read-only t))
- 	(erase-buffer)
-	(insert (mu4e-view-message-text msg))
-	(goto-char (point-min))
-	(mu4e~fontify-cited)
-	(mu4e~fontify-signature)
-	(mu4e~view-make-urls-clickable)
- 	(mu4e~view-show-images-maybe msg)
-
-	(if embedded
-	  (local-set-key "q" 'kill-buffer-and-window)
-	  (setq mu4e~view-buffer buf)))
-
-    (unless (eq major-mode 'mu4e-view-mode)
-      (mu4e-view-mode))
-      (setq ;; buffer local
-      mu4e~view-msg msg
-	  mu4e~view-headers-buffer headersbuf)
-
-    (unless (or refresh embedded)
-	  ;; no use in trying to set flags again, or when it's an embedded
-	  ;; message
-	  (mu4e~view-mark-as-read-maybe)))))
-
-
+      (setq mu4e~view-msg msg)
+      (when (or embedded (not (mu4e~view-mark-as-read msg)))
+	(let ((inhibit-read-only t))
+	  (erase-buffer)
+	  (insert (mu4e-view-message-text msg))
+	  (goto-char (point-min))
+	  (mu4e~fontify-cited)
+	  (mu4e~fontify-signature)
+	  (mu4e~view-make-urls-clickable)
+	  (mu4e~view-show-images-maybe msg) 
+	  (setq
+	    mu4e~view-buffer buf
+	    mu4e~view-headers-buffer headersbuf)
+	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
+	  (mu4e-view-mode))))))
+ 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
@@ -694,19 +683,22 @@ FUNC should be a function taking two arguments:
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t)))
 
-(defun mu4e~view-mark-as-read-maybe ()
-  "Clear the current message's New/Unread status and set it to Seen.
-If the message is not New/Unread, do nothing."
-  (when mu4e~view-msg
-    (let ((flags (mu4e-message-field mu4e~view-msg :flags))
-	   (msgid (mu4e-message-field mu4e~view-msg :message-id))
-	   (docid (mu4e-message-field mu4e~view-msg :docid)))
+(defun mu4e~view-mark-as-read (msg)
+  "Clear the message MSG New/Unread status and set it to Seen.
+If the message is not New/Unread, do nothing. Evaluates to t if it
+triggers any changes, nil otherwise. If this function does any
+changes, it triggers a refresh."
+  (when msg
+    (let ((flags (mu4e-message-field msg :flags))
+	   (msgid (mu4e-message-field msg :message-id))
+	   (docid (mu4e-message-field msg :docid)))
       ;; attached (embedded) messages don't have docids; leave them alone
       ;; is it a new message
       (when (and docid (or (member 'unread flags) (member 'new flags)))
 	;; mark /all/ messages with this message-id as read, so all copies of
 	;; this message will be marked as read.
-	(mu4e~proc-move msgid nil "+S-u-N")))))
+	(mu4e~proc-move msgid nil "+S-u-N")
+	t))))
 
 (defun mu4e~view-browse-url-func (url)
   "Return a function that executes `browse-url' with URL.
@@ -820,7 +812,7 @@ N (prefix argument), to the Nth previous header."
 (defun mu4e-view-refresh ()
   "Redisplay the current message."
   (interactive)
-  (mu4e-view mu4e~view-msg mu4e~view-headers-buffer t)
+  (mu4e-view mu4e~view-msg mu4e~view-headers-buffer)
   (setq mu4e~view-cited-hidden nil))
 
 (defun mu4e-view-action (&optional msg)
