@@ -22,12 +22,15 @@
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
+#define _BSD_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <sys/time.h>
 
 #include <glib/gprintf.h>
 
@@ -1145,7 +1148,8 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 		different_mdir =
 			(g_strcmp0 (maildir, mu_msg_get_maildir(msg)) != 0);
 
-	if (!mu_msg_move_to_maildir (msg, maildir, flags, TRUE, new_name, err))
+	if (!mu_msg_move_to_maildir (msg, maildir, flags, TRUE,
+				     new_name, err))
 		return MU_G_ERROR_CODE (err);
 
 	/* after mu_msg_move_to_maildir, path will be the *new* path,
@@ -1529,7 +1533,6 @@ handle_args (ServerContext *ctx, GHashTable *args, GError **err)
 		{ "view",	cmd_view }
 	};
 
-
 	cmd = g_hash_table_lookup (args, "cmd");
 
 	/* ignore empty */
@@ -1560,6 +1563,8 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err)
 	ctx.query = mu_query_new (store, err);
 	if (!ctx.query)
 		return MU_G_ERROR_CODE (err);
+
+	srand (time(NULL)*getpid());
 
 	install_sig_handler ();
 
