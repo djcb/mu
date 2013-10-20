@@ -749,7 +749,6 @@ user-interaction ongoing."
   "Major mode for displaying mu4e search results.
 \\{mu4e-headers-mode-map}."
   (use-local-map mu4e-headers-mode-map)
-
   (make-local-variable 'mu4e~headers-proc)
   (make-local-variable 'mu4e~highlighted-docid)
   (make-local-variable 'global-mode-string)

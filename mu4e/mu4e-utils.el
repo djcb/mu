@@ -1081,5 +1081,49 @@ receive (:info add :path <path> :docid <docid>) as well as (:update
 <msg-sexp>)."
   (mu4e~proc-add path maildir))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e~fontify-cited ()
+  "Colorize message content based on the citation level. This is
+used in the view and compose modes."
+  (save-excursion
+    (let ((more-lines t))
+      (goto-char (point-min))
+      (when (search-forward-regexp "^\n") ;; search the first empty line
+	(while more-lines
+	  ;; Get the citation level at point -- i.e., the number of '>'
+	  ;; prefixes, starting with 0 for 'no citation'
+	  (beginning-of-line 1)
+	  ;; consider only lines that heuristically look like a citation line...
+	  (when (looking-at "[[:blank:]]*[^[:blank:]\n]*[[:blank:]]*>")
+	    (let* ((level (how-many ">" (line-beginning-position 1)
+			    (line-end-position 1)))
+		    (face
+		      (unless (zerop level)
+			(intern-soft (format "mu4e-cited-%d-face" level)))))
+	      (when face
+		(add-text-properties (line-beginning-position 1)
+		  (line-end-position 1) `(face ,face)))))
+	  (setq more-lines
+	    (and (= 0 (forward-line 1))
+	      ;; we need to add this weird check below; it seems in some cases
+	      ;; `forward-line' continues to return 0, even when at the end,
+	      ;; which would lead to an infinite loop
+	      (not (= (point-max) (line-end-position))))))))))
+
+
+(defun mu4e~fontify-signature ()
+  "Give the message signatures a distinctive color. This is used in
+the view and compose modes."
+  (let ((inhibit-read-only t))
+    (save-excursion
+      ;; give the footer a different color...
+      (goto-char (point-min))
+      (let ((p (search-forward "^-- *$" nil t)))
+	(when p
+	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

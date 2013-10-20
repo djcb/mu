@@ -241,8 +241,8 @@ marking if it still had that."
  	(erase-buffer)
 	(insert (mu4e-view-message-text msg))
 	(goto-char (point-min))
-	(mu4e~view-fontify-cited)
-	(mu4e~view-fontify-footer)
+	(mu4e~fontify-cited)
+	(mu4e~fontify-signature)
 	(mu4e~view-make-urls-clickable)
  	(mu4e~view-show-images-maybe msg)
 
@@ -707,43 +707,6 @@ If the message is not New/Unread, do nothing."
 	;; mark /all/ messages with this message-id as read, so all copies of
 	;; this message will be marked as read.
 	(mu4e~proc-move msgid nil "+S-u-N")))))
-
-(defun mu4e~view-fontify-cited ()
-  "Colorize message content based on the citation level."
-  (save-excursion
-    (let ((more-lines t))
-      (goto-char (point-min))
-      (when (search-forward-regexp "^\n") ;; search the first empty line
-	(while more-lines
-	  ;; Get the citation level at point -- i.e., the number of '>'
-	  ;; prefixes, starting with 0 for 'no citation'
-	  (beginning-of-line 1)
-	  ;; consider only lines that heuristically look like a citation line...
-	  (when (looking-at "[[:blank:]]*[^[:blank:]\n]*[[:blank:]]*>")
-	    (let* ((level (how-many ">" (line-beginning-position 1)
-			    (line-end-position 1)))
-		    (face
-		      (unless (zerop level)
-			(intern-soft (format "mu4e-cited-%d-face" level)))))
-	      (when face
-		(add-text-properties (line-beginning-position 1)
-		  (line-end-position 1) `(face ,face)))))
-	  (setq more-lines
-	    (and (= 0 (forward-line 1))
-	      ;; we need to add this weird check below; it seems in some cases
-	      ;; `forward-line' continues to return 0, even when at the end,
-	      ;; which would lead to an infinite loop
-	      (not (= (point-max) (line-end-position))))))))))
-
-(defun mu4e~view-fontify-footer ()
-  "Give the message footers a distinctive color."
-  (let ((inhibit-read-only t))
-    (save-excursion
-      ;; give the footer a different color...
-      (goto-char (point-min))
-      (let ((p (search-forward "\n-- \n" nil t)))
-	(when p
-	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 
 (defun mu4e~view-browse-url-func (url)
   "Return a function that executes `browse-url' with URL.

@@ -2564,7 +2564,7 @@ it work with @t{mu4e}:
 
 @lisp
 (require 'mu-cite)
-(setq message-cite-function 'mu-cite-original)
+(setq mu4e-cite-function 'mu-cite-original)
 (setq mu-cite-top-format
     '("On " date ", " from " wrote:\n\n"))
 (setq mu-cite-prefix-format '(" > ")))
@@ -2712,8 +2712,7 @@ customize.
 (setq mu4e-reply-to-address "foo@@bar.com"
       user-mail-address "foo@@bar.com"
       user-full-name  "Foo X. Bar")
-;; include in message with C-c C-w
-(setq message-signature
+(setq mu4e-compose-signature
    "Foo X. Bar\nhttp://www.example.com\n")
 
 ;; smtp mail setting
@@ -2861,7 +2860,7 @@ Next step: let's make a @t{mu4e} configuration for this:
 (setq
    user-mail-address "USERNAME@@gmail.com"
    user-full-name  "Foo X. Bar"
-   message-signature
+   mu4e-compose-signature
     (concat
       "Foo X. Bar\n"
       "http://www.example.com\n"))

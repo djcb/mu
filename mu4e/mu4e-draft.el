@@ -32,6 +32,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-utils)
 (require 'mu4e-message)
+(require 'message) ;; mail-header-separator
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -43,27 +44,45 @@
   :type 'boolean
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-cite-function
+  (or message-cite-function 'message-cite-original-without-signature)
+  "The function to use to cite message in replies and forwarded
+messages. This is the mu4e-specific version of
+`message-cite-function'."
+  :type 'function
+  :group 'mu4e-compose)
+
+(defcustom mu4e-compose-signature
+  (or message-signature "Sent with my mu4e")
+  "The message signature (i.e. the blob at the bottom of
+messages). This is the mu4e-specific version of
+`message-signature'."
+  :type 'sexp
+  :group 'mu4e-compose)
+
 (defun mu4e~draft-user-agent-construct ()
   "Return the User-Agent string for mu4e.
 This is either the value of `mu4e-user-agent', or, if not set, a
 string based on the versions of mu4e and emacs."
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version))
 
-
 (defun mu4e~draft-cite-original (msg)
   "Return a cited version of the original message MSG as a plist.
-This function use gnus' `message-cite-function', and as such all
-its settings apply."
+This function uses gnus' `mu4e-compose-cite-function', and as such
+all its settings apply."
   (with-temp-buffer
     (when (fboundp 'mu4e-view-message-text) ;; keep bytecompiler happy
       (insert (mu4e-view-message-text msg))
-      ;; this seems to be needed, otherwise existing signatures
-      ;; won't be stripped
       (message-yank-original)
       (goto-char (point-min))
       (push-mark (point-max))
-      (funcall message-cite-function)
+      ;; set the the signature separator to 'loose', since in the real world,
+      ;; many message don't follow the standard...
+      (let ((message-signature-separator "^-- *$"))
+	(funcall mu4e-compose-cite-function))
       (pop-mark)
+      (goto-char (point-min))
+      (mu4e~fontify-cited)
       (buffer-string))))
 
 (defun mu4e~draft-header (hdr val)
@@ -219,7 +238,7 @@ separator is never written to the message file. Also see
 		  'intangible t
 		  'read-only "Can't touch this"
 		  'rear-nonsticky t
-		  'font-lock-face 'mu4e-separator-face)))
+		  'font-lock-face 'mu4e-compose-separator-face)))
       (widen)
       ;; search for the first empty line
       (goto-char (point-min))
@@ -260,9 +279,7 @@ If there is just one recipient of ORIGMSG do nothing."
 (defun mu4e~draft-message-filename-construct (&optional flagstr)
   "Construct a randomized name for a message file with flags FLAGSTR.
 It looks something like
-
   <time>-<random>.<hostname>:2,
-
 You can append flags."
   (let* ((hostname
 	   (downcase
@@ -393,40 +410,17 @@ from either `mu4e~draft-reply-construct', or
 	    (reply   (mu4e~draft-reply-construct msg))
 	    (forward (mu4e~draft-forward-construct msg))
 	    (new     (mu4e~draft-newmsg-construct))
-	    (t (mu4e-error "unsupported compose-type %S" compose-type))))))
-	  ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value throughout.
+	    (t (mu4e-error "unsupported compose-type %S" compose-type))))
+	;; include the message signature (if it's set) 
+	(let ((message-signature mu4e-compose-signature))
+	  (message-insert-signature)
+	  (mu4e~fontify-signature))))
+	  ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
+	  ;; throughout.
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)
     (put 'mu4e~draft-drafts-folder 'permanent-local t)
     (unless mu4e~draft-drafts-folder
       (mu4e-error "failed to determine drafts folder"))))
 
-
-
-;; (defun mu4e-draft-setup-fcc ()
-;;   "Setup Fcc, based on `mu4e-sent-messages-behavior'. If needed,
-;; set the Fcc header, and register the handler function."
-;;   (let* ((mdir
-;; 	   (case mu4e-sent-messages-behavior
-;; 	     (delete nil)
-;; 	     (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
-;; 	     (sent  (mu4e-get-sent-folder mu4e-compose-parent-message))
-;; 	     (otherwise
-;; 	       (mu4e-error "unsupported value '%S' `mu4e-sent-messages-behavior'."
-;; 		 mu4e-sent-messages-behavior))))
-;; 	  (fccfile (and mdir
-;; 		     (concat mu4e-maildir mdir "/cur/"
-;; 		       (mu4e~compose-message-filename-construct "S")))))
-;;     ;; if there's an fcc header, add it to the file
-;;      (when fccfile
-;;        (message-add-header (concat "Fcc: " fccfile "\n"))
-;;        ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
-;;        ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
-;;        ;; handler after we've done our thing.
-;;       (setq message-fcc-handler-function
-;; 	(lexical-let ((maildir mdir) (old-handler message-fcc-handler-function))
-;; 	  (lambda (file)
-;; 	    (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
-;; 	    (write-file file)		       ;; writing maildirs files is easy
-;; 	    (mu4e~proc-add file maildir))))))) ;; update the database
-
+ 
 (provide 'mu4e-draft)

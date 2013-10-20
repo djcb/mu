@@ -117,7 +117,7 @@ for quering the message information."
   :safe 'symbolp
   :group 'mu4e-compose)
 
-(defvar mu4e-compose-pre-hook nil
+(defcustom mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts.
 If the compose-type is either 'reply' or 'forward', the variable
 `mu4e-compose-parent-message' points to the message replied to /
@@ -127,7 +127,9 @@ Note that there is no draft message yet when this hook runs, it
 is meant for influencing the how mu4e constructs the draft
 message. If you want to do something with the draft messages after
 it has been constructed, `mu4e-compose-mode-hook' would be the
-place to do that.")
+place to do that."
+  :type 'hook
+  :group 'mu4e-compose)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -265,6 +267,8 @@ appear on disk."
 \\{message-mode-map}."
   (progn
     (use-local-map mu4e-compose-mode-map)
+    (set (make-local-variable 'message-signature)
+      mu4e-compose-signature)
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
@@ -360,10 +364,6 @@ tempfile)."
     (dolist (att includes)
       (mml-attach-file
 	(plist-get att :file-name) (plist-get att :mime-type))))
-  ;; include the message signature (if it's set); but not when editing an
-  ;; existing message.
-  (unless (eq compose-type 'edit)
-    (message-insert-signature))
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
@@ -377,9 +377,8 @@ tempfile)."
    ;; hide some headers
   (mu4e~compose-hide-headers)
   ;; switch on the mode
-  (run-with-timer 0.01 nil #'(lambda () (mu4e-compose-mode))))
-
-
+  (mu4e-compose-mode))
+ 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
 message. For Forwarded ('Passed') and Replied messages, try to set
