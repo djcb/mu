@@ -1088,7 +1088,7 @@ used in the view and compose modes."
   (save-excursion
     (let ((more-lines t))
       (goto-char (point-min))
-      (when (search-forward-regexp "^\n") ;; search the first empty line
+      (when (search-forward-regexp "^\n" nil t) ;; search the first empty line
 	(while more-lines
 	  ;; Get the citation level at point -- i.e., the number of '>'
 	  ;; prefixes, starting with 0 for 'no citation'
