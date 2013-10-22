@@ -304,7 +304,7 @@ appear on disk."
     (add-hook 'message-sent-hook
       (lambda () ;;  mu4e~compose-mark-after-sending
 	(setq mu4e-sent-func 'mu4e-sent-handler)
-	(mu4e~proc-sent (buffer-file-name) mu4e~draft-drafts-folder)) nil))
+	(mu4e~proc-sent (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
   ;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
