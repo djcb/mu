@@ -243,8 +243,8 @@ marking if it still had that."
 	  (goto-char (point-min))
 	  (mu4e~fontify-cited)
 	  (mu4e~fontify-signature)
-	  (mu4e~view-make-urls-clickable)
-	  (mu4e~view-show-images-maybe msg) 
+	  (mu4e~view-make-urls-clickable)	
+	  (mu4e~view-show-images-maybe msg)
 	  (setq
 	    mu4e~view-buffer buf
 	    mu4e~view-headers-buffer headersbuf)
@@ -413,7 +413,8 @@ at POINT, or if nil, at (point)."
 	    ;; user-visible numbers and the part indices
 	    (remove-if-not
 	      (lambda (part)
-		(let* ((mtype (mu4e-message-part-field part :mime-type))
+		(let* ((mtype (or (mu4e-message-part-field part :mime-type)
+				"application/octet-stream"))
 			(attachtype (mu4e-message-part-field part :type))
 			(isattach
 			  (or ;; we consider parts marked either
@@ -720,7 +721,9 @@ What browser is called is depending on
   (when (and (display-images-p) mu4e-view-show-images)
     (mu4e-view-for-each-part msg
       (lambda (msg part)
-	(when (string-match "^image/" (mu4e-message-part-field part :mime-type))
+	(when (string-match "^image/"
+		(or (mu4e-message-part-field part :mime-type)
+		  "application/object-stream"))
 	  (let ((imgfile (mu4e-message-part-field part :temp)))
 	    (when (and imgfile (file-exists-p imgfile))
  	      (save-excursion
