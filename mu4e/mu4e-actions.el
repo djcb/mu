@@ -174,7 +174,8 @@ store your org-contacts."
   (let ((path (ido-read-directory-name "Target directory: "
                                        (car ido-work-directory-list)
                                        "~/" t)))
-    (add-to-list 'ido-work-directory-list path)
+    (setf ido-work-directory-list
+          (cons path (delete path ido-work-directory-list)))
     (shell-command
       (format "cd %s; git apply %s"
 	path
