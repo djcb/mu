@@ -1100,6 +1100,7 @@ actions
 -------
 g            go to (visit) numbered URL (using `browse-url')
              (or: <mouse-1> or M-RET with point on url)
+             C-u g visits multiple URLs
 e            extract (save) attachment (asks for number)
              (or: <mouse-2> or S-RET with point on attachment)
              C-u e extracts multiple attachments
