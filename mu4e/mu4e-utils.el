@@ -814,7 +814,7 @@ Also scrolls to the final line, and update the progress throbber."
 screen to display buffer BUF."
   (let ((win 
 	  (split-window
-	    (frame-root-window)
+	    nil
 	    (- (window-height (frame-root-window)) height))))
     (set-window-buffer win buf)
     (set-window-dedicated-p win t)
