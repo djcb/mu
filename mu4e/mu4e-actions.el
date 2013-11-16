@@ -174,11 +174,25 @@ store your org-contacts."
   (let ((path (ido-read-directory-name "Target directory: "
                                        (car ido-work-directory-list)
                                        "~/" t)))
-    (add-to-list 'ido-work-directory-list path)
+    (setf ido-work-directory-list
+          (cons path (delete path ido-work-directory-list)))
     (shell-command
       (format "cd %s; git apply %s"
 	path
 	(mu4e-message-field msg :path)))))
+
+(defun mu4e-action-git-apply-mbox (msg)
+  "Apply and commit the git [patch] message."
+  (let ((path (ido-read-directory-name "Target directory: "
+                                       (car ido-work-directory-list)
+                                       "~/" t)))
+    (setf ido-work-directory-list
+          (cons path (delete path ido-work-directory-list)))
+    (shell-command
+      (format "cd %s; git am %s"
+	path
+	(mu4e-message-field msg :path)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
