@@ -306,7 +306,8 @@ Xapian, GMime and their dependencies must be installed.
 
 Alternatively, if you build from the git repository or use a tarball like the
 ones that @t{github} produces, the instructions are slightly different, and
-require you to have @t{autotools} installed:
+require you to have @t{autotools} (Autoconf, Automake, Libtool, and friends)
+installed:
 
 @example
 # get from git (alternatively, use a github tarball)
@@ -3097,11 +3098,14 @@ to your configuration:
   send-mail-function 'async-smtpmail-send-it
   message-send-mail-function 'async-smtpmail-send-it)
 @end lisp
-With this, messages are sent using background emacs-instance. A word of
-warning though, this tends to not be as reliable as sending the message in the
-normal, synchronous fashion; however, you can check the progress of the
-background by checking the @t{*Messages*}-buffer, which should show something
-like:
+With this, messages are sent using background emacs-instance. 
+
+A word of warning though, this tends to not be as reliable as sending the
+message in the normal, synchronous fashion, and people have reported silent
+failures, that is, message are not sent but there is no indication of that.
+
+You can check the progress of the background by checking the
+@t{*Messages*}-buffer, which should show something like:
 @verbatim
 Delivering message to "William Shakespeare" <will@example.com>...
 Mark set
