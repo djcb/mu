@@ -3157,8 +3157,9 @@ github-repository.
 
 @menu
 * Multiple accounts::
-* Refiling message::
+* Refiling messages::
 * Saving outgoing messages::
+* Fancy characters and Inconsolata::
 @end menu
 
 @node Multiple accounts
@@ -3266,8 +3267,8 @@ the account is chosen automatically, based on the first component of the
 maildir of the message being replied to, forwarded or edited (i.e., the
 directory under @t{~/Maildir}).
 
-@node Refiling message
-@section Refiling message
+@node Refiling messages
+@section Refiling messages
 
 By setting @code{mu4e-refile-folder} to a function, you can dynamically
 determine where messages are to be refiled. If you want to do this based
@@ -3401,6 +3402,23 @@ If the from address is not associated with Account1 or with the Gmail
 account, the function uses @code{mu4e-ask-maildir-check-exists} to ask
 the user for a maildir to save the message in.
 
+@node Fancy characters and Inconsolata
+@section Fancy characters and Inconsolata
+
+When using 'fancy characters' (@code{mu4e-use-fancy-chars}) with the
+@emph{Inconsolata}-font (and likely others as well), the display may be
+slightly off; the reason for this issue is that Inconsolata does not contain
+the glyphs for the 'fancy' arrows and the glyphs that are used as replacement
+are too high.
+
+To fix this, you can use something like the following workaround (in your
+@t{.emacs}-file):
+@lisp
+(if (equal window-system 'x)
+    (progn
+      (set-fontset-font "fontset-default" 'unicode "Dejavu Sans Mono")
+      (set-face-font 'default "Inconsolata-10")))
+@end lisp
 
 @node How it works
 @appendix How it works
