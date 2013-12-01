@@ -163,10 +163,11 @@ get_target_fullpath (const char* src, const gchar *targetpath, GError **err)
 
 	srcfile = g_path_get_basename (src);
 
-	/* create targetpath; note: make the filename cough* unique by
-	 *including a hash * of the srcname in the targetname. This
-	 *helps if there are * copies of a message (which all have the
-	 *same basename)*/
+	/* create targetpath; note: make the filename *cough* unique
+	 * by including a hash of the srcname in the targetname. This
+	 * helps if there are copies of a message (which all have the
+	 * same basename)
+	 */
 	targetfullpath = g_strdup_printf ("%s%c%s%c%u_%s",
 					  targetpath,
 					  G_DIR_SEPARATOR,
@@ -700,8 +701,8 @@ mu_maildir_get_flags_from_path (const char *path)
  * /home/user/Maildir/foo/bar/new/abc  and flags == MU_FLAG_REPLIED
  *    => /home/user/Maildir/foo/bar/cur
  *
- * so the difference is whether MuFlags matches MU_FLAG_NEW is set or
- * not; and in the latter case, no other flags are allowed.
+ * so the difference is whether MU_FLAG_NEW is set or not; and in the
+ * latter case, no other flags are allowed.
  *
  */
 static gchar*
@@ -749,10 +750,10 @@ mu_maildir_get_maildir_from_path (const char* path)
 static char*
 get_new_basename (void)
 {
-	char date[9]; /* YYYYMMDD */
-	char hostname[32]; /* should be enough...*/
-	long int rnd;
-	time_t now;
+	char		date[9];	/* YYYYMMDD */
+	char		hostname[32];	/* should be enough...*/
+	long int	rnd;
+	time_t		now;
 
 	now = time(NULL);
 	strftime (date, sizeof(date), "%Y%m%d", localtime(&now));
@@ -760,7 +761,8 @@ get_new_basename (void)
 		memcpy (hostname, "hostname", strlen("hostname"));
 	rnd = random ();
 
-	return g_strdup_printf ("%s-%06x-%s", date, (unsigned)rnd, hostname);
+	return g_strdup_printf ("%s-%08x-%s", date,
+				(unsigned)rnd, hostname);
 }
 
 

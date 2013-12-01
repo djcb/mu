@@ -188,7 +188,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 
 			c2	  = mu_container_new (msg, docid, fake_msgid);
 			c2->flags = MU_CONTAINER_FLAG_DUP;
-			c	  = mu_container_append_children (c, c2);
+			/*c	  = */ mu_container_append_children (c, c2);
 
 			g_hash_table_insert (id_table, (gpointer)fake_msgid, c2);
 
@@ -266,7 +266,8 @@ handle_references (GHashTable *id_table, MuContainer *c)
 		 as a child of the other, don't add the link. */
 
 		if (child_elligible (parent, child, created))
-			parent = mu_container_append_children (parent, child);
+			/*parent =*/
+			mu_container_append_children (parent, child);
 
 		parent = child;
 	}
@@ -307,7 +308,7 @@ handle_references (GHashTable *id_table, MuContainer *c)
 			c->next = c->last = c->parent = NULL;
 		}
 
-		parent = mu_container_append_children (parent, c);
+		/*parent = */mu_container_append_children (parent, c);
 	}
 }
 
