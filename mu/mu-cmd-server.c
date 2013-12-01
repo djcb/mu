@@ -837,6 +837,8 @@ cmd_extract (ServerContext *ctx, GHashTable *args, GError **err)
 	return MU_OK;
 }
 
+#define MAX_NUM_DEFAULT 500
+
 /* parse the find parameters, and return the values as out params */
 static MuError
 get_find_params (GHashTable *args, MuMsgFieldId *sortfield,
@@ -845,7 +847,7 @@ get_find_params (GHashTable *args, MuMsgFieldId *sortfield,
 	const char *maxnumstr, *sortfieldstr;
 
 	/* defaults */
-	*maxnum	   = 500;
+	*maxnum	   = MAX_NUM_DEFAULT;
 	*qflags	   = MU_QUERY_FLAG_NONE;
 	*sortfield = MU_MSG_FIELD_ID_NONE;
 
@@ -866,7 +868,8 @@ get_find_params (GHashTable *args, MuMsgFieldId *sortfield,
 
 	/* maximum number of results */
 	maxnumstr = get_string_from_args (args, "maxnum", TRUE, NULL);
-	*maxnum = maxnumstr ? atoi (maxnumstr) : 0;
+	if (maxnumstr)
+		*maxnum = atoi (maxnumstr);
 
 	if (get_bool_from_args (args, "reverse", TRUE, NULL))
 		*qflags |= MU_QUERY_FLAG_DESCENDING;
