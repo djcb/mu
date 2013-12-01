@@ -903,7 +903,7 @@ If ATTNUM is nil ask for the attachment number."
 	  (path (concat
 		  (mu4e~get-attachment-dir fname mtype) "/"))
 	  (index (plist-get att :index))
-	  (retry t))
+	  (retry t) (fpath))
     (while retry
       (setq fpath (expand-file-name
 		   (read-directory-name
