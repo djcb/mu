@@ -1125,12 +1125,62 @@ list."
   (mu4e~view-in-headers-context
     (mu4e-mark-execute-all)))
 
-(defun mu4e-view-go-to-url (num)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; URL handling
+(defun mu4e~view-get-urls-num (prompt &optional multi)
+  "Ask the user with PROMPT for an URL number for MSG, and ensure
+it is valid. The number is [1..n] for URLs \[0..(n-1)] in the
+message. If MULTI is nil, return the number for the URL;
+otherwise (MULTI is non-nil), accept ranges of URL numbers, as
+per `mu4e-split-ranges-to-numbers', and return the corresponding
+string."
+  (let* ((count (hash-table-count mu4e~view-link-map)) (def))
+    (when (zerop count) (mu4e-error "No links for this message"))
+    (if (not multi)
+      (if (= count 1)
+	(read-number (mu4e-format "%s: " prompt) 1)
+	(read-number (mu4e-format "%s (1-%d): " prompt count)))
+      (progn
+	(setq def (if (= count 1) "1" (format "1-%d" count)))
+	(read-string (mu4e-format "%s (default %s): " prompt def)
+	  nil nil def)))))
+
+(defun mu4e-view-go-to-url (&optional multi)
+  "Offer to go to URL(s).
+If MULTI (prefix-argument) is nil, go to a single one, otherwise,
+offer to go to a range of URLs."
+  (interactive "P")
+  (if multi
+    (mu4e-view-go-to-urls-multi)
+    (mu4e-view-go-to-urls-single)))
+
+(defun mu4e-view-go-to-urls-single (&optional num)
   "Go to a numbered url."
-  (interactive "n[mu4e] Visit url with number: ")
-  (let ((url (gethash num mu4e~view-link-map)))
+  (interactive)
+  (let* ((num (or num
+		    (mu4e~view-get-urls-num "URL to visit")))
+         (url (gethash num mu4e~view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
     (funcall (mu4e~view-browse-url-func url))))
+
+(defun mu4e-view-go-to-urls-multi ()
+  "Offer to visit multiple URLs from the current message.
+Default is to visit all URLs, [1..n], where n is the number of
+URLS.  You can type multiple values separated by space, e.g.
+  1 3-6 8
+will visit URLs 1,3,4,5,6 and 8.
+
+Furthermore, there is a shortcut \"a\" which means all URLS, but
+as this is the default, you may not need it."
+  (interactive)
+  (let* ((linkstr (mu4e~view-get-urls-num
+		      "URL number range (or 'a' for 'all')" t))
+	  (count (hash-table-count mu4e~view-link-map))
+	  (linknums (mu4e-split-ranges-to-numbers linkstr count)))
+    (dolist (num linknums)
+      (mu4e-view-go-to-urls-single num))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
   "*internal* Name for the raw message view buffer")
