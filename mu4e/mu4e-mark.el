@@ -29,7 +29,9 @@
 (require 'mu4e-proc)
 (require 'mu4e-utils)
 (require 'mu4e-message)
- 
+
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
+
 ;; keep byte-compiler happy
 (declare-function mu4e~headers-mark "mu4e-headers")
 (declare-function mu4e~headers-goto-docid "mu4e-headers")
