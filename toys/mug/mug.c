@@ -101,13 +101,27 @@ on_tool_button_clicked (GtkToolButton * btn, MugData * mugdata)
 	}
 }
 
+
+
+static GtkToolItem*
+tool_button (const char *name)
+{
+	GtkWidget *icon;
+
+	icon = gtk_image_new_from_icon_name
+		(name, GTK_ICON_SIZE_SMALL_TOOLBAR);
+	
+	return gtk_menu_tool_button_new (icon, NULL);
+}
+
+
 static GtkToolItem*
 get_connected_tool_button (const char* stock_id, ToolAction action,
 			   MugData *mugdata)
 {
 	GtkToolItem *btn;
 
-	btn = gtk_tool_button_new_from_stock (stock_id);
+	btn = tool_button (stock_id);
 	g_object_set_data (G_OBJECT (btn), "action",
 			   GUINT_TO_POINTER (action));
 	g_signal_connect (G_OBJECT (btn), "clicked",
@@ -125,14 +139,14 @@ mug_toolbar (MugData * mugdata)
 		const char *stock_id;
 		ToolAction action;
 	} tools[] = {
-		{GTK_STOCK_GO_UP, ACTION_PREV_MSG},
-		{GTK_STOCK_GO_DOWN, ACTION_NEXT_MSG},
+		{"go-up", ACTION_PREV_MSG},
+		{"go-down", ACTION_NEXT_MSG},
 		{NULL, ACTION_SEPARATOR},
-		{GTK_STOCK_REFRESH, ACTION_REINDEX},
+		{"view-refresh", ACTION_REINDEX},
 		{NULL, ACTION_SEPARATOR},
-		{GTK_STOCK_ABOUT, ACTION_ABOUT},
+		{"help-about", ACTION_ABOUT},
 		{NULL, ACTION_SEPARATOR},
-		{GTK_STOCK_QUIT, ACTION_DO_QUIT}};
+		{"application-exit", ACTION_DO_QUIT}};
 
 	toolbar = gtk_toolbar_new ();
 	for (i = 0; i != G_N_ELEMENTS (tools); ++i) {
