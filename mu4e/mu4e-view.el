@@ -889,6 +889,16 @@ number ATTNUM."
     (or attach (mu4e-error "Not a valid attachment"))))
 
 
+(defun mu4e~view-request-attachment-path (fname path)
+  "Ask the user where to save FNAME (default is PATH/FNAME)."
+  (let ((fpath (expand-file-name
+                (read-file-name
+                 (mu4e-format "Save as ")
+                 path nil nil fname) path)))
+    (if (file-directory-p fpath)
+      (expand-file-name fname fpath)
+      fpath)))
+
 (defun mu4e-view-save-attachment-single (&optional msg attnum)
   "Save attachment number ATTNUM from MSG.
 If MSG is nil use the message returned by `message-at-point'.
@@ -905,26 +915,13 @@ If ATTNUM is nil ask for the attachment number."
 	  (index (plist-get att :index))
 	  (retry t) (fpath))
     (while retry
-      (setq fpath (mu4e-view-request-attachment-path fname path))
+      (setq fpath (mu4e~view-request-attachment-path fname path))
       (setq retry
 	(and (file-exists-p fpath)
 	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" fpath))))))
     (mu4e~proc-extract
       'save (mu4e-message-field msg :docid) index fpath)))
 
-(defun mu4e-view-request-attachment-path (fname path)
-  "Ask the user where to save FNAME (default is PATH/FNAME)."
-  (let ((fpath (expand-file-name
-                (read-file-name
-                 (mu4e-format "Save as ")
-                 path
-                 nil
-                 nil
-                 fname)
-                path)))
-    (if (file-directory-p fpath)
-        (expand-file-name fname fpath)
-      fpath)))
 
 (defun mu4e-view-save-attachment-multi (&optional msg)
   "Offer to save multiple email attachments from the current message.
