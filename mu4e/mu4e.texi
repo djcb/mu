@@ -281,7 +281,7 @@ $ sudo yum install emacs
 $ sudo yum install html2text xdg-utils
 
 # optional: only needed for msg2pdf and mug (toy gtk+ frontend)
-$ sudo apt-get install webkitgtk3-devel
+$ sudo yum install webkitgtk3-devel
 @end example
 
 @subsection Building from a release tarball
