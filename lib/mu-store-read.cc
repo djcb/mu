@@ -131,11 +131,17 @@ char*
 mu_store_get_metadata (const MuStore *store, const char *key, GError **err)
 {
 	g_return_val_if_fail (store, NULL);
+	g_return_val_if_fail (store->db_read_only(), NULL);
 	g_return_val_if_fail (key, NULL);
 
 	try {
-		const std::string val (store->db_read_only()->get_metadata (key));
-		return val.empty() ? NULL : g_strdup (val.c_str());
+		std::string val;
+
+		val = store->db_read_only()->get_metadata (key);
+		if (!val.empty())
+			return g_strdup (val.c_str());
+		else
+			return NULL;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, NULL);
 }
