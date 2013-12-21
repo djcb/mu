@@ -53,7 +53,8 @@ messages. This is the mu4e-specific version of
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-signature
-  (or message-signature "Sent with my mu4e")
+  (or (and (stringp message-signature) message-signature)
+    message-signature "Sent with my mu4e")
   "The message signature (i.e. the blob at the bottom of
 messages). This is the mu4e-specific version of
 `message-signature'."
@@ -65,7 +66,6 @@ messages). This is the mu4e-specific version of
 messages (if it is set)."
   :type 'boolean
   :group 'mu4e-compose)
-
 
 (defun mu4e~draft-user-agent-construct ()
   "Return the User-Agent string for mu4e.
