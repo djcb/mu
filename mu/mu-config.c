@@ -180,7 +180,7 @@ set_group_find_defaults (void)
 	/* note, when no fields are specified, we use
 	 * date-from-subject, and sort descending by date. If fields
 	 * *are* specified, we sort in ascending order. */
-	if (!MU_CONFIG.fields) {
+	if (!MU_CONFIG.fields || !*MU_CONFIG.fields) {
 		MU_CONFIG.fields = "d f s";
 		if (!MU_CONFIG.sortfield)
 			MU_CONFIG.sortfield = "d";

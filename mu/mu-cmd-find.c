@@ -455,9 +455,11 @@ static void
 output_plain_fields (MuMsg *msg, const char *fields,
 		     gboolean color, gboolean threads)
 {
-	const char* myfields;
-	int nonempty;
+	const char*	myfields;
+	int		nonempty;
 
+	g_return_if_fail (fields);
+	
 	for (myfields = fields, nonempty = 0; *myfields; ++myfields) {
 
 		MuMsgFieldId mfid;
