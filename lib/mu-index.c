@@ -320,8 +320,8 @@ mu_index_run (MuIndex *index, const char *path,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 	      void *user_data)
 {
-	MuIndexCallbackData cb_data;
-	MuError rv;
+	MuIndexCallbackData	cb_data;
+	MuError			rv;
 
 	g_return_val_if_fail (index && index->_store, MU_ERROR);
 	g_return_val_if_fail (msg_cb, MU_ERROR);

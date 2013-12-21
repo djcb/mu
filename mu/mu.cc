@@ -79,7 +79,9 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 	}
 
 	if (*err)
-		g_printerr ("mu: %s\n", (*err)->message);
+		g_printerr ("mu: %s (%u)\n",
+			    (*err)->message,
+			    (*err)->code);
 }
 
 
