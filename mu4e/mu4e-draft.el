@@ -60,6 +60,13 @@ messages). This is the mu4e-specific version of
   :type 'sexp
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-signature-auto-include t
+  "Whether to automatically include a message-signature in new
+messages (if it is set)."
+  :type 'boolean
+  :group 'mu4e-compose)
+
+
 (defun mu4e~draft-user-agent-construct ()
   "Return the User-Agent string for mu4e.
 This is either the value of `mu4e-user-agent', or, if not set, a
@@ -411,10 +418,11 @@ from either `mu4e~draft-reply-construct', or
 	    (forward (mu4e~draft-forward-construct msg))
 	    (new     (mu4e~draft-newmsg-construct))
 	    (t (mu4e-error "unsupported compose-type %S" compose-type))))
-	;; include the message signature (if it's set) 
-	(let ((message-signature mu4e-compose-signature))
-	  (message-insert-signature)
-	  (mu4e~fontify-signature))))
+	;; include the message signature (if it's set)
+	(when mu4e-compose-signature-auto-include
+	  (let ((message-signature mu4e-compose-signature))
+	    (message-insert-signature)
+	    (mu4e~fontify-signature)))))
 	  ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
 	  ;; throughout.
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)

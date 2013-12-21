@@ -1345,6 +1345,7 @@ functionality is available, as well some @t{mu4e}-specifics. Its major mode is
 * Compose hooks::
 * Signing and encrypting::
 * Queuing mail::
+* Message signatures::
 * Other settings::
 @end menu
 
@@ -1543,6 +1544,19 @@ man-pages for details.
 @emph{Warning}: when you switch on queued-mode, your messages @emph{won't}
 reach their destination until you switch it off again; so, be careful not to
 do this accidentally!
+
+@node Message signatures
+@section Message signatures
+
+Message signatures are the standard footer blobs in e-mail messages where you
+can put in information you want to include in every message. The text to
+include is set with @code{mu4e-compose-signature}.
+
+If you don't want to include this automatically with each message,
+you can set @code{mu4e-compose-signature-auto-include} to @code{nil}; you can
+then still include the signature manually, using the function
+@code{message-insert-signature}, typically bound to @kbd{C-c C-w}.
+ 
 
 @node Other settings
 @section Other settings
@@ -3186,7 +3200,6 @@ environment with e.g., your main account:
 (setq mu4e-sent-folder "/Account1/Saved Items"
       mu4e-drafts-folder "/Account1/Drafts"
       user-mail-address "my.address@@account1.tld"
-      message-signature-file ".Signature1.txt"
       smtpmail-default-smtp-server "smtp.account1.tld"
       smtpmail-local-domain "account1.tld"
       smtpmail-smtp-server "smtp.account1.tld"
@@ -3206,7 +3219,6 @@ value)} pairs:
      (mu4e-sent-folder "/Account1/Saved Items")
      (mu4e-drafts-folder "/Account1/Drafts")
      (user-mail-address "my.address@@account1.tld")
-     (message-signature-file ".Signature1.txt")
      (smtpmail-default-smtp-server "smtp.account1.tld")
      (smtpmail-local-domain "account1.tld")
      (smtpmail-smtp-server "smtp.account1.tld")
@@ -3216,7 +3228,6 @@ value)} pairs:
      (mu4e-sent-folder "/Account2/Saved Items")
      (mu4e-drafts-folder "/Account2/Drafts")
      (user-mail-address "my.address@@account2.tld)
-     (message-signature-file ".Signature2.txt")
      (smtpmail-default-smtp-server "smtp.account2.tld)
      (smtpmail-local-domain "account2.tld")
      (smtpmail-smtp-server "smtp.account2.tld)
