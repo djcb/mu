@@ -376,7 +376,7 @@ The flags are any of `deleted', `flagged', `new', `passed', `replied' `seen' or
 The server reports the results for the operation through
 `mu4e-update-func'.
 
-If the the variable `mu4e-change-filenames-when-moving' is
+If the variable `mu4e-change-filenames-when-moving' is
 non-nil, moving to a different maildir generates new names for
 the target files; this helps certain tools (such as mbsync).
 
