@@ -54,7 +54,7 @@ messages. This is the mu4e-specific version of
 
 (defcustom mu4e-compose-signature
   (or (and (stringp message-signature) message-signature)
-    message-signature "Sent with my mu4e")
+    "Sent with my mu4e")
   "The message signature (i.e. the blob at the bottom of
 messages). This is the mu4e-specific version of
 `message-signature'."
