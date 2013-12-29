@@ -174,8 +174,8 @@ struct _MuConfig {
 	mode_t		 dirmode;	/* mode for the created maildir */
 
 	/* options for extracting parts */
-	gboolean	*save_all;	/* extract all parts */
-	gboolean	*save_attachments; /* extract all attachment parts */
+	gboolean	save_all;	/* extract all parts */
+	gboolean	save_attachments; /* extract all attachment parts */
 	gchar		*parts;		/* comma-sep'd list of parts
 					 * to save /  open */
 	gchar		*targetdir;	/* where to save the attachments */
