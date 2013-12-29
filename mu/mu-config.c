@@ -181,9 +181,9 @@ set_group_find_defaults (void)
 	 * date-from-subject, and sort descending by date. If fields
 	 * *are* specified, we sort in ascending order. */
 	if (!MU_CONFIG.fields || !*MU_CONFIG.fields) {
-		MU_CONFIG.fields = "d f s";
+		MU_CONFIG.fields = g_strdup ("d f s");
 		if (!MU_CONFIG.sortfield)
-			MU_CONFIG.sortfield = "d";
+			MU_CONFIG.sortfield = g_strdup ("d");
 	}
 
 	if (!MU_CONFIG.formatstr) /* by default, use plain output */
@@ -505,7 +505,7 @@ parse_cmd (int *argcp, char ***argvp, GError **err)
 		 * etc.)*/
 		return TRUE;
 
-	MU_CONFIG.cmdstr = (*argvp)[1];
+	MU_CONFIG.cmdstr = g_strdup ((*argvp)[1]);
 	MU_CONFIG.cmd    = cmd_from_string (MU_CONFIG.cmdstr);
 
 #ifndef BUILD_GUILE
@@ -748,10 +748,18 @@ mu_config_uninit (MuConfig *opts)
 	if (!opts)
 		return;
 
+	g_free (opts->cmdstr);
 	g_free (opts->muhome);
 	g_free (opts->maildir);
+	g_free (opts->fields);
+	g_free (opts->sortfield);
+	g_free (opts->bookmark);
+	g_free (opts->formatstr);
+	g_free (opts->exec);
 	g_free (opts->linksdir);
 	g_free (opts->targetdir);
+	g_free (opts->parts);
+	g_free (opts->script);
 
 	g_strfreev (opts->params);
 
