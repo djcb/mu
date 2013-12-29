@@ -85,8 +85,7 @@ mug_msg_view_init (MugMsgView * obj)
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled),
 					GTK_POLICY_AUTOMATIC,
 					GTK_POLICY_AUTOMATIC);
-	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled),
-					       priv->_view);
+	gtk_container_add (GTK_CONTAINER (scrolled), priv->_view);
 
 	gtk_box_pack_start (GTK_BOX (obj), scrolled, TRUE, TRUE, 0);
 }
