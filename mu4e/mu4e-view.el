@@ -333,7 +333,7 @@ at POINT, or if nil, at (point)."
 	  (define-key map "C"  'mu4e~view-compose-contact)
 	  (define-key map "c"  'mu4e~view-copy-contact)
 	  (propertize
-	    email
+	    long
 	    'long long
 	    'short short
 	    'email email
