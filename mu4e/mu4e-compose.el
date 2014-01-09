@@ -611,7 +611,7 @@ end of the buffer."
   (let ((old-position (point))
         (message-position (save-excursion (message-goto-body) (point))))
     (end-of-buffer)
-    (when (re-search-backward "^-- $" message-position t)
+    (when (re-search-backward message-signature-separator message-position t)
       (previous-line))
     (when (equal (point) old-position)
       (end-of-buffer))))
