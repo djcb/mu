@@ -811,10 +811,10 @@ Also scrolls to the final line, and update the progress throbber."
 
 (defun mu4e~temp-window (buf height)
   "Create a temporary window with HEIGHT at the bottom of the
-screen to display buffer BUF."
+frame to display buffer BUF."
   (let ((win 
 	  (split-window
-	    nil
+	    (frame-root-window)
 	    (- (window-height (frame-root-window)) height))))
     (set-window-buffer win buf)
     (set-window-dedicated-p win t)
