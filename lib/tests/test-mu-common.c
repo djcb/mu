@@ -36,11 +36,21 @@
 char*
 test_mu_common_get_random_tmpdir (void)
 {
-        return g_strdup_printf ("%s%cmu-test-%d%ctest-%x", g_get_tmp_dir(),
-				G_DIR_SEPARATOR,
-				getuid(),
-                                G_DIR_SEPARATOR,
-                                (int)random()*getpid()*(int)time(NULL));
+	char*dir;
+	int  res;
+
+	dir = g_strdup_printf (
+		"%s%cmu-test-%d%ctest-%x",
+		g_get_tmp_dir(),
+		G_DIR_SEPARATOR,
+		getuid(),
+		G_DIR_SEPARATOR,
+		(int)random()*getpid()*(int)time(NULL));
+
+	res = g_mkdir_with_parents (dir, 0700);
+	g_assert (res != -1);
+
+	return dir;
 }
 
 

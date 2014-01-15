@@ -45,8 +45,8 @@ test_mu_store_new_destroy (void)
 
 	err = NULL;
 	store = mu_store_new_writable (tmpdir, NULL, FALSE, &err);
+	g_assert_no_error (err);
 	g_assert (store);
-	g_assert (err == NULL);
 
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));
 
