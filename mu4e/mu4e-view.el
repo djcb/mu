@@ -522,6 +522,7 @@ FUNC should be a function taking two arguments:
       (define-key map "E" 'mu4e-compose-edit)
 
       (define-key map "." 'mu4e-view-raw-message)
+      (define-key map "," 'mu4e-edit-raw-message)
       (define-key map "|" 'mu4e-view-pipe)
       (define-key map "a" 'mu4e-view-action)
 
@@ -1208,6 +1209,23 @@ as this is the default, you may not need it."
 	(view-mode)
 	(goto-char (point-min))))
     (switch-to-buffer buf)))
+
+(defun mu4e-edit-raw-message ()
+  "Edit the message at point in a new buffer."
+  (interactive)
+  (let ((path (mu4e-message-field-at-point :path)))
+    (unless (and path (file-readable-p path))
+      (mu4e-error "Not a readable file: %S" path))
+    (find-file path)
+    (message-mode) ;; not necessary, only for syntax highlighting and some key bindings
+    (local-set-key (kbd "C-c C-c")
+		   '(lambda ()
+		      (interactive)
+		      (let ((docid (mu4e-message-field-at-point :docid))
+			    (flags (mu4e-message-field-at-point :flags)))
+			(save-buffer)
+			(kill-buffer)
+			(mu4e~proc-move docid nil flags))))))
 
 (defun mu4e-view-pipe (cmd)
   "Pipe the message at point through shell command CMD, and display
