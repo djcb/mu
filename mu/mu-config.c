@@ -79,11 +79,28 @@ set_group_mu_defaults (void)
 
 	/* check for the MU_NOCOLOR env var; but in any case don't
 	 * use colors unless we're writing to a tty */
-	if (g_getenv (MU_NOCOLOR) != NULL)
-		MU_CONFIG.nocolor = TRUE;
 
-	if (!isatty(fileno(stdout)) || !isatty(fileno(stderr)))
+	if( MU_CONFIG.color == MuColorOpt_always)
+		MU_CONFIG.nocolor= FALSE;
+	else if( MU_CONFIG.color == MuColorOpt_never)
 		MU_CONFIG.nocolor = TRUE;
+	else if (!isatty(fileno(stdout)) || !isatty(fileno(stderr)))
+		MU_CONFIG.nocolor = TRUE;
+	else if (g_getenv (MU_NOCOLOR) != NULL)
+		MU_CONFIG.nocolor = TRUE;
+}
+
+static gboolean config_options_set_color (const gchar  *option_name, const gchar  *value, gpointer data, GError **error)
+{
+	if( g_strcmp0( value, "never") == 0) 
+		MU_CONFIG.color = MuColorOpt_never;
+	else if( g_strcmp0( value, "auto") == 0) 
+		MU_CONFIG.color = MuColorOpt_auto;
+	else if( g_strcmp0( value, "always") == 0) 
+		MU_CONFIG.color = MuColorOpt_always;
+	else
+		return FALSE;
+	return TRUE;
 }
 
 static GOptionGroup*
@@ -101,8 +118,8 @@ config_options_group_mu (void)
 		 "specify an alternative mu directory", "<dir>"},
 		{"log-stderr", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.log_stderr,
 		 "log to standard error (false)", NULL},
-		{"nocolor", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocolor,
-		 "don't use ANSI-colors in output (false)", NULL},
+		{"color", 0, 0, G_OPTION_ARG_CALLBACK, &config_options_set_color,
+		 "colorize output (never|auto|always)", "<mode>"},
 		{"verbose", 'v', 0, G_OPTION_ARG_NONE, &MU_CONFIG.verbose,
 		 "verbose output (false)", NULL},
 
