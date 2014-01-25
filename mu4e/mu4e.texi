@@ -1460,13 +1460,14 @@ Let's look at some examples. First, suppose we want to set the
   (defun my-set-from-address ()
     "Set the From address based on the To address of the original."
     (let ((msg mu4e-compose-parent-message)) ;; msg is shorter...
-      (setq user-mail-address
-	(cond
-          ((mu4e-message-contact-field-matches msg :to "me@@foo.com")
-           "me@@foo.com")
-          ((mu4e-message-contact-field-matches msg :to "me@@bar.com")
-           "me@@bar.com")
-	  (t "me@@cuux.com"))))))
+      (when msg
+	(setq user-mail-address
+	  (cond
+	    ((mu4e-message-contact-field-matches msg :to "me@@foo.com")
+	      "me@@foo.com")
+	    ((mu4e-message-contact-field-matches msg :to "me@@bar.com")
+	      "me@@bar.com")
+	    (t "me@@cuux.com")))))))
 @end lisp
 
 Second, as mentioned, @code{mu4e-compose-mode-hook} is especially useful for
