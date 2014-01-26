@@ -92,7 +92,7 @@ clicked."
     (define-key map [mouse-2] func)
     (define-key map (kbd "RET") func)
     (put-text-property 0 (length newstr) 'keymap map newstr)
-    (put-text-property (string-match "\\[.+" newstr)
+    (put-text-property (string-match "\\[.+$" newstr)
       (- (length newstr) 1) 'mouse-face 'highlight newstr) newstr))
 
 
