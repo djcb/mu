@@ -76,28 +76,20 @@ set_group_mu_defaults (void)
 		g_free(MU_CONFIG.muhome);
 		MU_CONFIG.muhome = exp;
 	}
-
-	/* check for the MU_NOCOLOR env var; but in any case don't
-	 * use colors unless we're writing to a tty */
-
-	if( MU_CONFIG.color == MuColorOpt_always)
-		MU_CONFIG.nocolor= FALSE;
-	else if( MU_CONFIG.color == MuColorOpt_never)
-		MU_CONFIG.nocolor = TRUE;
-	else if (!isatty(fileno(stdout)) || !isatty(fileno(stderr)))
-		MU_CONFIG.nocolor = TRUE;
-	else if (g_getenv (MU_NOCOLOR) != NULL)
-		MU_CONFIG.nocolor = TRUE;
 }
 
-static gboolean config_options_set_color (const gchar  *option_name, const gchar  *value, gpointer data, GError **error)
+static gboolean 
+config_options_set_color (const gchar  *option_name, 
+						const gchar  *value, 
+						gpointer data, 
+						GError **error)
 {
 	if( g_strcmp0( value, "never") == 0) 
-		MU_CONFIG.color = MuColorOpt_never;
-	else if( g_strcmp0( value, "auto") == 0) 
-		MU_CONFIG.color = MuColorOpt_auto;
+		MU_CONFIG.nocolor = TRUE;
+	else if( g_strcmp0( value, "auto") == 0)
+		MU_CONFIG.nocolor = (!isatty(fileno(stdout)) || !isatty(fileno(stderr)));
 	else if( g_strcmp0( value, "always") == 0) 
-		MU_CONFIG.color = MuColorOpt_always;
+		MU_CONFIG.nocolor = FALSE;
 	else
 		return FALSE;
 	return TRUE;
