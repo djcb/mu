@@ -86,12 +86,6 @@ typedef enum _MuConfigCmd MuConfigCmd;
 	((C) > MU_CONFIG_CMD_UNKNOWN && (C) < MU_CONFIG_CMD_NONE)
 
 
-enum MuColorOpt {
-	MuColorOpt_auto, 
-	MuColorOpt_never, 
-	MuColorOpt_always
-};
-
 /* struct with all configuration options for mu; it will be filled
  * from the config file, and/or command line arguments */
 
@@ -108,8 +102,8 @@ struct _MuConfig {
 	gboolean	 version;	/* request mu version */
 	gboolean	 log_stderr;	/* log to stderr (not logfile) */
 	gchar**		 params;	/* parameters (for querying) */
-	enum MuColorOpt color;		/* colorize output (enum)*/
-	gboolean	nocolor;		/* colorize output (boolean)*/
+	gboolean	nocolor; /* don't use use ansi-colors
+						  * in some output */
 	gboolean	 verbose;	/* verbose output */
 
 	/* options for indexing */
