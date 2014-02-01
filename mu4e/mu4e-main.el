@@ -118,7 +118,7 @@ clicked."
 	"\n\n"
 	(propertize "  Basics\n\n" 'face 'mu4e-title-face)
 	(mu4e~main-action-str "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
-	(mu4e~main-action-str "\t* enter a [/]earch query\n" 'mu4e-search)
+	(mu4e~main-action-str "\t* enter a [s]earch query\n" 'mu4e-search)
 	(mu4e~main-action-str "\t* [C]ompose a new message\n" 'mu4e-compose-new)
 	"\n"
 	(propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
