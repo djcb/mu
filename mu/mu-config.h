@@ -102,8 +102,8 @@ struct _MuConfig {
 	gboolean	 version;	/* request mu version */
 	gboolean	 log_stderr;	/* log to stderr (not logfile) */
 	gchar**		 params;	/* parameters (for querying) */
-	gboolean	 nocolor;        /* don't use use ansi-colors
-					 * in some output */
+	gboolean	nocolor; /* don't use use ansi-colors
+						  * in some output */
 	gboolean	 verbose;	/* verbose output */
 
 	/* options for indexing */
