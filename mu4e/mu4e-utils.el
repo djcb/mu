@@ -1035,8 +1035,8 @@ displaying it). Do _not_ bury the current buffer, though."
 	(with-current-buffer (window-buffer win)
 	  (unless (eq curbuf (current-buffer))
 	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
-	      (unless (one-window-p t)
-		(delete-window win))))))) nil t))
+	      (when (eq t (window-deletable-p win))
+		(delete-window win))))))) t))
 
 
 (defun mu4e-get-time-date (prompt)
