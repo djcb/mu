@@ -118,6 +118,22 @@ The first letter of NAME is used as a shortcut character.")
 
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
+
+
+(defvar mu4e-view-clickable-urls-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
+    (define-key map [?\M-\r] 'mu4e~view-browse-url-from-binding)
+    map))
+
+(defvar mu4e-view-attachments-header-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-open-attach-from-binding)
+    (define-key map  [?\M-\r] 'mu4e~view-open-attach-from-binding)
+    (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
+    (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
+    map))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -266,6 +282,18 @@ marking if it still had that."
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
 	  (mu4e-view-mode))))))
 
+(defun mu4e~view-get-property-from-event (prop)
+  (if (and (eventp last-command-event)
+	   (mouse-event-p last-command-event))
+      (let ((posn (event-end last-command-event)))
+        (when (numberp (posn-point posn))
+          (get-text-property
+           (posn-point posn)
+           prop
+           (window-buffer (posn-window posn)))
+          ))
+    (get-text-property (point) prop)))
+
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
@@ -401,16 +429,17 @@ at POINT, or if nil, at (point)."
 	  (val (when val (concat val " (" btn ")"))))
     (mu4e~view-construct-header :signature val t)))
 
-(defun mu4e~view-open-attach-func (msg attnum)
-  "Return a function that opens attachment with ATTNUM."
-  (lexical-let ((msg msg) (attnum attnum))
-    (lambda () (interactive) (mu4e-view-open-attachment msg attnum))))
+(defun mu4e~view-open-attach-from-binding ()
+  (interactive)
+  (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
+         ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
+    (mu4e-view-open-attachment msg attnum)))
 
-(defun mu4e~view-save-attach-func (msg attnum)
-  "Return a function that saves attachment with ATTNUM."
-  (lexical-let ((msg msg) (attnum attnum))
-    (lambda () (interactive)
-      (mu4e-view-save-attachment-single msg attnum))))
+(defun mu4e~view-save-attach-from-binding ()
+  (interactive)
+  (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
+         ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
+    (mu4e-view-save-attachment-single msg attnum)))
 
 (defun mu4e~view-construct-attachments-header (msg)
   "Display attachment information; the field looks like something like:
@@ -454,27 +483,19 @@ at POINT, or if nil, at (point)."
 	      (lambda (part)
 		(let ((index (mu4e-message-part-field part :index))
 		       (name (mu4e-message-part-field part :name))
-		       (size (mu4e-message-part-field part :size))
-		       (map (make-sparse-keymap)))
+		       (size (mu4e-message-part-field part :size)))
 		  (incf id)
 		  (puthash id index mu4e~view-attach-map)
-
-		  (define-key map [mouse-1]
-		    (mu4e~view-open-attach-func msg id))
-		  (define-key map  [?\M-\r]
-		    (mu4e~view-open-attach-func msg id))
-		  (define-key map [mouse-2]
-		    (mu4e~view-save-attach-func msg id))
-		  (define-key map (kbd "<S-return>")
-		    (mu4e~view-save-attach-func msg id))
 
 		  (concat
 		    (propertize (format "[%d]" id)
 		      'face 'mu4e-attach-number-face)
 		    (propertize name 'face 'mu4e-link-face
-		      'keymap map
+		      'keymap mu4e-view-attachments-header-keymap
 		      'mouse-face 'highlight
 		      'help-echo
+		      'mu4e-msg msg
+		      'mu4e-attnum id
 		      (concat
 			"[mouse-1] or [M-RET] opens the attachment\n"
 			"[mouse-2] or [S-RET] offers to save it"))
@@ -731,6 +752,13 @@ What browser is called is depending on
 	  (interactive)
 	  (browse-url url))))))
 
+(defun mu4e~view-browse-url-from-binding (&optional url)
+  (interactive)
+  (let* (( url (or url (mu4e~view-get-property-from-event 'mu4e-url))))
+    (if (string-match-p "^mailto:" url)
+        (mu4e~compose-browse-url-mail url)
+      (browse-url url))))
+
 (defun mu4e~view-show-images-maybe (msg)
   "Show attached images, if `mu4e-show-images' is non-nil."
   (when (and (display-images-p) mu4e-view-show-images)
@@ -757,15 +785,13 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	(make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
       (while (re-search-forward mu4e~view-url-regexp nil t)
-	(let ((url (match-string 0))
-	       (map (make-sparse-keymap)))
-	  (define-key map [mouse-1] (mu4e~view-browse-url-func url))
-	  (define-key map [?\M-\r] (mu4e~view-browse-url-func url))
+	(let ((url (match-string 0)))
 	  (puthash (incf num) url mu4e~view-link-map)
 	  (add-text-properties 0 (length url)
 	    `(face mu4e-link-face
 	       mouse-face highlight
-	       keymap ,map
+	       mu4e-url ,url
+	       keymap ,mu4e-view-clickable-urls-keymap
 	       help-echo
 	       "[mouse-1] or [M-RET] to open the link") url)
 	  (replace-match
@@ -1186,7 +1212,7 @@ offer to go to a range of URLs."
 		    (mu4e~view-get-urls-num "URL to visit")))
          (url (gethash num mu4e~view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
-    (funcall (mu4e~view-browse-url-func url))))
+    (mu4e~view-browse-url-from-binding url)))
 
 (defun mu4e-view-go-to-urls-multi ()
   "Offer to visit multiple URLs from the current message.
