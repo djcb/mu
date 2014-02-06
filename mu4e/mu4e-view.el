@@ -779,7 +779,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
   (save-excursion
     (let ((inhibit-read-only t))
       (goto-char (point-min))
-      (flush-lines "^[:blank:]*>")
+      (flush-lines mu4e-cited-regexp)
       (setq mu4e~view-cited-hidden t))))
 
 

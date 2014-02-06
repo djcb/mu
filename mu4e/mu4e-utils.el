@@ -1094,7 +1094,7 @@ used in the view and compose modes."
 	  ;; prefixes, starting with 0 for 'no citation'
 	  (beginning-of-line 1)
 	  ;; consider only lines that heuristically look like a citation line...
-	  (when (looking-at "[[:blank:]]*[^[:blank:]\n]*[[:blank:]]*>")
+	  (when (looking-at mu4e-cited-regexp)
 	    (let* ((level (how-many ">" (line-beginning-position 1)
 			    (line-end-position 1)))
 		    (face

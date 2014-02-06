@@ -181,6 +181,11 @@ view buffer."
   :type 'boolean
   :group 'mu4e)
 
+(defcustom mu4e-cited-regexp "^[[:blank:]]*[^[:blank:]\n]*[[:blank:]]*>"
+  "Regular expression that determines whether a line is a citation."
+  :type 'string
+  :group 'mu4e)
+
 (defcustom mu4e-completing-read-function 'ido-completing-read
   "Function to be used to receive input from the user with
 completion. This is used to receive the name of the maildir
