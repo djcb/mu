@@ -337,12 +337,12 @@ add text-properties to VAL."
       (buffer-string))
     "")))
 
-(defun mu4e~view-toggle-contact (&optional point)
+(defun* mu4e~view-toggle-contact (&optional point)
   "Toggle between the long and short versions of long/short string
 at POINT, or if nil, at (point)."
   (interactive)
   (unless (get-text-property (or point (point)) 'long)
-    (error "point is not toggleable"))
+    (return-from mu4e~view-toggle-contact))
   (let* ((point (or point (point)))
 	  ;; find the first pos part of the button
 	  (start (previous-property-change point))
@@ -443,14 +443,16 @@ at POINT, or if nil, at (point)."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
          ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
-    (mu4e-view-open-attachment msg attnum)))
+    (when (and msg attnum)
+      (mu4e-view-open-attachment msg attnum))))
 
 (defun mu4e~view-save-attach-from-binding ()
   "Save the attachement at point, or click location."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
          ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
-    (mu4e-view-save-attachment-single msg attnum)))
+    (when (and msg attnum)
+      (mu4e-view-save-attachment-single msg attnum))))
 
 (defun mu4e~view-construct-attachments-header (msg)
   "Display attachment information; the field looks like something like:
@@ -769,9 +771,10 @@ If the optional argument URL is provided, browse that instead.
 If the url is mailto link, start writing an email to that address."
   (interactive)
   (let* (( url (or url (mu4e~view-get-property-from-event 'mu4e-url))))
-    (if (string-match-p "^mailto:" url)
-        (mu4e~compose-browse-url-mail url)
-      (browse-url url))))
+    (when url
+      (if (string-match-p "^mailto:" url)
+	  (mu4e~compose-browse-url-mail url)
+	(browse-url url)))))
 
 (defun mu4e~view-show-images-maybe (msg)
   "Show attached images, if `mu4e-show-images' is non-nil."
