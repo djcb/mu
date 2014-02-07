@@ -266,6 +266,7 @@ marking if it still had that."
       (when (or embedded (not (mu4e~view-mark-as-read msg)))
 	(let ((inhibit-read-only t))
 	  (erase-buffer)
+	  (delete-all-overlays)
 	  (insert (mu4e-view-message-text msg))
 	  (goto-char (point-min))
 	  (mu4e~fontify-cited)
@@ -798,19 +799,22 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	(make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
       (while (re-search-forward mu4e~view-url-regexp nil t)
-	(let ((url (match-string 0)))
+	(let* ((url (match-string 0))
+	       (ov (make-overlay (match-beginning 0) (match-end 0))))
 	  (puthash (incf num) url mu4e~view-link-map)
-	  (add-text-properties 0 (length url)
+	  (add-text-properties
+	   (match-beginning 0)
+	   (match-end 0)
 	    `(face mu4e-link-face
 	       mouse-face highlight
 	       mu4e-url ,url
 	       keymap ,mu4e-view-clickable-urls-keymap
 	       help-echo
-	       "[mouse-1] or [M-RET] to open the link") url)
-	  (replace-match
-	    (concat url
-	      (propertize (format "[%d]" num)
-		'face 'mu4e-url-number-face))))))))
+	       "[mouse-1] or [M-RET] to open the link"))
+	  (overlay-put ov 'after-string 
+		       (propertize (format "[%d]" num)
+				   'face 'mu4e-url-number-face))
+	  )))))
 
 
 (defun mu4e~view-hide-cited ()
