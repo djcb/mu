@@ -119,22 +119,6 @@ The first letter of NAME is used as a shortcut character.")
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
 
-(defvar mu4e-view-clickable-urls-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
-    (define-key map [?\M-\r] 'mu4e~view-browse-url-from-binding)
-    map))
-
-(defvar mu4e-view-attachments-header-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] 'mu4e~view-open-attach-from-binding)
-    (define-key map  [?\M-\r] 'mu4e~view-open-attach-from-binding)
-    (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
-    (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
-    map))
-
-;; FIXME: Put me where?
-
 (defvar mu4e-view-contacts-header-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'mu4e~view-toggle-contact)
@@ -142,7 +126,24 @@ The first letter of NAME is used as a shortcut character.")
     (define-key map [mouse-2] 'mu4e~view-compose-contact)
     (define-key map "C"  'mu4e~view-compose-contact)
     (define-key map "c"  'mu4e~view-copy-contact)
-    map))
+    map)
+  "Keymap used for the contacts in the header fields.")
+
+(defvar mu4e-view-clickable-urls-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
+    (define-key map [?\M-\r] 'mu4e~view-browse-url-from-binding)
+    map)
+  "Keymap used for the urls inside the body.")
+
+(defvar mu4e-view-attachments-header-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-open-attach-from-binding)
+    (define-key map  [?\M-\r] 'mu4e~view-open-attach-from-binding)
+    (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
+    (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
+    map)
+  "Keymap used in the \"Attachements\" header field.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -293,6 +294,9 @@ marking if it still had that."
 	  (mu4e-view-mode))))))
 
 (defun mu4e~view-get-property-from-event (prop)
+  "Get the property PROP at point, or the location of the mouse.
+The action is chosen based on the `last-command-event'.
+Meant to be evoked from interactive commands."
   (if (and (eventp last-command-event)
 	   (mouse-event-p last-command-event))
       (let ((posn (event-end last-command-event)))
@@ -434,12 +438,14 @@ at POINT, or if nil, at (point)."
     (mu4e~view-construct-header :signature val t)))
 
 (defun mu4e~view-open-attach-from-binding ()
+  "Open the attachement at point, or click location."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
          ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
     (mu4e-view-open-attachment msg attnum)))
 
 (defun mu4e~view-save-attach-from-binding ()
+  "Save the attachement at point, or click location."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
          ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
@@ -757,6 +763,9 @@ What browser is called is depending on
 	  (browse-url url))))))
 
 (defun mu4e~view-browse-url-from-binding (&optional url)
+  "View in browser the url at point, or click location.
+If the optional argument URL is provided, browse that instead.
+If the url is mailto link, start writing an email to that address."
   (interactive)
   (let* (( url (or url (mu4e~view-get-property-from-event 'mu4e-url))))
     (if (string-match-p "^mailto:" url)
