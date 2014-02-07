@@ -119,7 +119,6 @@ The first letter of NAME is used as a shortcut character.")
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
 
-
 (defvar mu4e-view-clickable-urls-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
@@ -132,6 +131,17 @@ The first letter of NAME is used as a shortcut character.")
     (define-key map  [?\M-\r] 'mu4e~view-open-attach-from-binding)
     (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
     (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
+    map))
+
+;; FIXME: Put me where?
+
+(defvar mu4e-view-contacts-header-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-toggle-contact)
+    (define-key map [?\M-\r]  'mu4e~view-toggle-contact)
+    (define-key map [mouse-2] 'mu4e~view-compose-contact)
+    (define-key map "C"  'mu4e~view-compose-contact)
+    (define-key map "c"  'mu4e~view-copy-contact)
     map))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -368,20 +378,14 @@ at POINT, or if nil, at (point)."
 		(email (when (cdr c)
 			 (replace-regexp-in-string "[[:cntrl:]]" "" (cdr c))))
 		(short (or name email)) ;; name may be nil
-		(long (if name (format "%s <%s>" name email) email))
-		(map (make-sparse-keymap)))
-	  (define-key map [mouse-1] 'mu4e~view-toggle-contact)
-	  (define-key map [?\M-\r]  'mu4e~view-toggle-contact)
-	  (define-key map [mouse-2] 'mu4e~view-compose-contact)
-	  (define-key map "C"  'mu4e~view-compose-contact)
-	  (define-key map "c"  'mu4e~view-copy-contact)
+		(long (if name (format "%s <%s>" name email) email)))
 	  (propertize
 	    long
 	    'long long
 	    'short short
 	    'email email
 	    'display (if mu4e-view-show-addresses long short)
-	    'keymap map
+	    'keymap mu4e-view-contacts-header-keymap
 	    'face 'mu4e-contact-face
 	    'mouse-face 'highlight
 	    'help-echo
