@@ -271,23 +271,8 @@ marking if it still had that."
 	  (goto-char (point-min))
 	  (mu4e~fontify-cited)
 	  (mu4e~fontify-signature)
-	  (mu4e~view-make-urls-clickable)
+	  (mu4e~view-make-urls-clickable)	
 	  (mu4e~view-show-images-maybe msg)
-
-	  (let* ((headers-window
-		  (or (case mu4e-split-view
-			(horizontal (window-in-direction 'above))
-			(vertical (window-in-direction 'left)))
-		      (get-buffer-window mu4e~view-headers-buffer))))
-	    (when (and mu4e-split-view headers-window)
-	      (set-window-prev-buffers nil nil)
-	      (set-window-parameter nil
-				    'quit-restore
-				    (list 'window
-					  'window
-					  headers-window
-					  (current-buffer)))))
-
 	  (setq
 	    mu4e~view-buffer buf
 	    mu4e~view-headers-buffer headersbuf)
@@ -308,7 +293,7 @@ Meant to be evoked from interactive commands."
            (window-buffer (posn-window posn)))
           ))
     (get-text-property (point) prop)))
-
+ 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
