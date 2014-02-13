@@ -491,12 +491,12 @@ at POINT, or if nil, at (point)."
 		    (propertize name 'face 'mu4e-link-face
 		      'keymap mu4e-view-attachments-header-keymap
 		      'mouse-face 'highlight
-		      'help-echo
+		      'help-echo (concat
+				  "[mouse-1] or [M-RET] opens the attachment\n"
+				  "[mouse-2] or [S-RET] offers to save it")
 		      'mu4e-msg msg
 		      'mu4e-attnum id
-		      (concat
-			"[mouse-1] or [M-RET] opens the attachment\n"
-			"[mouse-2] or [S-RET] offers to save it"))
+		      )
 		    (when (and size (> size 0))
 		      (propertize (format "(%s)" (mu4e-display-size size))
                                   'face 'mu4e-header-key-face)))))
