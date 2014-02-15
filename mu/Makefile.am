@@ -26,7 +26,7 @@ AM_CPPFLAGS=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement \
-	-pedantic -Wno-variadic-macros \
+	-Wno-variadic-macros \
         -DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
