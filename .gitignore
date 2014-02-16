@@ -4,7 +4,8 @@ mu
 mug2
 .desktop
 *html
-.*
+.deps
+.libs
 autom4te*
 Makefile
 Makefile.in

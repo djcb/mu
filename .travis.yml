@@ -1,0 +1,27 @@
+language: c
+compiler:
+  - gcc
+env:
+  global:
+    - BUILD_PKGS="libtool autoconf automake texinfo"
+    - BUILD_LIBS="libgmime-2.6-dev libxapian-dev guile-2.0-dev libwebkitgtk-dev"
+    - TEST_PKGS="pmccabe"
+  matrix:
+    - EVM_EMACS=emacs-24.1-bin
+    - EVM_EMACS=emacs-24.2-bin
+    - EVM_EMACS=emacs-24.3-bin
+before_install:
+  - git submodule update --init --recursive
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq ${BUILD_PKGS} ${BUILD_LIBS} ${TEST_PKGS}
+install:
+  - sudo mkdir /usr/local/evm
+  - sudo chown $(id -u):$(id -g) /usr/local/evm
+  - curl -fsSkL https://raw.github.com/rejeep/evm/master/go | bash
+  - export PATH="$HOME/.evm/bin:$PATH"
+  - evm install $EVM_EMACS --use
+script:
+  - autoreconf -i
+  - ./configure
+  - make
+  - make check
