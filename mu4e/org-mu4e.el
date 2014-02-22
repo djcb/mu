@@ -59,6 +59,13 @@ Example usage:
   :type 'function
   :group 'org-mu4e)
 
+(defun org-mu4e-contact-full-str (contacts)
+  (mapcar
+    (lambda (ct)
+      (let ((name (car ct)) (email (cdr ct)))
+        (if name (format "%s <%s>" name email) email))) contacts))
+
+
 (defun org-mu4e-store-link ()
   "Store a link to a mu4e query or message."
   (cond
@@ -78,6 +85,11 @@ Example usage:
 	     (msgid   (or (plist-get msg :message-id) "<none>"))
 	     link)
        (org-store-link-props :type "mu4e" :link link
+			     :from (car (org-mu4e-contact-full-str (mu4e-msg-field msg :from))) 
+			     :to (car (org-mu4e-contact-full-str (mu4e-msg-field msg :to)))
+                             :subject (mu4e-msg-field msg :subject)
+                             :date (format-time-string mu4e-headers-date-format
+                                    (mu4e-msg-field msg :date)) 
 			     :message-id msgid)
        (setq link (concat "mu4e:msgid:" msgid))
        (org-add-link-props :link link
