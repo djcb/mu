@@ -129,7 +129,8 @@ and offlineimap."
   "With this option set to non-nil, not just return the matches for
 a searches, but also messages that are related (through their
 references) to these messages. This can be useful e.g. to include
-sent messages into message threads."
+sent messages into message threads. This only has effect when
+`mu4e-headers-show-threads' is non-nil."
   :type 'boolean
   :group 'mu4e-headers)
 
@@ -940,7 +941,8 @@ the query history stack."
       mu4e~headers-sort-direction
       maxnum
       mu4e-headers-skip-duplicates
-      mu4e-headers-include-related)))
+      (and mu4e-headers-show-threads
+	   mu4e-headers-include-related))))
 
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value
