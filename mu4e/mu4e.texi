@@ -1791,7 +1791,7 @@ to the list of maildirs you want to have quick access to, for example:
        ("/archive"   . ?a)
        ("/lists"     . ?l)
        ("/work"      . ?w)
-       ("/sent"      . ?s))
+       ("/sent"      . ?s)))
 @end lisp
 
 This sets @key{i} as a shortcut for the @t{/inbox} folder -- effectively a
