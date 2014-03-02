@@ -1089,27 +1089,14 @@ used in the view and compose modes."
     (let ((more-lines t))
       (goto-char (point-min))
       (when (search-forward-regexp "^\n" nil t) ;; search the first empty line
-	(while more-lines
-	  ;; Get the citation level at point -- i.e., the number of '>'
-	  ;; prefixes, starting with 0 for 'no citation'
-	  (beginning-of-line 1)
-	  ;; consider only lines that heuristically look like a citation line...
-	  (when (looking-at mu4e-cited-regexp)
-	    (let* ((level (how-many ">" (line-beginning-position 1)
-			    (line-end-position 1)))
+        (while (re-search-forward mu4e-cited-regexp nil t)
+          (let* ((level (length (replace-regexp-in-string " " "" (match-string 1))))
 		    (face
 		      (unless (zerop level)
 			(intern-soft (format "mu4e-cited-%d-face" level)))))
 	      (when face
 		(add-text-properties (line-beginning-position 1)
-		  (line-end-position 1) `(face ,face)))))
-	  (setq more-lines
-	    (and (= 0 (forward-line 1))
-	      ;; we need to add this weird check below; it seems in some cases
-	      ;; `forward-line' continues to return 0, even when at the end,
-	      ;; which would lead to an infinite loop
-	      (not (= (point-max) (line-end-position))))))))))
-
+                                     (line-end-position 1) `(face ,face)))))))))
 
 (defun mu4e~fontify-signature ()
   "Give the message signatures a distinctive color. This is used in

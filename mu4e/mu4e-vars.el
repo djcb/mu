@@ -181,7 +181,7 @@ view buffer."
   :type 'boolean
   :group 'mu4e)
 
-(defcustom mu4e-cited-regexp "^[[:blank:]]*[^[:blank:]\n]*[[:blank:]]*>"
+(defcustom mu4e-cited-regexp "^ *\\(> *>*\\)"
   "Regular expression that determines whether a line is a citation."
   :type 'string
   :group 'mu4e)
