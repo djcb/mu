@@ -1090,10 +1090,10 @@ used in the view and compose modes."
       (goto-char (point-min))
       (when (search-forward-regexp "^\n" nil t) ;; search the first empty line
         (while (re-search-forward mu4e-cited-regexp nil t)
-          (let* ((level (length (replace-regexp-in-string " " "" (match-string 1))))
-		    (face
-		      (unless (zerop level)
-			(intern-soft (format "mu4e-cited-%d-face" level)))))
+          (let* ((level (string-width (replace-regexp-in-string
+                                       " " "" (match-string 1))))
+                 (face  (unless (zerop level)
+                          (intern-soft (format "mu4e-cited-%d-face" level)))))
 	      (when face
 		(add-text-properties (line-beginning-position 1)
                                      (line-end-position 1) `(face ,face)))))))))
