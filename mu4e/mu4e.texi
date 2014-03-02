@@ -1523,7 +1523,7 @@ To allow for queuing, you need to tell @t{smtpmail} where you want to store
 the queued messages. For example:
 
 @lisp
-(setq smtpmail-queue-mail  nil  ;; start in non-queuing mode
+(setq smtpmail-queue-mail t  ;; start in queuing mode
       smtpmail-queue-dir   "~/Maildir/queue/cur")
 @end lisp
 
@@ -1791,7 +1791,7 @@ to the list of maildirs you want to have quick access to, for example:
        ("/archive"   . ?a)
        ("/lists"     . ?l)
        ("/work"      . ?w)
-       ("/sent"      . ?s))
+       ("/sent"      . ?s)))
 @end lisp
 
 This sets @key{i} as a shortcut for the @t{/inbox} folder -- effectively a
