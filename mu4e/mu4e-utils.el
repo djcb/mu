@@ -1095,7 +1095,7 @@ used in the view and compose modes."
 	  (beginning-of-line 1)
 	  ;; consider only lines that heuristically look like a citation line...
 	  (when (looking-at mu4e-cited-regexp)
-	    (let* ((level (how-many ">" (line-beginning-position 1)
+	    (let* ((level (how-many "^>" (line-beginning-position 1)
 			    (line-end-position 1)))
 		    (face
 		      (unless (zerop level)
