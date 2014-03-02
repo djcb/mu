@@ -1086,17 +1086,16 @@ receive (:info add :path <path> :docid <docid>) as well as (:update
   "Colorize message content based on the citation level. This is
 used in the view and compose modes."
   (save-excursion
-    (let ((more-lines t))
-      (goto-char (point-min))
-      (when (search-forward-regexp "^\n" nil t) ;; search the first empty line
-        (while (re-search-forward mu4e-cited-regexp nil t)
-          (let* ((level (string-width (replace-regexp-in-string
-                                       " " "" (match-string 1))))
-                 (face  (unless (zerop level)
-                          (intern-soft (format "mu4e-cited-%d-face" level)))))
-	      (when face
-		(add-text-properties (line-beginning-position 1)
-                                     (line-end-position 1) `(face ,face)))))))))
+    (goto-char (point-min))
+    (when (search-forward-regexp "^\n" nil t) ;; search the first empty line
+      (while (re-search-forward mu4e-cited-regexp nil t)
+        (let* ((level (string-width (replace-regexp-in-string
+                                     " " "" (match-string 1))))
+               (face  (unless (zerop level)
+                        (intern-soft (format "mu4e-cited-%d-face" level)))))
+          (when face
+            (add-text-properties (line-beginning-position 1)
+                                 (line-end-position 1) `(face ,face))))))))
 
 (defun mu4e~fontify-signature ()
   "Give the message signatures a distinctive color. This is used in
