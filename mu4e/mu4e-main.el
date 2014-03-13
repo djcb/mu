@@ -158,12 +158,15 @@ clicked."
 (defun mu4e~main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
-  (unless (file-directory-p smtpmail-queue-dir)
-    (mu4e-error "`smtpmail-queue-dir' does not exist"))
-  (setq smtpmail-queue-mail (not smtpmail-queue-mail))
-  (message
-    (concat "Outgoing mail will now be "
-      (if smtpmail-queue-mail "queued" "sent directly")))
-  (mu4e~main-view))
+  (let ((curpos (point)))
+    (unless (file-directory-p smtpmail-queue-dir)
+      (mu4e-error "`smtpmail-queue-dir' does not exist"))
+    (setq smtpmail-queue-mail (not smtpmail-queue-mail))
+    (message
+     (concat "Outgoing mail will now be "
+             (if smtpmail-queue-mail "queued" "sent directly")))
+    (mu4e~main-view)
+    ;; "queued" and "direct" have same length.
+    (goto-char curpos)))
 
 (provide 'mu4e-main)
