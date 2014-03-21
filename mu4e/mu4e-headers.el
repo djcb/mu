@@ -249,8 +249,9 @@ In the format needed for `mu4e-read-option'.")
   (when (buffer-live-p mu4e~headers-buffer)
     (let ((inhibit-read-only t))
       (with-current-buffer mu4e~headers-buffer
-	(erase-buffer)
-	(mu4e~mark-clear)))))
+	(setq mu4e~view-msg nil)
+	(mu4e~mark-clear)
+	(erase-buffer)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
@@ -436,7 +437,6 @@ found."
 		  (mu4e-error "no :function defined for field %S %S" field (cdr item)))))
     (funcall func msg)))
 
-
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
     "Create a one line description of MSG in this buffer, at POINT,
@@ -497,21 +497,19 @@ if provided, or at the end of the buffer otherwise."
   "Create a one line description of the number of headers found
 after the end of the search results."
   (when (buffer-live-p mu4e~headers-buffer)
-  (with-current-buffer mu4e~headers-buffer
-    (save-excursion
-      (goto-char (point-max))
-      (let ((inhibit-read-only t)
-	     (str (if (= 0 count)
-		    mu4e~no-matches
-		    mu4e~end-of-results)))
-	(insert (propertize str 'face 'mu4e-system-face 'intangible t))
-	(unless (zerop count)
-	  (mu4e-message "Found %d matching message%s"
-	    count (if (= 1 count) "" "s"))
-	  ;; highlight the first message
-	  (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))
-      ;; run-hooks
-      (run-hooks 'mu4e-headers-found-hook)))))
+    (with-current-buffer mu4e~headers-buffer
+      (save-excursion
+	(goto-char (point-max))
+	(let ((inhibit-read-only t)
+	       (str (if (zerop count) mu4e~no-matches mu4e~end-of-results)))
+	  (insert (propertize str 'face 'mu4e-system-face 'intangible t))
+	  (unless (zerop count)
+	    (mu4e-message "Found %d matching message%s"
+	      count (if (= 1 count) "" "s"))
+	    ;; highlight the first message
+	    (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))
+	;; run-hooks
+	(run-hooks 'mu4e-headers-found-hook)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
