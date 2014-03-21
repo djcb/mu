@@ -451,7 +451,10 @@ if provided, or at the end of the buffer otherwise."
 		(concat ;; prefix subject with a thread indicator
 		  (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
 		  ;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
-		  val))
+		  
+		  ;; work-around: emacs' display gets really slow when lines are too long;
+		  ;; so limit subject length to 600 
+		  (truncate-string-to-width val 600)))
 	      ((:maildir :path :message-id) val)
 	      ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
 	      ;; if we (ie. `user-mail-address' is the 'From', show
