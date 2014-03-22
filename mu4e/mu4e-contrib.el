@@ -39,5 +39,52 @@
   (mu4e-headers-mark-all-unread-read)
   (mu4e-mark-execute-all t))
 
+;;; Bookmark handlers
+;;
+;;  Allow bookmarking a mu4e buffer in regular emacs bookmarks.
+
+;; Probably this can be moved to mu4e-view.el.
+(add-hook 'mu4e-view-mode-hook
+          #'(lambda ()
+              (set (make-local-variable 'bookmark-make-record-function)
+                   'mu4e-view-bookmark-make-record)))
+;; And this can be moved to mu4e-headers.el.
+(add-hook 'mu4e-headers-mode-hook
+          #'(lambda ()
+              (set (make-local-variable 'bookmark-make-record-function)
+                   'mu4e-view-bookmark-make-record)))
+
+(defun mu4e-view-bookmark-make-record ()
+  "Make a bookmark entry for a mu4e buffer."
+  (let* ((msg     (mu4e-message-at-point))
+         (query   (mu4e-last-query))
+         (docid   (plist-get msg :docid))
+         (mode    (symbol-name major-mode))
+         (subject (or (plist-get msg :subject) "No subject")))
+    `(,subject
+      ,@(bookmark-make-record-default 'no-file 'no-context)
+        (location . (,query . ,docid))
+        (mode . ,mode)
+        (handler . mu4e-bookmark-jump))))
+
+(defun mu4e-bookmark-jump (bookmark)
+  "Handler function for record returned by `mu4e-view-bookmark-make-record'.
+BOOKMARK is a bookmark name or a bookmark record."
+  (let* ((path  (bookmark-prop-get bookmark 'location))
+         (mode  (bookmark-prop-get bookmark 'mode))
+         (docid (cdr path))
+         (query (car path)))
+    (call-interactively 'mu4e)
+    (mu4e-headers-search query)
+    (sit-for 0.5)
+    (mu4e~headers-goto-docid docid)
+    (mu4e~headers-highlight docid)
+    (unless (string= mode "mu4e-headers-mode")
+      (call-interactively 'mu4e-headers-view-message)
+      (run-with-timer 0.1 nil
+                      (lambda (bmk)
+                        (bookmark-default-handler
+                         `("" (buffer . ,(current-buffer)) . ,(bookmark-get-bookmark-record bmk))))
+                      bookmark))))
 
 (provide 'mu4e-contrib)
