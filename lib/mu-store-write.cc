@@ -207,10 +207,9 @@ add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 	const char *datestr;
 
 	t = (time_t)mu_msg_get_field_numeric (msg, mfid);
-	if (t != 0) {
-		datestr = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
-		doc.add_value ((Xapian::valueno)mfid, datestr);
-	}
+
+	datestr = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
+	doc.add_value ((Xapian::valueno)mfid, datestr);
 }
 
 G_GNUC_CONST
