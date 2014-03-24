@@ -524,7 +524,12 @@ mu4e-compose-mode."
   "Face for the separator between headers / message in
 mu4e-compose-mode."
   :group 'mu4e-faces)
- 
+
+(defface mu4e-region-code
+    '((t (:background "DarkSlateGray")))
+  "Face for highlighting marked region in mu4e-view buffer."
+  :group 'mu4e-faces)
+
 ;; headers info
 (defconst mu4e-header-info
   '( (:attachments .
