@@ -904,6 +904,8 @@ all messages in the subthread at point in the headers view."
   (mu4e~view-in-headers-context (mu4e-headers-search-edit)))
 
 (defun mu4e-mark-region-code ()
+  "Highlight region marked with `message-mark-inserted-region'.
+Add this function to `mu4e-view-mode-hook' to enable this feature."
   (require 'message)
   (let (beg end ov-beg ov-end ov-inv)
     (save-excursion
