@@ -903,6 +903,32 @@ all messages in the subthread at point in the headers view."
   (interactive)
   (mu4e~view-in-headers-context (mu4e-headers-search-edit)))
 
+(defun mu4e-mark-region-code ()
+  "Highlight region marked with `message-mark-inserted-region'.
+Add this function to `mu4e-view-mode-hook' to enable this feature."
+  (require 'message)
+  (let (beg end ov-beg ov-end ov-inv)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+              (concat "^" message-mark-insert-begin) nil t)
+        (setq ov-beg (match-beginning 0)
+              ov-end (match-end 0)
+              ov-inv (make-overlay ov-beg ov-end)
+              beg    ov-end)
+        (overlay-put ov-inv 'invisible t)
+        (when (re-search-forward
+               (concat "^" message-mark-insert-end) nil t)
+          (setq ov-beg (match-beginning 0)
+                ov-end (match-end 0)
+                ov-inv (make-overlay ov-beg ov-end)
+                end    ov-beg)
+          (overlay-put ov-inv 'invisible t))
+        (when (and beg end)
+          (let ((ov (make-overlay beg end)))
+            (overlay-put ov 'face 'mu4e-region-code))
+          (setq beg nil end nil))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
 (defun mu4e~view-get-attach-num (prompt msg &optional multi)
