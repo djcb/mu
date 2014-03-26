@@ -57,7 +57,9 @@
 (defun mu4e-view-bookmark-make-record ()
   "Make a bookmark entry for a mu4e buffer."
   (let* ((msg     (mu4e-message-at-point))
-         (query   (mu4e-last-query))
+         (maildir (plist-get msg :maildir))
+         (date    (format-time-string "%Y%m%d" (plist-get msg :date)))
+         (query   (format "maildir:%s date:%s" maildir date))
          (docid   (plist-get msg :docid))
          (mode    (symbol-name major-mode))
          (subject (or (plist-get msg :subject) "No subject")))
