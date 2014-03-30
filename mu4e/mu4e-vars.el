@@ -249,6 +249,13 @@ Set to nil to not have any time-based restriction."
   :type 'string
   :group 'mu4e-compose)
 
+(defcustom mu4e-canonical-contact-function 'mu4e-canonical-contact-identity
+  "Function to be used for processing every contact and convert it to the 
+canonical counterpart, you may use this for correcting typo's, changed 
+names and adapting addresses or names to company policies."
+  :type 'function
+  :group 'mu4e-compose)
+
 (defcustom mu4e-compose-complete-ignore-address-regexp "no-?reply"
   "Ignore any e-mail addresses for completion if they match this regexp."
   :type 'string

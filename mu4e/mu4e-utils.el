@@ -604,6 +604,20 @@ process."
 	  (replace-regexp-in-string "\"" "\\\\\"" ph)))
       (t (format "\"%s\"" ph)))))
 
+;;; names and mail-addresses can be mapped onto their canonical counterpart.
+;;; use the customizeable function mu4e-canonical-contact-function to do that.
+;;; below the identity function for mapping a contact onto the canonical one.
+(defun mu4e-canonical-contact-identity (contact) 
+    "This returns the name and the mail-address of a contact.
+It's used as an identity function for converting contacts to their
+canonical counterpart."
+    (let ((name (plist-get contact :name))
+          (mail (plist-get contact :mail))
+          )
+      (list :name name :mail mail)
+      )
+    )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
@@ -628,8 +642,9 @@ This is used by the completion function in mu4e-compose."
 			   (< tstamp1 tstamp2)
 			   (< freq1 freq2)))))))
     (dolist (contact contacts)
-      (let ((name (plist-get contact :name))
-	     (mail (plist-get contact :mail)))
+      (let* ((canonicalcontact (funcall mu4e-canonical-contact-function contact))
+              (name (plist-get canonicalcontact :name))
+              (mail (plist-get canonicalcontact :mail)))
 	(when mail
 	  (unless ;; ignore some address ('noreply' etc.)
 	    (and mu4e-compose-complete-ignore-address-regexp
