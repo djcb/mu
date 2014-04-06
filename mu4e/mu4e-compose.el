@@ -390,16 +390,17 @@ the appropriate flag at the message forwarded or replied-to."
   ;; this seems a bit hamfisted...
   (dolist (buf (buffer-list))
     (when (and (buffer-file-name buf)
-	    (string= (buffer-file-name buf) path))
+               (string= (buffer-file-name buf) path)
+               message-kill-buffer-on-exit)
       (kill-buffer buf)))
   ;; now, try to go back to some previous buffer, in the order
   ;; view->headers->main
   (if (buffer-live-p mu4e~view-buffer)
-    (switch-to-buffer mu4e~view-buffer)
-    (if (buffer-live-p mu4e~headers-buffer)
-      (switch-to-buffer mu4e~headers-buffer)
-      ;; if all else fails, back to the main view
-      (when (fboundp 'mu4e) (mu4e))))
+      (switch-to-buffer mu4e~view-buffer)
+      (if (buffer-live-p mu4e~headers-buffer)
+          (switch-to-buffer mu4e~headers-buffer)
+          ;; if all else fails, back to the main view
+          (when (fboundp 'mu4e) (mu4e))))
   (mu4e-message "Message sent"))
 
 (defun mu4e~compose-set-parent-flag (path)
