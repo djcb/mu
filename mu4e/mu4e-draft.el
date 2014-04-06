@@ -422,10 +422,12 @@ from either `mu4e~draft-reply-construct', or
 	    (t (mu4e-error "unsupported compose-type %S" compose-type))))
 	;; include the message signature (if it's set)
 	(when mu4e-compose-signature-auto-include
-	  (let ((message-signature mu4e-compose-signature)
-		 (message-signature-insert-empty-line t))
-	    (message-insert-signature)
-	    (mu4e~fontify-signature)))))
+          (save-excursion
+            ;; Leave point before signature
+            (let ((message-signature mu4e-compose-signature)
+                  (message-signature-insert-empty-line t))
+              (message-insert-signature)
+              (mu4e~fontify-signature))))))
 	  ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
 	  ;; throughout.
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)
