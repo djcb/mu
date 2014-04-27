@@ -245,7 +245,9 @@ separator is never written to the message file. Also see
     (mu4e~draft-remove-mail-header-separator)
     (let ((sepa (propertize mail-header-separator
 		  'intangible t
-		  'read-only "Can't touch this"
+		  ;; don't make this read-only, message-mode
+		  ;; seems to require it being writable in some cases
+		  ;;'read-only "Can't touch this"
 		  'rear-nonsticky t
 		  'font-lock-face 'mu4e-compose-separator-face)))
       (widen)
