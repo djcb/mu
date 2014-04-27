@@ -174,9 +174,9 @@ test_mu_threads_rogue (void)
 
 	tinfo items2 [] = {
 		{"0",   "cycle0.0@msg.id", "cycle0.0"},
-		{"0:0",     "cycle0@msg.id",  "cycle0"},
-		{"0:0:0",  "rogue0@msg.id", "rogue0" },
-		{"0:1", "cycle0.0.0@msg.id", "cycle0.0.0"}
+		{"0:0", "cycle0.0.0@msg.id", "cycle0.0.0"},
+		{"0:1",     "cycle0@msg.id",  "cycle0"},
+		{"0:1:0",  "rogue0@msg.id", "rogue0" }
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR3);
