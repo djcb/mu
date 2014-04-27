@@ -157,7 +157,7 @@ The first letter of NAME is used as a shortcut character.")
 This is to determine what is the parent docid for embedded
 message extracted at some path.")
 
-(defconst mu4e~view-url-regexp
+(defvar mu4e-view-url-regexp
   "\\(\\(https?\\://\\|mailto:\\)[-+\[:alnum:\].?_$%/+&#@!*~,:;=/()]+\\)"
   "Regexp that matches http:/https:/mailto: URLs; match-string 1
 will contain the matched URL, if any.")
@@ -786,7 +786,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
       (setq mu4e~view-link-map ;; buffer local
 	(make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
-      (while (re-search-forward mu4e~view-url-regexp nil t)
+      (while (re-search-forward mu4e-view-url-regexp nil t)
 	(let* ((url (match-string 0))
 	       (ov (make-overlay (match-beginning 0) (match-end 0))))
 	  (puthash (incf num) url mu4e~view-link-map)
