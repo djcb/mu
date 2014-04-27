@@ -243,7 +243,14 @@ found."
 	  (win (or (get-buffer-window buf) (split-window-vertically))))
     (select-window win)
     (switch-to-buffer buf)))
- 
+
+(defun mu4e~delete-all-overlays ()
+  "`delete-all-overlays' with compatibility fallback."
+  (if (functionp 'delete-all-overlays)
+    (delete-all-overlays)
+    (remove-overlays)))
+
+
 (defun mu4e-view (msg headersbuf)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
@@ -266,7 +273,7 @@ marking if it still had that."
       (when (or embedded (not (mu4e~view-mark-as-read msg)))
 	(let ((inhibit-read-only t))
 	  (erase-buffer)
-	  (delete-all-overlays)
+	  (mu4e~delete-all-overlays)
 	  (insert (mu4e-view-message-text msg))
 	  (goto-char (point-min))
 	  (mu4e~fontify-cited)
