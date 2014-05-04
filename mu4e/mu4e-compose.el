@@ -356,7 +356,6 @@ tempfile)."
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)
-  (insert "\n") ;; insert a newline after header separator
   ;; include files -- e.g. when forwarding a message with attachments,
   ;; we take those from the original.
   (save-excursion

@@ -254,7 +254,7 @@ separator is never written to the message file. Also see
       ;; search for the first empty line
       (goto-char (point-min))
       (if (search-forward-regexp "^$" nil t)
-	  (replace-match (concat sepa))
+	  (replace-match sepa)
 	  (progn ;; no empty line? then prepend one
 	    (goto-char (point-max))
 	    (insert "\n" sepa))))))
