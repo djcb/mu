@@ -144,7 +144,7 @@ exec_cmd (MuMsg *msg, MuMsgIter *iter, MuConfig *opts,  GError **err)
 	char *cmdline, *escpath;
 	gboolean rv;
 
-	escpath = g_strescape (mu_msg_get_path (msg), NULL);
+	escpath = g_shell_quote (mu_msg_get_path (msg));
 	cmdline = g_strdup_printf ("%s %s", opts->exec, escpath);
 
 	rv = g_spawn_command_line_sync (cmdline, NULL, NULL, &status, err);
