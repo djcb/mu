@@ -167,7 +167,7 @@ clicked."
 ;; NEW
 ;; Toggle mail sending mode without switching
 (defun mu4e~main-toggle-mail-sending-mode ()
-  "Toggle sending mail mode, either queued or direct (redefined)."
+  "Toggle sending mail mode, either queued or direct."
   (interactive)
   (let ((curpos (point)))
     (unless (file-directory-p smtpmail-queue-dir)
