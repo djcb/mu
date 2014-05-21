@@ -66,7 +66,9 @@
   (use-local-map mu4e-main-mode-map)
   (setq
     truncate-lines t
-    overwrite-mode 'overwrite-mode-binary))
+    overwrite-mode 'overwrite-mode-binary
+    (setq revert-buffer-function 'mu4e:main-revert-buffer)
+    ))
 
 
 (defun mu4e~main-action-str (str &optional func-or-shortcut)
@@ -152,8 +154,6 @@ clicked."
 	(mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
       )))
-
-(setq revert-buffer-function 'mu4e:main-revert-buffer)
 
 ;; NEW
 ;; Revert mu main buffer then switch to it
