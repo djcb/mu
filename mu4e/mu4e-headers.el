@@ -1226,7 +1226,8 @@ sortfield, change the sort-order) or nil (ask the user)."
 	      (t
 		(if (eq sortfield mu4e~headers-sort-field)
 		  (if (eq mu4e~headers-sort-direction 'ascending)
-		    'descending 'ascending)))
+		      'descending 'ascending)
+		  'descending))
 	      (mu4e-read-option "Direction: "
 		'(("ascending" . 'ascending) ("descending" . 'descending))))))
     (setq
