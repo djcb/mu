@@ -67,7 +67,7 @@
   (setq
     truncate-lines t
     overwrite-mode 'overwrite-mode-binary
-    (setq revert-buffer-function 'mu4e:main-revert-buffer)
+    revert-buffer-function 'mu4e:main-revert-buffer
     ))
 
 
