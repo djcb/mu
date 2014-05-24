@@ -153,6 +153,7 @@ clicked."
 	(mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
 	(mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
+      (mu4e-main-mode)
       )))
 
 ;; NEW
