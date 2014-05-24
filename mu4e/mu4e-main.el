@@ -180,11 +180,12 @@ clicked."
     (mu4e:main-revert-buffer nil nil)
     (goto-char curpos)))
 
-;; NEW
-;; Toggle queuing in any mu4e menu
-;; (dolist (keymap '(mu4e-main-mode-map mu4e-view-mode-map mu4e-compose-mode-map mu4e-headers-mode-map))
-;;   (progn
-;;     (define-key (symbol-value keymap) (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode))
-;;   )
+
+;; (progn
+;;   (define-key mu4e-compose-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
+;;   (define-key mu4e-view-mode-map (kbd "C-c m")    'mu4e~main-toggle-mail-sending-mode)
+;;   (define-key mu4e-compose-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
+;;   (define-key mu4e-headers-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
+;; )
 
 (provide 'mu4e-main)
