@@ -303,7 +303,9 @@ You can append flags."
 
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
-  (mu4e~draft-header "User-agent" (mu4e~draft-user-agent-construct)))
+  (mu4e~draft-header "User-agent" (mu4e~draft-user-agent-construct))
+  (mu4e~draft-header "Date" (message-make-date)))
+
 
 (defconst mu4e~draft-reply-prefix "Re: "
   "String to prefix replies with.")
