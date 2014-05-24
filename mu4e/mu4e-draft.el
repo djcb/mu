@@ -301,6 +301,9 @@ You can append flags."
       (format-time-string "%Y%m%d" (current-time))
       (random 255) (random 65535) hostname (or flagstr ""))))
 
+;; New
+;; Automatically add a date to new drafts, so one can
+;; sort drafts by date.
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
   (mu4e~draft-header "User-agent" (mu4e~draft-user-agent-construct))
