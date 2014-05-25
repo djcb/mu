@@ -12,7 +12,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2012, 2013 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012-2014 Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -54,10 +54,11 @@ Documentation License.''
 
 Welcome to @t{mu4e} @value{mu-version}!
 
-@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 23 and
-later, built on top of the
-@t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
-engine. @t{mu4e} is optimized for fast handling of large amounts of e-mail.
+@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 24
+(version 23 may works as well, but is tested as much), built on top of
+the @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail
+search engine. @t{mu4e} is optimized for fast handling of large amounts
+of e-mail.
 
 Some of @t{mu4e}'s highlights:
 
@@ -2464,9 +2465,10 @@ org-open-at-point} elsewhere - both typically bound to @kbd{C-c C-o}.
 @node Rich-text messages with org-mode
 @section Rich-text messages with @t{org-mode} (deprecated)
 
-Some earlier versions of @t{mu4e} had support for editing e-mail messages
-using @t{org-mode}; since this never worked very well, this has now been
-deprecated; it might be replaced in some future version with something better.
+Some earlier versions of @t{mu4e} had support for editing e-mail
+messages using @t{org-mode}; since this never worked very well, this has
+now been deprecated; it might be replaced in some future version with
+something better.
 
 @subsection Some caveats
 
@@ -3176,6 +3178,7 @@ github-repository.
 * Refiling messages::
 * Saving outgoing messages::
 * Fancy characters and Inconsolata::
+* Confirmation before sending::
 @end menu
 
 @node Multiple accounts
@@ -3433,11 +3436,25 @@ To fix this, you can use something like the following workaround (in your
       (set-face-font 'default "Inconsolata-10")))
 @end lisp
 
+@node Confirmation before sending
+@section Confirmation before sending
+
+To protect yourself from sending messages too hastily, you can add a
+final confirmation, which you can of course make as elaborate as you
+wish.
+
+@lisp
+(add-hook 'message-send-hook
+  (lambda ()
+    (unless (yes-or-no-p "Sure you want to send this?")
+      (signal 'quit nil))))
+@end lisp
+
 @node How it works
 @appendix How it works
 
-While perhaps not interesting for all users of @t{mu4e}, some curious souls
-may want to know how @t{mu4e} does its job.
+While perhaps not interesting for all users of @t{mu4e}, some curious
+souls may want to know how @t{mu4e} does its job.
 
 @menu
 * High-level overview::
