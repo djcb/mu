@@ -59,9 +59,7 @@ For the complete list of available headers, see `mu4e-header-info'."
 
 (defcustom mu4e-view-show-addresses nil
   "Whether to initially show full e-mail addresses for contacts in
-address fields, rather than only their names. Note that you can
-toggle between long/short display by klicking / M-RET on the
-contact."
+address fields, rather than only their names."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -121,8 +119,6 @@ The first letter of NAME is used as a shortcut character.")
 
 (defvar mu4e-view-contacts-header-keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] 'mu4e~view-toggle-contact)
-    (define-key map [?\M-\r]  'mu4e~view-toggle-contact)
     (define-key map [mouse-2] 'mu4e~view-compose-contact)
     (define-key map "C"  'mu4e~view-compose-contact)
     (define-key map "c"  'mu4e~view-copy-contact)
@@ -328,27 +324,7 @@ add text-properties to VAL."
 	    (indent-to-column margin))))
       (buffer-string))
     "")))
-
-(defun* mu4e~view-toggle-contact (&optional point)
-  "Toggle between the long and short versions of long/short string
-at POINT, or if nil, at (point)."
-  (interactive)
-  (unless (get-text-property (or point (point)) 'long)
-    (return-from mu4e~view-toggle-contact))
-  (let* ((point (or point (point)))
-	  ;; find the first pos part of the button
-	  (start (previous-property-change point))
-	  (start (if start (next-property-change start) (point-min)))
-	  ;; find the first pos not part of the button (possibly nil)
-	  (end (next-property-change point))
-	  (end (or end (1+ (point-max)))) ;; one beyond
-	  (longtext (get-text-property point 'long))
-	  (shorttext (get-text-property point 'short))
-	  (inhibit-read-only t))
-    (if (string= (get-text-property point 'display) longtext)
-      (add-text-properties start end `(display ,shorttext))
-      (add-text-properties start end `(display ,longtext)))))
-
+ 
 (defun mu4e~view-compose-contact (&optional point)
   "Compose a message for the address at point."
   (interactive)
@@ -377,19 +353,16 @@ at POINT, or if nil, at (point)."
 		(short (or name email)) ;; name may be nil
 		(long (if name (format "%s <%s>" name email) email)))
 	  (propertize
-	    long
+	    (if mu4e-view-show-addresses long short)
 	    'long long
 	    'short short
 	    'email email
-	    'display (if mu4e-view-show-addresses long short)
 	    'keymap mu4e-view-contacts-header-keymap
 	    'face 'mu4e-contact-face
 	    'mouse-face 'highlight
-	    'help-echo
-	    (format "<%s>\n%s\n%s" email
-	      "[mouse-1] or [M-RET] to toggle long/short display"
-	      "[mouse-2] or C to compose a mail for this recipient"))))
-      (mu4e-message-field msg field) ", ") t))
+	    'help-echo (format "<%s>\n%s" email
+			 "[mouse-2] or C to compose a mail for this recipient"))))
+	  (mu4e-message-field msg field) ", ") t))
 
 
 (defun mu4e~view-construct-flags-tags-header (field val)
