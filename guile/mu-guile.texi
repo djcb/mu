@@ -84,6 +84,7 @@ Trust me, it's not very hard -- and it it's @emph{fun}!
 
 Appendices
 
+* Recipies:: Snippets do specific things
 * GNU Free Documentation License::  The license of this manual.
 @end menu
 
@@ -956,6 +957,30 @@ $ mu msgs-per-month --textonly --query=hello
 
 Please refer to the @t{mu-script} man-page for some details on writing your
 own scripts.
+
+
+@node Recipies
+@appendix Recipies
+
+@itemize
+@item Calculating the average length of subject-lines
+@lisp
+;; the average length of all our
+(let ((len 0) (n 0))
+  (mu:for-each-message
+    (lambda (msg)
+      (set! len (+ len (string-length (or (mu:subject msg) ""))))
+      (set! n (+ n 1))))
+  (if (= n 0) 0 (/ len n)))
+  ;; this gives a rational, exact result;
+  ;; use exact->inexact to get decimals
+  
+;; we we can make this short with the mu:average (with (mu stats))
+(mu:average (lambda (msg) (string-length (or (mu:subject msg) ""))))
+
+
+@end lisp
+@end itemize
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
