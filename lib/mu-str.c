@@ -839,7 +839,7 @@ mu_str_asciify_in_place (char *buf)
 	g_return_val_if_fail (buf, NULL);
 
 	for (c = buf; c && *c; ++c) {
-		if (!isprint(*c) && !isspace (*c))
+		if ((!isprint(*c) && !isspace (*c)) || !isascii(*c))
 			*c = '.';
 	}
 
