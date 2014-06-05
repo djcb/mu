@@ -66,7 +66,9 @@
   (use-local-map mu4e-main-mode-map)
   (setq
     truncate-lines t
-    overwrite-mode 'overwrite-mode-binary))
+    overwrite-mode 'overwrite-mode-binary
+    revert-buffer-function 'mu4e:main-revert-buffer
+    ))
 
 
 (defun mu4e~main-action-str (str &optional func-or-shortcut)
@@ -95,9 +97,10 @@ clicked."
     (put-text-property (string-match "\\[.+$" newstr)
       (- (length newstr) 1) 'mouse-face 'highlight newstr) newstr))
 
-
-(defun mu4e~main-view ()
-  "Show the mu4e main view."
+;; NEW
+;; This is the old `mu4e~main-view' function but without
+;; buffer switching at the end.
+(defun mu4e:main-revert-buffer (ignore-auto noconfirm)
   (let ((buf (get-buffer-create mu4e~main-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
@@ -151,10 +154,19 @@ clicked."
 	(mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
-      (switch-to-buffer buf))))
+      )))
+
+;; NEW
+;; Revert mu main buffer then switch to it
+(defun mu4e~main-view ()
+  "Show the mu4e main view."
+  (mu4e:main-revert-buffer nil nil)
+  (switch-to-buffer  mu4e~main-buffer-name))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
+;; NEW
+;; Toggle mail sending mode without switching
 (defun mu4e~main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
@@ -165,8 +177,15 @@ clicked."
     (message
      (concat "Outgoing mail will now be "
              (if smtpmail-queue-mail "queued" "sent directly")))
-    (mu4e~main-view)
-    ;; "queued" and "direct" have same length.
+    (mu4e:main-revert-buffer nil nil)
     (goto-char curpos)))
+
+
+;; (progn
+;;   (define-key mu4e-compose-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
+;;   (define-key mu4e-view-mode-map (kbd "C-c m")    'mu4e~main-toggle-mail-sending-mode)
+;;   (define-key mu4e-compose-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
+;;   (define-key mu4e-headers-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
+;; )
 
 (provide 'mu4e-main)
