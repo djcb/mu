@@ -876,7 +876,7 @@ all messages in the subthread at point in the headers view."
 (defun mu4e-view-search-narrow ()
   "Run `mu4e-headers-search-narrow' in the headers buffer."
   (interactive)
-  (mu4e~view-in-headers-context (mu4e-headers-search-narrow nil)))
+  (mu4e~view-in-headers-context (call-interactively 'mu4e-headers-search-narrow)))
 
 (defun mu4e-view-search-edit ()
   "Run `mu4e-headers-search-edit' in the headers buffer."
