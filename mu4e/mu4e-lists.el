@@ -31,6 +31,7 @@
      ("boost-announce.lists.boost.org"                        . "BoostA")
      ("boost-interest.lists.boost.org"                        . "BoostI")
      ("conkeror.mozdev.org"                                   . "Conkeror")
+     ("curl-library.cool.haxx.se"                             . "LibCurl")
      ("crypto-gram-list.schneier.com "                        . "CryptoGr")
      ("dbus.lists.freedesktop.org"                            . "DBus")
      ("desktop-devel-list.gnome.org"                          . "GnomeDT")
