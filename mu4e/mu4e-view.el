@@ -598,6 +598,7 @@ FUNC should be a function taking two arguments:
       (define-key map "w" 'visual-line-mode)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
       (define-key map (kbd "M-q") 'mu4e-view-fill-long-lines)
+      (define-key map (kbd "M-b") 'mu4e-bounce-message)
 
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
@@ -1356,6 +1357,21 @@ other windows."
         (setq mu4e~headers-view-win nil)
 	(when (buffer-live-p mu4e~view-headers-buffer)
 	  (switch-to-buffer mu4e~view-headers-buffer))))))
+
+(defun mu4e-bounce-message (address)
+  "Bounce the message at point"
+  (interactive "sBounce To: ")
+  (let ((path (mu4e-message-field-at-point :path)))
+    (unless (and path (file-readable-p path))
+      (mu4e-error "Not a readable file: %S" path))
+    (find-file path)
+    (mu4e-compose-mode)
+    (make-local-variable 'mu4e-sent-messages-behavior)
+    (setq mu4e-sent-messages-behavior 'sent)
+    ;; sadly it does not save the sent message to the sent folder
+    ;; not even with this hack
+    (message-resend address)
+    (kill-buffer)))
 
 (provide 'mu4e-view)
 ;; end of mu4e-view
