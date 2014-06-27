@@ -598,7 +598,7 @@ FUNC should be a function taking two arguments:
       (define-key map "w" 'visual-line-mode)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
       (define-key map (kbd "M-q") 'mu4e-view-fill-long-lines)
-      
+
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
       (define-key map "U" 'mu4e-view-unmark-all)
