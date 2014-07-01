@@ -323,9 +323,9 @@ container_cmp (MuContainer *a, MuContainer *b, MuMsgFieldId mfid)
 	if (a == b)
 		return 0;
 	else if (!a->msg)
-		return 1;
-	else if (!b->msg)
 		return -1;
+	else if (!b->msg)
+		return 1;
 
 	return mu_msg_cmp (a->msg, b->msg, mfid);
 }
