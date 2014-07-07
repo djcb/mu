@@ -52,6 +52,7 @@ mu_container_new (MuMsg *msg, guint docid, const char *msgid)
 	if (msg)
 		c->msg = mu_msg_ref (msg);
 
+	c->leader = c;
 	c->docid = docid;
 	c->msgid = msgid;
 
@@ -356,20 +357,41 @@ container_cmp (MuContainer *a, MuContainer *b, MuMsgFieldId mfid)
 	return mu_msg_cmp (a->msg, b->msg, mfid);
 }
 
+static gboolean
+container_is_leaf (const MuContainer *c)
+{
+	return c->child == NULL;
+}
+
+static MuContainer*
+container_max (MuContainer *a, MuContainer *b, MuMsgFieldId mfid)
+{
+	return container_cmp (a, b, mfid) > 0 ? a : b;
+}
+
+static MuContainer*
+find_sorted_tree_leader (MuContainer *root, SortFuncData *order)
+{
+	MuContainer *last_child;
+
+	if (container_is_leaf (root))
+		return root;
+
+	if (!order->descending)
+		last_child = root->child->last;
+	else /* reversed order, first is last */
+		last_child = root->child;
+
+	return container_max (root, last_child->leader, order->mfid);
+}
+
 static int
 sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
 {
-	MuContainer *a1, *b1;
-
-	/* use the first non-empty 'left child' message if this one
-	 * is */
-	for (a1 = a; a1->msg == NULL && a1->child != NULL; a1 = a1->child);
-	for (b1 = b; b1->msg == NULL && b1->child != NULL; b1 = b1->child);
-
 	if (data->descending)
-		return container_cmp (b1, a1, data->mfid);
+		return container_cmp (b->leader, a->leader, data->mfid);
 	else
-		return container_cmp (a1, b1, data->mfid);
+		return container_cmp (a->leader, b->leader, data->mfid);
 }
 
 static MuContainer*
@@ -381,9 +403,11 @@ container_sort_real (MuContainer *c, SortFuncData *sfdata)
 	if (!c)
 		return NULL;
 
-	for (cur = c; cur; cur = cur->next)
+	for (cur = c; cur; cur = cur->next) {
 		if (cur->child)
 			cur->child = container_sort_real (cur->child, sfdata);
+		cur->leader = find_sorted_tree_leader (cur, sfdata);
+	}
 
 	/* sort siblings */
 	lst = mu_container_to_list (c);
@@ -395,7 +419,6 @@ container_sort_real (MuContainer *c, SortFuncData *sfdata)
 
 	return c;
 }
-
 
 MuContainer*
 mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean descending,

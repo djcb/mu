@@ -45,6 +45,11 @@ struct _MuContainer {
 	 * */
 	struct _MuContainer *last;
 
+	/* Node in the subtree rooted at this node which comes first
+	 * in the descending sort order, e.g. the latest message if
+	 * sorting by date. We compare the leaders when ordering
+	 * subtrees. */
+	struct _MuContainer *leader;
 
 	MuMsg               *msg;
 	const char          *msgid;
