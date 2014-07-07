@@ -122,6 +122,19 @@ MuContainer* mu_container_remove_child (MuContainer *c, MuContainer *child);
  */
 MuContainer* mu_container_remove_sibling (MuContainer *c, MuContainer *sibling);
 
+/**
+ * promote sibling's children to be this container's siblings and
+ * remove the sibling
+ *
+ * @param c a container instance
+ * @param sibling a sibling of this container
+ *
+ * @return the container with the sibling's children promoted and the
+ * sibling itself removed
+ */
+
+MuContainer* mu_container_splice_children (MuContainer *c,
+                                           MuContainer *sibling);
 
 /**
  * promote child's children to be parent's children and remove child
@@ -131,8 +144,8 @@ MuContainer* mu_container_remove_sibling (MuContainer *c, MuContainer *sibling);
  *
  * @return the new container with it's children's children promoted
  */
-MuContainer* mu_container_splice_children (MuContainer *parent,
-					   MuContainer *child);
+MuContainer* mu_container_splice_grandchildren (MuContainer *parent,
+                                                MuContainer *child);
 
 typedef gboolean (*MuContainerForeachFunc) (MuContainer*, gpointer);
 

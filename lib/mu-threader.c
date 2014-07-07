@@ -388,7 +388,7 @@ prune_maybe (MuContainer *c)
 		if (cur->flags & MU_CONTAINER_FLAG_DELETE)
 			c = mu_container_remove_child (c, cur);
 		else if (cur->flags & MU_CONTAINER_FLAG_SPLICE)
-			c = mu_container_splice_children (c, cur);
+			c = mu_container_splice_grandchildren (c, cur);
 	}
 
 	g_return_val_if_fail (c, FALSE);
@@ -433,17 +433,10 @@ prune_empty_containers (MuContainer *root_set)
 
 	/* and prune the root_set itself... */
 	for (cur = root_set; cur; cur = cur->next) {
-
 		if (cur->flags & MU_CONTAINER_FLAG_DELETE)
 			root_set = mu_container_remove_sibling (root_set, cur);
-
-		else if (cur->flags & MU_CONTAINER_FLAG_SPLICE) {
-			MuContainer *newchild;
-			newchild = cur->child;
-			cur->child = NULL;
-			root_set = mu_container_append_siblings (root_set,
-								 newchild);
-		}
+		else if (cur->flags & MU_CONTAINER_FLAG_SPLICE)
+			root_set = mu_container_splice_children (root_set, cur);
 	}
 
 	return root_set;

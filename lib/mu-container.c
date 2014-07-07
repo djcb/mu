@@ -263,9 +263,24 @@ mu_container_foreach (MuContainer *c, MuContainerForeachFunc func,
 	return func (c, user_data);
 }
 
+MuContainer*
+mu_container_splice_children (MuContainer *c, MuContainer *sibling)
+{
+	MuContainer *children;
+
+	g_return_val_if_fail (c, NULL);
+	g_return_val_if_fail (sibling, NULL);
+
+	children = sibling->child;
+	sibling->child = NULL;
+
+	c = mu_container_remove_sibling (c, sibling);
+
+	return mu_container_append_siblings (c, children);
+}
 
 MuContainer*
-mu_container_splice_children (MuContainer *parent, MuContainer *child)
+mu_container_splice_grandchildren (MuContainer *parent, MuContainer *child)
 {
 	MuContainer *newchild;
 
