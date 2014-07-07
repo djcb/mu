@@ -34,6 +34,13 @@
 #include "mu-query.h"
 #include "mu-str.h"
 
+struct _tinfo {
+	const char *threadpath;
+	const char *msgid;
+	const char *subject;
+};
+typedef struct _tinfo tinfo;
+
 static gchar*
 fill_database (const char *testdir)
 {
@@ -87,11 +94,7 @@ test_mu_threads_01 (void)
 	MuMsgIter *iter;
 	unsigned u;
 
-	struct {
-		const char* threadpath;
-		const char *msgid;
-		const char* subject;
-	}   items [] = {
+	const tinfo items [] = {
 		{"0",   "root0@msg.id",  "root0"},
 		{"0:0", "child0.0@msg.id", "Re: child 0.0"},
 		{"0:1",   "child0.1@msg.id", "Re: child 0.1"},
@@ -148,14 +151,6 @@ test_mu_threads_01 (void)
 	g_free (xpath);
 	mu_msg_iter_destroy (iter);
 }
-
-
-struct _tinfo {
-	const char* threadpath;
-	const char *msgid;
-	const char* subject;
-};
-typedef struct _tinfo tinfo;
 
 static void
 test_mu_threads_rogue (void)
