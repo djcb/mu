@@ -41,6 +41,38 @@ struct _tinfo {
 };
 typedef struct _tinfo tinfo;
 
+static void
+assert_tinfo_equal (const tinfo *expected, const tinfo *actual)
+{
+	g_assert_cmpstr (expected->threadpath,==,actual->threadpath);
+	g_assert_cmpstr (expected->subject,==,actual->subject);
+	g_assert_cmpstr (expected->msgid,==,actual->msgid);
+}
+
+static void
+tinfo_init_from_iter (tinfo *item, MuMsgIter *iter)
+{
+	MuMsg *msg;
+	const MuMsgIterThreadInfo *ti;
+
+	msg = mu_msg_iter_get_msg_floating (iter);
+	g_assert (msg);
+
+	ti = mu_msg_iter_get_thread_info (iter);
+	if (!ti)
+		g_print ("%s: thread info not found\n", mu_msg_get_msgid (msg));
+	g_assert (ti);
+
+	item->threadpath = ti->threadpath;
+	item->subject = mu_msg_get_subject (msg);
+	item->msgid = mu_msg_get_msgid (msg);
+
+	if (g_test_verbose())
+		g_print ("%s %s %s\n",
+			 item->threadpath, item->subject, item->msgid);
+
+}
+
 static gchar*
 fill_database (const char *testdir)
 {
@@ -120,28 +152,12 @@ test_mu_threads_01 (void)
 
 	u = 0;
 	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items)) {
-		MuMsg *msg;
-		const MuMsgIterThreadInfo *ti;
+		tinfo ti;
 
-		ti = mu_msg_iter_get_thread_info (iter);
-		if (!ti)
-			g_print ("%s: thread info not found for %u\n",
-				 __FUNCTION__, (unsigned)mu_msg_iter_get_docid(iter));
-		g_assert(ti);
-
-		msg = mu_msg_iter_get_msg_floating (iter);
-		g_assert (msg);
-
-		if (g_test_verbose())
-			g_print ("%s %s %s\n", ti->threadpath,
-				 mu_msg_get_msgid(msg),
-				 mu_msg_get_path (msg));
+		tinfo_init_from_iter (&ti, iter);
 
 		g_assert (u < G_N_ELEMENTS(items));
-
-		g_assert_cmpstr (ti->threadpath,==,items[u].threadpath);
-		g_assert_cmpstr (mu_msg_get_subject(msg),==,items[u].subject);
-		g_assert_cmpstr (mu_msg_get_msgid(msg),==,items[u].msgid);
+		assert_tinfo_equal (&items[u], &ti);
 
 		++u;
 		mu_msg_iter_next (iter);
@@ -191,26 +207,12 @@ test_mu_threads_rogue (void)
 
 	u = 0;
 	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items1)) {
-		MuMsg *msg;
-		const MuMsgIterThreadInfo *ti;
+		tinfo ti;
 
-		ti = mu_msg_iter_get_thread_info (iter);
-		if (!ti)
-			g_print ("%s: thread info not found\n",
-				 mu_msg_get_msgid(mu_msg_iter_get_msg_floating (iter)));
-		g_assert(ti);
-
-		msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
-		/* g_print ("%s %s %s\n", ti->threadpath, */
-		/* 	 mu_msg_get_msgid(msg), */
-		/* 	 mu_msg_get_path (msg) */
-		/* 	); */
+		tinfo_init_from_iter (&ti, iter);
 
 		g_assert (u < G_N_ELEMENTS(items1));
-
-		g_assert_cmpstr (ti->threadpath,==,(items)[u].threadpath);
-		g_assert_cmpstr (mu_msg_get_subject(msg),==,(items)[u].subject);
-		g_assert_cmpstr (mu_msg_get_msgid(msg),==,(items)[u].msgid);
+		assert_tinfo_equal (&items[u], &ti);
 
 		++u;
 		mu_msg_iter_next (iter);
