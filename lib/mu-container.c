@@ -308,17 +308,28 @@ mu_container_to_list (MuContainer *c)
 	return lst;
 }
 
+static gpointer
+list_last_data (GSList *lst)
+{
+	GSList *tail;
+
+	tail = g_slist_last (lst);
+
+	return tail->data;
+}
 
 static MuContainer*
 mu_container_from_list (GSList *lst)
 {
-	MuContainer *c, *cur;
+	MuContainer *c, *cur, *tail;
 
 	if (!lst)
 		return NULL;
 
+	tail = list_last_data (lst);
 	for (c = cur = (MuContainer*)lst->data; cur; lst = g_slist_next(lst)) {
 		cur->next = lst ? (MuContainer*)lst->data : NULL;
+		cur->last = tail;
 		cur=cur->next;
 	}
 
