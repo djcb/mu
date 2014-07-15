@@ -397,6 +397,35 @@ test_mu_threads_sort_grandchild_promotes_thread (void)
 				    G_N_ELEMENTS (expected_desc));
 }
 
+static void
+test_mu_threads_sort_granchild_promotes_only_subthread (void)
+{
+	const char *query = "maildir:/sort/grandchild-promotes-only-subthread";
+
+	const tinfo expected_asc [] = {
+		{ "0", "A@msg.id", "A"},
+		{ "1", "B@msg.id", "B"},
+		{ "1:0", "C@msg.id", "C"},
+		{ "1:1", "E@msg.id", "E"},
+		{ "1:2", "D@msg.id", "D"},
+		{ "1:2:0", "F@msg.id", "F"},
+		{ "2", "G@msg.id", "G"},
+	};
+	const tinfo expected_desc [] = {
+		{ "0", "G@msg.id", "G"},
+		{ "1", "B@msg.id", "B"},
+		{ "1:0", "D@msg.id", "D"},
+		{ "1:0:0", "F@msg.id", "F"},
+		{ "1:1", "E@msg.id", "E"},
+		{ "1:2", "C@msg.id", "C"},
+		{ "2", "A@msg.id", "A"},
+	};
+
+	check_sort_by_subject_asc (query, expected_asc,
+				   G_N_ELEMENTS (expected_asc));
+	check_sort_by_subject_desc (query, expected_desc,
+				    G_N_ELEMENTS (expected_desc));
+}
 int
 main (int argc, char *argv[])
 {
@@ -416,6 +445,8 @@ main (int argc, char *argv[])
 			 test_mu_threads_sort_child_does_not_promote_thread);
 	g_test_add_func ("/mu-query/test-mu-threads-sort-grandchild-promotes-thread",
 			 test_mu_threads_sort_grandchild_promotes_thread);
+	g_test_add_func ("/mu-query/test-mu-threads-sort-grandchild-promotes-only-subthread",
+			 test_mu_threads_sort_granchild_promotes_only_subthread);
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
