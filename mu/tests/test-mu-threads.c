@@ -321,6 +321,31 @@ test_mu_threads_sort_2nd_child_promotes_thread (void)
 				    G_N_ELEMENTS (expected_desc));
 }
 
+static void
+test_mu_threads_sort_orphan_promotes_thread (void)
+{
+	const char *query = "maildir:/sort/2nd-child-promotes-thread NOT B";
+
+	/* B lost, C & E orphaned but not promoted */
+	const tinfo expected_asc [] = {
+		{ "0", "A@msg.id", "A"},
+		{ "1", "D@msg.id", "D"},
+		{ "2:0", "C@msg.id", "C"},
+		{ "2:1", "E@msg.id", "E"},
+	};
+	const tinfo expected_desc [] = {
+		{ "0:0", "E@msg.id", "E"},
+		{ "0:1", "C@msg.id", "C"},
+		{ "1", "D@msg.id", "D"},
+		{ "2", "A@msg.id", "A"},
+	};
+
+	check_sort_by_subject_asc (query, expected_asc,
+				   G_N_ELEMENTS (expected_asc));
+	check_sort_by_subject_desc (query, expected_desc,
+				    G_N_ELEMENTS (expected_desc));
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -334,6 +359,8 @@ main (int argc, char *argv[])
 			 test_mu_threads_sort_1st_child_promotes_thread);
 	g_test_add_func ("/mu-query/test-mu-threads-sort-2nd-child-promotes-thread",
 			 test_mu_threads_sort_2nd_child_promotes_thread);
+	g_test_add_func ("/mu-query/test-mu-threads-orphan-promotes-thread",
+			 test_mu_threads_sort_orphan_promotes_thread);
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
