@@ -73,6 +73,26 @@ tinfo_init_from_iter (tinfo *item, MuMsgIter *iter)
 
 }
 
+static void
+foreach_assert_tinfo_equal (MuMsgIter *iter, const tinfo items[], guint n_items)
+{
+	guint u;
+
+	u = 0;
+	while (!mu_msg_iter_is_done (iter) && u < n_items) {
+		tinfo ti;
+
+		tinfo_init_from_iter (&ti, iter);
+
+		g_assert (u < n_items);
+		assert_tinfo_equal (&items[u], &ti);
+
+		++u;
+		mu_msg_iter_next (iter);
+	}
+	g_assert (u == n_items);
+}
+
 static gchar*
 fill_database (const char *testdir)
 {
@@ -118,13 +138,11 @@ run_and_get_iter (const char *xpath, const char *query)
 	return iter;
 }
 
-
 static void
 test_mu_threads_01 (void)
 {
 	gchar *xpath;
 	MuMsgIter *iter;
-	unsigned u;
 
 	const tinfo items [] = {
 		{"0",   "root0@msg.id",  "root0"},
@@ -150,19 +168,7 @@ test_mu_threads_01 (void)
 	g_assert (iter);
 	g_assert (!mu_msg_iter_is_done(iter));
 
-	u = 0;
-	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items)) {
-		tinfo ti;
-
-		tinfo_init_from_iter (&ti, iter);
-
-		g_assert (u < G_N_ELEMENTS(items));
-		assert_tinfo_equal (&items[u], &ti);
-
-		++u;
-		mu_msg_iter_next (iter);
-	}
-	g_assert (u == G_N_ELEMENTS(items));
+	foreach_assert_tinfo_equal (iter, items, G_N_ELEMENTS (items));
 
 	g_free (xpath);
 	mu_msg_iter_destroy (iter);
@@ -173,7 +179,6 @@ test_mu_threads_rogue (void)
 {
 	gchar *xpath;
 	MuMsgIter *iter;
-	unsigned u;
 	tinfo *items;
 
 	tinfo items1 [] = {
@@ -205,19 +210,7 @@ test_mu_threads_rogue (void)
 	else
 		items = items2;
 
-	u = 0;
-	while (!mu_msg_iter_is_done (iter) && u < G_N_ELEMENTS(items1)) {
-		tinfo ti;
-
-		tinfo_init_from_iter (&ti, iter);
-
-		g_assert (u < G_N_ELEMENTS(items1));
-		assert_tinfo_equal (&items[u], &ti);
-
-		++u;
-		mu_msg_iter_next (iter);
-	}
-	g_assert (u == G_N_ELEMENTS(items1));
+	foreach_assert_tinfo_equal (iter, items, G_N_ELEMENTS (items1));
 
 	g_free (xpath);
 	mu_msg_iter_destroy (iter);
