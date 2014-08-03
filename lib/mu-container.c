@@ -52,6 +52,7 @@ mu_container_new (MuMsg *msg, guint docid, const char *msgid)
 	if (msg)
 		c->msg = mu_msg_ref (msg);
 
+	c->leader = c;
 	c->docid = docid;
 	c->msgid = msgid;
 
@@ -263,9 +264,24 @@ mu_container_foreach (MuContainer *c, MuContainerForeachFunc func,
 	return func (c, user_data);
 }
 
+MuContainer*
+mu_container_splice_children (MuContainer *c, MuContainer *sibling)
+{
+	MuContainer *children;
+
+	g_return_val_if_fail (c, NULL);
+	g_return_val_if_fail (sibling, NULL);
+
+	children = sibling->child;
+	sibling->child = NULL;
+
+	c = mu_container_remove_sibling (c, sibling);
+
+	return mu_container_append_siblings (c, children);
+}
 
 MuContainer*
-mu_container_splice_children (MuContainer *parent, MuContainer *child)
+mu_container_splice_grandchildren (MuContainer *parent, MuContainer *child)
 {
 	MuContainer *newchild;
 
@@ -293,17 +309,28 @@ mu_container_to_list (MuContainer *c)
 	return lst;
 }
 
+static gpointer
+list_last_data (GSList *lst)
+{
+	GSList *tail;
+
+	tail = g_slist_last (lst);
+
+	return tail->data;
+}
 
 static MuContainer*
 mu_container_from_list (GSList *lst)
 {
-	MuContainer *c, *cur;
+	MuContainer *c, *cur, *tail;
 
 	if (!lst)
 		return NULL;
 
+	tail = list_last_data (lst);
 	for (c = cur = (MuContainer*)lst->data; cur; lst = g_slist_next(lst)) {
 		cur->next = lst ? (MuContainer*)lst->data : NULL;
+		cur->last = tail;
 		cur=cur->next;
 	}
 
@@ -317,47 +344,54 @@ struct _SortFuncData {
 };
 typedef struct _SortFuncData SortFuncData;
 
-static MuContainer*
-get_top_msg (MuContainer *c, MuMsgFieldId mfid)
+static int
+container_cmp (MuContainer *a, MuContainer *b, MuMsgFieldId mfid)
 {
-  MuContainer *piv, *extreme = c;
-  for (piv = c; piv != NULL && piv->msg != NULL; piv = piv->child) {
-    if (mu_msg_cmp (piv->msg, extreme->msg, mfid) > 0)
-      extreme = piv;
-    if (piv != c && piv->next) {
-      MuContainer *sub = get_top_msg (piv->next, mfid);
+	if (a == b)
+		return 0;
+	else if (!a->msg)
+		return -1;
+	else if (!b->msg)
+		return 1;
 
-      if (sub->msg != NULL && mu_msg_cmp (sub->msg, extreme->msg, mfid) > 0)
-        extreme = sub;
-    }
-  }
-  return extreme;
+	return mu_msg_cmp (a->msg, b->msg, mfid);
+}
+
+static gboolean
+container_is_leaf (const MuContainer *c)
+{
+	return c->child == NULL;
+}
+
+static MuContainer*
+container_max (MuContainer *a, MuContainer *b, MuMsgFieldId mfid)
+{
+	return container_cmp (a, b, mfid) > 0 ? a : b;
+}
+
+static MuContainer*
+find_sorted_tree_leader (MuContainer *root, SortFuncData *order)
+{
+	MuContainer *last_child;
+
+	if (container_is_leaf (root))
+		return root;
+
+	if (!order->descending)
+		last_child = root->child->last;
+	else /* reversed order, first is last */
+		last_child = root->child;
+
+	return container_max (root, last_child->leader, order->mfid);
 }
 
 static int
 sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
 {
-	MuContainer *a1, *b1;
-
-	/* use the first non-empty 'left child' message if this one
-	 * is */
-	for (a1 = a; a1->msg == NULL && a1->child != NULL; a1 = a1->child);
-	for (b1 = b; b1->msg == NULL && b1->child != NULL; b1 = b1->child);
-
-  a1 = get_top_msg (a1, data->mfid);
-  b1 = get_top_msg (b1, data->mfid);
-
-	if (a1 == b1)
-		return 0;
-	else if (!a1->msg)
-		return 1;
-	else if (!b1->msg)
-		return -1;
-
 	if (data->descending)
-		return mu_msg_cmp (b1->msg, a1->msg, data->mfid);
+		return container_cmp (b->leader, a->leader, data->mfid);
 	else
-		return mu_msg_cmp (a1->msg, b1->msg, data->mfid);
+		return container_cmp (a->leader, b->leader, data->mfid);
 }
 
 static MuContainer*
@@ -369,9 +403,11 @@ container_sort_real (MuContainer *c, SortFuncData *sfdata)
 	if (!c)
 		return NULL;
 
-	for (cur = c; cur; cur = cur->next)
+	for (cur = c; cur; cur = cur->next) {
 		if (cur->child)
 			cur->child = container_sort_real (cur->child, sfdata);
+		cur->leader = find_sorted_tree_leader (cur, sfdata);
+	}
 
 	/* sort siblings */
 	lst = mu_container_to_list (c);
@@ -383,7 +419,6 @@ container_sort_real (MuContainer *c, SortFuncData *sfdata)
 
 	return c;
 }
-
 
 MuContainer*
 mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean descending,
