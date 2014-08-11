@@ -12,29 +12,10 @@
     - give messages without msgids fake-message-ids; this fixes the problem
       where such messages were not found in --include-related queries
     - cleanup of the query parser
-    - much improved date parsing
-    - support recursive maildirs
-    - many fixes in the query parser; there are still a number of
-      corner cases though, which probably requires writing a custom
-      query parser to fix
-    - drop gmime 2.4 support
 
 *** mu4e
 
-    - update the emacs <-> backend protocol; documented in the
-      mu-server man page
-    - improve saving attachment
-    - allow for visiting multiple URIs
-    - much improved navigation within messages
-
-    - mug
-
-      - only support gtk+ 3.x
-
-    - mu-guile:
-
-      - more examples; bug fixes
-
+    - update the emacs <-> backend protocol; documented in the mu-server man page
 
 ** Release 0.9.9.5
 
