@@ -3231,10 +3231,10 @@ value)} pairs:
     ("Account2"
      (mu4e-sent-folder "/Account2/Saved Items")
      (mu4e-drafts-folder "/Account2/Drafts")
-     (user-mail-address "my.address@@account2.tld)
-     (smtpmail-default-smtp-server "smtp.account2.tld)
+     (user-mail-address "my.address@@account2.tld")
+     (smtpmail-default-smtp-server "smtp.account2.tld")
      (smtpmail-local-domain "account2.tld")
-     (smtpmail-smtp-server "smtp.account2.tld)
+     (smtpmail-smtp-server "smtp.account2.tld")
      (smtpmail-stream-type starttls)
      (smtpmail-smtp-service 587))))
 @end lisp
