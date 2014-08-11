@@ -138,7 +138,7 @@ The following marks are available, and the corresponding props:
    `flag'      n	mark this message for flagging
    `move'      y	move the message to some folder
    `read'      n	mark the message as read
-   `trash'     y	thrash the message to some folder
+   `trash'     y	trash the message to some folder
    `unflag'    n	mark this message for unflagging
    `untrash'   n	remove the 'trashed' flag from a message
    `unmark'    n	unmark this message
@@ -286,7 +286,7 @@ user which one)."
 	mu4e~mark-map))))
 
 (defun mu4e~mark-check-target (target)
-  "Check if the target exists if not, offer to create it."
+  "Check if the target exists; if not, offer to create it."
   (let ((fulltarget (concat mu4e-maildir target)))
     (if (not (mu4e-create-maildir-maybe fulltarget))
       (mu4e-error "Target dir %s does not exist " fulltarget)
@@ -298,9 +298,9 @@ user which one)."
 After the actions have been executed succesfully, the affected
 messages are *hidden* from the current header list. Since the
 headers are the result of a search, we cannot be certain that the
-messages no longer matches the current one - to get that
+messages no longer match the current one - to get that
 certainty, we need to rerun the search, but we don't want to do
-that automatically, as it may be too slow and/or break the users
+that automatically, as it may be too slow and/or break the user's
 flow. Therefore, we hide the message, which in practice seems to
 work well.
 
