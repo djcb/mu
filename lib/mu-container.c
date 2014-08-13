@@ -275,8 +275,6 @@ mu_container_splice_children (MuContainer *c, MuContainer *sibling)
 	children = sibling->child;
 	sibling->child = NULL;
 
-	c = mu_container_remove_sibling (c, sibling);
-
 	return mu_container_append_siblings (c, children);
 }
 

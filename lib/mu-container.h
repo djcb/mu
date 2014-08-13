@@ -128,14 +128,12 @@ MuContainer* mu_container_remove_child (MuContainer *c, MuContainer *child);
 MuContainer* mu_container_remove_sibling (MuContainer *c, MuContainer *sibling);
 
 /**
- * promote sibling's children to be this container's siblings and
- * remove the sibling
+ * promote sibling's children to be this container's siblings
  *
  * @param c a container instance
  * @param sibling a sibling of this container
  *
- * @return the container with the sibling's children promoted and the
- * sibling itself removed
+ * @return the container with the sibling's children promoted
  */
 
 MuContainer* mu_container_splice_children (MuContainer *c,
