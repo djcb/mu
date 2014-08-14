@@ -70,6 +70,10 @@ TEST_PROGS += test-mu-flags
 test_mu_flags_SOURCES= test-mu-flags.c dummy.cc
 test_mu_flags_LDADD=  libtestmucommon.la
 
+TEST_PROGS += test-mu-container
+test_mu_container_SOURCES= test-mu-container.c dummy.cc
+test_mu_container_LDADD= libtestmucommon.la
+
 # we need to use dummy.cc to enforce c++ linking...
 BUILT_SOURCES=					\
 	dummy.cc
