@@ -140,7 +140,7 @@ MuContainer* mu_container_splice_children (MuContainer *c,
                                            MuContainer *sibling);
 
 /**
- * promote child's children to be parent's children and remove child
+ * promote child's children to be parent's children
  *
  * @param parent a container instance
  * @param child a child of this container

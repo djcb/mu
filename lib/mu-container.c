@@ -290,8 +290,6 @@ mu_container_splice_grandchildren (MuContainer *parent, MuContainer *child)
 	newchild = child->child;
 	child->child=NULL;
 
-	mu_container_remove_child (parent, child);
-
 	return mu_container_append_children (parent, newchild);
 }
 

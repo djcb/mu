@@ -385,10 +385,12 @@ prune_maybe (MuContainer *c)
 	MuContainer *cur;
 
 	for (cur = c->child; cur; cur = cur->next) {
-		if (cur->flags & MU_CONTAINER_FLAG_DELETE)
+		if (cur->flags & MU_CONTAINER_FLAG_DELETE) {
 			c = mu_container_remove_child (c, cur);
-		else if (cur->flags & MU_CONTAINER_FLAG_SPLICE)
+		} else if (cur->flags & MU_CONTAINER_FLAG_SPLICE) {
 			c = mu_container_splice_grandchildren (c, cur);
+			c = mu_container_remove_child (c, cur);
+		}
 	}
 
 	g_return_val_if_fail (c, FALSE);
