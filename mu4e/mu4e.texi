@@ -1685,6 +1685,9 @@ date:2w.. emacs
 @verbatim
 list:mu-discuss.googlegroups.com
 @end verbatim
+Note - in the @ref{Headers view} you may see the 'friendly name' for a
+list; however, when searching you need the real name. You can see the
+real name for a mailing list from the friendly name's tool-tip.
 
 @item Get messages with a subject soccer, Socrates, society, ...; note that the '*'-wildcard can only appear as a term's rightmost character:
 @verbatim
