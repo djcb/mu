@@ -1,0 +1,9 @@
+From: testfrom@example.com
+To: testto@example.com
+Subject: A
+Message-Id: <A@msg.id>
+References: <Y@msg.id>
+In-reply-to: <Y@msg.id>
+Aate: Sat, 17 May 2014 10:00:00 +0000
+
+A

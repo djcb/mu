@@ -597,6 +597,7 @@ FUNC should be a function taking two arguments:
       ;; misc
       (define-key map "w" 'visual-line-mode)
       (define-key map "h" 'mu4e-view-toggle-hide-cited)
+      (define-key map (kbd "M-q") 'mu4e-view-fill-long-lines)
 
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
@@ -908,6 +909,28 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
           (let ((ov (make-overlay beg end)))
             (overlay-put ov 'face 'mu4e-region-code))
           (setq beg nil end nil))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Wash functions
+(defun mu4e-view-fill-long-lines ()
+  "Fill lines that are wider than the window width or `fill-column'."
+  (interactive)
+  (with-current-buffer mu4e~view-buffer
+    (save-excursion
+      (let ((inhibit-read-only t)
+            (width (window-width (get-buffer-window (current-buffer)))))
+        (save-restriction
+          (message-goto-body)
+          (while (not (eobp))
+            (end-of-line)
+            (when (>= (current-column) (min fill-column width))
+              (narrow-to-region (min (1+ (point)) (point-max))
+                                (point-at-bol))
+              (let ((goback (point-marker)))
+                (fill-paragraph nil)
+                (goto-char (marker-position goback)))
+              (widen))
+            (forward-line 1)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling

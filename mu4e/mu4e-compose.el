@@ -326,7 +326,7 @@ appear on disk."
 		       mu4e~compose-buffer-max-name-length
 		       nil nil t)))))
 
-(defun mu4e~compose-handler (compose-type &optional original-msg includes)
+(defun* mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -352,7 +352,10 @@ tempfile)."
   (run-hooks 'mu4e-compose-pre-hook)
 
   ;; this opens (or re-opens) a messages with all the basic headers set.
-  (mu4e-draft-open compose-type original-msg)
+  (condition-case nil
+      (mu4e-draft-open compose-type original-msg)
+    (quit (kill-buffer) (message "[mu4e] Operation aborted")
+          (return-from mu4e~compose-handler)))
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)

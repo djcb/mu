@@ -810,7 +810,7 @@ W            toggle include-related
 marking
 -------
 d            mark for moving to the trash folder
-=            mark for remove thrash flags ('untrash')
+=            mark for removing trash flag ('untrash')
 DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
@@ -1076,7 +1076,7 @@ M-right      next query
 marking
 -------
 d            mark for moving to the trash folder
-=            mark for remove thrash flags ('untrash')
+=            mark for removing trash flag ('untrash')
 DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
@@ -1839,12 +1839,12 @@ previous/next queries, you can use @kbd{M-x mu4e-headers-forget-queries}.
 It can be useful to narrow existing search results, that is, to add some
 clauses to the current query to match fewer messages.
 
-For example, suppose you're looking at the some mailing list, perhaps by
+For example, suppose you're looking at some mailing list, perhaps by
 jumping to a maildir (@kbd{M-x mu4e-headers-jump-to-maildir}, @key{j}) or
 because you followed some bookmark (@kbd{M-x mu4e-headers-search-bookmark},
 @key{b}). Now, you want to narrow things down to only those messages that have
 attachments.
-1
+
 This is when @kbd{M-x mu4e-headers-search-narrow} (@key{/}) comes in handy. It
 asks for an additional search pattern, which is appended to the current search
 query, in effect getting you the subset of the currently shown headers that
@@ -3234,10 +3234,10 @@ value)} pairs:
     ("Account2"
      (mu4e-sent-folder "/Account2/Saved Items")
      (mu4e-drafts-folder "/Account2/Drafts")
-     (user-mail-address "my.address@@account2.tld)
-     (smtpmail-default-smtp-server "smtp.account2.tld)
+     (user-mail-address "my.address@@account2.tld")
+     (smtpmail-default-smtp-server "smtp.account2.tld")
      (smtpmail-local-domain "account2.tld")
-     (smtpmail-smtp-server "smtp.account2.tld)
+     (smtpmail-smtp-server "smtp.account2.tld")
      (smtpmail-stream-type starttls)
      (smtpmail-smtp-service 587))))
 @end lisp

@@ -64,11 +64,9 @@
   "Major mode for the mu4e main screen.
 \\{mu4e-main-mode-map}."
   (use-local-map mu4e-main-mode-map)
-  (setq
-    truncate-lines t
-    overwrite-mode 'overwrite-mode-binary
-    revert-buffer-function 'mu4e:main-revert-buffer
-    ))
+  (setq truncate-lines t
+        overwrite-mode 'overwrite-mode-binary)
+  (set (make-local-variable 'revert-buffer-function) #'mu4e:main-revert-buffer))
 
 
 (defun mu4e~main-action-str (str &optional func-or-shortcut)
