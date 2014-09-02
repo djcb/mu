@@ -823,7 +823,7 @@ U            unmark *all* messages
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
-<insert>     mark for 'something' (decide later)
+<insert>,*   mark for 'something' (decide later)
 #            resolve deferred 'something' marks
 
 x            execute actions for the marked messages
@@ -1088,7 +1088,7 @@ U            unmark *all* messages
 %            mark based on a regular expression
 T,t          mark whole thread, subthread
 
-<insert>     mark for 'something' (decide later)
+<insert>,*   mark for 'something' (decide later)
 #            resolve deferred 'something' marks
 
 x            execute actions for the marked messages
@@ -1925,7 +1925,7 @@ mu4e-headers-mark-subthread}, respectively
 @verbatim
   mark for/as  | keybinding  | description
  --------------+-------------+--------------------------
-  'something'  | <insert>    | mark now, decide later
+  'something'  | *, <insert> | mark now, decide later
   delete       | D, <delete> | delete
   flag         | +           | mark as 'flagged' ('starred')
   move         | m           | move to some maildir
