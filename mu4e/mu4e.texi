@@ -2307,7 +2307,7 @@ guidelines for doing so.
 There are a number of places where @t{mu4e} lets you plug in your own
 functions:
 @itemize
-@item Custom functions for for message headers in the message-view and
+@item Custom functions for message headers in the message-view and
 headers-view - see @ref{HV Custom headers}, @ref{MSGV Custom headers}
 @item Using message-specific folders for drafts, trash, sent messages and
 refiling, based on a function - see @ref{Dynamic folders}
