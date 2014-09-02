@@ -2345,19 +2345,21 @@ kinds of assumptions, and they are subject to change, and should therefore
 @end verbatim
 
 @noindent
-In addition, you should use functions in the right context; functions that
-start with @t{mu4e-view-} are only applicable to the message view, while
-functions starting with @t{mu4e-headers-} are only applicable to the headers
-view. Functions without such prefixes are applicable everywhere.
+In addition, you should use functions in the right context; functions
+that start with @t{mu4e-view-} are only applicable to the message view,
+while functions starting with @t{mu4e-headers-} are only applicable to
+the headers view. Functions without such prefixes are applicable
+everywhere.
 
 @node Message functions
 @section Message functions
 
-Many functions in @t{mu4e} deal with message plist (property lists). They
-contain information about messages, such as sender and recipient, subject,
-date and so on. To deal with these plists, there are a number of
-@code{mu4e-message-} functions (in @file{mu4e-message.el}), such as
-@code{mu4e-message-field} and @code{mu4e-message-at-point}
+Many functions in @t{mu4e} deal with message plist (property
+lists). They contain information about messages, such as sender and
+recipient, subject, date and so on. To deal with these plists, there are
+a number of @code{mu4e-message-} functions (in @file{mu4e-message.el}),
+such as @code{mu4e-message-field} and @code{mu4e-message-at-point}, and
+a shortcut to combine the two, @code{mu4e-message-field-at-point}.
 
 For example, to get the subject of the message at point, in either the headers
 view or the message view, you could write:
@@ -2379,6 +2381,24 @@ recipients of the message?''), there is a convenience function
 @item The message body is only available in the message view, not in the
 headers view.
 @end itemize
+
+Note that the message-functions work available to @t{mu4e} -- the
+headers that are stored in the database and, in
+@code{mu4e-message-view}-context, the message body.
+
+If you need access to other parts of the message, it is possible to do
+so by hand, using the raw-message and some third-party tool like
+@t{procmail}'s @t{formail}:
+@lisp
+(defun my-mu4e-any-message-field-at-point (hdr)
+  "Quick & dirty way to get an arbitrary header HDR at
+point. Requires the 'formail' tool from procmail."
+   (replace-regexp-in-string "\n$" ""
+     (shell-command-to-string
+       (concat "formail -x " hdr " -c < "
+	 (shell-quote-argument (mu4e-message-field-at-point :path))))))
+@end lisp
+
 
 @node Utility functions
 @section Utility functions
