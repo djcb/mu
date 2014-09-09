@@ -54,6 +54,7 @@ msg2pdf
 test-mu-cmd
 test-mu-cmd-cfind
 test-mu-contacts
+test-mu-container
 test-mu-date
 test-mu-flags
 test-mu-maildir
