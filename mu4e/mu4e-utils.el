@@ -1,6 +1,6 @@
 ;;; mu4e-utils.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2014 Dirk-Jan C. Binnema
 ;; Copyright (C) 2013 Tibor Simko
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -154,12 +154,13 @@ see its docstring)."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~guess-maildir (path)
   "Guess the maildir for some path, or nil if cannot find it."
-  (when (zerop (string-match mu4e-maildir path))
-    (replace-regexp-in-string
-      mu4e-maildir
-      ""
-      (expand-file-name
-	(concat path "/../..")))))
+  (let ((idx (string-match mu4e-maildir path)))
+    (when (and idx (zerop idx))
+      (replace-regexp-in-string
+	mu4e-maildir
+	""
+	(expand-file-name
+	  (concat path "/../.."))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
