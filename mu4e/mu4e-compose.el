@@ -110,7 +110,7 @@ for example:
                    'delete 'sent)))
 
 The various `message-' functions from `message-mode' are available
-for quering the message information."
+for querying the message information."
     :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
 		 (const :tag "move message to mu4e-trash-folder" trash)
 		 (const :tag "delete message" delete))

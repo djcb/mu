@@ -2884,6 +2884,10 @@ Next step: let's make a @t{mu4e} configuration for this:
 ;; don't save message to Sent Messages, Gmail/IMAP takes care of this
 (setq mu4e-sent-messages-behavior 'delete)
 
+;; (See the documentation for `mu4e-sent-messages-behavior' if you have
+;; additional non-Gmail addresses and want assign them different
+;; behavior.)
+
 ;; setup some handy shortcuts
 ;; you can quickly switch to your Inbox -- press ``ji''
 ;; then, when you want archive some messages, move them to
