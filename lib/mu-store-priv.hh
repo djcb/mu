@@ -102,7 +102,7 @@ public:
 
 	void init (const char *path, const char *contacts_path,
 		   bool rebuild, bool read_only) {
-
+		
 		_my_addresses   = NULL;
 		_batch_size	= DEFAULT_BATCH_SIZE;
 		_contacts       = 0;
@@ -111,6 +111,7 @@ public:
 		_processed	= 0;
 		_read_only      = read_only;
 		_ref_count      = 1;
+		_version	= NULL;
 	}
 
 	void set_my_addresses (const char **my_addresses) {
@@ -128,18 +129,17 @@ public:
 	}
 
 	void check_set_version () {
-		/* check version...*/
-		gchar *version;
-		version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
-		if (!version)
+		if (_version)
+			return;
+		_version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
+		if (!_version) {
 			mu_store_set_metadata (this, MU_STORE_VERSION_KEY,
 					       MU_STORE_SCHEMA_VERSION, NULL);
-		else if (g_strcmp0 (version, MU_STORE_SCHEMA_VERSION) != 0) {
-			g_free (version);
+			_version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
+			
+		} else if (g_strcmp0 (_version, MU_STORE_SCHEMA_VERSION) != 0)
 			throw MuStoreError (MU_ERROR_XAPIAN_VERSION_MISMATCH,
 					    "the database needs a rebuild");
-		} else
-			g_free (version);
 	}
 
 	~_MuStore () {
@@ -151,6 +151,7 @@ public:
 			if (!_read_only)
 				mu_store_flush (this);
 
+			g_free (_version);
 			mu_str_free_list (_my_addresses);
 
 			MU_WRITE_LOG ("closing xapian database with %d document(s)",
@@ -180,14 +181,14 @@ public:
 
 	MuContacts* contacts() { return _contacts; }
 
-	const std::string version () const {
-		char *v = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
-		_version = v;
-		g_free (v);
+	const char *version () const {
+		if (!_version)
+			_version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
 		return _version;
 	}
 
 	void set_version (const char *version)  {
+		g_clear_pointer (&_version, g_free);
 		mu_store_set_metadata (this, MU_STORE_VERSION_KEY, version, NULL);
 	}
 
@@ -245,7 +246,7 @@ private:
 	MuContacts *_contacts;
 
 	std::string _path;
-	mutable std::string _version;
+	mutable char *_version;
 
 	Xapian::Database *_db;
 	bool _read_only;

@@ -113,7 +113,8 @@ const char*
 mu_store_version (const MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
-	return store->version().c_str();
+
+	return store->version();
 }
 
 

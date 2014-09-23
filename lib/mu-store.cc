@@ -98,8 +98,6 @@ mu_store_database_version (const gchar *xpath)
 }
 
 
-
-
 gboolean
 mu_store_database_is_locked (const gchar *xpath)
 {
