@@ -444,8 +444,9 @@ runtime. This allows for dynamically changing them depending on context. See
     mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
-Note, @code{mu4e-maildir} takes an actual filesystem-path, the other folder
-names are all relative to @code{mu4e-maildir}.
+Note, @code{mu4e-maildir} takes an actual filesystem-path, the other
+folder names are all relative to @code{mu4e-maildir}. Also note that
+this must @emph{not} be a symbolic link.
 
 @node Retrieval and indexing
 @section Retrieval and indexing
@@ -2675,6 +2676,7 @@ see most is commented-out.
 (require 'mu4e)
 
 ;; Only needed if your maildir is _not_ ~/Maildir
+;; Must be a real dir, not a symlink
 ;;(setq mu4e-maildir "/home/user/Maildir")
 
 ;; these must start with a "/", and must exist

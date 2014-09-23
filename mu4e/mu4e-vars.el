@@ -49,7 +49,8 @@ path."
   :safe 'stringp)
 
 (defcustom mu4e-maildir (expand-file-name "~/Maildir")
-  "The file system path to your Maildir."
+  "The file system path to your Maildir. Must not be a symbolic
+link."
   :type 'directory
   :safe 'stringp
   :group 'mu4e)
