@@ -3428,6 +3428,8 @@ Sending...done
 @end verbatim
 The first and final messages are the most important, and there may be
 considerable time between them, depending on the size of the message.
+@item @emph{Is it possible to compose messages in a separate frame?} 
+Yes - set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
 @item @emph{How can I apply format=flowed to my outgoing messages, enabling
 receiving clients that support this feature to reflow my paragraphs?}
 Plain text emails with @t{Content-Type: text/plain; format=flowed} can
@@ -3486,8 +3488,8 @@ when sending a reply to some e-mail. This seems to be caused by
 @t{mu4e} is working on it. To prevent this, deactivate @t{notmuch} in
 your Emacs setup.
 @item @emph{The PDF-version of the manual does not show any of the non-ASCII
-characters} - this is because, sadly, @t{texi2pdf} documentation system
-does not support those. There is not much we can do about that.
+characters} - this is because the @t{texi2pdf} documentation system does
+not support those. There is not much we can do about that.
 @end itemize
 
 For a more complete list, please refer to the issues-list in the
