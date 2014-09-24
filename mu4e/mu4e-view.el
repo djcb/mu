@@ -576,7 +576,7 @@ FUNC should be a function taking two arguments:
       ;; marking/unmarking
       (define-key map "d" 'mu4e-view-mark-for-trash)
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
-      (define-key map (kbd "<deletechar>") 'mu4e-mark-for-delete)
+      (define-key map (kbd "<deletechar>") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "m") 'mu4e-view-mark-for-move)
       (define-key map (kbd "r") 'mu4e-view-mark-for-refile)
