@@ -188,7 +188,8 @@ public:
 	}
 
 	void set_version (const char *version)  {
-		g_clear_pointer (&_version, g_free);
+		g_free (_version);
+		_version = NULL;
 		mu_store_set_metadata (this, MU_STORE_VERSION_KEY, version, NULL);
 	}
 
