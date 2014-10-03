@@ -151,8 +151,8 @@ and images in a multipart/related part."
 
 (defun org~mu4e-mime-convert-to-html ()
   "Convert the current body to html."
-  (unless (fboundp 'org-export-string)
-    (mu4e-error "require function 'org-export-string not found."))
+  (unless (fboundp 'org-export-string-as)
+    (mu4e-error "require function 'org-export-string-as not found."))
   (unless (executable-find "dvipng")
     (mu4e-error "Required program dvipng not found"))
   (let* ((begin
@@ -163,8 +163,7 @@ and images in a multipart/related part."
 	    (raw-body (buffer-substring begin end))
 	    (tmp-file (make-temp-name (expand-file-name "mail"
 					temporary-file-directory)))
-	    (body (org-export-string raw-body 'org
-		    (file-name-directory tmp-file)))
+            (body (org-export-string-as raw-body 'html t))
 	    ;; because we probably don't want to skip part of our mail
 	    (org-export-skip-text-before-1st-heading nil)
 	    ;; because we probably don't want to export a huge style file
@@ -176,8 +175,7 @@ and images in a multipart/related part."
 	    ;; to hold attachments for inline html images
 	    (html-and-images
 	      (org~mu4e-mime-replace-images
-		(org-export-string raw-body 'html
-		  (file-name-directory tmp-file))
+                (org-export-string-as raw-body 'html t)
 		tmp-file))
 	    (html-images (cdr html-and-images))
 	    (html (car html-and-images)))
