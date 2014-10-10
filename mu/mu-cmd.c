@@ -48,7 +48,7 @@ view_msg_sexp (MuMsg *msg, MuConfig *opts)
 {
 	char *sexp;
 
-	sexp = mu_msg_to_sexp (msg, 0, NULL, MU_MSG_OPTION_NONE);
+	sexp = mu_msg_to_sexp (msg, 0, NULL, mu_config_get_msg_options(opts));
 	fputs (sexp, stdout);
 	g_free (sexp);
 
@@ -78,12 +78,12 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
 
 /* return comma-sep'd list of attachments */
 static gchar *
-get_attach_str (MuMsg *msg)
+get_attach_str (MuMsg *msg, MuConfig *opts)
 {
 	gchar *attach;
 
 	attach = NULL;
-	mu_msg_part_foreach (msg, MU_MSG_OPTION_NONE,
+	mu_msg_part_foreach (msg, mu_config_get_msg_options(opts),
 			     (MuMsgPartForeachFunc)each_part, &attach);
 	return attach;
 }
@@ -177,7 +177,7 @@ view_msg_plain (MuMsg *msg, MuConfig *opts)
 		g_free (tags);
 	}
 
-	if ((attachs = get_attach_str (msg))) {
+	if ((attachs = get_attach_str (msg, opts))) {
 		print_field ("Attachments", attachs, color);
 		g_free (attachs);
 	}
