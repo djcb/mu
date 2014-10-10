@@ -42,8 +42,13 @@ do_it_with_index (MuMsg *msg, MuMsgPart *part, DoData *ddata)
 	if (ddata->mime_obj)
 		return;
 
-	if (part->index == ddata->index)
+	if (part->index == ddata->index) {
+		/* Add a reference to this object, this way if it is
+		 * encrypted it will not be garbage collected before
+		 * we are done with it. */
+		g_object_ref (part->data);
 		ddata->mime_obj = (GMimeObject*)part->data;
+	}
 }
 
 static GMimeObject*
@@ -648,6 +653,10 @@ save_object (GMimeObject *obj, MuMsgOptions opts, const char *fullpath,
 	else
 		rv = write_object_to_fd (obj, fd, err);
 
+	/* Unref it since it was referenced earlier by
+	 * get_mime_object_at_index */
+	g_object_unref (obj);
+
 	if (close (fd) != 0 && !err) { /* don't write on top of old err */
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "could not close '%s': %s",
@@ -681,6 +690,10 @@ mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
 	fname = mime_part_get_filename (mobj, index, TRUE);
 	filepath = g_build_path (G_DIR_SEPARATOR_S, targetdir ? targetdir : "",
 				 fname, NULL);
+
+	/* Unref it since it was referenced earlier by
+	 * get_mime_object_at_index */
+	g_object_unref (mobj);
 	g_free (fname);
 
 	return filepath;

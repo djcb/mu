@@ -675,8 +675,8 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 
 
 static MuError
-save_part (MuMsg *msg, unsigned docid,
-	   unsigned index, GHashTable *args, GError **err)
+save_part (MuMsg *msg, unsigned docid, unsigned index,
+           MuMsgOptions opts, GHashTable *args, GError **err)
 {
 	gboolean rv;
 	const gchar *path;
@@ -684,7 +684,7 @@ save_part (MuMsg *msg, unsigned docid,
 
 	GET_STRING_OR_ERROR_RETURN (args, "path", &path, err);
 
-	rv = mu_msg_part_save (msg, MU_MSG_OPTION_OVERWRITE,
+	rv = mu_msg_part_save (msg, opts | MU_MSG_OPTION_OVERWRITE,
 			       path, index, err);
 	if (!rv) {
 		print_and_clear_g_error (err);
@@ -701,17 +701,17 @@ save_part (MuMsg *msg, unsigned docid,
 
 
 static MuError
-open_part (MuMsg *msg, unsigned docid, unsigned index, GError **err)
+open_part (MuMsg *msg, unsigned docid, unsigned index,
+           MuMsgOptions opts, GError **err)
 {
 	char *targetpath;
 	gboolean rv;
 
-	targetpath = mu_msg_part_get_cache_path (msg,MU_MSG_OPTION_NONE,
-						 index, err);
+	targetpath = mu_msg_part_get_cache_path (msg, opts, index, err);
 	if (!targetpath)
 		return print_and_clear_g_error (err);
 
-	rv = mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
+	rv = mu_msg_part_save (msg, opts | MU_MSG_OPTION_USE_EXISTING,
 			       targetpath, index, err);
 	if (!rv) {
 		print_and_clear_g_error (err);
@@ -736,8 +736,8 @@ leave:
 
 
 static MuError
-temp_part (MuMsg *msg, unsigned docid, unsigned index, GHashTable *args,
-	   GError **err)
+temp_part (MuMsg *msg, unsigned docid, unsigned index,
+           MuMsgOptions opts, GHashTable *args, GError **err)
 {
 	const char *what, *param;
 	char *path;
@@ -745,11 +745,10 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index, GHashTable *args,
 	GET_STRING_OR_ERROR_RETURN (args, "what", &what, err);
 	param = get_string_from_args (args, "param", TRUE, NULL);
 
-	path = mu_msg_part_get_cache_path (msg, MU_MSG_OPTION_NONE,
-					   index, err);
+	path = mu_msg_part_get_cache_path (msg, opts, index, err);
 	if (!path)
 		print_and_clear_g_error (err);
-	else if (!mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
+	else if (!mu_msg_part_save (msg, opts | MU_MSG_OPTION_USE_EXISTING,
 				    path, index, err))
 		print_and_clear_g_error (err);
 	else {
@@ -778,6 +777,21 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index, GHashTable *args,
 }
 
 
+static MuMsgOptions
+get_extract_msg_opts (GHashTable *args)
+{
+	MuMsgOptions opts;
+
+	opts = MU_MSG_OPTION_NONE;
+
+	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
+		opts |= MU_MSG_OPTION_USE_AGENT;
+	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
+		opts |= MU_MSG_OPTION_DECRYPT;
+
+	return opts;
+}
+
 enum { SAVE, OPEN, TEMP, INVALID_ACTION };
 static int
 action_type (const char *actionstr)
@@ -799,8 +813,10 @@ cmd_extract (ServerContext *ctx, GHashTable *args, GError **err)
 	MuMsg *msg;
 	int docid, index, action;
 	MuError rv;
+	MuMsgOptions opts;
 	const char* actionstr, *indexstr;
 
+	opts = get_extract_msg_opts (args);
 	rv = MU_ERROR;
 
 	/* read parameters */
@@ -824,9 +840,9 @@ cmd_extract (ServerContext *ctx, GHashTable *args, GError **err)
 	}
 
 	switch (action) {
-	case SAVE: rv = save_part (msg, docid, index, args, err); break;
-	case OPEN: rv = open_part (msg, docid, index, err); break;
-	case TEMP: rv = temp_part (msg, docid, index, args, err); break;
+	case SAVE: rv = save_part (msg, docid, index, opts, args, err); break;
+	case OPEN: rv = open_part (msg, docid, index, opts, err); break;
+	case TEMP: rv = temp_part (msg, docid, index, opts, args, err); break;
 	default: print_error (MU_ERROR_INTERNAL, "unknown action");
 	}
 

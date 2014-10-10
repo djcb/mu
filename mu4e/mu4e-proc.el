@@ -452,7 +452,7 @@ The result will be delivered to the function registered as
   "Create a new maildir-directory at filesystem PATH."
   (mu4e~proc-send-command "cmd:mkdir path:%s"  (mu4e~proc-escape path)))
 
-(defun mu4e~proc-extract (action docid partidx &optional path what param)
+(defun mu4e~proc-extract (action docid partidx decrypt &optional path what param)
   "Extract an attachment with index PARTIDX from message with DOCID
 and perform ACTION on it (as symbol, either `save', `open', `temp') which
 mean:
@@ -464,17 +464,19 @@ mean:
 	  (concat "cmd:extract "
 	    (case action
 	      (save
-		(format "action:save docid:%d index:%d path:%s"
-		  docid partidx (mu4e~proc-escape path)))
-	      (open (format "action:open docid:%d index:%d" docid partidx))
+		(format "action:save docid:%d index:%d path:%s extract-encrypted:%s use-agent:true"
+		  docid partidx (mu4e~proc-escape path) (if decrypt "true" "false")))
+	      (open (format "action:open docid:%d index:%d extract-encrypted:%s use-agent:true"
+		  docid partidx (if decrypt "true" "false")))
 	      (temp
-		(format "action:temp docid:%d index:%d what:%s%s"
+		(format "action:temp docid:%d index:%d what:%s%s extract-encrypted:%s use-agent:true"
 		  docid partidx what
 		  (if param
 		    (if (stringp param)
 		      (format " param:%s" (mu4e~proc-escape param))
-		      (format " param:%S" param)) "")))
-	      (otherwise (mu4e-error "Unsupported action %S" action))))))
+		      (format " param:%S" param)) "") (if decrypt "true" "false")))
+	      (otherwise (mu4e-error "Unsupported action %S" action))))
+	  ))
     (mu4e~proc-send-command "%s" cmd)))
 
 

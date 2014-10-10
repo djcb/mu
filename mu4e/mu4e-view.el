@@ -251,7 +251,7 @@ found."
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
 the the message view affects HDRSBUF, as does marking etc.
- 
+
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
   (let* ((embedded ;; is it as an embedded msg (ie. message/rfc822 att)?
@@ -274,7 +274,7 @@ marking if it still had that."
 	  (goto-char (point-min))
 	  (mu4e~fontify-cited)
 	  (mu4e~fontify-signature)
-	  (mu4e~view-make-urls-clickable)	
+	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
 	  (setq
 	    mu4e~view-buffer buf
@@ -296,7 +296,7 @@ Meant to be evoked from interactive commands."
            (window-buffer (posn-window posn)))
           ))
     (get-text-property (point) prop)))
- 
+
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
 VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
@@ -324,7 +324,7 @@ add text-properties to VAL."
 	    (indent-to-column margin))))
       (buffer-string))
     "")))
- 
+
 (defun mu4e~view-compose-contact (&optional point)
   "Compose a message for the address at point."
   (interactive)
@@ -780,7 +780,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	       keymap ,mu4e-view-clickable-urls-keymap
 	       help-echo
 	       "[mouse-1] or [M-RET] to open the link"))
-	  (overlay-put ov 'after-string 
+	  (overlay-put ov 'after-string
 		       (propertize (format "[%d]" num)
 				   'face 'mu4e-url-number-face))
 	  )))))
@@ -1045,13 +1045,13 @@ If ATTNUM is nil ask for the attachment number."
       ;; current message when quiting that one.
       (mu4e~view-temp-action docid index "mu4e" docid)
       ;; otherwise, open with the default program (handled in mu-server
-      (mu4e~proc-extract 'open docid index))))
+      (mu4e~proc-extract 'open docid index mu4e-decryption-policy))))
 
 
 (defun mu4e~view-temp-action (docid index what &optional param)
   "Open attachment INDEX for message with DOCID, and invoke ACTION."
   (interactive)
-  (mu4e~proc-extract 'temp docid index nil what param))
+  (mu4e~proc-extract 'temp docid index mu4e-decryption-policy nil what param ))
 
 (defvar mu4e~view-open-with-hist nil "History list for the open-with argument.")
 
