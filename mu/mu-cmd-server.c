@@ -22,7 +22,7 @@
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
-#define _BSD_SOURCE
+#define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <stdio.h>
