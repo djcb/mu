@@ -1,6 +1,5 @@
-;;; org-mu4e -- Support for links to mu4e messages/queries from within
-;;; org-mode, and for writing message in org-mode, sending them as
-;;; rich-text
+;;; org-mu4e -- Support for links to mu4e messages/queries from within org-mode,
+;;; and for writing message in org-mode, sending them as rich-text
 ;;
 ;; Copyright (C) 2012 Dirk-Jan C. Binnema
 
@@ -28,9 +27,7 @@
 
 ;;; Code:
 
-
-;; The expect version here is org 8.x
-
+;; This should support org-mode versions 6.x. 7.x
 
 ;; the 'noerror is just to make sure bytecompilations does not break...
 ;; FIXME: find a better solution

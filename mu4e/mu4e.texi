@@ -2475,6 +2475,12 @@ can set it up by adding it to your configuration:
 (require 'org-mu4e)
 @end lisp
 
+this expects org-mode 8.x. If you have an older version, you can try:
+
+@lisp
+(require 'org-old-mu4e)
+@end lisp
+
 @noindent
 After this, you can use the normal @t{org-mode} mechanisms to store links:
 @kbd{M-x org-store-link} stores a link to a particular message when you're
@@ -2491,8 +2497,8 @@ org-open-at-point} elsewhere - both typically bound to @kbd{C-c C-o}.
 
 Some earlier versions of @t{mu4e} had support for editing e-mail
 messages using @t{org-mode}; since this never worked very well, this has
-now been deprecated; it might be replaced in some future version with
-something better.
+now been deprecated; it might be replaced with something better in some
+future version .
 
 @subsection Some caveats
 
