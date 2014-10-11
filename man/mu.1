@@ -111,14 +111,8 @@ for extract MIME-parts (such as attachments) from messages. See
 
 .SH COLORS
 
-Some \fBmu\fR sub-commands support colorized output using the \fB--color\fR option. This option mimics the 
-behaviour of same option in the GNU-version of \fBls\fR-command : 
-With \fI"--color=auto"\fR, output is colorized only when stardard output is 
-connected to a terminal. 
-\fI--color=never\fR doesn't print colorized output in any case, 
-and \fI--color=always\fR will always print colors.
-
-The default value is \fI--color=always\fR.
+Some \fBmu\fR sub-commands support colorized output, and do so by
+default. If you don't want colors, you can use \fI--nocolor\fR.
 
 Currently, \fBmu find\fR, \fBmu view\fR, \fBmu cfind\fR and \fBmu extract\fR
 support colors.
