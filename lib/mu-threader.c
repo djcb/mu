@@ -154,17 +154,24 @@ find_or_create_referred (GHashTable *id_table, const char *msgid,
 static MuContainer*
 find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 {
-	MuContainer *c;
-	const char* msgid;
-
+	MuContainer	*c;
+	const char*	 msgid;
+	char		 fake[32];
+	
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (docid != 0, NULL);
 
 	msgid = mu_msg_get_msgid (msg);
 	if (!msgid)
 		msgid = mu_msg_get_path (msg); /* fake it */
-
-	c = g_hash_table_lookup (id_table, msgid);
+	if (!msgid) { /* no path either? seems to happen... */
+		g_warning ("message without path");
+		snprintf (fake, sizeof(fake), "fake:%p", (gpointer)msg);
+	}
+	
+	/* XXX the '<none>' works around a crash; find a better
+	 * solution */
+	c = g_hash_table_lookup (id_table, msgid ? msgid : fake);
 
 	/* If id_table contains an empty MuContainer for this ID: * *
 	 * Store this message in the MuContainer's message slot. */
