@@ -3055,6 +3055,13 @@ manual} becomes @t{/&MH4wijCCMEgwSg-}). How can display such folders
 correctly?} This is best solved by telling @command{offlineimap} to use UTF-8
 instead -- see
 @url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
+@item @emph{How can I customize the function to select a folder?} 
+The @t{mu4e-completing-read} variable can be customized to select a
+folder in any way. The variable can be set to a function that receives
+five arguments, following @t{completing-read}. The default value is
+@t{ido-completing-read}; to use emacs's default behaviour, set the
+variable to @t{completing-read}. Helm users can use the same value, and
+by enabling @t{helm-mode} use helm-style completion.
 @end enumerate
 
 @node Reading messages
