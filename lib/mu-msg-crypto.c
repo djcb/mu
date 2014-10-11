@@ -99,26 +99,46 @@ dummy_password_func (const char *user_id, const char *prompt_ctx,
 }
 
 
+static char*
+get_gpg (GError **err)
+{
+	char		*path;
+	const char	*envpath;
+
+	if ((envpath = g_getenv ("MU_GPG_PATH"))) {
+		if (access (envpath, X_OK) != 0) {
+			mu_util_g_set_error (
+				err, MU_ERROR,
+				"'%s': not a valid gpg path: %s",
+				envpath, strerror (errno));
+			return NULL;
+		 }
+		return g_strdup (envpath);
+	}
+	
+	if (!(path = g_find_program_in_path ("gpg")) &&
+	    !(path = g_find_program_in_path ("gpg2"))) {
+		mu_util_g_set_error (err, MU_ERROR, "gpg/gpg2 not found");
+		return NULL;
+	} else
+		return path;
+}
+
+
 static GMimeCryptoContext*
 get_gpg_crypto_context (MuMsgOptions opts, GError **err)
 {
-	GMimeCryptoContext *cctx;
-	const char *prog;
+	GMimeCryptoContext	*cctx;
+	char			*gpg;
 
 	cctx  = NULL;
+	if (!(gpg   = get_gpg (err)))
+		return NULL;
+	
+	cctx = g_mime_gpg_context_new (
+		(GMimePasswordRequestFunc)password_requester, gpg);
+	g_free (gpg);
 
-	prog = g_getenv ("MU_GPG_PATH");
-	if (prog)
-		cctx = g_mime_gpg_context_new (
-		(GMimePasswordRequestFunc)password_requester, prog);
-	else {
-		char *path;
-		path  = g_find_program_in_path ("gpg");
-		if (path)
-			cctx = g_mime_gpg_context_new (
-				password_requester, path);
-		g_free (path);
-	}
 	if (!cctx) {
 		mu_util_g_set_error (err, MU_ERROR,
 				     "failed to get GPG crypto context");
@@ -143,7 +163,9 @@ get_crypto_context (MuMsgOptions opts, MuMsgPartPasswordFunc password_func,
 	GMimeCryptoContext *cctx;
 
 	cctx = get_gpg_crypto_context (opts, err);
-
+	if (!cctx)
+		return NULL;
+	
 	/* use gobject to pass data to the callback func */
 	cbdata = g_new0 (CallbackData, 1);
 	cbdata->pw_func   = password_func ? password_func : dummy_password_func;
