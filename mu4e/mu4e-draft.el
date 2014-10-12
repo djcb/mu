@@ -435,8 +435,9 @@ from either `mu4e~draft-reply-construct', or
 	(if mu4e-compose-signature-auto-include
 	  (let ((message-signature (or mu4e-compose-signature "\n"))
 		 (message-signature-insert-empty-line t))
-	    (message-insert-signature)
-	    (mu4e~fontify-signature))
+	    (save-excursion
+	      (message-insert-signature)
+	      (mu4e~fontify-signature)))
 	  (insert "\n"))))
 	  ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
 	  ;; throughout.
