@@ -267,8 +267,9 @@ appear on disk."
 \\{message-mode-map}."
   (progn
     (use-local-map mu4e-compose-mode-map)
-    (set (make-local-variable 'message-signature)
-      mu4e-compose-signature)
+    (set (make-local-variable 'message-signature) mu4e-compose-signature)
+    ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
+    (set (make-local-variable 'message-send-mail-real-function) nil)
     (make-local-variable 'message-default-charset)
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
