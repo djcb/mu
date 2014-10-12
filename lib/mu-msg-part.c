@@ -156,21 +156,22 @@ accumulate_text (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 static gboolean handle_mime_object (MuMsg *msg,
 				    GMimeObject *mobj, GMimeObject *parent,
 				    MuMsgOptions opts,
-				    unsigned index, MuMsgPartForeachFunc func,
+				    unsigned *index, MuMsgPartForeachFunc func,
 				    gpointer user_data);
 
 static char*
-get_text_from_mime_msg (MuMsg *msg, GMimeMessage *mmsg, MuMsgOptions opts,
-			unsigned index)
+get_text_from_mime_msg (MuMsg *msg, GMimeMessage *mmsg, MuMsgOptions opts)
 {
 	GString *gstr;
+	unsigned index;
 
-	gstr = g_string_sized_new (4096);
+	index = 0;
+	gstr  = g_string_sized_new (4096);
 	handle_mime_object (msg,
 	                    mmsg->mime_part,
 			    (GMimeObject *) mmsg,
 			    opts,
-			    0,
+			    &index,
 			    (MuMsgPartForeachFunc)accumulate_text,
 			    &gstr);
 
@@ -211,8 +212,7 @@ mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 	/* apparently, g_mime_message_part_get_message may still
 	 * return NULL */
  	if (mime_msg)
-		return get_text_from_mime_msg (msg, mime_msg,
-					       opts, self->index);
+		return get_text_from_mime_msg (msg, mime_msg, opts);
 	return NULL;
 }
 
@@ -377,7 +377,7 @@ get_console_pw (const char* user_id, const char *prompt_ctx,
 static gboolean
 handle_encrypted_part (MuMsg *msg,
 		       GMimeMultipartEncrypted *part, GMimeObject *parent,
-		       MuMsgOptions opts, unsigned index,
+		       MuMsgOptions opts, unsigned *index,
 		       MuMsgPartForeachFunc func, gpointer user_data)
 {
 	GError *err;
@@ -400,7 +400,7 @@ handle_encrypted_part (MuMsg *msg,
 	if (dec) {
 		gboolean rv;
 		rv = handle_mime_object (msg, dec, parent, opts,
-					 index + 1, func, user_data);
+					 index, func, user_data);
 		g_object_unref (dec);
 		return rv;
 	}
@@ -413,7 +413,7 @@ handle_encrypted_part (MuMsg *msg,
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
-	     MuMsgOptions opts, unsigned index,
+	     MuMsgOptions opts, unsigned *index,
 	     MuMsgPartForeachFunc func, gpointer user_data)
 {
 	GMimeContentType *ct;
@@ -445,7 +445,7 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);
 
 	msgpart.data    = (gpointer)part;
-	msgpart.index   = index;
+	msgpart.index   = (*index)++;
 
 	func (msg, &msgpart, user_data);
 
@@ -456,7 +456,7 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 /* call 'func' with information about this MIME-part */
 static gboolean
 handle_message_part (MuMsg *msg, GMimeMessagePart *mimemsgpart, GMimeObject *parent,
-		     MuMsgOptions opts, unsigned index,
+		     MuMsgOptions opts, unsigned *index,
 		     MuMsgPartForeachFunc func, gpointer user_data)
 {
 	MuMsgPart msgpart;
@@ -465,7 +465,7 @@ handle_message_part (MuMsg *msg, GMimeMessagePart *mimemsgpart, GMimeObject *par
 
 	msgpart.type        = "message";
 	msgpart.subtype     = "rfc822";
-	msgpart.index       = index;
+	msgpart.index       = (*index)++;
 
 	/* msgpart.size        = 0; /\* maybe calculate this? *\/ */
 
@@ -492,9 +492,8 @@ handle_message_part (MuMsg *msg, GMimeMessagePart *mimemsgpart, GMimeObject *par
 }
 
 static gboolean
-handle_multipart (MuMsg *msg,
-                  GMimeMultipart *mpart, GMimeObject *parent, MuMsgOptions opts,
-                  unsigned index, MuMsgPartForeachFunc func, gpointer user_data)
+handle_multipart (MuMsg *msg, GMimeMultipart *mpart, MuMsgOptions opts,
+                  unsigned *index, MuMsgPartForeachFunc func, gpointer user_data)
 {
 	gboolean res;
 	GMimeObject *part;
@@ -504,7 +503,7 @@ handle_multipart (MuMsg *msg,
 	for (i = 0; i < mpart->children->len; i++) {
 		part = (GMimeObject *) mpart->children->pdata[i];
 		res &= handle_mime_object (msg, part, (GMimeObject *) mpart,
-		                           opts, ++index, func, user_data);
+		                           opts, index, func, user_data);
 	}
 
 	return res;
@@ -514,7 +513,7 @@ handle_multipart (MuMsg *msg,
 static gboolean
 handle_mime_object (MuMsg *msg,
 		    GMimeObject *mobj, GMimeObject *parent, MuMsgOptions opts,
-		    unsigned index, MuMsgPartForeachFunc func, gpointer user_data)
+		    unsigned *index, MuMsgPartForeachFunc func, gpointer user_data)
 {
 	if (GMIME_IS_PART (mobj))
 		return handle_part
@@ -525,11 +524,18 @@ handle_mime_object (MuMsg *msg,
 			(msg, GMIME_MESSAGE_PART(mobj),
 			 parent, opts, index, func, user_data);
 	else if ((opts & MU_MSG_OPTION_VERIFY) &&
-	         GMIME_IS_MULTIPART_SIGNED (mobj))
-		return check_signature
+	         GMIME_IS_MULTIPART_SIGNED (mobj)) {
+		gboolean verified, multipart;
+
+		verified = check_signature
 			(msg, GMIME_MULTIPART_SIGNED (mobj), opts);
-	else if ((opts & MU_MSG_OPTION_DECRYPT) &&
-	         GMIME_IS_MULTIPART_ENCRYPTED (mobj))
+		multipart = handle_multipart
+			(msg, GMIME_MULTIPART (mobj),
+			 opts, index, func, user_data);
+
+		return verified && multipart;
+	} else if ((opts & MU_MSG_OPTION_DECRYPT) &&
+	           GMIME_IS_MULTIPART_ENCRYPTED (mobj))
 		return handle_encrypted_part
 			(msg, GMIME_MULTIPART_ENCRYPTED (mobj),
 			 parent, opts, index, func, user_data);
@@ -545,6 +551,9 @@ gboolean
 mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 		     MuMsgPartForeachFunc func, gpointer user_data)
 {
+	unsigned index;
+
+	index = 0;
 	g_return_val_if_fail (msg, FALSE);
 
 	if (!mu_msg_load_msg_file (msg, NULL))
@@ -554,7 +563,7 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 	                           msg->_file->_mime_msg->mime_part,
 	                           (GMimeObject *) msg->_file->_mime_msg,
 	                           opts,
-	                           0,
+	                           &index,
 	                           func,
 	                           user_data);
 }
