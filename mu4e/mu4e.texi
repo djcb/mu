@@ -3267,6 +3267,7 @@ value)} pairs:
      (user-mail-address "my.address@@account1.tld")
      (smtpmail-default-smtp-server "smtp.account1.tld")
      (smtpmail-local-domain "account1.tld")
+     (smtpmail-smtp-user "username1")
      (smtpmail-smtp-server "smtp.account1.tld")
      (smtpmail-stream-type starttls)
      (smtpmail-smtp-service 25))
@@ -3276,16 +3277,23 @@ value)} pairs:
      (user-mail-address "my.address@@account2.tld")
      (smtpmail-default-smtp-server "smtp.account2.tld")
      (smtpmail-local-domain "account2.tld")
+     (smtpmail-smtp-user "username2")
      (smtpmail-smtp-server "smtp.account2.tld")
      (smtpmail-stream-type starttls)
      (smtpmail-smtp-service 587))))
 @end lisp
 
-You can put any variables you want in the account lists, just make sure
+You can put any variable you want in the account lists, just make sure
 that you put in @emph{all} the variables that differ for each account.
-Variables that do not differ do not be included. For example, if you use
-the same smtp server for both accounts, you don't need to include the
-smtp-related variables in @code{my-mu4e-account-alist}.
+Variables that do not differ need not be included. For example, if you
+use the same smtp server for both accounts, you don't need to include
+the smtp-related variables in @code{my-mu4e-account-alist}.
+
+Note that some SMTP servers (such as Gmail) require the SMTP username to
+match the user mail address. In this case your mail will appear to
+originate from whichever SMTP account you use. Thus unless you are
+certain your SMTP server does not have this requirement, you should
+generally use different SMTP account credentials for each mail account.
 
 Now, the following function can be used to select an account and set the
 variables in @code{my-mu4e-account-alist} to the correct values:
