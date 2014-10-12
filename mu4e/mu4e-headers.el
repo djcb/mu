@@ -932,7 +932,7 @@ the query history stack."
 	mode-name "mu4e-headers"
 	mu4e~headers-last-query expr
 	global-mode-string (propertize mu4e~headers-last-query
-			     'face 'mu4e-title-face)))
+			     'face 'mu4e-modeline-face)))
     (switch-to-buffer buf)
     (mu4e~proc-find
       expr
