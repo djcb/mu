@@ -80,14 +80,38 @@ Example usage:
       ;; storing links to messages
     ((eq major-mode 'mu4e-view-mode)
       (let* ((msg  (mu4e-message-at-point))
-	     (msgid   (or (plist-get msg :message-id) "<none>"))
-	     link)
-       (org-store-link-props :type "mu4e" :link link
-			     :message-id msgid)
-       (setq link (concat "mu4e:msgid:" msgid))
-       (org-add-link-props :link link
-			   :description (funcall org-mu4e-link-desc-func msg))
-       link))))
+             (msgid   (or (plist-get msg :message-id) "<none>"))
+             (from  (or (plist-get msg :from) '(("none" . "none"))))
+             (fromname (car (car from)))
+             (fromaddress (cdr (car from)))
+             (to  (or (plist-get msg :to) '(("none" . "none"))))
+             (toname (car (car to)))
+             (toaddress (cdr (car to)))
+             (fromto (if (mu4e-user-mail-address-p fromaddress)
+                         (format "to %s <%s>" toname toaddress)
+                       (format "from %s <%s>" fromname fromaddress)))
+             (date (plist-get msg :date))
+             (date-ts (format-time-string (org-time-stamp-format t) date))
+             (date-ts-ia (format-time-string (org-time-stamp-format t t) date))
+             (subject  (or (plist-get msg :subject) "<none>"))
+             link)
+        (org-store-link-props :type "mu4e" :link link
+                              :message-id msgid)
+        (setq link (concat "mu4e:msgid:" msgid))
+        (org-add-link-props :link link
+                            :to (format "%s <%s>" toname toaddress)
+                            :toname toname
+                            :toaddress toaddress
+                            :from (format "%s <%s>" fromname fromaddress)
+                            :fromname fromname
+                            :fromaddress fromaddress
+                            :fromto fromto
+                            :date date-ts-ia
+                            :date-timestamp date-ts
+                            :date-timestamp-inactive date-ts-ia
+                            :subject subject
+                            :description (funcall org-mu4e-link-desc-func msg))
+        link))))
 
 (org-add-link-type "mu4e" 'org-mu4e-open)
 (add-hook 'org-store-link-functions 'org-mu4e-store-link)
