@@ -167,11 +167,12 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 	if (!msgid) { /* no path either? seems to happen... */
 		g_warning ("message without path");
 		snprintf (fake, sizeof(fake), "fake:%p", (gpointer)msg);
+		msgid = fake;
 	}
 	
 	/* XXX the '<none>' works around a crash; find a better
 	 * solution */
-	c = g_hash_table_lookup (id_table, msgid ? msgid : fake);
+	c = g_hash_table_lookup (id_table, msgid);
 
 	/* If id_table contains an empty MuContainer for this ID: * *
 	 * Store this message in the MuContainer's message slot. */
