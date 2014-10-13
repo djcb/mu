@@ -542,7 +542,7 @@ handle_mime_object (MuMsg *msg,
 	else if (GMIME_IS_MULTIPART (mobj))
 		return handle_multipart
 			(msg, GMIME_MULTIPART (mobj),
-			 parent, opts, index, func, user_data);
+			 opts, index, func, user_data);
 	return TRUE;
 }
 
