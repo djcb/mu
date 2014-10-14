@@ -471,6 +471,21 @@ include_attachments (MuMsg *msg)
 	return g_string_free (gstr, FALSE);
 }
 
+static MuMsgOptions
+get_encrypted_msg_opts (GHashTable *args)
+{
+	MuMsgOptions opts;
+
+	opts = MU_MSG_OPTION_NONE;
+
+	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
+		opts |= MU_MSG_OPTION_USE_AGENT;
+	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
+		opts |= MU_MSG_OPTION_DECRYPT;
+
+	return opts;
+}
+
 enum { NEW, REPLY, FORWARD, EDIT, INVALID_TYPE };
 static unsigned
 compose_type (const char *typestr)
@@ -505,6 +520,9 @@ cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 	const gchar *typestr;
 	char *sexp, *atts;
 	unsigned ctype;
+	MuMsgOptions opts;
+
+	opts = get_encrypted_msg_opts (args);
 
 	GET_STRING_OR_ERROR_RETURN (args, "type", &typestr, err);
 
@@ -523,8 +541,7 @@ cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 			print_and_clear_g_error (err);
 			return MU_OK;
 		}
-		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL,
-				       MU_MSG_OPTION_NONE);
+		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL, opts);
 		atts = (ctype == FORWARD) ? include_attachments (msg) : NULL;
 		mu_msg_unref (msg);
 	} else
@@ -776,22 +793,6 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index,
 	return MU_OK;
 }
 
-
-static MuMsgOptions
-get_extract_msg_opts (GHashTable *args)
-{
-	MuMsgOptions opts;
-
-	opts = MU_MSG_OPTION_NONE;
-
-	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
-		opts |= MU_MSG_OPTION_USE_AGENT;
-	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
-		opts |= MU_MSG_OPTION_DECRYPT;
-
-	return opts;
-}
-
 enum { SAVE, OPEN, TEMP, INVALID_ACTION };
 static int
 action_type (const char *actionstr)
@@ -816,7 +817,7 @@ cmd_extract (ServerContext *ctx, GHashTable *args, GError **err)
 	MuMsgOptions opts;
 	const char* actionstr, *indexstr;
 
-	opts = get_extract_msg_opts (args);
+	opts = get_encrypted_msg_opts (args);
 	rv = MU_ERROR;
 
 	/* read parameters */
