@@ -381,7 +381,7 @@ tempfile)."
   (mu4e~compose-hide-headers)
   ;; switch on the mode
   (mu4e-compose-mode))
- 
+
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
 message. For Forwarded ('Passed') and Replied messages, try to set
@@ -466,7 +466,13 @@ for draft messages."
     (if (eq compose-type 'new)
       (mu4e~compose-handler 'new)
       ;; otherwise, we need the doc-id
-      (let ((docid (mu4e-message-field msg :docid)))
+      (let* ((docid (mu4e-message-field msg :docid))
+	;; decrypt (or not), based on `mu4e-decryption-policy'.
+	(decrypt
+	  (and (member 'encrypted (mu4e-message-field msg :flags))
+	    (if (eq mu4e-decryption-policy 'ask)
+	      (yes-or-no-p (mu4e-format "Decrypt message?"))
+	      mu4e-decryption-policy))))
 	;; if there's a visible view window, select that before starting composing
 	;; a new message, so that one will be replaced by the compose window. The
 	;; 10-or-so line headers buffer is not a good place to write it...
@@ -474,7 +480,7 @@ for draft messages."
 	  (when (window-live-p viewwin)
 	    (select-window viewwin)))
 	;; talk to the backend
-	(mu4e~proc-compose compose-type docid)))))
+	(mu4e~proc-compose compose-type decrypt docid)))))
 
 (defun mu4e-compose-reply ()
   "Compose a reply for the message at point in the headers buffer."

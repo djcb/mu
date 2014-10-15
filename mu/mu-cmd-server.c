@@ -415,8 +415,14 @@ cmd_add (ServerContext *ctx, GHashTable *args, GError **err)
 }
 
 
+struct _PartInfo {
+	GSList      *attlist;
+	MuMsgOptions opts;
+};
+typedef struct _PartInfo PartInfo;
+
 static void
-each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
+each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
 	char *att, *cachefile;
 	GError *err;
@@ -427,7 +433,8 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
 		return;
 
 	err	  = NULL;
-	cachefile = mu_msg_part_save_temp (msg, MU_MSG_OPTION_OVERWRITE,
+	cachefile = mu_msg_part_save_temp (msg,
+					   pinfo->opts|MU_MSG_OPTION_OVERWRITE,
 					   part->index, &err);
 	if (!cachefile) {
 		print_and_clear_g_error (&err);
@@ -437,7 +444,7 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
 	att = g_strdup_printf (
 		"(:file-name \"%s\" :mime-type \"%s/%s\")",
 		cachefile, part->type, part->subtype);
-	*attlist = g_slist_append (*attlist, att);
+	pinfo->attlist = g_slist_append (pinfo->attlist, att);
 	g_free (cachefile);
 }
 
@@ -450,25 +457,42 @@ each_part (MuMsg *msg, MuMsgPart *part, GSList **attlist)
  *
  */
 static gchar*
-include_attachments (MuMsg *msg)
+include_attachments (MuMsg *msg, MuMsgOptions opts)
 {
-	GSList *attlist, *cur;
+	GSList  *cur;
 	GString *gstr;
+	PartInfo pinfo;
 
-	attlist = NULL;
-	mu_msg_part_foreach (msg, MU_MSG_OPTION_NONE,
+	pinfo.attlist = NULL;
+	pinfo.opts    = opts;
+	mu_msg_part_foreach (msg, opts,
 			     (MuMsgPartForeachFunc)each_part,
-			     &attlist);
+			     &pinfo);
 
 	gstr = g_string_sized_new (512);
 	gstr = g_string_append_c (gstr, '(');
-	for (cur = attlist; cur; cur = g_slist_next (cur))
+	for (cur = pinfo.attlist; cur; cur = g_slist_next (cur))
 		g_string_append (gstr, (gchar*)cur->data);
 	gstr = g_string_append_c (gstr, ')');
 
-	mu_str_free_list (attlist);
+	mu_str_free_list (pinfo.attlist);
 
 	return g_string_free (gstr, FALSE);
+}
+
+static MuMsgOptions
+get_encrypted_msg_opts (GHashTable *args)
+{
+	MuMsgOptions opts;
+
+	opts = MU_MSG_OPTION_NONE;
+
+	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
+		opts |= MU_MSG_OPTION_USE_AGENT;
+	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
+		opts |= MU_MSG_OPTION_DECRYPT;
+
+	return opts;
 }
 
 enum { NEW, REPLY, FORWARD, EDIT, INVALID_TYPE };
@@ -505,6 +529,9 @@ cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 	const gchar *typestr;
 	char *sexp, *atts;
 	unsigned ctype;
+	MuMsgOptions opts;
+
+	opts = get_encrypted_msg_opts (args);
 
 	GET_STRING_OR_ERROR_RETURN (args, "type", &typestr, err);
 
@@ -523,9 +550,8 @@ cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 			print_and_clear_g_error (err);
 			return MU_OK;
 		}
-		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL,
-				       MU_MSG_OPTION_NONE);
-		atts = (ctype == FORWARD) ? include_attachments (msg) : NULL;
+		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL, opts);
+		atts = (ctype == FORWARD) ? include_attachments (msg, opts) : NULL;
 		mu_msg_unref (msg);
 	} else
 		atts = sexp = NULL;
@@ -776,22 +802,6 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index,
 	return MU_OK;
 }
 
-
-static MuMsgOptions
-get_extract_msg_opts (GHashTable *args)
-{
-	MuMsgOptions opts;
-
-	opts = MU_MSG_OPTION_NONE;
-
-	if (get_bool_from_args (args, "use-agent", FALSE, NULL))
-		opts |= MU_MSG_OPTION_USE_AGENT;
-	if (get_bool_from_args (args, "extract-encrypted", FALSE, NULL))
-		opts |= MU_MSG_OPTION_DECRYPT;
-
-	return opts;
-}
-
 enum { SAVE, OPEN, TEMP, INVALID_ACTION };
 static int
 action_type (const char *actionstr)
@@ -816,7 +826,7 @@ cmd_extract (ServerContext *ctx, GHashTable *args, GError **err)
 	MuMsgOptions opts;
 	const char* actionstr, *indexstr;
 
-	opts = get_extract_msg_opts (args);
+	opts = get_encrypted_msg_opts (args);
 	rv = MU_ERROR;
 
 	/* read parameters */
