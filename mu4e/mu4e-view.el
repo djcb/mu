@@ -995,7 +995,7 @@ If ATTNUM is nil ask for the attachment number."
 	(and (file-exists-p fpath)
 	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" fpath))))))
     (mu4e~proc-extract
-      'save (mu4e-message-field msg :docid) index fpath)))
+      'save (mu4e-message-field msg :docid) index mu4e-decryption-policy fpath)))
 
 
 (defun mu4e-view-save-attachment-multi (&optional msg)
