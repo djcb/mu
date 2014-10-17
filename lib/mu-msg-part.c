@@ -165,7 +165,7 @@ get_text_from_mime_msg (MuMsg *msg, GMimeMessage *mmsg, MuMsgOptions opts)
 	GString *gstr;
 	unsigned index;
 
-	index = 0;
+	index = 1;
 	gstr  = g_string_sized_new (4096);
 	handle_mime_object (msg,
 	                    mmsg->mime_part,
@@ -553,7 +553,7 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 {
 	unsigned index;
 
-	index = 0;
+	index = 1;
 	g_return_val_if_fail (msg, FALSE);
 
 	if (!mu_msg_load_msg_file (msg, NULL))
