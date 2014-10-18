@@ -437,9 +437,9 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
 	}
 
-	/* put the verification info in the pgp-signature part */
+	/* put the verification info in the signed part */
 	msgpart.sig_status_report = NULL;
-	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0)
+	if ((opts & MU_MSG_OPTION_VERIFY) && GMIME_IS_MULTIPART_SIGNED (parent))
 		msgpart.sig_status_report =
 			(MuMsgPartSigStatusReport*)
 			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);
@@ -525,15 +525,17 @@ handle_mime_object (MuMsg *msg,
 			 parent, opts, index, func, user_data);
 	else if ((opts & MU_MSG_OPTION_VERIFY) &&
 	         GMIME_IS_MULTIPART_SIGNED (mobj)) {
-		gboolean verified, multipart;
+		gboolean verified, signedpart;
 
 		verified = check_signature
 			(msg, GMIME_MULTIPART_SIGNED (mobj), opts);
-		multipart = handle_multipart
-			(msg, GMIME_MULTIPART (mobj),
-			 opts, index, func, user_data);
 
-		return verified && multipart;
+		// Only process the first part (the second one is the signature)
+		signedpart = handle_mime_object
+			(msg, g_mime_multipart_get_part (GMIME_MULTIPART (mobj), 0),
+			 mobj, opts, index, func, user_data);
+
+		return verified && signedpart;
 	} else if ((opts & MU_MSG_OPTION_DECRYPT) &&
 	           GMIME_IS_MULTIPART_ENCRYPTED (mobj))
 		return handle_encrypted_part
