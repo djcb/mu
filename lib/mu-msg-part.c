@@ -381,6 +381,7 @@ handle_encrypted_part (MuMsg *msg,
 		       MuMsgPartForeachFunc func, gpointer user_data)
 {
 	GError *err;
+	gboolean rv;
 	GMimeObject *dec;
 	MuMsgPartPasswordFunc pw_func;
 
@@ -398,14 +399,23 @@ handle_encrypted_part (MuMsg *msg,
 	}
 
 	if (dec) {
-		gboolean rv;
 		rv = handle_mime_object (msg, dec, parent, opts,
 					 index, func, user_data);
 		g_object_unref (dec);
-		return rv;
+	} else {
+		// On failure to decrypt, list the encrypted part as
+		// an attachment
+		GMimeObject *encrypted;
+
+		encrypted = g_mime_multipart_get_part (GMIME_MULTIPART (part), 1);
+
+		g_return_val_if_fail (GMIME_IS_PART(encrypted), FALSE);
+
+		rv = handle_mime_object (msg, encrypted, parent, opts,
+		                         index, func, user_data);
 	}
 
-	return TRUE;
+	return rv;
 }
 
 
