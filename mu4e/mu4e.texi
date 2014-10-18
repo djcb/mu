@@ -2769,7 +2769,7 @@ customize.
 (setq
    message-send-mail-function 'smtpmail-send-it
    smtpmail-default-smtp-server "smtp.example.com"
-   smtpmail-smtp-server ""smtp.example.com"
+   smtpmail-smtp-server "smtp.example.com"
    smtpmail-local-domain "example.com"
 
    ;; if you need offline mode, set these -- and create the queue dir
