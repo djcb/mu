@@ -1324,9 +1324,12 @@ or message-at-point."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (path (mu4e-message-field msg :path))
-	  (cmd (format "%s verify --verbose %s"
+	  (cmd (format "%s verify --verbose %s %s"
 		 mu4e-mu-binary
-		 (shell-quote-argument path)))
+		 (shell-quote-argument path)
+		 (if mu4e-decryption-policy
+		     "--decrypt --use-agent"
+		     "")))
 	  (output (shell-command-to-string cmd))
 	    ;; create a new one
 	  (buf (get-buffer-create mu4e~verify-buffer-name))
