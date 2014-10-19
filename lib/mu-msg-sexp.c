@@ -300,6 +300,21 @@ sig_verdict (MuMsgPart *mpart)
 	}
 }
 
+static const char*
+dec_verdict (MuMsgPart *mpart)
+{
+	MuMsgPartType ptype;
+
+	ptype = mpart->part_type;
+
+	if (ptype & MU_MSG_PART_TYPE_DECRYPTED)
+		return ":decryption succeeded";
+	else if (ptype & MU_MSG_PART_TYPE_ENCRYPTED)
+		return ":decryption failed";
+	else
+		return "";
+}
+
 
 static gchar *
 get_part_type_string (MuMsgPartType ptype)
@@ -348,7 +363,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 	tmp = g_strdup_printf
 		("%s(:index %d :name \"%s\" :mime-type \"%s/%s\"%s%s "
 		 ":type %s "
-		 ":attachment %s :size %i %s)",
+		 ":attachment %s :size %i %s %s)",
 		 pinfo->parts ? pinfo->parts: "",
 		 part->index,
 		 name ? name : "noname",
@@ -358,7 +373,8 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 parttype,
 		 mu_msg_part_maybe_attachment (part) ? "t" : "nil",
 		 (int)part->size,
-		 sig_verdict (part));
+		 sig_verdict (part),
+		 dec_verdict (part));
 
 	g_free (pinfo->parts);
 	pinfo->parts = tmp;
