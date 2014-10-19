@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2014 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -402,11 +402,13 @@ handle_encrypted_part (MuMsg *msg, GMimeMultipartEncrypted *part,
 		                         opts, index, TRUE, func, user_data);
 		g_object_unref (dec);
 	} else {
-		// On failure to decrypt list the encrypted part as an
-		// attachment
+		/* On failure to decrypt, list the encrypted part as
+		 * an attachment
+		 */
 		GMimeObject *encrypted;
 
-		encrypted = g_mime_multipart_get_part (GMIME_MULTIPART (part), 1);
+		encrypted = g_mime_multipart_get_part (
+			GMIME_MULTIPART (part), 1);
 
 		g_return_val_if_fail (GMIME_IS_PART(encrypted), FALSE);
 
@@ -457,7 +459,8 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0)
 		msgpart.sig_status_report =
 			(MuMsgPartSigStatusReport*)
-			g_object_get_data (G_OBJECT(parent), SIG_STATUS_REPORT);
+			g_object_get_data (G_OBJECT(parent),
+					   SIG_STATUS_REPORT);
 
 	msgpart.data    = (gpointer)part;
 	msgpart.index   = (*index)++;
@@ -470,8 +473,9 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 
 /* call 'func' with information about this MIME-part */
 static gboolean
-handle_message_part (MuMsg *msg, GMimeMessagePart *mimemsgpart, GMimeObject *parent,
-		     MuMsgOptions opts, unsigned *index, gboolean decrypted,
+handle_message_part (MuMsg *msg, GMimeMessagePart *mimemsgpart,
+		     GMimeObject *parent, MuMsgOptions opts, unsigned *index,
+		     gboolean decrypted,
 		     MuMsgPartForeachFunc func, gpointer user_data)
 {
 	MuMsgPart msgpart;
@@ -491,7 +495,8 @@ handle_message_part (MuMsg *msg, GMimeMessagePart *mimemsgpart, GMimeObject *par
 	func (msg, &msgpart, user_data);
 
 	if (opts & MU_MSG_OPTION_RECURSE_RFC822) {
-		GMimeMessage *mmsg; /* this may return NULL for some messages */
+		GMimeMessage *mmsg; /* may return NULL for some
+				     * messages */
 		mmsg = g_mime_message_part_get_message (mimemsgpart);
 		if (mmsg)
 			return handle_mime_object (msg,
@@ -799,7 +804,8 @@ mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
 
 
 gchar*
-mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts, guint partidx, GError **err)
+mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts, guint partidx,
+		       GError **err)
 {
 	gchar *filepath;
 
@@ -826,7 +832,8 @@ match_cid (MuMsgPart *mpart, const char *cid)
 }
 
 int
-mu_msg_find_index_for_cid (MuMsg *msg, MuMsgOptions opts, const char *sought_cid)
+mu_msg_find_index_for_cid (MuMsg *msg, MuMsgOptions opts,
+			   const char *sought_cid)
 {
 	const char* cid;
 
