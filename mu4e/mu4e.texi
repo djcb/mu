@@ -1232,15 +1232,15 @@ On MacOS, there is a program called @t{textutil} as yet another alternative:
 @section Crypto
 
 The @t{mu4e} message view supports@footnote{Crypto-support in @t{mu4e}
-requires @t{mu} to have been build with crypto-support; see the @ref{FAQ}}
-decryption of encrypted messages, as well as verification of signatures. For
-signing/encrypting messages your outgoing messages, see @ref{Signing and
-encrypting}.
+requires @t{mu} to have been build with crypto-support; see the
+@ref{FAQ}} decryption of encrypted messages, as well as verification of
+signatures. For signing/encrypting messages your outgoing messages, see
+@ref{Signing and encrypting}.
 
 Currently, only PGP/MIME is supported; PGP-inline and S/MIME are not.
 
-For all of this to work, @command{gpg-agent} must be running, and it must set
-the environment variable @t{GPG_AGENT_INFO}. You can check from
+For all of this to work, @command{gpg-agent} must be running, and it
+must set the environment variable @t{GPG_AGENT_INFO}. You can check from
 @command{emacs} with @key{M-x getenv GPG_AGENT_INFO}.
 
 In many mainstream Linux/Unix desktop environments, everything works
@@ -1513,6 +1513,12 @@ two, you can still sign/encrypt messages.
 
 Currently, decryption and signature verification only works for PGP/MIME;
 inline-PGP and S/MIME are not supported.
+
+Important note: the messages are encrypted when they are @emph{sent}:
+this means that draft messages are @emph{not} encrypted. So if you are
+using e.g. @t{offlineimap} to synchronize with some remote IMAP-service,
+make sure the drafts folder is @emph{not} in the set of synchronized
+folders, for obvious reasons.
 
 @node Queuing mail
 @section Queuing mail
@@ -2871,9 +2877,13 @@ mu: cleaning up messages [/home/foo/.mu/xapian]
 mu: elapsed: 0 second(s)
 @end verbatim
 
-We can run both the @t{offlineimap} and the @t{mu index} from within @t{mu4e},
-but running it from the command line makes it a bit easier to troubleshoot as
-we are setting things up.
+We can run both the @t{offlineimap} and the @t{mu index} from within
+@t{mu4e}, but running it from the command line makes it a bit easier to
+troubleshoot as we are setting things up.
+
+NOte: when using encryption, you probably do @emph{not} want to
+synchronize your Drafts-folder, since it contains the unencrypted
+messages. You can use OfflineIMAP's @t{folderfilter} for that.
 
 @subsection Settings
 
@@ -3125,6 +3135,8 @@ reply-message, based on some field in the original?} See @ref{Compose hooks}.
 @item @emph{And what about customizable folders for draft messages, sent
 messages, trashed messages, based on e.g. the @t{From:} header?} See
 @ref{Dynamic folders}.
+@item @emph{Can I define aliases for (groups of) e-mail addresses?} Sure - 
+see @ref{(emacs) Mail Aliases}.
 @item @emph{How can I automatically add some header to an outgoing message?}
 Once more, see @ref{Compose hooks}.
 @item @emph{How can I influence the way the original message looks when
@@ -3473,9 +3485,9 @@ the user for a maildir to save the message in.
 
 When using 'fancy characters' (@code{mu4e-use-fancy-chars}) with the
 @emph{Inconsolata}-font (and likely others as well), the display may be
-slightly off; the reason for this issue is that Inconsolata does not contain
-the glyphs for the 'fancy' arrows and the glyphs that are used as replacement
-are too high.
+slightly off; the reason for this issue is that Inconsolata does not
+contain the glyphs for the 'fancy' arrows and the glyphs that are used
+as replacements are too high.
 
 To fix this, you can use something like the following workaround (in your
 @t{.emacs}-file):
