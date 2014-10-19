@@ -50,7 +50,8 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-fields
-  '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags :attachments :signature)
+  '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags
+          :attachments :signature :decryption)
   "Header fields to display in the message view buffer.
 For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
@@ -227,6 +228,8 @@ found."
 	    (:attachments (mu4e~view-construct-attachments-header msg))
 	    ;; pgp-signatures
 	    (:signature   (mu4e~view-construct-signature-header msg))
+	    ;; pgp-decryption
+	    (:decryption  (mu4e~view-construct-decryption-header msg))
 	    (t (mu4e~view-construct-header field
 		 (mu4e~view-custom-field msg field))))))
       mu4e-view-fields "")
@@ -402,6 +405,28 @@ add text-properties to VAL."
 		   (buffer-string))))
 	  (val (when val (concat val " (" btn ")"))))
     (mu4e~view-construct-header :signature val t)))
+
+(defun mu4e~view-construct-decryption-header (msg)
+  "Construct a Decryption: header, if there are any encrypted parts."
+  (let* ((parts (mu4e-message-field msg :parts))
+	 (verdicts
+	  (remove-if 'null
+		     (mapcar (lambda (part) (mu4e-message-part-field part :decryption))
+			     parts)))
+	 (succeeded (remove-if (lambda (v) (eq v 'failed)) verdicts))
+	 (failed (remove-if (lambda (v) (eq v 'succeeded)) verdicts))
+	 (succ (when succeeded
+		 (propertize
+		  (concat (number-to-string (length succeeded))
+			  " part(s) decrypted")
+		  'face 'mu4e-ok-face)))
+	 (fail (when failed
+		 (propertize
+		  (concat (number-to-string (length failed))
+			  " part(s) failed")
+		  'face 'mu4e-warning-face)))
+	 (val (concat succ fail)))
+    (mu4e~view-construct-header :decryption val t)))
 
 (defun mu4e~view-open-attach-from-binding ()
   "Open the attachement at point, or click location."

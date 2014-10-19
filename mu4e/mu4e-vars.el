@@ -435,7 +435,7 @@ I.e. a message with the draft flag set."
   '((t :inherit font-lock-preprocessor-face))
   "Face for the mark in the headers list."
   :group 'mu4e-faces)
- 
+
 (defface mu4e-header-key-face
   '((t :inherit message-header-name-face :bold t))
   "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\")."
@@ -624,6 +624,11 @@ mu4e-compose-mode."
        ( :name "Signature"
 	 :shortname "Sgn"
 	 :help "Check for the cryptographic signature"
+	 :sortable nil))
+     (:decryption .
+       ( :name "Decryption"
+	 :shortname "Dec"
+	 :help "Check the cryptographic decryption status"
 	 :sortable nil))
      (:size .
        ( :name "Size"
