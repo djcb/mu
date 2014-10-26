@@ -53,11 +53,13 @@
      (:from          .   22)
      (:subject       .   nil))
   "A list of header fields to show in the headers buffer.
-Each element has the form (HEADER . WIDTH), where HEADER is one
-of the available headers (see `mu4e-header-info') and WIDTH is
-the respective width in characters.  A width of `nil' means
-'unrestricted', and this is best reserved for the
-rightmost (last) field."
+Each element has the form (HEADER . WIDTH), where HEADER is one of
+the available headers (see `mu4e-header-info') and WIDTH is the
+respective width in characters.  A width of `nil' means
+'unrestricted', and this is best reserved for the rightmost (last)
+field. Note that emacs may become very slow with excessively long
+lines (1000s of characters), so if you regularly get such messages,
+you want to avoid fields with `nil' altogether."
   :type `(repeat (cons (choice ,@(mapcar (lambda (h)
 					   (list 'const :tag
 						 (plist-get (cdr h) :help)
