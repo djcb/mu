@@ -1,6 +1,6 @@
 ;;; mu4e-main.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2014 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -66,7 +66,7 @@
   (use-local-map mu4e-main-mode-map)
   (setq truncate-lines t
         overwrite-mode 'overwrite-mode-binary)
-  (set (make-local-variable 'revert-buffer-function) #'mu4e:main-revert-buffer))
+  (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
 
 
 (defun mu4e~main-action-str (str &optional func-or-shortcut)
@@ -98,7 +98,7 @@ clicked."
 ;; NEW
 ;; This is the old `mu4e~main-view' function but without
 ;; buffer switching at the end.
-(defun mu4e:main-revert-buffer (ignore-auto noconfirm)
+(defun mu4e~main-view-real (ignore-auto noconfirm)
   (let ((buf (get-buffer-create mu4e~main-buffer-name))
 	 (inhibit-read-only t))
     (with-current-buffer buf
@@ -154,13 +154,11 @@ clicked."
       (mu4e-main-mode)
       )))
 
-;; NEW
-;; Revert mu main buffer then switch to it
 (defun mu4e~main-view ()
-  "Show the mu4e main view."
-  (mu4e:main-revert-buffer nil nil)
-  (switch-to-buffer  mu4e~main-buffer-name))
-
+  "Create the mu4e main-view, and switch to it."
+  (mu4e~main-view-real nil nil)
+  (switch-to-buffer mu4e~main-buffer-name)
+  (goto-char (point-min)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
 ;; NEW
@@ -175,7 +173,7 @@ clicked."
     (message
      (concat "Outgoing mail will now be "
              (if smtpmail-queue-mail "queued" "sent directly")))
-    (mu4e:main-revert-buffer nil nil)
+    (mu4e~main-view-real nil nil)
     (goto-char curpos)))
 
 
