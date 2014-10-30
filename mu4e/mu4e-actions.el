@@ -240,6 +240,10 @@ bother asking for the git tree again (useful for bulk actions)."
    this setting on already tagged messages can lead to messages
    with multiple tags headers.")
 
+(defvar mu4e-action-tags-completion-list '()
+  "List of tags to show for autocompletion in
+  `mu4e-action-retag-message'.")
+
 (defun mu4e~contains-line-matching (regexp path)
   "Determine whether the file at path contains a line matching
    the given regexp."
@@ -262,12 +266,23 @@ bother asking for the git tree again (useful for bulk actions)."
 	(replace-match to-string nil nil)))))
 
 (defun mu4e-action-retag-message (msg &optional retag-arg)
-  "Change tags of a message. Example: +tag \"+long tag\" -oldtag
-   adds 'tag' and 'long tag', and removes oldtag."
-  (let* ((retag (or retag-arg (read-string "Tags: ")))
-	  (path (mu4e-message-field msg :path))
+  "Change tags of a message. Accepts a comma-separated list of
+   additions and removals.
+
+   Example: +tag,+long tag,-oldtag
+
+   would add 'tag' and 'long tag', and remove 'oldtag'."
+  (let* (
+      (path (mu4e-message-field msg :path))
 	  (maildir (mu4e-message-field msg :maildir))
 	  (oldtags (mu4e-message-field msg :tags))
+      (tags-completion (append
+                        mu4e-action-tags-completion-list
+                        (mapcar (lambda (tag) (format "+%s" tag)) mu4e-action-tags-completion-list)
+                        (mapcar (lambda (tag) (format "-%s" tag)) oldtags)))
+      (retag (if retag-arg
+                 (split-string retag-arg ",")
+               (completing-read-multiple "Tags: " tags-completion)))
 	  (header  mu4e-action-tags-header)
 	  (sep     (cond ((string= header "Keywords") ", ")
 		     ((string= header "X-Label") " ")
@@ -275,7 +290,7 @@ bother asking for the git tree again (useful for bulk actions)."
 		     (t ", ")))
 	  (taglist (if oldtags (copy-sequence oldtags) '()))
 	  tagstr)
-    (dolist (tag (split-string-and-unquote retag) taglist)
+    (dolist (tag retag taglist)
       (cond
 	((string-match "^\\+\\(.+\\)" tag)
 	  (setq taglist (push (match-string 1 tag) taglist)))
