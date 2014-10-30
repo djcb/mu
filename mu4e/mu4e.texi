@@ -2551,7 +2551,7 @@ when new messages arrive.
 # put the path to your Inbox folder here
 CHECKDIR="/home/$LOGNAME/Maildir/Inbox"
 
-sauron-msg () {
+sauron_msg () {
     DBUS_COOKIE="/home/$LOGNAME/.sauron-dbus"
     if test "x$DBUS_SESSION_BUS_ADDRESS" = "x"; then
         if test -e $DBUS_COOKIE; then
@@ -2574,7 +2574,7 @@ sauron-msg () {
 #
 for f in `find $CHECKDIR -mmin -5 -a -type f`; do
         subject=`$MU view $f | grep '^Subject:' | sed 's/^Subject://'`
-        sauron-msg "mail: $subject"
+        sauron_msg "mail: $subject"
 done
 @end verbatim
 
