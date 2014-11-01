@@ -1196,16 +1196,24 @@ is used for images.
 both a plain-text and html (rich-text) versions of the body-text. You can
 change this by setting @code{mu4e-view-prefer-html} to @t{t}.
 
-If there is only an html-version, or if the plain-text version is too short in
-comparison with the html part@footnote{this is for the case where the
-text-part only warns that you should use the html-version}, @t{mu4e} tries to
-convert the html into plain-text for display. The default way to do that is to
-use the @command{emacs} built-in @code{html2text} function. However, you can
-set the variable @code{mu4e-html2text-command} to some external program
-instead. This program is expected to take html from standard input and write
-plain text in @t{UTF-8} encoding on standard output.
+If there is only an html-version, or if the plain-text version is too
+short in comparison with the html part@footnote{this is for the case
+where the text-part only warns that you should use the html-version},
+@t{mu4e} tries to convert the html into plain-text for display.
 
-An example of such a program is the program that is actually @emph{called}
+The default way to do that is to use the @command{emacs} built-in
+@code{html2text} function. However, you can set the variable
+@code{mu4e-html2text-command} to a either a shell command or a function
+instead.
+
+@subsection Html2text commands
+
+If @code{mu4e-html2text-command} is a shell command, it is expected to
+take html from standard input and write plain text in @t{UTF-8} encoding
+on standard output.
+
+An example of such a program is the program that is actually
+@emph{called}
 @t{html2text}@footnote{@url{http://www.mbayer.de/html2text/}}. After
 installation, you can set it up with something like the following:
 
@@ -1227,6 +1235,24 @@ On MacOS, there is a program called @t{textutil} as yet another alternative:
 (setq mu4e-html2text-command
   "textutil -stdin -format html -convert txt -stdout")
 @end lisp
+
+@subsection Html2text functions
+@anchor{Html2text functions}
+
+If @code{mu4e-html2text-command} refers to an elisp function, it is
+expected to take the current buffer in html as input, and transform it
+into html (just like the @code{html2text} function).
+
+For example, emacs 24.4 and later versions include the @code{eww}
+browser which uses the @code{shr} html renderer; @t{mu4e} includes a
+little snippet to uses this with @code{mu4e-html2text-command}; for
+this, add the following to your configuration:
+
+@lisp
+(require 'mu4e-contrib)
+(setq mu4e-html2text-command 'mu4e-shr2text)
+@end lisp
+
 
 @node MSGV Crypto
 @section Crypto
@@ -3106,11 +3132,12 @@ messages}.
 like Gmail does?} Yes -- see @ref{Including related messages}.
 @item @emph{There seem to be a lot of duplicate messages -- how can I get rid
 of them?} See @ref{Skipping duplicates}.
+@item @emph{How can I use the @t{eww} browser to view rich-text messages?} See @ref{Html2text functions}.
 @item @emph{Some messages are almost unreadable in emacs - can I view them in
-an external web browser?} Indeed, airlines often send messages that heavily
-depend on html and are hard to digest inside emacs. Fortunately, there's an
-@emph{action} (@ref{Adding an action in the message view}) defined for
-this. Simply add to your configuration:
+an external web browser?} Indeed, airlines often send messages that
+heavily depend on html and are hard to digest inside emacs. Fortunately,
+there's an @emph{action} (@ref{Adding an action in the message view})
+defined for this. Simply add to your configuration:
 @lisp
 (add-to-list 'mu4e-view-actions
   '("ViewInBrowser" . mu4e-action-view-in-browser) t)

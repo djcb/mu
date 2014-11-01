@@ -39,6 +39,19 @@
   (mu4e-headers-mark-all-unread-read)
   (mu4e-mark-execute-all t))
 
+;;;
+
+(defun mu4e-shr2text ()
+  "Html to text using the shr engine; this can be used in
+`mu4e-html2text-command' in a new enough emacs. Based on code by
+Titus von der Malsburg."
+  (interactive)
+  (let ((dom (libxml-parse-html-region (point-min) (point-max))))
+    (erase-buffer)
+    (shr-insert-document dom)
+    (goto-char (point-min))))
+
+
 ;;; Bookmark handlers
 ;;
 ;;  Allow bookmarking a mu4e buffer in regular emacs bookmarks.

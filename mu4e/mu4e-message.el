@@ -37,12 +37,11 @@
 (defcustom mu4e-html2text-command 'html2text
   "Either a shell command or a function that converts from html to plain text.
 
-If it is a shell-command, the command has to read html from stdin
-and output plain text on stdout. If this is not defined, the emacs
-`html2text' tool will be used when faced with html-only
-messages. If you use htmltext, it's recommended you use \"html2text
--utf8 -width 72\". Alternatives are the python-based html2markdown,
-w3m and on MacOS you may want to use textutil.
+If it is a shell-command, the command reads html from standard
+input and outputs plain text on standard output. If you use the
+htmltext program, it's recommended you use \"html2text -utf8 -width
+72\". Alternatives are the python-based html2markdown, w3m and on
+MacOS you may want to use textutil.
 
 It can also be a function, which takes the current buffer in html
 as input, and transforms it into html (like the `html2text'
