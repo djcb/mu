@@ -451,6 +451,21 @@ I.e. a message with the draft flag set."
   "Face for special header values."
   :group 'mu4e-faces)
 
+(defface mu4e-header-first-thread-unfolded-face
+  '((t :inherit mu4e-header-face))
+  "Face for the first message of a conversation, when unfolded"
+  :group 'mu4e-faces)
+
+(defface mu4e-header-first-thread-folded-face
+  '((t :inherit mu4e-header-highlight-face))
+  "Face for the first message of a conversation, when folded"
+  :group 'mu4e-faces)
+
+(defface mu4e-header-thread-block-face
+  '((t :inherit mu4e-header-face))
+  "Face for the other (not first) messages of a conversation"
+  :group 'mu4e-faces)
+
 (defface mu4e-link-face
   '((t :inherit link))
   "Face for showing URLs and attachments in the message view."

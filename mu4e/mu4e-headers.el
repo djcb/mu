@@ -231,6 +231,9 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 (defconst mu4e~headers-docid-post (purecopy "\377")
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
 followed by the docid, followed by `mu4e~headers-docid-post'.")
+(defconst mu4e~headers-thread-start (purecopy "\378")
+  "Each thread starts (invisibly) with the `mu4e~headers-thread-start'
+ marker")
 
 (defvar mu4e~headers-view-win nil
   "The view window connected to this headers view.")
@@ -592,7 +595,7 @@ after the end of the search results."
       (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
       (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
-
+      (define-key map (kbd "TAB") 'mu4e~headers-threads-toggle)
 
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
@@ -817,6 +820,14 @@ at the beginning of lines to identify headers."
 		mu4e~headers-docid-pre docid mu4e~headers-docid-post)
     'docid docid 'invisible t));;
 
+(defsubst mu4e~headers-thread-start-cookie (thread)
+  "Create an invisible string containing the thread-start marker; this is to be used
+at the beginning of lines to identify threads."
+  (when (= (plist-get thread :level) 0)
+    (propertize
+     mu4e~headers-thread-start
+     'invisible t)))
+
 (defsubst mu4e~headers-docid-at-point (&optional point)
   "Get the docid for the header at POINT, or at current (point) if
 nil. Returns the docid, or nil if there is none."
@@ -888,16 +899,18 @@ text-property `msg'."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (let ((inhibit-read-only t)
-	     (is-first-header (= (point-min) (point-max))))
-	(save-excursion
-	  (goto-char (if point point (point-max)))
-	  (insert
-	    (propertize
-	      (concat
-		(mu4e~headers-docid-cookie docid)
-		mu4e~mark-fringe
-		str "\n")
-	      'docid docid 'msg msg)))))))
+            (is-first-header (= (point-min) (point-max)))
+            (thread (mu4e-message-field msg :thread)))
+       (save-excursion
+         (goto-char (if point point (point-max)))
+         (insert
+           (propertize
+            (concat
+             (mu4e~headers-thread-start-cookie thread)
+             (mu4e~headers-docid-cookie docid)
+             mu4e~mark-fringe
+             str "\n")
+            'docid docid 'msg msg)))))))
 
 (defun mu4e~headers-remove-header (docid &optional ignore-missing)
   "Remove header with DOCID at point.
@@ -969,6 +982,78 @@ of `mu4e-split-view', and return a window for the message view."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; search-based marking
 
+(defsubst mu4e~headers-get-overlay (beg end prop)
+  (let ((overlays (overlays-in beg end))
+        overlay)
+    (while overlays
+      (let ((o (car overlays)))
+        (if (overlay-get o prop)
+            (setq overlay o)))
+      (setq overlays (cdr overlays)))
+    (unless overlay (setq overlay (mu4e~headers-make-overlay beg end prop)))
+    overlay))
+
+(defsubst mu4e~headers-get-thread-overlay (beg end)
+  (let ((overlay (mu4e~headers-get-overlay beg end :thread)))
+    (overlay-put overlay 'face 'mu4e-header-thread-block-face)
+    overlay))
+
+(defsubst mu4e~headers-get-thread-header-overlay (beg end)
+  (mu4e~headers-get-overlay beg end :thread-header))
+
+(defsubst mu4e~headers-make-overlay (beg end prop)
+  (let ((overlay (make-overlay beg end)))
+    (overlay-put overlay prop t)
+    overlay))
+
+(defsubst mu4e~headers-threads-run (fn)
+  (let* ((inhibit-read-only t)
+         (tbeg) (tend) (beg) (end))
+    (save-excursion
+      (if (looking-at mu4e~headers-thread-start)
+          (search-forward mu4e~headers-docid-post nil t)
+        (search-backward mu4e~headers-thread-start nil t))
+      (beginning-of-line) (setq tbeg (point))
+      (end-of-line)       (setq tend (point))
+      (forward-line)      (setq  beg (point))
+      (search-forward mu4e~headers-thread-start nil t)
+      (setq end (point)))
+    (let ((hoverlay (mu4e~headers-get-thread-header-overlay tbeg tend))
+          (overlay  (mu4e~headers-get-thread-overlay         beg  end)))
+      (funcall fn overlay hoverlay)
+      (goto-char tbeg))))
+
+(defsubst mu4e~headers-threads-do-hide (overlay hoverlay)
+  (overlay-put overlay 'invisible t)
+  (overlay-put hoverlay 'face 'mu4e-header-first-thread-folded-face))
+
+(defsubst mu4e~headers-threads-hide ()
+  (interactive)
+  (mu4e~headers-threads-run mu4e~headers-threads-hide))
+
+(defsubst mu4e~headers-threads-do-show (overlay hoverlay)
+  (overlay-put overlay 'invisible nil)
+  (overlay-put hoverlay 'face 'mu4e-header-first-thread-unfolded-face))
+
+(defsubst mu4e~headers-threads-show ()
+  (interactive)
+  (mu4e~headers-threads-run
+   (lambda (overlay)
+     (overlay-put overlay 'invisible t))))
+
+(defsubst mu4e~headers-threads-toggle ()
+  (interactive)
+  (mu4e~headers-threads-run
+   (lambda (overlay hoverlay)
+     (if (overlay-get overlay 'invisible)
+         (mu4e~headers-threads-do-show overlay hoverlay)
+       (mu4e~headers-threads-do-hide overlay hoverlay)))))
+
+    ;; (if (get-text-property beg 'invisible)
+    ;;     (put-text-property beg end 'invisible nil)
+    ;;   (put-text-property beg end 'invisible t)))
+    ;; (goto-char tbeg)))
+
 (defun mu4e-headers-for-each (func)
   "Call FUNC for each header, moving point to the header.
 FUNC takes one argument, the msg s-expression for the corresponding
@@ -976,6 +1061,19 @@ header."
   (save-excursion
     (goto-char (point-min))
     (while (search-forward mu4e~headers-docid-pre nil t)
+      ;; not really sure why we need to jump to bol; we do need to, otherwise we
+      ;; miss lines sometimes...
+      (let ((msg (get-text-property (line-beginning-position) 'msg)))
+	(when msg
+	  (funcall func msg))))))
+
+(defun mu4e-threads-for-each (func)
+  "Call FUNC for each thread, moving point to the first header.
+FUNC takes one argument, the msg s-expression for the corresponding
+header."
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward mu4e~headers-thread-start nil t)
       ;; not really sure why we need to jump to bol; we do need to, otherwise we
       ;; miss lines sometimes...
       (let ((msg (get-text-property (line-beginning-position) 'msg)))
