@@ -46,7 +46,8 @@
 `mu4e-html2text-command' in a new enough emacs. Based on code by
 Titus von der Malsburg."
   (interactive)
-  (let ((dom (libxml-parse-html-region (point-min) (point-max))))
+  (let ((dom (libxml-parse-html-region (point-min) (point-max)))
+	(shr-inhibit-images t))
     (erase-buffer)
     (shr-insert-document dom)
     (goto-char (point-min))))
