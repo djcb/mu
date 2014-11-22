@@ -986,8 +986,10 @@ header."
   "Move to the next header for which FUNC returns non-`nil',
 starting from the current position. FUNC takes one argument, the
 msg s-expression for the corresponding header. If BACKWARD is
-non-`nil', search backwards."
-  (let ((pos) (search-func (if backward 'search-backward 'search-forward)))
+non-`nil', search backwards. Returns the new position, or `nil' if
+nothing was found."
+  (let ((pos)
+	 (search-func (if backward 'search-backward 'search-forward)))
     (save-excursion
       (while (and (null pos)
 	       (funcall search-func mu4e~headers-docid-pre nil t))

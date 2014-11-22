@@ -2380,11 +2380,13 @@ action}
 @end itemize
 
 @noindent
-You can also write your own functions without using the above. If you want to
-do so, key useful functions are @code{mu4e-message-at-point} (see below),
-@code{mu4e-headers-for-each} (to iterate over all headers, see its docstring)
-and @code{mu4e-view-for-each-part} (to iterate over all parts/attachments, see
-its docstring).
+You can also write your own functions without using the above. If you
+want to do so, key useful functions are @code{mu4e-message-at-point}
+(see below), @code{mu4e-headers-for-each} (to iterate over all headers,
+see its docstring) and @code{mu4e-view-for-each-part} (to iterate over
+all parts/attachments, see its docstring). Another useful function is
+@code{mu4e-headers-find-if}, which searches for a message matching a
+certain pattern; again, see its docstring.
 
 @node Available functions
 @section Available functions
