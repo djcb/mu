@@ -982,6 +982,24 @@ header."
 	(when msg
 	  (funcall func msg))))))
 
+(defun mu4e-headers-find-if (func &optional backward)
+  "Move to the next header for which FUNC returns non-`nil',
+starting from the current position. FUNC takes one argument, the
+msg s-expression for the corresponding header. If BACKWARD is
+non-`nil', search backwards."
+  (let ((pos) (search-func (if backward 'search-backward 'search-forward)))
+    (save-excursion
+      (while (and (null pos)
+	       (funcall search-func mu4e~headers-docid-pre nil t))
+	;; not really sure why we need to jump to bol; we do need to, otherwise we
+	;; miss lines sometimes...
+	(let ((msg (get-text-property (line-beginning-position) 'msg)))
+	  (when (and msg (funcall func msg))
+	    (setq pos (point))))))
+    (when pos
+      (goto-char pos))))
+
+
 (defvar mu4e~headers-regexp-hist nil
   "History list of regexps used.")
 
