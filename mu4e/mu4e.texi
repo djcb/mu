@@ -1624,6 +1624,12 @@ see @ref{Setting the default emacs mail program}.
 @item Normally, @t{mu4e} @emph{buries} the message buffer after sending; if you want
 to kill the buffer instead, add something like the following to your
 configuration:
+@item If you want to exclude your own e-mail address when ``replying to
+all'', set @code{mu4e-compose-dont-reply-to-self} to @code{t}.  In order
+for this to work properly you need to properly set the
+@code{user-mail-address} variable or in the case you use multiple e-mail
+addresses you need to set the @code{mu4e-user-mail-address-list}
+variable accordingly.
 @lisp
 (setq message-kill-buffer-on-exit t)
 @end lisp
