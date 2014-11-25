@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2014 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -587,6 +587,10 @@ after the end of the search results."
       (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
       (define-key map (kbd "<M-down>") 'mu4e-headers-next)
 
+      (define-key map (kbd "<tab>") 'mu4e-headers-next-unread)
+      (define-key map (kbd "<backtab>")
+	(lambda() (interactive) (mu4e-headers-next-unread t)))
+      
       ;; change the number of headers
       (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
@@ -971,8 +975,8 @@ of `mu4e-split-view', and return a window for the message view."
 
 (defun mu4e-headers-for-each (func)
   "Call FUNC for each header, moving point to the header.
-FUNC takes one argument, the msg s-expression for the corresponding
-header."
+FUNC receives one argument, the message s-expression for the
+corresponding header."
   (save-excursion
     (goto-char (point-min))
     (while (search-forward mu4e~headers-docid-pre nil t)
@@ -984,10 +988,11 @@ header."
 
 (defun mu4e-headers-find-if (func &optional backward)
   "Move to the next header for which FUNC returns non-`nil',
-starting from the current position. FUNC takes one argument, the
-msg s-expression for the corresponding header. If BACKWARD is
+starting from the current position. FUNC receives one argument, the
+message s-expression for the corresponding header. If BACKWARD is
 non-`nil', search backwards. Returns the new position, or `nil' if
-nothing was found."
+nothing was found. If you want to exclude matches for the current
+message, you can use `mu4e-headers-find-if-next'."
   (let ((pos)
 	 (search-func (if backward 'search-backward 'search-forward)))
     (save-excursion
@@ -1001,13 +1006,22 @@ nothing was found."
     (when pos
       (goto-char pos))))
 
+(defun mu4e-headers-find-if-next (func &optional backwards)
+  "Like `mu4e-headers-find-if', but do not match the current header.
+Move to the next header for which FUNC returns non-`nil', starting
+from the current position."
+  (let ((pos))
+    (save-excursion
+      (forward-line (if backwards -1 1))
+      (setq pos (mu4e-headers-find-if func backwards)))
+    (when pos (goto-char pos))))
 
 (defvar mu4e~headers-regexp-hist nil
   "History list of regexps used.")
 
 (defun mu4e-headers-mark-for-each-if (markpair mark-pred &optional param)
   "Mark all headers for which predicate function MARK-PRED returns
-non-nil with MARKPAIR. MARK-PRED is function that takes two
+non-nil with MARKPAIR. MARK-PRED is function that receives two
 arguments, MSG (the message at point) and PARAM (a user-specified
 parameter). MARKPAIR is a cell (MARK . TARGET); see
 `mu4e-mark-at-point' for details about marks."
@@ -1069,7 +1083,7 @@ matching messages with that mark."
 (defun mu4e-headers-mark-thread (&optional subthread)
   "Mark the thread at point. If SUBTHREAD is non-nil, marking is
 limited to the message at point and its descendants."
-  ;; the tread id is shared by all messages in a thread
+  ;; note: the tread id is shared by all messages in a thread
   (interactive "P")
   (let* ((msg (mu4e-message-at-point))
 	  (thread-id (mu4e~headers-get-thread-info msg 'thread-id))
@@ -1139,8 +1153,8 @@ stack size."
 
 (defun mu4e~headers-pop-query (whence)
   "Pop a query from the stack.
-WHENCE is a symbol telling us where to get it from; it's a
-symbol, either 'future or 'past."
+WHENCE is a symbol telling us where to get it from, either `future'
+or `past'."
   (case whence
     (past
       (unless mu4e~headers-query-past
@@ -1359,7 +1373,7 @@ either `future' or `past'."
 (defun mu4e-headers-query-next ()
   "Execute the previous query from the query stacks."
   (interactive)
-  (mu4e~headers-query-navigate 'future))
+  (mu4e~headersq-query-navigate 'future))
 
 (defun mu4e-headers-query-prev ()
   "Execute the previous query from the query stacks."
@@ -1416,6 +1430,19 @@ Optionally, takes an integer N (prefix argument), to the Nth
 previous header."
   (interactive "P")
   (mu4e~headers-move (- (or n 1))))
+
+(defun mu4e-headers-next-unread (&optional backwards)
+  "Move point to the next message that is unread (and
+untrashed). If BACKWARDS is non-`nil', move backwards."
+  (interactive "P")
+  (or (mu4e-headers-find-if-next
+	(lambda (msg)
+	  (let ((flags (mu4e-message-field msg :flags))) 
+	    (and (member 'unread flags) (not (member 'trashed flags)))))
+	backwards)
+    (mu4e-message (format "No %s unread message found"
+		    (if backwards "previous" "next")))))
+
 
 (defun mu4e~headers-jump-to-maildir (maildir)
   "Show the messages in maildir (user is prompted to ask what
