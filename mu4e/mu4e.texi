@@ -454,10 +454,16 @@ this must @emph{not} be a symbolic link.
 As we have seen, we can do all of the mail retrieval @emph{outside} of
 @command{emacs}/@t{mu4e}. However, you can also do it from within
 @t{mu4e}. For that, set the variable @code{mu4e-get-mail-command} to the
-program or shell command you want to use for retrieving mail. You can then
-retrieve your e-mail using @kbd{M-x mu4e-update-mail-and-index}, or
-@kbd{C-S-u} in all @t{mu4e}-views; alternatively, you can use @kbd{C-c C-u},
-which may be more convenient if you use emacs in a terminal.
+program or shell command you want to use for retrieving mail. You can
+then retrieve your e-mail using @kbd{M-x mu4e-update-mail-and-index}, or
+@kbd{C-S-u} in all @t{mu4e}-views; alternatively, you can use @kbd{C-c
+C-u}, which may be more convenient if you use emacs in a
+terminal. 
+
+Please note that indexing only takes place if getting mail finished
+successfully, that is, if the mail-retrieval program ended with
+exit-code 0. If you're mail-retrieval program does not do that, you need
+to wrap it in a shell-script.
 
 If you don't have a specific command for getting mail, for example because you
 are running your own mail-server, you can set @code{mu4e-get-mail-command} to
@@ -466,11 +472,11 @@ re-index your messages.
 
 You can interrupt the (foreground) update process with @kbd{q}.
 
-You can also update your mail and index periodically in the background, by
-setting the variable @code{mu4e-update-interval} to the number of seconds
-between these updates. If set to @code{nil}, it won't update at all. After you
-make changes to @code{mu4e-update-interval}, @t{mu4e} must be restarted before
-the changes take effect.
+You can also update your mail and index periodically in the background,
+by setting the variable @code{mu4e-update-interval} to the number of
+seconds between these updates. If set to @code{nil}, it won't update at
+all. After you make changes to @code{mu4e-update-interval}, @t{mu4e}
+must be restarted before the changes take effect.
 
 A simple setup could look something like:
 
@@ -1564,9 +1570,9 @@ inline-PGP and S/MIME are not supported.
 
 Important note: the messages are encrypted when they are @emph{sent}:
 this means that draft messages are @emph{not} encrypted. So if you are
-using e.g. @t{offlineimap} to synchronize with some remote IMAP-service,
-make sure the drafts folder is @emph{not} in the set of synchronized
-folders, for obvious reasons.
+using e.g. @t{offlineimap} or @t{mbsync} to synchronize with some remote
+IMAP-service, make sure the drafts folder is @emph{not} in the set of
+synchronized folders, for obvious reasons.
 
 @node Queuing mail
 @section Queuing mail
@@ -2391,7 +2397,7 @@ want to do so, key useful functions are @code{mu4e-message-at-point}
 (see below), @code{mu4e-headers-for-each} (to iterate over all headers,
 see its docstring) and @code{mu4e-view-for-each-part} (to iterate over
 all parts/attachments, see its docstring). Another useful function is
-@code{mu4e-headers-find-if}, which searches for a message matching a
+@code{mu4e-headers-find-if} which searches for a message matching a
 certain pattern; again, see its docstring.
 
 @node Available functions
