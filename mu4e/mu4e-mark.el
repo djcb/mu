@@ -294,8 +294,7 @@ headers in the region. Optionally, provide TARGET (for moves)."
       (let ((cant-go-further) (eor (region-end)))
 	(goto-char (region-beginning))
 	(while (and (<= (point) eor) (not cant-go-further))
-	  (when (eq mark 'refile)
-            (setq target (mu4e~mark-get-target mark target)))
+          (setq target (mu4e~mark-get-target mark target))
 	  (mu4e-mark-at-point mark target)
 	  (setq cant-go-further (not (mu4e-headers-next))))))))
 
