@@ -258,9 +258,8 @@ The following marks are available, and the corresponding props:
 
 
 (defun mu4e~mark-get-move-target (&optional target)
-  "Mark message at point or, if region is active, all messages in
-the region, for moving to maildir TARGET. If target is not
-provided, function asks for it."
+  "Ask for a move target, and propose to create it if it does not exist.  If TARGET is provided,
+this function merely checks the validity of the move."
   (interactive)
 ;;  (mu4e-message-at-point) ;; raises error if there is none
   (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
