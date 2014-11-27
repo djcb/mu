@@ -248,7 +248,7 @@ The following marks are available, and the corresponding props:
 	  (puthash docid (cons mark target) mu4e~mark-map)
 	  ;; when we have a target (ie., when moving), show the target folder in
 	  ;; an overlay
-	  (when (and target mu4e-headers-show-target)
+	  (when (and shown-target mu4e-headers-show-target)
 	    (let* ((targetstr (propertize (concat "-> " shown-target " ")
 				'face 'mu4e-system-face))
 		    ;; mu4e~headers-goto-docid docid t \will take us just after the
