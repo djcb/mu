@@ -590,6 +590,10 @@ FUNC should be a function taking two arguments:
       (define-key map (kbd "<M-down>") 'mu4e-view-headers-next)
       (define-key map (kbd "<M-up>") 'mu4e-view-headers-prev)
 
+      (define-key map (kbd "]") 'mu4e-view-headers-next-unread)
+      (define-key map (kbd "[")
+	(lambda() (interactive) (mu4e-view-headers-next-unread t)))
+      
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
@@ -807,8 +811,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	       "[mouse-1] or [M-RET] to open the link"))
 	  (overlay-put ov 'after-string
 		       (propertize (format "[%d]" num)
-				   'face 'mu4e-url-number-face))
-	  )))))
+				   'face 'mu4e-url-number-face)))))))
 
 
 (defun mu4e~view-hide-cited ()
@@ -819,7 +822,6 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
       (flush-lines mu4e-cited-regexp)
       (setq mu4e~view-cited-hidden t))))
 
-
 (defmacro mu4e~view-in-headers-context (&rest body)
   "Evaluate BODY in the context of the headers buffer connected to
 this view."
@@ -827,15 +829,17 @@ this view."
      (unless (buffer-live-p mu4e~view-headers-buffer)
        (mu4e-error "no headers-buffer connected"))
      (let* ((msg (mu4e-message-at-point))
-	     (docid (mu4e-message-field msg :docid)))
+	     (docid (mu4e-message-field msg :docid))
+	     (curwin (selected-window)))
        (unless docid
 	 (mu4e-error "message without docid: action is not possible."))
        (with-current-buffer mu4e~view-headers-buffer
+	 (select-window (get-buffer-window))
 	 (if (mu4e~headers-goto-docid docid)
 	   ,@body
 	   (mu4e-error "cannot find message in headers buffer."))))))
 
-(defun mu4e-view-headers-next(&optional n)
+(defun mu4e-view-headers-next (&optional n)
   "Move point to the next message header in the headers buffer
 connected with this message view. If this succeeds, return the new
 docid. Otherwise, return nil. Optionally, takes an integer
@@ -844,7 +848,7 @@ N (prefix argument), to the Nth next header."
   (mu4e~view-in-headers-context
     (mu4e~headers-move (or n 1))))
 
-(defun mu4e-view-headers-prev(&optional n)
+(defun mu4e-view-headers-prev (&optional n)
   "Move point to the previous message header in the headers buffer
 connected with this message view. If this succeeds, return the new
 docid. Otherwise, return nil. Optionally, takes an integer
@@ -852,6 +856,18 @@ N (prefix argument), to the Nth previous header."
   (interactive "P")
   (mu4e~view-in-headers-context
     (mu4e~headers-move (- (or n 1)))))
+
+(defun mu4e-view-headers-next-unread (&optional backwards)
+  "Move point to the next or previous (when BACKWARDS is non-`nil')
+unread message header in the headers buffer connected with this
+message view. If this succeeds, return the new docid. Otherwise,
+return nil."
+  (interactive "P")
+  (mu4e~view-in-headers-context 
+    (mu4e-headers-next-unread backwards)))
+;; NOTE perhaps nice to have it also _select_ the found message;
+;; but it seems emacs gets a bit confused when we try that.
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

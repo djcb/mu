@@ -793,7 +793,8 @@ menu bar.
 @verbatim
 key          description
 ===========================================================
-n,p          go to next, previous message
+n,p          view the next, previous message
+],[          move to the next, previous unread message
 y            select the message view (if it's visible)
 RET          open the message at point in the message view
 
@@ -1073,7 +1074,8 @@ or by using the keyboard; the default bindings are:
 @verbatim
 key          description
 ==============================================================
-n,p          go to next, previous message
+n,p          view the next, previous message
+],[          move to the next, previous unread message
 y            select the headers view (if it's visible)
 
 RET          scroll down

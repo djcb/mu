@@ -587,8 +587,8 @@ after the end of the search results."
       (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
       (define-key map (kbd "<M-down>") 'mu4e-headers-next)
 
-      (define-key map (kbd "<tab>") 'mu4e-headers-next-unread)
-      (define-key map (kbd "<backtab>")
+      (define-key map (kbd "]") 'mu4e-headers-next-unread)
+      (define-key map (kbd "[")
 	(lambda() (interactive) (mu4e-headers-next-unread t)))
       
       ;; change the number of headers
