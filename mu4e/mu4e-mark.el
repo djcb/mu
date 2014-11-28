@@ -127,22 +127,24 @@ properties are:
   :char  The character to display in the headers view
   :prompt  The prompt to use when asking for marks (used for
      example when marking a whole thread)
-  :get-target  The function to obtain the target for the mark
-     action, or nil if the action requires no target.
+  :ask-target Get the target.  This function run once per
+     bulk-operation, and thus is suitable for user-interaction.
+     If nil, the target is nil.
+  :dyn-target Compute the dynamic target.  This is run once per
+     message, which is passed as an argument.  If nil, the target
+     is not touched.
   :show-target How to display the target.
   :action The action to apply on the message.
      ")
 
-;; TODO: the arguments taken by the various functions should probably
-;; be different.  1. It appears that the TARGET argument of
-;; :get-target is always nil. 2. The actions should probably get the
+;; TODO: The actions should probably get the
 ;; message: it contains more info than the docid.
 (unless mu4e-marks
   (setq mu4e-marks
-`((refile
+'((refile
    :char       "r"
    :prompt     "refile"
-   :get-target  (lambda (target msg) (mu4e-get-refile-folder msg))
+   :dyn-target  (lambda (target msg) (mu4e-get-refile-folder msg))
    :show-target (lambda (target) target)
    :action      (lambda (docid target) (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
   (delete
@@ -158,7 +160,7 @@ properties are:
   (move
    :char "m"
    :prompt "move"
-   :get-target (lambda (target msg) (mu4e~mark-get-move-target target))
+   :ask-target  mu4e~mark-get-move-target
    :show-target (lambda (target) target)
    :action (lambda (docid target) (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
   (read
@@ -169,7 +171,7 @@ properties are:
   (trash
    :char      "d"
    :prompt "dtrash"
-   :get-target (lambda (target msg) (mu4e-get-trash-folder msg))
+   :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
    :show-target (lambda (target) target)
    :action (lambda (docid target) (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N")))
   (unflag
@@ -200,10 +202,10 @@ properties are:
   )))
 
 
-(defun mu4e-mark-at-point (mark &optional target)
+(defun mu4e-mark-at-point (mark target)
   "Mark (or unmark) message at point.
 MARK specifies the mark-type. For `move'-marks and `trash'-marks
-there is also the TARGET argument, which specifies to which
+the TARGET argument is non-nil and specifies to which
 maildir the message is to be moved/trashed. The function works in
 both headers buffers and message buffers.
 
@@ -230,7 +232,8 @@ The following marks are available, and the corresponding props:
 	  ;; info for the user.
 	  (markdesc (cdr (or (assq mark mu4e-marks) (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (plist-get markdesc :char))
-	  (target (funcall (plist-get markdesc :show-target) target)))
+          (target (mu4e~mark-get-dyn-target mark target))
+	  (shown-target (funcall (plist-get markdesc :show-target) target)))
     (unless docid (mu4e-warn "No message on this line"))
     (unless (eq major-mode 'mu4e-headers-mode) (mu4e-error "Not in headers-mode"))
     (save-excursion
@@ -246,7 +249,7 @@ The following marks are available, and the corresponding props:
 	  ;; when we have a target (ie., when moving), show the target folder in
 	  ;; an overlay
 	  (when (and target mu4e-headers-show-target)
-	    (let* ((targetstr (propertize (concat "-> " target " ")
+	    (let* ((targetstr (propertize (concat "-> " shown-target " ")
 				'face 'mu4e-system-face))
 		    ;; mu4e~headers-goto-docid docid t \will take us just after the
 		    ;; docid cookie and then we skip the mu4e~mark-fringe
@@ -257,35 +260,40 @@ The following marks are available, and the corresponding props:
 	      docid)))))))
 
 
-(defun mu4e~mark-get-move-target (&optional target)
-  "Mark message at point or, if region is active, all messages in
-the region, for moving to maildir TARGET. If target is not
-provided, function asks for it."
+(defun mu4e~mark-get-move-target ()
+  "Ask for a move target, and propose to create it if it does not exist."
   (interactive)
 ;;  (mu4e-message-at-point) ;; raises error if there is none
-  (let* ((target (or target (mu4e-ask-maildir "Move message to: ")))
-	  (target (if (string= (substring target 0 1) "/")
+  (let* ((target (mu4e-ask-maildir "Move message to: "))
+         (target (if (string= (substring target 0 1) "/")
 		    target
 		    (concat "/" target)))
 	  (fulltarget (concat mu4e-maildir target)))
     (when (or (file-directory-p fulltarget)
 	    (and (yes-or-no-p
-		   (format "%s does not exist. Create now?" fulltarget))
+		   (format "%s does not exist.  Create now?" fulltarget))
 	      (mu4e~proc-mkdir fulltarget)))
       target)))
 
-(defun mu4e~mark-get-target (mark &optional target)
-  "Get the target for MARK, if it is a mark that has a target;
-otherwise return nil."
-  (let ((getter (plist-get (cdr (assq mark mu4e-marks)) :get-target)))
-    (and getter (funcall getter target (mu4e-message-at-point)))))
+(defun mu4e~mark-ask-target (mark)
+  "Ask the target for MARK, if the user should be asked the target."
+  (let ((getter (plist-get (cdr (assq mark mu4e-marks)) :ask-target)))
+    (and getter (funcall getter))))
+
+(defun mu4e~mark-get-dyn-target (mark target)
+  "Get the dynamic target for MARK.  The result may depend on the
+message at point."
+  (let ((getter (plist-get (cdr (assq mark mu4e-marks)) :dyn-target)))
+    (if getter
+        (funcall getter target (mu4e-message-at-point))
+      target)))
 
 
 (defun mu4e-mark-set (mark &optional target)
   "Mark the header at point, or, if region is active, mark all
 headers in the region. Optionally, provide TARGET (for moves)."
   (unless target
-    (setq target (mu4e~mark-get-target mark target)))
+    (setq target (mu4e~mark-ask-target mark)))
   (if (not (use-region-p))
     ;; single message
     (mu4e-mark-at-point mark target)
@@ -294,8 +302,6 @@ headers in the region. Optionally, provide TARGET (for moves)."
       (let ((cant-go-further) (eor (region-end)))
 	(goto-char (region-beginning))
 	(while (and (<= (point) eor) (not cant-go-further))
-	  (when (eq mark 'refile)
-            (setq target (mu4e~mark-get-target mark target)))
 	  (mu4e-mark-at-point mark target)
 	  (setq cant-go-further (not (mu4e-headers-next))))))))
 
@@ -317,7 +323,7 @@ as well."
 	      marks
             (assq-delete-all 'something marks)))
 	  (mark (mu4e-read-option prompt marks))
-	  (target (mu4e~mark-get-target mark)))
+	  (target (mu4e~mark-ask-target mark)))
     (cons mark target)))
 
 
