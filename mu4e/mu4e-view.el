@@ -610,12 +610,14 @@ FUNC should be a function taking two arguments:
       (define-key map (kbd "m") 'mu4e-view-mark-for-move)
       (define-key map (kbd "r") 'mu4e-view-mark-for-refile)
 
-      (define-key map (kbd "&") 'mu4e-view-mark-custom)
+      (define-key map (kbd "?") 'mu4e-view-mark-for-unread)
+      (define-key map (kbd "!") 'mu4e-view-mark-for-read)
 
       (define-key map (kbd "+") 'mu4e-view-mark-for-flag)
       (define-key map (kbd "-") 'mu4e-view-mark-for-unflag)
       (define-key map (kbd "=") 'mu4e-view-mark-for-untrash)
-
+      (define-key map (kbd "&") 'mu4e-view-mark-custom)
+      
       (define-key map (kbd "*")             'mu4e-view-mark-for-something)
       (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-for-something)
       (define-key map (kbd "<insert>")     'mu4e-view-mark-for-something)
@@ -1243,6 +1245,8 @@ list."
 (mu4e~view-defun-mark-for unflag)
 (mu4e~view-defun-mark-for unmark)
 (mu4e~view-defun-mark-for something)
+(mu4e~view-defun-mark-for read)
+(mu4e~view-defun-mark-for unread)
 
 (defun mu4e-view-marked-execute ()
   "Execute the marks."
