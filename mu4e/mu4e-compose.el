@@ -228,38 +228,48 @@ appear on disk."
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
 
 
-(defun mu4e~compose-find-completion-style (some-style)
-  "Find completion style SOME-STYLE in completion-styles-alist, or return nil."
-  (find-if (lambda (style) (eq some-style (car style)))
-    completion-styles-alist))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; address completion; inspired by org-contacts.el and
+;; https://github.com/nordlow/elisp/blob/master/mine/completion-styles-cycle.el
 
-(defconst mu4e~completion-cycle-treshold 5
-  "mu4e value for `completion-cycle-treshold'.")
-
+(defun mu4e~compose-complete-contact (&optional start)
+  "Complete the text at START with a contact.
+Ie. either 'name <email>' or 'email')."
+  (interactive)
+  (let ((mail-abbrev-mode-regexp mu4e~compose-address-fields-regexp)
+	 (eoh ;; end-of-headers
+	   (save-excursion
+	     (goto-char (point-min))
+	     (search-forward-regexp mail-header-separator nil t))))
+    ;; try to complete only when we're in the headers area,
+    ;; looking  at an address field.
+    (when (and eoh (> eoh (point)) (mail-abbrev-in-expansion-header-p))
+      (let* ((end (point))
+	      (start
+		(or start
+		  (save-excursion
+		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
+		    (goto-char (match-end 0))
+		    (point)))))
+	(list start end mu4e~contacts-for-completion))))) 
+ 
 (defun mu4e~compose-setup-completion ()
-  "Set up autocompletion of addresses."
-  (let ((compstyle
-	  (or (mu4e~compose-find-completion-style 'substring)
-	    (mu4e~compose-find-completion-style 'partial-completion))))
-    ;; emacs-24+ has 'substring, otherwise we try partial-completion, otherwise
-    ;; we leave it at the default
-    (when compstyle
-      (make-local-variable 'completion-styles)
-      (add-to-list 'completion-styles (car compstyle)))
-    (when (boundp 'completion-cycle-threshold)
-      (make-local-variable 'completion-cycle-threshold)
-      (setq completion-cycle-threshold mu4e~completion-cycle-treshold))
-    ;; disable org-contacts support, since it prevents our autocompletion
-    (make-local-variable 'completion-at-point-functions)
-    (remove 'org-contacts-message-complete-function completion-at-point-functions)
-    (add-to-list 'completion-at-point-functions 'mu4e~compose-complete-contact)
-    ;; needed for emacs 23...
-    (when (= emacs-major-version 23)
-      (make-local-variable 'message-completion-alist)
-      (setq message-completion-alist
-	(cons
-	  (cons mu4e~compose-address-fields-regexp 'completion-at-point)
-	  message-completion-alist)))))
+  "Set up auto-completion of addresses."
+  (set (make-local-variable 'completion-ignore-case) t)
+  (set (make-local-variable 'completion-cycle-threshold) 7)
+  (add-hook 'completion-at-point-functions
+    'mu4e~compose-complete-contact nil t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mu4e-compose-mode-map nil
+  "Keymap for \"*mu4e-compose*\" buffers.")
+(unless mu4e-compose-mode-map
+  (setq mu4e-compose-mode-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
+      (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
+      map)))
 
 (defvar mu4e-compose-mode-abbrev-table nil)
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
@@ -274,8 +284,6 @@ appear on disk."
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
-    ;; make completion case-insensitive
-    (set (make-local-variable 'completion-ignore-case) t)
     ;; make sure mu4e is started in the background (ie. we don't want to error
     ;; out when sending the message; better to do it now if there's a problem)
     (mu4e~start) ;; start mu4e in background, if needed
@@ -286,12 +294,8 @@ appear on disk."
     (setq default-directory (expand-file-name "~/"))
 
     ;; offer completion for e-mail addresses
-    (when (and mu4e-compose-complete-addresses
-	    (boundp 'completion-at-point-functions))
+    (when mu4e-compose-complete-addresses
       (mu4e~compose-setup-completion))
-
-    (define-key mu4e-compose-mode-map (kbd "C-S-u") 'mu4e-update-mail-and-index)
-    (define-key mu4e-compose-mode-map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
 
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
@@ -504,29 +508,6 @@ draft message."
   (interactive)
   (mu4e-compose 'new))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; address completion; inspired by org-contacts.el
-(defun mu4e~compose-complete-contact (&optional start)
-  "Complete the text at START with a contact.
-Ie. either 'name <email>' or 'email')."
-  (interactive)
-  (let ((mail-abbrev-mode-regexp mu4e~compose-address-fields-regexp)
-	 (eoh ;; end-of-headers
-	   (save-excursion
-	     (goto-char (point-min))
-	     (search-forward-regexp mail-header-separator nil t))))
-    ;; try to complete only when we're in the headers area,
-    ;; looking  at an address field.
-    (when (and eoh (> eoh (point)) (mail-abbrev-in-expansion-header-p))
-      (let* ((end (point))
-	      (start
-		(or start
-		  (save-excursion
-		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
-		    (goto-char (match-end 0))
-		    (point)))))
-	(list start end mu4e~contacts-for-completion)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -608,7 +589,7 @@ beginning of the buffer."
   (let ((old-position (point)))
     (message-goto-body)
     (when (equal (point) old-position)
-      (beginning-of-buffer))))
+      (goto-char (point-min)))))
 
 (define-key mu4e-compose-mode-map
   (vector 'remap 'beginning-of-buffer) 'mu4e-compose-goto-top)
@@ -620,11 +601,11 @@ end of the buffer."
   (interactive)
   (let ((old-position (point))
         (message-position (save-excursion (message-goto-body) (point))))
-    (end-of-buffer)
+    (goto-char (point-max))
     (when (re-search-backward message-signature-separator message-position t)
-      (previous-line))
+      (forward-line -1))
     (when (equal (point) old-position)
-      (end-of-buffer))))
+      (goto-char (point-max)))))
 
 (define-key mu4e-compose-mode-map
   (vector 'remap 'end-of-buffer) 'mu4e-compose-goto-bottom)
