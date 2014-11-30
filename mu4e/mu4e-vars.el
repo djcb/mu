@@ -57,17 +57,30 @@ link."
 
 (defcustom mu4e-get-mail-command "true"
   "Shell command to run to retrieve new mail.
-Common values are \"offlineimap\" and \"fetchmail\", but you use
-arbitrary shell-commands.
-
-If you set it to \"true\" (the default), the command won't don't
-anything, which is useful if you get your mail without the need to
-explicitly run any scripts, for example when running yout own
-mail-server.
-"
+Common values are \"offlineimap\", \"fetchmail\" and \"mbsync\",
+but you use arbitrary shell-commands. If you set it to
+\"true\" (the default), the command won't don't anything, which is
+useful if you get your mail without the need to explicitly run any
+scripts, for example when running yout own mail-server."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
+
+(defcustom mu4e-index-update-error-warning t
+  "Whether to display warnings when we the retrieval process (as
+  per `mu4e-get-mail-command') finished with a non-zero exit code."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
+
+(defcustom mu4e-index-update-error-continue t
+  "Whether to continue with indexing when we the retrieval
+  process (as per `mu4e-get-mail-command') finished with a non-zero
+  exit code."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
+
 
 (defcustom mu4e-update-interval nil
   "Number of seconds between automatic calls to retrieve mail and

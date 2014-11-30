@@ -90,7 +90,6 @@ User's addresses are set in `mu4e-user-mail-address-list')."
 
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the standard folders can be functions too
 (defun mu4e~get-folder (foldervar msg)
@@ -834,11 +833,15 @@ frame to display buffer BUF."
  	  (maybe-error (or (not (eq status 'exit)) (/= code 0)))
 	  (buf (and (buffer-live-p mu4e~update-buffer) mu4e~update-buffer))
 	  (win (and buf (get-buffer-window buf))))
-    ;; there may be an error, give the user up to 5 seconds to check
     (message nil)
     (if maybe-error
-      (sit-for 5)
-      (mu4e-update-index))
+      (progn 
+	(when mu4e-index-update-error-warning
+	  (mu4e-message "Update process returned with non-zero exit code")
+	  (sit-for 5))
+	(when mu4e-index-update-error-continue 
+	  (mu4e-update-index))) 
+      (mu4e-update-index))  
     (if (window-live-p win)
       (with-selected-window win (kill-buffer-and-window))
       (when (buffer-live-p buf) (kill-buffer buf)))))
@@ -858,9 +861,10 @@ in the background; otherwise, pop up a window."
   (run-hooks 'mu4e-update-pre-hook)
   (unless mu4e-get-mail-command
     (mu4e-error "`mu4e-get-mail-command' is not defined"))
+
   (let* ((process-connection-type t)
 	  (proc (start-process-shell-command
-		  "mu4e-update" "mu4e-update"
+		  "mu4e-update" " *mu4e-update*"
 		  mu4e-get-mail-command))
 	  (buf (process-buffer proc))
 	  (win (or run-in-background

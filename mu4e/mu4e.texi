@@ -55,8 +55,8 @@ Documentation License.''
 Welcome to @t{mu4e} @value{mu-version}!
 
 @t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 24
-(version 23 may works as well, but is tested as much), built on top of
-the @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail
+(version 23 may works as well, but is not tested as much), built on top
+of the @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail
 search engine. @t{mu4e} is optimized for fast handling of large amounts
 of e-mail.
 
@@ -123,24 +123,27 @@ Appendices
 
 Fair question.
 
-I'm not sure the world needs yet another e-mail client, but perhaps @emph{I}
-do! I (the author) spend a @emph{lot} of time dealing with e-mail, both
-professionally and privately. Having an efficient e-mail client is essential.
-Since none of the existing ones worked the way I wanted, I created my
-own. @command{emacs} is an integral part of my workflow, so it made a lot of
-sense to use it for e-mail as well. And as I already had written an e-mail
-search engine (@t{mu}), it seemed only logical to use that as a basis.
+I'm not sure the world needs yet another e-mail client, but perhaps
+@emph{I} do!
+
+I (the author) spend a @emph{lot} of time dealing with e-mail, both
+professionally and privately. Having an efficient e-mail client is
+essential.  Since none of the existing ones worked the way I wanted, I
+created my own. @command{emacs} is an integral part of my workflow, so
+it made a lot of sense to use it for e-mail as well. And as I already
+had written an e-mail search engine (@t{mu}), it seemed only logical to
+use that as a basis.
 
 @node Other mail clients
 @section Other mail clients
 
 Under the hood, @t{mu4e} is fully search-based, similar to programs like
 @t{notmuch}@footnote{@url{http://notmuchmail.org}},
-@t{md}@footnote{@url{https://github.com/nicferrier/md}} and
-@t{sup}@footnote{@url{http://sup.rubyforge.org/}}. However, @t{mu4e}'s
-user-interface is quite different. @t{mu4e}'s mail handling (deleting, moving
-etc.) is inspired by
-@emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
+@t{md}@footnote{@url{https://github.com/nicferrier/md} (inactive)} and
+@t{sup}@footnote{@url{http://sup.rubyforge.org/}
+(unreachable)}. However, @t{mu4e}'s user-interface is quite
+different. @t{mu4e}'s mail handling (deleting, moving etc.) is inspired
+by @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
 @code{emacs}-based e-mail client),
 @t{mutt}@footnote{@url{http://www.mutt.org/}} and @t{dired}.
 
@@ -156,9 +159,10 @@ There are a number of things that @t{mu4e} does @emph{not} do:
 @item @t{mu}/@t{mu4e} do @emph{not} get your e-mail messages from
 a mail server. That task is delegated to other tools, such as
 @t{offlineimap}@footnote{@url{http://offlineimap.org/}},
-@t{isync}@footnote{@url{http://isync.sourceforge.net/}} or
+@t{isync/mbsync}@footnote{@url{http://isync.sourceforge.net/}} or
 @t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}. As long as the
-messages end up in a maildir, @t{mu4e} and @t{mu} are happy to deal with them.
+messages end up in a maildir, @t{mu4e} and @t{mu} are happy to deal with
+them.
 @item @t{mu4e} also does @emph{not} implement sending of messages; instead, it
 depends on @t{smptmail} (@inforef{Top,,smtpmail}), which is part of
 @command{emacs}. In addition, @t{mu4e} piggybacks on Gnus' message editor;
@@ -173,23 +177,23 @@ efficiently as possible.
 @node Becoming a mu4e user
 @section Becoming a @t{mu4e} user
 
-If @t{mu4e} looks like something for you, give it a shot! We've been trying
-hard to make it as easy as possible to set up and use; and while you can use
-elisp in various places to augment @t{mu4e}, a lot of knowledge about
-programming or elisp shouldn't be required. The idea is always to provide
-sensible defaults.
+If @t{mu4e} looks like something for you, give it a shot! We've been
+trying hard to make it as easy as possible to set up and use; and while
+you can use elisp in various places to augment @t{mu4e}, a lot of
+knowledge about programming or elisp shouldn't be required. The idea is
+to provide sensible defaults, and allow for customization.
 
 When you take @t{mu4e} into use, it's a good idea to subscribe to the
 @t{mu}/@t{mu4e}-mailing
 list@footnote{@url{http://groups.google.com/group/mu-discuss}}.
 
-If you have suggestions for improvements or bug reports, please use the GitHub
-issues list@footnote{@url{https://github.com/djcb/mu/issues}}. In bug reports,
-please clearly specify the versions of @t{mu}/@t{mu4e} and @command{emacs} you
-are using, as well as any other relevant details. Also, if it is about the
-behavior for specific messages, please attach the raw message (that is, the
-message file as it exists in your maildir); you can of course strip it of any
-personal informatiion.
+If you have suggestions for improvements or bug reports, please use the
+GitHub issues list@footnote{@url{https://github.com/djcb/mu/issues}}. In
+bug reports, please clearly specify the versions of @t{mu}/@t{mu4e} and
+@command{emacs} you are using, as well as any other relevant
+details. Also, if it is about the behavior for specific messages, please
+attach the raw message (that is, the message file as it exists in your
+maildir); you can of course strip off any personal information.
 
 If you are new to all this, the somewhat paternalistic @emph{``How to ask
 questions the smart
@@ -199,9 +203,9 @@ be a good read.
 @node Getting started
 @chapter Getting started
 
-In this chapter, we go through the installation of @t{mu4e} and its basic
-setup. After we have succeeded in @ref{Getting mail}, and @pxref{Indexing your
-messages}, we discuss @ref{Basic configuration}.
+In this chapter, we go through the installation of @t{mu4e} and its
+basic setup. After we have succeeded in @ref{Getting mail}, and
+@pxref{Indexing your messages}, we discuss @ref{Basic configuration}.
 
 After these steps, @t{mu4e} should be ready to go!
 
@@ -228,7 +232,8 @@ Xapian@footnote{@url{http://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
 @t{mu} has optional support for the Guile 2.x (Scheme) programming
-language. There are also some GUI-tools, which require GTK+ 3.x and Webkit.
+language. There are also some GUI-tools, which require GTK+ 3.x and
+Webkit.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
 development tools, such as C and C++ compilers (both @command{gcc} and
@@ -388,10 +393,10 @@ need to provide the @t{--maildir=~/Maildir} since it is the default; see the
 @t{mu-index} man-page for details} and fill the database, and give progress
 information while doing so.
 
-The indexing process may take a few minutes the first time you do it (for
-thousands of e-mails); afterwards it is much faster, since @t{mu} only scans
-messages that are new or have changed. Indexing is discussed in full detail in
-the @t{mu-index} man-page.
+The indexing process may take a few minutes the first time you do it
+(for thousands of e-mails); afterwards it is much faster, since @t{mu}
+only scans messages that are new or have changed. Indexing is discussed
+in full detail in the @t{mu-index} man-page.
 
 After the indexing process has finished, you can quickly test if everything
 worked, by trying some command-line searches, for example
@@ -428,12 +433,12 @@ with @t{MU4E-PATH} replaced with the actual path.
 @node Folders
 @section Folders
 
-The next step is to tell @t{mu4e} where it can find your Maildir, and some
-special folders. So, for example@footnote{Note that the folders
+The next step is to tell @t{mu4e} where it can find your Maildir, and
+some special folders. So, for example@footnote{Note that the folders
 (@t{mu4e-sent-folder}, @t{mu4e-drafts-folder}, @t{mu4e-trash-folder} and
-@t{mu4e-refile-folder}) can also be @emph{functions} that are evaluated at
-runtime. This allows for dynamically changing them depending on context. See
-@ref{Dynamic folders} for details.}:
+@t{mu4e-refile-folder}) can also be @emph{functions} that are evaluated
+at runtime. This allows for dynamically changing them depending on the
+context. See @ref{Dynamic folders} for details.}:
 @lisp
   ;; these are actually the defaults
   (setq
@@ -449,34 +454,59 @@ folder names are all relative to @code{mu4e-maildir}. Also note that
 this must @emph{not} be a symbolic link.
 
 @node Retrieval and indexing
-@section Retrieval and indexing
+@section Retrieval and indexing with mu4e
 
 As we have seen, we can do all of the mail retrieval @emph{outside} of
 @command{emacs}/@t{mu4e}. However, you can also do it from within
-@t{mu4e}. For that, set the variable @code{mu4e-get-mail-command} to the
-program or shell command you want to use for retrieving mail. You can
-then retrieve your e-mail using @kbd{M-x mu4e-update-mail-and-index}, or
-@kbd{C-S-u} in all @t{mu4e}-views; alternatively, you can use @kbd{C-c
-C-u}, which may be more convenient if you use emacs in a
-terminal. 
+@t{mu4e}. 
 
-Please note that indexing only takes place if getting mail finished
-successfully, that is, if the mail-retrieval program ended with
-exit-code 0. If you're mail-retrieval program does not do that, you need
-to wrap it in a shell-script.
-
-If you don't have a specific command for getting mail, for example because you
-are running your own mail-server, you can set @code{mu4e-get-mail-command} to
-@t{"true"}, in which case @t{mu4e} won't try to get new mail, but still
-re-index your messages.
+@subsection Basics
+ 
+To set up mail-retrieval from withing @t{mu4e}, set the variable
+@code{mu4e-get-mail-command} to the program or shell command you want to
+use for retrieving mail. You can then get your e-mail using @kbd{M-x
+mu4e-update-mail-and-index}, or @kbd{C-S-u} in all @t{mu4e}-views;
+alternatively, you can use @kbd{C-c C-u}, which may be more convenient
+if you use emacs in a terminal.
 
 You can interrupt the (foreground) update process with @kbd{q}.
 
-You can also update your mail and index periodically in the background,
-by setting the variable @code{mu4e-update-interval} to the number of
-seconds between these updates. If set to @code{nil}, it won't update at
-all. After you make changes to @code{mu4e-update-interval}, @t{mu4e}
-must be restarted before the changes take effect.
+It is possible to update your mail and index periodically in the
+background, by setting the variable @code{mu4e-update-interval} to the
+number of seconds between these updates. If set to @code{nil}, it won't
+update at all. After you make changes to @code{mu4e-update-interval},
+@t{mu4e} must be restarted before the changes take effect.
+
+@subsection Handling errors during mail retrieval
+
+If the mail-retrieval process returns with a non-zero exit code,
+@t{mu4e} will show a warning (unless
+@code{mu4e-index-update-error-warning} is set to @code{nil}), but then
+try to index your maildirs anyway (unlesds
+@code{mu4e-index-update-error-continue} is set to @code{nil}).
+
+Reason for these defaults is that some of the mail-retrieval programs
+may return non-zero, even when the updating process succeeded; however,
+it is hard to tell such pseudo-errors from real ones like 'login
+failed'.
+
+If you need more refinement, it may be useful to wrap the mail-retrieval
+program in a shell-script, for example @t{fetchmail} returns 1 to
+indicate 'no mail'; we can handle that with:
+@lisp
+  (setq mu4e-get-mail-command "fetchmail -v || [ $? -eq 1 ]")
+@end lisp
+A similar approach can be used with other mail retrieval programs,
+although not all of them have their exit codes documented.
+
+@subsection Implicit mail retrieval 
+
+If you don't have a specific command for getting mail, for example
+because you are running your own mail-server, you can leave
+@code{mu4e-get-mail-command} at @t{"true"} (the default), in which case
+@t{mu4e} won't try to get new mail, but still re-index your messages.
+
+@subsection Example setup
 
 A simple setup could look something like:
 
@@ -486,14 +516,15 @@ A simple setup could look something like:
    mu4e-update-interval 300)             ;; update every 5 minutes
 @end lisp
 
-A hook @code{mu4e-update-pre-hook} is available which is run right before
-starting the process, which you can for example to influence
-@code{mu4e-get-mail-command} based on the the current situation (location,
-time of day, ...).
+A hook @code{mu4e-update-pre-hook} is available which is run right
+before starting the process. That can be useful, for example, to
+influence, @code{mu4e-get-mail-command} based on the the current
+situation (location, time of day, ...).
 
-It is possible to get notifications when the indexing process does any updates
-- for example when receiving new mail. See @code{mu4e-index-updated-hook} and
-some tips on its usage in the @ref{FAQ}.
+It is possible to get notifications when the indexing process does any
+updates - for example when receiving new mail. See
+@code{mu4e-index-updated-hook} and some tips on its usage in the
+@ref{FAQ}.
 
 @node Sending mail
 @section Sending mail
@@ -3206,7 +3237,7 @@ see @ref{(emacs) Mail Aliases}.
 Once more, see @ref{Compose hooks}.
 @item @emph{How can I influence the way the original message looks when
 replying or forwarding?} Since @code{mu4e-compose-mode} derives from
-@code{message-mode}, you can re-use many of the latter's facilities.
+@code{message-mode}, you can re-use many of its facilities.
 @inforef{Insertion Variables,,message}.
 @item @emph{How can I easily include attachments in the messages I write?}
 You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
@@ -3264,7 +3295,7 @@ as a todo-list.
 
 @itemize
 @item @emph{mu4e does not work well if the @command{emacs} language environment is not
-UTF-8}; so, if you problems with encodings, be sure to have
+UTF-8}; so, if you encounter problems with encodings, be sure to have
 @code{(set-language-environment "UTF-8")} in your @file{~/.emacs}.
 @item @emph{Thread handling is incomplete.} While threads are calculated and are
 visible in the headers buffer, you cannot collapse/open them.
@@ -3277,9 +3308,10 @@ conflicts with @t{mu4e}}. @t{notmuch} running in parallel with
 error in process filter: mu4e-error-handler: Error 70: cannot read
 ~/Maildir/...
 @end verbatim
-when sending a reply to a new e-mail. This seems to be caused by @t{notmuch}
-changing the name of the original message file while @t{mu4e} is working in on
-it. To prevent this, deactivate @t{notmuch} in your Emacs setup.
+when sending a reply to some e-mail. This seems to be caused by
+@t{notmuch} changing the name of the original message file while
+@t{mu4e} is working on it. To prevent this, deactivate @t{notmuch} in
+your Emacs setup.
 @item @emph{The PDF-version of the manual does not show any of the non-ASCII
 characters} - this is because, sadly, @t{texi2pdf} documentation system
 does not support those. There is not much we can do about that.
