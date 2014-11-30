@@ -156,7 +156,7 @@ properties are:
    :char "+"
    :prompt "+flag"
    :show-target (lambda (target) "flag")
-   :action (lambda (docid msg target) (mu4e~proc-move dociddocid nil    "+F-u-N")))
+   :action (lambda (docid msg target) (mu4e~proc-move docid nil    "+F-u-N")))
   (move
    :char "m"
    :prompt "move"
