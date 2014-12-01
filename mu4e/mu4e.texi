@@ -1997,6 +1997,7 @@ can happen in both the @ref{Headers view} and the @ref{Message view}.
 * Leaving the headers buffer::
 * Built-in marking functions::
 * Custom mark functions::
+* Adding a new kind of mark::
 @end menu
 
 @node Selecting messages for marking
@@ -2129,6 +2130,67 @@ As you can see, it's not very hard to define simple functions to match
 messages. There are more examples in the defaults for
 @code{mu4e-headers-custom-markers}; see @file{mu4e-headers.el} and see
 @ref{Extending mu4e} for general information about writing your own functions.
+
+
+@node Adding a new kind of mark
+@section Adding a new kind of mark
+
+It is possible to configure new marks. To do so one can add entries
+in the list @code{mu4e-marks}. Such an element must have the following form:
+
+@lisp
+(SYMBOL
+  :char STRING
+  :prompt STRING
+  :ask-target (lambda () TARGET)
+  :dyn-target (lambda (TARGET MSG) DYN-TARGET)
+  :show-target (lambda (DYN-TARGET) STRING)
+  :action (lambda (DOCID MSG DYN-TARGET) nil))
+@end lisp
+
+The symbol can be any symbol, except for 'unmark and 'something, which
+are reserved. The rest is a plist with the following
+elements:
+
+@itemize
+@item @code{:char} -- the character to display in the headers view.
+@item @code{:prompt} -- the prompt to use when asking for marks (used for example when marking a whole thread).
+@item @code{:ask-target} -- a function run once per bulk-operation, and thus suitable for
+querying the user about a target for move-like marks. If nil, the
+TARGET passed to @code{:dyn-target} is nil.
+@item @code{:dyn-target} -- a function run once per message
+(The message is passed as MSG to the function). This function allows
+to compute a per-message target, for refile-like marks. If nil, the
+DYN-TARGET passed to the @code{:action} is the TARGET obtained as above.
+@item @code{:show-target} -- how to display the target in the headers view.
+If @code{:show-target} is nil the DYN-TARGET is shown (and DYN-TARGET must be
+a string).
+@item @code{:action} -- the action to apply on the message when the mark is executed.
+@end itemize
+
+As an example, suppose we would like to add a mark for tagging
+messages (gmail-style), then we can run the following code (after
+loading mu4e):
+
+@lisp
+(add-to-list 'mu4e-marks
+   '(tag
+     :char       "g"
+     :prompt     "gtag"
+     :ask-target (lambda () (read-string "What tag do you want to add?"))
+     :action      (lambda (docid msg target)
+                    (mu4e-action-retag-message msg (concat "+" target)))))
+@end lisp
+
+Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
+(for example when tagging a whole thread), but does not bind the mark
+to a key to use at the top-level. This must be done separately. In our
+example:
+
+@lisp
+(mu4e~headers-defun-mark-for tag)
+(define-key mu4e-headers-mode-map (kbd "g") 'mu4e-headers-mark-for-tag)
+@end lisp
 
 @node Dynamic folders
 @chapter Dynamic folders
@@ -2334,66 +2396,6 @@ Suppose we want to inspect the number of recipients for a message in the
 
 After evaluating this, @kbd{a N} in the headers view shows the number of
 recipients for the message at point.
-
-@node Adding a new kind of mark
-@section Adding a new kind of mark
-
-It is possible to configure new marks. To do so one can add entries
-in the list @code{mu4e-marks}. Such an element must have the following form:
-
-@lisp
-(SYMBOL
-  :char STRING
-  :prompt STRING
-  :ask-target (lambda () TARGET)
-  :dyn-target (lambda (TARGET MSG) DYN-TARGET)
-  :show-target (lambda (DYN-TARGET) STRING)
-  :action (lambda (DOCID MSG DYN-TARGET) nil))
-@end lisp
-
-The symbol can be any symbol, except for 'unmark and 'something, which
-are reserved. The rest is a plist with the following
-elements:
-
-@itemize
-@item @code{:char} -- the character to display in the headers view.
-@item @code{:prompt} -- the prompt to use when asking for marks (used for example when marking a whole thread).
-@item @code{:ask-target} -- a function run once per bulk-operation, and thus suitable for
-querying the user about a target for move-like marks. If nil, the
-TARGET passed to @code{:dyn-target} is nil.
-@item @code{:dyn-target} -- a function run once per message
-(The message is passed as MSG to the function). This function allows
-to compute a per-message target, for refile-like marks. If nil, the
-DYN-TARGET passed to the @code{:action} is the TARGET obtained as above.
-@item @code{:show-target} -- how to display the target in the headers view.
-If @code{:show-target} is nil the DYN-TARGET is shown (and DYN-TARGET must be
-a string).
-@item @code{:action} -- the action to apply on the message when the mark is executed.
-@end itemize
-
-As an example, suppose we would like to add a mark for tagging
-messages (gmail-style), then we can run the following code (after
-loading mu4e):
-
-@lisp
-(add-to-list 'mu4e-marks
-   '(tag
-     :char       "g"
-     :prompt     "gtag"
-     :ask-target (lambda () (read-string "What tag do you want to add?"))
-     :action      (lambda (docid msg target)
-                    (mu4e-action-retag-message msg (concat "+" target)))))
-@end lisp
-
-Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
-(for example when tagging a whole thread), but does not bind the mark
-to a key to use at the top-level. This must be done separately. In our
-example:
-
-@lisp
-(mu4e~headers-defun-mark-for tag)
-(define-key mu4e-headers-mode-map (kbd "g") 'mu4e-headers-mark-for-tag)
-@end lisp
 
 @node Adding an action in the message view
 @section Adding an action in the message view
