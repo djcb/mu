@@ -145,7 +145,6 @@ properties are:
    :char       "r"
    :prompt     "refile"
    :dyn-target  (lambda (target msg) (mu4e-get-refile-folder msg))
-   :show-target (lambda (target) target)
    :action      (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
   (delete
    :char "D"
@@ -161,7 +160,6 @@ properties are:
    :char "m"
    :prompt "move"
    :ask-target  mu4e~mark-get-move-target
-   :show-target (lambda (target) target)
    :action (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
   (read
    :char       "!"
@@ -172,7 +170,6 @@ properties are:
    :char      "d"
    :prompt "dtrash"
    :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-   :show-target (lambda (target) target)
    :action (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N")))
   (unflag
    :char     "-"
@@ -192,12 +189,10 @@ properties are:
   (unmark
    :char     " "
    :prompt "unmark"
-   :show-target (lambda (target) nil)
    :action (mu4e-error "No action for unmarking"))
   (something
    :char  "*"
    :prompt "*something"
-   :show-target (lambda (target) "")
    :action (mu4e-error "No action for deferred mark"))
   )))
 
@@ -233,7 +228,10 @@ The following marks are available, and the corresponding props:
 	  (markdesc (cdr (or (assq mark mu4e-marks) (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (plist-get markdesc :char))
           (target (mu4e~mark-get-dyn-target mark target))
-	  (shown-target (funcall (plist-get markdesc :show-target) target)))
+          (show-fct (plist-get markdesc :show-target))
+	  (shown-target (if show-fct
+                            (funcall show-fct target)
+                          target)))
     (unless docid (mu4e-warn "No message on this line"))
     (unless (eq major-mode 'mu4e-headers-mode) (mu4e-error "Not in headers-mode"))
     (save-excursion
