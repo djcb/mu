@@ -381,7 +381,7 @@ KAR, or raise an error if none is found."
 	     (= kar (nth 2 bm)))
 	   mu4e-bookmarks)))
    (if chosen-bm
-     (nth 0 chosen-bm)
+     (eval (nth 0 chosen-bm))
      (mu4e-warn "Unknown shortcut '%c'" kar))))
 
 
