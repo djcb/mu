@@ -375,14 +375,19 @@ and offer to create it if it does not exist yet."
 (defun mu4e-get-bookmark-query (kar)
   "Get the corresponding bookmarked query for shortcut character
 KAR, or raise an error if none is found."
- (let ((chosen-bm
-	 (find-if
-	   (lambda (bm)
-	     (= kar (nth 2 bm)))
-	   mu4e-bookmarks)))
-   (if chosen-bm
-     (nth 0 chosen-bm)
-     (mu4e-warn "Unknown shortcut '%c'" kar))))
+  (let* ((chosen-bm
+	   (or (find-if
+		 (lambda (bm)
+		   (= kar (nth 2 bm)))
+		mu4e-bookmarks)
+	    (mu4e-warn "Unknown shortcut '%c'" kar)))
+	 (expr (nth 0 chosen-bm))
+	 (query (eval expr)))
+    (if (stringp query)
+      query
+      (mu4e-warn "Expression must evaluate to query string ('%S')" expr))))
+
+
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

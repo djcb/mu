@@ -1862,6 +1862,23 @@ defined in the echo area, with the shortcut key highlighted. So, to invoke the
 bookmark we just defined (to get the list of "Big Messages"), all you need to
 type is @kbd{bb}.
 
+@subsection Lisp expressions as bookmarks
+
+Instead of using strings, it is also possible to use Lisp expressions as
+bookmarks. The only requirement is that they evaluate to a query string.
+
+For example, to get all the messages that are at least a week old in
+your inbox:
+
+@lisp
+(add-to-list 'mu4e-bookmarks '(
+   (concat "maildir:/inbox date:.."
+       (format-time-string "%Y%m%d"
+                 (subtract-time (current-time) (days-to-time 7))))
+    "Messages older than a week" ?O) t)
+@end lisp
+
+
 @subsection Editing bookmarks before searching
 
 There is also @kbd{M-x mu4e-headers-search-bookmark-edit} (key @key{B}), which
