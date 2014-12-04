@@ -1113,6 +1113,7 @@ RET          scroll down
 M-RET        open URL at point / attachment at point
 
 SPC          scroll down, if at end, move to next message
+S-SPC        scroll up
 
 searching
 ---------
