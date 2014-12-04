@@ -2199,6 +2199,23 @@ loading mu4e):
                     (mu4e-action-retag-message msg (concat "+" target)))))
 @end lisp
 
+As another example, suppose we would like to ``archive and mark read''
+a message (gmail-style), then we can run the following code (after
+loading mu4e):
+
+@lisp
+(add-to-list 'mu4e-marks
+   '(archive
+     :char       "A"
+     :prompt     "Archive"
+     :show-target (lambda (target) "archive")
+     :action      (lambda (docid msg target)
+                    ;; must come before proc-move since retag runs
+                    ;; 'sed' on the file
+                    (mu4e-action-retag-message msg "-\\Inbox")
+                    (mu4e~proc-move docid nil "+S-u-N"))))
+@end lisp
+
 Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
 (for example when tagging a whole thread), but does not bind the mark
 to a key to use at the top-level. This must be done separately. In our
@@ -2206,7 +2223,9 @@ example:
 
 @lisp
 (mu4e~headers-defun-mark-for tag)
+(mu4e~headers-defun-mark-for archive)
 (define-key mu4e-headers-mode-map (kbd "g") 'mu4e-headers-mark-for-tag)
+(define-key mu4e-headers-mode-map (kbd "A") 'mu4e-headers-mark-for-archive)
 @end lisp
 
 @node Dynamic folders
