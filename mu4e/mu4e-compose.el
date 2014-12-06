@@ -258,6 +258,7 @@ Ie. either 'name <email>' or 'email')."
   "Set up auto-completion of addresses."
   (set (make-local-variable 'completion-ignore-case) t)
   (set (make-local-variable 'completion-cycle-threshold) 7)
+  (add-to-list (make-local-variable 'completion-styles) 'substring t)
   (add-hook 'completion-at-point-functions
     'mu4e~compose-complete-contact nil t))
 
