@@ -837,7 +837,7 @@ S            edit last query
 b            search bookmark
 B            edit bookmark before search
 j            jump to maildir
-M-left       previous query
+M-left,\     previous query
 M-right      next query
 
 O            change sort order
