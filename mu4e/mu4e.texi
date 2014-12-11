@@ -2684,10 +2684,12 @@ this expects org-mode 8.x. If you have an older version, you can try:
 @end lisp
 
 @noindent
-After this, you can use the normal @t{org-mode} mechanisms to store links:
-@kbd{M-x org-store-link} stores a link to a particular message when you're
-in @ref{Message view}, and a link to a query when you are in @ref{Headers
-view}.
+After this, you can use the normal @t{org-mode} mechanisms to store
+links: @kbd{M-x org-store-link} stores a link to a particular message
+when you are in @ref{Message view}. When you are in @ref{Headers view},
+@kbd{M-x org-store-link} links to the @emph{query} if
+@code{org-mu4e-link-query-in-headers-mode} is non-@code{nil}, and to the
+particular message otherwise.
 
 You can insert this link later with @kbd{M-x org-insert-link}. From
 @t{org-mode}, you can go to the query or message the link points to with
