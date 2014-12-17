@@ -74,7 +74,7 @@ Messages of type 'new' don't use the docid: parameter, the other ones do.
 
 .nf
 -> cmd:compose type:<reply|forward|edit|new> [docid:<docid>]
-<- (:compose <reply|forward|edit|new> :original <s-exp> :include (<list-of-attachments))
+<- (:compose <reply|forward|edit|new> :original <s-exp> :include (<list-of-attachments)) :reply-to <all|sender>
 .fi
 
 The <list-of-attachments> is an s-expression describing the attachments to

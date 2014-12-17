@@ -189,7 +189,7 @@ The server output is as follows:
   => the docid will be passed to `mu4e-remove-func'
 
   6. a compose looks like:
-  (:compose <reply|forward|edit|new> [:original<msg-sexp>] [:include <attach>])
+  (:compose <reply|forward|edit|new> [:original<msg-sexp>] [:include <attach>] [:reply-to <all|sender>])
   `mu4e-compose-func'."
   (mu4e-log 'misc "* Received %d byte(s)" (length str))
   (setq mu4e~proc-buf (concat mu4e~proc-buf str)) ;; update our buffer
@@ -245,7 +245,8 @@ The server output is as follows:
 	    (funcall mu4e-compose-func
 	      (plist-get sexp :compose)
 	      (plist-get sexp :original)
-	      (plist-get sexp :include)))
+	      (plist-get sexp :include)
+	      (plist-get sexp :reply-to)))
 
 	  ;; do something with a temporary file
 	  ((plist-get sexp :temp)
@@ -433,7 +434,7 @@ e.g. '/drafts'.
       (mu4e~proc-escape path) (mu4e~proc-escape maildir)))
 
 
-(defun mu4e~proc-compose (type decrypt &optional docid)
+(defun mu4e~proc-compose (type decrypt &optional docid reply-to)
   "Start composing a message of certain TYPE (a symbol, either
 `forward', `reply', `edit' or `new', based on an original
 message (ie, replying to, forwarding, editing) with DOCID or nil
@@ -446,8 +447,11 @@ The result will be delivered to the function registered as
   (unless (eq (null docid) (eq type 'new))
     (mu4e-error "`new' implies docid not-nil, and vice-versa"))
   (mu4e~proc-send-command
-    "cmd:compose type:%s docid:%d extract-encrypted:%s use-agent:true"
-    (symbol-name type) docid (if decrypt "true" "false")))
+    "cmd:compose type:%s docid:%d extract-encrypted:%s use-agent:true%s"
+    (symbol-name type) docid (if decrypt "true" "false")
+    (if (eq reply-to nil)
+        ""
+      (concat " reply-to:" (symbol-name reply-to)))))
 
 (defun mu4e~proc-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."

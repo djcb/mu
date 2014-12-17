@@ -530,7 +530,9 @@ cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 	char *sexp, *atts;
 	unsigned ctype;
 	MuMsgOptions opts;
+	const char *replytostr;
 
+	replytostr = NULL;
 	opts = get_encrypted_msg_opts (args);
 
 	GET_STRING_OR_ERROR_RETURN (args, "type", &typestr, err);
@@ -550,14 +552,19 @@ cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 			print_and_clear_g_error (err);
 			return MU_OK;
 		}
+		if (ctype == REPLY) {
+			replytostr = get_string_from_args (args, "reply-to",
+			                                   TRUE, err);
+		}
 		sexp = mu_msg_to_sexp (msg, atoi(docidstr), NULL, opts);
 		atts = (ctype == FORWARD) ? include_attachments (msg, opts) : NULL;
 		mu_msg_unref (msg);
 	} else
 		atts = sexp = NULL;
 
-	print_expr ("(:compose %s :original %s :include %s)",
-		    typestr, sexp ? sexp : "nil", atts ? atts : "nil");
+	print_expr ("(:compose %s :original %s :include %s :reply-to %s)",
+	            typestr, sexp ? sexp : "nil", atts ? atts : "nil",
+	            replytostr ? replytostr : "nil");
 
 	g_free (sexp);
 	g_free (atts);

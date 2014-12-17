@@ -306,7 +306,7 @@ You can append flags."
     (format "%s-%02x%04x-%s:2,%s"
       (format-time-string "%Y%m%d" (current-time))
       (random 255) (random 65535) hostname (or flagstr ""))))
- 
+
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
   (mu4e~draft-header "User-agent" (mu4e~draft-user-agent-construct))
@@ -317,7 +317,7 @@ You can append flags."
 (defconst mu4e~draft-reply-prefix "Re: "
   "String to prefix replies with.")
 
-(defun mu4e~draft-reply-construct (origmsg)
+(defun mu4e~draft-reply-construct (origmsg &optional reply-all)
   "Create a draft message as a reply to original message
 ORIGMSG. Replying-to-self is a special; in that case, the To and Cc
 fields will be the same as in the original."
@@ -326,7 +326,7 @@ fields will be the same as in the original."
 	     (+ (length (mu4e~draft-create-to-lst origmsg))
 	       (length (mu4e~draft-create-cc-lst origmsg t))))
 	  ;; reply-to-self implies reply-all
-	  (reply-all (or reply-to-self (mu4e~draft-user-wants-reply-all origmsg)))
+	  (reply-all (or reply-to-self reply-all))
 	  (old-msgid (plist-get origmsg :message-id))
 	  (subject
 	    (concat mu4e~draft-reply-prefix
@@ -341,8 +341,8 @@ fields will be the same as in the original."
 	  (mu4e~draft-header "To" (mu4e~draft-recipients-list-to-string
 				    (mu4e-message-field origmsg :to)))
 	  (mu4e~draft-header "Cc" (mu4e~draft-recipients-list-to-string
-				    (mu4e-message-field origmsg :cc)))) 
-	
+				    (mu4e-message-field origmsg :cc))))
+
 	;; if there's no-one in To, copy the CC-list
 	(if (zerop (length (mu4e~draft-create-to-lst origmsg)))
 	  (mu4e~draft-header "To" (mu4e~draft-recipients-construct :cc origmsg reply-all))
@@ -397,7 +397,7 @@ fields will be the same as in the original."
   "The drafts-folder for this compose buffer, based on
 `mu4e-drafts-folder', which is evaluated once.")
 
-(defun mu4e-draft-open (compose-type &optional msg)
+(defun mu4e-draft-open (compose-type &optional msg reply-to)
   "Open a draft file for a new message (when COMPOSE-TYPE is reply, forward or new),
 or open an existing draft (when COMPOSE-TYPE is edit).
 
@@ -408,6 +408,9 @@ evaluated). The message file name is a unique name determined by
 from either `mu4e~draft-reply-construct', or
 `mu4e~draft-forward-construct' or `mu4e~draft-newmsg-construct'."
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
+  (when reply-to
+    (unless (member reply-to '(sender all))
+      (mu4e-error "Invalid reply-to '%S'" reply-to)))
   (let ((draft-dir))
     (if (eq compose-type 'edit)
       ;; case-1: re-editing a draft messages. in this case, we do know the full
@@ -427,7 +430,14 @@ from either `mu4e~draft-reply-construct', or
 	  (find-file draft-path))
 	(insert
 	  (case compose-type
-	    (reply   (mu4e~draft-reply-construct msg))
+	    (reply
+         (let ((reply-all
+                (case reply-to
+                  (sender nil)
+                  (all t)
+                  (t (mu4e~draft-user-wants-reply-all msg))
+                  )))
+           (mu4e~draft-reply-construct msg reply-all)))
 	    (forward (mu4e~draft-forward-construct msg))
 	    (new     (mu4e~draft-newmsg-construct))
 	    (t (mu4e-error "unsupported compose-type %S" compose-type))))
@@ -446,5 +456,5 @@ from either `mu4e~draft-reply-construct', or
     (unless mu4e~draft-drafts-folder
       (mu4e-error "failed to determine drafts folder"))))
 
- 
+
 (provide 'mu4e-draft)
