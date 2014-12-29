@@ -2638,7 +2638,7 @@ one of the user's e-mail addresses (as per @code{mu4e-user-mail-address-list}).
 @node Interaction with other tools
 @appendix Interaction with other tools
 
-In this chapter, we discuss some ways in ways in which @t{mu4e} can coöperate
+In this chapter, we discuss some ways in ways in which @t{mu4e} can cooperate
 with other tools.
 
 @menu
