@@ -1082,9 +1082,9 @@ the built-in fields, you can also create custom fields using
 addresses by clicking on the name, or pressing @key{M-RET}.
 @item You can compose a message for the contact at point by either clicking
 @key{[mouse-2]} or pressing @key{C}.
-@item The body text can be line-wrapped using @t{longlines-mode}. @t{mu4e}
+@item The body text can be line-wrapped using @t{visual-line-mode}. @t{mu4e}
 defines @key{w} to toggle between the wrapped and unwrapped state. If you want
-to do this automatically when viewing a message, invoke @code{longlines-mode}
+to do this automatically when viewing a message, invoke @code{visual-line-mode}
 in your @code{mu4e-view-mode-hook}.
 @item You can hide cited parts in messages (the parts starting with ``@t{>}'')
 using @code{mu4e-view-hide-cited}, bound to @key{h}. If you want to do this
@@ -1294,7 +1294,7 @@ OS X, there is a program called @t{textutil} as yet another alternative:
 
 If @code{mu4e-html2text-command} refers to an elisp function, it is
 expected to take the current buffer in html as input, and transform it
-into html (just like the @code{html2text} function).
+into text (just like the @code{html2text} function).
 
 For example, emacs 24.4 and later versions include the @code{eww}
 browser which uses the @code{shr} html renderer; @t{mu4e} includes a
@@ -1664,15 +1664,15 @@ see @ref{Setting the default emacs mail program}.
 @item Normally, @t{mu4e} @emph{buries} the message buffer after sending; if you want
 to kill the buffer instead, add something like the following to your
 configuration:
+@lisp
+(setq message-kill-buffer-on-exit t)
+@end lisp
 @item If you want to exclude your own e-mail address when ``replying to
 all'', set @code{mu4e-compose-dont-reply-to-self} to @code{t}.  In order
 for this to work properly you need to properly set the
 @code{user-mail-address} variable or in the case you use multiple e-mail
 addresses you need to set the @code{mu4e-user-mail-address-list}
 variable accordingly.
-@lisp
-(setq message-kill-buffer-on-exit t)
-@end lisp
 @end itemize
 
 @node Searching
@@ -2638,7 +2638,7 @@ one of the user's e-mail addresses (as per @code{mu4e-user-mail-address-list}).
 @node Interaction with other tools
 @appendix Interaction with other tools
 
-In this chapter, we discuss some ways in ways in which @t{mu4e} can coöperate
+In this chapter, we discuss some ways in ways in which @t{mu4e} can cooperate
 with other tools.
 
 @menu
@@ -3286,7 +3286,7 @@ by enabling @t{helm-mode} use helm-style completion.
 @ref{Viewing images inline}.
 @item @emph{How can I word-wrap long lines in when viewing a
 message?} You can toggle between wrapped and non-wrapped states using
-@key{w}. If you want to do this automatically, invoke @code{longlines-mode} in
+@key{w}. If you want to do this automatically, invoke @code{visual-line-mode} in
 your @code{mu4e-view-mode-hook}.
 @item @emph{What about hiding cited parts?} Toggle between hiding and showing
 of cited parts with @key{h}. If you want to hide parts automatically, call
