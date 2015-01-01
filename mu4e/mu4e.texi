@@ -1294,7 +1294,7 @@ OS X, there is a program called @t{textutil} as yet another alternative:
 
 If @code{mu4e-html2text-command} refers to an elisp function, it is
 expected to take the current buffer in html as input, and transform it
-into html (just like the @code{html2text} function).
+into text (just like the @code{html2text} function).
 
 For example, emacs 24.4 and later versions include the @code{eww}
 browser which uses the @code{shr} html renderer; @t{mu4e} includes a
