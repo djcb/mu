@@ -1082,9 +1082,9 @@ the built-in fields, you can also create custom fields using
 addresses by clicking on the name, or pressing @key{M-RET}.
 @item You can compose a message for the contact at point by either clicking
 @key{[mouse-2]} or pressing @key{C}.
-@item The body text can be line-wrapped using @t{longlines-mode}. @t{mu4e}
+@item The body text can be line-wrapped using @t{visual-line-mode}. @t{mu4e}
 defines @key{w} to toggle between the wrapped and unwrapped state. If you want
-to do this automatically when viewing a message, invoke @code{longlines-mode}
+to do this automatically when viewing a message, invoke @code{visual-line-mode}
 in your @code{mu4e-view-mode-hook}.
 @item You can hide cited parts in messages (the parts starting with ``@t{>}'')
 using @code{mu4e-view-hide-cited}, bound to @key{h}. If you want to do this
@@ -3286,7 +3286,7 @@ by enabling @t{helm-mode} use helm-style completion.
 @ref{Viewing images inline}.
 @item @emph{How can I word-wrap long lines in when viewing a
 message?} You can toggle between wrapped and non-wrapped states using
-@key{w}. If you want to do this automatically, invoke @code{longlines-mode} in
+@key{w}. If you want to do this automatically, invoke @code{visual-line-mode} in
 your @code{mu4e-view-mode-hook}.
 @item @emph{What about hiding cited parts?} Toggle between hiding and showing
 of cited parts with @key{h}. If you want to hide parts automatically, call
