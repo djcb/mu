@@ -2746,6 +2746,9 @@ when new messages arrive.
 @verbatim
 #!/bin/sh
 
+# the mu binary
+MU=mu
+
 # put the path to your Inbox folder here
 CHECKDIR="/home/$LOGNAME/Maildir/Inbox"
 
