@@ -1373,7 +1373,7 @@ either `future' or `past'."
 (defun mu4e-headers-query-next ()
   "Execute the previous query from the query stacks."
   (interactive)
-  (mu4e~headersq-query-navigate 'future))
+  (mu4e~headers-query-navigate 'future))
 
 (defun mu4e-headers-query-prev ()
   "Execute the previous query from the query stacks."
