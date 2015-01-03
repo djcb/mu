@@ -13,7 +13,7 @@
 ;;
 ;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
+;; the Free Software Foundation, either version 3 of 1the License, or
 ;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
@@ -43,7 +43,11 @@
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
   :group 'mu4e
-  :group 'org) 
+  :group 'org)
+
+(defvar org-mu4e-link-query-in-headers-mode t
+  "If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
+the current query; otherwise, it links to the message at point.")
 
 (defcustom org-mu4e-link-desc-func
   (lambda (msg) (or (plist-get msg :subject) "No subject"))
@@ -66,9 +70,10 @@ Example usage:
 
 (defun org-mu4e-store-link ()
   "Store a link to a mu4e query or message."
-  (cond
-    ;; storing links to queries
-    ((eq major-mode 'mu4e-headers-mode)
+  (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
+    (if (and (eq major-mode 'mu4e-headers-mode)
+	  org-mu4e-link-query-in-headers-mode)
+      ;; storing links to queries
       (let* ((query (mu4e-last-query))
 	      desc link)
 	(org-store-link-props :type "mu4e" :query query)
@@ -76,9 +81,8 @@ Example usage:
 	  desc (concat "mu4e:query:" query)
 	  link desc)
 	(org-add-link-props :link link :description desc)
-	link))
+	link)
       ;; storing links to messages
-    ((eq major-mode 'mu4e-view-mode)
       (let* ((msg  (mu4e-message-at-point))
              (msgid   (or (plist-get msg :message-id) "<none>"))
              (from  (or (plist-get msg :from) '(("none" . "none"))))

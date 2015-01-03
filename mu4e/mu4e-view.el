@@ -333,7 +333,7 @@ add text-properties to VAL."
   (interactive)
   (unless (get-text-property (or point (point)) 'email)
     (mu4e-error "No address at point"))
-  (mu4e~compose-mail (get-text-property (or point (point)) 'email)))
+  (mu4e~compose-mail (get-text-property (or point (point)) 'long)))
 
 (defun mu4e~view-copy-contact (&optional full)
   "Compose a message for the address at (point)."

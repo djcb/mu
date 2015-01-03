@@ -26,8 +26,9 @@ exec guile -e main -s $0 $@
 
 (use-modules (mu) (mu script) (mu stats))
 
-(define (count expr)
-  "Print the total number of messages matching QUERY."
+(define (count expr output)
+  "Print the total number of messages matching the query EXPR.
+OUTPUT is ignored."
   (display (mu:count expr))
   (newline))
 

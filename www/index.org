@@ -76,7 +76,7 @@
    Some Linux-distributions already provide pre-built mu packages; if there's no
    packagage for your distribution, or if you want the latest release, you can
    [[http://code.google.com/p/mu0/downloads/list][download mu source packages]] from Google Code. In case you find a bug, or have
-   a feature requests, please use the [[http://code.google.com/p/mu0/issues/list][issue tracker]].
+   a feature requests, please use the [[https://github.com/djcb/mu/issues][issue tracker]].
 
    If you'd like to work with the mu source code, you can find it [[https://github.com/djcb/mu][in Github]];
    also, see the notes on [[https://github.com/djcb/mu/blob/master/HACKING][HACKING]] the mu source code.

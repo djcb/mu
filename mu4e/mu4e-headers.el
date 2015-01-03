@@ -1008,11 +1008,13 @@ message, you can use `mu4e-headers-find-if-next'."
 
 (defun mu4e-headers-find-if-next (func &optional backwards)
   "Like `mu4e-headers-find-if', but do not match the current header.
-Move to the next header for which FUNC returns non-`nil', starting
-from the current position."
+Move to the next or (if BACKWARDS is non-`nil') header for which FUNC
+returns non-`nil', starting from the current position."
   (let ((pos))
     (save-excursion
-      (forward-line (if backwards -1 1))
+      (if backwards
+	(beginning-of-line)
+	(end-of-line))
       (setq pos (mu4e-headers-find-if func backwards)))
     (when pos (goto-char pos))))
 
