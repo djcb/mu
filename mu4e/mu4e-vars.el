@@ -250,7 +250,7 @@ The setting is a symbol:
   "Whether to consider only 'personal' e-mail addresses,
 i.e. addresses from messages where user was explicitly in one of
 the address fields (this excludes mailing list messages). See
-`mu4e-my-email-addresses' and the mu-index manpage for details for
+`mu4e-user-mail-address-list' and the mu-index manpage for details for
 details (in particular, how to define your own e-mail addresses)."
   :type 'boolean
   :group 'mu4e-compose)
