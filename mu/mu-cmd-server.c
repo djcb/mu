@@ -258,7 +258,7 @@ get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
 	unsigned docid;
 	MuMsgIter *iter;
 
-	querystr = g_strdup_printf ("msgid:%s", str);
+	querystr = g_strdup_printf ("msgid:\"%s\"", str);
 	iter = mu_query_run (query, querystr,
 			     MU_MSG_FIELD_ID_NONE,
 			     1, MU_QUERY_FLAG_NONE, err);
@@ -293,7 +293,7 @@ get_docids_from_msgids (MuQuery *query, const char *str, GError **err)
 	MuMsgIter *iter;
 	GSList *lst;
 
-	querystr = g_strdup_printf ("msgid:%s", str);
+	querystr = g_strdup_printf ("msgid:\"%s\"", str);
 	iter = mu_query_run (query, querystr, MU_MSG_FIELD_ID_NONE,
 			     -1 /*unlimited*/, MU_QUERY_FLAG_NONE,
 			     err);
