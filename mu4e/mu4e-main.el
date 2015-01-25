@@ -138,21 +138,43 @@ clicked."
 	  'mu4e-update-mail-and-index)
 
 	;; show the queue functions if `smtpmail-queue-dir' is defined
-	(if (file-directory-p smtpmail-queue-dir)
-	  (concat
-	    (mu4e~main-action-str "\t* toggle [m]ail sending mode "
-	      'mu4e~main-toggle-mail-sending-mode)
-	    "(" (propertize (if smtpmail-queue-mail "queued" "direct")
-		  'face 'mu4e-header-key-face) ")\n"
-	    (mu4e~main-action-str "\t* [f]lush queued mail\n"
-	      'smtpmail-send-queued-mail))
-	  "")
+       (if (file-directory-p smtpmail-queue-dir)
+           (mu4e~main-view-queue)
+         "")
 	"\n"
 	(mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
 	(mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
       )))
+
+(defun mu4e~main-view-queue ()
+  "Display queue-related actions in the main view."
+  (concat
+   (mu4e~main-action-str "\t* toggle [m]ail sending mode "
+                         'mu4e~main-toggle-mail-sending-mode)
+   "(currently "
+   (propertize (if smtpmail-queue-mail "queued" "direct")
+               'face 'mu4e-header-key-face)
+   ")\n"
+   (let ((queue-size (mu4e~main-queue-size)))
+     (if (zerop queue-size)
+         ""
+       (mu4e~main-action-str
+        (format "\t* [f]lush %s queued %s\n"
+                (propertize (int-to-string queue-size)
+                            'face 'mu4e-header-key-face)
+                (if (> queue-size 1) "mails" "mail"))
+        'smtpmail-send-queued-mail)))))
+
+(defun mu4e~main-queue-size ()
+  "Return, as an int, the number of emails in the queue."
+  (condition-case nil
+      (with-temp-buffer
+        (insert-file-contents (expand-file-name smtpmail-queue-index-file
+                                                smtpmail-queue-dir))
+        (count-lines (point-min) (point-max)))
+    (error 0)))
 
 (defun mu4e~main-view ()
   "Create the mu4e main-view, and switch to it."
