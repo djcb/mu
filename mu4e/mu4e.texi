@@ -3389,6 +3389,34 @@ Sending...done
 @end verbatim
 The first and final messages are the most important, and there may be
 considerable time between them, depending on the size of the message.
+@item @emph{How can I apply format=flowed to my outgoing messages, enabling
+receiving clients that support this feature to reflow my paragraphs?}
+Plain text emails with @t{Content-Type: text/plain; format=flowed} can
+be reflowed (i.e. line endings removed, paragraphs refilled) by
+receiving clients that support this standard. Clients that don't support
+this, show them as is, which means this feature is truly non-invasive.
+
+Here's an explanatory blog post which also shows why this is a desirable
+feature: @url{https://mathiasbynens.be/notes/gmail-plain-text} (if you
+don't have it, your mails mostly look quite bad especially on mobile
+devices) and here's the RFC with all the details:
+@url{http://www.ietf.org/rfc/rfc2646.txt}.
+
+To add this to outgoing mu4e emails, activate @t{use-hard-newlines} and
+use only @t{M-q} or @t{fill-paragraph} for your paragraphs, Emacs will
+indicate intra-paragraph breaks with soft newlines and inter-paragraph
+breaks with hard newlines. When the Gnus code sees these on outgoing
+emails, it will automatically set @t{format=flowed}.
+
+To enable this, you can use something like this in your init.el:
+
+@lisp
+;; tip submitted by mu4e user cpbotha
+(add-hook 'mu4e-compose-mode-hook
+          "Outgoing mails get format=flowed."
+          (defun cpb-compose-setup ()
+            (use-hard-newlines t 'guess)))
+@end lisp
 @end enumerate
 
 @node Known issues
