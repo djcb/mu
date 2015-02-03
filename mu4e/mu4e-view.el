@@ -105,6 +105,7 @@ The first letter of NAME is used as a shortcut character.")
 (defvar mu4e-view-attachment-actions
   '( ("wopen-with" . mu4e-view-open-attachment-with)
      ("ein-emacs"  . mu4e-view-open-attachment-emacs)
+     ("dimport-in-diary"  . mu4e-view-import-attachment-diary)
      ("|pipe"      . mu4e-view-pipe-attachment))
   "List of actions to perform on message attachments.
 The actions are cons-cells of the form:
@@ -1136,6 +1137,12 @@ If PIPECMD is nil, ask user for it."
 	  (index (plist-get att :index)))
     (mu4e~view-temp-action (mu4e-message-field msg :docid) index "emacs")))
 
+(defun mu4e-view-import-attachment-diary (msg attachnum)
+  "Open MSG's attachment ATTACHNUM in the current emacs instance."
+  (interactive)
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+	  (index (plist-get att :index)))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "diary")))
 
 (defun mu4e-view-attachment-action (&optional msg)
   "Ask user what to do with attachments in MSG
@@ -1174,6 +1181,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
       ;; make the buffer read-only since it usually does not make
       ;; sense to edit the temp buffer; use C-x C-q if you insist...
       (setq buffer-read-only t))
+    ((string= what "diary")
+     (icalendar-import-file path diary-file))
     (t (mu4e-error "Unsupported action %S" what))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
