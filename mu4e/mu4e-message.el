@@ -178,8 +178,10 @@ be changed by setting `mu4e-view-prefer-html'."
 		  (insert html)
 		  (cond
 		    ((stringp mu4e-html2text-command)
-		      (shell-command-on-region (point-min) (point-max)
-			mu4e-html2text-command nil t))
+                     (let* ((tmp-file (make-temp-file "mu4e-html")))
+                       (write-region (point-min) (point-max) tmp-file)
+                       (mu4e-process-file-through-pipe tmp-file mu4e-html2text-command)
+                       (delete-file tmp-file)))
 		    ((functionp mu4e-html2text-command)
 		      (funcall mu4e-html2text-command))
 		    (t (mu4e-error "Invalid `mu4e-html2text-command'")))
