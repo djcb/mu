@@ -90,6 +90,12 @@ support, and `mu4e-view-show-images' is non-nil."
 `mu4e-view-scroll-up-or-next' (typically bound to SPC) when at the
 end of a message. Otherwise, don't move to the next message.")
 
+(defcustom mu4e-save-multiple-attachments-without-asking nil
+  "If non-nil, saving multiple attachments asks once for a
+directory and saves all attachments in the chosen directory."
+  :type 'boolean
+  :group 'mu4e-view)
+
 (defvar mu4e-view-actions
   '( ("capture message" . mu4e-action-capture-message)
      ("view as pdf"     . mu4e-action-view-as-pdf))
@@ -1018,6 +1024,15 @@ number ATTNUM."
       (expand-file-name fname fpath)
       fpath)))
 
+(defun mu4e~view-request-attachments-dir (path)
+  "Ask the user where to save multiple attachments (default is PATH)."
+  (let ((fpath (expand-file-name
+                (read-directory-name
+                 (mu4e-format "Save in directory ")
+                 path nil nil nil) path)))
+    (if (file-directory-p fpath)
+        fpath)))
+
 (defun mu4e-view-save-attachment-single (&optional msg attnum)
   "Save attachment number ATTNUM from MSG.
 If MSG is nil use the message returned by `message-at-point'.
@@ -1053,12 +1068,27 @@ Furthermore, there is a shortcut \"a\" which so means all
 attachments, but as this is the default, you may not need it."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
-	 (attachstr (mu4e~view-get-attach-num
-		      "Attachment number range (or 'a' for 'all')" msg t))
-	  (count (hash-table-count mu4e~view-attach-map))
-	  (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
-    (dolist (num attachnums)
-      (mu4e-view-save-attachment-single msg num))))
+         (attachstr (mu4e~view-get-attach-num
+                     "Attachment number range (or 'a' for 'all')" msg t))
+         (count (hash-table-count mu4e~view-attach-map))
+         (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
+    (if mu4e-save-multiple-attachments-without-asking
+        (let* ((path (concat (mu4e~get-attachment-dir) "/"))
+               (attachdir (mu4e~view-request-attachments-dir path)))
+          (dolist (num attachnums)
+            (let* ((att (mu4e~view-get-attach msg num))
+                   (fname  (plist-get att :name))
+                   (index (plist-get att :index))
+                   (retry t))
+              (while retry
+                (setq fpath (expand-file-name (concat attachdir fname) path))
+                (setq retry
+                      (and (file-exists-p fpath)
+                           (not (y-or-n-p (mu4e-format "Overwrite '%s'?" fpath))))))
+              (mu4e~proc-extract
+               'save (mu4e-message-field msg :docid) index mu4e-decryption-policy fpath))))
+      (dolist (num attachnums)
+        (mu4e-view-save-attachment-single msg num)))))
 
 (defun mu4e-view-save-attachment (&optional multi)
   "Offer to save attachment(s).
