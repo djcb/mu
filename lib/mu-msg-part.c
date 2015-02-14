@@ -316,30 +316,18 @@ get_disposition (GMimeObject *mobj)
 	return MU_MSG_PART_TYPE_NONE;
 }
 
-#define SIG_STATUS_REPORT "sig-status-report"
-
 /* call 'func' with information about this MIME-part */
-static gboolean
+static inline void
 check_signature (MuMsg *msg, GMimeMultipartSigned *part, MuMsgOptions opts)
 {
-	/* the signature status */
-	MuMsgPartSigStatusReport *sigrep;
 	GError *err;
 
-	err     = NULL;
-	sigrep = mu_msg_crypto_verify_part (part, opts, &err);
+	err = NULL;
+	mu_msg_crypto_verify_part (part, opts, &err);
 	if (err) {
 		g_warning ("error verifying signature: %s", err->message);
 		g_clear_error (&err);
 	}
-
-	/* tag this part with the signature status check */
-	g_object_set_data_full
-		(G_OBJECT(part), SIG_STATUS_REPORT,
-		 sigrep,
-		 (GDestroyNotify)mu_msg_part_sig_status_report_destroy);
-
-	return TRUE;
 }
 
 
@@ -454,9 +442,11 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
 	}
 
-	/* put the verification info in the pgp-signature part */
+	/* put the verification info in the pgp-signature and
+	 * pgp-encrypted part */
 	msgpart.sig_status_report = NULL;
-	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0)
+	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0 ||
+	    msgpart.part_type & MU_MSG_PART_TYPE_DECRYPTED)
 		msgpart.sig_status_report =
 			(MuMsgPartSigStatusReport*)
 			g_object_get_data (G_OBJECT(parent),
@@ -548,15 +538,11 @@ handle_mime_object (MuMsg *msg, GMimeObject *mobj, GMimeObject *parent,
 			 parent, opts, index, decrypted, func, user_data);
 	else if ((opts & MU_MSG_OPTION_VERIFY) &&
 	         GMIME_IS_MULTIPART_SIGNED (mobj)) {
-		gboolean verified, multipart;
-
-		verified = check_signature
+		check_signature
 			(msg, GMIME_MULTIPART_SIGNED (mobj), opts);
-		multipart = handle_multipart
+		return handle_multipart
 			(msg, GMIME_MULTIPART (mobj), opts,
 			 index, decrypted, func, user_data);
-
-		return verified && multipart;
 	} else if ((opts & MU_MSG_OPTION_DECRYPT) &&
 	           GMIME_IS_MULTIPART_ENCRYPTED (mobj))
 		return handle_encrypted_part
