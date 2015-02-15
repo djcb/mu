@@ -545,7 +545,7 @@ handle_mime_object (MuMsg *msg, GMimeObject *mobj, GMimeObject *parent,
 		check_signature
 			(msg, GMIME_MULTIPART_SIGNED (mobj), opts);
 		return handle_multipart
-			(msg, GMIME_MULTIPART (mobj), parent, opts,
+			(msg, GMIME_MULTIPART (mobj), (GObject*)mobj, opts,
 			 index, decrypted, func, user_data);
 	} else if ((opts & MU_MSG_OPTION_DECRYPT) &&
 	           GMIME_IS_MULTIPART_ENCRYPTED (mobj))
