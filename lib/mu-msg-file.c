@@ -287,6 +287,8 @@ msg_cflags_cb (GMimeObject *parent, GMimeObject *part, MuFlags *flags)
 	if (GMIME_IS_MULTIPART_SIGNED(part))
 		*flags |= MU_FLAG_SIGNED;
 
+	/* FIXME: An encrypted part might be signed at the same time.
+	 *        In that case the signed flag is lost. */
 	if (GMIME_IS_MULTIPART_ENCRYPTED(part))
 		*flags |= MU_FLAG_ENCRYPTED;
 

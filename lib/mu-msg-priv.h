@@ -115,10 +115,9 @@ typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *promp
  *
  * @return a status report object, free with mu_msg_part_sig_status_report_destroy
  */
-MuMsgPartSigStatusReport* mu_msg_crypto_verify_part (GMimeMultipartSigned *sig,
-						     MuMsgOptions opts,
-						     GError **err)
-                                         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+void mu_msg_crypto_verify_part (GMimeMultipartSigned *sig,
+                                MuMsgOptions opts,
+                                GError **err);
 
 /**
  * decrypt the given encrypted mime multipart
