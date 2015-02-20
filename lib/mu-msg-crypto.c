@@ -374,7 +374,7 @@ mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 	GMimeCryptoContext *ctx;
 	GMimeSignatureList *sigs;
 
-	g_return_val_if_fail (GMIME_IS_MULTIPART_SIGNED(sig), NULL);
+	g_return_if_fail (GMIME_IS_MULTIPART_SIGNED(sig));
 
 	ctx = get_crypto_context (opts, NULL, NULL, err);
 	if (!ctx) {
