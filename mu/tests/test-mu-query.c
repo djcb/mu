@@ -90,7 +90,7 @@ assert_no_dups (MuMsgIter *iter)
 
 /* note: this also *moves the iter* */
 static guint
-run_and_count_matches (const char *xpath, const char *query)
+run_and_count_matches_with_query_flags (const char *xpath, const char *query, MuQueryFlags flags)
 {
 	MuQuery  *mquery;
 	MuMsgIter *iter;
@@ -131,7 +131,7 @@ run_and_count_matches (const char *xpath, const char *query)
 
 
 	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE, -1,
-			     MU_QUERY_FLAG_NONE, NULL);
+			     flags, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
@@ -153,6 +153,12 @@ run_and_count_matches (const char *xpath, const char *query)
 	g_assert_cmpuint (count1, ==, count2);
 
 	return count1;
+}
+
+static guint
+run_and_count_matches (const char *xpath, const char *query)
+{
+	return run_and_count_matches_with_query_flags (xpath, query, MU_QUERY_FLAG_NONE);
 }
 
 typedef struct  {
@@ -629,6 +635,32 @@ test_mu_query_tags_02 (void)
 	}
 }
 
+/* Tests for https://github.com/djcb/mu/issues/380
+
+   On certain platforms, something goes wrong during compilation and
+   the --related option doesn't work.
+*/
+static void
+test_mu_query_threads_compilation_error (void)
+{
+	gchar *xpath;
+
+	xpath = fill_database (MU_TESTMAILDIR);
+	g_assert (xpath != NULL);
+
+	g_assert_cmpuint (run_and_count_matches_with_query_flags
+			  (xpath, "msgid:uwsireh25.fsf@one.dot.net",
+			  MU_QUERY_FLAG_NONE),
+			  ==, 1);
+
+	g_assert_cmpuint (run_and_count_matches_with_query_flags
+			  (xpath, "msgid:uwsireh25.fsf@one.dot.net",
+			   MU_QUERY_FLAG_INCLUDE_RELATED),
+			  ==, 3);
+
+	g_free (xpath);
+}
+
 
 static void
 test_mu_query_preprocess (void)
@@ -710,6 +742,9 @@ main (int argc, char *argv[])
 			 test_mu_query_tags);
 	g_test_add_func ("/mu-query/test-mu-query-tags_02",
 			 test_mu_query_tags_02);
+
+	g_test_add_func ("/mu-query/test-mu-query-threads-compilation-error",
+			 test_mu_query_threads_compilation_error);
 
 	if (!g_test_verbose())
 	    g_log_set_handler (NULL,
