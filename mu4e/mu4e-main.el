@@ -47,6 +47,10 @@
 
     ;;
     (define-key map "U" 'mu4e-update-mail-and-index)
+    (define-key map  (kbd "C-S-u")   'mu4e-update-mail-and-index)
+    ;; for terminal users
+    (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
+
     (define-key map "S" 'mu4e-interrupt-update-mail)
     (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
 
