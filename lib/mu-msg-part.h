@@ -25,6 +25,8 @@
 #include <glib.h>
 #include <unistd.h> /* for ssize_t */
 
+#define SIG_STATUS_REPORT "sig-status-report"
+
 G_BEGIN_DECLS
 
 enum _MuMsgPartType {

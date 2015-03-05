@@ -115,7 +115,7 @@ get_gpg (GError **err)
 		 }
 		return g_strdup (envpath);
 	}
-	
+
 	if (!(path = g_find_program_in_path ("gpg")) &&
 	    !(path = g_find_program_in_path ("gpg2"))) {
 		mu_util_g_set_error (err, MU_ERROR, "gpg/gpg2 not found");
@@ -134,7 +134,7 @@ get_gpg_crypto_context (MuMsgOptions opts, GError **err)
 	cctx  = NULL;
 	if (!(gpg   = get_gpg (err)))
 		return NULL;
-	
+
 	cctx = g_mime_gpg_context_new (
 		(GMimePasswordRequestFunc)password_requester, gpg);
 	g_free (gpg);
@@ -165,7 +165,7 @@ get_crypto_context (MuMsgOptions opts, MuMsgPartPasswordFunc password_func,
 	cctx = get_gpg_crypto_context (opts, err);
 	if (!cctx)
 		return NULL;
-	
+
 	/* use gobject to pass data to the callback func */
 	cbdata = g_new0 (CallbackData, 1);
 	cbdata->pw_func   = password_func ? password_func : dummy_password_func;
@@ -355,21 +355,32 @@ mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report)
 }
 
 
-MuMsgPartSigStatusReport*
+static inline void
+tag_with_sig_status(GObject *part,
+                    MuMsgPartSigStatusReport *report)
+{
+	g_object_set_data_full
+		(part, SIG_STATUS_REPORT, report,
+		 (GDestroyNotify)mu_msg_part_sig_status_report_destroy);
+}
+
+
+void
 mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 			   GError **err)
 {
+	/* the signature status */
 	MuMsgPartSigStatusReport *report;
 	GMimeCryptoContext *ctx;
 	GMimeSignatureList *sigs;
 
-	g_return_val_if_fail (GMIME_IS_MULTIPART_SIGNED(sig), NULL);
+	g_return_if_fail (GMIME_IS_MULTIPART_SIGNED(sig));
 
 	ctx = get_crypto_context (opts, NULL, NULL, err);
 	if (!ctx) {
 		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
 				     "failed to get crypto context");
-		return NULL;
+		return;
 	}
 
 	sigs = g_mime_multipart_signed_verify (sig, ctx, err);
@@ -378,13 +389,42 @@ mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 		if (err && !*err)
 			mu_util_g_set_error (err, MU_ERROR_CRYPTO,
 					     "verification failed");
-		return NULL;
+		return;
 	}
 
 	report = get_status_report (sigs);
 	g_mime_signature_list_clear (sigs);
 
-	return report;
+	/* tag this part with the signature status check */
+	tag_with_sig_status(G_OBJECT(sig), report);
+}
+
+
+static inline void
+check_decrypt_result(GMimeMultipartEncrypted *part, GMimeDecryptResult *res,
+                     GError **err)
+{
+	GMimeSignatureList *sigs;
+	MuMsgPartSigStatusReport *report;
+
+	if (res) {
+		/* Check if the decrypted part had any embed signatures */
+		sigs = res->signatures;
+		if (sigs) {
+			report = get_status_report (sigs);
+			g_mime_signature_list_clear (sigs);
+
+			/* tag this part with the signature status check */
+			tag_with_sig_status(G_OBJECT(part), report);
+		}
+		else {
+			if (err && !*err)
+				mu_util_g_set_error (err, MU_ERROR_CRYPTO,
+				                     "verification failed");
+		}
+		g_object_unref (res);
+	}
+
 }
 
 
@@ -417,10 +457,7 @@ mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 	dec = g_mime_multipart_encrypted_decrypt (enc, ctx, &res, err);
 	g_object_unref (ctx);
 
-	/* we don't use the 3rd param 'res' * (GMimeDecryptResult),
-	 * but we must unref it. */
-	if (res)
-		g_object_unref (res);
+	check_decrypt_result(enc, res, err);
 
 	if (!dec) {
 		if (err && !*err)

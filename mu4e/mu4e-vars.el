@@ -61,7 +61,7 @@ Common values are \"offlineimap\", \"fetchmail\" and \"mbsync\",
 but you use arbitrary shell-commands. If you set it to
 \"true\" (the default), the command won't don't anything, which is
 useful if you get your mail without the need to explicitly run any
-scripts, for example when running yout own mail-server."
+scripts, for example when running your own mail-server."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
