@@ -145,7 +145,7 @@ void mu_msg_iter_set_preferred (MuMsgIter *iter, GHashTable *preferred_hash);
  *
  * @return the docid or (unsigned int)-1 in case of error
  */
-unsigned int     mu_msg_iter_get_docid         (MuMsgIter *iter);
+guint    mu_msg_iter_get_docid         (MuMsgIter *iter);
 
 
 /**
@@ -196,10 +196,10 @@ const MuMsgIterThreadInfo* mu_msg_iter_get_thread_info (MuMsgIter *iter);
  *
  * @param iter a valid MuMsgIter iterator
  *
- * @return the message-id; this only stays valid as long as the
- * current iter stays valid.
+ * @return the message-id; free with g_free().
  */
-const char* mu_msg_iter_get_msgid (MuMsgIter *iter);
+char* mu_msg_iter_get_msgid (MuMsgIter *iter)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the list of references for this messages as a NULL-terminated
@@ -210,7 +210,8 @@ const char* mu_msg_iter_get_msgid (MuMsgIter *iter);
  * @return a NULL-terminated string array. free with g_strfreev when
  * it's no longer needed.
  */
-char** mu_msg_iter_get_refs (MuMsgIter *iter);
+char** mu_msg_iter_get_refs (MuMsgIter *iter)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -218,15 +219,10 @@ char** mu_msg_iter_get_refs (MuMsgIter *iter);
  *
  * @param iter a valid MuMsgIter iterator
  *
- * @return the thread-id; this only stays valid as long as the
- * current iter stays valid.
+ * @return the thread-id; free with g_free().
  */
-const char* mu_msg_iter_get_thread_id (MuMsgIter *iter);
-
-
-
-
-
+char* mu_msg_iter_get_thread_id (MuMsgIter *iter)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /* FIXME */

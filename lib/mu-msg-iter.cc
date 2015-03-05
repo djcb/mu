@@ -359,14 +359,16 @@ mu_msg_iter_get_docid (MuMsgIter *iter)
 
 
 
-const char*
+char*
 mu_msg_iter_get_msgid (MuMsgIter *iter)
 {
 	g_return_val_if_fail (iter, NULL);
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 
 	try {
-		return iter->msgid().c_str();
+		const char *msgid (iter->msgid().c_str());
+
+		return msgid ? g_strdup (msgid) : NULL;
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
@@ -388,7 +390,7 @@ mu_msg_iter_get_refs (MuMsgIter *iter)
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
 
-const char*
+char*
 mu_msg_iter_get_thread_id (MuMsgIter *iter)
 {
 	g_return_val_if_fail (iter, NULL);
@@ -397,7 +399,8 @@ mu_msg_iter_get_thread_id (MuMsgIter *iter)
 	try {
 		const std::string thread_id (
 			iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_THREAD_ID).c_str());
-		return thread_id.empty() ? NULL : thread_id.c_str();
+		
+		return thread_id.empty() ? NULL : g_strdup (thread_id.c_str());
 
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);

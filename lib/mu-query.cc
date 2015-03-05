@@ -414,22 +414,23 @@ static GHashTable*
 get_thread_ids (MuMsgIter *iter, GHashTable **orig_set)
 {
 	GHashTable *ids;
+	
 	ids	  = g_hash_table_new_full (g_str_hash, g_str_equal,
 					   (GDestroyNotify)g_free, NULL);
 	*orig_set = g_hash_table_new_full (g_str_hash, g_str_equal,
 					   (GDestroyNotify)g_free, NULL);
 
 	while (!mu_msg_iter_is_done (iter)) {
-		const char *thread_id, *msgid;
-		unsigned docid;
+		char		*thread_id, *msgid;
+		unsigned	 docid;
 		/* record the thread id for the message */
 		if ((thread_id = mu_msg_iter_get_thread_id (iter)))
-			g_hash_table_insert (ids, g_strdup (thread_id),
+			g_hash_table_insert (ids, thread_id,
 					     GSIZE_TO_POINTER(TRUE));
 		/* record the original set */
 		docid = mu_msg_iter_get_docid(iter);
 		if (docid != 0 && (msgid = mu_msg_iter_get_msgid (iter)))
-			g_hash_table_insert (*orig_set, g_strdup (msgid),
+			g_hash_table_insert (*orig_set, msgid,
 					     GSIZE_TO_POINTER(docid));
 
 		if (!mu_msg_iter_next (iter))
