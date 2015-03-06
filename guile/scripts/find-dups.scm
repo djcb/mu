@@ -22,6 +22,7 @@ exec guile -e main -s $0 $@
 ;; INFO: find duplicate messages
 ;; INFO: options:
 ;; INFO:   --muhome=<muhome>: path to mu home dir
+;; INFO:   --delete: delete all but the first one
 
 (use-modules (mu) (mu script) (mu stats))
 (use-modules (ice-9 getopt-long) (ice-9 optargs)
@@ -29,12 +30,27 @@ exec guile -e main -s $0 $@
 
 (define (md5sum path)
   (let* ((port (open-pipe* OPEN_READ "md5sum" path))
-	  (md5 (read-delimited " " port)))
+         (md5 (read-delimited " " port)))
     (close-pipe port)
     md5))
 
+(define (remove-msg filepath delete)
+  (if delete
+      (begin
+        (format #t "\t~a ... " (basename filepath))
+        (let* ((cmd (format #f "mu remove ~a\n" filepath))
+               (port (open-pipe cmd OPEN_READ))
+               (line (read-line port)))
+          (close-pipe port)
+          (if (eof-object? line)
+              (begin
+                (format #t "ok\n")
+                (delete-file filepath))
+              (begin
+                (format #t "\nError while deleting:\n\t~a\n" line)))))
+      (format #t "would\t~a\n" (basename filepath))))
 
-(define (find-dups)
+(define (find-dups delete)
   (let ((id-table (make-hash-table 20000)))
     ;; fill the hash with <msgid-size> => <list of paths>
     (mu:for-each-message
@@ -68,9 +84,11 @@ exec guile -e main -s $0 $@
 		    (format #t "md5sum: ~a:\n" md5)
 		    (let ((num 1))
 		      (for-each
-			(lambda (path)
-			  (format #t "\t~d. ~a\n" num path)
-			  (set! num (+ 1 num)))
+                       (lambda (path)
+                         (if (equal? num 1)
+                             (format #t "\t~a\n" (basename path))
+                             (remove-msg path delete))
+                         (set! num (+ 1 num)))
 			mpaths)))))
 	      hash))))
       id-table)))
@@ -81,15 +99,18 @@ exec guile -e main -s $0 $@
   "Run some statistics function.
 Interpret argument-list ARGS (like command-line
 arguments). Possible arguments are:
-  --muhome (path to alternative mu home directory)."
+  --muhome (path to alternative mu home directory).
+  --delete (delete all but the first oen)."
   (setlocale LC_ALL "")
   (let* ((optionspec   '( (muhome     (value #t))
+                          (delete     (value #f))
 			  (help       (single-char #\h) (value #f))))
 	  (options (getopt-long args optionspec))
 	  (help (option-ref options 'help #f))
+	  (delete (option-ref options 'delete #f))
 	  (muhome (option-ref options 'muhome #f)))
     (mu:initialize muhome)
-    (find-dups)))
+    (find-dups delete)))
 
 
 ;; Local Variables:
