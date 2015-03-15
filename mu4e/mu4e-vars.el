@@ -270,8 +270,8 @@ Set to nil to not have any time-based restriction."
 ;;; function for mapping a contact onto the canonical one.
 (defun mu4e-contact-identity (contact)
   "This returns the name and the mail-address of a contact.
-It's used as an identity function for converting contacts to their
-canonical counterpart."
+It is used as the identity function for converting contacts to
+their canonical counterpart; useful as an example."
     (let ((name (plist-get contact :name))
           (mail (plist-get contact :mail)))
       (list :name name :mail mail)))
@@ -279,7 +279,7 @@ canonical counterpart."
 (defcustom mu4e-contact-rewrite-function nil
   "Function to be used for when processing contacts and rewrite
 them, for example you may use this for correcting typo's, changed
-names and adapting addresses or names to company policies. As as
+names and adapting addresses or names to company policies. As an
 example of this, see `mu4e-contact-identity'."
   :type 'function
   :group 'mu4e-compose)

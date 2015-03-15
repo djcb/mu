@@ -2497,6 +2497,7 @@ guidelines for doing so.
 * Extension points::
 * Available functions::
 * Message functions::
+* Contact functions::
 * Utility functions::
 @end menu
 
@@ -2602,6 +2603,31 @@ point. Requires the 'formail' tool from procmail."
 	 (shell-quote-argument (mu4e-message-field-at-point :path))))))
 @end lisp
 
+
+@node Contact functions
+@section Contact functions
+
+It can be useful to rewrite the contact information that @t{mu4e}
+provides, for example to convert them to some standardized format, or
+to fix spelling errors.
+
+You can do this by setting @code{mu4e-contact-rewrite-function} to
+your function, for example:
+
+@lisp
+(defun my-rewrite-function (contact)
+   (let* ((name (plist-get contact :name))
+	   (mail (plist-get contact :mail))
+	   (actual-name
+	     (cond
+	       ((string= name "jonh smiht") "John Smith")
+	       ;; other replacements
+	       (t name))))
+     (list :name actual-name :mail mail)))
+(setq mu4e-contact-rewrite-function 'my-rewrite-function)
+@end lisp
+
+This function is called for each of your contacts.
 
 @node Utility functions
 @section Utility functions
