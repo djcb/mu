@@ -1082,21 +1082,20 @@ matching messages with that mark."
       (otherwise (mu4e-error "Not supported")))))
 
 
-(defun mu4e-headers-mark-thread (&optional subthread)
-  "Mark the thread at point. If SUBTHREAD is non-nil, marking is
-limited to the message at point and its descendants."
+(defun mu4e-headers-mark-thread-using-markpair (markpair &optional subthread)
+  "Mark the thread at point using the given markpair. If SUBTHREAD is
+non-nil, marking is limited to the message at point and its
+descendants."
+  (let* ((mark (car markpair))
+	 (allowed-marks (mapcar 'car mu4e-marks)))
+    (unless (memq mark allowed-marks)
+      (mu4e-error "The mark (%s) has to be one of: %s"
+		  mark allowed-marks)))
   ;; note: the tread id is shared by all messages in a thread
-  (interactive "P")
   (let* ((msg (mu4e-message-at-point))
-	  (thread-id (mu4e~headers-get-thread-info msg 'thread-id))
-	  (path     (mu4e~headers-get-thread-info msg 'path))
-	  ;; FIXME: e.g., for refiling we should evaluate this
-	  ;; for each line separately
-	  (markpair
-	    (mu4e~mark-get-markpair
-	      (if subthread "Mark subthread with: " "Mark whole thread with: ")
-	      t))
-	  (last-marked-point))
+	 (thread-id (mu4e~headers-get-thread-info msg 'thread-id))
+	 (path	   (mu4e~headers-get-thread-info msg 'path))
+	 (last-marked-point))
     (mu4e-headers-for-each
       (lambda (mymsg)
  	(let ((my-thread-id (mu4e~headers-get-thread-info mymsg 'thread-id)))
@@ -1115,6 +1114,17 @@ limited to the message at point and its descendants."
     (when last-marked-point
       (goto-char last-marked-point)
       (mu4e-headers-next))))
+
+(defun mu4e-headers-mark-thread (&optional subthread)
+  "Like `mu4e-headers-mark-thread-using-markpair' but prompt for the markpair."
+  (interactive "P")
+  (let* (;; FIXME: e.g., for refiling we should evaluate this
+	 ;; for each line separately
+	 (markpair
+	  (mu4e~mark-get-markpair
+	   (if subthread "Mark subthread with: " "Mark whole thread with: ")
+	   t)))
+    (mu4e-headers-mark-thread-using-markpair markpair)))
 
 (defun mu4e-headers-mark-subthread ()
   "Like `mu4e-mark-thread', but only for a sub-thread."
