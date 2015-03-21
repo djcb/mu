@@ -557,6 +557,7 @@ FUNC should be a function taking two arguments:
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
       (define-key map "g" 'mu4e-view-go-to-url)
+      (define-key map "k" 'mu4e-view-save-url)
 
       (define-key map "F" 'mu4e-compose-forward)
       (define-key map "R" 'mu4e-compose-reply)
@@ -1318,38 +1319,58 @@ string."
 	  nil nil def)))))
 
 (defun mu4e-view-go-to-url (&optional multi)
-  "Offer to go to URL(s). If MULTI (prefix-argument) is nil, go to
-a single one, otherwise, offer to go to a range of URLs."
+  "Offer to go to url(s). If MULTI (prefix-argument) is nil, go to
+a single one, otherwise, offer to go to a range of urls."
+  (interactive "P")
+  (mu4e~view-handle-urls multi (lambda (url) (mu4e~view-browse-url-from-binding url))))
+
+(defun mu4e-view-save-url (&optional multi)
+  "Offer to save urls(s) to the kill-ring. If
+MULTI (prefix-argument) is nil, save a single one, otherwise, offer
+to save a range of URLs."
+  (interactive "P")
+  (mu4e~view-handle-urls multi
+    (lambda (url)
+      (kill-new url)
+      (mu4e-message "Saved %s to the kill-ring" url))))
+
+(defun mu4e~view-handle-urls (multi urlfunc)
+  "If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
+it to a range of uris."
   (interactive "P")
   (if multi
-    (mu4e-view-go-to-urls-multi)
-    (mu4e-view-go-to-urls-single)))
+    (mu4e~view-handle-multi-urls urlfunc)
+    (mu4e~view-handle-single-url urlfunc)))
 
-(defun mu4e-view-go-to-urls-single (&optional num)
-  "Go to a numbered url."
+(defun mu4e~view-handle-single-url (urlfunc &optional num)
+  "Apply URLFUNC to url NUM in the current message."
   (interactive)
-  (let* ((num (or num
-		    (mu4e~view-get-urls-num "URL to visit")))
+  (let* ((num (or num (mu4e~view-get-urls-num "URL to visit")))
          (url (gethash num mu4e~view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
-    (mu4e~view-browse-url-from-binding url)))
+    (funcall urlfunc url)))
 
-(defun mu4e-view-go-to-urls-multi ()
-  "Offer to visit multiple URLs from the current message.
-Default is to visit all URLs, [1..n], where n is the number of
-URLS.  You can type multiple values separated by space, e.g.
-  1 3-6 8
-will visit URLs 1,3,4,5,6 and 8.
+(defun mu4e~view-handle-multi-urls (urlfunc)
+  "Apply URLFUNC to a a range of urls in the current message.
+Default is to aplly it to all URLs, [1..n], where n is the number
+of urls. You can type multiple values separated by space, e.g.  1
+3-6 8 will visit urls 1,3,4,5,6 and 8.
 
-Furthermore, there is a shortcut \"a\" which means all URLS, but
-as this is the default, you may not need it."
+Furthermore, there is a shortcut \"a\" which means all urls, but as
+this is the default, you may not need it."
   (interactive)
   (let* ((linkstr (mu4e~view-get-urls-num
 		      "URL number range (or 'a' for 'all')" t))
 	  (count (hash-table-count mu4e~view-link-map))
 	  (linknums (mu4e-split-ranges-to-numbers linkstr count)))
     (dolist (num linknums)
-      (mu4e-view-go-to-urls-single num))))
+      (mu4e~view-handle-single-url urlfunc num))))
+
+(defun mu4e-view-for-each-uri (func)
+  "Execute FUNC (which receives a uri) for each uri in the current
+  message."
+  (maphash (lambda (num uri) (funcall func uri)) mu4e~view-link-map))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
