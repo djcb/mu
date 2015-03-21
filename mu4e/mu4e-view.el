@@ -1,6 +1,6 @@
 ;;; mu4e-view.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2015 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -39,6 +39,7 @@
 (require 'button)
 (require 'epa)
 (require 'epg)
+(require 'thingatpt)
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
@@ -161,11 +162,6 @@ The first letter of NAME is used as a shortcut character.")
 This is to determine what is the parent docid for embedded
 message extracted at some path.")
 
-(defvar mu4e-view-url-regexp
-  "\\(\\(https?\\://\\|mailto:\\)[-+\[:alnum:\].?_$%/+&#@!*~,:;=/()]+\\)"
-  "Regexp that matches http:/https:/mailto: URLs; match-string 1
-will contain the matched URL, if any.")
-
 (defvar mu4e~view-attach-map nil
   "A mapping of user-visible attachment number to the actual part index.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -243,7 +239,7 @@ found."
     "\n"
     (mu4e-message-body-text msg)))
 
- (defun mu4e~view-embedded-winbuf ()
+(defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
   (let* ((buf (get-buffer-create mu4e~view-embedded-buffer-name))
 	  (win (or (get-buffer-window buf) (split-window-vertically))))
@@ -688,7 +684,6 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [sepa3] '("--"))
 
-
 	(define-key menumap [query-next]
 	  '("Next query" . mu4e-headers-query-next))
 	(define-key menumap [query-prev]
@@ -796,6 +791,12 @@ If the url is mailto link, start writing an email to that address."
 		  mu4e-view-image-max-width
 		  mu4e-view-image-max-height)))))))))
 
+
+(defvar mu4e~view-beginning-of-url-regexp
+  "https?\\://\\|mailto:"
+  "Regexp that matches the beginning of http:/https:/mailto: URLs; match-string 1
+will contain the matched URL, if any.")
+
 ;; this is fairly simplistic...
 (defun mu4e~view-make-urls-clickable ()
   "Turn things that look like URLs into clickable things.
@@ -805,22 +806,24 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
       (setq mu4e~view-link-map ;; buffer local
 	(make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
-      (while (re-search-forward mu4e-view-url-regexp nil t)
-	(let* ((url (match-string 0))
-	       (ov (make-overlay (match-beginning 0) (match-end 0))))
-	  (puthash (incf num) url mu4e~view-link-map)
-	  (add-text-properties
-	   (match-beginning 0)
-	   (match-end 0)
-	    `(face mu4e-link-face
-	       mouse-face highlight
-	       mu4e-url ,url
-	       keymap ,mu4e-view-clickable-urls-keymap
-	       help-echo
-	       "[mouse-1] or [M-RET] to open the link"))
-	  (overlay-put ov 'after-string
-		       (propertize (format "[%d]" num)
-				   'face 'mu4e-url-number-face)))))))
+      (while (re-search-forward mu4e~view-beginning-of-url-regexp nil t)
+	(let ((bounds (thing-at-point-bounds-of-url-at-point)))
+	  (when bounds
+	    (let* ((url (thing-at-point-url-at-point))
+		    (ov (make-overlay (car bounds) (cdr bounds))))
+	      (puthash (incf num) url mu4e~view-link-map)
+	      (add-text-properties
+		(car bounds)
+		(cdr bounds)
+		`(face mu4e-link-face
+		   mouse-face highlight
+		   mu4e-url ,url
+		   keymap ,mu4e-view-clickable-urls-keymap
+		   help-echo
+		   "[mouse-1] or [M-RET] to open the link"))
+	      (overlay-put ov 'after-string
+		(propertize (format "[%d]" num)
+		  'face 'mu4e-url-number-face)))))))))
 
 
 (defun mu4e~view-hide-cited ()
@@ -1315,9 +1318,8 @@ string."
 	  nil nil def)))))
 
 (defun mu4e-view-go-to-url (&optional multi)
-  "Offer to go to URL(s).
-If MULTI (prefix-argument) is nil, go to a single one, otherwise,
-offer to go to a range of URLs."
+  "Offer to go to URL(s). If MULTI (prefix-argument) is nil, go to
+a single one, otherwise, offer to go to a range of URLs."
   (interactive "P")
   (if multi
     (mu4e-view-go-to-urls-multi)
