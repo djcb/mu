@@ -1158,7 +1158,7 @@ g            go to (visit) numbered URL (using `browse-url')
              (or: <mouse-1> or M-RET with point on url)
              C-u g visits multiple URLs
 k            save the numbered URL in the kill-ring.
-             C-u g saves multiple URLs
+             C-u k saves multiple URLs
 
 e            extract (save) attachment (asks for number)
              (or: <mouse-2> or S-RET with point on attachment)
@@ -2542,8 +2542,8 @@ Another useful function is
 @code{mu4e-headers-find-if} which searches for a message matching a
 certain pattern; again, see its docstring.
 
-@node Avaifmlable functions
-@section Available functions
+@node Available functions
+@section Availabe functions
 
 The whole of @t{mu4e} consists of hundreds of elisp functions. However, the
 majority of those are for @emph{internal} use only; you can recognize them
