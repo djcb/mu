@@ -482,7 +482,7 @@ update at all. After you make changes to @code{mu4e-update-interval},
 If the mail-retrieval process returns with a non-zero exit code,
 @t{mu4e} will show a warning (unless
 @code{mu4e-index-update-error-warning} is set to @code{nil}), but then
-try to index your maildirs anyway (unlesds
+try to index your maildirs anyway (unless
 @code{mu4e-index-update-error-continue} is set to @code{nil}).
 
 Reason for these defaults is that some of the mail-retrieval programs
@@ -565,7 +565,7 @@ happens with sent messages. The default is the symbol @code{sent} which, as
 mentioned, causes the message to be copied to your sent-messages folder. Other
 possible values are the symbols @code{trash} (the sent message is moved to the
 trash-folder (@code{mu4e-trash-folder}), and @code{delete} to simply discard
-the sent message altogether (so GMail can deal with it).
+the sent message altogether (so Gmail can deal with it).
 
 For Gmail-over-@abbr{IMAP}, you could add the following to your settings:
 @verbatim
@@ -574,16 +574,16 @@ For Gmail-over-@abbr{IMAP}, you could add the following to your settings:
 @end verbatim
 And that's it! We should now be ready to go.
 
-For more complex needs, @code{mu4e-sent-messages-behavior} can also be a
-a parameter-less function that returns one of the metioned symbols; see the
-built-in documentation for the variable.
+For more complex needs, @code{mu4e-sent-messages-behavior} can also be
+a a parameter-less function that returns one of the mentioned symbols;
+see the built-in documentation for the variable.
 
 @node Running mu4e
 @section Running mu4e
 
-After following the steps in this chapter, we hopely now have a working
-@t{mu4e} setup. Great! In the next chapters, we walk you through the various
-views in @t{mu4e}.
+After following the steps in this chapter, we now (hopefully!) have a
+working @t{mu4e} setup. Great! In the next chapters, we walk you
+through the various views in @t{mu4e}.
 
 For your orientation, the diagram below shows how the views relate to each
 other, and the default key-bindings to navigate between them.
@@ -728,10 +728,10 @@ if you have actually set up mail-queuing. @ref{Queuing mail}
 @node Headers view
 @chapter The headers view
 
-The headers view shows the results of a query. The topline shows the names of
-the fields. Below that, there is a line with those fields, for each matching
-message, followed by a footer line. The major-mode for the headers view is
-@code{mu4e-headers-mode}.
+The headers view shows the results of a query. The header-line shows
+the names of the fields. Below that, there is a line with those
+fields, for each matching message, followed by a footer line. The
+major-mode for the headers view is @code{mu4e-headers-mode}.
 
 @menu
 * Overview: HV Overview.
@@ -1903,7 +1903,7 @@ client. By default, maildir searches are available in the @ref{Main view},
 
 @subsection Setting up maildir shortcuts
 
-You can search for maildirs like can for any other messsage property
+You can search for maildirs like can for any other message property
 (e.g. with a query like @t{maildir:/myfolder}), but since it is so common,
 @t{mu4e} offers a shortcut for this.
 
@@ -2543,7 +2543,7 @@ Another useful function is
 certain pattern; again, see its docstring.
 
 @node Available functions
-@section Availabe functions
+@section Available functions
 
 The whole of @t{mu4e} consists of hundreds of elisp functions. However, the
 majority of those are for @emph{internal} use only; you can recognize them
@@ -3115,7 +3115,7 @@ We can run both the @t{offlineimap} and the @t{mu index} from within
 @t{mu4e}, but running it from the command line makes it a bit easier to
 troubleshoot as we are setting things up.
 
-NOte: when using encryption, you probably do @emph{not} want to
+Note: when using encryption, you probably do @emph{not} want to
 synchronize your Drafts-folder, since it contains the unencrypted
 messages. You can use OfflineIMAP's @t{folderfilter} for that.
 
@@ -3295,7 +3295,7 @@ prefix-argument (@key{C-u}), @t{mu4e} starts, but does not show the
 main-window.
 @item @emph{Some IMAP-synchronization programs such as @t{mbsync} (but not
 @t{offlineimap}) don't like it when message files do not change their names
-when they are moved to different folders. Can @t{mu4e} somehow accomodate
+when they are moved to different folders. Can @t{mu4e} somehow accommodate
 this?} Yes - you can set the variable @code{mu4e-change-filenames-when-moving}
 to non-nil.
 @item @emph{@command{offlineimap} uses IMAP's UTF-7 for encoding
