@@ -224,6 +224,7 @@ appear on disk."
       ;; hide some headers again
       (mu4e~compose-hide-headers)
       (set-buffer-modified-p nil)
+      (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
 
