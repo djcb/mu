@@ -658,6 +658,11 @@ mu4e-compose-mode."
 	 :shortname "Tags"
 	 :help "Tags for the message"
 	 :sortable nil))
+     (:thread-subject .
+       ( :name "Subject"
+	 :shortname "Subject"
+	 :help "Subject of the thread"
+	 :sortable :subject))
      (:to .
        ( :name "To"
 	 :shortname "T"

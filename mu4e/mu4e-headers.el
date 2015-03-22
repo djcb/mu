@@ -434,6 +434,19 @@ date. The formats used for date and time are
 	  (format-time-string mu4e-headers-date-format date))))))
 
 
+(defsubst mu4e~headers-thread-subject (msg)
+  "Get the subject if it is the first one in a thread; otherwise,
+return the thread-prefix without the subject-text. In other words,
+show the subject of a thread only once, similar to e.g. 'mutt'."
+  (let ((tinfo  (mu4e-message-field msg :thread))
+	 (subj (mu4e-msg-field msg :subject)))
+    (concat ;; prefix subject with a thread indicator
+      (mu4e~headers-thread-prefix tinfo)
+      (if (or (zerop (plist-get tinfo :level))
+	    (plist-get tinfo :empty-parent))
+	(truncate-string-to-width subj 600) ""))))
+
+
 (defsubst mu4e~headers-mailing-list (list)
   "Get some identifier for the mailing list."
   (if list
@@ -467,6 +480,7 @@ if provided, or at the end of the buffer otherwise."
 		  ;; work-around: emacs' display gets really slow when lines are too long;
 		  ;; so limit subject length to 600 
 		  (truncate-string-to-width val 600)))
+	      (:thread-subject (mu4e~headers-thread-subject msg))
 	      ((:maildir :path :message-id) val)
 	      ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
 	      ;; if we (ie. `user-mail-address' is the 'From', show

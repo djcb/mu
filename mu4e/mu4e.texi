@@ -779,11 +779,15 @@ the @t{:date} field instead.
 @code{mu4e-headers-date-format} and @code{mu4e-headers-time-format},
 respectively. In the example, we use @code{:human-date}, which shows when the
 time when the message was sent today, and the date otherwise.
+@item By default, the subject is shown using the @t{:subject} field;
+however, it is also possible to use @t{:thread-subject}, which shows
+the subject of a thread only once, similar to the display of the
+@t{mutt} e-mail client.
 @item The header field used for sorting is indicated by ``@t{V}'' or
-``@t{^}''@footnote{or you can use little graphical triangles; see variable
-@code{mu4e-use-fancy-chars}}, corresponding to the sort order (descending or
-ascending, respectively). You can influence this by a mouse click, or
-@key{O}. Not all fields allow sorting.
+``@t{^}''@footnote{or you can use little graphical triangles; see
+variable @code{mu4e-use-fancy-chars}}, corresponding to the sort order
+(descending or ascending, respectively). You can influence this by a
+mouse click, or @key{O}. Not all fields allow sorting.
 @item Instead of showing the @t{From:} and @t{To:} fields separately, you
 can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
 compact way to convey the most important information: it shows @t{From:}
@@ -2984,10 +2988,10 @@ customize.
 ;; (better only use that for the last field.
 ;; These are the defaults:
 (setq mu4e-headers-fields
-    '( (:date          .  25)
+    '( (:date          .  25)    ;; alternatively, use :human-date
        (:flags         .   6)
        (:from          .  22)
-       (:subject       .  nil)))
+       (:subject       .  nil))) ;; alternatively, use :thread-subject
 
 ;; program to get mail; alternatives are 'fetchmail', 'getmail'
 ;; isync or your own shellscript. called when 'U' is pressed in
