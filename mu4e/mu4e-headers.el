@@ -161,6 +161,16 @@ query have been received and are displayed."
   :group 'mu4e-headers)
 
 
+(defvar mu4e-headers-sort-field :date
+  "Field to sort the headers by.
+Field must be a symbol, one of: :date, :subject, :size, :prio,
+:from, :to.")
+
+(defvar mu4e-headers-sort-direction 'descending
+  "Direction to sort by; a symbol either `descending' (sorting
+  Z->A) or `ascending' (sorting A->Z).")
+
+
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
 (defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Draft.")
@@ -720,8 +730,8 @@ after the end of the search results."
 		(downarrow (if mu4e-use-fancy-chars " ▼" " V"))
 		;; triangle to mark the sorted-by column
 		(arrow
-		  (when (and sortable (eq (car item) mu4e~headers-sort-field))
-		    (if (eq mu4e~headers-sort-direction 'descending) downarrow uparrow)))
+		  (when (and sortable (eq (car item) mu4e-headers-sort-field))
+		    (if (eq mu4e-headers-sort-direction 'descending) downarrow uparrow)))
 		(name (concat (plist-get info :shortname) arrow))
 		(map (make-sparse-keymap)))
 	  (when sortable
@@ -943,8 +953,8 @@ the query history stack."
     (mu4e~proc-find
       expr
       mu4e-headers-show-threads
-      mu4e~headers-sort-field
-      mu4e~headers-sort-direction
+      mu4e-headers-sort-field
+      mu4e-headers-sort-direction
       maxnum
       mu4e-headers-skip-duplicates
       mu4e-headers-include-related)))
@@ -1240,15 +1250,6 @@ query (effectively, 'widen' it), with `mu4e-headers-query-prev'."
     (format "(%s) AND %s" mu4e~headers-last-query filter)))
 
 
-(defvar mu4e~headers-sort-field :date
-  "Field to sort the headers by.
-Field must be a symbol, one of: :date, :subject, :size, :prio,
-:from, :to.")
-
-(defvar mu4e~headers-sort-direction 'descending
-  "Direction to sort by; a symbol either `descending' (sorting
-  Z->A) or `ascending' (sorting A->Z).")
-
 (defun mu4e-headers-change-sorting (&optional field dir)
   "Change the sorting/threading parameters.
 FIELD is the field to sort by; DIR is a symbol: either 'ascending,
@@ -1272,18 +1273,18 @@ sortfield, change the sort-order) or nil (ask the user)."
 	      ((ascending descending) dir)
 	      ;; change the sort order if field = curfield
 	      (t
-		(if (eq sortfield mu4e~headers-sort-field)
-		  (if (eq mu4e~headers-sort-direction 'ascending)
+		(if (eq sortfield mu4e-headers-sort-field)
+		  (if (eq mu4e-headers-sort-direction 'ascending)
 		      'descending 'ascending)
 		  'descending))
 	      (mu4e-read-option "Direction: "
 		'(("ascending" . 'ascending) ("descending" . 'descending))))))
     (setq
-      mu4e~headers-sort-field sortfield
-      mu4e~headers-sort-direction dir)
+      mu4e-headers-sort-field sortfield
+      mu4e-headers-sort-direction dir)
     (mu4e-message "Sorting by %s (%s)"
       (symbol-name sortfield)
-      (symbol-name mu4e~headers-sort-direction))
+      (symbol-name mu4e-headers-sort-direction))
     (mu4e-headers-rerun-search)))
 
 (defun mu4e~headers-toggle (name togglevar dont-refresh)
