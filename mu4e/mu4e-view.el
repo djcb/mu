@@ -1322,36 +1322,40 @@ string."
   "Offer to go to url(s). If MULTI (prefix-argument) is nil, go to
 a single one, otherwise, offer to go to a range of urls."
   (interactive "P")
-  (mu4e~view-handle-urls multi (lambda (url) (mu4e~view-browse-url-from-binding url))))
+  (mu4e~view-handle-urls "URL to visit"
+    multi (lambda (url) (mu4e~view-browse-url-from-binding url))))
 
 (defun mu4e-view-save-url (&optional multi)
   "Offer to save urls(s) to the kill-ring. If
 MULTI (prefix-argument) is nil, save a single one, otherwise, offer
 to save a range of URLs."
   (interactive "P")
-  (mu4e~view-handle-urls multi
+  (mu4e~view-handle-urls "URL to save" multi
     (lambda (url)
       (kill-new url)
       (mu4e-message "Saved %s to the kill-ring" url))))
 
-(defun mu4e~view-handle-urls (multi urlfunc)
+(defun mu4e~view-handle-urls (prompt multi urlfunc)
   "If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
-it to a range of uris."
+it to a range of uris. PROMPT is the query to present to the user."
   (interactive "P")
   (if multi
-    (mu4e~view-handle-multi-urls urlfunc)
-    (mu4e~view-handle-single-url urlfunc)))
+    (mu4e~view-handle-multi-urls prompt urlfunc)
+    (mu4e~view-handle-single-url prompt urlfunc)))
 
-(defun mu4e~view-handle-single-url (urlfunc &optional num)
-  "Apply URLFUNC to url NUM in the current message."
+(defun mu4e~view-handle-single-url (prompt urlfunc &optional num)
+  "Apply URLFUNC to url NUM in the current message, prompting the
+user with PROMPT."
   (interactive)
-  (let* ((num (or num (mu4e~view-get-urls-num "URL to visit")))
+  (let* ((num (or num (mu4e~view-get-urls-num prompt)))
          (url (gethash num mu4e~view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
     (funcall urlfunc url)))
 
-(defun mu4e~view-handle-multi-urls (urlfunc)
-  "Apply URLFUNC to a a range of urls in the current message.
+(defun mu4e~view-handle-multi-urls (prompt urlfunc)
+  "Apply URLFUNC to a a range of urls in the current message,
+prompting the user with PROMPT.
+
 Default is to aplly it to all URLs, [1..n], where n is the number
 of urls. You can type multiple values separated by space, e.g.  1
 3-6 8 will visit urls 1,3,4,5,6 and 8.
@@ -1364,7 +1368,7 @@ this is the default, you may not need it."
 	  (count (hash-table-count mu4e~view-link-map))
 	  (linknums (mu4e-split-ranges-to-numbers linkstr count)))
     (dolist (num linknums)
-      (mu4e~view-handle-single-url urlfunc num))))
+      (mu4e~view-handle-single-url prompt urlfunc num))))
 
 (defun mu4e-view-for-each-uri (func)
   "Execute FUNC (which receives a uri) for each uri in the current
