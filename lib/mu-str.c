@@ -586,7 +586,9 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
 		if (g_unichar_ismark(uc))
 			continue;
 
-		uc = g_unichar_tolower (uc);
+		if (!is_range_field)
+			uc = g_unichar_tolower (uc);
+		
 		g_string_append_unichar (gstr, uc);
 	}
 

@@ -105,14 +105,19 @@ mu_date_parse_hdwmy (const char *nptr)
 
 	switch (endptr[0]) {
 	case 'h': /* hour */
+	case 'H':
 		delta = num * 60 * 60; break;
 	case 'd': /* day */
+	case 'D':
 		delta = num * 24 * 60 * 60; break;
 	case 'w': /* week */
+	case 'W':
 		delta = num * 7 * 24 * 60 * 60; break;
 	case 'm': /* month */
+	case 'M':
 		delta = num * 30 * 24 * 60 * 60; break;
 	case 'y': /* year */
+	case 'Y':
 		delta = num * 365 * 24 * 60 * 60; break;
 	default:
 		return never;
