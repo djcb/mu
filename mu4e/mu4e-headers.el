@@ -438,11 +438,11 @@ date. The formats used for date and time are
   "Get the subject if it is the first one in a thread; otherwise,
 return the thread-prefix without the subject-text. In other words,
 show the subject of a thread only once, similar to e.g. 'mutt'."
-  (let ((tinfo  (mu4e-message-field msg :thread))
+  (let* ((tinfo  (mu4e-message-field msg :thread))
 	 (subj (mu4e-msg-field msg :subject)))
     (concat ;; prefix subject with a thread indicator
       (mu4e~headers-thread-prefix tinfo)
-      (if (or (zerop (plist-get tinfo :level))
+      (if (or (not tinfo) (zerop (plist-get tinfo :level))
 	    (plist-get tinfo :empty-parent))
 	(truncate-string-to-width subj 600) ""))))
 
