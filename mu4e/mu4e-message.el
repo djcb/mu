@@ -71,7 +71,7 @@ messages requires html' text bodies."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e-message-field-raw (msg field)
   "Retrieve FIELD from message plist MSG.
-FIELD is one of :from, :to, :cc, :bcc, :subject, :data,
+FIELD is one of :from, :to, :cc, :bcc, :subject, :date,
 :message-id, :path, :maildir, :priority, :attachments,
 :references, :in-reply-to, :body-txt, :body-html
 
