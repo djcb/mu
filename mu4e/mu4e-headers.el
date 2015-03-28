@@ -985,13 +985,16 @@ of `mu4e-split-view', and return a window for the message view."
     (kill-buffer mu4e~view-buffer))
   ;; get a new view window
   (setq mu4e~headers-view-win
-    (cond
-      ((eq mu4e-split-view 'horizontal) ;; split horizontally
-	(split-window-vertically mu4e-headers-visible-lines))
-      ((eq mu4e-split-view 'vertical) ;; split vertically
-	(split-window-horizontally mu4e-headers-visible-columns))
-      (t ;; no splitting; just use the currently selected one
-	(selected-window))))
+   (let* ((new-win-func
+           (cond
+            ((eq mu4e-split-view 'horizontal) ;; split horizontally
+             '(split-window-vertically mu4e-headers-visible-lines))
+            ((eq mu4e-split-view 'vertical) ;; split vertically
+             '(split-window-horizontally mu4e-headers-visible-columns)))))
+     (cond ((with-demoted-errors "Unable to split window"
+              (eval new-win-func)))
+           (t ;; no splitting; just use the currently selected one
+            (selected-window)))))
   mu4e~headers-view-win)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
