@@ -1,4 +1,4 @@
-.TH MU FIND 1 "September 2013" "User Manuals"
+.TH MU FIND 1 "19 April 2015" "User Manuals"
 
 .SH NAME
 
@@ -307,6 +307,7 @@ search parameters; the complete list:
 	s	Message \fBs\fRubject
 	i	Message-\fBi\fRd
 	m	\fBm\fRaildir
+	v       Mailing-list Id
 .fi
 
 
@@ -324,13 +325,14 @@ following fields are supported:
 .nf
 	cc,c            Cc (carbon-copy) recipient(s)
 	bcc,h           Bcc (blind-carbon-copy) recipient(s)
-	date,d          message sent date
-	from,f          message sender
-	maildir,m       maildir
-	msgid,i         message id
-	prio,p          message priority
-	subject,s       message subject
+	date,d          Message sent date
+	from,f          Message sender
+	maildir,m       Maildir
+	msgid,i         Message id
+	prio,p          Nessage priority
+	subject,s       Message subject
 	to,t            To:-recipient(s)
+	list,v          Mailing-list id
 .fi
 
 Thus, for example, to sort messages by date, you could specify:
