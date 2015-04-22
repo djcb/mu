@@ -110,7 +110,7 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 
 	idx = mu_msg_find_index_for_cid (msg, MU_MSG_OPTION_NONE, cid);
 	if (idx < 0) {
-		g_warning ("%s: cannot find %s", __FUNCTION__, cid);
+		g_warning ("%s: cannot find %s", __func__, cid);
 		return NULL;
 	}
 
@@ -124,7 +124,7 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	rv = mu_msg_part_save (msg, MU_MSG_OPTION_USE_EXISTING,
 			       filepath, idx, &err);
 	if (!rv) {
-		g_warning ("%s: failed to save %s: %s", __FUNCTION__, filepath,
+		g_warning ("%s: failed to save %s: %s", __func__, filepath,
 			   err&&err->message?err->message:"error");
 		g_clear_error (&err);
 		g_free (filepath);
@@ -193,7 +193,7 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 	msg = self->_priv->_msg;
 	uri = webkit_network_request_get_uri (request);
 
-	/* g_warning ("%s: %s", __FUNCTION__, uri); */
+	/* g_warning ("%s: %s", __func__, uri); */
 
 	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
 		gchar *filepath;

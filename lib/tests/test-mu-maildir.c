@@ -227,7 +227,7 @@ dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 		++data->_dir_left;
 
 	if (g_test_verbose())
-		g_print ("%s: %s: %s (%u)\n", __FUNCTION__, enter ? "entering" : "leaving",
+		g_print ("%s: %s: %s (%u)\n", __func__, enter ? "entering" : "leaving",
 			 fullpath, enter ? data->_dir_entered : data->_dir_left);
 
 	return MU_OK;

@@ -77,7 +77,7 @@ public:
 		}
 
 		MU_WRITE_LOG ("%s: opened %s (batch size: %u) for read-write",
-			      __FUNCTION__, this->path(), (unsigned)batch_size());
+			      __func__, this->path(), (unsigned)batch_size());
 	}
 
 	/* create a read-only MuStore */
@@ -97,7 +97,7 @@ public:
 			g_free (errstr);
 			throw exc;
 		}
-		MU_WRITE_LOG ("%s: opened %s read-only", __FUNCTION__, this->path());
+		MU_WRITE_LOG ("%s: opened %s read-only", __func__, this->path());
 	}
 
 	void init (const char *path, const char *contacts_path,

@@ -74,7 +74,7 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 
 	idx = mu_msg_find_index_for_cid (msg, MU_MSG_OPTION_NONE, cid);
 	if (idx < 0) {
-		g_warning ("%s: cannot find %s", __FUNCTION__, cid);
+		g_warning ("%s: cannot find %s", __func__, cid);
 		return NULL;
 	}
 
@@ -90,7 +90,7 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	return filepath;
 
 errexit:
-	g_warning ("%s: failed to save %s: %s", __FUNCTION__,
+	g_warning ("%s: failed to save %s: %s", __func__,
 		   filepath,
 		   err&&err->message?err->message:"error");
 	g_clear_error (&err);

@@ -209,7 +209,7 @@ get_path (MuMsg *self)
 
 	/* shouldn't happen */
 	if (!val)
-		g_warning ("%s: cannot find path", __FUNCTION__);
+		g_warning ("%s: cannot find path", __func__);
 
 	return free_later_str (self, val);
 }

@@ -134,7 +134,7 @@ print_expr (const char* frm, ...)
 		rv = write (outfd, "\n", 1);
 	if (rv == -1) {
 		g_critical ("%s: write() failed: %s",
-			   __FUNCTION__, strerror(errno));
+			   __func__, strerror(errno));
 		/* terminate ourselves */
 		raise (SIGTERM);
 	}
@@ -976,14 +976,12 @@ cmd_find (ServerContext *ctx, GHashTable *args, GError **err)
 static MuError
 cmd_guile (ServerContext *ctx, GHashTable *args, GError **err)
 {
-	const char *script, *file;
+	const char *eval;
 
-	script = get_string_from_args (args, "script", TRUE, NULL);
-	file   = get_string_from_args (args, "file", TRUE, NULL);
-
-	if (!script == !file) {
-		print_error (MU_ERROR_IN_PARAMETERS,
-			     "guile: must provide one of 'script', 'file'");
+	eval = get_string_from_args (args, "eval", TRUE, NULL);
+	
+	if (!eval) {
+		print_error (MU_ERROR_IN_PARAMETERS, "guile: expected: 'eval'");
 		return MU_OK;
 	}
 

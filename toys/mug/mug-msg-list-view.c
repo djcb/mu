@@ -382,7 +382,7 @@ add_row (GtkTreeStore * store, MuMsg *msg, GtkTreeIter *treeiter)
 	/* 	if (!gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL(store), */
 	/* 						  &myiter, path)) */
 	/* 		g_warning ("%s: cannot get iter for %s",
-	 * 		__FUNCTION__, path); */
+	 * 		__func__, path); */
 	/* } */
 
 	gtk_tree_store_set (store, treeiter,

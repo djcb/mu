@@ -117,7 +117,7 @@ mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex, GError **err)
 {
 	g_return_val_if_fail (path, FALSE);
 
-	MU_WRITE_LOG ("%s (%s, %o, %s)", __FUNCTION__,
+	MU_WRITE_LOG ("%s (%s, %o, %s)", __func__,
 		      path, mode, noindex ? "TRUE" : "FALSE");
 
 	if (!create_maildir (path, mode, err))
@@ -238,7 +238,7 @@ process_file (const char* fullpath, const gchar* mdir,
 		g_debug ("callback said 'MU_STOP' for %s", fullpath);
 	else if (result == MU_ERROR)
 		g_warning ("%s: error in callback (%s)",
-			   __FUNCTION__, fullpath);
+			   __func__, fullpath);
 
 	return result;
 }
@@ -735,7 +735,7 @@ mu_maildir_get_maildir_from_path (const char* path)
 	if (!g_str_has_suffix (mdir, "cur") &&
 	    !g_str_has_suffix (mdir, "new")) {
 		g_warning ("%s: not a valid maildir path: %s",
-			   __FUNCTION__, path);
+			   __func__, path);
 		g_free (mdir);
 		return NULL;
 	}

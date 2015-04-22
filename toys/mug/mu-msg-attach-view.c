@@ -253,7 +253,7 @@ each_part (MuMsg *msg, MuMsgPart *part, CBData *cbdata)
 	pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type (ctype, 16);
 	if (!pixbuf) {
 		g_debug ("%s: could not get icon pixbuf for '%s'",
-			 __FUNCTION__, ctype);
+			 __func__, ctype);
 		pixbuf = mu_widget_util_get_icon_pixbuf_for_content_type
 			("application/octet-stream", 16);
 	}

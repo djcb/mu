@@ -108,7 +108,7 @@ mu_store_database_is_locked (const gchar *xpath)
 	} catch (const Xapian::DatabaseLockError& xer) {
 		return TRUE;
 	} catch (const Xapian::Error &xer) {
-		g_warning ("%s: error: %s", __FUNCTION__,
+		g_warning ("%s: error: %s", __func__,
 			   xer.get_msg().c_str());
 	}
 

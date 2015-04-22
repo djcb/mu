@@ -106,7 +106,7 @@ mu_guile_init_instance (const char *muhome)
 	return TRUE;
 
 errexit:
-	mu_guile_g_error (__FUNCTION__, err);
+	mu_guile_g_error (__func__, err);
 	g_clear_error (&err);
 	return FALSE;
 }

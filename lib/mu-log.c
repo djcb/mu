@@ -67,7 +67,7 @@ try_close (int fd)
 
 	if (close (fd) < 0)
 		g_printerr ("%s: close() of fd %d failed: %s\n",
-				    __FUNCTION__, fd, strerror(errno));
+				    __func__, fd, strerror(errno));
 }
 
 static void
@@ -190,7 +190,7 @@ mu_log_init (const char* logfile, MuLogOptions opts)
 
 	fd = open (logfile, O_WRONLY|O_CREAT|O_APPEND, 00600);
 	if (fd < 0) {
-		g_warning ("%s: open() of '%s' failed: %s",  __FUNCTION__,
+		g_warning ("%s: open() of '%s' failed: %s",  __func__,
 			   logfile, strerror(errno));
 		return FALSE;
 	}
@@ -275,7 +275,7 @@ log_write_fd (GLogLevelFlags level, const gchar *msg)
 
 err:
 	fprintf (stderr, "%s: failed to write to log: %s\n",
-		 __FUNCTION__,  strerror(errno));
+		 __func__,  strerror(errno));
 }
 
 

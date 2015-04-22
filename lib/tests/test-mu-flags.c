@@ -160,7 +160,7 @@ test_mu_flags_custom_from_str (void)
 		cust = mu_flags_custom_from_str (cases[u].str);
 		if (g_test_verbose())
 			g_print ("%s: str:%s; got:%s; expected:%s\n",
-				 __FUNCTION__, cases[u].str, cust, cases[u].expected);
+				 __func__, cases[u].str, cust, cases[u].expected);
 		g_assert_cmpstr (cust, ==, cases[u].expected);
 		g_free (cust);
 	}

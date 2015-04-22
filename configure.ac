@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2014 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ AC_SUBST(prefix)
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CC_STDC
+AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_HEADER_STDC
 

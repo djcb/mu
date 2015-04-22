@@ -245,7 +245,7 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 					  data->_user_data);
 
 	if (err) {
-		MU_WRITE_LOG ("%s: %s", __FUNCTION__, err->message);
+		MU_WRITE_LOG ("%s: %s", __func__, err->message);
 		g_clear_error(&err);
 	}
 
@@ -259,13 +259,13 @@ check_path (const char *path)
 
 	if (!g_path_is_absolute (path)) {
 		g_warning ("%s: not an absolute path: %s",
-			   __FUNCTION__, path);
+			   __func__, path);
 		return FALSE;
 	}
 
 	if (access (path, R_OK) != 0) {
 		g_warning ("%s: cannot open '%s': %s",
-			   __FUNCTION__, path, strerror (errno));
+			   __func__, path, strerror (errno));
 		return FALSE;
 	}
 

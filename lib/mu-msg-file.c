@@ -451,7 +451,7 @@ stream_to_string (GMimeStream *stream, size_t buflen)
 	/* we read everything in one go */
 	bytes = g_mime_stream_read (stream, buffer, buflen);
 	if (bytes < 0) {
-		g_warning ("%s: failed to read from stream", __FUNCTION__);
+		g_warning ("%s: failed to read from stream", __func__);
 		g_free (buffer);
 		return NULL;
 	}
@@ -695,7 +695,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 	case MU_MSG_FIELD_ID_BODY_HTML:  /* use mu_msg_get_body_html */
 	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
 		g_warning ("%s is not retrievable through: %s",
-			   mu_msg_field_name (mfid), __FUNCTION__);
+			   mu_msg_field_name (mfid), __func__);
  		return NULL;
 
 	default: g_return_val_if_reached (NULL);
