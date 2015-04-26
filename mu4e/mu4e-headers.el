@@ -563,6 +563,7 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for untrash)
 (mu4e~headers-defun-mark-for unmark)
 (mu4e~headers-defun-mark-for unread)
+(mu4e~headers-defun-mark-for action)
 
 
 ;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -636,6 +637,7 @@ after the end of the search results."
 
       (define-key map (kbd "?")            'mu4e-headers-mark-for-unread)
       (define-key map (kbd "!")            'mu4e-headers-mark-for-read)
+      (define-key map (kbd "A")            'mu4e-headers-mark-for-action)
 
       (define-key map (kbd "u")            'mu4e-headers-mark-for-unmark)
       (define-key map (kbd "+")            'mu4e-headers-mark-for-flag)
@@ -1514,13 +1516,15 @@ do nothing."
   (interactive "P")
   (mu4e-headers-split-view-grow (- (or n 1))))
 
-(defun mu4e-headers-action ()
+(defun mu4e-headers-action (&optional actionfunc)
   "Ask user what to do with message-at-point, then do it.
-The actions are specified in `mu4e-headers-actions'."
+The actions are specified in `mu4e-headers-actions'. Optionally,
+pass ACTIONFUNC, which is a function that takes a msg-plist
+argument."
   (interactive)
   (let ((msg (mu4e-message-at-point))
-	 (actionfunc (mu4e-read-option "Action: " mu4e-headers-actions)))
-    (funcall actionfunc msg)))
+	 (afunc (or actionfunc (mu4e-read-option "Action: " mu4e-headers-actions))))
+    (funcall afunc msg)))
 
 (defun mu4e-headers-mark-and-next (mark)
   "Set mark MARK on the message at point or on all messages in the

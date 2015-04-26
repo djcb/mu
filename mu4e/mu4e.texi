@@ -2050,7 +2050,7 @@ mu4e-headers-mark-subthread}, respectively
 @cartouche
 @verbatim
   mark for/as  | keybinding  | description
- --------------+-------------+--------------------------
+ --------------+-------------+------------------------------
   'something'  | *, <insert> | mark now, decide later
   delete       | D, <delete> | delete
   flag         | +           | mark as 'flagged' ('starred')
@@ -2063,6 +2063,7 @@ mu4e-headers-mark-subthread}, respectively
   unmark       | u           | remove mark at point
   unmark all   | U           | remove all marks
   unread       | ?           | marks as unread
+  action       | a           | apply some action
 @end verbatim
 @end cartouche
 
@@ -2073,14 +2074,15 @@ messages, this slows things down significantly@footnote{this uses an
 in a buffer}. For this reason, you can disable this by setting
 @code{mu4e-headers-show-target} to @code{nil}.
 
-@t{something} is a special kind of mark; you can use it to mark messages for
-'something', and then decide later what the 'something' should
-be@footnote{This kind of 'deferred marking' is similar to the facility in
-@t{midnight commander} (@url{http://www.midnight-commander.org/}) and the
-like, and uses the same key binding (@key{insert}).}  Later, you can set the
-actual mark using @kbd{M-x mu4e-mark-resolve-deferred-marks}
-(@key{#}). Alternatively, @t{mu4e} will ask you when you try to execute the
-marks (@key{x}).
+@t{something} is a special kind of mark; you can use it to mark messages
+for 'something', and then decide later what the 'something' should
+be@footnote{This kind of 'deferred marking' is similar to the facility
+in @t{dired}, @t{midnight commander}
+(@url{http://www.midnight-commander.org/}) and the like, and uses the
+same key binding (@key{insert}).}  Later, you can set the actual mark
+using @kbd{M-x mu4e-mark-resolve-deferred-marks}
+(@key{#}). Alternatively, @t{mu4e} will ask you when you try to execute
+the marks (@key{x}).
 
 @node Executing the marks
 @section Executing the marks
