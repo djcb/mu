@@ -153,7 +153,8 @@ see its docstring)."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~guess-maildir (path)
   "Guess the maildir for some path, or nil if cannot find it."
-  (let ((idx (string-match mu4e-maildir path)))
+  (let ((idx (or (string-match mu4e-maildir path)
+                 (string-match (file-truename mu4e-maildir) path))))
     (when (and idx (zerop idx))
       (replace-regexp-in-string
 	mu4e-maildir
