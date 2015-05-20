@@ -148,9 +148,9 @@ store your org-contacts."
 	  (blurb
 	    (format
 	      (concat
-		"* %s%%?\n"
+		"* %%?%s\n"
 		":PROPERTIES:\n"
-		":EMAIL:%s\n"
+		":EMAIL: %s\n"
 		":NICK:\n"
 		":BIRTHDAY:\n"
 		":END:\n\n")
