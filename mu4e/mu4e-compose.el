@@ -1,3 +1,4 @@
+;; -*-mode: emacs-lisp; tab-width: 8; indent-tabs-mode: t -*-
 ;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs
 ;;
 ;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
@@ -401,7 +402,14 @@ the appropriate flag at the message forwarded or replied-to."
     (when (and (buffer-file-name buf)
                (string= (buffer-file-name buf) path)
                message-kill-buffer-on-exit)
-      (kill-buffer buf)))
+      (if (and mu4e-compose-in-new-frame (window-system))
+	  (progn
+	    (switch-to-buffer buf)
+	    (when (and (get-buffer-window buf)
+		       (window-frame (get-buffer-window buf)))
+	      (kill-buffer buf)
+	      (delete-frame (window-frame (get-buffer-window buf))))
+	(kill-buffer buf)))))
   ;; now, try to go back to some previous buffer, in the order
   ;; view->headers->main
   (if (buffer-live-p mu4e~view-buffer)
