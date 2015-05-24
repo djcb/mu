@@ -73,6 +73,12 @@ message; if nil, only do so when sending the message."
   :type 'boolean
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-in-new-frame nil
+  "Whether to compose message in new frame instead of current
+window"
+  :type 'boolean
+  :group 'mu4e-compose)
+
 (defun mu4e~draft-user-agent-construct ()
   "Return the User-Agent string for mu4e.
 This is either the value of `mu4e-user-agent', or, if not set, a
@@ -414,7 +420,9 @@ from either `mu4e~draft-reply-construct', or
       ;; path, but we cannot really know 'drafts folder'... we make a guess
       (progn
 	(setq draft-dir (mu4e~guess-maildir (mu4e-message-field msg :path)))
-	(find-file (mu4e-message-field msg :path)))
+        (if (and mu4e-compose-in-new-frame (window-system))
+            (find-file-other-frame (mu4e-message-field msg :path))
+          (find-file (mu4e-message-field msg :path))))
       ;; case-2: creating a new message; in this case, we can determing
       ;; mu4e-get-drafts-folder
       (progn
@@ -424,7 +432,9 @@ from either `mu4e~draft-reply-construct', or
 		  mu4e-maildir
 		  draft-dir
 		  (mu4e~draft-message-filename-construct "DS"))))
-	  (find-file draft-path))
+          (if (and mu4e-compose-in-new-frame (window-system))
+              (find-file-other-frame draft-path)
+            (find-file draft-path)))
 	(insert
 	  (case compose-type
 	    (reply   (mu4e~draft-reply-construct msg))
