@@ -3452,8 +3452,8 @@ To enable this, you can use something like this in your init.el:
 @lisp
 ;; tip submitted by mu4e user cpbotha
 (add-hook 'mu4e-compose-mode-hook
-          "Outgoing mails get format=flowed."
           (defun cpb-compose-setup ()
+            "Outgoing mails get format=flowed."
             (use-hard-newlines t 'guess)))
 @end lisp
 @end enumerate
