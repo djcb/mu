@@ -1943,7 +1943,7 @@ them, you should @emph{not} quote them when used in
 @code{mu4e-maildir-shortcuts}, since @t{mu4e} does that automatically for you.
 
 The very same shortcuts are used by @kbd{M-x mu4e-mark-for-move} (default
-shortcut @key{m}); so, for example, if you want to move a message the
+shortcut @key{m}); so, for example, if you want to move a message to the
 @t{/archive} folder, you can do so by typing @kbd{ma}.
 
 @node Other search functionality
@@ -2528,7 +2528,7 @@ see @ref{Adding an action in the headers view}
 action in the message view}
 @item Add a new kind of mark for use in the headers view
 - see @ref{Adding a new kind of mark}
-@item Apply a function to to an attachment - see @ref{Adding an attachment
+@item Apply a function to an attachment - see @ref{Adding an attachment
 action}
 @item Custom function to mark certain messages - see @ref{Custom mark functions}
 @item Using various @emph{mode}-hooks, @code{mu4e-compose-pre-hook} (see
