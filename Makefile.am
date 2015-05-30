@@ -83,4 +83,5 @@ EXTRA_DIST=		\
 	HACKING		\
 	gtest.mk	\
 	NEWS		\
+	NEWS.org	\
 	autogen.sh
