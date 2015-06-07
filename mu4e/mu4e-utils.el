@@ -32,7 +32,7 @@
 (eval-when-compile (require 'org nil 'noerror))
 
 (require 'mu4e-vars)
-(require 'mu4e-about)
+(require 'mu4e-meta)
 (require 'mu4e-lists)
 (require 'doc-view)
 
@@ -1060,32 +1060,34 @@ displaying it). Do _not_ bury the current buffer, though."
     (apply 'encode-time (mu4e-parse-time-string timestr))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defconst mu4e~main-about-buffer-name "*mu4e-about*"
-  "Name for the mu4e-about buffer.")
+(define-derived-mode mu4e-org-mode org-mode "mu4e:org"
+  "Major mode for mu4e documents, derived from
+  `org-mode'.")
 
-(define-derived-mode mu4e-about-mode org-mode "mu4e:about"
-  "Major mode for the mu4e About page, derived from `org-mode'.")
+(defun mu4e-info (path)
+  "Show a buffer with the information (an org-file) at PATH."
+  (interactive)
+  (unless (file-exists-p path)
+    (mu4e-error "Cannot find %s" path))
+  (lexical-let ((curbuf (current-buffer)))
+    (find-file path)
+    (mu4e-org-mode)
+    (setq buffer-read-only t)
+    (define-key mu4e-org-mode-map (kbd "q")
+      (lambda ()
+	(interactive)
+	(bury-buffer)
+	(switch-to-buffer curbuf)))))
 
 (defun mu4e-about ()
-  "Show a buffer with the mu4e-about text."
+  "Show the mu4e 'about' page."
   (interactive)
-  (lexical-let ((oldbuf (current-buffer)))
-    (with-current-buffer
-      (get-buffer-create mu4e~main-about-buffer-name)
-      (define-key mu4e-about-mode-map (kbd "q")
-	(lambda () ;; XXX it seems unnecessarily hard to do this... 
-	  (interactive)
-	  (bury-buffer)
-	  (when (buffer-live-p oldbuf)
-	    (switch-to-buffer oldbuf))))
-      (let ((inhibit-read-only t))
-	(erase-buffer)
-	(insert mu4e-about)
-	(mu4e-about-mode)
-	(show-all))))
-  (switch-to-buffer mu4e~main-about-buffer-name)
-  (setq buffer-read-only t)
-  (goto-char (point-min)))
+  (mu4e-info (concat mu4e-doc-dir "/mu4e-about.org")))
+
+(defun mu4e-news ()
+  "Show the mu4e 'about' page."
+  (interactive)
+  (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e-refresh-message (path maildir)

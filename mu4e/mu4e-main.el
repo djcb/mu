@@ -57,6 +57,7 @@
 
     (define-key map "$" 'mu4e-show-log)
     (define-key map "A" 'mu4e-about)
+    (define-key map "N" 'mu4e-news)
     (define-key map "H" 'mu4e-display-manual)
     map)
 
@@ -146,6 +147,7 @@ clicked."
            (mu4e~main-view-queue)
          "")
 	"\n"
+	(mu4e~main-action-str "\t* [N]ews\n" 'mu4e-news)
 	(mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
 	(mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
 	(mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
