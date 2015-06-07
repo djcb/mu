@@ -85,3 +85,6 @@ EXTRA_DIST=		\
 	NEWS		\
 	NEWS.org	\
 	autogen.sh
+
+doc_DATA =			\
+	NEWS.org
