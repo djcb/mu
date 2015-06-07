@@ -57,11 +57,13 @@ link."
 
 (defcustom mu4e-get-mail-command "true"
   "Shell command to run to retrieve new mail.
-Common values are \"offlineimap\", \"fetchmail\" and \"mbsync\",
-but you use arbitrary shell-commands. If you set it to
-\"true\" (the default), the command won't don't anything, which is
-useful if you get your mail without the need to explicitly run any
-scripts, for example when running your own mail-server."
+Common values are \"offlineimap\", \"fetchmail\" or \"mbsync\", but
+arbitrary shell-commands can be used.
+
+When set to \"true\" (the default), the command simply finishes
+succesfully (running the 'true' command) without retrieving any
+mail. This can be useful when mail is already retrieved in another
+way."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
