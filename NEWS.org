@@ -2,7 +2,19 @@
 
 * NEWS (user visible changes)
 
-** Development
+** Development (unreleased)
+
+*** mu
+    
+*** mu4e
+
+    - update NEWS.org, make it viewable within mu4e
+    - make `mu4e-headers-sort-field', `mu4e-headers-sort-direction'
+      public
+    - add `:thread-subject' header field, for showing the subject for
+      a thread only once
+
+** Release 0.9.9.12
 
 *** mu
 
@@ -12,10 +24,19 @@
     - give messages without msgids fake-message-ids; this fixes the problem
       where such messages were not found in --include-related queries
     - cleanup of the query parser
+    - provide fake message-ids for messages without it; fixes #183
+    - allow showing tags in 'mu find' output
+    - fix CSV quoting
+    - 
 
 *** mu4e
 
     - update the emacs <-> backend protocol; documented in the mu-server man page
+    - show 'None' as date for messages without it (Headers View)
+    - add `mu4e-headers-found-hook', `mu4e-update-pre-hook'.
+    - split org support in org-old-mu4e.el (org <= 7.x) and org-mu4e.el
+    - org: improve template keywords
+    - rework URL handling
 
 ** Release 0.9.9.5
 
