@@ -227,6 +227,13 @@ AM_CONDITIONAL(HAVE_MAKEINFO, [test "x$have_makeinfo" = "xyes"])
 
 
 ###############################################################################
+# docdir, so we can use it in mu4e-meta.el.in
+AC_SUBST(MU_DOC_DIR, "${prefix}/share/doc/mu")
+###############################################################################
+
+
+
+###############################################################################
 # check for pmccabe
 AC_PATH_PROG([PMCCABE],[pmccabe],[no])
 AS_IF([test "x$PMCCABE" = "xno"],[
