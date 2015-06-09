@@ -400,16 +400,17 @@ the appropriate flag at the message forwarded or replied-to."
   ;; this seems a bit hamfisted...
   (dolist (buf (buffer-list))
     (when (and (buffer-file-name buf)
-               (string= (buffer-file-name buf) path)
-               message-kill-buffer-on-exit)
+               (string= (buffer-file-name buf) path))
       (if (and mu4e-compose-in-new-frame (window-system))
 	  (progn
 	    (switch-to-buffer buf)
 	    (when (and (get-buffer-window buf)
 		       (window-frame (get-buffer-window buf)))
-	      (kill-buffer buf)
 	      (delete-frame (window-frame (get-buffer-window buf)))))
-	(kill-buffer buf))))
+	)
+      (if message-kill-buffer-on-exit
+	  (kill-buffer buf))
+      ))
   ;; now, try to go back to some previous buffer, in the order
   ;; view->headers->main
   (if (buffer-live-p mu4e~view-buffer)
