@@ -13,6 +13,7 @@
       public
     - add `:thread-subject' header field, for showing the subject for
       a thread only once
+    - add some spam-handling actions to mu4e-contrib.el
 
 ** Release 0.9.9.12
 
