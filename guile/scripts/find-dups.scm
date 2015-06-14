@@ -2,7 +2,7 @@
 exec guile -e main -s $0 $@
 !#
 ;;
-;; Copyright (C) 2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2013-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -33,22 +33,7 @@ exec guile -e main -s $0 $@
          (md5 (read-delimited " " port)))
     (close-pipe port)
     md5))
-
-(define (remove-msg filepath delete)
-  (if delete
-      (begin
-        (format #t "\t~a ... " (basename filepath))
-        (let* ((port (open-pipe* OPEN_READ "mu" "remove" filepath))
-               (line (read-line port))
-               (err (status:exit-val (close-pipe port))))
-          (if (and (equal? err 0) (eof-object? line))
-              (begin
-                (format #t "ok\n")
-                (delete-file filepath))
-              (begin
-                (format #t "\nError while deleting:\n\t~a\n" line)))))
-      (format #t "would\t~a\n" (basename filepath))))
-
+ 
 (define (find-dups delete)
   (let ((id-table (make-hash-table 20000)))
     ;; fill the hash with <msgid-size> => <list of paths>
@@ -81,13 +66,15 @@ exec guile -e main -s $0 $@
 	      (lambda (md5 mpaths)
 	    	(if (> (length mpaths) 1)
 		  (begin
-		    (format #t "md5sum: ~a:\n" md5)
+		    ;;(format #t "md5sum: ~a:\n" md5)
 		    (let ((num 1))
 		      (for-each
                        (lambda (path)
                          (if (equal? num 1)
-                             (format #t "\t~a\n" (basename path))
-                             (remove-msg path delete))
+			   (format #t "~a\n" path)
+			   (begin
+			     (format #t "~a: ~a\n" (if delete "deleting" "dup") path)
+			     (if delete (delete-file path))))
                          (set! num (+ 1 num)))
 			mpaths)))))
 	      hash))))
@@ -101,7 +88,7 @@ exec guile -e main -s $0 $@
 Interpret argument-list ARGS (like command-line
 arguments). Possible arguments are:
   --muhome (path to alternative mu home directory).
-  --delete (delete all but the first one)."
+  --delete (delete all but the first one). Run mu index afterwards."
   (setlocale LC_ALL "")
   (let* ((optionspec   '( (muhome     (value #t))
                           (delete     (value #f))
