@@ -436,38 +436,40 @@ each_sig (MuMsg *msg, MuMsgPart *part, VData *vdata)
 
 
 static void
-print_verdict (VData *vdata, gboolean color)
+print_verdict (VData *vdata, gboolean color, gboolean verbose)
 {
  	g_print ("verdict: ");
 
 	switch (vdata->combined_status) {
 	case MU_MSG_PART_SIG_STATUS_UNSIGNED:
-		g_print ("%s", "no signature found");
+		g_print ("no signature found");
 		break;
 	case MU_MSG_PART_SIG_STATUS_GOOD:
 		color_maybe (MU_COLOR_GREEN);
-		g_print ("%s", "signature(s) verified");
+		g_print ("signature(s) verified");
 		break;
 	case MU_MSG_PART_SIG_STATUS_BAD:
 		color_maybe (MU_COLOR_RED);
-		g_print ("%s", "bad signature");
+		g_print ("bad signature");
 		break;
 	case MU_MSG_PART_SIG_STATUS_ERROR:
 		color_maybe (MU_COLOR_RED);
-		g_print ("%s", "verification failed");
+		g_print ("verification failed");
 		break;
 	case MU_MSG_PART_SIG_STATUS_FAIL:
 		color_maybe(MU_COLOR_RED);
-		g_print ("%s", "error in verification process");
+		g_print ("error in verification process");
 		break;
 	default: g_return_if_reached ();
 	}
 
 	color_maybe (MU_COLOR_DEFAULT);
-	if (vdata->report)
+	if (vdata->report && verbose)
 		g_print ("%s%s\n",
 			 (vdata->oneline) ? ";" : "\n",
 			 vdata->report);
+	else
+		g_print ("\n");
 }
 
 
@@ -502,7 +504,7 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 			     (MuMsgPartForeachFunc)each_sig, &vdata);
 
 	if (!opts->quiet)
-		print_verdict (&vdata, !opts->nocolor);
+		print_verdict (&vdata, !opts->nocolor, opts->verbose);
 
 	mu_msg_unref (msg);
 	g_free (vdata.report);
