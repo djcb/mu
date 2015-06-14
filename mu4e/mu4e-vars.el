@@ -105,7 +105,7 @@ mu4e."
 
 (defcustom mu4e-change-filenames-when-moving nil
   "When moving messages to different folders, normally mu/mu4e keep
-the the base filename the same (the flags-part of the filename may
+the base filename the same (the flags-part of the filename may
 change still). With this option set to non-nil, mu4e instead
 changes the filename. This latter behavior works better with some
 IMAP-synchronization programs such as mbsync; the default works
