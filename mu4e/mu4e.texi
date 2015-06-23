@@ -2685,6 +2685,7 @@ with other tools.
 * Creating org-mode links::
 * Rich-text messages with org-mode::
 * Maintaining an address-book with org-contacts::
+* Maintaining an address-book with BBDB::
 * Getting new mail notifications with Sauron::
 * Speedbar support::
 * Citations with mu-cite::
@@ -2770,6 +2771,40 @@ After this, you should be able to add contacts using @key{a o} in the headers
 view and the message view, using the @t{org-capture} mechanism. Note, the
 shortcut character @key{o} is due to the first character of
 @t{org-contact-add}.
+
+@node Maintaining an address-book with BBDB
+@section Maintaining an address-book with BBDB
+
+Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
+autocompletion}, and that is the recommended way to do this. However, it
+is also possible to manage your addresses with the current (2015-06-23)
+development release of @t{BBDB}, or releases of @t{BBDB} after
+3.1.2.@footnote{@url{http://savannah.nongnu.org/projects/bbdb/}}.
+
+To enable BBDB, add to your configuration something like:
+
+@lisp
+;; Load BBDB (Method 1)
+(require 'bbdb-loaddefs) 
+;; OR (Method 2)
+;; (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
+;; OR (Method 3)
+;; (autoload 'bbdb-insinuate-mu4e "bbdb-mu4e")
+;; (bbdb-initialize 'message 'mu4e)
+(setq bbdb-mail-user-agent (quote message-user-agent))
+(setq mu4e-view-mode-hook (quote (bbdb-mua-auto-update visual-line-mode)))
+(setq mu4e-compose-complete-addresses nil)
+(setq bbdb-mua-pop-up t)
+(setq bbdb-mua-pop-up-window-size 5)
+@end lisp
+
+@noindent
+After this, you should be able to:
+@itemize
+@item In mu4e-view mode, add the sender of the email to BBDB with @key{C-u :}
+@item Tab-complete addresses from BBDB when composing emails
+@item View the BBDB contact while viewing a message
+@end itemize
 
 @node Getting new mail notifications with Sauron
 @section Getting new mail notifications with Sauron
@@ -3393,9 +3428,11 @@ configuration.
 @item @emph{How can I sign or encrypt messages?} You can do so using @command{emacs}'
 MIME-support -- check the @t{Attachments}-menu while composing a message. Also
 see @ref{Signing and encrypting}.
-@item @emph{Can I use @t{BBDB} with @t{mu4e}?} It should be possible, but
-there is no built-in support. Instead, we recommend using @t{mu4e}'s
-@ref{Address autocompletion}.
+@item @emph{Can I use @t{BBDB} with @t{mu4e}?} Yes, with the current
+(2015-06-23) development release of BBDB
+@url{http://savannah.nongnu.org/projects/bbdb/}, or releases of BBDB
+after 3.1.2.
+@ref{Maintaining an address-book with BBDB}.
 @item @emph{After sending some messages, it seems the buffer for these
 messages stay around. How can I get rid of those?}
 @lisp
