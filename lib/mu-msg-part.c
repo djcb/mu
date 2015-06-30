@@ -780,6 +780,11 @@ mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
 		part = (GMimeObject*)g_mime_message_part_get_message
 			(GMIME_MESSAGE_PART (part));
 
+	if (!part) {
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
+			     "part %u does not exist", partidx);
+		return FALSE;
+	}
 	if (!GMIME_IS_PART(part) && !GMIME_IS_MESSAGE(part)) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "unexpected type %s for part %u",
