@@ -366,9 +366,7 @@ mu_msg_iter_get_msgid (MuMsgIter *iter)
 	g_return_val_if_fail (!mu_msg_iter_is_done(iter), NULL);
 
 	try {
-		const char *msgid (iter->msgid().c_str());
-
-		return msgid ? g_strdup (msgid) : NULL;
+		return g_strdup (iter->msgid().c_str());
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
