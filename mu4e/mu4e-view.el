@@ -175,8 +175,9 @@ messages - for example, `mu4e-org'."
   ;; not, when the policy is 'ask'. we simply assume the user said yes...  the
   ;; alternative would be to ask for each message, encrypted or not.  maybe we
   ;; need an extra policy...
-  (if-let ((view-buffer (get-buffer "*mu4e-view*")))
-			(kill-buffer view-buffer))
+  (let ((view-buffer (get-buffer "*mu4e-view*")))
+		(when view-buffer
+			(kill-buffer view-buffer)))
   (mu4e~proc-view msgid mu4e-view-show-images mu4e-decryption-policy))
 
 (defun mu4e~view-custom-field (msg field)
