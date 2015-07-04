@@ -170,12 +170,12 @@ message extracted at some path.")
   "View message with MSGID.
 This is meant for external programs wanting to show specific
 messages - for example, `mu4e-org'."
-  ;; note: hackish; if mu4e-decryption-policy is non-nil (ie., t or 'ask), we
-  ;; decrpt the message. Since here we don't know if message is encrypted or
-  ;; not, when the policy is 'ask'. we simply assume the user said yes...  the
-  ;; alternative would be to ask for each message, encrypted or not.  maybe we
-  ;; need an extra policy...
-  (let ((view-buffer (get-buffer "*mu4e-view*")))
+  ;; note: hackish; if mu4e-decryption-policy is non-nil (ie., t or
+  ;; 'ask), we decrypt the message. Since here we don't know if
+  ;; message is encrypted or not, when the policy is 'ask'. we simply
+  ;; assume the user said yes...  the alternative would be to ask for
+  ;; each message, encrypted or not.  maybe we need an extra policy...
+  (let ((view-buffer (get-buffer mu4e~view-buffer-name)))
 		(when view-buffer
 			(kill-buffer view-buffer)))
   (mu4e~proc-view msgid mu4e-view-show-images mu4e-decryption-policy))
