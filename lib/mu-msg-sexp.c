@@ -431,11 +431,7 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 
 	append_sexp_parts (gstr, msg, opts);
 	append_sexp_contacts (gstr, msg);
-
-	append_sexp_attr_list (gstr, "references",
-			       mu_msg_get_references (msg));
-	append_sexp_attr (gstr, "in-reply-to",
-			  mu_msg_get_header (msg, "In-Reply-To"));
+	
 	append_sexp_body_attr (gstr, "body-txt",
 			  mu_msg_get_body_text(msg, opts));
 	append_sexp_body_attr (gstr, "body-html",
@@ -530,6 +526,11 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 				mu_msg_prio_name(mu_msg_get_prio(msg)));
 	append_sexp_flags (gstr, msg);
 	append_sexp_tags  (gstr, msg);
+
+	append_sexp_attr_list (gstr, "references",
+			       mu_msg_get_references (msg));
+	append_sexp_attr (gstr, "in-reply-to",
+			  mu_msg_get_header (msg, "In-Reply-To"));
 
 	/* headers are retrieved from the database, views from the
 	 * message file file attr things can only be gotten from the
