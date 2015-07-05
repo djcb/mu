@@ -12,7 +12,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2012-2014 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012-2015 Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -2742,9 +2742,7 @@ org-open-at-point} elsewhere - both typically bound to @kbd{C-c C-o}.
 Some earlier versions of @t{mu4e} had support for editing e-mail
 messages using @t{org-mode}; since this never worked very well, this has
 now been deprecated; it might be replaced with something better in some
-future version .
-
-@subsection Some caveats
+future version.
 
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
