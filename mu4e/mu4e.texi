@@ -3392,7 +3392,18 @@ defined for this. Simply add to your configuration:
 Now, when viewing such a difficult message, type @kbd{aV}, and the message
 opens inside a webbrowser. You can influence the browser with
 @code{browse-url-generic-program}.
-
+@item @emph{How can read encrypted messages that I sent?}. Since you do not own the 
+recipient's key you typically cannot read those mails - so the trick is
+to encrypt outgoing mails with your key, too. This can be automated by
+adding the following snippet to your configuration (courtesy of user
+@t{kpachnis}):
+@lisp
+(require 'epg-config)
+(setq mml2015-use 'epg
+      epg-user-id "gpg_key_id"
+      mml2015-encrypt-to-self t
+      mml2015-sign-with-sender t)
+@end lisp
 @end enumerate
 
 @node Writing messages
@@ -3401,9 +3412,9 @@ opens inside a webbrowser. You can influence the browser with
 @enumerate
 @item @emph{What's the deal with replies to messages I wrote myself?} Like
 many other mail-clients, @t{mu4e} treats replies to messages you wrote
-yourself as special -- these message keep the same @t{To:} and @t{Cc:} as the
-original message. This is to ease the common case of following up to a message
-you wrote earlier.
+yourself as special -- these message keep the same @t{To:} and @t{Cc:}
+as the original message. This is to ease the common case of following up
+to a message you wrote earlier.
 @item @emph{How can I automatically set the @t{From:}-address for a
 reply-message, based on some field in the original?} See @ref{Compose hooks}.
 @item @emph{And what about customizable folders for draft messages, sent
