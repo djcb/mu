@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "mup 3"
-.TH mup 3 "2015-06-29" "perl v5.20.2" "User Contributed Perl Documentation"
+.TH mup 3 "2015-07-10" "perl v5.20.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -147,8 +147,8 @@ mup \- perl interface to mu
 \&
 \&  my $mu = mup\->new();
 \&
-\&  my @results = $mu\->find({ subject => \*(Aqsomething\*(Aq});
-\&  print scalar(@results)." results for subject:something\en";
+\&  my $results = $mu\->find({ subject => \*(Aqsomething\*(Aq});
+\&  print "$results\->{found} results for subject:something\en";
 .Ve
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"

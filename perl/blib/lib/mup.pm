@@ -12,8 +12,8 @@ mup - perl interface to mu
 
   my $mu = mup->new();
 
-  my @results = $mu->find({ subject => 'something'});
-  print scalar(@results)." results for subject:something\n";
+  my $results = $mu->find({ subject => 'something'});
+  print "$results->{found} results for subject:something\n";
 
 =head1 DESCRIPTION
 
@@ -200,6 +200,11 @@ sub _init {
     if ($ENV{'MUP_MU_HOME'}) {
         $self->mu_home($ENV{'MUP_MU_HOME'});
         warn("mup: set --muhome ".$self->mu_home."\n") if $self->verbose;
+    }
+    # Same for MUP_MU_BIN
+    if ($ENV{'MUP_MU_BIN'}) {
+        $self->mu_bin($ENV{'MUP_MU_BIN'});
+        warn("mup: set mu_bin to ".$self->mu_bin."\n") if $self->verbose;
     }
     my @cmdargs = ($self->mu_bin,$self->mu_server_cmd);
     push(@cmdargs, "--muhome=".$self->mu_home) if $self->mu_home;

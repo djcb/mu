@@ -19,6 +19,16 @@ use File::Path qw(make_path remove_tree);
 
 # ensure a testworthy Maildir is available and pointed at by $ENV{MAILDIR}
 
+sub setup_testing_envars {
+    if (-x '../../mu/mu') {
+        $ENV{'MUP_MU_BIN'} = '../../mu/mu';
+    }
+    if (-x '../mu/mu') {
+        $ENV{'MUP_MU_BIN'} = '../mu/mu';
+    }
+    warn("MUP_MU_BIN is $ENV{MUP_MU_BIN}\n") if $ENV{'TEST_VERBOSE'};
+}
+
 sub setup_testing_maildir {
     my $verbose = $ENV{'TEST_VERBOSE'};
     if ($ENV{'MAILDIR'}) {
@@ -52,9 +62,16 @@ sub setup_testing_maildir {
         $ENV{'MUP_MU_HOME'} = $muhome;
         warn("seting_testing_maildir: $muhome\n") if $verbose;
         my $mu_opts = $verbose ? '-d --log-stderr ' : '';
-        my $cmd = qq{mu index ${mu_opts}--muhome=${muhome}};
+        my $bin = $ENV{'MUP_MU_BIN'} || 'mu';
+        my $cmd = qq{$bin index ${mu_opts}--muhome=${muhome}};
+        warn("indexing: $cmd\n") if $verbose;
         system($cmd) == 0 or die("setup_testing_maildir: $cmd: $!");
     }
+}
+
+sub setup_testing_env {
+    setup_testing_envars;
+    setup_testing_maildir;
 }
 
 END {
@@ -63,7 +80,7 @@ END {
             !$ENV{'MUP_TEST_KEEP_MAILDIR'});
 }
 
-setup_testing_maildir unless $ENV{'MUP_TEST_NO_SETUP'};
+setup_testing_env unless $ENV{'MUP_TEST_NO_SETUP'};
 
 1;
 
