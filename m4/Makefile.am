@@ -21,6 +21,5 @@ EXTRA_DIST = 		\
 	ltoptions.m4	\
 	ltversion.m4  	\
 	lt~obsolete.m4	\
-	ltsugar.m4
-
-
+	ltsugar.m4	\
+	perlmod.m4
