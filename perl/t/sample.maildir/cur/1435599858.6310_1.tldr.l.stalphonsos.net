@@ -1,0 +1,200 @@
+Return-Path: <owner-tech+M42749@openbsd.org>
+Delivered-To: attila@stalphonsos.com
+Received: (qmail 37697 invoked from network); 28 Jun 2015 22:20:10 -0000
+Received: from unknown (HELO shear.ucar.edu) (192.43.244.163)
+  by x.stalphonsos.net with SMTP; 28 Jun 2015 22:20:10 -0000
+Received: from openbsd.org (localhost [127.0.0.1])
+	by shear.ucar.edu (8.14.7/8.14.7) with ESMTP id t5SMJRQT000203;
+	Sun, 28 Jun 2015 16:19:27 -0600 (MDT)
+Received: from mail-pa0-f51.google.com (mail-pa0-f51.google.com [209.85.220.51])
+	by shear.ucar.edu (8.14.7/8.14.7) with ESMTP id t5SMJGwf030092
+	(version=TLSv1/SSLv3 cipher=DHE-DSS-AES128-SHA bits=128 verify=FAIL)
+	for <tech@openbsd.org>; Sun, 28 Jun 2015 16:19:17 -0600 (MDT)
+Received: by padev16 with SMTP id ev16so94981036pad.0
+        for <tech@openbsd.org>; Sun, 28 Jun 2015 15:19:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=4q12s9+CtyHZEDQlC5XvVo3VnQHQCA5Vt6JwqbU9Adc=;
+        b=UVS7CgpSvUmIQMP7SOv8c1FO5cj2765fmTE2FwHVGkUahh/tuqT1uQGa7tfG7/1vbL
+         y4FPwhokPb+Q8mLKI3qIEfdgmQzhq1QcT6kkvNrRe7UuybMQhDJKwZuPAd7KcaS1kigX
+         GMS8P3DxB3PMoNOKoYUomd5X4Xm4MT/68ifl+4g1WiWD5BkLdqG5G8MaFo3B6W0E+h+1
+         XNNK2B4BSJF28WswgAXzEshV4Sr/Uju0a5I/1sh3QYkZ3XCZRJeQpd14je0O5Z9ivj3P
+         3EW+CQZmiStJ+A9CCsMhGUoMFhJFcbZ6LDd8bJKkcsGPZ85zmFfcUubODSA/lRtkW6Gi
+         RtkA==
+X-Received: by 10.70.48.68 with SMTP id j4mr25375231pdn.111.1435529956338;
+        Sun, 28 Jun 2015 15:19:16 -0700 (PDT)
+Received: from the-guenther.attlocal.net (76-253-1-113.lightspeed.sntcca.sbcglobal.net. [76.253.1.113])
+        by mx.google.com with ESMTPSA id v8sm40045232pdm.89.2015.06.28.15.19.14
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 28 Jun 2015 15:19:15 -0700 (PDT)
+Date: Sun, 28 Jun 2015 15:19:13 -0700
+From: Philip Guenther <guenther@gmail.com>
+X-X-Sender: guenther@morgaine.local
+To: Mark Kettenis <mark.kettenis@xs4all.nl>
+cc: tech@openbsd.org
+Subject: Re: C-state FFH on x41
+In-Reply-To: <201506281537.t5SFbZs6031688@glazunov.sibelius.xs4all.nl>
+Message-ID: <alpine.BSO.2.20.1506281513280.27877@morgaine.local>
+References: <201506281537.t5SFbZs6031688@glazunov.sibelius.xs4all.nl>
+User-Agent: Alpine 2.20 (BSO 67 2015-01-07)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+List-Help: <mailto:majordomo@openbsd.org?body=help>
+List-ID: <tech.openbsd.org>
+List-Owner: <mailto:owner-tech@openbsd.org>
+List-Post: <mailto:tech@openbsd.org>
+List-Subscribe: <mailto:majordomo@openbsd.org?body=sub%20tech>
+List-Unsubscribe: <mailto:majordomo@openbsd.org?body=unsub%20tech>
+X-Loop: tech@openbsd.org
+Precedence: list
+Sender: owner-tech@openbsd.org
+
+On Sun, 28 Jun 2015, Mark Kettenis wrote:
+> I have an x41 that prints the following in dmesg:
+> 
+> acpicpu0 at acpi0
+> C1: unknown FFH vendor 8: !C3(250@85 io@0x1015), C2(500@1 io@0x1014), PSS
+> 
+> The relevant AML indead has that strange value in the "Bit Width" field:
+...
+> Obviously this ACPI BIOS is buggy and perhaps we should indeed
+> complain.  But we also should include a C1 HALT state in the list
+> regardless, and I don't think we currently do that.
+
+Give the diff below a try.  It inserts a fallback "C1-via-halt" state 
+before parsing the _CST objects, overwriting it if a valid _CST C1 state 
+is found.  If no valid _CST C1 was found, the fallback should show in 
+dmesg as "C1(@1 halt!)".
+
+As a side-benefit, this renders a couple paranoia checks obsolete in 
+acpicpu_idle().
+
+
+Index: dev/acpi/acpicpu.c
+===================================================================
+RCS file: /data/src/openbsd/src/sys/dev/acpi/acpicpu.c,v
+retrieving revision 1.64
+diff -u -p -r1.64 acpicpu.c
+--- dev/acpi/acpicpu.c	13 Jun 2015 21:41:42 -0000	1.64
++++ dev/acpi/acpicpu.c	28 Jun 2015 21:55:51 -0000
+@@ -77,7 +77,7 @@ void	acpicpu_setperf_ppc_change(struct a
+ /* flags on Intel's FFH mwait method */
+ #define CST_FLAG_MWAIT_HW_COORD		0x1
+ #define CST_FLAG_MWAIT_BM_AVOIDANCE	0x2
+-#define CST_FLAG_UP_ONLY		0x4000	/* ignore if MP */
++#define CST_FLAG_FALLBACK		0x4000	/* fallback for broken _CST */
+ #define CST_FLAG_SKIP			0x8000	/* state is worse choice */
+ 
+ #define FLAGS_MWAIT_ONLY	0x02
+@@ -339,7 +339,13 @@ acpicpu_add_cstate(struct acpicpu_softc 
+ 	dnprintf(10," C%d: latency:.%4x power:%.4x addr:%.16llx\n",
+ 	    state, latency, power, address);
+ 
+-	cx = malloc(sizeof(*cx), M_DEVBUF, M_WAITOK);
++	/* add a new state, or overwrite the fallback C1 state? */
++	if (state != ACPI_STATE_C1 ||
++	    (cx = SLIST_FIRST(&sc->sc_cstates)) == NULL ||
++	    (cx->flags & CST_FLAG_FALLBACK) == 0) {
++		cx = malloc(sizeof(*cx), M_DEVBUF, M_WAITOK);
++		SLIST_INSERT_HEAD(&sc->sc_cstates, cx, link);
++	}
+ 
+ 	cx->state = state;
+ 	cx->method = method;
+@@ -347,8 +353,6 @@ acpicpu_add_cstate(struct acpicpu_softc 
+ 	cx->latency = latency;
+ 	cx->power = power;
+ 	cx->address = address;
+-
+-	SLIST_INSERT_HEAD(&sc->sc_cstates, cx, link);
+ }
+ 
+ /* Found a _CST object, add new cstate for each entry */
+@@ -489,9 +493,18 @@ acpicpu_getcst(struct acpicpu_softc *sc)
+ 	if (aml_evalname(sc->sc_acpi, sc->sc_devnode, "_CST", 0, NULL, &res))
+ 		return (1);
+ 
++	/* provide a fallback C1-via-halt in case _CST's C1 is bogus */
++	acpicpu_add_cstate(sc, ACPI_STATE_C1, CST_METH_HALT,
++	    CST_FLAG_FALLBACK, 1, -1, 0);
++
+ 	aml_foreachpkg(&res, 1, acpicpu_add_cstatepkg, sc);
+ 	aml_freevalue(&res);
+ 
++	/* only have fallback state?  then no _CST objects were understood */
++	cx = SLIST_FIRST(&sc->sc_cstates);
++	if (cx->flags & CST_FLAG_FALLBACK)
++		return (1);
++
+ 	/*
+ 	 * Scan the list for states that are neither lower power nor
+ 	 * lower latency than the next state; mark them to be skipped.
+@@ -500,19 +513,15 @@ acpicpu_getcst(struct acpicpu_softc *sc)
+ 	 * Also keep track if all the states we'll use use mwait.
+ 	 */
+ 	use_nonmwait = 0;
+-	if ((cx = SLIST_FIRST(&sc->sc_cstates)) == NULL)
+-		use_nonmwait = 1;
+-	else {
+-		while ((next_cx = SLIST_NEXT(cx, link)) != NULL) {
+-			if ((cx->power >= next_cx->power &&
+-			    cx->latency >= next_cx->latency) ||
+-			    (cx->state > 1 &&
+-			    (sc->sc_ci->ci_feature_tpmflags & TPM_ARAT) == 0))
+-				cx->flags |= CST_FLAG_SKIP;
+-			else if (cx->method != CST_METH_MWAIT)
+-				use_nonmwait = 1;
+-			cx = next_cx;
+-		}
++	while ((next_cx = SLIST_NEXT(cx, link)) != NULL) {
++		if ((cx->power >= next_cx->power &&
++		    cx->latency >= next_cx->latency) ||
++		    (cx->state > 1 &&
++		    (sc->sc_ci->ci_feature_tpmflags & TPM_ARAT) == 0))
++			cx->flags |= CST_FLAG_SKIP;
++		else if (cx->method != CST_METH_MWAIT)
++			use_nonmwait = 1;
++		cx = next_cx;
+ 	}
+ 	if (use_nonmwait)
+ 		sc->sc_flags &= ~FLAGS_MWAIT_ONLY;
+@@ -581,8 +590,12 @@ acpicpu_print_one_cst(struct acpi_cstate
+ 	if (cx->power != -1)
+ 		printf("%d", cx->power);
+ 	printf("@%d%s", cx->latency, meth);
+-	if (cx->flags & ~CST_FLAG_SKIP)
+-		printf(".%x", (cx->flags & ~CST_FLAG_SKIP));
++	if (cx->flags & ~CST_FLAG_SKIP) {
++		if (cx->flags & CST_FLAG_FALLBACK)
++			printf("!");
++		else
++			printf(".%x", (cx->flags & ~CST_FLAG_SKIP));
++	}
+ 	if (show_addr)
+ 		printf("@0x%llx", cx->address);
+ 	printf(")");
+@@ -1114,12 +1127,6 @@ acpicpu_idle(void)
+ 	 * states marked skippable
+ 	 */
+ 	best = cx = SLIST_FIRST(&sc->sc_cstates);
+-	if (cx == NULL) {
+-halt:
+-		__asm volatile("sti; hlt");
+-		return;
+-	}
+-
+ 	while ((cx->flags & CST_FLAG_SKIP) ||
+ 	    cx->latency * 3 > sc->sc_prev_sleep) {
+ 		if ((cx = SLIST_NEXT(cx, link)) == NULL)
+@@ -1140,8 +1147,6 @@ halt:
+ 			    (cx->flags & CST_FLAG_MWAIT_BM_AVOIDANCE) == 0)
+ 				break;
+ 		}
+-		if (cx == NULL)
+-			goto halt;
+ 		best = cx;
+ 	}
+ 
+

@@ -1,0 +1,23 @@
+---
+abstract: 'perl interface to mu'
+author:
+  - 'attila <attila@stalphonsos.com>'
+build_requires:
+  ExtUtils::MakeMaker: '0'
+configure_requires:
+  ExtUtils::MakeMaker: '0'
+dynamic_config: 0
+generated_by: 'ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.150001'
+license: unknown
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: mup
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  Data::SExpression: '0'
+  Moose: '0'
+version: v0.1.0
