@@ -452,7 +452,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-header-key-face
-  '((t :inherit message-header-name-face :bold t))
+  '((t :inherit message-header-name :bold t))
   "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\")."
   :group 'mu4e-faces)
 
@@ -477,7 +477,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-highlight-face
-  '((t :inherit font-lock-pseudo-keyword-face :bold t))
+  '((t :inherit higlight))
   "Face for highlighting things."
   :group 'mu4e-faces)
 
@@ -497,7 +497,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-url-number-face
-  '((t :inherit font-lock-reference-face :bold t))
+  '((t :inherit font-lock-constant-face :bold t))
   "Face for the number tags for URLs."
   :group 'mu4e-faces)
 
