@@ -2779,7 +2779,9 @@ is also possible to manage your addresses with the current (2015-06-23)
 development release of @t{BBDB}, or releases of @t{BBDB} after
 3.1.2.@footnote{@url{http://savannah.nongnu.org/projects/bbdb/}}.
 
-To enable BBDB, add to your configuration something like:
+To enable BBDB, add to your @file{~/.emacs} (or its moral equivalent,
+such as @file{~/.emacs.d/init.el}) the following @emph{after} the
+@code{(require 'mu4e)} line:
 
 @lisp
 ;; Load BBDB (Method 1)
