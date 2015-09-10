@@ -353,7 +353,8 @@ into a string."
   "Calculate the thread prefix based on thread info THREAD."
   (when thread
     (let ((get-prefix
-	    (lambda (cell)  (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
+           (lambda (cell)  (if (or (eq mu4e-use-fancy-chars t)
+                                   (eq mu4e-use-fancy-chars 'threads)) (cdr cell) (car cell)))))
       (concat
 	(make-string (* (if (plist-get thread :empty-parent) 0 1)
 		 (plist-get thread :level)) ?\s)
@@ -378,7 +379,9 @@ internally, the Maildir spec determines what the flags look like,
 while our display may be different)."
   (let ((str "")
         (get-prefix
-         (lambda (cell) (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
+         (lambda (cell)  (if (or (eq mu4e-use-fancy-chars t)
+                                 (eq mu4e-use-fancy-chars 'marks)) (cdr cell) (car cell)))))
+
     (dolist (flag mu4e-headers-visible-flags)
       (when (member flag flags)
         (setq str
