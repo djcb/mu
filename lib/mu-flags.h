@@ -137,7 +137,7 @@ MuFlags mu_flags_from_str (const char *str, MuFlagType types,
  * @return concatenation of all non-standard flags, as a string; free
  * with g_free when done. If there are no such flags, return NULL.
  */
-char*  mu_flags_custom_from_str (const char *str) G_GNUC_WARN_UNUSED_RESULT;
+char* mu_flags_custom_from_str (const char *str) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**

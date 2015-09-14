@@ -44,7 +44,7 @@ _MuStore::begin_transaction ()
 {
 	try {
 		db_writable()->begin_transaction();
-			in_transaction (true);
+		in_transaction (true);
 	} MU_XAPIAN_CATCH_BLOCK;
 }
 
@@ -371,8 +371,8 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 
 
 static void
-add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
-			       MuMsgFieldId mfid)
+add_terms_values_string_list (Xapian::Document& doc, MuMsg *msg,
+			      MuMsgFieldId mfid)
 {
 	const GSList *lst;
 
@@ -389,7 +389,7 @@ add_terms_values_string_list  (Xapian::Document& doc, MuMsg *msg,
 	}
 
 	if (mu_msg_field_xapian_term (mfid)) {
-		for  (; lst; lst = g_slist_next ((GSList*)lst))
+		for (; lst; lst = g_slist_next ((GSList*)lst))
 			add_terms_values_str (doc, (const gchar*)lst->data,
 					      mfid);
 	}
@@ -516,7 +516,7 @@ typedef struct _MsgDoc		 MsgDoc;
 
 
 static void
-add_terms_values_default  (MuMsgFieldId mfid, MsgDoc *msgdoc)
+add_terms_values_default (MuMsgFieldId mfid, MsgDoc *msgdoc)
 {
 	if (mu_msg_field_is_numeric (mfid))
 		add_terms_values_number
@@ -647,7 +647,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		char *flat;
 		flat = mu_str_process_term (contact->address);
 		msgdoc->_doc->add_term
-			(std::string  (pfx + flat, 0, MuStore::MAX_TERM_LENGTH));
+			(std::string (pfx + flat, 0, MuStore::MAX_TERM_LENGTH));
 		g_free (flat);
 		add_address_subfields (*msgdoc->_doc, contact->address, pfx);
 

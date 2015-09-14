@@ -115,7 +115,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_TIME_T,
 		"date", 'd', 'D',
 		FLAG_GMIME | FLAG_XAPIAN_TERM | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_BOOLEAN  | FLAG_RANGE_FIELD
+		FLAG_XAPIAN_BOOLEAN | FLAG_RANGE_FIELD
 	},
 
 	{
@@ -224,7 +224,7 @@ static const MuMsgField FIELD_DATA[] = {
 		MU_MSG_FIELD_TYPE_STRING,
 		"subject", 's', 'S',
 		FLAG_GMIME | FLAG_XAPIAN_INDEX | FLAG_XAPIAN_VALUE |
-		FLAG_XAPIAN_TERM  | FLAG_PREPROCESS
+		FLAG_XAPIAN_TERM | FLAG_PREPROCESS
 	},
 
 	{
@@ -337,21 +337,21 @@ gboolean
 mu_msg_field_xapian_index  (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_XAPIAN_INDEX  ? TRUE: FALSE;
+	return mu_msg_field(id)->_flags & FLAG_XAPIAN_INDEX ? TRUE: FALSE;
 }
 
 gboolean
 mu_msg_field_xapian_value (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_XAPIAN_VALUE  ? TRUE: FALSE;
+	return mu_msg_field(id)->_flags & FLAG_XAPIAN_VALUE ? TRUE: FALSE;
 }
 
 gboolean
 mu_msg_field_xapian_term (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_XAPIAN_TERM  ? TRUE: FALSE;
+	return mu_msg_field(id)->_flags & FLAG_XAPIAN_TERM ? TRUE: FALSE;
 }
 
 
@@ -359,7 +359,7 @@ gboolean
 mu_msg_field_is_range_field (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_RANGE_FIELD  ? TRUE: FALSE;
+	return mu_msg_field(id)->_flags & FLAG_RANGE_FIELD ? TRUE: FALSE;
 }
 
 
@@ -368,7 +368,7 @@ gboolean
 mu_msg_field_uses_boolean_prefix (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_XAPIAN_BOOLEAN?TRUE:FALSE;
+	return mu_msg_field(id)->_flags & FLAG_XAPIAN_BOOLEAN ? TRUE:FALSE;
 }
 
 
@@ -393,7 +393,7 @@ gboolean
 mu_msg_field_preprocess (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_PREPROCESS  ? TRUE: FALSE;
+	return mu_msg_field(id)->_flags & FLAG_PREPROCESS ? TRUE: FALSE;
 }
 
 
