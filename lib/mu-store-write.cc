@@ -302,7 +302,6 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 		doc.add_term (prio_val((MuMsgPrio)num));
 }
 
-/* for string and string-list */
 static void
 add_terms_values_msgid (Xapian::Document& doc, MuMsg *msg)
 {
