@@ -2,18 +2,79 @@
 
 * NEWS (user visible changes)
 
-** Development (unreleased)
+** 0.9.9.13 (unreleased)
 
-*** mu
+*** contributors
+
+    Attila, Charles-H.Schulz, David C Sterrat, Dirk-Jan C. Binnema,
+    Florian Lindner, Foivos S. Zakkak, Gour, KOMURA Takaaki, Pan Jie,
+    Phil Hagelberg, thdox, Tiago Saboga, Titus von der Malsburg
+
+    (and of course all people who reported issues, provided
+    suggestions etc.)
     
-*** mu4e
+*** mu/mu4e/guile
 
-    - update NEWS.org, make it viewable within mu4e
+    - NEWS (this file) is now visible from within mu4e – "N" in the main-menu.
+      
     - make `mu4e-headers-sort-field', `mu4e-headers-sort-direction'
-      public
-    - add `:thread-subject' header field, for showing the subject for
-      a thread only once
+      public (that, is change the prefix from mu4e~ to mu4e-), so
+      users can manipulate them
+      
+    - make it possible the 'fancy' (unicode) characters separately for
+      headers and marks (see the variable `mu4e-use-fancy-chars'.)
+      
+    - allow for composing in a separate frame (see
+      `mu4e-compose-in-new-frame')
+      
+    - add the `:thread-subject' header field, for showing the subject
+      for a thread only once. So, instead of (from the manual):
+      
+      #+BEGIN_EXAMPLE
+06:32        Nu    To Edmund Dantès    GstDev       + Re: Gstreamer-V4L...
+15:08        Nu    Abbé Busoni         GstDev         + Re: Gstreamer-V...
+18:20        Nu    Pierre Morrel       GstDev           \ Re: Gstreamer...
+2013-03-18   S     Jacopo              EmacsUsr   + emacs server on win...
+2013-03-18   S     Mercédès            EmacsUsr     \ RE: emacs server ...
+2013-03-18   S     Beachamp            EmacsUsr   + Re: Copying a whole...
+22:07        Nu    Albert de Moncerf   EmacsUsr     \ Re: Copying a who...
+2013-03-18   S     Gaspard Caderousse  GstDev     | Issue with GESSimpl...
+2013-03-18   Ss    Baron Danglars      GuileUsr   | Guile-SDL 0.4.2 ava...
+End of search results
+      #+END_EXAMPLE
+      
+      the headers list would now look something like:
+      #+BEGIN_EXAMPLE
+10:26      ⭑☐   Nicolas Goaziou      Orgmode  /bulk    ◼ Re: [O] 2 issue with Include function 
+11:00      ⭑☐   Leonard Randall      Orgmode  /bulk     ┗▶  
+10:55      ⭑☐   Guillermo Rodrigu... GstDev   /bulk    ◼ Re: stop pipeline into a callback funtion. 
+12:04      ⭑☐   Enrique Ocaña Gon... GstDev   /bulk     ┗▶  
+11:27      ⭑☐   Tim Müller           GstDev   /bulk     ◼  
+09:34      ⭑☐   Robert Klein         Orgmode  /bulk    ◼ Re: [O] Agenda Tag filtering - has the behaviour changed? 
+      #+END_EXAMPLE  
+      
+      This is a feature known from e.g. `mutt' and `gnus` and many
+      other clients, and can be enabled by customizing
+      `mu4e-headers-fields' (replacing `:subject' with `:thread-subject')
+      
+      It's not the default yet, but may become so in the future.
+     
     - add some spam-handling actions to mu4e-contrib.el
+      
+    - mu4e now targets org 8.x, which support for previous versions
+      relegated to `org-old-mu4e.el`. Some of the new org-features are
+      improved capture templates.
+      
+    - updates to the documentation, in particular about using BBDB.
+           
+    - improved URL-handling (use emacs built-in functionality)
+    
+    - many bug fixes, including some crash fixes on BSD
+      
+*** guile
+
+    – add --delete option to the find-dups scripts, to automatically
+    delete them. Use with care!
 
 ** Release 0.9.9.12
 
