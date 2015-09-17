@@ -140,8 +140,11 @@ personal message. This is used when indexing messages."
   'mu4e-user-mail-address-list "0.9.9.x")
 
 (defcustom mu4e-use-fancy-chars nil
-  "Whether to use fancy (non-ascii) characters."
-  :type 'boolean
+  "Whether to use fancy (non-ascii) characters for marks and/or threads."
+  :type '(choice (const :tag "Do not use fancy chars" nil)
+                 (const :tag "Use fancy chars everywhere" t)
+                 (const :tag "Use fancy chars only for threads" threads)
+                 (const :tag "Use fancy chars only for marks" marks))
   :group 'mu4e)
 
 (defcustom mu4e-date-format-long "%c"
