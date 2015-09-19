@@ -735,46 +735,49 @@ after the end of the search results."
 
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
-  (cons
-    (make-string
-      (+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
-    (mapcar
-      (lambda (item)
-	(let* ((field (car item)) (width (cdr item))
-		(info (cdr (assoc field
-			     (append mu4e-header-info mu4e-header-info-custom))))
-		(sortable (plist-get info :sortable))
-		(help (plist-get info :help))
-		(uparrow   (if mu4e-use-fancy-chars " ▲" " ^"))
-		(downarrow (if mu4e-use-fancy-chars " ▼" " V"))
-		;; triangle to mark the sorted-by column
-		(arrow
-		  (when (and sortable (eq (car item) mu4e-headers-sort-field))
-		    (if (eq mu4e-headers-sort-direction 'descending) downarrow uparrow)))
-		(name (concat (plist-get info :shortname) arrow))
-		(map (make-sparse-keymap)))
-	  (when sortable
-	    (define-key map [header-line mouse-1]
-	      (lambda (&optional e)
-		;; getting the field, inspired by `tabulated-list-col-sort'
-		(interactive "e")
-		(let* ((obj (posn-object (event-start e)))
-			(field
-			  (and obj (get-text-property 0 'field (car obj)))))
-		  ;; "t": if we're already sorted by field, the sort-order is
-		  ;; changed
-		  (mu4e-headers-change-sorting field t)))))
-	  (concat
-	    (propertize
-	      (if width
-		(truncate-string-to-width name width 0 ?\s t)
-		name)
-	      'face (when arrow 'bold)
-	      'help-echo help
-	      'mouse-face (when sortable 'highlight)
-	      'keymap (when sortable map)
-	      'field field) " ")))
-      mu4e-headers-fields)))
+  (let ((uparrow   (if mu4e-use-fancy-chars " ▲" " ^"))
+	 (downarrow (if mu4e-use-fancy-chars " ▼" " V")))
+    (cons
+      (make-string
+	(+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
+      (mapcar
+	(lambda (item)
+	  (let* ((field (car item)) (width (cdr item))
+		  (info (cdr (assoc field
+			       (append mu4e-header-info mu4e-header-info-custom))))
+		  (sortable (plist-get info :sortable))
+		  ;; if sortable, it is either t (when field is sortable itself) or a symbol (if
+		  ;; another field is used for sorting)
+		  (sortfield (when sortable (if (booleanp sortable) field sortable)))
+		  (help (plist-get info :help))
+		  ;; triangle to mark the sorted-by column
+		  (arrow
+		    (when (and sortable (eq sortfield mu4e-headers-sort-field))
+		      (if (eq mu4e-headers-sort-direction 'descending) downarrow uparrow)))
+		  (name (concat (plist-get info :shortname) arrow))
+		  (map (make-sparse-keymap)))
+	    (when sortable
+	      (define-key map [header-line mouse-1]
+		(lambda (&optional e)
+		  ;; getting the field, inspired by `tabulated-list-col-sort'
+		  (interactive "e")
+		  (let* ((obj (posn-object (event-start e)))
+			  (field
+			    (and obj (get-text-property 0 'field (car obj)))))
+		    ;; "t": if we're already sorted by field, the sort-order is
+		    ;; changed
+		    (mu4e-headers-change-sorting field t)))))
+	    (concat
+	      (propertize
+		(if width
+		  (truncate-string-to-width name width 0 ?\s t)
+		  name)
+		'face (when arrow 'bold)
+		'help-echo help
+		'mouse-face (when sortable 'highlight)
+		'keymap (when sortable map)
+		'field field) " ")))
+	mu4e-headers-fields))))
 
 (defvar mu4e-headers-mode-abbrev-table nil)
 
