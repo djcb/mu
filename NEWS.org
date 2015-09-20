@@ -7,8 +7,9 @@
 *** contributors
 
     Attila, Charles-H.Schulz, David C Sterrat, Dirk-Jan C. Binnema,
-    Florian Lindner, Foivos S. Zakkak, Gour, KOMURA Takaaki, Pan Jie,
-    Phil Hagelberg, thdox, Tiago Saboga, Titus von der Malsburg
+    Eike Kettner, Florian Lindner, Foivos S. Zakkak, Gour, KOMURA
+    Takaaki, Pan Jie, Phil Hagelberg, thdox, Tiago Saboga, Titus von
+    der Malsburg
 
     (and of course all people who reported issues, provided
     suggestions etc.)
