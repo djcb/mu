@@ -315,9 +315,10 @@ You can append flags."
  
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
-  (mu4e~draft-header "User-agent" (mu4e~draft-user-agent-construct))
-  (when mu4e-compose-auto-include-date
-    (mu4e~draft-header "Date" (message-make-date))))
+  (concat
+   (mu4e~draft-header "User-agent" (mu4e~draft-user-agent-construct))
+   (when mu4e-compose-auto-include-date
+     (mu4e~draft-header "Date" (message-make-date)))))
 
 
 (defconst mu4e~draft-reply-prefix "Re: "
