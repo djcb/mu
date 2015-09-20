@@ -149,7 +149,7 @@ get_script_info_list (const char *muhome, GError **err)
 static gboolean
 check_params (MuConfig *opts, GError **err)
 {
-	if (!mu_util_supports (MU_FEATURE_GUILE | MU_FEATURE_GNUPLOT)) {
+	if (!mu_util_supports (MU_FEATURE_GUILE)) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "the 'script' command is not available "
 				     "in this version of mu");
