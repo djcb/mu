@@ -480,7 +480,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-highlight-face
-  '((t :inherit higlight))
+  '((t :inherit highlight))
   "Face for highlighting things."
   :group 'mu4e-faces)
 
