@@ -525,6 +525,7 @@ handle_esc_maybe (GString *gstr, char **cur, gunichar uc,
 		case '*':
 		case '&':
 		case '"':
+		case '-':
 			g_string_append_c (gstr, kar);
 			return TRUE;
 		case '.':
