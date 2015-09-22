@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.12],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[0.9.13],[https://github.com/djcb/mu/issues],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -325,7 +325,7 @@ echo
 if test "x$have_makeinfo" != "xyes"; then
     echo "* You do not seem to have the makeinfo program; if you are building from git"
     echo "  you need that to create documentation for guile and emacs. It is in the"
-    echo "  texinfo package in debian/ubuntu (ie., apt-get install texinfo)"
+    echo "  texinfo package in debian/ubuntu/fedora/... "
     echo
 fi
 
