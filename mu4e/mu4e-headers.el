@@ -813,7 +813,7 @@ user-interaction ongoing."
   (hl-line-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; higlighting
+;;; highlighting
 (defvar mu4e~highlighted-docid nil
   "The highlighted docid")
 
