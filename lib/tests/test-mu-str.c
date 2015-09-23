@@ -543,7 +543,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-to-list-strip",
 			 test_mu_str_to_list_strip);
 
-	g_test_add_func ("/mu-str/mu-str-esc-to-list",
+	g_test_add_func ("/mu-str/mu-str-parse-arglist",
 			 test_parse_arglist);
 
 	g_test_add_func ("/mu-str/mu-str-replace",
