@@ -2,7 +2,7 @@
 
 * NEWS (user visible changes)
 
-** 0.9.9.13
+** 0.9.13
 
 *** contributors
 
@@ -77,7 +77,7 @@ End of search results
     – add --delete option to the find-dups scripts, to automatically
     delete them. Use with care!
 
-** Release 0.9.9.12
+** Release 0.9.12
 
 *** mu
 
@@ -101,7 +101,7 @@ End of search results
     - org: improve template keywords
     - rework URL handling
 
-** Release 0.9.9.5
+** Release 0.9.5
 
 *** mu
 
