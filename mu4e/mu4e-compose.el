@@ -254,8 +254,8 @@ Ie. either 'name <email>' or 'email')."
 		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
 		    (goto-char (match-end 0))
 		    (point)))))
-	(list start end mu4e~contacts-for-completion))))) 
- 
+	(list start end mu4e~contacts-for-completion)))))
+
 (defun mu4e~compose-setup-completion ()
   "Set up auto-completion of addresses."
   (set (make-local-variable 'completion-ignore-case) t)
@@ -334,7 +334,7 @@ Ie. either 'name <email>' or 'email')."
 		       mu4e~compose-buffer-max-name-length
 		       nil nil t)))))
 
-(defun* mu4e~compose-handler (compose-type &optional original-msg includes)
+(defun* mu4e~compose-handler (compose-type &optional original-msg includes reply-to)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -361,7 +361,7 @@ tempfile)."
 
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (condition-case nil
-      (mu4e-draft-open compose-type original-msg)
+      (mu4e-draft-open compose-type original-msg reply-to)
     (quit (kill-buffer) (message "[mu4e] Operation aborted")
           (return-from mu4e~compose-handler)))
   ;; insert mail-header-separator, which is needed by message mode to separate
@@ -461,7 +461,7 @@ buffer."
 	  (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
 	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P-N")))))))
 
-(defun mu4e-compose (compose-type)
+(defun mu4e-compose (compose-type &optional reply-to)
   "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
 a symbol, one of `reply', `forward', `edit', `new'. All but `new'
 take the message at point as input. Symbol `edit' is only allowed
@@ -495,12 +495,12 @@ for draft messages."
 	  (when (window-live-p viewwin)
 	    (select-window viewwin)))
 	;; talk to the backend
-	(mu4e~proc-compose compose-type decrypt docid)))))
+	(mu4e~proc-compose compose-type decrypt docid reply-to)))))
 
-(defun mu4e-compose-reply ()
+(defun mu4e-compose-reply (&optional reply-to)
   "Compose a reply for the message at point in the headers buffer."
   (interactive)
-  (mu4e-compose 'reply))
+  (mu4e-compose 'reply reply-to))
 
 (defun mu4e-compose-forward ()
   "Forward the message at point in the headers buffer."
@@ -527,12 +527,13 @@ draft message."
 
 ;;;###autoload
 (defun mu4e~compose-mail (&optional to subject other-headers continue
-			   switch-function yank-action send-actions return-action)
+			   switch-function yank-action send-actions return-action
+			   reply-to)
   "This is mu4e's implementation of `compose-mail'."
 
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
-  (mu4e~compose-handler 'new)
+  (mu4e~compose-handler 'new nil reply-to)
 
   (when (message-goto-to) ;; reset to-address, if needed
     (message-delete-line))
