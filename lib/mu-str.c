@@ -492,7 +492,7 @@ check_for_field (const char *str, gboolean *is_field,
 	while (pfx.str && *pfx.str && !isalnum(*pfx.str))
 		++pfx.str;
 
-	pfx.match =  pfx.range_field = FALSE;
+	pfx.match = pfx.range_field = FALSE;
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)each_check_prefix,
 			      &pfx);

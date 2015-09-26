@@ -114,7 +114,7 @@ void mu_msg_field_foreach (MuMsgFieldForeachFunc func, gconstpointer data);
  * @return the name of the field as a constant string, or
  * NULL if the field is unknown
  */
-const char*  mu_msg_field_name (MuMsgFieldId id) G_GNUC_PURE;
+const char* mu_msg_field_name (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * get the shortcut of the field -- this a shortcut that can be use in
@@ -134,7 +134,7 @@ char mu_msg_field_shortcut (MuMsgFieldId id) G_GNUC_PURE;
  *
  * @return the xapian prefix char or 0 if the field is unknown
  */
-char  mu_msg_field_xapian_prefix (MuMsgFieldId id) G_GNUC_PURE;
+char mu_msg_field_xapian_prefix (MuMsgFieldId id) G_GNUC_PURE;
 
 
 /**
