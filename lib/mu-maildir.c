@@ -750,19 +750,21 @@ mu_maildir_get_maildir_from_path (const char* path)
 static char*
 get_new_basename (void)
 {
-	char		date[9];	/* YYYYMMDD */
-	char		hostname[32];	/* should be enough...*/
-	long int	rnd;
-	time_t		now;
+	time_t	now;
+	char	hostname[64];
+		
+	if (gethostname (hostname, sizeof(hostname)) == -1)
+		memcpy (hostname, "localhost", sizeof(hostname));
+	else
+		hostname[sizeof(hostname)-1] = '\0';
 
 	now = time(NULL);
-	strftime (date, sizeof(date), "%Y%m%d", localtime(&now));
-	if (gethostname (hostname, sizeof(hostname)) != 0)
-		memcpy (hostname, "hostname", strlen("hostname"));
-	rnd = random ();
 
-	return g_strdup_printf ("%s-%08x-%s", date,
-				(unsigned)rnd, hostname);
+	return g_strdup_printf ("%u.%8x%8x.%s",
+				(guint)now,
+				g_random_int(),
+				(gint32)g_get_monotonic_time (),
+				hostname);
 }
 
 

@@ -481,7 +481,10 @@ test_mu_maildir_get_new_path_new (void)
 		str	= mu_maildir_get_new_path (paths[i].oldpath, NULL,
 						   paths[i].flags, TRUE);
 		newbase = g_path_get_basename (str);
-		assert_matches_regexp (newbase, "\\d{8}-[[:xdigit:]]{8}-[[:alpha:]]+(:2,.*)?");
+		assert_matches_regexp (newbase,
+				       "\\d+\\."
+				       "[[:xdigit:]]{16}\\."
+				       "[[:alpha:]]+(:2,.*)?");
 		g_free (newbase);
 		g_free(str);
 	}

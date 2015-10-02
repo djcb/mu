@@ -309,9 +309,10 @@ You can append flags."
 	     (save-match-data
 	       (substring system-name
 		 (string-match "^[^.]+" system-name) (match-end 0))))))
-    (format "%s-%02x%04x-%s:2,%s"
-      (format-time-string "%Y%m%d" (current-time))
-      (random 255) (random 65535) hostname (or flagstr ""))))
+    (format "%s.%04x%04x%04x%04x.%s:2,%s"
+      (format-time-string "%s" (current-time))
+      (random 65535) (random 65535) (random 65535) (random 65535)
+      hostname (or flagstr ""))))
  
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
