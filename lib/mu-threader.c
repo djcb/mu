@@ -407,8 +407,8 @@ prune_maybe (MuContainer *c)
 	if (c->msg)
 		return TRUE;
 
-	/* A. If it is an msg-less container with no children, mark it
-	 * for deletion. */
+	/* A. If it is an msg-less container with no children, mark it for
+	 * deletion. */
 	if (!c->child) {
 		c->flags |= MU_CONTAINER_FLAG_DELETE;
 		return TRUE;
