@@ -2,6 +2,11 @@
 
 * NEWS (user visible changes)
 
+** 0.9.14
+  
+   - change the message file names to better conform to the maildir
+     spec; this was confusing some tools.
+  
 ** 0.9.13
 
 *** contributors
