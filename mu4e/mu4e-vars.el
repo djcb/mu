@@ -128,7 +128,8 @@ attachments' for details."
 (defcustom mu4e-user-mail-address-list `(,user-mail-address)
   "List of e-mail addresses to consider 'my email addresses'.
 I.e. addresses whose presence in an email imply that it is a
-personal message. This is used when indexing messages."
+personal message. Note that e-mail addresses are case-sensitive,
+as per RFC531."
   :type '(repeat (string :tag "Address"))
   :group 'mu4e)
 
