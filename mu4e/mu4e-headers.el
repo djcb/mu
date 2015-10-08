@@ -999,7 +999,7 @@ of `mu4e-split-view', and return a window for the message view."
              '(split-window-vertically mu4e-headers-visible-lines))
             ((eq mu4e-split-view 'vertical) ;; split vertically
              '(split-window-horizontally mu4e-headers-visible-columns)))))
-     (cond ((with-demoted-errors "Unable to split window"
+     (cond ((with-demoted-errors "Unable to split window: %S"
               (eval new-win-func)))
            (t ;; no splitting; just use the currently selected one
             (selected-window)))))

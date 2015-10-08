@@ -304,11 +304,14 @@ If there is just one recipient of ORIGMSG do nothing."
 It looks something like
   <time>-<random>.<hostname>:2,
 You can append flags."
-  (let* ((hostname
-	   (downcase
-	     (save-match-data
-	       (substring system-name
-		 (string-match "^[^.]+" system-name) (match-end 0))))))
+  (let* ((sysname (if (fboundp 'system-name)
+		      (system-name)
+		    (with-no-warnings system-name)))
+	 (hostname (downcase
+		    (save-match-data
+		      (substring sysname
+				 (string-match "^[^.]+" sysname)
+				 (match-end 0))))))
     (format "%s.%04x%04x%04x%04x.%s:2,%s"
       (format-time-string "%s" (current-time))
       (random 65535) (random 65535) (random 65535) (random 65535)
