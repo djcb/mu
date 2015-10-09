@@ -1086,7 +1086,8 @@ attachments, but as this is the default, you may not need it."
             (let* ((att (mu4e~view-get-attach msg num))
                    (fname  (plist-get att :name))
                    (index (plist-get att :index))
-                   (retry t))
+                   (retry t)
+		   fpath)
               (while retry
                 (setq fpath (expand-file-name (concat attachdir fname) path))
                 (setq retry
