@@ -850,23 +850,15 @@ frame to display buffer BUF."
     (if (window-live-p win)
       (with-selected-window win (kill-buffer-and-window))
       (when (buffer-live-p buf) (kill-buffer buf)))))
-     
+
 ;; complicated function, as it:
 ;;   - needs to check for errors
 ;;   - (optionally) pop-up a window
 ;;   - (optionally) check password requests 
-(defun mu4e-update-mail-and-index (run-in-background)
+(defun mu4e~update-mail-and-index-real (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
-run-in-background is non-nil (or called with prefix-argument), run
-in the background; otherwise, pop up a window."
-  (interactive "P")
-  (when (and (buffer-live-p mu4e~update-buffer)
-	  (process-live-p (get-buffer-process mu4e~update-buffer)))
-    (mu4e-error "Update process is already running"))
-  (run-hooks 'mu4e-update-pre-hook)
-  (unless mu4e-get-mail-command
-    (mu4e-error "`mu4e-get-mail-command' is not defined"))
-
+RUN-IN-BACKGROUND is non-nil (or called with prefix-argument),
+run in the background; otherwise, pop up a window."
   (let* ((process-connection-type t)
 	  (proc (start-process-shell-command
 		  "mu4e-update" " *mu4e-update*"
@@ -891,6 +883,20 @@ in the background; otherwise, pop up a window."
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
       (set-process-filter proc 'mu4e~get-mail-process-filter))))
+
+(defun mu4e-update-mail-and-index (run-in-background)
+  "Get a new mail by running `mu4e-get-mail-command'. If
+run-in-background is non-nil (or called with prefix-argument), run
+in the background; otherwise, pop up a window."
+  (interactive "P")
+  (unless mu4e-get-mail-command
+    (mu4e-error "`mu4e-get-mail-command' is not defined"))
+  (if (and (buffer-live-p mu4e~update-buffer)
+	(process-live-p (get-buffer-process mu4e~update-buffer)))
+    (mu4e-message "Update process is already running")
+    (progn
+      (run-hooks 'mu4e-update-pre-hook)
+      (mu4e~update-mail-and-index-real run-in-background))))
 
 (defun mu4e-interrupt-update-mail ()
   "Stop the update process by sending SIGINT to it."
