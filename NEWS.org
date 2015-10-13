@@ -6,6 +6,9 @@
   
    - change the message file names to better conform to the maildir
      spec; this was confusing some tools.
+   - fix navigation when not running in split-view mode
+   - add mu4e-view-body-face, so the body-face for message in the view can be customized; e.g.
+      (set-face-attribute 'mu4e-view-body-face nil :font "Liberation Serif-10")
   
 ** 0.9.13
 
