@@ -492,7 +492,12 @@ I.e. a message with the draft flag set."
 
 (defface mu4e-modeline-face
   '((t :inherit font-lock-string-face :bold t))
-  "Face for the query view in the mode-line."
+  "Face for the query in the mode-line."
+  :group 'mu4e-faces)
+
+(defface mu4e-view-body-face
+  '((t :inherit default))
+  "Face for the body in the message-view."
   :group 'mu4e-faces)
 
 (defface mu4e-footer-face
