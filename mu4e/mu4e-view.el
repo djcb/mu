@@ -850,7 +850,8 @@ this view."
        (unless docid
 	 (mu4e-error "message without docid: action is not possible."))
        (with-current-buffer mu4e~view-headers-buffer
-	 (select-window (get-buffer-window))
+	 (when (get-buffer-window)
+	   (select-window (get-buffer-window)))
 	 (if (mu4e~headers-goto-docid docid)
 	   ,@body
 	   (mu4e-error "cannot find message in headers buffer."))))))

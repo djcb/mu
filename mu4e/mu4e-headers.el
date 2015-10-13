@@ -1422,8 +1422,7 @@ either `future' or `past'."
 (defun mu4e-headers-forget-queries ()
   "Forget all the complete query history."
   (interactive)
-  (setq
-    ;; note: don't forget the present one
+  (setq ;; note: don't forget the present one
     mu4e~headers-query-past nil
     mu4e~headers-query-future nil)
   (mu4e-message "Query history cleared"))
@@ -1449,8 +1448,7 @@ docid. Otherwise, return nil."
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
       ;; update message view if it was already showing
-      (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
-	(mu4e-headers-view-message))
+      (mu4e-headers-view-message)
       docid)))
 
 (defun mu4e-headers-next (&optional n)
