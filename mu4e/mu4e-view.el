@@ -240,7 +240,10 @@ found."
 		 (mu4e~view-custom-field msg field))))))
       mu4e-view-fields "")
     "\n"
-    (propertize (mu4e-message-body-text msg) 'face 'mu4e-view-body-face)))
+    (let ((body (mu4e-message-body-text msg)))
+      (when (fboundp 'add-face-text-property)
+        (add-face-text-property 0 (string-width body) 'mu4e-view-body-face t body))
+      body)))
 
 (defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
