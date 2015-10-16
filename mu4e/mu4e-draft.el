@@ -446,14 +446,13 @@ from either `mu4e~draft-reply-construct', or
 	    (forward (mu4e~draft-forward-construct msg))
 	    (new     (mu4e~draft-newmsg-construct))
 	    (t (mu4e-error "unsupported compose-type %S" compose-type))))
+	(newline)
 	;; include the message signature (if it's set)
-	(if mu4e-compose-signature-auto-include
-	  (let ((message-signature (or mu4e-compose-signature "\n"))
-		 (message-signature-insert-empty-line t))
+	(if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
+	  (let ((message-signature mu4e-compose-signature))
 	    (save-excursion
 	      (message-insert-signature)
-	      (mu4e~fontify-signature)))
-	  (insert "\n"))))
+	      (mu4e~fontify-signature))))))
 	  ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
 	  ;; throughout.
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)
