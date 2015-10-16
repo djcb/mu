@@ -21,3 +21,11 @@ WriteMakefile(
 	PAIR('mup.pm'),
     }
 );
+
+sub MY::postamble {
+    return <<__MyStuff__;
+
+check:
+
+__MyStuff__
+}
