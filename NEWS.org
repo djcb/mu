@@ -2,8 +2,13 @@
 
 * NEWS (user visible changes)
 
-** 0.9.14
-  
+** 0.9.15
+
+   - bump version to 0.9.15. From now on, odd minor version numbers are for development versions;
+     thus, 0.9.16 is to be the next stable release.
+   - special case text/calendar attachements to get .vcs
+     extensions. This makes it easier to process those with external
+     tools.
    - change the message file names to better conform to the maildir
      spec; this was confusing some tools.
    - fix navigation when not running in split-view mode
