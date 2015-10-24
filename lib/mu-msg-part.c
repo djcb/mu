@@ -271,7 +271,7 @@ guess_file_name (GMimeObject *mobj, unsigned index)
 		return g_strdup_printf ("vcal-%u.vcs", index);
 
 	/* fallback */
-	return g_strdup_printf ("%u.part", index);
+	return g_strdup_printf ("%u.msgpart", index);
 }
 
 
