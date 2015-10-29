@@ -1076,7 +1076,10 @@ matching messages with that mark."
 	 (field (mu4e-read-option "Field to match: "
 		  '( ("subject" . :subject)
 		     ("from"    . :from)
-		     ("to"      . :to))))
+		     ("to"      . :to)
+                     ("cc"      . :cc)
+		     ("bcc"     . :bcc)
+		     ("list"    . :mailing-list))))
 	  (pattern (read-string
 		     (mu4e-format "Regexp:")
 		     nil 'mu4e~headers-regexp-hist)))
