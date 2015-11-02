@@ -903,8 +903,6 @@ get_find_params (GHashTable *args, MuMsgFieldId *sortfield,
 		*qflags |= MU_QUERY_FLAG_SKIP_DUPS;
 	if (get_bool_from_args (args, "include-related", TRUE, NULL))
 		*qflags |= MU_QUERY_FLAG_INCLUDE_RELATED;
-	if (get_bool_from_args (args, "include-related", TRUE, NULL))
-		*qflags |= MU_QUERY_FLAG_INCLUDE_RELATED;
 	if (get_bool_from_args (args, "threads", TRUE, NULL))
 		*qflags |= MU_QUERY_FLAG_THREADS;
 
