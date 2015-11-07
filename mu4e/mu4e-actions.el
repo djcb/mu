@@ -268,6 +268,16 @@ store your org-contacts."
 
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
     (mu4e-refresh-message path maildir)))
+
+(defun mu4e-action-show-thread (msg)
+  "Show all messages that are in the same thread as the message
+at point."
+  (let ((msgid (mu4e-message-field msg :message-id)))
+    (when msgid
+      (let ((mu4e-headers-show-threads t)
+	     (mu4e-headers-include-related t))
+        (mu4e-headers-search
+         (format "msgid:%s" msgid))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
