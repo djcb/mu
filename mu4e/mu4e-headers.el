@@ -194,7 +194,9 @@ Field must be a symbol, one of: :date, :subject, :size, :prio,
 
 
 (defvar mu4e-headers-actions
-  '( ("capture message" . mu4e-action-capture-message))
+  '( ("capture message"  . mu4e-action-capture-message))
+     ("show this thread" . mu4e-action-show-thread))
+
   "List of actions to perform on messages in the headers list.
 The actions are of the form (NAME SHORTCUT FUNC) where:
 * NAME is the name of the action (e.g. \"Count lines\")
