@@ -2739,10 +2739,13 @@ org-open-at-point} elsewhere - both typically bound to @kbd{C-c C-o}.
 @node Rich-text messages with org-mode
 @section Rich-text messages with @t{org-mode} (deprecated)
 
-Some earlier versions of @t{mu4e} had support for editing e-mail
-messages using @t{org-mode}; since this never worked very well, this has
-now been deprecated; it might be replaced with something better in some
-future version.
+It is possible to write rich-text messages using @t{org-mode}; see
+@url{http://orgmode.org/worg/org-contrib/org-mime.html}.
+
+Note, some earlier versions of @t{mu4e} had more elaborate support for
+editing e-mail messages using @t{org-mode}; since this never worked very
+well, this has now been deprecated; it might be replaced with something
+better in some future version.
 
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
