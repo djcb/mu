@@ -85,4 +85,9 @@
   "A list of (MAILING-LIST-ID . SHORTNAME); these are used in
 addition to the 'built-in' list `mu4e~user-lists'.")
 
+(defvar mu4e-mailing-list-patterns nil
+  "A list of regex patterns to capture a shortname out of a list ID. For
+the first regex that matches, its first matchgroup will be used as the
+shortname.")
+
 (provide 'mu4e-lists)

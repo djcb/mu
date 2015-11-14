@@ -517,7 +517,8 @@ that has a live window), and vice versa."
 
 (defun mu4e-get-mailing-list-shortname (list-id)
   "Get the shortname for a mailing-list with list-id LIST-ID. based
-  on `mu4e~mailing-lists' and `mu4e-user-mailing-lists'."
+on `mu4e~mailing-lists', `mu4e-user-mailing-lists', and
+`mu4e-mailing-list-patterns'."
   (unless mu4e~lists-hash
     (setq mu4e~lists-hash (make-hash-table :test 'equal))
     (dolist (cell mu4e~mailing-lists)
@@ -526,6 +527,12 @@ that has a live window), and vice versa."
       (puthash (car cell) (cdr cell) mu4e~lists-hash)))
   (or
     (gethash list-id mu4e~lists-hash)
+    (and (boundp 'mu4e-mailing-list-patterns)
+         (cl-member-if
+          (lambda (pattern)
+            (string-match pattern list-id))
+          mu4e-mailing-list-patterns)
+         (match-string 1 list-id))
     ;; if it's not in the db, take the part until the first dot if there is one;
     ;; otherwise just return the whole thing
     (if (string-match "\\([^.]*\\)\\." list-id)
