@@ -804,7 +804,7 @@ your own shortcuts. You can use @code{mu4e-mailing-list-patterns} to
 to specify generic shortcuts, e.g. to shorten list names which contain
 dots (mu4e defaults to shortening up to the first dot):
 @lisp
-(setq mu4e-mailing-list-patterns '(``\\([a-z0-9.]+\\)\.lists\.company\.com'')))
+(setq mu4e-mailing-list-patterns '(``\\([-_a-z0-9.]+\\)\.lists\.company\.com'')))
 @end lisp
 @item The letters in the 'Flags' field correspond to the following: D=@emph{draft},
 F=@emph{flagged} (i.e., 'starred'), N=@emph{new}, P=@emph{passed} (i.e.,
