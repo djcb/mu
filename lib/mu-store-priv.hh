@@ -177,7 +177,8 @@ public:
 			mu_contacts_clear (_contacts);
 	}
 
-	std::string get_uid_term (const char *path) const;
+	// not re-entrant; stays valid until called again
+	const char *get_uid_term (const char *path) const;
 
 	MuContacts* contacts() { return _contacts; }
 

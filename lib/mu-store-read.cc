@@ -44,24 +44,16 @@
 
 
 // note: not re-entrant
-std::string
+const char*
 _MuStore::get_uid_term (const char* path) const
 {
-	char real_path[PATH_MAX + 1];
+	static char uid_term[64] = { '\0' };
+	if (G_UNLIKELY(uid_term[0] == '\0'))
+		uid_term[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID);
 
-	static const std::string uid_prefix (
-		1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID));
+	strncpy (uid_term + 1, mu_util_get_hash (path), sizeof(uid_term) - 1);
 
-	/* check profile to see if realpath is expensive; we need
-	 * realpath here (and in mu-msg-file) to ensure that the same
-	 * messages are only considered ones (ignore e.g. symlinks and
-	 * '//' in paths) */
-
-	// note: realpath fails when there's no file at path
-	if (!realpath (path, real_path))
-		strcpy (real_path, path);
-
-	return std::string (uid_prefix + mu_util_get_hash (real_path));
+	return uid_term;
 }
 
 
@@ -72,7 +64,6 @@ mu_store_new_read_only (const char* xpath, GError **err)
 
 	try {
 		return new _MuStore (xpath);
-
 	} catch (const MuStoreError& merr) {
 		mu_util_g_set_error (err, merr.mu_error(), "%s",
 				     merr.what().c_str());

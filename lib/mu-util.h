@@ -513,9 +513,26 @@ gboolean mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ..
  * @return the hash as a static string, which stays valid until this
  * function is called again.
  */
-const char* mu_util_get_hash (const char* str);
+static inline const char*
+mu_util_get_hash (const char* str)
+{
+	unsigned	djbhash, bkdrhash, bkdrseed;
+	unsigned	u;
+	static char	hex[18];
 
+	djbhash  = 5381;
+	bkdrhash = 0;
+	bkdrseed = 1313;
 
+	for(u = 0; str[u]; ++u) {
+		djbhash  = ((djbhash << 5) + djbhash) + str[u];
+		bkdrhash = bkdrhash * bkdrseed + str[u];
+	}
+
+	snprintf (hex, sizeof(hex), "%08x%08x", djbhash, bkdrhash);
+
+	return hex;
+}
 
 
 #define MU_COLOR_RED		"\x1b[31m"
