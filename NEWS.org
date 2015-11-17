@@ -4,16 +4,24 @@
 
 ** 0.9.15
 
-   - bump version to 0.9.15. From now on, odd minor version numbers are for development versions;
-     thus, 0.9.16 is to be the next stable release.
+   - bump version to 0.9.15. From now on, odd minor version numbers
+     are for development versions; thus, 0.9.16 is to be the next
+     stable release.
    - special case text/calendar attachements to get .vcs
      extensions. This makes it easier to process those with external
      tools.
    - change the message file names to better conform to the maildir
      spec; this was confusing some tools.
    - fix navigation when not running in split-view mode
-   - add mu4e-view-body-face, so the body-face for message in the view can be customized; e.g.
-      (set-face-attribute 'mu4e-view-body-face nil :font "Liberation Serif-10")
+   - add `mu4e-view-body-face', so the body-face for message in the
+     view can be customized; e.g.  (set-face-attribute
+     'mu4e-view-body-face nil :font "Liberation Serif-10")
+   - add `mu4e-action-show-thread`, an action for the headers and view
+     buffers to search for messages in the same thread as the current
+     one.
+   - allow for transforming mailing-list names for display, using
+     `mu4e-mailing-list-patterns'.
+   - some optimizations in indexing
   
 ** 0.9.13
 
