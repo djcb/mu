@@ -27,7 +27,7 @@ Features include:
 For all the details, please see the [manual](mu4e/), or
 check the screenshots below. `mu4e` is part of the normal
 [mu source package](http://code.google.com/p/mu0/downloads/list) and
-also [[https://github.com/djcb/mu][available on Github]].
+also [available on Github](https://github.com/djcb/mu).
 
 # Screenshots
 
