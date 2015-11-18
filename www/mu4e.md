@@ -8,10 +8,13 @@ provides an emacs-based e-mail client which uses `mu` as its back-end:
 *mu4e*.
 
 Through `mu`, `mu4e` sits on top of your Maildir (which you update
-with e.g. `offlineimap` or `fetchmail`). `mu4e` is designed to enable
-super-efficient handling of e-mail; searching, reading, replying,
-moving, deleting. The overall 'feel' is a bit of a mix of `dired` and
-[Wanderlust](http://www.gohome.org/wl/).
+with e.g. [`offlineimap`](http://offlineimap.org/),
+[`mbsync`](http://isync.sourceforge.net) or
+[`fetchmail`](http://www.fetchmail.info/)). `mu4e` is designed to
+enable super-efficient handling of e-mail; searching, reading,
+replying, moving, deleting. The overall 'feel' is a bit of a mix of
+[`dired`](http://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html)
+and [Wanderlust](http://www.gohome.org/wl/).
 
 Features include:
 
@@ -27,7 +30,7 @@ Features include:
 For all the details, please see the [manual](mu4e/), or
 check the screenshots below. `mu4e` is part of the normal
 [mu source package](http://code.google.com/p/mu0/downloads/list) and
-also [[https://github.com/djcb/mu][available on Github]].
+also [available on Github](https://github.com/djcb/mu).
 
 # Screenshots
 
