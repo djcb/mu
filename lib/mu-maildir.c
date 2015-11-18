@@ -760,13 +760,13 @@ get_new_basename (void)
 
 	now = time(NULL);
 
-	return g_strdup_printf ("%u.%8x%8x.%s",
+	return g_strdup_printf ("%u.%08x%08x.%s",
 				(guint)now,
 				g_random_int(),
 				(gint32)g_get_monotonic_time (),
 				hostname);
 }
-
+g
 
 char*
 mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
