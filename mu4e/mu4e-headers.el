@@ -1452,7 +1452,7 @@ docid. Otherwise, return nil."
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
       ;; update message view if it was already showing
-      (when mu4e-split-view
+      (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
 	(mu4e-headers-view-message))
       docid)))
 
