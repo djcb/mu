@@ -77,11 +77,9 @@ current window."
   :type 'boolean
   :group 'mu4e-compose)
 
-(defun mu4e~draft-user-agent-construct ()
-  "Return the User-Agent string for mu4e.
-This is either the value of `mu4e-user-agent', or, if not set, a
-string based on the versions of mu4e and emacs."
-  (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version))
+(defvar mu4e-user-agent-string
+  (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)
+  "The User-Agent string for mu4e.")
 
 (defun mu4e~draft-cite-original (msg)
   "Return a cited version of the original message MSG as a plist.
@@ -318,7 +316,7 @@ You can append flags."
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
   (concat
-   (mu4e~draft-header "User-agent" (mu4e~draft-user-agent-construct))
+   (mu4e~draft-header "User-agent" mu4e-user-agent-string)
    (when mu4e-compose-auto-include-date
      (mu4e~draft-header "Date" (message-make-date)))))
 
