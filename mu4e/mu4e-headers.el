@@ -616,9 +616,8 @@ after the end of the search results."
       (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
       (define-key map (kbd "<M-down>") 'mu4e-headers-next)
 
+      (define-key map (kbd "[") 'mu4e-headers-prev-unread)
       (define-key map (kbd "]") 'mu4e-headers-next-unread)
-      (define-key map (kbd "[")
-	(lambda() (interactive) (mu4e-headers-next-unread t)))
       
       ;; change the number of headers
       (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
@@ -1472,10 +1471,10 @@ previous header."
   (interactive "P")
   (mu4e~headers-move (- (or n 1))))
 
-(defun mu4e-headers-next-unread (&optional backwards)
+(defun mu4e~headers-prev-or-next-unread (backwards)
   "Move point to the next message that is unread (and
 untrashed). If BACKWARDS is non-`nil', move backwards."
-  (interactive "P")
+  (interactive)
   (or (mu4e-headers-find-if-next
 	(lambda (msg)
 	  (let ((flags (mu4e-message-field msg :flags))) 
@@ -1484,6 +1483,17 @@ untrashed). If BACKWARDS is non-`nil', move backwards."
     (mu4e-message (format "No %s unread message found"
 		    (if backwards "previous" "next")))))
 
+(defun mu4e-headers-prev-unread ()
+  "Move point to the previous message that is unread (and
+untrashed)."
+  (interactive)
+  (mu4e~headers-prev-or-next-unread t))
+
+(defun mu4e-headers-next-unread ()
+  "Move point to the next message that is unread (and
+untrashed)."
+  (interactive)
+  (mu4e~headers-prev-or-next-unread nil))
 
 (defun mu4e~headers-jump-to-maildir (maildir)
   "Show the messages in maildir (user is prompted to ask what
