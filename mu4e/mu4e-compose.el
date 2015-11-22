@@ -264,6 +264,14 @@ Ie. either 'name <email>' or 'email')."
   (add-hook 'completion-at-point-functions
     'mu4e~compose-complete-contact nil t))
 
+
+(defun mu4e~remove-refs-maybe ()
+  "Remove the References: header if the In-Reply-To header is
+missing. This allows the user to effectively start a new
+message-thread by removing the In-Reply-To header."
+  (unless (message-fetch-field "in-reply-to")
+    (message-remove-header "References")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-compose-mode-map nil
   "Keymap for \"*mu4e-compose*\" buffers.")
@@ -303,6 +311,8 @@ Ie. either 'name <email>' or 'email')."
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda () ;; mu4e~compose-save-before-sending
+	;; when in-reply-to was removed, remove references as well.
+	(mu4e~remove-refs-maybe)
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
@@ -620,6 +630,8 @@ end of the buffer."
 
 (define-key mu4e-compose-mode-map
   (vector 'remap 'end-of-buffer) 'mu4e-compose-goto-bottom)
+
+
 
 (provide 'mu4e-compose)
 

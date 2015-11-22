@@ -21,7 +21,12 @@
      one.
    - allow for transforming mailing-list names for display, using
      `mu4e-mailing-list-patterns'.
-   - some optimizations in indexing
+   - some optimizations in indexing (~30% faster in some cases)
+   - new variable mu4e-user-agent-string, to customize the User-Agent:
+     header.
+   - when removing the "In-reply-to" header from replies, mu4e will
+     also remove the (hidden) References header, effectively creating
+     a new message-thread.
   
 ** 0.9.13
 

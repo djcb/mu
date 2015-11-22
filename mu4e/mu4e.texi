@@ -533,8 +533,8 @@ updates - for example when receiving new mail. See
 writing mail and inherits the setup for sending mail as well.
 
 For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
-(@inforef{Top,,smtpmail}). This package supports many different ways to send
-mail; please refer to its documentation for the details.
+(@inforef{Top,,smtpmail}). This package supports many different ways to
+send mail; please refer to its documentation for the details.
 
 Here, we only provide some simple examples - for more, see @ref{Example
 configurations}.
@@ -3444,9 +3444,13 @@ You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
 @item @emph{@t{mu4e} seems to remove myself from the @t{Cc:}-list; how can I
 prevent that?}  Set @code{mu4e-compose-keep-self-cc} to @t{t} in your
 configuration.
+@item @emph{How can I start a new message-thread from a reply?} Remove the @t{In-Reply-To} header,
+and @t{mu4e} automatically removes the (hidden) @t{References} header as
+well when sending it. This makes the message show up as a top-level
+message rather than as a response.
 @item @emph{How can I sign or encrypt messages?} You can do so using @command{emacs}'
-MIME-support -- check the @t{Attachments}-menu while composing a message. Also
-see @ref{Signing and encrypting}.
+MIME-support -- check the @t{Attachments}-menu while composing a
+message. Also see @ref{Signing and encrypting}.
 @item @emph{Can I use @t{BBDB} with @t{mu4e}?} Yes, with the current
 (2015-06-23) development release of BBDB
 @url{http://savannah.nongnu.org/projects/bbdb/}, or releases of BBDB
