@@ -601,9 +601,8 @@ FUNC should be a function taking two arguments:
       (define-key map (kbd "<M-down>") 'mu4e-view-headers-next)
       (define-key map (kbd "<M-up>") 'mu4e-view-headers-prev)
 
+      (define-key map (kbd "[") 'mu4e-view-headers-prev-unread)
       (define-key map (kbd "]") 'mu4e-view-headers-next-unread)
-      (define-key map (kbd "[")
-	(lambda() (interactive) (mu4e-view-headers-next-unread t)))
       
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
@@ -878,17 +877,29 @@ N (prefix argument), to the Nth previous header."
   (mu4e~view-in-headers-context
     (mu4e~headers-move (- (or n 1)))))
 
-(defun mu4e-view-headers-next-unread (&optional backwards)
+(defun mu4e~view-prev-or-next-unread (backwards)
   "Move point to the next or previous (when BACKWARDS is non-`nil')
 unread message header in the headers buffer connected with this
 message view. If this succeeds, return the new docid. Otherwise,
 return nil."
-  (interactive "P")
   (mu4e~view-in-headers-context 
-    (mu4e-headers-next-unread backwards))
+    (mu4e~headers-prev-or-next-unread backwards))
   (mu4e-select-other-view)
   (mu4e-headers-view-message))
 
+(defun mu4e-view-headers-prev-unread ()
+"Move point to the previous unread message header in the headers
+buffer connected with this message view. If this succeeds, return
+the new docid. Otherwise, return nil."
+  (interactive)
+  (mu4e~view-prev-or-next-unread t))
+
+(defun mu4e-view-headers-next-unread ()
+  "Move point to the next unread message header in the headers
+buffer connected with this message view. If this succeeds, return
+the new docid. Otherwise, return nil."
+  (interactive)
+  (mu4e~view-prev-or-next-unread nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
