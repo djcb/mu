@@ -1153,21 +1153,23 @@ descendants."
       (goto-char last-marked-point)
       (mu4e-headers-next))))
 
-(defun mu4e-headers-mark-thread (&optional subthread)
+(defun mu4e-headers-mark-thread (&optional subthread markpair)
   "Like `mu4e-headers-mark-thread-using-markpair' but prompt for the markpair."
-  (interactive "P")
-  (let* (;; FIXME: e.g., for refiling we should evaluate this
-	 ;; for each line separately
-	 (markpair
-	  (mu4e~mark-get-markpair
-	   (if subthread "Mark subthread with: " "Mark whole thread with: ")
-	   t)))
-    (mu4e-headers-mark-thread-using-markpair markpair)))
+  (interactive
+   (let* ((subthread current-prefix-arg))
+     (list current-prefix-arg
+           ;; FIXME: e.g., for refiling we should evaluate this
+           ;; for each line separately
+           (mu4e~mark-get-markpair
+            (if subthread "Mark subthread with: " "Mark whole thread with: ") t))))
+  (mu4e-headers-mark-thread-using-markpair markpair subthread))
 
-(defun mu4e-headers-mark-subthread ()
+(defun mu4e-headers-mark-subthread (&optional markpair)
   "Like `mu4e-mark-thread', but only for a sub-thread."
   (interactive)
-  (mu4e-headers-mark-thread t))
+  (if markpair (mu4e-headers-mark-thread t markpair)
+    (let ((current-prefix-arg t))
+      (call-interactively 'mu4e-headers-mark-thread))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

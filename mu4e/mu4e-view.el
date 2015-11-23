@@ -935,17 +935,25 @@ matching messages with that mark."
   (interactive)
   (mu4e~view-in-headers-context (mu4e-headers-mark-pattern)))
 
-(defun mu4e-view-mark-thread ()
-  "Ask user for a kind of mark (move, delete etc.), and apply it to
-all messages in the thread at point in the headers view."
+(defun mu4e-view-mark-thread (&optional markpair)
+  "Ask user for a kind of mark (move, delete etc.), and apply it
+to all messages in the thread at point in the headers view. The
+optional MARKPAIR can also be used to provide the mark
+selection."
   (interactive)
-  (mu4e~view-in-headers-context (mu4e-headers-mark-thread)))
+  (mu4e~view-in-headers-context
+   (if markpair (mu4e-headers-mark-thread nil markpair)
+       (call-interactively 'mu4e-headers-mark-thread))))
 
-(defun mu4e-view-mark-subthread ()
-  "Ask user for a kind of mark (move, delete etc.), and apply it to
-all messages in the subthread at point in the headers view."
+(defun mu4e-view-mark-subthread (&optional markpair)
+  "Ask user for a kind of mark (move, delete etc.), and apply it
+to all messages in the subthread at point in the headers view.
+The optional MARKPAIR can also be used to provide the mark
+selection."
   (interactive)
-  (mu4e~view-in-headers-context (mu4e-headers-mark-subthread)))
+  (mu4e~view-in-headers-context
+   (if markpair (mu4e-headers-mark-subthread markpair)
+     (mu4e-headers-mark-subthread))))
 
 (defun mu4e-view-search-narrow ()
   "Run `mu4e-headers-search-narrow' in the headers buffer."
