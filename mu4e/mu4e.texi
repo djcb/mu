@@ -3593,7 +3593,7 @@ environment with e.g., your main account:
       smtpmail-default-smtp-server "smtp.account1.tld"
       smtpmail-local-domain "account1.tld"
       smtpmail-smtp-server "smtp.account1.tld"
-      smtpmail-stream-type starttls
+      smtpmail-stream-type 'starttls
       smtpmail-smtp-service 25)
 @end lisp
 
