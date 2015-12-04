@@ -40,6 +40,7 @@
 (require 'epa)
 (require 'epg)
 (require 'thingatpt)
+(require 'calendar)
 
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
