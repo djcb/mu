@@ -297,7 +297,8 @@ Function will return the cdr of the list element."
 				    (concat mdir (car dentry) "/")))))))
     dirs))
 
-(defvar mu4e~maildir-list nil "Cached list of maildirs.")
+(defvar mu4e~maildir-list nil
+  "Cached list of maildirs.")
 
 (defun mu4e-get-maildirs ()
   "Get maildirs under `mu4e-maildir', recursively, as a list of
@@ -352,7 +353,6 @@ and offer to create it if it does not exist yet."
 	     (mu4e-format "%s does not exist. Create now?" fullpath))
 	      (mu4e~proc-mkdir fullpath)))
     mdir))
-
 
 (defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
@@ -755,14 +755,18 @@ successful, call FUNC (if non-nil) afterwards."
       (mu4e~request-contacts)
       (add-hook 'mu4e-index-updated-hook 'mu4e~request-contacts))))
 
+(defun mu4e-clear-caches ()
+  "Clear any cached resources."
+  (setq
+    mu4e~maildir-list nil
+    mu4e~contacts-for-completion nil)) 
+ 
 (defun mu4e~stop ()
   "Stop the mu4e session."
   (when mu4e~update-timer
     (cancel-timer mu4e~update-timer)
-    (setq
-      mu4e~update-timer nil
-      mu4e~maildir-list nil
-      mu4e~contacts-for-completion nil))
+    (setq mu4e~update-timer nil))
+  (mu4e-clear-caches)
   (mu4e~proc-kill)
   ;; kill all main/view/headers buffer
   (mapcar
