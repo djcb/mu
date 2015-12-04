@@ -41,6 +41,16 @@
 
 ;;;
 
+(defun mu4e-headers-mark-all ()
+  "Mark all messages within current query results and ask user to execute which action."
+  (interactive)
+  (mu4e-headers-mark-for-each-if
+   (cons 'something nil)
+   (lambda (msg param) t))
+  (mu4e-mark-execute-all))
+
+;;;
+
 (defun mu4e-shr2text ()
   "Html to text using the shr engine; this can be used in
 `mu4e-html2text-command' in a new enough emacs. Based on code by
