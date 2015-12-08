@@ -153,7 +153,7 @@ properties are:
 	:dyn-target  (lambda (target msg) (mu4e-get-refile-folder msg))
 	:action      (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
        (delete
-	 :char "D"
+	 :char      ("D" . "🗙")
 	 :prompt "Delete"
 	 :show-target (lambda (target) "delete")
 	 :action (lambda (docid msg target) (mu4e~proc-remove docid)))
@@ -173,7 +173,7 @@ properties are:
 	 :show-target (lambda (target) "read")
 	 :action (lambda (docid msg target) (mu4e~proc-move docid nil    "+S-u-N")))
        (trash
-	 :char      "d"
+	 :char      ("d" . "🗑")
 	 :prompt "dtrash"
 	 :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
 	 :action (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N")))
