@@ -124,7 +124,13 @@ is either a headers or view buffer."
   "The list of all the possible marks.
 This is an alist mapping mark symbols to their properties.  The
 properties are:
-  :char (string)  The character to display in the headers view
+  :char (string) or (basic . fancy) The character to display in
+    the headers view. Either a single-character string, or a
+    dotted-pair cons cell where the second item will be used if
+    `mu4e-use-fancy-chars' is `t' or `marks', otherwise we'll use
+    the first one. It can also be a plain string for backwards
+    compatibility since we didn't always support
+    `mu4e-use-fancy-chars' here.
   :prompt (string) The prompt to use when asking for marks (used for
      example when marking a whole thread)
   :ask-target (function returning a string) Get the target.  This
@@ -235,7 +241,14 @@ The following marks are available, and the corresponding props:
 	  ;; target (the target folder) the other ones get a pseudo "target", as
 	  ;; info for the user.
 	  (markdesc (cdr (or (assq mark mu4e-marks) (mu4e-error "Invalid mark %S" mark))))
-	  (markkar (plist-get markdesc :char))
+	  (get-markkar
+	   (lambda (char)
+	     (if (listp char)
+	         (if (or (eq mu4e-use-fancy-chars t)
+	                 (eq mu4e-use-fancy-chars 'marks))
+	             (cdr char) (car char))
+	       char)))
+	  (markkar (funcall get-markkar (plist-get markdesc :char)))
 	  (target (mu4e~mark-get-dyn-target mark target))
 	  (show-fct (plist-get markdesc :show-target))
 	  (shown-target (if show-fct
