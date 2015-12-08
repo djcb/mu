@@ -236,8 +236,8 @@ The following marks are available, and the corresponding props:
 	  ;; info for the user.
 	  (markdesc (cdr (or (assq mark mu4e-marks) (mu4e-error "Invalid mark %S" mark))))
 	  (markkar (plist-get markdesc :char))
-          (target (mu4e~mark-get-dyn-target mark target))
-          (show-fct (plist-get markdesc :show-target))
+	  (target (mu4e~mark-get-dyn-target mark target))
+	  (show-fct (plist-get markdesc :show-target))
 	  (shown-target (if show-fct
 			  (funcall show-fct target)
                           (if target (format "%S" target)))))
