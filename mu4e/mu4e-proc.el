@@ -407,9 +407,14 @@ point to some maildir directory structure. MY-ADDRESSES is a list
 of 'my' email addresses (see `mu4e-user-mail-address-list')."
   (let ((path (mu4e~proc-escape path))
 	 (addrs (when my-addresses (mapconcat 'identity my-addresses ","))))
-    (if addrs
-      (mu4e~proc-send-command "cmd:index path:%s my-addresses:%s" path addrs)
-      (mu4e~proc-send-command "cmd:index path:%s" path))))
+    (if mu4e-hide-index-messages
+        (if addrs
+            (mu4e~proc-send-command "cmd:index path:%s my-addresses:%s report-processed-every:%d" path addrs 0)
+          (mu4e~proc-send-command "cmd:index path:%s report-processed-every:%d" path 0))
+      (if addrs
+          (mu4e~proc-send-command "cmd:index path:%s my-addresses:%s" path addrs)
+        (mu4e~proc-send-command "cmd:index path:%s" path)))))
+
 
 (defun mu4e~proc-add (path maildir)
   "Add the message at PATH to the database.

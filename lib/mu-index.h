@@ -96,7 +96,7 @@ void mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize);
  * @return  MU_OK to continue, MU_STOP to stop, or MU_ERROR in
  * case of some error.
  */
-typedef MuError (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data);
+typedef MuError (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data, unsigned reporteveryn);
 
 
 /**
@@ -133,7 +133,8 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  */
 MuError mu_index_run (MuIndex *index, const char *path, gboolean force,
 		      MuIndexStats *stats, MuIndexMsgCallback msg_cb,
-		      MuIndexDirCallback dir_cb, void *user_data);
+		      unsigned reporteveryn, MuIndexDirCallback dir_cb,
+		      void *user_data);
 
 /**
  * gather some statistics about the Maildir; this is usually much faster
