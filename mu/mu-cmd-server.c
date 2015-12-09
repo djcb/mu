@@ -1360,7 +1360,7 @@ cmd_ping (ServerContext *ctx, GHashTable *args, GError **err)
 static MuError
 cmd_quit (ServerContext *ctx, GHashTable *args , GError **err)
 {
-	print_expr (";; quiting");
+	print_expr (";; quitting");
 
 	return MU_STOP;
 }
