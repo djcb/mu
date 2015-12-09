@@ -73,7 +73,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;###autoload
 (defun mu4e (&optional background)
-  "If mu4e is not running yet, start it. Then, show the the main
+  "If mu4e is not running yet, start it. Then, show the main
 window, unless BACKGROUND (prefix-argument) is non-nil."
   (interactive "P")
   ;; start mu4e, then show the main view
