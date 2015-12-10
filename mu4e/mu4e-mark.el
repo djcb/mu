@@ -429,7 +429,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   "If there are any marks in the current buffer, handle those
 according to the value of `mu4e-headers-leave-behavior'. This
 function is to be called before any further action (like searching,
-quiting the buffer) is taken; returning t means 'take the following
+quitting the buffer) is taken; returning t means 'take the following
 action', return nil means 'don't do anything'."
   (mu4e~mark-in-context 
     (let ((marknum (mu4e-mark-marks-num))

@@ -1149,7 +1149,7 @@ If ATTNUM is nil ask for the attachment number."
       ;; send the docid as parameter (4th arg); we'll get this back from the
       ;; server, and use it to determine the parent message (ie., the current
       ;; message) when showing the embedded message/rfc822, and return to the
-      ;; current message when quiting that one.
+      ;; current message when quitting that one.
       (mu4e~view-temp-action docid index "mu4e" docid)
       ;; otherwise, open with the default program (handled in mu-server
       (mu4e~proc-extract 'open docid index mu4e-decryption-policy))))
