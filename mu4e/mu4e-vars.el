@@ -674,6 +674,11 @@ mu4e-compose-mode."
 	 :shortname "Subject"
 	 :help "Subject of the thread"
 	 :sortable :subject))
+     (:content-base .
+       ( :name "Website"
+         :shortname "Website"
+         :help "Origin of the email"
+         :sortable t))
      (:to .
        ( :name "To"
 	 :shortname "T"

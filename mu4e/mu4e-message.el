@@ -73,7 +73,7 @@ messages requires html' text bodies."
   "Retrieve FIELD from message plist MSG.
 FIELD is one of :from, :to, :cc, :bcc, :subject, :data,
 :message-id, :path, :maildir, :priority, :attachments,
-:references, :in-reply-to, :body-txt, :body-html
+:references, :in-reply-to, :content-base, :body-txt, :body-html
 
 Returns `nil' if the field does not exist.
 
@@ -123,7 +123,8 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
     (cond
       (val
 	val)   ;; non-nil -> just return it
-      ((member field '(:subject :message-id :path :maildir :in-reply-to))
+      ((member field (list :subject :message-id :path :maildir
+                           :in-reply-to :content-base))
 	"")    ;; string fields except body-txt, body-html: nil -> ""
       ((member field '(:body-html :body-txt))
 	val)

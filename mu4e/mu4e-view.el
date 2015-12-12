@@ -52,8 +52,8 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-fields
-  '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags
-          :attachments :signature :decryption)
+  '(:from :to  :cc :subject :flags :date :maildir :mailing-list :content-base
+          :tags :attachments :signature :decryption)
   "Header fields to display in the message view buffer.
 For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
@@ -200,9 +200,10 @@ found."
       (lambda (field)
 	(let ((fieldval (mu4e-message-field msg field)))
 	  (case field
-	    (:subject  (mu4e~view-construct-header field fieldval))
-	    (:path     (mu4e~view-construct-header field fieldval))
-	    (:maildir  (mu4e~view-construct-header field fieldval))
+            (:subject       (mu4e~view-construct-header field fieldval))
+            (:path          (mu4e~view-construct-header field fieldval))
+            (:maildir       (mu4e~view-construct-header field fieldval))
+            (:content-base  (mu4e~view-construct-header field fieldval))
 	    ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
 
 	    ;; contact fields
