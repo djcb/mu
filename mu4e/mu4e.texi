@@ -3414,6 +3414,12 @@ adding the following snippet to your configuration (courtesy of user
       mml2015-encrypt-to-self t
       mml2015-sign-with-sender t)
 @end lisp
+@item @emph{view-as-pdf seems to hang for some e-mails - what can I do about that?}
+Short answer: install @t{nspluginwrapper}. Longer answer: @t{mu} comes
+with @t{msg2pdf}, which is a program used to convert the messages to
+pdf, and which depends on WebKit, which in some cases needs
+@t{nspluginwrapper} and it waits for a long time if it's not there. So,
+installing @t{nspluginwrapper} prevents that.
 @end enumerate
 
 @node Writing messages
