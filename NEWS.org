@@ -27,6 +27,9 @@
    - when removing the "In-reply-to" header from replies, mu4e will
      also remove the (hidden) References header, effectively creating
      a new message-thread.
+   - implement 'mu4e-context', for defining and switching between
+     various contexts, which are groups of settings. This can be used
+     for instance for switch between e-mail accounts.
 
 ** 0.9.13
 
