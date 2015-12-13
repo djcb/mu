@@ -2262,18 +2262,19 @@ example:
 
 It can be useful to be able to switch between different sets of settings
 in mu4e; typical examples include the case where you have different
-e-mail accounts for private and work email.
+e-mail accounts for private and work email, each with their own settings
+for e-mail addresses, mailservers etc.
 
-The @code{mu4e-context} system is a @t{mu4e}-specific mechanism to
-accomplish that; users can be define different contexts, and either
-manually switch between them, or let @t{mu4e} determine the right
-context when composing a message.
+The @code{mu4e-context} system is a @t{mu4e}-specific mechanism to allow
+for that; users can be define different contexts, and either manually
+switch between them, or let @t{mu4e} determine the right context when
+composing a message.
 
-Note, there are a number of existin ways to switch accounts in @t{mu4e},
-for example using the method described in the @ref{Tips and Tricks}
-section of this manual. Those keep on working - mu4e-context has the
-benefit of being a core part of `mu4e`, thus allowing for deeper
-integration.
+Note, there are a number of existing ways to switch accounts in
+@t{mu4e}, for example using the method described in the @ref{Tips and
+Tricks} section of this manual. Those still work - but the new mechanism
+has the benefit of being a core part of @code{mu4e}, thus allowing for
+deeper integration.
 
 @node Defining a context
 @section Defining a context
@@ -2296,14 +2297,14 @@ this context is the right one for this message, or @t{nil} otherwise.
 an alist of variable settings for this account.
 @end itemize
 
-@t{mu4e} uses a variable @code{mu4e-contexts}, which is a list of those
+@t{mu4e} uses a variable @code{mu4e-contexts}, which is a list of such
 objects.
 
 @node Contexts example
 @section Example
 
 Let's look at an example; we define two contexts, 'Private' and 'Work'
-for our fictional user Alice Derleth.
+for a fictional user Alice Derleth.
 
 @lisp
 (setq mu4e-contexts
@@ -2331,7 +2332,7 @@ for our fictional user Alice Derleth.
 		  ( mu4e-compose-signature .
 		    (concat
 		      "Prof. Alice Derleth\n"
-		      "Miskatonic University, Dept. of Occult Sciences"))))))
+		      "Miskatonic University, Dept. of Occult Sciences\n"))))))
 @end lisp
 
 @node Contexts notes

@@ -83,7 +83,6 @@ for the message replied to or forwarded, and nil otherwise. Before composing a n
       (mapc #'(lambda (cell)
 		(set (car cell) (cdr cell)))
 	(mu4e-context-vars context)))
-    (mu4e-clear-caches)
     (setq mu4e~context-current context)
     (mu4e-message "Switched context to %s" (mu4e-context-name context))
     context))
