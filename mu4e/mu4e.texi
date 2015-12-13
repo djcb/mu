@@ -94,6 +94,7 @@ which should help you with some common questions.
 * Editor view:: Creating / editing messages
 * Searching:: Some more background on searching/queries
 * Marking:: Marking messages and performing actions
+* Contexts:: Defining contexts and switching between them
 * Dynamic folders:: Folders that depend on the context
 * Actions:: Defining and using custom actions
 * Extending mu4e:: Writing code for @t{mu4e}
@@ -624,8 +625,6 @@ with @kbd{M-x mu4e}. @t{mu4e} does some checks to ensure everything is set up
 correctly, and then shows you the @t{mu4e} main view. Its major mode is
 @code{mu4e-main-mode}.
 
-
-
 @menu
 * Overview: MV Overview.
 * Basic actions::
@@ -640,30 +639,36 @@ The main view looks something like the following:
 
 @cartouche
 @verbatim
-    * mu4e - mu for emacs version x.x CG
+* mu4e - mu for emacs version xx.xx CG
 
-      Basics
+  Basics
 
-            * [j]ump to some maildir
-            * enter a [s]earch query
-            * [C]ompose a new message
+	* [j]ump to some maildir
+	* enter a [s]earch query
+	* [C]ompose a new message
 
-      Bookmarks
+  Bookmarks
 
-            * [bu] Unread messages
-            * [bt] Today's messages
-            * [bw] Last 7 days
-            * [bp] Messages with images
-      Misc
+	* [bu] Unread messages
+	* [bt] Today's messages
+	* [bw] Last 7 days
+	* [bp] Messages with images
+	* [bs] Sent mail
+	* [bf] Flagged messages
+	* [b]] Flow
+	* [b/] Test
 
-            * [U]pdate email & database
-            * toggle [m]ail sending mode (direct)
-            * [f]lush queued mail
+  Misc
 
-            * [A]bout mu4e
-            * [H]elp
-            * [q]uit mu4e
+	* [;]Switch focus
+	* [U]pdate email & database
+	* toggle [m]ail sending mode (currently direct)
+	* [f]lush 5 queued mails
 
+	* [N]ews
+	* [A]bout mu4e
+	* [H]elp
+	* [q]uit
 @end verbatim
 @end cartouche
 
@@ -884,6 +889,7 @@ E            edit (only allowed for draft messages)
 
 misc
 ----
+;            switch focus
 a            execute some custom action on a header
 |            pipe message through shell command
 C-+,C--      increase / decrease the number of headers shown
@@ -1180,6 +1186,7 @@ A            execute some custom action on an attachment
 
 misc
 ----
+;            switch focus
 c            copy address at point (with C-u copy long version)
 w            toggle line wrapping
 h            toggle showing cited parts
@@ -2243,10 +2250,110 @@ example:
 (define-key mu4e-headers-mode-map (kbd "A") 'mu4e-headers-mark-for-archive)
 @end lisp
 
+@node Contexts
+@chapter Contexts
+
+@menu
+* Defining a context::
+* Contexts example::  
+* Contexts notes::
+@end menu
+
+
+It can be useful to be able to switch between different sets of settings
+in mu4e; typical examples include the case where you have different
+e-mail accounts for private and work email.
+
+The @code{mu4e-context} system is a @t{mu4e}-specific mechanism to
+accomplish that; users can be define different contexts, and either
+manually switch between them, or let @t{mu4e} determine the right
+context when composing a message.
+
+Note, there are a number of existin ways to switch accounts in @t{mu4e},
+for example using the method described in the @ref{Tips and Tricks}
+section of this manual. Those keep on working - mu4e-context has the
+benefit of being a core part of `mu4e`, thus allowing for deeper
+integration.
+
+@node Defining a context
+@section Defining a context
+
+A @code{mu4e-context} is Lisp object with the following members:
+@itemize
+@item @t{name}: the name of the context, e.g. @t{work} or @t{private}
+@item @t{enter-func}: 
+an optional function that takes no parameter and is invoked when entering
+the context
+@item @t{leave-func}:
+an optional function that takes no parameter and is invoked when leaving
+the context
+@item @t{match-func}:
+an optional function that is invoked before replying to or forwarding a
+message with the given message plist as parameter, or @t{nil} when
+composing a brand new message. The function should return @t{t} when
+this context is the right one for this message, or @t{nil} otherwise.
+@item @t{vars}:
+an alist of variable settings for this account.
+@end itemize
+
+@t{mu4e} uses a variable @code{mu4e-contexts}, which is a list of those
+objects.
+
+@node Contexts example
+@section Example
+
+Let's look at an example; we define two contexts, 'Private' and 'Work'
+for our fictional user Alice Derleth.
+
+@lisp
+(setq mu4e-contexts
+  `( ,(make-mu4e-context
+	:name "Private"
+	:enter-func (lambda () (mu4e-message "Private mail"))
+        ;; no leave-func
+	:match-func (lambda (msg)
+		      (when msg (mu4e-message-contact-field-matches msg :to "aliced@@home.com")))
+	:vars '(  ( mail-reply-to          . "aliced@@home.com" )	
+		  ( user-mail-address      . "aliced@@home.com"  )	
+		  ( user-full-name         . "Alice Derleth" )	
+		  ( mu4e-compose-signature .
+		    (concat
+		      "Alice Derleth\n"
+		      "Lauttasaari, Finland\n")))) 
+     ,(make-mu4e-context
+	:name "Work"
+	:enter-func (lambda () (message "Work"))
+	:match-func (lambda (msg)
+		      (when msg (mu4e-message-contact-field-matches msg :to "aderleth@@miskatonic.edu")))
+	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.edu" )	
+		  ( user-mail-address      . "aderleth@@miskatonic.edu" )	
+		  ( user-full-name         . "Alice Derleth" )	
+		  ( mu4e-compose-signature .
+		    (concat
+		      "Prof. Alice Derleth\n"
+		      "Miskatonic University, Dept. of Occult Sciences"))))))
+@end lisp
+
+@node Contexts notes
+@section Notes
+
+Couple of notes:
+@itemize
+@item You can manually switch the focus use @code{M-x mu4e-context-switch}, by default bound to @code{;} in headers, view and main mode. The current focus shows in the mode-line.
+@item The function @code{mu4e-context-current} returns the current-context; the current context is also visiable in the mode-line when in headers, view or main mode.
+@item You can set any kind of variable; including settings for mail servers etc. However, settings like @code{mu4e-maildir} and @code{mu4e-mu-home} are not changeable after they have been set without quiting @t{mu4e} firts.
+@item @code{leave-func} (if defined) for the context we are leaving, is invoked before the @code{enter-func} (if defined) of the context we are entering.
+@item @code{enter-func} (if defined) is invoked before setting the variables.
+@item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}. 
+@item Finally, be careful to get the quotations right -- backticks, single quotes and commas and note the '.' between variable name and value.
+@end itemize
+
+
 @node Dynamic folders
 @chapter Dynamic folders
 
-In @ref{Folders}, we explained how you can set up @t{mu4e}'s special folders:
+In @ref{Folders}, we explained how you can set up @t{mu4e}'s special
+folders:
 @lisp
 (setq
   mu4e-sent-folder   "/sent"       ;; sent messages
