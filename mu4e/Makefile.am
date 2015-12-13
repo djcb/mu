@@ -24,6 +24,7 @@ mu4e_TEXINFOS=fdl.texi
 dist_lisp_LISP=			\
 	mu4e-actions.el		\
 	mu4e-compose.el		\
+	mu4e-context.el		\
 	mu4e-contrib.el		\
 	mu4e-draft.el		\
 	mu4e-headers.el		\
