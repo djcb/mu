@@ -625,7 +625,8 @@ after the end of the search results."
       (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
 
-
+      (define-key map ";" 'mu4e-context-switch)
+      
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
@@ -946,8 +947,6 @@ docid is not found."
       (unless ignore-missing
 	(mu4e-error "Cannot find message with docid %S" docid)))))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
@@ -969,8 +968,13 @@ the query history stack."
 	mu4e~headers-buffer buf
 	mode-name "mu4e-headers"
 	mu4e~headers-last-query expr
-	global-mode-string (propertize mu4e~headers-last-query
-			     'face 'mu4e-modeline-face)))
+	global-mode-string
+	'(:eval
+	   (concat
+	     (propertize mu4e~headers-last-query 'face 'mu4e-modeline-face)
+	     " "
+	     (mu4e-context-label)))))
+    
     (switch-to-buffer buf)
     (mu4e~proc-find
       expr

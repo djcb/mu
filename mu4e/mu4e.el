@@ -35,8 +35,8 @@
 (require 'mu4e-compose)  ;; message composition / sending
 (require 'mu4e-proc)     ;; communication with backend
 (require 'mu4e-utils)    ;; utility functions
+(require 'mu4e-context)  ;; support for contexts
 (require 'mu4e-speedbar) ;; support for speedbar
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

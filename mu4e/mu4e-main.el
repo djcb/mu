@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'smtpmail)      ;; the queing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
+(require 'mu4e-context)  ;; the context
 
 
 (defconst mu4e~main-buffer-name " *mu4e-main*"
@@ -53,7 +54,7 @@
 
     (define-key map "S" 'mu4e-interrupt-update-mail)
     (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
-
+    (define-key map ";" 'mu4e-context-switch)
 
     (define-key map "$" 'mu4e-show-log)
     (define-key map "A" 'mu4e-about)
@@ -110,8 +111,8 @@ clicked."
       (erase-buffer)
       (insert
        "* "
-       (propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
-       (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
+	(propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
+	(propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
 
        ;; show some server properties; in this case; a big C when there's
        ;; crypto support, a big G when there's Guile support
@@ -120,7 +121,8 @@ clicked."
         (concat
          (when (plist-get mu4e~server-props :crypto) "C")
          (when (plist-get mu4e~server-props :guile)  "G"))
-        'face 'mu4e-title-face)
+	 'face 'mu4e-title-face)
+	
        "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
        (mu4e~main-action-str "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
@@ -139,12 +141,14 @@ clicked."
        "\n\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-       (mu4e~main-action-str "\t* [U]pdate email & database\n"
-                             'mu4e-update-mail-and-index)
+	(mu4e~main-action-str "\t* [;]Switch focus\n" 'mu4e-context-switch)
+	
+	(mu4e~main-action-str "\t* [U]pdate email & database\n"
+	  'mu4e-update-mail-and-index)
 
 	;; show the queue functions if `smtpmail-queue-dir' is defined
-       (if (file-directory-p smtpmail-queue-dir)
-           (mu4e~main-view-queue)
+	(if (file-directory-p smtpmail-queue-dir)
+	  (mu4e~main-view-queue)
          "")
 	"\n"
 	(mu4e~main-action-str "\t* [N]ews\n" 'mu4e-news)
@@ -186,7 +190,9 @@ clicked."
   "Create the mu4e main-view, and switch to it."
   (mu4e~main-view-real nil nil)
   (switch-to-buffer mu4e~main-buffer-name)
-  (goto-char (point-min)))
+  (goto-char (point-min))
+  (setq global-mode-string '(:eval (mu4e-context-label))))
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
 ;; NEW

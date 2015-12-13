@@ -576,6 +576,8 @@ FUNC should be a function taking two arguments:
       (define-key map "|" 'mu4e-view-pipe)
       (define-key map "a" 'mu4e-view-action)
 
+      (define-key map ";" 'mu4e-context-switch)
+      
       ;; toggle header settings
       (define-key map "O" 'mu4e-headers-change-sorting)
       (define-key map "P" 'mu4e-headers-toggle-threading)
@@ -707,7 +709,6 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [search]
 	  '("Search" . mu4e-headers-search))
 
-
 	(define-key menumap [sepa4] '("--"))
 	(define-key menumap [next]  '("Next" . mu4e-view-headers-next))
 	(define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
@@ -733,8 +734,10 @@ FUNC should be a function taking two arguments:
   (make-local-variable 'mu4e~view-attach-map)
   (make-local-variable 'mu4e~view-cited-hidden)
 
-  (setq buffer-undo-list t) ;; don't record undo info
-
+  (setq buffer-undo-list t ;; don't record undo info
+    global-mode-string     ;; show context in mode-line
+    '(:eval (mu4e-context-label))) 
+  
   ;; autopair mode gives error when pressing RET
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
