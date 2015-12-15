@@ -173,24 +173,24 @@ Field must be a symbol, one of: :date, :subject, :size, :prio,
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
-(defvar mu4e-headers-draft-mark     (purecopy '("D" . "⚒")) "Draft.")
-(defvar mu4e-headers-flagged-mark   (purecopy '("F" . "⚑")) "Flagged.")
-(defvar mu4e-headers-new-mark       (purecopy '("N" . "⭑")) "New.")
-(defvar mu4e-headers-passed-mark    (purecopy '("P" . "❯")) "Passed (fwd).")
-(defvar mu4e-headers-replied-mark   (purecopy '("R" . "❮")) "Replied.")
-(defvar mu4e-headers-seen-mark      (purecopy '("S" . "✔")) "Seen.")
-(defvar mu4e-headers-trashed-mark   (purecopy '("T" . "♻")) "Trashed.")
-(defvar mu4e-headers-attach-mark    (purecopy '("a" . "⚓")) "W/ attachments.")
-(defvar mu4e-headers-encrypted-mark (purecopy '("x" . "⚴")) "Encrypted.")
-(defvar mu4e-headers-signed-mark    (purecopy '("s" . "☡")) "Signed.")
-(defvar mu4e-headers-unread-mark    (purecopy '("u" . "☐")) "Unread.")
+(defvar mu4e-headers-draft-mark     '("D" . "⚒") "Draft.")
+(defvar mu4e-headers-flagged-mark   '("F" . "⚑") "Flagged.")
+(defvar mu4e-headers-new-mark       '("N" . "⭑") "New.")
+(defvar mu4e-headers-passed-mark    '("P" . "❯") "Passed (fwd).")
+(defvar mu4e-headers-replied-mark   '("R" . "❮") "Replied.")
+(defvar mu4e-headers-seen-mark      '("S" . "✔") "Seen.")
+(defvar mu4e-headers-trashed-mark   '("T" . "♻") "Trashed.")
+(defvar mu4e-headers-attach-mark    '("a" . "⚓") "W/ attachments.")
+(defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Encrypted.")
+(defvar mu4e-headers-signed-mark    '("s" . "☡") "Signed.")
+(defvar mu4e-headers-unread-mark    '("u" . "☐") "Unread.")
 
 ;; thread prefix marks
-(defvar mu4e-headers-has-child-prefix    (purecopy '("+"  . "◼"))  "Parent.")
-(defvar mu4e-headers-empty-parent-prefix (purecopy '("-"  . "◽"))  "Orphan.")
-(defvar mu4e-headers-first-child-prefix  (purecopy '("\\" . "┗▶")) "First child.")
-(defvar mu4e-headers-duplicate-prefix    (purecopy '("="  . "⚌"))  "Duplicate.")
-(defvar mu4e-headers-default-prefix       (purecopy '("|"  . "┃")) "Default.")
+(defvar mu4e-headers-has-child-prefix    '("+"  . "◼")  "Parent.")
+(defvar mu4e-headers-empty-parent-prefix '("-"  . "◽")  "Orphan.")
+(defvar mu4e-headers-first-child-prefix  '("\\" . "┗▶") "First child.")
+(defvar mu4e-headers-duplicate-prefix    '("="  . "⚌")  "Duplicate.")
+(defvar mu4e-headers-default-prefix       '("|"  . "┃") "Default.")
 
 
 (defvar mu4e-headers-actions
@@ -236,10 +236,10 @@ If this is nil show results up to `mu4e-search-results-limit')")
 ;;;; internal variables/constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; docid cookies
-(defconst mu4e~headers-docid-pre (purecopy "\376")
+(defconst mu4e~headers-docid-pre "\376"
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
 followed by the docid, followed by `mu4e~headers-docid-post'.")
-(defconst mu4e~headers-docid-post (purecopy "\377")
+(defconst mu4e~headers-docid-post "\377"
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
 followed by the docid, followed by `mu4e~headers-docid-post'.")
 
@@ -523,8 +523,8 @@ if provided, or at the end of the buffer otherwise."
       ;; now, append the header line
       (mu4e~headers-add-header line docid point msg)))
 
-(defconst mu4e~no-matches     (purecopy "No matching messages found"))
-(defconst mu4e~end-of-results (purecopy "End of search results"))
+(defconst mu4e~no-matches     "No matching messages found")
+(defconst mu4e~end-of-results "End of search results")
 
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found

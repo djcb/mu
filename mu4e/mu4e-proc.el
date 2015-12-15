@@ -48,7 +48,7 @@ a length cookie:
 a length cookie:
   <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>.")
 (defconst mu4e~cookie-matcher-rx
-  (purecopy (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post))
+  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
 

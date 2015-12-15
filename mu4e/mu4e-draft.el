@@ -245,8 +245,7 @@ separator is never written to the message file. Also see
 `mu4e-remove-mail-header-separator'."
   ;; we set this here explicitly, since (as it has happened) a wrong
   ;; value for this (such as "") breaks address completion and other things
-  (set (make-local-variable 'mail-header-separator)
-    (purecopy "--text follows this line--"))
+  (set (make-local-variable 'mail-header-separator) "--text follows this line--")
   (put 'mail-header-separator 'permanent-local t)
   (save-excursion
     ;; make sure there's not one already
