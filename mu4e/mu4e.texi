@@ -2367,8 +2367,9 @@ Couple of notes:
 @item Finally, be careful to get the quotations right -- backticks, single quotes and commas and note the '.' between variable name and value.
 @end itemize
 
-@section Some context tricks
 @node Some context tricks
+@section Some context tricks
+
 
 It is possible to automatically fill @code{mu4e-user-address-list} by
 concatenating the @code{user-mail-address} fields of all contexts:
