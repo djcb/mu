@@ -2255,13 +2255,14 @@ example:
 
 @menu
 * Defining a context::
+* Default context::
 * Contexts example::  
 * Contexts notes::
+* Some context tricks::
 @end menu
 
-
 It can be useful to be able to switch between different sets of settings
-in mu4e; typical examples include the case where you have different
+in @t{mu4e}; typical examples include the case where you have different
 e-mail accounts for private and work email, each with their own settings
 for e-mail addresses, mailservers etc.
 
@@ -2293,6 +2294,11 @@ an optional function that is invoked before replying to or forwarding a
 message with the given message plist as parameter, or @t{nil} when
 composing a brand new message. The function should return @t{t} when
 this context is the right one for this message, or @t{nil} otherwise.
+
+The function is also invoked when starting @t{mu4e} to determine the
+starting context; in that case, the message-parameter is nil. You can
+use e.g. the host you're running or or perhaps the time of day or even
+your location to determine the context.
 @item @t{vars}:
 an alist of variable settings for this account.
 @end itemize
@@ -2300,18 +2306,29 @@ an alist of variable settings for this account.
 @t{mu4e} uses a variable @code{mu4e-contexts}, which is a list of such
 objects.
 
+@node Default context
+@section Default context
+
+When you have defined contexts and you start @t{mu4e}, it automatically
+switches to the first context whose @code{match-func} returns
+non-nil. If none of them do, it picks the first. So, put your 'default'
+context as the first in @code{mu4e-contexts}.
+
 @node Contexts example
 @section Example
 
 Let's look at an example; we define two contexts, 'Private' and 'Work'
 for a fictional user Alice Derleth.
 
+Note that in this case, we automatically switch to the first context
+when starting; see the discussion in the previous section.
+
 @lisp
 (setq mu4e-contexts
   `( ,(make-mu4e-context
 	:name "Private"
-	:enter-func (lambda () (mu4e-message "Private mail"))
-        ;; no leave-func
+	:enter-func (lambda () (mu4e-message "Switch to the Private context")) 
+        ;; leave-func not defined
 	:match-func (lambda (msg)
 		      (when msg (mu4e-message-contact-field-matches msg :to "aliced@@home.com")))
 	:vars '(  ( mail-reply-to          . "aliced@@home.com" )	
@@ -2323,7 +2340,8 @@ for a fictional user Alice Derleth.
 		      "Lauttasaari, Finland\n")))) 
      ,(make-mu4e-context
 	:name "Work"
-	:enter-func (lambda () (message "Work"))
+	:enter-func (lambda () (mu4e-message "Switch to the Work context"))
+        ;; leave-fun not defined
 	:match-func (lambda (msg)
 		      (when msg (mu4e-message-contact-field-matches msg :to "aderleth@@miskatonic.edu")))
 	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.edu" )	
@@ -2333,10 +2351,31 @@ for a fictional user Alice Derleth.
 		    (concat
 		      "Prof. Alice Derleth\n"
 		      "Miskatonic University, Dept. of Occult Sciences\n"))))))
+@end lisp
 
-;; Set default context
-(mu4e-context-switch "Private")
-;; Set mu4e-user-mail-address-list to reflect the contexts' addresses
+@node Contexts notes
+@section Context notes
+
+Couple of notes:
+@itemize
+@item You can manually switch the focus use @code{M-x mu4e-context-switch}, by default bound to @code{;} in headers, view and main mode. The current focus appears in the mode-line.
+@item The function @code{mu4e-context-current} returns the current-context; the current context is also visiable in the mode-line when in headers, view or main mode.
+@item You can set any kind of variable; including settings for mail servers etc. However, settings like @code{mu4e-maildir} and @code{mu4e-mu-home} are not changeable after they have been set without quiting @t{mu4e} first.
+@item @code{leave-func} (if defined) for the context we are leaving, is invoked before the @code{enter-func} (if defined) of the context we are entering.
+@item @code{enter-func} (if defined) is invoked before setting the variables.
+@item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}. 
+@item Finally, be careful to get the quotations right -- backticks, single quotes and commas and note the '.' between variable name and value.
+@end itemize
+
+@section Some context tricks
+@node Some context tricks
+
+It is possible to automatically fill @code{mu4e-user-address-list} by
+concatenating the @code{user-mail-address} fields of all contexts:
+
+@lisp
+;; This sets `mu4e-user-mail-address-list' to the concatenation of all `user-mail-address' values
+;; for all contexts. If you have other mail addresses as well, you'll need to add those manually. 
 (setq mu4e-user-mail-address-list
       (delq nil
             (mapcar (lambda (context)
@@ -2345,19 +2384,6 @@ for a fictional user Alice Derleth.
                     mu4e-contexts)))
 @end lisp
 
-@node Contexts notes
-@section Notes
-
-Couple of notes:
-@itemize
-@item You can manually switch the focus use @code{M-x mu4e-context-switch}, by default bound to @code{;} in headers, view and main mode. The current focus shows in the mode-line.
-@item The function @code{mu4e-context-current} returns the current-context; the current context is also visiable in the mode-line when in headers, view or main mode.
-@item You can set any kind of variable; including settings for mail servers etc. However, settings like @code{mu4e-maildir} and @code{mu4e-mu-home} are not changeable after they have been set without quiting @t{mu4e} firts.
-@item @code{leave-func} (if defined) for the context we are leaving, is invoked before the @code{enter-func} (if defined) of the context we are entering.
-@item @code{enter-func} (if defined) is invoked before setting the variables.
-@item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}. 
-@item Finally, be careful to get the quotations right -- backticks, single quotes and commas and note the '.' between variable name and value.
-@end itemize
 
 
 @node Dynamic folders

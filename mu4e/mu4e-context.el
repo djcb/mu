@@ -87,17 +87,27 @@ for the message replied to or forwarded, and nil otherwise. Before composing a n
     (mu4e-message "Switched context to %s" (mu4e-context-name context))
     context))
 
-(defun mu4e-context-determine (msg)
+(defun mu4e-context-autoselect ()
+  "When contexts are defined but there is no context yet, switch
+to the first whose :match-func return non-nil. If none of them
+match, return the first."
+ (when (and mu4e-contexts (not (mu4e-context-current)))
+   (mu4e-context-switch
+     (mu4e-context-name  (mu4e-context-determine nil 'pick-first)))))
+
+(defun mu4e-context-determine (msg &optional pick-first)
   "Return the first context with a match-func that returns t. MSG
   points to the plist for the message replied to or forwarded, or
   nil if there is no such MSG; similar to what
-  `mu4e-compose-pre-hook' does. If no context matches, return
-  nil."
+  `mu4e-compose-pre-hook' does.
+
+If there are contexts but none match, return nil, unless
+  PICK-FIRST is non-nil, in which case return the first context."
   (when mu4e-contexts
-    (find-if (lambda (context)
-	       (and (mu4e-context-match-func context)
-		 (funcall (mu4e-context-match-func context) msg)))
-      mu4e-contexts)))
+    (or (find-if (lambda (context)
+		   (and (mu4e-context-match-func context)
+		     (funcall (mu4e-context-match-func context) msg))) mu4e-contexts)
+      (car mu4e-contexts))))
 
 (provide 'mu4e-context)
  

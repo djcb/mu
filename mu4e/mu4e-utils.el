@@ -46,6 +46,8 @@
 (declare-function mu4e~proc-mkdir     "mu4e-proc")
 (declare-function mu4e~proc-running-p "mu4e-proc")
 
+(declare-function mu4e-context-autoselect  "mu4e-context")
+
 (declare-function show-all "org")
 
 
@@ -148,8 +150,6 @@ see its docstring)."
       (mu4e-error (mu4e-error "mu4e-attachment-dir evaluates to nil")))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~guess-maildir (path)
   "Guess the maildir for some path, or nil if cannot find it."
@@ -161,8 +161,6 @@ see its docstring)."
 	(expand-file-name
 	  (concat path "/../.."))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -722,9 +720,18 @@ list of contacts we use for autocompletion; otherwise, do nothing."
 	    (mu4e-parse-time-string mu4e-compose-complete-only-after)))))))
 
 (defun mu4e~start (&optional func)
-  "If mu4e is already running, execute function FUNC (if non-nil).
+  "If `mu4e-contexts' have been defined, but we don't have a
+context yet, switch to the matching one, or none matches, the
+first.
+If mu4e is already running, execute function FUNC (if non-nil).
 Otherwise, check various requirements, then start mu4e. When
 successful, call FUNC (if non-nil) afterwards."
+
+  ;; auto-select some account
+  (mu4e-context-autoselect)
+ 
+  ;; (when (and mu4e-contexts (not (mu4e-context-current)))
+  ;;   (mu4e-switch-context (mu4e-context-determine nil 'pick-first))
   ;; if we're already running, simply go to the main view
   (if (mu4e-running-p)   ;; already running?
     (when func                 ;; yes! run func if defined
