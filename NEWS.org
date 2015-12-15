@@ -30,6 +30,8 @@
    - implement 'mu4e-context', for defining and switching between
      various contexts, which are groups of settings. This can be used
      for instance for switch between e-mail accounts.
+   - correctly decode mailing-list headers
+   - allow for "fancy" mark-characters
 
 ** 0.9.13
 
