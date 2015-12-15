@@ -376,8 +376,20 @@ mu_msg_get_msgid  (MuMsg *self)
 const char*
 mu_msg_get_mailing_list (MuMsg *self)
 {
+	const char	*ml;
+	char		*decml;
+	
 	g_return_val_if_fail (self, NULL);
-	return get_str_field (self, MU_MSG_FIELD_ID_MAILING_LIST);
+	
+	ml = get_str_field (self, MU_MSG_FIELD_ID_MAILING_LIST);
+	if (!ml)
+		return NULL;
+
+	decml = g_mime_utils_header_decode_text (ml);
+	if (!decml)
+		return NULL;
+
+	return free_later_str (self, decml);
 }
 
 

@@ -334,8 +334,9 @@ test_mu_msg_references (void)
 static void
 test_mu_msg_references_dups (void)
 {
-	MuMsg *msg;
-	const GSList *refs;
+	MuMsg		*msg;
+	const GSList	*refs;
+	const char	*mlist;
 
 	msg = get_msg (MU_TESTMAILDIR4 "/1252168370_3.14675.cthulhu!2,S");
 	refs = mu_msg_get_references(msg);
@@ -363,6 +364,9 @@ test_mu_msg_references_dups (void)
 			 "20051211184308.GB13513@gauss.org");
 	refs = g_slist_next (refs);
 
+	mlist = mu_msg_get_mailing_list (msg);
+	g_assert_cmpstr (mlist ,==, "Example of List Id");
+		
 	mu_msg_unref (msg);
 }
 
@@ -404,10 +408,6 @@ test_mu_msg_references_many (void)
 
 	mu_msg_unref (msg);
 }
-
-
-
-
 
 static void
 test_mu_msg_tags (void)
