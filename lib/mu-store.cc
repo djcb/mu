@@ -74,7 +74,7 @@ xapian_get_metadata (const gchar *xpath, const gchar *key)
 	g_return_val_if_fail (xpath, NULL);
 	g_return_val_if_fail (key, NULL);
 
-	if (!access(xpath, F_OK) == 0) {
+	if (access(xpath, F_OK) != 0) {
 		g_warning ("cannot access %s: %s", xpath, strerror(errno));
 		return NULL;
 	}
