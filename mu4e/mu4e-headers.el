@@ -170,28 +170,26 @@ Field must be a symbol, one of: :date, :subject, :size, :prio,
   "Direction to sort by; a symbol either `descending' (sorting
   Z->A) or `ascending' (sorting A->Z).")
 
-
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
 (defvar mu4e-headers-draft-mark     '("D" . "⚒") "Draft.")
-(defvar mu4e-headers-flagged-mark   '("F" . "⚑") "Flagged.")
-(defvar mu4e-headers-new-mark       '("N" . "⭑") "New.")
+(defvar mu4e-headers-flagged-mark   '("F" . "✚") "Flagged.")
+(defvar mu4e-headers-new-mark       '("N" . "✱") "New.")
 (defvar mu4e-headers-passed-mark    '("P" . "❯") "Passed (fwd).")
 (defvar mu4e-headers-replied-mark   '("R" . "❮") "Replied.")
 (defvar mu4e-headers-seen-mark      '("S" . "✔") "Seen.")
-(defvar mu4e-headers-trashed-mark   '("T" . "♻") "Trashed.")
+(defvar mu4e-headers-trashed-mark   '("T" . "✀") "Trashed.")
 (defvar mu4e-headers-attach-mark    '("a" . "⚓") "W/ attachments.")
 (defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Encrypted.")
 (defvar mu4e-headers-signed-mark    '("s" . "☡") "Signed.")
-(defvar mu4e-headers-unread-mark    '("u" . "☐") "Unread.")
+(defvar mu4e-headers-unread-mark    '("u" . "🖂") "Unread.")
 
 ;; thread prefix marks
 (defvar mu4e-headers-has-child-prefix    '("+"  . "◼")  "Parent.")
 (defvar mu4e-headers-empty-parent-prefix '("-"  . "◽")  "Orphan.")
 (defvar mu4e-headers-first-child-prefix  '("\\" . "┗▶") "First child.")
-(defvar mu4e-headers-duplicate-prefix    '("="  . "⚌")  "Duplicate.")
-(defvar mu4e-headers-default-prefix       '("|"  . "┃") "Default.")
-
+(defvar mu4e-headers-duplicate-prefix    '("="  . "≡")  "Duplicate.")
+(defvar mu4e-headers-default-prefix      '("|"  . "│") "Default.")
 
 (defvar mu4e-headers-actions
   '( ("capture message"  . mu4e-action-capture-message) 
@@ -354,8 +352,7 @@ into a string."
   "Calculate the thread prefix based on thread info THREAD."
   (when thread
     (let ((get-prefix
-           (lambda (cell)  (if (or (eq mu4e-use-fancy-chars t)
-                                   (eq mu4e-use-fancy-chars 'threads)) (cdr cell) (car cell)))))
+	    (lambda (cell) (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
       (concat
 	(make-string (* (if (plist-get thread :empty-parent) 0 1)
 		 (plist-get thread :level)) ?\s)
@@ -380,9 +377,7 @@ internally, the Maildir spec determines what the flags look like,
 while our display may be different)."
   (let ((str "")
         (get-prefix
-         (lambda (cell)  (if (or (eq mu4e-use-fancy-chars t)
-                                 (eq mu4e-use-fancy-chars 'marks)) (cdr cell) (car cell)))))
-
+	  (lambda (cell)  (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
     (dolist (flag mu4e-headers-visible-flags)
       (when (member flag flags)
         (setq str

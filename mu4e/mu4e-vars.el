@@ -141,11 +141,11 @@ as per RFC531."
   'mu4e-user-mail-address-list "0.9.9.x")
 
 (defcustom mu4e-use-fancy-chars nil
-  "Whether to use fancy (non-ascii) characters for marks and/or threads."
-  :type '(choice (const :tag "Do not use fancy chars" nil)
-                 (const :tag "Use fancy chars everywhere" t)
-                 (const :tag "Use fancy chars only for threads" threads)
-                 (const :tag "Use fancy chars only for marks" marks))
+  "Whether to use fancy (Unicode) characters for marks and
+threads. You can customize the exact fancy characters used with
+`mu4e-marks' and various `mu4e-headers-..-mark' and
+`mu4e-headers..-prefix' variables."
+  :type 'boolean
   :group 'mu4e)
 
 (defcustom mu4e-date-format-long "%c"

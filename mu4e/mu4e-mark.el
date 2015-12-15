@@ -120,14 +120,79 @@ is either a headers or view buffer."
 	     ,@body)
 	   (progn (mu4e-message "%S" major-mode) ,@body))))))  
 
-(defvar mu4e-marks nil
+(defvar mu4e-marks
+    '((refile
+	:char ("r" . "▶")
+	:prompt "refile"
+	:dyn-target (lambda (target msg) (mu4e-get-refile-folder msg))
+	:action (lambda (docid msg target) (mu4e~proc-move docid
+						  (mu4e~mark-check-target target) "-N")))
+       (delete
+	 :char ("D" . "🗙")
+	 :prompt "Delete"
+	 :show-target (lambda (target) "delete")
+	 :action (lambda (docid msg target) (mu4e~proc-remove docid)))
+       (flag
+	 :char ("+" . "✚")
+	 :prompt "+flag"
+	 :show-target (lambda (target) "flag")
+	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "+F-u-N")))
+       (move
+	 :char ("m" . "▷")
+	 :prompt "move"
+	 :ask-target  mu4e~mark-get-move-target
+	 :action (lambda (docid msg target) (mu4e~proc-move docid
+					      (mu4e~mark-check-target target) "-N")))
+       (read
+	 :char    ("!" . "☑")
+	 :prompt "!read"
+	 :show-target (lambda (target) "read")
+	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "+S-u-N")))
+       (trash
+	 :char ("d" . "✀")
+	 :prompt "dtrash"
+	 :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+	 :action (lambda (docid msg target) (mu4e~proc-move docid
+					      (mu4e~mark-check-target target) "+T-N")))
+       (unflag
+	 :char    ("-" . "➖")
+	 :prompt "-unflag"
+	 :show-target (lambda (target) "unflag")
+	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "-F-N")))
+       (untrash
+	 :char   ("=" . "🡸")
+	 :prompt "=untrash"
+	 :show-target (lambda (target) "untrash")
+	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "-T")))
+       (unread
+	 :char    ("?" . "☐")
+	 :prompt "?unread"
+	 :show-target (lambda (target) "unread")
+	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "-S+u-N")))
+       (unmark
+	 :char  " "
+	 :prompt "unmark"
+	 :action (mu4e-error "No action for unmarking"))
+       (action
+	 :char ( "a" . "🗲")
+	 :prompt "action"
+	 :ask-target  (lambda () (mu4e-read-option "Action: " mu4e-headers-actions))
+	 :action  (lambda (docid msg actionfunc)
+		    (save-excursion
+		      (when (mu4e~headers-goto-docid docid)
+			(mu4e-headers-action actionfunc)))))
+       (something
+	 :char  ("*" . "✱")
+	 :prompt "*something"
+	 :action (mu4e-error "No action for deferred mark")))
+       
   "The list of all the possible marks.
 This is an alist mapping mark symbols to their properties.  The
 properties are:
   :char (string) or (basic . fancy) The character to display in
     the headers view. Either a single-character string, or a
     dotted-pair cons cell where the second item will be used if
-    `mu4e-use-fancy-chars' is `t' or `marks', otherwise we'll use
+    `mu4e-use-fancy-chars' is `t', otherwise we'll use
     the first one. It can also be a plain string for backwards
     compatibility since we didn't always support
     `mu4e-use-fancy-chars' here.
@@ -142,73 +207,7 @@ properties are:
   :show-target (function from TARGET to string) How to display
      the target.
   :action (function taking (DOCID MSG TARGET)).  The action to
-     apply on the message.
-     ")
-
-(unless mu4e-marks
-  (setq mu4e-marks
-    '((refile
-	:char       "r"
-	:prompt     "refile"
-	:dyn-target  (lambda (target msg) (mu4e-get-refile-folder msg))
-	:action      (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
-       (delete
-	 :char      ("D" . "🗙")
-	 :prompt "Delete"
-	 :show-target (lambda (target) "delete")
-	 :action (lambda (docid msg target) (mu4e~proc-remove docid)))
-       (flag
-	 :char "+"
-	 :prompt "+flag"
-	 :show-target (lambda (target) "flag")
-	 :action (lambda (docid msg target) (mu4e~proc-move docid nil    "+F-u-N")))
-       (move
-	 :char "m"
-	 :prompt "move"
-	 :ask-target  mu4e~mark-get-move-target
-	 :action (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
-       (read
-	 :char       "!"
-	 :prompt "!read"
-	 :show-target (lambda (target) "read")
-	 :action (lambda (docid msg target) (mu4e~proc-move docid nil    "+S-u-N")))
-       (trash
-	 :char      ("d" . "🗑")
-	 :prompt "dtrash"
-	 :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-	 :action (lambda (docid msg target) (mu4e~proc-move docid (mu4e~mark-check-target target) "+T-N")))
-       (unflag
-	 :char     "-"
-	 :prompt "-unflag"
-	 :show-target (lambda (target) "unflag")
-	 :action (lambda (docid msg target) (mu4e~proc-move docid nil    "-F-N")))
-       (untrash
-	 :char    "="
-	 :prompt "=untrash"
-	 :show-target (lambda (target) "untrash")
-	 :action (lambda (docid msg target) (mu4e~proc-move docid nil    "-T")))
-       (unread
-	 :char     "?"
-	 :prompt "?unread"
-	 :show-target (lambda (target) "unread")
-	 :action (lambda (docid msg target) (mu4e~proc-move docid nil    "-S+u-N")))
-       (unmark
-	 :char     " "
-	 :prompt "unmark"
-	 :action (mu4e-error "No action for unmarking"))
-       (action
-	 :char  "a"
-	 :prompt "action"
-	 :ask-target  (lambda () (mu4e-read-option "Action: " mu4e-headers-actions))
-	 :action  (lambda (docid msg actionfunc)
-		    (save-excursion
-		      (when (mu4e~headers-goto-docid docid)
-			(mu4e-headers-action actionfunc)))))
-       (something
-	 :char  "*"
-	 :prompt "*something"
-	 :action (mu4e-error "No action for deferred mark"))
-  )))
+     apply on the message.")
 
 
 (defun mu4e-mark-at-point (mark target)
@@ -244,9 +243,7 @@ The following marks are available, and the corresponding props:
 	  (get-markkar
 	   (lambda (char)
 	     (if (listp char)
-	         (if (or (eq mu4e-use-fancy-chars t)
-	                 (eq mu4e-use-fancy-chars 'marks))
-	             (cdr char) (car char))
+	       (if mu4e-use-fancy-chars (cdr char) (car char))
 	       char)))
 	  (markkar (funcall get-markkar (plist-get markdesc :char)))
 	  (target (mu4e~mark-get-dyn-target mark target))

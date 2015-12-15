@@ -3445,8 +3445,10 @@ should take you to the right place in this manual.
 See @ref{Setting the default emacs mail program}.
 @item @emph{Can @t{mu4e} use some fancy Unicode characters instead of these
 boring plain-ASCII ones?} Glad you asked! Yes, if you set
-@code{mu4e-use-fancy-chars} to @t{t}, @t{mu4e} uses such fancy characters in a
-number of places.
+@code{mu4e-use-fancy-chars} to @t{t}, @t{mu4e} uses such fancy
+characters in a number of places. Since not all fonts include all
+characters, you may want to install the @t{unifont} and/or @t{symbola}
+fonts on your system.
 @item @emph{Can I start @t{mu4e} in the background?} Yes - if you provide a
 prefix-argument (@key{C-u}), @t{mu4e} starts, but does not show the
 main-window.
@@ -3935,14 +3937,17 @@ slightly off; the reason for this issue is that Inconsolata does not
 contain the glyphs for the 'fancy' arrows and the glyphs that are used
 as replacements are too high.
 
-To fix this, you can use something like the following workaround (in your
-@t{.emacs}-file):
+To fix this, you can use something like the following workaround (in
+your @t{.emacs}-file):
 @lisp
 (if (equal window-system 'x)
     (progn
       (set-fontset-font "fontset-default" 'unicode "Dejavu Sans Mono")
       (set-face-font 'default "Inconsolata-10")))
 @end lisp
+
+Other fonts with good support for Unicode are @t{unifont} and
+@t{symbola}.
 
 @node Confirmation before sending
 @section Confirmation before sending
