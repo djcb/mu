@@ -2333,6 +2333,16 @@ for a fictional user Alice Derleth.
 		    (concat
 		      "Prof. Alice Derleth\n"
 		      "Miskatonic University, Dept. of Occult Sciences\n"))))))
+
+;; Set default context
+(mu4e-context-switch "Private")
+;; Set mu4e-user-mail-address-list to reflect the contexts' addresses
+(setq mu4e-user-mail-address-list
+      (delq nil
+            (mapcar (lambda (context)
+                      (when (mu4e-context-vars context)
+                        (cdr (assq 'user-mail-address (mu4e-context-vars context)))))
+                    mu4e-contexts)))
 @end lisp
 
 @node Contexts notes
