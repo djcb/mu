@@ -1562,9 +1562,9 @@ is also at your disposal.
 Let's look at some examples. First, suppose we want to set the
 @t{From:}-address for a reply message based on the receiver of the original:
 @lisp
-;; 1) messages to me@@foo.com should be replied with From:me@@foo.com
-;; 2) messages to me@@bar.com should be replied with From:me@@bar.com
-;; 3) all other mail should use From:me@@cuux.com
+;; 1) messages to me@@foo.example.com should be replied with From:me@@foo.example.com
+;; 2) messages to me@@bar.example.com should be replied with From:me@@bar.example.com
+;; 3) all other mail should use From:me@@cuux.example.com
 (add-hook 'mu4e-compose-pre-hook
   (defun my-set-from-address ()
     "Set the From address based on the To address of the original."
@@ -1572,11 +1572,11 @@ Let's look at some examples. First, suppose we want to set the
       (when msg
 	(setq user-mail-address
 	  (cond
-	    ((mu4e-message-contact-field-matches msg :to "me@@foo.com")
-	      "me@@foo.com")
-	    ((mu4e-message-contact-field-matches msg :to "me@@bar.com")
-	      "me@@bar.com")
-	    (t "me@@cuux.com")))))))
+	    ((mu4e-message-contact-field-matches msg :to "me@@foo.example.com")
+	      "me@@foo.example.com")
+	    ((mu4e-message-contact-field-matches msg :to "me@@bar.example.com")
+	      "me@@bar.example.com")
+	    (t "me@@cuux.example.com")))))))
 @end lisp
 
 Second, as mentioned, @code{mu4e-compose-mode-hook} is especially useful for
@@ -2313,9 +2313,9 @@ for a fictional user Alice Derleth.
 	:enter-func (lambda () (mu4e-message "Private mail"))
         ;; no leave-func
 	:match-func (lambda (msg)
-		      (when msg (mu4e-message-contact-field-matches msg :to "aliced@@home.com")))
-	:vars '(  ( mail-reply-to          . "aliced@@home.com" )	
-		  ( user-mail-address      . "aliced@@home.com"  )	
+		      (when msg (mu4e-message-contact-field-matches msg :to "aliced@@home.example.com")))
+	:vars '(  ( mail-reply-to          . "aliced@@home.example.com" )	
+		  ( user-mail-address      . "aliced@@home.example.com"  )	
 		  ( user-full-name         . "Alice Derleth" )	
 		  ( mu4e-compose-signature .
 		    (concat
@@ -2325,9 +2325,9 @@ for a fictional user Alice Derleth.
 	:name "Work"
 	:enter-func (lambda () (message "Work"))
 	:match-func (lambda (msg)
-		      (when msg (mu4e-message-contact-field-matches msg :to "aderleth@@miskatonic.edu")))
-	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.edu" )	
-		  ( user-mail-address      . "aderleth@@miskatonic.edu" )	
+		      (when msg (mu4e-message-contact-field-matches msg :to "aderleth@@miskatonic.example.com")))
+	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.example.com" )	
+		  ( user-mail-address      . "aderleth@@miskatonic.example.com" )	
 		  ( user-full-name         . "Alice Derleth" )	
 		  ( mu4e-compose-signature .
 		    (concat
@@ -2464,7 +2464,7 @@ work-email. You can achieve this with something like:
     (lambda (msg)
        ;; the 'and msg' is to handle the case where msg is nil
        (if (and msg
-             (mu4e-message-contact-field-matches msg :to "me@@work.com"))
+             (mu4e-message-contact-field-matches msg :to "me@@work.example.com"))
         "/trash-work"
         "/trash")))
 @end lisp
@@ -3140,7 +3140,7 @@ customize.
       ("/sent"        . ?s)))
 
 ;; a  list of user's e-mail addresses
-(setq mu4e-user-mail-address-list '("foo@@bar.com" "cuux@@example.com")
+(setq mu4e-user-mail-address-list '("foo@@bar.example.com" "cuux@@example.com")
 
 ;; when you want to use some external command for text->html
 ;; conversion, e.g. the 'html2text' program
@@ -3166,8 +3166,8 @@ customize.
 
 ;; general emacs mail settings; used when composing e-mail
 ;; the non-mu4e-* stuff is inherited from emacs/message-mode
-(setq mu4e-reply-to-address "foo@@bar.com"
-      user-mail-address "foo@@bar.com"
+(setq mu4e-reply-to-address "foo@@bar.example.com"
+      user-mail-address "foo@@bar.example.com"
       user-full-name  "Foo X. Bar")
 (setq mu4e-compose-signature
    "Foo X. Bar\nhttp://www.example.com\n")
@@ -3715,10 +3715,10 @@ environment with e.g., your main account:
 @lisp
 (setq mu4e-sent-folder "/Account1/Saved Items"
       mu4e-drafts-folder "/Account1/Drafts"
-      user-mail-address "my.address@@account1.tld"
-      smtpmail-default-smtp-server "smtp.account1.tld"
-      smtpmail-local-domain "account1.tld"
-      smtpmail-smtp-server "smtp.account1.tld"
+      user-mail-address "my.address@@account1.example.com"
+      smtpmail-default-smtp-server "smtp.account1.example.com"
+      smtpmail-local-domain "account1.example.com"
+      smtpmail-smtp-server "smtp.account1.example.com"
       smtpmail-stream-type 'starttls
       smtpmail-smtp-service 25)
 @end lisp
@@ -3734,21 +3734,21 @@ value)} pairs:
   '(("Account1"
      (mu4e-sent-folder "/Account1/Saved Items")
      (mu4e-drafts-folder "/Account1/Drafts")
-     (user-mail-address "my.address@@account1.tld")
-     (smtpmail-default-smtp-server "smtp.account1.tld")
-     (smtpmail-local-domain "account1.tld")
+     (user-mail-address "my.address@@account1.example.com")
+     (smtpmail-default-smtp-server "smtp.account1.example.com")
+     (smtpmail-local-domain "account1.example.com")
      (smtpmail-smtp-user "username1")
-     (smtpmail-smtp-server "smtp.account1.tld")
+     (smtpmail-smtp-server "smtp.account1.example.com")
      (smtpmail-stream-type starttls)
      (smtpmail-smtp-service 25))
     ("Account2"
      (mu4e-sent-folder "/Account2/Saved Items")
      (mu4e-drafts-folder "/Account2/Drafts")
-     (user-mail-address "my.address@@account2.tld")
-     (smtpmail-default-smtp-server "smtp.account2.tld")
-     (smtpmail-local-domain "account2.tld")
+     (user-mail-address "my.address@@account2.example.com")
+     (smtpmail-default-smtp-server "smtp.account2.example.com")
+     (smtpmail-local-domain "account2.example.com")
      (smtpmail-smtp-user "username2")
-     (smtpmail-smtp-server "smtp.account2.tld")
+     (smtpmail-smtp-server "smtp.account2.example.com")
      (smtpmail-stream-type starttls)
      (smtpmail-smtp-service 587))))
 @end lisp
@@ -3905,7 +3905,7 @@ use the following function to determine a save folder:
   (let ((from-address (message-field-value "From"))
         (to-address (message-field-value "To")))
     (cond
-     ((string-match "my.address@@account1.tld" from-address)
+     ((string-match "my.address@@account1.example.com" from-address)
       (if (member* to-address my-mu4e-mailing-lists
                    :test #'(lambda (x y)
                              (string-match (car y) x)))
@@ -3928,7 +3928,7 @@ account name from the message's maildir, so instead the from address is
 used to determine the account.
 
 Again, the function shows three different possibilities: for the first
-account (@t{my.address@@account1.tld}) it uses
+account (@t{my.address@@account1.example.com}) it uses
 @code{my-mu4e-mailing-lists} again to determine if the message goes to a
 mailing list. If so, the message is put in the trash folder, if not, it
 is saved in @t{/Account1/Sent}. For the second (Gmail) account, sent
