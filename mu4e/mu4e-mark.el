@@ -122,13 +122,13 @@ is either a headers or view buffer."
 
 (defvar mu4e-marks
     '((refile
-	:char ("r" . "⯈")
+	:char ("r" . "▶")
 	:prompt "refile"
 	:dyn-target (lambda (target msg) (mu4e-get-refile-folder msg))
 	:action (lambda (docid msg target) (mu4e~proc-move docid
 						  (mu4e~mark-check-target target) "-N")))
        (delete
-	 :char ("D" . "⭙")
+	 :char ("D" . "❌")
 	 :prompt "Delete"
 	 :show-target (lambda (target) "delete")
 	 :action (lambda (docid msg target) (mu4e~proc-remove docid)))
@@ -138,18 +138,18 @@ is either a headers or view buffer."
 	 :show-target (lambda (target) "flag")
 	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "+F-u-N")))
        (move
-	 :char ("m" . "⩥")
+	 :char ("m" . "▷")
 	 :prompt "move"
 	 :ask-target  mu4e~mark-get-move-target
 	 :action (lambda (docid msg target) (mu4e~proc-move docid
 					      (mu4e~mark-check-target target) "-N")))
        (read
-	 :char    ("!" . "⬛")
+	 :char    ("!" . "◼")
 	 :prompt "!read"
 	 :show-target (lambda (target) "read")
 	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "+S-u-N")))
        (trash
-	 :char ("d" . "✀")
+	 :char ("d" . "▼")
 	 :prompt "dtrash"
 	 :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
 	 :action (lambda (docid msg target) (mu4e~proc-move docid
@@ -160,12 +160,12 @@ is either a headers or view buffer."
 	 :show-target (lambda (target) "unflag")
 	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "-F-N")))
        (untrash
-	 :char   ("=" . "⯇")
+	 :char   ("=" . "▲")
 	 :prompt "=untrash"
 	 :show-target (lambda (target) "untrash")
 	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "-T")))
        (unread
-	 :char    ("?" . "⬜")
+	 :char    ("?" . "◻")
 	 :prompt "?unread"
 	 :show-target (lambda (target) "unread")
 	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "-S+u-N")))
@@ -174,7 +174,7 @@ is either a headers or view buffer."
 	 :prompt "unmark"
 	 :action (mu4e-error "No action for unmarking"))
        (action
-	 :char ( "a" . "⮹")
+	 :char ( "a" . "◯")
 	 :prompt "action"
 	 :ask-target  (lambda () (mu4e-read-option "Action: " mu4e-headers-actions))
 	 :action  (lambda (docid msg actionfunc)

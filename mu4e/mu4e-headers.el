@@ -178,18 +178,18 @@ Field must be a symbol, one of: :date, :subject, :size, :prio,
 (defvar mu4e-headers-passed-mark    '("P" . "❯") "Passed (fwd).")
 (defvar mu4e-headers-replied-mark   '("R" . "❮") "Replied.")
 (defvar mu4e-headers-seen-mark      '("S" . "✔") "Seen.")
-(defvar mu4e-headers-trashed-mark   '("T" . "✀") "Trashed.")
+(defvar mu4e-headers-trashed-mark   '("T" . "⏚") "Trashed.")
 (defvar mu4e-headers-attach-mark    '("a" . "⚓") "W/ attachments.")
 (defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Encrypted.")
 (defvar mu4e-headers-signed-mark    '("s" . "☡") "Signed.")
-(defvar mu4e-headers-unread-mark    '("u" . "🖂") "Unread.")
+(defvar mu4e-headers-unread-mark    '("u" . "⎕") "Unread.")
 
 ;; thread prefix marks
-(defvar mu4e-headers-has-child-prefix    '("+"  . "◼")  "Parent.")
-(defvar mu4e-headers-empty-parent-prefix '("-"  . "◽")  "Orphan.")
+(defvar mu4e-headers-has-child-prefix    '("+"  . "◼ ") "Parent.")
+(defvar mu4e-headers-empty-parent-prefix '("-"  . "◽ ") "Orphan.")
 (defvar mu4e-headers-first-child-prefix  '("\\" . "┗▶") "First child.")
-(defvar mu4e-headers-duplicate-prefix    '("="  . "≡")  "Duplicate.")
-(defvar mu4e-headers-default-prefix      '("|"  . "│") "Default.")
+(defvar mu4e-headers-duplicate-prefix    '("="  . "≡ ") "Duplicate.")
+(defvar mu4e-headers-default-prefix      '("|"  . "│ ") "Default.")
 
 (defvar mu4e-headers-actions
   '( ("capture message"  . mu4e-action-capture-message) 
