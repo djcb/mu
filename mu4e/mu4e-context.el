@@ -107,7 +107,7 @@ If there are contexts but none match, return nil, unless
     (or (find-if (lambda (context)
 		   (and (mu4e-context-match-func context)
 		     (funcall (mu4e-context-match-func context) msg))) mu4e-contexts)
-      (car mu4e-contexts))))
+      (when pick-first (car mu4e-contexts)))))
 
 (provide 'mu4e-context)
  
