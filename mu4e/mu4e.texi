@@ -2879,7 +2879,7 @@ links: @kbd{M-x org-store-link} stores a link to a particular message
 when you are in @ref{Message view}. When you are in @ref{Headers view},
 @kbd{M-x org-store-link} links to the @emph{query} if
 @code{org-mu4e-link-query-in-headers-mode} is non-@code{nil}, and to the
-particular message otherwise.
+particular message otherwise (which is the default).
 
 You can insert this link later with @kbd{M-x org-insert-link}. From
 @t{org-mode}, you can go to the query or message the link points to with
@@ -3508,6 +3508,10 @@ five arguments, following @t{completing-read}. The default value is
 @t{ido-completing-read}; to use emacs's default behaviour, set the
 variable to @t{completing-read}. Helm users can use the same value, and
 by enabling @t{helm-mode} use helm-style completion.
+@item @emph{I have a lot of Maildir folders, so regenerating them each time makes things slow. What can I do?}
+Set @code{mu4e-cache-maildir-list} to @code{t} (but make sure to read
+its docstring).
+
 @end enumerate
 
 @node Reading messages

@@ -31,7 +31,14 @@
      various contexts, which are groups of settings. This can be used
      for instance for switch between e-mail accounts.
    - correctly decode mailing-list headers
-   - allow for "fancy" mark-characters
+   - allow for "fancy" mark-characters; and improve the default set
+   - by default, the maildirs are no longer cached; please see the
+     variable ~mu4e-cache-maildir-list~ if you have a lot of maildirs
+     and it gets slow.
+   - change the default value for
+     ~org-mu4e-link-query-in-headers-mode~ to ~nil~, ie. by default
+     link to the message, not the query, as this is usually more useful
+     behavior.
 
 ** 0.9.13
 
