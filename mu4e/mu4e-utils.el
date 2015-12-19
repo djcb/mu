@@ -295,7 +295,12 @@ Function will return the cdr of the list element."
 				    (concat mdir (car dentry) "/")))))))
     dirs))
 
-(defvar mu4e~maildir-list nil
+(defvar mu4e-cache-maildir-list nil
+  "Whether to cache the list of maildirs; set it to t if you find that
+generating the list on the fly is too slow. If you do, you can set `mu4e-maildir-list' to
+nil to force regenerating the cache the next time `mu4e-get-maildirs' gets called.")
+
+(defvar mu4e-maildir-list nil
   "Cached list of maildirs.")
 
 (defun mu4e-get-maildirs ()
@@ -304,14 +309,14 @@ relative paths (ie., /archive, /sent etc.). Most of the work is
 done in `mu4e-get-maildirs-1'. Note, these results are /cached/, so
 the list of maildirs will not change until you restart mu4e."
   (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
-  (unless mu4e~maildir-list
-    (setq mu4e~maildir-list
+  (unless (and mu4e-maildir-list mu4e-cache-maildir-list)
+    (setq mu4e-maildir-list
       (sort
 	(append
 	  (when (file-accessible-directory-p (concat mu4e-maildir "/cur")) '("/"))
 	  (mu4e~get-maildirs-1 mu4e-maildir "/"))
 	(lambda (s1 s2) (string< (downcase s1) (downcase s2))))))
-  mu4e~maildir-list)
+  mu4e-maildir-list)
 
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT) as defined in
@@ -765,7 +770,7 @@ successful, call FUNC (if non-nil) afterwards."
 (defun mu4e-clear-caches ()
   "Clear any cached resources."
   (setq
-    mu4e~maildir-list nil
+    mu4e-maildir-list nil
     mu4e~contacts-for-completion nil)) 
  
 (defun mu4e~stop ()
