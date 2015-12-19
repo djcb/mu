@@ -734,10 +734,11 @@ FUNC should be a function taking two arguments:
   (make-local-variable 'mu4e~view-attach-map)
   (make-local-variable 'mu4e~view-cited-hidden)
 
-  (setq buffer-undo-list t ;; don't record undo info
-    global-mode-string     ;; show context in mode-line
-    '(:eval (mu4e-context-label))) 
-  
+  ;; show context in mode-string
+  (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label))) 
+ 
+  (setq buffer-undo-list t);; don't record undo info
+     
   ;; autopair mode gives error when pressing RET
   ;; turn it off
   (when (boundp 'autopair-dont-activate)

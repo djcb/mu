@@ -70,8 +70,12 @@
   "Major mode for the mu4e main screen.
 \\{mu4e-main-mode-map}."
   (use-local-map mu4e-main-mode-map)
-  (setq truncate-lines t
-        overwrite-mode 'overwrite-mode-binary)
+  (setq
+    truncate-lines t
+    overwrite-mode 'overwrite-mode-binary)
+
+  ;; show context in mode-string
+  (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label))) 
   (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
 
 

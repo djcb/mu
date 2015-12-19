@@ -288,6 +288,9 @@ message-thread by removing the In-Reply-To header."
 \\{message-mode-map}."
   (progn
     (use-local-map mu4e-compose-mode-map)
+
+    (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label))) 
+   
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
