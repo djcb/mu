@@ -45,7 +45,7 @@
   :group 'mu4e
   :group 'org)
 
-(defvar org-mu4e-link-query-in-headers-mode t
+(defvar org-mu4e-link-query-in-headers-mode nil
   "If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
 the current query; otherwise, it links to the message at point.")
 
