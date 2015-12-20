@@ -68,24 +68,28 @@ for the message replied to or forwarded, and nil otherwise. Before composing a n
   (let* ((names (map 'list (lambda (context)
 			     (cons (mu4e-context-name context) context))
 		  mu4e-contexts))
+         (current-name (if mu4e~context-current
+                           (mu4e-context-name mu4e~context-current)
+                         ""))
 	  (context
 	    (if name (cdr-safe  (assoc name names))
 	      (mu4e-read-option "Switch to context: " names))))
     (unless context (mu4e-error "No such context"))
    
-    ;; leave the current context
-    (when (and mu4e~context-current (mu4e-context-leave-func mu4e~context-current))
-      (funcall (mu4e-context-leave-func mu4e~context-current)))
-    ;; enter the new context
-    (when (mu4e-context-enter-func context)
-      (funcall (mu4e-context-enter-func context)))
-    (when (mu4e-context-vars context)
-      (mapc #'(lambda (cell)
-		(set (car cell) (cdr cell)))
-	(mu4e-context-vars context)))
-    (setq mu4e~context-current context)
-    (mu4e-message "Switched context to %s" (mu4e-context-name context))
-    context))
+    (unless (string-equal current-name (mu4e-context-name context))
+      ;; leave the current context
+      (when (and mu4e~context-current (mu4e-context-leave-func mu4e~context-current))
+        (funcall (mu4e-context-leave-func mu4e~context-current)))
+      ;; enter the new context
+      (when (mu4e-context-enter-func context)
+        (funcall (mu4e-context-enter-func context)))
+      (when (mu4e-context-vars context)
+        (mapc #'(lambda (cell)
+                  (set (car cell) (cdr cell)))
+              (mu4e-context-vars context)))
+      (setq mu4e~context-current context)
+      (mu4e-message "Switched context to %s" (mu4e-context-name context))
+      context)))
 
 (defun mu4e-context-autoselect ()
   "When contexts are defined but there is no context yet, switch
