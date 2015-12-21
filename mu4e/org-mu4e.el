@@ -132,6 +132,13 @@ the query (for paths starting with 'query:')."
     (t (mu4e-error "mu4e: unrecognized link type '%s'" path))))
 
 
+(defun org-mu4e-store-and-capture ()
+  "Store a link to the current message or query (depending on
+`org-mu4e-link-query-in-headers-mode', and capture it with
+org-mode)."
+  (interactive)
+  (org-mu4e-store-link)
+  (org-capture))
 
 
 ;;; editing with org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
