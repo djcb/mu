@@ -459,10 +459,10 @@ this must @emph{not} be a symbolic link.
 
 As we have seen, we can do all of the mail retrieval @emph{outside} of
 @command{emacs}/@t{mu4e}. However, you can also do it from within
-@t{mu4e}. 
+@t{mu4e}.
 
 @subsection Basics
- 
+
 To set up mail-retrieval from withing @t{mu4e}, set the variable
 @code{mu4e-get-mail-command} to the program or shell command you want to
 use for retrieving mail. You can then get your e-mail using @kbd{M-x
@@ -500,7 +500,7 @@ indicate 'no mail'; we can handle that with:
 A similar approach can be used with other mail retrieval programs,
 although not all of them have their exit codes documented.
 
-@subsection Implicit mail retrieval 
+@subsection Implicit mail retrieval
 
 If you don't have a specific command for getting mail, for example
 because you are running your own mail-server, you can leave
@@ -1672,7 +1672,7 @@ If you don't want to include this automatically with each message,
 you can set @code{mu4e-compose-signature-auto-include} to @code{nil}; you can
 then still include the signature manually, using the function
 @code{message-insert-signature}, typically bound to @kbd{C-c C-w}.
- 
+
 
 @node Other settings
 @section Other settings
@@ -1809,7 +1809,8 @@ Note - in the @ref{Headers view} you may see the 'friendly name' for a
 list; however, when searching you need the real name. You can see the
 real name for a mailing list from the friendly name's tool-tip.
 
-@item Get messages with a subject soccer, Socrates, society, ...; note that the '*'-wildcard can only appear as a term's rightmost character:
+@item Get messages with a subject soccer, Socrates, society, ...; note that
+the '*'-wildcard can only appear as a term's rightmost character:
 @verbatim
 subject:soc*
 @end verbatim
@@ -2256,7 +2257,7 @@ example:
 @menu
 * Defining a context::
 * Default context::
-* Contexts example::  
+* Contexts example::
 * Contexts notes::
 * Some context tricks::
 @end menu
@@ -2283,7 +2284,7 @@ deeper integration.
 A @code{mu4e-context} is Lisp object with the following members:
 @itemize
 @item @t{name}: the name of the context, e.g. @t{work} or @t{private}
-@item @t{enter-func}: 
+@item @t{enter-func}:
 an optional function that takes no parameter and is invoked when entering
 the context
 @item @t{leave-func}:
@@ -2327,26 +2328,26 @@ when starting; see the discussion in the previous section.
 (setq mu4e-contexts
   `( ,(make-mu4e-context
 	:name "Private"
-	:enter-func (lambda () (mu4e-message "Switch to the Private context")) 
+	:enter-func (lambda () (mu4e-message "Switch to the Private context"))
         ;; leave-func not defined
 	:match-func (lambda (msg)
 		      (when msg (mu4e-message-contact-field-matches msg :to "aliced@@home.example.com")))
-	:vars '(  ( mail-reply-to          . "aliced@@home.example.com" )	
-		  ( user-mail-address      . "aliced@@home.example.com"  )	
-		  ( user-full-name         . "Alice Derleth" )	
+	:vars '(  ( mail-reply-to          . "aliced@@home.example.com" )
+		  ( user-mail-address      . "aliced@@home.example.com"  )
+		  ( user-full-name         . "Alice Derleth" )
 		  ( mu4e-compose-signature .
 		    (concat
 		      "Alice Derleth\n"
-		      "Lauttasaari, Finland\n")))) 
+		      "Lauttasaari, Finland\n"))))
      ,(make-mu4e-context
 	:name "Work"
 	:enter-func (lambda () (mu4e-message "Switch to the Work context"))
         ;; leave-fun not defined
 	:match-func (lambda (msg)
 		      (when msg (mu4e-message-contact-field-matches msg :to "aderleth@@miskatonic.example.com")))
-	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.example.com" )	
-		  ( user-mail-address      . "aderleth@@miskatonic.example.com" )	
-		  ( user-full-name         . "Alice Derleth" )	
+	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.example.com" )
+		  ( user-mail-address      . "aderleth@@miskatonic.example.com" )
+		  ( user-full-name         . "Alice Derleth" )
 		  ( mu4e-compose-signature .
 		    (concat
 		      "Prof. Alice Derleth\n"
@@ -2358,13 +2359,20 @@ when starting; see the discussion in the previous section.
 
 Couple of notes:
 @itemize
-@item You can manually switch the focus use @code{M-x mu4e-context-switch}, by default bound to @code{;} in headers, view and main mode. The current focus appears in the mode-line.
-@item The function @code{mu4e-context-current} returns the current-context; the current context is also visiable in the mode-line when in headers, view or main mode.
-@item You can set any kind of variable; including settings for mail servers etc. However, settings like @code{mu4e-maildir} and @code{mu4e-mu-home} are not changeable after they have been set without quiting @t{mu4e} first.
-@item @code{leave-func} (if defined) for the context we are leaving, is invoked before the @code{enter-func} (if defined) of the context we are entering.
+@item You can manually switch the focus use @code{M-x mu4e-context-switch}, by default bound to @kbd{;} in headers, view and main mode.
+The current focus appears in the mode-line.
+@item Normally, @code{M-x mu4e-context-switch} does not call the enter/leave functions if the 'new' context is the same as the old one.
+However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to call
+those function even in that case.
+@item The function @code{mu4e-context-current} returns the current-context; the current context is also visiable in the mode-line when in
+headers, view or main mode.
+@item You can set any kind of variable; including settings for mail servers etc. However, settings like @code{mu4e-maildir}
+and @code{mu4e-mu-home} are not changeable after they have been set without quiting @t{mu4e} first.
+@item @code{leave-func} (if defined) for the context we are leaving, is invoked before the @code{enter-func} (if defined) of the
+context we are entering.
 @item @code{enter-func} (if defined) is invoked before setting the variables.
-@item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}. 
-@item Finally, be careful to get the quotations right -- backticks, single quotes and commas and note the '.' between variable name and value.
+@item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}.
+@item Finally, be careful to get the quotations right -- backticks, single quotes and commas and note the '.' between variable name and its value.
 @end itemize
 
 @node Some context tricks
@@ -2376,7 +2384,7 @@ concatenating the @code{user-mail-address} fields of all contexts:
 
 @lisp
 ;; This sets `mu4e-user-mail-address-list' to the concatenation of all `user-mail-address' values
-;; for all contexts. If you have other mail addresses as well, you'll need to add those manually. 
+;; for all contexts. If you have other mail addresses as well, you'll need to add those manually.
 (setq mu4e-user-mail-address-list
       (delq nil
             (mapcar (lambda (context)
@@ -2938,7 +2946,7 @@ such as @file{~/.emacs.d/init.el}) the following @emph{after} the
 
 @lisp
 ;; Load BBDB (Method 1)
-(require 'bbdb-loaddefs) 
+(require 'bbdb-loaddefs)
 ;; OR (Method 2)
 ;; (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
 ;; OR (Method 3)
@@ -3501,14 +3509,15 @@ manual} becomes @t{/&MH4wijCCMEgwSg-}). How can display such folders
 correctly?} This is best solved by telling @command{offlineimap} to use UTF-8
 instead -- see
 @url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
-@item @emph{How can I customize the function to select a folder?} 
+@item @emph{How can I customize the function to select a folder?}
 The @t{mu4e-completing-read} variable can be customized to select a
 folder in any way. The variable can be set to a function that receives
 five arguments, following @t{completing-read}. The default value is
 @t{ido-completing-read}; to use emacs's default behaviour, set the
 variable to @t{completing-read}. Helm users can use the same value, and
 by enabling @t{helm-mode} use helm-style completion.
-@item @emph{I have a lot of Maildir folders, so regenerating them each time makes things slow. What can I do?}
+@item @emph{I have a lot of Maildir folders, so regenerating them each time makes
+things slow. What can I do?}
 Set @code{mu4e-cache-maildir-list} to @code{t} (but make sure to read
 its docstring).
 
@@ -3540,7 +3549,8 @@ messages}.
 like Gmail does?} Yes -- see @ref{Including related messages}.
 @item @emph{There seem to be a lot of duplicate messages -- how can I get rid
 of them?} See @ref{Skipping duplicates}.
-@item @emph{How can I use the @t{eww} browser to view rich-text messages?} See @ref{Html2text functions}.
+@item @emph{How can I use the @t{eww} browser to view rich-text messages?}
+See @ref{Html2text functions}.
 @item @emph{Some messages are almost unreadable in emacs - can I view them in
 an external web browser?} Indeed, airlines often send messages that
 heavily depend on html and are hard to digest inside emacs. Fortunately,
@@ -3553,7 +3563,7 @@ defined for this. Simply add to your configuration:
 Now, when viewing such a difficult message, type @kbd{aV}, and the message
 opens inside a webbrowser. You can influence the browser with
 @code{browse-url-generic-program}.
-@item @emph{How can read encrypted messages that I sent?}. Since you do not own the 
+@item @emph{How can read encrypted messages that I sent?}. Since you do not own the
 recipient's key you typically cannot read those mails - so the trick is
 to encrypt outgoing mails with your key, too. This can be automated by
 adding the following snippet to your configuration (courtesy of user
@@ -3587,7 +3597,7 @@ reply-message, based on some field in the original?} See @ref{Compose hooks}.
 @item @emph{And what about customizable folders for draft messages, sent
 messages, trashed messages, based on e.g. the @t{From:} header?} See
 @ref{Dynamic folders}.
-@item @emph{Can I define aliases for (groups of) e-mail addresses?} Sure - 
+@item @emph{Can I define aliases for (groups of) e-mail addresses?} Sure -
 see @ref{(emacs) Mail Aliases}.
 @item @emph{How can I automatically add some header to an outgoing message?}
 Once more, see @ref{Compose hooks}.
@@ -3628,7 +3638,7 @@ to your configuration:
   send-mail-function 'async-smtpmail-send-it
   message-send-mail-function 'async-smtpmail-send-it)
 @end lisp
-With this, messages are sent using background emacs-instance. 
+With this, messages are sent using background emacs-instance.
 
 A word of warning though, this tends to not be as reliable as sending the
 message in the normal, synchronous fashion, and people have reported silent
@@ -3645,7 +3655,7 @@ Sending...done
 @end verbatim
 The first and final messages are the most important, and there may be
 considerable time between them, depending on the size of the message.
-@item @emph{Is it possible to compose messages in a separate frame?} 
+@item @emph{Is it possible to compose messages in a separate frame?}
 Yes - set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
 @item @emph{How can I apply format=flowed to my outgoing messages, enabling
 receiving clients that support this feature to reflow my paragraphs?}

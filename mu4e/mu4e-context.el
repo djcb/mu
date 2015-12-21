@@ -59,32 +59,45 @@ for the message replied to or forwarded, and nil otherwise. Before composing a n
   ;; if it matches, nil otherwise
   vars)                     ;; alist of variables.
 
-(defun mu4e-context-switch (&optional name)
+(defun mu4e~context-ask-user (prompt)
+  "Let user choose some context based on its name."
+  (when mu4e-contexts
+    (let* ((names (map 'list (lambda (context) (cons (mu4e-context-name context) context))
+		    mu4e-contexts))
+	    (context (mu4e-read-option prompt names)))
+      (or context (mu4e-error "No such context")))))
+
+(defun mu4e-context-switch (&optional force name)
   "Switch context to a context with NAME which is part of
-`mu4e-contexts'; if NAME is nil, query user."
-  (interactive)
+`mu4e-contexts'; if NAME is nil, query user.
+
+If the new context is the same and the current context, only
+switch (run associated functions) when prefix argument FORCE is
+non-nil."
+  (interactive "P")
   (unless mu4e-contexts
     (mu4e-error "No contexts defined"))
   (let* ((names (map 'list (lambda (context)
 			     (cons (mu4e-context-name context) context))
 		  mu4e-contexts))
 	  (context
-	    (if name (cdr-safe  (assoc name names))
-	      (mu4e-read-option "Switch to context: " names))))
+	    (if name
+	      (cdr-safe (assoc name names))
+	      (mu4e~context-ask-user "Switch to context: "))))
     (unless context (mu4e-error "No such context"))
-   
-    ;; leave the current context
-    (when (and mu4e~context-current (mu4e-context-leave-func mu4e~context-current))
-      (funcall (mu4e-context-leave-func mu4e~context-current)))
-    ;; enter the new context
-    (when (mu4e-context-enter-func context)
-      (funcall (mu4e-context-enter-func context)))
-    (when (mu4e-context-vars context)
-      (mapc #'(lambda (cell)
-		(set (car cell) (cdr cell)))
-	(mu4e-context-vars context)))
-    (setq mu4e~context-current context)
-    (mu4e-message "Switched context to %s" (mu4e-context-name context))
+    ;; if new context is same as old one one switch with FORCE is set.
+    (when (or force (not (eq context (mu4e-context-current))))
+      (when (and (mu4e-context-current) (mu4e-context-leave-func mu4e~context-current))
+	(funcall (mu4e-context-leave-func mu4e~context-current)))
+      ;; enter the new context
+      (when (mu4e-context-enter-func context)
+	(funcall (mu4e-context-enter-func context)))
+      (when (mu4e-context-vars context)
+	(mapc #'(lambda (cell)
+		  (set (car cell) (cdr cell)))
+	  (mu4e-context-vars context)))
+      (setq mu4e~context-current context)
+      (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
 
 (defun mu4e-context-autoselect ()
@@ -95,19 +108,26 @@ match, return the first."
    (mu4e-context-switch
      (mu4e-context-name  (mu4e-context-determine nil 'pick-first)))))
 
-(defun mu4e-context-determine (msg &optional pick-first)
+(defun mu4e-context-determine (msg &optional policy)
   "Return the first context with a match-func that returns t. MSG
-  points to the plist for the message replied to or forwarded, or
-  nil if there is no such MSG; similar to what
-  `mu4e-compose-pre-hook' does.
+points to the plist for the message replied to or forwarded, or
+nil if there is no such MSG; similar to what
+`mu4e-compose-pre-hook' does.
 
-If there are contexts but none match, return nil, unless
-  PICK-FIRST is non-nil, in which case return the first context."
+POLICY determines what to do if there are contexts but none match. The following
+are supported:
+- pick-first: pick the first of the contexts available
+- ask: ask the user
+- otherwise, return nil. Effectively, this leaves the current context in place."
   (when mu4e-contexts
     (or (find-if (lambda (context)
 		   (and (mu4e-context-match-func context)
 		     (funcall (mu4e-context-match-func context) msg))) mu4e-contexts)
-      (when pick-first (car mu4e-contexts)))))
+      ;; no context found
+      (case policy
+	(pick-first (car mu4e-contexts))
+	(ask (mu4e~context-ask-user "Select context: "))
+	(otherwise nil)))))
 
 (provide 'mu4e-context)
  

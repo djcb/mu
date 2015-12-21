@@ -372,8 +372,8 @@ tempfile)."
   (put 'mu4e-compose-parent-message 'permanent-local t)
   (let ((context (mu4e-context-determine mu4e-compose-parent-message)))
     (if context
-        (mu4e-context-switch (mu4e-context-name context))
-      (when mu4e-contexts (mu4e-context-switch))))
+      (mu4e-context-switch nil (mu4e-context-name context))
+      (when mu4e-contexts (mu4e-context-switch nil))))
   (run-hooks 'mu4e-compose-pre-hook)
 
   ;; this opens (or re-opens) a messages with all the basic headers set.
