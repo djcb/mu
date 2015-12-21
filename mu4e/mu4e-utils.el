@@ -95,7 +95,7 @@ User's addresses are set in `mu4e-user-mail-address-list')."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the standard folders can be functions too
 (defun mu4e~get-folder (foldervar msg)
-  "Get message folder FOLDER.
+  "Get message folder FOLDERVAR.
 If FOLDER is a string, return it, if it is a function, evaluate
 this function with MSG as parameter (which may be `nil'), and
 return the result."
@@ -734,9 +734,6 @@ successful, call FUNC (if non-nil) afterwards."
 
   ;; auto-select some account
   (mu4e-context-autoselect)
- 
-  ;; (when (and mu4e-contexts (not (mu4e-context-current)))
-  ;;   (mu4e-switch-context (mu4e-context-determine nil 'pick-first))
   ;; if we're already running, simply go to the main view
   (if (mu4e-running-p)   ;; already running?
     (when func                 ;; yes! run func if defined
