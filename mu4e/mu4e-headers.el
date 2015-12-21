@@ -274,6 +274,13 @@ In the format needed for `mu4e-read-option'.")
   "Handler function for displaying a message."
   (mu4e-view msg mu4e~headers-buffer))
 
+(defun mu4e~headers-view-this-message-p (docid)
+  "Is DOCID currently being viewed?"
+  (let ((viewbuf (get-buffer mu4e~view-buffer-name)))
+    (when (and viewbuf (buffer-live-p viewbuf))
+      (with-current-buffer viewbuf
+	(eq docid (plist-get mu4e~view-msg :docid))))))
+
 (defun mu4e~headers-update-handler (msg is-move)
   "Update handler, will be called when a message has been updated
 in the database. This function will update the current list of
@@ -302,14 +309,10 @@ headers."
 	  ;; the same docid...
 	  (mu4e~headers-remove-handler docid)
 
-	  ;; if we we're actually viewing this message (in mu4e-view mode), we
-	  ;; update it; that way, the flags can be updated, as well as the path
-	  ;; (which is useful for viewing the raw message)
-	  (let ((viewbuf (get-buffer mu4e~view-buffer-name)))
-	    (when (and viewbuf (buffer-live-p viewbuf))
-	      (with-current-buffer viewbuf
-		(when (eq docid (plist-get mu4e~view-msg :docid))
-		  (mu4e-view msg mu4e~headers-buffer)))))
+	  ;; if we're actually viewing this message (in mu4e-view mode), we update it; that way, the
+	  ;; flags can be updated, as well as the path (which is useful for viewing the raw message)
+	  (when (mu4e~headers-view-this-message-p docid)
+	    (mu4e-view msg mu4e~headers-buffer))
 
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
@@ -327,7 +330,6 @@ headers."
 	    (mu4e~headers-highlight docid))
 	  )))))
 
-
 (defun mu4e~headers-remove-handler (docid)
   "Remove handler, will be called when a message with DOCID has
 been removed from the database. This function will hide the removed
@@ -335,7 +337,13 @@ message from the current list of headers. If the message is not
 present, don't do anything."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
-      (mu4e~headers-remove-header docid t))))
+      (mu4e~headers-remove-header docid t)
+
+      ;; if we were viewing this message, close it now.
+      (when (and (mu4e~headers-view-this-message-p docid)
+	      (buffer-live-p mu4e~view-buffer))
+	(with-current-buffer mu4e~view-buffer
+	  (kill-buffer-and-window ))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
