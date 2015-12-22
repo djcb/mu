@@ -360,7 +360,7 @@ and offer to create it if it does not exist yet."
 (defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
-  (unless mu4e-bookmarks (mu4e-error "`mu4e-bookmarks' is not defined"))
+  (unless mu4e-bookmarks (mu4e-error "No bookmarks defined"))
   (let* ((prompt (mu4e-format "%s" prompt))
 	  (bmarks
 	   (mapconcat
@@ -391,6 +391,12 @@ KAR, or raise an error if none is found."
       (mu4e-warn "Expression must evaluate to query string ('%S')" expr))))
 
 
+(defun mu4e-bookmark-define (query descr key)
+  "Define a bookmark for QUERY with description DESCR and short
+character KEY in the list of `mu4e-bookmarks'. This replaces any
+existing bookmark with KEY."
+  (setq mu4e-bookmarks (remove-if (lambda (bm) (= (nth 2 bm) key)) mu4e-bookmarks))
+  (add-to-list 'mu4e-bookmarks (list query descr key) t))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
