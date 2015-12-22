@@ -123,14 +123,12 @@ Example usage:
 (defun org-mu4e-open (path)
   "Open the mu4e message (for paths starting with 'msgid:') or run
 the query (for paths starting with 'query:')."
-  (require 'mu4e)
   (cond
     ((string-match "^msgid:\\(.+\\)" path)
       (mu4e-view-message-with-msgid (match-string 1 path)))
     ((string-match "^query:\\(.+\\)" path)
       (mu4e-headers-search (match-string 1 path) current-prefix-arg))
     (t (mu4e-error "mu4e: unrecognized link type '%s'" path))))
-
 
 (defun org-mu4e-store-and-capture ()
   "Store a link to the current message or query (depending on
@@ -139,6 +137,7 @@ org-mode)."
   (interactive)
   (org-mu4e-store-link)
   (org-capture))
+
 
 
 ;;; editing with org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

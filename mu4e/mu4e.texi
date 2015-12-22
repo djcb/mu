@@ -2841,7 +2841,6 @@ with other tools.
 @menu
 * Setting the default emacs mail program::
 * Creating org-mode links::
-* Rich-text messages with org-mode::
 * Maintaining an address-book with org-contacts::
 * Maintaining an address-book with BBDB::
 * Getting new mail notifications with Sauron::
@@ -2853,33 +2852,28 @@ with other tools.
 @node Setting the default emacs mail program
 @section Setting the default @command{emacs} mail program
 
-@command{emacs} allows you to select an e-mail program as the default program
-it uses when you press @key{C-x m} (@code{compose-mail}), call
-@code{report-emacs-bug} and so on. If you want to use @t{mu4e} for this, you
-do so by adding the following to your configuration:
+@command{emacs} allows you to select an e-mail program as the default
+program it uses when you press @key{C-x m} (@code{compose-mail}), call
+@code{report-emacs-bug} and so on. If you want to use @t{mu4e} for this,
+you can do so by adding the following to your configuration:
 
 @lisp
 (setq mail-user-agent 'mu4e-user-agent)
 @end lisp
 
-@noindent
-At the present time, support is @emph{experimental}.
-
 @node Creating org-mode links
 @section Creating @t{org-mode} links
-It can be useful to include links to e-mail messages or even search queries in
-your org-mode files. @t{mu4e} supports this with the @t{org-mu4e} module; you
-can set it up by adding it to your configuration:
+It can be useful to include links to e-mail messages or even search
+queries in your org-mode files. @t{mu4e} supports this with the
+@t{org-mu4e} module; you can set it up by adding it to your
+configuration:
 
 @lisp
 (require 'org-mu4e)
 @end lisp
 
-this expects org-mode 8.x. If you have an older version, you can try:
-
-@lisp
-(require 'org-old-mu4e)
-@end lisp
+this expects org-mode 8.x.@footnote{If you have an older version, you
+can try @t{org-old-mu4e} instead}
 
 @noindent
 After this, you can use the normal @t{org-mode} mechanisms to store
@@ -2894,16 +2888,28 @@ You can insert this link later with @kbd{M-x org-insert-link}. From
 either @kbd{M-x org-agenda-open-link} in agenda buffers, or @kbd{M-x
 org-open-at-point} elsewhere - both typically bound to @kbd{C-c C-o}.
 
-@node Rich-text messages with org-mode
-@section Rich-text messages with @t{org-mode} (deprecated)
+You can also directly @emph{capture} such links - for example, to add
+e-mail messages to your todo-list. For that, @t{org-mu4e} has a function
+@code{org-mu4e-store-and-capture}. This captures the message-at-point
+(or header - see the discussion on
+@code{org-mu4e-link-query-in-headers-mode} above), then calls org-mode's
+capture functionality.
 
-It is possible to write rich-text messages using @t{org-mode}; see
-@url{http://orgmode.org/worg/org-contrib/org-mime.html}.
+You can add some specific capture-template for this, for example, to add
+a message to your todo-list, and set a deadline for processing it within
+two days, you could add this to @code{org-capture-templates}:
 
-Note, some earlier versions of @t{mu4e} had more elaborate support for
-editing e-mail messages using @t{org-mode}; since this never worked very
-well, this has now been deprecated; it might be replaced with something
-better in some future version.
+@lisp
+     ("S" "read-soon" entry (file+headline "todo.org" "Reading")
+       "* TODO %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t \"+2d\"))")
+@end lisp
+
+If you use the functionality a lot, you may want to define key-bindings
+for that in headers and view mode:
+@lisp
+(define-key mu4e-headers-mode-map (kbd "C-c c") 'org-mu4e-store-and-capture)
+(define-key mu4e-view-mode-map    (kbd "C-c c") 'org-mu4e-store-and-capture)
+@end lisp
 
 @node Maintaining an address-book with org-contacts
 @section Maintaining an address-book with org-contacts
