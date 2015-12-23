@@ -83,7 +83,7 @@
 
 (defvar mu4e-user-mailing-lists nil
   "A list of (MAILING-LIST-ID . SHORTNAME); these are used in
-addition to the 'built-in' list `mu4e~user-lists'.")
+addition to the 'built-in' list `mu4e-user-lists'.")
 
 (defvar mu4e-mailing-list-patterns nil
   "A list of regex patterns to capture a shortname out of a list ID. For

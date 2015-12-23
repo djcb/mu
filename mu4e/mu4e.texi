@@ -1990,7 +1990,7 @@ also match this extra search pattern. @key{\} takes you back to the previous
 query, so, effectively 'widens' the search. Technically, narrowing the results
 of query @t{x} with expression @t{y} implies doing a search @t{(x) AND y}.
 
-Note, messages that were not in your in your original search results because
+Note, messages that were not in your original search results because
 of @code{mu4e-headers-results-limit}, may show up in the narrowed query.
 
 @subsection Including related messages
