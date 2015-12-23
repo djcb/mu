@@ -37,7 +37,7 @@ Documentation License.''
 
 @dircategory Emacs
 @direntry
-* mu4e: (mu4e).        An email client for Emacs.
+* mu4e: (Mu4e).        An email client for GNU/Emacs.
 @end direntry
 
 @contents
@@ -1990,8 +1990,8 @@ also match this extra search pattern. @key{\} takes you back to the previous
 query, so, effectively 'widens' the search. Technically, narrowing the results
 of query @t{x} with expression @t{y} implies doing a search @t{(x) AND y}.
 
-Note, messages that were not in your in your original search results because
-of @code{mu4e-headers-results-limit}, may show up in the narrowed query.
+Note that messages that were not in your original search results because
+of @code{mu4e-headers-results-limit} may show up in the narrowed query.
 
 @subsection Including related messages
 @anchor{Including related messages}
@@ -2256,16 +2256,15 @@ example:
 
 @menu
 * Defining a context::
-* Default context::
+* Context policies::
 * Contexts example::
-* Contexts notes::
 * Some context tricks::
 @end menu
 
 It can be useful to be able to switch between different sets of settings
 in @t{mu4e}; typical examples include the case where you have different
 e-mail accounts for private and work email, each with their own settings
-for e-mail addresses, mailservers etc.
+for folders, e-mail addresses, mailservers etc.
 
 The @code{mu4e-context} system is a @t{mu4e}-specific mechanism to allow
 for that; users can be define different contexts, and either manually
@@ -2307,19 +2306,34 @@ an alist of variable settings for this account.
 @t{mu4e} uses a variable @code{mu4e-contexts}, which is a list of such
 objects.
 
-@node Default context
-@section Default context
+@node Context policies
+@section Context policies
 
-When you have defined contexts and you start @t{mu4e}, it automatically
-switches to the first context whose @code{match-func} returns
-non-nil. If none of them do, it picks the first. So, put your 'default'
-context as the first in @code{mu4e-contexts}.
+When you have defined contexts and you start @t{mu4e} it decides which
+context to use based on the variable @code{mu4e-context-policy};
+similarly, when you compose a new message, the context is determined
+using @code{mu4e-compose-context-policy}.
+
+These policies can be one of the following:
+@itemize
+@item a symbol @t{always-ask}: unconditionally ask the user what context to pick
+@end itemize
+
+The other choices only apply if none of the context matches (i.e., if
+none of the contexts' match-functions returns @code{t}:
+
+@itemize
+@item a symbol @t{ask}: ask the user
+@item a symbol @t{pick-first}: pick the first context
+@item @t{nil}: don't change the context
+@end itemize
 
 @node Contexts example
 @section Example
 
-Let's look at an example; we define two contexts, 'Private' and 'Work'
-for a fictional user Alice Derleth.
+Let's explain how contexts work by looking at an example. We define two
+contexts, 'Private' and 'Work' for a fictional user @emph{Alice
+Derleth}.
 
 Note that in this case, we automatically switch to the first context
 when starting; see the discussion in the previous section.
@@ -2354,16 +2368,13 @@ when starting; see the discussion in the previous section.
 		      "Miskatonic University, Dept. of Occult Sciences\n"))))))
 @end lisp
 
-@node Contexts notes
-@section Context notes
-
-Couple of notes:
+A couple of notes about this example:
 @itemize
 @item You can manually switch the focus use @code{M-x mu4e-context-switch}, by default bound to @kbd{;} in headers, view and main mode.
 The current focus appears in the mode-line.
-@item Normally, @code{M-x mu4e-context-switch} does not call the enter/leave functions if the 'new' context is the same as the old one.
-However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to call
-those function even in that case.
+@item Normally, @code{M-x mu4e-context-switch} does not call the enter or leave functions if the 'new' context is the same as the old one.
+However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to
+invoke those function even in that case.
 @item The function @code{mu4e-context-current} returns the current-context; the current context is also visiable in the mode-line when in
 headers, view or main mode.
 @item You can set any kind of variable; including settings for mail servers etc. However, settings like @code{mu4e-maildir}
@@ -2378,13 +2389,13 @@ context we are entering.
 @node Some context tricks
 @section Some context tricks
 
-
 It is possible to automatically fill @code{mu4e-user-address-list} by
 concatenating the @code{user-mail-address} fields of all contexts:
 
 @lisp
-;; This sets `mu4e-user-mail-address-list' to the concatenation of all `user-mail-address' values
-;; for all contexts. If you have other mail addresses as well, you'll need to add those manually.
+;; This sets `mu4e-user-mail-address-list' to the concatenation of all
+;; `user-mail-address' values for all contexts. If you have other mail
+;; addresses as well, you'll need to add those manually.
 (setq mu4e-user-mail-address-list
       (delq nil
             (mapcar (lambda (context)
@@ -2906,6 +2917,7 @@ two days, you could add this to @code{org-capture-templates}:
 
 If you use the functionality a lot, you may want to define key-bindings
 for that in headers and view mode:
+
 @lisp
 (define-key mu4e-headers-mode-map (kbd "C-c c") 'org-mu4e-store-and-capture)
 (define-key mu4e-view-mode-map    (kbd "C-c c") 'org-mu4e-store-and-capture)

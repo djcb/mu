@@ -114,7 +114,6 @@ better with e.g. offlineimap."
   :group 'mu4e
   :safe 'booleanp)
 
-
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
   "Default directory for saving attachments.
 This can be either a string (a file system path), or a function
@@ -217,6 +216,29 @@ Suggested possible values are:
   :type 'function
   :options '(completing-read ido-completing-read)
   :group 'mu4e)
+
+(defcustom mu4e-context-policy 'ask
+  "Determines how mu4e should determine the context when starting up.
+
+If POLICY is 'always-ask, we ask the user unconditionally.
+
+In all other cases, if any context matches (using its match
+function), this context is returned. If none of the contexts
+match, POLICY determines what to do:
+
+- pick-first: pick the first of the contexts available
+- ask: ask the user
+- otherwise, return nil. Effectively, this leaves the current context in place.
+
+Also see `mu4e-compose-context-policy'."
+  :type '(choice
+	   (const :tag "Always ask what context to use" 'always-ask)
+	   (const :tag "Ask if none of the contexts match" 'ask)
+	   (const :tag "Pick the default (first) context if none match" 'pick-first)
+	   (const :tag "Don't change the context when none match" nil)
+  :safe 'symbolp
+  :group 'mu4e))
+
 
 ;; crypto
 (defgroup mu4e-crypto nil

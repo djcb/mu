@@ -112,11 +112,33 @@ for example:
 
 The various `message-' functions from `message-mode' are available
 for querying the message information."
-    :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
-		 (const :tag "move message to mu4e-trash-folder" trash)
-		 (const :tag "delete message" delete))
+  :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
+	   (const :tag "move message to mu4e-trash-folder" trash)
+	   (const :tag "delete message" delete))
   :safe 'symbolp
   :group 'mu4e-compose)
+
+
+(defcustom mu4e-compose-context-policy nil
+  "Determines how mu4e should determine the context when composing a new message.
+
+If POLICY is
+'always-ask, we ask the user unconditionally.
+
+In all other cases, if any context matches (using its match
+function), this context is returned. If none of the contexts
+match, POLICY determines what to do:
+
+- pick-first: pick the first of the contexts available
+- ask: ask the user
+- otherwise, return nil. Effectively, this leaves the current context in place."
+  :type '(choice
+	   (const :tag "Always ask what context to use" 'always-ask)
+	   (const :tag "Ask if none of the contexts match" 'ask)
+	   (const :tag "Pick the default (first) context if none match" 'pick-first)
+	   (const :tag "Don't change the context when none match" nil)
+  :safe 'symbolp
+  :group 'mu4e-compose))
 
 (defcustom mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts.
@@ -370,10 +392,9 @@ tempfile)."
   ;; message being forwarded or replied to, otherwise it is nil.
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
-  (let ((context (mu4e-context-determine mu4e-compose-parent-message)))
-    (if context
-      (mu4e-context-switch nil (mu4e-context-name context))
-      (when mu4e-contexts (mu4e-context-switch nil))))
+  ;; maybe switch the context
+  (mu4e~context-autoswitch mu4e-compose-parent-message
+			   mu4e-compose-context-policy)
   (run-hooks 'mu4e-compose-pre-hook)
 
   ;; this opens (or re-opens) a messages with all the basic headers set.

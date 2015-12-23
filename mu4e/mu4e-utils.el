@@ -46,7 +46,7 @@
 (declare-function mu4e~proc-mkdir     "mu4e-proc")
 (declare-function mu4e~proc-running-p "mu4e-proc")
 
-(declare-function mu4e-context-autoselect  "mu4e-context")
+(declare-function mu4e~context-autoswitch  "mu4e-context")
 
 (declare-function show-all "org")
 
@@ -737,9 +737,9 @@ first.
 If mu4e is already running, execute function FUNC (if non-nil).
 Otherwise, check various requirements, then start mu4e. When
 successful, call FUNC (if non-nil) afterwards."
-
-  ;; auto-select some account
-  (mu4e-context-autoselect)
+  ;; maybe switch the context
+  (mu4e~context-autoswitch mu4e-compose-parent-message
+  mu4e-compose-context-policy)
   ;; if we're already running, simply go to the main view
   (if (mu4e-running-p)   ;; already running?
     (when func                 ;; yes! run func if defined

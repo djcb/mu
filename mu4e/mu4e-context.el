@@ -100,13 +100,13 @@ non-nil."
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
 
-(defun mu4e-context-autoselect ()
+(defun mu4e~context-autoswitch (&optional msg policy)
   "When contexts are defined but there is no context yet, switch
 to the first whose :match-func return non-nil. If none of them
-match, return the first."
- (when (and mu4e-contexts (not (mu4e-context-current)))
-   (mu4e-context-switch
-     (mu4e-context-name  (mu4e-context-determine nil 'pick-first)))))
+match, return the first. For MSG and POLICY, see `mu4e-context-determine'."
+  (when mu4e-contexts
+    (let ((context (mu4e-context-determine msg policy)))
+      (when context (mu4e-context-switch (mu4e-context-name context))))))
 
 (defun mu4e-context-determine (msg &optional policy)
   "Return the first context with a match-func that returns t. MSG
@@ -114,20 +114,27 @@ points to the plist for the message replied to or forwarded, or
 nil if there is no such MSG; similar to what
 `mu4e-compose-pre-hook' does.
 
-POLICY determines what to do if there are contexts but none match. The following
-are supported:
+POLICY specifies how to do the determination. If POLICY is
+'always-ask, we ask the user unconditionally.
+
+In all other cases, if any context matches (using its match
+function), this context is returned. If none of the contexts
+match, POLICY determines what to do:
+
 - pick-first: pick the first of the contexts available
 - ask: ask the user
 - otherwise, return nil. Effectively, this leaves the current context in place."
   (when mu4e-contexts
-    (or (find-if (lambda (context)
-		   (and (mu4e-context-match-func context)
-		     (funcall (mu4e-context-match-func context) msg))) mu4e-contexts)
-      ;; no context found
-      (case policy
-	(pick-first (car mu4e-contexts))
-	(ask (mu4e~context-ask-user "Select context: "))
-	(otherwise nil)))))
+    (if (eq policy 'always-ask)
+      (mu4e~context-ask-user "Select context: ")
+      (or (find-if (lambda (context)
+		     (and (mu4e-context-match-func context)
+		       (funcall (mu4e-context-match-func context) msg))) mu4e-contexts)
+	;; no context found
+	(case policy
+	  (pick-first (car mu4e-contexts))
+	  (ask (mu4e~context-ask-user "Select context: "))
+	  (otherwise nil))))))
 
 (provide 'mu4e-context)
  
