@@ -1,6 +1,6 @@
 ;;; mu4e-lists.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2015 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -79,15 +79,15 @@
      ("wl-en.ml.gentei.org"                                   . "WdrLust")
      ("xapian-devel.lists.xapian.org"                         . "Xapian")
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
-  "AList of mailing lists id -> shortname")
+  "AList of cells (MAILING-LIST-ID . SHORTNAME)")
 
 (defvar mu4e-user-mailing-lists nil
-  "A list of (MAILING-LIST-ID . SHORTNAME); these are used in
-addition to the 'built-in' list `mu4e~user-lists'.")
+  "An alist with cells (MAILING-LIST-ID . SHORTNAME); these are
+used in addition to the built-in list `mu4e~mailing-lists'.")
 
 (defvar mu4e-mailing-list-patterns nil
-  "A list of regex patterns to capture a shortname out of a list ID. For
-the first regex that matches, its first matchgroup will be used as the
-shortname.")
+  "A list of regex patterns to capture a shortname out of a list
+ID. For the first regex that matches, its first matchgroup will
+be used as the shortname.")
 
 (provide 'mu4e-lists)
