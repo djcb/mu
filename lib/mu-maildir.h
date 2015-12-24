@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -167,7 +167,8 @@ MuFlags mu_maildir_get_flags_from_path (const char* pathname);
  * error.
  */
 char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
-			       MuFlags new_flags, gboolean new_name);
+			       MuFlags new_flags, gboolean new_name)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the maildir for a certain message path, ie, the path *before*
@@ -177,12 +178,13 @@ char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
  *
  * @return the maildir (free with g_free), or NULL in case of error
  */
-char* mu_maildir_get_maildir_from_path (const char* path);
+char* mu_maildir_get_maildir_from_path (const char* path)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
- * move a message file to another maildir; the function returns the full
- * path to the new message.
+ * move a message file to another maildir; the function returns the full path to
+ * the new message. if the target file already exists, it is overwritten.
  *
  * @param msgpath an absolute file system path to an existing message in an
  * actual maildir
@@ -193,7 +195,7 @@ char* mu_maildir_get_maildir_from_path (const char* path);
  * of the message are affected; note that this may still involve a
  * moved to another directory (say, from new/ to cur/)
  * @param flags to set for the target (influences the filename, path)
- * @param ignore_dups whether to silent ignore the src=target case
+ * @param ignore_dups whether to silently ignore the src=target case
  * (and return TRUE)
  * @param new_name whether to create a new unique name, or keep the
  * old one
@@ -204,7 +206,8 @@ char* mu_maildir_get_maildir_from_path (const char* path);
  */
 gchar* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 				MuFlags newflags, gboolean ignore_dups,
-				gboolean new_name, GError **err);
+				gboolean new_name, GError **err)
+	G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 
