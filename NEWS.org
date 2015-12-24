@@ -29,7 +29,8 @@
      a new message-thread.
    - implement 'mu4e-context', for defining and switching between
      various contexts, which are groups of settings. This can be used
-     for instance for switch between e-mail accounts.
+     for instance for switch between e-mail accounts. See the section
+     in the manual for details.
    - correctly decode mailing-list headers
    - allow for "fancy" mark-characters; and improve the default set
    - by default, the maildirs are no longer cached; please see the
@@ -39,6 +40,8 @@
      ~org-mu4e-link-query-in-headers-mode~ to ~nil~, ie. by default
      link to the message, not the query, as this is usually more useful
      behavior.
+   - overwrite target message files that already exist, rather than
+     erroring out.
 
 ** 0.9.13
 
