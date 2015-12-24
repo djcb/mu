@@ -217,7 +217,7 @@ Suggested possible values are:
   :options '(completing-read ido-completing-read)
   :group 'mu4e)
 
-(defcustom mu4e-context-policy 'ask
+(defcustom mu4e-context-policy 'pick-first
   "Determines how mu4e should determine the context when starting up.
 
 If POLICY is 'always-ask, we ask the user unconditionally.

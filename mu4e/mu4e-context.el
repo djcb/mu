@@ -106,7 +106,8 @@ to the first whose :match-func return non-nil. If none of them
 match, return the first. For MSG and POLICY, see `mu4e-context-determine'."
   (when mu4e-contexts
     (let ((context (mu4e-context-determine msg policy)))
-      (when context (mu4e-context-switch (mu4e-context-name context))))))
+      (when context (mu4e-context-switch
+		      nil (mu4e-context-name context))))))
 
 (defun mu4e-context-determine (msg &optional policy)
   "Return the first context with a match-func that returns t. MSG
