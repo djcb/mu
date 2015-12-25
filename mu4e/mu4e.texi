@@ -54,11 +54,11 @@ Documentation License.''
 
 Welcome to @t{mu4e} @value{mu-version}!
 
-@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 24
-(version 23 may works as well, but is not tested as much), built on top
-of the @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail
-search engine. @t{mu4e} is optimized for fast handling of large amounts
-of e-mail.
+@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version
+24, built on top of the
+@t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
+engine. @t{mu4e} is optimized for fast handling of large amounts of
+e-mail.
 
 Some of @t{mu4e}'s highlights:
 
@@ -68,34 +68,34 @@ folders, you use queries that match messages in a particular folder}, only
 queries.
 @item Fully documented, with example configurations
 @item User-interface optimized for speed, with quick key strokes for common actions
-@item Support for non-English languages (so ``angstrom'' will match ``Angström'')
-@item Asynchronous: heavy actions don't block @command{emacs}@footnote{currently,
-the only exception to this is @emph{sending mail}; there are solutions for
-that though - see the @ref{FAQ}}
-@item Support for crypto
+@item Support for non-English languages (so ``angstrom''  matches ``Ångström'')
+@item Asynchronous: heavy actions don't block @t{emacs}@footnote{currently,
+the only exception to this is @emph{sending mail}; there are solutions
+for that though - see the @ref{FAQ}}
+@item Support for cryptography - signing, encrypting and decrypting
 @item Address auto-completion based on the contacts in your messages
 @item Extendable with your own snippets of elisp
 @end itemize
 
-In this manual, we go through the installation of @t{mu4e}, do some basic
-configuration and explain its daily use. We also show you how you can
-customize @t{mu4e} for your needs.
+In this manual, we go through the installation of @t{mu4e}, do some
+basic configuration and explain its daily use. We also show you how you
+can customize @t{mu4e} for your needs.
 
 At the end of the manual, there are some example configurations, to get you up
 to speed quickly: @ref{Example configurations}. There's also an @ref{FAQ},
 which should help you with some common questions.
 
 @menu
-* Introduction:: How it all began
+* Introduction:: Where be begin
 * Getting started:: Setting things up
-* Main view:: Where we go when starting @t{mu4e}
+* Main view:: The @t{mu4e} overview
 * Headers view:: Lists of message headers
 * Message view:: Viewing specific messages
 * Editor view:: Creating / editing messages
 * Searching:: Some more background on searching/queries
 * Marking:: Marking messages and performing actions
 * Contexts:: Defining contexts and switching between them
-* Dynamic folders:: Folders that depend on the context
+* Dynamic folders:: Folders that change based on circumstances
 * Actions:: Defining and using custom actions
 * Extending mu4e:: Writing code for @t{mu4e}
 
@@ -129,11 +129,13 @@ I'm not sure the world needs yet another e-mail client, but perhaps
 
 I (the author) spend a @emph{lot} of time dealing with e-mail, both
 professionally and privately. Having an efficient e-mail client is
-essential.  Since none of the existing ones worked the way I wanted, I
-created my own. @command{emacs} is an integral part of my workflow, so
-it made a lot of sense to use it for e-mail as well. And as I already
-had written an e-mail search engine (@t{mu}), it seemed only logical to
-use that as a basis.
+essential. Since none of the existing ones worked the way I wanted, I
+created my own. 
+
+@command{emacs} is an integral part of my workflow, so it made a lot of
+sense to use it for e-mail as well. And as I had already written an
+e-mail search engine (@t{mu}), it seemed only logical to use that as a
+basis.
 
 @node Other mail clients
 @section Other mail clients
@@ -142,9 +144,11 @@ Under the hood, @t{mu4e} is fully search-based, similar to programs like
 @t{notmuch}@footnote{@url{http://notmuchmail.org}},
 @t{md}@footnote{@url{https://github.com/nicferrier/md} (inactive)} and
 @t{sup}@footnote{@url{http://sup.rubyforge.org/}
-(unreachable)}. However, @t{mu4e}'s user-interface is quite
-different. @t{mu4e}'s mail handling (deleting, moving etc.) is inspired
-by @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
+(unreachable)}. 
+
+However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
+handling (deleting, moving etc.) is inspired by
+@emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
 @code{emacs}-based e-mail client),
 @t{mutt}@footnote{@url{http://www.mutt.org/}} and @t{dired}.
 
@@ -178,11 +182,11 @@ efficiently as possible.
 @node Becoming a mu4e user
 @section Becoming a @t{mu4e} user
 
-If @t{mu4e} looks like something for you, give it a shot! We've been
-trying hard to make it as easy as possible to set up and use; and while
-you can use elisp in various places to augment @t{mu4e}, a lot of
-knowledge about programming or elisp shouldn't be required. The idea is
-to provide sensible defaults, and allow for customization.
+If @t{mu4e} looks like something for you, give it a shot! We're trying
+hard to make it as easy as possible to set up and use; and while you can
+use elisp in various places to augment @t{mu4e}, a lot of knowledge
+about programming or elisp shouldn't be required. The idea is to provide
+sensible defaults, and allow for customization.
 
 When you take @t{mu4e} into use, it's a good idea to subscribe to the
 @t{mu}/@t{mu4e}-mailing
@@ -196,10 +200,10 @@ details. Also, if it is about the behavior for specific messages, please
 attach the raw message (that is, the message file as it exists in your
 maildir); you can of course strip off any personal information.
 
-If you are new to all this, the somewhat paternalistic @emph{``How to ask
-questions the smart
-way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}} may
-be a good read.
+If you are new to all of this, the somewhat paternalistic @emph{``How to
+ask questions the smart
+way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}}
+may be a good read.
 
 @node Getting started
 @chapter Getting started
@@ -481,10 +485,9 @@ update at all. After you make changes to @code{mu4e-update-interval},
 @subsection Handling errors during mail retrieval
 
 If the mail-retrieval process returns with a non-zero exit code,
-@t{mu4e} will show a warning (unless
-@code{mu4e-index-update-error-warning} is set to @code{nil}), but then
-try to index your maildirs anyway (unless
-@code{mu4e-index-update-error-continue} is set to @code{nil}).
+@t{mu4e} shows a warning (unless @code{mu4e-index-update-error-warning}
+is set to @code{nil}), but then try to index your maildirs anyway
+(unless @code{mu4e-index-update-error-continue} is set to @code{nil}).
 
 Reason for these defaults is that some of the mail-retrieval programs
 may return non-zero, even when the updating process succeeded; however,
@@ -3688,10 +3691,10 @@ devices) and here's the RFC with all the details:
 @url{http://www.ietf.org/rfc/rfc2646.txt}.
 
 To add this to outgoing mu4e emails, activate @t{use-hard-newlines} and
-use only @t{M-q} or @t{fill-paragraph} for your paragraphs, Emacs will
-indicate intra-paragraph breaks with soft newlines and inter-paragraph
+use only @t{M-q} or @t{fill-paragraph} for your paragraphs, Emacs
+indicates intra-paragraph breaks with soft newlines and inter-paragraph
 breaks with hard newlines. When the Gnus code sees these on outgoing
-emails, it will automatically set @t{format=flowed}.
+emails, it automatically sets @t{format=flowed}.
 
 To enable this, you can use something like this in your init.el:
 
@@ -3707,10 +3710,10 @@ To enable this, you can use something like this in your init.el:
 @node Known issues
 @section Known issues
 
-Although they are not really @emph{questions}, we end this chapter with a list
-of known issues and/or missing features in @t{mu4e}. Thus, users won't have to
-search in vain for things that are not there (yet), and the author can use it
-as a todo-list.
+Although they are not really @emph{questions}, we end this chapter with
+a list of known issues and/or missing features in @t{mu4e}. Thus, users
+won't have to search in vain for things that are not there (yet), and
+the author can use it as a todo-list.
 
 @itemize
 @item @emph{mu4e does not work well if the @command{emacs} language environment is not
@@ -3753,6 +3756,10 @@ github-repository.
 
 @node Multiple accounts
 @section Multiple accounts
+
+@b{Note}: - for @t{mu4e} version 0.9.16 and higher, the recommended way
+to deal with multiple accounts is through @t{mu4e}'s built-in
+@ref{Contexts} system. For older versions, the below still works.
 
 Using mu4e with multiple email accounts is fairly easy. Although
 variables such as @code{user-mail-address}, @code{mu4e-sent-folder},
@@ -3818,7 +3825,7 @@ use the same smtp server for both accounts, you don't need to include
 the smtp-related variables in @code{my-mu4e-account-alist}.
 
 Note that some SMTP servers (such as Gmail) require the SMTP username to
-match the user mail address. In this case your mail will appear to
+match the user mail address. In this case, your mail is appear to
 originate from whichever SMTP account you use. Thus unless you are
 certain your SMTP server does not have this requirement, you should
 generally use different SMTP account credentials for each mail account.
@@ -3853,8 +3860,8 @@ This function then needs to be added to @code{mu4e-compose-pre-hook}:
 (add-hook 'mu4e-compose-pre-hook 'my-mu4e-set-account)
 @end lisp
 
-This way, @code{my-mu4e-set-account} will be called every time you edit
-a message. If you compose a new message, it simply asks you for the
+This way, @code{my-mu4e-set-account} is called every time you edit a
+message. If you compose a new message, it simply asks you for the
 account you wish to send the message from (TAB completion works). If
 you're replying or forwarding a message, or editing an existing draft,
 the account is chosen automatically, based on the first component of the
