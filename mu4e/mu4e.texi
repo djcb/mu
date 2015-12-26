@@ -2791,23 +2791,31 @@ point. Requires the 'formail' tool from procmail."
 @node Contact functions
 @section Contact functions
 
-It can be useful to rewrite the contact information that @t{mu4e}
-provides, for example to convert them to some standardized format, or
-to fix spelling errors.
+It can sometimes be useful to rewrite the contact information that
+@t{mu4e} provides, for example to convert them to some standardized
+format, or to fix spelling errors. And sometimes, you may want to remove
+certain contacts altogether.
 
-You can do this by setting @code{mu4e-contact-rewrite-function} to
-your function, for example:
+For this, @t{mu4e} provides @code{mu4e-contact-rewrite-function}, which
+passes each contact to a user-provided function, which is expected to
+return either the possibly rewritten contact or @code{nil} to remove the
+contact from the list - note that the latter can also be achieved using
+@code{mu4e-compose-complete-ignore-address-regexp}.
+
+Let's look at an example.
 
 @lisp
 (defun my-rewrite-function (contact)
-   (let* ((name (plist-get contact :name))
-	   (mail (plist-get contact :mail))
-	   (actual-name
-	     (cond
-	       ((string= name "jonh smiht") "John Smith")
-	       ;; other replacements
-	       (t name))))
-     (list :name actual-name :mail mail)))
+  (let ((name (or (plist-get contact :name) ""))
+	 (mail (plist-get contact :mail)))
+    (cond
+      ;; jonh smiht --> John Smith
+      ((string= "jonh smiht" name) (list :name "John Smith" :mail mail)) 
+      ;; remove evilspammer from the contacts list
+      ((string= "evilspammer@@example.com" mail) nil)
+      ;; others stay as the are
+      (t contact))))
+
 (setq mu4e-contact-rewrite-function 'my-rewrite-function)
 @end lisp
 

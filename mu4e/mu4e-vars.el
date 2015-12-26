@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2013 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2015 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -305,10 +305,17 @@ their canonical counterpart; useful as an example."
       (list :name name :mail mail)))
 
 (defcustom mu4e-contact-rewrite-function nil
-  "Function to be used for when processing contacts and rewrite
-them, for example you may use this for correcting typo's, changed
-names and adapting addresses or names to company policies. As an
-example of this, see `mu4e-contact-identity'."
+  "Either nil or a function to be used for when processing
+contacts and rewrite them or remove them altogether.
+
+If the function receives the contact as a list of the form
+     (:name NAME :mail EMAIL)
+(other properties may be there as well)
+
+The function should return either:
+ - nil: remove this contact
+- a possible rewritten cell (:name NAME :mail EMAIL), or simply return
+the functions parameter."
   :type 'function
   :group 'mu4e-compose)
 

@@ -626,6 +626,17 @@ process."
       (t (format "\"%s\"" ph)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defsubst mu4e~process-contact (contact)
+  "Process CONTACT, possibly rewriting it, or return nil if
+should be removed."
+  (when mu4e-contact-rewrite-function
+    (setq contact (funcall mu4e-contact-rewrite-function contact)))
+  (when contact
+    (let ((name (plist-get contact :name))
+	   (mail (plist-get contact :mail))) 
+      (unless (and mail (string-match mu4e-compose-complete-ignore-address-regexp mail))
+	(if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)))))  
+	
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
   "We receive a list of contacts, which each contact of the form
@@ -634,9 +645,14 @@ and fill the list `mu4e~contacts-for-completion' with it, with
 each element looking like
   name <email>
 This is used by the completion function in mu4e-compose."
-  (setq mu4e~contact-list contacts)
+  (setq
+    mu4e~contact-list contacts
+    mu4e~contacts-for-completion nil)
   (let ((lst)
-	 ;; sort by the frequency (descending), then timestamp (descending)
+	 ;; sort by the frequency (ascending), then timestamp (ascending)
+	 ;; note -- this the opposite order we'd want, but the
+	 ;; `push' below reverses the order
+	 
 	 ;; FIXME: sadly, the emacs completion subsystem re-sorts the list
 	 ;; before showing candidates, so this doesn't do anything useful yet.
 	 (contacts (sort contacts
@@ -649,18 +665,8 @@ This is used by the completion function in mu4e-compose."
 			   (< tstamp1 tstamp2)
 			   (< freq1 freq2)))))))
     (dolist (contact contacts)
-      (let* ((contact
-	       (if mu4e-contact-rewrite-function
-		 (funcall mu4e-contact-rewrite-function contact) contact))
-              (name (plist-get contact :name))
-              (mail (plist-get contact :mail)))
-	(when mail
-	  (unless ;; ignore some address ('noreply' etc.)
-	    (and mu4e-compose-complete-ignore-address-regexp
-	      (string-match mu4e-compose-complete-ignore-address-regexp mail))
-	  (add-to-list 'lst
-	    (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail))))))
-    (setq mu4e~contacts-for-completion lst)
+      (let ((contact (mu4e~process-contact contact)))
+	(when contact (push contact mu4e~contacts-for-completion))))    
     (mu4e-index-message "Contacts received: %d"
       (length mu4e~contacts-for-completion))))
 
