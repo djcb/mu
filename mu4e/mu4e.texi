@@ -1191,8 +1191,10 @@ misc
 ----
 ;            switch focus
 c            copy address at point (with C-u copy long version)
+
+h            toggle between html/text (if available)
 w            toggle line wrapping
-h            toggle showing cited parts
+#            toggle showing cited parts
 
 v            show details about the cryptographic signature
 
@@ -1267,13 +1269,16 @@ is used for images.
 @node Displaying rich-text messages
 @section Displaying rich-text messages
 
-@t{mu4e} normally prefers the plain-text version for messages that consist of
-both a plain-text and html (rich-text) versions of the body-text. You can
-change this by setting @code{mu4e-view-prefer-html} to @t{t}.
+@t{mu4e} normally prefers the plain-text version for messages that
+consist of both a plain-text and html (rich-text) versions of the
+body-text. You can change this by setting @code{mu4e-view-prefer-html}
+to @t{t}. And you can toggle this value (globally) using @kbd{h} in the
+message view; this also refreshes the message with the new setting.
 
 If there is only an html-version, or if the plain-text version is too
-short in comparison with the html part@footnote{this is for the case
-where the text-part only warns that you should use the html-version},
+short in comparison with the html part@footnote{this is e.g. for the
+case where the text-part is only a short blurb telling you to use the
+html-version; see @code{mu4e-view-html-plaintext-ratio-heuristic}},
 @t{mu4e} tries to convert the html into plain-text for display.
 
 The default way to do that is to use the @command{emacs} built-in

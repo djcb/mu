@@ -640,7 +640,8 @@ FUNC should be a function taking two arguments:
 
       ;; misc
       (define-key map "w" 'visual-line-mode)
-      (define-key map "h" 'mu4e-view-toggle-hide-cited)
+      (define-key map "#" 'mu4e-view-toggle-hide-cited)
+      (define-key map "h" 'mu4e-view-toggle-html)
       (define-key map (kbd "M-q") 'mu4e-view-fill-long-lines)
 
       ;; next 3 only warn user when attempt in the message view
@@ -663,6 +664,8 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
 	  '("Toggle wrap lines" . visual-line-mode))
+	(define-key menumap [hide-cited]
+	  '("Toggle view-html" . mu4e-view-toggle-html))
 	(define-key menumap [hide-cited]
 	  '("Toggle hide cited" . mu4e-view-toggle-hide-cited))
 	(define-key menumap [raw-view]
@@ -704,8 +707,6 @@ FUNC should be a function taking two arguments:
 	  '("Search bookmark" . mu4e-headers-search-bookmark))
 	(define-key menumap [jump]
 	  '("Jump to maildir" . mu4e~headers-jump-to-maildir))
-	(define-key menumap [refresh]
-	  '("Refresh" . mu4e-headers-rerun-search))
 	(define-key menumap [search]
 	  '("Search" . mu4e-headers-search))
 
@@ -916,6 +917,12 @@ the new docid. Otherwise, return nil."
   (if mu4e~view-cited-hidden
     (mu4e-view-refresh)
     (mu4e~view-hide-cited)))
+
+(defun mu4e-view-toggle-html ()
+  "Toggle html-display of the message body (if any)."
+  (interactive)
+  (setq mu4e-view-prefer-html (not mu4e-view-prefer-html)) 
+  (mu4e-view-refresh)) 
 
 (defun mu4e-view-refresh ()
   "Redisplay the current message."

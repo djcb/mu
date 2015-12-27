@@ -42,6 +42,11 @@
      behavior.
    - overwrite target message files that already exist, rather than
      erroring out.
+   - set mu4e-view-html-plaintext-ratio-heuristic to 5, as 10 was too
+     high to detect some effectively html-only messages
+   - add mu4e-view-toggle-html (keybinding: 'h') to toggle between
+     text and html display. The existing 'mu4e-view-toggle-hide-cited'
+     gets the new binding '#'.
 
 ** 0.9.13
 
