@@ -60,7 +60,7 @@ is always used."
   :type 'boolean
   :group 'mu4e-view)
 
-(defcustom mu4e-view-html-plaintext-ratio-heuristic 10
+(defcustom mu4e-view-html-plaintext-ratio-heuristic 5
   "Ratio between the length of the html and the plain text part
 below which mu4e will consider the plain text part to be 'This
 messages requires html' text bodies."
