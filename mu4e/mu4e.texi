@@ -230,8 +230,8 @@ After these steps, @t{mu4e} should be ready to go!
 @node Requirements
 @section Requirements
 
-@t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and Unix-like
-systems, including many Linux distributions, MacOS and
+@t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and
+Unix-like systems, including many Linux distributions, OS X and
 FreeBSD. @command{emacs} 23 or 24 (recommended) is required, as well as
 Xapian@footnote{@url{http://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
@@ -1104,8 +1104,11 @@ addresses by clicking on the name, or pressing @key{M-RET}.
 defines @key{w} to toggle between the wrapped and unwrapped state. If you want
 to do this automatically when viewing a message, invoke @code{visual-line-mode}
 in your @code{mu4e-view-mode-hook}.
-@item You can hide cited parts in messages (the parts starting with ``@t{>}'')
-using @code{mu4e-view-hide-cited}, bound to @key{h}. If you want to do this
+@item For messages that support it, you can toggle between html and text versions using 
+@code{mu4e-view-toggle-html}, bound to @key{h}; 
+@item You can hide cited parts
+in messages (the parts starting with ``@t{>}'') using
+@code{mu4e-view-hide-cited}, bound to @key{#}. If you want to do this
 automatically for every message, invoke the function in your
 @code{mu4e-view-mode-hook}.
 @item For search-related operations, see @ref{Searching}.
@@ -1194,7 +1197,7 @@ c            copy address at point (with C-u copy long version)
 
 h            toggle between html/text (if available)
 w            toggle line wrapping
-#            toggle showing cited parts
+#            toggle show/hide cited parts
 
 v            show details about the cryptographic signature
 
@@ -1211,10 +1214,10 @@ For the marking commands, please refer to @ref{Marking messages}.
 @section Opening and saving attachments
 
 By default, @t{mu4e} uses the @t{xdg-open}-program
-@footnote{@url{http://portland.freedesktop.org/wiki/}} or (on MacOS) the
-@t{open} program for opening attachments. If you want to use another program,
-you do so by setting the @t{MU_PLAY_PROGRAM} environment variable to the
-program to be used.
+@footnote{@url{http://portland.freedesktop.org/wiki/}} or (on OS X) the
+@t{open} program for opening attachments. If you want to use another
+program, you do so by setting the @t{MU_PLAY_PROGRAM} environment
+variable to the program to be used.
 
 The default directory for extracting (saving) attachments is your home
 directory (@file{~/}); you can change this using the variable
@@ -1309,7 +1312,8 @@ installing that, you can tell @t{mu4e} to use it with something like:
    "html2markdown | grep -v '&nbsp_place_holder;'")
 @end lisp
 
-OS X, there is a program called @t{textutil} as yet another alternative:
+On OS X, there is a program called @t{textutil} as yet another
+alternative:
 
 @lisp
 (setq mu4e-html2text-command
@@ -1341,6 +1345,12 @@ of the @t{shr} key bindings, with something like:
      ;; try to emulate some of the eww key-bindings
     (local-set-key (kbd "<tab>") 'shr-next-link)
     (local-set-key (kbd "<backtab>") 'shr-previous-link)))
+@end lisp
+
+If you're using a dark theme, and the messages are hard to read, it can help to change
+the luminosity, e.g.:
+@lisp
+   (setq shr-color-visible-luminance-min 80)
 @end lisp
 
 @node MSGV Crypto
@@ -2926,7 +2936,7 @@ a message to your todo-list, and set a deadline for processing it within
 two days, you could add this to @code{org-capture-templates}:
 
 @lisp
-     ("S" "read-soon" entry (file+headline "todo.org" "Reading")
+     ("P" "process-soon" entry (file+headline "todo.org" "Todo")
        "* TODO %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t \"+2d\"))")
 @end lisp
 
@@ -3566,18 +3576,17 @@ its docstring).
 message?} You can toggle between wrapped and non-wrapped states using
 @key{w}. If you want to do this automatically, invoke @code{visual-line-mode} in
 your @code{mu4e-view-mode-hook}.
-@item @emph{What about hiding cited parts?} Toggle between hiding and showing
-of cited parts with @key{h}. If you want to hide parts automatically, call
-@code{mu4e-view-toggle-hide-cited} in your @code{mu4e-view-mode-hook}.
 @item @emph{How can I perform custom actions on messages and attachments?} See
 @ref{Actions}.
 @item @emph{Does @t{mu4e} support crypto (i.e., decrypting messages and
-verifying signatures)?}  Yes -- if @t{mu} was built with @t{GMime} 2.6 or
-later, it is possible to do both (note, only PGP/MIME is supported). In the
-@ref{Main view} the support is indicated by a big letter @t{C} on the right
-hand side of the @t{mu4e} version. See @ref{Decryption} and @ref{Verifying
-signatures}. For encryption and signing messages, see the @ref{Writing
-messages}.
+verifying signatures)?}  Yes -- if @t{mu} was built with @t{GMime} 2.6
+or later, it is possible to do both (note, only PGP/MIME is
+supported). In the @ref{Main view} the support is indicated by a big
+letter @t{C} on the right hand side of the @t{mu4e} version. See
+@ref{Decryption} and @ref{Verifying signatures}. For encryption and
+signing messages, see @ref{Writing messages}.
+@item @emph{How can I prevent @t{mu4e} from automatically marking messages as 'read' when i read them?}
+Set @code{mu4e-view-auto-mark-as-read} to nil.
 @item @emph{Does @t{mu4e} support including all related messages in a thread,
 like Gmail does?} Yes -- see @ref{Including related messages}.
 @item @emph{There seem to be a lot of duplicate messages -- how can I get rid

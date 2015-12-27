@@ -47,6 +47,10 @@
    - add mu4e-view-toggle-html (keybinding: 'h') to toggle between
      text and html display. The existing 'mu4e-view-toggle-hide-cited'
      gets the new binding '#'.
+   - add a customization variable `mu4e-view-auto-mark-as-read'
+     (defaults to t); if set to nil, mu4e won't mark messages as read
+     when you open them. This can be useful on read-only file-systems,
+     since marking-as-read implies a file-move operation.
 
 ** 0.9.13
 

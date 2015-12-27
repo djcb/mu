@@ -152,6 +152,14 @@ The first letter of NAME is used as a shortcut character.")
     map)
   "Keymap used in the \"Attachements\" header field.")
 
+(defcustom mu4e-view-auto-mark-as-read t
+  "Automatically mark messages are 'read' when you read
+them. This is typically the expected behavior, but can be turned
+off, for example when using a read-only file-system."
+  :type 'boolean
+  :group 'mu4e-view)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -275,12 +283,12 @@ marking if it still had that."
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
 	      (get-buffer-create mu4e~view-buffer-name))))
-    ;; note: mu4e~view-mark-as-read will pseudo-recursively call mu4e-view again
-    ;; by triggering mu4e~view again as it marks the message as read
+    ;; note: mu4e~view-mark-as-read-maybe will pseudo-recursively call mu4e-view again by triggering
+    ;; mu4e~view again as it marks the message as read
     (with-current-buffer buf
       (switch-to-buffer buf)
       (setq mu4e~view-msg msg)
-      (when (or embedded (not (mu4e~view-mark-as-read msg)))
+      (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	(let ((inhibit-read-only t))
 	  (erase-buffer)
 	  (mu4e~delete-all-overlays)
@@ -745,17 +753,16 @@ FUNC should be a function taking two arguments:
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t)))
 
-(defun mu4e~view-mark-as-read (msg)
+(defun mu4e~view-mark-as-read-maybe (msg)
   "Clear the message MSG New/Unread status and set it to Seen.
 If the message is not New/Unread, do nothing. Evaluates to t if it
 triggers any changes, nil otherwise. If this function does any
 changes, it triggers a refresh."
-  (when msg
+  (when (and mu4e-view-auto-mark-as-read msg)
     (let ((flags (mu4e-message-field msg :flags))
 	   (msgid (mu4e-message-field msg :message-id))
 	   (docid (mu4e-message-field msg :docid)))
-      ;; attached (embedded) messages don't have docids; leave them alone
-      ;; is it a new message
+      ;; attached (embedded) messages don't have docids; leave them alone if it is a new message
       (when (and docid (or (member 'unread flags) (member 'new flags)))
 	;; mark /all/ messages with this message-id as read, so all copies of
 	;; this message will be marked as read.
