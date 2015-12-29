@@ -93,6 +93,41 @@ You can influence the browser to use with the variable
 
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-action-view-in-browser-with-images (msg)
+  "View the body of the message in a web browser with images displayed.
+You can influence the browser to use with the variable
+`browse-url-generic-program'."
+  (let* ((html (mu4e-message-field msg :body-html))
+	  (txt (mu4e-message-field msg :body-txt))
+	  (tmpfile (format "%s%x.html" temporary-file-directory (random t)))
+      (tmpfile2 (format "%s%x-2.html" temporary-file-directory (random t)))
+      (imgfilelist '()))
+    (unless (or html txt)
+      (mu4e-error "No body part for this message"))
+    ;; Make list of image file sources formatted as "src=\"<src>\"", where <src>
+    ;; is the image filename.
+    (mu4e-view-for-each-part msg
+                             (lambda (msg part)
+                               (when (string-match "^image/"
+                                                   (or (mu4e-message-part-field part :mime-type)
+                                                       "application/object-stream"))
+                                 (let ((imgfile (mu4e-message-part-field part :temp)))
+                                   (when (and imgfile (file-exists-p imgfile))
+                                     (push (concat "src=\"" imgfile "\"") imgfilelist ))))))
+    ;; Find all images and place them in order. Note that this function is
+    ;; primitive and assumes single occurrences of images and replaces them in order.
+    (with-temp-buffer (insert (or html (concat "<pre>" txt "</pre>")))
+                      ;; Now replace image file sources with pop from imgfilelist
+                      (goto-char (point-min))
+                      (perform-replace "src=[\s\"].+?[\s\"]" imgfilelist nil t nil 1)
+                      (write-file tmpfile)
+                      (browse-url (concat "file://" tmpfile)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   (defconst mu4e-text2speech-command "festival --tts"
     "Program that speaks out text it receives on standard-input.")
 
