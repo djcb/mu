@@ -771,10 +771,6 @@ for an example.")
 This is used by the completion functions in mu4e-compose, filled
 when mu4e starts.")
 
-(defvar mu4e~contact-list nil
-  "List of contacts, where each contact is a plist
-  (:name NAME :mail EMAIL :tstamp TIMESTAMP :freq FREQUENCY).")
-
 (defvar mu4e~server-props nil
   "Properties we receive from the mu4e server process.
 \(in the 'pong-handler').")

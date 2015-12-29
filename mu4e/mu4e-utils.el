@@ -638,16 +638,32 @@ process."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e~process-contact (contact)
-  "Process CONTACT, possibly rewriting it, or return nil if
-should be removed."
+  "Process CONTACT, and either return nil when it should not be included,
+or (rfc822-string . CONTACT) otherwise."
   (when mu4e-contact-rewrite-function
     (setq contact (funcall mu4e-contact-rewrite-function contact)))
   (when contact
     (let ((name (plist-get contact :name))
 	   (mail (plist-get contact :mail))) 
       (unless (and mail (string-match mu4e-compose-complete-ignore-address-regexp mail))
-	(if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)))))  
-	
+	(cons
+	  (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)
+	  contact)))))
+
+(defun mu4e~sort-contacts (contacts)
+  "Sort the contacts (only for cycling). Sort by last-use when
+that is at most 10 days old. Otherwise, sort by frequency."
+  (let ((recent (- (float-time) (* 10 24 3600))))
+    (sort contacts
+      (lambda (c1 c2)
+	(let* ((freq1 (plist-get c1 :freq))
+		(freq2 (plist-get c2 :freq))
+		(tstamp1 (plist-get c1 :tstamp))
+		(tstamp2 (plist-get c2 :tstamp)))
+	  (if (or (> tstamp1 recent) (> tstamp2 recent))
+	    (< tstamp1 tstamp2)
+	    (< freq1 freq2)))))))
+
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
   "We receive a list of contacts, which each contact of the form
@@ -656,25 +672,8 @@ and fill the list `mu4e~contacts-for-completion' with it, with
 each element looking like
   name <email>
 This is used by the completion function in mu4e-compose."
-  (setq
-    mu4e~contact-list contacts
-    mu4e~contacts-for-completion nil)
-  (let ((lst)
-	 ;; sort by the frequency (ascending), then timestamp (ascending)
-	 ;; note -- this the opposite order we'd want, but the
-	 ;; `push' below reverses the order
-	 
-	 ;; FIXME: sadly, the emacs completion subsystem re-sorts the list
-	 ;; before showing candidates, so this doesn't do anything useful yet.
-	 (contacts (sort contacts
-		     (lambda (c1 c2)
-		       (let ((freq1 (plist-get c1 :freq))
-			      (tstamp1 (plist-get c1 :tstamp))
-			      (freq2 (plist-get c2 :freq))
-			      (tstamp2 (plist-get c2 :tstamp)))
-			 (if (equal freq1 freq2)
-			   (< tstamp1 tstamp2)
-			   (< freq1 freq2)))))))
+  (let ((contacts (mu4e~sort-contacts contacts)))
+    (setq mu4e~contacts-for-completion nil)
     (dolist (contact contacts)
       (let ((contact (mu4e~process-contact contact)))
 	(when contact (push contact mu4e~contacts-for-completion))))    
@@ -1171,7 +1170,6 @@ the view and compose modes."
 	(when p
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 (provide 'mu4e-utils)

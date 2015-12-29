@@ -250,12 +250,22 @@ appear on disk."
       (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
       ;; update the file on disk -- ie., without the separator
       (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; address completion; inspired by org-contacts.el and
 ;; https://github.com/nordlow/elisp/blob/master/mine/completion-styles-cycle.el
+(defun mu4e~compose-complete-handler (str pred action)
+  (cond
+    ((eq action nil)
+      (try-completion str mu4e~contacts-for-completion pred))
+    ((eq action t)
+      (all-completions str mu4e~contacts-for-completion pred))
+    ((eq action 'metadata)
+      ;; our contacts are already sorted - just need to tell the
+      ;; completion machinery not to try to undo that...
+      '(metadata
+	 (display-sort-function . identity) ;; i.e., alphabetically
+	 (cycle-sort-function   . identity)))))
 
 (defun mu4e~compose-complete-contact (&optional start)
   "Complete the text at START with a contact.
@@ -276,8 +286,8 @@ Ie. either 'name <email>' or 'email')."
 		    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
 		    (goto-char (match-end 0))
 		    (point)))))
-	(list start end mu4e~contacts-for-completion))))) 
- 
+	(list start end 'mu4e~compose-complete-handler)))))
+
 (defun mu4e~compose-setup-completion ()
   "Set up auto-completion of addresses."
   (set (make-local-variable 'completion-ignore-case) t)
@@ -311,8 +321,8 @@ message-thread by removing the In-Reply-To header."
   (progn
     (use-local-map mu4e-compose-mode-map)
 
-    (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label))) 
-   
+    (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label)))
+
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
