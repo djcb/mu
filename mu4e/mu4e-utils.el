@@ -46,8 +46,9 @@
 (declare-function mu4e~proc-mkdir     "mu4e-proc")
 (declare-function mu4e~proc-running-p "mu4e-proc")
 
-(declare-function mu4e~context-autoswitch  "mu4e-context")
-
+(declare-function mu4e~context-autoswitch "mu4e-context")
+(declare-function mu4e-context-determine  "mu4e-context")
+(declare-function mu4e-context-vars       "mu4e-context")
 (declare-function show-all "org")
 
 
@@ -90,26 +91,36 @@ User's addresses are set in `mu4e-user-mail-address-list')."
     t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(defmacro with~mu4e-context-vars (context &rest body)
+  "Evaluate BODY, with variables let-bound for CONTEXT (if any).
+`funcall'."
+  (declare (indent 2))
+  `(let* ((vars (and ,context (mu4e-context-vars ,context))))
+     (progv ;; XXX: perhaps use eval's lexical environment instead of progv?
+      (mapcar (lambda(cell) (car cell)) vars)
+      (mapcar (lambda(cell) (cdr cell)) vars)
+      (eval ,@body))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the standard folders can be functions too
 (defun mu4e~get-folder (foldervar msg)
-  "Get message folder FOLDERVAR.
+  "Within the mu-context of MSG, get message folder FOLDERVAR.
 If FOLDER is a string, return it, if it is a function, evaluate
 this function with MSG as parameter (which may be `nil'), and
 return the result."
-  (unless (member foldervar '(mu4e-sent-folder mu4e-drafts-folder
-			       mu4e-trash-folder mu4e-refile-folder))
-    (mu4e-error "Folder must be either mu4e-sent-folder,
-    mu4e-drafts-folder or mu4e-trash-folder (not %S)" foldervar))
-  (let* ((folder (symbol-value foldervar))
-	  (val
-	    (cond
-	      ((stringp   folder) folder)
-	      ((functionp folder) (funcall folder msg))
-	      (t (mu4e-error "unsupported type for %S" folder)))))
-    (or val (mu4e-error "%S evaluates to nil" foldervar))))
+  (unless (member foldervar
+	    '(mu4e-sent-folder mu4e-drafts-folder
+	       mu4e-trash-folder mu4e-refile-folder))
+    (mu4e-error "Folder must be one of mu4e-(sent|drafts|trash|refile)-folder"))
+  ;; get the value with the vars for the relevants context let-bound
+  (with~mu4e-context-vars (mu4e-context-determine msg nil)
+    (let* ((folder (symbol-value foldervar))
+	    (val
+	      (cond
+		((stringp   folder) folder)
+		((functionp folder) (funcall folder msg))
+		(t (mu4e-error "unsupported type for %S" folder)))))
+      (or val (mu4e-error "%S evaluates to nil" foldervar)))))
 
 (defun mu4e-get-drafts-folder (&optional msg)
   "Get the sent folder. See `mu4e-drafts-folder'."

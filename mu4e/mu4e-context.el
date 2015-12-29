@@ -22,16 +22,20 @@
 
 ;;; Commentary:
 
-;; A mu4e 'context' is a a set of variable-settings and hooks, which can be used e.g. to switch
-;; between accounts.
+;; A mu4e 'context' is a a set of variable-settings and functions, which can be
+;; used e.g. to switch between accounts.
 
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
+
 (require 'mu4e-utils)
 
-(defvar mu4e-contexts nil "The list of context objects.")
+(defvar mu4e-contexts nil "The list of `mu4e-context' objects
+describing mu4e's contexts.")
 
 (defvar mu4e~context-current nil
-  "The current context. Use `mu4e-context-switch' to change it.")
+  "The current context; for internal use. Use
+  `mu4e-context-switch' to change it.")
 
 (defun mu4e-context-current ()
   "Get the currently active context, or nil if there is none."
@@ -47,11 +51,15 @@
 (defstruct mu4e-context
   "A mu4e context object with the following members:
 - `name': the name of the context, eg. \"Work\" or \"Private\".'
-- `enter-func': a parameterless function invoked when entering this context, or nil
-- `leave-func':a parameterless fuction invoked when leaving this context, or nil
-- `match-func': a function called when comnposing a new messages, and takes a message plist
-for the message replied to or forwarded, and nil otherwise. Before composing a new message,
-`mu4e' switches to the first context for which `match-func' return t."
+- `enter-func': a parameterless function invoked when entering
+  this context, or nil
+- `leave-func':a parameterless fuction invoked when leaving this
+  context, or nil
+- `match-func': a function called when comnposing a new messages,
+  and takes a message plist
+for the message replied to or forwarded, and nil
+otherwise. Before composing a new message, `mu4e' switches to the
+first context for which `match-func' return t."
   name                      ;; name of the context, e.g. "work"
   (enter-func nil)          ;; function invoked when entering the context
   (leave-func nil)          ;; function invoked when leaving the context
@@ -62,7 +70,8 @@ for the message replied to or forwarded, and nil otherwise. Before composing a n
 (defun mu4e~context-ask-user (prompt)
   "Let user choose some context based on its name."
   (when mu4e-contexts
-    (let* ((names (map 'list (lambda (context) (cons (mu4e-context-name context) context))
+    (let* ((names (map 'list (lambda (context)
+			       (cons (mu4e-context-name context) context))
 		    mu4e-contexts))
 	    (context (mu4e-read-option prompt names)))
       (or context (mu4e-error "No such context")))))
@@ -87,7 +96,8 @@ non-nil."
     (unless context (mu4e-error "No such context"))
     ;; if new context is same as old one one switch with FORCE is set.
     (when (or force (not (eq context (mu4e-context-current))))
-      (when (and (mu4e-context-current) (mu4e-context-leave-func mu4e~context-current))
+      (when (and (mu4e-context-current)
+	      (mu4e-context-leave-func mu4e~context-current))
 	(funcall (mu4e-context-leave-func mu4e~context-current)))
       ;; enter the new context
       (when (mu4e-context-enter-func context)
@@ -124,13 +134,14 @@ match, POLICY determines what to do:
 
 - pick-first: pick the first of the contexts available
 - ask: ask the user
-- otherwise, return nil. Effectively, this leaves the current context in place."
+- otherwise, return nil. Effectively, this leaves the current context as it is."
   (when mu4e-contexts
     (if (eq policy 'always-ask)
       (mu4e~context-ask-user "Select context: ")
       (or (find-if (lambda (context)
 		     (and (mu4e-context-match-func context)
-		       (funcall (mu4e-context-match-func context) msg))) mu4e-contexts)
+		       (funcall (mu4e-context-match-func context) msg)))
+	    mu4e-contexts)
 	;; no context found
 	(case policy
 	  (pick-first (car mu4e-contexts))

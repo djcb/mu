@@ -439,11 +439,13 @@ with @t{MU4E-PATH} replaced with the actual path.
 @section Folders
 
 The next step is to tell @t{mu4e} where it can find your Maildir, and
-some special folders. So, for example@footnote{Note that the folders
-(@t{mu4e-sent-folder}, @t{mu4e-drafts-folder}, @t{mu4e-trash-folder} and
+some special folders. 
+
+So, for example@footnote{Note that the folders (@t{mu4e-sent-folder},
+@t{mu4e-drafts-folder}, @t{mu4e-trash-folder} and
 @t{mu4e-refile-folder}) can also be @emph{functions} that are evaluated
 at runtime. This allows for dynamically changing them depending on the
-context. See @ref{Dynamic folders} for details.}:
+situation. See @ref{Dynamic folders} for details.}:
 @lisp
   ;; these are actually the defaults
   (setq
@@ -457,6 +459,9 @@ context. See @ref{Dynamic folders} for details.}:
 Note, @code{mu4e-maildir} takes an actual filesystem-path, the other
 folder names are all relative to @code{mu4e-maildir}. Also note that
 this must @emph{not} be a symbolic link.
+
+If you use @t{mu4e-context}, see @ref{Contexts and special folders} for
+what that means for these special folders.
 
 @node Retrieval and indexing
 @section Retrieval and indexing with mu4e
@@ -2274,6 +2279,7 @@ example:
 @menu
 * Defining a context::
 * Context policies::
+* Contexts and special folders::
 * Contexts example::
 * Some context tricks::
 @end menu
@@ -2345,6 +2351,31 @@ none of the contexts' match-functions returns @code{t}:
 @item @t{nil}: don't change the context
 @end itemize
 
+@node Contexts and special folders
+@section Contexts and special folders
+
+As we discussed in @ref{Folders} and @ref{Dynamic folders}, @t{mu4e}
+recognizes a number of special folders: @code{mu4e-sent-folder},
+@code{mu4e-drafts-folder}, @code{mu4e-trash-folder} and
+@code{mu4e-refile-folder}.
+
+When you have a headers-buffer with messages that belong to different
+contexts (say, a few different accounts), it is desirable for each of
+them to use the specific folders for their own context - so, for
+instance, if you trash a message, it needs to go to the trash-folder for
+the account it belongs to, which is not necessarily the current context.
+
+To make this easy to do, whenever @t{mu4e} needs to know the value for
+such a special folder for a given message, it tries to determine the
+appropriate context using @code{mu4e-context-determine}. If it finds
+one, it let-binds the @code{vars} for that account, and then determines
+the value for the folder. It does not, however, call the @t{enter-func},
+since we are not really switching context.
+
+In practice, this what this means that a long as each of the accounts
+has a good @t{match-func}, all message operations automatically find the
+appropriate folders.
+
 @node Contexts example
 @section Example
 
@@ -2362,7 +2393,8 @@ when starting; see the discussion in the previous section.
 	:enter-func (lambda () (mu4e-message "Switch to the Private context"))
         ;; leave-func not defined
 	:match-func (lambda (msg)
-		      (when msg (mu4e-message-contact-field-matches msg :to "aliced@@home.example.com")))
+		      (when msg (mu4e-message-contact-field-matches msg 
+                      :to "aliced@@home.example.com")))
 	:vars '(  ( mail-reply-to          . "aliced@@home.example.com" )
 		  ( user-mail-address      . "aliced@@home.example.com"  )
 		  ( user-full-name         . "Alice Derleth" )
@@ -2375,7 +2407,8 @@ when starting; see the discussion in the previous section.
 	:enter-func (lambda () (mu4e-message "Switch to the Work context"))
         ;; leave-fun not defined
 	:match-func (lambda (msg)
-		      (when msg (mu4e-message-contact-field-matches msg :to "aderleth@@miskatonic.example.com")))
+		      (when msg (mu4e-message-contact-field-matches msg 
+                      :to "aderleth@@miskatonic.example.com")))
 	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.example.com" )
 		  ( user-mail-address      . "aderleth@@miskatonic.example.com" )
 		  ( user-full-name         . "Alice Derleth" )
@@ -2445,6 +2478,9 @@ you can set them to be a @emph{function} that takes a message as its
 parameter, and returns the desired folder name. This chapter shows you how to
 do that. For a more general discussion of how to extend @t{mu4e} and writing
 your own functions, see @ref{Extending mu4e}.
+
+If you use @t{mu4e-context}, see @ref{Contexts and special folders} for
+what that means for these special folders.
 
 @menu
 * Smart refiling:: Automatically choose the target folder
