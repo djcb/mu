@@ -286,14 +286,14 @@ gboolean
 mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 		 gboolean personal, time_t tstamp)
 {
-	ContactInfo *cinfo;
-	const char *group;
+	ContactInfo	*cinfo;
+	const char	*group;
 
 	g_return_val_if_fail (self, FALSE);
 	g_return_val_if_fail (addr, FALSE);
 
-	group	= encode_email_address (addr);
-
+	group = encode_email_address (addr);
+	
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, group);
 	if (!cinfo) {
 		char *addr_dc;
@@ -304,6 +304,11 @@ mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 					  tstamp, 1);
 		g_hash_table_insert (self->_hash, g_strdup(group), cinfo);
 	} else {
+		/* if the contact is ever user in a personal way, it's
+		 * personal */
+		if (personal)
+			cinfo->_personal = TRUE;
+		
 		if (cinfo->_tstamp < tstamp) {
 			if (!mu_str_is_empty(name)) {
 				/* update the name to the last one used, unless it's

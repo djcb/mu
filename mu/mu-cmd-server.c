@@ -578,7 +578,7 @@ static void
 each_contact_sexp (const char *email, const char *name, gboolean personal,
 		   time_t tstamp, unsigned freq, SexpData *sdata)
 {
-	char *escmail;
+	char *escmail, *escname;
 
 	/* (maybe) only include 'personal' contacts */
 	if (sdata->personal && !personal)
@@ -594,19 +594,18 @@ each_contact_sexp (const char *email, const char *name, gboolean personal,
 		return;
 
 	escmail = mu_str_escape_c_literal (email, TRUE);
+	escname = name ? mu_str_escape_c_literal (name, TRUE) : NULL;
 
-	if (name) {
-		char *escname;
-		escname = mu_str_escape_c_literal (name, TRUE);
-		g_string_append_printf (sdata->gstr,
-					"(:name %s :mail %s :tstamp %u :freq %u)\n",
-					escname, escmail, (unsigned)tstamp, freq);
-		g_free (escname);
-	} else
-		g_string_append_printf (sdata->gstr,
-					"(:mail %s :tstamp %u :freq %u)\n",
-					escmail, (unsigned)tstamp, freq);
+	g_string_append_printf (
+		sdata->gstr,
+		"(:mail %s :name %s :tstamp %u :freq %u :personal %s)\n",
+		escmail,
+		escname ? escname : "nil",
+		(unsigned)tstamp,
+		freq,
+		sdata->personal ? "t" : "nil");
 
+	g_free (escname);
 	g_free (escmail);
 }
 

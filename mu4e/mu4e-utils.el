@@ -645,24 +645,37 @@ or (rfc822-string . CONTACT) otherwise."
   (when contact
     (let ((name (plist-get contact :name))
 	   (mail (plist-get contact :mail))) 
-      (unless (and mail (string-match mu4e-compose-complete-ignore-address-regexp mail))
+      (unless (and mail
+		(string-match mu4e-compose-complete-ignore-address-regexp mail))
 	(cons
 	  (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)
 	  contact)))))
 
-(defun mu4e~sort-contacts (contacts)
-  "Sort the contacts (only for cycling). Sort by last-use when
-that is at most 10 days old. Otherwise, sort by frequency."
-  (let ((recent (- (float-time) (* 10 24 3600))))
-    (sort contacts
+(defsubst mu4e~sort-contacts (contacts)
+  "Destructively sort contacts (only for cycling). Sort by
+last-use when that is at most 10 days old. Otherwise, sort by
+frequency."
+  (let* ((now (+ (float-time) 3600)) ;; allow for clock diffs
+	  (recent (- (float-time) (* 30 24 3600))))
+    (sort* contacts
       (lambda (c1 c2)
-	(let* ((freq1 (plist-get c1 :freq))
+	(let* ( (c1 (cdr c1)) (c2 (cdr c2))
+		(personal1 (plist-get c1 :personal))
+		(personal2 (plist-get c2 :personal))
+		(freq1 (plist-get c1 :freq))
 		(freq2 (plist-get c2 :freq))
 		(tstamp1 (plist-get c1 :tstamp))
 		(tstamp2 (plist-get c2 :tstamp)))
-	  (if (or (> tstamp1 recent) (> tstamp2 recent))
-	    (< tstamp1 tstamp2)
-	    (< freq1 freq2)))))))
+	  ;; personal contacts come first
+	  (if (or personal1 personal2)
+	    (if personal1 t nil)
+	    ;; then come recently seen ones; but only if they're not in
+	    ;; the future (as seen in spams)
+	    (if (and (<= tstamp1 now) (<= tstamp2 now)
+		  (or (> tstamp1 recent) (> tstamp2 recent)))
+	      (> tstamp1 tstamp2) 
+	      ;; otherwise, use the frequency
+	      (> freq1 freq2))))))))
 
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
@@ -672,13 +685,16 @@ and fill the list `mu4e~contacts-for-completion' with it, with
 each element looking like
   name <email>
 This is used by the completion function in mu4e-compose."
-  (let ((contacts (mu4e~sort-contacts contacts)))
-    (setq mu4e~contacts-for-completion nil)
-    (dolist (contact contacts)
-      (let ((contact (mu4e~process-contact contact)))
-	(when contact (push contact mu4e~contacts-for-completion))))    
-    (mu4e-index-message "Contacts received: %d"
-      (length mu4e~contacts-for-completion))))
+  (setq mu4e~contacts-for-completion nil)
+  (dolist (contact contacts)
+    (let ((contact (mu4e~process-contact contact)))
+      ;; note, this gives cells (rfc822-address . contact)
+      (when contact (push contact mu4e~contacts-for-completion))))
+  (setq mu4e~contacts-for-completion
+    (mapcar 'car ;; strip off the other stuff again
+      (mu4e~sort-contacts mu4e~contacts-for-completion)))
+  (mu4e-index-message "Contacts received: %d"
+    (length mu4e~contacts-for-completion)))
 
 
 (defun mu4e~check-requirements ()
