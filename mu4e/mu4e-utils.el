@@ -97,9 +97,9 @@ User's addresses are set in `mu4e-user-mail-address-list')."
   (declare (indent 2))
   `(let* ((vars (and ,context (mu4e-context-vars ,context))))
      (progv ;; XXX: perhaps use eval's lexical environment instead of progv?
-      (mapcar (lambda(cell) (car cell)) vars)
-      (mapcar (lambda(cell) (cdr cell)) vars)
-      (eval ,@body))))
+       (mapcar (lambda(cell) (car cell)) vars)
+       (mapcar (lambda(cell) (cdr cell)) vars)
+       (eval ,@body))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the standard folders can be functions too

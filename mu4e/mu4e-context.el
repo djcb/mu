@@ -130,7 +130,8 @@ POLICY specifies how to do the determination. If POLICY is
 
 In all other cases, if any context matches (using its match
 function), this context is returned. If none of the contexts
-match, POLICY determines what to do:
+match, and if there is no current context, POLICY determines what
+to do:
 
 - pick-first: pick the first of the contexts available
 - ask: ask the user
@@ -138,11 +139,14 @@ match, POLICY determines what to do:
   (when mu4e-contexts
     (if (eq policy 'always-ask)
       (mu4e~context-ask-user "Select context: ")
-      (or (find-if (lambda (context)
+      (or ;; is there a matching one?
+	(find-if (lambda (context)
 		     (and (mu4e-context-match-func context)
 		       (funcall (mu4e-context-match-func context) msg)))
-	    mu4e-contexts)
-	;; no context found
+	  mu4e-contexts)
+	;; no matching one; but is there a current one?
+	(mu4e-context-current) 	
+	;; no context found yet; consult policy
 	(case policy
 	  (pick-first (car mu4e-contexts))
 	  (ask (mu4e~context-ask-user "Select context: "))

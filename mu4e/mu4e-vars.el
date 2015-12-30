@@ -224,7 +224,8 @@ If POLICY is 'always-ask, we ask the user unconditionally.
 
 In all other cases, if any context matches (using its match
 function), this context is returned. If none of the contexts
-match, POLICY determines what to do:
+match, and if there is no current context, POLICY determines what
+to do:
 
 - pick-first: pick the first of the contexts available
 - ask: ask the user
