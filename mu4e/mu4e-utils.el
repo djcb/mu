@@ -266,7 +266,8 @@ Function will return the cdr of the list element."
 	      (lambda (option)
 		;; try to detect old-style options, and warn
 		(when (characterp (car-safe (cdr-safe option)))
-		  (mu4e-error (concat "Please use the new format for options/actions; "
+		  (mu4e-error
+		    (concat "Please use the new format for options/actions; "
 				"see the manual")))
 		(let* ((kar (substring (car option) 0 1))
 			(val (cdr option)))
@@ -277,7 +278,8 @@ Function will return the cdr of the list element."
 	  (response
 	    (mu4e~read-char-choice
 	      (concat prompt optionsstr
-		" [" (propertize "C-g" 'face 'mu4e-highlight-face) " to cancel]")
+		" [" (propertize "C-g" 'face 'mu4e-highlight-face)
+		" to cancel]")
 	      ;; the allowable chars
 	      (map 'list (lambda(elm) (string-to-char (car elm))) options)))
 	  (chosen
@@ -307,9 +309,10 @@ Function will return the cdr of the list element."
     dirs))
 
 (defvar mu4e-cache-maildir-list nil
-  "Whether to cache the list of maildirs; set it to t if you find that
-generating the list on the fly is too slow. If you do, you can set `mu4e-maildir-list' to
-nil to force regenerating the cache the next time `mu4e-get-maildirs' gets called.")
+  "Whether to cache the list of maildirs; set it to t if you find
+that generating the list on the fly is too slow. If you do, you
+can set `mu4e-maildir-list' to nil to force regenerating the
+cache the next time `mu4e-get-maildirs' gets called.")
 
 (defvar mu4e-maildir-list nil
   "Cached list of maildirs.")
@@ -324,7 +327,8 @@ the list of maildirs will not change until you restart mu4e."
     (setq mu4e-maildir-list
       (sort
 	(append
-	  (when (file-accessible-directory-p (concat mu4e-maildir "/cur")) '("/"))
+	  (when (file-accessible-directory-p
+		  (concat mu4e-maildir "/cur")) '("/"))
 	  (mu4e~get-maildirs-1 mu4e-maildir "/"))
 	(lambda (s1 s2) (string< (downcase s1) (downcase s2))))))
   mu4e-maildir-list)
@@ -351,9 +355,11 @@ maildirs under `mu4e-maildir'."
 		  mlist ", "))
 	      (kar (read-char (concat prompt fnames))))
 	(if (member kar '(?/ ?o)) ;; user chose 'other'?
-	  (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs) nil nil "/")
+	  (funcall mu4e-completing-read-function prompt
+	    (mu4e-get-maildirs) nil nil "/")
 	  (or (car-safe
-		(find-if (lambda (item) (= kar (cdr item))) mu4e-maildir-shortcuts))
+		(find-if (lambda (item) (= kar (cdr item)))
+		  mu4e-maildir-shortcuts))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))))))
 
 
@@ -734,7 +740,7 @@ This is used by the completion function in mu4e-compose."
 Checks whether the server process is live."
   (mu4e~proc-running-p))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; starting / getting mail / updating the index
 ;;
 ;;
@@ -782,7 +788,7 @@ successful, call FUNC (if non-nil) afterwards."
 	;; set up the 'pong' handler func
 	(setq mu4e-pong-func
 	  (lambda (props)
-	    (setq mu4e~server-props props) ;; save the props we got from the server
+	    (setq mu4e~server-props props) ;; save props from the server
 	    (let ((version (plist-get props :version))
 		   (doccount (plist-get props :doccount)))
 	      (mu4e~check-requirements)
@@ -962,7 +968,7 @@ in the background; otherwise, pop up a window."
 		 (get-buffer-process mu4e~update-buffer))))
     (when (process-live-p proc)
       (interrupt-process proc t))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -1159,7 +1165,7 @@ receive (:info add :path <path> :docid <docid>) as well as (:update
 <msg-sexp>)."
   (mu4e~proc-add path maildir))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~fontify-cited ()
   "Colorize message content based on the citation level. This is
 used in the view and compose modes."
@@ -1185,7 +1191,7 @@ the view and compose modes."
       (let ((p (search-forward "^-- *$" nil t)))
 	(when p
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (provide 'mu4e-utils)

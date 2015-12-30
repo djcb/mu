@@ -538,7 +538,6 @@ FUNC should be a function taking two arguments:
   (dolist (part (mu4e-msg-field msg :parts))
     (funcall func msg part)))
 
-
 (defvar mu4e-view-mode-map nil
   "Keymap for \"*mu4e-view*\" buffers.")
 (unless mu4e-view-mode-map
@@ -552,7 +551,7 @@ FUNC should be a function taking two arguments:
 
       ;; note, 'z' is by-default bound to 'bury-buffer'
       ;; but that's not very useful in this case
-      (define-key map "z" 'mu4e~view-quit-buffer)
+      (define-key map "z" 'ignore)
 
       (define-key map "s" 'mu4e-headers-search)
       (define-key map "S" 'mu4e-view-search-edit)
@@ -672,7 +671,7 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
 	  '("Toggle wrap lines" . visual-line-mode))
-	(define-key menumap [hide-cited]
+	(define-key menumap [toggle-html]
 	  '("Toggle view-html" . mu4e-view-toggle-html))
 	(define-key menumap [hide-cited]
 	  '("Toggle hide cited" . mu4e-view-toggle-hide-cited))
