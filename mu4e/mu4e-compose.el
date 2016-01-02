@@ -402,11 +402,10 @@ tempfile)."
   ;; message being forwarded or replied to, otherwise it is nil.
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
-  ;; maybe switch the context
+  (run-hooks 'mu4e-compose-pre-hook)
+  ;; maybe switch the context.
   (mu4e~context-autoswitch mu4e-compose-parent-message
 			   mu4e-compose-context-policy)
-  (run-hooks 'mu4e-compose-pre-hook)
-
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (condition-case nil
       (mu4e-draft-open compose-type original-msg)

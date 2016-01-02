@@ -144,8 +144,6 @@ to do:
 		     (and (mu4e-context-match-func context)
 		       (funcall (mu4e-context-match-func context) msg)))
 	  mu4e-contexts)
-	;; no matching one; but is there a current one?
-	(mu4e-context-current) 	
 	;; no context found yet; consult policy
 	(case policy
 	  (pick-first (car mu4e-contexts))
