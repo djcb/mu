@@ -403,6 +403,9 @@ tempfile)."
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
   (run-hooks 'mu4e-compose-pre-hook)
+  ;; maybe switch the context.
+  (mu4e~context-autoswitch mu4e-compose-parent-message
+			   mu4e-compose-context-policy)
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (condition-case nil
       (mu4e-draft-open compose-type original-msg)
@@ -431,12 +434,7 @@ tempfile)."
    ;; hide some headers
   (mu4e~compose-hide-headers)
   ;; switch on the mode
-  (mu4e-compose-mode)
-  ;; maybe switch the context, this should happen
-  ;; after `mu4e-compose-mode', otherwise mu4e in the meaning time
-  ;; switch back to view-mode buffer and calculate context there.
-  (mu4e~context-autoswitch mu4e-compose-parent-message
-			   mu4e-compose-context-policy))
+  (mu4e-compose-mode))
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
