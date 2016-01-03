@@ -166,8 +166,10 @@ clicked."
   (concat
    (mu4e~main-action-str "\t* [;]Switch context " 'mu4e-context-switch)
    "(currently "
-   (propertize (mu4e-context-name (mu4e-context-current))
-               'face 'mu4e-header-key-face)
+   (or (and mu4e-contexts
+            (propertize (mu4e-context-name (mu4e-context-current))
+                        'face 'mu4e-header-key-face))
+       "No context found")
    ")\n"))
 
 (defun mu4e~main-view-queue ()
