@@ -674,14 +674,16 @@ frequency."
 		(tstamp2 (plist-get c2 :tstamp)))
 	  ;; personal contacts come first
 	  (if (or personal1 personal2)
-	    (if personal1 t nil)
-	    ;; then come recently seen ones; but only if they're not in
-	    ;; the future (as seen in spams)
-	    (if (and (<= tstamp1 now) (<= tstamp2 now)
-		  (or (> tstamp1 recent) (> tstamp2 recent)))
-	      (> tstamp1 tstamp2) 
-	      ;; otherwise, use the frequency
-	      (> freq1 freq2))))))))
+	    (if (not (and personal1 personal2))
+	      ;; if only one is personal, that one comes first
+	      (if personal1 t nil)
+	      ;; then come recently seen ones; but only if they're not in
+	      ;; the future (as seen in spams)
+	      (if (and (<= tstamp1 now) (<= tstamp2 now)
+		    (or (> tstamp1 recent) (> tstamp2 recent)))
+		(> tstamp1 tstamp2) 
+		;; otherwise, use the frequency
+		(> freq1 freq2)))))))))
 
 ;; start and stopping
 (defun mu4e~fill-contacts (contacts)
