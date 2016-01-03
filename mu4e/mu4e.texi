@@ -3,7 +3,7 @@
 @include texi.texi
 @c %**start of header
 @setfilename mu4e.info
-@settitle mu4e @value{mu-version} user manual
+@settitle Mu4e @value{mu-version} user manual
 
 @c Use proper quote and backtick for code sections in PDF output
 @c Cf. Texinfo manual 14.2
@@ -25,7 +25,7 @@ Documentation License.''
 @end copying
 
 @titlepage
-@title @t{Mu4e} - an e-mail client for Emacs
+@title @t{Mu4e} - an e-mail client for GNU/Emacs
 @subtitle version  @value{mu-version}
 @author Dirk-Jan C. Binnema
 
@@ -37,7 +37,7 @@ Documentation License.''
 
 @dircategory Emacs
 @direntry
-* mu4e: (Mu4e).        An email client for GNU/Emacs.
+* mu4e: (Mu4e).  An email client for GNU/Emacs.
 @end direntry
 
 @contents
@@ -54,14 +54,13 @@ Documentation License.''
 
 Welcome to @t{mu4e} @value{mu-version}!
 
-@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version
-24, built on top of the
+@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 24
+or higher, built on top of the
 @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
 engine. @t{mu4e} is optimized for fast handling of large amounts of
 e-mail.
 
-Some of @t{mu4e}'s highlights:
-
+Some of its highlights:
 @itemize
 @item Fully search-based: there are no folders@footnote{that is, instead of
 folders, you use queries that match messages in a particular folder}, only
@@ -79,11 +78,12 @@ for that though - see the @ref{FAQ}}
 
 In this manual, we go through the installation of @t{mu4e}, do some
 basic configuration and explain its daily use. We also show you how you
-can customize @t{mu4e} for your needs.
+can customize @t{mu4e} for your special needs.
 
-At the end of the manual, there are some example configurations, to get you up
-to speed quickly: @ref{Example configurations}. There's also an @ref{FAQ},
-which should help you with some common questions.
+At the end of the manual, there are some example configurations, to get
+you up to speed quickly: @ref{Example configurations}. There's also an
+@ref{FAQ}, which should help you with questions to some common
+questions.
 
 @menu
 * Introduction:: Where be begin
@@ -122,15 +122,10 @@ Appendices
 @node Why another e-mail client
 @section Why another e-mail client?
 
-Fair question.
-
-I'm not sure the world needs yet another e-mail client, but perhaps
-@emph{I} do!
-
 I (the author) spend a @emph{lot} of time dealing with e-mail, both
 professionally and privately. Having an efficient e-mail client is
 essential. Since none of the existing ones worked the way I wanted, I
-created my own. 
+created my own.
 
 @command{emacs} is an integral part of my workflow, so it made a lot of
 sense to use it for e-mail as well. And as I had already written an
@@ -141,16 +136,15 @@ basis.
 @section Other mail clients
 
 Under the hood, @t{mu4e} is fully search-based, similar to programs like
-@t{notmuch}@footnote{@url{http://notmuchmail.org}},
-@t{md}@footnote{@url{https://github.com/nicferrier/md} (inactive)} and
-@t{sup}@footnote{@url{http://sup.rubyforge.org/}
-(unreachable)}. 
+@t{notmuch}@footnote{@url{http://notmuchmail.org}} and
+@t{sup}@footnote{@url{http://sup.rubyforge.org/}}.
 
 However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
 handling (deleting, moving etc.) is inspired by
 @emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
 @code{emacs}-based e-mail client),
-@t{mutt}@footnote{@url{http://www.mutt.org/}} and @t{dired}.
+@t{mutt}@footnote{@url{http://www.mutt.org/}} and the @t{dired}
+file-manager for emacs.
 
 @t{mu4e} tries to keep all the 'state' in your maildirs, so you can easily
 switch between clients, synchronize over @abbr{IMAP}, backup with @t{rsync}
@@ -159,7 +153,7 @@ and so on. If you delete the database, you won't lose any information.
 @node What mu4e does not do
 @section What @t{mu4e} does not do
 
-There are a number of things that @t{mu4e} does @emph{not} do:
+There are a number of things that @t{mu4e} does @b{not} do:
 @itemize
 @item @t{mu}/@t{mu4e} do @emph{not} get your e-mail messages from
 a mail server. That task is delegated to other tools, such as
@@ -169,7 +163,7 @@ a mail server. That task is delegated to other tools, such as
 messages end up in a maildir, @t{mu4e} and @t{mu} are happy to deal with
 them.
 @item @t{mu4e} also does @emph{not} implement sending of messages; instead, it
-depends on @t{smptmail} (@inforef{Top,,smtpmail}), which is part of
+depends on @t{smtpmail} (@inforef{Top,,smtpmail}), which is part of
 @command{emacs}. In addition, @t{mu4e} piggybacks on Gnus' message editor;
 @inforef{Top,,message}.
 @end itemize
@@ -200,17 +194,13 @@ details. Also, if it is about the behavior for specific messages, please
 attach the raw message (that is, the message file as it exists in your
 maildir); you can of course strip off any personal information.
 
-If you are new to all of this, the somewhat paternalistic @emph{``How to
-ask questions the smart
-way''}@footnote{@url{http://www.catb.org/esr/faqs/smart-questions.html}}
-may be a good read.
-
 @node Getting started
 @chapter Getting started
 
 In this chapter, we go through the installation of @t{mu4e} and its
 basic setup. After we have succeeded in @ref{Getting mail}, and
-@pxref{Indexing your messages}, we discuss @ref{Basic configuration}.
+@pxref{Indexing your messages}, we discuss the @ref{Basic
+configuration}.
 
 After these steps, @t{mu4e} should be ready to go!
 
@@ -2216,7 +2206,8 @@ elements:
 
 @itemize
 @item @code{:char} -- the character to display in the headers view.
-@item @code{:prompt} -- the prompt to use when asking for marks (used for example when marking a whole thread).
+@item @code{:prompt} -- the prompt to use when asking for marks 
+(used for example when marking a whole thread).
 @item @code{:ask-target} -- a function run once per bulk-operation, and thus suitable for
 querying the user about a target for move-like marks. If nil, the
 TARGET passed to @code{:dyn-target} is nil.
@@ -2277,53 +2268,62 @@ example:
 @chapter Contexts
 
 @menu
-* Defining a context::
+* What contexts are made of::
 * Context policies::
 * Contexts and special folders::
 * Contexts example::
 * Some context tricks::
 @end menu
 
-It can be useful to be able to switch between different sets of settings
-in @t{mu4e}; typical examples include the case where you have different
-e-mail accounts for private and work email, each with their own settings
-for folders, e-mail addresses, mailservers etc.
+It can be useful to switch between different sets of settings in
+@t{mu4e}; a typical example is the case where you have different e-mail
+accounts for private and work email, each with their own values for
+folders, e-mail addresses, mailservers and so on.
 
 The @code{mu4e-context} system is a @t{mu4e}-specific mechanism to allow
-for that; users can be define different contexts, and either manually
-switch between them, or let @t{mu4e} determine the right context when
-composing a message.
+for that; users can be define different @i{contexts} corresponding with
+groups of setting and either manually switch between them, or let
+@t{mu4e} determine the right context when composing a message based on
+some user-provided function.
 
-Note, there are a number of existing ways to switch accounts in
+Note that there are a number of existing ways to switch accounts in
 @t{mu4e}, for example using the method described in the @ref{Tips and
 Tricks} section of this manual. Those still work - but the new mechanism
 has the benefit of being a core part of @code{mu4e}, thus allowing for
 deeper integration.
 
-@node Defining a context
-@section Defining a context
+@node What contexts are made of
+@section What context are made of
+
+Let's see what's contained in a context. Most of it is optional.
 
 A @code{mu4e-context} is Lisp object with the following members:
 @itemize
 @item @t{name}: the name of the context, e.g. @t{work} or @t{private}
+@item @t{vars}:
+an association-list (alist) of variable settings for this account.
 @item @t{enter-func}:
-an optional function that takes no parameter and is invoked when entering
-the context
+an (optional) function that takes no parameter and is invoked when entering
+the context. You can use this for extra setup etc.
 @item @t{leave-func}:
-an optional function that takes no parameter and is invoked when leaving
-the context
+an (optional) function that takes no parameter and is invoked when leaving
+the context. You can use this for clearing things up.
 @item @t{match-func}:
-an optional function that is invoked before replying to or forwarding a
+an (optional) function that takes an @t{MSG} message plist as argument,
+and returns non-@t{nil} if this context matches the situation. @t{mu4e}
+uses the first context that matches, in a couple of situations:
+@itemize
+@item when starting @t{mu4e} to determine the
+starting context; in this case, @t{MSG} is nil. You can use e.g. the
+host you're running or the time of day to determine which context
+matches.
+@item before replying to or forwarding a
 message with the given message plist as parameter, or @t{nil} when
 composing a brand new message. The function should return @t{t} when
 this context is the right one for this message, or @t{nil} otherwise.
-
-The function is also invoked when starting @t{mu4e} to determine the
-starting context; in that case, the message-parameter is nil. You can
-use e.g. the host you're running or or perhaps the time of day or even
-your location to determine the context.
-@item @t{vars}:
-an alist of variable settings for this account.
+@item when determining the target folders for deleting, refiling etc; 
+see @ref{Contexts and special folders}.
+@end itemize
 @end itemize
 
 @t{mu4e} uses a variable @code{mu4e-contexts}, which is a list of such
@@ -2337,18 +2337,28 @@ context to use based on the variable @code{mu4e-context-policy};
 similarly, when you compose a new message, the context is determined
 using @code{mu4e-compose-context-policy}.
 
-These policies can be one of the following:
+For both of these, you can choose one of the following policies:
 @itemize
-@item a symbol @t{always-ask}: unconditionally ask the user what context to pick
+@item a symbol @code{always-ask}: unconditionally ask the user what context to pick.
 @end itemize
 
-The other choices only apply if none of the context matches (i.e., if
-none of the contexts' match-functions returns @code{t}:
+The other choices @b{only apply if none of the contexts match} (i.e.,
+none of the contexts' match-functions returns @code{t}). We have the
+following options:
 
 @itemize
-@item a symbol @t{ask}: ask the user
-@item a symbol @t{pick-first}: pick the first context
-@item @t{nil}: don't change the context
+@item a symbol @code{ask}: ask the user if @t{mu4e} can't figure
+things out the context by itself (through the match-function). This is a
+good policy if there are no match functions, or if the match functions
+don't cover all cases.
+@item a symbol @code{ask-if-none}: if there's already a context, don't change it; otherwise,
+ask the user.
+@item a symbol @code{pick-first}: pick the first (default) context. This is a good choice if
+you want to specify context for special case, and fall back to the first
+one if none match.
+@item @code{nil}: don't change the context; this is useful if you don't change 
+contexts very often, and e.g. manually changes contexts with @kbd{M-x
+mu4e-context-switch}.
 @end itemize
 
 @node Contexts and special folders
@@ -2367,10 +2377,11 @@ the account it belongs to, which is not necessarily the current context.
 
 To make this easy to do, whenever @t{mu4e} needs to know the value for
 such a special folder for a given message, it tries to determine the
-appropriate context using @code{mu4e-context-determine}. If it finds
-one, it let-binds the @code{vars} for that account, and then determines
-the value for the folder. It does not, however, call the @t{enter-func},
-since we are not really switching context.
+appropriate context using @code{mu4e-context-determine} (and policy
+@t{nil}; see @ref{Context policies}). If it finds a matching context, it
+let-binds the @code{vars} for that account, and then determines the
+value for the folder. It does not, however, call the @code{enter-func}
+or @code{leave-func}, since we are not really switching context.
 
 In practice, this what this means that a long as each of the accounts
 has a good @t{match-func}, all message operations automatically find the
@@ -2393,8 +2404,9 @@ when starting; see the discussion in the previous section.
 	:enter-func (lambda () (mu4e-message "Switch to the Private context"))
         ;; leave-func not defined
 	:match-func (lambda (msg)
-		      (when msg (mu4e-message-contact-field-matches msg 
-                      :to "aliced@@home.example.com")))
+		      (when msg 
+                         (mu4e-message-contact-field-matches msg 
+                             :to "aliced@@home.example.com")))
 	:vars '(  ( mail-reply-to          . "aliced@@home.example.com" )
 		  ( user-mail-address      . "aliced@@home.example.com"  )
 		  ( user-full-name         . "Alice Derleth" )
@@ -2407,8 +2419,9 @@ when starting; see the discussion in the previous section.
 	:enter-func (lambda () (mu4e-message "Switch to the Work context"))
         ;; leave-fun not defined
 	:match-func (lambda (msg)
-		      (when msg (mu4e-message-contact-field-matches msg 
-                      :to "aderleth@@miskatonic.example.com")))
+		      (when msg 
+                        (mu4e-message-contact-field-matches msg 
+                           :to "aderleth@@miskatonic.example.com")))
 	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.example.com" )
 		  ( user-mail-address      . "aderleth@@miskatonic.example.com" )
 		  ( user-full-name         . "Alice Derleth" )
@@ -2416,24 +2429,44 @@ when starting; see the discussion in the previous section.
 		    (concat
 		      "Prof. Alice Derleth\n"
 		      "Miskatonic University, Dept. of Occult Sciences\n"))))))
+
+;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
+;; guess or ask the correct context, e.g.
+
+;; start with the first (default) context; 
+;; default is to ask-if-none (ask when there's no context yet, and none match)
+;; (setq mu4e-context-policy 'pick-first)
+
+;; compose with the current context is no context matches;
+;; default is to ask 
+;; '(setq mu4e-compose-context-policy nil)
 @end lisp
 
 A couple of notes about this example:
 @itemize
-@item You can manually switch the focus use @code{M-x mu4e-context-switch}, by default bound to @kbd{;} in headers, view and main mode.
+@item You can manually switch the focus use @code{M-x mu4e-context-switch}, 
+by default bound to @kbd{;} in headers, view and main mode.
 The current focus appears in the mode-line.
-@item Normally, @code{M-x mu4e-context-switch} does not call the enter or leave functions if the 'new' context is the same as the old one.
+@item Normally, @code{M-x mu4e-context-switch} does not call the enter or 
+leave functions if the 'new' context is the same as the old one.
 However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to
 invoke those function even in that case.
-@item The function @code{mu4e-context-current} returns the current-context; the current context is also visiable in the mode-line when in
+@item The function @code{mu4e-context-current} returns the current-context; 
+the current context is also visible in the mode-line when in
 headers, view or main mode.
-@item You can set any kind of variable; including settings for mail servers etc. However, settings like @code{mu4e-maildir}
-and @code{mu4e-mu-home} are not changeable after they have been set without quiting @t{mu4e} first.
-@item @code{leave-func} (if defined) for the context we are leaving, is invoked before the @code{enter-func} (if defined) of the
+@item You can set any kind of variable; including settings for mail servers etc. 
+However, settings such as @code{mu4e-maildir} and @code{mu4e-mu-home} are
+not changeable after they have been set without quitting @t{mu4e} first.
+@item @code{leave-func} (if defined) for the context we are leaving, is invoked 
+before the @code{enter-func} (if defined) of the
 context we are entering.
 @item @code{enter-func} (if defined) is invoked before setting the variables.
 @item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}.
-@item Finally, be careful to get the quotations right -- backticks, single quotes and commas and note the '.' between variable name and its value.
+@item See the variables @code{mu4e-context-policy} and
+@code{mu4e-compose-context-policy} to tweak what @t{mu4e} should do when 
+no context matches (or if you always want to be asked).
+@item Finally, be careful to get the quotations right -- backticks, single quotes 
+and commas and note the '.' between variable name and its value.
 @end itemize
 
 @node Some context tricks
@@ -2453,7 +2486,6 @@ concatenating the @code{user-mail-address} fields of all contexts:
                         (cdr (assq 'user-mail-address (mu4e-context-vars context)))))
                     mu4e-contexts)))
 @end lisp
-
 
 
 @node Dynamic folders
@@ -2541,9 +2573,11 @@ describing a message}. The plist corresponds to the message at point. See
 returns the first of the clauses that matches. It's important to make the last
 clause a catch-all, so we always return @emph{some} folder.
 @item We use
-the convenience function @code{mu4e-message-contact-field-matches}, which
-evaluates to @code{t} if any of the names or e-mail addresses in a contact
-field (in this case, the @t{To:}-field) matches the regular expression.
+the convenience function @code{mu4e-message-contact-field-matches},
+which evaluates to @code{t} if any of the names or e-mail addresses in a
+contact field (in this case, the @t{To:}-field) matches the regular
+expression. With @t{mu4e} version 0.9.16 or newer, the contact field can
+in fact be a list instead of a single value, such as @code{'(:to :cc)'}
 @end itemize
 
 @node Other dynamic folders
@@ -3516,7 +3550,7 @@ time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
 matching a certain regular expression.
 @item @emph{@t{mu4e} seems to return a subset of all matches - how can I get
 all?} For speed reasons, @t{mu4e} returns only up to the value of the variable
-@code{m4ue-search-result-limit} (default: 500) matches. To show @emph{all},
+@code{mu4e-search-result-limit} (default: 500) matches. To show @emph{all},
 use @kbd{M-x mu4e-headers-toggle-full-search} (@key{Q}), or customize the
 variable @code{mu4e-headers-full-search}. This applies to all search commands.
 @item @emph{How can I get notifications when receiving mail?} There is
