@@ -777,14 +777,13 @@ first.
 If mu4e is already running, execute function FUNC (if non-nil).
 Otherwise, check various requirements, then start mu4e. When
 successful, call FUNC (if non-nil) afterwards."
-  ;; maybe switch the context
-  (mu4e~context-autoswitch nil mu4e-context-policy)
   ;; if we're already running, simply go to the main view
   (if (mu4e-running-p)   ;; already running?
-    (when func                 ;; yes! run func if defined
-      (funcall func))
+    (when func (funcall func)) ;; yes! run func if defined
     (progn
-      ;; no! do some checks, set up pong handler and ping the server
+      ;; no! try to set a context, do some checks, set up pong handler and ping
+      ;; the server maybe switch the context
+      (mu4e~context-autoswitch nil mu4e-context-policy)
       (lexical-let ((func func))
 	(mu4e~check-requirements)
 	;; set up the 'pong' handler func
