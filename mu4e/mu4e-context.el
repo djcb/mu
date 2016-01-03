@@ -83,32 +83,35 @@ first context for which `match-func' return t."
 If the new context is the same and the current context, only
 switch (run associated functions) when prefix argument FORCE is
 non-nil."
-  (interactive "P")
-  (unless mu4e-contexts
-    (mu4e-error "No contexts defined"))
-  (let* ((names (map 'list (lambda (context)
-			     (cons (mu4e-context-name context) context))
-		  mu4e-contexts))
-	  (context
+  (interactive "p")
+  (let ((curpos (point)))
+    (unless mu4e-contexts
+      (mu4e-error "No contexts defined"))
+    (let* ((names (map 'list (lambda (context)
+                               (cons (mu4e-context-name context) context))
+                       mu4e-contexts))
+           (context
 	    (if name
-	      (cdr-safe (assoc name names))
-	      (mu4e~context-ask-user "Switch to context: "))))
-    (unless context (mu4e-error "No such context"))
-    ;; if new context is same as old one one switch with FORCE is set.
-    (when (or force (not (eq context (mu4e-context-current))))
-      (when (and (mu4e-context-current)
-	      (mu4e-context-leave-func mu4e~context-current))
-	(funcall (mu4e-context-leave-func mu4e~context-current)))
-      ;; enter the new context
-      (when (mu4e-context-enter-func context)
-	(funcall (mu4e-context-enter-func context)))
-      (when (mu4e-context-vars context)
-	(mapc #'(lambda (cell)
-		  (set (car cell) (cdr cell)))
-	  (mu4e-context-vars context)))
-      (setq mu4e~context-current context)
-      (mu4e-message "Switched context to %s" (mu4e-context-name context)))
-    context))
+                (cdr-safe (assoc name names))
+                (mu4e~context-ask-user "Switch to context: "))))
+      (unless context (mu4e-error "No such context"))
+      ;; if new context is same as old one one switch with FORCE is set.
+      (when (or (equal force '(4)) (not (eq context (mu4e-context-current))))
+        (when (and (mu4e-context-current)
+                   (mu4e-context-leave-func mu4e~context-current))
+          (funcall (mu4e-context-leave-func mu4e~context-current)))
+        ;; enter the new context
+        (when (mu4e-context-enter-func context)
+          (funcall (mu4e-context-enter-func context)))
+        (when (mu4e-context-vars context)
+          (mapc #'(lambda (cell)
+                    (set (car cell) (cdr cell)))
+                (mu4e-context-vars context)))
+        (setq mu4e~context-current context)
+        (mu4e-message "Switched context to %s" (mu4e-context-name context)))
+      (when force (mu4e~main-view-real nil nil))
+      (goto-char curpos)
+      context)))
 
 (defun mu4e~context-autoswitch (&optional msg policy)
   "When contexts are defined but there is no context yet, switch

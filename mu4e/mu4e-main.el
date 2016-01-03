@@ -145,8 +145,8 @@ clicked."
        "\n\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-	(mu4e~main-action-str "\t* [;]Switch focus\n" 'mu4e-context-switch)
-	
+	(mu4e~main-context-switch)
+        
 	(mu4e~main-action-str "\t* [U]pdate email & database\n"
 	  'mu4e-update-mail-and-index)
 
@@ -161,6 +161,14 @@ clicked."
 	(mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
       )))
+
+(defun mu4e~main-context-switch ()
+  (concat
+   (mu4e~main-action-str "\t* [;]Switch context " 'mu4e-context-switch)
+   "(currently "
+   (propertize (mu4e-context-name (mu4e-context-current))
+               'face 'mu4e-header-key-face)
+   ")\n"))
 
 (defun mu4e~main-view-queue ()
   "Display queue-related actions in the main view."
