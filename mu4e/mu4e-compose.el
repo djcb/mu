@@ -119,24 +119,26 @@ for querying the message information."
   :group 'mu4e-compose)
 
 
-(defcustom mu4e-compose-context-policy nil
-  "Determines how mu4e should determine the context when composing a new message.
+(defcustom mu4e-compose-context-policy 'ask
+  "Policy for determining the context when composing a new message.
 
-If POLICY is
-'always-ask, we ask the user unconditionally.
+If the value is `always-ask', ask the user unconditionally.
 
 In all other cases, if any context matches (using its match
-function), this context is returned. If none of the contexts
-match, and if there is no current context, POLICY determines what
-to do:
+function), this context is used. Otherwise, if none of the
+contexts match, we have the following choices:
 
-- pick-first: pick the first of the contexts available
-- ask: ask the user
-- otherwise, return nil. Effectively, this leaves the current context in place."
+- `pick-first': pick the first of the contexts available (ie. the default)
+- `ask': ask the user
+- `ask-if-none': ask if there is no context yet, otherwise leave it as it is
+-  nil: return nil; leaves the current context as is.
+
+Also see `mu4e-context-policy'."
   :type '(choice
 	   (const :tag "Always ask what context to use" 'always-ask)
 	   (const :tag "Ask if none of the contexts match" 'ask)
-	   (const :tag "Pick the default (first) context if none match" 'pick-first)
+	   (const :tag "Ask when there's no context yet" 'ask-if-none)
+	   (const :tag "Pick the first context if none match" 'pick-first)
 	   (const :tag "Don't change the context when none match" nil)
   :safe 'symbolp
   :group 'mu4e-compose))
@@ -403,6 +405,7 @@ tempfile)."
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
   ;; maybe switch the context
+  (message "Autoswitch")
   (mu4e~context-autoswitch mu4e-compose-parent-message
 			   mu4e-compose-context-policy)
   (run-hooks 'mu4e-compose-pre-hook)

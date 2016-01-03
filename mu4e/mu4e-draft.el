@@ -279,7 +279,7 @@ never hits the disk. Also see `mu4e~draft-insert-mail-header-separator."
 	(replace-match "")))))
 
 
-(defun mu4e~draft-user-wants-reply-all (origmsg)
+(defun mu4e~draft-reply-all-p (origmsg)
   "Ask user whether she wants to reply to *all* recipients.
 If there is just one recipient of ORIGMSG do nothing."
   (let* ((recipnum
@@ -315,10 +315,9 @@ You can append flags."
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
   (concat
-   (mu4e~draft-header "User-agent" mu4e-user-agent-string)
+    (mu4e~draft-header "User-agent" mu4e-user-agent-string)
    (when mu4e-compose-auto-include-date
      (mu4e~draft-header "Date" (message-make-date)))))
-
 
 (defconst mu4e~draft-reply-prefix "Re: "
   "String to prefix replies with.")
@@ -332,7 +331,7 @@ fields will be the same as in the original."
 	     (+ (length (mu4e~draft-create-to-lst origmsg))
 	       (length (mu4e~draft-create-cc-lst origmsg t))))
 	  ;; reply-to-self implies reply-all
-	  (reply-all (or reply-to-self (mu4e~draft-user-wants-reply-all origmsg)))
+	  (reply-all (or reply-to-self (mu4e~draft-reply-all-p origmsg)))
 	  (old-msgid (plist-get origmsg :message-id))
 	  (subject
 	    (concat mu4e~draft-reply-prefix
