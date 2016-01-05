@@ -4116,6 +4116,14 @@ your @t{.emacs}-file):
 Other fonts with good support for Unicode are @t{unifont} and
 @t{symbola}.
 
+For a more complete solution, but with greater overhead, you can also
+try the @emph{unicode-fonts} package:
+@lisp
+(require 'unicode-fonts)
+(require 'persistent-soft) ; To cache the fonts and reduce load time
+(unicode-fonts-setup)
+@end lisp
+
 @node Confirmation before sending
 @section Confirmation before sending
 
