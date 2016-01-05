@@ -2407,8 +2407,7 @@ when starting; see the discussion in the previous section.
 		      (when msg 
                          (mu4e-message-contact-field-matches msg 
                              :to "aliced@@home.example.com")))
-	:vars '(  ( mail-reply-to          . "aliced@@home.example.com" )
-		  ( user-mail-address      . "aliced@@home.example.com"  )
+	:vars '(  ( user-mail-address      . "aliced@@home.example.com"  )
 		  ( user-full-name         . "Alice Derleth" )
 		  ( mu4e-compose-signature .
 		    (concat
@@ -2422,8 +2421,7 @@ when starting; see the discussion in the previous section.
 		      (when msg 
                         (mu4e-message-contact-field-matches msg 
                            :to "aderleth@@miskatonic.example.com")))
-	:vars '(  ( mail-reply-to          . "aderleth@@miskatonic.example.com" )
-		  ( user-mail-address      . "aderleth@@miskatonic.example.com" )
+	:vars '(  ( user-mail-address      . "aderleth@@miskatonic.example.com" )
 		  ( user-full-name         . "Alice Derleth" )
 		  ( mu4e-compose-signature .
 		    (concat
