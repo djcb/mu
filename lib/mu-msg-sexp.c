@@ -532,6 +532,9 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 	append_sexp_attr (gstr, "in-reply-to",
 			  mu_msg_get_header (msg, "In-Reply-To"));
 
+    append_sexp_attr (gstr, "content-base",
+              mu_msg_get_header (msg, "Content-Base"));
+
 	/* headers are retrieved from the database, views from the
 	 * message file file attr things can only be gotten from the
 	 * file (ie., mu view), not from the database (mu find).  */
