@@ -1,6 +1,6 @@
 ;;; mu4e-utils.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2014 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
 ;; Copyright (C) 2013 Tibor Simko
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -347,7 +347,7 @@ maildirs under `mu4e-maildir'."
 		(mapconcat
 		  (lambda (item)
 		    (concat
-		      "["
+q		      "["
 		      (propertize (make-string 1 (cdr item))
 			'face 'mu4e-highlight-face)
 		      "]"
@@ -657,53 +657,66 @@ or (rfc822-string . CONTACT) otherwise."
 	  (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)
 	  contact)))))
 
-(defsubst mu4e~sort-contacts (contacts)
-  "Destructively sort contacts (only for cycling). Sort by
-last-use when that is at most 10 days old. Otherwise, sort by
-frequency."
+(defun mu4e~sort-contacts (contacts)
+  "Destructively sort contacts (only for cycling) in order of
+ 'mostly likely contact'.t See the code for the detail"
   (let* ((now (+ (float-time) 3600)) ;; allow for clock diffs
-	  (recent (- (float-time) (* 30 24 3600))))
+	  (recent (- (float-time) (* 15 24 3600))))
     (sort* contacts
       (lambda (c1 c2)
 	(let* ( (c1 (cdr c1)) (c2 (cdr c2))
 		(personal1 (plist-get c1 :personal))
 		(personal2 (plist-get c2 :personal))
-		(freq1 (plist-get c1 :freq))
-		(freq2 (plist-get c2 :freq))
-		(tstamp1 (plist-get c1 :tstamp))
-		(tstamp2 (plist-get c2 :tstamp)))
-	  ;; personal contacts come first
-	  (if (or personal1 personal2)
-	    (if (not (and personal1 personal2))
-	      ;; if only one is personal, that one comes first
-	      (if personal1 t nil)
-	      ;; then come recently seen ones; but only if they're not in
-	      ;; the future (as seen in spams)
-	      (if (and (<= tstamp1 now) (<= tstamp2 now)
-		    (or (> tstamp1 recent) (> tstamp2 recent)))
-		(> tstamp1 tstamp2) 
-		;; otherwise, use the frequency
-		(> freq1 freq2)))))))))
+		;; note: freq, tstamp can only be missing if the rewrite
+		;; function removed them. If the rewrite function changed the
+		;; contact somehow, we guess it's important.
+		(freq1 (or (plist-get c1 :freq) 500))
+		(freq2 (or (plist-get c2 :freq) 500))
+		(tstamp1 (or (plist-get c1 :tstamp) now))
+		(tstamp2 (or (plist-get c2 :tstamp) now)))
+	  ;; only one is personal? if so, that one comes first
+	  (if (not (equal personal1 personal2))
+	    (if personal1 t nil)
+	    ;; only one is recent? that one comes first
+	    (if (not (equal (> tstamp1 recent) (> tstamp2 recent)))
+	      (> tstamp1 tstamp2)
+	      ;; otherwise, use the frequency
+	      (> freq1 freq2))))))))
 
+(defun mu4e~sort-contacts-for-completion (contacts)
+  "Takes CONTACTS, which is a list of RFC-822 addresses, and sort them based
+on the ranking in `mu4e~contacts.'"
+  (sort* contacts
+    (lambda (c1 c2)
+      (let ((rank1 (gethash c1 mu4e~contacts))
+	     (rank2 (gethash c2 mu4e~contacts)))
+	(< rank1 rank2)))))
+ 
 ;; start and stopping
-(defun mu4e~fill-contacts (contacts)
+(defun mu4e~fill-contacts (contact-data)
   "We receive a list of contacts, which each contact of the form
-  (:name NAME :mail EMAIL :tstamp TIMESTAMP :freq FREQUENCY)
-and fill the list `mu4e~contacts-for-completion' with it, with
-each element looking like
-  name <email>
-This is used by the completion function in mu4e-compose."
-  (setq mu4e~contacts-for-completion nil)
-  (dolist (contact contacts)
-    (let ((contact (mu4e~process-contact contact)))
-      ;; note, this gives cells (rfc822-address . contact)
-      (when contact (push contact mu4e~contacts-for-completion))))
-  (setq mu4e~contacts-for-completion
-    (mapcar 'car ;; strip off the other stuff again
-      (mu4e~sort-contacts mu4e~contacts-for-completion)))
-  (mu4e-index-message "Contacts received: %d"
-    (length mu4e~contacts-for-completion)))
+  (:me NAME :mail EMAIL :tstamp TIMESTAMP :freq FREQUENCY)
+and fill the hash  `mu4e~contacts-for-completion' with it, with
+each contact mapped to an integer for their ranking.
 
+This is used by the completion function in mu4e-compose."
+  (let ((contacts) (rank 0))
+    (dolist (contact contact-data)
+      (let ((contact-maybe (mu4e~process-contact contact)))
+	;; note, this gives cells (rfc822-address . contact)
+	(when contact-maybe (push contact-maybe contacts))))
+    (setq contacts (mu4e~sort-contacts contacts))
+    ;; now, we have our nicely sorted list, map them to a list
+    ;; of increasing integers. We use that map in the composer
+    ;; to sort them there. It would have been so much easier if emacs
+    ;; allowed us to use the sorted-list as-is, but no such luck.
+    (setq mu4e~contacts (make-hash-table :test 'equal :weakness nil
+			  :size (length contacts)))
+    (dolist (contact contacts)
+      (puthash (car contact) rank mu4e~contacts)
+      (incf rank))
+    (mu4e-index-message "Contacts received: %d"
+      (hash-table-count mu4e~contacts))))
 
 (defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
@@ -812,7 +825,7 @@ successful, call FUNC (if non-nil) afterwards."
   "Clear any cached resources."
   (setq
     mu4e-maildir-list nil
-    mu4e~contacts-for-completion nil)) 
+    mu4e~contacts nil)) 
  
 (defun mu4e~stop ()
   "Stop the mu4e session."
@@ -1193,7 +1206,6 @@ the view and compose modes."
 	(when p
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el

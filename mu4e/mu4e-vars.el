@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2015 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -312,13 +312,17 @@ their canonical counterpart; useful as an example."
 contacts and rewrite them or remove them altogether.
 
 If the function receives the contact as a list of the form
-     (:name NAME :mail EMAIL)
+     (:name NAME :mail EMAIL ... other properties ... )
 (other properties may be there as well)
 
 The function should return either:
- - nil: remove this contact
-- a possible rewritten cell (:name NAME :mail EMAIL), or simply return
-the functions parameter."
+ - nil: remove this contact, or
+- the rewritten cell, or
+- the existing cell as-is
+
+For rewriting, it is recommended to use `plist-put' to set the
+changed parameters, so the other properties stay in place. Those
+are needed for sorting the contacts."
   :type 'function
   :group 'mu4e-compose)
 
@@ -769,10 +773,11 @@ for an example.")
 (defvar mu4e~view-headers-buffer nil
   "The headers buffer connected to this view.")
 
-(defvar mu4e~contacts-for-completion nil
-  "List of contacts (ie. 'name <e-mail>').
-This is used by the completion functions in mu4e-compose, filled
-when mu4e starts.")
+(defvar mu4e~contacts nil
+  "Hash of that maps contacts (ie. 'name <e-mail>') to an integer
+with their sort order. We need to keep this information around to
+quickly re-sort subsets of the contacts in the completions function in
+mu4e-compose.")
 
 (defvar mu4e~server-props nil
   "Properties we receive from the mu4e server process.

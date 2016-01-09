@@ -1,7 +1,7 @@
 ;; -*-mode: emacs-lisp; tab-width: 8; indent-tabs-mode: t -*-
 ;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs
 ;;
-;; Copyright (C) 2011-2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -260,15 +260,15 @@ appear on disk."
 (defun mu4e~compose-complete-handler (str pred action)
   (cond
     ((eq action nil)
-      (try-completion str mu4e~contacts-for-completion pred))
+      (try-completion str mu4e~contacts pred))
     ((eq action t)
-      (all-completions str mu4e~contacts-for-completion pred))
+      (all-completions str mu4e~contacts pred))
     ((eq action 'metadata)
       ;; our contacts are already sorted - just need to tell the
       ;; completion machinery not to try to undo that...
       '(metadata
-	 (display-sort-function . identity) ;; i.e., alphabetically
-	 (cycle-sort-function   . identity)))))
+	 (display-sort-function . mu4e~sort-contacts-for-completion) 
+	 (cycle-sort-function   . mu4e~sort-contacts-for-completion)))))
 
 (defun mu4e~compose-complete-contact (&optional start)
   "Complete the text at START with a contact.
@@ -671,8 +671,6 @@ end of the buffer."
 
 (define-key mu4e-compose-mode-map
   (vector 'remap 'end-of-buffer) 'mu4e-compose-goto-bottom)
-
-
 
 (provide 'mu4e-compose)
 
