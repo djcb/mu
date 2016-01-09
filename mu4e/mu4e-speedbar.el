@@ -1,6 +1,6 @@
 ;;; mu4e-speedbar --- Speedbar support for mu4e
 
-;; Copyright (C) 2012 Antono Vasiljev, Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2016 Antono Vasiljev, Dirk-Jan C. Binnema
 ;;
 ;; Author: Antono Vasiljev <self@antono.info>
 ;; Version: 0.1

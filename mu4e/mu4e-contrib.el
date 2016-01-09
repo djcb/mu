@@ -1,6 +1,6 @@
 ;;; mu4e-contrib.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2013 Dirk-Jan C. Binnema
+;; Copyright (C) 2013-2016 Dirk-Jan C. Binnema
 
 ;; This file is not part of GNU Emacs.
 ;;

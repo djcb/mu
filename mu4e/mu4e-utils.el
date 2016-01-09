@@ -347,7 +347,7 @@ maildirs under `mu4e-maildir'."
 		(mapconcat
 		  (lambda (item)
 		    (concat
-q		      "["
+		      "["
 		      (propertize (make-string 1 (cdr item))
 			'face 'mu4e-highlight-face)
 		      "]"

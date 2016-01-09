@@ -1,7 +1,7 @@
 ;;; org-mu4e -- Support for links to mu4e messages/queries from within org-mode,
 ;;; and for writing message in org-mode, sending them as rich-text
 ;;
-;; Copyright (C) 2012 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2016 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
