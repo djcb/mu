@@ -1173,6 +1173,8 @@ actions
 g            go to (visit) numbered URL (using `browse-url')
 (or: <mouse-1> or M-RET with point on url)
 C-u g visits multiple URLs
+f            fetch (download )the numbered URL.
+C-u f fetches multiple URLs
 k            save the numbered URL in the kill-ring.
 C-u k saves multiple URLs
 

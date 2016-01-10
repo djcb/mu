@@ -687,6 +687,11 @@ FUNC should be a function taking two arguments:
 	  '("Open attachment" . mu4e-view-open-attachment))
 	(define-key menumap [extract-att]
 	  '("Extract attachment" . mu4e-view-save-attachment))
+
+	(define-key menumap [save-url]
+	  '("Save URL to kill-ring" . mu4e-view-save-url))
+	(define-key menumap [fetch-url]
+	  '("Fetch URL" . mu4e-view-fetch-url))
 	(define-key menumap [goto-url]
 	  '("Visit URL" . mu4e-view-go-to-url))
 
@@ -1380,6 +1385,18 @@ to save a range of URLs."
     (lambda (url)
       (kill-new url)
       (mu4e-message "Saved %s to the kill-ring" url))))
+
+(defun mu4e-view-fetch-url (&optional multi)
+  "Offer to fetch (download) urls(s). If MULTI (prefix-argument) is nil,
+download a single one, otherwise, offer to fetch a range of
+URLs. The urls are fetched to `mu4e-attachment-dir'."
+  (interactive "P")
+  (mu4e~view-handle-urls "URL to fetch" multi
+    (lambda (url)
+      (let ((target (concat (mu4e~get-attachment-dir url) "/"
+		      (file-name-nondirectory url))))
+	(url-copy-file url target)
+      (mu4e-message "Fetched %s -> %s" url target)))))
 
 (defun mu4e~view-handle-urls (prompt multi urlfunc)
   "If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
