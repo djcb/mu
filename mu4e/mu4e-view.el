@@ -211,7 +211,8 @@ found."
 	    (:subject  (mu4e~view-construct-header field fieldval))
 	    (:path     (mu4e~view-construct-header field fieldval))
 	    (:maildir  (mu4e~view-construct-header field fieldval))
-	    ((:flags :tags) (mu4e~view-construct-flags-tags-header field fieldval))
+	    ((:flags :tags) (mu4e~view-construct-flags-tags-header
+			      field fieldval))
 
 	    ;; contact fields
 	    (:to       (mu4e~view-construct-contacts-header msg field))
@@ -283,8 +284,8 @@ marking if it still had that."
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
 	      (get-buffer-create mu4e~view-buffer-name))))
-    ;; note: mu4e~view-mark-as-read-maybe will pseudo-recursively call mu4e-view again by triggering
-    ;; mu4e~view again as it marks the message as read
+    ;; note: mu4e~view-mark-as-read-maybe will pseudo-recursively call mu4e-view
+    ;; again by triggering mu4e~view again as it marks the message as read
     (with-current-buffer buf
       (switch-to-buffer buf)
       (setq mu4e~view-msg msg)
@@ -430,8 +431,9 @@ add text-properties to VAL."
   (let* ((parts (mu4e-message-field msg :parts))
 	 (verdicts
 	  (remove-if 'null
-		     (mapcar (lambda (part) (mu4e-message-part-field part :decryption))
-			     parts)))
+	    (mapcar (lambda (part)
+		      (mu4e-message-part-field part :decryption))
+	      parts)))
 	 (succeeded (remove-if (lambda (v) (eq v 'failed)) verdicts))
 	 (failed (remove-if (lambda (v) (eq v 'succeeded)) verdicts))
 	 (succ (when succeeded
@@ -573,6 +575,7 @@ FUNC should be a function taking two arguments:
 
       (define-key map "g" 'mu4e-view-go-to-url)
       (define-key map "k" 'mu4e-view-save-url)
+      (define-key map "f" 'mu4e-view-fetch-url)
 
       (define-key map "F" 'mu4e-compose-forward)
       (define-key map "R" 'mu4e-compose-reply)
@@ -818,8 +821,8 @@ If the url is mailto link, start writing an email to that address."
 
 (defvar mu4e~view-beginning-of-url-regexp
   "https?\\://\\|mailto:"
-  "Regexp that matches the beginning of http:/https:/mailto: URLs; match-string 1
-will contain the matched URL, if any.")
+  "Regexp that matches the beginning of http:/https:/mailto:
+URLs; match-string 1 will contain the matched URL, if any.")
 
 ;; this is fairly simplistic...
 (defun mu4e~view-make-urls-clickable ()
@@ -981,7 +984,8 @@ selection."
 (defun mu4e-view-search-narrow ()
   "Run `mu4e-headers-search-narrow' in the headers buffer."
   (interactive)
-  (mu4e~view-in-headers-context (call-interactively 'mu4e-headers-search-narrow)))
+  (mu4e~view-in-headers-context
+    (call-interactively 'mu4e-headers-search-narrow)))
 
 (defun mu4e-view-search-edit ()
   "Run `mu4e-headers-search-edit' in the headers buffer."
@@ -1108,7 +1112,8 @@ If ATTNUM is nil ask for the attachment number."
 	(and (file-exists-p fpath)
 	  (not (y-or-n-p (mu4e-format "Overwrite '%s'?" fpath))))))
     (mu4e~proc-extract
-      'save (mu4e-message-field msg :docid) index mu4e-decryption-policy fpath)))
+      'save (mu4e-message-field msg :docid)
+      index mu4e-decryption-policy fpath)))
 
 
 (defun mu4e-view-save-attachment-multi (&optional msg)
@@ -1139,9 +1144,11 @@ attachments, but as this is the default, you may not need it."
                 (setq fpath (expand-file-name (concat attachdir fname) path))
                 (setq retry
                       (and (file-exists-p fpath)
-                           (not (y-or-n-p (mu4e-format "Overwrite '%s'?" fpath))))))
+			(not (y-or-n-p
+			       (mu4e-format "Overwrite '%s'?" fpath))))))
               (mu4e~proc-extract
-               'save (mu4e-message-field msg :docid) index mu4e-decryption-policy fpath))))
+		'save (mu4e-message-field msg :docid)
+		index mu4e-decryption-policy fpath))))
       (dolist (num attachnums)
         (mu4e-view-save-attachment-single msg num)))))
 
@@ -1254,8 +1261,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     ((string= what "pipe")
       ;; 'param' will be the pipe command, path the infile for this
       (mu4e-process-file-through-pipe path param))
-    ;; if it's mu4e, it's some embedded message; 'param' may contain the docid of
-    ;; the parent message.
+    ;; if it's mu4e, it's some embedded message; 'param' may contain the docid
+    ;; of the parent message.
     ((string= what "mu4e")
       ;; remember the mapping path->docid, which maps the path of the embedded
       ;; message to the docid of its parent
