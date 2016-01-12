@@ -380,7 +380,7 @@ command line, which makes it easier to verify that everything works correctly.
 Assuming that your maildir is at @file{~/Maildir}, we issue the following
 command:
 @example
-$ mu index --maildir=~/Maildir
+  $ mu index --maildir=~/Maildir
 @end example
 
 This should scan your @file{~/Maildir}@footnote{In most cases, you do not even
@@ -396,7 +396,7 @@ in full detail in the @t{mu-index} man-page.
 After the indexing process has finished, you can quickly test if everything
 worked, by trying some command-line searches, for example
 @example
-$ mu find hello
+  $ mu find hello
 @end example
 
 which lists all messages that match @t{hello}. For more examples of searches,
@@ -439,11 +439,11 @@ situation. See @ref{Dynamic folders} for details.}:
 @lisp
 ;; these are actually the defaults
 (setq
-mu4e-maildir       "~/Maildir"   ;; top-level Maildir
-mu4e-sent-folder   "/sent"       ;; folder for sent messages
-mu4e-drafts-folder "/drafts"     ;; unfinished messages
-mu4e-trash-folder  "/trash"      ;; trashed messages
-mu4e-refile-folder "/archive")   ;; saved messages
+  mu4e-maildir       "~/Maildir"   ;; top-level Maildir
+  mu4e-sent-folder   "/sent"       ;; folder for sent messages
+  mu4e-drafts-folder "/drafts"     ;; unfinished messages
+  mu4e-trash-folder  "/trash"      ;; trashed messages
+  mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
 Note, @code{mu4e-maildir} takes an actual filesystem-path, the other
@@ -511,8 +511,8 @@ A simple setup could look something like:
 
 @lisp
 (setq
-mu4e-get-mail-command "offlineimap"   ;; or fetchmail, or ...
-mu4e-update-interval 300)             ;; update every 5 minutes
+  mu4e-get-mail-command "offlineimap"   ;; or fetchmail, or ...
+  mu4e-update-interval 300)             ;; update every 5 minutes
 @end lisp
 
 A hook @code{mu4e-update-pre-hook} is available which is run right
@@ -590,20 +590,20 @@ other, and the default key-bindings to navigate between them.
 @cartouche
 @verbatim
 
-[C]     +--------+   [RFCE]
---------> | editor | <--------
-/          +--------+          \
-/         [RFCE]^                \
+   [C]       +--------+   [RFCE]
+   --------> | editor | <--------
+  /          +--------+          \
+ /         [RFCE]^                \
 /                |                 \
-+-------+ [sjbB]+---------+  [RET] +---------+
-| main  | <---> | headers | <----> | message |
-+-------+  [q]  +---------+ [qbBjs]+---------+
-[sjbB]                ^
++-------+ [sjbB]+---------+  [RET]  +---------+
+| main  | <---> | headers | <---->  | message |
++-------+  [q]  +---------+ [qbBjs] +---------+
+                   [sjbB]                ^
 [.] | [q]
-V
-+-----+
-| raw |
-+-----+
+    V
+  +-----+
+  | raw |
+  +-----+
 
 Default bindings
 ----------------
@@ -637,36 +637,35 @@ The main view looks something like the following:
 
 @cartouche
 @verbatim
-* mu4e - mu for emacs version xx.xx CG
+* mu4e - mu for emacs version 0.X.X CG
 
-Basics
+  Basics
 
-* [j]ump to some maildir
-* enter a [s]earch query
-* [C]ompose a new message
+	* [j]ump to some maildir
+	* enter a [s]earch query
+	* [C]ompose a new message
 
-Bookmarks
+  Bookmarks
 
-* [bu] Unread messages
-* [bt] Today's messages
-* [bw] Last 7 days
-* [bp] Messages with images
-* [bs] Sent mail
-* [bf] Flagged messages
-* [b]] Flow
-* [b/] Test
+	* [bu] Unread messages
+	* [bt] Today's messages
+	* [bw] Last 7 days
+	* [bp] Messages with images
+	* [bs] Sent mail
+	* [bf] Flagged messages
+	* [b]] Flow
+	* [b/] Test
 
-Misc
+  Misc
 
-* [;]Switch focus
-* [U]pdate email & database
-* toggle [m]ail sending mode (currently direct)
-* [f]lush 5 queued mails
+	* [;]Switch focus
+	* [U]pdate email & database
 
-* [N]ews
-* [A]bout mu4e
-* [H]elp
-* [q]uit
+	* [N]ews
+	* [A]bout mu4e
+	* [H]elp
+	* [q]uit
+
 @end verbatim
 @end cartouche
 
@@ -962,27 +961,25 @@ takes a message-plist as its argument (@ref{Message functions}).
 
 @lisp
 (add-to-list 'mu4e-header-info-custom
-'(:recipnum .
-( :name "Number of recipients"  ;; long name, as seen in the message-view
-:shortname "Recip#"           ;; short name, as seen in the headers view
-:help "Number of recipients for this message" ;; tooltip
-:function
-(lambda (msg)
-(format "%d"
-(+ (length (mu4e-message-field msg :to))
-(length (mu4e-message-field msg :cc))))))))
+  '(:recipnum .
+     ( :name "Number of recipients"  ;; long name, as seen in the message-view
+       :shortname "Recip#"           ;; short name, as seen in the headers view
+       :help "Number of recipients for this message" ;; tooltip
+       :function (lambda (msg)
+          (format "%d"
+            (+ (length (mu4e-message-field msg :to))
+               (length (mu4e-message-field msg :cc))))))))
 @end lisp
 
 Or, let's get the full mailing-list name:
 @lisp
 (add-to-list 'mu4e-header-info-custom
-'(:full-mailing-list .
-( :name "Mailing-list"               ;; long name, as seen in the message-view
-:shortname "ML"                    ;; short name, as seen in the headers view
-:help "Full name for mailing list" ;; tooltip
-:function
-(lambda (msg)
-(or (mu4e-message-field msg :mailing-list) "")))))
+ '(:full-mailing-list .
+     ( :name "Mailing-list"               ;; long name, as seen in the message-view
+       :shortname "ML"                    ;; short name, as seen in the headers view
+       :help "Full name for mailing list" ;; tooltip
+       :function (lambda (msg)
+           (or (mu4e-message-field msg :mailing-list) "")))))
 @end lisp
 
 You can then add the custom header to your @code{mu4e-headers-fields},
@@ -1061,24 +1058,24 @@ An example message view:
 
 @cartouche
 @verbatim
-From: randy@epiphyte.com
-To: julia@eruditorum.org
-Subject: Re: some pics
-Flags: (seen attach)
-Date: Mon 19 Jan 2004 09:39:42 AM EET
-Maildir: /inbox
-Attachments(2): [1]DSCN4961.JPG(1.3M), [2]DSCN4962.JPG(1.4M)
-
-Hi Julia,
-
-Some pics from our trip to Cerin Amroth. Enjoy!
-
-All the best,
-Randy.
-
-On Sun 21 Dec 2003 09:06:34 PM EET, Julia wrote:
-
-[....]
+    From: randy@epiphyte.com
+    To: julia@eruditorum.org
+    Subject: Re: some pics
+    Flags: (seen attach)
+    Date: Mon 19 Jan 2004 09:39:42 AM EET
+    Maildir: /inbox
+    Attachments(2): [1]DSCN4961.JPG(1.3M), [2]DSCN4962.JPG(1.4M)
+     
+    Hi Julia,
+     
+    Some pics from our trip to Cerin Amroth. Enjoy!
+     
+    All the best,
+    Randy.
+     
+    On Sun 21 Dec 2003 09:06:34 PM EET, Julia wrote:
+     
+    [....]
 @end verbatim
 @end cartouche
 
@@ -1233,12 +1230,12 @@ example:
 
 @lisp
 (setq mu4e-attachment-dir
-(lambda (fname mtype)
-(cond
-;; docfiles go to ~/Desktop
-((and fname (string-match "\\.doc$" fname))  "~/Desktop")
-;; ... other cases  ...
-(t "~/Downloads")))) ;; everything else
+  (lambda (fname mtype)
+     (cond
+        ;; docfiles go to ~/Desktop
+       ((and fname (string-match "\\.doc$" fname))  "~/Desktop")
+       ;; ... other cases  ...
+       (t "~/Downloads")))) ;; everything else
 @end lisp
 
 You can extract multiple attachments at once by prefixing the extracting
@@ -1263,7 +1260,7 @@ is used for images.
 (setq mu4e-view-show-images t)
 ;; use imagemagick, if available
 (when (fboundp 'imagemagick-register-types)
-(imagemagick-register-types))
+  (imagemagick-register-types))
 @end lisp
 
 @node Displaying rich-text messages
@@ -1306,7 +1303,7 @@ installing that, you can tell @t{mu4e} to use it with something like:
 
 @lisp
 (setq mu4e-html2text-command
-"html2markdown | grep -v '&nbsp_place_holder;'")
+  "html2markdown | grep -v '&nbsp_place_holder;'")
 @end lisp
 
 On OS X, there is a program called @t{textutil} as yet another
@@ -1314,7 +1311,7 @@ alternative:
 
 @lisp
 (setq mu4e-html2text-command
-"textutil -stdin -format html -convert txt -stdout")
+  "textutil -stdin -format html -convert txt -stdout")
 @end lisp
 
 @subsection Html2text functions
@@ -1338,10 +1335,10 @@ If you use the @code{mu4e-shr2text}, it might be useful to emulate some
 of the @t{shr} key bindings, with something like:
 @lisp
 (add-hook 'mu4e-view-mode-hook
-(lambda()
-;; try to emulate some of the eww key-bindings
-(local-set-key (kbd "<tab>") 'shr-next-link)
-(local-set-key (kbd "<backtab>") 'shr-previous-link)))
+  (lambda()
+    ;; try to emulate some of the eww key-bindings
+    (local-set-key (kbd "<tab>") 'shr-next-link)
+    (local-set-key (kbd "<backtab>") 'shr-previous-link)))
 @end lisp
 
 If you're using a dark theme, and the messages are hard to read, it can help to change
@@ -1478,18 +1475,18 @@ functionality is available, as well some @t{mu4e}-specifics. Its major mode is
 
 @cartouche
 @verbatim
-From: Rupert the Monkey <rupert@example.com>
-To: Wally the Walrus <wally@example.com>
-Subject: Re: Eau-qui d'eau qui?
---text follows this line--
-
-On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
-
-> Hi Rupert,
->
-> Dude - how are things?
->
-> Later -- wally.
+    From: Rupert the Monkey <rupert@example.com>
+    To: Wally the Walrus <wally@example.com>
+    Subject: Re: Eau-qui d'eau qui?
+    --text follows this line--
+     
+    On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
+     
+    > Hi Rupert,
+    >
+    > Dude - how are things?
+    >
+    > Later -- wally.
 @end verbatim
 @end cartouche
 
@@ -1581,27 +1578,27 @@ Let's look at some examples. First, suppose we want to set the
 ;; 2) messages to me@@bar.example.com should be replied with From:me@@bar.example.com
 ;; 3) all other mail should use From:me@@cuux.example.com
 (add-hook 'mu4e-compose-pre-hook
-(defun my-set-from-address ()
-"Set the From address based on the To address of the original."
-(let ((msg mu4e-compose-parent-message)) ;; msg is shorter...
-(when msg
-(setq user-mail-address
-(cond
-((mu4e-message-contact-field-matches msg :to "me@@foo.example.com")
-"me@@foo.example.com")
-((mu4e-message-contact-field-matches msg :to "me@@bar.example.com")
-"me@@bar.example.com")
-(t "me@@cuux.example.com")))))))
+  (defun my-set-from-address ()
+    "Set the From address based on the To address of the original."
+    (let ((msg mu4e-compose-parent-message)) ;; msg is shorter...
+      (when msg
+	(setq user-mail-address
+	  (cond
+	    ((mu4e-message-contact-field-matches msg :to "me@@foo.example.com")
+	      "me@@foo.example.com")
+	    ((mu4e-message-contact-field-matches msg :to "me@@bar.example.com")
+	      "me@@bar.example.com")
+	    (t "me@@cuux.example.com")))))))
 @end lisp
 
 Second, as mentioned, @code{mu4e-compose-mode-hook} is especially useful for
 editing-related settings. For example:
 @lisp
 (add-hook 'mu4e-compose-mode-hook
-(defun my-do-compose-stuff ()
-"My settings for message composition."
-(set-fill-column 72)
-(flyspell-mode)))
+  (defun my-do-compose-stuff ()
+    "My settings for message composition."
+    (set-fill-column 72)
+    (flyspell-mode)))
 @end lisp
 
 This hook is also useful for adding headers or changing headers, since the
@@ -1611,9 +1608,9 @@ message is fully formed when this hook runs. For example, to add a
 
 @lisp
 (add-hook 'mu4e-compose-mode-hook
-(defun my-add-bcc ()
-"Add a Bcc: header."
-(save-excursion (message-add-header "Bcc: me@@example.com\n"))))
+  (defun my-add-bcc ()
+    "Add a Bcc: header."
+    (save-excursion (message-add-header "Bcc: me@@example.com\n"))))
 @end lisp
 
 @noindent
@@ -1654,7 +1651,7 @@ the queued messages. For example:
 
 @lisp
 (setq smtpmail-queue-mail t  ;; start in queuing mode
-smtpmail-queue-dir   "~/Maildir/queue/cur")
+  smtpmail-queue-dir   "~/Maildir/queue/cur")
 @end lisp
 
 For convenience, we put the queue directory somewhere in our normal
@@ -1663,8 +1660,8 @@ before starting @t{mu4e}. The @command{mu mkdir} command may be useful here,
 so for example:
 
 @verbatim
-$ mu mkdir ~/Maildir/queue
-$ touch ~/Maildir/queue/.noindex
+  $ mu mkdir ~/Maildir/queue
+  $ touch ~/Maildir/queue/.noindex
 @end verbatim
 
 The file created by the @command{touch} command tells @t{mu} to ignore this
@@ -1869,12 +1866,13 @@ first.
 instructive:
 
 @lisp
+
 (defvar mu4e-bookmarks
-'( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
-("date:today..now"                  "Today's messages"     ?t)
-("date:7d..now"                     "Last 7 days"          ?w)
-("mime:image/*"                     "Messages with images" ?p))
-"A list of pre-defined queries; these show up in the main
+  '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
+     ("date:today..now"                  "Today's messages"     ?t)
+     ("date:7d..now"                     "Last 7 days"          ?w)
+     ("mime:image/*"                     "Messages with images" ?p))
+  "A list of pre-defined queries; these show up in the main
 screen. Each of the list elements is a three-element list of the
 form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
 query, DESCRIPTION is a short description of the query (this
@@ -1885,7 +1883,7 @@ You can replace these or add your own items, by putting in your
 configuration (@file{~/.emacs}) something like:
 @lisp
 (add-to-list 'mu4e-bookmarks
-'("size:5M..500M"       "Big messages"     ?b))
+  '("size:5M..500M"       "Big messages"     ?b))
 @end lisp
 
 This prepends your bookmark to the list, and assigns the key @key{b} to it. If
@@ -1907,11 +1905,10 @@ inbox:
 
 @lisp
 (add-to-list 'mu4e-bookmarks
-'((concat "maildir:/inbox AND date:"
-(format-time-string "%Y%m%d" (subtract-time (current-time) (days-to-time 7))))
-"Inbox messages in the last 7 days" ?W) t)
+  '((concat "maildir:/inbox AND date:"
+      (format-time-string "%Y%m%d" (subtract-time (current-time) (days-to-time 7))))
+     "Inbox messages in the last 7 days" ?W) t)
 @end lisp
-
 
 @subsection Editing bookmarks before searching
 
@@ -1942,11 +1939,11 @@ to the list of maildirs you want to have quick access to, for example:
 
 @lisp
 (setq mu4e-maildir-shortcuts
-'( ("/inbox"     . ?i)
-("/archive"   . ?a)
-("/lists"     . ?l)
-("/work"      . ?w)
-("/sent"      . ?s)))
+  '( ("/inbox"     . ?i)
+     ("/archive"   . ?a)
+     ("/lists"     . ?l)
+     ("/work"      . ?w)
+     ("/sent"      . ?s)))
 @end lisp
 
 This sets @key{i} as a shortcut for the @t{/inbox} folder -- effectively a
@@ -2016,8 +2013,9 @@ results, just like e.g. Gmail does it. You can enable this behavior by setting
 @code{mu4e-headers-include-related} to @code{t}, and you can toggle between
 including/not-including with @key{W}.
 
-Be careful though when e.g. deleting ranges of messages from a certain folder
--- the list may now also include messages from @emph{other} folders.
+Be careful though when e.g. deleting ranges of messages from a certain
+folder -- the list may now also include messages from @emph{other}
+folders.
 
 @subsection Skipping duplicates
 @anchor{Skipping duplicates}
@@ -2166,12 +2164,12 @@ than @emph{n} recipients -- we could do this with the following recipe:
 
 @lisp
 (add-to-list 'mu4e-headers-custom-markers
-'("More than n recipients"
-(lambda (msg n)
-(> (+ (length (mu4e-message-field msg :to))
-(length (mu4e-message-field msg :cc))) n))
-(lambda ()
-(read-number "Match messages with more recipients than: "))) t)
+  '("More than n recipients"
+     (lambda (msg n)
+       (> (+ (length (mu4e-message-field msg :to))
+	    (length (mu4e-message-field msg :cc))) n))
+     (lambda ()
+       (read-number "Match messages with more recipients than: "))) t)
 @end lisp
 
 After evaluating this expression, you can use it by pressing @key{&} in
@@ -2193,12 +2191,12 @@ in the list @code{mu4e-marks}. Such an element must have the following form:
 
 @lisp
 (SYMBOL
-:char STRING
-:prompt STRING
-:ask-target (lambda () TARGET)
-:dyn-target (lambda (TARGET MSG) DYN-TARGET)
-:show-target (lambda (DYN-TARGET) STRING)
-:action (lambda (DOCID MSG DYN-TARGET) nil))
+  :char STRING
+  :prompt STRING
+  :ask-target (lambda () TARGET)
+  :dyn-target (lambda (TARGET MSG) DYN-TARGET)
+  :show-target (lambda (DYN-TARGET) STRING)
+  :action (lambda (DOCID MSG DYN-TARGET) nil))
 @end lisp
 
 The symbol can be any symbol, except for 'unmark and 'something, which
@@ -2228,12 +2226,12 @@ loading mu4e):
 
 @lisp
 (add-to-list 'mu4e-marks
-'(tag
-:char       "g"
-:prompt     "gtag"
-:ask-target (lambda () (read-string "What tag do you want to add?"))
-:action      (lambda (docid msg target)
-(mu4e-action-retag-message msg (concat "+" target)))))
+  '(tag
+     :char       "g"
+     :prompt     "gtag"
+     :ask-target (lambda () (read-string "What tag do you want to add?"))
+     :action      (lambda (docid msg target)
+		    (mu4e-action-retag-message msg (concat "+" target)))))
 @end lisp
 
 As another example, suppose we would like to ``archive and mark read''
@@ -2242,15 +2240,15 @@ loading mu4e):
 
 @lisp
 (add-to-list 'mu4e-marks
-'(archive
-:char       "A"
-:prompt     "Archive"
-:show-target (lambda (target) "archive")
-:action      (lambda (docid msg target)
-;; must come before proc-move since retag runs
-;; 'sed' on the file
-(mu4e-action-retag-message msg "-\\Inbox")
-(mu4e~proc-move docid nil "+S-u-N"))))
+  '(archive
+     :char       "A"
+     :prompt     "Archive"
+     :show-target (lambda (target) "archive")
+     :action      (lambda (docid msg target)
+		    ;; must come before proc-move since retag runs
+		    ;; 'sed' on the file
+		    (mu4e-action-retag-message msg "-\\Inbox")
+		    (mu4e~proc-move docid nil "+S-u-N"))))
 @end lisp
 
 Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
@@ -2399,46 +2397,46 @@ Note that in this case, we automatically switch to the first context
 when starting; see the discussion in the previous section.
 
 @lisp
-(setq mu4e-contexts
-`( ,(make-mu4e-context
-:name "Private"
-:enter-func (lambda () (mu4e-message "Switch to the Private context"))
-;; leave-func not defined
-:match-func (lambda (msg)
-(when msg 
-(mu4e-message-contact-field-matches msg 
-:to "aliced@@home.example.com")))
-:vars '(  ( user-mail-address      . "aliced@@home.example.com"  )
-( user-full-name         . "Alice Derleth" )
-( mu4e-compose-signature .
-(concat
-"Alice Derleth\n"
-"Lauttasaari, Finland\n"))))
-,(make-mu4e-context
-:name "Work"
-:enter-func (lambda () (mu4e-message "Switch to the Work context"))
-;; leave-fun not defined
-:match-func (lambda (msg)
-(when msg 
-(mu4e-message-contact-field-matches msg 
-:to "aderleth@@miskatonic.example.com")))
-:vars '(  ( user-mail-address      . "aderleth@@miskatonic.example.com" )
-( user-full-name         . "Alice Derleth" )
-( mu4e-compose-signature .
-(concat
-"Prof. Alice Derleth\n"
-"Miskatonic University, Dept. of Occult Sciences\n"))))))
+  (setq mu4e-contexts
+    `( ,(make-mu4e-context
+	  :name "Private"
+	  :enter-func (lambda () (mu4e-message "Switch to the Private context"))
+	  ;; leave-func not defined
+	  :match-func (lambda (msg)
+			(when msg 
+			  (mu4e-message-contact-field-matches msg 
+			    :to "aliced@@home.example.com")))
+	  :vars '(  ( user-mail-address	     . "aliced@@home.example.com"  )
+		   ( user-full-name	    . "Alice Derleth" )
+		   ( mu4e-compose-signature .
+		     (concat
+		       "Alice Derleth\n"
+		       "Lauttasaari, Finland\n"))))
+       ,(make-mu4e-context
+	  :name "Work"
+	  :enter-func (lambda () (mu4e-message "Switch to the Work context"))
+	  ;; leave-fun not defined
+	  :match-func (lambda (msg)
+			(when msg 
+			  (mu4e-message-contact-field-matches msg 
+			    :to "aderleth@@miskatonic.example.com")))
+	  :vars '(  ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
+		   ( user-full-name	    . "Alice Derleth" )
+		   ( mu4e-compose-signature .
+		     (concat
+		       "Prof. Alice Derleth\n"
+		       "Miskatonic University, Dept. of Occult Sciences\n"))))))
 
-;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
-;; guess or ask the correct context, e.g.
+  ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
+  ;; guess or ask the correct context, e.g.
 
-;; start with the first (default) context; 
-;; default is to ask-if-none (ask when there's no context yet, and none match)
-;; (setq mu4e-context-policy 'pick-first)
+  ;; start with the first (default) context; 
+  ;; default is to ask-if-none (ask when there's no context yet, and none match)
+  ;; (setq mu4e-context-policy 'pick-first)
 
-;; compose with the current context is no context matches;
-;; default is to ask 
-;; '(setq mu4e-compose-context-policy nil)
+  ;; compose with the current context is no context matches;
+  ;; default is to ask 
+  ;; '(setq mu4e-compose-context-policy nil)
 @end lisp
 
 A couple of notes about this example:
@@ -2475,15 +2473,15 @@ It is possible to automatically fill @code{mu4e-user-address-list} by
 concatenating the @code{user-mail-address} fields of all contexts:
 
 @lisp
-;; This sets `mu4e-user-mail-address-list' to the concatenation of all
-;; `user-mail-address' values for all contexts. If you have other mail
-;; addresses as well, you'll need to add those manually.
-(setq mu4e-user-mail-address-list
-(delq nil
-(mapcar (lambda (context)
-(when (mu4e-context-vars context)
-(cdr (assq 'user-mail-address (mu4e-context-vars context)))))
-mu4e-contexts)))
+  ;; This sets `mu4e-user-mail-address-list' to the concatenation of all
+  ;; `user-mail-address' values for all contexts. If you have other mail
+  ;; addresses as well, you'll need to add those manually.
+  (setq mu4e-user-mail-address-list
+    (delq nil
+      (mapcar (lambda (context)
+		(when (mu4e-context-vars context)
+		  (cdr (assq 'user-mail-address (mu4e-context-vars context)))))
+	mu4e-contexts)))
 @end lisp
 
 
@@ -2494,10 +2492,10 @@ In @ref{Folders}, we explained how you can set up @t{mu4e}'s special
 folders:
 @lisp
 (setq
-mu4e-sent-folder   "/sent"       ;; sent messages
-mu4e-drafts-folder "/drafts"     ;; unfinished messages
-mu4e-trash-folder  "/trash"      ;; trashed messages
-mu4e-refile-folder "/archive")   ;; saved messages
+  mu4e-sent-folder   "/sent"	   ;; sent messages
+  mu4e-drafts-folder "/drafts"	   ;; unfinished messages
+  mu4e-trash-folder  "/trash"	   ;; trashed messages
+  mu4e-refile-folder "/archive")   ;; saved messages01
 @end lisp
 
 In some cases, having such static folders may not suffice - perhaps you want
@@ -2532,29 +2530,29 @@ message. An example should clarify this:
 
 @lisp
 (setq mu4e-refile-folder
-(lambda (msg)
-(cond
-;; messages to the mu mailing list go to the /mu folder
-((mu4e-message-contact-field-matches msg :to
-"mu-discuss@@googlegroups.com")
-"/mu")
-;; messages sent directly to me go to /archive
-;; also `mu4e-user-mail-address-p' can be used
-((mu4e-message-contact-field-matches msg :to "me@@example.com")
-"/private")
-;; messages with football or soccer in the subject go to /football
-((string-match "football\\|soccer"
-(mu4e-message-field msg :subject))
-"/football")
-;; messages sent by me go to the sent folder
-((find-if
-(lambda (addr)
-(mu4e-message-contact-field-matches msg :from addr))
-mu4e-user-mail-address-list)
-mu4e-sent-folder)
-;; everything else goes to /archive
-;; important to have a catch-all at the end!
-(t  "/archive"))))
+  (lambda (msg)
+    (cond
+      ;; messages to the mu mailing list go to the /mu folder
+      ((mu4e-message-contact-field-matches msg :to
+	 "mu-discuss@@googlegroups.com")
+	"/mu")
+      ;; messages sent directly to me go to /archive
+      ;; also `mu4e-user-mail-address-p' can be used
+      ((mu4e-message-contact-field-matches msg :to "me@@example.com")
+	"/private")
+      ;; messages with football or soccer in the subject go to /football
+      ((string-match "football\\|soccer"
+	 (mu4e-message-field msg :subject))
+	"/football")
+      ;; messages sent by me go to the sent folder
+      ((find-if
+	 (lambda (addr)
+	   (mu4e-message-contact-field-matches msg :from addr))
+	 mu4e-user-mail-address-list)
+	mu4e-sent-folder)
+      ;; everything else goes to /archive
+      ;; important to have a catch-all at the end!
+      (t  "/archive"))))
 @end lisp
 
 @noindent
@@ -2643,10 +2641,10 @@ Defining a new custom action comes down to writing an elisp-function to do the
 work. Functions that operate on messages receive a @var{msg} parameter, which
 corresponds to the message at point. Something like:
 @lisp
-(defun my-action-func (msg)
-"Describe my message function."
-;; do stuff
-)
+  (defun my-action-func (msg)
+  "Describe my message function."
+  ;; do stuff
+  )
 @end lisp
 
 @noindent
@@ -2655,10 +2653,10 @@ corresponds to the message at point, and an @var{attachment-num}, which is the
 number of the attachment as seen in the message view. An attachment function
 looks like:
 @lisp
-(defun my-attachment-action-func (msg attachment-num)
-"Describe my attachment function."
-;; do stuff
-)
+  (defun my-attachment-action-func (msg attachment-num)
+  "Describe my attachment function."
+  ;; do stuff
+  )
 @end lisp
 
 @noindent
@@ -2684,15 +2682,15 @@ Suppose we want to inspect the number of recipients for a message in the
 
 @lisp
 (defun show-number-of-recipients (msg)
-"Display the number of recipients for the message at point."
-(message "Number of recipients: %d"
-(+ (length (mu4e-message-field msg :to))
-(length (mu4e-message-field msg :cc)))))
+  "Display the number of recipients for the message at point."
+  (message "Number of recipients: %d"
+    (+ (length (mu4e-message-field msg :to))
+      (length (mu4e-message-field msg :cc)))))
 
 ;; define 'N' (the first letter of the description) as the shortcut
 ;; the 't' argument to add-to-list puts it at the end of the list
 (add-to-list 'mu4e-headers-actions
-'("Number of recipients" . show-number-of-recipients) t)
+  '("Number of recipients" . show-number-of-recipients) t)
 @end lisp
 
 After evaluating this, @kbd{a N} in the headers view shows the number of
@@ -2706,13 +2704,13 @@ of the message at point:
 
 @lisp
 (defun search-for-sender (msg)
-"Search for messages sent by the sender of the message at point."
-(mu4e-headers-search
-(concat "from:" (cdar (mu4e-message-field msg :from)))))
+  "Search for messages sent by the sender of the message at point."
+  (mu4e-headers-search
+    (concat "from:" (cdar (mu4e-message-field msg :from)))))
 
 ;; define 'x' as the shortcut
 (add-to-list 'mu4e-view-actions
-'("xsearch for sender" . search-for-sender) t)
+  '("xsearch for sender" . search-for-sender) t)
 @end lisp
 
 @indent
@@ -2734,12 +2732,12 @@ description).
 
 @lisp
 (defun count-lines-in-attachment (msg attachnum)
-"Count the number of lines in an attachment."
-(mu4e-view-pipe-attachment msg attachnum "wc -l"))
+  "Count the number of lines in an attachment."
+  (mu4e-view-pipe-attachment msg attachnum "wc -l"))
 
 ;; defining 'n' as the shortcut
 (add-to-list 'mu4e-view-attachment-actions
-'("ncount lines" . count-lines-in-attachment) t)
+  '("ncount lines" . count-lines-in-attachment) t)
 @end lisp
 
 @node Example actions
@@ -2842,8 +2840,8 @@ Note that:
 @item The contact fields (To, From, Cc, Bcc) are lists of cons-pairs
 @code{(name . email)}; @code{name} may be @code{nil}. So, for example:
 @lisp
-(mu4e-message-field some-msg :to)
-;; => (("Jack" . "jack@@example.com") (nil . "foo@@example.com"))
+  (mu4e-message-field some-msg :to)
+  ;; => (("Jack" . "jack@@example.com") (nil . "foo@@example.com"))
 @end lisp
 If you are only looking for a match in this list (e.g., ``Is Jack one of the
 recipients of the message?''), there is a convenience function
@@ -2861,12 +2859,12 @@ so by hand, using the raw-message and some third-party tool like
 @t{procmail}'s @t{formail}:
 @lisp
 (defun my-mu4e-any-message-field-at-point (hdr)
-"Quick & dirty way to get an arbitrary header HDR at
+  "Quick & dirty way to get an arbitrary header HDR at
 point. Requires the 'formail' tool from procmail."
-(replace-regexp-in-string "\n$" ""
-(shell-command-to-string
-(concat "formail -x " hdr " -c < "
-(shell-quote-argument (mu4e-message-field-at-point :path))))))
+  (replace-regexp-in-string "\n$" ""
+    (shell-command-to-string
+      (concat "formail -x " hdr " -c < "
+	(shell-quote-argument (mu4e-message-field-at-point :path))))))
 @end lisp
 
 
@@ -2892,17 +2890,17 @@ Let's look at an example:
 
 @lisp
 (defun my-rewrite-function (contact)
-(let ((name (or (plist-get contact :name) ""))
-(mail (plist-get contact :mail)))
-(cond
-;; jonh smiht --> John Smith
-((string= "jonh smiht" name) 
-(plist-put contact :name "John C. Smith")
-contact) 
-;; remove evilspammer from the contacts list
-((string= "evilspammer@@example.com" mail) nil)
-;; others stay as the are
-(t contact))))
+  (let ((name (or (plist-get contact :name) ""))
+	 (mail (plist-get contact :mail)))
+    (cond
+      ;; jonh smiht --> John Smith
+      ((string= "jonh smiht" name) 
+	(plist-put contact :name "John C. Smith")
+	contact) 
+      ;; remove evilspammer from the contacts list
+      ((string= "evilspammer@@example.com" mail) nil)
+      ;; others stay as the are
+      (t contact))))
 
 (setq mu4e-contact-rewrite-function 'my-rewrite-function)
 @end lisp
@@ -3010,16 +3008,16 @@ a message to your todo-list, and set a deadline for processing it within
 two days, you could add this to @code{org-capture-templates}:
 
 @lisp
-("P" "process-soon" entry (file+headline "todo.org" "Todo")
-"* TODO %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t \"+2d\"))")
+  ("P" "process-soon" entry (file+headline "todo.org" "Todo")
+  "* TODO %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t \"+2d\"))")
 @end lisp
 
 If you use the functionality a lot, you may want to define key-bindings
 for that in headers and view mode:
 
 @lisp
-(define-key mu4e-headers-mode-map (kbd "C-c c") 'org-mu4e-store-and-capture)
-(define-key mu4e-view-mode-map    (kbd "C-c c") 'org-mu4e-store-and-capture)
+  (define-key mu4e-headers-mode-map (kbd "C-c c") 'org-mu4e-store-and-capture)
+  (define-key mu4e-view-mode-map    (kbd "C-c c") 'org-mu4e-store-and-capture)
 @end lisp
 
 @node Org-contacts
@@ -3035,11 +3033,11 @@ based on the @t{From:}-address in the message at point. To enable this, add to
 your configuration something like:
 
 @lisp
-(setq mu4e-org-contacts-file  <full-path-to-your-org-contacts-file>)
-(add-to-list 'mu4e-headers-actions
-'("org-contact-add" . mu4e-action-add-org-contact) t)
-(add-to-list 'mu4e-view-actions
-'("org-contact-add" . mu4e-action-add-org-contact) t)
+  (setq mu4e-org-contacts-file  <full-path-to-your-org-contacts-file>)
+  (add-to-list 'mu4e-headers-actions
+    '("org-contact-add" . mu4e-action-add-org-contact) t)
+  (add-to-list 'mu4e-view-actions
+    '("org-contact-add" . mu4e-action-add-org-contact) t)
 @end lisp
 
 @noindent
@@ -3062,18 +3060,18 @@ such as @file{~/.emacs.d/init.el}) the following @emph{after} the
 @code{(require 'mu4e)} line:
 
 @lisp
-;; Load BBDB (Method 1)
-(require 'bbdb-loaddefs)
-;; OR (Method 2)
-;; (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
-;; OR (Method 3)
-;; (autoload 'bbdb-insinuate-mu4e "bbdb-mu4e")
-;; (bbdb-initialize 'message 'mu4e)
-(setq bbdb-mail-user-agent (quote message-user-agent))
-(setq mu4e-view-mode-hook (quote (bbdb-mua-auto-update visual-line-mode)))
-(setq mu4e-compose-complete-addresses nil)
-(setq bbdb-mua-pop-up t)
-(setq bbdb-mua-pop-up-window-size 5)
+  ;; Load BBDB (Method 1)
+  (require 'bbdb-loaddefs)
+  ;; OR (Method 2)
+  ;; (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
+  ;; OR (Method 3)
+  ;; (autoload 'bbdb-insinuate-mu4e "bbdb-mu4e")
+  ;; (bbdb-initialize 'message 'mu4e)
+  (setq bbdb-mail-user-agent (quote message-user-agent))
+  (setq mu4e-view-mode-hook (quote (bbdb-mua-auto-update visual-line-mode)))
+  (setq mu4e-compose-complete-addresses nil)
+  (setq bbdb-mua-pop-up t)
+  (setq bbdb-mua-pop-up-window-size 5)
 @end lisp
 
 @noindent
