@@ -98,12 +98,17 @@ install_sig_handler (void)
 static void G_GNUC_PRINTF(1, 2)
 print_expr (const char* frm, ...)
 {
-	char *expr;
+	char *expr, *expr_orig;
 	va_list ap;
 	ssize_t rv;
 	size_t exprlen, lenlen;
 	char cookie[16];
 	static int outfd = 0;
+
+#if defined(__CYGWIN__ )&& !defined (_WIN32)
+	const size_t writestep = 4096 * 16;
+	size_t bytestowrite = 0;
+#endif
 
 	if (outfd == 0)
 		outfd = fileno (stdout);
@@ -127,8 +132,18 @@ print_expr (const char* frm, ...)
 	 */
 	rv = write (outfd, cookie, lenlen + 2);
 	if (rv != -1) {
+		expr_orig = expr;
+#if defined (__CYGWIN__) && !defined(_WIN32)
+		while (exprlen > 0) {
+			bytestowrite = exprlen > writestep ? writestep : exprlen;
+			rv = write(outfd, expr, bytestowrite);
+			expr += bytestowrite;
+			exprlen -= bytestowrite;
+		}
+#else
 		rv = write (outfd, expr, exprlen);
-		g_free (expr);
+#endif
+		g_free (expr_orig);
 	}
 	if (rv != -1)
 		rv = write (outfd, "\n", 1);
@@ -976,7 +991,7 @@ cmd_guile (ServerContext *ctx, GHashTable *args, GError **err)
 	const char *eval;
 
 	eval = get_string_from_args (args, "eval", TRUE, NULL);
-	
+
 	if (!eval) {
 		print_error (MU_ERROR_IN_PARAMETERS, "guile: expected: 'eval'");
 		return MU_OK;
