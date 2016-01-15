@@ -83,8 +83,8 @@ current window."
 
 (defun mu4e~draft-cite-original (msg)
   "Return a cited version of the original message MSG as a plist.
-This function uses gnus' `mu4e-compose-cite-function', and as such
-all its settings apply."
+This function uses `mu4e-compose-cite-function', and as such all
+its settings apply."
   (with-temp-buffer
     (when (fboundp 'mu4e-view-message-text) ;; keep bytecompiler happy
       (let ((mu4e-view-date-format "%Y-%m-%dT%T%z"))
