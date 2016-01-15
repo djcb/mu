@@ -234,7 +234,7 @@ store your org-contacts."
 	  (maildir (mu4e-message-field msg :maildir))
 	  (oldtags (mu4e-message-field msg :tags))
 	  (header  mu4e-action-tags-header)
-	  (sep     (cond ((string= header "Keywords") " ")
+	  (sep     (cond ((string= header "Keywords") ", ")
 		     ((string= header "X-Label") " ")
 		     ((string= header "X-Keywords") ", ")
 		     (t ", ")))

@@ -1,4 +1,4 @@
-;;; mu4e.el -- part of mu4e, the mu mail user agent
+;;; mu4e.el --- part of mu4e, the mu mail user agent
 ;;
 ;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
 
@@ -89,3 +89,5 @@ window, unless BACKGROUND (prefix-argument) is non-nil."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mu4e)
+
+;;; mu4e.el ends here
