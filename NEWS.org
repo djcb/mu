@@ -51,6 +51,8 @@
      (defaults to t); if set to nil, mu4e won't mark messages as read
      when you open them. This can be useful on read-only file-systems,
      since marking-as-read implies a file-move operation.
+   - use smaller chunks for mu server on Cygwin, allowing for better
+     mu4e support there.
 
 ** 0.9.13
 
