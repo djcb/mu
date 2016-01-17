@@ -3622,6 +3622,10 @@ non-ascii folder names, while @t{mu} expects UTF-8 (so, e.g. @t{/まりも
 correctly?} This is best solved by telling @command{offlineimap} to use
 UTF-8 instead -- see
 @url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
+@item @emph{Does @t{mu4e} support searching for CJK (Chinese-Japanese-Korean) characters?}
+Yes, if you have @t{Xapian} 1.2.8 or newer, and set the environment
+variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when
+using @t{mu} from the command-line and from @t{mu4e}.
 @item @emph{How can I customize the function to select a folder?}
 The @t{mu4e-completing-read} variable can be customized to select a
 folder in any way. The variable can be set to a function that receives
