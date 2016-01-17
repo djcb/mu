@@ -1014,12 +1014,12 @@ cmd_guile (ServerContext *ctx, GHashTable *args, GError **err)
 
 
 static MuError
-index_msg_cb (MuIndexStats *stats, void *user_data)
+index_msg_cb (MuIndexStats *stats, void *user_data, unsigned reporteveryn)
 {
 	if (MU_TERMINATE)
 		return MU_STOP;
 
-	if (stats->_processed % 1000)
+	if (!reporteveryn || stats->_processed % reporteveryn)
 		return MU_OK;
 
 	print_expr ("(:info index :status running "
@@ -1066,14 +1066,14 @@ get_checked_path (const char *path)
 
 
 static MuError
-index_and_cleanup (MuIndex *index, const char *path, GError **err)
+index_and_cleanup (MuIndex *index, const char *path, const unsigned reporteveryn, GError **err)
 {
 	MuError rv;
 	MuIndexStats stats, stats2;
 
 	mu_index_stats_clear (&stats);
 	rv = mu_index_run (index, path, FALSE, &stats,
-			   index_msg_cb, NULL, NULL);
+			   index_msg_cb, reporteveryn, NULL, NULL);
 
 	if (rv != MU_OK && rv != MU_STOP) {
 		mu_util_g_set_error (err, MU_ERROR_INTERNAL, "indexing failed");
@@ -1104,6 +1104,8 @@ cmd_index (ServerContext *ctx, GHashTable *args, GError **err)
 	MuIndex *index;
 	const char *argpath;
 	char *path;
+	const char* reporteverynstr;
+	unsigned reporteveryn = 1000;
 
 	index = NULL;
 
@@ -1117,7 +1119,12 @@ cmd_index (ServerContext *ctx, GHashTable *args, GError **err)
 	if (!(index = mu_index_new (ctx->store, err)))
 		goto leave;
 
-	index_and_cleanup (index, path, err);
+
+	reporteverynstr = get_string_from_args (args, "report-processed-every", TRUE, err);
+	if (reporteverynstr)
+		reporteveryn = atoi (reporteverynstr);
+
+	index_and_cleanup (index, path, reporteveryn, err);
 
 leave:
 	g_free (path);

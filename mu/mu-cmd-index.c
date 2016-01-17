@@ -175,9 +175,9 @@ typedef struct _IndexData IndexData;
 
 
 static MuError
-index_msg_cb  (MuIndexStats* stats, IndexData *idata)
+index_msg_cb  (MuIndexStats* stats, IndexData *idata, unsigned reporteveryn)
 {
-	if (stats->_processed % 75)
+	if (stats->_processed % reporteveryn)
 	 	return MU_OK;
 
 	print_stats (stats, TRUE, idata->color);
@@ -323,6 +323,7 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 			   show_progress ?
 			   (MuIndexMsgCallback)index_msg_cb :
 			   (MuIndexMsgCallback)index_msg_silent_cb,
+			   75,
 			   NULL, &idata);
 	newline_before_off();
 

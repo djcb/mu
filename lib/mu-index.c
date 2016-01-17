@@ -95,6 +95,7 @@ struct _MuIndexCallbackData {
 	gboolean		_reindex;
 	time_t			_dirstamp;
 	guint			_max_filesize;
+	unsigned                _reportevern;
 };
 typedef struct _MuIndexCallbackData	MuIndexCallbackData;
 
@@ -174,7 +175,7 @@ run_msg_callback_maybe (MuIndexCallbackData *data)
 	if (!data || !data->_idx_msg_cb)
 		return MU_OK;
 
-	result = data->_idx_msg_cb (data->_stats, data->_user_data);
+	result = data->_idx_msg_cb (data->_stats, data->_user_data, data->_reportevern);
 	if (G_UNLIKELY(result != MU_OK && result != MU_STOP))
 		g_warning ("error in callback");
 
@@ -275,8 +276,8 @@ check_path (const char *path)
 static void
 init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
 	      gboolean reindex, guint max_filesize, MuIndexStats *stats,
-	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
-	      void *user_data)
+	      MuIndexMsgCallback msg_cb, unsigned reporteveryn,
+	      MuIndexDirCallback dir_cb, void *user_data)
 {
 	cb_data->_idx_msg_cb    = msg_cb;
 	cb_data->_idx_dir_cb    = dir_cb;
@@ -287,6 +288,7 @@ init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
 	cb_data->_reindex       = reindex;
 	cb_data->_dirstamp      = 0;
 	cb_data->_max_filesize  = max_filesize;
+	cb_data->_reportevern   = reporteveryn;
 
 	cb_data->_stats         = stats;
 	if (cb_data->_stats)
@@ -317,8 +319,8 @@ mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
 MuError
 mu_index_run (MuIndex *index, const char *path,
 	      gboolean reindex, MuIndexStats *stats,
-	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
-	      void *user_data)
+	      MuIndexMsgCallback msg_cb, unsigned reporteveryn,
+	      MuIndexDirCallback dir_cb, void *user_data)
 {
 	MuIndexCallbackData	cb_data;
 	MuError			rv;
@@ -336,7 +338,7 @@ mu_index_run (MuIndex *index, const char *path,
 
 	init_cb_data (&cb_data, index->_store, reindex,
 		      index->_max_filesize, stats,
-		      msg_cb, dir_cb, user_data);
+		      msg_cb, reporteveryn, dir_cb, user_data);
 
 	rv = mu_maildir_walk (path,
 			      (MuMaildirWalkMsgCallback)on_run_maildir_msg,
@@ -358,7 +360,8 @@ on_stats_maildir_file (const char *fullpath, const char *mdir,
 
 	if (cb_data && cb_data->_idx_msg_cb)
 		result = cb_data->_idx_msg_cb (cb_data->_stats,
-					       cb_data->_user_data);
+					       cb_data->_user_data,
+					       cb_data->_reportevern);
 	else
 		result = MU_OK;
 
