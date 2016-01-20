@@ -1,7 +1,24 @@
 #+STARTUP:showall
-
 * NEWS (user visible changes)
 
+** 0.9.16
+
+*** Release
+
+    2015-01-20: Release from the 0.9.15 series
+
+*** Contributors:
+
+     Adam Sampson, Ævar Arnfjörð Bjarmason, Bar Shirtcliff,
+     Charles-H. Schulz, Clément Pit--Claudel, Damien Cassou, Declan
+     Qian, Dima Kogan, Dirk-Jan C. Binnema, Foivos S. Zakkak, Hinrik
+     Örn Sigurðsson, Jeroen Tiebout, JJ Asghar, Jonas Bernoulli, Jun
+     Hao, Martin Yrjölä, Maximilian Matthé, Piotr Trojanek, prsarv,
+     Thierry Volpiatto, Titus von der Malsburg
+
+     (and of course all people who reported issues, provided
+     suggestions etc.)
+     
 ** 0.9.15
 
    - bump version to 0.9.15. From now on, odd minor version numbers
