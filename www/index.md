@@ -48,7 +48,42 @@ all kinds of statistics
 
 ## News
 
-2015-09-24: After almost 6 months, a new release of mu/mu4e. We are
+2016-01-21: mu/mu4e 0.9.16 is here, and it is our latest stable release!
+
+# Better behaviour and context handling
+- Context Handling just got smart:  new ‘mu4e-context’ defines and switches between various contexts, which are groups of settings. This may be used for instance to easily configure and switch between multiple accounts.
+- Improved behaviour in html and messages marks: ability to toggle between html and text display of messages & better management of messages marked as read or unread. 
+
+# User Interface improvements
+- Numerous improvements in threads view and mailing lists management
+- Fancy characters can now be properly used as well as special customizations for message views
+
+# Faster Indexing and message management
+- Indexing & caching optimizations
+
+You can grab the tarball directly
+[from Github](https://github.com/djcb/mu-releases) or wait a bit to
+get it through your distribution channels (details may vary from one
+distribution to another).
+
+None of this would be possible without a team of dedicated
+individuals: Adam Sampson, Ævar Arnfjörð Bjarmason, Bar Shirtcliff,
+Charles-H. Schulz, Clément Pit--Claudel, Damien Cassou, Declan Qian,
+Dima Kogan, Dirk-Jan C. Binnema, Foivos, Foivos S. Zakkak, Hinrik
+Örn Sigurðsson, jeroen tiebout, JJ Asghar, Jonas Bernoulli, Jun Hao,
+Martin Yrjölä, Maximilian Matthé, Piotr Trojanek, prsarv, Thierry
+Volpiatto, Titus von der Malsburg (and of course all people who reported issues,
+provided suggestions etc.)
+
+We hope you will enjoy this release as much as we do. Happy Hacking!
+                        
+                        The mu/mu4e Team
+
+
+
+## Old News
+
+- 2015-09-24: After almost 6 months, a new release of mu/mu4e. We are
 happy to announce mu and mu4e 0.9.9.13! have just been
 released. The following key features and improvements have been
 added:
@@ -62,22 +97,6 @@ enhanced clarity
 * Lots of bugs squashed, updates to the documentation (BDDB), as
 well as embedding the News file inside mu4e itself.
 
-You may grab the the tarball [from GitHub](https://github.com/djcb/mu-releases/) or get it through your
-distribution channels (details may vary from one distribution to
-another).
-
-None of this would be possible without a team of dedicated
-individuals: Attila, Charles-H.Schulz, David C Sterrat, Dirk-Jan
-C. Binnema, Eike Kettner, Florian Lindner, Foivos S. Zakkak, Gour,
-KOMURA Takaaki, Pan Jie, Phil Hagelberg, thdox, Tiago Saboga, Titus
-von der Malsburg (and of course all people who reported issues,
-provided suggestions etc.)
-
-We hope you will enjoy this release as much as we do. Happy Hacking!
-
-The mu/mu4e Team
-
-## Old News
 
 - 2013-03-30: released [mu-0.9.9.5](http://code.google.com/p/mu0/downloads/detail?name%3Dmu-0.9.9.5.tar.gz); full with new features and bug
 fixes – see the download link for some of the details. Many
