@@ -1,11 +1,15 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
+** 0.9.17
+
+   - Start of the new development series
+  
 ** 0.9.16
 
 *** Release
 
-    2015-01-20: Release from the 0.9.15 series
+    2016-01-20: Release from the 0.9.15 series
 
 *** Contributors:
 

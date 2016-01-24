@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.16],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[0.9.17],[https://github.com/djcb/mu/issues],[mu])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
