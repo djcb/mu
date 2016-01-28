@@ -3627,7 +3627,7 @@ Yes, if you have @t{Xapian} 1.2.8 or newer, and set the environment
 variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when
 using @t{mu} from the command-line and from @t{mu4e}.
 @item @emph{How can I customize the function to select a folder?}
-The @t{mu4e-completing-read} variable can be customized to select a
+The @t{mu4e-completing-read-function} variable can be customized to select a
 folder in any way. The variable can be set to a function that receives
 five arguments, following @t{completing-read}. The default value is
 @code{ido-completing-read}; to use emacs's default behaviour, set the
