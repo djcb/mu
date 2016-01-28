@@ -429,7 +429,7 @@ with @t{MU4E-PATH} replaced with the actual path.
 @section Folders
 
 The next step is to tell @t{mu4e} where it can find your Maildir, and
-some special folders.
+some special folders. 
 
 So, for example@footnote{Note that the folders (@t{mu4e-sent-folder},
 @t{mu4e-drafts-folder}, @t{mu4e-trash-folder} and
@@ -1065,16 +1065,16 @@ An example message view:
     Date: Mon 19 Jan 2004 09:39:42 AM EET
     Maildir: /inbox
     Attachments(2): [1]DSCN4961.JPG(1.3M), [2]DSCN4962.JPG(1.4M)
-
+     
     Hi Julia,
-
+     
     Some pics from our trip to Cerin Amroth. Enjoy!
-
+     
     All the best,
     Randy.
-
+     
     On Sun 21 Dec 2003 09:06:34 PM EET, Julia wrote:
-
+     
     [....]
 @end verbatim
 @end cartouche
@@ -1096,8 +1096,8 @@ addresses by clicking on the name, or pressing @key{M-RET}.
 defines @key{w} to toggle between the wrapped and unwrapped state. If you want
 to do this automatically when viewing a message, invoke @code{visual-line-mode}
 in your @code{mu4e-view-mode-hook}.
-@item For messages that support it, you can toggle between html and text versions using
-@code{mu4e-view-toggle-html}, bound to @key{h};
+@item For messages that support it, you can toggle between html and text versions using 
+@code{mu4e-view-toggle-html}, bound to @key{h}; 
 @item You can hide cited parts
 in messages (the parts starting with ``@t{>}'') using
 @code{mu4e-view-hide-cited}, bound to @key{#}. If you want to do this
@@ -1479,9 +1479,9 @@ functionality is available, as well some @t{mu4e}-specifics. Its major mode is
     To: Wally the Walrus <wally@example.com>
     Subject: Re: Eau-qui d'eau qui?
     --text follows this line--
-
+     
     On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
-
+     
     > Hi Rupert,
     >
     > Dude - how are things?
@@ -2040,7 +2040,7 @@ first you @emph{mark} them for a certain action, then you @emph{execute}
 can happen in both the @ref{Headers view} and the @ref{Message view}.
 
 @menu
-* Marking messages::Selecting message do something with them
+* Marking messages::Selecting message do something with them 
 * What to mark for::What can we do with them
 * Executing the marks::Do it
 * Leaving the headers buffer::Handling marks automatically when leaving
@@ -2205,7 +2205,7 @@ elements:
 
 @itemize
 @item @code{:char} -- the character to display in the headers view.
-@item @code{:prompt} -- the prompt to use when asking for marks
+@item @code{:prompt} -- the prompt to use when asking for marks 
 (used for example when marking a whole thread).
 @item @code{:ask-target} -- a function run once per bulk-operation, and thus suitable for
 querying the user about a target for move-like marks. If nil, the
@@ -2320,7 +2320,7 @@ matches.
 message with the given message plist as parameter, or @t{nil} when
 composing a brand new message. The function should return @t{t} when
 this context is the right one for this message, or @t{nil} otherwise.
-@item when determining the target folders for deleting, refiling etc;
+@item when determining the target folders for deleting, refiling etc; 
 see @ref{Contexts and special folders}.
 @end itemize
 @end itemize
@@ -2355,7 +2355,7 @@ ask the user.
 @item a symbol @code{pick-first}: pick the first (default) context. This is a good choice if
 you want to specify context for special case, and fall back to the first
 one if none match.
-@item @code{nil}: don't change the context; this is useful if you don't change
+@item @code{nil}: don't change the context; this is useful if you don't change 
 contexts very often, and e.g. manually changes contexts with @kbd{M-x
 mu4e-context-switch}.
 @end itemize
@@ -2403,8 +2403,8 @@ when starting; see the discussion in the previous section.
 	  :enter-func (lambda () (mu4e-message "Switch to the Private context"))
 	  ;; leave-func not defined
 	  :match-func (lambda (msg)
-			(when msg
-			  (mu4e-message-contact-field-matches msg
+			(when msg 
+			  (mu4e-message-contact-field-matches msg 
 			    :to "aliced@@home.example.com")))
 	  :vars '(  ( user-mail-address	     . "aliced@@home.example.com"  )
 		   ( user-full-name	    . "Alice Derleth" )
@@ -2417,8 +2417,8 @@ when starting; see the discussion in the previous section.
 	  :enter-func (lambda () (mu4e-message "Switch to the Work context"))
 	  ;; leave-fun not defined
 	  :match-func (lambda (msg)
-			(when msg
-			  (mu4e-message-contact-field-matches msg
+			(when msg 
+			  (mu4e-message-contact-field-matches msg 
 			    :to "aderleth@@miskatonic.example.com")))
 	  :vars '(  ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
 		   ( user-full-name	    . "Alice Derleth" )
@@ -2430,39 +2430,39 @@ when starting; see the discussion in the previous section.
   ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
   ;; guess or ask the correct context, e.g.
 
-  ;; start with the first (default) context;
+  ;; start with the first (default) context; 
   ;; default is to ask-if-none (ask when there's no context yet, and none match)
   ;; (setq mu4e-context-policy 'pick-first)
 
   ;; compose with the current context is no context matches;
-  ;; default is to ask
+  ;; default is to ask 
   ;; '(setq mu4e-compose-context-policy nil)
 @end lisp
 
 A couple of notes about this example:
 @itemize
-@item You can manually switch the focus use @code{M-x mu4e-context-switch},
+@item You can manually switch the focus use @code{M-x mu4e-context-switch}, 
 by default bound to @kbd{;} in headers, view and main mode.
 The current focus appears in the mode-line.
-@item Normally, @code{M-x mu4e-context-switch} does not call the enter or
+@item Normally, @code{M-x mu4e-context-switch} does not call the enter or 
 leave functions if the 'new' context is the same as the old one.
 However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to
 invoke those function even in that case.
-@item The function @code{mu4e-context-current} returns the current-context;
+@item The function @code{mu4e-context-current} returns the current-context; 
 the current context is also visible in the mode-line when in
 headers, view or main mode.
-@item You can set any kind of variable; including settings for mail servers etc.
+@item You can set any kind of variable; including settings for mail servers etc. 
 However, settings such as @code{mu4e-maildir} and @code{mu4e-mu-home} are
 not changeable after they have been set without quitting @t{mu4e} first.
-@item @code{leave-func} (if defined) for the context we are leaving, is invoked
+@item @code{leave-func} (if defined) for the context we are leaving, is invoked 
 before the @code{enter-func} (if defined) of the
 context we are entering.
 @item @code{enter-func} (if defined) is invoked before setting the variables.
 @item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}.
 @item See the variables @code{mu4e-context-policy} and
-@code{mu4e-compose-context-policy} to tweak what @t{mu4e} should do when
+@code{mu4e-compose-context-policy} to tweak what @t{mu4e} should do when 
 no context matches (or if you always want to be asked).
-@item Finally, be careful to get the quotations right -- backticks, single quotes
+@item Finally, be careful to get the quotations right -- backticks, single quotes 
 and commas and note the '.' between variable name and its value.
 @end itemize
 
@@ -2894,9 +2894,9 @@ Let's look at an example:
 	 (mail (plist-get contact :mail)))
     (cond
       ;; jonh smiht --> John Smith
-      ((string= "jonh smiht" name)
+      ((string= "jonh smiht" name) 
 	(plist-put contact :name "John C. Smith")
-	contact)
+	contact) 
       ;; remove evilspammer from the contacts list
       ((string= "evilspammer@@example.com" mail) nil)
       ;; others stay as the are
@@ -3627,7 +3627,7 @@ Yes, if you have @t{Xapian} 1.2.8 or newer, and set the environment
 variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when
 using @t{mu} from the command-line and from @t{mu4e}.
 @item @emph{How can I customize the function to select a folder?}
-The @t{mu4e-completing-read-function} variable can be customized to select a
+The @t{mu4e-completing-read} variable can be customized to select a
 folder in any way. The variable can be set to a function that receives
 five arguments, following @t{completing-read}. The default value is
 @code{ido-completing-read}; to use emacs's default behaviour, set the
