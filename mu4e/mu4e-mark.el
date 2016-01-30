@@ -50,6 +50,10 @@ Value is one of the following symbols:
 	   (const ignore :tag "ignore marks without asking"))
   :group 'mu4e-headers)
 
+(defcustom mu4e-mark-execute-hook nil
+  "Hook run just *before* a mark is applied to a message. The hook function
+is called with two arguments, the mark being executed and the message itself.")
+
 (defvar mu4e-headers-show-target t
   "Whether to show targets (such as '-> delete', '-> /archive')
 when marking message. Normally, this is useful information for the
@@ -404,7 +408,9 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
               ;; note: whenever you do something with the message,
               ;; it looses its N (new) flag
               (if markdescr
-                  (funcall (plist-get (cdr markdescr) :action) docid msg target)
+                  (progn
+                    (run-hook-with-args 'mu4e-mark-execute-hook mark msg)
+                    (funcall (plist-get (cdr markdescr) :action) docid msg target))
                 (mu4e-error "Unrecognized mark %S" mark))))
           mu4e~mark-map))
        (mu4e-mark-unmark-all)

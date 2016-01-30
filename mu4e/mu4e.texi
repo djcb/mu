@@ -2114,6 +2114,10 @@ the marks (@key{x}).
 After you have marked some messages, you can execute them with @key{x}
 (@kbd{M-x mu4e-mark-execute-all}).
 
+A hook, @code{mu4e-mark-execute-hook}, is available which is run right
+before execution of each mark. The hook is called with two arguments,
+the mark and the message itself.
+
 @node Leaving the headers buffer
 @section Leaving the headers buffer
 
