@@ -84,6 +84,7 @@ You can influence the browser to use with the variable
       (mu4e-error "No body part for this message"))
     (with-temp-buffer
       ;; simplistic -- but note that it's only an example...
+      (insert "<head><meta charset=\"UTF-8\"></head>\n")
       (insert (or html (concat "<pre>" txt "</pre>")))
       (write-file tmpfile)
       (browse-url (concat "file://" tmpfile)))))
@@ -104,6 +105,7 @@ You can influence the browser to use with the variable
       (mu4e-error "No body part for this message"))
     (with-temp-buffer
       ;; simplistic -- but note that it's only an example...
+      (insert "<head><meta charset=\"UTF-8\"></head>\n")
       (insert (or html (concat "<pre>" txt "</pre>")))
       (write-file tmpfile)
       (xwidget-webkit-browse-url (concat "file://" tmpfile) t))))
