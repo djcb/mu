@@ -430,17 +430,18 @@ from either `mu4e~draft-reply-construct', or
 		(format "%s/%s/cur/%s"
 		  mu4e-maildir
 		  draft-dir
-		  (mu4e~draft-message-filename-construct "DS"))))
-          (if (and mu4e-compose-in-new-frame (window-system))
+		  (mu4e~draft-message-filename-construct "DS")))
+	      (initial-contents
+	       (case compose-type
+		 (reply   (mu4e~draft-reply-construct msg))
+		 (forward (mu4e~draft-forward-construct msg))
+		 (new     (mu4e~draft-newmsg-construct))
+		 (t (mu4e-error "unsupported compose-type %S" compose-type)))))
+	  (if (and mu4e-compose-in-new-frame (window-system))
               (find-file-other-frame draft-path)
-            (find-file draft-path)))
-	(insert
-	  (case compose-type
-	    (reply   (mu4e~draft-reply-construct msg))
-	    (forward (mu4e~draft-forward-construct msg))
-	    (new     (mu4e~draft-newmsg-construct))
-	    (t (mu4e-error "unsupported compose-type %S" compose-type))))
-	(newline)
+            (find-file draft-path))
+          (insert initial-contents))
+    (newline)
 	;; include the message signature (if it's set)
 	(if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
 	  (let ((message-signature mu4e-compose-signature))
