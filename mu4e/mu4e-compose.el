@@ -314,6 +314,7 @@ message-thread by removing the In-Reply-To header."
     (let ((map (make-sparse-keymap)))
       (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
       (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
+      (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
       map)))
 
 (defvar mu4e-compose-mode-abbrev-table nil)
@@ -471,6 +472,24 @@ the appropriate flag at the message forwarded or replied-to."
           ;; if all else fails, back to the main view
           (when (fboundp 'mu4e) (mu4e))))
   (mu4e-message "Message sent"))
+
+(defun mu4e-message-kill-buffer ()
+  "Wrapper around `message-kill-buffer'.
+It restores mu4e window layout after killing the compose-buffer."
+  (interactive)
+  (let ((current-buffer (current-buffer)))
+    (message-kill-buffer)
+    ;; Compose buffer killed
+    (when (not (equal current-buffer (current-buffer)))
+      ;; Restore mu4e
+      (if mu4e-compose-in-new-frame
+	  (delete-frame)
+	(if (buffer-live-p mu4e~view-buffer)
+	    (switch-to-buffer mu4e~view-buffer)
+	  (if (buffer-live-p mu4e~headers-buffer)
+	      (switch-to-buffer mu4e~headers-buffer)
+	    ;; if all else fails, back to the main view
+	    (when (fboundp 'mu4e) (mu4e))))))))
 
 (defun mu4e~compose-set-parent-flag (path)
   "Set the 'replied' \"R\" flag on messages we replied to, and the
