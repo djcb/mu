@@ -50,6 +50,10 @@ Value is one of the following symbols:
 	   (const ignore :tag "ignore marks without asking"))
   :group 'mu4e-headers)
 
+(defcustom mu4e-mark-execute-hook nil
+  "Hook run just *before* a mark is applied to a message. The hook function
+is called with two arguments, the mark being executed and the message itself.")
+
 (defvar mu4e-headers-show-target t
   "Whether to show targets (such as '-> delete', '-> /archive')
 when marking message. Normally, this is useful information for the
@@ -386,29 +390,31 @@ work well.
 If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (interactive)
   (mu4e~mark-in-context
-    (let ((marknum (hash-table-count mu4e~mark-map)))
-      (if (zerop marknum)
-	(message "Nothing is marked")
-	(mu4e-mark-resolve-deferred-marks)
-	(when (or no-confirmation
-		(y-or-n-p
-		  (format "Are you sure you want to execute %d mark%s?"
-		    marknum (if (> marknum 1) "s" ""))))
-	  (maphash
-	    (lambda (docid val)
-	      (let* ((mark (car val)) (target (cdr val))
-		      (markdescr (assq mark mu4e-marks))
-		      (msg (save-excursion
-			     (mu4e~headers-goto-docid docid)
-			     (mu4e-message-at-point))))
-		;; note: whenever you do something with the message,
-		;; it looses its N (new) flag
-                (if markdescr
-		  (funcall (plist-get (cdr markdescr) :action) docid msg target)
-		  (mu4e-error "Unrecognized mark %S" mark))))
-	    mu4e~mark-map))
-	(mu4e-mark-unmark-all)
-	(message nil)))))
+   (let ((marknum (hash-table-count mu4e~mark-map)))
+     (if (zerop marknum)
+         (message "Nothing is marked")
+       (mu4e-mark-resolve-deferred-marks)
+       (when (or no-confirmation
+                 (y-or-n-p
+                  (format "Are you sure you want to execute %d mark%s?"
+                          marknum (if (> marknum 1) "s" ""))))
+         (maphash
+          (lambda (docid val)
+            (let* ((mark (car val)) (target (cdr val))
+                   (markdescr (assq mark mu4e-marks))
+                   (msg (save-excursion
+                          (mu4e~headers-goto-docid docid)
+                          (mu4e-message-at-point))))
+              ;; note: whenever you do something with the message,
+              ;; it looses its N (new) flag
+              (if markdescr
+                  (progn
+                    (run-hook-with-args 'mu4e-mark-execute-hook mark msg)
+                    (funcall (plist-get (cdr markdescr) :action) docid msg target))
+                (mu4e-error "Unrecognized mark %S" mark))))
+          mu4e~mark-map))
+       (mu4e-mark-unmark-all)
+       (message nil)))))
 
 (defun mu4e-mark-unmark-all ()
   "Unmark all marked messages."
