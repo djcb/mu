@@ -4,7 +4,15 @@
 ** 0.9.17
 
    - Start of the new development series
-  
+   - Add `mu4e-action-view-with-xwidget`, and action for viewing e-mails
+     inside a Webkit-widget inside emacs (requires emacs 25.x)
+   - Explicitly specify utf8 for external html viewing, so browser can
+     handle it correctly.
+   - Cleanly handle early exits from message composition as well as
+     while composing.
+   - Add a hook `mu4e-mark-execute-pre-hook`, which is run just before
+     executing marks.
+        
 ** 0.9.16
 
 *** Release
