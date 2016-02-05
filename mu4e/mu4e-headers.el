@@ -343,7 +343,10 @@ present, don't do anything."
       (when (and (mu4e~headers-view-this-message-p docid)
 	      (buffer-live-p mu4e~view-buffer))
 	(with-current-buffer mu4e~view-buffer
-	  (kill-buffer-and-window ))))))
+	  ;; XXX it seems this sometimes fails; investigate;
+	  ;; for now, just ignore the error
+	  (ignore-errors
+	    (kill-buffer-and-window)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
