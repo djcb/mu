@@ -631,8 +631,6 @@ after the end of the search results."
       (define-key map "V" 'mu4e-headers-toggle-skip-duplicates)
 
       (define-key map "q" 'mu4e~headers-quit-buffer)
-      (define-key map "z" 'mu4e~headers-quit-buffer)
-
       (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
 
       (define-key map "%" 'mu4e-headers-mark-pattern)

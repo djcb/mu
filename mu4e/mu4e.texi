@@ -892,7 +892,7 @@ a            execute some custom action on a header
 C-+,C--      increase / decrease the number of headers shown
 H            get help
 C-S-u        update mail & reindex
-q,z          leave the headers buffer
+q            leave the headers buffer
 @end verbatim
 
 
@@ -1199,7 +1199,7 @@ v            show details about the cryptographic signature
 C-+,C--      increase / decrease the number of headers shown
 H            get help
 C-S-u        update mail & reindex
-q,z          leave the message view
+q            leave the message view
 @end verbatim
 
 For the marking commands, please refer to @ref{Marking messages}.
