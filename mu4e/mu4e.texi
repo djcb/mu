@@ -3574,9 +3574,10 @@ some soundfile, change as needed):
   somehow?} Yes - set @code{mu4e-headers-auto-update} to @code{nil}.
 @item @emph{I don't use @t{offlineimap}, @t{fetchmail} etc., I get my mail
 through my own mailserver. What should I use for
-@code{mu4e-get-mail-command}}? Use @t{"true"} (or don't do anything, it's the
-default). This makes getting mail a no-op, but the messages are still
-re-indexed.
+@code{mu4e-get-mail-command}}? Use the literal string @t{"true"} (or
+don't do anything, it's the default) which then uses @t{/bin/true} (a
+command that does nothing and always succeeds). This makes getting mail
+a no-op, but the messages are still re-indexed.
 @item @emph{How can I re-index my messages without getting new mail?}
 Use @kbd{M-x mu4e-update-index}
 @item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
