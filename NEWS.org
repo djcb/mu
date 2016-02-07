@@ -12,7 +12,10 @@
      while composing.
    - Add a hook `mu4e-mark-execute-pre-hook`, which is run just before
      executing marks.
-        
+   - Remove the 'z' keybinding for leaving the headers
+     view. Keybindings are precious!
+   - Make `shr' the default renderer for rich-text emails
+             
 ** 0.9.16
 
 *** Release
