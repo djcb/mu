@@ -1278,10 +1278,32 @@ case where the text-part is only a short blurb telling you to use the
 html-version; see @code{mu4e-view-html-plaintext-ratio-heuristic}},
 @t{mu4e} tries to convert the html into plain-text for display.
 
-The default way to do that is to use the @command{emacs} built-in
-@code{html2text} function. However, you can set the variable
-@code{mu4e-html2text-command} to a either a shell command or a function
+With emacs 24.4 or newer, this defaults to @code{mu4e-shr2text}, which
+uses the built-in @t{shr} renderer. For older emacs versions, this
+defaults to the built-in @code{html2text} function. In practice, the
+latter gives much better results.
+
+If you use @code{mu4e-shr2text}, it might be useful to emulate some of
+the @t{shr} key bindings, with something like:
+@lisp
+(add-hook 'mu4e-view-mode-hook
+  (lambda()
+    ;; try to emulate some of the eww key-bindings
+    (local-set-key (kbd "<tab>") 'shr-next-link)
+    (local-set-key (kbd "<backtab>") 'shr-previous-link)))
+@end lisp
+
+If you're using a dark theme, and the messages are hard to read, it can help to change
+the luminosity, e.g.:
+@lisp
+(setq shr-color-visible-luminance-min 80)
+@end lisp
+
+If your emacs does not have @t{shr} yet, it can be useful to use a
+custom method. For that, you can set the variable
+@code{mu4e-html2text-command} to either a shell command or a function
 instead.
+  
 
 @subsection Html2text commands
 
@@ -1320,32 +1342,6 @@ alternative:
 If @code{mu4e-html2text-command} refers to an elisp function, it is
 expected to take the current buffer in html as input, and transform it
 into text (just like the @code{html2text} function).
-
-For example, emacs 24.4 and later versions include the @code{eww}
-browser which uses the @code{shr} html renderer; @t{mu4e} includes a
-little snippet to uses this with @code{mu4e-html2text-command}; for
-this, add the following to your configuration:
-
-@lisp
-(require 'mu4e-contrib)
-(setq mu4e-html2text-command 'mu4e-shr2text)
-@end lisp
-
-If you use the @code{mu4e-shr2text}, it might be useful to emulate some
-of the @t{shr} key bindings, with something like:
-@lisp
-(add-hook 'mu4e-view-mode-hook
-  (lambda()
-    ;; try to emulate some of the eww key-bindings
-    (local-set-key (kbd "<tab>") 'shr-next-link)
-    (local-set-key (kbd "<backtab>") 'shr-previous-link)))
-@end lisp
-
-If you're using a dark theme, and the messages are hard to read, it can help to change
-the luminosity, e.g.:
-@lisp
-(setq shr-color-visible-luminance-min 80)
-@end lisp
 
 @node MSGV Crypto
 @section Crypto
@@ -3294,9 +3290,6 @@ customize.
 ;; a  list of user's e-mail addresses
 (setq mu4e-user-mail-address-list '("foo@@bar.example.com" "cuux@@example.com")
 
-;; when you want to use some external command for text->html
-;; conversion, e.g. the 'html2text' program
-;; (setq mu4e-html2text-command "html2text")
 
 ;; the headers to show in the headers list -- a pair of a field
 ;; and its width, with `nil' meaning 'unlimited'
@@ -3671,7 +3664,8 @@ like Gmail does?} Yes -- see @ref{Including related messages}.
 @item @emph{There seem to be a lot of duplicate messages -- how can I get rid
 of them?} See @ref{Skipping duplicates}.
 @item @emph{How can I use the @t{eww} browser to view rich-text messages?}
-See @ref{Html2text functions}.
+With a new enough emacs, this happens automatically. See @ref{Html2text
+functions} for some details.
 @item @emph{Some messages are almost unreadable in emacs - can I view them in
 an external web browser?} Indeed, airlines often send messages that
 heavily depend on html and are hard to digest inside emacs. Fortunately,

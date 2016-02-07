@@ -34,22 +34,26 @@
 (require 'html2text)
 
 
-(defcustom mu4e-html2text-command 'html2text
+(defcustom mu4e-html2text-command
+  (if (fboundp 'shr-insert-document) 'mu4e-shr2text 'html2text)
+  
   "Either a shell command or a function that converts from html to plain text.
 
 If it is a shell-command, the command reads html from standard
 input and outputs plain text on standard output. If you use the
-htmltext program, it's recommended you use \"html2text -utf8 -width
-72\". Alternatives are the python-based html2markdown, w3m and on
-MacOS you may want to use textutil.
+htmltext program, it's recommended you use \"html2text -utf8
+-width 72\". Alternatives are the python-based html2markdown, w3m
+and on MacOS you may want to use textutil.
 
 It can also be a function, which takes the current buffer in html
 as input, and transforms it into html (like the `html2text'
 function).
 
-In both cases, the output is expected to be in utf-8 encoding.
+In both cases, the output is expected to be in UTF-8 encoding.
 
-The default is emacs' built-in `html2text' function."
+Newer emacs has the shr renderer, and when its available,
+conversion defaults `mu4e-shr2text'; otherwise, the default is
+emacs' built-in `html2text' function."
   :type '(choice string function)
   :group 'mu4e-view)
 
@@ -258,5 +262,23 @@ point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point) field))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(defun mu4e-shr2text ()
+  "Html to text using the shr engine; this can be used in
+`mu4e-html2text-command' in a new enough emacs. Based on code by
+Titus von der Malsburg."
+  (interactive)
+  (let ((dom (libxml-parse-html-region (point-min) (point-max)))
+	 ;; When HTML emails contain references to remote images,
+	 ;; retrieving these images leaks information. For example,
+	 ;; the sender can see when I openend the email and from which
+	 ;; computer (IP address). For this reason, it is preferrable
+	 ;; to not retrieve images.
+	 ;; See this discussion on mu-discuss:
+	 ;; https://groups.google.com/forum/#!topic/mu-discuss/gr1cwNNZnXo
+	 (shr-inhibit-images t))
+    (erase-buffer)
+    (shr-insert-document dom)
+    (goto-char (point-min))))
 
 (provide 'mu4e-message)
