@@ -1272,6 +1272,9 @@ body-text. You can change this by setting @code{mu4e-view-prefer-html}
 to @t{t}. And you can toggle this value (globally) using @kbd{h} in the
 message view; this also refreshes the message with the new setting.
 
+Note, when using html-based rendering, you don't get the hyperlink
+shortcuts the text-version provides.
+
 If there is only an html-version, or if the plain-text version is too
 short in comparison with the html part@footnote{this is e.g. for the
 case where the text-part is only a short blurb telling you to use the
