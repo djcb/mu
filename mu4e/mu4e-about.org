@@ -1,3 +1,4 @@
+#+STARTUP:showall
 * About mu4e
 
   *mu4e* is an emacs e-mail client based on the [[http://djcbsoftware.nl/code/mu][mu]] email search engine. It was
