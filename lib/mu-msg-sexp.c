@@ -366,7 +366,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 ":attachment %s :size %i %s %s)",
 		 pinfo->parts ? pinfo->parts: "",
 		 part->index,
-		 name ? name : "noname",
+		 name ? mu_str_escape_c_literal(name, TRUE) : "noname",
 		 part->type ? part->type : "application",
 		 part->subtype ? part->subtype : "octet-stream",
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
