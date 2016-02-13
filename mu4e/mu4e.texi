@@ -186,13 +186,20 @@ When you take @t{mu4e} into use, it's a good idea to subscribe to the
 @t{mu}/@t{mu4e}-mailing
 list@footnote{@url{http://groups.google.com/group/mu-discuss}}.
 
-If you have suggestions for improvements or bug reports, please use the
-GitHub issues list@footnote{@url{https://github.com/djcb/mu/issues}}. In
-bug reports, please clearly specify the versions of @t{mu}/@t{mu4e} and
-@command{emacs} you are using, as well as any other relevant
-details. Also, if it is about the behavior for specific messages, please
-attach the raw message (that is, the message file as it exists in your
-maildir); you can of course strip off any personal information.
+Sometimes, you might encounter some unexpected behavior while using
+@t{mu4e}. It could be a bug in @t{mu4e}, it could be an issue in other
+software. Or it could just be a misunderstanding. In any case, if you
+want to report this (either to the mailing list or to
+@url{https://github.com/djcb/mu/issues}, the latter is preferred),
+please always include the following information:
+
+@itemize
+@item what did you expect that should happen? what actually happened?
+@item can you provide some exact steps to reproduce?
+@item what version of mu4e and emacs were you using? What operating system?
+@item can you reproduce it with emacs -q and only loading mu4e?
+@item if the problem is related to some specific message, please include the raw message file (appropriately anonimized, of course)
+@end itemize
 
 @node Getting started
 @chapter Getting started
