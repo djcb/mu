@@ -580,7 +580,7 @@ clear_links (const gchar* dirname, DIR *dir, GError **err)
 		unsigned char d_type;
 
 		/* ignore empty, dot thingies */
-		if (!entry->d_name || entry->d_name[0] == '.')
+		if (entry->d_name[0] == '\0' || entry->d_name[0] == '.')
 			continue;
 
 		/* we have to copy the buffer from fullpath_s, because

@@ -123,9 +123,8 @@ runtime_free (void)
 	if (!_data)
 		return;
 
-	if (_data->_str)
-		for (i = 0; i != MU_RUNTIME_PATH_NUM; ++i)
-			g_free (_data->_str[i]);
+	for (i = 0; i != MU_RUNTIME_PATH_NUM; ++i)
+		g_free (_data->_str[i]);
 
 	g_free (_data->_name);
 	g_free (_data);
