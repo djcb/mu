@@ -711,7 +711,7 @@ mu4e-compose-mode."
 	 :sortable :subject))
      (:to .
        ( :name "To"
-	 :shortname "T"
+	 :shortname "To"
 	 :help "Recipient of the message"
 	 :sortable t)))
   "An alist of all possible header fields and information about them.
