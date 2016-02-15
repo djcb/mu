@@ -1207,5 +1207,10 @@ the view and compose modes."
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mu4e~quote-for-modeline (str)
+  "Quote a string to be used literally in the modeline."
+  (replace-regexp-in-string "%" "%%" str t t))
+
+
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el
