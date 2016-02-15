@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -353,8 +353,8 @@ get_part_type_string (MuMsgPartType ptype)
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
-	char *name, *tmp, *parttype;
-	char *tmpfile;
+	char	*name, *tmp, *parttype;
+	char	*tmpfile;
 
 	name     = mu_msg_part_get_filename (part, TRUE);
 	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
@@ -366,7 +366,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 ":attachment %s :size %i %s %s)",
 		 pinfo->parts ? pinfo->parts: "",
 		 part->index,
-		 name ? mu_str_escape_c_literal(name, TRUE) : "noname",
+		 name ? mu_str_escape_c_literal(name, FALSE) : "noname",
 		 part->type ? part->type : "application",
 		 part->subtype ? part->subtype : "octet-stream",
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
