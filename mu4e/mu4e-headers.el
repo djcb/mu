@@ -999,7 +999,7 @@ the query history stack."
 	'(:eval
 	   (concat
 	    (propertize
-	     (replace-regexp-in-string "%" "%%" mu4e~headers-last-query t t)
+	     (mu4e~quote-for-modeline mu4e~headers-last-query)
 	     'face 'mu4e-modeline-face)
 	     " "
 	     (mu4e-context-label)))))
