@@ -998,7 +998,9 @@ the query history stack."
 	global-mode-string
 	'(:eval
 	   (concat
-	     (propertize mu4e~headers-last-query 'face 'mu4e-modeline-face)
+	    (propertize
+	     (replace-regexp-in-string "%" "%%" mu4e~headers-last-query t t)
+	     'face 'mu4e-modeline-face)
 	     " "
 	     (mu4e-context-label)))))
     
