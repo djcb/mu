@@ -15,6 +15,8 @@
    - Remove the 'z' keybinding for leaving the headers
      view. Keybindings are precious!
    - Make `shr' the default renderer for rich-text emails
+   - Allow for resending existing messages, possibly editing them. M-x
+     mu4e-compose-resend, or use the menu; no shortcut.
              
 ** 0.9.16
 
