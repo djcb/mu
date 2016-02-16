@@ -435,13 +435,13 @@ e.g. '/drafts'.
 
 (defun mu4e~proc-compose (type decrypt &optional docid)
   "Start composing a message of certain TYPE (a symbol, either
-`forward', `reply', `edit' or `new', based on an original
-message (ie, replying to, forwarding, editing) with DOCID or nil
-for type `new'.
+`forward', `reply', `edit', `resend' or `new', based on an
+original message (ie, replying to, forwarding, editing,
+resending) with DOCID or nil for type `new'.
 
 The result will be delivered to the function registered as
 `mu4e-compose-func'."
-  (unless (member type '(forward reply edit new))
+  (unless (member type '(forward reply edit resend new))
     (mu4e-error "Unsupported compose-type %S" type))
   (unless (eq (null docid) (eq type 'new))
     (mu4e-error "`new' implies docid not-nil, and vice-versa"))

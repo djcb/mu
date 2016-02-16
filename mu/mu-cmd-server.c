@@ -511,7 +511,7 @@ get_encrypted_msg_opts (GHashTable *args)
 	return opts;
 }
 
-enum { NEW, REPLY, FORWARD, EDIT, INVALID_TYPE };
+enum { NEW, REPLY, FORWARD, EDIT, RESEND, INVALID_TYPE };
 static unsigned
 compose_type (const char *typestr)
 {
@@ -521,18 +521,19 @@ compose_type (const char *typestr)
 		return FORWARD;
 	else if (EQSTR (typestr, "edit"))
 		return EDIT;
+	else if (EQSTR (typestr, "resend"))
+		return RESEND;
 	else if (EQSTR (typestr, "new"))
 		return NEW;
 	else
 		return INVALID_TYPE;
 }
 
-/* 'compose' produces the un-changed *original* message sexp (ie., the
- * message to reply to, forward or edit) for a new message to
- * compose). It takes two parameters: 'type' with the compose type
- * (either reply, forward or edit), and 'docid' for the message to
- * reply to. Note, type:new does not have an original message, and
- * therefore does not need a docid
+/* 'compose' produces the un-changed *original* message sexp (ie., the message
+ * to reply to, forward or edit) for a new message to compose). It takes two
+ * parameters: 'type' with the compose type (either reply, forward or
+ * edit/resend), and 'docid' for the message to reply to. Note, type:new does
+ * not have an original message, and therefore does not need a docid
  *
  * In returns a (:compose <type> [:original <original-msg>] [:include] )
  * message (detals: see code below)
@@ -557,7 +558,8 @@ cmd_compose (ServerContext *ctx, GHashTable *args, GError **err)
 		return MU_OK;
 	}
 
-	if (ctype == REPLY || ctype == FORWARD || ctype == EDIT) {
+	if (ctype == REPLY || ctype == FORWARD ||
+	    ctype == EDIT || ctype == RESEND) {
 		MuMsg *msg;
 		const char *docidstr;
 		GET_STRING_OR_ERROR_RETURN (args, "docid", &docidstr, err);

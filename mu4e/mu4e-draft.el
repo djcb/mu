@@ -402,54 +402,69 @@ fields will be the same as in the original."
   "The drafts-folder for this compose buffer, based on
 `mu4e-drafts-folder', which is evaluated once.")
 
-(defun mu4e-draft-open (compose-type &optional msg)
-  "Open a draft file for a new message (when COMPOSE-TYPE is reply, forward or new),
-or open an existing draft (when COMPOSE-TYPE is edit).
+(defun mu4e~draft-open-file (path)
+  "Open the the draft file at PATH."
+  (if (and mu4e-compose-in-new-frame (window-system))
+    (find-file-other-frame path)
+    (find-file path)))
 
-The name of the draft folder is constructed from the concatenation
-of `mu4e-maildir' and `mu4e-drafts-folder' (the latter will be
-evaluated). The message file name is a unique name determined by
-`mu4e-send-draft-file-name'. The initial contents will be created
-from either `mu4e~draft-reply-construct', or
+(defun mu4e~draft-determine-path (draft-dir)
+  "Determine the path for a new draft file."
+  (format "%s/%s/cur/%s"
+    mu4e-maildir draft-dir (mu4e~draft-message-filename-construct "DS")))
+
+
+(defun mu4e-draft-open (compose-type &optional msg)
+  "Open a draft file for a new message (when COMPOSE-TYPE is `reply', `forward' or `new'),
+open an existing draft (when COMPOSE-TYPE is `edit'), or re-send
+an existing message (when COMPOSE-TYPE is `resend').
+
+The name of the draft folder is constructed from the
+concatenation of `mu4e-maildir' and `mu4e-drafts-folder' (the
+latter will be evaluated). The message file name is a unique name
+determined by `mu4e-send-draft-file-name'. The initial contents
+will be created from either `mu4e~draft-reply-construct', or
 `mu4e~draft-forward-construct' or `mu4e~draft-newmsg-construct'."
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
-  (let ((draft-dir))
-    (if (eq compose-type 'edit)
-      ;; case-1: re-editing a draft messages. in this case, we do know the full
-      ;; path, but we cannot really know 'drafts folder'... we make a guess
-      (progn
+  (let ((draft-dir nil))
+    (case compose-type
+      
+      (edit
+	;; case-1: re-editing a draft messages. in this case, we do know the full
+	;; path, but we cannot really know 'drafts folder'... we make a guess
 	(setq draft-dir (mu4e~guess-maildir (mu4e-message-field msg :path)))
-        (if (and mu4e-compose-in-new-frame (window-system))
-            (find-file-other-frame (mu4e-message-field msg :path))
-          (find-file (mu4e-message-field msg :path))))
-      ;; case-2: creating a new message; in this case, we can determing
-      ;; mu4e-get-drafts-folder
-      (progn
+	(mu4e~draft-open-file (mu4e-message-field msg :path)))
+
+      (resend
+	;; case-2: copy some exisisting message to a draft message, then edit
+	;; that.
+	(setq draft-dir (mu4e~guess-maildir (mu4e-message-field msg :path)))
+	(let ((draft-path (mu4e~draft-determine-path draft-dir)))
+	  (copy-file (mu4e-message-field msg :path) draft-path)
+	  (mu4e~draft-open-file draft-path)))
+      
+      ((reply forward new)
+	;; case-3: creating a new message; in this case, we can determing
+	;; mu4e-get-drafts-folder
 	(setq draft-dir (mu4e-get-drafts-folder msg))
-	(let ((draft-path
-		(format "%s/%s/cur/%s"
-		  mu4e-maildir
-		  draft-dir
-		  (mu4e~draft-message-filename-construct "DS")))
-	      (initial-contents
-	       (case compose-type
-		 (reply   (mu4e~draft-reply-construct msg))
-		 (forward (mu4e~draft-forward-construct msg))
-		 (new     (mu4e~draft-newmsg-construct))
-		 (t (mu4e-error "unsupported compose-type %S" compose-type)))))
-	  (if (and mu4e-compose-in-new-frame (window-system))
-              (find-file-other-frame draft-path)
-            (find-file draft-path))
-          (insert initial-contents))
-    (newline)
-	;; include the message signature (if it's set)
-	(if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
-	  (let ((message-signature mu4e-compose-signature))
-	    (save-excursion
-	      (message-insert-signature)
-	      (mu4e~fontify-signature))))))
-	  ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
-	  ;; throughout.
+	(let ((draft-path (mu4e~draft-determine-path draft-dir))
+	       (initial-contents
+		 (case compose-type
+		   (reply   (mu4e~draft-reply-construct msg))
+		   (forward (mu4e~draft-forward-construct msg))
+		   (new     (mu4e~draft-newmsg-construct)))))
+	  (mu4e~draft-open-file draft-path)
+          (insert initial-contents) 
+	  (newline)
+	  ;; include the message signature (if it's set)
+	  (if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
+	    (let ((message-signature mu4e-compose-signature))
+	      (save-excursion
+		(message-insert-signature)
+		(mu4e~fontify-signature))))))
+      (t (mu4e-error "unsupported compose-type %S" compose-type)))
+      ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
+      ;; throughout.
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)
     (put 'mu4e~draft-drafts-folder 'permanent-local t)
     (unless mu4e~draft-drafts-folder

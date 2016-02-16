@@ -386,10 +386,10 @@ message-thread by removing the In-Reply-To header."
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
-symbol, either `reply', `forward', `edit', `new'. `edit' is for
-editing existing messages. When COMPOSE-TYPE is `reply' or
-`forward', MSG should be a message plist.  If COMPOSE-TYPE is
-`new', ORIGINAL-MSG should be nil.
+symbol, either `reply', `forward', `edit', `resend' `new'. `edit'
+is for editing existing (draft) messages. When COMPOSE-TYPE is
+`reply' or `forward', MSG should be a message plist.  If
+COMPOSE-TYPE is `new', ORIGINAL-MSG should be nil.
 
 Optionally (when forwarding, replying) ORIGINAL-MSG is the original
 message we will forward / reply to.
@@ -406,7 +406,6 @@ tempfile)."
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
   ;; maybe switch the context
-  (message "Autoswitch")
   (mu4e~context-autoswitch mu4e-compose-parent-message
 			   mu4e-compose-context-policy)
   (run-hooks 'mu4e-compose-pre-hook)
@@ -414,7 +413,7 @@ tempfile)."
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (condition-case nil
       (mu4e-draft-open compose-type original-msg)
-    (quit (kill-buffer) (message "[mu4e] Operation aborted")
+    (quit (kill-buffer) (mu4e-message "Operation aborted")
           (return-from mu4e~compose-handler)))
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
@@ -532,15 +531,15 @@ buffer."
 	    (mu4e~proc-move (match-string 1 forwarded-from) nil "+P-N")))))))
 
 (defun mu4e-compose (compose-type)
-  "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE is
-a symbol, one of `reply', `forward', `edit', `new'. All but `new'
-take the message at point as input. Symbol `edit' is only allowed
-for draft messages."
+  "Start composing a message of COMPOSE-TYPE, where COMPOSE-TYPE
+is a symbol, one of `reply', `forward', `edit', `resend'
+`new'. All but `new' take the message at point as input. Symbol
+`edit' is only allowed for draft messages."
   (let ((msg (mu4e-message-at-point 'noerror)))
     ;; some sanity checks
     (unless (or msg (eq compose-type 'new))
       (mu4e-warn "No message at point"))
-    (unless (member compose-type '(reply forward edit new))
+    (unless (member compose-type '(reply forward edit resend new))
       (mu4e-error "Invalid compose type '%S'" compose-type))
     (when (and (eq compose-type 'edit)
 	    (not (member 'draft (mu4e-message-field msg :flags))))
@@ -583,6 +582,11 @@ This is only possible if the message at point is, in fact, a
 draft message."
   (interactive)
   (mu4e-compose 'edit))
+
+(defun mu4e-compose-resend ()
+  "Resend the message at point in the headers buffer."
+  (interactive)
+  (mu4e-compose 'resend))
 
 (defun mu4e-compose-new ()
   "Start writing a new message."
