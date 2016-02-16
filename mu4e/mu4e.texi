@@ -738,10 +738,10 @@ major-mode for the headers view is @code{mu4e-headers-mode}.
 @menu
 * Overview: HV Overview. What is the Header View
 * Keybindings::Do things with your keyboard
-* Marking:HV Marking. Selecting messages for doing things
+* Marking: HV Marking. Selecting messages for doing things
 * Sort order and threading::Influencing the display
-* HV Custom headers::Adding your own headers
-* HV Actions::Defining and using actions
+* Custom headers: HV Custom headers. Adding your own headers
+* Actions: HV Actions. Defining and using actions
 * Split view::Seeing both headers and messages
 @end menu
 
@@ -3696,6 +3696,14 @@ with @t{msg2pdf}, which is a program used to convert the messages to
 pdf, and which depends on WebKit, which in some cases needs
 @t{nspluginwrapper} and it waits for a long time if it's not there. So,
 installing @t{nspluginwrapper} prevents that.
+@item @emph{Can I 'bounce' or 'resend' messages?} 
+Yes - it is possible to edit a (copy of) an existing message and then
+send it, using @code{M-x mu4e-compose-resend}. This gives you a raw copy
+of the message, including all headers, encoded parts and so on. Reason
+for this is that for resending, it is important not to change anything
+(except perhaps for the 'To:' address when bouncing); since we cannot
+losslessly decode an existing message, you get the raw version.
+
 @end enumerate
 
 @node Writing messages
