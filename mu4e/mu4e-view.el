@@ -707,9 +707,10 @@ FUNC should be a function taking two arguments:
 	  '("Mark for move" . mu4e-view-mark-for-move))
 
 	(define-key menumap [sepa2] '("--"))
-	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
+	(define-key menumap [resend]  '("Resend" . mu4e-compose-resend))
 	(define-key menumap [forward]  '("Forward" . mu4e-compose-forward))
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
+	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
 	(define-key menumap [sepa3] '("--"))
 
 	(define-key menumap [query-next]
