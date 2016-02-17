@@ -3748,6 +3748,10 @@ configuration.
 and @t{mu4e} automatically removes the (hidden) @t{References} header as
 well when sending it. This makes the message show up as a top-level
 message rather than as a response.
+@item @emph{How can I attach an existing message?} Use @code{mu4e-action-capture-message}
+ (i.e., @kbd{a c} in the headers view) to 'capture' the to-be-attached
+ message, then when editing the message, use @kbd{M-x
+ mu4e-compose-attach-captured-message}.
 @item @emph{How can I sign or encrypt messages?} You can do so using @command{emacs}'
 MIME-support -- check the @t{Attachments}-menu while composing a
 message. Also see @ref{Signing and encrypting}.
