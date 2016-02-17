@@ -650,12 +650,13 @@ or (rfc822-string . CONTACT) otherwise."
     (setq contact (funcall mu4e-contact-rewrite-function contact)))
   (when contact
     (let ((name (plist-get contact :name))
-	   (mail (plist-get contact :mail))) 
-      (unless (and mail
-		(string-match mu4e-compose-complete-ignore-address-regexp mail))
+	   (mail (plist-get contact :mail))
+	   (ignore-rx (or mu4e-compose-complete-ignore-address-regexp ""))) 
+      (unless (and mail (not (string-match ignore-rx mail)))
 	(cons
 	  (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)
 	  contact)))))
+
 
 (defun mu4e~sort-contacts (contacts)
   "Destructively sort contacts (only for cycling) in order of
