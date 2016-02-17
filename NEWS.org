@@ -17,6 +17,9 @@
    - Make `shr' the default renderer for rich-text emails
    - Allow for resending existing messages, possibly editing them. M-x
      mu4e-compose-resend, or use the menu; no shortcut.
+   - Let `mu4e~read-char-choice' become case-insensitive if there is
+     no exact match; small convenience that affects most the
+     single-char option reading in mu4e.
              
 ** 0.9.16
 

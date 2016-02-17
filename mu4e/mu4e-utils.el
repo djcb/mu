@@ -228,14 +228,18 @@ Does a local-exit and does not return. In emacs versions below
   (user-error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e~read-char-choice (prompt choices)
-  "Compatiblity wrapper for `read-char-choice'.
-That function is available which emacs-24 only."
-  (let ((choice) (ok) (inhibit-quit nil))
-    (while (not ok)
+  "Read and return one of CHOICES, prompting for PROMPT.
+Any input that is not one of CHOICES is ignored. This mu4e's
+version of `read-char-choice', that becomes case-insentive after
+trying an exact match."
+  (let ((choice) (chosen) (inhibit-quit nil))
+    (while (not chosen)
       (message nil);; this seems needed...
       (setq choice (read-char-exclusive prompt))
-      (setq ok (member choice choices)))
-    choice))
+      (setq chosen (or (member choice choices)
+		     (member (downcase choice) choices)
+		     (member (upcase choice) choices))))
+    (car chosen)))
 
 (defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area.
