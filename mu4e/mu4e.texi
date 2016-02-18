@@ -827,7 +827,10 @@ Jamie Zawinski's mail threading algorithm,
 found during the indexing process, and if there is no current
 user-interaction. If you do not want such automatic updates, set
 @code{mu4e-headers-auto-update} to @code{nil}.
-@item There is a hook-function @code{mu4e-headers-found-hook} available which
+@item Just before executing a search, a hook-function 
+@code{mu4e-headers-search-pre-hook} is invoked, which receives the
+search expression as its parameter.
+@item Also, there is a hook-function @code{mu4e-headers-found-hook} available which
 is invoked just after @t{mu4e} has completed showing the messages in the
 headers-view.
 @end itemize

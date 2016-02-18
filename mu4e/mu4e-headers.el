@@ -160,10 +160,9 @@ query have been received and are displayed."
   :type 'hook
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-search-bookmark-hook nil
-  "Hook run just we're about to do a bookmarked search. The only
-argument is `expr' which is the bookmarked search we're about to
-execute."
+(defcustom mu4e-headers-search-pre-hook nil
+  "Hook run just before executing a new search operation. This
+function receives the query as its parameter."
   :type 'hook
   :group 'mu4e-headers)
 
@@ -1015,6 +1014,7 @@ the query history stack."
 	     (mu4e-context-label)))))
     
     (switch-to-buffer buf)
+    (run-hook-with-args 'mu4e-headers-search-pre-hook expr)
     (mu4e~proc-find
       expr
       mu4e-headers-show-threads
@@ -1300,7 +1300,6 @@ the search."
   (let ((expr
 	  (or expr
 	    (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: ")))))
-    (run-hook-with-args 'mu4e-headers-search-bookmark-hook expr)
     (mu4e-headers-search expr (when edit "Edit bookmark: ") edit)))
 
 (defun mu4e-headers-search-bookmark-edit ()
