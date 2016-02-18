@@ -655,7 +655,7 @@ or (rfc822-string . CONTACT) otherwise."
   (when contact
     (let ((name (plist-get contact :name))
 	   (mail (plist-get contact :mail))
-	   (ignore-rx (or mu4e-compose-complete-ignore-address-regexp ""))) 
+	   (ignore-rx (or mu4e-compose-complete-ignore-address-regexp "$^"))) 
       (when (and mail (not (string-match ignore-rx mail)))
 	(cons
 	  (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)
