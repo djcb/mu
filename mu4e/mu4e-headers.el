@@ -160,6 +160,12 @@ query have been received and are displayed."
   :type 'hook
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-search-bookmark-hook nil
+  "Hook run just we're about to do a bookmarked search. The only
+argument is `expr' which is the bookmarked search we're about to
+execute."
+  :type 'hook
+  :group 'mu4e-headers)
 
 (defvar mu4e-headers-sort-field :date
   "Field to sort the headers by.
@@ -1294,6 +1300,7 @@ the search."
   (let ((expr
 	  (or expr
 	    (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: ")))))
+    (run-hook-with-args 'mu4e-headers-search-bookmark-hook expr)
     (mu4e-headers-search expr (when edit "Edit bookmark: ") edit)))
 
 (defun mu4e-headers-search-bookmark-edit ()
