@@ -20,9 +20,14 @@
    - Let `mu4e~read-char-choice' become case-insensitive if there is
      no exact match; small convenience that affects most the
      single-char option reading in mu4e.
-   - Now, just before executing a search, a hook-function
+   - Now, just before executing any search, a hook-function
      `mu4e-headers-search-pre-hook` is invoked, which receives the
      search expression as its parameter.
+   - In addition there's a `mu4e-headers-search-bookmark-hook` which
+     gets called when searches get invoked as a bookmark (note that
+     `mu4e-headers-search-pre-hook` will also be called just
+     afterwards). This hook also receives the search expression as its
+     parameter.
              
 ** 0.9.16
 

@@ -160,9 +160,27 @@ query have been received and are displayed."
   :type 'hook
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-search-bookmark-hook nil
+  "Hook run just after we invoke a bookmarked search. This
+function receives the query as its parameter.
+
+The reason to use this instead of `mu4e-headers-search-pre-hook'
+is if you only want to execute a hook when a search is entered
+via a bookmark, e.g. if you'd like to treat the bookmarks as a
+custom folder and change the options for the search,
+e.g. `mu4e-headers-show-threads', `mu4e-headers-include-related',
+`mu4e-headers-skip-duplicates` or `mu4e-headers-results-limit'."
+  :type 'hook
+  :group 'mu4e-headers)
+
 (defcustom mu4e-headers-search-pre-hook nil
   "Hook run just before executing a new search operation. This
-function receives the query as its parameter."
+function receives the query as its parameter.
+
+This is a more general hook facility than the
+`mu4e-headers-search-bookmark-hook'. It gets called on every
+executed search, not just those that are invoked via bookmarks,
+but also manually invoked searches."
   :type 'hook
   :group 'mu4e-headers)
 
@@ -1300,6 +1318,7 @@ the search."
   (let ((expr
 	  (or expr
 	    (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: ")))))
+    (run-hook-with-args 'mu4e-headers-search-bookmark-hook expr)
     (mu4e-headers-search expr (when edit "Edit bookmark: ") edit)))
 
 (defun mu4e-headers-search-bookmark-edit ()
