@@ -164,7 +164,7 @@ query have been received and are displayed."
   "Hook run just after we invoke a bookmarked search. This
 function receives the query as its parameter.
 
-The reason to use this instead of `mu4e-headers-search-pre-hook'
+The reason to use this instead of `mu4e-headers-search-hook'
 is if you only want to execute a hook when a search is entered
 via a bookmark, e.g. if you'd like to treat the bookmarks as a
 custom folder and change the options for the search,
@@ -173,7 +173,7 @@ e.g. `mu4e-headers-show-threads', `mu4e-headers-include-related',
   :type 'hook
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-search-pre-hook nil
+(defcustom mu4e-headers-search-hook nil
   "Hook run just before executing a new search operation. This
 function receives the query as its parameter.
 
@@ -1032,7 +1032,7 @@ the query history stack."
 	     (mu4e-context-label)))))
     
     (switch-to-buffer buf)
-    (run-hook-with-args 'mu4e-headers-search-pre-hook expr)
+    (run-hook-with-args 'mu4e-headers-search-hook expr)
     (mu4e~proc-find
       expr
       mu4e-headers-show-threads
