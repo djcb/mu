@@ -178,15 +178,16 @@ be changed by setting `mu4e-view-prefer-html'."
 		txt)
 	      ;; otherwise, it there some html?
 	      (html
+		(message "%S" html)
 		(with-temp-buffer
 		  (insert html)
 		  (cond
-                   ((stringp mu4e-html2text-command)
-                    (let* ((tmp-file (make-temp-file "mu4e-html")))
-                     (write-region (point-min) (point-max) tmp-file)
-                     (erase-buffer)
-                     (call-process-shell-command mu4e-html2text-command tmp-file t t)
-                     (delete-file tmp-file)))
+		    ((stringp mu4e-html2text-command)
+		      (let* ((tmp-file (mu4e-make-temp-file "html")))
+			(write-region (point-min) (point-max) tmp-file)
+			(erase-buffer)
+			(call-process-shell-command mu4e-html2text-command tmp-file t t)
+			(delete-file tmp-file)))
 		    ((functionp mu4e-html2text-command)
 		      (funcall mu4e-html2text-command))
 		    (t (mu4e-error "Invalid `mu4e-html2text-command'")))

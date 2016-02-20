@@ -141,6 +141,18 @@ return the result."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-make-temp-file (ext)
+  "Create a temporary file with extension EXT. The file will
+self-destruct in a few seconds, enough to open it in another
+program."
+  (let ((tmpfile (make-temp-file "mu4e-" nil (concat "." ext))))
+    (run-at-time "10 sec" nil
+      (lambda (fname) (ignore-errors (delete-file fname))) tmpfile)
+    tmpfile))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mu4e-attachment-dir is either a string or a function that takes a filename
 ;; and the mime-type as argument, either (or both) which can be nil
 (defun mu4e~get-attachment-dir (&optional fname mimetype)

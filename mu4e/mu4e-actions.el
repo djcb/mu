@@ -30,6 +30,7 @@
 (require 'cl)
 (require 'ido)
 
+(require 'mu4e-utils)
 (require 'mu4e-message)
 (require 'mu4e-meta)
 
@@ -43,7 +44,6 @@ Works for headers view and message-view."
     (shell-command-to-string
       (concat "wc -l < " (shell-quote-argument (mu4e-message-field msg :path))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 
@@ -68,47 +68,36 @@ Works for the message view."
       (mu4e-warn "Failed to create PDF file"))
     (find-file pdf)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+(defun mu4e~write-body-to-html (msg)
+  "Write the body (either html or text) to a temporary file;
+return the filename."
+  (let* ((html (mu4e-message-field msg :body-html))
+	  (txt (mu4e-message-field msg :body-txt))
+	  (tmpfile (mu4e-make-temp-file "html")))
+    (unless (or html txt)
+      (mu4e-error "No body part for this message"))
+    (with-temp-buffer
+      (insert "<head><meta charset=\"UTF-8\"></head>\n")
+      (insert (or html (concat "<pre>" txt "</pre>")))
+      (write-file tmpfile)
+      tmpfile)))
+
 (defun mu4e-action-view-in-browser (msg)
-  "View the body of the message in a web browser.
+  "View the body of the message in a browser.
 You can influence the browser to use with the variable
 `browse-url-generic-program'."
-  (let* ((html (mu4e-message-field msg :body-html))
-	  (txt (mu4e-message-field msg :body-txt))
-	  (tmpfile (format "%s%x.html" temporary-file-directory (random t))))
-    (unless (or html txt)
-      (mu4e-error "No body part for this message"))
-    (with-temp-buffer
-      ;; simplistic -- but note that it's only an example...
-      (insert "<head><meta charset=\"UTF-8\"></head>\n")
-      (insert (or html (concat "<pre>" txt "</pre>")))
-      (write-file tmpfile)
-      (browse-url (concat "file://" tmpfile)))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (browse-url (concat "file://"
+		(mu4e~write-body-to-html msg)))) 
 
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-view-with-xwidget (msg)
-  "View the body of the message inside xwidget-webkit."
+  "View the body of the message inside xwidget-webkit. This is
+only available in emacs 25+."
   (unless (fboundp 'xwidget-webkit-browse-url)
     (mu4e-error "No xwidget support available"))
-  (let* ((html (mu4e-message-field msg :body-html))
-	  (txt (mu4e-message-field msg :body-txt))
-	  (tmpfile (format "%s%x.html" temporary-file-directory (random t))))
-    (unless (or html txt)
-      (mu4e-error "No body part for this message"))
-    (with-temp-buffer
-      ;; simplistic -- but note that it's only an example...
-      (insert "<head><meta charset=\"UTF-8\"></head>\n")
-      (insert (or html (concat "<pre>" txt "</pre>")))
-      (write-file tmpfile)
-      (xwidget-webkit-browse-url (concat "file://" tmpfile) t))))
+  (xwidget-webkit-browse-url
+    (concat "file://" (mu4e~write-body-to-html msg)) t)) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
