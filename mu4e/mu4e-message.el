@@ -178,7 +178,6 @@ be changed by setting `mu4e-view-prefer-html'."
 		txt)
 	      ;; otherwise, it there some html?
 	      (html
-		(message "%S" html)
 		(with-temp-buffer
 		  (insert html)
 		  (cond
