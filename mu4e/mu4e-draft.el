@@ -404,7 +404,7 @@ fields will be the same as in the original."
 
 (defun mu4e~draft-open-file (path)
   "Open the the draft file at PATH."
-  (if (and mu4e-compose-in-new-frame (window-system))
+  (if mu4e-compose-in-new-frame
     (find-file-other-frame path)
     (find-file path)))
 

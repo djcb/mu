@@ -438,7 +438,14 @@ tempfile)."
    ;; hide some headers
   (mu4e~compose-hide-headers)
   ;; switch on the mode
-  (mu4e-compose-mode))
+  (mu4e-compose-mode)
+  (when mu4e-compose-in-new-frame
+    ;; make sure to close the frame when we're done with
+    ;; the message
+    ;; these are all buffer-local; 
+    (push 'delete-frame message-exit-actions)
+    (push 'delete-frame message-kill-actions)
+    (push 'delete-frame message-postpone-actions)))
 
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
@@ -452,16 +459,8 @@ the appropriate flag at the message forwarded or replied-to."
   (dolist (buf (buffer-list))
     (when (and (buffer-file-name buf)
                (string= (buffer-file-name buf) path))
-      (if (and mu4e-compose-in-new-frame (window-system))
-	  (progn
-	    (switch-to-buffer buf)
-	    (when (and (get-buffer-window buf)
-		       (window-frame (get-buffer-window buf)))
-	      (delete-frame (window-frame (get-buffer-window buf)))))
-	)
       (if message-kill-buffer-on-exit
-	  (kill-buffer buf))
-      ))
+	  (kill-buffer buf))))
   ;; now, try to go back to some previous buffer, in the order
   ;; view->headers->main
   (if (buffer-live-p mu4e~view-buffer)
