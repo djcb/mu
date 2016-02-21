@@ -440,11 +440,9 @@ tempfile)."
   ;; switch on the mode
   (mu4e-compose-mode)
   (when mu4e-compose-in-new-frame
-    ;; make sure to close the frame when we're done with
-    ;; the message
-    ;; these are all buffer-local; 
+    ;; make sure to close the frame when we're done with the message these are
+    ;; all buffer-local;
     (push 'delete-frame message-exit-actions)
-    (push 'delete-frame message-kill-actions)
     (push 'delete-frame message-postpone-actions)))
 
 (defun mu4e-sent-handler (docid path)
