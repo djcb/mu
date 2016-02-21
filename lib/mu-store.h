@@ -168,7 +168,8 @@ const char* mu_store_version (const MuStore *store);
 
 
 /**
- * try to flush/commit all outstanding work
+ * try to flush/commit all outstanding work to the database and the contacts
+ * cache.
  *
  * @param store a valid xapian store
  */

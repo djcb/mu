@@ -1,6 +1,6 @@
 /* -*-mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8-*- */
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -195,8 +195,11 @@ mu_store_flush (MuStore *store)
 		if (store->in_transaction())
 			store->commit_transaction ();
 		store->db_writable()->commit ();
-
+		
 	} MU_XAPIAN_CATCH_BLOCK;
+
+	if (store->contacts())
+		mu_contacts_serialize (store->contacts());
 }
 
 
@@ -669,9 +672,11 @@ each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 		return;
 
 	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
-		if (g_ascii_strcasecmp (contact->address,
-					(const char*)cur->data) == 0)
+		if (g_ascii_strcasecmp (
+			    contact->address, (const char*)cur->data) == 0) {
 			msgdoc->_personal = TRUE;
+			break;
+		}
 	}
 }
 

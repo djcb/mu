@@ -111,7 +111,7 @@ typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
  * call a function for either each contact, or each contact satisfying
  * a regular expression,
  *
- * @param contacts contacts object
+ * @param self contacts object
  * @param func callback function to be called for each
  * @param user_data user data to pass to the callback
  * @param pattern a regular expression which matches either the e-mail
@@ -123,6 +123,15 @@ typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
  */
 gboolean mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
 			      gpointer user_data, const char* pattern, size_t *num);
+
+/**
+ * serialize the contacts to the contacts cache file
+ *
+ * @param self contacts object
+ *
+ * @return TRUE if the function succeeded, FALSE otherwise 
+ * */
+gboolean mu_contacts_serialize (MuContacts *self);
 
 G_END_DECLS
 
