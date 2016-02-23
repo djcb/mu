@@ -332,8 +332,9 @@ headers."
 	  ;; the same docid...
 	  (mu4e~headers-remove-handler docid)
 
-	  ;; if we're actually viewing this message (in mu4e-view mode), we update it; that way, the
-	  ;; flags can be updated, as well as the path (which is useful for viewing the raw message)
+	  ;; if we're actually viewing this message (in mu4e-view mode), we
+	  ;; update it; that way, the flags can be updated, as well as the path
+	  ;; (which is useful for viewing the raw message)
 	  (when (mu4e~headers-view-this-message-p docid)
 	    (mu4e-view msg mu4e~headers-buffer))
 
@@ -590,11 +591,19 @@ after the end of the search results."
 	  (insert (propertize str 'face 'mu4e-system-face 'intangible t))
 	  (unless (zerop count)
 	    (mu4e-message "Found %d matching message%s"
-	      count (if (= 1 count) "" "s"))
-	    ;; highlight the first message
-	    (mu4e~headers-highlight (mu4e~headers-docid-at-point (point-min)))))
-	;; run-hooks
-	(run-hooks 'mu4e-headers-found-hook)))))
+	      count (if (= 1 count) "" "s")))))
+      ;; if we need to jump to some specific message, do so now
+      (goto-char (point-min))
+      (when mu4e~headers-msgid-target
+	(mu4e-headers-goto-message-id mu4e~headers-msgid-target))
+      (when mu4e~headers-view-target
+	(mu4e-headers-view-message))  ;; view the message at point
+      (setq mu4e~headers-view-target nil
+	mu4e-headers-msgid-target nil))
+    (when (mu4e~headers-docid-at-point)
+      (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
+    ;; run-hooks
+    (run-hooks 'mu4e-headers-found-hook))) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -801,8 +810,8 @@ after the end of the search results."
 		  (info (cdr (assoc field
 			       (append mu4e-header-info mu4e-header-info-custom))))
 		  (sortable (plist-get info :sortable))
-		  ;; if sortable, it is either t (when field is sortable itself) or a symbol (if
-		  ;; another field is used for sorting)
+		  ;; if sortable, it is either t (when field is sortable itself)
+		  ;; or a symbol (if another field is used for sorting)
 		  (sortfield (when sortable (if (booleanp sortable) field sortable)))
 		  (help (plist-get info :help))
 		  ;; triangle to mark the sorted-by column
@@ -878,7 +887,7 @@ Also, unhighlight any previously highlighted headers."
   (with-current-buffer mu4e~headers-buffer
     (save-excursion
       ;; first, unhighlight the previously highlighted docid, if any
-      (when (and mu4e~highlighted-docid
+      (when (and docid mu4e~highlighted-docid
 	      (mu4e~headers-goto-docid mu4e~highlighted-docid))
 	(hl-line-unhighlight))
       ;; now, highlight the new one
@@ -933,6 +942,7 @@ of the beginning of the line."
 	  (setq newpoint (point)))))
     newpoint)) ;; return the point, or nil if not found
 
+
 (defsubst mu4e~headers-docid-pos (docid)
   "Return the pos of the beginning of the line with the header with
 docid DOCID, or nil if it cannot be found."
@@ -948,6 +958,15 @@ with DOCID which must be present in the headers buffer."
     (when (mu4e~headers-goto-docid docid)
       (mu4e-message-field (mu4e-message-at-point) field))))
 
+(defun mu4e-headers-goto-message-id (msgid)
+  "Go to the next message with message-id MSGID. Return the
+message plist, or nil if not found."
+  (mu4e-headers-find-if
+    (lambda (msg)
+      (let ((this-msgid (mu4e-message-field msg :message-id)))
+	(when (and this-msgid (string= msgid this-msgid))
+	  msg)))))
+  
 ;;;; markers mark headers for
 (defun mu4e~headers-mark (docid mark)
   "(Visually) mark the header for DOCID with character MARK."
@@ -1284,14 +1303,23 @@ or `past'."
 (defvar mu4e~headers-search-hist nil
   "History list of searches.")
 
-(defun mu4e-headers-search (&optional expr prompt edit ignore-history)
+(defvar mu4e~headers-msgid-target nil
+  "Message-id to jump to after the search has finished.")
+
+(defvar mu4e~headers-view-target nil
+  "Whether to automatically view (open) the target message (as
+  per `mu4e~headers-msgid-target').")
+
+(defun mu4e-headers-search (&optional expr prompt edit ignore-history msgid show)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. This is an interactive function which ask
 user for EXPR. PROMPT, if non-nil, is the prompt used by this
-function (default is \"Search for:\"). If EDIT is non-nil, instead
-of executing the query for EXPR, let the user edit the query before
-executing it. If IGNORE-HISTORY is true, do *not* update the query
-history stack."
+function (default is \"Search for:\"). If EDIT is non-nil,
+instead of executing the query for EXPR, let the user edit the
+query before executing it. If IGNORE-HISTORY is true, do *not*
+update the query history stack. If MSGID is non-nil, attempt to
+move point to the first message with that message-id after
+searching. If SHOW is non-nil, show the message with MSGID."
   ;; note: we don't want to update the history if this query comes from
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'."
   (interactive)
@@ -1302,8 +1330,9 @@ history stack."
 	      (or expr
 		(read-string prompt nil 'mu4e~headers-search-hist)))))
     (mu4e-mark-handle-when-leaving)
-    (mu4e~headers-search-execute expr
-      ignore-history)))
+    (mu4e~headers-search-execute expr ignore-history)
+    (setq mu4e~headers-msgid-target msgid
+      mu4e~headers-view-target show)))
 
 (defun mu4e-headers-search-edit ()
   "Edit the last search expression."

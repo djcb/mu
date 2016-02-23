@@ -176,19 +176,14 @@ message extracted at some path.")
   "A mapping of user-visible attachment number to the actual part index.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e-view-message-with-msgid (msgid)
-  "View message with MSGID.
-This is meant for external programs wanting to show specific
-messages - for example, `mu4e-org'."
-  ;; note: hackish; if mu4e-decryption-policy is non-nil (ie., t or
-  ;; 'ask), we decrypt the message. Since here we don't know if
-  ;; message is encrypted or not, when the policy is 'ask'. we simply
-  ;; assume the user said yes...  the alternative would be to ask for
-  ;; each message, encrypted or not.  maybe we need an extra policy...
-  (let ((view-buffer (get-buffer mu4e~view-buffer-name)))
-		(when view-buffer
-			(kill-buffer view-buffer)))
-  (mu4e~proc-view msgid mu4e-view-show-images mu4e-decryption-policy))
+(defun mu4e-view-message-with-message-id (msgid)
+  "View message with message-id MSGID. This (re)creates a
+headers-buffer with a search for MSGID, then open a view for that
+message."
+  (mu4e-headers-search (concat "msgid:" msgid) nil nil t msgid t))
+
+(define-obsolete-function-alias 'mu4e-view-message-with-msgid
+  'mu4e-view-message-with-message-id "0.9.17")
 
 (defun mu4e~view-custom-field (msg field)
   "Show some custom header field, or raise an error if it is not
