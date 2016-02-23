@@ -28,6 +28,11 @@
      `mu4e-headers-search-hook` will also be called just
      afterwards). This hook also receives the search expression as its
      parameter.
+   - Better handle the closing of separate compose frames
+   - Make org-links (and more general, all users of
+     mu4e-view-message-with-message-id) use a headers buffer, then
+     view the message. This way, those linked message are just like
+     any other, and can be deleted, moved etc.
              
 ** 0.9.16
 
