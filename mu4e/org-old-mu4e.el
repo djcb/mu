@@ -95,7 +95,7 @@ the query (for paths starting with 'query:')."
   (require 'mu4e)
   (cond
     ((string-match "^msgid:\\(.+\\)" path)
-      (mu4e-view-message-with-msgid (match-string 1 path)))
+      (mu4e-view-message-with-message-id (match-string 1 path)))
     ((string-match "^query:\\(.+\\)" path)
       (mu4e-headers-search (match-string 1 path) current-prefix-arg))
     (t (mu4e-error "mu4e: unrecognized link type '%s'" path))))
