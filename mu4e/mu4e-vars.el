@@ -83,6 +83,11 @@ already retrieved in another way."
   :group 'mu4e
   :safe 'booleanp)
 
+(defcustom mu4e-index-update-in-background t
+  "Whether run in background for automatic mail retrieval"
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
 
 (defcustom mu4e-update-interval nil
   "Number of seconds between automatic calls to retrieve mail and
