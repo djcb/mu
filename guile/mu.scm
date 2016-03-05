@@ -99,7 +99,7 @@
   (define mu:c:log)
   (define mu:warning)
   (define mu:c:log)
-  (define mu:get-parts))
+  (define mu:c:get-parts))
 
 (define (mu:log-warning frm . args)
   "Log FRM with ARGS at warning."
@@ -297,7 +297,7 @@ only get the part with file names."
 	   #:name       (list-ref part 2)
 	   #:mime-type  (list-ref part 3)
 	   #:size       (list-ref part 4)))
-    (mu:get-parts (slot-ref msg 'msg) files-only)))
+    (mu:c:get-parts (slot-ref msg 'msg) files-only)))
 
 (define-method (mu:attachments (msg <mu:message>))
   "Get the attachments for MSG as a list of <mu:part> objects."
