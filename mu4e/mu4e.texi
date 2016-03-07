@@ -479,10 +479,13 @@ if you use emacs in a terminal.
 You can interrupt the (foreground) update process with @kbd{q}.
 
 It is possible to update your mail and index periodically in the
-background, by setting the variable @code{mu4e-update-interval} to the
-number of seconds between these updates. If set to @code{nil}, it won't
-update at all. After you make changes to @code{mu4e-update-interval},
-@t{mu4e} must be restarted before the changes take effect.
+background or foreground, by setting the variable
+@code{mu4e-update-interval} to the number of seconds between these
+updates. If set to @code{nil}, it won't update at all. After you make
+changes to @code{mu4e-update-interval}, @t{mu4e} must be restarted
+before the changes take effect. By default, this will run in
+background and to change it to run in foreground, set
+@code{mu4e-index-update-in-background} to @code{nil}
 
 @subsection Handling errors during mail retrieval
 
