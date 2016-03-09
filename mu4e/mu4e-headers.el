@@ -556,8 +556,10 @@ found."
                 ((memq 'flagged flags) 'mu4e-flagged-face)
                 ((memq 'replied flags) 'mu4e-replied-face)
                 ((memq 'passed flags)  'mu4e-forwarded-face)
-                (t                     'mu4e-header-face))))
-    (add-face-text-property 0 (length line) face t line)
+		 (t                     'mu4e-header-face))))
+    ;; hmmm, this only works with emacs 24.4+
+    (when (fboundp 'add-face-text-property)
+      (add-face-text-property 0 (length line) face t line))
     line))
 
 (defun mu4e~headers-line-handler (msg line)
