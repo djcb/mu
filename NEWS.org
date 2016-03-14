@@ -14,7 +14,7 @@
      executing marks.
    - Remove the 'z' keybinding for leaving the headers
      view. Keybindings are precious!
-   - Make `shr' the default renderer for rich-text emails
+   - Make `shr' the default renderer for rich-text emails (when available)
    - Allow for resending existing messages, possibly editing them. M-x
      mu4e-compose-resend, or use the menu; no shortcut.
    - Let `mu4e~read-char-choice' become case-insensitive if there is
@@ -33,6 +33,13 @@
      mu4e-view-message-with-message-id) use a headers buffer, then
      view the message. This way, those linked message are just like
      any other, and can be deleted, moved etc.
+   - Increase the maximum default for message to index to 500 Mb; you
+     can customize this using the --max-msg-size parameter to mu
+     index.
+   - Allow for indexing in the background; see
+     `mu4e-index-update-in-background`.
+   - Add a :user-agent field to the message-sexp (in mu4e-view), which
+     is either the User-Agent or X-Mailer field, when present.
              
 ** 0.9.16
 

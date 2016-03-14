@@ -415,11 +415,12 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 		 " :has-child t" : "");
 }
 
-
 static void
 append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 {
-	GError *err;
+	const char	*str;
+	GError		*err;
+
 	err = NULL;
 
 	if (!mu_msg_load_msg_file (msg, &err)) {
@@ -431,7 +432,12 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 
 	append_sexp_parts (gstr, msg, opts);
 	append_sexp_contacts (gstr, msg);
-	
+
+	/* add the user-agent / x-mailer */
+	str = mu_msg_get_header (msg, "User-Agent");
+	if (str || (str = mu_msg_get_header (msg, "X-Mailer")))
+		append_sexp_attr (gstr, "user-agent", str);
+
 	append_sexp_body_attr (gstr, "body-txt",
 			  mu_msg_get_body_text(msg, opts));
 	append_sexp_body_attr (gstr, "body-html",
