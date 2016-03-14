@@ -231,7 +231,7 @@ based on `user-full-name' and `user-mail-address'; if the latter is
 nil, function returns nil."
   (when user-mail-address
     (if user-full-name
-      (format "%s <%s>" user-full-name user-mail-address)
+      (format "%s <%s>" (mu4e~rfc822-quoteit user-full-name) user-mail-address)
       (format "%s" user-mail-address))))
 
 
