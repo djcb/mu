@@ -84,7 +84,8 @@ already retrieved in another way."
   :safe 'booleanp)
 
 (defcustom mu4e-index-update-in-background t
-  "Whether run in background for automatic mail retrieval"
+  "Whether to run the automatic mail retrieval in the
+background."
   :type 'boolean
   :group 'mu4e
   :safe 'booleanp)
