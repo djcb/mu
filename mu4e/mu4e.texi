@@ -125,7 +125,7 @@ Appendices
 I (the author) spend a @emph{lot} of time dealing with e-mail, both
 professionally and privately. Having an efficient e-mail client is
 essential. Since none of the existing ones worked the way I wanted, I
-created my own.
+thought about creating my own.
 
 @command{emacs} is an integral part of my workflow, so it made a lot of
 sense to use it for e-mail as well. And as I had already written an
@@ -228,8 +228,9 @@ After these steps, @t{mu4e} should be ready to go!
 @section Requirements
 
 @t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and
-Unix-like systems, including many Linux distributions, OS X and
-FreeBSD. @command{emacs} 23 or 24 (recommended) is required, as well as
+Unix-like systems, including many Linux distributions, OS X and FreeBSD,
+and even on MS-Windows (with Cygwin). @command{emacs} 23 or 24
+(recommended) is required, as well as
 Xapian@footnote{@url{http://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
@@ -2423,16 +2424,18 @@ Note that in this case, we automatically switch to the first context
 when starting; see the discussion in the previous section.
 
 @lisp
-  (setq mu4e-contexts
+ 
+ (setq mu4e-contexts
     `( ,(make-mu4e-context
 	  :name "Private"
-	  :enter-func (lambda () (mu4e-message "Switch to the Private context"))
-	  ;; leave-func not defined
+	  :enter-func (lambda () (mu4e-message "Entering Private context"))
+          :leave-func (lambda () (mu4e-message "Leaving Private context"))
+	  ;; we match based on the contact-fields of the message
 	  :match-func (lambda (msg)
 			(when msg 
 			  (mu4e-message-contact-field-matches msg 
 			    :to "aliced@@home.example.com")))
-	  :vars '(  ( user-mail-address	     . "aliced@@home.example.com"  )
+	  :vars '( ( user-mail-address	    . "aliced@@home.example.com"  )
 		   ( user-full-name	    . "Alice Derleth" )
 		   ( mu4e-compose-signature .
 		     (concat
@@ -2441,17 +2444,31 @@ when starting; see the discussion in the previous section.
        ,(make-mu4e-context
 	  :name "Work"
 	  :enter-func (lambda () (mu4e-message "Switch to the Work context"))
-	  ;; leave-fun not defined
+	  ;; no leave-func
+	  ;; we match based on the contact-fields of the message
 	  :match-func (lambda (msg)
 			(when msg 
 			  (mu4e-message-contact-field-matches msg 
 			    :to "aderleth@@miskatonic.example.com")))
-	  :vars '(  ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
-		   ( user-full-name	    . "Alice Derleth" )
-		   ( mu4e-compose-signature .
+	  :vars '( ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
+		   ( user-full-name	     . "Alice Derleth" )
+		   ( mu4e-compose-signature  .
 		     (concat
 		       "Prof. Alice Derleth\n"
-		       "Miskatonic University, Dept. of Occult Sciences\n"))))))
+		       "Miskatonic University, Dept. of Occult Sciences\n"))))
+
+       ,(make-mu4e-context
+	  :name "Cycling"
+	  :enter-func (lambda () (mu4e-message "Switch to the Cycling context"))
+	  ;; no leave-func
+	  ;; we match based on the maildir of the message; assume all
+	  ;; cycling-related messages go into the /cycling maildir
+	  :match-func (lambda (msg)
+			(when msg
+			  (string= (mu4e-message-field msg :maildir) "/cycling")))
+	  :vars '( ( user-mail-address	     . "aderleth@@example.com" )
+		   ( user-full-name	     . "AliceD" )
+		   ( mu4e-compose-signature  . nil)))))
 
   ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
   ;; guess or ask the correct context, e.g.
@@ -2462,7 +2479,7 @@ when starting; see the discussion in the previous section.
 
   ;; compose with the current context is no context matches;
   ;; default is to ask 
-  ;; '(setq mu4e-compose-context-policy nil)
+  ;; (setq mu4e-compose-context-policy nil)
 @end lisp
 
 A couple of notes about this example:
