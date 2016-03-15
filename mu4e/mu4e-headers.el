@@ -1494,7 +1494,10 @@ window. "
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
   (interactive)
-  (mu4e-headers-search mu4e~headers-last-query))
+  ;; if possible, try to return to the same message
+  (let* ((msg (mu4e-message-at-point))
+	  (msgid (and msg (mu4e-message-field msg :message-id))))
+    (mu4e-headers-search mu4e~headers-last-query nil nil t msgid)))
 
 (defun mu4e~headers-query-navigate (whence)
   "Execute the previous query from the query stacks.
