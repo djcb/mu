@@ -244,9 +244,9 @@ cleanup_filename (char *fname)
 {
 	gchar *cur;
 
-	/* remove slashes, spaces, colons... */
+	/* replace control characters, slashes,colons by a '-' */
 	for (cur = fname; *cur; ++cur)
-		if (*cur == '/' || *cur == ' ' || *cur == ':')
+		if (*cur < ' ' || *cur == '/' || *cur == ':')
 			*cur = '-';
 }
 
