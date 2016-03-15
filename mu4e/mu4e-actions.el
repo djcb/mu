@@ -87,13 +87,15 @@ return the filename."
 (defun mu4e-action-view-in-browser (msg)
   "View the body of the message in a browser.
 You can influence the browser to use with the variable
-`browse-url-generic-program'."
+`browse-url-generic-program', and see the discussion of privacy
+aspects in `(mu4e) Displaying rich-text messages'."
   (browse-url (concat "file://"
 		(mu4e~write-body-to-html msg)))) 
 
 (defun mu4e-action-view-with-xwidget (msg)
   "View the body of the message inside xwidget-webkit. This is
-only available in emacs 25+."
+only available in emacs 25+; also see the discussion of privacy
+aspects in `(mu4e) Displaying rich-text messages'."
   (unless (fboundp 'xwidget-webkit-browse-url)
     (mu4e-error "No xwidget support available"))
   (xwidget-webkit-browse-url

@@ -1319,7 +1319,6 @@ If your emacs does not have @t{shr} yet, it can be useful to use a
 custom method. For that, you can set the variable
 @code{mu4e-html2text-command} to either a shell command or a function
 instead.
-  
 
 @subsection Html2text commands
 
@@ -1358,6 +1357,17 @@ alternative:
 If @code{mu4e-html2text-command} refers to an elisp function, it is
 expected to take the current buffer in html as input, and transform it
 into text (just like the @code{html2text} function).
+
+@subsection Privacy aspects
+@anchor{Privacy aspects}
+
+When opening your messages in a graphical browser, it may expose you
+doing so to the sender, due to the presence of specially crafted image
+URLs, or Javascript.
+
+If that is an issue, it is recommended to use a browser (or browser
+profile) that does not load images. The same applies to Javascript.
+
 
 @node MSGV Crypto
 @section Crypto
@@ -3693,7 +3703,7 @@ defined for this. Simply add to your configuration:
 @end lisp
 Now, when viewing such a difficult message, type @kbd{aV}, and the message
 opens inside a webbrowser. You can influence the browser with
-@code{browse-url-generic-program}.
+@code{browse-url-generic-program}; and see @ref{Privacy aspects}.
 @item @emph{How can read encrypted messages that I sent?}. Since you do not own the
 recipient's key you typically cannot read those mails - so the trick is
 to encrypt outgoing mails with your key, too. This can be automated by
