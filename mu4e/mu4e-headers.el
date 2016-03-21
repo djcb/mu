@@ -747,6 +747,17 @@ after the end of the search results."
 
 	(define-key menumap [sepa0] '("--"))
 
+	(define-key menumap [toggle-include-related]
+	  '(menu-item "Toggle related messages" mu4e-headers-toggle-include-related
+		      :button (:toggle . (and (boundp 'mu4e-headers-include-related)
+					      mu4e-headers-include-related))))
+	(define-key menumap [toggle-threading]
+	  '(menu-item "Toggle threading" mu4e-headers-toggle-threading
+		      :button (:toggle . (and (boundp 'mu4e-headers-show-threads)
+																				mu4e-headers-show-threads))))
+
+	(define-key menumap [sepa1] '("--"))
+
 	(define-key menumap [execute-marks]  '("Execute marks"
 						. mu4e-mark-execute-all))
 	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-mark-unmark-all))
@@ -765,7 +776,7 @@ after the end of the search results."
 	  '("Mark for trash" .  mu4e-headers-mark-for-trash))
 	(define-key menumap [mark-move]
 	  '("Mark for move" . mu4e-headers-mark-for-move))
-	(define-key menumap [sepa1] '("--"))
+	(define-key menumap [sepa2] '("--"))
 
 
 	(define-key menumap [resend]  '("Resend" . mu4e-compose-resend))
@@ -774,7 +785,7 @@ after the end of the search results."
 	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
       
     
-	(define-key menumap [sepa2] '("--"))
+	(define-key menumap [sepa3] '("--"))
 
 	(define-key menumap [query-next]  '("Next query" . mu4e-headers-query-next))
 	(define-key menumap [query-prev]  '("Previous query" .
@@ -789,12 +800,12 @@ after the end of the search results."
 	(define-key menumap [search]  '("Search" . mu4e-headers-search))
 
 
-	(define-key menumap [sepa3] '("--"))
+	(define-key menumap [sepa4] '("--"))
 
 	(define-key menumap [view]  '("View" . mu4e-headers-view-message))
 	(define-key menumap [next]  '("Next" . mu4e-headers-next))
 	(define-key menumap [previous]  '("Previous" . mu4e-headers-prev))
-	(define-key menumap [sepa4] '("--")))
+	(define-key menumap [sepa5] '("--")))
       map)))
 (fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
 
