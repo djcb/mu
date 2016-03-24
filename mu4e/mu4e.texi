@@ -2097,7 +2097,7 @@ mu4e-headers-mark-subthread}, respectively
 @cartouche
 @verbatim
 mark for/as  | keybinding  | description
---------------+-------------+------------------------------
+-------------+-------------+------------------------------
 'something'  | *, <insert> | mark now, decide later
 delete       | D, <delete> | delete
 flag         | +           | mark as 'flagged' ('starred')
