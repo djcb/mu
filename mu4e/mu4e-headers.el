@@ -601,7 +601,7 @@ after the end of the search results."
       (when mu4e~headers-view-target
 	(mu4e-headers-view-message))  ;; view the message at point
       (setq mu4e~headers-view-target nil
-	mu4e-headers-msgid-target nil))
+	mu4e~headers-msgid-target nil))
     (when (mu4e~headers-docid-at-point)
       (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
     ;; run-hooks
