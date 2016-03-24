@@ -350,7 +350,8 @@ message-thread by removing the In-Reply-To header."
     (add-hook 'message-send-hook
       (lambda () ;; mu4e~compose-save-before-sending
 	;; when in-reply-to was removed, remove references as well.
-	(mu4e~remove-refs-maybe)
+	(when (eq mu4e~compose-type 'reply)
+	  (mu4e~remove-refs-maybe))
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
@@ -367,6 +368,9 @@ message-thread by removing the In-Reply-To header."
 
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
+
+(defvar mu4e~compose-type nil
+  "Compose-type for this buffer.")
 
 (defun mu4e~compose-set-friendly-buffer-name (&optional compose-type)
   "Set some user-friendly buffer name based on the compose type."
@@ -429,12 +433,17 @@ tempfile)."
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
   ;; now jump to some useful positions, and start writing that mail!
+  
   (if (member compose-type '(new forward))
     (message-goto-to)
     (message-goto-body))
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
+  ;; remember the compose-type
+  (set (make-local-variable 'mu4e~compose-type) compose-type)
+  (put 'mu4e~compose-type 'permanent-local t)
+  
    ;; hide some headers
   (mu4e~compose-hide-headers)
   ;; switch on the mode
@@ -508,6 +517,7 @@ buffer."
   (let ((buf (find-file-noselect path)))
     (when buf
       (with-current-buffer buf
+	(message-narrow-to-headers-or-head)
 	(let ((in-reply-to (message-fetch-field "in-reply-to"))
 	       (forwarded-from)
 	       (references (message-fetch-field "references")))
