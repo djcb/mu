@@ -74,14 +74,29 @@ Works for the message view."
   "Write the body (either html or text) to a temporary file;
 return the filename."
   (let* ((html (mu4e-message-field msg :body-html))
-	  (txt (mu4e-message-field msg :body-txt))
-	  (tmpfile (mu4e-make-temp-file "html")))
+         (txt (mu4e-message-field msg :body-txt))
+         (tmpfile (mu4e-make-temp-file "html"))
+         (attachments (remove-if (lambda (part)
+                                   (or (null (plist-get part :attachment))
+                                       (null (plist-get part :cid))))
+                                 (mu4e-message-field msg :parts))))
     (unless (or html txt)
       (mu4e-error "No body part for this message"))
     (with-temp-buffer
       (insert "<head><meta charset=\"UTF-8\"></head>\n")
       (insert (or html (concat "<pre>" txt "</pre>")))
       (write-file tmpfile)
+      ;; rewrite attachment urls
+      (mapc (lambda (attachment)
+              (goto-char (point-min))
+              (while (re-search-forward (format "src=\"cid:%s\"" (plist-get attachment :cid)) nil t)
+                (if (plist-get attachment :temp)
+                    (replace-match (format "src=\"%s\"" (plist-get attachment :temp)))
+                  (replace-match (format "src=\"%s%s\"" temporary-file-directory (plist-get attachment :name)))
+                  (mu4e~proc-extract 'save (mu4e-message-field :docid) (plist-get attachment :index) mu4e-decryption-policy temporary-file-directory)
+                  (mu4e-remove-file-later (format "%s%s" temporary-file-directory (plist-get attachment :name))))))
+            attachments)
+      (save-buffer)
       tmpfile)))
 
 (defun mu4e-action-view-in-browser (msg)
