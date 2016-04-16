@@ -354,16 +354,17 @@ static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
 	char	*name, *tmp, *parttype;
-	char	*tmpfile;
+	char	*tmpfile, *cid;
 
 	name     = mu_msg_part_get_filename (part, TRUE);
 	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
 	parttype = get_part_type_string (part->part_type);
+	cid      = mu_str_escape_c_literal(mu_msg_part_get_content_id(part), TRUE);
 
 	tmp = g_strdup_printf
 		("%s(:index %d :name \"%s\" :mime-type \"%s/%s\"%s%s "
 		 ":type %s "
-		 ":attachment %s :size %i %s %s)",
+		 ":attachment %s %s%s :size %i %s %s)",
 		 pinfo->parts ? pinfo->parts: "",
 		 part->index,
 		 name ? mu_str_escape_c_literal(name, FALSE) : "noname",
@@ -372,6 +373,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
 		 parttype,
 		 mu_msg_part_maybe_attachment (part) ? "t" : "nil",
+		 cid ? " :cid" : "", cid ? cid : "",
 		 (int)part->size,
 		 sig_verdict (part),
 		 dec_verdict (part));
@@ -379,6 +381,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 	g_free (name);
 	g_free (tmpfile);
 	g_free (parttype);
+	g_free (cid);
 
 	g_free (pinfo->parts);
 	pinfo->parts = tmp;

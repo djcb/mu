@@ -322,6 +322,15 @@ mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
 				       mpart->index, construct_if_needed);
 }
 
+const gchar*
+mu_msg_part_get_content_id (MuMsgPart *mpart)
+{
+	g_return_val_if_fail (mpart, NULL);
+	g_return_val_if_fail (GMIME_IS_OBJECT(mpart->data), NULL);
+	return g_mime_object_get_content_id((GMimeObject*)mpart->data);
+}
+
+
 
 static MuMsgPartType
 get_disposition (GMimeObject *mobj)
