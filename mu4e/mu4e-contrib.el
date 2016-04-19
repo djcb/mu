@@ -138,6 +138,27 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
     (shell-command command))
 (mu4e-mark-at-point 'something nil))
  
+;; (add-to-list 'mu4e-view-actions
+;;              '("sMark as spam" . mu4e-view-register-msg-as-spam) t)
+;; (add-to-list 'mu4e-view-actions
+;;              '("hMark as ham" . mu4e-view-register-msg-as-ham) t)
+
+(defun mu4e-view-register-msg-as-spam (msg)
+  "Mark message as spam (view mode)."
+  (interactive)
+  (let* ((path (shell-quote-argument (mu4e-message-field msg :path)))
+         (command (format mu4e-register-as-spam-cmd path)))
+    (shell-command command))
+  (mu4e-view-mark-for-delete))
+
+(defun mu4e-view-register-msg-as-ham (msg)
+  "Mark message as ham (view mode)."
+  (interactive)
+  (let* ((path (shell-quote-argument(mu4e-message-field msg :path)))
+         (command (format mu4e-register-as-ham-cmd path)))
+    (shell-command command))
+  (mu4e-view-mark-for-something))
+
 ;;; end of spam-filtering functions 
 
 (provide 'mu4e-contrib)
