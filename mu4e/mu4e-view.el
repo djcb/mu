@@ -330,7 +330,9 @@ add text-properties to VAL."
 		'help-echo help) " "
 	(if dont-propertize-val
 	  val
-	  (propertize val 'face 'mu4e-header-value-face)) "\n")
+	  (if (string= "Subject" key)
+	      (propertize val 'face 'mu4e-header-subject-face)
+	    (propertize val 'face 'mu4e-header-value-face))) "\n")
       (when mu4e-view-fill-headers
 	;; temporarily set the fill column <margin> positions to the right, so
 	;; we can indent the following lines correctly

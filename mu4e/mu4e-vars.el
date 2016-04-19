@@ -623,6 +623,11 @@ mu4e-compose-mode."
   "Face for highlighting marked region in mu4e-view buffer."
   :group 'mu4e-faces)
 
+(defface mu4e-header-subject-face
+  '((t :inherit mu4e-header-value-face))
+  "Face for subject header."
+  :group 'mu4e-faces)
+
 ;; headers info
 (defconst mu4e-header-info
   '( (:attachments .
