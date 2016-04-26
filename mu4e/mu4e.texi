@@ -1483,7 +1483,7 @@ functionality is available, as well some @t{mu4e}-specifics. Its major mode is
 @code{mu4e-compose-mode}.
 
 @menu
-* Overview:EV Overview. What is the Editor view
+* Overview: EV Overview. What is the Editor view
 * Keybindings: EV Keybindings. Doing things with your keyboard
 * Address autocompletion:: Quickly entering known addresses
 * Compose hooks::Calling functions when composing
