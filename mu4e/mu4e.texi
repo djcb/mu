@@ -3213,7 +3213,7 @@ it work with @t{mu4e}:
 
 @lisp
 (require 'mu-cite)
-(setq mu4e-cite-function 'mu-cite-original)
+(setq mu4e-compose-cite-function 'mu-cite-original)
 (setq mu-cite-top-format '("On " date ", " from " wrote:\n\n"))
 (setq mu-cite-prefix-format '(" > "))
 @end lisp
