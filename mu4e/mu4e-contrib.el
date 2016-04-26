@@ -113,10 +113,6 @@ BOOKMARK is a bookmark name or a bookmark record."
 ;;              '("sMark as spam" . mu4e-register-msg-as-spam) t)
 ;; (add-to-list 'mu4e-headers-actions
 ;;              '("hMark as ham" . mu4e-register-msg-as-ham) t)
-;; (add-to-list 'mu4e-headers-actions
-;;              '("aMark unsure as spam" . mu4e-mark-unsure-as-spam) t)
-;; (add-to-list 'mu4e-headers-actions
-;;              '("bMark unsure as ham" . mu4e-mark-unsure-as-ham) t)
 
 (defvar mu4e-register-as-spam-cmd nil
   "Command for invoking spam processor to register message as spam,
@@ -142,6 +138,27 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
     (shell-command command))
 (mu4e-mark-at-point 'something nil))
  
+;; (add-to-list 'mu4e-view-actions
+;;              '("sMark as spam" . mu4e-view-register-msg-as-spam) t)
+;; (add-to-list 'mu4e-view-actions
+;;              '("hMark as ham" . mu4e-view-register-msg-as-ham) t)
+
+(defun mu4e-view-register-msg-as-spam (msg)
+  "Mark message as spam (view mode)."
+  (interactive)
+  (let* ((path (shell-quote-argument (mu4e-message-field msg :path)))
+         (command (format mu4e-register-as-spam-cmd path)))
+    (shell-command command))
+  (mu4e-view-mark-for-delete))
+
+(defun mu4e-view-register-msg-as-ham (msg)
+  "Mark message as ham (view mode)."
+  (interactive)
+  (let* ((path (shell-quote-argument(mu4e-message-field msg :path)))
+         (command (format mu4e-register-as-ham-cmd path)))
+    (shell-command command))
+  (mu4e-view-mark-for-something))
+
 ;;; end of spam-filtering functions 
 
 (provide 'mu4e-contrib)
