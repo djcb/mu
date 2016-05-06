@@ -376,6 +376,10 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 sig_verdict (part),
 		 dec_verdict (part));
 
+	g_free (name);
+	g_free (tmpfile);
+	g_free (parttype);
+
 	g_free (pinfo->parts);
 	pinfo->parts = tmp;
 }
