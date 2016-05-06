@@ -326,6 +326,23 @@ message-thread by removing the In-Reply-To header."
       (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
       map)))
 
+(define-key-after
+  (lookup-key text-mode-map [menu-bar text])
+  [mu4e-hard-newlines]
+  '(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
+	      :button (:toggle . use-hard-newlines)
+	      :help "Toggle format=flowed"
+	      :visible (eq major-mode 'mu4e-compose-mode))
+  'sep)
+
+(defun mu4e-toggle-use-hard-newlines ()
+  (interactive)
+  (setq use-hard-newlines (not use-hard-newlines))
+  (if use-hard-newlines
+      (turn-off-auto-fill)
+    (turn-on-auto-fill)))
+
+
 (defvar mu4e-compose-mode-abbrev-table nil)
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
