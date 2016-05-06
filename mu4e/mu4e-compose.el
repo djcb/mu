@@ -143,6 +143,15 @@ Also see `mu4e-context-policy'."
   :safe 'symbolp
   :group 'mu4e-compose))
 
+(defcustom mu4e-compose-format-flowed t
+  "Whether to compose messages to be sent as format=flowed (or
+   with long lines if `use-hard-newlines' is set to nil).  The
+   variable `fill-flowed-encode-column' lets you customize the
+   width beyond which format=flowed lines are wrapped."
+  :type 'boolean
+  :safe 'booleanp
+  :group 'mu4e-compose)
+
 (defcustom mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts.
 If the compose-type is either 'reply' or 'forward', the variable
@@ -346,12 +355,24 @@ message-thread by removing the In-Reply-To header."
     (when mu4e-compose-complete-addresses
       (mu4e~compose-setup-completion))
 
+    (when mu4e-compose-format-flowed
+      (turn-off-auto-fill)
+      (setq truncate-lines nil
+	    word-wrap t
+	    use-hard-newlines t)
+      ;; Set the marks in the fringes before activating visual-line-mode
+      (set (make-local-variable 'visual-line-fringe-indicators)
+	   '(left-curly-arrow right-curly-arrow))
+      (visual-line-mode t))
+
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda () ;; mu4e~compose-save-before-sending
 	;; when in-reply-to was removed, remove references as well.
 	(when (eq mu4e~compose-type 'reply)
 	  (mu4e~remove-refs-maybe))
+	(when use-hard-newlines
+	  (mu4e-send-harden-newlines))
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
@@ -365,6 +386,13 @@ message-thread by removing the In-Reply-To header."
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
   ;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
+
+(defun mu4e-send-harden-newlines ()
+  "Set the hard property to all newlines."
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward "\n" nil t)
+      (put-text-property (1- (point)) (point) 'hard t))))
 
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
