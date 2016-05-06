@@ -532,10 +532,10 @@ the appropriate flag at the message forwarded or replied-to."
     (mu4e~proc-remove docid))
   ;; kill any remaining buffers for the draft file, or they will hang around...
   ;; this seems a bit hamfisted...
-  (dolist (buf (buffer-list))
-    (when (and (buffer-file-name buf)
-               (string= (buffer-file-name buf) path))
-      (if message-kill-buffer-on-exit
+  (if message-kill-buffer-on-exit
+      (dolist (buf (buffer-list))
+	(when (and (buffer-file-name buf)
+		   (string= (buffer-file-name buf) path))
 	  (kill-buffer buf))))
   ;; now, try to go back to some previous buffer, in the order
   ;; view->headers->main
