@@ -139,6 +139,12 @@ return the result."
   (mu4e~get-folder 'mu4e-trash-folder msg))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-remove-file-later (filename)
+  "Remove FILENAME in a few seconds."
+  (run-at-time "10 sec" nil
+    (lambda () (ignore-errors (delete-file filename)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-make-temp-file (ext)
@@ -146,8 +152,7 @@ return the result."
 self-destruct in a few seconds, enough to open it in another
 program."
   (let ((tmpfile (make-temp-file "mu4e-" nil (concat "." ext))))
-    (run-at-time "10 sec" nil
-      (lambda (fname) (ignore-errors (delete-file fname))) tmpfile)
+    (mu4e-remove-file-later tmpfile)
     tmpfile))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
