@@ -143,7 +143,7 @@ Also see `mu4e-context-policy'."
   :safe 'symbolp
   :group 'mu4e-compose))
 
-(defcustom mu4e-compose-format-flowed t
+(defcustom mu4e-compose-format-flowed nil
   "Whether to compose messages to be sent as format=flowed (or
    with long lines if `use-hard-newlines' is set to nil).  The
    variable `fill-flowed-encode-column' lets you customize the
@@ -334,7 +334,7 @@ by blank lines.  If `use-hard-newlines' is not enabled, this
 simply executes `fill-paragraph'."
   ;; Inspired by https://www.emacswiki.org/emacs/UnfillParagraph
   (interactive (progn (barf-if-buffer-read-only) '(t)))
-  (if use-hard-newlines
+  (if mu4e-compose-format-flowed
       (let ((fill-column (point-max))
 	    (use-hard-newlines nil)); rfill "across" hard newlines
 	(fill-paragraph nil region))
@@ -393,7 +393,8 @@ simply executes `fill-paragraph'."
       '(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
 		  :button (:toggle . use-hard-newlines)
 		  :help "Toggle format=flowed"
-		  :visible (eq major-mode 'mu4e-compose-mode))
+		  :visible (eq major-mode 'mu4e-compose-mode)
+		  :enable mu4e-compose-format-flowed)
       'sep)
 
     ;; setup the fcc-stuff, if needed
