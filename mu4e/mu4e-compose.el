@@ -340,15 +340,6 @@ simply executes `fill-paragraph'."
 	(fill-paragraph nil region))
     (fill-paragraph nil region)))
 
-(define-key-after
-  (lookup-key text-mode-map [menu-bar text])
-  [mu4e-hard-newlines]
-  '(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
-	      :button (:toggle . use-hard-newlines)
-	      :help "Toggle format=flowed"
-	      :visible (eq major-mode 'mu4e-compose-mode))
-  'sep)
-
 (defun mu4e-toggle-use-hard-newlines ()
   (interactive)
   (setq use-hard-newlines (not use-hard-newlines))
@@ -395,6 +386,15 @@ simply executes `fill-paragraph'."
       (set (make-local-variable 'visual-line-fringe-indicators)
 	   '(left-curly-arrow right-curly-arrow))
       (visual-line-mode t))
+
+    (define-key-after
+      (lookup-key message-mode-map [menu-bar text])
+      [mu4e-hard-newlines]
+      '(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
+		  :button (:toggle . use-hard-newlines)
+		  :help "Toggle format=flowed"
+		  :visible (eq major-mode 'mu4e-compose-mode))
+      'sep)
 
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
