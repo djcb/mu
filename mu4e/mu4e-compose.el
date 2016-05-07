@@ -324,7 +324,21 @@ message-thread by removing the In-Reply-To header."
       (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
       (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
       (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
+      (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
       map)))
+
+(defun mu4e-fill-paragraph (&optional region)
+  "If `use-hard-newlines', takes a multi-line paragraph and makes
+it into a single line of text.  Assume paragraphs are separated
+by blank lines.  If `use-hard-newlines' is not enabled, this
+simply executes `fill-paragraph'."
+  ;; Inspired by https://www.emacswiki.org/emacs/UnfillParagraph
+  (interactive (progn (barf-if-buffer-read-only) '(t)))
+  (if use-hard-newlines
+      (let ((fill-column (point-max))
+	    (use-hard-newlines nil)); rfill "across" hard newlines
+	(fill-paragraph nil region))
+    (fill-paragraph nil region)))
 
 (define-key-after
   (lookup-key text-mode-map [menu-bar text])
