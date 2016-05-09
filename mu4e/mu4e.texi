@@ -2021,7 +2021,7 @@ asks for an additional search pattern, which is appended to the current search
 query, in effect getting you the subset of the currently shown headers that
 also match this extra search pattern. @key{\} takes you back to the previous
 query, so, effectively 'widens' the search. Technically, narrowing the results
-of query @t{x} with expression @t{y} implies doing a search @t{(x) AND y}.
+of query @t{x} with expression @t{y} implies doing a search @t{(x) AND (y)}.
 
 Note that messages that were not in your original search results because
 of @code{mu4e-headers-results-limit} may show up in the narrowed query.

@@ -1381,7 +1381,7 @@ query (effectively, 'widen' it), with `mu4e-headers-query-prev'."
   (unless mu4e~headers-last-query
     (mu4e-warn "There's nothing to filter"))
   (mu4e-headers-search
-    (format "(%s) AND %s" mu4e~headers-last-query filter)))
+    (format "(%s) AND (%s)" mu4e~headers-last-query filter)))
 
 
 (defun mu4e-headers-change-sorting (&optional field dir)
