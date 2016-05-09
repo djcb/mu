@@ -143,6 +143,15 @@ Also see `mu4e-context-policy'."
   :safe 'symbolp
   :group 'mu4e-compose))
 
+(defcustom mu4e-compose-format-flowed nil
+  "Whether to compose messages to be sent as format=flowed (or
+   with long lines if `use-hard-newlines' is set to nil).  The
+   variable `fill-flowed-encode-column' lets you customize the
+   width beyond which format=flowed lines are wrapped."
+  :type 'boolean
+  :safe 'booleanp
+  :group 'mu4e-compose)
+
 (defcustom mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts.
 If the compose-type is either 'reply' or 'forward', the variable
@@ -315,7 +324,29 @@ message-thread by removing the In-Reply-To header."
       (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
       (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
       (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
+      (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
       map)))
+
+(defun mu4e-fill-paragraph (&optional region)
+  "If `use-hard-newlines', takes a multi-line paragraph and makes
+it into a single line of text.  Assume paragraphs are separated
+by blank lines.  If `use-hard-newlines' is not enabled, this
+simply executes `fill-paragraph'."
+  ;; Inspired by https://www.emacswiki.org/emacs/UnfillParagraph
+  (interactive (progn (barf-if-buffer-read-only) '(t)))
+  (if mu4e-compose-format-flowed
+      (let ((fill-column (point-max))
+	    (use-hard-newlines nil)); rfill "across" hard newlines
+	(fill-paragraph nil region))
+    (fill-paragraph nil region)))
+
+(defun mu4e-toggle-use-hard-newlines ()
+  (interactive)
+  (setq use-hard-newlines (not use-hard-newlines))
+  (if use-hard-newlines
+      (turn-off-auto-fill)
+    (turn-on-auto-fill)))
+
 
 (defvar mu4e-compose-mode-abbrev-table nil)
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
@@ -346,12 +377,34 @@ message-thread by removing the In-Reply-To header."
     (when mu4e-compose-complete-addresses
       (mu4e~compose-setup-completion))
 
+    (when mu4e-compose-format-flowed
+      (turn-off-auto-fill)
+      (setq truncate-lines nil
+	    word-wrap t
+	    use-hard-newlines t)
+      ;; Set the marks in the fringes before activating visual-line-mode
+      (set (make-local-variable 'visual-line-fringe-indicators)
+	   '(left-curly-arrow right-curly-arrow))
+      (visual-line-mode t))
+
+    (define-key-after
+      (lookup-key message-mode-map [menu-bar text])
+      [mu4e-hard-newlines]
+      '(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
+		  :button (:toggle . use-hard-newlines)
+		  :help "Toggle format=flowed"
+		  :visible (eq major-mode 'mu4e-compose-mode)
+		  :enable mu4e-compose-format-flowed)
+      'sep)
+
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda () ;; mu4e~compose-save-before-sending
 	;; when in-reply-to was removed, remove references as well.
 	(when (eq mu4e~compose-type 'reply)
 	  (mu4e~remove-refs-maybe))
+	(when use-hard-newlines
+	  (mu4e-send-harden-newlines))
 	;; for safety, always save the draft before sending
 	(set-buffer-modified-p t)
 	(save-buffer)
@@ -365,6 +418,13 @@ message-thread by removing the In-Reply-To header."
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
   ;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
+
+(defun mu4e-send-harden-newlines ()
+  "Set the hard property to all newlines."
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward "\n" nil t)
+      (put-text-property (1- (point)) (point) 'hard t))))
 
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")

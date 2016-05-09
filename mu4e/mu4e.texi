@@ -3840,21 +3840,27 @@ don't have it, your mails mostly look quite bad especially on mobile
 devices) and here's the RFC with all the details:
 @url{http://www.ietf.org/rfc/rfc2646.txt}.
 
-To add this to outgoing mu4e emails, activate @t{use-hard-newlines} and
-use only @t{M-q} or @t{fill-paragraph} for your paragraphs, Emacs
-indicates intra-paragraph breaks with soft newlines and inter-paragraph
-breaks with hard newlines. When the Gnus code sees these on outgoing
-emails, it automatically sets @t{format=flowed}.
-
-To enable this, you can use something like this in your init.el:
+Since version 0.9.17, @t{mu4e} send emails with @t{format=flowed} by
+setting
 
 @lisp
-;; tip submitted by mu4e user cpbotha
-(add-hook 'mu4e-compose-mode-hook
-          (defun cpb-compose-setup ()
-            "Outgoing mails get format=flowed."
-            (use-hard-newlines t 'guess)))
+(setq mu4e-compose-format-flowed t)
 @end lisp
+
+in your Emacs init file (@file{~/.emacs} or @file{~/.emacs.d/init.el}).
+The transformation of your message into the proper format is
+done at the time of sending.  In order to happen properly, you should
+write each paragraph of your message of as a long line (i.e. without
+carriage return).  If you introduce unwanted newlines in your paragraph,
+use @kbd{M-q} to reformat it as a single line.
+
+If you want to send the message with paragraphs on single lines but
+without @t{format=flowed} (because, say, the receiver does not
+understand the latter as it is the case for Google or Github), use
+@kbd{M-x use-hard-newlines} (to turn @code{use-hard-newlines} off) or
+uncheck the box @t{format=flowed} in the @t{Text} menu when composing a
+message.
+
 @end enumerate
 
 @node Known issues
