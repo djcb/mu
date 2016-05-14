@@ -397,6 +397,15 @@ simply executes `fill-paragraph'."
 		  :enable mu4e-compose-format-flowed)
       'sep)
 
+    (define-key-after
+      (lookup-key mml-mode-map [menu-bar Attachments])
+      [mu4e-compose-attach-captured-message]
+      '(menu-item "Attach captured message"
+		  mu4e-compose-attach-captured-message
+		  :help "Attach message captured in Headers View (with 'a c')"
+		  :visible (eq major-mode 'mu4e-compose-mode))
+      (quote Attach\ External...))
+
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
       (lambda () ;; mu4e~compose-save-before-sending
