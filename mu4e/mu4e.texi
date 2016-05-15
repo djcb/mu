@@ -1526,7 +1526,7 @@ key          description
 ---          -----------
 C-c C-c      send message
 C-c C-d      save to drafts and leave
-C-c C-k      kill the message
+C-c C-k      kill the message buffer (the message remains in the draft folder)
 C-c C-a      attach a file (pro-tip: drag & drop works as well)
 
 (mu4e-specific)
