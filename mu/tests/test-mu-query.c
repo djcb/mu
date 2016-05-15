@@ -90,7 +90,8 @@ assert_no_dups (MuMsgIter *iter)
 
 /* note: this also *moves the iter* */
 static guint
-run_and_count_matches_with_query_flags (const char *xpath, const char *query, MuQueryFlags flags)
+run_and_count_matches_with_query_flags (const char *xpath, const char *query,
+					MuQueryFlags flags)
 {
 	MuQuery  *mquery;
 	MuMsgIter *iter;
@@ -158,7 +159,8 @@ run_and_count_matches_with_query_flags (const char *xpath, const char *query, Mu
 static guint
 run_and_count_matches (const char *xpath, const char *query)
 {
-	return run_and_count_matches_with_query_flags (xpath, query, MU_QUERY_FLAG_NONE);
+	return run_and_count_matches_with_query_flags (
+		xpath, query, MU_QUERY_FLAG_NONE);
 }
 
 typedef struct  {
@@ -191,7 +193,7 @@ test_mu_query_01 (void)
 		{ "i:abcd$efgh@example.com", 1},
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -235,7 +237,7 @@ test_mu_query_03 (void)
 		{ "flag:flagged", 1}
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -255,15 +257,15 @@ test_mu_query_04 (void)
 		{ "t:bilbo@anotherexample.com", 1},
 		{ "t:bilbo", 1},
 		{ "f:bilbo", 0},
- 		{ "baggins", 1},
+		{ "baggins", 1},
 		{ "prio:h", 1},
 		{ "prio:high", 1},
-		{ "prio:normal", 10},
+		{ "prio:normal", 11},
 		{ "prio:l", 7},
-		{ "not prio:l", 11},
+		{ "not prio:l", 12},
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -285,7 +287,7 @@ test_mu_query_logic (void)
 		{ "(subject:gcc OR subject:scheme) AND subject:elisp" , 1}
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -349,7 +351,7 @@ test_mu_query_accented_chars_02 (void)
 		{ "Queensrÿche", 1}
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -371,7 +373,7 @@ test_mu_query_accented_chars_fraiche (void)
 		{ "CREME FRAICHE", 1}
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 
 		if (g_test_verbose ())
 			g_print ("'%s'\n", queries[i].query);
@@ -398,7 +400,7 @@ test_mu_query_wildcards (void)
 		{ "Queen*", 1},
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -416,7 +418,7 @@ test_mu_query_dates_helsinki (void)
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
 		{ "date:200808110803..now", 6},
-		{ "date:200808110803..today", 6},
+		{ "date:200808110803..today",7},
 		{ "date:200808110801..now", 6}
 	};
 
@@ -425,7 +427,7 @@ test_mu_query_dates_helsinki (void)
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches
 				  (xpath, queries[i].query),
 				  ==, queries[i].count);
@@ -455,7 +457,7 @@ test_mu_query_dates_sydney (void)
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches
 				  (xpath, queries[i].query),
 				  ==, queries[i].count);
@@ -476,16 +478,16 @@ test_mu_query_dates_la (void)
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
 		{ "date:200808110803..now", 5},
-		{ "date:200808110803..today", 5},
+		{ "date:200808110803..today", 6},
 		{ "date:200808110801..now", 5}
- 	};
+	};
 
 	old_tz = set_tz ("America/Los_Angeles");
 
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches
 				  (xpath, queries[i].query),
 				  ==, queries[i].count);
@@ -502,12 +504,12 @@ test_mu_query_sizes (void)
 {
 	int i;
 	QResults queries[] = {
-		{ "size:0b..2m", 18},
+		{ "size:0b..2m", 19},
 		{ "size:2k..4k", 4},
-		{ "size:2m..0b", 18}
+		{ "size:2m..0b", 19}
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -525,7 +527,7 @@ test_mu_query_attach (void)
 		{ "file:custer.jpg", 1}
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		if (g_test_verbose())
 			g_print ("query: %s\n", queries[i].query);
 		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
@@ -550,7 +552,7 @@ test_mu_query_msgid (void)
 
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		if (g_test_verbose())
 			g_print ("query: %s\n", queries[i].query);
 		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
@@ -575,7 +577,7 @@ test_mu_query_tags (void)
 		{ "x:\\\\backslash", 1},
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -593,7 +595,7 @@ test_mu_query_wom_bat (void)
 		{ "\"maildir:/wom bat\"", 3},
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -610,12 +612,30 @@ test_mu_query_signed_encrypted (void)
 		{ "flag:signed", 2},
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
 							 queries[i].query),
 				  ==, queries[i].count);
 }
 
+
+static void
+test_mu_query_multi_to_cc (void)
+{
+	int i;
+	QResults queries[] = {
+		{ "to:a@example.com", 1},
+		{ "cc:d@example.com", 1},
+		{ "to:b@example.com", 1},
+		{ "cc:e@example.com", 1},
+		{ "cc:e@example.com AND cc:d@example.com", 1},
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+		g_assert_cmpuint (run_and_count_matches (DB_PATH1,
+							 queries[i].query),
+				  ==, queries[i].count);
+}
 
 static void
 test_mu_query_tags_02 (void)
@@ -628,7 +648,7 @@ test_mu_query_tags_02 (void)
 		{ "tag:lost OR tag:operation*", 2},
 	};
 
- 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		g_assert_cmpuint (run_and_count_matches (DB_PATH2,
 							 queries[i].query),
 				  ==, queries[i].count);
@@ -674,7 +694,7 @@ test_mu_query_preprocess (void)
 		/* add more */
 	};
 
- 	for (u = 0; u != G_N_ELEMENTS(testcases); ++u) {
+	for (u = 0; u != G_N_ELEMENTS(testcases); ++u) {
 		gchar *prep;
 		prep = mu_query_preprocess (testcases[u].expr, NULL);
 		g_assert_cmpstr (prep, ==, testcases[u].expected);
@@ -708,7 +728,8 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/mu-query/test-mu-query-signed-encrypted",
 			 test_mu_query_signed_encrypted);
-
+	g_test_add_func ("/mu-query/test-mu-query-multi-to-cc",
+			 test_mu_query_multi_to_cc);
 	g_test_add_func ("/mu-query/test-mu-query-logic", test_mu_query_logic);
 
 	g_test_add_func ("/mu-query/test-mu-query-accented-chars-1",
