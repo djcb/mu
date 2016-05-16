@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -417,9 +417,9 @@ test_mu_query_dates_helsinki (void)
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 6},
+		{ "date:200808110803..now", 7},
 		{ "date:200808110803..today",7},
-		{ "date:200808110801..now", 6}
+		{ "date:200808110801..now", 7}
 	};
 
 	old_tz = set_tz ("Europe/Helsinki");
@@ -447,9 +447,9 @@ test_mu_query_dates_sydney (void)
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 6},
-		{ "date:200808110803..today", 6},
-		{ "date:200808110801..now", 6}
+		{ "date:200808110803..now", 7},
+		{ "date:200808110803..today", 7},
+		{ "date:200808110801..now", 7}
 	};
 
 	old_tz = set_tz ("Australia/Sydney");
@@ -477,9 +477,9 @@ test_mu_query_dates_la (void)
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
-		{ "date:200808110803..now", 5},
+		{ "date:200808110803..now", 6},
 		{ "date:200808110803..today", 6},
-		{ "date:200808110801..now", 5}
+		{ "date:200808110801..now", 6}
 	};
 
 	old_tz = set_tz ("America/Los_Angeles");
@@ -487,10 +487,12 @@ test_mu_query_dates_la (void)
 	xpath = fill_database (MU_TESTMAILDIR);
 	g_assert (xpath != NULL);
 
-	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
+	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
+		/* g_print ("%s\n", queries[i].query); */
 		g_assert_cmpuint (run_and_count_matches
 				  (xpath, queries[i].query),
 				  ==, queries[i].count);
+	}
 
 	g_free (xpath);
 	set_tz (old_tz);
