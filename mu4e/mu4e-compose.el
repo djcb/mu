@@ -529,13 +529,15 @@ message. For Forwarded ('Passed') and Replied messages, try to set
 the appropriate flag at the message forwarded or replied-to."
   (mu4e~compose-set-parent-flag path)
   (when (file-exists-p path) ;; maybe the draft was not saved at all
-    (mu4e~proc-remove docid))
+    (mu4e~proc-remove docid)
+    (let ((backup (file-newest-backup path)))
+      (if backup (ignore-errors (delete-file backup)))))
   ;; kill any remaining buffers for the draft file, or they will hang around...
   ;; this seems a bit hamfisted...
-  (dolist (buf (buffer-list))
-    (when (and (buffer-file-name buf)
-               (string= (buffer-file-name buf) path))
-      (if message-kill-buffer-on-exit
+  (if message-kill-buffer-on-exit
+      (dolist (buf (buffer-list))
+	(when (and (buffer-file-name buf)
+		   (string= (buffer-file-name buf) path))
 	  (kill-buffer buf))))
   ;; now, try to go back to some previous buffer, in the order
   ;; view->headers->main
