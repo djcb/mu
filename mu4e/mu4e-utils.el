@@ -142,8 +142,9 @@ return the result."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-remove-file-later (filename)
   "Remove FILENAME in a few seconds."
-  (run-at-time "10 sec" nil
-    (lambda () (ignore-errors (delete-file filename)))))
+  (lexical-let ((filename filename))
+    (run-at-time "10 sec" nil
+      (lambda () (ignore-errors (delete-file filename))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -672,7 +673,7 @@ or (rfc822-string . CONTACT) otherwise."
   (when contact
     (let ((name (plist-get contact :name))
 	   (mail (plist-get contact :mail))
-	   (ignore-rx (or mu4e-compose-complete-ignore-address-regexp "$^"))) 
+	   (ignore-rx (or mu4e-compose-complete-ignore-address-regexp "$^")))
       (when (and mail (not (string-match ignore-rx mail)))
 	(cons
 	  (if name (format "%s <%s>" (mu4e~rfc822-quoteit name) mail) mail)
@@ -713,7 +714,7 @@ on the ranking in `mu4e~contacts.'"
       (let ((rank1 (gethash c1 mu4e~contacts))
 	     (rank2 (gethash c2 mu4e~contacts)))
 	(< rank1 rank2)))))
- 
+
 ;; start and stopping
 (defun mu4e~fill-contacts (contact-data)
   "We receive a list of contacts, which each contact of the form
@@ -847,8 +848,8 @@ successful, call FUNC (if non-nil) afterwards."
   "Clear any cached resources."
   (setq
     mu4e-maildir-list nil
-    mu4e~contacts nil)) 
- 
+    mu4e~contacts nil))
+
 (defun mu4e~stop ()
   "Stop the mu4e session."
   (when mu4e~update-timer
@@ -879,7 +880,7 @@ The messages are inserted into the process buffer.
 Also scrolls to the final line, and update the progress throbber."
   (when mu4e~progress-reporter
     (progress-reporter-update mu4e~progress-reporter))
-  
+
   (when (string-match mu4e~get-mail-password-regexp msg)
     (if (process-get proc 'x-interactive)
         (process-send-string proc
@@ -919,7 +920,7 @@ Also scrolls to the final line, and update the progress throbber."
 (defun mu4e~temp-window (buf height)
   "Create a temporary window with HEIGHT at the bottom of the
 frame to display buffer BUF."
-  (let ((win 
+  (let ((win
 	  (split-window
 	    (frame-root-window)
 	    (- (window-height (frame-root-window)) height))))
@@ -934,18 +935,18 @@ frame to display buffer BUF."
     (setq mu4e~progress-reporter nil))
   (let* ((status (process-status proc))
 	  (code (process-exit-status proc))
- 	  (maybe-error (or (not (eq status 'exit)) (/= code 0)))
+	  (maybe-error (or (not (eq status 'exit)) (/= code 0)))
 	  (buf (and (buffer-live-p mu4e~update-buffer) mu4e~update-buffer))
 	  (win (and buf (get-buffer-window buf))))
     (message nil)
     (if maybe-error
-      (progn 
+      (progn
 	(when mu4e-index-update-error-warning
 	  (mu4e-message "Update process returned with non-zero exit code")
 	  (sit-for 5))
-	(when mu4e-index-update-error-continue 
-	  (mu4e-update-index))) 
-      (mu4e-update-index))  
+	(when mu4e-index-update-error-continue
+	  (mu4e-update-index)))
+      (mu4e-update-index))
     (if (window-live-p win)
       (with-selected-window win (kill-buffer-and-window))
       (when (buffer-live-p buf) (kill-buffer buf)))))
@@ -953,7 +954,7 @@ frame to display buffer BUF."
 ;; complicated function, as it:
 ;;   - needs to check for errors
 ;;   - (optionally) pop-up a window
-;;   - (optionally) check password requests 
+;;   - (optionally) check password requests
 (defun mu4e~update-mail-and-index-real (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If
 RUN-IN-BACKGROUND is non-nil (or called with prefix-argument),
@@ -977,7 +978,7 @@ run in the background; otherwise, pop up a window."
       (unless mu4e-hide-index-messages
 	(make-progress-reporter
 	  (mu4e-format "Retrieving mail..."))))
-    (set-process-sentinel proc 'mu4e~update-sentinel-func) 
+    (set-process-sentinel proc 'mu4e~update-sentinel-func)
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
