@@ -192,8 +192,6 @@ and images in a multipart/related part."
   "Convert the current body to html."
   (unless (fboundp 'org-export-string-as)
     (mu4e-error "require function 'org-export-string-as not found."))
-  (unless (executable-find "dvipng")
-    (mu4e-error "Required program dvipng not found"))
   (let* ((begin
 	     (save-excursion
 	       (goto-char (point-min))
@@ -209,7 +207,9 @@ and images in a multipart/related part."
 	    ;; makes the replies with ">"s look nicer
 	    (org-export-preserve-breaks t)
 	    ;; dvipng for inline latex because MathJax doesn't work in mail
-	    (org-export-with-LaTeX-fragments 'dvipng)
+	    (org-export-with-LaTeX-fragments
+	      (if (executable-find "dvipng") 'dvipng
+	        (mu4e-message "Cannot find dvipng, ignore inline LaTeX") nil))
 	    ;; to hold attachments for inline html images
 	    (html-and-images
 	      (org~mu4e-mime-replace-images
