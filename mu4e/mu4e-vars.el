@@ -105,9 +105,11 @@ mu4e."
  You can use this hook for example to `mu4e-get-mail-command' with
  some specific setting.")
 
-(defvar mu4e-hide-index-messages nil
-  "If non-nil, mu4e does not show the \"Indexing...\" messages, or
-  any messages relating to updated contacts.")
+(defcustom mu4e-hide-index-messages nil
+  "Whether to hide the \"Indexing...\" messages, or any messages
+relating to updated contacts."
+  :type 'boolean
+  :group 'mu4e)
 
 (defcustom mu4e-change-filenames-when-moving nil
   "When moving messages to different folders, normally mu/mu4e keep
