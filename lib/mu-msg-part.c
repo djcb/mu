@@ -239,15 +239,26 @@ get_part_size (GMimePart *part)
 }
 
 
-static void
+static char*
 cleanup_filename (char *fname)
 {
+	GString *gstr;
 	gchar *cur;
+	gunichar uc;
 
-	/* replace control characters, slashes,colons by a '-' */
-	for (cur = fname; *cur; ++cur)
-		if (*cur < ' ' || *cur == '/' || *cur == ':')
-			*cur = '-';
+	gstr = g_string_sized_new (strlen (fname));
+
+	/* replace control characters, slashes, and colons by '-' */
+	for (cur = fname; cur && *cur; cur = g_utf8_next_char (cur)) {
+		uc = g_utf8_get_char (cur);
+		if (g_unichar_iscntrl (uc) || uc == '/' || uc == ':')
+			g_string_append_unichar (gstr, '-');
+		else
+			g_string_append_unichar (gstr, uc);
+	}
+
+	g_free (fname);
+	return g_string_free (gstr, FALSE);
 }
 
 
@@ -304,9 +315,9 @@ mime_part_get_filename (GMimeObject *mobj, unsigned index,
 
 	if (!fname)
 		fname = guess_file_name (mobj, index);
-	
-	/* remove slashes, spaces, colons... */
-	cleanup_filename (fname);
+
+	/* replace control characters, slashes, and colons */
+	fname = cleanup_filename (fname);
 
 	return fname;
 }
