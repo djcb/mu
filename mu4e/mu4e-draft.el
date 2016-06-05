@@ -111,6 +111,16 @@ If VAL is nil, return nil."
 	      (propertize hdr 'face 'mu4e-header-key-face)
 	      (propertize val 'face 'mu4e-header-val-face))))
 
+(defconst mu4e~max-reference-num 21
+  "Maximum number of References:, as suggested by
+`message-shorten-references'.")
+
+(defun mu4e~shorten-1 (list cut surplus)
+  "Cut SURPLUS elements out of LIST, beginning with CUTth
+one. Code borrowed from `message-shorten-1'."
+  (setcdr (nthcdr (- cut 2) list)
+	  (nthcdr (+ (- cut 2) surplus 1) list)))
+
 (defun mu4e~draft-references-construct (msg)
   "Construct the value of the References: header based on MSG as a
 comma-separated string. Normally, this the concatenation of the
@@ -125,10 +135,16 @@ References. If both are empty, return nil."
 	  (refs (if (and msgid (not (string= msgid "")))
 		  (append refs (list msgid)) refs))
 	  ;; no doubles
-	  (refs (delete-duplicates refs :test #'equal)))
-    (mapconcat (lambda (id) (format "<%s>" id)) refs " ")))
+	  (refs (delete-duplicates refs :test #'equal))
+	  (refnum (length refs))
+	  (cut 2))
+    ;; remove some refs when there are too many
+    (when (> refnum mu4e~max-reference-num)
+      (let ((surplus (- refnum mu4e~max-reference-num)))
+	(mu4e~shorten-1 refs cut surplus))
+    (mapconcat (lambda (id) (format "<%s>" id)) refs " "))))
 
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; determine the recipient fields for new messages
 
@@ -311,7 +327,7 @@ You can append flags."
       (format-time-string "%s" (current-time))
       (random 65535) (random 65535) (random 65535) (random 65535)
       hostname (or flagstr ""))))
- 
+
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
   (concat
@@ -346,11 +362,12 @@ fields will be the same as in the original."
 	  (mu4e~draft-header "To" (mu4e~draft-recipients-list-to-string
 				    (mu4e-message-field origmsg :to)))
 	  (mu4e~draft-header "Cc" (mu4e~draft-recipients-list-to-string
-				    (mu4e-message-field origmsg :cc)))) 
-	
+				    (mu4e-message-field origmsg :cc))))
+
 	;; if there's no-one in To, copy the CC-list
 	(if (zerop (length (mu4e~draft-create-to-lst origmsg)))
-	  (mu4e~draft-header "To" (mu4e~draft-recipients-construct :cc origmsg reply-all))
+	  (mu4e~draft-header "To" (mu4e~draft-recipients-construct
+				    :cc origmsg reply-all))
 	  ;; otherwise...
 	  (concat
 	    (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
@@ -428,7 +445,7 @@ will be created from either `mu4e~draft-reply-construct', or
   (unless mu4e-maildir (mu4e-error "mu4e-maildir not set"))
   (let ((draft-dir nil))
     (case compose-type
-      
+
       (edit
 	;; case-1: re-editing a draft messages. in this case, we do know the full
 	;; path, but we cannot really know 'drafts folder'... we make a guess
@@ -442,7 +459,7 @@ will be created from either `mu4e~draft-reply-construct', or
 	(let ((draft-path (mu4e~draft-determine-path draft-dir)))
 	  (copy-file (mu4e-message-field msg :path) draft-path)
 	  (mu4e~draft-open-file draft-path)))
-      
+
       ((reply forward new)
 	;; case-3: creating a new message; in this case, we can determing
 	;; mu4e-get-drafts-folder
@@ -454,7 +471,7 @@ will be created from either `mu4e~draft-reply-construct', or
 		   (forward (mu4e~draft-forward-construct msg))
 		   (new     (mu4e~draft-newmsg-construct)))))
 	  (mu4e~draft-open-file draft-path)
-          (insert initial-contents) 
+          (insert initial-contents)
 	  (newline)
 	  ;; include the message signature (if it's set)
 	  (if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
@@ -470,5 +487,5 @@ will be created from either `mu4e~draft-reply-construct', or
     (unless mu4e~draft-drafts-folder
       (mu4e-error "failed to determine drafts folder"))))
 
- 
+
 (provide 'mu4e-draft)
