@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -331,6 +331,8 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 {
 	if (G_LIKELY(d_type == DT_REG)) {
 
+		guint u;
+
 		/* ignore emacs tempfiles */
 		if (entry->d_name[0] == '#')
 			return TRUE;
@@ -345,7 +347,18 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 		if (entry->d_name[0] == 'c' &&
 		    strncmp (entry->d_name, "core", 4) == 0)
 			return TRUE;
-
+		/* ignore tmp/backup files; find the last char */
+		for (u = 0; entry->d_name[u] != '\0'; ++u) {
+			switch (entry->d_name[u]) {
+			case '#':
+			case '~':
+				/* looks like a backup / tempsave file */
+				if (entry->d_name[u + 1] == '\0')
+					return TRUE;
+			default:
+				continue;
+			}
+		}
 		return FALSE; /* other files: don't ignore */
 
 	} else if (d_type == DT_DIR)
@@ -395,8 +408,10 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 	d_type = GET_DTYPE(entry, fullpath);
 
 	/* ignore special files/dirs */
-	if (ignore_dir_entry (entry, d_type))
+	if (ignore_dir_entry (entry, d_type)) {
+		/* g_debug ("ignoring %s\n", entry->d_name); */
 		return MU_OK;
+	}
 
 	switch (d_type) {
 	case DT_REG: /* we only want files in cur/ and new/ */
@@ -751,7 +766,7 @@ static char*
 get_new_basename (void)
 {
 	char	hostname[64];
-		
+
 	if (gethostname (hostname, sizeof(hostname)) == -1)
 		memcpy (hostname, "localhost", sizeof(hostname));
 	else
@@ -830,7 +845,7 @@ static gboolean
 msg_move_check_pre (const gchar *src, const gchar *dst, GError **err)
 {
 	gint size1, size2;
-	
+
 	if (!g_path_is_absolute(src))
 		return mu_util_g_set_error
 			(err, MU_ERROR_FILE,
