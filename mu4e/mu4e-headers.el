@@ -598,14 +598,15 @@ after the end of the search results."
       (goto-char (point-min))
       (when mu4e~headers-msgid-target
 	(mu4e-headers-goto-message-id mu4e~headers-msgid-target))
-      (when mu4e~headers-view-target
-	(mu4e-headers-view-message))  ;; view the message at point
+      (when (and mu4e~headers-view-target (mu4e-message-at-point 'noerror))
+	;; view the message at point when there is one.
+	(mu4e-headers-view-message))
       (setq mu4e~headers-view-target nil
 	mu4e~headers-msgid-target nil))
     (when (mu4e~headers-docid-at-point)
       (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
     ;; run-hooks
-    (run-hooks 'mu4e-headers-found-hook))) 
+    (run-hooks 'mu4e-headers-found-hook)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
