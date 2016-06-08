@@ -276,7 +276,7 @@ appear on disk."
       ;; our contacts are already sorted - just need to tell the
       ;; completion machinery not to try to undo that...
       '(metadata
-	 (display-sort-function . mu4e~sort-contacts-for-completion) 
+	 (display-sort-function . mu4e~sort-contacts-for-completion)
 	 (cycle-sort-function   . mu4e~sort-contacts-for-completion)))))
 
 (defun mu4e~compose-complete-contact (&optional start)
@@ -502,7 +502,7 @@ tempfile)."
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
   ;; now jump to some useful positions, and start writing that mail!
-  
+
   (if (member compose-type '(new forward))
     (message-goto-to)
     (message-goto-body))
@@ -512,7 +512,7 @@ tempfile)."
   ;; remember the compose-type
   (set (make-local-variable 'mu4e~compose-type) compose-type)
   (put 'mu4e~compose-type 'permanent-local t)
-  
+
    ;; hide some headers
   (mu4e~compose-hide-headers)
   ;; switch on the mode

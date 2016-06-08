@@ -834,7 +834,8 @@ successful, call FUNC (if non-nil) afterwards."
 		(setq mu4e~update-timer
 		  (run-at-time
 		    0 mu4e-update-interval
-		    (lambda () (mu4e-update-mail-and-index mu4e-index-update-in-background)))))
+		    (lambda () (mu4e-update-mail-and-index
+				 mu4e-index-update-in-background)))))
 	      (mu4e-message "Started mu4e with %d message%s in store"
 		doccount (if (= doccount 1) "" "s"))))))
       ;; wake up server

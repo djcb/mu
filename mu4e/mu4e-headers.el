@@ -215,7 +215,7 @@ Field must be a symbol, one of: :date, :subject, :size, :prio,
 (defvar mu4e-headers-default-prefix      '("|"  . "│ ") "Default.")
 
 (defvar mu4e-headers-actions
-  '( ("capture message"  . mu4e-action-capture-message) 
+  '( ("capture message"  . mu4e-action-capture-message)
      ("show this thread" . mu4e-action-show-thread))
   "List of actions to perform on messages in the headers list.
 The actions are of the form (NAME SHORTCUT FUNC) where:
@@ -320,13 +320,13 @@ headers."
 	  (when (mu4e-mark-docid-marked-p docid)
 	    (mu4e-mark-set 'unmark))
 
- 	  ;; re-use the thread info from the old one; this is needed because
- 	  ;; *update* messages don't have thread info by themselves (unlike
- 	  ;; search results)
+	  ;; re-use the thread info from the old one; this is needed because
+	  ;; *update* messages don't have thread info by themselves (unlike
+	  ;; search results)
 	  ;; since we still have the search results, re-use
- 	  ;; those
- 	  (plist-put msg :thread
- 	    (mu4e~headers-field-for-docid docid :thread))
+	  ;; those
+	  (plist-put msg :thread
+	    (mu4e~headers-field-for-docid docid :thread))
 
 	  ;; first, remove the old one (otherwise, we'd have two headers with
 	  ;; the same docid...
@@ -340,8 +340,8 @@ headers."
 
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
-	  ;; longer matches the query, but this seem a good heuristic.
-	  ;; if it was only a flag-change, show the message with its updated flags.
+	  ;; longer matches the query, but this seem a good heuristic.  if it
+	  ;; was only a flag-change, show the message with its updated flags.
 	  (unless is-move
 	    (mu4e~headers-header-handler msg point))
 
@@ -382,7 +382,7 @@ into a string."
       (let ((name (car ct)) (email (cdr ct)))
 	(or name email "?"))) contacts ", "))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e~headers-thread-prefix (thread)
   "Calculate the thread prefix based on thread info THREAD."
   (when thread
@@ -430,7 +430,7 @@ while our display may be different)."
               ('signed    (funcall get-prefix mu4e-headers-signed-mark))
               ('unread    (funcall get-prefix mu4e-headers-unread-mark)))))))
     str))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defconst mu4e-headers-from-or-to-prefix '("" . "To ")
@@ -493,7 +493,8 @@ found."
   (let* ((item (or (assoc field mu4e-header-info-custom)
 		 (mu4e-error "field %S not found" field)))
 	  (func (or (plist-get (cdr-safe item) :function)
-		  (mu4e-error "no :function defined for field %S %S" field (cdr item)))))
+		  (mu4e-error "no :function defined for field %S %S"
+		    field (cdr item)))))
     (funcall func msg)))
 
 (defun mu4e~headers-field-apply-basic-properties (msg field val width)
@@ -680,7 +681,7 @@ after the end of the search results."
 
       (define-key map (kbd "[") 'mu4e-headers-prev-unread)
       (define-key map (kbd "]") 'mu4e-headers-next-unread)
-      
+
       ;; change the number of headers
       (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
       (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
@@ -688,7 +689,7 @@ after the end of the search results."
       (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
 
       (define-key map ";" 'mu4e-context-switch)
-      
+
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
@@ -749,20 +750,24 @@ after the end of the search results."
 	(define-key menumap [sepa0] '("--"))
 
 	(define-key menumap [toggle-include-related]
-	  '(menu-item "Toggle related messages" mu4e-headers-toggle-include-related
-		      :button (:toggle . (and (boundp 'mu4e-headers-include-related)
-					      mu4e-headers-include-related))))
+	  '(menu-item "Toggle related messages"
+	     mu4e-headers-toggle-include-related
+	     :button (:toggle .
+		       (and (boundp 'mu4e-headers-include-related)
+			 mu4e-headers-include-related))))
 	(define-key menumap [toggle-threading]
 	  '(menu-item "Toggle threading" mu4e-headers-toggle-threading
-		      :button (:toggle . (and (boundp 'mu4e-headers-show-threads)
-																				mu4e-headers-show-threads))))
+	     :button (:toggle .
+		       (and (boundp 'mu4e-headers-show-threads)
+			 mu4e-headers-show-threads))))
 
 	(define-key menumap [sepa1] '("--"))
 
 	(define-key menumap [execute-marks]  '("Execute marks"
 						. mu4e-mark-execute-all))
 	(define-key menumap [unmark-all]  '("Unmark all" . mu4e-mark-unmark-all))
-	(define-key menumap [unmark]      '("Unmark" . mu4e-headers-mark-for-unmark))
+	(define-key menumap [unmark]
+	  '("Unmark" . mu4e-headers-mark-for-unmark))
 
 	(define-key menumap [mark-pattern]  '("Mark pattern" .
 					       mu4e-headers-mark-pattern))
@@ -784,11 +789,12 @@ after the end of the search results."
 	(define-key menumap [forward]  '("Forward" . mu4e-compose-forward))
 	(define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
 	(define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
-      
-    
+
+
 	(define-key menumap [sepa3] '("--"))
 
-	(define-key menumap [query-next]  '("Next query" . mu4e-headers-query-next))
+	(define-key menumap [query-next]
+	  '("Next query" . mu4e-headers-query-next))
 	(define-key menumap [query-prev]  '("Previous query" .
 					     mu4e-headers-query-prev))
 	(define-key menumap [narrow-search] '("Narrow search" .
@@ -980,7 +986,7 @@ message plist, or nil if not found."
       (let ((this-msgid (mu4e-message-field msg :message-id)))
 	(when (and this-msgid (string= msgid this-msgid))
 	  msg)))))
-  
+
 ;;;; markers mark headers for
 (defun mu4e~headers-mark (docid mark)
   "(Visually) mark the header for DOCID with character MARK."
@@ -1063,7 +1069,7 @@ the query history stack."
 	     'face 'mu4e-modeline-face)
 	     " "
 	     (mu4e-context-label)))))
-    
+
     (switch-to-buffer buf)
     (run-hook-with-args 'mu4e-headers-search-hook expr)
     (mu4e~proc-find
@@ -1230,7 +1236,7 @@ descendants."
 	 (last-marked-point))
     (mu4e-headers-for-each
       (lambda (mymsg)
- 	(let ((my-thread-id (mu4e~headers-get-thread-info mymsg 'thread-id)))
+	(let ((my-thread-id (mu4e~headers-get-thread-info mymsg 'thread-id)))
 	  (if subthread
 	    ;; subthread matching; mymsg's thread path should have path as its
 	    ;; prefix
@@ -1376,8 +1382,8 @@ the last search expression. Note that you can go back to previous
 query (effectively, 'widen' it), with `mu4e-headers-query-prev'."
   (interactive
     (let ((filter
-  	    (read-string (mu4e-format "Narrow down to: ")
-  	      nil 'mu4e~headers-search-hist nil t)))
+	    (read-string (mu4e-format "Narrow down to: ")
+	      nil 'mu4e~headers-search-hist nil t)))
       (list filter)))
   (unless mu4e~headers-last-query
     (mu4e-warn "There's nothing to filter"))
@@ -1587,7 +1593,7 @@ untrashed). If BACKWARDS is non-`nil', move backwards."
   (interactive)
   (or (mu4e-headers-find-if-next
 	(lambda (msg)
-	  (let ((flags (mu4e-message-field msg :flags))) 
+	  (let ((flags (mu4e-message-field msg :flags)))
 	    (and (member 'unread flags) (not (member 'trashed flags)))))
 	backwards)
     (mu4e-message (format "No %s unread message found"
