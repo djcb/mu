@@ -484,10 +484,12 @@ tempfile)."
   (run-hooks 'mu4e-compose-pre-hook)
 
   ;; this opens (or re-opens) a messages with all the basic headers set.
-  (condition-case nil
-      (mu4e-draft-open compose-type original-msg)
-    (quit (kill-buffer) (mu4e-message "Operation aborted")
-          (return-from mu4e~compose-handler)))
+  (let ((winconf (current-window-configuration)))
+    (condition-case nil
+	(mu4e-draft-open compose-type original-msg)
+      (quit (set-window-configuration winconf)
+	    (mu4e-message "Operation aborted")
+	    (return-from mu4e~compose-handler))))
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)
