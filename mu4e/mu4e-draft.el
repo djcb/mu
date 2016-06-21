@@ -141,8 +141,8 @@ References. If both are empty, return nil."
     ;; remove some refs when there are too many
     (when (> refnum mu4e~max-reference-num)
       (let ((surplus (- refnum mu4e~max-reference-num)))
-	(mu4e~shorten-1 refs cut surplus))
-    (mapconcat (lambda (id) (format "<%s>" id)) refs " "))))
+	(mu4e~shorten-1 refs cut surplus)))
+    (mapconcat (lambda (id) (format "<%s>" id)) refs " ")))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
