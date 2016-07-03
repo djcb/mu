@@ -432,9 +432,10 @@ fields will be the same as in the original."
 
 
 (defun mu4e-draft-open (compose-type &optional msg)
-  "Open a draft file for a new message (when COMPOSE-TYPE is `reply', `forward' or `new'),
-open an existing draft (when COMPOSE-TYPE is `edit'), or re-send
-an existing message (when COMPOSE-TYPE is `resend').
+  "Open a draft file for a new message (when COMPOSE-TYPE is `reply',
+ `forward' or `new'), open an existing draft (when COMPOSE-TYPE
+is `edit'), or re-send an existing message (when COMPOSE-TYPE is
+`resend').
 
 The name of the draft folder is constructed from the
 concatenation of `mu4e-maildir' and `mu4e-drafts-folder' (the
@@ -447,8 +448,9 @@ will be created from either `mu4e~draft-reply-construct', or
     (case compose-type
 
       (edit
-	;; case-1: re-editing a draft messages. in this case, we do know the full
-	;; path, but we cannot really know 'drafts folder'... we make a guess
+	;; case-1: re-editing a draft messages. in this case, we do know the
+	;; full path, but we cannot really know 'drafts folder'... we make a
+	;; guess
 	(setq draft-dir (mu4e~guess-maildir (mu4e-message-field msg :path)))
 	(mu4e~draft-open-file (mu4e-message-field msg :path)))
 
@@ -461,7 +463,7 @@ will be created from either `mu4e~draft-reply-construct', or
 	  (mu4e~draft-open-file draft-path)))
 
       ((reply forward new)
-	;; case-3: creating a new message; in this case, we can determing
+	;; case-3: creating a new message; in this case, we can determine
 	;; mu4e-get-drafts-folder
 	(setq draft-dir (mu4e-get-drafts-folder msg))
 	(let ((draft-path (mu4e~draft-determine-path draft-dir))
@@ -480,8 +482,11 @@ will be created from either `mu4e~draft-reply-construct', or
 		(message-insert-signature)
 		(mu4e~fontify-signature))))))
       (t (mu4e-error "unsupported compose-type %S" compose-type)))
-      ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
-      ;; throughout.
+    ;; if we didn't find a draft folder yet, try some default
+    (unless draft-dir
+      (setq draft-dir (mu4e-get-drafts-folder msg)))
+    ;; evaluate mu4e~drafts-drafts-folder once, here, and use that value
+    ;; throughout.
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)
     (put 'mu4e~draft-drafts-folder 'permanent-local t)
     (unless mu4e~draft-drafts-folder
