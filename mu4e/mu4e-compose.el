@@ -347,6 +347,29 @@ simply executes `fill-paragraph'."
       (turn-off-auto-fill)
     (turn-on-auto-fill)))
 
+(defun mu4e~compose-remap-faces ()
+  "Our parent `message-mode' uses font-locking for the compose
+buffers; lets remap its faces so it uses the ones for mu4e."
+  ;; normal headers
+  (face-remap-add-relative 'message-header-name
+    '((:inherit mu4e-header-key-face)))
+  (face-remap-add-relative 'message-header-other
+    '((:inherit mu4e-header-value-face)))
+  ;; special headers
+  (face-remap-add-relative 'message-header-from
+    '((:inherit mu4e-contact-face)))
+  (face-remap-add-relative 'message-header-to
+    '((:inherit mu4e-contact-face)))
+  (face-remap-add-relative 'message-header-cc
+    '((:inherit mu4e-contact-face)))
+    (face-remap-add-relative 'message-header-bcc
+    '((:inherit mu4e-contact-face)))
+  (face-remap-add-relative 'message-header-subject
+    '((:inherit mu4e-header-special-header-value-face)))
+  ;; citation
+  (face-remap-add-relative 'message-cited-text
+    '((:inherit mu4e-cited-1-face))))
+
 
 (defvar mu4e-compose-mode-abbrev-table nil)
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
@@ -354,13 +377,14 @@ simply executes `fill-paragraph'."
 \\{message-mode-map}."
   (progn
     (use-local-map mu4e-compose-mode-map)
-
     (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label)))
-
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
     (make-local-variable 'message-default-charset)
+    ;; message-mode has font-locking, but uses its own faces. Let's
+    ;; use the mu4e-specific ones instead
+    (mu4e~compose-remap-faces)
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
@@ -372,7 +396,6 @@ simply executes `fill-paragraph'."
     ;; useful e.g. when finding an attachment file the directory the current
     ;; mail files lives in...
     (setq default-directory (expand-file-name "~/"))
-
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
       (mu4e~compose-setup-completion))
@@ -672,7 +695,6 @@ draft message."
   "Start writing a new message."
   (interactive)
   (mu4e-compose 'new))
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

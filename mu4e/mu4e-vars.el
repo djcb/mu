@@ -504,12 +504,12 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-header-value-face
-  '((t :inherit font-lock-doc-face))
+  '((t :inherit font-lock-type-face))
   "Face for a header value (such as \"Re: Hello!\")."
   :group 'mu4e-faces)
 
 (defface mu4e-special-header-value-face
-  '((t :inherit font-lock-variable-name-face))
+  '((t :inherit font-lock-builtin-face))
   "Face for special header values."
   :group 'mu4e-faces)
 

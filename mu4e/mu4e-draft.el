@@ -99,7 +99,6 @@ its settings apply."
 	(funcall mu4e-compose-cite-function))
       (pop-mark)
       (goto-char (point-min))
-      (mu4e~fontify-cited)
       (buffer-string))))
 
 (defun mu4e~draft-header (hdr val)
