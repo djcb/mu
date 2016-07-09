@@ -895,7 +895,11 @@ Also scrolls to the final line, and update the progress throbber."
       ;; Insert at end of buffer. Leave point alone.
       (with-current-buffer (process-buffer proc)
         (goto-char (point-max))
-        (insert msg))
+        (if (string-match ".*\r\\(.*\\)" msg)
+            (progn
+              (kill-line 0)
+              (insert (match-string 1 msg)))
+          (insert msg)))
       ;; Auto-scroll unless user is interacting with the window.
       (when (and (window-live-p procwin)
 	      (not (eq (selected-window) procwin)))
