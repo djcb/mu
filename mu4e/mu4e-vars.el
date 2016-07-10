@@ -207,8 +207,10 @@ view buffer."
   :type 'boolean
   :group 'mu4e)
 
-(defcustom mu4e-cited-regexp "^ *\\(\\(>+ ?\\)+\\)"
-  "Regular expression that determines whether a line is a citation."
+(defcustom mu4e-cited-regexp  "^\\(\\([[:alpha:]]+\\)\\|\\( *\\)\\)\\(\\(>+ ?\\)+\\)"
+  "Regular expression that determines whether a line is a
+  citation. This recognizes lines starting with numbers of '>'
+  and spaces as well as citations of the type \"John> ... \"."
   :type 'string
   :group 'mu4e)
 
@@ -564,7 +566,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-2-face
-  '((t :inherit font-lock-type-face :bold nil :italic t))
+  '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
   "Face for cited message parts (level 2)."
   :group 'mu4e-faces)
 
@@ -589,7 +591,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-7-face
-  '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
+  '((t :inherit font-lock-type-face :bold nil :italic t))
   "Face for cited message parts (level 7)."
   :group 'mu4e-faces)
 

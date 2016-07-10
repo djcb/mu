@@ -1216,7 +1216,7 @@ used in the view and compose modes."
     (when (search-forward-regexp "^\n" nil t) ;; search the first empty line
       (while (re-search-forward mu4e-cited-regexp nil t)
         (let* ((level (string-width (replace-regexp-in-string
-                                     " " "" (match-string 1))))
+                                     "[^>]" "" (match-string 0))))
                (face  (unless (zerop level)
                         (intern-soft (format "mu4e-cited-%d-face" level)))))
           (when face
