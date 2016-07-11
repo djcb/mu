@@ -140,8 +140,25 @@ Also see `mu4e-context-policy'."
 	   (const :tag "Ask when there's no context yet" 'ask-if-none)
 	   (const :tag "Pick the first context if none match" 'pick-first)
 	   (const :tag "Don't change the context when none match" nil)
-  :safe 'symbolp
-  :group 'mu4e-compose))
+	   :safe 'symbolp
+	   :group 'mu4e-compose))
+
+
+(defcustom mu4e-compose-crypto-reply-policy 'sign-and-encrypt
+  "Policy for signing/encrypting replies to encrypted messages.
+We have the following choices:
+
+- `sign': sign the reply
+- `sign-and-encrypt': sign and encrypt the repy
+- `encrypt': encrypt the reply, but don't sign it.
+-  anything else: do nothing."
+  :type '(choice
+	   (const :tag "Sign the reply" 'sign)
+	   (const :tag "Sign and encrypt the reply" 'sign-and-encrypt)
+	   (const :tag "Encrypt the reply" 'encrypt)
+	   (const :tag "Don't do anything" nil)
+	   :safe 'symbolp
+	   :group 'mu4e-compose))
 
 (defcustom mu4e-compose-format-flowed nil
   "Whether to compose messages to be sent as format=flowed (or
@@ -165,13 +182,14 @@ it has been constructed, `mu4e-compose-mode-hook' would be the
 place to do that."
   :type 'hook
   :group 'mu4e-compose)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun mu4e-compose-attach-captured-message ()
   "Insert the last captured message file as an attachment.
 Messages are captured with `mu4e-action-capture-message'."
-    (interactive)
+  (interactive)
   (unless mu4e-captured-message
     (mu4e-warn "No message has been captured"))
   (let ((path (plist-get mu4e-captured-message :path)))
@@ -224,8 +242,8 @@ If needed, set the Fcc header, and register the handler function."
     (when fccfile
       (message-add-header (concat "Fcc: " fccfile "\n"))
       ;; sadly, we cannot define as 'buffer-local'...  this will screw up gnus
-       ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
-       ;; handler after we've done our thing.
+      ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
+      ;; handler after we've done our thing.
       (setq message-fcc-handler-function
 	(lexical-let ((maildir mdir) (old-handler message-fcc-handler-function))
 	  (lambda (file)
@@ -335,16 +353,16 @@ simply executes `fill-paragraph'."
   ;; Inspired by https://www.emacswiki.org/emacs/UnfillParagraph
   (interactive (progn (barf-if-buffer-read-only) '(t)))
   (if mu4e-compose-format-flowed
-      (let ((fill-column (point-max))
-	    (use-hard-newlines nil)); rfill "across" hard newlines
-	(fill-paragraph nil region))
+    (let ((fill-column (point-max))
+	   (use-hard-newlines nil)); rfill "across" hard newlines
+      (fill-paragraph nil region))
     (fill-paragraph nil region)))
 
 (defun mu4e-toggle-use-hard-newlines ()
   (interactive)
   (setq use-hard-newlines (not use-hard-newlines))
   (if use-hard-newlines
-      (turn-off-auto-fill)
+    (turn-off-auto-fill)
     (turn-on-auto-fill)))
 
 (defun mu4e~compose-remap-faces ()
@@ -362,7 +380,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     '((:inherit mu4e-contact-face)))
   (face-remap-add-relative 'message-header-cc
     '((:inherit mu4e-contact-face)))
-    (face-remap-add-relative 'message-header-bcc
+  (face-remap-add-relative 'message-header-bcc
     '((:inherit mu4e-contact-face)))
   (face-remap-add-relative 'message-header-subject
     '((:inherit mu4e-special-header-value-face)))
@@ -403,11 +421,11 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (when mu4e-compose-format-flowed
       (turn-off-auto-fill)
       (setq truncate-lines nil
-	    word-wrap t
-	    use-hard-newlines t)
+	word-wrap t
+	use-hard-newlines t)
       ;; Set the marks in the fringes before activating visual-line-mode
       (set (make-local-variable 'visual-line-fringe-indicators)
-	   '(left-curly-arrow right-curly-arrow))
+	'(left-curly-arrow right-curly-arrow))
       (visual-line-mode t))
 
     (when (lookup-key message-mode-map [menu-bar text])
@@ -480,6 +498,21 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 		       mu4e~compose-buffer-max-name-length
 		       nil nil t)))))
 
+
+(defun mu4e~compose-crypto-reply (parent compose-type)
+  "When composing a reply to an encrypted message, we can
+automatically encrypt that reply."
+  (message "%S %S" parent compose-type)
+  (when (and  (eq compose-type 'reply)
+	  (and parent (member 'encrypted (mu4e-message-field parent :flags))))
+	(case mu4e-compose-crypto-reply-policy
+	  (sign (mml-secure-message-sign))
+	  (encrypt (mml-secure-message-encrypt))
+	  (sign-and-encrypt (mml-secure-message-sign-encrypt))
+	  (message "Do nothing"))))
+
+
+
 (defun* mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
@@ -505,19 +538,21 @@ tempfile)."
   (put 'mu4e-compose-parent-message 'permanent-local t)
   ;; maybe switch the context
   (mu4e~context-autoswitch mu4e-compose-parent-message
-			   mu4e-compose-context-policy)
+    mu4e-compose-context-policy)
   (run-hooks 'mu4e-compose-pre-hook)
 
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (let ((winconf (current-window-configuration)))
     (condition-case nil
-	(mu4e-draft-open compose-type original-msg)
+      (mu4e-draft-open compose-type original-msg)
       (quit (set-window-configuration winconf)
-	    (mu4e-message "Operation aborted")
-	    (return-from mu4e~compose-handler))))
+	(mu4e-message "Operation aborted")
+	(return-from mu4e~compose-handler))))
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)
+  ;; maybe encrypt/sign replies
+  (mu4e~compose-crypto-reply original-msg compose-type)
   ;; include files -- e.g. when forwarding a message with attachments,
   ;; we take those from the original.
   (save-excursion
@@ -540,7 +575,7 @@ tempfile)."
   (set (make-local-variable 'mu4e~compose-type) compose-type)
   (put 'mu4e~compose-type 'permanent-local t)
 
-   ;; hide some headers
+  ;; hide some headers
   (mu4e~compose-hide-headers)
   ;; switch on the mode
   (mu4e-compose-mode)
@@ -561,17 +596,17 @@ the appropriate flag at the message forwarded or replied-to."
   ;; this seems a bit hamfisted...
   (dolist (buf (buffer-list))
     (when (and (buffer-file-name buf)
-               (string= (buffer-file-name buf) path))
+	    (string= (buffer-file-name buf) path))
       (if message-kill-buffer-on-exit
-	  (kill-buffer buf))))
+	(kill-buffer buf))))
   ;; now, try to go back to some previous buffer, in the order
   ;; view->headers->main
   (if (buffer-live-p mu4e~view-buffer)
-      (switch-to-buffer mu4e~view-buffer)
-      (if (buffer-live-p mu4e~headers-buffer)
-          (switch-to-buffer mu4e~headers-buffer)
-          ;; if all else fails, back to the main view
-          (when (fboundp 'mu4e) (mu4e))))
+    (switch-to-buffer mu4e~view-buffer)
+    (if (buffer-live-p mu4e~headers-buffer)
+      (switch-to-buffer mu4e~headers-buffer)
+      ;; if all else fails, back to the main view
+      (when (fboundp 'mu4e) (mu4e))))
   (mu4e-message "Message sent"))
 
 (defun mu4e-message-kill-buffer ()
@@ -584,11 +619,11 @@ It restores mu4e window layout after killing the compose-buffer."
     (when (not (equal current-buffer (current-buffer)))
       ;; Restore mu4e
       (if mu4e-compose-in-new-frame
-	  (delete-frame)
+	(delete-frame)
 	(if (buffer-live-p mu4e~view-buffer)
-	    (switch-to-buffer mu4e~view-buffer)
+	  (switch-to-buffer mu4e~view-buffer)
 	  (if (buffer-live-p mu4e~headers-buffer)
-	      (switch-to-buffer mu4e~headers-buffer)
+	    (switch-to-buffer mu4e~headers-buffer)
 	    ;; if all else fails, back to the main view
 	    (when (fboundp 'mu4e) (mu4e))))))))
 
@@ -654,12 +689,12 @@ is a symbol, one of `reply', `forward', `edit', `resend'
       (mu4e~compose-handler 'new)
       ;; otherwise, we need the doc-id
       (let* ((docid (mu4e-message-field msg :docid))
-	;; decrypt (or not), based on `mu4e-decryption-policy'.
-	(decrypt
-	  (and (member 'encrypted (mu4e-message-field msg :flags))
-	    (if (eq mu4e-decryption-policy 'ask)
-	      (yes-or-no-p (mu4e-format "Decrypt message?"))
-	      mu4e-decryption-policy))))
+	      ;; decrypt (or not), based on `mu4e-decryption-policy'.
+	      (decrypt
+		(and (member 'encrypted (mu4e-message-field msg :flags))
+		  (if (eq mu4e-decryption-policy 'ask)
+		    (yes-or-no-p (mu4e-format "Decrypt message?"))
+		    mu4e-decryption-policy))))
 	;; if there's a visible view window, select that before starting composing
 	;; a new message, so that one will be replaced by the compose window. The
 	;; 10-or-so line headers buffer is not a good place to write it...
@@ -787,7 +822,7 @@ Go to the end of the message (before signature) or, if already there, go to the
 end of the buffer."
   (interactive)
   (let ((old-position (point))
-        (message-position (save-excursion (message-goto-body) (point))))
+	 (message-position (save-excursion (message-goto-body) (point))))
     (goto-char (point-max))
     (when (re-search-backward message-signature-separator message-position t)
       (forward-line -1))
