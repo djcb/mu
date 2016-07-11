@@ -365,7 +365,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (face-remap-add-relative 'message-header-bcc
     '((:inherit mu4e-contact-face)))
   (face-remap-add-relative 'message-header-subject
-    '((:inherit mu4e-header-special-header-value-face)))
+    '((:inherit mu4e-special-header-value-face)))
   ;; citation
   (face-remap-add-relative 'message-cited-text
     '((:inherit mu4e-cited-1-face))))
