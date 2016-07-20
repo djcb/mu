@@ -50,6 +50,9 @@ a length cookie:
   (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
+(defvar mu4e~proc-start-hook nil
+  "Hook run just before `mu4e~proc-start' calls `start-process'
+our 'mu server' process.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e~proc-send-command (frm &rest args)
@@ -70,6 +73,7 @@ Start the process if needed."
 	  (args (append args (when mu4e-mu-home
 			       (list (concat "--muhome=" mu4e-mu-home))))))
     (setq mu4e~proc-buf "")
+    (run-hooks 'mu4e~proc-start-hook)
     (setq mu4e~proc-process (apply 'start-process
 			      mu4e~proc-name mu4e~proc-name
 			      mu4e-mu-binary args))
