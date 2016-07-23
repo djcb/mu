@@ -112,6 +112,8 @@ struct _MuConfig {
 	gboolean        rebuild;	/* empty the database before indexing */
 	gboolean        autoupgrade;    /* automatically upgrade db
 					 * when needed */
+	gboolean        lazycheck;      /* don't check dirs with up-to-date
+					 * timestamps */
 	int             xbatchsize;     /* batchsize for xapian
 					 * commits, or 0 for
 					 * default */

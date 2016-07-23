@@ -129,6 +129,15 @@ MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 gboolean mu_maildir_clear_links (const gchar* dir, GError **err);
 
 
+
+/**
+ * whether the directory path ends in '/cur/' or '/new/'
+ *
+ * @param path some path
+ */
+gboolean mu_maildir_is_leaf_dir (const char *path);
+
+
 /**
  * get the Maildir flags from the full path of a mailfile. The flags
  * are as specified in http://cr.yp.to/proto/maildir.html, plus

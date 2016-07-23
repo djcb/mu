@@ -148,6 +148,8 @@ config_options_group_index (void)
 		 "top of the maildir", "<maildir>"},
 		{"rebuild", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.rebuild,
 		 "rebuild the database from scratch (false)", NULL},
+		{"lazy-check", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.lazycheck,
+		 "only check dir-timestamps (false)", NULL},
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.my_addresses,
 		 "my e-mail address (regexp); can be used multiple times",
@@ -307,7 +309,7 @@ config_options_group_script (void)
 	GOptionEntry entries[] = {
 		{G_OPTION_REMAINING, 0,0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.params, "script parameters", NULL},
-                {NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("script", "Options for the 'script' command",
