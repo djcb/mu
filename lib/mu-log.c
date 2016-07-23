@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,8 +81,8 @@ mu_log_init_silence (void)
 {
 	g_return_val_if_fail (!MU_LOG, FALSE);
 
-        MU_LOG	      = g_new0 (MuLog, 1);
-        MU_LOG->_fd   = -1;
+	MU_LOG	      = g_new0 (MuLog, 1);
+	MU_LOG->_fd   = -1;
 
 	mu_log_options_set (MU_LOG_OPTIONS_NONE);
 
@@ -195,7 +195,7 @@ mu_log_init (const char* logfile, MuLogOptions opts)
 		return FALSE;
 	}
 
-	MU_LOG = g_new0 (MuLog, 1);
+	MU_LOG	    = g_new0 (MuLog, 1);
 	MU_LOG->_fd = fd;
 
 	mu_log_options_set (opts);
