@@ -911,7 +911,10 @@ Also scrolls to the final line, and update the progress throbber."
   (interactive)
   (unless mu4e-maildir
     (mu4e-error "`mu4e-maildir' is not defined"))
-  (mu4e~proc-index mu4e-maildir mu4e-user-mail-address-list))
+  (mu4e~proc-index mu4e-maildir
+    mu4e-user-mail-address-list
+    mu4e-index-cleanup
+    mu4e-index-lazy-check))
 
 (defvar mu4e~update-buffer nil
   "Internal, store the buffer of the update process when
