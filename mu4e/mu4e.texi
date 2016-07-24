@@ -516,6 +516,28 @@ because you are running your own mail-server, you can leave
 @code{mu4e-get-mail-command} at @t{"true"} (the default), in which case
 @t{mu4e} won't try to get new mail, but still re-index your messages.
 
+@subsection Speeding up indexing
+
+If you have a large number of e-mail messages in your store,
+(re)indexing might take a while. The defaults for indexing are to ensure
+the we always have correct, up-to-date information about your messages,
+even if other programs have modified the Maildir.
+
+The downside of this thoroughness (which is the default) is that it is
+relatively slow, something that can be noticeable with large e-mail
+corpa. For a faster approach, you can use the following:
+
+@lisp
+(setq
+  mu4e-index-cleanup nil      ;; don't do a full cleanup check
+  mu4e-index-lazy-check t)    ;; don't consider up-to-date dirs
+@end lisp
+
+In many cases, the mentioned thoroughness might not be needed, and these
+settings give a very significant speed-up. Note that you can of course
+occasionally run a thorough indexing round. For further details, please
+refer to the @t{mu-index} manpage.
+
 @subsection Example setup
 
 A simple setup could look something like:
