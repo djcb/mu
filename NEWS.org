@@ -40,7 +40,20 @@
      `mu4e-index-update-in-background`.
    - Add a :user-agent field to the message-sexp (in mu4e-view), which
      is either the User-Agent or X-Mailer field, when present.
-             
+   - Improve file-name escaping, and make it support non-ascii filenames
+   - Attempt to jump to the same messages after a re-search update operation
+   - Add action for spam-filter options
+   - Fixing parentheses in narrowing search terms
+   - Better handle mbsync output in the update buffer
+   - Improved font-locking for the compose buffers, and more extensive
+     checks for cited parts.
+   - automatically sign/encrypt replies to signed/encrypted messages
+     (subject to `mu4e-compose-crypto-reply-policy')
+   - implement "lazy-checking", which makes mu not descend into
+     subdirectories when the directory-timestamp is up to date;
+     greatly speeds up indexing. Add mu4e-index-cleanup and
+     mu4e-index-lazy to use these from mu4e.
+        
 ** 0.9.16
 
 *** Release
