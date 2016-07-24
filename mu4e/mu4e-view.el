@@ -203,9 +203,10 @@ found."
       (lambda (field)
 	(let ((fieldval (mu4e-message-field msg field)))
 	  (case field
-	    (:subject  (mu4e~view-construct-header field fieldval))
-	    (:path     (mu4e~view-construct-header field fieldval))
-	    (:maildir  (mu4e~view-construct-header field fieldval))
+	    (:subject    (mu4e~view-construct-header field fieldval))
+	    (:path       (mu4e~view-construct-header field fieldval))
+	    (:maildir    (mu4e~view-construct-header field fieldval))
+	    (:user-agent (mu4e~view-construct-header field fieldval))
 	    ((:flags :tags) (mu4e~view-construct-flags-tags-header
 			      field fieldval))
 

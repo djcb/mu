@@ -744,6 +744,11 @@ mu4e-compose-mode."
        ( :name "To"
 	 :shortname "To"
 	 :help "Recipient of the message"
+	 :sortable t))
+     (:user-agent .
+       ( :name "User-Agent"
+	 :shortname "UA"
+	 :help "Program used for writing this message"
 	 :sortable t)))
   "An alist of all possible header fields and information about them.
 This is used in the user-interface (the column headers in the header list, and
