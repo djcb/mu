@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -80,10 +80,14 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
 static gchar *
 get_attach_str (MuMsg *msg, MuConfig *opts)
 {
-	gchar *attach;
+	gchar		*attach;
+	MuMsgOptions	 msgopts;
+
+	msgopts = mu_config_get_msg_options(opts) |
+		MU_MSG_OPTION_CONSOLE_PASSWORD;
 
 	attach = NULL;
-	mu_msg_part_foreach (msg, mu_config_get_msg_options(opts),
+	mu_msg_part_foreach (msg, msgopts,
 			     (MuMsgPartForeachFunc)each_part, &attach);
 	return attach;
 }
@@ -494,7 +498,9 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 	if (!msg)
 		return MU_ERROR;
 
-	msgopts = mu_config_get_msg_options (opts) | MU_MSG_OPTION_VERIFY;
+	msgopts = mu_config_get_msg_options (opts)
+		| MU_MSG_OPTION_VERIFY
+		| MU_MSG_OPTION_CONSOLE_PASSWORD;
 
 	vdata.report  = NULL;
 	vdata.combined_status = MU_MSG_PART_SIG_STATUS_UNSIGNED;

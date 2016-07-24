@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -65,7 +65,7 @@ password_requester (GMimeCryptoContext *ctx, const char *user_id,
 		written = g_mime_stream_write_string (response, "\n");
 	if (written == -1)
 		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
-			             "writing password to mime stream failed");
+				     "writing password to mime stream failed");
 
 	/* it seems that GMime tries to flush the fd; however, this
 	 * does not work for pipes/sockets, causing getting a password
@@ -116,8 +116,8 @@ get_gpg (GError **err)
 		return g_strdup (envpath);
 	}
 
-	if (!(path = g_find_program_in_path ("gpg")) &&
-	    !(path = g_find_program_in_path ("gpg2"))) {
+	if (!(path = g_find_program_in_path ("gpg2")) &&
+	    !(path = g_find_program_in_path ("gpg"))) {
 		mu_util_g_set_error (err, MU_ERROR, "gpg/gpg2 not found");
 		return NULL;
 	} else
@@ -357,7 +357,7 @@ mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report)
 
 static inline void
 tag_with_sig_status(GObject *part,
-                    MuMsgPartSigStatusReport *report)
+		    MuMsgPartSigStatusReport *report)
 {
 	g_object_set_data_full
 		(part, SIG_STATUS_REPORT, report,
@@ -402,7 +402,7 @@ mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 
 static inline void
 check_decrypt_result(GMimeMultipartEncrypted *part, GMimeDecryptResult *res,
-                     GError **err)
+		     GError **err)
 {
 	GMimeSignatureList *sigs;
 	MuMsgPartSigStatusReport *report;
@@ -420,7 +420,7 @@ check_decrypt_result(GMimeMultipartEncrypted *part, GMimeDecryptResult *res,
 		else {
 			if (err && !*err)
 				mu_util_g_set_error (err, MU_ERROR_CRYPTO,
-				                     "verification failed");
+						     "verification failed");
 		}
 		g_object_unref (res);
 	}
