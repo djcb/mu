@@ -108,7 +108,7 @@ If VAL is nil, return nil."
   ;; later.
   (when val (format "%s: %s\n"
 	      (propertize hdr 'face 'mu4e-header-key-face)
-	      (propertize val 'face 'mu4e-header-val-face))))
+	      (propertize val 'face 'mu4e-header-value-face))))
 
 (defconst mu4e~max-reference-num 21
   "Maximum number of References:, as suggested by
