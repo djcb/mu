@@ -930,9 +930,13 @@ Also scrolls to the final line, and update the progress throbber."
       (with-current-buffer (process-buffer proc)
         (goto-char (point-max))
         (if (string-match ".*\r\\(.*\\)" msg)
-            (progn
-              (kill-line 0)
-              (insert (match-string 1 msg)))
+	  (progn
+	    ;; kill even with \r
+	    (end-of-line)
+	    (let ((end (point)))
+	      (beginning-of-line)
+	      (delete-region (point) end))
+	    (insert (match-string 1 msg)))
           (insert msg)))
       ;; Auto-scroll unless user is interacting with the window.
       (when (and (window-live-p procwin)
