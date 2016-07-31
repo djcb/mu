@@ -135,6 +135,21 @@ sent messages into message threads."
   :type 'boolean
   :group 'mu4e-headers)
 
+
+(defvar mu4e-headers-hide-predicate nil
+  "Predicate function applied to headers before they are shown;
+if function is nil or evaluates to nil, show the header,
+otherwise don't. function takes one parameter MSG, which is the
+message plist for the message to be hidden or not.
+
+Example that hides all 'trashed' messages:
+  (setq mu4e-headers-hide-predicate
+     (lambda (msg)
+       (member 'trashed (mu4e-message-field msg :flags))))
+
+Note that this is merely a display filter.")
+
+
 (defcustom mu4e-headers-visible-flags
   '(draft flagged new passed replied seen trashed attach encrypted signed unread)
   "An ordered list of flags to show in the headers buffer. Each
@@ -311,9 +326,10 @@ headers."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (let* ((docid (mu4e-message-field msg :docid))
-	     (initial-message-at-point (mu4e~headers-docid-at-point))
-	     (initial-column (current-column))
-	     (point (mu4e~headers-docid-pos docid)))
+	      (initial-message-at-point (mu4e~headers-docid-at-point))
+	      (initial-column (current-column))
+	      (point (mu4e~headers-docid-pos docid)))
+
 	(when point ;; is the message present in this list?
 
 	  ;; if it's marked, unmark it now
@@ -337,7 +353,6 @@ headers."
 	  ;; (which is useful for viewing the raw message)
 	  (when (mu4e~headers-view-this-message-p docid)
 	    (mu4e-view msg mu4e~headers-buffer))
-
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
 	  ;; longer matches the query, but this seem a good heuristic.  if it
@@ -351,8 +366,7 @@ headers."
 		(move-to-column initial-column)
 		(mu4e~headers-highlight initial-message-at-point))
 	    ;; attempt to highlight the corresponding line and make it visible
-	    (mu4e~headers-highlight docid))
-	  )))))
+	    (mu4e~headers-highlight docid)))))))
 
 (defun mu4e~headers-remove-handler (docid)
   "Remove handler, will be called when a message with DOCID has
@@ -572,12 +586,14 @@ found."
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (let ((docid (mu4e-message-field msg :docid))
-        (line (mapconcat (lambda (f-w)
-                           (mu4e~headers-field-handler f-w msg))
-                         mu4e-headers-fields " ")))
-    (setq line (mu4e~headers-line-handler msg line))
-    (mu4e~headers-add-header line docid point msg)))
+  (unless (and mu4e-headers-hide-predicate
+	    (funcall mu4e-headers-hide-predicate msg)) 
+    (let ((docid (mu4e-message-field msg :docid))
+	   (line (mapconcat (lambda (f-w)
+			      (mu4e~headers-field-handler f-w msg))
+		   mu4e-headers-fields " ")))
+      (setq line (mu4e~headers-line-handler msg line))
+      (mu4e~headers-add-header line docid point msg))))
 
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
