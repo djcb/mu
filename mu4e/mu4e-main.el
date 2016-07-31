@@ -137,11 +137,11 @@ clicked."
        ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
        (mapconcat
         (lambda (bm)
-          (let* ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
-            (mu4e~main-action-str
-             (concat "\t* [b" (make-string 1 key) "] " title)
-             (concat "b" (make-string 1 key)))))
-        mu4e-bookmarks "\n")
+	  (mu4e~main-action-str
+	    (concat "\t* [b" (make-string 1 (mu4e-bookmark-key bm)) "] "
+	      (mu4e-bookmark-name bm))
+	    (concat "b" (make-string 1 (mu4e-bookmark-key bm)))))
+	 (mu4e-bookmarks) "\n")
        "\n\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 

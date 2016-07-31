@@ -200,6 +200,33 @@ is a shortcut key for the query."
 		   character))
   :group 'mu4e)
 
+(defvar mu4e-bookmarks
+  `( ,(make-mu4e-bookmark
+	:name  "Unread messages"
+	:query "flag:unread AND NOT flag:trashed"
+	:key ?u)
+     ,(make-mu4e-bookmark
+	:name "Today's messages"
+	:query "date:today..now"
+	:key ?t)
+     ,(make-mu4e-bookmark
+	:name "Last 7 days"
+	:query "date:7d..now"
+	:key ?w)
+     ,(make-mu4e-bookmark
+	:name "Messages with images"
+	:query "mime:image/*"
+	:key ?p))
+  "A list of pre-defined queries. Each query is represented by a
+mu4e-bookmark structure with parameters @t{:name} with the name
+of the bookmark, @t{:query} with the query expression (a query
+string or an s-expression that evaluates to query string) and a
+@t{:key}, which is the shortcut-key for the query.
+
+An older form of bookmark, a 3-item list with (QUERY DESCRIPTION
+KEY) is still recognized as well, for backward-compatibility.")
+
+
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
 A symbol which is either:

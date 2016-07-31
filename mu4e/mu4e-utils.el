@@ -396,23 +396,49 @@ and offer to create it if it does not exist yet."
 	      (mu4e~proc-mkdir fullpath)))
     mdir))
 
+
+(defstruct mu4e-bookmark
+  "A mu4e bookmarl object with the following members:
+- `name': the user-visible name of the bookmark
+- `key': a single key to search for this bookmark
+- `query': the query for this bookmark. Either a literal string or a function
+   that evaluates to a string."
+  name                      ;; name/description of the bookmark
+  query                     ;; a query (a string or a function evaluation to string)
+  key                       ;; key to activate the bookmark
+  )
+
+(defun mu4e-bookmarks ()
+  "Get `mu4e-bookmarks' in the (new) format, converting from the old
+format if needed."
+  (map 'list
+    (lambda (item)
+      (if (mu4e-bookmark-p item)
+	item ;; already in the right format
+	(if (and (listp item) (= (length item) 3))
+	  (make-mu4e-bookmark
+	    :name (nth 1 item)
+	    :query (nth 0 item)
+	    :key (nth 2 item))
+	  (mu4e-error "Invalid bookmark in mu4e-bookmarks"))))
+      mu4e-bookmarks))
+
+
 (defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
-  (unless mu4e-bookmarks (mu4e-error "No bookmarks defined"))
+  (unless (mu4e-bookmarks) (mu4e-error "No bookmarks defined"))
   (let* ((prompt (mu4e-format "%s" prompt))
 	  (bmarks
 	   (mapconcat
 	     (lambda (bm)
-	       (let ((query (nth 0 bm)) (title (nth 1 bm)) (key (nth 2 bm)))
-		 (concat
-		   "[" (propertize (make-string 1 key)
-			 'face 'mu4e-highlight-face)
-		   "]"
-		   title))) mu4e-bookmarks ", "))
-	  (kar (read-char (concat prompt bmarks))))
+	       (concat
+		 "[" (propertize (make-string 1 (mu4e-bookmark-key bm))
+		       'face 'mu4e-highlight-face)
+		 "]"
+		 (mu4e-bookmark-name bm))) (mu4e-bookmarks) ", "))
+	     (kar (read-char (concat prompt bmarks))))
     (mu4e-get-bookmark-query kar)))
-
 
 (defun mu4e-get-bookmark-query (kar)
   "Get the corresponding bookmarked query for shortcut character
@@ -420,22 +446,30 @@ KAR, or raise an error if none is found."
   (let* ((chosen-bm
 	   (or (find-if
 		 (lambda (bm)
-		   (= kar (nth 2 bm)))
-		mu4e-bookmarks)
+		   (= kar (mu4e-bookmark-key bm)))
+		 (mu4e-bookmarks))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))
-	 (expr (nth 0 chosen-bm))
+	 (expr (mu4e-bookmark-query chosen-bm))
 	 (query (eval expr)))
     (if (stringp query)
       query
       (mu4e-warn "Expression must evaluate to query string ('%S')" expr))))
 
 
-(defun mu4e-bookmark-define (query descr key)
-  "Define a bookmark for QUERY with description DESCR and short
-character KEY in the list of `mu4e-bookmarks'. This replaces any
-existing bookmark with KEY."
-  (setq mu4e-bookmarks (remove-if (lambda (bm) (= (nth 2 bm) key)) mu4e-bookmarks))
-  (add-to-list 'mu4e-bookmarks (list query descr key) t))
+(defun mu4e-bookmark-define (query name key)
+  "Define a bookmark for QUERY with name NAME and
+shortcut-character KEY in the list of `mu4e-bookmarks'. This
+replaces any existing bookmark with KEY."
+  (setq mu4e-bookmarks
+    (remove-if
+      (lambda (bm)
+	(= (mu4e-bookmark-key bm) key))
+      (mu4e-bookmarks)))
+  (add-to-list 'mu4e-bookmarks
+    (make-mu4e-bookmark
+      :name name
+      :query query
+      :key key) t))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
