@@ -52,10 +52,10 @@ Documentation License.''
 @unnumbered Welcome to mu4e
 @end iftex
 
-Welcome to @t{mu4e} @value{mu-version}!
+Welcome to @t{mu4e} @value{mu-version}.
 
-@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version 24
-or higher, built on top of the
+@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version
+24.4 or higher, built on top of the
 @t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
 engine. @t{mu4e} is optimized for fast handling of large amounts of
 e-mail.
@@ -81,9 +81,8 @@ basic configuration and explain its daily use. We also show you how you
 can customize @t{mu4e} for your special needs.
 
 At the end of the manual, there are some example configurations, to get
-you up to speed quickly: @ref{Example configurations}. There's also an
-@ref{FAQ}, which should help you with questions to some common
-questions.
+you up to speed quickly: @ref{Example configurations}. There's also a
+section with answers to frequenly asked questions, @ref{FAQ}.
 
 @menu
 * Introduction:: Where be begin
@@ -111,6 +110,8 @@ Appendices
 
 @node Introduction
 @chapter Introduction
+
+Let's get started!
 
 @menu
 * Why another e-mail client::Aren't there enough already
@@ -141,8 +142,8 @@ Under the hood, @t{mu4e} is fully search-based, similar to programs like
 
 However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
 handling (deleting, moving etc.) is inspired by
-@emph{Wanderlust}@footnote{@url{http://www.gohome.org/wl/}} (another
-@code{emacs}-based e-mail client),
+Wanderlustu@footnote{@url{http://www.gohome.org/wl/}} (another
+@t{emacs}-based e-mail client),
 @t{mutt}@footnote{@url{http://www.mutt.org/}} and the @t{dired}
 file-manager for emacs.
 
@@ -153,7 +154,7 @@ and so on. If you delete the database, you won't lose any information.
 @node What mu4e does not do
 @section What @t{mu4e} does not do
 
-There are a number of things that @t{mu4e} does @b{not} do:
+There are a number of things that @t{mu4e} does @b{not} do, by design:
 @itemize
 @item @t{mu}/@t{mu4e} do @emph{not} get your e-mail messages from
 a mail server. That task is delegated to other tools, such as
@@ -176,7 +177,7 @@ efficiently as possible.
 @node Becoming a mu4e user
 @section Becoming a @t{mu4e} user
 
-If @t{mu4e} looks like something for you, give it a shot! We're trying
+If @t{mu4e} sounds like something for you, give it a shot! We're trying
 hard to make it as easy as possible to set up and use; and while you can
 use elisp in various places to augment @t{mu4e}, a lot of knowledge
 about programming or elisp shouldn't be required. The idea is to provide
@@ -657,9 +658,9 @@ correctly, and then shows you the @t{mu4e} main view. Its major mode is
 @code{mu4e-main-mode}.
 
 @menu
-* Overview:MV Overview. What is the main view
+* Overview: MV Overview. What is the main view
 * Basic actions::What can we do
-* Bookmarks:MV Bookmarks. Jumping to other places
+* Bookmarks: MV Bookmarks. Jumping to other places
 * Miscellaneous::Notes
 @end menu
 
@@ -772,7 +773,7 @@ major-mode for the headers view is @code{mu4e-headers-mode}.
 * Overview: HV Overview. What is the Header View
 * Keybindings::Do things with your keyboard
 * Marking: HV Marking. Selecting messages for doing things
-* Sort order and threading::Influencing the display
+* Sorting and threading::Influencing the display
 * Custom headers: HV Custom headers. Adding your own headers
 * Actions: HV Actions. Defining and using actions
 * Split view::Seeing both headers and messages
@@ -956,8 +957,8 @@ influenced with the variable @code{mu4e-headers-leave-behavior}.
 
 For more information about marking, see @ref{Marking}.
 
-@node Sort order and threading
-@section Sort order and threading
+@node Sorting and threading
+@section Sorting and threading
 
 By default, @t{mu4e} sorts messages by date, in descending order: the most
 recent messages are shown at the top. In addition, the messages are
@@ -1765,7 +1766,7 @@ the variable @code{mu4e-headers-full-search}. This applies to all search
 commands.
 
 You can also influence the sort order and whether threads are shown or not;
-see @ref{Sort order and threading}.
+see @ref{Sorting and threading}.
 
 @menu
 * Queries:: Searching for messages.
@@ -1899,11 +1900,11 @@ mime:image/*
 @section Bookmarks
 
 If you have queries that you use often, you may want to store them as
-@emph{bookmarks}. Bookmark searches are available in the main view @ref{Main
-view}, header view @xref{Headers view}, and message view @xref{Message view},
-using (by default) the key @key{b} (@kbd{M-x mu4e-search-bookmark}), or
-@key{B} (@kbd{M-x mu4e-search-bookmark-edit}) which lets you edit the bookmark
-first.
+@emph{bookmarks}. Bookmark searches are available in the main view
+(@pxref{Main view}), header view (@pxref{Headers view}), and message
+view (@pxref{Message view}), using (by default) the key @key{b}
+(@kbd{M-x mu4e-search-bookmark}), or @key{B} (@kbd{M-x
+mu4e-search-bookmark-edit}) which lets you edit the bookmark first.
 
 @subsection Setting up bookmarks
 
@@ -1911,25 +1912,42 @@ first.
 instructive:
 
 @lisp
-
 (defvar mu4e-bookmarks
-  '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
-     ("date:today..now"                  "Today's messages"     ?t)
-     ("date:7d..now"                     "Last 7 days"          ?w)
-     ("mime:image/*"                     "Messages with images" ?p))
-  "A list of pre-defined queries; these show up in the main
-screen. Each of the list elements is a three-element list of the
-form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
-query, DESCRIPTION is a short description of the query (this
-shows up in the UI), and KEY is a shortcut key for the query.")
+  `( ,(make-mu4e-bookmark
+	:name  "Unread messages"
+	:query "flag:unread AND NOT flag:trashed"
+	:key ?u)
+     ,(make-mu4e-bookmark
+	:name "Today's messages"
+	:query "date:today..now"
+	:key ?t)
+     ,(make-mu4e-bookmark
+	:name "Last 7 days"
+	:query "date:7d..now"
+	:key ?w)
+     ,(make-mu4e-bookmark
+	:name "Messages with images"
+	:query "mime:image/*"
+	:key ?p))
+  "A list of pre-defined queries. Each query is represented by a
+mu4e-bookmark structure with parameters @t{:name} with the name
+of the bookmark, @t{:query} with the query expression (a query
+string or an s-expression that evaluates to query string) and a
+@t{:key}, which is the shortcut-key for the query.
+
+An older form of bookmark, a 3-item list with (QUERY DESCRIPTION
+KEY) is still recognized as well, for backward-compatibility.")
 @end lisp
 
 You can replace these or add your own items, by putting in your
 configuration (@file{~/.emacs}) something like:
 @lisp
 (add-to-list 'mu4e-bookmarks
-  '("size:5M..500M"       "Big messages"     ?b))
-@end lisp
+  (make-mu4e-bookmark
+    :name  "Big messages"
+    :query "size:5M..500M"
+    :key ?b))
+ @end lisp
 
 This prepends your bookmark to the list, and assigns the key @key{b} to it. If
 you want to @emph{append} your bookmark, you can use @code{t} as the third
@@ -1950,9 +1968,12 @@ inbox:
 
 @lisp
 (add-to-list 'mu4e-bookmarks
-  '((concat "maildir:/inbox AND date:"
-      (format-time-string "%Y%m%d" (subtract-time (current-time) (days-to-time 7))))
-     "Inbox messages in the last 7 days" ?W) t)
+  (make-mu4e-bookmark
+   :name  "Inbox messages in the last 7 days"
+   :query (concat "maildir:/inbox AND date:"
+             (format-time-string "%Y%m%d"
+                (subtract-time (current-time) (days-to-time 7))))
+   :key ?w) t)
 @end lisp
 
 @subsection Editing bookmarks before searching
@@ -3593,6 +3614,7 @@ answers.
 
 @menu
 * General::General questions and answers about mu4e
+* Retrieving mail::Getting mail and indexing
 * Reading messages::Dealing with incoming messages
 * Writing messages::Dealing with outgoing messages
 * Known issues::Limitations we know about
@@ -3617,6 +3639,42 @@ all?} For speed reasons, @t{mu4e} returns only up to the value of the variable
 @code{mu4e-search-result-limit} (default: 500) matches. To show @emph{all},
 use @kbd{M-x mu4e-headers-toggle-full-search} (@key{Q}), or customize the
 variable @code{mu4e-headers-full-search}. This applies to all search commands.
+@item @emph{Can I automatically apply the marks on messages when
+leaving the headers buffer?} Yes you can -- see the documentation for the
+variable @t{mu4e-headers-leave-behavior}.
+@item @emph{How can I set @t{mu4e} as the default e-mail client in @command{emacs}?}
+See @ref{Emacs default}.
+@item @emph{Can @t{mu4e} use some fancy Unicode characters instead of these
+boring plain-ASCII ones?} Glad you asked! Yes, if you set
+@code{mu4e-use-fancy-chars} to @t{t}, @t{mu4e} uses such fancy
+characters in a number of places. Since not all fonts include all
+characters, you may want to install the @t{unifont} and/or @t{symbola}
+fonts on your system.
+@item @emph{Can I start @t{mu4e} in the background?} Yes - if you provide a
+prefix-argument (@key{C-u}), @t{mu4e} starts, but does not show the
+main-window.
+@item @emph{Does @t{mu4e} support searching for CJK (Chinese-Japanese-Korean) characters?}
+Yes, if you have @t{Xapian} 1.2.8 or newer, and set the environment
+variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when
+using @t{mu} from the command-line and from @t{mu4e}.
+@item @emph{How can I customize the function to select a folder?}
+The @t{mu4e-completing-read-function} variable can be customized to select a
+folder in any way. The variable can be set to a function that receives
+five arguments, following @t{completing-read}. The default value is
+@code{ido-completing-read}; to use emacs's default behaviour, set the
+variable to @code{completing-read}. Helm users can use the same value,
+and by enabling @code{helm-mode} use helm-style completion.
+@item @emph{I have a lot of Maildir folders, so regenerating them each time makes
+things slow. What can I do?}
+Set @code{mu4e-cache-maildir-list} to @code{t} (but make sure to read
+its docstring).
+@end enumerate
+
+
+@node Retrieving mail
+@section Retrieving mail
+
+@enumerate
 @item @emph{How can I get notifications when receiving mail?} There is
 @code{mu4e-index-updated-hook}, which gets triggered when the indexing process
 triggered sees an update (not just new mail though). To use this hook, put
@@ -3659,20 +3717,6 @@ seems to work quite well.
 @item @emph{I don't like the @t{Indexing...} messages that the indexing process
 gives me. Can I turn them off?}. Yes: set the variable
 @code{mu4e-hide-index-messages} to non-@t{nil}.
-@item @emph{Can I automatically apply the marks on messages when
-leaving the headers buffer?} Yes you can -- see the documentation for the
-variable @t{mu4e-headers-leave-behavior}.
-@item @emph{How can I set @t{mu4e} as the default e-mail client in @command{emacs}?}
-See @ref{Emacs default}.
-@item @emph{Can @t{mu4e} use some fancy Unicode characters instead of these
-boring plain-ASCII ones?} Glad you asked! Yes, if you set
-@code{mu4e-use-fancy-chars} to @t{t}, @t{mu4e} uses such fancy
-characters in a number of places. Since not all fonts include all
-characters, you may want to install the @t{unifont} and/or @t{symbola}
-fonts on your system.
-@item @emph{Can I start @t{mu4e} in the background?} Yes - if you provide a
-prefix-argument (@key{C-u}), @t{mu4e} starts, but does not show the
-main-window.
 @item @emph{Some IMAP-synchronization programs such as @t{mbsync} (but not
 @t{offlineimap}) don't like it when message files do not change their names
 when they are moved to different folders. Can @t{mu4e} somehow accommodate
@@ -3685,22 +3729,6 @@ non-ascii folder names, while @t{mu} expects UTF-8 (so, e.g. @t{/まりも
 correctly?} This is best solved by telling @command{offlineimap} to use
 UTF-8 instead -- see
 @url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
-@item @emph{Does @t{mu4e} support searching for CJK (Chinese-Japanese-Korean) characters?}
-Yes, if you have @t{Xapian} 1.2.8 or newer, and set the environment
-variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when
-using @t{mu} from the command-line and from @t{mu4e}.
-@item @emph{How can I customize the function to select a folder?}
-The @t{mu4e-completing-read-function} variable can be customized to select a
-folder in any way. The variable can be set to a function that receives
-five arguments, following @t{completing-read}. The default value is
-@code{ido-completing-read}; to use emacs's default behaviour, set the
-variable to @code{completing-read}. Helm users can use the same value,
-and by enabling @code{helm-mode} use helm-style completion.
-@item @emph{I have a lot of Maildir folders, so regenerating them each time makes
-things slow. What can I do?}
-Set @code{mu4e-cache-maildir-list} to @code{t} (but make sure to read
-its docstring).
-
 @end enumerate
 
 @node Reading messages
@@ -3723,7 +3751,7 @@ letter @t{C} on the right hand side of the @t{mu4e} version. See
 @ref{Decryption} and @ref{Verifying signatures}. For encryption and
 signing messages, see @ref{Writing messages}.
 @item @emph{How can I prevent @t{mu4e} from automatically marking messages as 'read' when i read them?}
-Set @code{mu4e-view-auto-mark-as-read} to nil.
+Set @code{mu4e-view-auto-mark-as-read} to @code{nil}.
 @item @emph{Does @t{mu4e} support including all related messages in a thread,
 like Gmail does?} Yes -- see @ref{Including related messages}.
 @item @emph{There seem to be a lot of duplicate messages -- how can I get rid
@@ -3832,9 +3860,10 @@ to your configuration:
 @end lisp
 With this, messages are sent using background emacs-instance.
 
-A word of warning though, this tends to not be as reliable as sending the
-message in the normal, synchronous fashion, and people have reported silent
-failures, that is, message are not sent but there is no indication of that.
+A word of warning though, this tends to not be as reliable as sending
+the message in the normal, synchronous fashion, and people have reported
+silent failures, where mail sending fails for some reason without any
+indication of that.
 
 You can check the progress of the background by checking the
 @t{*Messages*}-buffer, which should show something like:

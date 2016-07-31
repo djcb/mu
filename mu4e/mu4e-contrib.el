@@ -67,7 +67,8 @@
                    'mu4e-view-bookmark-make-record)))
 
 (defun mu4e-view-bookmark-make-record ()
-  "Make a bookmark entry for a mu4e buffer."
+  "Make a bookmark entry for a mu4e buffer. Note that this is an
+emacs bookmark, not to be confused with `mu4e-bookmarks'."
   (let* ((msg     (mu4e-message-at-point))
          (maildir (plist-get msg :maildir))
          (date    (format-time-string "%Y%m%d" (plist-get msg :date)))
