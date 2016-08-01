@@ -93,7 +93,7 @@ return the filename."
                 (if (plist-get attachment :temp)
                     (replace-match (format "src=\"%s\"" (plist-get attachment :temp)))
                   (replace-match (format "src=\"%s%s\"" temporary-file-directory (plist-get attachment :name)))
-                  (mu4e~proc-extract 'save (mu4e-message-field :docid) (plist-get attachment :index) mu4e-decryption-policy temporary-file-directory)
+                  (mu4e~proc-extract 'save (mu4e-message-field msg :docid) (plist-get attachment :index) mu4e-decryption-policy temporary-file-directory)
                   (mu4e-remove-file-later (format "%s%s" temporary-file-directory (plist-get attachment :name))))))
             attachments)
       (save-buffer)
