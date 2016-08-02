@@ -211,16 +211,22 @@ store your org-contacts."
 	(mu4e-message-field msg :path)))))
 
 (defun mu4e-action-git-apply-mbox (msg)
-  "Apply and commit the git [patch] message."
-  (let ((path (ido-read-directory-name "Target directory: "
-                                       (car ido-work-directory-list)
-                                       "~/" t)))
-    (setf ido-work-directory-list
-          (cons path (delete path ido-work-directory-list)))
+  "Apply and commit the git [patch] MSG.
+
+If the `default-directory' matches the most recent history entry don't
+bother asking for the git tree again (useful for bulk actions)."
+
+  (let ((cwd (car ido-work-directory-list)))
+    (unless (and (stringp cwd) (string= default-directory cwd))
+      (setq cwd (ido-read-directory-name "Target directory: "
+                                          cwd
+                                          "~/" t))
+      (setf ido-work-directory-list
+            (cons cwd (delete cwd ido-work-directory-list))))
     (shell-command
       (format "cd %s; git am %s"
-	path
-	(mu4e-message-field msg :path)))))
+              (shell-quote-argument cwd)
+              (shell-quote-argument (mu4e-message-field msg :path))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
