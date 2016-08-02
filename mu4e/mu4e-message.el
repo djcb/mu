@@ -36,7 +36,7 @@
 
 (defcustom mu4e-html2text-command
   (if (fboundp 'shr-insert-document) 'mu4e-shr2text 'html2text)
-  
+
   "Either a shell command or a function that converts from html to plain text.
 
 If it is a shell-command, the command reads html from standard
@@ -268,7 +268,7 @@ point in eiter the headers buffer or the view buffer."
 `mu4e-html2text-command' in a new enough emacs. Based on code by
 Titus von der Malsburg."
   (interactive)
-  (let ((dom (libxml-parse-html-region (point-min) (point-max)))
+  (let (
 	 ;; When HTML emails contain references to remote images,
 	 ;; retrieving these images leaks information. For example,
 	 ;; the sender can see when I openend the email and from which
@@ -277,8 +277,7 @@ Titus von der Malsburg."
 	 ;; See this discussion on mu-discuss:
 	 ;; https://groups.google.com/forum/#!topic/mu-discuss/gr1cwNNZnXo
 	 (shr-inhibit-images t))
-    (erase-buffer)
-    (shr-insert-document dom)
+    (shr-render-region (point-min) (point-max))
     (goto-char (point-min))))
 
 (provide 'mu4e-message)
