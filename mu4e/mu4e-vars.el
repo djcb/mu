@@ -90,6 +90,27 @@ background."
   :group 'mu4e
   :safe 'booleanp)
 
+(defcustom mu4e-index-cleanup t
+  "Whether to run a cleanup face after indexing -- that is, see
+if the is a message in the filesystem for each file in the
+message store. Having this option as `t' ensures that no
+non-existing mesages are shown but can also be quite slow with
+large message stores."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
+
+(defcustom mu4e-index-lazy-check nil
+  "Whether to run do a 'lazy check' for deciding whether to
+indexing a message. When this is set to `t', mu only uses the
+directory timestamps to decide on whether it needs to check the
+messages beneath it, which would miss messages that are modified
+outside mu. On the other hand, it's significantly faster."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
+
+
 (defcustom mu4e-update-interval nil
   "Number of seconds between automatic calls to retrieve mail and
 update the database. If nil, don't update automatically. Note,
@@ -105,9 +126,11 @@ mu4e."
  You can use this hook for example to `mu4e-get-mail-command' with
  some specific setting.")
 
-(defvar mu4e-hide-index-messages nil
-  "If non-nil, mu4e does not show the \"Indexing...\" messages, or
-  any messages relating to updated contacts.")
+(defcustom mu4e-hide-index-messages nil
+  "Whether to hide the \"Indexing...\" messages, or any messages
+relating to updated contacts."
+  :type 'boolean
+  :group 'mu4e)
 
 (defcustom mu4e-change-filenames-when-moving nil
   "When moving messages to different folders, normally mu/mu4e keep
@@ -177,6 +200,33 @@ is a shortcut key for the query."
 		   character))
   :group 'mu4e)
 
+(defvar mu4e-bookmarks
+  `( ,(make-mu4e-bookmark
+	:name  "Unread messages"
+	:query "flag:unread AND NOT flag:trashed"
+	:key ?u)
+     ,(make-mu4e-bookmark
+	:name "Today's messages"
+	:query "date:today..now"
+	:key ?t)
+     ,(make-mu4e-bookmark
+	:name "Last 7 days"
+	:query "date:7d..now"
+	:key ?w)
+     ,(make-mu4e-bookmark
+	:name "Messages with images"
+	:query "mime:image/*"
+	:key ?p))
+  "A list of pre-defined queries. Each query is represented by a
+mu4e-bookmark structure with parameters @t{:name} with the name
+of the bookmark, @t{:query} with the query expression (a query
+string or an s-expression that evaluates to query string) and a
+@t{:key}, which is the shortcut-key for the query.
+
+An older form of bookmark, a 3-item list with (QUERY DESCRIPTION
+KEY) is still recognized as well, for backward-compatibility.")
+
+
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
 A symbol which is either:
@@ -205,8 +255,10 @@ view buffer."
   :type 'boolean
   :group 'mu4e)
 
-(defcustom mu4e-cited-regexp "^ *\\(\\(>+ ?\\)+\\)"
-  "Regular expression that determines whether a line is a citation."
+(defcustom mu4e-cited-regexp  "^\\(\\([[:alpha:]]+\\)\\|\\( *\\)\\)\\(\\(>+ ?\\)+\\)"
+  "Regular expression that determines whether a line is a
+  citation. This recognizes lines starting with numbers of '>'
+  and spaces as well as citations of the type \"John> ... \"."
   :type 'string
   :group 'mu4e)
 
@@ -502,12 +554,12 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-header-value-face
-  '((t :inherit font-lock-doc-face))
+  '((t :inherit font-lock-type-face))
   "Face for a header value (such as \"Re: Hello!\")."
   :group 'mu4e-faces)
 
 (defface mu4e-special-header-value-face
-  '((t :inherit font-lock-variable-name-face))
+  '((t :inherit font-lock-builtin-face))
   "Face for special header values."
   :group 'mu4e-faces)
 
@@ -562,7 +614,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-2-face
-  '((t :inherit font-lock-type-face :bold nil :italic t))
+  '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
   "Face for cited message parts (level 2)."
   :group 'mu4e-faces)
 
@@ -587,7 +639,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-7-face
-  '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
+  '((t :inherit font-lock-type-face :bold nil :italic t))
   "Face for cited message parts (level 7)."
   :group 'mu4e-faces)
 
@@ -724,6 +776,11 @@ mu4e-compose-mode."
        ( :name "To"
 	 :shortname "To"
 	 :help "Recipient of the message"
+	 :sortable t))
+     (:user-agent .
+       ( :name "User-Agent"
+	 :shortname "UA"
+	 :help "Program used for writing this message"
 	 :sortable t)))
   "An alist of all possible header fields and information about them.
 This is used in the user-interface (the column headers in the header list, and

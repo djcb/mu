@@ -34,7 +34,7 @@ exec guile -e main -s $0 $@
     (close-pipe port)
     md5))
  
-(define (find-dups delete)
+(define (find-dups delete expr)
   (let ((id-table (make-hash-table 20000)))
     ;; fill the hash with <msgid-size> => <list of paths>
     (mu:for-each-message
@@ -45,7 +45,8 @@ exec guile -e main -s $0 $@
 	  (if lst
 	    (set! lst (cons (mu:path msg) lst))
 	    (set! lst (list (mu:path msg))))
-	  (hash-set! id-table id lst))))
+	  (hash-set! id-table id lst)))
+      expr)
     ;; list all the paths with multiple elements; check the md5sum to
     ;; make 100%-minus-ε sure they are really the same file.
     (hash-for-each
@@ -88,17 +89,20 @@ exec guile -e main -s $0 $@
 Interpret argument-list ARGS (like command-line
 arguments). Possible arguments are:
   --muhome (path to alternative mu home directory).
-  --delete (delete all but the first one). Run mu index afterwards."
+  --delete (delete all but the first one). Run mu index afterwards.
+  --expr   (expression to constrain search)."
   (setlocale LC_ALL "")
   (let* ((optionspec   '( (muhome     (value #t))
                           (delete     (value #f))
+			  (expr       (value #t))
 			  (help       (single-char #\h) (value #f))))
 	  (options (getopt-long args optionspec))
 	  (help (option-ref options 'help #f))
 	  (delete (option-ref options 'delete #f))
+	  (expr (option-ref options 'expr #t))
 	  (muhome (option-ref options 'muhome #f)))
     (mu:initialize muhome)
-    (find-dups delete)))
+    (find-dups delete expr)))
 
 
 ;; Local Variables:

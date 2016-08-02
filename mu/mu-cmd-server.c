@@ -63,24 +63,24 @@ static gboolean MU_TERMINATE;
 static void
 sig_handler (int sig)
 {
-        MU_TERMINATE = TRUE;
+	MU_TERMINATE = TRUE;
 }
 
 static void
 install_sig_handler (void)
 {
-        struct sigaction action;
-        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM, SIGPIPE };
+	struct sigaction action;
+	int i, sigs[] = { SIGINT, SIGHUP, SIGTERM, SIGPIPE };
 
-        MU_TERMINATE = FALSE;
+	MU_TERMINATE = FALSE;
 
-        action.sa_handler = sig_handler;
-        sigemptyset(&action.sa_mask);
-        action.sa_flags = SA_RESETHAND;
+	action.sa_handler = sig_handler;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags = SA_RESETHAND;
 
-        for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
-                if (sigaction (sigs[i], &action, NULL) != 0)
-                        g_critical ("set sigaction for %d failed: %s",
+	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
+		if (sigaction (sigs[i], &action, NULL) != 0)
+			g_critical ("set sigaction for %d failed: %s",
 				    sigs[i], strerror (errno));;
 }
 /************************************************************************/
@@ -235,7 +235,8 @@ get_string_from_args (GHashTable *args, const char *param, gboolean optional,
 }
 
 static gboolean
-get_bool_from_args (GHashTable *args, const char *param, gboolean optional, GError **err)
+get_bool_from_args (GHashTable *args, const char *param, gboolean optional,
+		    GError **err)
 {
 	const char *val;
 
@@ -719,7 +720,7 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 
 static MuError
 save_part (MuMsg *msg, unsigned docid, unsigned index,
-           MuMsgOptions opts, GHashTable *args, GError **err)
+	   MuMsgOptions opts, GHashTable *args, GError **err)
 {
 	gboolean rv;
 	const gchar *path;
@@ -745,7 +746,7 @@ save_part (MuMsg *msg, unsigned docid, unsigned index,
 
 static MuError
 open_part (MuMsg *msg, unsigned docid, unsigned index,
-           MuMsgOptions opts, GError **err)
+	   MuMsgOptions opts, GError **err)
 {
 	char *targetpath;
 	gboolean rv;
@@ -780,7 +781,7 @@ leave:
 
 static MuError
 temp_part (MuMsg *msg, unsigned docid, unsigned index,
-           MuMsgOptions opts, GHashTable *args, GError **err)
+	   MuMsgOptions opts, GHashTable *args, GError **err)
 {
 	const char *what, *param;
 	char *path;
@@ -1068,13 +1069,14 @@ get_checked_path (const char *path)
 
 
 static MuError
-index_and_cleanup (MuIndex *index, const char *path, GError **err)
+index_and_maybe_cleanup (MuIndex *index, const char *path,
+			 gboolean cleanup, gboolean lazy_check, GError **err)
 {
 	MuError rv;
 	MuIndexStats stats, stats2;
 
 	mu_index_stats_clear (&stats);
-	rv = mu_index_run (index, path, FALSE, &stats,
+	rv = mu_index_run (index, path, FALSE, lazy_check, &stats,
 			   index_msg_cb, NULL, NULL);
 
 	if (rv != MU_OK && rv != MU_STOP) {
@@ -1083,10 +1085,13 @@ index_and_cleanup (MuIndex *index, const char *path, GError **err)
 	}
 
 	mu_index_stats_clear (&stats2);
-	rv = mu_index_cleanup (index, &stats2, NULL, NULL, err);
-	if (rv != MU_OK && rv != MU_STOP) {
-		mu_util_g_set_error (err, MU_ERROR_INTERNAL, "cleanup failed");
-		return rv;
+	if (cleanup) {
+		rv = mu_index_cleanup (index, &stats2, NULL, NULL, err);
+		if (rv != MU_OK && rv != MU_STOP) {
+			mu_util_g_set_error (err, MU_ERROR_INTERNAL,
+					     "cleanup failed");
+			return rv;
+		}
 	}
 
 	print_expr ("(:info index :status complete "
@@ -1103,9 +1108,10 @@ index_and_cleanup (MuIndex *index, const char *path, GError **err)
 static MuError
 cmd_index (ServerContext *ctx, GHashTable *args, GError **err)
 {
-	MuIndex *index;
-	const char *argpath;
-	char *path;
+	MuIndex		*index;
+	const char	*argpath;
+	char		*path;
+	gboolean	 cleanup, lazy_check;
 
 	index = NULL;
 
@@ -1119,7 +1125,10 @@ cmd_index (ServerContext *ctx, GHashTable *args, GError **err)
 	if (!(index = mu_index_new (ctx->store, err)))
 		goto leave;
 
-	index_and_cleanup (index, path, err);
+	cleanup	   = get_bool_from_args (args, "cleanup", TRUE, NULL);
+	lazy_check = get_bool_from_args (args, "lazy-check", TRUE, NULL);
+
+	index_and_maybe_cleanup (index, path, cleanup, lazy_check, err);
 
 leave:
 	g_free (path);

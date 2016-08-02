@@ -49,7 +49,7 @@ G_BEGIN_DECLS
  * case of error
  */
 char* mu_util_dir_expand (const char* path)
-    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * guess the maildir; first try $MAILDIR; if it is unset or
@@ -58,7 +58,7 @@ char* mu_util_dir_expand (const char* path)
  * @return full path of the guessed Maildir, or NULL; must be freed (gfree)
  */
 char* mu_util_guess_maildir (void)
-   G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -70,7 +70,7 @@ char* mu_util_guess_maildir (void)
  * when no longer needed.
  */
 gchar* mu_util_guess_mu_homedir (void)
-    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * if path exists, check that's a read/writeable dir; otherwise try to
@@ -98,7 +98,7 @@ gboolean mu_util_create_dir_maybe (const gchar *path, mode_t mode,
  */
 gboolean mu_util_check_dir (const gchar* path, gboolean readable,
 			    gboolean writeable)
-    G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -124,7 +124,7 @@ const char* mu_util_cache_dir (void) G_GNUC_CONST;
  */
 int mu_util_create_writeable_fd (const char* path, mode_t mode,
 				 gboolean overwrite)
-    G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -185,7 +185,7 @@ gboolean mu_util_printerr_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
  * @return the password (free with g_free), or NULL
  */
 char* mu_util_read_password (const char *prompt)
-	   G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Try to 'play' (ie., open with it's associated program) a file. On
@@ -254,7 +254,7 @@ GQuark mu_util_error_quark (void) G_GNUC_CONST;
  * @return a newly allocated string
  */
 gchar* mu_util_str_from_strv (const gchar **params)
-	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /*
  * for OSs with out support for direntry->d_type, like Solaris
@@ -262,30 +262,30 @@ gchar* mu_util_str_from_strv (const gchar **params)
 #ifndef DT_UNKNOWN
 enum {
 	DT_UNKNOWN = 0,
-# define DT_UNKNOWN     DT_UNKNOWN
-	DT_FIFO = 1,
-# define DT_FIFO        DT_FIFO
-	DT_CHR = 2,
-# define DT_CHR         DT_CHR
-	DT_DIR = 4,
-# define DT_DIR         DT_DIR
-	DT_BLK = 6,
-# define DT_BLK         DT_BLK
-	DT_REG = 8,
-# define DT_REG         DT_REG
-	DT_LNK = 10,
-# define DT_LNK         DT_LNK
-	DT_SOCK = 12,
-# define DT_SOCK        DT_SOCK
-	DT_WHT = 14
-# define DT_WHT         DT_WHT
+#define DT_UNKNOWN	DT_UNKNOWN
+	DT_FIFO	   = 1,
+#define DT_FIFO		DT_FIFO
+	DT_CHR	   = 2,
+#define DT_CHR		DT_CHR
+	DT_DIR	   = 4,
+#define DT_DIR		DT_DIR
+	DT_BLK	   = 6,
+#define DT_BLK		DT_BLK
+	DT_REG	   = 8,
+#define DT_REG		DT_REG
+	DT_LNK	   = 10,
+#define DT_LNK		DT_LNK
+	DT_SOCK	   = 12,
+#define DT_SOCK		DT_SOCK
+	DT_WHT	   = 14
+#define DT_WHT		DT_WHT
 };
 #endif /*DT_UNKNOWN*/
 
 
 /**
  * get the d_type (as in direntry->d_type) for the file at path, using
- * lstat(3)
+* lstat(3)
  *
  * @param path full path
  *
@@ -309,15 +309,15 @@ typedef gpointer XapianEnquire;
 
 
 /* print a warning for a GError, and free it */
-#define MU_HANDLE_G_ERROR(GE)							\
-	do {									\
-		if (!(GE))							\
-			g_warning ("%s:%u: an error occured in %s",		\
-				   __FILE__, __LINE__, __func__);		\
-		else {								\
-			g_warning ("error %u: %s", (GE)->code, (GE)->message);  \
-			g_error_free ((GE));					\
-		}								\
+#define MU_HANDLE_G_ERROR(GE)						\
+	do {								\
+		if (!(GE))						\
+			g_warning ("%s:%u: an error occured in %s",	\
+				   __FILE__, __LINE__, __func__);	\
+		else {							\
+			g_warning ("error %u: %s", (GE)->code, (GE)->message); \
+			g_error_free ((GE));				\
+		}							\
 	} while (0)
 
 
@@ -327,71 +327,71 @@ typedef gpointer XapianEnquire;
  *
  */
 
-#define MU_STORE_CATCH_BLOCK_RETURN(GE,R)				\
-        catch (const MuStoreError& merr) {				\
+#define MU_STORE_CATCH_BLOCK_RETURN(GE,R)			\
+	catch (const MuStoreError& merr) {			\
+		mu_util_g_set_error ((GE),			\
+				     merr.mu_error(), "%s",	\
+				     merr.what().c_str());	\
+		return (R);					\
+	}							\
+
+
+#define MU_XAPIAN_CATCH_BLOCK					\
+	catch (const Xapian::Error &xerr) {			\
+		g_critical ("%s: xapian error '%s'",		\
+			    __func__, xerr.get_msg().c_str());	\
+	} catch (...) {						\
+		g_critical ("%s: caught exception", __func__);	\
+	  }
+
+#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)				\
+	catch (const Xapian::DatabaseLockError &xerr) {			\
 		mu_util_g_set_error ((GE),				\
-			     merr.mu_error(), "%s",			\
-			     merr.what().c_str());			\
-		return (R);						\
-	  }								\
+				     MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK, \
+				     "%s: xapian error '%s'",		\
+				     __func__, xerr.get_msg().c_str());	\
+	} catch (const Xapian::DatabaseCorruptError &xerr) {		\
+		mu_util_g_set_error ((GE),				\
+				     MU_ERROR_XAPIAN_CORRUPTION,	\
+				     "%s: xapian error '%s'",		\
+				     __func__, xerr.get_msg().c_str());	\
+	  } catch (const Xapian::DatabaseError &xerr) {			\
+		  mu_util_g_set_error ((GE),MU_ERROR_XAPIAN,		\
+				       "%s: xapian error '%s'",		\
+				       __func__, xerr.get_msg().c_str()); \
+	    } catch (const Xapian::Error &xerr) {			\
+		    mu_util_g_set_error ((GE),(E),			\
+					 "%s: xapian error '%s'",	\
+					 __func__, xerr.get_msg().c_str()); \
+	      } catch (...) {						\
+		      mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),	\
+					   "%s: caught exception", __func__); \
+		}
 
 
-#define MU_XAPIAN_CATCH_BLOCK						\
-	 catch (const Xapian::Error &xerr) {				\
-                g_critical ("%s: xapian error '%s'",			\
-			__func__, xerr.get_msg().c_str());		\
-        } catch (...) {							\
-                g_critical ("%s: caught exception", __func__);	\
-        }
-
-#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)					\
-	  catch (const Xapian::DatabaseLockError &xerr) {			\
-		mu_util_g_set_error ((GE),					\
-			     MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,		\
-			     "%s: xapian error '%s'",				\
-			     __func__, xerr.get_msg().c_str());		\
-	} catch (const Xapian::DatabaseCorruptError &xerr) {			\
-		mu_util_g_set_error ((GE),					\
-				MU_ERROR_XAPIAN_CORRUPTION,			\
-			     "%s: xapian error '%s'",				\
-			     __func__, xerr.get_msg().c_str());		\
-	} catch (const Xapian::DatabaseError &xerr) {				\
-		  mu_util_g_set_error ((GE),MU_ERROR_XAPIAN,			\
-			     "%s: xapian error '%s'",				\
-			     __func__, xerr.get_msg().c_str());		\
-	} catch (const Xapian::Error &xerr) {					\
-		mu_util_g_set_error ((GE),(E),					\
-			     "%s: xapian error '%s'",				\
-			     __func__, xerr.get_msg().c_str());		\
-        } catch (...) {								\
-			mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),		\
-			     "%s: caught exception", __func__);		\
-	 }
-
-
-#define MU_XAPIAN_CATCH_BLOCK_RETURN(R)					\
-	  catch (const Xapian::Error &xerr) {				\
-                g_critical ("%s: xapian error '%s'",			\
-			   __func__, xerr.get_msg().c_str());	\
-		return (R);						\
-        } catch (...) {							\
-                g_critical ("%s: caught exception", __func__);	\
-		return (R);						\
-        }
+#define MU_XAPIAN_CATCH_BLOCK_RETURN(R)				\
+	catch (const Xapian::Error &xerr) {			\
+		g_critical ("%s: xapian error '%s'",		\
+			    __func__, xerr.get_msg().c_str());	\
+		return (R);					\
+	} catch (...) {						\
+		g_critical ("%s: caught exception", __func__);	\
+		return (R);					\
+	  }
 
 #define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)			\
-	  catch (const Xapian::Error &xerr) {				\
+	catch (const Xapian::Error &xerr) {				\
 		mu_util_g_set_error ((GE),(E),				\
-			     "%s: xapian error '%s'",			\
-			   __func__, xerr.get_msg().c_str());	\
+				     "%s: xapian error '%s'",		\
+				     __func__, xerr.get_msg().c_str());	\
 		return (R);						\
-        } catch (...) {							\
+	} catch (...) {							\
 		if ((GE)&&!(*(GE)))					\
 			mu_util_g_set_error ((GE),			\
-				     (MU_ERROR_INTERNAL),		\
-			     "%s: caught exception", __func__);	\
+					     (MU_ERROR_INTERNAL),	\
+					     "%s: caught exception", __func__);	\
 		return (R);						\
-        }
+	  }
 
 /* the name of the (leaf) dir which has the xapian database */
 #define MU_XAPIAN_DIR_NAME    "xapian"
@@ -407,11 +407,11 @@ typedef gpointer XapianEnquire;
  * log something in the log file; note, we use G_LOG_LEVEL_INFO
  * for such messages
  */
-#define MU_WRITE_LOG(...)					     \
-	G_STMT_START {						     \
-		g_log (G_LOG_DOMAIN,				     \
-		       G_LOG_LEVEL_INFO,			     \
-		       __VA_ARGS__);				     \
+#define MU_WRITE_LOG(...)			\
+	G_STMT_START {				\
+		g_log (G_LOG_DOMAIN,		\
+		       G_LOG_LEVEL_INFO,	\
+		       __VA_ARGS__);		\
 	} G_STMT_END
 
 
@@ -421,13 +421,16 @@ typedef gpointer XapianEnquire;
 
 enum _MuError {
 	/* no error at all! */
-        MU_OK                                 = 0,
+	MU_OK                                 = 0,
 
 	/* generic error */
 	MU_ERROR                              = 1,
 	MU_ERROR_IN_PARAMETERS                = 2,
 	MU_ERROR_INTERNAL                     = 3,
 	MU_ERROR_NO_MATCHES                   = 4,
+
+	/* not really an error; for callbacks */
+	MU_IGNORE = 5,
 
 	MU_ERROR_SCRIPT_NOT_FOUND             = 8,
 

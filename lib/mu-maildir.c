@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -248,21 +248,20 @@ process_file (const char* fullpath, const gchar* mdir,
  * determine if path is a maildir leaf-dir; ie. if it's 'cur' or 'new'
  * (we're skipping 'tmp' for obvious reasons)
  */
-G_GNUC_CONST static gboolean
-is_maildir_new_or_cur (const char *path)
+gboolean
+mu_maildir_is_leaf_dir (const char *path)
 {
 	size_t len;
 
-	g_return_val_if_fail (path, FALSE);
-
 	/* path is the full path; it cannot possibly be shorter
 	 * than 4 for a maildir (/cur or /new) */
-	len = strlen (path);
+	len = path ? strlen (path) : 0;
 	if (G_UNLIKELY(len < 4))
 		return FALSE;
 
-	/* optimization; one further idea would be cast the 4 bytes to an integer
-	 * and compare that -- need to think about alignment, endianness */
+	/* optimization; one further idea would be cast the 4 bytes to an
+	 * integer and compare that -- need to think about alignment,
+	 * endianness */
 
 	if (path[len - 4] == G_DIR_SEPARATOR &&
 	    path[len - 3] == 'c' &&
@@ -331,6 +330,8 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 {
 	if (G_LIKELY(d_type == DT_REG)) {
 
+		guint u;
+
 		/* ignore emacs tempfiles */
 		if (entry->d_name[0] == '#')
 			return TRUE;
@@ -345,7 +346,18 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 		if (entry->d_name[0] == 'c' &&
 		    strncmp (entry->d_name, "core", 4) == 0)
 			return TRUE;
-
+		/* ignore tmp/backup files; find the last char */
+		for (u = 0; entry->d_name[u] != '\0'; ++u) {
+			switch (entry->d_name[u]) {
+			case '#':
+			case '~':
+				/* looks like a backup / tempsave file */
+				if (entry->d_name[u + 1] == '\0')
+					return TRUE;
+			default:
+				continue;
+			}
+		}
 		return FALSE; /* other files: don't ignore */
 
 	} else if (d_type == DT_DIR)
@@ -395,12 +407,14 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 	d_type = GET_DTYPE(entry, fullpath);
 
 	/* ignore special files/dirs */
-	if (ignore_dir_entry (entry, d_type))
+	if (ignore_dir_entry (entry, d_type)) {
+		/* g_debug ("ignoring %s\n", entry->d_name); */
 		return MU_OK;
+	}
 
 	switch (d_type) {
 	case DT_REG: /* we only want files in cur/ and new/ */
-		if (!is_maildir_new_or_cur (path))
+		if (!mu_maildir_is_leaf_dir (path))
 			return MU_OK;
 
 		return process_file (fullpath, mdir, cb_msg, data);
@@ -507,7 +521,7 @@ process_dir (const char* path, const char* mdir,
 	     gboolean full, void *data)
 {
 	MuError result;
-	DIR* dir;
+	DIR*	dir;
 
 	/* if it has a noindex file, we ignore this dir */
 	if (dir_contains_file (path, MU_MAILDIR_NOINDEX_FILE) ||
@@ -516,27 +530,30 @@ process_dir (const char* path, const char* mdir,
 		return MU_OK;
 	}
 
+	if (dir_cb) {
+		MuError rv;
+		rv = dir_cb (path, TRUE/*enter*/, data);
+		/* ignore this dir; not necessarily an _error_, dir might
+		 * be up-to-date and return MU_IGNORE */
+		if (rv == MU_IGNORE)
+			return MU_OK;
+		else if (rv != MU_OK)
+			return rv;
+	}
+
 	dir = opendir (path);
 	if (!dir) {
 		g_warning ("cannot access %s: %s", path, strerror(errno));
 		return MU_OK;
 	}
 
-	if (dir_cb) {
-		MuError rv;
-		rv = dir_cb (path, TRUE, data);
-		if (rv != MU_OK) {
-			closedir (dir);
-			return rv;
-		}
-	}
-
-	result = process_dir_entries (dir, path, mdir, msg_cb, dir_cb, full, data);
+	result = process_dir_entries (dir, path, mdir, msg_cb, dir_cb,
+				      full, data);
 	closedir (dir);
 
 	/* only run dir_cb if it exists and so far, things went ok */
 	if (dir_cb && result == MU_OK)
-		return dir_cb (path, FALSE, data);
+		return dir_cb (path, FALSE/*leave*/, data);
 
 	return result;
 }
@@ -751,7 +768,7 @@ static char*
 get_new_basename (void)
 {
 	char	hostname[64];
-		
+
 	if (gethostname (hostname, sizeof(hostname)) == -1)
 		memcpy (hostname, "localhost", sizeof(hostname));
 	else
@@ -783,15 +800,16 @@ mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 	if (new_name)
 		mfile = get_new_basename ();
 	else {
-		/* determine the name of the mailfile, stripped of its flags, as well
-		 * as any custom (non-standard) flags */
+		/* determine the name of the mailfile, stripped of its flags, as
+		 * well as any custom (non-standard) flags */
 		char *cur;
 		mfile = g_path_get_basename (oldpath);
 		for (cur = &mfile[strlen(mfile)-1]; cur > mfile; --cur) {
 			if ((*cur == ':' || *cur == '!') &&
 			    (cur[1] == '2' && cur[2] == ',')) {
 				/* get the custom flags (if any) */
-				custom_flags = mu_flags_custom_from_str (cur + 3);
+				custom_flags =
+					mu_flags_custom_from_str (cur + 3);
 				cur[0] = '\0'; /* strip the flags */
 				break;
 			}
@@ -824,13 +842,11 @@ get_file_size (const char* path)
 }
 
 
-
-
 static gboolean
 msg_move_check_pre (const gchar *src, const gchar *dst, GError **err)
 {
 	gint size1, size2;
-	
+
 	if (!g_path_is_absolute(src))
 		return mu_util_g_set_error
 			(err, MU_ERROR_FILE,

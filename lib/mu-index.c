@@ -89,14 +89,15 @@ mu_index_destroy (MuIndex *index)
 
 
 struct _MuIndexCallbackData {
-	MuIndexMsgCallback	_idx_msg_cb;
-	MuIndexDirCallback	_idx_dir_cb;
-	MuStore*		_store;
-	void*			_user_data;
-	MuIndexStats*		_stats;
-	gboolean		_reindex;
-	time_t			_dirstamp;
-	guint			_max_filesize;
+	MuIndexMsgCallback		_idx_msg_cb;
+	MuIndexDirCallback		_idx_dir_cb;
+	MuStore*			_store;
+	void*				_user_data;
+	MuIndexStats*			_stats;
+	gboolean			_reindex;
+	gboolean			_lazy_check;
+	time_t				_dirstamp;
+	guint				_max_filesize;
 };
 typedef struct _MuIndexCallbackData	MuIndexCallbackData;
 
@@ -216,30 +217,51 @@ on_run_maildir_msg (const char *fullpath, const char *mdir,
 	return result;
 }
 
+static time_t
+get_dir_timestamp (const char *path)
+{
+	struct stat statbuf;
+
+	if (stat (path, &statbuf) != 0) {
+		g_warning ("failed to stat %s: %s",
+			   path, strerror(errno));
+		return 0;
+	}
+
+	return statbuf.st_ctime;
+}
 
 static MuError
 on_run_maildir_dir (const char* fullpath, gboolean enter,
 		    MuIndexCallbackData *data)
 {
 	GError *err;
+
 	err = NULL;
 
-	/* xapian stores a per-dir timestamp; we use this timestamp
-	 *  to determine whether a message is up-to-data
+	/* xapian stores a per-dir timestamp; we use this timestamp to determine
+	 * whether a message is up-to-date
 	 */
 	if (enter) {
 		data->_dirstamp =
 			mu_store_get_timestamp (data->_store, fullpath, &err);
-		g_debug ("entering %s (ts==%u)",
-			 fullpath, (unsigned)data->_dirstamp);
+		/* in 'lazy' mode, we only check the dir timestamp, and if it's
+		 * up to date, we don't bother with this dir. This fails to
+		 * account for messages below this dir that have merely
+		 * _changed_ though */
+		if (data->_lazy_check && mu_maildir_is_leaf_dir(fullpath)) {
+			time_t dirstamp;
+			dirstamp = get_dir_timestamp (fullpath);
+			if (dirstamp <= data->_dirstamp) {
+				g_debug ("ignore %s (up-to-date)", fullpath);
+				return MU_IGNORE;
+			}
+		}
+		g_debug ("entering %s", fullpath);
 	} else {
-		time_t now;
-		now = time (NULL);
-
 		mu_store_set_timestamp (data->_store, fullpath,
-					now, &err);
-		g_debug ("leaving %s (ts=%u)",
-			 fullpath, (unsigned)data->_dirstamp);
+					time(NULL), &err);
+		g_debug ("leaving %s", fullpath);
 	}
 
 	if (data->_idx_dir_cb)
@@ -276,7 +298,8 @@ check_path (const char *path)
 
 static void
 init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
-	      gboolean reindex, guint max_filesize, MuIndexStats *stats,
+	      gboolean reindex, gboolean lazycheck,
+	      guint max_filesize, MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 	      void *user_data)
 {
@@ -286,9 +309,10 @@ init_cb_data (MuIndexCallbackData *cb_data, MuStore  *xapian,
 	cb_data->_user_data     = user_data;
 	cb_data->_store         = xapian;
 
-	cb_data->_reindex       = reindex;
-	cb_data->_dirstamp      = 0;
-	cb_data->_max_filesize  = max_filesize;
+	cb_data->_reindex      = reindex;
+	cb_data->_lazy_check   = lazycheck;
+	cb_data->_dirstamp     = 0;
+	cb_data->_max_filesize = max_filesize;
 
 	cb_data->_stats         = stats;
 	if (cb_data->_stats)
@@ -318,7 +342,8 @@ mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
 
 MuError
 mu_index_run (MuIndex *index, const char *path,
-	      gboolean reindex, MuIndexStats *stats,
+	      gboolean reindex, gboolean lazycheck,
+	      MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 	      void *user_data)
 {
@@ -336,7 +361,7 @@ mu_index_run (MuIndex *index, const char *path,
 		return MU_ERROR;
 	}
 
-	init_cb_data (&cb_data, index->_store, reindex,
+	init_cb_data (&cb_data, index->_store, reindex, lazycheck,
 		      index->_max_filesize, stats,
 		      msg_cb, dir_cb, user_data);
 
@@ -396,7 +421,7 @@ mu_index_stats (MuIndex *index, const char *path,
 	cb_data._stats     = stats;
 	cb_data._user_data = user_data;
 
-	cb_data._dirstamp  = 0;
+	cb_data._dirstamp = 0;
 
 	return mu_maildir_walk (path,
 				(MuMaildirWalkMsgCallback)on_stats_maildir_file,
@@ -404,10 +429,10 @@ mu_index_stats (MuIndex *index, const char *path,
 }
 
 struct _CleanupData {
-	MuStore *_store;
-	MuIndexStats  *_stats;
-	MuIndexCleanupDeleteCallback _cb;
-	void *_user_data;
+	MuStore				*_store;
+	MuIndexStats			*_stats;
+	MuIndexCleanupDeleteCallback	 _cb;
+	void				*_user_data;
 
 };
 typedef struct _CleanupData CleanupData;
@@ -440,8 +465,8 @@ mu_index_cleanup (MuIndex *index, MuIndexStats *stats,
 		  MuIndexCleanupDeleteCallback cb,
 		  void *user_data, GError **err)
 {
-	MuError rv;
-	CleanupData cudata;
+	MuError		rv;
+	CleanupData	cudata;
 
 	g_return_val_if_fail (index, MU_ERROR);
 

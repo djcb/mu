@@ -115,6 +115,17 @@ char *mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
 
 
 /**
+ * get appropriate content id for the mime-part
+ *
+ * @param mpart a MuMsgPart
+ *
+ * @return const content id
+ */
+const gchar*
+mu_msg_part_get_content_id (MuMsgPart *mpart)
+	G_GNUC_WARN_UNUSED_RESULT;
+
+/**
  * get the text in the MuMsgPart (ie. in its GMimePart)
  *
  * @param msg a MuMsg

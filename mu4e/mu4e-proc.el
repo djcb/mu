@@ -401,14 +401,15 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
       idparam (or flagstr "") (or path "")
       (format "newname:%s" rename))))
 
-(defun mu4e~proc-index (path my-addresses)
+(defun mu4e~proc-index (path my-addresses cleanup lazy-check)
   "Update the message database for filesystem PATH, which should
 point to some maildir directory structure. MY-ADDRESSES is a list
 of 'my' email addresses (see `mu4e-user-mail-address-list')."
   (let ((path (mu4e~proc-escape path))
 	 (addrs (when my-addresses (mapconcat 'identity my-addresses ","))))
     (if addrs
-      (mu4e~proc-send-command "cmd:index path:%s my-addresses:%s" path addrs)
+      (mu4e~proc-send-command "cmd:index path:%s my-addresses:%s cleanup:%s lazy-check:%s"
+	path addrs (if cleanup "true" : "false") (if lazy-check "true"))
       (mu4e~proc-send-command "cmd:index path:%s" path))))
 
 (defun mu4e~proc-add (path maildir)

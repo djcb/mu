@@ -74,14 +74,30 @@ Works for the message view."
   "Write the body (either html or text) to a temporary file;
 return the filename."
   (let* ((html (mu4e-message-field msg :body-html))
-	  (txt (mu4e-message-field msg :body-txt))
-	  (tmpfile (mu4e-make-temp-file "html")))
+         (txt (mu4e-message-field msg :body-txt))
+         (tmpfile (mu4e-make-temp-file "html"))
+         (attachments (remove-if (lambda (part)
+                                   (or (null (plist-get part :attachment))
+                                       (null (plist-get part :cid))))
+                                 (mu4e-message-field msg :parts))))
     (unless (or html txt)
       (mu4e-error "No body part for this message"))
     (with-temp-buffer
       (insert "<head><meta charset=\"UTF-8\"></head>\n")
       (insert (or html (concat "<pre>" txt "</pre>")))
       (write-file tmpfile)
+      ;; rewrite attachment urls
+      (mapc (lambda (attachment)
+              (goto-char (point-min))
+              (while (re-search-forward (format "src=\"cid:%s\"" (plist-get attachment :cid)) nil t)
+                (if (plist-get attachment :temp)
+                    (replace-match (format "src=\"%s\"" (plist-get attachment :temp)))
+                  (replace-match (format "src=\"%s%s\"" temporary-file-directory (plist-get attachment :name)))
+                  (let ((tmp-attachment-name (format "%s%s" temporary-file-directory (plist-get attachment :name))))
+                    (mu4e~proc-extract 'save (mu4e-message-field msg :docid) (plist-get attachment :index) mu4e-decryption-policy tmp-attachment-name)
+                    (mu4e-remove-file-later tmp-attachment-name)))))
+            attachments)
+      (save-buffer)
       tmpfile)))
 
 (defun mu4e-action-view-in-browser (msg)
@@ -195,16 +211,22 @@ store your org-contacts."
 	(mu4e-message-field msg :path)))))
 
 (defun mu4e-action-git-apply-mbox (msg)
-  "Apply and commit the git [patch] message."
-  (let ((path (ido-read-directory-name "Target directory: "
-                                       (car ido-work-directory-list)
-                                       "~/" t)))
-    (setf ido-work-directory-list
-          (cons path (delete path ido-work-directory-list)))
+  "Apply and commit the git [patch] MSG.
+
+If the `default-directory' matches the most recent history entry don't
+bother asking for the git tree again (useful for bulk actions)."
+
+  (let ((cwd (car ido-work-directory-list)))
+    (unless (and (stringp cwd) (string= default-directory cwd))
+      (setq cwd (ido-read-directory-name "Target directory: "
+                                          cwd
+                                          "~/" t))
+      (setf ido-work-directory-list
+            (cons cwd (delete cwd ido-work-directory-list))))
     (shell-command
       (format "cd %s; git am %s"
-	path
-	(mu4e-message-field msg :path)))))
+              (shell-quote-argument cwd)
+              (shell-quote-argument (mu4e-message-field msg :path))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -284,13 +306,17 @@ store your org-contacts."
 
 (defun mu4e-action-show-thread (msg)
   "Show all messages that are in the same thread as the message
-at point."
+at point.  Point remains on the message with the message-id where
+the action was invoked.  If invoked in view-mode, continue to
+display the message."
   (let ((msgid (mu4e-message-field msg :message-id)))
     (when msgid
       (let ((mu4e-headers-show-threads t)
 	     (mu4e-headers-include-related t))
         (mu4e-headers-search
-         (format "msgid:%s" msgid))))))
+         (format "msgid:%s" msgid)
+         nil nil nil
+         msgid (eq major-mode 'mu4e-view-mode))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

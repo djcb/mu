@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -49,24 +49,24 @@ sig_handler (int sig)
 			   "press again to kill immediately");
 	}
 
-        MU_CAUGHT_SIGNAL = TRUE;
+	MU_CAUGHT_SIGNAL = TRUE;
 }
 
 static void
 install_sig_handler (void)
 {
-        struct sigaction action;
-        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM };
+	struct sigaction action;
+	int i, sigs[] = { SIGINT, SIGHUP, SIGTERM };
 
-        MU_CAUGHT_SIGNAL = FALSE;
+	MU_CAUGHT_SIGNAL = FALSE;
 
-        action.sa_handler = sig_handler;
-        sigemptyset(&action.sa_mask);
-        action.sa_flags = SA_RESETHAND;
+	action.sa_handler = sig_handler;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags = SA_RESETHAND;
 
-        for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
-                if (sigaction (sigs[i], &action, NULL) != 0)
-                        g_critical ("set sigaction for %d failed: %s",
+	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
+		if (sigaction (sigs[i], &action, NULL) != 0)
+			g_critical ("set sigaction for %d failed: %s",
 				    sigs[i], strerror (errno));;
 }
 
@@ -319,7 +319,8 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 
 	newline_before_on();
 
-	rv = mu_index_run (midx, opts->maildir, opts->rebuild, stats,
+	rv = mu_index_run (midx, opts->maildir, opts->rebuild,
+			   opts->lazycheck, stats,
 			   show_progress ?
 			   (MuIndexMsgCallback)index_msg_cb :
 			   (MuIndexMsgCallback)index_msg_silent_cb,

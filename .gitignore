@@ -1,6 +1,7 @@
 www/mu
 mug
-mu
+/mu/mu
+/mu/mu-help-strings.h
 mug2
 .desktop
 *html

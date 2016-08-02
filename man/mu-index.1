@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "September 2013" "User Manuals"
+.TH MU-INDEX 1 "July 2016" "User Manuals"
 
 .SH NAME
 
@@ -13,18 +13,16 @@ mu index \- index e-mail messages stored in Maildirs
 \fBmu index\fR is the \fBmu\fR command for scanning the contents of Maildir
 directories and storing the results in a Xapian database. The data can then be
 queried using
-.BR mu-find(1)
-\.
+.BR mu-find(1)\.
 
-.B index
-understands Maildirs as defined by Daniel Bernstein for qmail(7). In addition,
-it understands recursive Maildirs (Maildirs within Maildirs), Maildir++. It
-can also deal with VFAT-based Maildirs which use '!' as the separators instead
-of ':' as used by \fITinymail\fR/\fIModest\fR and some other e-mail programs.
+\fBindex\fR understands Maildirs as defined by Daniel Bernstein for
+qmail(7). In addition, it understands recursive Maildirs (Maildirs
+within Maildirs), Maildir++. It can also deal with VFAT-based Maildirs
+which use '!' as the separators instead of ':'.
 
 E-mail messages which are not stored in something resembling a maildir
 leaf-directory (\fIcur\fR and \fInew\fR) are ignored, as are the cache
-directories for \fInotmuch\fR and \fIgnus\fR.
+directories for \fInotmuch\fR and \fIgnus\fR, and any dot-directory.
 
 Symlinks are not followed.
 
@@ -39,10 +37,14 @@ rebuild (with \fB--rebuild\fR). This can be useful to speed up things you have
 some maildirs that never change. Note that you can still search for these
 messages, this only affects updating the database.
 
-The first run of \fBmu index\fR may take a few minutes if you have a lot of
-mail (tens of thousands of messages).  Fortunately, such a full scan needs to be
-done only once; after that it suffices to index the changes, which goes much
-faster. See the 'Note on performance' below for more information.
+There also the \fB--lazy-check\fR which can greatly speed up indexing;
+see below for details.
+
+The first run of \fBmu index\fR may take a few minutes if you have a
+lot of mail (tens of thousands of messages).  Fortunately, such a full
+scan needs to be done only once; after that it suffices to index the
+changes, which goes much faster. See the 'Note on performance
+(i,ii,iii)' below for more information.
 
 The optional 'phase two' of the indexing-process is the removal of messages
 from the database for which there is no longer a corresponding file in the
@@ -67,7 +69,6 @@ starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
 
 .TP
 \fB\-\-my-address\fR=\fI<my-email-address>\fR
-
 specifies that some e-mail address is 'my-address' (\fB\-\-my-address\fR can
 be used multiple times). This is used by \fBmu cfind\fR -- any e-mail address
 found in the address fields of a message which also has
@@ -75,6 +76,16 @@ found in the address fields of a message which also has
 \fIpersonal\fR e-mail address. This allows you, for example, to filter out
 (\fBmu cfind --personal\fR) addresses which were merely seen in mailing list
 messages.
+
+.TP
+\fB\-\-lazy-check\fR
+in lazy-check mode, \fBmu\fR does not consider messages for which the
+time-stamp (ctime) of the directory they reside in has not changed
+since the previous indexing run. This is much faster than the non-lazy
+check, but won't update messages that have change (rather than having
+been added or removed), since merely editing a message does not update
+the directory time-stamp. Of course, you can run \fBmu-index\fR
+occasionally without \fB\-\-lazy-check\fR, to pick up such messages.
 
 .TP
 \fB\-\-nocleanup\fR
@@ -105,7 +116,7 @@ size to (for example) 1000, which will reduce memory consumption, but also
 substantially reduce the indexing performance.
 
 .TP
-\fB\-\-max-msg-size\fR=\fI<max msg size>\fR\
+\fB\-\-max-msg-size\fR=\fI<max msg size>\fR
 set the maximum size (in bytes) for messages. The default maximum
 (currently at 500Mb) should be enough in most cases, but if you
 encounter warnings from \fBmu\fR about ignoring messsage because they
@@ -155,8 +166,8 @@ which is more than 30000 messages per second.
 
 .SS A note on performance (ii)
 As per June 2012, we did the same non-scientific benchmark, this time with an
-Intel) i5-2500 CPU @ 3.30GHz, an ext4 file system and a maildir with 22589
-messages.
+Intel i5-2500 CPU @ 3.30GHz, an ext4 file system and a maildir with 22589
+messages. We start without an existing database.
 
 .nf
  $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
@@ -176,10 +187,22 @@ already, goes much faster:
 (more than 173000 messages per second)
 
 
-In general, \fBmu\fR has been getting faster with each release, even with
-relatively expensive new features such as text-normalization (for
-case-insensitve/accent-insensitive matching). The profiles are dominated by
-operations in the Xapian database now.
+.SS A note on performance (iii)
+As per July 2016, we did the same non-scientific benchmark, again with
+the Intel i5-2500 CPU @ 3.30GHz, an ext4 file system. This time, the
+maildir contains 72525 messages.
+
+.nf
+ $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
+ $ time mu index --quiet
+ 40,34s user 2,56s system 64% cpu 1:06,17 total
+.fi
+(about 1099 messages per second).
+
+As shown, \fBmu\fR has been getting faster with each release, even
+with relatively expensive new features such as text-normalization (for
+case-insensitve/accent-insensitive matching). The profiles are
+dominated by operations in the Xapian database now.
 
 .SH FILES
 By default, \fBmu index\fR stores its message database in \fI~/.mu/xapian\fR;

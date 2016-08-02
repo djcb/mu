@@ -38,6 +38,15 @@
 (require 'mu4e-context)  ;; support for contexts
 (require 'mu4e-speedbar) ;; support for speedbar
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; we can't properly use compose buffers that are revived using
+;; desktop-save-mode; so let's turn that off
+(require 'desktop)
+(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; register our handler functions; these connect server messages to functions

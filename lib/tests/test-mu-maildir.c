@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -260,7 +260,7 @@ test_mu_maildir_walk_01 (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 18);
+	g_assert_cmpuint (data._file_count, ==, 19);
 
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
@@ -298,7 +298,7 @@ test_mu_maildir_walk (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 14);
+	g_assert_cmpuint (data._file_count, ==, 15);
 
 	g_assert_cmpuint (data._dir_entered,==, 4);
 	g_assert_cmpuint (data._dir_left,==, 4);
@@ -330,7 +330,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 18);
+	g_assert_cmpuint (data._file_count, ==, 19);
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
 
@@ -344,7 +344,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 18);
+	g_assert_cmpuint (data._file_count, ==, 19);
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
 
@@ -362,7 +362,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 14);
+	g_assert_cmpuint (data._file_count, ==, 15);
 
 	g_assert_cmpuint (data._dir_entered,==, 4);
 	g_assert_cmpuint (data._dir_left,==, 4);
@@ -376,7 +376,7 @@ test_mu_maildir_walk_with_noupdate (void)
 			      &data);
 
 	g_assert_cmpuint (MU_OK, ==, rv);
-	g_assert_cmpuint (data._file_count, ==, 18);
+	g_assert_cmpuint (data._file_count, ==, 19);
 
 	g_assert_cmpuint (data._dir_entered,==, 5);
 	g_assert_cmpuint (data._dir_left,==, 5);
@@ -647,7 +647,7 @@ main (int argc, char *argv[])
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_util_maildir_mkmdir */
- 	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-01",
+	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-01",
 			 test_mu_maildir_mkdir_01);
 	g_test_add_func ("/mu-maildir/mu-maildir-mkdir-02",
 			 test_mu_maildir_mkdir_02);

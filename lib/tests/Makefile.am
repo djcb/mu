@@ -113,6 +113,7 @@ EXTRA_DIST=						\
 	testdir/cur/signed!2,S				\
 	testdir/cur/signed-encrypted!2,S		\
 	testdir/cur/special!2,Sabc			\
+	testdir/cur/multirecip!2,S			\
 	testdir2/bar/cur/mail1				\
 	testdir2/bar/cur/mail2				\
 	testdir2/bar/cur/mail3				\

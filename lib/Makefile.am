@@ -26,7 +26,7 @@ AM_CPPFLAGS=$(XAPIAN_CXXFLAGS) $(GMIME_CFLAGS) $(GLIB_CFLAGS) $(GUILE_CFLAGS)
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter			\
--Wdeclaration-after-statement -pedantic -Wno-variadic-macros
+-Wdeclaration-after-statement -Wno-variadic-macros
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 noinst_LTLIBRARIES=			\

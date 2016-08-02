@@ -34,6 +34,7 @@
 (require 'speedbar)
 (require 'mu4e-vars)
 (require 'mu4e-headers)
+(require 'mu4e-utils)
 
 (defvar mu4e-main-speedbar-key-map nil
   "Keymap used when in mu4e display mode.")
@@ -90,12 +91,12 @@
   (interactive)
   (mapcar (lambda (bookmark)
             (speedbar-insert-button
-	      (concat "  " (nth 1 bookmark))
+	      (concat "  " (mu4e-bookmark-name bookmark))
 	      'mu4e-highlight-face
 	      'highlight
 	      'mu4e~speedbar-bookmark
-	      (nth 0 bookmark)))
-    mu4e-bookmarks))
+	      (mu4e-bookmark-query bookmark)))
+    (mu4e-bookmarks)))
 
 (defun mu4e~speedbar-bookmark (&optional text token ident)
   "Run bookmarked query TOKEN. TEXT and INDENT are not used."

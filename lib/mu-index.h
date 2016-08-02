@@ -119,6 +119,8 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  * @param path the path to index. This must be an absolute path
  * @param force if != 0, force re-indexing already index messages; this is
  *         obviously a lot slower than only indexing new/changed messages
+ * @param lazycheck whether ignore subdirectoryies that have up-to-date
+ * timestamps.
  * @param stats a structure with some statistics about the results;
  * note that this function does *not* reset the struct values to allow
  * for cumulative stats from multiple calls. If needed, you can use
@@ -132,12 +134,13 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  * case of some error.
  */
 MuError mu_index_run (MuIndex *index, const char *path, gboolean force,
-		      MuIndexStats *stats, MuIndexMsgCallback msg_cb,
+		      gboolean lazycheck, MuIndexStats *stats,
+		      MuIndexMsgCallback msg_cb,
 		      MuIndexDirCallback dir_cb, void *user_data);
 
 /**
- * gather some statistics about the Maildir; this is usually much faster
- * than mu_index_run, and can thus be used to provide some information to the user
+ * gather some statistics about the Maildir; this is usually much faster than
+ * mu_index_run, and can thus be used to provide some information to the user
  * note though that the statistics may be different from the reality that
  * mu_index_run sees, when there are updates in the Maildir
  *
