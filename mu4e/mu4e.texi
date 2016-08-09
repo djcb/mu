@@ -3153,11 +3153,13 @@ such as @file{~/.emacs.d/init.el}) the following @emph{after} the
   ;; OR (Method 3)
   ;; (autoload 'bbdb-insinuate-mu4e "bbdb-mu4e")
   ;; (bbdb-initialize 'message 'mu4e)
-  (setq bbdb-mail-user-agent (quote message-user-agent))
-  (setq mu4e-view-mode-hook (quote (bbdb-mua-auto-update visual-line-mode)))
+
+  (setq bbdb-mail-user-agent 'message-user-agent)
+  (setq mu4e-view-mode-hook 'bbdb-mua-auto-update visual-line-mode)
   (setq mu4e-compose-complete-addresses nil)
   (setq bbdb-mua-pop-up t)
   (setq bbdb-mua-pop-up-window-size 5)
+  (setq mu4e-view-show-addresses t)  
 @end lisp
 
 @noindent
