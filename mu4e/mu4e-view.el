@@ -128,6 +128,13 @@ The first letter of NAME is used as a shortcut character.")
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
 
+(defvar mu4e-view-header-field-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-header-field-fold)
+    (define-key map (kbd "TAB") 'mu4e~view-header-field-fold)
+    map)
+  "Keymap used for header fields.")
+
 (defvar mu4e-view-contacts-header-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-2] 'mu4e~view-compose-contact)
@@ -323,10 +330,15 @@ add text-properties to VAL."
   (let* ((info (cdr (assoc field
 		      (append mu4e-header-info mu4e-header-info-custom))))
 	  (key (plist-get info :name))
+	  (val (if val (propertize val 'field 'mu4e-header-field-value
+	                               'front-sticky '(field))))
 	  (help (plist-get info :help)))
     (if (and val (> (length val) 0))
     (with-temp-buffer
       (insert (propertize (concat key ":")
+		'field 'mu4e-header-field-key
+		'front-sticky '(field)
+		'keymap mu4e-view-header-field-keymap
 		'face 'mu4e-header-key-face
 		'help-echo help) " "
 	(if dont-propertize-val
@@ -343,6 +355,28 @@ add text-properties to VAL."
 	    (indent-to-column margin))))
       (buffer-string))
     "")))
+
+(defun mu4e~view-header-field-fold ()
+  "Fold/unfold headers' value if there are more than one line."
+  (interactive)
+  (let ((name-pos (field-beginning))
+        (value-pos (1+ (field-end))))
+    (if (and name-pos value-pos
+             (eq (get-text-property name-pos 'field) 'mu4e-header-field-key))
+      (save-excursion
+        (let* ((folded))
+          (mapc (lambda (o)
+                  (when (overlay-get o 'mu4e~view-header-field-folded)
+                    (delete-overlay o)
+                    (setq folded t)))
+                (overlays-at value-pos))
+          (unless folded
+            (let ((o (make-overlay value-pos (field-end value-pos))))
+              (overlay-put o 'mu4e~view-header-field-folded t)
+              (overlay-put o 'display (car
+                                       (split-string
+                                        (field-string-no-properties value-pos)
+                                        "\n" t))))))))))
 
 (defun mu4e~view-compose-contact (&optional point)
   "Compose a message for the address at point."
