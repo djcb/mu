@@ -149,7 +149,7 @@ Also see `mu4e-context-policy'."
 We have the following choices:
 
 - `sign': sign the reply
-- `sign-and-encrypt': sign and encrypt the repy
+- `sign-and-encrypt': sign and encrypt the reply
 - `encrypt': encrypt the reply, but don't sign it.
 -  anything else: do nothing."
   :type '(choice
