@@ -158,12 +158,16 @@ This is equivalent to:
   (mu4e-message-field (mu4e-message-at-point) FIELD)."
   (mu4e-message-field (mu4e-message-at-point) field))
 
-(defun mu4e-message-body-text (msg)
+(defvar mu4e~message-body-html nil
+  "Whether the body text uses HTML.")
+
+(defun mu4e-message-body-text (msg &optional prefer-html)
   "Get the body in text form for this message.
-This is either :body-txt, or if not available, :body-html converted
-to text, using `mu4e-html2text-command' is non-nil, it will use
-that. Normally, thiss function prefers the text part, but this can
-be changed by setting `mu4e-view-prefer-html'."
+This is either :body-txt, or if not available, :body-html
+converted to text, using `mu4e-html2text-command' is non-nil, it
+will use that. Normally, this function prefers the text part,
+unless PREFER-HTML is non-nil."
+  (setq mu4e~message-body-html nil) ;; default
   (let* ((txt (mu4e-message-field msg :body-txt))
 	  (html (mu4e-message-field msg :body-html))
 	  (body
@@ -176,7 +180,7 @@ be changed by setting `mu4e-view-prefer-html'."
 	      ((and (> (* mu4e-view-html-plaintext-ratio-heuristic
                       (length txt)) (length html))
 		 ;; use html if it's prefered, unless there is no html
-		 (or (not mu4e-view-prefer-html) (not html)))
+		 (or (not prefer-html) (not html)))
 		txt)
 	      ;; otherwise, it there some html?
 	      (html
@@ -192,6 +196,7 @@ be changed by setting `mu4e-view-prefer-html'."
 		    ((functionp mu4e-html2text-command)
 		      (funcall mu4e-html2text-command))
 		    (t (mu4e-error "Invalid `mu4e-html2text-command'")))
+		  (setq mu4e~message-body-html t)
 		  (buffer-string))
                 )
 	      (t ;; otherwise, an empty body

@@ -247,7 +247,7 @@ found."
 		 (mu4e~view-custom-field msg field))))))
       mu4e-view-fields "")
     "\n"
-    (let ((body (mu4e-message-body-text msg)))
+    (let ((body (mu4e-message-body-text msg mu4e-view-prefer-html)))
       (when (fboundp 'add-face-text-property)
         (add-face-text-property 0 (length body) 'mu4e-view-body-face t body))
       body)))
@@ -747,6 +747,10 @@ FUNC should be a function taking two arguments:
   (make-local-variable 'mu4e~view-attach-map)
   (make-local-variable 'mu4e~view-cited-hidden)
 
+  ;; make permanent too, so they'll survive changing the mode
+  (put 'mu4e~view-link-map 'permanent-local t)
+  (put 'mu4e~view-attach-map 'permanent-local t)
+
   ;; show context in mode-string
   (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label))) 
  
@@ -932,8 +936,8 @@ the new docid. Otherwise, return nil."
 (defun mu4e-view-toggle-html ()
   "Toggle html-display of the message body (if any)."
   (interactive)
-  (setq mu4e-view-prefer-html (not mu4e-view-prefer-html)) 
-  (mu4e-view-refresh)) 
+  (let ((mu4e-view-prefer-html (not mu4e~message-body-html))) 
+    (mu4e-view-refresh))) 
 
 (defun mu4e-view-refresh ()
   "Redisplay the current message."
