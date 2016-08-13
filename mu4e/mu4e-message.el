@@ -67,7 +67,9 @@ is always used."
 (defcustom mu4e-view-html-plaintext-ratio-heuristic 5
   "Ratio between the length of the html and the plain text part
 below which mu4e will consider the plain text part to be 'This
-messages requires html' text bodies."
+messages requires html' text bodies. You can neutralize
+it (always show the text version) by using
+`most-positive-fixnum'."
   :type 'integer
   :group 'mu4e-view)
 
@@ -167,10 +169,10 @@ be changed by setting `mu4e-view-prefer-html'."
 	  (body
 	    (cond
 	      ;; does it look like some text? ie., if the text part is more than
-          ;; mu4e-view-html-plaintext-ratio-heuristic times shorter than the
-          ;; html part, it should't be used
-          ;; This is an heuristic to guard against 'This messages requires
-          ;; html' text bodies.
+	      ;; mu4e-view-html-plaintext-ratio-heuristic times shorter than the
+	      ;; html part, it should't be used
+	      ;; This is an heuristic to guard against 'This messages requires
+	      ;; html' text bodies.
 	      ((and (> (* mu4e-view-html-plaintext-ratio-heuristic
                       (length txt)) (length html))
 		 ;; use html if it's prefered, unless there is no html
