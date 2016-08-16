@@ -85,9 +85,12 @@ NODEFAULT, hour and minute fields will be nil if not given."
 
 (defun mu4e-user-mail-address-p (addr)
   "If ADDR is one of user's e-mail addresses return t, nil otherwise.
-User's addresses are set in `mu4e-user-mail-address-list')."
+User's addresses are set in `mu4e-user-mail-address-list'.  Case
+insensitive comparison is used."
   (when (and addr mu4e-user-mail-address-list
-	  (find addr mu4e-user-mail-address-list :test 'string=))
+	  (find addr mu4e-user-mail-address-list
+		:test (lambda (s1 s2)
+			(eq t (compare-strings s1 nil nil s2 nil nil t)))))
     t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
