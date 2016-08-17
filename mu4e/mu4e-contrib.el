@@ -160,6 +160,66 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
     (shell-command command))
   (mu4e-view-mark-for-something))
 
-;;; end of spam-filtering functions 
+;;; end of spam-filtering functions
+
+;;; eshell functions
+;; Code for 'gnus-dired-attached' modifed to be run from eshell, allowing files
+;; to be attached to an email via mu4e using the eshell.
+(defun eshell/mu4e-attach (&rest args)
+  "Attach files to a mu4e message using eshell."
+  (let ((destination nil)
+        (files-str nil)
+        (bufs nil)
+        ;; Remove directories from the list
+        (files-to-attach (delq nil (mapcar
+                                    (lambda (f) (if (file-directory-p f)
+                                               nil
+                                             (expand-file-name f)))
+                                    (eshell-flatten-list (reverse args))))))
+    ;; warn if user tries to attach without any files marked
+    (if (null files-to-attach)
+        (error "No files to attach")
+      (setq files-str
+            (mapconcat
+             (lambda (f) (file-name-nondirectory f))
+             files-to-attach ", "))
+      (setq bufs (gnus-dired-mail-buffers))
+
+      ;; set up destination mail composition buffer
+      (if (and bufs
+               (y-or-n-p "Attach files to existing mail composition buffer? "))
+          (setq destination
+                (if (= (length bufs) 1)
+                    (get-buffer (car bufs))
+                  (gnus-completing-read "Attach to buffer"
+                                        bufs t nil nil (car bufs))))
+        ;; setup a new mail composition buffer
+        (let ((mail-user-agent gnus-dired-mail-mode)
+              ;; The folling comment is verbatim from the source code
+              ;; for 'gnus-dired-attach' in 'gnus-dired.el':
+              ;; A workaround to prevent Gnus from displaying the Gnus
+              ;; logo when invoking this command without loading Gnus.
+              ;; Gnus demonstrates it when gnus.elc is being loaded if
+              ;; a command of which the name is prefixed with "gnus"
+              ;; causes that autoloading.  See the code in question,
+              ;; that is the one first found in gnus.el by performing
+              ;; `C-s this-command'.
+              (this-command (if (eq gnus-dired-mail-mode 'gnus-user-agent)
+                                'gnoose-dired-attach
+                              this-command)))
+          (compose-mail))
+        (setq destination (current-buffer)))
+
+      ;; set buffer to destination buffer, and attach files
+      (set-buffer destination)
+      (goto-char (point-max))		;attach at end of buffer
+      (while files-to-attach
+        (mml-attach-file (car files-to-attach)
+                         (or (mm-default-file-encoding (car files-to-attach))
+                             "application/octet-stream") nil)
+        (setq files-to-attach (cdr files-to-attach)))
+      (message "Attached file(s) %s" files-str))))
+
+;;; end of eshell functions
 
 (provide 'mu4e-contrib)
