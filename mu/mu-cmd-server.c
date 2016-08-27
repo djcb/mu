@@ -188,9 +188,9 @@ print_and_clear_g_error (GError **err)
 static GHashTable*
 read_command_line (GError **err)
 {
-	char *line;
-	GHashTable *hash;
-	GString *gstr;
+	char		*line;
+	GHashTable	*hash;
+	GString		*gstr;
 
 	line = NULL;
 	gstr = g_string_sized_new (512);
@@ -1632,17 +1632,17 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err)
 		 * strings. returning NULL indicates an error */
 		my_err = NULL;
 		args   = read_command_line (&my_err);
-		if ((!args || g_hash_table_size(args) == 0) && !my_err) {
-			if (args)
-				g_hash_table_destroy (args);
-			continue;
-		} else if (my_err) {
-			print_and_clear_g_error (&my_err);
+		if (!args) {
+			if (feof(stdin))
+				break;
+			if (my_err)
+				print_and_clear_g_error (&my_err);
 			continue;
 		}
 
 		switch (handle_args (&ctx, args, &my_err)) {
-		case MU_OK: break;
+		case MU_OK:
+			break;
 		case MU_STOP:
 			do_quit = TRUE;
 			break;
