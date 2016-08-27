@@ -1529,7 +1529,7 @@ window. "
   "Rerun the search for the last search expression."
   (interactive)
   ;; if possible, try to return to the same message
-  (let* ((msg (mu4e-message-at-point))
+  (let* ((msg (mu4e-message-at-point t))
 	  (msgid (and msg (mu4e-message-field msg :message-id))))
     (mu4e-headers-search mu4e~headers-last-query nil nil t msgid)))
 
