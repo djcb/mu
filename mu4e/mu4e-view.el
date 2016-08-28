@@ -371,12 +371,13 @@ add text-properties to VAL."
                     (setq folded t)))
                 (overlays-at value-pos))
           (unless folded
-            (let ((o (make-overlay value-pos (field-end value-pos))))
+            (let* ((o (make-overlay value-pos (field-end value-pos)))
+                   (vals (split-string (field-string value-pos) "\n" t))
+                   (val (if (= (length vals) 1)
+                            (car vals)
+                          (concat (substring (car vals) 0 -3) "..."))))
               (overlay-put o 'mu4e~view-header-field-folded t)
-              (overlay-put o 'display (car
-                                       (split-string
-                                        (field-string-no-properties value-pos)
-                                        "\n" t))))))))))
+              (overlay-put o 'display val))))))))
 
 (defun mu4e~view-compose-contact (&optional point)
   "Compose a message for the address at point."
