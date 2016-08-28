@@ -163,19 +163,21 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
 ;;; end of spam-filtering functions
 
 ;;; eshell functions
-;; Code for 'gnus-dired-attached' modifed to be run from eshell, allowing files
-;; to be attached to an email via mu4e using the eshell.
+;; Code for 'gnus-dired-attached' modifed to run from eshell, allowing files to
+;; be attached to an email via mu4e using the eshell. Does not depend on gnus.
 (defun eshell/mu4e-attach (&rest args)
-  "Attach files to a mu4e message using eshell."
+  "Attach files to a mu4e message using eshell. If no mu4e
+buffers found, compose a new message and then attach the file."
   (let ((destination nil)
         (files-str nil)
         (bufs nil)
         ;; Remove directories from the list
-        (files-to-attach (delq nil (mapcar
-                                    (lambda (f) (if (file-directory-p f)
-                                               nil
-                                             (expand-file-name f)))
-                                    (eshell-flatten-list (reverse args))))))
+        (files-to-attach
+         (delq nil (mapcar
+                    (lambda (f) (if (or (not (file-exists-p f)) (file-directory-p f))
+                                    nil
+                                  (expand-file-name f)))
+                    (eshell-flatten-list (reverse args))))))
     ;; warn if user tries to attach without any files marked
     (if (null files-to-attach)
         (error "No files to attach")
@@ -183,43 +185,31 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
             (mapconcat
              (lambda (f) (file-name-nondirectory f))
              files-to-attach ", "))
-      (setq bufs (gnus-dired-mail-buffers))
-
+      (setq bufs (mu4e~active-composition-buffers))
       ;; set up destination mail composition buffer
       (if (and bufs
                (y-or-n-p "Attach files to existing mail composition buffer? "))
           (setq destination
                 (if (= (length bufs) 1)
                     (get-buffer (car bufs))
-                  (gnus-completing-read "Attach to buffer"
-                                        bufs t nil nil (car bufs))))
+                  (let ((prompt (mu4e-format "%s" "Attach to buffer")))
+                    (funcall mu4e-completing-read-function prompt
+                             bufs))))
         ;; setup a new mail composition buffer
-        (let ((mail-user-agent gnus-dired-mail-mode)
-              ;; The folling comment is verbatim from the source code
-              ;; for 'gnus-dired-attach' in 'gnus-dired.el':
-              ;; A workaround to prevent Gnus from displaying the Gnus
-              ;; logo when invoking this command without loading Gnus.
-              ;; Gnus demonstrates it when gnus.elc is being loaded if
-              ;; a command of which the name is prefixed with "gnus"
-              ;; causes that autoloading.  See the code in question,
-              ;; that is the one first found in gnus.el by performing
-              ;; `C-s this-command'.
-              (this-command (if (eq gnus-dired-mail-mode 'gnus-user-agent)
-                                'gnoose-dired-attach
-                              this-command)))
-          (compose-mail))
-        (setq destination (current-buffer)))
-
-      ;; set buffer to destination buffer, and attach files
-      (set-buffer destination)
-      (goto-char (point-max))		;attach at end of buffer
-      (while files-to-attach
-        (mml-attach-file (car files-to-attach)
-                         (or (mm-default-file-encoding (car files-to-attach))
-                             "application/octet-stream") nil)
-        (setq files-to-attach (cdr files-to-attach)))
-      (message "Attached file(s) %s" files-str))))
-
+        (if (y-or-n-p "Compose new mail and attach this file? ")
+            (progn (mu4e-compose-new)
+                   (setq destination (current-buffer)))))
+      ;; if buffer was found, set buffer to destination buffer, and attach files
+      (if (not (eq destination 'nil))
+          (progn (set-buffer destination)
+                 (goto-char (point-max))		;attach at end of buffer
+                 (while files-to-attach
+                   (mml-attach-file (car files-to-attach)
+                                    (or (mm-default-file-encoding (car files-to-attach))
+                                        "application/octet-stream") nil)
+                   (setq files-to-attach (cdr files-to-attach)))
+                 (message "Attached file(s) %s" files-str))
+        (message "No buffer to attach file to.")))))
 ;;; end of eshell functions
 
 (provide 'mu4e-contrib)

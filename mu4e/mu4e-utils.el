@@ -1280,6 +1280,17 @@ the view and compose modes."
   "Quote a string to be used literally in the modeline."
   (replace-regexp-in-string "%" "%%" str t t))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun mu4e~active-composition-buffers ()
+  "Return all active mu4e composition buffers"
+  (let (buffers)
+    (save-excursion
+      (dolist (buffer (buffer-list t))
+        (set-buffer buffer)
+        (when (eq major-mode 'mu4e-compose-mode)
+          (push (buffer-name buffer) buffers))))
+    (nreverse buffers)))
 
 (provide 'mu4e-utils)
 ;;; End of mu4e-utils.el
