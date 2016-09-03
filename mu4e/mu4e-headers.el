@@ -346,7 +346,7 @@ headers."
 
 	  ;; first, remove the old one (otherwise, we'd have two headers with
 	  ;; the same docid...
-	  (mu4e~headers-remove-handler docid)
+	  (mu4e~headers-remove-handler docid t)
 
 	  ;; if we're actually viewing this message (in mu4e-view mode), we
 	  ;; update it; that way, the flags can be updated, as well as the path
@@ -366,25 +366,30 @@ headers."
 		(move-to-column initial-column)
 		(mu4e~headers-highlight initial-message-at-point))
 	    ;; attempt to highlight the corresponding line and make it visible
-	    (mu4e~headers-highlight docid)))))))
+	    (mu4e~headers-highlight docid))
+	  (run-hooks 'mu4e-msg-changed-hook))))))
 
-(defun mu4e~headers-remove-handler (docid)
+(defun mu4e~headers-remove-handler (docid &optional skip-hook)
   "Remove handler, will be called when a message with DOCID has
 been removed from the database. This function will hide the removed
 message from the current list of headers. If the message is not
-present, don't do anything."
+present, don't do anything.
+
+If SKIP-HOOK is not nil, `mu4e-msg-changed-hook' will be invoked."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (mu4e~headers-remove-header docid t)
 
       ;; if we were viewing this message, close it now.
       (when (and (mu4e~headers-view-this-message-p docid)
-	      (buffer-live-p mu4e~view-buffer))
-	(with-current-buffer mu4e~view-buffer
-	  ;; XXX it seems this sometimes fails; investigate;
-	  ;; for now, just ignore the error
-	  (ignore-errors
-	    (kill-buffer-and-window)))))))
+                 (buffer-live-p mu4e~view-buffer))
+        (with-current-buffer mu4e~view-buffer
+          ;; XXX it seems this sometimes fails; investigate;
+          ;; for now, just ignore the error
+          (ignore-errors
+            (kill-buffer-and-window))))
+      (unless skip-hook
+        (run-hooks 'mu4e-msg-changed-hook)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -903,6 +908,7 @@ user-interaction ongoing."
 
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook 'mu4e~headers-do-auto-update nil t)
+  (add-hook 'mu4e-index-updated-hook (lambda () (run-hooks 'mu4e-msg-changed-hook)) t t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
