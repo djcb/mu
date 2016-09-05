@@ -500,11 +500,9 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 		       mu4e~compose-buffer-max-name-length
 		       nil nil t)))))
 
-
 (defun mu4e~compose-crypto-reply (parent compose-type)
   "When composing a reply to an encrypted message, we can
 automatically encrypt that reply."
-  (message "%S %S" parent compose-type)
   (when (and  (eq compose-type 'reply)
 	  (and parent (member 'encrypted (mu4e-message-field parent :flags))))
 	(case mu4e-compose-crypto-reply-policy
