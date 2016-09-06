@@ -173,7 +173,8 @@ We have the following choices:
   "Hook run just *before* message composition starts.
 If the compose-type is either 'reply' or 'forward', the variable
 `mu4e-compose-parent-message' points to the message replied to /
-being forwarded / edited.
+being forwarded / edited, and `mu4e-compose-type' contains the
+type of message to be composed.
 
 Note that there is no draft message yet when this hook runs, it
 is meant for influencing the how mu4e constructs the draft
@@ -182,6 +183,10 @@ it has been constructed, `mu4e-compose-mode-hook' would be the
 place to do that."
   :type 'hook
   :group 'mu4e-compose)
+
+(defvar mu4e-compose-type nil
+  "The compose-type for this buffer, which is a symbol, `new',
+  `forward', `reply' or `edit'.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -455,7 +460,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (add-hook 'message-send-hook
       (lambda () ;; mu4e~compose-save-before-sending
 	;; when in-reply-to was removed, remove references as well.
-	(when (eq mu4e~compose-type 'reply)
+	(when (eq mu4e-compose-type 'reply)
 	  (mu4e~remove-refs-maybe))
 	(when use-hard-newlines
 	  (mu4e-send-harden-newlines))
@@ -483,8 +488,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
 
-(defvar mu4e~compose-type nil
-  "Compose-type for this buffer.")
 
 (defun mu4e~compose-set-friendly-buffer-name (&optional compose-type)
   "Set some user-friendly buffer name based on the compose type."
@@ -508,10 +511,7 @@ automatically encrypt that reply."
 	(case mu4e-compose-crypto-reply-policy
 	  (sign (mml-secure-message-sign))
 	  (encrypt (mml-secure-message-encrypt))
-	  (sign-and-encrypt (mml-secure-message-sign-encrypt))
-	  (message "Do nothing"))))
-
-
+	  (sign-and-encrypt (mml-secure-message-sign-encrypt)))))
 
 (defun* mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
@@ -572,8 +572,8 @@ tempfile)."
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
   ;; remember the compose-type
-  (set (make-local-variable 'mu4e~compose-type) compose-type)
-  (put 'mu4e~compose-type 'permanent-local t)
+  (set (make-local-variable 'mu4e-compose-type) compose-type)
+  (put 'mu4e-compose-type 'permanent-local t)
 
   ;; hide some headers
   (mu4e~compose-hide-headers)
