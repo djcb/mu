@@ -536,6 +536,9 @@ tempfile)."
   ;; message being forwarded or replied to, otherwise it is nil.
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
+    ;; remember the compose-type
+  (set (make-local-variable 'mu4e-compose-type) compose-type)
+  (put 'mu4e-compose-type 'permanent-local t)
   ;; maybe switch the context
   (mu4e~context-autoswitch mu4e-compose-parent-message
     mu4e-compose-context-policy)
@@ -571,9 +574,6 @@ tempfile)."
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
-  ;; remember the compose-type
-  (set (make-local-variable 'mu4e-compose-type) compose-type)
-  (put 'mu4e-compose-type 'permanent-local t)
 
   ;; hide some headers
   (mu4e~compose-hide-headers)
